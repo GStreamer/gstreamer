@@ -1,3 +1,16 @@
+2007-02-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_event), (gst_lame_chain),
+	(gst_lame_change_state):
+	* ext/lame/gstlame.h:
+	  On receiving EOS, we try to push a last buffer with the remaining
+	  samples. Don't do that if we got an unclean flow return on the last
+	  gst_pad_push(), downstream might not handle this very gracefully
+	  (see #403168).
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):
+	  Pass flow returns upstream (helps #403168).
+
 2007-02-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/synaesthesia/gstsynaesthesia.c:

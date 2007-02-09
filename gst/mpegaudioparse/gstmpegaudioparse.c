@@ -319,6 +319,7 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
 static GstFlowReturn
 gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 {
+  GstFlowReturn flow = GST_FLOW_OK;
   GstMPEGAudioParse *mp3parse;
   const guchar *data;
   guint32 header;
@@ -327,10 +328,9 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
   GstClockTime timestamp;
   guint available;
 
-  mp3parse = GST_MP3PARSE (gst_pad_get_parent (pad));
+  mp3parse = GST_MP3PARSE (GST_PAD_PARENT (pad));
 
-  GST_DEBUG_OBJECT (mp3parse, "received buffer of %d bytes",
-      GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (mp3parse, "buffer of %d bytes", GST_BUFFER_SIZE (buf));
 
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
@@ -472,7 +472,7 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
 
           gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mp3parse->srcpad));
 
-          gst_pad_push (mp3parse->srcpad, outbuf);
+          flow = gst_pad_push (mp3parse->srcpad, outbuf);
 
         } else {
           GST_DEBUG_OBJECT (mp3parse, "skipping buffer of %d bytes",
@@ -486,11 +486,12 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
       gst_adapter_flush (mp3parse->adapter, 1);
       GST_DEBUG_OBJECT (mp3parse, "wrong header, skipping byte");
     }
+
+    if (GST_FLOW_IS_FATAL (flow))
+      break;
   }
 
-  gst_object_unref (mp3parse);
-
-  return GST_FLOW_OK;
+  return flow;
 }
 
 static gboolean

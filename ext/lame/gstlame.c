@@ -920,7 +920,7 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
         buf = gst_buffer_new_and_alloc (7200);
         size = lame_encode_flush (lame->lgf, GST_BUFFER_DATA (buf), 7200);
 
-        if (size > 0) {
+        if (size > 0 && lame->last_flow == GST_FLOW_OK) {
           gint64 duration;
 
           duration = gst_util_uint64_scale_int (size, GST_SECOND,
@@ -941,7 +941,8 @@ gst_lame_sink_event (GstPad * pad, GstEvent * event)
           gst_buffer_set_caps (buf, GST_PAD_CAPS (lame->srcpad));
           gst_pad_push (lame->srcpad, buf);
         } else {
-          GST_DEBUG_OBJECT (lame, "no final packet (size=%d)", size);
+          GST_DEBUG_OBJECT (lame, "no final packet (size=%d, last_flow=%s)",
+              size, gst_flow_get_name (lame->last_flow));
           gst_buffer_unref (buf);
         }
       }
@@ -1064,6 +1065,7 @@ gst_lame_chain (GstPad * pad, GstBuffer * buf)
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (lame->srcpad));
 
     result = gst_pad_push (lame->srcpad, outbuf);
+    lame->last_flow = result;
     if (result != GST_FLOW_OK) {
       GST_DEBUG_OBJECT (lame, "flow return: %s", gst_flow_get_name (result));
     }
@@ -1201,6 +1203,7 @@ gst_lame_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      lame->last_flow = GST_FLOW_OK;
       lame->last_ts = GST_CLOCK_TIME_NONE;
       lame->eos_ts = GST_CLOCK_TIME_NONE;
       break;
