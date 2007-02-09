@@ -93,6 +93,9 @@ struct _GstLame {
   gboolean emphasis;
   gint preset;
 
+  /* track this so we don't send a last buffer in eos handler after error */
+  GstFlowReturn  last_flow;
+
   lame_global_flags *lgf;
 
   /* time tracker */
