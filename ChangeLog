@@ -1,3 +1,17 @@
+2007-02-09  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstregistryxml.c (load_feature, load_plugin): Drop some
+	normal-case logs down to LOG, raise errors to WARNING.
+	(gst_registry_xml_read_cache): Don't log before calling a function
+	that logs.
+
+	* gst/gstregistry.c (gst_registry_finalize): Less debug on program
+	exit (registry finalize).
+	(gst_registry_add_plugin, gst_registry_add_feature): No need for a
+	DEBUG log when we emit signals that people don't even have the
+	chance to connect to.
+	(gst_registry_scan_path_level): Less logging in the normal case.
+
 2007-02-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Michal Benes <michal dot benes at itonis dot tv>

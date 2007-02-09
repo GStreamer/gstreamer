@@ -275,7 +275,7 @@ load_feature (xmlTextReaderPtr reader)
   }
   while ((ret = xmlTextReaderRead (reader)) == 1) {
     if (xmlTextReaderDepth (reader) == depth) {
-      GST_DEBUG ("loaded feature %p with name %s", feature, feature->name);
+      GST_LOG ("loaded feature %p with name %s", feature, feature->name);
       return feature;
     }
     if (xmlTextReaderNodeType (reader) == XML_READER_TYPE_ELEMENT &&
@@ -294,8 +294,7 @@ load_feature (xmlTextReaderPtr reader)
           int ret;
 
           ret = read_string (reader, &factory->details.longname, TRUE);
-          GST_DEBUG ("longname ret=%d, name=%s",
-              ret, factory->details.longname);
+          GST_LOG ("longname ret=%d, name=%s", ret, factory->details.longname);
         } else if (g_str_equal (tag, "class")) {
           read_string (reader, &factory->details.klass, TRUE);
         } else if (g_str_equal (tag, "description")) {
@@ -375,7 +374,7 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
 
   *feature_list = NULL;
 
-  GST_DEBUG ("creating new plugin and parsing");
+  GST_LOG ("creating new plugin and parsing");
 
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
 
@@ -392,69 +391,69 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
         int ret;
 
         ret = read_string (reader, &plugin->desc.name, FALSE);
-        GST_DEBUG ("name ret=%d, name=%s", ret, plugin->desc.name);
+        GST_LOG ("name ret=%d, name=%s", ret, plugin->desc.name);
         if (!ret)
           break;
       } else if (g_str_equal (tag, "description")) {
         if (!read_string (reader, &plugin->desc.description, TRUE)) {
-          GST_DEBUG ("description field was invalid in registry");
+          GST_WARNING ("description field was invalid in registry");
           break;
         }
-        GST_DEBUG ("description %s", plugin->desc.description);
+        GST_LOG ("description %s", plugin->desc.description);
       } else if (g_str_equal (tag, "filename")) {
         if (!read_string (reader, &plugin->filename, FALSE)) {
-          GST_DEBUG ("filename field was invalid in registry");
+          GST_WARNING ("filename field was invalid in registry");
           break;
         }
-        GST_DEBUG ("filename %s", plugin->filename);
+        GST_LOG ("filename %s", plugin->filename);
         plugin->basename = g_path_get_basename (plugin->filename);
       } else if (g_str_equal (tag, "version")) {
         if (!read_string (reader, &plugin->desc.version, TRUE)) {
-          GST_DEBUG ("version field was invalid in registry");
+          GST_WARNING ("version field was invalid in registry");
           break;
         }
-        GST_DEBUG ("version %s", plugin->desc.version);
+        GST_LOG ("version %s", plugin->desc.version);
       } else if (g_str_equal (tag, "license")) {
         if (!read_string (reader, &plugin->desc.license, TRUE)) {
-          GST_DEBUG ("license field was invalid in registry");
+          GST_WARNING ("license field was invalid in registry");
           break;
         }
-        GST_DEBUG ("license %s", plugin->desc.license);
+        GST_LOG ("license %s", plugin->desc.license);
       } else if (g_str_equal (tag, "source")) {
         if (!read_string (reader, &plugin->desc.source, TRUE)) {
-          GST_DEBUG ("source field was invalid in registry");
+          GST_WARNING ("source field was invalid in registry");
           break;
         }
-        GST_DEBUG ("source %s", plugin->desc.source);
+        GST_LOG ("source %s", plugin->desc.source);
       } else if (g_str_equal (tag, "package")) {
         if (!read_string (reader, &plugin->desc.package, TRUE)) {
-          GST_DEBUG ("package field was invalid in registry");
+          GST_WARNING ("package field was invalid in registry");
           break;
         }
-        GST_DEBUG ("package %s", plugin->desc.package);
+        GST_LOG ("package %s", plugin->desc.package);
       } else if (g_str_equal (tag, "origin")) {
         if (!read_string (reader, &plugin->desc.origin, TRUE)) {
-          GST_DEBUG ("failed to read origin");
+          GST_WARNING ("failed to read origin");
           break;
         }
       } else if (g_str_equal (tag, "m32p")) {
         char *s;
 
         if (!read_string (reader, &s, FALSE)) {
-          GST_DEBUG ("failed to read mtime");
+          GST_WARNING ("failed to read mtime");
           break;
         }
         plugin->file_mtime = strtol (s, NULL, 0);
-        GST_DEBUG ("mtime %d", (int) plugin->file_mtime);
+        GST_LOG ("mtime %d", (int) plugin->file_mtime);
         g_free (s);
       } else if (g_str_equal (tag, "size")) {
         unsigned int x;
 
         if (read_uint (reader, &x)) {
           plugin->file_size = x;
-          GST_DEBUG ("file_size %" G_GINT64_FORMAT, (gint64) plugin->file_size);
+          GST_LOG ("file_size %" G_GINT64_FORMAT, (gint64) plugin->file_size);
         } else {
-          GST_DEBUG ("failed to read size");
+          GST_WARNING ("failed to read size");
         }
       } else if (g_str_equal (tag, "feature")) {
         GstPluginFeature *feature = load_feature (reader);
@@ -464,13 +463,13 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
           *feature_list = g_list_prepend (*feature_list, feature);
         }
       } else {
-        GST_DEBUG ("unknown tag %s", tag);
+        GST_WARNING ("unknown tag %s", tag);
       }
     }
   }
   gst_object_unref (plugin);
 
-  GST_DEBUG ("problem reading plugin");
+  GST_WARNING ("problem reading plugin");
 
   return NULL;
 }
@@ -545,7 +544,6 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
           if (plugin) {
             GList *g;
 
-            GST_DEBUG ("adding plugin %s", plugin->desc.name);
             gst_registry_add_plugin (registry, plugin);
             for (g = feature_list; g; g = g_list_next (g)) {
               gst_registry_add_feature (registry,

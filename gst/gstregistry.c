@@ -195,7 +195,7 @@ gst_registry_finalize (GObject * object)
     GstPlugin *plugin = p->data;
 
     if (plugin) {
-      GST_DEBUG_OBJECT (registry, "removing plugin %s",
+      GST_LOG_OBJECT (registry, "removing plugin %s",
           gst_plugin_get_name (plugin));
       gst_object_unref (plugin);
     }
@@ -211,7 +211,7 @@ gst_registry_finalize (GObject * object)
     GstPluginFeature *feature = f->data;
 
     if (feature) {
-      GST_DEBUG_OBJECT (registry, "removing feature %p (%s)",
+      GST_LOG_OBJECT (registry, "removing feature %p (%s)",
           feature, gst_plugin_feature_get_name (feature));
       gst_object_unref (feature);
     }
@@ -355,7 +355,7 @@ gst_registry_add_plugin (GstRegistry * registry, GstPlugin * plugin)
   gst_object_sink (plugin);
   GST_OBJECT_UNLOCK (registry);
 
-  GST_DEBUG_OBJECT (registry, "emitting plugin-added for filename \"%s\"",
+  GST_LOG_OBJECT (registry, "emitting plugin-added for filename \"%s\"",
       GST_STR_NULL (plugin->filename));
   g_signal_emit (G_OBJECT (registry), gst_registry_signals[PLUGIN_ADDED], 0,
       plugin);
@@ -455,7 +455,7 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   gst_object_sink (feature);
   GST_OBJECT_UNLOCK (registry);
 
-  GST_DEBUG_OBJECT (registry, "emitting feature-added for %s", feature->name);
+  GST_LOG_OBJECT (registry, "emitting feature-added for %s", feature->name);
   g_signal_emit (G_OBJECT (registry), gst_registry_signals[FEATURE_ADDED], 0,
       feature);
 
@@ -862,9 +862,9 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
       }
       if (plugin->file_mtime == file_status.st_mtime &&
           plugin->file_size == file_status.st_size) {
-        GST_DEBUG_OBJECT (registry, "file %s cached", filename);
+        GST_LOG_OBJECT (registry, "file %s cached", filename);
         plugin->flags &= ~GST_PLUGIN_FLAG_CACHED;
-        GST_DEBUG_OBJECT (registry, "marking plugin %p as registered as %s",
+        GST_LOG_OBJECT (registry, "marking plugin %p as registered as %s",
             plugin, filename);
         plugin->registered = TRUE;
         /* Update the file path on which we've seen this cached plugin 
