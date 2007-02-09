@@ -131,7 +131,7 @@ static void gst_decode_bin_finalize (GObject * object);
 static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
     GstStateChange transition);
 
-static void add_fakesink (GstDecodeBin * decode_bin);
+static gboolean add_fakesink (GstDecodeBin * decode_bin);
 static void remove_fakesink (GstDecodeBin * decode_bin);
 
 static void dynamic_free (GstDynamic * dyn);
@@ -566,11 +566,11 @@ free_pad_probes (GstDecodeBin * decode_bin)
   decode_bin->probes = NULL;
 }
 
-static void
+static gboolean
 add_fakesink (GstDecodeBin * decode_bin)
 {
   if (decode_bin->fakesink != NULL)
-    return;
+    return TRUE;
 
   g_mutex_lock (decode_bin->cb_mutex);
 
@@ -588,14 +588,14 @@ add_fakesink (GstDecodeBin * decode_bin)
     decode_bin->fakesink = NULL;
   }
   g_mutex_unlock (decode_bin->cb_mutex);
-  return;
+  return TRUE;
 
   /* ERRORS */
 no_fakesink:
   {
     g_warning ("can't find fakesink element, decodebin will not work");
     g_mutex_unlock (decode_bin->cb_mutex);
-    return;
+    return FALSE;
   }
 }
 
@@ -1667,19 +1667,16 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
       decode_bin->numpads = 0;
       decode_bin->numwaiting = 0;
       decode_bin->dynamics = NULL;
-      /* catch fatal errors that may have occured in the init function */
-      if (decode_bin->typefind == NULL || decode_bin->fakesink == NULL) {
-        GST_ELEMENT_ERROR (decode_bin, CORE, MISSING_PLUGIN, (NULL), (NULL));
-        return GST_STATE_CHANGE_FAILURE;
-      }
+      if (decode_bin->typefind == NULL)
+        goto missing_typefind;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_OBJECT_LOCK (decode_bin);
       decode_bin->shutting_down = FALSE;
       GST_OBJECT_UNLOCK (decode_bin);
 
-      add_fakesink (decode_bin);
-      break;
+      if (!add_fakesink (decode_bin))
+        goto missing_fakesink;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -1711,6 +1708,21 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+/* ERRORS */
+missing_typefind:
+  {
+    gst_element_post_message (element,
+        gst_missing_element_message_new (element, "typefind"));
+    GST_ELEMENT_ERROR (element, CORE, MISSING_PLUGIN, (NULL), ("no typefind!"));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+missing_fakesink:
+  {
+    gst_element_post_message (element,
+        gst_missing_element_message_new (element, "fakesink"));
+    GST_ELEMENT_ERROR (element, CORE, MISSING_PLUGIN, (NULL), ("no fakesink!"));
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
 
 static gboolean

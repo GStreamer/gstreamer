@@ -1,5 +1,21 @@
 2007-02-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstdecodebin.c: (add_fakesink),
+	(gst_decode_bin_change_state):
+	* gst/playback/gstdecodebin2.c: (add_fakesink),
+	(gst_decode_bin_change_state):
+	  Don't error out if there is no fakesink in the READY to NULL state
+	  change, since when decodebin is re-used, we're only adding the
+	  fakesink element in READY to PAUSED.
+
+	* tests/check/elements/decodebin.c:
+	(new_decoded_pad_plug_fakesink_cb), (GST_START_TEST),
+	(decodebin_suite):
+	  Minimal unit test to make sure we can use the same decodebin
+	  instance twice (at least with audiotestsrc input).
+
+2007-02-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/alsa/gstalsa.c: (gst_alsa_find_device_name):
 	  Try to get devic-name from device string first, and from handle only
 	  as fallback (seems to yield better results and is more robust

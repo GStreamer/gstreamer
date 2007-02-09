@@ -122,7 +122,7 @@ GST_ELEMENT_DETAILS ("Decoder Bin",
     "Edward Hervey <edward@fluendo.com>");
 
 
-static void add_fakesink (GstDecodeBin * decode_bin);
+static gboolean add_fakesink (GstDecodeBin * decode_bin);
 static void remove_fakesink (GstDecodeBin * decode_bin);
 
 static void type_found (GstElement * typefind, guint probability,
@@ -1800,13 +1800,13 @@ gst_decode_pad_new (GstDecodeGroup * group, GstPad * pad, gboolean block)
  * ::get_state .
  */
 
-static void
+static gboolean
 add_fakesink (GstDecodeBin * decode_bin)
 {
   GST_DEBUG_OBJECT (decode_bin, "Adding the fakesink");
 
   if (decode_bin->fakesink)
-    return;
+    return TRUE;
 
   decode_bin->fakesink =
       gst_element_factory_make ("fakesink", "async-fakesink");
@@ -1820,20 +1820,20 @@ add_fakesink (GstDecodeBin * decode_bin)
   if (!gst_bin_add (GST_BIN (decode_bin), decode_bin->fakesink))
     goto could_not_add;
 
-  return;
+  return TRUE;
 
   /* ERRORS */
 no_fakesink:
   {
     g_warning ("can't find fakesink element, decodebin will not work");
-    return;
+    return FALSE;
   }
 could_not_add:
   {
     g_warning ("Could not add fakesink to decodebin, decodebin will not work");
     gst_object_unref (decode_bin->fakesink);
     decode_bin->fakesink = NULL;
-    return;
+    return FALSE;
   }
 }
 
@@ -1888,14 +1888,12 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      /* catch fatal errors that may have occured in the init function */
-      if (dbin->typefind == NULL || dbin->fakesink == NULL) {
-        GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL), (NULL));
-        return GST_STATE_CHANGE_FAILURE;
-      }
+      if (dbin->typefind == NULL)
+        goto missing_typefind;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
-      add_fakesink (dbin);
+      if (!add_fakesink (dbin))
+        goto missing_fakesink;
       break;
     }
     default:
@@ -1907,6 +1905,22 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
   /* FIXME : put some cleanup functions here.. if needed */
 
   return ret;
+
+/* ERRORS */
+missing_typefind:
+  {
+    gst_element_post_message (element,
+        gst_missing_element_message_new (element, "typefind"));
+    GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL), ("no typefind!"));
+    return GST_STATE_CHANGE_FAILURE;
+  }
+missing_fakesink:
+  {
+    gst_element_post_message (element,
+        gst_missing_element_message_new (element, "fakesink"));
+    GST_ELEMENT_ERROR (dbin, CORE, MISSING_PLUGIN, (NULL), ("no fakesink!"));
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
 
 static gboolean
