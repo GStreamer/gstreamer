@@ -627,6 +627,31 @@ gst_ffmpegmux_get_id_caps (enum CodecID * id_list)
   return caps;
 }
 
+/* set a list of integer values on the caps, e.g. for sample rates */
+static void
+gst_ffmpeg_mux_simple_caps_set_int_list (GstCaps * caps, const gchar * field,
+    guint num, const gint * values)
+{
+  GValue list = { 0, };
+  GValue val = { 0, };
+  gint i;
+
+  g_return_if_fail (GST_CAPS_IS_SIMPLE (caps));
+
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&val, G_TYPE_INT);
+
+  for (i = 0; i < num; ++i) {
+    g_value_set_int (&val, values[i]);
+    gst_value_list_append_value (&list, &val);
+  }
+
+  gst_structure_set_value (gst_caps_get_structure (caps, 0), field, &list);
+
+  g_value_unset (&val);
+  g_value_unset (&list);
+}
+
 gboolean
 gst_ffmpegmux_register (GstPlugin * plugin)
 {
@@ -691,6 +716,13 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       if (videosinkcaps)
         gst_caps_unref (videosinkcaps);
       goto next;
+    }
+
+    /* fix up allowed caps for some muxers */
+    if (strcmp (in_plugin->name, "flv") == 0) {
+      const gint rates[] = { 44100, 22050, 11025 };
+
+      gst_ffmpeg_mux_simple_caps_set_int_list (audiosinkcaps, "rate", 3, rates);
     }
 
     /* create a cache for these properties */

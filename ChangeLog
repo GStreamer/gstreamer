@@ -1,5 +1,13 @@
 2007-02-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_register):
+	  ffmux_flv only accepts mpeg audio with a sample rate of 44100, 22050
+	  or 11025. Fix up the caps in the sink pad template accordingly, so
+	  that encoding piplines at least have a chance to automatically
+	  negotiate to one of the allowed rates.
+
+2007-02-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_request_new_pad),
 	(gst_ffmpegmux_setcaps), (gst_ffmpegmux_collected):
 	  Only set the mux->opened flag after we've successfully written the
