@@ -119,6 +119,55 @@ GST_START_TEST (test_2_elements)
 
 GST_END_TEST;
 
+GST_START_TEST (test_tee)
+{
+  gchar *s;
+
+  s = "fakesrc can-activate-push=true ! tee ! fakesink can-activate-push=true";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN);
+
+  s = "fakesrc can-activate-push=true num-buffers=10 ! tee ! fakesink can-activate-push=true";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_EOS);
+
+  s = "fakesrc can-activate-push=false can-activate-pull=true ! tee ! fakesink can-activate-pull=true";
+  ASSERT_CRITICAL (run_pipeline (setup_pipeline (s), s,
+          GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED,
+          GST_MESSAGE_UNKNOWN));
+
+  s = "fakesrc can-activate-push=false can-activate-pull=true "
+      "! tee pull-mode=single ! fakesink can-activate-pull=true";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN);
+
+  s = "fakesrc can-activate-push=false can-activate-pull=true num-buffers=10 "
+      "! tee pull-mode=single ! fakesink can-activate-pull=true";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_EOS);
+
+  s = "fakesrc can-activate-push=false can-activate-pull=true "
+      "! tee name=t pull-mode=single ! fakesink can-activate-pull=true "
+      "t. ! queue ! fakesink can-activate-pull=true can-activate-push=false";
+  ASSERT_CRITICAL (run_pipeline (setup_pipeline (s), s,
+          GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED,
+          GST_MESSAGE_UNKNOWN));
+
+  s = "fakesrc can-activate-push=false can-activate-pull=true "
+      "! tee name=t pull-mode=single ! fakesink can-activate-pull=true "
+      "t. ! queue ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_UNKNOWN);
+
+  s = "fakesrc can-activate-push=false can-activate-pull=true num-buffers=10 "
+      "! tee name=t pull-mode=single ! fakesink can-activate-pull=true "
+      "t. ! queue ! fakesink";
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED, GST_MESSAGE_EOS);
+}
+
+GST_END_TEST;
+
 static void
 got_handoff (GstElement * sink, GstBuffer * buf, GstPad * pad, gpointer unused)
 {
@@ -217,6 +266,7 @@ simple_launch_lines_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_2_elements);
+  tcase_add_test (tc_chain, test_tee);
   tcase_add_test (tc_chain, test_stop_from_app);
   return s;
 }

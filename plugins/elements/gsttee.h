@@ -44,6 +44,19 @@ typedef struct _GstTee 		GstTee;
 typedef struct _GstTeeClass 	GstTeeClass;
 
 /**
+ * GstTeePullMode:
+ * @GST_TEE_PULL_MODE_NEVER: Never activate in pull mode.
+ * @GST_TEE_PULL_MODE_SINGLE: Only one src pad can be active in pull mode.
+ *
+ * The different ways that tee can behave in pull mode. @TEE_PULL_MODE_NEVER
+ * disables pull mode.
+ */
+typedef enum {
+  GST_TEE_PULL_MODE_NEVER,
+  GST_TEE_PULL_MODE_SINGLE,
+} GstTeePullMode;
+
+/**
  * GstTee:
  *
  * Opaque #GstTee data structure.
@@ -63,6 +76,8 @@ struct _GstTee {
 
   guint64         offset;
   GstActivateMode sink_mode;
+  GstTeePullMode  pull_mode;
+  GstPad         *pull_pad;
 };
 
 struct _GstTeeClass {

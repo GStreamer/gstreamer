@@ -1,5 +1,13 @@
 2007-02-09  Andy Wingo  <wingo@pobox.com>
 
+	* tests/check/pipelines/simple-launch-lines.c (test_tee): Add
+	tests for push and pull tee behavior.
+
+	* plugins/elements/gsttee.h: 
+	* plugins/elements/gsttee.c: Describe has-sink-loop better, and
+	mark as deprecated as well as unimplemented. It was a crack idea.
+	Add support for tee operating in pull mode, off by default.
+
 	* gst/gstregistryxml.c (load_feature, load_plugin): Drop some
 	normal-case logs down to LOG, raise errors to WARNING.
 	(gst_registry_xml_read_cache): Don't log before calling a function
