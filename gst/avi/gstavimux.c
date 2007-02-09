@@ -1035,7 +1035,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     highmark += 24;
   }
 
-  GST_WRITE_UINT32_LE (hdrl_size, buffdata - hdrl_size - 4);
+  GST_WRITE_UINT32_LE (hdrl_size, (guint32) (buffdata - hdrl_size) - 4);
 
   /* tags */
   if (tags) {
@@ -1070,7 +1070,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
 
   /* finally we can fill in the RIFF size */
   /* note that riff only counts the first avi chunk */
-  GST_WRITE_UINT32_LE (riff_size, (buffdata - riff_size - 4)    /* header and movi tags */
+  GST_WRITE_UINT32_LE (riff_size, (guint32) (buffdata - riff_size - 4)  /* header and movi tags */
       +avimux->idx_size + avimux->data_size - 4);       /* movi data and index */
 
   {                             /* only the part that is filled in actually makes up the header
