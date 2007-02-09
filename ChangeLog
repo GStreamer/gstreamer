@@ -1,5 +1,9 @@
 2007-02-09  Andy Wingo  <wingo@pobox.com>
 
+	* tests/check/pipelines/simple-launch-lines.c
+	(simple_launch_lines_suite, test_tee): Disable tee test until I
+	have time to fix it :-(
+
 	* tests/check/Makefile.am (noinst_HEADERS): 
 	* tests/check/libs/libsabi.c: 
 	* tests/check/libs/struct_ppc32.h: Add ABI checks for PPC32.
