@@ -2130,7 +2130,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
     /* name */
     if (!gst_ffmpeg_get_codecid_longname (in_plugin->id)) {
-      g_warning ("Add decoder %s (%d) please", in_plugin->name, in_plugin->id);
+      GST_INFO ("Add decoder %s (%d) please", in_plugin->name, in_plugin->id);
       goto next;
     }
 
