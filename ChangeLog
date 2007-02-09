@@ -4,7 +4,7 @@
 	(gst_decode_bin_change_state):
 	* gst/playback/gstdecodebin2.c: (add_fakesink),
 	(gst_decode_bin_change_state):
-	  Don't error out if there is no fakesink in the READY to NULL state
+	  Don't error out if there is no fakesink in the NULL to READY state
 	  change, since when decodebin is re-used, we're only adding the
 	  fakesink element in READY to PAUSED.
 
