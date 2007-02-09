@@ -39,6 +39,10 @@
 #include "struct_i386.h"
 #define HAVE_ABI_SIZES TRUE
 #else
+#ifdef HAVE_CPU_PPC
+#include "struct_ppc32.h"
+#define HAVE_ABI_SIZES TRUE
+#else
 #ifdef HAVE_CPU_PPC64
 #include "struct_ppc64.h"
 #define HAVE_ABI_SIZES TRUE
@@ -54,6 +58,7 @@
 /* in case someone wants to generate a new arch */
 #include "struct_i386.h"
 #define HAVE_ABI_SIZES FALSE
+#endif
 #endif
 #endif
 #endif
