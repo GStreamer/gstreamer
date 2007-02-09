@@ -59,9 +59,9 @@ struct _GstFFMpegMux
 
   gint videopads, audiopads;
 
-  /*< private >*/
+  /*< private > */
   /* event_function is the collectpads default eventfunction */
-  GstPadEventFunction	event_function;
+  GstPadEventFunction event_function;
 };
 
 typedef struct _GstFFMpegMuxClassParams
@@ -107,13 +107,15 @@ static GHashTable *global_plugins;
 /* A number of functon prototypes are given so we can refer to them later. */
 static void gst_ffmpegmux_class_init (GstFFMpegMuxClass * klass);
 static void gst_ffmpegmux_base_init (gpointer g_class);
-static void gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux, GstFFMpegMuxClass * g_class);
+static void gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux,
+    GstFFMpegMuxClass * g_class);
 static void gst_ffmpegmux_finalize (GObject * object);
 
 static gboolean gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps);
 static GstPad *gst_ffmpegmux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
-static GstFlowReturn gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data);
+static GstFlowReturn gst_ffmpegmux_collected (GstCollectPads * pads,
+    gpointer user_data);
 
 static gboolean gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event);
 
@@ -265,20 +267,22 @@ gst_ffmpegmux_request_new_pad (GstElement * element,
   /* create pad */
   pad = gst_pad_new_from_template (templ, padname);
   collect_pad = (GstFFMpegMuxPad *)
-      gst_collect_pads_add_pad (ffmpegmux->collect, pad, sizeof (GstFFMpegMuxPad));
+      gst_collect_pads_add_pad (ffmpegmux->collect, pad,
+      sizeof (GstFFMpegMuxPad));
   collect_pad->padnum = ffmpegmux->context->nb_streams;
 
   /* small hack to put our own event pad function and chain up to collect pad */
-  ffmpegmux->event_function = GST_PAD_EVENTFUNC(pad);
-  gst_pad_set_event_function (pad, gst_ffmpegmux_sink_event);
+  ffmpegmux->event_function = GST_PAD_EVENTFUNC (pad);
+  gst_pad_set_event_function (pad,
+      GST_DEBUG_FUNCPTR (gst_ffmpegmux_sink_event));
 
-  gst_pad_set_setcaps_function (pad, gst_ffmpegmux_setcaps);
+  gst_pad_set_setcaps_function (pad, GST_DEBUG_FUNCPTR (gst_ffmpegmux_setcaps));
   gst_element_add_pad (element, pad);
 
   /* AVStream needs to be created */
   st = av_new_stream (ffmpegmux->context, collect_pad->padnum);
   st->codec->codec_type = type;
-  st->codec->codec_id = CODEC_ID_NONE;   /* this is a check afterwards */
+  st->codec->codec_id = CODEC_ID_NONE;  /* this is a check afterwards */
   st->stream_copy = 1;          /* we're not the actual encoder */
   st->codec->bit_rate = bitrate;
   st->codec->frame_size = framesize;
@@ -315,9 +319,11 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
   /* for the format-specific guesses, we'll go to
    * our famous codec mapper */
   if (gst_ffmpeg_caps_to_codecid (caps, st->codec) != CODEC_ID_NONE) {
+    GST_LOG_OBJECT (pad, "accepted caps %" GST_PTR_FORMAT, caps);
     return TRUE;
   }
 
+  GST_LOG_OBJECT (pad, "rejecting caps %" GST_PTR_FORMAT, caps);
   return FALSE;
 }
 
@@ -325,21 +331,21 @@ gst_ffmpegmux_setcaps (GstPad * pad, GstCaps * caps)
 static gboolean
 gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstFFMpegMux * ffmpegmux = (GstFFMpegMux*) gst_pad_get_parent(pad);
+  GstFFMpegMux *ffmpegmux = (GstFFMpegMux *) gst_pad_get_parent (pad);
   gboolean res = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
-  case GST_EVENT_TAG: {
-    GstTagList * taglist = NULL;
-    
-    gst_event_parse_tag (event, &taglist);
-    ffmpegmux->tags = gst_tag_list_merge(ffmpegmux->tags, taglist, 
-					 GST_TAG_MERGE_PREPEND);
-    
-    break;
-  }
-  default:
-    break;
+    case GST_EVENT_TAG:{
+      GstTagList *taglist = NULL;
+
+      gst_event_parse_tag (event, &taglist);
+      ffmpegmux->tags = gst_tag_list_merge (ffmpegmux->tags, taglist,
+          GST_TAG_MERGE_PREPEND);
+
+      break;
+    }
+    default:
+      break;
   }
 
   /* chaining up to collectpads default event function */
@@ -379,31 +385,31 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       }
       /* set framerate for audio */
       if (st->codec->codec_type == CODEC_TYPE_AUDIO) {
-	switch (st->codec->codec_id) {
-	case CODEC_ID_PCM_S16LE:
-	case CODEC_ID_PCM_S16BE:
-	case CODEC_ID_PCM_U16LE:
-	case CODEC_ID_PCM_U16BE:
-	case CODEC_ID_PCM_S8:
-	case CODEC_ID_PCM_U8:
-	  st->codec->frame_size = 1;
-	  break;
-	default:
-	  {
-	    GstBuffer *buffer;
-	    
-	    /* FIXME : This doesn't work for RAW AUDIO...
-	    * in fact I'm wondering if it even works for any kind of audio... */
-	    buffer = gst_collect_pads_peek (ffmpegmux->collect,
-					    (GstCollectData *)collect_pad);
-	    if (buffer) {
-	      st->codec->frame_size =
-		st->codec->sample_rate *
-		GST_BUFFER_DURATION (buffer) / GST_SECOND;
-	      gst_buffer_unref (buffer);
-	    }
-	  }
-	}
+        switch (st->codec->codec_id) {
+          case CODEC_ID_PCM_S16LE:
+          case CODEC_ID_PCM_S16BE:
+          case CODEC_ID_PCM_U16LE:
+          case CODEC_ID_PCM_U16BE:
+          case CODEC_ID_PCM_S8:
+          case CODEC_ID_PCM_U8:
+            st->codec->frame_size = 1;
+            break;
+          default:
+          {
+            GstBuffer *buffer;
+
+            /* FIXME : This doesn't work for RAW AUDIO...
+             * in fact I'm wondering if it even works for any kind of audio... */
+            buffer = gst_collect_pads_peek (ffmpegmux->collect,
+                (GstCollectData *) collect_pad);
+            if (buffer) {
+              st->codec->frame_size =
+                  st->codec->sample_rate *
+                  GST_BUFFER_DURATION (buffer) / GST_SECOND;
+              gst_buffer_unref (buffer);
+            }
+          }
+        }
       }
     }
 
@@ -415,7 +421,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       gchar *s;
 
       tags = gst_tag_list_merge (iface_tags, ffmpegmux->tags,
-				 GST_TAG_MERGE_APPEND);
+          GST_TAG_MERGE_APPEND);
 
       /* get the interesting ones */
       if (gst_tag_list_get_string (tags, GST_TAG_TITLE, &s)) {
@@ -449,8 +455,8 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     }
 
     /* set the streamheader flag for gstffmpegprotocol if codec supports it */
-    if (!strcmp (ffmpegmux->context->oformat->name, "flv") ) {
-            open_flags |= GST_FFMPEG_URL_STREAMHEADER;
+    if (!strcmp (ffmpegmux->context->oformat->name, "flv")) {
+      open_flags |= GST_FFMPEG_URL_STREAMHEADER;
     }
 
     if (url_fopen (&ffmpegmux->context->pb,
@@ -466,15 +472,15 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       return GST_FLOW_ERROR;
     }
 
-    /* we're now opened */
-    ffmpegmux->opened = TRUE;
-
     /* now open the mux format */
     if (av_write_header (ffmpegmux->context) < 0) {
       GST_ELEMENT_ERROR (ffmpegmux, LIBRARY, SETTINGS, (NULL),
           ("Failed to write file header - check codec settings"));
       return GST_FLOW_ERROR;
     }
+
+    /* we're now opened */
+    ffmpegmux->opened = TRUE;
 
     /* flush the header so it will be used as streamheader */
     put_flush_packet (&ffmpegmux->context->pb);
@@ -488,7 +494,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       collected = g_slist_next (collected)) {
     GstFFMpegMuxPad *collect_pad = (GstFFMpegMuxPad *) collected->data;
     GstBuffer *buffer = gst_collect_pads_peek (ffmpegmux->collect,
-                            (GstCollectData *)collect_pad);
+        (GstCollectData *) collect_pad);
 
     /* if there's no buffer, just continue */
     if (buffer == NULL) {
@@ -508,7 +514,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       best_pad = collect_pad;
     }
 
-next_pad:
+  next_pad:
     gst_buffer_unref (buffer);
 
     /* Mux buffers with invalid timestamp first */
@@ -524,7 +530,7 @@ next_pad:
 
     /* push out current buffer */
     buf = gst_collect_pads_pop (ffmpegmux->collect,
-                            (GstCollectData *)best_pad);
+        (GstCollectData *) best_pad);
 
     ffmpegmux->context->streams[best_pad->padnum]->codec->frame_number++;
 
@@ -541,7 +547,9 @@ next_pad:
       pkt.flags |= PKT_FLAG_KEY;
 
     if (GST_BUFFER_DURATION_IS_VALID (buf))
-      pkt.duration = gst_util_uint64_scale_int(GST_BUFFER_DURATION (buf), AV_TIME_BASE, GST_SECOND);
+      pkt.duration =
+          gst_util_uint64_scale_int (GST_BUFFER_DURATION (buf), AV_TIME_BASE,
+          GST_SECOND);
     else
       pkt.duration = 0;
     av_write_frame (ffmpegmux->context, &pkt);
@@ -573,9 +581,9 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
-  case GST_STATE_CHANGE_PAUSED_TO_READY:
-    gst_collect_pads_stop (ffmpegmux->collect);
-    break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_collect_pads_stop (ffmpegmux->collect);
+      break;
     default:
       break;
   }
@@ -634,7 +642,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     (GInstanceInitFunc) gst_ffmpegmux_init,
   };
   static const GInterfaceInfo tag_setter_info = {
-      NULL, NULL, NULL
+    NULL, NULL, NULL
   };
   GType type;
   AVOutputFormat *in_plugin;
@@ -656,7 +664,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       goto next;
     }
     if (!gst_ffmpeg_formatid_get_codecids (in_plugin->name,
-             &video_ids, &audio_ids)) {
+            &video_ids, &audio_ids)) {
       gst_caps_unref (srccaps);
       goto next;
     }
@@ -697,8 +705,7 @@ gst_ffmpegmux_register (GstPlugin * plugin)
 
     /* create the type now */
     type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-    g_type_add_interface_static (type, GST_TYPE_TAG_SETTER,
-        &tag_setter_info);
+    g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
     if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
       g_free (type_name);
       gst_caps_unref (srccaps);

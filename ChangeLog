@@ -1,3 +1,15 @@
+2007-02-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_request_new_pad),
+	(gst_ffmpegmux_setcaps), (gst_ffmpegmux_collected):
+	  Only set the mux->opened flag after we've successfully written the
+	  header. This way we don't crash in mysterious ways if we can't write
+	  the header for some reason (e.g. due to having accepted caps the
+	  format doesn't really allow), then return a GST_FLOW_ERROR, and
+	  then still receive another buffer afterwards despite having previously
+	  returned FLOW_ERROR (#403168).
+	  Also some minor logging improvements.
+
 2007-01-26  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Mark Nauwelaerts <manauw@skynet.be>
