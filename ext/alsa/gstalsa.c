@@ -451,17 +451,7 @@ gst_alsa_find_device_name (GstObject * obj, const gchar * device,
 {
   gchar *ret = NULL;
 
-  if (handle != NULL) {
-    snd_pcm_info_t *info;
-
-    GST_LOG_OBJECT (obj, "Trying to get device name from open handle");
-    snd_pcm_info_malloc (&info);
-    snd_pcm_info (handle, info);
-    ret = g_strdup (snd_pcm_info_get_name (info));
-    snd_pcm_info_free (info);
-  }
-
-  if (ret == NULL && device != NULL) {
+  if (device != NULL) {
     gchar *dev, *comma;
     gint devnum;
 
@@ -475,6 +465,16 @@ gst_alsa_find_device_name (GstObject * obj, const gchar * device,
       ret = gst_alsa_find_device_name_no_handle (obj, dev, devnum, stream);
     }
     g_free (dev);
+  }
+
+  if (ret == NULL && handle != NULL) {
+    snd_pcm_info_t *info;
+
+    GST_LOG_OBJECT (obj, "Trying to get device name from open handle");
+    snd_pcm_info_malloc (&info);
+    snd_pcm_info (handle, info);
+    ret = g_strdup (snd_pcm_info_get_name (info));
+    snd_pcm_info_free (info);
   }
 
   GST_LOG_OBJECT (obj, "Device name for device '%s': %s",
