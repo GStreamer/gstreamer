@@ -1,3 +1,18 @@
+2007-02-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/synaesthesia/Makefile.am:
+	* gst/synaesthesia/gstsynaesthesia.c:
+	(gst_synaesthesia_class_init), (gst_synaesthesia_init),
+	(gst_synaesthesia_sink_setcaps), (gst_synaesthesia_src_getcaps),
+	(gst_synaesthesia_chain), (plugin_init):
+	* gst/synaesthesia/synaescope.c:
+	* gst/synaesthesia/synaescope.h:
+	  Added docs (not yet added to gst-plugins-ugl/docs/plugins as plugin is not
+	  built by default). Fixed Makefile.am. Fixed license headers (its GPL as it
+	  is derived from GPL code). Fixed GST_SYNAESTHESIA_CLASS macro. Added
+	  GST_DEBUG_FUNCPTR. Reflowed _setcaps. Updated pad setup in _init. Fix
+	  possible leak in _chain. (#356882)
+
 2007-02-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/asfheaders.c:

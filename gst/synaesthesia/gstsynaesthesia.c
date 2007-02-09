@@ -1,20 +1,37 @@
 /* gstsynaesthesia.c: implementation of synaesthesia drawing element
  * Copyright (C) <2001> Richard Boulton <richard@tartarus.org>
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+/**
+ * SECTION:element-synaesthesia
+ * @see_also: goom
+ *
+ * <refsect2>
+ * <para>
+ * Synaesthesia is an audio visualisation element. It creates glitter and
+ * pulsating fog based on the incomming audio signal.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v audiotestsrc ! audioconvert ! synaesthesia ! ximagesink
+ * gst-launch -v audiotestsrc ! audioconvert ! synaesthesia ! ffmpegcolorspace ! xvimagesink
+ * </programlisting>
+ * </para>
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -32,10 +49,10 @@
 #define SYNAES_WIDTH 320
 #define SYNAES_HEIGHT 200
 
-#define GST_TYPE_SYNAESTHESIA (gst_synaesthesia_get_type())
-#define GST_SYNAESTHESIA(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SYNAESTHESIA,GstSynaesthesia))
-#define GST_SYNAESTHESIA_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SYNAESTHESIA,GstSynaesthesia))
-#define GST_IS_SYNAESTHESIA(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SYNAESTHESIA))
+#define GST_TYPE_SYNAESTHESIA            (gst_synaesthesia_get_type())
+#define GST_SYNAESTHESIA(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_SYNAESTHESIA,GstSynaesthesia))
+#define GST_SYNAESTHESIA_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_SYNAESTHESIA,GstSynaesthesiaClass))
+#define GST_IS_SYNAESTHESIA(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_SYNAESTHESIA))
 #define GST_IS_SYNAESTHESIA_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_SYNAESTHESIA))
 
 typedef struct _GstSynaesthesia GstSynaesthesia;
@@ -169,10 +186,11 @@ gst_synaesthesia_class_init (GstSynaesthesiaClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gstelement_class->change_state = gst_synaesthesia_change_state;
-
   gobject_class->dispose = gst_synaesthesia_dispose;
   gobject_class->finalize = gst_synaesthesia_finalize;
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_synaesthesia_change_state);
 }
 
 static void
@@ -180,22 +198,20 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
 {
   /* create the sink and src pads */
   synaesthesia->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_synaesthesia_sink_template), "sink");
-  synaesthesia->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_synaesthesia_src_template), "src");
-  gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->sinkpad);
-  gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->srcpad);
-
+      gst_pad_new_from_static_template (&gst_synaesthesia_sink_template,
+      "sink");
   gst_pad_set_chain_function (synaesthesia->sinkpad, gst_synaesthesia_chain);
   gst_pad_set_setcaps_function (synaesthesia->sinkpad,
       gst_synaesthesia_sink_setcaps);
+  gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->sinkpad);
 
+  synaesthesia->srcpad =
+      gst_pad_new_from_static_template (&gst_synaesthesia_src_template, "src");
   gst_pad_set_getcaps_function (synaesthesia->srcpad,
       gst_synaesthesia_src_getcaps);
   gst_pad_set_setcaps_function (synaesthesia->srcpad,
       gst_synaesthesia_src_setcaps);
+  gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->srcpad);
 
   synaesthesia->adapter = gst_adapter_new ();
 
@@ -247,21 +263,33 @@ gst_synaesthesia_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   gint channels;
   gint rate;
+  gboolean res = TRUE;
 
   synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (structure, "channels", &channels) ||
-      !gst_structure_get_int (structure, "rate", &rate)) {
-    return GST_PAD_LINK_REFUSED;
-  }
+      !gst_structure_get_int (structure, "rate", &rate))
+    goto missing_caps_details;
 
   if (synaesthesia->channels != 2)
-    return GST_PAD_LINK_REFUSED;
+    goto wrong_channels;
 
   synaesthesia->sample_rate = rate;
 
-  return TRUE;
+done:
+  gst_object_unref (synaesthesia);
+  return res;
+
+  /* Errors */
+missing_caps_details:
+  GST_WARNING ("missing channels or rate in the caps");
+  res = FALSE;
+  goto done;
+wrong_channels:
+  GST_WARNING ("channesl must be 2, but are %d", channels);
+  res = FALSE;
+  goto done;
 }
 
 static GstCaps *
@@ -283,8 +311,6 @@ gst_synaesthesia_src_getcaps (GstPad * pad)
         "width", G_TYPE_INT, synaesthesia->width,
         "height", G_TYPE_INT, synaesthesia->height,
         "framerate", GST_TYPE_FRACTION, (gint) synaesthesia->fps, 1, NULL);
-    //gst_structure_set (structure, "width", G_TYPE_INT, SYNAES_WIDTH, "height",
-    //    G_TYPE_INT, SYNAES_HEIGHT, NULL);
   }
 
   gst_object_unref (synaesthesia);
@@ -391,7 +417,7 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
 
     /* no buffer allocated, we don't care why. */
     if (ret != GST_FLOW_OK)
-      return ret;
+      goto done;
 
     GST_BUFFER_TIMESTAMP (outbuf) =
         synaesthesia->audio_basetime +
@@ -409,6 +435,7 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
         synaesthesia->channels * sizeof (gint16));
   }
 
+done:
   gst_object_unref (synaesthesia);
 
   return ret;
