@@ -412,30 +412,34 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
 
     ret =
         gst_pad_alloc_buffer_and_set_caps (synaesthesia->srcpad,
-        GST_BUFFER_OFFSET_NONE, synaesthesia->width * synaesthesia->height * 4,
+        GST_BUFFER_OFFSET_NONE,
+        synaesthesia->width * synaesthesia->height * 4,
         GST_PAD_CAPS (synaesthesia->srcpad), &outbuf);
 
     /* no buffer allocated, we don't care why. */
     if (ret != GST_FLOW_OK)
-      goto done;
+      break;
 
     GST_BUFFER_TIMESTAMP (outbuf) =
         synaesthesia->audio_basetime +
         (GST_SECOND * synaesthesia->samples_consumed /
         synaesthesia->sample_rate);
     GST_BUFFER_DURATION (outbuf) = frame_duration;
-    GST_BUFFER_SIZE (outbuf) = synaesthesia->width * synaesthesia->height * 4;
 
     out_frame = (guchar *) synaesthesia_update (synaesthesia->datain);
     memcpy (GST_BUFFER_DATA (outbuf), out_frame, GST_BUFFER_SIZE (outbuf));
-    gst_pad_push (synaesthesia->srcpad, outbuf);
+
+    ret = gst_pad_push (synaesthesia->srcpad, outbuf);
+    outbuf = NULL;
+
+    if (ret != GST_FLOW_OK)
+      break;
 
     synaesthesia->samples_consumed += samples_per_frame;
     gst_adapter_flush (synaesthesia->adapter, samples_per_frame *
         synaesthesia->channels * sizeof (gint16));
   }
 
-done:
   gst_object_unref (synaesthesia);
 
   return ret;
