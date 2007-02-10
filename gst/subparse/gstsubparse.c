@@ -547,6 +547,42 @@ subrip_unescape_formatting (gchar * txt)
   }
 }
 
+
+static gboolean
+subrip_remove_unhandled_tag (gchar * start, gchar * stop)
+{
+  gchar *tag, saved;
+
+  tag = start + strlen ("&lt;");
+  if (*tag == '/')
+    ++tag;
+
+  if (g_ascii_tolower (*tag) < 'a' || g_ascii_tolower (*tag) > 'z')
+    return FALSE;
+
+  saved = *stop;
+  *stop = '\0';
+  GST_LOG ("removing unhandled tag '%s'", start);
+  *stop = saved;
+  g_memmove (start, stop, strlen (stop) + 1);
+  return TRUE;
+}
+
+/* remove tags we haven't explicitly allowed earlier on, like font tags
+ * for example */
+static void
+subrip_remove_unhandled_tags (gchar * txt)
+{
+  gchar *pos, *gt;
+
+  for (pos = txt; pos != NULL && *pos != '\0'; ++pos) {
+    if (strncmp (pos, "&lt;", 4) == 0 && (gt = strstr (pos + 4, "&gt;"))) {
+      if (subrip_remove_unhandled_tag (pos, gt + strlen ("&gt;")))
+        --pos;
+    }
+  }
+}
+
 /* we only allow <i>, <u> and <b>, so let's take a simple approach. This code
  * assumes the input has been escaped and subrip_unescape_formatting() has then
  * been run over the input! This function adds missing closing markup tags and
@@ -670,6 +706,7 @@ parse_subrip (ParserState * state, const gchar * line)
         g_string_truncate (state->buf, 0);
         state->state = 0;
         subrip_unescape_formatting (ret);
+        subrip_remove_unhandled_tags (ret);
         strip_trailing_newlines (ret);
         subrip_fix_up_markup (&ret);
         return ret;

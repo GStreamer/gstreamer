@@ -100,7 +100,10 @@ static SubParseInputChunk srt_input[] = {
         "26\n00:04:00,000 --> 00:05:00,000\n<i>Rock & Roll</i>\n\n",
       240 * GST_SECOND, 300 * GST_SECOND, "<i>Rock &amp; Roll</i>"}, {
         "27\n00:06:00,000 --> 00:08:00,000\nRock & Roll\n\n",
-      360 * GST_SECOND, 480 * GST_SECOND, "Rock &amp; Roll"}
+      360 * GST_SECOND, 480 * GST_SECOND, "Rock &amp; Roll"}, {
+        "28\n00:10:00,000 --> 00:11:00,000\n"
+        "<font \"#0000FF\"><joj>This is </xxx>in blue but <5</font>\n\n",
+      600 * GST_SECOND, 660 * GST_SECOND, "This is in blue but &lt;5"}
 };
 
 static void
