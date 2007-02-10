@@ -4,6 +4,9 @@ EXPORTS
 	gst_dp_event_from_packet
 	gst_dp_header_payload_length
 	gst_dp_header_payload_type
+	gst_dp_init
+	gst_dp_packetizer_new
+	gst_dp_packetizer_free
 	gst_dp_validate_header
 	gst_dp_validate_packet
 	gst_dp_validate_payload

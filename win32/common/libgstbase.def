@@ -3,6 +3,7 @@ EXPORTS
 	gst_adapter_available
 	gst_adapter_available_fast
 	gst_adapter_clear
+	gst_adapter_copy
 	gst_adapter_flush
 	gst_adapter_get_type
 	gst_adapter_peek
@@ -37,6 +38,7 @@ EXPORTS
 	gst_data_queue_push
 	gst_data_queue_set_flushing
 	gst_collect_pads_add_pad
+	gst_collect_pads_add_pad_full
 	gst_collect_pads_available
 	gst_collect_pads_collect
 	gst_collect_pads_collect_range

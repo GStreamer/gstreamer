@@ -1074,7 +1074,9 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
      * "location" with uri + 16 because it provides unescaping */
     location = gst_uri_get_location (tmp);
     g_free (tmp);
-  } else if (!g_str_has_prefix (uri, "file:///")) {
+  } else if (!g_str_has_prefix (uri, "file://")) {
+    return FALSE;
+  } else if (!g_path_is_absolute (uri + strlen ("file://"))) {
     return FALSE;
   } else {
     location = gst_uri_get_location (uri);

@@ -1,3 +1,18 @@
+2007-02-10  Sébastien Moutte  <sebastien@moutte.net>
+
+	* gst/gstbin.h:(gst_bin_get_by_interface),
+	(gst_bin_iterate_all_by_interface):
+	Replace interface parameter name by iface as interface is 
+	a reserved keyword in Visual Studio for C++ projects so it removes
+	a build error for application developpers using VS.
+	* plugins/elements/gstfilesrc.c:(gst_file_src_uri_set_uri):
+	Fix a bug on Windows in uri format check. Now the prefix checked
+	is file:// and next we check if the path after file:// is absolute.
+	* win32/common/libgstbase.def:
+	* win32/common/libgstdataprotocol.def:
+	* win32/common/libgstgstreamer.def:
+	Add new exported functions.
+
 2007-02-09  Andy Wingo  <wingo@pobox.com>
 
 	* tests/check/pipelines/simple-launch-lines.c

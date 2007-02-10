@@ -161,7 +161,7 @@ gboolean	gst_bin_remove			(GstBin *bin, GstElement *element);
 /* retrieve a single child */
 GstElement*	gst_bin_get_by_name		 (GstBin *bin, const gchar *name);
 GstElement*	gst_bin_get_by_name_recurse_up	 (GstBin *bin, const gchar *name);
-GstElement*	gst_bin_get_by_interface	 (GstBin *bin, GType interface);
+GstElement*	gst_bin_get_by_interface	 (GstBin *bin, GType iface);
 
 /* retrieve multiple children */
 GstIterator*    gst_bin_iterate_elements	 (GstBin *bin);
@@ -170,7 +170,7 @@ GstIterator*    gst_bin_iterate_recurse		 (GstBin *bin);
 
 GstIterator*	gst_bin_iterate_sinks		 (GstBin *bin);
 GstIterator*	gst_bin_iterate_sources		 (GstBin *bin);
-GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType interface);
+GstIterator*	gst_bin_iterate_all_by_interface (GstBin *bin, GType iface);
 
 G_END_DECLS
 

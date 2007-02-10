@@ -178,6 +178,7 @@ EXPORTS
 	gst_element_factory_get_num_pad_templates
 	gst_element_factory_get_static_pad_templates
 	gst_element_factory_get_type
+	gst_element_factory_get_uri_protocols
 	gst_element_factory_get_uri_type
 	gst_element_factory_make
 	gst_element_flags_get_type
@@ -311,6 +312,7 @@ EXPORTS
 	gst_int_range_get_type
 	gst_is_tag_list
 	gst_iterator_fold
+	gst_iterator_foreach
 	gst_iterator_free
 	gst_iterator_item_get_type
 	gst_iterator_next
@@ -622,6 +624,7 @@ EXPORTS
 	gst_structure_nth_field_name
 	gst_structure_remove_all_fields
 	gst_structure_remove_field
+	gst_structure_remove_fields
 	gst_structure_set
 	gst_structure_set_name
 	gst_structure_set_valist
@@ -710,6 +713,7 @@ EXPORTS
 	gst_value_array_get_type
 	gst_value_array_get_value
 	gst_value_compare
+	gst_value_deserialize
 	gst_value_fraction_multiply
 	gst_value_get_caps
 	gst_value_get_double_range_max
@@ -738,6 +742,7 @@ EXPORTS
 	gst_value_set_fraction_range
 	gst_value_set_int_range
 	gst_value_set_mini_object
+	gst_value_take_mini_object
 	gst_version
 	gst_version_string
 	gst_xml_get_element
