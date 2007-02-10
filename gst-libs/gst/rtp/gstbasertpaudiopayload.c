@@ -341,7 +341,7 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
     ts_inc = (payload_len * frame_duration) / frame_size;
 
     ts_inc = ts_inc * GST_MSECOND;
-    basertpaudiopayload->base_ts += ts_inc;
+    basertpaudiopayload->base_ts += gst_gdouble_to_guint64 (ts_inc);
 
     available -= payload_len;
     data += payload_len;
@@ -437,7 +437,7 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
 
     basertpaudiopayload->base_ts +=
         /* payload_len (bytes) * nsecs/sec / datarate (bytes*sec) */
-        num / datarate * GST_SECOND;
+        gst_gdouble_to_guint64 (num / datarate * GST_SECOND);
     GST_DEBUG_OBJECT (basertpaudiopayload, "New ts is %" GST_TIME_FORMAT,
         GST_TIME_ARGS (basertpaudiopayload->base_ts));
 

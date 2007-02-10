@@ -255,3 +255,5 @@
 #ifndef __cplusplus
 #undef inline
 #endif
+
+#define GST_INSTALL_PLUGINS_HELPER "@GST_INSTALL_PLUGINS_HELPER@"

@@ -104,6 +104,10 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\bin
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE="..\..\gst-libs\gst\rtp\gstbasertpaudiopayload.c"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\gst-libs\gst\rtp\gstbasertpdepayload.c"
 # End Source File
 # Begin Source File
@@ -113,6 +117,10 @@ SOURCE="..\..\gst-libs\gst\rtp\gstbasertppayload.c"
 # Begin Source File
 
 SOURCE="..\..\gst-libs\gst\rtp\gstrtpbuffer.c"
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\libgstrtp.def
 # End Source File
 # End Group
 # Begin Group "Header Files"

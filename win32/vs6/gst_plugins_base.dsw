@@ -90,6 +90,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libgstcdda"=".\libgstcdda.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name libgsttag
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "libgstdecodebin"=".\libgstdecodebin.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -101,11 +116,26 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name grammar
     End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libgstutils
+    End Project Dependency
 }}}
 
 ###############################################################################
 
 Project: "libgstffmpegcolorspace"=".\libgstffmpegcolorspace.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstgdp"=".\libgstgdp.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -169,6 +199,9 @@ Package=<4>
 {{{
     Begin Project Dependency
     Project_Dep_Name grammar
+    End Project Dependency
+    Begin Project Dependency
+    Project_Dep_Name libgstutils
     End Project Dependency
 }}}
 
@@ -253,6 +286,18 @@ Package=<4>
 ###############################################################################
 
 Project: "libgsttypefindfunctions"=".\libgsttypefindfunctions.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstutils"=".\libgstutils.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

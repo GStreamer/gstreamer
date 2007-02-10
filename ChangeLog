@@ -1,3 +1,26 @@
+2007-02-10  Sébastien Moutte  <sebastien at moutte dot net>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:(gst_base_rtp_audio_payload_handle_frame_based_buffer):
+	  Use gst_gdouble_to_guint64 for conversions.
+	* win32/common/config.h.in:
+	  Add a define for GST_INSTALL_PLUGINS_HELPER
+	* win32/common/libgstaudio.def:
+	* win32/common/libgstcdda.def:
+	* win32/common/libgstnetbuffer.def:
+	* win32/common/libgstrtp.def:
+	* win32/common/libgutils.def:
+	  Add new exported functions.
+	* win32/vs6/gst_plugins_base.dsw:
+	* win32/vs6/libgstdecodebin.dsp:
+	* win32/vs6/libgstnetbuffer.dsp:
+	* win32/vs6/libgstplaybin.dsp:
+	* win32/vs6/libgstrtp.dsp:
+	* win32/vs6/libgstvorbis.dsp:
+	* win32/vs6/libgstcdda.dsp:
+	* win32/vs6/libgstgdp.dsp:
+	* win32/vs6/libgstutils.dsp:
+	  Update and add new project files.
+
 2007-02-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/subparse/gstsubparse.c: (subrip_remove_unhandled_tag),
