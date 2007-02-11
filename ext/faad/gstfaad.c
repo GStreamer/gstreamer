@@ -30,13 +30,17 @@
  * with types changed to match glib types, since those are defined for us.
  * However, upstream FAAD is distributed with a broken header file that defined
  * these wrongly (in a way which was broken on 64 bit systems).
+ *
  * Upstream CVS still has the bug, but has also renamed all the public symbols
- * for Better Corporate Branding (or whatever), so we're screwed there.
+ * for Better Corporate Branding (or whatever), so we need to take that
+ * (FAAD_IS_NEAAC) into account as well.
  *
  * We must call them using these definitions. Most distributions now have the
  * corrected header file (they distribute a patch along with the source), 
- * but not all, hence this Truly Evil Hack. This hack will need updating if
- * upstream ever releases something with the new API.
+ * but not all, hence this Truly Evil Hack.
+ *
+ * Note: The prototypes don't need to be defined conditionaly, as the cpp will
+ * do that for us.
  */
 #ifdef FAAD_IS_NEAAC
 #define NeAACDecInit NeAACDecInit_no_definition
