@@ -79,9 +79,9 @@ GST_PLUGINS_ALL="\
 	asfdemux \
 	dvdlpcmdec \
 	dvdsub \
-        iec958 \
+	iec958 \
 	mpegaudioparse \
-        mpegstream \
+	mpegstream \
 	realmedia \
 	synaesthesia \
 	"
@@ -103,13 +103,9 @@ AC_ARG_WITH(plugins,
     done],
     [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
 
-dnl disable synaesthesia plugin
-GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/synaesthesia//`
-
-AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl ext plug-ins; plug-ins that have external dependencies
-GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
+GST_CHECK_FEATURE(EXTERNAL, [building of plug-ins with external deps],,
   [HAVE_EXTERNAL=yes], enabled,
   [
     AC_MSG_NOTICE(building external plug-ins)
@@ -119,6 +115,18 @@ GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
     BUILD_EXTERNAL="no"
   ])
 AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
+
+dnl experimental plug-ins; stuff that hasn't had the dust settle yet
+GST_CHECK_FEATURE(EXPERIMENTAL, [building of experimental plug-ins],,
+[HAVE_EXPERIMENTAL=yes],disabled,
+[
+  AC_MSG_WARN(building experimental plug-ins)
+],[
+  AC_MSG_NOTICE(not building experimental plug-ins)
+  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/synaesthesia//`
+])
+
+AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl *** checks for platform ***
 
