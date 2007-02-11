@@ -1,3 +1,9 @@
+2007-02-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Fix faad detection to support also fadd with new symbol prefix.
+	  ChangeLog surgery.
+	  
 2007-02-08  Stefan Kost  <ensonic@users.sf.net>
 
 	Patch by: Wouter Paesen <wouter@blue-gate.be>
@@ -17,7 +23,7 @@
 	(gst_timidity_change_state), (gst_timidity_typefind),
 	(plugin_init):
 	* ext/timidity/gsttimidity.h:
-	  Add timitity midi render plugin (#403992)
+	  Add timidity midi render plugin (#403992)
 
 2007-02-07  Edward Hervey  <edward@fluendo.com>
 
