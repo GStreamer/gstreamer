@@ -93,12 +93,12 @@ enum
 };
 
 GST_BOILERPLATE_WITH_INTERFACE (GstSunAudioSrc, gst_sunaudiosrc,
-    GstAudioSrc, GST_TYPE_AUDIO_SRC, GstMixer, GST_TYPE_MIXER, gst_sunaudiosrc)
+    GstAudioSrc, GST_TYPE_AUDIO_SRC, GstMixer, GST_TYPE_MIXER, gst_sunaudiosrc);
 
-    GST_IMPLEMENT_SUNAUDIO_MIXER_CTRL_METHODS (GstSunAudioSrc, gst_sunaudiosrc)
+GST_IMPLEMENT_SUNAUDIO_MIXER_CTRL_METHODS (GstSunAudioSrc, gst_sunaudiosrc);
 
-     static GstStaticPadTemplate gst_sunaudiosrc_factory =
-         GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate gst_sunaudiosrc_factory =
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
@@ -108,7 +108,8 @@ GST_BOILERPLATE_WITH_INTERFACE (GstSunAudioSrc, gst_sunaudiosrc,
         "rate = (int) [ 5510, 48000 ], " "channels = (int) [ 1, 2 ]")
     );
 
-     static void gst_sunaudiosrc_dispose (GObject * object)
+static void
+gst_sunaudiosrc_dispose (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }

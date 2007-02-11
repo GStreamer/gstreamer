@@ -42,14 +42,15 @@ GST_ELEMENT_DETAILS ("Sun Audio Mixer",
     "Brian Cameron <brian.cameron@sun.com>");
 
 GST_BOILERPLATE_WITH_INTERFACE (GstSunAudioMixer, gst_sunaudiomixer,
-    GstElement, GST_TYPE_ELEMENT, GstMixer, GST_TYPE_MIXER, gst_sunaudiomixer)
+    GstElement, GST_TYPE_ELEMENT, GstMixer, GST_TYPE_MIXER, gst_sunaudiomixer);
 
-    GST_IMPLEMENT_SUNAUDIO_MIXER_CTRL_METHODS (GstSunAudioMixer, gst_sunaudiomixer)
+GST_IMPLEMENT_SUNAUDIO_MIXER_CTRL_METHODS (GstSunAudioMixer, gst_sunaudiomixer);
 
-     static GstStateChangeReturn gst_sunaudiomixer_change_state (GstElement *
+static GstStateChangeReturn gst_sunaudiomixer_change_state (GstElement *
     element, GstStateChange transition);
 
-     static void gst_sunaudiomixer_base_init (gpointer klass)
+static void
+gst_sunaudiomixer_base_init (gpointer klass)
 {
   gst_element_class_set_details (GST_ELEMENT_CLASS (klass),
       &gst_sunaudiomixer_details);

@@ -138,13 +138,8 @@ if test "x$HAVE_WINSOCK2_H" = "xyes"; then
   AC_SUBST(WIN32_LIBS)
 fi
 
-dnl disable monoscope plugin
-GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/monoscope//`
-
-AC_SUBST(GST_PLUGINS_SELECTED)
-
 dnl ext plug-ins; plug-ins that have external dependencies
-GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
+GST_CHECK_FEATURE(EXTERNAL, [building of plug-ins with external deps],,
   [HAVE_EXTERNAL=yes], enabled,
   [
     AC_MSG_NOTICE(building external plug-ins)
@@ -164,8 +159,10 @@ GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plug-ins],,
 ],[
   AC_MSG_NOTICE(not building experimental plug-ins)
   USE_GST_V4L2="no"
+  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/monoscope//`
 ])
 
+AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl *** checks for platform ***
 
