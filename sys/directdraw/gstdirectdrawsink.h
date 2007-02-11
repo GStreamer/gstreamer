@@ -27,8 +27,9 @@
 
 #include <gst/gst.h>
 #include <gst/video/gstvideosink.h>
-#include <windows.h>
+#include <gst/interfaces/xoverlay.h>
 
+#include <windows.h>
 #include <ddraw.h>
 
 G_BEGIN_DECLS
@@ -51,87 +52,76 @@ struct _GstDDrawSurface
   /* Extension of GstBuffer to store directdraw surfaces */
   GstBuffer buffer;
 
-  /*directdraw surface */
+  /* directdraw surface */
   LPDIRECTDRAWSURFACE surface;
 
+  /* surface dimensions */
   gint width;
   gint height;
 
   /*TRUE when surface is locked*/
   gboolean locked;
+
   /*TRUE when surface is using a system memory buffer 
   (i'm using system memory when directdraw optimized pitch is not the same as the GStreamer one)*/
   gboolean system_memory;
 
+  /* pixel format of the encapsulated surface */
   DDPIXELFORMAT dd_pixel_format;
 
+  /* pointer to parent */
   GstDirectDrawSink *ddrawsink;
-};
-
-
-typedef struct _GstDDDDisplayMode GstDDDisplayMode;
-
-struct _GstDDDDisplayMode
-{
-  gint width;
-  gint height;
-  gint bpp;
 };
 
 struct _GstDirectDrawSink
 {
   GstVideoSink videosink;
 
-  /*directdraw offscreen surfaces pool */
+  /* directdraw offscreen surfaces pool */
   GSList *buffer_pool;
+  GMutex *pool_lock;
 
-  GSList *display_modes;
-  //GstDDDisplayMode display_mode;
-
-  /*directdraw objects */
+  /* directdraw objects */
   LPDIRECTDRAW ddraw_object;
   LPDIRECTDRAWSURFACE primary_surface;
   LPDIRECTDRAWSURFACE offscreen_surface;
   LPDIRECTDRAWSURFACE overlays;
   LPDIRECTDRAWCLIPPER clipper; 
 
-  /*DDCAPS DDDriverCaps;
-  DDCAPS DDHELCaps;
-  gboolean can_blit;*/
+  /* last buffer displayed (used for XOverlay interface expose method) */
+  GstBuffer * last_buffer;
 
-  /*Directdraw caps */
+  /* directdraw caps */
   GstCaps *caps;
 
-  /*handle of the video window */
+  /* video window management */
   HWND video_window;
+  gboolean our_video_window;
   HANDLE window_created_signal;
-  gboolean resize_window;
-
-  /*video properties */
+  
+  /* video properties */
   gint video_width, video_height;
   gint out_width, out_height;
-  //gdouble framerate;
   gint fps_n;
   gint fps_d;
 
   /*properties*/
   LPDIRECTDRAWSURFACE extern_surface;
   gboolean keep_aspect_ratio;
-  gboolean fullscreen;
 
   /*pixel format */
   DDPIXELFORMAT dd_pixel_format;
 
+  /* thread processing our default window messages */
   GThread *window_thread;
 
-  gboolean bUseOverlay;
-  gboolean bIsOverlayVisible;
+  /* TRUE when directdraw objects are setup */
   gboolean setup;
 
-  GMutex *pool_lock;
-
+  /* overlays */
+  gboolean bUseOverlay;
+  gboolean bIsOverlayVisible;
   guint color_key;
-  /*LPDIRECTDRAWSURFACE extern_surface; */
 };
 
 struct _GstDirectDrawSinkClass
