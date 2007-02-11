@@ -16,10 +16,16 @@ DIST_SUBDIRS = \
 	m4 common docs tests po \
 	examples
 
+win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
+
+debug:
+	echo $(win32)	
+
 EXTRA_DIST = \
 	gst-plugins-bad.spec depcomp \
 	AUTHORS COPYING NEWS README RELEASE REQUIREMENTS \
-	ChangeLog gst-plugins-bad.doap autogen.sh
+	ChangeLog gst-plugins-bad.doap autogen.sh \
+	$(win32)
 
 DISTCLEANFILES = _stdint.h
 
