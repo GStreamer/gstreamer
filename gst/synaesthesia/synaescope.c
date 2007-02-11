@@ -25,10 +25,17 @@
 
 #include "synaescope.h"
 
+#ifndef G_OS_WIN32
 #include <pthread.h>
+#include <sys/time.h>
+#else
+#ifndef M_PI
+#define M_PI  3.14159265358979323846
+#endif
+#endif
+
 #include <dirent.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <time.h>
 #include <math.h>
 #include <stdio.h>

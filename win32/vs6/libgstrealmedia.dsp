@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 ibgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release" /libpath:"../../../gst-plugins-base/win32/vs6/release"
+# ADD LINK32 libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release" /libpath:"../../../gst-plugins-base/win32/vs6/release"
 # Begin Special Build Tool
 TargetPath=.\Release\libgstrealmedia.dll
 SOURCE="$(InputPath)"
@@ -104,7 +104,19 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=..\..\gst\realmedia\rademux.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\realmedia\rdtdepay.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\realmedia\rmdemux.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\realmedia\rmutils.c
 # End Source File
 # End Group
 # Begin Group "Header Files"

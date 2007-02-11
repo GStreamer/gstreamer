@@ -1773,7 +1773,8 @@ gst_rmdemux_parse_indx_data (GstRMDemux * rmdemux, const guint8 * data,
     index[i].offset = RMDEMUX_GUINT32_GET (data + 6);
 
     GST_DEBUG_OBJECT (rmdemux, "Index found for timestamp=%f (at offset=%x)",
-        (float) index[i].timestamp / GST_SECOND, index[i].offset);
+        gst_guint64_to_gdouble (index[i].timestamp) / GST_SECOND,
+        index[i].offset);
     data += 14;
   }
 }
