@@ -541,7 +541,10 @@ GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
     FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
   if test $HAVE_FAAD = "no"; then
     GST_CHECK_LIBHEADER(FAAD, faad, NeAACDecOpen, -lm, neaacdec.h,
-      FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
+      [ FAAD_LIBS="-lfaad -lm"
+	  	AC_DEFINE(FAAD_IS_NEAAC, 1, [Define if AAC is using new api prefix])
+	  ],
+	  HAVE_FAAD="no",)
   fi
   if test $HAVE_FAAD = "yes"; then
     AC_MSG_CHECKING([Checking for FAAD >= 2])
@@ -573,6 +576,7 @@ return 0;
   fi
   AS_SCRUB_INCLUDE(FAAD_CFLAGS)
   AC_SUBST(FAAD_LIBS)
+  AC_SUBST(FAAD_IS_NEAAC)
 ])
 
 dnl *** gsm ***

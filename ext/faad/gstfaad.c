@@ -38,11 +38,21 @@
  * but not all, hence this Truly Evil Hack. This hack will need updating if
  * upstream ever releases something with the new API.
  */
+#ifdef FAAD_IS_NEAAC
+#define NeAACDecInit NeAACDecInit_no_definition
+#define NeAACDecInit2 NeAACDecInit2_no_definition
+#else
 #define faacDecInit faacDecInit_no_definition
 #define faacDecInit2 faacDecInit2_no_definition
+#endif
 #include "gstfaad.h"
+#ifdef FAAD_IS_NEAAC
+#undef NeAACDecInit
+#undef NeAACDecInit2
+#else
 #undef faacDecInit
 #undef faacDecInit2
+#endif
 
 extern long faacDecInit (faacDecHandle, guint8 *, guint32, guint32 *, guint8 *);
 extern int8_t faacDecInit2 (faacDecHandle, guint8 *, guint32,
