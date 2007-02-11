@@ -75,7 +75,7 @@ typedef enum {
  * GST_PAD_TEMPLATE_DIRECTION:
  * @templ: the template to query
  *
- * Get the direction of the padtemplate.
+ * Get the #GstPadDirection of the padtemplate.
  */
 #define GST_PAD_TEMPLATE_DIRECTION(templ)	(((GstPadTemplate *)(templ))->direction)
 
@@ -83,7 +83,7 @@ typedef enum {
  * GST_PAD_TEMPLATE_PRESENCE:
  * @templ: the template to query
  *
- * Get the presence of the padtemplate.
+ * Get the #GstPadPresence of the padtemplate.
  */
 #define GST_PAD_TEMPLATE_PRESENCE(templ)	(((GstPadTemplate *)(templ))->presence)
 

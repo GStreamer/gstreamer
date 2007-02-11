@@ -33,9 +33,22 @@ G_BEGIN_DECLS
 #define GST_IS_CHILD_PROXY(obj)	                (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_CHILD_PROXY))
 #define GST_CHILD_PROXY_GET_INTERFACE(obj)	(G_TYPE_INSTANCE_GET_INTERFACE ((obj), GST_TYPE_CHILD_PROXY, GstChildProxyInterface))
 
+/**
+ * GstChildProxy:
+ *
+ * Opaque #GstChildProxy data structure.
+ */
 typedef struct _GstChildProxy GstChildProxy;    /* dummy object */
 typedef struct _GstChildProxyInterface GstChildProxyInterface;
 
+/**
+ * GstChildProxyInterface:
+ * @parent: parent interface type.
+ * @get_child_by_index: virtual method to fetch the child
+ * @get_children_count: virtual method to get the children count
+ *
+ * #GstChildProxyInterface interface.
+ */
 struct _GstChildProxyInterface
 {
   GTypeInterface parent;

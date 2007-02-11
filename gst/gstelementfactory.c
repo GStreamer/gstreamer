@@ -602,7 +602,7 @@ __gst_element_factory_add_interface (GstElementFactory * elementfactory,
  * gst_element_factory_get_static_pad_templates:
  * @factory: a #GstElementFactory
  *
- * Gets the #GList of padtemplates for this factory.
+ * Gets the #GList of #GstStaticPadTemplate for this factory.
  *
  * Returns: the padtemplates
  */

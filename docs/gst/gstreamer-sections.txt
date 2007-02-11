@@ -263,6 +263,8 @@ gst_caps_get_type
 <SECTION>
 <FILE>gstchildproxy</FILE>
 <TITLE>GstChildProxy</TITLE>
+GstChildProxy
+GstChildProxyInterface
 gst_child_proxy_get_children_count
 gst_child_proxy_get_child_by_name
 gst_child_proxy_get_child_by_index
@@ -276,8 +278,6 @@ gst_child_proxy_set
 gst_child_proxy_child_added
 gst_child_proxy_child_removed
 <SUBSECTION Standard>
-GstChildProxy
-GstChildProxyInterface
 GST_CHILD_PROXY
 GST_IS_CHILD_PROXY
 GST_CHILD_PROXY_GET_INTERFACE

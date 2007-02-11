@@ -367,7 +367,7 @@ gst_controlled_property_new (GObject * object, const gchar * name)
           GST_WARNING ("incomplete implementation for paramspec type '%s'",
               G_PARAM_SPEC_TYPE_NAME (pspec));
       }
-      /* TODO what about adding a timedval with timestamp=0 and value=default
+      /* TODO what about adding a timed-val with timestamp=0 and value=default
        * a bit easier for interpolators, example:
        * first timestamp is at 5
        * requested value if for timestamp=3

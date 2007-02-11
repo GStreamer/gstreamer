@@ -2645,7 +2645,7 @@ compare_interface (GstElement * element, gpointer interface)
 /**
  * gst_bin_get_by_interface:
  * @bin: a #GstBin
- * @interface: the #GType of an interface
+ * @iface: the #GType of an interface
  *
  * Looks for an element inside the bin that implements the given
  * interface. If such an element is found, it returns the element.
@@ -2658,17 +2658,17 @@ compare_interface (GstElement * element, gpointer interface)
  * Returns: A #GstElement inside the bin implementing the interface
  */
 GstElement *
-gst_bin_get_by_interface (GstBin * bin, GType interface)
+gst_bin_get_by_interface (GstBin * bin, GType iface)
 {
   GstIterator *children;
   gpointer result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
-  g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
+  g_return_val_if_fail (G_TYPE_IS_INTERFACE (iface), NULL);
 
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_find_custom (children, (GCompareFunc) compare_interface,
-      (gpointer) interface);
+      (gpointer) iface);
   gst_iterator_free (children);
 
   return GST_ELEMENT_CAST (result);
@@ -2677,7 +2677,7 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
 /**
  * gst_bin_iterate_all_by_interface:
  * @bin: a #GstBin
- * @interface: the #GType of an interface
+ * @iface: the #GType of an interface
  *
  * Looks for all elements inside the bin that implements the given
  * interface. You can safely cast all returned elements to the given interface.
@@ -2693,17 +2693,17 @@ gst_bin_get_by_interface (GstBin * bin, GType interface)
  *          implementing the given interface, or NULL
  */
 GstIterator *
-gst_bin_iterate_all_by_interface (GstBin * bin, GType interface)
+gst_bin_iterate_all_by_interface (GstBin * bin, GType iface)
 {
   GstIterator *children;
   GstIterator *result;
 
   g_return_val_if_fail (GST_IS_BIN (bin), NULL);
-  g_return_val_if_fail (G_TYPE_IS_INTERFACE (interface), NULL);
+  g_return_val_if_fail (G_TYPE_IS_INTERFACE (iface), NULL);
 
   children = gst_bin_iterate_recurse (bin);
   result = gst_iterator_filter (children, (GCompareFunc) compare_interface,
-      (gpointer) interface);
+      (gpointer) iface);
 
   return result;
 }

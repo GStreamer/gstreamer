@@ -1,3 +1,23 @@
+2007-02-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/Makefile.am:
+	  Fix path to core docs.
+
+	* gst/gstbin.c: (gst_bin_get_by_interface),
+	(gst_bin_iterate_all_by_interface):
+	  Refix docs by also renaming 'interface' to 'iface' in implementation.
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstcaps.c:
+	* gst/gstchildproxy.c: (gst_child_proxy_base_init):
+	* gst/gstchildproxy.h:
+	* gst/gstelementfactory.c:
+	* gst/gstpadtemplate.h:
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_new):
+	  Document more.
+
+
 2007-02-10  Sébastien Moutte  <sebastien@moutte.net>
 
 	* gst/gstbin.h:(gst_bin_get_by_interface),
@@ -177,6 +197,18 @@
 
 	* gst/gstplugin.h:
 	  Fix and expand GstPluginDesc API docs.
+
+2007-01-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstcaps.c:
+	* gst/gstelementfactory.c:
+	* gst/gstpadtemplate.h:
+	  api doc fixes
+
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_new):
+	* tests/examples/controller/audio-example.c:
+	  comment fixes
 
 2007-01-29  Stefan Kost  <ensonic@users.sf.net>
 

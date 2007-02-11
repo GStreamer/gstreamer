@@ -1029,11 +1029,11 @@ gst_caps_is_always_compatible (const GstCaps * caps1, const GstCaps * caps2)
  * @subset: a #GstCaps
  * @superset: a potentially greater #GstCaps
  *
- * Checks if all caps represented by @subset are also represented by @superset
+ * Checks if all caps represented by @subset are also represented by @superset.
  * <note>This function does not work reliably if optional properties for caps
  * are included on one caps and omitted on the other.</note>
  *
- * Returns: TRUE if @subset is a subset of @superset
+ * Returns: %TRUE if @subset is a subset of @superset
  */
 gboolean
 gst_caps_is_subset (const GstCaps * subset, const GstCaps * superset)
