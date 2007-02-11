@@ -1,9 +1,8 @@
 # plugindir is set in configure
+plugin_LTLIBRARIES =
 
-# change libgstplugin.la to something more suitable
-plugin_LTLIBRARIES = libgsttimidity.la
-
-# for the next set of variables, rename the prefix if you renamed the .la
+if USE_TIMIDITY
+plugin_LTLIBRARIES += libgsttimidity.la
 
 # sources used to compile this plug-in
 libgsttimidity_la_SOURCES = gsttimidity.c
@@ -15,3 +14,20 @@ libgsttimidity_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(TIMIDITY_LIBS)
 libgsttimidity_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gsttimidity.h
+
+endif
+
+if USE_WILDMIDI
+plugin_LTLIBRARIES += libgstwildmidi.la
+
+# sources used to compile this plug-in
+libgstwildmidi_la_SOURCES = gstwildmidi.c
+
+# flags used to compile this plugin
+# add other _CFLAGS and _LIBS as needed
+libgstwildmidi_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(WILDMIDI_CFLAGS)
+libgstwildmidi_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(WILDMIDI_LIBS)
+libgstwildmidi_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+noinst_HEADERS = gstwildmidi.h
+endif

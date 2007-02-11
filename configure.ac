@@ -755,13 +755,49 @@ GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
 
 dnl *** timidity ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TIMIDITY, true)
-GST_CHECK_FEATURE(TIMIDITY, [timidity midie soft synth plugin], timidity, [
-  PKG_CHECK_MODULES(TIMIDITY, libtimidity, HAVE_TIMIDITY="yes", [
+GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
+  PKG_CHECK_MODULES(TIMIDITY, libtimidity, [ 
+    HAVE_TIMIDITY="yes",
+	AC_MSG_CHECKING([for timidity.cfg])
+	timidity_cfg=""
+	if test -r /etc/timidity.cfg; then
+	  timidity_cfg=/etc/timidity.cfg
+	elif test -r /etc/timidify/timidity.cfg; then
+	  timidity_cfg=/etc/timidify/timidity.cfg
+	elif test -r /usr/share/timidity/timidity.cfg; then
+	  timidity_cfg=/usr/share/timidity/timidity.cfg
+	elif test -r /usr/local/share/timidity/timidity.cfg; then
+	  timidity_cfg=/usr/local/share/timidity/timidity.cfg
+	fi
+	if test "x$timidity_cfg" != "x"; then
+	  AC_MSG_RESULT($timidity_cfg)
+      AC_DEFINE_UNQUOTED(TIMIDITY_CFG, "$timidity_cfg", [Define location of timidity.cfg])
+	else
+	  AC_MSG_RESULT([not found])
+	fi
+  ], [
     HAVE_TIMIDITY="no"
     AC_MSG_RESULT(no)
   ])
   AC_SUBST(TIMIDITY_CFLAGS)
   AC_SUBST(TIMIDITY_LIBS)
+])
+
+dnl *** wildmidi ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_WILDMIDI, true)
+GST_CHECK_FEATURE(WILDMIDI, [wildmidi midi soft synth plugin], wildmidi, [
+  AC_CHECK_HEADER([wildmidi_lib.h],HAVE_WILDMIDI=yes, HAVE_WILDMIDI=no)
+  if test "x$HAVE_WILDMIDI" = "xyes"; then
+	 WILDMIDI_CFLAGS=
+	 WILDMIDI_LIBS=-lWildMidi		
+	 AC_MSG_NOTICE(compiling gstWildMidi)
+  else
+	 WILDMIDI_CFLAGS=
+	 WILDMIDI_LIBS=
+	 AC_MSG_WARN(no WildMidi library found (libWildMidi))
+  fi
+  AC_SUBST(WILDMIDI_CFLAGS)
+  AC_SUBST(WILDMIDI_LIBS)
 ])
 
 dnl *** SDL ***

@@ -1,3 +1,23 @@
+2007-02-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* ext/timidity/Makefile.am:
+	* ext/timidity/gsttimidity.c: (plugin_init):
+	* ext/timidity/gstwildmidi.c: (gst_wildmidi_base_init),
+	(gst_wildmidi_class_init), (gst_wildmidi_init),
+	(gst_wildmidi_src_convert), (gst_wildmidi_src_query),
+	(gst_wildmidi_get_upstream_size), (gst_wildmidi_get_segment),
+	(gst_wildmidi_get_new_segment_event), (gst_wildmidi_src_event),
+	(gst_wildmidi_activate), (gst_wildmidi_activatepull),
+	(gst_wildmidi_allocate_buffer), (gst_wildmidi_clip_buffer),
+	(gst_wildmidi_fill_buffer), (gst_wildmidi_get_buffer),
+	(gst_wildmidi_loop), (gst_wildmidi_change_state),
+	(gst_wildmidi_set_property), (gst_wildmidi_get_property),
+	(gst_wildmidi_typefind), (wildmidi_open_config), (plugin_init):
+	* ext/timidity/gstwildmidi.h:
+	  Add second midi renderer. Fix some double frees and leaks. Clean up
+	  logging.
+
 2007-02-11  Sébastien Moutte  <sebastien@moutte.net>
 
 	* Makefile.am:

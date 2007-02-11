@@ -784,15 +784,17 @@ plugin_init (GstPlugin * plugin)
   /* initialise timidity library, fail loading the plugin if this fails
    * FIXME: check for config location during configure
    */
-  if (mid_init ("/etc/timidity/timidity.cfg") != 0) {
-    GST_WARNING ("can't initialize timidity, is it configured?");
+  if (mid_init (TIMIDITY_CFG) != 0) {
+    GST_WARNING ("can't initialize timidity with config: " TIMIDITY_CFG);
     return FALSE;
   }
 
   if (!gst_type_find_register (plugin, "audio/midi", GST_RANK_PRIMARY,
           gst_timidity_typefind, exts,
-          gst_caps_new_simple ("audio/midi", NULL), NULL, NULL))
+          gst_caps_new_simple ("audio/midi", NULL), NULL, NULL)) {
+    GST_WARNING ("can't register typefind");
     return FALSE;
+  }
 
   return gst_element_register (plugin, "timidity",
       GST_RANK_PRIMARY, GST_TYPE_TIMIDITY);
