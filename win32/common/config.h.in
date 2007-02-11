@@ -163,7 +163,7 @@
 #undef HAVE_MMAP
 
 /* Define to 1 if you have the <netinet/in.h> header file. */
-#define HAVE_NETINET_IN_H 1
+#undef HAVE_NETINET_IN_H
 
 /* support for features: osssrc osssink */
 #define HAVE_OSS 

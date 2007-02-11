@@ -1425,7 +1425,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
       ("Could not receive any UDP packets for %.4f seconds, maybe your "
           "firewall is blocking it. Retrying using a TCP connection.",
-          (gdouble) src->timeout / 1000000));
+          gst_guint64_to_gdouble (src->timeout / 1000000)));
   /* we can try only TCP now */
   src->cur_protocols = RTSP_LOWER_TRANS_TCP;
 

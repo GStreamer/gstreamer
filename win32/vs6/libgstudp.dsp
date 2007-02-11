@@ -1,24 +1,24 @@
-# Microsoft Developer Studio Project File - Name="libgstrtsp" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="libgstudp" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
-CFG=libgstrtsp - Win32 Debug
+CFG=libgstudp - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "libgstrtsp.mak".
+!MESSAGE NMAKE /f "libgstudp.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "libgstrtsp.mak" CFG="libgstrtsp - Win32 Debug"
+!MESSAGE NMAKE /f "libgstudp.mak" CFG="libgstudp - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "libgstrtsp - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
-!MESSAGE "libgstrtsp - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "libgstudp - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "libgstudp - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
@@ -29,7 +29,7 @@ CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "libgstrtsp - Win32 Release"
+!IF  "$(CFG)" == "libgstudp - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -42,8 +42,8 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTRTSP_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "./" /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /I "../../../gst-plugins-good/gst/rtsp" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTRTSP_EXPORTS" /D "HAVE_CONFIG_H" /FD /c
+# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTUDP_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "./" /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /I "../../../gst-plugins-good/gst/udp" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTUDP_EXPORTS" /D "HAVE_CONFIG_H" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -54,14 +54,14 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 ws2_32.lib libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release" /libpath:"../../../gst-plugins-base/win32/vs6/release"
+# ADD LINK32 glib-2.0.lib gobject-2.0.lib libgstreamer-0.10.lib libgstbase-0.10.lib libgstnetbuffer-0.10.lib Ws2_32.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release" /libpath:"../../../gst-plugins-base/win32/vs6/release"
 # Begin Special Build Tool
-TargetPath=.\Release\libgstrtsp.dll
+TargetPath=.\Release\libgstudp.dll
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\lib\gstreamer-0.10
 # End Special Build Tool
 
-!ELSEIF  "$(CFG)" == "libgstrtsp - Win32 Debug"
+!ELSEIF  "$(CFG)" == "libgstudp - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -74,8 +74,8 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\lib\gstreamer-0.10
 # PROP Intermediate_Dir "Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTRTSP_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /I "../../../gst-plugins-good/gst/rtsp" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTRTSP_EXPORTS" /D "HAVE_CONFIG_H" /FD /GZ /c
+# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTUDP_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /I "../../../gst-plugins-good/gst/udp" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTUDP_EXPORTS" /D "HAVE_CONFIG_H" /FD /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -86,9 +86,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 ws2_32.lib libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0D.lib gobject-2.0D.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"./debug" /libpath:"../../../gst-plugins-base/win32/vs6/debug"
+# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib libgstreamer-0.10.lib libgstbase-0.10.lib libgstnetbuffer-0.10.lib Ws2_32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"./debug" /libpath:"../../../gst-plugins-base/win32/vs6/debug"
 # Begin Special Build Tool
-TargetPath=.\Debug\libgstrtsp.dll
+TargetPath=.\Debug\libgstudp.dll
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 # End Special Build Tool
@@ -97,50 +97,42 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 
 # Begin Target
 
-# Name "libgstrtsp - Win32 Release"
-# Name "libgstrtsp - Win32 Debug"
+# Name "libgstudp - Win32 Release"
+# Name "libgstudp - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\gstrtpdec.c
+SOURCE=..\..\gst\udp\gstdynudpsink.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\gstrtsp.c
+SOURCE=..\..\gst\udp\gstmultiudpsink.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\gstrtspsrc.c
+SOURCE="..\..\gst\udp\gstudp-enumtypes.c"
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\rtspconnection.c
+SOURCE="..\..\gst\udp\gstudp-marshal.c"
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\rtspdefs.c
+SOURCE=..\..\gst\udp\gstudp.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\rtspextwms.c
+SOURCE=..\..\gst\udp\gstudpnetutils.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\rtspmessage.c
+SOURCE=..\..\gst\udp\gstudpsink.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\rtsptransport.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\rtsp\rtspurl.c
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\rtsp\sdpmessage.c
+SOURCE=..\..\gst\udp\gstudpsrc.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -148,47 +140,35 @@ SOURCE=..\..\gst\rtsp\sdpmessage.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\gstrtpdec.h
+SOURCE=..\..\gst\udp\gstdynudpsink.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\gstrtsp.h
+SOURCE=..\..\gst\udp\gstmultiudpsink.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\gstrtspsrc.h
+SOURCE="..\..\gst\udp\gstudp-enumtypes.h"
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\rtsp.h
+SOURCE="..\..\gst\udp\gstudp-marshal.h"
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\rtspconnection.h
+SOURCE=..\..\gst\udp\gstudp.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\rtspdefs.h
+SOURCE=..\..\gst\udp\gstudpnetutils.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\rtspmessage.h
+SOURCE=..\..\gst\udp\gstudpsink.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\rtsp\rtsptransport.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\rtsp\rtspurl.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\rtsp\sdp.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\rtsp\sdpmessage.h
+SOURCE=..\..\gst\udp\gstudpsrc.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

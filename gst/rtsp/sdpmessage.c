@@ -582,7 +582,9 @@ sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
     case 'm':
     {
       gchar *slash;
-      SDPMedia nmedia = {.media = NULL };
+      SDPMedia nmedia;
+
+      nmedia.media = NULL;
 
       c->state = SDP_MEDIA;
       sdp_media_init (&nmedia);

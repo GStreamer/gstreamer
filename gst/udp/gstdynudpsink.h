@@ -30,7 +30,9 @@ G_BEGIN_DECLS
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#ifndef G_OS_WIN32
 #include <sys/time.h>
+#endif
 #include <sys/types.h>
 
 #include "gstudpnetutils.h"

@@ -238,12 +238,16 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
   gint towrite;
   gchar *data;
 
+#ifdef G_OS_WIN32
+  WSADATA w;
+  int error;
+#endif
+
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
   g_return_val_if_fail (message != NULL, RTSP_EINVAL);
 
 #ifdef G_OS_WIN32
-  WSADATA w;
-  int error = WSAStartup (0x0202, &w);
+  error = WSAStartup (0x0202, &w);
 
   if (error)
     goto startup_error;

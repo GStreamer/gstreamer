@@ -21,7 +21,6 @@
 #ifndef __GST_UDP_NET_UTILS_H__
 #define __GST_UDP_NET_UTILS_H__
 
-#include <sys/time.h>
 #include <sys/types.h>
 
 /* Needed for G_OS_XXXX */
@@ -36,6 +35,7 @@
 #include <gst/gstinfo.h>
 
 #else
+#include <sys/time.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/socket.h>

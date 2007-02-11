@@ -1,3 +1,37 @@
+2007-02-11  Sébastien Moutte  <sebastien@moutte.net>
+
+	* gst/avi/gstavimux.c:
+	  Comment a #if 0 in caps template definition as VS6 seems to 
+	do not support it.
+	* gst/rtsp/gstrtspsrc.c:(gst_rtspsrc_loop_udp):
+	  Use gst_guint64_to_gdouble for conversion.
+	* gst/rtsp/rtspconnection.c:(rtsp_connection_send):
+	  Move variables declaration before the first instruction.
+	* gst/rtsp/rtspdefs.c:(rtsp_strresult):
+	  Don't use hstrerror for error log on G_OS_WIN32 build as it's not supported.
+	  And don't include netdb.h for G_OS_WIN32
+	* gst/rtsp/sdpmessage.c:(sdp_parse_line):
+	  This initialization SDPMedia nmedia = {.media = NULL }; is not supported
+	  by VS6 then use an other way to initialize SDPMedia structure.
+	* gst/udp/gstdynudpsink.h:
+	* gst/udp/gstdynudpnetutils.h:
+	  Do not include <sys/time.h> for G_OS_WIN32
+	* gst/udp/gstudpsrc.c:
+	  Define socklen_t as int for G_OS_WIN32
+	* win/common/config.h.in:
+	  Undef HAVE_NETINET_IN_H
+	* win32/vs6/gst_plugins_good.dsw:
+	* win32/vs6/libgstrtp.dsp:
+	* win32/vs6/libgstrtsp.dsp:
+	* win32/vs6/libgstautogen.dsp:
+	* win32/vs6/libgstaudiofx.dsp:
+	* win32/vs6/libgstudp.dsp:
+	  Add and update project files.
+	* win32/common/gstudp-enumtypes.c:
+	* win32/common/gstudp-enumtypes.h:
+	  Add a copy of udp enumtypes to win32/common as in core 
+	  and base.
+	
 2007-02-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

@@ -51,6 +51,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libgstaudiofx"=".\libgstaudiofx.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "libgstauparse"=".\libgstauparse.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -88,6 +100,30 @@ Package=<4>
 ###############################################################################
 
 Project: "libgstcutter"=".\libgstcutter.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstdebug"=".\libgstdebug.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstdvdemux"=".\libgstdvdemux.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -303,6 +339,21 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libgstudp"=".\libgstudp.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name autogen
+    End Project Dependency
+}}}
+
+###############################################################################
+
 Project: "libgstvideobalance"=".\libgstvideobalance.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -364,6 +415,18 @@ Package=<4>
 ###############################################################################
 
 Project: "libgstwavparse"=".\libgstwavparse.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "autogen"=".\autogen.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

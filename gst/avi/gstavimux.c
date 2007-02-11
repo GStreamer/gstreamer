@@ -171,10 +171,10 @@ static GstStaticPadTemplate audio_sink_factory =
         "mpegversion = (int) 1, "
         "layer = (int) [ 1, 3 ], "
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
-#if 0
+/*#if 0 VC6 doesn't support #if here ...
         "audio/x-vorbis, "
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
-#endif
+#endif*/
         "audio/x-ac3, "
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]")
     );

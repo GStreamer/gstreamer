@@ -44,9 +44,11 @@
 
 extern int h_errno;
 
-#include <netdb.h>
-
 #include "rtspdefs.h"
+
+#ifndef G_OS_WIN32
+#include <netdb.h>
+#endif
 
 static const gchar *rtsp_results[] = {
   "OK",
@@ -217,7 +219,13 @@ rtsp_strresult (RTSPResult result)
       res = g_strdup_printf (rtsp_results[idx], g_strerror (errno));
       break;
     case -RTSP_ENET:
+#ifndef G_OS_WIN32
       res = g_strdup_printf (rtsp_results[idx], hstrerror (h_errno));
+#else
+      res =
+          g_strdup
+          ("not supported on win32, implement me in a different way ??");
+#endif
       break;
     case -RTSP_ELAST:
       res = g_strdup_printf (rtsp_results[idx], result);

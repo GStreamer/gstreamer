@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release" /libpath:"../../../gst-plugins-base/win32/vs6/release"
+# ADD LINK32 glib-2.0.lib gobject-2.0.lib libgstreamer-0.10.lib libgstbase-0.10.lib libgstrtp-0.10.lib libgsttag-0.10.lib Ws2_32.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release" /libpath:"../../../gst-plugins-base/win32/vs6/release"
 # Begin Special Build Tool
 TargetPath=.\Release\libgstrtp.dll
 SOURCE="$(InputPath)"
@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0D.lib gobject-2.0D.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"./debug" /libpath:"../../../gst-plugins-base/win32/vs6/debug"
+# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib libgstreamer-0.10.lib libgstbase-0.10.lib libgstrtp-0.10.lib libgsttag-0.10.lib Ws2_32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"./debug" /libpath:"../../../gst-plugins-base/win32/vs6/debug"
 # Begin Special Build Tool
 TargetPath=.\Debug\libgstrtp.dll
 SOURCE="$(InputPath)"
@@ -109,6 +109,10 @@ SOURCE=..\..\gst\rtp\gstasteriskh263.c
 # Begin Source File
 
 SOURCE=..\..\gst\rtp\gstrtp.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtpac3depay.c
 # End Source File
 # Begin Source File
 
@@ -144,11 +148,31 @@ SOURCE=..\..\gst\rtp\gstrtph263ppay.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\rtp\gstrtph264depay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtpilbcdepay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtpilbcpay.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\rtp\gstrtpL16depay.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\gst\rtp\gstrtpL16pay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtpmp2tdepay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtpmp4gdepay.c
 # End Source File
 # Begin Source File
 
@@ -169,6 +193,10 @@ SOURCE=..\..\gst\rtp\gstrtpmpadepay.c
 # Begin Source File
 
 SOURCE=..\..\gst\rtp\gstrtpmpapay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtpmpvdepay.c
 # End Source File
 # Begin Source File
 
@@ -193,6 +221,26 @@ SOURCE=..\..\gst\rtp\gstrtpspeexdepay.c
 # Begin Source File
 
 SOURCE=..\..\gst\rtp\gstrtpspeexpay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtpsv3vdepay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtptheoradepay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtptheorapay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtpvorbisdepay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtpvorbispay.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -233,14 +281,6 @@ SOURCE=..\..\gst\rtp\gstrtph263pdepay.h
 # Begin Source File
 
 SOURCE=..\..\gst\rtp\gstrtph263ppay.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\rtp\gstrtpL16depay.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\rtp\gstrtpL16pay.h
 # End Source File
 # Begin Source File
 

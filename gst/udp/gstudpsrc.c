@@ -111,6 +111,9 @@
 #include <stdlib.h>
 
 #include <gst/netbuffer/gstnetbuffer.h>
+#ifdef G_OS_WIN32
+typedef int socklen_t;
+#endif
 
 #ifdef HAVE_FIONREAD_IN_SYS_FILIO
 #include <sys/filio.h>
