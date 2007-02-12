@@ -25,15 +25,6 @@
 
 #include "synaescope.h"
 
-#ifndef G_OS_WIN32
-#include <pthread.h>
-#include <sys/time.h>
-#else
-#ifndef M_PI
-#define M_PI  3.14159265358979323846
-#endif
-#endif
-
 #include <dirent.h>
 #include <sys/stat.h>
 #include <time.h>
@@ -43,6 +34,12 @@
 #include <unistd.h>
 #include <string.h>
 #include <assert.h>
+
+#ifdef G_OS_WIN32
+#ifndef M_PI
+#define M_PI  3.14159265358979323846
+#endif
+#endif
 
 #define SCOPE_BG_RED 0
 #define SCOPE_BG_GREEN 0
@@ -81,29 +78,6 @@ static int scaleDown[256];
 
 static void synaes_fft (double *x, double *y);
 static void synaescope_coreGo (void);
-
-#define SYNAESCOPE_DOLOOP() \
-while (running) { \
-    gint bar; \
-    guint val; \
-    gint val2; \
-    unsigned char *outptr = output; \
-        int w; \
-\
-    synaescope_coreGo(); \
-\
-    outptr = output; \
-    for (w=0; w < syn_width * syn_height; w++) { \
-        bits[w] = colEq[(outptr[0] >> 4) + (outptr[1] & 0xf0)]; \
-        outptr += 2; \
-    } \
-\
-    GDK_THREADS_ENTER(); \
-    gdk_draw_image(win,gc,image,0,0,0,0,-1,-1); \
-    gdk_flush(); \
-    GDK_THREADS_LEAVE(); \
-    dosleep(SCOPE_SLEEP); \
-}
 
 static inline void
 addPixel (unsigned char *output, int x, int y, int br1, int br2)
@@ -209,7 +183,7 @@ synaescope_coreGo (void)
     if (corr_l[i] > 0 || corr_r[i] > 0) {
       int h = (int) (corr_r[i] * syn_width / (corr_l[i] + corr_r[i]));
 
-/*      int h = (int)( syn_width - 1 ); */
+      /* int h = (int)( syn_width - 1 ); */
       int br1, br2, br = (int) ((corr_l[i] + corr_r[i]) * i * brightFactor2);
       int px = h, py = heightAdd - i / heightFactor;
 
@@ -307,6 +281,30 @@ synaescope32 ()
 
 
 #if 0
+
+#define SYNAESCOPE_DOLOOP() \
+while (running) { \
+    gint bar; \
+    guint val; \
+    gint val2; \
+    unsigned char *outptr = output; \
+        int w; \
+    \
+    synaescope_coreGo(); \
+    \
+    outptr = output; \
+    for (w=0; w < syn_width * syn_height; w++) { \
+        bits[w] = colEq[(outptr[0] >> 4) + (outptr[1] & 0xf0)]; \
+        outptr += 2; \
+    } \
+    \
+    GDK_THREADS_ENTER(); \
+    gdk_draw_image(win,gc,image,0,0,0,0,-1,-1); \
+    gdk_flush(); \
+    GDK_THREADS_LEAVE(); \
+    dosleep(SCOPE_SLEEP); \
+}
+
 static void
 synaescope16 (void *data)
 {
@@ -411,9 +409,8 @@ synaescope8 (void *data)
 
   SYNAESCOPE_DOLOOP ();
 }
-#endif
 
-#if 0
+
 static void
 run_synaescope (void *data)
 {

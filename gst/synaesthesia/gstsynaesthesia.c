@@ -69,19 +69,23 @@ struct _GstSynaesthesia
   GstPad *sinkpad, *srcpad;
   GstAdapter *adapter;
 
-  /* the timestamp of the next frame */
-  guint64 audio_basetime;
+  guint64 audio_basetime;       /* the timestamp of the next frame */
+  guint64 frame_duration;
+  guint bps;                    /* bytes per sample        */
+  guint spf;                    /* samples per video frame */
+
   guint64 samples_consumed;
   gint16 datain[2][SYNAES_SAMPLES];
 
   /* video state */
-  gdouble fps;
+  gint fps_n, fps_d;
   gint width;
   gint height;
   gint channels;
 
   /* Audio state */
-  gint sample_rate;
+  gint rate;
+
 };
 
 struct _GstSynaesthesiaClass
@@ -200,17 +204,18 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
   synaesthesia->sinkpad =
       gst_pad_new_from_static_template (&gst_synaesthesia_sink_template,
       "sink");
-  gst_pad_set_chain_function (synaesthesia->sinkpad, gst_synaesthesia_chain);
+  gst_pad_set_chain_function (synaesthesia->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_synaesthesia_chain));
   gst_pad_set_setcaps_function (synaesthesia->sinkpad,
-      gst_synaesthesia_sink_setcaps);
+      GST_DEBUG_FUNCPTR (gst_synaesthesia_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->sinkpad);
 
   synaesthesia->srcpad =
       gst_pad_new_from_static_template (&gst_synaesthesia_src_template, "src");
   gst_pad_set_getcaps_function (synaesthesia->srcpad,
-      gst_synaesthesia_src_getcaps);
+      GST_DEBUG_FUNCPTR (gst_synaesthesia_src_getcaps));
   gst_pad_set_setcaps_function (synaesthesia->srcpad,
-      gst_synaesthesia_src_setcaps);
+      GST_DEBUG_FUNCPTR (gst_synaesthesia_src_setcaps));
   gst_element_add_pad (GST_ELEMENT (synaesthesia), synaesthesia->srcpad);
 
   synaesthesia->adapter = gst_adapter_new ();
@@ -218,14 +223,21 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
   /* reset the initial video state */
   synaesthesia->width = SYNAES_WIDTH;
   synaesthesia->height = SYNAES_HEIGHT;
-  synaesthesia->fps = 25.0;     /* desired frame rate */
+  synaesthesia->fps_n = 25;     /* desired frame rate */
+  synaesthesia->fps_d = 1;
+  synaesthesia->frame_duration = -1;
 
-  synaesthesia->sample_rate = 0;
+  /* reset the initial audio state */
+  synaesthesia->rate = GST_AUDIO_DEF_RATE;
   synaesthesia->channels = 2;
 
   synaesthesia->audio_basetime = GST_CLOCK_TIME_NONE;
   synaesthesia->samples_consumed = 0;
 
+  /* FIXME: this isn't used by the engine, the size is hardcoded there again
+   * we also need to initialize once we negotiated
+   * the we can also supply spf (samples_per_frame)
+   */
   synaesthesia_init (synaesthesia->width, synaesthesia->height);
 }
 
@@ -272,10 +284,15 @@ gst_synaesthesia_sink_setcaps (GstPad * pad, GstCaps * caps)
       !gst_structure_get_int (structure, "rate", &rate))
     goto missing_caps_details;
 
-  if (synaesthesia->channels != 2)
+  if (channels != 2)
     goto wrong_channels;
 
-  synaesthesia->sample_rate = rate;
+  if (rate <= 0)
+    goto wrong_rate;
+
+
+  synaesthesia->channels = channels;
+  synaesthesia->rate = rate;
 
 done:
   gst_object_unref (synaesthesia);
@@ -287,7 +304,11 @@ missing_caps_details:
   res = FALSE;
   goto done;
 wrong_channels:
-  GST_WARNING ("channesl must be 2, but are %d", channels);
+  GST_WARNING ("number of channels must be 2, but is %d", channels);
+  res = FALSE;
+  goto done;
+wrong_rate:
+  GST_WARNING ("sample rate must be >0, but is %d", rate);
   res = FALSE;
   goto done;
 }
@@ -310,7 +331,8 @@ gst_synaesthesia_src_getcaps (GstPad * pad)
     gst_structure_set (structure,
         "width", G_TYPE_INT, synaesthesia->width,
         "height", G_TYPE_INT, synaesthesia->height,
-        "framerate", GST_TYPE_FRACTION, (gint) synaesthesia->fps, 1, NULL);
+        "framerate", GST_TYPE_FRACTION, synaesthesia->fps_n,
+        synaesthesia->fps_d, NULL);
   }
 
   gst_object_unref (synaesthesia);
@@ -326,29 +348,47 @@ gst_synaesthesia_src_setcaps (GstPad * pad, GstCaps * caps)
   GstSynaesthesia *synaesthesia;
   GstStructure *structure;
   gint w, h;
-  gdouble fps;
+  gint num, denom;
+  gboolean res = TRUE;
 
   synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
   structure = gst_caps_get_structure (caps, 0);
 
   if (!gst_structure_get_int (structure, "width", &w) ||
       !gst_structure_get_int (structure, "height", &h) ||
-      !gst_structure_get_double (structure, "framerate", &fps)) {
-    return GST_PAD_LINK_REFUSED;
+      !gst_structure_get_fraction (structure, "framerate", &num, &denom)) {
+    goto missing_caps_details;
   }
 
   if ((w != SYNAES_WIDTH) || (h != SYNAES_HEIGHT))
-    return GST_PAD_LINK_REFUSED;
+    goto wrong_resolution;
 
   synaesthesia->width = w;
   synaesthesia->height = h;
-  synaesthesia->fps = fps;
+  synaesthesia->fps_n = num;
+  synaesthesia->fps_d = denom;
+
+  synaesthesia->frame_duration = gst_util_uint64_scale_int (GST_SECOND,
+      synaesthesia->fps_d, synaesthesia->fps_n);
+  synaesthesia->spf = gst_util_uint64_scale_int (synaesthesia->rate,
+      synaesthesia->fps_d, synaesthesia->fps_n);
 
   synaesthesia_init (synaesthesia->width, synaesthesia->height);
 
+done:
   gst_object_unref (synaesthesia);
+  return res;
 
-  return TRUE;
+  /* Errors */
+missing_caps_details:
+  GST_WARNING ("missing channels or rate in the caps");
+  res = FALSE;
+  goto done;
+wrong_resolution:
+  GST_WARNING ("unsupported resolution: %d x %d (wanted %d x %d)",
+      w, h, SYNAES_WIDTH, SYNAES_HEIGHT);
+  res = FALSE;
+  goto done;
 }
 
 static GstFlowReturn
@@ -356,8 +396,7 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstSynaesthesia *synaesthesia;
-  guint32 bytesperread;
-  gint samples_per_frame;
+  guint32 avail, bytesperread;
 
   synaesthesia = GST_SYNAESTHESIA (gst_pad_get_parent (pad));
 
@@ -389,22 +428,26 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
   if (synaesthesia->audio_basetime == GST_CLOCK_TIME_NONE)
     synaesthesia->audio_basetime = 0;
 
-  bytesperread = SYNAES_SAMPLES * synaesthesia->channels * sizeof (gint16);
-  samples_per_frame = synaesthesia->sample_rate / synaesthesia->fps;
-
   gst_adapter_push (synaesthesia->adapter, buffer);
 
-  while (gst_adapter_available (synaesthesia->adapter) >
+  /* this is what we want */
+  bytesperread = SYNAES_SAMPLES * synaesthesia->channels * sizeof (gint16);
+  /* FIXME: what about:
+     bytesperread = MAX (SYNAES_SAMPLES, synaesthesia->spf) * synaesthesia->channels * sizeof (gint16);
+   */
+  /* this is what we have */
+  avail = gst_adapter_available (synaesthesia->adapter);
+  while (avail >
       MAX (bytesperread,
-          samples_per_frame * synaesthesia->channels * sizeof (gint16))) {
+          synaesthesia->spf * synaesthesia->channels * sizeof (gint16))) {
     const guint16 *data =
         (const guint16 *) gst_adapter_peek (synaesthesia->adapter,
         bytesperread);
     GstBuffer *outbuf;
     guchar *out_frame;
-    GstClockTimeDiff frame_duration = GST_SECOND / synaesthesia->fps;
-    gint i;
+    guint i;
 
+    /* deinterleave */
     for (i = 0; i < SYNAES_SAMPLES; i++) {
       synaesthesia->datain[0][i] = *data++;
       synaesthesia->datain[1][i] = *data++;
@@ -422,9 +465,8 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
 
     GST_BUFFER_TIMESTAMP (outbuf) =
         synaesthesia->audio_basetime +
-        (GST_SECOND * synaesthesia->samples_consumed /
-        synaesthesia->sample_rate);
-    GST_BUFFER_DURATION (outbuf) = frame_duration;
+        (GST_SECOND * synaesthesia->samples_consumed / synaesthesia->rate);
+    GST_BUFFER_DURATION (outbuf) = synaesthesia->frame_duration;
 
     out_frame = (guchar *) synaesthesia_update (synaesthesia->datain);
     memcpy (GST_BUFFER_DATA (outbuf), out_frame, GST_BUFFER_SIZE (outbuf));
@@ -435,9 +477,12 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
     if (ret != GST_FLOW_OK)
       break;
 
-    synaesthesia->samples_consumed += samples_per_frame;
-    gst_adapter_flush (synaesthesia->adapter, samples_per_frame *
+    /* FIXME: flush what we actually read */
+    synaesthesia->samples_consumed += synaesthesia->spf;
+    gst_adapter_flush (synaesthesia->adapter, synaesthesia->spf *
         synaesthesia->channels * sizeof (gint16));
+
+    avail = gst_adapter_available (synaesthesia->adapter);
   }
 
   gst_object_unref (synaesthesia);
