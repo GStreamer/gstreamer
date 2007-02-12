@@ -42,7 +42,8 @@ SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
 MKDB_OPTIONS=--sgml-mode --ignore-files=parse
 
 # Extra options to supply to gtkdoc-fixref.
-FIXXREF_OPTIONS=
+FIXXREF_OPTIONS=$(GLIB_PREFIX)/share/gtk-doc/html/gobject \
+	--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/glib
 
 # The files containing the source code. Relative to $(top_srcdir).
 # gtk-doc will search all .c & .h files beneath here for inline comments

@@ -1,4 +1,12 @@
-2007-02-12  Wim Taymans,,,  <wim@fluendo.com>
+2007-02-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	* docs/plugins/Makefile.am:
+	  Add crossreferences to glib/gobject docs.
+
+2007-02-12  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/draft-latency.txt:
 	Small update.
@@ -122,7 +130,7 @@
 	  The klass string is not a hierarchy. Add reference to the design doc
 	  for more information and common types.
 
-2007-02-02  Wim Taymans,,,  <wim@fluendo.com>
+2007-02-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstquery.c: (gst_query_new_latency):
 	Remove old structure field.

@@ -383,7 +383,7 @@ INET_ATON_LIBS=$LIBS
 AC_SUBST(INET_ATON_LIBS)
 LIBS="$save_libs"
 
-dnl *** checks for dependancy libraries ***
+dnl *** checks for dependency libraries ***
 
 dnl GLib
 
@@ -395,7 +395,11 @@ AC_SUBST(GST_HAVE_GLIB_2_8_DEFINE)
 
 dnl Check for glib2 without extra fat, useful for the unversioned tool frontends
 PKG_CHECK_MODULES(GLIB_ONLY, glib-2.0 >= $GLIB_REQ)
-  
+
+dnl Checks for documentation xrefs
+GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
+AC_SUBST(GLIB_PREFIX)
+
 dnl libxml 2, which is/should be optional (FIXME)
 dnl (FIXME) if we use binary registry, the DISABLE_REGISTRY check need to go
 if test "x$GST_DISABLE_LOADSAVE" = "xyes" && \
