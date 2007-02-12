@@ -47,15 +47,19 @@ G_BEGIN_DECLS
   ((((chunkid) & 0xff) - '0') * 10 + \
    (((chunkid) >> 8) & 0xff) - '0')
 
+#define GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME 1
+
+/* 48 bytes */
 typedef struct {
-  gint           index_nr;
-  gint           stream_nr;
-  guint64        ts, dur;
-  guint32        flags;
+  guint          index_nr;      /* = (entry-index_entries)/sizeof(gst_avi_index_entry); */
+  guchar         stream_nr;
+  guchar         flags;
+  guint64        ts;
+  guint64        dur;           /* =entry[1].ts-entry->ts */
   guint64        offset;
-  gint           size;
-  guint64        bytes_before;
-  guint32        frames_before;
+  guint64        bytes_before;  /* calculated */
+  guint32        frames_before; /* calculated */
+  guint32        size;          /* could be read from the chunk (if we don't split) */
 } gst_avi_index_entry;
 
 typedef struct {
@@ -95,6 +99,7 @@ typedef struct {
   /* VBR indicator */
   gboolean       is_vbr;
 
+  /* openDML support (for files >4GB) */
   gboolean       superindex;
   guint64       *indexes;
 

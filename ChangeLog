@@ -1,5 +1,22 @@
 2007-02-12  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_class_init),
+	(gst_avi_demux_reset), (gst_avi_demux_index_entry_for_time),
+	(gst_avi_demux_handle_src_query), (gst_avi_demux_parse_superindex),
+	(gst_avi_demux_parse_subindex), (gst_avi_demux_parse_stream),
+	(gst_avi_demux_parse_index), (gst_avi_demux_stream_index),
+	(gst_avi_demux_sync), (gst_avi_demux_next_data_buffer),
+	(gst_avi_demux_stream_scan), (gst_avi_demux_massage_index),
+	(gst_avi_demux_calculate_durations_from_index),
+	(gst_avi_demux_push_event), (gst_avi_demux_stream_header_pull),
+	(gst_avi_demux_do_seek), (gst_avi_demux_process_next_entry),
+	(gst_avi_demux_stream_data), (gst_avi_demux_loop):
+	* gst/avi/gstavidemux.h:
+	  Save some memory (8%) by repacking the index entry structure (more to
+	  come). Add more FIXMEs to questionable parts.
+
+2007-02-12  Stefan Kost  <ensonic@users.sf.net>
+
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_v4l2fourcc_to_caps),
 	(gst_v4l2src_get_caps):
 	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_fill_format_list),
