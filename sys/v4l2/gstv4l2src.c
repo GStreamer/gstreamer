@@ -415,6 +415,15 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
 {
   GstStructure *structure = NULL;
 
+  /* FIXME: new FourCCs
+     camera: ZC0301 PC Camera
+     driver: zc0301
+     BA81, S910, PWC1, PWC2
+
+     camera:
+     driver:
+   */
+
   switch (fourcc) {
     case V4L2_PIX_FMT_MJPEG:   /* Motion-JPEG */
     case V4L2_PIX_FMT_JPEG:    /* JFIF JPEG */
@@ -766,6 +775,7 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
       gst_caps_append_structure (caps, structure);
     }
   }
+  GST_DEBUG_OBJECT (v4l2src, "returning caps: %" GST_PTR_FORMAT, caps);
 
   return caps;
 }
