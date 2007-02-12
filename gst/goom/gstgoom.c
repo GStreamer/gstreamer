@@ -23,6 +23,10 @@
  * @see_also: synaesthesia
  *
  * <refsect2>
+ * <para>
+ * Goom is an audio visualisation element. It creates warping structures
+ * based on the incomming audio signal.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
@@ -148,7 +152,7 @@ gst_goom_class_init (GstGoomClass * klass)
 
   gobject_class->finalize = gst_goom_finalize;
 
-  gstelement_class->change_state = gst_goom_change_state;
+  gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_goom_change_state);
 
   GST_DEBUG_CATEGORY_INIT (goom_debug, "goom", 0, "goom visualisation element");
 }
@@ -158,14 +162,19 @@ gst_goom_init (GstGoom * goom)
 {
   /* create the sink and src pads */
   goom->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
-  gst_pad_set_chain_function (goom->sinkpad, gst_goom_chain);
-  gst_pad_set_event_function (goom->sinkpad, gst_goom_sink_event);
-  gst_pad_set_setcaps_function (goom->sinkpad, gst_goom_sink_setcaps);
+  gst_pad_set_chain_function (goom->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_goom_chain));
+  gst_pad_set_event_function (goom->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_goom_sink_event));
+  gst_pad_set_setcaps_function (goom->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_goom_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (goom), goom->sinkpad);
 
   goom->srcpad = gst_pad_new_from_static_template (&src_template, "src");
-  gst_pad_set_setcaps_function (goom->srcpad, gst_goom_src_setcaps);
-  gst_pad_set_event_function (goom->srcpad, gst_goom_src_event);
+  gst_pad_set_setcaps_function (goom->srcpad,
+      GST_DEBUG_FUNCPTR (gst_goom_src_setcaps));
+  gst_pad_set_event_function (goom->srcpad,
+      GST_DEBUG_FUNCPTR (gst_goom_src_event));
   gst_element_add_pad (GST_ELEMENT (goom), goom->srcpad);
 
   goom->adapter = gst_adapter_new ();
@@ -547,7 +556,6 @@ gst_goom_change_state (GstElement * element, GstStateChange transition)
 {
   GstGoom *goom = GST_GOOM (element);
   GstStateChangeReturn ret;
-
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:

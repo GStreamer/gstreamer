@@ -1,3 +1,17 @@
+2007-02-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/goom/gstgoom.c: (gst_goom_class_init), (gst_goom_init),
+	(gst_goom_change_state):
+	* gst/goom/gstgoom.h:
+	  Improved docs and use GST_DEBUG_FUNCPTR.
+
+	* gst/level/gstlevel.c: (gst_level_class_init):
+	  Use GST_DEBUG_FUNCPTR.
+
+	* gst/monoscope/gstmonoscope.c: (gst_monoscope_init),
+	(gst_monoscope_chain), (gst_monoscope_change_state):
+	  Improved docs source cleanups.
+
 2007-02-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/debug/Makefile.am:
@@ -455,6 +469,8 @@
 	  Update to CVS.
 
 2007-01-18  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: Sebastian Dröge <slomo circular-chaos org>
 
 	* gst/audiofx/audiopanorama.c:
 	  Fix doc section name (Fixes #397946)

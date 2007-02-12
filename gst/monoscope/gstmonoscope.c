@@ -21,9 +21,13 @@
 
 /**
  * SECTION:element-monoscope
- * @see_also: monoscope
+ * @see_also: goom
  *
  * <refsect2>
+ * <para>
+ * Synaesthesia is an audio visualisation element. It creates a colored
+ * curve of the audio signal like on an oszilloscope.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
@@ -159,6 +163,9 @@ gst_monoscope_init (GstMonoscope * monoscope, GstMonoscopeClass * klass)
   monoscope->fps_num = 25;      /* desired frame rate */
   monoscope->fps_denom = 1;
   monoscope->visstate = NULL;
+
+  /* reset the initial audio state */
+  monoscope->rate = GST_AUDIO_DEF_RATE;
 }
 
 static void
@@ -309,8 +316,8 @@ get_buffer (GstMonoscope * monoscope, GstBuffer ** outbuf)
 static GstFlowReturn
 gst_monoscope_chain (GstPad * pad, GstBuffer * inbuf)
 {
+  GstFlowReturn flow_ret = GST_FLOW_OK;
   GstMonoscope *monoscope;
-  GstFlowReturn flow_ret;
 
   monoscope = GST_MONOSCOPE (GST_PAD_PARENT (pad));
 
@@ -330,8 +337,6 @@ gst_monoscope_chain (GstPad * pad, GstBuffer * inbuf)
 
   gst_adapter_push (monoscope->adapter, inbuf);
   inbuf = NULL;
-
-  flow_ret = GST_FLOW_OK;
 
   /* Collect samples until we have enough for an output frame */
   while (flow_ret == GST_FLOW_OK) {
@@ -515,7 +520,6 @@ gst_monoscope_change_state (GstElement * element, GstStateChange transition)
 {
   GstMonoscope *monoscope = GST_MONOSCOPE (element);
   GstStateChangeReturn ret;
-
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:

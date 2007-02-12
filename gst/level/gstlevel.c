@@ -183,8 +183,8 @@ gst_level_class_init (GstLevelClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (level_debug, "level", 0, "Level calculation");
 
-  trans_class->set_caps = gst_level_set_caps;
-  trans_class->transform_ip = gst_level_transform_ip;
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_level_set_caps);
+  trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_level_transform_ip);
   trans_class->passthrough_on_same_caps = TRUE;
 }
 
