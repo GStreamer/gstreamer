@@ -25,8 +25,8 @@
  *
  * <refsect2>
  * <para>
- * Synaesthesia is an audio visualisation element. It creates a colored
- * curve of the audio signal like on an oszilloscope.
+ * Monoscope is an audio visualisation element. It creates a coloured
+ * curve of the audio signal like on an oscilloscope.
  * </para>
  * <title>Example launch line</title>
  * <para>

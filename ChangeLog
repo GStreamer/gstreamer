@@ -1,5 +1,12 @@
 2007-02-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/monoscope/Makefile.am:
+	* gst/monoscope/gstmonoscope.c:
+	  Fix copy'n'paste-o in docs chunk. Also add some missing CFLAGS
+	  (but no LIBS, since we only use defines from the headers).
+
+2007-02-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Based on patch by: Jonathan Matthew  <jonathan at kaolin wh9 net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_parse_stream_init),
