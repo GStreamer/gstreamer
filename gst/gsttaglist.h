@@ -561,6 +561,14 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  */
 #define GST_TAG_ALBUM_PEAK             "replaygain-album-peak"
 /**
+ * GST_TAG_REFERENCE_LEVEL:
+ *
+ * reference level of track and album gain values (double)
+ *
+ * Since: 0.10.12
+ */
+#define GST_TAG_REFERENCE_LEVEL        "replaygain-reference-level"
+/**
  * GST_TAG_LANGUAGE_CODE:
  *
  * Language code (ISO-639-1) (string)
@@ -586,7 +594,7 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
 /**
  * GST_TAG_BEATS_PER_MINUTE:
  *
- * number of beats per minute in audio
+ * number of beats per minute in audio (double)
  *
  * Since: 0.10.12
  */

@@ -206,6 +206,9 @@ _gst_tag_initialize (void)
       G_TYPE_DOUBLE, _("replaygain album gain"), _("album gain in db"), NULL);
   gst_tag_register (GST_TAG_ALBUM_PEAK, GST_TAG_FLAG_META,
       G_TYPE_DOUBLE, _("replaygain album peak"), _("peak of the album"), NULL);
+  gst_tag_register (GST_TAG_REFERENCE_LEVEL, GST_TAG_FLAG_META,
+      G_TYPE_DOUBLE, _("replaygain reference level"),
+      _("reference level of track and album gain values"), NULL);
   gst_tag_register (GST_TAG_LANGUAGE_CODE, GST_TAG_FLAG_META, G_TYPE_STRING,
       _("language code"),
       _("language code for this stream, conforming to ISO-639-1"), NULL);
