@@ -1319,12 +1319,10 @@ static GstFlowReturn
 gst_wavparse_parse_stream_init (GstWavParse * wav)
 {
   if (gst_adapter_available (wav->adapter) >= 12) {
-    GstBuffer *tmp = gst_buffer_new ();
+    GstBuffer *tmp;
 
     /* _take flushes the data */
-    GST_BUFFER_DATA (tmp) = gst_adapter_take (wav->adapter, 12);
-    GST_BUFFER_SIZE (tmp) = 12;
-
+    tmp = gst_adapter_take_buffer (wav->adapter, 12);
     GST_DEBUG ("Parsing wav header");
     if (!gst_wavparse_parse_file_header (GST_ELEMENT (wav), tmp)) {
       return GST_FLOW_ERROR;
@@ -1458,9 +1456,7 @@ iterate_adapter:
       return GST_FLOW_OK;
     }
 
-    buf = gst_buffer_new ();
-    GST_BUFFER_DATA (buf) = gst_adapter_take (wav->adapter, desired);
-    GST_BUFFER_SIZE (buf) = desired;
+    buf = gst_adapter_take_buffer (wav->adapter, desired);
   } else {
     if ((res = gst_pad_pull_range (wav->sinkpad, wav->offset,
                 desired, &buf)) != GST_FLOW_OK)

@@ -1,3 +1,13 @@
+2007-02-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Jonathan Matthew  <jonathan at kaolin wh9 net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_parse_stream_init),
+	(gst_wavparse_stream_data):
+	  Fix massive memory leak when operating in streaming mode due to
+	  GST_BUFFER_MALLOCDATA() not being set on newly-created buffers.
+	  Fixes #407057.
+
 2007-02-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_class_init),
