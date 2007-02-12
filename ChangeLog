@@ -1,3 +1,14 @@
+2007-02-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/debug/Makefile.am:
+	* gst/debug/gstdebug.c: (plugin_init):
+	* gst/debug/gstpushfilesrc.c:
+	* gst/debug/gstpushfilesrc.h:
+	  Add code for a pushfilesrc element that implements a pushfile:// URI
+	  handler, to make debugging push-mode operation of demuxer/decoders
+	  that support both easier in connection with seek/playbin/etc.
+	  The element isn't registered at the moment.
+
 2007-02-11  Sébastien Moutte  <sebastien@moutte.net>
 
 	* gst/avi/gstavimux.c:

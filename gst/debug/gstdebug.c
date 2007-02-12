@@ -27,6 +27,7 @@ gboolean gst_progress_report_plugin_init (GstPlugin * plugin);
 gboolean gst_navseek_plugin_init (GstPlugin * plugin);
 gboolean gst_test_plugin_init (GstPlugin * plugin);
 gboolean gst_break_my_data_plugin_init (GstPlugin * plugin);
+gboolean gst_push_file_src_plugin_init (GstPlugin * plugin);
 
 /* gboolean gst_negotiation_plugin_init (GstPlugin * plugin); */
 
@@ -35,6 +36,7 @@ plugin_init (GstPlugin * plugin)
 {
   if (!gst_break_my_data_plugin_init (plugin) ||
       !gst_navseek_plugin_init (plugin) ||
+/*    !gst_push_file_src_plugin_init (plugin) || */
 /*    !gst_negotiation_plugin_init (plugin) || */
       !gst_progress_report_plugin_init (plugin) ||
       !gst_test_plugin_init (plugin))
