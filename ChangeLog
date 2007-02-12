@@ -1,3 +1,16 @@
+2007-02-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/libs/Makefile.am:
+	* docs/plugins/Makefile.am:
+	  Add crossreferences to glib/gobject/gstream docs.
+
+	* gst-libs/gst/audio/audio.h:
+	  Source formatting.
+
+	* gst/audiotestsrc/gstaudiotestsrc.c: (plugin_init):
+	  Add own debug category.
+
 2007-02-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: René Stadler <mail at renestadler de>
@@ -2644,6 +2657,13 @@
 	  Try harder to guess which mixer track is the master mixer
 	  track (instead of just taking the first one that has a pvolume).
 	  Fixes #342228.
+
+2006-09-17  Stefan Kost  <ensonic@users.sf.net>
+
+	reviewed by: <delete if not using a buddy>
+
+	* gst-libs/gst/audio/audio.h:
+	* gst/audiotestsrc/gstaudiotestsrc.c: (plugin_init):
 
 2006-09-17  Stefan Kost  <ensonic@users.sf.net>
 

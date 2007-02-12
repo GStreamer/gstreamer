@@ -1,8 +1,6 @@
 /* GStreamer
  * Copyright (C) 2005 Stefan Kost <ensonic@users.sf.net>
  *
- * gstaudiotestsrc.c:
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -63,6 +61,9 @@
 #endif
 
 #define M_PI_M2 ( M_PI + M_PI )
+
+GST_DEBUG_CATEGORY_STATIC (audio_test_src_debug);
+#define GST_CAT_DEFAULT audio_test_src_debug
 
 static const GstElementDetails gst_audio_test_src_details =
 GST_ELEMENT_DETAILS ("Audio test source",
@@ -770,6 +771,9 @@ plugin_init (GstPlugin * plugin)
 {
   /* initialize gst controller library */
   gst_controller_init (NULL, NULL);
+
+  GST_DEBUG_CATEGORY_INIT (audio_test_src_debug, "audiotestsrc", 0,
+      "Audio Test Source");
 
   return gst_element_register (plugin, "audiotestsrc",
       GST_RANK_NONE, GST_TYPE_AUDIO_TEST_SRC);
