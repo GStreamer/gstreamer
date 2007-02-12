@@ -313,7 +313,8 @@ Dynamically adjusting latency
 An element that want to change the latency in the pipeline can do this by
 posting a LATENCY message on the bus. This message instructs the pipeline to:
 
- - query the latency in the pipeline (which might now have changed)
+ - query the latency in the pipeline (which might now have changed) with a
+   LATENCY query.
  - redistribute a new global latency to all elements with a LATENCY event.
 
 A use case where the latency in a pipeline can change could be a network element

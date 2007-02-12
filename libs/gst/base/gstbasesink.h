@@ -190,6 +190,10 @@ gint64		gst_base_sink_get_max_lateness 	(GstBaseSink *sink);
 void		gst_base_sink_set_qos_enabled 	(GstBaseSink *sink, gboolean enabled);
 gboolean	gst_base_sink_is_qos_enabled 	(GstBaseSink *sink);
 
+gboolean	gst_base_sink_query_latency 	(GstBaseSink *sink, gboolean *live, gboolean *upstream_live,
+						 GstClockTime *min_latency, GstClockTime *max_latency);
+GstClockTime	gst_base_sink_get_latency 	(GstBaseSink *sink);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_SINK_H__ */

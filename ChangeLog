@@ -1,3 +1,30 @@
+2007-02-12  Wim Taymans,,,  <wim@fluendo.com>
+
+	* docs/design/draft-latency.txt:
+	Small update.
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init),
+	(gst_base_sink_get_latency), (gst_base_sink_query_latency),
+	(gst_base_sink_wait_clock), (gst_base_sink_send_qos),
+	(gst_base_sink_perform_qos), (gst_base_sink_queue_object_unlocked),
+	(gst_base_sink_chain_unlocked), (gst_base_sink_send_event),
+	(gst_base_sink_get_position), (gst_base_sink_query),
+	(gst_base_sink_change_state):
+	* libs/gst/base/gstbasesink.h:
+	API: gst_base_sink_query_latency() to let subclasses query the upstream
+	latency.
+	API: gst_base_sink_get_latency() to let subclasses query the configured
+	latency in the sink.
+	Implement query and set latency.
+	Update some docs.
+	As spotted by Will Newton <will dot newton at gmail dot com>: Make sure we
+	don't continue preroll when we are flushing. Fixes #405284.
+
+	* tests/check/pipelines/stress.c: (change_state_timeout),
+	(quit_timeout), (GST_START_TEST), (stress_suite):
+	Test for #405284.
+
 2007-02-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: René Stadler <mail at renestadler de>
