@@ -1,3 +1,14 @@
+2007-02-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstplaybasebin.c: (setup_source):
+	  When we have external subtitles and wait for the subtitle decodebin
+	  to get up and running, we set up a (sync) bus handler for the
+	  subtitle decodebin, so we can stop waiting when it posts an error
+	  message. However, we should do that before we set the subtitle
+	  decodebin's state to playing, otherwise things are racy and we might
+	  miss error messages posted before we had a chance to set up the bus.
+	  This should finally fix totem hanging on .txt pseudo-subtitle files.
+	  
 2007-02-10  Sébastien Moutte  <sebastien at moutte dot net>
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:(gst_base_rtp_audio_payload_handle_frame_based_buffer):

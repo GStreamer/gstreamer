@@ -1967,6 +1967,7 @@ setup_source (GstPlayBaseBin * play_base_bin)
   /* do subs */
   if (subbin) {
     GstElement *db;
+    GstBus *bus;
 
     play_base_bin->subtitle = subbin;
     db = gst_bin_get_by_name (GST_BIN_CAST (subbin), "subtitle-decoder");
@@ -1996,26 +1997,20 @@ setup_source (GstPlayBaseBin * play_base_bin)
        * to commit the subtitle group using an extra flag. */
       play_base_bin->subtitle_done = FALSE;
 
+      /* since subbin is still a stand-alone bin, we need to add a custom bus
+       * to intercept error messages, so we can stop waiting and continue */
+      bus = gst_bus_new ();
+      gst_element_set_bus (subbin, bus);
+      gst_bus_set_sync_handler (bus, subbin_startup_sync_msg, play_base_bin);
+
       sret = gst_element_set_state (subbin, GST_STATE_PAUSED);
       if (sret != GST_STATE_CHANGE_FAILURE) {
-        GstBus *bus;
-
-        /* since subbin is still a stand-alone bin, we need to add a custom bus
-         * to intercept error messages, so we can stop waiting and continue */
-        bus = gst_bus_new ();
-        gst_element_set_bus (subbin, bus);
-        gst_bus_set_sync_handler (bus, subbin_startup_sync_msg, play_base_bin);
-
         GROUP_LOCK (play_base_bin);
         GST_DEBUG ("waiting for subtitle to complete...");
         while (!play_base_bin->subtitle_done)
           GROUP_WAIT (play_base_bin);
         GST_DEBUG ("group done !");
         GROUP_UNLOCK (play_base_bin);
-
-        gst_bus_set_sync_handler (bus, NULL, NULL);
-        gst_element_set_bus (subbin, NULL);
-        gst_object_unref (bus);
 
         if (!play_base_bin->building_group ||
             play_base_bin->building_group->type[GST_STREAM_TYPE_TEXT -
@@ -2034,6 +2029,10 @@ setup_source (GstPlayBaseBin * play_base_bin)
         gst_object_unref (play_base_bin->subtitle);
         play_base_bin->subtitle = NULL;
       }
+
+      gst_bus_set_sync_handler (bus, NULL, NULL);
+      gst_element_set_bus (subbin, NULL);
+      gst_object_unref (bus);
     }
     gst_object_unref (db);
   }
