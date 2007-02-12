@@ -1,3 +1,11 @@
+2007-02-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: René Stadler <mail at renestadler de>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  Add vorbis/FLAC-tag mapping for new GST_TAG_REFERENCE_LEVEL
+	  (#403597).
+
 2007-02-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (setup_source):
