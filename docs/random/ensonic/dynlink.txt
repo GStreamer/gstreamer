@@ -1,0 +1,42 @@
+$Id$
+
+Currently its only save to link/unlink elements/pad when pipeline is in READY.
+
+= current api =
+
+gboolean gst_element_link   (GstElement *src, GstElement *dest);
+void     gst_element_unlink (GstElement *src, GstElement *dest);
+
+gst_element_link_many, gst_element_unlink_many, gst_element_link_filtered,
+gst_element_link_pads, gst_element_unlink_pads, gst_element_link_pads_filtered
+
+GstPadLinkReturn gst_pad_link (GstPad *srcpad, GstPad *sinkpad);
+gboolean         gst_pad_unlink (GstPad *srcpad, GstPad *sinkpad);
+
+= use cases =
+
+== inserting an element ==
+
+* we have: e1 ! e2
+* we want: e1 ! e3 ! e2
+
+gst_element_insert_linked(e1, e2, e3);
+
+== removing an element ==
+
+* we have: e1 ! e2 ! e3
+* we want: e1 ! e3
+
+gst_element_remove_linked(e2);
+
+== swapping out an elelment ==
+
+* we have: e1 ! e2 ! e3
+* we want: e1 ! e4 ! e3
+
+gst_element_swap_linked(e1, e3, e4);
+
+= thoughts =
+* I don't think we need api for pads
+* Should current api check for the state?
+

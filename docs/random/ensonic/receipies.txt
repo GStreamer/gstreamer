@@ -16,7 +16,7 @@ How to I configure the initial playback segment?
 3) set pipeline to PLAYING
 
 === problems ===
-1) would preroll the pipeline only to flush it when the seek comes
+1) would preroll the pipeline only, to flush it when the seek comes
 
 
 == async state changes ==

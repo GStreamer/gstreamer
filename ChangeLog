@@ -1,3 +1,11 @@
+2007-02-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/random/ensonic/dynlink.txt:
+	* docs/random/ensonic/interfaces.txt:
+	* docs/random/ensonic/receipies.txt:
+	  Possible dynamic reconnection api, plus some type fixes the other two
+	  docs.
+
 2007-02-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* plugins/elements/gstfilesink.c: (gst_file_sink_uri_set_uri):
