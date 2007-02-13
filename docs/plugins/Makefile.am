@@ -53,8 +53,11 @@ SCAN_OPTIONS=
 MKDB_OPTIONS=--sgml-mode --source-suffixes=c,h,cc
 
 # Extra options to supply to gtkdoc-fixref.
-# FIXME get the location of the installed gstreamer docs
-#FIXXREF_OPTIONS=--extra-dir=../gst/html
+FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/gobject \
+	--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/glib \
+	--extra-dir=$(GST_PREFIX)/share/gtk-doc/html/gstreamer-@GST_MAJORMINOR@ \
+	--extra-dir=$(GST_PREFIX)/share/gtk-doc/html/gstreamer-libs-@GST_MAJORMINOR@ \
+	--extra-dir=$(GSTPB_PREFIX)/share/gtk-doc/html/gst-plugins-base-libs-@GST_MAJORMINOR@
 
 # Used for dependencies.
 HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.h

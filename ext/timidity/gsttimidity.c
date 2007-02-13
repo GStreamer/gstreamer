@@ -781,13 +781,18 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_timidity_debug, "timidity",
       0, "Timidity plugin");
 
-  /* initialise timidity library, fail loading the plugin if this fails
-   * FIXME: check for config location during configure
-   */
+  /* initialise timidity library, fail loading the plugin if this fails */
+#ifdef TIMIDITY_CFG
   if (mid_init (TIMIDITY_CFG) != 0) {
     GST_WARNING ("can't initialize timidity with config: " TIMIDITY_CFG);
     return FALSE;
   }
+#else
+  if (mid_init ("/etc/timidity.cfg") != 0) {
+    GST_WARNING ("can't initialize timidity with config: /etc/timidity.cfg");
+    return FALSE;
+  }
+#endif
 
   if (!gst_type_find_register (plugin, "audio/midi", GST_RANK_PRIMARY,
           gst_timidity_typefind, exts,

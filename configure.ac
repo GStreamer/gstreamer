@@ -156,7 +156,7 @@ dnl *** checks for compiler characteristics ***
 
 dnl *** checks for library functions ***
 
-dnl *** checks for dependancy libraries ***
+dnl *** checks for dependency libraries ***
 
 dnl GLib is required
 GST_GLIB_CHECK([2.6])
@@ -183,6 +183,14 @@ dnl FIXME: get rid of this by making sure gstreamer-check brings it in
 dnl check for "check", unit testing library/header
 AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
 AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+
+dnl Check for documentation xrefs
+GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
+GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_MAJORMINOR`"
+GSTPB_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-plugins-base-$GST_MAJORMINOR`"
+AC_SUBST(GLIB_PREFIX)
+AC_SUBST(GST_PREFIX)
+AC_SUBST(GSTPB_PREFIX)
 
 dnl GTK is optional and used in examples
 HAVE_GTK=NO
@@ -762,8 +770,8 @@ GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
 	timidity_cfg=""
 	if test -r /etc/timidity.cfg; then
 	  timidity_cfg=/etc/timidity.cfg
-	elif test -r /etc/timidify/timidity.cfg; then
-	  timidity_cfg=/etc/timidify/timidity.cfg
+	elif test -r /etc/timidity/timidity.cfg; then
+	  timidity_cfg=/etc/timidity/timidity.cfg
 	elif test -r /usr/share/timidity/timidity.cfg; then
 	  timidity_cfg=/usr/share/timidity/timidity.cfg
 	elif test -r /usr/local/share/timidity/timidity.cfg; then
