@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gconf/gconf-client.h>
+#include "gstswitchsink.h"
 
 G_BEGIN_DECLS
 
@@ -39,21 +40,19 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_GCONF_AUDIO_SINK))
 
 typedef struct _GstGConfAudioSink {
-  GstBin parent;
+  GstSwitchSink parent;
 
   /* explicit pointers to stuff used */
   GConfClient *client;
-  int profile;
+  GstGConfProfile profile;
   guint connection;
-  GstElement *kid;
-  GstPad *pad;
 
   /* Current gconf string */
   gchar *gconf_str;
 } GstGConfAudioSink;
 
 typedef struct _GstGConfAudioSinkClass {
-  GstBinClass parent_class;
+  GstSwitchSinkClass parent_class;
 } GstGConfAudioSinkClass;
 
 GType   gst_gconf_audio_sink_get_type   (void);

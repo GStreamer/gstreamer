@@ -1,3 +1,36 @@
+2007-02-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/gconf/Makefile.am:
+	* ext/gconf/gconf.c: (gst_gconf_get_string),
+	(gst_gconf_get_key_for_sink_profile), (gst_gconf_set_string),
+	(gst_gconf_render_bin_with_default):
+	* ext/gconf/gconf.h:
+	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_base_init),
+	(gst_gconf_audio_sink_reset), (gst_gconf_audio_sink_init),
+	(gst_gconf_audio_sink_dispose), (do_change_child),
+	(gst_gconf_switch_profile), (gst_gconf_audio_sink_set_property),
+	(cb_change_child), (gst_gconf_audio_sink_change_state):
+	* ext/gconf/gstgconfaudiosink.h:
+	* ext/gconf/gstswitchsink.c: (gst_switch_sink_base_init),
+	(gst_switch_sink_class_init), (gst_switch_sink_reset),
+	(gst_switch_sink_init), (gst_switch_sink_dispose),
+	(gst_switch_commit_new_kid), (gst_switch_sink_set_child),
+	(gst_switch_sink_set_property), (gst_switch_sink_handle_event),
+	(gst_switch_sink_get_property), (gst_switch_sink_change_state):
+	* ext/gconf/gstswitchsink.h:
+	* gst/autodetect/gstautoaudiosink.c:
+	(gst_auto_audio_sink_class_init), (gst_auto_audio_sink_dispose),
+	(gst_auto_audio_sink_clear_kid), (gst_auto_audio_sink_reset),
+	(gst_auto_audio_sink_detect):
+	* gst/autodetect/gstautovideosink.c:
+	(gst_auto_video_sink_class_init), (gst_auto_video_sink_dispose),
+	(gst_auto_video_sink_clear_kid), (gst_auto_video_sink_reset),
+	(gst_auto_video_sink_detect):
+	Re-factor the gconfaudiosink into a "GstSwitchSink" base class
+	and a child that implements the GConf key monitoring. The end goal of
+	this is an audio sink that can be changed on the fly, but at the 
+	moment it still only changes on the next READY transition.
+
 2007-02-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),

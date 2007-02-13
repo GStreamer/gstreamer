@@ -1,4 +1,5 @@
 /* GStreamer
+ * nf_get_default_audio_sink
  * Copyright (C) <2002> Thomas Vander Stichele <thomas@apestaart.org>
  * Copyright (C) <2006> Jürg Billeter <j@bitron.ch>
  *
@@ -25,6 +26,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <gst/gst.h>
 
 #include "gconf.h"
 #include "gstgconfelements.h"   /* for debug category */
@@ -63,8 +66,12 @@ gst_gconf_get_string (const gchar * key)
 {
   GError *error = NULL;
   gchar *value = NULL;
-  gchar *full_key = g_strdup_printf ("%s/%s", GST_GCONF_DIR, key);
+  gchar *full_key;
 
+  if (!g_str_has_prefix (key, GST_GCONF_DIR))
+    full_key = g_strdup_printf ("%s/%s", GST_GCONF_DIR, key);
+  else
+    full_key = g_strdup (key);
 
   value = gconf_client_get_string (gst_gconf_get_client (), full_key, &error);
   g_free (full_key);
@@ -79,20 +86,20 @@ gst_gconf_get_string (const gchar * key)
 }
 
 const gchar *
-gst_gconf_get_key_for_sink_profile (guint profile)
+gst_gconf_get_key_for_sink_profile (GstGConfProfile profile)
 {
   switch (profile) {
     case GCONF_PROFILE_SOUNDS:
-      return GST_GCONF_AUDIOSINK_KEY;
+      return GST_GCONF_DIR "/" GST_GCONF_AUDIOSINK_KEY;
     case GCONF_PROFILE_MUSIC:
-      return GST_GCONF_MUSIC_AUDIOSINK_KEY;
+      return GST_GCONF_DIR "/" GST_GCONF_MUSIC_AUDIOSINK_KEY;
     case GCONF_PROFILE_CHAT:
-      return GST_GCONF_CHAT_AUDIOSINK_KEY;
+      return GST_GCONF_DIR "/" GST_GCONF_CHAT_AUDIOSINK_KEY;
     default:
       break;
   }
 
-  g_return_val_if_reached (GST_GCONF_AUDIOSINK_KEY);
+  g_return_val_if_reached (GST_GCONF_DIR "/" GST_GCONF_AUDIOSINK_KEY);
 }
 
 /**
@@ -106,7 +113,12 @@ void
 gst_gconf_set_string (const gchar * key, const gchar * value)
 {
   GError *error = NULL;
-  gchar *full_key = g_strdup_printf ("%s/%s", GST_GCONF_DIR, key);
+  gchar *full_key;
+
+  if (!g_str_has_prefix (key, GST_GCONF_DIR))
+    full_key = g_strdup_printf ("%s/%s", GST_GCONF_DIR, key);
+  else
+    full_key = g_strdup (key);
 
   gconf_client_set_string (gst_gconf_get_client (), full_key, value, &error);
   if (error) {
@@ -149,27 +161,25 @@ gst_gconf_render_bin_from_key (const gchar * key)
 }
 
 /**
- * gst_gconf_get_default_audio_sink:
- * @profile: the appropriate application profile.
+ * gst_gconf_render_bin_with_default:
+ * @bin: a #gchar string corresponding to pipeline to construct.
+ * @default: a pipeline description to use as default if the GConf key
+ *   pipeline fails to construct.
  *
- * Render audio output bin from GStreamer GConf key : "default/audiosink".
- * If key is invalid, the default audio sink for the platform is used
- * (typically osssink or sunaudiosink).
+ * Render bin from GConf key @key using @default as a fallback.
  *
- * Returns: a #GstElement containing the audio output bin, or NULL if
- * everything failed.
+ * Returns: a #GstElement containing the rendered bin.
  */
 GstElement *
-gst_gconf_get_default_audio_sink (int profile)
+gst_gconf_render_bin_with_default (const gchar * bin,
+    const gchar * default_sink)
 {
   GstElement *ret;
-  const gchar *key;
 
-  key = gst_gconf_get_key_for_sink_profile (profile);
-  ret = gst_gconf_render_bin_from_key (key);
+  ret = gst_element_factory_make (bin, NULL);
 
   if (!ret) {
-    ret = gst_element_factory_make (DEFAULT_AUDIOSINK, NULL);
+    ret = gst_element_factory_make (default_sink, NULL);
 
     if (!ret)
       g_warning ("No GConf default audio sink key and %s doesn't work",

@@ -1,5 +1,6 @@
 /* GStreamer
  * (c) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
+ * (c) 2006 Jan Schmidt <thaytan@noraisin.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -49,6 +50,8 @@
 static GstStateChangeReturn
 gst_auto_audio_sink_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_auto_audio_sink_dispose (GstAutoAudioSink * sink);
+static void gst_auto_audio_sink_clear_kid (GstAutoAudioSink * sink);
 
 GST_BOILERPLATE (GstAutoAudioSink, gst_auto_audio_sink, GstBin, GST_TYPE_BIN);
 
@@ -56,7 +59,8 @@ static const GstElementDetails gst_auto_audio_sink_details =
 GST_ELEMENT_DETAILS ("Auto audio sink",
     "Sink/Audio",
     "Wrapper audio sink for automatically detected audio sink",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
+    "Jan Schmidt <thaytan@noraisin.net");
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -77,11 +81,33 @@ gst_auto_audio_sink_base_init (gpointer klass)
 static void
 gst_auto_audio_sink_class_init (GstAutoAudioSinkClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *eklass;
 
+  gobject_class = G_OBJECT_CLASS (klass);
   eklass = GST_ELEMENT_CLASS (klass);
 
+  gobject_class->dispose =
+      (GObjectFinalizeFunc) GST_DEBUG_FUNCPTR (gst_auto_audio_sink_dispose);
   eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_audio_sink_change_state);
+}
+
+static void
+gst_auto_audio_sink_dispose (GstAutoAudioSink * sink)
+{
+  gst_auto_audio_sink_clear_kid (sink);
+
+  G_OBJECT_CLASS (parent_class)->dispose ((GObject *) sink);
+}
+
+static void
+gst_auto_audio_sink_clear_kid (GstAutoAudioSink * sink)
+{
+  if (sink->kid) {
+    gst_element_set_state (sink->kid, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN (sink), sink->kid);
+    sink->kid = NULL;
+  }
 }
 
 /*
@@ -94,11 +120,9 @@ gst_auto_audio_sink_reset (GstAutoAudioSink * sink)
 {
   GstPad *targetpad;
 
+  gst_auto_audio_sink_clear_kid (sink);
+
   /* fakesink placeholder */
-  if (sink->kid) {
-    gst_element_set_state (sink->kid, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (sink), sink->kid);
-  }
   sink->kid = gst_element_factory_make ("fakesink", "tempsink");
   gst_bin_add (GST_BIN (sink), sink->kid);
 
@@ -258,11 +282,7 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
   GstElement *esink;
   GstPad *targetpad;
 
-  if (sink->kid) {
-    gst_element_set_state (sink->kid, GST_STATE_NULL);
-    gst_bin_remove (GST_BIN (sink), sink->kid);
-    sink->kid = NULL;
-  }
+  gst_auto_audio_sink_clear_kid (sink);
 
   /* find element */
   GST_DEBUG_OBJECT (sink, "Creating new kid");
