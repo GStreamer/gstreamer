@@ -30,7 +30,7 @@ earliest element in the pipeline, typically a demuxer. After receiving
 the message, the application can reconnect the pipeline or issue other
 seek events in the pipeline. Since the message is posted as early as
 possible in the pipeline, the application has some time to issue a new
-seek to make the transition seemless. Typically the allowed delay is
+seek to make the transition seamless. Typically the allowed delay is
 defined by the buffer sizes of the sinks as well as the size of any 
 queues in the pipeline.
 

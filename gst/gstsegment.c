@@ -230,7 +230,7 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
  * @start: the seek start value
  * @stop_type: the seek method
  * @stop: the seek stop value
- * @update: boolean holding whether start or stop were updated.
+ * @update: boolean holding whether last_stop was updated.
  *
  * Update the segment structure with the field values of a seek event (see
  * gst_event_new_seek()).
@@ -255,6 +255,10 @@ gst_segment_set_last_stop (GstSegment * segment, GstFormat format,
  * The applied rate of the segment will be set to 1.0 by default.
  * If the caller can apply a rate change, it should update @segment
  * rate and applied_rate after calling this function.
+ *
+ * @update will be set to TRUE if a seek should be performed to the segment 
+ * last_stop field. This field can be FALSE if, for example, only the @rate
+ * has been changed but not the playback position.
  */
 void
 gst_segment_set_seek (GstSegment * segment, gdouble rate,
@@ -263,6 +267,7 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
     GstSeekType stop_type, gint64 stop, gboolean * update)
 {
   gboolean update_stop, update_start;
+  gint64 last_stop;
 
   g_return_if_fail (rate != 0.0);
   g_return_if_fail (segment != NULL);
@@ -272,7 +277,7 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
   else
     g_return_if_fail (segment->format == format);
 
-  update_stop = update_start = TRUE;
+  update_start = update_stop = TRUE;
 
   /* start is never invalid */
   switch (start_type) {
@@ -285,20 +290,14 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
       /* start holds desired position, map -1 to the start */
       if (start == -1)
         start = 0;
-      if (start == segment->start)
-        update_start = FALSE;
       break;
     case GST_SEEK_TYPE_CUR:
       /* add start to currently configure segment */
-      if (start == 0)
-        update_start = FALSE;
       start = segment->start + start;
       break;
     case GST_SEEK_TYPE_END:
       if (segment->duration != -1) {
         /* add start to total length */
-        if (start == 0)
-          update_start = FALSE;
         start = segment->duration + start;
       } else {
         /* no update if duration unknown */
@@ -323,21 +322,15 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
       /* stop holds required value */
       break;
     case GST_SEEK_TYPE_CUR:
-      if (segment->stop != -1) {
-        if (stop == 0)
-          update_stop = FALSE;
+      if (segment->stop != -1)
         stop = segment->stop + stop;
-      } else {
+      else
         stop = -1;
-        update_stop = FALSE;
-      }
       break;
     case GST_SEEK_TYPE_END:
-      if (segment->duration != -1) {
-        if (stop == 0)
-          update_stop = FALSE;
+      if (segment->duration != -1)
         stop = segment->duration + stop;
-      } else {
+      else {
         stop = segment->stop;
         update_stop = FALSE;
       }
@@ -361,24 +354,30 @@ gst_segment_set_seek (GstSegment * segment, gdouble rate,
   segment->applied_rate = 1.0;
   segment->flags = flags;
   segment->start = start;
+  last_stop = segment->last_stop;
   if (update_start && rate > 0.0) {
-    segment->last_stop = start;
+    last_stop = start;
   }
   if (update_stop && rate < 0.0) {
     if (stop != -1)
-      segment->last_stop = stop;
+      last_stop = stop;
     else {
       if (segment->duration != -1)
-        segment->last_stop = segment->duration;
+        last_stop = segment->duration;
       else
-        segment->last_stop = 0;
+        last_stop = 0;
     }
   }
+  /* set update arg to reflect update of last_stop */
+  if (update)
+    *update = last_stop != segment->last_stop;
+
+  /* update new position */
+  if (last_stop != segment->last_stop)
+    segment->last_stop = last_stop;
+
   segment->time = start;
   segment->stop = stop;
-
-  if (update)
-    *update = update_start || update_stop;
 }
 
 /**

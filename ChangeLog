@@ -1,3 +1,11 @@
+2007-02-13  Wim Taymans,,,  <wim@fluendo.com>
+
+	* docs/design/part-seeking.txt:
+	Some small update.
+
+	* gst/gstsegment.c: (gst_segment_set_seek):
+	Revert old bogus change that should make seeking work again.
+
 2007-02-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/dynlink.txt:
