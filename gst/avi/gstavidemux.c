@@ -1496,10 +1496,9 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
   GList *entries_list = NULL;
   guint i, num, n;
 
-  /* DEBUG */
+#ifndef GST_DISABLE_DEBUG
   gulong _nr_keyframes = 0;
-
-  /* DEBUG */
+#endif
 
   if (!buf || !GST_BUFFER_SIZE (buf)) {
     *_entries_list = NULL;
@@ -1565,10 +1564,10 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
       /* all audio frames are keyframes */
       target->flags |= GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME;
     }
-    /* DEBUG */
+#ifndef GST_DISABLE_DEBUG
     if (target->flags & GST_AVI_INDEX_ENTRY_FLAG_KEYFRAME)
       _nr_keyframes++;
-    /* DEBUG */
+#endif
 
     /* stream duration unknown, now we can calculate it */
     if (stream->idx_duration == -1)
@@ -2179,7 +2178,9 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
       g_list_length (list));
 
   if (list) {
-
+#ifndef GST_DISABLE_DEBUG
+    guint num_added_total = 0;
+#endif
     GST_LOG_OBJECT (avi,
         "I'm now going to cut large chunks into smaller pieces");
 
@@ -2206,7 +2207,7 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
             && stream->strh->type == GST_RIFF_FCC_auds) {
           guint32 ideal_size;
           gst_avi_index_entry *entries;
-          gint old_size, num_added;
+          guint old_size, num_added;
           GList *node2;
 
           /* cut in 1/10th of a second */
@@ -2260,9 +2261,16 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
               entry2->frames_before++;
             }
           }
+#ifndef GST_DISABLE_DEBUG
+          num_added_total += num_added;
+#endif
         }
       }
     }
+#ifndef GST_DISABLE_DEBUG
+    if (num_added_total)
+      GST_LOG ("added %u new index entries", num_added_total);
+#endif
 
     GST_LOG_OBJECT (avi, "I'm now going to reorder the index entries for time");
 

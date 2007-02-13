@@ -1,5 +1,16 @@
 2007-02-13  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_parse_index), (gst_avi_demux_stream_index),
+	(gst_avi_demux_sync), (gst_avi_demux_massage_index),
+	(gst_avi_demux_calculate_durations_from_index),
+	(gst_avi_demux_push_event), (gst_avi_demux_stream_header_pull),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data),
+	(gst_avi_demux_loop):
+	  Put debug stuff into #ifndef GST_DISABLE_DEBUG #endif
+
+2007-02-13  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* docs/plugins/Makefile.am:
 	  Add crossreferences to glib/gobject/gstream docs.
