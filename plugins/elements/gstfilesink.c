@@ -554,10 +554,14 @@ gst_file_sink_uri_set_uri (GstURIHandler * handler, const gchar * uri)
      * "location" with uri + 16 because it provides unescaping */
     location = gst_uri_get_location (tmp);
     g_free (tmp);
-  } else if (!g_str_has_prefix (uri, "file:///")) {
-    return FALSE;
   } else {
     location = gst_uri_get_location (uri);
+    if (!location)
+      return FALSE;
+    if (!g_path_is_absolute (location)) {
+      g_free (location);
+      return FALSE;
+    }
   }
 
   ret = gst_file_sink_set_location (sink, location);

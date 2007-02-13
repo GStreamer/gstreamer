@@ -1,3 +1,11 @@
+2007-02-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* plugins/elements/gstfilesink.c: (gst_file_sink_uri_set_uri):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_uri_set_uri):
+	Also check for an absolute path following file:// in the filesrc
+	element. Remove redundant check and call g_path_is_absolute() on the
+	unescaped location.
+
 2007-02-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/design/draft-klass.txt:
