@@ -51,7 +51,8 @@ MKDB_OPTIONS=--sgml-mode
 FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/gobject \
 	--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/glib \
 	--extra-dir=$(GST_PREFIX)/share/gtk-doc/html/gstreamer-@GST_MAJORMINOR@ \
-	--extra-dir=$(GST_PREFIX)/share/gtk-doc/html/gstreamer-libs-@GST_MAJORMINOR@
+	--extra-dir=$(GST_PREFIX)/share/gtk-doc/html/gstreamer-libs-@GST_MAJORMINOR@ \
+        	--extra-dir=$(datadir)/gtk-doc/html/gst-plugins-base-libs-@GST_MAJORMINOR@
 
 # Used for dependencies.
 HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.h

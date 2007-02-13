@@ -1,3 +1,9 @@
+2007-02-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	  Also crossref against gst-plugins-base-libs.
+
 2007-02-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
