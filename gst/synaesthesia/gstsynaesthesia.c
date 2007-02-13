@@ -84,8 +84,11 @@ struct _GstSynaesthesia
   gint channels;
 
   /* Audio state */
+  gint sample_rate;
   gint rate;
 
+  /* Synaesthesia instance */
+  syn_instance *si;
 };
 
 struct _GstSynaesthesiaClass
@@ -195,6 +198,8 @@ gst_synaesthesia_class_init (GstSynaesthesiaClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_synaesthesia_change_state);
+
+  synaesthesia_init ();
 }
 
 static void
@@ -234,11 +239,12 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
   synaesthesia->audio_basetime = GST_CLOCK_TIME_NONE;
   synaesthesia->samples_consumed = 0;
 
-  /* FIXME: this isn't used by the engine, the size is hardcoded there again
-   * we also need to initialize once we negotiated
-   * the we can also supply spf (samples_per_frame)
-   */
-  synaesthesia_init (synaesthesia->width, synaesthesia->height);
+  /* FIXME: the size is currently ignored by the engine. It should
+   * not be, and also there should be a way to change the size later.
+   * We also need API to negotiate the spf (samples_per_frame)
+   * we can supply. */
+  synaesthesia->si =
+      synaesthesia_new (synaesthesia->width, synaesthesia->height);
 }
 
 static void
@@ -263,7 +269,7 @@ gst_synaesthesia_finalize (GObject * object)
 
   synaesthesia = GST_SYNAESTHESIA (object);
 
-  synaesthesia_close ();
+  synaesthesia_close (synaesthesia->si);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -468,7 +474,8 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
         (GST_SECOND * synaesthesia->samples_consumed / synaesthesia->rate);
     GST_BUFFER_DURATION (outbuf) = synaesthesia->frame_duration;
 
-    out_frame = (guchar *) synaesthesia_update (synaesthesia->datain);
+    out_frame = (guchar *)
+        synaesthesia_update (synaesthesia->si, synaesthesia->datain);
     memcpy (GST_BUFFER_DATA (outbuf), out_frame, GST_BUFFER_SIZE (outbuf));
 
     ret = gst_pad_push (synaesthesia->srcpad, outbuf);
