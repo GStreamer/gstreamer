@@ -177,7 +177,10 @@ dnl *** checks for library functions ***
 dnl Check for a way to display the function name in debug output
 GST_CHECK_FUNCTION
 
-dnl *** checks for dependancy libraries ***
+dnl *** checks for dependency libraries ***
+
+dnl GLib is required
+GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.6, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
@@ -197,6 +200,14 @@ dnl FIXME: get rid of this by making sure gstreamer-check brings it in
 dnl check for "check", unit testing library/header
 AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
 AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+
+dnl Check for documentation xrefs
+GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
+GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_MAJORMINOR`"
+GSTPB_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-plugins-base-$GST_MAJORMINOR`"
+AC_SUBST(GLIB_PREFIX)
+AC_SUBST(GST_PREFIX)
+AC_SUBST(GSTPB_PREFIX)
 
 dnl *** set variables based on configure arguments ***
 
