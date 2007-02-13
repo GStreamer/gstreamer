@@ -313,7 +313,7 @@ GST_START_TEST (segment_seek_size)
       GST_SEEK_TYPE_CUR, 100, GST_SEEK_TYPE_SET, 200, &update);
   fail_unless (segment.start == 200);
   fail_unless (segment.stop == 200);
-  fail_unless (update == TRUE);
+  fail_unless (update == FALSE);
 
   /* seek relative to end */
   gst_segment_set_seek (&segment, 1.0,
@@ -430,7 +430,7 @@ GST_START_TEST (segment_seek_reverse)
   fail_unless (segment.stop == 80);
   fail_unless (segment.time == 20);
   fail_unless (segment.last_stop == 80);
-  fail_unless (update == TRUE);
+  fail_unless (update == FALSE);
 }
 
 GST_END_TEST;
