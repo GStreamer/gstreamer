@@ -1,6 +1,11 @@
 2007-02-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
+	  Remove 'tests/examples/xerror/Makefile' from output files again.
+
+2007-02-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
 	* docs/plugins/Makefile.am:
 	  Also crossref against gst-plugins-base-libs.
 

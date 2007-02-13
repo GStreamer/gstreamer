@@ -662,7 +662,6 @@ tests/check/Makefile
 tests/examples/Makefile
 tests/examples/seek/Makefile
 tests/examples/volume/Makefile
-tests/examples/xerror/Makefile
 tests/icles/Makefile
 docs/Makefile
 docs/design/Makefile
