@@ -26,8 +26,8 @@
  * They are composed of an array of #GstStructure.
  *
  * Caps are exposed on #GstPadTemplate to describe all possible types a
- * given pad can handle. They are also stored in the registry along with
- * a description of the element.
+ * given pad can handle. They are also stored in the #GstRegistry along with
+ * a description of the #GstElement.
  *
  * Caps are exposed on the element pads using the gst_pad_get_caps() pad
  * function. This function describes the possible types that the pad can
@@ -45,7 +45,7 @@
  *  GstCaps *caps;
  *  caps = gst_caps_new_simple ("video/x-raw-yuv",
  *       "format", GST_TYPE_FOURCC, GST_MAKE_FOURCC ('I', '4', '2', '0'),
- *       "framerate", G_TYPE_DOUBLE, 25.0,
+ *       "framerate", GST_TYPE_FRACTION, 25, 1,
  *       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
  *       "width", G_TYPE_INT, 320,
  *       "height", G_TYPE_INT, 240,
@@ -60,7 +60,7 @@
  * Various methods exist to work with the media types such as subtracting
  * or intersecting.
  *
- * Last reviewed on 2005-11-23 (0.9.5)
+ * Last reviewed on 2007-02-13 (0.10.10)
  */
 
 #ifdef HAVE_CONFIG_H

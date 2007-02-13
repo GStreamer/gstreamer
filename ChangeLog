@@ -1,3 +1,11 @@
+2007-02-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/design/draft-klass.txt:
+	  Add existing category analysis.
+	  
+	* gst/gstcaps.c:
+	  Fix doc example, framerate is a fraction.
+
 2007-02-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

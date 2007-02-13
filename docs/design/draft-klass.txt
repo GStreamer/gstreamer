@@ -105,6 +105,16 @@ Proposal:
      * Visualisation : intended to be used for audio visualisation
      * Debug         : intended usage is more for debugging purposes.
      
+   - Categories found, but not yet in one of the above lists
+   
+     * Bin           : playbin, decodebin, bin, pipeline
+     * Codec         : lots of decoders, encoder, demuxers
+                       should be removed?
+     * Generic       : should be removed?
+     * File          : like network, should go to Extra?
+     * Editor        : gnonlin, textoverlays
+     * DVD, GDP, LADSPA, Parser, Player, Subtitle, Testing, ...
+     
   3) suggested order:
 
      <functional>[/<media type>]*[/<extra...>]*
@@ -138,7 +148,7 @@ Proposal:
      decodebin        : Decoder/Demuxer
      level            : Filter/Analyzer/Audio
      tee              : Connector/Debug
-   
+
 Use cases:
 
   - get a list of all elements implementing a video effect (pitivi):
