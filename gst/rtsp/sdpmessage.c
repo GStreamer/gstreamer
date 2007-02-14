@@ -57,11 +57,15 @@ G_STMT_START {                  \
 } G_STMT_END
 #define REPLACE_STRING(field,val)       FREE_STRING(field);field=g_strdup (val);
 
-#define INIT_ARRAY(field,type)  \
-G_STMT_START {                  \
-  if (field)                    \
-    g_array_set_size (field,0); \
-  else                          \
+#define INIT_ARRAY(field,type,init_func)  		\
+G_STMT_START {                   			\
+  if (field) {                   			\
+    gint i;			 			\
+    for(i=0; i<field->len; i++)				\
+      init_func (&g_array_index(field, type, i));	\
+    g_array_set_size (field,0); 			\
+  }				 			\
+  else                          			\
     field = g_array_new (FALSE, TRUE, sizeof(type));    \
 } G_STMT_END
 
@@ -95,8 +99,71 @@ RTSPResult sdp_message_add_##method (SDPMessage *msg, type val) {       \
   return RTSP_OK;                                                       \
 }
 
+static void
+sdp_origin_init (SDPOrigin * origin)
+{
+  FREE_STRING (origin->username);
+  FREE_STRING (origin->sess_id);
+  FREE_STRING (origin->sess_version);
+  FREE_STRING (origin->nettype);
+  FREE_STRING (origin->addrtype);
+  FREE_STRING (origin->addr);
+}
 
+static void
+sdp_connection_init (SDPConnection * connection)
+{
+  FREE_STRING (connection->nettype);
+  FREE_STRING (connection->addrtype);
+  FREE_STRING (connection->address);
+  connection->ttl = 0;
+  connection->addr_number = 0;
+}
 
+static void
+sdp_bandwidth_init (SDPBandwidth * bandwidth)
+{
+  FREE_STRING (bandwidth->bwtype);
+  bandwidth->bandwidth = 0;
+}
+
+static void
+sdp_time_init (SDPTime * time)
+{
+  FREE_STRING (time->start);
+  FREE_STRING (time->stop);
+  time->n_repeat = 0;
+}
+
+static void
+sdp_zone_init (SDPZone * zone)
+{
+  FREE_STRING (zone->time);
+  FREE_STRING (zone->typed_time);
+}
+
+static void
+sdp_key_init (SDPKey * key)
+{
+  FREE_STRING (key->type);
+  FREE_STRING (key->data);
+}
+
+static void
+sdp_attribute_init (SDPAttribute * attr)
+{
+  FREE_STRING (attr->key);
+  FREE_STRING (attr->value);
+}
+
+/**
+ * sdp_message_new:
+ * @msg: pointer to new #SDPMessage
+ *
+ * Allocate a new SDPMessage and store the result in @msg.
+ *
+ * Returns: a #RTSPResult.
+ */
 RTSPResult
 sdp_message_new (SDPMessage ** msg)
 {
@@ -111,43 +178,55 @@ sdp_message_new (SDPMessage ** msg)
   return sdp_message_init (newmsg);
 }
 
+/**
+ * sdp_message_init:
+ * @msg: an #SDPMessage
+ *
+ * Initialize @msg so that its contents are as if it was freshly allocated
+ * with sdp_message_new(). This function is mostly used to initialize a message
+ * allocated on the stack. sdp_message_uninit() undoes this operation.
+ *
+ * Returns: a #RTSPResult.
+ */
 RTSPResult
 sdp_message_init (SDPMessage * msg)
 {
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
   FREE_STRING (msg->version);
-  FREE_STRING (msg->origin.username);
-  FREE_STRING (msg->origin.sess_id);
-  FREE_STRING (msg->origin.sess_version);
-  FREE_STRING (msg->origin.nettype);
-  FREE_STRING (msg->origin.addrtype);
-  FREE_STRING (msg->origin.addr);
+  sdp_origin_init (&msg->origin);
   FREE_STRING (msg->session_name);
   FREE_STRING (msg->information);
   FREE_STRING (msg->uri);
-  INIT_ARRAY (msg->emails, gchar *);
-  INIT_ARRAY (msg->phones, gchar *);
-  FREE_STRING (msg->connection.nettype);
-  FREE_STRING (msg->connection.addrtype);
-  FREE_STRING (msg->connection.address);
-  msg->connection.ttl = 0;
-  msg->connection.addr_number = 0;
-  INIT_ARRAY (msg->bandwidths, SDPBandwidth);
-  INIT_ARRAY (msg->times, SDPTime);
-  INIT_ARRAY (msg->zones, SDPZone);
-  FREE_STRING (msg->key.type);
-  FREE_STRING (msg->key.data);
-  INIT_ARRAY (msg->attributes, SDPAttribute);
-  INIT_ARRAY (msg->medias, SDPMedia);
+  INIT_ARRAY (msg->emails, gchar *, g_free);
+  INIT_ARRAY (msg->phones, gchar *, g_free);
+  sdp_connection_init (&msg->connection);
+  INIT_ARRAY (msg->bandwidths, SDPBandwidth, sdp_bandwidth_init);
+  INIT_ARRAY (msg->times, SDPTime, sdp_time_init);
+  INIT_ARRAY (msg->zones, SDPZone, sdp_zone_init);
+  sdp_key_init (&msg->key);
+  INIT_ARRAY (msg->attributes, SDPAttribute, sdp_attribute_init);
+  INIT_ARRAY (msg->medias, SDPMedia, sdp_media_uninit);
 
   return RTSP_OK;
 }
 
+/**
+ * sdp_message_uninit:
+ * @msg: an #SDPMessage
+ *
+ * Free all resources allocated in @msg. @msg should not be used anymore after
+ * this function. This function should be used when @msg was allocated on the
+ * stack and initialized with sdp_message_init().
+ *
+ * Returns: a #RTSPResult.
+ */
 RTSPResult
-sdp_message_clean (SDPMessage * msg)
+sdp_message_uninit (SDPMessage * msg)
 {
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
+
+  sdp_message_init (msg);
 
   FREE_ARRAY (msg->emails);
   FREE_ARRAY (msg->phones);
@@ -160,19 +239,35 @@ sdp_message_clean (SDPMessage * msg)
   return RTSP_OK;
 }
 
+/**
+ * sdp_message_free:
+ * @msg: an #SDPMessage
+ *
+ * Free all resources allocated by @msg. @msg should not be used anymore after
+ * this function. This function should be used when @msg was dynamically
+ * allocated with sdp_message_new().
+ *
+ * Returns: a #RTSPResult.
+ */
 RTSPResult
 sdp_message_free (SDPMessage * msg)
 {
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
-  sdp_message_clean (msg);
-
+  sdp_message_uninit (msg);
   g_free (msg);
 
   return RTSP_OK;
 }
 
-
+/**
+ * sdp_media_new:
+ * @media: pointer to new #SDPMedia
+ *
+ * Allocate a new SDPMedia and store the result in @media.
+ *
+ * Returns: a #RTSPResult.
+ */
 RTSPResult
 sdp_media_new (SDPMedia ** media)
 {
@@ -187,6 +282,16 @@ sdp_media_new (SDPMedia ** media)
   return sdp_media_init (newmedia);
 }
 
+/**
+ * sdp_media_init:
+ * @media: a #SDPMedia
+ *
+ * Initialize @media so that its contents are as if it was freshly allocated
+ * with sdp_media_new(). This function is mostly used to initialize a media
+ * allocated on the stack. sdp_media_uninit() undoes this operation.
+ *
+ * Returns: a #RTSPResult.
+ */
 RTSPResult
 sdp_media_init (SDPMedia * media)
 {
@@ -196,13 +301,57 @@ sdp_media_init (SDPMedia * media)
   media->port = 0;
   media->num_ports = 0;
   FREE_STRING (media->proto);
-  INIT_ARRAY (media->fmts, gchar *);
+  INIT_ARRAY (media->fmts, gchar *, g_free);
   FREE_STRING (media->information);
-  INIT_ARRAY (media->connections, SDPConnection);
-  INIT_ARRAY (media->bandwidths, SDPBandwidth);
-  FREE_STRING (media->key.type);
-  FREE_STRING (media->key.data);
-  INIT_ARRAY (media->attributes, SDPAttribute);
+  INIT_ARRAY (media->connections, SDPConnection, sdp_connection_init);
+  INIT_ARRAY (media->bandwidths, SDPBandwidth, sdp_bandwidth_init);
+  sdp_key_init (&media->key);
+  INIT_ARRAY (media->attributes, SDPAttribute, sdp_attribute_init);
+
+  return RTSP_OK;
+}
+
+/**
+ * sdp_media_uninit:
+ * @media: an #SDPMedia
+ *
+ * Free all resources allocated in @media. @media should not be used anymore after
+ * this function. This function should be used when @media was allocated on the
+ * stack and initialized with sdp_media_init().
+ *
+ * Returns: a #RTSPResult.
+ */
+RTSPResult
+sdp_media_uninit (SDPMedia * media)
+{
+  g_return_val_if_fail (media != NULL, RTSP_EINVAL);
+
+  sdp_media_init (media);
+  FREE_ARRAY (media->fmts);
+  FREE_ARRAY (media->connections);
+  FREE_ARRAY (media->bandwidths);
+  FREE_ARRAY (media->attributes);
+
+  return RTSP_OK;
+}
+
+/**
+ * sdp_media_free:
+ * @media: an #SDPMedia
+ *
+ * Free all resources allocated by @media. @media should not be used anymore after
+ * this function. This function should be used when @media was dynamically
+ * allocated with sdp_media_new().
+ *
+ * Returns: a #RTSPResult.
+ */
+RTSPResult
+sdp_media_free (SDPMedia * media)
+{
+  g_return_val_if_fail (media != NULL, RTSP_EINVAL);
+
+  sdp_media_uninit (media);
+  g_free (media);
 
   return RTSP_OK;
 }
@@ -359,6 +508,18 @@ sdp_message_add_attribute (SDPMessage * msg, gchar * key, gchar * value)
 
 DEFINE_ARRAY_LEN (medias);
 DEFINE_ARRAY_P_GETTER (media, medias, SDPMedia);
+
+/**
+ * sdp_message_add_media:
+ * @msg: an #SDPMessage
+ * @media: an #SDPMedia to add
+ *
+ * Adds @media to the array of medias in @msg. This function takes ownership of
+ * the contents of @media so that @media will have to be reinitialized with
+ * gst_media_init() before it can be used again.
+ *
+ * Returns: an #RTSPResult.
+ */
 RTSPResult
 sdp_message_add_media (SDPMessage * msg, SDPMedia * media)
 {
@@ -370,6 +531,7 @@ sdp_message_add_media (SDPMessage * msg, SDPMedia * media)
   nmedia = &g_array_index (msg->medias, SDPMedia, len);
 
   memcpy (nmedia, media, sizeof (SDPMedia));
+  memset (media, 0, sizeof (SDPMedia));
 
   return RTSP_OK;
 }
@@ -583,8 +745,6 @@ sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
     {
       gchar *slash;
       SDPMedia nmedia;
-
-      nmedia.media = NULL;
 
       c->state = SDP_MEDIA;
       sdp_media_init (&nmedia);

@@ -1,3 +1,15 @@
+2007-02-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/sdpmessage.c: (sdp_origin_init), (sdp_connection_init),
+	(sdp_bandwidth_init), (sdp_time_init), (sdp_zone_init),
+	(sdp_key_init), (sdp_attribute_init), (sdp_message_init),
+	(sdp_message_uninit), (sdp_message_free), (sdp_media_init),
+	(sdp_media_uninit), (sdp_media_free), (sdp_message_add_media),
+	(sdp_parse_line):
+	* gst/rtsp/sdpmessage.h:
+	Based on patch by: jp.liu <jp_liu at astrocom dot cn>
+	Fix memory management of SDP messages. Fixes #407793.
+
 2007-02-14  Stefan Kost  <ensonic@users.sf.net>
 
 	Patch by: zhangfei gao <gaozhangfei@yahoo.com.cn>

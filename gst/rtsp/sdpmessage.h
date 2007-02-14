@@ -130,7 +130,7 @@ typedef struct {
 /* Session descriptions */
 RTSPResult      sdp_message_new                 (SDPMessage **msg);
 RTSPResult      sdp_message_init                (SDPMessage *msg);
-RTSPResult      sdp_message_clean               (SDPMessage *msg);
+RTSPResult      sdp_message_uninit              (SDPMessage *msg);
 RTSPResult      sdp_message_free                (SDPMessage *msg);
 
 RTSPResult      sdp_message_parse_buffer        (guint8 *data, guint size, SDPMessage *msg);
@@ -182,14 +182,18 @@ RTSPResult      sdp_message_dump                (SDPMessage *msg);
 /* Media descriptions */
 RTSPResult      sdp_media_new                   (SDPMedia **media);
 RTSPResult      sdp_media_init                  (SDPMedia *media);
-RTSPResult      sdp_media_clean                 (SDPMedia *media);
+RTSPResult      sdp_media_uninit                (SDPMedia *media);
 RTSPResult      sdp_media_free                  (SDPMedia *media);
 
+RTSPResult      sdp_media_add_bandwidth         (SDPMedia * media, gchar * bwtype, gint bandwidth);
+
+RTSPResult      sdp_media_add_attribute         (SDPMedia *media, gchar * key, gchar * value);
 SDPAttribute *  sdp_media_get_attribute         (SDPMedia *media, guint idx);
 gchar*          sdp_media_get_attribute_val     (SDPMedia *media, gchar *key);
 gchar*          sdp_media_get_attribute_val_n   (SDPMedia *media, gchar *key, guint nth);
-gchar*          sdp_media_get_format            (SDPMedia *media, guint idx);
 
+RTSPResult      sdp_media_add_format            (SDPMedia * media, gchar * format);
+gchar*          sdp_media_get_format            (SDPMedia *media, guint idx);
 
 G_END_DECLS
 
