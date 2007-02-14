@@ -105,8 +105,6 @@ gst_gconf_audio_sink_reset (GstGConfAudioSink * sink)
 
   g_free (sink->gconf_str);
   sink->gconf_str = NULL;
-
-  gst_gconf_switch_profile (sink, GCONF_PROFILE_NONE);
 }
 
 static void
@@ -145,6 +143,9 @@ do_change_child (GstGConfAudioSink * sink)
   const gchar *key;
   gchar *new_gconf_str;
   GstElement *new_kid;
+
+  if (sink->profile == GCONF_PROFILE_NONE)
+    return FALSE;               /* Can't switch to a 'NONE' sink */
 
   key = gst_gconf_get_key_for_sink_profile (sink->profile);
   new_gconf_str = gst_gconf_get_string (key);

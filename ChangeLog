@@ -1,3 +1,10 @@
+2007-02-14  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_reset),
+	(do_change_child):
+	Don't reset the profile when going switching states, as it makes
+	the element non-reusable.
+
 2007-02-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/sdpmessage.c: (sdp_origin_init), (sdp_connection_init),
