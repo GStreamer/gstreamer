@@ -76,12 +76,15 @@ struct _GstWavParse {
 
   /* useful audio data */
   guint16 depth;
-  gint rate;
+  gint    rate;
   guint16 channels;
   guint16 blockalign;
   guint16 width;
-  guint32 bps;
+  guint32 av_bps;
   guint32 fact;
+
+  /* real bps used or 0 when no bitrate is known */
+  guint32 bps;
 
   guint bytes_per_sample;
 

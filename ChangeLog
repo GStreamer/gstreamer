@@ -1,3 +1,26 @@
+2007-02-14  Wim Taymans,,,  <wim@fluendo.com>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_class_init),
+	(gst_wavparse_reset), (gst_wavparse_init),
+	(gst_wavparse_destroy_sourcepad), (gst_wavparse_fmt),
+	(gst_wavparse_parse_file_header), (gst_wavparse_stream_init),
+	(gst_wavparse_perform_seek), (gst_wavparse_peek_chunk_info),
+	(gst_wavparse_stream_headers), (gst_wavparse_parse_stream_init),
+	(gst_wavparse_add_src_pad), (gst_wavparse_stream_data),
+	(gst_wavparse_loop), (gst_wavparse_chain),
+	(gst_wavparse_pad_convert), (gst_wavparse_pad_query),
+	(gst_wavparse_srcpad_event), (gst_wavparse_change_state),
+	(plugin_init):
+	* gst/wavparse/gstwavparse.h:
+	Update docs.
+	Use boilerplate.
+	Various code cleanups.
+	When the bitrate is not known (bps == 0 or compressed formats) let
+	downstream element guestimate the duration and position and don't
+	generate timestamps or durations. Fixes #405213.
+	Fix EOS and ERROR conditions in chain mode, we just need to forward the
+	error flowreturn upstream.
+
 2007-02-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/gconf/Makefile.am:
