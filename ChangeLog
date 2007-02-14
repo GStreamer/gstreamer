@@ -1,3 +1,8 @@
+2007-02-14  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_flags_get_type):
+	Typo fix.
+
 2007-02-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):

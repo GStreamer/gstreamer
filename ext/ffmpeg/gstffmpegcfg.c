@@ -271,7 +271,7 @@ gst_ffmpeg_flags_get_type (void)
       {CODEC_FLAG_H263P_UMV, "Unlimited Motion Vector", "umv"},
       {CODEC_FLAG_CBP_RD, "Rate Distoration Optimization for CBP", "cbp-rd"},
       {CODEC_FLAG_QP_RD, "Rate Distoration Optimization for QP selection", "qp-rd"},
-      {CODEC_FLAG_SVCD_SCAN_OFFSET, "Reserve space for SVC scan offset user data", "scanoffset"},
+      {CODEC_FLAG_SVCD_SCAN_OFFSET, "Reserve space for SVCD scan offset user data", "scanoffset"},
       {CODEC_FLAG_CLOSED_GOP, "Closed GOP", "closedgop"},
       {0, NULL, NULL},
     };
