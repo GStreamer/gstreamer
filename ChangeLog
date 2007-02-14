@@ -1,5 +1,12 @@
 2007-02-14  Wim Taymans,,,  <wim@fluendo.com>
 
+	Patch by: jp.liu <jp_liu at astrocom dot cn>
+
+	* gst/rtsp/rtspurl.c: (rtsp_url_parse):
+	Fix parsing of password field in url. Fixes #407797.
+
+2007-02-14  Wim Taymans,,,  <wim@fluendo.com>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_class_init),
 	(gst_wavparse_reset), (gst_wavparse_init),
 	(gst_wavparse_destroy_sourcepad), (gst_wavparse_fmt),

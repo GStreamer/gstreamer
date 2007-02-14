@@ -95,7 +95,7 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
 
     res->user = g_strndup (p, col - p);
     col++;
-    res->passwd = g_strndup (col, col - at);
+    res->passwd = g_strndup (col, at - col);
 
     /* move to host */
     p = at + 1;
