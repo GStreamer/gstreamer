@@ -1,7 +1,9 @@
 /* GStreamer RTP DTMF source
- * Copyright (C) 2007 Zeeshan Ali <zeenix@gstreamer.net>
  *
  * gstrtpdtmfsrc.h:
+ *
+ * Copyright (C) <2007> Nokia Corporation.
+ *   Contact: Zeeshan Ali <zeeshan.ali@nokia.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
