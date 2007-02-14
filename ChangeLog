@@ -1,3 +1,10 @@
+2007-02-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/sdpmessage.c: (sdp_parse_line):
+	As spotted by: Peter Kjellerstedt  <pkj at axis com>:
+	Clear stack allocated SDPMedia struct before calling _init() on it.
+	Clarify this in the docs as well.
+
 2007-02-14  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_reset),

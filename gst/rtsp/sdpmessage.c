@@ -186,6 +186,9 @@ sdp_message_new (SDPMessage ** msg)
  * with sdp_message_new(). This function is mostly used to initialize a message
  * allocated on the stack. sdp_message_uninit() undoes this operation.
  *
+ * When this function is invoked on newly allocated data (with malloc or on the
+ * stack), its contents should be set to 0 before calling this function.
+ *
  * Returns: a #RTSPResult.
  */
 RTSPResult
@@ -289,6 +292,9 @@ sdp_media_new (SDPMedia ** media)
  * Initialize @media so that its contents are as if it was freshly allocated
  * with sdp_media_new(). This function is mostly used to initialize a media
  * allocated on the stack. sdp_media_uninit() undoes this operation.
+ *
+ * When this function is invoked on newly allocated data (with malloc or on the
+ * stack), its contents should be set to 0 before calling this function.
  *
  * Returns: a #RTSPResult.
  */
@@ -747,6 +753,7 @@ sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
       SDPMedia nmedia;
 
       c->state = SDP_MEDIA;
+      memset (&nmedia, 0, sizeof (nmedia));
       sdp_media_init (&nmedia);
 
       READ_STRING (nmedia.media);
