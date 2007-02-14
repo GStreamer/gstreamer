@@ -1,11 +1,18 @@
-2007-02-14  Wim Taymans,,,  <wim@fluendo.com>
+2007-02-14  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: zhangfei gao <gaozhangfei@yahoo.com.cn>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_vidsink_set_caps):
+	Allow muxing video/x-h264 (was already in the caps). Fixes #407780.
+
+2007-02-14  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: jp.liu <jp_liu at astrocom dot cn>
 
 	* gst/rtsp/rtspurl.c: (rtsp_url_parse):
 	Fix parsing of password field in url. Fixes #407797.
 
-2007-02-14  Wim Taymans,,,  <wim@fluendo.com>
+2007-02-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_class_init),
 	(gst_wavparse_reset), (gst_wavparse_init),

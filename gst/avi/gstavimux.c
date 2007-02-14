@@ -523,6 +523,8 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
       avipad->vids.compression = GST_MAKE_FOURCC ('D', 'V', 'S', 'D');
     } else if (!strcmp (mimetype, "video/x-h263")) {
       avipad->vids.compression = GST_MAKE_FOURCC ('H', '2', '6', '3');
+    } else if (!strcmp (mimetype, "video/x-h264")) {
+      avipad->vids.compression = GST_MAKE_FOURCC ('H', '2', '6', '4');
     } else if (!strcmp (mimetype, "video/mpeg")) {
       gint mpegversion;
 
