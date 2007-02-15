@@ -1,5 +1,11 @@
 2007-02-15  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_get_internal_links_default),
+	(gst_pad_dispatcher):
+	Improve debugging of default pad dispatcher and query functions.
+
+2007-02-15  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	Remove old unused method.
 

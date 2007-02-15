@@ -2829,7 +2829,7 @@ gst_pad_get_internal_links_default (GstPad * pad)
 
   parent = GST_PAD_PARENT (pad);
   if (!parent)
-    return NULL;
+    goto no_parent;
 
   parent_pads = parent->pads;
 
@@ -2837,13 +2837,19 @@ gst_pad_get_internal_links_default (GstPad * pad)
     GstPad *parent_pad = GST_PAD_CAST (parent_pads->data);
 
     if (parent_pad->direction != direction) {
+      GST_DEBUG_OBJECT (pad, "adding pad %s:%s",
+          GST_DEBUG_PAD_NAME (parent_pad));
       res = g_list_prepend (res, parent_pad);
     }
-
     parent_pads = g_list_next (parent_pads);
   }
-
   return res;
+
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "no parent");
+    return NULL;
+  }
 }
 
 /**
@@ -2976,17 +2982,22 @@ gst_pad_dispatcher (GstPad * pad, GstPadDispatcherFunction dispatch,
 
   while (int_pads) {
     GstPad *int_pad = GST_PAD_CAST (int_pads->data);
-    GstPad *int_peer = GST_PAD_PEER (int_pad);
+    GstPad *int_peer = gst_pad_get_peer (int_pad);
 
     if (int_peer) {
+      GST_DEBUG_OBJECT (int_pad, "dispatching to peer %s:%s",
+          GST_DEBUG_PAD_NAME (int_peer));
       res = dispatch (int_peer, data);
+      gst_object_unref (int_peer);
       if (res)
         break;
+    } else {
+      GST_DEBUG_OBJECT (int_pad, "no peer");
     }
     int_pads = g_list_next (int_pads);
   }
-
   g_list_free (orig);
+  GST_DEBUG_OBJECT (pad, "done, result %d", res);
 
   return res;
 }
