@@ -1,3 +1,8 @@
+2007-02-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_process):
+	Set right caps on output buffers.
+
 2007-02-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/sdpmessage.c: (sdp_parse_line):

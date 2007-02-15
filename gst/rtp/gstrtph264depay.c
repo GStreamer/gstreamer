@@ -381,8 +381,7 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
           GST_BUFFER_DATA (outbuf) = outdata;
           GST_BUFFER_MALLOCDATA (outbuf) = outdata;
 
-          gst_buffer_set_caps (outbuf,
-              (GstCaps *) gst_pad_get_pad_template_caps (depayload->srcpad));
+          gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
           GST_DEBUG_OBJECT (rtph264depay, "output %d bytes", outsize);
 
@@ -405,8 +404,7 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         outdata[2] = 1;
         memcpy (&outdata[3], payload, payload_len);
 
-        gst_buffer_set_caps (outbuf,
-            (GstCaps *) gst_pad_get_pad_template_caps (depayload->srcpad));
+        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
         return outbuf;
       }
