@@ -851,15 +851,15 @@ gst_alsasink_reset (GstAudioSink * asink)
   /* ERRORS */
 drop_error:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS,
-        ("alsa-reset: pcm drop error: %s", snd_strerror (err)), (NULL));
+    GST_ERROR_OBJECT (alsa, "alsa-reset: pcm drop error: %s",
+        snd_strerror (err));
     GST_ALSA_UNLOCK (asink);
     return;
   }
 prepare_error:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS,
-        ("alsa-reset: pcm prepare error: %s", snd_strerror (err)), (NULL));
+    GST_ERROR_OBJECT (alsa, "alsa-reset: pcm prepare error: %s",
+        snd_strerror (err));
     GST_ALSA_UNLOCK (asink);
     return;
   }
