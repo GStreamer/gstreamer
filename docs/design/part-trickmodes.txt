@@ -195,7 +195,7 @@ For plugins the following rules apply:
 
 Notes:
 
- - The clock/stream_time keeps running forward.
+ - The clock/running_time keeps running forward.
  - backwards playback potentially uses a lot of memory as frames and undecoded
    data gets buffered.
 

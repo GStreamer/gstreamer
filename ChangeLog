@@ -1,5 +1,27 @@
 2007-02-15  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-TODO.txt:
+	* docs/design/part-activation.txt:
+	* docs/design/part-block.txt:
+	* docs/design/part-buffering.txt:
+	* docs/design/part-clocks.txt:
+	* docs/design/part-element-source.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-gstbin.txt:
+	* docs/design/part-gstbus.txt:
+	* docs/design/part-gstpipeline.txt:
+	* docs/design/part-live-source.txt:
+	* docs/design/part-messages.txt:
+	* docs/design/part-overview.txt:
+	* docs/design/part-qos.txt:
+	* docs/design/part-query.txt:
+	* docs/design/part-states.txt:
+	* docs/design/part-trickmodes.txt:
+	Some doc updates. Start renaming from stream_time to running_time where
+	it was used wrongly.
+
+2007-02-15  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_query):
 	Answer LATENCY query.
 

@@ -55,9 +55,14 @@ Message types
     An element changed state in the pipeline. The message carries the old, new
     and pending state of the element.
   
+  GST_MESSAGE_STATE_DIRTY:
+    
+    An internal message used to instruct a pipeline hierarchy that a state
+    recalculation must be performed because of an ASYNC state change completed.
+
   GST_MESSAGE_STEP_DONE:
 
-    An element stepping frames has finished.
+    An element stepping frames has finished. This is currently not used.
   
   GST_MESSAGE_CLOCK_PROVIDE:
 
@@ -75,12 +80,15 @@ Message types
   GST_MESSAGE_STRUCTURE_CHANGE:
 
     The pipeline changed of structure, This means elements were added or removed or
-    pads were linked or unlinked.
+    pads were linked or unlinked. This messages is not yet used.
 
   GST_MESSAGE_STREAM_STATUS:
 
-    An element posted information about the stream it is handling. This could include
-    information about the length of the stream.
+    Posted by an element when it start/stop/pauses a streaming task. It
+    contains information about the reason why the stream state changed along
+    with the thread id. The application can use this information to detect
+    failures in streaming threads. It can also be used to adjust streaming
+    thread priorities by the application.
     
   GST_MESSAGE_APPLICATION:
 
@@ -99,5 +107,23 @@ Message types
 
     An element or bin completed playback of a segment. This message is only posted
     on the bus if a SEGMENT seek is performed on a pipeline.
+
+  GST_MESSAGE_DURATION:
+
+    An element posts this message when it has detected or updated the stream duration.
+
+  GST_MESSAGE_LOST_PREROLL:
+
+    Posted by sinks when they lose their preroll buffer in the PAUSED or PLAYING
+    state caused by a FLUSH_START event.
+
+  GST_MESSAGE_PREROLLED:
+
+    Posted by sinks when they receive the first data buffer.
+
+  GST_MESSAGE_LATENCY:
+
+    Posted by elements when the latency in a pipeline changed and a new global
+    latency should be calculated by the pipeline or application.
 
 

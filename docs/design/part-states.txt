@@ -41,7 +41,7 @@ the following state changes are possible:
      when they have enough information. It is a requirement for sinks to
      return ASYNC and complete the state change when they receive the first
      buffer or EOS event (prerol). Sinks also block the dataflow when in PAUSED.
-   - a pipeline resets the stream time to 0.
+   - a pipeline resets the running_time to 0.
    - live sources return NO_PREROLL and don't generate data.
  
  PAUSED -> PLAYING
@@ -49,8 +49,8 @@ the following state changes are possible:
    - The pipeline selects a clock and distributes this to all the children
      before setting them to PLAYING. This means that it is only alowed to
      synchronize on the clock in the PLAYING state.
-   - The pipeline uses the clock and the stream time to calculate the base time.
-     The base time is distributed to all children when performing the state
+   - The pipeline uses the clock and the running_time to calculate the base_time.
+     The base_time is distributed to all children when performing the state
      change.
    - sink elements stop blocking on the preroll buffer or event and start
      rendering the data. 
@@ -62,8 +62,8 @@ the following state changes are possible:
 
  PLAYING -> PAUSED
    - most elements ignore this state change.
-   - The pipeline calculates the stream time based on the last selected clock
-     and the base time. It stores this information to continue playback when
+   - The pipeline calculates the running_time based on the last selected clock
+     and the base_time. It stores this information to continue playback when
      going back to the PLAYING state.
    - sinks unblock any clock wait calls.
    - when a sink did not have a pending buffer to play, it returns ASYNC from 
@@ -202,7 +202,7 @@ and which were not affected by iterating the elements and calling _get_state()
 on the elements.
 
 If after calling the state function on all children, one of the children returned
-ASYNC, the function returns ASYNC as well. 
+ASYNC, the function returns ASYNC as well.
 
 If after calling the state function on all children, one of the children returned
 NO_PREROLL, the function returns NO_PREROLL as well. 

@@ -19,8 +19,12 @@ Different types of events exist to implement various functionalities.
   GST_EVENT_QOS:           A notification of the quality of service of the stream
   GST_EVENT_SEEK:          A seek should be performed to a new position in the stream
   GST_EVENT_NAVIGATION:    A navigation event.
-  GST_EVENT_DRAIN:         Play all data downstream before returning.
+  GST_EVENT_LATENCY:       Configure the latency in a pipeline
 
+  * GST_EVENT_DRAIN:       Play all data downstream before returning.
+
+* not yet implemented, under investigation, might be needed to do still frames
+  in DVD.
 
 FLUSH_START/STOP
 ----------------
@@ -53,6 +57,12 @@ For elements that use the pullrange function, they send both flush events to
 the upstream pads in the same way to make sure that the pullrange function
 unlocks and any pending buffers are cleared in the upstream elements.
 
+A FLUSH_STOP event will also clear any configured synchronisation information
+like NEWSEGMENT events. After a FLUSH_STOP, any element that performs
+synchronisation to the clock will therefore need a NEWSEGMENT event (which makes
+the running_time start from 0 again) and will therefore also need a new
+base_time (see part-clocks.txt and part-synchronisation.txt).
+
 
 EOS
 ---
@@ -64,7 +74,7 @@ in the streaming thread but can also be sent from the application thread.
 An EOS event sent on a srcpad returns GST_FLOW_UNEXPECTED.
 
 The downstream element should forward the EOS event to its downstream peer
-elements. This way the event will eventually reach the renderers which should
+elements. This way the event will eventually reach the sinks which should
 then post an EOS message on the bus when in PLAYING.
 
 An element might want to flush its internally queued data before forwarding
@@ -86,14 +96,14 @@ sending data.
 An element that sends EOS on a pad should stop sending data on that pad. Source
 elements typically pause() their task for that purpose.
 
-By default, a GstBin collects all EOS events from all its sinks before 
+By default, a GstBin collects all EOS messages from all its sinks before 
 posting the EOS message to its parent.
 
 The EOS is only posted on the bus by the sink elements in the PLAYING state. If
 the EOS event is received in the PAUSED state, it is queued until the element
 goes to PLAYING.
 
-A seek event on an element flushes all pending EOS messages.
+A FLUSH_STOP event on an element flushes the EOS state and all pending EOS messages.
 
 
 NEWSEGMENT
@@ -148,56 +158,57 @@ BUFFERSIZE
 
 An element can suggest a buffersize for downstream elements. This is
 typically done by elements that produce data on multiple source pads
-such as demuxers.
+such as demuxers. This event is currently not yet defined or used.
 
 
 QOS
 ---
 
 A QOS, or quality of service message, is generated in an element to report
-to the upstream elements about the current quality of the stream. This
-is typically done by the sinks that measure the amount of framedrops they
-have. (see part-qos.txt)
+to the upstream elements about the current quality of real-time performance
+the stream. This is typically done by the sinks that measure the amount of
+framedrops they have. (see part-qos.txt)
 
 
 SEEK
 ----
 
-A seek event is issued by the application to start playback of a new
-position in the stream. It is called form the application thread and
-travels upstream.
+A seek event is issued by the application to configure the playback range
+of a stream. It is called form the application thread and travels upstream.
 
-The seek event contains the new start and end position of playback
-after the seek is performed. Optionally the end position can be left
+The seek event contains the new start and stop position of playback
+after the seek is performed. Optionally the stop position can be left
 at -1 to continue playback to the end of the stream. The seek event
 also contains the new playback rate of the stream, 1.0 is normal playback,
 2.0 double speed and negative values mean backwards playback.
 
 A seek usually flushes the graph to minimize latency after the seek. This
-behaviour is triggered by using the SEEK_FLUSH flag. 
+behaviour is triggered by using the SEEK_FLUSH flag on the seek event. 
 
-The seek event is passed along from element to element until it reaches
-an element that can perform the seek. No intermediate element is allowed
-to assume that a seek to this location will happen. It is allowed to
-modify the start and stop times if it needs to do so. this is typically
-the case if a seek is requested for a non-time position.
+The seek event usually starts from the sink elements and travels upstream
+from element to element until it reaches an element that can perform the
+seek. No intermediate element is allowed to assume that a seek to this
+location will happen. It is allowed to modify the start and stop times if it
+needs to do so. this is typically the case if a seek is requested for a
+non-time position.
 
 The actual seek is performed in the application thread so that success
 or failure can be reported as a return value of the seek event. It is
 therefore important that before executing the seek, the element acquires
-the STREAM_LOCK so that the streaming thread and the seek gets serialized.
+the STREAM_LOCK so that the streaming thread and the seek get serialized.
 
 The general flow of executing the seek with FLUSH is as follows:
 
  1) unblock the streaming threads, they could be blocked in a chain 
-    function. This is done by sending a FLUSH_START on all srcpads.
+    function. This is done by sending a FLUSH_START on all srcpads or by pausing
+    the streaming task, depending on the seek FLUSH flag.
     The flush will make sure that all downstream elements unlock and
     that control will return to this element chain/loop function.
     We cannot lock the STREAM_LOCK before doing this since it might
     cause a deadlock.
 
  2) acquire the STREAM_LOCK. This will work since the chain/loop function
-    was unlocked in step 1).
+    was unlocked/paused in step 1).
 
  3) perform the seek. since the STREAM_LOCK is held, the streaming thread
     will wait for the seek to complete. Most likely, the stream thread
@@ -205,8 +216,8 @@ The general flow of executing the seek with FLUSH is as follows:
 
  4) send a FLUSH_STOP event to all peer elements to allow streaming again.
 
- 5) send a NEWSEGMENT event to signal the new buffer timestamp base time.
-    This can also be done from the streaming thread.
+ 5) create a NEWSEGMENT event to signal the new buffer timestamp base time.
+    This event must be queued to be send by the streaming thread.
 
  6) start stopped tasks and unlock the STREAM_LOCK, dataflow will continue
     now from the new position.
@@ -223,8 +234,21 @@ of a navigation event such as a mouse movement or button click.
 Navigation events travel upstream.
 
 
+LATENCY
+-------
+
+A latency event is used to configure a certain latency in the pipeline. It
+contains a single GstClockTime with the required latency. The latency value is
+calculated by the pipeline and distributed to all sink elements before they are
+set to PLAYING. The sinks will add the configured latency value to the
+timestamps of the buffer in order to delay their presentation.
+See also part-latency.txt.
+
+
 DRAIN
 -----
+
+This event is not yet implemented.
 
 Drain event indicates that upstream is about to perform a real-time event, such
 as pausing to present an interactive menu or such, and needs to wait for all

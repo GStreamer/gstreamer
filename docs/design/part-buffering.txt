@@ -51,3 +51,8 @@ application should not set the pipeline to PLAYING before a BUFFERING message
 with 100 percent value is received, which might only happen after the pipeline
 prerolled.
 
+
+Incremental download
+--------------------
+
+

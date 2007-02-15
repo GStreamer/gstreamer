@@ -7,7 +7,8 @@ a first-in first-out way from the streaming threads to the application.
 Since the application typically only wants to deal with delivery of these
 messages from one thread, the GstBus will marshall the messages between
 different threads. This is important since the actual streaming of media
-is done in another thread than the application.
+is done in another thread than the application. It is also important to not
+block the streaming thread while the application deals with the message.
 
 The GstBus provides support for GSource based notifications. This makes it
 possible to handle the delivery in the glib mainloop. Different GSources 

@@ -6,6 +6,10 @@ sink-to-source order. As elements undergo the READY->PAUSED transition,
 their pads are activated so as to prepare for data flow. Some pads will
 start tasks to drive the data flow.
 
+An element activates its pads from sourcepads to sinkpads. This to make
+sure that when the sinkpads are activated an ready to accept data, the
+sourcepads are already active to pass the data downstream.
+
 Pads can be activated in one of two modes, PUSH and PULL. PUSH pads are
 the normal case, where the source pad in a link sends data to the sink
 pad via gst_pad_push(). PULL pads instead have sink pads request data
@@ -71,12 +75,14 @@ pushing data.
 Deactivation
 ------------
 
-Pad deactivation occurs when a pad is unlinked, or when its parent goes
-into the READY state. gst_pad_set_active() is called with a FALSE
-argument, which then calls activate_push() or activate_pull() with a
-FALSE argument, depending on the activation mode of the pad.
+Pad deactivation occurs when its parent goes into the READY state or when the 
+pad is deactivated explicitly by the application or element. 
+gst_pad_set_active() is called with a FALSE argument, which then calls
+activate_push() or activate_pull() with a FALSE argument, depending on the
+activation mode of the pad.
 
 Mode switching
 --------------
 
-Changing from push to pull modes needs a bit of thought.
+Changing from push to pull modes needs a bit of thought. This is actually
+possible and implemented but not yet documented here.

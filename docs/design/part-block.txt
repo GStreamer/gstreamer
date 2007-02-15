@@ -137,7 +137,7 @@ Use cases:
      5a) optionally element2 can now be set to NULL.
   6) link element4 and element3
   7) link element1 and element4 (FIXME, how about letting element4 know
-     about the currently running segment?)
+     about the currently running segment?, see issues.)
   8) unblock element1 src
 
  The same flow can be used to replace an element in a PAUSED pipeline. Only
@@ -150,5 +150,18 @@ Use cases:
  be implemented with a helper function in the future.
 
 
+Issues
+------
 
+When an EOS event has passed a pad and the pad is set to blocked, the block will
+never happen because no data is going to flow anymore. One possibility is to
+keep track of the pad's EOS state and make the block succeed immediatly. This is
+not yet implemenented.
+
+When dynamically reconnecting pads, some events (like NEWSEGMENT, EOS,
+TAGS, ...) are not yet retransmitted to the newly connected element. It's
+unclear if this can be done by core automatically by caching those events and
+resending them on a relink. It might also be possible that this needs a
+GstFlowReturn value from the event function, in which case the implementation
+must be delayed for after 0.11, when we can break API/ABI.
 

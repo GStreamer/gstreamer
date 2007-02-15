@@ -31,7 +31,7 @@ QoS event
 The QoS event travels upstream and contains the following fields:
 
  - timestamp:  The timestamp on the buffer that generated the QoS
-               event. These timestamps are expressed in total running time in
+               event. These timestamps are expressed in total running_time in
 	       the sink so that the value is ever increasing.
 
  - jitter:     The difference of that timestamp against the current clock time.
@@ -223,11 +223,11 @@ values:
 The processing time and the average buffer durations will be used to
 calculate a proportion.
 
-the processing time in system time is compared to render time to decide if
+The processing time in system time is compared to render time to decide if
 the majority of the time is spend upstream or in the sink itself. This value
 is used to decide flood or starvation.
 
-the number of rendered and dropped buffers is used to query stats on the sink.
+The number of rendered and dropped buffers is used to query stats on the sink.
 
 A QoS message with the most current values is sent upstream for each buffer 
 that was received by the sink.
@@ -293,5 +293,5 @@ less demanding source material. In case of a network stream, a switch could be d
 to a lower or higher quality stream or additional enhancement layers could be used
 or ignored.
 
-Live sources will automatically drop data when it takes too long to prcess the data 
+Live sources will automatically drop data when it takes too long to process the data 
 that the element pushes out.

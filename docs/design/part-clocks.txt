@@ -1,13 +1,6 @@
 Clocks
 ------
 
-To synchronize the different elements, the GstPipeline is responsible for
-selecting and distributing a global GstClock for all the elements in it.
-
-This selection happens whenever an element is added or removed from the 
-pipeline. Whever the clock changes in a pipeline, a NEW_CLOCK message is 
-posted on the bus signaling the new clock to the application.
-
 The GstClock returns a monotonically increasing time with the method 
 _get_time(). Its accuracy and base time depends on the specific clock 
 implementation but time is always expessed in nanoseconds. Since the
@@ -17,27 +10,52 @@ times.
 The time reported by the clock is called the absolute time.
 
 
+Clock Selection
+---------------
+
+To synchronize the different elements, the GstPipeline is responsible for
+selecting and distributing a global GstClock for all the elements in it.
+
+This selection happens whenever the pipeline goes to PLAYING. Whenever an
+element is added/removed from the pipeline, this selection will be redone in the
+next state change to PLAYING. Adding an element that can provide a clock will
+post a GST_MESSAGE_CLOCK_PROVIDE message on the bus to inform parent bins of the
+fact that a clock recalculation is needed. 
+
+When a clock is selected, a NEW_CLOCK message is posted on the bus signaling the
+clock to the application.
+
+When the element that provided the clock is removed from the pipeline, a
+CLOCK_LOST message is posted. The application must then set the pipeline to
+PAUSED and PLAYING again in order to let the pipeline select a new clock
+and distribute a new base time.
+
+
 Time in GStreamer
 -----------------
 
-The absolute time is used to calculate the stream time. The stream time
+The absolute time is used to calculate the running time. The running time
 is defined as follows:
 
- - If the pipeline is NULL/READY, the stream time is undefined.
- - In PAUSED, the stream time remains at the time when it was last 
-   PAUSED. When the stream is PAUSED for the first time, the stream time
+ - If the pipeline is NULL/READY, the running time is undefined.
+ - In PAUSED, the running time remains at the time when it was last 
+   PAUSED. When the stream is PAUSED for the first time, the running time
    is 0. 
- - In PLAYING, the stream time is the delta between the absolute time
+ - In PLAYING, the running time is the delta between the absolute time
    and the base time. The base time is defined as the absolute time minus
-   the stream time at the time when the pipeline is set to PLAYING.
- - after a seek, the stream time is set to 0 (see part-seeking.txt)
+   the running time at the time when the pipeline is set to PLAYING.
+ - after a flushing seek, the running time is set to 0 (see part-seeking.txt)
 
-The stream time is completely managed by the GstPipeline object using the
-GstClock absolute time.
+The running time is completely managed by the GstPipeline object using the
+GstClock absolute time. It basically represents the elapsed time that the
+pipeline spend in the PLAYING state.
 
 
 Timestamps
 ----------
+
+NOTE: this info is inaccurate, see part-synchronisation.txt for how the clock
+time is used to synchronize buffer timestamps.
 
 The combination of the last NEWSEGMENT event and the buffer timestamps 
 express the presentation stream time of the buffer. The stream time

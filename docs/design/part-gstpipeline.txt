@@ -6,10 +6,8 @@ children with a clock.
 
 A GstPipeline also provides a toplevel GstBus (see part-gstbus.txt)
 
-The pipeline also calculates the stream time based on the selected
+The pipeline also calculates the running_time based on the selected
 clock (see part-clocks.txt).
-
-The pipeline manages the seek operation for the application.
 
 
 State changes
@@ -22,26 +20,30 @@ GstBin, the pipeline performs the following actions during a state change:
     - set the bus to non-flushing
 
  - READY -> PAUSED:
-    - reset the stream time to 0
+    - reset the running_time to 0
 
  - PAUSED -> PLAYING:
     - Select and a clock.
-    - calculate base time using the stream time.
-    - set clock and base time on all elements before performing the
+    - calculate base_time using the running_time.
+    - set clock and base_time on all elements before performing the
       state change.
 
  - PAUSED -> PLAYING:
-    - calculate the stream time when the pipeline was stopped.
+    - calculate the running_time when the pipeline was stopped.
 
  - READY -> NULL:
     - set the bus to flushing (when auto-flushing is enabled)
+
+The running_time represents the total elapsed time, measured in clock units,
+that the pipeline spent in the PLAYING state.
 
 
 Clock selection
 ---------------
 
 Since all of the children of a GstPipeline must use the same clock, the
-pipeline must select a clock.
+pipeline must select a clock. This clock selection happens when the pipeline
+gopes to the PLAYING state.
 
 The default clock selection algorithm works as follows:
 
@@ -54,7 +56,7 @@ The default clock selection algorithm works as follows:
     * since this selection procedure happens in the PAUSED->PLAYING
       state change, all the sinks are prerolled and we can thus be sure
       that each sink is linked to some upstream element.
-    * in the case of a live pipeline (NO_PREROLL), the sink will not
+    * in the case of a live pipeline (NO_PREROLL), the sink will not yet
       be prerolled and the selection process will select the clock of
       a more upstream element.
       
@@ -71,20 +73,4 @@ possible.
 
 The _auto_clock() method removes the fixed clock and reactivates the auto-
 matic clock selection algorithm described above.
-
-
-Seeking
--------
-
-When performing a seek on the pipeline element using gst_element_send_event(),
-the pipeline performs the following actions:
-
- - record the current state of the pipeline.
- - set the pipeline to paused if a FLUSHING seek is requested
- - send the seek event to all sinks
- - when a FLUSH seek was performed successfully, the stream_time is set 0 again.
- - restore old state of the pipeline.
-
-
-
 

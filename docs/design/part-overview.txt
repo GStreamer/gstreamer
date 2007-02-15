@@ -47,7 +47,7 @@ Introduction
 
  Downstream and upstream are the terms used to describe the direction in the
  Pipeline. From source to sink is called "downstream" and "upstream" is 
- from sink to source.
+ from sink to source. Dataflow always happens downstream.
 
  The task of the application is to construct a pipeline as above using existing
  elements. This is further explained in the pipeline building topic.
@@ -162,8 +162,10 @@ Pipeline
  A pipeline is a special bin subclass that provides the following features to its 
  children:
 
-   - Select and manage a clock.
-   - Manage stream time based on the selected clock.
+   - Select and manage a global clock for all its children.
+   - Manage running_time based on the selected clock. Running_time is the elapsed
+     time the pipeline spent in the PLAYING state and is used for
+     synchronisation.
    - Provide means for elements to comunicate with the application by the GstBus.
    - Manage the global state of the elements such as Errors and end-of-stream.
  
@@ -226,6 +228,7 @@ Dataflow and buffers
  The process of selecting a media type and attaching it to the buffers is called
  caps negotiation.
 
+
 Caps
 ----
  
@@ -243,7 +246,7 @@ Dataflow and events
 -------------------
 
  Parallel to the dataflow is a flow of events. Unlike the buffers, events can pass
- upstream and downstream. Some events only travel upstream others only downstream.
+ both upstream and downstream. Some events only travel upstream others only downstream.
 
  the events are used to denote special conditions in the dataflow such as EOS or 
  to inform plugins of special events such as flushing or seeking.
@@ -311,13 +314,13 @@ Pipeline clock
  a sink element such as an audio sink.
 
  In capture pipelines, this will typically select the clock of the data producer, which
- can in most cases not control the rate at which it produces data.
+ in most cases can not control the rate at which it produces data.
 
 
 Pipeline states
 ---------------
 
- When all the pads are linked or signals have been connected, the pipeline can
+ When all the pads are linked and signals have been connected, the pipeline can
  be put in the PAUSED state to start dataflow. 
 
  When a bin (and hence a pipeline) performs a state change, it will change the state
@@ -361,7 +364,7 @@ Pipeline states
  the pipeline can be put in the PLAYING state.
 
  Before going to PLAYING, the pipeline select a clock and samples the current time of 
- the clock. This is the base time. It then distributes this time to all elements. 
+ the clock. This is the base_time. It then distributes this time to all elements. 
  Elements can then synchronize against the clock using the buffer timestamp+base time. 
 
  The following chain of state changes then takes place:
@@ -404,14 +407,14 @@ Pipeline EOS
  data after receiving an EOS event on a sinkpad.
 
  The element providing the streaming thread stops sending data after sending the 
- EOS message.
+ EOS event.
 
- The EOS even will eventually arrive in the sink element. The sink will then post
+ The EOS event will eventually arrive in the sink element. The sink will then post
  an EOS message on the bus to inform the pipeline that a particular stream has
  finished. When all sinks have reported EOS, the pipeline forwards the EOS message
  to the application. 
 
- When in EOS, the pipeline remains in the playing state, it is the applications
+ When in EOS, the pipeline remains in the PLAYING state, it is the applications
  responsability to PAUSE or READY the pipeline. The application can also issue
  a seek, for example.
 
