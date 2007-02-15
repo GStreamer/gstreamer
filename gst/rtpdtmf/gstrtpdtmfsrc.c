@@ -421,8 +421,8 @@ gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
 {
   g_return_if_fail (dtmfsrc->payload != NULL);
 
-  if (!gst_pad_stop_task (dtmfsrc->srcpad)) {
-    GST_ERROR_OBJECT (dtmfsrc, "Failed to stop task on src pad");
+  if (!gst_pad_pause_task (dtmfsrc->srcpad)) {
+    GST_ERROR_OBJECT (dtmfsrc, "Failed to pause task on src pad");
     return;
   }
 
