@@ -144,6 +144,10 @@ struct _GstBaseSrc {
  *   undesirable. 
  * @fixate: Called during negotation if caps need fixating. Implement instead of
  *   setting a fixate function on the source pad.
+ *
+ * Subclasses can override any of the available virtual methods or not, as
+ * needed. At the minimum, the @create method should be overridden to produce
+ * buffers.
  */
 struct _GstBaseSrcClass {
   GstElementClass parent_class;

@@ -56,10 +56,12 @@ struct _GstChildProxyInterface
   /* methods */
   GstObject *(*get_child_by_index) (GstChildProxy * parent, guint index);
   guint (*get_children_count) (GstChildProxy * parent);
+  /*< private > */
   /* signals */
   void (*child_added) (GstChildProxy * parent, GstObject * child);
   void (*child_removed) (GstChildProxy * parent, GstObject * child);
 
+  /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
 

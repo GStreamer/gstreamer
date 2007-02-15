@@ -104,6 +104,7 @@ struct _GstBaseSink {
 
 /**
  * GstBaseSinkClass:
+ * @parent_class: Element parent class
  * @get_caps: Called to get sink pad caps from the subclass
  * @set_caps: Notify subclass of changed caps
  * @buffer_alloc: Subclasses can override to perform custom buffer allocations
@@ -130,7 +131,7 @@ struct _GstBaseSink {
  *     ideas about what should be the default values for the caps you support.
  *
  * Subclasses can override any of the available virtual methods or not, as
- * needed. At the minimum, the render method should be overridden to
+ * needed. At the minimum, the @render method should be overridden to
  * output/present buffers.
  */
 struct _GstBaseSinkClass {

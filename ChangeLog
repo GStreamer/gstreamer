@@ -1,3 +1,11 @@
+2007-02-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstchildproxy.h:
+	* libs/gst/base/gstbasesink.h:
+	* libs/gst/base/gstbasesrc.h:
+	* libs/gst/base/gstbasetransform.h:
+	More docs coverage and some ChangeLog surgery (add missing names)
+
 2007-02-15  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-TODO.txt:
@@ -1262,7 +1270,7 @@
 
 2006-11-20  Wim Taymans  <wim@fluendo.com>
 
-	Patch by: Sebastian Droege <slomo at ubuntu dot com>
+	Patch by: Sebastian Dröge <slomo at ubuntu dot com>
 
 	* libs/gst/check/gstcheck.h:
 	Fix compilation and running against 0.9.4. Fixes #377332.
@@ -8811,7 +8819,7 @@
 
 === release 0.10.0 ===
 
-2005-12-05   <thomas (at) apestaart (dot) org>
+2005-12-05  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
 	  releasing 0.10.0, "Maroilles"
@@ -8963,7 +8971,7 @@
 
 === release 0.9.7 ===
 
-2005-12-01   <thomas (at) apestaart (dot) org>
+2005-12-01  Thomas Vander Stichele <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
 	  releasing 0.9.7, "My Dog Has No Nose"

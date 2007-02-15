@@ -152,6 +152,11 @@ struct _GstBaseTransform {
  *                         analysis can return a subbuffer or even just
  *                         increment the reference to the input buffer (if in
  *                         passthrough mode)
+ *
+ * Subclasses can override any of the available virtual methods or not, as
+ * needed. At minimum either @transform or @transform_ip need to be overridden.
+ * If the element can overwrite the input data with the results (data is of the
+ * same type and quantity) it should provide @transform_ip.
  */
 struct _GstBaseTransformClass {
   GstElementClass parent_class;
