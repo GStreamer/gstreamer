@@ -1,3 +1,16 @@
+2007-02-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/cdparanoia/gstcdparanoiasrc.h:
+	* ext/ogg/gstoggdemux.h:
+	* gst-libs/gst/audio/audio.c: (gst_audio_frame_byte_size),
+	(gst_audio_frame_length), (gst_audio_duration_from_pad_buffer),
+	(gst_audio_is_buffer_framed), (gst_audio_structure_set_int):
+	* gst-libs/gst/audio/audio.h:
+	* gst-libs/gst/audio/gstaudiofilter.h:
+	* gst-libs/gst/interfaces/videoorientation.h:
+	* gst/adder/gstadder.h:
+	  More docs coverage and some ChangeLog surgery (add missing names)
+
 2007-02-15  Wim Taymans  <wim@fluendo.com>
 
 	* sys/ximage/ximagesink.c:
@@ -9018,7 +9031,7 @@
 
 === release 0.10.0 ===
 
-2005-12-05   <thomas (at) apestaart (dot) org>
+2005-12-05 Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
 	  releasing 0.10.0, "Mont-d'or"
@@ -9095,7 +9108,7 @@
 
 === release 0.9.7 ===
 
-2005-12-01   <thomas (at) apestaart (dot) org>
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
 	  releasing 0.9.7, "Mi Perro No Tiene Ninguna Nariz"
@@ -10249,7 +10262,7 @@
 	(gst_videoscale_fixate_caps): Introduce back caps fixate with
 	handling of PAR.
 
-2005-11-18    <bilboed@dvdsrc.fluendo.com>
+2005-11-18  Edward Hervey  <bilboed@dvdsrc.fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (gst_decode_bin_init): 
 	Unsetting IS_SINK flag from the fakesink, so decodebin
@@ -12113,7 +12126,7 @@
 	Resync if the buffer timestamps drift more than a 10th 
 	of a second.
 
-2005-08-31  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_set_property),
 	(gst_v4lsrc_get_property):
@@ -12699,7 +12712,7 @@
 	  Added rtp timestamp -> gst timestamp conversion.
 	  Fixed several problems with queue.
 
-2005-08-09  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/gstaudioclock.h:
 	* gst-libs/gst/audio/gstaudiofilter.h:
@@ -12714,7 +12727,7 @@
 	  Add padding (you will need to rebuild gst-plugins-base,
 	  gst-plugins and all applications afterwards!)
 
-2005-08-09  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-read.c: (gst_riff_read_chunk),
 	(gst_riff_parse_chunk):
@@ -12756,7 +12769,7 @@
 	New API functions. The device should be opened before acquiring
 	and closed after releasing.
 
-2005-08-08  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-08-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/interfaces/mixer.h:
 	  Reset padding to GST_PADDING.
@@ -12926,12 +12939,12 @@
 	* ext/alsa/gstalsasink.c (alsasink_sink_factory): Advertise our
 	support of both endiannesses.
 
-2005-07-28  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_src_query):
 	  Fix confusing debug message (s/event/query/)
 
-2005-07-28  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-07-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videotestsrc/videotestsrc.h:
 	  Use "_stdint.h" instead of <stdint.h>
@@ -15440,7 +15453,7 @@
 
 2005-02-22  Luca Ognibene  <luogni@tin.it>
 
-	Reviewed by: Tim-Philipp M??ller  <tim at centricular dot net>
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/gdk_pixbuf/pixbufscale.c: (gst_pixbufscale_link):
 	  Don't leak caps string (fixes #168134)
@@ -15450,7 +15463,7 @@
 	(gst_jpegenc_change_state):
 	  Don't leak line buffers and context struct (fixes #168133).
 
-2005-02-21  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-02-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
 	* ext/dirac/gstdiracdec.cc:
@@ -15472,7 +15485,7 @@
 	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_chain):
 	  Make sure we only write to writable buffers
 
-2005-02-20  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-02-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/riff-media.c:
 	(gst_riff_create_audio_caps_with_data):
@@ -15486,7 +15499,7 @@
 
 2005-02-19  Martin Holters  <martin.holters@gmx.de>
 
-	Reviewed by: Tim-Philipp M??ller  <tim at centricular dot net>
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/audioconvert/bufferframesconvert.c:
 	(buffer_frames_convert_link):
@@ -15499,13 +15512,13 @@
 	(gst_visual_change_state):
 	  Support libvisual 0.2.0.
 
-2005-02-18  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-02-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/jpeg/gstjpegdec.c: (gst_jpegdec_chain):
 	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_resync), (gst_jpegenc_chain):
 	  Use same rowstrides for I420 as used everywhere else.
 
-2005-02-17  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-02-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_invert):
 	  Declare variables at beginning of block and make gcc-2.95 happy
@@ -15522,7 +15535,7 @@
 
 2005-02-17  Luca Ognibene  <luogni at tin dot it>
 
-	Reviewed by: Tim-Philipp M??ller  <tim at centricular dot net>
+	Reviewed by: Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/tcp/gsttcpserversink.c: (gst_tcpserversink_init_send):
 	  Don't pass uninitialised values to setsockopt(). (fixes #167704)
@@ -15558,7 +15571,7 @@
 	  events into the stream thread from whichever thread
 	  sends them.
 
-2005-02-15  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-02-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/speed/demo-mp3.c: (time_tick_cb), (main):
 	  Display current position and track length; misc. clean-ups.
@@ -15591,7 +15604,7 @@
 	  channel. Previously used different signs made the signals cancel
 	  each other out and appear like silence. (fixes #167269)
 
-2005-02-12  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-02-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/ffmpegcolorspace/avcodec.h:
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
@@ -15614,7 +15627,7 @@
 	(gst_xvimagesink_buffer_alloc), (gst_xvimagesink_set_xwindow_id),
 	(gst_xvimagesink_expose): Check for xcontext before trying to link.
 
-2005-02-12  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-02-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdnav/dvdnavsrc.c: (dvdnavsrc_open):
 	  Don't send "Hey! You gave me a NULL pointer you naughty person" as
@@ -15667,7 +15680,7 @@
 	* gst/librfb/rfbdecoder.h:
 	* gst/librfb/rfbutil.h:
 
-2005-02-10  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-02-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/speed/Makefile.am:
 	* gst/speed/demo-mp3.c: (main):
@@ -15689,7 +15702,7 @@
 	  Don't clobber the stack constructing the channels array.
 	  Make the element chain-based. DTS tracks can now be played.
 	  
-2005-02-09  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-02-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/multichannel.h:
 	* gst-libs/gst/gconf/gconf.h:
@@ -15815,7 +15828,7 @@
 	* gst/law/mulaw-encode.c: (mulawenc_link):
 	  Fix caps memleaks (#166600).
 
-2005-02-08  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-02-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/tarkin/mem.h:
 	* ext/tarkin/wavelet.h:
@@ -15995,7 +16008,7 @@
 	* gst/subparse/gstsubparse.c:
 	  Fix OSX buildbot.
 
-2005-01-31  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-01-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/theora/theoraenc.c: (theora_buffer_from_packet),
 	(theora_enc_chain), (theora_enc_change_state):
@@ -16006,7 +16019,7 @@
 	  Set granulepos and timestamp correctly for streams not
 	  starting at 0, taking into account the initial delay.
 
-2005-01-31  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-01-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/mpegstream/gstdvddemux.c:
 	  Add audio/x-dts to audio pad template caps
@@ -16193,7 +16206,7 @@
 	* ext/cairo/gsttextoverlay.c: include  string.h and strings.h to fix
 	build failure on amd64
 
-2005-01-26  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-01-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mad/gstid3tag.c: (mad_id3_parse_latin1_string),
 	(mad_id3_parse_comment_frame), (gst_mad_id3_to_tag_list):
@@ -16385,7 +16398,7 @@
 	  Allow for 0-sized buffers. Fixes length query problems in
 	  starwars.mkv from the testsuite.
 
-2005-01-19  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-01-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_copy_plane_i420),
 	(gst_video_box_i420), (gst_video_box_chain):
@@ -16448,18 +16461,18 @@
 	  Fix off-by-one bug. Fixes warnings during playback of sincity.mp4
 	  when fixating to six channels in Totem.
 
-2005-01-17  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-01-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (get_next_cell_for):
 	  Fix compile warnings on Solaris 10 buildbot
 
-2005-01-17  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-01-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/dvdreadsrc.c: (_read):
 	  Don't read beyond the last cell in a chapter (fixes 
 	  invalid memory access)
 
-2005-01-17  Tim-Philipp M??ller  <tim at centricular dot net>
+2005-01-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdread/stream_labels.c:
 	(dvdreadsrc_get_audio_stream_labels):
@@ -16559,7 +16572,7 @@
 2005-01-14  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* sys/v4l/gstv4lelement.c: (gst_v4l_iface_supported):
-	  Revert Johan??s 1.35->1.36 since it breaks compat.
+	  Revert Johan's 1.35->1.36 since it breaks compat.
 
 2005-01-14  Stephane LOEUILLET  <stephane.loeuillet@tiscali.fr>
 
@@ -17259,7 +17272,7 @@
 
 2005-01-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-	patch by: Tim-Philipp M??ller  <t.i.m@zen.co.uk>
+	patch by: Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	* gst/playback/gstplaybasebin.c:
 	 Fix for #162924 - free caps after use, not before
@@ -17495,7 +17508,7 @@
 	Fix code to not use GCC extensions (and c99 extensions that
 	Forte does not like.)
 
-2004-12-19  Tim-Philipp M??ller  <t.i.m@zen.co.uk>
+2004-12-19  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -18359,7 +18372,7 @@
 
 2004-11-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
-	patch by: Tim-Philipp M??ller <t.i.m@zen.co.uk>
+	patch by: Tim-Philipp Müller <t.i.m@zen.co.uk>
 
 	* ext/dvdread/dvdreadsrc.c:
 	  Fixes invalid reads (#158462)
@@ -18465,7 +18478,7 @@
 	  wouldn't do anything because we're not negotiated yet, leading
 	  to an infinite loop. Showed in e.g. Rhythmbox. Fixes #158006.
 
-2004-11-11  Tim-Philipp M??ller  <t.i.m@zen.co.uk>
+2004-11-11  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -18754,14 +18767,14 @@
 	* ext/mad/gstid3tag.c: (gst_id3_tag_do_typefind):
 	  Hide unused glory.
 
-2004-11-06  Tim-Philipp M??ller  <t.i.m@zen.co.uk>
+2004-11-06  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
 	* ext/vorbis/vorbisenc.c: (raw_caps_factory):
 	  Fix weird caps (#157548).
 
-2004-11-06  Tim-Philipp M??ller  <t.i.m@zen.co.uk>
+2004-11-06  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -19738,7 +19751,7 @@
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_src_link), (gst_v4lsrc_getcaps):
 	Fix for webcams that support only specific width or height
 
-2004-10-09  Tim-Philipp M??ller  <t.i.m@zen.co.uk>
+2004-10-09  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	Reviewed by:  Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -19752,7 +19765,7 @@
 	* gst/auparse/gstauparse.c: (gst_auparse_chain):
 	  Error out on invalid data (fixes #154807).
 
-2004-10-09  Tim-Philipp M??ller  <t.i.m@zen.co.uk>
+2004-10-09  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	Reviewed by: Ronald S. Bultje  <rbultje@ronald.bitfreak.net>
 
@@ -24025,7 +24038,7 @@
 	Add support for the new_media flag when sending DISCONT events
 	Make the querying work when video pad is not linked
 
-2004-06-07  Tim-Philipp M??ller  <t.i.m@zen.co.uk>
+2004-06-07  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>
 
@@ -24052,7 +24065,7 @@
 	  bogus timestamps and screwing sync.
 	(fixes #143454)
 
-2004-06-07  Tim-Philipp M??ller  <t.i.m@zen.co.uk>
+2004-06-07  Tim-Philipp Müller  <t.i.m@zen.co.uk>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>
 
@@ -26138,7 +26151,7 @@
 	* sys/oss/.cvsignore:
 	  add for oss_probe
 
-2004-04-03  Tim-Phillip M??ller <t.i.m@zen.co.uk>
+2004-04-03  Tim-Phillip Müller <t.i.m@zen.co.uk>
 
 	reviewed by Benjamin Otte  <otte@gnome.org>
 
@@ -26523,7 +26536,7 @@
 
 	* configure.ac: GST_PACKAGE default: s/GStreamer/GStreamer Plugins/
 
-2004-03-20  Tim-Phillip M??ller <t.i.m@zen.co.uk>
+2004-03-20  Tim-Phillip Müller <t.i.m@zen.co.uk>
 
 	reviewed by: Benjamin Otte  <otte@gnome.org>
 
@@ -27358,7 +27371,7 @@
 
 	* testsuite/gst-lint:  Add a check for bad signal names.
 
-2004-03-04  <kost@imn.htwk-leipzig.de>
+2004-03-04  Stefan Kost <kost@imn.htwk-leipzig.de>
 
 	reviewed by David Schleef
 

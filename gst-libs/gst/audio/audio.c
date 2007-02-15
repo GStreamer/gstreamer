@@ -29,17 +29,25 @@
 /**
  * SECTION:gstaudio
  * @short_description: Support library for audio elements
+ *
+ * This library contains some helper functions for audio elements.
  */
 
+/**
+ * gst_audio_frame_byte_size:
+ * @pad: the #GstPad to get the caps from
+ *
+ * Calculate byte size of an audio frame.
+ *
+ * Returns: -1 if there's an error (to avoid division by zero),
+ * or the byte size if everything's ok
+ */
 int
 gst_audio_frame_byte_size (GstPad * pad)
 {
-/* calculate byte size of an audio frame
- * this should be moved closer to the gstreamer core
- * and be implemented for every mime type IMO
- * returns -1 if there's an error (to avoid division by zero),
- * or the byte size if everything's ok
- */
+  /* FIXME: this should be moved closer to the gstreamer core
+   * and be implemented for every mime type IMO
+   */
 
   int width = 0;
   int channels = 0;
@@ -63,14 +71,21 @@ gst_audio_frame_byte_size (GstPad * pad)
   return (width / 8) * channels;
 }
 
+/**
+ * gst_audio_frame_length:
+ * @pad: the #GstPad to get the caps from
+ * @buf: the #GstBuffer
+ *
+ * Calculate length of buffer in frames.
+ *
+ * Returns: 0 if there's an error, or the number of frames if everything's ok
+ */
 long
 gst_audio_frame_length (GstPad * pad, GstBuffer * buf)
-/* calculate length of buffer in frames
- * this should be moved closer to the gstreamer core
- * and be implemented for every mime type IMO
- * returns 0 if there's an error, or the number of frames if everything's ok
- */
 {
+  /* FIXME: this should be moved closer to the gstreamer core
+   * and be implemented for every mime type IMO
+   */
   int frame_byte_size = 0;
 
   frame_byte_size = gst_audio_frame_byte_size (pad);
@@ -83,14 +98,19 @@ gst_audio_frame_length (GstPad * pad, GstBuffer * buf)
   return GST_BUFFER_SIZE (buf) / frame_byte_size;
 }
 
+/**
+ * gst_audio_duration_from_pad_buffer:
+ * @pad: the #GstPad to get the caps from
+ * @buf: the #GstBuffer
+ *
+ * Calculate length in nanoseconds of audio buffer @buf based on capabilities of
+ * @pad.
+ *
+ * Return: the length.
+ */
 GstClockTime
 gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
 {
-/* calculate length in nanoseconds
- * of audio buffer buf
- * based on capabilities of pad
- */
-
   long bytes = 0;
   int width = 0;
   int channels = 0;
@@ -125,9 +145,17 @@ gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf)
   return length;
 }
 
+/**
+ * gst_audio_is_buffer_framed:
+ * @pad: the #GstPad to get the caps from
+ * @buf: the #GstBuffer
+ *
+ * Check if the buffer size is a whole multiple of the frame size.
+ *
+ * Returns: %TRUE if buffer size is multiple.
+ */
 gboolean
 gst_audio_is_buffer_framed (GstPad * pad, GstBuffer * buf)
-/* check if the buffer size is a whole multiple of the frame size */
 {
   if (GST_BUFFER_SIZE (buf) % gst_audio_frame_byte_size (pad) == 0)
     return TRUE;
@@ -191,9 +219,21 @@ _gst_audio_structure_set_list (GstStructure * structure,
   va_end (varargs);
 }
 
+/**
+ * gst_audio_structure_set_int:
+ * @structure: a #GstStructure
+ * @flag: a set of #GstAudioFieldFlag
+ *
+ * Do not use anymore.
+ * @Deprecated: use gst_structure_set()
+ */
 void
 gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag)
 {
+  /* was added here:
+   * http://webcvs.freedesktop.org/gstreamer/gst-plugins-base/gst-libs/gst/audio/audio.c?r1=1.16&r2=1.17
+   * but it is not used
+   */
   if (flag & GST_AUDIO_FIELD_RATE)
     gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
         NULL);

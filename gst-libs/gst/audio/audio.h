@@ -50,12 +50,31 @@ G_BEGIN_DECLS
  * Thomas, 6 September 2002 */
 
 /* conversion macros */
+/**
+ * GST_FRAMES_TO_CLOCK_TIME:
+ * @frames: sample frames
+ * @rate: sampling rate
+ * 
+ * Calculate clocktime from sample @frames and @rate.
+ */
 #define GST_FRAMES_TO_CLOCK_TIME(frames, rate) \
   ((GstClockTime) (((gdouble) frames / rate) * GST_SECOND))
 
+/**
+ * GST_CLOCK_TIME_TO_FRAMES:
+ * @clocktime: clock time
+ * @rate: sampling rate
+ * 
+ * Calculate frames from @clocktime and sample @rate.
+ */
 #define GST_CLOCK_TIME_TO_FRAMES(clocktime, rate) \
   ((gint64) ((gst_guint64_to_gdouble (clocktime) / GST_SECOND) * rate))
 
+/**
+ * GST_AUDIO_DEF_RATE:
+ * 
+ * Standard sampling rate used in consumer audio.
+ */
 #define GST_AUDIO_DEF_RATE 44100
 
 #define GST_AUDIO_INT_PAD_TEMPLATE_CAPS \
@@ -66,7 +85,6 @@ G_BEGIN_DECLS
   "width = (int) { 8, 16, 24, 32 }, " \
   "depth = (int) [ 1, 32 ], " \
   "signed = (boolean) { true, false }"
-
 
 /* "standard" int audio is native order, 16 bit stereo. */
 #define GST_AUDIO_INT_STANDARD_PAD_TEMPLATE_CAPS \
@@ -110,6 +128,12 @@ GstClockTime gst_audio_duration_from_pad_buffer (GstPad * pad, GstBuffer * buf);
 gboolean gst_audio_is_buffer_framed     (GstPad* pad, GstBuffer* buf);
 
 /* functions useful for _getcaps functions */
+/**
+ * GstAudioFieldFlag:
+ *
+ * Do not use anymore.
+ * @Deprecated: use gst_structure_set() directly
+ */
 typedef enum {
   GST_AUDIO_FIELD_RATE          = (1 << 0),
   GST_AUDIO_FIELD_CHANNELS      = (1 << 1),

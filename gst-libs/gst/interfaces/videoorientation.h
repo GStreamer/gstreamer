@@ -36,8 +36,27 @@ G_BEGIN_DECLS
 #define GST_VIDEO_ORIENTATION_GET_IFACE(inst) \
   (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_VIDEO_ORIENTATION, GstVideoOrientationInterface))
 
+/**
+ * GstVideoOrientation:
+ *
+ * Opaque #GstVideoOrientation data structure.
+ */
 typedef struct _GstVideoOrientation GstVideoOrientation;
 
+/**
+ * GstVideoOrientationInterface:
+ * @parent: parent interface type.
+ * @get_hflip: virtual method to get horizontal flipping state
+ * @get_vflip: virtual method to get vertical flipping state
+ * @get_hcenter: virtual method to get horizontal centering state
+ * @get_vcenter: virtual method to get vertical centering state
+ * @set_hflip: virtual method to set horizontal flipping state
+ * @set_vflip: virtual method to set vertical flipping state
+ * @set_hcenter: virtual method to set horizontal centering state
+ * @set_vcenter: virtual method to set vertical centering state
+ *
+ * #GstVideoOrientationInterface interface.
+ */
 typedef struct _GstVideoOrientationInterface {
   GTypeInterface parent;
 
@@ -52,6 +71,7 @@ typedef struct _GstVideoOrientationInterface {
   gboolean (* set_hcenter) (GstVideoOrientation *video_orientation, gint center);
   gboolean (* set_vcenter) (GstVideoOrientation *video_orientation, gint center);
 
+  /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 } GstVideoOrientationInterface;
 

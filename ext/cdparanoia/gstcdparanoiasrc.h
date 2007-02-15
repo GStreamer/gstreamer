@@ -45,6 +45,11 @@ G_BEGIN_DECLS
 typedef struct _GstCdParanoiaSrc GstCdParanoiaSrc;
 typedef struct _GstCdParanoiaSrcClass GstCdParanoiaSrcClass;
 
+/**
+ * GstCdParanoiaSrc:
+ *
+ * The cdparanoia object structure.
+ */
 struct _GstCdParanoiaSrc {
   GstCddaBaseSrc   cddabasesrc;
 

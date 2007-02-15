@@ -47,6 +47,11 @@ typedef enum {
 
 typedef void (*GstAdderFunction) (gpointer out, gpointer in, guint size);
 
+/**
+ * GstAdder:
+ *
+ * The adder object structure.
+ */
 struct _GstAdder {
   GstElement      element;
 

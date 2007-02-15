@@ -130,6 +130,11 @@ struct _GstOggPadClass
 #define GST_CHAIN_LOCK(ogg)     g_mutex_lock((ogg)->chain_lock)
 #define GST_CHAIN_UNLOCK(ogg)   g_mutex_unlock((ogg)->chain_lock)
 
+/**
+ * GstOggDemux:
+ *
+ * The ogg demuxer object structure.
+ */
 struct _GstOggDemux
 {
   GstElement element;
