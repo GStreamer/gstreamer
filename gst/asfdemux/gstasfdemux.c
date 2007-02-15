@@ -1438,7 +1438,6 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   guint64 file_size, creation_time, packets_count;
   guint64 play_time, send_time, preroll;
   guint32 flags, min_pktsize, max_pktsize, min_bitrate;
-  gboolean broadcast;
 
   if (size < (16 + 8 + 8 + 8 + 8 + 8 + 8 + 4 + 4 + 4 + 4))
     goto not_enough_data;
@@ -1455,13 +1454,13 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   max_pktsize = gst_asf_demux_get_uint32 (&data, &size);
   min_bitrate = gst_asf_demux_get_uint32 (&data, &size);
 
-  broadcast = !!(flags & 0x01);
+  demux->broadcast = !!(flags & 0x01);
   demux->seekable = !!(flags & 0x02);
 
-  GST_DEBUG_OBJECT (demux, "flags::broadcast = %d", broadcast);
+  GST_DEBUG_OBJECT (demux, "flags::broadcast = %d", demux->broadcast);
   GST_DEBUG_OBJECT (demux, "flags::seekable  = %d", demux->seekable);
 
-  if (broadcast) {
+  if (demux->broadcast) {
     /* these fields are invalid if the broadcast flag is set */
     play_time = 0;
     file_size = 0;
@@ -1725,6 +1724,50 @@ not_enough_data:
 }
 
 static GstFlowReturn
+gst_asf_demux_process_advanced_mutual_exclusion (GstASFDemux * demux,
+    guint8 * data, guint64 size)
+{
+  ASFGuid guid;
+  guint16 num, i;
+  guint8 *mes;
+
+  if (size < 16 + 2 + (2 * 2))
+    goto not_enough_data;
+
+  gst_asf_demux_get_guid (&guid, &data, &size);
+  num = gst_asf_demux_get_uint16 (&data, &size);
+
+  if (num < 2) {
+    GST_WARNING_OBJECT (demux, "nonsensical mutually exclusive streams count");
+    return GST_FLOW_OK;
+  }
+
+  if (size < (num * sizeof (guint16)))
+    goto not_enough_data;
+
+  /* read mutually exclusive stream numbers */
+  mes = g_new (guint8, num + 1);
+  for (i = 0; i < num; ++i) {
+    mes[i] = gst_asf_demux_get_uint16 (&data, &size) & 0x7f;
+    GST_LOG_OBJECT (demux, "mutually exclusive: stream #%d", mes[i]);
+  }
+
+  /* add terminator so we can easily get the count or know when to stop */
+  mes[i] = (guint8) - 1;
+
+  demux->mut_ex_streams = g_slist_append (demux->mut_ex_streams, mes);
+
+  return GST_FLOW_OK;
+
+  /* Errors */
+not_enough_data:
+  {
+    GST_WARNING_OBJECT (demux, "short read parsing advanced mutual exclusion");
+    return GST_FLOW_OK;         /* not absolutely fatal */
+  }
+}
+
+static GstFlowReturn
 gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
     guint64 size)
 {
@@ -1883,27 +1926,59 @@ gst_asf_demux_pop_obj (GstASFDemux * demux)
 static void
 gst_asf_demux_process_queued_extended_stream_objects (GstASFDemux * demux)
 {
-  GSList *l;
+  GSList *l, *x;
 
   GST_DEBUG_OBJECT (demux, "parsing %d stream objects embedded in extended "
       "stream properties", g_slist_length (demux->ext_stream_props));
 
   for (l = demux->ext_stream_props; l != NULL; l = l->next) {
     asf_obj_ext_stream_properties *esp;
-    guint64 len;
-    guint8 *data;
+    gboolean is_hidden = FALSE;
+    guint8 *mes, i;
 
     esp = (asf_obj_ext_stream_properties *) l->data;
-    data = esp->stream_obj_data;
-    len = esp->stream_obj_len;
 
-    GST_DEBUG ("Parsing stream data allocated at %p", data);
+    GST_DEBUG ("Parsing queued extended stream with ID %d", esp->stream_num);
 
-    if (data && gst_asf_demux_process_stream (demux, data, len) != GST_FLOW_OK) {
-      GST_WARNING_OBJECT (demux,
-          "failed to parse stream object in extended "
-          "stream properties object for stream %u", esp->stream_num);
+    for (x = demux->mut_ex_streams; x != NULL; x = x->next) {
+      /* check for each mutual exclusion whether it affects this stream */
+      for (mes = (guint8 *) x->data; mes != NULL && *mes != 0xff; ++mes) {
+        if (*mes == esp->stream_num) {
+          /* if yes, check if we've already added streams that are mutually
+           * exclusive with the stream we're about to add */
+          for (mes = (guint8 *) x->data; mes != NULL && *mes != 0xff; ++mes) {
+            for (i = 0; i < demux->num_streams; ++i) {
+              /* if the broadcast flag is set, assume the hidden streams aren't
+               * actually streamed and hide them (or playbin won't work right),
+               * otherwise assume their data is available */
+              if (demux->stream[i].id == *mes && demux->broadcast) {
+                is_hidden = TRUE;
+                GST_LOG_OBJECT (demux, "broadcast stream ID %d to be added is "
+                    "mutually exclusive with already existing stream ID %d, "
+                    "hiding stream", esp->stream_num, demux->stream[i].id);
+                break;
+              }
+            }
+          }
+          break;
+        }
+      }
     }
+
+    if (!is_hidden && esp->stream_obj_data != NULL) {
+      guint64 len;
+      guint8 *data;
+
+      data = esp->stream_obj_data;
+      len = esp->stream_obj_len;
+
+      if (gst_asf_demux_process_stream (demux, data, len) != GST_FLOW_OK) {
+        GST_WARNING_OBJECT (demux,
+            "failed to parse stream object in extended "
+            "stream properties object for stream %u", esp->stream_num);
+      }
+    }
+
     g_free (esp->stream_obj_data);
     esp->stream_obj_data = NULL;
     esp->stream_obj_data = 0;
@@ -1966,6 +2041,10 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_LANGUAGE_LIST:
       ret = gst_asf_demux_process_language_list (demux, *p_data, obj_data_size);
       break;
+    case ASF_OBJ_ADVANCED_MUTUAL_EXCLUSION:
+      ret = gst_asf_demux_process_advanced_mutual_exclusion (demux, *p_data,
+          obj_data_size);
+      break;
     case ASF_OBJ_CONTENT_ENCRYPTION:
     case ASF_OBJ_EXT_CONTENT_ENCRYPTION:
     case ASF_OBJ_DIGITAL_SIGNATURE_OBJECT:
@@ -1981,7 +2060,6 @@ gst_asf_demux_process_object (GstASFDemux * demux, guint8 ** p_data,
     case ASF_OBJ_COMPATIBILITY:
     case ASF_OBJ_INDEX_PLACEHOLDER:
     case ASF_OBJ_INDEX_PARAMETERS:
-    case ASF_OBJ_ADVANCED_MUTUAL_EXCLUSION:
     case ASF_OBJ_STREAM_PRIORITIZATION:
     case ASF_OBJ_SCRIPT_COMMAND:
     default:
@@ -2853,6 +2931,8 @@ gst_asf_demux_change_state (GstElement * element, GstStateChange transition)
       demux->num_languages = 0;
       g_slist_foreach (demux->ext_stream_props, (GFunc) g_free, NULL);
       g_slist_free (demux->ext_stream_props);
+      g_slist_foreach (demux->mut_ex_streams, (GFunc) g_free, NULL);
+      g_slist_free (demux->mut_ex_streams);
       demux->ext_stream_props = NULL;
       memset (demux->stream, 0, sizeof (demux->stream));
       demux->seekable = FALSE;

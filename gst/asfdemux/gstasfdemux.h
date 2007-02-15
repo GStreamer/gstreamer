@@ -95,6 +95,7 @@ struct _GstASFDemux {
   guint                num_languages;
 
   GSList              *ext_stream_props;
+  GSList              *mut_ex_streams; /* mutually exclusive streams */
 
   guint32              num_audio_streams;
   guint32              num_video_streams;
@@ -109,6 +110,7 @@ struct _GstASFDemux {
   guint64              pts;
 
   gboolean             seekable;
+  gboolean             broadcast;
 
   GstSegment           segment; /* configured play segment */
 

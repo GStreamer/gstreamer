@@ -1,3 +1,19 @@
+2007-02-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_file),
+	(gst_asf_demux_process_advanced_mutual_exclusion),
+	(gst_asf_demux_process_queued_extended_stream_objects),
+	(gst_asf_demux_process_object), (gst_asf_demux_change_state):
+	* gst/asfdemux/gstasfdemux.h:
+	  Parse advanced mutual exclusion object and only add pads for
+	  'hidden' streams (those in an extended stream header) that are
+	  mutually exclusive with an already existing 'main stream' if
+	  the broadcasting flag is not set. If the broadcasting flag is set,
+	  assume that data for this stream isn't sent. (This should ideally be
+	  solved better by making playbin more robust against this and/or by
+	  making mmssrc send some information downstream about which streams
+	  will be streamed). Fixes #353116.
+
 2007-02-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/synaesthesia/gstsynaesthesia.c:
