@@ -735,6 +735,14 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       break;
     }
     case GST_QUERY_LATENCY:
+      /* we can only report the fact that we are live or not, we know nothing
+       * about latency. Subclasses should override and implement something
+       * usefull */
+      GST_LIVE_LOCK (src);
+      gst_query_set_latency (query, src->is_live, 0, -1);
+      GST_LIVE_UNLOCK (src);
+      res = TRUE;
+      break;
     case GST_QUERY_JITTER:
     case GST_QUERY_RATE:
     default:
