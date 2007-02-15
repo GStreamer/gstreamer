@@ -261,6 +261,8 @@ event_probe (GstPad * pad, GstMiniObject ** data, gpointer user_data)
 
   fail_unless (GST_IS_EVENT (data));
 
+  GST_DEBUG ("event probe called");
+
   if (before_q) {
     switch (GST_EVENT_TYPE (GST_EVENT (data))) {
       case GST_EVENT_CUSTOM_UPSTREAM:
@@ -308,6 +310,8 @@ static void test_event
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL,
       GST_CLOCK_TIME_NONE);
+
+  GST_DEBUG ("test event called");
 
   event = gst_event_new_custom (type,
       gst_structure_empty_new ("application/x-custom"));
@@ -404,32 +408,32 @@ GST_START_TEST (send_custom_events)
   test_event (pipeline, GST_EVENT_CUSTOM_UPSTREAM, sinkpad, TRUE, srcpad);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) < G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_UP took to long to reach source: %"
+      "GST_EVENT_CUSTOM_UP took too long to reach source: %"
       G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   test_event (pipeline, GST_EVENT_CUSTOM_BOTH, sinkpad, TRUE, srcpad);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) < G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_BOTH took to long to reach source: %"
+      "GST_EVENT_CUSTOM_BOTH took too long to reach source: %"
       G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   test_event (pipeline, GST_EVENT_CUSTOM_BOTH_OOB, sinkpad, TRUE, srcpad);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) < G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_BOTH_OOB took to long to reach source: %"
+      "GST_EVENT_CUSTOM_BOTH_OOB took too long to reach source: %"
       G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   /* Out of band downstream events */
   test_event (pipeline, GST_EVENT_CUSTOM_DOWNSTREAM_OOB, srcpad, FALSE, srcpad);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) < G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_DS_OOB took to long to reach source: %"
+      "GST_EVENT_CUSTOM_DS_OOB took too long to reach source: %"
       G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   test_event (pipeline, GST_EVENT_CUSTOM_BOTH_OOB, srcpad, FALSE, srcpad);
   fail_unless (timediff (&got_event_time,
           &sent_event_time) < G_USEC_PER_SEC / 2,
-      "GST_EVENT_CUSTOM_BOTH_OOB took to long to reach source: %"
+      "GST_EVENT_CUSTOM_BOTH_OOB took too long to reach source: %"
       G_GINT64_FORMAT " us", timediff (&got_event_time, &sent_event_time));
 
   /* In-band downstream events are expected to take at least 1 second

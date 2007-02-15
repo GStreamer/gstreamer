@@ -1,5 +1,11 @@
 2007-02-15  Wim Taymans  <wim@fluendo.com>
 
+	* tests/check/gst/gstevent.c: (event_probe), (test_event),
+	(GST_START_TEST):
+	Improve debugging.
+
+2007-02-15  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_get_internal_links_default),
 	(gst_pad_dispatcher):
 	Improve debugging of default pad dispatcher and query functions.
