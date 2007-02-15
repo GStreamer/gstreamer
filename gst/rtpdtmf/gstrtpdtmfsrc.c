@@ -281,21 +281,6 @@ gst_rtp_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
       gst_rtp_dtmf_src_stop (dtmfsrc);
       result = TRUE;
       break;
-    case GST_EVENT_NEWSEGMENT:
-    {
-      gboolean update;
-      gdouble rate;
-      GstFormat fmt;
-      gint64 start, stop, position;
-
-      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
-          &position);
-      gst_segment_set_newsegment (&dtmfsrc->segment, update, rate, fmt,
-          start, stop, position);
-      
-      result = TRUE;
-      break;
-    }
     default:
       result = gst_pad_event_default (pad, event);
       break;
