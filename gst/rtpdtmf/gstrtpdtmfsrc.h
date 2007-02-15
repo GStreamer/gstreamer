@@ -4,6 +4,7 @@
  *
  * Copyright (C) <2007> Nokia Corporation.
  *   Contact: Zeeshan Ali <zeeshan.ali@nokia.com>
+ * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
