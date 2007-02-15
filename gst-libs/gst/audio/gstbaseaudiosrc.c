@@ -66,6 +66,7 @@ static void gst_base_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_base_audio_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+static void gst_base_audio_src_dispose (GObject * object);
 
 static GstStateChangeReturn gst_base_audio_src_change_state (GstElement *
     element, GstStateChange transition);
@@ -84,6 +85,7 @@ static gboolean gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static void gst_base_audio_src_get_times (GstBaseSrc * bsrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
 static gboolean gst_base_audio_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps);
+static gboolean gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query);
 static void gst_base_audio_src_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 /* static guint gst_base_audio_src_signals[LAST_SIGNAL] = { 0 }; */
@@ -110,6 +112,7 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_audio_src_set_property);
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_get_property);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_base_audio_src_dispose);
 
   g_object_class_install_property (gobject_class, PROP_BUFFER_TIME,
       g_param_spec_int64 ("buffer-time", "Buffer Time",
@@ -130,6 +133,7 @@ gst_base_audio_src_class_init (GstBaseAudioSrcClass * klass)
 
   gstbasesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_base_audio_src_setcaps);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_base_audio_src_event);
+  gstbasesrc_class->query = GST_DEBUG_FUNCPTR (gst_base_audio_src_query);
   gstbasesrc_class->get_times =
       GST_DEBUG_FUNCPTR (gst_base_audio_src_get_times);
   gstbasesrc_class->create = GST_DEBUG_FUNCPTR (gst_base_audio_src_create);
@@ -155,6 +159,25 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
   gst_base_src_set_live (GST_BASE_SRC (baseaudiosrc), TRUE);
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (baseaudiosrc), GST_FORMAT_TIME);
+}
+
+static void
+gst_base_audio_src_dispose (GObject * object)
+{
+  GstBaseAudioSrc *src;
+
+  src = GST_BASE_AUDIO_SRC (object);
+
+  if (src->clock)
+    gst_object_unref (src->clock);
+  src->clock = NULL;
+
+  if (src->ringbuffer) {
+    gst_object_unparent (GST_OBJECT_CAST (src->ringbuffer));
+    src->ringbuffer = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean
@@ -379,6 +402,50 @@ gst_base_audio_src_get_times (GstBaseSrc * bsrc, GstBuffer * buffer,
 }
 
 static gboolean
+gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
+{
+  GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
+  gboolean res = FALSE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      GstClockTime min_latency, max_latency;
+      GstRingBufferSpec *spec;
+
+      if (G_UNLIKELY (src->ringbuffer == NULL
+              || src->ringbuffer->spec.rate == 0))
+        goto done;
+
+      spec = &src->ringbuffer->spec;
+
+      min_latency =
+          gst_util_uint64_scale_int (spec->segsize, GST_SECOND,
+          spec->rate * spec->bytes_per_sample);
+      max_latency =
+          gst_util_uint64_scale_int (spec->segtotal * spec->segsize, GST_SECOND,
+          spec->rate * spec->bytes_per_sample);
+
+      GST_DEBUG_OBJECT (src,
+          "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+      /* we are always live, the min latency is 1 segment and the max latency is
+       * the complete buffer of segments. */
+      gst_query_set_latency (query, TRUE, min_latency, max_latency);
+
+      res = TRUE;
+      break;
+    }
+    default:
+      res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
+      break;
+  }
+done:
+  return res;
+}
+
+static gboolean
 gst_base_audio_src_event (GstBaseSrc * bsrc, GstEvent * event)
 {
   GstBaseAudioSrc *src = GST_BASE_AUDIO_SRC (bsrc);
@@ -588,14 +655,17 @@ gst_base_audio_src_change_state (GstElement * element,
         src->ringbuffer = gst_base_audio_src_create_ringbuffer (src);
       }
       if (!gst_ring_buffer_open_device (src->ringbuffer))
-        return GST_STATE_CHANGE_FAILURE;
-      src->next_sample = -1;
+        goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      src->next_sample = -1;
       gst_ring_buffer_set_flushing (src->ringbuffer, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       gst_ring_buffer_may_start (src->ringbuffer, TRUE);
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_ring_buffer_set_flushing (src->ringbuffer, TRUE);
       break;
     default:
       break;
@@ -609,9 +679,7 @@ gst_base_audio_src_change_state (GstElement * element,
       gst_ring_buffer_pause (src->ringbuffer);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_ring_buffer_set_flushing (src->ringbuffer, TRUE);
       gst_ring_buffer_release (src->ringbuffer);
-      src->next_sample = -1;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_ring_buffer_close_device (src->ringbuffer);
@@ -623,4 +691,13 @@ gst_base_audio_src_change_state (GstElement * element,
   }
 
   return ret;
+
+  /* ERRORS */
+open_failed:
+  {
+    /* subclass must post a meaningfull error message */
+    GST_DEBUG_OBJECT (src, "open failed");
+    return GST_STATE_CHANGE_FAILURE;
+  }
+
 }

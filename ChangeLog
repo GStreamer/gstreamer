@@ -1,5 +1,23 @@
 2007-02-15  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_class_init), (gst_base_audio_sink_query),
+	(gst_base_audio_sink_render), (gst_base_audio_sink_callback),
+	(gst_base_audio_sink_async_play),
+	(gst_base_audio_sink_change_state):
+	Answer latency query.
+	Use configured latency when syncing.
+	Fix clock slaving.
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_class_init), (gst_base_audio_src_dispose),
+	(gst_base_audio_src_query), (gst_base_audio_src_change_state):
+	Fix possible memleak.
+	Implement latency query.
+	Small cleanups.
+
+2007-02-15  Wim Taymans  <wim@fluendo.com>
+
 	* ext/alsa/gstalsasink.c: (gst_alsasink_reset):
 	Ignore errors in reset, these are not fatal. They also grab the element
 	lock which is already taking when this function is called. Fixes

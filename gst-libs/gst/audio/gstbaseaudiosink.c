@@ -87,6 +87,8 @@ static GstStateChangeReturn gst_base_audio_sink_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_base_audio_sink_activate_pull (GstBaseSink * basesink,
     gboolean active);
+static gboolean gst_base_audio_sink_query (GstElement * element, GstQuery *
+    query);
 
 static GstClock *gst_base_audio_sink_provide_clock (GstElement * elem);
 static GstClockTime gst_base_audio_sink_get_time (GstClock * clock,
@@ -149,6 +151,7 @@ gst_base_audio_sink_class_init (GstBaseAudioSinkClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_change_state);
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_base_audio_sink_provide_clock);
+  gstelement_class->query = GST_DEBUG_FUNCPTR (gst_base_audio_sink_query);
 
   gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_base_audio_sink_event);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_base_audio_sink_preroll);
@@ -234,6 +237,62 @@ clock_disabled:
     return NULL;
   }
 }
+
+static gboolean
+gst_base_audio_sink_query (GstElement * element, GstQuery * query)
+{
+  gboolean res = FALSE;
+
+  GstBaseAudioSink *basesink = GST_BASE_AUDIO_SINK (element);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      gboolean live, us_live;
+      GstClockTime min_l, max_l;
+
+      GST_DEBUG_OBJECT (basesink, "latency query");
+
+      /* ask parent first, it will do an upstream query for us. */
+      if ((res =
+              gst_base_sink_query_latency (GST_BASE_SINK_CAST (basesink), &live,
+                  &us_live, &min_l, &max_l))) {
+        GstClockTime min_latency, max_latency;
+
+        /* we and upstream are both live, adjust the min_latency */
+        if (live && us_live && basesink->ringbuffer
+            && basesink->ringbuffer->spec.rate) {
+          GstRingBufferSpec *spec;
+
+          spec = &basesink->ringbuffer->spec;
+
+          max_latency =
+              spec->segtotal * spec->segsize * GST_SECOND / (spec->rate *
+              spec->bytes_per_sample);
+          min_latency = MAX (max_latency, min_l);
+
+          GST_DEBUG_OBJECT (basesink,
+              "peer min %" GST_TIME_FORMAT ", our min latency: %"
+              GST_TIME_FORMAT, GST_TIME_ARGS (min_l),
+              GST_TIME_ARGS (min_latency));
+        } else {
+          GST_DEBUG_OBJECT (basesink,
+              "peer or we are not live, don't care about latency");
+          min_latency = 0;
+          max_latency = -1;
+        }
+        gst_query_set_latency (query, live, min_latency, max_latency);
+      }
+      break;
+    }
+    default:
+      res = GST_ELEMENT_CLASS (parent_class)->query (element, query);
+      break;
+  }
+
+  return res;
+}
+
 
 static GstClockTime
 gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
@@ -550,7 +609,7 @@ gst_base_audio_sink_get_offset (GstBaseAudioSink * sink)
 static GstFlowReturn
 gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
-  guint64 in_offset, clock_offset;
+  guint64 in_offset;
   GstClockTime time, stop, render_start, render_stop, sample_offset;
   GstBaseAudioSink *sink;
   GstRingBuffer *ringbuf;
@@ -563,9 +622,9 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   GstClockTime crate_num;
   GstClockTime crate_denom;
   gint out_samples;
-  GstClockTime cinternal, cexternal;
+  GstClockTime base_time, cinternal, cexternal, latency;
   GstClock *clock;
-  gboolean sync;
+  gboolean sync, slaved;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
@@ -663,28 +722,61 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       "running: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
       GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
 
-  /* get calibration parameters to compensate for speed and offset differences
-   * when we are slaved */
-  gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
-      &crate_num, &crate_denom);
+  base_time = gst_element_get_base_time (GST_ELEMENT_CAST (bsink));
 
-  clock_offset =
-      (gst_element_get_base_time (GST_ELEMENT_CAST (bsink)) - cexternal) +
-      cinternal;
+  GST_DEBUG_OBJECT (sink, "base_time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (base_time));
 
-  GST_DEBUG_OBJECT (sink, "clock offset %" GST_TIME_FORMAT " %" G_GUINT64_FORMAT
-      "/%" G_GUINT64_FORMAT, GST_TIME_ARGS (clock_offset), crate_num,
-      crate_denom);
+  /* add base time to sync against the clock */
+  render_start += base_time;
+  render_stop += base_time;
 
-  /* and bring the time to the rate corrected offset in the buffer */
-  render_start = gst_util_uint64_scale_int (render_start + clock_offset,
-      ringbuf->spec.rate, GST_SECOND);
-  render_stop = gst_util_uint64_scale_int (render_stop + clock_offset,
-      ringbuf->spec.rate, GST_SECOND);
+  slaved = clock != sink->provided_clock;
+  if (slaved) {
+    /* get calibration parameters to compensate for speed and offset differences
+     * when we are slaved */
+    gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
+        &crate_num, &crate_denom);
+
+    GST_DEBUG_OBJECT (sink, "internal %" GST_TIME_FORMAT " external %"
+        GST_TIME_FORMAT " %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT " = %f",
+        GST_TIME_ARGS (cinternal), GST_TIME_ARGS (cexternal), crate_num,
+        crate_denom, (gdouble) crate_num / crate_denom);
+
+    /* bring to our slaved clock time */
+    if (render_start >= cexternal)
+      render_start =
+          gst_util_uint64_scale (render_start - cexternal, crate_denom,
+          crate_num) + cinternal;
+    else
+      render_start =
+          cinternal - gst_util_uint64_scale (cexternal - render_start,
+          crate_denom, crate_num);
+
+    if (render_stop >= cexternal)
+      render_stop =
+          gst_util_uint64_scale (render_stop - cexternal, crate_denom,
+          crate_num) + cinternal;
+    else
+      render_stop =
+          cinternal - gst_util_uint64_scale (cexternal - render_stop,
+          crate_denom, crate_num);
+  }
+
+  /* compensate for latency */
+  latency = gst_base_sink_get_latency (bsink);
+  render_start += latency;
+  render_stop += latency;
 
   GST_DEBUG_OBJECT (sink,
       "render: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
       GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
+
+  /* and bring the time to the rate corrected offset in the buffer */
+  render_start = gst_util_uint64_scale_int (render_start,
+      ringbuf->spec.rate, GST_SECOND);
+  render_stop = gst_util_uint64_scale_int (render_stop,
+      ringbuf->spec.rate, GST_SECOND);
 
   /* always resync after a discont */
   if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
@@ -736,7 +828,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   render_start += align;
 
   /* only align stop if we are not slaved */
-  if (clock != sink->provided_clock) {
+  if (slaved) {
     GST_DEBUG_OBJECT (sink, "no stop time align needed: we are slaved");
     goto no_align;
   }
@@ -878,7 +970,8 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
 
   /* would be nice to arrange for pad_alloc_buffer to return data -- as it is we
      will copy twice, once into data, once into DMA */
-  GST_LOG_OBJECT (basesink, "pulling %d bytes to fill audio buffer", len);
+  GST_LOG_OBJECT (basesink, "pulling %d bytes offset %" G_GUINT64_FORMAT
+      " to fill audio buffer", len, basesink->offset);
   ret = gst_pad_pull_range (basesink->sinkpad, basesink->offset, len, &buf);
   if (ret != GST_FLOW_OK)
     goto error;
@@ -944,6 +1037,8 @@ gst_base_audio_sink_async_play (GstBaseSink * basesink)
   }
 
 no_clock:
+  gst_ring_buffer_start (sink->ringbuffer);
+
   return GST_STATE_CHANGE_SUCCESS;
 }
 
@@ -1009,7 +1104,6 @@ gst_base_audio_sink_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_ring_buffer_release (sink->ringbuffer);
-      gst_pad_set_caps (GST_BASE_SINK_PAD (sink), NULL);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_ring_buffer_close_device (sink->ringbuffer);
