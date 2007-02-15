@@ -1,9 +1,14 @@
-2007-02-13  Wim Taymans,,,  <wim@fluendo.com>
+2007-02-15  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	Remove old unused method.
+
+2007-02-13  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/gst/gstsegment.c: (GST_START_TEST):
 	Fix check
 
-2007-02-13  Wim Taymans,,,  <wim@fluendo.com>
+2007-02-13  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-seeking.txt:
 	Some small update.

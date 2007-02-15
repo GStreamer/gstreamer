@@ -1020,7 +1020,6 @@ gst_message_parse_buffering
 gst_message_parse_warning
 gst_message_parse_duration
 gst_message_parse_lost_preroll
-gst_message_parse_prerolled
 gst_message_ref
 gst_message_unref
 <SUBSECTION Standard>
