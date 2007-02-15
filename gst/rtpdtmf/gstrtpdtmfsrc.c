@@ -272,11 +272,14 @@ gst_rtp_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
         }
       }
 
+      result = TRUE;
       break;
     }
-    case GST_EVENT_FLUSH_STOP:
-      result = gst_pad_event_default (pad, event);
-      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
+    /* Ideally this element should not be flushed but let's handle the event
+     * just in case it is */
+    case GST_EVENT_FLUSH_START:
+      gst_rtp_dtmf_src_stop (dtmfsrc);
+      result = TRUE;
       break;
     case GST_EVENT_NEWSEGMENT:
     {
@@ -289,7 +292,8 @@ gst_rtp_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
           &position);
       gst_segment_set_newsegment (&dtmfsrc->segment, update, rate, fmt,
           start, stop, position);
-
+      
+      result = TRUE;
       break;
     }
     default:
