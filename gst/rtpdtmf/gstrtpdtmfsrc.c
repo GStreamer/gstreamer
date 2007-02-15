@@ -30,17 +30,19 @@
 
 #include "gstrtpdtmfsrc.h"
 
-#define GST_RTP_DTMF_TYPE_EVENT 1
-#define DEFAULT_PACKET_INTERVAL ((guint16) 50) /* ms */
-#define DEFAULT_SSRC            -1
-#define DEFAULT_PT              96
-#define DEFAULT_CLOCK_RATE      8000
-#define MIN_EVENT               0
-#define MAX_EVENT               16
-#define MIN_EVENT_STRING        "0"
-#define MAX_EVENT_STRING        "16"
-#define MIN_VOLUME              0
-#define MAX_VOLUME              36
+#define GST_RTP_DTMF_TYPE_EVENT  1
+#define DEFAULT_PACKET_INTERVAL  ((guint16) 50) /* ms */
+#define DEFAULT_SSRC             -1
+#define DEFAULT_PT               96
+#define DEFAULT_TIMESTAMP_OFFSET -1
+#define DEFAULT_SEQNUM_OFFSET    -1
+#define DEFAULT_CLOCK_RATE       8000
+#define MIN_EVENT                0
+#define MAX_EVENT                16
+#define MIN_EVENT_STRING         "0"
+#define MAX_EVENT_STRING         "16"
+#define MIN_VOLUME               0
+#define MAX_VOLUME               36
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_dtmf_src_details =
@@ -63,8 +65,12 @@ enum
 {
   PROP_0,
   PROP_SSRC,
+  PROP_TIMESTAMP_OFFSET,
+  PROP_SEQNUM_OFFSET,
   PROP_PT,
   PROP_CLOCK_RATE,
+  PROP_TIMESTAMP,
+  PROP_SEQNUM
 };
 
 static GstStaticPadTemplate gst_rtp_dtmf_src_template =
@@ -76,7 +82,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "payload = (int) [ 96, 127 ], "
         "clock-rate = (int) [ 0, MAX ], " 
         "ssrc = (int) [ 0, MAX ], " 
-        "event = (int) [ " MIN_EVENT_STRING ", " MAX_EVENT_STRING " ], "
+        "events = (int) [ " MIN_EVENT_STRING ", " MAX_EVENT_STRING " ], "
         "encoding-name = (string) \"telephone-event\"")
     );
 
@@ -155,6 +161,23 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_get_property);
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMESTAMP,
+      g_param_spec_uint ("timestamp", "Timestamp",
+          "The RTP timestamp of the last processed packet",
+          0, G_MAXUINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM,
+      g_param_spec_uint ("seqnum", "Sequence number",
+          "The RTP sequence number of the last processed packet",
+          0, G_MAXUINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_TIMESTAMP_OFFSET, g_param_spec_int ("timestamp-offset",
+          "Timestamp Offset",
+          "Offset to add to all outgoing timestamps (-1 = random)", -1,
+          G_MAXINT, DEFAULT_TIMESTAMP_OFFSET, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM_OFFSET,
+      g_param_spec_int ("seqnum-offset", "Sequence number Offset",
+          "Offset to add to all outgoing seqnum (-1 = random)", -1, G_MAXINT,
+          DEFAULT_SEQNUM_OFFSET, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CLOCK_RATE,
       g_param_spec_uint ("clock-rate", "clockrate",
           "The clock-rate at which to generate the dtmf packets",
@@ -183,6 +206,8 @@ gst_rtp_dtmf_src_init (GstRTPDTMFSrc * dtmfsrc, gpointer g_class)
   gst_pad_set_event_function (dtmfsrc->srcpad, gst_rtp_dtmf_src_handle_event);
   
   dtmfsrc->ssrc = DEFAULT_SSRC;
+  dtmfsrc->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
+  dtmfsrc->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   dtmfsrc->pt = DEFAULT_PT;
   dtmfsrc->clock_rate = DEFAULT_CLOCK_RATE;
   
@@ -246,11 +271,32 @@ gst_rtp_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
           gst_rtp_dtmf_src_stop (dtmfsrc);
         }
       }
+
+      break;
+    }
+    case GST_EVENT_FLUSH_STOP:
+      result = gst_pad_event_default (pad, event);
+      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gboolean update;
+      gdouble rate;
+      GstFormat fmt;
+      gint64 start, stop, position;
+
+      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
+          &position);
+      gst_segment_set_newsegment (&dtmfsrc->segment, update, rate, fmt,
+          start, stop, position);
+
       break;
     }
     default:
+      result = gst_pad_event_default (pad, event);
       break;
   }
+
   gst_event_unref (event);
   return result;
 }
@@ -264,6 +310,12 @@ gst_rtp_dtmf_src_set_property (GObject * object, guint prop_id,
   dtmfsrc = GST_RTP_DTMF_SRC (object);
 
   switch (prop_id) {
+    case PROP_TIMESTAMP_OFFSET:
+      dtmfsrc->ts_offset = g_value_get_int (value);
+      break;
+    case PROP_SEQNUM_OFFSET:
+      dtmfsrc->seqnum_offset = g_value_get_int (value);
+      break;
     case PROP_CLOCK_RATE:
       dtmfsrc->clock_rate = g_value_get_uint (value);
       gst_rtp_dtmf_src_set_caps (dtmfsrc);
@@ -290,6 +342,12 @@ gst_rtp_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
   dtmfsrc = GST_RTP_DTMF_SRC (object);
 
   switch (prop_id) {
+    case PROP_TIMESTAMP_OFFSET:
+      g_value_set_int (value, dtmfsrc->ts_offset);
+      break;
+    case PROP_SEQNUM_OFFSET:
+      g_value_set_int (value, dtmfsrc->seqnum_offset);
+      break;
     case PROP_CLOCK_RATE:
       g_value_set_uint (value, dtmfsrc->clock_rate);
       break;
@@ -298,6 +356,12 @@ gst_rtp_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_PT:
       g_value_set_uint (value, dtmfsrc->pt);
+      break;
+    case PROP_TIMESTAMP:
+      g_value_set_uint (value, dtmfsrc->rtp_timestamp);
+      break;
+    case PROP_SEQNUM:
+      g_value_set_uint (value, dtmfsrc->seqnum);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -309,19 +373,42 @@ static void
 gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc,
         gint event_number, gint event_volume)
 {
+  GstClock *clock;
+
   g_return_if_fail (dtmfsrc->payload == NULL);
 
   dtmfsrc->payload = g_new0 (GstRTPDTMFPayload, 1);
   dtmfsrc->payload->event = CLAMP (event_number, MIN_EVENT, MAX_EVENT);
   dtmfsrc->payload->volume = CLAMP (event_volume, MIN_VOLUME, MAX_VOLUME);
 
-  dtmfsrc->next_ts = gst_clock_get_time (GST_ELEMENT_CLOCK (dtmfsrc));
+  gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
   dtmfsrc->first_packet = TRUE;
+
+  clock = GST_ELEMENT_CLOCK (dtmfsrc);
+  if (clock != NULL) {
+    dtmfsrc->timestamp = gst_clock_get_time (GST_ELEMENT_CLOCK (dtmfsrc));
+  }
+
+  else {
+    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", GST_ELEMENT_NAME (dtmfsrc));
+    dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
+  }
 
   if (dtmfsrc->ssrc == -1)
     dtmfsrc->current_ssrc = g_random_int ();
   else
     dtmfsrc->current_ssrc = dtmfsrc->ssrc;
+
+  if (dtmfsrc->seqnum_offset == -1)
+    dtmfsrc->seqnum_base = g_random_int_range (0, G_MAXUINT16);
+  else
+    dtmfsrc->seqnum_base = dtmfsrc->seqnum_offset;
+  dtmfsrc->seqnum = dtmfsrc->seqnum_base;
+
+  if (dtmfsrc->ts_offset == -1)
+    dtmfsrc->ts_base = g_random_int ();
+  else
+    dtmfsrc->ts_base = dtmfsrc->ts_offset;
 
   if (!gst_pad_start_task (dtmfsrc->srcpad,
       (GstTaskFunction) gst_rtp_dtmf_src_push_next_rtp_packet, dtmfsrc)) {
@@ -348,13 +435,30 @@ gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
 }
 
 static void
+gst_rtp_dtmf_src_calc_rtp_timestamp (GstRTPDTMFSrc *dtmfsrc)
+{
+  /* add our random offset to the timestamp */
+  dtmfsrc->rtp_timestamp = dtmfsrc->ts_base;
+
+  if (GST_CLOCK_TIME_IS_VALID (dtmfsrc->timestamp)) {
+    gint64 rtime;
+
+    rtime =
+        gst_segment_to_running_time (&dtmfsrc->segment, GST_FORMAT_TIME,
+                dtmfsrc->timestamp);
+    rtime = gst_util_uint64_scale_int (rtime, dtmfsrc->clock_rate, GST_SECOND);
+
+    dtmfsrc->rtp_timestamp += rtime;
+  }
+}
+
+static void
 gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
 {
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
   GstRTPDTMFPayload *payload;
   GstClock * clock;
-  guint32 rtp_ts;
 
   /* create buffer to hold the payload */
   buf = gst_rtp_buffer_new_allocate (sizeof (GstRTPDTMFPayload), 0, 0);
@@ -365,10 +469,13 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
     gst_rtp_buffer_set_marker (buf, TRUE);
     dtmfsrc->first_packet = FALSE;
   }
+  dtmfsrc->seqnum++;
+  gst_rtp_buffer_set_seq (buf, dtmfsrc->seqnum);
 
   /* timestamp and duration of GstBuffer */ 
-  GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->next_ts;
   GST_BUFFER_DURATION (buf) = DEFAULT_PACKET_INTERVAL * GST_MSECOND;
+  dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
+  GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
   
   /* duration of DTMF payload */
   dtmfsrc->payload->duration +=
@@ -376,8 +483,8 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
 
   payload = (GstRTPDTMFPayload *) gst_rtp_buffer_get_payload (buf);
   /* timestamp of RTP header */
-  rtp_ts = dtmfsrc->next_ts * dtmfsrc->clock_rate / GST_SECOND;
-  gst_rtp_buffer_set_timestamp (buf, rtp_ts);
+  gst_rtp_dtmf_src_calc_rtp_timestamp (dtmfsrc);
+  gst_rtp_buffer_set_timestamp (buf, dtmfsrc->rtp_timestamp);
   
   /* copy payload and convert to network-byte order */
   g_memmove (payload, dtmfsrc->payload, sizeof (GstRTPDTMFPayload));
@@ -389,7 +496,7 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
     GstClockID clock_id;
     GstClockReturn clock_ret;
 
-    clock_id = gst_clock_new_single_shot_id (clock, dtmfsrc->next_ts);
+    clock_id = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp);
     clock_ret = gst_clock_id_wait (clock_id, NULL);
     if (clock_ret != GST_CLOCK_OK && clock_ret != GST_CLOCK_EARLY) {
       GST_ERROR_OBJECT (dtmfsrc, "Failed to wait on clock %s",
@@ -401,8 +508,6 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
   else {
     GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", GST_ELEMENT_NAME (dtmfsrc));
   }
-
-  dtmfsrc->next_ts += GST_BUFFER_DURATION (buf);
 
   GST_DEBUG_OBJECT (dtmfsrc,
           "pushing buffer on src pad of size %d", GST_BUFFER_SIZE (buf));
@@ -425,7 +530,9 @@ gst_rtp_dtmf_src_set_caps (GstRTPDTMFSrc *dtmfsrc)
       "payload", G_TYPE_INT, dtmfsrc->pt,
       "clock-rate", G_TYPE_INT, dtmfsrc->clock_rate,
       "encoding-name", G_TYPE_STRING, "telephone-event",
-      "ssrc", G_TYPE_UINT, dtmfsrc->current_ssrc, NULL);
+      "ssrc", G_TYPE_UINT, dtmfsrc->current_ssrc,
+      "clock-base", G_TYPE_UINT, dtmfsrc->ts_base,
+      "seqnum-base", G_TYPE_UINT, dtmfsrc->seqnum_base, NULL);
 
   if (!gst_pad_set_caps (dtmfsrc->srcpad, caps)) {
     GST_ERROR_OBJECT (dtmfsrc, "Failed to set caps % on src pad",
@@ -503,8 +610,6 @@ plugin_init (GstPlugin * plugin)
 
   return TRUE;
 }
-
-#define PACKAGE "gstreamer"
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,

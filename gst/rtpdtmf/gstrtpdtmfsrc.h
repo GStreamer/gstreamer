@@ -68,12 +68,21 @@ struct _GstRTPDTMFSrc {
   GstPad	    *srcpad;
   GstRTPDTMFPayload *payload;
 
-  GstClockTime      next_ts;
+  guint32           ts_base;
+  guint16           seqnum_base;
+
+  gint16            seqnum_offset;
+  guint16           seqnum;
+  gint32            ts_offset;
+  guint32           rtp_timestamp;
   guint32           clock_rate;
   guint             pt;
   guint             ssrc;
   guint             current_ssrc;
   gboolean          first_packet;
+  
+  GstClockTime      timestamp;
+  GstSegment        segment;
 };
 
 struct _GstRTPDTMFSrcClass {
