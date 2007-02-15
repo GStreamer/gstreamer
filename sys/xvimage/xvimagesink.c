@@ -1459,7 +1459,7 @@ gst_xvimagesink_event_thread (GstXvImageSink * xvimagesink)
 static void
 gst_xvimagesink_calculate_pixel_aspect_ratio (GstXContext * xcontext)
 {
-  gint par[][2] = {
+  static const gint par[][2] = {
     {1, 1},                     /* regular screen */
     {16, 15},                   /* PAL TV */
     {11, 10},                   /* 525 line Rec.601 video */
