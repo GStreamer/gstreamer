@@ -1,3 +1,7 @@
+2007-02-15  David Schleef  <ds@schleef.org>
+
+	* Makefile.am: Add ACLOCAL_AMFLAGS
+
 2007-02-04  Edward Hervey  <edward@fluendo.com>
 
 	* testsuite/common.py:

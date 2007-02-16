@@ -1,5 +1,7 @@
 SUBDIRS = codegen gst examples testsuite pkgconfig
 
+ACLOCAL_AMFLAGS = -I common/m4
+
 EXTRA_DIST = \
 	gstltihooks.py \
 	pygst.py.in \
