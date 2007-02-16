@@ -1,5 +1,15 @@
 2007-02-16  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/URLS:
+	Add example H264 rtsp url.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_media_to_caps),
+	(gst_rtspsrc_handle_message), (gst_rtspsrc_change_state):
+	Don't convert values to lowercase or we might mess up base64 encoded
+	properties.
+
+2007-02-16  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/README:
 	Fix case of string params.
 

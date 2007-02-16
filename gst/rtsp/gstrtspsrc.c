@@ -610,7 +610,7 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
   gchar *name = NULL;
   gint rate = -1;
   gchar *params = NULL;
-  gchar *tmp1, *tmp2;
+  gchar *tmp;
   GstStructure *s;
 
   /* dynamic payloads need rtpmap */
@@ -636,25 +636,27 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
       goto no_rtpmap;
   }
 
-  tmp1 = g_ascii_strdown (media->media, -1);
+  tmp = g_ascii_strdown (media->media, -1);
   caps = gst_caps_new_simple ("application/x-unknown",
-      "media", G_TYPE_STRING, tmp1, "payload", G_TYPE_INT, pt, NULL);
-  g_free (tmp1);
+      "media", G_TYPE_STRING, tmp, "payload", G_TYPE_INT, pt, NULL);
+  g_free (tmp);
   s = gst_caps_get_structure (caps, 0);
 
   if (rate != -1)
     gst_structure_set (s, "clock-rate", G_TYPE_INT, rate, NULL);
 
+  /* encoding name must be upper case */
   if (name != NULL) {
-    tmp1 = g_ascii_strup (name, -1);
-    gst_structure_set (s, "encoding-name", G_TYPE_STRING, tmp1, NULL);
-    g_free (tmp1);
+    tmp = g_ascii_strup (name, -1);
+    gst_structure_set (s, "encoding-name", G_TYPE_STRING, tmp, NULL);
+    g_free (tmp);
   }
 
+  /* params must be lower case */
   if (params != NULL) {
-    tmp1 = g_ascii_strdown (params, -1);
-    gst_structure_set (s, "encoding-params", G_TYPE_STRING, tmp1, NULL);
-    g_free (tmp1);
+    tmp = g_ascii_strdown (params, -1);
+    gst_structure_set (s, "encoding-params", G_TYPE_STRING, tmp, NULL);
+    g_free (tmp);
   }
 
   /* parse optional fmtp: field */
@@ -687,13 +689,11 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
           /* simple <param>;.. is translated into <param>=1;... */
           val = "1";
         }
-        /* strip the key of spaces */
+        /* strip the key of spaces, convert key to lowercase but not the value. */
         key = g_strstrip (pairs[i]);
-        tmp1 = g_ascii_strdown (key, -1);
-        tmp2 = g_ascii_strdown (val, -1);
-        gst_structure_set (s, tmp1, G_TYPE_STRING, tmp2, NULL);
-        g_free (tmp1);
-        g_free (tmp2);
+        tmp = g_ascii_strdown (key, -1);
+        gst_structure_set (s, tmp, G_TYPE_STRING, val, NULL);
+        g_free (tmp);
       }
       g_strfreev (pairs);
     }
@@ -2422,11 +2422,19 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
         gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_RECONNECT);
         return;
       }
-    }
-      /* Fallthrough */
-    default:
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
       break;
+    }
+    case GST_MESSAGE_ERROR:
+    {
+      GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+      break;
+    }
+    default:
+    {
+      GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+      break;
+    }
   }
 }
 
@@ -2448,7 +2456,6 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       rtsp_connection_flush (rtspsrc->connection, FALSE);
-      /* copy configuerd protocols */
       gst_rtspsrc_play (rtspsrc);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:

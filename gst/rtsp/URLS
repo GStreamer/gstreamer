@@ -13,6 +13,7 @@ ASF (audio/video):
 MP4V-ES/mpeg4-generic(ACC):
   rtsp://vod.nwec.jp/quicktime/505.mov
   rtsp://203.140.68.241:554/hirakataeizou9.mp4
+  rtsp://kmdi.utoronto.ca:555/osconf/2004_may9.1.mp4
 
 REAL:
   rtsp://213.254.239.61/farm/*/encoder/tagesschau/live1high.rm
