@@ -39,8 +39,7 @@
  *
  * Calculate byte size of an audio frame.
  *
- * Returns: -1 if there's an error (to avoid division by zero),
- * or the byte size if everything's ok
+ * Returns: the byte size, or 0 if there was an error
  */
 int
 gst_audio_frame_byte_size (GstPad * pad)
