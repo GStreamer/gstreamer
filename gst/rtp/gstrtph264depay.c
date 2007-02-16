@@ -26,6 +26,12 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtph264depay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtph264depay_debug);
+#define GST_CAT_DEFAULT (rtph264depay_debug)
+
+/* 2 or 3 bytes syncword */
+static const guint8 sync_bytes[] = { 0, 0, 1 };
+
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h264depay_details =
 GST_ELEMENT_DETAILS ("RTP packet depayloader",
@@ -132,6 +138,9 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
   gobject_class->get_property = gst_rtp_h264_depay_get_property;
 
   gstelement_class->change_state = gst_rtp_h264_depay_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (rtph264depay_debug, "rtph264depay", 0,
+      "H264 Video RTP Depayloader");
 }
 
 static void
@@ -203,11 +212,14 @@ decode_base64 (gchar * in, guint8 * out)
 }
 
 static gboolean
-gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
+gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps = NULL;
   gint clock_rate = 90000;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
+  GstRtpH264Depay *rtph264depay;
+
+  rtph264depay = GST_RTP_H264_DEPAY (depayload);
 
   if (gst_structure_has_field (structure, "clock-rate")) {
     gst_structure_get_int (structure, "clock-rate", &clock_rate);
@@ -235,25 +247,25 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
     /* we seriously overshoot the length, but it's fine. */
     codec_data = gst_buffer_new_and_alloc (len);
     b64 = GST_BUFFER_DATA (codec_data);
-
     total = 0;
     for (i = 0; params[i]; i++) {
-      *b64++ = 0;
-      *b64++ = 0;
-      *b64++ = 1;
+      GST_DEBUG_OBJECT (depayload, "decoding param %d", i);
+      memcpy (b64, sync_bytes, sizeof (sync_bytes));
+      b64 += sizeof (sync_bytes);
       len = decode_base64 (params[i], b64);
-      total += (len + 3);
+      total += len + sizeof (sync_bytes);
       b64 += len;
     }
     GST_BUFFER_SIZE (codec_data) = total;
 
-    gst_caps_set_simple (srccaps,
-        "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
+    /* don't set codec_data, we send unpacketized data so let the decoder
+     * packetize for us */
+    gst_adapter_push (rtph264depay->adapter, codec_data);
   }
 
-  filter->clock_rate = clock_rate;
+  depayload->clock_rate = clock_rate;
 
-  gst_pad_set_caps (filter->srcpad, srccaps);
+  gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
 
   return TRUE;
@@ -262,9 +274,9 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 static GstBuffer *
 gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
-
   GstRtpH264Depay *rtph264depay;
   GstBuffer *outbuf;
+  guint8 nal_unit_type;
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
 
@@ -275,10 +287,14 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     gint payload_len;
     guint8 *payload;
     guint header_len;
-    guint8 nal_ref_idc, nal_unit_type;
+    guint8 nal_ref_idc;
+    guint8 *outdata;
+    guint outsize, nalu_size;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
+
+    GST_DEBUG_OBJECT (rtph264depay, "receiving %d bytes", payload_len);
 
     /* +---------------+
      * |0|1|2|3|4|5|6|7|
@@ -291,6 +307,9 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     nal_ref_idc = (payload[0] & 0x60) >> 5;
     nal_unit_type = payload[0] & 0x1f;
 
+    /* at least one byte header with type */
+    header_len = 1;
+
     GST_DEBUG_OBJECT (rtph264depay, "NRI %d, Type %d", nal_ref_idc,
         nal_unit_type);
 
@@ -300,18 +319,60 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       case 31:
         /* undefined */
         goto undefined_type;
-      case 24:
-        /* STAP-A    Single-time aggregation packet     5.7.1 */
-        header_len = 1;
-        goto not_implemented;
-        break;
       case 25:
         /* STAP-B    Single-time aggregation packet     5.7.1 */
+        /* 2 byte extra header for DON */
+        header_len += 2;
+        /* fallthrough */
+      case 24:
+      {
+        /* strip headers */
+        payload += header_len;
+        payload_len -= header_len;
+
+        /* STAP-A    Single-time aggregation packet     5.7.1 */
+        while (payload_len > 2) {
+          /*                      1          
+           *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           * |         NALU Size             |
+           * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+           */
+          nalu_size = (payload[0] << 8) | payload[1];
+
+          /* strip NALU size */
+          payload += 2;
+          payload_len -= 2;
+
+          if (nalu_size > payload_len)
+            nalu_size = payload_len;
+
+          outsize = nalu_size + sizeof (sync_bytes);
+          outbuf = gst_buffer_new_and_alloc (outsize);
+          outdata = GST_BUFFER_DATA (outbuf);
+          memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+          outdata += sizeof (sync_bytes);
+          memcpy (outdata, payload, nalu_size);
+
+          gst_adapter_push (rtph264depay->adapter, outbuf);
+
+          payload += nalu_size;
+          payload_len -= nalu_size;
+        }
+
+        outsize = gst_adapter_available (rtph264depay->adapter);
+        outbuf = gst_adapter_take_buffer (rtph264depay->adapter, outsize);
+
+        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
+
+        return outbuf;
+      }
       case 26:
         /* MTAP16    Multi-time aggregation packet      5.7.2 */
+        header_len = 5;
       case 27:
         /* MTAP24    Multi-time aggregation packet      5.7.2 */
-        header_len = 3;
+        header_len = 6;
         goto not_implemented;
         break;
       case 28:
@@ -336,33 +397,40 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
         if (S) {
           /* NAL unit starts here */
-          guint8 *outdata;
-          guint outsize;
+          guint8 nal_header;
 
-          outsize = payload_len - 1;
-
-          outbuf = gst_buffer_new_and_alloc (outsize + 3);
-          outdata = GST_BUFFER_DATA (outbuf);
-          memcpy (outdata + 3, payload + 1, outsize);
           /* reconstruct NAL header */
-          outdata[0] = 0x00;
-          outdata[1] = 0x00;
-          outdata[2] = 0x01;
-          outdata[3] = (payload[0] & 0xe0) | (payload[1] & 0x1f);
+          nal_header = (payload[0] & 0xe0) | (payload[1] & 0x1f);
+
+          /* strip type header, keep FU header, we'll reuse it to reconstruct
+           * the NAL header. */
+          payload += 1;
+          payload_len -= 1;
+
+          nalu_size = payload_len;
+          outsize = nalu_size + sizeof (sync_bytes);
+          outbuf = gst_buffer_new_and_alloc (outsize);
+          outdata = GST_BUFFER_DATA (outbuf);
+          memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+          outdata += sizeof (sync_bytes);
+          memcpy (outdata, payload, nalu_size);
+          outdata[0] = nal_header;
+
+          GST_DEBUG_OBJECT (rtph264depay, "queueing %d bytes", outsize);
 
           /* and assemble in the adapter */
           gst_adapter_push (rtph264depay->adapter, outbuf);
         } else {
-          /* NAL unit data */
-          guint outsize;
-          guint8 *outdata;
+          /* strip off FU indicator and FU header bytes */
+          payload += 2;
+          payload_len -= 2;
 
-          /* strip off 2 header bytes */
-          outsize = payload_len - 2;
-
+          outsize = payload_len;
           outbuf = gst_buffer_new_and_alloc (outsize);
           outdata = GST_BUFFER_DATA (outbuf);
-          memcpy (outdata, payload + 2, outsize);
+          memcpy (outdata, payload, outsize);
+
+          GST_DEBUG_OBJECT (rtph264depay, "queueing %d bytes", outsize);
 
           /* and assemble in the adapter */
           gst_adapter_push (rtph264depay->adapter, outbuf);
@@ -370,16 +438,8 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
         /* if NAL unit ends, flush the adapter */
         if (E) {
-          guint outsize;
-          guint8 *outdata;
-
           outsize = gst_adapter_available (rtph264depay->adapter);
-          outdata = gst_adapter_take (rtph264depay->adapter, outsize);
-
-          outbuf = gst_buffer_new ();
-          GST_BUFFER_SIZE (outbuf) = outsize;
-          GST_BUFFER_DATA (outbuf) = outdata;
-          GST_BUFFER_MALLOCDATA (outbuf) = outdata;
+          outbuf = gst_adapter_take_buffer (rtph264depay->adapter, outsize);
 
           gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
@@ -391,18 +451,15 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       }
       default:
       {
-        guint outsize;
-        guint8 *outdata;
-
         /* 1-23   NAL unit  Single NAL unit packet per H.264   5.6 */
         /* the entire payload is the output buffer */
-        outsize = payload_len + 3;
+        nalu_size = payload_len;
+        outsize = nalu_size + sizeof (sync_bytes);
         outbuf = gst_buffer_new_and_alloc (outsize);
         outdata = GST_BUFFER_DATA (outbuf);
-        outdata[0] = 0;
-        outdata[1] = 0;
-        outdata[2] = 1;
-        memcpy (&outdata[3], payload, payload_len);
+        memcpy (outdata, sync_bytes, sizeof (sync_bytes));
+        outdata += sizeof (sync_bytes);
+        memcpy (outdata, payload, nalu_size);
 
         gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
@@ -417,19 +474,19 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 bad_packet:
   {
     GST_ELEMENT_WARNING (rtph264depay, STREAM, DECODE,
-        ("Packet did not validate"), (NULL));
+        (NULL), ("Packet did not validate"));
     return NULL;
   }
 undefined_type:
   {
     GST_ELEMENT_WARNING (rtph264depay, STREAM, DECODE,
-        ("Undefined packet type"), (NULL));
+        (NULL), ("Undefined packet type"));
     return NULL;
   }
 not_implemented:
   {
     GST_ELEMENT_ERROR (rtph264depay, STREAM, FORMAT,
-        (NULL), ("NAL unit type not supported yet"));
+        (NULL), ("NAL unit type %d not supported yet", nal_unit_type));
     return NULL;
   }
 }

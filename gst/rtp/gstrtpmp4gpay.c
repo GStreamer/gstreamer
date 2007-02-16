@@ -59,7 +59,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "streamtype = (string) { \"4\", \"5\" }, "      /* 4 = video, 5 = audio */
         /* "profile-level-id = (string) [1,MAX], " */
         /* "config = (string) [1,MAX]" */
-        "mode = (string) { \"generic\", \"celp-cbr\", \"celp-vbr\", \"aac-lbr\", \"aac-hbr\" } "
+        "mode = (string) { \"generic\", \"CELP-cbr\", \"CELP-vbr\", \"AAC-lbr\", \"AAC-hbr\" } "
         /* Optional general parameters */
         /* "objecttype = (string) [1,MAX], " */
         /* "constantsize = (string) [1,MAX], " *//* constant size of each AU */

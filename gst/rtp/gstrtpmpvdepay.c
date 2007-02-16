@@ -217,20 +217,13 @@ gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 bad_packet:
   {
     GST_ELEMENT_WARNING (rtpmpvdepay, STREAM, DECODE,
-        ("Packet did not validate."), (NULL));
+        (NULL), ("Packet did not validate."));
     return NULL;
   }
-#if 0
-bad_payload:
-  {
-    GST_DEBUG_OBJECT (rtpmpvdepay, "Unexpected payload type %u", pt);
-    return NULL;
-  }
-#endif
 empty_packet:
   {
     GST_ELEMENT_WARNING (rtpmpvdepay, STREAM, DECODE,
-        ("Empty payload."), (NULL));
+        (NULL), ("Empty payload."));
     return NULL;
   }
 }

@@ -43,7 +43,8 @@ The following fields can or must (*) be specified in the structure:
      Converted to lower-case.
      
    Optional parameters as key/value pairs, media type specific. The value type
-   should be of type G_TYPE_STRING. The key and value are converted to lower-case.
+   should be of type G_TYPE_STRING. The key is converted to lower-case. The
+   value is left in its original case.
    A parameter with no value is converted to <param>=1.
 
  Example:

@@ -1,3 +1,18 @@
+2007-02-16  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/README:
+	Fix case of string params.
+
+	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_class_init),
+	(gst_rtp_h264_depay_setcaps), (gst_rtp_h264_depay_process):
+	Fix depayloader, support more packet types.
+	Add sync codes to make sure the packetizer can do its job.
+
+	* gst/rtp/gstrtpmp4gdepay.c:
+	* gst/rtp/gstrtpmp4gpay.c:
+	* gst/rtp/gstrtpmpvdepay.c: (gst_rtp_mpv_depay_process):
+	Fix caps case again.
+
 2007-02-15  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_process):
