@@ -23,6 +23,95 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-rtpdtmfsrc
+ * @short_description: Generates RTP DTMF packets
+ *
+ * <refsect2>
+ *
+ * <para>
+ * The RTPDTMFSrc element generates RTP DTMF (RFC 2833) event packets on request
+ * from application. The application communicates the beginning and end of a
+ * DTMF event using custom upstream gstreamer events. To report a DTMF event, an
+ * application must send an event of type GST_EVENT_CUSTOM_UPSTREAM, having a
+ * structure of name "dtmf-event" with fields set according to the following
+ * table:
+ * </para>
+ *
+ * <para>
+ * <informaltable>
+ * <tgroup cols='4'>
+ * <colspec colname='Name' />
+ * <colspec colname='Type' />
+ * <colspec colname='Possible values' />
+ * <colspec colname='Purpose' />
+ * 
+ * <thead>
+ * <row>
+ * <entry>Name</entry>
+ * <entry>GType</entry>
+ * <entry>Possible values</entry>
+ * <entry>Purpose</entry>
+ * </row>
+ * </thead>
+ * 
+ * <tbody>
+ * <row>
+ * <entry>type</entry>
+ * <entry>G_TYPE_INT</entry>
+ * <entry>0-1</entry>
+ * <entry>The application uses this field to specify which of the two methods
+ * specified in RFC 2833 to use. The value should be 0 for tones and 1 for
+ * named events. This element is only capable of generating named events.
+ * </entry>
+ * </row>
+ * <row>
+ * <entry>number</entry>
+ * <entry>G_TYPE_INT</entry>
+ * <entry>0-16</entry>
+ * <entry>The event number.</entry>
+ * </row>
+ * <row>
+ * <entry>volume</entry>
+ * <entry>G_TYPE_INT</entry>
+ * <entry>0-36</entry>
+ * <entry>This field describes the power level of the tone, expressed in dBm0
+ * after dropping the sign. Power levels range from 0 to -63 dBm0. The range of
+ * valid DTMF is from 0 to -36 dBm0. Can be omitted if start is set to FALSE.
+ * </entry>
+ * </row>
+ * <row>
+ * <entry>start</entry>
+ * <entry>G_TYPE_BOOLEAN</entry>
+ * <entry>True or False</entry>
+ * <entry>Wether the event is starting or ending.</entry>
+ * </row>
+ * </tbody>
+ * </tgroup>
+ * </informaltable>
+ * </para>
+ * 
+ * <para>For example, the following code informs the pipeline (and in turn, the
+ * RTPDTMFSrc element inside the pipeline) about the start of an RTP DTMF named
+ * event '1' of volume -25 dBm0:
+ * </para>
+ * 
+ * <para>
+ * <programlisting>
+ * structure = gst_structure_new ("dtmf-event",
+ *                    "type", G_TYPE_INT, GST_RTP_DTMF_TYPE_EVENT,
+ *                    "number", G_TYPE_INT, 1,
+ *                    "volume", G_TYPE_INT, 25,
+ *                    "start", G_TYPE_BOOLEAN, TRUE, NULL);
+ * 
+ * event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, structure);
+ * gst_element_send_event (pipeline, event);
+ * </programlisting>
+ * </para>
+ *
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
