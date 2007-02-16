@@ -354,6 +354,7 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
         videorate->from_rate_denominator = rate_denominator;
       }
       gst_pad_set_caps (otherpad, caps);
+      gst_caps_unref (caps);
       ret = TRUE;
     }
     gst_object_unref (opeer);
