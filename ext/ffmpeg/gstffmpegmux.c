@@ -102,9 +102,7 @@ enum
   /* FILL ME */
 };
 
-static GHashTable *global_plugins;
-
-/* A number of functon prototypes are given so we can refer to them later. */
+/* A number of function prototypes are given so we can refer to them later. */
 static void gst_ffmpegmux_class_init (GstFFMpegMuxClass * klass);
 static void gst_ffmpegmux_base_init (gpointer g_class);
 static void gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux,
@@ -122,6 +120,8 @@ static gboolean gst_ffmpegmux_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_ffmpegmux_change_state (GstElement * element,
     GstStateChange transition);
 
+#define GST_FFMUX_PARAMS_QDATA g_quark_from_static_string("ffmux-params")
+
 static GstElementClass *parent_class = NULL;
 
 /*static guint gst_ffmpegmux_signals[LAST_SIGNAL] = { 0 }; */
@@ -129,18 +129,16 @@ static GstElementClass *parent_class = NULL;
 static void
 gst_ffmpegmux_base_init (gpointer g_class)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
   GstFFMpegMuxClass *klass = (GstFFMpegMuxClass *) g_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   GstElementDetails details;
   GstFFMpegMuxClassParams *params;
   GstPadTemplate *videosinktempl, *audiosinktempl, *srctempl;
 
-  params = g_hash_table_lookup (global_plugins,
-      GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
-  if (!params)
-    params = g_hash_table_lookup (global_plugins, GINT_TO_POINTER (0));
-  g_assert (params);
+  params =
+      (GstFFMpegMuxClassParams *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
+      GST_FFMUX_PARAMS_QDATA);
+  g_assert (params != NULL);
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFMPEG %s Muxer",
@@ -675,8 +673,6 @@ gst_ffmpegmux_register (GstPlugin * plugin)
 
   in_plugin = first_oformat;
 
-  global_plugins = g_hash_table_new (NULL, NULL);
-
   while (in_plugin) {
     gchar *type_name;
     gchar *p;
@@ -732,12 +728,11 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     params->videosinkcaps = videosinkcaps;
     params->audiosinkcaps = audiosinkcaps;
 
-    g_hash_table_insert (global_plugins,
-        GINT_TO_POINTER (0), (gpointer) params);
-
     /* create the type now */
     type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
+    g_type_set_qdata (type, GST_FFMUX_PARAMS_QDATA, (gpointer) params);
     g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
+
     if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
       g_free (type_name);
       gst_caps_unref (srccaps);
@@ -750,13 +745,9 @@ gst_ffmpegmux_register (GstPlugin * plugin)
 
     g_free (type_name);
 
-    g_hash_table_insert (global_plugins,
-        GINT_TO_POINTER (type), (gpointer) params);
-
   next:
     in_plugin = in_plugin->next;
   }
-  g_hash_table_remove (global_plugins, GINT_TO_POINTER (0));
 
   return TRUE;
 }

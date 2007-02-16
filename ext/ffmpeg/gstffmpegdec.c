@@ -126,9 +126,7 @@ enum
   ARG_SKIPFRAME
 };
 
-static GHashTable *global_plugins;
-
-/* A number of functon prototypes are given so we can refer to them later. */
+/* A number of function prototypes are given so we can refer to them later. */
 static void gst_ffmpegdec_base_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_class_init (GstFFMpegDecClass * klass);
 static void gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec);
@@ -156,6 +154,8 @@ static int gst_ffmpegdec_get_buffer (AVCodecContext * context,
     AVFrame * picture);
 static void gst_ffmpegdec_release_buffer (AVCodecContext * context,
     AVFrame * picture);
+
+#define GST_FFDEC_PARAMS_QDATA g_quark_from_static_string("ffdec-params")
 
 static GstElementClass *parent_class = NULL;
 
@@ -205,17 +205,15 @@ gst_ffmpegdec_skipframe_get_type (void)
 static void
 gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstFFMpegDecClassParams *params;
   GstElementDetails details;
   GstPadTemplate *sinktempl, *srctempl;
 
-  params = g_hash_table_lookup (global_plugins,
-      GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
-  if (!params)
-    params = g_hash_table_lookup (global_plugins, GINT_TO_POINTER (0));
-  g_assert (params);
+  params =
+      (GstFFMpegDecClassParams *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
+      GST_FFDEC_PARAMS_QDATA);
+  g_assert (params != NULL);
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFMPEG %s decoder",
@@ -2109,8 +2107,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
   in_plugin = first_avcodec;
 
-  global_plugins = g_hash_table_new (NULL, NULL);
-
   while (in_plugin) {
     GstFFMpegDecClassParams *params;
     GstCaps *srccaps = NULL, *sinkcaps = NULL;
@@ -2158,11 +2154,10 @@ gst_ffmpegdec_register (GstPlugin * plugin)
     params->in_plugin = in_plugin;
     params->srccaps = gst_caps_ref (srccaps);
     params->sinkcaps = gst_caps_ref (sinkcaps);
-    g_hash_table_insert (global_plugins,
-        GINT_TO_POINTER (0), (gpointer) params);
 
     /* create the gtype now */
     type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
+    g_type_set_qdata (type, GST_FFDEC_PARAMS_QDATA, (gpointer) params);
 
     /* (Ronald) MPEG-4 gets a higher priority because it has been well-
      * tested and by far outperforms divxdec/xviddec - so we prefer it.
@@ -2201,9 +2196,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
     g_free (type_name);
 
-    g_hash_table_insert (global_plugins,
-        GINT_TO_POINTER (type), (gpointer) params);
-
   next:
     if (sinkcaps)
       gst_caps_unref (sinkcaps);
@@ -2211,7 +2203,6 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       gst_caps_unref (srccaps);
     in_plugin = in_plugin->next;
   }
-  g_hash_table_remove (global_plugins, GINT_TO_POINTER (0));
 
   return TRUE;
 }

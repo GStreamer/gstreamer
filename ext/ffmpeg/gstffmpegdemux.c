@@ -33,7 +33,6 @@
 #include <ffmpeg/avformat.h>
 #include <ffmpeg/avi.h>
 #endif
-
 #include <gst/gst.h>
 
 #include "gstffmpeg.h"
@@ -102,9 +101,7 @@ struct _GstFFMpegDemuxClass
   GstPadTemplate *audiosrctempl;
 };
 
-static GHashTable *global_plugins;
-
-/* A number of functon prototypes are given so we can refer to them later. */
+/* A number of function prototypes are given so we can refer to them later. */
 static void gst_ffmpegdemux_class_init (GstFFMpegDemuxClass * klass);
 static void gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass);
 static void gst_ffmpegdemux_init (GstFFMpegDemux * demux);
@@ -126,6 +123,8 @@ static gboolean
 gst_ffmpegdemux_send_event (GstElement * element, GstEvent * event);
 static GstStateChangeReturn
 gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition);
+
+#define GST_FFDEMUX_PARAMS_QDATA g_quark_from_static_string("ffdemux-params")
 
 static GstElementClass *parent_class = NULL;
 
@@ -167,17 +166,15 @@ gst_ffmpegdemux_averror (gint av_errno)
 static void
 gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstFFMpegDemuxClassParams *params;
   GstElementDetails details;
   GstPadTemplate *sinktempl, *audiosrctempl, *videosrctempl;
 
-  params = g_hash_table_lookup (global_plugins,
-      GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
-  if (!params)
-    params = g_hash_table_lookup (global_plugins, GINT_TO_POINTER (0));
-  g_assert (params);
+  params =
+      (GstFFMpegDemuxClassParams *)
+      g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass), GST_FFDEMUX_PARAMS_QDATA);
+  g_assert (params != NULL);
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFMPEG %s demuxer",
@@ -512,6 +509,7 @@ gst_ffmpegdemux_perform_seek (GstFFMpegDemux * demux, GstEvent * event)
   /* and prepare to continue streaming */
   if (flush) {
     gint n;
+
     /* send flush stop, peer will accept data and events again. We
      * are not yet providing data as we still have the STREAM_LOCK. */
     gst_ffmpegdemux_push_event (demux, gst_event_new_flush_stop ());
@@ -1234,7 +1232,7 @@ gst_ffmpegdemux_loop (GstPad * pad)
 
   /* if a pad is in e.g. WRONG_STATE, we want to pause to unlock the STREAM_LOCK */
   if ((ret != GST_FLOW_OK)
-       && ((ret = gst_ffmpegdemux_aggregated_flow (demux)) != GST_FLOW_OK)) {
+      && ((ret = gst_ffmpegdemux_aggregated_flow (demux)) != GST_FLOW_OK)) {
     GST_WARNING_OBJECT (demux, "stream_movi flow: %s / %s",
         gst_flow_get_name (stream->last_flow), gst_flow_get_name (ret));
     goto pause;
@@ -1433,8 +1431,6 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
 
   in_plugin = first_iformat;
 
-  global_plugins = g_hash_table_new (NULL, NULL);
-
   while (in_plugin) {
     gchar *type_name, *typefind_name;
     gchar *p, *name = NULL;
@@ -1506,9 +1502,9 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "ea") ||
         !strcmp (in_plugin->name, "daud") ||
         !strcmp (in_plugin->name, "avs") ||
-        !strcmp (in_plugin->name, "aiff") || 
-	!strcmp (in_plugin->name, "4xm") || 
-	!strcmp(in_plugin->name, "yuv4mpegpipe"))
+        !strcmp (in_plugin->name, "aiff") ||
+        !strcmp (in_plugin->name, "4xm") ||
+        !strcmp (in_plugin->name, "yuv4mpegpipe"))
       rank = GST_RANK_MARGINAL;
     else
       rank = GST_RANK_NONE;
@@ -1551,14 +1547,9 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     params->videosrccaps = videosrccaps;
     params->audiosrccaps = audiosrccaps;
 
-    g_hash_table_insert (global_plugins,
-        GINT_TO_POINTER (0), (gpointer) params);
-
     /* create the type now */
     type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
-
-    g_hash_table_insert (global_plugins,
-        GINT_TO_POINTER (type), (gpointer) params);
+    g_type_set_qdata (type, GST_FFDEMUX_PARAMS_QDATA, (gpointer) params);
 
     if (in_plugin->extensions)
       extensions = g_strsplit (in_plugin->extensions, " ", 0);
@@ -1585,7 +1576,6 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     g_free (name);
     in_plugin = in_plugin->next;
   }
-  g_hash_table_remove (global_plugins, GINT_TO_POINTER (0));
 
   return TRUE;
 }

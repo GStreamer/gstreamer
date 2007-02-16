@@ -1,3 +1,23 @@
+2007-02-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_base_init),
+	(gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_base_init),
+	(gst_ffmpegdemux_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_base_init),
+	(gst_ffmpegenc_register):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_base_init),
+	(gst_ffmpegmux_register):
+	  Don't use GINT_TO_POINTER and GPOINTER_TO_INT with GTypes, this
+	  can break horribly if sizeof(GType) happens to be bigger than
+	  sizeof(int), because GPOINTER_TO_INT might then chop off some bits
+	  of our GType (the reason this seems to works nevertheless is the
+	  put-current-type-also-as-value-0-into-the-hash-table-as-fallback
+	  hack used in the current code).
+	  In any case, instead of just fixing this, let's not use a hash table
+	  with GTypes here at all. g_type_{set|get}_qdata() seems to do the
+	  job just as well.
+
 2007-02-14  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_flags_get_type):

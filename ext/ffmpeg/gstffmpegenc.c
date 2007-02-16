@@ -89,9 +89,7 @@ gst_ffmpegenc_me_method_get_type (void)
   return ffmpegenc_me_method_type;
 }
 
-static GHashTable *enc_global_plugins;
-
-/* A number of functon prototypes are given so we can refer to them later. */
+/* A number of function prototypes are given so we can refer to them later. */
 static void gst_ffmpegenc_class_init (GstFFMpegEncClass * klass);
 static void gst_ffmpegenc_base_init (GstFFMpegEncClass * klass);
 static void gst_ffmpegenc_init (GstFFMpegEnc * ffmpegenc);
@@ -113,6 +111,8 @@ static void gst_ffmpegenc_get_property (GObject * object,
 static GstStateChangeReturn gst_ffmpegenc_change_state (GstElement * element,
     GstStateChange transition);
 
+#define GST_FFENC_PARAMS_QDATA g_quark_from_static_string("ffenc-params")
+
 static GstElementClass *parent_class = NULL;
 
 /*static guint gst_ffmpegenc_signals[LAST_SIGNAL] = { 0 }; */
@@ -120,19 +120,15 @@ static GstElementClass *parent_class = NULL;
 static void
 gst_ffmpegenc_base_init (GstFFMpegEncClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstFFMpegEncClassParams *params;
   GstElementDetails details;
   GstPadTemplate *srctempl, *sinktempl;
 
-  params = g_hash_table_lookup (enc_global_plugins,
-      GINT_TO_POINTER (G_OBJECT_CLASS_TYPE (gobject_class)));
-  /* HACK: if we don't have a GType yet, our params are stored at position 0 */
-  if (!params) {
-    params = g_hash_table_lookup (enc_global_plugins, GINT_TO_POINTER (0));
-  }
-  g_assert (params);
+  params =
+      (GstFFMpegEncClassParams *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass),
+      GST_FFENC_PARAMS_QDATA);
+  g_assert (params != NULL);
 
   /* construct the element details struct */
   details.longname = g_strdup_printf ("FFMPEG %s encoder",
@@ -928,8 +924,6 @@ gst_ffmpegenc_register (GstPlugin * plugin)
 
   in_plugin = first_avcodec;
 
-  enc_global_plugins = g_hash_table_new (NULL, NULL);
-
   /* build global ffmpeg param/property info */
   gst_ffmpeg_cfg_init ();
 
@@ -983,20 +977,16 @@ gst_ffmpegenc_register (GstPlugin * plugin)
     params->srccaps = gst_caps_ref (srccaps);
     params->sinkcaps = gst_caps_ref (sinkcaps);
 
-    g_hash_table_insert (enc_global_plugins,
-        GINT_TO_POINTER (0), (gpointer) params);
-
     /* create the glib type now */
     type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &typeinfo, 0);
+    g_type_set_qdata (type, GST_FFENC_PARAMS_QDATA, (gpointer) params);
+
     if (!gst_element_register (plugin, type_name, GST_RANK_NONE, type)) {
       g_free (type_name);
       return FALSE;
     }
 
     g_free (type_name);
-
-    g_hash_table_insert (enc_global_plugins,
-        GINT_TO_POINTER (type), (gpointer) params);
 
   next:
     if (sinkcaps)
@@ -1005,7 +995,6 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       gst_caps_unref (srccaps);
     in_plugin = in_plugin->next;
   }
-  g_hash_table_remove (enc_global_plugins, GINT_TO_POINTER (0));
 
   return TRUE;
 }
