@@ -1,5 +1,13 @@
 2007-02-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/utils/base-utils.c:
+	* gst-libs/gst/utils/descriptions.c:
+	* gst-libs/gst/utils/install-plugins.c:
+	* gst-libs/gst/utils/missing-plugins.c:
+	  Some more docs (and descriptions for two subtitle formats).
+
+2007-02-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/audio/audio.c:
 	  Fix documentation.
 

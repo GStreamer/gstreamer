@@ -18,6 +18,302 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbaseutilsinstallplugins
+ * @short_description: Missing plugin installation support for applications
+ *
+ * <refsect2>
+ * <title>Overview</title>
+ * <para>
+ * Using this API, applications can request the installation of missing
+ * GStreamer plugins. These may be missing decoders/demuxers or encoders/muxers
+ * for a certain format, sources or sinks for a certain URI protocol
+ * (e.g. 'http'), or certain elements known by their element factory name
+ * ('audioresample').
+ * </para>
+ * <para>
+ * Whether plugin installation is supported or not depends on the operating
+ * system and/or distribution in question. The vendor of the operating system
+ * needs to make sure the necessary hooks and mechanisms are in place for
+ * plugin installation to work. See below for more detailed information.
+ * </para>
+ * <para>
+ * From the application perspective, plugin installation is usually triggered
+ * either
+ * <itemizedlist>
+ * <listitem><para>
+ * when the application itself has found that it wants or needs to install a
+ * certain element
+ * </para></listitem>
+ * <listitem><para>
+ * when the application has been notified by an element (such as playbin or
+ * decodebin) that one or more plugins are missing <emphasis>and</emphasis>
+ * the application has decided that it wants to install one or more of those
+ * missing plugins
+ * </para></listitem>
+ * </itemizedlist>
+ * </para>
+ * <title>Detail Strings</title>
+ * <para>
+ * The install functions in this section all take one or more 'detail strings'.
+ * These detail strings contain information about the type of plugin that
+ * needs to be installed (decoder, encoder, source, sink, or named element),
+ * and some additional information such GStreamer version used and a
+ * human-readable description of the component to install for user dialogs.
+ * </para>
+ * <para>
+ * Applications should not concern themselves with the composition of the
+ * string itself. They should regard the string as if it was a shared secret
+ * between GStreamer and the plugin installer application.
+ * </para>
+ * <para>
+ * Detail strings can be obtained using the function
+ * gst_missing_plugin_message_get_installer_detail() on a missing-plugin
+ * message. Such a message will either have been found by the application on
+ * a pipeline's #GstBus, or the application will have created it itself using
+ * gst_missing_element_message_new(), gst_missing_decoder_message_new(),
+ * gst_missing_encoder_message_new(), gst_missing_uri_sink_message_new(), or
+ * gst_missing_uri_source_message_new().
+ * </para>
+ * <title>Plugin Installation from the Application Perspective</title>
+ * <para>
+ * For each GStreamer element/plugin/component that should be installed, the
+ * application needs one of those 'installer detail' string mentioned in the
+ * previous section. This string can be obtained, as already mentioned above,
+ * from a missing-plugin message using the function
+ * gst_missing_plugin_message_get_installer_detail(). The missing-plugin
+ * message is either posted by another element and then found on the bus
+ * by the application, or the application has created it itself as described
+ * above.
+ * </para>
+ * <para>
+ * The application will then call gst_install_plugins_async(), passing a
+ * #NULL-terminated array of installer detail strings, and a function that
+ * should be called when the installation of the plugins has finished
+ * (successfully or not). Optionally, a #GstInstallPluginsContext created
+ * with gst_install_plugins_context_new() may be passed as well. This way
+ * additional optional arguments like the application window's XID can be
+ * passed to the external installer application.
+ * </para>
+ * <para>
+ * gst_install_plugins_async() will return almost immediately, with the
+ * return code indicating whether plugin installation was started or not.
+ * If the necessary hooks for plugin installation are in place and an
+ * external installer application has in fact been called, the passed in
+ * function will be called with a result code as soon as the external installer
+ * has finished. If the result code indicates that new plugins have been
+ * installed, the application will want to call gst_update_registry() so the
+ * run-time plugin registry is updated and the new plugins are made available
+ * to the application.
+ * <note>
+ * A Gtk/GLib main loop must be running in order for the result function to
+ * be called when the external installer has finished. If this is not the case,
+ * make sure to regularly call
+ * <programlisting>
+ * g_main_context_iteration (NULL,FALSE);
+ * </programlisting>
+ * from your code.
+ * </note>
+ * </para>
+ * <title>Plugin Installation from the Vendor/Distribution Perspective</title>
+ * <para>
+ * <emphasis>1. Installer hook</emphasis>
+ * </para>
+ * <para>
+ * When GStreamer applications initiate plugin installation via
+ * gst_install_plugins_async() or gst_install_plugins_sync(), a pre-defined
+ * helper application will be called.
+ * </para>
+ * <para>
+ * The exact path of the helper application to be called is set at compile
+ * time, usually by the <literal>./configure</literal> script based on the
+ * install prefix. For a normal package build into the <literal>/usr</literal>
+ * prefix, this will usually default to
+ * <filename>/usr/libexec/gst-install-plugins-helper</filename> or
+ * <filename>/usr/lib/gst-install-plugins-helper</filename>.
+ * </para>
+ * <para>
+ * Vendors/distros who want to support GStreamer plugin installation should
+ * either provide such a helper script/application or use the
+ * <literal>./configure</literal> option
+ * <literal>--with-install-plugins-helper=/path/to/installer</literal> to
+ * make GStreamer call an installer of their own directly.
+ * </para>
+ * <para>
+ * It is strongly recommended that vendors provide a small helper application
+ * as interlocutor to the real installer though, even more so if command line
+ * argument munging is required to transform the command line arguments
+ * passed by GStreamer to the helper application into arguments that are
+ * understood by the reeal installer.
+ * </para>
+ * <para>
+ * The helper application path defined at compile time can be overriden at
+ * runtime by setting the <envar>GST_INSTALL_PLUGINS_HELPER</envar>
+ * environment variable. This can be useful for testing/debugging purposes.
+ * </para>
+ * <para>
+ * <emphasis>2. Arguments passed to the install helper</emphasis>
+ * </para>
+ * <para>
+ * GStreamer will pass the following arguments to the install helper (this is
+ * in addition to the path of the executable itself, which is by convention
+ * argv[0]):
+ * <itemizedlist>
+ *  <listitem><para>
+ *    none to many optional arguments in the form of
+ *    <literal>--foo-bar=val</literal>. Example:
+ *    <literal>--transient-for=XID</literal> where XID is the X Window ID of
+ *    the main window of the calling application (so the installer can make
+ *    itself transient to that window). Unknown optional arguments should
+ *    be ignored by the installer.
+ *  </para></listitem>
+ *  <listitem><para>
+ *    one 'installer detail string' argument for each plugin to be installed;
+ *    these strings will have a <literal>gstreamer.net</literal> prefix; the
+ *    exact format of the detail string is explained below
+ *  </para></listitem>
+ * </itemizedlist>
+ * </para>
+ * <para>
+ * <emphasis>3. Detail string describing the missing plugin</emphasis>
+ * </para>
+ * <para>
+ * The string is in UTF-8 encoding and is made up of several fields, separated
+ * by '|' characters (but neither the first nor the last character is a '|').
+ * The fields are:
+ * <itemizedlist>
+ *   <listitem><para>
+ *    plugin system identifier, ie. "gstreamer.net"
+ *   </para><para>
+ *    This identifier determines the format of the rest of the detail string.
+ *    Automatic plugin installers should not process detail strings with
+ *    unknown identifiers. This allows other plugin-based libraries to use
+ *    the same mechanism for their automatic plugin installation needs, or
+ *    for the format to be changed should it turn out to be insufficient.
+ *   </para></listitem>
+ *   <listitem><para>
+ *    plugin system version, e.g. "0.10"
+ *   </para><para>
+ *    This is required so that when there is a GStreamer-0.12 or GStreamer-1.0
+ *    at some point in future, the different major versions can still co-exist
+ *    and use the same plugin install mechanism in the same way.
+ *   </para></listitem>
+ *   <listitem><para>
+ *    application identifier, e.g. "totem"
+ *   </para><para>
+ *    This may also be in the form of "pid/12345" if the program name can't
+ *    be obtained for some reason.
+ *   </para></listitem>
+ *   <listitem><para>
+ *    human-readable localised description of the required component,
+ *    e.g. "Vorbis audio decoder"
+ *   </para></listitem>
+ *   <listitem><para>
+ *    identifier string for the required component (see below for details about
+ *    how to map this to the package/plugin that needs installing), e.g.
+ *    <itemizedlist>
+ *     <listitem><para>
+ *       urisource-$(PROTOCOL_REQUIRED), e.g. urisource-http or urisource-mms
+ *     </para></listitem>
+ *     <listitem><para>
+ *       element-$(ELEMENT_REQUIRED), e.g. element-ffmpegcolorspace
+ *     </para></listitem>
+ *     <listitem><para>
+ *       decoder-$(CAPS_REQUIRED), e.g. decoder-audio/x-vorbis or
+ *       decoder-application/ogg
+ *     </para></listitem>
+ *     <listitem><para>
+ *       encoder-$(CAPS_REQUIRED), e.g. encoder-audio/x-vorbis
+ *     </para></listitem>
+ *    </itemizedlist>
+ *   </para></listitem>
+ *   <listitem><para>
+ *     optional further fields not yet specified
+ *   </para></listitem>
+ * </itemizedlist>
+ * </para>
+ * <para>
+ * An entire ID string might then look like this, for example:
+ * <literal>
+ * gstreamer.net|0.10|totem|Vorbis audio decoder|decoder-audio/x-vorbis
+ * </literal>
+ * </para>
+ * <para>
+ * Plugin installers parsing this ID string should expect further fields also
+ * separated by '|' symbols and either ignore them, warn the user, or error
+ * out when encountering them.
+ * </para>
+ * <para>
+ * <emphasis>4. Exit codes the installer should return</emphasis>
+ * </para>
+ * <para>
+ * The installer should return one of the following exit codes when it exits:
+ * <itemizedlist>
+ *   <listitem><para>
+ *     0 if all of the requested plugins could be installed
+ *     (#GST_INSTALL_PLUGINS_SUCCESS)
+ *   </para></listitem>
+ *   <listitem><para>
+ *     1 if no appropriate installation candidate for any of the requested
+ *     plugins could be found. Only return this if nothing has been installed
+ *     (#GST_INSTALL_PLUGINS_NOT_FOUND)
+ *   </para></listitem>
+ *   <listitem><para>
+ *     2 if an error occured during the installation. The application will
+ *     assume that the user will already have seen an error message by the
+ *     installer in this case and will usually not show another one
+ *     (#GST_INSTALL_PLUGINS_ERROR)
+ *   </para></listitem>
+ *   <listitem><para>
+ *     3 if some of the requested plugins could be installed, but not all
+ *     (#GST_INSTALL_PLUGINS_PARTIAL_SUCCESS)
+ *   </para></listitem>
+ *   <listitem><para>
+ *     4 if the user aborted the installation (#GST_INSTALL_PLUGINS_USER_ABORT)
+ *   </para></listitem>
+ * </itemizedlist>
+ * </para>
+ * <para>
+ * <emphasis>5. How to map the required detail string to packages</emphasis>
+ * </para>
+ * <para>
+ * It is up to the vendor to find mechanism to map required components from
+ * the detail string to the actual packages/plugins to install. This could
+ * be a hardcoded list of mappings, for example, or be part of the packaging
+ * system metadata.
+ * </para>
+ * <para>
+ * GStreamer plugin files can be introspected for this information. The
+ * <literal>gst-inspect</literal> utility has a special command line option
+ * that will output information similar to what is required. For example
+ * <command>
+ * $ gst-inspect-0.10 --print-plugin-auto-install-info /path/to/libgstvorbis.so
+ * </command>
+ * should output something along the lines of
+ * <computeroutput>
+ * decoder-audio/x-vorbis
+ * element-vorbisdec
+ * element-vorbisenc
+ * element-vorbisparse
+ * element-vorbistag
+ * encoder-audio/x-vorbis
+ * </computeroutput>
+ * Note that in the encoder and decoder case the introspected caps can be more
+ * complex with additional fields, e.g.
+ * <literal>audio/mpeg,mpegversion=(int){2,4}</literal>, so they will not
+ * always exactly match the caps wanted by the application. It is up to the
+ * installer to deal with this (either by doing proper caps intersection using
+ * the GStreamer #GstCaps API, or by only taking into account the media type).
+ * </para>
+ * <para>
+ * Another potential source of problems are plugins such as ladspa or
+ * libvisual where the list of elements depends on the installed
+ * ladspa/libvisual plugins at the time. This is also up to the distribution
+ * to handle (but usually not relevant for playback applications).
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

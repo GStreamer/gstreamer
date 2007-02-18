@@ -17,6 +17,25 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbaseutilsdescriptions
+ * @short_description: Provides human-readable descriptions for caps/codecs
+ * and encoder, decoder, URI source and URI sink elements
+ *
+ * <refsect2>
+ * <para>
+ * The above functions provide human-readable strings for media formats
+ * and decoder/demuxer/depayloader/encoder/muxer/payloader elements for use
+ * in error dialogs or other messages shown to users.
+ * </para>
+ * <para>
+ * gst_base_utils_add_codec_description_to_tag_list() is a utility function
+ * for demuxer and decoder elements to add audio/video codec tags from a
+ * given (fixed) #GstCaps.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -180,6 +199,11 @@ static const FormatInfo formats[] = {
   {"image/x-quicktime", "QuickTime Image Format (QTIF)", 0},
   {"image/x-sun-raster", "Sun Raster Format (RAS)", 0},
   {"image/x-tga", "TGA", 0},
+
+  /* subtitle formats with static descriptions */
+  {"application/x-subtitle-sami", N_("Sami subtitle format"), 0},
+  {"application/x-subtitle-tmplayer", N_("TMPlayer subtitle format"), 0},
+  /* add variant field to typefinder? { "application/x-subtitle", N_("subtitle"), 0}, */
 
   /* formats with dynamic descriptions */
   {"audio/mpeg", NULL, 0},

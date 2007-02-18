@@ -17,6 +17,39 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbaseutilsmissingplugins
+ * @short_description: Create, recognise and parse missing-plugins messages
+ *
+ * <refsect2>
+ * <para>
+ * Functions to create, recognise and parse missing-plugins messages for
+ * applications and elements.
+ * </para>
+ * <para>
+ * Missing-plugin messages are posted on the bus by elements like decodebin
+ * or playbin if they can't find an appropriate source element or decoder
+ * element. The application can use these messages for two things:
+ * <itemizedlist>
+ *   <listitem><para>
+ *     concise error/problem reporting to the user mentioning what exactly
+ *     is missing, see gst_missing_plugin_message_get_description()
+ *   </para></listitem>
+ *   <listitem><para>
+ *     initiate installation of missing plugins, see
+ *     gst_missing_plugin_message_get_installer_detail() and
+ *     gst_install_plugins_async()
+ *   </para></listitem>
+ * </itemizedlist>
+ * </para>
+ * <para>
+ * Applications may also create missing-plugin messages themselves to install
+ * required elements that are missing, using the install mechanism mentioned
+ * above.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif

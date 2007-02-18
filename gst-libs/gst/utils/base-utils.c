@@ -17,6 +17,57 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbaseutils
+ * @short_description: General Application and Plugin Utility Library
+ *
+ * <refsect2>
+ * <para>
+ * libgstbaseutils is a general utility library for plugins and applications,
+ * available since gst-plugins-base 0.10.12. It currently provides the
+ * following:
+ * </para>
+ * <itemizedlist>
+ * <listitem>
+ * <para>
+ * human-readable description strings of codecs, elements, sources, decoders,
+ * encoders, or sinks from decoder/encoder caps, element names, or protocol
+ * names.
+ * </para>
+ * </listitem>
+ * <listitem>
+ * <para>
+ * support for applications to initiate installation of missing plugins (if
+ * this is supported by the distribution or operating system used)
+ * </para>
+ * </listitem>
+ * <listitem>
+ * <para>
+ * API for GStreamer elements to create missing-plugin messages in order to
+ * communicate to the application that a certain type of plugin is missing
+ * (decoder, encoder, URI protocol source, URI protocol sink, named element)
+ * </para>
+ * </listitem>
+ * <listitem>
+ * <para>
+ * API for applications to recognise and handle missing-plugin messages
+ * </para>
+ * </listitem>
+ * </itemizedlist>
+ * <title>Linking to this library</title>
+ * <para>
+ * You should obtain the required CFLAGS and LIBS using pkg-config on the
+ * gstreamer-plugins-base-0.10 module. You will then also need to add
+ * '-lgstbaseutils-0.10' manually to your LIBS line.
+ * </para>
+ * <title>Library initialisation</title>
+ * <para>
+ * Before using any of its functions, applications and plugins must call
+ * gst_base_utils_init() to initialise the library.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -31,6 +82,11 @@
  * Initialises the base utils support library. This function is not
  * thread-safe. Applications should call it after calling gst_init(),
  * plugins should call it from their plugin_init function.
+ *
+ * This function may be called multiple times. It will do nothing if the
+ * library has already been initialised.
+ *
+ * Since: 0.10.12
  */
 void
 gst_base_utils_init (void)
