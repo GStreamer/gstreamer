@@ -1,3 +1,14 @@
+2007-02-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpmp2tpay.c: (gst_rtp_mp2t_pay_base_init),
+	(gst_rtp_mp2t_pay_class_init), (gst_rtp_mp2t_pay_init),
+	(gst_rtp_mp2t_pay_setcaps), (gst_rtp_mp2t_pay_handle_buffer),
+	(gst_rtp_mp2t_pay_plugin_init):
+	* gst/rtp/gstrtpmp2tpay.h:
+	Added simple mpeg transport stream payloader.
+
 2007-02-16  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/URLS:
