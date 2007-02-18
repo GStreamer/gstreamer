@@ -1,3 +1,25 @@
+2007-02-18  Sébastien Moutte  <sebastien@moutte.net>
+	
+	* sys/directdraw/gstdirectdrawplugin.c:
+	* sys/directdraw/gstdirectdrawsink.c:
+	* sys/directdraw/gstdirectdrawsink.h:
+	  Prepare the plugin to move to good:
+	  Remove unused/untested code (rendering to an extern surface,
+	  yuv format rendering).Use GST_(DEBUG/*)_OBJECT macros
+      Rename all functions from gst_directdrawsink to gst_directdraw_sink.
+	  Add gtk doc section
+	  Fix a bug in gst_directdraw_sink_show_frame, memcpy line by line
+	  respecting destination surface stride.
+	* sys/directsound/gstdirectsoundplugin.c:
+	* sys/directsound/gstdirectsoundsink.c:
+	* sys/directsound/gstdirectsoundsink.h:
+	  Prepare the plugin to move to good:
+	  Rename all functions from gst_directsoundsink to gst_directsound_sink.
+	  Add gtk doc section
+	* win32/common/config.h.in:
+	* win32/MANIFEST:
+	  Add config.h.in
+
 2007-02-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
