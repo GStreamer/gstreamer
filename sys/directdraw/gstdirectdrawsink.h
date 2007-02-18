@@ -33,7 +33,7 @@
 #include <ddraw.h>
 
 G_BEGIN_DECLS
-#define GST_TYPE_DIRECTDRAW_SINK            (gst_directdrawsink_get_type())
+#define GST_TYPE_DIRECTDRAW_SINK            (gst_directdraw_sink_get_type())
 #define GST_DIRECTDRAW_SINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DIRECTDRAW_SINK,GstDirectDrawSink))
 #define GST_DIRECTDRAW_SINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DIRECTDRAW_SINK,GstDirectDrawSinkClass))
 #define GST_IS_DIRECTDRAW_SINK(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DIRECTDRAW_SINK))
@@ -85,7 +85,6 @@ struct _GstDirectDrawSink
   LPDIRECTDRAW ddraw_object;
   LPDIRECTDRAWSURFACE primary_surface;
   LPDIRECTDRAWSURFACE offscreen_surface;
-  LPDIRECTDRAWSURFACE overlays;
   LPDIRECTDRAWCLIPPER clipper; 
 
   /* last buffer displayed (used for XOverlay interface expose method) */
@@ -105,8 +104,7 @@ struct _GstDirectDrawSink
   gint fps_n;
   gint fps_d;
 
-  /*properties*/
-  LPDIRECTDRAWSURFACE extern_surface;
+  /* properties */
   gboolean keep_aspect_ratio;
 
   /*pixel format */
@@ -117,11 +115,6 @@ struct _GstDirectDrawSink
 
   /* TRUE when directdraw objects are setup */
   gboolean setup;
-
-  /* overlays */
-  gboolean bUseOverlay;
-  gboolean bIsOverlayVisible;
-  guint color_key;
 };
 
 struct _GstDirectDrawSinkClass
@@ -129,7 +122,7 @@ struct _GstDirectDrawSinkClass
   GstVideoSinkClass parent_class;
 };
 
-GType gst_directdrawsink_get_type (void);
+GType gst_direct_drawsink_get_type (void);
 
 G_END_DECLS
 #endif /* __GST_DIRECTDRAWSINK_H__ */
