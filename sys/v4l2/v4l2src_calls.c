@@ -194,9 +194,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
            */
           GST_DEBUG_OBJECT (v4l2src, "reenqueing buffer");
           if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF, &buffer) < 0) {
-            GST_WARNING_OBJECT (v4l2src,
-                "Error queueing buffer on device %s. system error: %s",
-                v4l2src->v4l2object->videodev, g_strerror (errno));
+            goto qbuf_failed;
           }
           /*} */
         }
@@ -253,6 +251,15 @@ too_many_trials:
             v4l2src->v4l2object->videodev),
         (_("Failed after %d tries. device %s. system error: %s"),
             NUM_TRIALS, v4l2src->v4l2object->videodev, g_strerror (errno)));
+    return -1;
+  }
+qbuf_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, WRITE,
+        (_("Could not exchange data with device '%s'."),
+            v4l2src->v4l2object->videodev),
+        ("Error queueing buffer on device %s. system error: %s",
+            v4l2src->v4l2object->videodev, g_strerror (errno)));
     return -1;
   }
 }
