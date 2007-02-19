@@ -1,3 +1,11 @@
+2007-02-19  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasetransform.c: (gst_base_transform_init),
+	(gst_base_transform_check_get_range):
+	Implement a checkgetrange function instead of relying on the default
+	core behaviour that assumes we can operate in pull mode if we have a
+	getrange function. First step at fixing #385084.
+
 2007-02-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstchildproxy.h:

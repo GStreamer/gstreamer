@@ -287,6 +287,7 @@ static gboolean gst_base_transform_src_eventfunc (GstBaseTransform * trans,
 static gboolean gst_base_transform_sink_event (GstPad * pad, GstEvent * event);
 static gboolean gst_base_transform_sink_eventfunc (GstBaseTransform * trans,
     GstEvent * event);
+static gboolean gst_base_transform_check_get_range (GstPad * pad);
 static GstFlowReturn gst_base_transform_getrange (GstPad * pad, guint64 offset,
     guint length, GstBuffer ** buffer);
 static GstFlowReturn gst_base_transform_chain (GstPad * pad,
@@ -382,6 +383,8 @@ gst_base_transform_init (GstBaseTransform * trans,
       GST_DEBUG_FUNCPTR (gst_base_transform_setcaps));
   gst_pad_set_event_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_src_event));
+  gst_pad_set_checkgetrange_function (trans->srcpad,
+      GST_DEBUG_FUNCPTR (gst_base_transform_check_get_range));
   gst_pad_set_getrange_function (trans->srcpad,
       GST_DEBUG_FUNCPTR (gst_base_transform_getrange));
   gst_pad_set_activatepull_function (trans->srcpad,
@@ -1506,6 +1509,21 @@ configure_failed:
     GST_DEBUG_OBJECT (trans, "could not negotiate");
     return GST_FLOW_NOT_NEGOTIATED;
   }
+}
+
+static gboolean
+gst_base_transform_check_get_range (GstPad * pad)
+{
+  GstBaseTransform *trans;
+  gboolean ret;
+
+  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+
+  ret = gst_pad_check_pull_range (trans->sinkpad);
+
+  gst_object_unref (trans);
+
+  return ret;
 }
 
 /* FIXME, getrange is broken, need to pull range from the other
