@@ -1,3 +1,17 @@
+2007-02-20  Sébastien Moutte  <sebastien@moutte.net>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	* sys/directsound/gstdirectsoundsink.h:
+	  Remove include of unused headers.
+	* sys/waveform/gstwaveformplugin.c:
+	* sys/waveform/gstwaveformsink.c:
+	* sys/waveform/gstwaveformsink.h:
+	* win32/vs6/libgstwaveform.dsp:
+	  Add a new waveform plugin which includes an audio sink 
+	  element using the WaveForm win32 API.
+	* win32/MANIFEST:
+	  Add the new project file form waveform plugin.
+	
 2007-02-18  Sébastien Moutte  <sebastien@moutte.net>
 	
 	* sys/directdraw/gstdirectdrawplugin.c:

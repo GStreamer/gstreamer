@@ -19,7 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
-
 #ifndef __GST_DIRECTSOUNDSINK_H__
 #define __GST_DIRECTSOUNDSINK_H__
 
@@ -29,7 +28,6 @@
 #include <windows.h>
 #include <dxerr9.h>
 #include <dsound.h>
-
 
 G_BEGIN_DECLS
 #define GST_TYPE_DIRECTSOUND_SINK            (gst_directsound_sink_get_type())

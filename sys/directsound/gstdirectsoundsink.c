@@ -20,7 +20,7 @@
 */
 
 /**
- * SECTION:element-directsound
+ * SECTION:element-directsoundsink
  * @short_description: output sound using Directsound API
  *
  * <refsect2>
@@ -56,13 +56,6 @@
 
 #include "gstdirectsoundsink.h"
 
-#include <fcntl.h>
-#include <errno.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-#include <string.h>
-
 GST_DEBUG_CATEGORY_STATIC (directsoundsink_debug);
 
 /* elementfactory information */
@@ -76,7 +69,6 @@ static void gst_directsound_sink_base_init (gpointer g_class);
 static void gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass);
 static void gst_directsound_sink_init (GstDirectSoundSink * dsoundsink,
     GstDirectSoundSinkClass * g_class);
-static void gst_directsound_sink_dispose (GObject * object);
 static void gst_directsound_sink_finalise (GObject * object);
 static void gst_directsound_sink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -128,11 +120,6 @@ _do_init (GType directsoundsink_type)
 GST_BOILERPLATE_FULL (GstDirectSoundSink, gst_directsound_sink, GstAudioSink,
     GST_TYPE_AUDIO_SINK, _do_init);
 
-static void
-gst_directsound_sink_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
 
 static void
 gst_directsound_sink_finalise (GObject * object)
@@ -171,7 +158,6 @@ gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_directsound_sink_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_directsound_sink_finalise);
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_directsound_sink_get_property);
