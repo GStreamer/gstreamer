@@ -66,8 +66,6 @@ Ghostpads
   	    | target *----->//
 	    (------------)
 
-  The GstGhostPad (X) is also set as the parent of the GstProxyPad (Y).
-
   The target is a pointer to the internal pads peer. It is an optimisation to
   quickly get to the peer of a ghostpad without having to dereference the
   internal->peer.

@@ -576,6 +576,7 @@ pre_activate (GstPad * pad, GstActivateMode new_mode)
       GST_OBJECT_LOCK (pad);
       GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE NONE, set flushing");
       GST_PAD_SET_FLUSHING (pad);
+      GST_PAD_ACTIVATE_MODE (pad) = new_mode;
       /* unlock blocked pads so element can resume and stop */
       GST_PAD_BLOCK_BROADCAST (pad);
       GST_OBJECT_UNLOCK (pad);
@@ -594,11 +595,7 @@ post_activate (GstPad * pad, GstActivateMode new_mode)
     case GST_ACTIVATE_NONE:
       /* ensures that streaming stops */
       GST_PAD_STREAM_LOCK (pad);
-      /* while we're at it set activation mode */
-      GST_OBJECT_LOCK (pad);
-      GST_DEBUG_OBJECT (pad, "setting ACTIVATE_MODE %d", new_mode);
-      GST_PAD_ACTIVATE_MODE (pad) = new_mode;
-      GST_OBJECT_UNLOCK (pad);
+      GST_DEBUG_OBJECT (pad, "stopped streaming");
       GST_PAD_STREAM_UNLOCK (pad);
       break;
   }
@@ -639,22 +636,30 @@ gst_pad_set_active (GstPad * pad, gboolean active)
   if (active) {
     switch (old) {
       case GST_ACTIVATE_PUSH:
+        GST_DEBUG_OBJECT (pad, "activating pad from push");
+        ret = TRUE;
+        break;
       case GST_ACTIVATE_PULL:
+        GST_DEBUG_OBJECT (pad, "activating pad from pull");
         ret = TRUE;
         break;
       case GST_ACTIVATE_NONE:
+        GST_DEBUG_OBJECT (pad, "activating pad from none");
         ret = (GST_PAD_ACTIVATEFUNC (pad)) (pad);
         break;
     }
   } else {
     switch (old) {
       case GST_ACTIVATE_PUSH:
+        GST_DEBUG_OBJECT (pad, "deactivating pad from push");
         ret = gst_pad_activate_push (pad, FALSE);
         break;
       case GST_ACTIVATE_PULL:
+        GST_DEBUG_OBJECT (pad, "deactivating pad from pull");
         ret = gst_pad_activate_pull (pad, FALSE);
         break;
       case GST_ACTIVATE_NONE:
+        GST_DEBUG_OBJECT (pad, "deactivating pad from none");
         ret = TRUE;
         break;
     }
@@ -666,7 +671,7 @@ gst_pad_set_active (GstPad * pad, gboolean active)
       g_critical ("Failed to deactivate pad %s:%s, very bad",
           GST_DEBUG_PAD_NAME (pad));
     } else {
-      GST_WARNING ("Failed to activate pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+      GST_WARNING_OBJECT (pad, "Failed to activate pad");
     }
     GST_OBJECT_UNLOCK (pad);
   }
@@ -706,21 +711,27 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
   if (active) {
     switch (old) {
       case GST_ACTIVATE_PULL:
+        GST_DEBUG_OBJECT (pad, "activating pad from pull, was ok");
         goto was_ok;
       case GST_ACTIVATE_PUSH:
+        GST_DEBUG_OBJECT (pad,
+            "activating pad from push, deactivate push first");
         /* pad was activate in the wrong direction, deactivate it
          * and reactivate it in pull mode */
         if (G_UNLIKELY (!gst_pad_activate_push (pad, FALSE)))
           goto deactivate_failed;
         /* fallthrough, pad is deactivated now. */
       case GST_ACTIVATE_NONE:
+        GST_DEBUG_OBJECT (pad, "activating pad from none");
         break;
     }
   } else {
     switch (old) {
       case GST_ACTIVATE_NONE:
+        GST_DEBUG_OBJECT (pad, "deactivating pad from none, was ok");
         goto was_ok;
       case GST_ACTIVATE_PUSH:
+        GST_DEBUG_OBJECT (pad, "deactivating pad from push, weird");
         /* pad was activated in the other direction, deactivate it
          * in push mode, this should not happen... */
         if (G_UNLIKELY (!gst_pad_activate_push (pad, FALSE)))
@@ -728,12 +739,14 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
         /* everything is fine now */
         goto was_ok;
       case GST_ACTIVATE_PULL:
+        GST_DEBUG_OBJECT (pad, "deactivating pad from pull");
         break;
     }
   }
 
   if (gst_pad_get_direction (pad) == GST_PAD_SINK) {
     if ((peer = gst_pad_get_peer (pad))) {
+      GST_DEBUG_OBJECT (pad, "calling peer");
       if (G_UNLIKELY (!gst_pad_activate_pull (peer, active)))
         goto peer_failed;
       gst_object_unref (peer);
@@ -833,21 +846,27 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
   if (active) {
     switch (old) {
       case GST_ACTIVATE_PUSH:
+        GST_DEBUG_OBJECT (pad, "activating pad from push, was ok");
         goto was_ok;
       case GST_ACTIVATE_PULL:
+        GST_DEBUG_OBJECT (pad,
+            "activating pad from push, deactivating pull first");
         /* pad was activate in the wrong direction, deactivate it
          * an reactivate it in push mode */
         if (G_UNLIKELY (!gst_pad_activate_pull (pad, FALSE)))
           goto deactivate_failed;
         /* fallthrough, pad is deactivated now. */
       case GST_ACTIVATE_NONE:
+        GST_DEBUG_OBJECT (pad, "activating pad from none");
         break;
     }
   } else {
     switch (old) {
       case GST_ACTIVATE_NONE:
+        GST_DEBUG_OBJECT (pad, "deactivating pad from none, was ok");
         goto was_ok;
       case GST_ACTIVATE_PULL:
+        GST_DEBUG_OBJECT (pad, "deactivating pad from pull, weird");
         /* pad was activated in the other direction, deactivate it
          * in pull mode, this should not happen... */
         if (G_UNLIKELY (!gst_pad_activate_pull (pad, FALSE)))
@@ -855,6 +874,7 @@ gst_pad_activate_push (GstPad * pad, gboolean active)
         /* everything is fine now */
         goto was_ok;
       case GST_ACTIVATE_PUSH:
+        GST_DEBUG_OBJECT (pad, "deactivating pad from push");
         break;
     }
   }
@@ -3668,6 +3688,8 @@ gst_pad_check_pull_range (GstPad * pad)
   if (G_LIKELY ((checkgetrangefunc = peer->checkgetrangefunc) == NULL)) {
     /* FIXME, kindoff ghetto */
     ret = GST_PAD_GETRANGEFUNC (peer) != NULL;
+    GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+        "no checkgetrangefunc, assuming %d", ret);
   } else {
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
         "calling checkgetrangefunc %s of peer pad %s:%s",

@@ -483,96 +483,12 @@ G_DEFINE_TYPE (GstGhostPad, gst_ghost_pad, GST_TYPE_PROXY_PAD);
 
 static void gst_ghost_pad_dispose (GObject * object);
 
-/*
- * The parent_set and parent_unset are used to make sure that:
- * _ the internal and target are only linked when the GhostPad has a parent,
- * _ the internal and target are unlinked as soon as the GhostPad is removed
- *    from it's parent.
- */
-static void
-gst_ghost_pad_parent_set (GstObject * object, GstObject * parent)
-{
-  GstPad *gpad;
-  GstPad *target;
-  GstPad *internal;
-  GstPadLinkReturn ret;
-  GstObjectClass *klass;
-
-  gpad = GST_PAD (object);
-
-  /* internal is never NULL */
-  internal = GST_PROXY_PAD_INTERNAL (gpad);
-  target = gst_proxy_pad_get_target (gpad);
-
-  if (target) {
-    if (GST_PAD_IS_SRC (internal))
-      ret = gst_pad_link (internal, target);
-    else
-      ret = gst_pad_link (target, internal);
-
-    gst_object_unref (target);
-
-    if (ret != GST_PAD_LINK_OK)
-      goto link_failed;
-  }
-
-  klass = GST_OBJECT_CLASS (gst_ghost_pad_parent_class);
-
-  if (klass->parent_set)
-    klass->parent_set (object, parent);
-
-  return;
-
-  /* ERRORS */
-link_failed:
-  {
-    /* a warning is all we can do */
-    GST_WARNING_OBJECT (gpad, "could not link internal ghostpad %s:%s",
-        GST_DEBUG_PAD_NAME (target));
-    g_warning ("could not link internal ghostpad %s:%s",
-        GST_DEBUG_PAD_NAME (target));
-    return;
-  }
-}
-
-static void
-gst_ghost_pad_parent_unset (GstObject * object, GstObject * parent)
-{
-  GstPad *gpad;
-  GstPad *target;
-  GstPad *internal;
-  GstObjectClass *klass;
-
-  gpad = GST_PAD (object);
-  internal = GST_PROXY_PAD_INTERNAL (gpad);
-  target = gst_proxy_pad_get_target (gpad);
-
-  if (target) {
-    if (GST_PAD_IS_SRC (internal))
-      gst_pad_unlink (internal, target);
-    else
-      gst_pad_unlink (target, internal);
-
-    gst_object_unref (target);
-  }
-
-  klass = GST_OBJECT_CLASS (gst_ghost_pad_parent_class);
-
-  if (klass->parent_unset)
-    klass->parent_unset (object, parent);
-}
-
-
 static void
 gst_ghost_pad_class_init (GstGhostPadClass * klass)
 {
   GObjectClass *gobject_class = (GObjectClass *) klass;
-  GstObjectClass *gstobject_class = (GstObjectClass *) klass;
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_ghost_pad_dispose);
-  gstobject_class->parent_set = GST_DEBUG_FUNCPTR (gst_ghost_pad_parent_set);
-  gstobject_class->parent_unset =
-      GST_DEBUG_FUNCPTR (gst_ghost_pad_parent_unset);
 }
 
 /* see gstghostpad design docs */
@@ -582,17 +498,13 @@ gst_ghost_pad_internal_do_activate_push (GstPad * pad, gboolean active)
   gboolean ret;
   GstPad *other;
 
-  GST_LOG_OBJECT (pad, "%sactivate push on %s:%s", (active ? "" : "de"),
-      GST_DEBUG_PAD_NAME (pad));
+  GST_LOG_OBJECT (pad, "%sactivate push on %s:%s, we're ok",
+      (active ? "" : "de"), GST_DEBUG_PAD_NAME (pad));
 
-  if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-    other = GST_PROXY_PAD_INTERNAL (pad);
-    ret = gst_pad_activate_push (other, active);
-  } else if (G_LIKELY ((other = gst_pad_get_peer (pad)))) {
-    ret = gst_pad_activate_push (other, active);
-    gst_object_unref (other);
-  } else
-    ret = FALSE;
+  /* in both cases (SRC and SINK) we activate just the internal pad. The targets
+   * will be activated later (or already in case of a ghost sinkpad). */
+  other = GST_PROXY_PAD_INTERNAL (pad);
+  ret = gst_pad_activate_push (other, active);
 
   return ret;
 }
@@ -607,13 +519,25 @@ gst_ghost_pad_internal_do_activate_pull (GstPad * pad, gboolean active)
       GST_DEBUG_PAD_NAME (pad));
 
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+    /* we are activated in pull mode by our peer element, which is a sinkpad
+     * that wants to operate in pull mode. This activation has to propagate
+     * upstream throught the pipeline. We call the internal activation function,
+     * which will trigger gst_ghost_pad_do_activate_pull, which propagates even
+     * further upstream */
+    GST_LOG_OBJECT (pad, "pad is src, activate internal");
     other = GST_PROXY_PAD_INTERNAL (pad);
     ret = gst_pad_activate_pull (other, active);
   } else if (G_LIKELY ((other = gst_pad_get_peer (pad)))) {
+    /* We are SINK, the ghostpad is SRC, we propagate the activation upstream
+     * since we hold a pointer to the upstream peer. */
+    GST_LOG_OBJECT (pad, "activating peer");
     ret = gst_pad_activate_pull (other, active);
     gst_object_unref (other);
-  } else
+  } else {
+    /* this is failure, we can't activate pull if there is no peer */
+    GST_LOG_OBJECT (pad, "not src and no peer, failing");
     ret = FALSE;
+  }
 
   return ret;
 }
@@ -624,14 +548,12 @@ gst_ghost_pad_do_activate_push (GstPad * pad, gboolean active)
   gboolean ret;
   GstPad *other;
 
-  GST_LOG_OBJECT (pad, "%sactivate push on %s:%s", (active ? "" : "de"),
-      GST_DEBUG_PAD_NAME (pad));
+  GST_LOG_OBJECT (pad, "%sactivate push on %s:%s, proxy internal",
+      (active ? "" : "de"), GST_DEBUG_PAD_NAME (pad));
 
-  if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-    other = GST_PROXY_PAD_INTERNAL (pad);
-    ret = gst_pad_activate_push (other, active);
-  } else
-    ret = TRUE;
+  /* just activate the internal pad */
+  other = GST_PROXY_PAD_INTERNAL (pad);
+  ret = gst_pad_activate_push (other, active);
 
   return ret;
 }
@@ -646,13 +568,23 @@ gst_ghost_pad_do_activate_pull (GstPad * pad, gboolean active)
       GST_DEBUG_PAD_NAME (pad));
 
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+    /* the ghostpad is SRC and activated in pull mode by its peer, call the
+     * activation function of the internal pad to propagate the activation
+     * upstream */
+    GST_LOG_OBJECT (pad, "pad is src, activate internal");
     other = GST_PROXY_PAD_INTERNAL (pad);
     ret = gst_pad_activate_pull (other, active);
   } else if (G_LIKELY ((other = gst_pad_get_peer (pad)))) {
+    /* We are SINK and activated by the internal pad, propagate activation
+     * upstream because we hold a ref to the upstream peer */
+    GST_LOG_OBJECT (pad, "activating peer");
     ret = gst_pad_activate_pull (other, active);
     gst_object_unref (other);
-  } else
+  } else {
+    /* no peer, we fail */
+    GST_LOG_OBJECT (pad, "pad not src and no peer, failing");
     ret = FALSE;
+  }
 
   return ret;
 }
@@ -671,7 +603,7 @@ gst_ghost_pad_do_link (GstPad * pad, GstPad * peer)
 
   ret = GST_PAD_LINK_OK;
   /* if we are a source pad, we should call the peer link function
-   * if the peer has one */
+   * if the peer has one, see design docs. */
   if (GST_PAD_IS_SRC (pad)) {
     if (GST_PAD_LINKFUNC (peer)) {
       ret = GST_PAD_LINKFUNC (peer) (peer, pad);
@@ -777,7 +709,7 @@ gst_ghost_pad_dispose (GObject * object)
   /* disposes of the internal pad, since the ghostpad is the only possible object
    * that has a refcount on the internal pad.
    */
-  gst_object_unparent (GST_OBJECT_CAST (internal));
+  gst_object_unref (internal);
 
   GST_PROXY_UNLOCK (pad);
 
@@ -850,17 +782,17 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
 
   GST_PROXY_LOCK (ret);
 
-  /* now make the ghostpad a parent of the internal pad */
-  if (!gst_object_set_parent (GST_OBJECT_CAST (internal),
-          GST_OBJECT_CAST (ret)))
-    goto parent_failed;
+  /* don't set parent, we can't link the internal pads if parents/grandparents
+   * are different, just take ownership. */
+  gst_object_ref (internal);
+  gst_object_sink (internal);
 
-  /* The ghostpad is the parent of the internal pad and is the only object that
+  /* The ghostpad is the owner of the internal pad and is the only object that
    * can have a refcount on the internal pad.
    * At this point, the GstGhostPad has a refcount of 1, and the internal pad has
    * a refcount of 1.
    * When the refcount of the GstGhostPad drops to 0, the ghostpad will dispose
-   * it's refcount on the internal pad in the dispose method by un-parenting it.
+   * it's refcount on the internal pad in the dispose method by un-reffing it.
    * This is why we don't take extra refcounts in the assignments below
    */
   GST_PROXY_PAD_INTERNAL (ret) = internal;
@@ -884,19 +816,6 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
   GST_PROXY_UNLOCK (ret);
 
   return ret;
-
-  /* ERRORS */
-parent_failed:
-  {
-    GST_WARNING_OBJECT (ret, "Could not set internal pad %s:%s",
-        GST_DEBUG_PAD_NAME (internal));
-    g_critical ("Could not set internal pad %s:%s",
-        GST_DEBUG_PAD_NAME (internal));
-    GST_PROXY_UNLOCK (ret);
-    gst_object_unref (ret);
-    gst_object_unref (internal);
-    return NULL;
-  }
 }
 
 /**
@@ -1069,14 +988,14 @@ gst_ghost_pad_get_target (GstGhostPad * gpad)
  * Set the new target of the ghostpad @gpad. Any existing target
  * is unlinked and links to the new target are established.
  *
- * Returns: TRUE if the new target could be set, FALSE otherwise.
+ * Returns: TRUE if the new target could be set. This function can return FALSE
+ * when the internal pads could not be linked.
  */
 gboolean
 gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
 {
   GstPad *internal;
   GstPad *oldtarget;
-  GstObject *parent;
   gboolean result;
   GstPadLinkReturn lret;
 
@@ -1101,25 +1020,16 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
   result = gst_proxy_pad_set_target_unlocked (GST_PAD_CAST (gpad), newtarget);
 
   if (result && newtarget) {
-    /* and link to internal pad if we are not unparent-ed */
-    if ((parent = gst_object_get_parent (GST_OBJECT (gpad)))) {
-      gst_object_unref (parent);
+    /* and link to internal pad */
+    GST_DEBUG_OBJECT (gpad, "connecting internal pad to target");
 
-      GST_DEBUG_OBJECT (gpad,
-          "GhostPad has parent, connecting internal pad to target");
+    if (GST_PAD_IS_SRC (internal))
+      lret = gst_pad_link (internal, newtarget);
+    else
+      lret = gst_pad_link (newtarget, internal);
 
-      if (GST_PAD_IS_SRC (internal))
-        lret = gst_pad_link (internal, newtarget);
-      else
-        lret = gst_pad_link (newtarget, internal);
-
-      if (lret != GST_PAD_LINK_OK)
-        goto link_failed;
-    } else {
-      /* we need to connect the internal pad once we have a parent */
-      GST_DEBUG_OBJECT (gpad,
-          "GhostPad doesn't have a parent, will connect internal pad later");
-    }
+    if (lret != GST_PAD_LINK_OK)
+      goto link_failed;
   }
   GST_PROXY_UNLOCK (gpad);
 
