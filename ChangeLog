@@ -1,5 +1,14 @@
 2007-02-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (bin_replace_message), (gst_bin_add_func),
+	(gst_bin_change_state_func), (bin_query_min_max_init),
+	(bin_query_latency_fold), (bin_query_latency_done),
+	(gst_bin_query):
+	Improve debug info.
+	Implement latency query.
+
+2007-02-20  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/part-gstghostpad.txt:
 	* gst/gstghostpad.c: (gst_ghost_pad_class_init),
 	(gst_ghost_pad_internal_do_activate_push),

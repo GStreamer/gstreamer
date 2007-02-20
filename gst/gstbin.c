@@ -173,8 +173,8 @@
 
 /* enable for DURATION caching. 
  * FIXME currently too many elements don't update
- * their duration when it changes so we return inaccurate values.
- * #define DURATION_CACHING */
+ * their duration when it changes so we return inaccurate values. */
+#undef DURATION_CACHING
 
 GST_DEBUG_CATEGORY_STATIC (bin_debug);
 #define GST_CAT_DEFAULT bin_debug
@@ -652,8 +652,8 @@ bin_replace_message (GstBin * bin, GstMessage * message, GstMessageType types)
       /* keep new message */
       bin->messages = g_list_prepend (bin->messages, message);
 
-      GST_DEBUG_OBJECT (bin, "got new message %s from %s",
-          name, GST_ELEMENT_NAME (src));
+      GST_DEBUG_OBJECT (bin, "got new message %p, %s from %s",
+          message, name, GST_ELEMENT_NAME (src));
     }
   } else {
     GST_DEBUG_OBJECT (bin, "got message %s from (NULL), not processing", name);
@@ -797,7 +797,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   /* distribute the bus */
   gst_element_set_bus (element, bin->child_bus);
 
-  /* propagate the current base time and clock */
+  /* propagate the current base_time and clock */
   gst_element_set_base_time (element, GST_ELEMENT (bin)->base_time);
   /* it's possible that the element did not accept the clock but
    * that is not important right now. When the pipeline goes to PLAYING,
@@ -1907,7 +1907,7 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
   it = gst_bin_iterate_sorted (bin);
 
 restart:
-  /* take base time */
+  /* take base_time */
   base_time = gst_element_get_base_time (element);
 
   have_async = FALSE;
@@ -1924,7 +1924,7 @@ restart:
 
         child = GST_ELEMENT_CAST (data);
 
-        /* set base time on child */
+        /* set base_time on child */
         gst_element_set_base_time (child, base_time);
 
         /* set state now */
@@ -1939,8 +1939,8 @@ restart:
             break;
           case GST_STATE_CHANGE_ASYNC:
             GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
-                "child '%s' is changing state asynchronously",
-                GST_ELEMENT_NAME (child));
+                "child '%s' is changing state asynchronously to %s",
+                GST_ELEMENT_NAME (child), gst_element_state_get_name (next));
             have_async = TRUE;
             break;
           case GST_STATE_CHANGE_FAILURE:
@@ -1977,7 +1977,7 @@ restart:
   }
 
   ret = parent_class->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
+  if (G_UNLIKELY (ret == GST_STATE_CHANGE_FAILURE))
     goto done;
 
   if (have_no_preroll) {
@@ -1997,10 +1997,13 @@ done:
 
   return ret;
 
+  /* ERRORS */
 activate_failure:
-  GST_CAT_WARNING_OBJECT (GST_CAT_STATES, element,
-      "failure (de)activating src pads");
-  return GST_STATE_CHANGE_FAILURE;
+  {
+    GST_CAT_WARNING_OBJECT (GST_CAT_STATES, element,
+        "failure (de)activating src pads");
+    return GST_STATE_CHANGE_FAILURE;
+  }
 }
 
 /*
@@ -2125,7 +2128,7 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
  *     This message is also generated when we remove a clock provider from
  *     a bin. If this message is received by the application, it should
  *     PAUSE the pipeline and set it back to PLAYING to force a new clock
- *     distribution.
+ *     and a new base_time distribution.
  *
  * GST_MESSAGE_CLOCK_PROVIDE: This message is generated when an element
  *     can provide a clock. This mostly happens when we add a new clock
@@ -2325,6 +2328,7 @@ forward:
 typedef struct
 {
   GstQuery *query;
+  gint64 min;
   gint64 max;
 } QueryFold;
 
@@ -2334,8 +2338,9 @@ typedef void (*QueryDoneFunction) (GstBin * bin, QueryFold * fold);
 /* for duration/position we collect all durations/positions and take 
  * the MAX of all valid results */
 static void
-bin_query_max_init (GstBin * bin, QueryFold * fold)
+bin_query_min_max_init (GstBin * bin, QueryFold * fold)
 {
+  fold->min = 0;
   fold->max = -1;
 }
 
@@ -2409,6 +2414,45 @@ bin_query_position_done (GstBin * bin, QueryFold * fold)
   GST_DEBUG_OBJECT (bin, "max position %" G_GINT64_FORMAT, fold->max);
 }
 
+static gboolean
+bin_query_latency_fold (GstElement * item, GValue * ret, QueryFold * fold)
+{
+  if (gst_element_query (item, fold->query)) {
+    GstClockTime min, max;
+
+    g_value_set_boolean (ret, TRUE);
+
+    gst_query_parse_latency (fold->query, NULL, &min, &max);
+
+    GST_DEBUG_OBJECT (item,
+        "got latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+    /* for the combined latency we collect the MAX of all min latencies and
+     * the MIN of all max latencies */
+    if (min > fold->min)
+      fold->min = min;
+    if (fold->max == -1)
+      fold->max = max;
+    else if (max < fold->max)
+      fold->max = max;
+  }
+
+  gst_object_unref (item);
+  return TRUE;
+}
+static void
+bin_query_latency_done (GstBin * bin, QueryFold * fold)
+{
+  /* store max in query result */
+  gst_query_set_latency (fold->query, TRUE, fold->min, fold->max);
+
+  GST_DEBUG_OBJECT (bin,
+      "latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (fold->min), GST_TIME_ARGS (fold->max));
+}
+
+
 /* generic fold, return first valid result */
 static gboolean
 bin_query_generic_fold (GstElement * item, GValue * ret, QueryFold * fold)
@@ -2475,15 +2519,22 @@ gst_bin_query (GstElement * element, GstQuery * query)
 #endif
       /* no cached value found, iterate and collect durations */
       fold_func = (GstIteratorFoldFunction) bin_query_duration_fold;
-      fold_init = bin_query_max_init;
+      fold_init = bin_query_min_max_init;
       fold_done = bin_query_duration_done;
       break;
     }
     case GST_QUERY_POSITION:
     {
       fold_func = (GstIteratorFoldFunction) bin_query_position_fold;
-      fold_init = bin_query_max_init;
+      fold_init = bin_query_min_max_init;
       fold_done = bin_query_position_done;
+      break;
+    }
+    case GST_QUERY_LATENCY:
+    {
+      fold_func = (GstIteratorFoldFunction) bin_query_latency_fold;
+      fold_init = bin_query_min_max_init;
+      fold_done = bin_query_latency_done;
       break;
     }
     default:
