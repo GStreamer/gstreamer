@@ -71,6 +71,8 @@ struct _GstDecodeBin
   GstDecodeGroup *activegroup;  /* group currently active */
   GList *groups;                /* List of non-active GstDecodeGroups, sorted in
                                  * order of creation. */
+  GList *oldgroups;             /* List of no-longer-used GstDecodeGroups. 
+                                 * Should be freed in dispose */
   gint nbpads;                  /* unique identifier for source pads */
   GstCaps *caps;                /* caps on which to stop decoding */
 
@@ -496,6 +498,14 @@ gst_decode_bin_dispose (GObject * object)
   }
   g_list_free (decode_bin->groups);
   decode_bin->groups = NULL;
+
+  for (tmp = decode_bin->oldgroups; tmp; tmp = g_list_next (tmp)) {
+    GstDecodeGroup *group = (GstDecodeGroup *) tmp->data;
+
+    gst_decode_group_free (group);
+  }
+  g_list_free (decode_bin->oldgroups);
+  decode_bin->oldgroups = NULL;
 
   if (decode_bin->caps)
     gst_caps_unref (decode_bin->caps);
@@ -1269,7 +1279,6 @@ multi_queue_underrun_cb (GstElement * queue, GstDecodeGroup * group)
     GST_DEBUG_OBJECT (dbin, "Switching to new group");
     /* unexpose current active */
     gst_decode_group_hide (group);
-    gst_decode_group_free (group);
 
     /* expose first group of groups */
     gst_decode_group_expose ((GstDecodeGroup *) dbin->groups->data);
@@ -1518,7 +1527,6 @@ gst_decode_group_check_if_drained (GstDecodeGroup * group)
     GST_DEBUG_OBJECT (dbin, "Switching to new group");
 
     gst_decode_group_hide (group);
-    gst_decode_group_free (group);
 
     gst_decode_group_expose ((GstDecodeGroup *) dbin->groups->data);
   }
@@ -1704,6 +1712,7 @@ gst_decode_group_hide (GstDecodeGroup * group)
   GROUP_MUTEX_UNLOCK (group);
 
   group->dbin->activegroup = NULL;
+  group->dbin->oldgroups = g_list_append (group->dbin->oldgroups, group);
 }
 
 static void

@@ -1,5 +1,14 @@
 2007-02-20  Edward Hervey  <edward@fluendo.com>
 
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_dispose),
+	(multi_queue_underrun_cb), (gst_decode_group_check_if_drained),
+	(sort_end_pads), (gst_decode_group_expose),
+	(gst_decode_group_hide):
+	Don't free groups from the streaming threads. Just put them aside and
+	free them in dispose.
+
+2007-02-20  Edward Hervey  <edward@fluendo.com>
+
 	* gst/playback/gstdecodebin2.c: (connect_element),
 	(pad_added_group_cb), (gst_decode_group_check_if_blocked),
 	(sort_end_pads), (gst_decode_group_expose):
