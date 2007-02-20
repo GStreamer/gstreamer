@@ -707,9 +707,8 @@ gst_ghost_pad_dispose (GObject * object)
   GST_PROXY_PAD_INTERNAL (internal) = NULL;
 
   /* disposes of the internal pad, since the ghostpad is the only possible object
-   * that has a refcount on the internal pad.
-   */
-  gst_object_unref (internal);
+   * that has a refcount on the internal pad. */
+  gst_object_unparent (GST_OBJECT_CAST (internal));
 
   GST_PROXY_UNLOCK (pad);
 
@@ -782,17 +781,17 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
 
   GST_PROXY_LOCK (ret);
 
-  /* don't set parent, we can't link the internal pads if parents/grandparents
-   * are different, just take ownership. */
-  gst_object_ref (internal);
-  gst_object_sink (internal);
+  /* now make the ghostpad a parent of the internal pad */
+  if (!gst_object_set_parent (GST_OBJECT_CAST (internal),
+          GST_OBJECT_CAST (ret)))
+    goto parent_failed;
 
-  /* The ghostpad is the owner of the internal pad and is the only object that
+  /* The ghostpad is the parent of the internal pad and is the only object that
    * can have a refcount on the internal pad.
    * At this point, the GstGhostPad has a refcount of 1, and the internal pad has
    * a refcount of 1.
    * When the refcount of the GstGhostPad drops to 0, the ghostpad will dispose
-   * it's refcount on the internal pad in the dispose method by un-reffing it.
+   * it's refcount on the internal pad in the dispose method by un-parenting it.
    * This is why we don't take extra refcounts in the assignments below
    */
   GST_PROXY_PAD_INTERNAL (ret) = internal;
@@ -816,6 +815,19 @@ gst_ghost_pad_new_full (const gchar * name, GstPadDirection dir,
   GST_PROXY_UNLOCK (ret);
 
   return ret;
+
+  /* ERRORS */
+parent_failed:
+  {
+    GST_WARNING_OBJECT (ret, "Could not set internal pad %s:%s",
+        GST_DEBUG_PAD_NAME (internal));
+    g_critical ("Could not set internal pad %s:%s",
+        GST_DEBUG_PAD_NAME (internal));
+    GST_PROXY_UNLOCK (ret);
+    gst_object_unref (ret);
+    gst_object_unref (internal);
+    return NULL;
+  }
 }
 
 /**

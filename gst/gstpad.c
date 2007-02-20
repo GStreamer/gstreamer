@@ -1697,6 +1697,10 @@ gst_pad_link_check_hierarchy (GstPad * src, GstPad * sink)
   if (G_UNLIKELY (psrc == NULL || psink == NULL))
     goto no_parent;
 
+  /* only care about parents that are elements */
+  if (G_UNLIKELY (!GST_IS_ELEMENT (psrc) || !GST_IS_ELEMENT (psink)))
+    goto no_element_parent;
+
   /* if the parents are the same, we have a loop */
   if (G_UNLIKELY (psrc == psink))
     goto same_parents;
@@ -1718,6 +1722,13 @@ no_parent:
   {
     GST_CAT_DEBUG (GST_CAT_CAPS,
         "one of the pads has no parent %" GST_PTR_FORMAT " and %"
+        GST_PTR_FORMAT, psrc, psink);
+    return TRUE;
+  }
+no_element_parent:
+  {
+    GST_CAT_DEBUG (GST_CAT_CAPS,
+        "one of the pads has no element parent %" GST_PTR_FORMAT " and %"
         GST_PTR_FORMAT, psrc, psink);
     return TRUE;
   }

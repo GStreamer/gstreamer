@@ -1,5 +1,17 @@
 2007-02-20  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-gstghostpad.txt:
+	* gst/gstghostpad.c: (gst_ghost_pad_dispose),
+	(gst_ghost_pad_new_full):
+	Make the ghostpad a parent of the internal pad again for better backward
+	compatibility. Don't write code that relies on this however.
+
+	* gst/gstpad.c: (gst_pad_activate_pull), (gst_pad_activate_push),
+	(gst_pad_link_check_hierarchy):
+	Require that parents should be GstElements in the hierarchy check.
+
+2007-02-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (bin_replace_message), (gst_bin_add_func),
 	(gst_bin_change_state_func), (bin_query_min_max_init),
 	(bin_query_latency_fold), (bin_query_latency_done),
