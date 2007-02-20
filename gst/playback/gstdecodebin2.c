@@ -178,6 +178,7 @@ struct _GstDecodeGroup
                                  * on this group */
   gulong overrunsig;
   gulong underrunsig;
+  guint nbdynamic;              /* number of dynamic pads in the group. */
 
   GList *endpads;               /* List of GstDecodePad of source pads to be exposed */
   GList *ghosts;                /* List of GstGhostPad for the endpads */
@@ -922,6 +923,12 @@ connect_element (GstDecodeBin * dbin, GstElement * element,
   /* 2. if there are more potential pads, connect to relevent signals */
   if (dynamic) {
     if (group) {
+      GST_LOG ("Adding signals to element %s in group %p",
+          GST_ELEMENT_NAME (element), group);
+      GROUP_MUTEX_LOCK (group);
+      group->nbdynamic++;
+      GST_LOG ("Group %p has now %d dynamic elements", group, group->nbdynamic);
+      GROUP_MUTEX_UNLOCK (group);
       g_signal_connect (G_OBJECT (element), "pad-added",
           G_CALLBACK (pad_added_group_cb), group);
       g_signal_connect (G_OBJECT (element), "pad-removed",
@@ -1027,9 +1034,29 @@ type_found (GstElement * typefind, guint probability,
 static void
 pad_added_group_cb (GstElement * element, GstPad * pad, GstDecodeGroup * group)
 {
+  GstCaps *caps;
+  gboolean expose = FALSE;
+
   GST_LOG_OBJECT (pad, "pad added, group:%p", group);
 
-  /* FIXME : FILLME */
+  caps = gst_pad_get_caps (pad);
+  analyze_new_pad (group->dbin, element, pad, caps, group);
+  if (caps)
+    gst_caps_unref (caps);
+
+  GROUP_MUTEX_LOCK (group);
+  group->nbdynamic--;
+  GST_LOG ("Group %p has now %d dynamic objects", group, group->nbdynamic);
+  if (group->nbdynamic == 0)
+    expose = TRUE;
+  GROUP_MUTEX_UNLOCK (group);
+  if (expose) {
+    GST_LOG
+        ("That was the last dynamic object, now attempting to expose the group");
+    DECODE_BIN_LOCK (group->dbin);
+    gst_decode_group_expose (group);
+    DECODE_BIN_UNLOCK (group->dbin);
+  }
 }
 
 static void
@@ -1419,7 +1446,7 @@ gst_decode_group_control_source_pad (GstDecodeGroup * group, GstPad * pad)
  * If the group is complete and blocked, the group will be marked as blocked
  * and will ghost/expose all pads on decodebin if the group is the current one.
  *
- * MT safe
+ * Call with the group lock taken ! MT safe
  */
 static void
 gst_decode_group_check_if_blocked (GstDecodeGroup * group)
@@ -1427,10 +1454,11 @@ gst_decode_group_check_if_blocked (GstDecodeGroup * group)
   GList *tmp;
   gboolean blocked = TRUE;
 
-  GST_LOG ("group : %p", group);
+  GST_LOG ("group : %p , ->complete:%d , ->nbdynamic:%d",
+      group, group->complete, group->nbdynamic);
 
   /* 1. don't do anything if group is not complete */
-  if (!group->complete) {
+  if (!group->complete || group->nbdynamic) {
     GST_DEBUG_OBJECT (group->dbin, "Group isn't complete yet");
     return;
   }
@@ -1497,6 +1525,64 @@ gst_decode_group_check_if_drained (GstDecodeGroup * group)
   DECODE_BIN_UNLOCK (dbin);
 }
 
+/* sort_end_pads:
+ * GCompareFunc to use with lists of GstPad.
+ * Sorts pads by mime type.
+ * First video (raw, then non-raw), then audio (raw, then non-raw),
+ * then others.
+ *
+ * Return: negative if a<b, 0 if a==b, positive if a>b
+ */
+
+static gint
+sort_end_pads (GstDecodePad * da, GstDecodePad * db)
+{
+  GstPad *a, *b;
+  gint va, vb;
+  GstCaps *capsa, *capsb;
+  GstStructure *sa, *sb;
+  const gchar *namea, *nameb;
+
+  a = da->pad;
+  b = db->pad;
+
+  capsa = gst_pad_get_caps (a);
+  capsb = gst_pad_get_caps (b);
+
+  sa = gst_caps_get_structure ((const GstCaps *) capsa, 0);
+  sb = gst_caps_get_structure ((const GstCaps *) capsb, 0);
+
+  namea = gst_structure_get_name (sa);
+  nameb = gst_structure_get_name (sb);
+
+  if (g_strrstr (namea, "video/x-raw-"))
+    va = 0;
+  else if (g_strrstr (namea, "video/"))
+    va = 1;
+  else if (g_strrstr (namea, "audio/x-raw"))
+    va = 2;
+  else if (g_strrstr (namea, "audio/"))
+    va = 3;
+  else
+    va = 4;
+
+  if (g_strrstr (nameb, "video/x-raw-"))
+    vb = 0;
+  else if (g_strrstr (nameb, "video/"))
+    vb = 1;
+  else if (g_strrstr (nameb, "audio/x-raw"))
+    vb = 2;
+  else if (g_strrstr (nameb, "audio/"))
+    vb = 3;
+  else
+    vb = 4;
+
+  gst_caps_unref (capsa);
+  gst_caps_unref (capsb);
+
+  return va - vb;
+}
+
 /* gst_decode_group_expose:
  *
  * Expose this group's pads.
@@ -1526,7 +1612,16 @@ gst_decode_group_expose (GstDecodeGroup * group)
     return FALSE;
   }
 
+  if (group->nbdynamic) {
+    GST_WARNING ("Group %p still has %d dynamic objects, not exposing yet",
+        group, group->nbdynamic);
+    return FALSE;
+  }
+
   GST_LOG ("Exposing group %p", group);
+
+  /* re-order pads : video, then audio, then others */
+  group->endpads = g_list_sort (group->endpads, (GCompareFunc) sort_end_pads);
 
   /* Expose pads */
 

@@ -1,3 +1,14 @@
+2007-02-20  Edward Hervey  <edward@fluendo.com>
+
+	* gst/playback/gstdecodebin2.c: (connect_element),
+	(pad_added_group_cb), (gst_decode_group_check_if_blocked),
+	(sort_end_pads), (gst_decode_group_expose):
+	Handle dynamic pads within groups.
+	Sort pads before exposing them in order to make playbin happy.
+	There still is a race with the multiqueue filling up. This should be
+	solved separately.
+	Fixes #398721
+
 2007-02-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/utils/base-utils.c:
