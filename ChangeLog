@@ -1,5 +1,10 @@
 2007-02-21  Wim Taymans  <wim@fluendo.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	Removed docs as well.
+
+2007-02-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstmessage.c: (gst_message_parse_duration):
 	* gst/gstmessage.h:
 	Remove new messages for release.
