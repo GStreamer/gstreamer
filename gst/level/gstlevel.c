@@ -78,6 +78,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <string.h>
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include "gstlevel.h"
@@ -92,7 +93,7 @@ static const GstElementDetails level_details = GST_ELEMENT_DETAILS ("Level",
     "Thomas Vander Stichele <thomas at apestaart dot org>");
 
 static GstStaticPadTemplate sink_template_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
@@ -100,11 +101,16 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "channels = (int) [ 1, MAX ], "
         "endianness = (int) BYTE_ORDER, "
         "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, " "signed = (boolean) true")
+        "depth = (int) { 8, 16 }, "
+        "signed = (boolean) true; "
+        "audio/x-raw-float, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, " "width = (int) {32, 64} ")
     );
 
 static GstStaticPadTemplate src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
@@ -112,7 +118,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "channels = (int) [ 1, MAX ], "
         "endianness = (int) BYTE_ORDER, "
         "width = (int) { 8, 16 }, "
-        "depth = (int) { 8, 16 }, " "signed = (boolean) true")
+        "depth = (int) { 8, 16 }, "
+        "signed = (boolean) true; "
+        "audio/x-raw-float, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) [ 1, MAX ], "
+        "endianness = (int) BYTE_ORDER, " "width = (int) {32, 64} ")
     );
 
 enum
@@ -203,6 +214,8 @@ gst_level_init (GstLevel * filter, GstLevelClass * g_class)
   filter->decay_peak_falloff = 10.0;    /* dB falloff (/sec) */
 
   filter->message = TRUE;
+
+  filter->process = NULL;
 }
 
 static void
@@ -277,6 +290,82 @@ gst_level_get_property (GObject * object, guint prop_id,
   }
 }
 
+
+/* process one (interleaved) channel of incoming samples
+ * calculate square sum of samples
+ * normalize and average over number of samples
+ * returns a normalized cumulative square value, which can be averaged
+ * to return the average power as a double between 0 and 1
+ * also returns the normalized peak power (square of the highest amplitude)
+ *
+ * caller must assure num is a multiple of channels
+ * samples for multiple channels are interleaved
+ * input sample data enters in *in_data as 8 or 16 bit data
+ * this filter only accepts signed audio data, so mid level is always 0
+ *
+ * for 16 bit, this code considers the non-existant 32768 value to be
+ * full-scale; so 32767 will not map to 1.0
+ */
+
+#define DEFINE_INT_LEVEL_CALCULATOR(TYPE, RESOLUTION)                         \
+static void inline                                                            \
+gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
+                            gdouble *NCS, gdouble *NPS)                       \
+{                                                                             \
+  TYPE * in = (TYPE *)data;                                                   \
+  register guint j;                                                           \
+  gdouble squaresum = 0.0;           /* square sum of the integer samples */  \
+  register gdouble square = 0.0;     /* Square */                             \
+  register gdouble peaksquare = 0.0; /* Peak Square Sample */                 \
+  gdouble normalizer;               /* divisor to get a [-1.0, 1.0] range */  \
+                                                                              \
+  *NCS = 0.0;                       /* Normalized Cumulative Square */        \
+  *NPS = 0.0;                       /* Normalized Peask Square */             \
+                                                                              \
+  normalizer = (gdouble) (1 << (RESOLUTION * 2));                             \
+                                                                              \
+  for (j = 0; j < num; j += channels)                                         \
+  {                                                                           \
+    square = ((gdouble) in[j]) * in[j];                                       \
+    if (square > peaksquare) peaksquare = square;                             \
+    squaresum += square;                                                      \
+  }                                                                           \
+                                                                              \
+  *NCS = squaresum / normalizer;                                              \
+  *NPS = peaksquare / normalizer;                                             \
+}
+
+DEFINE_INT_LEVEL_CALCULATOR (gint16, 15);
+DEFINE_INT_LEVEL_CALCULATOR (gint8, 7);
+
+#define DEFINE_FLOAT_LEVEL_CALCULATOR(TYPE)                                   \
+static void inline                                                            \
+gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
+                            gdouble *NCS, gdouble *NPS)                       \
+{                                                                             \
+  TYPE * in = (TYPE *)data;                                                   \
+  register guint j;                                                           \
+  gdouble squaresum = 0.0;           /* square sum of the integer samples */  \
+  register gdouble square = 0.0;     /* Square */                             \
+  register gdouble peaksquare = 0.0; /* Peak Square Sample */                 \
+                                                                              \
+  *NCS = 0.0;                       /* Normalized Cumulative Square */        \
+  *NPS = 0.0;                       /* Normalized Peask Square */             \
+                                                                              \
+  for (j = 0; j < num; j += channels)                                         \
+  {                                                                           \
+    square = ((gdouble) in[j]) * in[j];                                       \
+    if (square > peaksquare) peaksquare = square;                             \
+    squaresum += square;                                                      \
+  }                                                                           \
+                                                                              \
+  *NCS = squaresum;                                                           \
+  *NPS = peaksquare;                                                          \
+}
+
+DEFINE_FLOAT_LEVEL_CALCULATOR (gfloat);
+DEFINE_FLOAT_LEVEL_CALCULATOR (gdouble);
+
 static gint
 structure_get_int (GstStructure * structure, const gchar * field)
 {
@@ -291,11 +380,10 @@ structure_get_int (GstStructure * structure, const gchar * field)
 static gboolean
 gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 {
-  GstLevel *filter;
+  GstLevel *filter = GST_LEVEL (trans);
+  const gchar *mimetype;
   GstStructure *structure;
   int i;
-
-  filter = GST_LEVEL (trans);
 
   filter->num_frames = 0;
 
@@ -303,6 +391,31 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
   filter->rate = structure_get_int (structure, "rate");
   filter->width = structure_get_int (structure, "width");
   filter->channels = structure_get_int (structure, "channels");
+  mimetype = gst_structure_get_name (structure);
+
+  /* FIXME: set calculator func depending on caps */
+  filter->process = NULL;
+  if (strcmp (mimetype, "audio/x-raw-int") == 0) {
+    GST_DEBUG_OBJECT (filter, "use int: %u", filter->width);
+    switch (filter->width) {
+      case 8:
+        filter->process = gst_level_calculate_gint8;
+        break;
+      case 16:
+        filter->process = gst_level_calculate_gint16;
+        break;
+    }
+  } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
+    GST_DEBUG_OBJECT (filter, "use float, %u", filter->width);
+    switch (filter->width) {
+      case 32:
+        filter->process = gst_level_calculate_gfloat;
+        break;
+      case 64:
+        filter->process = gst_level_calculate_gdouble;
+        break;
+    }
+  }
 
   /* allocate channel variable arrays */
   g_free (filter->CS);
@@ -327,52 +440,6 @@ gst_level_set_caps (GstBaseTransform * trans, GstCaps * in, GstCaps * out)
 
   return TRUE;
 }
-
-/* process one (interleaved) channel of incoming samples
- * calculate square sum of samples
- * normalize and average over number of samples
- * returns a normalized cumulative square value, which can be averaged
- * to return the average power as a double between 0 and 1
- * also returns the normalized peak power (square of the highest amplitude)
- *
- * caller must assure num is a multiple of channels
- * samples for multiple channels are interleaved
- * input sample data enters in *in_data as 8 or 16 bit data
- * this filter only accepts signed audio data, so mid level is always 0
- *
- * for 16 bit, this code considers the non-existant 32768 value to be
- * full-scale; so 32767 will not map to 1.0
- */
-
-#define DEFINE_LEVEL_CALCULATOR(TYPE, RESOLUTION)                             \
-static void inline                                                            \
-gst_level_calculate_##TYPE (TYPE * in, guint num, gint channels,              \
-                            double *NCS, double *NPS)                         \
-{                                                                             \
-  register int j;                                                             \
-  double squaresum = 0.0;           /* square sum of the integer samples */   \
-  register double square = 0.0;     /* Square */                              \
-  register double peaksquare = 0.0; /* Peak Square Sample */                  \
-  gdouble normalizer;               /* divisor to get a [-1.0, 1.0] range */  \
-                                                                              \
-  *NCS = 0.0;                       /* Normalized Cumulative Square */        \
-  *NPS = 0.0;                       /* Normalized Peask Square */             \
-                                                                              \
-  normalizer = (double) (1 << (RESOLUTION * 2));                              \
-                                                                              \
-  for (j = 0; j < num; j += channels)                                         \
-  {                                                                           \
-    square = ((double) in[j]) * in[j];                                        \
-    if (square > peaksquare) peaksquare = square;                             \
-    squaresum += square;                                                      \
-  }                                                                           \
-                                                                              \
-  *NCS = squaresum / normalizer;                                              \
-  *NPS = peaksquare / normalizer;                                             \
-}
-
-DEFINE_LEVEL_CALCULATOR (gint16, 15);
-DEFINE_LEVEL_CALCULATOR (gint8, 7);
 
 static GstMessage *
 gst_level_message_new (GstLevel * l, GstClockTime endtime)
@@ -427,10 +494,10 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   GstLevel *filter;
   gpointer in_data;
   double CS = 0.0;
-  gint num_frames = 0;
-  gint num_int_samples = 0;     /* number of interleaved samples
+  guint num_frames = 0;
+  guint num_int_samples = 0;    /* number of interleaved samples
                                  * ie. total count for all channels combined */
-  gint i;
+  guint i;
 
   filter = GST_LEVEL (trans);
 
@@ -447,16 +514,8 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   for (i = 0; i < filter->channels; ++i) {
     CS = 0.0;
-    switch (filter->width) {
-      case 16:
-        gst_level_calculate_gint16 (((gint16 *) in_data) + i, num_int_samples,
-            filter->channels, &CS, &filter->peak[i]);
-        break;
-      case 8:
-        gst_level_calculate_gint8 (((gint8 *) in_data) + i, num_int_samples,
-            filter->channels, &CS, &filter->peak[i]);
-        break;
-    }
+    filter->process (in_data + i, num_int_samples, filter->channels, &CS,
+        &filter->peak[i]);
     GST_LOG_OBJECT (filter,
         "channel %d, cumulative sum %f, peak %f, over %d samples/%d channels",
         i, CS, filter->peak[i], num_int_samples, filter->channels);

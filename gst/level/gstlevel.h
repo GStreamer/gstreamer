@@ -48,7 +48,11 @@ G_BEGIN_DECLS
 typedef struct _GstLevel GstLevel;
 typedef struct _GstLevelClass GstLevelClass;
 
-
+/**
+ * GstLevel:
+ *
+ * Opaque data structure.
+ */
 struct _GstLevel {
   GstBaseTransform element;
 
@@ -73,6 +77,8 @@ struct _GstLevel {
   gdouble *MS;                  /* normalized Mean Square of buffer */
   gdouble *RMS_dB;              /* RMS in dB to emit */
   GstClockTime *decay_peak_age; /* age of last peak */
+  
+  void (*process)(gpointer, guint, guint, gdouble*, gdouble*);
 };
 
 struct _GstLevelClass {
