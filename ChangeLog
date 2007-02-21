@@ -1,3 +1,9 @@
+2007-02-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstmessage.c: (gst_message_parse_duration):
+	* gst/gstmessage.h:
+	Remove new messages for release.
+
 2007-02-20  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/part-gstghostpad.txt:

@@ -108,8 +108,6 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_SEGMENT_START, "segment-start", 0},
   {GST_MESSAGE_SEGMENT_DONE, "segment-done", 0},
   {GST_MESSAGE_DURATION, "duration", 0},
-  {GST_MESSAGE_LOST_PREROLL, "lost-preroll", 0},
-  {GST_MESSAGE_PREROLLED, "prerolled", 0},
   {GST_MESSAGE_LATENCY, "latency", 0},
   {0, NULL, 0}
 };
@@ -700,51 +698,6 @@ gst_message_new_duration (GstObject * src, GstFormat format, gint64 duration)
 }
 
 /**
- * gst_message_new_lost_preroll:
- * @src: The object originating the message.
- * @pending: The state of @src when it lost preroll
- *
- * Returns: The new lost_preroll message.
- *
- * MT safe.
- *
- * Since: 0.10.12
- */
-GstMessage *
-gst_message_new_lost_preroll (GstObject * src, GstState pending)
-{
-  GstMessage *message;
-
-  message = gst_message_new_custom (GST_MESSAGE_LOST_PREROLL, src,
-      gst_structure_new ("GstMessageLostPreroll",
-          "pending", GST_TYPE_STATE, pending, NULL));
-
-  return message;
-}
-
-/**
- * gst_message_new_prerolled:
- * @src: The object originating the message.
- *
- * This message is posted by sinks when they preroll. 
- *
- * Returns: The new prerolled message. 
- *
- * MT safe.
- *
- * Since: 0.10.12
- */
-GstMessage *
-gst_message_new_prerolled (GstObject * src)
-{
-  GstMessage *message;
-
-  message = gst_message_new_custom (GST_MESSAGE_PREROLLED, src, NULL);
-
-  return message;
-}
-
-/**
  * gst_message_new_latency:
  * @src: The object originating the message.
  *
@@ -1091,30 +1044,4 @@ gst_message_parse_duration (GstMessage * message, GstFormat * format,
   if (duration)
     *duration =
         g_value_get_int64 (gst_structure_get_value (structure, "duration"));
-}
-
-/**
- * gst_message_parse_lost_preroll:
- * @message: A valid #GstMessage of type GST_MESSAGE_LOST_PREROLL.
- * @pending: Result location for the pending state, or NULL
- *
- * Extract the pending state from the lost_preroll message. The pending state is
- * the state the element was in when it lost the preroll buffer.
- *
- * MT safe.
- *
- * Since: 0.10.12
- */
-void
-gst_message_parse_lost_preroll (GstMessage * message, GstState * pending)
-{
-  const GstStructure *structure;
-
-  g_return_if_fail (GST_IS_MESSAGE (message));
-  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_LOST_PREROLL);
-
-  structure = gst_message_get_structure (message);
-  if (pending)
-    *pending =
-        g_value_get_enum (gst_structure_get_value (structure, "pending"));
 }
