@@ -433,16 +433,16 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
       case GST_MESSAGE_WARNING:{
         GError *gerror;
         gchar *debug;
+        gchar *name = gst_object_get_path_string (GST_MESSAGE_SRC (message));
 
         gst_message_parse_warning (message, &gerror, &debug);
+        g_print (_("WARNING: from element %s: %s\n"), name, gerror->message);
         if (debug) {
-          g_print ("WARNING: Element \"%s\" warns: %s\n",
-              GST_STR_NULL (GST_ELEMENT_NAME (GST_MESSAGE_SRC (message))),
-              debug);
+          g_print (_("Additional debug info:\n%s\n"), debug);
         }
-        if (gerror)
-          g_error_free (gerror);
+        g_error_free (gerror);
         g_free (debug);
+        g_free (name);
         break;
       }
       case GST_MESSAGE_ERROR:{
@@ -451,8 +451,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         gst_message_parse_error (message, &gerror, &debug);
         gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
-        if (gerror)
-          g_error_free (gerror);
+        g_error_free (gerror);
         g_free (debug);
         /* we have an error */
         res = TRUE;

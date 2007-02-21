@@ -1,3 +1,12 @@
+2007-02-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tools/gst-launch.c: (event_loop):
+	  Make sure that we actually show the important message part of a
+	  warning message.
+	  No need to check if the gerror is not NULL to free; first of all
+	  g_free accepts NULL; and second the default error handler would
+	  segfault if gerror was NULL.
+
 2007-02-21  Wim Taymans  <wim@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:
