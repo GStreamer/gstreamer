@@ -1,6 +1,12 @@
 2007-02-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/examples/seek/seek.c: (do_seek):
+	Undo the previous commit: -1 as a stop time implies that the stop
+	time is the end of file, clearing any previously configured segment.
+
+2007-02-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/examples/seek/seek.c: (do_seek):
 	Don't SEEK_SET with a stop time of -1, use SEEK_NONE instead.
 
 2007-02-21  Stefan Kost  <ensonic@users.sf.net>
