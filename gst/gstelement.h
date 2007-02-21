@@ -282,8 +282,8 @@ G_STMT_START {								\
 /**
  * GST_ELEMENT_WARNING:
  * @el:     the element that generates the warning
- * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #GstGError)
- * @code:   error code defined for that domain (see #GstGError)
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #gstreamer-GstGError)
+ * @code:   error code defined for that domain (see #gstreamer-GstGError)
  * @text:   the message to display (format string and args enclosed in
             parentheses)
  * @debug:  debugging information for the message (format string and args
@@ -302,6 +302,34 @@ G_STMT_START {								\
   if (__dbg)								\
     GST_WARNING_OBJECT (el, "warning: %s", __dbg);			\
   gst_element_message_full (GST_ELEMENT(el), GST_MESSAGE_WARNING,	\
+    GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code,	\
+  __txt, __dbg, __FILE__, GST_FUNCTION, __LINE__);			\
+} G_STMT_END
+
+/**
+ * GST_ELEMENT_INFO:
+ * @el:     the element that generates the information
+ * @domain: like CORE, LIBRARY, RESOURCE or STREAM (see #gstreamer-GstGError)
+ * @code:   error code defined for that domain (see #gstreamer-GstGError)
+ * @text:   the message to display (format string and args enclosed in
+            parentheses)
+ * @debug:  debugging information for the message (format string and args
+            enclosed in parentheses)
+ *
+ * Utility function that elements can use in case they want to inform
+ * the application of something noteworthy that is not an error.
+ * The pipeline will post a warning message and the
+ * application will be informed.
+ */
+#define GST_ELEMENT_INFO(el, domain, code, text, debug)			\
+G_STMT_START {								\
+  gchar *__txt = _gst_element_error_printf text;			\
+  gchar *__dbg = _gst_element_error_printf debug;			\
+  if (__txt)								\
+    GST_INFO_OBJECT (el, "info: %s", __txt);				\
+  if (__dbg)								\
+    GST_INFO_OBJECT (el, "info: %s", __dbg);				\
+  gst_element_message_full (GST_ELEMENT(el), GST_MESSAGE_INFO,		\
     GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code,	\
   __txt, __dbg, __FILE__, GST_FUNCTION, __LINE__);			\
 } G_STMT_END
