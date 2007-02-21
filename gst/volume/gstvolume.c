@@ -412,7 +412,8 @@ static void
 volume_process_int16 (GstVolume * this, gpointer bytes, guint n_bytes)
 {
   gint16 *data = (gint16 *) bytes;
-  guint i, val, num_samples;
+  guint i, num_samples;
+  gint val;
 
   num_samples = n_bytes / sizeof (gint16);
 
@@ -432,7 +433,8 @@ static void
 volume_process_int16_clamp (GstVolume * this, gpointer bytes, guint n_bytes)
 {
   gint16 *data = (gint16 *) bytes;
-  guint i, val, num_samples;
+  guint i, num_samples;
+  gint val;
 
   num_samples = n_bytes / sizeof (gint16);
 
@@ -470,10 +472,10 @@ volume_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
   /* based on mimetype, choose the correct volume_process format */
   if (strcmp (mimetype, "audio/x-raw-int") == 0) {
     this->format = GST_VOLUME_FORMAT_INT;
-    GST_DEBUG_OBJECT (this, "use int");
+    GST_DEBUG_OBJECT (this, "use int: %u", this->width);
   } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
     this->format = GST_VOLUME_FORMAT_FLOAT;
-    GST_DEBUG_OBJECT (this, "use float");
+    GST_DEBUG_OBJECT (this, "use float: %u", this->width);
   } else {
     this->process = NULL;
     goto invalid_format;

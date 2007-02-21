@@ -1,5 +1,11 @@
 2007-02-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/volume/gstvolume.c: (volume_process_int16),
+	(volume_process_int16_clamp), (volume_set_caps):
+	  Unbreak volume, value remains gint.
+
+2007-02-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/volume/gstvolume.c: (volume_choose_func),
 	(volume_update_real_volume), (gst_volume_set_volume),
 	(gst_volume_init), (volume_process_double), (volume_process_float),
