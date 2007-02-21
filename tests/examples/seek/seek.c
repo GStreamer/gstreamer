@@ -1112,7 +1112,8 @@ do_seek (GtkWidget * widget)
 
   if (rate >= 0) {
     s_event = gst_event_new_seek (rate,
-        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_SET, -1);
+        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_NONE,
+        -1);
   } else {
     s_event = gst_event_new_seek (rate,
         GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
