@@ -55,14 +55,14 @@
 #include "gstvolume.h"
 
 /* some defines for audio processing */
-/* the volume factor is a range from 0.0 to (arbitrary) 4.0
- * we map 1.0 to VOLUME_UNITY_INT
+/* the volume factor is a range from 0.0 to (arbitrary) VOLUME_MAX_DOUBLE = 10.0
+ * we map 1.0 to VOLUME_UNITY_INT16
  */
-#define VOLUME_UNITY_INT        8192    /* internal int for unity */
-#define VOLUME_UNITY_BIT_SHIFT  13      /* number of bits to shift for unity */
-#define VOLUME_MAX_DOUBLE       10.0
-#define VOLUME_MAX_INT16        32767
-#define VOLUME_MIN_INT16        -32768
+#define VOLUME_UNITY_INT16           8192       /* internal int for unity 2^13 */
+#define VOLUME_UNITY_INT16_BIT_SHIFT 13 /* number of bits to shift for unity */
+#define VOLUME_MAX_DOUBLE            10.0
+#define VOLUME_MAX_INT16             32767
+#define VOLUME_MIN_INT16             -32768
 
 /* number of steps we use for the mixer interface to go from 0.0 to 1.0 */
 # define VOLUME_STEPS           100
@@ -98,7 +98,7 @@ static GstStaticPadTemplate volume_sink_template =
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, MAX ], "
         "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32; "
+        "width = (int) {32, 64}; "
         "audio/x-raw-int, "
         "channels = (int) [ 1, MAX ], "
         "rate = (int) [ 1,  MAX ], "
@@ -114,7 +114,7 @@ static GstStaticPadTemplate volume_src_template = GST_STATIC_PAD_TEMPLATE
         "rate = (int) [ 1, MAX ], "
         "channels = (int) [ 1, MAX ], "
         "endianness = (int) BYTE_ORDER, "
-        "width = (int) 32; "
+        "width = (int) {32, 64}; "
         "audio/x-raw-int, "
         "channels = (int) [ 1, MAX ], "
         "rate = (int) [ 1,  MAX ], "
@@ -158,33 +158,44 @@ static GstFlowReturn volume_transform_ip (GstBaseTransform * base,
 static gboolean volume_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps);
 
+static void volume_process_double (GstVolume * this, gpointer bytes,
+    guint n_bytes);
 static void volume_process_float (GstVolume * this, gpointer bytes,
-    gint n_bytes);
+    guint n_bytes);
 static void volume_process_int16 (GstVolume * this, gpointer bytes,
-    gint n_bytes);
+    guint n_bytes);
 static void volume_process_int16_clamp (GstVolume * this, gpointer bytes,
-    gint n_bytes);
+    guint n_bytes);
 
 /* helper functions */
 
 static void
 volume_choose_func (GstVolume * this)
 {
+  this->process = NULL;
   switch (this->format) {
     case GST_VOLUME_FORMAT_INT:
+      /* FIXME: should we also support gint8, gint32? */
       /* only clamp if the gain is greater than 1.0
        * FIXME: real_vol_i can change while processing the buffer!
        */
-      if (this->real_vol_i > VOLUME_UNITY_INT)
+      if (this->real_vol_i > VOLUME_UNITY_INT16)
         this->process = volume_process_int16_clamp;
       else
         this->process = volume_process_int16;
       break;
     case GST_VOLUME_FORMAT_FLOAT:
-      this->process = volume_process_float;
+      switch (this->width) {
+        case 32:
+          this->process = volume_process_float;
+          break;
+        case 64:
+          this->process = volume_process_double;
+          break;
+      }
       break;
     default:
-      this->process = NULL;
+      break;
   }
 }
 
@@ -199,7 +210,7 @@ volume_update_real_volume (GstVolume * this)
   } else {
     this->real_vol_f = this->volume_f;
     this->real_vol_i = this->volume_i;
-    passthrough = (this->volume_i == VOLUME_UNITY_INT);
+    passthrough = (this->volume_i == VOLUME_UNITY_INT16);
   }
   volume_choose_func (this);
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (this), passthrough);
@@ -240,7 +251,7 @@ gst_volume_set_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
   g_return_if_fail (GST_IS_VOLUME (this));
 
   this->volume_f = (gfloat) volumes[0] / VOLUME_STEPS;
-  this->volume_i = this->volume_f * VOLUME_UNITY_INT;
+  this->volume_i = this->volume_f * VOLUME_UNITY_INT16;
 
   volume_update_real_volume (this);
 }
@@ -344,9 +355,9 @@ gst_volume_init (GstVolume * this, GstVolumeClass * g_class)
   GstMixerTrack *track = NULL;
 
   this->mute = FALSE;
-  this->volume_i = VOLUME_UNITY_INT;
+  this->volume_i = VOLUME_UNITY_INT16;
   this->volume_f = 1.0;
-  this->real_vol_i = VOLUME_UNITY_INT;
+  this->real_vol_i = VOLUME_UNITY_INT16;
   this->real_vol_f = 1.0;
   this->tracklist = NULL;
   this->format = GST_VOLUME_FORMAT_NONE;
@@ -369,12 +380,24 @@ gst_volume_init (GstVolume * this, GstVolumeClass * g_class)
  */
 
 static void
-volume_process_float (GstVolume * this, gpointer bytes, gint n_bytes)
+volume_process_double (GstVolume * this, gpointer bytes, guint n_bytes)
 {
-  gfloat *data;
-  gint i, num_samples;
+  gdouble *data = (gdouble *) bytes;
+  guint i, num_samples;
 
-  data = (gfloat *) bytes;
+  num_samples = n_bytes / sizeof (gdouble);
+
+  for (i = 0; i < num_samples; i++) {
+    *data++ *= this->real_vol_f;
+  }
+}
+
+static void
+volume_process_float (GstVolume * this, gpointer bytes, guint n_bytes)
+{
+  gfloat *data = (gfloat *) bytes;
+  guint i, num_samples;
+
   num_samples = n_bytes / sizeof (gfloat);
 
   for (i = 0; i < num_samples; i++) {
@@ -386,32 +409,11 @@ volume_process_float (GstVolume * this, gpointer bytes, gint n_bytes)
 }
 
 static void
-volume_process_int16 (GstVolume * this, gpointer bytes, gint n_bytes)
+volume_process_int16 (GstVolume * this, gpointer bytes, guint n_bytes)
 {
-  gint16 *data;
-  gint i, val, num_samples;
+  gint16 *data = (gint16 *) bytes;
+  guint i, val, num_samples;
 
-  data = (gint16 *) bytes;
-  num_samples = n_bytes / sizeof (gint16);
-
-  /* FIXME: need... liboil... 
-   * oil_scalarmultiply_s16_ns ?
-   * https://bugs.freedesktop.org/show_bug.cgi?id=7060
-   */
-  for (i = 0; i < num_samples; i++) {
-    /* we use bitshifting instead of dividing by UNITY_INT for speed */
-    val = (gint) * data;
-    *data++ = (gint16) ((this->real_vol_i * val) >> VOLUME_UNITY_BIT_SHIFT);
-  }
-}
-
-static void
-volume_process_int16_clamp (GstVolume * this, gpointer bytes, gint n_bytes)
-{
-  gint16 *data;
-  gint i, val, num_samples;
-
-  data = (gint16 *) bytes;
   num_samples = n_bytes / sizeof (gint16);
 
   /* FIXME: need... liboil... 
@@ -422,8 +424,29 @@ volume_process_int16_clamp (GstVolume * this, gpointer bytes, gint n_bytes)
     /* we use bitshifting instead of dividing by UNITY_INT for speed */
     val = (gint) * data;
     *data++ =
-        (gint16) CLAMP ((this->real_vol_i * val) >> VOLUME_UNITY_BIT_SHIFT,
-        VOLUME_MIN_INT16, VOLUME_MAX_INT16);
+        (gint16) ((this->real_vol_i * val) >> VOLUME_UNITY_INT16_BIT_SHIFT);
+  }
+}
+
+static void
+volume_process_int16_clamp (GstVolume * this, gpointer bytes, guint n_bytes)
+{
+  gint16 *data = (gint16 *) bytes;
+  guint i, val, num_samples;
+
+  num_samples = n_bytes / sizeof (gint16);
+
+  /* FIXME: need... liboil... 
+   * oil_scalarmultiply_s16_ns ?
+   * https://bugs.freedesktop.org/show_bug.cgi?id=7060
+   */
+  for (i = 0; i < num_samples; i++) {
+    /* we use bitshifting instead of dividing by UNITY_INT for speed */
+    val = (gint) * data;
+    *data++ =
+        (gint16) CLAMP ((this->real_vol_i *
+            val) >> VOLUME_UNITY_INT16_BIT_SHIFT, VOLUME_MIN_INT16,
+        VOLUME_MAX_INT16);
   }
 }
 
@@ -435,19 +458,22 @@ volume_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
 {
   GstVolume *this = GST_VOLUME (base);
   const gchar *mimetype;
+  GstStructure *structure;
 
   GST_DEBUG_OBJECT (this,
       "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
-  mimetype = gst_structure_get_name (gst_caps_get_structure (incaps, 0));
+  structure = gst_caps_get_structure (incaps, 0);
+  gst_structure_get_int (structure, "width", &this->width);
+  mimetype = gst_structure_get_name (structure);
 
   /* based on mimetype, choose the correct volume_process format */
   if (strcmp (mimetype, "audio/x-raw-int") == 0) {
     this->format = GST_VOLUME_FORMAT_INT;
-    GST_INFO_OBJECT (this, "use int16");
+    GST_DEBUG_OBJECT (this, "use int");
   } else if (strcmp (mimetype, "audio/x-raw-float") == 0) {
     this->format = GST_VOLUME_FORMAT_FLOAT;
-    GST_INFO_OBJECT (this, "use float");
+    GST_DEBUG_OBJECT (this, "use float");
   } else {
     this->process = NULL;
     goto invalid_format;
@@ -479,7 +505,9 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   if (gst_base_transform_is_passthrough (base))
     return GST_FLOW_OK;
 
-  /* FIXME: subdivide GST_BUFFER_SIZE into small chunks for smooth fades */
+  /* FIXME: if controllers are bound, subdivide GST_BUFFER_SIZE into small
+   * chunks for smooth fades, what is small? 1/10th sec.
+   */
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
   timestamp =
       gst_segment_to_stream_time (&base->segment, GST_FORMAT_TIME, timestamp);
@@ -519,7 +547,7 @@ volume_update_volume (const GValue * value, gpointer data)
   g_return_if_fail (GST_IS_VOLUME (this));
 
   this->volume_f = g_value_get_double (value);
-  this->volume_i = this->volume_f * VOLUME_UNITY_INT;
+  this->volume_i = this->volume_f * VOLUME_UNITY_INT16;
 
   volume_update_real_volume (this);
 }

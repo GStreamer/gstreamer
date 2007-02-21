@@ -56,14 +56,15 @@ typedef enum {
 struct _GstVolume {
   GstBaseTransform element;
 
-  void (*process)(GstVolume*, gpointer, gint);
+  void (*process)(GstVolume*, gpointer, guint);
 
   gboolean mute;
   gint   volume_i, real_vol_i; /* the _i(nt) values get synchronized with the */
   gfloat volume_f, real_vol_f; /* _f(loat) values on each update */
   
   GList *tracklist;
-  GstVolumeFormat format;
+  GstVolumeFormat format;       /* caps variables */
+  gint width;
 };
 
 struct _GstVolumeClass {
