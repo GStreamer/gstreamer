@@ -1,3 +1,14 @@
+2007-02-21  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/lame/gstlame.c: (gst_lame_sink_setcaps),
+	(gst_lame_set_property), (gst_lame_setup):
+	  Fix up bitrate checking macro.  Make it give us a
+	  GST_ELEMENT_WARNING message so the application has a chance of
+	  reporting this to the user.  Move the checking to _setup, so we
+	  are sure it runs in the READY state, when we hope to have a pipeline
+	  and a bus that is not flushing.
+	  This fixes e.g. using 96 kbit/sec as a bitrate.
+
 2007-02-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_file),

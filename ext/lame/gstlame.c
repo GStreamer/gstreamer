@@ -551,7 +551,7 @@ zero_output_rate:
 setup_failed:
   {
     GST_ELEMENT_ERROR (lame, LIBRARY, SETTINGS,
-        (_("Failed to configure LAME encoder. Check your encoding parameters.")), ("Failed to configure LAME encoder. Check your encoding parameters."));
+        (_("Failed to configure LAME encoder. Check your encoding parameters.")), NULL);
     return FALSE;
   }
 }
@@ -648,21 +648,37 @@ init_error:
   }
 }
 
-#define CHECK_AND_FIXUP_BITRATE(obj,pspec,rate) \
+/* <php-emulation-mode>three underscores for ___rate is really really really
+ * private as opposed to one underscore<php-emulation-mode> */
+/* call this MACRO outside of the NULL state so that we have a higher chance
+ * of actually having a pipeline and bus to get the message through */
+
+#define CHECK_AND_FIXUP_BITRATE(obj,param,rate) 			  \
 G_STMT_START {                                                            \
   gint ___rate = rate;                                                    \
-  if (rate <= 64 && (rate % 8) != 0) {                                    \
-    ___rate = GST_ROUND_UP_8 (rate);                                      \
-  } else if (rate <= 128 && (rate % 16) != 0) {                           \
-    ___rate = GST_ROUND_UP_16 (rate);                                     \
-  } else if (rate <= 256 && (rate % 32) != 0) {                           \
-    ___rate = GST_ROUND_UP_32 (rate);                                     \
-  } else if (rate <= 320 && (rate % 64) != 0) {                           \
-    ___rate = GST_ROUND_UP_64 (rate);                                     \
+  gint maxrate;								  \
+  gint multiplier;							  \
+  if (rate <= 64) {							  \
+     maxrate = 64; multiplier = 8;                                        \
+     if ((rate % 8) != 0) ___rate = GST_ROUND_UP_8 (rate); 		  \
+  } else if (rate <= 128) {						  \
+     maxrate = 128; multiplier = 16;                                      \
+     if ((rate % 16) != 0) ___rate = GST_ROUND_UP_16 (rate);              \
+  } else if (rate <= 256) {						  \
+     maxrate = 256; multiplier = 32;                                      \
+     if ((rate % 32) != 0) ___rate = GST_ROUND_UP_32 (rate);              \
+  } else if (rate <= 320) { 						  \
+     maxrate = 320; multiplier = 64;                                      \
+     if ((rate % 64) != 0) ___rate = GST_ROUND_UP_64 (rate);              \
   }                                                                       \
   if (___rate != rate) {                                                  \
-    GST_WARNING_OBJECT (obj, "Bitrate %d not allowed for property '%s', " \
-        "changing to %d", rate, g_param_spec_get_name (pspec), ___rate);  \
+    GST_ELEMENT_WARNING (obj, LIBRARY, SETTINGS,			  \
+        (_("The requested bitrate %d kbit/s for property '%s' "           \
+           "is not allowed. "  						  \
+          "The bitrate was changed to %d kbit/s."), rate,		  \
+	  param,  ___rate), 					          \
+        ("A bitrate below %d should be a multiple of %d.", 		  \
+            maxrate, multiplier));		  			  \
     rate = ___rate;                                                       \
   }                                                                       \
 } G_STMT_END
@@ -678,7 +694,6 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
   switch (prop_id) {
     case ARG_BITRATE:
       lame->bitrate = g_value_get_int (value);
-      CHECK_AND_FIXUP_BITRATE (object, pspec, lame->bitrate);
       break;
     case ARG_COMPRESSION_RATIO:
       lame->compression_ratio = g_value_get_float (value);
@@ -727,15 +742,12 @@ gst_lame_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     case ARG_VBR_MIN_BITRATE:
       lame->vbr_min_bitrate = g_value_get_int (value);
-      CHECK_AND_FIXUP_BITRATE (object, pspec, lame->vbr_min_bitrate);
       break;
     case ARG_VBR_MAX_BITRATE:
       lame->vbr_max_bitrate = g_value_get_int (value);
-      CHECK_AND_FIXUP_BITRATE (object, pspec, lame->vbr_max_bitrate);
       break;
     case ARG_VBR_HARD_MIN:
       lame->vbr_hard_min = g_value_get_int (value);
-      CHECK_AND_FIXUP_BITRATE (object, pspec, lame->vbr_hard_min);
       break;
     case ARG_LOWPASS_FREQ:
       lame->lowpass_freq = g_value_get_int (value);
@@ -1136,6 +1148,7 @@ gst_lame_setup (GstLame * lame)
     lame->mode = 3;
 
   CHECK_ERROR (lame_set_num_channels (lame->lgf, lame->num_channels));
+  CHECK_AND_FIXUP_BITRATE (lame, "bitrate", lame->bitrate);
   CHECK_ERROR (lame_set_brate (lame->lgf, lame->bitrate));
   CHECK_ERROR (lame_set_compression_ratio (lame->lgf, lame->compression_ratio));
   CHECK_ERROR (lame_set_quality (lame->lgf, lame->quality));
@@ -1153,10 +1166,13 @@ gst_lame_setup (GstLame * lame)
   CHECK_ERROR (lame_set_VBR_q (lame->lgf, lame->vbr_quality));
   CHECK_ERROR (lame_set_VBR_mean_bitrate_kbps (lame->lgf,
           lame->vbr_mean_bitrate));
+  CHECK_AND_FIXUP_BITRATE (lame, "vbr-min-bitrate", lame->vbr_min_bitrate);
   CHECK_ERROR (lame_set_VBR_min_bitrate_kbps (lame->lgf,
           lame->vbr_min_bitrate));
+  CHECK_AND_FIXUP_BITRATE (lame, "vbr-max-bitrate", lame->vbr_max_bitrate);
   CHECK_ERROR (lame_set_VBR_max_bitrate_kbps (lame->lgf,
           lame->vbr_max_bitrate));
+  CHECK_AND_FIXUP_BITRATE (lame, "vbr-hard-min", lame->vbr_hard_min);
   CHECK_ERROR (lame_set_VBR_hard_min (lame->lgf, lame->vbr_hard_min));
   CHECK_ERROR (lame_set_lowpassfreq (lame->lgf, lame->lowpass_freq));
   CHECK_ERROR (lame_set_lowpasswidth (lame->lgf, lame->lowpass_width));
