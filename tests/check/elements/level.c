@@ -157,6 +157,7 @@ GST_START_TEST (test_int16)
       list = gst_structure_get_value (structure, fields[j]);
       value = gst_value_list_get_value (list, i);
       dB = g_value_get_double (value);
+      GST_DEBUG ("%s is %lf", fields[j], dB);
       fail_if (dB < -6.0);
       fail_if (dB > -5.9);
     }
@@ -164,7 +165,6 @@ GST_START_TEST (test_int16)
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
   fail_unless (inbuffer == outbuffer);
-
 
   /* clean up */
   /* flush current messages,and future state change messages */

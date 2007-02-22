@@ -514,12 +514,13 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   for (i = 0; i < filter->channels; ++i) {
     CS = 0.0;
-    filter->process (in_data + i, num_int_samples, filter->channels, &CS,
+    filter->process (in_data, num_int_samples, filter->channels, &CS,
         &filter->peak[i]);
     GST_LOG_OBJECT (filter,
         "channel %d, cumulative sum %f, peak %f, over %d samples/%d channels",
         i, CS, filter->peak[i], num_int_samples, filter->channels);
     filter->CS[i] += CS;
+    in_data += (filter->width / 8);
   }
 
   filter->num_frames += num_frames;
