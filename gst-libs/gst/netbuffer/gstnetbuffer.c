@@ -88,14 +88,52 @@ gst_netbuffer_finalize (GstNetBuffer * nbuf)
   GST_MINI_OBJECT_CLASS (parent_class)->finalize (GST_MINI_OBJECT (nbuf));
 }
 
+/* this is copy'n'pasted from _gst_buffer_copy() in lack of a better solution;
+ * keep in sync with _gst_buffer_copy() */
+static void
+notgst_buffer_copy_fields_in_place (GstBuffer * copy, GstBuffer * buffer)
+{
+  guint mask;
+
+  GST_LOG ("copying %p to %p", buffer, copy);
+
+  /* copy relevant flags */
+  mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
+      GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
+      GST_BUFFER_FLAG_GAP;
+  GST_MINI_OBJECT_FLAGS (copy) |= GST_MINI_OBJECT_FLAGS (buffer) & mask;
+
+  /* we simply copy everything from our parent */
+  copy->data = g_memdup (buffer->data, buffer->size);
+  /* make sure it gets freed (even if the parent is subclassed, we return a
+     normal buffer) */
+  copy->malloc_data = copy->data;
+
+  copy->size = buffer->size;
+
+  GST_BUFFER_TIMESTAMP (copy) = GST_BUFFER_TIMESTAMP (buffer);
+  GST_BUFFER_DURATION (copy) = GST_BUFFER_DURATION (buffer);
+  GST_BUFFER_OFFSET (copy) = GST_BUFFER_OFFSET (buffer);
+  GST_BUFFER_OFFSET_END (copy) = GST_BUFFER_OFFSET_END (buffer);
+
+  if (GST_BUFFER_CAPS (buffer))
+    GST_BUFFER_CAPS (copy) = gst_caps_ref (GST_BUFFER_CAPS (buffer));
+  else
+    GST_BUFFER_CAPS (copy) = NULL;
+}
+
 static GstNetBuffer *
 gst_netbuffer_copy (GstNetBuffer * nbuf)
 {
   GstNetBuffer *copy;
 
-  copy =
-      (GstNetBuffer *) GST_MINI_OBJECT_CLASS (parent_class)->
-      copy (GST_MINI_OBJECT (nbuf));
+  copy = gst_netbuffer_new ();
+
+  /* can't just chain up to parent_class::copy() because that will allocate
+   * a normal GstBuffer for us, so we'd lose the to/from fields and we don't
+   * want that */
+  notgst_buffer_copy_fields_in_place (GST_BUFFER_CAST (copy),
+      GST_BUFFER_CAST (nbuf));
 
   memcpy (&copy->to, &nbuf->to, sizeof (nbuf->to));
   memcpy (&copy->from, &nbuf->from, sizeof (nbuf->from));

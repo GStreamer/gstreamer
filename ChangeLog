@@ -1,3 +1,17 @@
+2007-02-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/netbuffer/gstnetbuffer.c:
+	(notgst_buffer_copy_fields_in_place), (gst_netbuffer_copy):
+	  Fix copying of GstNetBuffer (would crash before, or at least lead to
+	  invalid memory access, #410772), for now by copying the GstBuffer copy
+	  code from the core over here so we can copy the GstBuffer fields on a
+	  provided buffer instance (of type GstNetBuffer in this case). Would be
+	  better to fix this with some support by the core though (and in the long
+	  run change the broken GstBuffer/GstMiniObject copy semantics, #393099).
+
+	* tests/check/Makefile.am:
+	  Enable unit test for GstNetBuffer.
+
 2007-02-22  Andy Wingo  <wingo@pobox.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c

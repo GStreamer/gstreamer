@@ -77,6 +77,7 @@ check_PROGRAMS = \
 	gst/typefindfunctions \
 	libs/audio \
 	libs/cddabasesrc \
+	libs/netbuffer \
 	libs/tag \
 	libs/video \
 	libs/utils \
@@ -94,7 +95,7 @@ VALGRIND_TO_FIX = \
 	libs/video
 
 # these tests don't even pass
-noinst_PROGRAMS = libs/netbuffer
+noinst_PROGRAMS =
 
 AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS)
 LDADD = $(GST_LIBS) $(GST_CHECK_LIBS)
