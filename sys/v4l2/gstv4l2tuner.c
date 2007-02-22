@@ -171,11 +171,13 @@ gst_v4l2_tuner_get_channel (GstV4l2Object * v4l2object)
   /* assert that we're opened and that we're using a known item */
   g_return_val_if_fail (GST_V4L2_IS_OPEN (v4l2object), NULL);
 
-  v4l2object->get_in_out_func (v4l2object, &channel);
+  if (v4l2object->get_in_out_func (v4l2object, &channel)) {
 
-  for (item = v4l2object->channels; item != NULL; item = item->next) {
-    if (channel == GST_V4L2_TUNER_CHANNEL (item->data)->index)
-      return (GstTunerChannel *) item->data;
+    for (item = v4l2object->channels; item != NULL; item = item->next) {
+      if (channel == GST_V4L2_TUNER_CHANNEL (item->data)->index)
+        return (GstTunerChannel *) item->data;
+    }
+
   }
 
   return NULL;
@@ -271,15 +273,17 @@ gst_v4l2_tuner_set_frequency (GstV4l2Object * v4l2object,
   g_return_val_if_fail (gst_v4l2_tuner_contains_channel (v4l2object,
           v4l2channel), FALSE);
 
-  v4l2object->get_in_out_func (v4l2object, &chan);
-  if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&
-      GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
-    if (gst_v4l2_set_frequency (v4l2object, v4l2channel->tuner, frequency)) {
-      gst_tuner_frequency_changed (GST_TUNER (v4l2object->element), channel,
-          frequency);
-      return TRUE;
+  if (v4l2object->get_in_out_func (v4l2object, &chan)) {
+    if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&
+        GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
+      if (gst_v4l2_set_frequency (v4l2object, v4l2channel->tuner, frequency)) {
+        gst_tuner_frequency_changed (GST_TUNER (v4l2object->element), channel,
+            frequency);
+        return TRUE;
+      }
     }
   }
+
   return FALSE;
 }
 
@@ -298,10 +302,11 @@ gst_v4l2_tuner_get_frequency (GstV4l2Object * v4l2object,
   g_return_val_if_fail (gst_v4l2_tuner_contains_channel (v4l2object,
           v4l2channel), 0);
 
-  v4l2object->get_in_out_func (v4l2object, &chan);
-  if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&
-      GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
-    gst_v4l2_get_frequency (v4l2object, v4l2channel->tuner, &frequency);
+  if (v4l2object->get_in_out_func (v4l2object, &chan)) {
+    if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&
+        GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
+      gst_v4l2_get_frequency (v4l2object, v4l2channel->tuner, &frequency);
+    }
   }
 
   return frequency;
@@ -322,10 +327,11 @@ gst_v4l2_tuner_signal_strength (GstV4l2Object * v4l2object,
   g_return_val_if_fail (gst_v4l2_tuner_contains_channel (v4l2object,
           v4l2channel), 0);
 
-  v4l2object->get_in_out_func (v4l2object, &chan);
-  if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&
-      GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
-    gst_v4l2_signal_strength (v4l2object, v4l2channel->tuner, &signal);
+  if (v4l2object->get_in_out_func (v4l2object, &chan)) {
+    if (chan == GST_V4L2_TUNER_CHANNEL (channel)->index &&
+        GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
+      gst_v4l2_signal_strength (v4l2object, v4l2channel->tuner, &signal);
+    }
   }
 
   return signal;

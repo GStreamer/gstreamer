@@ -1,3 +1,10 @@
+2007-02-22  Edgard Lima <edgard.lima@indt.org.br>
+
+	* sys/v4l2/gstv4l2object.c:
+	* sys/v4l2/gstv4l2tuner.c:
+	* sys/v4l2/v4l2_calls.c:
+	Fix segfault when oppening a radio device.
+	
 2007-02-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/level/gstlevel.c: (gst_level_set_caps),

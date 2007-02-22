@@ -431,12 +431,15 @@ gst_v4l2_set_defaults (GstV4l2Object * v4l2object)
     channel =
         GST_TUNER_CHANNEL (gst_tuner_get_channel (GST_TUNER (v4l2object->
                 element)));
-    g_free (v4l2object->channel);
-    v4l2object->channel = g_strdup (channel->label);
-    gst_tuner_channel_changed (tuner, channel);
+    if (channel) {
+      g_free (v4l2object->channel);
+      v4l2object->channel = g_strdup (channel->label);
+      gst_tuner_channel_changed (tuner, channel);
+    }
   }
 
-  if (GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
+  if (channel
+      && GST_TUNER_CHANNEL_HAS_FLAG (channel, GST_TUNER_CHANNEL_FREQUENCY)) {
     if (v4l2object->frequency != 0) {
       gst_tuner_set_frequency (tuner, channel, v4l2object->frequency);
     } else {

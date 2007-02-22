@@ -726,8 +726,7 @@ gst_v4l2_get_input (GstV4l2Object * v4l2object, gint * input)
 input_failed:
   {
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
-        (_("Failed to get current input on device '%s'."),
-            v4l2object->videodev), GST_ERROR_SYSTEM);
+        (_("Failed to get current input on device '%s'. May be it is a radio device"), v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
 }
