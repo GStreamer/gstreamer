@@ -46,9 +46,14 @@ gboolean        gst_channel_mix_passthrough     (AudioConvertCtx * this);
 /*
  * Do actual mixing.
  */
-void            gst_channel_mix_mix             (AudioConvertCtx * this,
+void            gst_channel_mix_mix_int         (AudioConvertCtx * this,
                                                  gint32          * in_data,
                                                  gint32          * out_data,
+                                                 gint              samples);
+
+void            gst_channel_mix_mix_float       (AudioConvertCtx * this,
+                                                 gdouble         * in_data,
+                                                 gdouble         * out_data,
                                                  gint              samples);
 
 #endif /* __GST_CHANNEL_MIX_H__ */

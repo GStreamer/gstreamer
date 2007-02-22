@@ -473,12 +473,9 @@ GST_START_TEST (test_float_conversion)
         in, get_float_caps (1, "BYTE_ORDER", 64),
         out, get_float_caps (1, "BYTE_ORDER", 32));
 
-    /* FIXME: this fails */
-#if 0
     RUN_CONVERSION ("32 float to 64 float",
         out, get_float_caps (1, "BYTE_ORDER", 32),
         in, get_float_caps (1, "BYTE_ORDER", 64));
-#endif
   }
 }
 

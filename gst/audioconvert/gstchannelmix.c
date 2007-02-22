@@ -480,7 +480,11 @@ gst_channel_mix_setup_matrix (AudioConvertCtx * this)
   gst_channel_mix_unset_matrix (this);
 
   /* temp storage */
-  this->tmp = g_new (gint32, this->out.channels);
+  if (this->in.is_int || this->out.is_int) {
+    this->tmp = (gpointer) g_new (gint32, this->out.channels);
+  } else {
+    this->tmp = (gpointer) g_new (gdouble, this->out.channels);
+  }
 
   /* allocate */
   this->matrix = g_new0 (gfloat *, this->in.channels);
@@ -534,13 +538,14 @@ gst_channel_mix_passthrough (AudioConvertCtx * this)
 /* IMPORTANT: out_data == in_data is possible, make sure to not overwrite data
  * you might need later on! */
 void
-gst_channel_mix_mix (AudioConvertCtx * this,
+gst_channel_mix_mix_int (AudioConvertCtx * this,
     gint32 * in_data, gint32 * out_data, gint samples)
 {
   gint in, out, n;
   gint64 res;
   gboolean backwards;
   gint inchannels, outchannels;
+  gint32 *tmp = (gint32 *) this->tmp;
 
   g_return_if_fail (this->matrix != NULL);
   g_return_if_fail (this->tmp != NULL);
@@ -564,9 +569,48 @@ gst_channel_mix_mix (AudioConvertCtx * this,
         res = G_MININT32;
       else if (res > G_MAXINT32)
         res = G_MAXINT32;
-      this->tmp[out] = res;
+      tmp[out] = res;
     }
     memcpy (&out_data[n * outchannels], this->tmp,
         sizeof (gint32) * outchannels);
+  }
+}
+
+void
+gst_channel_mix_mix_float (AudioConvertCtx * this,
+    gdouble * in_data, gdouble * out_data, gint samples)
+{
+  gint in, out, n;
+  gdouble res;
+  gboolean backwards;
+  gint inchannels, outchannels;
+  gdouble *tmp = (gdouble *) this->tmp;
+
+  g_return_if_fail (this->matrix != NULL);
+  g_return_if_fail (this->tmp != NULL);
+
+  inchannels = this->in.channels;
+  outchannels = this->out.channels;
+  backwards = outchannels > inchannels;
+
+  /* FIXME: use liboil here? */
+  for (n = (backwards ? samples - 1 : 0); n < samples && n >= 0;
+      backwards ? n-- : n++) {
+    for (out = 0; out < outchannels; out++) {
+      /* convert */
+      res = 0.0;
+      for (in = 0; in < inchannels; in++) {
+        res += in_data[n * inchannels + in] * this->matrix[in][out];
+      }
+
+      /* clip (shouldn't we use doubles instead as intermediate format?) */
+      if (res < -1.0)
+        res = -1.0;
+      else if (res > 1.0)
+        res = 1.0;
+      tmp[out] = res;
+    }
+    memcpy (&out_data[n * outchannels], this->tmp,
+        sizeof (gdouble) * outchannels);
   }
 }

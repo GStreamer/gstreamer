@@ -1,3 +1,16 @@
+2007-02-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audioconvert/audioconvert.c: (float), (double), (float_hq),
+	(double_hq), (audio_convert_get_func_index),
+	(audio_convert_prepare_context), (audio_convert_convert):
+	* gst/audioconvert/audioconvert.h:
+	* gst/audioconvert/gstchannelmix.c: (gst_channel_mix_setup_matrix),
+	(gst_channel_mix_mix_int), (gst_channel_mix_mix_float):
+	* gst/audioconvert/gstchannelmix.h:
+	* tests/check/elements/audioconvert.c: (GST_START_TEST):
+	  Add float as an intermediate format, as well as float mixing. Enable
+	  test that was failing before. Fixes #339837
+
 2007-02-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/examples/seek/seek.c: (do_seek):

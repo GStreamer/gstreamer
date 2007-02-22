@@ -55,31 +55,44 @@ MAKE_UNPACK_FUNC_NAME (name) (gpointer src, gint32 *dst,                \
 
 /* special unpack code for float/double */
 static void
-MAKE_UNPACK_FUNC_NAME (float) (gpointer src, gint32 * dst,
-    gint scale, gint count)
+MAKE_UNPACK_FUNC_NAME (float) (gfloat * src, gint32 * dst, gint s, gint count)
 {
-  gfloat *p = (gfloat *) src;
   gdouble temp;
 
   for (; count; count--) {
     /* blow up to 32 bit */
-    temp = (*p++ * 2147483647.0) + 0.5;
+    temp = (*src++ * 2147483647.0) + 0.5;
     *dst++ = (gint32) CLAMP (temp, G_MININT32, G_MAXINT32);
   }
 }
 
 static void
-MAKE_UNPACK_FUNC_NAME (double) (gpointer src, gint32 * dst,
-    gint scale, gint count)
+MAKE_UNPACK_FUNC_NAME (double) (gdouble * src, gint32 * dst, gint s, gint count)
 {
-  gdouble *p = (gdouble *) src;
   gdouble temp;
 
   for (; count; count--) {
     /* blow up to 32 bit */
-    temp = (*p++ * 2147483647.0) + 0.5;
+    temp = (*src++ * 2147483647.0) + 0.5;
     *dst++ = (gint32) CLAMP (temp, G_MININT32, G_MAXINT32);
   }
+}
+
+static void
+MAKE_UNPACK_FUNC_NAME (float_hq) (gfloat * src, gdouble * dst, gint s,
+    gint count)
+{
+  for (; count; count--)
+    *dst++ = (gdouble) * src++;
+}
+
+static void
+MAKE_UNPACK_FUNC_NAME (double_hq) (gdouble * src, gdouble * dst, gint s,
+    gint count)
+{
+  /* FIXME: memcpy */
+  for (; count; count--)
+    *dst++ = *src++;
 }
 
 #define READ8(p)          GST_READ_UINT8(p)
@@ -127,24 +140,34 @@ MAKE_PACK_FUNC_NAME (name) (gint32 *src, gpointer dst,                  \
 
 /* special pack code for float/double */
 static void
-MAKE_PACK_FUNC_NAME (float) (gint32 * src, gpointer dst, gint scale, gint count)
+MAKE_PACK_FUNC_NAME (float) (gint32 * src, gfloat * dst, gint scale, gint count)
 {
-  gfloat *p = (gfloat *) dst;
-
-  for (; count; count--) {
-    *p++ = INT2FLOAT (*src++);
-  }
+  for (; count; count--)
+    *dst++ = INT2FLOAT (*src++);
 }
 
 static void
-MAKE_PACK_FUNC_NAME (double) (gint32 * src, gpointer dst, gint scale,
+MAKE_PACK_FUNC_NAME (double) (gint32 * src, gdouble * dst, gint scale,
     gint count)
 {
-  gdouble *p = (gdouble *) dst;
+  for (; count; count--)
+    *dst++ = INT2DOUBLE (*src++);
+}
 
-  for (; count; count--) {
-    *p++ = INT2DOUBLE (*src++);
-  }
+static void
+MAKE_PACK_FUNC_NAME (float_hq) (gdouble * src, gfloat * dst, gint s, gint count)
+{
+  for (; count; count--)
+    *dst++ = (gfloat) (*src++);
+}
+
+static void
+MAKE_PACK_FUNC_NAME (double_hq) (gdouble * src, gdouble * dst, gint s,
+    gint count)
+{
+  /* FIXME: memcpy */
+  for (; count; count--)
+    *dst++ = *src++;
 }
 
 #define WRITE8(p, v)       GST_WRITE_UINT8 (p, v)
@@ -171,45 +194,49 @@ MAKE_PACK_FUNC (u32_be, 4, SIGNED, WRITE32_TO_BE);
 MAKE_PACK_FUNC (s32_be, 4, 0, WRITE32_TO_BE);
 
 static AudioConvertUnpack unpack_funcs[] = {
-  MAKE_UNPACK_FUNC_NAME (u8),
-  MAKE_UNPACK_FUNC_NAME (s8),
-  MAKE_UNPACK_FUNC_NAME (u8),
-  MAKE_UNPACK_FUNC_NAME (s8),
-  MAKE_UNPACK_FUNC_NAME (u16_le),
-  MAKE_UNPACK_FUNC_NAME (s16_le),
-  MAKE_UNPACK_FUNC_NAME (u16_be),
-  MAKE_UNPACK_FUNC_NAME (s16_be),
-  MAKE_UNPACK_FUNC_NAME (u24_le),
-  MAKE_UNPACK_FUNC_NAME (s24_le),
-  MAKE_UNPACK_FUNC_NAME (u24_be),
-  MAKE_UNPACK_FUNC_NAME (s24_be),
-  MAKE_UNPACK_FUNC_NAME (u32_le),
-  MAKE_UNPACK_FUNC_NAME (s32_le),
-  MAKE_UNPACK_FUNC_NAME (u32_be),
-  MAKE_UNPACK_FUNC_NAME (s32_be),
-  MAKE_UNPACK_FUNC_NAME (float),
-  MAKE_UNPACK_FUNC_NAME (double),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u8),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s8),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u8),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s8),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u16_le),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s16_le),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u16_be),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s16_be),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u24_le),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s24_le),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u24_be),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s24_be),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u32_le),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s32_le),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u32_be),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s32_be),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (double),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (float_hq),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (double_hq),
 };
 
 static AudioConvertPack pack_funcs[] = {
-  MAKE_PACK_FUNC_NAME (u8),
-  MAKE_PACK_FUNC_NAME (s8),
-  MAKE_PACK_FUNC_NAME (u8),
-  MAKE_PACK_FUNC_NAME (s8),
-  MAKE_PACK_FUNC_NAME (u16_le),
-  MAKE_PACK_FUNC_NAME (s16_le),
-  MAKE_PACK_FUNC_NAME (u16_be),
-  MAKE_PACK_FUNC_NAME (s16_be),
-  MAKE_PACK_FUNC_NAME (u24_le),
-  MAKE_PACK_FUNC_NAME (s24_le),
-  MAKE_PACK_FUNC_NAME (u24_be),
-  MAKE_PACK_FUNC_NAME (s24_be),
-  MAKE_PACK_FUNC_NAME (u32_le),
-  MAKE_PACK_FUNC_NAME (s32_le),
-  MAKE_PACK_FUNC_NAME (u32_be),
-  MAKE_PACK_FUNC_NAME (s32_be),
-  MAKE_PACK_FUNC_NAME (float),
-  MAKE_PACK_FUNC_NAME (double),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u8),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s8),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u8),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s8),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u16_le),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s16_le),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u16_be),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s16_be),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u24_le),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s24_le),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u24_be),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s24_be),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u32_le),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s32_le),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u32_be),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s32_be),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (double),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (float_hq),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (double_hq),
 };
 
 static gint
@@ -251,7 +278,7 @@ gboolean
 audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
     AudioConvertFmt * out)
 {
-  gint idx;
+  gint idx_in, idx_out;
 
   g_return_val_if_fail (ctx != NULL, FALSE);
   g_return_val_if_fail (in != NULL, FALSE);
@@ -265,13 +292,27 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
 
   gst_channel_mix_setup_matrix (ctx);
 
-  idx = audio_convert_get_func_index (in);
-  if (!(ctx->unpack = unpack_funcs[idx]))
+  idx_in = audio_convert_get_func_index (in);
+  if (!(ctx->unpack = unpack_funcs[idx_in]))
     goto not_supported;
 
-  idx = audio_convert_get_func_index (out);
-  if (!(ctx->pack = pack_funcs[idx]))
+  idx_out = audio_convert_get_func_index (out);
+  if (!(ctx->pack = pack_funcs[idx_out]))
     goto not_supported;
+
+  /* if both formats are float/double use double as intermediate format and
+   * and switch mixing */
+  if (in->is_int || out->is_int) {
+    GST_DEBUG ("use int mixing");
+    ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_int;
+  } else {
+    GST_DEBUG ("use float mixing");
+    ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_float;
+    if (!(ctx->unpack = unpack_funcs[idx_in + 2]))
+      goto not_supported;
+    if (!(ctx->pack = pack_funcs[idx_out + 2]))
+      goto not_supported;
+  }
 
   /* check if input is in default format */
   ctx->in_default = check_default (in);
@@ -287,6 +328,7 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
 
 not_supported:
   {
+    GST_INFO ("missing pack/unpack function");
     return FALSE;
   }
 }
@@ -325,7 +367,7 @@ gboolean
 audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
     gpointer dst, gint samples, gboolean src_writable)
 {
-  gint insize, outsize;
+  gint insize, outsize, size;
   gpointer outbuf, tmpbuf;
   gint biggest = 0;
 
@@ -341,10 +383,11 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
   outsize = ctx->out.unit_size * samples;
 
   /* find biggest temp buffer size */
+  size = (ctx->in.is_int || ctx->out.is_int) ? 32 : 64;
   if (!ctx->in_default)
-    biggest = insize * 32 / ctx->in.width;
+    biggest = insize * size / ctx->in.width;
   if (!ctx->mix_passthrough)
-    biggest = MAX (biggest, outsize * 32 / ctx->out.width);
+    biggest = MAX (biggest, outsize * size / ctx->out.width);
 
   /* see if one of the buffers can be used as temp */
   if (outsize >= biggest)
@@ -381,7 +424,7 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
       outbuf = dst;
 
     /* convert channels */
-    gst_channel_mix_mix (ctx, src, outbuf, samples);
+    ctx->channel_mix (ctx, src, outbuf, samples);
 
     src = outbuf;
   }
