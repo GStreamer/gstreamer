@@ -25,13 +25,14 @@
 
 #include "pygstvalue.h"
 
-
 static PyObject *gstvalue_class = NULL;
 static PyObject *gstfourcc_class = NULL;
 static PyObject *gstintrange_class = NULL;
 static PyObject *gstdoublerange_class = NULL;
 static PyObject *gstfraction_class = NULL;
 static PyObject *gstfractionrange_class = NULL;
+
+extern PyTypeObject PyGstBuffer_Type;
 
 /**
  * pygst_value_as_pyobject:
@@ -103,6 +104,8 @@ pygst_value_as_pyobject(const GValue *value, gboolean copy_boxed)
 			pygst_value_as_pyobject (min, copy_boxed),
 			pygst_value_as_pyobject (max, copy_boxed)),
 	 NULL);
+    } else if (GST_VALUE_HOLDS_BUFFER (value)) {
+      return pygstminiobject_new (gst_value_get_mini_object (value));
     } else {
       gchar buf[256];
       g_snprintf (buf, 256, "unknown type: %s", g_type_name (G_VALUE_TYPE (value)));
@@ -144,6 +147,9 @@ pygst_value_init_for_pyobject (GValue *value, PyObject *obj)
         PyErr_SetString(PyExc_TypeError, "Unexpected gst.Value instance");
         return FALSE;
       }
+    } else if (PyObject_IsInstance (obj, (PyObject *)&PyGstBuffer_Type)) {
+      PyErr_Clear ();
+      t = GST_TYPE_BUFFER;
     } else if (PyTuple_Check (obj)) {
       PyErr_Clear ();
       t = GST_TYPE_ARRAY;
@@ -259,6 +265,10 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
       PyErr_SetString(PyExc_TypeError, buf);
       return -1;
     }
+    return 0;
+  } else if (PyObject_IsInstance (obj, (PyObject *)&PyGstBuffer_Type)) {
+    VALUE_TYPE_CHECK (value, GST_TYPE_BUFFER);
+    gst_value_set_buffer (value, pygstminiobject_get(obj));
     return 0;
   } else if (PyTuple_Check (obj)) {
     gint i, len;
