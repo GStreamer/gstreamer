@@ -1,3 +1,9 @@
+2007-02-22  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c
+	(gst_base_audio_sink_init): Disable pull-mode activation until we
+	figure out how to make audio sinks go to PLAYING.
+
 2007-02-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audioconvert/audioconvert.c: (float), (double), (float_hq),

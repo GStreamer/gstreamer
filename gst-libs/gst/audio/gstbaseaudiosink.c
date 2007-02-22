@@ -178,7 +178,11 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
       (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
 
   GST_BASE_SINK (baseaudiosink)->can_activate_push = TRUE;
+#if 0
+  /* disabling until we fix state changes so that both READY_TO_PAUSED and
+     PAUSED_TO_PLAYING return SUCCESS */
   GST_BASE_SINK (baseaudiosink)->can_activate_pull = TRUE;
+#endif
 }
 
 static void
