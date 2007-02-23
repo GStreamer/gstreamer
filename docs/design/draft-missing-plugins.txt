@@ -2,7 +2,8 @@ What to do when a plugin is missing
 ===================================
 
 The mechanism and API described in this document requires GStreamer core and
-gst-plugins-base versions >= 0.10.12.
+gst-plugins-base versions >= 0.10.12. Further information on some aspects of
+this document can be found in the libgstbaseutils API reference.
 
 We only discuss playback pipelines for now.
 
@@ -128,14 +129,13 @@ A three step process:
   message into an identifier string describing the missing capability. This is
   done using the function gst_missing_plugin_message_get_installer_detail().
 
-  The application will then pass these strings to the external libgimme-codec
-  library [0] to initiate the download. Error handling and progress reporting
-  etc. will all be handled using libgimmecodec's API.
+  The application will then pass these strings to gst_install_plugins_async()
+  or gst_install_plugins_sync() to initiate the download. See the API
+  documentation there (libgstbaseutils, part of gst-plugins-base) for more
+  details.
 
   When new plugins have been installed, the application will have to initiate
   a re-scan of the GStreamer plugin registry using gst_update_registry().
-
-  [0] http://desrt.mcmaster.ca/code/libgimme-codec/
 
 
 4) Format of the (UTF-8) string ID passed to the external installer system
@@ -143,7 +143,7 @@ A three step process:
   The string is made up of several fields, separated by '|' characters.
   The fields are:
 
-    - plugin system identifier, ie. "gstreamer.net"
+    - plugin system identifier, ie. "gstreamer"
       This identifier determines the format of the rest of the detail string.
       Automatic plugin installers should not process detail strings with
       unknown identifiers. This allows other plugin-based libraries to use
@@ -163,12 +163,19 @@ A three step process:
       e.g. "Vorbis audio decoder"
 
     - identifier string for the required component, e.g.
+
          - urisource-$(PROTOCOL_REQUIRED)
              e.g. urisource-http or urisource-mms
+
          - element-$(ELEMENT_REQUIRED),
              e.g. element-ffmpegcolorspace
+
          - decoder-$(CAPS_REQUIRED)
-             e.g. decoder-audio/x-vorbis or decoder-application/ogg
+             e.g. decoder-audio/x-vorbis or
+                  decoder-application/ogg or
+                  decoder-audio/mpeg, mpegversion=(int)4 or
+                  decoder-video/mpeg, systemstream=(boolean)true, mpegversion=(int)2
+
          - encoder-$(CAPS_REQUIRED)
              e.g. encoder-audio/x-vorbis
 
@@ -177,7 +184,7 @@ A three step process:
 
   An entire ID string might then look like this, for example:
 
-    gstreamer.net|0.10|totem|Vorbis audio decoder|decoder-audio/x-vorbis
+    gstreamer|0.10|totem|Vorbis audio decoder|decoder-audio/x-vorbis
 
   Plugin installers parsing this ID string should expect further fields also
   separated by '|' symbols and either ignore them, warn the user, or error
@@ -222,6 +229,18 @@ A three step process:
      element-vorbistag
      encoder-audio/x-vorbis
 
+   BUT could also be like this (from the faad element in this case):
+
+     decoder-audio/mpeg, mpegversion=(int){ 2, 4 }
+
+   NOTE that this does not exactly match the caps string that the installer
+   will get from the application. The application will always ever ask for
+   one of
+
+     decoder-audio/mpeg, mpegversion=(int)2
+     decoder-audio/mpeg, mpegversion=(int)4
+
+
  - when introspecting, keep in mind that there are GStreamer plugins that
    in turn load external plugins. Examples of these are pitfdll, ladspa, or
    the GStreamer libvisual plugin. Those plugins will only announce elements
@@ -230,3 +249,8 @@ A three step process:
    case, but may become an issue in future when applications like buzztard,
    jokosher or pitivi start requestion elements by name, for example ladspa
    effect elements or so.
+
+
+7) Further references:
+
+http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gst-plugins-base-libs/html/gstreamer-base-utils.html

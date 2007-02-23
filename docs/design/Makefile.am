@@ -3,6 +3,7 @@ EXTRA_DIST = \
 	draft-ghostpads.txt \
 	draft-klass.txt \
 	draft-latency.txt \
+	draft-missing-plugins.txt \
 	draft-push-pull.txt \
 	part-activation.txt \
 	part-block.txt \

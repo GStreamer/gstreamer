@@ -1,3 +1,13 @@
+2007-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/design/Makefile.am:
+	* docs/design/draft-missing-plugins.txt:
+	* docs/random/draft-missing-plugins.txt:
+	  Some small updates: update plugin system identifier prefix
+	  ('gstreamer.net' to 'gstreamer'), mention our new install
+	  API in libgstbaseutils rather than libgimme-codec, add
+	  reference to the online docs.
+
 2007-02-21  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* win32/common/config.h:
