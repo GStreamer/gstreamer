@@ -70,7 +70,7 @@
 
 #include <string.h>
 
-#define GST_DETAIL_STRING_MARKER "gstreamer.net"
+#define GST_DETAIL_STRING_MARKER "gstreamer"
 
 typedef enum
 {

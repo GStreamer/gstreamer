@@ -1,3 +1,14 @@
+2007-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/utils/install-plugins.c:
+	* gst-libs/gst/utils/missing-plugins.c:
+	* tests/check/libs/utils.c: (missing_msg_check_getters):
+	  Change GStreamer marker prefix in detail string from 'gstreamer.net'
+	  to just 'gstreamer'. Document the caps string component of the
+	  decoder/encoder detail a bit better, since not everyone will be
+	  familiar with the GStreamer media type/caps system (but they better
+	  enjoy nested itemized lists).
+
 2007-02-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/netbuffer/gstnetbuffer.c:

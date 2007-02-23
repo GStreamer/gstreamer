@@ -49,7 +49,7 @@ missing_msg_check_getters (GstMessage * msg)
   str = gst_missing_plugin_message_get_installer_detail (msg);
   fail_unless (str != NULL);
   fail_unless (*str != '\0');
-  fail_unless (g_str_has_prefix (str, "gstreamer.net|"));
+  fail_unless (g_str_has_prefix (str, "gstreamer|"));
   g_free (str);
 
   str = gst_missing_plugin_message_get_description (msg);

@@ -169,7 +169,7 @@
  *  </para></listitem>
  *  <listitem><para>
  *    one 'installer detail string' argument for each plugin to be installed;
- *    these strings will have a <literal>gstreamer.net</literal> prefix; the
+ *    these strings will have a <literal>gstreamer</literal> prefix; the
  *    exact format of the detail string is explained below
  *  </para></listitem>
  * </itemizedlist>
@@ -183,7 +183,7 @@
  * The fields are:
  * <itemizedlist>
  *   <listitem><para>
- *    plugin system identifier, ie. "gstreamer.net"
+ *    plugin system identifier, ie. "gstreamer"
  *   </para><para>
  *    This identifier determines the format of the rest of the detail string.
  *    Automatic plugin installers should not process detail strings with
@@ -219,8 +219,13 @@
  *       element-$(ELEMENT_REQUIRED), e.g. element-ffmpegcolorspace
  *     </para></listitem>
  *     <listitem><para>
- *       decoder-$(CAPS_REQUIRED), e.g. decoder-audio/x-vorbis or
- *       decoder-application/ogg
+ *       decoder-$(CAPS_REQUIRED), e.g. (do read below for more details!):
+ *       <itemizedlist>
+ *         <listitem><para>decoder-audio/x-vorbis</para></listitem>
+ *         <listitem><para>decoder-application/ogg</para></listitem>
+ *         <listitem><para>decoder-audio/mpeg, mpegversion=(int)4</para></listitem>
+ *         <listitem><para>decoder-video/mpeg, systemstream=(boolean)true, mpegversion=(int)2</para></listitem>
+         </itemizedlist>
  *     </para></listitem>
  *     <listitem><para>
  *       encoder-$(CAPS_REQUIRED), e.g. encoder-audio/x-vorbis
@@ -235,13 +240,44 @@
  * <para>
  * An entire ID string might then look like this, for example:
  * <literal>
- * gstreamer.net|0.10|totem|Vorbis audio decoder|decoder-audio/x-vorbis
+ * gstreamer|0.10|totem|Vorbis audio decoder|decoder-audio/x-vorbis
  * </literal>
  * </para>
  * <para>
  * Plugin installers parsing this ID string should expect further fields also
  * separated by '|' symbols and either ignore them, warn the user, or error
  * out when encountering them.
+ * </para>
+ * <para>
+ * Those unfamiliar with the GStreamer 'caps' system should note a few things
+ * about the caps string used in the above decoder/encoder case:
+ *   <itemizedlist>
+ *     <listitem><para>
+ *       the first part ("video/mpeg") of the caps string is a GStreamer media
+ *       type and <emphasis>not</emphasis> a MIME type. Wherever possible, the
+ *       GStreamer media type will be the same as the corresponding MIME type,
+ *       but often it is not.
+ *     </para></listitem>
+ *     <listitem><para>
+ *       a caps string may or may not have additional comma-separated fields
+ *       of various types (as seen in the examples above)
+ *     </para></listitem>
+ *     <listitem><para>
+ *       the caps string of a 'required' component (as above) will always have
+ *       fields with fixed values, whereas an introspected string (see below)
+ *       may have fields with non-fixed values. Compare for example:
+ *       <itemizedlist>
+ *         <listitem><para>
+ *           <literal>audio/mpeg, mpegversion=(int)4</literal> vs.
+ *           <literal>audio/mpeg, mpegversion=(int){2, 4}</literal>
+ *         </para></listitem>
+ *         <listitem><para>
+ *           <literal>video/mpeg, mpegversion=(int)2</literal> vs.
+ *           <literal>video/mpeg, systemstream=(boolean){ true, false}, mpegversion=(int)[1, 2]</literal>
+ *         </para></listitem>
+ *       </itemizedlist>
+ *     </para></listitem>
+ *   </itemizedlist>
  * </para>
  * <para>
  * <emphasis>4. Exit codes the installer should return</emphasis>
