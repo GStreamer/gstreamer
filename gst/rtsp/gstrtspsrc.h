@@ -130,6 +130,7 @@ struct _GstRTSPSrc {
 
   /* properties */
   gchar           *location;
+  gchar           *req_location; /* Sanitised URL to use in network requests */
   RTSPUrl         *url;
   RTSPLowerTrans   protocols;
   gboolean         debug;
@@ -139,6 +140,7 @@ struct _GstRTSPSrc {
   /* state */
   gchar           *content_base;
   RTSPLowerTrans   cur_protocols;
+  gboolean         tried_url_auth;
 
   /* supported methods */
   gint             methods;

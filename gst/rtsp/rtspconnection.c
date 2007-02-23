@@ -143,6 +143,10 @@ rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
   newconn->session_id[0] = 0;
   newconn->state = RTSP_STATE_INIT;
 
+  newconn->auth_method = RTSP_AUTH_NONE;
+  newconn->username = NULL;
+  newconn->passwd = NULL;
+
   *conn = newconn;
 
   return RTSP_OK;
@@ -231,6 +235,30 @@ append_header (gint key, gchar * value, GString * str)
   g_string_append_printf (str, "%s: %s\r\n", keystr, value);
 }
 
+static void
+append_auth_header (RTSPConnection * conn, RTSPMessage * message, GString * str)
+{
+  switch (conn->auth_method) {
+    case RTSP_AUTH_BASIC:{
+      gchar *user_pass =
+          g_strdup_printf ("%s:%s", conn->username, conn->passwd);
+      gchar *user_pass64 =
+          g_base64_encode ((guchar *) user_pass, strlen (user_pass));
+      gchar *auth_string = g_strdup_printf ("Basic %s", user_pass64);
+
+      append_header (RTSP_HDR_AUTHORIZATION, auth_string, str);
+
+      g_free (user_pass);
+      g_free (user_pass64);
+      g_free (auth_string);
+      break;
+    }
+    default:
+      /* Nothing to do */
+      break;
+  }
+}
+
 RTSPResult
 rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
 {
@@ -278,11 +306,14 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
 
   /* append session id if we have one */
   if (conn->session_id[0] != '\0') {
-    rtsp_message_add_header (message, RTSP_HDR_SESSION, conn->session_id);
+    append_header (RTSP_HDR_SESSION, conn->session_id, str);
   }
 
   /* append headers */
   g_hash_table_foreach (message->hdr_fields, (GHFunc) append_header, str);
+
+  /* Append any authentication headers */
+  append_auth_header (conn, message, str);
 
   /* append Content-Length and body if needed */
   if (message->body != NULL && message->body_size > 0) {
@@ -786,6 +817,9 @@ rtsp_connection_free (RTSPConnection * conn)
   WSACleanup ();
 #endif
 
+  g_free (conn->username);
+  g_free (conn->passwd);
+
   g_free (conn);
 
   return RTSP_OK;
@@ -810,5 +844,31 @@ rtsp_connection_flush (RTSPConnection * conn, gboolean flush)
       }
     }
   }
+  return RTSP_OK;
+}
+
+RTSPResult
+rtsp_connection_set_auth (RTSPConnection * conn, RTSPAuthMethod method,
+    gchar * user, gchar * pass)
+{
+  /* Digest isn't implemented yet */
+  if (method == RTSP_AUTH_DIGEST)
+    return RTSP_ENOTIMPL;
+
+  /* Make sure the username and passwd are being set for authentication */
+  if (method == RTSP_AUTH_NONE && (user == NULL || pass == NULL))
+    return RTSP_EINVAL;
+
+  /* ":" chars are not allowed in usernames for basic auth */
+  if (method == RTSP_AUTH_BASIC && g_strrstr (user, ":") != NULL)
+    return RTSP_EINVAL;
+
+  g_free (conn->username);
+  g_free (conn->passwd);
+
+  conn->auth_method = method;
+  conn->username = g_strdup (user);
+  conn->passwd = g_strdup (pass);
+
   return RTSP_OK;
 }

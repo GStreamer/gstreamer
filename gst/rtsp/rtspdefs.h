@@ -99,6 +99,16 @@ typedef enum {
   RTSP_TEARDOWN         = (1 << 10),
 } RTSPMethod;
 
+/* Authentication methods, ordered by strength */
+typedef enum {
+  RTSP_AUTH_NONE    = 0x00,
+  RTSP_AUTH_BASIC   = 0x01,
+  RTSP_AUTH_DIGEST  = 0x02
+} RTSPAuthMethod;
+
+/* Strongest available authentication method */
+#define RTSP_AUTH_MAX RTSP_AUTH_DIGEST
+
 typedef enum {
   RTSP_HDR_INVALID,
 

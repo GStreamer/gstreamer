@@ -64,6 +64,11 @@ typedef struct _RTSPConnection
   RTSPState     state;
   gint          cseq;                   /* sequence number */
   gchar         session_id[512];        /* session id */
+
+  /* Authentication */
+  RTSPAuthMethod auth_method;
+  gchar *username;
+  gchar *passwd;
 } RTSPConnection;
 
 /* opening/closing a connection */
@@ -77,6 +82,10 @@ RTSPResult      rtsp_connection_send    (RTSPConnection *conn, RTSPMessage *mess
 RTSPResult      rtsp_connection_receive (RTSPConnection *conn, RTSPMessage *message);
 
 RTSPResult      rtsp_connection_flush   (RTSPConnection *conn, gboolean flush);
+
+/* Configure Authentication data */
+RTSPResult      rtsp_connection_set_auth (RTSPConnection *conn, 
+                    RTSPAuthMethod method, gchar *user, gchar *pass);
 
 G_END_DECLS
 

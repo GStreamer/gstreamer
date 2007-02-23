@@ -177,3 +177,20 @@ rtsp_url_get_port (RTSPUrl * url, guint16 * port)
 
   return RTSP_OK;
 }
+
+gchar *
+rtsp_url_get_request_uri (RTSPUrl * url)
+{
+  gchar *uri;
+
+  g_return_val_if_fail (url != NULL, NULL);
+
+  if (url->port != 0) {
+    uri = g_strdup_printf ("rtsp://%s:%u/%s", url->host, url->port,
+        url->abspath);
+  } else {
+    uri = g_strdup_printf ("rtsp://%s/%s", url->host, url->abspath);
+  }
+
+  return uri;
+}

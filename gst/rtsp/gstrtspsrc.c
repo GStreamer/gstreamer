@@ -177,6 +177,12 @@ static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message);
 
+static gboolean gst_rtspsrc_setup_auth (GstRTSPSrc * src,
+    RTSPMessage * response);
+static gboolean gst_rtspsrc_try_send (GstRTSPSrc * src, RTSPMessage * request,
+    RTSPMessage * response, RTSPStatusCode * code);
+
+
 static gboolean gst_rtspsrc_open (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_play (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_pause (GstRTSPSrc * src);
@@ -301,6 +307,7 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->stream_rec_lock);
   g_cond_free (rtspsrc->loop_cond);
   g_free (rtspsrc->location);
+  g_free (rtspsrc->req_location);
   g_free (rtspsrc->content_base);
   rtsp_url_free (rtspsrc->url);
 
@@ -439,7 +446,8 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
       stream->setup_url =
           g_strdup_printf ("%s%s", src->content_base, control_url);
     else
-      stream->setup_url = g_strdup_printf ("%s/%s", src->location, control_url);
+      stream->setup_url =
+          g_strdup_printf ("%s/%s", src->req_location, control_url);
   }
   GST_DEBUG_OBJECT (src, " setup: %s", GST_STR_NULL (stream->setup_url));
 
@@ -1533,6 +1541,145 @@ send_error:
   }
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
+const gchar *
+rtsp_auth_method_to_string (RTSPAuthMethod method)
+{
+  gint index = 0;
+
+  while (method != 0) {
+    index++;
+    method >>= 1;
+  }
+  switch (index) {
+    case 0:
+      return "None";
+    case 1:
+      return "Basic";
+    case 2:
+      return "Digest";
+  }
+
+  return "Unknown";
+}
+#endif
+
+/* Parse a WWW-Authenticate Response header and determine the 
+ * available authentication methods
+ * FIXME: To implement digest or other auth types, we should extract
+ * the authentication tokens that the server provided for each method
+ * into an array of structures and give those to the connection object.
+ *
+ * This code should also cope with the fact that each WWW-Authenticate
+ * header can contain multiple challenge methods + tokens 
+ *
+ * At the moment, we just do a minimal check for Basic auth and don't
+ * even parse out the realm */
+static void
+gst_rtspsrc_parse_auth_hdr (gchar * hdr, RTSPAuthMethod * methods)
+{
+  gchar *start;
+
+  g_return_if_fail (hdr != NULL);
+  g_return_if_fail (methods != NULL);
+
+  /* Skip whitespace at the start of the string */
+  for (start = hdr; start[0] != '\0' && g_ascii_isspace (start[0]); start++);
+
+  if (g_ascii_strncasecmp (start, "basic", 5) == 0)
+    *methods |= RTSP_AUTH_BASIC;
+}
+
+/**
+ * gst_rtspsrc_setup_auth:
+ * @src: the rtsp source
+ *
+ * Configure a username and password and auth method on the 
+ * connection object based on a response we received from the 
+ * peer.
+ *
+ * Currently, this requires that a username and password were supplied
+ * in the uri. In the future, they may be requested on demand by sending
+ * a message up the bus.
+ *
+ * Returns: TRUE if authentication information could be set up correctly.
+ */
+static gboolean
+gst_rtspsrc_setup_auth (GstRTSPSrc * src, RTSPMessage * response)
+{
+  gchar *user = NULL;
+  gchar *pass = NULL;
+  RTSPAuthMethod avail_methods = RTSP_AUTH_NONE;
+  RTSPAuthMethod method;
+  RTSPResult auth_result;
+  gchar *hdr;
+
+  /* Identify the available auth methods and see if any are supported */
+  if (rtsp_message_get_header (response, RTSP_HDR_WWW_AUTHENTICATE, &hdr) ==
+      RTSP_OK) {
+    gst_rtspsrc_parse_auth_hdr (hdr, &avail_methods);
+  }
+
+  if (avail_methods == RTSP_AUTH_NONE)
+    goto no_auth_available;
+
+  /* FIXME: For digest auth, if the response indicates that the session
+   * data are stale, we just update them in the connection object and
+   * return TRUE to retry the request */
+
+  /* Do we have username and password available? */
+  if (src->url != NULL && !src->tried_url_auth) {
+    user = src->url->user;
+    pass = src->url->passwd;
+    src->tried_url_auth = TRUE;
+    GST_DEBUG_OBJECT (src,
+        "Attempting authentication using credentials from the URL");
+  }
+
+  /* FIXME: If the url didn't contain username and password or we tried them
+   * already, request a username and passwd from the application via some kind
+   * of credentials request message */
+
+  /* If we don't have a username and passwd at this point, bail out. */
+  if (user == NULL || pass == NULL)
+    goto no_user_pass;
+
+  /* Try to configure for each available authentication method, strongest to
+   * weakest */
+  for (method = RTSP_AUTH_MAX; method != RTSP_AUTH_NONE; method >>= 1) {
+    /* Check if this method is available on the server */
+    if ((method & avail_methods) == 0)
+      continue;
+
+    /* Pass the credentials to the connection to try on the next request */
+    auth_result =
+        rtsp_connection_set_auth (src->connection, method, user, pass);
+    /* INVAL indicates an invalid username/passwd were supplied, so we'll just
+     * ignore it and end up retrying later */
+    if (auth_result == RTSP_OK || auth_result == RTSP_EINVAL) {
+      GST_DEBUG_OBJECT (src, "Attempting %s authentication",
+          rtsp_auth_method_to_string (method));
+      break;
+    }
+  }
+
+  if (method == RTSP_AUTH_NONE)
+    goto no_auth_available;
+
+  return TRUE;
+
+no_auth_available:
+  /* Output an error indicating that we couldn't connect because there were
+   * no supported authentication protocols */
+  GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
+      ("No supported authentication protocol was found"));
+  return FALSE;
+no_user_pass:
+  /* We don't fire an error message, we just return FALSE and let the
+   * normal NOT_AUTHORIZED error be propagated */
+  return FALSE;
+}
+
 /**
  * gst_rtspsrc_send:
  * @src: the rtsp source
@@ -1548,10 +1695,63 @@ send_error:
  * If @code is NULL, this function will return FALSE (with an invalid @response
  * message) if the response code was not 200 (OK).
  *
+ * If the attempt results in an authentication failure, then this will attempt
+ * to retrieve authentication credentials via gst_rtspsrc_setup_auth and retry
+ * the request.
+ *
  * Returns: TRUE if the processing was successful.
  */
 gboolean
 gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
+    RTSPMessage * response, RTSPStatusCode * code)
+{
+  RTSPStatusCode int_code = RTSP_STS_OK;
+  gboolean res;
+  gboolean retry;
+
+  do {
+    retry = FALSE;
+    res = gst_rtspsrc_try_send (src, request, response, &int_code);
+
+    if (int_code == RTSP_STS_UNAUTHORIZED) {
+      if (gst_rtspsrc_setup_auth (src, response)) {
+        /* Try the request/response again after configuring the auth info
+         * and loop again */
+        retry = TRUE;
+      }
+    }
+  } while (retry == TRUE);
+
+  /* If the user requested the code, let them handle errors, otherwise
+   * post an error below */
+  if (code != NULL)
+    *code = int_code;
+  else if (int_code != RTSP_STS_OK)
+    goto error_response;
+
+  return res;
+
+error_response:
+  {
+    switch (response->type_data.response.code) {
+      case RTSP_STS_NOT_FOUND:
+        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), ("%s",
+                response->type_data.response.reason));
+        break;
+      default:
+        GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+            ("Got error response: %d (%s).", response->type_data.response.code,
+                response->type_data.response.reason));
+        break;
+    }
+    /* we return FALSE so we should unset the response ourselves */
+    rtsp_message_unset (response);
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_rtspsrc_try_send (GstRTSPSrc * src, RTSPMessage * request,
     RTSPMessage * response, RTSPStatusCode * code)
 {
   RTSPResult res;
@@ -1590,12 +1790,14 @@ next:
   }
 
   thecode = response->type_data.response.code;
-  /* if the caller wanted the result code, we store it. Else we check if it's
-   * OK. */
+
+  /* if the caller wanted the result code, we store it. */
   if (code)
     *code = thecode;
-  else if (thecode != RTSP_STS_OK)
-    goto error_response;
+
+  /* If the request didn't succeed, bail out before doing any more */
+  if (thecode != RTSP_STS_OK)
+    return FALSE;
 
   /* store new content base if any */
   rtsp_message_get_header (response, RTSP_HDR_CONTENT_BASE, &content_base);
@@ -1629,23 +1831,6 @@ receive_error:
 handle_request_failed:
   {
     /* ERROR was posted */
-    return FALSE;
-  }
-error_response:
-  {
-    switch (response->type_data.response.code) {
-      case RTSP_STS_NOT_FOUND:
-        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), ("%s",
-                response->type_data.response.reason));
-        break;
-      default:
-        GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
-            ("Got error response: %d (%s).", response->type_data.response.code,
-                response->type_data.response.reason));
-        break;
-    }
-    /* we return FALSE so we should unset the response ourselves */
-    rtsp_message_unset (response);
     return FALSE;
   }
 }
@@ -2058,20 +2243,21 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   /* can't continue without a valid url */
   if (G_UNLIKELY (src->url == NULL))
     goto no_url;
+  src->tried_url_auth = FALSE;
 
   /* create connection */
-  GST_DEBUG_OBJECT (src, "creating connection (%s)...", src->location);
+  GST_DEBUG_OBJECT (src, "creating connection (%s)...", src->req_location);
   if ((res = rtsp_connection_create (src->url, &src->connection)) < 0)
     goto could_not_create;
 
   /* connect */
-  GST_DEBUG_OBJECT (src, "connecting (%s)...", src->location);
+  GST_DEBUG_OBJECT (src, "connecting (%s)...", src->req_location);
   if ((res = rtsp_connection_connect (src->connection)) < 0)
     goto could_not_connect;
 
   /* create OPTIONS */
   GST_DEBUG_OBJECT (src, "create options...");
-  res = rtsp_message_init_request (&request, RTSP_OPTIONS, src->location);
+  res = rtsp_message_init_request (&request, RTSP_OPTIONS, src->req_location);
   if (res < 0)
     goto create_request_failed;
 
@@ -2086,7 +2272,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   /* create DESCRIBE */
   GST_DEBUG_OBJECT (src, "create describe...");
-  res = rtsp_message_init_request (&request, RTSP_DESCRIBE, src->location);
+  res = rtsp_message_init_request (&request, RTSP_DESCRIBE, src->req_location);
   if (res < 0)
     goto create_request_failed;
 
@@ -2177,11 +2363,8 @@ create_request_failed:
   }
 send_error:
   {
-    gchar *str = rtsp_strresult (res);
-
-    GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
-        ("Could not send message. (%s)", str));
-    g_free (str);
+    /* Don't post a message - the rtsp_send method will have
+     * taken care of it because we passed NULL for the response code */
     goto cleanup_error;
   }
 methods_error:
@@ -2232,7 +2415,8 @@ gst_rtspsrc_close (GstRTSPSrc * src)
 
   if (src->methods & RTSP_PLAY) {
     /* do TEARDOWN */
-    res = rtsp_message_init_request (&request, RTSP_TEARDOWN, src->location);
+    res =
+        rtsp_message_init_request (&request, RTSP_TEARDOWN, src->req_location);
     if (res < 0)
       goto create_request_failed;
 
@@ -2317,7 +2501,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "PLAY...");
 
   /* do play */
-  res = rtsp_message_init_request (&request, RTSP_PLAY, src->location);
+  res = rtsp_message_init_request (&request, RTSP_PLAY, src->req_location);
   if (res < 0)
     goto create_request_failed;
 
@@ -2378,7 +2562,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
 
   GST_DEBUG_OBJECT (src, "PAUSE...");
   /* do pause */
-  res = rtsp_message_init_request (&request, RTSP_PAUSE, src->location);
+  res = rtsp_message_init_request (&request, RTSP_PAUSE, src->req_location);
   if (res < 0)
     goto create_request_failed;
 
@@ -2541,11 +2725,13 @@ gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   rtsp_url_free (src->url);
   src->url = newurl;
   g_free (src->location);
+  g_free (src->req_location);
   src->location = g_strdup (uri);
-  if (!g_str_has_prefix (src->location, "rtsp://"))
-    memmove (src->location + 4, src->location + 5, strlen (src->location) - 4);
+  src->req_location = rtsp_url_get_request_uri (src->url);
 
   GST_DEBUG_OBJECT (src, "set uri: %s", GST_STR_NULL (uri));
+  GST_DEBUG_OBJECT (src, "request uri is: %s",
+      GST_STR_NULL (src->req_location));
 
   return TRUE;
 

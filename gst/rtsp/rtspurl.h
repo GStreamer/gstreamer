@@ -64,6 +64,7 @@ typedef struct _RTSPUrl {
 
 RTSPResult      rtsp_url_parse          (const gchar *urlstr, RTSPUrl **url);
 void            rtsp_url_free           (RTSPUrl *url);
+gchar           *rtsp_url_get_request_uri (RTSPUrl *url);
 
 RTSPResult      rtsp_url_set_port       (RTSPUrl *url, guint16 port);
 RTSPResult      rtsp_url_get_port       (RTSPUrl *url, guint16 *port);
