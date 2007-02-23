@@ -411,7 +411,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         gst_message_parse_new_clock (message, &clock);
 
-        g_print ("New clock: %s\n", GST_OBJECT_NAME (clock));
+        g_print ("New clock: %s\n", (clock ? GST_OBJECT_NAME (clock) : "NULL"));
         break;
       }
       case GST_MESSAGE_EOS:
