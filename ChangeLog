@@ -1,5 +1,11 @@
 2007-02-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybin.c:
+	  Improve docs: point out that the application needs to assist playbin
+	  with buffering.
+
+2007-02-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/utils/install-plugins.c:
 	* gst-libs/gst/utils/missing-plugins.c:
 	* tests/check/libs/utils.c: (missing_msg_check_getters):

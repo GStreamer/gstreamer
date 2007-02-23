@@ -161,28 +161,33 @@
  * new_state=PAUSED), since before that the list might not be complete yet or
  * not contain all available information (like language-codes).
  * </para>
- * <title>Buffering status</title>
+ * <title>Buffering</title>
  * <para>
- * Playbin handles buffering automatically. When playbin is buffering, it
- * will post BUFFERING messages on the bus with a percentage value that
- * shows the progress of the buffering. Applications may want to show this
- * information to the user in some form or another. Here is how to extract
- * the percentage information from the message:
+ * Playbin handles buffering automatically for the most part, but applications
+ * need to handle parts of the buffering process as well. Whenever playbin is
+ * buffering, it will post BUFFERING messages on the bus with a percentage
+ * value that shows the progress of the buffering process. Applications need
+ * to set playbin to PLAYING or PAUSED state in response to these messages.
+ * They may also want to convey the buffering progress to the user in some
+ * way. Here is how to extract the percentage information from the message
+ * (requires GStreamer >= 0.10.11):
  * </para>
  * <para>
  * <programlisting>
  * switch (GST_MESSAGE_TYPE (msg)) {
  *   case GST_MESSAGE_BUFFERING: {
  *     gint percent = 0;
- *     gst_structure_get_int (msg-&gt;structure, "buffer-percent", &amp;percent);
+ *     gst_message_parse_buffering (msg, &amp;percent);
  *     g_print ("Buffering (%%u percent done)", percent);
  *     break;
  *   }
  *   ...
  * }
  * </programlisting>
- * Note that application should keep the pipeline in the PAUSED state when a
- * GST_MESSAGE_BUFFERING message is received with a buffer-percent < 100.
+ * Note that applications should keep/set the pipeline in the PAUSED state when
+ * a BUFFERING message is received with a buffer percent value < 100 and set
+ * the pipeline back to PLAYING state when a BUFFERING message with a value
+ * of 100 percent is received (if PLAYING is the desired state, that is).
  * </para>
  * <title>Embedding the video window in your application</title>
  * <para>
