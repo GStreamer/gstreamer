@@ -1,5 +1,14 @@
 2007-02-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/rtsp/Makefile.am:
+	* gst/rtsp/rtspconnection.c: (append_auth_header),
+	(rtsp_connection_send), (rtsp_connection_set_auth):
+	g_base64_encode is a GLib 2.12 function. Use an equivalent taken
+	from icecast to replace it. Relicensed from GPL courtesy of Mike
+	Smith.
+
+2007-02-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_finalize),
 	(gst_rtspsrc_create_stream), (rtsp_auth_method_to_string),
 	(gst_rtspsrc_parse_auth_hdr), (gst_rtspsrc_setup_auth),

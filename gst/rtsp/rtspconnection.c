@@ -69,6 +69,7 @@
 #endif
 
 #include "rtspconnection.h"
+#include "base64.h"
 
 /* the select call is also performed on the control sockets, that way
  * we can send special commands to unlock or restart the select call */
@@ -242,8 +243,7 @@ append_auth_header (RTSPConnection * conn, RTSPMessage * message, GString * str)
     case RTSP_AUTH_BASIC:{
       gchar *user_pass =
           g_strdup_printf ("%s:%s", conn->username, conn->passwd);
-      gchar *user_pass64 =
-          g_base64_encode ((guchar *) user_pass, strlen (user_pass));
+      gchar *user_pass64 = util_base64_encode (user_pass, strlen (user_pass));
       gchar *auth_string = g_strdup_printf ("Basic %s", user_pass64);
 
       append_header (RTSP_HDR_AUTHORIZATION, auth_string, str);
