@@ -1,3 +1,17 @@
+2007-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* ext/gsm/Makefile.am:
+	* ext/ladspa/Makefile.am:
+	* ext/wavpack/Makefile.am:
+	* gst/equalizer/Makefile.am:
+	* gst/filter/Makefile.am:
+	* gst/mve/Makefile.am:
+	* gst/nsf/Makefile.am:
+	* gst/replaygain/Makefile.am:
+	* gst/speed/Makefile.am:
+	  Fix build with LDFLAGS='-Wl,-z,defs'.
+
 2007-02-20  Sébastien Moutte  <sebastien@moutte.net>
 
 	* sys/directsound/gstdirectsoundsink.c:

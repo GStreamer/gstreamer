@@ -6,7 +6,8 @@ libgstfilter_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFL
 libgstfilter_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
-	$(GST_CONTROLLER_LIBS)
+	$(GST_CONTROLLER_LIBS) \
+	$(LIBM)
 
 libgstfilter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 

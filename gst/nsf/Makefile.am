@@ -27,7 +27,7 @@ NOSEFART_INCLUDES=fmopl.h \
 libgstnsf_la_SOURCES = gstnsf.c $(NOSEFART_SOURCES)
 
 libgstnsf_la_CFLAGS = $(GST_CFLAGS) -DNSF_PLAYER
-libgstnsf_la_LIBADD = $(GST_LIBS)
+libgstnsf_la_LIBADD = $(GST_LIBS) $(LIBM)
 libgstnsf_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstnsf.h $(NOSEFART_INCLUDES)
