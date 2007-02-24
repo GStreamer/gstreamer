@@ -1,3 +1,8 @@
+2007-02-24  Michael Smith  <msmith@fluendo.com>
+
+	* testsuite/test_caps.py:
+	  Add test for gst.Buffer in caps.
+
 2007-02-22  Michael Smith  <msmith@fluendo.com>
 
 	* gst/pygstvalue.c: (pygst_value_as_pyobject),

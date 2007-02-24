@@ -47,6 +47,17 @@ class CapsTest(TestCase):
         mime = structure.get_name()
         assert mime == 'video/x-raw-rgb'
 
+    def testCapsContainingMiniObjects(self):
+        # buffer contains hex encoding of ascii 'abcd'
+        caps = gst.Caps("video/x-raw-yuv, buf=(buffer)61626364")
+        assert isinstance(caps[0]['buf'], gst.Buffer)
+
+        buf = gst.Buffer("1234")
+        caps[0]['buf2'] = buf
+        buf2 = caps[0]['buf2']
+        assert buf2 == buf
+
+
     def testCapsConstructEmpty(self):
         caps = gst.Caps()
         assert isinstance(caps, gst.Caps)
@@ -90,7 +101,7 @@ class CapsTest(TestCase):
         assert isinstance(struct['height'], float)
         assert struct['height'] == 20.0
 
-    def testCapsRefernceStructs(self):
+    def testCapsReferenceStructs(self):
         'test that shows why it\'s not a good idea to use structures by reference'
         caps = gst.Caps('hi/mom,width=0')
         structure = caps[0]
