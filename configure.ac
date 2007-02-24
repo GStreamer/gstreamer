@@ -186,6 +186,10 @@ dnl For interactive UNIX (a Sun thing)
 dnl FIXME: this adds -lcposix to LIBS, but I doubt we use LIBS
 AC_ISC_POSIX
 
+dnl libm, for sin() etc.
+AC_CHECK_LIBM
+AC_SUBST(LIBM)
+
 dnl *** checks for header files ***
 
 dnl check if we have ANSI C header files
