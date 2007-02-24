@@ -205,6 +205,10 @@ GST_PLUGIN_DOCS([1.3],[2.1])
 
 dnl *** checks for libraries ***
 
+dnl check for libm, for sin()
+AC_CHECK_LIBM
+AC_SUBST(LIBM)
+
 dnl *** checks for header files ***
 
 dnl check if we have ANSI C header files

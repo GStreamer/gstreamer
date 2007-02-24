@@ -1,3 +1,21 @@
+2007-02-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Loïc Minier <lool+gnome at via ecp fr>
+
+	* configure.ac:
+	* ext/annodex/Makefile.am:
+	* ext/jpeg/Makefile.am:
+	* ext/speex/Makefile.am:
+	* gst/alpha/Makefile.am:
+	* gst/cutter/Makefile.am:
+	* gst/debug/Makefile.am:
+	* gst/effectv/Makefile.am:
+	* gst/goom/Makefile.am:
+	* gst/level/Makefile.am:
+	* gst/smpte/Makefile.am:
+	* gst/videofilter/Makefile.am:
+	  Fix build with LDFLAGS='-Wl,-z,defs' (#410997)
+
 2007-02-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/rtsp/Makefile.am:

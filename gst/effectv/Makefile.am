@@ -11,7 +11,8 @@ libgsteffectv_la_CFLAGS = \
 libgsteffectv_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
 	$(GST_BASE_LIBS) \
-	$(GST_LIBS)
+	$(GST_LIBS) \
+	$(LIBM)
 libgsteffectv_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gsteffectv.h

@@ -10,6 +10,6 @@ libgstspeex_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(SPEEX_LIBS)
-libgstspeex_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+libgstspeex_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
 
 noinst_HEADERS = gstspeexenc.h gstspeexdec.h 

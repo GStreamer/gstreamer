@@ -11,7 +11,7 @@ libgstannodex_la_SOURCES = \
 libgstannodex_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) \
 			  $(GST_CFLAGS) $(XML_CFLAGS)
 libgstannodex_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
-			  $(GST_LIBS) $(XML_LIBS)
+			  $(GST_LIBS) $(XML_LIBS) $(LIBM)
 libgstannodex_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstannodex.h gstcmmlutils.h gstcmmltag.h gstcmmlparser.h \
