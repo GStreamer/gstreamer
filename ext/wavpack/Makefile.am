@@ -10,8 +10,8 @@ libgstwavpack_la_SOURCES = \
 				gstwavpackstreamreader.c \
 				md5.c
 
-libgstwavpack_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(WAVPACK_CFLAGS)
-libgstwavpack_la_LIBADD = $(GST_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(WAVPACK_LIBS)
+libgstwavpack_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(WAVPACK_CFLAGS)
+libgstwavpack_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR) $(WAVPACK_LIBS)
 libgstwavpack_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = \
