@@ -1,3 +1,11 @@
+2007-02-25  Michael Smith  <msmith@fluendo.com>
+
+	* gst/pygstvalue.c: (pygst_value_init_for_pyobject),
+	(pygst_value_from_pyobject):
+	  Make buffers-in-gvalues more generic: handle all miniobjects
+	* testsuite/test_caps.py:
+	  Add a bit to one the test for buffers in caps.
+
 2007-02-24  Michael Smith  <msmith@fluendo.com>
 
 	* testsuite/test_caps.py:

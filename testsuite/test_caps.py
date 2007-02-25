@@ -50,13 +50,14 @@ class CapsTest(TestCase):
     def testCapsContainingMiniObjects(self):
         # buffer contains hex encoding of ascii 'abcd'
         caps = gst.Caps("video/x-raw-yuv, buf=(buffer)61626364")
-        assert isinstance(caps[0]['buf'], gst.Buffer)
+        buf = caps[0]['buf']
+        assert isinstance(buf, gst.Buffer)
+        assert buf.data == "abcd"
 
         buf = gst.Buffer("1234")
         caps[0]['buf2'] = buf
         buf2 = caps[0]['buf2']
         assert buf2 == buf
-
 
     def testCapsConstructEmpty(self):
         caps = gst.Caps()
