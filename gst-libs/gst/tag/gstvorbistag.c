@@ -254,6 +254,12 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
           }
         }
 
+        if (y != 0 && m == 0 && d == 0) {
+          /* accept dates of the form 2007-00-00 as 2007-01-01 */
+          m = 1;
+          d = 1;
+        }
+
         /* date might be followed by a time */
         if ((*check == '\0' || g_ascii_isspace (*check)) && y != 0 &&
             g_date_valid_dmy (d, m, y)) {

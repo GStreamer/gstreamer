@@ -1,3 +1,14 @@
+2007-02-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: René Stadler <mail at renestadler de>
+
+	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add):
+	  Parse date strings in vorbis comments that have an invalid (zero)
+	  month or day (#410396).
+
+	* tests/check/libs/tag.c: (GST_START_TEST):
+	  Test case for the above.
+
 2007-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Loïc Minier <lool+gnome at via ecp fr>
