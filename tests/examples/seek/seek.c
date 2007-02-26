@@ -1209,7 +1209,12 @@ stop_seek (GtkWidget * widget, GdkEventButton * event, gpointer user_data)
   if (seek_timeout_id != 0) {
     g_source_remove (seek_timeout_id);
     seek_timeout_id = 0;
-    /* Still scrubbing, so the pipeline is already playing */
+    /* Still scrubbing, so the pipeline is playing, see if we need PAUSED
+     * instead. */
+    if (state == GST_STATE_PAUSED) {
+      GST_DEBUG ("stop scrub seek, PAUSED");
+      gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    }
   } else {
     if (state == GST_STATE_PLAYING) {
       GST_DEBUG ("stop scrub seek, PLAYING");

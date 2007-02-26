@@ -1,3 +1,9 @@
+2007-02-26  Wim Taymans  <wim@fluendo.com>
+
+	* tests/examples/seek/seek.c: (stop_seek):
+	When we stop scrubbing, don't leave the pipeline PLAYING when we
+	requested a PAUSED state.
+
 2007-02-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: René Stadler <mail at renestadler de>
