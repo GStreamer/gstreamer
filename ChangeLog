@@ -1,3 +1,9 @@
+2007-02-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/rtsp/base64.c: (util_base64_encode):
+	* gst/rtsp/base64.h:
+	Commit missing files for base64 encoding.
+
 2007-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Loïc Minier <lool+gnome at via ecp fr>
