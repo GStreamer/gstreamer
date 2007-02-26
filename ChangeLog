@@ -1,5 +1,10 @@
 2007-02-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/rtsp/Makefile.am:
+	Fix make check too.
+
+2007-02-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/rtsp/base64.c: (util_base64_encode):
 	* gst/rtsp/base64.h:
 	Commit missing files for base64 encoding.

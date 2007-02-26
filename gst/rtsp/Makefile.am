@@ -17,7 +17,7 @@ libgstrtsp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 check_PROGRAMS = test
 
-test_SOURCES = test.c rtspdefs.c rtspurl.c rtspconnection.c rtspmessage.c rtsptransport.c sdpmessage.c
+test_SOURCES = test.c rtspdefs.c rtspurl.c rtspconnection.c rtspmessage.c rtsptransport.c sdpmessage.c base64.c
 test_CFLAGS = $(GST_CFLAGS)
 test_LDFLAGS = $(GST_LIBS) $(WIN32_LIBS)
 
