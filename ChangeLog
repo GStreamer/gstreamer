@@ -1,3 +1,13 @@
+2007-02-26  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* gst/app/Makefile.am:
+	* gst/app/gstapp.c:
+	* gst/app/gstappsrc.c:
+	* gst/app/gstappsrc.h:
+	  Add a new plugin/library to make it easy for apps to shove
+	  data into a pipeline.
+
 2007-02-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_init):

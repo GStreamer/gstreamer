@@ -76,6 +76,7 @@ GST_ARG_EXAMPLES
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
+  app \
   cdxaparse \
   deinterlace \
   equalizer \
@@ -1026,6 +1027,7 @@ AC_CONFIG_FILES(
 Makefile
 gst-plugins-bad.spec
 gst/Makefile
+gst/app/Makefile
 gst/cdxaparse/Makefile
 gst/deinterlace/Makefile
 gst/equalizer/Makefile
