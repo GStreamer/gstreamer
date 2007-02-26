@@ -743,19 +743,20 @@ close_library (GstRealVideoDecHooks hooks)
 static void
 gst_real_video_dec_init (GstRealVideoDec * dec, GstRealVideoDecClass * klass)
 {
-  dec->snk =
-      gst_pad_new_from_template (gst_static_pad_template_get (&snk_t), "sink");
-  gst_pad_set_setcaps_function (dec->snk, gst_real_video_dec_setcaps);
-  gst_pad_set_chain_function (dec->snk, gst_real_video_dec_chain);
+  dec->snk = gst_pad_new_from_static_template (&snk_t, "sink");
+  gst_pad_set_setcaps_function (dec->snk,
+      GST_DEBUG_FUNCPTR (gst_real_video_dec_setcaps));
+  gst_pad_set_chain_function (dec->snk,
+      GST_DEBUG_FUNCPTR (gst_real_video_dec_chain));
   gst_pad_set_activatepush_function (dec->snk,
-      gst_real_video_dec_activate_push);
+      GST_DEBUG_FUNCPTR (gst_real_video_dec_activate_push));
   gst_element_add_pad (GST_ELEMENT (dec), dec->snk);
 
-  dec->src =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_t), "src");
+  dec->src = gst_pad_new_from_static_template (&src_t, "src");
+  gst_pad_use_fixed_caps (dec->src);
   gst_element_add_pad (GST_ELEMENT (dec), dec->src);
 
-  dec->adapter = g_object_new (GST_TYPE_ADAPTER, NULL);
+  dec->adapter = gst_adapter_new ();
 }
 
 static void

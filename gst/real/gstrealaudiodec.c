@@ -319,13 +319,15 @@ could_not_set_caps:
 static void
 gst_real_audio_dec_init (GstRealAudioDec * dec, GstRealAudioDecClass * klass)
 {
-  dec->snk =
-      gst_pad_new_from_template (gst_static_pad_template_get (&snk_t), "sink");
-  gst_pad_set_setcaps_function (dec->snk, gst_real_audio_dec_setcaps);
-  gst_pad_set_chain_function (dec->snk, gst_real_audio_dec_chain);
+  dec->snk = gst_pad_new_from_static_template (&snk_t, "sink");
+  gst_pad_set_setcaps_function (dec->snk,
+      GST_DEBUG_FUNCPTR (gst_real_audio_dec_setcaps));
+  gst_pad_set_chain_function (dec->snk,
+      GST_DEBUG_FUNCPTR (gst_real_audio_dec_chain));
   gst_element_add_pad (GST_ELEMENT (dec), dec->snk);
-  dec->src =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_t), "src");
+
+  dec->src = gst_pad_new_from_static_template (&src_t, "src");
+  gst_pad_use_fixed_caps (dec->src);
   gst_element_add_pad (GST_ELEMENT (dec), dec->src);
 }
 

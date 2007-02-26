@@ -1,3 +1,11 @@
+2007-02-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_init):
+	* gst/real/gstrealvideodec.c: (gst_real_video_dec_init):
+	  Use gst_pad_use_fixed_caps() on source pads, to avoid negotiation
+	  errors in certain situations (e.g. dec ! cs ! ximagesink and the
+	  imagesink window is resized); also, some minor clean-ups.
+
 2007-02-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
