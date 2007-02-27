@@ -1,6 +1,7 @@
 /*
  * GStreamer
  * Copyright 2005-2006 Zaheer Abbas Merali <zaheerabbas at merali dot org>
+ * Copyright 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -39,6 +40,11 @@
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ * 
+ *  The development of this code was made possible due to the involvement of Pioneers of
+ *  the Inevitable, the creators of the Songbird Music player
+ *
+
  */
 
 #ifndef __GST_OSXAUDIOSINK_H__
