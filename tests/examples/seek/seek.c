@@ -1044,6 +1044,8 @@ update_scale (gpointer data)
 
 static void do_seek (GtkWidget * widget);
 
+static void set_update_scale (gboolean active);
+
 static gboolean
 end_scrub (GtkWidget * widget)
 {
@@ -1113,14 +1115,15 @@ do_seek (GtkWidget * widget)
   if (rate >= 0) {
     s_event = gst_event_new_seek (rate,
         GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, real, GST_SEEK_TYPE_SET, -1);
+    GST_DEBUG ("seek with rate %lf to %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT,
+        rate, GST_TIME_ARGS (real), GST_TIME_ARGS (duration));
   } else {
     s_event = gst_event_new_seek (rate,
         GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
         GST_SEEK_TYPE_SET, real);
+    GST_DEBUG ("seek with rate %lf to %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT,
+        rate, GST_TIME_ARGS (0), GST_TIME_ARGS (real));
   }
-
-  GST_DEBUG ("seek with rate %lf to %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT,
-      rate, GST_TIME_ARGS (real), GST_TIME_ARGS (duration));
 
   res = send_event (s_event);
 
@@ -1128,6 +1131,8 @@ do_seek (GtkWidget * widget)
     if (flush_seek) {
       gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
       gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, SEEK_TIMEOUT);
+    } else {
+      set_update_scale (TRUE);
     }
   } else
     g_print ("seek failed\n");
@@ -1159,6 +1164,9 @@ seek_cb (GtkWidget * widget)
 static void
 set_update_scale (gboolean active)
 {
+
+  GST_DEBUG ("update scale is %d", active);
+
   if (active) {
     if (update_id == 0) {
       update_id =
@@ -1445,15 +1453,9 @@ msg_segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   if (flush_seek)
     flags |= GST_SEEK_FLAG_FLUSH;
 
-  if (rate >= 0) {
-    s_event = gst_event_new_seek (rate,
-        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
-        GST_SEEK_TYPE_SET, duration);
-  } else {
-    s_event = gst_event_new_seek (rate,
-        GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, duration,
-        GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0));
-  }
+  s_event = gst_event_new_seek (rate,
+      GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
+      GST_SEEK_TYPE_SET, duration);
 
   GST_DEBUG ("restart loop with rate %lf to 0 / %" GST_TIME_FORMAT,
       rate, GST_TIME_ARGS (duration));

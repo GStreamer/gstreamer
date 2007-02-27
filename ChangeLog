@@ -1,3 +1,10 @@
+2007-02-27  Julien MOUTTE  <julien@moutte.net>
+
+	* tests/examples/seek/seek.c: (do_seek), (set_update_scale),
+	(msg_segment_done): Fix various seeking bugs (Slider was not
+	updating when doing a non flushing seek, Reverse playback 
+	on segment seek was wrong).
+
 2007-02-26  Wim Taymans  <wim@fluendo.com>
 
 	* tests/examples/seek/seek.c: (stop_seek):
