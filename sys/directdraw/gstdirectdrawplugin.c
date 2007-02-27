@@ -1,5 +1,6 @@
 /* GStreamer
 * Copyright (C) 2005 Sebastien Moutte <sebastien@moutte.net>
+* Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
 *
 * gstdirectdrawplugin.c:
 *
@@ -17,6 +18,10 @@
 * License along with this library; if not, write to the
 * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 * Boston, MA 02111-1307, USA.
+*
+* The development of this code was made possible due to the involvement
+* of Pioneers of the Inevitable, the creators of the Songbird Music player
+*
 */
 
 #ifdef HAVE_CONFIG_H
