@@ -52,6 +52,7 @@ enum
   ARG_IP,                       /* the ip of the server */
   ARG_PORT,                     /* the encoder port number on the server */
   ARG_PASSWORD,                 /* the encoder password on the server */
+  ARG_USERNAME,                 /* the encoder username on the server */
   ARG_PUBLIC,                   /* is this stream public? */
   ARG_STREAMNAME,               /* Name of the stream */
   ARG_DESCRIPTION,              /* Description of the stream */
@@ -66,6 +67,7 @@ enum
 #define DEFAULT_IP           "127.0.0.1"
 #define DEFAULT_PORT         8000
 #define DEFAULT_PASSWORD     "hackme"
+#define DEFAULT_USERNAME     "source"
 #define DEFAULT_STREAMNAME   ""
 #define DEFAULT_DESCRIPTION  ""
 #define DEFAULT_GENRE        ""
@@ -193,6 +195,10 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
       g_param_spec_string ("password", "password", "password", DEFAULT_PASSWORD,
           G_PARAM_READWRITE));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_USERNAME,
+      g_param_spec_string ("username", "username", "username", DEFAULT_USERNAME,
+          G_PARAM_READWRITE));
+
   /* metadata */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STREAMNAME,
       g_param_spec_string ("streamname", "streamname", "name of the stream",
@@ -244,6 +250,7 @@ gst_shout2send_init (GstShout2send * shout2send)
   shout2send->ip = g_strdup (DEFAULT_IP);
   shout2send->port = DEFAULT_PORT;
   shout2send->password = g_strdup (DEFAULT_PASSWORD);
+  shout2send->username = g_strdup (DEFAULT_USERNAME);
   shout2send->streamname = g_strdup (DEFAULT_STREAMNAME);
   shout2send->description = g_strdup (DEFAULT_DESCRIPTION);
   shout2send->genre = g_strdup (DEFAULT_GENRE);
@@ -465,9 +472,9 @@ gst_shout2send_start (GstBaseSink * basesink)
   if (shout_set_mount (sink->conn, sink->mount) != SHOUTERR_SUCCESS)
     goto set_failed;
 
-  cur_prop = "user";
+  cur_prop = "username";
   GST_DEBUG_OBJECT (sink, "setting %s: %s", cur_prop, "source");
-  if (shout_set_user (sink->conn, "source") != SHOUTERR_SUCCESS)
+  if (shout_set_user (sink->conn, sink->username) != SHOUTERR_SUCCESS)
     goto set_failed;
 
   version_string = gst_version_string ();
@@ -619,6 +626,11 @@ gst_shout2send_set_property (GObject * object, guint prop_id,
         g_free (shout2send->password);
       shout2send->password = g_strdup (g_value_get_string (value));
       break;
+    case ARG_USERNAME:
+      if (shout2send->username)
+        g_free (shout2send->username);
+      shout2send->username = g_strdup (g_value_get_string (value));
+      break;
     case ARG_STREAMNAME:       /* Name of the stream */
       if (shout2send->streamname)
         g_free (shout2send->streamname);
@@ -670,6 +682,9 @@ gst_shout2send_get_property (GObject * object, guint prop_id,
       break;
     case ARG_PASSWORD:
       g_value_set_string (value, shout2send->password);
+      break;
+    case ARG_USERNAME:
+      g_value_set_string (value, shout2send->username);
       break;
     case ARG_STREAMNAME:       /* Name of the stream */
       g_value_set_string (value, shout2send->streamname);

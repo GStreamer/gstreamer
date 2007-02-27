@@ -1,3 +1,11 @@
+2007-02-28  Michael Smith  <msmith@fluendo.com>
+
+	* ext/shout2/gstshout2.c: (gst_shout2send_class_init),
+	(gst_shout2send_init), (gst_shout2send_start),
+	(gst_shout2send_set_property), (gst_shout2send_get_property):
+	* ext/shout2/gstshout2.h:
+	  Add a property for username.
+
 2007-02-27  Christian Schallerr <christian@fluendo.com>
 
 	* sys/osxaudio: Add Pioneers of the inevitable to the copyright list
