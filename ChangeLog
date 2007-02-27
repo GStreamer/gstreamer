@@ -1,3 +1,17 @@
+2007-02-27  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbus.c: (gst_bus_init), (gst_bus_dispose), (gst_bus_post),
+	(gst_bus_timed_pop), (gst_bus_pop):
+	* gst/gstbus.h:
+	API: gst_bus_timed_pop()
+	Implement gst_bus_timed_pop() to do a blocking timed wait for a
+	message to arrive on the bus.
+
+	* tests/check/gst/gstbus.c: (GST_START_TEST), (pop_thread),
+	(gst_bus_suite):
+	Two unit tests for new _timed_pop() function.
+
 2007-02-23  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpipeline.c: (gst_pipeline_change_state),

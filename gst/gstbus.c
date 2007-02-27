@@ -105,6 +105,8 @@ static GMainContext *main_context;
 struct _GstBusPrivate
 {
   guint num_sync_message_emitters;
+
+  GCond *queue_cond;
 };
 
 GType
@@ -225,6 +227,7 @@ gst_bus_init (GstBus * bus)
   bus->queue_lock = g_mutex_new ();
 
   bus->priv = G_TYPE_INSTANCE_GET_PRIVATE (bus, GST_TYPE_BUS, GstBusPrivate);
+  bus->priv->queue_cond = g_cond_new ();
 
   GST_DEBUG_OBJECT (bus, "created");
 }
@@ -250,6 +253,8 @@ gst_bus_dispose (GObject * object)
     g_mutex_unlock (bus->queue_lock);
     g_mutex_free (bus->queue_lock);
     bus->queue_lock = NULL;
+    g_cond_free (bus->priv->queue_cond);
+    bus->priv->queue_cond = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -360,6 +365,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       GST_DEBUG_OBJECT (bus, "[msg %p] pushing on async queue", message);
       g_mutex_lock (bus->queue_lock);
       g_queue_push_tail (bus->queue, message);
+      g_cond_broadcast (bus->priv->queue_cond);
       g_mutex_unlock (bus->queue_lock);
       GST_DEBUG_OBJECT (bus, "[msg %p] pushed on async queue", message);
 
@@ -385,6 +391,7 @@ gst_bus_post (GstBus * bus, GstMessage * message)
       g_mutex_lock (lock);
       g_mutex_lock (bus->queue_lock);
       g_queue_push_tail (bus->queue, message);
+      g_cond_broadcast (bus->priv->queue_cond);
       g_mutex_unlock (bus->queue_lock);
 
       /* FIXME cannot assume sources are only in the default context */
@@ -479,6 +486,78 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
 
 
 /**
+ * gst_bus_timed_pop:
+ * @bus: a #GstBus to pop
+ * @timeout: a timeout
+ *
+ * Get a message from the bus, waiting up to the specified timeout.
+ *
+ * If @timeout is 0, this function behaves like gst_bus_pop(). If @timeout is
+ * #GST_CLOCK_TIME_NONE, this function will block forever until a message was
+ * posted on the bus.
+ *
+ * Returns: The #GstMessage that is on the bus after the specified timeout
+ * or NULL if the bus is empty after the timeout expired.
+ * The message is taken from the bus and needs to be unreffed with
+ * gst_message_unref() after usage.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.12
+ */
+GstMessage *
+gst_bus_timed_pop (GstBus * bus, GstClockTime timeout)
+{
+  GstMessage *message;
+  GTimeVal *timeval, abstimeout;
+
+  g_return_val_if_fail (GST_IS_BUS (bus), NULL);
+
+  g_mutex_lock (bus->queue_lock);
+  while (TRUE) {
+    message = g_queue_pop_head (bus->queue);
+    if (message) {
+      GST_DEBUG_OBJECT (bus,
+          "pop from bus, have %d messages, got message %p, %s",
+          g_queue_get_length (bus->queue) + 1, message,
+          GST_MESSAGE_TYPE_NAME (message));
+      /* exit the loop, we have a message */
+      break;
+    } else {
+      GST_DEBUG_OBJECT (bus, "pop from bus, no messages");
+      /* no need to wait, exit loop */
+      if (timeout == 0)
+        break;
+      if (timeout == GST_CLOCK_TIME_NONE) {
+        /* wait forever */
+        timeval = NULL;
+      } else {
+        glong add = timeout / 1000;
+
+        if (add == 0)
+          /* no need to wait */
+          break;
+
+        /* make timeout absolute */
+        g_get_current_time (&abstimeout);
+        g_time_val_add (&abstimeout, add);
+        timeval = &abstimeout;
+        GST_DEBUG_OBJECT (bus, "blocking for message, timeout %ld", add);
+      }
+      if (!g_cond_timed_wait (bus->priv->queue_cond, bus->queue_lock, timeval)) {
+        GST_INFO_OBJECT (bus, "timed out, breaking loop");
+        break;
+      } else {
+        GST_INFO_OBJECT (bus, "we got woken up, recheck for message");
+      }
+    }
+  }
+  g_mutex_unlock (bus->queue_lock);
+
+  return message;
+}
+
+/**
  * gst_bus_pop:
  * @bus: a #GstBus to pop
  *
@@ -493,21 +572,9 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
 GstMessage *
 gst_bus_pop (GstBus * bus)
 {
-  GstMessage *message;
-
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
-  g_mutex_lock (bus->queue_lock);
-  message = g_queue_pop_head (bus->queue);
-  if (message)
-    GST_DEBUG_OBJECT (bus, "pop from bus, have %d messages, got message %p, %s",
-        g_queue_get_length (bus->queue) + 1, message,
-        GST_MESSAGE_TYPE_NAME (message));
-  else
-    GST_DEBUG_OBJECT (bus, "pop from bus, no messages");
-  g_mutex_unlock (bus->queue_lock);
-
-  return message;
+  return gst_bus_timed_pop (bus, 0);
 }
 
 /**

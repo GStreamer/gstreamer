@@ -183,7 +183,7 @@ GST_START_TEST (test_watch)
 
 GST_END_TEST;
 
-static gint messages_seen = 0;
+static gint messages_seen;
 
 static void
 message_func (GstBus * bus, GstMessage * message, gpointer data)
@@ -213,6 +213,7 @@ GST_START_TEST (test_watch_with_poll)
   guint i;
 
   test_bus = gst_bus_new ();
+  messages_seen = 0;
 
   gst_bus_add_signal_watch (test_bus);
   g_signal_connect (test_bus, "message", (GCallback) message_func, NULL);
@@ -233,6 +234,65 @@ GST_START_TEST (test_watch_with_poll)
 
 GST_END_TEST;
 
+/* test that you get the messages with pop. */
+GST_START_TEST (test_timed_pop)
+{
+  guint i;
+
+  test_bus = gst_bus_new ();
+
+  send_10_app_messages ();
+
+  for (i = 0; i < 10; i++)
+    gst_message_unref (gst_bus_timed_pop (test_bus, GST_CLOCK_TIME_NONE));
+
+  fail_if (gst_bus_have_pending (test_bus), "unexpected messages on bus");
+
+  gst_object_unref (test_bus);
+}
+
+GST_END_TEST;
+
+/* test that you get the messages with pop from another thread. */
+static gpointer
+pop_thread (gpointer data)
+{
+  GstBus *bus = GST_BUS_CAST (data);
+  guint i;
+
+  for (i = 0; i < 10; i++)
+    gst_message_unref (gst_bus_timed_pop (bus, GST_CLOCK_TIME_NONE));
+
+  return NULL;
+}
+
+GST_START_TEST (test_timed_pop_thread)
+{
+  GThread *thread;
+  GError *error = NULL;
+
+  test_bus = gst_bus_new ();
+
+  thread = g_thread_create (pop_thread, test_bus, TRUE, &error);
+  fail_if (error != NULL);
+
+  send_10_app_messages ();
+
+  g_thread_join (thread);
+
+  fail_if (gst_bus_have_pending (test_bus), "unexpected messages on bus");
+
+  /* try to pop a message without timeout. */
+  fail_if (gst_bus_timed_pop (test_bus, 0) != NULL);
+
+  /* with a small timeout */
+  fail_if (gst_bus_timed_pop (test_bus, 1000) != NULL);
+
+  gst_object_unref (test_bus);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_bus_suite (void)
 {
@@ -245,6 +305,8 @@ gst_bus_suite (void)
   tcase_add_test (tc_chain, test_hammer_bus);
   tcase_add_test (tc_chain, test_watch);
   tcase_add_test (tc_chain, test_watch_with_poll);
+  tcase_add_test (tc_chain, test_timed_pop);
+  tcase_add_test (tc_chain, test_timed_pop_thread);
   return s;
 }
 

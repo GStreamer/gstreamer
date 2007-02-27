@@ -150,6 +150,7 @@ gboolean 		gst_bus_post 			(GstBus * bus, GstMessage * message);
 gboolean 		gst_bus_have_pending 		(GstBus * bus);
 GstMessage *		gst_bus_peek 			(GstBus * bus);
 GstMessage *		gst_bus_pop 			(GstBus * bus);
+GstMessage *		gst_bus_timed_pop 		(GstBus * bus, GstClockTime timeout);
 void			gst_bus_set_flushing		(GstBus * bus, gboolean flushing);
 
 /* synchronous dispatching */
