@@ -1,3 +1,14 @@
+2007-02-27  Edward Hervey  <edward@fluendo.com>
+
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	Disable the cocoa event loop since it's a huge memory leak. Should only
+	matter if the sink isn't used within an NSApp (which has already got
+	a coca event loop).
+	Remove all unused code.
+
 2007-02-26  David Schleef  <ds@schleef.org>
 
 	* configure.ac:

@@ -60,6 +60,7 @@ enum
 static GstVideoSinkClass *parent_class = NULL;
 
 /* cocoa event loop - needed if not run in own app */
+/* FIXME : currently disabled since a huge memory leak happens if it is run. */
 gpointer
 cocoa_event_loop (GstOSXVideoSink * vsink)
 {
@@ -108,7 +109,7 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
     [pool release];
 
     /* Start Cocoa event loop */
-    g_thread_create ((GThreadFunc) cocoa_event_loop, osxvideosink, FALSE, NULL);
+//     g_thread_create ((GThreadFunc) cocoa_event_loop, osxvideosink, FALSE, NULL);
   } else {
     /* Needs to be embedded */
 
@@ -147,7 +148,6 @@ gst_osx_video_sink_osxwindow_resize (GstOSXVideoSink * osxvideosink,
   g_return_if_fail (osxwindow != NULL);
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
 
-  //SizeWindow (osxwindow->win, width, height, 1);
   osxwindow->width = width;
   osxwindow->height = height;
 
@@ -342,18 +342,6 @@ gst_osx_video_sink_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_osx_video_sink_dispose (GObject * object)
-{
-  GstOSXVideoSink *osxvideosink;
-
-  osxvideosink = GST_OSX_VIDEO_SINK (object);
-
-  g_mutex_free (osxvideosink->pool_lock);
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
 gst_osx_video_sink_init (GstOSXVideoSink * osxvideosink)
 {
 
@@ -396,11 +384,9 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
 
   parent_class = g_type_class_ref (GST_TYPE_VIDEO_SINK);
 
-  gobject_class->dispose = gst_osx_video_sink_dispose;
   gobject_class->set_property = gst_osx_video_sink_set_property;
   gobject_class->get_property = gst_osx_video_sink_get_property;
 
-  //gstbasesink_class->get_times = gst_osx_video_sink_get_times;
   gstbasesink_class->set_caps = gst_osx_video_sink_setcaps;
   gstbasesink_class->preroll = gst_osx_video_sink_show_frame;
   gstbasesink_class->render = gst_osx_video_sink_show_frame;
