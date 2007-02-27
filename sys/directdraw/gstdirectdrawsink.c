@@ -1,5 +1,6 @@
 /* GStreamer
 * Copyright (C) 2005 Sebastien Moutte <sebastien@moutte.net>
+* Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
 *	
 * Based on directfb video sink
 * gstdirectdrawsink.c:
@@ -18,6 +19,10 @@
 * License along with this library; if not, write to the
 * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 * Boston, MA 02111-1307, USA.
+*
+* The development of this code was made possible due to the involvement
+* of Pioneers of the Inevitable, the creators of the Songbird Music player
+*
 */
 
 /**
@@ -1030,8 +1035,7 @@ gst_directdraw_sink_setup_ddraw (GstDirectDrawSink * ddrawsink)
 
   /* create an instance of the ddraw object use DDCREATE_EMULATIONONLY as first parameter to
      force Directdraw to use the hardware emulation layer */
-  hRes =
-      DirectDrawCreateEx ( /*DDCREATE_EMULATIONONLY */ 0,
+  hRes = DirectDrawCreateEx ( /*DDCREATE_EMULATIONONLY */ 0,
       (void **) &ddrawsink->ddraw_object, &IID_IDirectDraw7, NULL);
   if (hRes != DD_OK || ddrawsink->ddraw_object == NULL) {
     GST_ELEMENT_ERROR (ddrawsink, RESOURCE, WRITE,
