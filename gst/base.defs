@@ -35,12 +35,13 @@
   (gtype-id "GST_TYPE_COLLECT_PADS")
 )
 
-(define-object PushSrc
-  (in-module "Gst")
-  (parent "GstBaseSrc")
-  (c-name "GstPushSrc")
-  (gtype-id "GST_TYPE_PUSH_SRC")
-)
+; PushSrc doesn't work due to limitations in the code generator, so disable
+;(define-object PushSrc
+;  (in-module "Gst")
+;  (parent "GstBaseSrc")
+;  (c-name "GstPushSrc")
+;  (gtype-id "GST_TYPE_PUSH_SRC")
+;)
 
 ;; Enumerations and flags ...
 
@@ -708,18 +709,18 @@
 
 ;; From ../gstreamer/libs/gst/base/gstpushsrc.h
 
-(define-function gst_push_src_get_type
-  (c-name "gst_push_src_get_type")
-  (return-type "GType")
-)
+;(define-function gst_push_src_get_type
+;  (c-name "gst_push_src_get_type")
+;  (return-type "GType")
+;)
 
-(define-virtual create
-  (of-object "GstPushSrc")
-  (return-type "GstFlowReturn")
-  (parameters
-   '("GstBuffer**" "buf")
-  )
-)
+;(define-virtual create
+;  (of-object "GstPushSrc")
+;  (return-type "GstFlowReturn")
+;  (parameters
+;   '("GstBuffer**" "buf")
+;  )
+;)
 
 
 

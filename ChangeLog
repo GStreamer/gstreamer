@@ -1,3 +1,10 @@
+2007-02-27  Michael Smith  <msmith@fluendo.com>
+
+	* gst/base.defs:
+	  Limitations in the code generator mean that we can't handle PushSrc
+	  in a way which works, so just comment this out until someone wants
+	  to tackle this more completely.
+
 2007-02-25  Michael Smith  <msmith@fluendo.com>
 
 	* gst/pygstvalue.c: (pygst_value_init_for_pyobject),
