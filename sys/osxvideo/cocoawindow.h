@@ -53,21 +53,6 @@ struct _GstOSXImage;
 
 @end
 
-@interface GstView : NSQuickDrawView {
-    int                        width, height;
-    gboolean isPortSet;
-    void* port;
-/* Quicktime Sequence */
-    ImageSequence qtseqid;
-    ImageDescriptionHandle imgdesc;
-    struct _GstOSXImage* curimg;
-}
-- (void) drawRect: (NSRect) rect;
-- (id) initWithFrame: (NSRect) frame;
-- (void) setVideoSize: (int) w: (int) h;
-- (void) setVideoImage: (GstBuffer*) img;
-@end
-
 @interface GstOSXVideoSinkWindow: NSWindow {
    int width, height;
    GstGLView *gstview;

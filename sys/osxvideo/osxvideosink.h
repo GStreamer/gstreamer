@@ -52,24 +52,6 @@ typedef struct _GstOSXVideoSinkClass GstOSXVideoSinkClass;
 
 #define GST_TYPE_OSXVIDEOBUFFER (gst_osxvideobuffer_get_type())
 
-#define GST_IS_OSXVIDEOBUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_OSXVIDEOBUFFER))
-#define GST_OSXVIDEOBUFFER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_OSXVIDEOBUFFER, GstOSXVideoBuffer))
-
-typedef struct _GstOSXVideoBuffer GstOSXVideoBuffer;
-  
-struct _GstOSXVideoBuffer {
-  GstBuffer buffer; /* We extend GstBuffer */
-  
-  CVOpenGLTextureRef texture;
-  
-  gint width;
-  gint height;
-  
-  gboolean locked;
-  
-  GstOSXVideoSink *osxvideosink;
-};
-
 /* OSXWindow stuff */
 struct _GstOSXWindow {
   gint width, height;
@@ -81,9 +63,6 @@ struct _GstOSXWindow {
 struct _GstOSXVideoSink {
   /* Our element stuff */
   GstVideoSink videosink;
-
-  GMutex *pool_lock;
-  GSList *buffer_pool;
 
   GstOSXWindow *osxwindow;
   
