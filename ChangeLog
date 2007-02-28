@@ -1,5 +1,10 @@
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_query_latency):
+	Don't unref query twice.
+
+2007-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstvalue.c: (gst_value_transform_object_string),
 	(_gst_value_initialize):
 	Implement GstObject -> string transform so we print object names

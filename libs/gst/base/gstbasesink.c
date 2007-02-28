@@ -712,7 +712,6 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
     min = us_min;
     max = us_max;
   }
-  gst_query_unref (query);
 
   GST_DEBUG_OBJECT (sink, "latency query: live: %d, upstream: %d, min %"
       GST_TIME_FORMAT ", max %" GST_TIME_FORMAT, l, us_live,
