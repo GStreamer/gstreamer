@@ -155,8 +155,7 @@ gst_dvdlpcm_reset (GstDvdLpcmDec * dvdlpcmdec)
 
   dvdlpcmdec->header = 0;
 
-  GST_LOG_OBJECT (dvdlpcmdec, "Setting NULL caps on src pad");
-  gst_pad_set_caps (dvdlpcmdec->srcpad, NULL);
+  gst_segment_init (&dvdlpcmdec->segment, GST_FORMAT_UNDEFINED);
 }
 
 static void
@@ -276,7 +275,7 @@ update_timestamps (GstDvdLpcmDec * dvdlpcmdec, GstBuffer * buf, int samples)
       take_buf_ts = TRUE;
     }
   } else if (!GST_CLOCK_TIME_IS_VALID (dvdlpcmdec->timestamp)) {
-    dvdlpcmdec->timestamp = dvdlpcmdec->segment_start;
+    dvdlpcmdec->timestamp = 0;
   }
 
   if (take_buf_ts) {
@@ -318,11 +317,21 @@ parse_header (GstDvdLpcmDec * dec, guint32 header)
       break;
   }
 
-  /* Only two sample rates supported */
-  if (header & 0x1000)
-    dec->rate = 96000;
-  else
-    dec->rate = 48000;
+  /* Only four sample rates supported */
+  switch (header & 0x3000) {
+    case 0x0000:
+      dec->rate = 48000;
+      break;
+    case 0x1000:
+      dec->rate = 96000;
+      break;
+    case 0x2000:
+      dec->rate = 44100;
+      break;
+    case 0x3000:
+      dec->rate = 32000;
+      break;
+  }
 
   /* And, of course, the number of channels (up to 8) */
   dec->channels = ((header >> 8) & 0x7) + 1;
@@ -426,7 +435,7 @@ gst_dvdlpcmdec_chain_dvd (GstPad * pad, GstBuffer * buf)
       GST_WARNING_OBJECT (pad, "Bad first_access parameter in buffer");
       GST_ELEMENT_ERROR (dvdlpcmdec, STREAM, DECODE,
           (NULL),
-          ("first_access parameter out of range: bad buffer from " "demuxer"));
+          ("first_access parameter out of range: bad buffer from demuxer"));
       ret = GST_FLOW_ERROR;
       goto done;
     }
@@ -496,8 +505,7 @@ done:
 negotiation_failed:
   {
     GST_DEBUG_OBJECT (dvdlpcmdec, "Failed to set caps!");
-    GST_DEBUG_OBJECT (dvdlpcmdec, "Couldn't negotiate caps on src pad");
-    ret = GST_FLOW_ERROR;
+    ret = GST_FLOW_NOT_NEGOTIATED;
     goto done;
   }
 }
@@ -506,7 +514,7 @@ static GstFlowReturn
 gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
 {
   GstDvdLpcmDec *dvdlpcmdec;
-  guchar *data;
+  guint8 *data;
   guint size;
   GstFlowReturn ret;
   guint samples = 0;
@@ -522,6 +530,9 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
 
   if (dvdlpcmdec->rate == 0)
     goto not_negotiated;
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf))
+    dvdlpcmdec->timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   /* We don't currently do anything at all regarding emphasis, mute or 
    * dynamic_range - I'm not sure what they're for */
@@ -540,8 +551,8 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
       gint64 samples = size * 8 / 20;
       gint64 count = size / 10;
       gint64 i;
-      guchar *src;
-      guchar *dest;
+      guint8 *src;
+      guint8 *dest;
       GstBuffer *outbuf;
       GstCaps *bufcaps = GST_PAD_CAPS (dvdlpcmdec->srcpad);
 
@@ -598,19 +609,19 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
 
       src = GST_BUFFER_DATA (buf);
       for (i = 0; i < count; i++) {
-        guchar temp[9];
+        guint8 tmp;
 
-        temp[0] = src[8];
-        temp[1] = src[2];
-        temp[2] = src[3];
-        temp[3] = src[9];
-        temp[4] = src[4];
-        temp[5] = src[5];
-        temp[6] = src[10];
-        temp[7] = src[6];
-        temp[8] = src[7];
+        tmp = src[10];
+        src[10] = src[7];
+        src[7] = src[5];
+        src[5] = src[9];
+        src[9] = src[6];
+        src[6] = src[4];
+        src[4] = src[3];
+        src[3] = src[2];
+        src[2] = src[8];
+        src[8] = tmp;
 
-        memcpy (src + 2, temp, 9);
         src += 12;
       }
       break;
@@ -659,7 +670,10 @@ invalid_width:
 static gboolean
 dvdlpcmdec_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstDvdLpcmDec *dvdlpcmdec = GST_DVDLPCMDEC (GST_PAD_PARENT (pad));
+  GstDvdLpcmDec *dvdlpcmdec;
+  gboolean res;
+
+  dvdlpcmdec = GST_DVDLPCMDEC (GST_PAD_PARENT (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
@@ -667,32 +681,37 @@ dvdlpcmdec_sink_event (GstPad * pad, GstEvent * event)
       gdouble rate, arate;
       GstFormat format;
       gboolean update;
-      gint64 start, end, base;
+      gint64 start, stop, pos;
 
       gst_event_parse_new_segment_full (event, &update, &rate, &arate,
-          &format, &start, &end, &base);
+          &format, &start, &stop, &pos);
 
       GST_DEBUG_OBJECT (dvdlpcmdec,
           "new segment, format=%d, start = %" G_GINT64_FORMAT
-          ", end = %" G_GINT64_FORMAT ", position %" G_GINT64_FORMAT,
-          format, start, end, base);
+          ", stop = %" G_GINT64_FORMAT ", position %" G_GINT64_FORMAT,
+          format, start, stop, pos);
 
-      dvdlpcmdec->timestamp = GST_CLOCK_TIME_NONE;
-      if (format == GST_FORMAT_TIME)
-        dvdlpcmdec->segment_start = start;
-      else
-        dvdlpcmdec->segment_start = 0;
+      gst_segment_set_newsegment_full (&dvdlpcmdec->segment, update,
+          rate, arate, format, start, stop, pos);
 
-      GST_DEBUG_OBJECT (dvdlpcmdec,
-          "Have new segment. Resetting timestamp. segment_start = % "
-          G_GINT64_FORMAT, dvdlpcmdec->segment_start);
+      if (format == GST_FORMAT_TIME) {
+        dvdlpcmdec->timestamp = GST_CLOCK_TIME_NONE;
+      } else {
+        dvdlpcmdec->timestamp = 0;
+      }
+      res = gst_pad_push_event (dvdlpcmdec->srcpad, event);
       break;
     }
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&dvdlpcmdec->segment, GST_FORMAT_UNDEFINED);
+      res = gst_pad_push_event (dvdlpcmdec->srcpad, event);
+      break;
     default:
+      res = gst_pad_push_event (dvdlpcmdec->srcpad, event);
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  return res;
 }
 
 static GstStateChangeReturn
