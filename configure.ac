@@ -9,6 +9,8 @@ AC_INIT(GStreamer Base Plug-ins, 0.10.11.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-base)
 
+AG_GST_INIT
+
 dnl initialize automake
 AM_INIT_AUTOMAKE
 
@@ -66,20 +68,20 @@ dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
 AM_GNU_GETTEXT_VERSION([0.11.5])
 AM_GNU_GETTEXT([external])
-GST_GETTEXT([gst-plugins-base-$GST_MAJORMINOR])
+AG_GST_GETTEXT([gst-plugins-base-$GST_MAJORMINOR])
 
 dnl *** check for arguments to configure ***
 
-GST_ARG_DEBUG
-GST_ARG_PROFILING
-GST_ARG_VALGRIND
-GST_ARG_GCOV
+AG_GST_ARG_DEBUG
+AG_GST_ARG_PROFILING
+AG_GST_ARG_VALGRIND
+AG_GST_ARG_GCOV
 
-GST_ARG_EXAMPLES
+AG_GST_ARG_EXAMPLES
 
-GST_ARG_WITH_PKG_CONFIG_PATH
-GST_ARG_WITH_PACKAGE_NAME
-GST_ARG_WITH_PACKAGE_ORIGIN
+AG_GST_ARG_WITH_PKG_CONFIG_PATH
+AG_GST_ARG_WITH_PACKAGE_NAME
+AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
 dnl let distro override plugin install helper path
 AC_ARG_WITH(install-plugins-helper,
@@ -139,7 +141,7 @@ AC_ARG_WITH(plugins,
 AC_SUBST(GST_PLUGINS_SELECTED)
 
 dnl ext plug-ins; plug-ins that have external dependencies
-GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
+AG_GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
   [HAVE_EXTERNAL=yes], enabled,
   [
     AC_MSG_NOTICE(building external plug-ins)
@@ -156,7 +158,7 @@ dnl * hardware/architecture *
 
 dnl common/m4/gst-arch.m4
 dnl check CPU type
-GST_ARCH
+AG_GST_ARCH
 
 dnl *** checks for programs ***
 
@@ -178,7 +180,7 @@ AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 dnl check for documentation tools
 GTK_DOC_CHECK([1.3])
 AS_PATH_PYTHON([2.1])
-GST_PLUGIN_DOCS([1.3],[2.1])
+AG_GST_PLUGIN_DOCS([1.3],[2.1])
 
 dnl *** checks for libraries ***
 
@@ -239,12 +241,12 @@ AC_C99_FUNC_LRINT
 AC_C99_FUNC_LRINTF
 
 dnl Check for a way to display the function name in debug output
-GST_CHECK_FUNCTION
+AG_GST_CHECK_FUNCTION
 
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-GST_GLIB_CHECK([2.6])
+AG_GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
@@ -255,11 +257,11 @@ fi
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
+AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
 
 dnl FIXME: get rid of this by making sure gstreamer-check brings it in
 dnl check for "check", unit testing library/header
@@ -302,16 +304,16 @@ AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
 AC_SUBST(GST_LICENSE)
 
 dnl set location of plugin directory
-GST_SET_PLUGINDIR
+AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
-GST_SET_ERROR_CFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CFLAGS($GST_CVS)
 
 dnl define correct level for debugging messages
-GST_SET_LEVEL_DEFAULT($GST_CVS)
+AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
 dnl used in examples
-GST_DEFAULT_ELEMENTS
+AG_GST_DEFAULT_ELEMENTS
 
 dnl *** sys plug-ins ***
 
@@ -321,7 +323,7 @@ echo
 
 dnl *** X11 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
-GST_CHECK_FEATURE(X, [X libraries and plugins],
+AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesink], [
   AC_PATH_XTRA
   ac_cflags_save="$CFLAGS"
@@ -351,14 +353,14 @@ GST_CHECK_FEATURE(X, [X libraries and plugins],
   
 dnl Check for Xv extension
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
-GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
+AG_GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
                   [xvimagesink], [
-  GST_CHECK_XV
+  AG_AG_GST_CHECK_XV
 ])
 
 dnl check for X Shm
 translit(dnm, m, l) AM_CONDITIONAL(USE_XSHM, true)
-GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
+AG_GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
   if test x$HAVE_X = xyes; then
     AC_CHECK_LIB(Xext, XShmAttach, 
 		 HAVE_XSHM="yes", HAVE_XSHM="no",
@@ -386,7 +388,7 @@ dnl *** Video 4 Linux ***
 dnl for information about the header/define, see sys/v4l/gstv4lelement.h
 dnl renamed to GST_V4L in accordance with V4L2 below
 translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L, true)
-GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], video4linux, [
+AG_GST_CHECK_FEATURE(GST_V4L, [Video 4 Linux], video4linux, [
   AC_CHECK_DECL(VID_TYPE_MPEG_ENCODER, HAVE_GST_V4L="yes", HAVE_GST_V4L="no", [
 #include <sys/types.h>
 #define _LINUX_TIME_H
@@ -413,7 +415,7 @@ echo
 
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
-GST_CHECK_FEATURE(ALSA, [ALSA], alsa, [
+AG_GST_CHECK_FEATURE(ALSA, [ALSA], alsa, [
   PKG_CHECK_MODULES(ALSA, alsa >= 0.9.1, [
     HAVE_ALSA="yes"
     AC_SUBST(ALSA_CFLAGS)
@@ -425,8 +427,8 @@ GST_CHECK_FEATURE(ALSA, [ALSA], alsa, [
 
 dnl *** CDParanoia ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDPARANOIA, true)
-GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
-  GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
+AG_GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
+  AG_GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
                       cdda_open, -lm, 
                       cdda_interface.h, 
                       CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
@@ -434,7 +436,7 @@ GST_CHECK_FEATURE(CDPARANOIA, [CDParanoia], cdparanoia, [
                       FOUND_CDPARANOIA="yes")
   if test "x$FOUND_CDPARANOIA" != "xyes";
   then
-    GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
+    AG_GST_CHECK_LIBHEADER(CDPARANOIA, cdda_interface, 
                         cdda_open, -lm, 
                         cdda/cdda_interface.h, 
                         CDPARANOIA_LIBS="-lcdda_interface -lcdda_paranoia"
@@ -454,24 +456,24 @@ dnl AC_CHECK_HEADER(cdda_paranoia.h, :, HAVE_CDPARANOIA=no)
 
 dnl *** GNOME VFS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GNOME_VFS, true)
-GST_CHECK_FEATURE(GNOME_VFS, [GNOME VFS], gnomevfs, [
-  GST_PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0)
+AG_GST_CHECK_FEATURE(GNOME_VFS, [GNOME VFS], gnomevfs, [
+  AG_GST_PKG_CHECK_MODULES(GNOME_VFS, gnome-vfs-2.0)
 ])
 
 dnl *** libvisual ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBVISUAL, true)
-GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization library], libvisual, [
-  GST_PKG_CHECK_MODULES(LIBVISUAL, libvisual-0.4 >= 0.4.0)
+AG_GST_CHECK_FEATURE(LIBVISUAL, [libvisual visualization library], libvisual, [
+  AG_GST_PKG_CHECK_MODULES(LIBVISUAL, libvisual-0.4 >= 0.4.0)
   if test $HAVE_LIBVISUAL = no
   then
-    GST_PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.2.0)
+    AG_GST_PKG_CHECK_MODULES(LIBVISUAL, libvisual = 0.2.0)
   fi
 ])
 
 dnl *** ogg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OGG, true)
-GST_CHECK_FEATURE(OGG, [Xiph Ogg library], ogg, [
-  GST_PKG_CHECK_MODULES(OGG, ogg >= 1.0)
+AG_GST_CHECK_FEATURE(OGG, [Xiph Ogg library], ogg, [
+  AG_GST_PKG_CHECK_MODULES(OGG, ogg >= 1.0)
   if test $HAVE_OGG = no
   then
     XIPH_PATH_OGG(HAVE_OGG="yes", HAVE_OGG="no")
@@ -481,17 +483,17 @@ GST_CHECK_FEATURE(OGG, [Xiph Ogg library], ogg, [
 
 dnl *** pango ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_PANGO, true)
-GST_CHECK_FEATURE(PANGO, [Pango font rendering], pango, [
-  GST_PKG_CHECK_MODULES(PANGO, pango pangoft2)
+AG_GST_CHECK_FEATURE(PANGO, [Pango font rendering], pango, [
+  AG_GST_PKG_CHECK_MODULES(PANGO, pango pangoft2)
 ])
 
 dnl *** theora ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORA, true)
-GST_CHECK_FEATURE(THEORA, [Xiph Theora video codec], theora, [
-  GST_PKG_CHECK_MODULES(THEORA, theora)
+AG_GST_CHECK_FEATURE(THEORA, [Xiph Theora video codec], theora, [
+  AG_GST_PKG_CHECK_MODULES(THEORA, theora)
   if test $HAVE_THEORA = no
   then
-    GST_CHECK_LIBHEADER(THEORA, theora, theora_version_string, "-logg", theora/theora.h, THEORA_LIBS="-ltheora -logg")
+    AG_GST_CHECK_LIBHEADER(THEORA, theora, theora_version_string, "-logg", theora/theora.h, THEORA_LIBS="-ltheora -logg")
     AC_SUBST(THEORA_LIBS)
   fi
 ])
@@ -499,8 +501,8 @@ GST_CHECK_FEATURE(THEORA, [Xiph Theora video codec], theora, [
 dnl *** vorbis ***
 dnl AM_PATH_VORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
-GST_CHECK_FEATURE(VORBIS, [Xiph Vorbis audio codec], vorbis, [
-  GST_PKG_CHECK_MODULES(VORBIS, vorbis >= 1.0 vorbisenc >= 1.0)
+AG_GST_CHECK_FEATURE(VORBIS, [Xiph Vorbis audio codec], vorbis, [
+  AG_GST_PKG_CHECK_MODULES(VORBIS, vorbis >= 1.0 vorbisenc >= 1.0)
   if test $HAVE_VORBIS = no
   then
     XIPH_PATH_VORBIS(HAVE_VORBIS="yes", HAVE_VORBIS="no")
@@ -679,4 +681,4 @@ m4/Makefile
 )
 AC_OUTPUT
 
-GST_OUTPUT_PLUGINS
+AG_GST_OUTPUT_PLUGINS
