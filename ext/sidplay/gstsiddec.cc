@@ -18,6 +18,35 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-siddec
+ * @short_description: a decoder for sid files
+ *
+ * <refsect2>
+ * <para>
+ * This element decodes .sid files to raw audio. .sid files are in fact 
+ * small Commodore 64 programs that are executed on an emulated 6502 CPU and a 
+ * MOS 6581 sound chip. 
+ * </para>
+ * <para>
+ * This plugin will first load the complete program into memory before starting
+ * the emulator and producing output.
+ * </para>
+ * <para>
+ * Seeking is not (and cannot be) implemented.
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * <programlisting>
+ * gst-launch -v filesrc location=Hawkeye.sid ! siddec ! audioconvert ! alsasink
+ * </programlisting>
+ * Decode a sid file and play back the audio using alsasink.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2006-12-30 (0.10.5)
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -274,7 +303,6 @@ gst_siddec_finalize (GObject * object)
   delete (siddec->engine);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
-
 }
 
 static void
@@ -356,6 +384,7 @@ siddec_negotiate (GstSidDec * siddec)
 
   return TRUE;
 
+  /* ERRORS */
 nothing_allowed:
   {
     GST_DEBUG_OBJECT (siddec, "could not get allowed caps");
@@ -539,7 +568,7 @@ gst_siddec_chain (GstPad * pad, GstBuffer * buffer)
 overflow:
   {
     GST_ELEMENT_ERROR (siddec, STREAM, DECODE,
-        (NULL), ("Input data bigger than allowd buffer size"));
+        (NULL), ("Input data bigger than allowed buffer size"));
     gst_object_unref (siddec);
     return GST_FLOW_ERROR;
   }

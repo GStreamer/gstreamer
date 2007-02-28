@@ -21,7 +21,6 @@
 #ifndef __GST_SIDDEC_H__
 #define __GST_SIDDEC_H__
 
-
 #include <stdlib.h>
 #include <sidplay/player.h>
 

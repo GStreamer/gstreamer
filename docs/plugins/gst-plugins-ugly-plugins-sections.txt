@@ -14,3 +14,11 @@ GstLame
 GstLameClass
 </SECTION>
 
+<SECTION>
+<FILE>element-siddec</FILE>
+GstSidDec
+<TITLE>siddec</TITLE>
+<SUBSECTION Standard>
+GstSidDecClass
+</SECTION>
+
