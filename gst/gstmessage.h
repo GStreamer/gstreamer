@@ -249,6 +249,7 @@ gst_message_ref (GstMessage * msg)
 GstMessage *	gst_message_new_eos		(GstObject * src);
 GstMessage *	gst_message_new_error		(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_warning		(GstObject * src, GError * error, gchar * debug);
+GstMessage *	gst_message_new_info		(GstObject * src, GError * error, gchar * debug);
 GstMessage *	gst_message_new_tag		(GstObject * src, GstTagList * tag_list);
 GstMessage *	gst_message_new_buffering	(GstObject * src, gint percent);
 GstMessage *	gst_message_new_state_changed	(GstObject * src, GstState oldstate,
@@ -269,6 +270,7 @@ GstMessage *	gst_message_new_custom		(GstMessageType type,
 
 void		gst_message_parse_error		(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_warning	(GstMessage *message, GError **gerror, gchar **debug);
+void		gst_message_parse_info 		(GstMessage *message, GError **gerror, gchar **debug);
 void		gst_message_parse_tag		(GstMessage *message, GstTagList **tag_list);
 void 		gst_message_parse_buffering	(GstMessage *message, gint *percent);
 void		gst_message_parse_state_changed	(GstMessage *message, GstState *oldstate,

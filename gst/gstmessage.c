@@ -374,6 +374,33 @@ gst_message_new_warning (GstObject * src, GError * error, gchar * debug)
 }
 
 /**
+ * gst_message_new_info:
+ * @src: The object originating the message.
+ * @error: The GError for this message.
+ * @debug: A debugging string for something or other.
+ *
+ * Create a new info message. The message will make copies of @error and
+ * @debug.
+ *
+ * Returns: The new info message.
+ *
+ * Since: 0.10.12
+ *
+ * MT safe.
+ */
+GstMessage *
+gst_message_new_info (GstObject * src, GError * error, gchar * debug)
+{
+  GstMessage *message;
+
+  message = gst_message_new_custom (GST_MESSAGE_INFO, src,
+      gst_structure_new ("GstMessageInfo", "gerror", GST_TYPE_G_ERROR, error,
+          "debug", G_TYPE_STRING, debug, NULL));
+
+  return message;
+}
+
+/**
  * gst_message_new_tag:
  * @src: The object originating the message.
  * @tag_list: The tag list for the message.
@@ -947,6 +974,42 @@ gst_message_parse_warning (GstMessage * message, GError ** gerror,
 
   g_return_if_fail (GST_IS_MESSAGE (message));
   g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_WARNING);
+
+  error_gvalue = gst_structure_get_value (message->structure, "gerror");
+  g_return_if_fail (error_gvalue != NULL);
+  g_return_if_fail (G_VALUE_TYPE (error_gvalue) == GST_TYPE_G_ERROR);
+
+  error_val = (GError *) g_value_get_boxed (error_gvalue);
+  if (error_val)
+    *gerror = g_error_copy (error_val);
+  else
+    *gerror = NULL;
+
+  if (debug)
+    *debug = g_strdup (gst_structure_get_string (message->structure, "debug"));
+}
+
+/**
+ * gst_message_parse_info:
+ * @message: A valid #GstMessage of type GST_MESSAGE_INFO.
+ * @gerror: Location for the GError
+ * @debug: Location for the debug message, or NULL
+ *
+ * Extracts the GError and debug string from the GstMessage. The values returned
+ * in the output arguments are copies; the caller must free them when done.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.12
+ */
+void
+gst_message_parse_info (GstMessage * message, GError ** gerror, gchar ** debug)
+{
+  const GValue *error_gvalue;
+  GError *error_val;
+
+  g_return_if_fail (GST_IS_MESSAGE (message));
+  g_return_if_fail (GST_MESSAGE_TYPE (message) == GST_MESSAGE_INFO);
 
   error_gvalue = gst_structure_get_value (message->structure, "gerror");
   g_return_if_fail (error_gvalue != NULL);

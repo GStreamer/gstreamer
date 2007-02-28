@@ -1556,7 +1556,7 @@ void gst_element_message_full
   GST_DEBUG_OBJECT (element, "start");
   g_return_if_fail (GST_IS_ELEMENT (element));
   g_return_if_fail ((type == GST_MESSAGE_ERROR) ||
-      (type == GST_MESSAGE_WARNING));
+      (type == GST_MESSAGE_WARNING) || (type == GST_MESSAGE_INFO));
 
   /* check if we send the given text or the default error text */
   if ((text == NULL) || (text[0] == 0)) {
@@ -1587,14 +1587,22 @@ void gst_element_message_full
       sent_text);
   gerror = g_error_new_literal (domain, code, sent_text);
 
-  if (type == GST_MESSAGE_ERROR) {
-    message =
-        gst_message_new_error (GST_OBJECT_CAST (element), gerror, sent_debug);
-  } else if (type == GST_MESSAGE_WARNING) {
-    message = gst_message_new_warning (GST_OBJECT_CAST (element), gerror,
-        sent_debug);
-  } else {
-    g_assert_not_reached ();
+  switch (type) {
+    case GST_MESSAGE_ERROR:
+      message =
+          gst_message_new_error (GST_OBJECT_CAST (element), gerror, sent_debug);
+      break;
+    case GST_MESSAGE_WARNING:
+      message = gst_message_new_warning (GST_OBJECT_CAST (element), gerror,
+          sent_debug);
+      break;
+    case GST_MESSAGE_INFO:
+      message = gst_message_new_info (GST_OBJECT_CAST (element), gerror,
+          sent_debug);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
   gst_element_post_message (element, message);
 
@@ -1645,7 +1653,7 @@ gst_element_is_locked_state (GstElement * element)
  *
  * MT safe.
  *
- * Returns: TRUE if the state was changed, FALSE if bad parameterss were given
+ * Returns: TRUE if the state was changed, FALSE if bad parameters were given
  * or the elements state-locking needed no change.
  */
 gboolean
@@ -1675,11 +1683,13 @@ gst_element_set_locked_state (GstElement * element, gboolean locked_state)
   return TRUE;
 
 was_ok:
-  GST_CAT_DEBUG (GST_CAT_STATES, "elements %s was in locked state %d",
-      GST_ELEMENT_NAME (element), old);
-  GST_OBJECT_UNLOCK (element);
+  {
+    GST_CAT_DEBUG (GST_CAT_STATES, "elements %s was in locked state %d",
+        GST_ELEMENT_NAME (element), old);
+    GST_OBJECT_UNLOCK (element);
 
-  return FALSE;
+    return FALSE;
+  }
 }
 
 /**
@@ -1741,10 +1751,13 @@ gst_element_get_state_func (GstElement * element,
   GstStateChangeReturn ret = GST_STATE_CHANGE_FAILURE;
   GstState old_pending;
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "getting state");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "getting state, timeout %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (timeout));
 
   GST_OBJECT_LOCK (element);
   ret = GST_STATE_RETURN (element);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "RETURN is %s",
+      gst_element_state_change_return_get_name (ret));
 
   /* we got an error, report immediatly */
   if (ret == GST_STATE_CHANGE_FAILURE)
@@ -1860,13 +1873,12 @@ interrupted:
  *
  * This function returns %GST_STATE_CHANGE_NO_PREROLL if the element
  * successfully changed its state but is not able to provide data yet.
- * This mostly
- * happens for live sources that only produce data in the PLAYING state.
- * While the state change return is equivalent to %GST_STATE_CHANGE_SUCCESS, it
- * is returned to the application to signal that some sink elements might not
- * be able to complete their state change because an element is not producing
- * data to complete the preroll. When setting the element to playing,
- * the preroll will complete and playback will start.
+ * This mostly happens for live sources that only produce data in the PLAYING
+ * state. While the state change return is equivalent to
+ * %GST_STATE_CHANGE_SUCCESS, it is returned to the application to signal that
+ * some sink elements might not be able to complete their state change because
+ * an element is not producing data to complete the preroll. When setting the
+ * element to playing, the preroll will complete and playback will start.
  *
  * Returns: %GST_STATE_CHANGE_SUCCESS if the element has no more pending state
  *          and the last state change succeeded, %GST_STATE_CHANGE_ASYNC if the
@@ -1955,12 +1967,12 @@ nothing_aborted:
  * by elements that do asynchronous state changes.       
  * The core will normally call this method automatically when an         
  * element returned %GST_STATE_CHANGE_SUCCESS from the state change function.      
- * Elements that return %GST_STATE_CHANGE_ASYNC from the change_state function
- * should eventually call this method from the streaming thread to signal       
- * successfull state change completion.          
- *       
+ *
  * If after calling this method the element still has not reached        
  * the pending state, the next state change is performed.        
+ *       
+ * This method is used internally and should normally not be called by plugins
+ * or applications.
  *       
  * Returns: The result of the commit state change.       
  *       
@@ -2067,7 +2079,8 @@ complete:
  * This function can only be called when the element is currently
  * not in error or an async state change.
  *
- * This function can only be called with the STATE_LOCK held.
+ * This function is used internally and should normally not be called from
+ * plugins or applications.
  *
  * MT safe.
  */
@@ -2336,6 +2349,7 @@ invalid_return:
     g_critical ("%s: unknown return value %d from a state change function",
         GST_ELEMENT_NAME (element), ret);
 
+    /* we are in error now */
     ret = GST_STATE_CHANGE_FAILURE;
     GST_STATE_RETURN (element) = ret;
     GST_OBJECT_UNLOCK (element);
