@@ -3231,29 +3231,33 @@ gst_avi_demux_invert (avi_stream_context * stream, GstBuffer * buf)
  * Returns the aggregated GstFlowReturn.
  */
 static GstFlowReturn
-gst_avi_demux_aggregated_flow (GstAviDemux * avi)
+gst_avi_demux_combine_flows (GstAviDemux * avi, avi_stream_context * stream,
+    GstFlowReturn ret)
 {
   gint i;
-  GstFlowReturn res = GST_FLOW_OK;
 
+  /* store the value */
+  stream->last_flow = ret;
+
+  /* any other error that is not-linked can be returned right
+   * away */
+  if (ret != GST_FLOW_NOT_LINKED)
+    goto done;
+
+  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
   for (i = 0; i < avi->num_streams; i++) {
-    res = avi->stream[i].last_flow;
+    avi_stream_context *ostream = &avi->stream[i];
 
-    GST_LOG_OBJECT (avi, "stream %d , flow : %s", i, gst_flow_get_name (res));
-
-    /* at least one flow is success, return that value */
-    if (GST_FLOW_IS_SUCCESS (res))
-      break;
-
-    /* any other error that is not-linked can be returned right away */
-    if (res != GST_FLOW_NOT_LINKED)
-      break;
+    ret = ostream->last_flow;
+    /* some other return value (must be SUCCESS but we can return
+     * other values as well) */
+    if (ret != GST_FLOW_NOT_LINKED)
+      goto done;
   }
-
-  GST_DEBUG_OBJECT (avi, "Returning aggregated value of %s",
-      gst_flow_get_name (res));
-
-  return res;
+  /* if we get here, all other pads were unlinked and we return
+   * NOT_LINKED then */
+done:
+  return ret;
 }
 
 /*
@@ -3343,7 +3347,11 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
       stream->discont = FALSE;
     }
 
-    res = stream->last_flow = gst_pad_push (stream->pad, buf);
+    res = gst_pad_push (stream->pad, buf);
+
+    /* combine flows */
+    res = gst_avi_demux_combine_flows (avi, stream, res);
+
     /* mark as processed, we increment the frame and byte counters then
      * leave the while loop and return the GstFlowReturn */
     processed = TRUE;
@@ -3357,6 +3365,7 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
 
 beach:
   GST_DEBUG_OBJECT (avi, "returning %s", gst_flow_get_name (res));
+
   return res;
 
   /* ERRORS */
@@ -3365,7 +3374,7 @@ eos:
     GST_LOG_OBJECT (avi, "Handled last index entry, setting EOS (%d > %d)",
         avi->current_entry, avi->index_size);
     /* we mark the first stream as EOS */
-    res = avi->stream[0].last_flow = GST_FLOW_UNEXPECTED;
+    res = GST_FLOW_UNEXPECTED;
     goto beach;
   }
 eos_stop:
@@ -3373,7 +3382,7 @@ eos_stop:
     GST_LOG_OBJECT (avi, "Found keyframe after segment,"
         " setting EOS (%" GST_TIME_FORMAT " > %" GST_TIME_FORMAT ")",
         GST_TIME_ARGS (entry->ts), GST_TIME_ARGS (avi->segment.stop));
-    res = stream->last_flow = GST_FLOW_UNEXPECTED;
+    res = GST_FLOW_UNEXPECTED;
     goto beach;
   }
 pull_failed:
@@ -3381,7 +3390,6 @@ pull_failed:
     GST_DEBUG_OBJECT (avi,
         "pull range failed: pos=%" G_GUINT64_FORMAT " size=%d",
         entry->offset + avi->index_offset, entry->size);
-    stream->last_flow = res;
     goto beach;
   }
 short_buffer:
@@ -3390,7 +3398,7 @@ short_buffer:
         ", only got %d/%d bytes (truncated file?)", entry->offset +
         avi->index_offset, GST_BUFFER_SIZE (buf), entry->size);
     gst_buffer_unref (buf);
-    res = stream->last_flow = GST_FLOW_UNEXPECTED;
+    res = GST_FLOW_UNEXPECTED;
     goto beach;
   }
 }
@@ -3532,7 +3540,10 @@ gst_avi_demux_stream_data (GstAviDemux * avi)
           GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
           stream->discont = FALSE;
         }
-        res = stream->last_flow = gst_pad_push (stream->pad, buf);
+        res = gst_pad_push (stream->pad, buf);
+
+        /* combine flows */
+        res = gst_avi_demux_combine_flows (avi, stream, res);
         if (res != GST_FLOW_OK) {
           GST_DEBUG ("Push failed; %s", gst_flow_get_name (res));
           return res;
@@ -3584,7 +3595,7 @@ push_tag_lists (GstAviDemux * avi)
 static void
 gst_avi_demux_loop (GstPad * pad)
 {
-  GstFlowReturn res = GST_FLOW_OK, agg_res = GST_FLOW_OK;
+  GstFlowReturn res;
   GstAviDemux *avi = GST_AVI_DEMUX (GST_PAD_PARENT (pad));
 
   switch (avi->state) {
@@ -3613,32 +3624,10 @@ gst_avi_demux_loop (GstPad * pad)
       /* process each index entry in turn */
       res = gst_avi_demux_stream_data (avi);
 
-#if 0
-      /* if a pad is in e.g. WRONG_STATE, we want to pause to unlock the STREAM_LOCK */
-      if ((res == GST_FLOW_WRONG_STATE) || ((res != GST_FLOW_OK)
-              && ((agg_res =
-                      gst_avi_demux_aggregated_flow (avi)) != GST_FLOW_OK))) {
-        GST_WARNING ("stream_movi flow: %s / %s", gst_flow_get_name (res),
-            gst_flow_get_name (agg_res));
-        res = agg_res;
-        goto pause;
-      }
-#endif
-
-      /* if a pad is in WRONG_STATE like after a flushing seek, we want to pause to
-       * unlock the STREAM_LOCK
-       */
+      /* pause when error */
       if (res != GST_FLOW_OK) {
         GST_INFO ("stream_movi flow: %s", gst_flow_get_name (res));
-        /* if we do that then we can't play streams, that are partialy linked */
-        if (res == GST_FLOW_WRONG_STATE)
-          goto pause;
-        if ((agg_res = gst_avi_demux_aggregated_flow (avi)) != GST_FLOW_OK) {
-          GST_INFO ("stream_movi aggregated flow: %s",
-              gst_flow_get_name (agg_res));
-          res = agg_res;
-          goto pause;
-        }
+        goto pause;
       }
       break;
     default:
@@ -3695,7 +3684,7 @@ pause:
 static GstFlowReturn
 gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstFlowReturn res = GST_FLOW_OK;
+  GstFlowReturn res;
   GstAviDemux *avi = GST_AVI_DEMUX (GST_PAD_PARENT (pad));
 
   GST_DEBUG ("Store %d bytes in adapter", GST_BUFFER_SIZE (buf));
@@ -3725,14 +3714,14 @@ gst_avi_demux_chain (GstPad * pad, GstBuffer * buf)
       res = gst_avi_demux_stream_data (avi);
       break;
     default:
-      g_assert_not_reached ();
+      GST_ELEMENT_ERROR (avi, STREAM, FAILED, (NULL),
+          ("Illegal internal state"));
+      res = GST_FLOW_ERROR;
+      break;
   }
 
   GST_DEBUG_OBJECT (avi, "state: %d res:%s", avi->state,
       gst_flow_get_name (res));
-
-  /* Get Aggregated flow return as the final flow result. */
-  res = gst_avi_demux_aggregated_flow (avi);
 
   return res;
 }

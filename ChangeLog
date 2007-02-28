@@ -1,5 +1,12 @@
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/avi/gstavidemux.c: (gst_avi_demux_combine_flows),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data),
+	(gst_avi_demux_loop), (gst_avi_demux_chain):
+	Fix combined flow return. Fixes #412608.
+
+2007-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videofilter/Makefile.am:
 	Dist header..
 
