@@ -1,5 +1,10 @@
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_sink_activate):
+	Improve debugging.
+
+2007-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_class_init), (gst_v4lsrc_init),
 	(gst_v4lsrc_fixate), (gst_v4lsrc_query):
 	* sys/v4l/v4lsrc_calls.c: (gst_v4lsrc_buffer_new):
