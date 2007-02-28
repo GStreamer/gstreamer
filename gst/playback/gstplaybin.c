@@ -513,7 +513,11 @@ static void
 gst_play_bin_vis_unblocked (GstPad * tee_pad, gboolean blocked,
     gpointer user_data)
 {
-  /* Unblocked */
+  GstPlayBin *play_bin = GST_PLAY_BIN (user_data);
+
+  if (play_bin->pending_visualisation)
+    gst_pad_set_blocked_async (tee_pad, FALSE, gst_play_bin_vis_unblocked,
+        play_bin);
 }
 
 static void
@@ -524,9 +528,15 @@ gst_play_bin_vis_blocked (GstPad * tee_pad, gboolean blocked,
   GstBin *vis_bin = NULL;
   GstPad *vis_sink_pad = NULL, *vis_src_pad = NULL, *vqueue_pad = NULL;
   GstState bin_state;
+  GstElement *pending_visualisation;
+
+  GST_OBJECT_LOCK (play_bin);
+  pending_visualisation = play_bin->pending_visualisation;
+  play_bin->pending_visualisation = NULL;
+  GST_OBJECT_UNLOCK (play_bin);
 
   /* We want to disable visualisation */
-  if (!GST_IS_ELEMENT (play_bin->pending_visualisation)) {
+  if (!GST_IS_ELEMENT (pending_visualisation)) {
     /* Set visualisation element to READY */
     gst_element_set_state (play_bin->visualisation, GST_STATE_READY);
     goto beach;
@@ -575,17 +585,16 @@ gst_play_bin_vis_blocked (GstPad * tee_pad, gboolean blocked,
   /* And loose our ref */
   gst_object_unref (play_bin->visualisation);
 
-  if (play_bin->pending_visualisation) {
+  if (pending_visualisation) {
     /* Ref this new visualisation element before adding to the bin */
-    gst_object_ref (play_bin->pending_visualisation);
+    gst_object_ref (pending_visualisation);
     /* Add the new one */
-    gst_bin_add (vis_bin, play_bin->pending_visualisation);
+    gst_bin_add (vis_bin, pending_visualisation);
     /* Synchronizing state */
-    gst_element_set_state (play_bin->pending_visualisation, bin_state);
+    gst_element_set_state (pending_visualisation, bin_state);
 
-    vis_sink_pad = gst_element_get_pad (play_bin->pending_visualisation,
-        "sink");
-    vis_src_pad = gst_element_get_pad (play_bin->pending_visualisation, "src");
+    vis_sink_pad = gst_element_get_pad (pending_visualisation, "sink");
+    vis_src_pad = gst_element_get_pad (pending_visualisation, "src");
 
     if (!GST_IS_PAD (vis_sink_pad) || !GST_IS_PAD (vis_src_pad)) {
       goto beach;
@@ -598,8 +607,7 @@ gst_play_bin_vis_blocked (GstPad * tee_pad, gboolean blocked,
 
   /* We are done */
   gst_object_unref (play_bin->visualisation);
-  play_bin->visualisation = play_bin->pending_visualisation;
-  play_bin->pending_visualisation = NULL;
+  play_bin->visualisation = pending_visualisation;
 
 beach:
   if (vis_sink_pad) {
@@ -656,24 +664,23 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       break;
     case ARG_VIS_PLUGIN:
     {
+      GstElement *pending_visualisation =
+          GST_ELEMENT_CAST (g_value_get_object (value));
+
+      /* Take ownership */
+      if (pending_visualisation) {
+        gst_object_ref (pending_visualisation);
+        gst_object_sink (pending_visualisation);
+      }
+
       /* Do we already have a visualisation change pending ? */
+      GST_OBJECT_LOCK (play_bin);
       if (play_bin->pending_visualisation) {
         gst_object_unref (play_bin->pending_visualisation);
-        play_bin->pending_visualisation = g_value_get_object (value);
-        /* Take ownership */
-        if (play_bin->pending_visualisation) {
-          gst_object_ref (play_bin->pending_visualisation);
-          gst_object_sink (GST_OBJECT_CAST (play_bin->pending_visualisation));
-        }
+        play_bin->pending_visualisation = pending_visualisation;
+        GST_OBJECT_UNLOCK (play_bin);
       } else {
-        play_bin->pending_visualisation = g_value_get_object (value);
-
-        /* Take ownership */
-        if (play_bin->pending_visualisation) {
-          gst_object_ref (play_bin->pending_visualisation);
-          gst_object_sink (GST_OBJECT_CAST (play_bin->pending_visualisation));
-        }
-
+        GST_OBJECT_UNLOCK (play_bin);
         /* Was there a visualisation already set ? */
         if (play_bin->visualisation != NULL) {
           GstBin *vis_bin = NULL;
@@ -697,6 +704,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
               goto beach;
             }
 
+            play_bin->pending_visualisation = pending_visualisation;
             /* Block with callback */
             gst_pad_set_blocked_async (tee_pad, TRUE, gst_play_bin_vis_blocked,
                 play_bin);
@@ -709,12 +717,10 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
             }
             gst_object_unref (vis_bin);
           } else {
-            play_bin->visualisation = play_bin->pending_visualisation;
-            play_bin->pending_visualisation = NULL;
+            play_bin->visualisation = pending_visualisation;
           }
         } else {
-          play_bin->visualisation = play_bin->pending_visualisation;
-          play_bin->pending_visualisation = NULL;
+          play_bin->visualisation = pending_visualisation;
         }
       }
       break;

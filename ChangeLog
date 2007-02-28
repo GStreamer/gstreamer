@@ -1,3 +1,12 @@
+2007-02-28  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Ed Catmur <ed at catmur dot co dot uk>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_vis_unblocked),
+	(gst_play_bin_vis_blocked), (gst_play_bin_set_property):
+	Fix race condition when rapidly switching visualisations in playbin.
+	Fixes #401029.
+
 2007-02-28  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/Makefile.am:
