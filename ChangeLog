@@ -1,5 +1,10 @@
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videofilter/Makefile.am:
+	Dist header..
+
+2007-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videofilter/gstgamma.h:
 	Add header too.
 

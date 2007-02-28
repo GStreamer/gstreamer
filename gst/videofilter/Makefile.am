@@ -1,7 +1,7 @@
 # noinst_LTLIBRARIES = libgstvideoexample.la
 plugin_LTLIBRARIES = libgstvideoflip.la libgstvideobalance.la libgstgamma.la
 
-noinst_HEADERS = gstvideoflip.h gstvideobalance.h
+noinst_HEADERS = gstvideoflip.h gstvideobalance.h gstgamma.h
 
 EXTRA_DIST = gstvideotemplate.c make_filter
 CLEANFILES = gstvideoexample.c
