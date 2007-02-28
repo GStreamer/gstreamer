@@ -93,8 +93,6 @@ gst_audio_clock_class_init (GstAudioClockClass * klass)
 static void
 gst_audio_clock_init (GstAudioClock * clock)
 {
-  gst_object_set_name (GST_OBJECT (clock), "GstAudioClock");
-
   clock->last_time = 0;
   GST_OBJECT_FLAG_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER);
 }
@@ -116,7 +114,7 @@ gst_audio_clock_new (gchar * name, GstAudioClockGetTimeFunc func,
     gpointer user_data)
 {
   GstAudioClock *aclock =
-      GST_AUDIO_CLOCK (g_object_new (GST_TYPE_AUDIO_CLOCK, NULL));
+      GST_AUDIO_CLOCK (g_object_new (GST_TYPE_AUDIO_CLOCK, "name", name, NULL));
 
   aclock->func = func;
   aclock->user_data = user_data;

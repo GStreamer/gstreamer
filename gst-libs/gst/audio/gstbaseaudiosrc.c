@@ -152,7 +152,7 @@ gst_base_audio_src_init (GstBaseAudioSrc * baseaudiosrc,
    * value based on negotiated format. */
   GST_BASE_SRC (baseaudiosrc)->blocksize = 0;
 
-  baseaudiosrc->clock = gst_audio_clock_new ("clock",
+  baseaudiosrc->clock = gst_audio_clock_new ("GstAudioSrcClock",
       (GstAudioClockGetTimeFunc) gst_base_audio_src_get_time, baseaudiosrc);
 
   /* we are always a live source */
@@ -419,9 +419,11 @@ gst_base_audio_src_query (GstBaseSrc * bsrc, GstQuery * query)
 
       spec = &src->ringbuffer->spec;
 
+      /* we have at least 1 segment of latency */
       min_latency =
           gst_util_uint64_scale_int (spec->segsize, GST_SECOND,
           spec->rate * spec->bytes_per_sample);
+      /* we cannot delay more than the buffersize else we lose data */
       max_latency =
           gst_util_uint64_scale_int (spec->segtotal * spec->segsize, GST_SECOND,
           spec->rate * spec->bytes_per_sample);
@@ -493,11 +495,14 @@ gst_base_audio_src_get_offset (GstBaseAudioSrc * src)
   segdone = g_atomic_int_get (&src->ringbuffer->segdone)
       - src->ringbuffer->segbase;
 
+  GST_DEBUG_OBJECT (src, "reading from %d, we are at %d", readseg, segdone);
+
   /* see how far away it is from the read segment, normally segdone (where new
    * data is written in the ringbuffer) is bigger than readseg (where we are
    * reading). */
   diff = segdone - readseg;
   if (diff >= segtotal) {
+    GST_DEBUG_OBJECT (src, "dropped, align to segment %d", segdone);
     /* sample would be dropped, position to next playable position */
     sample = (segdone - segtotal + 1) * sps;
   }
@@ -574,6 +579,8 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     GST_WARNING_OBJECT (src,
         "create DISCONT of %" G_GUINT64_FORMAT " samples at sample %"
         G_GUINT64_FORMAT, sample - src->next_sample, sample);
+    GST_ELEMENT_WARNING (src, CORE, CLOCK, (NULL),
+        ("dropped %" G_GUINT64_FORMAT " samples", sample - src->next_sample));
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
