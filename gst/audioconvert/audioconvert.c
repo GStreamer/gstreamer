@@ -252,10 +252,14 @@ audio_convert_get_func_index (AudioConvertFmt * fmt)
 }
 
 static gboolean
-check_default (AudioConvertFmt * fmt)
+check_default (AudioConvertCtx * ctx, AudioConvertFmt * fmt)
 {
-  return (fmt->width == 32 && fmt->depth == 32 &&
-      fmt->endianness == G_BYTE_ORDER && fmt->sign == TRUE);
+  if (ctx->in.is_int || ctx->out.is_int) {
+    return (fmt->width == 32 && fmt->depth == 32 &&
+        fmt->endianness == G_BYTE_ORDER && fmt->sign == TRUE);
+  } else {
+    return (fmt->width == 64);
+  }
 }
 
 gboolean
@@ -312,11 +316,11 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   GST_INFO ("unitsizes: %d -> %d", in->unit_size, out->unit_size);
 
   /* check if input is in default format */
-  ctx->in_default = check_default (in);
+  ctx->in_default = check_default (ctx, in);
   /* check if channel mixer is passthrough */
   ctx->mix_passthrough = gst_channel_mix_passthrough (ctx);
   /* check if output is in default format */
-  ctx->out_default = check_default (out);
+  ctx->out_default = check_default (ctx, out);
 
   GST_INFO ("in default %d, mix passthrough %d, out default %d",
       ctx->in_default, ctx->mix_passthrough, ctx->out_default);
