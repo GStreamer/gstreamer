@@ -7,6 +7,7 @@ REGISTRY_ENVIRONMENT = \
 
 TESTS_ENVIRONMENT = \
         CK_DEFAULT_TIMEOUT=120                                  \
+        STATE_IGNORE_ELEMENTS="$(STATE_IGNORE_ELEMENTS)"	\
 	$(REGISTRY_ENVIRONMENT)					\
 	GST_PLUGIN_SYSTEM_PATH=					\
 	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GST_PLUGINS_DIR)
@@ -18,6 +19,9 @@ clean-local: clean-local-check
 
 $(CHECK_REGISTRY):
 	$(TESTS_ENVIRONMENT)
+
+# elements to ignore for the state tests
+STATE_IGNORE_ELEMENTS = cdio cdparanoiasrc
 
 TESTS = $(check_PROGRAMS)
 

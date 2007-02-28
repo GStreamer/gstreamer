@@ -33,8 +33,15 @@ GST_START_TEST (test_state_changes)
   GstElement *element;
   GList *features, *f;
   GList *plugins, *p;
+  gchar **ignorelist = NULL;
+  const gchar *STATE_IGNORE_ELEMENTS = NULL;
 
   GST_DEBUG ("testing elements from source %s", PACKAGE);
+  STATE_IGNORE_ELEMENTS = g_getenv ("STATE_IGNORE_ELEMENTS");
+  if (STATE_IGNORE_ELEMENTS) {
+    GST_DEBUG ("Will ignore element factories: '%s'", STATE_IGNORE_ELEMENTS);
+    ignorelist = g_strsplit (STATE_IGNORE_ELEMENTS, " ", 0);
+  }
 
   plugins = gst_registry_get_plugin_list (gst_registry_get_default ());
 
@@ -51,13 +58,22 @@ GST_START_TEST (test_state_changes)
     for (f = features; f; f = f->next) {
       GstPluginFeature *feature = f->data;
       const gchar *name = gst_plugin_feature_get_name (feature);
+      gboolean ignore = FALSE;
 
       if (!GST_IS_ELEMENT_FACTORY (feature))
         continue;
 
-      if (g_str_has_prefix (name, "cdparanoia") ||
-          g_str_has_prefix (name, "cdio")) {
-        continue;
+      if (ignorelist) {
+        gchar **s;
+
+        for (s = ignorelist; s && *s; ++s) {
+          if (g_str_has_prefix (name, *s)) {
+            GST_DEBUG ("ignoring element %s", name);
+            ignore = TRUE;
+          }
+        }
+        if (ignore)
+          continue;
       }
 
       GST_DEBUG ("testing element %s", name);
@@ -82,6 +98,7 @@ GST_START_TEST (test_state_changes)
       gst_object_unref (GST_OBJECT (element));
     }
   }
+  g_strfreev (ignorelist);
 }
 
 GST_END_TEST;

@@ -1,3 +1,10 @@
+2007-02-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/generic/states.c: (GST_START_TEST):
+	  Copy the states.c test from core again
+	* tests/check/Makefile.am:
+	  ignore cdio and cdparanoiasrc
+
 2007-02-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audioconvert/audioconvert.c: (float), (double), (float_hq),
