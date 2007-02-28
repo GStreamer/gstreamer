@@ -697,6 +697,7 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
 {
   GstBuffer *buf;
   gint fps_n, fps_d;
+  GstClockTime duration, timestamp, latency;
 
   GST_DEBUG_OBJECT (v4lsrc, "creating buffer for frame %d", num);
 
@@ -711,12 +712,19 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
   GST_BUFFER_DATA (buf) = gst_v4lsrc_get_buffer (v4lsrc, num);
   GST_BUFFER_SIZE (buf) = v4lsrc->buffer_size;
   GST_BUFFER_OFFSET (buf) = v4lsrc->offset++;
-  GST_BUFFER_TIMESTAMP (buf) = gst_clock_get_time (GST_ELEMENT (v4lsrc)->clock);
-  GST_BUFFER_TIMESTAMP (buf) -= GST_ELEMENT (v4lsrc)->base_time;
-  /* FIXME: this is a most ghetto timestamp/duration */
 
-  GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (GST_SECOND,
-      fps_n, fps_d);
+  duration = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
+  latency = duration;
+
+  timestamp = gst_clock_get_time (GST_ELEMENT_CAST (v4lsrc)->clock);
+  timestamp -= gst_element_get_base_time (GST_ELEMENT_CAST (v4lsrc));
+  if (timestamp > latency)
+    timestamp -= latency;
+  else
+    timestamp = 0;
+
+  GST_BUFFER_TIMESTAMP (buf) = timestamp;
+  GST_BUFFER_DURATION (buf) = duration;
 
   /* the negotiate() method already set caps on the source pad */
   gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (v4lsrc)));

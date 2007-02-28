@@ -60,8 +60,8 @@ static gboolean gst_v4lsrc_stop (GstBaseSrc * src);
 static gboolean gst_v4lsrc_set_caps (GstBaseSrc * src, GstCaps * caps);
 static GstCaps *gst_v4lsrc_get_caps (GstBaseSrc * src);
 static GstFlowReturn gst_v4lsrc_create (GstPushSrc * src, GstBuffer ** out);
-
-static void gst_v4lsrc_fixate (GstPad * pad, GstCaps * caps);
+static gboolean gst_v4lsrc_query (GstBaseSrc * bsrc, GstQuery * query);
+static void gst_v4lsrc_fixate (GstBaseSrc * bsrc, GstCaps * caps);
 
 static void gst_v4lsrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -119,6 +119,8 @@ gst_v4lsrc_class_init (GstV4lSrcClass * klass)
   basesrc_class->set_caps = gst_v4lsrc_set_caps;
   basesrc_class->start = gst_v4lsrc_start;
   basesrc_class->stop = gst_v4lsrc_stop;
+  basesrc_class->fixate = gst_v4lsrc_fixate;
+  basesrc_class->query = gst_v4lsrc_query;
 
   pushsrc_class->create = gst_v4lsrc_create;
 }
@@ -139,9 +141,6 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc, GstV4lSrcClass * klass)
   v4lsrc->timestamp_offset = 0;
 
   v4lsrc->fps_list = NULL;
-
-  gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (v4lsrc),
-      gst_v4lsrc_fixate);
 
   gst_base_src_set_live (GST_BASE_SRC (v4lsrc), TRUE);
 }
@@ -201,12 +200,12 @@ gst_v4lsrc_get_property (GObject * object,
 
 /* this function is a bit of a last resort */
 static void
-gst_v4lsrc_fixate (GstPad * pad, GstCaps * caps)
+gst_v4lsrc_fixate (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstStructure *structure;
   int i;
   int targetwidth, targetheight;
-  GstV4lSrc *v4lsrc = GST_V4LSRC (gst_pad_get_parent (pad));
+  GstV4lSrc *v4lsrc = GST_V4LSRC (bsrc);
   struct video_capability *vcap = &GST_V4LELEMENT (v4lsrc)->vcap;
   struct video_window *vwin = &GST_V4LELEMENT (v4lsrc)->vwin;
 
@@ -613,6 +612,53 @@ gst_v4lsrc_set_caps (GstBaseSrc * src, GstCaps * caps)
     return FALSE;
 
   return TRUE;
+}
+
+static gboolean
+gst_v4lsrc_query (GstBaseSrc * bsrc, GstQuery * query)
+{
+  GstV4lSrc *v4lsrc;
+  gboolean res = FALSE;
+
+  v4lsrc = GST_V4LSRC (bsrc);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      GstClockTime min_latency, max_latency;
+      gint fps_n, fps_d;
+
+      /* device must be open */
+      if (!GST_V4L_IS_OPEN (v4lsrc))
+        goto done;
+
+      /* we must have a framerate */
+      if (!(res = gst_v4lsrc_get_fps (v4lsrc, &fps_n, &fps_d)))
+        goto done;
+
+      /* min latency is the time to capture one frame */
+      min_latency = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
+
+      /* max latency is total duration of the frame buffer */
+      max_latency = v4lsrc->mbuf.frames * min_latency;
+
+      GST_DEBUG_OBJECT (bsrc,
+          "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+      /* we are always live, the min latency is 1 frame and the max latency is
+       * the complete buffer of frames. */
+      gst_query_set_latency (query, TRUE, min_latency, max_latency);
+
+      res = TRUE;
+      break;
+    }
+    default:
+      res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
+      break;
+  }
+done:
+  return res;
 }
 
 /* start and stop are not symmetric -- start will open the device, but not start
