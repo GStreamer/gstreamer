@@ -6,6 +6,7 @@ dnl releases only do Wall, cvs and prerelease does Werror too
 AC_INIT(GStreamer, 0.10.11.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer)
+AG_GST_INIT
 
 dnl initialize automake
 AM_INIT_AUTOMAKE
@@ -63,15 +64,15 @@ dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
 AM_GNU_GETTEXT_VERSION([0.11.5])
 AM_GNU_GETTEXT([external])
-GST_GETTEXT([gstreamer-$GST_MAJORMINOR])
+AG_GST_GETTEXT([gstreamer-$GST_MAJORMINOR])
 
 dnl *** check for arguments to configure ***
 
 dnl subsystems - can influence other decisions so needs to be high up
 dnl we need to AM_CONDITIONAL them here for automake 1.6.x compatibility
-GST_CHECK_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
 AM_CONDITIONAL(GST_DISABLE_GST_DEBUG, test "x$GST_GST_DISABLE_DEBUG" = "xyes")
-GST_CHECK_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
 AM_CONDITIONAL(GST_DISABLE_LOADSAVE, test "x$GST_DISABLE_LOADSAVE" = "xyes")
 dnl define a substitution to use in docs/gst/gstreamer.types
 if test "x$GST_DISABLE_LOADSAVE" = "xyes"
@@ -81,17 +82,17 @@ else
   GST_LOADSAVE_DOC_TYPES=
 fi
 AC_SUBST(GST_LOADSAVE_DOC_TYPES)
-GST_CHECK_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(PARSE,[command-line parser])
 AM_CONDITIONAL(GST_DISABLE_PARSE, test "x$GST_DISABLE_PARSE" = "xyes")
 if test "x$GST_DISABLE_PARSE" = xyes; then
   AC_DEFINE(GST_DISABLE_PARSE, 1,
     [Define if pipeline parsing code is disabled])
 fi
-GST_CHECK_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(TRACE,[tracing subsystem])
 AM_CONDITIONAL(GST_DISABLE_TRACE, test "x$GST_DISABLE_TRACE" = "xyes")
-GST_CHECK_SUBSYSTEM_DISABLE(ALLOC_TRACE,[allocation tracing])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(ALLOC_TRACE,[allocation tracing])
 AM_CONDITIONAL(GST_DISABLE_ALLOC_TRACE, test "x$GST_DISABLE_ALLOC_TRACE" = "xyes")
-GST_CHECK_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(REGISTRY,[plugin registry])
 AM_CONDITIONAL(GST_DISABLE_REGISTRY, test "x$GST_DISABLE_REGISTRY" = "xyes")
 dnl define a substitution to use in docs/gst/gstreamer.types
 if test "x$GST_DISABLE_REGISTRY" = "xyes"
@@ -101,27 +102,27 @@ else
   GST_REGISTRY_DOC_TYPES=
 fi
 AC_SUBST(GST_REGISTRY_DOC_TYPES)
-GST_CHECK_SUBSYSTEM_DISABLE(ENUMTYPES,[enum types])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(ENUMTYPES,[enum types])
 AM_CONDITIONAL(GST_DISABLE_ENUMTYPES, test "x$GST_DISABLE_ENUMTYPES" = "xyes")
-GST_CHECK_SUBSYSTEM_DISABLE(INDEX,[index])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(INDEX,[index])
 AM_CONDITIONAL(GST_DISABLE_INDEX, test "x$GST_DISABLE_INDEX" = "xyes")
-GST_CHECK_SUBSYSTEM_DISABLE(NET,[network distribution])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(NET,[network distribution])
 AM_CONDITIONAL(GST_DISABLE_NET, test "x$GST_DISABLE_NET" = "xyes")
-GST_CHECK_SUBSYSTEM_DISABLE(PLUGIN,[plugin])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(PLUGIN,[plugin])
 AM_CONDITIONAL(GST_DISABLE_PLUGIN, test "x$GST_DISABLE_PLUGIN" = "xyes")
-GST_CHECK_SUBSYSTEM_DISABLE(URI,[uri handlers])
+AG_GST_CHECK_SUBSYSTEM_DISABLE(URI,[uri handlers])
 AM_CONDITIONAL(GST_DISABLE_URI, test "x$GST_DISABLE_URI" = "xyes")
 
-GST_ARG_DEBUG
-GST_ARG_PROFILING
-GST_ARG_VALGRIND
-GST_ARG_GCOV
+AG_GST_ARG_DEBUG
+AG_GST_ARG_PROFILING
+AG_GST_ARG_VALGRIND
+AG_GST_ARG_GCOV
 
-GST_ARG_EXAMPLES
+AG_GST_ARG_EXAMPLES
 
-GST_ARG_WITH_PKG_CONFIG_PATH
-GST_ARG_WITH_PACKAGE_NAME
-GST_ARG_WITH_PACKAGE_ORIGIN
+AG_GST_ARG_WITH_PKG_CONFIG_PATH
+AG_GST_ARG_WITH_PACKAGE_NAME
+AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
 dnl use a cache dir for storing element registry info.
 GST_CACHE_DIR=${localstatedir}/cache/gstreamer-$GST_MAJORMINOR
@@ -214,14 +215,14 @@ dnl * hardware/architecture *
 
 dnl common/m4/gst-arch.m4
 dnl check CPU type
-GST_ARCH
+AG_GST_ARCH
 dnl substitution for win32/common/config.h
 HOST_CPU=$host_cpu
 AC_SUBST(HOST_CPU)
 
 dnl common/m4/gst-arch.m4
 dnl check for unaligned access
-GST_UNALIGNED_ACCESS
+AG_GST_UNALIGNED_ACCESS
 dnl create a configure variable for gst/gstconfig.h
 if test x${as_cv_unaligned_access} = xyes ; then
   GST_HAVE_UNALIGNED_ACCESS_DEFINE="#define GST_HAVE_UNALIGNED_ACCESS 1"
@@ -260,17 +261,17 @@ if test x$PERL_PATH = xno; then
 fi
 
 dnl we require flex and bison for building the parser
-GST_BISON_CHECK
-GST_FLEX_CHECK
+AG_GST_BISON_CHECK
+AG_GST_FLEX_CHECK
 
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
 dnl check for documentation tools
-GST_DOCBOOK_CHECK
+AG_GST_DOCBOOK_CHECK
 GTK_DOC_CHECK([1.3])
 AS_PATH_PYTHON([2.1])
-GST_PLUGIN_DOCS([1.3],[2.1])
+AG_GST_PLUGIN_DOCS([1.3],[2.1])
 
 dnl *** checks for libraries ***
 
@@ -345,7 +346,7 @@ AC_FUNC_MMAP
 AM_CONDITIONAL(HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" = "xyes")
 
 dnl Check for a way to display the function name in debug output
-GST_CHECK_FUNCTION
+AG_GST_CHECK_FUNCTION
 
 dnl test for register_printf_function
 AC_CHECK_FUNC(register_printf_function,
@@ -387,7 +388,7 @@ dnl *** checks for dependency libraries ***
 
 dnl GLib
 
-GST_GLIB_CHECK([2.8])
+AG_GST_GLIB_CHECK([2.8])
 
 dnl Guess we need to keep this around until 0.11
 GST_HAVE_GLIB_2_8_DEFINE="#define GST_HAVE_GLIB_2_8 1"
@@ -408,7 +409,7 @@ then
   AC_MSG_NOTICE([Registry and load/save are disabled, not checking for libxml2])
 else
   dnl check for libxml2 with minimum req version
-  GST_LIBXML2_CHECK(2.4.9)
+  AG_GST_LIBXML2_CHECK(2.4.9)
 fi
 
 dnl check for "check", unit testing library/header
@@ -433,17 +434,17 @@ AS_AC_EXPAND(LIBDIR, $libdir)
 AC_DEFINE_UNQUOTED(LIBDIR, "$LIBDIR", [library dir])
 
 dnl set location of plugin directory
-GST_SET_PLUGINDIR
+AG_GST_SET_PLUGINDIR
 
 dnl FIXME: add LIBXML_PKG here
 GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-no-export-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
 
 dnl define an ERROR_CFLAGS Makefile variable
-GST_SET_ERROR_CFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CFLAGS($GST_CVS)
 
 dnl define correct level for debugging messages
-GST_SET_LEVEL_DEFAULT($GST_CVS)
+AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
 dnl *** finalize CFLAGS, LDFLAGS, LIBS
 
