@@ -8,6 +8,7 @@ REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY=$(CHECK_REGISTRY)
 
 TESTS_ENVIRONMENT = \
+        STATE_IGNORE_ELEMENTS="$(STATE_IGNORE_ELEMENTS)"	\
         $(REGISTRY_ENVIRONMENT)					\
         GST_PLUGIN_SYSTEM_PATH=					\
         GST_PLUGIN_PATH=$(top_builddir)/plugins
@@ -101,7 +102,7 @@ noinst_PROGRAMS =				\
 
 # elements to ignore for the state tests
 # STATE_IGNORE_ELEMENTS =
-#
+
 TESTS = $(check_PROGRAMS)
 
 noinst_HEADERS = \
