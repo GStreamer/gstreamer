@@ -7,6 +7,8 @@ AC_INIT(GStreamer Python Bindings, 0.10.7.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-python)
 
+AG_GST_INIT
+
 dnl initialize automake
 AM_INIT_AUTOMAKE
 
@@ -44,7 +46,7 @@ AC_SUBST(GSTPB_REQ, 0.10.0.2)
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL
 
-GST_ARG_GCOV
+AG_GST_ARG_GCOV
 
 dnl check for python
 dnl AM_PATH_PYTHON(2.2)
@@ -265,7 +267,7 @@ PKG_CHECK_MODULES(PYGOBJECT_2_12, pygobject-2.0 >= 2.11.1,
   ], HAVE_PYGOBJECT_2_12="no")
 
 dnl define an ERROR_CFLAGS Makefile variable
-GST_SET_ERROR_CFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CFLAGS($GST_CVS)
 
 GST_OPTION_CFLAGS="\$(ERROR_CFLAGS) \$(GCOV_CFLAGS)"
 AC_SUBST(GST_OPTION_CFLAGS)
@@ -291,7 +293,7 @@ dnl add debugging options ...
 # fi
 # changequote([,])dnl
 
-GST_VALGRIND_CHECK()
+AG_GST_VALGRIND_CHECK
 
 AC_OUTPUT([
   Makefile
