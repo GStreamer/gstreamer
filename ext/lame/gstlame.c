@@ -85,6 +85,10 @@
 GST_DEBUG_CATEGORY_STATIC (debug);
 #define GST_CAT_DEFAULT debug
 
+#define DEFAULT_MIN_VBR_BITRATE 112
+#define DEFAULT_MAX_VBR_BITRATE 160
+#define DEFAULT_MEAN_VBR_BITRATE 128
+
 /* elementfactory information */
 static GstElementDetails gst_lame_details = {
   "L.A.M.E. mp3 encoder",
@@ -420,20 +424,22 @@ gst_lame_class_init (GstLameClass * klass)
           GST_TYPE_LAME_QUALITY, 5, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MEAN_BITRATE,
       g_param_spec_int ("vbr-mean-bitrate", "VBR mean bitrate",
-          "Specify mean VBR bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
+          "Specify mean VBR bitrate", 8, 320,
+          DEFAULT_MEAN_VBR_BITRATE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MIN_BITRATE,
       g_param_spec_int ("vbr-min-bitrate", "VBR min bitrate",
           "Specify minimum VBR bitrate (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, "
           "112, 128, 160, 192, 224, 256 or 320)",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          8, 320, DEFAULT_MIN_VBR_BITRATE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_MAX_BITRATE,
       g_param_spec_int ("vbr-max-bitrate", "VBR max bitrate",
           "Specify maximum VBR bitrate (8, 16, 24, 32, 40, 48, 56, 64, 80, 96, "
           "112, 128, 160, 192, 224, 256 or 320)",
-          0, G_MAXINT, 0, G_PARAM_READWRITE));
+          8, 320, DEFAULT_MAX_VBR_BITRATE, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_VBR_HARD_MIN,
       g_param_spec_int ("vbr-hard-min", "VBR hard min",
-          "Specify hard min bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE));
+          "Specify whether min VBR bitrate is a hard limit. Normally, "
+          "it can be violated for silence", 0, 1, 0, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_LOWPASS_FREQ,
       g_param_spec_int ("lowpass-freq", "Lowpass freq",
           "frequency(kHz), lowpass filter cutoff above freq", 0, 50000, 0,
@@ -606,10 +612,18 @@ gst_lame_init (GstLame * lame)
   lame->disable_reservoir = lame_get_disable_reservoir (lame->lgf);
   lame->vbr = vbr_off;          /* lame_get_VBR (lame->lgf); */
   lame->vbr_quality = 5;
+#if 0
+  /* Replaced by our own more informative constants, 
+     rather than LAME's defaults */
   lame->vbr_mean_bitrate = lame_get_VBR_mean_bitrate_kbps (lame->lgf);
   lame->vbr_min_bitrate = lame_get_VBR_min_bitrate_kbps (lame->lgf);
   lame->vbr_max_bitrate = 0;    /* lame_get_VBR_max_bitrate_kbps (lame->lgf);
                                  * => 0/no vbr possible */
+#else
+  lame->vbr_mean_bitrate = DEFAULT_MEAN_VBR_BITRATE;
+  lame->vbr_min_bitrate = DEFAULT_MIN_VBR_BITRATE;
+  lame->vbr_max_bitrate = DEFAULT_MAX_VBR_BITRATE;
+#endif
   lame->vbr_hard_min = lame_get_VBR_hard_min (lame->lgf);
   /* lame->lowpass_freq = 50000;    lame_get_lowpassfreq (lame->lgf);
    * => 0/lowpass on everything ? */
@@ -1172,7 +1186,6 @@ gst_lame_setup (GstLame * lame)
   CHECK_AND_FIXUP_BITRATE (lame, "vbr-max-bitrate", lame->vbr_max_bitrate);
   CHECK_ERROR (lame_set_VBR_max_bitrate_kbps (lame->lgf,
           lame->vbr_max_bitrate));
-  CHECK_AND_FIXUP_BITRATE (lame, "vbr-hard-min", lame->vbr_hard_min);
   CHECK_ERROR (lame_set_VBR_hard_min (lame->lgf, lame->vbr_hard_min));
   CHECK_ERROR (lame_set_lowpassfreq (lame->lgf, lame->lowpass_freq));
   CHECK_ERROR (lame_set_lowpasswidth (lame->lgf, lame->lowpass_width));
