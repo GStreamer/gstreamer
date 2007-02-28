@@ -32,6 +32,7 @@ check_taglib =
 endif
 
 check_PROGRAMS = \
+	generic/states \
 	$(check_annodex) \
 	elements/audiopanorama \
 	elements/audioinvert \

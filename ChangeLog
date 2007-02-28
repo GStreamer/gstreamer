@@ -1,3 +1,9 @@
+2007-02-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/Makefile.am:
+	* tests/check/generic/states.c: (GST_START_TEST), (states_suite):
+	  add test for states
+
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/elements/.cvsignore:
