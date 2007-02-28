@@ -253,6 +253,9 @@ rtsp_message_get_header (const RTSPMessage * msg, RTSPHeaderField field,
 
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
+  if (msg->type != RTSP_MESSAGE_RESPONSE && msg->type != RTSP_MESSAGE_REQUEST)
+    return RTSP_ENOTIMPL;
+
   val = g_hash_table_lookup (msg->hdr_fields, GINT_TO_POINTER (field));
   if (val == NULL)
     return RTSP_ENOTIMPL;
