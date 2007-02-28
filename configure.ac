@@ -7,6 +7,8 @@ AC_INIT(GStreamer Bad Plug-ins, 0.10.4.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-bad)
 
+AG_GST_INIT
+
 dnl initialize automake
 AM_INIT_AUTOMAKE
 
@@ -57,22 +59,22 @@ dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
 AM_GNU_GETTEXT_VERSION([0.11.5])
 AM_GNU_GETTEXT([external])
-GST_GETTEXT([gst-plugins-bad-$GST_MAJORMINOR])
+AG_GST_GETTEXT([gst-plugins-bad-$GST_MAJORMINOR])
 
 dnl *** check for arguments to configure ***
 
-GST_ARG_DEBUG
-GST_ARG_PROFILING
-GST_ARG_VALGRIND
-GST_ARG_GCOV
+AG_GST_ARG_DEBUG
+AG_GST_ARG_PROFILING
+AG_GST_ARG_VALGRIND
+AG_GST_ARG_GCOV
 
-GST_ARG_EXAMPLES
+AG_GST_ARG_EXAMPLES
 
-GST_ARG_WITH_PKG_CONFIG_PATH
-GST_ARG_WITH_PACKAGE_NAME
-GST_ARG_WITH_PACKAGE_ORIGIN
+AG_GST_ARG_WITH_PKG_CONFIG_PATH
+AG_GST_ARG_WITH_PACKAGE_NAME
+AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
-GST_ARG_EXAMPLES
+AG_GST_ARG_EXAMPLES
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
@@ -104,11 +106,11 @@ GST_PLUGINS_ALL="\
 
 AC_SUBST(GST_PLUGINS_ALL)
 
-GST_ARG_WITH_PLUGINS
+AG_GST_ARG_WITH_PLUGINS
 
-GST_ARG_ENABLE_EXTERNAL
+AG_GST_ARG_ENABLE_EXTERNAL
 
-GST_ARG_ENABLE_EXPERIMENTAL
+AG_GST_ARG_ENABLE_EXPERIMENTAL
 
 USE_TARKIN=$BUILD_EXPERIMENTAL
 
@@ -118,7 +120,7 @@ dnl * hardware/architecture *
 
 dnl common/m4/gst-arch.m4
 dnl check CPU type
-GST_ARCH
+AG_GST_ARCH
 
 dnl Determine endianness
 AC_C_BIGENDIAN
@@ -164,7 +166,7 @@ dnl *** checks for library functions ***
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-GST_GLIB_CHECK([2.6])
+AG_GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.2, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
@@ -174,12 +176,12 @@ fi
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
-GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], no)
+AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
+AG_GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], no)
 GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_MAJORMINOR --variable pluginsdir`
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
@@ -228,13 +230,13 @@ AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
 AC_SUBST(GST_LICENSE)
 
 dnl set location of plugin directory
-GST_SET_PLUGINDIR
+AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
-GST_SET_ERROR_CFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CFLAGS($GST_CVS)
 
 dnl define correct level for debugging messages
-GST_SET_LEVEL_DEFAULT($GST_CVS)
+AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
 dnl *** plug-ins to exclude ***
 
@@ -267,13 +269,13 @@ dnl *** sys plug-ins ***
 
 dnl OpenGL
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
-GST_CHECK_X
+AG_GST_CHECK_X
 save_CPPFLAGS="$CPPFLAGS"
 save_LIBS="$LIBS"
 CPPFLAGS="$CPPFLAGS $X_CFLAGS"
 LIBS="$LIBS $X_LIBS"
-GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
-  GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,,
+AG_GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
+  AG_GST_CHECK_LIBHEADER(GL, GL, glTexImage2D,,
                       GL/gl.h, HAVE_OPENGL="yes", HAVE_OPENGL="no")
 ])
 CPPFLAGS="$save_CPPFLAGS"
@@ -281,7 +283,7 @@ LIBS="$save_LIBS"
 
 dnl Check for X11
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
-GST_CHECK_FEATURE(X, [X libraries and plugins],
+AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesrc], [
   AC_PATH_XTRA
 
@@ -311,7 +313,7 @@ GST_CHECK_FEATURE(X, [X libraries and plugins],
 
 dnl DirectDraw
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTDRAW, true)
-GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
+AG_GST_CHECK_FEATURE(DIRECTDRAW, [DirectDraw plug-in], directdrawsink, [
   HAVE_DIRECTDRAW="no"
   save_LIBS="$LIBS"
   LIBS="$LIBS -lddraw -lgdi32"
@@ -344,7 +346,7 @@ int main ()
 
 dnl DirectSound
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTSOUND, true)
-GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound plug-in], directsoundsink, [
+AG_GST_CHECK_FEATURE(DIRECTSOUND, [DirectSound plug-in], directsoundsink, [
   HAVE_DIRECTSOUND="no"
   save_LIBS="$LIBS"
   LIBS="$LIBS -ldsound -ldxerr9"
@@ -379,7 +381,7 @@ int main ()
 dnl *** OS X video ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)
 HAVE_OSX_VIDEO="no"
-GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
+AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
   AC_CHECK_HEADER(OpenGL/gl.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
 ])
 dnl in case header OpenGL/gl.h is found on other platforms
@@ -401,7 +403,7 @@ if test "x$BUILD_EXTERNAL" = "xyes"; then
 
 dnl *** alsa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ALSA, true)
-GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
+AG_GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
   PKG_CHECK_MODULES(ALSA, alsa >= 0.9.1, [
     HAVE_ALSA="yes"
     AC_SUBST(ALSA_CFLAGS)
@@ -413,7 +415,7 @@ GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
 
 dnl *** amrwb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
-GST_CHECK_FEATURE(AMRWB, [amrwb code], amrwb, [
+AG_GST_CHECK_FEATURE(AMRWB, [amrwb code], amrwb, [
   if test -f "gst-libs/ext/amrwb/26204-600.zip"; then
     HAVE_AMRWB="yes"
   else
@@ -425,14 +427,14 @@ GST_CHECK_FEATURE(AMRWB, [amrwb code], amrwb, [
 
 dnl *** BZ2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_BZ2, true)
-GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
-  GST_CHECK_LIBHEADER(BZ2, bz2, BZ2_bzCompress, ,bzlib.h, BZ2_LIBS="-lbz2")
+AG_GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
+  AG_GST_CHECK_LIBHEADER(BZ2, bz2, BZ2_bzCompress, ,bzlib.h, BZ2_LIBS="-lbz2")
   AC_SUBST(BZ2_LIBS)
 ])
 
 #dnl *** cairo ***
 #translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO, true)
-#GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
+#AG_GST_CHECK_FEATURE(CAIRO, [cairo plug-in], cairo, [
 #  PKG_CHECK_MODULES(CAIRO, cairo >= 1.0 glitz-glx, HAVE_CAIRO=yes, [
 #    HAVE_CAIRO=no
 #    AC_MSG_RESULT(no)
@@ -443,15 +445,15 @@ GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
 
 dnl *** cdaudio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDAUDIO, true)
-GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
-  GST_CHECK_CONFIGPROG(CDAUDIO, libcdaudio-config)
+AG_GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
+  AG_GST_CHECK_CONFIGPROG(CDAUDIO, libcdaudio-config)
   AC_SUBST(CDAUDIO_CFLAGS)
   AC_SUBST(CDAUDIO_LIBS)
 ])
 
 dnl **** DirectFB ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIRECTFB, true)
-GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
+AG_GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
   PKG_CHECK_MODULES(DIRECTFB, directfb >= 0.9.24, HAVE_DIRECTFB="yes", [
     HAVE_DIRECTFB="no"
     AC_MSG_RESULT(no)
@@ -460,15 +462,15 @@ GST_CHECK_FEATURE(DIRECTFB, [directfb], dfbvideosink , [
 
 dnl *** DTS ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DTS, true)
-GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
-  GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, -lm, dts.h,
+AG_GST_CHECK_FEATURE(DTS, [dts library], dtsdec, [
+  AG_GST_CHECK_LIBHEADER(DTS, dts_pic, dts_init, -lm, dts.h,
     DTS_LIBS="-ldts_pic -lm")
   AC_SUBST(DTS_LIBS)
 ])
 
 dnl *** DIVX ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DIVX, true)
-GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
+AG_GST_CHECK_FEATURE(DIVX, [divx plugins], divx, [
   HAVE_DIVX=yes
   AC_CHECK_HEADER(encore2.h, , [
     AC_MSG_WARN([Divx4linux encore headers not found])
@@ -539,8 +541,8 @@ return 0;
 
 dnl **** Free AAC Encoder (FAAC) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
-GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
-  GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, -lm, faac.h,
+AG_GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
+  AG_GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, -lm, faac.h,
     FAAC_LIBS="-lfaac -lm")
   AS_SCRUB_INCLUDE(FAAC_CFLAGS)
   AC_SUBST(FAAC_LIBS)
@@ -548,12 +550,12 @@ GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
 
 dnl **** Free AAC Decoder (FAAD) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAD, true)
-GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
+AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   HAVE_FAAD="yes"
-  GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h,
+  AG_GST_CHECK_LIBHEADER(FAAD, faad, faacDecOpen, -lm, faad.h,
     FAAD_LIBS="-lfaad -lm", HAVE_FAAD="no")
   if test $HAVE_FAAD = "no"; then
-    GST_CHECK_LIBHEADER(FAAD, faad, NeAACDecOpen, -lm, neaacdec.h,
+    AG_GST_CHECK_LIBHEADER(FAAD, faad, NeAACDecOpen, -lm, neaacdec.h,
       [ FAAD_LIBS="-lfaad -lm"
 	  	AC_DEFINE(FAAD_IS_NEAAC, 1, [Define if AAC is using new api prefix])
 	  ],
@@ -594,10 +596,10 @@ return 0;
 
 dnl *** gsm ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GSM, true)
-GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
-  GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm.h, GSM_LIBS="-lgsm")
+AG_GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
+  AG_GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm.h, GSM_LIBS="-lgsm")
   if test $HAVE_GSM != "yes"; then
-    GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm/gsm.h, GSM_LIBS="-lgsm")
+    AG_GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm/gsm.h, GSM_LIBS="-lgsm")
     if test $HAVE_GSM = "yes"; then 
       AC_DEFINE(GSM_HEADER_IN_SUBDIR, 1, [Define if GSM header in gsm/ subdir])
     fi
@@ -608,7 +610,7 @@ GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
 dnl *** ivorbis ***
 dnl AM_PATH_IVORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_IVORBIS, true)
-GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
+AG_GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
   IVORBIS_LIBS=
   IVORBIS_CFLAGS=
   AC_CHECK_LIB(vorbisidec, vorbis_block_init,
@@ -621,7 +623,7 @@ GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
 
 dnl *** Jack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_JACK, true)
-GST_CHECK_FEATURE(JACK, Jack, jack, [
+AG_GST_CHECK_FEATURE(JACK, Jack, jack, [
   PKG_CHECK_MODULES(JACK, jack >= 0.99.10, HAVE_JACK="yes", HAVE_JACK="no")
   AC_SUBST(JACK_CFLAGS)
   AC_SUBST(JACK_LIBS)
@@ -629,13 +631,13 @@ GST_CHECK_FEATURE(JACK, Jack, jack, [
 
 dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
-GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
+AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
   AC_CHECK_HEADER(ladspa.h, HAVE_LADSPA="yes", HAVE_LADSPA="no")
 ])
 
 dnl *** libmms ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBMMS, true)
-GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
+AG_GST_CHECK_FEATURE(LIBMMS, [mms protocol library], libmms, [
   dnl check with pkg-config first
   PKG_CHECK_MODULES(LIBMMS, libmms >= 0.2, HAVE_LIBMMS="yes", [
     HAVE_LIBMMS="no"
@@ -655,7 +657,7 @@ PKG_CHECK_EXISTS(mjpegtools >= 1.8.0 mjpegtools < 1.9.0, [
 
 dnl *** mpeg2enc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2ENC, true)
-GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
+AG_GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
   HAVE_MPEG2ENC="no"
   dnl we require a c++ compiler for this one
   if [ test x$HAVE_CXX = xyes ]; then
@@ -726,7 +728,7 @@ GST_CHECK_FEATURE(MPEG2ENC, [mpeg2enc], mpeg2enc, [
 
 dnl *** musepack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSEPACK, true)
-GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
+AG_GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
   AC_LANG_CPLUSPLUS
   AC_CHECK_HEADER([mpcdec/mpcdec.h], [
     HAVE_MUSEPACK="yes"
@@ -738,7 +740,7 @@ GST_CHECK_FEATURE(MUSEPACK, [musepackdec], musepack, [
 
 dnl *** musicbrainz ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MUSICBRAINZ, true)
-GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz tag generation], musicbrainz, [
+AG_GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz tag generation], musicbrainz, [
   PKG_CHECK_MODULES(MUSICBRAINZ, libmusicbrainz >= 2.1.0, HAVE_MUSICBRAINZ="yes", HAVE_MUSICBRAINZ="no")
   AC_SUBST(MUSICBRAINZ_CFLAGS)
   AC_SUBST(MUSICBRAINZ_LIBS)
@@ -746,7 +748,7 @@ GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz tag generation], musicbrainz, [
 
 dnl *** MythTV ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MYTHTV, true)
-GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
+AG_GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
   PKG_CHECK_MODULES(GMYTH, gmyth-0.1 >= 0.1.0.3, HAVE_MYTHTV="yes", [
     HAVE_MYTHTV="no"
     AC_MSG_RESULT(no)
@@ -757,7 +759,7 @@ GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
 
 dnl *** neon ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
-GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
+AG_GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
   PKG_CHECK_MODULES(NEON, neon >= 0.25.5  neon <= 0.26.99, HAVE_NEON="yes", [
     HAVE_NEON="no"
     AC_MSG_RESULT(no)
@@ -768,7 +770,7 @@ GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
 
 dnl *** timidity ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TIMIDITY, true)
-GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
+AG_GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
   PKG_CHECK_MODULES(TIMIDITY, libtimidity, [ 
     HAVE_TIMIDITY="yes",
 	AC_MSG_CHECKING([for timidity.cfg])
@@ -798,7 +800,7 @@ GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
 
 dnl *** wildmidi ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WILDMIDI, true)
-GST_CHECK_FEATURE(WILDMIDI, [wildmidi midi soft synth plugin], wildmidi, [
+AG_GST_CHECK_FEATURE(WILDMIDI, [wildmidi midi soft synth plugin], wildmidi, [
   AC_CHECK_HEADER([wildmidi_lib.h],HAVE_WILDMIDI=yes, HAVE_WILDMIDI=no)
   if test "x$HAVE_WILDMIDI" = "xyes"; then
 	 WILDMIDI_CFLAGS=
@@ -815,13 +817,13 @@ GST_CHECK_FEATURE(WILDMIDI, [wildmidi midi soft synth plugin], wildmidi, [
 
 dnl *** SDL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SDL, true)
-GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
+AG_GST_CHECK_FEATURE(SDL, [SDL plug-in], sdlvideosink sdlaudiosink, [
     AM_PATH_SDL(, HAVE_SDL=yes, HAVE_SDL=no)
 ])
 
 dnl *** sndfile ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SNDFILE, true)
-GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
+AG_GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
   PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.16, HAVE_SNDFILE="yes", HAVE_SNDFILE="no")
   AC_SUBST(SNDFILE_CFLAGS)
   AC_SUBST(SNDFILE_LIBS)
@@ -829,7 +831,7 @@ GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
 
 dnl *** soundtouch ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SOUNDTOUCH, true)
-GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
+AG_GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
   PKG_CHECK_MODULES(SOUNDTOUCH, libSoundTouch, HAVE_SOUNDTOUCH=yes, [
     HAVE_SOUNDTOUCH=no
      AC_MSG_RESULT(no)])
@@ -843,7 +845,7 @@ GST_CHECK_FEATURE(SOUNDTOUCH, [soundtouch plug-in], soundtouch, [
 
 dnl *** spc ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SPC, true)
-GST_CHECK_FEATURE(SPC, [spc decoder], spc, [
+AG_GST_CHECK_FEATURE(SPC, [spc decoder], spc, [
   AC_CHECK_HEADER(openspc.h, [
     AC_CHECK_LIB(openspc, OSPC_Init, [
       SPC_LIBS="-lopenspc"
@@ -859,7 +861,7 @@ GST_CHECK_FEATURE(SPC, [spc decoder], spc, [
 
 dnl *** swfdec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SWFDEC, true)
-GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
+AG_GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
   PKG_CHECK_MODULES(SWFDEC, swfdec-0.3 >= 0.3.6, HAVE_SWFDEC=yes, [
     HAVE_SWFDEC=no
     AC_MSG_RESULT(no)
@@ -870,7 +872,7 @@ GST_CHECK_FEATURE(SWFDEC, [swfdec plug-in], swfdec, [
 
 dnl *** theora ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORADEC, true)
-GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
+AG_GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
   PKG_CHECK_MODULES(THEORADEC, theoradec, HAVE_THEORADEC="yes", [
     HAVE_THEORADEC="no"
     AC_MSG_RESULT(no)
@@ -881,7 +883,7 @@ GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
 
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
-GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
+AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
   HAVE_XVID=no
   AC_CHECK_HEADER(xvid.h, [
     OLD_LIBS="$LIBS"
@@ -910,7 +912,7 @@ int main () { return 0; }
 
 dnl *** wavpack ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_WAVPACK, true)
-GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
+AG_GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
   PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.40.0, HAVE_WAVPACK=yes, [
     PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.20, [
       HAVE_WAVPACK=yes
@@ -926,15 +928,15 @@ GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
 
 dnl *** dvb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVB, true)
-GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
+AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
   AC_MSG_CHECKING([Checking for up to date dvb installation])
   AC_CHECK_HEADER(linux/dvb/frontend.h, [HAVE_DVB="yes"], [HAVE_DVB="no"])
 ])
 
 dnl *** qtdemux prefers to have zlib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ZLIB, true)
-GST_CHECK_FEATURE(ZLIB, [zlib support for qtdemux],, [
-  GST_CHECK_LIBHEADER(ZLIB,
+AG_GST_CHECK_FEATURE(ZLIB, [zlib support for qtdemux],, [
+  AG_GST_CHECK_LIBHEADER(ZLIB,
     z, uncompress,, zlib.h, [
     HAVE_ZLIB="yes"
     ZLIB_LIBS="-lz"
@@ -1106,4 +1108,4 @@ tests/icles/Makefile
 )
 AC_OUTPUT
 
-GST_OUTPUT_PLUGINS
+AG_GST_OUTPUT_PLUGINS

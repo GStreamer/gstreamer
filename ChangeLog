@@ -1,3 +1,8 @@
+2007-02-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	  Convert to new AG_GST style.
+
 2007-02-27  Christian Schaller <christian at fluendo dot com>
 
 	* sys/direct*: Add Pioneers of the Inevitable to copyright
