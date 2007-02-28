@@ -3834,6 +3834,19 @@ gst_value_transform_string_date (const GValue * src_value, GValue * dest_value)
   gst_value_deserialize_date (dest_value, src_value->data[0].v_pointer);
 }
 
+static void
+gst_value_transform_object_string (const GValue * src_value,
+    GValue * dest_value)
+{
+  GstObject *obj;
+  gchar *str;
+
+  obj = g_value_get_object (src_value);
+  str = obj ? GST_OBJECT_NAME (obj) : "NULL";
+
+  dest_value->data[0].v_pointer = g_strdup (str);
+}
+
 static GTypeInfo _info = {
   0,
   NULL,
@@ -4158,6 +4171,8 @@ _gst_value_initialize (void)
       gst_value_transform_date_string);
   g_value_register_transform_func (G_TYPE_STRING, GST_TYPE_DATE,
       gst_value_transform_string_date);
+  g_value_register_transform_func (GST_TYPE_OBJECT, G_TYPE_STRING,
+      gst_value_transform_object_string);
 
   gst_value_register_intersect_func (G_TYPE_INT, GST_TYPE_INT_RANGE,
       gst_value_intersect_int_int_range);

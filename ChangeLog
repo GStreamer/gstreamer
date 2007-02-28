@@ -1,5 +1,12 @@
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstvalue.c: (gst_value_transform_object_string),
+	(_gst_value_initialize):
+	Implement GstObject -> string transform so we print object names
+	when serializing GValues containing GstObjects.
+
+2007-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	Add new stuff to docs.
 
