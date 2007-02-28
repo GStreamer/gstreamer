@@ -9,6 +9,8 @@ AC_INIT(GStreamer Good Plug-ins, 0.10.5.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-good)
 
+AG_GST_INIT
+
 dnl initialize automake
 AM_INIT_AUTOMAKE
 
@@ -59,20 +61,20 @@ dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
 AM_GNU_GETTEXT_VERSION([0.11.5])
 AM_GNU_GETTEXT([external])
-GST_GETTEXT([gst-plugins-good-$GST_MAJORMINOR])
+AG_GST_GETTEXT([gst-plugins-good-$GST_MAJORMINOR])
 
 dnl *** check for arguments to configure ***
 
-GST_ARG_DEBUG
-GST_ARG_PROFILING
-GST_ARG_VALGRIND
-GST_ARG_GCOV
+AG_GST_ARG_DEBUG
+AG_GST_ARG_PROFILING
+AG_GST_ARG_VALGRIND
+AG_GST_ARG_GCOV
 
-GST_ARG_EXAMPLES
+AG_GST_ARG_EXAMPLES
 
-GST_ARG_WITH_PKG_CONFIG_PATH
-GST_ARG_WITH_PACKAGE_NAME
-GST_ARG_WITH_PACKAGE_ORIGIN
+AG_GST_ARG_WITH_PKG_CONFIG_PATH
+AG_GST_ARG_WITH_PACKAGE_NAME
+AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
 dnl these are all the gst plug-ins, compilable without additional libs
 dnl videofilter is at the top because others depend on it
@@ -139,7 +141,7 @@ if test "x$HAVE_WINSOCK2_H" = "xyes"; then
 fi
 
 dnl ext plug-ins; plug-ins that have external dependencies
-GST_CHECK_FEATURE(EXTERNAL, [building of plug-ins with external deps],,
+AG_GST_CHECK_FEATURE(EXTERNAL, [building of plug-ins with external deps],,
   [HAVE_EXTERNAL=yes], enabled,
   [
     AC_MSG_NOTICE(building external plug-ins)
@@ -151,7 +153,7 @@ GST_CHECK_FEATURE(EXTERNAL, [building of plug-ins with external deps],,
 AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
 
 dnl experimental plug-ins; stuff that hasn't had the dust settle yet
-GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plug-ins],,
+AG_GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plug-ins],,
 [HAVE_EXPERIMENTAL=yes],disabled,
 [
   AC_MSG_WARN(building experimental plug-ins)
@@ -170,7 +172,7 @@ dnl * hardware/architecture *
 
 dnl common/m4/gst-arch.m4
 dnl check CPU type
-GST_ARCH
+AG_GST_ARCH
 
 dnl Determine endianness
 AC_C_BIGENDIAN
@@ -201,7 +203,7 @@ AM_GCONF_SOURCE_2
 dnl check for documentation tools
 GTK_DOC_CHECK([1.3])
 AS_PATH_PYTHON([2.1])
-GST_PLUGIN_DOCS([1.3],[2.1])
+AG_GST_PLUGIN_DOCS([1.3],[2.1])
 
 dnl *** checks for libraries ***
 
@@ -243,7 +245,7 @@ AM_CONDITIONAL(GST_HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" == "xyes")
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-GST_GLIB_CHECK([2.6])
+AG_GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.2, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
@@ -253,12 +255,12 @@ fi
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
-GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ])
+AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
+AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ])
 
 GST_TOOLS_DIR=`pkg-config --variable=toolsdir gstreamer-$GST_MAJORMINOR`
 if test -z $GST_TOOLS_DIR; then
@@ -309,7 +311,7 @@ AM_CONDITIONAL(HAVE_GTK, test "x$HAVE_GTK" = "xyes")
 
 dnl should we install schemas ?
 translit(dnm, m, l) AM_CONDITIONAL(USE_GCONFTOOL, true)
-GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
+AG_GST_CHECK_FEATURE(GCONFTOOL, [GConf schemas], , [
   AC_PATH_PROG(GCONFTOOL, gconftool-2, no)
   if test x$GCONFTOOL = xno; then
     AC_MSG_WARN(Not installing GConf schemas)
@@ -328,16 +330,16 @@ AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
 AC_SUBST(GST_LICENSE)
 
 dnl set location of plugin directory
-GST_SET_PLUGINDIR
+AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
-GST_SET_ERROR_CFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CFLAGS($GST_CVS)
 
 dnl define correct level for debugging messages
-GST_SET_LEVEL_DEFAULT($GST_CVS)
+AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
 dnl used in examples
-GST_DEFAULT_ELEMENTS
+AG_GST_DEFAULT_ELEMENTS
 
 dnl *** sys plug-ins ***
 
@@ -347,7 +349,7 @@ echo
 
 dnl *** OSS audio *** (Linux, *BSD)
 translit(dnm, m, l) AM_CONDITIONAL(USE_OSS, true)
-GST_CHECK_FEATURE(OSS, [OSS audio], ossaudio, [
+AG_GST_CHECK_FEATURE(OSS, [OSS audio], ossaudio, [
  HAVE_OSS="yes"
 dnl Linux and newer BSD versions :
  AC_CHECK_HEADER(sys/soundcard.h, [
@@ -370,7 +372,7 @@ dnl Some old BSD versions and also newer OpenBSD versions :
 
 dnl *** Sun Audio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SUNAUDIO, true)
-GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudio, [
+AG_GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudio, [
   AC_CHECK_HEADER(sys/audioio.h, HAVE_SUNAUDIO="yes", HAVE_SUNAUDIO="no")
 ])
 
@@ -378,7 +380,7 @@ dnl *** Video 4 Linux 2 ***
 dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
 dnl renamed to GST_V4L2 because of some conflict with kernel headers
 translit(dnm, m, l) AM_CONDITIONAL(USE_GST_V4L2, true)
-GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
+AG_GST_CHECK_FEATURE(GST_V4L2, [Video 4 Linux 2], v4l2src, [
   AC_MSG_CHECKING([Checking for uptodate v4l2 installation])
   AC_TRY_COMPILE([
 #include <sys/types.h>
@@ -426,13 +428,13 @@ return 0;
     fi
 
     dnl check for XOverlay libraries
-    GST_CHECK_XV
+    AG_AG_GST_CHECK_XV
   fi
 ])
 
 dnl Check for X11
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
-GST_CHECK_FEATURE(X, [X libraries and plugins],
+AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
                   [ximagesrc], [
   AC_PATH_XTRA
 
@@ -483,7 +485,7 @@ dnl feature of the ximagesrc plug-in
 dnl This is the same as in gst-plugins-base
 dnl check for X Shm
 translit(dnm, m, l) AM_CONDITIONAL(USE_XSHM, true)
-GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
+AG_GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
   if test x$HAVE_X = xyes; then
     AC_CHECK_LIB(Xext, XShmAttach,
                  HAVE_XSHM="yes", HAVE_XSHM="no",
@@ -507,9 +509,9 @@ GST_CHECK_FEATURE(XSHM, [X Shared Memory extension], , [
 
 dnl for V4L2, we also need to know if we have XVIDEO
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
-GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
+AG_GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
                   [], [
-  GST_CHECK_XV
+  AG_AG_GST_CHECK_XV
 ])
 
 dnl *** ext plug-ins ***
@@ -523,33 +525,33 @@ echo
 
 dnl *** aalib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
-GST_CHECK_FEATURE(AALIB, [aalib ASCII Art library], aasink, [
+AG_GST_CHECK_FEATURE(AALIB, [aalib ASCII Art library], aasink, [
   AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)
   AS_SCRUB_INCLUDE(AALIB_CFLAGS)
 ])
 
 dnl *** annodex ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ANNODEX, true)
-GST_CHECK_FEATURE(ANNODEX, [XML library], annodex, [
-  GST_PKG_CHECK_MODULES(ANNODEX, libxml-2.0 >= 2.4.9)
+AG_GST_CHECK_FEATURE(ANNODEX, [XML library], annodex, [
+  AG_GST_PKG_CHECK_MODULES(ANNODEX, libxml-2.0 >= 2.4.9)
 ])
 
 dnl *** cairo ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CAIRO, true)
-GST_CHECK_FEATURE(CAIRO, [Cairo graphics rendering], cairo, [
-  GST_PKG_CHECK_MODULES(CAIRO, cairo >= 1.0.0)
+AG_GST_CHECK_FEATURE(CAIRO, [Cairo graphics rendering], cairo, [
+  AG_GST_PKG_CHECK_MODULES(CAIRO, cairo >= 1.0.0)
 ])
 
 dnl *** cdio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CDIO, true)
-GST_CHECK_FEATURE(CDIO, [cdio library], cdio, [
-  GST_PKG_CHECK_MODULES(CDIO, libcdio >= 0.71)
+AG_GST_CHECK_FEATURE(CDIO, [cdio library], cdio, [
+  AG_GST_PKG_CHECK_MODULES(CDIO, libcdio >= 0.71)
 ])
 
 dnl **** ESound ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_ESD, true)
-GST_CHECK_FEATURE(ESD, [ESounD sound daemon], esdsink, [
-  GST_PKG_CHECK_MODULES(ESD, esound >= 0.2.12)
+AG_GST_CHECK_FEATURE(ESD, [ESounD sound daemon], esdsink, [
+  AG_GST_PKG_CHECK_MODULES(ESD, esound >= 0.2.12)
   if test $HAVE_ESD = no
   then
     AM_PATH_ESD(0.2.12, HAVE_ESD="yes")
@@ -559,8 +561,8 @@ GST_CHECK_FEATURE(ESD, [ESounD sound daemon], esdsink, [
 
 dnl *** FLAC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
-GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flac, [
-  GST_CHECK_LIBHEADER(FLAC, FLAC, FLAC__seekable_stream_encoder_new, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC -lm")
+AG_GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flac, [
+  AG_GST_CHECK_LIBHEADER(FLAC, FLAC, FLAC__seekable_stream_encoder_new, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC -lm")
   dnl API change in FLAC 1.1.1, so require that...
   dnl (this check will also fail with FLAC 1.1.3 which changed API again
   dnl and with which our plugin does not compile or work yet)
@@ -575,26 +577,26 @@ GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flac, [
 
 dnl *** GConf ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GCONF, true)
-GST_CHECK_FEATURE(GCONF, [GConf libraries], gconfelements, [
-  GST_PKG_CHECK_MODULES(GCONF, gconf-2.0)
+AG_GST_CHECK_FEATURE(GCONF, [GConf libraries], gconfelements, [
+  AG_GST_PKG_CHECK_MODULES(GCONF, gconf-2.0)
 ])
 
 dnl *** GDK pixbuf ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GDK_PIXBUF, true)
-GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbuf, [
+AG_GST_CHECK_FEATURE(GDK_PIXBUF, [GDK pixbuf], gdkpixbuf, [
   if test $HAVE_GTK_22 = "yes"; then HAVE_GDK_PIXBUF=yes; fi;
 ])
 
 dnl *** HAL ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_HAL, true)
-GST_CHECK_FEATURE(HAL, [HAL libraries], halelements, [
-  GST_PKG_CHECK_MODULES(HAL, [hal >= 0.5.6, dbus-1 >= 0.32])
+AG_GST_CHECK_FEATURE(HAL, [HAL libraries], halelements, [
+  AG_GST_PKG_CHECK_MODULES(HAL, [hal >= 0.5.6, dbus-1 >= 0.32])
 ])
 
 dnl *** jpeg ***
 dnl FIXME: we could use header checks here as well IMO
 translit(dnm, m, l) AM_CONDITIONAL(USE_JPEG, true)
-GST_CHECK_FEATURE(JPEG, [jpeg library], jpeg, [
+AG_GST_CHECK_FEATURE(JPEG, [jpeg library], jpeg, [
   AC_ARG_WITH(jpeg-mmx,
     [  --with-jpeg-mmx, path to MMX'ified JPEG library])
   OLD_LIBS="$LIBS"
@@ -613,17 +615,17 @@ GST_CHECK_FEATURE(JPEG, [jpeg library], jpeg, [
 
 dnl *** ladspa ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LADSPA, true)
-GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
+AG_GST_CHECK_FEATURE(LADSPA, [ladspa], ladspa, [
   AC_CHECK_HEADER(ladspa.h, HAVE_LADSPA="yes", HAVE_LADSPA="no")
 ], disabled)
 
 dnl *** libcaca ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBCACA, true)
-GST_CHECK_FEATURE(LIBCACA, [libcaca coloured ASCII art], cacasink, [
-  GST_PKG_CHECK_MODULES(LIBCACA, caca)
+AG_GST_CHECK_FEATURE(LIBCACA, [libcaca coloured ASCII art], cacasink, [
+  AG_GST_PKG_CHECK_MODULES(LIBCACA, caca)
   dnl only newer versions of libcaca ship caca.pc, so try caca-config as well
   if test "x$HAVE_LIBCACA" != "xyes"; then
-    GST_CHECK_CONFIGPROG(LIBCACA, caca-config)
+    AG_GST_CHECK_CONFIGPROG(LIBCACA, caca-config)
     dnl see if it compilation works too, might not if we are cross-compiling
     if test "x$HAVE_LIBCACA" = "xyes"; then
       AC_CHECK_LIB([caca], [caca_init], [HAVE_LIBCACA=yes],
@@ -634,29 +636,29 @@ GST_CHECK_FEATURE(LIBCACA, [libcaca coloured ASCII art], cacasink, [
 
 dnl *** libdv ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBDV, true)
-GST_CHECK_FEATURE(LIBDV, [libdv DV demuxer/decoder], dv, [
-  GST_PKG_CHECK_MODULES(LIBDV, libdv >= 0.100)
+AG_GST_CHECK_FEATURE(LIBDV, [libdv DV demuxer/decoder], dv, [
+  AG_GST_PKG_CHECK_MODULES(LIBDV, libdv >= 0.100)
 ])
 
 dnl *** libpng ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LIBPNG, true)
-GST_CHECK_FEATURE(LIBPNG, [Portable Network Graphics library], png, [
-  GST_PKG_CHECK_MODULES(LIBPNG, libpng12)
+AG_GST_CHECK_FEATURE(LIBPNG, [Portable Network Graphics library], png, [
+  AG_GST_PKG_CHECK_MODULES(LIBPNG, libpng12)
 ])
 
 dnl *** dv1394 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DV1394, true)
-GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], 1394, [
+AG_GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], 1394, [
   dnl first test for libraw1394 >= 1.2.1
-  GST_PKG_CHECK_MODULES(RAW1394, libraw1394 >= 1.2.1)
-  GST_PKG_CHECK_MODULES(LIBIEC61883, libiec61883 >= 1.0.0)
+  AG_GST_PKG_CHECK_MODULES(RAW1394, libraw1394 >= 1.2.1)
+  AG_GST_PKG_CHECK_MODULES(LIBIEC61883, libiec61883 >= 1.0.0)
   dnl now see how far we got
   if test x$HAVE_RAW1394 = xyes && \
      test x$HAVE_LIBIEC61883 = xyes; then
-       GST_CHECK_LIBHEADER(AVC1394,
+       AG_GST_CHECK_LIBHEADER(AVC1394,
         avc1394, avc1394_send_command, $RAW1394_LIBS,
 	libavc1394/avc1394.h, AVC1394_LIBS="-lavc1394")
-       GST_CHECK_LIBHEADER(ROM1394,
+       AG_GST_CHECK_LIBHEADER(ROM1394,
         rom1394, rom1394_free_directory, $RAW1394_LIBS,
         libavc1394/rom1394.h, ROM1394_LIBS="-lrom1394")
        if test x$HAVE_AVC1394 = xyes && \
@@ -670,11 +672,11 @@ GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], 1394, [
 	fi
   else
        if test x$HAVE_RAW1394 = xno; then
-	  GST_PKG_CHECK_MODULES(RAW1394, libraw1394 >= 1.1.0)
-	  GST_CHECK_LIBHEADER(AVC1394,
+	  AG_GST_PKG_CHECK_MODULES(RAW1394, libraw1394 >= 1.1.0)
+	  AG_GST_CHECK_LIBHEADER(AVC1394,
 	   avc1394, avc1394_send_command, $RAW1394_LIBS,
 	   libavc1394/avc1394.h, AVC1394_LIBS="-lavc1394")
-	  GST_CHECK_LIBHEADER(ROM1394,
+	  AG_GST_CHECK_LIBHEADER(ROM1394,
 	   rom1394, rom1394_free_directory, $RAW1394_LIBS,
 	   libavc1394/rom1394.h, ROM1394_LIBS="-lrom1394")
           if test x$HAVE_RAW1394 = xyes && \
@@ -696,8 +698,8 @@ GST_CHECK_FEATURE(DV1394, [raw1394 and avc1394 library], 1394, [
 
 dnl *** shout2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SHOUT2, true)
-GST_CHECK_FEATURE(SHOUT2, [Shoutcast/Icecast client library], shout2, [
-  GST_PKG_CHECK_MODULES(SHOUT2, shout >= 2.0)
+AG_GST_CHECK_FEATURE(SHOUT2, [Shoutcast/Icecast client library], shout2, [
+  AG_GST_PKG_CHECK_MODULES(SHOUT2, shout >= 2.0)
   if test $HAVE_SHOUT2 = no
   then
     AM_PATH_SHOUT2(HAVE_SHOUT2="yes")
@@ -711,14 +713,14 @@ dnl   1.1.4 and earlier were not API/ABI compatible with 1.0
 dnl   1.1.6 is the first to use a .pc/pkg-config file ***
 dnl   speex_jitter.h is 1.1.x only
 translit(dnm, m, l) AM_CONDITIONAL(USE_SPEEX, true)
-GST_CHECK_FEATURE(SPEEX, [speex speech codec], speex, [
-  GST_PKG_CHECK_MODULES(SPEEX, speex >= 1.1.6)
+AG_GST_CHECK_FEATURE(SPEEX, [speex speech codec], speex, [
+  AG_GST_PKG_CHECK_MODULES(SPEEX, speex >= 1.1.6)
   if test $HAVE_SPEEX = no
   then
-    GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex/speex.h, [
+    AG_GST_CHECK_LIBHEADER(SPEEX, speex, speex_bits_init, , speex/speex.h, [
       AC_CHECK_HEADER(speex/speex_jitter.h, [
         dnl speex 1.1.x :
-        GST_CHECK_LIBHEADER(SPEEX, speex, speex_encode_int, , speex/speex.h, [
+        AG_GST_CHECK_LIBHEADER(SPEEX, speex, speex_encode_int, , speex/speex.h, [
           dnl speex 1.1.5 or + :
           HAVE_SPEEX="yes"
           SPEEX_LIBS="-lspeex"
@@ -751,8 +753,8 @@ GST_CHECK_FEATURE(SPEEX, [speex speech codec], speex, [
 
 dnl *** taglib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TAGLIB, true)
-GST_CHECK_FEATURE(TAGLIB, [taglib tagging library], taglib, [
-  GST_PKG_CHECK_MODULES(TAGLIB, taglib >= 1.4)
+AG_GST_CHECK_FEATURE(TAGLIB, [taglib tagging library], taglib, [
+  AG_GST_PKG_CHECK_MODULES(TAGLIB, taglib >= 1.4)
   if test "x$HAVE_CXX" != "xyes"; then
     USE_TAGLIB=false
     AC_MSG_NOTICE([Not building taglib plugin: no C++ compiler found])
@@ -761,8 +763,8 @@ GST_CHECK_FEATURE(TAGLIB, [taglib tagging library], taglib, [
 
 dnl *** id3demux prefers to have zlib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ZLIB, true)
-GST_CHECK_FEATURE(ZLIB, [zlib support for id3demux],, [
-  GST_CHECK_LIBHEADER(ZLIB,
+AG_GST_CHECK_FEATURE(ZLIB, [zlib support for id3demux],, [
+  AG_GST_CHECK_LIBHEADER(ZLIB,
     z, uncompress,, zlib.h, [
     HAVE_ZLIB="yes"
     ZLIB_LIBS="-lz"
@@ -923,4 +925,4 @@ gst-plugins-good.spec
 )
 AC_OUTPUT
 
-GST_OUTPUT_PLUGINS
+AG_GST_OUTPUT_PLUGINS
