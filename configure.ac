@@ -8,6 +8,7 @@ dnl use a three digit version number for releases, and four for cvs/prerelease
 AC_INIT(GStreamer Ugly Plug-ins, 0.10.5.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-ugly)
+AG_GST_INIT
 
 dnl initialize automake
 AM_INIT_AUTOMAKE
@@ -59,20 +60,20 @@ dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
 AM_GNU_GETTEXT_VERSION(0.11.5)
 AM_GNU_GETTEXT([external])
-GST_GETTEXT([gst-plugins-ugly-$GST_MAJORMINOR])
+AG_GST_GETTEXT([gst-plugins-ugly-$GST_MAJORMINOR])
 
 dnl *** check for arguments to configure ***
 
-GST_ARG_DEBUG
-GST_ARG_PROFILING
-GST_ARG_VALGRIND
-GST_ARG_GCOV
+AG_GST_ARG_DEBUG
+AG_GST_ARG_PROFILING
+AG_GST_ARG_VALGRIND
+AG_GST_ARG_GCOV
 
-GST_ARG_EXAMPLES
+AG_GST_ARG_EXAMPLES
 
-GST_ARG_WITH_PKG_CONFIG_PATH
-GST_ARG_WITH_PACKAGE_NAME
-GST_ARG_WITH_PACKAGE_ORIGIN
+AG_GST_ARG_WITH_PKG_CONFIG_PATH
+AG_GST_ARG_WITH_PACKAGE_NAME
+AG_GST_ARG_WITH_PACKAGE_ORIGIN
 
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
@@ -105,7 +106,7 @@ AC_ARG_WITH(plugins,
 
 
 dnl ext plug-ins; plug-ins that have external dependencies
-GST_CHECK_FEATURE(EXTERNAL, [building of plug-ins with external deps],,
+AG_GST_CHECK_FEATURE(EXTERNAL, [building of plug-ins with external deps],,
   [HAVE_EXTERNAL=yes], enabled,
   [
     AC_MSG_NOTICE(building external plug-ins)
@@ -117,7 +118,7 @@ GST_CHECK_FEATURE(EXTERNAL, [building of plug-ins with external deps],,
 AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
 
 dnl experimental plug-ins; stuff that hasn't had the dust settle yet
-GST_CHECK_FEATURE(EXPERIMENTAL, [building of experimental plug-ins],,
+AG_GST_CHECK_FEATURE(EXPERIMENTAL, [building of experimental plug-ins],,
 [HAVE_EXPERIMENTAL=yes],disabled,
 [
   AC_MSG_WARN(building experimental plug-ins)
@@ -134,7 +135,7 @@ dnl * hardware/architecture *
 
 dnl common/m4/gst-arch.m4
 dnl check CPU type
-GST_ARCH
+AG_GST_ARCH
 
 dnl Determine endianness
 AC_C_BIGENDIAN
@@ -175,12 +176,12 @@ dnl *** checks for compiler characteristics ***
 dnl *** checks for library functions ***
 
 dnl Check for a way to display the function name in debug output
-GST_CHECK_FUNCTION
+AG_GST_CHECK_FUNCTION
 
 dnl *** checks for dependency libraries ***
 
 dnl GLib is required
-GST_GLIB_CHECK([2.6])
+AG_GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
 PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.6, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
@@ -191,10 +192,10 @@ fi
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
-GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
-GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
-GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ])
+AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
+AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
+AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ])
 
 dnl FIXME: get rid of this by making sure gstreamer-check brings it in
 dnl check for "check", unit testing library/header
@@ -217,16 +218,16 @@ AC_DEFINE_UNQUOTED(GST_LICENSE, "$GST_LICENSE", [GStreamer license])
 AC_SUBST(GST_LICENSE)
 
 dnl set location of plugin directory
-GST_SET_PLUGINDIR
+AG_GST_SET_PLUGINDIR
 
 dnl define an ERROR_CFLAGS Makefile variable
-GST_SET_ERROR_CFLAGS($GST_CVS)
+AG_GST_SET_ERROR_CFLAGS($GST_CVS)
 
 dnl define correct level for debugging messages
-GST_SET_LEVEL_DEFAULT($GST_CVS)
+AG_GST_SET_LEVEL_DEFAULT($GST_CVS)
 
 dnl used in examples
-GST_DEFAULT_ELEMENTS
+AG_GST_DEFAULT_ELEMENTS
 
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
@@ -239,14 +240,14 @@ echo
 
 dnl *** a52dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_A52DEC, true)
-GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
+AG_GST_CHECK_FEATURE(A52DEC, [a52dec], a52dec, [
   AC_CHECK_A52DEC(HAVE_A52DEC=yes, HAVE_A52DEC=no)
 ])
 
 dnl *** AMR-NB ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRNB, true)
-GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnb, [
-  GST_CHECK_LIBHEADER(AMRNB, amrnb,
+AG_GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnb, [
+  AG_GST_CHECK_LIBHEADER(AMRNB, amrnb,
 		      Decoder_Interface_init, -lm,
 		      amrnb/interf_dec.h,
 		      AMRNB_LIBS="-lamrnb -lm"
@@ -255,17 +256,17 @@ GST_CHECK_FEATURE(AMRNB, [AMR-NB], amrnb, [
 
 dnl *** dvdread ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDREAD, true)
-GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
-  GST_CHECK_LIBHEADER(DVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, DVDREAD_LIBS="-ldvdread")
+AG_GST_CHECK_FEATURE(DVDREAD, [dvdread library], dvdreadsrc, [
+  AG_GST_CHECK_LIBHEADER(DVDREAD, dvdread, DVDOpen, , dvdread/dvd_reader.h, DVDREAD_LIBS="-ldvdread")
   AC_SUBST(DVDREAD_LIBS)
 ])
 
 dnl *** dvdnav ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVDNAV, true)
-GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnav, [
+AG_GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnav, [
   translit(dnm, m, l) AC_SUBST(DVDNAV_LIBS)
   translit(dnm, m, l) AC_SUBST(DVDNAV_CFLAGS)
-  GST_CHECK_CONFIGPROG(DVDNAV, dvdnav-config)
+  AG_GST_CHECK_CONFIGPROG(DVDNAV, dvdnav-config)
   if test x"$HAVE_DVDNAV" = x"yes"; then
     dnl check version
     DVDNAV_VERSION=`dvdnav-config --version|head -n 1|sed 's/^.*) //'|sed 's/ (.*)//'`
@@ -298,8 +299,8 @@ GST_CHECK_FEATURE(DVDNAV, [dvdnav library], dvdnav, [
 
 dnl *** lame ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_LAME, true)
-GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
-  GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h,
+AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
+  AG_GST_CHECK_LIBHEADER(LAME, mp3lame, lame_init, -lm, lame/lame.h,
   [
     HAVE_LAME="yes"
     LAME_LIBS="-lmp3lame -lm"
@@ -323,10 +324,10 @@ int main (int argc, char *argv[])
 
 dnl *** id3tag from the MAD project ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ID3TAG, true)
-GST_CHECK_FEATURE(ID3TAG, [id3tag reading and writing from the MAD project],
+AG_GST_CHECK_FEATURE(ID3TAG, [id3tag reading and writing from the MAD project],
   id3tag, [
   dnl check with pkg-config first
-  GST_PKG_CHECK_MODULES(ID3TAG, id3tag >= 0.15)
+  AG_GST_PKG_CHECK_MODULES(ID3TAG, id3tag >= 0.15)
   if test "x$HAVE_ID3TAG" = "xno"; then
     dnl fall back to oldskool detection
     AC_CHECK_HEADER(id3tag.h, [
@@ -342,10 +343,10 @@ GST_CHECK_FEATURE(ID3TAG, [id3tag reading and writing from the MAD project],
 
 dnl *** mad ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MAD, true)
-GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
+AG_GST_CHECK_FEATURE(MAD, [mad mp3 decoder], mad, [
   if test "x$HAVE_ID3TAG" = "xyes"; then
     dnl check with pkg-config first
-    GST_PKG_CHECK_MODULES(MAD, mad >= 0.15 id3tag >= 0.15)
+    AG_GST_PKG_CHECK_MODULES(MAD, mad >= 0.15 id3tag >= 0.15)
     if test "x$HAVE_MAD" = "xno"; then
       dnl fall back to oldskool detection
       AC_CHECK_HEADER(mad.h, [
@@ -362,13 +363,13 @@ AC_SUBST(MAD_LIBS)
 
 dnl *** mpeg2dec ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MPEG2DEC, true)
-GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
-  GST_PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.4.0)
+AG_GST_CHECK_FEATURE(MPEG2DEC, [mpeg2dec], mpeg2dec, [
+  AG_GST_PKG_CHECK_MODULES(MPEG2DEC, libmpeg2 >= 0.4.0)
 ])
 
 dnl *** sidplay : works with libsidplay 1.36.x (not 2.x.x) ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SIDPLAY, true)
-GST_CHECK_FEATURE(SIDPLAY, [libsidplay], sid, [
+AG_GST_CHECK_FEATURE(SIDPLAY, [libsidplay], sid, [
   GST_PATH_SIDPLAY()
 ])
 
@@ -467,4 +468,4 @@ gst-plugins-ugly.spec
 )
 AC_OUTPUT
 
-GST_OUTPUT_PLUGINS
+AG_GST_OUTPUT_PLUGINS
