@@ -2330,6 +2330,7 @@ typedef struct
   GstQuery *query;
   gint64 min;
   gint64 max;
+  gboolean live;
 } QueryFold;
 
 typedef void (*QueryInitFunction) (GstBin * bin, QueryFold * fold);
@@ -2342,6 +2343,7 @@ bin_query_min_max_init (GstBin * bin, QueryFold * fold)
 {
   fold->min = 0;
   fold->max = -1;
+  fold->live = FALSE;
 }
 
 static gboolean
@@ -2419,14 +2421,15 @@ bin_query_latency_fold (GstElement * item, GValue * ret, QueryFold * fold)
 {
   if (gst_element_query (item, fold->query)) {
     GstClockTime min, max;
+    gboolean live;
 
     g_value_set_boolean (ret, TRUE);
 
-    gst_query_parse_latency (fold->query, NULL, &min, &max);
+    gst_query_parse_latency (fold->query, &live, &min, &max);
 
     GST_DEBUG_OBJECT (item,
-        "got latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+        "got latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
+        ", live %d", GST_TIME_ARGS (min), GST_TIME_ARGS (max), live);
 
     /* for the combined latency we collect the MAX of all min latencies and
      * the MIN of all max latencies */
@@ -2436,6 +2439,8 @@ bin_query_latency_fold (GstElement * item, GValue * ret, QueryFold * fold)
       fold->max = max;
     else if (max < fold->max)
       fold->max = max;
+    if (fold->live == FALSE)
+      fold->live = live;
   }
 
   gst_object_unref (item);
@@ -2445,11 +2450,12 @@ static void
 bin_query_latency_done (GstBin * bin, QueryFold * fold)
 {
   /* store max in query result */
-  gst_query_set_latency (fold->query, TRUE, fold->min, fold->max);
+  gst_query_set_latency (fold->query, fold->live, fold->min, fold->max);
 
   GST_DEBUG_OBJECT (bin,
-      "latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (fold->min), GST_TIME_ARGS (fold->max));
+      "latency min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT
+      ", live %d", GST_TIME_ARGS (fold->min), GST_TIME_ARGS (fold->max),
+      fold->live);
 }
 
 
