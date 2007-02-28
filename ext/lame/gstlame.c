@@ -656,8 +656,8 @@ init_error:
 #define CHECK_AND_FIXUP_BITRATE(obj,param,rate) 			  \
 G_STMT_START {                                                            \
   gint ___rate = rate;                                                    \
-  gint maxrate;								  \
-  gint multiplier;							  \
+  gint maxrate = 320;							  \
+  gint multiplier = 64;							  \
   if (rate <= 64) {							  \
      maxrate = 64; multiplier = 8;                                        \
      if ((rate % 8) != 0) ___rate = GST_ROUND_UP_8 (rate); 		  \
