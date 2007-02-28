@@ -688,9 +688,11 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   pop_messages (bus, 4);        /* pop playing => paused messages off the bus */
   pop_messages (bus, 4);        /* pop paused => ready messages off the bus */
 
+  GST_DEBUG ("waiting for pipeline to reach refcount 1");
   while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 1)
     THREAD_SWITCH ();
 
+  GST_DEBUG ("checking refcount");
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
@@ -698,10 +700,12 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   ret = gst_element_set_state (pipeline, GST_STATE_NULL);
   fail_if (ret != GST_STATE_CHANGE_SUCCESS, "State change to NULL failed");
 
+  GST_DEBUG ("checking refcount");
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);
   ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
+  GST_DEBUG ("cleanup");
   gst_object_unref (bus);
   gst_object_unref (pipeline);
 }

@@ -1,5 +1,16 @@
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_query_latency),
+	(gst_base_sink_queue_object_unlocked), (gst_base_sink_send_event),
+	(gst_base_sink_change_state):
+	Improve latency query code.
+	Don't leak latency events.
+
+	* tests/check/gst/gstbin.c: (GST_START_TEST):
+	Improve debugging.
+
+2007-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.c: (gst_element_message_full),
 	(gst_element_get_state_func):
 	* gst/gstelement.h:

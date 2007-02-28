@@ -688,6 +688,7 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
   gboolean l, us_live, res;
   GstClockTime min, max;
   GstQuery *query;
+  GstClockTime us_min, us_max;
 
   /* we are live when we sync to the clock */
   l = gst_base_sink_get_sync (sink);
@@ -700,17 +701,16 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
   query = gst_query_new_latency ();
 
   /* ask the peer for the latency */
-  if ((res = gst_base_sink_peer_query (sink, query))) {
-    GstClockTime us_min, us_max;
+  if (!(res = gst_base_sink_peer_query (sink, query)))
+    goto query_failed;
 
-    /* get upstream min and max latency */
-    gst_query_parse_latency (query, &us_live, &us_min, &us_max);
-    if (us_live) {
-      /* upstream live, use its latency, subclasses should use these
-       * values to create the complete latency. */
-      min = us_min;
-      max = us_max;
-    }
+  /* get upstream min and max latency */
+  gst_query_parse_latency (query, &us_live, &us_min, &us_max);
+  if (us_live) {
+    /* upstream live, use its latency, subclasses should use these
+     * values to create the complete latency. */
+    min = us_min;
+    max = us_max;
   }
   gst_query_unref (query);
 
@@ -727,7 +727,17 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
   if (max_latency)
     *max_latency = max;
 
+done:
+  gst_query_unref (query);
+
   return res;
+
+  /* ERRORS */
+query_failed:
+  {
+    GST_DEBUG_OBJECT (sink, "latency query failed");
+    goto done;
+  }
 }
 
 static void
@@ -1841,7 +1851,7 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
     o = g_queue_pop_head (q);
     GST_DEBUG_OBJECT (basesink, "rendering queued object %p", o);
 
-    /* FIXME, do something with the return value? */
+    /* do something with the return value */
     ret = gst_base_sink_render_object (basesink, pad, o);
     if (ret != GST_FLOW_OK)
       goto dequeue_failed;
@@ -2483,7 +2493,10 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
       GST_OBJECT_UNLOCK (element);
       GST_DEBUG_OBJECT (basesink, "latency set to %" GST_TIME_FORMAT,
           GST_TIME_ARGS (latency));
+
+      /* don't forward, yet */
       forward = FALSE;
+      gst_event_unref (event);
       break;
     }
     default:
@@ -2840,6 +2853,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       /* if we don't have a preroll buffer we need to wait for a preroll and
        * return ASYNC. */
       if (gst_base_sink_is_prerolled (basesink)) {
+        GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, we are prerolled");
         basesink->playing_async = FALSE;
       } else {
         GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, need preroll");
