@@ -1,3 +1,16 @@
+2007-02-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audioconvert/audioconvert.c: (float), (double), (float_hq),
+	(double_hq), (audio_convert_get_func_index),
+	(audio_convert_prepare_context), (audio_convert_convert):
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_class_init), (gst_audio_convert_get_unit_size),
+	(gst_audio_convert_transform_caps):
+	* tests/check/elements/audioconvert.c: (GST_START_TEST),
+	(audioconvert_suite):
+	  Don't run inplace if that overwrites source data as we go. Add more
+	  tests. Fixes #339837 even more.
+
 2007-02-27  Julien MOUTTE  <julien@moutte.net>
 
 	* tests/examples/seek/seek.c: (do_seek), (set_update_scale),

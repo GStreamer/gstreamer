@@ -348,6 +348,7 @@ verify_convert (const gchar * which, void *in, int inlength,
   verify_convert (which, inarray, sizeof (inarray),                            \
         in_get_caps, outarray, sizeof (outarray), out_get_caps)
 
+
 GST_START_TEST (test_int16)
 {
   /* stereo to mono */
@@ -383,6 +384,32 @@ GST_START_TEST (test_int16)
 }
 
 GST_END_TEST;
+
+
+GST_START_TEST (test_float32)
+{
+  /* stereo to mono */
+  {
+    gfloat in[] = { 0.6, -0.0078125, 0.03125, 0.03125 };
+    gfloat out[] = { 0.29609375, 0.03125 };
+
+    RUN_CONVERSION ("float32 stereo to mono",
+        in, get_float_caps (2, "BYTE_ORDER", 32),
+        out, get_float_caps (1, "BYTE_ORDER", 32));
+  }
+  /* mono to stereo */
+  {
+    gfloat in[] = { 0.015625, 0.03125 };
+    gfloat out[] = { 0.015625, 0.015625, 0.03125, 0.03125 };
+
+    RUN_CONVERSION ("float32 mono to stereo",
+        in, get_float_caps (1, "BYTE_ORDER", 32),
+        out, get_float_caps (2, "BYTE_ORDER", 32));
+  }
+}
+
+GST_END_TEST;
+
 
 GST_START_TEST (test_int_conversion)
 {
@@ -448,6 +475,7 @@ GST_START_TEST (test_int_conversion)
 
 GST_END_TEST;
 
+
 GST_START_TEST (test_float_conversion)
 {
   /* 32 float <-> 16 signed */
@@ -459,9 +487,55 @@ GST_START_TEST (test_float_conversion)
     /* only one direction conversion, the other direction does
      * not produce exactly the same as the input due to floating
      * point rounding errors etc. */
-    RUN_CONVERSION ("32 float to 16 signed", in, get_float_caps (1,
-            "BYTE_ORDER", 32), out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
-        );
+    RUN_CONVERSION ("32 float to 16 signed",
+        in, get_float_caps (1, "BYTE_ORDER", 32),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE));
+  }
+  {
+    gint16 in[] = { 0, -32768, 16384, -16384 };
+    gfloat out[] = { 0.0, -1.0, 0.5, -0.5 };
+
+    RUN_CONVERSION ("16 signed to 32 float",
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+        out, get_float_caps (1, "BYTE_ORDER", 32));
+  }
+
+  /* 64 float <-> 16 signed */
+  /* NOTE: if audioconvert was doing dithering we'd have a problem */
+  {
+    gdouble in[] = { 0.0, 1.0, -1.0, 0.5, -0.5, 1.1, -1.1 };
+    gint16 out[] = { 0, 32767, -32768, 16384, -16384, 32767, -32768 };
+
+    /* only one direction conversion, the other direction does
+     * not produce exactly the same as the input due to floating
+     * point rounding errors etc. */
+    RUN_CONVERSION ("64 float to 16 signed",
+        in, get_float_caps (1, "BYTE_ORDER", 64),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE));
+  }
+  {
+    gint16 in[] = { 0, -32768, 16384, -16384 };
+    gdouble out[] = { 0.0,
+      4.6566128752457969e-10 * (gdouble) (-32768L << 16),       /* ~ -1.0 */
+      4.6566128752457969e-10 * (gdouble) (16384L << 16),        /* ~ 0.5 */
+      4.6566128752457969e-10 * (gdouble) (-16384L << 16), /* ~ -0.5 */
+    };
+
+    RUN_CONVERSION ("16 signed to 64 float",
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+        out, get_float_caps (1, "BYTE_ORDER", 64));
+  }
+  {
+    gint32 in[] = { 0, (-1L << 31), (1L << 30), (-1L << 30) };
+    gdouble out[] = { 0.0,
+      4.6566128752457969e-10 * (gdouble) (-1L << 31),   /* ~ -1.0 */
+      4.6566128752457969e-10 * (gdouble) (1L << 30),    /* ~ 0.5 */
+      4.6566128752457969e-10 * (gdouble) (-1L << 30), /* ~ -0.5 */
+    };
+
+    RUN_CONVERSION ("32 signed to 64 float",
+        in, get_int_caps (1, "BYTE_ORDER", 32, 32, TRUE),
+        out, get_float_caps (1, "BYTE_ORDER", 64));
   }
 
   /* 64-bit float <-> 32-bit float */
@@ -480,6 +554,7 @@ GST_START_TEST (test_float_conversion)
 }
 
 GST_END_TEST;
+
 
 GST_START_TEST (test_multichannel_conversion)
 {
@@ -500,6 +575,7 @@ GST_START_TEST (test_multichannel_conversion)
 }
 
 GST_END_TEST;
+
 
 GST_START_TEST (test_channel_remapping)
 {
@@ -606,6 +682,7 @@ audioconvert_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_int16);
+  tcase_add_test (tc_chain, test_float32);
   tcase_add_test (tc_chain, test_int_conversion);
   tcase_add_test (tc_chain, test_float_conversion);
   tcase_add_test (tc_chain, test_multichannel_conversion);

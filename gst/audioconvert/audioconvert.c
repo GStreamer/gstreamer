@@ -43,13 +43,12 @@ audio_convert_unpack_##name
 
 #define MAKE_UNPACK_FUNC(name, stride, sign, READ_FUNC)                 \
 static void                                                             \
-MAKE_UNPACK_FUNC_NAME (name) (gpointer src, gint32 *dst,                \
+MAKE_UNPACK_FUNC_NAME (name) (guint8 *src, gint32 *dst,                 \
         gint scale, gint count)                                         \
 {                                                                       \
-  guint8* p = (guint8 *) src;                                           \
   for (;count; count--) {                                               \
-    *dst++ = (((gint32) READ_FUNC (p)) << scale) ^ (sign);              \
-    p+=stride;                                                          \
+    *dst++ = (((gint32) READ_FUNC (src)) << scale) ^ (sign);            \
+    src+=stride;                                                        \
   }                                                                     \
 }
 
@@ -83,16 +82,14 @@ MAKE_UNPACK_FUNC_NAME (float_hq) (gfloat * src, gdouble * dst, gint s,
     gint count)
 {
   for (; count; count--)
-    *dst++ = (gdouble) * src++;
+    *dst++ = (gdouble) (*src++);
 }
 
 static void
 MAKE_UNPACK_FUNC_NAME (double_hq) (gdouble * src, gdouble * dst, gint s,
     gint count)
 {
-  /* FIXME: memcpy */
-  for (; count; count--)
-    *dst++ = *src++;
+  memcpy (dst, src, count * sizeof (gdouble));
 }
 
 #define READ8(p)          GST_READ_UINT8(p)
@@ -150,8 +147,9 @@ static void
 MAKE_PACK_FUNC_NAME (double) (gint32 * src, gdouble * dst, gint scale,
     gint count)
 {
-  for (; count; count--)
+  for (; count; count--) {
     *dst++ = INT2DOUBLE (*src++);
+  }
 }
 
 static void
@@ -165,9 +163,7 @@ static void
 MAKE_PACK_FUNC_NAME (double_hq) (gdouble * src, gdouble * dst, gint s,
     gint count)
 {
-  /* FIXME: memcpy */
-  for (; count; count--)
-    *dst++ = *src++;
+  memcpy (dst, src, count * sizeof (gdouble));
 }
 
 #define WRITE8(p, v)       GST_WRITE_UINT8 (p, v)
@@ -303,16 +299,17 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   /* if both formats are float/double use double as intermediate format and
    * and switch mixing */
   if (in->is_int || out->is_int) {
-    GST_DEBUG ("use int mixing");
+    GST_INFO ("use int mixing");
     ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_int;
   } else {
-    GST_DEBUG ("use float mixing");
+    GST_INFO ("use float mixing");
     ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_float;
     if (!(ctx->unpack = unpack_funcs[idx_in + 2]))
       goto not_supported;
     if (!(ctx->pack = pack_funcs[idx_out + 2]))
       goto not_supported;
   }
+  GST_INFO ("unitsizes: %d -> %d", in->unit_size, out->unit_size);
 
   /* check if input is in default format */
   ctx->in_default = check_default (in);
@@ -321,8 +318,11 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   /* check if output is in default format */
   ctx->out_default = check_default (out);
 
-  ctx->in_scale = 32 - in->depth;
-  ctx->out_scale = 32 - out->depth;
+  GST_INFO ("in default %d, mix passthrough %d, out default %d",
+      ctx->in_default, ctx->mix_passthrough, ctx->out_default);
+
+  ctx->in_scale = (in->is_int) ? (32 - in->depth) : 0;
+  ctx->out_scale = (out->is_int) ? (32 - out->depth) : 0;
 
   return TRUE;
 
@@ -369,7 +369,7 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
 {
   gint insize, outsize, size;
   gpointer outbuf, tmpbuf;
-  gint biggest = 0;
+  gint intemp = 0, outtemp = 0, biggest;
 
   g_return_val_if_fail (ctx != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
@@ -383,16 +383,19 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
   outsize = ctx->out.unit_size * samples;
 
   /* find biggest temp buffer size */
-  size = (ctx->in.is_int || ctx->out.is_int) ? 32 : 64;
+  size = (ctx->in.is_int || ctx->out.is_int) ?
+      sizeof (gint32) : sizeof (gdouble);
+
   if (!ctx->in_default)
-    biggest = insize * size / ctx->in.width;
+    intemp = insize * size * 8 / ctx->in.width;
   if (!ctx->mix_passthrough)
-    biggest = MAX (biggest, outsize * size / ctx->out.width);
+    outtemp = outsize * size * 8 / ctx->out.width;
+  biggest = MAX (intemp, outtemp);
 
   /* see if one of the buffers can be used as temp */
-  if (outsize >= biggest)
+  if ((outsize >= biggest) && (ctx->out.unit_size <= size))
     tmpbuf = dst;
-  else if (insize >= biggest && src_writable)
+  else if ((insize >= biggest) && src_writable && (ctx->in.unit_size >= size))
     tmpbuf = src;
   else {
     if (biggest > ctx->tmpbufsize) {

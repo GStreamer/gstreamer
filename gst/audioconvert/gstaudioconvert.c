@@ -197,6 +197,7 @@ static void
 gst_audio_convert_class_init (GstAudioConvertClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstBaseTransformClass *basetransform_class = GST_BASE_TRANSFORM_CLASS (klass);
   gint i;
 
   gobject_class->dispose = gst_audio_convert_dispose;
@@ -206,20 +207,20 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
   for (i = 0; i < GST_AUDIO_CHANNEL_POSITION_NUM; i++)
     supported_positions[i] = i;
 
-  GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size =
+  basetransform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_convert_get_unit_size);
-  GST_BASE_TRANSFORM_CLASS (klass)->transform_caps =
+  basetransform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform_caps);
-  GST_BASE_TRANSFORM_CLASS (klass)->fixate_caps =
+  basetransform_class->fixate_caps =
       GST_DEBUG_FUNCPTR (gst_audio_convert_fixate_caps);
-  GST_BASE_TRANSFORM_CLASS (klass)->set_caps =
+  basetransform_class->set_caps =
       GST_DEBUG_FUNCPTR (gst_audio_convert_set_caps);
-  GST_BASE_TRANSFORM_CLASS (klass)->transform_ip =
+  basetransform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform_ip);
-  GST_BASE_TRANSFORM_CLASS (klass)->transform =
+  basetransform_class->transform =
       GST_DEBUG_FUNCPTR (gst_audio_convert_transform);
 
-  GST_BASE_TRANSFORM_CLASS (klass)->passthrough_on_same_caps = TRUE;
+  basetransform_class->passthrough_on_same_caps = TRUE;
 }
 
 static void
@@ -315,6 +316,7 @@ gst_audio_convert_get_unit_size (GstBaseTransform * base, GstCaps * caps,
   if (!gst_audio_convert_parse_caps (caps, &fmt))
     goto parse_error;
 
+  GST_INFO_OBJECT (base, "unit_size = %u", fmt.unit_size);
   *size = fmt.unit_size;
 
   audio_convert_clean_fmt (&fmt);
@@ -323,6 +325,7 @@ gst_audio_convert_get_unit_size (GstBaseTransform * base, GstCaps * caps,
 
 parse_error:
   {
+    GST_INFO_OBJECT (base, "failed to parse caps to get unit_size");
     return FALSE;
   }
 }
@@ -525,14 +528,9 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
    * done the equivalent above. */
   if (!gst_structure_get_int (structure, "width", &width) || width > 16) {
     if (isfloat) {
-      /* These are invalid widths/depths for float, but we don't actually use
-       * them - we just pass it to append_with_other_format, which makes them
-       * valid
-       */
       GstStructure *s2 = gst_structure_copy (s);
 
-      set_structure_widths (s2, 16, 32);
-      gst_structure_set (s2, "depth", GST_TYPE_INT_RANGE, 16, 32, NULL);
+      set_structure_widths_32_and_64 (s2);
       append_with_other_format (ret, s2, TRUE);
       gst_structure_free (s2);
     } else {
