@@ -97,7 +97,9 @@ GST_START_TEST (test_state_changes)
       gst_element_set_state (element, GST_STATE_NULL);
       gst_object_unref (GST_OBJECT (element));
     }
+    gst_plugin_feature_list_free (features);
   }
+  gst_plugin_list_free (plugins);
   g_strfreev (ignorelist);
 }
 
