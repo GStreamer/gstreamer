@@ -1,3 +1,9 @@
+2007-02-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/Makefile.am:
+	Include local stuff before system installed things in LDFLAGS and
+	CFLAGS.
+
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_sink_activate):

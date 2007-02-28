@@ -196,13 +196,14 @@ elements_volume_CFLAGS = \
 	$(AM_CFLAGS)
 
 elements_vorbistag_LDADD = \
-	$(VORBIS_LIBS) \
-	$(LDADD)
+	$(LDADD) \
+	$(VORBIS_LIBS)
 
 elements_vorbistag_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS) \
 	$(VORBIS_CFLAGS) \
-	$(CFLAGS) $(AM_CFLAGS)
+	$(CFLAGS)
 
 gst_typefindfunctions_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 gst_typefindfunctions_LDADD = $(GST_BASE_LIBS) $(LDADD)
