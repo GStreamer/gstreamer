@@ -8,7 +8,7 @@ REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY=$(CHECK_REGISTRY)
 
 TESTS_ENVIRONMENT = \
-        $(REGISTRY_ENVIRONMENT)                                 \
+        $(REGISTRY_ENVIRONMENT)					\
         GST_PLUGIN_SYSTEM_PATH=					\
         GST_PLUGIN_PATH=$(top_builddir)/plugins
 
@@ -43,8 +43,8 @@ if GST_DISABLE_REGISTRY
 REGISTRY_CHECKS =
 else
 REGISTRY_CHECKS =				\
-	gst/gst				     	\
-	gst/gstbin			     	\
+	gst/gst					\
+	gst/gstbin				\
 	gst/gstelement				\
 	gst/gstevent				\
 	gst/gstghostpad				\
@@ -54,9 +54,9 @@ REGISTRY_CHECKS =				\
 	gst/gstutils				\
 	generic/sinks				\
 	elements/fakesink			\
-	elements/fakesrc				\
-	elements/fdsrc		          	\
-	elements/filesrc	          		\
+	elements/fakesrc			\
+	elements/fdsrc			  	\
+	elements/filesrc			\
 	elements/identity			\
 	libs/basesrc				\
 	libs/controller				\
@@ -64,30 +64,30 @@ REGISTRY_CHECKS =				\
 	pipelines/stress
 endif
 
-check_PROGRAMS =					\
+check_PROGRAMS =				\
 	gst/gstabi			     	\
 	gst/gstbuffer				\
 	gst/gstbus				\
-	gst/gstcaps     				\
+	gst/gstcaps     			\
 	gst/gstinfo		 		\
-	gst/gstiterator 				\
+	gst/gstiterator 			\
 	gst/gstmessage	 			\
 	gst/gstminiobject 			\
 	gst/gstobject				\
 	gst/gstpad				\
 	gst/gstsegment				\
 	gst/gstsystemclock			\
-	gst/gststructure				\
+	gst/gststructure			\
 	gst/gsttag				\
-	gst/gsttagsetter		\
+	gst/gsttagsetter			\
 	gst/gsttask				\
 	gst/gstvalue				\
-	$(LOADSAVE_CHECKS)          		\
+	$(LOADSAVE_CHECKS)	  		\
 	generic/states				\
 	$(PARSE_CHECKS)				\
 	$(REGISTRY_CHECKS)			\
 	libs/libsabi				\
-	libs/gdp					\
+	libs/gdp				\
 	libs/adapter				\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider
@@ -95,10 +95,13 @@ check_PROGRAMS =					\
 # failing tests
 # queue : tests is unstable (race conditions)
 noinst_PROGRAMS =				\
-	gst/gstpipeline                           \
-	libs/collectpads				\
+	gst/gstpipeline				\
+	libs/collectpads			\
 	elements/queue
 
+# elements to ignore for the state tests
+# STATE_IGNORE_ELEMENTS =
+#
 TESTS = $(check_PROGRAMS)
 
 noinst_HEADERS = \
@@ -207,7 +210,7 @@ coverage-report:
 	rm -r coverage
 	for dir in $(COVERAGE_DIRS); do 				\
 	  mkdir -p coverage/$$dir; 					\
-	  make -C $(top_builddir)/$$dir gcov;			\
+	  make -C $(top_builddir)/$$dir gcov;				\
         done
 	for dir in $(COVERAGE_DIRS); do					\
 	    files="`ls $(top_builddir)/$$dir/*.gcov.out 2> /dev/null`"; \

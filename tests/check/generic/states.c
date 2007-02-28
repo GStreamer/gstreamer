@@ -20,6 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
@@ -28,34 +32,73 @@ GST_START_TEST (test_state_changes)
 {
   GstElement *element;
   GList *features, *f;
+  GList *plugins, *p;
+  gchar **ignorelist = NULL;
+  const gchar *STATE_IGNORE_ELEMENTS = NULL;
 
-  features = gst_registry_get_feature_list (gst_registry_get_default (),
-      GST_TYPE_ELEMENT_FACTORY);
-
-  for (f = features; f; f = f->next) {
-    GstPluginFeature *feature = f->data;
-    const gchar *name = gst_plugin_feature_get_name (feature);
-
-    GST_DEBUG ("testing element %s", name);
-    element = gst_element_factory_make (name, name);
-
-    gst_element_set_state (element, GST_STATE_READY);
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_PLAYING);
-
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_READY);
-    gst_element_set_state (element, GST_STATE_NULL);
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_READY);
-    gst_element_set_state (element, GST_STATE_PLAYING);
-    gst_element_set_state (element, GST_STATE_PAUSED);
-    gst_element_set_state (element, GST_STATE_NULL);
-
-    gst_object_unref (GST_OBJECT (element));
+  GST_DEBUG ("testing elements from source %s", PACKAGE);
+  STATE_IGNORE_ELEMENTS = g_getenv ("STATE_IGNORE_ELEMENTS");
+  if (STATE_IGNORE_ELEMENTS) {
+    GST_DEBUG ("Will ignore element factories: '%s'", STATE_IGNORE_ELEMENTS);
+    ignorelist = g_strsplit (STATE_IGNORE_ELEMENTS, " ", 0);
   }
-  gst_plugin_feature_list_free (features);
-  gst_task_cleanup_all ();
+
+  plugins = gst_registry_get_plugin_list (gst_registry_get_default ());
+
+  for (p = plugins; p; p = p->next) {
+    GstPlugin *plugin = p->data;
+
+    if (strcmp (gst_plugin_get_source (plugin), PACKAGE) != 0)
+      continue;
+
+    features =
+        gst_registry_get_feature_list_by_plugin (gst_registry_get_default (),
+        gst_plugin_get_name (plugin));
+
+    for (f = features; f; f = f->next) {
+      GstPluginFeature *feature = f->data;
+      const gchar *name = gst_plugin_feature_get_name (feature);
+      gboolean ignore = FALSE;
+
+      if (!GST_IS_ELEMENT_FACTORY (feature))
+        continue;
+
+      if (ignorelist) {
+        gchar **s;
+
+        for (s = ignorelist; s && *s; ++s) {
+          if (g_str_has_prefix (name, *s)) {
+            GST_DEBUG ("ignoring element %s", name);
+            ignore = TRUE;
+          }
+        }
+        if (ignore)
+          continue;
+      }
+
+      GST_DEBUG ("testing element %s", name);
+      element = gst_element_factory_make (name, name);
+      fail_if (element == NULL, "Could not make element from factory %s", name);
+
+      if (GST_IS_PIPELINE (element)) {
+        GST_DEBUG ("element %s is a pipeline", name);
+      }
+
+      gst_element_set_state (element, GST_STATE_READY);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_PLAYING);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_READY);
+      gst_element_set_state (element, GST_STATE_NULL);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_READY);
+      gst_element_set_state (element, GST_STATE_PLAYING);
+      gst_element_set_state (element, GST_STATE_PAUSED);
+      gst_element_set_state (element, GST_STATE_NULL);
+      gst_object_unref (GST_OBJECT (element));
+    }
+  }
+  g_strfreev (ignorelist);
 }
 
 GST_END_TEST;
@@ -65,10 +108,6 @@ states_suite (void)
 {
   Suite *s = suite_create ("states");
   TCase *tc_chain = tcase_create ("general");
-
-  /* Use a long timeout, as we test all elements and take
-   * at least 0.2 seconds each */
-  tcase_set_timeout (tc_chain, 120);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_state_changes);

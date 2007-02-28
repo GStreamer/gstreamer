@@ -1,3 +1,14 @@
+2007-02-28  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/generic/states.c: (GST_START_TEST), (states_suite):
+	  Copy the current generic/states example from -base and adapt so
+	  we can use the exact same code everywhere.
+	  Check a STATES_IGNORE_ELEMENTS env var which can be used
+	  to ignore certain element factories for this test, which is
+	  what is being done in -base
+	* tests/check/Makefile.am:
+	  Mention this environment variable.
+
 2007-02-27  Wim Taymans  <wim@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:
