@@ -1,6 +1,22 @@
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstelement.c: (gst_element_message_full),
+	(gst_element_get_state_func):
+	* gst/gstelement.h:
+	Improve docs a little. Added Since: for new macro.
+
+	* gst/gstobject.c: (gst_object_sink):
+	* gst/gstpipeline.c: (gst_pipeline_change_state),
+	(gst_pipeline_set_new_stream_time):
+	* gst/gstpipeline.h:
+	Improve debugging and docs.
+
+	* gst/gstutils.c: (gst_element_state_change_return_get_name):
+	Improve debugging.
+
+2007-02-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstelement.c: (gst_element_message_full),
 	(gst_element_set_locked_state), (gst_element_get_state_func),
 	(gst_element_change_state):
 	Handle INFO messages from the GST_ELEMENT_INFO macro as well.

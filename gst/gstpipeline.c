@@ -436,14 +436,16 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       GstClockTime start_time, stream_time, delay;
       gboolean new_clock;
 
+      GST_DEBUG_OBJECT (element, "selecting clock and base_time");
+
       /* when going to playing, select a clock */
       clock = gst_element_provide_clock (element);
 
       if (clock) {
         start_time = gst_clock_get_time (clock);
       } else {
-        start_time = GST_CLOCK_TIME_NONE;
         GST_DEBUG ("no clock, using base time of NONE");
+        start_time = GST_CLOCK_TIME_NONE;
         new_base_time = GST_CLOCK_TIME_NONE;
       }
 
@@ -467,9 +469,14 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       }
 
       if (stream_time != GST_CLOCK_TIME_NONE
-          && start_time != GST_CLOCK_TIME_NONE)
+          && start_time != GST_CLOCK_TIME_NONE) {
         new_base_time = start_time - stream_time + delay;
-      else
+        GST_DEBUG_OBJECT (element,
+            "stream_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
+            ", base_time %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (stream_time), GST_TIME_ARGS (start_time),
+            GST_TIME_ARGS (new_base_time));
+      } else
         new_base_time = GST_CLOCK_TIME_NONE;
 
       if (clock)
@@ -498,8 +505,8 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     {
       gboolean need_reset;
 
-      /* only reset the stream time when the application did not
-       * specify a stream time explicitly */
+      /* only reset the stream_time when the application did not
+       * specify a stream_time explicitly */
       GST_OBJECT_LOCK (element);
       need_reset = pipeline->stream_time != GST_CLOCK_TIME_NONE;
       GST_OBJECT_UNLOCK (element);
@@ -529,7 +536,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
           pipeline->stream_time = now - element->base_time;
         GST_DEBUG_OBJECT (element,
             "stream_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
-            ", base time %" GST_TIME_FORMAT,
+            ", base_time %" GST_TIME_FORMAT,
             GST_TIME_ARGS (pipeline->stream_time), GST_TIME_ARGS (now),
             GST_TIME_ARGS (element->base_time));
       }
@@ -613,7 +620,7 @@ gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
       GST_TIME_ARGS (time));
 
   if (time == GST_CLOCK_TIME_NONE)
-    GST_DEBUG_OBJECT (pipeline, "told not to adjust base time");
+    GST_DEBUG_OBJECT (pipeline, "told not to adjust base_time");
 }
 
 /**
@@ -794,7 +801,8 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
  * Set the expected delay needed for all elements to perform the
  * PAUSED to PLAYING state change. @delay will be added to the
  * base time of the elements so that they wait an additional @delay
- * amount of time before starting to process buffers.
+ * amount of time before starting to process buffers and cannot be
+ * #GST_CLOCK_TIME_NONE.
  *
  * This option is used for tuning purposes and should normally not be 
  * used.

@@ -380,6 +380,7 @@ gst_object_sink (gpointer object)
 
   GST_OBJECT_LOCK (object);
   if (G_LIKELY (GST_OBJECT_IS_FLOATING (object))) {
+    GST_CAT_LOG_OBJECT (GST_CAT_REFCOUNTING, object, "clear floating flag");
     GST_OBJECT_FLAG_UNSET (object, GST_OBJECT_FLOATING);
     GST_OBJECT_UNLOCK (object);
     gst_object_unref (object);

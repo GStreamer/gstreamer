@@ -320,6 +320,8 @@ G_STMT_START {								\
  * the application of something noteworthy that is not an error.
  * The pipeline will post a warning message and the
  * application will be informed.
+ *
+ * Since: 0.10.12
  */
 #define GST_ELEMENT_INFO(el, domain, code, text, debug)			\
 G_STMT_START {								\

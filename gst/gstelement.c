@@ -1536,7 +1536,10 @@ _gst_element_error_printf (const gchar * format, ...)
  * @function: the source code function where the error was generated
  * @line:     the source code line where the error was generated
  *
- * Post an error or warning message on the bus from inside an element.
+ * Post an error, warning or info message on the bus from inside an element.
+ *
+ * @type must be of #GST_MESSAGE_ERROR, #GST_MESSAGE_WARNING or
+ * #GST_MESSAGE_INFO.
  *
  * MT safe.
  */

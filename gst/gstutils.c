@@ -1043,7 +1043,7 @@ gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
     case GST_STATE_CHANGE_ASYNC:
       return "\033[01;33mASYNC\033[00m";
     case GST_STATE_CHANGE_NO_PREROLL:
-      return "\033[01;34mNO PREROLL\033[00m";
+      return "\033[01;34mNO_PREROLL\033[00m";
     default:
       /* This is a memory leak */
       return g_strdup_printf ("\033[01;35;41mUNKNOWN!\033[00m(%d)", state_ret);

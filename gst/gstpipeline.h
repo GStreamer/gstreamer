@@ -34,6 +34,7 @@ G_BEGIN_DECLS
 #define GST_PIPELINE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_PIPELINE, GstPipelineClass))
 #define GST_IS_PIPELINE_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_PIPELINE))
 #define GST_PIPELINE_GET_CLASS(obj) 	(G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_PIPELINE, GstPipelineClass))
+#define GST_PIPELINE_CAST(obj) 		((GstPipeline*)(obj))
 
 typedef struct _GstPipeline GstPipeline;
 typedef struct _GstPipelineClass GstPipelineClass;
@@ -56,8 +57,10 @@ typedef enum {
  * GstPipeline:
  * @fixed_clock: The fixed clock of the pipeline, used when 
  *               GST_PIPELINE_FLAG_FIXED_CLOCK is set.
- * @stream_time: The stream time of the pipeline.
- * @delay: Extra delay added to base time to compensate for delay
+ * @stream_time: The stream time of the pipeline. A better name for this
+ *         property would be the running_time, the total time spent in the
+ *         PLAYING state without being flushed.
+ * @delay: Extra delay added to base_time to compensate for computing delays
  *         when setting elements to PLAYING.
  *
  * The #GstPipeline structure.
@@ -66,8 +69,9 @@ struct _GstPipeline {
   GstBin 	 bin;
 
   /*< public >*/ /* with LOCK */
-  GstClock      *fixed_clock;	/* fixed clock if any */
-  GstClockTime   stream_time;
+  GstClock      *fixed_clock;
+
+  GstClockTime   stream_time;	
   GstClockTime   delay;
 
   /*< private >*/
