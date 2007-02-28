@@ -1,3 +1,9 @@
+2007-02-28  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/lame/gstlame.c:
+	Initialise the variables so gcc doesn't complain about possibly
+	uninitialised uses, even though they can't actually happen.
+
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcm_reset),
