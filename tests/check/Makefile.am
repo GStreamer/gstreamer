@@ -40,6 +40,7 @@ check_PROGRAMS = \
 	elements/level \
 	elements/matroskamux \
 	elements/icydemux \
+	elements/videofilter
 	$(check_taglib)
     
 TESTS = $(check_PROGRAMS)

@@ -2,6 +2,7 @@
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David Schleef <ds@schleef.org>
  * Copyright (C) 2003 Arwed v. Merkatz <v.merkatz@gmx.net>
+ * Copyright (C) 2006 Mark Nauwelaerts <manauw@skynet.be>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -26,46 +27,39 @@
  * make_filter,v 1.6 2004/01/07 21:33:01 ds Exp 
  */
 
+/**
+ * SECTION:element-gamma
+ *
+ * <refsect2>
+ * <para>
+ * Performs gamma correction on a video stream.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch videotestsrc ! gamma gamma=2.0 ! ffmpegcolorspace ! ximagesink
+ * </programlisting>
+ * This pipeline will make the image "brighter".
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include "gstvideofilter.h"
+#include "gstgamma.h"
+#ifdef HAVE_LIBOIL
+#include <liboil/liboil.h>
+#endif
 #include <string.h>
 #include <math.h>
 
-#define GST_TYPE_GAMMA \
-  (gst_gamma_get_type())
-#define GST_GAMMA(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GAMMA,GstGamma))
-#define GST_GAMMA_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GAMMA,GstGammaClass))
-#define GST_IS_GAMMA(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GAMMA))
-#define GST_IS_GAMMA_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GAMMA))
+#include <gst/video/video.h>
 
-typedef struct _GstGamma GstGamma;
-typedef struct _GstGammaClass GstGammaClass;
 
-struct _GstGamma
-{
-  GstVideofilter videofilter;
-
-  double gamma;
-  double gamma_r, gamma_g, gamma_b;
-  guint8 gamma_table[256];
-  guint8 gamma_table_r[256];
-  guint8 gamma_table_g[256];
-  guint8 gamma_table_b[256];
-};
-
-struct _GstGammaClass
-{
-  GstVideofilterClass parent_class;
-};
-
+GST_DEBUG_CATEGORY_STATIC (gamma_debug);
+#define GST_CAT_DEFAULT gamma_debug
 
 /* GstGamma signals and args */
 enum
@@ -76,128 +70,89 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_GAMMA,
-  ARG_GAMMA_R,
-  ARG_GAMMA_G,
-  ARG_GAMMA_B
+  PROP_0,
+  PROP_GAMMA
       /* FILL ME */
 };
 
-static void gst_gamma_base_init (gpointer g_class);
-static void gst_gamma_class_init (gpointer g_class, gpointer class_data);
-static void gst_gamma_init (GTypeInstance * instance, gpointer g_class);
+#define DEFAULT_PROP_GAMMA  1
+
+static const GstElementDetails gamma_details =
+GST_ELEMENT_DETAILS ("Video gamma correction",
+    "Filter/Effect/Video",
+    "Adjusts gamma on a video stream",
+    "Arwed v. Merkatz <v.merkatz@gmx.net");
+
+static GstStaticPadTemplate gst_gamma_src_template =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, YV12 }"))
+    );
+
+static GstStaticPadTemplate gst_gamma_sink_template =
+GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ IYUV, I420, YV12 }"))
+    );
 
 static void gst_gamma_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_gamma_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_gamma_planar411 (GstVideofilter * videofilter, void *dest,
-    void *src);
-static void gst_gamma_rgb24 (GstVideofilter * videofilter, void *dest,
-    void *src);
-static void gst_gamma_rgb32 (GstVideofilter * videofilter, void *dest,
-    void *src);
-static void gst_gamma_setup (GstVideofilter * videofilter);
+static gboolean gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
+    GstCaps * outcaps);
+static GstFlowReturn gst_gamma_transform_ip (GstBaseTransform * transform,
+    GstBuffer * buf);
+
+static void gst_gamma_planar411_ip (GstGamma * gamma, guint8 * data, gint size);
 static void gst_gamma_calculate_tables (GstGamma * gamma);
 
-GType
-gst_gamma_get_type (void)
-{
-  static GType gamma_type = 0;
-
-  if (!gamma_type) {
-    static const GTypeInfo gamma_info = {
-      sizeof (GstGammaClass),
-      gst_gamma_base_init,
-      NULL,
-      gst_gamma_class_init,
-      NULL,
-      NULL,
-      sizeof (GstGamma),
-      0,
-      gst_gamma_init,
-    };
-
-    gamma_type = g_type_register_static (GST_TYPE_VIDEOFILTER,
-        "GstGamma", &gamma_info, 0);
-  }
-  return gamma_type;
-}
-
-static GstVideofilterFormat gst_gamma_formats[] = {
-  {"I420", 12, gst_gamma_planar411,},
-  {"RGB ", 24, gst_gamma_rgb24, 24, G_BIG_ENDIAN, 0xff0000, 0xff00, 0xff},
-  {"RGB ", 32, gst_gamma_rgb32, 24, G_BIG_ENDIAN, 0x00ff00, 0xff0000,
-      0xff000000},
-};
+GST_BOILERPLATE (GstGamma, gst_gamma, GstVideoFilter, GST_TYPE_VIDEO_FILTER);
 
 
 static void
 gst_gamma_base_init (gpointer g_class)
 {
-  static const GstElementDetails gamma_details =
-      GST_ELEMENT_DETAILS ("Video gamma correction",
-      "Filter/Effect/Video",
-      "Adjusts gamma on a video stream",
-      "Arwed v. Merkatz <v.merkatz@gmx.net");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-  GstVideofilterClass *videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
-  int i;
 
   gst_element_class_set_details (element_class, &gamma_details);
 
-  for (i = 0; i < G_N_ELEMENTS (gst_gamma_formats); i++) {
-    gst_videofilter_class_add_format (videofilter_class, gst_gamma_formats + i);
-  }
-
-  gst_videofilter_class_add_pad_templates (GST_VIDEOFILTER_CLASS (g_class));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_gamma_sink_template));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_gamma_src_template));
 }
 
 static void
-gst_gamma_class_init (gpointer g_class, gpointer class_data)
+gst_gamma_class_init (GstGammaClass * g_class)
 {
   GObjectClass *gobject_class;
-  GstVideofilterClass *videofilter_class;
+  GstBaseTransformClass *trans_class;
 
   gobject_class = G_OBJECT_CLASS (g_class);
-  videofilter_class = GST_VIDEOFILTER_CLASS (g_class);
+  trans_class = GST_BASE_TRANSFORM_CLASS (g_class);
 
   gobject_class->set_property = gst_gamma_set_property;
   gobject_class->get_property = gst_gamma_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_GAMMA,
+  g_object_class_install_property (gobject_class, PROP_GAMMA,
       g_param_spec_double ("gamma", "Gamma", "gamma",
-          0.01, 10, 1, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_GAMMA_R,
-      g_param_spec_double ("redgamma", "Gamma_r",
-          "gamma value for the red channel", 0.01, 10, 1, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_GAMMA_G,
-      g_param_spec_double ("greengamma", "Gamma_g",
-          "gamma value for the green channel", 0.01, 10, 1, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, ARG_GAMMA_B,
-      g_param_spec_double ("bluegamma", "Gamma_b",
-          "gamma value for the blue channel", 0.01, 10, 1, G_PARAM_READWRITE));
+          0.01, 10, DEFAULT_PROP_GAMMA, G_PARAM_READWRITE));
 
-  videofilter_class->setup = gst_gamma_setup;
+  trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_gamma_set_caps);
+  trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_gamma_transform_ip);
 }
 
 static void
-gst_gamma_init (GTypeInstance * instance, gpointer g_class)
+gst_gamma_init (GstGamma * gamma, GstGammaClass * g_class)
 {
-  GstGamma *gamma = GST_GAMMA (instance);
-  GstVideofilter *videofilter;
+  GST_DEBUG_OBJECT (gamma, "gst_gamma_init");
 
-  GST_DEBUG ("gst_gamma_init");
-
-  videofilter = GST_VIDEOFILTER (gamma);
-
-  /* do stuff */
-  gamma->gamma = 1;
-  gamma->gamma_r = 1;
-  gamma->gamma_g = 1;
-  gamma->gamma_b = 1;
+  /* properties */
+  gamma->gamma = DEFAULT_PROP_GAMMA;
   gst_gamma_calculate_tables (gamma);
 }
 
@@ -212,20 +167,8 @@ gst_gamma_set_property (GObject * object, guint prop_id, const GValue * value,
 
   GST_DEBUG ("gst_gamma_set_property");
   switch (prop_id) {
-    case ARG_GAMMA:
+    case PROP_GAMMA:
       gamma->gamma = g_value_get_double (value);
-      gst_gamma_calculate_tables (gamma);
-      break;
-    case ARG_GAMMA_R:
-      gamma->gamma_r = g_value_get_double (value);
-      gst_gamma_calculate_tables (gamma);
-      break;
-    case ARG_GAMMA_G:
-      gamma->gamma_g = g_value_get_double (value);
-      gst_gamma_calculate_tables (gamma);
-      break;
-    case ARG_GAMMA_B:
-      gamma->gamma_b = g_value_get_double (value);
       gst_gamma_calculate_tables (gamma);
       break;
     default:
@@ -243,50 +186,13 @@ gst_gamma_get_property (GObject * object, guint prop_id, GValue * value,
   gamma = GST_GAMMA (object);
 
   switch (prop_id) {
-    case ARG_GAMMA:
+    case PROP_GAMMA:
       g_value_set_double (value, gamma->gamma);
-      break;
-    case ARG_GAMMA_R:
-      g_value_set_double (value, gamma->gamma_r);
-      break;
-    case ARG_GAMMA_G:
-      g_value_set_double (value, gamma->gamma_g);
-      break;
-    case ARG_GAMMA_B:
-      g_value_set_double (value, gamma->gamma_b);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
-}
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_library_load ("gstvideofilter"))
-    return FALSE;
-
-  return gst_element_register (plugin, "gamma", GST_RANK_NONE, GST_TYPE_GAMMA);
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "gamma",
-    "Changes gamma on video images",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
-
-
-static void
-gst_gamma_setup (GstVideofilter * videofilter)
-{
-  GstGamma *gamma;
-
-  g_return_if_fail (GST_IS_GAMMA (videofilter));
-  gamma = GST_GAMMA (videofilter);
-
-  /* if any setup needs to be done, do it here */
-
 }
 
 static void
@@ -296,12 +202,11 @@ gst_gamma_calculate_tables (GstGamma * gamma)
   double val;
   double exp;
 
-  if (gamma->gamma == 1.0 &&
-      gamma->gamma_r == 1.0 && gamma->gamma_g == 1.0 && gamma->gamma_b == 1.0) {
-    GST_VIDEOFILTER (gamma)->passthru = TRUE;
+  if (gamma->gamma == 1.0) {
+    GST_BASE_TRANSFORM (gamma)->passthrough = TRUE;
     return;
   }
-  GST_VIDEOFILTER (gamma)->passthru = FALSE;
+  GST_BASE_TRANSFORM (gamma)->passthrough = FALSE;
 
   exp = 1.0 / gamma->gamma;
   for (n = 0; n < 256; n++) {
@@ -310,123 +215,108 @@ gst_gamma_calculate_tables (GstGamma * gamma)
     val = 255.0 * val;
     gamma->gamma_table[n] = (unsigned char) floor (val + 0.5);
   }
-  exp = 1.0 / gamma->gamma_r;
-  for (n = 0; n < 256; n++) {
-    val = n / 255.0;
-    val = pow (val, exp);
-    val = 255.0 * val;
-    gamma->gamma_table_r[n] = (unsigned char) floor (val + 0.5);
-  }
-  exp = 1.0 / gamma->gamma_g;
-  for (n = 0; n < 256; n++) {
-    val = n / 255.0;
-    val = pow (val, exp);
-    val = 255.0 * val;
-    gamma->gamma_table_g[n] = (unsigned char) floor (val + 0.5);
-  }
-  exp = 1.0 / gamma->gamma_b;
-  for (n = 0; n < 256; n++) {
-    val = n / 255.0;
-    val = pow (val, exp);
-    val = 255.0 * val;
-    gamma->gamma_table_b[n] = (unsigned char) floor (val + 0.5);
-  }
-
 }
 
-static void
-gst_gamma_planar411 (GstVideofilter * videofilter, void *dest, void *src)
+#ifndef HAVE_LIBOIL
+void
+oil_tablelookup_u8 (guint8 * dest, int dstr, guint8 * src, int sstr,
+    guint8 * table, int tstr, int n)
 {
-  GstGamma *gamma;
-  int width = gst_videofilter_get_input_width (videofilter);
-  int height = gst_videofilter_get_input_height (videofilter);
-
-  g_return_if_fail (GST_IS_GAMMA (videofilter));
-  gamma = GST_GAMMA (videofilter);
-
-  memcpy (dest, src, width * height + (width / 2) * (height / 2) * 2);
-
-  if (gamma->gamma != 1.0) {
-    {
-      guint8 *cdest = dest;
-      guint8 *csrc = src;
-      int x, y;
-
-      for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) {
-          cdest[y * width + x] =
-              gamma->gamma_table[(unsigned char) csrc[y * width + x]];
-        }
-      }
-    }
-  }
-}
-
-static void
-gst_gamma_rgb24 (GstVideofilter * videofilter, void *dest, void *src)
-{
-  GstGamma *gamma;
   int i;
-  int width, height;
-  guint8 *csrc = src;
-  guint8 *cdest = dest;
 
-  g_return_if_fail (GST_IS_GAMMA (videofilter));
-  gamma = GST_GAMMA (videofilter);
-
-  width = gst_videofilter_get_input_width (videofilter);
-  height = gst_videofilter_get_input_height (videofilter);
-  if (gamma->gamma == 1.0) {
-    i = 0;
-    while (i < width * height * 3) {
-      *cdest++ = gamma->gamma_table_r[*csrc++];
-      *cdest++ = gamma->gamma_table_g[*csrc++];
-      *cdest++ = gamma->gamma_table_b[*csrc++];
-      i = i + 3;
-    }
-  } else {
-    i = 0;
-    while (i < width * height * 3) {
-      *cdest++ = gamma->gamma_table[*csrc++];
-      i++;
-    }
+  for (i = 0; i < n; i++) {
+    *dest = table[*src * tstr];
+    dest += dstr;
+    src += sstr;
   }
+}
+#endif
+
+/* Useful macros */
+#define GST_VIDEO_I420_Y_ROWSTRIDE(width) (GST_ROUND_UP_4(width))
+#define GST_VIDEO_I420_U_ROWSTRIDE(width) (GST_ROUND_UP_8(width)/2)
+#define GST_VIDEO_I420_V_ROWSTRIDE(width) ((GST_ROUND_UP_8(GST_VIDEO_I420_Y_ROWSTRIDE(width)))/2)
+
+#define GST_VIDEO_I420_Y_OFFSET(w,h) (0)
+#define GST_VIDEO_I420_U_OFFSET(w,h) (GST_VIDEO_I420_Y_OFFSET(w,h)+(GST_VIDEO_I420_Y_ROWSTRIDE(w)*GST_ROUND_UP_2(h)))
+#define GST_VIDEO_I420_V_OFFSET(w,h) (GST_VIDEO_I420_U_OFFSET(w,h)+(GST_VIDEO_I420_U_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+#define GST_VIDEO_I420_SIZE(w,h)     (GST_VIDEO_I420_V_OFFSET(w,h)+(GST_VIDEO_I420_V_ROWSTRIDE(w)*GST_ROUND_UP_2(h)/2))
+
+static gboolean
+gst_gamma_set_caps (GstBaseTransform * base, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  GstGamma *this;
+  GstStructure *structure;
+  gboolean res;
+
+  this = GST_GAMMA (base);
+
+  GST_DEBUG_OBJECT (this,
+      "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
+
+  structure = gst_caps_get_structure (incaps, 0);
+
+  res = gst_structure_get_int (structure, "width", &this->width);
+  res &= gst_structure_get_int (structure, "height", &this->height);
+  if (!res)
+    goto done;
+
+  this->size = GST_VIDEO_I420_SIZE (this->width, this->height);
+
+done:
+  return res;
 }
 
 static void
-gst_gamma_rgb32 (GstVideofilter * videofilter, void *dest, void *src)
+gst_gamma_planar411_ip (GstGamma * gamma, guint8 * data, gint size)
+{
+  oil_tablelookup_u8 (data, 1, data, 1, gamma->gamma_table, 1, size);
+}
+
+static GstFlowReturn
+gst_gamma_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
   GstGamma *gamma;
-  int i;
-  int width, height;
-  guint8 *csrc = src;
-  guint8 *cdest = dest;
+  guint8 *data;
+  guint size;
 
-  g_return_if_fail (GST_IS_GAMMA (videofilter));
-  gamma = GST_GAMMA (videofilter);
+  gamma = GST_GAMMA (base);
 
-  width = gst_videofilter_get_input_width (videofilter);
-  height = gst_videofilter_get_input_height (videofilter);
-  if (gamma->gamma == 1.0) {
-    i = 0;
-    while (i < width * height * 4) {
-      *cdest++ = gamma->gamma_table_b[*csrc++];
-      *cdest++ = gamma->gamma_table_g[*csrc++];
-      *cdest++ = gamma->gamma_table_r[*csrc++];
-      cdest++;
-      csrc++;
-      i = i + 4;
-    }
-  } else {
-    i = 0;
-    while (i < width * height * 4) {
-      if ((i % 4) != 3)
-        *cdest++ = gamma->gamma_table[*csrc++];
-      else {
-        cdest++;
-        csrc++;
-      }
-      i++;
-    }
+  if (base->passthrough)
+    goto done;
+
+  data = GST_BUFFER_DATA (outbuf);
+  size = GST_BUFFER_SIZE (outbuf);
+
+  if (size != gamma->size)
+    goto wrong_size;
+
+  gst_gamma_planar411_ip (gamma, data,
+      gamma->height * GST_VIDEO_I420_Y_ROWSTRIDE (gamma->width));
+
+done:
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+wrong_size:
+  {
+    GST_ELEMENT_ERROR (gamma, STREAM, FORMAT,
+        (NULL), ("Invalid buffer size %d, expected %d", size, gamma->size));
+    return GST_FLOW_ERROR;
   }
 }
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  GST_DEBUG_CATEGORY_INIT (gamma_debug, "gamma", 0, "gamma");
+
+  return gst_element_register (plugin, "gamma", GST_RANK_NONE, GST_TYPE_GAMMA);
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "gamma",
+    "Changes gamma on video images",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

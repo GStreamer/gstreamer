@@ -1,5 +1,23 @@
 2007-02-28  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
+	* gst/videofilter/Makefile.am:
+	* gst/videofilter/gstgamma.c: (gst_gamma_base_init),
+	(gst_gamma_class_init), (gst_gamma_init), (gst_gamma_set_property),
+	(gst_gamma_get_property), (gst_gamma_calculate_tables),
+	(oil_tablelookup_u8), (gst_gamma_set_caps),
+	(gst_gamma_planar411_ip), (gst_gamma_transform_ip), (plugin_init):
+	Port gamma filter to 0.10. Fixes #412704.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/videofilter.c: (setup_filter),
+	(cleanup_filter), (check_filter), (GST_START_TEST),
+	(videobalance_suite), (videoflip_suite), (gamma_suite), (main):
+	Add unit tests for videofilters.
+
+2007-02-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/URLS:
 	Add another interesting test url.
 
