@@ -1056,7 +1056,7 @@ gst_base_audio_sink_async_play (GstBaseSink * basesink)
   if (clock != sink->provided_clock) {
     GstClockTime rate_num, rate_denom;
 
-    etime = gst_clock_get_time (clock) - GST_ELEMENT_CAST (sink)->base_time;
+    etime = gst_clock_get_time (clock);
     itime = gst_clock_get_internal_time (sink->provided_clock);
 
     GST_DEBUG_OBJECT (sink,

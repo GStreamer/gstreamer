@@ -1,5 +1,11 @@
 2007-03-01  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_async_play):
+	base time is irrelevant here.
+
+2007-03-01  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/audio/gstaudiosink.c: (audioringbuffer_thread_func):
 	* gst-libs/gst/audio/gstaudiosrc.c: (audioringbuffer_thread_func):
 	Improve debugging.
