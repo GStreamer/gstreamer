@@ -50,6 +50,12 @@ gst_hal_get_string (const gchar * udi)
   LibHalContext *ctx;
   char *string;
 
+  /* Don't query HAL for NULL UDIs. Passing NULL as UDI to HAL gives
+   * an assertion failure in D-Bus when running with
+   * DBUS_FATAL_WARNINGS=1. */
+  if (!udi)
+    return NULL;
+
   dbus_error_init (&error);
 
   connection = dbus_bus_get (DBUS_BUS_SYSTEM, &error);

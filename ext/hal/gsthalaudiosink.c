@@ -162,7 +162,11 @@ do_toggle_element (GstHalAudioSink * sink)
   }
 
   GST_DEBUG_OBJECT (sink, "Creating new kid");
-  if (!(sink->kid = gst_hal_get_audio_sink (sink->udi))) {
+  if (!sink->udi) {
+    GST_ELEMENT_ERROR (sink, LIBRARY, SETTINGS, (NULL),
+        ("No UDI set for device"));
+    return FALSE;
+  } else if (!(sink->kid = gst_hal_get_audio_sink (sink->udi))) {
     GST_ELEMENT_ERROR (sink, LIBRARY, SETTINGS, (NULL),
         ("Failed to render audio sink from Hal"));
     return FALSE;

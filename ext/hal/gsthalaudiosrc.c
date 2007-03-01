@@ -164,7 +164,11 @@ do_toggle_element (GstHalAudioSrc * src)
   }
 
   GST_DEBUG_OBJECT (src, "Creating new kid");
-  if (!(src->kid = gst_hal_get_audio_src (src->udi))) {
+  if (!src->udi) {
+    GST_ELEMENT_ERROR (src, LIBRARY, SETTINGS, (NULL),
+        ("No UDI set for device"));
+    return FALSE;
+  } else if (!(src->kid = gst_hal_get_audio_src (src->udi))) {
     GST_ELEMENT_ERROR (src, LIBRARY, SETTINGS, (NULL),
         ("Failed to render audio source from Hal"));
     return FALSE;

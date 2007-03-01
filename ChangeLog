@@ -1,3 +1,14 @@
+2007-03-01  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/hal/gsthalaudiosink.c: (do_toggle_element):
+	* ext/hal/gsthalaudiosrc.c: (do_toggle_element):
+	  Check if the device UDI is set before trying to query HAL
+	  about it and give a useful error message if it wasn't set.
+	* ext/hal/hal.c: (gst_hal_get_string):
+	  Don't query HAL for NULL UDIs. Passing NULL as UDI to HAL
+	  gives an assertion failure in D-Bus when running with
+	  DBUS_FATAL_WARNINGS=1.
+
 2007-02-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
