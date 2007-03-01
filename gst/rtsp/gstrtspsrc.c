@@ -376,11 +376,33 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gint
+find_stream_by_channel (GstRTSPStream * stream, gconstpointer a)
+{
+  gint channel = GPOINTER_TO_INT (a);
+
+  if (stream->channel[0] == channel || stream->channel[1] == channel)
+    return 0;
+
+  return -1;
+}
+
+static gint
 find_stream_by_pt (GstRTSPStream * stream, gconstpointer a)
 {
   gint pt = GPOINTER_TO_INT (a);
 
   if (stream->pt == pt)
+    return 0;
+
+  return -1;
+}
+
+static gint
+find_stream_by_udpsrc (GstRTSPStream * stream, gconstpointer a)
+{
+  GstElement *src = (GstElement *) a;
+
+  if (stream->udpsrc[0] == src)
     return 0;
 
   return -1;
@@ -1171,16 +1193,6 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
   return TRUE;
 }
 
-static gint
-find_stream_by_channel (GstRTSPStream * stream, gconstpointer a)
-{
-  gint channel = GPOINTER_TO_INT (a);
-
-  if (stream->channel[0] == channel || stream->channel[1] == channel)
-    return 0;
-
-  return -1;
-}
 
 static GstFlowReturn
 gst_rtspsrc_combine_flows (GstRTSPSrc * src, GstRTSPStream * stream,
@@ -2593,13 +2605,14 @@ send_error:
 static void
 gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
 {
+  GstRTSPSrc *rtspsrc;
+
+  rtspsrc = GST_RTSPSRC (bin);
+
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ELEMENT:
     {
-      GstRTSPSrc *rtspsrc;
       const GstStructure *s = gst_message_get_structure (message);
-
-      rtspsrc = GST_RTSPSRC (bin);
 
       if (gst_structure_has_name (s, "GstUDPSrcTimeout")) {
         GST_DEBUG_OBJECT (bin, "timeout on UDP port");
@@ -2611,6 +2624,32 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
     }
     case GST_MESSAGE_ERROR:
     {
+      GstObject *udpsrc;
+      GList *lstream;
+      GstRTSPStream *stream;
+      GstFlowReturn ret;
+
+      udpsrc = GST_MESSAGE_SRC (message);
+
+      lstream = g_list_find_custom (rtspsrc->streams, udpsrc,
+          (GCompareFunc) find_stream_by_udpsrc);
+      if (!lstream)
+        goto forward;
+
+      stream = (GstRTSPStream *) lstream->data;
+
+      /* if we get error messages from the udp sources, that's not a problem as
+       * long as not all of them error out. We also don't really know what the
+       * problem is, the message does not give enough detail... */
+      ret = gst_rtspsrc_combine_flows (rtspsrc, stream, GST_FLOW_NOT_LINKED);
+      if (ret != GST_FLOW_OK)
+        goto forward;
+
+      gst_message_unref (message);
+      break;
+
+      /* fatal our not our message, forward */
+    forward:
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
       break;
     }
