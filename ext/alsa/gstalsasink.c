@@ -80,7 +80,6 @@ static void gst_alsasink_init_interfaces (GType type);
 GST_BOILERPLATE_FULL (GstAlsaSink, gst_alsasink, GstAudioSink,
     GST_TYPE_AUDIO_SINK, gst_alsasink_init_interfaces);
 
-static void gst_alsasink_dispose (GObject * object);
 static void gst_alsasink_finalise (GObject * object);
 static void gst_alsasink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
@@ -134,12 +133,6 @@ static GstStaticPadTemplate alsasink_sink_factory =
     );
 
 static void
-gst_alsasink_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
 gst_alsasink_finalise (GObject * object)
 {
   GstAlsaSink *sink = GST_ALSA_SINK (object);
@@ -191,7 +184,6 @@ gst_alsasink_class_init (GstAlsaSinkClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_alsasink_dispose);
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_alsasink_finalise);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_alsasink_get_property);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_alsasink_set_property);
@@ -788,7 +780,7 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
   cptr = length / alsa->bytes_per_sample;
   ptr = data;
 
-  GST_ALSA_LOCK (asink);
+  GST_ALSA_SINK_LOCK (asink);
   while (cptr > 0) {
     err = snd_pcm_writei (alsa->handle, ptr, cptr);
 
@@ -806,13 +798,13 @@ gst_alsasink_write (GstAudioSink * asink, gpointer data, guint length)
     ptr += err * alsa->channels;
     cptr -= err;
   }
-  GST_ALSA_UNLOCK (asink);
+  GST_ALSA_SINK_UNLOCK (asink);
 
   return length - cptr;
 
 write_error:
   {
-    GST_ALSA_UNLOCK (asink);
+    GST_ALSA_SINK_UNLOCK (asink);
     return length;              /* skip one period */
   }
 }
@@ -838,13 +830,13 @@ gst_alsasink_reset (GstAudioSink * asink)
 
   alsa = GST_ALSA_SINK (asink);
 
-  GST_ALSA_LOCK (asink);
+  GST_ALSA_SINK_LOCK (asink);
   GST_DEBUG_OBJECT (alsa, "drop");
   CHECK (snd_pcm_drop (alsa->handle), drop_error);
   GST_DEBUG_OBJECT (alsa, "prepare");
   CHECK (snd_pcm_prepare (alsa->handle), prepare_error);
   GST_DEBUG_OBJECT (alsa, "reset done");
-  GST_ALSA_UNLOCK (asink);
+  GST_ALSA_SINK_UNLOCK (asink);
 
   return;
 
@@ -853,14 +845,14 @@ drop_error:
   {
     GST_ERROR_OBJECT (alsa, "alsa-reset: pcm drop error: %s",
         snd_strerror (err));
-    GST_ALSA_UNLOCK (asink);
+    GST_ALSA_SINK_UNLOCK (asink);
     return;
   }
 prepare_error:
   {
     GST_ERROR_OBJECT (alsa, "alsa-reset: pcm prepare error: %s",
         snd_strerror (err));
-    GST_ALSA_UNLOCK (asink);
+    GST_ALSA_SINK_UNLOCK (asink);
     return;
   }
 }

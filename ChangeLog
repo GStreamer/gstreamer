@@ -1,3 +1,20 @@
+2007-03-01  Wim Taymans  <wim@fluendo.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_class_init),
+	(gst_alsasink_write), (gst_alsasink_reset):
+	* ext/alsa/gstalsasink.h:
+	Remove unused dispose function.
+	Rename lock to not interfere with alsasrc lock.
+
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_finalize),
+	(gst_alsasrc_class_init), (gst_alsasrc_init), (set_swparams),
+	(gst_alsasrc_read), (gst_alsasrc_reset):
+	* ext/alsa/gstalsasrc.h:
+	Implement finalize function.
+	Use lock to protect alsa access.
+	Implement _reset.
+	Fine tune sw params.
+
 2007-02-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

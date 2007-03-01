@@ -80,7 +80,7 @@ GST_BOILERPLATE_FULL (GstAlsaSrc, gst_alsasrc, GstAudioSrc,
 
 GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaSrc, gst_alsasrc_mixer);
 
-static void gst_alsasrc_dispose (GObject * object);
+static void gst_alsasrc_finalize (GObject * object);
 static void gst_alsasrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_alsasrc_get_property (GObject * object,
@@ -133,14 +133,14 @@ static GstStaticPadTemplate alsasrc_src_factory =
     );
 
 static void
-gst_alsasrc_dispose (GObject * object)
+gst_alsasrc_finalize (GObject * object)
 {
   GstAlsaSrc *src = GST_ALSA_SRC (object);
 
   g_free (src->device);
-  src->device = NULL;
+  g_mutex_free (src->alsa_lock);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -205,7 +205,7 @@ gst_alsasrc_class_init (GstAlsaSrcClass * klass)
   gstbaseaudiosrc_class = (GstBaseAudioSrcClass *) klass;
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_alsasrc_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_alsasrc_finalize);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_alsasrc_get_property);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_alsasrc_set_property);
 
@@ -282,6 +282,8 @@ gst_alsasrc_init (GstAlsaSrc * alsasrc, GstAlsaSrcClass * g_class)
 
   alsasrc->device = g_strdup (DEFAULT_PROP_DEVICE);
   alsasrc->cached_caps = NULL;
+
+  alsasrc->alsa_lock = g_mutex_new ();
 }
 
 #define CHECK(call, error) \
@@ -470,17 +472,12 @@ set_swparams (GstAlsaSrc * alsa)
 
   /* get the current swparams */
   CHECK (snd_pcm_sw_params_current (alsa->handle, params), no_config);
-  /* start the transfer when the buffer is almost full: */
-  /* (buffer_size / avail_min) * avail_min */
-#if 0
-  CHECK (snd_pcm_sw_params_set_start_threshold (alsa->handle, params,
-          (alsa->buffer_size / alsa->period_size) * alsa->period_size),
-      start_threshold);
-
   /* allow the transfer when at least period_size samples can be processed */
   CHECK (snd_pcm_sw_params_set_avail_min (alsa->handle, params,
           alsa->period_size), set_avail);
-#endif
+  /* start the transfer on first read */
+  CHECK (snd_pcm_sw_params_set_start_threshold (alsa->handle, params,
+          0), start_threshold);
   /* align all transfers to 1 sample */
   CHECK (snd_pcm_sw_params_set_xfer_align (alsa->handle, params, 1), set_align);
 
@@ -497,7 +494,6 @@ no_config:
             snd_strerror (err)));
     return err;
   }
-#if 0
 start_threshold:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
@@ -511,7 +507,6 @@ set_avail:
         ("Unable to set avail min for playback: %s", snd_strerror (err)));
     return err;
   }
-#endif
 set_align:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
@@ -766,6 +761,7 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length)
   cptr = length / alsa->bytes_per_sample;
   ptr = data;
 
+  GST_ALSA_SRC_LOCK (asrc);
   while (cptr > 0) {
     if ((err = snd_pcm_readi (alsa->handle, ptr, cptr)) < 0) {
       if (err == -EAGAIN) {
@@ -780,10 +776,13 @@ gst_alsasrc_read (GstAudioSrc * asrc, gpointer data, guint length)
     ptr += err * alsa->channels;
     cptr -= err;
   }
+  GST_ALSA_SRC_UNLOCK (asrc);
+
   return length - cptr;
 
 read_error:
   {
+    GST_ALSA_SRC_UNLOCK (asrc);
     return length;              /* skip one period */
   }
 }
@@ -804,30 +803,34 @@ gst_alsasrc_delay (GstAudioSrc * asrc)
 static void
 gst_alsasrc_reset (GstAudioSrc * asrc)
 {
-
-#if 0
   GstAlsaSrc *alsa;
   gint err;
 
   alsa = GST_ALSA_SRC (asrc);
 
+  GST_ALSA_SRC_LOCK (asrc);
+  GST_DEBUG_OBJECT (alsa, "drop");
   CHECK (snd_pcm_drop (alsa->handle), drop_error);
+  GST_DEBUG_OBJECT (alsa, "prepare");
   CHECK (snd_pcm_prepare (alsa->handle), prepare_error);
+  GST_DEBUG_OBJECT (alsa, "reset done");
+  GST_ALSA_SRC_UNLOCK (asrc);
 
   return;
 
   /* ERRORS */
 drop_error:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("alsa-reset: pcm drop error: %s", snd_strerror (err)), (NULL));
+    GST_ERROR_OBJECT (alsa, "alsa-reset: pcm drop error: %s",
+        snd_strerror (err));
+    GST_ALSA_SRC_UNLOCK (asrc);
     return;
   }
 prepare_error:
   {
-    GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
-        ("alsa-reset: pcm prepare error: %s", snd_strerror (err)), (NULL));
+    GST_ERROR_OBJECT (alsa, "alsa-reset: pcm prepare error: %s",
+        snd_strerror (err));
+    GST_ALSA_SRC_UNLOCK (asrc);
     return;
   }
-#endif
 }

@@ -34,6 +34,11 @@ G_BEGIN_DECLS
 #define GST_ALSA_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALSA_SRC,GstAlsaSrcClass))
 #define GST_IS_ALSA_SRC(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALSA_SRC))
 #define GST_IS_ALSA_SRC_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALSA_SRC))
+#define GST_ALSA_SRC_CAST(obj)       ((GstAlsaSrc *)(obj))
+
+#define GST_ALSA_SRC_GET_LOCK(obj)  (GST_ALSA_SRC_CAST (obj)->alsa_lock)
+#define GST_ALSA_SRC_LOCK(obj)      (g_mutex_lock (GST_ALSA_SRC_GET_LOCK (obj)))
+#define GST_ALSA_SRC_UNLOCK(obj)    (g_mutex_unlock (GST_ALSA_SRC_GET_LOCK (obj)))
 
 typedef struct _GstAlsaSrc GstAlsaSrc;
 typedef struct _GstAlsaSrcClass GstAlsaSrcClass;
@@ -66,6 +71,8 @@ struct _GstAlsaSrc {
   snd_pcm_uframes_t     period_size;
 
   GstAlsaMixer          *mixer;
+
+  GMutex                *alsa_lock;
 };
 
 struct _GstAlsaSrcClass {
