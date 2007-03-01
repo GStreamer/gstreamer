@@ -1,3 +1,12 @@
+2007-03-01  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/interfacesmodule.c: (initinterfaces):
+	initialize pygobject in the gst.interfaces modules. The absence of it
+	causes segfaults on Solaris and MIPS machines.
+	Fixes #343980
+
 2007-02-27  Michael Smith  <msmith@fluendo.com>
 
 	* gst/base.defs:

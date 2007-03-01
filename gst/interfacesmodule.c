@@ -38,6 +38,8 @@ initinterfaces (void)
 {
 	PyObject *m, *d;
 
+	init_pygobject ();
+
 	m = Py_InitModule ("interfaces", pyinterfaces_functions);
 	d = PyModule_GetDict (m);
 
