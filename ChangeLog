@@ -1,3 +1,9 @@
+2007-03-01  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	 Version 0.10.11.2 (0.10.12 pre-release)
+	 Bump libtool versioning.
+
 2007-03-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_loop):
