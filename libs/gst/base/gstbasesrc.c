@@ -1547,7 +1547,8 @@ gst_base_src_loop (GstPad * pad)
 
   ret = gst_base_src_get_range (src, position, src->blocksize, &buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_INFO_OBJECT (src, "pausing after gst_base_src_get_range() = %d", ret);
+    GST_INFO_OBJECT (src, "pausing after gst_base_src_get_range() = %s",
+        gst_flow_get_name (ret));
     goto pause;
   }
   if (G_UNLIKELY (buf == NULL))
@@ -1599,7 +1600,8 @@ gst_base_src_loop (GstPad * pad)
 
   ret = gst_pad_push (pad, buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_INFO_OBJECT (src, "pausing after gst_pad_push() = %d", ret);
+    GST_INFO_OBJECT (src, "pausing after gst_pad_push() = %s",
+        gst_flow_get_name (ret));
     goto pause;
   }
 

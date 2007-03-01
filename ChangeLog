@@ -1,3 +1,8 @@
+2007-03-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_loop):
+	  Log flow-names and not numbers.
+
 2007-02-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
