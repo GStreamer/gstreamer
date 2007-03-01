@@ -558,7 +558,7 @@ gst_base_audio_sink_event (GstBaseSink * bsink, GstEvent * event)
       gst_event_parse_new_segment_full (event, NULL, &rate, NULL, NULL,
           NULL, NULL, NULL);
 
-      GST_DEBUG_OBJECT (sink, "new rate of %f", rate);
+      GST_DEBUG_OBJECT (sink, "new segment rate of %f", rate);
       break;
     }
     default:
@@ -746,6 +746,11 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   render_start += base_time;
   render_stop += base_time;
 
+  /* compensate for latency */
+  latency = gst_base_sink_get_latency (bsink);
+  GST_DEBUG_OBJECT (sink,
+      "compensating for latency %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
+
   slaved = clock != sink->provided_clock;
   if (slaved) {
     /* get calibration parameters to compensate for speed and offset differences
@@ -753,39 +758,56 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
         &crate_num, &crate_denom);
 
+    cinternal += latency;
+
     GST_DEBUG_OBJECT (sink, "internal %" GST_TIME_FORMAT " external %"
         GST_TIME_FORMAT " %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT " = %f",
         GST_TIME_ARGS (cinternal), GST_TIME_ARGS (cexternal), crate_num,
         crate_denom, (gdouble) crate_num / crate_denom);
 
+    if (crate_num == 0)
+      crate_denom = crate_num = 1;
+
     /* bring to our slaved clock time */
-    if (render_start >= cexternal)
+    if (render_start >= cexternal) {
       render_start =
           gst_util_uint64_scale (render_start - cexternal, crate_denom,
-          crate_num) + cinternal;
-    else
-      render_start =
-          cinternal - gst_util_uint64_scale (cexternal - render_start,
+          crate_num);
+      render_start += cinternal;
+    } else {
+      render_start = gst_util_uint64_scale (cexternal - render_start,
           crate_denom, crate_num);
+      if (cinternal > render_start)
+        render_start = cinternal - render_start;
+      else
+        render_start = 0;
+    }
 
-    if (render_stop >= cexternal)
+    if (render_stop >= cexternal) {
       render_stop =
           gst_util_uint64_scale (render_stop - cexternal, crate_denom,
-          crate_num) + cinternal;
-    else
-      render_stop =
-          cinternal - gst_util_uint64_scale (cexternal - render_stop,
+          crate_num);
+      render_stop += cinternal;
+    } else {
+      render_stop = gst_util_uint64_scale (cexternal - render_stop,
           crate_denom, crate_num);
+      if (cinternal > render_stop)
+        render_stop = cinternal - render_stop;
+      else
+        render_stop = 0;
+    }
+
+    GST_DEBUG_OBJECT (sink,
+        "after slaving: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
+  } else {
+    render_start += latency;
+    render_stop += latency;
+    GST_DEBUG_OBJECT (sink,
+        "after latency: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
   }
 
-  /* compensate for latency */
-  latency = gst_base_sink_get_latency (bsink);
-  render_start += latency;
-  render_stop += latency;
-
-  GST_DEBUG_OBJECT (sink,
-      "render: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
 
   /* and bring the time to the rate corrected offset in the buffer */
   render_start = gst_util_uint64_scale_int (render_start,
@@ -1016,7 +1038,7 @@ static GstStateChangeReturn
 gst_base_audio_sink_async_play (GstBaseSink * basesink)
 {
   GstClock *clock;
-  GstClockTime time, base;
+  GstClockTime itime, etime;
   GstBaseAudioSink *sink;
 
   sink = GST_BASE_AUDIO_SINK (basesink);
@@ -1034,18 +1056,18 @@ gst_base_audio_sink_async_play (GstBaseSink * basesink)
   if (clock != sink->provided_clock) {
     GstClockTime rate_num, rate_denom;
 
-    base = GST_ELEMENT_CAST (sink)->base_time;
-    time = gst_clock_get_internal_time (sink->provided_clock);
+    etime = gst_clock_get_time (clock) - GST_ELEMENT_CAST (sink)->base_time;
+    itime = gst_clock_get_internal_time (sink->provided_clock);
 
     GST_DEBUG_OBJECT (sink,
-        "time: %" GST_TIME_FORMAT " base: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (time), GST_TIME_ARGS (base));
+        "internal time: %" GST_TIME_FORMAT " external time: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (itime), GST_TIME_ARGS (etime));
 
     /* FIXME, this is not yet accurate enough for smooth playback */
     gst_clock_get_calibration (sink->provided_clock, NULL, NULL, &rate_num,
         &rate_denom);
     /* Does not work yet. */
-    gst_clock_set_calibration (sink->provided_clock, time, base,
+    gst_clock_set_calibration (sink->provided_clock, itime, etime,
         rate_num, rate_denom);
 
     gst_clock_set_master (sink->provided_clock, clock);

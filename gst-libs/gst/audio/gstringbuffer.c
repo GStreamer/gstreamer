@@ -1309,7 +1309,7 @@ gst_ring_buffer_commit_full (GstRingBuffer * buf, guint64 * sample,
   gboolean reverse;
 
   if (G_UNLIKELY (in_samples == 0 || out_samples == 0))
-    return 0;
+    return in_samples;
 
   g_return_val_if_fail (GST_IS_RING_BUFFER (buf), -1);
   g_return_val_if_fail (buf->data != NULL, -1);

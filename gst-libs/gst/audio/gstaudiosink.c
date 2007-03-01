@@ -207,7 +207,7 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
   sink = GST_AUDIO_SINK (GST_OBJECT_PARENT (buf));
   csink = GST_AUDIO_SINK_GET_CLASS (sink);
 
-  GST_DEBUG ("enter thread");
+  GST_DEBUG_OBJECT (sink, "enter thread");
 
   writefunc = csink->write;
   if (writefunc == NULL)
@@ -224,10 +224,11 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
       left = len;
       do {
         written = writefunc (sink, readptr + written, left);
-        GST_LOG ("transfered %d bytes of %d from segment %d", written, left,
-            readseg);
+        GST_LOG_OBJECT (sink, "transfered %d bytes of %d from segment %d",
+            written, left, readseg);
         if (written < 0 || written > left) {
-          GST_WARNING ("error writing data (reason: %s), skipping segment",
+          GST_WARNING_OBJECT (sink,
+              "error writing data (reason: %s), skipping segment",
               g_strerror (errno));
           break;
         }
@@ -243,18 +244,18 @@ audioringbuffer_thread_func (GstRingBuffer * buf)
       GST_OBJECT_LOCK (abuf);
       if (!abuf->running)
         goto stop_running;
-      GST_DEBUG ("signal wait");
+      GST_DEBUG_OBJECT (sink, "signal wait");
       GST_AUDIORING_BUFFER_SIGNAL (buf);
-      GST_DEBUG ("wait for action");
+      GST_DEBUG_OBJECT (sink, "wait for action");
       GST_AUDIORING_BUFFER_WAIT (buf);
-      GST_DEBUG ("got signal");
+      GST_DEBUG_OBJECT (sink, "got signal");
       if (!abuf->running)
         goto stop_running;
-      GST_DEBUG ("continue running");
+      GST_DEBUG_OBJECT (sink, "continue running");
       GST_OBJECT_UNLOCK (abuf);
     }
   }
-  GST_DEBUG ("exit thread");
+  GST_DEBUG_OBJECT (sink, "exit thread");
 
   return;
 
