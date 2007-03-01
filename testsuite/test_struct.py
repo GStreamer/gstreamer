@@ -26,7 +26,7 @@ from common import gst, unittest, TestCase
 class StructureTest(TestCase):
     def setUp(self):
         TestCase.setUp(self)
-        self.struct = gst.structure_from_string('video/x-raw-yuv,width=10,foo="bar",pixel-aspect-ratio=1/2,framerate=5.0,boolean=(boolean)true')
+        self.struct = gst.structure_from_string('video/x-raw-yuv,width=10,foo="bar",pixel-aspect-ratio=1/2,framerate=5/1,boolean=(boolean)true')
 
     def testName(self):
         assert self.struct.get_name() == 'video/x-raw-yuv'
@@ -102,9 +102,9 @@ class StructureTest(TestCase):
         assert s['rlist'] == [([(['a', 'b'], ['c', 'd']),'e'], ['f', 'g']), 'h']
 
     def testStructureChange(self):
-        assert self.struct['framerate'] == 5.0
-        self.struct['framerate'] = 10.0
-        assert self.struct['framerate'] == 10.0
+        assert self.struct['framerate'] == gst.Fraction(5, 1)
+        self.struct['framerate'] = gst.Fraction(10, 1)
+        assert self.struct['framerate'] == gst.Fraction(10, 1)
         self.struct['pixel-aspect-ratio'] = gst.Fraction(4, 2)
         assert self.struct['pixel-aspect-ratio'].num == 2
         assert self.struct['pixel-aspect-ratio'].denom == 1

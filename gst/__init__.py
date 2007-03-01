@@ -80,6 +80,11 @@ class Fraction(Value):
       Value.__init__(self, 'fraction')
       self.num = num
       self.denom = denom
+   def __eq__(self, other):
+       if isinstance(other, Fraction):
+           return self.num * other.denom == other.num * self.denom
+       return False
+       
    def __repr__(self):
       return '<gst.Fraction %d/%d>' % (self.num, self.denom)
 

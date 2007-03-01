@@ -32,6 +32,24 @@ static PyObject *gstdoublerange_class = NULL;
 static PyObject *gstfraction_class = NULL;
 static PyObject *gstfractionrange_class = NULL;
 
+/* helper function */
+
+/* Finds the greatest common divisor.
+ * Returns 1 if none other found.
+ * This is Euclid's algorithm. */
+static long
+my_gcd(long num, long denom)
+{
+  while (denom != 0) {
+    long temp = num;
+
+    num = denom;
+    denom = temp % denom;
+  }
+
+  return ABS (num);
+}
+
 /**
  * pygst_value_as_pyobject:
  * @value: the GValue object.
@@ -225,14 +243,24 @@ pygst_value_from_pyobject (GValue *value, PyObject *obj)
     } else if (PyObject_IsInstance (obj, gstfraction_class)) {
       PyObject *pyval;
       long num, denom;
+      long gcd = 0;
       VALUE_TYPE_CHECK (value, GST_TYPE_FRACTION);
       if (!(pyval = PyObject_GetAttrString (obj, "num")))
         return -1;
       num = PyInt_AsLong (pyval);
+      if ((num == -1) && PyErr_Occurred())
+	return -1;
       g_assert (G_MININT <= num && num <= G_MAXINT);
       if (!(pyval = PyObject_GetAttrString (obj, "denom")))
         return -1;
       denom = PyInt_AsLong (pyval);
+      if ((denom == -1) && PyErr_Occurred())
+	return -1;
+      /* we need to reduce the values to be smaller than MAXINT */
+      if ((gcd = my_gcd(num, denom))) {
+	num /= gcd;
+	denom /= gcd;
+      }
       g_assert (G_MININT <= denom && denom <= G_MAXINT);
       gst_value_set_fraction (value, (int)num, (int)denom);
     } else if (PyObject_IsInstance (obj, gstfractionrange_class)) {

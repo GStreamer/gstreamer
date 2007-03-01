@@ -1,3 +1,15 @@
+2007-03-01  Edward Hervey  <edward@fluendo.com>
+
+	* gst/__init__.py:
+	Added __eq__ method to fractions so we can check if two fractions are
+	equal.
+	* gst/pygstvalue.c: (my_gcd), (pygst_value_from_pyobject):
+	Attempt to simplify gst.Fraction before filling in a GValue.
+	Fixes #381243
+	* testsuite/test_caps.py:
+	* testsuite/test_struct.py:
+	Minor beauty fixes. framerates are fractions, not floats.
+
 2007-03-01  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	reviewed by: Edward Hervey  <edward@fluendo.com>

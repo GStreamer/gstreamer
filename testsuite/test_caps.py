@@ -26,7 +26,7 @@ from common import gst, unittest, TestCase
 class CapsTest(TestCase):
     def setUp(self):
         TestCase.setUp(self)
-        self.caps = gst.caps_from_string('video/x-raw-yuv,width=10,framerate=5.0;video/x-raw-rgb,width=15,framerate=10.0')
+        self.caps = gst.caps_from_string('video/x-raw-yuv,width=10,framerate=5/1;video/x-raw-rgb,width=15,framerate=10/1')
         self.assertEquals(self.caps.__refcount__, 1)
         self.structure = self.caps[0]
         self.any = gst.Caps("ANY")
