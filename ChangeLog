@@ -1,6 +1,12 @@
 2007-03-01  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/Makefile.am:
+	Disable aasink in the states test. I suspect this is the element that
+	is calling exit(1) when it can't proceed.
+
+2007-03-01  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/Makefile.am:
 	Draw plugins in from the build tree sys/ dir, rather than picking
 	up the already installed versions.
 
