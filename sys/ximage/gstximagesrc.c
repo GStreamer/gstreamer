@@ -127,6 +127,13 @@ gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
 
   g_mutex_lock (s->x_lock);
   s->xcontext = ximageutil_xcontext_get (GST_ELEMENT (s), name);
+  if (s->xcontext == NULL) {
+    g_mutex_unlock (s->x_lock);
+    GST_ELEMENT_ERROR (s, RESOURCE, OPEN_READ,
+        ("Could not open X display for reading"),
+        ("NULL returned from getting xcontext"));
+    return FALSE;
+  }
   s->width = s->xcontext->width;
   s->height = s->xcontext->height;
 

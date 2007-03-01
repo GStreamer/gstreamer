@@ -1,3 +1,8 @@
+2007-03-01  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/ximage/gstximagesrc.c: (gst_ximage_src_open_display):
+	Error out correctly when getting xcontext fails.
+
 2007-03-01  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtpdec.c: (gst_rtpdec_change_state):
