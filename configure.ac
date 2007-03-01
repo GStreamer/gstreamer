@@ -355,7 +355,7 @@ dnl Check for Xv extension
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 AG_GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
                   [xvimagesink], [
-  AG_AG_GST_CHECK_XV
+  AG_GST_CHECK_XV
 ])
 
 dnl check for X Shm
