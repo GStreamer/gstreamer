@@ -937,7 +937,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     gst_bin_add (GST_BIN_CAST (src), stream->sess);
 
     ret = gst_element_set_state (stream->sess, GST_STATE_PAUSED);
-    if (ret != GST_STATE_CHANGE_SUCCESS)
+    if (ret == GST_STATE_CHANGE_FAILURE)
       goto start_session_failure;
 
     /* we stream directly to the manager, FIXME, pad names should not be
@@ -2660,6 +2660,7 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       gst_rtspsrc_pause (rtspsrc);
+      ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       gst_rtspsrc_close (rtspsrc);
