@@ -26,8 +26,9 @@
  * HalAudioSink allows access to output of sound devices by specifying the
  * corresponding persistent Unique Device Id (UDI) from the Hardware Abstraction
  * Layer (HAL) in the <link linkend="GstHalAudioSrc--udi">udi</link> property.
- * It currently always embeds alsasink as HAL doesn't support other sound
- * systems yet.
+ * It currently always embeds alsasink or osssink as HAL doesn't support other
+ * sound systems yet. You can also specify the UDI of a device that has ALSA or
+ * OSS subdevices. If both are present ALSA is preferred.
  * </para>
  * <title>Examples</title>
  * <para>
@@ -162,11 +163,10 @@ do_toggle_element (GstHalAudioSink * sink)
   }
 
   GST_DEBUG_OBJECT (sink, "Creating new kid");
-  if (!sink->udi) {
-    GST_ELEMENT_ERROR (sink, LIBRARY, SETTINGS, (NULL),
-        ("No UDI set for device"));
-    return FALSE;
-  } else if (!(sink->kid = gst_hal_get_audio_sink (sink->udi))) {
+  if (!sink->udi)
+    GST_INFO_OBJECT (sink, "No UDI set for device, using default one");
+
+  if (!(sink->kid = gst_hal_get_audio_sink (sink->udi))) {
     GST_ELEMENT_ERROR (sink, LIBRARY, SETTINGS, (NULL),
         ("Failed to render audio sink from Hal"));
     return FALSE;

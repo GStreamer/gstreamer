@@ -27,8 +27,9 @@
  * HalAudioSrc allows access to input of sound devices by specifying the
  * corresponding persistent Unique Device Id (UDI) from the Hardware Abstraction
  * Layer (HAL) in the <link linkend="GstHalAudioSrc--udi">udi</link> property.
- * It currently always embeds alsasrc as HAL doesn't support other sound systems
- * yet.
+ * It currently always embeds alsasrc or osssrc as HAL doesn't support other
+ * sound systems yet. You can also specify the UDI of a device that has ALSA or
+ * OSS subdevices. If both are present ALSA is preferred.
  * </para>
  * <title>Examples</title>
  * <para>
@@ -164,11 +165,10 @@ do_toggle_element (GstHalAudioSrc * src)
   }
 
   GST_DEBUG_OBJECT (src, "Creating new kid");
-  if (!src->udi) {
-    GST_ELEMENT_ERROR (src, LIBRARY, SETTINGS, (NULL),
-        ("No UDI set for device"));
-    return FALSE;
-  } else if (!(src->kid = gst_hal_get_audio_src (src->udi))) {
+  if (!src->udi)
+    GST_INFO_OBJECT (src, "No UDI set for device, using default one");
+
+  if (!(src->kid = gst_hal_get_audio_src (src->udi))) {
     GST_ELEMENT_ERROR (src, LIBRARY, SETTINGS, (NULL),
         ("Failed to render audio source from Hal"));
     return FALSE;

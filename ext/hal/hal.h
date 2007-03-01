@@ -31,10 +31,17 @@
 
 G_BEGIN_DECLS
 
-GstElement *    gst_hal_render_bin_from_udi (const gchar *udi);
+typedef enum
+{
+  GST_HAL_AUDIOSINK,
+  GST_HAL_AUDIOSRC
+} GstHalDeviceType;
 
-GstElement *    gst_hal_get_audio_sink (const gchar *udi);
-GstElement *    gst_hal_get_audio_src  (const gchar *udi);
+GstElement *gst_hal_render_bin_from_udi (const gchar * udi,
+    GstHalDeviceType type);
+
+GstElement *gst_hal_get_audio_sink (const gchar * udi);
+GstElement *gst_hal_get_audio_src (const gchar * udi);
 
 G_END_DECLS
 

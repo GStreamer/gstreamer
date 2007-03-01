@@ -1,3 +1,21 @@
+2007-03-01  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/hal/gsthalaudiosink.c: (do_toggle_element):
+	* ext/hal/gsthalaudiosrc.c: (do_toggle_element):
+	Having NULL as UDI previously selected the default sink/src. Change
+	this back but mention it in the debug output.
+	* ext/hal/hal.c: (gst_hal_get_alsa_element),
+	(gst_hal_get_oss_element), (gst_hal_get_string),
+	(gst_hal_render_bin_from_udi), (gst_hal_get_audio_sink),
+	(gst_hal_get_audio_src):
+	* ext/hal/hal.h:
+	Refactor a bit, check all error conditions, greatly improve debugging
+	and fix some possible memory leaks. Also implement OSS support
+	and allow specifying an UDI that points to a real device. For this the
+	child device which supports ALSA (preferred) or OSS is used.
+	As a side effect this makes it impossible now to get a alsasink in
+	halaudiosrc and a alsasrc in halaudiosink.
+
 2007-03-01  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (find_stream_by_channel),
