@@ -237,8 +237,10 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
   if (funcs.SetDLLAccessPath)
     funcs.SetDLLAccessPath (DEFAULT_PATH);
 
-  if ((res = funcs.RAOpenCodec2 (&context, NULL)))
+  if ((res = funcs.RAOpenCodec2 (&context, NULL))) {
+    GST_DEBUG_OBJECT (dec, "RAOpenCodec2() failed");
     goto could_not_initialize;
+  }
 
   data.samplerate = rate;
   data.width = width;
@@ -249,15 +251,19 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
   data.datalen = buf ? GST_BUFFER_SIZE (buf) : 0;
   data.data = buf ? GST_BUFFER_DATA (buf) : NULL;
 
-  if ((res = funcs.RAInitDecoder (context, &data)))
+  if ((res = funcs.RAInitDecoder (context, &data))) {
+    GST_DEBUG_OBJECT (dec, "RAInitDecoder() failed");
     goto could_not_initialize;
+  }
 
-  if (funcs.RASetPwd)
+  if (funcs.RASetPwd) {
     funcs.RASetPwd (dec->context, dec->pwd ? dec->pwd : DEFAULT_PWD);
+  }
 
-  res = funcs.RASetFlavor (context, flavor);
-  if (res)
+  if ((res = funcs.RASetFlavor (context, flavor))) {
+    GST_DEBUG_OBJECT (dec, "RASetFlavor(%d) failed", flavor);
     goto could_not_initialize;
+  }
 
   caps = gst_caps_new_simple ("audio/x-raw-int",
       "endianness", G_TYPE_INT, G_BYTE_ORDER,

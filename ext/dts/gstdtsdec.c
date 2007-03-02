@@ -47,15 +47,8 @@ GST_ELEMENT_DETAILS ("DTS audio decoder",
 
 enum
 {
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
   ARG_0,
   ARG_DRC
-      /* FILL ME */
 };
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -153,18 +146,14 @@ gst_dtsdec_class_init (GstDtsDecClass * klass)
 static void
 gst_dtsdec_init (GstDtsDec * dtsdec, GstDtsDecClass * g_class)
 {
-  /* create the sink and src pads */
-  dtsdec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&sink_factory), "sink");
-  gst_pad_set_chain_function (dtsdec->sinkpad, gst_dtsdec_chain);
+  dtsdec->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
+  gst_pad_set_chain_function (dtsdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_dtsdec_chain));
   gst_pad_set_event_function (dtsdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_dtsdec_sink_event));
   gst_element_add_pad (GST_ELEMENT (dtsdec), dtsdec->sinkpad);
 
-  dtsdec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&src_factory), "src");
+  dtsdec->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_use_fixed_caps (dtsdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (dtsdec), dtsdec->srcpad);
 
@@ -308,8 +297,7 @@ gst_dtsdec_sink_event (GstPad * pad, GstEvent * event)
   GstDtsDec *dtsdec = GST_DTSDEC (gst_pad_get_parent (pad));
   gboolean ret = FALSE;
 
-  GST_LOG ("Handling event of type %d timestamp %llu", GST_EVENT_TYPE (event),
-      GST_EVENT_TIMESTAMP (event));
+  GST_LOG_OBJECT (dtsdec, "%s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:{
@@ -331,14 +319,6 @@ gst_dtsdec_sink_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_event_default (pad, event);
       break;
     }
-    case GST_EVENT_TAG:
-    case GST_EVENT_EOS:{
-      ret = gst_pad_event_default (pad, event);
-      break;
-    }
-    case GST_EVENT_FLUSH_START:
-      ret = gst_pad_event_default (pad, event);
-      break;
     case GST_EVENT_FLUSH_STOP:
       if (dtsdec->cache) {
         gst_buffer_unref (dtsdec->cache);
