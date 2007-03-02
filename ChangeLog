@@ -1,5 +1,14 @@
 2007-03-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Young-Ho Cha  <ganadist at chollian net>
+
+	* ext/dts/gstdtsdec.c: (gst_dtsdec_handle_frame),
+	(gst_dtsdec_change_state):
+	  Don't do forced downmixing to stereo, but check what downstream
+	  can do and let libdts do the downmixing based on that (#400555).
+
+2007-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Lutz Mueller  <lutz topfrose de>
 
 	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_class_init),

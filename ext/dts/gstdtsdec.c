@@ -392,6 +392,45 @@ gst_dtsdec_handle_frame (GstDtsDec * dts, guint8 * data,
     gst_dtsdec_update_streaminfo (dts);
   }
 
+  if (dts->request_channels == DTS_CHANNEL) {
+    GstCaps *caps;
+
+    caps = gst_pad_get_allowed_caps (dts->srcpad);
+    if (caps && gst_caps_get_size (caps) > 0) {
+      GstCaps *copy = gst_caps_copy_nth (caps, 0);
+      GstStructure *structure = gst_caps_get_structure (copy, 0);
+      gint channels;
+      const int dts_channels[6] = {
+        DTS_MONO,
+        DTS_STEREO,
+        DTS_STEREO | DTS_LFE,
+        DTS_2F2R,
+        DTS_2F2R | DTS_LFE,
+        DTS_3F2R | DTS_LFE,
+      };
+
+      /* Prefer the original number of channels, but fixate to something 
+       * preferred (first in the caps) downstream if possible.
+       */
+      gst_structure_fixate_field_nearest_int (structure, "channels",
+          flags ? gst_dtsdec_channels (flags, NULL) : 6);
+      gst_structure_get_int (structure, "channels", &channels);
+      if (channels <= 6)
+        dts->request_channels = dts_channels[channels - 1];
+      else
+        dts->request_channels = dts_channels[5];
+
+      gst_caps_unref (copy);
+    } else if (flags) {
+      dts->request_channels = dts->stream_channels;
+    } else {
+      dts->request_channels = DTS_3F2R | DTS_LFE;
+    }
+
+    if (caps)
+      gst_caps_unref (caps);
+  }
+
   /* process */
   flags = dts->request_channels | DTS_ADJUST_LEVEL;
   dts->level = 1;
@@ -539,7 +578,7 @@ gst_dtsdec_change_state (GstElement * element, GstStateChange transition)
       dts->sample_rate = -1;
       dts->stream_channels = 0;
       /* FIXME force stereo for now */
-      dts->request_channels = DTS_STEREO;
+      dts->request_channels = DTS_CHANNEL;
       dts->using_channels = 0;
       dts->level = 1;
       dts->bias = 0;
