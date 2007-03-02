@@ -1,5 +1,15 @@
 2007-03-02  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Thijs Vermeir <thijsvermeir at gmail dot com>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init), (gst_udpsrc_init),
+	(gst_udpsrc_create), (gst_udpsrc_set_property),
+	(gst_udpsrc_get_property):
+	* gst/udp/gstudpsrc.h:
+	Add support to strip proprietary headers. Fixes #350296.
+
+2007-03-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpmp2tdepay.c: (gst_rtp_mp2t_depay_process):
 	Fix compilation.
 

@@ -59,6 +59,7 @@ struct _GstUDPSrc {
   GstCaps *caps;
   gint     buffer_size;
   guint64  timeout;
+  gint     skip_first_bytes;
 
   /* our sockets */
   int      sock;

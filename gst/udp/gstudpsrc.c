@@ -71,6 +71,10 @@
  * default buffer size is typically 50K and can be increased to maximally 100K.
  * </para>
  * <para>
+ * The "skip-first-bytes" property is used to strip off an arbitrary number of
+ * bytes from the start of the raw udp packet and can be used to . 
+ * </para>
+ * <para>
  * The udpsrc is always a live source. It does however not provide a GstClock, this
  * is left for upstream elements such as an RTP session manager or demuxer (such
  * as an MPEG demuxer).
@@ -98,7 +102,7 @@
  * because it is blocked by a firewall.
  * </para>
  * <para>
- * Last reviewed on 2006-09-29 (0.10.5)
+ * Last reviewed on 2007-03-02 (0.10.6)
  * </para>
  * </refsect2>
  */
@@ -160,6 +164,7 @@ GST_ELEMENT_DETAILS ("UDP packet receiver",
 #define UDP_DEFAULT_SOCKFD              -1
 #define UDP_DEFAULT_BUFFER_SIZE		0
 #define UDP_DEFAULT_TIMEOUT             0
+#define UDP_DEFAULT_SKIP_FIRST_BYTES	0
 
 enum
 {
@@ -170,7 +175,8 @@ enum
   PROP_CAPS,
   PROP_SOCKFD,
   PROP_BUFFER_SIZE,
-  PROP_TIMEOUT
+  PROP_TIMEOUT,
+  PROP_SKIP_FIRST_BYTES
 };
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
@@ -257,6 +263,10 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
       g_param_spec_uint64 ("timeout", "Timeout",
           "Post a message after timeout microseconds (0 = disabled)", 0,
           G_MAXUINT64, UDP_DEFAULT_TIMEOUT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_SKIP_FIRST_BYTES, g_param_spec_int ("skip-first-bytes",
+          "Skip first bytes", "number of bytes to skip for each udp packet", 0,
+          G_MAXINT, UDP_DEFAULT_SKIP_FIRST_BYTES, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
@@ -278,6 +288,7 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
   udpsrc->uri = g_strdup (UDP_DEFAULT_URI);
   udpsrc->buffer_size = UDP_DEFAULT_BUFFER_SIZE;
   udpsrc->timeout = UDP_DEFAULT_TIMEOUT;
+  udpsrc->skip_first_bytes = UDP_DEFAULT_SKIP_FIRST_BYTES;
 
   udpsrc->control_sock[0] = -1;
   udpsrc->control_sock[1] = -1;
@@ -320,7 +331,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   socklen_t len;
   fd_set read_fds;
   guint max_sock;
-  gchar *pktdata;
+  guint8 *pktdata;
   gint pktsize;
 
 #ifdef G_OS_UNIX
@@ -441,8 +452,17 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   /* special case buffer so receivers can also track the address */
   outbuf = gst_netbuffer_new ();
-  GST_BUFFER_DATA (outbuf) = (guint8 *) pktdata;
-  GST_BUFFER_MALLOCDATA (outbuf) = (guint8 *) pktdata;
+  GST_BUFFER_MALLOCDATA (outbuf) = pktdata;
+
+  /* patch pktdata and len when stripping off the headers */
+  if (udpsrc->skip_first_bytes != 0) {
+    if (G_UNLIKELY (readsize <= udpsrc->skip_first_bytes))
+      goto skip_error;
+
+    pktdata += udpsrc->skip_first_bytes;
+    ret -= udpsrc->skip_first_bytes;
+  }
+  GST_BUFFER_DATA (outbuf) = pktdata;
   GST_BUFFER_SIZE (outbuf) = ret;
 
   gst_netaddress_set_ip4_address (&outbuf->from, tmpaddr.sin_addr.s_addr,
@@ -479,6 +499,12 @@ receive_error:
     g_free (pktdata);
     GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
         ("receive error %d: %s (%d)", ret, g_strerror (errno), errno));
+    return GST_FLOW_ERROR;
+  }
+skip_error:
+  {
+    GST_ELEMENT_ERROR (udpsrc, STREAM, DECODE, (NULL),
+        ("UDP buffer to small to skip header"));
     return GST_FLOW_ERROR;
   }
 }
@@ -585,6 +611,9 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_TIMEOUT:
       udpsrc->timeout = g_value_get_uint64 (value);
       break;
+    case PROP_SKIP_FIRST_BYTES:
+      udpsrc->skip_first_bytes = g_value_get_int (value);
+      break;
     default:
       break;
   }
@@ -617,6 +646,9 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TIMEOUT:
       g_value_set_uint64 (value, udpsrc->timeout);
+      break;
+    case PROP_SKIP_FIRST_BYTES:
+      g_value_set_int (value, udpsrc->skip_first_bytes);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
