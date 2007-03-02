@@ -44,7 +44,6 @@ struct _GstSunAudioSrc {
   GstAudioSrc    src;
 
   gchar *device;
-  gchar *device_name;
   gint   fd;
   gint   control_fd;
 

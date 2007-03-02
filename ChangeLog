@@ -1,3 +1,11 @@
+2007-03-02  Wim Taymans  <wim@fluendo.com>
+
+	* sys/sunaudio/gstsunaudiosrc.c: (gst_sunaudiosrc_class_init),
+	(gst_sunaudiosrc_init), (gst_sunaudiosrc_get_property),
+	(gst_sunaudiosrc_open):
+	* sys/sunaudio/gstsunaudiosrc.h:
+	Remove device-name from GstSunAudioSrc. Fixes #412597.
+
 2007-03-01  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/hal/gsthalaudiosink.c: (do_toggle_element):

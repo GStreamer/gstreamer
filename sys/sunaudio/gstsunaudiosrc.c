@@ -83,13 +83,11 @@ static guint gst_sunaudiosrc_delay (GstAudioSrc * asrc);
 static void gst_sunaudiosrc_reset (GstAudioSrc * asrc);
 
 #define DEFAULT_DEVICE          "/dev/audio"
-#define DEFAULT_DEVICE_NAME     ""
 
 enum
 {
   PROP_0,
-  PROP_DEVICE,
-  PROP_DEVICE_NAME,
+  PROP_DEVICE
 };
 
 GST_BOILERPLATE_WITH_INTERFACE (GstSunAudioSrc, gst_sunaudiosrc,
@@ -159,11 +157,6 @@ gst_sunaudiosrc_class_init (GstSunAudioSrcClass * klass)
       g_param_spec_string ("device", "Device",
           "SunAudio device (usually /dev/audio)", DEFAULT_DEVICE,
           G_PARAM_READWRITE));
-
-  g_object_class_install_property (gobject_class, PROP_DEVICE_NAME,
-      g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", DEFAULT_DEVICE_NAME,
-          G_PARAM_READABLE));
 }
 
 static void
@@ -180,8 +173,6 @@ gst_sunaudiosrc_init (GstSunAudioSrc * sunaudiosrc,
   if (audiodev == NULL)
     audiodev = DEFAULT_DEVICE;
   sunaudiosrc->device = g_strdup (audiodev);
-
-  sunaudiosrc->device_name = g_strdup (DEFAULT_DEVICE_NAME);
 }
 
 static void
@@ -215,9 +206,6 @@ gst_sunaudiosrc_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_DEVICE:
       g_value_set_string (value, sunaudiosrc->device);
-      break;
-    case PROP_DEVICE_NAME:
-      g_value_set_string (value, sunaudiosrc->device_name);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -301,7 +289,6 @@ gst_sunaudiosrc_open (GstAudioSrc * asrc)
       sunaudiosrc->mixer = gst_sunaudiomixer_ctrl_new (device);
       g_free (device);
     }
-    sunaudiosrc->device_name = g_strdup (sunaudiosrc->mixer->device);
   }
 
   return TRUE;
