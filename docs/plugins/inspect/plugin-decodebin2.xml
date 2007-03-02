@@ -1,0 +1,20 @@
+<plugin>
+  <name>decodebin2</name>
+  <description>decoder bin newer version</description>
+  <filename>../../gst/playback/.libs/libgstdecodebin2.so</filename>
+  <basename>libgstdecodebin2.so</basename>
+  <version>0.10.11.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-base</source>
+  <package>GStreamer Base Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>decodebin2</name>
+      <longname>Decoder Bin</longname>
+      <class>Generic/Bin/Decoder</class>
+      <description>Autoplug and decode to raw media</description>
+      <author>Edward Hervey &lt;edward@fluendo.com&gt;</author>
+    </element>
+  </elements>
+</plugin>

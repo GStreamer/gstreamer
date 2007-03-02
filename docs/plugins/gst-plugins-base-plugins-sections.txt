@@ -130,6 +130,12 @@ gst_clock_overlay_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-decodebin2</FILE>
+<TITLE>decodebin2</TITLE>
+GstDecodeBin2
+</SECTION>
+
+<SECTION>
 <FILE>element-ffmpegcolorspace</FILE>
 <TITLE>ffmpegcolorspace</TITLE>
 GstFFMpegCsp

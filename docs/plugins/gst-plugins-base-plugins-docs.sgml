@@ -29,6 +29,7 @@
     <xi:include href="xml/element-multifdsink.xml" />
     <xi:include href="xml/element-oggdemux.xml" />
     <xi:include href="xml/element-playbin.xml" />
+    <xi:include href="xml/element-decodebin2.xml" />
     <xi:include href="xml/element-tcpserversink.xml" />
     <xi:include href="xml/element-theoradec.xml" />
     <xi:include href="xml/element-theoraenc.xml" />
@@ -57,6 +58,7 @@
     <xi:include href="xml/plugin-audiotestsrc.xml" />
     <xi:include href="xml/plugin-cdparanoia.xml" />
     <xi:include href="xml/plugin-decodebin.xml" />
+    <xi:include href="xml/plugin-decodebin2.xml" />
     <xi:include href="xml/plugin-ffmpegcolorspace.xml" />
     <xi:include href="xml/plugin-gdp.xml" />
     <xi:include href="xml/plugin-gnomevfs.xml" />

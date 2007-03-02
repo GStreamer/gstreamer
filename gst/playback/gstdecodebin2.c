@@ -19,7 +19,17 @@
 
 /**
  * SECTION:element-decodebin2
+ * @short_description: Next-generation automatic decoding bin
  *
+ * #GstBin that auto-magically constructs a decoding pipeline using available
+ * decoders and demuxers via auto-plugging.
+ *
+ * At this stage, decodebin2 is considered UNSTABLE. The API provided in the
+ * signals is expected to change in the near future. 
+ *
+ * To try out decodebin2, you can set the USE_DECODEBIN2 environment 
+ * variable (USE_DECODEBIN2=1 for example). This will cause playbin to use
+ * decodebin2 instead of the older decodebin for its internal auto-plugging.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -51,6 +61,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_decode_bin_debug);
 typedef struct _GstDecodeGroup GstDecodeGroup;
 typedef struct _GstDecodePad GstDecodePad;
 typedef struct _GstDecodeBin GstDecodeBin;
+typedef struct _GstDecodeBin GstDecodeBin2;
 typedef struct _GstDecodeBinClass GstDecodeBinClass;
 
 #define GST_TYPE_DECODE_BIN             (gst_decode_bin_get_type())
@@ -60,6 +71,11 @@ typedef struct _GstDecodeBinClass GstDecodeBinClass;
 #define GST_IS_DECODE_BIN(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DECODE_BIN))
 #define GST_IS_DECODE_BIN_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DECODE_BIN))
 
+/**
+ *  GstDecodeBin2:
+ *
+ *  The opaque #DecodeBin2 data structure
+ */
 struct _GstDecodeBin
 {
   GstBin bin;                   /* we extend GstBin */
@@ -310,27 +326,85 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gobject_klass->set_property = GST_DEBUG_FUNCPTR (gst_decode_bin_set_property);
   gobject_klass->get_property = GST_DEBUG_FUNCPTR (gst_decode_bin_get_property);
 
+  /**
+   * GstDecodeBin2::new-decoded-pad:
+   * @pad: the newly created pad
+   * @islast: #TRUE if this is the last pad to be added. Deprecated.
+   *
+   * This signal gets emitted as soon as a new pad of the same type as one of
+   * the valid 'raw' types is added.
+   */
+
   gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD] =
       g_signal_new ("new-decoded-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstDecodeBinClass, new_decoded_pad), NULL, NULL,
       gst_play_marshal_VOID__OBJECT_BOOLEAN, G_TYPE_NONE, 2, GST_TYPE_PAD,
       G_TYPE_BOOLEAN);
+
+  /**
+   * GstDecodeBin2::removed-decoded-pad:
+   * @pad: the pad that was removed
+   *
+   * This signal is emitted when a 'final' caps pad has been removed.
+   */
+
   gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD] =
       g_signal_new ("removed-decoded-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstDecodeBinClass, removed_decoded_pad), NULL, NULL,
       gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
+
+  /**
+   * GstDecodeBin2::unknown-type:
+   * @pad: the new pad containing caps that cannot be resolved to a 'final' stream type.
+   * @caps: the #GstCaps of the pad that cannot be resolved.
+   *
+   * This signal is emitted when a pad for which there is no further possible
+   * decoding is added to the decodebin.
+   */
+
   gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE] =
       g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, unknown_type),
       NULL, NULL, gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2,
       GST_TYPE_PAD, GST_TYPE_CAPS);
+
+  /**
+   * GstDecodeBin2::autoplug-continue:
+   * @caps: The #GstCaps found.
+   *
+   * This signal is emitted whenever decodebin2 finds a new stream. It is
+   * emitted before looking for any elements that can handle that stream.
+   *
+   * Returns: #TRUE if you wish decodebin2 to look for elements that can
+   * handle the given @caps. If #FALSE, those caps will be considered as
+   * final and the pad will be exposed as such (see 'new-decoded-pad'
+   * signal).
+   */
+
   gst_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE] =
       g_signal_new ("autoplug-continue", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_continue),
       _gst_boolean_accumulator, NULL, gst_play_marshal_BOOLEAN__OBJECT,
       G_TYPE_BOOLEAN, 1, GST_TYPE_CAPS);
+
+  /**
+   * GstDecodeBin2::autoplug-sort:
+   * @caps: The #GstCaps.
+   * @factories: A #GList of possible #GstElementFactory to use.
+   *
+   * This signal is emitted once decodebin2 has found all the possible
+   * #GstElementFactory that can be used to handle the given @caps.
+   *
+   * UNSTABLE API. Will change soon.
+   *
+   * Returns: #TRUE if you wish decodebin2 to start trying to decode
+   * the given @caps with the list of factories. #FALSE if you do not want
+   * these #GstCaps, if so the pad will be exposed as unknown (see
+   * 'unknown-type' signal).
+   */
+
   gst_decode_bin_signals[SIGNAL_AUTOPLUG_SORT] =
       g_signal_new ("autoplug-sort", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_sort),
@@ -747,7 +821,7 @@ any_caps:
 }
 
 
-/** connect_pad:
+/* connect_pad:
  *
  * Try to connect the given pad to an element created from one of the factories,
  * and recursively.
@@ -1859,7 +1933,7 @@ source_pad_event_probe (GstPad * pad, GstEvent * event, GstDecodePad * dpad)
   return TRUE;
 }
 
-/** gst_decode_pad_new:
+/*gst_decode_pad_new:
  *
  * Creates a new GstDecodePad for the given pad.
  * If block is TRUE, Sets the pad blocking asynchronously
@@ -1961,7 +2035,7 @@ remove_fakesink (GstDecodeBin * decode_bin)
  * convenience functions
  *****/
 
-/** find_sink_pad
+/* find_sink_pad
  *
  * Returns the first sink pad of the given element, or NULL if it doesn't have
  * any.
