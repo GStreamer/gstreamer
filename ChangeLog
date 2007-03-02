@@ -1,3 +1,11 @@
+2007-03-02  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_cfg_init):
+	Add mpeg1video and mpeg2video to the list of mpeg-derivatives for
+	configuration settings.
+	Renamed the mpeg4 category to mpeg.
+	Fixes #403739
+
 2007-03-01  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
