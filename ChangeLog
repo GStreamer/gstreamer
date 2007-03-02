@@ -1,5 +1,13 @@
 2007-03-02  Wim Taymans  <wim@fluendo.com>
 
+	* ext/cdio/gstcdiocddasrc.c: (gst_cdio_cdda_src_probe_devices),
+	(gst_cdio_cdda_src_read_sector), (gst_cdio_cdda_src_open),
+	(gst_cdio_cdda_src_finalize):
+	Small code cleanups.
+	Don't use pad_alloc as the base class cannot deal with the error codes.
+
+2007-03-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init),
 	(gst_udpsrc_create):
 	Fix doc.
