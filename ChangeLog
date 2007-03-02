@@ -1,3 +1,9 @@
+2007-03-02  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/Makefile.am:
+	Disable cacasink from the states check too - it also calls exit(1)
+	on us when it can't find a terminal to talk to.
+
 2007-03-02  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Thijs Vermeir <thijsvermeir at gmail dot com>
