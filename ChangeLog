@@ -1,3 +1,10 @@
+2007-03-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers),
+	(gst_wavparse_stream_data):
+	  Unbreak my previous commit (swapped nominator & denominator). Tim,
+	  thanks for spotting.
+
 2007-03-02  Wim Taymans  <wim@fluendo.com>
 
 	* ext/cdio/gstcdiocddasrc.c: (gst_cdio_cdda_src_probe_devices),

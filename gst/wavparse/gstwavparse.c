@@ -1280,7 +1280,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   }
 
   if (wav->bps > 0) {
-    duration = uint64_ceiling_scale_int (wav->datasize, wav->bps, GST_SECOND);
+    duration = uint64_ceiling_scale_int (wav->datasize, GST_SECOND, wav->bps);
     GST_DEBUG_OBJECT (wav, "Got duration %" GST_TIME_FORMAT,
         GST_TIME_ARGS (duration));
     gst_segment_init (&wav->segment, GST_FORMAT_TIME);
@@ -1531,8 +1531,8 @@ iterate_adapter:
 
   if (wav->bps > 0) {
     /* and timestamps if we have a bitrate, be carefull for overflows */
-    timestamp = uint64_ceiling_scale_int (pos, wav->bps, GST_SECOND);
-    next_timestamp = uint64_ceiling_scale_int (nextpos, wav->bps, GST_SECOND);
+    timestamp = uint64_ceiling_scale_int (pos, GST_SECOND, wav->bps);
+    next_timestamp = uint64_ceiling_scale_int (nextpos, GST_SECOND, wav->bps);
     duration = next_timestamp - timestamp;
 
     /* update current running segment position */
