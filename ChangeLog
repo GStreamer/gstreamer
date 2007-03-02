@@ -1,3 +1,9 @@
+2007-03-02  Edward Hervey  <edward@fluendo.com>
+
+	* gst/__init__.py:
+	Import libxml2 (if available) at import time with GLOBAL and LAZY flags.
+	Fixes #398567
+
 2007-03-01  Edward Hervey  <edward@fluendo.com>
 
 	* gst/__init__.py:
