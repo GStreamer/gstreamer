@@ -1,5 +1,10 @@
 2007-03-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpmp2tdepay.c: (gst_rtp_mp2t_depay_process):
+	Fix compilation.
+
+2007-03-02  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Thijs Vermeir <thijsvermeir at gmail dot com>
 
 	* gst/rtp/gstrtpmp2tdepay.c: (gst_rtp_mp2t_depay_class_init),

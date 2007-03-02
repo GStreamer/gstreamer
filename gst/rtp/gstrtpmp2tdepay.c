@@ -188,7 +188,8 @@ gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   timestamp = gst_rtp_buffer_get_timestamp (buf);
 
   outbuf =
-      gst_rtp_buffer_get_payload_subbuffer (rtpmp2tdepay->skip_first_bytes, -1);
+      gst_rtp_buffer_get_payload_subbuffer (buf, rtpmp2tdepay->skip_first_bytes,
+      -1);
 
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
   GST_BUFFER_TIMESTAMP (outbuf) =
