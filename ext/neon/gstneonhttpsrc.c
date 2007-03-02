@@ -31,6 +31,8 @@
 #define HTTP_DEFAULT_HOST        "localhost"
 #define HTTP_DEFAULT_PORT        80
 #define HTTPS_DEFAULT_PORT       443
+#define HTTP_DEFAULT_URI        "http://localhost:80/"
+#define NEON_HTTP_DEBUG_DEFAULT FALSE
 #define HTTP_SOCKET_ERROR        -2
 #define HTTP_REQUEST_WRONG_PROXY -1
 
@@ -90,10 +92,9 @@ static gboolean gst_neonhttp_src_do_seek (GstBaseSrc * bsrc,
     GstSegment * segment);
 
 static gboolean gst_neonhttp_src_set_proxy (GstNeonhttpSrc * src,
-    const gchar * uri, ne_uri * parsed, gboolean set_default);
+    const gchar * uri);
 static gboolean gst_neonhttp_src_set_uri (GstNeonhttpSrc * src,
-    const gchar * uri, ne_uri * parsed, gboolean * ishttps, gchar ** uristr,
-    gboolean set_default);
+    const gchar * uri);
 static gint gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
     ne_session ** ses, ne_request ** req, gint64 offset, gboolean do_redir);
 static gint gst_neonhttp_src_request_dispatch (GstNeonhttpSrc * src,
@@ -209,7 +210,8 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_NEON_HTTP_DBG,
       g_param_spec_boolean ("neon-http-debug", "neon-http-debug",
-          "Enable Neon HTTP debug messages", FALSE, G_PARAM_READWRITE));
+          "Enable Neon HTTP debug messages",
+          NEON_HTTP_DEBUG_DEFAULT, G_PARAM_READWRITE));
 #endif
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_neonhttp_src_start);
@@ -228,14 +230,30 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
 static void
 gst_neonhttp_src_init (GstNeonhttpSrc * src, GstNeonhttpSrcClass * g_class)
 {
+  const gchar *str = g_getenv ("http_proxy");
+
+  src->neon_http_msgs_dbg = NEON_HTTP_DEBUG_DEFAULT;
+  src->session = NULL;
+  src->request = NULL;
   memset (&src->uri, 0, sizeof (src->uri));
   memset (&src->proxy, 0, sizeof (src->proxy));
   src->content_size = -1;
+  src->uristr = NULL;
 
-  gst_neonhttp_src_set_uri (src, NULL, &src->uri, &src->ishttps, &src->uristr,
-      TRUE);
-  gst_neonhttp_src_set_proxy (src, NULL, &src->proxy, TRUE);
+  gst_neonhttp_src_set_uri (src, HTTP_DEFAULT_URI);
+  if (str && !gst_neonhttp_src_set_proxy (src, str)) {
+    GST_WARNING_OBJECT (src,
+        "The proxy set on http_proxy env var ('%s') cannot be parsed.", str);
+  }
 
+  src->user_agent = g_strdup ("neonhttpsrc");
+
+  src->iradio_mode = FALSE;
+  src->iradio_name = NULL;
+  src->iradio_genre = NULL;
+  src->iradio_url = NULL;
+  src->icy_caps = NULL;
+  src->icy_metaint = 0;
   src->user_agent = g_strdup ("neonhttpsrc");
   src->seekable = TRUE;
 }
@@ -289,8 +307,7 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
         GST_WARNING ("proxy property cannot be NULL");
         goto done;
       }
-      if (!gst_neonhttp_src_set_proxy (src, g_value_get_string (value),
-              &src->proxy, FALSE)) {
+      if (!gst_neonhttp_src_set_proxy (src, g_value_get_string (value))) {
         GST_WARNING ("badly formated proxy");
         goto done;
       }
@@ -303,8 +320,7 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
         GST_WARNING ("location property cannot be NULL");
         goto done;
       }
-      if (!gst_neonhttp_src_set_uri (src, g_value_get_string (value), &src->uri,
-              &src->ishttps, &src->uristr, FALSE)) {
+      if (!gst_neonhttp_src_set_uri (src, g_value_get_string (value))) {
         GST_WARNING ("badly formated location");
         goto done;
       }
@@ -682,98 +698,69 @@ gst_neonhttp_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 }
 
 static gboolean
-gst_neonhttp_src_set_uri (GstNeonhttpSrc * src, const gchar * uri,
-    ne_uri * parsed, gboolean * ishttps, gchar ** uristr, gboolean set_default)
+gst_neonhttp_src_set_uri (GstNeonhttpSrc * src, const gchar * uri)
 {
-  ne_uri_free (parsed);
-  if (uristr && *uristr) {
-    ne_free (*uristr);
-    *uristr = NULL;
+  ne_uri_free (&src->uri);
+  if (src->uristr) {
+    ne_free (src->uristr);
+    src->uristr = NULL;
   }
 
-  if (set_default) {
-    parsed->scheme = g_strdup ("http");
-    parsed->host = g_strdup (HTTP_DEFAULT_HOST);
-    parsed->port = HTTP_DEFAULT_PORT;
-    parsed->path = g_strdup ("/");
-    *ishttps = FALSE;
-    goto done;
-  }
-
-  if (ne_uri_parse (uri, parsed) != 0)
+  if (ne_uri_parse (uri, &src->uri) != 0)
     goto parse_error;
 
-  if (parsed->scheme == NULL) {
-    parsed->scheme = g_strdup ("http");
-    *ishttps = FALSE;
-  } else {
-    if (strcmp (parsed->scheme, "https") == 0)
-      *ishttps = TRUE;
+  if (src->uri.scheme == NULL)
+    src->uri.scheme = g_strdup ("http");
+
+  if (src->uri.host == NULL)
+    src->uri.host = g_strdup (HTTP_DEFAULT_HOST);
+
+  if (src->uri.port == 0) {
+    if (!strcmp (src->uri.scheme, "https"))
+      src->uri.port = HTTPS_DEFAULT_PORT;
     else
-      *ishttps = FALSE;
+      src->uri.port = HTTP_DEFAULT_PORT;
   }
 
-  if (parsed->host == NULL)
-    parsed->host = g_strdup (HTTP_DEFAULT_HOST);
+  if (!src->uri.path)
+    src->uri.path = g_strdup ("");
 
-  if (parsed->port == 0) {
-    if (*ishttps)
-      parsed->port = HTTPS_DEFAULT_PORT;
-    else
-      parsed->port = HTTP_DEFAULT_PORT;
-  }
-
-  if (!parsed->path)
-    parsed->path = g_strdup ("");
-
-done:
-  if (uristr)
-    *uristr = ne_uri_unparse (parsed);
+  src->uristr = ne_uri_unparse (&src->uri);
 
   return TRUE;
 
   /* ERRORS */
 parse_error:
   {
-    if (uristr && *uristr) {
-      ne_free (*uristr);
-      *uristr = NULL;
+    if (src->uristr) {
+      ne_free (src->uristr);
+      src->uristr = NULL;
     }
-    ne_uri_free (parsed);
+    ne_uri_free (&src->uri);
     return FALSE;
   }
 }
 
 static gboolean
-gst_neonhttp_src_set_proxy (GstNeonhttpSrc * src, const gchar * uri,
-    ne_uri * parsed, gboolean set_default)
+gst_neonhttp_src_set_proxy (GstNeonhttpSrc * src, const char *uri)
 {
-  ne_uri_free (parsed);
+  ne_uri_free (&src->proxy);
 
-  if (set_default) {
-    const gchar *str = g_getenv ("http_proxy");
-
-    if (str) {
-      if (ne_uri_parse (str, parsed) != 0)
-        goto cannot_parse;
-    }
-    return TRUE;
-  }
-
-  if (ne_uri_parse (uri, parsed) != 0)
+  if (ne_uri_parse (uri, &src->proxy) != 0)
     goto error;
 
-  if (parsed->scheme)
-    GST_WARNING ("The proxy schema shouldn't be defined");
+  if (src->proxy.scheme)
+    GST_WARNING ("The proxy schema shouldn't be defined (schema is '%s')",
+        src->proxy.scheme);
 
-  if (parsed->host && !parsed->port)
+  if (src->proxy.host && !src->proxy.port)
     goto error;
 
 #ifdef NEON_026_OR_LATER
-  if (!parsed->path || parsed->userinfo)
+  if (!src->proxy.path || src->proxy.userinfo)
     goto error;
 #else
-  if (!parsed->path || parsed->authinfo)
+  if (!src->proxy.path || src->proxy.authinfo)
     goto error;
 #endif
   return TRUE;
@@ -781,15 +768,8 @@ gst_neonhttp_src_set_proxy (GstNeonhttpSrc * src, const gchar * uri,
   /* ERRORS */
 error:
   {
-    ne_uri_free (parsed);
+    ne_uri_free (&src->proxy);
     return FALSE;
-  }
-cannot_parse:
-  {
-    GST_WARNING_OBJECT (src,
-        "The proxy set on http_proxy env var isn't well formated");
-    ne_uri_free (parsed);
-    return TRUE;
   }
 }
 
@@ -848,8 +828,7 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
         redir = ne_get_response_header (request, "Location");
         if (redir != NULL) {
           ne_uri_free (&src->uri);
-          gst_neonhttp_src_set_uri (src, redir, &src->uri, &src->ishttps,
-              &src->uristr, FALSE);
+          gst_neonhttp_src_set_uri (src, redir);
 #ifndef GST_DISABLE_GST_DEBUG
           if (src->neon_http_msgs_dbg)
             GST_LOG_OBJECT (src,
@@ -1025,8 +1004,7 @@ gst_neonhttp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstNeonhttpSrc *src = GST_NEONHTTP_SRC (handler);
 
-  return gst_neonhttp_src_set_uri (src, uri, &src->uri, &src->ishttps,
-      &src->uristr, FALSE);
+  return gst_neonhttp_src_set_uri (src, uri);
 }
 
 static void

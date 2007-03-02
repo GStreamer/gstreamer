@@ -52,8 +52,6 @@ struct _GstNeonhttpSrc {
   ne_uri proxy;
   gchar *user_agent;
 
-  gboolean ishttps;
-
   guint64 content_size;
 
   gboolean eos;

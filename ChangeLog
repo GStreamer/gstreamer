@@ -1,3 +1,21 @@
+2007-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Lutz Mueller  <lutz topfrose de>
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_class_init),
+	(gst_neonhttp_src_init), (gst_neonhttp_src_set_property),
+	(gst_neonhttp_src_set_uri), (gst_neonhttp_src_set_proxy),
+	(gst_neonhttp_src_send_request_and_redirect),
+	(gst_neonhttp_src_uri_set_uri):
+	* ext/neon/gstneonhttpsrc.h:
+	  Simplify _set_uri() and _set_proxy() and remove the unused ishttp
+	  member (#388050).
+
+	* tests/check/elements/neonhttpsrc.c: (GST_START_TEST):
+	  Fix bogus URI to something that actually exists, otherwise we just
+	  bypass the test (and also to something that doesn't redirect, since
+	  neonhttpsrc doesn't seem to handle this very gracefully yet)
+
 2007-03-01  Chris Lord <chris@openedhand.com>
 
 	Reviewed by Christian Schaller <christian@fluendo.com>

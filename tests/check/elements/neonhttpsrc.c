@@ -50,7 +50,7 @@ GST_START_TEST (test_first_buffer_has_offset)
   gst_bin_add (GST_BIN (pipe), sink);
   fail_unless (gst_element_link (src, sink));
 
-  g_object_set (src, "location", "http://www.google.comadfadf", NULL);
+  g_object_set (src, "location", "http://gstreamer.freedesktop.org/", NULL);
   g_object_set (src, "automatic-redirect", TRUE, NULL);
 
   g_object_set (sink, "signal-handoffs", TRUE, NULL);
