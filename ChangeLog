@@ -1,5 +1,16 @@
 2007-03-02  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Thijs Vermeir <thijsvermeir at gmail dot com>
+
+	* gst/rtp/gstrtpmp2tdepay.c: (gst_rtp_mp2t_depay_class_init),
+	(gst_rtp_mp2t_depay_init), (gst_rtp_mp2t_depay_process),
+	(gst_rtp_mp2t_depay_set_property),
+	(gst_rtp_mp2t_depay_get_property):
+	* gst/rtp/gstrtpmp2tdepay.h:
+	Add support to strip off proprietary headers. Fixes #350278.
+
+2007-03-02  Wim Taymans  <wim@fluendo.com>
+
 	* ext/hal/hal.c:
 	Fix compilation.
 

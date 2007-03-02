@@ -31,7 +31,8 @@ static const GstElementDetails gst_rtp_mp2tdepay_details =
 GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Depayloader/Network",
     "Extracts MPEG2 TS from RTP packets (RFC 2250)",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim@fluendo.com>\n"
+    "Thijs Vermeir <thijs.vermeir@barco.com>");
 
 /* RtpMP2TDepay signals and args */
 enum
@@ -40,10 +41,12 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SKIP_FIRST_BYTES	0
+
 enum
 {
-  ARG_0,
-  ARG_FREQUENCY
+  PROP_0,
+  PROP_SKIP_FIRST_BYTES
 };
 
 static GstStaticPadTemplate gst_rtp_mp2t_depay_src_template =
@@ -123,13 +126,24 @@ gst_rtp_mp2t_depay_class_init (GstRtpMP2TDepayClass * klass)
   gobject_class->set_property = gst_rtp_mp2t_depay_set_property;
   gobject_class->get_property = gst_rtp_mp2t_depay_get_property;
 
+  g_object_class_install_property (gobject_class, PROP_SKIP_FIRST_BYTES,
+      g_param_spec_uint ("skip-first-bytes",
+          "Skip first bytes",
+          "The amount of bytes that need to be skipped at the beginning of the payload",
+          0, G_MAXUINT, 0, G_PARAM_READWRITE));
+
   gstelement_class->change_state = gst_rtp_mp2t_depay_change_state;
 }
 
 static void
-gst_rtp_mp2t_depay_init (GstRtpMP2TDepay * rtpmp2tdepay,
+gst_rtp_mp2t_depay_init (GstRtpMP2TDepay * depayload,
     GstRtpMP2TDepayClass * klass)
 {
+  GstRtpMP2TDepay *rtpmp2tdepay;
+
+  rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
+
+  rtpmp2tdepay->skip_first_bytes = DEFAULT_SKIP_FIRST_BYTES;
 }
 
 static gboolean
@@ -159,21 +173,22 @@ gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstRtpMP2TDepay *rtpmp2tdepay;
   GstBuffer *outbuf;
   gint payload_len;
-  guint8 *payload;
   guint32 timestamp;
 
   rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
 
-  if (!gst_rtp_buffer_validate (buf))
+  if (G_UNLIKELY (!gst_rtp_buffer_validate (buf)))
     goto bad_packet;
 
   payload_len = gst_rtp_buffer_get_payload_len (buf);
-  payload = gst_rtp_buffer_get_payload (buf);
+
+  if (G_UNLIKELY (payload_len <= rtpmp2tdepay->skip_first_bytes))
+    goto empty_packet;
 
   timestamp = gst_rtp_buffer_get_timestamp (buf);
 
-  outbuf = gst_buffer_new_and_alloc (payload_len);
-  memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
+  outbuf =
+      gst_rtp_buffer_get_payload_subbuffer (rtpmp2tdepay->skip_first_bytes, -1);
 
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
   GST_BUFFER_TIMESTAMP (outbuf) =
@@ -184,10 +199,17 @@ gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   return outbuf;
 
+  /* ERRORS */
 bad_packet:
   {
     GST_ELEMENT_WARNING (rtpmp2tdepay, STREAM, DECODE,
-        ("Packet did not validate"), (NULL));
+        (NULL), ("Packet did not validate"));
+    return NULL;
+  }
+empty_packet:
+  {
+    GST_ELEMENT_WARNING (rtpmp2tdepay, STREAM, DECODE,
+        (NULL), ("Packet was empty"));
     return NULL;
   }
 }
@@ -201,6 +223,9 @@ gst_rtp_mp2t_depay_set_property (GObject * object, guint prop_id,
   rtpmp2tdepay = GST_RTP_MP2T_DEPAY (object);
 
   switch (prop_id) {
+    case PROP_SKIP_FIRST_BYTES:
+      rtpmp2tdepay->skip_first_bytes = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -216,6 +241,9 @@ gst_rtp_mp2t_depay_get_property (GObject * object, guint prop_id,
   rtpmp2tdepay = GST_RTP_MP2T_DEPAY (object);
 
   switch (prop_id) {
+    case PROP_SKIP_FIRST_BYTES:
+      g_value_set_uint (value, rtpmp2tdepay->skip_first_bytes);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

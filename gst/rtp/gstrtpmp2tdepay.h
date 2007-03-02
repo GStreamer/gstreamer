@@ -36,13 +36,14 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_MP2T_DEPAY))
 #define GST_IS_RTP_MP2T_DEPAY_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_MP2T_DEPAY))
-
 typedef struct _GstRtpMP2TDepay GstRtpMP2TDepay;
 typedef struct _GstRtpMP2TDepayClass GstRtpMP2TDepayClass;
 
 struct _GstRtpMP2TDepay
 {
   GstBaseRTPDepayload depayload;
+
+  guint8 skip_first_bytes;
 };
 
 struct _GstRtpMP2TDepayClass
