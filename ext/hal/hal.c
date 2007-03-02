@@ -35,6 +35,11 @@ GST_DEBUG_CATEGORY_EXTERN (hal_debug);
 
 #define GST_CAT_DEFAULT hal_debug
 
+/* compat for older libhal */
+#ifndef LIBHAL_FREE_DBUS_ERROR
+#define LIBHAL_FREE_DBUS_ERROR(e) dbus_error_free (e)
+#endif
+
 /**
  * gst_hal_get_alsa_element:
  * @ctx: a #LibHalContext which should be used for querying HAL.

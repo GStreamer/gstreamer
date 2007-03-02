@@ -1,5 +1,10 @@
 2007-03-02  Wim Taymans  <wim@fluendo.com>
 
+	* ext/hal/hal.c:
+	Fix compilation.
+
+2007-03-02  Wim Taymans  <wim@fluendo.com>
+
 	* sys/sunaudio/gstsunaudiosrc.c: (gst_sunaudiosrc_class_init),
 	(gst_sunaudiosrc_init), (gst_sunaudiosrc_get_property),
 	(gst_sunaudiosrc_open):
