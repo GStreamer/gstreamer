@@ -72,7 +72,8 @@
  * </para>
  * <para>
  * The "skip-first-bytes" property is used to strip off an arbitrary number of
- * bytes from the start of the raw udp packet and can be used to . 
+ * bytes from the start of the raw udp packet and can be used to strip off
+ * proprietary header, for example. 
  * </para>
  * <para>
  * The udpsrc is always a live source. It does however not provide a GstClock, this
