@@ -166,11 +166,11 @@ else
 MYTHTV_DIR=
 endif
 
-# if USE_NAS
-# NAS_DIR=nas
-# else
+if USE_NAS
+NAS_DIR=nas
+else
 NAS_DIR=
-# endif
+endif
 
 if USE_NEON
 NEON_DIR=neon
@@ -320,6 +320,7 @@ DIST_SUBDIRS= \
 	musepack \
 	musicbrainz \
 	mythtv \
+	nas \
 	neon \
 	sdl \
 	sndfile \

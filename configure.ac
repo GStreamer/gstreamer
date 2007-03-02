@@ -762,6 +762,21 @@ AG_GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
   AC_SUBST(GMYTH_LIBS)
 ])
 
+dnl *** nas ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_NAS, true)
+AG_GST_CHECK_FEATURE(NAS, [nas plug-in], nassink, [
+  HAVE_NAS="no"
+  if test "x$HAVE_X" = "xyes"; then
+    save_cppflags=$CFLAGS
+    CPPFLAGS="$CPPFLAGS $X_CFLAGS"
+    AG_GST_CHECK_LIBHEADER(NAS, audio, AuOpenServer, $X_LIBS, audio/audiolib.h,
+      NAS_LIBS="$X_LIBS -laudio" NAS_CFLAGS="$X_CFLAGS")
+    CPPFLAGS="$save_cppflags"
+  fi
+  AC_SUBST(NAS_CFLAGS)
+  AC_SUBST(NAS_LIBS)
+])
+
 dnl *** neon ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_NEON, true)
 AG_GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
@@ -1086,6 +1101,7 @@ ext/jack/Makefile
 ext/ladspa/Makefile
 ext/libmms/Makefile
 ext/Makefile
+ext/nas/Makefile
 ext/mpeg2enc/Makefile
 ext/musepack/Makefile
 ext/musicbrainz/Makefile

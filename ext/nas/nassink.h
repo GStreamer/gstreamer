@@ -22,6 +22,7 @@
 #define __GST_NASSINK_H__
 
 #include <gst/gst.h>
+#include <gst/audio/gstaudiosink.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -48,16 +49,11 @@ typedef struct _GstNassink GstNassink;
 typedef struct _GstNassinkClass GstNassinkClass;
 
 struct _GstNassink {
-  GstElement element;
-
-  GstPad *sinkpad;
+  GstAudioSink audiosink;
 
   /* instance properties */
 
   gboolean mute;
-  gint depth;
-  gint tracks;
-  gint rate;
   gchar* host;
 
   /* Server info */
@@ -68,14 +64,11 @@ struct _GstNassink {
 
   /* buffer */
 
-  AuUint32 size;
-  AuUint32 pos;
-
-  char *buf;
+  AuUint32 need_data;
 };
 
 struct _GstNassinkClass {
-  GstElementClass parent_class;
+  GstAudioSinkClass parent_class;
 };
 
 GType gst_nassink_get_type(void);
