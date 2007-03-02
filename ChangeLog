@@ -1,3 +1,13 @@
+2007-03-01  Chris Lord <chris@openedhand.com>
+
+	Reviewed by Christian Schaller <christian@fluendo.com>
+
+	Fixes Bug 357055
+	* ext/ivorbis/Makefile.am:
+	* ext/ivorbis/vorbisdec.c: Add support for Vorbis streams
+	* ext/ivorbis/vorbisdec.h
+	* ext/ivorbis/vorbis.c :
+
 2007-03-01  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/Makefile.am:

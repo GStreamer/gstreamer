@@ -615,7 +615,12 @@ AG_GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
   IVORBIS_CFLAGS=
   AC_CHECK_LIB(vorbisidec, vorbis_block_init,
     [IVORBIS_LIBS=-lvorbisidec
-     HAVE_IVORBIS=yes],
+     HAVE_IVORBIS=yes
+     case $host in 
+     arm-*-*)
+       IVORBIS_CFLAGS="-D_ARM_ASSEM_ $IVORBIS_CFLAGS"
+     esac
+    ],
     HAVE_IVORBIS=no)
   AC_SUBST(IVORBIS_LIBS)
   AC_SUBST(IVORBIS_CFLAGS)

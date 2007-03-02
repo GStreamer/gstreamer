@@ -23,9 +23,11 @@
 
 #include <gst/gst.h>
 #include <tremor/ivorbiscodec.h>
+#include "vorbisdec.h"
+
+GST_DEBUG_CATEGORY (vorbisdec_debug);
 
 extern GType ivorbisfile_get_type (void);
-
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -33,6 +35,13 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "tremor", GST_RANK_SECONDARY,
           ivorbisfile_get_type ()))
     return FALSE;
+
+  if (!gst_element_register (plugin, "ivorbisdec", GST_RANK_SECONDARY,
+          gst_ivorbis_dec_get_type ()))
+    return FALSE;
+
+  GST_DEBUG_CATEGORY_INIT (vorbisdec_debug, "ivorbisdec", 0,
+      "vorbis decoding element (integer decoder)");
 
   return TRUE;
 }
