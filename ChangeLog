@@ -1,3 +1,12 @@
+2007-03-02  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: René Stadler <mail@renestadler.de>
+
+	* gst/wavparse/gstwavparse.c: (uint64_ceiling_scale_int),
+	(gst_wavparse_perform_seek), (gst_wavparse_stream_headers),
+	(gst_wavparse_stream_data):
+	  Handle rounding better to not drop last sample frame. Fixes #356692
+
 2007-03-02  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/Makefile.am:

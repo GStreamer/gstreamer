@@ -270,6 +270,23 @@ gst_wavparse_create_sourcepad (GstWavParse * wavparse)
   GST_DEBUG_OBJECT (wavparse, "srcpad created");
 }
 
+/* Compute (value * nom) % denom, avoiding overflow.  This can be used
+ * to perform ceiling or rounding division together with
+ * gst_util_uint64_scale[_int]. */
+#define uint64_scale_modulo(val, nom, denom) \
+  ((val % denom) * (nom % denom) % denom)
+
+/* Like gst_util_uint64_scale_int, but performs ceiling division. */
+static guint64
+uint64_ceiling_scale_int (guint64 val, gint num, gint denom)
+{
+  guint64 result = gst_util_uint64_scale_int (val, num, denom);
+
+  if (uint64_scale_modulo (val, num, denom) == 0)
+    return result;
+  else
+    return result + 1;
+}
 
 #if 0
 static void
@@ -833,7 +850,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
      * bytes. */
     if (wav->bps)
       wav->offset =
-          gst_util_uint64_scale_int (seeksegment.last_stop, wav->bps,
+          uint64_ceiling_scale_int (seeksegment.last_stop, wav->bps,
           GST_SECOND);
     else
       wav->offset = seeksegment.last_stop;
@@ -849,7 +866,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
 
   if (stop_type != GST_SEEK_TYPE_NONE) {
     if (wav->bps)
-      wav->end_offset = gst_util_uint64_scale_int (stop, wav->bps, GST_SECOND);
+      wav->end_offset = uint64_ceiling_scale_int (stop, wav->bps, GST_SECOND);
     else
       wav->end_offset = stop;
     GST_LOG_OBJECT (wav, "end_offset=%" G_GUINT64_FORMAT, wav->end_offset);
@@ -1263,7 +1280,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   }
 
   if (wav->bps > 0) {
-    duration = gst_util_uint64_scale_int (wav->datasize, GST_SECOND, wav->bps);
+    duration = uint64_ceiling_scale_int (wav->datasize, wav->bps, GST_SECOND);
     GST_DEBUG_OBJECT (wav, "Got duration %" GST_TIME_FORMAT,
         GST_TIME_ARGS (duration));
     gst_segment_init (&wav->segment, GST_FORMAT_TIME);
@@ -1514,8 +1531,8 @@ iterate_adapter:
 
   if (wav->bps > 0) {
     /* and timestamps if we have a bitrate, be carefull for overflows */
-    timestamp = gst_util_uint64_scale_int (pos, GST_SECOND, wav->bps);
-    next_timestamp = gst_util_uint64_scale_int (nextpos, GST_SECOND, wav->bps);
+    timestamp = uint64_ceiling_scale_int (pos, wav->bps, GST_SECOND);
+    next_timestamp = uint64_ceiling_scale_int (nextpos, wav->bps, GST_SECOND);
     duration = next_timestamp - timestamp;
 
     /* update current running segment position */
