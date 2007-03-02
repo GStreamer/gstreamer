@@ -52,10 +52,10 @@ GST_ELEMENT_DETAILS ("mpeg1 and mpeg2 video decoder",
     "Uses libmpeg2 to decode MPEG video streams",
     "Wim Taymans <wim.taymans@chello.be>");
 
-/* error out after receiving MAX_ERROR_COUNT STATE_INVALID return value
- * from mpeg2_parse. -1 means never error out
+/* Send a warning message about decoding errors after receiving this many
+ * STATE_INVALID return values from mpeg2_parse. -1 means never.
  */
-#define MAX_ERROR_COUNT (5)
+#define WARN_THRESHOLD (5)
 
 #ifdef enable_user_data
 static GstStaticPadTemplate user_data_template_factory =
@@ -1020,12 +1020,15 @@ gst_mpeg2dec_chain (GstPad * pad, GstBuffer * buf)
         break;
         /* error */
       case STATE_INVALID:
+        /* FIXME: at some point we should probably send newsegment events to
+         * let downstream know that parts of the stream are missing */
         mpeg2dec->error_count++;
         GST_WARNING_OBJECT (mpeg2dec, "Decoding error #%d",
             mpeg2dec->error_count);
-        if (mpeg2dec->error_count >= MAX_ERROR_COUNT && MAX_ERROR_COUNT > 0) {
-          GST_WARNING_OBJECT (mpeg2dec, "Too many decoding errors");
-          goto exit_error;
+        if (mpeg2dec->error_count >= WARN_THRESHOLD && WARN_THRESHOLD > 0) {
+          GST_ELEMENT_WARNING (mpeg2dec, STREAM, DECODE,
+              ("%d consecutive decoding errors", mpeg2dec->error_count),
+              (NULL));
         }
         goto exit;
       default:
@@ -1062,12 +1065,6 @@ done:
 exit:
   {
     ret = GST_FLOW_OK;
-    goto done;
-  }
-exit_error:
-  {
-    GST_ELEMENT_ERROR (mpeg2dec, STREAM, DECODE, (NULL), (NULL));
-    ret = GST_FLOW_ERROR;
     goto done;
   }
 }

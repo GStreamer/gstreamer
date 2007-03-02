@@ -1,3 +1,15 @@
+2007-03-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Zaheer Abbas Merali  <zaheermerali at gmail com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c: (gst_mpeg2dec_chain):
+	  Never post a (fatal) error message on the bus on decoding errors. We
+	  should only do this if we can't recover, but mpeg2dec can always
+	  recover. This is needed for DVB streams, for example, where there
+	  may be temporary glitches in the stream. Instead of an error
+	  message, post a warning message on the bus for every N decoding
+	  errors. Fixes #370020.
+
 2007-02-28  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
