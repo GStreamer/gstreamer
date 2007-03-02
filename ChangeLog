@@ -1,5 +1,10 @@
 2007-03-02  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/generic/.cvsignore:
+	  Ignore files to please buildbot.
+
+2007-03-02  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers),
 	(gst_wavparse_stream_data):
 	  Unbreak my previous commit (swapped nominator & denominator). Tim,
