@@ -85,9 +85,11 @@
 #include <string.h>
 #include <errno.h>
 
+#define DEFAULT_READ_SPEED   -1
+
 enum
 {
-  PROP0 = 0,
+  PROP_0 = 0,
   PROP_READ_SPEED
 };
 
@@ -112,8 +114,6 @@ static GstBuffer *gst_cdio_cdda_src_read_sector (GstCddaBaseSrc * src,
 static gboolean gst_cdio_cdda_src_open (GstCddaBaseSrc * src,
     const gchar * device);
 static void gst_cdio_cdda_src_close (GstCddaBaseSrc * src);
-
-#define DEFAULT_READ_SPEED   -1
 
 static void
 gst_cdio_cdda_src_base_init (gpointer g_class)
@@ -151,16 +151,11 @@ gst_cdio_cdda_src_probe_devices (GstCddaBaseSrc * cddabasesrc)
    * as /dev/cdrom and /dev/dvd - gotta do something more sophisticated */
   devices = cdio_get_devices (DRIVER_DEVICE);
 
-  if (devices == NULL) {
-    GST_DEBUG_OBJECT (cddabasesrc, "no devices found");
-    return NULL;
-  }
+  if (devices == NULL)
+    goto no_devices;
 
-  if (*devices == NULL) {
-    GST_DEBUG_OBJECT (cddabasesrc, "no devices found");
-    free (devices);
-    return NULL;
-  }
+  if (*devices == NULL)
+    goto empty_devices;
 
   ret = g_strdupv (devices);
   for (d = devices; *d != NULL; ++d) {
@@ -170,27 +165,40 @@ gst_cdio_cdda_src_probe_devices (GstCddaBaseSrc * cddabasesrc)
   free (devices);
 
   return ret;
+
+  /* ERRORS */
+no_devices:
+  {
+    GST_DEBUG_OBJECT (cddabasesrc, "no devices found");
+    return NULL;
+  }
+empty_devices:
+  {
+    GST_DEBUG_OBJECT (cddabasesrc, "empty device list found");
+    free (devices);
+    return NULL;
+  }
 }
 
 static GstBuffer *
 gst_cdio_cdda_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
 {
-  GstFlowReturn flowret;
   GstCdioCddaSrc *src;
   GstBuffer *buf;
 
   src = GST_CDIO_CDDA_SRC (cddabasesrc);
 
-  flowret = gst_pad_alloc_buffer (GST_BASE_SRC (src)->srcpad,
-      GST_BUFFER_OFFSET_NONE, CDIO_CD_FRAMESIZE_RAW,
-      GST_PAD_CAPS (GST_BASE_SRC (src)->srcpad), &buf);
+  /* can't use pad_alloc because we can't return the GstFlowReturn */
+  buf = gst_buffer_new_and_alloc (CDIO_CD_FRAMESIZE_RAW);
 
-  if (flowret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (src, "gst_pad_alloc_buffer() failed! (ret=%d)", flowret);
-    return NULL;
-  }
+  if (cdio_read_audio_sector (src->cdio, GST_BUFFER_DATA (buf), sector) != 0)
+    goto read_failed;
 
-  if (cdio_read_audio_sector (src->cdio, GST_BUFFER_DATA (buf), sector) != 0) {
+  return buf;
+
+  /* ERRORS */
+read_failed:
+  {
     GST_WARNING_OBJECT (src, "read at sector %d failed!", sector);
     GST_ELEMENT_ERROR (src, RESOURCE, READ,
         (_("Could not read from CD.")),
@@ -199,8 +207,6 @@ gst_cdio_cdda_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
     gst_buffer_unref (buf);
     return NULL;
   }
-
-  return buf;
 }
 
 static gboolean
@@ -223,23 +229,14 @@ gst_cdio_cdda_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
 
   GST_LOG_OBJECT (src, "trying to open device %s", device);
 
-  src->cdio = cdio_open (device, DRIVER_UNKNOWN);
-
-  if (src->cdio == NULL) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("Could not open CD device for reading.")),
-        ("cdio_open() failed: %s", g_strerror (errno)));
-    return FALSE;
-  }
+  if (!(src->cdio = cdio_open (device, DRIVER_UNKNOWN)))
+    goto open_failed;
 
   discmode = cdio_get_discmode (src->cdio);
   GST_LOG_OBJECT (src, "discmode: %d", (gint) discmode);
 
-  if (discmode != CDIO_DISC_MODE_CD_DA && discmode != CDIO_DISC_MODE_CD_MIXED) {
-    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
-        (_("Disc is not an Audio CD.")), ("discmode: %d", (gint) discmode));
-    return FALSE;
-  }
+  if (discmode != CDIO_DISC_MODE_CD_DA && discmode != CDIO_DISC_MODE_CD_MIXED)
+    goto not_audio;
 
   first_track = cdio_get_first_track_num (src->cdio);
   num_tracks = cdio_get_num_tracks (src->cdio);
@@ -276,8 +273,22 @@ gst_cdio_cdda_src_open (GstCddaBaseSrc * cddabasesrc, const gchar * device)
 
     gst_cdda_base_src_add_track (GST_CDDA_BASE_SRC (src), &track);
   }
-
   return TRUE;
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("Could not open CD device for reading.")),
+        ("cdio_open() failed: %s", g_strerror (errno)));
+    return FALSE;
+  }
+not_audio:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
+        (_("Disc is not an Audio CD.")), ("discmode: %d", (gint) discmode));
+    return FALSE;
+  }
 }
 
 static void
@@ -301,8 +312,7 @@ gst_cdio_cdda_src_init (GstCdioCddaSrc * src, GstCdioCddaSrcClass * klass)
 static void
 gst_cdio_cdda_src_finalize (GObject * obj)
 {
-  if (G_OBJECT_CLASS (parent_class)->finalize)
-    G_OBJECT_CLASS (parent_class)->finalize (obj);
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
