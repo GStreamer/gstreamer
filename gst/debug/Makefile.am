@@ -1,7 +1,7 @@
 if GST_HAVE_MMAP
-  EFENCE_PLUGIN=libgstefence.la
+EFENCE_PLUGIN=libgstefence.la
 else
-  EFENCE_PLUGIN=
+EFENCE_PLUGIN=
 endif
 
 plugin_LTLIBRARIES = $(EFENCE_PLUGIN) libgstdebug.la libgstnavigationtest.la 
@@ -25,17 +25,17 @@ libgstnavigationtest_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 libgstnavigationtest_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ $(LIBM)
 libgstnavigationtest_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
- 
+
 libgstdebug_la_SOURCES = \
 	gstdebug.c \
- 	breakmydata.c \
- 	progressreport.c \
- 	progressreport.h \
+	breakmydata.c \
+	progressreport.c \
+	progressreport.h \
 	gstnavseek.c \
 	gstpushfilesrc.c \
 	gstpushfilesrc.h \
- 	tests.c \
- 	testplugin.c
+	tests.c \
+	testplugin.c
 # 	negotiation.c
 
 libgstdebug_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)

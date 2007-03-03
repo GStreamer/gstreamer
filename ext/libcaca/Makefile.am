@@ -7,7 +7,7 @@ libgstcacasink_la_CFLAGS = \
 	$(LIBCACA_CFLAGS)
 libgstcacasink_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
- 	$(GST_BASE_LIBS) \
+	$(GST_BASE_LIBS) \
 	$(LIBCACA_LIBS)
 libgstcacasink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
