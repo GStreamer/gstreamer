@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libgstapp-@GST_MAJORMINOR@.la
 
-libgstapp_@GST_MAJORMINOR@_la_SOURCES = gstappsrc.c
+libgstapp_@GST_MAJORMINOR@_la_SOURCES = gstappsrc.c gstappbuffer.c
 libgstapp_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS)
 libgstapp_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS)

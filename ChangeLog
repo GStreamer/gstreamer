@@ -1,5 +1,14 @@
 2007-03-03  David Schleef  <ds@schleef.org>
 
+	* gst-libs/gst/app/Makefile.am:
+	* gst-libs/gst/app/gstappbuffer.c:
+	* gst-libs/gst/app/gstappbuffer.h:
+	* gst-libs/gst/app/gstappsrc.c:
+	  Add GstAppBuffer that includes a callback and closure for
+	  proper handling of data chunks.
+
+2007-03-03  David Schleef  <ds@schleef.org>
+
 	* gst-libs/gst/app/gstappsrc.c:
 	* gst-libs/gst/app/gstappsrc.h:
 	  Hacking to address issues in 413418.
