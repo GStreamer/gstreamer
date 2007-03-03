@@ -100,6 +100,7 @@ GST_PLUGINS_ALL="\
   tta \
   videocrop \
   videoparse \
+  vmnc \
   xingheader \
   y4m \
   "

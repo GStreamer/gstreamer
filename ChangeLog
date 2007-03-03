@@ -2,6 +2,12 @@
 
 	* configure.ac:
 	* gst/vmnc/Makefile.am:
+	  Fix up dist.
+
+2007-03-03  Michael Smith  <msmith@fluendo.com>
+
+	* configure.ac:
+	* gst/vmnc/Makefile.am:
 	* gst/vmnc/vmncdec.c: (gst_vmnc_dec_base_init),
 	(gst_vmnc_dec_class_init), (gst_vmnc_dec_init),
 	(gst_vmnc_dec_reset), (vmnc_handle_wmvi_rectangle),
