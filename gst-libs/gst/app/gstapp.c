@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 
-#include <gst/app/gstappsrc.h>
+#include "gstappsrc.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
