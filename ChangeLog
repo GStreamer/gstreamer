@@ -1,6 +1,11 @@
 2007-03-03  David Schleef  <ds@schleef.org>
 
 	* gst-libs/gst/app/Makefile.am:
+	  Install the headers.
+
+2007-03-03  David Schleef  <ds@schleef.org>
+
+	* gst-libs/gst/app/Makefile.am:
 	* gst-libs/gst/app/gstappbuffer.c:
 	* gst-libs/gst/app/gstappbuffer.h:
 	* gst-libs/gst/app/gstappsrc.c:

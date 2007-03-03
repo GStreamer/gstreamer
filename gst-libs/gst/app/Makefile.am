@@ -6,5 +6,8 @@ libgstapp_@GST_MAJORMINOR@_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 libgstapp_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS)
 libgstapp_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LDFLAGS)
 
-noinst_HEADERS = gstappsrc.h
+libgstapp_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/app
+libgstapp_@GST_MAJORMINOR@include_HEADERS = \
+	gstappsrc.h \
+	gstappbuffer.h
 
