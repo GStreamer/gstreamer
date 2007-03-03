@@ -23,6 +23,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_APP_SRC \
   (gst_app_src_get_type())
 #define GST_APP_SRC(obj) \
@@ -66,6 +68,7 @@ void gst_app_src_set_caps (GstAppSrc *appsrc, GstCaps *caps);
 void gst_app_src_flush (GstAppSrc *appsrc);
 void gst_app_src_end_of_stream (GstAppSrc *appsrc);
 
+G_END_DECLS
 
 #endif
 
