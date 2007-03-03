@@ -7,7 +7,7 @@ SUBDIRS_EXAMPLES =
 endif
 
 SUBDIRS = \
-	gst gst-libs sys ext \
+	gst-libs gst sys ext \
 	m4 common docs tests po \
 	$(SUBDIRS_EXAMPLES)
 

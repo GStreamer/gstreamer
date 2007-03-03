@@ -227,13 +227,13 @@ SPC_DIR=
 endif
 
 if USE_SWFDEC
-SWFDEC_DIR=swfdec
+#SWFDEC_DIR=swfdec
 else
 SWFDEC_DIR=
 endif
 
 if USE_THEORADEC
-THEORA_DIR = theora
+#THEORA_DIR = theora
 else
 THEORA_DIR =
 endif

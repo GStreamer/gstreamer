@@ -1,3 +1,19 @@
+2007-03-03  David Schleef  <ds@schleef.org>
+
+	* Makefile.am:
+	* configure.ac:
+	* ext/Makefile.am:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/app/Makefile.am:
+	* gst-libs/gst/app/gstapp.c:
+	* gst-libs/gst/app/gstappsrc.c:
+	* gst-libs/gst/app/gstappsrc.h:
+	* gst/app/Makefile.am:
+	* gst/app/gstapp.c:
+	* gst/app/gstappsrc.c:
+	* gst/app/gstappsrc.h:
+	  Move the app library to gst-libs/gst/app (duh!)
+
 2007-03-02 Christian Schaller <christian at fluendo dot com>
 	
 	Patch by: Nguyen Thai Ngoc Duy <pcloud@gmail.com>

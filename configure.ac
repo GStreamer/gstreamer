@@ -1076,6 +1076,7 @@ gst/real/Makefile
 gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
+gst-libs/gst/app/Makefile
 gst-libs/ext/Makefile
 gst-libs/ext/amrwb/Makefile
 sys/Makefile
