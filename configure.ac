@@ -1071,6 +1071,7 @@ gst/qtdemux/Makefile
 gst/tta/Makefile
 gst/videocrop/Makefile
 gst/videoparse/Makefile
+gst/vmnc/Makefile
 gst/xingheader/Makefile
 gst/real/Makefile
 gst/y4m/Makefile

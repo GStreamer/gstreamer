@@ -1,3 +1,24 @@
+2007-03-03  Michael Smith  <msmith@fluendo.com>
+
+	* configure.ac:
+	* gst/vmnc/Makefile.am:
+	* gst/vmnc/vmncdec.c: (gst_vmnc_dec_base_init),
+	(gst_vmnc_dec_class_init), (gst_vmnc_dec_init),
+	(gst_vmnc_dec_reset), (vmnc_handle_wmvi_rectangle),
+	(render_colour_cursor), (render_cursor), (vmnc_make_buffer),
+	(vmnc_handle_wmvd_rectangle), (vmnc_handle_wmve_rectangle),
+	(vmnc_handle_wmvf_rectangle), (vmnc_handle_wmvg_rectangle),
+	(vmnc_handle_wmvh_rectangle), (vmnc_handle_wmvj_rectangle),
+	(render_raw_tile), (render_subrect), (vmnc_handle_raw_rectangle),
+	(vmnc_handle_hextile_rectangle), (vmnc_handle_packet),
+	(vmnc_dec_setcaps), (vmnc_dec_chain), (vmnc_dec_change_state),
+	(vmnc_dec_set_property), (vmnc_dec_get_property), (plugin_init):
+	  Add VMnc decoder.
+	  Still missing support for:
+	   - rectangle types I didn't find in my samples (e.g. copy, RRE,
+	     ZRLE)
+	   - alpha-composited cursors
+
 2007-03-03  David Schleef  <ds@schleef.org>
 
 	* gst-libs/gst/app/Makefile.am:
