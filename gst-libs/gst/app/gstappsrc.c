@@ -114,6 +114,8 @@ gst_app_src_dispose (GObject * obj)
     g_queue_free (appsrc->queue);
     appsrc->queue = NULL;
   }
+
+  G_OBJECT_CLASS (parent_class)->dispose (obj);
 }
 
 static void
