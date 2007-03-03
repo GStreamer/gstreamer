@@ -24,8 +24,6 @@
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
 
-#include <unistd.h>
-#include <fcntl.h>
 #include <string.h>
 
 #include "gstappsrc.h"
@@ -100,9 +98,22 @@ gst_app_src_dispose (GObject * obj)
 {
   GstAppSrc *appsrc = GST_APP_SRC (obj);
 
-  g_mutex_free (appsrc->mutex);
-  g_cond_free (appsrc->cond);
-  g_queue_free (appsrc->queue);
+  if (appsrc->caps) {
+    gst_caps_unref (appsrc->caps);
+    appsrc->caps = NULL;
+  }
+  if (appsrc->mutex) {
+    g_mutex_free (appsrc->mutex);
+    appsrc->mutex = NULL;
+  }
+  if (appsrc->cond) {
+    g_cond_free (appsrc->cond);
+    appsrc->cond = NULL;
+  }
+  if (appsrc->queue) {
+    g_queue_free (appsrc->queue);
+    appsrc->queue = NULL;
+  }
 }
 
 static void
@@ -187,6 +198,10 @@ gst_app_src_create (GstPushSrc * psrc, GstBuffer ** buf)
   g_mutex_lock (appsrc->mutex);
 
   while (1) {
+    if (appsrc->unlock) {
+      ret = GST_FLOW_WRONG_STATE;
+      break;
+    }
     if (!g_queue_is_empty (appsrc->queue)) {
       *buf = g_queue_pop_head (appsrc->queue);
 
@@ -216,9 +231,20 @@ gst_app_src_create (GstPushSrc * psrc, GstBuffer ** buf)
 
 /* external API */
 
+/**
+ * gst_app_src_push_buffer:
+ * @appsrc:
+ * @buffer:
+ *
+ * Adds a buffer to the queue of buffers that the appsrc element will
+ * push to its source pad.  This function takes ownership of the buffer.
+ */
 void
 gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
 {
+  g_return_if_fail (appsrc);
+  g_return_if_fail (GST_IS_APP_SRC (appsrc));
+
   g_mutex_lock (appsrc->mutex);
 
   g_queue_push_tail (appsrc->queue, buffer);
@@ -227,16 +253,36 @@ gst_app_src_push_buffer (GstAppSrc * appsrc, GstBuffer * buffer)
   g_mutex_unlock (appsrc->mutex);
 }
 
+/**
+ * gst_app_src_set_caps:
+ * @appsrc:
+ * @caps:
+ *
+ * Set the capabilities on the appsrc element.  This function takes
+ * ownership of the caps structure.
+ */
 void
 gst_app_src_set_caps (GstAppSrc * appsrc, GstCaps * caps)
 {
+  g_return_if_fail (appsrc);
+  g_return_if_fail (GST_IS_APP_SRC (appsrc));
+
   gst_caps_replace (&appsrc->caps, caps);
 }
 
+/**
+ * gst_app_src_flush:
+ * @appsrc:
+ *
+ * Flushes all queued buffers from the appsrc element.
+ */
 void
 gst_app_src_flush (GstAppSrc * appsrc)
 {
   GstBuffer *buffer;
+
+  g_return_if_fail (appsrc);
+  g_return_if_fail (GST_IS_APP_SRC (appsrc));
 
   g_mutex_lock (appsrc->mutex);
 
@@ -249,9 +295,19 @@ gst_app_src_flush (GstAppSrc * appsrc)
   g_mutex_unlock (appsrc->mutex);
 }
 
+/**
+ * gst_app_src_end_of_stream:
+ * @appsrc:
+ *
+ * Indicates to the appsrc element that the last buffer queued in the
+ * element is the last buffer of the stream.
+ */
 void
 gst_app_src_end_of_stream (GstAppSrc * appsrc)
 {
+  g_return_if_fail (appsrc);
+  g_return_if_fail (GST_IS_APP_SRC (appsrc));
+
   g_mutex_lock (appsrc->mutex);
 
   appsrc->end_of_stream = TRUE;
