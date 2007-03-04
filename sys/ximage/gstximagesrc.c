@@ -658,6 +658,13 @@ gst_ximage_src_create (GstPushSrc * bs, GstBuffer ** buf)
    * before capturing */
 
   GST_OBJECT_LOCK (s);
+  if (GST_ELEMENT_CLOCK (s) == NULL) {
+    GST_OBJECT_UNLOCK (s);
+    GST_ELEMENT_ERROR (s, RESOURCE, FAILED,
+        (_("Cannot operate without a clock")), (NULL));
+    return GST_FLOW_ERROR;
+  }
+
   base_time = GST_ELEMENT_CAST (s)->base_time;
   next_capture_ts = gst_clock_get_time (GST_ELEMENT_CLOCK (s));
   next_capture_ts -= base_time;

@@ -1,5 +1,10 @@
 2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* sys/ximage/gstximagesrc.c: (gst_ximage_src_create):
+	Catch the case where no clock has been set.
+
+2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/flac/gstflacenc.c: (gst_flac_enc_finalize):
 	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_class_init),
 	(gst_gconf_audio_sink_dispose), (gst_gconf_audio_sink_finalize):
