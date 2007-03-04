@@ -1,5 +1,11 @@
 2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/Makefile.am:
+	Disable autovideosink so the buildbots don't barf over memory
+	leaked in the directfb sink.
+
+2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* sys/ximage/gstximagesrc.c: (gst_ximage_src_dispose):
 	Chain up in dispose
 
