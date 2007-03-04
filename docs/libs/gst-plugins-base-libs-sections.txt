@@ -917,14 +917,14 @@ gst_tag_to_id3_tag
 # base utils
 
 <SECTION>
-<FILE>gstbaseutils</FILE>
+<FILE>gstpbutils</FILE>
 <INCLUDE>gst/utils/base-utils.h</INCLUDE>
 <SUBSECTION>
-gst_base_utils_init
+gst_pb_utils_init
 </SECTION>
 
 <SECTION>
-<FILE>gstbaseutilsmissingplugins</FILE>
+<FILE>gstpbutilsmissingplugins</FILE>
 <INCLUDE>gst/utils/missing-plugins.h</INCLUDE>
 <SUBSECTION>
 gst_missing_plugin_message_get_installer_detail
@@ -939,7 +939,7 @@ gst_missing_element_message_new
 </SECTION>
 
 <SECTION>
-<FILE>gstbaseutilsinstallplugins</FILE>
+<FILE>gstpbutilsinstallplugins</FILE>
 <INCLUDE>gst/utils/install-plugins.h</INCLUDE>
 <SUBSECTION>
 GstInstallPluginsReturn
@@ -956,17 +956,17 @@ gst_install_plugins_context_set_xid
 </SECTION>
 
 <SECTION>
-<FILE>gstbaseutilsdescriptions</FILE>
+<FILE>gstpbutilsdescriptions</FILE>
 <INCLUDE>gst/utils/descriptions.h</INCLUDE>
 <SUBSECTION>
-gst_base_utils_get_source_description
-gst_base_utils_get_sink_description
-gst_base_utils_get_decoder_description
-gst_base_utils_get_encoder_description
-gst_base_utils_get_element_description
+gst_pb_utils_get_source_description
+gst_pb_utils_get_sink_description
+gst_pb_utils_get_decoder_description
+gst_pb_utils_get_encoder_description
+gst_pb_utils_get_element_description
 <SUBSECTION>
-gst_base_utils_add_codec_description_to_tag_list
-gst_base_utils_get_codec_description
+gst_pb_utils_add_codec_description_to_tag_list
+gst_pb_utils_get_codec_description
 </SECTION>
 
 # video

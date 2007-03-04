@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:gstbaseutilsmissingplugins
+ * SECTION:gstpbutilsmissingplugins
  * @short_description: Create, recognise and parse missing-plugins messages
  *
  * <refsect2>
@@ -66,7 +66,7 @@
 
 #include "gst/gst-i18n-plugin.h"
 
-#include "base-utils.h"
+#include "pbutils.h"
 
 #include <string.h>
 
@@ -164,7 +164,7 @@ gst_missing_uri_source_message_new (GstElement * element,
   g_return_val_if_fail (GST_IS_ELEMENT (element), NULL);
   g_return_val_if_fail (protocol != NULL, NULL);
 
-  description = gst_base_utils_get_source_description (protocol);
+  description = gst_pb_utils_get_source_description (protocol);
 
   s = gst_structure_new ("missing-plugin", "type", G_TYPE_STRING,
       "urisource", "detail", G_TYPE_STRING, protocol, "name", G_TYPE_STRING,
@@ -196,7 +196,7 @@ gst_missing_uri_sink_message_new (GstElement * element, const gchar * protocol)
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (protocol != NULL, FALSE);
 
-  description = gst_base_utils_get_sink_description (protocol);
+  description = gst_pb_utils_get_sink_description (protocol);
 
   s = gst_structure_new ("missing-plugin", "type", G_TYPE_STRING,
       "urisink", "detail", G_TYPE_STRING, protocol, "name", G_TYPE_STRING,
@@ -229,7 +229,7 @@ gst_missing_element_message_new (GstElement * element,
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
   g_return_val_if_fail (factory_name != NULL, FALSE);
 
-  description = gst_base_utils_get_element_description (factory_name);
+  description = gst_pb_utils_get_element_description (factory_name);
 
   s = gst_structure_new ("missing-plugin", "type", G_TYPE_STRING,
       "element", "detail", G_TYPE_STRING, factory_name, "name", G_TYPE_STRING,
@@ -266,7 +266,7 @@ gst_missing_decoder_message_new (GstElement * element,
   g_return_val_if_fail (!gst_caps_is_empty (decode_caps), FALSE);
   g_return_val_if_fail (gst_caps_is_fixed (decode_caps), FALSE);
 
-  description = gst_base_utils_get_decoder_description (decode_caps);
+  description = gst_pb_utils_get_decoder_description (decode_caps);
   caps = copy_and_clean_caps (decode_caps);
 
   s = gst_structure_new ("missing-plugin", "type", G_TYPE_STRING,
@@ -306,7 +306,7 @@ gst_missing_encoder_message_new (GstElement * element,
   g_return_val_if_fail (!gst_caps_is_empty (encode_caps), FALSE);
   g_return_val_if_fail (gst_caps_is_fixed (encode_caps), FALSE);
 
-  description = gst_base_utils_get_encoder_description (encode_caps);
+  description = gst_pb_utils_get_encoder_description (encode_caps);
   caps = copy_and_clean_caps (encode_caps);
 
   s = gst_structure_new ("missing-plugin", "type", G_TYPE_STRING,
@@ -505,11 +505,11 @@ gst_missing_plugin_message_get_description (GstMessage * msg)
 
       if (missing_structure_get_string_detail (msg->structure, &detail)) {
         if (missing_type == GST_MISSING_TYPE_URISOURCE)
-          ret = gst_base_utils_get_source_description (detail);
+          ret = gst_pb_utils_get_source_description (detail);
         else if (missing_type == GST_MISSING_TYPE_URISINK)
-          ret = gst_base_utils_get_sink_description (detail);
+          ret = gst_pb_utils_get_sink_description (detail);
         else
-          ret = gst_base_utils_get_sink_description (detail);
+          ret = gst_pb_utils_get_sink_description (detail);
         g_free (detail);
       }
       break;
@@ -520,9 +520,9 @@ gst_missing_plugin_message_get_description (GstMessage * msg)
 
       if (missing_structure_get_caps_detail (msg->structure, &caps)) {
         if (missing_type == GST_MISSING_TYPE_DECODER)
-          ret = gst_base_utils_get_decoder_description (caps);
+          ret = gst_pb_utils_get_decoder_description (caps);
         else
-          ret = gst_base_utils_get_encoder_description (caps);
+          ret = gst_pb_utils_get_encoder_description (caps);
         gst_caps_unref (caps);
       }
       break;

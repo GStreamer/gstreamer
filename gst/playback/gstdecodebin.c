@@ -23,7 +23,7 @@
 
 #include <string.h>
 #include <gst/gst.h>
-#include <gst/utils/base-utils.h>
+#include <gst/pbutils/pbutils.h>
 
 #include "gstplay-marshal.h"
 

@@ -246,7 +246,7 @@
 #include <gst/gst.h>
 
 #include <gst/gst-i18n-plugin.h>
-#include <gst/utils/base-utils.h>
+#include <gst/pbutils/pbutils.h>
 
 #include "gstplaybasebin.h"
 
@@ -1932,7 +1932,7 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_play_bin_debug, "playbin", 0, "play bin");
 
-  gst_base_utils_init ();
+  gst_pb_utils_init ();
 
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,

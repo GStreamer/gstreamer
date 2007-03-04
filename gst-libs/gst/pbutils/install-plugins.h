@@ -18,8 +18,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_BASE_UTILS_INSTALL_PLUGINS_H__
-#define __GST_BASE_UTILS_INSTALL_PLUGINS_H__
+#ifndef __GST_PB_UTILS_INSTALL_PLUGINS_H__
+#define __GST_PB_UTILS_INSTALL_PLUGINS_H__
 
 #include <glib.h>
 
@@ -133,5 +133,5 @@ gboolean      gst_install_plugins_installation_in_progress (void);
 
 G_END_DECLS
 
-#endif /* __GST_BASE_UTILS_INSTALL_PLUGINS_H__ */
+#endif /* __GST_PB_UTILS_INSTALL_PLUGINS_H__ */
 

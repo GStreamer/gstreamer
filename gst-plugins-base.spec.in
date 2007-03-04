@@ -68,18 +68,17 @@ rm -rf $RPM_BUILD_ROOT
 # helper programs
 %{_bindir}/gst-visualise-%{majorminor}
 %{_mandir}/man1/gst-visualise-%{majorminor}*
-%{_libdir}/libgstbaseutils-0.10.so.0
-%{_libdir}/libgstbaseutils-0.10.so.0.8.0
 
 # libraries
-%{_libdir}/libgstinterfaces-%{majorminor}.so.*
 %{_libdir}/libgstaudio-%{majorminor}.so.*
+%{_libdir}/libgstcdda-%{majorminor}.so*
+%{_libdir}/libgstinterfaces-%{majorminor}.so.*
+%{_libdir}/libgstnetbuffer-%{majorminor}.so*
+%{_libdir}/libgstpbutils-%{majorminor}.so*
 %{_libdir}/libgstriff-%{majorminor}.so.*
+%{_libdir}/libgstrtp-%{majorminor}.so*
 %{_libdir}/libgsttag-%{majorminor}.so.*
 %{_libdir}/libgstvideo-%{majorminor}.so.*
-%{_libdir}/libgstrtp-%{majorminor}.so*
-%{_libdir}/libgstnetbuffer-%{majorminor}.so*
-%{_libdir}/libgstcdda-%{majorminor}.so*
 
 # base plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
@@ -170,7 +169,6 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/utils/descriptions.h
 %{_includedir}/gstreamer-%{majorminor}/gst/utils/missing-plugins.h
 %{_includedir}/gstreamer-%{majorminor}/gst/utils/install-plugins.h
-%{_libdir}/libgstbaseutils-0.10.so
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
 %{_libdir}/libgsttag-%{majorminor}.so
@@ -178,6 +176,7 @@ GStreamer Plugins Base library development and header files.
 %{_libdir}/libgstrtp-%{majorminor}.so
 %{_libdir}/libgstinterfaces-%{majorminor}.so
 %{_libdir}/libgstnetbuffer-%{majorminor}.so
+%{_libdir}/libgstpbutils-%{majorminor}.so
 %{_libdir}/libgstcdda-%{majorminor}.so
 
 # pkg-config files

@@ -9,9 +9,9 @@ SUBDIRS = \
 	cdda \
 	floatcast \
 	netbuffer \
+	pbutils \
 	riff \
 	rtp \
-	utils \
 	video
 
 noinst_HEADERS = gettext.h gst-i18n-plugin.h

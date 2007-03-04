@@ -19,7 +19,7 @@
  */
 
 /**
- * SECTION:gstbaseutilsinstallplugins
+ * SECTION:gstpbutilsinstallplugins
  * @short_description: Missing plugin installation support for applications
  *
  * <refsect2>

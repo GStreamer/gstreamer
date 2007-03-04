@@ -180,7 +180,7 @@ gst_mixer_set_volume (GstMixer * mixer, GstMixerTrack * track, gint * volumes)
   }
 }
 
-/*
+/**
  * gst_mixer_get_volume:
  * @mixer: the #GstMixer (a #GstElement) that owns the track
  * @track: the GstMixerTrack to get the volume from.

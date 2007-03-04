@@ -17,20 +17,20 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_BASE_UTILS_BASE_UTILS_H__
-#define __GST_BASE_UTILS_BASE_UTILS_H__
+#ifndef __GST_PB_UTILS_BASE_UTILS_H__
+#define __GST_PB_UTILS_BASE_UTILS_H__
 
 #include <gst/gst.h>
 
-#include <gst/utils/descriptions.h>
-#include <gst/utils/missing-plugins.h>
-#include <gst/utils/install-plugins.h>
+#include <gst/pbutils/descriptions.h>
+#include <gst/pbutils/missing-plugins.h>
+#include <gst/pbutils/install-plugins.h>
 
 G_BEGIN_DECLS
 
-void    gst_base_utils_init (void);
+void    gst_pb_utils_init (void);
 
 G_END_DECLS
 
-#endif /* __GST_BASE_UTILS_BASE_UTILS_H__ */
+#endif /* __GST_PB_UTILS_BASE_UTILS_H__ */
 

@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_BASE_UTILS_DESCRIPTIONS_H__
-#define __GST_BASE_UTILS_DESCRIPTIONS_H__
+#ifndef __GST_PB_UTILS_DESCRIPTIONS_H__
+#define __GST_PB_UTILS_DESCRIPTIONS_H__
 
 #include <gst/gsttaglist.h>
 #include <gst/gstcaps.h>
@@ -30,29 +30,29 @@ G_BEGIN_DECLS
  * from caps
  */
 
-gboolean   gst_base_utils_add_codec_description_to_tag_list (GstTagList    * taglist,
+gboolean   gst_pb_utils_add_codec_description_to_tag_list (GstTagList    * taglist,
                                                              const gchar   * codec_tag,
                                                              const GstCaps * caps);
 
-gchar    * gst_base_utils_get_codec_description (const GstCaps * caps);
+gchar    * gst_pb_utils_get_codec_description (const GstCaps * caps);
 
 /*
  * functions mainly used by the missing plugins message creation functions to
  * find descriptions of what exactly is missing
  */
 
-gchar    * gst_base_utils_get_source_description (const gchar * protocol);
+gchar    * gst_pb_utils_get_source_description (const gchar * protocol);
 
-gchar    * gst_base_utils_get_sink_description (const gchar * protocol);
+gchar    * gst_pb_utils_get_sink_description (const gchar * protocol);
 
-gchar    * gst_base_utils_get_decoder_description (const GstCaps * caps);
+gchar    * gst_pb_utils_get_decoder_description (const GstCaps * caps);
 
-gchar    * gst_base_utils_get_encoder_description (const GstCaps * caps);
+gchar    * gst_pb_utils_get_encoder_description (const GstCaps * caps);
 
-gchar    * gst_base_utils_get_element_description (const gchar * factory_name);
+gchar    * gst_pb_utils_get_element_description (const gchar * factory_name);
 
 
 G_END_DECLS
 
-#endif /* __GST_BASE_UTILS_DESCRIPTIONS_H__ */
+#endif /* __GST_PB_UTILS_DESCRIPTIONS_H__ */
 

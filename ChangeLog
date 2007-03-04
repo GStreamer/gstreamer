@@ -1,3 +1,54 @@
+2007-03-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/interfaces/mixer.c:
+	* gst-libs/gst/pbutils/Makefile.am:
+	* gst-libs/gst/pbutils/descriptions.c:
+	(gst_pb_utils_get_source_description),
+	(gst_pb_utils_get_sink_description),
+	(gst_pb_utils_get_decoder_description),
+	(gst_pb_utils_get_encoder_description),
+	(gst_pb_utils_get_element_description),
+	(gst_pb_utils_add_codec_description_to_tag_list),
+	(gst_pb_utils_get_codec_description), (gst_pb_utils_list_all):
+	* gst-libs/gst/pbutils/descriptions.h:
+	* gst-libs/gst/pbutils/install-plugins.c:
+	* gst-libs/gst/pbutils/install-plugins.h:
+	* gst-libs/gst/pbutils/missing-plugins.c:
+	(gst_missing_uri_source_message_new),
+	(gst_missing_uri_sink_message_new),
+	(gst_missing_element_message_new),
+	(gst_missing_decoder_message_new),
+	(gst_missing_encoder_message_new),
+	(gst_missing_plugin_message_get_description):
+	* gst-libs/gst/pbutils/missing-plugins.h:
+	* gst-libs/gst/pbutils/pbutils.c: (gst_pb_utils_init):
+	* gst-libs/gst/pbutils/pbutils.h:
+	* gst-libs/gst/utils/Makefile.am:
+	* gst-libs/gst/utils/base-utils.c:
+	* gst-libs/gst/utils/base-utils.h:
+	* gst-libs/gst/utils/descriptions.c:
+	* gst-libs/gst/utils/descriptions.h:
+	* gst-libs/gst/utils/install-plugins.c:
+	* gst-libs/gst/utils/install-plugins.h:
+	* gst-libs/gst/utils/missing-plugins.c:
+	* gst-libs/gst/utils/missing-plugins.h:
+	* gst-plugins-base.spec.in:
+	* gst/playback/Makefile.am:
+	* gst/playback/gstdecodebin.c:
+	* gst/playback/gstdecodebin2.c:
+	* gst/playback/gstplaybasebin.c: (setup_subtitle),
+	(gen_source_element):
+	* gst/playback/gstplaybin.c: (plugin_init):
+	* tests/check/Makefile.am:
+	* tests/check/libs/pbutils.c: (GST_START_TEST),
+	(test_pb_utils_install_plugins_do_callout), (libgstpbutils_suite):
+	* tests/check/libs/utils.c:
+	  rename utils to pbutils
+
 2007-03-02  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/plugins/Makefile.am:

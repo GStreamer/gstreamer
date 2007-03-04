@@ -1,4 +1,4 @@
-/* GStreamer base utils library source/sink/codec description support
+/* GStreamer Plugins Base utils library source/sink/codec description support
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
@@ -18,7 +18,7 @@
  */
 
 /**
- * SECTION:gstbaseutilsdescriptions
+ * SECTION:gstpbutilsdescriptions
  * @short_description: Provides human-readable descriptions for caps/codecs
  * and encoder, decoder, URI source and URI sink elements
  *
@@ -29,7 +29,7 @@
  * in error dialogs or other messages shown to users.
  * </para>
  * <para>
- * gst_base_utils_add_codec_description_to_tag_list() is a utility function
+ * gst_pb_utils_add_codec_description_to_tag_list() is a utility function
  * for demuxer and decoder elements to add audio/video codec tags from a
  * given (fixed) #GstCaps.
  * </para>
@@ -42,7 +42,7 @@
 
 #include "gst/gst-i18n-plugin.h"
 
-#include "base-utils.h"
+#include "pbutils.h"
 
 #include <string.h>
 
@@ -611,7 +611,7 @@ caps_are_rtp_caps (const GstCaps * caps, const gchar * media, gchar ** format)
 }
 
 /**
- * gst_base_utils_get_source_description:
+ * gst_pb_utils_get_source_description:
  * @protocol: the protocol the source element needs to handle, e.g. "http"
  *
  * Returns a localised string describing a source element handling the protocol
@@ -626,7 +626,7 @@ caps_are_rtp_caps (const GstCaps * caps, const gchar * media, gchar ** format)
  *          string with g_free() when not needed any longer.
  */
 gchar *
-gst_base_utils_get_source_description (const gchar * protocol)
+gst_pb_utils_get_source_description (const gchar * protocol)
 {
   gchar *proto_uc, *ret;
 
@@ -659,7 +659,7 @@ gst_base_utils_get_source_description (const gchar * protocol)
 }
 
 /**
- * gst_base_utils_get_sink_description:
+ * gst_pb_utils_get_sink_description:
  * @protocol: the protocol the sink element needs to handle, e.g. "http"
  *
  * Returns a localised string describing a sink element handling the protocol
@@ -674,7 +674,7 @@ gst_base_utils_get_source_description (const gchar * protocol)
  *          string with g_free() when not needed any longer.
  */
 gchar *
-gst_base_utils_get_sink_description (const gchar * protocol)
+gst_pb_utils_get_sink_description (const gchar * protocol)
 {
   gchar *proto_uc, *ret;
 
@@ -694,7 +694,7 @@ gst_base_utils_get_sink_description (const gchar * protocol)
 }
 
 /**
- * gst_base_utils_get_decoder_description:
+ * gst_pb_utils_get_decoder_description:
  * @caps: the (fixed) #GstCaps for which an decoder description is needed
  *
  * Returns a localised string describing an decoder for the format specified
@@ -709,7 +709,7 @@ gst_base_utils_get_sink_description (const gchar * protocol)
  *          string with g_free() when not needed any longer.
  */
 gchar *
-gst_base_utils_get_decoder_description (const GstCaps * caps)
+gst_pb_utils_get_decoder_description (const GstCaps * caps)
 {
   gchar *str, *ret;
 
@@ -727,7 +727,7 @@ gst_base_utils_get_decoder_description (const GstCaps * caps)
   } else {
     const FormatInfo *info;
 
-    str = gst_base_utils_get_codec_description (caps);
+    str = gst_pb_utils_get_codec_description (caps);
     info = find_format_info (caps);
     if (info != NULL && (info->flags & FLAG_CONTAINER) != 0) {
       ret = g_strdup_printf (_("%s demuxer"), str);
@@ -742,7 +742,7 @@ gst_base_utils_get_decoder_description (const GstCaps * caps)
 }
 
 /**
- * gst_base_utils_get_encoder_description:
+ * gst_pb_utils_get_encoder_description:
  * @caps: the (fixed) #GstCaps for which an encoder description is needed
  *
  * Returns a localised string describing an encoder for the format specified
@@ -757,7 +757,7 @@ gst_base_utils_get_decoder_description (const GstCaps * caps)
  *          string with g_free() when not needed any longer.
  */
 gchar *
-gst_base_utils_get_encoder_description (const GstCaps * caps)
+gst_pb_utils_get_encoder_description (const GstCaps * caps)
 {
   gchar *str, *ret;
 
@@ -775,7 +775,7 @@ gst_base_utils_get_encoder_description (const GstCaps * caps)
   } else {
     const FormatInfo *info;
 
-    str = gst_base_utils_get_codec_description (caps);
+    str = gst_pb_utils_get_codec_description (caps);
     info = find_format_info (caps);
     if (info != NULL && (info->flags & FLAG_CONTAINER) != 0) {
       ret = g_strdup_printf (_("%s muxer"), str);
@@ -790,7 +790,7 @@ gst_base_utils_get_encoder_description (const GstCaps * caps)
 }
 
 /**
- * gst_base_utils_get_element_description:
+ * gst_pb_utils_get_element_description:
  * @factory_name: the name of the element, e.g. "gnomevfssrc"
  *
  * Returns a localised string describing the given element, for use in
@@ -805,7 +805,7 @@ gst_base_utils_get_encoder_description (const GstCaps * caps)
  *          string with g_free() when not needed any longer.
  */
 gchar *
-gst_base_utils_get_element_description (const gchar * factory_name)
+gst_pb_utils_get_element_description (const gchar * factory_name)
 {
   gchar *ret;
 
@@ -819,7 +819,7 @@ gst_base_utils_get_element_description (const gchar * factory_name)
 }
 
 /**
- * gst_base_utils_add_codec_description_to_tag_list:
+ * gst_pb_utils_add_codec_description_to_tag_list:
  * @taglist: a #GstTagList
  * @codec_tag: a GStreamer codec tag such as #GST_TAG_AUDIO_CODEC,
  *             #GST_TAG_VIDEO_CODEC or #GST_TAG_CODEC
@@ -830,7 +830,7 @@ gst_base_utils_get_element_description (const gchar * factory_name)
  * Returns: TRUE if a codec tag was added, FALSE otherwise.
  */
 gboolean
-gst_base_utils_add_codec_description_to_tag_list (GstTagList * taglist,
+gst_pb_utils_add_codec_description_to_tag_list (GstTagList * taglist,
     const gchar * codec_tag, const GstCaps * caps)
 {
   const FormatInfo *info;
@@ -856,7 +856,7 @@ gst_base_utils_add_codec_description_to_tag_list (GstTagList * taglist,
 }
 
 /**
- * gst_base_utils_get_codec_description:
+ * gst_pb_utils_get_codec_description:
  * @caps: the (fixed) #GstCaps for which an format description is needed
  *
  * Returns a localised (as far as this is possible) string describing the
@@ -864,13 +864,13 @@ gst_base_utils_add_codec_description_to_tag_list (GstTagList * taglist,
  * to be seen by the user. Should never return NULL unless @caps is invalid.
  *
  * Also see the convenience function
- * gst_base_utils_add_codec_description_to_tag_list().
+ * gst_pb_utils_add_codec_description_to_tag_list().
  *
  * Returns: a newly-allocated description string, or NULL on error. Free
  *          string with g_free() when not needed any longer.
  */
 gchar *
-gst_base_utils_get_codec_description (const GstCaps * caps)
+gst_pb_utils_get_codec_description (const GstCaps * caps)
 {
   const FormatInfo *info;
   gchar *str, *comma;
@@ -902,7 +902,7 @@ gst_base_utils_get_codec_description (const GstCaps * caps)
 
 #if 0
 void
-gst_base_utils_list_all (void)
+gst_pb_utils_list_all (void)
 {
   gint i;
 

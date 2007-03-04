@@ -27,7 +27,7 @@
 #include "gststreamselector.h"
 #include "gstplay-marshal.h"
 
-#include <gst/utils/base-utils.h>
+#include <gst/pbutils/pbutils.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
 #define GST_CAT_DEFAULT gst_play_base_bin_debug
@@ -1449,7 +1449,7 @@ unknown_uri:
           gst_missing_uri_source_message_new (GST_ELEMENT (play_base_bin),
               prot));
 
-      desc = gst_base_utils_get_source_description (prot);
+      desc = gst_pb_utils_get_source_description (prot);
       GST_ELEMENT_ERROR (play_base_bin, CORE, MISSING_PLUGIN,
           (_("A %s plugin is required to play this stream, but not installed."),
               desc), ("No URI handler to handle sub_uri: %s", sub_uri));
@@ -1575,7 +1575,7 @@ no_source:
           gst_missing_uri_source_message_new (GST_ELEMENT (play_base_bin),
               prot));
 
-      desc = gst_base_utils_get_source_description (prot);
+      desc = gst_pb_utils_get_source_description (prot);
       GST_ELEMENT_ERROR (play_base_bin, CORE, MISSING_PLUGIN,
           (_("A %s plugin is required to play this stream, but not installed."),
               desc), ("No URI handler for %s", prot));

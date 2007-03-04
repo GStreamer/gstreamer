@@ -1,4 +1,4 @@
-/* GStreamer unit tests for libgstbaseutils
+/* GStreamer unit tests for libgstpbutils
  *
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
  *
@@ -23,7 +23,7 @@
 #endif
 
 #include <gst/check/gstcheck.h>
-#include <gst/utils/base-utils.h>
+#include <gst/pbutils/pbutils.h>
 
 #include <stdio.h>
 #include <glib/gstdio.h>
@@ -58,7 +58,7 @@ missing_msg_check_getters (GstMessage * msg)
   g_free (str);
 }
 
-GST_START_TEST (test_base_utils_post_missing_messages)
+GST_START_TEST (test_pb_utils_post_missing_messages)
 {
   GstElement *pipeline;
   GstStructure *s;
@@ -66,14 +66,13 @@ GST_START_TEST (test_base_utils_post_missing_messages)
   GstCaps *caps;
   GstBus *bus;
 
-  gst_base_utils_init ();
+  gst_pb_utils_init ();
 
   pipeline = gst_pipeline_new ("pipeline");
   bus = gst_element_get_bus (pipeline);
 
   /* first, test common assertion failure cases */
-  ASSERT_CRITICAL (msg = gst_missing_uri_source_message_new (NULL, "http");
-      );
+  ASSERT_CRITICAL (msg = gst_missing_uri_source_message_new (NULL, "http"););
   ASSERT_CRITICAL (gst_missing_uri_source_message_new (pipeline, NULL));
 
   ASSERT_CRITICAL (gst_missing_uri_sink_message_new (NULL, "http"));
@@ -234,13 +233,13 @@ GST_START_TEST (test_base_utils_post_missing_messages)
 
 GST_END_TEST;
 
-GST_START_TEST (test_base_utils_init)
+GST_START_TEST (test_pb_utils_init)
 {
   /* should be fine to call multiple times */
-  gst_base_utils_init ();
-  gst_base_utils_init ();
-  gst_base_utils_init ();
-  gst_base_utils_init ();
+  gst_pb_utils_init ();
+  gst_pb_utils_init ();
+  gst_pb_utils_init ();
+  gst_pb_utils_init ();
 }
 
 GST_END_TEST;
@@ -385,11 +384,11 @@ static const gchar *caps_strings[] = {
   "video/x-tpm"
 };
 
-GST_START_TEST (test_base_utils_get_codec_description)
+GST_START_TEST (test_pb_utils_get_codec_description)
 {
   gint i;
 
-  gst_base_utils_init ();
+  gst_pb_utils_init ();
 
   for (i = 0; i < G_N_ELEMENTS (caps_strings); ++i) {
     GstCaps *caps;
@@ -399,15 +398,15 @@ GST_START_TEST (test_base_utils_get_codec_description)
     fail_unless (caps != NULL, "could not create caps from string '%s'",
         caps_strings[i]);
     GST_LOG ("Caps %s:", caps_strings[i]);
-    desc = gst_base_utils_get_codec_description (caps);
+    desc = gst_pb_utils_get_codec_description (caps);
     fail_unless (desc != NULL);
     GST_LOG (" - codec   : %s", desc);
     g_free (desc);
-    desc = gst_base_utils_get_decoder_description (caps);
+    desc = gst_pb_utils_get_decoder_description (caps);
     fail_unless (desc != NULL);
     GST_LOG (" - decoder : %s", desc);
     g_free (desc);
-    desc = gst_base_utils_get_encoder_description (caps);
+    desc = gst_pb_utils_get_encoder_description (caps);
     fail_unless (desc != NULL);
     GST_LOG (" - encoder : %s", desc);
     g_free (desc);
@@ -418,29 +417,29 @@ GST_START_TEST (test_base_utils_get_codec_description)
 GST_END_TEST;
 
 
-GST_START_TEST (test_base_utils_taglist_add_codec_info)
+GST_START_TEST (test_pb_utils_taglist_add_codec_info)
 {
   GstTagList *list;
   GstCaps *caps;
 
-  gst_base_utils_init ();
+  gst_pb_utils_init ();
   list = gst_tag_list_new ();
   caps = gst_caps_new_simple ("video/x-theora", NULL);
   ASSERT_CRITICAL (fail_if
-      (gst_base_utils_add_codec_description_to_tag_list (NULL,
+      (gst_pb_utils_add_codec_description_to_tag_list (NULL,
               GST_TAG_VIDEO_CODEC, caps)));
   ASSERT_CRITICAL (fail_if
-      (gst_base_utils_add_codec_description_to_tag_list (list, NULL, caps)));
+      (gst_pb_utils_add_codec_description_to_tag_list (list, NULL, caps)));
   ASSERT_CRITICAL (fail_if
-      (gst_base_utils_add_codec_description_to_tag_list (list, "asdfa", caps)));
+      (gst_pb_utils_add_codec_description_to_tag_list (list, "asdfa", caps)));
   ASSERT_CRITICAL (fail_if
-      (gst_base_utils_add_codec_description_to_tag_list (list,
+      (gst_pb_utils_add_codec_description_to_tag_list (list,
               GST_TAG_IMAGE, caps)));
   ASSERT_CRITICAL (fail_if
-      (gst_base_utils_add_codec_description_to_tag_list (list,
+      (gst_pb_utils_add_codec_description_to_tag_list (list,
               GST_TAG_VIDEO_CODEC, NULL)));
   /* FIXME: do something here */
-  fail_unless (gst_base_utils_add_codec_description_to_tag_list (list,
+  fail_unless (gst_pb_utils_add_codec_description_to_tag_list (list,
           GST_TAG_VIDEO_CODEC, caps));
   fail_if (gst_tag_list_is_empty (list));
   gst_tag_list_free (list);
@@ -476,7 +475,7 @@ result_cb (GstInstallPluginsReturn result, gpointer user_data)
 
 /* make sure our script gets called with the right parameters */
 static void
-test_base_utils_install_plugins_do_callout (gchar ** details,
+test_pb_utils_install_plugins_do_callout (gchar ** details,
     GstInstallPluginsContext * ctx, const gchar * script,
     GstInstallPluginsReturn expected_result)
 {
@@ -533,7 +532,7 @@ done:
 #endif /* G_OS_UNIX */
 }
 
-GST_START_TEST (test_base_utils_install_plugins)
+GST_START_TEST (test_pb_utils_install_plugins)
 {
   GstInstallPluginsContext *ctx;
   GstInstallPluginsReturn ret;
@@ -541,11 +540,14 @@ GST_START_TEST (test_base_utils_install_plugins)
 
   ctx = gst_install_plugins_context_new ();
 
-  ASSERT_CRITICAL (ret = gst_install_plugins_sync (NULL, ctx););
+  ASSERT_CRITICAL (ret = gst_install_plugins_sync (NULL, ctx);
+      );
   ASSERT_CRITICAL (ret =
-      gst_install_plugins_async (NULL, ctx, result_cb, (gpointer) & marker););
+      gst_install_plugins_async (NULL, ctx, result_cb, (gpointer) & marker);
+      );
   ASSERT_CRITICAL (ret =
-      gst_install_plugins_async (details, ctx, NULL, (gpointer) & marker););
+      gst_install_plugins_async (details, ctx, NULL, (gpointer) & marker);
+      );
 
   /* make sure the functions return the right error code if the helper does
    * not exist */
@@ -561,12 +563,12 @@ GST_START_TEST (test_base_utils_install_plugins)
   fail_unless_equals_int (marker, -333);
 
   /* now make sure our scripts are actually called as expected (if possible) */
-  test_base_utils_install_plugins_do_callout (details, NULL, SCRIPT_NO_XID,
+  test_pb_utils_install_plugins_do_callout (details, NULL, SCRIPT_NO_XID,
       GST_INSTALL_PLUGINS_NOT_FOUND);
 
   /* and again with context */
   gst_install_plugins_context_set_xid (ctx, 42);
-  test_base_utils_install_plugins_do_callout (details, ctx, SCRIPT_WITH_XID,
+  test_pb_utils_install_plugins_do_callout (details, ctx, SCRIPT_WITH_XID,
       GST_INSTALL_PLUGINS_SUCCESS);
 
   /* and free the context now that we don't need it any longer */
@@ -590,18 +592,18 @@ GST_START_TEST (test_base_utils_install_plugins)
 GST_END_TEST;
 
 static Suite *
-libgstbaseutils_suite (void)
+libgstpbutils_suite (void)
 {
-  Suite *s = suite_create ("base utils library");
+  Suite *s = suite_create ("pbutils library");
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_base_utils_init);
-  tcase_add_test (tc_chain, test_base_utils_post_missing_messages);
-  tcase_add_test (tc_chain, test_base_utils_taglist_add_codec_info);
-  tcase_add_test (tc_chain, test_base_utils_get_codec_description);
-  tcase_add_test (tc_chain, test_base_utils_install_plugins);
+  tcase_add_test (tc_chain, test_pb_utils_init);
+  tcase_add_test (tc_chain, test_pb_utils_post_missing_messages);
+  tcase_add_test (tc_chain, test_pb_utils_taglist_add_codec_info);
+  tcase_add_test (tc_chain, test_pb_utils_get_codec_description);
+  tcase_add_test (tc_chain, test_pb_utils_install_plugins);
   return s;
 }
 
-GST_CHECK_MAIN (libgstbaseutils);
+GST_CHECK_MAIN (libgstpbutils);

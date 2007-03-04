@@ -210,7 +210,7 @@ AC_CHECK_HEADERS([sys/socket.h],
   HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
 
-dnl used in gst-libs/gst/utils and associated unit test
+dnl used in gst-libs/gst/pbutils and associated unit test
 AC_CHECK_HEADERS([process.h sys/types.h sys/wait.h sys/stat.h])
 
 dnl ffmpegcolorspace includes _stdint.h
@@ -656,7 +656,7 @@ gst-libs/gst/netbuffer/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/rtp/Makefile
 gst-libs/gst/tag/Makefile
-gst-libs/gst/utils/Makefile
+gst-libs/gst/pbutils/Makefile
 gst-libs/gst/video/Makefile
 tools/Makefile
 win32/common/config.h

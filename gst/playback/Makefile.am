@@ -19,7 +19,7 @@ nodist_libgstplaybin_la_SOURCES = $(built_sources)
 libgstplaybin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstplaybin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstplaybin_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/utils/libgstbaseutils-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
 	$(GST_LIBS)
 
 libgstdecodebin_la_SOURCES = gstdecodebin.c
@@ -27,7 +27,7 @@ nodist_libgstdecodebin_la_SOURCES = $(built_sources)
 libgstdecodebin_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstdecodebin_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdecodebin_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/utils/libgstbaseutils-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
 	$(GST_LIBS)
 
 libgstdecodebin2_la_SOURCES = gstdecodebin2.c
@@ -35,7 +35,7 @@ nodist_libgstdecodebin2_la_SOURCES = $(built_sources)
 libgstdecodebin2_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
 libgstdecodebin2_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdecodebin2_la_LIBADD = \
-	$(top_builddir)/gst-libs/gst/utils/libgstbaseutils-@GST_MAJORMINOR@.la \
+	$(top_builddir)/gst-libs/gst/pbutils/libgstpbutils-@GST_MAJORMINOR@.la \
 	$(GST_LIBS)
 
 noinst_HEADERS = \

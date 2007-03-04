@@ -18,12 +18,12 @@
  */
 
 /**
- * SECTION:gstbaseutils
+ * SECTION:gstpbutils
  * @short_description: General Application and Plugin Utility Library
  *
  * <refsect2>
  * <para>
- * libgstbaseutils is a general utility library for plugins and applications,
+ * libgstpbutils is a general utility library for plugins and applications,
  * available since gst-plugins-base 0.10.12. It currently provides the
  * following:
  * </para>
@@ -58,12 +58,12 @@
  * <para>
  * You should obtain the required CFLAGS and LIBS using pkg-config on the
  * gstreamer-plugins-base-0.10 module. You will then also need to add
- * '-lgstbaseutils-0.10' manually to your LIBS line.
+ * '-lgstpbutils-0.10' manually to your LIBS line.
  * </para>
  * <title>Library initialisation</title>
  * <para>
  * Before using any of its functions, applications and plugins must call
- * gst_base_utils_init() to initialise the library.
+ * gst_pb_utils_init() to initialise the library.
  * </para>
  * </refsect2>
  */
@@ -72,12 +72,12 @@
 # include "config.h"
 #endif
 
-#include "base-utils.h"
+#include "pbutils.h"
 
 #include "gst/gst-i18n-plugin.h"
 
 /**
- * gst_base_utils_init:
+ * gst_pb_utils_init:
  *
  * Initialises the base utils support library. This function is not
  * thread-safe. Applications should call it after calling gst_init(),
@@ -89,7 +89,7 @@
  * Since: 0.10.12
  */
 void
-gst_base_utils_init (void)
+gst_pb_utils_init (void)
 {
   static gboolean inited;       /* FALSE */
 

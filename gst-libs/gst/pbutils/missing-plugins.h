@@ -17,8 +17,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_BASE_UTILS_MISSING_PLUGINS_H__
-#define __GST_BASE_UTILS_MISSING_PLUGINS_H__
+#ifndef __GST_PB_UTILS_MISSING_PLUGINS_H__
+#define __GST_PB_UTILS_MISSING_PLUGINS_H__
 
 #include <gst/gstmessage.h>
 #include <gst/gstcaps.h>
@@ -56,5 +56,5 @@ gboolean      gst_is_missing_plugin_message (GstMessage * msg);
    
 G_END_DECLS
 
-#endif /* __GST_BASE_UTILS_MISSING_PLUGINS_H__ */
+#endif /* __GST_PB_UTILS_MISSING_PLUGINS_H__ */
 
