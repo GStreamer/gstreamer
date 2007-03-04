@@ -2224,6 +2224,8 @@ gst_dfbvideosink_finalize (GObject * object)
   if (dfbvideosink->setup) {
     gst_dfbvideosink_cleanup (dfbvideosink);
   }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
