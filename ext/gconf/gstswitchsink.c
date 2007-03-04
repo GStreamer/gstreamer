@@ -57,7 +57,7 @@ gst_switch_sink_class_init (GstSwitchSinkClass * klass)
 {
   GObjectClass *oklass = G_OBJECT_CLASS (klass);
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
-  GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+  static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS_ANY);
@@ -79,7 +79,7 @@ gst_switch_sink_class_init (GstSwitchSinkClass * klass)
 static void
 gst_switch_sink_reset (GstSwitchSink * sink)
 {
-  /* fakesink */
+  /* this will install fakesink if no other child has been set */
   if (sink->kid == NULL) {
     gst_switch_sink_set_child (sink, NULL);
   }
@@ -189,6 +189,7 @@ gst_switch_sink_set_child (GstSwitchSink * sink, GstElement * new_kid)
   if (cur == GST_STATE_PAUSED && next == GST_STATE_READY) {
     return gst_switch_commit_new_kid (sink);
   }
+
   /* Sometime, it would be lovely to allow sink changes even when
    * already running, but this involves sending an appropriate new-segment
    * and possibly prerolling etc */

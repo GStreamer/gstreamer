@@ -163,6 +163,7 @@ gst_smpte_transition_type_get_type (void)
 static void gst_smpte_class_init (GstSMPTEClass * klass);
 static void gst_smpte_base_init (GstSMPTEClass * klass);
 static void gst_smpte_init (GstSMPTE * smpte);
+static void gst_smpte_finalize (GstSMPTE * smpte);
 
 static GstFlowReturn gst_smpte_collected (GstCollectPads * pads,
     GstSMPTE * smpte);
@@ -230,6 +231,7 @@ gst_smpte_class_init (GstSMPTEClass * klass)
 
   gobject_class->set_property = gst_smpte_set_property;
   gobject_class->get_property = gst_smpte_get_property;
+  gobject_class->finalize = (GObjectFinalizeFunc) gst_smpte_finalize;
 
   _gst_mask_init ();
 
@@ -377,6 +379,16 @@ gst_smpte_init (GstSMPTE * smpte)
   smpte->duration = DEFAULT_PROP_DURATION;
   smpte->fps_num = 0;
   smpte->fps_denom = 1;
+}
+
+static void
+gst_smpte_finalize (GstSMPTE * smpte)
+{
+  if (smpte->collect) {
+    gst_object_unref (smpte->collect);
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize ((GObject *) smpte);
 }
 
 static void

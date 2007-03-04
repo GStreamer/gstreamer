@@ -184,6 +184,9 @@ gst_rtp_mp4g_pay_finalize (GObject * object)
   g_free (rtpmp4gpay->params);
   rtpmp4gpay->params = NULL;
 
+  g_free (rtpmp4gpay->profile);
+  rtpmp4gpay->profile = NULL;
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 

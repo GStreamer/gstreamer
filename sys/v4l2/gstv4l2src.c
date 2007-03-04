@@ -223,6 +223,7 @@ GST_BOILERPLATE_FULL (GstV4l2Src, gst_v4l2src, GstPushSrc, GST_TYPE_PUSH_SRC,
     gst_v4l2src_init_interfaces);
 
 static void gst_v4l2src_dispose (GObject * object);
+static void gst_v4l2src_finalize (GstV4l2Src * v4l2src);
 
 /* basesrc methods */
 static gboolean gst_v4l2src_start (GstBaseSrc * src);
@@ -270,6 +271,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   pushsrc_class = GST_PUSH_SRC_CLASS (klass);
 
   gobject_class->dispose = gst_v4l2src_dispose;
+  gobject_class->finalize = (GObjectFinalizeFunc) gst_v4l2src_finalize;
   gobject_class->set_property = gst_v4l2src_set_property;
   gobject_class->get_property = gst_v4l2src_get_property;
 
@@ -325,6 +327,13 @@ gst_v4l2src_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+static void
+gst_v4l2src_finalize (GstV4l2Src * v4l2src)
+{
+  gst_v4l2_object_destroy (v4l2src->v4l2object);
+
+  G_OBJECT_CLASS (parent_class)->finalize ((GObject *) (v4l2src));
+}
 
 static void
 gst_v4l2src_set_property (GObject * object,

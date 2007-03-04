@@ -97,6 +97,7 @@ static void gst_oss_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static void gst_oss_src_dispose (GObject * object);
+static void gst_oss_src_finalize (GstOssSrc * osssrc);
 
 static GstCaps *gst_oss_src_getcaps (GstBaseSrc * bsrc);
 
@@ -160,6 +161,8 @@ gst_oss_src_class_init (GstOssSrcClass * klass)
   gstaudiosrc_class = (GstAudioSrcClass *) klass;
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_oss_src_dispose);
+  gobject_class->finalize =
+      (GObjectFinalizeFunc) GST_DEBUG_FUNCPTR (gst_oss_src_finalize);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_oss_src_get_property);
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_oss_src_set_property);
 
@@ -232,6 +235,15 @@ gst_oss_src_init (GstOssSrc * osssrc, GstOssSrcClass * g_class)
   osssrc->fd = -1;
   osssrc->device = g_strdup (DEFAULT_DEVICE);
   osssrc->device_name = g_strdup (DEFAULT_DEVICE_NAME);
+}
+
+static void
+gst_oss_src_finalize (GstOssSrc * osssrc)
+{
+  g_free (osssrc->device);
+  g_free (osssrc->device_name);
+
+  G_OBJECT_CLASS (parent_class)->finalize ((GObject *) (osssrc));
 }
 
 static GstCaps *

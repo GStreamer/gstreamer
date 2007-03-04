@@ -92,6 +92,8 @@ static void gst_multiudpsink_set_property (GObject * object, guint prop_id,
 static void gst_multiudpsink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static void free_client (GstUDPClient * client);
+
 static GstElementClass *parent_class = NULL;
 
 static guint gst_multiudpsink_signals[LAST_SIGNAL] = { 0 };
@@ -268,6 +270,9 @@ gst_multiudpsink_finalize (GObject * object)
   GstMultiUDPSink *sink;
 
   sink = GST_MULTIUDPSINK (object);
+
+  g_list_foreach (sink->clients, (GFunc) free_client, NULL);
+  g_list_free (sink->clients);
 
   g_mutex_free (sink->client_lock);
 

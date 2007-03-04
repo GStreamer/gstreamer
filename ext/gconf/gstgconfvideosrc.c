@@ -28,6 +28,7 @@
 #include "gstgconfvideosrc.h"
 
 static void gst_gconf_video_src_dispose (GObject * object);
+static void gst_gconf_video_src_finalize (GstGConfVideoSrc * src);
 static void cb_toggle_element (GConfClient * client,
     guint connection_id, GConfEntry * entry, gpointer data);
 static GstStateChangeReturn
@@ -45,7 +46,7 @@ gst_gconf_video_src_base_init (gpointer klass)
       "Source/Video",
       "Video source embedding the GConf-settings for video input",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-  GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+  static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS_ANY);
@@ -62,6 +63,7 @@ gst_gconf_video_src_class_init (GstGConfVideoSrcClass * klass)
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
   oklass->dispose = gst_gconf_video_src_dispose;
+  oklass->finalize = (GObjectFinalizeFunc) gst_gconf_video_src_finalize;
   eklass->change_state = gst_gconf_video_src_change_state;
 }
 
@@ -117,10 +119,15 @@ gst_gconf_video_src_dispose (GObject * object)
     src->client = NULL;
   }
 
-  g_free (src->gconf_str);
-  src->gconf_str = NULL;
-
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+}
+
+static void
+gst_gconf_video_src_finalize (GstGConfVideoSrc * src)
+{
+  g_free (src->gconf_str);
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, ((GObject *) (src)));
 }
 
 static gboolean
@@ -128,6 +135,7 @@ do_toggle_element (GstGConfVideoSrc * src)
 {
   GstPad *targetpad;
   gchar *new_gconf_str;
+  GstState cur, next;
 
   new_gconf_str = gst_gconf_get_string (GST_GCONF_AUDIOSRC_KEY);
   if (new_gconf_str != NULL && src->gconf_str != NULL &&
@@ -135,6 +143,17 @@ do_toggle_element (GstGConfVideoSrc * src)
           strcmp (src->gconf_str, new_gconf_str) == 0)) {
     g_free (new_gconf_str);
     GST_DEBUG_OBJECT (src, "GConf key was updated, but it didn't change");
+    return TRUE;
+  }
+
+  GST_OBJECT_LOCK (src);
+  cur = GST_STATE (src);
+  next = GST_STATE_PENDING (src);
+  GST_OBJECT_UNLOCK (src);
+
+  if (cur >= GST_STATE_READY || next == GST_STATE_PAUSED) {
+    GST_DEBUG_OBJECT (src, "already running, ignoring GConf change");
+    g_free (new_gconf_str);
     return TRUE;
   }
 

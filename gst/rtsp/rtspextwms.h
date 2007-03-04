@@ -50,6 +50,7 @@ G_BEGIN_DECLS
 #include "rtspext.h"
 
 RTSPExtensionCtx*     rtsp_ext_wms_get_context    (void);
+void  rtsp_ext_wms_free_context    (RTSPExtensionCtx *ctx);
 
 G_END_DECLS
 

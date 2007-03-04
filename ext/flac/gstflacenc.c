@@ -315,6 +315,7 @@ gst_flac_enc_finalize (GObject * object)
 {
   GstFlacEnc *flacenc = GST_FLAC_ENC (object);
 
+  gst_tag_list_free (flacenc->tags);
   FLAC__seekable_stream_encoder_delete (flacenc->encoder);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);

@@ -288,10 +288,11 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
   src->location = g_strdup (DEFAULT_LOCATION);
   src->url = NULL;
 
-  /* install WMS extension by default */
-  src->extension = rtsp_ext_wms_get_context ();
 #ifdef WITH_EXT_REAL
   src->extension = rtsp_ext_real_get_context ();
+#else
+  /* install WMS extension by default */
+  src->extension = rtsp_ext_wms_get_context ();
 #endif
   src->extension->src = (gpointer) src;
 }
@@ -310,6 +311,14 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->req_location);
   g_free (rtspsrc->content_base);
   rtsp_url_free (rtspsrc->url);
+
+  if (rtspsrc->extension) {
+#ifdef WITH_EXT_REAL
+    rtsp_ext_real_free_context (rtspsrc->extension);
+#else
+    rtsp_ext_wms_free_context (rtspsrc->extension);
+#endif
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

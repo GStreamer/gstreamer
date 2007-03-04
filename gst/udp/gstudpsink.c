@@ -51,6 +51,7 @@ enum
 static void gst_udpsink_base_init (gpointer g_class);
 static void gst_udpsink_class_init (GstUDPSink * klass);
 static void gst_udpsink_init (GstUDPSink * udpsink);
+static void gst_udpsink_finalize (GstUDPSink * udpsink);
 
 static void gst_udpsink_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -123,6 +124,8 @@ gst_udpsink_class_init (GstUDPSink * klass)
   gobject_class->set_property = gst_udpsink_set_property;
   gobject_class->get_property = gst_udpsink_get_property;
 
+  gobject_class->finalize = (GObjectFinalizeFunc) gst_udpsink_finalize;
+
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_HOST,
       g_param_spec_string ("host", "host",
           "The host/IP/Multicast group to send the packets to",
@@ -140,6 +143,14 @@ gst_udpsink_init (GstUDPSink * udpsink)
   udpsink->port = UDP_DEFAULT_PORT;
   gst_multiudpsink_add (GST_MULTIUDPSINK (udpsink), udpsink->host,
       udpsink->port);
+}
+
+static void
+gst_udpsink_finalize (GstUDPSink * udpsink)
+{
+  g_free (udpsink->host);
+
+  G_OBJECT_CLASS (parent_class)->finalize ((GObject *) udpsink);
 }
 
 static gboolean

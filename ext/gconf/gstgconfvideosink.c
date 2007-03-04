@@ -27,6 +27,7 @@
 #include "gstgconfvideosink.h"
 
 static void gst_gconf_video_sink_dispose (GObject * object);
+static void gst_gconf_video_sink_finalize (GstGConfVideoSink * sink);
 static void cb_toggle_element (GConfClient * client,
     guint connection_id, GConfEntry * entry, gpointer data);
 static GstStateChangeReturn
@@ -44,7 +45,7 @@ gst_gconf_video_sink_base_init (gpointer klass)
       "Sink/Video",
       "Video sink embedding the GConf-settings for video output",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-  GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+  static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS_ANY);
@@ -61,6 +62,7 @@ gst_gconf_video_sink_class_init (GstGConfVideoSinkClass * klass)
   GstElementClass *eklass = GST_ELEMENT_CLASS (klass);
 
   oklass->dispose = gst_gconf_video_sink_dispose;
+  oklass->finalize = (GObjectFinalizeFunc) gst_gconf_video_sink_finalize;
   eklass->change_state = gst_gconf_video_sink_change_state;
 }
 
@@ -121,6 +123,14 @@ gst_gconf_video_sink_dispose (GObject * object)
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
+static void
+gst_gconf_video_sink_finalize (GstGConfVideoSink * sink)
+{
+  g_free (sink->gconf_str);
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, ((GObject *) (sink)));
+}
+
 static gboolean
 do_toggle_element (GstGConfVideoSink * sink)
 {
@@ -148,6 +158,7 @@ do_toggle_element (GstGConfVideoSink * sink)
   if (cur > GST_STATE_READY || next == GST_STATE_PAUSED) {
     GST_DEBUG_OBJECT (sink,
         "Auto-sink is already running. Ignoring GConf change");
+    g_free (new_gconf_str);
     return TRUE;
   }
 

@@ -240,10 +240,10 @@ gst_multipart_mux_finalize (GObject * object)
 
   multipart_mux = GST_MULTIPART_MUX (object);
 
-  if (multipart_mux->collect) {
+  g_free (multipart_mux->boundary);
+
+  if (multipart_mux->collect)
     gst_object_unref (multipart_mux->collect);
-    multipart_mux->collect = NULL;
-  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

@@ -81,7 +81,7 @@ gst_hal_audio_src_base_init (gpointer klass)
       "Source/Audio",
       "Audio source for sound device access via HAL",
       "Jürg Billeter <j@bitron.ch>");
-  GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
+  static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
       GST_PAD_SRC,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS_ANY);

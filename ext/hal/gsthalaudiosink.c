@@ -79,7 +79,7 @@ gst_hal_audio_sink_base_init (gpointer klass)
       "Sink/Audio",
       "Audio sink for sound device access via HAL",
       "Jürg Billeter <j@bitron.ch>");
-  GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
+  static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
       GST_PAD_ALWAYS,
       GST_STATIC_CAPS_ANY);

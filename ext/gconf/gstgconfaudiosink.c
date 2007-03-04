@@ -28,6 +28,7 @@
 #include "gstgconfaudiosink.h"
 
 static void gst_gconf_audio_sink_dispose (GObject * object);
+static void gst_gconf_audio_sink_finalize (GstGConfAudioSink * sink);
 static void cb_change_child (GConfClient * client,
     guint connection_id, GConfEntry * entry, gpointer data);
 static GstStateChangeReturn
@@ -91,6 +92,7 @@ gst_gconf_audio_sink_class_init (GstGConfAudioSinkClass * klass)
   oklass->set_property = gst_gconf_audio_sink_set_property;
   oklass->get_property = gst_gconf_audio_sink_get_property;
   oklass->dispose = gst_gconf_audio_sink_dispose;
+  oklass->finalize = (GObjectFinalizeFunc) gst_gconf_audio_sink_finalize;
   eklass->change_state = gst_gconf_audio_sink_change_state;
 
   g_object_class_install_property (oklass, PROP_PROFILE,
@@ -131,10 +133,15 @@ gst_gconf_audio_sink_dispose (GObject * object)
     sink->client = NULL;
   }
 
-  g_free (sink->gconf_str);
-  sink->gconf_str = NULL;
-
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
+}
+
+static void
+gst_gconf_audio_sink_finalize (GstGConfAudioSink * sink)
+{
+  g_free (sink->gconf_str);
+
+  GST_CALL_PARENT (G_OBJECT_CLASS, finalize, ((GObject *) (sink)));
 }
 
 static gboolean

@@ -62,6 +62,8 @@ struct _GstTestClass
   gchar *param_names[2 * TESTS_COUNT];
 };
 
+static void gst_test_finalize (GstTest * test);
+
 static gboolean gst_test_start (GstBaseSink * trans);
 static gboolean gst_test_stop (GstBaseSink * trans);
 static gboolean gst_test_sink_event (GstBaseSink * basesink, GstEvent * event);
@@ -107,6 +109,8 @@ gst_test_class_init (GstTestClass * klass)
   object_class->set_property = GST_DEBUG_FUNCPTR (gst_test_set_property);
   object_class->get_property = GST_DEBUG_FUNCPTR (gst_test_get_property);
 
+  object_class->finalize = (GObjectFinalizeFunc) gst_test_finalize;
+
   for (i = 0; i < TESTS_COUNT; i++) {
     GParamSpec *spec;
 
@@ -138,6 +142,18 @@ gst_test_init (GstTest * test, GstTestClass * g_class)
 
     g_value_init (&test->values[i], G_PARAM_SPEC_VALUE_TYPE (spec));
   }
+}
+
+static void
+gst_test_finalize (GstTest * test)
+{
+  guint i;
+
+  for (i = 0; i < TESTS_COUNT; i++) {
+    g_value_unset (&test->values[i]);
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize ((GObject *) test);
 }
 
 static void

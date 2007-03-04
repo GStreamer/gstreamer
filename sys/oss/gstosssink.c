@@ -247,6 +247,8 @@ gst_oss_sink_finalise (GObject * object)
   GstOssSink *osssink = GST_OSSSINK (object);
 
   g_free (osssink->device);
+
+  G_OBJECT_CLASS (parent_class)->finalize ((GObject *) (object));
 }
 
 static void

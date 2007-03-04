@@ -178,3 +178,9 @@ rtsp_ext_wms_get_context (void)
 
   return (RTSPExtensionCtx *) res;
 }
+
+void
+rtsp_ext_wms_free_context (RTSPExtensionCtx * ctx)
+{
+  g_free (ctx);
+}

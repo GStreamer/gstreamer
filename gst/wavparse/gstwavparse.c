@@ -182,7 +182,7 @@ gst_wavparse_dispose (GObject * object)
 {
   GstWavParse *wav;
 
-  GST_DEBUG ("WAV: Dispose\n");
+  GST_DEBUG ("WAV: Dispose");
   wav = GST_WAVPARSE (object);
 
   if (wav->adapter) {
@@ -1956,6 +1956,9 @@ gst_wavparse_sink_activate (GstPad * sinkpad)
 {
   GstWavParse *wav = GST_WAVPARSE (gst_pad_get_parent (sinkpad));
   gboolean res;
+
+  if (wav->adapter)
+    gst_object_unref (wav->adapter);
 
   if (gst_pad_check_pull_range (sinkpad)) {
     GST_DEBUG ("going to pull mode");

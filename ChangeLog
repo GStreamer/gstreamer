@@ -1,5 +1,53 @@
 2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/flac/gstflacenc.c: (gst_flac_enc_finalize):
+	* ext/gconf/gstgconfaudiosink.c: (gst_gconf_audio_sink_class_init),
+	(gst_gconf_audio_sink_dispose), (gst_gconf_audio_sink_finalize):
+	* ext/gconf/gstgconfaudiosrc.c: (gst_gconf_audio_src_base_init),
+	(gst_gconf_audio_src_class_init), (gst_gconf_audio_src_dispose),
+	(gst_gconf_audio_src_finalize), (do_toggle_element):
+	* ext/gconf/gstgconfvideosink.c: (gst_gconf_video_sink_base_init),
+	(gst_gconf_video_sink_class_init), (gst_gconf_video_sink_finalize),
+	(do_toggle_element):
+	* ext/gconf/gstgconfvideosrc.c: (gst_gconf_video_src_base_init),
+	(gst_gconf_video_src_class_init), (gst_gconf_video_src_dispose),
+	(gst_gconf_video_src_finalize), (do_toggle_element):
+	* ext/gconf/gstswitchsink.c: (gst_switch_sink_class_init),
+	(gst_switch_sink_reset), (gst_switch_sink_set_child):
+	* ext/hal/gsthalaudiosink.c: (gst_hal_audio_sink_base_init):
+	* ext/hal/gsthalaudiosrc.c: (gst_hal_audio_src_base_init):
+	* ext/shout2/gstshout2.c: (gst_shout2send_class_init),
+	(gst_shout2send_init), (gst_shout2send_finalize):
+	* gst/debug/testplugin.c: (gst_test_class_init),
+	(gst_test_finalize):
+	* gst/flx/gstflxdec.c: (gst_flxdec_class_init),
+	(gst_flxdec_dispose):
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_finalize):
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_finalize):
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
+	(gst_rtspsrc_finalize):
+	* gst/rtsp/rtspextwms.c: (rtsp_ext_wms_free_context):
+	* gst/rtsp/rtspextwms.h:
+	* gst/smpte/gstsmpte.c: (gst_smpte_class_init),
+	(gst_smpte_finalize):
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_finalize):
+	* gst/udp/gstudpsink.c: (gst_udpsink_class_init),
+	(gst_udpsink_finalize):
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_dispose),
+	(gst_wavparse_sink_activate):
+	* sys/oss/gstosssink.c: (gst_oss_sink_finalise):
+	* sys/oss/gstosssrc.c: (gst_oss_src_class_init),
+	(gst_oss_src_finalize):
+	* sys/v4l2/gstv4l2object.c: (gst_v4l2_object_destroy):
+	* sys/v4l2/gstv4l2object.h:
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_class_init),
+	(gst_v4l2src_finalize):
+	* sys/ximage/gstximagesrc.c: (gst_ximage_src_ximage_get):
+
+	Fix a bunch of leaks shown by the newly-added states test.
+
+2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/dv/gstdvdec.c: (gst_dvdec_init):
 	Use gst_pad_new_from_static_template instead of 
 	static_pad_template_get+pad_new.

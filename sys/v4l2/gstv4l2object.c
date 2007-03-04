@@ -278,17 +278,14 @@ gst_v4l2_object_new (GstElement * element,
 }
 
 void
-gst_v4l2_object_destroy (GstV4l2Object ** v4l2object)
+gst_v4l2_object_destroy (GstV4l2Object * v4l2object)
 {
-  if (*v4l2object) {
-    if ((*v4l2object)->videodev) {
-      g_free ((*v4l2object)->videodev);
-      (*v4l2object)->videodev = NULL;
-    }
+  g_return_if_fail (v4l2object != NULL);
 
-    g_free (*v4l2object);
-    *v4l2object = NULL;
-  }
+  if (v4l2object->videodev)
+    g_free (v4l2object->videodev);
+
+  g_free (v4l2object);
 }
 
 gboolean

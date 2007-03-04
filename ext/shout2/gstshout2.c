@@ -86,6 +86,7 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 static void gst_shout2send_class_init (GstShout2sendClass * klass);
 static void gst_shout2send_base_init (GstShout2sendClass * klass);
 static void gst_shout2send_init (GstShout2send * shout2send);
+static void gst_shout2send_finalize (GstShout2send * shout2send);
 
 static gboolean gst_shout2send_event (GstBaseSink * sink, GstEvent * event);
 static GstFlowReturn gst_shout2send_render (GstBaseSink * sink,
@@ -184,6 +185,7 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
 
   gobject_class->set_property = gst_shout2send_set_property;
   gobject_class->get_property = gst_shout2send_get_property;
+  gobject_class->finalize = (GObjectFinalizeFunc) gst_shout2send_finalize;
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_IP,
       g_param_spec_string ("ip", "ip", "ip", DEFAULT_IP, G_PARAM_READWRITE));
@@ -265,7 +267,23 @@ gst_shout2send_init (GstShout2send * shout2send)
   shout2send->songmetadata = NULL;
   shout2send->songartist = NULL;
   shout2send->songtitle = NULL;
+}
 
+static void
+gst_shout2send_finalize (GstShout2send * shout2send)
+{
+  g_free (shout2send->ip);
+  g_free (shout2send->password);
+  g_free (shout2send->username);
+  g_free (shout2send->streamname);
+  g_free (shout2send->description);
+  g_free (shout2send->genre);
+  g_free (shout2send->mount);
+  g_free (shout2send->url);
+
+  gst_tag_list_free (shout2send->tags);
+
+  G_OBJECT_CLASS (parent_class)->finalize ((GObject *) (shout2send));
 }
 
 static void

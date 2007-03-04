@@ -68,6 +68,7 @@ static GstStaticPadTemplate src_video_factory = GST_STATIC_PAD_TEMPLATE ("src",
 static void gst_flxdec_class_init (GstFlxDecClass * klass);
 static void gst_flxdec_base_init (GstFlxDecClass * klass);
 static void gst_flxdec_init (GstFlxDec * flxdec);
+static void gst_flxdec_dispose (GstFlxDec * flxdec);
 
 static GstFlowReturn gst_flxdec_chain (GstPad * pad, GstBuffer * buf);
 
@@ -134,6 +135,8 @@ gst_flxdec_class_init (GstFlxDecClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->dispose = (GObjectFinalizeFunc) gst_flxdec_dispose;
+
   GST_DEBUG_CATEGORY_INIT (flxdec_debug, "flxdec", 0, "FLX video decoder");
 
   gstelement_class->change_state = gst_flxdec_change_state;
@@ -158,6 +161,17 @@ gst_flxdec_init (GstFlxDec * flxdec)
   flxdec->delta = NULL;
 
   flxdec->adapter = gst_adapter_new ();
+}
+
+static void
+gst_flxdec_dispose (GstFlxDec * flxdec)
+{
+  if (flxdec->adapter) {
+    g_object_unref (flxdec->adapter);
+    flxdec->adapter = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->dispose ((GObject *) flxdec);
 }
 
 static gboolean

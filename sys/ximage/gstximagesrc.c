@@ -339,7 +339,6 @@ static GstXImageSrcBuffer *
 gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 {
   GstXImageSrcBuffer *ximage = NULL;
-  GstCaps *caps = NULL;
 
   g_mutex_lock (ximagesrc->pool_lock);
   while (ximagesrc->buffer_pool != NULL) {
@@ -357,6 +356,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
   if (ximage == NULL) {
     GstXContext *xcontext;
+    GstCaps *caps = NULL;
 
     GST_DEBUG_OBJECT (ximagesrc, "creating image (%dx%d)",
         ximagesrc->width, ximagesrc->height);
@@ -391,6 +391,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
     gst_buffer_set_caps (GST_BUFFER (ximage), caps);
     g_mutex_unlock (ximagesrc->x_lock);
+
+    gst_caps_unref (caps);
   }
 
   g_return_val_if_fail (GST_IS_XIMAGE_SRC (ximagesrc), NULL);
