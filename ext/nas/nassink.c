@@ -24,6 +24,7 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <gst/gst.h>
 #include <string.h>
 #include <audio/audiolib.h>
@@ -32,13 +33,8 @@
 
 #define NAS_SOUND_PORT_DURATION (2)
 
-GST_DEBUG_CATEGORY (NAS);
-/* Signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
+GST_DEBUG_CATEGORY_STATIC (nas_debug);
+#define GST_CAT_DEFAULT nas_debug
 
 enum
 {
@@ -46,6 +42,9 @@ enum
   ARG_MUTE,
   ARG_HOST
 };
+
+#define DEFAULT_MUTE  FALSE
+#define DEFAULT_HOST  NULL
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -64,81 +63,81 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]")
     );
 
-static void gst_nassink_base_init (gpointer g_class);
-static void gst_nassink_class_init (GstNassinkClass * klass);
-static void gst_nassink_init (GstNassink * nassink);
-static void gst_nassink_finalize (GObject * object);
+static void gst_nas_sink_base_init (gpointer g_class);
+static void gst_nas_sink_class_init (GstNasSinkClass * klass);
+static void gst_nas_sink_init (GstNasSink * nassink);
+static void gst_nas_sink_finalize (GObject * object);
 
-static gboolean gst_nassink_open (GstAudioSink * sink);
-static gboolean gst_nassink_close (GstAudioSink * sink);
-static gboolean gst_nassink_prepare (GstAudioSink * sink,
+static gboolean gst_nas_sink_open (GstAudioSink * sink);
+static gboolean gst_nas_sink_close (GstAudioSink * sink);
+static gboolean gst_nas_sink_prepare (GstAudioSink * sink,
     GstRingBufferSpec * spec);
-static gboolean gst_nassink_unprepare (GstAudioSink * sink);
-static guint gst_nassink_write (GstAudioSink * asink, gpointer data,
+static gboolean gst_nas_sink_unprepare (GstAudioSink * sink);
+static guint gst_nas_sink_write (GstAudioSink * asink, gpointer data,
     guint length);
-static guint gst_nassink_delay (GstAudioSink * asink);
-static void gst_nassink_reset (GstAudioSink * asink);
-static GstCaps *gst_nassink_getcaps (GstBaseSink * pad);
+static guint gst_nas_sink_delay (GstAudioSink * asink);
+static void gst_nas_sink_reset (GstAudioSink * asink);
+static GstCaps *gst_nas_sink_getcaps (GstBaseSink * pad);
 
-static void gst_nassink_set_property (GObject * object, guint prop_id,
+static void gst_nas_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_nassink_get_property (GObject * object, guint prop_id,
+static void gst_nas_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void NAS_flush (GstNassink * sink);
-static void NAS_sendData (GstNassink * sink, AuUint32 numBytes);
+static void NAS_flush (GstNasSink * sink);
+static void NAS_sendData (GstNasSink * sink, AuUint32 numBytes);
 static AuBool NAS_EventHandler (AuServer * aud, AuEvent * ev,
     AuEventHandlerRec * handler);
 static AuDeviceID NAS_getDevice (AuServer * aud, int numTracks);
-static int NAS_createFlow (GstNassink * sink, GstRingBufferSpec * spec);
+static int NAS_createFlow (GstNasSink * sink, GstRingBufferSpec * spec);
 
 static GstElementClass *parent_class = NULL;
 
-GType
-gst_nassink_get_type (void)
-{
-  static GType nassink_type = 0;
+static const GstElementDetails nas_sink_details =
+GST_ELEMENT_DETAILS ("NAS audio sink",
+    "Sink/Audio",
+    "Plays audio to a Network Audio Server",
+    "Laurent Vivier <Laurent.Vivier@bull.net>, "
+    "Arwed v. Merkatz <v.merkatz@gmx.net>");
 
-  if (!nassink_type) {
-    static const GTypeInfo nassink_info = {
-      sizeof (GstNassinkClass),
-      gst_nassink_base_init,
+GType
+gst_nas_sink_get_type (void)
+{
+  static GType nas_sink_type = 0;
+
+  if (!nas_sink_type) {
+    static const GTypeInfo nas_sink_info = {
+      sizeof (GstNasSinkClass),
+      gst_nas_sink_base_init,
       NULL,
-      (GClassInitFunc) gst_nassink_class_init,
+      (GClassInitFunc) gst_nas_sink_class_init,
       NULL,
       NULL,
-      sizeof (GstNassink),
+      sizeof (GstNasSink),
       0,
-      (GInstanceInitFunc) gst_nassink_init,
+      (GInstanceInitFunc) gst_nas_sink_init,
     };
 
-    nassink_type =
-        g_type_register_static (GST_TYPE_AUDIO_SINK, "GstNassink",
-        &nassink_info, 0);
+    nas_sink_type =
+        g_type_register_static (GST_TYPE_AUDIO_SINK, "GstNasSink",
+        &nas_sink_info, 0);
   }
 
-  return nassink_type;
+  return nas_sink_type;
 }
 
 static void
-gst_nassink_base_init (gpointer g_class)
+gst_nas_sink_base_init (gpointer g_class)
 {
-  static const GstElementDetails nassink_details =
-      GST_ELEMENT_DETAILS ("NAS audio sink",
-      "Sink/Audio",
-      "Plays audio to a Network Audio Server",
-      "Laurent Vivier <Laurent.Vivier@bull.net>, "
-      "Arwed v. Merkatz <v.merkatz@gmx.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
-  gst_element_class_set_details (element_class, &nassink_details);
-  GST_DEBUG_CATEGORY_INIT (NAS, "NAS", 0, NULL);
+  gst_element_class_set_details (element_class, &nas_sink_details);
 }
 
 static void
-gst_nassink_class_init (GstNassinkClass * klass)
+gst_nas_sink_class_init (GstNasSinkClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseSinkClass *gstbasesink_class;
@@ -148,55 +147,54 @@ gst_nassink_class_init (GstNassinkClass * klass)
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  if (parent_class == NULL)
-    parent_class = g_type_class_peek_parent (klass);
+  parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_nassink_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_nassink_get_property);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_nassink_finalize);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_nas_sink_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_nas_sink_get_property);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_nas_sink_finalize);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_MUTE, g_param_spec_boolean ("mute", "mute", "mute", TRUE, G_PARAM_READWRITE));   /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_HOST, g_param_spec_string ("host", "host", "host", NULL, G_PARAM_READWRITE));    /* CHECKME */
+  g_object_class_install_property (gobject_class, ARG_MUTE,
+      g_param_spec_boolean ("mute", "mute", "Whether to mute playback",
+          DEFAULT_MUTE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (gobject_class, ARG_HOST,
+      g_param_spec_string ("host", "host",
+          "host running the NAS daemon (name of X/Terminal, default is "
+          "$AUDIOSERVER or $DISPLAY)", DEFAULT_HOST,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
-  gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_nassink_getcaps);
+  gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_nas_sink_getcaps);
 
-  gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_nassink_open);
-  gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_nassink_close);
-  gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_nassink_prepare);
-  gstaudiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_nassink_unprepare);
-  gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_nassink_write);
-  gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_nassink_delay);
-  gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_nassink_reset);
+  gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_nas_sink_open);
+  gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_nas_sink_close);
+  gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_nas_sink_prepare);
+  gstaudiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_nas_sink_unprepare);
+  gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_nas_sink_write);
+  gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_nas_sink_delay);
+  gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_nas_sink_reset);
 }
 
 static void
-gst_nassink_init (GstNassink * nassink)
+gst_nas_sink_init (GstNasSink * nassink)
 {
-  GST_CAT_DEBUG (NAS, "nassink: init");
-
-  nassink->mute = FALSE;
-  nassink->host = g_strdup (getenv ("AUDIOSERVER"));
-  if (nassink->host == NULL)
-    nassink->host = g_strdup (getenv ("DISPLAY"));
-
+  /* properties will automatically be set to their default values */
   nassink->audio = NULL;
   nassink->flow = AuNone;
   nassink->need_data = 0;
 }
 
 static void
-gst_nassink_finalize (GObject * object)
+gst_nas_sink_finalize (GObject * object)
 {
-  GstNassink *nassink = GST_NASSINK (object);
+  GstNasSink *nassink = GST_NAS_SINK (object);
 
   g_free (nassink->host);
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static GstCaps *
-gst_nassink_getcaps (GstBaseSink * bsink)
+gst_nas_sink_getcaps (GstBaseSink * bsink)
 {
-  GstNassink *nassink = GST_NASSINK (bsink);
+  GstNasSink *nassink = GST_NAS_SINK (bsink);
   GstCaps *templatecaps =
       gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (bsink)));
   GstCaps *caps;
@@ -223,20 +221,20 @@ gst_nassink_getcaps (GstBaseSink * bsink)
 }
 
 static gboolean
-gst_nassink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
+gst_nas_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 {
-  GstNassink *sink = GST_NASSINK (asink);
+  GstNasSink *sink = GST_NAS_SINK (asink);
 
   /*spec->bytes_per_sample = sink->rate * NAS_SOUND_PORT_DURATION; */
   /*spec->bytes_per_sample = (spec->width / 8) * spec->channels; */
   memset (spec->silence_sample, 0, spec->bytes_per_sample);
-  GST_CAT_DEBUG (NAS, "Sample %d", spec->bytes_per_sample);
+  GST_DEBUG_OBJECT (sink, "Sample %d", spec->bytes_per_sample);
 
   if (sink->audio == NULL)
     return TRUE;
 
   if (sink->flow != AuNone) {
-    GST_CAT_DEBUG (NAS, "flushing buffer");
+    GST_DEBUG_OBJECT (sink, "flushing buffer");
     NAS_flush (sink);
     AuStopFlow (sink->audio, sink->flow, NULL);
     AuReleaseScratchFlow (sink->audio, sink->flow, NULL);
@@ -247,32 +245,33 @@ gst_nassink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 }
 
 static gboolean
-gst_nassink_unprepare (GstAudioSink * asink)
+gst_nas_sink_unprepare (GstAudioSink * asink)
 {
-  //GstNassink *sink = GST_NASSINK (asink);
+  //GstNasSink *sink = GST_NAS_SINK (asink);
   return TRUE;
 }
 
 static guint
-gst_nassink_delay (GstAudioSink * asink)
+gst_nas_sink_delay (GstAudioSink * asink)
 {
-  GST_CAT_DEBUG (NAS, "nassink_delay");
+  GST_DEBUG_OBJECT (asink, "nas_sink_delay");
   return 0;
 }
 
 static void
-gst_nassink_reset (GstAudioSink * asink)
+gst_nas_sink_reset (GstAudioSink * asink)
 {
-  GstNassink *sink = GST_NASSINK (asink);
+  GstNasSink *sink = GST_NAS_SINK (asink);
 
-  GST_CAT_DEBUG (NAS, "nassink_reset");
+  GST_DEBUG_OBJECT (sink, "reset");
+
   NAS_flush (sink);
 }
 
 static guint
-gst_nassink_write (GstAudioSink * asink, gpointer data, guint length)
+gst_nas_sink_write (GstAudioSink * asink, gpointer data, guint length)
 {
-  GstNassink *nassink = GST_NASSINK (asink);
+  GstNasSink *nassink = GST_NAS_SINK (asink);
   int used = 0;
 
   NAS_flush (nassink);
@@ -293,25 +292,24 @@ gst_nassink_write (GstAudioSink * asink, gpointer data, guint length)
 }
 
 static void
-gst_nassink_set_property (GObject * object, guint prop_id, const GValue * value,
-    GParamSpec * pspec)
+gst_nas_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
 {
-  GstNassink *nassink;
+  GstNasSink *nassink;
 
-  g_return_if_fail (GST_IS_NASSINK (object));
-  nassink = GST_NASSINK (object);
+  nassink = GST_NAS_SINK (object);
 
   switch (prop_id) {
     case ARG_MUTE:
       nassink->mute = g_value_get_boolean (value);
       break;
     case ARG_HOST:
-      if (nassink->host != NULL)
-        g_free (nassink->host);
-      if (g_value_get_string (value) == NULL)
-        nassink->host = NULL;
-      else
-        nassink->host = g_strdup (g_value_get_string (value));
+      g_free (nassink->host);
+      nassink->host = g_value_dup_string (value);
+      if (nassink->host == NULL)
+        nassink->host = g_strdup (getenv ("AUDIOSERVER"));
+      if (nassink->host == NULL)
+        nassink->host = g_strdup (getenv ("DISPLAY"));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -320,14 +318,12 @@ gst_nassink_set_property (GObject * object, guint prop_id, const GValue * value,
 }
 
 static void
-gst_nassink_get_property (GObject * object, guint prop_id, GValue * value,
+gst_nas_sink_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstNassink *nassink;
+  GstNasSink *nassink;
 
-  g_return_if_fail (GST_IS_NASSINK (object));
-
-  nassink = GST_NASSINK (object);
+  nassink = GST_NAS_SINK (object);
 
   switch (prop_id) {
     case ARG_MUTE:
@@ -343,29 +339,13 @@ gst_nassink_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static gboolean
-plugin_init (GstPlugin * plugin)
+gst_nas_sink_open (GstAudioSink * asink)
 {
-  if (!gst_element_register (plugin, "nassink", GST_RANK_NONE,
-          GST_TYPE_NASSINK)) {
-    return FALSE;
-  }
+  GstNasSink *sink = GST_NAS_SINK (asink);
 
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "nassink",
-    "uses NAS for audio output",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
-
-static gboolean
-gst_nassink_open (GstAudioSink * asink)
-{
-  GstNassink *sink = GST_NASSINK (asink);
+  GST_DEBUG_OBJECT (sink, "opening, host = '%s'", GST_STR_NULL (sink->host));
 
   /* Open Server */
-
   sink->audio = AuOpenServer (sink->host, 0, NULL, 0, NULL, NULL);
   if (sink->audio == NULL)
     return FALSE;
@@ -373,17 +353,14 @@ gst_nassink_open (GstAudioSink * asink)
   sink->need_data = 0;
 
   /* Start a flow */
-
-  GST_OBJECT_FLAG_SET (sink, GST_NASSINK_OPEN);
-
-  GST_CAT_DEBUG (NAS, "opened audio device");
+  GST_DEBUG_OBJECT (asink, "opened audio device");
   return TRUE;
 }
 
 static gboolean
-gst_nassink_close (GstAudioSink * asink)
+gst_nas_sink_close (GstAudioSink * asink)
 {
-  GstNassink *sink = GST_NASSINK (asink);
+  GstNasSink *sink = GST_NAS_SINK (asink);
 
   if (sink->audio == NULL)
     return TRUE;
@@ -401,14 +378,12 @@ gst_nassink_close (GstAudioSink * asink)
   AuCloseServer (sink->audio);
   sink->audio = NULL;
 
-  GST_OBJECT_FLAG_UNSET (sink, GST_NASSINK_OPEN);
-
-  GST_CAT_DEBUG (NAS, "closed audio device");
+  GST_DEBUG_OBJECT (sink, "closed audio device");
   return TRUE;
 }
 
 static void
-NAS_flush (GstNassink * sink)
+NAS_flush (GstNasSink * sink)
 {
   AuEvent ev;
 
@@ -417,7 +392,7 @@ NAS_flush (GstNassink * sink)
 }
 
 static void
-NAS_sendData (GstNassink * sink, AuUint32 numBytes)
+NAS_sendData (GstNasSink * sink, AuUint32 numBytes)
 {
   sink->need_data += numBytes;
   return;
@@ -426,7 +401,7 @@ NAS_sendData (GstNassink * sink, AuUint32 numBytes)
 static AuBool
 NAS_EventHandler (AuServer * aud, AuEvent * ev, AuEventHandlerRec * handler)
 {
-  GstNassink *sink = (GstNassink *) handler->data;
+  GstNasSink *sink = (GstNasSink *) handler->data;
   AuElementNotifyEvent *notify;
 
   switch (ev->type) {
@@ -506,7 +481,7 @@ NAS_getDevice (AuServer * aud, int numTracks)
 }
 
 static gint
-gst_nassink_sink_get_format (const GstRingBufferSpec * spec)
+gst_nas_sink_sink_get_format (const GstRingBufferSpec * spec)
 {
   gint result;
 
@@ -537,23 +512,23 @@ gst_nassink_sink_get_format (const GstRingBufferSpec * spec)
 }
 
 static gboolean
-NAS_createFlow (GstNassink * sink, GstRingBufferSpec * spec)
+NAS_createFlow (GstNasSink * sink, GstRingBufferSpec * spec)
 {
   AuElement elements[2];
   AuUint32 buf_samples;
   unsigned char format;
 
-  format = gst_nassink_sink_get_format (spec);
+  format = gst_nas_sink_sink_get_format (spec);
   if (format == 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
         ("Unable to get format %d", spec->format));
     return FALSE;
   }
-  GST_CAT_DEBUG (NAS, "Format: %d %d\n", spec->format, format);
+  GST_DEBUG_OBJECT (sink, "Format: %d %d\n", spec->format, format);
 
   sink->flow = AuGetScratchFlow (sink->audio, NULL);
   if (sink->flow == 0) {
-    GST_CAT_DEBUG (NAS, "couldn't get flow");
+    GST_DEBUG_OBJECT (sink, "couldn't get flow");
     return FALSE;
   }
 
@@ -568,14 +543,14 @@ NAS_createFlow (GstNassink * sink, GstRingBufferSpec * spec)
         AuGetElements (sink->audio, sink->flow, &clocked, &num_elements,
         &status);
     if (num_elements > 0) {
-      GST_CAT_DEBUG (NAS, "GetElements status: %i", status);
+      GST_DEBUG_OBJECT (sink, "GetElements status: %i", status);
       if (oldelems)
         AuFreeElements (sink->audio, num_elements, oldelems);
-      gst_nassink_close (GST_AUDIO_SINK (sink));
-      gst_nassink_open (GST_AUDIO_SINK (sink));
+      gst_nas_sink_close (GST_AUDIO_SINK (sink));
+      gst_nas_sink_open (GST_AUDIO_SINK (sink));
       sink->flow = AuGetScratchFlow (sink->audio, NULL);
       if (sink->flow == 0) {
-        GST_CAT_DEBUG (NAS, "couldn't get flow");
+        GST_DEBUG_OBJECT (sink, "couldn't get flow");
         return FALSE;
       }
     }
@@ -592,14 +567,14 @@ NAS_createFlow (GstNassink * sink, GstRingBufferSpec * spec)
         AuGetElements (sink->audio, sink->flow, &clocked, &num_elements,
         &status);
     if (num_elements > 0) {
-      GST_CAT_DEBUG (NAS, "GetElements status: %i", status);
+      GST_DEBUG_OBJECT (sink, "GetElements status: %i", status);
       if (oldelems)
         AuFreeElements (sink->audio, num_elements, oldelems);
-      gst_nassink_close (GST_AUDIO_SINK (sink));
-      gst_nassink_open (GST_AUDIO_SINK (sink));
+      gst_nas_sink_close (GST_AUDIO_SINK (sink));
+      gst_nas_sink_open (GST_AUDIO_SINK (sink));
       sink->flow = AuGetScratchFlow (sink->audio, NULL);
       if (sink->flow == 0) {
-        GST_CAT_DEBUG (NAS, "couldn't get flow");
+        GST_DEBUG_OBJECT (sink, "couldn't get flow");
         return FALSE;
       }
     }
@@ -615,7 +590,7 @@ NAS_createFlow (GstNassink * sink, GstRingBufferSpec * spec)
   spec->segsize = buf_samples * spec->bytes_per_sample;
   spec->segtotal = 1;
 
-  GST_CAT_DEBUG (NAS, "Rate %d Format %d tracks %d bufs %d %d/%d w %d",
+  GST_DEBUG_OBJECT (sink, "Rate %d Format %d tracks %d bufs %d %d/%d w %d",
       spec->rate, format, spec->channels, buf_samples, spec->segsize,
       spec->segtotal, spec->width);
   AuMakeElementImportClient (&elements[0],      /* element */
@@ -631,7 +606,7 @@ NAS_createFlow (GstNassink * sink, GstRingBufferSpec * spec)
 
   sink->device = NAS_getDevice (sink->audio, spec->channels);
   if (sink->device == AuNone) {
-    GST_CAT_DEBUG (NAS, "no device with %i tracks found", spec->channels);
+    GST_DEBUG_OBJECT (sink, "no device with %i tracks found", spec->channels);
     return FALSE;
   }
 
@@ -661,3 +636,22 @@ NAS_createFlow (GstNassink * sink, GstRingBufferSpec * spec)
 
   return TRUE;
 }
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  GST_DEBUG_CATEGORY_INIT (nas_debug, "NAS", 0, NULL);
+
+  if (!gst_element_register (plugin, "nassink", GST_RANK_NONE,
+          GST_TYPE_NAS_SINK)) {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
+    GST_VERSION_MINOR,
+    "nas",
+    "NAS (Network Audio System) support for GStreamer",
+    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

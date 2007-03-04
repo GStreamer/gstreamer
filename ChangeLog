@@ -1,3 +1,25 @@
+2007-03-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/nas/Makefile.am:
+	* ext/nas/README:
+	* ext/nas/nassink.c: (gst_nas_sink_get_type),
+	(gst_nas_sink_base_init), (gst_nas_sink_class_init),
+	(gst_nas_sink_init), (gst_nas_sink_finalize),
+	(gst_nas_sink_getcaps), (gst_nas_sink_prepare),
+	(gst_nas_sink_unprepare), (gst_nas_sink_delay),
+	(gst_nas_sink_reset), (gst_nas_sink_write),
+	(gst_nas_sink_set_property), (gst_nas_sink_get_property),
+	(gst_nas_sink_open), (gst_nas_sink_close), (NAS_flush),
+	(NAS_sendData), (NAS_EventHandler), (gst_nas_sink_sink_get_format),
+	(NAS_createFlow), (plugin_init):
+	* ext/nas/nassink.h:
+	  Bunch of nassink clean-ups: make build by adding the right CFLAGS
+	  and LIBS to Makefile.am; rename structure, macros and functions
+	  according to canonical naming scheme; move some things around a bit;
+	  use GST_CAT_DEFAULT instead of GST_CAT_* everywhere; remove README
+	  file that didn't really contain any useful information anyway (the
+	  useful bits have been moved into the 'host' property description).
+
 2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_finalize):

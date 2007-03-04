@@ -18,38 +18,32 @@
  */
 
 
-#ifndef __GST_NASSINK_H__
-#define __GST_NASSINK_H__
+#ifndef __GST_NAS_SINK_H__
+#define __GST_NAS_SINK_H__
 
 #include <gst/gst.h>
 #include <gst/audio/gstaudiosink.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+G_BEGIN_DECLS
 
+#define GST_TYPE_NAS_SINK \
+  (gst_nas_sink_get_type())
+#define GST_NAS_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_NAS_SINK,GstNasSink))
+#define GST_NAS_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_NAS_SINK,GstNasSinkClass))
+#define GST_IS_NAS_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_NAS_SINK))
+#define GST_IS_NAS_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NAS_SINK))
 
-#define GST_TYPE_NASSINK \
-  (gst_nassink_get_type())
-#define GST_NASSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_NASSINK,GstNassink))
-#define GST_NASSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_NASSINK,GstNassinkClass))
-#define GST_IS_NASSINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_NASSINK))
-#define GST_IS_NASSINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_NASSINK))
+typedef struct _GstNasSink GstNasSink;
+typedef struct _GstNasSinkClass GstNasSinkClass;
 
-typedef enum {
-  GST_NASSINK_OPEN            = (GST_ELEMENT_FLAG_LAST << 0),
-  GST_NASSINK_FLAG_LAST       = (GST_ELEMENT_FLAG_LAST << 2)
-} GstNasSinkFlags;
-
-typedef struct _GstNassink GstNassink;
-typedef struct _GstNassinkClass GstNassinkClass;
-
-struct _GstNassink {
+struct _GstNasSink {
   GstAudioSink audiosink;
+
+  /*< private >*/
 
   /* instance properties */
 
@@ -67,16 +61,12 @@ struct _GstNassink {
   AuUint32 need_data;
 };
 
-struct _GstNassinkClass {
+struct _GstNasSinkClass {
   GstAudioSinkClass parent_class;
 };
 
-GType gst_nassink_get_type(void);
+GType gst_nas_sink_get_type(void);
 
+G_END_DECLS
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
-
-#endif /* __GST_NASSINK_H__ */
+#endif /* __GST_NAS_SINK_H__ */
