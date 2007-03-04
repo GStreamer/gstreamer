@@ -1,5 +1,12 @@
 2007-03-04  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/nas/nassink.c: (gst_nas_sink_class_init),
+	(gst_nas_sink_init), (gst_nas_sink_getcaps),
+	(gst_nas_sink_unprepare):
+	  Some more cleanups/changes; use boilerplate macro.
+
+2007-03-04  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/nas/Makefile.am:
 	* ext/nas/README:
 	* ext/nas/nassink.c: (gst_nas_sink_get_type),

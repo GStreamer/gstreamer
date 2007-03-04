@@ -63,9 +63,6 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]")
     );
 
-static void gst_nas_sink_base_init (gpointer g_class);
-static void gst_nas_sink_class_init (GstNasSinkClass * klass);
-static void gst_nas_sink_init (GstNasSink * nassink);
 static void gst_nas_sink_finalize (GObject * object);
 
 static gboolean gst_nas_sink_open (GstAudioSink * sink);
@@ -91,8 +88,6 @@ static AuBool NAS_EventHandler (AuServer * aud, AuEvent * ev,
 static AuDeviceID NAS_getDevice (AuServer * aud, int numTracks);
 static int NAS_createFlow (GstNasSink * sink, GstRingBufferSpec * spec);
 
-static GstElementClass *parent_class = NULL;
-
 static const GstElementDetails nas_sink_details =
 GST_ELEMENT_DETAILS ("NAS audio sink",
     "Sink/Audio",
@@ -100,31 +95,7 @@ GST_ELEMENT_DETAILS ("NAS audio sink",
     "Laurent Vivier <Laurent.Vivier@bull.net>, "
     "Arwed v. Merkatz <v.merkatz@gmx.net>");
 
-GType
-gst_nas_sink_get_type (void)
-{
-  static GType nas_sink_type = 0;
-
-  if (!nas_sink_type) {
-    static const GTypeInfo nas_sink_info = {
-      sizeof (GstNasSinkClass),
-      gst_nas_sink_base_init,
-      NULL,
-      (GClassInitFunc) gst_nas_sink_class_init,
-      NULL,
-      NULL,
-      sizeof (GstNasSink),
-      0,
-      (GInstanceInitFunc) gst_nas_sink_init,
-    };
-
-    nas_sink_type =
-        g_type_register_static (GST_TYPE_AUDIO_SINK, "GstNasSink",
-        &nas_sink_info, 0);
-  }
-
-  return nas_sink_type;
-}
+GST_BOILERPLATE (GstNasSink, gst_nas_sink, GstAudioSink, GST_TYPE_AUDIO_SINK);
 
 static void
 gst_nas_sink_base_init (gpointer g_class)
@@ -147,10 +118,8 @@ gst_nas_sink_class_init (GstNasSinkClass * klass)
   gstbasesink_class = (GstBaseSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_nas_sink_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_nas_sink_get_property);
+  gobject_class->set_property = gst_nas_sink_set_property;
+  gobject_class->get_property = gst_nas_sink_get_property;
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_nas_sink_finalize);
 
   g_object_class_install_property (gobject_class, ARG_MUTE,
@@ -174,7 +143,7 @@ gst_nas_sink_class_init (GstNasSinkClass * klass)
 }
 
 static void
-gst_nas_sink_init (GstNasSink * nassink)
+gst_nas_sink_init (GstNasSink * nassink, GstNasSinkClass * klass)
 {
   /* properties will automatically be set to their default values */
   nassink->audio = NULL;
@@ -195,29 +164,47 @@ static GstCaps *
 gst_nas_sink_getcaps (GstBaseSink * bsink)
 {
   GstNasSink *nassink = GST_NAS_SINK (bsink);
-  GstCaps *templatecaps =
-      gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (bsink)));
-  GstCaps *caps;
-  int i;
+  const GstCaps *templatecaps;
   AuServer *server;
+  GstCaps *fixated, *caps;
+  int i;
 
-  server = AuOpenServer (nassink->host, 0, NULL, 0, NULL, NULL);
-  if (!server)
-    return templatecaps;
+  server = nassink->audio;
 
-  for (i = 0; i < gst_caps_get_size (templatecaps); i++) {
-    GstStructure *structure = gst_caps_get_structure (templatecaps, i);
-
-    gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE,
-        AuServerMinSampleRate (server), AuServerMaxSampleRate (server), NULL);
+  if (server == NULL) {
+    /* FIXME: is it really a good idea to do a potentially long blocking call
+     * like this here? (tpm) */
+    server = AuOpenServer (nassink->host, 0, NULL, 0, NULL, NULL);
   }
-  caps =
-      gst_caps_intersect (templatecaps,
-      gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (bsink)));
-  gst_caps_unref (templatecaps);
+
+  templatecaps = gst_static_pad_template_get_caps (&sink_factory);
+
+  if (server == NULL)
+    return gst_caps_copy (templatecaps);
+
+  fixated = gst_caps_copy (templatecaps);
+  for (i = 0; i < gst_caps_get_size (fixated); i++) {
+    GstStructure *structure;
+    gint min, max;
+
+    min = AuServerMinSampleRate (server);
+    max = AuServerMaxSampleRate (server);
+
+    structure = gst_caps_get_structure (fixated, i);
+
+    if (min == max)
+      gst_structure_set (structure, "rate", G_TYPE_INT, max, NULL);
+    else
+      gst_structure_set (structure, "rate", GST_TYPE_INT_RANGE, min, max, NULL);
+  }
+
+  caps = gst_caps_intersect (fixated, templatecaps);
+  gst_caps_unref (fixated);
+
+  if (nassink->audio == NULL)
+    AuCloseServer (server);
 
   return caps;
-
 }
 
 static gboolean
@@ -247,7 +234,6 @@ gst_nas_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
 static gboolean
 gst_nas_sink_unprepare (GstAudioSink * asink)
 {
-  //GstNasSink *sink = GST_NAS_SINK (asink);
   return TRUE;
 }
 
