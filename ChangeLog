@@ -1,5 +1,12 @@
 2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/Makefile.am:
+	Gah! Also disable gconfvideosink from the tests, otherwise
+	it will instantiate autovideosink, and dfbvideosink and
+	leak on the buildbots.
+
+2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/cdio/gstcdiocddasrc.c: (gst_cdio_cdda_src_open),
 	(gst_cdio_cdda_src_finalize):
 	Make sure we always destroy our libcdio handle.
