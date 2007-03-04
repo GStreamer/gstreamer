@@ -287,6 +287,9 @@ not_audio:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ,
         (_("Disc is not an Audio CD.")), ("discmode: %d", (gint) discmode));
+
+    cdio_destroy (src->cdio);
+    src->cdio = NULL;
     return FALSE;
   }
 }
@@ -312,6 +315,13 @@ gst_cdio_cdda_src_init (GstCdioCddaSrc * src, GstCdioCddaSrcClass * klass)
 static void
 gst_cdio_cdda_src_finalize (GObject * obj)
 {
+  GstCdioCddaSrc *src = GST_CDIO_CDDA_SRC (obj);
+
+  if (src->cdio) {
+    cdio_destroy (src->cdio);
+    src->cdio = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
