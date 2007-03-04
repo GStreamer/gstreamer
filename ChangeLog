@@ -1,5 +1,12 @@
 2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_init),
+	(gst_multipart_find_pad_by_mime):
+	Use gst_pad_new_from_static_template instead of
+	static_pad_template_get+pad_new.
+
+2007-03-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* sys/ximage/gstximagesrc.c: (gst_ximage_src_create):
 	Catch the case where no clock has been set.
 

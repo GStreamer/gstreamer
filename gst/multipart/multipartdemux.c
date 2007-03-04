@@ -218,8 +218,8 @@ gst_multipart_demux_init (GstMultipartDemux * multipart,
 {
   /* create the sink pad */
   multipart->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&multipart_demux_sink_template_factory), "sink");
+      gst_pad_new_from_static_template (&multipart_demux_sink_template_factory,
+      "sink");
   gst_element_add_pad (GST_ELEMENT_CAST (multipart), multipart->sinkpad);
   gst_pad_set_chain_function (multipart->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multipart_demux_chain));
@@ -277,8 +277,9 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     GST_DEBUG_OBJECT (demux, "creating pad with mime: %s", mime);
 
     name = g_strdup_printf ("src_%d", demux->numpads);
-    pad = gst_pad_new_from_template (gst_static_pad_template_get
-        (&multipart_demux_src_template_factory), name);
+    pad =
+        gst_pad_new_from_static_template (&multipart_demux_src_template_factory,
+        name);
     g_free (name);
     caps = gst_caps_from_string (mime);
     gst_pad_use_fixed_caps (pad);
