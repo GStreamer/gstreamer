@@ -204,21 +204,15 @@ gst_dvdec_class_init (GstDVDecClass * klass)
 static void
 gst_dvdec_init (GstDVDec * dvdec, GstDVDecClass * g_class)
 {
-  dvdec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_temp),
-      "sink");
+  dvdec->sinkpad = gst_pad_new_from_static_template (&sink_temp, "sink");
   gst_pad_set_setcaps_function (dvdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_dvdec_sink_setcaps));
   gst_pad_set_chain_function (dvdec->sinkpad, gst_dvdec_chain);
   gst_pad_set_event_function (dvdec->sinkpad, gst_dvdec_sink_event);
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->sinkpad);
 
-  dvdec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_temp),
-      "src");
-
+  dvdec->srcpad = gst_pad_new_from_static_template (&src_temp, "src");
   gst_pad_use_fixed_caps (dvdec->srcpad);
-
   gst_element_add_pad (GST_ELEMENT (dvdec), dvdec->srcpad);
 
   dvdec->framerate_numerator = 0;
