@@ -838,6 +838,8 @@ gst_ximage_src_dispose (GObject * object)
 {
   /* Drop references in the buffer_pool */
   gst_ximage_src_clear_bufpool (GST_XIMAGE_SRC (object));
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
