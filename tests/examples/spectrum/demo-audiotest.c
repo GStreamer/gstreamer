@@ -90,8 +90,6 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
       draw_spectrum (spect);
     }
   }
-  /* we handled the message we want, and ignored the ones we didn't want.
-   * so the core can unref the message for us */
   return TRUE;
 }
 
