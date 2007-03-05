@@ -1,3 +1,8 @@
+2007-03-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* po/POTFILES.in:
+	  Update paths for the rename from utils to pbutils to fix the build.
+
 2007-03-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/pbutils/Makefile.am:
