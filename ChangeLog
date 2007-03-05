@@ -1,3 +1,9 @@
+2007-03-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/spectrum/demo-audiotest.c: (message_handler):
+	* gst/spectrum/demo-osssrc.c: (message_handler):
+	  Remove two obsolete and confusing comments.
+
 2007-03-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/nas/nassink.c: (gst_nas_sink_class_init),
@@ -2306,7 +2312,7 @@
 	(qtdemux_video_caps):
 	Make sure segment start<=stop in weird quicktime files.
 
-2006-08-28  Stefan Kost,,,  <ensonic@users.sf.net>
+2006-08-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/v4l2/v4l2_calls.c: (gst_v4l2_fill_lists):
 	  add comments and more debug logging
@@ -5690,7 +5696,7 @@
 
 === release 0.10.0 ===
 
-2005-12-05   <thomas (at) apestaart (dot) org>
+2005-12-05  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
 	  releasing 0.10.0, "Camembert"
@@ -5714,7 +5720,7 @@
 
 === release 0.9.7 ===
 
-2005-12-01   <thomas (at) apestaart (dot) org>
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
 	  releasing 0.9.7, "Arrigato Gasuimas Skebisan"
