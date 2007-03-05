@@ -1,3 +1,9 @@
+2007-03-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/pbutils/Makefile.am:
+	  Change directory to install headers in from gst/utils to gst/pbutils
+	  as well.
+
 2007-03-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:

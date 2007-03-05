@@ -10,7 +10,7 @@ libgstpbutils_@GST_MAJORMINOR@_la_SOURCES = \
 	missing-plugins.c \
 	missing-plugins.h
 
-libgstpbutils_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/utils
+libgstpbutils_@GST_MAJORMINOR@includedir = $(includedir)/gstreamer-@GST_MAJORMINOR@/gst/pbutils
 libgstpbutils_@GST_MAJORMINOR@include_HEADERS = \
 	pbutils.h         \
 	descriptions.h    \
