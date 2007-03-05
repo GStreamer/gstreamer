@@ -83,6 +83,7 @@ gst_switch_sink_reset (GstSwitchSink * sink)
   if (sink->kid == NULL) {
     gst_switch_sink_set_child (sink, NULL);
   }
+  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
 }
 
 static void
