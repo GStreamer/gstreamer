@@ -414,7 +414,7 @@ gst_rtp_mp4g_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   if (media_type == NULL)
     goto config_failed;
 
-  gst_basertppayload_set_options (payload, media_type, TRUE, "mpeg4-generic",
+  gst_basertppayload_set_options (payload, media_type, TRUE, "MPEG4-GENERIC",
       rtpmp4gpay->rate);
 
   gst_rtp_mp4g_pay_new_caps (rtpmp4gpay);

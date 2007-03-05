@@ -312,7 +312,7 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
   /* configure payloader settings */
   wstr = g_strdup_printf ("%d", rtptheorapay->width);
   hstr = g_strdup_printf ("%d", rtptheorapay->height);
-  gst_basertppayload_set_options (basepayload, "video", TRUE, "theora", 90000);
+  gst_basertppayload_set_options (basepayload, "video", TRUE, "THEORA", 90000);
   gst_basertppayload_set_outcaps (basepayload,
       "sampling", G_TYPE_STRING, "YCbCr-4:2:0",
       "width", G_TYPE_STRING, wstr,

@@ -1,5 +1,12 @@
 2007-03-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_setcaps):
+	* gst/rtp/gstrtptheorapay.c: (gst_rtp_theora_pay_finish_headers):
+	* gst/rtp/gstrtpvorbispay.c: (gst_rtp_vorbis_pay_finish_headers):
+	Fix encoding-name case.
+
+2007-03-05  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpspeexdepay.c: (gst_rtp_speex_depay_class_init),
 	(gst_rtp_speex_depay_get_mode), (gst_rtp_speex_depay_setcaps),
 	(gst_rtp_speex_depay_process):

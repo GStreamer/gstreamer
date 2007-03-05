@@ -306,7 +306,7 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
 
   /* configure payloader settings */
   cstr = g_strdup_printf ("%d", rtpvorbispay->channels);
-  gst_basertppayload_set_options (basepayload, "audio", TRUE, "vorbis",
+  gst_basertppayload_set_options (basepayload, "audio", TRUE, "VORBIS",
       rtpvorbispay->rate);
   gst_basertppayload_set_outcaps (basepayload, "encoding-params", G_TYPE_STRING,
       cstr, "configuration", G_TYPE_STRING, configuration,
