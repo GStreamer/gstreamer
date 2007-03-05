@@ -79,11 +79,12 @@ gst_switch_sink_class_init (GstSwitchSinkClass * klass)
 static void
 gst_switch_sink_reset (GstSwitchSink * sink)
 {
-  /* this will install fakesink if no other child has been set */
+  /* this will install fakesink if no other child has been set,
+   * otherwise we rely on the subclass to know when to unset its
+   * custom kid */
   if (sink->kid == NULL) {
     gst_switch_sink_set_child (sink, NULL);
   }
-  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
 }
 
 static void
@@ -143,6 +144,8 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
   GST_OBJECT_LOCK (sink);
   old_kid = sink->kid;
   sink->kid = new_kid;
+  /* Mark whether a custom kid or fakesink has been installed */
+  sink->have_kid = !is_fakesink;
   GST_OBJECT_UNLOCK (sink);
 
   /* kill old element */
@@ -176,20 +179,17 @@ gst_switch_sink_set_child (GstSwitchSink * sink, GstElement * new_kid)
   GstState cur, next;
   GstElement **p_kid;
 
-  /* Nothing to do if clearing the child and we don't have one anyway */
-  if (new_kid == NULL && sink->have_kid == FALSE)
+  /* Nothing to do if clearing the child and we've already installed fakesink */
+  if (new_kid == NULL && sink->kid != NULL && sink->have_kid == FALSE)
     return TRUE;
 
+  /* Store the new kid to be committed later */
   GST_OBJECT_LOCK (sink);
   cur = GST_STATE (sink);
   next = GST_STATE_NEXT (sink);
   p_kid = &sink->new_kid;
   gst_object_replace ((GstObject **) p_kid, (GstObject *) new_kid);
   GST_OBJECT_UNLOCK (sink);
-
-  if (cur == GST_STATE_PAUSED && next == GST_STATE_READY) {
-    return gst_switch_commit_new_kid (sink);
-  }
 
   /* Sometime, it would be lovely to allow sink changes even when
    * already running, but this involves sending an appropriate new-segment

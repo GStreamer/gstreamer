@@ -1,3 +1,11 @@
+2007-03-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/gconf/gstswitchsink.c: (gst_switch_sink_reset),
+	(gst_switch_commit_new_kid), (gst_switch_sink_set_child):
+	Install fakesink in NULL by fixing some broken logic. This obviates
+	the need to manually set _IS_SINK.
+	Add some comments and remove a little cruft while I'm at it.
+
 2007-03-05  Wim Taymans  <wim@fluendo.com>
 
 	* ext/gconf/gstswitchsink.c: (gst_switch_sink_reset):
