@@ -100,9 +100,18 @@ static void
 gst_switch_sink_dispose (GObject * object)
 {
   GstSwitchSink *sink = GST_SWITCH_SINK (object);
-  GstElement **p_kid = &sink->kid;
+  GstElement **p_kid;
 
+  GST_OBJECT_LOCK (sink);
+  p_kid = &sink->new_kid;
   gst_object_replace ((GstObject **) p_kid, NULL);
+
+  if (sink->new_kid) {
+    p_kid = &sink->kid;
+    gst_element_set_state (sink->kid, GST_STATE_NULL);
+    gst_object_replace ((GstObject **) p_kid, NULL);
+  }
+  GST_OBJECT_UNLOCK (sink);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
@@ -126,6 +135,8 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
   if (new_kid == NULL) {
     GST_DEBUG_OBJECT (sink, "Replacing kid with fakesink");
     new_kid = gst_element_factory_make ("fakesink", "testsink");
+    /* Add a reference, as it would if the element came from sink->new_kid */
+    gst_object_ref (new_kid);
     g_object_set (new_kid, "sync", TRUE, NULL);
     is_fakesink = TRUE;
   } else {
@@ -153,6 +164,7 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
     GST_DEBUG_OBJECT (sink, "Removing old kid %" GST_PTR_FORMAT, old_kid);
     gst_element_set_state (old_kid, GST_STATE_NULL);
     gst_bin_remove (GST_BIN (sink), old_kid);
+    gst_object_unref (old_kid);
   }
 
   /* re-attach ghostpad */
