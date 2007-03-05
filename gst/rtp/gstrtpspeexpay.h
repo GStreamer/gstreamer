@@ -38,6 +38,8 @@ typedef struct _GstRtpSPEEXPayClass GstRtpSPEEXPayClass;
 struct _GstRtpSPEEXPay
 {
   GstBaseRTPPayload payload;
+
+  guint64 packet;
 };
 
 struct _GstRtpSPEEXPayClass

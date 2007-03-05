@@ -94,8 +94,6 @@ gst_rtp_speex_depay_class_init (GstRtpSPEEXDepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstbasertpdepayload_class->process = gst_rtp_speex_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_speex_depay_setcaps;
 }
@@ -107,37 +105,104 @@ gst_rtp_speex_depay_init (GstRtpSPEEXDepay * rtpspeexdepay,
   GST_BASE_RTP_DEPAYLOAD (rtpspeexdepay)->clock_rate = 8000;
 }
 
+static gint
+gst_rtp_speex_depay_get_mode (gint rate)
+{
+  if (rate > 25000)
+    return 2;
+  else if (rate > 12500)
+    return 1;
+  else
+    return 0;
+}
+
+/* len 4 bytes LE,
+ * vendor string (len bytes),
+ * user_len 4 (0) bytes LE
+ */
+static const gchar gst_rtp_speex_comment[] =
+    "\045\0\0\0Depayloaded with GStreamer speexdepay\0\0\0\0";
+
 static gboolean
 gst_rtp_speex_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
-  GstCaps *srccaps;
-  gboolean ret;
+  GstStructure *structure;
+  GstRtpSPEEXDepay *rtpspeexdepay;
+  gint clock_rate, nb_channels;
+  GstBuffer *buf;
+  guint8 *data;
+  const gchar *params;
 
-  srccaps =
-      gst_static_pad_template_get_caps (&gst_rtp_speex_depay_src_template);
-  ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
+  rtpspeexdepay = GST_RTP_SPEEX_DEPAY (depayload);
 
-  gst_caps_unref (srccaps);
-  return ret;
+  structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  depayload->clock_rate = clock_rate;
+
+  if (!(params = gst_structure_get_string (structure, "encoding-params")))
+    nb_channels = 1;
+  else {
+    nb_channels = atoi (params);
+  }
+
+  /* construct minimal header and comment packet for the decoder */
+  buf = gst_buffer_new_and_alloc (80);
+  data = GST_BUFFER_DATA (buf);
+  memcpy (data, "Speex   ", 8);
+  data += 8;
+  memcpy (data, "1.1.12", 7);
+  data += 20;
+  GST_WRITE_UINT32_LE (data, 1);        /* version */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, 80);       /* header_size */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, clock_rate);       /* rate */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, gst_rtp_speex_depay_get_mode (clock_rate));        /* mode */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, 4);        /* mode_bitstream_version */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, nb_channels);      /* nb_channels */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, -1);       /* bitrate */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, 0xa0);     /* frame_size */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, 0);        /* VBR */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, 1);        /* frames_per_packet */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, 0);        /* extra_headers */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, 0);        /* reserved1 */
+  data += 4;
+  GST_WRITE_UINT32_LE (data, 0);        /* reserved2 */
+
+  gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpspeexdepay), buf);
+
+  buf = gst_buffer_new_and_alloc (sizeof (gst_rtp_speex_comment));
+  memcpy (GST_BUFFER_DATA (buf), gst_rtp_speex_comment,
+      sizeof (gst_rtp_speex_comment));
+
+  gst_base_rtp_depayload_push (GST_BASE_RTP_DEPAYLOAD (rtpspeexdepay), buf);
+
+  return TRUE;
 }
 
 static GstBuffer *
 gst_rtp_speex_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf = NULL;
-  gint payload_len;
-  guint8 *payload;
 
   GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
       GST_BUFFER_SIZE (buf),
       gst_rtp_buffer_get_marker (buf),
       gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
-  payload = gst_rtp_buffer_get_payload (buf);
+  /* nothing special to be done */
+  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 
-  outbuf = gst_buffer_new_and_alloc (payload_len);
-  memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
   return outbuf;
 }
 

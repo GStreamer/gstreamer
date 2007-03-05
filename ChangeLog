@@ -1,3 +1,15 @@
+2007-03-05  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpspeexdepay.c: (gst_rtp_speex_depay_class_init),
+	(gst_rtp_speex_depay_get_mode), (gst_rtp_speex_depay_setcaps),
+	(gst_rtp_speex_depay_process):
+	* gst/rtp/gstrtpspeexpay.c: (gst_rtp_speex_pay_base_init),
+	(gst_rtp_speex_pay_class_init), (gst_rtp_speex_pay_setcaps),
+	(gst_rtp_speex_pay_parse_ident), (gst_rtp_speex_pay_handle_buffer),
+	(gst_rtp_speex_pay_change_state):
+	* gst/rtp/gstrtpspeexpay.h:
+	Fix speex (de)payloader. Fixes #358040.
+
 2007-03-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/gconf/gstswitchsink.c: (gst_switch_sink_reset),
