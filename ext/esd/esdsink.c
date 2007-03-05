@@ -240,6 +240,7 @@ gst_esdsink_open (GstAudioSink * asink)
 
   pad_template = gst_static_pad_template_get (&sink_factory);
   esdsink->cur_caps = gst_caps_copy (gst_pad_template_get_caps (pad_template));
+  gst_object_unref (pad_template);
 
   for (i = 0; i < esdsink->cur_caps->structs->len; i++) {
     GstStructure *s;

@@ -1,5 +1,10 @@
 2007-03-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/esd/esdsink.c: (gst_esdsink_open):
+	Unref static pad template after using it.
+
+2007-03-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/gconf/gstswitchsink.c: (gst_switch_sink_dispose),
 	(gst_switch_commit_new_kid):
 	Fix up the reference counting of the child elements.
