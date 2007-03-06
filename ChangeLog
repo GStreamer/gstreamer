@@ -1,3 +1,11 @@
+2007-03-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init),
+	(gst_spectrum_init), (gst_spectrum_set_property),
+	(gst_spectrum_transform_ip):
+	Fix and cleanup default property values.
+	Add FIXMEs for stuff that looks rather wrong.
+
 2007-03-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/spectrum/demo-audiotest.c: (message_handler):

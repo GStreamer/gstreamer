@@ -93,6 +93,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 /* Spectrum properties */
+#define DEFAULT_SIGNAL_SPECTRUM		TRUE
+#define DEFAULT_SIGNAL_INTERVAL		(GST_SECOND / 10)
+#define DEFAULT_BANDS			128
+#define DEFAULT_THRESHOLD		-60
+
 enum
 {
   PROP_0,
@@ -157,20 +162,20 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
   g_object_class_install_property (gobject_class, PROP_SIGNAL_SPECTRUM,
       g_param_spec_boolean ("message", "Message",
           "Post a level message for each passed interval",
-          TRUE, G_PARAM_READWRITE));
+          DEFAULT_SIGNAL_SPECTRUM, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_SIGNAL_INTERVAL,
       g_param_spec_uint64 ("interval", "Interval",
           "Interval of time between message posts (in nanoseconds)",
-          1, G_MAXUINT64, GST_SECOND / 10, G_PARAM_READWRITE));
+          1, G_MAXUINT64, DEFAULT_SIGNAL_INTERVAL, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_BANDS,
       g_param_spec_uint ("bands", "Bands", "number of frequency bands",
-          0, G_MAXUINT, 0, G_PARAM_READWRITE));
+          0, G_MAXUINT, DEFAULT_BANDS, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD,
       g_param_spec_int ("threshold", "Threshold",
-          "db threshold for result, maps to 0", G_MININT, 0, -60,
+          "db threshold for result, maps to 0", G_MININT, 0, DEFAULT_THRESHOLD,
           G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (gst_spectrum_debug, "spectrum", 0,
@@ -182,8 +187,10 @@ gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
 {
   spectrum->adapter = gst_adapter_new ();
 
-  spectrum->interval = GST_SECOND / 10;
-  spectrum->bands = 128;
+  spectrum->message = DEFAULT_SIGNAL_SPECTRUM;
+  spectrum->interval = DEFAULT_SIGNAL_INTERVAL;
+  spectrum->bands = DEFAULT_BANDS;
+  spectrum->threshold = DEFAULT_THRESHOLD;
   spectrum->base = 9;
   spectrum->len = 1024;         /* 2 ^ (base+1) */
 
@@ -230,6 +237,7 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
       filter->interval = g_value_get_uint64 (value);
       break;
     case PROP_BANDS:
+      /* FIXME, this will segfault when the transform function is running */
       filter->bands = g_value_get_uint (value);
       g_free (filter->spect);
       filter->spect = g_malloc (filter->bands * sizeof (guchar));
@@ -360,6 +368,9 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   gint32 acc;
   gfloat pos, step;
   guchar *spect = spectrum->spect;
+
+  /* FIXME, the buffer timestamp does not mean anything, maybe you mean
+   * stream_time or running_time? */
   GstClockTime endtime = GST_BUFFER_TIMESTAMP (in);
   GstClockTime blktime =
       GST_FRAMES_TO_CLOCK_TIME (spectrum->len, spectrum->rate);
