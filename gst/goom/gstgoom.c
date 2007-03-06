@@ -257,6 +257,7 @@ gst_goom_src_setcaps (GstPad * pad, GstCaps * caps)
   goom->duration =
       gst_util_uint64_scale_int (GST_SECOND, goom->fps_d, goom->fps_n);
   goom->spf = gst_util_uint64_scale_int (goom->rate, goom->fps_d, goom->fps_n);
+  goom->bpf = goom->spf * goom->bps;
 
   GST_DEBUG_OBJECT (goom, "dimension %dx%d, framerate %d/%d, spf %d",
       goom->width, goom->height, goom->fps_n, goom->fps_d, goom->spf);
@@ -409,12 +410,8 @@ get_buffer (GstGoom * goom, GstBuffer ** outbuf)
       gst_pad_alloc_buffer_and_set_caps (goom->srcpad,
       GST_BUFFER_OFFSET_NONE, goom->outsize,
       GST_PAD_CAPS (goom->srcpad), outbuf);
-
   if (ret != GST_FLOW_OK)
     return ret;
-
-  if (*outbuf == NULL)
-    return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
 }
@@ -425,7 +422,6 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
   GstGoom *goom;
   GstFlowReturn ret;
   GstBuffer *outbuf = NULL;
-  guint avail;
 
   goom = GST_GOOM (gst_pad_get_parent (pad));
 
@@ -453,18 +449,28 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
       "Input buffer has %d samples, time=%" G_GUINT64_FORMAT,
       GST_BUFFER_SIZE (buffer) / goom->bps, GST_BUFFER_TIMESTAMP (buffer));
 
+  /* Collect samples until we have enough for an output frame */
   gst_adapter_push (goom->adapter, buffer);
 
   ret = GST_FLOW_OK;
 
-  /* Collect samples until we have enough for an output frame */
-  avail = gst_adapter_available (goom->adapter);
-  GST_DEBUG_OBJECT (goom, "avail now %u", avail);
-  while (avail > MAX (GOOM_SAMPLES, goom->spf) * goom->bps) {
+  while (TRUE) {
     const guint16 *data;
     gboolean need_skip;
     guchar *out_frame;
     gint i;
+    guint avail, to_flush;
+
+    avail = gst_adapter_available (goom->adapter);
+    GST_DEBUG_OBJECT (goom, "avail now %u", avail);
+
+    /* we need GOOM_SAMPLES to get a meaningful result from goom. */
+    if (avail < (GOOM_SAMPLES * goom->bps))
+      break;
+
+    /* we also need enough samples to produce one frame at least */
+    if (avail < goom->bpf)
+      break;
 
     GST_DEBUG_OBJECT (goom, "processing buffer");
 
@@ -487,6 +493,7 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
       }
     }
 
+    /* get next GOOM_SAMPLES, we have at least this amount of samples */
     data =
         (const guint16 *) gst_adapter_peek (goom->adapter,
         GOOM_SAMPLES * goom->bps);
@@ -531,15 +538,16 @@ gst_goom_chain (GstPad * pad, GstBuffer * buffer)
     if (goom->next_ts != -1)
       goom->next_ts += goom->duration;
 
-    GST_DEBUG_OBJECT (goom, "finished frame, flushing %u samples from input",
-        goom->spf);
-    gst_adapter_flush (goom->adapter, MIN (avail, goom->spf * goom->bps));
+    /* Now flush the samples we needed for this frame, which might be more than
+     * the samples we used (GOOM_SAMPLES). */
+    to_flush = goom->bpf;
+
+    GST_DEBUG_OBJECT (goom, "finished frame, flushing %u bytes from input",
+        to_flush);
+    gst_adapter_flush (goom->adapter, to_flush);
 
     if (ret != GST_FLOW_OK)
       break;
-
-    avail = gst_adapter_available (goom->adapter);
-    GST_DEBUG_OBJECT (goom, "avail now %u", avail);
   }
 
   if (outbuf != NULL)

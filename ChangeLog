@@ -1,3 +1,11 @@
+2007-03-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/goom/gstgoom.c: (gst_goom_src_setcaps), (get_buffer),
+	(gst_goom_chain):
+	* gst/goom/gstgoom.h:
+	Document, fix and improve goom adapter behaviour.
+	Fixes #407006.
+
 2007-03-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/esd/esdsink.c: (gst_esdsink_open):

@@ -60,6 +60,8 @@ struct _GstGoom
 
   /* samples per frame */
   guint spf;
+  /* bytes per frame */
+  guint bpf;
 
   /* goom stuff */
   gint16 datain[2][GOOM_SAMPLES];
