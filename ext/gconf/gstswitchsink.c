@@ -100,18 +100,18 @@ static void
 gst_switch_sink_dispose (GObject * object)
 {
   GstSwitchSink *sink = GST_SWITCH_SINK (object);
-  GstElement **p_kid;
+  GstObject *new_kid, *kid;
 
   GST_OBJECT_LOCK (sink);
-  p_kid = &sink->new_kid;
-  gst_object_replace ((GstObject **) p_kid, NULL);
+  new_kid = GST_OBJECT_CAST (sink->new_kid);
+  sink->new_kid = NULL;
 
-  if (sink->new_kid) {
-    p_kid = &sink->kid;
-    gst_element_set_state (sink->kid, GST_STATE_NULL);
-    gst_object_replace ((GstObject **) p_kid, NULL);
-  }
+  kid = GST_OBJECT_CAST (sink->kid);
+  sink->kid = NULL;
   GST_OBJECT_UNLOCK (sink);
+
+  gst_object_replace (&new_kid, NULL);
+  gst_object_replace (&kid, NULL);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
@@ -120,13 +120,20 @@ gboolean
 gst_switch_commit_new_kid (GstSwitchSink * sink)
 {
   GstPad *targetpad;
-  GstState cur_state;
+  GstState kid_state;
   GstElement *new_kid, *old_kid;
   gboolean is_fakesink = FALSE;
 
   /* need locking around member accesses */
   GST_OBJECT_LOCK (sink);
-  cur_state = GST_STATE (sink);
+  /* If we're currently changing state, set the child to the next state
+   * we're transitioning too, rather than our current state which is 
+   * about to change */
+  if (GST_STATE_NEXT (sink) != GST_STATE_VOID_PENDING)
+    kid_state = GST_STATE_NEXT (sink);
+  else
+    kid_state = GST_STATE (sink);
+
   new_kid = sink->new_kid;
   sink->new_kid = NULL;
   GST_OBJECT_UNLOCK (sink);
@@ -143,7 +150,7 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
     GST_DEBUG_OBJECT (sink, "Setting new kid");
   }
 
-  if (gst_element_set_state (new_kid, cur_state) == GST_STATE_CHANGE_FAILURE) {
+  if (gst_element_set_state (new_kid, kid_state) == GST_STATE_CHANGE_FAILURE) {
     GST_ELEMENT_ERROR (sink, CORE, STATE_CHANGE, (NULL),
         ("Failed to set state on new child."));
     gst_object_unref (new_kid);

@@ -1,3 +1,11 @@
+2007-03-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/gconf/gstswitchsink.c: (gst_switch_sink_dispose),
+	(gst_switch_commit_new_kid):
+	Fix up the dispose logic so it doesn't leak, and fix setting of 
+	the child state so that we don't set a child to our current state 
+	just as we are changing it to something else.
+
 2007-03-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/goom/gstgoom.c: (gst_goom_src_setcaps), (get_buffer),
