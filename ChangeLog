@@ -1,3 +1,10 @@
+2007-03-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_async_play):
+	Fix regression that made GStreamer skip the first samples of audio.
+	Fixes #414684.
+
 2007-03-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

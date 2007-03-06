@@ -1071,11 +1071,11 @@ gst_base_audio_sink_async_play (GstBaseSink * basesink)
         rate_num, rate_denom);
 
     gst_clock_set_master (sink->provided_clock, clock);
+
+    /* start ringbuffer so we can start slaving right away */
+    gst_ring_buffer_start (sink->ringbuffer);
   }
-
 no_clock:
-  gst_ring_buffer_start (sink->ringbuffer);
-
   return GST_STATE_CHANGE_SUCCESS;
 }
 
