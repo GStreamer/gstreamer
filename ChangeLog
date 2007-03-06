@@ -1,3 +1,15 @@
+2007-03-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3tags.c: (id3demux_id3v2_frames_to_tag_list):
+	* gst/id3demux/id3tags.h:
+	* gst/id3demux/id3v2frames.c: (id3demux_id3v2_parse_frame),
+	(parse_obsolete_tdat_frame):
+	  Do not convert obsolete TDA/TDAT frames to TDRC frames, otherwise
+	  the four-digit number will be interpreted as a year, whereas it is
+	  month and day in DDMM format. Instead, parse TDAT frames and fix up
+	  the date in the GST_TAG_DATE tag later if we also extracted a year.
+	  Fixes #407349.
+
 2007-03-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/gconf/gstswitchsink.c: (gst_switch_sink_dispose),

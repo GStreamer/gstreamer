@@ -44,6 +44,7 @@ static gchar *parse_user_text_identification_frame (ID3TagsWorking * work,
 static gchar *parse_unique_file_identifier (ID3TagsWorking * work,
     const gchar ** tag_name);
 static gboolean parse_relative_volume_adjustment_two (ID3TagsWorking * work);
+static void parse_obsolete_tdat_frame (ID3TagsWorking * work);
 static gboolean id3v2_tag_to_taglist (ID3TagsWorking * work,
     const gchar * tag_name, const gchar * tag_str);
 /* Parse a single string into an array of gchar* */
@@ -100,6 +101,7 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
   if (tag_name == NULL &&
       strncmp (work->frame_id, "RVA2", 4) != 0 &&
       strncmp (work->frame_id, "TXXX", 4) != 0 &&
+      strncmp (work->frame_id, "TDAT", 4) != 0 &&
       strncmp (work->frame_id, "UFID", 4) != 0) {
     return FALSE;
   }
@@ -152,12 +154,15 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
   }
 
   if (work->frame_id[0] == 'T') {
-    if (strcmp (work->frame_id, "TXXX") != 0) {
-      /* Text identification frame */
-      tag_fields = parse_text_identification_frame (work);
-    } else {
+    if (strcmp (work->frame_id, "TDAT") == 0) {
+      parse_obsolete_tdat_frame (work);
+      result = TRUE;
+    } else if (strcmp (work->frame_id, "TXXX") == 0) {
       /* Handle user text frame */
       tag_str = parse_user_text_identification_frame (work, &tag_name);
+    } else {
+      /* Text identification frame */
+      tag_fields = parse_text_identification_frame (work);
     }
   } else if (!strcmp (work->frame_id, "COMM")) {
     /* Comment */
@@ -633,6 +638,23 @@ parse_relative_volume_adjustment_two (ID3TagsWorking * work)
   g_free (id);
 
   return (gain_tag_name != NULL || peak_tag_name != NULL);
+}
+
+static void
+parse_obsolete_tdat_frame (ID3TagsWorking * work)
+{
+  if (work->parse_size >= 5 &&
+      work->parse_data[0] == ID3V2_ENCODING_ISO8859 &&
+      g_ascii_isdigit (work->parse_data[1]) &&
+      g_ascii_isdigit (work->parse_data[2]) &&
+      g_ascii_isdigit (work->parse_data[3]) &&
+      g_ascii_isdigit (work->parse_data[4])) {
+    work->pending_day = (10 * g_ascii_digit_value (work->parse_data[1])) +
+        g_ascii_digit_value (work->parse_data[2]);
+    work->pending_month = (10 * g_ascii_digit_value (work->parse_data[3])) +
+        g_ascii_digit_value (work->parse_data[4]);
+    GST_LOG ("date (dd/mm) %02u/%02u", work->pending_day, work->pending_month);
+  }
 }
 
 static gboolean
