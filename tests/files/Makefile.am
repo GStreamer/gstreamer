@@ -1,0 +1,5 @@
+
+EXTRA_DIST = \
+	id3-407349-1.tag \
+	id3-407349-2.tag
+

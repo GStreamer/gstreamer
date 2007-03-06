@@ -106,7 +106,7 @@ static GstFlowReturn gst_id3demux_src_getrange (GstPad * srcpad,
     guint64 offset, guint length, GstBuffer ** buffer);
 
 static gboolean gst_id3demux_add_srcpad (GstID3Demux * id3demux,
-    GstCaps * new_caps);
+    const GstCaps * new_caps);
 static gboolean gst_id3demux_remove_srcpad (GstID3Demux * id3demux);
 
 static gboolean gst_id3demux_srcpad_event (GstPad * pad, GstEvent * event);
@@ -239,12 +239,12 @@ gst_id3demux_dispose (GObject * object)
 }
 
 static gboolean
-gst_id3demux_add_srcpad (GstID3Demux * id3demux, GstCaps * new_caps)
+gst_id3demux_add_srcpad (GstID3Demux * id3demux, const GstCaps * new_caps)
 {
   if (id3demux->src_caps == NULL ||
       !gst_caps_is_equal (new_caps, id3demux->src_caps)) {
 
-    gst_caps_replace (&(id3demux->src_caps), new_caps);
+    gst_caps_replace (&(id3demux->src_caps), (GstCaps *) new_caps);
     if (id3demux->srcpad != NULL) {
       GST_DEBUG_OBJECT (id3demux, "Changing src pad caps to %" GST_PTR_FORMAT,
           id3demux->src_caps);
@@ -252,8 +252,7 @@ gst_id3demux_add_srcpad (GstID3Demux * id3demux, GstCaps * new_caps)
       gst_pad_set_caps (id3demux->srcpad, id3demux->src_caps);
     }
   } else {
-    /* Caps never changed */
-    gst_caps_unref (new_caps);
+    /* caps didn't change */
   }
 
   if (id3demux->srcpad == NULL) {
@@ -909,7 +908,6 @@ gst_id3demux_sink_activate (GstPad * sinkpad)
   id3demux->state = GST_ID3DEMUX_STREAMING;
 
   /* 6 Add the srcpad for output now we know caps. */
-  /* add_srcpad takes ownership of the caps */
   if (!gst_id3demux_add_srcpad (id3demux, caps)) {
     GST_DEBUG_OBJECT (id3demux, "Could not add source pad");
     goto done_activate;
@@ -924,6 +922,9 @@ gst_id3demux_sink_activate (GstPad * sinkpad)
   }
 
 done_activate:
+
+  if (caps)
+    gst_caps_unref (caps);
 
   return ret;
 }

@@ -1,5 +1,29 @@
 2007-03-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_add_srcpad),
+	(gst_id3demux_sink_activate):
+	  Don't leak caps: make gst_id3demux_add_srcpad() not take ownership of the
+	  caps passed to it (previouslly one code path assumes it takes ownership
+	  while another one assumes it doesn't).
+
+	* configure.ac:
+	* tests/files/Makefile.am:
+	* tests/files/id3-407349-1.tag:
+	* tests/files/id3-407349-2.tag:
+	  Add directory where data for unit tests can be stored.
+
+	* tests/Makefile.am:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/id3demux.c: (pad_added_cb), (error_cb),
+	(read_tags_from_file), (run_check_for_file),
+	(check_date_1977_06_23), (GST_START_TEST), (id3demux_suite):
+	  Add unit test for id3demux, and in particular for bug #407349. Only
+	  testing pull-mode for now; push mode doesn't work yet because the test
+	  files are smaller than ID3_TYPE_FIND_MIN_SIZE.
+
+2007-03-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	  Add missing backslash at end of line.
 

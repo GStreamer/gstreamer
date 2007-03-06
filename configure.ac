@@ -907,9 +907,10 @@ sys/ximage/Makefile
 po/Makefile.in
 tests/Makefile
 tests/check/Makefile
-tests/icles/Makefile
 tests/examples/Makefile
 tests/examples/level/Makefile
+tests/files/Makefile
+tests/icles/Makefile
 gconf/Makefile
 gconf/gstreamer.schemas
 common/Makefile

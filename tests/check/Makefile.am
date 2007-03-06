@@ -1,6 +1,7 @@
 include $(top_srcdir)/common/check.mak
 
 CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.xml
+TEST_FILES_DIRECTORY = $(top_srcdir)/tests/files
 
 REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY=$(CHECK_REGISTRY)
@@ -9,6 +10,7 @@ TESTS_ENVIRONMENT = \
 	$(REGISTRY_ENVIRONMENT)					\
 	GST_PLUGIN_SYSTEM_PATH=					\
 	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)			\
+	GST_TEST_FILES_PATH=$(TEST_FILES_DIRECTORY) \
 	STATE_IGNORE_ELEMENTS="aasink cacasink autovideosink gconfvideosink"
 
 # ths core dumps of some machines have PIDs appended
@@ -39,6 +41,7 @@ check_PROGRAMS = \
 	elements/audioinvert \
 	elements/audioamplify \
 	elements/avimux \
+	elements/id3demux \
 	elements/level \
 	elements/matroskamux \
 	elements/icydemux \

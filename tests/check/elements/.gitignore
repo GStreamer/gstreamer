@@ -7,6 +7,7 @@ cmmldec
 cmmlenc
 icydemux
 avimux
+id3demux
 id3v2mux
 apev2mux
 audiopanorama
