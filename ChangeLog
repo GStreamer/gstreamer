@@ -1,3 +1,7 @@
+2007-03-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	Trigger rebuild.
+
 2007-03-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/id3tags.c: (id3demux_id3v2_frames_to_tag_list):
