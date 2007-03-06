@@ -3,8 +3,9 @@
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_add_srcpad),
 	(gst_id3demux_sink_activate):
 	  Don't leak caps: make gst_id3demux_add_srcpad() not take ownership of the
-	  caps passed to it (previouslly one code path assumes it takes ownership
-	  while another one assumes it doesn't).
+	  caps passed to it (previously one code path assumed it took ownership
+	  while another one assumed it didn't, while in fact it sometimes did and
+	  sometimes didn't ...).
 
 	* configure.ac:
 	* tests/files/Makefile.am:
