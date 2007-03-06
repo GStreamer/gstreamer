@@ -1,3 +1,8 @@
+2007-03-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	  Add missing backslash at end of line.
+
 2007-03-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	Trigger rebuild.
