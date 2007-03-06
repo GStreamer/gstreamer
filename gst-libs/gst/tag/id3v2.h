@@ -78,6 +78,10 @@ typedef struct {
   
   /* Previous genre string, for simple duplicate removal */
   gchar *prev_genre;
+
+  /* To collect day/month from obsolete TDAT frame if it exists */
+  guint pending_month;
+  guint pending_day;
 } ID3TagsWorking;
 
 enum {

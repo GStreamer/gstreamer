@@ -242,7 +242,6 @@ const struct ID3v2FrameIDConvert
 } frame_id_conversions[] = {
   /* 2.3.x frames */
   {
-  "TDAT", "TDRC"}, {
   "TORY", "TDOR"}, {
   "TYER", "TDRC"},
       /* 2.2.x frames */
@@ -266,7 +265,7 @@ const struct ID3v2FrameIDConvert
   "TCM", "TCOM"}, {
   "TCO", "TCON"}, {
   "TCR", "TCOP"}, {
-  "TDA", "TDRC"}, {
+  "TDA", "TDAT"}, {             /* obsolete, but we need to parse it anyway */
   "TDY", "TDLY"}, {
   "TEN", "TENC"}, {
   "TFT", "TFLT"}, {
@@ -498,6 +497,19 @@ id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size)
     gst_tag_list_free (work->tags);
     work->tags = NULL;
     return ID3TAGS_BROKEN_TAG;
+  }
+
+  /* Set day/month now if they were in a separate (obsolete) TDAT frame */
+  if (work->pending_day != 0 && work->pending_month != 0) {
+    GDate *date = NULL;
+
+    if (gst_tag_list_get_date (work->tags, GST_TAG_DATE, &date)) {
+      g_date_set_day (date, work->pending_day);
+      g_date_set_month (date, work->pending_month);
+      gst_tag_list_add (work->tags, GST_TAG_MERGE_REPLACE, GST_TAG_DATE,
+          date, NULL);
+      g_date_free (date);
+    }
   }
 
   return ID3TAGS_READ_TAG;
