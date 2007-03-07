@@ -28,6 +28,9 @@
 #include "gstwavpackcommon.h"
 #include <string.h>
 
+GST_DEBUG_CATEGORY_EXTERN (wavpack_debug);
+#define GST_CAT_DEFAULT wavpack_debug
+
 gboolean
 gst_wavpack_read_header (WavpackHeader * header, guint8 * buf)
 {

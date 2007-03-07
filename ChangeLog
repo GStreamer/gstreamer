@@ -1,3 +1,20 @@
+2007-03-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpack.c: (plugin_init):
+	* ext/wavpack/gstwavpackcommon.c:
+	  Use a general wavpack debug category for common code.
+	* ext/wavpack/gstwavpackstreamreader.c:
+	(gst_wavpack_stream_reader_set_pos_abs),
+	(gst_wavpack_stream_reader_set_pos_rel),
+	(gst_wavpack_stream_reader_write_bytes):
+	  Use the general wavpack debug category here too and add debug
+	  output to the functions that should not be called at all by
+	  the wavpack library.
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_plugin_init):
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_plugin_init):
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_plugin_init):
+	  Change debugging category names to conform to the conventions.
+
 2007-03-07  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c:

@@ -494,7 +494,7 @@ gst_wavpack_dec_plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "wavpackdec",
           GST_RANK_PRIMARY, GST_TYPE_WAVPACK_DEC))
     return FALSE;
-  GST_DEBUG_CATEGORY_INIT (gst_wavpack_dec_debug, "wavpackdec", 0,
-      "wavpack decoder");
+  GST_DEBUG_CATEGORY_INIT (gst_wavpack_dec_debug, "wavpack_dec", 0,
+      "Wavpack decoder");
   return TRUE;
 }
