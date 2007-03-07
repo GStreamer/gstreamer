@@ -530,8 +530,9 @@ gst_multi_fd_sink_class_init (GstMultiFdSinkClass * klass)
    *     values that represent respectively: total number of bytes sent, time
    *     when the client was added, time when the client was
    *     disconnected/removed, time the client is/was active, last activity
-   *     time, number of buffers dropped.
+   *     time (in epoch seconds), number of buffers dropped.
    *     All times are expressed in nanoseconds (GstClockTime).
+   *     The array can be 0-length if the client was not found.
    */
   gst_multi_fd_sink_signals[SIGNAL_GET_STATS] =
       g_signal_new ("get-stats", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -826,14 +827,14 @@ restart:
   CLIENTS_UNLOCK (sink);
 }
 
-/* "get-stats" signal implemntation
+/* "get-stats" signal implementation
  * the array returned contains:
  *
  * guint64 : bytes_sent
- * guint64 : connect time (in nanoseconds)
- * guint64 : disconnect time (in nanoseconds)
+ * guint64 : connect time (in nanoseconds, since Epoch)
+ * guint64 : disconnect time (in nanoseconds, since Epoch)
  * guint64 : time the client is/was connected (in nanoseconds)
- * guint64 : last activity time (in nanoseconds)
+ * guint64 : last activity time (in nanoseconds, since Epoch)
  * guint64 : buffers dropped due to recovery
  */
 GValueArray *
