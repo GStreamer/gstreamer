@@ -1,3 +1,11 @@
+2007-03-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c: (gst_level_class_init),
+	(gst_level_set_caps), (gst_level_start), (gst_level_event),
+	(gst_level_transform_ip):
+	* gst/level/gstlevel.h:
+	  Resolve message timestamps against the playback segment.
+
 2007-03-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_add_srcpad),
