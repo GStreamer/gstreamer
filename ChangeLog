@@ -1,3 +1,8 @@
+2007-03-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gstreamer.doap:
+	Update the doap file.
+
 2007-03-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* plugins/elements/gstidentity.c: (gst_identity_check_perfect):
