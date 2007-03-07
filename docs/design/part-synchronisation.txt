@@ -1,0 +1,176 @@
+Synchronisation
+---------------
+
+This document outlines the techniques used for doing synchronised playback of
+multiple streams.
+
+Synchronisation in a GstPipeline is achieved using the following 3 components:
+
+ - a GstClock, which is global for all elements in a GstPipeline.
+ - Timestamps on a GstBuffer.
+ - the NEW_SEGMENT event preceeding the buffers.
+
+
+A GstClock
+----------
+
+This object provides a counter that represents the current time in nanoseconds.
+This value is called the absolute_time.
+
+Different sources exist for this counter:
+
+ - the systemtime (with g_get_current_time() and with microsend accuracy)
+ - an audio device (based on number of samples played)
+ - a network source based on packets received + timestamps in those packets (a
+   typical example is an RTP source)
+ - ...
+
+In GStreamer any element can provide a GstClock object that can be used in the
+pipeline. The GstPipeline object will select a clock from all the providers and
+will distribute it to all other elements (see part-gstpipeline.txt).
+
+A GstClock always counts time upwards and does not necessarily start at 0.
+
+
+Running time
+------------
+
+After a pipeline selected a clock it will maintain the running_time based on the
+selected clock. This running_time represents the total time spent in the PLAYING
+state and is calculated as follows:
+
+ - If the pipeline is NULL/READY, the running_time is undefined.
+ - In PAUSED, the running_time remains at the time when it was last
+   PAUSED. When the stream is PAUSED for the first time, the running_time
+   is 0.
+ - In PLAYING, the running_time is the delta between the absolute_time
+   and the base time. The base time is defined as the absolute_time minus
+   the running_time at the time when the pipeline is set to PLAYING.
+ - after a flushing seek, the running_time is set to 0 (see part-seeking.txt).
+   This is accomplished by redistributing a new base_time to the elements that
+   got flushed.
+
+This algorithm captures the running_time when the pipeline is set from PLAYING
+to PAUSED and restores this time based on the current absolute_time when going
+back to PLAYING. This allows for both clocks that progress when in the PAUSED
+state (systemclock) and clocks that don't (audioclock).
+
+The clock and pipeline now provides a running_time to all elements that want to
+perform synchronisation. Indeed, the running time can be observed in each
+element (during the PLAYING state) as:
+  
+  running_time = absolute_time - base_time
+
+
+Timestamps
+----------
+ 
+The GstBuffer timestamps and the preceeding NEW_SEGMENT event (See
+part-streams.txt) define a transformation of the buffers to running_time as
+follows:
+
+The following notation is used:
+
+ B: GstBuffer 
+  - B.timestamp = buffer timestamp (GST_BUFFER_TIMESTAMP)
+
+ NS:  NEWSEGMENT event preceeding the buffers.
+  - NS.start: start field in the NEWSEGMENT event
+  - NS.rate: rate field of NEWSEGMENT event
+  - NS.abs_rate: absolute value of rate field of NEWSEGMENT event
+  - NS.time: time field in the NEWSEGMENT event
+  - NS.accum: total accumulated time of all previous segments
+
+Valid buffers for synchronisation are those with B.timestamp between NS.start
+and NS.stop. All other buffers outside this range should be dropped or clipped
+to these boundaries (see also part-segments.txt).
+
+The following transformation to running_time exist:
+
+    if (NS.rate > 0.0)
+      running_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
+    else
+      running_time = (NS.stop - B.timestamp) / NS.abs_rate + NS.accum
+
+The first displayable buffer will yield a value of 0 (since B.timestamp ==
+NS.start and NS.accum == 0).
+
+For NS.rate > 1.0, the timestamps will be scaled down to increase the playback
+rate. Likewise, a rate between 0.0 and 1.0 will slow down playback.
+
+For negative rates, timestamps are received stop NS.stop to NS.start so that the
+first buffer received will be transformed into running_time of 0 (B.timestamp ==
+NS.stop and NS.accum == 0).
+
+
+Synchronisation
+---------------
+
+As we have seen, we can get a running_time:
+
+ - using the clock and the element's base_time with:
+
+    C.running_time = absolute_time - base_time
+
+ - using the buffer timestamp and the preceeding NEWSEGMENT event as (assuming
+   positive playback rate):
+
+    B.running_time = (B.timestamp - NS.start) / NS.abs_rate + NS.accum
+
+We prefix C. and B. before the two running times to note how they were
+calculated.
+
+The task of synchronized playback is to make sure that we play be buffer with
+B.running_time at the moment when the clock reaches the same C.running_time.
+
+Thus the following must hold:
+
+   B.running_time = C.running_time
+
+expaning:
+
+   B.running_time = absolute_time - base_time
+
+or:
+
+   absolute_time = B.running_time + base_time
+
+The absolute_time when a buffer with B.running_time should be played is noted
+with B.sync_time. Thus:
+
+  B.sync_time = B.running_time + base_time
+
+One then waits for the clock to reach B.sync_time before rendering the buffer in
+the sink (See also part-clocks.txt).
+
+For multiple streams this means that buffers with the same running_time are to
+be displayed at the same time. 
+
+A demuxer must make sure that the NEWSEGMENT it emits on its output pads yield
+the same running_time for buffers that should be played synchronized. This
+usually means sending the same NEWSEGMENT on all pads and making sure that the
+synchronized buffers have the same timestamps.
+
+
+Stream time
+-----------
+
+The stream time is also known as the position in the stream and is a value
+between 0 and the total duration of the media file.
+
+It is the stream time that is used for:
+
+  - report the POSITION query in the pipeline
+  - the position used in seek queries
+  - the position used to synchronize controller values
+
+Stream time is calculated using the buffer times and the preceeding NEWSEGMENT
+event as follows:
+
+    stream_time = (B.timestamp - NS.start) * NS.abs_applied_rate + NS.time
+ 
+For negative rates, B.timestamp will go backwards from NS.stop to NS.start,
+making the stream time go backwards.
+
+Note that the stream time is never used for synchronisation against the clock.
+

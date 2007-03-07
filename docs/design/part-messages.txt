@@ -10,7 +10,7 @@ requiring an API change while allowing a wide range of different types
 of messages.
 
 Messages are posted by objects in the pipeline and are passed to the 
-application using the GstBus. 
+application using the GstBus (See also part-gstbus.txt and part-gstpipeline.txt). 
 
 
 Message types
@@ -112,14 +112,14 @@ Message types
 
     An element posts this message when it has detected or updated the stream duration.
 
-  GST_MESSAGE_LOST_PREROLL:
+  GST_MESSAGE_ASYNC_START:
 
-    Posted by sinks when they lose their preroll buffer in the PAUSED or PLAYING
-    state caused by a FLUSH_START event.
+    Posted by sinks when they start an asynchronous state change.
 
-  GST_MESSAGE_PREROLLED:
+  GST_MESSAGE_ASYNC_DONE:
 
-    Posted by sinks when they receive the first data buffer.
+    Posted by sinks when they receive the first data buffer and complete the
+    asynchronous state change.
 
   GST_MESSAGE_LATENCY:
 

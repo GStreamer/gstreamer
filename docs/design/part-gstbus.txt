@@ -7,8 +7,9 @@ a first-in first-out way from the streaming threads to the application.
 Since the application typically only wants to deal with delivery of these
 messages from one thread, the GstBus will marshall the messages between
 different threads. This is important since the actual streaming of media
-is done in another thread than the application. It is also important to not
-block the streaming thread while the application deals with the message.
+is done in another threads (streaming threads) than the application. It is
+also important to not block the streaming threads while the application deals
+with the message.
 
 The GstBus provides support for GSource based notifications. This makes it
 possible to handle the delivery in the glib mainloop. Different GSources 
@@ -21,7 +22,7 @@ posted message.
 The bus can be polled with the gst_bus_poll() method. This methods blocks
 up to the specified timeout value until one of the specified messages types
 is posted on the bus. The application can then _pop() the messages from the
-bus to handle them.
+bus to handle them. 
 
 It is also possible to get messages from the bus without any thread 
 marshalling with the gst_bus_set_sync_handler() method. This makes it

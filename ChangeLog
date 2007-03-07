@@ -1,3 +1,22 @@
+2007-03-07  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/Makefile.am:
+	* docs/design/part-synchronisation.txt:
+	Add doc about synchronisation
+
+	* docs/design/draft-latency.txt:
+	* docs/design/part-TODO.txt:
+	* docs/design/part-clocks.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-gstbus.txt:
+	* docs/design/part-gstpipeline.txt:
+	* docs/design/part-live-source.txt:
+	* docs/design/part-messages.txt:
+	* docs/design/part-overview.txt:
+	* docs/design/part-streams.txt:
+	* docs/design/part-trickmodes.txt:
+	Documentation updates.
+
 2007-03-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gstreamer.doap:

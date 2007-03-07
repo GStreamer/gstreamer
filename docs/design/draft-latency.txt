@@ -199,26 +199,21 @@ that no sink is set to PLAYING before it is prerolled.
 
 In order to do this, the pipeline (at the GstBin level) keeps track of all
 elements that require preroll (the ones that return ASYNC from the state
-change). It keeps a custom GstBinState GST_MESSAGE_ELEMENT internally for
-those elements.
+change). These elements posted a ASYNC_START message without a matching
+ASYNC_DONE message.
 
-When the pipeline did not receive a NO_PREROLL state change return from any
-element, it can forget about the GstBinState messages because the state change
-to PLAYING will proceed when all elements commited their state when they are
-prerolled automatically.
+The pipeline will not change the state of the elements that are still doing an
+ASYNC state change.
 
-When the pipeline received a NO_PREROLL state change return from an element, it
-keeps the ELEMENT messages. The pipeline will not change the state of the
-elements that are still doing an ASYNC state change.
+When an ASYNC element prerolls, it commits its state to PAUSED and posts an
+ASYNC_DONE message. The pipeline notices this ASYNC_DONE message and matches it
+with the ASYNC_START message it cached for the corresponding element. 
 
-When an ASYNC element prerolls, it commits its state to PAUSED and posts a
-PREROLLED message. The pipeline notices this PREROLLED message and matches it
-with the GstBinState message it cached for the corresponding element. 
+When all ASYNC_START messages are matched with an ASYNC_DONE message, the
+pipeline proceeds with setting the elements to the final state again.
 
-When all GstBinState messages are matched with a PREROLLED message, the
-pipeline proceeds with setting the PREROLLED sinks to their pending state.
 The base time of the element was already set by the pipeline when it changed the
-nopreroll element to PLAYING. This operation has to be performed in the
+NO_PREROLL element to PLAYING. This operation has to be performed in the
 separate async state change thread (like the one currently used for going from
 PAUSED->PLAYING in a non-live pipeline).
 
@@ -235,7 +230,7 @@ Latency compensation
 As an extension to the revised state changes we can perform latency calculation
 and compensation before we proceed to the PLAYING state. 
 
-When the pipeline collected all PREROLLED messages it can calculate the global
+When the pipeline collected all ASYNC_DONE messages it can calculate the global
 latency as follows:
 
   - perform a latency query on all sinks.
@@ -262,11 +257,12 @@ ex2:
   MIN (50, 40) = 40 >= 33 -> latency = 33
 
 The latency is set on the pipeline by sending a LATENCY event to the sinks
-that posted the PREROLLED message. This event configures the total latency on
-the sinks. The sink forwards this LATENCY event upstream so that
-intermediate elements can configure themselves as well.
+in the pipeline. This event configures the total latency on the sinks. The
+sink forwards this LATENCY event upstream so that intermediate elements can
+configure themselves as well.
 
-After this step, the pipeline continues setting the pending state on the sinks.
+After this step, the pipeline continues setting the pending state on its
+elements.
 
 A sink adds the latency value, received in the LATENCY event, to
 the times used for synchronizing against the clock. This will effectively
@@ -289,22 +285,18 @@ A flush in a pipeline can happen in the following cases:
  - flush preformed by an element
     - after receiving a navigation event (DVD, ...)
 
-When a playing sink is flushed by a FLUSH_START event, a LOST_PREROLL message is
-posted by the element. As part of the message, the state of the element is
-included. The element also goes to a pending PAUSED state.
+When a playing sink is flushed by a FLUSH_START event, an ASYNC_START  message is
+posted by the element. As part of the message, the fact that the element got
+flushes is included. The element also goes to a pending PAUSED state and has to
+be set to the PLAYING state again later.
 
-The message is kept in a GstBinState message by the parent bin. When the element
-prerolls, it posts a PREROLLED message. 
+The ASYNC_START message is kept by the parent bin. When the element prerolls,
+it posts an ASYNC_DONE message. 
 
-When all LOST_PREROLL messages are matched with a PREROLLED message, the bin
-will capture a new base time from the clock and will bring all the prerolled
-sinks back to PLAYING (or whatever their state was when they posted the
-LOST_PREROLL message) after setting the new base time on them. It's also possible
+When all ASYNC_START messages are matched with an ASYNC_DONE message, the bin
+will capture a new base_time from the clock and will bring all the sinks back to
+PLAYING after setting the new base time on them. It's also possible
 to perform additional latency calculations and adjustments before doing this. 
-
-The difference with the NEED_PREROLL/PREROLLED and LOST_PREROLL/PREROLLED
-message pair is that the latter makes the pipeline acquire a new base time for
-the PREROLLED elements.
 
 
 Dynamically adjusting latency

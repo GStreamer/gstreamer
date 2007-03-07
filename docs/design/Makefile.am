@@ -39,6 +39,7 @@ EXTRA_DIST = \
 	part-standards.txt \
 	part-states.txt \
 	part-streams.txt \
+	part-synchronisation.txt \
 	part-TODO.txt \
 	part-trickmodes.txt
 

@@ -7,7 +7,7 @@ implementation but time is always expessed in nanoseconds. Since the
 baseline of the clock is undefined, the clock time returned is not
 meaningfull in itself, what matters are the deltas between two clock
 times.
-The time reported by the clock is called the absolute time.
+The time reported by the clock is called the absolute_time.
 
 
 Clock Selection
@@ -30,68 +30,8 @@ CLOCK_LOST message is posted. The application must then set the pipeline to
 PAUSED and PLAYING again in order to let the pipeline select a new clock
 and distribute a new base time.
 
-
-Time in GStreamer
------------------
-
-The absolute time is used to calculate the running time. The running time
-is defined as follows:
-
- - If the pipeline is NULL/READY, the running time is undefined.
- - In PAUSED, the running time remains at the time when it was last 
-   PAUSED. When the stream is PAUSED for the first time, the running time
-   is 0. 
- - In PLAYING, the running time is the delta between the absolute time
-   and the base time. The base time is defined as the absolute time minus
-   the running time at the time when the pipeline is set to PLAYING.
- - after a flushing seek, the running time is set to 0 (see part-seeking.txt)
-
-The running time is completely managed by the GstPipeline object using the
-GstClock absolute time. It basically represents the elapsed time that the
-pipeline spend in the PLAYING state.
-
-
-Timestamps
-----------
-
-NOTE: this info is inaccurate, see part-synchronisation.txt for how the clock
-time is used to synchronize buffer timestamps.
-
-The combination of the last NEWSEGMENT event and the buffer timestamps 
-express the presentation stream time of the buffer. The stream time
-of a buffer is calculated as follows:
-
- ST = TS - DT        where: TS = buffer timestamp
-                            DT = NEWSEGMENT timestamp
-			    ST = buffer stream time
-
-The reason for not making the buffer times express the stream time directly
-is for the following reasons:
-
- - demuxers are easier if they can just copy the timestamps as encoded in
-   the file. The initial NEWSEGMENT event would contain the lowest timestamp in
-   the stream which makes the buffer stream time start from 0.
- - pipelines requiring retimestamping of buffers can efficiently adjust
-   the timestamp in the NEWSEGMENT events and have all buffers retimestamped
-   automatically.
- - resync after different kinds of seeks is easier.
-
-If an element wants to synchronize a buffer to the clock it needs to first
-calculate the buffer stream time and then bring the stream time to the
-absolute clock time.
-
-Converting a timestamp (in stream time) to absolute time is performed using
-the following formula:
-
-    AT = BT + ST               where: AT = absolute time
-                                      BT = base time
-                                      ST = stream time
-
-The pipeline base time is propagated to all the element during the PAUSED
-to PLAYING state change. All elements are therefore able to convert the 
-stream time to the absolute time. It is possible to specify an aditional
-delay to the base time to compensate for the delay it takes to perform
-the state change using the GstPipeline "delay" property.
+The clock selection is performed as part of the state change from PAUSED to
+PLAYING and is described in part-states.txt.
 
 
 Clock features

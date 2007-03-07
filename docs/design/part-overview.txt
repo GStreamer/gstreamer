@@ -166,6 +166,7 @@ Pipeline
    - Manage running_time based on the selected clock. Running_time is the elapsed
      time the pipeline spent in the PLAYING state and is used for
      synchronisation.
+   - Manage latency in the pipeline.
    - Provide means for elements to comunicate with the application by the GstBus.
    - Manage the global state of the elements such as Errors and end-of-stream.
  
@@ -365,7 +366,8 @@ Pipeline states
 
  Before going to PLAYING, the pipeline select a clock and samples the current time of 
  the clock. This is the base_time. It then distributes this time to all elements. 
- Elements can then synchronize against the clock using the buffer timestamp+base time. 
+ Elements can then synchronize against the clock using the buffer running_time +
+ base_time (See also part-synchronisation.txt). 
 
  The following chain of state changes then takes place:
 
@@ -385,7 +387,7 @@ Pipeline status
 
  The bus is distributed to all elements added to the pipeline. The elements use the bus
  to post messages on. Various message types exist such as ERRORS, WARNINGS, EOS, 
- STATE_CHANGED,  etc..
+ STATE_CHANGED, etc..
 
  The pipeline handles EOS messages received from elements in a special way. It will
  only forward the message to the application when all sink elements have posted an
@@ -412,7 +414,8 @@ Pipeline EOS
  The EOS event will eventually arrive in the sink element. The sink will then post
  an EOS message on the bus to inform the pipeline that a particular stream has
  finished. When all sinks have reported EOS, the pipeline forwards the EOS message
- to the application. 
+ to the application. The EOS message is only forwarded to the application in the
+ PLAYING state.
 
  When in EOS, the pipeline remains in the PLAYING state, it is the applications
  responsability to PAUSE or READY the pipeline. The application can also issue

@@ -15,7 +15,8 @@ since such a buffer might never arrive.
 
 Live sources return NO_PREROLL when going to the PAUSED state to inform the
 bin/pipeline that this element will not be able to produce data in the
-PAUSED state.
+PAUSED state. NO_PREROLL should be returned for both READY->PAUSED and
+PLAYING->PAUSED.
 
 When performing a get_state() on a bin with a non-zero timeout value, the
 bin must be sure that there are no live sources in the pipeline because else

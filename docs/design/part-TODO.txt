@@ -22,9 +22,6 @@ API/ABI
 - use | instead of + as divider in serialization of Flags
   (gstvalue/gststructure)
 
-- with the addition the PREROLLED message, we can probably get rid of the
-  STATE_DIRTY message.
-
 
 IMPLEMENTATION
 --------------

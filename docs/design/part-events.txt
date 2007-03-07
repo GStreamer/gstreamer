@@ -242,7 +242,7 @@ contains a single GstClockTime with the required latency. The latency value is
 calculated by the pipeline and distributed to all sink elements before they are
 set to PLAYING. The sinks will add the configured latency value to the
 timestamps of the buffer in order to delay their presentation.
-See also part-latency.txt.
+(See also part-latency.txt).
 
 
 DRAIN
