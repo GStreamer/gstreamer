@@ -475,7 +475,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Max. size (buffers)</NICK>
 <BLURB>Max. number of buffers in the queue (0=disable).</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>200</DEFAULT>
 </ARG>
 
 <ARG>
@@ -485,7 +485,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Max. size (kB)</NICK>
 <BLURB>Max. amount of data in the queue (bytes, 0=disable).</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>10485760</DEFAULT>
 </ARG>
 
 <ARG>
@@ -495,7 +495,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Max. size (ns)</NICK>
 <BLURB>Max. amount of data in the queue (in ns, 0=disable).</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1000000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -554,7 +554,7 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Has Sink Loop</NICK>
-<BLURB>If the element can operate in pull mode (unimplemented).</BLURB>
+<BLURB>If the element should spawn a thread (unimplemented and deprecated).</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -586,6 +586,16 @@
 <NICK>Silent</NICK>
 <BLURB>Don't produce last_message events.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTee::pull-mode</NAME>
+<TYPE>GstTeePullMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pull mode</NICK>
+<BLURB>Behavior of tee in pull mode.</BLURB>
+<DEFAULT>Never activate in pull mode</DEFAULT>
 </ARG>
 
 <ARG>

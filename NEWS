@@ -1,4 +1,68 @@
-This is GStreamer 0.10.11, "Love never runs on time"
+This is GStreamer 0.10.10.12 "Inevitable Demise"
+
+Changes since 0.10.11:
+
+      * Add a warning if GLib threading support is not properly initialised
+      * Add support for binary registry serialisation
+      * Preliminary support for pull-mode scheduling of entire chains
+      * Add support for HPPA 
+      * Collectpads fixes
+      * Lots of bug fixes
+
+Bugs fixed since 0.10.11:
+     
+      * 378931 : Bison version check doesn't work on Solaris 9
+      * 399875 : [multiqueue] dynamic growth not implemented.
+      * 339326 : pads not set to FLUSHING when created
+      * 380129 : gst_plugin_feature_load doesn't consistently ref a return...
+      * 381301 : [patch] Make GstBus watch work with any GMainContext
+      * 383382 : Removing pads from collectpads not threadsafe
+      * 383506 : Disallow CLOCK_TIME_NONE as periodic clock id interval
+      * 387073 : gst-launch videotestsrc ! ffmpegcolorspace ! ximagesink d...
+      * 387866 : [docs] Small fix for GstCollectPads docs
+      * 391278 : g_thread_init() called too late, possibly causing memory ...
+      * 391296 : [API] add gst_update_registry() to rescan registry at run...
+      * 391777 : GStreamer does not reset SEGV trap handler
+      * 391909 : Fix compilation with MinGW
+      * 399094 : gst_pad_start_task: small doc typo
+      * 401381 : GstRegistry signals documentation is missing
+      * 401781 : [API] add GST_ROUND_DOWN_* macros
+      * 402393 : [API][GstCollectPads] Allow elements to specify destroy n...
+      * 405284 : Changing state of pipeline can lock up with preroll queue...
+      * 400656 : [PATCH] filesrc seekability detection fix (NFS and 2GB+ f...
+      * 403172 : [filesrc] doesn't handle localhost file locations
+      * 404569 : [filesrc] Unexpected end of file
+      * 161922 : script to provide plugin installation info
+      * 391915 : adapter test doesn't compile with mingw
+      * 395554 : gst_tag_setter_merge_tags works at most once
+      * 403597 : [API] Add ReplayGain reference level tag
+      * 405288 : Configure checks use pkg-config directly
+      * 381492 : [SystemClock] ClockID wait_async notification broken
+      * 382592 : Multiple wait()ers break periodic clock ids
+      * 385084 : endless ghost pad pull/push activate recursion until crash
+      * 388201 : [API] add gst_adapter_copy()
+
+API additions since 0.10.11:
+
+      * gst_update_registry()
+      * gst_adapter_copy()
+      * GST_ROUND_DOWN_* macros
+      * GstCollectDataDestroyNotify
+      * gst_query_new_latency()
+      * gst_query_set_latency()
+      * gst_query_parse_latency()
+      * gst_message_new_lost_preroll()
+      * gst_message_parse_lost_preroll()
+      * gst_message_new_prerolled()
+      * gst_message_new_latency()
+      * gst_event_new_latency()
+      * gst_event_parse_latency()
+      * GST_TAG_REFERENCE_LEVEL
+      * gst_base_sink_query_latency()
+      * gst_base_sink_get_latency()
+      * gst_bus_timed_pop()
+      * gst_message_new_info()
+      * gst_message_parse_info()
 
 Bugs fixed since 0.10.10:
 

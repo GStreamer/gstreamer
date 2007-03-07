@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.11 "Love never runs on time"
+Release notes for GStreamer 0.10.12 "Inevitable Demise"
         
 
 
@@ -37,60 +37,69 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Base sink classes now fully support reverse playback modes
-      * Optimisations and bug-fixes
-      * Documentation improvements
-      * New API for network buffering
-      * Reduction in exported DLL symbols
-      * Pad blocking now works correctly
-      * Introduction of the MultiQueue object for building queue-like objects
-      * Many other bug-fixes and enhancements
+      * Add a warning if GLib threading support is not properly initialised
+      * Add support for binary registry serialisation
+      * Preliminary support for pull-mode scheduling of entire chains
+      * Add support for HPPA
+      * Collectpads fixes
+      * Lots of bug fixes
 
 Bugs fixed in this release
      
-      * 363095 : [BaseTransform] Outputs empty buffers
-      * 353301 : aborts in _get_element_by_uri(), probably due to buggy el...
-      * 344639 : Separate threadsafe queuing functionnality in a separate ...
-      * 347785 : [multiqueue] New multiple input-output queue
-      * 352827 : re-negotiation issues with dynamic pipelines and level or...
-      * 357180 : [libs] gst_controller_new* functions don't increase refco...
-      * 318031 : gstreamer should use gmodule-no-export in its .pc file
-      * 340878 : Registry doesn't discard removed plugin features
-      * 345496 : No GstPadDirection in files created by GstXml
-      * 356910 : Basesrc gst_base_src_activate_push not calling base_src_s...
-      * 357593 : Generated gst-element-check.m4 installed from $(srcdir)
-      * 358436 : #include is missing in gstghostpad.c and gstquery.c
-      * 358999 : [PATCH] [GstPad] Flushing on blocked pads not handled cor...
-      * 359850 : Compiling issues on sparc with Forte
-      * 360151 : Fixes compiling with forte: disable warning as error for ...
-      * 360173 : Fixes compiling with forte: warning clean up (part 1)
-      * 360467 : [API] add gst_tag_list_is_empty ()
-      * 360860 : Fixes compiling with forte: warning clean up (part 2)
-      * 361675 : Allow applications to use libxml2 and GStreamer even if  ...
-      * 361720 : grammar project: error generating gstmarshal.c and gstmar...
-      * 361730 : wrong source file list in VC8 project
-      * 361732 :  " win32\common\libgstreamer.def " lacks 'gst_caps_merge' entry
-      * 361769 : Deadlock in gstpad.c
-      * 364388 : size variable is not always initialized in gst_base_src_s...
-      * 366321 : GST_SEGMENT_FORMAT not defined on windows
-      * 370865 : [basesrc] update segment duration in gst_base_src_update_...
-      * 371493 : Incomplete change of printf conversion specifiers in gstr...
-      * 374475 : [PATCH] minor doc typo
-      * 377332 : [PATCH] Warning with check > = 0.9.4
-      * 381175 : [PATCH] fix vs8 compilation
-      * 357617 : [libs] gst_controller_set_from_list can return without un...
-      * 358737 : _gst_event_copy sets the wrong parent_refcount on the chi...
-      * 366212 : Fix some misspellings in gstreamer core
-      * 369366 : MacOSX printf fixes for CVS
-      * 371894 : tests/examples/typefind is broken
-      * 355499 : ensure_current_registry_forking()  fails if zombie alread...
-      * 352345 : Small race condition in the queue element
-      * 357432 : [libs] GstController needs to keep controlled objects alive
-      * 358613 : sink- > file is never reset for filesink elements, even tho...
-      * 366286 : [PATCH] fix compilation on Windows
-      * 366572 : Bad declaration in headerfile
-      * 367677 : [fdsrc] skips the first byte
-      * 369942 : [PATCH] unblocking blocked pad does not release all block...
+      * 378931 : Bison version check doesn't work on Solaris 9
+      * 399875 : [multiqueue] dynamic growth not implemented.
+      * 339326 : pads not set to FLUSHING when created
+      * 380129 : gst_plugin_feature_load doesn't consistently ref a return...
+      * 381301 : [patch] Make GstBus watch work with any GMainContext
+      * 383382 : Removing pads from collectpads not threadsafe
+      * 383506 : Disallow CLOCK_TIME_NONE as periodic clock id interval
+      * 387073 : gst-launch videotestsrc ! ffmpegcolorspace ! ximagesink d...
+      * 387866 : [docs] Small fix for GstCollectPads docs
+      * 391278 : g_thread_init() called too late, possibly causing memory ...
+      * 391296 : [API] add gst_update_registry() to rescan registry at run...
+      * 391777 : GStreamer does not reset SEGV trap handler
+      * 391909 : Fix compilation with MinGW
+      * 399094 : gst_pad_start_task: small doc typo
+      * 401381 : GstRegistry signals documentation is missing
+      * 401781 : [API] add GST_ROUND_DOWN_* macros
+      * 402393 : [API][GstCollectPads] Allow elements to specify destroy n...
+      * 405284 : Changing state of pipeline can lock up with preroll queue...
+      * 400656 : [PATCH] filesrc seekability detection fix (NFS and 2GB+ f...
+      * 403172 : [filesrc] doesn't handle localhost file locations
+      * 404569 : [filesrc] Unexpected end of file
+      * 161922 : script to provide plugin installation info
+      * 391915 : adapter test doesn't compile with mingw
+      * 395554 : gst_tag_setter_merge_tags works at most once
+      * 403597 : [API] Add ReplayGain reference level tag
+      * 405288 : Configure checks use pkg-config directly
+      * 381492 : [SystemClock] ClockID wait_async notification broken
+      * 382592 : Multiple wait()ers break periodic clock ids
+      * 385084 : endless ghost pad pull/push activate recursion until crash
+      * 388201 : [API] add gst_adapter_copy()
+
+API changed in this release
+     
+- API additions:
+    
+* gst_update_registry()
+* gst_adapter_copy()
+* GST_ROUND_DOWN_* macros
+* GstCollectDataDestroyNotify
+* gst_query_new_latency()
+* gst_query_set_latency()
+* gst_query_parse_latency()
+* gst_message_new_lost_preroll()
+* gst_message_parse_lost_preroll()
+* gst_message_new_prerolled()
+* gst_message_new_latency()
+* gst_event_new_latency()
+* gst_event_parse_latency()
+* GST_TAG_REFERENCE_LEVEL
+* gst_base_sink_query_latency()
+* gst_base_sink_get_latency()
+* gst_bus_timed_pop()
+* gst_message_new_info()
+* gst_message_parse_info()
 
 Download
 
@@ -125,31 +134,21 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Alessandro Decina
-      * Antoine Tremblay
-      * Christian F.K. Schaller
+      * Andy Wingo
+      * Carlos Sanmartin Dominguez
       * David Schleef
       * Edward Hervey
-      * Jan David Mol
       * Jan Schmidt
-      * Jonathan Matthew
-      * Josep Torre Valles
-      * Kjartan Maraas
-      * Marcus Granado
+      * Jindrich Makovicka
       * Mark Nauwelaerts
-      * Michael Smith
-      * Peter Kjellerstedt
+      * Michal Benes
       * René Stadler
-      * Sebastian Droege
-      * Sebastien Cote
-      * Sergey Scobich
+      * Sebastian Dröge
       * Sjoerd Simons
       * Stefan Kost
+      * Sébastien Moutte
       * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Vincent Torri
       * Wim Taymans
-      * Yves Lefebvre
-      * Zaheer Abbas Merali
-      * gorshkov
-      * mrcgran
  

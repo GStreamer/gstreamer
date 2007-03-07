@@ -24,7 +24,7 @@
 /* #undef GST_GCOV_ENABLED */
 
 /* Default errorlevel to use */
-#define GST_LEVEL_DEFAULT GST_LEVEL_ERROR
+#define GST_LEVEL_DEFAULT GST_LEVEL_NONE
 
 /* GStreamer license */
 #define GST_LICENSE "LGPL"
@@ -33,7 +33,7 @@
 #define GST_MAJORMINOR "0.10"
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer CVS/prerelease"
+#define GST_PACKAGE_NAME "GStreamer source release"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
@@ -175,7 +175,7 @@
 #define HAVE_WIN32 1
 
 /* Define host CPU */
-#define HOST_CPU "i386"
+#define HOST_CPU "i686"
 
 /* library dir */
 #ifdef _DEBUG
@@ -197,13 +197,13 @@
 #define PACKAGE_NAME "GStreamer"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer 0.10.11.1"
+#define PACKAGE_STRING "GStreamer 0.10.12"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gstreamer"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.10.11.1"
+#define PACKAGE_VERSION "0.10.12"
 
 /* Define the plugin directory */
 #ifdef _DEBUG
@@ -219,7 +219,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.11.1"
+#define VERSION "0.10.12"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
