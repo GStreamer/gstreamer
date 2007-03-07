@@ -1,5 +1,12 @@
 2007-03-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
+	* plugins/elements/gstidentity.c: (gst_identity_check_perfect):
+	Rename non-perfect to imperfect for Mike and for the sanctity of the
+	language.
+	Also make sure bus message gets emitted for data-incontiguities.
+
+2007-03-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
 	* plugins/elements/gstidentity.c: (gst_identity_check_perfect),
 	(gst_identity_start):
 	* plugins/elements/gstidentity.h:

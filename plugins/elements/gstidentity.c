@@ -335,7 +335,7 @@ gst_identity_check_perfect (GstIdentity * identity, GstBuffer * buf)
             GST_TIME_ARGS (t_expected), (dt < 0) ? '-' : '+',
             GST_TIME_ARGS ((dt < 0) ? (GstClockTime) (-dt) : dt));
         /*
-         * "non-perfect" bus message:
+         * "imperfect" bus message:
          * @identity: the identity instance
          * @prev-timestamp: the previous buffer timestamp
          * @prev-duration: the previous buffer duration
@@ -352,16 +352,15 @@ gst_identity_check_perfect (GstIdentity * identity, GstBuffer * buf)
          */
         gst_element_post_message (GST_ELEMENT (identity),
             gst_message_new_element (GST_OBJECT (identity),
-                gst_structure_new ("non-perfect", "prev-timestamp",
-                    G_TYPE_UINT64, identity->prev_timestamp, "prev-duration",
-                    G_TYPE_UINT64, identity->prev_duration, "prev-offset",
-                    G_TYPE_UINT64, identity->prev_offset, "prev-offset-end",
-                    G_TYPE_UINT64, identity->prev_offset_end, "cur-timestamp",
-                    G_TYPE_UINT64, timestamp, "cur-duration", G_TYPE_UINT64,
+                gst_structure_new ("imperfect", "prev-timestamp", G_TYPE_UINT64,
+                    identity->prev_timestamp, "prev-duration", G_TYPE_UINT64,
+                    identity->prev_duration, "prev-offset", G_TYPE_UINT64,
+                    identity->prev_offset, "prev-offset-end", G_TYPE_UINT64,
+                    identity->prev_offset_end, "cur-timestamp", G_TYPE_UINT64,
+                    timestamp, "cur-duration", G_TYPE_UINT64,
                     GST_BUFFER_DURATION (buf), "cur-offset", G_TYPE_UINT64,
                     GST_BUFFER_OFFSET (buf), "cur-offset-end", G_TYPE_UINT64,
                     GST_BUFFER_OFFSET_END (buf), NULL)));
-
       }
 
       offset = GST_BUFFER_OFFSET (buf);
@@ -370,6 +369,17 @@ gst_identity_check_perfect (GstIdentity * identity, GstBuffer * buf)
             "Buffer not data-contiguous with previous one: "
             "prev offset_end %" G_GINT64_FORMAT ", new offset %"
             G_GINT64_FORMAT, identity->prev_offset_end, offset);
+        gst_element_post_message (GST_ELEMENT (identity),
+            gst_message_new_element (GST_OBJECT (identity),
+                gst_structure_new ("imperfect", "prev-timestamp", G_TYPE_UINT64,
+                    identity->prev_timestamp, "prev-duration", G_TYPE_UINT64,
+                    identity->prev_duration, "prev-offset", G_TYPE_UINT64,
+                    identity->prev_offset, "prev-offset-end", G_TYPE_UINT64,
+                    identity->prev_offset_end, "cur-timestamp", G_TYPE_UINT64,
+                    timestamp, "cur-duration", G_TYPE_UINT64,
+                    GST_BUFFER_DURATION (buf), "cur-offset", G_TYPE_UINT64,
+                    GST_BUFFER_OFFSET (buf), "cur-offset-end", G_TYPE_UINT64,
+                    GST_BUFFER_OFFSET_END (buf), NULL)));
       }
     } else {
       GST_DEBUG_OBJECT (identity, "can't check time-contiguity, no timestamp "
