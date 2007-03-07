@@ -25,6 +25,9 @@
 
 #include "gstwavpackstreamreader.h"
 
+GST_DEBUG_CATEGORY_EXTERN (wavpack_debug);
+#define GST_CAT_DEFAULT wavpack_debug
+
 static int32_t
 gst_wavpack_stream_reader_read_bytes (void *id, void *data, int32_t bcount)
 {
@@ -50,12 +53,14 @@ gst_wavpack_stream_reader_get_pos (void *id)
 static int
 gst_wavpack_stream_reader_set_pos_abs (void *id, uint32_t pos)
 {
+  GST_DEBUG ("should not be called");
   return -1;
 }
 
 static int
 gst_wavpack_stream_reader_set_pos_rel (void *id, int32_t delta, int mode)
 {
+  GST_DEBUG ("should not be called");
   return -1;
 }
 
@@ -85,6 +90,7 @@ gst_wavpack_stream_reader_can_seek (void *id)
 static int32_t
 gst_wavpack_stream_reader_write_bytes (void *id, void *data, int32_t bcount)
 {
+  GST_DEBUG ("should not be called");
   return 0;
 }
 

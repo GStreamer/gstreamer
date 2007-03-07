@@ -1176,8 +1176,8 @@ gst_wavpack_parse_plugin_init (GstPlugin * plugin)
     return FALSE;
   }
 
-  GST_DEBUG_CATEGORY_INIT (gst_wavpack_parse_debug, "wavpackparse", 0,
-      "wavpack file parser");
+  GST_DEBUG_CATEGORY_INIT (gst_wavpack_parse_debug, "wavpack_parse", 0,
+      "Wavpack file parser");
 
   return TRUE;
 }

@@ -27,9 +27,13 @@
 #include "gstwavpackdec.h"
 #include "gstwavpackenc.h"
 
+/* debug category for common code */
+GST_DEBUG_CATEGORY (wavpack_debug);
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (wavpack_debug, "wavpack", 0, "Wavpack elements");
   return (gst_wavpack_parse_plugin_init (plugin)
       && gst_wavpack_dec_plugin_init (plugin)
       && gst_wavpack_enc_plugin_init (plugin));

@@ -978,8 +978,8 @@ gst_wavpack_enc_plugin_init (GstPlugin * plugin)
           GST_RANK_NONE, GST_TYPE_WAVPACK_ENC))
     return FALSE;
 
-  GST_DEBUG_CATEGORY_INIT (gst_wavpack_enc_debug, "wavpackenc", 0,
-      "wavpack encoder");
+  GST_DEBUG_CATEGORY_INIT (gst_wavpack_enc_debug, "wavpack_enc", 0,
+      "Wavpack encoder");
 
   return TRUE;
 }
