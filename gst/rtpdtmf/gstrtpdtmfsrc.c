@@ -615,8 +615,8 @@ gst_rtp_dtmf_src_set_caps (GstRTPDTMFSrc *dtmfsrc)
       "seqnum-base", G_TYPE_UINT, dtmfsrc->seqnum_base, NULL);
 
   if (!gst_pad_set_caps (dtmfsrc->srcpad, caps)) {
-    GST_ERROR_OBJECT (dtmfsrc, "Failed to set caps % on src pad",
-            GST_PTR_FORMAT, caps);
+    GST_ERROR_OBJECT (dtmfsrc,
+            "Failed to set caps %" GST_PTR_FORMAT " on src pad", caps);
   }
 
   gst_caps_unref (caps);
