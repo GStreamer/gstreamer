@@ -66,6 +66,7 @@ struct _GstIdentity {
   gboolean	 single_segment;
   GstClockTime   prev_timestamp;
   GstClockTime   prev_duration;
+  guint64        prev_offset;
   guint64        prev_offset_end;
   gchar 	*last_message;
   guint64        offset;

@@ -1,3 +1,12 @@
+2007-03-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* plugins/elements/gstidentity.c: (gst_identity_check_perfect),
+	(gst_identity_start):
+	* plugins/elements/gstidentity.h:
+	Emit bus message if check-perfect is true and we encounter a
+	non-perfect stream between 2 consecutive buffers.
+	Fixes #415394.
+
 2007-03-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
