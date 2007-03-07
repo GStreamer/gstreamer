@@ -26,6 +26,9 @@
 
 G_BEGIN_DECLS
 
+GST_DEBUG_CATEGORY_EXTERN (qtdemux_debug);
+#define GST_CAT_DEFAULT qtdemux_debug
+
 #define GST_TYPE_QTDEMUX \
   (gst_qtdemux_get_type())
 #define GST_QTDEMUX(obj) \

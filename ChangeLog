@@ -1,3 +1,10 @@
+2007-03-07  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux.h:
+	Share qtdemux debug category across all files, otherwise all debugging
+	in files other than qtdemux.c would end up in the default category.
+
 2007-03-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_start),
