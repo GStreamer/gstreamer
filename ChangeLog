@@ -1,3 +1,8 @@
+2007-03-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* plugins/elements/gstidentity.c: (gst_identity_check_perfect):
+	Only post bus message at max, once per buffer received.
+
 2007-03-07  Wim Taymans  <wim@fluendo.com>
 
 	* docs/design/Makefile.am:
