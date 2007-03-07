@@ -1,3 +1,8 @@
+2007-03-07  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_read_chain):
+	Fix confusing debug message.
+
 2007-03-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst-plugins-base.doap:

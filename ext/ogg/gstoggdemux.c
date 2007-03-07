@@ -2355,7 +2355,11 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
   }
 
   if (ret != GST_FLOW_OK || chain == NULL) {
-    GST_WARNING_OBJECT (ogg, "failed to read chain");
+    if (ret != GST_FLOW_UNEXPECTED) {
+      GST_WARNING_OBJECT (ogg, "failed to read chain");
+    } else {
+      GST_DEBUG_OBJECT (ogg, "done reading chains");
+    }
     if (chain) {
       gst_ogg_chain_free (chain);
     }
