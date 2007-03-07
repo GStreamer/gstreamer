@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-11-30 23:32+0100\n"
+"POT-Creation-Date: 2007-03-07 12:47+0000\n"
 "PO-Revision-Date: 2006-04-07 18:23+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0\n"
 "X-Generator: BBEdit 8.2.3\n"
 
-#: gst/gst.c:289
+#: gst/gst.c:298
 msgid "Print the GStreamer version"
 msgstr "Hiển thị phiên bản GStreamer"
 
-#: gst/gst.c:291
+#: gst/gst.c:300
 msgid "Make all warnings fatal"
 msgstr "Đặt mọi cảnh báo là nghiêm trọng"
 
-#: gst/gst.c:295
+#: gst/gst.c:304
 msgid "Print available debug categories and exit"
 msgstr "Hiển thị tất cả các loại gỡ lỗi sẵn sàng rồi thoát"
 
-#: gst/gst.c:299
+#: gst/gst.c:308
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 5 (bất cứ điều nào) hay 0 (không xuất "
 "gì)"
 
-#: gst/gst.c:301
+#: gst/gst.c:310
 msgid "LEVEL"
 msgstr "MỨC"
 
-#: gst/gst.c:303
+#: gst/gst.c:312
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -47,31 +47,31 @@ msgstr ""
 "Danh sách định giới bằng dấu phẩy của đôi « tên_loại:mức » để đặt mức dứt "
 "khoát cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:306
+#: gst/gst.c:315
 msgid "LIST"
 msgstr "DANH SÁCH"
 
-#: gst/gst.c:308
+#: gst/gst.c:317
 msgid "Disable colored debugging output"
 msgstr "Tắt xuất dữ liệu gỡ lỗi với màu"
 
-#: gst/gst.c:311
+#: gst/gst.c:320
 msgid "Disable debugging"
 msgstr "Tắt gỡ lỗi"
 
-#: gst/gst.c:315
+#: gst/gst.c:324
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Bật chẩn đoán chi tiết việc tải trình cầm phít"
 
-#: gst/gst.c:319
+#: gst/gst.c:328
 msgid "Colon-separated paths containing plugins"
 msgstr "Các đường dẫn chứa bộ cầm phít, phân cách nhau bởi dấu phẩy."
 
-#: gst/gst.c:319
+#: gst/gst.c:328
 msgid "PATHS"
 msgstr "ĐƯỜNG DẪN"
 
-#: gst/gst.c:322
+#: gst/gst.c:331
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -79,51 +79,51 @@ msgstr ""
 "Danh sách định giới bằng dấu phẩy của các bộ cầm phít cần tải trước, thêm "
 "vào danh sách được cất giữ trong biến môi trường <GST_PLUGIN_PATH>."
 
-#: gst/gst.c:324
+#: gst/gst.c:333
 msgid "PLUGINS"
 msgstr "CẦM PHÍT"
 
-#: gst/gst.c:327
+#: gst/gst.c:336
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Tắt khả năng bắt lỗi phân đoạn trong khi tải bộ cầm phít"
 
-#: gst/gst.c:332
+#: gst/gst.c:341
 msgid "Disable the use of fork() while scanning the registry"
 msgstr ""
 
-#: gst/gst.c:337
+#: gst/gst.c:362
 msgid "GStreamer Options"
 msgstr "Tùy chọn GStreamer"
 
-#: gst/gst.c:338
+#: gst/gst.c:363
 msgid "Show GStreamer Options"
 msgstr "Hiển thị Tùy chọnStreamer"
 
-#: gst/gst.c:674
+#: gst/gst.c:727
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr ""
 
-#: gst/gst.c:709 gst/gst.c:718 gst/gst.c:759
+#: gst/gst.c:763 gst/gst.c:772 gst/gst.c:819
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr ""
 
-#: gst/gst.c:774
+#: gst/gst.c:834
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr ""
 
-#: gst/gst.c:1044
+#: gst/gst.c:1117
 msgid "Unknown option"
 msgstr "Tùy chọn lạ"
 
-#: gst/gstelement.c:279 gst/gstutils.c:2181
+#: gst/gstelement.c:286 gst/gstutils.c:2173
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "LỖI: từ yếu tố %s: %s\n"
 
-#: gst/gstelement.c:281 gst/gstutils.c:2183
+#: gst/gstelement.c:288 gst/gstutils.c:2175 tools/gst-launch.c:441
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -309,7 +309,7 @@ msgstr "Không có thông điệp lỗi cho miền %s."
 msgid "No standard error message for domain %s and code %d."
 msgstr "Không có thông điệp chuẩn cho miền %s và mã %d."
 
-#: gst/gstpipeline.c:558
+#: gst/gstpipeline.c:567
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
 
@@ -595,32 +595,49 @@ msgid "peak of the album"
 msgstr "âm lượng tối đa bạn muốn cho tập dữ liệu này"
 
 #: gst/gsttaglist.c:210
-msgid "language code"
-msgstr "mã ngôn ngữ"
+#, fuzzy
+msgid "replaygain reference level"
+msgstr "nhớ âm lượng tối đa rãnh"
 
 #: gst/gsttaglist.c:211
-msgid "language code for this stream, conforming to ISO-639-1"
-msgstr "mã ngôn ngữ cho luồng này, tùy theo tiêu chuẩn ISO-639-1"
-
-#: gst/gsttaglist.c:213
-msgid "image"
+msgid "reference level of track and album gain values"
 msgstr ""
 
 #: gst/gsttaglist.c:213
+msgid "language code"
+msgstr "mã ngôn ngữ"
+
+#: gst/gsttaglist.c:214
+msgid "language code for this stream, conforming to ISO-639-1"
+msgstr "mã ngôn ngữ cho luồng này, tùy theo tiêu chuẩn ISO-639-1"
+
+#: gst/gsttaglist.c:216
+msgid "image"
+msgstr ""
+
+#: gst/gsttaglist.c:216
 #, fuzzy
 msgid "image related to this stream"
 msgstr "bộ mã hóa được sử dụng để mã hóa luồng này"
 
-#: gst/gsttaglist.c:215
+#: gst/gsttaglist.c:218
 msgid "preview image"
 msgstr ""
 
-#: gst/gsttaglist.c:215
+#: gst/gsttaglist.c:218
 #, fuzzy
 msgid "preview image related to this stream"
 msgstr "bộ mã hóa được sử dụng để mã hóa luồng này"
 
-#: gst/gsttaglist.c:254
+#: gst/gsttaglist.c:220
+msgid "beats per minute"
+msgstr ""
+
+#: gst/gsttaglist.c:220
+msgid "number of beats per minute in audio"
+msgstr ""
+
+#: gst/gsttaglist.c:260
 msgid ", "
 msgstr ", "
 
@@ -697,15 +714,15 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr "không cho phép đường ống trống"
 
-#: libs/gst/base/gstbasesrc.c:1613 libs/gst/base/gstbasesrc.c:1624
+#: libs/gst/base/gstbasesrc.c:1641 libs/gst/base/gstbasesrc.c:1652
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
-#: libs/gst/base/gstbasesink.c:1934
+#: libs/gst/base/gstbasesink.c:2090
 msgid "Internal data flow problem."
 msgstr "Vấn đề luồng dữ liệu nội bộ."
 
-#: libs/gst/base/gstbasesink.c:2066
+#: libs/gst/base/gstbasesink.c:2222
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
@@ -751,31 +768,31 @@ msgstr "Gặp lỗi khi ghi vào tập tin « %s »."
 msgid "Error while writing to file \"%s\"."
 msgstr "Gặp lỗi khi ghi vào tập tin « %s »."
 
-#: plugins/elements/gstfilesrc.c:967
+#: plugins/elements/gstfilesrc.c:968
 msgid "No file name specified for reading."
 msgstr "Chưa ghi rõ tên tập tin để đọc."
 
-#: plugins/elements/gstfilesrc.c:979
+#: plugins/elements/gstfilesrc.c:980
 #, fuzzy, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không mở được tập tin « %s » để đọc: %s."
 
-#: plugins/elements/gstfilesrc.c:988
+#: plugins/elements/gstfilesrc.c:989
 #, fuzzy, c-format
 msgid "Could not get info on \"%s\"."
 msgstr "không thể lấy thông tin về « %s »."
 
-#: plugins/elements/gstfilesrc.c:995
+#: plugins/elements/gstfilesrc.c:996
 #, c-format
 msgid "\"%s\" is a directory."
 msgstr "« %s » là thư mục."
 
-#: plugins/elements/gstfilesrc.c:1002
+#: plugins/elements/gstfilesrc.c:1003
 #, c-format
 msgid "File \"%s\" is a socket."
 msgstr "Tập tin « %s » là ổ cắm."
 
-#: plugins/elements/gstidentity.c:361
+#: plugins/elements/gstidentity.c:372
 msgid "Failed after iterations as requested."
 msgstr "Lỗi sau số lần lặp lại được chọn."
 
@@ -829,16 +846,23 @@ msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] ""
 
-#: tools/gst-inspect.c:1112
+#: tools/gst-inspect.c:1244
 msgid "Print all elements"
 msgstr "Hiển thị mọi yếu tố"
 
-#: tools/gst-inspect.c:1178
+#: tools/gst-inspect.c:1246
+msgid ""
+"Print a machine-parsable list of features the specified plugin provides.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
+msgstr ""
+
+#: tools/gst-inspect.c:1326
 #, fuzzy, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Không mở được tập tin « %s » để ghi."
 
-#: tools/gst-inspect.c:1183
+#: tools/gst-inspect.c:1331
 #, fuzzy, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "không có yếu tố nguồn cho địa điểm « %s »"
@@ -888,122 +912,131 @@ msgstr "Mới nhận kết thức dòng (EOS) từ yếu tố « %s ».\n"
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "THẺ ĐÃ TÌM      : được tìm bởi yếu tố « %s ».\n"
 
-#: tools/gst-launch.c:493 tools/gst-launch.c:727
+#: tools/gst-launch.c:439
+#, fuzzy, c-format
+msgid "WARNING: from element %s: %s\n"
+msgstr "LỖI: từ yếu tố %s: %s\n"
+
+#: tools/gst-launch.c:492 tools/gst-launch.c:729
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Đang lập đường ống thành ĐANG PHÁT ...\n"
 
-#: tools/gst-launch.c:501 tools/gst-launch.c:693 tools/gst-launch.c:747
+#: tools/gst-launch.c:500 tools/gst-launch.c:695 tools/gst-launch.c:749
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Đang lập đường ống thành BỊ TẠM DỪNG ...\n"
 
-#: tools/gst-launch.c:516
+#: tools/gst-launch.c:515
 #, fuzzy, c-format
 msgid "Interrupt: Setting pipeline to PAUSED ...\n"
 msgstr "Đang lập đường ống thành BỊ TẠM DỪNG ...\n"
 
-#: tools/gst-launch.c:554
+#: tools/gst-launch.c:553
 msgid "Output tags (also known as metadata)"
 msgstr "Thể xuất (cũng được biết là siêu dữ liệu, dữ liệu về dữ liệu)"
 
-#: tools/gst-launch.c:556
+#: tools/gst-launch.c:555
 msgid "Output status information and property notifications"
 msgstr "Xuất thông tin trạng thái và thông báo đặc tính"
 
-#: tools/gst-launch.c:558
+#: tools/gst-launch.c:557
 msgid "Output messages"
 msgstr "Thông điệp xuất"
 
-#: tools/gst-launch.c:560
+#: tools/gst-launch.c:559
 msgid "Do not output status information of TYPE"
 msgstr "Không xuất thông tin trạng thái KIỂU (type)"
 
-#: tools/gst-launch.c:560
+#: tools/gst-launch.c:559
 msgid "TYPE1,TYPE2,..."
 msgstr "KIỂU1,KIỂU2,..."
 
-#: tools/gst-launch.c:563
+#: tools/gst-launch.c:562
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Lưu đường ống dạng xml vào TẬP_TIN rồi thoát"
 
-#: tools/gst-launch.c:563
+#: tools/gst-launch.c:562
 msgid "FILE"
 msgstr "TẬP_TIN"
 
-#: tools/gst-launch.c:566
+#: tools/gst-launch.c:565
 msgid "Do not install a fault handler"
 msgstr "Không cài bộ quản lý lỗi"
 
-#: tools/gst-launch.c:568
+#: tools/gst-launch.c:567
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Hiển thị vết cấp phát (nếu được bật khi biên dich)"
 
-#: tools/gst-launch.c:652
+#: tools/gst-launch.c:654
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "LỖI: không thể cấu tạo đường ống: %s.\n"
 
-#: tools/gst-launch.c:656
+#: tools/gst-launch.c:658
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "LỖI: không thể cấu tạo đường ống.\n"
 
-#: tools/gst-launch.c:660
+#: tools/gst-launch.c:662
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "CẢNH BÁO: đường ống có lỗi: %s\n"
 
-#: tools/gst-launch.c:687
+#: tools/gst-launch.c:689
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "LỖI: không tìm thấy yếu tố « đường ống » (pipeline).\n"
 
-#: tools/gst-launch.c:698
+#: tools/gst-launch.c:700
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "LỖI: đường ống không tạm dừng được.\n"
 
-#: tools/gst-launch.c:703
+#: tools/gst-launch.c:705
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Đường ống là động, không cần TIỀN CUỘN ...\n"
 
-#: tools/gst-launch.c:706
+#: tools/gst-launch.c:708
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Đường ống ĐANG TIỀN CUỘN ...\n"
 
-#: tools/gst-launch.c:709 tools/gst-launch.c:722
+#: tools/gst-launch.c:711 tools/gst-launch.c:724
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "LỖI: đường ống không tiền cuộn được.\n"
 
-#: tools/gst-launch.c:715
+#: tools/gst-launch.c:717
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Đường ống ĐÃ TIỀN CUỘN ...\n"
 
-#: tools/gst-launch.c:730
+#: tools/gst-launch.c:732
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "LỖI: đường ống không phát được.\n"
 
-#: tools/gst-launch.c:741
+#: tools/gst-launch.c:743
 msgid "Execution ended after %"
 msgstr "Thực hiện xong sau %"
 
-#: tools/gst-launch.c:750
+#: tools/gst-launch.c:743
+msgid " ns.\n"
+msgstr " ns.\n"
+
+#: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Đang lập đường ống thành SẴN SÀNG ...\n"
 
-#: tools/gst-launch.c:755
+#: tools/gst-launch.c:757
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Đang lập đường ống thành RỖNG ...\n"
 
-#: tools/gst-launch.c:760
+#: tools/gst-launch.c:762
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "ĐANG GIẢI PHÓNG đường ống ...\n"
@@ -1011,9 +1044,6 @@ msgstr "ĐANG GIẢI PHÓNG đường ống ...\n"
 #~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 #~ msgstr ""
 #~ "Yếu tố « %s » đã thay đổi từ ĐANG PHÁT thành BỊ TẠM DỪNG nên thoát.\n"
-
-#~ msgid " ns.\n"
-#~ msgstr " ns.\n"
 
 #~ msgid "ERROR: Pipeline can't PREROLL ...\n"
 #~ msgstr "LỖI: đường ống không TIỀN CUỘN được.\n"
