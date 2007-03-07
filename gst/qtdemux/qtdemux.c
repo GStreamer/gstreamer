@@ -64,9 +64,7 @@
 # include <zlib.h>
 #endif
 
-GST_DEBUG_CATEGORY_STATIC (qtdemux_debug);
-#define GST_CAT_DEFAULT qtdemux_debug
-
+GST_DEBUG_CATEGORY (qtdemux_debug);
 
 #if 0
 #define qtdemux_dump_mem(a,b)  gst_util_dump_mem(a,b)
