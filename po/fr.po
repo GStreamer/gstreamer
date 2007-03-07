@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: GStreamer\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2004-01-13 16:52+0100\n"
 "Last-Translator: Julien Moutte <julien@moutte.net>\n"
 "Language-Team: French <fr@li.org>\n"
@@ -1060,11 +1060,6 @@ msgstr "ERREUR: le tube refuse de s'executer.\n"
 msgid "Execution ended after %"
 msgstr "L'execution s'est terminé après %"
 
-#: tools/gst-launch.c:743
-#, fuzzy
-msgid " ns.\n"
-msgstr "ns).\n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1079,6 +1074,10 @@ msgstr ""
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "EXECUTION du tube en cours ...\n"
+
+#, fuzzy
+#~ msgid " ns.\n"
+#~ msgstr "ns).\n"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Désactiver les instructions accélerées du processeur"

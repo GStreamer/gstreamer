@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2004-04-26 10:36-0400\n"
 "Last-Translator: Gareth Owen <gowen72@yahoo.com>\n"
 "Language-Team: English (British) <en_gb@li.org>\n"
@@ -1027,11 +1027,6 @@ msgstr "ERROR: pipeline doesn't want to play.\n"
 msgid "Execution ended after %"
 msgstr "Execution ended after %"
 
-#: tools/gst-launch.c:743
-#, fuzzy
-msgid " ns.\n"
-msgstr " ns).\n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1046,6 +1041,10 @@ msgstr ""
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "RUNNING pipeline ...\n"
+
+#, fuzzy
+#~ msgid " ns.\n"
+#~ msgstr " ns).\n"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Disable accelerated CPU instructions"

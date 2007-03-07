@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2005-04-27 14:55+0800\n"
 "Last-Translator: Abel Cheung <abelcheung@gmail.com>\n"
 "Language-Team: Chinese (traditional) <zh-l10n@linux.org.tw>\n"
@@ -1020,10 +1020,6 @@ msgstr "錯誤：管線無法執行。\n"
 
 #: tools/gst-launch.c:743
 msgid "Execution ended after %"
-msgstr ""
-
-#: tools/gst-launch.c:743
-msgid " ns.\n"
 msgstr ""
 
 #: tools/gst-launch.c:752

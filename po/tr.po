@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2004-04-03 03:14+0300\n"
 "Last-Translator: Baris Cicek <baris@teamforce.name.tr>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -1034,11 +1034,6 @@ msgstr "HATA: boruhattı çalmak istemiyor.\n"
 msgid "Execution ended after %"
 msgstr "Çalıştırma % sonrası bitti"
 
-#: tools/gst-launch.c:743
-#, fuzzy
-msgid " ns.\n"
-msgstr " ns) \n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1053,6 +1048,10 @@ msgstr ""
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "BORUHATTI çalıştırılıyor ...\n"
+
+#, fuzzy
+#~ msgid " ns.\n"
+#~ msgstr " ns) \n"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Hızlandırılmış CPU işlemlerini kapat"

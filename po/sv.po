@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2006-11-22 22:16+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -1023,11 +1023,6 @@ msgstr "FEL: rörledningen vill inte spela.\n"
 msgid "Execution ended after %"
 msgstr "Körning avslutades efter %"
 
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#: tools/gst-launch.c:743
-msgid " ns.\n"
-msgstr " ns.\n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1042,6 +1037,10 @@ msgstr "Ställer in rörledningen till NULL...\n"
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "FRIGÖR rörledning...\n"
+
+# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
+#~ msgid " ns.\n"
+#~ msgstr " ns.\n"
 
 #~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 #~ msgstr "Elementet \"%s\" har gått från PLAYING till PAUSED, avslutar.\n"

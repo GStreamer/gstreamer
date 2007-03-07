@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2005-12-05 11:45+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -1018,10 +1018,6 @@ msgstr "FOUT: pyplyn wil nie speel nie.\n"
 msgid "Execution ended after %"
 msgstr "Uitvoering het geëindig na %"
 
-#: tools/gst-launch.c:743
-msgid " ns.\n"
-msgstr " ns.\n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1036,6 +1032,9 @@ msgstr "Pyplyn word gestel na NULL ...\n"
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "pyplyn word VRYGEMAAK ...\n"
+
+#~ msgid " ns.\n"
+#~ msgstr " ns.\n"
 
 #~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 #~ msgstr "Element \"%s\" het verander van SPEEL na POUSE, verlaat dus.\n"

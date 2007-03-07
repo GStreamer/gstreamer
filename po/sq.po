@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -1034,11 +1034,6 @@ msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 msgid "Execution ended after %"
 msgstr "Ekzekutimi përfundoi mbas %"
 
-#: tools/gst-launch.c:743
-#, fuzzy
-msgid " ns.\n"
-msgstr " ns).\n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1053,6 +1048,10 @@ msgstr ""
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "DUKE ZBATUAR pipeline ...\n"
+
+#, fuzzy
+#~ msgid " ns.\n"
+#~ msgstr " ns).\n"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"

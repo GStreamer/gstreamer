@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2006-04-07 11:16+0300\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -1019,10 +1019,6 @@ msgstr "ПОМИЛКА: канал не може почати відтворен
 msgid "Execution ended after %"
 msgstr "Виконання завершено після %"
 
-#: tools/gst-launch.c:743
-msgid " ns.\n"
-msgstr " нс.\n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1037,6 +1033,9 @@ msgstr "Канал переводиться у стан NULL ...\n"
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "канал ЗВІЛЬНЕННЯ...\n"
+
+#~ msgid " ns.\n"
+#~ msgstr " нс.\n"
 
 #~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 #~ msgstr "Елемент \"%s\" перейшов зі стану PLAYING до PAUSED, завершення.\n"

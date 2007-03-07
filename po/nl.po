@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2006-01-20 16:15+0200\n"
 "Last-Translator: Taco Witte <tcwitte@cs.uu.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -1020,10 +1020,6 @@ msgstr "FOUT: pijplijn wil niet afspelen.\n"
 msgid "Execution ended after %"
 msgstr "Uitvoering beëindigd na %"
 
-#: tools/gst-launch.c:743
-msgid " ns.\n"
-msgstr " ns.\n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1038,6 +1034,9 @@ msgstr "Pijplijn gezet op NULL ...\n"
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "Pijplijn wordt vrijgemaakt ...\n"
+
+#~ msgid " ns.\n"
+#~ msgstr " ns.\n"
 
 #~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 #~ msgstr "Element \"%s\" is van afspelen naar gepauzeerd gegaan; afsluiten.\n"

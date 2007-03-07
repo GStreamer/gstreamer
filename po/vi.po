@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2006-04-07 18:23+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net>\n"
@@ -1022,10 +1022,6 @@ msgstr "LỖI: đường ống không phát được.\n"
 msgid "Execution ended after %"
 msgstr "Thực hiện xong sau %"
 
-#: tools/gst-launch.c:743
-msgid " ns.\n"
-msgstr " ns.\n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1040,6 +1036,9 @@ msgstr "Đang lập đường ống thành RỖNG ...\n"
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "ĐANG GIẢI PHÓNG đường ống ...\n"
+
+#~ msgid " ns.\n"
+#~ msgstr " ns.\n"
 
 #~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 #~ msgstr ""

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.9.7\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2005-12-02 17:43+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -1023,10 +1023,6 @@ msgstr "ERROR: el conducte no vol reproduir-se.\n"
 msgid "Execution ended after %"
 msgstr "L'execució ha finalitzat després de %"
 
-#: tools/gst-launch.c:743
-msgid " ns.\n"
-msgstr " ns.\n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1043,6 +1039,9 @@ msgstr "S'està establint el conducte a NUL ...\n"
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "S'ESTÀ ALLIBERANT el conducte ...\n"
+
+#~ msgid " ns.\n"
+#~ msgstr " ns.\n"
 
 #~ msgid "Could not open file \"%s\" for reading: %s."
 #~ msgstr "No s'ha pogut obrir el fitxer «%s» per a la lectura: %s."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-07 12:47+0000\n"
+"POT-Creation-Date: 2007-03-07 17:19+0100\n"
 "PO-Revision-Date: 2004-06-05 09:32+0100\n"
 "Last-Translator: Roland Illig <roland.illig@gmx.de>\n"
 "Language-Team: German <de@li.org>\n"
@@ -1065,11 +1065,6 @@ msgstr "FEHLER: Leitung möchte nicht abgespielt werden.\n"
 msgid "Execution ended after %"
 msgstr "Ausführung nach %"
 
-#: tools/gst-launch.c:743
-#, fuzzy
-msgid " ns.\n"
-msgstr " Nanosekunden.\n"
-
 #: tools/gst-launch.c:752
 #, c-format
 msgid "Setting pipeline to READY ...\n"
@@ -1084,6 +1079,10 @@ msgstr ""
 #, fuzzy, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "FÜHRE Leitung AUS ...\n"
+
+#, fuzzy
+#~ msgid " ns.\n"
+#~ msgstr " Nanosekunden.\n"
 
 #~ msgid "Disable accelerated CPU instructions"
 #~ msgstr "Beschleunigte CPU-Befehle deaktivieren"
