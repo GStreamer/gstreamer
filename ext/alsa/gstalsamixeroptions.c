@@ -69,14 +69,22 @@ gst_alsa_mixer_options_init (GstAlsaMixerOptions * alsa_opts)
 GstMixerOptions *
 gst_alsa_mixer_options_new (snd_mixer_elem_t * element, gint track_num)
 {
-  GstMixerOptions *opts = g_object_new (GST_ALSA_MIXER_OPTIONS_TYPE, NULL);
-  GstAlsaMixerOptions *alsa_opts = (GstAlsaMixerOptions *) opts;
-  GstMixerTrack *track = (GstMixerTrack *) opts;
+  GstMixerOptions *opts;
+  GstAlsaMixerOptions *alsa_opts;
+  GstMixerTrack *track;
+  const gchar *label;
   gint num, i;
   gchar str[256];
 
+  label = snd_mixer_selem_get_name (element);
+
+  opts = g_object_new (GST_ALSA_MIXER_OPTIONS_TYPE,
+      "untranslated-label", label, NULL);
+  alsa_opts = (GstAlsaMixerOptions *) opts;
+  track = (GstMixerTrack *) opts;
+
   /* set basic information */
-  track->label = g_strdup (snd_mixer_selem_get_name (element));
+  track->label = g_strdup (label);      /* FIXME: translate this? */
   track->num_channels = 0;
   track->flags = 0;
   alsa_opts->element = element;

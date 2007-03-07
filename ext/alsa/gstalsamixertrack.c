@@ -145,7 +145,9 @@ gst_alsa_mixer_track_new (snd_mixer_elem_t * element,
   GST_LOG ("[%s] num=%d,track_num=%d,flags=0x%08x,sw=%s,shared_mute_track=%p",
       name, num, track_num, flags, (sw) ? "true" : "false", shared_mute_track);
 
-  track = (GstMixerTrack *) g_object_new (GST_ALSA_MIXER_TRACK_TYPE, NULL);
+  track = (GstMixerTrack *) g_object_new (GST_ALSA_MIXER_TRACK_TYPE,
+      "untranslated-label", name, NULL);
+
   alsa_track = (GstAlsaMixerTrack *) track;
 
   GST_LOG ("[%s] created new mixer track %p", name, track);

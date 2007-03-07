@@ -24,6 +24,7 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/interfaces/propertyprobe.h>
+#include <gst/interfaces/mixer.h>
 
 /* just a simple test that runs device probing on
  * an alsasrc, alsasink and alsamixer instance */
@@ -48,14 +49,16 @@ GST_START_TEST (test_device_property_probe)
     arr = gst_property_probe_probe_and_get_values_name (probe, "device");
     if (arr) {
       for (i = 0; i < arr->n_values; ++i) {
+        const gchar *device;
         GValue *val;
 
         val = g_value_array_get_nth (arr, i);
         fail_unless (val != NULL);
         fail_unless (G_VALUE_HOLDS_STRING (val));
 
-        GST_LOG_OBJECT (element, "device[%d] = %s", i,
-            g_value_get_string (val));
+        device = g_value_get_string (val);
+        fail_unless (device != NULL);
+        GST_LOG_OBJECT (element, "device[%d] = %s", i, device);
       }
       g_value_array_free (arr);
     } else {
@@ -68,7 +71,50 @@ GST_START_TEST (test_device_property_probe)
 
 GST_END_TEST;
 
-Suite *
+GST_START_TEST (test_alsa_mixer_track)
+{
+  GstStateChangeReturn state_ret;
+  GstElement *mixer;
+  GList *tracks, *l;
+
+  mixer = gst_element_factory_make ("alsamixer", "alsamixer");
+  fail_unless (mixer != NULL, "Failed to create 'alsamixer' element!");
+
+  state_ret = gst_element_set_state (mixer, GST_STATE_READY);
+  if (state_ret != GST_STATE_CHANGE_SUCCESS)
+    return;
+
+  GST_LOG ("opened alsamixer");
+  fail_unless (GST_IS_MIXER (mixer), "is not a GstMixer?!");
+
+  tracks = (GList *) gst_mixer_list_tracks (GST_MIXER (mixer));
+  for (l = tracks; l != NULL; l = l->next) {
+    GstMixerTrack *track;
+    gchar *ulabel = NULL, *label = NULL;
+
+    track = GST_MIXER_TRACK (l->data);
+    g_object_get (track, "label", &label, "untranslated-label", &ulabel, NULL);
+    fail_unless (label == NULL || g_utf8_validate (label, -1, NULL));
+    if (ulabel != NULL) {
+      gchar *p;
+
+      for (p = ulabel; p != NULL && *p != '\0'; ++p) {
+        fail_unless (g_ascii_isprint (*p),
+            "untranslated label '%s' not printable ASCII", ulabel);
+      }
+    }
+    GST_DEBUG ("%s: %s", GST_STR_NULL (ulabel), GST_STR_NULL (label));
+    g_free (label);
+    g_free (ulabel);
+  }
+
+  fail_unless_equals_int (gst_element_set_state (mixer, GST_STATE_NULL),
+      GST_STATE_CHANGE_SUCCESS);
+}
+
+GST_END_TEST;
+
+static Suite *
 alsa_suite (void)
 {
   Suite *s = suite_create ("alsa");
@@ -76,23 +122,9 @@ alsa_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_device_property_probe);
+  tcase_add_test (tc_chain, test_alsa_mixer_track);
 
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = alsa_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (alsa)
