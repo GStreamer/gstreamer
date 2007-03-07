@@ -297,6 +297,7 @@ gst_spectrum_start (GstBaseTransform * trans)
   GstSpectrum *filter = GST_SPECTRUM (trans);
 
   filter->num_frames = 0;
+  gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
 
   return TRUE;
 }
@@ -321,6 +322,22 @@ gst_spectrum_event (GstBaseTransform * trans, GstEvent * event)
     case GST_EVENT_EOS:
       gst_adapter_clear (filter->adapter);
       break;
+    case GST_EVENT_NEWSEGMENT:{
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time;
+      gboolean update;
+
+      /* the newsegment values are used to clip the input samples
+       * and to convert the incomming timestamps to running time */
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+
+      /* now configure the values */
+      gst_segment_set_newsegment_full (&filter->segment, update,
+          rate, arate, format, start, stop, time);
+      break;
+    }
     default:
       break;
   }
@@ -369,9 +386,9 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   gfloat pos, step;
   guchar *spect = spectrum->spect;
 
-  /* FIXME, the buffer timestamp does not mean anything, maybe you mean
-   * stream_time or running_time? */
-  GstClockTime endtime = GST_BUFFER_TIMESTAMP (in);
+  GstClockTime endtime =
+      gst_segment_to_running_time (&spectrum->segment, GST_FORMAT_TIME,
+      GST_BUFFER_TIMESTAMP (in));
   GstClockTime blktime =
       GST_FRAMES_TO_CLOCK_TIME (spectrum->len, spectrum->rate);
 
