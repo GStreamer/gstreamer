@@ -842,6 +842,8 @@ no_handle:
   }
 no_ports:
   {
+    raw1394_destroy_handle (src->handle);
+    src->handle = NULL;
     GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL),
         ("no ports available for raw1394"));
     return FALSE;
@@ -854,6 +856,12 @@ cannot_set_port:
   }
 cannot_start:
   {
+    raw1394_destroy_handle (src->handle);
+    src->handle = NULL;
+#ifdef HAVE_LIBIEC61883
+    iec61883_dv_fb_close (src->iec61883dv);
+    src->iec61883dv = NULL;
+#endif
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("can't start 1394 iso receive"));
     return FALSE;
@@ -861,6 +869,8 @@ cannot_start:
 #ifdef HAVE_LIBIEC61883
 cannot_initialise_dv:
   {
+    raw1394_destroy_handle (src->handle);
+    src->handle = NULL;
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("can't initialise iec61883 dv"));
     return FALSE;
