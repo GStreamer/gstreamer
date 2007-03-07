@@ -79,6 +79,36 @@
 </ARG>
 
 <ARG>
+<NAME>GstXvImageSink::device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Adaptor number</NICK>
+<BLURB>The number of the video adaptor.</BLURB>
+<DEFAULT>"0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::device-name</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Adaptor name</NICK>
+<BLURB>The name of the video adaptor.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXvImageSink::handle-events</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Handle XEvents</NICK>
+<BLURB>When enabled, XEvents will be selected and handled.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstXImageSink::display</NAME>
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>
@@ -116,6 +146,16 @@
 <NICK>Force aspect ratio</NICK>
 <BLURB>When enabled, reverse caps negotiation (scaling) will respect original aspect ratio.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstXImageSink::handle-events</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Handle XEvents</NICK>
+<BLURB>When enabled, XEvents will be selected and handled.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>

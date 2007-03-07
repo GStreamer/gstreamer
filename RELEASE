@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.11 "Dumb things"
+Release notes for GStreamer Base Plug-ins 0.10.12 "Zombie Horde"
         
 
 
@@ -50,76 +50,98 @@ contains a set of less supported plug-ins that haven't passed the
 
 
 
+Please note that decodebin2 API included in this release is still 
+considered unstable and WILL change in future releases. At this stage, only
+developers or early adopters should consider using the decodebin2 API embodied
+in its signals and properties.
+
   
 
 Features of this release
     
-      * This release requires GStreamer core 0.10.11 or higher
-      * Improved buffering during network playback
-      * Support for reverse playback of Ogg/Vorbis/Theora
-      * Reverse playback support in the audio sinks
-      * The Ogg muxer now produces correct streams in all cases
-      * Support libvisual 0.4
-      * Improvements in RTP support
-      * Support retagging of Vorbis files
-      * Introduction of the decodebin2 element
-      * Many other bug fixes and improvements
+      * New API for on-demand plugin installation
+      * Xv thread-safety and configuration enhancements
+      * decodebin2 improvements
+      * Support more raw audio format conversions
+      * Improvements in Ogg support
+      * AudioFilter base class ported to 0.10
+      * Fixes for subtitles
+      * Latency/live-playback support for Alsa
+      * Lots of bug fixes and improvements
 
 Bugs fixed in this release
      
-      * 360552 : [riff] [avi] extracts non-UTF8 metadata
-      * 365501 : [x/xvimagesink] race condition when creating first image ...
-      * 339366 : [playbin] hangs if suburi file type cannot be determined
-      * 355914 : libvisual causes xvimagesink:  assertion `GST_CAPS_REFCOU...
-      * 363118 : gst_riff_create_video_caps() should also store variant in...
-      * 363607 : xvimagesink xwindow_draw_border() slowness
-      * 336301 : [playbin] can't handle RTSP source
-      * 337026 : oggmux doesn't set EOS properly
-      * 337031 : vorbisdec outputs too much data
-      * 340049 : New BaseRTPAudioPayloader class to -base
-      * 348264 : Theora encoding, Ogg muxing don't handle discontinuities
-      * 354773 : xvimage assumes that XV_COLORKEY can be set in RGB888 format
-      * 355917 : libvisual plugin is broken
-      * 355935 : multifdsink doesn't allow setting maximums (soft, hard) i...
-      * 357038 : [ffmpegcolorspace] RGBA handling broken
-      * 357215 : [playbin] buffering notification not quite right yet
-      * 357289 : [riff] riff parser can't detect aac audio stream
-      * 357404 : [playbin] Linking can fail silently
-      * 357531 : [subparse] problem if markup is not closed
-      * 357577 : [playbin] regression: buffering still images broken
-      * 357591 : Avoid compiler warning with uclibc and -Werror
-      * 357613 : XvStopVideo in xvimagesink
-      * 357800 : [libvisual] doesn't pass audio data to libvisual 0.4.0 co...
-      * 359580 : tcpserversink and dataprotocol assert for multipart streams
-      * 361095 : Fixes compiling with forte: warning clean up (part 3)
-      * 361456 : [basertppayload] Memory leak
-      * 361634 : sink- > ringbuffer NULL in BaseAudioSink's setcaps()
-      * 361984 : [subparse] doesn't accept .srt file that doesn't start wi...
-      * 366334 : [PATCH] Windows vs8 fixes
-      * 368273 : Using the remove signal on multifdsink is not threadsafe
-      * 368310 : include file  gstbasertpaudiopayload.h not included for r...
-      * 369482 : [typefind] MPEG system streams get recognized as mp3 files
-      * 370092 : [PATCH] Decodebin v2 : Implementation
-      * 377183 : regression: no eos when playing ogg vorbis files
-      * 381219 : bad debugging code left in audiorate
-      * 382223 : [decodebin] more delayed linking
-      * 382269 : Typefind detects mpeg video clip as audio/mpeg
-      * 335635 : Add an Ogg/Vorbis retagging element
-      * 341681 : [textoverlay] flickering with continuously timestamped text
-      * 342228 : [alsa] Recognize " Front " as a Master channel
-      * 357330 : [subparse] some sami parser minor but enhanced patch
-      * 357532 : [gsttag] vorbistag doesn't handle dates that include time...
-      * 359237 : [typefinding] doesn't recognize XML files shorter than 25...
-      * 362845 : [subparse] add support for tmplayer format
-      * 357977 : [videorate] new segment start is not respected
-      * 364812 : [PATCH] oggmux release pad does not remove pad
-      * 364856 : pngenc stride problems
-      * 372507 : Mac build fixes
+      * 398721 : No video in .ogm files with decodebin2
+      * 339837 : [audioconvert] support for 64-bit float audio
+      * 341524 : [decodebin] can't handle decoders with always src pads wi...
+      * 352069 : Add de.po German translation
+      * 363379 : [oggmux] doesn't detect EOS on all sinkpads
+      * 378436 : [oggdemux] rhythmbox crash on fast clicking on rating in ...
+      * 380342 : Totem does not play mp3 files when lyrics are present
+      * 383195 : [cddabasesrc,basertpaudiopayload] compile errors with gcc...
+      * 383198 : totem crashed to gst_xvimagesink_update_colorbalance
+      * 384008 : [xvimagesink] accesses - > xwindow outside locks
+      * 384060 : gst_xoverlay_set_xwindow_id() causing lockups with x(v)im...
+      * 387138 : x input events processing in sinks with xoverlay interfac...
+      * 390063 : Documentation typo
+      * 390076 : add xv adaptor and port properties in xvimagesink element.
+      * 391365 : [oggdemux] internal stream error on OggFlac
+      * 392070 : [vorbis] GST_TAG_LOCATION not mapped
+      * 392393 : [API] add libgstbaseutils library for missing plugins mes...
+      * 396042 : mpeg4 video typefinder loops endlessly on quicktime redirect
+      * 396835 : audioconvert/audioresample combination causing buffer of ...
+      * 397673 : [patch] XIOError caught in x[v]imagesink.c
+      * 397810 : [typefinding] .vob file: could not determine type of stream
+      * 398110 : [theoraenc] GLib failed to allocate 3080991032 bytes on g...
+      * 399340 : Crash in the oggdemux plugin when trying to play a specia...
+      * 401029 : [playbin] rapidly changing visualisation freezes
+      * 401072 : Move libgimme-codec helper functions to GStreamer
+      * 402505 : visualisations don't work for some samplerates
+      * 407811 : decodebin2 hang on HD clip
+      * 409683 : Crash with Decodebin2
+      * 410396 : not reading " DATE " tags from Flac files
+      * 410963 : Fails to build with -z defs
+      * 357503 : [suparse] wrong timing with microdvd subtitles
+      * 393310 : [pango] localtime_r does not exist in MinGW
+      * 397207 : Test failure w/ HP-UX 11.11 & native compiler
+      * 399948 : [textoverlay] leaks upstream events if textpad unlinked
+      * 403963 : GstAudioFilter base class broken
+      * 404512 : [videoscale] floating point exception on 1x1 video
+      * 405020 : [alsa] probing the device-name doesn't seem to work corre...
+      * 408278 : [videorate] memory leak
+      * 410772 : Crash copying a GstNetBuffer
+      * 401118 : [visual] error if width not a multiple of 4
+      * 405451 : [alsasink] deadlocks when disconnecting USB Sounddevice
 
 API changed in this release
      
 - API additions:
     
+* GstAudioFilter
+* GST_VIDEO_SINK_CAST()
+* gst_pb_utils_add_codec_description_to_tag_list()
+* gst_pb_utils_get_codec_description()
+* gst_pb_utils_get_source_description()
+* gst_pb_utils_get_sink_description()
+* gst_pb_utils_get_decoder_description()
+* gst_pb_utils_get_encoder_description()
+* gst_pb_utils_get_element_description()
+* gst_pb_utils_init()
+* gst_install_plugins_context_new()
+* gst_install_plugins_context_set_xid()
+* gst_install_plugins_context_free()
+* gst_install_plugins_async()
+* gst_install_plugins_sync()
+* gst_install_plugins_return_get_name()
+* gst_install_plugins_installation_in_progress()
+* gst_missing_uri_source_message_new()
+* gst_missing_uri_sink_message_new
+* gst_missing_element_message_new
+* gst_missing_decoder_message_new
+* gst_missing_encoder_message_new
+* gst_missing_plugin_message_get_installer_detail
+* gst_missing_plugin_message_get_description
+* gst_is_missing_plugin_message
 
 Download
 
@@ -150,27 +172,23 @@ Applications
 Contributors to this release
     
       * 
+      * Andy Wingo
       * David Schleef
-      * Edgard Lima
+      * Ed Catmur
       * Edward Hervey
-      * Ferenc Gerlits
-      * James "Doc" Livingston
-      * Jan David Mol
+      * Günter Thelen
+      * Holger Wansing
       * Jan Schmidt
-      * Jonathan Matthew
-      * Josep Torre Valles
+      * Jens Granseuer
       * Julien MOUTTE
-      * Mark Nauwelaerts
-      * Michael Smith
-      * Peter Kjellerstedt
-      * Renato Filho
-      * Sebastien Cote
-      * Sergey Scobich
+      * Julien Puydt
+      * Loïc Minier
+      * René Stadler
+      * Sebastian Dröge
       * Stefan Kost
+      * Sébastien Moutte
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Ville Syrjala
       * Wim Taymans
-      * Young-Ho Cha
-      * Zaheer Abbas Merali
+      * Yves Lefebvre
  

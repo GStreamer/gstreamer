@@ -1,4 +1,93 @@
-This is GStreamer Base Plug-ins 0.10.11, "Dumb things"
+This is GStreamer Base Plug-ins 0.10.12, "Zombie Horde"
+
+Please note that decodebin2 API included in this release is still
+considered unstable and WILL change in future releases. At this stage, only
+developers or early adopters should consider using the decodebin2 API embodied
+in its signals and properties.
+
+Changes since 0.10.11:
+
+      * New API for on-demand plugin installation
+      * Xv thread-safety and configuration enhancements
+      * decodebin2 improvements
+      * Support more raw audio format conversions
+      * Improvements in Ogg support
+      * AudioFilter base class ported to 0.10
+      * Fixes for subtitles
+      * Latency/live-playback support for Alsa
+      * Lots of bug fixes and improvements
+
+Bugs fixed since 0.10.11:
+
+      * 398721 : No video in .ogm files with decodebin2
+      * 339837 : [audioconvert] support for 64-bit float audio 
+      * 341524 : [decodebin] can't handle decoders with always src pads wi...
+      * 352069 : Add de.po German translation
+      * 363379 : [oggmux] doesn't detect EOS on all sinkpads 
+      * 378436 : [oggdemux] rhythmbox crash on fast clicking on rating in ...
+      * 380342 : Totem does not play mp3 files when lyrics are present 
+      * 383195 : [cddabasesrc,basertpaudiopayload] compile errors with gcc...
+      * 383198 : totem crashed to gst_xvimagesink_update_colorbalance
+      * 384008 : [xvimagesink] accesses - > xwindow outside locks
+      * 384060 : gst_xoverlay_set_xwindow_id() causing lockups with x(v)im...
+      * 387138 : x input events processing in sinks with xoverlay interfac...
+      * 390063 : Documentation typo 
+      * 390076 : add xv adaptor and port properties in xvimagesink element.
+      * 391365 : [oggdemux] internal stream error on OggFlac
+      * 392070 : [vorbis] GST_TAG_LOCATION not mapped
+      * 392393 : [API] add libgstbaseutils library for missing plugins mes...
+      * 396042 : mpeg4 video typefinder loops endlessly on quicktime redirect
+      * 396835 : audioconvert/audioresample combination causing buffer of ...
+      * 397673 : [patch] XIOError caught in x[v]imagesink.c
+      * 397810 : [typefinding] .vob file: could not determine type of stream
+      * 398110 : [theoraenc] GLib failed to allocate 3080991032 bytes on g...
+      * 399340 : Crash in the oggdemux plugin when trying to play a specia...
+      * 401029 : [playbin] rapidly changing visualisation freezes
+      * 401072 : Move libgimme-codec helper functions to GStreamer
+      * 402505 : visualisations don't work for some samplerates
+      * 407811 : decodebin2 hang on HD clip
+      * 409683 : Crash with Decodebin2
+      * 410396 : not reading " DATE " tags from Flac files
+      * 410963 : Fails to build with -z defs 
+      * 357503 : [suparse] wrong timing with microdvd subtitles
+      * 393310 : [pango] localtime_r does not exist in MinGW
+      * 397207 : Test failure w/ HP-UX 11.11 & native compiler
+      * 399948 : [textoverlay] leaks upstream events if textpad unlinked
+      * 403963 : GstAudioFilter base class broken
+      * 404512 : [videoscale] floating point exception on 1x1 video
+      * 405020 : [alsa] probing the device-name doesn't seem to work corre...
+      * 408278 : [videorate] memory leak
+      * 410772 : Crash copying a GstNetBuffer
+      * 401118 : [visual] error if width not a multiple of 4 
+      * 405451 : [alsasink] deadlocks when disconnecting USB Sounddevice
+
+API additions since 0.10.11:
+
+      * GstAudioFilter
+      * GST_VIDEO_SINK_CAST()
+      * gst_pb_utils_add_codec_description_to_tag_list()
+      * gst_pb_utils_get_codec_description()
+      * gst_pb_utils_get_source_description()
+      * gst_pb_utils_get_sink_description()
+      * gst_pb_utils_get_decoder_description()
+      * gst_pb_utils_get_encoder_description()
+      * gst_pb_utils_get_element_description()
+      * gst_pb_utils_init()
+      * gst_install_plugins_context_new()
+      * gst_install_plugins_context_set_xid()
+      * gst_install_plugins_context_free()
+      * gst_install_plugins_async()
+      * gst_install_plugins_sync()
+      * gst_install_plugins_return_get_name()
+      * gst_install_plugins_installation_in_progress()
+      * gst_missing_uri_source_message_new()
+      * gst_missing_uri_sink_message_new
+      * gst_missing_element_message_new
+      * gst_missing_decoder_message_new
+      * gst_missing_encoder_message_new
+      * gst_missing_plugin_message_get_installer_detail
+      * gst_missing_plugin_message_get_description
+      * gst_is_missing_plugin_message
 
 Bugs fixed since 0.10.10:
      

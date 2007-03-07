@@ -1,3 +1,10 @@
+=== release 0.10.12 ===
+
+2007-03-07  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.12, "Zombie Horde"
+
 2007-03-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
