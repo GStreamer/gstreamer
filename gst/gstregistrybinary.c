@@ -747,7 +747,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
 
   mapped = g_mapped_file_new (location, FALSE, &err);
   if (err != NULL) {
-    GST_INFO ("Unable to mmap file: %s\n", err->message);
+    GST_INFO ("Unable to mmap file: %s", err->message);
     g_error_free (err);
     return FALSE;
   }

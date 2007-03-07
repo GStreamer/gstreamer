@@ -111,7 +111,7 @@ gst_trace_new (gchar * filename, gint size)
 
   g_return_val_if_fail (trace != NULL, NULL);
   trace->filename = g_strdup (filename);
-  GST_DEBUG ("opening '%s'\n", trace->filename);
+  GST_DEBUG ("opening '%s'", trace->filename);
 #ifndef S_IWUSR
 #define S_IWUSR S_IWRITE
 #endif
@@ -407,7 +407,7 @@ gst_alloc_trace_set_flags_all (GstAllocTraceFlags flags)
   while (walk) {
     GstAllocTrace *trace = (GstAllocTrace *) walk->data;
 
-    GST_DEBUG ("set flags on %p\n", trace);
+    GST_DEBUG ("setting flags %d on %p", (gint) flags, trace);
     gst_alloc_trace_set_flags (trace, flags);
 
     walk = g_list_next (walk);

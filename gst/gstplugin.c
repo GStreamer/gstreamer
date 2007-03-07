@@ -875,7 +875,7 @@ gst_plugin_load_by_name (const gchar * name)
     gst_object_unref (plugin);
 
     if (!newplugin) {
-      GST_WARNING ("load_plugin error: %s\n", error->message);
+      GST_WARNING ("load_plugin error: %s", error->message);
       g_error_free (error);
       return NULL;
     }
@@ -921,7 +921,7 @@ gst_plugin_load (GstPlugin * plugin)
 
 load_error:
   {
-    GST_WARNING ("load_plugin error: %s\n", error->message);
+    GST_WARNING ("load_plugin error: %s", error->message);
     g_error_free (error);
     return NULL;
   }

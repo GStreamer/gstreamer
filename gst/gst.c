@@ -495,7 +495,7 @@ load_plugin_func (gpointer data, gpointer user_data)
   } else {
     if (err) {
       /* Report error to user, and free error */
-      GST_ERROR ("Failed to load plugin: %s\n", err->message);
+      GST_ERROR ("Failed to load plugin: %s", err->message);
       g_error_free (err);
     } else {
       GST_WARNING ("Failed to load plugin: \"%s\"", filename);

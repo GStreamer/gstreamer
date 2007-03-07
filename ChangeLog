@@ -1,3 +1,11 @@
+2007-03-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c: (load_plugin_func):
+	* gst/gstplugin.c: (gst_plugin_load_by_name), (gst_plugin_load):
+	* gst/gstregistrybinary.c: (gst_registry_binary_read_cache):
+	* gst/gsttrace.c: (gst_trace_new), (gst_alloc_trace_set_flags_all):
+	  Remove newlines at end of debug log strings.
+
 2007-03-07  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* plugins/elements/gstidentity.c: (gst_identity_check_perfect):
