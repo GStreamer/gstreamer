@@ -99,7 +99,7 @@
  * <para>
  * <programlisting>
  * structure = gst_structure_new ("dtmf-event",
- *                    "type", G_TYPE_INT, GST_RTP_DTMF_TYPE_EVENT,
+ *                    "type", G_TYPE_INT, 1,
  *                    "number", G_TYPE_INT, 1,
  *                    "volume", G_TYPE_INT, 25,
  *                    "start", G_TYPE_BOOLEAN, TRUE, NULL);
