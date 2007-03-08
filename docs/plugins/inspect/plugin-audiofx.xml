@@ -17,6 +17,13 @@
       <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
     </element>
     <element>
+      <name>audiodynamic</name>
+      <longname>AudioDynamic</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Compressor and Expander</description>
+      <author>Sebastian Dröge &lt;slomo@circular-chaos.org&gt;</author>
+    </element>
+    <element>
       <name>audioinvert</name>
       <longname>AudioInvert</longname>
       <class>Filter/Effect/Audio</class>

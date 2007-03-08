@@ -1,3 +1,41 @@
+2007-03-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	reviewed by: Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiofx/Makefile.am:
+	* gst/audiofx/audiodynamic.c:
+	(gst_audio_dynamic_characteristics_get_type),
+	(gst_audio_dynamic_mode_get_type),
+	(gst_audio_dynamic_set_process_function),
+	(gst_audio_dynamic_base_init), (gst_audio_dynamic_class_init),
+	(gst_audio_dynamic_init), (gst_audio_dynamic_set_property),
+	(gst_audio_dynamic_get_property), (gst_audio_dynamic_setup),
+	(gst_audio_dynamic_transform_hard_knee_compressor_int),
+	(gst_audio_dynamic_transform_hard_knee_compressor_float),
+	(gst_audio_dynamic_transform_soft_knee_compressor_int),
+	(gst_audio_dynamic_transform_soft_knee_compressor_float),
+	(gst_audio_dynamic_transform_hard_knee_expander_int),
+	(gst_audio_dynamic_transform_hard_knee_expander_float),
+	(gst_audio_dynamic_transform_soft_knee_expander_int),
+	(gst_audio_dynamic_transform_soft_knee_expander_float),
+	(gst_audio_dynamic_transform_ip):
+	* gst/audiofx/audiodynamic.h:
+	* gst/audiofx/audiofx.c: (plugin_init):
+	Add new audiodynamic element which can act as a compressor or
+	expander. Supported are hard-knee and soft-knee operation modes with
+	user-specified ratio and threshold.
+	Attack and release parameters are not yet implemented but will follow.
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	Integrate audiodynamic into the docs.
+	* tests/check/Makefile.am:
+	* tests/check/elements/audiodynamic.c: (setup_dynamic),
+	(cleanup_dynamic), (GST_START_TEST), (dynamic_suite), (main):
+	Add unit test for audiodynamic.
+
 2007-03-07  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_start):

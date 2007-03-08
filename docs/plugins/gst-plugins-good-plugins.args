@@ -16668,3 +16668,43 @@
 <DEFAULT>Normal Clipping (default)</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstAudioDynamic::characteristics</NAME>
+<TYPE>GstAudioDynamicCharacteristics</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Characteristics</NICK>
+<BLURB>Selects whether the ratio should be applied smooth (soft-knee) or hard (hard-knee).</BLURB>
+<DEFAULT>Hard Knee (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioDynamic::mode</NAME>
+<TYPE>GstAudioDynamicMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Selects whether the filter should work on loud samples (compressor) orquiet samples (expander).</BLURB>
+<DEFAULT>Compressor (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioDynamic::ratio</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,inf]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ratio</NICK>
+<BLURB>Ratio that should be applied.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioDynamic::threshold</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Threshold</NICK>
+<BLURB>Threshold until the filter is activated.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+

@@ -40,6 +40,7 @@ check_PROGRAMS = \
 	elements/audiopanorama \
 	elements/audioinvert \
 	elements/audioamplify \
+	elements/audiodynamic \
 	elements/avimux \
 	elements/id3demux \
 	elements/level \

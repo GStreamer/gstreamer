@@ -58,6 +58,16 @@ GST_AUDIO_AMPLIFY_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-audiodynamic</FILE>
+GstAudioDynamic
+<TITLE>audiodynamic</TITLE>
+<SUBSECTION Standard>
+GstAudioDynamicClass
+GST_AUDIO_DYNAMIC
+GST_AUDIO_DYNAMIC_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-autoaudiosink</FILE>
 GstAutoAudioSink
 <TITLE>autoaudiosink</TITLE>

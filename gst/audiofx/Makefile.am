@@ -6,7 +6,8 @@ plugin_LTLIBRARIES = libgstaudiofx.la
 libgstaudiofx_la_SOURCES = audiofx.c\
 	audiopanorama.c \
 	audioinvert.c \
-	audioamplify.c
+	audioamplify.c \
+	audiodynamic.c
 
 # flags used to compile this plugin
 libgstaudiofx_la_CFLAGS = $(GST_CFLAGS) \
@@ -23,4 +24,6 @@ libgstaudiofx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 # headers we need but don't want installed
 noinst_HEADERS = audiopanorama.h \
 	audioinvert.h \
-	audioamplify.h
+	audioamplify.h \
+	audiodynamic.h
+
