@@ -1,3 +1,9 @@
+2007-03-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/Makefile.am:
+	Disable the states check until the remaining Valgrind errors
+	are fixed or suppressed.
+
 2007-03-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/elements/.cvsignore:

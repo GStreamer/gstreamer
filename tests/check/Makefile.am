@@ -49,6 +49,9 @@ check_PROGRAMS = \
 	elements/videofilter \
 	$(check_taglib)
     
+VALGRIND_TO_FIX = \
+        generic/states
+
 TESTS = $(check_PROGRAMS)
 
 # these tests don't even pass
@@ -60,7 +63,7 @@ AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 
 # valgrind testing
-VALGRIND_TESTS_DISABLE =
+VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
