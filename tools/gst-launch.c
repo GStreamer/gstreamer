@@ -430,6 +430,20 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           gst_tag_list_free (tags);
         }
         break;
+      case GST_MESSAGE_INFO:{
+        GError *gerror;
+        gchar *debug;
+        gchar *name = gst_object_get_path_string (GST_MESSAGE_SRC (message));
+
+        gst_message_parse_info (message, &gerror, &debug);
+        if (debug) {
+          g_print (_("INFO:\n%s\n"), debug);
+        }
+        g_error_free (gerror);
+        g_free (debug);
+        g_free (name);
+        break;
+      }
       case GST_MESSAGE_WARNING:{
         GError *gerror;
         gchar *debug;

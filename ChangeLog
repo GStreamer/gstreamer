@@ -1,5 +1,10 @@
 2007-03-08  Wim Taymans  <wim@fluendo.com>
 
+	* tools/gst-launch.c: (event_loop):
+	Print INFO messages.
+
+2007-03-08  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasetransform.c:
 	(gst_base_transform_sink_eventfunc),
 	(gst_base_transform_handle_buffer), (gst_base_transform_chain),
