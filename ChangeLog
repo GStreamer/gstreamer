@@ -1,3 +1,37 @@
+2007-03-08  Wim Taymans  <wim@fluendo.com>
+
+	Includes patch by: Paul Davis <paul at linuxaudiosystems dot com>
+
+	* ext/jack/Makefile.am:
+	* ext/jack/gstjackaudioclient.c: (gst_jack_audio_client_init),
+	(jack_process_cb), (jack_sample_rate_cb), (jack_buffer_size_cb),
+	(jack_shutdown_cb), (connection_find),
+	(gst_jack_audio_make_connection), (gst_jack_audio_get_connection),
+	(gst_jack_audio_unref_connection),
+	(gst_jack_audio_connection_add_client),
+	(gst_jack_audio_connection_remove_client),
+	(gst_jack_audio_client_new), (gst_jack_audio_client_free),
+	(gst_jack_audio_client_get_client),
+	(gst_jack_audio_client_set_active):
+	* ext/jack/gstjackaudioclient.h:
+	Make an object to manage client connections to the jack server which we
+	will use in the future to run selected jack elements with the same jack
+	connection.
+	Make some stuff a bit more threadsafe.
+	Activate the jack client ASAP.
+
+	* ext/jack/gstjackaudiosink.c:
+	(gst_jack_audio_sink_allocate_channels),
+	(gst_jack_audio_sink_free_channels), (jack_process_cb),
+	(gst_jack_ring_buffer_open_device),
+	(gst_jack_ring_buffer_close_device),
+	(gst_jack_ring_buffer_acquire), (gst_jack_ring_buffer_release),
+	(gst_jack_audio_sink_class_init), (gst_jack_audio_sink_init),
+	(gst_jack_audio_sink_getcaps):
+	* ext/jack/gstjackaudiosink.h:
+	Use new client object to manage connections.
+	Don't remove and recreate all ports, try to reuse them.
+
 2007-03-07  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpack.c: (plugin_init):

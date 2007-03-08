@@ -27,6 +27,8 @@
 #include <gst/gst.h>
 #include <gst/audio/gstbaseaudiosink.h>
 
+#include "gstjackaudioclient.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_JACK_AUDIO_SINK             (gst_jack_audio_sink_get_type())
@@ -63,6 +65,7 @@ typedef enum {
 struct _GstJackAudioSink {
   GstBaseAudioSink element;
 
+  /*< private >*/
   /* cached caps */
   GstCaps         *caps;
 
@@ -71,17 +74,15 @@ struct _GstJackAudioSink {
   gchar           *server;
 
   /* our client */
-  jack_client_t   *client;
+  GstJackAudioClient *client;
 
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  /* our ports */
+  jack_port_t    **ports;
+  int              port_count;
 };
 
 struct _GstJackAudioSinkClass {
   GstBaseAudioSinkClass parent_class;
-
-  /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_jack_audio_sink_get_type (void);

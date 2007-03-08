@@ -96,8 +96,6 @@ struct _GstJackRingBuffer
   gint sample_rate;
   gint buffer_size;
   gint channels;
-
-  jack_port_t **outport;
 };
 
 struct _GstJackRingBufferClass
@@ -122,6 +120,60 @@ static gboolean gst_jack_ring_buffer_start (GstRingBuffer * buf);
 static gboolean gst_jack_ring_buffer_pause (GstRingBuffer * buf);
 static gboolean gst_jack_ring_buffer_stop (GstRingBuffer * buf);
 static guint gst_jack_ring_buffer_delay (GstRingBuffer * buf);
+
+static gboolean
+gst_jack_audio_sink_allocate_channels (GstJackAudioSink * sink, gint channels)
+{
+  jack_client_t *client;
+
+  client = gst_jack_audio_client_get_client (sink->client);
+
+  /* remove ports we don't need */
+  while (sink->port_count > channels) {
+    jack_port_unregister (client, sink->ports[--sink->port_count]);
+  }
+
+  /* alloc enough output ports */
+  sink->ports = g_realloc (sink->ports, sizeof (jack_port_t *) * channels);
+
+  /* create an output port for each channel */
+  while (sink->port_count < channels) {
+    gchar *name;
+
+    /* port names start from 1 */
+    name = g_strdup_printf ("out_%d", sink->port_count + 1);
+    sink->ports[sink->port_count] =
+        jack_port_register (client, name,
+        JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+    if (sink->ports[sink->port_count] == NULL)
+      return FALSE;
+
+    sink->port_count++;
+
+    g_free (name);
+  }
+  return TRUE;
+}
+
+static void
+gst_jack_audio_sink_free_channels (GstJackAudioSink * sink)
+{
+  gint res, i = 0;
+  jack_client_t *client;
+
+  client = gst_jack_audio_client_get_client (sink->client);
+
+  /* get rid of all ports */
+  while (sink->port_count) {
+    GST_LOG_OBJECT (sink, "unregister port %d", i);
+    if ((res = jack_port_unregister (client, sink->ports[i++]))) {
+      GST_DEBUG_OBJECT (sink, "unregister of port failed (%d)", res);
+    }
+    sink->port_count--;
+  }
+  g_free (sink->ports);
+  sink->ports = NULL;
+}
 
 /* ringbuffer abstract base class */
 static GType
@@ -206,7 +258,7 @@ jack_process_cb (jack_nframes_t nframes, void *arg)
 
   /* get target buffers */
   for (i = 0; i < channels; i++) {
-    buffers[i] = (sample_t *) jack_port_get_buffer (abuf->outport[i], nframes);
+    buffers[i] = (sample_t *) jack_port_get_buffer (sink->ports[i], nframes);
   }
 
   if (gst_ring_buffer_prepare_read (buf, &readseg, &readptr, &len)) {
@@ -343,29 +395,18 @@ static gboolean
 gst_jack_ring_buffer_open_device (GstRingBuffer * buf)
 {
   GstJackAudioSink *sink;
-  jack_options_t options;
   jack_status_t status = 0;
 
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
 
   GST_DEBUG_OBJECT (sink, "open");
 
-  /* never start a server */
-  options = JackNoStartServer;
-  /* if we have a servername, use it */
-  if (sink->server != NULL)
-    options |= JackServerName;
-  /* open the client */
-  sink->client = jack_client_open ("GStreamer", options, &status, sink->server);
+  sink->client = gst_jack_audio_client_new ("GStreamer", sink->server,
+      GST_JACK_CLIENT_SINK,
+      jack_shutdown_cb,
+      jack_process_cb, jack_buffer_size_cb, jack_sample_rate_cb, buf, &status);
   if (sink->client == NULL)
     goto could_not_open;
-
-  /* set our callbacks  */
-  jack_set_process_callback (sink->client, jack_process_cb, buf);
-  /* these callbacks cause us to error */
-  jack_set_buffer_size_callback (sink->client, jack_buffer_size_cb, buf);
-  jack_set_sample_rate_callback (sink->client, jack_sample_rate_cb, buf);
-  jack_on_shutdown (sink->client, jack_shutdown_cb, buf);
 
   GST_DEBUG_OBJECT (sink, "opened");
 
@@ -391,17 +432,13 @@ static gboolean
 gst_jack_ring_buffer_close_device (GstRingBuffer * buf)
 {
   GstJackAudioSink *sink;
-  gint res;
 
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
 
   GST_DEBUG_OBJECT (sink, "close");
 
-  if ((res = jack_client_close (sink->client))) {
-    /* just a warning, we assume the client is gone. */
-    GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE,
-        (NULL), ("Jack client close error (%d)", res));
-  }
+  gst_jack_audio_sink_free_channels (sink);
+  gst_jack_audio_client_free (sink->client);
   sink->client = NULL;
 
   return TRUE;
@@ -426,37 +463,26 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   const char **ports;
   gint sample_rate, buffer_size;
   gint i, channels, res;
+  jack_client_t *client;
 
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
   abuf = GST_JACK_RING_BUFFER_CAST (buf);
 
   GST_DEBUG_OBJECT (sink, "acquire");
 
+  client = gst_jack_audio_client_get_client (sink->client);
+
   /* sample rate must be that of the server */
-  sample_rate = jack_get_sample_rate (sink->client);
+  sample_rate = jack_get_sample_rate (client);
   if (sample_rate != spec->rate)
     goto wrong_samplerate;
 
   channels = spec->channels;
 
-  /* alloc enough output ports */
-  abuf->outport = g_new (jack_port_t *, channels);
+  if (!gst_jack_audio_sink_allocate_channels (sink, channels))
+    goto out_of_ports;
 
-  /* create an output port for each channel */
-  for (i = 0; i < channels; i++) {
-    gchar *name;
-
-    /* port names start from 1 */
-    name = g_strdup_printf ("out_%d", i + 1);
-    abuf->outport[i] = jack_port_register (sink->client, name,
-        JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
-    if (abuf->outport[i] == NULL)
-      goto out_of_ports;
-
-    g_free (name);
-  }
-
-  buffer_size = jack_get_buffer_size (sink->client);
+  buffer_size = jack_get_buffer_size (client);
 
   /* the segment size in bytes, this is large enough to hold a buffer of 32bit floats
    * for all channels  */
@@ -473,7 +499,7 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   buf->data = gst_buffer_new_and_alloc (spec->segtotal * spec->segsize);
   memset (GST_BUFFER_DATA (buf->data), 0, GST_BUFFER_SIZE (buf->data));
 
-  if ((res = jack_activate (sink->client)))
+  if ((res = gst_jack_audio_client_set_active (sink->client, TRUE)))
     goto could_not_activate;
 
   /* if we need to automatically connect the ports, do so now. We must do this
@@ -482,7 +508,7 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
     /* find all the physical input ports. A physical input port is a port
      * associated with a hardware device. Someone needs connect to a physical
      * port in order to hear something. */
-    ports = jack_get_ports (sink->client, NULL, NULL,
+    ports = jack_get_ports (client, NULL, NULL,
         JackPortIsPhysical | JackPortIsInput);
     if (ports == NULL) {
       /* no ports? fine then we don't do anything except for posting a warning
@@ -501,7 +527,7 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
         break;
       }
       /* connect the port to a physical port */
-      if ((res = jack_connect (sink->client, jack_port_name (abuf->outport[i]),
+      if ((res = jack_connect (client, jack_port_name (sink->ports[i]),
                   ports[i])))
         goto cannot_connect;
     }
@@ -550,30 +576,20 @@ gst_jack_ring_buffer_release (GstRingBuffer * buf)
 {
   GstJackAudioSink *sink;
   GstJackRingBuffer *abuf;
-  gint i, res;
+  gint res;
 
   abuf = GST_JACK_RING_BUFFER_CAST (buf);
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
 
   GST_DEBUG_OBJECT (sink, "release");
 
-  if ((res = jack_deactivate (sink->client))) {
+  if ((res = gst_jack_audio_client_set_active (sink->client, FALSE))) {
     /* we only warn, this means the server is probably shut down and the client
      * is gone anyway. */
     GST_ELEMENT_WARNING (sink, RESOURCE, CLOSE, (NULL),
         ("Could not deactivate Jack client (%d)", res));
   }
 
-  /* remove all ports */
-  for (i = 0; i < abuf->channels; i++) {
-    GST_LOG_OBJECT (sink, "unregister port %d", i);
-    if ((res = jack_port_unregister (sink->client, abuf->outport[i]))) {
-      GST_DEBUG_OBJECT (sink, "unregister of port failed (%d)", res);
-    }
-    abuf->outport[i] = NULL;
-  }
-  g_free (abuf->outport);
-  abuf->outport = NULL;
   abuf->channels = -1;
   abuf->buffer_size = -1;
   abuf->sample_rate = -1;
@@ -746,6 +762,8 @@ gst_jack_audio_sink_class_init (GstJackAudioSinkClass * klass)
 
   gstbaseaudiosink_class->create_ringbuffer =
       GST_DEBUG_FUNCPTR (gst_jack_audio_sink_create_ringbuffer);
+
+  gst_jack_audio_client_init ();
 }
 
 static void
@@ -754,6 +772,8 @@ gst_jack_audio_sink_init (GstJackAudioSink * sink,
 {
   sink->connect = DEFAULT_PROP_CONNECT;
   sink->server = g_strdup (DEFAULT_PROP_SERVER);
+  sink->ports = NULL;
+  sink->port_count = 0;
 }
 
 static void
@@ -806,14 +826,17 @@ gst_jack_audio_sink_getcaps (GstBaseSink * bsink)
   const char **ports;
   gint min, max;
   gint rate;
+  jack_client_t *client;
 
   if (sink->client == NULL)
     goto no_client;
 
+  client = gst_jack_audio_client_get_client (sink->client);
+
   if (sink->connect == GST_JACK_CONNECT_AUTO) {
     /* get a port count, this is the number of channels we can automatically
      * connect. */
-    ports = jack_get_ports (sink->client, NULL, NULL,
+    ports = jack_get_ports (client, NULL, NULL,
         JackPortIsPhysical | JackPortIsInput);
     max = 0;
     if (ports != NULL) {
@@ -822,13 +845,13 @@ gst_jack_audio_sink_getcaps (GstBaseSink * bsink)
     } else
       max = 0;
   } else {
-    /* we allow any number of pads, somoething else is going to connect the
+    /* we allow any number of pads, something else is going to connect the
      * pads. */
     max = G_MAXINT;
   }
   min = MIN (1, max);
 
-  rate = jack_get_sample_rate (sink->client);
+  rate = jack_get_sample_rate (client);
 
   GST_DEBUG_OBJECT (sink, "got %d-%d ports, samplerate: %d", min, max, rate);
 
