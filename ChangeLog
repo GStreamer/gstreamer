@@ -1,5 +1,10 @@
 2007-03-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/check/elements/.cvsignore:
+	  Add audiodynamic check to .cvsignore
+
+2007-03-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	reviewed by: Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiofx/Makefile.am:
