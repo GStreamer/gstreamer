@@ -1156,70 +1156,71 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   GstCaps *caps = NULL;
   GstPad *pad;
   GstElement *element;
+  gboolean got_strh = FALSE, got_strf = FALSE;
 
   element = GST_ELEMENT_CAST (avi);
 
   GST_DEBUG_OBJECT (avi, "Parsing stream");
 
-  /* read strh */
-  if (!gst_riff_parse_chunk (element, buf, &offset, &tag, &sub) ||
-      tag != GST_RIFF_TAG_strh) {
-    GST_ERROR_OBJECT (avi,
-        "Failed to find strh chunk (bufsize: %d, tag: %" GST_FOURCC_FORMAT ")",
-        GST_BUFFER_SIZE (buf), GST_FOURCC_ARGS (tag));
-    goto fail;
-  } else if (!gst_riff_parse_strh (element, sub, &stream->strh)) {
-    GST_WARNING_OBJECT (avi, "Failed to parse strh chunk");
-    goto fail;
-  }
-
-  /* read strf */
-  if (!gst_riff_parse_chunk (element, buf, &offset, &tag, &sub) ||
-      tag != GST_RIFF_TAG_strf) {
-    GST_ERROR_OBJECT (avi,
-        "Failed to find strf chunk (size: %d, tag: %"
-        GST_FOURCC_FORMAT ")", GST_BUFFER_SIZE (buf), GST_FOURCC_ARGS (tag));
-    goto fail;
-  } else {
-    gboolean res = FALSE;
-
-    switch (stream->strh->type) {
-      case GST_RIFF_FCC_vids:
-        stream->is_vbr = TRUE;
-        res = gst_riff_parse_strf_vids (element, sub,
-            &stream->strf.vids, &stream->extradata);
-        GST_DEBUG_OBJECT (element, "marking video as VBR, res %d", res);
-        break;
-      case GST_RIFF_FCC_auds:
-        stream->is_vbr = (stream->strh->samplesize == 0)
-            && stream->strh->scale > 1;
-        res =
-            gst_riff_parse_strf_auds (element, sub, &stream->strf.auds,
-            &stream->extradata);
-        GST_DEBUG_OBJECT (element, "marking audio as VBR:%d, res %d",
-            stream->is_vbr, res);
-        break;
-      case GST_RIFF_FCC_iavs:
-        stream->is_vbr = TRUE;
-        res = gst_riff_parse_strf_iavs (element, sub,
-            &stream->strf.iavs, &stream->extradata);
-        GST_DEBUG_OBJECT (element, "marking iavs as VBR, res %d", res);
-        break;
-      default:
-        GST_ERROR_OBJECT (avi,
-            "Don´t know how to handle stream type %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (stream->strh->type));
-        break;
-    }
-
-    if (!res)
-      goto fail;
-  }
-
-  /* read strd/strn */
   while (gst_riff_parse_chunk (element, buf, &offset, &tag, &sub)) {
     /* sub can be NULL if the chunk is empty */
     switch (tag) {
+      case GST_RIFF_TAG_strh:
+        if (got_strh) {
+          GST_WARNING_OBJECT (avi, "Ignoring additional strh chunk");
+          break;
+        }
+        if (!gst_riff_parse_strh (element, sub, &stream->strh)) {
+          GST_WARNING_OBJECT (avi, "Failed to parse strh chunk");
+          goto fail;
+        }
+        got_strh = TRUE;
+        break;
+      case GST_RIFF_TAG_strf:
+      {
+        gboolean res = FALSE;
+
+        if (got_strf) {
+          GST_WARNING_OBJECT (avi, "Ignoring additional strf chunk");
+          break;
+        }
+        if (!got_strh) {
+          GST_ERROR_OBJECT (avi, "Found strf chunk before strh chunk");
+          goto fail;
+        }
+        switch (stream->strh->type) {
+          case GST_RIFF_FCC_vids:
+            stream->is_vbr = TRUE;
+            res = gst_riff_parse_strf_vids (element, sub,
+                &stream->strf.vids, &stream->extradata);
+            GST_DEBUG_OBJECT (element, "marking video as VBR, res %d", res);
+            break;
+          case GST_RIFF_FCC_auds:
+            stream->is_vbr = (stream->strh->samplesize == 0)
+                && stream->strh->scale > 1;
+            res =
+                gst_riff_parse_strf_auds (element, sub, &stream->strf.auds,
+                &stream->extradata);
+            GST_DEBUG_OBJECT (element, "marking audio as VBR:%d, res %d",
+                stream->is_vbr, res);
+            break;
+          case GST_RIFF_FCC_iavs:
+            stream->is_vbr = TRUE;
+            res = gst_riff_parse_strf_iavs (element, sub,
+                &stream->strf.iavs, &stream->extradata);
+            GST_DEBUG_OBJECT (element, "marking iavs as VBR, res %d", res);
+            break;
+          default:
+            GST_ERROR_OBJECT (avi,
+                "Don´t know how to handle stream type %" GST_FOURCC_FORMAT,
+                GST_FOURCC_ARGS (stream->strh->type));
+            break;
+        }
+        if (!res)
+          goto fail;
+        got_strf = TRUE;
+        break;
+      }
       case GST_RIFF_TAG_strd:
         if (stream->initdata)
           gst_buffer_unref (stream->initdata);
@@ -1258,6 +1259,16 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
         }
         break;
     }
+  }
+
+  if (!got_strh) {
+    GST_ERROR_OBJECT (avi, "Failed to find strh chunk");
+    goto fail;
+  }
+
+  if (!got_strf) {
+    GST_ERROR_OBJECT (avi, "Failed to find strf chunk");
+    goto fail;
   }
 
   /* get class to figure out the template */
@@ -2410,8 +2421,10 @@ gst_avi_demux_push_event (GstAviDemux * avi, GstEvent * event)
     for (i = 0; i < avi->num_streams; i++) {
       avi_stream_context *stream = &avi->stream[i];
 
-      gst_event_ref (event);
-      result &= gst_pad_push_event (stream->pad, event);
+      if (stream->pad) {
+        gst_event_ref (event);
+        result &= gst_pad_push_event (stream->pad, event);
+      }
     }
   } else {
     /* return error, as the event was not send */
