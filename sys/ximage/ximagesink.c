@@ -136,6 +136,7 @@ MotifWmHints, MwmHints;
 
 #define MWM_HINTS_DECORATIONS   (1L << 1)
 
+static void gst_ximagesink_reset (GstXImageSink * ximagesink);
 static void gst_ximagesink_ximage_destroy (GstXImageSink * ximagesink,
     GstXImageBuffer * ximage);
 static void gst_ximagesink_xwindow_update_geometry (GstXImageSink * ximagesink,
@@ -1260,7 +1261,7 @@ gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
 
   g_mutex_unlock (ximagesink->x_lock);
 
-  g_free (ximagesink->xcontext);
+  g_free (xcontext);
 }
 
 static void
@@ -1465,8 +1466,6 @@ gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -1478,30 +1477,7 @@ gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
       GST_VIDEO_SINK_HEIGHT (ximagesink) = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      GST_OBJECT_LOCK (ximagesink);
-      ximagesink->running = FALSE;
-      GST_OBJECT_UNLOCK (ximagesink);
-
-      if (ximagesink->ximage) {
-        gst_buffer_unref (ximagesink->ximage);
-        ximagesink->ximage = NULL;
-      }
-      if (ximagesink->cur_image) {
-        gst_buffer_unref (ximagesink->cur_image);
-        ximagesink->cur_image = NULL;
-      }
-
-      gst_ximagesink_bufferpool_clear (ximagesink);
-
-      g_mutex_lock (ximagesink->flow_lock);
-      if (ximagesink->xwindow) {
-        gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
-        gst_ximagesink_xwindow_destroy (ximagesink, ximagesink->xwindow);
-        ximagesink->xwindow = NULL;
-      }
-      g_mutex_unlock (ximagesink->flow_lock);
-
-      gst_ximagesink_xcontext_clear (ximagesink);
+      gst_ximagesink_reset (ximagesink);
       break;
     default:
       break;
@@ -2041,11 +2017,42 @@ gst_ximagesink_get_property (GObject * object, guint prop_id,
 }
 
 static void
+gst_ximagesink_reset (GstXImageSink * ximagesink)
+{
+  GST_OBJECT_LOCK (ximagesink);
+  ximagesink->running = FALSE;
+  GST_OBJECT_UNLOCK (ximagesink);
+
+  if (ximagesink->ximage) {
+    gst_buffer_unref (ximagesink->ximage);
+    ximagesink->ximage = NULL;
+  }
+  if (ximagesink->cur_image) {
+    gst_buffer_unref (ximagesink->cur_image);
+    ximagesink->cur_image = NULL;
+  }
+
+  gst_ximagesink_bufferpool_clear (ximagesink);
+
+  g_mutex_lock (ximagesink->flow_lock);
+  if (ximagesink->xwindow) {
+    gst_ximagesink_xwindow_clear (ximagesink, ximagesink->xwindow);
+    gst_ximagesink_xwindow_destroy (ximagesink, ximagesink->xwindow);
+    ximagesink->xwindow = NULL;
+  }
+  g_mutex_unlock (ximagesink->flow_lock);
+
+  gst_ximagesink_xcontext_clear (ximagesink);
+}
+
+static void
 gst_ximagesink_finalize (GObject * object)
 {
   GstXImageSink *ximagesink;
 
   ximagesink = GST_XIMAGESINK (object);
+
+  gst_ximagesink_reset (ximagesink);
 
   if (ximagesink->display_name) {
     g_free (ximagesink->display_name);

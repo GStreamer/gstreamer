@@ -149,6 +149,8 @@ MotifWmHints, MwmHints;
 
 #define MWM_HINTS_DECORATIONS   (1L << 1)
 
+static void gst_xvimagesink_reset (GstXvImageSink * xvimagesink);
+
 static void gst_xvimage_buffer_finalize (GstXvImageBuffer * xvimage);
 
 static void gst_xvimagesink_xwindow_update_geometry (GstXvImageSink *
@@ -2032,8 +2034,6 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -2045,27 +2045,7 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
       GST_VIDEO_SINK_HEIGHT (xvimagesink) = 0;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      GST_OBJECT_LOCK (xvimagesink);
-      xvimagesink->running = FALSE;
-      GST_OBJECT_UNLOCK (xvimagesink);
-      if (xvimagesink->cur_image) {
-        gst_buffer_unref (xvimagesink->cur_image);
-        xvimagesink->cur_image = NULL;
-      }
-      if (xvimagesink->xvimage) {
-        gst_buffer_unref (xvimagesink->xvimage);
-        xvimagesink->xvimage = NULL;
-      }
-
-      gst_xvimagesink_imagepool_clear (xvimagesink);
-
-      if (xvimagesink->xwindow) {
-        gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
-        gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
-        xvimagesink->xwindow = NULL;
-      }
-
-      gst_xvimagesink_xcontext_clear (xvimagesink);
+      gst_xvimagesink_reset (xvimagesink);
       break;
     default:
       break;
@@ -2862,6 +2842,32 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
   }
 }
 
+static void
+gst_xvimagesink_reset (GstXvImageSink * xvimagesink)
+{
+  GST_OBJECT_LOCK (xvimagesink);
+  xvimagesink->running = FALSE;
+  GST_OBJECT_UNLOCK (xvimagesink);
+  if (xvimagesink->cur_image) {
+    gst_buffer_unref (xvimagesink->cur_image);
+    xvimagesink->cur_image = NULL;
+  }
+  if (xvimagesink->xvimage) {
+    gst_buffer_unref (xvimagesink->xvimage);
+    xvimagesink->xvimage = NULL;
+  }
+
+  gst_xvimagesink_imagepool_clear (xvimagesink);
+
+  if (xvimagesink->xwindow) {
+    gst_xvimagesink_xwindow_clear (xvimagesink, xvimagesink->xwindow);
+    gst_xvimagesink_xwindow_destroy (xvimagesink, xvimagesink->xwindow);
+    xvimagesink->xwindow = NULL;
+  }
+
+  gst_xvimagesink_xcontext_clear (xvimagesink);
+}
+
 /* Finalize is called only once, dispose can be called multiple times.
  * We use mutexes and don't reset stuff to NULL here so let's register
  * as a finalize. */
@@ -2871,6 +2877,8 @@ gst_xvimagesink_finalize (GObject * object)
   GstXvImageSink *xvimagesink;
 
   xvimagesink = GST_XVIMAGESINK (object);
+
+  gst_xvimagesink_reset (xvimagesink);
 
   if (xvimagesink->display_name) {
     g_free (xvimagesink->display_name);

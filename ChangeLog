@@ -1,5 +1,20 @@
 2007-03-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_clear),
+	(gst_ximagesink_change_state), (gst_ximagesink_reset),
+	(gst_ximagesink_finalize):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_change_state),
+	(gst_xvimagesink_reset), (gst_xvimagesink_finalize):
+	Move some cleanup stuff from the state change handler into a _reset()
+	function that can be called from _finalize(). This ensures that things
+	get freed even if (for some reason) the NULL->READY state transition
+	fails in the parent class.
+	Even if a parent state change fails, process our downward state change
+	logic instead of bailing out early.
+	Free the correct xcontext pointer in ximagesink's xcontext_clear.
+
+2007-03-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/alsa/gstalsasink.c: (gst_alsasink_open):
 	Extra log line.
 
