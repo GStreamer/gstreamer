@@ -183,7 +183,7 @@ gst_identity_class_init (GstIdentityClass * klass)
   g_object_class_install_property (gobject_class,
       PROP_DROP_PROBABILITY, g_param_spec_float ("drop_probability",
           "Drop Probability",
-          "The Probability a buffer is dropped (not implemented)", 0.0, 1.0,
+          "The Probability a buffer is dropped", 0.0, 1.0,
           DEFAULT_DROP_PROBABILITY, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_DATARATE,
       g_param_spec_int ("datarate", "Datarate",
@@ -434,10 +434,8 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         GST_OBJECT_UNLOCK (identity);
         g_object_notify (G_OBJECT (identity), "last-message");
       }
-      /* FIXME, this does not drop the buffer in basetransform. Actually
-       * dropping the buffer in transform_ip is not possible without a new
-       * custom GstFlowReturn value. */
-      return GST_FLOW_OK;
+      /* return DROPPED to basetransform. */
+      return GST_BASE_TRANSFORM_FLOW_DROPPED;
     }
   }
 

@@ -1,3 +1,20 @@
+2007-03-08  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_sink_eventfunc),
+	(gst_base_transform_handle_buffer), (gst_base_transform_chain),
+	(gst_base_transform_activate):
+	* libs/gst/base/gstbasetransform.h:
+	Add support for dropping buffers with custom GstFlowReturn.
+	Set DISCONT flags on outgoing buffers based on QoS, incomming DISCONT
+	buffers or dropped buffers.
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	docs for new custom return code.
+
+	* plugins/elements/gstidentity.c: (gst_identity_transform_ip):
+	Use drop support in base class to implement drop-probability.
+
 2007-03-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (load_plugin_func):

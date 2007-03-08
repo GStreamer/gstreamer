@@ -67,10 +67,19 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_TRANSFORM_SINK_PAD(obj)	(GST_BASE_TRANSFORM_CAST (obj)->sinkpad)
 
+/**
+ * GST_BASE_TRANSFORM_FLOW_DROPPED:
+ *
+ * A #GstFlowReturn that can be returned from transform and transform_ip to
+ * indicate that no output buffer was generated.
+ *
+ * Since: 0.10.13
+ */
+#define GST_BASE_TRANSFORM_FLOW_DROPPED   GST_FLOW_CUSTOM_SUCCESS
+
 typedef struct _GstBaseTransform GstBaseTransform;
 typedef struct _GstBaseTransformClass GstBaseTransformClass;
 typedef struct _GstBaseTransformPrivate GstBaseTransformPrivate;
-
 
 /**
  * GstBaseTransform:

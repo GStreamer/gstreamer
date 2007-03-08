@@ -230,6 +230,8 @@ struct _GstBaseTransformPrivate
   gboolean qos_enabled;
   gdouble proportion;
   GstClockTime earliest_time;
+  /* previous buffer had a discont */
+  gboolean discont;
 
   GstActivateMode pad_mode;
 };
@@ -1250,6 +1252,7 @@ gst_base_transform_sink_eventfunc (GstBaseTransform * trans, GstEvent * event)
       /* reset QoS parameters */
       trans->priv->proportion = 1.0;
       trans->priv->earliest_time = -1;
+      trans->priv->discont = FALSE;
       GST_OBJECT_UNLOCK (trans);
       /* we need new segment info after the flush. */
       trans->have_newsegment = FALSE;
@@ -1372,6 +1375,12 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
   if (!trans->negotiated && !trans->passthrough && (bclass->set_caps != NULL))
     goto not_negotiated;
 
+  /* Set discont flag so we can mark the outgoing buffer */
+  if (GST_BUFFER_IS_DISCONT (inbuf)) {
+    GST_LOG_OBJECT (trans, "got DISCONT buffer %p", inbuf);
+    trans->priv->discont = TRUE;
+  }
+
   /* can only do QoS if the segment is in TIME */
   if (trans->segment.format != GST_FORMAT_TIME)
     goto no_qos;
@@ -1395,6 +1404,8 @@ gst_base_transform_handle_buffer (GstBaseTransform * trans, GstBuffer * inbuf,
       GST_CAT_DEBUG_OBJECT (GST_CAT_QOS, trans, "skipping transform: qostime %"
           GST_TIME_FORMAT " <= %" GST_TIME_FORMAT,
           GST_TIME_ARGS (qostime), GST_TIME_ARGS (earliest_time));
+      /* mark discont for next buffer */
+      trans->priv->discont = TRUE;
       goto skip;
     }
   }
@@ -1411,7 +1422,7 @@ no_qos:
 
     *outbuf = inbuf;
 
-    return ret;
+    goto done;
   }
 
   want_in_place = (bclass->transform_ip != NULL) && trans->always_in_place;
@@ -1477,6 +1488,7 @@ skip:
   if (*outbuf != inbuf)
     gst_buffer_unref (inbuf);
 
+done:
   return ret;
 
   /* ERRORS */
@@ -1565,12 +1577,27 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   ret = gst_base_transform_handle_buffer (trans, buffer, &outbuf);
   g_mutex_unlock (trans->transform_lock);
 
-  /* outbuf can be NULL, this means a dropped buffer */
+  /* outbuf can be NULL, this means a dropped buffer, if we have a buffer but
+   * GST_BASE_TRANSFORM_FLOW_DROPPED we will not push either. */
   if (outbuf != NULL) {
-    if ((ret == GST_FLOW_OK))
+    if ((ret == GST_FLOW_OK)) {
+      /* apply DISCONT flag if the buffer is not yet marked as such */
+      if (trans->priv->discont) {
+        if (!GST_BUFFER_IS_DISCONT (outbuf)) {
+          outbuf = gst_buffer_make_metadata_writable (outbuf);
+          GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+        }
+        trans->priv->discont = FALSE;
+      }
       ret = gst_pad_push (trans->srcpad, outbuf);
-    else
+    } else
       gst_buffer_unref (outbuf);
+  }
+
+  /* convert internal flow to OK and mark discont for the next buffer. */
+  if (ret == GST_BASE_TRANSFORM_FLOW_DROPPED) {
+    trans->priv->discont = TRUE;
+    ret = GST_FLOW_OK;
   }
 
   gst_object_unref (trans);
@@ -1641,6 +1668,7 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
     gst_segment_init (&trans->segment, GST_FORMAT_UNDEFINED);
     trans->priv->proportion = 1.0;
     trans->priv->earliest_time = -1;
+    trans->priv->discont = FALSE;
 
     GST_OBJECT_UNLOCK (trans);
   } else {
