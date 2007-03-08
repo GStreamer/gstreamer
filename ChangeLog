@@ -1,3 +1,9 @@
+2007-03-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* plugins/elements/gstidentity.c: (gst_identity_check_perfect):
+	Fix check for perfect stream to ignore buffers with -1 
+	offsets/offset ends when checking data contiguity.
+
 2007-03-08  Wim Taymans  <wim@fluendo.com>
 
 	* tools/gst-launch.c: (event_loop):
