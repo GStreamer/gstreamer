@@ -21,7 +21,7 @@ $(CHECK_REGISTRY):
 	$(TESTS_ENVIRONMENT)
 
 # elements to ignore for the state tests
-STATE_IGNORE_ELEMENTS = cdio cdparanoiasrc
+STATE_IGNORE_ELEMENTS = cdio cdparanoiasrc libvisual_
 
 TESTS = $(check_PROGRAMS)
 
@@ -92,10 +92,8 @@ check_PROGRAMS = \
 
 # ffmpegcolorspace takes too long, so disabled for now
 VALGRIND_TO_FIX = \
-	elements/alsa \
 	elements/audioresample \
 	elements/ffmpegcolorspace \
-	generic/states \
 	libs/video
 
 # these tests don't even pass
@@ -153,6 +151,7 @@ libs_pbutils_LDADD = \
 elements_alsa_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(AM_CFLAGS)
+
 elements_alsa_LDADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
 	$(LDADD)

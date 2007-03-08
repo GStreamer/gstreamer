@@ -1,5 +1,17 @@
 2007-03-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/Makefile.am:
+	Don't test libvisual elements in the states check, because libvisual
+	seems to leak internally.
+
+	Re-enable the alsa and states tests now that there's new suppressions
+	in gst.supp.
+
+	* tests/check/elements/alsa.c: (GST_START_TEST):
+	Don't leak the alsamixer we instantiated.
+
+2007-03-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_clear),
 	(gst_ximagesink_change_state), (gst_ximagesink_reset),
 	(gst_ximagesink_finalize):

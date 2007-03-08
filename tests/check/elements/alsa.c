@@ -110,6 +110,8 @@ GST_START_TEST (test_alsa_mixer_track)
 
   fail_unless_equals_int (gst_element_set_state (mixer, GST_STATE_NULL),
       GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (mixer);
 }
 
 GST_END_TEST;
