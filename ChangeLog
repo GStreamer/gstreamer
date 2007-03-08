@@ -1,5 +1,11 @@
 2007-03-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/elements/alsa.c: (GST_START_TEST):
+	Unref the mixer if the state change fails too (if the
+	alsa devices are inaccessible, for example)
+
+2007-03-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* tests/check/Makefile.am:
 	Don't test libvisual elements in the states check, because libvisual
 	seems to leak internally.

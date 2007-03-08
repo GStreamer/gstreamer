@@ -81,8 +81,10 @@ GST_START_TEST (test_alsa_mixer_track)
   fail_unless (mixer != NULL, "Failed to create 'alsamixer' element!");
 
   state_ret = gst_element_set_state (mixer, GST_STATE_READY);
-  if (state_ret != GST_STATE_CHANGE_SUCCESS)
+  if (state_ret != GST_STATE_CHANGE_SUCCESS) {
+    gst_object_unref (mixer);
     return;
+  }
 
   GST_LOG ("opened alsamixer");
   fail_unless (GST_IS_MIXER (mixer), "is not a GstMixer?!");
