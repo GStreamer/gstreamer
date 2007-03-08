@@ -163,6 +163,8 @@ gst_tcp_server_src_finalize (GObject * gobject)
   GstTCPServerSrc *src = GST_TCP_SERVER_SRC (gobject);
 
   g_free (src->host);
+
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
 static GstFlowReturn

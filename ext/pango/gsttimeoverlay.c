@@ -146,7 +146,7 @@ gst_time_overlay_init (GstTimeOverlay * overlay, GstTimeOverlayClass * klass)
   pango_context_set_base_dir (context, PANGO_DIRECTION_LTR);
 
   font_description = pango_font_description_new ();
-  pango_font_description_set_family (font_description, g_strdup ("Monospace"));
+  pango_font_description_set_family_static (font_description, "Monospace");
   pango_font_description_set_style (font_description, PANGO_STYLE_NORMAL);
   pango_font_description_set_variant (font_description, PANGO_VARIANT_NORMAL);
   pango_font_description_set_weight (font_description, PANGO_WEIGHT_NORMAL);

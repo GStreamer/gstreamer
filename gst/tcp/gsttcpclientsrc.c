@@ -168,6 +168,8 @@ gst_tcp_client_src_finalize (GObject * gobject)
   GstTCPClientSrc *this = GST_TCP_CLIENT_SRC (gobject);
 
   g_free (this->host);
+
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
 static GstCaps *

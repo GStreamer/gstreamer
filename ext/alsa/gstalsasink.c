@@ -610,6 +610,7 @@ gst_alsasink_open (GstAudioSink * asink)
 
   CHECK (snd_pcm_open (&alsa->handle, alsa->device, SND_PCM_STREAM_PLAYBACK,
           SND_PCM_NONBLOCK), open_error);
+  GST_LOG_OBJECT (alsa, "Opened device %s", alsa->device);
 
   return TRUE;
 

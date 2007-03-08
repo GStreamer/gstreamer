@@ -171,6 +171,8 @@ gst_tcp_client_sink_finalize (GObject * gobject)
   GstTCPClientSink *this = GST_TCP_CLIENT_SINK (gobject);
 
   g_free (this->host);
+
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
 static gboolean

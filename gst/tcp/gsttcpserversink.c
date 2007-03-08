@@ -132,6 +132,8 @@ gst_tcp_server_sink_finalize (GObject * gobject)
   GstTCPServerSink *this = GST_TCP_SERVER_SINK (gobject);
 
   g_free (this->host);
+
+  G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
 /* handle a read request on the server,

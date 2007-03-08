@@ -1,3 +1,20 @@
+2007-03-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_open):
+	Extra log line.
+
+	* ext/pango/gstclockoverlay.c: (gst_clock_overlay_init):
+	* ext/pango/gsttimeoverlay.c: (gst_time_overlay_init):
+	Use pango_font_description_set_family_static instead of 
+	pango_font_description_set_family to save a string copy (it was
+	leaking due to the strdup anyway)
+
+	* gst/tcp/gsttcpclientsink.c: (gst_tcp_client_sink_finalize):
+	* gst/tcp/gsttcpclientsrc.c: (gst_tcp_client_src_finalize):
+	* gst/tcp/gsttcpserversink.c: (gst_tcp_server_sink_finalize):
+	* gst/tcp/gsttcpserversrc.c: (gst_tcp_server_src_finalize):
+	Chain up in finalize.
+
 2007-03-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/interfaces/mixertrack.c:
