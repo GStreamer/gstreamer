@@ -1,5 +1,10 @@
 2007-03-09  Wim Taymans  <wim@fluendo.com>
 
+	* docs/plugins/gstreamer-plugins-sections.txt:
+	Fix GstTee docs.
+
+2007-03-09  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstbuffer.c: (gst_buffer_copy_metadata), (_gst_buffer_copy):
 	* gst/gstbuffer.h:

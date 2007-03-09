@@ -132,6 +132,7 @@ gst_type_find_element_get_type
 <FILE>element-tee</FILE>
 <TITLE>tee</TITLE>
 GstTee
+GstTeePullMode
 <SUBSECTION Standard>
 GstTeeClass
 GST_TEE
