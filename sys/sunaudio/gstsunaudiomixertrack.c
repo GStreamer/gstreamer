@@ -57,48 +57,35 @@ gst_sunaudiomixer_track_init (GstSunAudioMixerTrack * track)
   track->track_num = 0;
 }
 
-static const gchar **labels = NULL;
-
-static void
-fill_labels (void)
-{
-  int i;
-  struct
-  {
-    gchar *given, *wanted;
-  }
-  cases[] = {
-    {
-    "Vol  ", N_("Volume")}
-    , {
-    "Gain ", N_("Gain")}
-    , {
-    "Mon  ", N_("Monitor")}
-    , {
-    NULL, NULL}
-  };
-
-  labels = g_malloc (sizeof (gchar *) * MIXER_DEVICES);
-
-  for (i = 0; i < MIXER_DEVICES; i++) {
-    labels[i] = g_strdup (cases[i].wanted);
-  }
-}
-
 GstMixerTrack *
 gst_sunaudiomixer_track_new (GstSunAudioTrackType track_num,
     gint max_chans, gint flags)
 {
+  const gchar *labels[] = { N_("Volume"), N_("Gain"), N_("Monitor") };
+
   GstSunAudioMixerTrack *sunaudiotrack;
   GstMixerTrack *track;
+  GObjectClass *klass;
+  const gchar *untranslated_label;
   gint volume;
 
-  if (!labels)
-    fill_labels ();
+  if ((guint) track_num < G_N_ELEMENTS (labels))
+    untranslated_label = labels[track_num];
+  else
+    untranslated_label = NULL;
 
-  sunaudiotrack = g_object_new (GST_TYPE_SUNAUDIO_MIXER_TRACK, NULL);
+  /* FIXME: remove this check once we depend on -base >= 0.10.12.1 */
+  klass = G_OBJECT_CLASS (g_type_class_ref (GST_TYPE_SUNAUDIO_MIXER_TRACK));
+  if (g_object_class_find_property (klass, "untranslated-label")) {
+    sunaudiotrack = g_object_new (GST_TYPE_SUNAUDIO_MIXER_TRACK,
+        "untranslated-label", untranslated_label, NULL);
+  } else {
+    sunaudiotrack = g_object_new (GST_TYPE_SUNAUDIO_MIXER_TRACK, NULL);
+  }
+  g_type_class_unref (klass);
+
   track = GST_MIXER_TRACK (sunaudiotrack);
-  track->label = g_strdup (labels[track_num]);
+  track->label = g_strdup (_(untranslated_label));
   track->num_channels = max_chans;
   track->flags = flags;
   track->min_volume = 0;

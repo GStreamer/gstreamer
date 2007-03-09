@@ -26,6 +26,12 @@ else
 check_annodex = 
 endif
 
+if USE_SUNAUDIO
+check_sunaudio = elements/sunaudio
+else
+check_sunaudio = 
+endif
+
 if USE_TAGLIB
 check_taglib = \
 	elements/id3v2mux \
@@ -47,6 +53,7 @@ check_PROGRAMS = \
 	elements/matroskamux \
 	elements/icydemux \
 	elements/videofilter \
+	$(check_sunaudio) \
 	$(check_taglib)
     
 VALGRIND_TO_FIX =
@@ -76,3 +83,10 @@ elements_audiopanorama_CFLAGS = \
 
 elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
 elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
+
+elements_sunaudio_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+elements_sunaudio_LDADD = \
+	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-@GST_MAJORMINOR@ \
+	$(LDADD)

@@ -1,3 +1,21 @@
+2007-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/sunaudio/gstsunaudio.c: (plugin_init):
+	* sys/sunaudio/gstsunaudiomixertrack.c:
+	(gst_sunaudiomixer_track_new):
+	  Actually translate sunaudio mixer track labels instead of just
+	  marking the strings as translatable (#377306); clean up weird
+	  label string mapping code that serves no apparent purpose. Also
+	  set the 'untranslated-label' property when creating mixer tracks
+	  if the GstMixerTrack base class supports this.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/sunaudio.c: (GST_START_TEST),
+	(sunaudio_suite):
+	  Very minimalistic unit test for sunaudiomixer element (compiles, but not
+	  actually tested on a system where sunaudiomixer is available).
+
 2007-03-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/Makefile.am:
