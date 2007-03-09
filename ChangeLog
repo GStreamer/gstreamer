@@ -1,3 +1,31 @@
+2007-03-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/equalizer/Makefile.am:
+	* gst/equalizer/gstiirequalizer.c: (_do_init),
+	(gst_iir_equalizer_band_set_property),
+	(gst_iir_equalizer_band_get_property),
+	(gst_iir_equalizer_band_class_init),
+	(gst_iir_equalizer_band_get_type),
+	(gst_iir_equalizer_child_proxy_get_child_by_index),
+	(gst_iir_equalizer_child_proxy_get_children_count),
+	(gst_iir_equalizer_child_proxy_interface_init),
+	(gst_iir_equalizer_base_init), (gst_iir_equalizer_class_init),
+	(gst_iir_equalizer_finalize), (setup_filter),
+	(gst_iir_equalizer_compute_frequencies),
+	(gst_iir_equalizer_set_property), (gst_iir_equalizer_get_property),
+	(gst_iir_equalizer_setup), (plugin_init):
+	* gst/equalizer/gstiirequalizer.h:
+	* gst/equalizer/gstiirequalizernbands.c:
+	(gst_iir_equalizer_nbands_base_init),
+	(gst_iir_equalizer_nbands_class_init),
+	(gst_iir_equalizer_nbands_init),
+	(gst_iir_equalizer_nbands_set_property),
+	(gst_iir_equalizer_nbands_get_property):
+	* gst/equalizer/gstiirequalizernbands.h:
+	  Refactor plugin into a base class and a first subclass (nband eq). The
+	  nband eq uses GstChildProxy and is controlable. More subclasses will
+	  follow.
+
 2007-03-08  Wim Taymans  <wim@fluendo.com>
 
 	Includes patch by: Paul Davis <paul at linuxaudiosystems dot com>

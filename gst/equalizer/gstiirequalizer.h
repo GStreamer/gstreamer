@@ -1,5 +1,6 @@
 /* GStreamer IIR equalizer
  * Copyright (C) <2004> Benjamin Otte <otte@gnome.org>
+ *               <2007> Stefan Kost <ensonic@users.sf.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,9 +23,19 @@
 
 #include <gst/audio/gstaudiofilter.h>
 #include <gst/audio/gstringbuffer.h>
+#include <gst/controller/gstcontroller.h>
+
+
+#define GST_EQUALIZER_TRANSFORM_LOCK(eq) \
+    g_mutex_lock (GST_BASE_TRANSFORM(eq)->transform_lock)
+
+#define GST_EQUALIZER_TRANSFORM_UNLOCK(eq) \
+    g_mutex_unlock (GST_BASE_TRANSFORM(eq)->transform_lock)
+
 
 typedef struct _GstIirEqualizer GstIirEqualizer;
 typedef struct _GstIirEqualizerClass GstIirEqualizerClass;
+typedef struct _GstIirEqualizerBand GstIirEqualizerBand;
 
 #define GST_TYPE_IIR_EQUALIZER \
   (gst_iir_equalizer_get_type())
@@ -43,35 +54,31 @@ typedef struct _GstIirEqualizerClass GstIirEqualizerClass;
 typedef void (*ProcessFunc) (GstIirEqualizer * eq, guint8 * data, guint size,
     guint channels);
 
-typedef struct
-{
-  gdouble alpha;                /* IIR coefficients for outputs */
-  gdouble beta;                 /* IIR coefficients for inputs */
-  gdouble gamma;                /* IIR coefficients for inputs */
-} SecondOrderFilter;
-
 struct _GstIirEqualizer
 {
   GstAudioFilter audiofilter;
 
   /*< private >*/
+  
+  GstIirEqualizerBand **bands;
 
   /* properties */
-  guint freq_count;
+  guint freq_band_count;
   gdouble band_width;
-  gdouble *freqs;
-  gdouble *values;
-
-  /* data */
-  SecondOrderFilter *filter;
+  /* for each band and channel */
   gpointer history;
-  ProcessFunc process;
   guint history_size;
+
+  ProcessFunc process;
 };
 
 struct _GstIirEqualizerClass
 {
   GstAudioFilterClass audiofilter_class;
 };
+
+extern void gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count);
+
+extern GType gst_iir_equalizer_get_type(void);
 
 #endif /* __GST_IIR_EQUALIZER__ */
