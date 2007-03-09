@@ -207,6 +207,7 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_IMAGE, "APIC"},
   {GST_TAG_ENCODER, "TSSE"},
   {GST_TAG_BEATS_PER_MINUTE, "TBPM"},
+  {GST_TAG_MUSICBRAINZ_SORTNAME, "TSOP"},
   {NULL, NULL}
 };
 
