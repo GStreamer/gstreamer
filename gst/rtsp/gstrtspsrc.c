@@ -1174,6 +1174,11 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
 
+    if (stream->udpsrc[0]) {
+      /* remove timeout, we are streaming now and timeouts will be handled by
+       * the session manager and jitter buffer */
+      g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", (guint64) 0, NULL);
+    }
     if (stream->srcpad) {
       gst_pad_set_active (stream->srcpad, TRUE);
       /* add the pad */

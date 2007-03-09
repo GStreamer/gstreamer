@@ -1,5 +1,11 @@
 2007-03-09  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_activate_streams):
+	When activated, remove the udpsrc timeout, we have dataflow and timeouts
+	will later be handled by the jitterbuffer.
+
+2007-03-09  Wim Taymans  <wim@fluendo.com>
+
 	* ext/taglib/gstid3v2mux.cc:
 	Add write support for GST_TAG_MUSICBRAINZ_SORTNAME (TSOP) tag.
 	Fixes #414496.
