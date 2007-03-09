@@ -871,21 +871,99 @@ musepack_type_find (GstTypeFind * tf, gpointer unused)
 }
 
 /*** audio/x-ac3 ***/
+/* This should be audio/ac3, but isn't for backwards compatibility */
 static GstStaticCaps ac3_caps = GST_STATIC_CAPS ("audio/x-ac3");
 
 #define AC3_CAPS (gst_static_caps_get(&ac3_caps))
 
+struct ac3_frmsize
+{
+  unsigned short bit_rate;
+  unsigned short frm_size[3];
+};
+
+static const struct ac3_frmsize ac3_frmsizecod_tbl[] = {
+  {32, {64, 69, 96}},
+  {32, {64, 70, 96}},
+  {40, {80, 87, 120}},
+  {40, {80, 88, 120}},
+  {48, {96, 104, 144}},
+  {48, {96, 105, 144}},
+  {56, {112, 121, 168}},
+  {56, {112, 122, 168}},
+  {64, {128, 139, 192}},
+  {64, {128, 140, 192}},
+  {80, {160, 174, 240}},
+  {80, {160, 175, 240}},
+  {96, {192, 208, 288}},
+  {96, {192, 209, 288}},
+  {112, {224, 243, 336}},
+  {112, {224, 244, 336}},
+  {128, {256, 278, 384}},
+  {128, {256, 279, 384}},
+  {160, {320, 348, 480}},
+  {160, {320, 349, 480}},
+  {192, {384, 417, 576}},
+  {192, {384, 418, 576}},
+  {224, {448, 487, 672}},
+  {224, {448, 488, 672}},
+  {256, {512, 557, 768}},
+  {256, {512, 558, 768}},
+  {320, {640, 696, 960}},
+  {320, {640, 697, 960}},
+  {384, {768, 835, 1152}},
+  {384, {768, 836, 1152}},
+  {448, {896, 975, 1344}},
+  {448, {896, 976, 1344}},
+  {512, {1024, 1114, 1536}},
+  {512, {1024, 1115, 1536}},
+  {576, {1152, 1253, 1728}},
+  {576, {1152, 1254, 1728}},
+  {640, {1280, 1393, 1920}},
+  {640, {1280, 1394, 1920}}
+};
+
+
 static void
 ac3_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data = gst_type_find_peek (tf, 0, 2);
+  guint8 *data = gst_type_find_peek (tf, 0, 5);
+  gint offset = 0;
 
-  if (data) {
-    /* pretty lame method... */
+  /* Search for an ac3 frame; not neccesarily right at the start, but give it
+   * a lower probability if not found right at the start. Check that the
+   * frame is followed by a second frame at the expected offset.
+   * We could also check the two ac3 CRCs, but we don't do that right now */
+  while (data && offset < 1024) {
     if (data[0] == 0x0b && data[1] == 0x77) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, AC3_CAPS);
-      return;
+      guint fscod = (data[4] >> 6) & 0x03;
+      guint frmsizecod = data[4] & 0x3f;
+
+      if (fscod < 3 && frmsizecod < 38) {
+        guint frame_size = ac3_frmsizecod_tbl[frmsizecod].frm_size[fscod];
+
+        data = gst_type_find_peek (tf, offset + frame_size * 2, 5);
+
+        if (data) {
+          if (data[0] == 0x0b && data[1] == 0x77) {
+            guint fscod2 = (data[4] >> 6) & 0x03;
+            guint frmsizecod2 = data[4] & 0x3f;
+
+            if (fscod == fscod2 && frmsizecod == frmsizecod2) {
+              int prob;
+
+              if (offset == 0)
+                prob = GST_TYPE_FIND_MAXIMUM;
+              else
+                prob = GST_TYPE_FIND_NEARLY_CERTAIN;
+              gst_type_find_suggest (tf, prob, AC3_CAPS);
+            }
+          }
+        }
+      }
     }
+    offset++;
+    data = gst_type_find_peek (tf, offset, 5);
   }
 }
 

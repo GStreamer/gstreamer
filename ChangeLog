@@ -1,3 +1,9 @@
+2007-03-09  Michael Smith  <msmith@fluendo.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (ac3_type_find):
+	  Replace AC3 typefinder with one that isn't terrible, and actually
+	  works usefully.
+
 2007-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/audioconvert/gstaudioconvert.c:
