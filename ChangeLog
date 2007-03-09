@@ -1,5 +1,11 @@
 2007-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* pkgconfig/gstreamer-plugins-base-uninstalled.pc.in:
+	* pkgconfig/gstreamer-plugins-base.pc.in:
+	  Fix up utils => pbutils here too.
+
+2007-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/subparse/gstsubparse.c: (handle_buffer):
 	  Break out of loop in chain function as soon as possible if we get
 	  a non-OK flow return.

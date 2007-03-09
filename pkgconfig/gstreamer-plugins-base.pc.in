@@ -11,4 +11,4 @@ Version: @VERSION@
 Libs: -L${libdir}
 Cflags: -I${includedir}
 
-libraries=audio cdda floatcast interfaces netbuffer riff rtp tag utils video
+libraries=audio cdda floatcast interfaces netbuffer riff rtp tag pbutils video
