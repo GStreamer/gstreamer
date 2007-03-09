@@ -1,5 +1,11 @@
 2007-03-09  Wim Taymans  <wim@fluendo.com>
 
+	* ext/taglib/gstid3v2mux.cc:
+	Add write support for GST_TAG_MUSICBRAINZ_SORTNAME (TSOP) tag.
+	Fixes #414496.
+
+2007-03-09  Wim Taymans  <wim@fluendo.com>
+
 	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_stream),
 	(gst_avi_demux_push_event), (gst_avi_demux_do_seek),
 	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data),

@@ -544,6 +544,7 @@ static const struct
   GST_TAG_MUSICBRAINZ_ALBUMARTISTID, add_musicbrainz_tag, "\002"}, {
   GST_TAG_MUSICBRAINZ_TRMID, add_musicbrainz_tag, "\003"}, {
   GST_TAG_MUSICBRAINZ_TRACKID, add_unique_file_id_tag, ""}, {
+  GST_TAG_MUSICBRAINZ_SORTNAME, add_text_tag, "TSOP"}, {
   GST_TAG_TRACK_NUMBER, add_count_or_num_tag, "TRCK"}, {
   GST_TAG_TRACK_COUNT, add_count_or_num_tag, "TRCK"}, {
   GST_TAG_ALBUM_VOLUME_NUMBER, add_count_or_num_tag, "TPOS"}, {
