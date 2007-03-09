@@ -58,8 +58,25 @@ GST_ELEMENT_DETAILS ("DV video decoder",
     "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");
 
 /* sizes of one input buffer */
+#define NTSC_HEIGHT 480
 #define NTSC_BUFFER 120000
+#define NTSC_FRAMERATE_NUMERATOR 30000
+#define NTSC_FRAMERATE_DENOMINATOR 1001
+
+#define PAL_HEIGHT 576
 #define PAL_BUFFER 144000
+#define PAL_FRAMERATE_NUMERATOR 25
+#define PAL_FRAMERATE_DENOMINATOR 1
+
+#define PAL_NORMAL_PAR_X        59
+#define PAL_NORMAL_PAR_Y        54
+#define PAL_WIDE_PAR_X          118
+#define PAL_WIDE_PAR_Y          81
+
+#define NTSC_NORMAL_PAR_X       10
+#define NTSC_NORMAL_PAR_Y       11
+#define NTSC_WIDE_PAR_X         40
+#define NTSC_WIDE_PAR_Y         33
 
 #define DV_DEFAULT_QUALITY DV_QUALITY_BEST
 #define DV_DEFAULT_DECODE_NTH 1
@@ -217,7 +234,6 @@ gst_dvdec_init (GstDVDec * dvdec, GstDVDecClass * g_class)
 
   dvdec->framerate_numerator = 0;
   dvdec->framerate_denominator = 0;
-  dvdec->height = 0;
   dvdec->wide = FALSE;
   dvdec->drop_factor = 1;
 
@@ -242,8 +258,6 @@ gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstDVDec *dvdec;
   GstStructure *s;
-  GstCaps *othercaps;
-  gboolean gotpar = FALSE;
   const GValue *par = NULL, *rate = NULL;
 
   dvdec = GST_DVDEC (gst_pad_get_parent (pad));
@@ -251,18 +265,67 @@ gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
   /* first parse the caps */
   s = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (s, "height", &dvdec->height))
-    goto error;
-  if ((par = gst_structure_get_value (s, "pixel-aspect-ratio")))
-    gotpar = TRUE;
+  /* we allow framerate and PAR to be overwritten. framerate is mandatory. */
   if (!(rate = gst_structure_get_value (s, "framerate")))
-    goto error;
+    goto no_framerate;
+  par = gst_structure_get_value (s, "pixel-aspect-ratio");
 
+  if (par) {
+    dvdec->par_x = gst_value_get_fraction_numerator (par);
+    dvdec->par_y = gst_value_get_fraction_denominator (par);
+    dvdec->need_par = FALSE;
+  } else {
+    dvdec->par_x = 0;
+    dvdec->par_y = 0;
+    dvdec->need_par = TRUE;
+  }
   dvdec->framerate_numerator = gst_value_get_fraction_numerator (rate);
   dvdec->framerate_denominator = gst_value_get_fraction_denominator (rate);
+  dvdec->sink_negotiated = TRUE;
+  dvdec->src_negotiated = FALSE;
+
+  gst_object_unref (dvdec);
+
+  return TRUE;
+
+  /* ERRORS */
+no_framerate:
+  {
+    GST_DEBUG_OBJECT (dvdec, "no framerate specified in caps");
+    gst_object_unref (dvdec);
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_dvdec_src_negotiate (GstDVDec * dvdec)
+{
+  GstCaps *othercaps;
+
+  /* no PAR was specified in input, derive from encoded data */
+  if (dvdec->need_par) {
+    if (dvdec->PAL) {
+      if (dvdec->wide) {
+        dvdec->par_x = PAL_WIDE_PAR_X;
+        dvdec->par_y = PAL_WIDE_PAR_Y;
+      } else {
+        dvdec->par_x = PAL_NORMAL_PAR_X;
+        dvdec->par_y = PAL_NORMAL_PAR_Y;
+      }
+    } else {
+      if (dvdec->wide) {
+        dvdec->par_x = NTSC_WIDE_PAR_X;
+        dvdec->par_y = NTSC_WIDE_PAR_Y;
+      } else {
+        dvdec->par_x = NTSC_NORMAL_PAR_X;
+        dvdec->par_y = NTSC_NORMAL_PAR_Y;
+      }
+    }
+    GST_DEBUG_OBJECT (dvdec, "Inferred PAR %d/%d from video format",
+        dvdec->par_x, dvdec->par_y);
+  }
 
   /* ignoring rgb, bgr0 for now */
-
   dvdec->bpp = 2;
 
   othercaps = gst_caps_new_simple ("video/x-raw-yuv",
@@ -270,25 +333,16 @@ gst_dvdec_sink_setcaps (GstPad * pad, GstCaps * caps)
       "width", G_TYPE_INT, 720,
       "height", G_TYPE_INT, dvdec->height,
       "framerate", GST_TYPE_FRACTION, dvdec->framerate_numerator,
-      dvdec->framerate_denominator, NULL);
-  if (gotpar)
-    gst_structure_set_value (gst_caps_get_structure (othercaps, 0),
-        "pixel-aspect-ratio", par);
+      dvdec->framerate_denominator,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION, dvdec->par_x,
+      dvdec->par_y, NULL);
 
   gst_pad_set_caps (dvdec->srcpad, othercaps);
-
   gst_caps_unref (othercaps);
 
-  gst_object_unref (dvdec);
+  dvdec->src_negotiated = TRUE;
 
   return TRUE;
-
-error:
-  {
-    gst_object_unref (dvdec);
-
-    return FALSE;
-  }
 }
 
 static gboolean
@@ -342,6 +396,7 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_OK;
   guint length;
   gint64 cstart, cstop;
+  gboolean PAL, wide;
 
   dvdec = GST_DVDEC (gst_pad_get_parent (pad));
   inframe = GST_BUFFER_DATA (buf);
@@ -362,9 +417,13 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
   if (G_UNLIKELY (dv_parse_header (dvdec->decoder, inframe) < 0))
     goto parse_header_error;
 
+  /* get size */
+  PAL = dv_system_50_fields (dvdec->decoder);
+  wide = dv_format_wide (dvdec->decoder);
+
   /* check the buffer is of right size after we know if we are
    * dealing with PAL or NTSC */
-  length = (dvdec->PAL ? PAL_BUFFER : NTSC_BUFFER);
+  length = (PAL ? PAL_BUFFER : NTSC_BUFFER);
   if (G_UNLIKELY (GST_BUFFER_SIZE (buf) < length))
     goto wrong_size;
 
@@ -372,6 +431,22 @@ gst_dvdec_chain (GstPad * pad, GstBuffer * buf)
 
   if (dvdec->video_offset % dvdec->drop_factor != 0)
     goto skip;
+
+  /* renegotiate on change */
+  if (PAL != dvdec->PAL || wide != dvdec->wide) {
+    dvdec->src_negotiated = FALSE;
+    dvdec->PAL = PAL;
+    dvdec->wide = wide;
+  }
+
+  dvdec->height = (dvdec->PAL ? PAL_HEIGHT : NTSC_HEIGHT);
+
+
+  /* negotiate if not done yet */
+  if (!dvdec->src_negotiated) {
+    if (!gst_dvdec_src_negotiate (dvdec))
+      goto not_negotiated;
+  }
 
   ret =
       gst_pad_alloc_buffer_and_set_caps (dvdec->srcpad, 0,
@@ -429,6 +504,12 @@ parse_header_error:
     ret = GST_FLOW_ERROR;
     goto done;
   }
+not_negotiated:
+  {
+    GST_DEBUG_OBJECT (dvdec, "could not negotiate output");
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
 no_buffer:
   {
     GST_DEBUG_OBJECT (dvdec, "could not allocate buffer");
@@ -459,6 +540,8 @@ gst_dvdec_change_state (GstElement * element, GstStateChange transition)
       dvdec->decoder->quality = qualities[dvdec->quality];
       dv_set_error_log (dvdec->decoder, NULL);
       gst_segment_init (dvdec->segment, GST_FORMAT_UNDEFINED);
+      dvdec->src_negotiated = FALSE;
+      dvdec->sink_negotiated = FALSE;
       /* 
        * Enable this function call when libdv2 0.100 or higher is more
        * common

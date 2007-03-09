@@ -1,3 +1,16 @@
+2007-03-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_sink_setcaps),
+	(gst_dvdec_src_negotiate), (gst_dvdec_chain),
+	(gst_dvdec_change_state):
+	* ext/dv/gstdvdec.h:
+	Infer pixel-aspect-ratio from the video frame format if it isn't
+	provided by the container, as happens when playing DV from AVI
+	or Quicktime containers.
+
+	Patch by: Wim Taymans <wim@fluendo.com>
+	Fixes #380944
+
 2007-03-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_activate_streams):

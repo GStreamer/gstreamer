@@ -56,16 +56,23 @@ struct _GstDVDec {
   gboolean       clamp_chroma;
   gint           quality;
 
-  gint           frame_len;
   gboolean       PAL;
+  gboolean       wide;
+  gint           frame_len;
+
+  /* input caps */
+  gboolean       sink_negotiated;
   gint           framerate_numerator;
   gint           framerate_denominator;
   gint           height;
-  gboolean       wide;
+  gint           par_x;
+  gint           par_y;
+  gboolean       need_par;
 
   /* negotiated output */
   dv_color_space_t space;
   gint           bpp;
+  gboolean       src_negotiated;
   
   gint           video_offset;
   gint           drop_factor;
