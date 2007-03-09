@@ -1,3 +1,8 @@
+2007-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  We require core CVS for the new buffer metadata copy functions.
+
 2007-03-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/tag/gstid3tag.c:
