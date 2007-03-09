@@ -83,9 +83,9 @@ struct _GstSubParse {
   guint64 next_offset;
   
   /* Segment */
-  GstSegment *segment;
+  GstSegment    segment;
   GstSeekFlags  segment_flags;
-  gboolean need_segment;
+  gboolean      need_segment;
   
   gboolean flushing;
   gboolean valid_utf8;

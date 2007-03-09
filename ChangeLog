@@ -1,3 +1,19 @@
+2007-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_text_event),
+	(gst_text_overlay_video_event):
+	  Some more logging. Only accept newsegment events in TIME format and
+	  send a WARNING message if they are not in TIME format.
+
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_dispose),
+	(gst_sub_parse_init), (gst_sub_parse_src_event), (handle_buffer),
+	(gst_sub_parse_chain), (gst_sub_parse_sink_event):
+	* gst/subparse/gstsubparse.h:
+	  No need to allocate GstSegment structure dynamically, just put it
+	  into the instance structure; ignore newsegment events in BYTE
+	  format and in particular don't let it overwrite our saved TIME
+	  segment from the last seek.
+
 2007-03-09  Michael Smith  <msmith@fluendo.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (ac3_type_find):

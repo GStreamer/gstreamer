@@ -1092,7 +1092,11 @@ gst_text_overlay_text_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (overlay, "TEXT SEGMENT now: %" GST_SEGMENT_FORMAT,
             &overlay->text_segment);
         GST_OBJECT_UNLOCK (overlay);
+      } else {
+        GST_ELEMENT_WARNING (overlay, STREAM, MUX, (NULL),
+            ("received non-TIME newsegment event on text input"));
       }
+
       gst_event_unref (event);
       ret = TRUE;
 
@@ -1164,9 +1168,16 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment (event, &update, &rate, &format, &start,
           &stop, &time);
 
-      /* now copy over the values */
-      gst_segment_set_newsegment (overlay->segment, update, rate, format,
-          start, stop, time);
+      if (format == GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (overlay, "VIDEO SEGMENT now: %" GST_SEGMENT_FORMAT,
+            overlay->segment);
+
+        gst_segment_set_newsegment (overlay->segment, update, rate, format,
+            start, stop, time);
+      } else {
+        GST_ELEMENT_WARNING (overlay, STREAM, MUX, (NULL),
+            ("received non-TIME newsegment event on video input"));
+      }
 
       ret = gst_pad_event_default (pad, event);
       break;
@@ -1194,6 +1205,7 @@ gst_text_overlay_video_event (GstPad * pad, GstEvent * event)
       break;
     default:
       ret = gst_pad_event_default (pad, event);
+      break;
   }
 
   gst_object_unref (overlay);

@@ -137,10 +137,6 @@ gst_sub_parse_dispose (GObject * object)
 
   GST_DEBUG_OBJECT (subparse, "cleaning up subtitle parser");
 
-  if (subparse->segment) {
-    gst_segment_free (subparse->segment);
-    subparse->segment = NULL;
-  }
   if (subparse->encoding) {
     g_free (subparse->encoding);
     subparse->encoding = NULL;
@@ -194,14 +190,8 @@ gst_sub_parse_init (GstSubParse * subparse)
   subparse->textbuf = g_string_new (NULL);
   subparse->parser_type = GST_SUB_PARSE_FORMAT_UNKNOWN;
   subparse->flushing = FALSE;
-  subparse->segment = gst_segment_new ();
-  if (subparse->segment) {
-    gst_segment_init (subparse->segment, GST_FORMAT_TIME);
-    subparse->need_segment = TRUE;
-  } else {
-    GST_WARNING_OBJECT (subparse, "segment creation failed");
-    g_assert_not_reached ();
-  }
+  gst_segment_init (&subparse->segment, GST_FORMAT_TIME);
+  subparse->need_segment = TRUE;
   subparse->encoding = g_strdup (DEFAULT_ENCODING);
 }
 
@@ -243,14 +233,11 @@ gst_sub_parse_src_event (GstPad * pad, GstEvent * event)
 
       if (ret) {
         /* Apply the seek to our segment */
-        gst_segment_set_seek (self->segment, rate, format, self->segment_flags,
+        gst_segment_set_seek (&self->segment, rate, format, self->segment_flags,
             start_type, start, stop_type, stop, &update);
 
-        GST_DEBUG_OBJECT (self, "segment configured from %" GST_TIME_FORMAT
-            " to %" GST_TIME_FORMAT ", position %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (self->segment->start),
-            GST_TIME_ARGS (self->segment->stop),
-            GST_TIME_ARGS (self->segment->last_stop));
+        GST_DEBUG_OBJECT (self, "segment after seek: %" GST_SEGMENT_FORMAT,
+            &self->segment);
 
         self->next_offset = 0;
 
@@ -944,7 +931,7 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
 
   while ((line = get_next_line (self)) && !self->flushing) {
     /* Set segment on our parser state machine */
-    self->state.segment = self->segment;
+    self->state.segment = &self->segment;
     /* Now parse the line, out of segment lines will just return NULL */
     GST_LOG_OBJECT (self, "Parsing line '%s'", line);
     subtitle = self->parse_line (&self->state, line);
@@ -965,7 +952,7 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
         GST_BUFFER_TIMESTAMP (buf) = self->state.start_time;
         GST_BUFFER_DURATION (buf) = self->state.duration;
 
-        gst_segment_set_last_stop (self->segment, GST_FORMAT_TIME,
+        gst_segment_set_last_stop (&self->segment, GST_FORMAT_TIME,
             self->state.start_time);
 
         GST_DEBUG_OBJECT (self, "Sending text '%s', %" GST_TIME_FORMAT " + %"
@@ -998,10 +985,12 @@ gst_sub_parse_chain (GstPad * sinkpad, GstBuffer * buf)
 
   /* Push newsegment if needed */
   if (self->need_segment) {
+    GST_LOG_OBJECT (self, "pushing newsegment event with %" GST_SEGMENT_FORMAT,
+        &self->segment);
+
     gst_pad_push_event (self->srcpad, gst_event_new_new_segment (FALSE,
-            self->segment->rate, self->segment->format,
-            self->segment->last_stop, self->segment->stop,
-            self->segment->time));
+            self->segment.rate, self->segment.format,
+            self->segment.last_stop, self->segment.stop, self->segment.time));
     self->need_segment = FALSE;
   }
 
@@ -1042,14 +1031,24 @@ gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
       gint64 start, stop, time;
       gboolean update;
 
-      GST_DEBUG_OBJECT (self, "received new segment");
-
       gst_event_parse_new_segment (event, &update, &rate, &format, &start,
           &stop, &time);
 
-      /* now copy over the values */
-      gst_segment_set_newsegment (self->segment, update, rate, format,
-          start, stop, time);
+      GST_DEBUG_OBJECT (self, "newsegment (%s)", gst_format_get_name (format));
+
+      if (format == GST_FORMAT_TIME) {
+        gst_segment_set_newsegment (&self->segment, update, rate, format,
+            start, stop, time);
+      } else {
+        /* if not time format, we'll either start with a 0 timestamp anyway or
+         * it's following a seek in which case we'll have saved the requested
+         * seek segment and don't want to overwrite it (remember that on a seek
+         * we always just seek back to the start in BYTES format and just throw
+         * away all text that's before the requested position; if the subtitles
+         * come from an upstream demuxer, it won't be able to handle our BYTES
+         * seek request and instead send us a newsegment from the seek request
+         * it received via its video pads instead, so all is fine then too) */
+      }
 
       ret = TRUE;
       gst_event_unref (event);
