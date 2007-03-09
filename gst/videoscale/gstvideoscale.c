@@ -712,8 +712,6 @@ gst_video_scale_transform (GstBaseTransform * trans, GstBuffer * in,
 
   videoscale = GST_VIDEO_SCALE (trans);
 
-  gst_buffer_stamp (out, in);
-
   src = &videoscale->src;
   dest = &videoscale->dest;
 

@@ -286,7 +286,7 @@ gst_text_render_chain (GstPad * pad, GstBuffer * inbuf)
   if (ret != GST_FLOW_OK)
     goto done;
 
-  gst_buffer_stamp (outbuf, inbuf);
+  gst_buffer_copy_metadata (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
   data = GST_BUFFER_DATA (outbuf);
 
   for (n = 0; n < render->width * render->height; n++) {

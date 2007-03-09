@@ -466,8 +466,7 @@ gst_ffmpegcsp_transform (GstBaseTransform * btrans, GstBuffer * inbuf,
   if (result == -1)
     goto not_supported;
 
-  /* copy timestamps */
-  gst_buffer_stamp (outbuf, inbuf);
+  /* baseclass copies timestamps */
   GST_DEBUG ("from %d -> to %d done", space->from_pixfmt, space->to_pixfmt);
 
   return GST_FLOW_OK;

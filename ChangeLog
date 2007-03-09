@@ -1,3 +1,15 @@
+2007-03-09  Wim Taymans  <wim@fluendo.com>
+
+	* ext/pango/gsttextrender.c: (gst_text_render_chain):
+	* ext/vorbis/vorbistag.c: (gst_vorbis_tag_parse_packet):
+	* gst-libs/gst/netbuffer/gstnetbuffer.c: (gst_netbuffer_copy):
+	Use new metadata copy function.
+
+	* gst/ffmpegcolorspace/gstffmpegcolorspace.c:
+	(gst_ffmpegcsp_transform):
+	* gst/videoscale/gstvideoscale.c: (gst_video_scale_transform):
+	Basetransform copied the metadata for us.
+
 2007-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_text_event),

@@ -148,7 +148,7 @@ gst_vorbis_tag_parse_packet (GstVorbisParse * parse, GstBuffer * buffer)
   new_buf =
       gst_tag_list_to_vorbiscomment_buffer (new_tags, (guint8 *) "\003vorbis",
       7, encoder);
-  gst_buffer_stamp (new_buf, buffer);
+  gst_buffer_copy_metadata (new_buf, buffer, GST_BUFFER_COPY_TIMESTAMPS);
 
   gst_tag_list_free (new_tags);
   g_free (encoder);
