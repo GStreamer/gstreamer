@@ -1,5 +1,10 @@
 2007-03-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/Makefile.am:
+	Re-enable the states test and see if it works on the buildbots.
+
+2007-03-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/dv/gstdvdec.c: (gst_dvdec_init), (gst_dvdec_sink_setcaps),
 	(gst_dvdec_src_negotiate), (gst_dvdec_chain),
 	(gst_dvdec_change_state):

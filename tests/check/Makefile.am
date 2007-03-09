@@ -49,8 +49,7 @@ check_PROGRAMS = \
 	elements/videofilter \
 	$(check_taglib)
     
-VALGRIND_TO_FIX = \
-        generic/states
+VALGRIND_TO_FIX =
 
 TESTS = $(check_PROGRAMS)
 
