@@ -978,8 +978,10 @@ handle_buffer (GstSubParse * self, GstBuffer * buf)
       g_free (subtitle);
       subtitle = NULL;
 
-      if (GST_FLOW_IS_FATAL (ret))
+      if (ret != GST_FLOW_OK) {
+        GST_DEBUG_OBJECT (self, "flow: %s", gst_flow_get_name (ret));
         break;
+      }
     }
   }
 
