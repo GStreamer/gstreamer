@@ -706,16 +706,14 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   /* ERRORS */
 error:
   {
-    GST_ELEMENT_ERROR (this, STREAM, NOT_IMPLEMENTED,
-        ("cannot get input/output sizes for %d samples", samples),
-        ("cannot get input/output sizes for %d samples", samples));
+    GST_ELEMENT_ERROR (this, STREAM, FORMAT,
+        (NULL), ("cannot get input/output sizes for %d samples", samples));
     return GST_FLOW_ERROR;
   }
 wrong_size:
   {
-    GST_ELEMENT_ERROR (this, STREAM, NOT_IMPLEMENTED,
-        ("input/output buffers are of wrong size in: %d < %d or out: %d < %d",
-            GST_BUFFER_SIZE (inbuf), insize, GST_BUFFER_SIZE (outbuf), outsize),
+    GST_ELEMENT_ERROR (this, STREAM, FORMAT,
+        (NULL),
         ("input/output buffers are of wrong size in: %d < %d or out: %d < %d",
             GST_BUFFER_SIZE (inbuf), insize, GST_BUFFER_SIZE (outbuf),
             outsize));
@@ -723,8 +721,8 @@ wrong_size:
   }
 convert_error:
   {
-    GST_ELEMENT_ERROR (this, STREAM, NOT_IMPLEMENTED,
-        ("error while converting"), ("error while converting"));
+    GST_ELEMENT_ERROR (this, STREAM, FORMAT,
+        (NULL), ("error while converting"));
     return GST_FLOW_ERROR;
   }
 }
