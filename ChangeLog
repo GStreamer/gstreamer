@@ -1,3 +1,10 @@
+2007-03-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstelement.c: (gst_element_dispose):
+	There's no need to warn if VOID_PENDING is not NONE here, as
+	long as the state is NULL it's ok, and that's checked immediately
+	above.
+
 2007-03-08  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* plugins/elements/gstidentity.c: (gst_identity_check_perfect):

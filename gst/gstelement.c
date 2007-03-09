@@ -2581,8 +2581,6 @@ gst_element_dispose (GObject * object)
   if (GST_STATE (element) != GST_STATE_NULL)
     goto not_null;
 
-  g_return_if_fail (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING);
-
   GST_DEBUG_OBJECT (element, "removing %d pads", g_list_length (element->pads));
   /* first we break all our links with the outside */
   while (element->pads && element->pads->data) {
