@@ -1,3 +1,14 @@
+2007-03-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* plugins/elements/gstidentity.c: (gst_identity_class_init),
+	(gst_identity_init), (gst_identity_check_perfect),
+	(gst_identity_check_imperfect_timestamp),
+	(gst_identity_check_imperfect_offset), (gst_identity_transform_ip),
+	(gst_identity_set_property), (gst_identity_get_property):
+	* plugins/elements/gstidentity.h:
+	Separate out check-imperfect-timestamp and check-imperfect-offset.
+	Put back check-perfect as it was to keep compatibility.
+
 2007-03-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstelement.c: (gst_element_dispose):
