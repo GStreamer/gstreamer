@@ -2413,18 +2413,16 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
  * Copies additional information (the timestamp, duration, and offset start
  * and end) from one buffer to the other.
  *
- * This function does not copy any buffer flags or caps.
+ * This function does not copy any buffer flags or caps and is equivalent to
+ * gst_buffer_copy_metadata(@dest, @src, GST_BUFFER_COPY_TIMESTAMPS).
+ *
+ * Deprecated: use gst_buffer_copy_metadata() instead, it provides more
+ * control. 
  */
 void
 gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
 {
-  g_return_if_fail (dest != NULL);
-  g_return_if_fail (src != NULL);
-
-  GST_BUFFER_TIMESTAMP (dest) = GST_BUFFER_TIMESTAMP (src);
-  GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
-  GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
-  GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
+  gst_buffer_copy_metadata (dest, src, GST_BUFFER_COPY_TIMESTAMPS);
 }
 
 static gboolean

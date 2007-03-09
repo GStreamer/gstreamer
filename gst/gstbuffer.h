@@ -338,6 +338,39 @@ gst_buffer_ref (GstBuffer * buf)
  * copy of the data the source buffer contains.
  */
 #define		gst_buffer_copy(buf)		GST_BUFFER_CAST (gst_mini_object_copy (GST_MINI_OBJECT_CAST (buf)))
+
+/**
+ * GstBufferCopyFlags:
+ * @GST_BUFFER_COPY_FLAGS: flag indicating that buffer flags should be copied
+ * @GST_BUFFER_COPY_TIMESTAMPS: flag indicating that buffer timestamp, duration,
+ * offset and offset_end should be copied
+ * @GST_BUFFER_COPY_CAPS: flag indicating that buffer caps should be copied
+ *
+ * A set of flags that can be provided to the gst_buffer_copy_metadata()
+ * function to specify which metadata fields should be copied.
+ *
+ * Since: 0.10.13
+ */
+typedef enum {
+  GST_BUFFER_COPY_FLAGS      = (1 << 0),
+  GST_BUFFER_COPY_TIMESTAMPS = (1 << 1),
+  GST_BUFFER_COPY_CAPS       = (1 << 2),
+} GstBufferCopyFlags;
+
+/**
+ * GST_BUFFER_COPY_ALL:
+ *
+ * Combination of all possible fields that can be copied with
+ * gst_buffer_copy_metadata().
+ *
+ * Since: 0.10.13
+ */
+#define GST_BUFFER_COPY_ALL (GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS | GST_BUFFER_COPY_CAPS)
+
+/* copies metadata into newly allocated buffer */
+void            gst_buffer_copy_metadata        (GstBuffer *dest, const GstBuffer *src,
+                                                 GstBufferCopyFlags flags);
+
 /**
  * gst_buffer_is_writable:
  * @buf: a #GstBuffer

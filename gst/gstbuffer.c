@@ -192,42 +192,75 @@ gst_buffer_finalize (GstBuffer * buffer)
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
 }
 
+/**
+ * gst_buffer_copy_metadata:
+ * @dest: a destination #GstBuffer
+ * @src: a source #GstBuffer
+ * @flags: flags indicating what metadata fields should be copied.
+ *
+ * Copies the metadata from @src into @dest. The data, size and mallocdata
+ * fields are not copied.
+ *
+ * @flags indicate which fields will be copied. Use #GST_BUFFER_COPY_ALL to copy
+ * all the metadata fields.
+ *
+ * This function is typically called from a custom buffer copy function after
+ * creating @dest and setting the data, size, mallocdata.
+ *
+ * Since: 0.10.13
+ */
+void
+gst_buffer_copy_metadata (GstBuffer * dest, const GstBuffer * src,
+    GstBufferCopyFlags flags)
+{
+  g_return_if_fail (dest != NULL);
+  g_return_if_fail (src != NULL);
+
+  GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p", src, dest);
+
+  if (flags & GST_BUFFER_COPY_FLAGS) {
+    guint mask;
+
+    /* copy relevant flags */
+    mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
+        GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
+        GST_BUFFER_FLAG_GAP;
+    GST_MINI_OBJECT_FLAGS (dest) |= GST_MINI_OBJECT_FLAGS (src) & mask;
+  }
+
+  if (flags & GST_BUFFER_COPY_TIMESTAMPS) {
+    GST_BUFFER_TIMESTAMP (dest) = GST_BUFFER_TIMESTAMP (src);
+    GST_BUFFER_DURATION (dest) = GST_BUFFER_DURATION (src);
+    GST_BUFFER_OFFSET (dest) = GST_BUFFER_OFFSET (src);
+    GST_BUFFER_OFFSET_END (dest) = GST_BUFFER_OFFSET_END (src);
+  }
+
+  if (flags & GST_BUFFER_COPY_CAPS) {
+    if (GST_BUFFER_CAPS (src))
+      GST_BUFFER_CAPS (dest) = gst_caps_ref (GST_BUFFER_CAPS (src));
+    else
+      GST_BUFFER_CAPS (dest) = NULL;
+  }
+}
+
 static GstBuffer *
 _gst_buffer_copy (GstBuffer * buffer)
 {
   GstBuffer *copy;
-  guint mask;
 
   g_return_val_if_fail (buffer != NULL, NULL);
 
   /* create a fresh new buffer */
   copy = gst_buffer_new ();
 
-  GST_CAT_LOG (GST_CAT_BUFFER, "copy %p to %p", buffer, copy);
-
-  /* copy relevant flags */
-  mask = GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_IN_CAPS |
-      GST_BUFFER_FLAG_DELTA_UNIT | GST_BUFFER_FLAG_DISCONT |
-      GST_BUFFER_FLAG_GAP;
-  GST_MINI_OBJECT_FLAGS (copy) |= GST_MINI_OBJECT_FLAGS (buffer) & mask;
-
   /* we simply copy everything from our parent */
   copy->data = g_memdup (buffer->data, buffer->size);
   /* make sure it gets freed (even if the parent is subclassed, we return a
      normal buffer) */
   copy->malloc_data = copy->data;
-
   copy->size = buffer->size;
 
-  GST_BUFFER_TIMESTAMP (copy) = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (copy) = GST_BUFFER_DURATION (buffer);
-  GST_BUFFER_OFFSET (copy) = GST_BUFFER_OFFSET (buffer);
-  GST_BUFFER_OFFSET_END (copy) = GST_BUFFER_OFFSET_END (buffer);
-
-  if (GST_BUFFER_CAPS (buffer))
-    GST_BUFFER_CAPS (copy) = gst_caps_ref (GST_BUFFER_CAPS (buffer));
-  else
-    GST_BUFFER_CAPS (copy) = NULL;
+  gst_buffer_copy_metadata (copy, buffer, GST_BUFFER_COPY_ALL);
 
   return copy;
 }

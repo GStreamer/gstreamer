@@ -128,12 +128,12 @@ gst_bus_sync_reply_get_type
 GstBusPrivate
 </SECTION>
 
-
 <SECTION>
 <FILE>gstbuffer</FILE>
 <TITLE>GstBuffer</TITLE>
 GstBuffer
 GstBufferFlag
+GstBufferCopyFlags
 GST_BUFFER_FLAGS
 GST_BUFFER_FLAG_IS_SET
 GST_BUFFER_FLAG_SET
@@ -163,6 +163,9 @@ gst_buffer_unref
 
 gst_buffer_set_data
 gst_buffer_copy
+
+GST_BUFFER_COPY_ALL
+gst_buffer_copy_metadata
 gst_buffer_is_writable
 gst_buffer_make_writable
 gst_buffer_is_metadata_writable
@@ -189,10 +192,12 @@ GST_IS_BUFFER
 GST_IS_BUFFER_CLASS
 GST_TYPE_BUFFER
 GST_TYPE_BUFFER_FLAG
+GST_TYPE_BUFFER_COPY_FLAGS
 GST_BUFFER_CAST
 <SUBSECTION Private>
 gst_buffer_get_type
 gst_buffer_flag_get_type
+gst_buffer_copy_flags_get_type
 </SECTION>
 
 

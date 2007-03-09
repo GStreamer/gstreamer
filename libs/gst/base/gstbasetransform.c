@@ -972,10 +972,8 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
     if (copy_inbuf && gst_buffer_is_writable (*out_buf))
       memcpy (GST_BUFFER_DATA (*out_buf), GST_BUFFER_DATA (in_buf), out_size);
 
-    gst_buffer_stamp (*out_buf, in_buf);
-    GST_BUFFER_FLAGS (*out_buf) |= GST_BUFFER_FLAGS (in_buf) &
-        (GST_BUFFER_FLAG_PREROLL | GST_BUFFER_FLAG_DISCONT |
-        GST_BUFFER_FLAG_IN_CAPS | GST_BUFFER_FLAG_DELTA_UNIT);
+    gst_buffer_copy_metadata (*out_buf, in_buf,
+        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
   }
 
 done:
