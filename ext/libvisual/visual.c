@@ -370,6 +370,8 @@ gst_visual_sink_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_get_int (structure, "channels", &visual->channels);
   gst_structure_get_int (structure, "rate", &visual->rate);
 
+  /* this is how many samples we need to fill one frame at the requested
+   * framerate. */
   if (visual->fps_n != 0) {
     visual->spf =
         gst_util_uint64_scale_int (visual->rate, visual->fps_d, visual->fps_n);
@@ -401,9 +403,13 @@ gst_vis_src_negotiate (GstVisual * visual)
     target = gst_caps_copy_nth (intersect, 0);
     gst_caps_unref (intersect);
   } else {
-    target = gst_caps_ref ((GstCaps *) templ);
+    /* need a copy, we'll be modifying it when fixating */
+    target = gst_caps_copy (templ);
   }
 
+  /* fixate in case something is not fixed. This does nothing if the value is
+   * already fixed. For video we always try to fixate to something like
+   * 320x240x30 by convention. */
   structure = gst_caps_get_structure (target, 0);
   gst_structure_fixate_field_nearest_int (structure, "width", 320);
   gst_structure_fixate_field_nearest_int (structure, "height", 240);
@@ -541,11 +547,6 @@ get_buffer (GstVisual * visual, GstBuffer ** outbuf)
   if (ret != GST_FLOW_OK)
     return ret;
 
-  /* this is bad and should not happen. When the alloc function
-   * returns _OK, core ensures we have a valid buffer. */
-  if (*outbuf == NULL)
-    return GST_FLOW_ERROR;
-
   return GST_FLOW_OK;
 }
 
@@ -586,14 +587,22 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_adapter_push (visual->adapter, buffer);
 
-  avail = gst_adapter_available (visual->adapter);
-  GST_DEBUG_OBJECT (visual, "avail now %u", avail);
-
-  while (avail > MAX (512, visual->spf) * visual->bps) {
+  while (TRUE) {
     gboolean need_skip;
     const guint16 *data;
 
     GST_DEBUG_OBJECT (visual, "processing buffer");
+
+    avail = gst_adapter_available (visual->adapter);
+    GST_DEBUG_OBJECT (visual, "avail now %u", avail);
+
+    /* we need at least 512 samples */
+    if (avail < 512 * visual->bps)
+      break;
+
+    /* we need at least enough samples to make one frame */
+    if (avail < visual->spf * visual->bps)
+      break;
 
     if (visual->next_ts != -1) {
       gint64 qostime;
@@ -713,22 +722,20 @@ gst_visual_chain (GstPad * pad, GstBuffer * buffer)
     ret = gst_pad_push (visual->srcpad, outbuf);
     outbuf = NULL;
 
-    GST_DEBUG_OBJECT (visual, "finished frame, flushing %u samples from input",
-        visual->spf);
   skip:
     /* interpollate next timestamp */
     if (visual->next_ts != -1)
       visual->next_ts += visual->duration;
 
-    /* Flush out the number of samples per frame * channels * sizeof (gint16) */
-    gst_adapter_flush (visual->adapter, MIN (avail, visual->spf * visual->bps));
+    GST_DEBUG_OBJECT (visual, "finished frame, flushing %u samples from input",
+        visual->spf);
+
+    /* Flush out the number of samples per frame */
+    gst_adapter_flush (visual->adapter, visual->spf * visual->bps);
 
     /* quit the loop if something was wrong */
     if (ret != GST_FLOW_OK)
       break;
-
-    /* see what we have left for next iteration */
-    avail = gst_adapter_available (visual->adapter);
   }
 
   if (outbuf != NULL)

@@ -1,5 +1,11 @@
 2007-03-09  Wim Taymans  <wim@fluendo.com>
 
+	* ext/libvisual/visual.c: (gst_visual_sink_setcaps),
+	(gst_vis_src_negotiate), (get_buffer), (gst_visual_chain):
+	Improve adapter usage and comments.
+
+2007-03-09  Wim Taymans  <wim@fluendo.com>
+
 	* ext/pango/gsttextrender.c: (gst_text_render_chain):
 	* ext/vorbis/vorbistag.c: (gst_vorbis_tag_parse_packet):
 	* gst-libs/gst/netbuffer/gstnetbuffer.c: (gst_netbuffer_copy):
