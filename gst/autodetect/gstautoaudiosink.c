@@ -229,7 +229,6 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
       gst_element_set_bus (el, bus);
       ret = gst_element_set_state (el, GST_STATE_READY);
       if (ret == GST_STATE_CHANGE_SUCCESS) {
-        gst_element_set_state (el, GST_STATE_NULL);
         GST_DEBUG_OBJECT (sink, "This worked!");
         choice = el;
         break;

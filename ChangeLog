@@ -1,3 +1,12 @@
+2007-03-09  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/autodetect/gstautoaudiosink.c: (gst_auto_audio_sink_find_best):
+	  Tim and I can't think of any reason the child audio sink needs to 
+	  be set back to NULL after successfully determining that it can 
+	  reach READY - it gets immediately set back to READY by the caller
+	  anyway, causing an unnecessary close/open of any audio devices
+	  involved.
+
 2007-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* po/LINGUAS:
