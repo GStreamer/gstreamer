@@ -3040,7 +3040,9 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
      * to the time of the keyframe. */
     seek_time = avi->index_entries[avi->current_entry].ts;
   }
+  /* the seek time is also the last_stop and stream time */
   segment->last_stop = seek_time;
+  segment->time = seek_time;
 
   return TRUE;
 }
