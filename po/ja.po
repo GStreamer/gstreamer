@@ -1,0 +1,477 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-good HEAD\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-03-09 19:50+0000\n"
+"PO-Revision-Date: 2006-08-08 19:05+0200\n"
+"Last-Translator: takao.fujiwara@sun.com\n"
+"Language-Team: takao.fujiwara@sun.com\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# SUN REVIEWED
+#: ext/cdio/gstcdiocddasrc.c:204
+#, fuzzy
+msgid "Could not read from CD."
+msgstr "ファイル \"%s\" に書き込むことができません。"
+
+# SUN REVIEWED
+#: ext/cdio/gstcdiocddasrc.c:282
+msgid "Could not open CD device for reading."
+msgstr "CD デバイスを読み取り用に開くことができません。"
+
+# SUN REVIEWED
+#: ext/cdio/gstcdiocddasrc.c:289
+#, fuzzy
+msgid "Disc is not an Audio CD."
+msgstr "デバイスが開いていません。"
+
+#: ext/libpng/gstpngdec.c:330 ext/libpng/gstpngdec.c:513
+#: gst/avi/gstavidemux.c:3684 gst/avi/gstavidemux.c:3692
+msgid "Internal data stream error."
+msgstr ""
+
+#: ext/esd/esdsink.c:262 ext/esd/esdsink.c:367
+msgid "Could not establish connection to sound server"
+msgstr ""
+
+#: ext/esd/esdsink.c:269
+msgid "Failed to query sound server capabilities"
+msgstr ""
+
+#: ext/jpeg/gstjpegdec.c:1037
+msgid "Failed to decode JPEG image"
+msgstr ""
+
+#: ext/shout2/gstshout2.c:558
+msgid "Could not connect to server"
+msgstr ""
+
+# SUN REVIEWED
+#: gst/avi/gstavimux.c:1424
+msgid "No or invalid input audio, AVI stream will be corrupt."
+msgstr "入力オーディオが存在しないか無効であるため、AVI ストリームは壊れます。"
+
+#: gst/wavparse/gstwavparse.c:1672
+msgid "Internal data flow error."
+msgstr ""
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:97 sys/sunaudio/gstsunaudiomixertrack.c:64
+msgid "Volume"
+msgstr "音量"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:99
+msgid "Bass"
+msgstr "低音"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:101
+msgid "Treble"
+msgstr "高音"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:103
+msgid "Synth"
+msgstr "シンセ"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:105
+msgid "PCM"
+msgstr "PCM"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:107
+msgid "Speaker"
+msgstr "スピーカ"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:109
+msgid "Line-in"
+msgstr "ラインイン"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:111
+msgid "Microphone"
+msgstr "マイクロフォン"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:113
+msgid "CD"
+msgstr "CD"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:115
+msgid "Mixer"
+msgstr "ミキサー"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:117
+msgid "PCM-2"
+msgstr "PCM-2"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:119
+msgid "Record"
+msgstr "録音"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:121
+msgid "In-gain"
+msgstr "入力ゲイン"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:123
+msgid "Out-gain"
+msgstr "出力ゲイン"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:125
+msgid "Line-1"
+msgstr "ライン 1"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:127
+msgid "Line-2"
+msgstr "ライン 2"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:129
+msgid "Line-3"
+msgstr "ライン 3"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:131
+msgid "Digital-1"
+msgstr "デジタル 1"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:133
+msgid "Digital-2"
+msgstr "デジタル 2"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:135
+msgid "Digital-3"
+msgstr "デジタル 3"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:137
+msgid "Phone-in"
+msgstr "フォン入力"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:139
+msgid "Phone-out"
+msgstr "フォン出力"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:141
+msgid "Video"
+msgstr "ビデオ"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:143
+msgid "Radio"
+msgstr "ラジオ"
+
+# SUN REVIEWED
+#: sys/oss/gstossmixertrack.c:145 sys/sunaudio/gstsunaudiomixertrack.c:64
+msgid "Monitor"
+msgstr "モニター"
+
+# SUN REVIEWED
+#: sys/sunaudio/gstsunaudiomixertrack.c:64
+msgid "Gain"
+msgstr "ゲイン"
+
+#: sys/v4l2/gstv4l2src.c:945
+#, c-format
+msgid "Error read()ing %d bytes on device '%s'."
+msgstr ""
+
+#: sys/v4l2/gstv4l2src.c:953
+#, c-format
+msgid "Error reading from device '%s'"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:68
+#, c-format
+msgid ""
+"Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
+"it is a v4l1 driver."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:102
+#, c-format
+msgid "Failed to query attributes of input %d in device %s"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:126
+#, c-format
+msgid "Failed to get setting of tuner &d on device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:166
+#, c-format
+msgid "Failed to query norm on device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:214 sys/v4l2/v4l2_calls.c:285
+#, c-format
+msgid "Failed getting controls attributes on device '%s."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:403
+#, c-format
+msgid "Cannot identify device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:410
+#, c-format
+msgid "This isn't a device '%s'."
+msgstr ""
+
+# SUN REVIEWED
+#: sys/v4l2/v4l2_calls.c:417
+#, fuzzy, c-format
+msgid "Could not open device '%s' for reading and writing."
+msgstr "CD デバイスを読み取り用に開くことができません。"
+
+#: sys/v4l2/v4l2_calls.c:424
+#, c-format
+msgid "Device '%s' is not a capture device."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:519
+#, c-format
+msgid "Failed to set norm for device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:556
+#, c-format
+msgid "Failed to get current tuner frequency for device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:597
+#, c-format
+msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:631
+#, c-format
+msgid "Failed to get signal strength for device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:667
+#, c-format
+msgid "Failed to get value for control %d on device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:702
+#, c-format
+msgid "Failed to set value %d for control %d on device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:729
+#, c-format
+msgid "Failed to get current input on device '%s'. May be it is a radio device"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:751
+#, c-format
+msgid "Failed to set input %d on device %s."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:95
+#, c-format
+msgid "Failed to enumerate possible video formats device '%s' can work with"
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:137 sys/v4l2/v4l2src_calls.c:259
+#, c-format
+msgid "Could not exchange data with device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:233 sys/v4l2/v4l2src_calls.c:250
+#, c-format
+msgid "Failed trying to get video frames from device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:235
+#, c-format
+msgid ""
+"The buffer type is not supported, or the index is out of bounds, or no "
+"buffers have been allocated yet, or the userptr or length are invalid. "
+"device %s"
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:244
+#, c-format
+msgid "Failed trying to get video frames from device '%s'. Not enough memory."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:244
+#, c-format
+msgid "insufficient memory to enqueue a user pointer buffer. device %s."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:252
+#, c-format
+msgid "Failed after %d tries. device %s. system error: %s"
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:292
+#, c-format
+msgid "Failed querying in which video format device '%s' is working with"
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:336
+#, c-format
+msgid ""
+"The closest size from %dx%d is %dx%d, for video format %s on device '%s'"
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:350
+#, c-format
+msgid "The closest framerate from %u/%u is %u/%u, on device '%s'"
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:377 sys/v4l2/v4l2src_calls.c:387
+#, c-format
+msgid "Failed setting the video format for device '%s'"
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:505
+#, c-format
+msgid "Could not get buffers from device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:514
+#, c-format
+msgid "The driver of device '%s' is broken."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:523
+#, c-format
+msgid "Could not get enough buffers from device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:534
+#, c-format
+msgid "Could not get properties of data comming from device '%s'"
+msgstr ""
+
+# SUN REVIEWED
+#: sys/v4l2/v4l2src_calls.c:544
+#, fuzzy, c-format
+msgid "Could not map memory in device '%s'."
+msgstr "CD デバイスを読み取り用に開くことができません。"
+
+#: sys/v4l2/v4l2src_calls.c:554
+#, c-format
+msgid "Could not enqueue buffers in device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:593
+#, c-format
+msgid "Error starting streaming capture from device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:637
+#, c-format
+msgid "Error stopping streaming capture from device '%s'."
+msgstr ""
+
+#: sys/ximage/gstximagesrc.c:650
+msgid "Changing resolution at runtime is not yet supported."
+msgstr ""
+
+#: sys/ximage/gstximagesrc.c:664
+msgid "Cannot operate without a clock"
+msgstr ""
+
+# SUN REVIEWED
+#~ msgid ""
+#~ "GStreamer can play audio using any number of output elements. Some "
+#~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
+#~ "a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "オーディオを再生するとき、GStreamer は任意の数の出力要素を使用できます。使"
+#~ "用できる出力要素は、osssink、esdsink、および alsasink です。audiosink は単"
+#~ "なる 1 つの要素ではなく、パイプラインの一部になることができます。"
+
+# SUN REVIEWED
+#, fuzzy
+#~ msgid ""
+#~ "GStreamer can play video using any number of output elements. Some "
+#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
+#~ "The videosink can be a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "ビデオを再生するとき、GStreamer は任意の数の出力要素を使用できます。使用で"
+#~ "きる出力要素は、xvideosink、sdlvideosink、および aasink です。videosink は"
+#~ "単なる 1 つの要素ではなく、パイプラインの一部になることができます。"
+
+# SUN REVIEWED
+#~ msgid ""
+#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
+#~ "stream in video frames. Default is goom but more visualization plugins "
+#~ "will be ported soon. The visualization plugin can be a partial pipeline "
+#~ "instead of just one element."
+#~ msgstr ""
+#~ "GStreamer は視覚化プラグインをパイプラインに設定して、オーディオストリーム"
+#~ "をビデオフレームに変換できます。デフォルトは goom ですが、より多くの視覚化"
+#~ "プラグインがすぐに移植される予定です。視覚化プラグインは単なる 1 つの要素"
+#~ "ではなく、パイプラインの一部になることができます。"
+
+# SUN REVIEWED
+#~ msgid ""
+#~ "GStreamer can record audio using any number of input elements. Some "
+#~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
+#~ "a partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "オーディオを記録するとき、GStreamer は任意の数の入力要素を使用できます。使"
+#~ "用できる入力要素は、osssrc、esdsrc、および alsasrc です。オーディオソース"
+#~ "は単なる 1 つの要素ではなく、パイプラインの一部になることができます。"
+
+# SUN REVIEWED
+#~ msgid ""
+#~ "GStreamer can record video from any number of input elements. Some "
+#~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
+#~ "partial pipeline instead of just one element."
+#~ msgstr ""
+#~ "ビデオを記録するとき、GStreamer は任意の数の入力要素を使用できます。使用で"
+#~ "きる入力要素は、v4lsrc および videotestsrc です。ビデオソースは単なる 1 つ"
+#~ "の要素ではなく、パイプラインの一部になることができます。"
+
+# SUN REVIEWED
+#~ msgid "default GStreamer audio source"
+#~ msgstr "デフォルトの GStreamer オーディオソース"
+
+# SUN REVIEWED
+#~ msgid "default GStreamer audiosink"
+#~ msgstr "デフォルトの GStreamer audiosink"
+
+# SUN REVIEWED
+#~ msgid "default GStreamer video source"
+#~ msgstr "デフォルトの GStreamer ビデオソース"
+
+# SUN REVIEWED
+#~ msgid "default GStreamer videosink"
+#~ msgstr "デフォルトの GStreamer videosink"
+
+# SUN REVIEWED
+#~ msgid "default GStreamer visualization plugin"
+#~ msgstr "デフォルトの GStreamer 視覚化プラグイン"
+
+# SUN REVIEWED
+#, fuzzy
+#~ msgid "description for default GStreamer audiosink"
+#~ msgstr "デフォルトの GStreamer audiosink"
+
+# SUN REVIEWED
+#, fuzzy
+#~ msgid "description for default GStreamer audiosrc"
+#~ msgstr "デフォルトの GStreamer オーディオソース"

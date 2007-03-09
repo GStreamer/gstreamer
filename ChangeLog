@@ -1,5 +1,11 @@
 2007-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* po/LINGUAS:
+	* po/ja.po:
+	  Add ja.po file from #377306.
+
+2007-03-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* sys/sunaudio/gstsunaudio.c: (plugin_init):
 	* sys/sunaudio/gstsunaudiomixertrack.c:
 	(gst_sunaudiomixer_track_new):
