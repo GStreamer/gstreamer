@@ -28,6 +28,7 @@ EXPORTS
 	gst_bin_iterate_sources
 	gst_bin_new
 	gst_bin_remove
+	gst_buffer_copy_metadata
 	gst_buffer_create_sub
 	gst_buffer_flag_get_type
 	gst_buffer_get_caps
@@ -253,6 +254,7 @@ EXPORTS
 	gst_event_parse_buffer_size
 	gst_event_parse_new_segment
 	gst_event_parse_new_segment_full
+	gst_event_parse_latency
 	gst_event_parse_qos
 	gst_event_parse_seek
 	gst_event_parse_tag
@@ -349,6 +351,7 @@ EXPORTS
 	gst_message_parse_clock_provide
 	gst_message_parse_duration
 	gst_message_parse_error
+	gst_message_parse_info
 	gst_message_parse_new_clock
 	gst_message_parse_segment_done
 	gst_message_parse_segment_start
@@ -526,6 +529,7 @@ EXPORTS
 	gst_query_new_convert
 	gst_query_new_duration
 	gst_query_new_formats
+	gst_query_new_latency
 	gst_query_new_position
 	gst_query_new_seeking
 	gst_query_new_segment
@@ -533,6 +537,7 @@ EXPORTS
 	gst_query_parse_duration
 	gst_query_parse_formats_length
 	gst_query_parse_formats_nth
+	gst_query_parse_latency
 	gst_query_parse_position
 	gst_query_parse_seeking
 	gst_query_parse_segment
@@ -540,6 +545,7 @@ EXPORTS
 	gst_query_set_duration
 	gst_query_set_formats
 	gst_query_set_formatsv
+	gst_query_set_latency
 	gst_query_set_position
 	gst_query_set_seeking
 	gst_query_set_segment
@@ -662,6 +668,7 @@ EXPORTS
 	gst_tag_list_merge
 	gst_tag_list_new
 	gst_tag_merge_mode_get_type
+	gst_tag_merge_strings_with_comma
 	gst_tag_merge_use_first
 	gst_tag_register
 	gst_tag_setter_get_tag_list

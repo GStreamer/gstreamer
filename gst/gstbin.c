@@ -880,7 +880,8 @@ gst_bin_add (GstBin * bin, GstElement * element)
     goto no_function;
 
   GST_CAT_DEBUG (GST_CAT_PARENTAGE, "adding element %s to bin %s",
-      GST_ELEMENT_NAME (element), GST_ELEMENT_NAME (bin));
+      GST_STR_NULL (GST_ELEMENT_NAME (element)),
+      GST_STR_NULL (GST_ELEMENT_NAME (bin)));
 
   result = bclass->add_element (bin, element);
 

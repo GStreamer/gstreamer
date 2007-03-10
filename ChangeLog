@@ -1,3 +1,11 @@
+2007-03-10  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/gstbin.c:(gst_bin_add):
+	Use GST_STR_NULL to prevent NULL pointer to be passed to GST_CAT_DEBUG.
+	* win32/common/libgstbase.def:
+	* win32/common/libgstreamer.def:
+	Add new exported functions.
+
 2007-03-09  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/gstreamer-plugins-sections.txt:
