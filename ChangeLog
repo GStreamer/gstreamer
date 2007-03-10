@@ -1,3 +1,21 @@
+2007-03-10  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:(gst_base_audio_sink_render):
+	Use gst_guint64_to_gdouble for conversion.
+	* win32/MANIFEST:
+	Add new files to the win32 MANIFEST.
+	* win32/common/libgstaudio.def:
+	* win32/common/libgstpbutils.def:
+	Add new exported functions.
+	* win32/vs6/gst_plugins_base.dsw:
+	* win32/vs6/libgstdecodebin.dsp:
+	* win32/vs6/libgstplaybin.dsp:
+	Change the link to libgstpbutils.lib.
+	* win32/vs6/libgstdecodebin2.dsp:
+	Add a new project for decodebin2.
+	* win32/vs6/libgstpbutils.dsp:
+	Add a new project for pbutils.
+
 2007-03-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add):

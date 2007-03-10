@@ -116,9 +116,18 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name grammar
     End Project Dependency
-    Begin Project Dependency
-    Project_Dep_Name libgstutils
-    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libgstdecodebin2"=".\libgstdecodebin2.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################
@@ -185,6 +194,18 @@ Package=<4>
     Begin Project Dependency
     Project_Dep_Name libgstriff
     End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libgstpbutils"=".\libgstpbutils.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
 }}}
 
 ###############################################################################
@@ -286,18 +307,6 @@ Package=<4>
 ###############################################################################
 
 Project: "libgsttypefindfunctions"=".\libgsttypefindfunctions.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "libgstutils"=".\libgstutils.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

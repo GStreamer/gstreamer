@@ -763,7 +763,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     GST_DEBUG_OBJECT (sink, "internal %" GST_TIME_FORMAT " external %"
         GST_TIME_FORMAT " %" G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT " = %f",
         GST_TIME_ARGS (cinternal), GST_TIME_ARGS (cexternal), crate_num,
-        crate_denom, (gdouble) crate_num / crate_denom);
+        crate_denom, gst_guint64_to_gdouble (crate_num / crate_denom));
 
     if (crate_num == 0)
       crate_denom = crate_num = 1;
