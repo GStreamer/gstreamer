@@ -577,7 +577,7 @@ NAS_createFlow (GstNasSink * sink, GstRingBufferSpec * spec)
   spec->segtotal = 1;
 
   GST_DEBUG_OBJECT (sink, "Rate %d Format %d tracks %d bufs %d %d/%d w %d",
-      spec->rate, format, spec->channels, buf_samples, spec->segsize,
+      spec->rate, format, spec->channels, (gint) buf_samples, spec->segsize,
       spec->segtotal, spec->width);
   AuMakeElementImportClient (&elements[0],      /* element */
       spec->rate,               /* rate */

@@ -1,3 +1,9 @@
+2007-03-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/nas/nassink.c: (NAS_createFlow):
+	* ext/sndfile/gstsfsrc.c: (gst_sf_src_create):
+	  Printf format string fixes.
+
 2007-03-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/equalizer/Makefile.am:

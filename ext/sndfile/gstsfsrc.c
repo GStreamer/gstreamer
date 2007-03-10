@@ -267,9 +267,9 @@ bad_offset:
   }
 bad_length:
   {
-    GST_ELEMENT_ERROR (this, RESOURCE, SEEK,
-        (NULL), ("length %" G_GUINT64_FORMAT " not divisible by %d bytes per "
-            "frame", length, this->bytes_per_frame));
+    GST_ELEMENT_ERROR (this, RESOURCE, SEEK, (NULL),
+        ("length %u not divisible by %d bytes per frame", length,
+            this->bytes_per_frame));
     return GST_FLOW_ERROR;
   }
 seek_failed:
