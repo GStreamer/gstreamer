@@ -1,3 +1,12 @@
+2007-03-10  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/MANIFEST:
+	Add new project files to MANIFEST.
+	* win32/vs6/libgstaudiofx.dsp:
+	* win32/vs6/libgstrtp.dsp:
+	* win32/vs6/libgstrtsp.dsp:
+	Update project files.
+	
 2007-03-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_parse_subindex),

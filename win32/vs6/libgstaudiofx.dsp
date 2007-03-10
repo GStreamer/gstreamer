@@ -108,6 +108,10 @@ SOURCE=..\..\gst\audiofx\audioamplify.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\audiofx\audiodynamic.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\audiofx\audiofx.c
 # End Source File
 # Begin Source File

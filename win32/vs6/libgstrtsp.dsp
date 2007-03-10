@@ -104,6 +104,10 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
+SOURCE=..\..\gst\rtsp\base64.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\rtsp\gstrtpdec.c
 # End Source File
 # Begin Source File

@@ -2,10 +2,12 @@ win32/MANIFEST
 win32/common/config.h
 win32/common/config.h.in
 win32/vs6/gst_plugins_good.dsw
-win32/vs6/libgstalpha.dsp
+win32/vs6/autogen.dsp
 win32/vs6/libgstalaw.dsp
+win32/vs6/libgstalpha.dsp
 win32/vs6/libgstalphacolor.dsp
 win32/vs6/libgstapetag.dsp
+win32/vs6/libgstaudiofx.dsp
 win32/vs6/libgstauparse.dsp
 win32/vs6/libgstautodetect.dsp
 win32/vs6/libgstavi.dsp
@@ -27,6 +29,7 @@ win32/vs6/libgstrtp.dsp
 win32/vs6/libgstrtsp.dsp
 win32/vs6/libgstsmpte.dsp
 win32/vs6/libgstspeex.dsp
+win32/vs6/libgstudp.dsp
 win32/vs6/libgstvideobalance.dsp
 win32/vs6/libgstvideobox.dsp
 win32/vs6/libgstvideoflip.dsp
