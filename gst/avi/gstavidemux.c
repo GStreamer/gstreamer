@@ -1023,9 +1023,9 @@ not_implemented:
 out_of_mem:
   {
     GST_ELEMENT_ERROR (avi, RESOURCE, NO_SPACE_LEFT, (NULL),
-        ("Cannot allocate memory for %lu*%lu=%lu bytes",
-            sizeof (gst_avi_index_entry), num,
-            sizeof (gst_avi_index_entry) * num));
+        ("Cannot allocate memory for %u*%u=%u bytes",
+            (guint) sizeof (gst_avi_index_entry), num,
+            (guint) sizeof (gst_avi_index_entry) * num));
     gst_buffer_unref (buf);
     return FALSE;
   }
@@ -1618,10 +1618,10 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
     n++;
   }
 
-  GST_INFO
-      ("Parsed index, %6d entries, %5d keyframes, entry size = %2d, total size = %10ld",
-      num, _nr_keyframes, sizeof (gst_avi_index_entry),
-      num * sizeof (gst_avi_index_entry));
+  GST_INFO ("Parsed index, %6d entries, %5ld keyframes, entry size = %2d, "
+      "total size = %10d", num, _nr_keyframes,
+      (gint) sizeof (gst_avi_index_entry),
+      (gint) (num * sizeof (gst_avi_index_entry)));
 
   gst_buffer_unref (buf);
 
@@ -1636,9 +1636,9 @@ gst_avi_demux_parse_index (GstAviDemux * avi,
 out_of_mem:
   {
     GST_ELEMENT_ERROR (avi, RESOURCE, NO_SPACE_LEFT, (NULL),
-        ("Cannot allocate memory for %lu*%lu=%lu bytes",
-            sizeof (gst_avi_index_entry), num,
-            sizeof (gst_avi_index_entry) * num));
+        ("Cannot allocate memory for %u*%u=%u bytes",
+            (guint) sizeof (gst_avi_index_entry), num,
+            (guint) sizeof (gst_avi_index_entry) * num));
     gst_buffer_unref (buf);
   }
 }

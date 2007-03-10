@@ -160,7 +160,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
   while (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_DQBUF, &buffer) < 0) {
 
     GST_LOG_OBJECT (v4l2src,
-        "problem grabbing frame %ld (ix=%ld), trials=%ld, pool-ct=%d, buf.flags=%d",
+        "problem grabbing frame %d (ix=%d), trials=%d, pool-ct=%d, buf.flags=%d",
         buffer.sequence, buffer.index, trials, v4l2src->pool->refcount,
         buffer.flags);
 
@@ -221,7 +221,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src)
     }
   }
 
-  GST_LOG_OBJECT (v4l2src, "grabbed frame %ld (ix=%ld), pool-ct=%d",
+  GST_LOG_OBJECT (v4l2src, "grabbed frame %d (ix=%d), pool-ct=%d",
       buffer.sequence, buffer.index, v4l2src->pool->refcount);
 
   return buffer.index;

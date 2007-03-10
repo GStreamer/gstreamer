@@ -123,7 +123,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       vtun.index = input.tuner;
       if (ioctl (v4l2object->video_fd, VIDIOC_G_TUNER, &vtun) < 0) {
         GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-            (_("Failed to get setting of tuner &d on device '%s'."),
+            (_("Failed to get setting of tuner %d on device '%s'."),
                 input.tuner, v4l2object->videodev), GST_ERROR_SYSTEM);
         g_object_unref (G_OBJECT (channel));
         return FALSE;
@@ -211,7 +211,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
           break;
       } else {
         GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-            (_("Failed getting controls attributes on device '%s."),
+            (_("Failed getting controls attributes on device '%s.'"),
                 v4l2object->videodev),
             ("Failed querying control %d on device '%s'. (%d - %s)",
                 n, v4l2object->videodev, errno, strerror (errno)));
@@ -282,7 +282,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
             break;              /* end of enumeration */
           else {
             GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
-                (_("Failed getting controls attributes on device '%s."),
+                (_("Failed getting controls attributes on device '%s'."),
                     v4l2object->videodev),
                 ("Failed to get %d in menu enumeration for %s. (%d - %s)",
                     n, v4l2object->videodev, errno, strerror (errno)));
