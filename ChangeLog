@@ -1,3 +1,17 @@
+2007-03-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Kamil Pawlowski  <kamilpe gmail com>
+
+	* gst/subparse/Makefile.am:
+	* gst/subparse/gstsubparse.c:
+	(gst_sub_parse_data_format_autodetect),
+	(gst_sub_parse_format_autodetect), (gst_sub_parse_sink_event),
+	(gst_subparse_type_find):
+	* gst/subparse/gstsubparse.h:
+	* gst/subparse/mpl2parse.c: (mpl2_parse_line), (parse_mpl2):
+	* gst/subparse/mpl2parse.h:
+	  Add support for MPL2 subtitle format (#413799).
+
 2007-03-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

@@ -32,6 +32,7 @@
 #include "gstssaparse.h"
 #include "samiparse.h"
 #include "tmplayerparse.h"
+#include "mpl2parse.h"
 
 GST_DEBUG_CATEGORY (sub_parse_debug);
 
@@ -63,7 +64,7 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-sami; "
-        "application/x-subtitle-tmplayer")
+        "application/x-subtitle-tmplayer; application/x-subtitle-mpl2")
     );
 #else
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -841,7 +842,10 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     GST_LOG ("TMPlayer (time based) format detected");
     return GST_SUB_PARSE_FORMAT_TMPLAYER;
   }
-
+  if (sscanf (match_str, "[%u][%u]", &n1, &n2) == 2) {
+    GST_LOG ("MPL2 (time based) format detected");
+    return GST_SUB_PARSE_FORMAT_MPL2;
+  }
   GST_DEBUG ("no subtitle format detected");
   return GST_SUB_PARSE_FORMAT_UNKNOWN;
 }
@@ -881,6 +885,9 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
     case GST_SUB_PARSE_FORMAT_TMPLAYER:
       self->parse_line = parse_tmplayer;
       return gst_caps_new_simple ("text/plain", NULL);
+    case GST_SUB_PARSE_FORMAT_MPL2:
+      self->parse_line = parse_mpl2;
+      return gst_caps_new_simple ("text/x-pango-markup", NULL);
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
     default:
       GST_DEBUG ("no subtitle format detected");
@@ -1011,7 +1018,8 @@ gst_sub_parse_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:{
       /* Make sure the last subrip chunk is pushed out even
        * if the file does not have an empty line at the end */
-      if (self->parser_type == GST_SUB_PARSE_FORMAT_SUBRIP) {
+      if (self->parser_type == GST_SUB_PARSE_FORMAT_SUBRIP ||
+          self->parser_type == GST_SUB_PARSE_FORMAT_MPL2) {
         GstBuffer *buf = gst_buffer_new_and_alloc (1 + 1);
 
         GST_DEBUG ("EOS. Pushing remaining text (if any)");
@@ -1120,6 +1128,8 @@ gst_sub_parse_change_state (GstElement * element, GstStateChange transition)
 
 /* FIXME 0.11: these caps are ugly, use app/x-subtitle + type field or so;
  * also, give different  subtitle formats really different types */
+static GstStaticCaps mpl2_caps =
+GST_STATIC_CAPS ("application/x-subtitle-mpl2");
 static GstStaticCaps tmp_caps =
 GST_STATIC_CAPS ("application/x-subtitle-tmplayer");
 static GstStaticCaps smi_caps = GST_STATIC_CAPS ("application/x-subtitle-sami");
@@ -1128,6 +1138,7 @@ static GstStaticCaps sub_caps = GST_STATIC_CAPS ("application/x-subtitle");
 #define SUB_CAPS (gst_static_caps_get (&sub_caps))
 #define SAMI_CAPS (gst_static_caps_get (&smi_caps))
 #define TMP_CAPS (gst_static_caps_get (&tmp_caps))
+#define MPL2_CAPS (gst_static_caps_get (&mpl2_caps))
 
 static void
 gst_subparse_type_find (GstTypeFind * tf, gpointer private)
@@ -1165,6 +1176,14 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
     case GST_SUB_PARSE_FORMAT_TMPLAYER:
       GST_DEBUG ("TMPlayer (time based) format detected");
       caps = TMP_CAPS;
+      break;
+      /* FIXME: our MPL2 typefinding is not really good enough to warrant
+       * returning a high probability (however, since we registered our
+       * typefinder here with a rank of MARGINAL we should pretty much only
+       * be called if most other typefinders have already run */
+    case GST_SUB_PARSE_FORMAT_MPL2:
+      GST_DEBUG ("MPL2 (time based) format detected");
+      caps = MPL2_CAPS;
       break;
     default:
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
