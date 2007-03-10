@@ -1,5 +1,14 @@
 2007-03-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add):
+	  Also accept partial dates with only year and month,
+	  like 1999-12-00 (fixes #410396 even more).
+
+	* tests/check/libs/tag.c: (GST_START_TEST):
+	  Add unit test for the above.
+
+2007-03-10  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/elements/subparse.c: (GST_START_TEST),
 	(subparse_suite):
 	  Add unit test for MPL2 subtitle format (#413799).

@@ -530,6 +530,22 @@ GST_START_TEST (test_vorbis_tags)
     g_date_free (date);
     gst_tag_list_free (list);
   }
+
+  /* check date with valid month, but day of 00 */
+  {
+    GDate *date = NULL;
+
+    list = gst_tag_list_new ();
+    gst_vorbis_tag_add (list, "DATE", "1992-05-00");
+
+    fail_unless (gst_tag_list_get_date_index (list, GST_TAG_DATE, 0, &date));
+    fail_unless (date != NULL);
+    fail_unless (g_date_get_year (date) == 1992);
+    fail_unless (g_date_get_month (date) == G_DATE_MAY);
+
+    g_date_free (date);
+    gst_tag_list_free (list);
+  }
 }
 
 GST_END_TEST;
