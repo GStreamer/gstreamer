@@ -1,5 +1,11 @@
 2007-03-10  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/elements/subparse.c: (GST_START_TEST),
+	(subparse_suite):
+	  Add unit test for MPL2 subtitle format (#413799).
+
+2007-03-10  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Kamil Pawlowski  <kamilpe gmail com>
 
 	* gst/subparse/Makefile.am:

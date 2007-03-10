@@ -433,6 +433,32 @@ GST_START_TEST (test_microdvd_with_fps)
 
 GST_END_TEST;
 
+GST_START_TEST (test_mpl2)
+{
+  SubParseInputChunk mpl2_input[] = {
+    {
+          "[123][456] This is the Earth at a time|when the dinosaurs roamed\n",
+          (123 * GST_SECOND) / 10, (456 * GST_SECOND) / 10,
+        "This is the Earth at a time\nwhen the dinosaurs roamed"}, {
+          "[1234][5678]a lush and fertile planet.\n",
+          (1234 * GST_SECOND) / 10, (5678 * GST_SECOND) / 10,
+        "a lush and fertile planet."}, {
+          "[12345][27890] /Italic|Normal\n",
+          (12345 * GST_SECOND) / 10, (27890 * GST_SECOND) / 10,
+        "<i>Italic</i>\nNormal"}, {
+          "[32345][37890]/Italic|/Italic\n",
+          (32345 * GST_SECOND) / 10, (37890 * GST_SECOND) / 10,
+        "<i>Italic</i>\n<i>Italic</i>"}, {
+          "[42345][47890] Normal|/Italic",
+          (42345 * GST_SECOND) / 10, (47890 * GST_SECOND) / 10,
+        "Normal\n<i>Italic</i>"}
+  };
+
+  do_test (mpl2_input, G_N_ELEMENTS (mpl2_input), "text/x-pango-markup");
+}
+
+GST_END_TEST;
+
 /* TODO:
  *  - add/modify tests so that lines aren't dogfed to the parsers in complete
  *    lines or sets of complete lines, but rather in random chunks
@@ -455,6 +481,7 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_tmplayer_style4);
   tcase_add_test (tc_chain, test_tmplayer_style4_with_bogus_lines);
   tcase_add_test (tc_chain, test_microdvd_with_fps);
+  tcase_add_test (tc_chain, test_mpl2);
   return s;
 }
 
