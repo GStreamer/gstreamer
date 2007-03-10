@@ -1646,7 +1646,7 @@ gst_asf_demux_process_header_ext (GstASFDemux * demux, guint8 * data,
   gst_asf_demux_skip_bytes (16 + 2, &data, &size);
   hdr_size = gst_asf_demux_get_uint32 (&data, &size);
 
-  GST_INFO ("object is an extended header with a size of %u bytes", size);
+  GST_INFO ("extended header object with a size of %u bytes", (guint) size);
 
   /* FIXME: does data_size include the rest of the header that we have read? */
   if (hdr_size > size)

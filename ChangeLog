@@ -1,3 +1,8 @@
+2007-03-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_header_ext):
+	  Printf format fix.
+
 2007-03-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Zaheer Abbas Merali  <zaheermerali at gmail com>
