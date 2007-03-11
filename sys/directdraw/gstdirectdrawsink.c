@@ -30,7 +30,7 @@
  *
  * <refsect2>
  * <para>
- * DirectdrawSink renders video frames to any win32 window. This element can receive
+ * DirectdrawSink renders video RGB frames to any win32 window. This element can receive
  * a window ID from the application through the XOverlay interface and will then render
  * video frames in this window.
  * If no Window ID was provided by the application, the element will create its
@@ -88,21 +88,32 @@ static GstFlowReturn gst_directdraw_sink_show_frame (GstBaseSink * bsink,
 static gboolean gst_directdraw_sink_setup_ddraw (GstDirectDrawSink * ddrawsink);
 static gboolean gst_directdraw_sink_create_default_window (GstDirectDrawSink *
     ddrawsink);
-static gboolean gst_directdraw_sink_create_ddraw_surface (GstDirectDrawSink *
+static gboolean gst_directdraw_sink_check_primary_surface (GstDirectDrawSink *
+    ddrawsink);
+static gboolean gst_directdraw_sink_check_offscreen_surface (GstDirectDrawSink *
     ddrawsink);
 static GstCaps *gst_directdraw_sink_get_ddrawcaps (GstDirectDrawSink *
     ddrawsink);
+static GstCaps
+    *gst_directdraw_sink_create_caps_from_surfacedesc (LPDDSURFACEDESC2 desc);
 static void gst_directdraw_sink_cleanup (GstDirectDrawSink * ddrawsink);
 static void gst_directdraw_sink_bufferpool_clear (GstDirectDrawSink *
     ddrawsink);
 static void gst_directdraw_sink_ddraw_put (GstDirectDrawSink * ddrawsink,
     GstDDrawSurface * surface);
+static gboolean gst_ddrawvideosink_get_format_from_caps (GstDirectDrawSink *
+    ddrawsink, GstCaps * caps, DDPIXELFORMAT * pPixelFormat);
+static void gst_directdraw_sink_center_rect (GstDirectDrawSink * ddrawsink,
+    RECT src, RECT dst, RECT * result);
+char *DDErrorString (HRESULT hr);
 
 /* surfaces management functions */
 static void gst_directdraw_sink_surface_destroy (GstDirectDrawSink * ddrawsink,
     GstDDrawSurface * surface);
 static GstDDrawSurface *gst_directdraw_sink_surface_create (GstDirectDrawSink *
     ddrawsink, GstCaps * caps, size_t size);
+static gboolean gst_directdraw_sink_surface_check (GstDirectDrawSink *
+    ddrawsink, GstDDrawSurface * surface);
 
 static GstStaticPadTemplate directdrawsink_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -189,6 +200,631 @@ gst_directdraw_sink_init_interfaces (GType type)
   g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
       &iface_info);
   g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &xoverlay_info);
+}
+
+/* Subclass of GstBuffer which manages buffer_pool surfaces lifetime    */
+static void gst_ddrawsurface_finalize (GstDDrawSurface * surface);
+
+static void
+gst_ddrawsurface_init (GstDDrawSurface * surface, gpointer g_class)
+{
+  surface->surface = NULL;
+  surface->width = 0;
+  surface->height = 0;
+  surface->ddrawsink = NULL;
+  surface->locked = FALSE;
+  surface->system_memory = FALSE;
+  memset (&surface->dd_pixel_format, 0, sizeof (DDPIXELFORMAT));
+}
+
+static void
+gst_ddrawsurface_class_init (gpointer g_class, gpointer class_data)
+{
+  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  mini_object_class->finalize = GST_DEBUG_FUNCPTR (gst_ddrawsurface_finalize);
+}
+
+GType
+gst_ddrawsurface_get_type (void)
+{
+  static GType _gst_ddrawsurface_type;
+
+  if (G_UNLIKELY (_gst_ddrawsurface_type == 0)) {
+    static const GTypeInfo ddrawsurface_info = {
+      sizeof (GstBufferClass),
+      NULL,
+      NULL,
+      gst_ddrawsurface_class_init,
+      NULL,
+      NULL,
+      sizeof (GstDDrawSurface),
+      0,
+      (GInstanceInitFunc) gst_ddrawsurface_init,
+      NULL
+    };
+    _gst_ddrawsurface_type = g_type_register_static (GST_TYPE_BUFFER,
+        "GstDDrawSurface", &ddrawsurface_info, 0);
+  }
+  return _gst_ddrawsurface_type;
+}
+
+static void
+gst_ddrawsurface_finalize (GstDDrawSurface * surface)
+{
+  GstDirectDrawSink *ddrawsink = NULL;
+
+  g_return_if_fail (surface != NULL);
+
+  ddrawsink = surface->ddrawsink;
+  if (!ddrawsink)
+    goto no_sink;
+
+  /* If our geometry changed we can't reuse that image. */
+  if ((surface->width != ddrawsink->video_width) ||
+      (surface->height != ddrawsink->video_height) ||
+      (memcmp (&surface->dd_pixel_format, &ddrawsink->dd_pixel_format,
+              sizeof (DDPIXELFORMAT)) != 0 ||
+          !gst_directdraw_sink_surface_check (ddrawsink, surface))
+      ) {
+    GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
+        "destroy image as its size changed %dx%d vs current %dx%d",
+        surface->width, surface->height, ddrawsink->video_width,
+        ddrawsink->video_height);
+    gst_directdraw_sink_surface_destroy (ddrawsink, surface);
+
+  } else {
+    /* In that case we can reuse the image and add it to our image pool. */
+    GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
+        "recycling image in pool");
+
+    /* need to increment the refcount again to recycle */
+    gst_buffer_ref (GST_BUFFER (surface));
+
+    g_mutex_lock (ddrawsink->pool_lock);
+    ddrawsink->buffer_pool = g_slist_prepend (ddrawsink->buffer_pool, surface);
+    g_mutex_unlock (ddrawsink->pool_lock);
+  }
+  return;
+
+no_sink:
+  GST_WARNING (directdrawsink_debug, "no sink found");
+  return;
+}
+
+/************************************************************************/
+/* Directdraw sink functions                                            */
+/************************************************************************/
+static void
+gst_directdraw_sink_base_init (gpointer g_class)
+{
+  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+
+  gst_element_class_set_details (element_class, &gst_directdraw_sink_details);
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&directdrawsink_sink_factory));
+}
+
+static void
+gst_directdraw_sink_class_init (GstDirectDrawSinkClass * klass)
+{
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+  GstBaseSinkClass *gstbasesink_class;
+
+  gobject_class = (GObjectClass *) klass;
+  gstbasesink_class = (GstBaseSinkClass *) klass;
+  gstelement_class = (GstElementClass *) klass;
+
+  GST_DEBUG_CATEGORY_INIT (directdrawsink_debug, "directdrawsink", 0,
+      "Directdraw sink");
+
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_directdraw_sink_finalize);
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_directdraw_sink_get_property);
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_directdraw_sink_set_property);
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_directdraw_sink_change_state);
+  gstbasesink_class->get_caps =
+      GST_DEBUG_FUNCPTR (gst_directdraw_sink_get_caps);
+  gstbasesink_class->set_caps =
+      GST_DEBUG_FUNCPTR (gst_directdraw_sink_set_caps);
+  gstbasesink_class->preroll =
+      GST_DEBUG_FUNCPTR (gst_directdraw_sink_show_frame);
+  gstbasesink_class->render =
+      GST_DEBUG_FUNCPTR (gst_directdraw_sink_show_frame);
+  gstbasesink_class->get_times =
+      GST_DEBUG_FUNCPTR (gst_directdraw_sink_get_times);
+  gstbasesink_class->buffer_alloc =
+      GST_DEBUG_FUNCPTR (gst_directdraw_sink_buffer_alloc);
+
+  /* install properties */
+  /* setup aspect ratio mode */
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_KEEP_ASPECT_RATIO, g_param_spec_boolean ("keep-aspect-ratio",
+          "keep-aspect-ratio", "keep the aspect ratio or not", FALSE,
+          G_PARAM_READWRITE));
+}
+
+static void
+gst_directdraw_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (object);
+
+  switch (prop_id) {
+    case PROP_KEEP_ASPECT_RATIO:
+      ddrawsink->keep_aspect_ratio = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_directdraw_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (object);
+
+  switch (prop_id) {
+    case PROP_KEEP_ASPECT_RATIO:
+      g_value_set_boolean (value, ddrawsink->keep_aspect_ratio);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_directdraw_sink_finalize (GObject * object)
+{
+  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (object);
+
+  if (ddrawsink->pool_lock) {
+    g_mutex_free (ddrawsink->pool_lock);
+    ddrawsink->pool_lock = NULL;
+  }
+  if (ddrawsink->caps) {
+    gst_caps_unref (ddrawsink->caps);
+    ddrawsink->caps = NULL;
+  }
+  if (ddrawsink->setup) {
+    gst_directdraw_sink_cleanup (ddrawsink);
+  }
+}
+
+static void
+gst_directdraw_sink_init (GstDirectDrawSink * ddrawsink,
+    GstDirectDrawSinkClass * g_class)
+{
+  /*init members variables */
+  ddrawsink->ddraw_object = NULL;
+  ddrawsink->primary_surface = NULL;
+  ddrawsink->offscreen_surface = NULL;
+  ddrawsink->clipper = NULL;
+  ddrawsink->video_window = NULL;
+  ddrawsink->our_video_window = TRUE;
+  ddrawsink->last_buffer = NULL;
+  ddrawsink->caps = NULL;
+  ddrawsink->window_thread = NULL;
+  ddrawsink->setup = FALSE;
+  ddrawsink->buffer_pool = NULL;
+  ddrawsink->keep_aspect_ratio = FALSE;
+  ddrawsink->pool_lock = g_mutex_new ();
+  ddrawsink->can_blit_between_colorspace = TRUE;
+  ddrawsink->must_recreate_offscreen = FALSE;
+  memset (&ddrawsink->dd_pixel_format, 0, sizeof (DDPIXELFORMAT));
+
+  /*video default values */
+  ddrawsink->video_height = 0;
+  ddrawsink->video_width = 0;
+  ddrawsink->fps_n = 0;
+  ddrawsink->fps_d = 0;
+}
+
+static GstCaps *
+gst_directdraw_sink_get_caps (GstBaseSink * bsink)
+{
+  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (bsink);
+  GstCaps *caps = NULL;
+
+  if (!ddrawsink->setup) {
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
+            (ddrawsink)));
+    GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
+        "getcaps called and we are not setup yet, " "returning template %"
+        GST_PTR_FORMAT, caps);
+  } else {
+    caps = gst_caps_ref (ddrawsink->caps);
+  }
+
+  return caps;
+}
+
+static gboolean
+gst_directdraw_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
+{
+  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (bsink);
+  GstStructure *structure = NULL;
+  gboolean ret;
+  const GValue *fps;
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (!structure)
+    return FALSE;
+
+  ret = gst_structure_get_int (structure, "width", &ddrawsink->video_width);
+  ret &= gst_structure_get_int (structure, "height", &ddrawsink->video_height);
+  fps = gst_structure_get_value (structure, "framerate");
+  ret &= (fps != NULL);
+  ret &=
+      gst_ddrawvideosink_get_format_from_caps (ddrawsink, caps,
+      &ddrawsink->dd_pixel_format);
+  if (!ret) {
+    GST_ELEMENT_ERROR (ddrawsink, CORE, NEGOTIATION,
+        ("Failed to get caps properties from caps"), (NULL));
+    return FALSE;
+  }
+
+  ddrawsink->fps_n = gst_value_get_fraction_numerator (fps);
+  ddrawsink->fps_d = gst_value_get_fraction_denominator (fps);
+
+  /* Notify application to set window id now */
+  if (!ddrawsink->video_window) {
+    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (ddrawsink));
+  }
+
+  /* if we are rendering to our own window, resize it to video size */
+  if (ddrawsink->video_window && ddrawsink->our_video_window) {
+    SetWindowPos (ddrawsink->video_window, NULL,
+        0, 0, ddrawsink->video_width + (GetSystemMetrics (SM_CXSIZEFRAME) * 2),
+        ddrawsink->video_height + GetSystemMetrics (SM_CYCAPTION) +
+        (GetSystemMetrics (SM_CYSIZEFRAME) * 2), SWP_SHOWWINDOW | SWP_NOMOVE);
+  }
+
+  /* create an offscreen surface with the caps */
+  ret = gst_directdraw_sink_check_offscreen_surface (ddrawsink);
+  if (!ret) {
+    GST_ELEMENT_ERROR (ddrawsink, CORE, NEGOTIATION,
+        ("Can't create a directdraw offscreen surface with the input caps"),
+        (NULL));
+  }
+
+  return ret;
+}
+
+static GstStateChangeReturn
+gst_directdraw_sink_change_state (GstElement * element,
+    GstStateChange transition)
+{
+  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (element);;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_NULL_TO_READY:
+      if (ddrawsink->video_window == NULL)
+        if (!gst_directdraw_sink_create_default_window (ddrawsink))
+          return GST_STATE_CHANGE_FAILURE;
+
+      if (!gst_directdraw_sink_setup_ddraw (ddrawsink))
+        return GST_STATE_CHANGE_FAILURE;
+
+      if (!(ddrawsink->caps = gst_directdraw_sink_get_ddrawcaps (ddrawsink)))
+        return GST_STATE_CHANGE_FAILURE;
+      break;
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      ddrawsink->fps_n = 0;
+      ddrawsink->fps_d = 1;
+      ddrawsink->video_width = 0;
+      ddrawsink->video_height = 0;
+      if (ddrawsink->buffer_pool)
+        gst_directdraw_sink_bufferpool_clear (ddrawsink);
+      break;
+    case GST_STATE_CHANGE_READY_TO_NULL:
+      if (ddrawsink->setup)
+        gst_directdraw_sink_cleanup (ddrawsink);
+      break;
+  }
+
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+}
+
+static GstFlowReturn
+gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf)
+{
+  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (bsink);
+  GstDDrawSurface *surface = NULL;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstCaps *buffer_caps = caps;
+  gboolean buffercaps_unref = FALSE;
+
+  GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
+      "a buffer of %d bytes was requested", size);
+
+  g_mutex_lock (ddrawsink->pool_lock);
+
+  /* Inspect our buffer pool */
+  while (ddrawsink->buffer_pool) {
+    surface = (GstDDrawSurface *) ddrawsink->buffer_pool->data;
+    if (surface) {
+      /* Removing from the pool */
+      ddrawsink->buffer_pool = g_slist_delete_link (ddrawsink->buffer_pool,
+          ddrawsink->buffer_pool);
+
+      /* If the surface is invalid for our need, destroy */
+      if ((surface->width != ddrawsink->video_width) ||
+          (surface->height != ddrawsink->video_height) ||
+          (memcmp (&surface->dd_pixel_format, &ddrawsink->dd_pixel_format,
+                  sizeof (DDPIXELFORMAT)) ||
+              !gst_directdraw_sink_surface_check (ddrawsink, surface))
+          ) {
+        gst_directdraw_sink_surface_destroy (ddrawsink, surface);
+        surface = NULL;
+      } else {
+        /* We found a suitable surface */
+        break;
+      }
+    }
+  }
+
+  if (!ddrawsink->can_blit_between_colorspace) {
+    /* Hardware doesn't support blit from one colorspace to another.
+     * Check if the colorspace of the current display mode has changed since
+     * the last negociation. If it's the case, we will have to renegociate
+     */
+    guint depth;
+    HRESULT hres;
+    DDSURFACEDESC2 surface_desc;
+    GstStructure *structure = NULL;
+
+    structure = gst_caps_get_structure (caps, 0);
+    if (!gst_structure_get_int (structure, "depth", &depth)) {
+      GST_CAT_DEBUG_OBJECT (directdrawsink_debug, ddrawsink,
+          "Can't get depth from buffer_alloc caps");
+      return GST_FLOW_ERROR;
+    }
+    surface_desc.dwSize = sizeof (DDSURFACEDESC);
+    hres = IDirectDraw7_GetDisplayMode (ddrawsink->ddraw_object, &surface_desc);
+    if (hres != DD_OK) {
+      GST_CAT_DEBUG_OBJECT (directdrawsink_debug, ddrawsink,
+          "Can't get current display mode (error=%d)", hres);
+      return GST_FLOW_ERROR;
+    }
+
+    if (depth != gst_directdraw_sink_get_depth (&surface_desc.ddpfPixelFormat)) {
+      GstCaps *copy_caps = NULL;
+      GstStructure *copy_structure = NULL;
+      GstCaps *display_caps = NULL;
+      GstStructure *display_structure = NULL;
+
+      /* make a copy of the original caps */
+      copy_caps = gst_caps_copy (caps);
+      copy_structure = gst_caps_get_structure (copy_caps, 0);
+
+      display_caps =
+          gst_directdraw_sink_create_caps_from_surfacedesc (&surface_desc);
+      if (display_caps) {
+        display_structure = gst_caps_get_structure (display_caps, 0);
+        if (display_structure) {
+          gint bpp, endianness, red_mask, green_mask, blue_mask;
+
+          /* get new display mode properties */
+          gst_structure_get_int (display_structure, "depth", &depth);
+          gst_structure_get_int (display_structure, "bpp", &bpp);
+          gst_structure_get_int (display_structure, "endianness", &endianness);
+          gst_structure_get_int (display_structure, "red_mask", &red_mask);
+          gst_structure_get_int (display_structure, "green_mask", &green_mask);
+          gst_structure_get_int (display_structure, "blue_mask", &blue_mask);
+
+          /* apply the new display mode changes to the previous caps */
+          gst_structure_set (copy_structure,
+              "bpp", G_TYPE_INT, bpp,
+              "depth", G_TYPE_INT, depth,
+              "endianness", G_TYPE_INT, endianness,
+              "red_mask", G_TYPE_INT, red_mask,
+              "green_mask", G_TYPE_INT, green_mask,
+              "blue_mask", G_TYPE_INT, blue_mask, NULL);
+
+          if (gst_pad_peer_accept_caps (GST_VIDEO_SINK_PAD (ddrawsink),
+                  copy_caps)) {
+            buffer_caps = copy_caps;
+            buffercaps_unref = TRUE;
+            /* update buffer size needed to store video frames according to new caps */
+            size = ddrawsink->video_width * ddrawsink->video_height * (bpp / 8);
+
+            /* update our member pixel format */
+            gst_ddrawvideosink_get_format_from_caps (ddrawsink, buffer_caps,
+                &ddrawsink->dd_pixel_format);
+            ddrawsink->must_recreate_offscreen = TRUE;
+
+            GST_CAT_DEBUG_OBJECT (directdrawsink_debug, ddrawsink,
+                " desired caps %s \n\n new caps %s", gst_caps_to_string (caps),
+                gst_caps_to_string (buffer_caps));
+          } else {
+            GST_CAT_DEBUG_OBJECT (directdrawsink_debug, ddrawsink,
+                "peer refused caps re-negociation "
+                "and we can't render with the current caps.");
+            ret = GST_FLOW_ERROR;
+          }
+        }
+        gst_caps_unref (display_caps);
+      }
+
+      if (!buffercaps_unref)
+        gst_caps_unref (copy_caps);
+    }
+  }
+
+  /* We haven't found anything, creating a new one */
+  if (!surface) {
+    surface = gst_directdraw_sink_surface_create (ddrawsink, buffer_caps, size);
+  }
+
+  /* Now we should have a surface, set appropriate caps on it */
+  if (surface) {
+    gst_buffer_set_caps (GST_BUFFER (surface), buffer_caps);
+  }
+
+  g_mutex_unlock (ddrawsink->pool_lock);
+
+  *buf = GST_BUFFER (surface);
+
+  if (buffercaps_unref)
+    gst_caps_unref (buffer_caps);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
+{
+  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (bsink);
+  HRESULT hRes;
+  RECT destsurf_rect, src_rect;
+  POINT dest_surf_point;
+
+  if (buf) {
+    /* save a reference to the input buffer */
+    if (ddrawsink->last_buffer != buf) {
+      if (ddrawsink->last_buffer) {
+        gst_buffer_unref (ddrawsink->last_buffer);
+      }
+    }
+    ddrawsink->last_buffer = gst_buffer_ref (buf);
+  } else {
+    /* use last buffer */
+    buf = ddrawsink->last_buffer;
+  }
+  if (buf == NULL)
+    return GST_FLOW_ERROR;
+
+  /* get the video window position */
+  dest_surf_point.x = 0;
+  dest_surf_point.y = 0;
+  ClientToScreen (ddrawsink->video_window, &dest_surf_point);
+  GetClientRect (ddrawsink->video_window, &destsurf_rect);
+  OffsetRect (&destsurf_rect, dest_surf_point.x, dest_surf_point.y);
+
+  if (ddrawsink->keep_aspect_ratio) {
+    /* center image to dest image keeping aspect ratio */
+    src_rect.top = 0;
+    src_rect.left = 0;
+    src_rect.bottom = ddrawsink->video_height;
+    src_rect.right = ddrawsink->video_width;
+    gst_directdraw_sink_center_rect (ddrawsink, src_rect, destsurf_rect,
+        &destsurf_rect);
+  }
+
+  if (ddrawsink->must_recreate_offscreen && ddrawsink->offscreen_surface) {
+    IDirectDrawSurface7_Release (ddrawsink->offscreen_surface);
+    ddrawsink->offscreen_surface = NULL;
+  }
+
+  /* check for surfaces lost */
+  if (!gst_directdraw_sink_check_primary_surface (ddrawsink) ||
+      !gst_directdraw_sink_check_offscreen_surface (ddrawsink)) {
+    return GST_FLOW_ERROR;
+  }
+
+  if (!GST_IS_DDRAWSURFACE (buf) ||
+      ((GST_IS_DDRAWSURFACE (buf)) && (GST_BUFFER (buf)->malloc_data))) {
+    /* We are receiving a system memory buffer so we will copy 
+       to the memory of our offscreen surface and next blit this surface 
+       on the primary surface */
+    LPBYTE data = NULL;
+    guint src_pitch, line;
+    DDSURFACEDESC2 surf_desc;
+
+    ZeroMemory (&surf_desc, sizeof (surf_desc));
+    surf_desc.dwSize = sizeof (surf_desc);
+
+    /* Lock the surface */
+    hRes =
+        IDirectDrawSurface7_Lock (ddrawsink->offscreen_surface, NULL,
+        &surf_desc, DDLOCK_WAIT, NULL);
+    if (hRes != DD_OK) {
+      GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
+          "gst_directdraw_sink_show_frame failed locking surface %s",
+          DDErrorString (hRes));
+      return GST_FLOW_ERROR;
+    }
+
+    /* Write each line respecting the destination surface pitch */
+    data = surf_desc.lpSurface;
+    src_pitch = GST_BUFFER_SIZE (buf) / ddrawsink->video_height;
+    for (line = 0; line < surf_desc.dwHeight; line++) {
+      memcpy (data, GST_BUFFER_DATA (buf) + (line * src_pitch), src_pitch);
+      data += surf_desc.lPitch;
+    }
+
+    /* Unlock the surface */
+    hRes = IDirectDrawSurface7_Unlock (ddrawsink->offscreen_surface, NULL);
+    if (hRes != DD_OK) {
+      GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
+          "gst_directdraw_sink_show_frame failed unlocking surface %s",
+          DDErrorString (hRes));
+      return GST_FLOW_ERROR;
+    }
+
+    /* blit to primary surface ( Blt will scale the video the dest rect surface if needed */
+    hRes = IDirectDrawSurface7_Blt (ddrawsink->primary_surface, &destsurf_rect,
+        ddrawsink->offscreen_surface, NULL, DDBLT_WAIT, NULL);
+    if (hRes != DD_OK)
+      GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
+          "IDirectDrawSurface7_Blt (object's offscreen surface) " "returned %s",
+          DDErrorString (hRes));
+
+  } else {
+    /* We are receiving a directdraw surface (previously returned by our buffer pool
+       So we will simply blit it on the primary surface */
+    GstDDrawSurface *surface = NULL;
+
+    surface = GST_DDRAWSURFACE (buf);
+
+    /* Unlocking surface before blit */
+    IDirectDrawSurface7_Unlock (surface->surface, NULL);
+    surface->locked = FALSE;
+
+    /* blit to our primary surface */
+    hRes = IDirectDrawSurface7_Blt (ddrawsink->primary_surface, &destsurf_rect,
+        surface->surface, NULL, DDBLT_WAIT, NULL);
+    if (hRes != DD_OK)
+      GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
+          "IDirectDrawSurface7_Blt (offscreen surface from buffer_alloc) "
+          "returned %s", DDErrorString (hRes));
+  }
+
+  return GST_FLOW_OK;
+}
+
+static void
+gst_directdraw_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
+    GstClockTime * start, GstClockTime * end)
+{
+  GstDirectDrawSink *ddrawsink;
+
+  ddrawsink = GST_DIRECTDRAW_SINK (bsink);
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    *start = GST_BUFFER_TIMESTAMP (buf);
+    if (GST_BUFFER_DURATION_IS_VALID (buf)) {
+      *end = *start + GST_BUFFER_DURATION (buf);
+    } else {
+      if (ddrawsink->fps_n > 0) {
+        *end = *start + (GST_SECOND * ddrawsink->fps_d) / ddrawsink->fps_n;
+      }
+    }
+  }
 }
 
 /* Utility functions */
@@ -512,526 +1148,11 @@ DDErrorString (HRESULT hr)
   return "Unknown Error";
 }
 
-/* Subclass of GstBuffer which manages buffer_pool surfaces lifetime    */
-static void gst_ddrawsurface_finalize (GstDDrawSurface * surface);
-
-static void
-gst_ddrawsurface_init (GstDDrawSurface * surface, gpointer g_class)
-{
-  surface->surface = NULL;
-  surface->width = 0;
-  surface->height = 0;
-  surface->ddrawsink = NULL;
-  surface->locked = FALSE;
-  surface->system_memory = FALSE;
-  memset (&surface->dd_pixel_format, 0, sizeof (DDPIXELFORMAT));
-}
-
-static void
-gst_ddrawsurface_class_init (gpointer g_class, gpointer class_data)
-{
-  GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
-
-  mini_object_class->finalize = GST_DEBUG_FUNCPTR (gst_ddrawsurface_finalize);
-}
-
-GType
-gst_ddrawsurface_get_type (void)
-{
-  static GType _gst_ddrawsurface_type;
-
-  if (G_UNLIKELY (_gst_ddrawsurface_type == 0)) {
-    static const GTypeInfo ddrawsurface_info = {
-      sizeof (GstBufferClass),
-      NULL,
-      NULL,
-      gst_ddrawsurface_class_init,
-      NULL,
-      NULL,
-      sizeof (GstDDrawSurface),
-      0,
-      (GInstanceInitFunc) gst_ddrawsurface_init,
-      NULL
-    };
-    _gst_ddrawsurface_type = g_type_register_static (GST_TYPE_BUFFER,
-        "GstDDrawSurface", &ddrawsurface_info, 0);
-  }
-  return _gst_ddrawsurface_type;
-}
-
-static void
-gst_ddrawsurface_finalize (GstDDrawSurface * surface)
-{
-  GstDirectDrawSink *ddrawsink = NULL;
-
-  g_return_if_fail (surface != NULL);
-
-  ddrawsink = surface->ddrawsink;
-  if (!ddrawsink)
-    goto no_sink;
-
-  /* If our geometry changed we can't reuse that image. */
-  if ((surface->width != ddrawsink->video_width) ||
-      (surface->height != ddrawsink->video_height) ||
-      (memcmp (&surface->dd_pixel_format, &ddrawsink->dd_pixel_format,
-              sizeof (DDPIXELFORMAT)) != 0)
-      ) {
-    GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
-        "destroy image as its size changed %dx%d vs current %dx%d",
-        surface->width, surface->height, ddrawsink->video_width,
-        ddrawsink->video_height);
-    gst_directdraw_sink_surface_destroy (ddrawsink, surface);
-
-  } else {
-    /* In that case we can reuse the image and add it to our image pool. */
-    GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
-        "recycling image in pool");
-
-    /* need to increment the refcount again to recycle */
-    gst_buffer_ref (GST_BUFFER (surface));
-
-    g_mutex_lock (ddrawsink->pool_lock);
-    ddrawsink->buffer_pool = g_slist_prepend (ddrawsink->buffer_pool, surface);
-    g_mutex_unlock (ddrawsink->pool_lock);
-  }
-  return;
-
-no_sink:
-  GST_WARNING (directdrawsink_debug, "no sink found");
-  return;
-}
-
-/************************************************************************/
-/* Directdraw sink functions                                            */
-/************************************************************************/
-static void
-gst_directdraw_sink_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_set_details (element_class, &gst_directdraw_sink_details);
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&directdrawsink_sink_factory));
-}
-
-static void
-gst_directdraw_sink_class_init (GstDirectDrawSinkClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstElementClass *gstelement_class;
-  GstBaseSinkClass *gstbasesink_class;
-
-  gobject_class = (GObjectClass *) klass;
-  gstbasesink_class = (GstBaseSinkClass *) klass;
-  gstelement_class = (GstElementClass *) klass;
-
-  GST_DEBUG_CATEGORY_INIT (directdrawsink_debug, "directdrawsink", 0,
-      "Directdraw sink");
-
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_directdraw_sink_finalize);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_directdraw_sink_get_property);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_directdraw_sink_set_property);
-  gstelement_class->change_state =
-      GST_DEBUG_FUNCPTR (gst_directdraw_sink_change_state);
-  gstbasesink_class->get_caps =
-      GST_DEBUG_FUNCPTR (gst_directdraw_sink_get_caps);
-  gstbasesink_class->set_caps =
-      GST_DEBUG_FUNCPTR (gst_directdraw_sink_set_caps);
-  gstbasesink_class->preroll =
-      GST_DEBUG_FUNCPTR (gst_directdraw_sink_show_frame);
-  gstbasesink_class->render =
-      GST_DEBUG_FUNCPTR (gst_directdraw_sink_show_frame);
-  gstbasesink_class->get_times =
-      GST_DEBUG_FUNCPTR (gst_directdraw_sink_get_times);
-  gstbasesink_class->buffer_alloc =
-      GST_DEBUG_FUNCPTR (gst_directdraw_sink_buffer_alloc);
-
-  /* install properties */
-  /* setup aspect ratio mode */
-  g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_KEEP_ASPECT_RATIO, g_param_spec_boolean ("keep-aspect-ratio",
-          "keep-aspect-ratio", "keep the aspect ratio or not", FALSE,
-          G_PARAM_READWRITE));
-}
-
-static void
-gst_directdraw_sink_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (object);
-
-  switch (prop_id) {
-    case PROP_KEEP_ASPECT_RATIO:
-      ddrawsink->keep_aspect_ratio = g_value_get_boolean (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_directdraw_sink_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (object);
-
-  switch (prop_id) {
-    case PROP_KEEP_ASPECT_RATIO:
-      g_value_set_boolean (value, ddrawsink->keep_aspect_ratio);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_directdraw_sink_finalize (GObject * object)
-{
-  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (object);
-
-  if (ddrawsink->pool_lock) {
-    g_mutex_free (ddrawsink->pool_lock);
-    ddrawsink->pool_lock = NULL;
-  }
-  if (ddrawsink->caps) {
-    gst_caps_unref (ddrawsink->caps);
-    ddrawsink->caps = NULL;
-  }
-  if (ddrawsink->setup) {
-    gst_directdraw_sink_cleanup (ddrawsink);
-  }
-}
-
-static void
-gst_directdraw_sink_init (GstDirectDrawSink * ddrawsink,
-    GstDirectDrawSinkClass * g_class)
-{
-  /*init members variables */
-  ddrawsink->ddraw_object = NULL;
-  ddrawsink->primary_surface = NULL;
-  ddrawsink->offscreen_surface = NULL;
-  ddrawsink->clipper = NULL;
-  ddrawsink->video_window = NULL;
-  ddrawsink->our_video_window = TRUE;
-  ddrawsink->last_buffer = NULL;
-  ddrawsink->caps = NULL;
-  ddrawsink->window_thread = NULL;
-  ddrawsink->setup = FALSE;
-  ddrawsink->buffer_pool = NULL;
-  ddrawsink->keep_aspect_ratio = FALSE;
-  ddrawsink->pool_lock = g_mutex_new ();
-  memset (&ddrawsink->dd_pixel_format, 0, sizeof (DDPIXELFORMAT));
-
-  /*video default values */
-  ddrawsink->video_height = 0;
-  ddrawsink->video_width = 0;
-  ddrawsink->fps_n = 0;
-  ddrawsink->fps_d = 0;
-}
-
-static GstCaps *
-gst_directdraw_sink_get_caps (GstBaseSink * bsink)
-{
-  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (bsink);
-  GstCaps *caps = NULL;
-
-  if (!ddrawsink->setup) {
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_VIDEO_SINK_PAD
-            (ddrawsink)));
-    GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
-        "getcaps called and we are not setup yet, " "returning template %"
-        GST_PTR_FORMAT, caps);
-  } else {
-    caps = gst_caps_ref (ddrawsink->caps);
-  }
-
-  return caps;
-}
-
-static gboolean
-gst_directdraw_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
-{
-  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (bsink);
-  GstStructure *structure = NULL;
-  gboolean ret;
-  const GValue *fps;
-
-  structure = gst_caps_get_structure (caps, 0);
-  if (!structure)
-    return FALSE;
-
-  ret = gst_structure_get_int (structure, "width", &ddrawsink->video_width);
-  ret &= gst_structure_get_int (structure, "height", &ddrawsink->video_height);
-  fps = gst_structure_get_value (structure, "framerate");
-  ret &= (fps != NULL);
-  ret &=
-      gst_ddrawvideosink_get_format_from_caps (ddrawsink, caps,
-      &ddrawsink->dd_pixel_format);
-  if (!ret) {
-    GST_ELEMENT_ERROR (ddrawsink, CORE, NEGOTIATION,
-        ("Failed to get caps properties from caps"), (NULL));
-    return FALSE;
-  }
-
-  ddrawsink->fps_n = gst_value_get_fraction_numerator (fps);
-  ddrawsink->fps_d = gst_value_get_fraction_denominator (fps);
-
-  /* Notify application to set window id now */
-  if (!ddrawsink->video_window) {
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (ddrawsink));
-  }
-
-  /* if we are rendering to our own window, resize it to video size */
-  if (ddrawsink->video_window && ddrawsink->our_video_window) {
-    SetWindowPos (ddrawsink->video_window, NULL,
-        0, 0, ddrawsink->video_width + (GetSystemMetrics (SM_CXSIZEFRAME) * 2),
-        ddrawsink->video_height + GetSystemMetrics (SM_CYCAPTION) +
-        (GetSystemMetrics (SM_CYSIZEFRAME) * 2), SWP_SHOWWINDOW | SWP_NOMOVE);
-  }
-
-  /* create an offscreen surface with the caps */
-  ret = gst_directdraw_sink_create_ddraw_surface (ddrawsink);
-  if (!ret) {
-    GST_ELEMENT_ERROR (ddrawsink, CORE, NEGOTIATION,
-        ("Can't create a directdraw offscreen surface with the input caps"),
-        (NULL));
-  }
-
-  return ret;
-}
-
-static GstStateChangeReturn
-gst_directdraw_sink_change_state (GstElement * element,
-    GstStateChange transition)
-{
-  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (element);;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      if (ddrawsink->video_window == NULL)
-        if (!gst_directdraw_sink_create_default_window (ddrawsink))
-          return GST_STATE_CHANGE_FAILURE;
-
-      if (!gst_directdraw_sink_setup_ddraw (ddrawsink))
-        return GST_STATE_CHANGE_FAILURE;
-
-      if (!(ddrawsink->caps = gst_directdraw_sink_get_ddrawcaps (ddrawsink)))
-        return GST_STATE_CHANGE_FAILURE;
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      ddrawsink->fps_n = 0;
-      ddrawsink->fps_d = 1;
-      ddrawsink->video_width = 0;
-      ddrawsink->video_height = 0;
-      if (ddrawsink->buffer_pool)
-        gst_directdraw_sink_bufferpool_clear (ddrawsink);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      if (ddrawsink->setup)
-        gst_directdraw_sink_cleanup (ddrawsink);
-      break;
-  }
-
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-}
-
-static GstFlowReturn
-gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
-    guint size, GstCaps * caps, GstBuffer ** buf)
-{
-  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (bsink);
-  GstDDrawSurface *surface = NULL;
-  GstStructure *structure = NULL;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
-      "a buffer of %d bytes was requested", size);
-
-  structure = gst_caps_get_structure (caps, 0);
-  g_mutex_lock (ddrawsink->pool_lock);
-
-  /* Inspect our buffer pool */
-  while (ddrawsink->buffer_pool) {
-    surface = (GstDDrawSurface *) ddrawsink->buffer_pool->data;
-    if (surface) {
-      /* Removing from the pool */
-      ddrawsink->buffer_pool = g_slist_delete_link (ddrawsink->buffer_pool,
-          ddrawsink->buffer_pool);
-
-      /* If the surface is invalid for our need, destroy */
-      if ((surface->width != ddrawsink->video_width) ||
-          (surface->height != ddrawsink->video_height) ||
-          (memcmp (&surface->dd_pixel_format, &ddrawsink->dd_pixel_format,
-                  sizeof (DDPIXELFORMAT)))
-          ) {
-        gst_directdraw_sink_surface_destroy (ddrawsink, surface);
-        surface = NULL;
-      } else {
-        /* We found a suitable surface */
-        break;
-      }
-    }
-  }
-
-  /* We haven't found anything, creating a new one */
-  if (!surface) {
-    surface = gst_directdraw_sink_surface_create (ddrawsink, caps, size);
-  }
-
-  /* Now we should have a surface, set appropriate caps on it */
-  if (surface) {
-    gst_buffer_set_caps (GST_BUFFER (surface), caps);
-  }
-
-  g_mutex_unlock (ddrawsink->pool_lock);
-
-  *buf = GST_BUFFER (surface);
-
-  return ret;
-}
-
-static GstFlowReturn
-gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
-{
-  GstDirectDrawSink *ddrawsink = GST_DIRECTDRAW_SINK (bsink);
-  HRESULT hRes;
-  RECT destsurf_rect, src_rect;
-  POINT dest_surf_point;
-
-  if (buf) {
-    /* save a reference to the input buffer */
-    if (ddrawsink->last_buffer != buf) {
-      if (ddrawsink->last_buffer) {
-        GST_CAT_LOG_OBJECT (directdrawsink_debug, ddrawsink, "unreffing %p",
-            ddrawsink->last_buffer);
-        gst_buffer_unref (ddrawsink->last_buffer);
-      }
-    }
-    GST_CAT_LOG_OBJECT (directdrawsink_debug, ddrawsink,
-        "reffing %p as our current buffer", buf);
-    ddrawsink->last_buffer = gst_buffer_ref (buf);
-  } else {
-    /* use last buffer */
-    buf = ddrawsink->last_buffer;
-  }
-  if (buf == NULL)
-    return GST_FLOW_ERROR;
-
-  /* get the video window position */
-  dest_surf_point.x = 0;
-  dest_surf_point.y = 0;
-  ClientToScreen (ddrawsink->video_window, &dest_surf_point);
-  GetClientRect (ddrawsink->video_window, &destsurf_rect);
-  OffsetRect (&destsurf_rect, dest_surf_point.x, dest_surf_point.y);
-
-  if (ddrawsink->keep_aspect_ratio) {
-    /* center image to dest image keeping aspect ratio */
-    src_rect.top = 0;
-    src_rect.left = 0;
-    src_rect.bottom = ddrawsink->video_height;
-    src_rect.right = ddrawsink->video_width;
-    gst_directdraw_sink_center_rect (ddrawsink, src_rect, destsurf_rect,
-        &destsurf_rect);
-  }
-
-  if (!GST_IS_DDRAWSURFACE (buf) ||
-      ((GST_IS_DDRAWSURFACE (buf)) && (GST_BUFFER (buf)->malloc_data))) {
-    /* We are receiving a system memory buffer so we will copy 
-       to the memory of our offscreen surface and next blit this surface 
-       on the primary surface */
-    LPBYTE data = NULL;
-    guint src_pitch, line;
-    DDSURFACEDESC2 surf_desc;
-
-    ZeroMemory (&surf_desc, sizeof (surf_desc));
-    surf_desc.dwSize = sizeof (surf_desc);
-
-    /* Check for lost surface */
-    if (IDirectDrawSurface7_IsLost (ddrawsink->offscreen_surface) ==
-        DDERR_SURFACELOST) {
-      IDirectDrawSurface7_Restore (ddrawsink->offscreen_surface);
-    }
-
-    /* Lock the surface */
-    hRes =
-        IDirectDrawSurface7_Lock (ddrawsink->offscreen_surface, NULL,
-        &surf_desc, DDLOCK_WAIT, NULL);
-    if (hRes != DD_OK) {
-      GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
-          "gst_directdraw_sink_show_frame failed locking surface %s",
-          DDErrorString (hRes));
-      return GST_FLOW_ERROR;
-    }
-
-    /* Write each line respecting the destination surface pitch */
-    data = surf_desc.lpSurface;
-    src_pitch = GST_BUFFER_SIZE (buf) / ddrawsink->video_height;
-    for (line = 0; line < surf_desc.dwHeight; line++) {
-      memcpy (data, GST_BUFFER_DATA (buf) + (line * src_pitch), src_pitch);
-      data += surf_desc.lPitch;
-    }
-
-    /* Unlock the surface */
-    hRes = IDirectDrawSurface7_Unlock (ddrawsink->offscreen_surface, NULL);
-    if (hRes != DD_OK) {
-      GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
-          "gst_directdraw_sink_show_frame failed unlocking surface %s",
-          DDErrorString (hRes));
-      return GST_FLOW_ERROR;
-    }
-
-    /* blit to primary surface ( Blt will scale the video the dest rect surface if needed */
-    hRes = IDirectDrawSurface7_Blt (ddrawsink->primary_surface, &destsurf_rect,
-        ddrawsink->offscreen_surface, NULL, DDBLT_WAIT, NULL);
-    if (hRes != DD_OK)
-      GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
-          "IDirectDrawSurface7_Blt (object's offscreen surface) " "returned %s",
-          DDErrorString (hRes));
-
-  } else {
-    /* We are receiving a directdraw surface (previously returned by our buffer pool
-       So we will simply blit it on the primary surface */
-    GstDDrawSurface *surface = NULL;
-
-    surface = GST_DDRAWSURFACE (buf);
-
-    /* Unlocking surface before blit */
-    IDirectDrawSurface7_Unlock (surface->surface, NULL);
-    surface->locked = FALSE;
-
-    /* Check for lost surfaces */
-    if (IDirectDrawSurface7_IsLost (surface->surface) == DDERR_SURFACELOST) {
-      IDirectDrawSurface7_Restore (surface->surface);
-    }
-
-    /* blit to our primary surface */
-    hRes = IDirectDrawSurface7_Blt (ddrawsink->primary_surface, &destsurf_rect,
-        surface->surface, NULL, DDBLT_WAIT, NULL);
-    if (hRes != DD_OK)
-      GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
-          "IDirectDrawSurface7_Blt (offscreen surface from buffer_alloc) "
-          "returned %s", DDErrorString (hRes));
-  }
-
-  return GST_FLOW_OK;
-}
-
 static gboolean
 gst_directdraw_sink_setup_ddraw (GstDirectDrawSink * ddrawsink)
 {
   gboolean bRet = TRUE;
   HRESULT hRes;
-  DDSURFACEDESC2 dd_surface_desc;
 
   /* create an instance of the ddraw object use DDCREATE_EMULATIONONLY as first parameter to
      force Directdraw to use the hardware emulation layer */
@@ -1054,29 +1175,17 @@ gst_directdraw_sink_setup_ddraw (GstDirectDrawSink * ddrawsink)
     return FALSE;
   }
 
-  /*create our primary surface */
-  memset (&dd_surface_desc, 0, sizeof (dd_surface_desc));
-  dd_surface_desc.dwSize = sizeof (dd_surface_desc);
-  dd_surface_desc.dwFlags = DDSD_CAPS;
-  dd_surface_desc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-  hRes = IDirectDraw7_CreateSurface (ddrawsink->ddraw_object, &dd_surface_desc,
-      &ddrawsink->primary_surface, NULL);
-  if (hRes != DD_OK) {
-    GST_ELEMENT_ERROR (ddrawsink, RESOURCE, WRITE,
-        ("Failed to create our primary surface error=%s", DDErrorString (hRes)),
-        (NULL));
-    return FALSE;
-  }
-
   /* setup the clipper object */
   hRes = IDirectDraw7_CreateClipper (ddrawsink->ddraw_object, 0,
       &ddrawsink->clipper, NULL);
   if (hRes == DD_OK) {
     hRes = IDirectDrawClipper_SetHWnd (ddrawsink->clipper, 0,
         ddrawsink->video_window);
-    hRes = IDirectDrawSurface7_SetClipper (ddrawsink->primary_surface,
-        ddrawsink->clipper);
   }
+
+  /* create our primary surface */
+  if (!gst_directdraw_sink_check_primary_surface (ddrawsink))
+    return FALSE;
 
   /* directdraw objects are setup */
   ddrawsink->setup = TRUE;
@@ -1171,10 +1280,95 @@ failed:
 }
 
 static gboolean
-gst_directdraw_sink_create_ddraw_surface (GstDirectDrawSink * ddrawsink)
+gst_directdraw_sink_check_primary_surface (GstDirectDrawSink * ddrawsink)
+{
+  HRESULT hres;
+  DDSURFACEDESC2 dd_surface_desc;
+
+  /* if our primary surface already exist, check if it's not lost */
+  if (ddrawsink->primary_surface) {
+    if (IDirectDrawSurface7_IsLost (ddrawsink->primary_surface) == DD_OK) {
+      /* no problem with our primary surface */
+      return TRUE;
+    } else {
+      /* our primary surface was lost, try to restore it */
+      if (IDirectDrawSurface7_Restore (ddrawsink->primary_surface) == DD_OK) {
+        /* restore is done */
+        GST_CAT_LOG_OBJECT (directdrawsink_debug, ddrawsink,
+            "Our primary surface" " was restored after lost");
+        return TRUE;
+      } else {
+        /* failed to restore our primary surface, 
+         * probably because the display mode was changed. 
+         * Release this surface and recreate a new one.
+         */
+        GST_CAT_LOG_OBJECT (directdrawsink_debug, ddrawsink,
+            "Our primary surface"
+            " was lost and display mode has changed. Destroy and recreate our surface.");
+        IDirectDrawSurface7_Release (ddrawsink->primary_surface);
+        ddrawsink->primary_surface = NULL;
+
+        /* also release offscreen surface */
+        IDirectDrawSurface7_Release (ddrawsink->offscreen_surface);
+        ddrawsink->offscreen_surface = NULL;
+      }
+    }
+  }
+
+  /* create our primary surface */
+  memset (&dd_surface_desc, 0, sizeof (dd_surface_desc));
+  dd_surface_desc.dwSize = sizeof (dd_surface_desc);
+  dd_surface_desc.dwFlags = DDSD_CAPS;
+  dd_surface_desc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+  hres = IDirectDraw7_CreateSurface (ddrawsink->ddraw_object, &dd_surface_desc,
+      &ddrawsink->primary_surface, NULL);
+  if (hres != DD_OK) {
+    GST_ELEMENT_ERROR (ddrawsink, RESOURCE, WRITE,
+        ("Failed to create our primary surface error=%s", DDErrorString (hres)),
+        (NULL));
+    return FALSE;
+  }
+
+  /* attach our clipper object to the new primary surface */
+  if (ddrawsink->clipper) {
+    hres = IDirectDrawSurface7_SetClipper (ddrawsink->primary_surface,
+        ddrawsink->clipper);
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_directdraw_sink_check_offscreen_surface (GstDirectDrawSink * ddrawsink)
 {
   DDSURFACEDESC2 dd_surface_desc;
-  HRESULT hRes;
+  HRESULT hres;
+
+  /* if our offscreen surface already exist, check if it's not lost */
+  if (ddrawsink->offscreen_surface) {
+    if (IDirectDrawSurface7_IsLost (ddrawsink->offscreen_surface) == DD_OK) {
+      /* no problem with our offscreen surface */
+      return TRUE;
+    } else {
+      /* our offscreen surface was lost, try to restore it */
+      if (IDirectDrawSurface7_Restore (ddrawsink->offscreen_surface) == DD_OK) {
+        /* restore is done */
+        GST_CAT_LOG_OBJECT (directdrawsink_debug, ddrawsink,
+            "Our offscreen surface" " was restored after lost");
+        return TRUE;
+      } else {
+        /* failed to restore our offscreen surface, 
+         * probably because the display mode was changed. 
+         * Release this surface and recreate a new one.
+         */
+        GST_CAT_LOG_OBJECT (directdrawsink_debug, ddrawsink,
+            "Our offscreen surface"
+            " was lost and display mode has changed. Destroy and recreate our surface.");
+        IDirectDrawSurface7_Release (ddrawsink->offscreen_surface);
+        ddrawsink->offscreen_surface = NULL;
+      }
+    }
+  }
 
   memset (&dd_surface_desc, 0, sizeof (dd_surface_desc));
   dd_surface_desc.dwSize = sizeof (dd_surface_desc);
@@ -1185,38 +1379,19 @@ gst_directdraw_sink_create_ddraw_surface (GstDirectDrawSink * ddrawsink)
   memcpy (&(dd_surface_desc.ddpfPixelFormat), &ddrawsink->dd_pixel_format,
       sizeof (DDPIXELFORMAT));
 
-  dd_surface_desc.ddsCaps.dwCaps =
-      DDSCAPS_OFFSCREENPLAIN /*|DDSCAPS_SYSTEMMEMORY */ ;
-  hRes =
-      IDirectDraw7_CreateSurface (ddrawsink->ddraw_object, &dd_surface_desc,
+  dd_surface_desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
+  hres = IDirectDraw7_CreateSurface (ddrawsink->ddraw_object, &dd_surface_desc,
       &ddrawsink->offscreen_surface, NULL);
-  if (hRes != DD_OK) {
+  if (hres != DD_OK) {
     GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
         "create_ddraw_surface:CreateSurface (offscreen surface for buffer_pool) failed %s",
-        DDErrorString (hRes));
+        DDErrorString (hres));
     return FALSE;
   }
+
+  ddrawsink->must_recreate_offscreen = FALSE;
+
   return TRUE;
-}
-
-static void
-gst_directdraw_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
-    GstClockTime * start, GstClockTime * end)
-{
-  GstDirectDrawSink *ddrawsink;
-
-  ddrawsink = GST_DIRECTDRAW_SINK (bsink);
-
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
-    *start = GST_BUFFER_TIMESTAMP (buf);
-    if (GST_BUFFER_DURATION_IS_VALID (buf)) {
-      *end = *start + GST_BUFFER_DURATION (buf);
-    } else {
-      if (ddrawsink->fps_n > 0) {
-        *end = *start + (GST_SECOND * ddrawsink->fps_d) / ddrawsink->fps_n;
-      }
-    }
-  }
 }
 
 static int
@@ -1254,23 +1429,57 @@ EnumModesCallback2 (LPDDSURFACEDESC2 lpDDSurfaceDesc, LPVOID lpContext)
   if ((lpDDSurfaceDesc->ddpfPixelFormat.dwFlags & DDPF_RGB) != DDPF_RGB)
     return DDENUMRET_OK;
 
-  format_caps = gst_caps_new_simple ("video/x-raw-rgb",
-      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
-      "bpp", G_TYPE_INT, lpDDSurfaceDesc->ddpfPixelFormat.dwRGBBitCount,
-      "depth", G_TYPE_INT,
-      gst_directdraw_sink_get_depth (&lpDDSurfaceDesc->ddpfPixelFormat),
-      "endianness", G_TYPE_INT, G_LITTLE_ENDIAN, "red_mask", G_TYPE_INT,
-      lpDDSurfaceDesc->ddpfPixelFormat.dwRBitMask, "green_mask", G_TYPE_INT,
-      lpDDSurfaceDesc->ddpfPixelFormat.dwGBitMask, "blue_mask", G_TYPE_INT,
-      lpDDSurfaceDesc->ddpfPixelFormat.dwBBitMask, NULL);
+  format_caps =
+      gst_directdraw_sink_create_caps_from_surfacedesc (lpDDSurfaceDesc);
 
   if (format_caps) {
     gst_caps_append (ddrawsink->caps, format_caps);
   }
 
   return DDENUMRET_OK;
+}
+
+static GstCaps *
+gst_directdraw_sink_create_caps_from_surfacedesc (LPDDSURFACEDESC2 desc)
+{
+  GstCaps *caps = NULL;
+  gint endianness = G_LITTLE_ENDIAN;
+  gint depth;
+
+  if ((desc->ddpfPixelFormat.dwFlags & DDPF_RGB) != DDPF_RGB)
+    return NULL;
+
+  depth = gst_directdraw_sink_get_depth (&desc->ddpfPixelFormat);
+
+  if (desc->ddpfPixelFormat.dwRGBBitCount == 24 ||
+      desc->ddpfPixelFormat.dwRGBBitCount == 32) {
+    /* ffmpegcolorspace handles 24/32 bpp RGB as big-endian. */
+    endianness = G_BIG_ENDIAN;
+    desc->ddpfPixelFormat.dwRBitMask =
+        GUINT32_TO_BE (desc->ddpfPixelFormat.dwRBitMask);
+    desc->ddpfPixelFormat.dwGBitMask =
+        GUINT32_TO_BE (desc->ddpfPixelFormat.dwGBitMask);
+    desc->ddpfPixelFormat.dwBBitMask =
+        GUINT32_TO_BE (desc->ddpfPixelFormat.dwBBitMask);
+    if (desc->ddpfPixelFormat.dwRGBBitCount == 24) {
+      desc->ddpfPixelFormat.dwRBitMask >>= 8;
+      desc->ddpfPixelFormat.dwGBitMask >>= 8;
+      desc->ddpfPixelFormat.dwBBitMask >>= 8;
+    }
+  }
+
+  caps = gst_caps_new_simple ("video/x-raw-rgb",
+      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+      "bpp", G_TYPE_INT, desc->ddpfPixelFormat.dwRGBBitCount,
+      "depth", G_TYPE_INT, depth,
+      "endianness", G_TYPE_INT, endianness,
+      "red_mask", G_TYPE_INT, desc->ddpfPixelFormat.dwRBitMask,
+      "green_mask", G_TYPE_INT, desc->ddpfPixelFormat.dwGBitMask,
+      "blue_mask", G_TYPE_INT, desc->ddpfPixelFormat.dwBBitMask, NULL);
+
+  return caps;
 }
 
 static GstCaps *
@@ -1297,12 +1506,13 @@ gst_directdraw_sink_get_ddrawcaps (GstDirectDrawSink * ddrawsink)
   /*  we don't test for DDCAPS_BLTSTRETCH on the hardware as the directdraw emulation layer can do it */
   if (!(ddcaps_hardware.dwCaps & DDCAPS_BLTFOURCC)) {
     DDSURFACEDESC2 surface_desc;
-    gint endianness = G_LITTLE_ENDIAN;
-    gint depth;
 
     GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
         "hardware doesn't support blit from one colorspace to another one. "
         "so we will create a caps with only the current display mode");
+
+    /* save blit caps */
+    ddrawsink->can_blit_between_colorspace = FALSE;
 
     surface_desc.dwSize = sizeof (DDSURFACEDESC);
     hRes = IDirectDraw7_GetDisplayMode (ddrawsink->ddraw_object, &surface_desc);
@@ -1313,36 +1523,8 @@ gst_directdraw_sink_get_ddrawcaps (GstDirectDrawSink * ddrawsink)
       return NULL;
     }
 
-    depth = gst_directdraw_sink_get_depth (&surface_desc.ddpfPixelFormat);
-
-    if (surface_desc.ddpfPixelFormat.dwRGBBitCount == 24 ||
-        surface_desc.ddpfPixelFormat.dwRGBBitCount == 32) {
-      /* ffmpegcolorspace handles 24/32 bpp RGB as big-endian. */
-      endianness = G_BIG_ENDIAN;
-      surface_desc.ddpfPixelFormat.dwRBitMask =
-          GUINT32_TO_BE (surface_desc.ddpfPixelFormat.dwRBitMask);
-      surface_desc.ddpfPixelFormat.dwGBitMask =
-          GUINT32_TO_BE (surface_desc.ddpfPixelFormat.dwGBitMask);
-      surface_desc.ddpfPixelFormat.dwBBitMask =
-          GUINT32_TO_BE (surface_desc.ddpfPixelFormat.dwBBitMask);
-      if (surface_desc.ddpfPixelFormat.dwRGBBitCount == 24) {
-        surface_desc.ddpfPixelFormat.dwRBitMask >>= 8;
-        surface_desc.ddpfPixelFormat.dwGBitMask >>= 8;
-        surface_desc.ddpfPixelFormat.dwBBitMask >>= 8;
-      }
-    }
-
-    format_caps = gst_caps_new_simple ("video/x-raw-rgb",
-        "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
-        "bpp", G_TYPE_INT, surface_desc.ddpfPixelFormat.dwRGBBitCount,
-        "depth", G_TYPE_INT, depth,
-        "endianness", G_TYPE_INT, endianness,
-        "red_mask", G_TYPE_INT, surface_desc.ddpfPixelFormat.dwRBitMask,
-        "green_mask", G_TYPE_INT, surface_desc.ddpfPixelFormat.dwGBitMask,
-        "blue_mask", G_TYPE_INT, surface_desc.ddpfPixelFormat.dwBBitMask, NULL);
-
+    format_caps =
+        gst_directdraw_sink_create_caps_from_surfacedesc (&surface_desc);
     if (format_caps) {
       gst_caps_append (ddrawsink->caps, format_caps);
     }
@@ -1355,6 +1537,9 @@ gst_directdraw_sink_get_ddrawcaps (GstDirectDrawSink * ddrawsink)
   GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
       "the hardware can blit from one colorspace to another, "
       "then enumerate the colorspace supported by the hardware");
+
+  /* save blit caps */
+  ddrawsink->can_blit_between_colorspace = TRUE;
 
   /* enumerate display modes exposed by directdraw object 
      to know supported RGB modes */
@@ -1376,7 +1561,8 @@ gst_directdraw_sink_get_ddrawcaps (GstDirectDrawSink * ddrawsink)
         ("No supported caps found."), (NULL));
     return NULL;
   }
-  //GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink, "returning caps %s", gst_caps_to_string (ddrawsink->caps));
+
+  /*GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink, "returning caps %s", gst_caps_to_string (ddrawsink->caps)); */
 
   return ddrawsink->caps;
 }
@@ -1418,7 +1604,15 @@ gst_directdraw_sink_surface_create (GstDirectDrawSink * ddrawsink,
         "failed getting pixel format from caps %" GST_PTR_FORMAT, caps);
   }
 
-  if (ddrawsink->ddraw_object) {
+  /* disable return of directdraw surface to buffer alloc because actually I have no solution
+   * to handle display mode changes. The problem is that when the display mode is changed
+   * surface's memory is freed then the upstream filter would crash trying to write to this memory.
+   * Directdraw has a system lock (DDLOCK_NOSYSLOCK to disable it) to prevent display mode changes 
+   * when a surface memory is locked but we need to disable this lock to return multiple buffers (surfaces)
+   * and do not lock directdraw API calls.
+   */
+  if (0) {
+/*  if (ddrawsink->ddraw_object) {*/
     /* Creating an internal surface which will be used as GstBuffer, we used
        the detected pixel format and video dimensions */
 
@@ -1516,6 +1710,29 @@ gst_directdraw_sink_surface_destroy (GstDirectDrawSink * ddrawsink,
 no_sink:
   GST_WARNING ("no sink found in surface");
   return;
+}
+
+static gboolean
+gst_directdraw_sink_surface_check (GstDirectDrawSink * ddrawsink,
+    GstDDrawSurface * surface)
+{
+  if (!surface->surface)
+    return TRUE;                /* system memory buffer */
+
+  if (IDirectDrawSurface7_IsLost (surface->surface) == DD_OK) {
+    /* no problem with this surface */
+    return TRUE;
+  } else {
+    /* this surface was lost, try to restore it */
+    if (IDirectDrawSurface7_Restore (ddrawsink->offscreen_surface) == DD_OK) {
+      /* restore is done */
+      GST_CAT_LOG_OBJECT (directdrawsink_debug, ddrawsink, "A surface from our"
+          " bufferpool was restored after lost");
+      return TRUE;
+    }
+  }
+
+  return FALSE;
 }
 
 static void
