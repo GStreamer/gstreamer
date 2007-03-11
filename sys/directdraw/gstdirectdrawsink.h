@@ -120,6 +120,15 @@ struct _GstDirectDrawSink
 
   /* TRUE when directdraw objects are setup */
   gboolean setup;
+
+  /* TRUE if the hardware support blitting from one colorspace to another */
+  gboolean can_blit_between_colorspace;
+
+  /* this flag is used to force re-creation of our offscreen surface 
+   * it's need when hardware doesn't support fourcc blit and the bit deph
+   * of the current display mode changes.
+   */
+  gboolean must_recreate_offscreen;
 };
 
 struct _GstDirectDrawSinkClass

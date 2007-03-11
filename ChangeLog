@@ -1,3 +1,9 @@
+2007-03-11  Sebastien Moutte  <sebastien@moutte.net>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	* sys/directdraw/gstdirectdrawsink.h:
+	Handle display mode changes during playback.
+
 2007-03-10  David Schleef  <ds@schleef.org>
 
 	* configure.ac:
