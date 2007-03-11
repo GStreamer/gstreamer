@@ -24,14 +24,15 @@
 #include <gst/gst.h>
 
 #include <gst/app/gstappsrc.h>
+#include <gst/app/gstappsink.h>
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (app_src_debug, "appsrc", 0, "appsrc");
+  gst_element_register (plugin, "appsrc", GST_RANK_NONE, GST_TYPE_APP_SRC);
+  gst_element_register (plugin, "appsink", GST_RANK_NONE, GST_TYPE_APP_SINK);
 
-  return gst_element_register (plugin, "appsrc", GST_RANK_NONE,
-      GST_TYPE_APP_SRC);
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

@@ -5,5 +5,5 @@ else
 DIRECTFB_DIR=
 endif
 
-SUBDIRS= $(DIRECTFB_DIR)
-DIST_SUBDIRS= directfb
+SUBDIRS= $(DIRECTFB_DIR) app
+DIST_SUBDIRS= directfb app

@@ -1088,6 +1088,7 @@ sys/directdraw/Makefile
 sys/directsound/Makefile
 sys/osxvideo/Makefile
 examples/Makefile
+examples/app/Makefile
 examples/directfb/Makefile
 ext/amrwb/Makefile
 ext/alsaspdif/Makefile
