@@ -77,6 +77,7 @@ struct _GstMultiQueueItem
 };
 
 static GstSingleQueue *gst_single_queue_new (GstMultiQueue * mqueue);
+static void gst_single_queue_free (GstSingleQueue * squeue);
 
 static void wake_up_next_non_linked (GstMultiQueue * mq);
 static void compute_next_non_linked (GstMultiQueue * mq);
@@ -260,19 +261,10 @@ static void
 gst_multi_queue_finalize (GObject * object)
 {
   GstMultiQueue *mqueue = GST_MULTI_QUEUE (object);
-  GList *tmp = mqueue->queues;
 
-  /* FILLME ? */
-  /* DRAIN QUEUES */
-  while (tmp) {
-    GstSingleQueue *sq = (GstSingleQueue *) tmp->data;
-
-    gst_data_queue_flush (sq->queue);
-    g_object_unref (G_OBJECT (sq->queue));
-
-    tmp = g_list_next (tmp);
-  }
+  g_list_foreach (mqueue->queues, (GFunc) gst_single_queue_free, NULL);
   g_list_free (mqueue->queues);
+  mqueue->queues = NULL;
 
   /* free/unref instance data */
   g_mutex_free (mqueue->qlock);
@@ -998,6 +990,15 @@ single_queue_check_full (GstDataQueue * dataq, guint visible, guint bytes,
 
   }
   return res;
+}
+
+static void
+gst_single_queue_free (GstSingleQueue * sq)
+{
+  /* DRAIN QUEUE */
+  gst_data_queue_flush (sq->queue);
+  g_object_unref (sq->queue);
+  g_free (sq);
 }
 
 static GstSingleQueue *

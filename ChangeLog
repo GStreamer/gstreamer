@@ -1,3 +1,9 @@
+2007-03-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_finalize),
+	(gst_single_queue_free):
+	  Fix small leak (free GstSingleQueue structure too, not only contents).
+
 2007-03-10  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/gstbin.c:(gst_bin_add):
