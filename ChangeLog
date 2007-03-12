@@ -1,3 +1,9 @@
+2007-03-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_srcpad_event):
+	  Fix handling of -1 values for start and stop values when seeking, 
+	  and SEEK_CUR+SEEK_END.
+
 2007-03-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/id3v2frames.c: (parse_picture_frame):

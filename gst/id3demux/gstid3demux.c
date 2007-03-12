@@ -672,12 +672,17 @@ gst_id3demux_srcpad_event (GstPad * pad, GstEvent * event)
 
         switch (cur_type) {
           case GST_SEEK_TYPE_SET:
+            if (cur == -1)
+              cur = 0;
             cur += id3demux->strip_start;
             break;
           case GST_SEEK_TYPE_CUR:
             break;
           case GST_SEEK_TYPE_END:
-            cur += id3demux->strip_end;
+            /* Adjust the seek to be relative to the start of any ID3v1 tag */
+            if (cur > 0)
+              cur = 0;
+            cur -= id3demux->strip_end;
             break;
           default:
             g_assert_not_reached ();
@@ -685,12 +690,18 @@ gst_id3demux_srcpad_event (GstPad * pad, GstEvent * event)
         }
         switch (stop_type) {
           case GST_SEEK_TYPE_SET:
-            stop += id3demux->strip_start;
+            if (stop != -1) {
+              /* -1 means the end of the file, pass it upstream intact */
+              stop += id3demux->strip_start;
+            }
             break;
           case GST_SEEK_TYPE_CUR:
             break;
           case GST_SEEK_TYPE_END:
-            stop += id3demux->strip_end;
+            /* Adjust the seek to be relative to the start of any ID3v1 tag */
+            if (stop > 0)
+              stop = 0;
+            stop -= id3demux->strip_end;
             break;
           default:
             break;
