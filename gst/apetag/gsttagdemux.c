@@ -732,12 +732,18 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
 
         switch (cur_type) {
           case GST_SEEK_TYPE_SET:
+            if (cur == -1)
+              cur = 0;
             cur += tagdemux->priv->strip_start;
             break;
           case GST_SEEK_TYPE_CUR:
             break;
           case GST_SEEK_TYPE_END:
-            cur += tagdemux->priv->strip_end;
+            /* Adjust the seek to be relative to the start of any end tag
+             * (note: 10 bytes before end is represented by stop=-10) */
+            if (cur > 0)
+              cur = 0;
+            cur -= tagdemux->priv->strip_end;
             break;
           default:
             g_assert_not_reached ();
@@ -745,12 +751,19 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
         }
         switch (stop_type) {
           case GST_SEEK_TYPE_SET:
-            stop += tagdemux->priv->strip_start;
+            if (stop != -1) {
+              /* -1 means the end of the file, pass it upstream intact */
+              stop += tagdemux->priv->strip_start;
+            }
             break;
           case GST_SEEK_TYPE_CUR:
             break;
           case GST_SEEK_TYPE_END:
-            stop += tagdemux->priv->strip_end;
+            /* Adjust the seek to be relative to the start of any end tag
+             * (note: 10 bytes before end is represented by stop=-10) */
+            if (stop > 0)
+              stop = 0;
+            stop -= tagdemux->priv->strip_end;
             break;
           default:
             break;
