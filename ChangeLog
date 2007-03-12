@@ -87,6 +87,8 @@
 	* ext/taglib/gstid3v2mux.cc:
 	Add write support for GST_TAG_MUSICBRAINZ_SORTNAME (TSOP) tag.
 	Fixes #414496.
+	
+	Patch by: Alex Lancaster <alexl at users sourceforge net>
 
 2007-03-09  Wim Taymans  <wim@fluendo.com>
 
