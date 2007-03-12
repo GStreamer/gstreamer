@@ -782,6 +782,12 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   GST_DEBUG_OBJECT (dec, "frame dimension %dx%d, offset %d:%d",
       dec->info.frame_width, dec->info.frame_height,
       dec->info.offset_x, dec->info.offset_y);
+  if (dec->info.pixelformat != OC_PF_420) {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dec), STREAM, DECODE,
+        (NULL), ("pixel formats other than 4:2:0 not yet supported"));
+
+    return GST_FLOW_ERROR;
+  }
 
   if (dec->crop) {
     /* add black borders to make width/height/offsets even. we need this because

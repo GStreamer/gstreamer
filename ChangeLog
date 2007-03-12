@@ -1,3 +1,11 @@
+2007-03-13  Michael Smith  <msmith@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_handle_type_packet):
+	  Since the plugin doesn't support anything other than 4:2:0 right
+	  now, post an error and fail if we get something else. Won't matter
+	  until libtheora supports the other pixel formats, but hopefully
+	  that'll be soon...
+
 2007-03-10  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:(gst_base_audio_sink_render):
