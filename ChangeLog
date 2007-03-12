@@ -1,3 +1,8 @@
+2007-03-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* examples/app/.cvsignore:
+	The buildbot demands .cvsignore files, and I comply.
+
 2007-03-11  Sebastien Moutte  <sebastien@moutte.net>
 
 	* sys/directdraw/gstdirectdrawsink.c:
