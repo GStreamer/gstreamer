@@ -433,10 +433,10 @@ parse_picture_frame (ID3TagsWorking * work)
   GstCaps *image_caps = NULL;
   gboolean is_pic_uri = FALSE;
   guint8 txt_encoding, pic_type;
-  gchar *mime_str = NULL;
+  gchar *c, *mime_str = NULL;
   gint len, datalen;
 
-  GST_LOG ("APIC frame");
+  GST_LOG ("APIC frame (ID3v2.%u)", ID3V2_VER_MAJOR (work->hdr.version));
 
   if (work->parse_size < 1 + 1 + 1 + 1 + 1)
     goto not_enough_data;
@@ -445,8 +445,32 @@ parse_picture_frame (ID3TagsWorking * work)
   ++work->parse_data;
   --work->parse_size;
 
-  if (!parse_id_string (work, &mime_str, &len, &datalen)) {
-    return FALSE;
+  /* Read image format; in early ID3v2 versions this is a fixed-length
+   * 3-character string without terminator; in later versions (>= 2.3.0)
+   * this is a NUL-terminated string of variable length */
+  if (ID3V2_VER_MAJOR (work->hdr.version) < 3) {
+    if (work->parse_size < 3)
+      goto not_enough_data;
+
+    mime_str = g_strndup ((gchar *) work->parse_data, 3);
+    len = 3;
+  } else {
+    if (!parse_id_string (work, &mime_str, &len, &datalen))
+      return FALSE;
+    ++len;                      /* for string terminator */
+  }
+
+  /* Fix up 'jpg' => 'jpeg' in mime/media type */
+  if (mime_str != NULL &&
+      (g_ascii_strcasecmp (mime_str, "jpg") == 0 ||
+          g_ascii_strcasecmp (mime_str, "image/jpg") == 0)) {
+    g_free (mime_str);
+    mime_str = g_strdup ("jpeg");
+  }
+
+  /* Make lower-case */
+  for (c = mime_str; c != NULL && *c != '\0'; ++c) {
+    *c = g_ascii_tolower (*c);
   }
 
   is_pic_uri = (mime_str != NULL && strcmp (mime_str, "-->") == 0);
@@ -459,12 +483,13 @@ parse_picture_frame (ID3TagsWorking * work)
     mime_str = tmp;
   }
 
-  if (work->parse_size < (len + 1) + 1 + 1 + 1)
+  if (work->parse_size < len + 1 + 1 + 1)
     goto not_enough_data;
 
-  work->parse_data += (len + 1);
-  work->parse_size -= (len + 1);
+  work->parse_data += len;
+  work->parse_size -= len;
 
+  /* Read image type */
   pic_type = work->parse_data[0];
   ++work->parse_data;
   --work->parse_size;

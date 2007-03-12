@@ -1,3 +1,12 @@
+2007-03-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3v2frames.c: (parse_picture_frame):
+	  Fix parsing of ID3 v2.2.0 PIC frames. Only in version >= 2.3.0 is
+	  the image format a variable-length NUL-terminated string; in
+	  versions before that the image format is a fixed-length string of
+	  3 characters (see #348644 for a sample tag).
+	  Also make supplied mime type lower-case and fix up 'jpg' to 'jpeg'.
+
 2007-03-10  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/MANIFEST:
