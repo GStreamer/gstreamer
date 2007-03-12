@@ -1,3 +1,10 @@
+2007-03-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstsystemclock.c: (gst_system_clock_init),
+	(gst_system_clock_start_async), (gst_system_clock_id_wait_async):
+	Defer starting the async system clock thread until the first async
+	wait is scheduled. Fixes #414986.
+
 2007-03-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_finalize),

@@ -65,6 +65,7 @@ static GstClockReturn gst_system_clock_id_wait_async (GstClock * clock,
 static void gst_system_clock_id_unschedule (GstClock * clock,
     GstClockEntry * entry);
 static void gst_system_clock_async_thread (GstClock * clock);
+static gboolean gst_system_clock_start_async (GstSystemClock * clock);
 
 static GStaticMutex _gst_sysclock_mutex = G_STATIC_MUTEX_INIT;
 
@@ -122,31 +123,18 @@ gst_system_clock_class_init (GstSystemClockClass * klass)
 static void
 gst_system_clock_init (GstSystemClock * clock)
 {
-  GError *error = NULL;
-
   GST_OBJECT_FLAG_SET (clock,
       GST_CLOCK_FLAG_CAN_DO_SINGLE_SYNC |
       GST_CLOCK_FLAG_CAN_DO_SINGLE_ASYNC |
       GST_CLOCK_FLAG_CAN_DO_PERIODIC_SYNC |
       GST_CLOCK_FLAG_CAN_DO_PERIODIC_ASYNC);
 
-  GST_OBJECT_LOCK (clock);
-  clock->thread = g_thread_create ((GThreadFunc) gst_system_clock_async_thread,
-      clock, TRUE, &error);
-  if (error)
-    goto no_thread;
-
-  /* wait for it to spin up */
-  GST_CLOCK_WAIT (clock);
-  GST_OBJECT_UNLOCK (clock);
-  return;
-
-  /* ERRORS */
-no_thread:
-  {
-    g_warning ("could not create async clock thread: %s", error->message);
-    GST_OBJECT_UNLOCK (clock);
-  }
+#if 0
+  /* Uncomment this to start the async clock thread straight away */
+  GST_CLOCK_LOCK (clock);
+  gst_system_clock_start_async (clock);
+  GST_CLOCK_UNLOCK (clock);
+#endif
 }
 
 static void
@@ -459,6 +447,34 @@ gst_system_clock_id_wait_jitter (GstClock * clock, GstClockEntry * entry,
   return ret;
 }
 
+/* Start the async clock thread. Must be called with the object lock
+ * held */
+static gboolean
+gst_system_clock_start_async (GstSystemClock * clock)
+{
+  GError *error = NULL;
+
+  if (clock->thread != NULL)
+    return TRUE;                /* Thread already running. Nothing to do */
+
+  clock->thread = g_thread_create ((GThreadFunc) gst_system_clock_async_thread,
+      clock, TRUE, &error);
+  if (error)
+    goto no_thread;
+
+  /* wait for it to spin up */
+  GST_CLOCK_WAIT (clock);
+
+  return TRUE;
+
+  /* ERRORS */
+no_thread:
+  {
+    g_warning ("could not create async clock thread: %s", error->message);
+  }
+  return FALSE;
+}
+
 /* Add an entry to the list of pending async waits. The entry is inserted
  * in sorted order. If we inserted the entry at the head of the list, we
  * need to signal the thread as it might either be waiting on it or waiting
@@ -472,6 +488,11 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
   GST_CAT_DEBUG (GST_CAT_CLOCK, "adding entry %p", entry);
 
   GST_OBJECT_LOCK (clock);
+
+  /* Start the clock async thread if needed */
+  if (!gst_system_clock_start_async (GST_SYSTEM_CLOCK (clock)))
+    goto thread_error;
+
   /* need to take a ref */
   gst_clock_id_ref ((GstClockID) entry);
   /* insert the entry in sorted order */
@@ -488,6 +509,10 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
   GST_OBJECT_UNLOCK (clock);
 
   return GST_CLOCK_OK;
+
+thread_error:
+  /* Could not start the async clock thread */
+  return GST_CLOCK_ERROR;
 }
 
 /* unschedule an entry. This will set the state of the entry to GST_CLOCK_UNSCHEDULED
