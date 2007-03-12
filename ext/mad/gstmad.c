@@ -396,6 +396,12 @@ gst_mad_convert_sink (GstPad * pad, GstFormat src_format, gint64 src_value,
     return TRUE;
   }
 
+  /* -1 always maps to -1, and 0 to 0, we don't need any more info for that */
+  if (src_value == -1 || src_value == 0) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
   mad = GST_MAD (GST_PAD_PARENT (pad));
 
   if (mad->vbr_average == 0)
@@ -440,6 +446,12 @@ gst_mad_convert_src (GstPad * pad, GstFormat src_format, gint64 src_value,
   GstMad *mad;
 
   if (src_format == *dest_format) {
+    *dest_value = src_value;
+    return TRUE;
+  }
+
+  /* -1 always maps to -1, and 0 to 0, we don't need any more info for that */
+  if (src_value == -1 || src_value == 0) {
     *dest_value = src_value;
     return TRUE;
   }

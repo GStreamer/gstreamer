@@ -1,5 +1,11 @@
 2007-03-12  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/mad/gstmad.c: (gst_mad_convert_sink), (gst_mad_convert_src):
+	When handling seeks, don't convert -1 start or stop values to a bogus
+	byte position - pass them upstream as -1.
+
+2007-03-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
 	(mp3_type_frame_length_from_header), (gst_mp3parse_reset),
 	(gst_mp3parse_init), (gst_mp3parse_sink_event),
