@@ -1,3 +1,31 @@
+2007-03-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(mp3_type_frame_length_from_header), (gst_mp3parse_reset),
+	(gst_mp3parse_init), (gst_mp3parse_sink_event),
+	(gst_mp3parse_emit_frame), (gst_mp3parse_chain),
+	(gst_mp3parse_change_state), (mp3parse_time_to_bytepos),
+	(mp3parse_bytepos_to_time), (mp3parse_total_bytes),
+	(mp3parse_total_time), (mp3parse_handle_seek),
+	(mp3parse_src_event), (mp3parse_src_query),
+	(mp3parse_get_query_types), (plugin_init):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	Implement seeking via average bitrate, and position+duration
+	querying in mp3parse. Later, it will support frame-accurate seeking by
+	building a seek table as it parses.
+
+	Add 'parsed=false' to the sink pad caps, and 'parsed=true' to the src
+	pad caps. Bump the priority to PRIMARY+1 so that it is autoplugged
+	before any extant MP3 decoder plugin. This allows us to remove framing
+	support from the decoders, if we want, and will provide them with
+	accurate seeking automatically once it is finished.
+
+	Fix the handling of MPEG-1 Layer 1 files.
+
+	Partially fix timestamping of packets arriving from a demuxer by
+	queueing the incoming timestamp until the next packet starts, rather
+	than applying it immediately to the next pushed buffer.
+
 2007-03-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_header_ext):

@@ -44,10 +44,18 @@ typedef struct _GstMPEGAudioParseClass GstMPEGAudioParseClass;
 struct _GstMPEGAudioParse {
   GstElement element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad *sinkpad, *srcpad;
 
-  GstClockTime last_ts;
   GstClockTime next_ts;
+  /* Offset as supplied by incoming buffers */
+  gint64 cur_offset;
+
+  /* Upcoming timestamp given on an incoming buffer and
+   * the offset at which it becomes active */
+  GstClockTime pending_ts;
+  gint64 pending_offset;
+  /* Offset since the last newseg */
+  gint64 tracked_offset;
 
   GstAdapter *adapter;
 
@@ -57,6 +65,12 @@ struct _GstMPEGAudioParse {
 
   gboolean resyncing; /* True when attempting to resync (stricter checks are
                          performed) */
+
+  /* VBR tracking */
+  guint   avg_bitrate;
+  guint64 bitrate_sum;
+  guint   frame_count;
+  guint   last_posted_bitrate;
 };
 
 struct _GstMPEGAudioParseClass {
@@ -64,6 +78,12 @@ struct _GstMPEGAudioParseClass {
 };
 
 GType gst_mp3parse_get_type(void);
+
+#ifdef __GCC__
+#define ATTR_UNUSED __attribute__ ((unused)
+#else
+#define ATTR_UNUSED 
+#endif
 
 G_END_DECLS
 
