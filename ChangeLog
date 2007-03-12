@@ -56,6 +56,8 @@
 	Add read support for GST_TAG_MUSICBRAINZ_SORTNAME (TSOP) tag.
 	Fixes #414496.
 
+	Patch by: Alex Lancaster <alexl at users sourceforge net>
+
 2007-03-09  Wim Taymans  <wim@fluendo.com>
 
 	* ext/libvisual/visual.c: (gst_visual_sink_setcaps),
