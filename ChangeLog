@@ -1,3 +1,12 @@
+2007-03-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/mpegaudioparse/Makefile.am:
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	* gst/mpegaudioparse/mpegaudioparse.vcproj:
+	Remove bogus 2nd copy of mp3parse - it's actually
+	in -ugly.
+
 2007-03-12  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* examples/app/.cvsignore:
