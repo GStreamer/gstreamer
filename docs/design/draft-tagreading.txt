@@ -1,0 +1,47 @@
+Tagreading
+----------
+
+The tagreading (metadata reading) use case for mediacenter applications is not
+to well supported by the current GStreamer architecture. It uses demuxers on the
+files, which generelly said takes too long. what we wan't is secialized elements
+that just do the tag-reading.
+
+The idea is to have one plugin 'tagread' simmilar to 'typefind' that provides
+elements for the different formats. The advantage of having those in on plugin
+would be that when building a metadatabase one only loads this plugin.
+
+Then there would be a tagbin, that similar to decodebin does a typefind and then
+plugs the right tagread element. It might plug a demuxer as a fallback solution.
+
+Still it would be nice to reuse code from demuxers/tag-filters.
+
+
+Design
+------
+
+The plan is that applications can do the following:
+  pipeline = "filesrc ! tagbin"
+  for (file_path in list_of_files) {
+    filesrc.location=file_path
+    pipeline.set_state(PLAYING)
+    // wait for TAGS & EOS
+    pipeline.set_state(READY)
+  }
+
+* it should have one sinkpad of type ANY
+* it should send EOS when all metadata has been read
+  (and all tags have been sent)
+* it could have a generic element that uses taglib
+  http://developer.kde.org/~wheeler/taglib.html
+* tagread-elements should have RANK_NONE to be not autoplugged by decodebin
+
+
+Reuse
+-----
+
+ogg : gst-plugins-base/ext/ogg
+avi : gst-plugins-good/gst/avi
+mp3 : gst-plugins-good/gst/id3demux
+wav : gst-plugins-good/gst/wavparse
+qt  : gst-plugins-bad/gst/qtdemux
+

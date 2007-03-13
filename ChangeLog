@@ -1,3 +1,15 @@
+2007-03-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/design/draft-tagreading.txt:
+	* docs/random/ensonic/audiobaseclasses.txt:
+	  Do some Architect work.
+
+	* gst/gstobject.c: (gst_object_set_name):
+	  Add a WARNING.
+
+	* gst/gstpad.c:
+	  Add docs that point from gst_pad_get_range to gst_pad_pull_range
+
 2007-03-12  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstsystemclock.c: (gst_system_clock_init),

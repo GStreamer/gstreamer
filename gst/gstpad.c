@@ -3748,6 +3748,8 @@ not_connected:
  * @buffer's caps must either be unset or the same as what is already configured
  * on @pad. Renegotiation within a running pull-mode pipeline is not supported.
  *
+ * This is a lowlevel function. Usualy gst_pad_pull_range() is used.
+ *
  * Returns: a #GstFlowReturn from the pad.
  *
  * MT safe.
@@ -3864,9 +3866,9 @@ not_negotiated:
  * @size: The length of the buffer
  * @buffer: a pointer to hold the #GstBuffer, returns GST_FLOW_ERROR if %NULL.
  *
- * Pulls a buffer from the peer pad. 
+ * Pulls a @buffer from the peer pad.
  *
- * This function will first trigger the pad block signal if it was 
+ * This function will first trigger the pad block signal if it was
  * installed.
  *
  * When @pad is not linked #GST_FLOW_NOT_LINKED is returned else this

@@ -680,6 +680,7 @@ gst_object_set_name (GstObject * object, const gchar * name)
   /* error */
 had_parent:
   {
+    GST_WARNING ("parented objects can't be renamed");
     GST_OBJECT_UNLOCK (object);
     return FALSE;
   }
