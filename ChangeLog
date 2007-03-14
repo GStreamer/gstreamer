@@ -1,3 +1,10 @@
+2007-03-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstchildproxy.c: (gst_child_proxy_get_property),
+	(gst_child_proxy_set_property):
+	  Invert precondition check to be alike the ones in the mimiced gobject
+	  api.
+
 2007-03-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/design/draft-tagreading.txt:

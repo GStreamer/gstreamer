@@ -214,7 +214,7 @@ gst_child_proxy_lookup (GstObject * object, const gchar * name,
  * gst_child_proxy_get_property:
  * @object: object to query
  * @name: name of the property
- * @value: an uninitialized #GValue that should take the result.
+ * @value: a #GValue that should take the result.
  *
  * Gets a single property using the GstChildProxy mechanism.
  * You are responsible for for freeing it by calling g_value_unset()
@@ -228,7 +228,7 @@ gst_child_proxy_get_property (GstObject * object, const gchar * name,
 
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (name != NULL);
-  g_return_if_fail (!G_IS_VALUE (value));
+  g_return_if_fail (G_IS_VALUE (value));
 
   if (!gst_child_proxy_lookup (object, name, &target, &pspec))
     goto not_found;
@@ -316,7 +316,7 @@ gst_child_proxy_set_property (GstObject * object, const gchar * name,
 
   g_return_if_fail (GST_IS_OBJECT (object));
   g_return_if_fail (name != NULL);
-  g_return_if_fail (!G_IS_VALUE (value));
+  g_return_if_fail (G_IS_VALUE (value));
 
   if (!gst_child_proxy_lookup (object, name, &target, &pspec))
     goto not_found;
