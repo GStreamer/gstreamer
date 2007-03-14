@@ -62,47 +62,52 @@ check_bus (GstClockTime max_wait_time)
   return TRUE;
 }
 
+// fix below
+
 static void
-equalizer_set_band_value (GstElement * eq, GValueArray * arr, guint band,
-    gdouble val)
+equalizer_set_band_value (GstElement * eq, guint band, gdouble val)
 {
-  g_value_set_double (g_value_array_get_nth (arr, band), val);
-  g_object_set (eq, "band-values", arr, NULL);
+  GstObject *child;
+
+  child = gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (eq), band);
+  g_object_set (child, "gain", val, NULL);
+  gst_object_unref (child);
   g_print ("Band %2d: %.2f\n", band, val);
 }
 
 static void
-equalizer_set_all_band_values (GstElement * eq, GValueArray * arr, gdouble val)
+equalizer_set_all_band_values (GstElement * eq, guint num, gdouble val)
 {
   gint i;
+  GstObject *child;
 
-  for (i = 0; i < arr->n_values; ++i) {
-    g_value_set_double (g_value_array_get_nth (arr, i), val);
+  for (i = 0; i < num; i++) {
+    child = gst_child_proxy_get_child_by_index (GST_CHILD_PROXY (eq), i);
+    g_object_set (child, "gain", val, NULL);
+    gst_object_unref (child);
   }
-  g_object_set (eq, "band-values", arr, NULL);
   g_print ("All bands: %.2f\n", val);
 }
 
+// fix above
+
 static gboolean
-equalizer_set_band_value_and_wait (GstElement * eq, GValueArray * arr,
-    guint band, gdouble val)
+equalizer_set_band_value_and_wait (GstElement * eq, guint band, gdouble val)
 {
-  equalizer_set_band_value (eq, arr, band, val);
+  equalizer_set_band_value (eq, band, val);
   return check_bus (100 * GST_MSECOND);
 }
 
 static gboolean
-equalizer_set_all_band_values_and_wait (GstElement * eq, GValueArray * arr,
-    gdouble val)
+equalizer_set_all_band_values_and_wait (GstElement * eq, guint num, gdouble val)
 {
-  equalizer_set_all_band_values (eq, arr, val);
+  equalizer_set_all_band_values (eq, num, val);
   return check_bus (100 * GST_MSECOND);
 }
 
 static void
 do_slider_fiddling (GstElement * playbin, GstElement * eq)
 {
-  GValueArray *arr;
   gboolean stop;
   guint num_bands, i;
   gdouble d, step = 0.2;
@@ -113,54 +118,41 @@ do_slider_fiddling (GstElement * playbin, GstElement * eq)
 
   g_print ("%u bands.\n", num_bands);
 
-  arr = g_value_array_new (num_bands);
-  for (i = 0; i < num_bands; ++i) {
-    GValue val = { 0, };
-
-    g_value_init (&val, G_TYPE_DOUBLE);
-    g_value_set_double (&val, 0.0);
-    g_value_array_append (arr, &val);
-  }
-
-  g_object_set (eq, "band-values", arr, NULL);
-
   while (!stop) {
     for (i = 0; !stop && i < num_bands; ++i) {
       d = 0.0;
       while (!stop && d <= 1.0) {
-        stop = equalizer_set_band_value_and_wait (eq, arr, i, d);
+        stop = equalizer_set_band_value_and_wait (eq, i, d);
         d += step;
       }
       d = 1.0;
       while (!stop && d >= -1.0) {
-        stop = equalizer_set_band_value_and_wait (eq, arr, i, d);
+        stop = equalizer_set_band_value_and_wait (eq, i, d);
         d -= step;
       }
       d = -1.0;
       while (!stop && d <= 0.0) {
-        stop = equalizer_set_band_value_and_wait (eq, arr, i, d);
+        stop = equalizer_set_band_value_and_wait (eq, i, d);
         d += step;
       }
     }
 
     d = 0.0;
     while (!stop && d <= 1.0) {
-      stop = equalizer_set_all_band_values_and_wait (eq, arr, d);
+      stop = equalizer_set_all_band_values_and_wait (eq, num_bands, d);
       d += step;
     }
     d = 1.0;
     while (!stop && d >= -1.0) {
-      stop = equalizer_set_all_band_values_and_wait (eq, arr, d);
+      stop = equalizer_set_all_band_values_and_wait (eq, num_bands, d);
       d -= step;
     }
     d = -1.0;
     while (!stop && d <= 0.0) {
-      stop = equalizer_set_all_band_values_and_wait (eq, arr, d);
+      stop = equalizer_set_all_band_values_and_wait (eq, num_bands, d);
       d += step;
     }
   }
-
-  g_value_array_free (arr);
 }
 
 int
@@ -236,7 +228,7 @@ main (int argc, char **argv)
   bin = gst_bin_new ("ausinkbin");
   g_assert (bin != NULL);
 
-  eq = gst_element_factory_make ("equalizer", "equalizer");
+  eq = gst_element_factory_make ("equalizer-nbands", "equalizer");
   g_assert (eq != NULL);
 
   auconv = gst_element_factory_make ("audioconvert", "eqauconv");
@@ -249,7 +241,6 @@ main (int argc, char **argv)
 
   if (!gst_element_link (auconv, sink))
     g_error ("Failed to link audioconvert to audio sink");
-
 
   eq_sinkpad = gst_element_get_static_pad (eq, "sink");
   g_assert (eq_sinkpad != NULL);
