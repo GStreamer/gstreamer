@@ -1329,8 +1329,8 @@ again:
     goto done;
 
   /* preroll done, we can sync since we are in PLAYING now. */
-  GST_DEBUG_OBJECT (basesink, "waiting for clock to reach %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (rstart));
+  GST_DEBUG_OBJECT (basesink, "possibly waiting for clock to reach %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (rstart));
 
   /* this function will return immediatly if start == -1, no clock
    * or sync is disabled with GST_CLOCK_BADTIME. */
