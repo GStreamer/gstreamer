@@ -1,3 +1,38 @@
+2007-03-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/equalizer/Makefile.am:
+	* gst/equalizer/gstiirequalizer.c: (_do_init),
+	(gst_iir_equalizer_band_set_property),
+	(gst_iir_equalizer_band_class_init),
+	(gst_iir_equalizer_band_get_type),
+	(gst_iir_equalizer_child_proxy_get_child_by_index),
+	(gst_iir_equalizer_child_proxy_get_children_count),
+	(gst_iir_equalizer_child_proxy_interface_init), (setup_filter),
+	(gst_iir_equalizer_compute_frequencies),
+	(gst_iir_equalizer_transform_ip), (plugin_init):
+	* gst/equalizer/gstiirequalizer10bands.c:
+	(gst_iir_equalizer_10bands_base_init),
+	(gst_iir_equalizer_10bands_class_init),
+	(gst_iir_equalizer_10bands_init),
+	(gst_iir_equalizer_10bands_set_property),
+	(gst_iir_equalizer_10bands_get_property):
+	* gst/equalizer/gstiirequalizer10bands.h:
+	* gst/equalizer/gstiirequalizer3bands.c:
+	(gst_iir_equalizer_3bands_base_init),
+	(gst_iir_equalizer_3bands_class_init),
+	(gst_iir_equalizer_3bands_init),
+	(gst_iir_equalizer_3bands_set_property),
+	(gst_iir_equalizer_3bands_get_property):
+	* gst/equalizer/gstiirequalizer3bands.h:
+	* gst/equalizer/gstiirequalizernbands.c:
+	(gst_iir_equalizer_nbands_base_init),
+	(gst_iir_equalizer_nbands_init):
+	  Add 3 and 10 band version and add missing gst_object_sync_values.
+
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_event),
+	(gst_spectrum_transform_ip):
+	  Add some comments about float support.
+
 2007-03-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/mpegaudioparse/Makefile.am:
