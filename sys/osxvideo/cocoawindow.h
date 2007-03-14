@@ -43,6 +43,7 @@ struct _GstOSXImage;
     int width, height;
     BOOL fullscreen;
     NSOpenGLContext* fullScreenContext; 
+    NSOpenGLContext* actualContext;
 }
 - (void) drawQuad;
 - (void) drawRect: (NSRect) rect;

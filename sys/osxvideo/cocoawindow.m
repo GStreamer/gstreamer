@@ -41,6 +41,7 @@
 
 @ implementation GstOSXVideoSinkWindow
 
+/* The object has to be released */
 - (id) initWithContentRect: (NSRect) rect
 		 styleMask: (unsigned int) styleMask
 		   backing: (NSBackingStoreType) bufferingType 
@@ -84,7 +85,7 @@
 - (void) sendEvent:(NSEvent *) event {
   BOOL taken = NO;
 
-  GST_LOG ("event %p type:%d", event,[event type]);
+  GST_DEBUG ("event %p type:%d", event,[event type]);
 
   if ([event type] == NSKeyDown) {
   }
@@ -128,14 +129,15 @@
 
   self = [super initWithFrame: frame pixelFormat:fmt];
 
-  [[self openGLContext] makeCurrentContext];
-  [[self openGLContext] update];
+   actualContext = [self openGLContext];
+   [actualContext makeCurrentContext];
+   [actualContext update];
 
   /* Black background */
   glClearColor (0.0, 0.0, 0.0, 0.0);
 
   pi_texture = 0;
-  data = g_malloc (2 * 320 * 240);
+  data = nil;
   width = frame.size.width;
   height = frame.size.height;
 
@@ -154,7 +156,7 @@
     return;
   }
 
-  [[self openGLContext] makeCurrentContext];
+  [actualContext makeCurrentContext];
 
   bounds = [self bounds];
 
@@ -163,18 +165,18 @@
 }
 
 - (void) initTextures {
-  NSOpenGLContext *currentContext;
 
-  if (fullscreen)
-    currentContext = fullScreenContext;
-  else
-    currentContext =[self openGLContext];
-
-  [currentContext makeCurrentContext];
+  [actualContext makeCurrentContext];
 
   /* Free previous texture if any */
-  if (initDone) {
+  if (pi_texture) {
     glDeleteTextures (1, &pi_texture);
+  }
+
+  if (data) {
+    data = g_realloc (data, width * height * sizeof(short)); // short or 3byte?
+  } else {
+    data = g_malloc0(width * height * sizeof(short));
   }
   /* Create textures */
   glGenTextures (1, &pi_texture);
@@ -182,6 +184,9 @@
   glEnable (GL_TEXTURE_RECTANGLE_EXT);
   glEnable (GL_UNPACK_CLIENT_STORAGE_APPLE);
 
+  glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+  glPixelStorei (GL_UNPACK_ROW_LENGTH, width);
+  
   glBindTexture (GL_TEXTURE_RECTANGLE_EXT, pi_texture);
 
   /* Use VRAM texturing */
@@ -191,7 +196,6 @@
   /* Tell the driver not to make a copy of the texture but to use
      our buffer */
   glPixelStorei (GL_UNPACK_CLIENT_STORAGE_APPLE, GL_TRUE);
-
 
   /* Linear interpolation */
   glTexParameteri (GL_TEXTURE_RECTANGLE_EXT, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -203,36 +207,34 @@
 		   GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameteri (GL_TEXTURE_RECTANGLE_EXT,
 		   GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glPixelStorei (GL_UNPACK_ROW_LENGTH, 0);
+  // glPixelStorei (GL_UNPACK_ROW_LENGTH, 0); WHY ??
 
   glTexImage2D (GL_TEXTURE_RECTANGLE_EXT, 0, GL_RGBA,
-		width, height, 0, GL_YCBCR_422_APPLE, GL_UNSIGNED_SHORT_8_8_APPLE, data);
+		width, height, 0, 
+		GL_YCBCR_422_APPLE, GL_UNSIGNED_SHORT_8_8_APPLE, data);
 
 
   initDone = 1;
 }
 
 - (void) reloadTexture {
-  NSOpenGLContext *currentContext;
-
   if (!initDone) {
     return;
   }
 
   GST_LOG ("Reloading Texture");
 
-  if (fullscreen)
-    currentContext = fullScreenContext;
-  else
-    currentContext =[self openGLContext];
-  [currentContext makeCurrentContext];
+  [actualContext makeCurrentContext];
 
   glBindTexture (GL_TEXTURE_RECTANGLE_EXT, pi_texture);
+  glPixelStorei (GL_UNPACK_ROW_LENGTH, width);
 
   /* glTexSubImage2D is faster than glTexImage2D
      http://developer.apple.com/samplecode/Sample_Code/Graphics_3D/
      TextureRange/MainOpenGLView.m.htm */
-  glTexSubImage2D (GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0, width, height, GL_YCBCR_422_APPLE, GL_UNSIGNED_SHORT_8_8_APPLE, data);    //FIXME
+  glTexSubImage2D (GL_TEXTURE_RECTANGLE_EXT, 0, 0, 0,
+		   width, height,
+		   GL_YCBCR_422_APPLE, GL_UNSIGNED_SHORT_8_8_APPLE, data);    //FIXME
 }
 
 - (void) cleanUp {
@@ -260,15 +262,9 @@
 }
 
 - (void) drawRect:(NSRect) rect {
-  NSOpenGLContext *currentContext;
   long params[] = { 1 };
 
-  if (fullscreen) {
-    currentContext = fullScreenContext;
-  } else {
-    currentContext =[self openGLContext];
-  }
-  [currentContext makeCurrentContext];
+  [actualContext makeCurrentContext];
 
   CGLSetParameter (CGLGetCurrentContext (), kCGLCPSwapInterval, params);
 
@@ -276,7 +272,7 @@
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   if (!initDone) {
-    [[self openGLContext] flushBuffer];
+    [actualContext flushBuffer];
     return;
   }
 
@@ -284,7 +280,7 @@
   glBindTexture (GL_TEXTURE_RECTANGLE_EXT, pi_texture); // FIXME
   [self drawQuad];
   /* Draw */
-  [currentContext flushBuffer];
+  [actualContext flushBuffer];
 }
 
 - (void) displayTexture {
@@ -337,6 +333,8 @@
       return;
     }
 
+    actualContext = fullScreenContext;
+
     /* Capture display, switch to fullscreen */
     if (CGCaptureAllDisplays () != CGDisplayNoErr) {
       GST_WARNING ("CGCaptureAllDisplays() failed");
@@ -353,7 +351,13 @@
   } else if (fullscreen && !flag) {
     // fullscreen now and needs to go back to normal
     initDone = NO;
+    
+    actualContext = [self openGLContext];
+
     [NSOpenGLContext clearCurrentContext];
+    [fullScreenContext clearDrawable];
+    [fullScreenContext release];
+    fullScreenContext = nil;
 
     CGReleaseAllDisplays ();
 
@@ -373,11 +377,24 @@
   width = w;
   height = h;
 
-  // FIXME : so, do we free, or don't we ?
-  //if (data) g_free(data);
+//  if (data) g_free(data);
 
-  data = g_malloc0 (2 * w * h);
-  [self reloadTexture];
+//  data = g_malloc0 (2 * w * h);
+  [self initTextures];
 }
 
+- (void) dealloc {
+  GST_LOG ("dealloc called");
+  if (data) g_free(data);
+
+  if (fullScreenContext) {
+    [NSOpenGLContext clearCurrentContext];
+    [fullScreenContext clearDrawable];
+    [fullScreenContext release];
+    if (actualContext == fullScreenContext) actualContext = nil;
+    fullScreenContext = nil;
+  }
+
+  [super dealloc];
+}
 @end
