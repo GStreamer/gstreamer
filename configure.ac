@@ -428,7 +428,7 @@ return 0;
     fi
 
     dnl check for XOverlay libraries
-    AG_AG_GST_CHECK_XV
+    AG_GST_CHECK_XV
   fi
 ])
 
@@ -511,7 +511,7 @@ dnl for V4L2, we also need to know if we have XVIDEO
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVIDEO, true)
 AG_GST_CHECK_FEATURE(XVIDEO, [X11 XVideo extensions],
                   [], [
-  AG_AG_GST_CHECK_XV
+  AG_GST_CHECK_XV
 ])
 
 dnl *** ext plug-ins ***

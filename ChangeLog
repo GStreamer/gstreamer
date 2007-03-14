@@ -1,3 +1,8 @@
+2007-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Fix string replace error (AG_AG_GST_* => AG_GST_*).
+
 2007-03-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_srcpad_event):
