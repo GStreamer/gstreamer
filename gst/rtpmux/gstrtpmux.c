@@ -66,7 +66,6 @@ struct _GstRTPMux
   GstPad *srcpad;
 
   /* sinkpads */
-  GSList *sinkpads;
   gint numpads;
   
   guint16  seqnum_base;
@@ -220,12 +219,6 @@ gst_rtp_mux_finalize (GObject * object)
 
   rtp_mux = GST_RTP_MUX (object);
 
-  if (rtp_mux->sinkpads) {
-    g_slist_foreach (rtp_mux->sinkpads, (GFunc) gst_object_unref, NULL);
-    g_slist_free (rtp_mux->sinkpads);
-    rtp_mux->sinkpads = NULL;
-  }
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -256,7 +249,6 @@ gst_rtp_mux_request_new_pad (GstElement * element,
     newpad = gst_pad_new_from_template (templ, name);
     g_free (name);
 
-    rtp_mux->sinkpads = g_slist_append (rtp_mux->sinkpads, (gpointer) newpad);
     rtp_mux->numpads++;
   } else {
     g_warning ("rtp_mux: this is not our template!\n");
