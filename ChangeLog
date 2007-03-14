@@ -1,3 +1,10 @@
+2007-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/hu.po:
+	* po/it.po:
+	* po/sv.po:
+	  Update translations.
+
 2007-03-12  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/mad/gstmad.c: (gst_mad_convert_sink), (gst_mad_convert_src):
