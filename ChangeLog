@@ -1,3 +1,19 @@
+2007-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/it.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	  Update translations.
+
 2007-03-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
