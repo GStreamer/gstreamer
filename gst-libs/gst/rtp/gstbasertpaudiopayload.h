@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2006> Philippe Khalaf <burger@speedy.org> 
+ * Copyright (C) <2006> Philippe Khalaf <philippe.kalaf@collabora.co.uk>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,6 +22,7 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -82,6 +83,14 @@ gst_base_rtp_audio_payload_set_frame_options (GstBaseRTPAudioPayload
 void
 gst_base_rtp_audio_payload_set_sample_options (GstBaseRTPAudioPayload
     *basertpaudiopayload, gint sample_size);
+
+GstFlowReturn
+gst_base_rtp_audio_payload_push (GstBaseRTPPayload * basepayload, 
+    const guint8 * data, guint payload_len, GstClockTime timestamp);
+
+GstAdapter*
+gst_base_rtp_audio_payload_get_adapter (GstBaseRTPAudioPayload 
+    *basertpaudiopayload);
 
 G_END_DECLS
 

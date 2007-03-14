@@ -1,3 +1,13 @@
+2007-03-14 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
+	Add min-ptime property to RTP base audio payloader. Patch by
+	olivier.crete@collabora.co.uk.
+	Fixes #415001
+
+	Indentation/whitespace/documentation fixes.
+
 2007-03-14  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/audioresample/gstaudioresample.c: (gst_audioresample_init),
