@@ -540,8 +540,8 @@ audioresample_do_output (GstAudioresample * audioresample, GstBuffer * outbuf)
   /* check for possible mem corruption */
   if (outsize > GST_BUFFER_SIZE (outbuf)) {
     /* this is an error that when it happens, would need fixing in the
-     * resample library; we told
-     * it we wanted only GST_BUFFER_SIZE (outbuf), and it gave us more ! */
+     * resample library; we told it we wanted only GST_BUFFER_SIZE (outbuf),
+     * and it gave us more ! */
     GST_WARNING_OBJECT (audioresample,
         "audioresample, you memory corrupting bastard. "
         "you gave me outsize %d while my buffer was size %d",
@@ -555,6 +555,14 @@ audioresample_do_output (GstAudioresample * audioresample, GstBuffer * outbuf)
         outsize, GST_BUFFER_SIZE (outbuf));
   }
   GST_BUFFER_SIZE (outbuf) = outsize;
+
+  GST_LOG_OBJECT (audioresample, "transformed to buffer of %ld bytes, ts %"
+      GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ", offset %"
+      G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
+      outsize, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
+      GST_BUFFER_OFFSET (outbuf), GST_BUFFER_OFFSET_END (outbuf));
+
 
   return GST_FLOW_OK;
 }
@@ -576,7 +584,12 @@ audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
   size = GST_BUFFER_SIZE (inbuf);
   timestamp = GST_BUFFER_TIMESTAMP (inbuf);
 
-  GST_DEBUG_OBJECT (audioresample, "got buffer of %ld bytes", size);
+  GST_LOG_OBJECT (audioresample, "transforming buffer of %ld bytes, ts %"
+      GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ", offset %"
+      G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
+      size, GST_TIME_ARGS (timestamp),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
+      GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf));
 
   if (audioresample->ts_offset == -1) {
     /* if we don't know the initial offset yet, calculate it based on the 
@@ -584,14 +597,14 @@ audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
     if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
       GstClockTime stime;
 
-      /* offset used to calculate the timestamps. We use the sample offset for this
-       * to make it more accurate. We want the first buffer to have the same timestamp
-       * as the incomming timestamp. */
+      /* offset used to calculate the timestamps. We use the sample offset for
+       * this to make it more accurate. We want the first buffer to have the
+       * same timestamp as the incoming timestamp. */
       audioresample->next_ts = timestamp;
       audioresample->ts_offset =
           gst_util_uint64_scale_int (timestamp, r->o_rate, GST_SECOND);
-      /* offset used to set as the buffer offset, this offset is always relative
-       * to the stream time, note that timestamp is not... */
+      /* offset used to set as the buffer offset, this offset is always
+       * relative to the stream time, note that timestamp is not... */
       stime = (timestamp - base->segment.start) + base->segment.time;
       audioresample->offset =
           gst_util_uint64_scale_int (stime, r->o_rate, GST_SECOND);
