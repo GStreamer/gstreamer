@@ -1,3 +1,12 @@
+2007-03-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/icles/equalizer-test.c: (equalizer_set_band_value),
+	(equalizer_set_all_band_values),
+	(equalizer_set_band_value_and_wait),
+	(equalizer_set_all_band_values_and_wait), (do_slider_fiddling),
+	(main):
+	  Port the example to new equalizer api.
+
 2007-03-14  Edward Hervey  <edward@fluendo.com>
 
 	* sys/osxvideo/cocoawindow.h:
