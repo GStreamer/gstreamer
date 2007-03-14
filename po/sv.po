@@ -1,16 +1,16 @@
 # Swedish messages for gstreamer.
-# Copyright (C) 2004, 2005, 2006 Free Software Foundation, Inc.
-# Daniel Nylander <po@danielnylander.se>, 2006.
+# Copyright (C) 2004, 2005, 2007 Free Software Foundation, Inc.
+# Daniel Nylander <po@danielnylander.se>, 2007.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 #
 # $Id: sv.po,v 1.68 2004/02/29 23:00:29 menthos Exp $
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.9.7\n"
+"Project-Id-Version: gstreamer 0.10.12\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2007-03-07 17:19+0100\n"
-"PO-Revision-Date: 2006-11-22 22:16+0100\n"
+"PO-Revision-Date: 2007-03-11 22:43+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -31,23 +31,16 @@ msgid "Print available debug categories and exit"
 msgstr "Skriv ut tillgängliga felsökningskategorier och avsluta"
 
 #: gst/gst.c:308
-msgid ""
-"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr ""
-"Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för "
-"ingen utmatning"
+msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr "Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för ingen utmatning"
 
 #: gst/gst.c:310
 msgid "LEVEL"
 msgstr "NIVÅ"
 
 #: gst/gst.c:312
-msgid ""
-"Comma-separated list of category_name:level pairs to set specific levels for "
-"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr ""
-"Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika "
-"nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr "Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:315
 msgid "LIST"
@@ -74,12 +67,8 @@ msgid "PATHS"
 msgstr "SÖKVÄGAR"
 
 #: gst/gst.c:331
-msgid ""
-"Comma-separated list of plugins to preload in addition to the list stored in "
-"environment variable GST_PLUGIN_PATH"
-msgstr ""
-"Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
-"som lagras i miljövariabeln GST_PLUGIN_PATH"
+msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
+msgstr "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan som lagras i miljövariabeln GST_PLUGIN_PATH"
 
 #: gst/gst.c:333
 msgid "PLUGINS"
@@ -87,8 +76,7 @@ msgstr "INSTICKSMODULER"
 
 #: gst/gst.c:336
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr ""
-"Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
+msgstr "Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
 
 #: gst/gst.c:341
 msgid "Disable the use of fork() while scanning the registry"
@@ -105,17 +93,17 @@ msgstr "Visa GStreamer-alternativ"
 #: gst/gst.c:727
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "Fel vid skrivning av registercache till %s: %s"
 
 #: gst/gst.c:763 gst/gst.c:772 gst/gst.c:819
 #, c-format
 msgid "Error re-scanning registry %s: %s"
-msgstr ""
+msgstr "Fel vid återsökning av registret %s: %s"
 
 #: gst/gst.c:834
 #, c-format
 msgid "Error re-scanning registry %s"
-msgstr ""
+msgstr "Fel vid återsökning av registret %s"
 
 #: gst/gst.c:1117
 msgid "Unknown option"
@@ -140,11 +128,8 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer stötte på ett allmänt fel i kärnbibliotek."
 
 #: gst/gsterror.c:141 gst/gsterror.c:178 gst/gsterror.c:198 gst/gsterror.c:229
-msgid ""
-"GStreamer developers were too lazy to assign an error code to this error."
-msgstr ""
-"Utvecklarna av GStreamer var för lata för att tilldela detta fel ett "
-"felnummer."
+msgid "GStreamer developers were too lazy to assign an error code to this error."
+msgstr "Utvecklarna av GStreamer var för lata för att tilldela detta fel ett felnummer."
 
 #: gst/gsterror.c:144
 msgid "Internal GStreamer error: code not implemented."
@@ -206,9 +191,8 @@ msgid "Could not close supporting library."
 msgstr "Kunde inte stänga stödbibliotek."
 
 #: gst/gsterror.c:182
-#, fuzzy
 msgid "Could not configure supporting library."
-msgstr "Kunde inte stänga stödbibliotek."
+msgstr "Kunde inte konfigurera stödbibliotek."
 
 #: gst/gsterror.c:196
 msgid "GStreamer encountered a general resource error."
@@ -264,43 +248,43 @@ msgstr "Inget ledigt utrymme på resursen."
 
 #: gst/gsterror.c:227
 msgid "GStreamer encountered a general stream error."
-msgstr "GStreamer stötte på ett allmänt flödesfel."
+msgstr "GStreamer stötte på ett allmänt strömfel."
 
 #: gst/gsterror.c:232
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "Elementet stöder inte hantering av detta flöde. Skicka en felrapport."
+msgstr "Elementet stöder inte hantering av denna ström. Skicka gärna in en felrapport."
 
 #: gst/gsterror.c:234
 msgid "Could not determine type of stream."
-msgstr "Kunde inte avgöra typen av flöde."
+msgstr "Kunde inte fastställa typen av ström."
 
 #: gst/gsterror.c:236
 msgid "The stream is of a different type than handled by this element."
-msgstr "Flödet är av en annan typ än den som hanteras av detta element."
+msgstr "Strömmen är av en annan typ än den som hanteras av detta element."
 
 #: gst/gsterror.c:238
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Det finns ingen komprimeringsmetod som kan hantera denna flödestyp."
+msgstr "Det finns ingen omkodare som kan hantera denna strömtyp."
 
 #: gst/gsterror.c:239
 msgid "Could not decode stream."
-msgstr "Kunde inte avkoda flöde."
+msgstr "Kunde inte avkoda ström."
 
 #: gst/gsterror.c:240
 msgid "Could not encode stream."
-msgstr "Kunde inte koda flöde."
+msgstr "Kunde inte koda ström."
 
 #: gst/gsterror.c:241
 msgid "Could not demultiplex stream."
-msgstr "Kunde inte avmultiplexera flöde."
+msgstr "Kunde inte avmultiplexera ström."
 
 #: gst/gsterror.c:242
 msgid "Could not multiplex stream."
-msgstr "Kunde inte multiplexera flöde."
+msgstr "Kunde inte multiplexera ström."
 
 #: gst/gsterror.c:243
 msgid "The stream is in the wrong format."
-msgstr "Flödet är i felaktigt format."
+msgstr "Strömmen är av fel format."
 
 #: gst/gsterror.c:294
 #, c-format
@@ -370,8 +354,7 @@ msgstr "utökad kommentar"
 
 #: gst/gsttaglist.c:120
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr ""
-"fri text som kommenterar dessa data i nyckel=värde eller nyckel[sv]=kommentar"
+msgstr "fri text som kommenterar dessa data i formatet key=värde eller key[sv]=kommentar"
 
 #: gst/gsttaglist.c:124
 msgid "track number"
@@ -543,7 +526,7 @@ msgstr "kodare"
 
 #: gst/gsttaglist.c:194
 msgid "encoder used to encode this stream"
-msgstr "kodare som använts för att koda detta flöde"
+msgstr "kodare som använts för att koda denna ström"
 
 #: gst/gsttaglist.c:197
 msgid "encoder version"
@@ -551,7 +534,7 @@ msgstr "kodarversion"
 
 #: gst/gsttaglist.c:198
 msgid "version of the encoder used to encode this stream"
-msgstr "version av kodaren som använts för att koda detta flöde"
+msgstr "version av kodaren som använts för att koda denna ström"
 
 #: gst/gsttaglist.c:200
 msgid "serial"
@@ -599,13 +582,12 @@ msgstr "toppen för albumet"
 
 # Osäker.
 #: gst/gsttaglist.c:210
-#, fuzzy
 msgid "replaygain reference level"
-msgstr "uppspelningsförstärkning spårtopp"
+msgstr "referensnivå för uppspelningsförstärkning"
 
 #: gst/gsttaglist.c:211
 msgid "reference level of track and album gain values"
-msgstr ""
+msgstr "referensnivå för förstärkningsvärden för spår och album"
 
 #: gst/gsttaglist.c:213
 msgid "language code"
@@ -613,7 +595,7 @@ msgstr "språkkod"
 
 #: gst/gsttaglist.c:214
 msgid "language code for this stream, conforming to ISO-639-1"
-msgstr "språkkod för detta flöde, enligt ISO-639-1"
+msgstr "språkkod för detta ström, enligt ISO-639-1"
 
 #: gst/gsttaglist.c:216
 msgid "image"
@@ -621,23 +603,23 @@ msgstr "bild"
 
 #: gst/gsttaglist.c:216
 msgid "image related to this stream"
-msgstr "bild relaterad till det här flödet"
+msgstr "bild relaterad till den här strömmen"
 
 #: gst/gsttaglist.c:218
 msgid "preview image"
-msgstr "miniatyrbild"
+msgstr "förhandsvisningsbild"
 
 #: gst/gsttaglist.c:218
 msgid "preview image related to this stream"
-msgstr "miniatyrbild relaterad till det här flödet"
+msgstr "förhandsvisningsbild relaterad till den här strömmen"
 
 #: gst/gsttaglist.c:220
 msgid "beats per minute"
-msgstr ""
+msgstr "slag per minut"
 
 #: gst/gsttaglist.c:220
 msgid "number of beats per minute in audio"
-msgstr ""
+msgstr "antalet slag per minut i ljudet"
 
 #: gst/gsttaglist.c:260
 msgid ", "
@@ -715,7 +697,7 @@ msgstr "tom rörledning är inte tillåtet"
 
 #: libs/gst/base/gstbasesrc.c:1641 libs/gst/base/gstbasesrc.c:1652
 msgid "Internal data flow error."
-msgstr "Internt dataflödesfel."
+msgstr "Internt fel i dataflöde."
 
 #: libs/gst/base/gstbasesink.c:2090
 msgid "Internal data flow problem."
@@ -723,7 +705,7 @@ msgstr "Internt dataflödesproblem."
 
 #: libs/gst/base/gstbasesink.c:2222
 msgid "Internal data stream error."
-msgstr "Internt dataflödesfel."
+msgstr "Internt fel i dataström."
 
 #: plugins/elements/gstcapsfilter.c:133
 msgid "Filter caps"
@@ -731,7 +713,7 @@ msgstr "Filtrera förmågor"
 
 #: plugins/elements/gstcapsfilter.c:134
 msgid "Restrict the possible allowed capabilities (NULL means ANY)"
-msgstr "Begränsa möjligen tillåtna förmågor (NULL betyder ALLA)"
+msgstr "Begränsa de möjliga tillåtna förmågorna (NULL betyder ANY)"
 
 #: plugins/elements/gstfdsink.c:343
 #, c-format
@@ -741,7 +723,7 @@ msgstr "Fel vid skrivning till filbeskrivaren \"%d\"."
 #: plugins/elements/gstfdsink.c:383
 #, c-format
 msgid "File descriptor \"%d\" is not valid."
-msgstr "Filbeskrivaren \"%d\" är inte giltig."
+msgstr "Filbeskrivaren \"%d\" är ogiltig."
 
 #: plugins/elements/gstfilesink.c:258
 msgid "No file name specified for writing."
@@ -760,7 +742,7 @@ msgstr "Fel vid stängning av filen \"%s\"."
 #: plugins/elements/gstfilesink.c:411
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Fel vid spolning i filen \"%s\"."
+msgstr "Fel vid sökning i filen \"%s\"."
 
 #: plugins/elements/gstfilesink.c:418 plugins/elements/gstfilesink.c:489
 #, c-format
@@ -772,9 +754,9 @@ msgid "No file name specified for reading."
 msgstr "Inget filnamn angivet för läsning."
 
 #: plugins/elements/gstfilesrc.c:980
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Kunde inte öppna filen \"%s\" för läsning: %s."
+msgstr "Kunde inte öppna filen \"%s\" för läsning."
 
 #: plugins/elements/gstfilesrc.c:989
 #, c-format
@@ -802,7 +784,7 @@ msgstr "förmågor"
 
 #: plugins/elements/gsttypefindelement.c:193
 msgid "detected capabilities in stream"
-msgstr "detekterade förmågor i flödet"
+msgstr "detekterade förmågor i strömmen"
 
 #: plugins/elements/gsttypefindelement.c:196
 msgid "minimum"
@@ -853,14 +835,15 @@ msgstr "Skriv ut alla element"
 #: tools/gst-inspect.c:1246
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
-"                                       Useful in connection with external "
-"automatic plugin installation mechanisms"
+"                                       Useful in connection with external automatic plugin installation mechanisms"
 msgstr ""
+"Skriv ut en maskintolkningsbar lista över funktioner som den angivna insticksmodulen tillhandahåller.\n"
+"                                       Användbart tillsammans med externa mekanismer för automatisk installation av insticksmodul"
 
 #: tools/gst-inspect.c:1326
 #, c-format
 msgid "Could not load plugin file: %s\n"
-msgstr "Kunde inte läsa in insticksmodulen: %s\n"
+msgstr "Kunde inte läsa in fil för insticksmodul: %s\n"
 
 #: tools/gst-inspect.c:1331
 #, c-format
@@ -912,9 +895,9 @@ msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "HITTADE TAGG   : hittat av elementet \"%s\".\n"
 
 #: tools/gst-launch.c:439
-#, fuzzy, c-format
+#, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "FEL: från element %s: %s\n"
+msgstr "VARNING: från elementet %s: %s\n"
 
 #: tools/gst-launch.c:492 tools/gst-launch.c:729
 #, c-format
@@ -927,9 +910,9 @@ msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Ställer in rörledningen till PAUSED...\n"
 
 #: tools/gst-launch.c:515
-#, fuzzy, c-format
+#, c-format
 msgid "Interrupt: Setting pipeline to PAUSED ...\n"
-msgstr "Ställer in rörledningen till PAUSED...\n"
+msgstr "Avbrott: Ställer in rörledningen till PAUSED ...\n"
 
 #: tools/gst-launch.c:553
 msgid "Output tags (also known as metadata)"
@@ -1037,10 +1020,6 @@ msgstr "Ställer in rörledningen till NULL...\n"
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "FRIGÖR rörledning...\n"
-
-# Felrapporterat i http://bugzilla.gnome.org/show_bug.cgi?id=137431
-#~ msgid " ns.\n"
-#~ msgstr " ns.\n"
 
 #~ msgid "Element \"%s\" has gone from PLAYING to PAUSED, quitting.\n"
 #~ msgstr "Elementet \"%s\" har gått från PLAYING till PAUSED, avslutar.\n"
