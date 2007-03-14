@@ -312,6 +312,13 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
 
         /* set caps and push */
         gst_buffer_set_caps (buf, this->caps);
+        GST_LOG_OBJECT (this, "pushing buffer %p, timestamp %"
+            GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
+            ", offset %" G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
+            buf,
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+            GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
+            GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf));
         ret = gst_pad_push (this->srcpad, buf);
         if (ret != GST_FLOW_OK)
           goto push_error;
