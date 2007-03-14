@@ -405,7 +405,10 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
     samples = (const gint16 *) gst_adapter_peek (spectrum->adapter, wanted);
 
+    /* the current fft code is gint16 based, so supporting other formats would
+     * not really benefit now */
     for (i = 0, j = 0; i < spectrum->len; i++) {
+      /* convert to mono */
       for (k = 0, acc = 0; k < spectrum->channels; k++)
         acc += samples[j++];
       spectrum->re[i] = (gint16) (acc / spectrum->channels);

@@ -18,9 +18,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*
+/**
+ * SECTION:element-equalizer-nbands
  *
- * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-nbands rband5::gain=-1.0 ! alsasink
+ * <refsect2>
+ * <title>Example launch line</title>
+ * <para>
+ * The n-band equalizer element changes the frequency spectrum of the audio data.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-nbands num-bands=15 band5::gain=-1.0 ! alsasink
+ * </programlisting>
+ * This make the equalizer use 15 bands and lowers the volume of the 5th band by FIXME db.
+ * </para>
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -57,7 +69,7 @@ gst_iir_equalizer_nbands_base_init (gpointer g_class)
       GST_ELEMENT_DETAILS ("N Band Equalizer",
       "Filter/Effect/Audio",
       "Direct Form IIR equalizer",
-      "Benjamin Otte <otte@gnome.org>," " Stefan Kost <ensonic@user.sf.net>");
+      "Benjamin Otte <otte@gnome.org>," " Stefan Kost <ensonic@users.sf.net>");
 
   gst_element_class_set_details (element_class, &iir_equalizer_details);
 }

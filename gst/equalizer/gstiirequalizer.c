@@ -27,6 +27,8 @@
 
 #include "gstiirequalizer.h"
 #include "gstiirequalizernbands.h"
+#include "gstiirequalizer3bands.h"
+#include "gstiirequalizer10bands.h"
 
 GST_DEBUG_CATEGORY (equalizer_debug);
 #define GST_CAT_DEFAULT equalizer_debug
@@ -145,8 +147,11 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
             GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
 
         band->gain = gain;
-        setup_filter (equ, band);
+        if (GST_AUDIO_FILTER (equ)->format.rate) {
+          setup_filter (equ, band);
+        }
         gst_object_unref (equ);
+        GST_INFO_OBJECT (band, "changed gain = %lf ", band->gain);
       }
       break;
     }
@@ -319,21 +324,25 @@ arg_to_scale (gdouble arg)
 static void
 setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
 {
-  gdouble gain = arg_to_scale (band->gain);
-  gdouble frequency = band->freq / GST_AUDIO_FILTER (equ)->format.rate;
-  gdouble q = pow (HIGHEST_FREQ / LOWEST_FREQ,
-      1.0 / (equ->freq_band_count - 1)) * equ->band_width;
-  gdouble theta = frequency * 2 * M_PI;
+  g_return_if_fail (GST_AUDIO_FILTER (equ)->format.rate);
 
-  band->beta = (q - theta / 2) / (2 * q + theta);
-  band->gamma = (0.5 + band->beta) * cos (theta);
-  band->alpha = (0.5 - band->beta) / 2;
+  {
+    gdouble gain = arg_to_scale (band->gain);
+    gdouble frequency = band->freq / GST_AUDIO_FILTER (equ)->format.rate;
+    gdouble q = pow (HIGHEST_FREQ / LOWEST_FREQ,
+        1.0 / (equ->freq_band_count - 1)) * equ->band_width;
+    gdouble theta = frequency * 2 * M_PI;
 
-  band->beta *= 2.0;
-  band->alpha *= 2.0 * gain;
-  band->gamma *= 2.0;
-  GST_INFO ("gain = %g, frequency = %g, alpha = %g, beta = %g, gamma=%g",
-      gain, frequency, band->alpha, band->beta, band->gamma);
+    band->beta = (q - theta / 2) / (2 * q + theta);
+    band->gamma = (0.5 + band->beta) * cos (theta);
+    band->alpha = (0.5 - band->beta) / 2;
+
+    band->beta *= 2.0;
+    band->alpha *= 2.0 * gain;
+    band->gamma *= 2.0;
+    GST_INFO ("gain = %g, frequency = %g, alpha = %g, beta = %g, gamma=%g",
+        gain, frequency, band->alpha, band->beta, band->gamma);
+  }
 }
 
 void
@@ -363,9 +372,10 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
   } else {
     /* free unused bands */
     for (i = new_count; i < old_count; i++) {
+      GST_DEBUG ("removing band[%d]=%p", i, equ->bands[i]);
       gst_child_proxy_child_removed (GST_OBJECT (equ),
           GST_OBJECT (equ->bands[i]));
-      gst_object_unref (equ->bands[i]);
+      gst_object_unparent (GST_OBJECT (equ->bands[i]));
       equ->bands[i] = NULL;
     }
   }
@@ -381,6 +391,7 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
    *   application should read band->freq
    */
   equ->bands[0]->freq = LOWEST_FREQ;
+  GST_DEBUG ("band[ 0] = '%lf'", equ->bands[0]->freq);
   /*
      if(equ->bands[0]->freq<10000.0) {
      sprintf (name,"%dHz",(gint)equ->bands[0]->freq);
@@ -394,6 +405,7 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
 
   for (i = 1; i < new_count; i++) {
     equ->bands[i]->freq = equ->bands[i - 1]->freq * step;
+    GST_DEBUG ("band[%2d] = '%lf'", i, equ->bands[i]->freq);
     /*
        if(equ->bands[i]->freq<10000.0) {
        sprintf (name,"%dHz",(gint)equ->bands[i]->freq);
@@ -525,9 +537,17 @@ gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
 {
   GstAudioFilter *filter = GST_AUDIO_FILTER (btrans);
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (btrans);
+  GstClockTime timestamp;
 
   if (G_UNLIKELY (filter->format.channels < 1 || equ->process == NULL))
     return GST_FLOW_NOT_NEGOTIATED;
+
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  timestamp =
+      gst_segment_to_stream_time (&btrans->segment, GST_FORMAT_TIME, timestamp);
+
+  if (GST_CLOCK_TIME_IS_VALID (timestamp))
+    gst_object_sync_values (G_OBJECT (equ), timestamp);
 
   equ->process (equ, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf),
       filter->format.channels);
@@ -562,8 +582,19 @@ plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (equalizer_debug, "equalizer", 0, "equalizer");
 
-  return gst_element_register (plugin, "equalizer-nbands", GST_RANK_NONE,
-      GST_TYPE_IIR_EQUALIZER_NBANDS);
+  if (!(gst_element_register (plugin, "equalizer-nbands", GST_RANK_NONE,
+              GST_TYPE_IIR_EQUALIZER_NBANDS)))
+    return FALSE;
+
+  if (!(gst_element_register (plugin, "equalizer-3bands", GST_RANK_NONE,
+              GST_TYPE_IIR_EQUALIZER_3BANDS)))
+    return FALSE;
+
+  if (!(gst_element_register (plugin, "equalizer-10bands", GST_RANK_NONE,
+              GST_TYPE_IIR_EQUALIZER_10BANDS)))
+    return FALSE;
+
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
