@@ -232,14 +232,14 @@ gst_rtp_mux_request_new_pad (GstElement * element,
 
   g_return_val_if_fail (templ != NULL, NULL);
 
+  rtp_mux = GST_RTP_MUX (element);
+
   if (templ->direction != GST_PAD_SINK) {
-    g_warning ("rtp_mux: request pad that is not a SINK pad\n");
+    GST_WARNING_OBJECT (rtp_mux, "request pad that is not a SINK pad");
     return NULL;
   }
 
   g_return_val_if_fail (GST_IS_RTP_MUX (element), NULL);
-
-  rtp_mux = GST_RTP_MUX (element);
 
   if (templ == gst_element_class_get_pad_template (klass, "sink_%d")) {
     gchar *name;
@@ -251,7 +251,7 @@ gst_rtp_mux_request_new_pad (GstElement * element,
 
     rtp_mux->numpads++;
   } else {
-    g_warning ("rtp_mux: this is not our template!\n");
+    GST_WARNING_OBJECT (rtp_mux, "this is not our template!\n");
     return NULL;
   }
 
