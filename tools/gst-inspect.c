@@ -1118,9 +1118,6 @@ print_plugin_automatic_install_info_codecs (GstElementFactory * factory)
   klass = gst_element_factory_get_klass (factory);
   g_return_if_fail (klass != NULL);
 
-  if (strstr (klass, "Codec/") == NULL)
-    return;
-
   if (strstr (klass, "Demuxer") ||
       strstr (klass, "Decoder") ||
       strstr (klass, "Depay") || strstr (klass, "Parser")) {

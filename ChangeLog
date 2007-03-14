@@ -1,3 +1,14 @@
+2007-03-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-inspect.c:
+	(print_plugin_automatic_install_info_codecs):
+	  Don't require decoder/demuxer/depayloader elements or
+	  encoder/muxer/paylader elements to have 'Codec' as part of their
+	  factory class string when introspecting a plugin's capabilities.
+	  draft-klass.txt mentions that it might be removed in future, and
+	  flump3dec doesn't have it as part of its class string, so chances
+	  are others might also not have it.
+
 2007-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/af.po:
