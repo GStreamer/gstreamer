@@ -38,3 +38,15 @@ Things to watch out for
   - without a bindtextdomain call, any domain is bound to the system locale
     dir - so you could still have translations if it happens to be where the
     translations are
+
+- our translations are managed by the Translation Project
+  http://www.iro.umontreal.ca/translation/
+  They are updated by the release manager for prereleases using
+  make download-po
+  As the translator project website clearly states, only accept translations
+  from the translation project, and direct would-be translators there:
+  "It would defeat the purpose of the teams if you were directly accepting PO
+   files from individual translators, or were having "contracts" with them. If
+   people write to you, wanting to volunteer as translators, direct them to
+   translation@iro.umontreal.ca, and the translation coordinator will send them
+   appropriate documentation."
