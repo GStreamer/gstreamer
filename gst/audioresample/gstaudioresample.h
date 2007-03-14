@@ -53,10 +53,12 @@ struct _GstAudioresample {
   GstCaps *srccaps, *sinkcaps;
 
   gboolean passthru;
+  gboolean need_discont;
 
   guint64 offset;
   guint64 ts_offset;
   GstClockTime next_ts;
+  GstClockTime prev_ts, prev_duration;
   int channels;
 
   int i_rate;

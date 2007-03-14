@@ -194,6 +194,8 @@ gst_audioresample_init (GstAudioresample * audioresample,
   gst_pad_set_bufferalloc_function (trans->sinkpad, NULL);
 
   audioresample->filter_length = DEFAULT_FILTERLEN;
+
+  audioresample->need_discont = FALSE;
 }
 
 /* vmethods */
@@ -371,7 +373,7 @@ audioresample_transform_size (GstBaseTransform * base,
   gboolean use_internal = FALSE;        /* whether we use the internal state */
   gboolean ret = TRUE;
 
-  GST_DEBUG_OBJECT (base, "asked to transform size %d in direction %s",
+  GST_LOG_OBJECT (base, "asked to transform size %d in direction %s",
       size, direction == GST_PAD_SINK ? "SINK" : "SRC");
   if (direction == GST_PAD_SINK) {
     sinkcaps = caps;
@@ -406,7 +408,7 @@ audioresample_transform_size (GstBaseTransform * base,
 
   /* we make room for one extra sample, given that the resampling filter
    * can output an extra one for non-integral i_rate/o_rate */
-  GST_DEBUG_OBJECT (base, "transformed size %d to %d", size, *othersize);
+  GST_LOG_OBJECT (base, "transformed size %d to %d", size, *othersize);
 
   if (!use_internal) {
     resample_free (state);
@@ -492,8 +494,7 @@ audioresample_do_output (GstAudioresample * audioresample, GstBuffer * outbuf)
   r = audioresample->resample;
 
   outsize = resample_get_output_size (r);
-  GST_DEBUG_OBJECT (audioresample, "audioresample can give me %d bytes",
-      outsize);
+  GST_LOG_OBJECT (audioresample, "audioresample can give me %d bytes", outsize);
 
   /* protect against mem corruption */
   if (outsize > GST_BUFFER_SIZE (outbuf)) {
@@ -556,6 +557,13 @@ audioresample_do_output (GstAudioresample * audioresample, GstBuffer * outbuf)
   }
   GST_BUFFER_SIZE (outbuf) = outsize;
 
+  if (G_UNLIKELY (audioresample->need_discont)) {
+    GST_DEBUG_OBJECT (audioresample,
+        "marking this buffer with the DISCONT flag");
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+    audioresample->need_discont = FALSE;
+  }
+
   GST_LOG_OBJECT (audioresample, "transformed to buffer of %ld bytes, ts %"
       GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ", offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
@@ -591,6 +599,25 @@ audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
       GST_TIME_ARGS (GST_BUFFER_DURATION (inbuf)),
       GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf));
 
+  /* check for timestamp discontinuities and flush/reset if needed */
+  if (GST_CLOCK_TIME_IS_VALID (audioresample->prev_ts) &&
+      GST_CLOCK_TIME_IS_VALID (audioresample->prev_duration)) {
+    GstClockTime ts_expected = audioresample->prev_ts +
+        audioresample->prev_duration;
+    GstClockTimeDiff ts_diff = GST_CLOCK_DIFF (ts_expected, timestamp);
+
+    if (G_UNLIKELY (ts_diff != 0)) {
+      GST_WARNING_OBJECT (audioresample,
+          "encountered timestamp discontinuity of %" G_GINT64_FORMAT, ts_diff);
+      /* Flush internal samples */
+      audioresample_pushthrough (audioresample);
+      /* Inform downstream element about discontinuity */
+      audioresample->need_discont = TRUE;
+      /* We want to recalculate the offset */
+      audioresample->ts_offset = -1;
+    }
+  }
+
   if (audioresample->ts_offset == -1) {
     /* if we don't know the initial offset yet, calculate it based on the 
      * input timestamp. */
@@ -610,6 +637,8 @@ audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
           gst_util_uint64_scale_int (stime, r->o_rate, GST_SECOND);
     }
   }
+  audioresample->prev_ts = timestamp;
+  audioresample->prev_duration = GST_BUFFER_DURATION (inbuf);
 
   /* need to memdup, resample takes ownership. */
   datacopy = g_memdup (data, size);
@@ -631,16 +660,24 @@ audioresample_pushthrough (GstAudioresample * audioresample)
   r = audioresample->resample;
 
   outsize = resample_get_output_size (r);
-  if (outsize == 0)
+  if (outsize == 0) {
+    GST_DEBUG_OBJECT (audioresample, "no internal buffers needing flush");
     goto done;
-
-  outbuf = gst_buffer_new_and_alloc (outsize);
-
-  res = audioresample_do_output (audioresample, outbuf);
-  if (res != GST_FLOW_OK)
-    goto done;
+  }
 
   trans = GST_BASE_TRANSFORM (audioresample);
+
+  res = gst_pad_alloc_buffer (trans->srcpad, GST_BUFFER_OFFSET_NONE, outsize,
+      GST_PAD_CAPS (trans->srcpad), &outbuf);
+  if (G_UNLIKELY (res != GST_FLOW_OK)) {
+    GST_WARNING_OBJECT (audioresample, "failed allocating buffer of %d bytes",
+        outsize);
+    goto done;
+  }
+
+  res = audioresample_do_output (audioresample, outbuf);
+  if (G_UNLIKELY (res != GST_FLOW_OK))
+    goto done;
 
   res = gst_pad_push (trans->srcpad, outbuf);
 

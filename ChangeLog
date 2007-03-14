@@ -1,3 +1,15 @@
+2007-03-14  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/audioresample/gstaudioresample.c: (gst_audioresample_init),
+	(audioresample_transform_size), (audioresample_do_output),
+	(audioresample_transform), (audioresample_pushthrough): Handle
+	discontinuous streams.
+	* gst/audioresample/gstaudioresample.h:
+	* tests/check/elements/audioresample.c:
+	(test_discont_stream_instance), (GST_START_TEST),
+	(audioresample_suite): Add a test for discontinuous streams.
+	* win32/common/config.h: Updated.
+
 2007-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/af.po:
