@@ -1,3 +1,10 @@
+2007-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/hu.po:
+	* po/it.po:
+	* po/sv.po:
+	  Updated translations.
+
 2007-03-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/equalizer/Makefile.am:

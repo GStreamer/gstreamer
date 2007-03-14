@@ -1,14 +1,14 @@
 # Italian translation for gst-plugins package of GStreamer project.
 # Copyright (C) 2004 GStreamer core team
 # This file is distributed under the same license as the gstreamer package.
-# Luca Ferretti <elle.uca@infinito.it>, 2004.
+# Luca Ferretti <elle.uca@infinito.it>, 2007.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.8.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2006-12-19 16:56+0100\n"
-"PO-Revision-Date: 2004-11-07 19:11+0100\n"
+"PO-Revision-Date: 2007-03-08 19:25+0100\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
 "MIME-Version: 1.0\n"
@@ -17,11 +17,11 @@ msgstr ""
 
 #: gst/qtdemux/qtdemux.c:3977
 msgid "This file is corrupt and cannot be played."
-msgstr ""
+msgstr "Questo file è corrotto e non può essere riprodotto."
 
 #: gst/qtdemux/qtdemux.c:3983
 msgid "This file is encrypted and cannot be played."
-msgstr ""
+msgstr "Questo file è cifrato e non può essere riprodotto."
 
 #: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
 #, c-format
@@ -29,207 +29,16 @@ msgid "Device \"%s\" does not exist."
 msgstr "Il device «%s» non esiste."
 
 #: sys/dvb/gstdvbsrc.c:662
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Impossibile chiudere il device di controllo «%s»."
+msgstr "Impossibile aprire il device frontend «%s»."
 
 #: sys/dvb/gstdvbsrc.c:674
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Impossibile ottenere abbastanza buffer dal device «%s»."
+msgstr "Impossibile ottenere le impostazioni dal device frontend «%s»."
 
 #: sys/dvb/gstdvbsrc.c:717
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Impossibile aprire il file «%s» in lettura."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Impossibile aprire il device «%s» in lettura e scrittura."
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Il device «%s» non è un device di cattura."
-
-#~ msgid "Could not write to device \"%s\"."
-#~ msgstr "Impossibile scrivere sul device «%s»."
-
-#~ msgid "Could not get buffers from device \"%s\"."
-#~ msgstr "Impossibile ottenere dei buffer dal device «%s»."
-
-#~ msgid "No filename specified."
-#~ msgstr "Nessun nome di file specificato."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Impossibile aprire il file «%s» in scrittura."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Impossibile scrivere sul file «%s»."
-
-#~ msgid "Could not open audio device \"%s\" for writing."
-#~ msgstr "Impossibile aprire il device audio «%s» in scrittura."
-
-#~ msgid "Could not open control device \"%s\" for writing."
-#~ msgstr "Impossibile aprire il device di controllo «%s» in scrittura."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "Impossibile configurare il device audio «%s»."
-
-#~ msgid "Could not set audio device \"%s\" to %d Hz."
-#~ msgstr "Impossibile impostare il device audio «%s» a %d Hz."
-
-#~ msgid "Could not close audio device \"%s\"."
-#~ msgstr "Impossibile chiudere il device audio «%s»."
-
-#~ msgid "Could not open video device \"%s\" for writing."
-#~ msgstr "Impossibile aprire il device video «%s» in scrittura."
-
-#~ msgid "Could not close video device \"%s\"."
-#~ msgstr "Impossibile chiudere il device video «%s»."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Errore nel chiudere il file «%s»."
-
-#~ msgid "No or invalid input audio, AVI stream will be corrupt."
-#~ msgstr ""
-#~ "Ingresso audio assente o non valido. Lo stream AVI risulterà corrotto."
-
-#~ msgid "OSS device \"%s\" is already in use by another program."
-#~ msgstr "Il device OSS «%s» è già usato da un altro programma."
-
-#~ msgid "Could not access device \"%s\", check its permissions."
-#~ msgstr "Impossibile accedere al device «%s», verificare i suoi permessi."
-
-#~ msgid "Could not open device \"%s\" for writing."
-#~ msgstr "Impossibile aprire il device «%s» in scrittura."
-
-#~ msgid "Could not open device \"%s\" for reading."
-#~ msgstr "Impossibile aprire il device «%s» in lettura."
-
-#~ msgid "Your OSS device could not be probed correctly"
-#~ msgstr "Il device OSS non può essere sondato in modo corretto"
-
-#~ msgid "Volume"
-#~ msgstr "Volume"
-
-#~ msgid "Bass"
-#~ msgstr "Bassi"
-
-#~ msgid "Treble"
-#~ msgstr "Acuti"
-
-#~ msgid "Synth"
-#~ msgstr "Sintetiz"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Speaker"
-#~ msgstr "Altoparl"
-
-#~ msgid "Line-in"
-#~ msgstr "Canale in"
-
-#~ msgid "Microphone"
-#~ msgstr "Microfono"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Mixer"
-#~ msgstr "Mixer"
-
-#~ msgid "PCM-2"
-#~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Registr"
-
-#~ msgid "In-gain"
-#~ msgstr "Guad in"
-
-#~ msgid "Out-gain"
-#~ msgstr "Guad out"
-
-#~ msgid "Line-1"
-#~ msgstr "Canale 1"
-
-#~ msgid "Line-2"
-#~ msgstr "Canale 2"
-
-#~ msgid "Line-3"
-#~ msgstr "Canale 3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Digital 1"
-
-#~ msgid "Digital-2"
-#~ msgstr "DIgital 2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Digital 3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Telefono in"
-
-#~ msgid "Phone-out"
-#~ msgstr "Telefono out"
-
-#~ msgid "Video"
-#~ msgstr "Video"
-
-#~ msgid "Radio"
-#~ msgstr "Radio"
-
-#~ msgid "Monitor"
-#~ msgstr "Monitor"
-
-#, fuzzy
-#~ msgid "PC Speaker"
-#~ msgstr "Altoparl"
-
-#~ msgid "Could not open CD device for reading."
-#~ msgstr "Impossibile aprire il device CD in lettura."
-
-#~ msgid "Could not open vfs file \"%s\" for reading."
-#~ msgstr "Impossibile aprire il file vfs «%s» in lettura."
-
-#, fuzzy
-#~ msgid "No filename given."
-#~ msgstr "Nessun nome di file fornito"
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Impossibile aprire il file vfs «%s» in scrittura: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Nessun nome di file fornito"
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Impossibile chiudere il file vfs «%s»."
-
-#, fuzzy
-#~ msgid "Your OSS device doesn't support mono or stereo."
-#~ msgstr "Il device OSS non può essere sondato in modo corretto"
-
-#~ msgid "No device specified."
-#~ msgstr "Nessun device specificato."
-
-#~ msgid "Device is not open."
-#~ msgstr "Il device non è aperto."
-
-#~ msgid "Device is open."
-#~ msgstr "Il device è aperto."
-
-#~ msgid ""
-#~ "The %s element could not be found. This element is essential for "
-#~ "playback. Please install the right plug-in and verify that it works by "
-#~ "running 'gst-inspect %s'"
-#~ msgstr ""
-#~ "Impossibile trovare l'elemento %s, essenziale per la riproduzione. "
-#~ "Installare il plugin corretto e verificare che sia funzionante eseguendo "
-#~ "«gst-inspect %s»"
-
-#~ msgid ""
-#~ "No usable colorspace element could be found.\n"
-#~ "Please install one and restart."
-#~ msgstr ""
-#~ "Impossibile trovare un elemento colorspace utilizzabile.\n"
-#~ "Installarne uno e riavviare."
