@@ -65,12 +65,12 @@ struct _GstOSXWindow {
   gboolean internal;
   GstOSXVideoSinkWindow* win;
   GstGLView* gstview;
+  NSAutoreleasePool *pool;
 };
 
 struct _GstOSXVideoSink {
   /* Our element stuff */
   GstVideoSink videosink;
-
   GstOSXWindow *osxwindow;
   
   gint fps_n;
@@ -91,6 +91,16 @@ struct _GstOSXVideoSinkClass {
 };
 
 GType gst_osx_video_sink_get_type(void);
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
+@interface NSApplication(AppleMenu)
+- (void)setAppleMenu:(NSMenu *)menu;
+@end
+#endif
+
+@interface GstAppDelegate : NSObject
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender;
+@end
 
 G_END_DECLS
 

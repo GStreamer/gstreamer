@@ -27,7 +27,7 @@
 
 /* Object header */
 #include "osxvideosink.h"
-
+#include <unistd.h>
 #import "cocoawindow.h"
 
 /* Debugging category */
@@ -51,8 +51,30 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], "
 	"height = (int) [ 1, MAX ], "
+#ifdef G_BYTE_ORDER == G_BIG_ENDIAN
+       "format = (fourcc) YUY2")
+#else
         "format = (fourcc) UYVY")
+#endif
     );
+
+// much of the following cocoa NSApp code comes from libsdl and libcaca
+@implementation NSApplication(Gst)
+- (void)setRunning
+{
+    _running = 1;
+}
+@end
+
+@implementation GstAppDelegate : NSObject
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication *)sender
+{
+    // destroy stuff here!
+    GST_DEBUG("Kill me please!");
+    return NSTerminateNow;
+}
+@end
+
 
 enum
 {
@@ -64,18 +86,113 @@ enum
 
 static GstVideoSinkClass *parent_class = NULL;
 
+
 /* cocoa event loop - needed if not run in own app */
-/* FIXME : currently disabled since a huge memory leak happens if it is run. */
-gpointer
+gint
 cocoa_event_loop (GstOSXVideoSink * vsink)
 {
-  GST_DEBUG_OBJECT (vsink, "About to start cocoa event loop");
+  NSAutoreleasePool *pool;
 
-  [NSApp run];
+  pool = [[NSAutoreleasePool alloc] init];
 
-  GST_DEBUG_OBJECT (vsink, "Cocoa event loop ended");
+  if ([NSApp isRunning]) {
+    NSEvent *event = [NSApp nextEventMatchingMask:NSAnyEventMask
+      			    untilDate:[NSDate distantPast]
+			    inMode:NSDefaultRunLoopMode dequeue:YES ];
+    if ( event != nil ) {
+      switch ([event type]) {
+      default: //XXX Feed me please
+        [NSApp sendEvent:event];
+      break;
+      }
+    }
+  }
 
-  return NULL;
+  [pool release];
+
+  return TRUE;
+}
+
+static NSString *
+GetApplicationName(void)
+{
+    NSDictionary *dict;
+    NSString *appName = 0;
+
+    /* Determine the application name */
+    dict = (NSDictionary *)CFBundleGetInfoDictionary(CFBundleGetMainBundle());
+    if (dict)
+        appName = [dict objectForKey: @"CFBundleName"];
+    
+    if (![appName length])
+        appName = [[NSProcessInfo processInfo] processName];
+
+    return appName;
+}
+
+static void
+CreateApplicationMenus(void)
+{
+    NSString *appName;
+    NSString *title;
+    NSMenu *appleMenu;
+    NSMenu *windowMenu;
+    NSMenuItem *menuItem;
+    
+    /* Create the main menu bar */
+    [NSApp setMainMenu:[[NSMenu alloc] init]];
+
+    /* Create the application menu */
+    appName = GetApplicationName();
+    appleMenu = [[NSMenu alloc] initWithTitle:@""];
+
+        /* Add menu items */
+    title = [@"About " stringByAppendingString:appName];
+    [appleMenu addItemWithTitle:title action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@""];
+
+    [appleMenu addItem:[NSMenuItem separatorItem]];
+    
+    title = [@"Hide " stringByAppendingString:appName];
+    [appleMenu addItemWithTitle:title action:@selector(hide:) keyEquivalent:@/*"h"*/""];
+
+    menuItem = (NSMenuItem *)[appleMenu addItemWithTitle:@"Hide Others" action:@selector(hideOtherApplications:) keyEquivalent:@/*"h"*/""];
+    [menuItem setKeyEquivalentModifierMask:(NSAlternateKeyMask|NSCommandKeyMask)];
+
+    [appleMenu addItemWithTitle:@"Show All" action:@selector(unhideAllApplications:) keyEquivalent:@""];
+
+    [appleMenu addItem:[NSMenuItem separatorItem]];
+
+    title = [@"Quit " stringByAppendingString:appName];
+    [appleMenu addItemWithTitle:title action:@selector(terminate:) keyEquivalent:@/*"q"*/""];
+    
+    /* Put menu into the menubar */
+    menuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
+    [menuItem setSubmenu:appleMenu];
+    [[NSApp mainMenu] addItem:menuItem];
+    [menuItem release];
+
+    /* Tell the application object that this is now the application menu */
+    [NSApp setAppleMenu:appleMenu];
+    [appleMenu release];
+
+
+    /* Create the window menu */
+    windowMenu = [[NSMenu alloc] initWithTitle:@"Window"];
+    
+    /* "Minimize" item */
+    menuItem = [[NSMenuItem alloc] initWithTitle:@"Minimize" action:@selector(performMiniaturize:) keyEquivalent:@/*"m"*/""];
+    [windowMenu addItem:menuItem];
+    [menuItem release];
+    
+    /* Put menu into the menubar */
+    menuItem = [[NSMenuItem alloc] initWithTitle:@"Window" action:nil keyEquivalent:@""];
+    [menuItem setSubmenu:windowMenu];
+    [[NSApp mainMenu] addItem:menuItem];
+    [menuItem release];
+    
+    /* Tell the application object that this is now the window menu */
+    [NSApp setWindowsMenu:windowMenu];
+    [windowMenu release];
 }
 
 /* This function handles osx window creation */
@@ -84,6 +201,7 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
     gint height)
 {
   NSRect rect;
+
   GstOSXWindow *osxwindow = NULL;
 
   g_return_val_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink), NULL);
@@ -93,28 +211,50 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
   osxwindow->width = width;
   osxwindow->height = height;
   osxwindow->internal = TRUE;
+  osxwindow->pool = [[NSAutoreleasePool alloc] init];
 
   if (osxvideosink->embed == FALSE) {
-    NSAutoreleasePool *pool;
+    ProcessSerialNumber psn;
+    unsigned int mask =  NSTitledWindowMask      	|
+                         NSClosableWindowMask    	|
+                         NSResizableWindowMask   	|
+			 NSTexturedBackgroundWindowMask |
+			 NSMiniaturizableWindowMask;
 
     rect.origin.x = 100.0;
     rect.origin.y = 100.0;
     rect.size.width = (float) osxwindow->width;
     rect.size.height = (float) osxwindow->height;
 
-    pool =[[NSAutoreleasePool alloc] init];
+    if (!GetCurrentProcess(&psn)) {
+        TransformProcessType(&psn, kProcessTransformToForegroundApplication);
+        SetFrontProcess(&psn);
+    }
 
     [NSApplication sharedApplication];
-    osxwindow->win =[[GstOSXVideoSinkWindow alloc] initWithContentRect: rect styleMask: NSTitledWindowMask | NSClosableWindowMask | NSMiniaturizableWindowMask backing: NSBackingStoreBuffered defer: NO screen:nil];
+ 
+    osxwindow->win =[[GstOSXVideoSinkWindow alloc]
+                         initWithContentRect: rect
+                         styleMask: mask
+                         backing: NSBackingStoreBuffered
+                         defer: NO
+                         screen: nil];
+    [osxwindow->win autorelease];
+    [NSApplication sharedApplication];
     [osxwindow->win makeKeyAndOrderFront:NSApp];
     osxwindow->gstview =[osxwindow->win gstView];
+    [osxwindow->gstview autorelease];
     if (osxvideosink->fullscreen)
       [osxwindow->gstview setFullScreen:YES];
 
-    [pool release];
+    CreateApplicationMenus();
 
-    /* Start Cocoa event loop */
-//     g_thread_create ((GThreadFunc) cocoa_event_loop, osxvideosink, FALSE, NULL);
+    [NSApp finishLaunching];
+    [NSApp setDelegate:[[GstAppDelegate alloc] init]];
+
+    [NSApp setRunning];
+    // insert event dispatch in the glib main loop
+    g_idle_add ((GSourceFunc) cocoa_event_loop, osxvideosink);
   } else {
     /* Needs to be embedded */
 
@@ -123,6 +263,7 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
     rect.size.width = (float) osxwindow->width;
     rect.size.height = (float) osxwindow->height;
     osxwindow->gstview =[[GstGLView alloc] initWithFrame:rect];
+    [osxwindow->gstview autorelease];
     /* send signal 
        FIXME: need to send a bus message */
     /*g_signal_emit (G_OBJECT(osxvideosink),
@@ -140,6 +281,8 @@ gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink,
   g_return_if_fail (osxwindow != NULL);
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
 
+  [osxwindow->pool release];
+
   g_free (osxwindow);
 }
 
@@ -149,7 +292,7 @@ gst_osx_video_sink_osxwindow_resize (GstOSXVideoSink * osxvideosink,
     GstOSXWindow * osxwindow, guint width, guint height)
 {
   NSSize size;
-
+  NSAutoreleasePool *subPool = [[NSAutoreleasePool alloc] init];
   g_return_if_fail (osxwindow != NULL);
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
 
@@ -159,7 +302,8 @@ gst_osx_video_sink_osxwindow_resize (GstOSXVideoSink * osxvideosink,
   size.width = width;
   size.height = height;
   /* Call relevant cocoa function to resize window */
-[osxwindow->win setContentSize:size];
+ [osxwindow->win setContentSize:size];
+ [subPool release];
 }
 
 static void
@@ -350,9 +494,7 @@ static void
 gst_osx_video_sink_init (GstOSXVideoSink * osxvideosink)
 {
 
-
   osxvideosink->osxwindow = NULL;
-
 
   osxvideosink->fps_n = 0;
   osxvideosink->fps_d = 0;

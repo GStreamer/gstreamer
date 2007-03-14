@@ -1,3 +1,15 @@
+2007-03-14  Edward Hervey  <edward@fluendo.com>
+
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	Fix leaks when running a NSApp.
+	Accept any kind of resolutions.
+	Works in fullscreen. Can maximize.
+	Only thing left before being able to move this to -good is documentation
+	and embedded window support.
+
 2007-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/hu.po:
