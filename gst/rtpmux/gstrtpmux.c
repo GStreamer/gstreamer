@@ -1,5 +1,11 @@
-/* rtp muxer plugin for GStreamer
- * Copyright (C) 2004 Wim Taymans <wim@fluendo.com>
+/* RTP muxer element for GStreamer
+ *
+ * gstrtpmux.c:
+ *
+ * Copyright (C) <2007> Nokia Corporation.
+ *   Contact: Zeeshan Ali <zeeshan.ali@nokia.com>
+ * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
+ *               2000,2005 Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
