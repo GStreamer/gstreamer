@@ -67,6 +67,7 @@ struct _GstRTPMux
 
   /* sinkpads */
   gint numpads;
+  GstPad *special_pad;
   
   guint16  seqnum_base;
   gint16   seqnum_offset;
@@ -113,7 +114,7 @@ static void gst_rtp_mux_init (GstRTPMux * rtp_mux);
 
 static void gst_rtp_mux_finalize (GObject * object);
 
-static gboolean gst_rtp_mux_handle_src_event (GstPad * pad,
+static gboolean gst_rtp_mux_handle_sink_event (GstPad * pad,
     GstEvent * event);
 static GstPad *gst_rtp_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
@@ -205,8 +206,6 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
   rtp_mux->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
-  gst_pad_set_event_function (rtp_mux->srcpad,
-      gst_rtp_mux_handle_src_event);
   gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
   
   rtp_mux->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
@@ -258,6 +257,7 @@ gst_rtp_mux_request_new_pad (GstElement * element,
   /* setup some pad functions */
   gst_pad_set_chain_function (newpad, gst_rtp_mux_chain);
   gst_pad_set_setcaps_function (newpad, gst_rtp_mux_setcaps);
+  gst_pad_set_event_function (newpad, gst_rtp_mux_handle_sink_event);
 
   /* dd the pad to the element */
   gst_element_add_pad (element, newpad);
@@ -319,9 +319,34 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
   return TRUE;
 }
 
-/* handle events */
+static void
+gst_rtp_mux_set_sinkpads_blocked (GstRTPMux *rtp_mux, gboolean blocked, GstPad *exception)
+{
+  GstIterator *iter;
+  GstPad *pad;
+
+  GST_DEBUG_OBJECT (rtp_mux, "blocking all sink pads except: %s",
+          GST_ELEMENT_NAME (exception));
+  
+  iter = gst_element_iterate_sink_pads (GST_ELEMENT (rtp_mux));
+  while (gst_iterator_next (iter, (gpointer) &pad) == GST_ITERATOR_OK) {
+    if (pad != exception) {
+      GstPad *peer;
+
+      peer = gst_pad_get_peer (pad);
+
+      GST_DEBUG_OBJECT (rtp_mux, "blocking pad %s..", GST_ELEMENT_NAME (pad));
+      gst_pad_set_blocked (peer, blocked);
+      GST_DEBUG_OBJECT (rtp_mux, "pad %s blocked", GST_ELEMENT_NAME (pad));
+
+      gst_object_unref (GST_OBJECT (peer));
+    }
+    gst_object_unref (GST_OBJECT (pad));
+  }
+}
+
 static gboolean
-gst_rtp_mux_handle_src_event (GstPad * pad, GstEvent * event)
+gst_rtp_mux_handle_sink_event (GstPad * pad, GstEvent * event)
 {
   GstRTPMux *rtp_mux;
   GstEventType type;
@@ -331,9 +356,52 @@ gst_rtp_mux_handle_src_event (GstPad * pad, GstEvent * event)
   type = event ? GST_EVENT_TYPE (event) : GST_EVENT_UNKNOWN;
 
   switch (type) {
-    case GST_EVENT_SEEK:
-      /* disable seeking for now */
-      return FALSE;
+    case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
+    {
+      const GstStructure *structure;
+
+      structure = gst_event_get_structure (event);
+      /* FIXME: is this event generic enough to be given a generic name? */
+      if (structure && gst_structure_has_name (structure, "stream-lock")) {
+        gboolean lock;
+
+        if (!gst_structure_get_boolean (structure, "lock", &lock))
+          break;
+
+        if (lock) {
+          if (rtp_mux->special_pad != NULL) {
+              GST_WARNING_OBJECT (rtp_mux,
+                      "Stream lock already acquired by pad %s",
+                      GST_ELEMENT_NAME (rtp_mux->special_pad));
+              break;
+          }
+
+          rtp_mux->special_pad = gst_object_ref (pad);
+        }
+
+        else {
+          if (rtp_mux->special_pad == NULL) {
+              GST_WARNING_OBJECT (rtp_mux,
+                      "Stream lock not acquired, can't release it");
+              break;
+          }
+
+          else if (pad != rtp_mux->special_pad) {
+              GST_WARNING_OBJECT (rtp_mux,
+                      "pad %s attempted to release Stream lock"
+                      " which was acquired by pad %s", GST_ELEMENT_NAME (pad),
+                      GST_ELEMENT_NAME (rtp_mux->special_pad));
+              break;
+          }
+
+          gst_object_unref (rtp_mux->special_pad);
+          rtp_mux->special_pad = NULL;
+        }
+          
+        gst_rtp_mux_set_sinkpads_blocked (rtp_mux, lock, pad);
+      }
+      break;
+    }
     default:
       break;
   }
