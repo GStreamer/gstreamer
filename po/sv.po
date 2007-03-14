@@ -2,13 +2,13 @@
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # Christian Rose <menthos@menthos.com>, 2004.
 #
-# $Id: sv.po,v 1.50 2007/03/07 15:35:26 thaytan Exp $
+# $Id: sv.po,v 1.51 2007/03/14 15:16:23 thomasvs Exp $
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-05 11:20+0000\n"
+"POT-Creation-Date: 2006-08-29 17:10+0200\n"
 "PO-Revision-Date: 2004-08-03 20:53+0200\n"
 "Last-Translator: Christian Rose <menthos@menthos.com>\n"
 "Language-Team: Swedish <sv@li.org>\n"
@@ -64,32 +64,32 @@ msgstr "Spela"
 msgid "Capture"
 msgstr "Satir"
 
-#: ext/alsa/gstalsasink.c:441
+#: ext/alsa/gstalsasink.c:456
 #, fuzzy
 msgid "Could not open device for playback in mono mode."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/alsa/gstalsasink.c:443
+#: ext/alsa/gstalsasink.c:458
 #, fuzzy
 msgid "Could not open device for playback in stereo mode."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/alsa/gstalsasink.c:447
+#: ext/alsa/gstalsasink.c:462
 #, fuzzy, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/alsa/gstalsasrc.c:406
+#: ext/alsa/gstalsasrc.c:411
 #, fuzzy
 msgid "Could not open device for recording in mono mode."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/alsa/gstalsasrc.c:408
+#: ext/alsa/gstalsasrc.c:413
 #, fuzzy
 msgid "Could not open device for recording in stereo mode."
 msgstr "Kunde inte öppna cd-enheten för läsning."
 
-#: ext/alsa/gstalsasrc.c:412
+#: ext/alsa/gstalsasrc.c:417
 #, fuzzy, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Kunde inte öppna cd-enheten för läsning."
@@ -127,89 +127,79 @@ msgstr "Kunde inte stänga vfs-filen \"%s\"."
 msgid "Error while writing to file \"%s\"."
 msgstr "Fel vid stängning av filen \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:3081
+#: ext/ogg/gstoggdemux.c:2891
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1437
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#: gst/playback/gstplaybasebin.c:1267
+msgid "RTSP streams cannot be played yet."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1454 gst/playback/gstplaybasebin.c:1580
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:1550
+#: gst/playback/gstplaybasebin.c:1567
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1556
+#: gst/playback/gstplaybasebin.c:1573
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1577
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1562
-msgid "RTSP streams cannot be played yet."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:1889
+#: gst/playback/gstplaybasebin.c:1584
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2100
-msgid "Source element is invalid."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:2176
+#: gst/playback/gstplaybasebin.c:1657
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2181
+#: gst/playback/gstplaybasebin.c:1662
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2185
+#: gst/playback/gstplaybasebin.c:1666
 #, fuzzy
 msgid "This is not a media file"
 msgstr "%s är ingen cdrom-enhet"
 
-#: gst/playback/gstplaybasebin.c:2190
+#: gst/playback/gstplaybasebin.c:1671
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:909
+#: gst/playback/gstplaybin.c:831
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:917 gst/playback/gstplaybin.c:927
-#: gst/playback/gstplaybin.c:1112 gst/playback/gstplaybin.c:1122
-#: gst/playback/gstplaybin.c:1253 gst/playback/gstplaybin.c:1262
-#: gst/playback/gstplaybin.c:1271
+#: gst/playback/gstplaybin.c:874 gst/playback/gstplaybin.c:883
+#: gst/playback/gstplaybin.c:1041 gst/playback/gstplaybin.c:1050
+#: gst/playback/gstplaybin.c:1153
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:1105
+#: gst/playback/gstplaybin.c:1007
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
-#: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:268
-#, fuzzy, c-format
+#: gst/tcp/gsttcp.c:517 gst/tcp/gsttcpclientsink.c:268
+#, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Fel vid stängning av filen \"%s\"."
+msgstr ""
 
-#: gst/tcp/gsttcp.c:571
-#, fuzzy, c-format
+#: gst/tcp/gsttcp.c:569
+#, c-format
 msgid "Error while sending gdp header data to \"%s:%d\"."
-msgstr "Fel vid stängning av filen \"%s\"."
+msgstr ""
 
-#: gst/tcp/gsttcp.c:580
+#: gst/tcp/gsttcp.c:578
 #, c-format
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr ""
@@ -219,283 +209,60 @@ msgstr ""
 msgid "Connection to %s:%d refused."
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:57
+#: gst-libs/gst/tag/tags.c:56
 #, fuzzy
 msgid "track ID"
 msgstr "Spår %d"
 
-#: gst-libs/gst/tag/tags.c:57
+#: gst-libs/gst/tag/tags.c:56
 msgid "MusicBrainz track ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:59
+#: gst-libs/gst/tag/tags.c:58
 #, fuzzy
 msgid "artist ID"
 msgstr "Skiv-ID"
 
-#: gst-libs/gst/tag/tags.c:59
+#: gst-libs/gst/tag/tags.c:58
 msgid "MusicBrainz artist ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:61
+#: gst-libs/gst/tag/tags.c:60
 msgid "album ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:61
+#: gst-libs/gst/tag/tags.c:60
 msgid "MusicBrainz album ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:64
+#: gst-libs/gst/tag/tags.c:63
 msgid "album artist ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:64
+#: gst-libs/gst/tag/tags.c:63
 msgid "MusicBrainz album artist ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:66
+#: gst-libs/gst/tag/tags.c:65
 msgid "track TRM ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:66
+#: gst-libs/gst/tag/tags.c:65
 msgid "MusicBrainz TRM ID"
 msgstr ""
 
-#: gst-libs/gst/tag/tags.c:69
+#: gst-libs/gst/tag/tags.c:68
 #, fuzzy
 msgid "artist sortname"
 msgstr "Artistrad"
 
-#: gst-libs/gst/tag/tags.c:69
+#: gst-libs/gst/tag/tags.c:68
 msgid "MusicBrainz artist sortname"
 msgstr ""
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1382
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1415
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1389
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1422
 msgid "This CD has no audio tracks"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:90
-msgid "Apple Lossless Audio (ALAC)"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:98
-msgid "Free Lossless Audio Codec (FLAC)"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:121
-#: gst-libs/gst/pbutils/descriptions.c:122
-msgid "Lossless True Audio (TTA)"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:130
-msgid "Windows Media Speech"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:144
-msgid "CYUV Lossless"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:147
-msgid "FFMpeg v1"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:159
-msgid "Lossless MSZH"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:165
-msgid "Uncompressed Gray Image"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:170
-msgid "Run-length encoding"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:204
-msgid "Sami subtitle format"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:205
-msgid "TMPlayer subtitle format"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:263
-msgid "Uncompressed planar YUV 4:2:0"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:266
-msgid "Uncompressed planar YVU 4:2:0"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:269
-#: gst-libs/gst/pbutils/descriptions.c:279
-msgid "Uncompressed packed YUV 4:2:2"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:272
-msgid "Uncompressed packed YUV 4:1:0"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:275
-msgid "Uncompressed packed YVU 4:1:0"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:282
-msgid "Uncompressed packed YUV 4:1:1"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:285
-msgid "Uncompressed packed YUV 4:4:4"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:288
-msgid "Uncompressed planar YUV 4:2:2"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:291
-msgid "Uncompressed planar YUV 4:1:1"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:294
-msgid "Uncompressed black and white Y-plane"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:297
-msgid "Uncompressed YUV"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:308
-#, c-format
-msgid "Uncompressed palettized %d-bit %s"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:358
-#, c-format
-msgid "DivX MPEG-4 Version %d"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:547
-#, c-format
-msgid "Raw %d-bit PCM audio"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:549
-msgid "Raw PCM audio"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:555
-#, c-format
-msgid "Raw %d-bit floating-point audio"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:557
-msgid "Raw floating-point audio"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:636
-msgid "Audio CD source"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:639
-msgid "DVD source"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:642
-msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:646
-msgid "Microsoft Media Server (MMS) protocol source"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:654
-#, c-format
-msgid "%s protocol source"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:722
-#, c-format
-msgid "%s video RTP depayloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:724
-#, c-format
-msgid "%s audio RTP depayloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:726
-#, c-format
-msgid "%s RTP depayloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:733
-#, fuzzy, c-format
-msgid "%s demuxer"
-msgstr "%s-skjutreglage"
-
-#: gst-libs/gst/pbutils/descriptions.c:735
-#, fuzzy, c-format
-msgid "%s decoder"
-msgstr "%s-inspelning"
-
-#: gst-libs/gst/pbutils/descriptions.c:770
-#, c-format
-msgid "%s video RTP payloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:772
-#, c-format
-msgid "%s audio RTP payloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:774
-#, c-format
-msgid "%s RTP payloader"
-msgstr ""
-
-#: gst-libs/gst/pbutils/descriptions.c:781
-#, fuzzy, c-format
-msgid "%s muxer"
-msgstr "%s tyst"
-
-#: gst-libs/gst/pbutils/descriptions.c:783
-#, fuzzy, c-format
-msgid "%s encoder"
-msgstr "%s-inspelning"
-
-#: gst-libs/gst/pbutils/descriptions.c:814
-#, fuzzy, c-format
-msgid "GStreamer element %s"
-msgstr "Inställningar för GStreamer"
-
-#: gst-libs/gst/pbutils/missing-plugins.c:540
-#, fuzzy
-msgid "Unknown source element"
-msgstr "Okänd längd"
-
-#: gst-libs/gst/pbutils/missing-plugins.c:543
-#, fuzzy
-msgid "Unknown sink element"
-msgstr "Okänd längd"
-
-#: gst-libs/gst/pbutils/missing-plugins.c:546
-#, fuzzy
-msgid "Unknown element"
-msgstr "Okänd längd"
-
-#: gst-libs/gst/pbutils/missing-plugins.c:549
-#, fuzzy
-msgid "Unknown decoder element"
-msgstr "Okänd längd"
-
-#: gst-libs/gst/pbutils/missing-plugins.c:552
-#, fuzzy
-msgid "Unknown encoder element"
-msgstr "Okänd längd"
-
-#: gst-libs/gst/pbutils/missing-plugins.c:557
-msgid "Plugin or element of unknown type"
 msgstr ""
 
 #: sys/v4l/v4l_calls.c:159
@@ -1657,6 +1424,9 @@ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 #~ msgid "Volume Control"
 #~ msgstr "Volymkontroll"
 
+#~ msgid "%s Slider"
+#~ msgstr "%s-skjutreglage"
+
 #~ msgid "Channel %d of %s Slider"
 #~ msgstr "Kanal %d för %s-skjutreglage"
 
@@ -1673,8 +1443,14 @@ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 #~ msgid "Mute"
 #~ msgstr "Tyst"
 
+#~ msgid "%s Mute"
+#~ msgstr "%s tyst"
+
 #~ msgid "Rec."
 #~ msgstr "Insp."
+
+#~ msgid "%s Record"
+#~ msgstr "%s-inspelning"
 
 #~ msgid "GStreamer Volume Control"
 #~ msgstr "GStreamer-volymkontroll"
@@ -1705,6 +1481,9 @@ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 
 #~ msgid "Click Ok to finish."
 #~ msgstr "Klicka på OK för att slutföra."
+
+#~ msgid "GStreamer Preferences"
+#~ msgstr "Inställningar för GStreamer"
 
 #~ msgid "Pipe_line:"
 #~ msgstr "Pipe_line:"
@@ -2617,6 +2396,9 @@ msgstr "Kunde inte öppna enheten \"%s\" för läsning och skrivning."
 
 #~ msgid "%s (Has not been saved"
 #~ msgstr "%s (Har inte sparats"
+
+#~ msgid "Unknown length"
+#~ msgstr "Okänd längd"
 
 #~ msgid "%.1f khz/s"
 #~ msgstr "%.1f kHz/s"

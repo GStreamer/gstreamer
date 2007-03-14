@@ -1,5 +1,22 @@
 2007-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/en_GB.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	  Update translations from translation project.
+
+2007-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* gst/audioresample/debug.h:
 	* gst/audioresample/resample.c: (resample_init):
 	  Since I really am not interested in a debug line for each sample
