@@ -144,6 +144,7 @@ fail_unless_perfect_stream ()
   buffers = NULL;
 }
 
+/* this tests that the output is a perfect stream if the input is */
 static void
 test_perfect_stream_instance (int inrate, int outrate, int samples,
     int numbuffers)
@@ -224,6 +225,89 @@ GST_START_TEST (test_perfect_stream)
 
 GST_END_TEST;
 
+/* this tests that the output is a correct discontinuous stream
+ * if the input is; ie input drops in time come out the same way */
+static void
+test_discont_stream_instance (int inrate, int outrate, int samples,
+    int numbuffers)
+{
+  GstElement *audioresample;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  GstClockTime ints;
+
+  int i, j;
+  gint16 *p;
+
+  audioresample = setup_audioresample (2, inrate, outrate);
+  caps = gst_pad_get_negotiated_caps (mysrcpad);
+  fail_unless (gst_caps_is_fixed (caps));
+
+  fail_unless (gst_element_set_state (audioresample,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  for (j = 1; j <= numbuffers; ++j) {
+
+    inbuffer = gst_buffer_new_and_alloc (samples * 4);
+    GST_BUFFER_DURATION (inbuffer) = samples * GST_SECOND / inrate;
+    /* "drop" half the buffers */
+    ints = GST_BUFFER_DURATION (inbuffer) * 2 * (j - 1);
+    GST_BUFFER_TIMESTAMP (inbuffer) = ints;
+    GST_BUFFER_OFFSET (inbuffer) = (j - 1) * 2 * samples;
+    GST_BUFFER_OFFSET_END (inbuffer) = j * 2 * samples + samples;
+
+    gst_buffer_set_caps (inbuffer, caps);
+
+    p = (gint16 *) GST_BUFFER_DATA (inbuffer);
+
+    /* create a 16 bit signed ramp */
+    for (i = 0; i < samples; ++i) {
+      *p = -32767 + i * (65535 / samples);
+      ++p;
+      *p = -32767 + i * (65535 / samples);
+      ++p;
+    }
+
+    /* pushing gives away my reference ... */
+    fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+
+    /* check if the timestamp of the pushed buffer matches the incoming one */
+    outbuffer = g_list_nth_data (buffers, g_list_length (buffers) - 1);
+    fail_if (outbuffer == NULL);
+    fail_unless_equals_uint64 (ints, GST_BUFFER_TIMESTAMP (outbuffer));
+    if (j > 1) {
+      fail_unless (GST_BUFFER_IS_DISCONT (outbuffer),
+          "expected discont buffer");
+    }
+  }
+
+  /* cleanup */
+  gst_caps_unref (caps);
+  cleanup_audioresample (audioresample);
+}
+
+GST_START_TEST (test_discont_stream)
+{
+  /* integral scalings */
+  test_discont_stream_instance (48000, 24000, 500, 20);
+  test_discont_stream_instance (48000, 12000, 500, 20);
+  test_discont_stream_instance (12000, 24000, 500, 20);
+  test_discont_stream_instance (12000, 48000, 500, 20);
+
+  /* non-integral scalings */
+  test_discont_stream_instance (44100, 8000, 500, 20);
+  test_discont_stream_instance (8000, 44100, 500, 20);
+
+  /* wacky scalings */
+  test_discont_stream_instance (12345, 54321, 500, 20);
+  test_discont_stream_instance (101, 99, 500, 20);
+}
+
+GST_END_TEST;
+
+
+
 GST_START_TEST (test_reuse)
 {
   GstElement *audioresample;
@@ -295,6 +379,7 @@ audioresample_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_perfect_stream);
+  tcase_add_test (tc_chain, test_discont_stream);
   tcase_add_test (tc_chain, test_reuse);
 
   return s;
