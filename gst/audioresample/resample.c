@@ -36,6 +36,7 @@
 void resample_scale_ref (ResampleState * r);
 void resample_scale_functable (ResampleState * r);
 
+GST_DEBUG_CATEGORY (libaudioresample_debug);
 
 void
 resample_init (void)
@@ -45,6 +46,9 @@ resample_init (void)
   if (!inited) {
     oil_init ();
     inited = 1;
+    GST_DEBUG_CATEGORY_INIT (libaudioresample_debug, "libaudioresample", 0,
+        "audio resampling library");
+
   }
 }
 

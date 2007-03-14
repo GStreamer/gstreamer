@@ -1,3 +1,11 @@
+2007-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/audioresample/debug.h:
+	* gst/audioresample/resample.c: (resample_init):
+	  Since I really am not interested in a debug line for each sample
+	  being processed, move the library's debugging to its own category,
+	  libaudioresample
+
 2007-03-13  Michael Smith  <msmith@fluendo.com>
 
 	* ext/theora/theoradec.c: (theora_handle_type_packet):

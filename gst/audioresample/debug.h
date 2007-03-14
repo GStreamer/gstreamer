@@ -35,8 +35,8 @@ int resample_debug_get_level (void);
 
 #include <gst/gst.h>
 
-GST_DEBUG_CATEGORY_EXTERN (audioresample_debug);
-#define GST_CAT_DEFAULT audioresample_debug
+GST_DEBUG_CATEGORY_EXTERN (libaudioresample_debug);
+#define GST_CAT_DEFAULT libaudioresample_debug
 
 #define RESAMPLE_ERROR GST_ERROR
 #define RESAMPLE_WARNING GST_WARNING
