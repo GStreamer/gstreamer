@@ -450,6 +450,19 @@ gst_rtp_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static void
+gst_rtp_dtmf_src_set_stream_lock (GstRTPDTMFSrc *dtmfsrc, gboolean lock)
+{
+   GstEvent *event;
+   GstStructure *structure;
+
+   structure = gst_structure_new ("stream-lock",
+                      "lock", G_TYPE_BOOLEAN, lock, NULL);
+
+   event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
+   gst_pad_push_event (dtmfsrc->srcpad, event);
+}
+
+static void
 gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc,
         gint event_number, gint event_volume)
 {
@@ -490,6 +503,9 @@ gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc,
   else
     dtmfsrc->ts_base = dtmfsrc->ts_offset;
 
+  /* Don't forget to get exclusive access to the stream */
+  gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
+  
   if (!gst_pad_start_task (dtmfsrc->srcpad,
       (GstTaskFunction) gst_rtp_dtmf_src_push_next_rtp_packet, dtmfsrc)) {
     GST_ERROR_OBJECT (dtmfsrc, "Failed to start task on src pad");
@@ -510,6 +526,9 @@ gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
   dtmfsrc->payload->e = 1;
   gst_rtp_dtmf_src_push_next_rtp_packet (dtmfsrc);
 
+  /* Don't forget to release the stream lock */
+  gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+  
   g_free (dtmfsrc->payload);
   dtmfsrc->payload = NULL;
 }
