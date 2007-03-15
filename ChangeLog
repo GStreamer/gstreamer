@@ -1,3 +1,41 @@
+2007-03-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* gst/mpeg1videoparse/Makefile.am:
+	* gst/mpeg1videoparse/gstmp1videoparse.c:
+	* gst/mpeg1videoparse/gstmp1videoparse.h:
+	* gst/mpeg1videoparse/mp1videoparse.vcproj:
+	* gst/mpegvideoparse/Makefile.am:
+	* gst/mpegvideoparse/mpegpacketiser.c: (mpeg_packetiser_init),
+	(mpeg_packetiser_free), (mpeg_packetiser_add_buf),
+	(mpeg_packetiser_flush), (mpeg_find_start_code),
+	(get_next_free_block), (complete_current_block),
+	(append_to_current_block), (start_new_block), (handle_packet),
+	(collect_packets), (mpeg_packetiser_handle_eos),
+	(mpeg_packetiser_get_block), (mpeg_packetiser_next_block):
+	* gst/mpegvideoparse/mpegpacketiser.h:
+	* gst/mpegvideoparse/mpegvideoparse.c: (mpegvideoparse_get_type),
+	(gst_mpegvideoparse_base_init), (gst_mpegvideoparse_class_init),
+	(mpv_parse_reset), (gst_mpegvideoparse_init),
+	(gst_mpegvideoparse_dispose), (set_par_from_dar),
+	(set_fps_from_code), (mpegvideoparse_parse_seq),
+	(gst_mpegvideoparse_time_code), (gst_mpegvideoparse_flush),
+	(mpegvideoparse_drain_avail), (gst_mpegvideoparse_chain),
+	(mpv_parse_sink_event), (gst_mpegvideoparse_change_state),
+	(plugin_init):
+	* gst/mpegvideoparse/mpegvideoparse.h:
+	* gst/mpegvideoparse/mpegvideoparse.vcproj:
+	Port mpeg1videoparse to 0.10 and give it rank SECONDARY-1, so
+	that it's below existing decoders.
+	
+	Rename it to mpegvideoparse to reflect that it handles MPEG-1 and
+	MPEG-2 now.
+
+	Re-write the parsing code so that it collects packets differently
+	and timestamps Picture packets correctly.
+
+	Add a list of FIXME's at the top.
+
 2007-03-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/icles/equalizer-test.c: (equalizer_set_band_value),
