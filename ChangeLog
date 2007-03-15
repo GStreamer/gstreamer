@@ -1,3 +1,11 @@
+2007-03-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/gst-inspect.c:
+	(print_plugin_automatic_install_info_codecs):
+	  Now that we don't check for the 'Codec' keyword any longer in the
+	  klass, we shouldn't spew a warning if the klass isn't a decoder or
+	  encoder (since it might be a Source/Network, for example).
+
 2007-03-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-inspect.c:

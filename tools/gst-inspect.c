@@ -1128,7 +1128,6 @@ print_plugin_automatic_install_info_codecs (GstElementFactory * factory)
     type_name = "encoder";
     direction = GST_PAD_SRC;
   } else {
-    g_printerr ("Unhandled Codec klass: %s\n", klass);
     return;
   }
 
