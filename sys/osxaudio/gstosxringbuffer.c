@@ -90,7 +90,7 @@ gst_osx_ring_buffer_get_type (void)
     };
     GST_DEBUG_CATEGORY_INIT (osx_audio_debug, "osxaudio", 0,
         "OSX Audio Elements");
-    GST_DEBUG ("Creating osx ring buffer type\n");
+    GST_DEBUG ("Creating osx ring buffer type");
 
     ringbuffer_type =
         g_type_register_static (GST_TYPE_RING_BUFFER, "GstOsxRingBuffer",
@@ -130,7 +130,7 @@ gst_osx_ring_buffer_class_init (GstOsxRingBufferClass * klass)
 
   gstringbuffer_class->delay = GST_DEBUG_FUNCPTR (gst_osx_ring_buffer_delay);
 
-  GST_DEBUG ("osx ring buffer class init\n");
+  GST_DEBUG ("osx ring buffer class init");
 }
 
 static void
@@ -141,21 +141,21 @@ gst_osx_ring_buffer_init (GstOsxRingBuffer * ringbuffer,
   UInt32 propertySize;
 
   /* currently do bugger all */
-  GST_DEBUG ("osx ring buffer init\n");
+  GST_DEBUG ("osx ring buffer init");
   propertySize = sizeof (ringbuffer->device_id);
   status =
       AudioHardwareGetProperty (kAudioHardwarePropertyDefaultOutputDevice,
       &propertySize, &(ringbuffer->device_id));
-  GST_DEBUG ("osx ring buffer called AudioHardwareGetProperty\n");
+  GST_DEBUG ("osx ring buffer called AudioHardwareGetProperty");
   if (status) {
-    GST_DEBUG ("AudioHardwareGetProperty returned %d\n", (int) status);
+    GST_WARNING ("AudioHardwareGetProperty returned %d", (int) status);
   } else {
-    GST_DEBUG ("AudioHardwareGetProperty returned 0\n");
+    GST_DEBUG ("AudioHardwareGetProperty returned 0");
   }
   if (ringbuffer->device_id == kAudioDeviceUnknown) {
-    GST_DEBUG ("AudioHardwareGetProperty: device_id is kAudioDeviceUnknown\n");
+    GST_DEBUG ("AudioHardwareGetProperty: device_id is kAudioDeviceUnknown");
   }
-  GST_DEBUG ("AudioHardwareGetProperty: device_id is %d\n",
+  GST_DEBUG ("AudioHardwareGetProperty: device_id is %lu",
       ringbuffer->device_id);
   /* get requested buffer length */
   propertySize = sizeof (ringbuffer->buffer_len);
@@ -163,11 +163,11 @@ gst_osx_ring_buffer_init (GstOsxRingBuffer * ringbuffer,
       AudioDeviceGetProperty (ringbuffer->device_id, 0, false,
       kAudioDevicePropertyBufferSize, &propertySize, &ringbuffer->buffer_len);
   if (status) {
-    GST_DEBUG
-        ("AudioDeviceGetProperty returned %d when getting kAudioDevicePropertyBufferSize\n",
+    GST_WARNING
+        ("AudioDeviceGetProperty returned %d when getting kAudioDevicePropertyBufferSize",
         (int) status);
   }
-  GST_DEBUG ("%5d ringbuffer->buffer_len\n", (int) ringbuffer->buffer_len);
+  GST_DEBUG ("%5d ringbuffer->buffer_len", (int) ringbuffer->buffer_len);
 }
 
 static void
@@ -207,7 +207,7 @@ gst_osx_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
   spec->segsize = osxbuf->buffer_len;
   spec->segtotal = 16;
 
-  GST_DEBUG ("osx ring buffer acquire\n");
+  GST_DEBUG ("osx ring buffer acquire");
 
   buf->data = gst_buffer_new_and_alloc (spec->segtotal * spec->segsize);
   memset (GST_BUFFER_DATA (buf->data), 0, GST_BUFFER_SIZE (buf->data));
@@ -233,24 +233,29 @@ static gboolean
 gst_osx_ring_buffer_start (GstRingBuffer * buf)
 {
   /* stub */
-  OSErr status;
+  OSStatus status;
   GstOsxRingBuffer *osxbuf;
 
   osxbuf = GST_OSX_RING_BUFFER (buf);
 
-  GST_DEBUG ("osx ring buffer start ioproc: 0x%x device_id %d\n",
+  GST_DEBUG ("osx ring buffer start ioproc: 0x%p device_id %lu",
       osxbuf->element->io_proc, osxbuf->device_id);
-  status =
-      AudioDeviceAddIOProc (osxbuf->device_id, osxbuf->element->io_proc,
-      osxbuf);
+  if (!osxbuf->io_proc_active) {
+    status =
+        AudioDeviceAddIOProc (osxbuf->device_id, osxbuf->element->io_proc,
+        osxbuf);
 
-  if (status) {
-    GST_DEBUG ("AudioDeviceAddIOProc returned %d\n", (int) status);
-    return FALSE;
+    if (status) {
+      GST_WARNING ("AudioDeviceAddIOProc returned %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (status));
+      return FALSE;
+    }
+    osxbuf->io_proc_active = TRUE;
   }
+
   status = AudioDeviceStart (osxbuf->device_id, osxbuf->element->io_proc);
   if (status) {
-    GST_DEBUG ("AudioDeviceStart returned %d\n", (int) status);
+    GST_WARNING ("AudioDeviceStart returned %d", (int) status);
     return FALSE;
   }
   return TRUE;
@@ -264,9 +269,15 @@ gst_osx_ring_buffer_pause (GstRingBuffer * buf)
   OSErr status;
   GstOsxRingBuffer *osxbuf = GST_OSX_RING_BUFFER (buf);
 
-  status = AudioDeviceStop (osxbuf->device_id, osxbuf->element->io_proc);
-  if (status)
-    GST_DEBUG ("AudioDeviceStop returned %d\n", (int) status);
+  GST_DEBUG ("osx ring buffer pause ioproc: 0x%p device_id %lu",
+      osxbuf->element->io_proc, osxbuf->device_id);
+  if (osxbuf->io_proc_active) {
+    status =
+        AudioDeviceRemoveIOProc (osxbuf->device_id, osxbuf->element->io_proc);
+    if (status)
+      GST_WARNING ("AudioDeviceRemoveIOProc " "returned %d", (int) status);
+    osxbuf->io_proc_active = FALSE;
+  }
   return TRUE;
 }
 
@@ -279,16 +290,20 @@ gst_osx_ring_buffer_stop (GstRingBuffer * buf)
 
   osxbuf = GST_OSX_RING_BUFFER (buf);
 
+  GST_DEBUG ("osx ring buffer stop ioproc: 0x%p device_id %lu",
+      osxbuf->element->io_proc, osxbuf->device_id);
   /* stop callback */
   status = AudioDeviceStop (osxbuf->device_id, osxbuf->element->io_proc);
   if (status)
-    GST_DEBUG ("AudioDeviceStop returned %d\n", (int) status);
+    GST_WARNING ("AudioDeviceStop returned %d", (int) status);
 
-  status =
-      AudioDeviceRemoveIOProc (osxbuf->device_id, osxbuf->element->io_proc);
-  if (status)
-    GST_DEBUG ("AudioDeviceRemoveIOProc " "returned %d\n", (int) status);
-
+  if (osxbuf->io_proc_active) {
+    status =
+        AudioDeviceRemoveIOProc (osxbuf->device_id, osxbuf->element->io_proc);
+    if (status)
+      GST_WARNING ("AudioDeviceRemoveIOProc " "returned %d", (int) status);
+    osxbuf->io_proc_active = FALSE;
+  }
   return TRUE;
 }
 

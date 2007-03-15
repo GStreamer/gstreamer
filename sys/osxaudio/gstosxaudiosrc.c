@@ -122,7 +122,7 @@ gst_osx_audio_src_osxelement_do_init (GType type)
 
   GST_DEBUG_CATEGORY_INIT (osx_audiosrc_debug, "osxaudiosrc", 0,
       "OSX Audio Src");
-  GST_DEBUG ("Adding static interface\n");
+  GST_DEBUG ("Adding static interface");
   g_type_add_interface_static (type, GST_OSX_AUDIO_ELEMENT_TYPE,
       &osxelement_info);
 }
@@ -181,7 +181,7 @@ gst_osx_audio_src_init (GstOsxAudioSrc * src, GstOsxAudioSrcClass * gclass)
 /*  GstElementClass *klass = GST_ELEMENT_GET_CLASS (sink); */
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE);
   src->ringbuffer = NULL;
-  GST_DEBUG ("Initialising object\n");
+  GST_DEBUG ("Initialising object");
   gst_osx_audio_src_create_ringbuffer (GST_BASE_AUDIO_SRC (src));
 }
 
@@ -233,9 +233,9 @@ gst_osx_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
 
   osxsrc = GST_OSX_AUDIO_SRC (src);
   if (!osxsrc->ringbuffer) {
-    GST_DEBUG ("Creating ringbuffer\n");
+    GST_DEBUG ("Creating ringbuffer");
     osxsrc->ringbuffer = g_object_new (GST_TYPE_OSX_RING_BUFFER, NULL);
-    GST_DEBUG ("osx src 0x%x element 0x%x  ioproc 0x%x\n", osxsrc,
+    GST_DEBUG ("osx src 0x%p element 0x%p  ioproc 0x%p", osxsrc,
         GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc),
         (void *) gst_osx_audio_src_io_proc);
     osxsrc->ringbuffer->element = GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc);

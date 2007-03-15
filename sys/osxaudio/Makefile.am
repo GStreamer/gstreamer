@@ -5,8 +5,12 @@ libgstosxaudio_la_SOURCES = gstosxringbuffer.c		\
 			    gstosxaudiosink.c \
 			    gstosxaudiosrc.c
 
-libgstosxaudio_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) $(GSTPB_BASE_FLAGS)
-libgstosxaudio_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) $(GSTPB_BASE_LIBS) -lgstaudio-@GST_MAJORMINOR@
+libgstosxaudio_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstosxaudio_la_LIBADD = 			\
+	-lgstinterfaces-@GST_MAJORMINOR@	\
+	-lgstaudio-@GST_MAJORMINOR@		\
+	$(GST_PLUGINS_BASE_LIBS) \
+        $(GST_LIBS)
 libgstosxaudio_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework -Wl,CoreAudio
 
 noinst_HEADERS = gstosxaudiosink.h	\

@@ -16,11 +16,11 @@ else
 SUNAUDIO_DIR=
 endif
 
-# if USE_OSX_AUDIO
-# OSX_AUDIO_DIR=osxaudio
-# else
-# OSX_AUDIO_DIR=
-# endif
+if USE_OSX_AUDIO
+OSX_AUDIO_DIR=osxaudio
+else
+OSX_AUDIO_DIR=
+endif
 
 # if USE_OSX_VIDEO
 # OSX_VIDEO_DIR=osxvideo
@@ -64,6 +64,6 @@ else
 XIMAGE_DIR=
 endif
 
-SUBDIRS=$(OSS_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
+SUBDIRS=$(OSS_DIR) $(OSX_AUDIO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
 
 DIST_SUBDIRS=oss sunaudio v4l2 ximage

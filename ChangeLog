@@ -1,3 +1,27 @@
+2007-03-15  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/osxaudio/Makefile.am:
+	* sys/osxaudio/gstosxaudio.c:
+	* sys/osxaudio/gstosxaudiosink.c:
+	(gst_osx_audio_sink_osxelement_do_init), (gst_osx_audio_sink_init),
+	(gst_osx_audio_sink_getcaps),
+	(gst_osx_audio_sink_create_ringbuffer), (plugin_init):
+	* sys/osxaudio/gstosxaudiosrc.c:
+	(gst_osx_audio_src_osxelement_do_init), (gst_osx_audio_src_init),
+	(gst_osx_audio_src_create_ringbuffer):
+	* sys/osxaudio/gstosxringbuffer.c: (gst_osx_ring_buffer_get_type),
+	(gst_osx_ring_buffer_class_init), (gst_osx_ring_buffer_init),
+	(gst_osx_ring_buffer_acquire), (gst_osx_ring_buffer_start),
+	(gst_osx_ring_buffer_pause), (gst_osx_ring_buffer_stop):
+	* sys/osxaudio/gstosxringbuffer.h:
+	Activate osxaudio in gst-plugins-good with proper build setup.
+	Add inlined documentation.
+	Fix debug statements
+	Fix ringbuffer when pausing.
+	Fixes #323471
+
 2007-03-14 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
 	* gst/rtp/gstrtppcmapay.c:
 	* gst/rtp/gstrtppcmapay.h:

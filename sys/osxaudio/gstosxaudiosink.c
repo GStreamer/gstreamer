@@ -129,7 +129,7 @@ gst_osx_audio_sink_osxelement_do_init (GType type)
 
   GST_DEBUG_CATEGORY_INIT (osx_audiosink_debug, "osxaudiosink", 0,
       "OSX Audio Sink");
-  GST_DEBUG ("Adding static interface\n");
+  GST_DEBUG ("Adding static interface");
   g_type_add_interface_static (type, GST_OSX_AUDIO_ELEMENT_TYPE,
       &osxelement_info);
 }
@@ -190,9 +190,9 @@ gst_osx_audio_sink_init (GstOsxAudioSink * sink, GstOsxAudioSinkClass * gclass)
 {
 /*  GstElementClass *klass = GST_ELEMENT_GET_CLASS (sink); */
   sink->ringbuffer = NULL;
-  GST_DEBUG ("Initialising object\n");
-  gst_osx_audio_sink_create_ringbuffer (sink);
+  GST_DEBUG ("Initialising object");
 
+  gst_osx_audio_sink_create_ringbuffer (GST_BASE_AUDIO_SINK (sink));
 }
 
 static void
@@ -256,11 +256,12 @@ gst_osx_audio_sink_getcaps (GstBaseSink * sink)
       kAudioDevicePropertyAvailableNominalSampleRates, &propertySize, &rates);
 
   GST_DEBUG
-      ("Getting available sample rates: Status: %d number of ranges: %d\n",
+      ("Getting available sample rates: Status: %ld number of ranges: %lu",
       status, propertySize / sizeof (AudioValueRange));
 
   for (i = 0; i < propertySize / sizeof (AudioValueRange); i++) {
-    g_print ("Range from %f to %f\n", rates[i].mMinimum, rates[i].mMaximum);
+    GST_LOG_OBJECT (osxsink, "Range from %f to %f", rates[i].mMinimum,
+        rates[i].mMaximum);
   }
 
   return caps;
@@ -274,9 +275,9 @@ gst_osx_audio_sink_create_ringbuffer (GstBaseAudioSink * sink)
 
   osxsink = GST_OSX_AUDIO_SINK (sink);
   if (!osxsink->ringbuffer) {
-    GST_DEBUG ("Creating ringbuffer\n");
+    GST_DEBUG ("Creating ringbuffer");
     osxsink->ringbuffer = g_object_new (GST_TYPE_OSX_RING_BUFFER, NULL);
-    GST_DEBUG ("osx sink 0x%x element 0x%x  ioproc 0x%x\n", osxsink,
+    GST_DEBUG ("osx sink 0x%p element 0x%p  ioproc 0x%p", osxsink,
         GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsink),
         (void *) gst_osx_audio_sink_io_proc);
     osxsink->ringbuffer->element =
@@ -333,9 +334,9 @@ plugin_init (GstPlugin * plugin)
   gboolean ret;
 
   ret = gst_element_register (plugin, "osxaudiosink",
-      GST_RANK_NONE, GST_TYPE_OSX_AUDIO_SINK);
+      GST_RANK_PRIMARY, GST_TYPE_OSX_AUDIO_SINK);
   return ret && gst_element_register (plugin, "osxaudiosrc",
-      GST_RANK_NONE, GST_TYPE_OSX_AUDIO_SRC);
+      GST_RANK_PRIMARY, GST_TYPE_OSX_AUDIO_SRC);
 }
 
 /* this is the structure that gstreamer looks for to register plugins

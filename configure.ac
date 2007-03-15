@@ -376,6 +376,13 @@ AG_GST_CHECK_FEATURE(SUNAUDIO, [Sun Audio], sunaudio, [
   AC_CHECK_HEADER(sys/audioio.h, HAVE_SUNAUDIO="yes", HAVE_SUNAUDIO="no")
 ])
 
+dnl *** OSX Audio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_AUDIO, true)
+AG_GST_CHECK_FEATURE(OSX_AUDIO, [OSX audio], osxaudio, [
+  AC_CHECK_HEADER(CoreAudio/CoreAudio.h, HAVE_OSX_AUDIO="yes", HAVE_OSX_AUDIO="no")
+])
+
+
 dnl *** Video 4 Linux 2 ***
 dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
 dnl renamed to GST_V4L2 because of some conflict with kernel headers
@@ -779,6 +786,7 @@ dnl but we still need to set the conditionals
 AM_CONDITIONAL(USE_GCONFTOOL, false)
 AM_CONDITIONAL(USE_OSS, false)
 AM_CONDITIONAL(USE_SUNAUDIO, false)
+AM_CONDITIONAL(USE_OSX_AUDIO, false)
 AM_CONDITIONAL(USE_X, false)
 AM_CONDITIONAL(USE_XSHM, false)
 AM_CONDITIONAL(USE_AALIB, false)
@@ -902,6 +910,7 @@ ext/taglib/Makefile
 sys/Makefile
 sys/oss/Makefile
 sys/sunaudio/Makefile
+sys/osxaudio/Makefile
 sys/v4l2/Makefile
 sys/ximage/Makefile
 po/Makefile.in
