@@ -66,4 +66,4 @@ endif
 
 SUBDIRS=$(OSS_DIR) $(OSX_AUDIO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
 
-DIST_SUBDIRS=oss sunaudio v4l2 ximage
+DIST_SUBDIRS=oss osxaudio sunaudio v4l2 ximage

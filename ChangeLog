@@ -1,5 +1,10 @@
 2007-03-15  Edward Hervey  <edward@fluendo.com>
 
+	* sys/Makefile.am:
+	Don't forget to distribute the sys/osxaudio/ directory.
+
+2007-03-15  Edward Hervey  <edward@fluendo.com>
+
 	* configure.ac:
 	* sys/Makefile.am:
 	* sys/osxaudio/Makefile.am:
