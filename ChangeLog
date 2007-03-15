@@ -1,3 +1,11 @@
+2007-03-15  Michael Smith  <msmith@fluendo.com>
+
+	* gst/audioresample/gstaudioresample.c:
+	(audioresample_check_discont), (audioresample_transform):
+	  Don't trigger discontinuities for very small imperfections; a filter
+	  flush will sound bad, and many plugins have rounding errors leading
+	  to these.
+
 2007-03-14 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:

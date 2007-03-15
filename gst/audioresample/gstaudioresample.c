@@ -575,6 +575,33 @@ audioresample_do_output (GstAudioresample * audioresample, GstBuffer * outbuf)
   return GST_FLOW_OK;
 }
 
+/* llabs() is C99, so we might not have it; just use a simple macro... */
+#define LLABS(x) ((x>0)?x:-x)
+static gboolean
+audioresample_check_discont (GstAudioresample * audioresample,
+    GstClockTime timestamp)
+{
+  if (timestamp != GST_CLOCK_TIME_NONE &&
+      audioresample->prev_ts != GST_CLOCK_TIME_NONE &&
+      audioresample->prev_duration != GST_CLOCK_TIME_NONE &&
+      timestamp != audioresample->prev_ts + audioresample->prev_duration) {
+    /* Potentially a discontinuous buffer. However, it turns out that many
+     * elements generate imperfect streams due to rounding errors, so we permit
+     * a small error (up to one sample) without triggering a filter 
+     * flush/restart (if triggered incorrectly, this will be audible) */
+    GstClockTimeDiff diff = timestamp -
+        (audioresample->prev_ts + audioresample->prev_duration);
+
+    if (LLABS (diff) > GST_SECOND / audioresample->i_rate) {
+      GST_WARNING_OBJECT (audioresample,
+          "encountered timestamp discontinuity of %" G_GINT64_FORMAT, diff);
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
 static GstFlowReturn
 audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -600,22 +627,13 @@ audioresample_transform (GstBaseTransform * base, GstBuffer * inbuf,
       GST_BUFFER_OFFSET (inbuf), GST_BUFFER_OFFSET_END (inbuf));
 
   /* check for timestamp discontinuities and flush/reset if needed */
-  if (GST_CLOCK_TIME_IS_VALID (audioresample->prev_ts) &&
-      GST_CLOCK_TIME_IS_VALID (audioresample->prev_duration)) {
-    GstClockTime ts_expected = audioresample->prev_ts +
-        audioresample->prev_duration;
-    GstClockTimeDiff ts_diff = GST_CLOCK_DIFF (ts_expected, timestamp);
-
-    if (G_UNLIKELY (ts_diff != 0)) {
-      GST_WARNING_OBJECT (audioresample,
-          "encountered timestamp discontinuity of %" G_GINT64_FORMAT, ts_diff);
-      /* Flush internal samples */
-      audioresample_pushthrough (audioresample);
-      /* Inform downstream element about discontinuity */
-      audioresample->need_discont = TRUE;
-      /* We want to recalculate the offset */
-      audioresample->ts_offset = -1;
-    }
+  if (G_UNLIKELY (audioresample_check_discont (audioresample, timestamp))) {
+    /* Flush internal samples */
+    audioresample_pushthrough (audioresample);
+    /* Inform downstream element about discontinuity */
+    audioresample->need_discont = TRUE;
+    /* We want to recalculate the offset */
+    audioresample->ts_offset = -1;
   }
 
   if (audioresample->ts_offset == -1) {
