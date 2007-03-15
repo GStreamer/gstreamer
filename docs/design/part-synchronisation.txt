@@ -8,7 +8,7 @@ Synchronisation in a GstPipeline is achieved using the following 3 components:
 
  - a GstClock, which is global for all elements in a GstPipeline.
  - Timestamps on a GstBuffer.
- - the NEW_SEGMENT event preceeding the buffers.
+ - the NEW_SEGMENT event preceding the buffers.
 
 
 A GstClock
@@ -19,7 +19,7 @@ This value is called the absolute_time.
 
 Different sources exist for this counter:
 
- - the systemtime (with g_get_current_time() and with microsend accuracy)
+ - the system time (with g_get_current_time() and with microsecond accuracy)
  - an audio device (based on number of samples played)
  - a network source based on packets received + timestamps in those packets (a
    typical example is an RTP source)
