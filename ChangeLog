@@ -2,7 +2,7 @@
 
 	* gst/equalizer/gstiirequalizer10bands.c:
 	(gst_iir_equalizer_10bands_init):
-	  A 10 band EQ should be initialized to 1 bands and not to 3.
+	  A 10 band EQ should be initialized to 10 bands and not to 3.
 
 2007-03-15  Jan Schmidt  <thaytan@mad.scientist.com>
 
