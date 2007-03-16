@@ -269,7 +269,7 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
     [osxwindow->gstview autorelease];
     
     s = gst_structure_new ("have-ns-view",
-			   "nsview", G_TYPE_POINTER, osxwindow,
+			   "nsview", G_TYPE_POINTER, osxwindow->gstview,
 			   nil);
 
     tmp = gst_structure_to_string (s);
