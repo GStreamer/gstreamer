@@ -24,6 +24,8 @@
 
 typedef struct MPEGPacketiser MPEGPacketiser;
 typedef struct MPEGBlockInfo MPEGBlockInfo;
+typedef struct MPEGSeqHdr MPEGSeqHdr;
+typedef struct MPEGPictureHdr MPEGPictureHdr;
 
 /* Packet ID codes for different packet types we
  * care about */
@@ -48,6 +50,11 @@ typedef struct MPEGBlockInfo MPEGBlockInfo;
 #define MPEG_BLOCK_FLAG_PICTURE   0x02
 #define MPEG_BLOCK_FLAG_GOP       0x04
 
+#define MPEG_PICTURE_TYPE_I 0x01
+#define MPEG_PICTURE_TYPE_P 0x02
+#define MPEG_PICTURE_TYPE_B 0x03
+#define MPEG_PICTURE_TYPE_D 0x04
+
 struct MPEGBlockInfo {
   guint8 first_pack_type;
   guint8 flags;
@@ -56,6 +63,24 @@ struct MPEGBlockInfo {
   guint32 length;
 
   GstClockTime ts;
+};
+
+struct MPEGSeqHdr
+{
+  /* 0 for unknown, else 1 or 2 */
+  guint8 mpeg_version;
+
+  /* Pixel-Aspect Ratio from DAR code via set_par_from_dar */
+  gint par_w, par_h;
+  /* Width and Height of the video */
+  gint width, height;
+  /* Framerate */
+  gint fps_n, fps_d;
+};
+
+struct MPEGPictureHdr
+{
+  guint8 pic_type;
 };
 
 struct MPEGPacketiser {
@@ -97,8 +122,6 @@ struct MPEGPacketiser {
   MPEGBlockInfo *blocks;
 };
 
-guint8 *mpeg_find_start_code (guint32 *sync_word, guint8 *cur, guint8 *end);
-
 void mpeg_packetiser_init (MPEGPacketiser *p);
 void mpeg_packetiser_free (MPEGPacketiser *p);
 
@@ -112,5 +135,13 @@ MPEGBlockInfo *mpeg_packetiser_get_block (MPEGPacketiser *p, GstBuffer **buf);
 
 /* Advance to the next data block */
 void mpeg_packetiser_next_block (MPEGPacketiser *p);
+
+/* Utility functions for parsing MPEG packets */
+guint8 *mpeg_util_find_start_code (guint32 *sync_word, 
+    guint8 *cur, guint8 *end);
+gboolean mpeg_util_parse_sequence_hdr (MPEGSeqHdr *hdr, 
+    guint8 *data, guint8 *end);
+gboolean mpeg_util_parse_picture_hdr (MPEGPictureHdr *hdr,
+    guint8 *data, guint8 *end);
 
 #endif

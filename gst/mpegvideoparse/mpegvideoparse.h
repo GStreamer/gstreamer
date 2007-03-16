@@ -39,19 +39,6 @@ G_BEGIN_DECLS
 typedef struct _MpegVideoParse MpegVideoParse;
 typedef struct _MpegVideoParseClass MpegVideoParseClass;
 
-typedef struct MPEGSeqHdr
-{
-  /* 0 for unknown, else 1 or 2 */
-  guint8 mpeg_version;
-
-  /* Pixel-Aspect Ratio from DAR code via set_par_from_dar */
-  gint par_w, par_h;
-  /* Width and Height of the video */
-  gint width, height;
-  /* Framerate */
-  gint fps_n, fps_d;
-} MPEGSeqHdr;
-
 struct _MpegVideoParse {
   GstElement element;
 

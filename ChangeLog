@@ -1,3 +1,27 @@
+2007-03-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/mpegvideoparse/mpegpacketiser.c: (mpeg_util_find_start_code),
+	(collect_packets), (set_par_from_dar), (set_fps_from_code),
+	(mpeg_util_parse_extension_packet), (mpeg_util_parse_sequence_hdr),
+	(mpeg_util_parse_picture_hdr):
+	* gst/mpegvideoparse/mpegpacketiser.h:
+	* gst/mpegvideoparse/mpegvideoparse.c:
+	(mpegvideoparse_handle_sequence), (mpegvideoparse_handle_picture),
+	(mpegvideoparse_drain_avail), (gst_mpegvideoparse_chain),
+	(mpv_parse_sink_event), (plugin_init):
+	* gst/mpegvideoparse/mpegvideoparse.h:
+	Move the MPEG specific byte parsing into the mpegpacketiser code.
+
+	Add parsing of picture types, that just feeds into a debug message
+	for now.
+
+	Fix some 64-bit format strings.
+
+2007-03-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/mpegaudioparse:
+	Remove empty dir.
+
 2007-03-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/equalizer/gstiirequalizer10bands.c:

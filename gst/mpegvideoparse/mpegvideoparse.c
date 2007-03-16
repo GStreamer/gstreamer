@@ -28,17 +28,18 @@
 /* FIXME: there are still some things to do in this element.
  * + Handle Sequence Display Extension to output the display size
  *   rather than the encoded size.
- * + Collect a list of regions and the sequence headers that apply
- *   to each region so that we properly handle SEQUENCE_END followed
- *   by a new sequence.
- * + At least detect when the sequence changes and error out instead.
  * + Do all the other stuff (documentation, tests) to get it into
  *   ugly or good.
  * + low priority:
  *   - handle seeking in raw elementary streams
  *   - calculate timestamps for all un-timestamped frames, taking into
  *     account frame re-ordering. Doing this probably requires introducing
- *     an extra end-to-end delay, however so might not be really desirable.
+ *     an extra end-to-end delay however, so might not be really desirable.
+ *   - Collect a list of regions and the sequence headers that apply
+ *     to each region so that we properly handle SEQUENCE_END followed
+ *     by a new sequence. At the moment, the caps will change if the
+ *     sequence changes, but if we then seek to a different spot it might
+ *     be wrong. Fortunately almost every stream only has 1 sequence.
  */
 GST_DEBUG_CATEGORY_STATIC (mpv_parse_debug);
 #define GST_CAT_DEFAULT mpv_parse_debug
@@ -190,150 +191,22 @@ gst_mpegvideoparse_dispose (MpegVideoParse * mpegvideoparse)
   gst_buffer_replace (&mpegvideoparse->seq_hdr_buf, NULL);
 }
 
-/* Set the Pixel Aspect Ratio in our hdr from a DAR code in the data */
-static void
-set_par_from_dar (MPEGSeqHdr * hdr, guint8 asr_code)
-{
-  /* Pixel_width = DAR_width * display_vertical_size */
-  /* Pixel_height = DAR_height * display_horizontal_size */
-  switch (asr_code) {
-    case 0x02:                 /* 3:4 DAR = 4:3 pixels */
-      hdr->par_w = 4 * hdr->height;
-      hdr->par_h = 3 * hdr->width;
-      break;
-    case 0x03:                 /* 9:16 DAR */
-      hdr->par_w = 16 * hdr->height;
-      hdr->par_h = 9 * hdr->width;
-      break;
-    case 0x04:                 /* 1:2.21 DAR */
-      hdr->par_w = 221 * hdr->height;
-      hdr->par_h = 100 * hdr->width;
-      break;
-    case 0x01:                 /* Square pixels */
-    default:
-      hdr->par_w = hdr->par_h = 1;
-      break;
-  }
-}
-
-static void
-set_fps_from_code (MPEGSeqHdr * hdr, guint8 fps_code)
-{
-  const gint framerates[][2] = {
-    {30, 1}, {24000, 1001}, {24, 1}, {25, 1},
-    {30000, 1001}, {30, 1}, {50, 1}, {60000, 1001},
-    {60, 1}, {30, 1}
-  };
-
-  if (fps_code < 10) {
-    hdr->fps_n = framerates[fps_code][0];
-    hdr->fps_d = framerates[fps_code][1];
-  } else {
-    /* Force a valid framerate */
-    hdr->fps_n = 30;
-    hdr->fps_d = 1;
-  }
-}
-
-static void
-mpegvideoparse_parse_seq (MpegVideoParse * mpegvideoparse, GstBuffer * buf)
+static gboolean
+mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
+    GstBuffer * buf)
 {
   MPEGSeqHdr new_hdr;
-  guint32 code;
-  guint8 dar_idx, fps_idx;
-  gint seq_data_length;
-  guint32 sync_word = 0xffffffff;
   guint8 *cur, *end;
-  gboolean constrained_flag;
-  gboolean load_intra_flag;
-  gboolean load_non_intra_flag;
 
   cur = GST_BUFFER_DATA (buf);
   end = GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
 
-  if (GST_BUFFER_SIZE (buf) < 12)
-    return;                     /* Too small to be a sequence header */
+  memset (&new_hdr, 0, sizeof (MPEGSeqHdr));
 
-  seq_data_length = 12;         /* minimum length. */
+  if (G_UNLIKELY (!mpeg_util_parse_sequence_hdr (&new_hdr, cur, end)))
+    return FALSE;
 
-  /* Skip the sync word */
-  cur += 4;
-
-  /* Parse the MPEG 1 bits */
-  new_hdr.mpeg_version = 1;
-
-  code = GST_READ_UINT32_BE (cur);
-  new_hdr.width = (code >> 20) & 0xfff;
-  new_hdr.height = (code >> 8) & 0xfff;
-
-  dar_idx = (code >> 4) & 0xf;
-  set_par_from_dar (&new_hdr, dar_idx);
-  fps_idx = code & 0xf;
-  set_fps_from_code (&new_hdr, fps_idx);
-
-  constrained_flag = (cur[7] >> 2) & 0x01;
-  load_intra_flag = (cur[7] >> 1) & 0x01;
-  if (load_intra_flag) {
-    seq_data_length += 64;      /* 8 rows of 8 bytes of intra matrix */
-    if (GST_BUFFER_SIZE (buf) < seq_data_length)
-      return;
-    cur += 64;
-  }
-
-  load_non_intra_flag = cur[7] & 0x01;
-  if (load_non_intra_flag) {
-    seq_data_length += 64;      /* 8 rows of 8 bytes of non-intra matrix */
-    if (GST_BUFFER_SIZE (buf) < seq_data_length)
-      return;
-    cur += 64;
-  }
-
-  /* Skip the rest of the MPEG-1 header */
-  cur += 8;
-
-  /* Read MPEG-2 sequence extensions */
-  cur = mpeg_find_start_code (&sync_word, cur, end);
-  while (cur != NULL) {
-    /* Cur points at the last byte of the start code */
-    if (cur[0] == MPEG_PACKET_EXTENSION) {
-      guint8 ext_code;
-
-      if ((end - cur - 1) < 1)
-        return;                 /* short extension packet extension */
-
-      ext_code = cur[1] >> 4;
-      if (ext_code == MPEG_PACKET_EXT_SEQUENCE) {
-        /* Parse a Sequence Extension */
-        guint8 horiz_size_ext, vert_size_ext;
-        guint8 fps_n_ext, fps_d_ext;
-
-        if ((end - cur - 1) < 7)
-          /* need at least 10 bytes, minus 3 for the start code 000001 */
-          return;
-
-        horiz_size_ext = ((cur[2] << 1) & 0x02) | ((cur[3] >> 7) & 0x01);
-        vert_size_ext = (cur[3] >> 5) & 0x03;
-        fps_n_ext = (cur[6] >> 5) & 0x03;
-        fps_d_ext = cur[6] & 0x1f;
-
-        new_hdr.fps_n *= (fps_n_ext + 1);
-        new_hdr.fps_d *= (fps_d_ext + 1);
-        new_hdr.width += (horiz_size_ext << 12);
-        new_hdr.height += (vert_size_ext << 12);
-      }
-
-      new_hdr.mpeg_version = 2;
-    }
-    cur = mpeg_find_start_code (&sync_word, cur, end);
-  }
-
-  if (new_hdr.par_w != mpegvideoparse->seq_hdr.par_w ||
-      new_hdr.par_h != mpegvideoparse->seq_hdr.par_h ||
-      new_hdr.fps_n != mpegvideoparse->seq_hdr.fps_n ||
-      new_hdr.fps_d != mpegvideoparse->seq_hdr.fps_d ||
-      new_hdr.width != mpegvideoparse->seq_hdr.width ||
-      new_hdr.height != mpegvideoparse->seq_hdr.height ||
-      new_hdr.mpeg_version != mpegvideoparse->seq_hdr.mpeg_version) {
+  if (memcmp (&mpegvideoparse, &new_hdr, sizeof (MPEGSeqHdr)) != 0) {
     GstCaps *caps;
     GstBuffer *seq_buf;
 
@@ -344,7 +217,7 @@ mpegvideoparse_parse_seq (MpegVideoParse * mpegvideoparse, GstBuffer * buf)
     gst_buffer_unref (seq_buf);
 
     /* And update the new_hdr into our stored version */
-    memcpy (&mpegvideoparse->seq_hdr, &new_hdr, sizeof (MPEGSeqHdr));
+    mpegvideoparse->seq_hdr = new_hdr;
 
     caps = gst_caps_new_simple ("video/mpeg",
         "systemstream", G_TYPE_BOOLEAN, FALSE,
@@ -357,8 +230,41 @@ mpegvideoparse_parse_seq (MpegVideoParse * mpegvideoparse, GstBuffer * buf)
         "codec_data", GST_TYPE_BUFFER, seq_buf, NULL);
 
     GST_DEBUG ("New mpegvideoparse caps: %" GST_PTR_FORMAT, caps);
-    gst_pad_set_caps (mpegvideoparse->srcpad, caps);
+    if (!gst_pad_set_caps (mpegvideoparse->srcpad, caps))
+      return FALSE;
   }
+
+  return TRUE;
+}
+
+static gboolean
+mpegvideoparse_handle_picture (MpegVideoParse * mpegvideoparse, GstBuffer * buf)
+{
+  guint8 *cur, *end;
+  guint32 sync_word = 0xffffffff;
+
+  cur = GST_BUFFER_DATA (buf);
+  end = GST_BUFFER_DATA (buf) + GST_BUFFER_SIZE (buf);
+
+  cur = mpeg_util_find_start_code (&sync_word, cur, end);
+  while (cur != NULL) {
+    /* Cur points at the last byte of the start code */
+    if (cur[0] == MPEG_PACKET_PICTURE) {
+      guint8 *pic_data = cur - 3;
+      MPEGPictureHdr hdr;
+
+      /* pic_data points to the first byte of the sync word now */
+      if (!mpeg_util_parse_picture_hdr (&hdr, pic_data, end))
+        return FALSE;
+
+      GST_LOG_OBJECT (mpegvideoparse, "Picture type is %u", hdr.pic_type);
+      /* FIXME: Can use the picture type and number of fields to track a
+       * timestamp */
+    }
+    cur = mpeg_util_find_start_code (&sync_word, cur, end);
+  }
+
+  return TRUE;
 }
 
 #if 0
@@ -392,11 +298,11 @@ static GstFlowReturn
 mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
 {
   MPEGBlockInfo *cur;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   GstFlowReturn res = GST_FLOW_OK;
 
   cur = mpeg_packetiser_get_block (&mpegvideoparse->packer, &buf);
-  while (cur != NULL) {
+  while ((cur != NULL) && (res == GST_FLOW_OK)) {
     /* Handle the block */
     GST_LOG_OBJECT (mpegvideoparse,
         "Have block of size %u with pack_type 0x%02x and flags 0x%02x\n",
@@ -404,7 +310,11 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
 
     /* Don't start pushing out buffers until we've seen a sequence header */
     if (mpegvideoparse->seq_hdr.mpeg_version == 0) {
-      if ((cur->flags & MPEG_BLOCK_FLAG_SEQUENCE) == 0) {
+      if (cur->flags & MPEG_BLOCK_FLAG_SEQUENCE) {
+        /* Found a sequence header */
+        if (!mpegvideoparse_handle_sequence (mpegvideoparse, buf))
+          goto error;
+      } else {
         if (buf) {
           GST_DEBUG_OBJECT (mpegvideoparse,
               "No sequence header yet. Dropping buffer of %u bytes",
@@ -412,9 +322,22 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
           gst_buffer_unref (buf);
           buf = NULL;
         }
-      } else {
-        /* Found a sequence header */
-        mpegvideoparse_parse_seq (mpegvideoparse, buf);
+      }
+    }
+
+    if (buf != NULL) {
+      /* If outputting a PICTURE packet, we can calculate the duration
+         and possibly the timestamp */
+      if (cur->flags & MPEG_BLOCK_FLAG_PICTURE) {
+        if (!mpegvideoparse_handle_picture (mpegvideoparse, buf)) {
+          /* Corrupted picture. Drop it. */
+          GST_DEBUG_OBJECT (mpegvideoparse,
+              "Corrupted picture header. Dropping buffer of %u bytes",
+              GST_BUFFER_SIZE (buf));
+          mpegvideoparse->need_discont = TRUE;
+          gst_buffer_unref (buf);
+          buf = NULL;
+        }
       }
     }
 
@@ -423,7 +346,9 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
           "mpegvideoparse: pushing buffer of %u bytes with ts %"
           GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
       gst_buffer_set_caps (buf, GST_PAD_CAPS (mpegvideoparse->srcpad));
+
       if (mpegvideoparse->need_discont) {
         GST_DEBUG_OBJECT (mpegvideoparse,
             "setting discont flag on outgoing buffer");
@@ -431,8 +356,6 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
         mpegvideoparse->need_discont = FALSE;
       }
       res = gst_pad_push (mpegvideoparse->srcpad, buf);
-      if (res != GST_FLOW_OK)
-        break;
     }
 
     /* Advance to the next data block */
@@ -441,6 +364,10 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
   };
 
   return res;
+error:
+  if (buf != NULL)
+    gst_buffer_unref (buf);
+  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
@@ -459,8 +386,8 @@ gst_mpegvideoparse_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (mpegvideoparse,
       "mpegvideoparse: received buffer of %u bytes with ts %"
-      GST_TIME_FORMAT, GST_BUFFER_SIZE (buf),
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+      GST_TIME_FORMAT " and offset %" G_GINT64_FORMAT, GST_BUFFER_SIZE (buf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_OFFSET (buf));
 
   /* If we have an offset, and the incoming offset doesn't match, 
      or we have a discont, handle it first by flushing out data
@@ -477,6 +404,7 @@ gst_mpegvideoparse_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
+  /* Clear out any existing stuff if the new buffer is discontinuous */
   if (have_discont) {
     GST_DEBUG_OBJECT (mpegvideoparse, "Have discont packet, draining data");
     mpegvideoparse->need_discont = TRUE;
@@ -557,9 +485,10 @@ mpv_parse_sink_event (GstPad * pad, GstEvent * event)
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &pos);
+
       GST_DEBUG_OBJECT (mpegvideoparse,
-          "Pushing newseg rate %g, applied rate %g, "
-          "format %d, start %lld, stop %lld, pos %lld\n",
+          "Pushing newseg rate %g, applied rate %g, format %d, start %"
+          G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", pos %" G_GINT64_FORMAT,
           rate, applied_rate, format, start, stop, pos);
 
       res = gst_pad_event_default (pad, event);
@@ -570,7 +499,6 @@ mpv_parse_sink_event (GstPad * pad, GstEvent * event)
       res = gst_pad_event_default (pad, event);
       break;
     case GST_EVENT_EOS:
-
       /* Push any remaining buffers out, then flush. */
       mpeg_packetiser_handle_eos (&mpegvideoparse->packer);
       mpegvideoparse_drain_avail (mpegvideoparse);
