@@ -17,6 +17,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-equalizer-10bands
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * <para>
+ * The 10 band equalizer element changes the frequency spectrum of the audio data.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-10bands band2=-1.0 ! alsasink
+ * </programlisting>
+ * This lowers the volume of the 3rd band which is at 93 Hz by FIXME db.
+ * </para>
+ * </refsect2>
+ */
+
 /*
  *
  * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-10bands band1=-1.0 ! alsasink
@@ -126,7 +143,7 @@ gst_iir_equalizer_10bands_init (GstIirEqualizer10Bands * equ_n,
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (equ_n);
 
-  gst_iir_equalizer_compute_frequencies (equ, 3);
+  gst_iir_equalizer_compute_frequencies (equ, 10);
 }
 
 static void
