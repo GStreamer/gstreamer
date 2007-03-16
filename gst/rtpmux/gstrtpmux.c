@@ -243,12 +243,14 @@ gst_rtp_mux_request_new_pad (GstElement * element,
   if (templ == gst_element_class_get_pad_template (klass, "sink_%d")) {
     gchar *name;
 
+    GST_OBJECT_LOCK (rtp_mux);
     /* create new pad with the name */
     name = g_strdup_printf ("sink_%02d", rtp_mux->numpads);
     newpad = gst_pad_new_from_template (templ, name);
     g_free (name);
 
     rtp_mux->numpads++;
+    GST_OBJECT_UNLOCK (rtp_mux);
   } else {
     GST_WARNING_OBJECT (rtp_mux, "this is not our template!\n");
     return NULL;
@@ -269,19 +271,36 @@ static GstFlowReturn
 gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstRTPMux *rtp_mux;
-
+  gboolean drop = FALSE;
+  GstFlowReturn ret;
+  
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
+  GST_OBJECT_LOCK (rtp_mux);
+  
+  if (rtp_mux->special_pad != NULL &&
+      rtp_mux->special_pad != pad) {
+    drop = TRUE;
+  }
 
-  rtp_mux->seqnum++;
-  GST_LOG_OBJECT (rtp_mux, "setting RTP seqnum %d", rtp_mux->seqnum);
-  gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
+  if (drop) {
+    gst_buffer_unref (buffer);
+    ret = GST_FLOW_OK;
+    GST_OBJECT_UNLOCK (rtp_mux);
+  }
 
+  else {
+    rtp_mux->seqnum++;
+    GST_LOG_OBJECT (rtp_mux, "setting RTP seqnum %d", rtp_mux->seqnum);
+    gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
+    GST_DEBUG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
+            GST_BUFFER_SIZE (buffer), rtp_mux->seqnum - 1);
+
+    GST_OBJECT_UNLOCK (rtp_mux);
+    ret = gst_pad_push (rtp_mux->srcpad, buffer);
+  }
+    
   gst_object_unref (rtp_mux);
-
-  GST_DEBUG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
-      GST_BUFFER_SIZE (buffer), rtp_mux->seqnum - 1);
-
-  return gst_pad_push (rtp_mux->srcpad, buffer);
+  return ret;
 }
 
 static gboolean
@@ -319,7 +338,7 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
   return TRUE;
 }
 
-static void
+/*static void
 gst_rtp_mux_set_sinkpads_blocked (GstRTPMux *rtp_mux, gboolean blocked, GstPad *exception)
 {
   GstIterator *iter;
@@ -343,7 +362,7 @@ gst_rtp_mux_set_sinkpads_blocked (GstRTPMux *rtp_mux, gboolean blocked, GstPad *
     }
     gst_object_unref (GST_OBJECT (pad));
   }
-}
+}*/
 
 static gboolean
 gst_rtp_mux_handle_sink_event (GstPad * pad, GstEvent * event)
@@ -368,22 +387,22 @@ gst_rtp_mux_handle_sink_event (GstPad * pad, GstEvent * event)
         if (!gst_structure_get_boolean (structure, "lock", &lock))
           break;
 
+        GST_OBJECT_LOCK (rtp_mux);
         if (lock) {
           if (rtp_mux->special_pad != NULL) {
               GST_WARNING_OBJECT (rtp_mux,
                       "Stream lock already acquired by pad %s",
                       GST_ELEMENT_NAME (rtp_mux->special_pad));
-              break;
           }
 
-          rtp_mux->special_pad = gst_object_ref (pad);
+          else
+            rtp_mux->special_pad = gst_object_ref (pad);
         }
 
         else {
           if (rtp_mux->special_pad == NULL) {
               GST_WARNING_OBJECT (rtp_mux,
                       "Stream lock not acquired, can't release it");
-              break;
           }
 
           else if (pad != rtp_mux->special_pad) {
@@ -391,15 +410,18 @@ gst_rtp_mux_handle_sink_event (GstPad * pad, GstEvent * event)
                       "pad %s attempted to release Stream lock"
                       " which was acquired by pad %s", GST_ELEMENT_NAME (pad),
                       GST_ELEMENT_NAME (rtp_mux->special_pad));
-              break;
           }
 
-          gst_object_unref (rtp_mux->special_pad);
-          rtp_mux->special_pad = NULL;
+          else {
+            gst_object_unref (rtp_mux->special_pad);
+            rtp_mux->special_pad = NULL;
+          }
         }
-          
-        gst_rtp_mux_set_sinkpads_blocked (rtp_mux, lock, pad);
+        
+        GST_OBJECT_UNLOCK (rtp_mux);
+        /*gst_rtp_mux_set_sinkpads_blocked (rtp_mux, lock, pad);*/
       }
+
       break;
     }
     default:
