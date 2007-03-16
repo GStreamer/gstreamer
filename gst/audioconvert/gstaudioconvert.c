@@ -380,7 +380,7 @@ static GstStructure *
 make_lossless_changes (GstStructure * s, gboolean isfloat)
 {
   if (isfloat) {
-    /* float doesn't have a depth or signedness field and only supports a
+    /* float doesn't have a depth or signedness field and only supports
      * widths of 32/64 and native endianness */
     gst_structure_remove_field (s, "depth");
     gst_structure_remove_field (s, "signed");
@@ -413,11 +413,32 @@ make_lossless_changes (GstStructure * s, gboolean isfloat)
     gst_structure_set_value (s, "signed", &list);
     g_value_unset (&val);
     g_value_unset (&list);
-    /* We don't handle 64 bit integer audio, so we set the width here as well */
-    gst_structure_set (s, "width", G_TYPE_INT, 32, NULL);
   }
 
   return s;
+}
+
+static void
+strip_width_64 (GstStructure * s)
+{
+  const GValue *v = gst_structure_get_value (s, "width");
+  GValue widths = { 0 };
+
+  if (GST_VALUE_HOLDS_LIST (v)) {
+    int i;
+    int len = gst_value_list_get_size (v);
+
+    g_value_init (&widths, GST_TYPE_LIST);
+
+    for (i = 0; i < len; i++) {
+      const GValue *width = gst_value_list_get_value (v, i);
+
+      if (g_value_get_int (width) != 64)
+        gst_value_list_append_value (&widths, width);
+    }
+    gst_structure_set_value (s, "width", &widths);
+    g_value_unset (&widths);
+  }
 }
 
 /* Little utility function to create a related structure for float/int */
@@ -430,6 +451,9 @@ append_with_other_format (GstCaps * caps, GstStructure * s, gboolean isfloat)
     s2 = gst_structure_copy (s);
     gst_structure_set_name (s2, "audio/x-raw-int");
     s = make_lossless_changes (s2, FALSE);
+    /* If 64 bit float was allowed; remove width 64: we don't support it for 
+     * integer*/
+    strip_width_64 (s);
     gst_caps_append_structure (caps, s2);
   } else {
     s2 = gst_structure_copy (s);

@@ -1,6 +1,13 @@
 2007-03-16  Michael Smith  <msmith@fluendo.com>
 
 	* gst/audioconvert/gstaudioconvert.c: (make_lossless_changes),
+	(strip_width_64), (append_with_other_format):
+	  Previous fix was too simplistic, and broke the tests. Use a better
+	  approach; only strip 64 from widths for integer audio.
+
+2007-03-16  Michael Smith  <msmith@fluendo.com>
+
+	* gst/audioconvert/gstaudioconvert.c: (make_lossless_changes),
 	(gst_audio_convert_transform_caps):
 	  We don't support 64 bit integer audio, so don't try to claim we can.
 	  Stops us producing caps don't match our template caps.
