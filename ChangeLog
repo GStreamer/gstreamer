@@ -1,3 +1,9 @@
+2007-03-16  Edward Hervey  <edward@fluendo.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	Emit 'have-ns-view' message when working in embedded mode. The message
+	will contain a pointer to the newly created NSView.
+
 2007-03-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/mpegvideoparse/mpegpacketiser.c: (mpeg_util_find_start_code),

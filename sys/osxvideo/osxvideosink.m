@@ -256,6 +256,9 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
     // insert event dispatch in the glib main loop
     g_idle_add ((GSourceFunc) cocoa_event_loop, osxvideosink);
   } else {
+    GstStructure *s;
+    GstMessage *msg;
+    gchar * tmp;
     /* Needs to be embedded */
 
     rect.origin.x = 0.0;
@@ -264,11 +267,20 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
     rect.size.height = (float) osxwindow->height;
     osxwindow->gstview =[[GstGLView alloc] initWithFrame:rect];
     [osxwindow->gstview autorelease];
-    /* send signal 
-       FIXME: need to send a bus message */
-    /*g_signal_emit (G_OBJECT(osxvideosink),
-       gst_osx_video_sink_signals[SIGNAL_VIEW_CREATED], 0,
-       osxwindow->gstview); */
+    
+    s = gst_structure_new ("have-ns-view",
+			   "nsview", G_TYPE_POINTER, osxwindow,
+			   nil);
+
+    tmp = gst_structure_to_string (s);
+    GST_DEBUG_OBJECT (osxvideosink, "Sending message %s",
+		      tmp);
+    g_free (tmp);
+
+    msg = gst_message_new_element (GST_OBJECT (osxvideosink), s);
+    gst_element_post_message (GST_ELEMENT (osxvideosink), msg);
+
+    GST_LOG_OBJECT (osxvideosink, "'have-ns-view' message sent");
   }
   return osxwindow;
 }
