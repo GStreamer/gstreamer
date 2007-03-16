@@ -1,6 +1,11 @@
 2007-03-16  Edward Hervey  <edward@fluendo.com>
 
 	* sys/osxvideo/osxvideosink.m:
+	Fix previous commit, we want to pass the NSView in the message.
+
+2007-03-16  Edward Hervey  <edward@fluendo.com>
+
+	* sys/osxvideo/osxvideosink.m:
 	Emit 'have-ns-view' message when working in embedded mode. The message
 	will contain a pointer to the newly created NSView.
 
