@@ -413,6 +413,8 @@ make_lossless_changes (GstStructure * s, gboolean isfloat)
     gst_structure_set_value (s, "signed", &list);
     g_value_unset (&val);
     g_value_unset (&list);
+    /* We don't handle 64 bit integer audio, so we set the width here as well */
+    gst_structure_set (s, "width", G_TYPE_INT, 32, NULL);
   }
 
   return s;
@@ -522,10 +524,9 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
   /* Same, plus a float<->int conversion */
   append_with_other_format (ret, s, isfloat);
 
-  /* We'll reduce depth if we must... only for integer, since we can't do this
-   * for float. We reduce as low as 16 bits; reducing to less than this is
-   * even worse than dropping channels. We only do this if we haven't already
-   * done the equivalent above. */
+  /* We'll reduce depth if we must. We reduce as low as 16 bits (for integer); 
+   * reducing to less than this is even worse than dropping channels. We only 
+   * do this if we haven't already done the equivalent above. */
   if (!gst_structure_get_int (structure, "width", &width) || width > 16) {
     if (isfloat) {
       GstStructure *s2 = gst_structure_copy (s);
@@ -563,6 +564,8 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
     gst_structure_free (s);
   } else
     gst_caps_append_structure (ret, s);
+
+  GST_DEBUG_OBJECT (base, "Caps transformed to % " GST_PTR_FORMAT, ret);
 
   return ret;
 }
