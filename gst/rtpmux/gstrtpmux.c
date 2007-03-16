@@ -338,32 +338,6 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
   return TRUE;
 }
 
-/*static void
-gst_rtp_mux_set_sinkpads_blocked (GstRTPMux *rtp_mux, gboolean blocked, GstPad *exception)
-{
-  GstIterator *iter;
-  GstPad *pad;
-
-  GST_DEBUG_OBJECT (rtp_mux, "blocking all sink pads except: %s",
-          GST_ELEMENT_NAME (exception));
-  
-  iter = gst_element_iterate_sink_pads (GST_ELEMENT (rtp_mux));
-  while (gst_iterator_next (iter, (gpointer) &pad) == GST_ITERATOR_OK) {
-    if (pad != exception) {
-      GstPad *peer;
-
-      peer = gst_pad_get_peer (pad);
-
-      GST_DEBUG_OBJECT (rtp_mux, "blocking pad %s..", GST_ELEMENT_NAME (pad));
-      gst_pad_set_blocked (peer, blocked);
-      GST_DEBUG_OBJECT (rtp_mux, "pad %s blocked", GST_ELEMENT_NAME (pad));
-
-      gst_object_unref (GST_OBJECT (peer));
-    }
-    gst_object_unref (GST_OBJECT (pad));
-  }
-}*/
-
 static gboolean
 gst_rtp_mux_handle_sink_event (GstPad * pad, GstEvent * event)
 {
@@ -419,7 +393,6 @@ gst_rtp_mux_handle_sink_event (GstPad * pad, GstEvent * event)
         }
         
         GST_OBJECT_UNLOCK (rtp_mux);
-        /*gst_rtp_mux_set_sinkpads_blocked (rtp_mux, lock, pad);*/
       }
 
       break;
