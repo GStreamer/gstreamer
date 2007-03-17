@@ -2527,7 +2527,7 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       name = "Indeo-3 video";
       break;
     case CODEC_ID_INDEO2:
-      name = "Indeo=2 video";
+      name = "Indeo-2 video";
       break;
     case CODEC_ID_VP3:
       name = "VP3 video";

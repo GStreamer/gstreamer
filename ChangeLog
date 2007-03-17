@@ -1,3 +1,8 @@
+2007-03-17  Johan Dahlin  <jdahlin@async.com.br>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c (gst_ffmpeg_get_codecid_longname): 
+	Fix typo in Indeo-2 codec name
+
 2007-03-02  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_cfg_init):
