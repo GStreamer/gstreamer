@@ -32,6 +32,7 @@ tests =  \
         test_registry.py \
         test_struct.py \
 	test_segment.py \
+	test_taglist.py \
 	test_xml.py
 
 check-local: testhelper.la

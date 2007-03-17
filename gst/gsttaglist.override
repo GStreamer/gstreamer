@@ -117,3 +117,25 @@ static PyMappingMethods _wrap_gst_tag_list_tp_as_mapping = {
 	(binaryfunc)_wrap_gst_tag_list_subscript,   /* mp_subscript */
 	(objobjargproc)_wrap_gst_tag_list_ass_subscript /* mp_ass_subscript */
 };
+%%
+override-slot GstTagList.tp_as_sequence
+static int
+_wrap_gst_tag_list_contains(PyGObject *self, PyObject *py_key)
+{
+	return gst_structure_has_field((GstStructure*)self->obj,
+				       PyString_AsString(py_key));
+}
+
+static PySequenceMethods _wrap_gst_tag_list_tp_as_sequence = {
+	(inquiry)NULL,
+	(binaryfunc)NULL,
+	(intargfunc)NULL,
+	(intargfunc)NULL,
+	(intintargfunc)NULL,
+	(intobjargproc)NULL,
+	(intintobjargproc)NULL,
+	(objobjproc)_wrap_gst_tag_list_contains,
+	(binaryfunc)NULL,
+	(intargfunc)NULL,
+};
+

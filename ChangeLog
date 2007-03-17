@@ -1,3 +1,10 @@
+2007-03-17  Johan Dahlin  <jdahlin@async.com.br>
+
+	* gst/gsttaglist.override (_wrap_gst_tag_list_contains): 
+	* testsuite/test_taglist.py (TestTagList.testKeys): 
+
+	Implement sq_contains and add tests for TagList.
+
 2007-03-02  Edward Hervey  <edward@fluendo.com>
 
 	* gst/__init__.py:
