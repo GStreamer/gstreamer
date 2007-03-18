@@ -20,8 +20,31 @@ pkgconfig 0.9.0 or better (http://www.freedesktop.org/software/pkgconfig/)
 Required libraries:
 ===================
 
-The core GStreamer libraries. See the gstreamer/ module in GStreamer cvs, or
-the version that corresponds to this plugin release.
+Package:	GStreamer
+Version:	0.10.11.2
+Recommended:	0.10.latest
+URL:		http://gstreamer.freedesktop.org/
+DebianPackage:	libgstreamer0.10-dev
+Notes:		The required version is updated frequently, so the version
+	listed in this file is often wrong.  If you are compiling from CVS,
+	the required version is often the latest GStreamer CVS.
+
+Package:	GStreamer Base Plugins
+Version:	0.10.11.2
+Recommended:	0.10.latest
+URL:		http://gstreamer.freedesktop.org/
+DebianPackage:	libgstreamer-plugins-base0.10-dev
+Notes:		The required version is updated frequently, so the version
+	listed in this file is often wrong.  If you are compiling from CVS,
+	the required version is often the latest GStreamer Base Plugins CVS.
+
+Package:	liboil
+Version:	>= 0.3.8
+Recommended:	0.3.latest
+URL:		http://liboil.freedesktop.org/
+DebianPackage:	liboil0.3-dev
+
+
 
 Optional libraries:
 ===================
@@ -30,86 +53,109 @@ This file lists supporting libraries for which gst-plugins contains plugins,
 as well as their minimum version.  You can find the corresponding plugins in
 ext/(library)
 
-dirac		(Dirac video codec)
-			http://www.bbc.co.uk/rd/projects/dirac/index.shtml
-libaudiofile    (for afsrc/afsink
-			http://oss.sgi.com/projects/audiofile/
-libmad          (for the mad mp3 decoder plugin)
-			http://www.mars.org/home/rob/proj/mpeg/
-libjpeg         (for jpegenc/jpegdec)
-			http://www.ijg.org/
-libopenquicktime (for the QT plugin)
-			http://sourceforge.net/projects/openquicktime/
-libXv		(for videosink)
-libxaudio	(for xa mp3 decoder)
-			http://www.xaudio.com/
-libvorbis	(for vorbisenc, vorbisdec)
-			http://www.xiph.org/ogg/vorbis/index.html
-libcdparanoia	(for cdparanoia ripper)
-			http://www.xiph.org/paranoia/index.html
-liblame		(for lame mp3 encoder)
-			http://www.mp3dev.org/mp3/
-libshout	(for the shoutcast plugin)
-			http://www.icecast.org
-libasound	(for the alsa src/sink plugin)
-			http://alsa-project.org/
-librtp		(for the rtp sink plugin)
-			http://www.linphone.org/ortp/
-aalib		(for the aa sink plugin)
-			http://aa-project.sourceforge.net/aalib/
-libcaca		(for the color aa sink plugin)
-			http://sam.zoy.org/projects/libcaca/
-aRts		(for the arts plugin wrapper, and the artsd sink)
-			http://www.arts-project.org
-raw1394/linux1394	(for the dv plugin)
-			http://linux1394.sourceforge.net
-libdvdread	(for the dvdsrc)
-			http://www.dtek.chalmers.se/groups/dvd/
-			(optional: libcss for encrypted DVDs)
-libdvdnav	(for the dvdnavsrc)
-			http://dvd.sourceforge.net/
-			(optional: libcss for encrypted DVDs)
-		>= 0.1.9
-libesound	(for the esd sink 
-			ftp.gnome.org/pub/GNOME/stable/sources/esound)
-gnome-vfs	(for the gnome-vfs src)
-		>= 2.4.0
-libgsm		(for the gsm plugin)
-			http://kbs.cs.tu-berlin.de/~jutta/toast.html
-sdl		(for the sdl sink)
-			http://www.libsdl.org
-xmms		(for the xmms plugins wrapper)
-			http://www.xmms.org
-mpeg2dec/a52dec	(for mpeg2 related plugins and dvd playback)
-			http://libmpeg2.sourceforge.net/
-			and http://liba52.sourceforge.net/
-		>=	v0.3.1/v0.7.2
-liboil		(for the liboil optimization library)
-			http://www.schleef.org/liboil/
-		>=	0.3.10
-flac		(for the FLAC lossless audio format)
-			http://flac.sourceforge.net
-                = 1.1.2  other versions will not work
-gtk		(for the gdk_pixbuf plugin)
-			http://www.gtk.org/
-		>= 2.2.1 preferred, 2.0 ok
-pango		(for the textoverlay plugins)
-			http://www.pango.org/
-dtsdec		(for DTS audio decoding)
-			http://www.videolan.org/libdca.html
-divx		(for divx decoding)
-			http://www.divx.com/divx/linux/
-libmng		(for mng animated image format encoding/decoding)
-			http://gjuyn.xs4all.nl/libmng
-musepack	(for musepack audio codec/format)
-			(http://www.musepack.net/)
-nas		(for the NAS sound server sink)
-			(http://radscan.com/nas.html)
-libmms		(for MMS protocol support)
-			(http://www.sf.net/projects/libmms)
+Package:	GTK+
+Version:	>= 2.0
+Recommended:	>= 2.2
+URL:		http://www.gtk.org/
+DebianPackage:	libgtk2.0-dev
+Plugins:	gdkpixbuf (gdkpixbufdec, gdkpixbufscale)
+Notes:		Also required by several examples.  Plugin require >= 2.2.
+
+Package:	Check
+DebianPackage:	check
+URL:		http://check.sourceforge.net/
+
+Package:	Xlib
+Plugins:	ximagesrc, v4l2
+DebianPackage:	libx11-dev libxv-dev libxt-dev
+
+Package:	AALib
+Plugins:	aasink
+URL:		http://aa-project.sourceforge.net/aalib/
+
+Package:	LibXML
+Version:	>= 2.4.9
+Plugins:	annodex (cmmlenc, cmmldec)
+URL:		http://xmlsoft.org/
+
+Package:	Cairo
+Version:	>= 1.0
+Plugins:	cairo (cairotextoverlay, cairotimeoverlay)
+URL:		http://cairographics.org/
+
+Package:	CDIO
+Version:	>= 0.71
+Plugins:	cdio (cdiocddasrc)
+URL:		http://www.gnu.org/software/libcdio/
+
+Package:	ESound
+Version:	>= 0.2.12
+Plugins:	esdsink
+URL:		http://www.gnome.org/
+
+Package:	FLAC
+Version:	== 1.1.2
+Plugins:	flac (flacenc, flacdec)
+URL:		http://flac.sourceforge.net/
+
+Package:	GConf
+Version:	>= 2.0
+Plugins:	gconfelements (gconfvideosink, gconfvideosrc, gconfaudiosink,
+		gconfaudiosrc)
+URL:		http://www.gnome.org/
+
+Package:	HAL
+Version:	>= 0.5.6
+Plugins:	halelements (halaudiosink, halaudiosrc)
+URL:		http://hal.freedesktop.org/
+
+Package:	IJG JPEG library
+Plugins:	jpeg (jpegenc, jpegdec, smokeenc, smokedec)
+URL:		http://www.ijg.org/
+
+Package:	LADSPA
+Plugins:	ladspa
+URL:		http://www.ladspa.org/
+
+Package:	Libcaca
+Plugins:	cacasink
+URL:		http://libcaca.zoy.org/
+
+Package:	Libdv
+Version:	>= 0.100
+Plugins:	dv (dvdec)
+URL:		http://libdv.sourceforge.net/
+
+Package:	Libpng
+Version:	>= 1.2
+Plugins:	png (pngenc, pngdec)
+URL:		http://www.libpng.org/pub/png/libpng.html
+
+Package:	libraw1394
+Plugins:	dv1394
+URL:		http://www.linux1394.org/
+
+Package:	libiec61883
+Plugins:	dv1394
+URL:		http://www.linux1394.org/
+
+Package:	libshout
+Version:	>= 2.0
+URL:		http://www.icecast.org/
+
+Package:	speex
+Version:	>= 1.0.4 or >= 1.1.5
+Plugins:	speex (speexenc, speexdec)
+URL:		http://www.speex.org/
+
+Package:	taglib
+Version:	>= 1.4
+DebianPackage:	libtag1-dev
+URL:		http://developer.kde.org/~wheeler/taglib.html
+
+Package:	zlib
+Plugins:	id3demux
+URL:		http://www.zlib.net/
 
 
-Optional debian packages:
-=========================
 
-gtk-doc-tools 0.4-0.2  -- needed to build documentation

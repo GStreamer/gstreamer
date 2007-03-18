@@ -1,5 +1,11 @@
 2007-03-17  David Schleef  <ds@schleef.org>
 
+	* REQUIREMENTS: Change the format to key/value, add a bunch of
+	  information, remove a bunch of requirements that are for
+	  other GStreamer packages.
+
+2007-03-17  David Schleef  <ds@schleef.org>
+
 	* REQUIREMENTS: Fix a few things.  This file really needs a
 	good once-over.
 
