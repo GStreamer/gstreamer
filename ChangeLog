@@ -1,3 +1,8 @@
+2007-03-17  David Schleef  <ds@schleef.org>
+
+	* REQUIREMENTS:  Update this file, change the formatting to make
+	it more consistent, plus more machine readable.
+
 2007-03-16  Michael Smith  <msmith@fluendo.com>
 
 	* gst/audioconvert/gstaudioconvert.c: (make_lossless_changes),

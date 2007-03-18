@@ -23,105 +23,83 @@ Required libraries:
 The core GStreamer libraries. See the gstreamer/ module in GStreamer cvs, or
 the version that corresponds to this plugin release.
 
+Package:	GStreamer
+Version:	0.10.11.2
+Recommended:	0.10.latest
+URL:		http://gstreamer.freedesktop.org/
+DebianPackage:	libgstreamer0.10-dev
+Notes:		The required version is updated frequently, so the version
+	listed in this file is often wrong.  If you are compiling from CVS,
+	the required version is often the latest GStreamer CVS.
+
+Package:	liboil
+Version:	>= 0.3.8
+Recommended:	0.3.latest
+URL:		http://liboil.freedesktop.org/
+DebianPackage:	liboil0.3-dev
+
+
 Optional libraries:
 ===================
 
-This file lists supporting libraries for which gst-plugins contains plugins,
-as well as their minimum version.  You can find the corresponding plugins in
-ext/(library)
+This file lists supporting libraries for which gst-plugins-base contains
+plugins, as well as their minimum version.  You can find the corresponding
+plugins in ext/(library)
 
-dirac		(Dirac video codec)
-			http://www.bbc.co.uk/rd/projects/dirac/index.shtml
-libaudiofile    (for afsrc/afsink
-			http://oss.sgi.com/projects/audiofile/
-libmad          (for the mad mp3 decoder plugin)
-			http://www.mars.org/home/rob/proj/mpeg/
-libjpeg         (for jpegenc/jpegdec)
-			http://www.ijg.org/
-libopenquicktime (for the QT plugin)
-			http://sourceforge.net/projects/openquicktime/
-libXv		(for videosink)
-libxaudio	(for xa mp3 decoder)
-			http://www.xaudio.com/
-libvorbis	(for vorbisenc, vorbisdec)
-			http://www.xiph.org/ogg/vorbis/index.html
-libcdparanoia	(for cdparanoia ripper)
-			http://www.xiph.org/paranoia/index.html
-liblame		(for lame mp3 encoder)
-			http://www.mp3dev.org/mp3/
-libshout	(for the shoutcast plugin)
-			http://www.icecast.org
-libasound	(for the alsa src/sink plugin)
-			http://alsa-project.org/
-librtp		(for the rtp sink plugin)
-			http://www.linphone.org/ortp/
-aalib		(for the aa sink plugin)
-			http://aa-project.sourceforge.net/aalib/
-libcaca		(for the color aa sink plugin)
-			http://sam.zoy.org/projects/libcaca/
-aRts		(for the arts plugin wrapper, and the artsd sink)
-			http://www.arts-project.org
-raw1394/linux1394	(for the dv plugin)
-			http://linux1394.sourceforge.net
-libdvdread	(for the dvdsrc)
-			http://www.dtek.chalmers.se/groups/dvd/
-			(optional: libcss for encrypted DVDs)
-libdvdnav	(for the dvdnavsrc)
-			http://dvd.sourceforge.net/
-			(optional: libcss for encrypted DVDs)
-		>= 0.1.9
-libesound	(for the esd sink 
-			ftp.gnome.org/pub/GNOME/stable/sources/esound)
-gnome-vfs	(for the gnome-vfs src)
-		>= 2.4.0
-libgsm		(for the gsm plugin)
-			http://kbs.cs.tu-berlin.de/~jutta/toast.html
-sdl		(for the sdl sink)
-			http://www.libsdl.org
-xmms		(for the xmms plugins wrapper)
-			http://www.xmms.org
-mpeg2dec/a52dec	(for mpeg2 related plugins and dvd playback)
-			http://libmpeg2.sourceforge.net/
-			and http://liba52.sourceforge.net/
-		>=	v0.3.1/v0.7.2
-swfdec		(for the swfdec (flash) plugin)
-			http://www.schleef.org/swfdec/
-liboil		(for the liboil optimization library)
-			http://www.schleef.org/liboil/
-		>=	0.3.6
-flac		(for the FLAC lossless audio format)
-			http://flac.sourceforge.net
-                >= 1.0.3 preferred, 1.0.2 should work
-gtk		(for the gdk_pixbuf plugin)
-			http://www.gtk.org/
-		>= 2.2.1 preferred, 2.0 ok
-pango		(for the textoverlay plugins)
-			http://www.pango.org/
-libHermes       (for colorspace conversion;most use ffcolorspace instead)
-                        http://www.clanlib.org/hermes/
-librfb		(for capturing of VNC output into a videostream)
-			http://www.schleef.org/
-libHermes       (for colorspace conversions (should not be needed anymore))
-                        http://www.clanlib.org/hermes/
-dtsdec		(for DTS audio decoding)
-			http://www.videolan.org/libdca.html
-divx		(for divx decoding)
-			http://www.divx.com/divx/linux/
-libmng		(for mng animated image format encoding/decoding)
-			http://gjuyn.xs4all.nl/libmng
-libvisual	(for audio visualisations)
-			http://libvisual.sourceforge.net/v2/
-musepack	(for musepack audio codec/format)
-			(http://www.musepack.net/)
-nas		(for the NAS sound server sink)
-			(http://radscan.com/nas.html)
-libtheora	(for Ogg Theora video support)
-			(http://www.theora.org)
-libmms		(for MMS protocol support)
-			(http://www.sf.net/projects/libmms)
+Package:	GTK+
+Version:	>= 2.0
+Recommended:	>= 2.2
+URL:		http://www.gtk.org/
+DebianPackage:	libgtk2.0-dev
+Notes:		Required by several examples
+
+Package:	Xlib
+Plugins:	xvimagesink, ximagesink, v4l (v4lsrc), ximagesrc
+DebianPackage:	libx11-dev libxv-dev libxt-dev
+
+Package:	Alsa
+Version:	>= 0.9.1
+Plugins:	alsa (alsasrc, alsasink)
+URL:		http://www.alsa-project.org/
+DebianPackage:	libasound2-dev
+
+Package:	CDParanoia
+Plugins:	cdparanoia
+URL:		http://xiph.org/paranoia/
+DebianPackage:	libcdparanoia0-dev
+
+Package:	GnomeVFS
+Version:	>= 2.0 (2.4?)
+Plugins:	gnomevfs (gnomevfssrc)
+URL:		http://www.gnome.org/
+DebianPackage:	libgnomevfs2-dev
+
+Package:	libvisual
+Version:	>= 0.2.0
+Recommended:	0.4.0
+Plugins:	libvisual
+URL:		http://localhost.nl/~synap/libvisual-wiki/index.php/Main_Page
+DebianPackage:	libvisual0.4-dev
+
+Package:	Ogg
+Version:	>= 1.0
+Plugins:	ogg (oggdemux, oggmux)
+URL:		http://xiph.org/ogg/
+DebianPackage:	libogg-dev
+
+Package:	Pango
+Plugins:	pango
+DebianPackage:	libpango1.0-dev
+URL:		http://www.pango.org/
+
+Package:	Theora
+Plugins:	theora (theoradec, theoraenc)
+URL:		http://www.theora.org/
+DebianPackage:	libtheora-dev
+
+Package:	Vorbis
+Plugins:	vorbis (vorbisdec, vorbisenc)
+DebianPackage:	libvorbis-dev
+URL:		http://www.vorbis.com/
 
 
-Optional debian packages:
-=========================
-
-gtk-doc-tools 0.4-0.2  -- needed to build documentation
