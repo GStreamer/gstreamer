@@ -84,39 +84,27 @@ mpeg2dec/a52dec	(for mpeg2 related plugins and dvd playback)
 			http://libmpeg2.sourceforge.net/
 			and http://liba52.sourceforge.net/
 		>=	v0.3.1/v0.7.2
-swfdec		(for the swfdec (flash) plugin)
-			http://www.schleef.org/swfdec/
 liboil		(for the liboil optimization library)
 			http://www.schleef.org/liboil/
-		>=	0.2.0
+		>=	0.3.10
 flac		(for the FLAC lossless audio format)
 			http://flac.sourceforge.net
-                >= 1.0.3 preferred, 1.0.2 should work
+                = 1.1.2  other versions will not work
 gtk		(for the gdk_pixbuf plugin)
 			http://www.gtk.org/
 		>= 2.2.1 preferred, 2.0 ok
 pango		(for the textoverlay plugins)
 			http://www.pango.org/
-libHermes       (for colorspace conversion;most use ffcolorspace instead)
-                        http://www.clanlib.org/hermes/
-librfb		(for capturing of VNC output into a videostream)
-			http://www.schleef.org/
-libHermes       (for colorspace conversions (should not be needed anymore))
-                        http://www.clanlib.org/hermes/
 dtsdec		(for DTS audio decoding)
 			http://www.videolan.org/libdca.html
 divx		(for divx decoding)
 			http://www.divx.com/divx/linux/
 libmng		(for mng animated image format encoding/decoding)
 			http://gjuyn.xs4all.nl/libmng
-libvisual	(for audio visualisations)
-			http://libvisual.sourceforge.net/v2/
 musepack	(for musepack audio codec/format)
 			(http://www.musepack.net/)
 nas		(for the NAS sound server sink)
 			(http://radscan.com/nas.html)
-libtheora	(for Ogg Theora video support)
-			(http://www.theora.org)
 libmms		(for MMS protocol support)
 			(http://www.sf.net/projects/libmms)
 

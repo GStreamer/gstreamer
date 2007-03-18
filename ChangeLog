@@ -1,3 +1,8 @@
+2007-03-17  David Schleef  <ds@schleef.org>
+
+	* REQUIREMENTS: Fix a few things.  This file really needs a
+	good once-over.
+
 2007-03-15  Edward Hervey  <edward@fluendo.com>
 
 	* sys/Makefile.am:
