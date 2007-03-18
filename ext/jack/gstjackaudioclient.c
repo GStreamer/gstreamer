@@ -283,18 +283,32 @@ static void
 gst_jack_audio_unref_connection (GstJackAudioConnection * conn)
 {
   gint res;
+  gboolean zero;
 
-  GST_DEBUG ("unref connection %p", conn);
+  GST_DEBUG ("unref connection %p refcnt %d", conn, conn->refcount);
 
   G_LOCK (connections_lock);
   conn->refcount--;
-  if (conn->refcount == 0) {
+  if ((zero = (conn->refcount == 0))) {
     GST_DEBUG ("closing connection %p", conn);
-    /* remove from list */
+    /* remove from list, we can release the mutex after removing the connection
+     * from the list because after that, nobody can access the connection anymore. */
     connections = g_list_remove (connections, conn);
+  }
+  G_UNLOCK (connections_lock);
 
-    /* grab lock to be sure that we are not in one of the callbacks */
-    g_mutex_lock (conn->lock);
+  /* if we are zero, close and cleanup the connection */
+  if (zero) {
+    /* don't use conn->lock here. two reasons:
+     *
+     *  1) its not necessary: jack_deactivate() will not return until the JACK thread
+     *      associated with this connection is cleaned up by a thread join, hence 
+     *      no more callbacks can occur or be in progress.
+     *
+     * 2) it would deadlock anyway, because jack_deactivate() will sleep
+     *      waiting for the JACK thread, and can thus cause deadlock in 
+     *      jack_process_cb()
+     */
     if ((res = jack_deactivate (conn->client))) {
       /* we only warn, this means the server is probably shut down and the client
        * is gone anyway. */
@@ -305,7 +319,6 @@ gst_jack_audio_unref_connection (GstJackAudioConnection * conn)
       /* we assume the client is gone. */
       GST_WARNING ("close failed (%d)", res);
     }
-    g_mutex_unlock (conn->lock);
 
     /* free resources */
     g_mutex_free (conn->lock);
@@ -313,7 +326,6 @@ gst_jack_audio_unref_connection (GstJackAudioConnection * conn)
     g_free (conn->server);
     g_free (conn);
   }
-  G_UNLOCK (connections_lock);
 }
 
 static void
