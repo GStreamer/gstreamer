@@ -1,9 +1,19 @@
+2007-03-18  Johan Dahlin  <jdahlin@async.com.br>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+
+	* gst/__init__.py: Implement multiplication, divison and float 
+	coercing for fractions.
+
+	* testsuite/test_fraction.py: 
+	Add fraction tests
+
 2007-03-17  Johan Dahlin  <jdahlin@async.com.br>
 
 	* gst/gsttaglist.override (_wrap_gst_tag_list_contains): 
 	* testsuite/test_taglist.py (TestTagList.testKeys): 
 
-	Implement sq_contains and add tests for TagList.
+	Implement sq_contains and add tests for gst.TagList.
 
 2007-03-02  Edward Hervey  <edward@fluendo.com>
 

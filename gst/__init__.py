@@ -76,17 +76,48 @@ class FractionRange(Value):
                                                      self.high.denom)
 
 class Fraction(Value):
-   def __init__(self, num, denom):
-      Value.__init__(self, 'fraction')
-      self.num = num
-      self.denom = denom
-   def __eq__(self, other):
-       if isinstance(other, Fraction):
-           return self.num * other.denom == other.num * self.denom
-       return False
-       
-   def __repr__(self):
-      return '<gst.Fraction %d/%d>' % (self.num, self.denom)
+    def __init__(self, num, denom=1):
+        Value.__init__(self, 'fraction')
+        self.num = num
+        self.denom = denom
+
+    def __repr__(self):
+        return '<gst.Fraction %d/%d>' % (self.num, self.denom)
+
+    def __eq__(self, other):
+        if isinstance(other, Fraction):
+            return self.num * other.denom == other.num * self.denom
+        return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __mul__(self, other):
+        if isinstance(other, Fraction):
+            return Fraction(self.num * other.num,
+                            self.denom * other.denom)
+        elif isinstance(other, int):
+            return Fraction(self.num * other, self.denom)
+        raise TypeError
+
+    __rmul__ = __mul__
+
+    def __div__(self, other):
+        if isinstance(other, Fraction):
+            return Fraction(self.num * other.denom,
+                            self.denom * other.num)
+        elif isinstance(other, int):
+            return Fraction(self.num, self.denom * other)
+        return TypeError
+
+    def __rdiv__(self, other):
+        if isinstance(other, int):
+            return Fraction(self.denom * other, self.num)
+        return TypeError
+
+    def __float__(self):
+        return float(self.num) / float(self.denom)
+
 
 import sys
 dlsave = sys.getdlopenflags()
@@ -116,7 +147,7 @@ if RTLD_GLOBAL != -1 and RTLD_LAZY != -1:
         import libxml2
     except:
         pass
-    
+
 version = get_gst_version
 
 sys.setdlopenflags(dlsave)
