@@ -1087,12 +1087,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
                 &extra)))
       goto parse_header_error;
 
-    if (wav->streaming) {
-      gst_adapter_flush (wav->adapter, size);
-      wav->offset += size;
-      gst_buffer_unref (buf);
-      buf = NULL;
-    }
+    buf = NULL;                 /* parse_strf_auds() took ownership of buffer */
 
     /* Note: gst_riff_create_audio_caps might need to fix values in
      * the header header depending on the format, so call it first */

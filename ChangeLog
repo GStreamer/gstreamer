@@ -1,3 +1,9 @@
+2007-03-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):
+	  Streaming mode fixes: don't unref buffer we don't own any longer;
+	  remove bogus adapter flush. Fixes #419338.
+
 2007-03-17  David Schleef  <ds@schleef.org>
 
 	* REQUIREMENTS: Change the format to key/value, add a bunch of
