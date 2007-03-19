@@ -1,3 +1,13 @@
+2007-03-19  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstmessage.c: (gst_message_new_async_start),
+	(gst_message_new_async_done), (gst_message_parse_info),
+	(gst_message_parse_async_start):
+	* gst/gstmessage.h:
+	Add ASYNC_START and ASYNC_DONE messages to prepare for latency
+	support.
+
 2007-03-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tools/gst-inspect.c:

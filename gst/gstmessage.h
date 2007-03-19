@@ -55,6 +55,10 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_SEGMENT_START: pipeline started playback of a segment.
  * @GST_MESSAGE_SEGMENT_DONE: pipeline completed playback of a segment.
  * @GST_MESSAGE_DURATION: The duration of a pipeline changed.
+ * @GST_MESSAGE_ASYNC_START: Posted by elements when they start an ASYNC state
+ * change. Since: 0.10.13
+ * @GST_MESSAGE_ASYNC_DONE: Posted by elements when they complete an ASYNC state
+ * change. Since: 0.10.13
  * @GST_MESSAGE_LATENCY: Posted by elements when their latency changes. The
  * pipeline will calculate and distribute a new latency. Since: 0.10.12
  * @GST_MESSAGE_ANY: mask for all of the above messages.
@@ -87,6 +91,8 @@ typedef enum
   GST_MESSAGE_SEGMENT_DONE      = (1 << 17),
   GST_MESSAGE_DURATION          = (1 << 18),
   GST_MESSAGE_LATENCY           = (1 << 19),
+  GST_MESSAGE_ASYNC_START       = (1 << 20),
+  GST_MESSAGE_ASYNC_DONE        = (1 << 21),
   GST_MESSAGE_ANY               = ~0
 } GstMessageType;
 
@@ -263,6 +269,8 @@ GstMessage *	gst_message_new_element		(GstObject * src, GstStructure * structure
 GstMessage *	gst_message_new_segment_start	(GstObject * src, GstFormat format, gint64 position);
 GstMessage *	gst_message_new_segment_done	(GstObject * src, GstFormat format, gint64 position);
 GstMessage *	gst_message_new_duration	(GstObject * src, GstFormat format, gint64 duration);
+GstMessage *	gst_message_new_async_start	(GstObject * src, gboolean new_base_time);
+GstMessage *	gst_message_new_async_done	(GstObject * src);
 GstMessage *	gst_message_new_latency         (GstObject * src);
 GstMessage *	gst_message_new_custom		(GstMessageType type,
 						 GstObject    * src,
@@ -281,6 +289,7 @@ void		gst_message_parse_new_clock	(GstMessage *message, GstClock **clock);
 void		gst_message_parse_segment_start (GstMessage *message, GstFormat *format, gint64 *position);
 void		gst_message_parse_segment_done	(GstMessage *message, GstFormat *format, gint64 *position);
 void		gst_message_parse_duration	(GstMessage *message, GstFormat *format, gint64 *duration);
+void		gst_message_parse_async_start	(GstMessage *message, gboolean *new_base_time);
 
 const GstStructure *  gst_message_get_structure	(GstMessage *message);
 

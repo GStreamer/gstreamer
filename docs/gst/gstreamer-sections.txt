@@ -1013,6 +1013,8 @@ gst_message_new_buffering
 gst_message_new_warning
 gst_message_new_duration
 gst_message_new_state_dirty
+gst_message_new_async_start
+gst_message_new_async_done
 gst_message_new_latency
 gst_message_parse_clock_lost
 gst_message_parse_clock_provide
@@ -1026,8 +1028,10 @@ gst_message_parse_tag
 gst_message_parse_buffering
 gst_message_parse_warning
 gst_message_parse_duration
+gst_message_parse_async_start
 gst_message_ref
 gst_message_unref
+
 <SUBSECTION Standard>
 GstMessageClass
 GST_MESSAGE
