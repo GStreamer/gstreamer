@@ -1,3 +1,15 @@
+2007-03-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin.c: (remove_fakesink):
+	Don't post STATE_DIRTY anymore.
+
+	* gst/playback/gstplaybin.c: (add_sink), (gst_play_bin_send_event),
+	(gst_play_bin_change_state):
+	Remove stream_time reset in seek handling, core does that now.
+	Disable clocking for live pipelines by forcing a NULL clock to the
+	complete pipeline, core is too smart now for our previous hack.
+	We can always autoplug in PAUSED now.
+
 2007-03-17  David Schleef  <ds@schleef.org>
 
 	* REQUIREMENTS:  Update this file, change the formatting to make

@@ -622,9 +622,6 @@ remove_fakesink (GstDecodeBin * decode_bin)
 
   if (removed_fakesink) {
     free_pad_probes (decode_bin);
-
-    gst_element_post_message (GST_ELEMENT_CAST (decode_bin),
-        gst_message_new_state_dirty (GST_OBJECT_CAST (decode_bin)));
   }
 }
 

@@ -1137,8 +1137,8 @@ link_failed:
  * visualisation ouput.  The idea is to split the audio using tee, then 
  * sending the output to the regular audio bin and the other output to
  * the vis plugin that transforms it into a video that is rendered with the
- * normal video bin. The video bin is run in a thread to make sure it does
- * not block the audio playback pipeline.
+ * normal video bin. The video and audio bins are run in threads to make sure
+ * they don't block eachother.
  *
  *  +-----------------------------------------------------------------------+
  *  | visbin                                                                |
@@ -1154,7 +1154,7 @@ link_failed:
  *  |   |  |      |                                                         |
  *  |   |  +------+                                                         |
  * sink-+                                                                   |
-   +------------------------------------------------------------------------+
+ *  +-----------------------------------------------------------------------+
  */
 static GstElement *
 gen_vis_element (GstPlayBin * play_bin)
@@ -1407,12 +1407,7 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad,
 
   g_return_val_if_fail (sink != NULL, FALSE);
 
-  /* For live pipelines we need to add the bin in the same state as the 
-   * parent so that it starts as soon as it is prerolled. */
-  if (play_bin->is_live)
-    state = GST_STATE_PLAYING;
-  else
-    state = GST_STATE_PAUSED;
+  state = GST_STATE_PAUSED;
 
   /* this is only for debugging */
   parent = gst_pad_get_parent_element (srcpad);
@@ -1425,10 +1420,12 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad,
 
   /* for live pipelines, disable the sync in the sinks until core handles this
    * correctly. */
-  if (play_bin->is_live)
+  if (play_bin->is_live) {
+    gst_pipeline_use_clock (GST_PIPELINE (play_bin), NULL);
     gst_element_set_clock (sink, NULL);
+  }
 
-  /* bring it to the PAUSED state so we can link to the peer without
+  /* bring it to the required state so we can link to the peer without
    * breaking the flow */
   stateret = gst_element_set_state (sink, state);
   if (stateret == GST_STATE_CHANGE_FAILURE)
@@ -1677,48 +1674,6 @@ gst_play_bin_send_event_to_sink (GstPlayBin * play_bin, GstEvent * event)
   return res;
 }
 
-static gboolean
-do_playbin_seek (GstElement * element, GstEvent * event)
-{
-  gdouble rate;
-  GstSeekFlags flags;
-  gboolean flush;
-  gboolean was_playing = FALSE;
-  gboolean res;
-
-  gst_event_parse_seek (event, &rate, NULL, &flags, NULL, NULL, NULL, NULL);
-
-  flush = flags & GST_SEEK_FLAG_FLUSH;
-
-  if (flush) {
-    GstState state;
-
-    /* need to call _get_state() since a bin state is only updated
-     * with this call. */
-    gst_element_get_state (element, &state, NULL, 0);
-    was_playing = state == GST_STATE_PLAYING;
-
-    if (was_playing) {
-      gst_element_set_state (element, GST_STATE_PAUSED);
-      gst_element_get_state (element, NULL, NULL, 50 * GST_MSECOND);
-    }
-  }
-
-  GST_DEBUG_OBJECT (element, "Sending seek event to a sink");
-  res = gst_play_bin_send_event_to_sink (GST_PLAY_BIN (element), event);
-
-  if (flush) {
-    /* need to reset the stream time to 0 after a flushing seek */
-    if (res)
-      gst_pipeline_set_new_stream_time (GST_PIPELINE (element), 0);
-
-    if (was_playing)
-      /* and continue playing */
-      gst_element_set_state (element, GST_STATE_PLAYING);
-  }
-  return res;
-}
-
 /* We only want to send the event to a single sink (overriding GstBin's 
  * behaviour), but we want to keep GstPipeline's behaviour - wrapping seek
  * events appropriately. So, this is a messy duplication of code. */
@@ -1728,13 +1683,13 @@ gst_play_bin_send_event (GstElement * element, GstEvent * event)
   gboolean res = FALSE;
   GstEventType event_type = GST_EVENT_TYPE (event);
 
-
   switch (event_type) {
     case GST_EVENT_SEEK:
-      res = do_playbin_seek (element, event);
+      GST_DEBUG_OBJECT (element, "Sending seek event to a sink");
+      res = gst_play_bin_send_event_to_sink (GST_PLAY_BIN (element), event);
       break;
     default:
-      res = gst_play_bin_send_event_to_sink (GST_PLAY_BIN (element), event);
+      res = parent_class->send_event (element, event);
       break;
   }
 
@@ -1886,6 +1841,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_pipeline_auto_clock (GST_PIPELINE (play_bin));
       /* this really is the easiest way to make the state change return
        * ASYNC until we added the sinks */
       if (!play_bin->fakesink) {
