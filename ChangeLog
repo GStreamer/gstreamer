@@ -1,3 +1,27 @@
+2007-03-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_set_flushing),
+	(gst_base_sink_change_state):
+	* libs/gst/base/gstbasesink.h:
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_perform_seek),
+	(gst_base_src_default_event), (gst_base_src_unlock_stop),
+	(gst_base_src_deactivate):
+	* libs/gst/base/gstbasesrc.h:
+	Add ::unlock_stop to basesrc and basesink. This allows an opportunity
+	for sub-classes to correctly clear any state they set trying to
+	unlock, such as clearing out unlock commands from a command fd.
+
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_class_init),
+	(gst_fd_sink_render), (gst_fd_sink_unlock),
+	(gst_fd_sink_unlock_stop):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_class_init),
+	(gst_fd_src_init), (gst_fd_src_unlock), (gst_fd_src_unlock_stop),
+	(gst_fd_src_create), (gst_fd_src_get_size), (gst_fd_src_do_seek):
+
+	Implement unlock_stop in fdsrc and fdsink.
+	Implement seeking in fdsrc when a seekable fd is passed, as in
+	gst-launch-0.10 fdsrc ! ... ! xvimagesink < /path/to/file
+
 2007-03-19  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Evan Nemerson <evan at coeus dash group dot com>

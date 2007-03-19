@@ -132,6 +132,8 @@ struct _GstBaseSrc {
  * @is_seekable: Check if the source can seek
  * @unlock: Unlock any pending access to the resource. Subclasses should
  *    unblock any blocked function ASAP
+ * @unlock_stop: Clear the previous unlock request. Subclasses should clear
+ *    any state they set during unlock(), such as clearing command queues. 
  * @event: Override this to implement custom event handling.
  * @create: Ask the subclass to create a buffer with offset and size.
  * @do_seek: Perform seeking on the resource to the indicated segment.
@@ -208,8 +210,11 @@ struct _GstBaseSrcClass {
   /* called if, in negotation, caps need fixating */
   void		(*fixate)	(GstBaseSrc *src, GstCaps *caps);
 
+  /* Clear any pending unlock request, as we succeeded in unlocking */
+  gboolean      (*unlock_stop)  (GstBaseSrc *src);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 4];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 5];
 };
 
 GType gst_base_src_get_type (void);

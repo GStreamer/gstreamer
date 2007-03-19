@@ -119,8 +119,10 @@ static void gst_fd_src_dispose (GObject * obj);
 static gboolean gst_fd_src_start (GstBaseSrc * bsrc);
 static gboolean gst_fd_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_fd_src_unlock (GstBaseSrc * bsrc);
+static gboolean gst_fd_src_unlock_stop (GstBaseSrc * bsrc);
 static gboolean gst_fd_src_is_seekable (GstBaseSrc * bsrc);
 static gboolean gst_fd_src_get_size (GstBaseSrc * src, guint64 * size);
+static gboolean gst_fd_src_do_seek (GstBaseSrc * src, GstSegment * segment);
 
 static GstFlowReturn gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf);
 
@@ -160,8 +162,10 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_fd_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_fd_src_stop);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_fd_src_unlock);
+  gstbasesrc_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_fd_src_unlock_stop);
   gstbasesrc_class->is_seekable = GST_DEBUG_FUNCPTR (gst_fd_src_is_seekable);
   gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_fd_src_get_size);
+  gstbasesrc_class->do_seek = GST_DEBUG_FUNCPTR (gst_fd_src_do_seek);
 
   gstpush_src_class->create = GST_DEBUG_FUNCPTR (gst_fd_src_create);
 }
@@ -169,10 +173,10 @@ gst_fd_src_class_init (GstFdSrcClass * klass)
 static void
 gst_fd_src_init (GstFdSrc * fdsrc, GstFdSrcClass * klass)
 {
-  fdsrc->fd = 0;
+  fdsrc->fd = -1;
   fdsrc->new_fd = 0;
   fdsrc->seekable_fd = FALSE;
-  fdsrc->uri = g_strdup_printf ("fd://%d", fdsrc->fd);
+  fdsrc->uri = g_strdup_printf ("fd://0");
   fdsrc->curoffset = 0;
 }
 
@@ -268,7 +272,33 @@ gst_fd_src_unlock (GstBaseSrc * bsrc)
 {
   GstFdSrc *src = GST_FD_SRC (bsrc);
 
+  GST_LOG_OBJECT (src, "sending unlock command");
   SEND_COMMAND (src, CONTROL_STOP);
+
+  return TRUE;
+}
+
+static gboolean
+gst_fd_src_unlock_stop (GstBaseSrc * bsrc)
+{
+  GstFdSrc *src = GST_FD_SRC (bsrc);
+
+  GST_LOG_OBJECT (src, "clearing unlock command queue");
+
+  /* read all stop commands */
+  while (TRUE) {
+    gchar command;
+    int res;
+
+    GST_LOG_OBJECT (src, "reading command");
+
+    READ_COMMAND (src, command, res);
+    if (res < 0) {
+      GST_LOG_OBJECT (src, "no more commands");
+      /* no more commands */
+      break;
+    }
+  }
 
   return TRUE;
 }
@@ -343,23 +373,8 @@ gst_fd_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   if (retval == -1)
     goto select_error;
 
-  if (FD_ISSET (READ_SOCKET (src), &readfds)) {
-    /* read all stop commands */
-    while (TRUE) {
-      gchar command;
-      int res;
-
-      GST_LOG_OBJECT (src, "reading command");
-
-      READ_COMMAND (src, command, res);
-      if (res < 0) {
-        GST_LOG_OBJECT (src, "no more commands");
-        /* no more commands */
-        break;
-      }
-    }
+  if (FD_ISSET (READ_SOCKET (src), &readfds))
     goto stopped;
-  }
 #endif
 
   blocksize = GST_BASE_SRC (src)->blocksize;
@@ -453,7 +468,33 @@ could_not_stat:
   {
     return FALSE;
   }
+}
 
+gboolean
+gst_fd_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
+{
+  gint res;
+  gint64 offset;
+  GstFdSrc *src = GST_FD_SRC (bsrc);
+
+  offset = segment->start;
+
+  /* No need to seek to the current position */
+  if (offset == src->curoffset)
+    return TRUE;
+
+  res = lseek (src->fd, offset, SEEK_SET);
+  if (G_UNLIKELY (res < 0 || res != offset))
+    goto seek_failed;
+
+  segment->last_stop = segment->start;
+  segment->time = segment->start;
+
+  return TRUE;
+
+seek_failed:
+  GST_DEBUG_OBJECT (src, "lseek returned %" G_GINT64_FORMAT, offset);
+  return FALSE;
 }
 
 /*** GSTURIHANDLER INTERFACE *************************************************/

@@ -290,6 +290,7 @@ static gboolean gst_base_src_default_do_seek (GstBaseSrc * src,
 static gboolean gst_base_src_default_query (GstBaseSrc * src, GstQuery * query);
 
 static gboolean gst_base_src_unlock (GstBaseSrc * basesrc);
+static gboolean gst_base_src_unlock_stop (GstBaseSrc * basesrc);
 static gboolean gst_base_src_start (GstBaseSrc * basesrc);
 static gboolean gst_base_src_stop (GstBaseSrc * basesrc);
 
@@ -910,6 +911,9 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
    * because our peer is flushing. */
   GST_PAD_STREAM_LOCK (src->srcpad);
 
+  if (unlock)
+    gst_base_src_unlock_stop (src);
+
   /* make copy into temp structure, we can only update the main one
    * when the subclass actually could do the seek. */
   memcpy (&seeksegment, &src->segment, sizeof (GstSegment));
@@ -1110,6 +1114,8 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
       result = gst_base_src_unlock (src);
       break;
     case GST_EVENT_FLUSH_STOP:
+      result = gst_base_src_unlock_stop (src);
+      break;
     default:
       result = TRUE;
       break;
@@ -1687,6 +1693,28 @@ gst_base_src_unlock (GstBaseSrc * basesrc)
   return result;
 }
 
+/* this will always be called between start() and stop(). So you can rely on
+ * resources allocated by start() and freed from stop(). This needs to be added
+ * to the docs at some point. */
+static gboolean
+gst_base_src_unlock_stop (GstBaseSrc * basesrc)
+{
+  GstBaseSrcClass *bclass;
+  gboolean result = TRUE;
+
+  GST_DEBUG_OBJECT (basesrc, "unlock stop");
+
+  /* Finish a previous unblock request, allowing subclasses to flush command
+   * queues or whatever they need to do */
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
+  if (bclass->unlock_stop)
+    result = bclass->unlock_stop (basesrc);
+
+  GST_DEBUG_OBJECT (basesrc, "unlock stop done");
+
+  return result;
+}
+
 /* default negotiation code. 
  *
  * Take intersection between src and sink pads, take first
@@ -1905,6 +1933,9 @@ gst_base_src_deactivate (GstBaseSrc * basesrc, GstPad * pad)
 
   /* step 2, make sure streaming finishes */
   result &= gst_pad_stop_task (pad);
+
+  /* step 3, clear the unblock condition */
+  result &= gst_base_src_unlock_stop (basesrc);
 
   return result;
 }

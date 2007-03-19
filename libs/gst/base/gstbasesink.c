@@ -2245,12 +2245,11 @@ static gboolean
 gst_base_sink_set_flushing (GstBaseSink * basesink, GstPad * pad,
     gboolean flushing)
 {
+  GstBaseSinkClass *bclass;
+
+  bclass = GST_BASE_SINK_GET_CLASS (basesink);
 
   if (flushing) {
-    GstBaseSinkClass *bclass;
-
-    bclass = GST_BASE_SINK_GET_CLASS (basesink);
-
     /* unlock any subclasses, we need to do this before grabbing the
      * PREROLL_LOCK since we hold this lock before going into ::render. */
     if (bclass->unlock)
@@ -2260,7 +2259,11 @@ gst_base_sink_set_flushing (GstBaseSink * basesink, GstPad * pad,
   GST_PAD_PREROLL_LOCK (pad);
   basesink->flushing = flushing;
   if (flushing) {
-    /* step 1, unblock clock sync (if any) or any other blocking thing */
+    /* step 1, now that we have the PREROLL lock, clear our unlock request */
+    if (bclass->unlock_stop)
+      bclass->unlock_stop (basesink);
+
+    /* step 2, unblock clock sync (if any) or any other blocking thing */
     basesink->need_preroll = TRUE;
     if (basesink->clock_id) {
       gst_clock_id_unschedule (basesink->clock_id);
@@ -2868,6 +2871,10 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         bclass->unlock (basesink);
 
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
+      /* now that we have the PREROLL lock, clear our unlock request */
+      if (bclass->unlock_stop)
+        bclass->unlock_stop (basesink);
+
       basesink->need_preroll = TRUE;
       if (basesink->clock_id) {
         gst_clock_id_unschedule (basesink->clock_id);

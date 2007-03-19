@@ -141,6 +141,7 @@ static GstFlowReturn gst_fd_sink_render (GstBaseSink * sink,
 static gboolean gst_fd_sink_start (GstBaseSink * basesink);
 static gboolean gst_fd_sink_stop (GstBaseSink * basesink);
 static gboolean gst_fd_sink_unlock (GstBaseSink * basesink);
+static gboolean gst_fd_sink_unlock_stop (GstBaseSink * basesink);
 
 static void
 gst_fd_sink_base_init (gpointer g_class)
@@ -170,6 +171,7 @@ gst_fd_sink_class_init (GstFdSinkClass * klass)
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_fd_sink_start);
   gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_fd_sink_stop);
   gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_fd_sink_unlock);
+  gstbasesink_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_fd_sink_unlock_stop);
   gstbasesink_class->event = NULL;
 
   g_object_class_install_property (gobject_class, ARG_FD,
@@ -272,21 +274,8 @@ again:
   if (retval == -1)
     goto select_error;
 
-  if (FD_ISSET (READ_SOCKET (fdsink), &readfds)) {
-    /* read all stop commands */
-    while (TRUE) {
-      gchar command;
-      int res;
-
-      READ_COMMAND (fdsink, command, res);
-      if (res < 0) {
-        GST_LOG_OBJECT (fdsink, "no more commands");
-        /* no more commands */
-        break;
-      }
-    }
+  if (FD_ISSET (READ_SOCKET (fdsink), &readfds))
     goto stopped;
-  }
 #endif
 
   GST_DEBUG_OBJECT (fdsink, "writing %d bytes to file descriptor %d", size,
@@ -437,7 +426,31 @@ gst_fd_sink_unlock (GstBaseSink * basesink)
 {
   GstFdSink *fdsink = GST_FD_SINK (basesink);
 
+  GST_LOG_OBJECT (fdsink, "Sending unlock command to queue");
   SEND_COMMAND (fdsink, CONTROL_STOP);
+
+  return TRUE;
+}
+
+static gboolean
+gst_fd_sink_unlock_stop (GstBaseSink * basesink)
+{
+  GstFdSink *fdsink = GST_FD_SINK (basesink);
+
+  /* read all stop commands */
+  GST_LOG_OBJECT (fdsink, "Clearing unlock command queue");
+
+  while (TRUE) {
+    gchar command;
+    int res;
+
+    READ_COMMAND (fdsink, command, res);
+    if (res < 0) {
+      GST_LOG_OBJECT (fdsink, "no more commands");
+      /* no more commands */
+      break;
+    }
+  }
 
   return TRUE;
 }

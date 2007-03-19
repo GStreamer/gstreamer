@@ -114,6 +114,8 @@ struct _GstBaseSink {
  * @stop: Stop processing. Subclasses should use this to close resources.
  * @unlock: Unlock any pending access to the resource. Subclasses should
  *     unblock any blocked function ASAP
+ * @unlock_stop: Clear the previous unlock request. Subclasses should clear
+ *     any state they set during unlock(), such as clearing command queues. 
  * @event: Override this to handle events arriving on the sink pad
  * @preroll: Called to present the preroll buffer if desired
  * @render: Called when a buffer should be presented or output, at the
@@ -174,8 +176,13 @@ struct _GstBaseSinkClass {
   /* fixate sink caps during pull-mode negotiation */
   void		(*fixate)	(GstBaseSink *sink, GstCaps *caps);
 
+  /* Clear a previously indicated unlock request not that unlocking is 
+   * complete. Sub-classes should clear any command queue or indicator they
+   * set during unlock */
+  gboolean      (*unlock_stop)       (GstBaseSink *sink);
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE-3];
+  gpointer       _gst_reserved[GST_PADDING_LARGE-4];
 };
 
 GType gst_base_sink_get_type(void);
