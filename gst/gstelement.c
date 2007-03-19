@@ -187,7 +187,7 @@ gst_element_class_init (GstElementClass * klass)
   gst_element_signals[PAD_ADDED] =
       g_signal_new ("pad-added", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, pad_added), NULL, NULL,
-      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
   /**
    * GstElement::pad-removed:
    * @gstelement: the object which received the signal
@@ -198,7 +198,7 @@ gst_element_class_init (GstElementClass * klass)
   gst_element_signals[PAD_REMOVED] =
       g_signal_new ("pad-removed", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstElementClass, pad_removed), NULL, NULL,
-      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+      gst_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_PAD);
   /**
    * GstElement::no-more-pads:
    * @gstelement: the object which received the signal

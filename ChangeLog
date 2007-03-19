@@ -1,5 +1,13 @@
 2007-03-19  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Evan Nemerson <evan at coeus dash group dot com>
+
+	* gst/gstelement.c: (gst_element_class_init):
+	Fix pad-added and pad-removed signal signatures so that the pad type is
+	stated as GST_TYPE_PAD instead of G_TYPE_OBJECT. Fixes #419851.
+
+2007-03-19  Wim Taymans  <wim@fluendo.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	Add new element field and method.
 
