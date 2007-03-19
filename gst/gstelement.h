@@ -120,6 +120,16 @@ typedef enum {
 #define GST_STATE_PENDING(elem)		(GST_ELEMENT_CAST(elem)->pending_state)
 
 /**
+ * GST_STATE_TARGET:
+ * @elem: a #GstElement to return the target state for.
+ *
+ * This macro returns the target #GstState of the element.
+ *
+ * Since: 0.10.13
+ */
+#define GST_STATE_TARGET(elem)		(GST_ELEMENT_CAST(elem)->abidata.ABI.target_state)
+
+/**
  * GST_STATE_RETURN:
  * @elem: a #GstElement to return the last state result for.
  *
@@ -427,7 +437,14 @@ struct _GstElement
   guint32               pads_cookie;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  union {
+    struct {
+      /* state set by application */
+      GstState              target_state;
+    } ABI;
+    /* adding + 0 to mark ABI change to be undone later */
+    gpointer _gst_reserved[GST_PADDING + 0];
+  } abidata;
 };
 
 /**
@@ -626,6 +643,8 @@ GstStateChangeReturn	gst_element_get_state		(GstElement * element,
 GstStateChangeReturn	gst_element_set_state		(GstElement *element, GstState state);
 
 void			gst_element_abort_state		(GstElement * element);
+GstStateChangeReturn    gst_element_change_state        (GstElement * element,
+		                                         GstStateChange transition);
 GstStateChangeReturn	gst_element_continue_state	(GstElement * element,
                                                          GstStateChangeReturn ret);
 void			gst_element_lost_state	        (GstElement * element);

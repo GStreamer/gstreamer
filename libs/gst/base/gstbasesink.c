@@ -192,6 +192,8 @@ struct _GstBaseSinkPrivate
 
   /* latency stuff */
   GstClockTime latency;
+
+  gboolean commited;
 };
 
 #define DO_RUNNING_AVG(avg,val,size) (((val) + ((size)-1) * (avg)) / (size))
@@ -888,9 +890,10 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
 {
   /* commit state and proceed to next pending state */
   GstState current, next, pending, post_pending;
-  GstMessage *message;
   gboolean post_paused = FALSE;
+  gboolean post_async_done = FALSE;
   gboolean post_playing = FALSE;
+  gboolean sync;
 
   /* we are certainly not playing async anymore now */
   basesink->playing_async = FALSE;
@@ -900,6 +903,7 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   next = GST_STATE_NEXT (basesink);
   pending = GST_STATE_PENDING (basesink);
   post_pending = pending;
+  sync = basesink->sync;
 
   switch (pending) {
     case GST_STATE_PLAYING:
@@ -912,6 +916,8 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
       GST_DEBUG_OBJECT (basesink, "commiting state to PLAYING");
 
       basesink->need_preroll = FALSE;
+      post_async_done = TRUE;
+      basesink->priv->commited = TRUE;
       post_playing = TRUE;
       /* post PAUSED too when we were READY */
       if (current == GST_STATE_READY) {
@@ -929,6 +935,8 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
     case GST_STATE_PAUSED:
       GST_DEBUG_OBJECT (basesink, "commiting state to PAUSED");
       post_paused = TRUE;
+      post_async_done = TRUE;
+      basesink->priv->commited = TRUE;
       post_pending = GST_STATE_VOID_PENDING;
       break;
     case GST_STATE_READY:
@@ -947,19 +955,18 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   GST_OBJECT_UNLOCK (basesink);
 
   if (post_paused) {
-    message = gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
-        current, next, post_pending);
-    gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
+    gst_element_post_message (GST_ELEMENT_CAST (basesink),
+        gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
+            current, next, post_pending));
+  }
+  if (post_async_done) {
+    gst_element_post_message (GST_ELEMENT_CAST (basesink),
+        gst_message_new_async_done (GST_OBJECT_CAST (basesink)));
   }
   if (post_playing) {
-    message = gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
-        next, pending, GST_STATE_VOID_PENDING);
-    gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
-  }
-  /* and mark dirty */
-  if (post_paused || post_playing) {
     gst_element_post_message (GST_ELEMENT_CAST (basesink),
-        gst_message_new_state_dirty (GST_OBJECT_CAST (basesink)));
+        gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
+            next, pending, GST_STATE_VOID_PENDING));
   }
 
   GST_STATE_BROADCAST (basesink);
@@ -2724,6 +2731,13 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       gboolean live, us_live;
       GstClockTime min, max;
 
+      GST_PAD_PREROLL_LOCK (basesink->sinkpad);
+      if (!gst_base_sink_is_prerolled (basesink)) {
+        GST_DEBUG_OBJECT (basesink, "not prerolled yet, can't report latency");
+        res = FALSE;
+        goto done;
+      }
+
       if ((res =
               gst_base_sink_query_latency (basesink, &live, &us_live, &min,
                   &max))) {
@@ -2737,6 +2751,8 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
         }
         gst_query_set_latency (query, live, min, max);
       }
+    done:
+      GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     }
     case GST_QUERY_JITTER:
@@ -2780,6 +2796,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* need to complete preroll before this state change completes, there
        * is no data flow in READY so we can safely assume we need to preroll. */
+      GST_PAD_PREROLL_LOCK (basesink->sinkpad);
       GST_DEBUG_OBJECT (basesink, "READY to PAUSED, need preroll");
       gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
       gst_segment_init (basesink->abidata.ABI.clip_segment,
@@ -2795,7 +2812,11 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       basesink->priv->latency = 0;
       basesink->eos = FALSE;
       gst_base_sink_reset_qos (basesink);
+      basesink->priv->commited = FALSE;
       ret = GST_STATE_CHANGE_ASYNC;
+      gst_element_post_message (GST_ELEMENT_CAST (basesink),
+          gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+      GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
@@ -2817,7 +2838,10 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         GST_DEBUG_OBJECT (basesink, "PAUSED to PLAYING, need preroll");
         basesink->need_preroll = TRUE;
         basesink->playing_async = TRUE;
+        basesink->priv->commited = FALSE;
         ret = GST_STATE_CHANGE_ASYNC;
+        gst_element_post_message (GST_ELEMENT_CAST (basesink),
+            gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
       }
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
@@ -2857,7 +2881,10 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       } else {
         GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, need preroll");
         basesink->playing_async = TRUE;
+        basesink->priv->commited = FALSE;
         ret = GST_STATE_CHANGE_ASYNC;
+        gst_element_post_message (GST_ELEMENT_CAST (basesink),
+            gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
       }
       GST_DEBUG_OBJECT (basesink, "rendered: %" G_GUINT64_FORMAT
           ", dropped: %" G_GUINT64_FORMAT, basesink->priv->rendered,
@@ -2867,8 +2894,24 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_PAD_PREROLL_LOCK (basesink->sinkpad);
+      if (!basesink->priv->commited) {
+        GST_DEBUG_OBJECT (basesink, "PAUSED to READY, posting async-done");
+
+        gst_element_post_message (GST_ELEMENT_CAST (basesink),
+            gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
+                GST_STATE_PLAYING, GST_STATE_PAUSED, GST_STATE_READY));
+
+        gst_element_post_message (GST_ELEMENT_CAST (basesink),
+            gst_message_new_async_done (GST_OBJECT_CAST (basesink)));
+
+        basesink->priv->commited = TRUE;
+      } else {
+        GST_DEBUG_OBJECT (basesink, "PAUSED to READY, don't need_preroll");
+      }
       basesink->priv->current_sstart = 0;
       basesink->priv->current_sstop = 0;
+      GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       if (bclass->stop)

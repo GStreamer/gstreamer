@@ -88,8 +88,9 @@ GST_START_TEST (test_pipeline_unref)
   sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
   fail_if (sink == NULL);
 
-  run_pipeline (pipeline, s, GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED,
-      GST_MESSAGE_EOS);
+  run_pipeline (pipeline, s,
+      GST_MESSAGE_NEW_CLOCK | GST_MESSAGE_STATE_CHANGED |
+      GST_MESSAGE_ASYNC_DONE, GST_MESSAGE_EOS);
   while (GST_OBJECT_REFCOUNT_VALUE (src) > 1)
     THREAD_SWITCH ();
   ASSERT_OBJECT_REFCOUNT (src, "src", 1);

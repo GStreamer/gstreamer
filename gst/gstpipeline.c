@@ -120,6 +120,8 @@ struct _GstPipelinePrivate
 {
   /* with LOCK */
   gboolean auto_flush_bus;
+
+  GstClockTime new_stream_time;
 };
 
 
@@ -133,12 +135,11 @@ static void gst_pipeline_set_property (GObject * object, guint prop_id,
 static void gst_pipeline_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean gst_pipeline_send_event (GstElement * element,
-    GstEvent * event);
-
 static GstClock *gst_pipeline_provide_clock_func (GstElement * element);
 static GstStateChangeReturn gst_pipeline_change_state (GstElement * element,
     GstStateChange transition);
+
+static void gst_pipeline_handle_message (GstBin * bin, GstMessage * message);
 
 static GstBinClass *parent_class = NULL;
 
@@ -185,6 +186,7 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (g_class);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GstBinClass *gstbin_class = GST_BIN_CLASS (g_class);
   GstPipelineClass *klass = GST_PIPELINE_CLASS (g_class);
 
   parent_class = g_type_class_peek_parent (klass);
@@ -226,11 +228,13 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_pipeline_dispose);
 
-  gstelement_class->send_event = GST_DEBUG_FUNCPTR (gst_pipeline_send_event);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_pipeline_change_state);
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_pipeline_provide_clock_func);
+
+  gstbin_class->handle_message =
+      GST_DEBUG_FUNCPTR (gst_pipeline_handle_message);
 }
 
 static void
@@ -311,90 +315,19 @@ gst_pipeline_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* default pipeline seeking code:
- *
- * If the pipeline is PLAYING and a flushing seek is done, set
- * the pipeline to PAUSED before doing the seek.
- *
- * A flushing seek also resets the stream time to 0 so that when
- * we go back to PLAYING after the seek, the base_time is recalculated
- * and redistributed to the elements.
- */
-static gboolean
-do_pipeline_seek (GstElement * element, GstEvent * event)
+/* set the stream time to 0 */
+static void
+reset_stream_time (GstPipeline * pipeline)
 {
-  gdouble rate;
-  GstSeekFlags flags;
-  gboolean flush;
-  gboolean was_playing = FALSE;
-  gboolean res;
-
-  /* we are only interested in the FLUSH flag of the seek event. */
-  gst_event_parse_seek (event, &rate, NULL, &flags, NULL, NULL, NULL, NULL);
-
-  flush = flags & GST_SEEK_FLAG_FLUSH;
-
-  /* if flushing seek, get the current state */
-  if (flush) {
-    GstState state;
-
-    /* need to call _get_state() since a bin state is only updated
-     * with this call. */
-    gst_element_get_state (element, &state, NULL, 0);
-    was_playing = (state == GST_STATE_PLAYING);
-
-    if (was_playing) {
-      /* and PAUSE when the pipeline was PLAYING, we don't need
-       * to wait for the state change to complete since we are going
-       * to flush out any preroll sample anyway. */
-      gst_element_set_state (element, GST_STATE_PAUSED);
-    }
+  GST_OBJECT_LOCK (pipeline);
+  if (pipeline->stream_time != GST_CLOCK_TIME_NONE) {
+    GST_DEBUG_OBJECT (pipeline, "reset stream_time to 0");
+    pipeline->stream_time = 0;
+    pipeline->priv->new_stream_time = TRUE;
+  } else {
+    GST_DEBUG_OBJECT (pipeline, "application asked to not reset stream_time");
   }
-
-  /* let parent class implement the seek behaviour */
-  res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
-
-  /* if flushing seek restore previous state */
-  if (flush) {
-    gboolean need_reset;
-
-    GST_OBJECT_LOCK (element);
-    need_reset = GST_PIPELINE (element)->stream_time != GST_CLOCK_TIME_NONE;
-    GST_OBJECT_UNLOCK (element);
-
-    /* need to reset the stream time to 0 after a successfull flushing seek, 
-     * unless the user explicitly disabled this behavior by setting stream 
-     * time to NONE */
-    if (need_reset && res)
-      gst_pipeline_set_new_stream_time (GST_PIPELINE (element), 0);
-
-    if (was_playing)
-      /* and continue playing, this might return ASYNC in which case the
-       * application can wait for the PREROLL to complete after the seek. 
-       */
-      gst_element_set_state (element, GST_STATE_PLAYING);
-  }
-  return res;
-}
-
-static gboolean
-gst_pipeline_send_event (GstElement * element, GstEvent * event)
-{
-  gboolean res;
-  GstEventType event_type = GST_EVENT_TYPE (event);
-
-  switch (event_type) {
-    case GST_EVENT_SEEK:
-      /* do the default seek handling */
-      res = do_pipeline_seek (element, event);
-      break;
-    default:
-      /* else parent implements the defaults */
-      res = GST_ELEMENT_CLASS (parent_class)->send_event (element, event);
-      break;
-  }
-
-  return res;
+  GST_OBJECT_UNLOCK (pipeline);
 }
 
 /**
@@ -433,8 +366,11 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
       GstClockTime new_base_time;
+      GstQuery *query;
+      GstClockTime min_latency, max_latency;
       GstClockTime start_time, stream_time, delay;
-      gboolean new_clock;
+      gboolean new_clock, update;
+      gboolean res;
 
       GST_DEBUG_OBJECT (element, "selecting clock and base_time");
 
@@ -452,6 +388,8 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_LOCK (element);
       new_clock = element->clock != clock;
       stream_time = pipeline->stream_time;
+      update = pipeline->priv->new_stream_time;
+      pipeline->priv->new_stream_time = FALSE;
       delay = pipeline->delay;
       GST_OBJECT_UNLOCK (element);
 
@@ -468,25 +406,68 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
             gst_message_new_new_clock (GST_OBJECT_CAST (element), clock));
       }
 
-      if (stream_time != GST_CLOCK_TIME_NONE
-          && start_time != GST_CLOCK_TIME_NONE) {
-        new_base_time = start_time - stream_time + delay;
-        GST_DEBUG_OBJECT (element,
-            "stream_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
-            ", base_time %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (stream_time), GST_TIME_ARGS (start_time),
-            GST_TIME_ARGS (new_base_time));
-      } else
-        new_base_time = GST_CLOCK_TIME_NONE;
-
       if (clock)
         gst_object_unref (clock);
 
-      if (new_base_time != GST_CLOCK_TIME_NONE)
-        gst_element_set_base_time (element, new_base_time);
-      else
+      /* stream time changed, either with a PAUSED or a flush, we need to update
+       * the base time */
+      if (update) {
+        GST_DEBUG_OBJECT (pipeline, "stream_time changed, updating base time");
+
+        if (stream_time != GST_CLOCK_TIME_NONE
+            && start_time != GST_CLOCK_TIME_NONE) {
+          new_base_time = start_time - stream_time + delay;
+          GST_DEBUG_OBJECT (element,
+              "stream_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
+              ", base_time %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (stream_time), GST_TIME_ARGS (start_time),
+              GST_TIME_ARGS (new_base_time));
+        } else
+          new_base_time = GST_CLOCK_TIME_NONE;
+
+        if (new_base_time != GST_CLOCK_TIME_NONE)
+          gst_element_set_base_time (element, new_base_time);
+        else
+          GST_DEBUG_OBJECT (pipeline,
+              "NOT adjusting base_time because stream_time is NONE");
+      } else {
         GST_DEBUG_OBJECT (pipeline,
-            "NOT adjusting base time because stream time is NONE");
+            "NOT adjusting base_time because we selected one before");
+      }
+
+      /* determine latency in this pipeline */
+      GST_DEBUG_OBJECT (element, "querying pipeline latency");
+      query = gst_query_new_latency ();
+      if (gst_element_query (element, query)) {
+        gboolean live;
+
+        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+
+        GST_DEBUG_OBJECT (element,
+            "configuring min latency %" GST_TIME_FORMAT ", max latency %"
+            GST_TIME_FORMAT ", live %d", GST_TIME_ARGS (min_latency),
+            GST_TIME_ARGS (max_latency), live);
+
+        /* configure latency on elements */
+        res =
+            gst_element_send_event (element,
+            gst_event_new_latency (min_latency));
+        if (res) {
+          GST_INFO_OBJECT (element, "configured latency of %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min_latency));
+        } else {
+          GST_WARNING_OBJECT (element,
+              "failed to configure latency of %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min_latency));
+          GST_ELEMENT_WARNING (element, CORE, CLOCK, (NULL),
+              ("Failed to configure latency of %" GST_TIME_FORMAT,
+                  GST_TIME_ARGS (min_latency)));
+        }
+      } else {
+        /* this is not a real problem, we just don't configure any latency. */
+        GST_WARNING_OBJECT (element, "failed to query pipeline latency");
+      }
+      gst_query_unref (query);
       break;
     }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
@@ -503,17 +484,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
     {
-      gboolean need_reset;
-
-      /* only reset the stream_time when the application did not
-       * specify a stream_time explicitly */
-      GST_OBJECT_LOCK (element);
-      need_reset = pipeline->stream_time != GST_CLOCK_TIME_NONE;
-      GST_OBJECT_UNLOCK (element);
-
-      if (need_reset)
-        gst_pipeline_set_new_stream_time (pipeline, 0);
-
+      reset_stream_time (pipeline);
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -532,8 +503,11 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 
         GST_OBJECT_LOCK (element);
         /* store the current stream time */
-        if (pipeline->stream_time != GST_CLOCK_TIME_NONE)
+        if (pipeline->stream_time != GST_CLOCK_TIME_NONE) {
           pipeline->stream_time = now - element->base_time;
+          pipeline->priv->new_stream_time = TRUE;
+        }
+
         GST_DEBUG_OBJECT (element,
             "stream_time=%" GST_TIME_FORMAT ", now=%" GST_TIME_FORMAT
             ", base_time %" GST_TIME_FORMAT,
@@ -573,6 +547,32 @@ invalid_clock:
     return GST_STATE_CHANGE_FAILURE;
   }
 }
+
+static void
+gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
+{
+  GstPipeline *pipeline = GST_PIPELINE_CAST (bin);
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ASYNC_START:
+    {
+      gboolean new_base_time;
+
+      gst_message_parse_async_start (message, &new_base_time);
+
+      /* reset our stream time if we need to distribute a new base_time to the
+       * children. */
+      if (new_base_time)
+        reset_stream_time (pipeline);
+
+      break;
+    }
+    default:
+      break;
+  }
+  GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+}
+
 
 /**
  * gst_pipeline_get_bus:
@@ -614,6 +614,7 @@ gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
 
   GST_OBJECT_LOCK (pipeline);
   pipeline->stream_time = time;
+  pipeline->priv->new_stream_time = TRUE;
   GST_OBJECT_UNLOCK (pipeline);
 
   GST_DEBUG_OBJECT (pipeline, "set new stream_time to %" GST_TIME_FORMAT,

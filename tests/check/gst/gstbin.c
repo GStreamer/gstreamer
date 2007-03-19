@@ -23,6 +23,21 @@
 #include <gst/check/gstcheck.h>
 
 static void
+pop_async_done (GstBus * bus)
+{
+  GstMessage *message;
+
+  GST_DEBUG ("popping async-done message");
+  message = gst_bus_poll (bus, GST_MESSAGE_ASYNC_DONE, -1);
+
+  fail_unless (message && GST_MESSAGE_TYPE (message)
+      == GST_MESSAGE_ASYNC_DONE, "did not get GST_MESSAGE_ASYNC_DONE");
+
+  gst_message_unref (message);
+  GST_DEBUG ("popped message");
+}
+
+static void
 pop_messages (GstBus * bus, int count)
 {
   GstMessage *message;
@@ -277,7 +292,7 @@ GST_START_TEST (test_message_state_changed_children)
   fail_unless (pending == GST_STATE_VOID_PENDING);
 
   /* wait for async thread to settle down */
-  while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 2)
+  while (GST_OBJECT_REFCOUNT_VALUE (pipeline) > 3)
     THREAD_SWITCH ();
 
   /* each object is referenced by a message;
@@ -291,6 +306,7 @@ GST_START_TEST (test_message_state_changed_children)
   ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "pipeline", 2, 3);
 
   pop_messages (bus, 3);
+  pop_async_done (bus);
   fail_if ((gst_bus_pop (bus)) != NULL);
 
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
@@ -390,6 +406,7 @@ GST_START_TEST (test_watch_for_state_change)
   fail_unless (ret == GST_STATE_CHANGE_SUCCESS);
 
   pop_messages (bus, 6);
+  pop_async_done (bus);
 
   fail_unless (gst_bus_have_pending (bus) == FALSE,
       "Unexpected messages on bus");
@@ -400,10 +417,12 @@ GST_START_TEST (test_watch_for_state_change)
   pop_messages (bus, 3);
 
   /* this one might return either SUCCESS or ASYNC, likely SUCCESS */
-  gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
+  ret = gst_element_set_state (GST_ELEMENT (bin), GST_STATE_PAUSED);
   gst_element_get_state (GST_ELEMENT (bin), NULL, NULL, GST_CLOCK_TIME_NONE);
 
   pop_messages (bus, 3);
+  if (ret == GST_STATE_CHANGE_ASYNC)
+    pop_async_done (bus);
 
   fail_unless (gst_bus_have_pending (bus) == FALSE,
       "Unexpected messages on bus");
@@ -521,6 +540,7 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
 
   src = gst_element_factory_make ("fakesrc", NULL);
   fail_if (src == NULL, "Could not create fakesrc");
+  g_object_set (src, "num-buffers", 5, NULL);
 
   identity = gst_element_factory_make ("identity", NULL);
   fail_if (identity == NULL, "Could not create identity");
@@ -552,6 +572,7 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
   /* READY => PAUSED */
   /* because of pre-rolling, sink will return ASYNC on state
    * change and change state later when it has a buffer */
+  GST_DEBUG ("popping READY -> PAUSED messages");
   ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_READY, GST_STATE_PAUSED,
       105);
 #if 0
@@ -561,20 +582,21 @@ GST_START_TEST (test_children_state_change_order_flagged_sink)
    * in which case the sink will commit its new state before the source ...  */
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_READY, GST_STATE_PAUSED, 106);
   ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_READY, GST_STATE_PAUSED, 107);
+#else
+
+  pop_messages (bus, 2);        /* pop remaining ready => paused messages off the bus */
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_READY, GST_STATE_PAUSED,
       108);
-
+  pop_async_done (bus);
+#endif
   /* PAUSED => PLAYING */
+  GST_DEBUG ("popping PAUSED -> PLAYING messages");
   ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_PAUSED, GST_STATE_PLAYING, 109);
   ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_PAUSED, GST_STATE_PLAYING,
       110);
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_PAUSED, GST_STATE_PLAYING, 111);
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_PAUSED, GST_STATE_PLAYING,
       112);
-#else
-  pop_messages (bus, 3);        /* pop remaining ready => paused messages off the bus */
-  pop_messages (bus, 4);        /* pop paused => playing messages off the bus */
-#endif
 
   /* don't set to NULL that will set the bus flushing and kill our messages */
   ret = gst_element_set_state (pipeline, GST_STATE_READY);
@@ -656,6 +678,7 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
   /* READY => PAUSED */
   /* because of pre-rolling, sink will return ASYNC on state
    * change and change state later when it has a buffer */
+  GST_DEBUG ("popping READY -> PAUSED messages");
   ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_READY, GST_STATE_PAUSED,
       205);
 #if 0
@@ -665,19 +688,20 @@ GST_START_TEST (test_children_state_change_order_semi_sink)
    * in which case the sink will commit its new state before the source ...  */
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_READY, GST_STATE_PAUSED, 206);
   ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_READY, GST_STATE_PAUSED, 207);
+#else
+  pop_messages (bus, 2);        /* pop remaining ready => paused messages off the bus */
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_READY, GST_STATE_PAUSED,
       208);
+  pop_async_done (bus);
 
   /* PAUSED => PLAYING */
+  GST_DEBUG ("popping PAUSED -> PLAYING messages");
   ASSERT_STATE_CHANGE_MSG (bus, sink, GST_STATE_PAUSED, GST_STATE_PLAYING, 209);
   ASSERT_STATE_CHANGE_MSG (bus, identity, GST_STATE_PAUSED, GST_STATE_PLAYING,
       210);
   ASSERT_STATE_CHANGE_MSG (bus, src, GST_STATE_PAUSED, GST_STATE_PLAYING, 211);
   ASSERT_STATE_CHANGE_MSG (bus, pipeline, GST_STATE_PAUSED, GST_STATE_PLAYING,
       212);
-#else
-  pop_messages (bus, 3);        /* pop remaining ready => paused messages off the bus */
-  pop_messages (bus, 4);        /* pop paused => playing messages off the bus */
 #endif
 
   /* don't set to NULL that will set the bus flushing and kill our messages */

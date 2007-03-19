@@ -313,7 +313,7 @@ GST_START_TEST (test_livesrc_sink)
         if (n_sink == 2) {
           fail_unless (old == GST_STATE_READY, "unexpected old");
           fail_unless (new == GST_STATE_PAUSED, "unexpected new");
-          fail_unless (pending == GST_STATE_PLAYING, "unexpected pending");
+          fail_unless (pending == GST_STATE_VOID_PENDING, "unexpected pending");
         } else if (n_sink == 1) {
           fail_unless (old == GST_STATE_PAUSED, "unexpected old");
           fail_unless (new == GST_STATE_PLAYING, "unexpected new");

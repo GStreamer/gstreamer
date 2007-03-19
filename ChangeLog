@@ -1,6 +1,62 @@
 2007-03-19  Wim Taymans  <wim@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:
+	Add new element field and method.
+
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_init),
+	(bin_remove_messages), (gst_bin_add_func), (gst_bin_remove_func),
+	(gst_bin_recalc_state), (gst_bin_get_state_func),
+	(gst_bin_element_set_state), (gst_bin_change_state_func),
+	(gst_bin_continue_func), (bin_bus_handler),
+	(bin_push_state_continue), (bin_handle_async_start),
+	(bin_handle_async_done), (gst_bin_handle_message_func):
+	Make async state changes a bit smarter by using new ASYNC_START and
+	ASYNC_DONE messages. This reduces the number of times we run the state
+	recalculation thread.
+	Don't change state of element with a pending ASYNC_START message.
+	Deprecate STATE_DIRTY messages.
+	
+	* gst/gstelement.c: (gst_element_init), (gst_element_send_event),
+	(gst_element_get_state_func), (gst_element_continue_state),
+	(gst_element_lost_state), (gst_element_set_state_func),
+	(gst_element_change_state):
+	* gst/gstelement.h:
+	Keep the state that was last set by the app in a new element field.
+	Don't allow state changes when handling an element event.
+	Post ASYNC_START and ASYNC_DONE messages.
+	Change lost_state so that we go to PAUSED and wait for the parent to set
+	us to PLAYING again (so latency calculation can be performed)
+	Export gst_element_change_state() method so that subclasses can use it.
+	API: gst_element_change_state()
+	API: GST_STATE_TARGET
+
+	* gst/gstpipeline.c: (gst_pipeline_class_init),
+	(reset_stream_time), (gst_pipeline_change_state),
+	(gst_pipeline_handle_message), (gst_pipeline_set_new_stream_time):
+	Using the new ASYNC_START message we can reset the base_time when
+	needed. This can then be used to implement base_time redistribution in
+	flushing seeks so that we can remove the explicit seek handling.
+	Perform latency query and configuration when going to PLAYING.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_commit_state),
+	(gst_base_sink_query), (gst_base_sink_change_state):
+	Post new ASYNC_START/ASYNC_DONE messages.
+
+	* tests/check/generic/sinks.c: (GST_START_TEST):
+	Fix test because the bin will not set the async element to PLAYING right
+	away.
+
+	* tests/check/gst/gstbin.c: (pop_async_done), (GST_START_TEST):
+	Make the message check a little stronger.
+	Handle ASYNC messages.
+
+	* tests/check/pipelines/cleanup.c: (GST_START_TEST):
+	* tests/check/pipelines/simple-launch-lines.c: (GST_START_TEST):
+	Expect ASYNC_DONE messages.
+
+2007-03-19  Wim Taymans  <wim@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
 	* gst/gstmessage.c: (gst_message_new_async_start),
 	(gst_message_new_async_done), (gst_message_parse_info),
 	(gst_message_parse_async_start):

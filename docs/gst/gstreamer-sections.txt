@@ -419,6 +419,7 @@ GST_STATE_GET_NEXT
 GST_STATE_NEXT
 GST_STATE_PENDING
 GST_STATE_RETURN
+GST_STATE_TARGET
 GST_STATE_TRANSITION
 GST_STATE_TRANSITION_CURRENT
 GST_STATE_TRANSITION_NEXT
@@ -500,6 +501,7 @@ gst_element_lost_state
 gst_element_state_get_name
 gst_element_state_change_return_get_name
 gst_element_sync_state_with_parent
+gst_element_change_state
 
 <SUBSECTION element-tags>
 gst_element_found_tags
