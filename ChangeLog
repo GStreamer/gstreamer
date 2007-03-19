@@ -1,7 +1,14 @@
 2007-03-18  Johan Dahlin  <jdahlin@async.com.br>
 
-	reviewed by: Edward Hervey  <edward@fluendo.com>
+	* gst/common.h: 
+	* gst/gsttaglist.override: 
 
+	Make it compilable on Python 2.4 and Python 2.5
+
+2007-03-18  Johan Dahlin  <jdahlin@async.com.br>
+
+	reviewed by: Edward Hervey  <edward@fluendo.com>
+	
 	* gst/__init__.py: Implement multiplication, divison and float 
 	coercing for fractions.
 

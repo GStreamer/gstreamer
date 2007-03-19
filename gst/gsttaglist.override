@@ -129,13 +129,13 @@ _wrap_gst_tag_list_contains(PyGObject *self, PyObject *py_key)
 static PySequenceMethods _wrap_gst_tag_list_tp_as_sequence = {
 	(inquiry)NULL,
 	(binaryfunc)NULL,
-	(intargfunc)NULL,
-	(intargfunc)NULL,
-	(intintargfunc)NULL,
+	(ssizeargfunc)NULL,
+	(ssizeargfunc)NULL,
+	(ssizessizeargfunc)NULL,
 	(intobjargproc)NULL,
 	(intintobjargproc)NULL,
 	(objobjproc)_wrap_gst_tag_list_contains,
 	(binaryfunc)NULL,
-	(intargfunc)NULL,
+	(ssizeargfunc)NULL,
 };
 

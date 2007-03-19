@@ -35,6 +35,11 @@
   typedef destructor freefunc;
 #endif
 
+#if PY_VERSION_HEX < 0x02050000
+#define ssizeargfunc intargfunc
+#define ssizessizeargfunc intintargfunc
+#endif
+
 typedef struct {
 	PyGObject *pad;
 	GClosure *link_function;
