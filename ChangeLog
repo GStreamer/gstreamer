@@ -1,5 +1,10 @@
 2007-03-20  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gst.c:
+	Fix compilation with registry disabled as spotted by Saur.
+
+2007-03-20  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Olivier Crete <tester at tester dot ca>
 
 	* gst/gstelement.c: (gst_element_sync_state_with_parent):

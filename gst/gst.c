@@ -1191,9 +1191,11 @@ gst_deinit (void)
   g_slist_free (preload_plugins);
   preload_plugins = NULL;
 
+#ifndef GST_DISABLE_REGISTRY
   g_list_foreach (plugin_paths, (GFunc) g_free, NULL);
   g_list_free (plugin_paths);
   plugin_paths = NULL;
+#endif
 
   clock = gst_system_clock_obtain ();
   gst_object_unref (clock);
