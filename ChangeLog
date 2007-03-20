@@ -1,3 +1,11 @@
+2007-03-20  Michael Smith  <msmith@fluendo.com>
+
+	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_chain):
+	  If we get a zero-sized input buffer, don't pass it to libvorbis, as
+	  that marks EOS internally. After that, libvorbis will buffer all
+	  input data, and encode none of it, eventually leading to memory
+	  exhaustion.
+
 2007-03-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin.c: (remove_fakesink):

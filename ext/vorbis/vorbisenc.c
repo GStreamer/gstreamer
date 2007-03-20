@@ -1149,6 +1149,12 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
     vorbisenc->next_discont = TRUE;
   }
 
+  /* Sending zero samples to libvorbis marks EOS, so we mustn't do that */
+  if (GST_BUFFER_SIZE (buffer) == 0) {
+    gst_buffer_unref (buffer);
+    return GST_FLOW_OK;
+  }
+
   /* data to encode */
   data = (gfloat *) GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer) / (vorbisenc->channels * sizeof (float));
