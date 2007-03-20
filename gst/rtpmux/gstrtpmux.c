@@ -83,7 +83,7 @@ struct _GstRTPMuxClass
 static const GstElementDetails gst_rtp_mux_details =
 GST_ELEMENT_DETAILS ("RTP muxer",
     "Codec/Muxer",
-    "mux rtp streams",
+    "multiplex N rtp streams into one",
     "Zeeshan Ali <first.last@nokia.com>");
 
 enum
