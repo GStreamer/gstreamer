@@ -1713,38 +1713,51 @@ gboolean
 gst_element_sync_state_with_parent (GstElement * element)
 {
   GstElement *parent;
+  GstState target;
+  GstStateChangeReturn ret;
 
   g_return_val_if_fail (GST_IS_ELEMENT (element), FALSE);
 
   if ((parent = GST_ELEMENT_CAST (gst_element_get_parent (element)))) {
     GstState parent_current, parent_pending;
-    GstStateChangeReturn ret;
 
     GST_OBJECT_LOCK (parent);
     parent_current = GST_STATE (parent);
     parent_pending = GST_STATE_PENDING (parent);
     GST_OBJECT_UNLOCK (parent);
 
-    GST_CAT_DEBUG (GST_CAT_STATES,
-        "syncing state of element %s (%s) to %s (%s, %s)",
-        GST_ELEMENT_NAME (element),
+    /* set to pending if there is one, else we set it to the current state of
+     * the parent */
+    if (parent_pending != GST_STATE_VOID_PENDING)
+      target = parent_pending;
+    else
+      target = parent_current;
+
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+        "syncing state (%s) to parent %s %s (%s, %s)",
         gst_element_state_get_name (GST_STATE (element)),
-        GST_ELEMENT_NAME (parent), gst_element_state_get_name (parent_current),
+        GST_ELEMENT_NAME (parent), gst_element_state_get_name (target),
+        gst_element_state_get_name (parent_current),
         gst_element_state_get_name (parent_pending));
 
-    ret = gst_element_set_state (element, parent_current);
+    ret = gst_element_set_state (element, target);
     if (ret == GST_STATE_CHANGE_FAILURE)
       goto failed;
 
     gst_object_unref (parent);
 
     return TRUE;
+  } else {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "element has no parent");
   }
   return FALSE;
 
   /* ERROR */
 failed:
   {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
+        "syncing state failed (%s)",
+        gst_element_state_change_return_get_name (ret));
     return FALSE;
   }
 }

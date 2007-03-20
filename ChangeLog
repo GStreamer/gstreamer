@@ -1,3 +1,11 @@
+2007-03-20  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Olivier Crete <tester at tester dot ca>
+
+	* gst/gstelement.c: (gst_element_sync_state_with_parent):
+	Look at the pending state too when syncing the element state to the
+	parent. Fixes #420133.
+
 2007-03-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_set_flushing),
