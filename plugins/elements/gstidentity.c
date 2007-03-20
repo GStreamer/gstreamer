@@ -431,7 +431,8 @@ gst_identity_check_imperfect_offset (GstIdentity * identity, GstBuffer * buf)
   offset = GST_BUFFER_OFFSET (buf);
 
   if (identity->prev_offset_end != offset &&
-      identity->prev_offset_end != G_MAXUINT64 && offset != G_MAXUINT64) {
+      identity->prev_offset_end != GST_BUFFER_OFFSET_NONE &&
+      offset != GST_BUFFER_OFFSET_NONE) {
     /*
      * "imperfect-offset" bus message:
      * @identity:        the identity instance
