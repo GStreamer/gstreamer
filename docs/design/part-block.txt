@@ -138,7 +138,9 @@ Use cases:
   6) link element4 and element3
   7) link element1 and element4 (FIXME, how about letting element4 know
      about the currently running segment?, see issues.)
-  8) unblock element1 src
+  8) make sure element4 is in the same state as the rest of the elements. The
+     element should at least be PAUSED.
+  9) unblock element1 src
 
  The same flow can be used to replace an element in a PAUSED pipeline. Only
  special care has to be taken when performing step 2) which has to be done

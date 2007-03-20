@@ -1,5 +1,11 @@
 2007-03-20  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-block.txt:
+	Mention the fact that the newly switched element should be set to at
+	least PAUSED.
+
+2007-03-20  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gst.c:
 	Fix compilation with registry disabled as spotted by Saur.
 
