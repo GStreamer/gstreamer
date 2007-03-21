@@ -176,6 +176,16 @@
  * their duration when it changes so we return inaccurate values. */
 #undef DURATION_CACHING
 
+/* latency is by default disabled for non CVS for now.
+ * live-preroll and no-live-preroll in the environment var GST_COMPAT
+ * to enables or disable it respectively.
+ */
+#if GST_VERSION_NANO == 1
+static gboolean enable_latency = TRUE;
+#else
+static gboolean enable_latency = FALSE;
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (bin_debug);
 #define GST_CAT_DEFAULT bin_debug
 
@@ -253,6 +263,7 @@ GType
 gst_bin_get_type (void)
 {
   static GType gst_bin_type = 0;
+  const gchar *compat;
 
   if (G_UNLIKELY (gst_bin_type == 0)) {
     static const GTypeInfo bin_info = {
@@ -281,6 +292,15 @@ gst_bin_get_type (void)
 
     GST_DEBUG_CATEGORY_INIT (bin_debug, "bin", GST_DEBUG_BOLD,
         "debugging info for the 'bin' container element");
+
+    /* compatibility stuff */
+    compat = g_getenv ("GST_COMPAT");
+    if (compat != NULL) {
+      if (strstr (compat, "no-live-preroll"))
+        enable_latency = FALSE;
+      else if (strstr (compat, "live-preroll"))
+        enable_latency = TRUE;
+    }
   }
   return gst_bin_type;
 }
@@ -1824,12 +1844,25 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
     GstMessage *message = GST_MESSAGE_CAST (found->data);
     GstObject *src = GST_MESSAGE_SRC (message);
 
+
     GST_DEBUG_OBJECT (element, "element message %p, %s async busy",
         message, GST_ELEMENT_NAME (src));
     /* only wait for upward state changes */
-    if (next > current)
+    if (next > current) {
+      /* We found an async element check if we can force its state to change or
+       * if we have to wait for it to preroll. */
+      if (G_UNLIKELY (!enable_latency)) {
+        g_warning ("Future versions of GStreamer will wait for element \"%s\"\n"
+            "\tto preroll in order to perform correct latency calculations.\n"
+            "\tPlease verify that the application continues to work correctly by\n"
+            "\tsetting the environment variable GST_COMPAT to a value containing\n"
+            "\tthe string 'live-preroll'.", GST_ELEMENT_NAME (element));
+        goto no_latency;
+      }
       goto was_busy;
+    }
   }
+no_latency:
   GST_OBJECT_UNLOCK (bin);
 
   GST_DEBUG_OBJECT (bin,

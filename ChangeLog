@@ -1,3 +1,10 @@
+2007-03-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_get_type), (gst_bin_element_set_state):
+	Prepare for release where we warn against possible app breakage in the
+	case of live pipelines along with an env var to enable/disable live
+	preroll mode (GST_COMPAT=[no-]live-preroll).
+
 2007-03-20  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* plugins/elements/gstidentity.c (gst_identity_check_imperfect_offset):
