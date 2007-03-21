@@ -1,3 +1,11 @@
+2007-03-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Young-Ho Cha <ganadist at chollian net>
+
+	* gst/subparse/samiparse.c: (handle_start_font):
+	  Special-case some more colour names that pango doesn't handle by
+	  default. Fixes #420578.
+
 2007-03-20  Michael Smith  <msmith@fluendo.com>
 
 	* ext/vorbis/vorbisenc.c: (gst_vorbis_enc_chain):

@@ -175,10 +175,24 @@ handle_start_font (GstSamiContext * sctx, const xmlChar ** atts)
             sharp = "#";
           }
         }
-        /* silver colour can be found in many sami files, but X RGB database
+        /* some colours can be found in many sami files, but X RGB database
          * doesn't contain a colour by this name, so map explicitly */
-        if (!xmlStrncasecmp ((const xmlChar *) "silver", value, 6)) {
+        if (!xmlStrncasecmp (value, (const xmlChar *) "aqua", len)) {
+          value = (const xmlChar *) "#00ffff";
+        } else if (!xmlStrncasecmp (value, (const xmlChar *) "crimson", len)) {
+          value = (const xmlChar *) "#dc143c";
+        } else if (!xmlStrncasecmp (value, (const xmlChar *) "fuchsia", len)) {
+          value = (const xmlChar *) "#ff00ff";
+        } else if (!xmlStrncasecmp (value, (const xmlChar *) "indigo", len)) {
+          value = (const xmlChar *) "#4b0082";
+        } else if (!xmlStrncasecmp (value, (const xmlChar *) "lime", len)) {
+          value = (const xmlChar *) "#00ff00";
+        } else if (!xmlStrncasecmp (value, (const xmlChar *) "olive", len)) {
+          value = (const xmlChar *) "#808000";
+        } else if (!xmlStrncasecmp (value, (const xmlChar *) "silver", len)) {
           value = (const xmlChar *) "#c0c0c0";
+        } else if (!xmlStrncasecmp (value, (const xmlChar *) "teal", len)) {
+          value = (const xmlChar *) "#008080";
         }
         g_string_append_printf (sctx->buf, " foreground=\"%s%s\"", sharp,
             value);
