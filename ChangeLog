@@ -1,5 +1,10 @@
 2007-03-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/playback/gstplaybin.c: (add_sink):
+	  Use GST_PTR_FORMAT to log caps. 
+
+2007-03-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Young-Ho Cha <ganadist at chollian net>
 
 	* gst/subparse/samiparse.c: (handle_start_font):
