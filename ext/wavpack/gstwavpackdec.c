@@ -353,22 +353,20 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
     gst_wavpack_dec_post_tags (dec, &wph);
   }
 
-  unpacked_size = wph.block_samples * (dec->width / 8) * dec->channels;
-
-  /* alloc buffer */
-  ret = gst_pad_alloc_buffer (dec->srcpad, GST_BUFFER_OFFSET (buf),
-      unpacked_size, GST_PAD_CAPS (dec->srcpad), &outbuf);
-
-  if (ret != GST_FLOW_OK)
-    goto out;
-
   /* decode */
   unpack_buf = g_new (int32_t, wph.block_samples * dec->channels);
   decoded = WavpackUnpackSamples (dec->context, unpack_buf, wph.block_samples);
   if (decoded != wph.block_samples)
     goto decode_error;
 
-  /* put samples into outbuf buffer */
+  /* alloc output buffer. Can't use gst_pad_alloc_buffer() because of
+   * possible clipping which will cause problems with BaseTransform
+   * elements because of the unit size */
+  unpacked_size = wph.block_samples * (dec->width / 8) * dec->channels;
+  outbuf = gst_buffer_new_and_alloc (unpacked_size);
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (dec->srcpad));
+
+  /* put samples into output buffer */
   gst_wavpack_dec_format_samples (dec, GST_BUFFER_DATA (outbuf),
       unpack_buf, wph.block_samples);
   gst_buffer_stamp (outbuf, buf);
