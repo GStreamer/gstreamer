@@ -1,3 +1,10 @@
+2007-03-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/lame/gstlame.c: (gst_lame_setup):
+	Disable the bitrate checking when the user has requested
+	Free Format mode, as all bitrates less than the maximum
+	are valid then.
+
 2007-03-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/hu.po:
