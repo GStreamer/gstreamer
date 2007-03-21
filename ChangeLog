@@ -1,3 +1,8 @@
+2007-03-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	Clarify FIXME comment in the face of having added unlock_stop()
+
 2007-03-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (gst_bin_get_type), (gst_bin_element_set_state):

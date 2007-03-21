@@ -851,9 +851,12 @@ gst_base_src_do_seek (GstBaseSrc * src, GstSegment * segment)
  * when we reach the segment.stop we have to post a segment.done
  * instead of EOS when doing a segment seek.
  */
-/* FIXME, we have the unlock gboolean here because most current implementations
- * (fdsrc, -base/gst/tcp/, ...) not only unlock when there is something to
- * unlock
+/* FIXME (0.11), we have the unlock gboolean here because most current 
+ * implementations (fdsrc, -base/gst/tcp/, ...) unconditionally unlock, even when
+ * the streaming thread isn't running, resulting in bogus unlocks later when it 
+ * starts. This is fixed by adding unlock_stop, but we should still avoid unlocking
+ * unnecessarily for backwards compatibility. Ergo, the unlock variable stays
+ * until 0.11
  */
 static gboolean
 gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
