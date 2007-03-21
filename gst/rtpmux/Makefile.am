@@ -1,7 +1,10 @@
-plugin_LTLIBRARIES = libgstrtpmux.la
+plugin_LTLIBRARIES = libgstrtpmuxer.la
 
-libgstrtpmux_la_SOURCES = gstrtpmux.c gstrtpmux.h
+libgstrtpmuxer_la_SOURCES = gstrtpmuxer.c gstrtpmux.c gstrtpdtmfmux.c
 
-libgstrtpmux_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(ERROR_CFLAGS) -DEXTERN_BUF -DRTP_SUPPORT
-libgstrtpmux_la_LIBADD = $(GST_LIBS_LIBS)
-libgstrtpmux_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_MAJORMINOR@
+libgstrtpmuxer_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(ERROR_CFLAGS) -DEXTERN_BUF -DRTP_SUPPORT
+libgstrtpmuxer_la_LIBADD = $(GST_LIBS_LIBS)
+libgstrtpmuxer_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstrtp-@GST_MAJORMINOR@
+
+noinst_HEADERS = gstrtpmux.h gstrtpdtmfmux.h
+

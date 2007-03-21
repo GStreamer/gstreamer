@@ -69,6 +69,7 @@ struct _GstRTPMuxClass
 };
 
 GType gst_rtp_mux_get_type (void);
+gboolean gst_rtp_mux_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
 
