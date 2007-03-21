@@ -100,10 +100,10 @@
       input stream. Here, we will focus only on typefind functions.
     </para>
     <para>
-      A typefind function ususally lives in
-      <filename>gst-plugins/gst/typefind/gsttypefindfunctions.c</filename>,
+      A typefind function usually lives in
+      <filename>gst-plugins-base/gst/typefind/gsttypefindfunctions.c</filename>,
       unless there's a good reason (like library dependencies) to put it
-      elsewhere. The reason for this centralization is to decreate the
+      elsewhere. The reason for this centralization is to reduce the
       number of plugins that need to be loaded in order to detect a stream's
       type. Below is an example that will recognize AVI files, which start
       with a <quote>RIFF</quote> tag, then the size of the file and then an

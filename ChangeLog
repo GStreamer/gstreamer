@@ -1,3 +1,8 @@
+2007-03-21  Michael Smith  <msmith@fluendo.com>
+
+	* docs/pwg/advanced-types.xml:
+	  Fix some errors in the typefinding docs pointed out on irc.
+
 2007-03-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* libs/gst/base/gstbasesrc.c:
