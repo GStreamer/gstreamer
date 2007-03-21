@@ -1,3 +1,9 @@
+2007-03-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_get_type):
+	  Rename registered type in preparation of GstTagDemux moving to
+	  -base at some point in the future.
+
 2007-03-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):

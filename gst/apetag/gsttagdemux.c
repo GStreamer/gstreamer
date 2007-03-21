@@ -177,9 +177,8 @@ gst_tag_demux_get_type (void)
       (GInstanceInitFunc) gst_tag_demux_init
     };
 
-    /* FIXME: register as 'GstApeDemuxBase' for now */
     object_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstTagDemux", &object_info, G_TYPE_FLAG_ABSTRACT);
+        "GstApeDemuxBase", &object_info, G_TYPE_FLAG_ABSTRACT);
   }
 
   return object_type;
