@@ -1,5 +1,11 @@
 2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
+	Revert to use gst_pad_alloc_buffer() here. We can and should use it.
+	Thanks to Jan and Mike for noticing my mistake.
+
+2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_class_init),
 	(gst_wavpack_enc_init), (gst_wavpack_enc_chain),
 	(gst_wavpack_enc_rewrite_first_block):
