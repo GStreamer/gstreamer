@@ -1,3 +1,10 @@
+2007-03-22  Wim Taymans  <wim@fluendo.com>
+
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_get_size),
+	(gst_gnome_vfs_src_start), (gst_gnome_vfs_src_stop):
+	* ext/gnomevfs/gstgnomevfssrc.h:
+	Don't cache file sizes. Fixes #341078.
+
 2007-03-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybin.c: (add_sink):

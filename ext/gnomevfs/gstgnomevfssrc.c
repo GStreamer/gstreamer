@@ -770,15 +770,40 @@ static gboolean
 gst_gnome_vfs_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 {
   GstGnomeVFSSrc *src;
+  GnomeVFSFileInfo *info;
+  GnomeVFSFileInfoOptions options;
+  GnomeVFSResult res;
 
   src = GST_GNOME_VFS_SRC (basesrc);
 
-  GST_DEBUG_OBJECT (src, "size %" G_GUINT64_FORMAT, src->size);
+  *size = -1;
+  info = gnome_vfs_file_info_new ();
+  options = GNOME_VFS_FILE_INFO_DEFAULT | GNOME_VFS_FILE_INFO_FOLLOW_LINKS;
+  res = gnome_vfs_get_file_info_from_handle (src->handle, info, options);
+  if (res == GNOME_VFS_OK) {
+    if ((info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE) != 0) {
+      *size = info->size;
+      GST_DEBUG_OBJECT (src, "from handle: %" G_GUINT64_FORMAT " bytes", *size);
+    } else if (src->own_handle && gnome_vfs_uri_is_local (src->uri)) {
+      GST_DEBUG_OBJECT (src,
+          "file size not known, file local, trying fallback");
+      res = gnome_vfs_get_file_info_uri (src->uri, info, options);
+      if (res == GNOME_VFS_OK &&
+          (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE) != 0) {
+        *size = info->size;
+        GST_DEBUG_OBJECT (src, "from uri: %" G_GUINT64_FORMAT " bytes", *size);
+      }
+    }
+  } else {
+    GST_WARNING_OBJECT (src, "getting info failed: %s",
+        gnome_vfs_result_to_string (res));
+  }
+  gnome_vfs_file_info_unref (info);
 
-  if (src->size == (GnomeVFSFileSize) - 1)
+  GST_DEBUG_OBJECT (src, "return size %" G_GUINT64_FORMAT, *size);
+
+  if (*size == (GnomeVFSFileSize) - 1)
     return FALSE;
-
-  *size = src->size;
 
   return TRUE;
 }
@@ -787,9 +812,7 @@ gst_gnome_vfs_src_get_size (GstBaseSrc * basesrc, guint64 * size)
 static gboolean
 gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
 {
-  GnomeVFSFileInfoOptions options;
   GnomeVFSResult res;
-  GnomeVFSFileInfo *info;
   GstGnomeVFSSrc *src;
 
   src = GST_GNOME_VFS_SRC (basesrc);
@@ -810,31 +833,6 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
   } else {
     src->own_handle = FALSE;
   }
-
-  src->size = (GnomeVFSFileSize) - 1;
-  info = gnome_vfs_file_info_new ();
-  options = GNOME_VFS_FILE_INFO_DEFAULT | GNOME_VFS_FILE_INFO_FOLLOW_LINKS;
-  res = gnome_vfs_get_file_info_from_handle (src->handle, info, options);
-  if (res == GNOME_VFS_OK) {
-    if ((info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE) != 0) {
-      src->size = info->size;
-      GST_DEBUG_OBJECT (src, "size: %" G_GUINT64_FORMAT " bytes", src->size);
-    } else if (src->own_handle && gnome_vfs_uri_is_local (src->uri)) {
-      GST_DEBUG_OBJECT (src, "file size not known, trying fallback");
-      res = gnome_vfs_get_file_info_uri (src->uri, info, options);
-      if (res == GNOME_VFS_OK &&
-          (info->valid_fields & GNOME_VFS_FILE_INFO_FIELDS_SIZE) != 0) {
-        src->size = info->size;
-        GST_DEBUG_OBJECT (src, "size: %" G_GUINT64_FORMAT " bytes", src->size);
-      }
-    }
-    if (src->size == (GnomeVFSFileSize) - 1)
-      GST_DEBUG_OBJECT (src, "file size not known");
-  } else {
-    GST_WARNING_OBJECT (src, "getting info failed: %s",
-        gnome_vfs_result_to_string (res));
-  }
-  gnome_vfs_file_info_unref (info);
 
   if (gnome_vfs_seek (src->handle, GNOME_VFS_SEEK_CURRENT, 0)
       == GNOME_VFS_OK) {
@@ -887,7 +885,6 @@ gst_gnome_vfs_src_stop (GstBaseSrc * basesrc)
     gnome_vfs_close (src->handle);
     src->handle = NULL;
   }
-  src->size = (GnomeVFSFileSize) - 1;
   src->curoffset = 0;
 
   if (src->icy_caps) {

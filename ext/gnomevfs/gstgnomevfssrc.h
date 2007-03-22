@@ -60,7 +60,6 @@ struct _GstGnomeVFSSrc
   gchar *uri_name;
   GnomeVFSHandle *handle;
   gboolean own_handle;
-  GnomeVFSFileSize size;        /* -1 = unknown */
   GnomeVFSFileOffset curoffset; /* current offset in file */
   gboolean seekable;
 
