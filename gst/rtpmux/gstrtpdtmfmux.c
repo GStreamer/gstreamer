@@ -156,18 +156,13 @@ static GstFlowReturn
 gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstRTPDTMFMux *mux;
-  gboolean drop = FALSE;
   GstFlowReturn ret;
   
   mux = GST_RTP_DTMF_MUX (gst_pad_get_parent (pad));
 
   GST_OBJECT_LOCK (mux);
-  if (mux->special_pad != NULL &&
-      mux->special_pad != pad) {
-    drop = TRUE;
-  }
-
-  if (drop) {
+  if (mux->special_pad != NULL && mux->special_pad != pad) {
+    /* Drop the buffer */
     gst_buffer_unref (buffer);
     ret = GST_FLOW_OK;
     GST_OBJECT_UNLOCK (mux);
@@ -188,11 +183,10 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
 static void
 gst_rtp_dtmf_mux_lock_stream (GstRTPDTMFMux *mux, GstPad * pad)
 {
-  if (mux->special_pad != NULL) {
+  if (mux->special_pad != NULL)
     GST_WARNING_OBJECT (mux,
             "Stream lock already acquired by pad %s",
             GST_ELEMENT_NAME (mux->special_pad));
-  }
 
   else
     mux->special_pad = gst_object_ref (pad);
@@ -201,18 +195,15 @@ gst_rtp_dtmf_mux_lock_stream (GstRTPDTMFMux *mux, GstPad * pad)
 static void
 gst_rtp_dtmf_mux_unlock_stream (GstRTPDTMFMux *mux, GstPad * pad)
 {
-  if (mux->special_pad == NULL) {
+  if (mux->special_pad == NULL)
     GST_WARNING_OBJECT (mux,
             "Stream lock not acquired, can't release it");
-  }
 
-  else if (pad != mux->special_pad) {
+  else if (pad != mux->special_pad)
     GST_WARNING_OBJECT (mux,
             "pad %s attempted to release Stream lock"
             " which was acquired by pad %s", GST_ELEMENT_NAME (pad),
             GST_ELEMENT_NAME (mux->special_pad));
-  }
-
   else {
     gst_object_unref (mux->special_pad);
     mux->special_pad = NULL;
@@ -239,16 +230,16 @@ gst_rtp_dtmf_mux_handle_stream_lock_event (GstRTPDTMFMux *mux, GstPad * pad,
 }
 
 static gboolean
-gst_rtp_dtmf_mux_handle_downstream_event (GstRTPDTMFMux *mux, GstPad * pad, GstEvent * event)
+gst_rtp_dtmf_mux_handle_downstream_event (GstRTPDTMFMux *mux,
+        GstPad * pad, GstEvent * event)
 {
   const GstStructure *structure;
   gboolean ret = FALSE;
 
   structure = gst_event_get_structure (event);
   /* FIXME: is this event generic enough to be given a generic name? */
-  if (structure && gst_structure_has_name (structure, "stream-lock")) {
+  if (structure && gst_structure_has_name (structure, "stream-lock"))
     ret = gst_rtp_dtmf_mux_handle_stream_lock_event (mux, pad, structure);
-  }
 
   return ret;
 }
@@ -258,10 +249,9 @@ gst_rtp_dtmf_mux_ignore_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret;
 
-  if (parent_class->sink_event_func) {
+  if (parent_class->sink_event_func)
     /* Give the parent a chance to handle the event first */
     ret = parent_class->sink_event_func (pad, event);
-  }
 
   else
     ret = gst_pad_event_default (pad, event);
