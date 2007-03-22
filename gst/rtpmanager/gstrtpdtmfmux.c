@@ -187,8 +187,42 @@ gst_rtp_dtmf_mux_chain (GstPad * pad, GstBuffer * buffer)
   return ret;
 }
 
+static void
+gst_rtp_dtmf_mux_lock_stream (GstRTPDTMFMux *mux, GstPad * pad)
+{
+  if (mux->special_pad != NULL) {
+    GST_WARNING_OBJECT (mux,
+            "Stream lock already acquired by pad %s",
+            GST_ELEMENT_NAME (mux->special_pad));
+  }
+
+  else
+    mux->special_pad = gst_object_ref (pad);
+}
+
+static void
+gst_rtp_dtmf_mux_unlock_stream (GstRTPDTMFMux *mux, GstPad * pad)
+{
+  if (mux->special_pad == NULL) {
+    GST_WARNING_OBJECT (mux,
+            "Stream lock not acquired, can't release it");
+  }
+
+  else if (pad != mux->special_pad) {
+    GST_WARNING_OBJECT (mux,
+            "pad %s attempted to release Stream lock"
+            " which was acquired by pad %s", GST_ELEMENT_NAME (pad),
+            GST_ELEMENT_NAME (mux->special_pad));
+  }
+
+  else {
+    gst_object_unref (mux->special_pad);
+    mux->special_pad = NULL;
+  }
+}
+
 static gboolean
-gst_rtp_dtmf_mux_stream_lock_event_handler (GstRTPDTMFMux *mux, GstPad * pad,
+gst_rtp_dtmf_mux_handle_stream_lock_event (GstRTPDTMFMux *mux, GstPad * pad,
         const GstStructure * event_structure)
 {
   gboolean lock;
@@ -197,39 +231,44 @@ gst_rtp_dtmf_mux_stream_lock_event_handler (GstRTPDTMFMux *mux, GstPad * pad,
     return FALSE;
 
   GST_OBJECT_LOCK (mux);
-  if (lock) {
-    if (mux->special_pad != NULL) {
-      GST_WARNING_OBJECT (mux,
-              "Stream lock already acquired by pad %s",
-              GST_ELEMENT_NAME (mux->special_pad));
-    }
-
-    else
-      mux->special_pad = gst_object_ref (pad);
-  }
-
-  else {
-    if (mux->special_pad == NULL) {
-      GST_WARNING_OBJECT (mux,
-              "Stream lock not acquired, can't release it");
-    }
-
-    else if (pad != mux->special_pad) {
-      GST_WARNING_OBJECT (mux,
-              "pad %s attempted to release Stream lock"
-              " which was acquired by pad %s", GST_ELEMENT_NAME (pad),
-              GST_ELEMENT_NAME (mux->special_pad));
-    }
-
-    else {
-      gst_object_unref (mux->special_pad);
-      mux->special_pad = NULL;
-    }
-  }
-
+  if (lock)
+    gst_rtp_dtmf_mux_lock_stream (mux, pad);
+  else
+    gst_rtp_dtmf_mux_unlock_stream (mux, pad);
   GST_OBJECT_UNLOCK (mux);
 
   return TRUE;
+}
+
+static gboolean
+gst_rtp_dtmf_mux_handle_downstream_event (GstRTPDTMFMux *mux, GstPad * pad, GstEvent * event)
+{
+  const GstStructure *structure;
+  gboolean ret = FALSE;
+
+  structure = gst_event_get_structure (event);
+  /* FIXME: is this event generic enough to be given a generic name? */
+  if (structure && gst_structure_has_name (structure, "stream-lock")) {
+    ret = gst_rtp_dtmf_mux_handle_stream_lock_event (mux, pad, structure);
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_rtp_dtmf_mux_ignore_event (GstPad * pad, GstEvent * event)
+{
+  gboolean ret;
+
+  if (parent_class->sink_event_func) {
+    /* Give the parent a chance to handle the event first */
+    ret = parent_class->sink_event_func (pad, event);
+  }
+
+  else
+    ret = gst_pad_event_default (pad, event);
+
+  return ret;
 }
 
 static gboolean
@@ -245,33 +284,14 @@ gst_rtp_dtmf_mux_sink_event (GstPad * pad, GstEvent * event)
 
   switch (type) {
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
-    {
-      const GstStructure *structure;
-
-      structure = gst_event_get_structure (event);
-      /* FIXME: is this event generic enough to be given a generic name? */
-      if (structure && gst_structure_has_name (structure, "stream-lock")) {
-        ret = gst_rtp_dtmf_mux_stream_lock_event_handler (mux, pad, structure);
-      }
-
-      ret = TRUE;
+      ret = gst_rtp_dtmf_mux_handle_downstream_event (mux, pad, event);
       break;
-    }
     default:
-    {
-      if (parent_class->sink_event_func) {
-        /* Give the parent a chance to handle the event first */
-        ret = parent_class->sink_event_func (pad, event);
-      }
-
-      else
-        ret = gst_pad_event_default (pad, event);
+      ret = gst_rtp_dtmf_mux_ignore_event (pad, event);
       break;
-    }
   }
 
   gst_object_unref (mux);
-
   return ret;
 }
 
