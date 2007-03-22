@@ -619,7 +619,7 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
     if (wph.block_index == 0) {
       gst_pad_push_event (pad,
           gst_event_new_new_segment (FALSE,
-              1.0, GST_FORMAT_BYTES, 0, GST_BUFFER_OFFSET_NONE, 0));
+              1.0, GST_FORMAT_TIME, 0, GST_BUFFER_OFFSET_NONE, 0));
 
       /* save header for later reference, so we can re-send it later on
        * EOS with fixed up values for total sample count etc. */
