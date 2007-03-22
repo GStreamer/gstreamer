@@ -337,8 +337,6 @@ static void gst_play_bin_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_play_bin_send_event (GstElement * element,
     GstEvent * event);
-static gboolean gst_play_bin_set_clock_func (GstElement * element,
-    GstClock * clock);
 static GstStateChangeReturn gst_play_bin_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -441,7 +439,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_play_bin_change_state);
   gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_play_bin_send_event);
-  gstelement_klass->set_clock = GST_DEBUG_FUNCPTR (gst_play_bin_set_clock_func);
 
   gstbin_klass->handle_message =
       GST_DEBUG_FUNCPTR (gst_play_bin_handle_message);
@@ -1688,42 +1685,6 @@ gst_play_bin_send_event (GstElement * element, GstEvent * event)
       res = parent_class->send_event (element, event);
       break;
   }
-
-  return res;
-}
-
-/* Override the set_clock function, we don't want to set a clock on the sinks
- * when we are live pipeline so that they don't synchronize until this is
- * fixed in core. */
-static gboolean
-gst_play_bin_set_clock_func (GstElement * element, GstClock * clock)
-{
-  GList *children;
-  GstBin *bin;
-  GstPlayBin *play_bin;
-  gboolean res = TRUE;
-  GstElement *asink, *vsink;
-
-  bin = GST_BIN (element);
-  play_bin = GST_PLAY_BIN (element);
-
-  asink = g_hash_table_lookup (play_bin->cache, "audio_sink");
-  vsink = g_hash_table_lookup (play_bin->cache, "video_sink");
-
-  GST_DEBUG_OBJECT (play_bin, "setting clock, is_live %d", play_bin->is_live);
-
-  GST_OBJECT_LOCK (bin);
-  if (element->clock != clock) {
-    for (children = bin->children; children; children = g_list_next (children)) {
-      GstElement *child = GST_ELEMENT (children->data);
-
-      if (play_bin->is_live && (child == asink || child == vsink))
-        res &= gst_element_set_clock (child, NULL);
-      else
-        res &= gst_element_set_clock (child, clock);
-    }
-  }
-  GST_OBJECT_UNLOCK (bin);
 
   return res;
 }

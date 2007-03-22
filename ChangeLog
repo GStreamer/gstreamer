@@ -1,3 +1,9 @@
+2007-03-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init):
+	Remove playbin's override of the set_clock vmethod. It's irrelevant
+	after Wim's commit on the 19th.
+
 2007-03-22  Wim Taymans  <wim@fluendo.com>
 
 	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_get_size),
