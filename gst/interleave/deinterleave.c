@@ -46,6 +46,8 @@ struct _GstDeinterleave
 {
   GstElement element;
 
+  /*< private > */
+  GList *srcpads;
   GstCaps *sinkcaps;
   gint channels;
 
@@ -144,32 +146,33 @@ gst_deinterleave_add_new_pads (GstDeinterleave * self, GstCaps * caps)
     g_free (name);
     gst_pad_set_caps (pad, caps);
     gst_pad_use_fixed_caps (pad);
-    GST_PAD_UNSET_FLUSHING (pad);
+    gst_pad_set_active (pad, TRUE);
     gst_element_add_pad (GST_ELEMENT (self), pad);
+    self->srcpads = g_list_prepend (self->srcpads, gst_object_ref (pad));
   }
 
   gst_element_no_more_pads (GST_ELEMENT (self));
+  self->srcpads = g_list_reverse (self->srcpads);
 }
 
 static void
 gst_deinterleave_remove_pads (GstDeinterleave * self)
 {
-  GstElement *elem;
-  GList *srcs, *l;
+  GList *l;
 
-  elem = GST_ELEMENT (self);
+  GST_INFO_OBJECT (self, "removing pads");
 
-  GST_INFO_OBJECT (self, "remove_pads()");
+  for (l = self->srcpads; l; l = l->next) {
+    GstPad *pad = GST_PAD (l->data);
 
-  srcs = g_list_copy (elem->srcpads);
-
-  for (l = srcs; l; l = l->next)
-    gst_element_remove_pad (elem, GST_PAD (l->data));
+    gst_element_remove_pad (GST_ELEMENT_CAST (self), pad);
+    gst_object_unref (pad);
+  }
+  g_list_free (self->srcpads);
+  self->srcpads = NULL;
 
   gst_pad_set_caps (self->sink, NULL);
   gst_caps_replace (&self->sinkcaps, NULL);
-
-  g_list_free (srcs);
 }
 
 static gboolean
@@ -220,13 +223,10 @@ static GstFlowReturn
 gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  GstElement *elem;
   GList *srcs;
   guint bufsize, i, j, channels, pads_pushed, nframes;
   GstBuffer **buffers_out;
   gfloat *in, *out;
-
-  elem = GST_ELEMENT (self);
 
   channels = self->channels;
   buffers_out = g_alloca (sizeof (GstBuffer *) * channels);
@@ -237,7 +237,7 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
   for (i = 0; i < channels; i++)
     buffers_out[i] = NULL;
 
-  for (srcs = elem->srcpads, i = 0; srcs; srcs = srcs->next, i++) {
+  for (srcs = self->srcpads, i = 0; srcs; srcs = srcs->next, i++) {
     GstPad *pad = (GstPad *) srcs->data;
 
     buffers_out[i] = NULL;
@@ -249,15 +249,12 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
     if (buffers_out[i] && GST_BUFFER_SIZE (buffers_out[i]) != bufsize)
       goto alloc_buffer_bad_size;
 
-    if (buffers_out[i]) {
-      GST_BUFFER_TIMESTAMP (buffers_out[i]) = GST_BUFFER_TIMESTAMP (buf);
-      GST_BUFFER_OFFSET (buffers_out[i]) = GST_BUFFER_OFFSET (buf);
-      GST_BUFFER_DURATION (buffers_out[i]) = GST_BUFFER_DURATION (buf);
-    }
+    if (buffers_out[i])
+      gst_buffer_stamp (buffers_out[i], buf);
   }
 
   /* do the thing */
-  for (srcs = elem->srcpads, i = 0; srcs; srcs = srcs->next, i++) {
+  for (srcs = self->srcpads, i = 0; srcs; srcs = srcs->next, i++) {
     GstPad *pad = (GstPad *) srcs->data;
 
     in = (gfloat *) GST_BUFFER_DATA (buf);
@@ -281,11 +278,12 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
   if (!pads_pushed)
     ret = GST_FLOW_NOT_LINKED;
 
+  gst_buffer_unref (buf);
   return ret;
 
 alloc_buffer_failed:
   {
-    GST_WARNING ("gst_pad_alloc_buffer() returned %d", ret);
+    GST_WARNING ("gst_pad_alloc_buffer() returned %s", gst_flow_get_name (ret));
     goto clean_buffers;
 
   }
@@ -297,14 +295,16 @@ alloc_buffer_bad_size:
   }
 push_failed:
   {
-    GST_DEBUG ("push() failed");
+    GST_DEBUG ("push() failed, flow = %s", gst_flow_get_name (ret));
     goto clean_buffers;
   }
 clean_buffers:
   {
-    for (i = 0; i < channels; i++)
+    for (i = 0; i < channels; i++) {
       if (buffers_out[i])
         gst_buffer_unref (buffers_out[i]);
+    }
+    gst_buffer_unref (buf);
     return ret;
   }
 }
@@ -315,14 +315,12 @@ gst_deinterleave_chain (GstPad * pad, GstBuffer * buffer)
   GstDeinterleave *self;
   GstFlowReturn ret;
 
-  self = GST_DEINTERLEAVE (gst_pad_get_parent (pad));
+  self = GST_DEINTERLEAVE (GST_PAD_PARENT (pad));
 
   ret = gst_deinterleave_process (self, buffer);
 
   if (ret != GST_FLOW_OK)
-    GST_WARNING_OBJECT (self, "process failed");
-
-  gst_object_unref (self);
+    GST_DEBUG_OBJECT (self, "flow: %s", gst_flow_get_name (ret));
 
   return ret;
 }

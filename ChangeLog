@@ -1,5 +1,15 @@
 2007-03-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/interleave/deinterleave.c: (gst_deinterleave_add_new_pads),
+	(gst_deinterleave_remove_pads), (gst_deinterleave_process),
+	(gst_deinterleave_chain):
+	  Don't leak input buffer in chain function; maintain our own list of
+	  source pads - there are no guarantees about the order of the list
+	  in the GstElement struct, and we want a very specific order; lastly,
+	  some more debugging.
+
+2007-03-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_init):
 	  Alloc user agent string only once.
 
