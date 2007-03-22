@@ -1,3 +1,9 @@
+2007-03-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst-libs/gst/app/Makefile.am:
+	  Use GST_ALL_LDFLAGS, which actually exists, but maybe David
+	  can confirm that was what he wanted.
+
 2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
