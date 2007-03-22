@@ -1,3 +1,8 @@
+2007-03-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_init):
+	  Alloc user agent string only once.
+
 2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_plugin_init):

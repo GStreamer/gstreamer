@@ -246,8 +246,6 @@ gst_neonhttp_src_init (GstNeonhttpSrc * src, GstNeonhttpSrcClass * g_class)
         "The proxy set on http_proxy env var ('%s') cannot be parsed.", str);
   }
 
-  src->user_agent = g_strdup ("neonhttpsrc");
-
   src->iradio_mode = FALSE;
   src->iradio_name = NULL;
   src->iradio_genre = NULL;
