@@ -56,9 +56,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_wavpack_parse_debug);
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-wavpack, "
-        "framed = (boolean) false; "
-        "audio/x-wavpack-correction, " "framed = (boolean) false")
+    GST_STATIC_CAPS ("audio/x-wavpack; " "audio/x-wavpack-correction")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
@@ -1173,7 +1171,7 @@ gboolean
 gst_wavpack_parse_plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "wavpackparse",
-          GST_RANK_PRIMARY, GST_TYPE_WAVPACK_PARSE)) {
+          GST_RANK_PRIMARY - 1, GST_TYPE_WAVPACK_PARSE)) {
     return FALSE;
   }
 
