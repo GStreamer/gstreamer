@@ -2709,6 +2709,8 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);
 
+  GST_DEBUG_OBJECT (pad, "offset %" G_GUINT64_FORMAT ", size %d", offset, size);
+
   GST_OBJECT_LOCK (pad);
   while (G_UNLIKELY (GST_PAD_IS_BLOCKED (pad)))
     if ((ret = handle_pad_block (pad)) != GST_FLOW_OK)
@@ -4232,6 +4234,8 @@ no_function:
     g_warning ("pad %s:%s has no event handler, file a bug.",
         GST_DEBUG_PAD_NAME (pad));
     GST_OBJECT_UNLOCK (pad);
+    if (need_unlock)
+      GST_PAD_STREAM_UNLOCK (pad);
     gst_event_unref (event);
     return FALSE;
   }

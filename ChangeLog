@@ -1,3 +1,11 @@
+2007-03-22  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: <syrjala at sci dot fi>
+
+	* gst/gstpad.c: (gst_pad_alloc_buffer_full), (gst_pad_send_event):
+	Fix possible deadlock if pad eventfunc is not specified.  Fixes #421177.
+	Improve debugging.
+
 2007-03-21  Michael Smith  <msmith@fluendo.com>
 
 	* docs/pwg/advanced-types.xml:
