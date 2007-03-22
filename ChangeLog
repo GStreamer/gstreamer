@@ -1,5 +1,12 @@
 2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/gstpad.c: (gst_pad_set_caps), (gst_pad_configure_sink),
+	(gst_pad_configure_src), (gst_pad_alloc_buffer_full),
+	(gst_pad_chain_unchecked), (gst_pad_push):
+	Revert last commit. This needs some more thoughts.
+
+2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstpad.c: (gst_pad_set_caps), (gst_pad_alloc_buffer_full),
 	(gst_pad_chain_unchecked), (gst_pad_push):
 	Check in set_caps if the caps are compatible with the pad and remove

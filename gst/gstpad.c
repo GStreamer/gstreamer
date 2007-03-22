@@ -2343,9 +2343,6 @@ gst_pad_set_caps (GstPad * pad, GstCaps * caps)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
   g_return_val_if_fail (caps == NULL || gst_caps_is_fixed (caps), FALSE);
 
-  if (!gst_pad_accept_caps (pad, caps))
-    goto could_not_set;
-
   GST_OBJECT_LOCK (pad);
   existing = GST_PAD_CAPS (pad);
   if (existing == caps)
@@ -2402,6 +2399,65 @@ could_not_set:
         "caps %" GST_PTR_FORMAT " could not be set", caps);
     GST_OBJECT_UNLOCK (pad);
 
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
+{
+  GstPadSetCapsFunction setcaps;
+  gboolean res;
+
+  setcaps = GST_PAD_SETCAPSFUNC (pad);
+
+  /* See if pad accepts the caps - only needed if 
+   * no setcaps function */
+  if (setcaps == NULL)
+    if (!gst_pad_accept_caps (pad, caps))
+      goto not_accepted;
+
+  /* set caps on pad if call succeeds */
+  res = gst_pad_set_caps (pad, caps);
+  /* no need to unref the caps here, set_caps takes a ref and
+   * our ref goes away when we leave this function. */
+
+  return res;
+
+not_accepted:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "caps %" GST_PTR_FORMAT " not accepted", caps);
+    return FALSE;
+  }
+}
+
+/* returns TRUE if the src pad could be configured to accept the given caps */
+static gboolean
+gst_pad_configure_src (GstPad * pad, GstCaps * caps, gboolean dosetcaps)
+{
+  GstPadSetCapsFunction setcaps;
+  gboolean res;
+
+  setcaps = GST_PAD_SETCAPSFUNC (pad);
+
+  /* See if pad accepts the caps - only needed if 
+   * no setcaps function */
+  if (setcaps == NULL)
+    if (!gst_pad_accept_caps (pad, caps))
+      goto not_accepted;
+
+  if (dosetcaps)
+    res = gst_pad_set_caps (pad, caps);
+  else
+    res = TRUE;
+
+  return res;
+
+not_accepted:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "caps %" GST_PTR_FORMAT " not accepted", caps);
     return FALSE;
   }
 }
@@ -2686,7 +2742,7 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
     GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
-    if (G_UNLIKELY (setcaps && !gst_pad_set_caps (pad, caps)))
+    if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, setcaps)))
       goto not_negotiated;
   }
   return ret;
@@ -3387,7 +3443,7 @@ gst_pad_chain_unchecked (GstPad * pad, GstBuffer * buffer)
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
     GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
-    if (G_UNLIKELY (!gst_pad_set_caps (pad, caps)))
+    if (G_UNLIKELY (!gst_pad_configure_sink (pad, caps)))
       goto not_negotiated;
   }
 
@@ -3564,7 +3620,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   /* we got a new datatype from the pad, it had better handle it */
   if (G_UNLIKELY (caps_changed)) {
     GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
-    if (G_UNLIKELY (!gst_pad_set_caps (pad, caps)))
+    if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, TRUE)))
       goto not_negotiated;
   }
 
