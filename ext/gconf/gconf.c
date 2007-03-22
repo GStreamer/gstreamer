@@ -162,11 +162,10 @@ gst_gconf_render_bin_from_key (const gchar * key)
 
 /**
  * gst_gconf_render_bin_with_default:
- * @bin: a #gchar string corresponding to pipeline to construct.
- * @default: a pipeline description to use as default if the GConf key
- *   pipeline fails to construct.
+ * @bin: a #gchar string describing the pipeline to construct.
+ * @default_sink: an element to use as default if the given pipeline fails to construct.
  *
- * Render bin from GConf key @key using @default as a fallback.
+ * Render bin from description @bin using @default_sink element as a fallback.
  *
  * Returns: a #GstElement containing the rendered bin.
  */
@@ -175,14 +174,16 @@ gst_gconf_render_bin_with_default (const gchar * bin,
     const gchar * default_sink)
 {
   GstElement *ret;
+  GError *err = NULL;
 
-  ret = gst_element_factory_make (bin, NULL);
+  ret = gst_parse_bin_from_description (bin, TRUE, &err);
 
-  if (!ret) {
+  if (err) {
     ret = gst_element_factory_make (default_sink, NULL);
 
     if (!ret)
-      g_warning ("No GConf default audio sink key and %s doesn't work",
+      g_warning
+          ("Could not build GConf audio sink and the replacement %s doesn't work",
           DEFAULT_AUDIOSINK);
   }
 

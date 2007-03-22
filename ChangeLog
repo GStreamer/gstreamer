@@ -1,3 +1,11 @@
+2007-03-22  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Christophe Dehais <christophe dot dehais at gmail dot com>
+
+	* ext/gconf/gconf.c: (gst_gconf_render_bin_with_default):
+	Accept complex pipeline descriptions as an audio profile instead of just
+	a single element. Fixes #420658.
+
 2007-03-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/apetag/gsttagdemux.c: (gst_tag_demux_get_type):
