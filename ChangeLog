@@ -1,3 +1,10 @@
+2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstpad.c: (gst_pad_set_caps), (gst_pad_alloc_buffer_full),
+	(gst_pad_chain_unchecked), (gst_pad_push):
+	Check in set_caps if the caps are compatible with the pad and remove
+	two functions that are redundant now. Fixes #421543.
+
 2007-03-22  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/gst/gstsystemclock.c: (GST_START_TEST),
