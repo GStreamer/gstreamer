@@ -1,5 +1,12 @@
 2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_plugin_init):
+	Revert last commit, preventing infinite plugging loops with ranks
+	is no clean solution and in general there's no reason why one wants
+	to parse framed wavpack data again.
+
+2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_push_block):
 	Send the new segment event in time format instead of bytes. This
 	allows "wavpackenc ! wavpackdec ! someaudiosink" pipelines.
