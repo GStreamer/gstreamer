@@ -424,6 +424,10 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
         /* else restart if we must */
         if (!restart)
           break;
+
+        /* this can happen if the entry got unlocked because of an async entry
+         * was added to the head of the async queue. */
+        GST_CAT_DEBUG (GST_CAT_CLOCK, "continue waiting for entry %p", entry);
       }
     }
   } else if (diff == 0) {
@@ -441,7 +445,7 @@ gst_system_clock_id_wait_jitter (GstClock * clock, GstClockEntry * entry,
   GstClockReturn ret;
 
   GST_OBJECT_LOCK (clock);
-  ret = gst_system_clock_id_wait_jitter_unlocked (clock, entry, jitter, FALSE);
+  ret = gst_system_clock_id_wait_jitter_unlocked (clock, entry, jitter, TRUE);
   GST_OBJECT_UNLOCK (clock);
 
   return ret;
@@ -485,7 +489,7 @@ no_thread:
 static GstClockReturn
 gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
 {
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "adding entry %p", entry);
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "adding async entry %p", entry);
 
   GST_OBJECT_LOCK (clock);
 
@@ -503,7 +507,12 @@ gst_system_clock_id_wait_async (GstClock * clock, GstClockEntry * entry)
    * front, else the thread is just waiting for another entry and
    * will get to this entry automatically. */
   if (clock->entries->data == entry) {
-    GST_CAT_DEBUG (GST_CAT_CLOCK, "send signal");
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "async entry added to head, sending signal");
+    /* this will wake up _all_ entries waiting for the clock because we have
+     * only one cond for all entries (makes allocation faster). Entries that
+     * have not timed out will have their status set to BUSY and should continue
+     * to wait. In the case of the async ones, the new head entry should be
+     * taken and waited for. */
     GST_CLOCK_BROADCAST (clock);
   }
   GST_OBJECT_UNLOCK (clock);
@@ -528,8 +537,11 @@ gst_system_clock_id_unschedule (GstClock * clock, GstClockEntry * entry)
   GST_CAT_DEBUG (GST_CAT_CLOCK, "unscheduling entry %p", entry);
 
   GST_OBJECT_LOCK (clock);
+  /* mark entry as unscheduled, then wake up all entries. The entries that did
+   * not timeout will be woken up but immediatly go to sleep again because their
+   * status would still be busy. */
   entry->status = GST_CLOCK_UNSCHEDULED;
-  GST_CAT_DEBUG (GST_CAT_CLOCK, "send signal");
+  GST_CAT_DEBUG (GST_CAT_CLOCK, "sending signal");
   GST_CLOCK_BROADCAST (clock);
   GST_OBJECT_UNLOCK (clock);
 }

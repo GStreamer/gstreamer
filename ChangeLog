@@ -1,5 +1,20 @@
 2007-03-22  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstsystemclock.c: (gst_system_clock_id_wait_jitter_unlocked),
+	(gst_system_clock_id_wait_jitter),
+	(gst_system_clock_id_wait_async), (gst_system_clock_id_unschedule):
+	Fix anoying regression that survived a few releases. When adding an
+	async entry while blocking on a sync entry, the sync entry will unblock
+	but still be busy, so it should continue to wait instead of returning
+	_BUSY to the app.
+	Add some comments here and there.
+
+	* tests/check/gst/gstsystemclock.c: (mixed_thread),
+	(mixed_async_cb), (GST_START_TEST), (gst_systemclock_suite):
+	Add testcase for this.
+
+2007-03-22  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_get_range):
 	Handle errors from the clock sync better, only UNSCHEDULED indicates a
 	WRONG_STATE and can silently pause the task. All other cases should

@@ -298,8 +298,76 @@ GST_START_TEST (test_diff)
     fail_if (d[i] != GST_CLOCK_DIFF (time1[i], time2[i]));
   }
 }
-GST_END_TEST Suite *
-gst_systemclock_suite (void)
+
+GST_END_TEST
+/* test if a blocking wait, unblocked by an async entry continues to be
+ * scheduled */
+    typedef struct
+{
+  GstClock *clock;
+  GstClockID id;
+  GstClockTimeDiff jitter;
+  GstClockReturn ret;
+} MixedInfo;
+
+static gpointer
+mixed_thread (MixedInfo * info)
+{
+  info->ret = gst_clock_id_wait (info->id, &info->jitter);
+  return NULL;
+}
+
+static gboolean
+mixed_async_cb (GstClock * clock, GstClockTime time,
+    GstClockID id, gpointer user_data)
+{
+  return TRUE;
+}
+
+GST_START_TEST (test_mixed)
+{
+  GThread *thread;
+  GError *error = NULL;
+  MixedInfo info;
+  GstClockTime base;
+  GstClockID id;
+
+  info.clock = gst_system_clock_obtain ();
+  fail_unless (info.clock != NULL,
+      "Could not create instance of GstSystemClock");
+
+  /* get current time of the clock as base time */
+  base = gst_clock_get_time (info.clock);
+
+  /* create entry to wait for 1 second */
+  info.id = gst_clock_new_single_shot_id (info.clock, base + GST_SECOND);
+
+  /* make and start an entry that is scheduled every 10ms */
+  id = gst_clock_new_periodic_id (info.clock, base, 10 * GST_MSECOND);
+
+  /* start waiting for the entry */
+  thread = g_thread_create ((GThreadFunc) mixed_thread, &info, TRUE, &error);
+  fail_unless (error == NULL, "error creating thread");
+  fail_unless (thread != NULL, "Could not create thread");
+
+  /* wait half a second so we are sure to be in the thread */
+  g_usleep (G_USEC_PER_SEC / 2);
+
+  /* start scheduling the entry */
+  gst_clock_id_wait_async (id, mixed_async_cb, NULL);
+
+  /* wait for thread to finish */
+  g_thread_join (thread);
+  /* entry must have timed out correctly */
+  fail_unless (info.ret == GST_CLOCK_OK, "clock return was %d", info.ret);
+
+  gst_clock_id_unschedule (id);
+  gst_clock_id_unref (info.id);
+  gst_object_unref (info.clock);
+
+}
+
+GST_END_TEST Suite * gst_systemclock_suite (void)
 {
   Suite *s = suite_create ("GstSystemClock");
   TCase *tc_chain = tcase_create ("waiting");
@@ -311,6 +379,7 @@ gst_systemclock_suite (void)
   tcase_add_test (tc_chain, test_periodic_multi);
   tcase_add_test (tc_chain, test_async_order);
   tcase_add_test (tc_chain, test_diff);
+  tcase_add_test (tc_chain, test_mixed);
 
   return s;
 }
