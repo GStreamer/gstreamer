@@ -25,10 +25,42 @@
 
 /**
  * SECTION:element-rtpdtmfmux
- * @short_description: Muxer that takes one or several RTP streams
- * and muxes them to a single rtp stream.
+ * @short_description: mixes RTP DTMF streams into other RTP streams
  *
  * <refsect2>
+ * <para>
+ * The RTPDTMFMuxer mixes/muxes RTP DTMF stream(s) into other RTP
+ * streams. It does exactly what it's parent (RTPMuxer) does, except
+ * that it allows upstream peer elements to request exclusive access
+ * to the stream, which is required by the RTP DTMF standards(see RFC
+ * 2833 for details). The peer upstream element requests the
+ * requisition and release of a stream lock beginning using custom
+ * downstream gstreamer events. To request the requesition of the
+ * lock, the peer element must send an event of type
+ * GST_EVENT_CUSTOM_DOWNSTREAM_OOB, having a
+ * structure of name "stream-lock" with only one boolean field:
+ * "lock". If this field is set to TRUE, the request is for the 
+ * requisition of the lock, otherwise it is for release of the lock.
+ * </para>
+ * <para>For example, the following code in an upstream peer element
+ * requests the requisition of the stream lock:
+ * </para>
+ * <para>
+ * <programlisting>
+ * GstEvent *event;
+ * GstStructure *structure;
+ * GstPad *srcpad;
+ *
+ * ... /\* srcpad initialization goes here \*\/
+ *
+ * structure = gst_structure_new ("stream-lock",
+ *                    "lock", G_TYPE_BOOLEAN, TRUE, NULL);
+ * 
+ * event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
+ * gst_pad_push_event (dtmfsrc->srcpad, event);
+ * </programlisting>
+ * </para>
+ *
  * </refsect2>
  */
 
