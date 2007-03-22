@@ -1,5 +1,11 @@
 2007-03-22  Wim Taymans  <wim@fluendo.com>
 
+	* tests/check/gst/gstsystemclock.c: (GST_START_TEST),
+	(mixed_thread), (mixed_async_cb), (gst_systemclock_suite):
+	Unref some more to make valgrind happy.
+
+2007-03-22  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstsystemclock.c: (gst_system_clock_id_wait_jitter_unlocked),
 	(gst_system_clock_id_wait_jitter),
 	(gst_system_clock_id_wait_async), (gst_system_clock_id_unschedule):

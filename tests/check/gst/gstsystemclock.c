@@ -362,9 +362,9 @@ GST_START_TEST (test_mixed)
   fail_unless (info.ret == GST_CLOCK_OK, "clock return was %d", info.ret);
 
   gst_clock_id_unschedule (id);
+  gst_clock_id_unref (id);
   gst_clock_id_unref (info.id);
   gst_object_unref (info.clock);
-
 }
 
 GST_END_TEST Suite * gst_systemclock_suite (void)
