@@ -208,7 +208,7 @@ gst_rtp_mux_create_sinkpad (GstRTPMux * rtp_mux, GstPadTemplate * templ)
     GST_WARNING_OBJECT (rtp_mux, "this is not our template!\n");
   }
 
-  return NULL;
+  return newpad;
 }
 
 static void
@@ -249,6 +249,8 @@ gst_rtp_mux_request_new_pad (GstElement * element,
   newpad = gst_rtp_mux_create_sinkpad (rtp_mux, templ);
   if (newpad)
     gst_rtp_mux_setup_sinkpad (rtp_mux, newpad);
+  else
+    GST_WARNING_OBJECT (rtp_mux, "failed to create request pad");
 
   return newpad;
 }
