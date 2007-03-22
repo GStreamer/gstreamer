@@ -34,7 +34,6 @@
 
 #include <string.h>
 #include <ctype.h>
-#include <zlib.h>
 
 #define RMDEMUX_GUINT32_GET(a)  GST_READ_UINT32_BE(a)
 #define RMDEMUX_GUINT16_GET(a)  GST_READ_UINT16_BE(a)

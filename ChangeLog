@@ -1,3 +1,8 @@
+2007-03-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/realmedia/rmdemux.c:
+	  Remove unused zlib.h include. Fixes #421594.
+
 2007-03-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/lame/gstlame.c: (gst_lame_setup):
