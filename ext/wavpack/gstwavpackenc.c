@@ -83,7 +83,6 @@ static int gst_wavpack_enc_push_block (void *id, void *data, int32_t count);
 static gboolean gst_wavpack_enc_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_wavpack_enc_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_wavpack_enc_finalize (GObject * object);
 static void gst_wavpack_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_wavpack_enc_get_property (GObject * object, guint prop_id,
@@ -274,7 +273,6 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
   /* set state change handler */
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_wavpack_enc_change_state);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_wavpack_enc_finalize);
 
   /* set property handlers */
   gobject_class->set_property =
@@ -372,12 +370,10 @@ gst_wavpack_enc_init (GstWavpackEnc * enc, GstWavpackEncClass * gclass)
   enc->md5_context = NULL;
   gst_wavpack_enc_reset (enc);
 
-  enc->wv_id = g_new0 (GstWavpackEncWriteID, 1);
-  enc->wv_id->correction = FALSE;
-  enc->wv_id->wavpack_enc = enc;
-  enc->wvc_id = g_new0 (GstWavpackEncWriteID, 1);
-  enc->wvc_id->correction = TRUE;
-  enc->wvc_id->wavpack_enc = enc;
+  enc->wv_id.correction = FALSE;
+  enc->wv_id.wavpack_enc = enc;
+  enc->wvc_id.correction = TRUE;
+  enc->wvc_id.wavpack_enc = enc;
 
   /* set default values of params */
   enc->mode = GST_WAVPACK_ENC_MODE_DEFAULT;
@@ -386,18 +382,6 @@ gst_wavpack_enc_init (GstWavpackEnc * enc, GstWavpackEncClass * gclass)
   enc->md5 = FALSE;
   enc->extra_processing = FALSE;
   enc->joint_stereo_mode = GST_WAVPACK_JS_MODE_AUTO;
-}
-
-static void
-gst_wavpack_enc_finalize (GObject * object)
-{
-  GstWavpackEnc *enc = GST_WAVPACK_ENC (object);
-
-  /* free the blockout helpers */
-  g_free (enc->wv_id);
-  g_free (enc->wvc_id);
-
-  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -694,8 +678,8 @@ gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
   if (!enc->wp_context) {
     /* create raw context */
     enc->wp_context =
-        WavpackOpenFileOutput (gst_wavpack_enc_push_block, enc->wv_id,
-        (enc->correction_mode > 0) ? enc->wvc_id : NULL);
+        WavpackOpenFileOutput (gst_wavpack_enc_push_block, &enc->wv_id,
+        (enc->correction_mode > 0) ? &enc->wvc_id : NULL);
     if (!enc->wp_context) {
       GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL),
           ("error creating Wavpack context"));
@@ -784,7 +768,7 @@ gst_wavpack_enc_rewrite_first_block (GstWavpackEnc * enc)
   if (ret) {
     /* try to rewrite the first block */
     GST_DEBUG_OBJECT (enc, "rewriting first block ...");
-    ret = gst_wavpack_enc_push_block (enc->wv_id,
+    ret = gst_wavpack_enc_push_block (&enc->wv_id,
         enc->first_block, enc->first_block_size);
   } else {
     GST_WARNING_OBJECT (enc, "rewriting of first block failed. "

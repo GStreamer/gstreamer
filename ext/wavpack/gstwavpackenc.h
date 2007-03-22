@@ -68,8 +68,8 @@ struct _GstWavpackEnc
   gint channels;
   gint width;
 
-  GstWavpackEncWriteID *wv_id;
-  GstWavpackEncWriteID *wvc_id;
+  GstWavpackEncWriteID wv_id;
+  GstWavpackEncWriteID wvc_id;
 
   guint mode;
   gdouble bitrate;
