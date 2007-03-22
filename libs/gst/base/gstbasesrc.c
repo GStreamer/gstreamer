@@ -1400,20 +1400,32 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
   status = gst_base_src_do_sync (src, *buf);
   switch (status) {
     case GST_CLOCK_EARLY:
+      /* the buffer is too late. We currently don't drop the buffer. */
       GST_DEBUG_OBJECT (src, "buffer too late!, returning anyway");
       break;
     case GST_CLOCK_OK:
+      /* buffer synchronised properly */
       GST_DEBUG_OBJECT (src, "buffer ok");
       break;
-    default:
+    case GST_CLOCK_UNSCHEDULED:
       /* this case is triggered when we were waiting for the clock and
        * it got unlocked because we did a state change. We return 
        * WRONG_STATE in this case to stop the dataflow also get rid of the
        * produced buffer. */
-      GST_DEBUG_OBJECT (src, "clock returned %d, not returning", status);
+      GST_DEBUG_OBJECT (src,
+          "clock was unscheduled (%d), returning WRONG_STATE", status);
       gst_buffer_unref (*buf);
       *buf = NULL;
       ret = GST_FLOW_WRONG_STATE;
+      break;
+    default:
+      /* all other result values are unexpected and errors */
+      GST_ELEMENT_ERROR (src, CORE, CLOCK,
+          (_("Internal clock error.")),
+          ("clock returned unexpected return value %d", status));
+      gst_buffer_unref (*buf);
+      *buf = NULL;
+      ret = GST_FLOW_ERROR;
       break;
   }
 done:

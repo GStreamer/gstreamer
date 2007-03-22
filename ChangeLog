@@ -1,5 +1,12 @@
 2007-03-22  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_get_range):
+	Handle errors from the clock sync better, only UNSCHEDULED indicates a
+	WRONG_STATE and can silently pause the task. All other cases should
+	error out.
+
+2007-03-22  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: <syrjala at sci dot fi>
 
 	* gst/gstpad.c: (gst_pad_alloc_buffer_full), (gst_pad_send_event):
