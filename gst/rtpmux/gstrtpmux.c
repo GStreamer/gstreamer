@@ -187,27 +187,13 @@ gst_rtp_mux_finalize (GObject * object)
 }
 
 static GstPad *
-gst_rtp_mux_request_new_pad (GstElement * element,
-    GstPadTemplate * templ, const gchar * req_name)
+gst_rtp_mux_create_sinkpad (GstRTPMux * rtp_mux, GstPadTemplate * templ)
 {
-  GstRTPMux *rtp_mux;
-  GstPad *newpad;
-  GstRTPMuxClass *klass;
+  GstPad *newpad = NULL;
   GstPadTemplate * class_templ;
-
-  g_return_val_if_fail (templ != NULL, NULL);
-  g_return_val_if_fail (GST_IS_RTP_MUX (element), NULL);
-
-  rtp_mux = GST_RTP_MUX (element);
-  klass = GST_RTP_MUX_GET_CLASS (rtp_mux);
-
-  if (templ->direction != GST_PAD_SINK) {
-    GST_WARNING_OBJECT (rtp_mux, "request pad that is not a SINK pad");
-    return NULL;
-  }
-
-  class_templ =
-      gst_element_class_get_pad_template (GST_ELEMENT_CLASS (klass), "sink_%d");
+  
+  class_templ = gst_element_class_get_pad_template (
+          GST_ELEMENT_GET_CLASS (rtp_mux), "sink_%d");
 
   if (templ == class_templ) {
     gchar *name;
@@ -220,18 +206,49 @@ gst_rtp_mux_request_new_pad (GstElement * element,
     rtp_mux->numpads++;
   } else {
     GST_WARNING_OBJECT (rtp_mux, "this is not our template!\n");
+  }
+
+  return NULL;
+}
+
+static void
+gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
+{
+  GstRTPMuxClass *klass;
+
+  klass = GST_RTP_MUX_GET_CLASS (rtp_mux);
+  
+  /* setup some pad functions */
+  gst_pad_set_setcaps_function (sinkpad, gst_rtp_mux_setcaps);
+  if (klass->chain_func)
+    gst_pad_set_chain_function (sinkpad, klass->chain_func);
+  if (klass->sink_event_func)
+    gst_pad_set_event_function (sinkpad, klass->sink_event_func);
+
+  /* dd the pad to the element */
+  gst_element_add_pad (GST_ELEMENT (rtp_mux), sinkpad);
+}
+
+static GstPad *
+gst_rtp_mux_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * req_name)
+{
+  GstRTPMux *rtp_mux;
+  GstPad *newpad;
+
+  g_return_val_if_fail (templ != NULL, NULL);
+  g_return_val_if_fail (GST_IS_RTP_MUX (element), NULL);
+
+  rtp_mux = GST_RTP_MUX (element);
+
+  if (templ->direction != GST_PAD_SINK) {
+    GST_WARNING_OBJECT (rtp_mux, "request pad that is not a SINK pad");
     return NULL;
   }
 
-  /* setup some pad functions */
-  gst_pad_set_setcaps_function (newpad, gst_rtp_mux_setcaps);
-  if (klass->chain_func)
-    gst_pad_set_chain_function (newpad, klass->chain_func);
-  if (klass->sink_event_func)
-    gst_pad_set_event_function (newpad, klass->sink_event_func);
-
-  /* dd the pad to the element */
-  gst_element_add_pad (element, newpad);
+  newpad = gst_rtp_mux_create_sinkpad (rtp_mux, templ);
+  if (newpad)
+    gst_rtp_mux_setup_sinkpad (rtp_mux, newpad);
 
   return newpad;
 }
