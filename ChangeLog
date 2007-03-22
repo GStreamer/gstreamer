@@ -1,5 +1,18 @@
 2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_class_init),
+	(gst_wavpack_enc_init), (gst_wavpack_enc_chain),
+	(gst_wavpack_enc_rewrite_first_block):
+	* ext/wavpack/gstwavpackenc.h:
+	Put the write helpers into the GstWavpackEnc struct directly and not
+	as a pointer to save two small, but useless mallocs. This also makes
+	it possible to drop the finalize method.
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_push_buffer):
+	For consistency reasons also set GST_BUFFER_OFFSET_END on the outgoing
+	buffers the same way wavpackenc does it.
+
+2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
 	Don't use gst_pad_alloc_buffer() as we might clip the buffer later and
 	BaseTransform-based elements will likely break because of wrong

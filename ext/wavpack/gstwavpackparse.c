@@ -870,6 +870,7 @@ gst_wavpack_parse_push_buffer (GstWavpackParse * wvparse, GstBuffer * buf,
   GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (header->block_samples,
       GST_SECOND, wvparse->samplerate);
   GST_BUFFER_OFFSET (buf) = header->block_index;
+  GST_BUFFER_OFFSET_END (buf) = header->block_index + header->block_samples;
   gst_buffer_set_caps (buf, GST_PAD_CAPS (wvparse->srcpad));
 
   GST_LOG_OBJECT (wvparse, "Pushing buffer with time %" GST_TIME_FORMAT,
