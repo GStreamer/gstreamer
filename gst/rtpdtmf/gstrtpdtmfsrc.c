@@ -608,6 +608,8 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
     GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", GST_ELEMENT_NAME (dtmfsrc));
   }
 
+  /* Set caps on the buffer before pushing it */
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (dtmfsrc->srcpad));
   GST_DEBUG_OBJECT (dtmfsrc,
           "pushing buffer on src pad of size %d", GST_BUFFER_SIZE (buf));
   ret = gst_pad_push (dtmfsrc->srcpad, buf);
