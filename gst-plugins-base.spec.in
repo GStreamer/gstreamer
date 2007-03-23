@@ -165,10 +165,10 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/cdda/gstcddabasesrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/audio/mixerutils.h
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/videoorientation.h
-%{_includedir}/gstreamer-%{majorminor}/gst/utils/base-utils.h
-%{_includedir}/gstreamer-%{majorminor}/gst/utils/descriptions.h
-%{_includedir}/gstreamer-%{majorminor}/gst/utils/missing-plugins.h
-%{_includedir}/gstreamer-%{majorminor}/gst/utils/install-plugins.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/descriptions.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/install-plugins.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/missing-plugins.h
+%{_includedir}/gstreamer-%{majorminor}/gst/pbutils/pbutils.h
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
 %{_libdir}/libgsttag-%{majorminor}.so
