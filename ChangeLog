@@ -1,3 +1,19 @@
+2007-03-23  Michael Smith  <msmith@fluendo.com>
+
+	* gst/vmnc/vmncdec.c: (gst_vmnc_dec_class_init),
+	(gst_vmnc_dec_init), (vmnc_dec_finalize), (gst_vmnc_dec_reset),
+	(vmnc_handle_wmvi_rectangle), (render_colour_cursor),
+	(render_cursor), (vmnc_make_buffer), (vmnc_handle_wmvd_rectangle),
+	(vmnc_handle_wmve_rectangle), (vmnc_handle_wmvf_rectangle),
+	(vmnc_handle_wmvg_rectangle), (vmnc_handle_wmvh_rectangle),
+	(vmnc_handle_wmvj_rectangle), (render_raw_tile), (render_subrect),
+	(vmnc_handle_raw_rectangle), (vmnc_handle_copy_rectangle),
+	(vmnc_handle_hextile_rectangle), (vmnc_handle_packet),
+	(vmnc_dec_setcaps), (vmnc_dec_chain_frame), (vmnc_dec_chain),
+	(vmnc_dec_set_property), (vmnc_dec_get_property):
+	  Redesign to include a parser for raw files (no timestamps in that
+	  mode yet, though).
+
 2007-03-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/interleave/deinterleave.c: (gst_deinterleave_add_new_pads),

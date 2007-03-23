@@ -31,6 +31,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 #include <gst/video/video.h>
 #include <string.h>
 
@@ -49,6 +50,12 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 enum
 {
   ARG_0,
+};
+
+enum
+{
+  ERROR_INVALID = -1,           /* Invalid data in bitstream */
+  ERROR_INSUFFICIENT_DATA = -2  /* Haven't received enough data yet */
 };
 
 #define MAKE_TYPE(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|d)
@@ -109,6 +116,10 @@ typedef struct
   GstPad *srcpad;
 
   GstCaps *caps;
+  gboolean have_format;
+
+  int parsed;
+  GstAdapter *adapter;
 
   int framerate_num;
   int framerate_denom;
@@ -155,6 +166,7 @@ static GstFlowReturn vmnc_dec_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean vmnc_dec_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn vmnc_dec_change_state (GstElement * element,
     GstStateChange transition);
+static void vmnc_dec_finalize (GObject * object);
 
 static void
 gst_vmnc_dec_base_init (gpointer g_class)
@@ -177,6 +189,8 @@ gst_vmnc_dec_class_init (GstVMncDecClass * klass)
   gobject_class->set_property = vmnc_dec_set_property;
   gobject_class->get_property = vmnc_dec_get_property;
 
+  gobject_class->finalize = vmnc_dec_finalize;
+
   gstelement_class->change_state = vmnc_dec_change_state;
 
   GST_DEBUG_CATEGORY_INIT (vmnc_debug, "vmncdec", 0, "VMnc decoder");
@@ -195,6 +209,16 @@ gst_vmnc_dec_init (GstVMncDec * dec, GstVMncDecClass * g_class)
   gst_pad_use_fixed_caps (dec->srcpad);
 
   gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
+
+  dec->adapter = gst_adapter_new ();
+}
+
+static void
+vmnc_dec_finalize (GObject * object)
+{
+  GstVMncDec *dec = GST_VMNC_DEC (object);
+
+  g_object_unref (dec->adapter);
 }
 
 static void
@@ -222,6 +246,10 @@ gst_vmnc_dec_reset (GstVMncDec * dec)
   /* Use these as defaults if the container doesn't provide anything */
   dec->framerate_num = 5;
   dec->framerate_denom = 1;
+
+  dec->have_format = FALSE;
+
+  gst_adapter_clear (dec->adapter);
 }
 
 struct RfbRectangle
@@ -238,11 +266,11 @@ struct RfbRectangle
  * Return number of bytes consumed, or < 0 on error
  */
 typedef int (*rectangle_handler) (GstVMncDec * dec, struct RfbRectangle * rect,
-    guint8 * data, int len);
+    const guint8 * data, int len, gboolean decode);
 
 static int
 vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
-    guint8 * data, int len)
+    const guint8 * data, int len, gboolean decode)
 {
   GstCaps *caps;
   gint bpp, tc;
@@ -251,12 +279,12 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 
   /* A WMVi rectangle has a 16byte payload */
   if (len < 16) {
-    GST_WARNING_OBJECT (dec, "Bad WMVi rect: too short");
-    return -1;
+    GST_DEBUG_OBJECT (dec, "Bad WMVi rect: too short");
+    return ERROR_INSUFFICIENT_DATA;
   }
 
   /* We only compare 13 bytes; ignoring the 3 padding bytes at the end */
-  if (memcmp (data, dec->format.descriptor, 13) == 0) {
+  if (dec->caps && memcmp (data, dec->format.descriptor, 13) == 0) {
     /* Nothing changed, so just exit */
     return 16;
   }
@@ -266,7 +294,7 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 
   if (rect->x != 0 || rect->y != 0) {
     GST_WARNING_OBJECT (dec, "Bad WMVi rect: wrong coordinates");
-    return -1;
+    return ERROR_INVALID;
   }
 
   bpp = data[0];
@@ -277,12 +305,12 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 
   if (bpp != 8 && bpp != 16 && bpp != 32) {
     GST_WARNING_OBJECT (dec, "Bad bpp value: %d", bpp);
-    return -1;
+    return ERROR_INVALID;
   }
 
   if (!tc) {
     GST_WARNING_OBJECT (dec, "Paletted video not supported");
-    return -1;
+    return ERROR_INVALID;
   }
 
   dec->format.bytes_per_pixel = bpp / 8;
@@ -318,6 +346,12 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
     }
   }
 
+  dec->have_format = TRUE;
+  if (!decode) {
+    GST_DEBUG_OBJECT (dec, "Parsing, not setting caps");
+    return 16;
+  }
+
   caps = gst_caps_new_simple ("video/x-raw-rgb",
       "framerate", GST_TYPE_FRACTION, dec->framerate_num, dec->framerate_denom,
       "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
@@ -338,6 +372,7 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
     g_free (dec->imagedata);
   dec->imagedata = g_malloc (dec->format.width * dec->format.height *
       dec->format.bytes_per_pixel);
+  GST_DEBUG_OBJECT (dec, "Allocated image data at %p", dec->imagedata);
 
   dec->format.stride = dec->format.width * dec->format.bytes_per_pixel;
 
@@ -452,7 +487,9 @@ vmnc_make_buffer (GstVMncDec * dec, GstBuffer * inbuf)
     render_cursor (dec, data);
   }
 
-  gst_buffer_stamp (buf, inbuf);
+  if (inbuf) {
+    gst_buffer_stamp (buf, inbuf);
+  }
 
   gst_buffer_set_caps (buf, dec->caps);
 
@@ -461,15 +498,15 @@ vmnc_make_buffer (GstVMncDec * dec, GstBuffer * inbuf)
 
 static int
 vmnc_handle_wmvd_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
-    guint8 * data, int len)
+    const guint8 * data, int len, gboolean decode)
 {
   /* Cursor data. */
   int datalen = 2;
   int type, size;
 
   if (len < datalen) {
-    GST_WARNING_OBJECT (dec, "Cursor data too short");
-    return -1;
+    GST_DEBUG_OBJECT (dec, "Cursor data too short");
+    return ERROR_INSUFFICIENT_DATA;
   }
 
   type = RFB_GET_UINT8 (data);
@@ -480,13 +517,14 @@ vmnc_handle_wmvd_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
     datalen += rect->width * rect->height * 4;
   } else {
     GST_WARNING_OBJECT (dec, "Unknown cursor type: %d", type);
-    return -1;
+    return ERROR_INVALID;
   }
 
   if (len < datalen) {
-    GST_WARNING_OBJECT (dec, "Cursor data too short");
-    return -1;
-  }
+    GST_DEBUG_OBJECT (dec, "Cursor data too short");
+    return ERROR_INSUFFICIENT_DATA;
+  } else if (!decode)
+    return datalen;
 
   dec->cursor.type = type;
   dec->cursor.width = rect->width;
@@ -516,15 +554,16 @@ vmnc_handle_wmvd_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 
 static int
 vmnc_handle_wmve_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
-    guint8 * data, int len)
+    const guint8 * data, int len, gboolean decode)
 {
   guint16 flags;
 
   /* Cursor state. */
   if (len < 2) {
-    GST_WARNING_OBJECT (dec, "Cursor data too short");
-    return -1;
-  }
+    GST_DEBUG_OBJECT (dec, "Cursor data too short");
+    return ERROR_INSUFFICIENT_DATA;
+  } else if (!decode)
+    return 2;
 
   flags = RFB_GET_UINT16 (data);
   dec->cursor.visible = flags & 0x01;
@@ -534,7 +573,7 @@ vmnc_handle_wmve_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 
 static int
 vmnc_handle_wmvf_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
-    guint8 * data, int len)
+    const guint8 * data, int len, gboolean decode)
 {
   /* Cursor position. */
   dec->cursor.x = rect->x;
@@ -544,46 +583,47 @@ vmnc_handle_wmvf_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 
 static int
 vmnc_handle_wmvg_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
-    guint8 * data, int len)
+    const guint8 * data, int len, gboolean decode)
 {
   /* Keyboard stuff; not interesting for playback */
   if (len < 10) {
-    GST_WARNING_OBJECT (dec, "Keyboard data too short");
-    return -1;
+    GST_DEBUG_OBJECT (dec, "Keyboard data too short");
+    return ERROR_INSUFFICIENT_DATA;
   }
   return 10;
 }
 
 static int
 vmnc_handle_wmvh_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
-    guint8 * data, int len)
+    const guint8 * data, int len, gboolean decode)
 {
   /* More keyboard stuff; not interesting for playback */
   if (len < 4) {
-    GST_WARNING_OBJECT (dec, "Keyboard data too short");
-    return -1;
+    GST_DEBUG_OBJECT (dec, "Keyboard data too short");
+    return ERROR_INSUFFICIENT_DATA;
   }
   return 4;
 }
 
 static int
 vmnc_handle_wmvj_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
-    guint8 * data, int len)
+    const guint8 * data, int len, gboolean decode)
 {
   /* VM state info, not interesting for playback */
   if (len < 2) {
-    GST_WARNING_OBJECT (dec, "VM state data too short");
-    return -1;
+    GST_DEBUG_OBJECT (dec, "VM state data too short");
+    return ERROR_INSUFFICIENT_DATA;
   }
   return 2;
 }
 
 static void
-render_raw_tile (GstVMncDec * dec, guint8 * data, int x, int y,
+render_raw_tile (GstVMncDec * dec, const guint8 * data, int x, int y,
     int width, int height)
 {
   int i;
-  guint8 *dst, *src;
+  guint8 *dst;
+  const guint8 *src;
   int line;
 
   src = data;
@@ -620,40 +660,93 @@ render_subrect (GstVMncDec * dec, int x, int y, int width,
 
 static int
 vmnc_handle_raw_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
-    guint8 * data, int len)
+    const guint8 * data, int len, gboolean decode)
 {
   int datalen = rect->width * rect->height * dec->format.bytes_per_pixel;
 
   if (len < datalen) {
-    GST_WARNING_OBJECT (dec, "Raw data too short");
-    return -1;
+    GST_DEBUG_OBJECT (dec, "Raw data too short");
+    return ERROR_INSUFFICIENT_DATA;
   }
 
-  render_raw_tile (dec, data, rect->x, rect->y, rect->width, rect->height);
+  if (decode)
+    render_raw_tile (dec, data, rect->x, rect->y, rect->width, rect->height);
 
   return datalen;
+}
+
+static int
+vmnc_handle_copy_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
+    const guint8 * data, int len, gboolean decode)
+{
+  int src_x, src_y;
+  guint8 *src, *dst;
+  int i;
+
+  if (len < 4) {
+    GST_DEBUG_OBJECT (dec, "Copy data too short");
+    return ERROR_INSUFFICIENT_DATA;
+  } else if (!decode)
+    return 4;
+
+  src_x = RFB_GET_UINT16 (data);
+  src_y = RFB_GET_UINT16 (data + 2);
+
+  /* Our destination rectangle is guaranteed in-frame; check this for the source
+   * rectangle. */
+  if (src_x + rect->width > dec->format.width ||
+      src_y + rect->height > dec->format.height) {
+    GST_WARNING_OBJECT (dec, "Source rectangle out of range");
+    return ERROR_INVALID;
+  }
+
+  if (src_y > rect->y || src_x > rect->x) {
+    /* Moving forward */
+    src = dec->imagedata + dec->format.stride * src_y +
+        dec->format.bytes_per_pixel * src_x;
+    dst = dec->imagedata + dec->format.stride * rect->y +
+        dec->format.bytes_per_pixel * rect->x;
+    for (i = 0; i < rect->height; i++) {
+      memmove (dst, src, rect->width * dec->format.bytes_per_pixel);
+      dst += dec->format.stride;
+      src += dec->format.stride;
+    }
+  } else {
+    /* Backwards */
+    src = dec->imagedata + dec->format.stride * (src_y + rect->height - 1) +
+        dec->format.bytes_per_pixel * src_x;
+    dst = dec->imagedata + dec->format.stride * (rect->y + rect->height - 1) +
+        dec->format.bytes_per_pixel * rect->x;
+    for (i = rect->height; i > 0; i--) {
+      memmove (dst, src, rect->width * dec->format.bytes_per_pixel);
+      dst -= dec->format.stride;
+      src -= dec->format.stride;
+    }
+  }
+
+  return 4;
 }
 
 #define READ_PIXEL(pixel, data, off, len)         \
   if (dec->format.bytes_per_pixel == 1) {         \
      if (off >= len)                              \
-       return -1;                                 \
+       return ERROR_INSUFFICIENT_DATA;            \
      pixel = data[off++];                         \
   } else if (dec->format.bytes_per_pixel == 2) {  \
      if (off+2 > len)                             \
-       return -1;                                 \
+       return ERROR_INSUFFICIENT_DATA;            \
      pixel = (*(guint16 *)(data + off));          \
      off += 2;                                    \
   } else {                                        \
      if (off+4 > len)                             \
-       return -1;                                 \
+       return ERROR_INSUFFICIENT_DATA;            \
      pixel = (*(guint32 *)(data + off));          \
      off += 4;                                    \
   }
 
 static int
 vmnc_handle_hextile_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
-    guint8 * data, int len)
+    const guint8 * data, int len, gboolean decode)
 {
   int tilesx = GST_ROUND_UP_16 (rect->width) / 16;
   int tilesy = GST_ROUND_UP_16 (rect->height) / 16;
@@ -678,16 +771,17 @@ vmnc_handle_hextile_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
         width = 16;
 
       if (off >= len) {
-        return -1;
+        return ERROR_INSUFFICIENT_DATA;
       }
       flags = data[off++];
 
       if (flags & 0x1) {
         if (off + width * height * dec->format.bytes_per_pixel > len) {
-          return -1;
+          return ERROR_INSUFFICIENT_DATA;
         }
-        render_raw_tile (dec, data + off, rect->x + x * 16, rect->y + y * 16,
-            width, height);
+        if (decode)
+          render_raw_tile (dec, data + off, rect->x + x * 16, rect->y + y * 16,
+              width, height);
         off += width * height * dec->format.bytes_per_pixel;
       } else {
         if (flags & 0x2) {
@@ -700,23 +794,24 @@ vmnc_handle_hextile_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
         subrects = 0;
         if (flags & 0x8) {
           if (off >= len) {
-            return -1;
+            return ERROR_INSUFFICIENT_DATA;
           }
           subrects = data[off++];
         }
 
         /* Paint background colour on entire tile */
-        render_subrect (dec, rect->x + x * 16, rect->y + y * 16, width, height,
-            bg);
+        if (decode)
+          render_subrect (dec, rect->x + x * 16, rect->y + y * 16,
+              width, height, bg);
 
         coloured = flags & 0x10;
         for (z = 0; z < subrects; z++) {
-          if (off + (coloured ? 3 : 2) > len)
-            return -1;
           if (coloured) {
             READ_PIXEL (colour, data, off, len);
           } else
             colour = fg;
+          if (off + 2 > len)
+            return ERROR_INSUFFICIENT_DATA;
 
           {
             int off_x = (data[off] & 0xf0) >> 4;
@@ -727,11 +822,15 @@ vmnc_handle_hextile_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
             off += 2;
 
             /* Ensure we don't have out of bounds coordinates */
-            if (off_x + w > width || off_y + h > height)
-              return -1;
+            if (off_x + w > width || off_y + h > height) {
+              GST_WARNING_OBJECT (dec, "Subrect out of bounds: %d-%d x %d-%d "
+                  "extends outside %dx%d", off_x, w, off_y, h, width, height);
+              return ERROR_INVALID;
+            }
 
-            render_subrect (dec, rect->x + x * 16 + off_x,
-                rect->y + y * 16 + off_y, w, h, colour);
+            if (decode)
+              render_subrect (dec, rect->x + x * 16 + off_x,
+                  rect->y + y * 16 + off_y, w, h, colour);
           }
         }
       }
@@ -741,16 +840,23 @@ vmnc_handle_hextile_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   return off;
 }
 
-static GstFlowReturn
-vmnc_handle_packet (GstVMncDec * dec, GstBuffer * buf)
+/* Handle a packet in one of two modes: decode or parse.
+ * In parse mode, we don't execute any of the decoding, we just do enough to
+ * figure out how many bytes it contains
+ *
+ * Returns: >= 0, the number of bytes consumed
+ *           < 0, packet too short to decode, or error
+ */
+static int
+vmnc_handle_packet (GstVMncDec * dec, const guint8 * data, int len,
+    gboolean decode)
 {
-  guint8 *data = GST_BUFFER_DATA (buf);
-  int len = GST_BUFFER_SIZE (buf);
   int type;
+  int offset = 0;
 
   if (len < 4) {
-    GST_WARNING_OBJECT (dec, "Packet too short");
-    return GST_FLOW_ERROR;
+    GST_DEBUG_OBJECT (dec, "Packet too short");
+    return ERROR_INSUFFICIENT_DATA;
   }
 
   type = data[0];
@@ -760,17 +866,21 @@ vmnc_handle_packet (GstVMncDec * dec, GstBuffer * buf)
     {
       int numrect = RFB_GET_UINT16 (data + 2);
       int i;
-      int offset = 4;
       int read;
+
+      offset = 4;
 
       for (i = 0; i < numrect; i++) {
         struct RfbRectangle r;
         rectangle_handler handler;
 
         if (len < offset + 12) {
-          GST_WARNING_OBJECT (dec, "Packet too short for rectangle header");
-          return GST_FLOW_ERROR;
+          GST_DEBUG_OBJECT (dec,
+              "Packet too short for rectangle header: %d < %d",
+              len, offset + 12);
+          return ERROR_INSUFFICIENT_DATA;
         }
+        GST_DEBUG_OBJECT (dec, "Reading rectangle %d", i);
         r.x = RFB_GET_UINT16 (data + offset);
         r.y = RFB_GET_UINT16 (data + offset + 2);
         r.width = RFB_GET_UINT16 (data + offset + 4);
@@ -780,14 +890,15 @@ vmnc_handle_packet (GstVMncDec * dec, GstBuffer * buf)
         if (r.type != TYPE_WMVi) {
           /* We must have a WMVi packet to initialise things before we can 
            * continue */
-          if (!dec->caps) {
-            GST_WARNING_OBJECT (dec, "Received packet without WMVi");
-            return GST_FLOW_ERROR;
+          if (!dec->have_format) {
+            GST_WARNING_OBJECT (dec, "Received packet without WMVi: %d",
+                r.type);
+            return ERROR_INVALID;
           }
           if (r.x + r.width > dec->format.width ||
               r.y + r.height > dec->format.height) {
             GST_WARNING_OBJECT (dec, "Rectangle out of range, type %d", r.type);
-            return GST_FLOW_ERROR;
+            return ERROR_INVALID;
           }
         }
 
@@ -816,18 +927,21 @@ vmnc_handle_packet (GstVMncDec * dec, GstBuffer * buf)
           case TYPE_RAW:
             handler = vmnc_handle_raw_rectangle;
             break;
+          case TYPE_COPY:
+            handler = vmnc_handle_copy_rectangle;
+            break;
           case TYPE_HEXTILE:
             handler = vmnc_handle_hextile_rectangle;
             break;
           default:
             GST_WARNING_OBJECT (dec, "Unknown rectangle type");
-            return GST_FLOW_ERROR;
+            return ERROR_INVALID;
         }
 
-        read = handler (dec, &r, data + offset + 12, len - offset - 12);
+        read = handler (dec, &r, data + offset + 12, len - offset - 12, decode);
         if (read < 0) {
-          GST_WARNING_OBJECT (dec, "Error calling rectangle handler\n");
-          return GST_FLOW_ERROR;
+          GST_DEBUG_OBJECT (dec, "Error calling rectangle handler\n");
+          return read;
         }
         offset += 12 + read;
       }
@@ -835,10 +949,10 @@ vmnc_handle_packet (GstVMncDec * dec, GstBuffer * buf)
     }
     default:
       GST_WARNING_OBJECT (dec, "Packet type unknown: %d", type);
-      return GST_FLOW_ERROR;
+      return ERROR_INVALID;
   }
 
-  return GST_FLOW_OK;
+  return offset;
 }
 
 static gboolean
@@ -847,12 +961,20 @@ vmnc_dec_setcaps (GstPad * pad, GstCaps * caps)
   /* We require a format descriptor in-stream, so we ignore the info from the
    * container here. We just use the framerate */
   GstVMncDec *dec = GST_VMNC_DEC (gst_pad_get_parent (pad));
-  GstStructure *structure = gst_caps_get_structure (caps, 0);
 
-  /* We gave these a default in reset(), so we don't need to check for failure
-   * here */
-  gst_structure_get_fraction (structure, "framerate",
-      &dec->framerate_num, &dec->framerate_denom);
+  if (gst_caps_get_size (caps) > 0) {
+    GstStructure *structure = gst_caps_get_structure (caps, 0);
+
+    /* We gave these a default in reset(), so we don't need to check for failure
+     * here */
+    gst_structure_get_fraction (structure, "framerate",
+        &dec->framerate_num, &dec->framerate_denom);
+
+    dec->parsed = TRUE;
+  } else {
+    GST_DEBUG_OBJECT (dec, "Unparsed input");
+    dec->parsed = FALSE;
+  }
 
   gst_object_unref (dec);
 
@@ -860,25 +982,88 @@ vmnc_dec_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static GstFlowReturn
+vmnc_dec_chain_frame (GstVMncDec * dec, GstBuffer * inbuf,
+    const guint8 * data, int len)
+{
+  int res;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstBuffer *outbuf;
+
+  res = vmnc_handle_packet (dec, data, len, TRUE);
+
+  if (res < 0) {
+    ret = GST_FLOW_ERROR;
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, NULL, ("Couldn't decode packet"));
+  } else {
+    GST_DEBUG_OBJECT (dec, "read %d bytes of %d", res, len);
+    /* inbuf may be NULL; that's ok */
+    outbuf = vmnc_make_buffer (dec, inbuf);
+    ret = gst_pad_push (dec->srcpad, outbuf);
+  }
+
+  return ret;
+}
+
+static GstFlowReturn
 vmnc_dec_chain (GstPad * pad, GstBuffer * buf)
 {
   GstVMncDec *dec;
-  GstFlowReturn res;
-  GstBuffer *outbuf;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   dec = GST_VMNC_DEC (gst_pad_get_parent (pad));
 
-  res = vmnc_handle_packet (dec, buf);
+  if (!dec->parsed) {
+    /* Submit our input buffer to adapter, then parse. Push each frame found
+     * through the decoder
+     */
+    int avail;
+    const guint8 *data;
+    int read = 0;
 
-  if (res == GST_FLOW_OK) {
-    outbuf = vmnc_make_buffer (dec, buf);
-    res = gst_pad_push (dec->srcpad, outbuf);
+    gst_adapter_push (dec->adapter, buf);
+
+
+    avail = gst_adapter_available (dec->adapter);
+    data = gst_adapter_peek (dec->adapter, avail);
+
+    GST_DEBUG_OBJECT (dec, "Parsing %d bytes", avail);
+
+    while (TRUE) {
+      int len = vmnc_handle_packet (dec, data, avail, FALSE);
+
+      if (len == ERROR_INSUFFICIENT_DATA) {
+        GST_DEBUG_OBJECT (dec, "Not enough data yet");
+        ret = GST_FLOW_OK;
+        break;
+      } else if (len < 0) {
+        GST_DEBUG_OBJECT (dec, "Fatal error in bitstream");
+        ret = GST_FLOW_ERROR;
+        break;
+      }
+
+      GST_DEBUG_OBJECT (dec, "Parsed packet: %d bytes", len);
+
+      ret = vmnc_dec_chain_frame (dec, NULL, data, len);
+      avail -= len;
+      data += len;
+
+      read += len;
+
+      if (ret != GST_FLOW_OK)
+        break;
+    }
+    GST_DEBUG_OBJECT (dec, "Flushing %d bytes", read);
+
+    gst_adapter_flush (dec->adapter, read);
+  } else {
+    ret = vmnc_dec_chain_frame (dec, buf, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
+    gst_buffer_unref (buf);
   }
-  gst_buffer_unref (buf);
 
   gst_object_unref (dec);
 
-  return res;
+  return ret;
 }
 
 static GstStateChangeReturn
