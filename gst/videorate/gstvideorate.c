@@ -360,6 +360,10 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
     gst_object_unref (opeer);
   }
 done:
+  /* After a setcaps, our caps may have changed. In that case, we can't use
+   * the old buffer, if there was one (it might have different dimensions) */
+  gst_video_rate_swap_prev (videorate, NULL, 0);
+
   gst_object_unref (videorate);
   return ret;
 
@@ -385,7 +389,7 @@ gst_video_rate_reset (GstVideoRate * videorate)
   videorate->out = 0;
   videorate->drop = 0;
   videorate->dup = 0;
-  videorate->next_ts = G_GINT64_CONSTANT (0);
+  videorate->next_ts = GST_CLOCK_TIME_NONE;
   gst_video_rate_swap_prev (videorate, NULL, 0);
 
   gst_segment_init (&videorate->segment, GST_FORMAT_TIME);
@@ -570,9 +574,11 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
   if (videorate->prevbuf == NULL) {
     gst_video_rate_swap_prev (videorate, buffer, intime);
     videorate->in++;
-    /* new buffer, we expect to output a buffer that matches the first
-     * timestamp in the segment */
-    videorate->next_ts = videorate->segment.start;
+    if (!GST_CLOCK_TIME_IS_VALID (videorate->next_ts)) {
+      /* new buffer, we expect to output a buffer that matches the first
+       * timestamp in the segment */
+      videorate->next_ts = videorate->segment.start;
+    }
   } else {
     GstClockTime prevtime;
     gint count = 0;
