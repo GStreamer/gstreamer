@@ -58,6 +58,8 @@ struct _GstRTPMux
   guint16  seqnum_base;
   gint16   seqnum_offset;
   guint16  seqnum;
+
+  guint32 clock_rate;
 };
 
 struct _GstRTPMuxClass
