@@ -1,3 +1,12 @@
+2007-03-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstpipeline.c: (gst_pipeline_change_state):
+	Modify the clock distribution path in PAUSED->PLAYING so that we 
+	never attempt to choose a new clock unless we're actually leaving
+	the PAUSED state for the first time. This prevents choosing a
+	different clock when the state_change gets called for a 2nd time due
+	to some element doing an async state change.
+
 2007-03-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstpad.c: (gst_pad_set_caps), (gst_pad_configure_sink),

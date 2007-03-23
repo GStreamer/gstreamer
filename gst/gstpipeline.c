@@ -371,48 +371,53 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       GstClockTime start_time, stream_time, delay;
       gboolean new_clock, update;
       gboolean res;
+      GstClock *cur_clock;
 
       GST_DEBUG_OBJECT (element, "selecting clock and base_time");
 
-      /* when going to playing, select a clock */
-      clock = gst_element_provide_clock (element);
-
-      if (clock) {
-        start_time = gst_clock_get_time (clock);
-      } else {
-        GST_DEBUG ("no clock, using base time of NONE");
-        start_time = GST_CLOCK_TIME_NONE;
-        new_base_time = GST_CLOCK_TIME_NONE;
-      }
-
       GST_OBJECT_LOCK (element);
-      new_clock = element->clock != clock;
+      cur_clock = element->clock;
+      if (cur_clock)
+        gst_object_ref (cur_clock);
       stream_time = pipeline->stream_time;
       update = pipeline->priv->new_stream_time;
       pipeline->priv->new_stream_time = FALSE;
       delay = pipeline->delay;
       GST_OBJECT_UNLOCK (element);
 
-      if (new_clock) {
-        /* now distribute the clock (which could be NULL). If some
-         * element refuses the clock, this will return FALSE and
-         * we effectively fail the state change. */
-        if (!gst_element_set_clock (element, clock))
-          goto invalid_clock;
-
-        /* if we selected and distributed a new clock, let the app 
-         * know about it */
-        gst_element_post_message (element,
-            gst_message_new_new_clock (GST_OBJECT_CAST (element), clock));
-      }
-
-      if (clock)
-        gst_object_unref (clock);
-
-      /* stream time changed, either with a PAUSED or a flush, we need to update
-       * the base time */
+      /* stream time changed, either with a PAUSED or a flush, we need to check
+       * if there is a new clock & update the base time */
       if (update) {
-        GST_DEBUG_OBJECT (pipeline, "stream_time changed, updating base time");
+        GST_DEBUG_OBJECT (pipeline, "stream_time changed. "
+            "Updating base time and checking for new clock.");
+
+        /* when going to playing, select a clock */
+        clock = gst_element_provide_clock (element);
+        new_clock = (clock != cur_clock);
+
+        if (clock) {
+          start_time = gst_clock_get_time (clock);
+        } else {
+          GST_DEBUG ("no clock, using base time of NONE");
+          start_time = GST_CLOCK_TIME_NONE;
+          new_base_time = GST_CLOCK_TIME_NONE;
+        }
+
+        if (new_clock) {
+          /* now distribute the clock (which could be NULL). If some
+           * element refuses the clock, this will return FALSE and
+           * we effectively fail the state change. */
+          if (!gst_element_set_clock (element, clock))
+            goto invalid_clock;
+
+          /* if we selected and distributed a new clock, let the app 
+           * know about it */
+          gst_element_post_message (element,
+              gst_message_new_new_clock (GST_OBJECT_CAST (element), clock));
+        }
+
+        if (clock)
+          gst_object_unref (clock);
 
         if (stream_time != GST_CLOCK_TIME_NONE
             && start_time != GST_CLOCK_TIME_NONE) {
@@ -434,6 +439,9 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
         GST_DEBUG_OBJECT (pipeline,
             "NOT adjusting base_time because we selected one before");
       }
+
+      if (cur_clock)
+        gst_object_unref (cur_clock);
 
       /* determine latency in this pipeline */
       GST_DEBUG_OBJECT (element, "querying pipeline latency");
