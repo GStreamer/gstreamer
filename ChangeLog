@@ -1,3 +1,11 @@
+2007-03-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/interleave/deinterleave.c: (gst_deinterleave_sink_setcaps):
+	  Remove 'channel-positions' field when munging input caps into
+	  1-channel output caps (I guess technically we should set the
+	  position for each channel on the output caps if it's non-NONE,
+	  but I'll save that as a task for another day).
+
 2007-03-23  Michael Smith  <msmith@fluendo.com>
 
 	* gst/vmnc/vmncdec.c: (gst_vmnc_dec_class_init),

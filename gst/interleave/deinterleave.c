@@ -198,6 +198,7 @@ gst_deinterleave_sink_setcaps (GstPad * pad, GstCaps * caps)
     if (!gst_structure_get_int (s, "channels", &self->channels))
       goto no_channels;
     gst_structure_set (s, "channels", G_TYPE_INT, 1, NULL);
+    gst_structure_remove_field (s, "channel-positions");
     gst_deinterleave_add_new_pads (self, srccaps);
     gst_caps_unref (srccaps);
   }
