@@ -903,6 +903,16 @@ AG_GST_CHECK_FEATURE(THEORADEC, [ogg theora codec], theoraexpdec, [
   AC_SUBST(THEORADEC_CFLAGS)
 ])
 
+dnl *** x264 (MPEG-4 part 10/h.264/AVC encoder) ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_X264, true)
+AG_GST_CHECK_FEATURE(X264, [x264 plug-in], x264, [
+  AG_GST_CHECK_LIBHEADER(X264, x264, x264_nal_encode, -lm, x264.h,
+      X264_LIBS="$LDFLAGS -lx264 -lm"
+      X264_CFLAGS="$CFLAGS"
+      AC_SUBST(X264_LIBS)
+      AC_SUBST(X264_CFLAGS))
+])
+
 dnl *** XVID ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_XVID, true)
 AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
@@ -995,6 +1005,7 @@ AM_CONDITIONAL(USE_SOUNDTOUCH, false)
 AM_CONDITIONAL(USE_SPC, false)
 AM_CONDITIONAL(USE_SWFDEC, false)
 AM_CONDITIONAL(USE_THEORADEC, false)
+AM_CONDITIONAL(USE_X264, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_WAVPACK, false)
 AM_CONDITIONAL(USE_DVB, false)
@@ -1121,6 +1132,7 @@ ext/swfdec/Makefile
 ext/theora/Makefile
 ext/timidity/Makefile
 ext/wavpack/Makefile
+ext/x264/Makefile
 ext/xvid/Makefile
 po/Makefile.in
 docs/Makefile

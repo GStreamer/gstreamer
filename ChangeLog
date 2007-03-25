@@ -1,3 +1,29 @@
+2007-03-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Michal Benes <michal.benes at itonis tv>
+	Patch by: Josef Zlomek <josef.zlomek at itonis tv>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/x264/Makefile.am:
+	* ext/x264/gstx264enc.c: (gst_x264_enc_me_get_type),
+	(gst_x264_enc_analyse_get_type),
+	(gst_x264_enc_timestamp_queue_init),
+	(gst_x264_enc_timestamp_queue_free),
+	(gst_x264_enc_timestamp_queue_put),
+	(gst_x264_enc_timestamp_queue_get), (gst_x264_enc_header_buf),
+	(gst_x264_enc_set_src_caps), (gst_x264_enc_sink_set_caps),
+	(gst_x264_enc_base_init), (gst_x264_enc_class_init),
+	(gst_x264_enc_init), (gst_x264_enc_init_encoder),
+	(gst_x264_enc_close_encoder), (gst_x264_enc_dispose),
+	(gst_x264_enc_sink_event), (gst_x264_enc_chain),
+	(gst_x264_enc_encode_frame), (gst_x264_enc_change_state),
+	(gst_x264_enc_set_property), (gst_x264_enc_get_property),
+	(plugin_init):
+	* ext/x264/gstx264enc.h:
+	  Add libx264-based h264 encoder plugin (#421110). Probably doesn't
+	  handle 'odd' widths and heights correctly yet.
+
 2007-03-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/interleave/deinterleave.c: (gst_deinterleave_sink_setcaps):
