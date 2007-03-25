@@ -1550,16 +1550,6 @@ gst_base_src_loop (GstPad * pad)
 
   src->priv->last_sent_eos = FALSE;
 
-  /* push events to close/start our segment before we do the real work. */
-  if (src->priv->close_segment) {
-    gst_pad_push_event (pad, src->priv->close_segment);
-    src->priv->close_segment = NULL;
-  }
-  if (src->priv->start_segment) {
-    gst_pad_push_event (pad, src->priv->start_segment);
-    src->priv->start_segment = NULL;
-  }
-
   /* if we operate in bytes, we can calculate an offset */
   if (src->segment.format == GST_FORMAT_BYTES)
     position = src->segment.last_stop;
@@ -1572,8 +1562,19 @@ gst_base_src_loop (GstPad * pad)
         gst_flow_get_name (ret));
     goto pause;
   }
+  /* this should not happen */
   if (G_UNLIKELY (buf == NULL))
     goto null_buffer;
+
+  /* push events to close/start our segment before we push the buffer. */
+  if (src->priv->close_segment) {
+    gst_pad_push_event (pad, src->priv->close_segment);
+    src->priv->close_segment = NULL;
+  }
+  if (src->priv->start_segment) {
+    gst_pad_push_event (pad, src->priv->start_segment);
+    src->priv->start_segment = NULL;
+  }
 
   /* figure out the new position */
   switch (src->segment.format) {

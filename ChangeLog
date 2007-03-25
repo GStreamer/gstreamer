@@ -1,3 +1,9 @@
+2007-03-25  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_get_range),
+	(gst_base_src_loop):
+	Only push the segment events in the PLAYING state for live sources.
+
 2007-03-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstpipeline.c: (gst_pipeline_change_state):
