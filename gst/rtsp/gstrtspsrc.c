@@ -417,6 +417,23 @@ find_stream_by_udpsrc (GstRTSPStream * stream, gconstpointer a)
   return -1;
 }
 
+static gint
+find_stream_by_setup (GstRTSPStream * stream, gconstpointer a)
+{
+  /* check qualified setup_url */
+  if (!strcmp (stream->setup_url, (gchar *) a))
+    return 0;
+  /* check original control_url */
+  if (!strcmp (stream->control_url, (gchar *) a))
+    return 0;
+
+  /* check if qualified setup_url ends with string */
+  if (g_str_has_suffix (stream->control_url, (gchar *) a))
+    return 0;
+
+  return -1;
+}
+
 static GstRTSPStream *
 gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
 {
@@ -468,7 +485,10 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
   GST_DEBUG_OBJECT (src, " control: %s", GST_STR_NULL (control_url));
 
   if (control_url != NULL) {
-    /* If the control_url starts with a '/' or a non rtsp: protocol we will most
+    stream->control_url = g_strdup (control_url);
+    /* Build a fully qualified url using the content_base if any or by prefixing
+     * the original request.
+     * If the control_url starts with a '/' or a non rtsp: protocol we will most
      * likely build a URL that the server will fail to understand, this is ok,
      * we will fail then. */
     if (g_str_has_prefix (control_url, "rtsp://"))
@@ -498,6 +518,7 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
   if (stream->caps)
     gst_caps_unref (stream->caps);
 
+  g_free (stream->control_url);
   g_free (stream->setup_url);
 
   for (i = 0; i < 2; i++) {
@@ -556,6 +577,46 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
   src->props = NULL;
 }
 
+/* FIXME, this should go somewhere else, ideally 
+ */
+static guint
+get_default_rate_for_pt (gint pt)
+{
+  switch (pt) {
+    case 0:
+    case 3:
+    case 4:
+    case 5:
+    case 7:
+    case 8:
+    case 9:
+    case 12:
+    case 13:
+    case 15:
+    case 18:
+      return 8000;
+    case 16:
+      return 11025;
+    case 17:
+      return 22050;
+    case 6:
+      return 16000;
+    case 10:
+    case 11:
+      return 44100;
+    case 14:
+    case 25:
+    case 26:
+    case 28:
+    case 31:
+    case 32:
+    case 33:
+    case 34:
+      return 90000;
+    default:
+      return -1;
+  }
+}
 
 #define PARSE_INT(p, del, res)          \
 G_STMT_START {                          \
@@ -609,7 +670,7 @@ gst_rtspsrc_parse_rtpmap (gchar * rtpmap, gint * payload, gchar ** name,
 
   PARSE_STRING (p, "/", *name);
   if (*name == NULL) {
-    /* no rate, assume 0 then */
+    /* no rate, assume -1 then */
     *name = p;
     *rate = -1;
     return TRUE;
@@ -651,28 +712,40 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
   gchar *params = NULL;
   gchar *tmp;
   GstStructure *s;
+  gint payload = 0;
+  gboolean ret;
 
-  /* dynamic payloads need rtpmap */
-  if (pt >= 96) {
-    gint payload = 0;
-    gboolean ret;
-
-    if ((rtpmap = sdp_media_get_attribute_val (media, "rtpmap"))) {
-      ret = gst_rtspsrc_parse_rtpmap (rtpmap, &payload, &name, &rate, &params);
-      if (ret) {
-        if (payload != pt) {
-          /* FIXME, not fatal? */
-          g_warning ("rtpmap of wrong payload type");
-          name = NULL;
-          rate = -1;
-          params = NULL;
-        }
-      } else {
-        /* FIXME, not fatal? */
-        g_warning ("error parsing rtpmap");
+  /* get and parse rtpmap */
+  if ((rtpmap = sdp_media_get_attribute_val (media, "rtpmap"))) {
+    ret = gst_rtspsrc_parse_rtpmap (rtpmap, &payload, &name, &rate, &params);
+    if (ret) {
+      if (payload != pt) {
+        /* we ignore the rtpmap if the payload type is different. */
+        g_warning ("rtpmap of wrong payload type, ignoring");
+        name = NULL;
+        rate = -1;
+        params = NULL;
       }
-    } else
+    } else {
+      /* if we failed to parse the rtpmap for a dynamic payload type, we have an
+       * error */
+      if (pt >= 96)
+        goto no_rtpmap;
+      /* else we can ignore */
+      g_warning ("error parsing rtpmap, ignoring");
+    }
+  } else {
+    /* dynamic payloads need rtpmap or we fail */
+    if (pt >= 96)
       goto no_rtpmap;
+  }
+  /* check if we have a rate, if not, we need to look up the rate from the
+   * default rates based on the payload types. */
+  if (rate == -1) {
+    rate = get_default_rate_for_pt (pt);
+    /* we fail if we cannot find one */
+    if (rate == -1)
+      goto no_rate;
   }
 
   tmp = g_ascii_strdown (media->media, -1);
@@ -743,6 +816,11 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
 no_rtpmap:
   {
     g_warning ("rtpmap type not given for dynamic payload %d", pt);
+    return NULL;
+  }
+no_rate:
+  {
+    g_warning ("rate unknown for payload type %d", pt);
     return NULL;
   }
 }
@@ -1010,7 +1088,6 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
 
       /* set caps and activate */
       gst_pad_use_fixed_caps (stream->channelpad[0]);
-      gst_pad_set_caps (stream->channelpad[0], stream->caps);
       gst_pad_set_active (stream->channelpad[0], TRUE);
 
       outpad = gst_object_ref (stream->channelpad[0]);
@@ -1067,9 +1144,6 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
 
       GST_DEBUG_OBJECT (src, "setting up UDP source");
 
-      /* set caps */
-      g_object_set (G_OBJECT (stream->udpsrc[0]), "caps", stream->caps, NULL);
-
       /* configure a timeout on the UDP port. When the timeout message is
        * posted, we assume UDP transport is not possible. We reconnect using TCP
        * if we can. */
@@ -1120,7 +1194,6 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     GST_DEBUG_OBJECT (src, "creating ghostpad");
 
     gst_pad_use_fixed_caps (outpad);
-    gst_pad_set_caps (outpad, stream->caps);
 
     /* create ghostpad, don't add just yet, this will be done when we activate
      * the stream. */
@@ -1160,6 +1233,19 @@ start_session_failure:
   }
 }
 
+static gboolean
+gst_rtspsrc_stream_configure_caps (GstRTSPStream * stream)
+{
+  /* configure the caps on the UDP source and the channelpad */
+  if (stream->udpsrc[0]) {
+    g_object_set (G_OBJECT (stream->udpsrc[0]), "caps", stream->caps, NULL);
+  }
+  if (stream->channelpad[0]) {
+    gst_pad_set_caps (stream->channelpad[0], stream->caps);
+  }
+  return TRUE;
+}
+
 /* Adds the source pads of all configured streams to the element.
  * This code is performed when we detected dataflow.
  *
@@ -1170,6 +1256,8 @@ static gboolean
 gst_rtspsrc_activate_streams (GstRTSPSrc * src)
 {
   GList *walk;
+
+  GST_DEBUG_OBJECT (src, "activating streams");
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
@@ -1183,6 +1271,7 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
       gst_pad_set_active (stream->srcpad, TRUE);
       /* add the pad */
       if (!stream->added) {
+        gst_pad_set_caps (stream->srcpad, stream->caps);
         gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
         stream->added = TRUE;
       }
@@ -2063,6 +2152,18 @@ failed:
   }
 }
 
+/* Perform the SETUP request for all the streams. 
+ *
+ * We ask the server for a specific transport, which initially includes all the
+ * ones we can support (UDP/TCP/MULTICAST). For the UDP transport we allocate
+ * two local UDP ports that we send to the server.
+ *
+ * Once the server replied with a transport, we configure the other streams
+ * with the same transport.
+ *
+ * This function will also configure the stream for the selected transport,
+ * which basically means creating the pipeline.
+ */
 static gboolean
 gst_rtspsrc_setup_streams (GstRTSPSrc * src)
 {
@@ -2497,16 +2598,69 @@ static gboolean
 gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
 {
   gchar **infos;
-  gint i;
+  gint i, j;
+
+  GST_DEBUG_OBJECT (src, "parsing RTP-Info %s", rtpinfo);
 
   infos = g_strsplit (rtpinfo, ",", 0);
   for (i = 0; infos[i]; i++) {
-    /* FIXME, do something here:
-     * parse url, find stream for url.
+    gchar **fields;
+    GstRTSPStream *stream;
+    gint32 seqbase;
+    gint64 timebase;
+
+    GST_DEBUG_OBJECT (src, "parsing info %s", infos[i]);
+
+    /* init values, types of seqbase and timebase are bigger than needed so we can
+     * store -1 as uninitialized values */
+    stream = NULL;
+    seqbase = -1;
+    timebase = -1;
+
+    /* parse url, find stream for url.
      * parse seq and rtptime. The seq number should be configured in the rtp
      * depayloader or session manager to detect gaps. Same for the rtptime, it
-     * should be used to create an initial time newsegment.
-     */
+     * should be used to create an initial time newsegment. */
+    fields = g_strsplit (infos[i], ";", 0);
+    for (j = 0; fields[j]; j++) {
+      GST_DEBUG_OBJECT (src, "parsing field %s", fields[j]);
+      /* remove leading whitespace */
+      fields[j] = g_strchug (fields[j]);
+      if (g_str_has_prefix (fields[j], "url=")) {
+        GList *lstream;
+
+        /* get the url and the stream */
+        lstream = g_list_find_custom (src->streams, (fields[j] + 4),
+            (GCompareFunc) find_stream_by_setup);
+        if (lstream)
+          stream = (GstRTSPStream *) lstream->data;
+      } else if (g_str_has_prefix (fields[j], "seq=")) {
+        seqbase = atoi (fields[j] + 4);
+      } else if (g_str_has_prefix (fields[j], "rtptime=")) {
+        timebase = atol (fields[j] + 8);
+      }
+    }
+    /* now we need to store the values in the caps of the stream and make sure
+     * that the UDP elements have the same caps property set before they receive
+     * the first buffer. */
+    if (stream != NULL) {
+      GstCaps *caps;
+
+      GST_DEBUG_OBJECT (src,
+          "found stream %p, seqbase %d, timebase %" G_GINT64_FORMAT, stream,
+          seqbase, timebase);
+      /* we have a stream, configure detected params */
+      stream->seqbase = seqbase;
+      stream->timebase = timebase;
+      if ((caps = stream->caps)) {
+        /* update caps */
+        gst_caps_set_simple (caps, "clock-base", G_TYPE_UINT, timebase,
+            "seqnum-base", G_TYPE_UINT, seqbase, NULL);
+
+        /* and configure the stream caps */
+        gst_rtspsrc_stream_configure_caps (stream);
+      }
+    }
   }
   g_strfreev (infos);
 

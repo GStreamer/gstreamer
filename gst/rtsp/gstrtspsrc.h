@@ -103,9 +103,13 @@ struct _GstRTSPStream {
   /* state */
   gint          pt;
   gboolean      container;
+  /* original control url */
+  gchar        *control_url;
+  /* fully qualified control url */
   gchar        *setup_url;
   guint32       ssrc; 
   guint32       seqbase;
+  guint64       timebase;
 };
 
 struct _GstRTSPSrc {

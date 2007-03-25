@@ -1,3 +1,20 @@
+2007-03-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (find_stream_by_setup),
+	(gst_rtspsrc_create_stream), (gst_rtspsrc_stream_free),
+	(get_default_rate_for_pt), (gst_rtspsrc_parse_rtpmap),
+	(gst_rtspsrc_media_to_caps),
+	(gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_stream_configure_caps),
+	(gst_rtspsrc_activate_streams), (gst_rtspsrc_parse_rtpinfo):
+	* gst/rtsp/gstrtspsrc.h:
+	Handle default clock-rates for static payload types, rearrange stuff so
+	that the rtpmap field in the sdp can override the defaults.
+	Parse RTP-Info field to get the seqnum and timebase fields that should
+	go in the caps.
+	Delay configuring caps after we got the RTP-Info from the PLAY reply from
+	the server. 
+
 2007-03-22  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Christophe Dehais <christophe dot dehais at gmail dot com>
