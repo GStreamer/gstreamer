@@ -1,3 +1,8 @@
+2007-03-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/interfaces.defs:
+	  GstTunerChannel and GstTunerNorm are not GstObjects, only GObjects.
+
 2007-03-18  Johan Dahlin  <jdahlin@async.com.br>
 
 	* gst/common.h: 

@@ -81,7 +81,7 @@
 
 (define-object TunerChannel
    (in-module "Gst")
-   (parent "GstObject")
+   (parent "GObject")
    (c-name "GstTunerChannel")
    (gtype-id "GST_TYPE_TUNER_CHANNEL")
    (fields
@@ -96,7 +96,7 @@
 
 (define-object TunerNorm
    (in-module "Gst")
-   (parent "GstObject")
+   (parent "GObject")
    (c-name "GstTunerNorm")
    (gtype-id "GST_TYPE_TUNER_NORM")
    (fields
