@@ -165,6 +165,18 @@ GST_END_TEST;
     fail_unless_equals_int (___n, num);                                    \
   }
 
+#define MATCH_DOUBLE(p1, p2) ((p1 < p2 + 1e-6) && (p2 < p1 + 1e-6))
+#define ASSERT_TAG_LIST_HAS_DOUBLE(list,field,d)                           \
+  {                                                                        \
+    gdouble ___d;                                                          \
+                                                                           \
+    fail_unless (gst_tag_list_get_tag_size (list,field) > 0);              \
+    fail_unless (gst_tag_list_get_tag_size (list,field) == 1);             \
+    fail_unless (gst_tag_list_get_double_index (list, field, 0, &___d));   \
+    fail_unless (MATCH_DOUBLE (d, ___d),                                   \
+        "%f does not match expected %f", ___d, d);                         \
+  }
+
 GST_START_TEST (test_muscibrainz_tag_registration)
 {
   GstTagList *list;
@@ -298,21 +310,18 @@ GST_START_TEST (test_vorbis_tags)
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_EXTENDED_COMMENT,
       "RuBuWuHash=1337BA42F91");
 
-#if 0
-  /* TODO: test these as well */
-  {
-  GST_TAG_TRACK_GAIN, "REPLAYGAIN_TRACK_GAIN"}
-  , {
-  GST_TAG_TRACK_PEAK, "REPLAYGAIN_TRACK_PEAK"}
-  , {
-  GST_TAG_ALBUM_GAIN, "REPLAYGAIN_ALBUM_GAIN"}
-  , {
-  GST_TAG_ALBUM_PEAK, "REPLAYGAIN_ALBUM_PEAK"}
-  , {
-  GST_TAG_LANGUAGE_CODE, "LANGUAGE"}
-  ,
-#endif
-      /* make sure we can convert back and forth without loss */
+  gst_vorbis_tag_add (list, "REPLAYGAIN_TRACK_GAIN", "+12.36");
+  ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_TRACK_GAIN, +12.36);
+  gst_vorbis_tag_add (list, "REPLAYGAIN_TRACK_PEAK", "0.96349");
+  ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_TRACK_PEAK, 0.96349);
+  gst_vorbis_tag_add (list, "REPLAYGAIN_ALBUM_GAIN", "+10.12");
+  ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_ALBUM_GAIN, +10.12);
+  gst_vorbis_tag_add (list, "REPLAYGAIN_ALBUM_PEAK", "0.98107");
+  ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_ALBUM_PEAK, 0.98107);
+  gst_vorbis_tag_add (list, "REPLAYGAIN_REFERENCE_LOUDNESS", "89.");
+  ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_REFERENCE_LEVEL, 89.);
+
+  /* make sure we can convert back and forth without loss */
   {
     GstTagList *new_list, *even_newer_list;
     GstBuffer *buf, *buf2;

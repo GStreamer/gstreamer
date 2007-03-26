@@ -433,11 +433,12 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
       }
       case G_TYPE_DOUBLE:{
         gdouble value;
+        gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
 
         if (!gst_tag_list_get_double_index (list, tag, i, &value))
           g_return_val_if_reached (NULL);
-        /* FIXME: what about locale-specific floating point separators? */
-        result = g_strdup_printf ("%s=%f", vorbis_tag, value);
+        g_ascii_formatd (buf, G_ASCII_DTOSTR_BUF_SIZE, "%f", value);
+        result = g_strconcat (vorbis_tag, "=", buf, NULL);
         break;
       }
       default:{

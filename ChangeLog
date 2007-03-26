@@ -1,3 +1,15 @@
+2007-03-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: René Stadler  <mail at renestadler de>
+
+	* gst-libs/gst/tag/gstvorbistag.c: (gst_tag_to_vorbis_comments):
+	  When writing out floating-point numbers to vorbis comment tags, always
+	  use the same character as separator no matter what the current locale is
+	  (fixes #423051).
+
+	* tests/check/libs/tag.c: (GST_START_TEST):
+	  Add unit tests for replaygain tags in vorbis comments (closes #423055).
+
 2007-03-26  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/vorbis/vorbisdec.c (vorbis_dec_push_forward,
