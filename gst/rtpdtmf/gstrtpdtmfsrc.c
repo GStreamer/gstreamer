@@ -302,8 +302,6 @@ gst_rtp_dtmf_src_init (GstRTPDTMFSrc * dtmfsrc, gpointer g_class)
   dtmfsrc->pt = DEFAULT_PT;
   dtmfsrc->clock_rate = DEFAULT_CLOCK_RATE;
   
-  gst_rtp_dtmf_src_set_caps (dtmfsrc);
-  
   GST_DEBUG_OBJECT (dtmfsrc, "init done");
 }
 
@@ -502,6 +500,8 @@ gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc,
     dtmfsrc->ts_base = g_random_int ();
   else
     dtmfsrc->ts_base = dtmfsrc->ts_offset;
+
+  gst_rtp_dtmf_src_set_caps (dtmfsrc);
 
   /* Don't forget to get exclusive access to the stream */
   gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
