@@ -1,3 +1,8 @@
+2007-03-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/gst/rtp/Makefile.am:
+	The base audio payloader uses GstAdapter - we need GST_BASE_LIBS.
+
 2007-03-23  Michael Smith  <msmith@fluendo.com>
 
 	* gst/videorate/gstvideorate.c: (gst_video_rate_setcaps),
