@@ -39,6 +39,7 @@ BuildRequires:  gcc-c++
 @USE_OPENGL_TRUE@Requires: mesa-libGL
 @USE_WAVPACK_TRUE@Requires: wavpack-devel >= 4.32
 @USE_MYTHTV_TRUE@Requires: gmyth-0.1
+@USE_X264_TRUE@Requires: x264
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
@@ -104,7 +105,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstinterleave.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmve.so
 %{_libdir}/gstreamer-%{majorminor}/libgstequalizer.so
-
+%{_libdir}/gstreamer-%{majorminor}/libgstmpegvideoparse.so
+%{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
+%{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
+%{_libdir}/gstreamer-%{majorminor}/libgstapp.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvmnc.so
+%{_libdir}/libgstapp-0.10.so
+%{_libdir}/libgstapp-0.10.so.0
+%{_libdir}/libgstapp-0.10.so.0.0.0
 
 # gstreamer-plugins with external dependencies but in the main package
 @USE_FAAD_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
@@ -126,8 +135,12 @@ rm -rf $RPM_BUILD_ROOT
 @USE_DTS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdtsdec.so
 @USE_LADSPA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 @USE_MYTHTV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmythtvsrc.so
+@USE_X264_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstx264.so
 
 %changelog
+* Thu Mar 22 2007 Christian Schaller <christian at fluendo dot com>
+- Add x264 and mpegvideoparse plugins
+
 * Fri Dec 15 2006 Thomas Vander Stichele <thomas at apestaart dot org>
 - add doap file
 - more cleanup
