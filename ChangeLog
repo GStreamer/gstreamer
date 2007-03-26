@@ -1,3 +1,14 @@
+2007-03-26  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/vorbis/vorbisdec.c (vorbis_dec_push_forward,
+	  vorbis_handle_data_packet):
+	  Correctly set DURATION to generate a timestamp-continuous stream.
+	  One bug left at the end; see
+	  ihttp://bugzilla.gnome.org/show_bug.cgi?id=423086
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/vorbisenc.c (GST_START_TEST):
+	  Add a test to check this.  Without the above patch this test fails.
+
 2007-03-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst-libs/gst/rtp/Makefile.am:

@@ -44,7 +44,8 @@ check_pango =
 endif
 
 if USE_VORBIS
-check_vorbis = elements/vorbisdec pipelines/vorbisenc elements/vorbistag
+check_vorbis = elements/vorbisdec pipelines/vorbisenc pipelines/vorbisdec \
+	elements/vorbistag
 else
 check_vorbis =
 endif
@@ -216,6 +217,11 @@ libs_video_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
+
+# this seemingly useless CFLAGS line is here only to avoid
+# vorbisdec.$(OBJEXT) by triggering creation of pipelines_vorbisdec.$(OBJEXT)
+# instead
+pipelines_vorbisdec_CFLAGS = $(AM_CFLAGS)
 
 pipelines_oggmux_LDADD = $(LDADD) $(OGG_LIBS)
 pipelines_oggmux_CFLAGS = $(AM_CFLAGS) $(OGG_CFLAGS)

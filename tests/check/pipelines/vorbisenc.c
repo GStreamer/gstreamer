@@ -187,7 +187,7 @@ GST_START_TEST (test_timestamps)
   GError *error = NULL;
 
   pipe_str = g_strdup_printf ("audiotestsrc"
-      " ! audio/x-raw-int,rate=44100" " ! audioconvert ! vorbisenc ! fakesink");
+      " ! audio/x-raw-int,rate=44100 ! audioconvert ! vorbisenc ! fakesink");
 
   bin = gst_parse_launch (pipe_str, &error);
   fail_unless (bin != NULL, "Error parsing pipeline: %s",

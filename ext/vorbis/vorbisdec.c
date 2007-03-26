@@ -867,11 +867,15 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
   } else {
     if (G_UNLIKELY (dec->queued)) {
       gint64 size;
+      GstClockTime ts;
       GList *walk;
 
       GST_DEBUG_OBJECT (dec, "first buffer with offset %lld", outoffset);
+      ts = gst_util_uint64_scale_int (outoffset, GST_SECOND, dec->vi.rate);
 
       size = g_list_length (dec->queued);
+      /* we walk the queued up list in reverse, and set the buffer fields
+       * calculating backwards */
       for (walk = g_list_last (dec->queued); walk;
           walk = g_list_previous (walk)) {
         GstBuffer *buffer = GST_BUFFER (walk->data);
@@ -882,8 +886,14 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
         GST_BUFFER_OFFSET (buffer) = outoffset;
         GST_BUFFER_TIMESTAMP (buffer) =
             gst_util_uint64_scale_int (outoffset, GST_SECOND, dec->vi.rate);
+        GST_BUFFER_DURATION (buffer) = GST_CLOCK_DIFF (GST_BUFFER_TIMESTAMP
+            (buffer), ts);
+        ts = GST_BUFFER_TIMESTAMP (buffer);
         GST_DEBUG_OBJECT (dec, "patch buffer %" G_GUINT64_FORMAT
-            " offset %" G_GUINT64_FORMAT, size, outoffset);
+            ", offset %" G_GUINT64_FORMAT ", timestamp %" GST_TIME_FORMAT
+            ", duration %" GST_TIME_FORMAT, size, outoffset,
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+            GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
         size--;
       }
       for (walk = dec->queued; walk; walk = g_list_next (walk)) {
@@ -970,6 +980,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   if ((sample_count = vorbis_synthesis_pcmout (&vd->vd, NULL)) == 0)
     goto done;
 
+  GST_LOG_OBJECT (vd, "%d samples ready for reading", sample_count);
   size = sample_count * vd->vi.channels * sizeof (float);
 
   /* alloc buffer for it */
@@ -996,7 +1007,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
     vd->granulepos = packet->granulepos - sample_count;
 
   if (vd->cur_timestamp != GST_CLOCK_TIME_NONE) {
-    /* we have incomming timestamps */
+    /* we have incoming timestamps */
     timestamp = vd->cur_timestamp;
     GST_DEBUG_OBJECT (vd,
         "cur_timestamp: %" GST_TIME_FORMAT " + %" GST_TIME_FORMAT " = %"
@@ -1008,12 +1019,20 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
         vd->vi.rate);
     GST_BUFFER_OFFSET_END (out) = GST_BUFFER_OFFSET (out) + sample_count;
   } else {
-    /* we have incomming granulepos */
+    /* we have incoming granulepos */
     GST_BUFFER_OFFSET (out) = vd->granulepos;
     if (vd->granulepos != -1) {
+      GST_DEBUG_OBJECT (vd, "granulepos: %" G_GINT64_FORMAT, vd->granulepos);
       GST_BUFFER_OFFSET_END (out) = vd->granulepos + sample_count;
       timestamp =
           gst_util_uint64_scale_int (vd->granulepos, GST_SECOND, vd->vi.rate);
+      GST_DEBUG_OBJECT (vd, "corresponding timestamp %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (timestamp));
+      /* calculate a nano-second accurate duration */
+      GST_BUFFER_DURATION (out) = GST_CLOCK_DIFF (timestamp,
+          (vd->granulepos + sample_count) * GST_SECOND / vd->vi.rate);
+      GST_DEBUG_OBJECT (vd, "set duration %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_DURATION (out)));
     } else {
       timestamp = -1;
     }
