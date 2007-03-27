@@ -1,3 +1,11 @@
+2007-03-27  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/mad/gstmad.c: (gst_mad_chain): Generate a perfect
+	stream and try to adapt to incoming timestamps lack of
+	precision up to half a frame. This allows generating
+	a perfect stream even with muxed formats like FLV where
+	the timestamps are stored in milliseconds.
+
 2007-03-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/realmedia/rmdemux.c:

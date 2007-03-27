@@ -1375,8 +1375,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
     while (mad->tempsize > 0) {
       gint consumed = 0;
       guint nsamples;
-      guint64 time_offset;
-      guint64 time_duration;
+      guint64 time_offset = GST_CLOCK_TIME_NONE;
+      guint64 time_duration = GST_CLOCK_TIME_NONE;
       unsigned char const *before_sync, *after_sync;
       gboolean goto_exit = FALSE;
 
@@ -1516,24 +1516,50 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
       if (mad->frame.header.samplerate == 0) {
         g_warning
             ("mad->frame.header.samplerate is 0; timestamps cannot be calculated");
-        time_offset = GST_CLOCK_TIME_NONE;
-        time_duration = GST_CLOCK_TIME_NONE;
       } else {
         /* if we have a pending timestamp, we can use it now to calculate the sample offset */
         if (GST_CLOCK_TIME_IS_VALID (mad->last_ts)) {
           GstFormat format = GST_FORMAT_DEFAULT;
           gint64 total;
 
+          /* Convert incoming timestamp to a number of encoded samples */
           gst_pad_query_convert (mad->srcpad, GST_FORMAT_TIME, mad->last_ts,
               &format, &total);
-          mad->total_samples = total;
+
+          GST_DEBUG_OBJECT (mad, "calculated samples offset from ts is %"
+              G_GUINT64_FORMAT " accumulated samples offset is %"
+              G_GUINT64_FORMAT, total, mad->total_samples);
+
+          /* We are using the incoming timestamps to generate the outgoing ones
+           * if available. However some muxing formats are not precise enough
+           * to allow us to generate a perfect stream. When converting the 
+           * timestamp to a number of encoded samples so far we are introducing
+           * a lot of potential error compared to our accumulated number of 
+           * samples encoded. If the difference between those 2 numbers is 
+           * bigger than half a frame we then use the incoming timestamp 
+           * as a reference, otherwise we continue using our accumulated samples
+           * counter */
+          if (ABS (mad->total_samples - total) > nsamples / 2) {
+            GST_DEBUG_OBJECT (mad, "difference is bigger than half a frame, "
+                "using calculated samples offset %" G_GUINT64_FORMAT, total);
+            /* Override our accumulated samples counter */
+            mad->total_samples = total;
+            /* We use that timestamp directly */
+            time_offset = mad->last_ts;
+          }
+
           mad->last_ts = GST_CLOCK_TIME_NONE;
         }
-        time_offset =
-            gst_util_uint64_scale_int (mad->total_samples, GST_SECOND,
-            mad->rate);
+
+        if (!GST_CLOCK_TIME_IS_VALID (time_offset)) {
+          time_offset = gst_util_uint64_scale_int (mad->total_samples,
+              GST_SECOND, mad->rate);
+        }
+        /* Duration is next timestamp - this one to generate a continuous
+         * stream */
         time_duration =
-            gst_util_uint64_scale_int (nsamples, GST_SECOND, mad->rate);
+            gst_util_uint64_scale_int (mad->total_samples + nsamples,
+            GST_SECOND, mad->rate) - time_offset;
       }
 
       if (mad->index) {
