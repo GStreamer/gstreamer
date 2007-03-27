@@ -589,7 +589,7 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
   } else
     gst_caps_append_structure (ret, s);
 
-  GST_DEBUG_OBJECT (base, "Caps transformed to % " GST_PTR_FORMAT, ret);
+  GST_DEBUG_OBJECT (base, "Caps transformed to %" GST_PTR_FORMAT, ret);
 
   return ret;
 }

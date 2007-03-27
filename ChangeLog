@@ -1,3 +1,9 @@
+2007-03-27  Michael Smith  <msmith@fluendo.com>
+
+	* gst/audioconvert/gstaudioconvert.c: (strip_width_64),
+	(gst_audio_convert_transform_caps):
+	  Fix typo in debug line introduced recently, as pointed out on irc.
+
 2007-03-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add):
