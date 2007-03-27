@@ -1,3 +1,18 @@
+2007-03-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audioconvert/audioconvert.c:
+	Add docs to the integer pack functions and implement proper
+	rounding. Before we had rounding towards negative infinity, i.e.
+	always the smaller number was taken. Now we use natural rounding,
+	i.e. rounding to the nearest integer and to the one with the largest
+	absolute value for X.5. The old rounding introduced some minor
+	distortions. Fixes #420079
+	* tests/check/elements/audioconvert.c: (GST_START_TEST):
+	Fix one unit test that assumed the old rounding and added unit tests
+	for checking signed/unsigned int16 <-> signed/unsigned int16 with
+	depth 8, one for signed int16 <-> unsigned int16 and one for the new
+	rounding from signed int32 to signed/unsigned int16.
+
 2007-03-27  Michael Smith  <msmith@fluendo.com>
 
 	* gst/audioconvert/gstaudioconvert.c: (strip_width_64),

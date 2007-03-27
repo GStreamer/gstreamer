@@ -121,17 +121,56 @@ MAKE_UNPACK_FUNC (s32_be, 4, 0, READ32_FROM_BE);
 #define MAKE_PACK_FUNC_NAME(name)                                       \
 audio_convert_pack_##name
 
+/*
+ * These functions convert the signed 32 bit integers to the
+ * target format. For this to work the following steps are done:
+ *
+ * 1) If the output format is smaller than 32 bit we add 0.5LSB of
+ *    the target format (i.e. 1<<(scale-1)) to get proper rounding.
+ *    Shifting will result in rounding towards negative infinity (for
+ *    signed values) or zero (for unsigned values). As we might overflow
+ *    an overflow check is performed.
+ *    Additionally, if our target format is signed and the value is smaller
+ *    than zero we decrease it by one to round -X.5 downwards.
+ *    This leads to the following rounding:
+ *    -1.2 => -1    1.2 => 1
+ *    -1.5 => -2    1.5 => 2
+ *    -1.7 => -2    1.7 => 2
+ * 2) If the output format is unsigned we will XOR the sign bit. This
+ *    will do the same as if we add 1<<31.
+ * 3) Afterwards we shift to the target depth. It's necessary to left-shift
+ *    on signed values here to get arithmetical shifting.
+ * 4) This is then written into our target array by the corresponding write
+ *    function for the target width.
+ */
+
 #define MAKE_PACK_FUNC(name, stride, sign, WRITE_FUNC)                  \
 static void                                                             \
 MAKE_PACK_FUNC_NAME (name) (gint32 *src, gpointer dst,                  \
         gint scale, gint count)                                         \
 {                                                                       \
   guint8 *p = (guint8 *)dst;                                            \
-  guint32 tmp;                                                          \
-  for (;count; count--) {                                               \
-    tmp = (*src++ ^ (sign)) >> scale;                                   \
-    WRITE_FUNC (p, tmp);                                                \
-    p+=stride;                                                          \
+  gint32 tmp;                                                           \
+  if (scale > 0) {                                                      \
+    guint32 bias = 1 << (scale - 1);                                    \
+    for (;count; count--) {                                             \
+      tmp = *src++;                                                     \
+      if (tmp > 0 && G_MAXINT32 - tmp < bias)                           \
+        tmp = G_MAXINT32;                                               \
+      else                                                              \
+        tmp += bias;                                                    \
+      if (sign == 0 && tmp < 0)                                         \
+        tmp--;                                                          \
+      tmp = ((tmp) ^ (sign)) >> scale;                                  \
+      WRITE_FUNC (p, tmp);                                              \
+      p+=stride;                                                        \
+    }                                                                   \
+  } else {                                                              \
+    for (;count; count--) {                                             \
+      tmp = (*src++ ^ (sign));                                          \
+      WRITE_FUNC (p, tmp);                                              \
+      p+=stride;                                                        \
+    }                                                                   \
   }                                                                     \
 }
 

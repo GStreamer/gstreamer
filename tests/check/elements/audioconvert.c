@@ -430,8 +430,8 @@ GST_START_TEST (test_int_conversion)
   }
   /* 16 -> 8 signed */
   {
-    gint16 in[] = { 0, 255, 256, 257 };
-    gint8 out[] = { 0, 0, 1, 1 };
+    gint16 in[] = { 0, 127, 128, 256, 256 + 127, 256 + 128 };
+    gint8 out[] = { 0, 0, 1, 1, 1, 2 };
 
     RUN_CONVERSION ("16 bit to 8 signed",
         in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
@@ -469,6 +469,92 @@ GST_START_TEST (test_int_conversion)
         );
     RUN_CONVERSION ("24 signed to 8", out, get_int_caps (1, "LITTLE_ENDIAN", 24,
             24, TRUE), in, get_int_caps (1, "BYTE_ORDER", 8, 8, TRUE)
+        );
+  }
+
+  /* 16 bit signed <-> unsigned */
+  {
+    gint16 in[] = { 0, 128, -128 };
+    guint16 out[] = { 32768, 32896, 32640 };
+    RUN_CONVERSION ("16 signed to 16 unsigned",
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, FALSE)
+        );
+    RUN_CONVERSION ("16 unsigned to 16 signed",
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, FALSE),
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
+        );
+  }
+
+  /* 16 bit signed <-> 8 in 16 bit signed */
+  {
+    gint16 in[] = { 0, 64 << 8, -64 << 8 };
+    gint16 out[] = { 0, 64, -64 };
+    RUN_CONVERSION ("16 signed to 8 in 16 signed",
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 8, TRUE)
+        );
+    RUN_CONVERSION ("8 in 16 signed to 16 signed",
+        out, get_int_caps (1, "BYTE_ORDER", 16, 8, TRUE),
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
+        );
+  }
+
+  /* 16 bit unsigned <-> 8 in 16 bit unsigned */
+  {
+    guint16 in[] = { 1 << 15, (1 << 15) - (64 << 8), (1 << 15) + (64 << 8) };
+    guint16 out[] = { 1 << 7, (1 << 7) - 64, (1 << 7) + 64 };
+    RUN_CONVERSION ("16 unsigned to 8 in 16 unsigned",
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, FALSE),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 8, FALSE)
+        );
+    RUN_CONVERSION ("8 in 16 unsigned to 16 unsigned",
+        out, get_int_caps (1, "BYTE_ORDER", 16, 8, FALSE),
+        in, get_int_caps (1, "BYTE_ORDER", 16, 16, FALSE)
+        );
+  }
+
+  /* 32 bit signed -> 16 bit signed for rounding check */
+  {
+    gint32 in[] = { 0, G_MININT32, G_MAXINT32,
+      (32 << 16), (32 << 16) + (1 << 15), (32 << 16) - (1 << 15),
+      (32 << 16) + (2 << 15), (32 << 16) - (2 << 15),
+      (-32 << 16) + (1 << 15), (-32 << 16) - (1 << 15),
+      (-32 << 16) + (2 << 15), (-32 << 16) - (2 << 15),
+      (-32 << 16)
+    };
+    gint16 out[] = { 0, G_MININT16, G_MAXINT16,
+      32, 33, 32,
+      33, 31,
+      -32, -33,
+      -31, -33,
+      -32
+    };
+    RUN_CONVERSION ("32 signed to 16 signed for rounding",
+        in, get_int_caps (1, "BYTE_ORDER", 32, 32, TRUE),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE)
+        );
+  }
+
+  /* 32 bit signed -> 16 bit unsigned for rounding check */
+  {
+    gint32 in[] = { 0, G_MININT32, G_MAXINT32,
+      (32 << 16), (32 << 16) + (1 << 15), (32 << 16) - (1 << 15),
+      (32 << 16) + (2 << 15), (32 << 16) - (2 << 15),
+      (-32 << 16) + (1 << 15), (-32 << 16) - (1 << 15),
+      (-32 << 16) + (2 << 15), (-32 << 16) - (2 << 15),
+      (-32 << 16)
+    };
+    guint16 out[] = { (1 << 15), 0, G_MAXUINT16,
+      (1 << 15) + 32, (1 << 15) + 33, (1 << 15) + 32,
+      (1 << 15) + 33, (1 << 15) + 31,
+      (1 << 15) - 31, (1 << 15) - 32,
+      (1 << 15) - 31, (1 << 15) - 33,
+      (1 << 15) - 32
+    };
+    RUN_CONVERSION ("32 signed to 16 unsigned for rounding",
+        in, get_int_caps (1, "BYTE_ORDER", 32, 32, TRUE),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, FALSE)
         );
   }
 }
@@ -518,7 +604,7 @@ GST_START_TEST (test_float_conversion)
     gdouble out[] = { 0.0,
       4.6566128752457969e-10 * (gdouble) (-32768L << 16),       /* ~ -1.0 */
       4.6566128752457969e-10 * (gdouble) (16384L << 16),        /* ~ 0.5 */
-      4.6566128752457969e-10 * (gdouble) (-16384L << 16), /* ~ -0.5 */
+      4.6566128752457969e-10 * (gdouble) (-16384L << 16),       /* ~ -0.5 */
     };
 
     RUN_CONVERSION ("16 signed to 64 float",
@@ -530,7 +616,7 @@ GST_START_TEST (test_float_conversion)
     gdouble out[] = { 0.0,
       4.6566128752457969e-10 * (gdouble) (-1L << 31),   /* ~ -1.0 */
       4.6566128752457969e-10 * (gdouble) (1L << 30),    /* ~ 0.5 */
-      4.6566128752457969e-10 * (gdouble) (-1L << 30), /* ~ -0.5 */
+      4.6566128752457969e-10 * (gdouble) (-1L << 30),   /* ~ -0.5 */
     };
 
     RUN_CONVERSION ("32 signed to 64 float",
