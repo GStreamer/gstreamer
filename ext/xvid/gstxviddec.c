@@ -325,8 +325,10 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
 
   fret = GST_FLOW_OK;
 
-  GST_LOG_OBJECT (dec, "Received buffer of time %" GST_TIME_FORMAT ", size %d",
-      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_BUFFER_SIZE (buf));
+  GST_LOG_OBJECT (dec, "Received buffer of time %" GST_TIME_FORMAT
+      " duration %" GST_TIME_FORMAT ", size %d",
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)), GST_BUFFER_SIZE (buf));
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
     /* FIXME: should we do anything here, like flush the decoder? */
@@ -394,7 +396,10 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
       GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buf);
     }
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (dec->srcpad));
-
+    GST_LOG_OBJECT (dec, "pushing buffer with pts %" GST_TIME_FORMAT
+        " duration %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)));
     fret = gst_pad_push (dec->srcpad, outbuf);
 
   } else {                      /* no real output yet, delay in frames being returned */
@@ -405,7 +410,7 @@ gst_xviddec_chain (GstPad * pad, GstBuffer * buf)
     } else {
       dec->have_ts = TRUE;
       dec->next_ts = GST_BUFFER_TIMESTAMP (buf);
-      dec->next_dur = GST_BUFFER_TIMESTAMP (buf);
+      dec->next_dur = GST_BUFFER_DURATION (buf);
     }
     gst_buffer_unref (outbuf);
   }

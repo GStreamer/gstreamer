@@ -1,3 +1,8 @@
+2007-03-27  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/xvid/gstxviddec.c: (gst_xviddec_chain): Add some
+	debug log and fix a stupid output buffer duration bug.
+
 2007-03-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Michal Benes <michal.benes at itonis tv>
