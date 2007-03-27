@@ -1,3 +1,11 @@
+2007-03-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gstvorbistag.c: (gst_vorbis_tag_add):
+	* tests/check/libs/tag.c: (GST_START_TEST):
+	  Make sure we parse floating-point numbers in vorbis comments
+	  correctly with either '.' or ',' as separator, no matter what
+	  the current locale is. Add unit test for this too.
+
 2007-03-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: René Stadler  <mail at renestadler de>

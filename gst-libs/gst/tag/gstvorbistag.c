@@ -235,8 +235,13 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
       break;
     }
     case G_TYPE_DOUBLE:{
-      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag, g_strtod (value,
-              NULL), NULL);
+      gchar *c;
+
+      c = g_strdup (value);
+      g_strdelimit (c, ",", '.');
+      gst_tag_list_add (list, GST_TAG_MERGE_APPEND, gst_tag,
+          g_strtod (c, NULL), NULL);
+      g_free (c);
       break;
     }
     default:{

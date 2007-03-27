@@ -310,16 +310,18 @@ GST_START_TEST (test_vorbis_tags)
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_EXTENDED_COMMENT,
       "RuBuWuHash=1337BA42F91");
 
+  gst_vorbis_tag_add (list, "REPLAYGAIN_REFERENCE_LOUDNESS", "89.");
+  ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_REFERENCE_LEVEL, 89.);
   gst_vorbis_tag_add (list, "REPLAYGAIN_TRACK_GAIN", "+12.36");
   ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_TRACK_GAIN, +12.36);
   gst_vorbis_tag_add (list, "REPLAYGAIN_TRACK_PEAK", "0.96349");
   ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_TRACK_PEAK, 0.96349);
   gst_vorbis_tag_add (list, "REPLAYGAIN_ALBUM_GAIN", "+10.12");
   ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_ALBUM_GAIN, +10.12);
-  gst_vorbis_tag_add (list, "REPLAYGAIN_ALBUM_PEAK", "0.98107");
+  /* now check that we can parse floating point numbers with any separator
+   * (',' or '.') regardless of the current locale */
+  gst_vorbis_tag_add (list, "REPLAYGAIN_ALBUM_PEAK", "0,98107");
   ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_ALBUM_PEAK, 0.98107);
-  gst_vorbis_tag_add (list, "REPLAYGAIN_REFERENCE_LOUDNESS", "89.");
-  ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_REFERENCE_LEVEL, 89.);
 
   /* make sure we can convert back and forth without loss */
   {
