@@ -4,5 +4,6 @@ fakesink
 fdsrc
 filesrc
 identity
+multiqueue
 queue
 *.check.xml

@@ -998,6 +998,7 @@ gst_single_queue_free (GstSingleQueue * sq)
   /* DRAIN QUEUE */
   gst_data_queue_flush (sq->queue);
   g_object_unref (sq->queue);
+  g_cond_free (sq->turn);
   g_free (sq);
 }
 

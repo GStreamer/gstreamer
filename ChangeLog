@@ -1,5 +1,17 @@
 2007-03-28  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* plugins/elements/gstmultiqueue.c: (gst_single_queue_free):
+	  Don't leak GCond.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/multiqueue.c: (setup_multiqueue),
+	(GST_START_TEST), (multiqueue_suite):
+	  Add some dead simple unit tests for the 'multiqueue' element
+	  (some bits don't work yet and are disabled for now).
+
+2007-03-28  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstelement.c: (gst_element_get_request_pad),
 	(gst_element_class_get_request_pad_template):
 	  Make gst_element_get_request_pad() create request pads only for
