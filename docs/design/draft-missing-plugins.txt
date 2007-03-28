@@ -249,6 +249,12 @@ A three step process:
    case, but may become an issue in future when applications like buzztard,
    jokosher or pitivi start requestion elements by name, for example ladspa
    effect elements or so.
+   
+   This case could be handled if those wrapper plugins would also provide a
+   gst-install-xxx-plugins-helper, where xxx={ladspa|visual|...}. Thus if the
+   distro specific gst-install-plugins-helper can't resolve a request for e.g.
+   element-bml-sonicverb it can forward the request to 
+   gst-install-bml-plugins-helper (bml is the buzz machine loader).
 
 
 7) Further references:

@@ -14,22 +14,17 @@ $Id$
 = qos profiling =
 
 * what data is needed ?
-  * streamtime,propotion pairs from sinks
+  * (streamtime,propotion) pairs from sinks
     draw a graph with gnuplot or similar
   * number of frames in total
   * number of frames dropped from each element that support QOS
     elements that don't support QOS wont have this information anyway
+  * needs to be media type specific:
+    * video: full frames
+    * audio: partial buffers can be dropped in the sink, count number of dropped
+      audio frames
 
-* idea1: parse data from debug log
-   GST_QOS gstbasesink.c:1188:gst_base_sink_send_qos:<xvimagesink0> qos: proportion: 0.895615, diff -16437500, timestamp 0:00:09.208333333
-  basesink gstbasesink.c:1542:gst_base_sink_render_object:<xvimagesink0> buffer late, dropping
-  basesink gstbasesink.c:2534:gst_base_sink_change_state:<alsasink0> rendered: 1028, dropped: 0
-   basesink gstbasesink.c:2534:gst_base_sink_change_state:<xvimagesink0> rendered: 598, dropped: 10
-
-  + easy to do
-  - debug log changes timing
-
-* idea2: query data (via gst-launch)
+* idea2: query data (e.g. via. gst-launch)
   * add -r, --report option to gst-launch
   * send duration to get total number of frames (GST_FORMAT_DEFAULT for video is frames)
   * during playing we need to capture QOS-events to record 'streamtime,proportion' pairs

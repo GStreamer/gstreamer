@@ -25,10 +25,33 @@ Elements with higher rank should be functionaly more complete. If we have
 multiple elements that are feature complete there is a draw.
 
 There are more decission criteria thinkable:
+* target processor (CPU,DSP,GPU)
 * ressource usage (CPU, memory)
 * license (proprietary, open source)
 * quality (in terms of the audio/image quality)
 
 One problem of taking criteria like quality and performance into account when
-autoplugging, is that elemnts might have options to control them.
+autoplugging, is that elements might have objects-properties that influence
+them.
 
+Beside adding more ranking criteria, we might consider adding an overridable
+mechanism for picking elements (basically registry filters that not decide on
+the base of ranks). Applications might choose the filter mechanism based on the
+use-case (which gstreamer not know right now).
+
+== g_malloc vs. g_try_malloc ==
+g_malloc/g_new should not be used when allocating space of a size that is
+derived from a value found in the file. Instead one should use g_try_malloc or
+g_try_new and check the return value.
+
+$ find . -name "*.c" -exec grep "g_malloc" {} \; | wc -l
+190
+$ find . -name "*.c" -exec grep "g_try_malloc" {} \; | wc -l
+0
+$ find . -name "*.c" -exec grep "g_new" {} \; | wc -l
+398
+$ find . -name "*.c" -exec grep "g_try_new" {} \; | wc -l
+3
+
+This is not strickly related to embedded, but its easier to crash gstreamer on
+embedded this way.
