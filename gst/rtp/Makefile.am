@@ -21,8 +21,8 @@ libgstrtp_la_SOURCES = \
 	gstrtph263ppay.c \
 	gstrtph263pay.c \
 	gstrtph264depay.c \
-        gstrtpL16depay.c \
-        gstrtpL16pay.c \
+	gstrtpL16depay.c \
+	gstrtpL16pay.c \
 	gstasteriskh263.c \
 	gstrtpmp2tdepay.c \
 	gstrtpmp2tpay.c \
@@ -30,6 +30,7 @@ libgstrtp_la_SOURCES = \
 	gstrtpmp4vpay.c \
 	gstrtpmp4gdepay.c \
 	gstrtpmp4gpay.c \
+	gstrtpmp4adepay.c \
 	gstrtpspeexdepay.c \
 	gstrtpspeexpay.c \
 	gstrtpsv3vdepay.c \
@@ -54,11 +55,11 @@ libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 noinst_HEADERS =			\
 		 gstrtpL16depay.h 	\
 		 gstrtpL16pay.h 	\
-	         gstrtpac3depay.h 	\
+		 gstrtpac3depay.h 	\
 		 gstrtpamrdepay.h 	\
 		 gstrtpamrpay.h 	\
 		 gstrtpilbcdepay.h      \
-	         gstrtpilbcpay.h        \
+		 gstrtpilbcpay.h        \
 		 gstrtppcmadepay.h	\
 		 gstrtppcmudepay.h	\
 		 gstrtppcmupay.h 	\
@@ -78,6 +79,7 @@ noinst_HEADERS =			\
 		 gstrtpmp4vpay.h	\
 		 gstrtpmp4gdepay.h 	\
 		 gstrtpmp4gpay.h	\
+		 gstrtpmp4adepay.h \
 		 gstrtpdepay.h		\
 		 gstasteriskh263.h	\
 		 gstrtpspeexdepay.h	\

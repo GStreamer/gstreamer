@@ -1,3 +1,27 @@
+2007-03-28  Wim Taymans  <wim@fluendo.com>
+
+	Based on patch by: Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtpmp4adepay.c: (gst_rtp_mp4a_depay_base_init),
+	(gst_rtp_mp4a_depay_class_init), (gst_rtp_mp4a_depay_init),
+	(gst_rtp_mp4a_depay_finalize), (gst_rtp_mp4a_depay_setcaps),
+	(gst_rtp_mp4a_depay_process), (gst_rtp_mp4a_depay_set_property),
+	(gst_rtp_mp4a_depay_get_property),
+	(gst_rtp_mp4a_depay_change_state),
+	(gst_rtp_mp4a_depay_plugin_init):
+	* gst/rtp/gstrtpmp4adepay.h:
+	Added MP4A-LATM depayloader. Fixes #417792.
+
+	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_setcaps),
+	(gst_rtp_mp4v_depay_process):
+	Fixup depayloader, setting codec_data, using more efficient adaptor and
+	rtpbuffer handling.
+
+	* gst/rtsp/URLS:
+	Add url to test above.
+
 2007-03-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (find_stream_by_setup),

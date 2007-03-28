@@ -39,14 +39,12 @@ GST_ELEMENT_DETAILS ("RTP packet depayloader",
 /* RtpMP4VDepay signals and args */
 enum
 {
-  /* FILL ME */
   LAST_SIGNAL
 };
 
 enum
 {
-  ARG_0,
-  ARG_FREQUENCY
+  PROP_0,
 };
 
 static GstStaticPadTemplate gst_rtp_mp4v_depay_src_template =
@@ -152,7 +150,6 @@ gst_rtp_mp4v_depay_finalize (GObject * object)
 static gboolean
 gst_rtp_mp4v_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
-
   GstStructure *structure;
   GstRtpMP4VDepay *rtpmp4vdepay;
   GstCaps *srccaps;
@@ -163,7 +160,8 @@ gst_rtp_mp4v_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  if (gst_structure_has_field (structure, "clock-rate"))
+    gst_structure_get_int (structure, "clock-rate", &clock_rate);
   depayload->clock_rate = clock_rate;
 
   srccaps = gst_caps_new_simple ("video/mpeg",
@@ -181,15 +179,14 @@ gst_rtp_mp4v_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       gst_buffer_ref (buffer);
       g_value_unset (&v);
 
-      gst_buffer_set_caps (buffer, srccaps);
-
-      gst_caps_unref (srccaps);
-
-      gst_pad_push (depayload->srcpad, buffer);
+      gst_caps_set_simple (srccaps,
+          "codec_data", GST_TYPE_BUFFER, buffer, NULL);
     } else {
       g_warning ("cannot convert config to buffer");
     }
   }
+  gst_pad_set_caps (depayload->srcpad, srccaps);
+  gst_caps_unref (srccaps);
 
   return TRUE;
 }
@@ -205,45 +202,29 @@ gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
 
-  {
-    gint payload_len;
-    guint8 *payload;
-    guint32 timestamp;
+  /* flush remaining data on discont */
+  if (GST_BUFFER_IS_DISCONT (buf))
+    gst_adapter_clear (rtpmp4vdepay->adapter);
 
-    payload_len = gst_rtp_buffer_get_payload_len (buf);
-    payload = gst_rtp_buffer_get_payload (buf);
+  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 
-    timestamp = gst_rtp_buffer_get_timestamp (buf);
+  gst_adapter_push (rtpmp4vdepay->adapter, outbuf);
 
-    outbuf = gst_buffer_new_and_alloc (payload_len);
-    memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
+  /* if this was the last packet of the VOP, create and push a buffer */
+  if (gst_rtp_buffer_get_marker (buf)) {
+    guint avail;
 
-    gst_adapter_push (rtpmp4vdepay->adapter, outbuf);
+    avail = gst_adapter_available (rtpmp4vdepay->adapter);
 
-    /* if this was the last packet of the VOP, create and push a buffer */
-    if (gst_rtp_buffer_get_marker (buf)) {
-      guint avail;
+    outbuf = gst_adapter_take_buffer (rtpmp4vdepay->adapter, avail);
 
-      avail = gst_adapter_available (rtpmp4vdepay->adapter);
+    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
-      outbuf = gst_buffer_new ();
-      GST_BUFFER_SIZE (outbuf) = avail;
-      GST_BUFFER_MALLOCDATA (outbuf) =
-          gst_adapter_take (rtpmp4vdepay->adapter, avail);
-      GST_BUFFER_DATA (outbuf) = GST_BUFFER_MALLOCDATA (outbuf);
-      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
-      GST_BUFFER_TIMESTAMP (outbuf) =
-          timestamp * GST_SECOND / depayload->clock_rate;
+    GST_DEBUG ("gst_rtp_mp4v_depay_chain: pushing buffer of size %d",
+        GST_BUFFER_SIZE (outbuf));
 
-      GST_DEBUG ("gst_rtp_mp4v_depay_chain: pushing buffer of size %d",
-          GST_BUFFER_SIZE (outbuf));
-
-      return outbuf;
-    } else {
-      return NULL;
-    }
+    return outbuf;
   }
-
   return NULL;
 
 bad_packet:
