@@ -112,7 +112,7 @@ static GstStaticPadTemplate src_template_factory =
         "endianness = (int) little_endian, "
         "signed = (boolean) { true, false }, "
         "width = (int) { 8, 16, 24, 32 }, "
-        "depth = (int) [ 8, 32 ], "
+        "depth = (int) [ 1, 32 ], "
         "rate = (int) [ 8000, 96000 ], "
         "channels = (int) [ 1, 8 ]; "
         "audio/ms-gsm; "
