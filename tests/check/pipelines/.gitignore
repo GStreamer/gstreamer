@@ -1,5 +1,6 @@
 .dirstamp
 simple-launch-lines
 theoraenc
+vorbisdec
 vorbisenc
 oggmux

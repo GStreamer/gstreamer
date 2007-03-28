@@ -1,3 +1,8 @@
+2007-03-28  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* tests/check/pipelines/.cvsignore:
+	Add new vorbisdec test to cvsignore.
+
 2007-03-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c: (slave_method_get_type),
