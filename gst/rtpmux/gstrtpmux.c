@@ -55,11 +55,13 @@ enum
 {
   ARG_0,
   PROP_CLOCK_RATE,
+  PROP_TIMESTAMP_OFFSET,
   PROP_SEQNUM_OFFSET,
   PROP_SEQNUM
   /* FILL ME */
 };
 
+#define DEFAULT_TIMESTAMP_OFFSET -1
 #define DEFAULT_SEQNUM_OFFSET -1
 #define DEFAULT_CLOCK_RATE    0
 
@@ -154,6 +156,11 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
       g_param_spec_uint ("clock-rate", "clockrate",
           "The clock-rate of the RTP streams",
           0, G_MAXUINT, DEFAULT_CLOCK_RATE, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_TIMESTAMP_OFFSET, g_param_spec_int ("timestamp-offset",
+          "Timestamp Offset",
+          "Offset to add to all outgoing timestamps (-1 = random)", -1,
+          G_MAXINT, DEFAULT_TIMESTAMP_OFFSET, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM_OFFSET,
       g_param_spec_int ("seqnum-offset", "Sequence number Offset",
           "Offset to add to all outgoing seqnum (-1 = random)", -1, G_MAXINT,
@@ -179,6 +186,7 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
           "src"), "src");
   gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
   
+  rtp_mux->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   rtp_mux->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
   rtp_mux->clock_rate = DEFAULT_CLOCK_RATE;
 }
@@ -262,6 +270,49 @@ gst_rtp_mux_request_new_pad (GstElement * element,
   return newpad;
 }
 
+static guint32
+gst_rtp_mux_get_buffer_ts_base (GstRTPMux * rtp_mux, GstBuffer * buffer)
+{
+  GstCaps *caps;
+  GstStructure *structure;
+  const GValue *value;
+  guint32 ts_base;
+   
+  caps = gst_buffer_get_caps (buffer);
+  g_return_val_if_fail (caps != NULL, 0);
+
+  structure = gst_caps_get_structure (caps, 0);
+  g_return_val_if_fail (structure != NULL, 0);
+
+  value = gst_structure_get_value (structure, "clock-base");
+
+  if (value) 
+    ts_base = g_value_get_uint (value);
+  else {
+    ts_base = 0;
+    GST_DEBUG_OBJECT (rtp_mux, "no cloc-base on structure: %s", gst_structure_to_string (structure));
+  }
+  
+  gst_caps_unref (caps);
+  
+  GST_DEBUG_OBJECT (rtp_mux, "sink's ts-base: %u", ts_base);
+  return ts_base;
+}
+
+/* Put our own clock-base on the buffer */
+static void
+gst_rtp_mux_readjust_rtp_timestamp (GstRTPMux * rtp_mux, GstBuffer * buffer)
+{
+  guint32 ts;
+  guint32 sink_ts_base;
+
+  sink_ts_base = gst_rtp_mux_get_buffer_ts_base (rtp_mux, buffer);
+  ts = gst_rtp_buffer_get_timestamp (buffer) - sink_ts_base + rtp_mux->ts_base;
+  GST_DEBUG_OBJECT (rtp_mux, "Re-adjusting RTP ts %u to %u",
+          gst_rtp_buffer_get_timestamp (buffer), ts);
+  gst_rtp_buffer_set_timestamp (buffer, ts);
+}
+
 static GstFlowReturn
 gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -273,6 +324,7 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
   rtp_mux->seqnum++;
   GST_LOG_OBJECT (rtp_mux, "setting RTP seqnum %d", rtp_mux->seqnum);
   gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
+  gst_rtp_mux_readjust_rtp_timestamp (rtp_mux, buffer);
   GST_DEBUG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
           GST_BUFFER_SIZE (buffer), rtp_mux->seqnum - 1);
 
@@ -305,23 +357,17 @@ static gboolean
 gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
 {
   GstRTPMux *rtp_mux;
+  GstStructure *structure;
   gboolean ret = TRUE;
-  gint i;
+  gint clock_rate;
 
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
-
-  for (i = 0;i < gst_caps_get_size (caps); i++) {
-    gint clock_rate;
-    GstStructure *structure;
     
-    structure = gst_caps_get_structure (caps, 0);
-    if (gst_structure_get_int (structure, "clock-rate", &clock_rate)) {
-      ret = gst_rtp_mux_set_clock_rate (rtp_mux, clock_rate);
-      if (!ret)
-        break;
-    }
+  structure = gst_caps_get_structure (caps, 0);
+  if (gst_structure_get_int (structure, "clock-rate", &clock_rate)) {
+    ret = gst_rtp_mux_set_clock_rate (rtp_mux, clock_rate);
   }
-
+    
   if (ret) {
     GST_DEBUG_OBJECT (rtp_mux,
             "seting caps %" GST_PTR_FORMAT " on src pad..", caps);
@@ -342,6 +388,9 @@ gst_rtp_mux_get_property (GObject * object,
   switch (prop_id) {
     case PROP_CLOCK_RATE:
       g_value_set_uint (value, rtp_mux->clock_rate);
+      break;
+    case PROP_TIMESTAMP_OFFSET:
+      g_value_set_uint (value, rtp_mux->ts_offset);
       break;
     case PROP_SEQNUM_OFFSET:
       g_value_set_int (value, rtp_mux->seqnum_offset);
@@ -367,6 +416,9 @@ gst_rtp_mux_set_property (GObject * object,
     case PROP_CLOCK_RATE:
       rtp_mux->clock_rate = g_value_get_uint (value);
       break;
+    case PROP_TIMESTAMP_OFFSET:
+      rtp_mux->ts_offset = g_value_get_int (value);
+      break;
     case PROP_SEQNUM_OFFSET:
       rtp_mux->seqnum_offset = g_value_get_int (value);
       break;
@@ -389,10 +441,15 @@ gst_rtp_mux_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (rtp_mux->seqnum_offset == -1)
-          rtp_mux->seqnum_base = g_random_int_range (0, G_MAXUINT16);
+        rtp_mux->seqnum_base = g_random_int_range (0, G_MAXUINT16);
       else
-          rtp_mux->seqnum_base = rtp_mux->seqnum_offset;
+        rtp_mux->seqnum_base = rtp_mux->seqnum_offset;
       rtp_mux->seqnum = rtp_mux->seqnum_base;
+      
+      if (rtp_mux->ts_offset == -1)
+        rtp_mux->ts_base = g_random_int ();
+      else
+        rtp_mux->ts_base = rtp_mux->ts_offset;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
