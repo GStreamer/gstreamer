@@ -298,6 +298,26 @@ qtdemux_dump_stco (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 }
 
 void
+qtdemux_dump_ctts (GstQTDemux * qtdemux, guint8 * buffer, int depth)
+{
+  int i;
+  int n;
+  int offset;
+
+  GST_LOG ("%*s  version/flags: %08x", depth, "", QT_UINT32 (buffer + 8));
+  n = QT_UINT32 (buffer + 12);
+  GST_LOG ("%*s  n entries:     %d", depth, "", n);
+  offset = 16;
+  for (i = 0; i < n; i++) {
+    GST_LOG ("%*s    sample count :%8d offset: %8d",
+        depth, "", QT_UINT32 (buffer + offset),
+        QT_UINT32 (buffer + offset + 4));
+
+    offset += 8;
+  }
+}
+
+void
 qtdemux_dump_co64 (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
   //int i;

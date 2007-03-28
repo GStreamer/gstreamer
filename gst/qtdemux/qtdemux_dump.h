@@ -41,6 +41,7 @@ void qtdemux_dump_stco (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 void qtdemux_dump_co64 (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 void qtdemux_dump_dcom (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 void qtdemux_dump_cmvd (GstQTDemux * qtdemux, guint8 * buffer, int depth);
+void qtdemux_dump_ctts (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 void qtdemux_dump_unknown (GstQTDemux * qtdemux, guint8 * buffer, int depth);
 
 void qtdemux_node_dump (GstQTDemux * qtdemux, GNode * node);
