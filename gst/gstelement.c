@@ -132,6 +132,10 @@ static gboolean gst_element_default_send_event (GstElement * element,
 static gboolean gst_element_default_query (GstElement * element,
     GstQuery * query);
 
+static GstPadTemplate
+    * gst_element_class_get_request_pad_template (GstElementClass *
+    element_class, const gchar * name);
+
 #ifndef GST_DISABLE_LOADSAVE
 static xmlNodePtr gst_element_save_thyself (GstObject * object,
     xmlNodePtr parent);
@@ -922,7 +926,7 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
   class = GST_ELEMENT_GET_CLASS (element);
 
   if (strstr (name, "%")) {
-    templ = gst_element_class_get_pad_template (class, name);
+    templ = gst_element_class_get_request_pad_template (class, name);
     req_name = NULL;
     if (templ)
       templ_found = TRUE;
@@ -1176,6 +1180,19 @@ gst_element_class_get_pad_template (GstElementClass * element_class,
 
     padlist = g_list_next (padlist);
   }
+
+  return NULL;
+}
+
+static GstPadTemplate *
+gst_element_class_get_request_pad_template (GstElementClass * element_class,
+    const gchar * name)
+{
+  GstPadTemplate *tmpl;
+
+  tmpl = gst_element_class_get_pad_template (element_class, name);
+  if (tmpl != NULL && tmpl->presence == GST_PAD_REQUEST)
+    return tmpl;
 
   return NULL;
 }

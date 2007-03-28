@@ -1,10 +1,17 @@
+2007-03-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstelement.c: (gst_element_get_request_pad),
+	(gst_element_class_get_request_pad_template):
+	  Make gst_element_get_request_pad() create request pads only for
+	  request pad templates and not for, say, sometimes pad templates.
+
 2007-03-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/design/draft-klass.txt:
 	  Add example that needs more thinking.
 	
 	* docs/design/draft-missing-plugins.txt:
-	  More thoughts about wtrapper plugins.
+	  More thoughts about wrapper plugins.
 	
 	* docs/random/ensonic/embedded.txt:
 	* docs/random/ensonic/profiling.txt:
