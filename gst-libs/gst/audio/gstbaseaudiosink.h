@@ -78,8 +78,23 @@ G_BEGIN_DECLS
  */
 #define GST_BASE_AUDIO_SINK_PAD(obj)     (GST_BASE_SINK (obj)->sinkpad)
 
+/**
+ * GstBaseAudioSinkSlaveMethod:
+ * @GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE: Resample to match the master clock
+ * @GST_BASE_AUDIO_SINK_SLAVE_SKEW: Adjust playout pointer when master clock
+ * drifts too much.
+ *
+ * Different possible clock slaving algorithms
+ */
+typedef enum 
+{
+  GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE,
+  GST_BASE_AUDIO_SINK_SLAVE_SKEW,
+} GstBaseAudioSinkSlaveMethod;
+
 typedef struct _GstBaseAudioSink GstBaseAudioSink;
 typedef struct _GstBaseAudioSinkClass GstBaseAudioSinkClass;
+typedef struct _GstBaseAudioSinkPrivate GstBaseAudioSinkPrivate;
 
 /**
  * GstBaseAudioSink:
@@ -105,10 +120,9 @@ struct _GstBaseAudioSink {
   GstClock      *provided_clock;
 
   /*< private >*/
-  union {
-    /* adding + 0 to mark ABI change to be undone later */
-    gpointer _gst_reserved[GST_PADDING + 0];
-  } abidata;
+  GstBaseAudioSinkPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 /**

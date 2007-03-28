@@ -1,3 +1,22 @@
+2007-03-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c: (slave_method_get_type),
+	(gst_base_audio_sink_class_init), (gst_base_audio_sink_init),
+	(gst_base_audio_sink_query), (gst_base_audio_sink_get_time),
+	(gst_base_audio_sink_set_property),
+	(gst_base_audio_sink_get_property), (gst_base_audio_sink_event),
+	(clock_convert_external), (gst_base_audio_sink_resample_slaving),
+	(gst_base_audio_sink_skew_slaving),
+	(gst_base_audio_sink_handle_slaving), (gst_base_audio_sink_render),
+	(gst_base_audio_sink_async_play):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	Store private stuff in GstBaseAudioSinkPrivate.
+	Add configurable clock slaving modes property.
+	API:: GstBaseAudioSink::slave-method property
+	Some more latency reporting tweaks.
+	Added skew based clock slaving correction and make it the default until
+	the resampling method is more robust.
+
 2007-03-27  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audioconvert/audioconvert.c:
