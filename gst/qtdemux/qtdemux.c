@@ -88,6 +88,7 @@ struct _QtDemuxSample
   guint32 chunk;
   guint32 size;
   guint64 offset;
+  GstClockTimeDiff pts_offset;  /* Add this value to timestamp to get the pts */
   guint64 timestamp;            /* In GstClockTime */
   guint64 duration;             /* in GstClockTime */
   gboolean keyframe;            /* TRUE when this packet is a keyframe */
@@ -1147,9 +1148,9 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   /* now get the info for the sample we're at */
   sample = &stream->samples[stream->sample_index];
 
+  *timestamp = sample->timestamp + sample->pts_offset;
   *offset = sample->offset;
   *size = sample->size;
-  *timestamp = sample->timestamp;
   *duration = sample->duration;
   *keyframe = stream->all_keyframe || sample->keyframe;
 
@@ -1687,9 +1688,15 @@ gst_qtdemux_chain (GstPad * sinkpad, GstBuffer * inbuf)
         GST_DEBUG_OBJECT (demux, "stream : %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (stream->fourcc));
 
-        GST_BUFFER_TIMESTAMP (outbuf) =
-            stream->samples[stream->sample_index].timestamp;
-        demux->last_ts = GST_BUFFER_TIMESTAMP (outbuf);
+        if (stream->samples[stream->sample_index].pts_offset) {
+          demux->last_ts = stream->samples[stream->sample_index].timestamp;
+          GST_BUFFER_TIMESTAMP (outbuf) = demux->last_ts +
+              stream->samples[stream->sample_index].pts_offset;
+        } else {
+          GST_BUFFER_TIMESTAMP (outbuf) =
+              stream->samples[stream->sample_index].timestamp;
+          demux->last_ts = GST_BUFFER_TIMESTAMP (outbuf);
+        }
         GST_BUFFER_DURATION (outbuf) =
             stream->samples[stream->sample_index].duration;
 
@@ -2265,6 +2272,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
   GNode *co64;
   GNode *stts;
   GNode *stss;
+  GNode *ctts;
   const guint8 *stsc_data, *stsz_data, *stco_data;
   int sample_size;
   int sample_index;
@@ -2478,6 +2486,24 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         samples[j].duration = timestamp - samples[j].timestamp;
 
         samples[j].keyframe = TRUE;
+      }
+    }
+  }
+
+  /* composition time to sample */
+  if ((ctts = qtdemux_tree_get_child_by_type (stbl, FOURCC_ctts))) {
+    const guint8 *ctts_data = (const guint8 *) ctts->data;
+    guint32 n_entries = QT_UINT32 (ctts_data + 12);
+    guint32 count;
+    gint32 soffset;
+
+    /* Fill in the pts_offsets */
+    for (i = 0, j = 0; (j < stream->n_samples) && (i < n_entries); i++) {
+      count = QT_UINT32 (ctts_data + 16 + i * 8);
+      soffset = QT_UINT32 (ctts_data + 20 + i * 8);
+      for (k = 0; k < count; k++, j++) {
+        /* we operate with very small soffset values here, it shouldn't overflow */
+        samples[j].pts_offset = soffset * GST_SECOND / stream->timescale;
       }
     }
   }

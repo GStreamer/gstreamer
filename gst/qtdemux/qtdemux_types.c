@@ -107,6 +107,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_rmda, "rmda", QT_FLAG_CONTAINER,},
   {FOURCC_rdrf, "rdrf", 0,},
   {FOURCC__gen, "Custom Genre", QT_FLAG_CONTAINER,},
+  {FOURCC_ctts, "Composition time to sample", 0, qtdemux_dump_ctts},
   {0, "unknown", 0,},
 };
 static const int n_qt_node_types =

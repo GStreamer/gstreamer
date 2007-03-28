@@ -1,3 +1,17 @@
+2007-03-28  Edward Hervey  <edward@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_prepare_current_sample),
+	(gst_qtdemux_chain), (qtdemux_parse_samples):
+	* gst/qtdemux/qtdemux_dump.c: (qtdemux_dump_ctts):
+	* gst/qtdemux/qtdemux_dump.h:
+	* gst/qtdemux/qtdemux_fourcc.h:
+	* gst/qtdemux/qtdemux_types.c:
+	Process 'ctts' atoms, which are present in AVC ISO files (.mov files
+	with h264 video).
+	Use the offset present in 'ctts' to calculate the PTS for each packet
+	and set the PTS on outgoing buffers.
+	Fixes #423283
+
 2007-03-27  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/xvid/gstxviddec.c: (gst_xviddec_chain): Add some
