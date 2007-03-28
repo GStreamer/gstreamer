@@ -1,3 +1,9 @@
+2007-03-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/wavparse/gstwavparse.c:
+	Add support for wav files containing audio/x-raw-int with random
+	depths between 1 and 32 bits.
+
 2007-03-28  Wim Taymans  <wim@fluendo.com>
 
 	Based on patch by: Stefan Kost  <ensonic@users.sf.net>
