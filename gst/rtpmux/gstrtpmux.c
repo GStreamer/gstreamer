@@ -439,11 +439,31 @@ gst_rtp_mux_set_property (GObject * object,
   }
 }
 
+static void 
+gst_rtp_mux_ready_to_paused (GstRTPMux * rtp_mux)
+{
+  if (rtp_mux->ssrc == -1)
+    rtp_mux->current_ssrc = g_random_int ();
+  else
+    rtp_mux->current_ssrc = rtp_mux->ssrc;
+
+  if (rtp_mux->seqnum_offset == -1)
+    rtp_mux->seqnum_base = g_random_int_range (0, G_MAXUINT16);
+  else
+    rtp_mux->seqnum_base = rtp_mux->seqnum_offset;
+    rtp_mux->seqnum = rtp_mux->seqnum_base;
+      
+  if (rtp_mux->ts_offset == -1)
+    rtp_mux->ts_base = g_random_int ();
+  else
+    rtp_mux->ts_base = rtp_mux->ts_offset;
+    GST_DEBUG_OBJECT (rtp_mux, "set clock-base to %u", rtp_mux->ts_base);
+}
+
 static GstStateChangeReturn
 gst_rtp_mux_change_state (GstElement * element, GstStateChange transition)
 {
   GstRTPMux *rtp_mux;
-  GstStateChangeReturn ret;
 
   rtp_mux = GST_RTP_MUX (element);
 
@@ -451,22 +471,7 @@ gst_rtp_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      if (rtp_mux->ssrc == -1)
-        rtp_mux->current_ssrc = g_random_int ();
-      else
-        rtp_mux->current_ssrc = rtp_mux->ssrc;
-
-      if (rtp_mux->seqnum_offset == -1)
-        rtp_mux->seqnum_base = g_random_int_range (0, G_MAXUINT16);
-      else
-        rtp_mux->seqnum_base = rtp_mux->seqnum_offset;
-      rtp_mux->seqnum = rtp_mux->seqnum_base;
-      
-      if (rtp_mux->ts_offset == -1)
-        rtp_mux->ts_base = g_random_int ();
-      else
-        rtp_mux->ts_base = rtp_mux->ts_offset;
-      GST_DEBUG_OBJECT (rtp_mux, "set clock-base to %u", rtp_mux->ts_base);
+      gst_rtp_mux_ready_to_paused (rtp_mux);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
@@ -474,16 +479,7 @@ gst_rtp_mux_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    return ret;
-
-  switch (transition) {
-    default:
-      break;
-  }
-
-  return ret;
+  return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
 
 gboolean
