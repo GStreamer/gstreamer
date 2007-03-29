@@ -1,3 +1,12 @@
+2007-03-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	(gst_rtp_buffer_default_clock_rate):
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	Fix fixed payload names and docs.
+	Added method to get the default clock rates of fixed payload types.
+	API: GstRTPBuffer::gst_rtp_buffer_default_clock_rate()
+
 2007-03-28  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* tests/check/pipelines/.cvsignore:
