@@ -1,3 +1,17 @@
+2007-03-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	Require gst-plugins-base CVS for audioconvert with non-native
+	float support and width/depth fix in libgstriff.
+
+	Patch by: René Stadler <mail at renestadler dot de>
+
+	* gst/auparse/gstauparse.c: (gst_au_parse_reset),
+	(gst_au_parse_parse_header), (gst_au_parse_chain):
+	* gst/auparse/gstauparse.h:
+	Don't swap the floats ourself if they're not in native endianness.
+	Instead let audioconvert handle this. Fixes #339838.
+
 2007-03-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstasteriskh263.h:
