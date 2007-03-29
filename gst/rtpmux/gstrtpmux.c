@@ -57,13 +57,14 @@ enum
   PROP_CLOCK_RATE,
   PROP_TIMESTAMP_OFFSET,
   PROP_SEQNUM_OFFSET,
-  PROP_SEQNUM
-  /* FILL ME */
+  PROP_SEQNUM,
+  PROP_SSRC
 };
 
 #define DEFAULT_TIMESTAMP_OFFSET -1
-#define DEFAULT_SEQNUM_OFFSET -1
-#define DEFAULT_CLOCK_RATE    0
+#define DEFAULT_SEQNUM_OFFSET    -1
+#define DEFAULT_SSRC             -1
+#define DEFAULT_CLOCK_RATE        0
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -169,6 +170,10 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
       g_param_spec_uint ("seqnum", "Sequence number",
           "The RTP sequence number of the last processed packet",
           0, G_MAXUINT, 0, G_PARAM_READABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
+      g_param_spec_uint ("ssrc", "SSRC",
+          "The SSRC of the packets (-1 == random)",
+          0, G_MAXUINT, DEFAULT_SSRC, G_PARAM_READWRITE));
 
   gstelement_class->request_new_pad = gst_rtp_mux_request_new_pad;
   gstelement_class->change_state = gst_rtp_mux_change_state;
@@ -186,6 +191,7 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
           "src"), "src");
   gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
   
+  rtp_mux->ssrc = DEFAULT_SSRC;
   rtp_mux->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   rtp_mux->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
   rtp_mux->clock_rate = DEFAULT_CLOCK_RATE;
@@ -322,6 +328,7 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
   rtp_mux->seqnum++;
   GST_LOG_OBJECT (rtp_mux, "setting RTP seqnum %d", rtp_mux->seqnum);
   gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
+  gst_rtp_buffer_set_ssrc (buffer, rtp_mux->current_ssrc);
   gst_rtp_mux_readjust_rtp_timestamp (rtp_mux, buffer);
   GST_DEBUG_OBJECT (rtp_mux, "Pushing packet size %d, seq=%d, ts=%u",
           GST_BUFFER_SIZE (buffer), rtp_mux->seqnum - 1);
@@ -396,6 +403,9 @@ gst_rtp_mux_get_property (GObject * object,
     case PROP_SEQNUM:
       g_value_set_uint (value, rtp_mux->seqnum);
       break;
+    case PROP_SSRC:
+      g_value_set_uint (value, rtp_mux->ssrc);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -420,6 +430,9 @@ gst_rtp_mux_set_property (GObject * object,
     case PROP_SEQNUM_OFFSET:
       rtp_mux->seqnum_offset = g_value_get_int (value);
       break;
+    case PROP_SSRC:
+      rtp_mux->ssrc = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -438,6 +451,11 @@ gst_rtp_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (rtp_mux->ssrc == -1)
+        rtp_mux->current_ssrc = g_random_int ();
+      else
+        rtp_mux->current_ssrc = rtp_mux->ssrc;
+
       if (rtp_mux->seqnum_offset == -1)
         rtp_mux->seqnum_base = g_random_int_range (0, G_MAXUINT16);
       else

@@ -62,6 +62,8 @@ struct _GstRTPMux
   gint32   ts_offset;
   gint16   seqnum_offset;
   guint16  seqnum;
+  guint    ssrc;
+  guint    current_ssrc;
 
   guint32 clock_rate;
 };
