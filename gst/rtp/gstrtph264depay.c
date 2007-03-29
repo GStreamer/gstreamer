@@ -278,6 +278,12 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
 
+  /* flush remaining data on discont */
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    gst_adapter_clear (rtph264depay->adapter);
+    rtph264depay->wait_start = TRUE;
+  }
+
   {
     gint payload_len;
     guint8 *payload;
@@ -324,6 +330,8 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         /* strip headers */
         payload += header_len;
         payload_len -= header_len;
+
+        rtph264depay->wait_start = FALSE;
 
         /* STAP-A    Single-time aggregation packet     5.7.1 */
         while (payload_len > 2) {
@@ -390,9 +398,14 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
         GST_DEBUG_OBJECT (rtph264depay, "S %d, E %d", S, E);
 
+        if (rtph264depay->wait_start && !S)
+          goto waiting_start;
+
         if (S) {
           /* NAL unit starts here */
           guint8 nal_header;
+
+          rtph264depay->wait_start = FALSE;
 
           /* reconstruct NAL header */
           nal_header = (payload[0] & 0xe0) | (payload[1] & 0x1f);
@@ -446,6 +459,8 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       }
       default:
       {
+        rtph264depay->wait_start = FALSE;
+
         /* 1-23   NAL unit  Single NAL unit packet per H.264   5.6 */
         /* the entire payload is the output buffer */
         nalu_size = payload_len;
@@ -476,6 +491,11 @@ undefined_type:
   {
     GST_ELEMENT_WARNING (rtph264depay, STREAM, DECODE,
         (NULL), ("Undefined packet type"));
+    return NULL;
+  }
+waiting_start:
+  {
+    GST_DEBUG_OBJECT (rtph264depay, "waiting for start");
     return NULL;
   }
 not_implemented:
@@ -530,6 +550,7 @@ gst_rtp_h264_depay_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (rtph264depay->adapter);
+      rtph264depay->wait_start = TRUE;
       break;
     default:
       break;

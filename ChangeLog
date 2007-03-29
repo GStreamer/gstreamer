@@ -1,5 +1,20 @@
 2007-03-29  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstasteriskh263.h:
+	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_process),
+	(gst_rtp_h263p_depay_change_state):
+	* gst/rtp/gstrtph263pdepay.h:
+	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_class_init),
+	(gst_rtp_h264_depay_setcaps), (gst_rtp_h264_depay_process),
+	(gst_rtp_h264_depay_change_state):
+	* gst/rtp/gstrtph264depay.h:
+	* gst/rtp/gstrtpmp4adepay.c: (gst_rtp_mp4a_depay_class_init),
+	(gst_rtp_mp4a_depay_setcaps), (gst_rtp_mp4a_depay_process):
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_process):
+	Flush adapter on disconts.
+
+2007-03-29  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16_depay_process):
 	* gst/rtp/gstrtpgsmdepay.c: (gst_rtp_gsm_depay_process):
 	* gst/rtp/gstrtpilbcdepay.c: (gst_rtp_ilbc_depay_process):

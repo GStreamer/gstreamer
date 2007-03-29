@@ -165,13 +165,19 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
 
+  /* flush remaining data on discont */
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    gst_adapter_clear (rtph263pdepay->adapter);
+    rtph263pdepay->wait_start = TRUE;
+  }
+
   {
     gint payload_len;
     guint8 *payload;
     gboolean P, V, M;
     guint32 timestamp;
     guint header_len;
-    guint8 PLEN;
+    guint8 PLEN, PEBIT;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
@@ -179,9 +185,17 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     header_len = 2;
 
     M = gst_rtp_buffer_get_marker (buf);
+
+    /*  0                   1
+     *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * |   RR    |P|V|   PLEN    |PEBIT|
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     */
     P = (payload[0] & 0x04) == 0x04;
     V = (payload[0] & 0x02) == 0x02;
     PLEN = ((payload[0] & 0x1) << 5) | (payload[1] >> 3);
+    PEBIT = payload[1] & 0x7;
 
     if (V) {
       header_len++;
@@ -191,10 +205,14 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     }
 
     if (P) {
+      rtph263pdepay->wait_start = FALSE;
       header_len -= 2;
       payload[header_len] = 0;
       payload[header_len + 1] = 0;
     }
+
+    if (rtph263pdepay->wait_start)
+      goto waiting_start;
 
     /* FIXME do not ignore the VRC header (See RFC 2429 section 4.2) */
     /* strip off header */
@@ -205,21 +223,21 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     if (M) {
       /* frame is completed: append to previous, push it out */
-      guint len;
+      guint len, padlen;
       guint avail;
-      guint8 *data;
 
       avail = gst_adapter_available (rtph263pdepay->adapter);
 
       len = avail + payload_len;
-      outbuf = gst_buffer_new_and_alloc (len + (len % 4) + 4);
-      memset (GST_BUFFER_DATA (outbuf) + len, 0, (len % 4) + 4);
+      padlen = (len % 4) + 4;
+      outbuf = gst_buffer_new_and_alloc (len + padlen);
+      memset (GST_BUFFER_DATA (outbuf) + len, 0, padlen);
       GST_BUFFER_SIZE (outbuf) = len;
 
       /* prepend previous data */
       if (avail > 0) {
-        data = (guint8 *) gst_adapter_peek (rtph263pdepay->adapter, avail);
-        memcpy (GST_BUFFER_DATA (outbuf), data, avail);
+        gst_adapter_copy (rtph263pdepay->adapter, GST_BUFFER_DATA (outbuf), 0,
+            avail);
         gst_adapter_flush (rtph263pdepay->adapter, avail);
       }
       memcpy (GST_BUFFER_DATA (outbuf) + avail, payload, payload_len);
@@ -247,6 +265,11 @@ bad_packet:
   {
     GST_ELEMENT_WARNING (rtph263pdepay, STREAM, DECODE,
         ("Packet did not validate"), (NULL));
+    return NULL;
+  }
+waiting_start:
+  {
+    GST_DEBUG_OBJECT (rtph263pdepay, "waiting for picture start");
     return NULL;
   }
 }
@@ -295,6 +318,7 @@ gst_rtp_h263p_depay_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_adapter_clear (rtph263pdepay->adapter);
+      rtph263pdepay->wait_start = TRUE;
       break;
     default:
       break;

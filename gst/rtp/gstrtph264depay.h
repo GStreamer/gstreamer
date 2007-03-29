@@ -45,8 +45,7 @@ struct _GstRtpH264Depay
   GstBaseRTPDepayload depayload;
 
   GstAdapter *adapter;
-
-  guint frequency;
+  gboolean    wait_start;
 };
 
 struct _GstRtpH264DepayClass

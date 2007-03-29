@@ -275,6 +275,11 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
 
+  /* flush remaining data on discont */
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    gst_adapter_clear (rtpmp4gdepay->adapter);
+  }
+
   {
     gint payload_len, payload_header;
     guint8 *payload;

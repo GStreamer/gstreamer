@@ -48,7 +48,6 @@ struct _GstAsteriskh263
 
   GstAdapter *adapter;
 
-  guint frequency;
   guint32 lastts;
 };
 

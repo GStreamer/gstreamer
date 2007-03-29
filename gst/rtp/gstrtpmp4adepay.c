@@ -249,8 +249,9 @@ gst_rtp_mp4a_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     goto bad_packet;
 
   /* flush remaining data on discont */
-  if (GST_BUFFER_IS_DISCONT (buf))
+  if (GST_BUFFER_IS_DISCONT (buf)) {
     gst_adapter_clear (rtpmp4adepay->adapter);
+  }
 
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 

@@ -45,8 +45,7 @@ struct _GstRtpH263PDepay
   GstBaseRTPDepayload depayload;
 
   GstAdapter *adapter;
-
-  guint frequency;
+  gboolean    wait_start;
 };
 
 struct _GstRtpH263PDepayClass
