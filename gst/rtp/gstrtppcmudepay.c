@@ -136,8 +136,6 @@ gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstCaps *srccaps;
   GstBuffer *outbuf = NULL;
-  gint payload_len;
-  guint8 *payload;
 
   GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
       GST_BUFFER_SIZE (buf),
@@ -153,11 +151,8 @@ gst_rtp_pcmu_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     gst_caps_unref (srccaps);
   }
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
-  payload = gst_rtp_buffer_get_payload (buf);
+  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 
-  outbuf = gst_buffer_new_and_alloc (payload_len);
-  memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
   return outbuf;
 }
 

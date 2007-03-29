@@ -1,3 +1,22 @@
+2007-03-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16_depay_process):
+	* gst/rtp/gstrtpgsmdepay.c: (gst_rtp_gsm_depay_process):
+	* gst/rtp/gstrtpilbcdepay.c: (gst_rtp_ilbc_depay_process):
+	* gst/rtp/gstrtpmp2tdepay.c: (gst_rtp_mp2t_depay_process):
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_process):
+	* gst/rtp/gstrtpmp4gpay.c: (gst_rtp_mp4g_pay_flush):
+	* gst/rtp/gstrtpmp4vdepay.c: (gst_rtp_mp4v_depay_setcaps),
+	(gst_rtp_mp4v_depay_process):
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_flush):
+	* gst/rtp/gstrtpmpadepay.c: (gst_rtp_mpa_depay_process):
+	* gst/rtp/gstrtpmpapay.c: (gst_rtp_mpa_pay_flush):
+	* gst/rtp/gstrtpmpvdepay.c: (gst_rtp_mpv_depay_process):
+	* gst/rtp/gstrtppcmadepay.c: (gst_rtp_pcma_depay_process):
+	* gst/rtp/gstrtppcmudepay.c: (gst_rtp_pcmu_depay_process):
+	* gst/rtp/gstrtpsv3vdepay.c: (gst_rtp_sv3v_depay_process):
+	Use more efficient adapter and rtpbuffer methods when possible.
+
 2007-03-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_create_header_buf),

@@ -207,7 +207,6 @@ gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     gst_adapter_clear (rtpmp4vdepay->adapter);
 
   outbuf = gst_rtp_buffer_get_payload_buffer (buf);
-
   gst_adapter_push (rtpmp4vdepay->adapter, outbuf);
 
   /* if this was the last packet of the VOP, create and push a buffer */
@@ -217,7 +216,6 @@ gst_rtp_mp4v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     avail = gst_adapter_available (rtpmp4vdepay->adapter);
 
     outbuf = gst_adapter_take_buffer (rtpmp4vdepay->adapter, avail);
-
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
     GST_DEBUG ("gst_rtp_mp4v_depay_chain: pushing buffer of size %d",

@@ -173,7 +173,6 @@ gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstRtpMP2TDepay *rtpmp2tdepay;
   GstBuffer *outbuf;
   gint payload_len;
-  guint32 timestamp;
 
   rtpmp2tdepay = GST_RTP_MP2T_DEPAY (depayload);
 
@@ -185,15 +184,10 @@ gst_rtp_mp2t_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (G_UNLIKELY (payload_len <= rtpmp2tdepay->skip_first_bytes))
     goto empty_packet;
 
-  timestamp = gst_rtp_buffer_get_timestamp (buf);
-
   outbuf =
       gst_rtp_buffer_get_payload_subbuffer (buf, rtpmp2tdepay->skip_first_bytes,
       -1);
-
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
-  GST_BUFFER_TIMESTAMP (outbuf) =
-      gst_util_uint64_scale_int (timestamp, GST_SECOND, depayload->clock_rate);
 
   GST_DEBUG ("gst_rtp_mp2t_depay_chain: pushing buffer of size %d",
       GST_BUFFER_SIZE (outbuf));

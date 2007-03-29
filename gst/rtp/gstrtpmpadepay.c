@@ -161,7 +161,6 @@ gst_rtp_mpa_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     gint payload_len;
     guint8 *payload;
     guint16 frag_offset;
-    guint32 timestamp;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
@@ -179,16 +178,8 @@ gst_rtp_mpa_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
      */
     frag_offset = (payload[2] << 8) | payload[3];
 
-    payload_len -= 4;
-    payload += 4;
-
-    timestamp = gst_rtp_buffer_get_timestamp (buf);
-
-    outbuf = gst_buffer_new_and_alloc (payload_len);
-
-    //GST_BUFFER_TIMESTAMP (outbuf) = timestamp * GST_SECOND / 90000;
-
-    memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
+    /* subbuffer skipping the 4 header bytes */
+    outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 4, -1);
 
     GST_DEBUG_OBJECT (rtpmpadepay,
         "gst_rtp_mpa_depay_chain: pushing buffer of size %d",

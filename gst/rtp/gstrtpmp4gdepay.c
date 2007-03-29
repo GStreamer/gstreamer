@@ -276,7 +276,7 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     goto bad_packet;
 
   {
-    gint payload_len;
+    gint payload_len, payload_header;
     guint8 *payload;
     guint32 timestamp;
     guint AU_headers_len;
@@ -284,6 +284,7 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
+    payload_header = 0;
 
     if (rtpmp4gdepay->sizelength > 0) {
       /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- .. -+-+-+-+-+-+-+-+-+-+
@@ -298,6 +299,7 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
       /* skip header */
       payload += 2;
+      payload_header += 2;
       payload_len -= 2;
 
       /* FIXME, use bits */
@@ -309,14 +311,15 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
       /* skip special headers */
       payload += (AU_headers_len + 7) / 8;
+      payload_header += (AU_headers_len + 7) / 8;
       payload_len = AU_size;
     }
 
     timestamp = gst_rtp_buffer_get_timestamp (buf);
 
-    outbuf = gst_buffer_new_and_alloc (payload_len);
-    memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
-
+    /* strip header from payload and push in the adapter */
+    outbuf =
+        gst_rtp_buffer_get_payload_subbuffer (buf, payload_header, payload_len);
     gst_adapter_push (rtpmp4gdepay->adapter, outbuf);
 
     /* if this was the last packet of the VOP, create and push a buffer */
@@ -325,11 +328,7 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
       avail = gst_adapter_available (rtpmp4gdepay->adapter);
 
-      outbuf = gst_buffer_new ();
-      GST_BUFFER_SIZE (outbuf) = avail;
-      GST_BUFFER_MALLOCDATA (outbuf) =
-          gst_adapter_take (rtpmp4gdepay->adapter, avail);
-      GST_BUFFER_DATA (outbuf) = GST_BUFFER_MALLOCDATA (outbuf);
+      outbuf = gst_adapter_take_buffer (rtpmp4gdepay->adapter, avail);
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
       GST_BUFFER_TIMESTAMP (outbuf) = gst_util_uint64_scale_int
           (timestamp, GST_SECOND, depayload->clock_rate);

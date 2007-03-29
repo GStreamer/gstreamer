@@ -158,13 +158,13 @@ gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     goto bad_packet;
 
   {
-    gint payload_len;
+    gint payload_len, payload_header;
     guint8 *payload;
     guint8 T;
-    guint32 timestamp;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
+    payload_header = 0;
 
     if (payload_len <= 4)
       goto empty_packet;
@@ -181,6 +181,7 @@ gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     T = (payload[0] & 0x04);
 
     payload_len -= 4;
+    payload_header += 4;
     payload += 4;
 
     if (T) {
@@ -197,13 +198,11 @@ gst_rtp_mpv_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         goto empty_packet;
 
       payload_len -= 4;
+      payload_header += 4;
       payload += 4;
     }
 
-    timestamp = gst_rtp_buffer_get_timestamp (buf);
-
-    outbuf = gst_buffer_new_and_alloc (payload_len);
-    memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
+    outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, payload_header, -1);
 
     GST_DEBUG_OBJECT (rtpmpvdepay,
         "gst_rtp_mpv_depay_chain: pushing buffer of size %d",

@@ -123,19 +123,14 @@ static GstBuffer *
 gst_rtp_gsm_depay_process (GstBaseRTPDepayload * _depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf = NULL;
-  gint payload_len;
-  guint8 *payload;
 
   GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
       GST_BUFFER_SIZE (buf),
       gst_rtp_buffer_get_marker (buf),
       gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
-  payload = gst_rtp_buffer_get_payload (buf);
+  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 
-  outbuf = gst_buffer_new_and_alloc (payload_len);
-  memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
   return outbuf;
 }
 

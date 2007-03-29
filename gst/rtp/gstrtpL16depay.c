@@ -220,10 +220,8 @@ gst_rtp_L16_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   {
     gint payload_len;
-    guint8 *payload;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
-    payload = gst_rtp_buffer_get_payload (buf);
 
     if (payload_len <= 0)
       goto empty_packet;

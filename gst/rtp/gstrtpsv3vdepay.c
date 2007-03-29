@@ -252,14 +252,10 @@ gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (M) {
       /* frame is completed: push contents of adapter */
       guint avail;
-      guint8 *data;
       guint32 timestamp;
 
       avail = gst_adapter_available (rtpsv3vdepay->adapter);
-      data = gst_adapter_take (rtpsv3vdepay->adapter, avail);
-
-      /* create buffer with data */
-      outbuf = gst_rtp_buffer_new_take_data (data, avail);
+      outbuf = gst_adapter_take_buffer (rtpsv3vdepay->adapter, avail);
 
       /* timestamp for complete buffer is that of last buffer as well */
       timestamp = gst_rtp_buffer_get_timestamp (buf);

@@ -174,7 +174,6 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
   while (avail > 0) {
     guint towrite;
     guint8 *payload;
-    guint8 *data;
     guint payload_len;
     guint packet_len;
 
@@ -207,8 +206,7 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     payload[2] = frag_offset >> 8;
     payload[3] = frag_offset & 0xff;
 
-    data = (guint8 *) gst_adapter_peek (rtpmpapay->adapter, payload_len);
-    memcpy (&payload[4], data, payload_len);
+    gst_adapter_copy (rtpmpapay->adapter, &payload[4], 0, payload_len);
     gst_adapter_flush (rtpmpapay->adapter, payload_len);
 
     avail -= payload_len;

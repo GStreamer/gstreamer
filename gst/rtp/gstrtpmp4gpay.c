@@ -453,7 +453,6 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
   while (avail > 0) {
     guint towrite;
     guint8 *payload;
-    guint8 *data;
     guint payload_len;
     guint packet_len;
 
@@ -511,9 +510,8 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
     payload[2] = (total & 0x1fe0) >> 5;
     payload[3] = (total & 0x1f) << 3;   /* we use 13 bits for the size, 3 bits index */
 
-    data = (guint8 *) gst_adapter_peek (rtpmp4gpay->adapter, payload_len);
-    memcpy (&payload[4], data, payload_len);
-
+    /* copy stuff from adapter to payload */
+    gst_adapter_copy (rtpmp4gpay->adapter, &payload[4], 0, payload_len);
     gst_adapter_flush (rtpmp4gpay->adapter, payload_len);
 
     /* marker only if the packet is complete */

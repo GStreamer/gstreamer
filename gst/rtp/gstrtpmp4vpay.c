@@ -262,7 +262,6 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
   while (avail > 0) {
     guint towrite;
     guint8 *payload;
-    guint8 *data;
     guint payload_len;
     guint packet_len;
 
@@ -280,9 +279,8 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
 
     /* copy payload */
     payload = gst_rtp_buffer_get_payload (outbuf);
-    data = (guint8 *) gst_adapter_peek (rtpmp4vpay->adapter, payload_len);
-    memcpy (payload, data, payload_len);
 
+    gst_adapter_copy (rtpmp4vpay->adapter, payload, 0, payload_len);
     gst_adapter_flush (rtpmp4vpay->adapter, payload_len);
 
     avail -= payload_len;

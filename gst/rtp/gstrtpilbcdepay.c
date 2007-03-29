@@ -169,18 +169,13 @@ static GstBuffer *
 gst_rtp_ilbc_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstBuffer *outbuf = NULL;
-  gint payload_len;
-  gint header_len;
 
   GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
       GST_BUFFER_SIZE (buf),
       gst_rtp_buffer_get_marker (buf),
       gst_rtp_buffer_get_timestamp (buf), gst_rtp_buffer_get_seq (buf));
 
-  payload_len = gst_rtp_buffer_get_payload_len (buf);
-  header_len = gst_rtp_buffer_calc_header_len (0);
-
-  outbuf = gst_buffer_create_sub (buf, header_len, payload_len);
+  outbuf = gst_rtp_buffer_get_payload_buffer (buf);
 
   return outbuf;
 }
