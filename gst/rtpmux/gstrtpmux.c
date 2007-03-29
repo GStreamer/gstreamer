@@ -288,10 +288,8 @@ gst_rtp_mux_get_buffer_ts_base (GstRTPMux * rtp_mux, GstBuffer * buffer)
 
   if (value) 
     ts_base = g_value_get_uint (value);
-  else {
+  else
     ts_base = 0;
-    GST_DEBUG_OBJECT (rtp_mux, "no cloc-base on structure: %s", gst_structure_to_string (structure));
-  }
   
   gst_caps_unref (caps);
   
@@ -450,6 +448,7 @@ gst_rtp_mux_change_state (GstElement * element, GstStateChange transition)
         rtp_mux->ts_base = g_random_int ();
       else
         rtp_mux->ts_base = rtp_mux->ts_offset;
+      GST_DEBUG_OBJECT (rtp_mux, "set clock-base to %u", rtp_mux->ts_base);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
