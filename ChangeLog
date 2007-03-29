@@ -1,3 +1,11 @@
+2007-03-29  Andy Wingo  <wingo@pobox.com>
+
+	* gst/videorate/gstvideorate.c (gst_video_rate_flush_prev): Make
+	perfect offsets also, not just timestamps.
+
+	* tests/check/elements/videorate.c (test_more): Test that given
+	any incoming offsets, that videorate produces perfect offsets.
+
 2007-03-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/riff/riff-ids.h:

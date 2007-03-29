@@ -438,6 +438,9 @@ gst_video_rate_flush_prev (GstVideoRate * videorate)
   outbuf = gst_buffer_make_metadata_writable
       (gst_buffer_ref (videorate->prevbuf));
 
+  GST_BUFFER_OFFSET (outbuf) = videorate->out;
+  GST_BUFFER_OFFSET_END (outbuf) = videorate->out + 1;
+
   /* this is the timestamp we put on the buffer */
   push_ts = videorate->next_ts;
 

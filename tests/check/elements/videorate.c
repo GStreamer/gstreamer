@@ -153,6 +153,7 @@ GST_START_TEST (test_more)
   GstBuffer *first, *second, *third, *outbuffer;
   GList *l;
   GstCaps *caps;
+  GRand *rand;
 
   videorate = setup_videorate ();
   fail_unless (gst_element_set_state (videorate,
@@ -160,9 +161,15 @@ GST_START_TEST (test_more)
       "could not set to playing");
   assert_videorate_stats (videorate, "creation", 0, 0, 0, 0);
 
+  rand = g_rand_new ();
+
   /* first buffer */
   first = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (first) = 0;
+  /* it shouldn't matter what the offsets are, videorate produces perfect
+     streams */
+  GST_BUFFER_OFFSET (first) = g_rand_int (rand);
+  GST_BUFFER_OFFSET_END (first) = g_rand_int (rand);
   memset (GST_BUFFER_DATA (first), 1, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (first, caps);
@@ -180,6 +187,8 @@ GST_START_TEST (test_more)
   /* second buffer; inbetween second and third output frame's timestamp */
   second = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (second) = GST_SECOND * 3 / 50;
+  GST_BUFFER_OFFSET (first) = g_rand_int (rand);
+  GST_BUFFER_OFFSET_END (first) = g_rand_int (rand);
   memset (GST_BUFFER_DATA (second), 2, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (second, caps);
@@ -203,6 +212,8 @@ GST_START_TEST (test_more)
   /* third buffer */
   third = gst_buffer_new_and_alloc (4);
   GST_BUFFER_TIMESTAMP (third) = GST_SECOND * 12 / 50;
+  GST_BUFFER_OFFSET (first) = g_rand_int (rand);
+  GST_BUFFER_OFFSET_END (first) = g_rand_int (rand);
   memset (GST_BUFFER_DATA (third), 3, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (third, caps);
@@ -222,17 +233,28 @@ GST_START_TEST (test_more)
   l = buffers;
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data), 0);
   fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 1);
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), 0);
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), 1);
+
   l = g_list_next (l);
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data), GST_SECOND / 25);
   fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 2);
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), 1);
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), 2);
+
   l = g_list_next (l);
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data),
       GST_SECOND * 2 / 25);
   fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 2);
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), 2);
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), 3);
+
   l = g_list_next (l);
   fail_unless_equals_uint64 (GST_BUFFER_TIMESTAMP (l->data),
       GST_SECOND * 3 / 25);
   fail_unless_equals_int (GST_BUFFER_DATA (l->data)[0], 2);
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET (l->data), 3);
+  fail_unless_equals_uint64 (GST_BUFFER_OFFSET_END (l->data), 4);
 
   fail_unless_equals_int (g_list_length (buffers), 4);
   /* one held by us, three held by each output frame taken from the second */
@@ -247,6 +269,7 @@ GST_START_TEST (test_more)
   fail_unless_equals_int (g_list_length (buffers), 5);
 
   /* cleanup */
+  g_rand_free (rand);
   gst_buffer_unref (first);
   gst_buffer_unref (second);
   gst_buffer_unref (third);
