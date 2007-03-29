@@ -395,7 +395,7 @@ gst_rtp_mux_get_property (GObject * object,
       g_value_set_uint (value, rtp_mux->clock_rate);
       break;
     case PROP_TIMESTAMP_OFFSET:
-      g_value_set_uint (value, rtp_mux->ts_offset);
+      g_value_set_int (value, rtp_mux->ts_offset);
       break;
     case PROP_SEQNUM_OFFSET:
       g_value_set_int (value, rtp_mux->seqnum_offset);
