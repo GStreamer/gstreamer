@@ -756,12 +756,13 @@ gst_riff_create_audio_caps (guint16 codec_id,
         gint ba = strf->blockalign;
         gint ch = strf->channels;
         gint ws = strf->size;
+        gint wd = ba * 8 / ch;
 
         caps = gst_caps_new_simple ("audio/x-raw-int",
             "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
             "channels", G_TYPE_INT, ch,
-            "width", G_TYPE_INT, (int) (ba * 8 / ch),
-            "depth", G_TYPE_INT, ws, "signed", G_TYPE_BOOLEAN, ws != 8, NULL);
+            "width", G_TYPE_INT, wd,
+            "depth", G_TYPE_INT, ws, "signed", G_TYPE_BOOLEAN, wd != 8, NULL);
 
         /* Add default MS channel layout if we have more than 2 channels,
          * but the layout isn't specified like with WAVEEXT below. Not sure

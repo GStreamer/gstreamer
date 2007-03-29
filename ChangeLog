@@ -1,3 +1,9 @@
+2007-03-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	PCM samples with width=8 must be always unsigned, no matter what
+	depth they have.
+
 2007-03-29  Andy Wingo  <wingo@pobox.com>
 
 	* gst/videorate/gstvideorate.c (gst_video_rate_flush_prev): Make
