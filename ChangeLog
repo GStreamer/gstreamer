@@ -2,6 +2,26 @@
 
 	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
 
+	* gst/udp/gstdynudpsink.c: (gst_dynudpsink_class_init),
+	(gst_dynudpsink_init), (gst_dynudpsink_set_property),
+	(gst_dynudpsink_get_property), (gst_dynudpsink_init_send),
+	(gst_dynudpsink_close):
+	* gst/udp/gstdynudpsink.h:
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init), (gst_udpsrc_init),
+	(gst_udpsrc_create), (gst_udpsrc_set_property),
+	(gst_udpsrc_get_property), (gst_udpsrc_start), (gst_udpsrc_stop):
+	* gst/udp/gstudpsrc.h:
+	Rework the socket allocation a bit based on the sockfd argument so that
+	it becomes usable.
+	Add a closefd property to instruct the udp elements to close the custom
+	file descriptors when going to READY. Fixes #423304.
+	API:GstUDPSrc::closefd property
+	API:GstDynUDPSink::closefd property
+
+2007-03-29  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
+
 	* gst/rtp/Makefile.am:
 	* gst/rtp/gstrtp.c: (plugin_init):
 	* gst/rtp/gstrtph264pay.c: (gst_rtp_h264_pay_base_init),

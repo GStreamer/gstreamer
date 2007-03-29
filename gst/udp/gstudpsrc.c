@@ -103,7 +103,14 @@
  * because it is blocked by a firewall.
  * </para>
  * <para>
- * Last reviewed on 2007-03-02 (0.10.6)
+ * A custom file descriptor can be configured with the 
+ * <link linkend="GstUDPSrc--sockfd">sockfd property</link>. The socket will be
+ * closed when setting the element to READY by default. This behaviour can be
+ * overriden with the <link linkend="GstUDPSrc--closefd">closefd property</link>,
+ * in which case the application is responsible for closing the file descriptor.
+ * </para>
+ * <para>
+ * Last reviewed on 2007-03-29 (0.10.6)
  * </para>
  * </refsect2>
  */
@@ -146,6 +153,11 @@ G_STMT_START {                                  \
   res = read(READ_SOCKET(src), &command, 1);    \
 } G_STMT_END
 
+#define CLOSE_IF_REQUESTED(udpctx)                                        \
+  if ((!udpctx->externalfd) || (udpctx->externalfd && udpctx->closefd))   \
+    CLOSE_SOCKET(udpctx->sock);                                           \
+  udpctx->sock = -1;
+
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -166,6 +178,7 @@ GST_ELEMENT_DETAILS ("UDP packet receiver",
 #define UDP_DEFAULT_BUFFER_SIZE		0
 #define UDP_DEFAULT_TIMEOUT             0
 #define UDP_DEFAULT_SKIP_FIRST_BYTES	0
+#define UDP_DEFAULT_CLOSEFD            TRUE
 
 enum
 {
@@ -177,7 +190,8 @@ enum
   PROP_SOCKFD,
   PROP_BUFFER_SIZE,
   PROP_TIMEOUT,
-  PROP_SKIP_FIRST_BYTES
+  PROP_SKIP_FIRST_BYTES,
+  PROP_CLOSEFD
 };
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
@@ -268,6 +282,10 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
       PROP_SKIP_FIRST_BYTES, g_param_spec_int ("skip-first-bytes",
           "Skip first bytes", "number of bytes to skip for each udp packet", 0,
           G_MAXINT, UDP_DEFAULT_SKIP_FIRST_BYTES, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_CLOSEFD,
+      g_param_spec_boolean ("closefd", "Close sockfd",
+          "Close sockfd if passed as property on state change",
+          UDP_DEFAULT_CLOSEFD, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
@@ -284,13 +302,16 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
 
   gst_base_src_set_live (GST_BASE_SRC (udpsrc), TRUE);
   udpsrc->port = UDP_DEFAULT_PORT;
-  udpsrc->sock = UDP_DEFAULT_SOCKFD;
+  udpsrc->sockfd = UDP_DEFAULT_SOCKFD;
   udpsrc->multi_group = g_strdup (UDP_DEFAULT_MULTICAST_GROUP);
   udpsrc->uri = g_strdup (UDP_DEFAULT_URI);
   udpsrc->buffer_size = UDP_DEFAULT_BUFFER_SIZE;
   udpsrc->timeout = UDP_DEFAULT_TIMEOUT;
   udpsrc->skip_first_bytes = UDP_DEFAULT_SKIP_FIRST_BYTES;
+  udpsrc->closefd = UDP_DEFAULT_CLOSEFD;
+  udpsrc->externalfd = (udpsrc->sockfd != -1);
 
+  udpsrc->sock = -1;
   udpsrc->control_sock[0] = -1;
   udpsrc->control_sock[1] = -1;
 }
@@ -606,14 +627,17 @@ gst_udpsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       break;
     }
     case PROP_SOCKFD:
-      udpsrc->sock = g_value_get_int (value);
-      GST_DEBUG ("setting SOCKFD to %d", udpsrc->sock);
+      udpsrc->sockfd = g_value_get_int (value);
+      GST_DEBUG ("setting SOCKFD to %d", udpsrc->sockfd);
       break;
     case PROP_TIMEOUT:
       udpsrc->timeout = g_value_get_uint64 (value);
       break;
     case PROP_SKIP_FIRST_BYTES:
       udpsrc->skip_first_bytes = g_value_get_int (value);
+      break;
+    case PROP_CLOSEFD:
+      udpsrc->closefd = g_value_get_boolean (value);
       break;
     default:
       break;
@@ -643,13 +667,16 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       gst_value_set_caps (value, udpsrc->caps);
       break;
     case PROP_SOCKFD:
-      g_value_set_int (value, udpsrc->sock);
+      g_value_set_int (value, udpsrc->sockfd);
       break;
     case PROP_TIMEOUT:
       g_value_set_uint64 (value, udpsrc->timeout);
       break;
     case PROP_SKIP_FIRST_BYTES:
       g_value_set_int (value, udpsrc->skip_first_bytes);
+      break;
+    case PROP_CLOSEFD:
+      g_value_set_boolean (value, udpsrc->closefd);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -691,11 +718,13 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   if (!inet_aton (src->multi_group, &(src->multi_addr.imr_multiaddr)))
     src->multi_addr.imr_multiaddr.s_addr = 0;
 
-  if (src->sock == -1) {
+  if (src->sockfd == -1) {
+    /* need to allocate a socket */
     if ((ret = socket (PF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
       goto no_socket;
 
     src->sock = ret;
+    src->externalfd = FALSE;
 
     reuse = 1;
     if ((ret =
@@ -716,6 +745,10 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     if ((ret = bind (src->sock, (struct sockaddr *) &src->myaddr,
                 sizeof (src->myaddr))) < 0)
       goto bind_error;
+  } else {
+    /* we use the configured socket */
+    src->sock = src->sockfd;
+    src->externalfd = TRUE;
   }
 
   if (src->multi_addr.imr_multiaddr.s_addr) {
@@ -784,40 +817,35 @@ no_socket:
   }
 setsockopt_error:
   {
-    CLOSE_SOCKET (src->sock);
-    src->sock = -1;
+    CLOSE_IF_REQUESTED (src);
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("setsockopt failed %d: %s (%d)", ret, g_strerror (errno), errno));
     return FALSE;
   }
 bind_error:
   {
-    CLOSE_SOCKET (src->sock);
-    src->sock = -1;
+    CLOSE_IF_REQUESTED (src);
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("bind failed %d: %s (%d)", ret, g_strerror (errno), errno));
     return FALSE;
   }
 membership:
   {
-    CLOSE_SOCKET (src->sock);
-    src->sock = -1;
+    CLOSE_IF_REQUESTED (src);
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("could add membership %d: %s (%d)", ret, g_strerror (errno), errno));
     return FALSE;
   }
 getsockname_error:
   {
-    CLOSE_SOCKET (src->sock);
-    src->sock = -1;
+    CLOSE_IF_REQUESTED (src);
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("getsockname failed %d: %s (%d)", ret, g_strerror (errno), errno));
     return FALSE;
   }
 udpbuffer_error:
   {
-    CLOSE_SOCKET (src->sock);
-    src->sock = -1;
+    CLOSE_IF_REQUESTED (src);
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Could not create a buffer of the size requested, %d: %s (%d)", ret,
             g_strerror (errno), errno));
@@ -825,8 +853,7 @@ udpbuffer_error:
   }
 no_broadcast:
   {
-    CLOSE_SOCKET (src->sock);
-    src->sock = -1;
+    CLOSE_IF_REQUESTED (src);
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("could not configure socket for broadcast %d: %s (%d)", ret,
             g_strerror (errno), errno));
@@ -859,8 +886,7 @@ gst_udpsrc_stop (GstBaseSrc * bsrc)
   GST_DEBUG ("stopping, closing sockets");
 
   if (src->sock != -1) {
-    CLOSE_SOCKET (src->sock);
-    src->sock = -1;
+    CLOSE_IF_REQUESTED (src);
   }
 
   /* pipes on WIN32 else sockets */

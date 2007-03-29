@@ -60,10 +60,13 @@ struct _GstUDPSrc {
   gint     buffer_size;
   guint64  timeout;
   gint     skip_first_bytes;
+  int      sockfd;
+  gboolean closefd;
 
   /* our sockets */
   int      sock;
   int      control_sock[2];
+  gboolean externalfd;
 
   struct   sockaddr_in myaddr;
   struct   ip_mreq multi_addr;

@@ -54,7 +54,13 @@ typedef struct _GstDynUDPSinkClass GstDynUDPSinkClass;
 struct _GstDynUDPSink {
   GstBaseSink parent;
 
+  /* properties */
+  gint sockfd;
+  gboolean closefd;
+
+  /* the socket in use */
   int sock;
+  gboolean externalfd;
 };
 
 struct _GstDynUDPSinkClass {
