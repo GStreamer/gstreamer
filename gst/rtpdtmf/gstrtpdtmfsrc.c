@@ -567,20 +567,21 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
   }
   dtmfsrc->seqnum++;
   gst_rtp_buffer_set_seq (buf, dtmfsrc->seqnum);
+  
+  /* timestamp of RTP header */
+  gst_rtp_dtmf_src_calc_rtp_timestamp (dtmfsrc);
+  gst_rtp_buffer_set_timestamp (buf, dtmfsrc->rtp_timestamp);
+
+  /* duration of DTMF payload */
+  dtmfsrc->payload->duration +=
+      DEFAULT_PACKET_INTERVAL * dtmfsrc->clock_rate / 1000;
 
   /* timestamp and duration of GstBuffer */ 
   GST_BUFFER_DURATION (buf) = DEFAULT_PACKET_INTERVAL * GST_MSECOND;
   dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
   
-  /* duration of DTMF payload */
-  dtmfsrc->payload->duration +=
-      DEFAULT_PACKET_INTERVAL * dtmfsrc->clock_rate / 1000;
-
   payload = (GstRTPDTMFPayload *) gst_rtp_buffer_get_payload (buf);
-  /* timestamp of RTP header */
-  gst_rtp_dtmf_src_calc_rtp_timestamp (dtmfsrc);
-  gst_rtp_buffer_set_timestamp (buf, dtmfsrc->rtp_timestamp);
   
   /* copy payload and convert to network-byte order */
   g_memmove (payload, dtmfsrc->payload, sizeof (GstRTPDTMFPayload));
