@@ -78,14 +78,15 @@ GST_ELEMENT_DETAILS ("WAV audio muxer",
     "rate = (int) [ 1, MAX ], "          \
     "channels = (int) [ 1, 2 ], "        \
     "endianness = (int) LITTLE_ENDIAN, " \
-    "width = (int) 16, "                 \
-    "depth = (int) 16, "                 \
+    "width = (int) { 16, 24, 32 }, "     \
+    "depth = (int) [ 1, 32 ], "          \
     "signed = (boolean) true"            \
     "; "                                 \
     "audio/x-raw-int, "                  \
     "rate = (int) [ 1, MAX ], "          \
     "channels = (int) [ 1, 2 ], "        \
     "width = (int) 8, "                  \
+    "depth = (int) [ 1, 8 ], "           \
     "signed = (boolean) false"
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -154,7 +155,6 @@ gst_wavenc_init (GstWavEnc * wavenc, GstWavEncClass * klass)
 
 #define WAV_HEADER_LEN 44
 
-/* FIXME: we are probably not handling depth != width correctly here */
 static GstBuffer *
 gst_wavenc_create_header_buf (GstWavEnc * wavenc, guint audio_data_size)
 {
@@ -179,11 +179,9 @@ gst_wavenc_create_header_buf (GstWavEnc * wavenc, guint audio_data_size)
   wave.format.len = 16;
 
   wave.common.wFormatTag = WAVE_FORMAT_PCM;
-  wave.common.dwAvgBytesPerSec =
-      wave.common.wChannels * wave.common.dwSamplesPerSec *
-      (wave.common.wBitsPerSample >> 3);
-  wave.common.wBlockAlign =
-      wave.common.wChannels * (wave.common.wBitsPerSample >> 3);
+  wave.common.wBlockAlign = (wavenc->width / 8) * wave.common.wChannels;
+  wave.common.dwAvgBytesPerSec = wave.common.wBlockAlign *
+      wave.common.dwSamplesPerSec;
 
   memcpy (wave.data.id, "data", 4);
   wave.data.len = audio_data_size;
@@ -253,14 +251,14 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (!gst_structure_get_int (structure, "channels", &chans) ||
       !gst_structure_get_int (structure, "rate", &rate) ||
       !gst_structure_get_int (structure, "width", &width) ||
-      (width != 8 && !gst_structure_get_int (structure, "depth", &depth))) {
+      !gst_structure_get_int (structure, "depth", &depth)) {
     GST_WARNING_OBJECT (wavenc, "caps incomplete");
     goto fail;
   }
 
   wavenc->channels = chans;
   wavenc->width = width;
-  wavenc->depth = (width == 8) ? 8 : depth;
+  wavenc->depth = depth;
   wavenc->rate = rate;
 
   GST_LOG_OBJECT (wavenc, "accepted caps: chans=%u width=%u depth=%u rate=%u",

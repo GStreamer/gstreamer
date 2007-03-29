@@ -1,3 +1,12 @@
+2007-03-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_create_header_buf),
+	(gst_wavenc_sink_setcaps):
+	Correctly handle width!=depth input.
+	* gst/wavparse/gstwavparse.c:
+	Already export in the caps that width==8 uses unsigned samples and
+	everything else uses signed samples.
+
 2007-03-29  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
