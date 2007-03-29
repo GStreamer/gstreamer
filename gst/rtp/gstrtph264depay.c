@@ -127,17 +127,14 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstbasertpdepayload_class = (GstBaseRTPDepayloadClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
-  gstbasertpdepayload_class->process = gst_rtp_h264_depay_process;
-  gstbasertpdepayload_class->set_caps = gst_rtp_h264_depay_setcaps;
-
   gobject_class->finalize = gst_rtp_h264_depay_finalize;
-
   gobject_class->set_property = gst_rtp_h264_depay_set_property;
   gobject_class->get_property = gst_rtp_h264_depay_get_property;
 
   gstelement_class->change_state = gst_rtp_h264_depay_change_state;
+
+  gstbasertpdepayload_class->process = gst_rtp_h264_depay_process;
+  gstbasertpdepayload_class->set_caps = gst_rtp_h264_depay_setcaps;
 
   GST_DEBUG_CATEGORY_INIT (rtph264depay_debug, "rtph264depay", 0,
       "H264 Video RTP Depayloader");
@@ -221,9 +218,9 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
 
-  if (gst_structure_has_field (structure, "clock-rate")) {
+  if (gst_structure_has_field (structure, "clock-rate"))
     gst_structure_get_int (structure, "clock-rate", &clock_rate);
-  }
+  depayload->clock_rate = clock_rate;
 
   srccaps = gst_caps_new_simple ("video/x-h264", NULL);
 
@@ -262,8 +259,6 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
      * packetize for us */
     gst_adapter_push (rtph264depay->adapter, codec_data);
   }
-
-  depayload->clock_rate = clock_rate;
 
   gst_pad_set_caps (depayload->srcpad, srccaps);
   gst_caps_unref (srccaps);
