@@ -474,9 +474,8 @@ gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc,
   dtmfsrc->first_packet = TRUE;
 
   clock = GST_ELEMENT_CLOCK (dtmfsrc);
-  if (clock != NULL) {
+  if (clock != NULL)
     dtmfsrc->timestamp = gst_clock_get_time (GST_ELEMENT_CLOCK (dtmfsrc));
-  }
 
   else {
     GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", GST_ELEMENT_NAME (dtmfsrc));
@@ -633,10 +632,12 @@ gst_rtp_dtmf_src_set_caps (GstRTPDTMFSrc *dtmfsrc)
       "clock-base", G_TYPE_UINT, dtmfsrc->ts_base,
       "seqnum-base", G_TYPE_UINT, dtmfsrc->seqnum_base, NULL);
 
-  if (!gst_pad_set_caps (dtmfsrc->srcpad, caps)) {
+  if (!gst_pad_set_caps (dtmfsrc->srcpad, caps))
     GST_ERROR_OBJECT (dtmfsrc,
             "Failed to set caps %" GST_PTR_FORMAT " on src pad", caps);
-  }
+  else
+    GST_DEBUG_OBJECT (dtmfsrc,
+            "caps %" GST_PTR_FORMAT " set on src pad", caps);
 
   gst_caps_unref (caps);
 }
