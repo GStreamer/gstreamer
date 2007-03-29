@@ -41,6 +41,7 @@
 <!ENTITY GstBaseRtpDepayload SYSTEM "xml/gstbasertpdepayload.xml">
 <!ENTITY GstBaseRtpPayload SYSTEM "xml/gstbasertppayload.xml">
 <!ENTITY GstRtpBuffer SYSTEM "xml/gstrtpbuffer.xml">
+<!ENTITY GstRtcpBuffer SYSTEM "xml/gstrtcpbuffer.xml">
 <!-- tag -->
 <!ENTITY GstTag SYSTEM "xml/gsttag.xml">
 <!ENTITY GstTagVorbis SYSTEM "xml/gsttagvorbis.xml">
@@ -164,6 +165,7 @@
       &GstBaseRtpDepayload;
       &GstBaseRtpPayload;
       &GstRtpBuffer;
+      &GstRtcpBuffer;
     </chapter>
 
     <chapter id="gstreamer-tag">

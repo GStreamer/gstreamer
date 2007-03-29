@@ -598,6 +598,19 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
   return ret;
 }
 
+/**
+ * gst_base_rtp_audio_payload_push:
+ * @basepayload: a #GstBaseRTPPayload
+ * @data: data to set as payload
+ * @payload_len: length of payload
+ * @timestamp: a #GstClockTime
+ *
+ * Create an RTP buffer and store @payload_len bytes of @data as the
+ * payload. Set the timestamp on the new buffer to @timestamp before pushing
+ * the buffer downstream.
+ *
+ * Returns: a #GstFlowReturn
+ */
 GstFlowReturn
 gst_base_rtp_audio_payload_push (GstBaseRTPPayload * basepayload,
     const guint8 * data, guint payload_len, GstClockTime timestamp)
@@ -712,14 +725,22 @@ gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event,
   return res;
 }
 
+/**
+ * gst_base_rtp_audio_payload_get_adapter:
+ * @basertpaudiopayload: a #GstBaseRTPAudioPayload
+ *
+ * Gets the internal adapter used by the depayloader.
+ *
+ * Returns: a #GstAdapter.
+ */
 GstAdapter *
 gst_base_rtp_audio_payload_get_adapter (GstBaseRTPAudioPayload
     * basertpaudiopayload)
 {
-  if (basertpaudiopayload->priv->adapter == NULL) {
-    return NULL;
-  }
+  GstAdapter *adapter;
 
-  g_object_ref (G_OBJECT (basertpaudiopayload->priv->adapter));
-  return basertpaudiopayload->priv->adapter;
+  if ((adapter = basertpaudiopayload->priv->adapter))
+    g_object_ref (adapter);
+
+  return adapter;
 }

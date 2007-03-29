@@ -93,6 +93,7 @@ GST_AUDIO_SRC_GET_CLASS
 <INCLUDE>gst/audio/gstbaseaudiosink.h</INCLUDE>
 GstBaseAudioSink
 GstBaseAudioSinkClass
+GstBaseAudioSinkSlaveMethod
 
 GST_BASE_AUDIO_SINK_CLOCK
 GST_BASE_AUDIO_SINK_PAD
@@ -105,6 +106,7 @@ gst_base_audio_sink_get_type
 GST_BASE_AUDIO_SINK_CLASS
 GST_IS_BASE_AUDIO_SINK_CLASS
 GST_BASE_AUDIO_SINK_GET_CLASS
+GstBaseAudioSinkPrivate
 </SECTION>
 
 <SECTION>
@@ -745,6 +747,8 @@ gst_base_rtp_audio_payload_set_frame_based
 gst_base_rtp_audio_payload_set_frame_options
 gst_base_rtp_audio_payload_set_sample_based
 gst_base_rtp_audio_payload_set_sample_options
+gst_base_rtp_audio_payload_get_adapter
+gst_base_rtp_audio_payload_push
 <SUBSECTION Standard>
 GST_TYPE_BASE_RTP_AUDIO_PAYLOAD
 GST_BASE_RTP_AUDIO_PAYLOAD
@@ -752,6 +756,7 @@ GST_BASE_RTP_AUDIO_PAYLOAD_CLASS
 GST_IS_BASE_RTP_AUDIO_PAYLOAD
 GST_IS_BASE_RTP_AUDIO_PAYLOAD_CLASS
 gst_base_rtp_audio_payload_get_type
+GstBaseRTPAudioPayloadPrivate
 </SECTION>
 
 <SECTION>
@@ -763,7 +768,11 @@ GstBaseRTPDepayloadClass
 GST_BASE_RTP_DEPAYLOAD_SINKPAD
 GST_BASE_RTP_DEPAYLOAD_SRCPAD
 
+gst_base_rtp_depayload_push
+gst_base_rtp_depayload_push_ts
+
 <SUBSECTION Standard>
+GstBaseRTPDepayloadPrivate
 GST_TYPE_BASE_RTP_DEPAYLOAD
 GST_BASE_RTP_DEPAYLOAD
 GST_BASE_RTP_DEPAYLOAD_CLASS
@@ -799,6 +808,58 @@ gst_basertppayload_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstrtcpbuffer</FILE>
+<INCLUDE>gst/rtp/gstrtcpbuffer.h</INCLUDE>
+
+GST_RTCP_VERSION
+
+GST_RTCP_MAX_SDES
+GST_RTCP_VALID_MASK
+GST_RTCP_VALID_VALUE
+
+GstRTCPType
+GstRTCPPacket
+GstRTCPSDESType
+
+gst_rtcp_buffer_add_packet
+gst_rtcp_buffer_get_first_packet
+gst_rtcp_buffer_get_packet_count
+gst_rtcp_buffer_new_copy_data
+gst_rtcp_buffer_new_take_data
+gst_rtcp_buffer_validate
+gst_rtcp_buffer_validate_data
+gst_rtcp_packet_add_rb
+gst_rtcp_packet_bye_add_ssrc
+gst_rtcp_packet_bye_add_ssrcs
+gst_rtcp_packet_bye_get_nth_ssrc
+gst_rtcp_packet_bye_get_reason
+gst_rtcp_packet_bye_get_reason_len
+gst_rtcp_packet_bye_get_ssrc_count
+gst_rtcp_packet_bye_set_reason
+gst_rtcp_packet_get_count
+gst_rtcp_packet_get_length
+gst_rtcp_packet_get_padding
+gst_rtcp_packet_get_rb
+gst_rtcp_packet_get_rb_count
+gst_rtcp_packet_get_type
+gst_rtcp_packet_move_to_next
+gst_rtcp_packet_remove
+gst_rtcp_packet_rr_get_ssrc
+gst_rtcp_packet_rr_set_ssrc
+gst_rtcp_packet_sdes_first_chunk
+gst_rtcp_packet_sdes_first_item
+gst_rtcp_packet_sdes_get_chunk_count
+gst_rtcp_packet_sdes_get_item
+gst_rtcp_packet_sdes_get_ssrc
+gst_rtcp_packet_sdes_next_chunk
+gst_rtcp_packet_sdes_next_item
+gst_rtcp_packet_set_rb
+gst_rtcp_packet_sr_get_sender_info
+gst_rtcp_packet_sr_set_sender_info
+<SUBSECTION Standard>
+</SECTION>
+
+<SECTION>
 <FILE>gstrtpbuffer</FILE>
 <INCLUDE>gst/rtp/gstrtpbuffer.h</INCLUDE>
 GstRTPPayload
@@ -809,6 +870,7 @@ gst_rtp_buffer_allocate_data
 gst_rtp_buffer_calc_header_len
 gst_rtp_buffer_calc_packet_len
 gst_rtp_buffer_calc_payload_len
+gst_rtp_buffer_default_clock_rate
 gst_rtp_buffer_get_csrc
 gst_rtp_buffer_get_csrc_count
 gst_rtp_buffer_get_extension
@@ -857,6 +919,26 @@ GST_RTP_PAYLOAD_PCMA_STRING
 GST_RTP_PAYLOAD_PCMU_STRING
 GST_RTP_PAYLOAD_TS41_STRING
 GST_RTP_PAYLOAD_TS48_STRING
+GST_RTP_PAYLOAD_1016_STRING
+GST_RTP_PAYLOAD_CELLB_STRING
+GST_RTP_PAYLOAD_CN_STRING
+GST_RTP_PAYLOAD_DVI4_11025_STRING
+GST_RTP_PAYLOAD_DVI4_16000_STRING
+GST_RTP_PAYLOAD_DVI4_22050_STRING
+GST_RTP_PAYLOAD_DVI4_8000_STRING
+GST_RTP_PAYLOAD_G721_STRING
+GST_RTP_PAYLOAD_G722_STRING
+GST_RTP_PAYLOAD_G723_53
+GST_RTP_PAYLOAD_G723_63
+GST_RTP_PAYLOAD_G723_STRING
+GST_RTP_PAYLOAD_H261_STRING
+GST_RTP_PAYLOAD_JPEG_STRING
+GST_RTP_PAYLOAD_LPC_STRING
+GST_RTP_PAYLOAD_MP2T_STRING
+GST_RTP_PAYLOAD_NV_STRING
+GST_RTP_PAYLOAD_QCELP_STRING
+GST_RTP_PAYLOAD_TS41
+GST_RTP_PAYLOAD_TS48
 </SECTION>
 
 # tag
