@@ -1,5 +1,10 @@
 2007-03-29  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/riff/riff-ids.h:
+	Add some more RIFF formats.
+
+2007-03-29  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/rtp/gstrtpbuffer.c:
 	(gst_rtp_buffer_default_clock_rate):
 	* gst-libs/gst/rtp/gstrtpbuffer.h:
