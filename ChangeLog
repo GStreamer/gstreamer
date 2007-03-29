@@ -1,5 +1,11 @@
 2007-03-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/gstclock.c: (gst_clock_set_master), (do_linear_regression):
+	Move all the debug to the CLOCK category, and associate it with
+	the clock object.
+
+2007-03-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* libs/gst/base/gstadapter.c: (gst_adapter_take_buffer):
 	Make take_buffer a bit quicker by removing redundant checks
 	caused by calling gst_adapter_take.

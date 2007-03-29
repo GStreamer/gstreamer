@@ -974,7 +974,8 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
   if (master && !GST_OBJECT_FLAG_IS_SET (clock, GST_CLOCK_FLAG_CAN_SET_MASTER))
     goto not_supported;
 
-  GST_DEBUG_OBJECT (clock, "slaving to master clock %p", master);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+      "slaving %p to master clock %p", clock, master);
   master_p = &clock->master;
   gst_object_replace ((GstObject **) master_p, (GstObject *) master);
   GST_OBJECT_UNLOCK (clock);
@@ -1002,7 +1003,8 @@ gst_clock_set_master (GstClock * clock, GstClock * master)
   /* ERRORS */
 not_supported:
   {
-    GST_DEBUG_OBJECT (clock, "cannot be slaved to a master clock");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "cannot be slaved to a master clock");
     GST_OBJECT_UNLOCK (clock);
     return FALSE;
   }
@@ -1057,9 +1059,10 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   n = clock->filling ? clock->time_index : clock->window_size;
 
 #ifdef DEBUGGING_ENABLED
-  GST_DEBUG ("doing regression on:");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "doing regression on:");
   for (i = j = 0; i < n; i++, j += 4)
-    GST_DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, x[j], y[j]);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, x[j], y[j]);
 #endif
 
   xmin = ymin = G_MAXUINT64;
@@ -1069,8 +1072,10 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   }
 
 #ifdef DEBUGGING_ENABLED
-  GST_DEBUG ("min x: %" G_GUINT64_FORMAT, xmin);
-  GST_DEBUG ("min y: %" G_GUINT64_FORMAT, ymin);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "min x: %" G_GUINT64_FORMAT,
+      xmin);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "min y: %" G_GUINT64_FORMAT,
+      ymin);
 #endif
 
   newx = clock->times + 1;
@@ -1083,9 +1088,10 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   }
 
 #ifdef DEBUGGING_ENABLED
-  GST_DEBUG ("reduced numbers:");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "reduced numbers:");
   for (i = j = 0; i < n; i++, j += 4)
-    GST_DEBUG ("  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, newx[j], newy[j]);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+        "  %" G_GUINT64_FORMAT "  %" G_GUINT64_FORMAT, newx[j], newy[j]);
 #endif
 
   /* have to do this precisely otherwise the results are pretty much useless.
@@ -1101,8 +1107,10 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   ybar /= n;
 
 #ifdef DEBUGGING_ENABLED
-  GST_DEBUG ("  xbar  = %" G_GUINT64_FORMAT, xbar);
-  GST_DEBUG ("  ybar  = %" G_GUINT64_FORMAT, ybar);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  xbar  = %" G_GUINT64_FORMAT,
+      xbar);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  ybar  = %" G_GUINT64_FORMAT,
+      ybar);
 #endif
 
   /* multiplying directly would give quantities on the order of 1e20 -> 60 bits;
@@ -1134,17 +1142,20 @@ do_linear_regression (GstClock * clock, GstClockTime * m_num,
   *r_squared = ((double) sxy * (double) sxy) / ((double) sxx * (double) syy);
 
 #ifdef DEBUGGING_ENABLED
-  GST_DEBUG ("  m      = %g", ((double) *m_num) / *m_denom);
-  GST_DEBUG ("  b      = %" G_GUINT64_FORMAT, *b);
-  GST_DEBUG ("  xbase  = %" G_GUINT64_FORMAT, *xbase);
-  GST_DEBUG ("  r2     = %g", *r_squared);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  m      = %g",
+      ((double) *m_num) / *m_denom);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  b      = %" G_GUINT64_FORMAT,
+      *b);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  xbase  = %" G_GUINT64_FORMAT,
+      *xbase);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "  r2     = %g", *r_squared);
 #endif
 
   return TRUE;
 
 invalid:
   {
-    GST_DEBUG_OBJECT (clock, "sxx == 0, regression failed");
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock, "sxx == 0, regression failed");
     return FALSE;
   }
 }
