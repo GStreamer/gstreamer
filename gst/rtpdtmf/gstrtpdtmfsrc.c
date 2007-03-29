@@ -471,8 +471,6 @@ gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc,
   dtmfsrc->payload = g_new0 (GstRTPDTMFPayload, 1);
   dtmfsrc->payload->event = CLAMP (event_number, MIN_EVENT, MAX_EVENT);
   dtmfsrc->payload->volume = CLAMP (event_volume, MIN_VOLUME, MAX_VOLUME);
-
-  gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
   dtmfsrc->first_packet = TRUE;
 
   clock = GST_ELEMENT_CLOCK (dtmfsrc);
@@ -658,6 +656,7 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       /* Indicate that we don't do PRE_ROLL */
       no_preroll = TRUE;
+      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
