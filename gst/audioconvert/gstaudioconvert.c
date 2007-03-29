@@ -129,12 +129,12 @@ GST_STATIC_CAPS ( \
   "audio/x-raw-float, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
-    "endianness = (int) BYTE_ORDER, " \
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 64;" \
   "audio/x-raw-float, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
-    "endianness = (int) BYTE_ORDER, " \
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) 32;" \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
@@ -267,6 +267,11 @@ gst_audio_convert_parse_caps (const GstCaps * caps, AudioConvertFmt * fmt)
     goto no_values;
   if (!gst_structure_get_int (structure, "rate", &fmt->rate))
     goto no_values;
+  /* width != 8 needs an endianness field */
+  if (fmt->width != 8) {
+    if (!gst_structure_get_int (structure, "endianness", &fmt->endianness))
+      goto no_values;
+  }
 
   if (fmt->is_int) {
     /* int specific fields */
@@ -275,11 +280,6 @@ gst_audio_convert_parse_caps (const GstCaps * caps, AudioConvertFmt * fmt)
     if (!gst_structure_get_int (structure, "depth", &fmt->depth))
       goto no_values;
 
-    /* width != 8 can have an endianness field */
-    if (fmt->width != 8) {
-      if (!gst_structure_get_int (structure, "endianness", &fmt->endianness))
-        goto no_values;
-    }
     /* depth cannot be bigger than the width */
     if (fmt->depth > fmt->width)
       goto not_allowed;
@@ -379,31 +379,30 @@ set_structure_widths_32_and_64 (GstStructure * s)
 static GstStructure *
 make_lossless_changes (GstStructure * s, gboolean isfloat)
 {
+  GValue list = { 0 };
+  GValue val = { 0 };
+  int i;
+  const gint endian[] = { G_LITTLE_ENDIAN, G_BIG_ENDIAN };
+  const gboolean booleans[] = { TRUE, FALSE };
+
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&val, G_TYPE_INT);
+  for (i = 0; i < 2; i++) {
+    g_value_set_int (&val, endian[i]);
+    gst_value_list_append_value (&list, &val);
+  }
+  gst_structure_set_value (s, "endianness", &list);
+  g_value_unset (&val);
+  g_value_unset (&list);
+
   if (isfloat) {
     /* float doesn't have a depth or signedness field and only supports
-     * widths of 32/64 and native endianness */
+     * widths of 32 and 64 bits */
     gst_structure_remove_field (s, "depth");
     gst_structure_remove_field (s, "signed");
     set_structure_widths_32_and_64 (s);
-    gst_structure_set (s, "endianness", G_TYPE_INT, G_BYTE_ORDER, NULL);
   } else {
-    /* int supports either endian, and signed or unsigned. GValues are a pain */
-    GValue list = { 0 };
-    GValue val = { 0 };
-    int i;
-    const gint endian[] = { G_LITTLE_ENDIAN, G_BIG_ENDIAN };
-    const gboolean booleans[] = { TRUE, FALSE };
-
-    g_value_init (&list, GST_TYPE_LIST);
-    g_value_init (&val, G_TYPE_INT);
-    for (i = 0; i < 2; i++) {
-      g_value_set_int (&val, endian[i]);
-      gst_value_list_append_value (&list, &val);
-    }
-    gst_structure_set_value (s, "endianness", &list);
-    g_value_unset (&val);
-    g_value_unset (&list);
-
+    /* int supports signed and unsigned. GValues are a pain */
     g_value_init (&list, GST_TYPE_LIST);
     g_value_init (&val, G_TYPE_BOOLEAN);
     for (i = 0; i < 2; i++) {

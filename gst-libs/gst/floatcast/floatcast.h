@@ -65,23 +65,29 @@ G_BEGIN_DECLS
 inline static gfloat
 GFLOAT_SWAP_LE_BE(gfloat in)
 {
-  gint32 swap;
-  gfloat out;
-  memcpy(&swap, &in, 4);
-  swap = GUINT32_SWAP_LE_BE_CONSTANT (swap);
-  memcpy(&out, &swap, 4);
-  return out;
+  union
+  {
+    guint32 i;
+    gfloat f;
+  } u;
+
+  u.f = in;
+  u.i = GUINT32_SWAP_LE_BE (u.i);
+  return u.f;
 }
 
 inline static gdouble
 GDOUBLE_SWAP_LE_BE(gdouble in)
 {
-  gint64 swap;
-  gdouble out;
-  memcpy(&swap, &in, 8);
-  swap = GUINT64_SWAP_LE_BE_CONSTANT (swap);
-  memcpy(&out, &swap, 8);
-  return out;
+  union
+  {
+    guint64 i;
+    gdouble d;
+  } u;
+
+  u.d = in;
+  u.i = GUINT64_SWAP_LE_BE (u.i);
+  return u.d;
 }
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN

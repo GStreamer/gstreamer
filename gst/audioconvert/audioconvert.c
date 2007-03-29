@@ -27,6 +27,7 @@
 
 #include "gstchannelmix.h"
 #include "audioconvert.h"
+#include "gst/floatcast/floatcast.h"
 
 /* int to float/double conversion: int2xxx(i) = 1 / (2^31-1) * i */
 #define INT2FLOAT(i) (4.6566128752457969e-10 * ((gfloat)i))
@@ -41,7 +42,8 @@
 #define MAKE_UNPACK_FUNC_NAME(name)                                     \
 audio_convert_unpack_##name
 
-#define MAKE_UNPACK_FUNC(name, stride, sign, READ_FUNC)                 \
+/* unpack from integer to signed integer 32 */
+#define MAKE_UNPACK_FUNC_II(name, stride, sign, READ_FUNC)                 \
 static void                                                             \
 MAKE_UNPACK_FUNC_NAME (name) (guint8 *src, gint32 *dst,                 \
         gint scale, gint count)                                         \
@@ -52,44 +54,28 @@ MAKE_UNPACK_FUNC_NAME (name) (guint8 *src, gint32 *dst,                 \
   }                                                                     \
 }
 
-/* special unpack code for float/double */
-static void
-MAKE_UNPACK_FUNC_NAME (float) (gfloat * src, gint32 * dst, gint s, gint count)
-{
-  gdouble temp;
-
-  for (; count; count--) {
-    /* blow up to 32 bit */
-    temp = (*src++ * 2147483647.0) + 0.5;
-    *dst++ = (gint32) CLAMP (temp, G_MININT32, G_MAXINT32);
-  }
+/* unpack from float to signed integer 32 */
+#define MAKE_UNPACK_FUNC_FI(name, type, READ_FUNC)                            \
+static void                                                                   \
+MAKE_UNPACK_FUNC_NAME (name) (type * src, gint32 * dst, gint s, gint count)   \
+{                                                                             \
+  gdouble temp;                                                               \
+                                                                              \
+  for (; count; count--) {                                                    \
+    /* blow up to 32 bit */                                                   \
+    temp = (READ_FUNC (*src++) * 2147483647.0) + 0.5;                         \
+    *dst++ = (gint32) CLAMP (temp, G_MININT32, G_MAXINT32);                   \
+  }                                                                           \
 }
 
-static void
-MAKE_UNPACK_FUNC_NAME (double) (gdouble * src, gint32 * dst, gint s, gint count)
-{
-  gdouble temp;
-
-  for (; count; count--) {
-    /* blow up to 32 bit */
-    temp = (*src++ * 2147483647.0) + 0.5;
-    *dst++ = (gint32) CLAMP (temp, G_MININT32, G_MAXINT32);
-  }
-}
-
-static void
-MAKE_UNPACK_FUNC_NAME (float_hq) (gfloat * src, gdouble * dst, gint s,
-    gint count)
-{
-  for (; count; count--)
-    *dst++ = (gdouble) (*src++);
-}
-
-static void
-MAKE_UNPACK_FUNC_NAME (double_hq) (gdouble * src, gdouble * dst, gint s,
-    gint count)
-{
-  memcpy (dst, src, count * sizeof (gdouble));
+/* unpack from float to float 64 (double) */
+#define MAKE_UNPACK_FUNC_FF(name, type, FUNC)                                 \
+static void                                                                   \
+MAKE_UNPACK_FUNC_NAME (name) (type * src, gdouble * dst, gint s,              \
+    gint count)                                                               \
+{                                                                             \
+  for (; count; count--)                                                      \
+    *dst++ = (gdouble) FUNC (*src++);                                         \
 }
 
 #define READ8(p)          GST_READ_UINT8(p)
@@ -100,20 +86,31 @@ MAKE_UNPACK_FUNC_NAME (double_hq) (gdouble * src, gdouble * dst, gint s,
 #define READ32_FROM_LE(p) GST_READ_UINT32_LE (p)
 #define READ32_FROM_BE(p) GST_READ_UINT32_BE (p)
 
-MAKE_UNPACK_FUNC (u8, 1, SIGNED, READ8);
-MAKE_UNPACK_FUNC (s8, 1, 0, READ8);
-MAKE_UNPACK_FUNC (u16_le, 2, SIGNED, READ16_FROM_LE);
-MAKE_UNPACK_FUNC (s16_le, 2, 0, READ16_FROM_LE);
-MAKE_UNPACK_FUNC (u16_be, 2, SIGNED, READ16_FROM_BE);
-MAKE_UNPACK_FUNC (s16_be, 2, 0, READ16_FROM_BE);
-MAKE_UNPACK_FUNC (u24_le, 3, SIGNED, READ24_FROM_LE);
-MAKE_UNPACK_FUNC (s24_le, 3, 0, READ24_FROM_LE);
-MAKE_UNPACK_FUNC (u24_be, 3, SIGNED, READ24_FROM_BE);
-MAKE_UNPACK_FUNC (s24_be, 3, 0, READ24_FROM_BE);
-MAKE_UNPACK_FUNC (u32_le, 4, SIGNED, READ32_FROM_LE);
-MAKE_UNPACK_FUNC (s32_le, 4, 0, READ32_FROM_LE);
-MAKE_UNPACK_FUNC (u32_be, 4, SIGNED, READ32_FROM_BE);
-MAKE_UNPACK_FUNC (s32_be, 4, 0, READ32_FROM_BE);
+MAKE_UNPACK_FUNC_II (u8, 1, SIGNED, READ8);
+MAKE_UNPACK_FUNC_II (s8, 1, 0, READ8);
+MAKE_UNPACK_FUNC_II (u16_le, 2, SIGNED, READ16_FROM_LE);
+MAKE_UNPACK_FUNC_II (s16_le, 2, 0, READ16_FROM_LE);
+MAKE_UNPACK_FUNC_II (u16_be, 2, SIGNED, READ16_FROM_BE);
+MAKE_UNPACK_FUNC_II (s16_be, 2, 0, READ16_FROM_BE);
+MAKE_UNPACK_FUNC_II (u24_le, 3, SIGNED, READ24_FROM_LE);
+MAKE_UNPACK_FUNC_II (s24_le, 3, 0, READ24_FROM_LE);
+MAKE_UNPACK_FUNC_II (u24_be, 3, SIGNED, READ24_FROM_BE);
+MAKE_UNPACK_FUNC_II (s24_be, 3, 0, READ24_FROM_BE);
+MAKE_UNPACK_FUNC_II (u32_le, 4, SIGNED, READ32_FROM_LE);
+MAKE_UNPACK_FUNC_II (s32_le, 4, 0, READ32_FROM_LE);
+MAKE_UNPACK_FUNC_II (u32_be, 4, SIGNED, READ32_FROM_BE);
+MAKE_UNPACK_FUNC_II (s32_be, 4, 0, READ32_FROM_BE);
+MAKE_UNPACK_FUNC_FI (float_le, gfloat, GFLOAT_FROM_LE);
+MAKE_UNPACK_FUNC_FI (float_be, gfloat, GFLOAT_FROM_BE);
+MAKE_UNPACK_FUNC_FI (double_le, gdouble, GDOUBLE_FROM_LE);
+MAKE_UNPACK_FUNC_FI (double_be, gdouble, GDOUBLE_FROM_BE);
+MAKE_UNPACK_FUNC_FF (float_hq_le, gfloat, GFLOAT_FROM_LE);
+MAKE_UNPACK_FUNC_FF (float_hq_be, gfloat, GFLOAT_FROM_BE);
+MAKE_UNPACK_FUNC_FF (double_hq_le, gdouble, GDOUBLE_FROM_LE);
+MAKE_UNPACK_FUNC_FF (double_hq_be, gdouble, GDOUBLE_FROM_BE);
+
+/* One of the double_hq_* functions generated above is ineffecient, but it's
+ * never used anyway.  The same is true for one of the s32_* functions. */
 
 /*** 
  * packing code
@@ -144,7 +141,8 @@ audio_convert_pack_##name
  *    function for the target width.
  */
 
-#define MAKE_PACK_FUNC(name, stride, sign, WRITE_FUNC)                  \
+/* pack from signed integer 32 to integer */
+#define MAKE_PACK_FUNC_II(name, stride, sign, WRITE_FUNC)               \
 static void                                                             \
 MAKE_PACK_FUNC_NAME (name) (gint32 *src, gpointer dst,                  \
         gint scale, gint count)                                         \
@@ -174,35 +172,24 @@ MAKE_PACK_FUNC_NAME (name) (gint32 *src, gpointer dst,                  \
   }                                                                     \
 }
 
-/* special pack code for float/double */
-static void
-MAKE_PACK_FUNC_NAME (float) (gint32 * src, gfloat * dst, gint scale, gint count)
-{
-  for (; count; count--)
-    *dst++ = INT2FLOAT (*src++);
+/* pack from signed integer 32 to float */
+#define MAKE_PACK_FUNC_IF(name, type, FUNC, FUNC2)                      \
+static void                                                             \
+MAKE_PACK_FUNC_NAME (name) (gint32 * src, type * dst, gint scale,       \
+    gint count)                                                         \
+{                                                                       \
+  for (; count; count--)                                                \
+    *dst++ = FUNC (FUNC2 (*src++));                                     \
 }
 
-static void
-MAKE_PACK_FUNC_NAME (double) (gint32 * src, gdouble * dst, gint scale,
-    gint count)
-{
-  for (; count; count--) {
-    *dst++ = INT2DOUBLE (*src++);
-  }
-}
-
-static void
-MAKE_PACK_FUNC_NAME (float_hq) (gdouble * src, gfloat * dst, gint s, gint count)
-{
-  for (; count; count--)
-    *dst++ = (gfloat) (*src++);
-}
-
-static void
-MAKE_PACK_FUNC_NAME (double_hq) (gdouble * src, gdouble * dst, gint s,
-    gint count)
-{
-  memcpy (dst, src, count * sizeof (gdouble));
+/* pack from float 64 (double) to float */
+#define MAKE_PACK_FUNC_FF(name, type, FUNC)                             \
+static void                                                             \
+MAKE_PACK_FUNC_NAME (name) (gdouble * src, type * dst, gint s,          \
+    gint count)                                                         \
+{                                                                       \
+  for (; count; count--)                                                \
+    *dst++ = FUNC ((type) (*src++));                                    \
 }
 
 #define WRITE8(p, v)       GST_WRITE_UINT8 (p, v)
@@ -213,20 +200,30 @@ MAKE_PACK_FUNC_NAME (double_hq) (gdouble * src, gdouble * dst, gint s,
 #define WRITE32_TO_LE(p,v) GST_WRITE_UINT32_LE (p, (guint32)(v))
 #define WRITE32_TO_BE(p,v) GST_WRITE_UINT32_BE (p, (guint32)(v))
 
-MAKE_PACK_FUNC (u8, 1, SIGNED, WRITE8);
-MAKE_PACK_FUNC (s8, 1, 0, WRITE8);
-MAKE_PACK_FUNC (u16_le, 2, SIGNED, WRITE16_TO_LE);
-MAKE_PACK_FUNC (s16_le, 2, 0, WRITE16_TO_LE);
-MAKE_PACK_FUNC (u16_be, 2, SIGNED, WRITE16_TO_BE);
-MAKE_PACK_FUNC (s16_be, 2, 0, WRITE16_TO_BE);
-MAKE_PACK_FUNC (u24_le, 3, SIGNED, WRITE24_TO_LE);
-MAKE_PACK_FUNC (s24_le, 3, 0, WRITE24_TO_LE);
-MAKE_PACK_FUNC (u24_be, 3, SIGNED, WRITE24_TO_BE);
-MAKE_PACK_FUNC (s24_be, 3, 0, WRITE24_TO_BE);
-MAKE_PACK_FUNC (u32_le, 4, SIGNED, WRITE32_TO_LE);
-MAKE_PACK_FUNC (s32_le, 4, 0, WRITE32_TO_LE);
-MAKE_PACK_FUNC (u32_be, 4, SIGNED, WRITE32_TO_BE);
-MAKE_PACK_FUNC (s32_be, 4, 0, WRITE32_TO_BE);
+MAKE_PACK_FUNC_II (u8, 1, SIGNED, WRITE8);
+MAKE_PACK_FUNC_II (s8, 1, 0, WRITE8);
+MAKE_PACK_FUNC_II (u16_le, 2, SIGNED, WRITE16_TO_LE);
+MAKE_PACK_FUNC_II (s16_le, 2, 0, WRITE16_TO_LE);
+MAKE_PACK_FUNC_II (u16_be, 2, SIGNED, WRITE16_TO_BE);
+MAKE_PACK_FUNC_II (s16_be, 2, 0, WRITE16_TO_BE);
+MAKE_PACK_FUNC_II (u24_le, 3, SIGNED, WRITE24_TO_LE);
+MAKE_PACK_FUNC_II (s24_le, 3, 0, WRITE24_TO_LE);
+MAKE_PACK_FUNC_II (u24_be, 3, SIGNED, WRITE24_TO_BE);
+MAKE_PACK_FUNC_II (s24_be, 3, 0, WRITE24_TO_BE);
+MAKE_PACK_FUNC_II (u32_le, 4, SIGNED, WRITE32_TO_LE);
+MAKE_PACK_FUNC_II (s32_le, 4, 0, WRITE32_TO_LE);
+MAKE_PACK_FUNC_II (u32_be, 4, SIGNED, WRITE32_TO_BE);
+MAKE_PACK_FUNC_II (s32_be, 4, 0, WRITE32_TO_BE);
+MAKE_PACK_FUNC_IF (float_le, gfloat, GFLOAT_TO_LE, INT2FLOAT);
+MAKE_PACK_FUNC_IF (float_be, gfloat, GFLOAT_TO_BE, INT2FLOAT);
+MAKE_PACK_FUNC_IF (double_le, gdouble, GDOUBLE_TO_LE, INT2DOUBLE);
+MAKE_PACK_FUNC_IF (double_be, gdouble, GDOUBLE_TO_BE, INT2DOUBLE);
+MAKE_PACK_FUNC_FF (float_hq_le, gfloat, GFLOAT_TO_LE);
+MAKE_PACK_FUNC_FF (float_hq_be, gfloat, GFLOAT_TO_BE);
+/* For double_hq, packing and unpacking is the same, so we reuse the unpacking
+ * functions here. */
+#define audio_convert_pack_double_hq_le MAKE_UNPACK_FUNC_NAME (double_hq_le)
+#define audio_convert_pack_double_hq_be MAKE_UNPACK_FUNC_NAME (double_hq_be)
 
 static AudioConvertUnpack unpack_funcs[] = {
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u8),
@@ -245,10 +242,14 @@ static AudioConvertUnpack unpack_funcs[] = {
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s32_le),
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u32_be),
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s32_be),
-  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (float),
-  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (double),
-  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (float_hq),
-  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (double_hq),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (float_le),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (float_be),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (double_le),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (double_be),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (float_hq_le),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (float_hq_be),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (double_hq_le),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (double_hq_be),
 };
 
 static AudioConvertPack pack_funcs[] = {
@@ -268,10 +269,14 @@ static AudioConvertPack pack_funcs[] = {
   (AudioConvertPack) MAKE_PACK_FUNC_NAME (s32_le),
   (AudioConvertPack) MAKE_PACK_FUNC_NAME (u32_be),
   (AudioConvertPack) MAKE_PACK_FUNC_NAME (s32_be),
-  (AudioConvertPack) MAKE_PACK_FUNC_NAME (float),
-  (AudioConvertPack) MAKE_PACK_FUNC_NAME (double),
-  (AudioConvertPack) MAKE_PACK_FUNC_NAME (float_hq),
-  (AudioConvertPack) MAKE_PACK_FUNC_NAME (double_hq),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (float_le),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (float_be),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (double_le),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (double_be),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (float_hq_le),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (float_hq_be),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (double_hq_le),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (double_hq_be),
 };
 
 static gint
@@ -285,7 +290,9 @@ audio_convert_get_func_index (AudioConvertFmt * fmt)
     index += fmt->sign ? 1 : 0;
   } else {
     /* this is float/double */
-    index = (fmt->width == 32) ? 16 : 17;
+    index = 16;
+    index += (fmt->width == 32) ? 0 : 2;
+    index += (fmt->endianness == G_LITTLE_ENDIAN) ? 0 : 1;
   }
   return index;
 }
@@ -297,7 +304,7 @@ check_default (AudioConvertCtx * ctx, AudioConvertFmt * fmt)
     return (fmt->width == 32 && fmt->depth == 32 &&
         fmt->endianness == G_BYTE_ORDER && fmt->sign == TRUE);
   } else {
-    return (fmt->width == 64);
+    return (fmt->width == 64 && fmt->endianness == G_BYTE_ORDER);
   }
 }
 
@@ -332,12 +339,10 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   gst_channel_mix_setup_matrix (ctx);
 
   idx_in = audio_convert_get_func_index (in);
-  if (!(ctx->unpack = unpack_funcs[idx_in]))
-    goto not_supported;
+  ctx->unpack = unpack_funcs[idx_in];
 
   idx_out = audio_convert_get_func_index (out);
-  if (!(ctx->pack = pack_funcs[idx_out]))
-    goto not_supported;
+  ctx->pack = pack_funcs[idx_out];
 
   /* if both formats are float/double use double as intermediate format and
    * and switch mixing */
@@ -347,10 +352,10 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   } else {
     GST_INFO ("use float mixing");
     ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_float;
-    if (!(ctx->unpack = unpack_funcs[idx_in + 2]))
-      goto not_supported;
-    if (!(ctx->pack = pack_funcs[idx_out + 2]))
-      goto not_supported;
+    /* Bump the pack/unpack function indices by 4 to use double as intermediary
+     * format (float_hq_*, double_hq_* functions).*/
+    ctx->unpack = unpack_funcs[idx_in + 4];
+    ctx->pack = pack_funcs[idx_out + 4];
   }
   GST_INFO ("unitsizes: %d -> %d", in->unit_size, out->unit_size);
 
@@ -368,12 +373,6 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   ctx->out_scale = (out->is_int) ? (32 - out->depth) : 0;
 
   return TRUE;
-
-not_supported:
-  {
-    GST_INFO ("missing pack/unpack function");
-    return FALSE;
-  }
 }
 
 gboolean

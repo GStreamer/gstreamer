@@ -22,6 +22,7 @@
 
 #include <unistd.h>
 
+#include <gst/floatcast/floatcast.h>
 #include <gst/check/gstcheck.h>
 #include <gst/audio/multichannel.h>
 
@@ -36,7 +37,7 @@ GstPad *mysrcpad, *mysinkpad;
   "audio/x-raw-float, " \
     "rate = (int) [ 1, MAX ], " \
     "channels = (int) [ 1, 8 ], " \
-    "endianness = (int) BYTE_ORDER, " \
+    "endianness = (int) { LITTLE_ENDIAN, BIG_ENDIAN }, " \
     "width = (int) { 32, 64 };" \
   "audio/x-raw-int, " \
     "rate = (int) [ 1, MAX ], " \
@@ -324,6 +325,8 @@ verify_convert (const gchar * which, void *in, int inlength,
   fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), outlength);
 
   if (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) != 0) {
+    g_print ("\nInput data:\n");
+    gst_util_dump_mem (in, inlength);
     g_print ("\nConverted data:\n");
     gst_util_dump_mem (GST_BUFFER_DATA (outbuffer), outlength);
     g_print ("\nExpected data:\n");
@@ -487,6 +490,7 @@ GST_START_TEST (test_int_conversion)
   }
 
   /* 16 bit signed <-> 8 in 16 bit signed */
+  /* NOTE: if audioconvert was doing dithering we'd have a problem */
   {
     gint16 in[] = { 0, 64 << 8, -64 << 8 };
     gint16 out[] = { 0, 64, -64 };
@@ -501,6 +505,7 @@ GST_START_TEST (test_int_conversion)
   }
 
   /* 16 bit unsigned <-> 8 in 16 bit unsigned */
+  /* NOTE: if audioconvert was doing dithering we'd have a problem */
   {
     guint16 in[] = { 1 << 15, (1 << 15) - (64 << 8), (1 << 15) + (64 << 8) };
     guint16 out[] = { 1 << 7, (1 << 7) - 64, (1 << 7) + 64 };
@@ -515,6 +520,7 @@ GST_START_TEST (test_int_conversion)
   }
 
   /* 32 bit signed -> 16 bit signed for rounding check */
+  /* NOTE: if audioconvert was doing dithering we'd have a problem */
   {
     gint32 in[] = { 0, G_MININT32, G_MAXINT32,
       (32 << 16), (32 << 16) + (1 << 15), (32 << 16) - (1 << 15),
@@ -537,6 +543,7 @@ GST_START_TEST (test_int_conversion)
   }
 
   /* 32 bit signed -> 16 bit unsigned for rounding check */
+  /* NOTE: if audioconvert was doing dithering we'd have a problem */
   {
     gint32 in[] = { 0, G_MININT32, G_MAXINT32,
       (32 << 16), (32 << 16) + (1 << 15), (32 << 16) - (1 << 15),
@@ -561,22 +568,34 @@ GST_START_TEST (test_int_conversion)
 
 GST_END_TEST;
 
-
 GST_START_TEST (test_float_conversion)
 {
   /* 32 float <-> 16 signed */
   /* NOTE: if audioconvert was doing dithering we'd have a problem */
   {
-    gfloat in[] = { 0.0, 1.0, -1.0, 0.5, -0.5, 1.1, -1.1 };
+    gfloat in_le[] =
+        { GFLOAT_TO_LE (0.0), GFLOAT_TO_LE (1.0), GFLOAT_TO_LE (-1.0),
+      GFLOAT_TO_LE (0.5), GFLOAT_TO_LE (-0.5), GFLOAT_TO_LE (1.1),
+      GFLOAT_TO_LE (-1.1)
+    };
+    gfloat in_be[] =
+        { GFLOAT_TO_BE (0.0), GFLOAT_TO_BE (1.0), GFLOAT_TO_BE (-1.0),
+      GFLOAT_TO_BE (0.5), GFLOAT_TO_BE (-0.5), GFLOAT_TO_BE (1.1),
+      GFLOAT_TO_BE (-1.1)
+    };
     gint16 out[] = { 0, 32767, -32768, 16384, -16384, 32767, -32768 };
 
     /* only one direction conversion, the other direction does
      * not produce exactly the same as the input due to floating
      * point rounding errors etc. */
-    RUN_CONVERSION ("32 float to 16 signed",
-        in, get_float_caps (1, "BYTE_ORDER", 32),
+    RUN_CONVERSION ("32 float le to 16 signed",
+        in_le, get_float_caps (1, "LITTLE_ENDIAN", 32),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE));
+    RUN_CONVERSION ("32 float be to 16 signed",
+        in_be, get_float_caps (1, "BIG_ENDIAN", 32),
         out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE));
   }
+
   {
     gint16 in[] = { 0, -32768, 16384, -16384 };
     gfloat out[] = { 0.0, -1.0, 0.5, -0.5 };
@@ -589,14 +608,26 @@ GST_START_TEST (test_float_conversion)
   /* 64 float <-> 16 signed */
   /* NOTE: if audioconvert was doing dithering we'd have a problem */
   {
-    gdouble in[] = { 0.0, 1.0, -1.0, 0.5, -0.5, 1.1, -1.1 };
+    gdouble in_le[] =
+        { GDOUBLE_TO_LE (0.0), GDOUBLE_TO_LE (1.0), GDOUBLE_TO_LE (-1.0),
+      GDOUBLE_TO_LE (0.5), GDOUBLE_TO_LE (-0.5), GDOUBLE_TO_LE (1.1),
+      GDOUBLE_TO_LE (-1.1)
+    };
+    gdouble in_be[] =
+        { GDOUBLE_TO_BE (0.0), GDOUBLE_TO_BE (1.0), GDOUBLE_TO_BE (-1.0),
+      GDOUBLE_TO_BE (0.5), GDOUBLE_TO_BE (-0.5), GDOUBLE_TO_BE (1.1),
+      GDOUBLE_TO_BE (-1.1)
+    };
     gint16 out[] = { 0, 32767, -32768, 16384, -16384, 32767, -32768 };
 
     /* only one direction conversion, the other direction does
      * not produce exactly the same as the input due to floating
      * point rounding errors etc. */
-    RUN_CONVERSION ("64 float to 16 signed",
-        in, get_float_caps (1, "BYTE_ORDER", 64),
+    RUN_CONVERSION ("64 float LE to 16 signed",
+        in_le, get_float_caps (1, "LITTLE_ENDIAN", 64),
+        out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE));
+    RUN_CONVERSION ("64 float BE to 16 signed",
+        in_be, get_float_caps (1, "BIG_ENDIAN", 64),
         out, get_int_caps (1, "BYTE_ORDER", 16, 16, TRUE));
   }
   {
@@ -636,6 +667,44 @@ GST_START_TEST (test_float_conversion)
     RUN_CONVERSION ("32 float to 64 float",
         out, get_float_caps (1, "BYTE_ORDER", 32),
         in, get_float_caps (1, "BYTE_ORDER", 64));
+  }
+
+  /* 32-bit float little endian <-> big endian */
+  {
+    gfloat le[] = { GFLOAT_TO_LE (0.0), GFLOAT_TO_LE (1.0), GFLOAT_TO_LE (-1.0),
+      GFLOAT_TO_LE (0.5), GFLOAT_TO_LE (-0.5)
+    };
+    gfloat be[] = { GFLOAT_TO_BE (0.0), GFLOAT_TO_BE (1.0), GFLOAT_TO_BE (-1.0),
+      GFLOAT_TO_BE (0.5), GFLOAT_TO_BE (-0.5)
+    };
+
+    RUN_CONVERSION ("32 float LE to BE",
+        le, get_float_caps (1, "LITTLE_ENDIAN", 32),
+        be, get_float_caps (1, "BIG_ENDIAN", 32));
+
+    RUN_CONVERSION ("32 float BE to LE",
+        be, get_float_caps (1, "BIG_ENDIAN", 32),
+        le, get_float_caps (1, "LITTLE_ENDIAN", 32));
+  }
+
+  /* 64-bit float little endian <-> big endian */
+  {
+    gdouble le[] =
+        { GDOUBLE_TO_LE (0.0), GDOUBLE_TO_LE (1.0), GDOUBLE_TO_LE (-1.0),
+      GDOUBLE_TO_LE (0.5), GDOUBLE_TO_LE (-0.5)
+    };
+    gdouble be[] =
+        { GDOUBLE_TO_BE (0.0), GDOUBLE_TO_BE (1.0), GDOUBLE_TO_BE (-1.0),
+      GDOUBLE_TO_BE (0.5), GDOUBLE_TO_BE (-0.5)
+    };
+
+    RUN_CONVERSION ("64 float LE to BE",
+        le, get_float_caps (1, "LITTLE_ENDIAN", 64),
+        be, get_float_caps (1, "BIG_ENDIAN", 64));
+
+    RUN_CONVERSION ("64 float BE to LE",
+        be, get_float_caps (1, "BIG_ENDIAN", 64),
+        le, get_float_caps (1, "LITTLE_ENDIAN", 64));
   }
 }
 

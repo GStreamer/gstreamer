@@ -1,3 +1,21 @@
+2007-03-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: René Stadler <mail at renestadler dot de>
+	with some minor changes
+
+	* gst-libs/gst/floatcast/floatcast.h:
+	Use more efficient float endianness conversion functions that don't
+	involve 2 function calls per value.
+	* gst/audioconvert/audioconvert.c: (audio_convert_get_func_index),
+	(check_default), (audio_convert_prepare_context):
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_parse_caps), (make_lossless_changes):
+	Support non-native endianness floats as input and output.
+	Fixes #339838.
+	* tests/check/elements/audioconvert.c: (verify_convert),
+	(GST_START_TEST):
+	Add unit tests for the non-native endianness float conversions.
+
 2007-03-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
