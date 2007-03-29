@@ -1,5 +1,23 @@
 2007-03-29  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_base_init),
+	(gst_base_rtp_depayload_class_init), (gst_base_rtp_depayload_init),
+	(gst_base_rtp_depayload_setcaps), (gst_base_rtp_depayload_chain),
+	(gst_base_rtp_depayload_set_gst_timestamp),
+	(gst_base_rtp_depayload_change_state),
+	(gst_base_rtp_depayload_set_property),
+	(gst_base_rtp_depayload_get_property):
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	Add Private structure.
+	Bring element code to 2007.
+	Parse clock-base caps param and use it when generating the
+	newsegment.
+	Reset variables before going to PAUSED.
+	Fix some docs.
+
+2007-03-29  Wim Taymans  <wim@fluendo.com>
+
 	* docs/libs/gst-plugins-base-libs-docs.sgml:
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
