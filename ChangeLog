@@ -1,3 +1,9 @@
+2007-03-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* libs/gst/base/gstadapter.c: (gst_adapter_take_buffer):
+	Make take_buffer a bit quicker by removing redundant checks
+	caused by calling gst_adapter_take.
+
 2007-03-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gstmultiqueue.c: (gst_single_queue_free):

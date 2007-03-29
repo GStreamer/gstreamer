@@ -458,7 +458,6 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
 {
   GstBuffer *buffer;
   GstBuffer *cur;
-  guint8 *data;
 
   g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
   g_return_val_if_fail (nbytes > 0, NULL);
@@ -483,14 +482,18 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
     return buffer;
   }
 
-  data = gst_adapter_take (adapter, nbytes);
-  if (data == NULL)
-    return NULL;
+  buffer = gst_buffer_new_and_alloc (nbytes);
 
-  buffer = gst_buffer_new ();
-  GST_BUFFER_DATA (buffer) = data;
-  GST_BUFFER_MALLOCDATA (buffer) = data;
-  GST_BUFFER_SIZE (buffer) = nbytes;
+  /* we have enough assembled data, copy from there */
+  if (adapter->assembled_len >= nbytes) {
+    GST_LOG_OBJECT (adapter, "taking %u bytes already assembled", nbytes);
+    memcpy (GST_BUFFER_DATA (buffer), adapter->assembled_data, nbytes);
+  } else {
+    GST_LOG_OBJECT (adapter, "taking %u bytes by collection", nbytes);
+    gst_adapter_peek_into (adapter, GST_BUFFER_DATA (buffer), nbytes);
+  }
+
+  gst_adapter_flush (adapter, nbytes);
 
   return buffer;
 }
