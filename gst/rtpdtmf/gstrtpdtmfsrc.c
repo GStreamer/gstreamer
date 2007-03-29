@@ -578,8 +578,8 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
 
   /* timestamp and duration of GstBuffer */ 
   GST_BUFFER_DURATION (buf) = DEFAULT_PACKET_INTERVAL * GST_MSECOND;
-  dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
+  dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
   
   payload = (GstRTPDTMFPayload *) gst_rtp_buffer_get_payload (buf);
   
