@@ -1,5 +1,12 @@
 2007-03-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/wavparse/gstwavparse.c:
+	Support audio/x-raw-float in wav files. This only works with
+	plugins-base CVS, using an older version doesn't have any
+	disadvantages though.
+
+2007-03-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	* gst/auparse/gstauparse.c: (gst_au_parse_reset),
 	(gst_au_parse_parse_header), (gst_au_parse_chain):
