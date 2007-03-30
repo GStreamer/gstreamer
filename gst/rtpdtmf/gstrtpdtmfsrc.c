@@ -485,7 +485,7 @@ gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc,
     dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
   }
 
-  dtmfsrc->rtp_timestamp = dtmfsrc->ts_base;
+  dtmfsrc->rtp_timestamp = dtmfsrc->ts_base +
       gst_util_uint64_scale_int (
       dtmfsrc->timestamp - gst_element_get_base_time (GST_ELEMENT (dtmfsrc)),  
       dtmfsrc->clock_rate, GST_SECOND);
