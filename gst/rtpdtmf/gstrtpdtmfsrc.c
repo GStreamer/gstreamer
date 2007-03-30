@@ -353,10 +353,13 @@ gst_rtp_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
               !gst_structure_get_int (structure, "volume", &event_volume)) 
             break;
 
+          GST_DEBUG_OBJECT (dtmfsrc, "Received start event %d with volume %d",
+              event_number, event_volume);
           gst_rtp_dtmf_src_start (dtmfsrc, event_number, event_volume);
         }
 
         else {
+          GST_DEBUG_OBJECT (dtmfsrc, "Received stop event");
           gst_rtp_dtmf_src_stop (dtmfsrc);
         }
       }
@@ -482,21 +485,11 @@ gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc,
     dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
   }
 
-  if (dtmfsrc->ssrc == -1)
-    dtmfsrc->current_ssrc = g_random_int ();
-  else
-    dtmfsrc->current_ssrc = dtmfsrc->ssrc;
-
-  if (dtmfsrc->seqnum_offset == -1)
-    dtmfsrc->seqnum_base = g_random_int_range (0, G_MAXUINT16);
-  else
-    dtmfsrc->seqnum_base = dtmfsrc->seqnum_offset;
-  dtmfsrc->seqnum = dtmfsrc->seqnum_base;
-
-  if (dtmfsrc->ts_offset == -1)
-    dtmfsrc->ts_base = g_random_int ();
-  else
-    dtmfsrc->ts_base = dtmfsrc->ts_offset;
+  dtmfsrc->rtp_timestamp = dtmfsrc->ts_base;
+      gst_util_uint64_scale_int (
+      dtmfsrc->timestamp - gst_element_get_base_time (GST_ELEMENT (dtmfsrc)),  
+      dtmfsrc->clock_rate, GST_SECOND);
+ 
 
   gst_rtp_dtmf_src_set_caps (dtmfsrc);
 
@@ -531,24 +524,6 @@ gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
 }
 
 static void
-gst_rtp_dtmf_src_calc_rtp_timestamp (GstRTPDTMFSrc *dtmfsrc)
-{
-  /* add our random offset to the timestamp */
-  dtmfsrc->rtp_timestamp = dtmfsrc->ts_base;
-
-  if (GST_CLOCK_TIME_IS_VALID (dtmfsrc->timestamp)) {
-    gint64 rtime;
-
-    rtime =
-        gst_segment_to_running_time (&dtmfsrc->segment, GST_FORMAT_TIME,
-                dtmfsrc->timestamp);
-    rtime = gst_util_uint64_scale_int (rtime, dtmfsrc->clock_rate, GST_SECOND);
-
-    dtmfsrc->rtp_timestamp += rtime;
-  }
-}
-
-static void
 gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
 {
   GstBuffer *buf = NULL;
@@ -569,8 +544,10 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
   gst_rtp_buffer_set_seq (buf, dtmfsrc->seqnum);
   
   /* timestamp of RTP header */
-  gst_rtp_dtmf_src_calc_rtp_timestamp (dtmfsrc);
   gst_rtp_buffer_set_timestamp (buf, dtmfsrc->rtp_timestamp);
+  dtmfsrc->rtp_timestamp += 
+      DEFAULT_PACKET_INTERVAL * dtmfsrc->clock_rate / 1000;
+
 
   /* duration of DTMF payload */
   dtmfsrc->payload->duration +=
@@ -648,7 +625,7 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
 {
   GstRTPDTMFSrc *dtmfsrc;
   GstStateChangeReturn result;
-  gboolean no_preroll = TRUE;
+  gboolean no_preroll = FALSE;
 
   dtmfsrc = GST_RTP_DTMF_SRC (element);
 
@@ -656,9 +633,28 @@ gst_rtp_dtmf_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      
+      if (dtmfsrc->ssrc == -1)
+        dtmfsrc->current_ssrc = g_random_int ();
+      else
+        dtmfsrc->current_ssrc = dtmfsrc->ssrc;
+
+      if (dtmfsrc->seqnum_offset == -1)
+        dtmfsrc->seqnum_base = g_random_int_range (0, G_MAXUINT16);
+      else
+        dtmfsrc->seqnum_base = dtmfsrc->seqnum_offset;
+      dtmfsrc->seqnum = dtmfsrc->seqnum_base;
+
+      if (dtmfsrc->ts_offset == -1)
+        dtmfsrc->ts_base = g_random_int ();
+      else
+        dtmfsrc->ts_base = dtmfsrc->ts_offset;
+
+
+
       /* Indicate that we don't do PRE_ROLL */
       no_preroll = TRUE;
-      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
+
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
