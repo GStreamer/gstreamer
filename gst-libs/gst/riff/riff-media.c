@@ -813,6 +813,54 @@ gst_riff_create_audio_caps (guint16 codec_id,
       block_align = TRUE;
       break;
 
+    case GST_RIFF_WAVE_FORMAT_IEEE_FLOAT:
+      if (strf != NULL) {
+        gint ba = strf->blockalign;
+        gint ch = strf->channels;
+        gint wd = ba * 8 / ch;
+
+        caps = gst_caps_new_simple ("audio/x-raw-float",
+            "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+            "channels", G_TYPE_INT, ch, "width", G_TYPE_INT, wd, NULL);
+
+        /* Add default MS channel layout if we have more than 2 channels,
+         * but the layout isn't specified like with WAVEEXT below. Not sure
+         * if this is right, but at least it makes sound output work at all
+         * in those cases. Somebody with a a 5.1 setup should double-check
+         * with chan-id.wav */
+        if (ch > 2) {
+          guint32 channel_mask;
+
+          switch (ch) {
+            case 4:
+              channel_mask = 0x33;
+              break;
+            case 6:
+              channel_mask = 0x3f;
+              break;
+            default:
+              GST_WARNING ("don't know default layout for %d channels", ch);
+              channel_mask = 0;
+              break;
+          }
+
+          if (channel_mask) {
+            GST_DEBUG ("using default channel layout for %d channels", ch);
+            if (!gst_riff_wavext_add_channel_layout (caps, channel_mask)) {
+              GST_WARNING ("failed to add channel layout");
+            }
+          }
+        }
+      } else {
+        /* FIXME: this is pretty useless - we need fixed caps */
+        caps = gst_caps_from_string ("audio/x-raw-float, "
+            "endianness = (int) LITTLE_ENDIAN, " "width = (int) { 32, 64 }");
+      }
+      if (codec_name && strf)
+        *codec_name = g_strdup_printf ("Uncompressed %d-bit IEEE float audio",
+            strf->size);
+      break;
+
     case GST_RIFF_WAVE_FORMAT_IBM_CVSD:
       goto unknown;
 

@@ -1,3 +1,9 @@
+2007-03-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	Add audio/x-raw-float support, now that audioconvert support
+	non-native endianness floats.
+
 2007-03-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/gst-plugins-base-libs-docs.sgml:
