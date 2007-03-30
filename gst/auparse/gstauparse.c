@@ -158,6 +158,7 @@ gst_au_parse_reset (GstAuParse * auparse)
   auparse->encoding = 0;
   auparse->samplerate = 0;
   auparse->channels = 0;
+  auparse->float_swap = 0;
 
   gst_adapter_clear (auparse->adapter);
 
@@ -282,6 +283,8 @@ gst_au_parse_parse_header (GstAuParse * auparse)
    * http://www.tsp.ece.mcgill.ca/MMSP/Documents/AudioFormats/AU/Samples.html
    */
 
+  auparse->float_swap = 0;
+
   switch (auparse->encoding) {
     case 1:                    /* 8-bit ISDN mu-law G.711 */
       law = 1;
@@ -360,9 +363,13 @@ gst_au_parse_parse_header (GstAuParse * auparse)
     tempcaps = gst_caps_new_simple ("audio/x-raw-float",
         "rate", G_TYPE_INT, auparse->samplerate,
         "channels", G_TYPE_INT, auparse->channels,
-        "endianness", G_TYPE_INT, auparse->endianness,
+        "endianness", G_TYPE_INT, G_BYTE_ORDER,
         "width", G_TYPE_INT, depth, NULL);
     auparse->sample_size = auparse->channels * depth / 8;
+    if (auparse->endianness != G_BYTE_ORDER) {
+      GST_DEBUG_OBJECT (auparse, "need to swap float byte order ourselves!");
+      auparse->float_swap = depth;
+    }
   } else if (layout[0]) {
     tempcaps = gst_caps_new_simple ("audio/x-adpcm",
         "layout", G_TYPE_STRING, layout, NULL);
@@ -467,7 +474,35 @@ gst_au_parse_chain (GstPad * pad, GstBuffer * buf)
     }
 
     data = gst_adapter_peek (auparse->adapter, sendnow);
-    memcpy (GST_BUFFER_DATA (outbuf), data, sendnow);
+
+    /* audioconvert only handles floats in native endianness ... */
+    switch (auparse->float_swap) {
+      case 32:{
+        guint32 *indata = (guint32 *) data;
+        guint32 *outdata = (guint32 *) GST_BUFFER_DATA (outbuf);
+        gint i;
+
+        for (i = 0; i < (sendnow / sizeof (guint32)); ++i) {
+          outdata[i] = GUINT32_SWAP_LE_BE (indata[i]);
+        }
+        break;
+      }
+      case 64:{
+        guint64 *indata = (guint64 *) data;
+        guint64 *outdata = (guint64 *) GST_BUFFER_DATA (outbuf);
+        gint i;
+
+        for (i = 0; i < (sendnow / sizeof (guint64)); ++i) {
+          outdata[i] = GUINT64_SWAP_LE_BE (indata[i]);
+        }
+        break;
+      }
+      default:{
+        memcpy (GST_BUFFER_DATA (outbuf), data, sendnow);
+        break;
+      }
+    }
+
     gst_adapter_flush (auparse->adapter, sendnow);
 
     auparse->buffer_offset += sendnow;

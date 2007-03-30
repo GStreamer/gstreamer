@@ -1,3 +1,12 @@
+2007-03-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* gst/auparse/gstauparse.c: (gst_au_parse_reset),
+	(gst_au_parse_parse_header), (gst_au_parse_chain):
+	* gst/auparse/gstauparse.h:
+	Revert last change as we don't want plugins-good to depend on
+	plugins-base CVS now.
+
 2007-03-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
