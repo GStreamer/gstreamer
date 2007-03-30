@@ -78,7 +78,7 @@
       <title>Audio Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgstaudio-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
       &GstAudio;
@@ -97,7 +97,7 @@
       <title>CDDA Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgstcdda-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
       &GstCddaBaseSrc;
@@ -107,7 +107,7 @@
       <title>FloatCast Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgstfloatcase-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
       &GstFloatCast;
@@ -117,7 +117,7 @@
       <title>Interfaces Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgstinterfaces-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
       &GstColorBalance;
@@ -138,7 +138,7 @@
       <title>Network Buffer Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgstnetbuffer-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
       &GstNetBuffer;
@@ -148,7 +148,7 @@
       <title>Riff Media Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgstriff-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
       &GstRiff;
@@ -158,7 +158,7 @@
       <title>Rtp Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgstrtp-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
       &GstBaseRtpAudioPayload;
@@ -172,7 +172,7 @@
       <title>Tag Support Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgsttag-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
       &GstTag;
@@ -184,7 +184,7 @@
       <title>Base Utils Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgstpbutils-&GST_MAJORMINOR;</filename> to the library
         flags.
       </para>
@@ -198,7 +198,7 @@
       <title>Video Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
-        <filename>gstreamer-plugins-base.pc</filename> and adding
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
         <filename>-lgstvideo-&GST_MAJORMINOR;</filename> to the library flags.
       </para>
       &GstVideo;

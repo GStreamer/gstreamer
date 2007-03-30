@@ -1,3 +1,9 @@
+2007-03-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	  gstreamer-plugins-base.pc doesn't exist, it's
+	  gstreamer-plugins-base-0.10.pc.
+
 2007-03-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: René Stadler <mail at renestadler dot de>
