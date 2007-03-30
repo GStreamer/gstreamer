@@ -51,7 +51,13 @@ guint8 test_frame[] = {
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "width = (int) 32, "
+        "depth = (int) 16, "
+        "channels = (int) 1, "
+        "rate = (int) 44100, "
+        "endianness = (int) BYTE_ORDER, " "signed = (boolean) true")
+    );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -117,11 +123,11 @@ GST_START_TEST (test_decode_frame)
   outbuffer = GST_BUFFER (buffers->data);
 
   fail_if (outbuffer == NULL);
-  /* uncompressed data should be 51200 bytes */
-  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), 51200);
+  /* uncompressed data should be 102400 bytes */
+  fail_unless_equals_int (GST_BUFFER_SIZE (outbuffer), 102400);
 
-  /* and all 51200 bytes must be 0, i.e. silence */
-  for (i = 0; i < 51200; i++)
+  /* and all 102400 bytes must be 0, i.e. silence */
+  for (i = 0; i < 102400; i++)
     fail_unless_equals_int (GST_BUFFER_DATA (outbuffer)[i], 0);
 
   ASSERT_BUFFER_REFCOUNT (outbuffer, "outbuffer", 1);

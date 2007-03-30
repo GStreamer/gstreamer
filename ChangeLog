@@ -1,3 +1,38 @@
+2007-03-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_reset),
+	(gst_wavpack_dec_init), (gst_wavpack_dec_sink_set_caps),
+	(gst_wavpack_dec_clip_outgoing_buffer),
+	(gst_wavpack_dec_post_tags), (gst_wavpack_dec_chain):
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_reset),
+	(gst_wavpack_enc_sink_set_caps), (gst_wavpack_enc_set_wp_config),
+	(gst_wavpack_enc_chain):
+	* ext/wavpack/gstwavpackenc.h:
+	* ext/wavpack/gstwavpackparse.c:
+	Don't play audioconvert. As wavpack wants/outputs all samples with
+	width==32 and depth=[1,32] accept this and let audioconvert convert
+	to accepted formats instead of doing it in the element for n*8 depths.
+	This also adds support for non-n*8 depths and prevents some useless
+	memory allocations. Fixes #421598
+	Also add a workaround for bug #421542 in wavpackenc for now...
+	* tests/check/elements/wavpackdec.c: (GST_START_TEST):
+	* tests/check/elements/wavpackenc.c: (GST_START_TEST):
+	* tests/check/elements/wavpackparse.c: (GST_START_TEST):
+	Consider the change above in the unit tests and test if the correct
+	caps are accepted and set. Also check for GST_BUFFER_OFFSET_END in
+	the wavpackparse unit test.
+
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_init),
+	(gst_wavpack_dec_sink_set_caps):
+	Set caps on the src pad as soon as possible.
+
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackcommon.h:
+	* ext/wavpack/gstwavpackenc.h:
+	* ext/wavpack/gstwavpackparse.h:
+	Fix indention. gst-indent is now called by cicl.
+
 2007-03-28  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_prepare_current_sample),
