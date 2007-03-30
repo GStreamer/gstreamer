@@ -108,26 +108,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "width = (int) 32, "
-        "depth = (int) 32, "
-        "endianness = (int) LITTLE_ENDIAN, "
-        "channels = (int) [ 1, 2 ], "
-        "rate = (int) [ 6000, 192000 ]," "signed = (boolean) TRUE;"
-        "audio/x-raw-int, "
-        "width = (int) 24, "
-        "depth = (int) 24, "
-        "endianness = (int) LITTLE_ENDIAN, "
-        "channels = (int) [ 1, 2 ], "
-        "rate = (int) [ 6000, 192000 ]," "signed = (boolean) TRUE;"
-        "audio/x-raw-int, "
-        "width = (int) 16, "
-        "depth = (int) 16, "
-        "endianness = (int) LITTLE_ENDIAN, "
-        "channels = (int) [ 1, 2 ], "
-        "rate = (int) [ 6000, 192000 ]," "signed = (boolean) TRUE;"
-        "audio/x-raw-int, "
-        "width = (int) 8, "
-        "depth = (int) 8, "
-        "endianness = (int) LITTLE_ENDIAN, "
+        "depth = (int) [ 1, 32], "
+        "endianness = (int) BYTE_ORDER, "
         "channels = (int) [ 1, 2 ], "
         "rate = (int) [ 6000, 192000 ]," "signed = (boolean) TRUE")
     );
@@ -136,7 +118,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack, "
-        "width = (int) { 8, 16, 24, 32 }, "
+        "width = (int) [ 1, 32 ], "
         "channels = (int) [ 1, 2 ], "
         "rate = (int) [ 6000, 192000 ], " "framed = (boolean) TRUE")
     );
@@ -343,7 +325,7 @@ gst_wavpack_enc_reset (GstWavpackEnc * enc)
 
   /* reset stream information */
   enc->samplerate = 0;
-  enc->width = 0;
+  enc->depth = 0;
   enc->channels = 0;
 }
 
@@ -389,14 +371,13 @@ gst_wavpack_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstWavpackEnc *enc = GST_WAVPACK_ENC (gst_pad_get_parent (pad));
   GstStructure *structure = gst_caps_get_structure (caps, 0);
-  int depth = 0;
 
+  /* FIXME: Workaround for bug #421543: calls gst_pad_accept_caps() */
   /* check caps and put relevant parts into our object attributes */
-  if (!gst_structure_get_int (structure, "channels", &enc->channels) ||
+  if (!gst_pad_accept_caps (pad, caps) ||
+      !gst_structure_get_int (structure, "channels", &enc->channels) ||
       !gst_structure_get_int (structure, "rate", &enc->samplerate) ||
-      !gst_structure_get_int (structure, "width", &enc->width) ||
-      !(gst_structure_get_int (structure, "depth", &depth) ||
-          depth != enc->width)) {
+      !gst_structure_get_int (structure, "depth", &enc->depth)) {
     GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL),
         ("got invalid caps: %" GST_PTR_FORMAT, caps));
     gst_object_unref (enc);
@@ -407,7 +388,7 @@ gst_wavpack_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   caps = gst_caps_new_simple ("audio/x-wavpack",
       "channels", G_TYPE_INT, enc->channels,
       "rate", G_TYPE_INT, enc->samplerate,
-      "width", G_TYPE_INT, enc->width, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+      "width", G_TYPE_INT, enc->depth, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   if (!gst_pad_set_caps (enc->srcpad, caps)) {
     GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL),
@@ -428,8 +409,8 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
 {
   enc->wp_config = g_new0 (WavpackConfig, 1);
   /* set general stream informations in the WavpackConfig */
-  enc->wp_config->bytes_per_sample = (enc->width + 7) >> 3;
-  enc->wp_config->bits_per_sample = enc->width;
+  enc->wp_config->bytes_per_sample = GST_ROUND_UP_8 (enc->depth) / 8;
+  enc->wp_config->bits_per_sample = enc->depth;
   enc->wp_config->num_channels = enc->channels;
 
   /* TODO: handle more than 2 channels correctly! */
@@ -540,46 +521,6 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
   }
 }
 
-static int32_t *
-gst_wavpack_enc_format_samples (const uchar * src_data, uint32_t sample_count,
-    guint width)
-{
-  int32_t *data = g_new0 (int32_t, sample_count);
-
-  /* put all samples into an int32_t*, no matter what
-   * width we have and convert them from little endian
-   * to host byte order */
-
-  switch (width) {
-      int i;
-
-    case 8:
-      for (i = 0; i < sample_count; i++)
-        data[i] = (int32_t) (int8_t) src_data[i];
-      break;
-    case 16:
-      for (i = 0; i < sample_count; i++)
-        data[i] = (int32_t) src_data[2 * i]
-            | ((int32_t) (int8_t) src_data[2 * i + 1] << 8);
-      break;
-    case 24:
-      for (i = 0; i < sample_count; i++)
-        data[i] = (int32_t) src_data[3 * i]
-            | ((int32_t) src_data[3 * i + 1] << 8)
-            | ((int32_t) (int8_t) src_data[3 * i + 2] << 16);
-      break;
-    case 32:
-      for (i = 0; i < sample_count; i++)
-        data[i] = (int32_t) src_data[4 * i]
-            | ((int32_t) src_data[4 * i + 1] << 8)
-            | ((int32_t) src_data[4 * i + 2] << 16)
-            | ((int32_t) (int8_t) src_data[4 * i + 3] << 24);
-      break;
-  }
-
-  return data;
-}
-
 static int
 gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
 {
@@ -663,8 +604,7 @@ static GstFlowReturn
 gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
 {
   GstWavpackEnc *enc = GST_WAVPACK_ENC (gst_pad_get_parent (pad));
-  uint32_t sample_count = GST_BUFFER_SIZE (buf) / ((enc->width + 7) >> 3);
-  int32_t *data;
+  uint32_t sample_count = GST_BUFFER_SIZE (buf) / 4;
   GstFlowReturn ret;
 
   /* reset the last returns to GST_FLOW_OK. This is only set to something else
@@ -712,17 +652,9 @@ gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
     MD5Update (enc->md5_context, GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   }
 
-  /* put all samples into an int32_t*, no matter what
-   * width we have and convert them from little endian
-   * to host byte order */
-  data =
-      gst_wavpack_enc_format_samples (GST_BUFFER_DATA (buf), sample_count,
-      enc->width);
-
-  gst_buffer_unref (buf);
-
   /* encode and handle return values from encoding */
-  if (WavpackPackSamples (enc->wp_context, data, sample_count / enc->channels)) {
+  if (WavpackPackSamples (enc->wp_context, (int32_t *) GST_BUFFER_DATA (buf),
+          sample_count / enc->channels)) {
     GST_DEBUG ("encoding samples successful");
     ret = GST_FLOW_OK;
   } else {
@@ -745,7 +677,7 @@ gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
     }
   }
 
-  g_free (data);
+  gst_buffer_unref (buf);
   gst_object_unref (enc);
   return ret;
 }

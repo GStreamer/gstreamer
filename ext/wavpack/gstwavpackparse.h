@@ -26,7 +26,6 @@
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_WAVPACK_PARSE \
   (gst_wavpack_parse_get_type())
 #define GST_WAVPACK_PARSE(obj) \
@@ -37,58 +36,57 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_WAVPACK_PARSE))
 #define GST_IS_WAVPACK_PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_WAVPACK_PARSE))
-
-typedef struct _GstWavpackParse           GstWavpackParse;
-typedef struct _GstWavpackParseClass      GstWavpackParseClass;
+typedef struct _GstWavpackParse GstWavpackParse;
+typedef struct _GstWavpackParseClass GstWavpackParseClass;
 typedef struct _GstWavpackParseIndexEntry GstWavpackParseIndexEntry;
 
-struct _GstWavpackParseIndexEntry {
-  gint64 byte_offset;          /* byte offset of this chunk  */
-  gint64 sample_offset;        /* first sample in this chunk */
-  gint64 sample_offset_end;    /* first sample in next chunk  */
+struct _GstWavpackParseIndexEntry
+{
+  gint64 byte_offset;           /* byte offset of this chunk  */
+  gint64 sample_offset;         /* first sample in this chunk */
+  gint64 sample_offset_end;     /* first sample in next chunk  */
 };
 
 struct _GstWavpackParse
 {
-  GstElement     element;
+  GstElement element;
 
-  /*< private >*/
-  GstPad        *sinkpad;
-  GstPad        *srcpad;
-  
-  guint          samplerate;
-  guint          channels;
-  guint          total_samples;
+  /*< private > */
+  GstPad *sinkpad;
+  GstPad *srcpad;
 
-  gboolean       need_newsegment;
+  guint samplerate;
+  guint channels;
+  guint total_samples;
 
-  gint64         current_offset;   /* byte offset on sink pad */
-  gint64         upstream_length;  /* length of file in bytes */
+  gboolean need_newsegment;
 
-  GstSegment     segment;     /* the currently configured segment, in
-                               * samples/audio frames (DEFAULT format) */
+  gint64 current_offset;        /* byte offset on sink pad */
+  gint64 upstream_length;       /* length of file in bytes */
 
-  GstAdapter    *adapter;     /* when operating chain-based, otherwise NULL */
+  GstSegment segment;           /* the currently configured segment, in
+                                 * samples/audio frames (DEFAULT format) */
+
+  GstAdapter *adapter;          /* when operating chain-based, otherwise NULL */
 
   /* Array of GstWavpackParseIndexEntry structs, mapping known
    * sample offsets to byte offsets. Is kept increasing without
    * gaps (ie. append only and consecutive entries must always
    * map to consecutive chunks in the file). */
-  GArray        *entries;
+  GArray *entries;
 
   /* Queued events (e.g. tag events we receive before we create the src pad) */
-  GList         *queued_events;  /* STREAM_LOCK */
+  GList *queued_events;         /* STREAM_LOCK */
 };
 
-struct _GstWavpackParseClass 
+struct _GstWavpackParseClass
 {
   GstElementClass parent;
 };
 
 GType gst_wavpack_parse_get_type (void);
 
-gboolean gst_wavpack_parse_plugin_init (GstPlugin *plugin);
+gboolean gst_wavpack_parse_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_WAVPACK_PARSE_H__ */

@@ -28,9 +28,9 @@
 
 typedef struct
 {
-  guint32  byte_length;
-  guint8  *data;
-  guint8   id;
+  guint32 byte_length;
+  guint8 *data;
+  guint8 id;
 } GstWavpackMetadata;
 
 #define ID_UNIQUE               0x3f

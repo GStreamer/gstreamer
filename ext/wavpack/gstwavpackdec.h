@@ -30,7 +30,6 @@
 #include "gstwavpackstreamreader.h"
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_WAVPACK_DEC \
   (gst_wavpack_dec_get_type())
 #define GST_WAVPACK_DEC(obj) \
@@ -48,23 +47,22 @@ struct _GstWavpackDec
 {
   GstElement element;
 
-  /*< private >*/
-  GstPad              *sinkpad;
-  GstPad              *srcpad;
+  /*< private > */
+  GstPad *sinkpad;
+  GstPad *srcpad;
 
-  WavpackContext      *context;
+  WavpackContext *context;
   WavpackStreamReader *stream_reader;
 
-  read_id              wv_id;
+  read_id wv_id;
 
-  GstSegment           segment; /* used for clipping, TIME format */
+  GstSegment segment;           /* used for clipping, TIME format */
 
-  guint                sample_rate;
-  guint                width;
-  guint                depth;
-  guint                channels;
+  gint sample_rate;
+  gint depth;
+  gint channels;
 
-  gint                 error_count;
+  gint error_count;
 };
 
 struct _GstWavpackDecClass

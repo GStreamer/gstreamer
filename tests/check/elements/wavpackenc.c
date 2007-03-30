@@ -31,7 +31,7 @@ static GstPad *mysrcpad, *mysinkpad;
 static GstBus *bus;
 
 #define RAW_CAPS_STRING "audio/x-raw-int, " \
-                        "width = (int) 16, " \
+                        "width = (int) 32, " \
                         "depth = (int) 16, " \
                         "channels = (int) 1, " \
                         "rate = (int) 44100, " \
@@ -47,11 +47,20 @@ static GstBus *bus;
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
+    GST_STATIC_CAPS ("audio/x-wavpack, "
+        "width = (int) 16, "
+        "channels = (int) 1, "
+        "rate = (int) 44100, " "framed = (boolean) true"));
+
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
+    GST_STATIC_CAPS ("audio/x-raw-int, "
+        "width = (int) 32, "
+        "depth = (int) 16, "
+        "channels = (int) 1, "
+        "rate = (int) 44100, "
+        "endianness = (int) BYTE_ORDER, " "signed = (boolean) true"));
 
 GstElement *
 setup_wavpackenc ()
@@ -126,8 +135,8 @@ GST_START_TEST (test_encode_silence)
 
   fail_unless_equals_int (GST_BUFFER_TIMESTAMP (outbuffer), 0);
   fail_unless_equals_int (GST_BUFFER_OFFSET (outbuffer), 0);
-  fail_unless_equals_int (GST_BUFFER_DURATION (outbuffer), 11337868);
-  fail_unless_equals_int (GST_BUFFER_OFFSET_END (outbuffer), 500);
+  fail_unless_equals_int (GST_BUFFER_DURATION (outbuffer), 5668934);
+  fail_unless_equals_int (GST_BUFFER_OFFSET_END (outbuffer), 250);
 
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), "wvpk", 4) == 0,
       "Failed to encode to valid Wavpack frames");
