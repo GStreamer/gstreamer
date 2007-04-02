@@ -17,10 +17,16 @@ gboolean         gst_pad_unlink (GstPad *srcpad, GstPad *sinkpad);
 
 == inserting an element ==
 
-* we have: e1 ! e2
-* we want: e1 ! e3 ! e2
+* we have: e1 ! e4
+* we want: e1 ! e2 ! e3 ! e4
+* we want: e1 ! e2      ! e4
 
-gst_element_insert_linked(e1, e2, e3);
+gst_element_insert_linked(e1, e2, e3, e4); // e2 == e3 allowed
+gst_pads_insert_link (e1.src, e2.sink, e3.src, e4.sink);
+  disconnect e1.src, e1.src.peer
+  disconnect e4.sink, e4.sink.peer
+  connect e1.src e2.sink
+  connect e3.src e4.sink
 
 == removing an element ==
 
@@ -28,15 +34,28 @@ gst_element_insert_linked(e1, e2, e3);
 * we want: e1 ! e3
 
 gst_element_remove_linked(e2);
+gst_pads_remove_link (e1.src, e3.sink);
+  disconnect e1.src, e1.src.peer
+  disconnect e3.sink, e3.sink..peer
+  connect e1.src e3.sink
 
 == swapping out an elelment ==
 
-* we have: e1 ! e2 ! e3
-* we want: e1 ! e4 ! e3
+* we have: e1 ! e2 ! e5
+* we want: e1 ! e3 ! e4 ! e5
+* we want: e1 ! e3      ! e5
 
-gst_element_swap_linked(e1, e3, e4);
+gst_element_swap_linked(e1, e3, e4, e5);
+gst_pads_insert_link (e1.src, e3.sink, e4.src, e5.sink);
+  disconnect e1.src, e1.src.peer (=e2.sink)
+  disconnect e5.sink, e5.sink.peer
+  connect e1.src e3.sink
+  connect e4.src e5.sink
+
+
 
 = thoughts =
 * I don't think we need api for pads
 * Should current api check for the state?
+* do we want to swapp multiple elements at once
 

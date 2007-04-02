@@ -105,7 +105,7 @@ on_object_controlled_property_changed (const GObject * object, GParamSpec * arg,
   GstControlledProperty *prop = GST_CONTROLLED_PROPERTY (user_data);
   GstController *ctrl;
 
-  GST_INFO ("notify for '%s'", prop->name);
+  GST_LOG ("notify for '%s'", prop->name);
 
   ctrl = g_object_get_qdata (G_OBJECT (object), __gst_controller_key);
   g_return_if_fail (ctrl);
@@ -945,7 +945,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
   g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  GST_INFO ("sync_values");
+  GST_LOG ("sync_values");
 
   g_mutex_lock (self->lock);
   /* go over the controlled properties of the controller */
@@ -1075,6 +1075,9 @@ gst_controller_get_value_array (GstController * self, GstClockTime timestamp,
  *
  * Sets the given interpolation mode on the given property.
  *
+ * <note><para>Quadratic, qubic and user interpolation is not yet available.
+ * </para></note>
+ *
  * Returns: %TRUE if the property is handled by the controller, %FALSE otherwise
  */
 gboolean
@@ -1092,8 +1095,7 @@ gst_controller_set_interpolation_mode (GstController * self,
     /* TODO shouldn't this also get a GstInterpolateMethod *user_method
        for the case mode==GST_INTERPOLATE_USER
      */
-    gst_controlled_property_set_interpolation_mode (prop, mode);
-    res = TRUE;
+    res = gst_controlled_property_set_interpolation_mode (prop, mode);
   }
   g_mutex_unlock (self->lock);
 

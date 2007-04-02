@@ -1,3 +1,20 @@
+2007-04-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/random/ensonic/dynlink.txt:
+	  More work on proposal for new core api.
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasetransform.h:
+          API: GST_BASE_TRANSFORM_LOCK/UNLOCK added
+          
+	* libs/gst/controller/gstcontroller.c:
+	(on_object_controlled_property_changed),
+	(gst_controller_sync_values),
+	(gst_controller_set_interpolation_mode):
+	* libs/gst/controller/gstcontroller.h:
+	  Less verbose logging add docs for unimplemented parts and correctly
+	  return when using unavailable parts.
+
 2007-03-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstclock.c: (gst_clock_set_master), (do_linear_regression):

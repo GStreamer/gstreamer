@@ -84,9 +84,9 @@ typedef struct _GstValueArray
  * @GST_INTERPOLATE_TRIGGER: returns the default value of the property,
  * except for times with specific values
  * @GST_INTERPOLATE_LINEAR: linear interpolation
- * @GST_INTERPOLATE_QUADRATIC: square interpolation
- * @GST_INTERPOLATE_CUBIC: cubic interpolation
- * @GST_INTERPOLATE_USER: user-provided interpolation
+ * @GST_INTERPOLATE_QUADRATIC: square interpolation (not yet available)
+ * @GST_INTERPOLATE_CUBIC: cubic interpolation (not yet available)
+ * @GST_INTERPOLATE_USER: user-provided interpolation (not yet available)
  *
  * The various interpolation modes available.
  */
