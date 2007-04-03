@@ -1,3 +1,76 @@
+2007-04-03  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* gst/rtpmanager/Makefile.am:
+	* gst/rtpmanager/async_jitter_queue.c: (async_jitter_queue_new),
+	(signal_waiting_threads), (async_jitter_queue_ref),
+	(async_jitter_queue_ref_unlocked),
+	(async_jitter_queue_set_low_threshold),
+	(async_jitter_queue_set_high_threshold),
+	(async_jitter_queue_set_max_queue_length),
+	(async_jitter_queue_get_g_queue), (calculate_ts_diff),
+	(async_jitter_queue_length_ts_units_unlocked),
+	(async_jitter_queue_unref_and_unlock), (async_jitter_queue_unref),
+	(async_jitter_queue_lock), (async_jitter_queue_unlock),
+	(async_jitter_queue_push), (async_jitter_queue_push_unlocked),
+	(async_jitter_queue_push_sorted),
+	(async_jitter_queue_push_sorted_unlocked),
+	(async_jitter_queue_insert_after_unlocked),
+	(async_jitter_queue_pop_intern_unlocked), (async_jitter_queue_pop),
+	(async_jitter_queue_pop_unlocked), (async_jitter_queue_length),
+	(async_jitter_queue_length_unlocked),
+	(async_jitter_queue_set_flushing_unlocked),
+	(async_jitter_queue_unset_flushing_unlocked),
+	(async_jitter_queue_set_blocking_unlocked):
+	* gst/rtpmanager/async_jitter_queue.h:
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_base_init),
+	(gst_rtp_bin_class_init), (gst_rtp_bin_init),
+	(gst_rtp_bin_finalize), (gst_rtp_bin_set_property),
+	(gst_rtp_bin_get_property), (gst_rtp_bin_change_state),
+	(gst_rtp_bin_request_new_pad), (gst_rtp_bin_release_pad):
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtpmanager/gstrtpclient.c: (new_pad), (create_stream),
+	(free_stream), (find_stream_by_ssrc), (gst_rtp_client_base_init),
+	(gst_rtp_client_class_init), (gst_rtp_client_init),
+	(gst_rtp_client_finalize), (gst_rtp_client_set_property),
+	(gst_rtp_client_get_property), (gst_rtp_client_change_state),
+	(gst_rtp_client_request_new_pad), (gst_rtp_client_release_pad):
+	* gst/rtpmanager/gstrtpclient.h:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_base_init),
+	(gst_rtp_jitter_buffer_class_init), (gst_rtp_jitter_buffer_init),
+	(gst_rtp_jitter_buffer_dispose), (gst_rtp_jitter_buffer_getcaps),
+	(gst_jitter_buffer_sink_setcaps), (free_func),
+	(gst_rtp_jitter_buffer_flush_start),
+	(gst_rtp_jitter_buffer_flush_stop),
+	(gst_rtp_jitter_buffer_src_activate_push),
+	(gst_rtp_jitter_buffer_change_state), (priv_compare_rtp_seq_lt),
+	(compare_rtp_buffers_seq_num), (gst_rtp_jitter_buffer_sink_event),
+	(gst_rtp_jitter_buffer_chain), (gst_rtp_jitter_buffer_loop),
+	(gst_rtp_jitter_buffer_query),
+	(gst_rtp_jitter_buffer_set_property),
+	(gst_rtp_jitter_buffer_get_property):
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	* gst/rtpmanager/gstrtpmanager.c: (plugin_init):
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_base_init),
+	(gst_rtp_pt_demux_class_init), (gst_rtp_pt_demux_init),
+	(gst_rtp_pt_demux_finalize), (gst_rtp_pt_demux_chain),
+	(gst_rtp_pt_demux_getcaps), (find_pad_for_pt),
+	(gst_rtp_pt_demux_setup), (gst_rtp_pt_demux_release),
+	(gst_rtp_pt_demux_change_state):
+	* gst/rtpmanager/gstrtpptdemux.h:
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_base_init),
+	(gst_rtp_session_class_init), (gst_rtp_session_init),
+	(gst_rtp_session_finalize), (gst_rtp_session_set_property),
+	(gst_rtp_session_get_property), (gst_rtp_session_change_state),
+	(gst_rtp_session_chain_recv_rtp),
+	(gst_rtp_session_chain_recv_rtcp),
+	(gst_rtp_session_chain_send_rtp), (create_recv_rtp_sink),
+	(create_recv_rtcp_sink), (create_send_rtp_sink), (create_rtcp_src),
+	(gst_rtp_session_request_new_pad), (gst_rtp_session_release_pad):
+	* gst/rtpmanager/gstrtpsession.h:
+	Add RTP session management elements. Still in progress.
+
 2007-03-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_reset),

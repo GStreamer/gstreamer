@@ -95,6 +95,7 @@ GST_PLUGINS_ALL="\
   nuvdemux \
   real \
   replaygain \
+  rtpmanager \
   spectrum \
   speed \
   qtdemux \
@@ -1079,6 +1080,7 @@ gst/mve/Makefile
 gst/nsf/Makefile
 gst/nuvdemux/Makefile
 gst/replaygain/Makefile
+gst/rtpmanager/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
 gst/qtdemux/Makefile
