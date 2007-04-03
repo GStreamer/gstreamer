@@ -106,6 +106,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmve.so
 %{_libdir}/gstreamer-%{majorminor}/libgstequalizer.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegvideoparse.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrtpmanager.so
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
