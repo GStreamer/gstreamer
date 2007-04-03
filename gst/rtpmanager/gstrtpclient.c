@@ -27,10 +27,13 @@
  * This element handles RTP data from one client. It accepts multiple RTP streams that
  * should be synchronized together.
  * </para>
+ * <para>
+ * Normally the SSRCs that map to the same CNAME (as given in the RTCP SDES messages)
+ * should be synchronized.
+ * </para>
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! alsasink
  * </programlisting>
  * </para>
  * </refsect2>
