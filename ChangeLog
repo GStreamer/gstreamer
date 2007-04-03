@@ -1,3 +1,11 @@
+2007-04-03  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
+
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_release_pad):
+	Deactivate pads and free GstSingleQueue with gst_single_queue_free()
+	when releasing sink pad. Fixes #425400.
+
 2007-04-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/dynlink.txt:

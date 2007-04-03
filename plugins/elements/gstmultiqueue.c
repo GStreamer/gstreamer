@@ -407,12 +407,12 @@ gst_multi_queue_release_pad (GstElement * element, GstPad * pad)
 
   /* delete SingleQueue */
   gst_data_queue_set_flushing (sq->queue, TRUE);
-  gst_data_queue_flush (sq->queue);
 
-  g_object_unref (G_OBJECT (sq->queue));
-
+  gst_pad_set_active (sq->srcpad, FALSE);
+  gst_pad_set_active (sq->sinkpad, FALSE);
   gst_element_remove_pad (element, sq->srcpad);
   gst_element_remove_pad (element, sq->sinkpad);
+  gst_single_queue_free (sq);
 
   /* FIXME : recompute next-non-linked */
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
