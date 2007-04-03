@@ -433,7 +433,7 @@ static const GstWipeConfig wipe_config[] = {
 #define WIPE_CONFIG_24  WIPE_CONFIG_23+1
   {triangles_3t[WIPE_T3_24], 3, 1, 1, 0},       /* 24 */
 #define WIPE_CONFIG_25  WIPE_CONFIG_24+1
-  {triangles_3t[WIPE_T3_23], 3, 1, 1, 0},       /* 25 */
+  {triangles_3t[WIPE_T3_25], 3, 1, 1, 0},       /* 25 */
 #define WIPE_CONFIG_26  WIPE_CONFIG_25+1
   {triangles_3t[WIPE_T3_26], 3, 1, 1, 0},       /* 26 */
 #define WIPE_CONFIG_41  WIPE_CONFIG_26+1
