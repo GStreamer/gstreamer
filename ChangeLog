@@ -1,5 +1,10 @@
 2007-04-03  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtpmanager/Makefile.am:
+	Add .h file so it can be disted properly.
+
+2007-04-03  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	* gst/rtpmanager/Makefile.am:
 	* gst/rtpmanager/async_jitter_queue.c: (async_jitter_queue_new),
