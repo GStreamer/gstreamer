@@ -69,6 +69,7 @@ struct _GstGLImageSink
 
   Display *display;
   GLXContext context;
+  gboolean internal;
 
   int max_texture_size;
   gboolean have_yuv;
@@ -83,6 +84,8 @@ struct _GstGLImageSinkClass
   GstVideoSinkClass video_sink_class;
 
 };
+
+static void gst_glimage_sink_init_interfaces (GType type);
 
 static void gst_glimage_sink_finalize (GObject * object);
 static void gst_glimage_sink_set_property (GObject * object, guint prop_id,
@@ -99,6 +102,21 @@ static GstCaps *gst_glimage_sink_get_caps (GstBaseSink * bsink);
 static gboolean gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static GstFlowReturn gst_glimage_sink_render (GstBaseSink * bsink,
     GstBuffer * buf);
+static gboolean gst_glimage_sink_start (GstBaseSink * bsink);
+static gboolean gst_glimage_sink_stop (GstBaseSink * bsink);
+static gboolean gst_glimage_sink_unlock (GstBaseSink * bsink);
+
+static void gst_glimage_sink_xoverlay_init (GstXOverlayClass * iface);
+static void gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay,
+    XID window_id);
+static void gst_glimage_sink_expose (GstXOverlay * overlay);
+static void gst_glimage_sink_set_event_handling (GstXOverlay * overlay,
+    gboolean handle_events);
+
+static gboolean gst_glimage_sink_interface_supported (GstImplementsInterface *
+    iface, GType type);
+static void gst_glimage_sink_implements_init (GstImplementsInterfaceClass *
+    klass);
 
 static void gst_glimage_sink_create_window (GstGLImageSink * glimage_sink);
 static gboolean gst_glimage_sink_init_display (GstGLImageSink * glimage_sink);
@@ -130,8 +148,27 @@ enum
   ARG_DISPLAY
 };
 
-GST_BOILERPLATE (GstGLImageSink, gst_glimage_sink, GstVideoSink,
-    GST_TYPE_VIDEO_SINK);
+GST_BOILERPLATE_FULL (GstGLImageSink, gst_glimage_sink, GstVideoSink,
+    GST_TYPE_VIDEO_SINK, gst_glimage_sink_init_interfaces);
+
+static void
+gst_glimage_sink_init_interfaces (GType type)
+{
+  static const GInterfaceInfo overlay_info = {
+    (GInterfaceInitFunc) gst_glimage_sink_xoverlay_init,
+    NULL,
+    NULL
+  };
+  static const GInterfaceInfo implements_info = {
+    (GInterfaceInitFunc) gst_glimage_sink_implements_init,
+    NULL,
+    NULL
+  };
+
+  g_type_add_interface_static (type, GST_TYPE_IMPLEMENTS_INTERFACE,
+      &implements_info);
+  g_type_add_interface_static (type, GST_TYPE_X_OVERLAY, &overlay_info);
+}
 
 static void
 gst_glimage_sink_base_init (gpointer g_class)
@@ -171,26 +208,21 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gstbasesink_class->get_times = gst_glimage_sink_get_times;
   gstbasesink_class->preroll = gst_glimage_sink_render;
   gstbasesink_class->render = gst_glimage_sink_render;
+  gstbasesink_class->start = gst_glimage_sink_start;
+  gstbasesink_class->stop = gst_glimage_sink_stop;
+  gstbasesink_class->unlock = gst_glimage_sink_unlock;
 }
 
 static void
 gst_glimage_sink_init (GstGLImageSink * glimage_sink,
     GstGLImageSinkClass * glimage_sink_class)
 {
-  int screen;
 
-  glimage_sink->display = XOpenDisplay (NULL);
-  if (glimage_sink->display) {
-    screen = DefaultScreen (glimage_sink->display);
+  glimage_sink->width = -1;
+  glimage_sink->height = -1;
 
-    XSynchronize (glimage_sink->display, True);
-  }
-  /* XSetErrorHandler (error_handler); */
-  glimage_sink->width = 400;
-  glimage_sink->height = 400;
-
+  glimage_sink->display_name = NULL;
   gst_glimage_sink_update_caps (glimage_sink);
-  glimage_sink->display_name = g_strdup ("");
 }
 
 static void
@@ -205,10 +237,7 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_DISPLAY:
-      /* FIXME this should close/reopen display */
-      if (glimage_sink->display_name) {
-        g_free (glimage_sink->display_name);
-      }
+      g_free (glimage_sink->display_name);
       glimage_sink->display_name = g_strdup (g_value_get_string (value));
       break;
     default:
@@ -230,10 +259,6 @@ gst_glimage_sink_finalize (GObject * object)
     gst_caps_unref (glimage_sink->caps);
   }
   g_free (glimage_sink->display_name);
-
-  if (glimage_sink->display) {
-    XCloseDisplay (glimage_sink->display);
-  }
 }
 
 static void
@@ -272,11 +297,6 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!gst_glimage_sink_init_display (glimage_sink)) {
-        GST_ELEMENT_ERROR (glimage_sink, RESOURCE, WRITE, (NULL),
-            ("Could not initialize OpenGL"));
-        return GST_STATE_CHANGE_FAILURE;
-      }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
@@ -314,10 +334,65 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
  * GstBaseSink methods
  */
 
+static gboolean
+gst_glimage_sink_start (GstBaseSink * bsink)
+{
+  GstGLImageSink *glimage_sink;
+  gboolean ret;
+
+  glimage_sink = GST_GLIMAGE_SINK (bsink);
+
+  ret = gst_glimage_sink_init_display (glimage_sink);
+
+  return ret;
+}
+
+static gboolean
+gst_glimage_sink_stop (GstBaseSink * bsink)
+{
+  GstGLImageSink *glimage_sink;
+
+  glimage_sink = GST_GLIMAGE_SINK (bsink);
+
+  if (glimage_sink->display) {
+    XCloseDisplay (glimage_sink->display);
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_glimage_sink_unlock (GstBaseSink * bsink)
+{
+  //GstGLImageSink *glimage_sink;
+
+  //glimage_sink = GST_GLIMAGE_SINK (bsink);
+
+  /* FIXME */
+
+  return TRUE;
+}
+
 static void
 gst_glimage_sink_get_times (GstBaseSink * bsink, GstBuffer * buf,
     GstClockTime * start, GstClockTime * end)
 {
+  GstGLImageSink *glimagesink;
+
+  glimagesink = GST_GLIMAGE_SINK (bsink);
+
+  if (GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+    *start = GST_BUFFER_TIMESTAMP (buf);
+    if (GST_BUFFER_DURATION_IS_VALID (buf)) {
+      *end = *start + GST_BUFFER_DURATION (buf);
+    } else {
+      if (glimagesink->fps_n > 0) {
+        *end = *start +
+            gst_util_uint64_scale_int (GST_SECOND, glimagesink->fps_d,
+            glimagesink->fps_n);
+      }
+    }
+  }
+
 
 }
 
@@ -408,11 +483,9 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     }
   }
 
-#if 0
   if (!glimage_sink->window) {
     gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
   }
-#endif
 
   if (!glimage_sink->window) {
     gst_glimage_sink_create_window (glimage_sink);
@@ -431,6 +504,87 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   gst_glimage_sink_push_image (glimage_sink, buf);
 
   return GST_FLOW_OK;
+}
+
+/*
+ * XOverlay
+ */
+static void
+gst_glimage_sink_xoverlay_init (GstXOverlayClass * iface)
+{
+  iface->set_xwindow_id = gst_glimage_sink_set_xwindow_id;
+  iface->expose = gst_glimage_sink_expose;
+  iface->handle_events = gst_glimage_sink_set_event_handling;
+}
+
+static void
+gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay, XID window_id)
+{
+  GstGLImageSink *glimage_sink;
+
+  g_return_if_fail (GST_IS_GLIMAGE_SINK (overlay));
+
+  glimage_sink = GST_GLIMAGE_SINK (overlay);
+  if (glimage_sink->window == window_id) {
+    return;
+  }
+
+  /* FIXME check if display inited */
+
+  if (window_id == 0) {
+    /* go back to independent window */
+    /* FIXME */
+    glimage_sink->internal = TRUE;
+  } else {
+    XWindowAttributes attr;
+
+    glimage_sink->window = window_id;
+
+    XGetWindowAttributes (glimage_sink->display, window_id, &attr);
+    glimage_sink->width = attr.width;
+    glimage_sink->height = attr.height;
+    glimage_sink->internal = FALSE;
+#if 0
+    /* FIXME */
+    if (glimage_sink->handle_events) {
+      XSelectInput (glimage_sink->display, window_id,
+          ExposureMask | StructureNotifyMask | PointerMotionMask | KeyPressMask
+          | KeyReleaseMask);
+    }
+#endif
+  }
+
+}
+
+static void
+gst_glimage_sink_expose (GstXOverlay * overlay)
+{
+  /* FIXME */
+  GST_DEBUG ("expose");
+}
+
+static void
+gst_glimage_sink_set_event_handling (GstXOverlay * overlay,
+    gboolean handle_events)
+{
+  /* FIXME */
+  GST_DEBUG ("handle_events %d", handle_events);
+}
+
+/*
+ * GstImplementsInterface
+ */
+static gboolean
+gst_glimage_sink_interface_supported (GstImplementsInterface * iface,
+    GType type)
+{
+  return TRUE;
+}
+
+static void
+gst_glimage_sink_implements_init (GstImplementsInterfaceClass * klass)
+{
+  klass->supported = gst_glimage_sink_interface_supported;
 }
 
 
@@ -460,14 +614,10 @@ gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
   GstCaps *caps;
   int max_size;
 
-  if (glimage_sink->caps) {
-    gst_caps_unref (glimage_sink->caps);
-  }
-
   if (glimage_sink->display == NULL) {
-    glimage_sink->caps =
-        gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
+    caps = gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD
             (glimage_sink)));
+    gst_caps_replace (&glimage_sink->caps, caps);
     return;
   }
 
@@ -490,7 +640,7 @@ gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
       "width", GST_TYPE_INT_RANGE, 16, max_size,
       "height", GST_TYPE_INT_RANGE, 16, max_size, NULL);
 
-  glimage_sink->caps = caps;
+  gst_caps_replace (&glimage_sink->caps, caps);
 }
 
 static void
@@ -546,6 +696,9 @@ gst_glimage_sink_create_window (GstGLImageSink * glimage_sink)
     XMapWindow (glimage_sink->display, glimage_sink->window);
   }
 
+  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (glimage_sink),
+      glimage_sink->window);
+
   glXMakeCurrent (glimage_sink->display, glimage_sink->window,
       glimage_sink->context);
 
@@ -574,7 +727,7 @@ gst_glimage_sink_init_display (GstGLImageSink * glimage_sink)
   const char *extstring;
   Window window;
 
-  GST_LOG_OBJECT (glimage_sink, "initializing display");
+  GST_DEBUG_OBJECT (glimage_sink, "initializing display");
 
   glimage_sink->display = XOpenDisplay (NULL);
   if (glimage_sink->display == NULL) {
@@ -588,13 +741,13 @@ gst_glimage_sink_init_display (GstGLImageSink * glimage_sink)
 
   ret = glXQueryExtension (glimage_sink->display, &error_base, &event_base);
   if (!ret) {
-    GST_LOG_OBJECT (glimage_sink, "No GLX extension");
+    GST_DEBUG_OBJECT (glimage_sink, "No GLX extension");
     return FALSE;
   }
 
   visinfo = glXChooseVisual (glimage_sink->display, scrnum, attrib);
   if (visinfo == NULL) {
-    GST_LOG_OBJECT (glimage_sink, "No usable visual");
+    GST_DEBUG_OBJECT (glimage_sink, "No usable visual");
     return FALSE;
   }
 
@@ -803,7 +956,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "glimagesink",
-          GST_RANK_NONE, GST_TYPE_GLIMAGE_SINK))
+          GST_RANK_MARGINAL, GST_TYPE_GLIMAGE_SINK))
     return FALSE;
 
   GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0,
