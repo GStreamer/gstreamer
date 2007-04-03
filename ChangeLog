@@ -1,5 +1,15 @@
 2007-04-03  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtpmanager/gstrtpbin.c: (find_session_by_id),
+	(create_session), (gst_rtp_bin_base_init), (create_recv_rtp),
+	(create_recv_rtcp), (create_send_rtp), (create_rtcp),
+	(gst_rtp_bin_request_new_pad):
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtpmanager/gstrtpclient.c:
+	Some more ghostpad magic.
+
+2007-04-03  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtpmanager/Makefile.am:
 	Add .h file so it can be disted properly.
 

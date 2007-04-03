@@ -40,8 +40,8 @@ typedef struct _GstRTPBinPrivate GstRTPBinPrivate;
 struct _GstRTPBin {
   GstBin         element;
 
-  /* a list of streams from a client */
-  GList         *streams;
+  /* a list of session */
+  GList         *sessions;
 
   /*< private >*/
   GstRTPBinPrivate *priv;
