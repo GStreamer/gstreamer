@@ -835,6 +835,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 {
   gboolean res = FALSE;
   GList *tmp;
+  GstPad *mqpad = NULL;
 
   g_return_val_if_fail (factories != NULL, FALSE);
   GST_DEBUG_OBJECT (dbin, "pad %s:%s , group:%p",
@@ -842,8 +843,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   /* 1. is element demuxer or parser */
   if (is_demuxer_element (src)) {
-    GstPad *mqpad;
-
     GST_LOG_OBJECT (src, "is a demuxer, connecting the pad through multiqueue");
 
     if (!group)
@@ -908,7 +907,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       gst_bin_remove (GST_BIN (dbin), element);
       continue;
     }
-
+    gst_object_unref (sinkpad);
     GST_LOG_OBJECT (dbin, "linked on pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
     /* link this element further */
@@ -920,7 +919,6 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       GST_WARNING_OBJECT (dbin, "Couldn't set %s to PAUSED",
           GST_ELEMENT_NAME (element));
       gst_element_set_state (element, GST_STATE_NULL);
-      gst_object_unref (sinkpad);
       gst_bin_remove (GST_BIN (dbin), element);
       continue;
     }
@@ -928,6 +926,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     res = TRUE;
     break;
   }
+
+  if (mqpad)
+    gst_object_unref (mqpad);
 
 beach:
   return res;
@@ -1058,6 +1059,7 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 {
   gboolean newgroup = FALSE;
   gboolean isdemux;
+  GstPad *mqpad = NULL;
 
   GST_DEBUG_OBJECT (dbin, "pad %s:%s, group:%p",
       GST_DEBUG_PAD_NAME (pad), group);
@@ -1074,8 +1076,6 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   isdemux = is_demuxer_element (src);
 
   if (isdemux || newgroup) {
-    GstPad *mqpad;
-
     GST_LOG_OBJECT (src, "is a demuxer, connecting the pad through multiqueue");
 
     if (!(mqpad = gst_decode_group_control_demuxer_pad (group, pad)))
@@ -1091,6 +1091,9 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
      * group as being complete. */
     gst_decode_group_set_complete (group);
   }
+  if (mqpad)
+    gst_object_unref (mqpad);
+
 beach:
   return;
 }
@@ -1823,7 +1826,10 @@ restart:
         GstPad *peerpad = NULL;
 
         if ((peerpad = gst_pad_get_peer (pad))) {
-          GstObject *parent = gst_pad_get_parent (peerpad);
+          GstObject *parent;
+
+          parent = gst_pad_get_parent (peerpad);
+          gst_object_unref (peerpad);
 
           if (parent && GST_IS_ELEMENT (parent))
             deactivate_free_recursive (group, GST_ELEMENT (parent));
