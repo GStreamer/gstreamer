@@ -13,6 +13,7 @@ noinst_HEADERS = gstrtpbin.h \
 		 gstrtpclient.h \
                  async_jitter_queue.h \
 		 gstrtpjitterbuffer.h \
+                 gstrtpptdemux.h \
 		 gstrtpsession.h
 
 libgstrtpmanager_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(ERROR_CFLAGS)
