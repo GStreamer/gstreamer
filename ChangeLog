@@ -139,7 +139,7 @@
 
 === release 0.10.7 ===
 
-2007-01-31   <>
+2007-01-31   Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:
 	* NEWS:
