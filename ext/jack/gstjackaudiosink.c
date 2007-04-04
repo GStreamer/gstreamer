@@ -26,7 +26,7 @@
  *
  * <refsect2>
  * <para>
- * A Sink that outputs data to Jack ports. 
+ * A Sink that outputs data to Jack ports.
  * </para>
  * <para>
  * It will create N Jack ports named out_&lt;num&gt; where &lt;num&gt; is starting from 1.
@@ -39,7 +39,7 @@
  * <para>
  * When the ::connect property is set to auto, this element will try to connect
  * each output port to a random physical jack input pin. In this mode, the sink
- * will expose the number of physical channels on its pad caps. 
+ * will expose the number of physical channels on its pad caps.
  * </para>
  * <para>
  * When the ::connect property is set to none, the element will accept any
@@ -396,12 +396,17 @@ gst_jack_ring_buffer_open_device (GstRingBuffer * buf)
 {
   GstJackAudioSink *sink;
   jack_status_t status = 0;
+  const gchar *name;
 
   sink = GST_JACK_AUDIO_SINK (GST_OBJECT_PARENT (buf));
 
   GST_DEBUG_OBJECT (sink, "open");
 
-  sink->client = gst_jack_audio_client_new ("GStreamer", sink->server,
+  name = g_get_application_name ();
+  if (!name)
+    name = "GStreamer";
+
+  sink->client = gst_jack_audio_client_new (name, sink->server,
       GST_JACK_CLIENT_SINK,
       jack_shutdown_cb,
       jack_process_cb, jack_buffer_size_cb, jack_sample_rate_cb, buf, &status);
@@ -526,9 +531,11 @@ gst_jack_ring_buffer_acquire (GstRingBuffer * buf, GstRingBufferSpec * spec)
             ("No more physical ports, leaving some ports unconnected"));
         break;
       }
+      GST_DEBUG_OBJECT (sink, "try connecting to %s",
+          jack_port_name (sink->ports[i]));
       /* connect the port to a physical port */
-      if ((res = jack_connect (client, jack_port_name (sink->ports[i]),
-                  ports[i])))
+      res = jack_connect (client, jack_port_name (sink->ports[i]), ports[i]);
+      if (res != 0 && res != EEXIST)
         goto cannot_connect;
     }
     free (ports);
@@ -558,13 +565,14 @@ out_of_ports:
 could_not_activate:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
-        ("Could not activate client (%d)", res));
+        ("Could not activate client (%d:%s)", res, g_strerror (res)));
     return FALSE;
   }
 cannot_connect:
   {
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
-        ("Could not connect output ports to physical ports (%d)", res));
+        ("Could not connect output ports to physical ports (%d:%s)",
+            res, g_strerror (res)));
     free (ports);
     return FALSE;
   }

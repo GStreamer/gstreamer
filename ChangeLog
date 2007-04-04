@@ -1,3 +1,10 @@
+2007-04-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/jack/gstjackaudiosink.c: (gst_jack_ring_buffer_open_device),
+	(gst_jack_ring_buffer_acquire):
+	  Try t better name clients. properly handle return codes when re-
+	  establishing links.
+
 2007-04-03  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/glimagesink.c:
