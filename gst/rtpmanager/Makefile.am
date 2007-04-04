@@ -7,6 +7,7 @@ libgstrtpmanager_la_SOURCES = gstrtpmanager.c \
 			      async_jitter_queue.c \
 			      gstrtpjitterbuffer.c \
 			      gstrtpptdemux.c \
+			      gstrtpssrcdemux.c \
 			      gstrtpsession.c
 
 noinst_HEADERS = gstrtpbin.h \
@@ -14,6 +15,7 @@ noinst_HEADERS = gstrtpbin.h \
                  async_jitter_queue.h \
 		 gstrtpjitterbuffer.h \
                  gstrtpptdemux.h \
+                 gstrtpssrcdemux.h \
 		 gstrtpsession.h
 
 libgstrtpmanager_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(ERROR_CFLAGS)

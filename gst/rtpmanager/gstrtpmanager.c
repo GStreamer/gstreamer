@@ -25,6 +25,7 @@
 #include "gstrtpjitterbuffer.h"
 #include "gstrtpptdemux.h"
 #include "gstrtpsession.h"
+#include "gstrtpssrcdemux.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -43,6 +44,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "rtpsession", GST_RANK_NONE,
           GST_TYPE_RTP_SESSION))
+    return FALSE;
+
+  if (!gst_element_register (plugin, "rtpssrcdemux", GST_RANK_NONE,
+          GST_TYPE_RTP_SSRC_DEMUX))
     return FALSE;
 
   return TRUE;

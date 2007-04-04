@@ -1,3 +1,16 @@
+2007-04-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/Makefile.am:
+	* gst/rtpmanager/gstrtpmanager.c: (plugin_init):
+	* gst/rtpmanager/gstrtpssrcdemux.c: (find_pad_for_ssrc),
+	(create_pad_for_ssrc), (gst_rtp_ssrc_demux_base_init),
+	(gst_rtp_ssrc_demux_class_init), (gst_rtp_ssrc_demux_init),
+	(gst_rtp_ssrc_demux_finalize), (gst_rtp_ssrc_demux_sink_event),
+	(gst_rtp_ssrc_demux_chain), (gst_rtp_ssrc_demux_src_event),
+	(gst_rtp_ssrc_demux_change_state):
+	* gst/rtpmanager/gstrtpssrcdemux.h:
+	Added simple SSRC demuxer.
+
 2007-04-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/jack/gstjackaudiosink.c: (gst_jack_ring_buffer_open_device),
