@@ -1,3 +1,16 @@
+2007-04-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/README:
+	* gst/avi/gstavidemux.c: (gst_avi_demux_handle_src_query),
+	(gst_avi_demux_parse_stream), (gst_avi_demux_parse_index),
+	(gst_avi_demux_stream_index), (gst_avi_demux_sync),
+	(gst_avi_demux_stream_scan), (gst_avi_demux_massage_index),
+	(gst_avi_demux_calculate_durations_from_index),
+	(gst_avi_demux_stream_header_push),
+	(gst_avi_demux_stream_header_pull), (gst_avi_demux_combine_flows),
+	(gst_avi_demux_process_next_entry), (gst_avi_demux_stream_data):
+	  Don't abort on out-of-memory. Use stream-nr as unsigned integer only.
+
 2007-04-03  Wim Taymans  <wim@fluendo.com>
 
 	* gst/smpte/barboxwipes.c:
