@@ -113,6 +113,7 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_CHECKERS2, "Checkers 2px", "checkers-2"},
     {GST_VIDEO_TEST_SRC_CHECKERS4, "Checkers 4px", "checkers-4"},
     {GST_VIDEO_TEST_SRC_CHECKERS8, "Checkers 8px", "checkers-8"},
+    {GST_VIDEO_TEST_SRC_CIRCULAR, "Circular", "circular"},
     {0, NULL, NULL}
   };
 
@@ -242,6 +243,9 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       break;
     case GST_VIDEO_TEST_SRC_CHECKERS8:
       videotestsrc->make_image = gst_video_test_src_checkers8;
+      break;
+    case GST_VIDEO_TEST_SRC_CIRCULAR:
+      videotestsrc->make_image = gst_video_test_src_circular;
       break;
     default:
       g_assert_not_reached ();

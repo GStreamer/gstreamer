@@ -50,6 +50,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_TEST_SRC_CHECKERS2: Checkers pattern (2px)
  * @GST_VIDEO_TEST_SRC_CHECKERS4: Checkers pattern (4px)
  * @GST_VIDEO_TEST_SRC_CHECKERS8: Checkers pattern (8px)
+ * @GST_VIDEO_TEST_SRC_CIRCULAR: Circular pattern
  *
  * The test pattern to produce.
  */
@@ -64,7 +65,8 @@ typedef enum {
   GST_VIDEO_TEST_SRC_CHECKERS1,
   GST_VIDEO_TEST_SRC_CHECKERS2,
   GST_VIDEO_TEST_SRC_CHECKERS4,
-  GST_VIDEO_TEST_SRC_CHECKERS8
+  GST_VIDEO_TEST_SRC_CHECKERS8,
+  GST_VIDEO_TEST_SRC_CIRCULAR
 } GstVideoTestSrcPattern;
 
 typedef struct _GstVideoTestSrc GstVideoTestSrc;

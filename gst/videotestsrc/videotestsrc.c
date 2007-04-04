@@ -30,6 +30,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 static unsigned char
 random_char (void)
@@ -897,6 +898,91 @@ gst_video_test_src_checkers8 (GstVideoTestSrc * v, guchar * dest, int w, int h)
           }
         }
       }
+    }
+  }
+}
+
+#undef SCALE_AMPLITUDE
+void
+gst_video_test_src_circular (GstVideoTestSrc * v, unsigned char *dest,
+    int w, int h)
+{
+  int i;
+  int j;
+  paintinfo pi = { NULL, };
+  paintinfo *p = &pi;
+  struct fourcc_list_struct *fourcc;
+  struct vts_color_struct color;
+  static uint8_t sine_array[256];
+  static int sine_array_inited = FALSE;
+  double freq[8];
+
+#ifdef SCALE_AMPLITUDE
+  double ampl[8];
+#endif
+  int d;
+
+  if (!sine_array_inited) {
+    for (i = 0; i < 256; i++) {
+      sine_array[i] =
+          floor (255 * (0.5 + 0.5 * sin (i * 2 * M_PI / 256)) + 0.5);
+    }
+    sine_array_inited = TRUE;
+  }
+
+  p->width = w;
+  p->height = h;
+  fourcc = v->fourcc;
+  if (fourcc == NULL)
+    return;
+
+  fourcc->paint_setup (p, dest);
+  p->paint_hline = fourcc->paint_hline;
+
+  color = vts_colors[COLOR_BLACK];
+  p->color = &color;
+
+  for (i = 1; i < 8; i++) {
+    freq[i] = 200 * pow (2.0, -(i - 1) / 4.0);
+#ifdef SCALE_AMPLITUDE
+    {
+      double x;
+
+      x = 2 * M_PI * freq[i] / w;
+      ampl[i] = sin (x) / x;
+    }
+#endif
+  }
+
+  for (i = 0; i < w; i++) {
+    for (j = 0; j < h; j++) {
+      double dist;
+      int seg;
+
+      dist =
+          sqrt ((2 * i - w) * (2 * i - w) + (2 * j - h) * (2 * j -
+              h)) / (2 * w);
+      seg = floor (dist * 16);
+      if (seg == 0 || seg >= 8) {
+        color.Y = 255;
+      } else {
+#ifdef SCALE_AMPLITUDE
+        double a;
+#endif
+        d = floor (256 * dist * freq[seg] + 0.5);
+#ifdef SCALE_AMPLITUDE
+        a = ampl[seg];
+        if (a < 0)
+          a = 0;
+        color.Y = 128 + a * (sine_array[d & 0xff] - 128);
+#else
+        color.Y = sine_array[d & 0xff];
+#endif
+      }
+      color.R = color.Y;
+      color.G = color.Y;
+      color.B = color.Y;
+      p->paint_hline (p, i, j, 1);
     }
   }
 }
