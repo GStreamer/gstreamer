@@ -172,10 +172,11 @@ _wrap_gst_structure_keys (PyObject *self)
 
 %%
 override-slot GstStructure.tp_as_mapping
-static int
-_wrap_gst_structure_length(PyGObject *self)
+static Py_ssize_t
+_wrap_gst_structure_length(PyObject *self)
 {
-	return gst_structure_n_fields((GstStructure*)self->obj);
+        PyGObject *gself = (PyGObject *)self;
+	return gst_structure_n_fields((GstStructure*)gself->obj);
 }
 
 static PyObject *
@@ -222,7 +223,7 @@ _wrap_gst_structure_ass_subscript(PyGObject *self,
 }
 
 static PyMappingMethods _wrap_gst_structure_tp_as_mapping = {
-	(inquiry)_wrap_gst_structure_length,         /* mp_length */
+	_wrap_gst_structure_length,         /* mp_length */
 	(binaryfunc)_wrap_gst_structure_subscript,   /* mp_subscript */
 	(objobjargproc)_wrap_gst_structure_ass_subscript /* mp_ass_subscript */
 };

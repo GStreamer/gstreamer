@@ -188,7 +188,7 @@ _wrap_gst_mixer_set_volume (PyGObject *self, PyObject *args, PyObject *kwargs)
     if (channels != PyTuple_Size (py_tuple)) {
       PyErr_Format (PyExc_TypeError,
           "Track channel count %d != volume tuple size %d",
-          channels, PyTuple_Size (py_tuple));
+          channels, (gint) PyTuple_Size (py_tuple));
       return NULL;
     }
 

@@ -23,17 +23,20 @@
 %%
 headers
 
-static int gst_buffer_getreadbuffer (PyGstMiniObject   *self,
-				     int          index,
-				     const void **ptr);
-static int gst_buffer_getwritebuf   (PyGstMiniObject   *self,
-				     int          index,
-				     const void **ptr);
-static int gst_buffer_getsegcount   (PyGstMiniObject   *self,
-				     int         *lenp);
-static int gst_buffer_getcharbuf    (PyGstMiniObject   *self,
-				     int          index,
-				     const char **ptr);
+static Py_ssize_t gst_buffer_getreadbuffer (PyObject *self, 
+                           Py_ssize_t index, void **ptr);
+static Py_ssize_t gst_buffer_getwritebuf   (PyObject   *self,
+			   Py_ssize_t index, void **ptr);
+static Py_ssize_t gst_buffer_getsegcount   (PyObject   *self,
+			   Py_ssize_t *lenp);
+
+#if PY_VERSION_HEX >= 0x02050000
+static Py_ssize_t gst_buffer_getcharbuf    (PyObject   *self,
+			   Py_ssize_t index, char **ptr);
+#else
+static Py_ssize_t gst_buffer_getcharbuf    (PyObject   *self,
+			   Py_ssize_t index, const char **ptr);
+#endif
 %%
 override gst_buffer_new kwargs
 static int
@@ -130,14 +133,15 @@ _wrap_gst_buffer_tp_repr (PyGstMiniObject *self)
 %%
 override-slot GstBuffer.tp_as_buffer
 static PyBufferProcs _wrap_gst_buffer_tp_as_buffer = {
-        (getreadbufferproc)gst_buffer_getreadbuffer, /* bf_getreadbuffer */
-	(getwritebufferproc)gst_buffer_getwritebuf,  /* bf_getwritebuffer */
-	(getsegcountproc)gst_buffer_getsegcount,     /* bf_getsegcount */
-	(getcharbufferproc)gst_buffer_getcharbuf,    /* bf_getcharbuffer */
+        gst_buffer_getreadbuffer, /* bf_getreadbuffer */
+	gst_buffer_getwritebuf,  /* bf_getwritebuffer */
+	gst_buffer_getsegcount,     /* bf_getsegcount */
+	gst_buffer_getcharbuf,    /* bf_getcharbuffer */
 };
 
-static int
-gst_buffer_getreadbuffer(PyGstMiniObject *self, int index, const void **ptr)
+static Py_ssize_t
+gst_buffer_getreadbuffer(PyObject *self, Py_ssize_t index, 
+    void **ptr)
 {
 	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
 
@@ -151,8 +155,8 @@ gst_buffer_getreadbuffer(PyGstMiniObject *self, int index, const void **ptr)
 	return GST_BUFFER_SIZE(buf);
 }
 
-static int
-gst_buffer_getsegcount(PyGstMiniObject *self, int *lenp)
+static Py_ssize_t
+gst_buffer_getsegcount(PyObject *self, Py_ssize_t *lenp)
 {
 	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
 
@@ -161,14 +165,20 @@ gst_buffer_getsegcount(PyGstMiniObject *self, int *lenp)
 	return 1;
 }
 
-static int
-gst_buffer_getcharbuf(PyGstMiniObject *self, int index, const char **ptr)
+/* Need a version that has const char ** for Python 2.4 */
+#if PY_VERSION_HEX >= 0x02050000
+static Py_ssize_t gst_buffer_getcharbuf    (PyObject   *self,
+			   Py_ssize_t index, char **ptr)
+#else
+static Py_ssize_t gst_buffer_getcharbuf    (PyObject   *self,
+			   Py_ssize_t index, const char **ptr)
+#endif
 {
-	return gst_buffer_getreadbuffer (self, index, (const void **) ptr);
+	return gst_buffer_getreadbuffer (self, index, (void **) ptr);
 }
 
-static int
-gst_buffer_getwritebuf(PyGstMiniObject *self, int index, const void **ptr)
+static Py_ssize_t
+gst_buffer_getwritebuf(PyObject *self, Py_ssize_t index, void **ptr)
 {
 	GstBuffer *buf = pyg_boxed_get(self, GstBuffer);
 
@@ -192,14 +202,14 @@ gst_buffer_getwritebuf(PyGstMiniObject *self, int index, const void **ptr)
 override-slot GstBuffer.tp_as_sequence
 /* FIXME: should buffer parts be buffers or strings? */
 
-static int
+static Py_ssize_t
 pygst_buffer_length(PyObject *self)
 {
 	return GST_BUFFER_SIZE(pygobject_get (self));
 }
 
 static PyObject *
-pygst_buffer_slice(PyObject *self, int start, int end)
+pygst_buffer_slice(PyObject *self, Py_ssize_t start, Py_ssize_t end)
 {
   GstBuffer *buf = GST_BUFFER (pygobject_get (self));
   if (start < 0)
@@ -217,17 +227,18 @@ pygst_buffer_slice(PyObject *self, int start, int end)
 }
 
 static PyObject *
-pygst_buffer_item(PyObject *self, int index)
+pygst_buffer_item(PyObject *self, Py_ssize_t index)
 {
   return pygst_buffer_slice (self, index, index + 1);
 }
 
 static int
-pygst_buffer_ass_slice (PyObject *self, int start, int end, PyObject *val)
+pygst_buffer_ass_slice (PyObject *self, Py_ssize_t start, 
+        Py_ssize_t end, PyObject *val)
 {
   GstBuffer *buf = GST_BUFFER (pygobject_get (self));
   const void *data;
-  int len;
+  Py_ssize_t len;
 
   if (!gst_buffer_is_writable (buf)) {
     PyErr_SetString(PyExc_TypeError, "buffer is not writable");
@@ -248,11 +259,11 @@ pygst_buffer_ass_slice (PyObject *self, int start, int end, PyObject *val)
 }
 
 static int
-pygst_buffer_ass_item (PyObject *self, int index, PyObject *val)
+pygst_buffer_ass_item (PyObject *self, Py_ssize_t index, PyObject *val)
 {
   GstBuffer *buf = GST_BUFFER (pygobject_get (self));
   const void *data;
-  int len;
+  Py_ssize_t len;
 
   if (!gst_buffer_is_writable (buf)) {
     PyErr_SetString(PyExc_TypeError, "buffer is not writable");

@@ -1,3 +1,18 @@
+2007-04-04  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/common.h:
+	* gst/gst.override:
+	* gst/gstbuffer.override:
+	* gst/gstcaps.override:
+	* gst/gststructure.override:
+	* gst/gsttaglist.override:
+	* gst/interfaces.override:
+
+	Fix the build for x86_64 when compiling against Python 2.5.
+	Keeps backwards compatibility with Python 2.4. Tested on Ubuntu
+	Edgy 32-bit with python 2.4 & Feisty 64-bit with Python 2.4 & 2.5
+	Fixes #415003.
+
 2007-03-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/interfaces.defs:

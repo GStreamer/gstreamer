@@ -77,7 +77,7 @@ ignore
   gst_caps_set_simple
 %%
 override gst_caps_get_structure kwargs
-static PyObject *pygst_caps_sq_item(PyObject *self, int i);
+static PyObject *pygst_caps_sq_item(PyObject *self, Py_ssize_t i);
 static PyObject *
 _wrap_gst_caps_get_structure(PyObject *self, PyObject *args, PyObject *kwargs)
 {
@@ -349,7 +349,7 @@ static PyNumberMethods _wrap_gst_caps_tp_as_number = {
 };
 %%
 override-slot GstCaps.tp_as_sequence
-static int
+static Py_ssize_t
 pygst_caps_sq_length(PyObject *self)
 {
 	GstCaps *caps = pyg_boxed_get (self, GstCaps);
@@ -357,7 +357,7 @@ pygst_caps_sq_length(PyObject *self)
 }
 
 static PyObject *
-pygst_caps_sq_item(PyObject *self, int i)
+pygst_caps_sq_item(PyObject *self, Py_ssize_t i)
 {
 	GstCaps *caps = pyg_boxed_get (self, GstCaps);
 	GstStructure *structure;
@@ -381,7 +381,7 @@ pygst_caps_sq_item(PyObject *self, int i)
 
 /* FIXME: This syntax sucks */
 static PyObject *
-pygst_caps_sq_slice(PyObject *self, int start, int end)
+pygst_caps_sq_slice(PyObject *self, Py_ssize_t start, Py_ssize_t end)
 {
 	GstCaps *caps = pyg_boxed_get (self, GstCaps);
 	GstCaps *ret = gst_caps_new_empty ();

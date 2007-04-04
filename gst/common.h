@@ -36,8 +36,11 @@
 #endif
 
 #if PY_VERSION_HEX < 0x02050000
+#define lenfunc inquiry
 #define ssizeargfunc intargfunc
 #define ssizessizeargfunc intintargfunc
+#define ssizeobjargproc intobjargproc
+#define ssizessizeobjargproc intintobjargproc
 #endif
 
 typedef struct {

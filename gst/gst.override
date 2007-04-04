@@ -58,6 +58,11 @@ headers
 #include <compile.h>
 #include <frameobject.h>
 
+/* Boonky define that allows for backwards compatibility with Python 2.4 */
+#if PY_VERSION_HEX < 0x02050000 
+#define Py_ssize_t int
+#endif 
+
 GST_DEBUG_CATEGORY_EXTERN (python_debug);
 GST_DEBUG_CATEGORY_EXTERN (pygst_debug);
 #define GST_CAT_DEFAULT pygst_debug
@@ -1030,7 +1035,7 @@ gst_type_find_peek_handler (gpointer data, gint64 offset, guint size)
 	goto beach;
     } else {
 	gchar *str;
-	int len;
+	Py_ssize_t len;
 
 	if ((PyString_AsStringAndSize(py_ret, &str, &len)) == -1) {
 	    Py_DECREF (py_ret);

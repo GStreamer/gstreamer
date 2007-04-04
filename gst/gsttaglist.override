@@ -63,10 +63,11 @@ _wrap_gst_tag_list_keys(PyGObject *self)
 }
 %%
 override-slot GstTagList.tp_as_mapping
-static int
-_wrap_gst_tag_list_length(PyGObject *self)
+static Py_ssize_t
+_wrap_gst_tag_list_length(PyObject *self)
 {
-	return gst_structure_n_fields((GstStructure*)self->obj);
+	PyGObject *gself = (PyGObject *)self;
+	return gst_structure_n_fields((GstStructure*)gself->obj);
 }
 
 static PyObject *
@@ -113,7 +114,7 @@ _wrap_gst_tag_list_ass_subscript(PyGObject *self,
 }
 
 static PyMappingMethods _wrap_gst_tag_list_tp_as_mapping = {
-	(inquiry)_wrap_gst_tag_list_length,         /* mp_length */
+	_wrap_gst_tag_list_length,         /* mp_length */
 	(binaryfunc)_wrap_gst_tag_list_subscript,   /* mp_subscript */
 	(objobjargproc)_wrap_gst_tag_list_ass_subscript /* mp_ass_subscript */
 };
@@ -127,13 +128,13 @@ _wrap_gst_tag_list_contains(PyGObject *self, PyObject *py_key)
 }
 
 static PySequenceMethods _wrap_gst_tag_list_tp_as_sequence = {
-	(inquiry)NULL,
+	(lenfunc)NULL,
 	(binaryfunc)NULL,
 	(ssizeargfunc)NULL,
 	(ssizeargfunc)NULL,
 	(ssizessizeargfunc)NULL,
-	(intobjargproc)NULL,
-	(intintobjargproc)NULL,
+	(ssizeobjargproc)NULL,
+	(ssizessizeobjargproc)NULL,
 	(objobjproc)_wrap_gst_tag_list_contains,
 	(binaryfunc)NULL,
 	(ssizeargfunc)NULL,
