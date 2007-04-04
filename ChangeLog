@@ -1,3 +1,11 @@
+2007-04-04  Edward Hervey  <edward@fluendo.com>
+
+	* codegen/codegen.py:
+	Also ignore pointers and boxed if they're in ignore-type.
+	* gst/gst-0.10.7.ignore:
+	Add gst_type_find_factory_call_function to functions ignored before
+	0.10.7 since it requires GstTypeFind arguments.
+	
 2007-04-04  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/common.h:

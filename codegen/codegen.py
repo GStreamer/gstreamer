@@ -1394,11 +1394,15 @@ def write_extension_init(overrides, prefix, fp):
 
 def write_registers(parser, overrides, fp):
     for boxed in parser.boxes:
+        if overrides.is_type_ignored(boxed.c_name):
+            continue
         fp.write('    pyg_register_boxed(d, "' + boxed.name +
                  '", ' + boxed.typecode +
                  ', &Py' + boxed.c_name +
                  '_Type);\n')
     for pointer in parser.pointers:
+        if overrides.is_type_ignored(pointer.c_name):
+            continue
         fp.write('    pyg_register_pointer(d, "' + pointer.name +
                  '", ' + pointer.typecode +
                  ', &Py' + pointer.c_name + '_Type);\n')
