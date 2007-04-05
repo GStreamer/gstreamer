@@ -3,6 +3,7 @@
  * unit test for fakesink
  *
  * Copyright (C) <2005> Thomas Vander Stichele <thomas at apestaart dot org>
+ *               <2007> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -292,6 +293,158 @@ GST_START_TEST (test_preroll_sync)
 
 GST_END_TEST;
 
+/* after EOS, we refuse everything */
+GST_START_TEST (test_eos)
+{
+  GstElement *pipeline, *sink;
+  GstPad *sinkpad;
+  GstStateChangeReturn ret;
+  GstMessage *message;
+  GstBus *bus;
+
+  /* create sink */
+  pipeline = gst_pipeline_new ("pipeline");
+  fail_if (pipeline == NULL);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (pipeline));
+  fail_if (bus == NULL);
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  fail_if (sink == NULL);
+  g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  sinkpad = gst_element_get_pad (sink, "sink");
+  fail_if (sinkpad == NULL);
+
+  /* make pipeline and element ready to accept data */
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+
+  /* send EOS, this should work fine */
+  {
+    GstEvent *eos;
+    gboolean eret;
+
+    GST_DEBUG ("sending EOS");
+    eos = gst_event_new_eos ();
+
+    eret = gst_pad_send_event (sinkpad, eos);
+    fail_if (eret == FALSE);
+  }
+
+  /* wait for preroll */
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+
+  /* EOS should be on the bus at some point */
+  while (TRUE) {
+    GstMessageType type;
+
+    /* blocking wait for messages */
+    message = gst_bus_timed_pop (bus, GST_CLOCK_TIME_NONE);
+    type = GST_MESSAGE_TYPE (message);
+    gst_message_unref (message);
+
+    GST_DEBUG ("got message %s", gst_message_type_get_name (type));
+
+    if (type == GST_MESSAGE_EOS)
+      break;
+  }
+
+  /* send another EOS, this should fail */
+  {
+    GstEvent *eos;
+    gboolean eret;
+
+    GST_DEBUG ("sending second EOS");
+    eos = gst_event_new_eos ();
+
+    eret = gst_pad_send_event (sinkpad, eos);
+    fail_if (eret == TRUE);
+  }
+
+  /* send segment, this should fail */
+  {
+    GstEvent *segment;
+    gboolean eret;
+
+    GST_DEBUG ("sending segment");
+    segment = gst_event_new_new_segment (FALSE,
+        1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND, 0 * GST_SECOND);
+
+    eret = gst_pad_send_event (sinkpad, segment);
+    fail_if (eret == TRUE);
+  }
+
+  /* send buffer that should fail after EOS */
+  {
+    GstBuffer *buffer;
+    GstFlowReturn fret;
+
+    buffer = gst_buffer_new ();
+    GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
+    GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+
+    GST_DEBUG ("sending buffer");
+
+    /* buffer after EOS is not UNEXPECTED */
+    fret = gst_pad_chain (sinkpad, buffer);
+    fail_unless (fret == GST_FLOW_UNEXPECTED);
+  }
+
+  /* flush, EOS state is flushed again. */
+  {
+    GstEvent *event;
+    gboolean eret;
+
+    GST_DEBUG ("sending FLUSH_START");
+    event = gst_event_new_flush_start ();
+    eret = gst_pad_send_event (sinkpad, event);
+    fail_unless (eret == TRUE);
+
+    GST_DEBUG ("sending FLUSH_STOP");
+    event = gst_event_new_flush_stop ();
+    eret = gst_pad_send_event (sinkpad, event);
+    fail_unless (eret == TRUE);
+  }
+
+  /* send segment, this should now work again */
+  {
+    GstEvent *segment;
+    gboolean eret;
+
+    GST_DEBUG ("sending segment");
+    segment = gst_event_new_new_segment (FALSE,
+        1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND, 0 * GST_SECOND);
+
+    eret = gst_pad_send_event (sinkpad, segment);
+    fail_unless (eret == TRUE);
+  }
+
+  /* send buffer that should work and block */
+  {
+    GstBuffer *buffer;
+    GstFlowReturn fret;
+
+    buffer = gst_buffer_new ();
+    GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
+    GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+
+    GST_DEBUG ("sending buffer");
+
+    fret = gst_pad_chain (sinkpad, buffer);
+    fail_unless (fret == GST_FLOW_OK);
+  }
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  gst_object_unref (sinkpad);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 Suite *
 fakesink_suite (void)
 {
@@ -301,6 +454,7 @@ fakesink_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_clipping);
   tcase_add_test (tc_chain, test_preroll_sync);
+  tcase_add_test (tc_chain, test_eos);
 
   return s;
 }

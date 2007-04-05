@@ -193,7 +193,11 @@ struct _GstBaseSinkPrivate
   /* latency stuff */
   GstClockTime latency;
 
+  /* if we already commited the state */
   gboolean commited;
+
+  /* when we received EOS */
+  gboolean received_eos;
 };
 
 #define DO_RUNNING_AVG(avg,val,size) (((val) + ((size)-1) * (avg)) / (size))
@@ -1825,6 +1829,9 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
   gint length;
   GQueue *q;
 
+  if (G_UNLIKELY (basesink->priv->received_eos))
+    goto was_eos;
+
   if (G_UNLIKELY (basesink->need_preroll)) {
     if (G_LIKELY (prerollable))
       basesink->preroll_queued++;
@@ -1870,6 +1877,12 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
   return ret;
 
   /* special cases */
+was_eos:
+  {
+    GST_DEBUG_OBJECT (basesink, "we are EOS");
+    gst_mini_object_unref (obj);
+    return GST_FLOW_UNEXPECTED;
+  }
 preroll_failed:
   {
     GST_DEBUG_OBJECT (basesink, "preroll failed, reason %s",
@@ -1952,6 +1965,9 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
 
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         result = FALSE;
+      else
+        /* we are now EOS, and refuse more buffers */
+        basesink->priv->received_eos = TRUE;
       break;
     }
     case GST_EVENT_NEWSEGMENT:
@@ -1960,19 +1976,24 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
 
       GST_DEBUG_OBJECT (basesink, "newsegment %p", event);
 
-      basesink->have_newsegment = TRUE;
-
-      /* the new segment is a non prerollable item and does not block anything,
-       * we need to configure the current clipping segment and insert the event 
-       * in the queue to serialize it with the buffers for rendering. */
-      gst_base_sink_configure_segment (basesink, pad, event,
-          basesink->abidata.ABI.clip_segment);
-
-      ret =
-          gst_base_sink_queue_object (basesink, pad,
-          GST_MINI_OBJECT_CAST (event), FALSE);
-      if (G_UNLIKELY (ret != GST_FLOW_OK))
+      if (G_UNLIKELY (basesink->priv->received_eos))
+        /* we can't accept anything when we are EOS */
         result = FALSE;
+      else {
+        /* the new segment is a non prerollable item and does not block anything,
+         * we need to configure the current clipping segment and insert the event 
+         * in the queue to serialize it with the buffers for rendering. */
+        gst_base_sink_configure_segment (basesink, pad, event,
+            basesink->abidata.ABI.clip_segment);
+
+        ret =
+            gst_base_sink_queue_object (basesink, pad,
+            GST_MINI_OBJECT_CAST (event), FALSE);
+        if (G_UNLIKELY (ret != GST_FLOW_OK))
+          result = FALSE;
+        else
+          basesink->have_newsegment = TRUE;
+      }
       break;
     }
     case GST_EVENT_FLUSH_START:
@@ -2012,6 +2033,8 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_init (basesink->abidata.ABI.clip_segment,
           GST_FORMAT_UNDEFINED);
       basesink->have_newsegment = FALSE;
+      /* we flush out the EOS event as well now */
+      basesink->priv->received_eos = FALSE;
 
       gst_event_unref (event);
       break;
@@ -2814,6 +2837,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       basesink->priv->eos_rtime = -1;
       basesink->priv->latency = 0;
       basesink->eos = FALSE;
+      basesink->priv->received_eos = FALSE;
       gst_base_sink_reset_qos (basesink);
       basesink->priv->commited = FALSE;
       ret = GST_STATE_CHANGE_ASYNC;

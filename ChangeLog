@@ -1,5 +1,16 @@
 2007-04-05  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasesink.c:
+	(gst_base_sink_queue_object_unlocked), (gst_base_sink_event),
+	(gst_base_sink_change_state):
+	Don't accept anything after an EOS, return UNEXPECTED instead.
+
+	* tests/check/elements/fakesink.c: (GST_START_TEST),
+	(fakesink_suite):
+	Unit test for new EOS behaviour.
+
+2007-04-05  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstelement.c: (gst_element_get_request_pad):
 	Make padtemplates also work when they don't contain %s or %d.
 
