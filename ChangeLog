@@ -1,3 +1,11 @@
+2007-04-05  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
+
+	* gst/playback/gstplaybasebin.c: (add_stream):
+	Fix leak in add_stream(), when g_value_set_object() increases the
+	refcount of streaminfo object. Fixes #426250.
+
 2007-04-03  David Schleef  <ds@schleef.org>
 
 	* gst/videotestsrc/gstvideotestsrc.c:

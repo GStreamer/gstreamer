@@ -912,6 +912,7 @@ add_stream (GstPlayBaseGroup * group, GstStreamInfo * info)
   g_value_init (&v, G_TYPE_OBJECT);
   g_value_set_object (&v, info);
   g_value_array_append (group->streaminfo_value_array, &v);
+  g_value_unset (&v);
   group->streaminfo = g_list_append (group->streaminfo, info);
   if (info->type > 0 && info->type <= NUM_TYPES) {
     group->type[info->type - 1].npads++;
