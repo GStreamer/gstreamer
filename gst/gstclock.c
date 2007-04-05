@@ -733,28 +733,97 @@ gst_clock_get_resolution (GstClock * clock)
  * @clock: a #GstClock to use
  * @internal: a clock time
  *
- * Converts the given @internal clock time to the real time, adjusting for the
+ * Converts the given @internal clock time to the external time, adjusting for the
  * rate and reference time set with gst_clock_set_calibration() and making sure
  * that the returned time is increasing. This function should be called with the
  * clock's OBJECT_LOCK held and is mainly used by clock subclasses.
  *
- * Returns: the converted time of the clock.
+ * This function is te reverse of gst_clock_unadjust_unlocked().
  *
- * MT safe.
+ * Returns: the converted time of the clock.
  */
 GstClockTime
 gst_clock_adjust_unlocked (GstClock * clock, GstClockTime internal)
 {
-  GstClockTime ret;
+  GstClockTime ret, cinternal, cexternal, cnum, cdenom;
 
-  ret = gst_util_uint64_scale (internal - clock->internal_calibration,
-      clock->rate_numerator, clock->rate_denominator);
-  ret += clock->external_calibration;
+  /* get calibration values for readability */
+  cinternal = clock->internal_calibration;
+  cexternal = clock->external_calibration;
+  cnum = clock->rate_numerator;
+  cdenom = clock->rate_denominator;
+
+  /* avoid divide by 0 */
+  if (cdenom == 0)
+    cnum = cdenom = 1;
+
+  /* The formula is (internal - cinternal) * cnum / cdenom + cexternal
+   *
+   * Since we do math on unsigned 64-bit ints we have to special case for
+   * interal < cinternal to get the sign right. this case is not very common,
+   * though.
+   */
+  if (G_LIKELY (internal >= cinternal)) {
+    ret = gst_util_uint64_scale (internal - cinternal, cnum, cdenom);
+    ret += cexternal;
+  } else {
+    ret = gst_util_uint64_scale (cinternal - internal, cnum, cdenom);
+    /* clamp to 0 */
+    if (cexternal > ret)
+      ret = cexternal - ret;
+    else
+      ret = 0;
+  }
 
   /* make sure the time is increasing */
   clock->last_time = MAX (ret, clock->last_time);
 
   return clock->last_time;
+}
+
+/**
+ * gst_clock_unadjust_unlocked
+ * @clock: a #GstClock to use
+ * @external: an external clock time
+ *
+ * Converts the given @external clock time to the internal time of @clock,
+ * using the rate and reference time set with gst_clock_set_calibration().
+ * This function should be called with the clock's OBJECT_LOCK held and
+ * is mainly used by clock subclasses.
+ *
+ * This function is te reverse of gst_clock_adjust_unlocked().
+ *
+ * Returns: the internal time of the clock corresponding to @external.
+ *
+ * Since: 0.10.13
+ */
+GstClockTime
+gst_clock_unadjust_unlocked (GstClock * clock, GstClockTime external)
+{
+  GstClockTime ret, cinternal, cexternal, cnum, cdenom;
+
+  /* get calibration values for readability */
+  cinternal = clock->internal_calibration;
+  cexternal = clock->external_calibration;
+  cnum = clock->rate_numerator;
+  cdenom = clock->rate_denominator;
+
+  /* avoid divide by 0 */
+  if (cnum == 0)
+    cnum = cdenom = 1;
+
+  /* The formula is (external - cexternal) * cdenom / cnum + cinternal */
+  if (external >= cexternal) {
+    ret = gst_util_uint64_scale (external - cexternal, cdenom, cnum);
+    ret += cinternal;
+  } else {
+    ret = gst_util_uint64_scale (cexternal - external, cdenom, cnum);
+    if (cinternal > ret)
+      ret = cinternal - ret;
+    else
+      ret = 0;
+  }
+  return ret;
 }
 
 /**
@@ -874,6 +943,12 @@ gst_clock_set_calibration (GstClock * clock, GstClockTime internal, GstClockTime
   g_return_if_fail (internal <= gst_clock_get_internal_time (clock));
 
   GST_OBJECT_LOCK (clock);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, clock,
+      "internal %" GST_TIME_FORMAT " external %" GST_TIME_FORMAT " %"
+      G_GUINT64_FORMAT "/%" G_GUINT64_FORMAT " = %f", GST_TIME_ARGS (internal),
+      GST_TIME_ARGS (external), rate_num, rate_denom,
+      gst_guint64_to_gdouble (rate_num / rate_denom));
+
   clock->internal_calibration = internal;
   clock->external_calibration = external;
   clock->rate_numerator = rate_num;

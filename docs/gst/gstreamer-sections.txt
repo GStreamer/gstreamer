@@ -339,6 +339,7 @@ gst_clock_new_single_shot_id
 gst_clock_new_periodic_id
 gst_clock_get_internal_time
 gst_clock_adjust_unlocked
+gst_clock_unadjust_unlocked
 gst_clock_get_calibration
 gst_clock_set_calibration
 gst_clock_id_get_time

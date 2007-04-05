@@ -477,9 +477,10 @@ gboolean		gst_clock_add_observation       (GstClock *clock, GstClockTime slave,
 							 GstClockTime master, gdouble *r_squared);
 
 
-/* getting and adjusting internal time */
+/* getting and adjusting internal/external time */
 GstClockTime		gst_clock_get_internal_time	(GstClock *clock);
 GstClockTime		gst_clock_adjust_unlocked	(GstClock *clock, GstClockTime internal);
+GstClockTime            gst_clock_unadjust_unlocked     (GstClock * clock, GstClockTime external);
 
 
 /* creating IDs that can be used to get notifications */
