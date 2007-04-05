@@ -80,6 +80,8 @@ struct _GstFakeSink {
   gboolean		signal_handoffs;
   GstFakeSinkStateError state_error;
   gchar			*last_message;
+  gint                  num_buffers;
+  gint                  num_buffers_left;
 };
 
 struct _GstFakeSinkClass {

@@ -69,6 +69,7 @@ enum
 #define DEFAULT_LAST_MESSAGE NULL
 #define DEFAULT_CAN_ACTIVATE_PUSH TRUE
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE
+#define DEFAULT_NUM_BUFFERS -1
 
 enum
 {
@@ -79,7 +80,8 @@ enum
   PROP_SIGNAL_HANDOFFS,
   PROP_LAST_MESSAGE,
   PROP_CAN_ACTIVATE_PUSH,
-  PROP_CAN_ACTIVATE_PULL
+  PROP_CAN_ACTIVATE_PULL,
+  PROP_NUM_BUFFERS
 };
 
 #define GST_TYPE_FAKE_SINK_STATE_ERROR (gst_fake_sink_state_error_get_type())
@@ -186,6 +188,10 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
       g_param_spec_boolean ("can-activate-pull", "Can activate pull",
           "Can activate in pull mode", DEFAULT_CAN_ACTIVATE_PULL,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_NUM_BUFFERS,
+      g_param_spec_int ("num-buffers", "num-buffers",
+          "Number of buffers to accept going EOS", -1, G_MAXINT,
+          DEFAULT_NUM_BUFFERS, G_PARAM_READWRITE));
 
   /**
    * GstFakeSink::handoff:
@@ -234,6 +240,7 @@ gst_fake_sink_init (GstFakeSink * fakesink, GstFakeSinkClass * g_class)
   fakesink->last_message = g_strdup (DEFAULT_LAST_MESSAGE);
   fakesink->state_error = DEFAULT_STATE_ERROR;
   fakesink->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
+  fakesink->num_buffers = DEFAULT_NUM_BUFFERS;
 }
 
 static void
@@ -262,6 +269,9 @@ gst_fake_sink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CAN_ACTIVATE_PULL:
       GST_BASE_SINK (sink)->can_activate_pull = g_value_get_boolean (value);
+      break;
+    case PROP_NUM_BUFFERS:
+      sink->num_buffers = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -300,6 +310,9 @@ gst_fake_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CAN_ACTIVATE_PULL:
       g_value_set_boolean (value, GST_BASE_SINK (sink)->can_activate_pull);
+      break;
+    case PROP_NUM_BUFFERS:
+      g_value_set_int (value, sink->num_buffers);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -341,6 +354,9 @@ gst_fake_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
 {
   GstFakeSink *sink = GST_FAKE_SINK (bsink);
 
+  if (sink->num_buffers_left == 0)
+    goto eos;
+
   if (!sink->silent) {
     GST_OBJECT_LOCK (sink);
     g_free (sink->last_message);
@@ -356,12 +372,25 @@ gst_fake_sink_preroll (GstBaseSink * bsink, GstBuffer * buffer)
         bsink->sinkpad);
   }
   return GST_FLOW_OK;
+
+  /* ERRORS */
+eos:
+  {
+    GST_DEBUG_OBJECT (sink, "we are EOS");
+    return GST_FLOW_UNEXPECTED;
+  }
 }
 
 static GstFlowReturn
 gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstFakeSink *sink = GST_FAKE_SINK_CAST (bsink);
+
+  if (sink->num_buffers_left == 0)
+    goto eos;
+
+  if (sink->num_buffers_left != -1)
+    sink->num_buffers_left--;
 
   if (!sink->silent) {
     gchar ts_str[64], dur_str[64];
@@ -400,8 +429,17 @@ gst_fake_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (sink->dump) {
     gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
   }
+  if (sink->num_buffers_left == 0)
+    goto eos;
 
   return GST_FLOW_OK;
+
+  /* ERRORS */
+eos:
+  {
+    GST_DEBUG_OBJECT (sink, "we are EOS");
+    return GST_FLOW_UNEXPECTED;
+  }
 }
 
 static GstStateChangeReturn
@@ -418,6 +456,7 @@ gst_fake_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_READY_PAUSED)
         goto error;
+      fakesink->num_buffers_left = fakesink->num_buffers;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_PAUSED_PLAYING)

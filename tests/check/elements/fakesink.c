@@ -351,6 +351,7 @@ GST_START_TEST (test_eos)
     if (type == GST_MESSAGE_EOS)
       break;
   }
+  gst_object_unref (bus);
 
   /* send another EOS, this should fail */
   {
@@ -445,6 +446,83 @@ GST_START_TEST (test_eos)
 
 GST_END_TEST;
 
+/* test EOS triggered by the element */
+GST_START_TEST (test_eos2)
+{
+  GstElement *pipeline, *sink;
+  GstPad *sinkpad;
+  GstStateChangeReturn ret;
+
+  /* create sink */
+  pipeline = gst_pipeline_new ("pipeline");
+  fail_if (pipeline == NULL);
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  fail_if (sink == NULL);
+  g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
+  g_object_set (G_OBJECT (sink), "num-buffers", 1, NULL);
+
+  gst_bin_add (GST_BIN (pipeline), sink);
+
+  sinkpad = gst_element_get_pad (sink, "sink");
+  fail_if (sinkpad == NULL);
+
+  /* make pipeline and element ready to accept data */
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC);
+
+  /* send segment, this should work */
+  {
+    GstEvent *segment;
+    gboolean eret;
+
+    GST_DEBUG ("sending segment");
+    segment = gst_event_new_new_segment (FALSE,
+        1.0, GST_FORMAT_TIME, 0 * GST_SECOND, 2 * GST_SECOND, 0 * GST_SECOND);
+
+    eret = gst_pad_send_event (sinkpad, segment);
+    fail_if (eret == FALSE);
+  }
+
+  /* send buffer that should return UNEXPECTED */
+  {
+    GstBuffer *buffer;
+    GstFlowReturn fret;
+
+    buffer = gst_buffer_new ();
+    GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
+    GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+
+    GST_DEBUG ("sending buffer");
+
+    /* this buffer will generate UNEXPECTED */
+    fret = gst_pad_chain (sinkpad, buffer);
+    fail_unless (fret == GST_FLOW_UNEXPECTED);
+  }
+
+  /* send buffer that should return UNEXPECTED */
+  {
+    GstBuffer *buffer;
+    GstFlowReturn fret;
+
+    buffer = gst_buffer_new ();
+    GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
+    GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+
+    GST_DEBUG ("sending buffer");
+
+    fret = gst_pad_chain (sinkpad, buffer);
+    fail_unless (fret == GST_FLOW_UNEXPECTED);
+  }
+
+  gst_element_set_state (pipeline, GST_STATE_NULL);
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  gst_object_unref (sinkpad);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 Suite *
 fakesink_suite (void)
 {
@@ -455,6 +533,7 @@ fakesink_suite (void)
   tcase_add_test (tc_chain, test_clipping);
   tcase_add_test (tc_chain, test_preroll_sync);
   tcase_add_test (tc_chain, test_eos);
+  tcase_add_test (tc_chain, test_eos2);
 
   return s;
 }

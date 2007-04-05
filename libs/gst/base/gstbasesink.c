@@ -1879,7 +1879,8 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
   /* special cases */
 was_eos:
   {
-    GST_DEBUG_OBJECT (basesink, "we are EOS");
+    GST_DEBUG_OBJECT (basesink,
+        "we are EOS, dropping object, return UNEXPECTED");
     gst_mini_object_unref (obj);
     return GST_FLOW_UNEXPECTED;
   }
@@ -1976,10 +1977,11 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
 
       GST_DEBUG_OBJECT (basesink, "newsegment %p", event);
 
-      if (G_UNLIKELY (basesink->priv->received_eos))
+      if (G_UNLIKELY (basesink->priv->received_eos)) {
         /* we can't accept anything when we are EOS */
         result = FALSE;
-      else {
+        gst_event_unref (event);
+      } else {
         /* the new segment is a non prerollable item and does not block anything,
          * we need to configure the current clipping segment and insert the event 
          * in the queue to serialize it with the buffers for rendering. */
