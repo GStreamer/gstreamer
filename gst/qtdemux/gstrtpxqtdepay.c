@@ -278,9 +278,10 @@ gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
 
-  /* discont, clear adapter */
   if (GST_BUFFER_IS_DISCONT (buf)) {
+    /* discont, clear adapter and try to find a new packet start */
     gst_adapter_clear (rtpxqtdepay->adapter);
+    rtpxqtdepay->need_resync = TRUE;
   }
 
   m = gst_rtp_buffer_get_marker (buf);
@@ -324,6 +325,22 @@ gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     GST_LOG_OBJECT (rtpxqtdepay,
         "VER: %d, PCK: %d, S: %d, Q: %d, L: %d, D: %d, ID: %d", ver, pck, s, q,
         l, d, rtpxqtdepay->current_id);
+
+    if (rtpxqtdepay->need_resync) {
+      /* we need to find the boundary of a new packet after a DISCONT */
+      if (pck != 3 || q) {
+        /* non-fragmented packet or payload description present, packet starts
+         * here. */
+        rtpxqtdepay->need_resync = FALSE;
+      } else {
+        /* fragmented packet without description */
+        if (m) {
+          /* marker bit set, next packet is start of new one */
+          rtpxqtdepay->need_resync = FALSE;
+        }
+        goto need_resync;
+      }
+    }
 
     payload += 4;
     payload_len -= 4;
@@ -625,6 +642,11 @@ bad_packet:
         ("Packet did not validate."), (NULL));
     return NULL;
   }
+need_resync:
+  {
+    GST_DEBUG_OBJECT (rtpxqtdepay, "waiting for marker");
+    return NULL;
+  }
 wrong_version:
   {
     GST_ELEMENT_WARNING (rtpxqtdepay, STREAM, DECODE,
@@ -688,6 +710,7 @@ gst_rtp_xqt_depay_change_state (GstElement * element, GstStateChange transition)
       gst_adapter_clear (rtpxqtdepay->adapter);
       rtpxqtdepay->previous_id = -1;
       rtpxqtdepay->current_id = -1;
+      rtpxqtdepay->need_resync = FALSE;
       break;
     default:
       break;
