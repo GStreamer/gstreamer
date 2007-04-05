@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "gstrtpbin.h"
 #include "gstrtpclient.h"
 #include "gstrtpjitterbuffer.h"
 #include "gstrtpptdemux.h"
@@ -30,6 +31,9 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_element_register (plugin, "rtpbin", GST_RANK_NONE, GST_TYPE_RTP_BIN))
+    return FALSE;
+
   if (!gst_element_register (plugin, "rtpclient", GST_RANK_NONE,
           GST_TYPE_RTP_CLIENT))
     return FALSE;

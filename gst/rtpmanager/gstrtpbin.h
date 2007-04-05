@@ -38,10 +38,10 @@ typedef struct _GstRTPBinClass GstRTPBinClass;
 typedef struct _GstRTPBinPrivate GstRTPBinPrivate;
 
 struct _GstRTPBin {
-  GstBin         element;
+  GstBin         bin;
 
   /* a list of session */
-  GList         *sessions;
+  GSList         *sessions;
 
   /*< private >*/
   GstRTPBinPrivate *priv;

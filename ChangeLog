@@ -1,3 +1,44 @@
+2007-04-05  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (find_session_by_id),
+	(create_session), (find_stream_by_ssrc), (create_stream),
+	(gst_rtp_bin_class_init), (new_payload_found),
+	(new_ssrc_pad_found), (create_recv_rtp), (create_recv_rtcp),
+	(create_send_rtp), (create_rtcp):
+	* gst/rtpmanager/gstrtpbin.h:
+	Add debugging category.
+	Added RTPStream to manage stream per SSRC, each with its own
+	jitterbuffer and ptdemux.
+	Added SSRCDemux.
+	Connect to various SSRC and PT signals and create ghostpads, link stuff.
+
+
+	* gst/rtpmanager/gstrtpmanager.c: (plugin_init):
+	Added rtpbin to elements.
+
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_chain):
+	Fix caps and forward GstFlowReturn
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_class_init),
+	(gst_rtp_session_event_recv_rtp_sink),
+	(gst_rtp_session_chain_recv_rtp),
+	(gst_rtp_session_event_recv_rtcp_sink),
+	(gst_rtp_session_chain_recv_rtcp),
+	(gst_rtp_session_event_send_rtp_sink),
+	(gst_rtp_session_chain_send_rtp), (create_recv_rtp_sink),
+	(create_recv_rtcp_sink), (create_send_rtp_sink), (create_rtcp_src),
+	(gst_rtp_session_request_new_pad):
+	Add debug category.
+	Add event handling
+
+	* gst/rtpmanager/gstrtpssrcdemux.c: (find_rtp_pad_for_ssrc),
+	(create_rtp_pad_for_ssrc), (gst_rtp_ssrc_demux_class_init),
+	(gst_rtp_ssrc_demux_init), (gst_rtp_ssrc_demux_chain),
+	(gst_rtp_ssrc_demux_change_state):
+	* gst/rtpmanager/gstrtpssrcdemux.h:
+	Add debug category.
+	Add new-pt-pad signal.
+
 2007-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	submitted by: Mogens Jaeger <mogens@jaeger.tf>
