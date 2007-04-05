@@ -3382,6 +3382,8 @@ gst_avi_demux_process_next_entry (GstAviDemux * avi)
 
     GST_BUFFER_TIMESTAMP (buf) = entry->ts;
     GST_BUFFER_DURATION (buf) = entry->dur;
+    GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+    GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
     gst_buffer_set_caps (buf, GST_PAD_CAPS (stream->pad));
 
     GST_DEBUG_OBJECT (avi, "Pushing buffer of size %d and time %"
