@@ -925,22 +925,31 @@ gst_element_get_request_pad (GstElement * element, const gchar * name)
 
   class = GST_ELEMENT_GET_CLASS (element);
 
+  /* if the name contains a %, we assume it's the complete template name. Get
+   * the template and try to get a pad */
   if (strstr (name, "%")) {
     templ = gst_element_class_get_request_pad_template (class, name);
     req_name = NULL;
     if (templ)
       templ_found = TRUE;
   } else {
+    /* there is no % in the name, try to find a matching template */
     list = gst_element_class_get_pad_template_list (class);
     while (!templ_found && list) {
       templ = (GstPadTemplate *) list->data;
       if (templ->presence == GST_PAD_REQUEST) {
+        GST_CAT_DEBUG (GST_CAT_PADS, "comparing %s to %s", name,
+            templ->name_template);
+        /* see if we find an exact match */
+        if (strcmp (name, templ->name_template) == 0) {
+          templ_found = TRUE;
+          req_name = name;
+          break;
+        }
         /* Because of sanity checks in gst_pad_template_new(), we know that %s
            and %d, occurring at the end of the name_template, are the only
            possibilities. */
-        GST_CAT_DEBUG (GST_CAT_PADS, "comparing %s to %s", name,
-            templ->name_template);
-        if ((str = strchr (templ->name_template, '%'))
+        else if ((str = strchr (templ->name_template, '%'))
             && strncmp (templ->name_template, name,
                 str - templ->name_template) == 0
             && strlen (name) > str - templ->name_template) {
