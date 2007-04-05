@@ -36,13 +36,16 @@ struct _GstRTPSsrcDemux
 {
   GstElement parent;
 
-  GstPad *sinkpad;
-  GSList *srcpads;
+  GstPad *rtp_sink;
+  GSList *rtp_srcpads;
 };
 
 struct _GstRTPSsrcDemuxClass
 {
   GstElementClass parent_class;
+
+  /* signals */
+  void (*new_ssrc_pad) (GstElement *element, guint32 ssrc, GstPad *pad);
 };
 
 GType gst_rtp_ssrc_demux_get_type (void);

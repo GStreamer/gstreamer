@@ -56,15 +56,15 @@ static GstStaticPadTemplate rtp_pt_demux_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("application/x-rtp, "
-        "payload = (int) [ 0, 255 ], " "clock-rate = (int) [ 0, 2147483647 ]")
+    GST_STATIC_CAPS ("application/x-rtp")
     );
 
 static GstStaticPadTemplate rtp_pt_demux_src_template =
-GST_STATIC_PAD_TEMPLATE ("src%d",
+GST_STATIC_PAD_TEMPLATE ("src_%d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS_ANY);
+    GST_STATIC_CAPS ("application/x-rtp, " "payload = (int) [ 0, 255 ]")
+    );
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_pt_demux_debug);
 #define GST_CAT_DEFAULT gst_rtp_pt_demux_debug
@@ -191,9 +191,12 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
 
   rtpdemux = GST_RTP_PT_DEMUX (GST_OBJECT_PARENT (pad));
 
-  g_return_val_if_fail (gst_rtp_buffer_validate (buf), GST_FLOW_ERROR);
+  if (!gst_rtp_buffer_validate (buf))
+    goto invalid_buffer;
 
   pt = gst_rtp_buffer_get_payload_type (buf);
+
+  GST_DEBUG_OBJECT (rtpdemux, "received buffer for pt %d", pt);
 
   srcpad = find_pad_for_pt (rtpdemux, pt);
   if (srcpad == NULL) {
@@ -205,15 +208,14 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     GstRTPPtDemuxPad *rtpdemuxpad;
 
     klass = GST_ELEMENT_GET_CLASS (rtpdemux);
-    templ = gst_element_class_get_pad_template (klass, "src%d");
-    padname = g_strdup_printf ("src%d", pt);
+    templ = gst_element_class_get_pad_template (klass, "src_%d");
+    padname = g_strdup_printf ("src_%d", pt);
     srcpad = gst_pad_new_from_template (templ, padname);
     g_free (padname);
 
     caps = gst_pad_get_caps (srcpad);
     caps = gst_caps_make_writable (caps);
-    gst_caps_append_structure (caps,
-        gst_structure_new ("payload", "payload", G_TYPE_INT, pt, NULL));
+    gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
     gst_pad_set_caps (srcpad, caps);
 
     /* XXX: set _link () function */
@@ -221,17 +223,15 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     gst_pad_set_active (srcpad, TRUE);
     gst_element_add_pad (element, srcpad);
 
-    if (srcpad) {
-      GST_DEBUG ("Adding pt=%d to the list.", pt);
-      rtpdemuxpad = g_new0 (GstRTPPtDemuxPad, 1);
-      rtpdemuxpad->pt = pt;
-      rtpdemuxpad->pad = srcpad;
-      rtpdemux->srcpads = g_slist_append (rtpdemux->srcpads, rtpdemuxpad);
+    GST_DEBUG ("Adding pt=%d to the list.", pt);
+    rtpdemuxpad = g_new0 (GstRTPPtDemuxPad, 1);
+    rtpdemuxpad->pt = pt;
+    rtpdemuxpad->pad = srcpad;
+    rtpdemux->srcpads = g_slist_append (rtpdemux->srcpads, rtpdemuxpad);
 
-      GST_DEBUG ("emitting new-payload_type for pt %d", pt);
-      g_signal_emit (G_OBJECT (rtpdemux),
-          gst_rtp_pt_demux_signals[SIGNAL_NEW_PAYLOAD_TYPE], 0, pt, srcpad);
-    }
+    GST_DEBUG ("emitting new-payload_type for pt %d", pt);
+    g_signal_emit (G_OBJECT (rtpdemux),
+        gst_rtp_pt_demux_signals[SIGNAL_NEW_PAYLOAD_TYPE], 0, pt, srcpad);
   }
 
   if (pt != rtpdemux->last_pt) {
@@ -246,9 +246,19 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
 
   /* push to srcpad */
   if (srcpad)
-    gst_pad_push (srcpad, GST_BUFFER (buf));
+    ret = gst_pad_push (srcpad, GST_BUFFER (buf));
 
   return ret;
+
+  /* ERRORS */
+invalid_buffer:
+  {
+    /* this is fatal and should be filtered earlier */
+    GST_ELEMENT_ERROR (rtpdemux, STREAM, DECODE, (NULL),
+        ("Dropping invalid RTP payload"));
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstCaps *

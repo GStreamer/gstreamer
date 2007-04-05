@@ -41,6 +41,9 @@
 #endif
 #include "gstrtpsession.h"
 
+GST_DEBUG_CATEGORY_STATIC (gst_rtp_session_debug);
+#define GST_CAT_DEFAULT gst_rtp_session_debug
+
 /* elementfactory information */
 static const GstElementDetails rtpsession_details =
 GST_ELEMENT_DETAILS ("RTP Session",
@@ -174,6 +177,9 @@ gst_rtp_session_class_init (GstRTPSessionClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_session_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_session_release_pad);
+
+  GST_DEBUG_CATEGORY_INIT (gst_rtp_session_debug,
+      "rtpsession", 0, "RTP Session");
 }
 
 static void
@@ -255,6 +261,26 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
   return res;
 }
 
+static GstFlowReturn
+gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
+{
+  GstRTPSession *rtpsession;
+  gboolean ret = FALSE;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (rtpsession, "received event");
+
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      ret = gst_pad_push_event (rtpsession->recv_rtp_src, event);
+      break;
+  }
+  gst_object_unref (rtpsession);
+
+  return ret;
+}
+
 /* receive a packet from a sender, send it to the RTP session manager and
  * forward the packet on the rtp_src pad
  */
@@ -266,9 +292,31 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstBuffer * buffer)
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
 
+  GST_DEBUG_OBJECT (rtpsession, "received RTP packet");
+
   /* FIXME, do something */
   ret = gst_pad_push (rtpsession->recv_rtp_src, buffer);
 
+  gst_object_unref (rtpsession);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_rtp_session_event_recv_rtcp_sink (GstPad * pad, GstEvent * event)
+{
+  GstRTPSession *rtpsession;
+  gboolean ret = FALSE;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (rtpsession, "received event");
+
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      ret = gst_pad_push_event (rtpsession->sync_src, event);
+      break;
+  }
   gst_object_unref (rtpsession);
 
   return ret;
@@ -286,8 +334,30 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
 
   /* FIXME, do something */
+  GST_DEBUG_OBJECT (rtpsession, "received RTCP packet");
+
   ret = gst_pad_push (rtpsession->sync_src, buffer);
 
+  gst_object_unref (rtpsession);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
+{
+  GstRTPSession *rtpsession;
+  gboolean ret = FALSE;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (rtpsession, "received event");
+
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
+      break;
+  }
   gst_object_unref (rtpsession);
 
   return ret;
@@ -304,6 +374,8 @@ gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
 
+  GST_DEBUG_OBJECT (rtpsession, "received RTP packet");
+
   /* FIXME, do something */
   ret = gst_pad_push (rtpsession->send_rtp_src, buffer);
 
@@ -319,17 +391,24 @@ gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
 static GstPad *
 create_recv_rtp_sink (GstRTPSession * rtpsession)
 {
+  GST_DEBUG_OBJECT (rtpsession, "creating RTP sink pad");
+
   rtpsession->recv_rtp_sink =
       gst_pad_new_from_static_template (&rtpsession_recv_rtp_sink_template,
       NULL);
   gst_pad_set_chain_function (rtpsession->recv_rtp_sink,
       gst_rtp_session_chain_recv_rtp);
+  gst_pad_set_event_function (rtpsession->recv_rtp_sink,
+      gst_rtp_session_event_recv_rtp_sink);
+  gst_pad_set_active (rtpsession->recv_rtp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->recv_rtp_sink);
 
+  GST_DEBUG_OBJECT (rtpsession, "creating RTP src pad");
   rtpsession->recv_rtp_src =
       gst_pad_new_from_static_template (&rtpsession_recv_rtp_src_template,
-      NULL);
+      "recv_rtp_src");
+  gst_pad_set_active (rtpsession->recv_rtp_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->recv_rtp_src);
 
   return rtpsession->recv_rtp_sink;
@@ -341,16 +420,24 @@ create_recv_rtp_sink (GstRTPSession * rtpsession)
 static GstPad *
 create_recv_rtcp_sink (GstRTPSession * rtpsession)
 {
+  GST_DEBUG_OBJECT (rtpsession, "creating RTCP sink pad");
+
   rtpsession->recv_rtcp_sink =
       gst_pad_new_from_static_template (&rtpsession_recv_rtcp_sink_template,
       NULL);
   gst_pad_set_chain_function (rtpsession->recv_rtcp_sink,
       gst_rtp_session_chain_recv_rtcp);
+  gst_pad_set_event_function (rtpsession->recv_rtcp_sink,
+      gst_rtp_session_event_recv_rtcp_sink);
+  gst_pad_set_active (rtpsession->recv_rtcp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->recv_rtcp_sink);
 
+  GST_DEBUG_OBJECT (rtpsession, "creating sync src pad");
   rtpsession->sync_src =
-      gst_pad_new_from_static_template (&rtpsession_sync_src_template, NULL);
+      gst_pad_new_from_static_template (&rtpsession_sync_src_template,
+      "sync_src");
+  gst_pad_set_active (rtpsession->sync_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->sync_src);
 
   return rtpsession->recv_rtcp_sink;
@@ -362,17 +449,23 @@ create_recv_rtcp_sink (GstRTPSession * rtpsession)
 static GstPad *
 create_send_rtp_sink (GstRTPSession * rtpsession)
 {
+  GST_DEBUG_OBJECT (rtpsession, "creating pad");
+
   rtpsession->send_rtp_sink =
       gst_pad_new_from_static_template (&rtpsession_send_rtp_sink_template,
       NULL);
   gst_pad_set_chain_function (rtpsession->send_rtp_sink,
       gst_rtp_session_chain_send_rtp);
+  gst_pad_set_event_function (rtpsession->send_rtp_sink,
+      gst_rtp_session_event_send_rtp_sink);
+  gst_pad_set_active (rtpsession->send_rtp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->recv_rtcp_sink);
 
   rtpsession->send_rtp_src =
       gst_pad_new_from_static_template (&rtpsession_send_rtp_src_template,
       NULL);
+  gst_pad_set_active (rtpsession->send_rtp_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->send_rtp_src);
 
   return rtpsession->send_rtp_sink;
@@ -385,8 +478,11 @@ create_send_rtp_sink (GstRTPSession * rtpsession)
 static GstPad *
 create_rtcp_src (GstRTPSession * rtpsession)
 {
+  GST_DEBUG_OBJECT (rtpsession, "creating pad");
+
   rtpsession->rtcp_src =
       gst_pad_new_from_static_template (&rtpsession_rtcp_src_template, NULL);
+  gst_pad_set_active (rtpsession->rtcp_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->rtcp_src);
 
   return rtpsession->rtcp_src;
@@ -405,6 +501,8 @@ gst_rtp_session_request_new_pad (GstElement * element,
 
   rtpsession = GST_RTP_SESSION (element);
   klass = GST_ELEMENT_GET_CLASS (element);
+
+  GST_DEBUG_OBJECT (element, "requesting pad %s", GST_STR_NULL (name));
 
   /* figure out the template */
   if (templ == gst_element_class_get_pad_template (klass, "recv_rtp_sink")) {
