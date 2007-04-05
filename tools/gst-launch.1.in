@@ -179,7 +179,7 @@ and the type can have the following case-insensitive values:
 .br
 - \fBs\fR, \fBstr\fR or \fBstring\fR for strings
 .br
-- \ffraction\fR for fractions (framerate, pixel-aspect-ratio)
+- \fBfraction\fR for fractions (framerate, pixel-aspect-ratio)
 .br
 - \fBl\fR or \fBlist\fR for lists
 .br

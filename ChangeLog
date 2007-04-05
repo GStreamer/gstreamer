@@ -1,3 +1,9 @@
+2007-04-05  Michael Smith  <msmith@fluendo.com>
+
+	* tools/gst-launch.1.in:
+	  fractions are better supported in gstreamer than ractions, so
+	  suggest using those.
+
 2007-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Submitted by: Mogens Jaeger <mogens@jaeger.tf>
