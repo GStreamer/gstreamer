@@ -1,3 +1,11 @@
+2007-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Submitted by: Mogens Jaeger <mogens@jaeger.tf>
+
+	* po/LINGUAS:
+	* po/da.po:
+	  Added Danish translation.
+
 2007-04-05  Wim Taymans  <wim@fluendo.com>
 
 	* libs/gst/base/gstbasesink.c:
