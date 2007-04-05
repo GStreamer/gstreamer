@@ -1,3 +1,11 @@
+2007-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	submitted by: Mogens Jaeger <mogens@jaeger.tf>
+
+	* po/LINGUAS:
+	* po/da.po:
+	  Added Danish translation.
+
 2007-04-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/Makefile.am:

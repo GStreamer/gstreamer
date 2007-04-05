@@ -1,0 +1,44 @@
+# Translation of gst-plugins-bad to Danish.
+# This file is put in the public domain.
+#
+# Mogens Jaeger <mogens@jaeger.tf>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-bad 0.10.4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-12-19 16:56+0100\n"
+"PO-Revision-Date: 2007-03-11 03:49+0100\n"
+"Last-Translator: Mogens Jaeger <mogens@jaeger.tf>\n"
+"Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.2\n"
+
+#: gst/qtdemux/qtdemux.c:3977
+msgid "This file is corrupt and cannot be played."
+msgstr "Denne fil er korrupt og kan ikke afspilles."
+
+#: gst/qtdemux/qtdemux.c:3983
+msgid "This file is encrypted and cannot be played."
+msgstr "Denne fil er krypteret og kan ikke afspilles."
+
+#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Enheden \"%s\" eksisterer ikke."
+
+#: sys/dvb/gstdvbsrc.c:662
+#, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "Kunne ikke åbne forende-enheden \"%s\"."
+
+#: sys/dvb/gstdvbsrc.c:674
+#, c-format
+msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Kunne ikke hente indstillinger fra forende-enheden \"%s\"."
+
+#: sys/dvb/gstdvbsrc.c:717
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Kunne ikke åbne filen \"%s\" for læsning."
