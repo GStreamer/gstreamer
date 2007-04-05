@@ -787,7 +787,7 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
 
   /* adjust playout pointer based on skew */
   if (sink->priv->avg_skew > segtime) {
-    /* master is running slower */
+    /* master is running slower, move internal time forward */
     GST_WARNING_OBJECT (sink,
         "correct clock skew %" G_GINT64_FORMAT " > %" G_GINT64_FORMAT,
         sink->priv->avg_skew, segtime);
@@ -797,11 +797,11 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
     gst_clock_set_calibration (sink->provided_clock, cinternal, cexternal,
         crate_num, crate_denom);
   } else if (sink->priv->avg_skew < -segtime) {
-    /* master is running faster */
+    /* master is running faster, move external time forwards */
     GST_WARNING_OBJECT (sink,
         "correct clock skew %" G_GINT64_FORMAT " < %" G_GINT64_FORMAT,
         sink->priv->avg_skew, -segtime);
-    cinternal -= segtime;
+    cexternal += segtime;
     sink->priv->avg_skew += segtime;
     sink->next_sample = -1;
     gst_clock_set_calibration (sink->provided_clock, cinternal, cexternal,
