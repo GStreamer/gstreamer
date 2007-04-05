@@ -1,5 +1,12 @@
 2007-04-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/qtdemux/gstrtpxqtdepay.c: (gst_rtp_xqt_depay_process),
+	(gst_rtp_xqt_depay_change_state):
+	* gst/qtdemux/gstrtpxqtdepay.h:
+	Try to recover from packet loss a little better.
+
+2007-04-05  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtpmanager/gstrtpbin.c: (find_session_by_id),
 	(create_session), (find_stream_by_ssrc), (create_stream),
 	(gst_rtp_bin_class_init), (new_payload_found),

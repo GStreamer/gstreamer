@@ -46,6 +46,7 @@ struct _GstRtpXQTDepay
 
   GstAdapter *adapter;
 
+  gboolean need_resync;
   guint16 previous_id;
   guint16 current_id;
 };
