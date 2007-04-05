@@ -336,6 +336,8 @@ gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps)
   /* first parse the caps */
   caps_struct = gst_caps_get_structure (caps, 0);
 
+  GST_DEBUG_OBJECT (jitterbuffer, "got caps");
+
   /* we need a clock-rate to convert the rtp timestamps to GStreamer time and to
    * measure the amount of data in the buffer */
   if (!gst_structure_get_int (caps_struct, "clock-rate", &priv->clock_rate))
@@ -344,21 +346,27 @@ gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (priv->clock_rate <= 0)
     goto wrong_rate;
 
+  GST_DEBUG_OBJECT (jitterbuffer, "got clock-rate %d", priv->clock_rate);
+
   /* gah, clock-base is uint. If we don't have a base, we will use the first
    * buffer timestamp as the base time. This will screw up sync but it's better
    * than nothing. */
   value = gst_structure_get_value (caps_struct, "clock-base");
-  if (value && G_VALUE_HOLDS_UINT (value))
+  if (value && G_VALUE_HOLDS_UINT (value)) {
     priv->clock_base = g_value_get_uint (value);
-  else
+    GST_DEBUG_OBJECT (jitterbuffer, "got clock-base %d", priv->clock_base);
+  } else
     priv->clock_base = -1;
 
   /* first expected seqnum */
   value = gst_structure_get_value (caps_struct, "seqnum-base");
-  if (value && G_VALUE_HOLDS_UINT (value))
+  if (value && G_VALUE_HOLDS_UINT (value)) {
     priv->next_seqnum = g_value_get_uint (value);
-  else
+    GST_DEBUG_OBJECT (jitterbuffer, "got seqnum-base %d", priv->next_seqnum);
+  } else
     priv->next_seqnum = -1;
+
+
 
   async_jitter_queue_set_max_queue_length (priv->queue,
       priv->latency_ms * priv->clock_rate / 1000);
@@ -730,7 +738,6 @@ out_flushing:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "flushing %s", gst_flow_get_name (ret));
     gst_buffer_unref (buffer);
-    gst_object_unref (jitterbuffer);
     goto finished;
   }
 too_late:
@@ -774,6 +781,8 @@ gst_rtp_jitter_buffer_loop (GstRTPJitterBuffer * jitterbuffer)
 
   async_jitter_queue_lock (priv->queue);
 again:
+  GST_DEBUG_OBJECT (jitterbuffer, "Popping item");
+  /* pop a buffer, we will get NULL if the queue was shut down */
   elem = async_jitter_queue_pop_unlocked (priv->queue);
   if (!elem)
     goto no_elem;
@@ -800,7 +809,7 @@ again:
     return;
   }
 
-  /* pop a buffer, we will get NULL if the queue was shut down */
+  /* we know it's a buffer now */
   outbuf = GST_BUFFER_CAST (elem);
 
   seqnum = gst_rtp_buffer_get_seq (outbuf);

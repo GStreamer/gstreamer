@@ -1,5 +1,13 @@
 2007-04-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_jitter_buffer_sink_setcaps), (gst_rtp_jitter_buffer_chain),
+	(gst_rtp_jitter_buffer_loop):
+	Add some debug and comments.
+	Fix double unref() in error cases.
+
+2007-04-05  Wim Taymans  <wim@fluendo.com>
+
 	* gst/qtdemux/gstrtpxqtdepay.c: (gst_rtp_xqt_depay_process),
 	(gst_rtp_xqt_depay_change_state):
 	* gst/qtdemux/gstrtpxqtdepay.h:
