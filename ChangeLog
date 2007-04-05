@@ -1,3 +1,11 @@
+2007-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	submitted by: Mogens Jaeger <mogens@jaeger.tf>
+
+	* po/LINGUAS:
+	* po/da.po:
+	  Added Danish translation.
+
 2007-03-28  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* po/.cvsignore:
