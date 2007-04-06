@@ -1,3 +1,9 @@
+2007-04-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/elements/playbin.c:
+	(test_sink_usage_video_only_stream), (playbin_suite):
+	  Add small test for stream-info-value-array code paths.
+
 2007-04-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

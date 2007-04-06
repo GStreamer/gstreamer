@@ -76,6 +76,15 @@ DEFINE_TEST (test_sink_usage_video_only_stream)
   fail_unless_equals_int (cur_state, GST_STATE_NULL);
   fail_unless_equals_int (pending_state, GST_STATE_VOID_PENDING);
 
+  {
+    GValueArray *stream_info = NULL;
+
+    g_object_get (playbin, "stream-info-value-array", &stream_info, NULL);
+    fail_unless (stream_info != NULL);
+    fail_unless_equals_int (stream_info->n_values, 1);
+    g_value_array_free (stream_info);
+  }
+
   gst_element_set_state (playbin, GST_STATE_NULL);
   gst_object_unref (playbin);
 }
