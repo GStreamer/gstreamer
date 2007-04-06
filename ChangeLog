@@ -1,3 +1,8 @@
+2007-04-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (create_rtcp):
+	Fix pad template name parsing.
+
 2007-04-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:

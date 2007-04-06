@@ -787,7 +787,7 @@ create_rtcp (GstRTPBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   GstRTPBinSession *session;
 
   /* first get the session number */
-  if (name == NULL || sscanf (name, "send_rtp_sink_%d", &sessid) != 1)
+  if (name == NULL || sscanf (name, "rtcp_src_%d", &sessid) != 1)
     goto no_name;
 
   /* get or create session */
