@@ -103,7 +103,7 @@ RTSPResult      rtsp_transport_init         (RTSPTransport *transport);
 RTSPResult      rtsp_transport_parse        (const gchar *str, RTSPTransport *transport);
 
 RTSPResult      rtsp_transport_get_mime     (RTSPTransMode trans, const gchar **mime);
-RTSPResult      rtsp_transport_get_manager  (RTSPTransMode trans, const gchar **manager);
+RTSPResult      rtsp_transport_get_manager  (RTSPTransMode trans, const gchar **manager, guint option);
 
 RTSPResult      rtsp_transport_free         (RTSPTransport *transport);
 

@@ -11,9 +11,11 @@ libgstrtsp_la_SOURCES = gstrtsp.c gstrtspsrc.c \
 			sdpmessage.c            \
 			base64.c
 
-libgstrtsp_la_CFLAGS = $(GST_CFLAGS)
-libgstrtsp_la_LIBADD = $(GST_LIBS) $(WIN32_LIBS)
+libgstrtsp_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstrtsp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
+		       -lgstrtp-@GST_MAJORMINOR@ $(GST_LIBS) $(WIN32_LIBS)
 libgstrtsp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
 
 check_PROGRAMS = test
 

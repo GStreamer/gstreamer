@@ -40,39 +40,36 @@
  * SOFTWARE.
  */
 
-#ifndef __GST_RTPDEC_H__
-#define __GST_RTPDEC_H__
+#ifndef __GST_RTP_DEC_H__
+#define __GST_RTP_DEC_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RTPDEC  		(gst_rtpdec_get_type())
-#define GST_IS_RTPDEC(obj)  		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTPDEC))
-#define GST_IS_RTPDEC_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTPDEC))
-#define GST_RTPDEC(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTPDEC, GstRTPDec))
-#define GST_RTPDEC_CLASS(klass)  	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTPDEC, GstRTPDecClass))
+#define GST_TYPE_RTP_DEC  		(gst_rtp_dec_get_type())
+#define GST_IS_RTP_DEC(obj)  		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_DEC))
+#define GST_IS_RTP_DEC_CLASS(klass) 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_DEC))
+#define GST_RTP_DEC(obj)  		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_DEC, GstRTPDec))
+#define GST_RTP_DEC_CLASS(klass)  	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_DEC, GstRTPDecClass))
 
 typedef struct _GstRTPDec GstRTPDec;
 typedef struct _GstRTPDecClass GstRTPDecClass;
+typedef struct _GstRTPDecSession GstRTPDecSession;
 
 struct _GstRTPDec {
-  GstElement element;
+  GstElement  element;
 
-  GstPad *sink_rtp;
-  GstPad *sink_rtcp;
-  GstPad *src_rtp;
-  GstPad *src_rtcp;
+  GSList     *sessions;
+  GstClock   *provided_clock;
 };
 
 struct _GstRTPDecClass {
   GstElementClass parent_class;
 };
 
-gboolean gst_rtpdec_plugin_init (GstPlugin * plugin);
-
-GType gst_rtpdec_get_type(void);
+GType gst_rtp_dec_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_RTPDEC_H__ */
+#endif /* __GST_RTP_DEC_H__ */

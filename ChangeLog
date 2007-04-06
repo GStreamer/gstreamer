@@ -1,3 +1,38 @@
+2007-04-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/Makefile.am:
+	* gst/rtsp/gstrtpdec.c: (find_session_by_id), (create_session),
+	(free_session), (gst_rtp_dec_base_init), (gst_rtp_dec_class_init),
+	(gst_rtp_dec_init), (gst_rtp_dec_finalize),
+	(gst_rtp_dec_query_src), (gst_rtp_dec_chain_rtp),
+	(gst_rtp_dec_chain_rtcp), (gst_rtp_dec_set_property),
+	(gst_rtp_dec_get_property), (gst_rtp_dec_provide_clock),
+	(gst_rtp_dec_change_state), (create_recv_rtp), (create_recv_rtcp),
+	(create_rtcp), (gst_rtp_dec_request_new_pad),
+	(gst_rtp_dec_release_pad):
+	* gst/rtsp/gstrtpdec.h:
+	* gst/rtsp/gstrtsp.c: (plugin_init):
+	Morph RTPDec into something compatible with RTPBin as a fallback.
+	Various other style fixes.
+
+	* gst/rtsp/gstrtspsrc.c: (find_stream_by_id),
+	(find_stream_by_udpsrc), (gst_rtspsrc_stream_free),
+	(gst_rtspsrc_cleanup), (gst_rtspsrc_media_to_caps),
+	(new_session_pad), (gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_activate_streams), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_loop_udp), (gst_rtspsrc_setup_auth),
+	(gst_rtspsrc_handle_message), (gst_rtspsrc_change_state):
+	* gst/rtsp/gstrtspsrc.h:
+	Implement RTPBin session manager handling.
+	Don't try to add empty properties to caps.
+	Implement fallback session manager, handling.
+	Don't combine errors from RTCP streams, just ignore them.
+
+	* gst/rtsp/rtsptransport.c: (rtsp_transport_get_manager):
+	* gst/rtsp/rtsptransport.h:
+	Implement fallback session manager.
+	Make RTPBin the default one when available.
+
 2007-04-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpmp4adepay.c: (gst_rtp_mp4a_depay_class_init),

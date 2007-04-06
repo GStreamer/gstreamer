@@ -97,9 +97,6 @@ struct _GstRTSPStream {
   /* our udp sink back to the server */
   GstElement   *udpsink;
 
-  /* the session manager */
-  GstElement   *sess;
-
   /* state */
   gint          pt;
   gboolean      container;
@@ -148,6 +145,10 @@ struct _GstRTSPSrc {
 
   /* supported methods */
   gint             methods;
+
+  /* session management */
+  GstElement      *session;
+  gulong           session_sig_id;
 
   RTSPConnection  *connection;
 

@@ -45,19 +45,21 @@
 
 #include "rtsptransport.h"
 
+#define MAX_MANAGERS	2
+
 typedef struct
 {
   const gchar *name;
   const RTSPTransMode mode;
   const gchar *gst_mime;
-  const gchar *manager;
+  const gchar *manager[MAX_MANAGERS];
 } RTSPTransMap;
 
 static const RTSPTransMap transports[] = {
-  {"rtp", RTSP_TRANS_RTP, "application/x-rtp", "rtpdec"},
-  {"x-real-rdt", RTSP_TRANS_RDT, "application/x-rdt", NULL},
-  {"x-pn-tng", RTSP_TRANS_RDT, "application/x-rdt", NULL},
-  {NULL, RTSP_TRANS_UNKNOWN, NULL, NULL}
+  {"rtp", RTSP_TRANS_RTP, "application/x-rtp", {"rtpbin", "rtpdec"}},
+  {"x-real-rdt", RTSP_TRANS_RDT, "application/x-rdt", {NULL, NULL}},
+  {"x-pn-tng", RTSP_TRANS_RDT, "application/x-rdt", {NULL, NULL}},
+  {NULL, RTSP_TRANS_UNKNOWN, NULL, {NULL, NULL}}
 };
 
 typedef struct
@@ -135,7 +137,8 @@ rtsp_transport_get_mime (RTSPTransMode trans, const gchar ** mime)
 }
 
 RTSPResult
-rtsp_transport_get_manager (RTSPTransMode trans, const gchar ** manager)
+rtsp_transport_get_manager (RTSPTransMode trans, const gchar ** manager,
+    guint option)
 {
   gint i;
 
@@ -144,7 +147,11 @@ rtsp_transport_get_manager (RTSPTransMode trans, const gchar ** manager)
   for (i = 0; transports[i].name; i++)
     if (transports[i].mode == trans)
       break;
-  *manager = transports[i].manager;
+
+  if (option < MAX_MANAGERS)
+    *manager = transports[i].manager[option];
+  else
+    *manager = NULL;
 
   return RTSP_OK;
 }
