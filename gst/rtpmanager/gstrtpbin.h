@@ -42,6 +42,7 @@ struct _GstRTPBin {
 
   /* a list of session */
   GSList         *sessions;
+  GstClock       *provided_clock;
 
   /*< private >*/
   GstRTPBinPrivate *priv;

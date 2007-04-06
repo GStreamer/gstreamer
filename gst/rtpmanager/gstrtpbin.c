@@ -312,6 +312,7 @@ static void gst_rtp_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 /* GstElement vmethods */
+static GstClock *gst_rtp_bin_provide_clock (GstElement * element);
 static GstStateChangeReturn gst_rtp_bin_change_state (GstElement * element,
     GstStateChange transition);
 static GstPad *gst_rtp_bin_request_new_pad (GstElement * element,
@@ -361,6 +362,8 @@ gst_rtp_bin_class_init (GstRTPBinClass * klass)
   gobject_class->set_property = gst_rtp_bin_set_property;
   gobject_class->get_property = gst_rtp_bin_get_property;
 
+  gstelement_class->provide_clock =
+      GST_DEBUG_FUNCPTR (gst_rtp_bin_provide_clock);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -373,6 +376,7 @@ static void
 gst_rtp_bin_init (GstRTPBin * rtpbin, GstRTPBinClass * klass)
 {
   rtpbin->priv = GST_RTP_BIN_GET_PRIVATE (rtpbin);
+  rtpbin->provided_clock = gst_system_clock_obtain ();
 }
 
 static void
@@ -413,6 +417,16 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstClock *
+gst_rtp_bin_provide_clock (GstElement * element)
+{
+  GstRTPBin *rtpbin;
+
+  rtpbin = GST_RTP_BIN (element);
+
+  return GST_CLOCK_CAST (gst_object_ref (rtpbin->provided_clock));
 }
 
 static GstStateChangeReturn
