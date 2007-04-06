@@ -121,7 +121,10 @@ struct _GstPipelinePrivate
   /* with LOCK */
   gboolean auto_flush_bus;
 
-  GstClockTime new_stream_time;
+  /* when we need to update stream_time or clock when going back to
+   * PLAYING*/
+  gboolean update_stream_time;
+  gboolean update_clock;
 };
 
 
@@ -323,7 +326,7 @@ reset_stream_time (GstPipeline * pipeline)
   if (pipeline->stream_time != GST_CLOCK_TIME_NONE) {
     GST_DEBUG_OBJECT (pipeline, "reset stream_time to 0");
     pipeline->stream_time = 0;
-    pipeline->priv->new_stream_time = TRUE;
+    pipeline->priv->update_stream_time = TRUE;
   } else {
     GST_DEBUG_OBJECT (pipeline, "application asked to not reset stream_time");
   }
@@ -362,6 +365,9 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_OBJECT_LOCK (element);
+      pipeline->priv->update_clock = TRUE;
+      GST_OBJECT_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
@@ -369,7 +375,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       GstQuery *query;
       GstClockTime min_latency, max_latency;
       GstClockTime start_time, stream_time, delay;
-      gboolean new_clock, update;
+      gboolean new_clock, update_stream_time, update_clock;
       gboolean res;
       GstClock *cur_clock;
 
@@ -380,19 +386,29 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
       if (cur_clock)
         gst_object_ref (cur_clock);
       stream_time = pipeline->stream_time;
-      update = pipeline->priv->new_stream_time;
-      pipeline->priv->new_stream_time = FALSE;
+      update_stream_time = pipeline->priv->update_stream_time;
+      update_clock = pipeline->priv->update_clock;
+      pipeline->priv->update_stream_time = FALSE;
+      pipeline->priv->update_clock = FALSE;
       delay = pipeline->delay;
       GST_OBJECT_UNLOCK (element);
 
       /* stream time changed, either with a PAUSED or a flush, we need to check
        * if there is a new clock & update the base time */
-      if (update) {
-        GST_DEBUG_OBJECT (pipeline, "stream_time changed. "
-            "Updating base time and checking for new clock.");
+      if (update_stream_time) {
+        GST_DEBUG_OBJECT (pipeline, "Need to update stream_time");
 
-        /* when going to playing, select a clock */
-        clock = gst_element_provide_clock (element);
+        /* when going to PLAYING, select a clock when needed. If we just got
+         * flushed, we don't reselect the clock. */
+        if (update_clock) {
+          GST_DEBUG_OBJECT (pipeline, "Need to update clock.");
+          clock = gst_element_provide_clock (element);
+        } else {
+          GST_DEBUG_OBJECT (pipeline,
+              "Don't need to update clock, using old clock.");
+          clock = gst_object_ref (cur_clock);
+        }
+
         new_clock = (clock != cur_clock);
 
         if (clock) {
@@ -513,7 +529,10 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
         /* store the current stream time */
         if (pipeline->stream_time != GST_CLOCK_TIME_NONE) {
           pipeline->stream_time = now - element->base_time;
-          pipeline->priv->new_stream_time = TRUE;
+          /* we went to PAUSED, when going to PLAYING select clock and new
+           * base_time */
+          pipeline->priv->update_stream_time = TRUE;
+          pipeline->priv->update_clock = TRUE;
         }
 
         GST_DEBUG_OBJECT (element,
@@ -622,7 +641,7 @@ gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
 
   GST_OBJECT_LOCK (pipeline);
   pipeline->stream_time = time;
-  pipeline->priv->new_stream_time = TRUE;
+  pipeline->priv->update_stream_time = TRUE;
   GST_OBJECT_UNLOCK (pipeline);
 
   GST_DEBUG_OBJECT (pipeline, "set new stream_time to %" GST_TIME_FORMAT,

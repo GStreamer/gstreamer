@@ -1,3 +1,10 @@
+2007-04-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpipeline.c: (reset_stream_time),
+	(gst_pipeline_change_state), (gst_pipeline_set_new_stream_time):
+	Only try to select a different pipeline clock when we went back to
+	PAUSED and not when we merely got flushed.
+
 2007-04-05  Michael Smith  <msmith@fluendo.com>
 
 	* tools/gst-launch.1.in:
