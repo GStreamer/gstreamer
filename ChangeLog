@@ -1,3 +1,9 @@
+2007-04-06  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybin.c: (add_sink),
+	(gst_play_bin_change_state):
+	Activate sync in playbin, we are ready to handle it for live streams.
+
 2007-04-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/playbin.c:

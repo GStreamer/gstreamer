@@ -1415,13 +1415,6 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad,
   }
   gst_bin_add (GST_BIN_CAST (play_bin), sink);
 
-  /* for live pipelines, disable the sync in the sinks until core handles this
-   * correctly. */
-  if (play_bin->is_live) {
-    gst_pipeline_use_clock (GST_PIPELINE (play_bin), NULL);
-    gst_element_set_clock (sink, NULL);
-  }
-
   /* bring it to the required state so we can link to the peer without
    * breaking the flow */
   stateret = gst_element_set_state (sink, state);
@@ -1798,7 +1791,6 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_pipeline_auto_clock (GST_PIPELINE (play_bin));
       /* this really is the easiest way to make the state change return
        * ASYNC until we added the sinks */
       if (!play_bin->fakesink) {
