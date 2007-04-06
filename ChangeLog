@@ -1,5 +1,12 @@
 2007-04-06  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_class_init),
+	(gst_rtp_bin_init), (gst_rtp_bin_provide_clock):
+	* gst/rtpmanager/gstrtpbin.h:
+	Provide a clock.
+
+2007-04-06  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtpmanager/gstrtpbin.c: (create_rtcp):
 	Fix pad template name parsing.
 
