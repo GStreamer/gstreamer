@@ -686,9 +686,9 @@ gst_pad_set_active (GstPad * pad, gboolean active)
  *
  * Activates or deactivates the given pad in pull mode via dispatching to the
  * pad's activatepullfunc. For use from within pad activation functions only.
- * When called on sink pads, will first proxy the call to the peer pad, which is
- * expected to activate its internally linked pads from within its activate_pull
- * function.
+ * When called on sink pads, will first proxy the call to the peer pad, which
+ * is expected to activate its internally linked pads from within its
+ * activate_pull function.
  *
  * If you don't know what this is, you probably don't want to call it.
  *
@@ -1186,8 +1186,8 @@ gst_pad_set_chain_function (GstPad * pad, GstPadChainFunction chain)
  * @pad: a source #GstPad.
  * @get: the #GstPadGetRangeFunction to set.
  *
- * Sets the given getrange function for the pad. The getrange function is called to
- * produce a new #GstBuffer to start the processing pipeline. see
+ * Sets the given getrange function for the pad. The getrange function is
+ * called to produce a new #GstBuffer to start the processing pipeline. see
  * #GstPadGetRangeFunction for a description of the getrange function.
  */
 void
@@ -1207,8 +1207,8 @@ gst_pad_set_getrange_function (GstPad * pad, GstPadGetRangeFunction get)
  * @pad: a source #GstPad.
  * @check: the #GstPadCheckGetRangeFunction to set.
  *
- * Sets the given checkgetrange function for the pad. Implement this function on
- * a pad if you dynamically support getrange based scheduling on the pad.
+ * Sets the given checkgetrange function for the pad. Implement this function
+ * on a pad if you dynamically support getrange based scheduling on the pad.
  */
 void
 gst_pad_set_checkgetrange_function (GstPad * pad,
@@ -1421,8 +1421,8 @@ gst_pad_set_unlink_function (GstPad * pad, GstPadUnlinkFunction unlink)
  * @getcaps should return the most specific caps it reasonably can, since this
  * helps with autoplugging.
  *
- * Note that the return value from @getcaps is owned by the caller, so the caller
- * should unref the caps after usage.
+ * Note that the return value from @getcaps is owned by the caller, so the
+ * caller should unref the caps after usage.
  */
 void
 gst_pad_set_getcaps_function (GstPad * pad, GstPadGetCapsFunction getcaps)
@@ -2065,9 +2065,9 @@ gst_pad_get_caps (GstPad * pad)
  *
  * Gets the capabilities of the peer connected to this pad.
  *
- * Returns: the #GstCaps of the peer pad. This function returns a new caps, so use
- * gst_caps_unref to get rid of it. this function returns NULL if there is no
- * peer pad.
+ * Returns: the #GstCaps of the peer pad. This function returns a new caps, so
+ * use gst_caps_unref to get rid of it. this function returns NULL if there is
+ * no peer pad.
  */
 GstCaps *
 gst_pad_peer_get_caps (GstPad * pad)
@@ -2468,8 +2468,8 @@ not_accepted:
  *
  * Gets the capabilities for @pad's template.
  *
- * Returns: the #GstCaps of this pad template. If you intend to keep a reference
- * on the caps, make a copy (see gst_caps_copy ()).
+ * Returns: the #GstCaps of this pad template. If you intend to keep a
+ * reference on the caps, make a copy (see gst_caps_copy ()).
  */
 const GstCaps *
 gst_pad_get_pad_template_caps (GstPad * pad)
@@ -2733,8 +2733,8 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
 
   /* Lock for checking caps, pretty pointless as the _pad_push() function might
    * change it concurrently, one of the problems with automatic caps setting in
-   * pad_alloc_and_set_caps. Worst case, if does a check too much, but only when
-   * there is heavy renegotiation going on in both directions. */
+   * pad_alloc_and_set_caps. Worst case, if does a check too much, but only
+   * when there is heavy renegotiation going on in both directions. */
   GST_OBJECT_LOCK (pad);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
   GST_OBJECT_UNLOCK (pad);
@@ -3253,7 +3253,7 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
  * GST_PAD_IS_BLOCKED (pad) == TRUE when this function is
  * called.
  *
- * This function perform the pad blocking when an event, buffer push
+ * This function performs the pad blocking when an event, buffer push
  * or buffer_alloc is performed on a _SRC_ pad. It blocks the
  * streaming thread after informing the pad has been blocked. 
  *
@@ -3263,7 +3263,7 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
  * Two methods are available for notifying the application of the
  * block: 
  * - the callback method, which happens in the STREAMING thread with
- *   the STREAM_LOCK held. With this method, the most usefull way of
+ *   the STREAM_LOCK held. With this method, the most useful way of
  *   dealing with the callback is to post a message to the main thread
  *   where the pad block can then be handled outside of the streaming
  *   thread. With the last method one can perform all operations such
@@ -3389,7 +3389,7 @@ gst_pad_emit_have_data_signal (GstPad * pad, GstMiniObject * obj)
   g_value_set_boolean (&ret, TRUE);
   g_value_init (&args[0], GST_TYPE_PAD);
   g_value_set_object (&args[0], pad);
-  g_value_init (&args[1], GST_TYPE_MINI_OBJECT);        // G_TYPE_POINTER);
+  g_value_init (&args[1], GST_TYPE_MINI_OBJECT);
   gst_value_set_mini_object (&args[1], obj);
 
   if (GST_IS_EVENT (obj))
@@ -3517,8 +3517,8 @@ no_function:
  *
  * If the caps on @buffer are different from the current caps on @pad, this
  * function will call any setcaps function (see gst_pad_set_setcaps_function())
- * installed on @pad. If the new caps are not acceptable for @pad, this function
- * returns #GST_FLOW_NOT_NEGOTIATED.
+ * installed on @pad. If the new caps are not acceptable for @pad, this
+ * function returns #GST_FLOW_NOT_NEGOTIATED.
  *
  * The function proceeds calling the chain function installed on @pad (see
  * gst_pad_set_chain_function()) and the return value of that function is
@@ -3558,9 +3558,9 @@ gst_pad_chain (GstPad * pad, GstBuffer * buffer)
  * gst_pad_set_setcaps_function()). In case of failure to renegotiate the new
  * format, this function returns #GST_FLOW_NOT_NEGOTIATED.
  *
- * The function proceeds calling gst_pad_chain() on the peer pad and returns the
- * value from that function. If @pad has no peer, #GST_FLOW_NOT_LINKED will be
- * returned.
+ * The function proceeds calling gst_pad_chain() on the peer pad and returns
+ * the value from that function. If @pad has no peer, #GST_FLOW_NOT_LINKED will
+ * be returned.
  *
  * In all cases, success or failure, the caller loses its reference to @buffer
  * after calling this function.
@@ -3747,8 +3747,9 @@ not_connected:
  * installed (see gst_pad_set_getrange_function()) this function returns
  * #GST_FLOW_NOT_SUPPORTED.
  *
- * @buffer's caps must either be unset or the same as what is already configured
- * on @pad. Renegotiation within a running pull-mode pipeline is not supported.
+ * @buffer's caps must either be unset or the same as what is already
+ * configured on @pad. Renegotiation within a running pull-mode pipeline is not
+ * supported.
  *
  * This is a lowlevel function. Usualy gst_pad_pull_range() is used.
  *
@@ -3842,10 +3843,10 @@ dropping:
   }
 not_negotiated:
   {
-    /* ideally we want to use the commented-out code, but currently demuxers and
-     * typefind do not follow part-negotiation.txt. When switching into pull
-     * mode, typefind should probably return the found caps from getcaps(), and
-     * demuxers should do the setcaps(). */
+    /* ideally we want to use the commented-out code, but currently demuxers
+     * and typefind do not follow part-negotiation.txt. When switching into
+     * pull mode, typefind should probably return the found caps from
+     * getcaps(), and demuxers should do the setcaps(). */
 
 #if 0
     gst_buffer_unref (*buffer);
@@ -3878,8 +3879,9 @@ not_negotiated:
  * See gst_pad_get_range() for a list of return values and for the
  * semantics of the arguments of this function.
  *
- * @buffer's caps must either be unset or the same as what is already configured
- * on @pad. Renegotiation within a running pull-mode pipeline is not supported.
+ * @buffer's caps must either be unset or the same as what is already
+ * configured on @pad. Renegotiation within a running pull-mode pipeline is not
+ * supported.
  *
  * Returns: a #GstFlowReturn from the peer pad.
  * When this function returns #GST_FLOW_OK, @buffer will contain a valid
@@ -3963,10 +3965,10 @@ dropping:
   }
 not_negotiated:
   {
-    /* ideally we want to use the commented-out code, but currently demuxers and
-     * typefind do not follow part-negotiation.txt. When switching into pull
-     * mode, typefind should probably return the found caps from getcaps(), and
-     * demuxers should do the setcaps(). */
+    /* ideally we want to use the commented-out code, but currently demuxers
+     * and typefind do not follow part-negotiation.txt. When switching into
+     * pull mode, typefind should probably return the found caps from
+     * getcaps(), and demuxers should do the setcaps(). */
 
 #if 0
     gst_buffer_unref (*buffer);
@@ -4114,9 +4116,9 @@ flushed:
  * To find out whether an event type is upstream, downstream, or downstream and
  * serialized, see #GstEventTypeFlags, gst_event_type_get_flags(),
  * #GST_EVENT_IS_UPSTREAM, #GST_EVENT_IS_DOWNSTREAM, and
- * #GST_EVENT_IS_SERIALIZED. Note that in practice that an application or plugin
- * doesn't need to bother itself with this information; the core handles all
- * necessary locks and checks.
+ * #GST_EVENT_IS_SERIALIZED. Note that in practice that an application or
+ * plugin doesn't need to bother itself with this information; the core handles
+ * all necessary locks and checks.
  *
  * This function takes owership of the provided event so you should
  * gst_event_ref() it if you want to reuse the event after this call.
