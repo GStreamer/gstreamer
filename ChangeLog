@@ -1,3 +1,12 @@
+2007-04-10  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gdp/gstgdppay.c (gst_gdp_pay_reset_streamheader,
+	  gst_gdp_pay_chain, gst_gdp_pay_sink_event):
+	  Only stamp buffers with offset/offset_end right before they get
+	  pushed.  This ensures offset continuity, which was not the case
+	  before as shown by
+	  gst-launch -v -m audiotestsrc num-buffers=10 ! audioconvert ! vorbisenc ! gdppay ! identity check-imperfect-offset=TRUE ! fakesink silent=TRUE
+
 2007-04-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybin.c: (add_sink),
