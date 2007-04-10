@@ -354,10 +354,13 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     }
   }
 
-  /* put copies of the buffers in a fixed list */
+  /* put copies of the buffers in a fixed list
+   * Stamp the buffers with offset and offset_end as well.
+   * We do this here so the offsets match the order the buffers go out in */
   g_value_init (&array, GST_TYPE_ARRAY);
 
   if (version_one_zero) {
+    gst_gdp_stamp_buffer (this, this->new_segment_buf);
     GST_DEBUG_OBJECT (this, "1.0, appending copy of new segment buffer %p",
         this->new_segment_buf);
     new_segment_buf = gst_buffer_copy (this->new_segment_buf);
@@ -368,6 +371,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     gst_buffer_unref (new_segment_buf);
 
     if (this->tag_buf) {
+      gst_gdp_stamp_buffer (this, this->tag_buf);
       GST_DEBUG_OBJECT (this, "1.0, appending copy of tag buffer %p",
           this->tag_buf);
       tag_buf = gst_buffer_copy (this->tag_buf);
@@ -379,6 +383,7 @@ gst_gdp_pay_reset_streamheader (GstGDPPay * this)
     }
   }
 
+  gst_gdp_stamp_buffer (this, this->caps_buf);
   GST_DEBUG_OBJECT (this, "appending copy of caps buffer %p", this->caps_buf);
   caps_buf = gst_buffer_copy (this->caps_buf);
   g_value_init (&value, GST_TYPE_BUFFER);
@@ -556,7 +561,6 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
       GST_ELEMENT_WARNING (this, STREAM, ENCODE, (NULL),
           ("Could not create GDP buffer from new segment event"));
     } else {
-      gst_gdp_stamp_buffer (this, outbuffer);
       GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
       GST_BUFFER_DURATION (outbuffer) = 0;
       GST_DEBUG_OBJECT (this, "Storing buffer %p as new_segment_buf",
@@ -578,7 +582,6 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
     if (!outbuffer)
       goto no_caps_buffer;
 
-    gst_gdp_stamp_buffer (this, outbuffer);
     GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
     GST_BUFFER_DURATION (outbuffer) = 0;
     GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
@@ -651,11 +654,10 @@ gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event)
   if (!outbuffer)
     goto no_outbuffer;
 
-  gst_gdp_stamp_buffer (this, outbuffer);
   GST_BUFFER_TIMESTAMP (outbuffer) = GST_EVENT_TIMESTAMP (event);
   GST_BUFFER_DURATION (outbuffer) = 0;
 
-  /* if we got a new segment, we should put it on our streamheader,
+  /* if we got a new segment or tag event, we should put it on our streamheader,
    * and not send it on */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
