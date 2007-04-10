@@ -41,6 +41,7 @@
 #endif
 #include <string.h>
 
+#include "gstrtpbin-marshal.h"
 #include "gstrtpbin.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_bin_debug);
@@ -108,7 +109,7 @@ struct _GstRTPBinPrivate
 /* signals and args */
 enum
 {
-  /* FILL ME */
+  SIGNAL_REQUEST_PT_MAP,
   LAST_SIGNAL
 };
 
@@ -319,7 +320,7 @@ static GstPad *gst_rtp_bin_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_rtp_bin_release_pad (GstElement * element, GstPad * pad);
 
-/*static guint gst_rtp_bin_signals[LAST_SIGNAL] = { 0 }; */
+static guint gst_rtp_bin_signals[LAST_SIGNAL] = { 0 };
 
 GST_BOILERPLATE (GstRTPBin, gst_rtp_bin, GstBin, GST_TYPE_BIN);
 
@@ -361,6 +362,12 @@ gst_rtp_bin_class_init (GstRTPBinClass * klass)
   gobject_class->finalize = gst_rtp_bin_finalize;
   gobject_class->set_property = gst_rtp_bin_set_property;
   gobject_class->get_property = gst_rtp_bin_get_property;
+
+  gst_rtp_bin_signals[SIGNAL_REQUEST_PT_MAP] =
+      g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, request_pt_map),
+      NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT, GST_TYPE_CAPS, 1,
+      G_TYPE_UINT);
 
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_provide_clock);

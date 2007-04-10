@@ -26,6 +26,7 @@
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include "gstrtpbin-marshal.h"
 #include "gstrtpssrcdemux.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_ssrc_demux_debug);
@@ -87,6 +88,7 @@ struct _GstRTPSsrcDemuxPad
 {
   GstPad *pad;
   guint32 ssrc;
+  GstCaps *caps;
 };
 
 /* find a src pad for a given SSRC, returns NULL if the SSRC was not found
@@ -167,8 +169,8 @@ gst_rtp_ssrc_demux_class_init (GstRTPSsrcDemuxClass * klass)
       g_signal_new ("new-ssrc-pad",
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTPSsrcDemuxClass, new_ssrc_pad),
-      NULL, NULL, g_cclosure_marshal_VOID__UINT_POINTER,
-      G_TYPE_NONE, 2, G_TYPE_INT, GST_TYPE_PAD);
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_OBJECT,
+      G_TYPE_NONE, 2, G_TYPE_UINT, GST_TYPE_PAD);
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_ssrc_demux_change_state);

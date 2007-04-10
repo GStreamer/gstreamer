@@ -1,3 +1,19 @@
+2007-04-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/.cvsignore:
+	* gst/rtpmanager/Makefile.am:
+	* gst/rtpmanager/gstrtpbin-marshal.list:
+	Added custom marshallers for signals.
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_class_init):
+	* gst/rtpmanager/gstrtpbin.h:
+	Prepare for emiting pt map signals.
+
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_class_init):
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	(gst_rtp_ssrc_demux_class_init):
+	Fix signals.
+
 2007-04-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_class_init),
