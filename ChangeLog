@@ -1,3 +1,23 @@
+2007-04-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_setcaps),
+	(gst_rtp_amr_depay_process):
+	Fix depayloader clock_rate and some cleanups.
+
+	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_finalize),
+	(gst_rtp_h264_depay_setcaps), (gst_rtp_h264_depay_process):
+	* gst/rtp/gstrtph264depay.h:
+	Don't push codec_data in the adapter because it might get flushed when
+	we get a discont.
+
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_process):
+	Handle multiple AU per packet.
+
+	* gst/rtp/gstrtpsv3vdepay.c: (gst_rtp_sv3v_depay_process),
+	(gst_rtp_sv3v_depay_plugin_init):
+	Disable rank, this one does not work.
+	Remove timestamping, base class does that.
+
 2007-04-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/auparse/gstauparse.c: (gst_au_parse_parse_header):

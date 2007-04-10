@@ -287,64 +287,92 @@ gst_rtp_mp4g_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     guint32 timestamp;
     guint AU_headers_len;
     guint AU_size, AU_index;
+    gboolean M;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
     payload_header = 0;
 
+    timestamp = gst_rtp_buffer_get_timestamp (buf);
+    M = gst_rtp_buffer_get_marker (buf);
+
     if (rtpmp4gdepay->sizelength > 0) {
+      gint num_AU_headers, AU_headers_bytes, i;
+
       /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- .. -+-+-+-+-+-+-+-+-+-+
        * |AU-headers-length|AU-header|AU-header|      |AU-header|padding|
        * |                 |   (1)   |   (2)   |      |   (n) * | bits  |
        * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- .. -+-+-+-+-+-+-+-+-+-+
        *
-       * The lenght is 2 bytes and contains the length of the following
+       * The length is 2 bytes and contains the length of the following
        * AU-headers in bits.
        */
       AU_headers_len = (payload[0] << 8) | payload[1];
+      AU_headers_bytes = (AU_headers_len + 7) / 8;
+      num_AU_headers = AU_headers_len / 16;
+
+      GST_DEBUG_OBJECT (rtpmp4gdepay, "AU headers len %d, bytes %d, num %d",
+          AU_headers_len, AU_headers_bytes, num_AU_headers);
 
       /* skip header */
       payload += 2;
-      payload_header += 2;
-      payload_len -= 2;
-
-      /* FIXME, use bits */
-      AU_size = ((payload[0] << 8) | payload[1]) >> 3;
-      AU_index = payload[1] & 0x7;
-
-      GST_DEBUG_OBJECT (rtpmp4gdepay, "len, %d, size %d, index %d",
-          AU_headers_len, AU_size, AU_index);
-
       /* skip special headers */
-      payload += (AU_headers_len + 7) / 8;
-      payload_header += (AU_headers_len + 7) / 8;
-      payload_len = AU_size;
-    }
+      payload_header = 2 + AU_headers_bytes;
 
-    timestamp = gst_rtp_buffer_get_timestamp (buf);
+      for (i = 0; i < num_AU_headers; i++) {
+        /* FIXME, use bits */
+        AU_size = ((payload[0] << 8) | payload[1]) >> 3;
+        AU_index = payload[1] & 0x7;
+        payload += 2;
 
-    /* strip header from payload and push in the adapter */
-    outbuf =
-        gst_rtp_buffer_get_payload_subbuffer (buf, payload_header, payload_len);
-    gst_adapter_push (rtpmp4gdepay->adapter, outbuf);
+        GST_DEBUG_OBJECT (rtpmp4gdepay, "len, %d, size %d, index %d",
+            AU_headers_len, AU_size, AU_index);
 
-    /* if this was the last packet of the VOP, create and push a buffer */
-    if (gst_rtp_buffer_get_marker (buf)) {
-      guint avail;
+        /* collect stuff in the adapter, strip header from payload and push in
+         * the adapter */
+        outbuf =
+            gst_rtp_buffer_get_payload_subbuffer (buf, payload_header, AU_size);
+        gst_adapter_push (rtpmp4gdepay->adapter, outbuf);
 
-      avail = gst_adapter_available (rtpmp4gdepay->adapter);
+        if (M) {
+          guint avail;
 
-      outbuf = gst_adapter_take_buffer (rtpmp4gdepay->adapter, avail);
-      gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
-      GST_BUFFER_TIMESTAMP (outbuf) = gst_util_uint64_scale_int
-          (timestamp, GST_SECOND, depayload->clock_rate);
+          /* packet is complete, flush */
+          avail = gst_adapter_available (rtpmp4gdepay->adapter);
 
-      GST_DEBUG ("gst_rtp_mp4g_depay_chain: pushing buffer of size %d",
-          GST_BUFFER_SIZE (outbuf));
+          outbuf = gst_adapter_take_buffer (rtpmp4gdepay->adapter, avail);
+          gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
-      return outbuf;
+          GST_DEBUG ("gst_rtp_mp4g_depay_chain: pushing buffer of size %d",
+              GST_BUFFER_SIZE (outbuf));
+
+          /* only apply the timestamp for the first buffer */
+          if (i == 0)
+            gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
+          else
+            gst_base_rtp_depayload_push (depayload, outbuf);
+        }
+        payload_header += AU_size;
+      }
     } else {
-      return NULL;
+      /* push complete buffer in adapter */
+      outbuf = gst_rtp_buffer_get_payload_subbuffer (buf, 0, payload_len);
+      gst_adapter_push (rtpmp4gdepay->adapter, outbuf);
+
+      /* if this was the last packet of the VOP, create and push a buffer */
+      if (M) {
+        guint avail;
+
+        avail = gst_adapter_available (rtpmp4gdepay->adapter);
+
+        outbuf = gst_adapter_take_buffer (rtpmp4gdepay->adapter, avail);
+        gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
+
+        GST_DEBUG ("gst_rtp_mp4g_depay_chain: pushing buffer of size %d",
+            GST_BUFFER_SIZE (outbuf));
+
+        return outbuf;
+      }
     }
   }
   return NULL;

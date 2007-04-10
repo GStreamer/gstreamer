@@ -197,6 +197,7 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
     clock_rate = 8000;
+  depayload->clock_rate = clock_rate;
 
   /* we require 1 channel, 8000 Hz, octet aligned, no CRC,
    * no robust sorting, no interleaving for now */
@@ -233,24 +234,20 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
   GstRtpAMRDepay *rtpamrdepay;
   GstBuffer *outbuf = NULL;
+  gint payload_len;
 
   rtpamrdepay = GST_RTP_AMR_DEPAY (depayload);
 
   if (!rtpamrdepay->negotiated)
     goto not_negotiated;
 
-  if (!gst_rtp_buffer_validate (buf)) {
-    GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
-        (NULL), ("AMR RTP packet did not validate"));
-    goto bad_packet;
-  }
+  if (!gst_rtp_buffer_validate (buf))
+    goto invalid_packet;
 
   /* when we get here, 1 channel, 8000 Hz, octet aligned, no CRC, 
    * no robust sorting, no interleaving data is to be depayloaded */
   {
-    gint payload_len;
     guint8 *payload, *p, *dp;
-    guint32 timestamp;
     guint8 CMR;
     gint i, num_packets, num_nonempty_packets;
     gint amr_len;
@@ -259,11 +256,8 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     payload_len = gst_rtp_buffer_get_payload_len (buf);
 
     /* need at least 2 bytes for the header */
-    if (payload_len < 2) {
-      GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
-          (NULL), ("AMR RTP payload too small (%d)", payload_len));
-      goto bad_packet;
-    }
+    if (payload_len < 2)
+      goto too_small;
 
     payload = gst_rtp_buffer_get_payload (buf);
 
@@ -290,11 +284,8 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       payload_len -= 1;
       payload += 1;
 
-      if (ILP > ILL) {
-        GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
-            (NULL), ("AMR RTP wrong interleaving"));
-        goto bad_packet;
-      }
+      if (ILP > ILL)
+        goto wrong_interleaving;
     }
 
     /* 
@@ -317,11 +308,8 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
       fr_size = frame_size[FT];
       GST_DEBUG_OBJECT (rtpamrdepay, "frame size %d", fr_size);
-      if (fr_size == -1) {
-        GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
-            (NULL), ("AMR RTP frame size == -1"));
-        goto bad_packet;
-      }
+      if (fr_size == -1)
+        goto wrong_framesize;
 
       if (fr_size > 0) {
         amr_len += fr_size;
@@ -335,26 +323,15 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
     if (rtpamrdepay->crc) {
       /* data len + CRC len + header bytes should be smaller than payload_len */
-      if (num_packets + num_nonempty_packets + amr_len > payload_len) {
-        GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
-            (NULL), ("AMR RTP wrong length 1"));
-        goto bad_packet;
-      }
+      if (num_packets + num_nonempty_packets + amr_len > payload_len)
+        goto wrong_length_1;
     } else {
       /* data len + header bytes should be smaller than payload_len */
-      if (num_packets + amr_len > payload_len) {
-        GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
-            (NULL), ("AMR RTP wrong length 2"));
-        goto bad_packet;
-      }
+      if (num_packets + amr_len > payload_len)
+        goto wrong_length_2;
     }
 
-    timestamp = gst_rtp_buffer_get_timestamp (buf);
-
     outbuf = gst_buffer_new_and_alloc (payload_len);
-    GST_BUFFER_TIMESTAMP (outbuf) =
-        gst_util_uint64_scale_int (timestamp, GST_SECOND,
-        depayload->clock_rate);
 
     /* point to destination */
     p = GST_BUFFER_DATA (outbuf);
@@ -386,15 +363,50 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     GST_DEBUG ("gst_rtp_amr_depay_chain: pushing buffer of size %d",
         GST_BUFFER_SIZE (outbuf));
   }
-
   return outbuf;
 
   /* ERRORS */
+invalid_packet:
+  {
+    GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
+        (NULL), ("AMR RTP packet did not validate"));
+    goto bad_packet;
+  }
 not_negotiated:
   {
     GST_ELEMENT_ERROR (rtpamrdepay, STREAM, NOT_IMPLEMENTED,
         (NULL), ("not negotiated"));
     return NULL;
+  }
+too_small:
+  {
+    GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
+        (NULL), ("AMR RTP payload too small (%d)", payload_len));
+    goto bad_packet;
+  }
+wrong_interleaving:
+  {
+    GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
+        (NULL), ("AMR RTP wrong interleaving"));
+    goto bad_packet;
+  }
+wrong_framesize:
+  {
+    GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
+        (NULL), ("AMR RTP frame size == -1"));
+    goto bad_packet;
+  }
+wrong_length_1:
+  {
+    GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
+        (NULL), ("AMR RTP wrong length 1"));
+    goto bad_packet;
+  }
+wrong_length_2:
+  {
+    GST_ELEMENT_WARNING (rtpamrdepay, STREAM, DECODE,
+        (NULL), ("AMR RTP wrong length 2"));
+    goto bad_packet;
   }
 bad_packet:
   {

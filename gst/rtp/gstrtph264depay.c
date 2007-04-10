@@ -154,8 +154,10 @@ gst_rtp_h264_depay_finalize (GObject * object)
 
   rtph264depay = GST_RTP_H264_DEPAY (object);
 
+  if (rtph264depay->codec_data)
+    gst_buffer_unref (rtph264depay->codec_data);
+
   g_object_unref (rtph264depay->adapter);
-  rtph264depay->adapter = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -255,9 +257,12 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     }
     GST_BUFFER_SIZE (codec_data) = total;
 
-    /* don't set codec_data, we send unpacketized data so let the decoder
-     * packetize for us */
-    gst_adapter_push (rtph264depay->adapter, codec_data);
+    /* keep the codec_data, we need to send it as the first buffer. We cannot
+     * push it in the adapter because the adapter might be flushed on discont.
+     */
+    if (rtph264depay->codec_data)
+      gst_buffer_unref (rtph264depay->codec_data);
+    rtph264depay->codec_data = codec_data;
   }
 
   gst_pad_set_caps (depayload->srcpad, srccaps);
@@ -332,6 +337,12 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         payload_len -= header_len;
 
         rtph264depay->wait_start = FALSE;
+
+        /* prepend codec_data */
+        if (rtph264depay->codec_data) {
+          gst_adapter_push (rtph264depay->adapter, rtph264depay->codec_data);
+          rtph264depay->codec_data = NULL;
+        }
 
         /* STAP-A    Single-time aggregation packet     5.7.1 */
         while (payload_len > 2) {
@@ -446,13 +457,20 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
         /* if NAL unit ends, flush the adapter */
         if (E) {
+          GST_DEBUG_OBJECT (rtph264depay, "output %d bytes", outsize);
+
           outsize = gst_adapter_available (rtph264depay->adapter);
           outbuf = gst_adapter_take_buffer (rtph264depay->adapter, outsize);
 
           gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
-          GST_DEBUG_OBJECT (rtph264depay, "output %d bytes", outsize);
-
+          /* push codec_data first */
+          if (rtph264depay->codec_data) {
+            gst_buffer_set_caps (rtph264depay->codec_data,
+                GST_PAD_CAPS (depayload->srcpad));
+            gst_base_rtp_depayload_push (depayload, rtph264depay->codec_data);
+            rtph264depay->codec_data = NULL;
+          }
           return outbuf;
         }
         break;
@@ -473,6 +491,13 @@ gst_rtp_h264_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
         gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
+        /* push codec_data first */
+        if (rtph264depay->codec_data) {
+          gst_buffer_set_caps (rtph264depay->codec_data,
+              GST_PAD_CAPS (depayload->srcpad));
+          gst_base_rtp_depayload_push (depayload, rtph264depay->codec_data);
+          rtph264depay->codec_data = NULL;
+        }
         return outbuf;
       }
     }

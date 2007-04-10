@@ -252,16 +252,11 @@ gst_rtp_sv3v_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (M) {
       /* frame is completed: push contents of adapter */
       guint avail;
-      guint32 timestamp;
 
       avail = gst_adapter_available (rtpsv3vdepay->adapter);
       outbuf = gst_adapter_take_buffer (rtpsv3vdepay->adapter, avail);
 
       /* timestamp for complete buffer is that of last buffer as well */
-      timestamp = gst_rtp_buffer_get_timestamp (buf);
-      GST_BUFFER_TIMESTAMP (outbuf) =
-          gst_util_uint64_scale_int (timestamp, GST_SECOND,
-          depayload->clock_rate);
       gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
 
       return outbuf;
@@ -342,5 +337,5 @@ gboolean
 gst_rtp_sv3v_depay_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpsv3vdepay",
-      GST_RANK_MARGINAL, GST_TYPE_RTP_SV3V_DEPAY);
+      GST_RANK_NONE, GST_TYPE_RTP_SV3V_DEPAY);
 }
