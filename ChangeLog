@@ -1,3 +1,17 @@
+2007-04-10  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst/avi/gstavidemux.c: (gst_avi_demux_massage_index):
+	* gst/rtp/gstrtpL16depay.c:
+	* gst/rtp/gstrtpmp4gdepay.c: (gst_rtp_mp4g_depay_process):
+	* gst/rtp/gstrtpspeexdepay.c: (gst_rtp_speex_depay_get_mode),
+	(gst_rtp_speex_depay_setcaps):
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_media_to_caps),
+	(gst_rtspsrc_stream_configure_transport), (gst_rtspsrc_loop_udp):
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_init_send):
+	Fix some compiler warnings. Fixes #428182.
+
 2007-04-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/Makefile.am:

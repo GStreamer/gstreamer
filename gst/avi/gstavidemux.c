@@ -2368,7 +2368,7 @@ gst_avi_demux_massage_index (GstAviDemux * avi,
 
   /* ERRORS */
 out_of_mem:
-  GST_WARNING_OBJECT (avi, "Out of memory for %lu bytes",
+  GST_WARNING_OBJECT (avi, "Out of memory for %" G_GSIZE_FORMAT " bytes",
       sizeof (gst_avi_index_entry) * avi->index_size);
   return FALSE;
 }

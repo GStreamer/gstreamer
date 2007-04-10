@@ -21,9 +21,10 @@
 #  include "config.h"
 #endif
 
+#include <string.h>
+#include <stdlib.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include <string.h>
 #include "gstrtpmp4gdepay.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpmp4gdepay_debug);

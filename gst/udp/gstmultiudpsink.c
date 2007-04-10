@@ -430,6 +430,7 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
       join_multicast (client);
   }
   return TRUE;
+
   /* ERRORS */
 no_socket:
   {

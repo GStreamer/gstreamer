@@ -1327,7 +1327,7 @@ no_manager:
   }
 manager_failed:
   {
-    GST_DEBUG_OBJECT (src, "no session manager element %d found", manager);
+    GST_DEBUG_OBJECT (src, "no session manager element %s found", manager);
     return FALSE;
   }
 no_element:
