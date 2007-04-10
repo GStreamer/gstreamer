@@ -1,3 +1,14 @@
+2007-04-10  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* examples/pyidentity.py:
+	Add a simple example that implements an identity-like element in
+	python and passes buffers through. It lacks buffer-alloc & query
+	handling at the moment, because the required gstreamer funcs aren't
+	wrapped.
+
+	* examples/sinkelement.py:
+	Make sure to call gobject.threads_init() in the example.
+
 2007-04-04  Edward Hervey  <edward@fluendo.com>
 
 	* codegen/codegen.py:

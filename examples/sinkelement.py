@@ -16,6 +16,7 @@ import pygst
 pygst.require('0.10')
 import gst
 import gobject
+gobject.threads_init ()
 
 #
 # Simple Sink element created entirely in python
