@@ -85,6 +85,11 @@ free_pad_private (gpointer data)
   INVALIDATE_CLOSURE (private->activatepull_function)
   INVALIDATE_CLOSURE (private->activatepush_function)
 #undef INVALIDATE_CLOSURE
+
+  if (private->query_function) {
+    Py_DECREF (private->query_function);
+    private->query_function = NULL;
+  }
 }
 
 static PyGstPadPrivate*
@@ -349,6 +354,148 @@ _wrap_gst_pad_set_event_function (PyGObject *self,
 {
     SET_PAD_CLOSURE (self, args, 
 		     kwargs, event_function)
+}
+
+%%
+override gst_pad_set_query_function kwargs
+
+static gboolean
+pypad_copy_struct_members (GQuark field_id, const GValue * value, 
+    GstStructure* to_structure)
+{
+    gst_structure_id_set_value (to_structure, field_id, value);
+
+    return TRUE;
+}
+
+static gboolean
+call_query_function (GstPad *pad, GstQuery *query)
+{
+    PyGILState_STATE __py_state;
+    PyGObject *py_pad;
+    PyGstPadPrivate *priv;
+
+    PyObject *py_ret;
+    PyObject *py_args;
+    gboolean ret = FALSE;
+    GstQuery *query_copy;
+    PyObject *py_query;
+
+    /* Push our GIL state */
+    __py_state = pyg_gil_state_ensure();
+
+    /* Get the python version of the pad */
+    py_pad = (PyGObject *) pygobject_new((GObject*) (pad));
+    if (!py_pad) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        goto beach;
+    }
+    /* Private data, where our callback should be stored */
+    priv = py_pad_private(py_pad);
+    if (priv->query_function == NULL) {
+        /* FIXME: Generate an error message somewhere? */
+        Py_DECREF(py_pad);
+        goto beach;
+    }
+    
+    /* Create our arguments tuple and populate */
+    py_args = PyTuple_New(2);
+
+    /* We copy the query into a new one so that it can have a refcount
+     * of exactly 1 and be owned by python */
+    pyg_begin_allow_threads;
+    query_copy = gst_query_copy (query);
+    pyg_end_allow_threads;
+    py_query = pygstminiobject_new((GstMiniObject *)query_copy);
+    gst_query_unref (query_copy);
+
+    PyTuple_SetItem(py_args, 0, (PyObject *) (py_pad));
+    PyTuple_SetItem(py_args, 1, py_query);
+
+    /* Perform the callback into python, then parse the result */
+    py_ret = PyObject_CallObject(priv->query_function, py_args);
+    if (!py_ret) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+
+        Py_DECREF(py_args);
+        goto beach;
+    }
+
+    ret = (py_ret == Py_True ? TRUE : FALSE);
+
+    /* If the query succeeded, copy the result back into the original query.
+     * We still have a refcount to it, because we didn't unref the py_query
+     * wrapper yet. */
+    if (ret) {
+        /* I feel ill violating the poor query like this, but it's the only
+         * way to transfer data from our copy back to the original query */
+        GstStructure *from, *to;
+        
+        pyg_begin_allow_threads;
+        from = GST_QUERY (query_copy)->structure; 
+        to = query->structure;
+        gst_structure_foreach (from, 
+            (GstStructureForeachFunc) pypad_copy_struct_members, to);
+        pyg_end_allow_threads;
+    }
+
+    Py_DECREF(py_args);
+    Py_DECREF(py_ret);
+beach:
+    pyg_gil_state_release(__py_state);
+    
+    return ret;
+}
+
+static PyObject*
+_wrap_gst_pad_set_query_function (PyGObject *self,
+                  PyObject  *args,
+                  PyObject  *kwargs)
+{
+    static char *kwlist[] = { "query_function", NULL };
+    PyObject *function;
+    GstPad *pad;
+    PyGstPadPrivate *priv;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+                     "O:GstPad.set_query_function",
+                     kwlist,
+                     &function)) {
+        return NULL;
+    }
+
+    pad = (GstPad*)pygobject_get(self);
+    priv = py_pad_private(self);
+
+    /* Allow setting query_function to None to clear it to NULL */
+    if (function == Py_None) {
+        if (priv->query_function) {
+            Py_DECREF (priv->query_function);
+            priv->query_function = NULL;
+        }
+        gst_pad_set_query_function (pad, NULL);
+        goto out;
+    }
+
+    if (!PyCallable_Check(function)) {
+        PyErr_SetString(PyExc_TypeError, "Passed query_function not callable");
+        return NULL;
+    }
+
+    if (priv->query_function) {
+        Py_DECREF (priv->query_function);
+    }
+
+    Py_INCREF(function);
+    priv->query_function = function;
+
+    gst_pad_set_query_function (pad, call_query_function);
+
+out:
+    Py_INCREF(Py_None);
+    return Py_None;
 }
 
 %%

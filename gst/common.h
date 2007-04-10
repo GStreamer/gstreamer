@@ -54,6 +54,9 @@ typedef struct {
 	GClosure *activate_function;
 	GClosure *activatepull_function;
 	GClosure *activatepush_function;
+        /* Query is not implemented as a closure to avoid refcounting
+         * making the query immutable and therefore useless */
+	PyObject *query_function;
 } PyGstPadPrivate;
 
 typedef struct {

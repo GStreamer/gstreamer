@@ -32,6 +32,7 @@ class PyIdentity(gst.Element):
         self.srcpad = gst.Pad(self._srcpadtemplate, "src")
 
         self.srcpad.set_event_function(self.srceventfunc)
+        self.srcpad.set_query_function(self.srcqueryfunc)
         self.srcpad.set_getcaps_function(gst.Pad.proxy_getcaps)
         self.srcpad.set_setcaps_function(gst.Pad.proxy_setcaps)
         self.add_pad (self.srcpad)
@@ -43,6 +44,8 @@ class PyIdentity(gst.Element):
     def eventfunc(self, pad, event):
         return self.srcpad.push_event (event)
         
+    def srcqueryfunc (self, pad, query):
+        return self.sinkpad.query (query)
     def srceventfunc (self, pad, event):
         return self.sinkpad.push_event (event)
 
