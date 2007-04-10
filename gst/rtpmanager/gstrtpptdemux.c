@@ -48,8 +48,10 @@
 
 #include <string.h>
 #include <gst/gst.h>
-#include "gstrtpptdemux.h"
 #include <gst/rtp/gstrtpbuffer.h>
+
+#include "gstrtpbin-marshal.h"
+#include "gstrtpptdemux.h"
 
 /* generic templates */
 static GstStaticPadTemplate rtp_pt_demux_sink_template =
@@ -138,14 +140,14 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTPPtDemuxClass, new_payload_type),
       NULL, NULL,
-      g_cclosure_marshal_VOID__UINT_POINTER,
+      gst_rtp_bin_marshal_VOID__UINT_OBJECT,
       G_TYPE_NONE, 2, G_TYPE_INT, GST_TYPE_PAD);
   gst_rtp_pt_demux_signals[SIGNAL_PAYLOAD_TYPE_CHANGE] =
       g_signal_new ("payload-type-change",
       G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRTPPtDemuxClass, payload_type_change),
-      NULL, NULL, gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_rtp_pt_demux_finalize);
 
