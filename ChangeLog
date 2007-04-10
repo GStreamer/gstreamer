@@ -1,3 +1,13 @@
+2007-04-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/auparse/gstauparse.c: (gst_au_parse_parse_header):
+	  limit caps to the formats we announce in the template
+
+	* gst/wavparse/gstwavparse.c: (uint64_ceiling_scale_int),
+	(gst_wavparse_perform_seek), (gst_wavparse_stream_headers),
+	(gst_wavparse_add_src_pad), (gst_wavparse_stream_data):
+	  fix some crashers/asserts when dealing with broken files
+
 2007-04-10  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Peter Kjellerstedt  <pkj at axis com>

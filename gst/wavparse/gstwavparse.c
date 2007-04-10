@@ -133,11 +133,16 @@ static GstStaticPadTemplate src_template_factory =
         "layer = (int) [ 1, 3 ], "
         "rate = (int) [ 8000, 48000 ], "
         "channels = (int) [ 1, 2 ]; "
+        "audio/mpeg, "
+        "mpegversion = (int) 4, "
+        "rate = (int) [ 8000, 48000 ], "
+        "channels = (int) [ 1, 8 ]; "
         "audio/x-alaw, "
         "rate = (int) [ 8000, 48000 ], "
         "channels = (int) [ 1, 2 ]; "
         "audio/x-mulaw, "
-        "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ];"
+        "rate = (int) [ 8000, 48000 ], "
+        "channels = (int) [ 1, 2 ];"
         "audio/x-adpcm, "
         "layout = (string) microsoft, "
         "block_align = (int) [ 1, 8192 ], "
@@ -146,7 +151,8 @@ static GstStaticPadTemplate src_template_factory =
         "audio/x-adpcm, "
         "layout = (string) dvi, "
         "block_align = (int) [ 1, 8192 ], "
-        "rate = (int) [ 8000, 48000 ], " "channels = (int) [ 1, 2 ];"
+        "rate = (int) [ 8000, 48000 ], "
+        "channels = (int) [ 1, 2 ];"
         "audio/x-vnd.sony.atrac3;"
         "audio/x-dts;" "audio/x-wma, " "wmaversion = (int) [ 1, 2 ]")
     );
@@ -761,7 +767,7 @@ gst_wavparse_stream_init (GstWavParse * wav)
   return GST_FLOW_OK;
 }
 
-/* This function is used to perform seeks on the element in 
+/* This function is used to perform seeks on the element in
  * pull mode.
  *
  * It also works when event is NULL, in which case it will just
@@ -979,8 +985,8 @@ no_format:
  * @wav Wavparse object
  * @tag holder for tag
  * @size holder for tag size
- *                         
- * Peek next chunk info (tag and size)                         
+ *
+ * Peek next chunk info (tag and size)
  *
  * Returns: %TRUE when one chunk info has been got from the adapter
  */
@@ -1101,6 +1107,11 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
     buf = NULL;                 /* parse_strf_auds() took ownership of buffer */
 
+    if (header->channels == 0)
+      goto no_channels;
+
+    GST_DEBUG_OBJECT (wav, "creating the caps");
+
     /* Note: gst_riff_create_audio_caps might need to fix values in
      * the header header depending on the format, so call it first */
     caps = gst_riff_create_audio_caps (header->format, NULL, header, extra,
@@ -1108,6 +1119,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
     if (extra)
       gst_buffer_unref (extra);
+
+    if (!caps)
+      goto unknown_format;
 
     wav->format = header->format;
     wav->rate = header->rate;
@@ -1117,9 +1131,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     wav->av_bps = header->av_bps;
 
     g_free (header);
-
-    if (wav->channels == 0)
-      goto no_channels;
 
     /* do format specific handling */
     switch (wav->format) {
@@ -1143,9 +1154,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
     if (wav->bytes_per_sample <= 0)
       goto no_bytes_per_sample;
-
-    if (!caps)
-      goto unknown_format;
 
     GST_DEBUG_OBJECT (wav, "blockalign = %u", (guint) wav->blockalign);
     GST_DEBUG_OBJECT (wav, "width      = %u", (guint) wav->width);
@@ -1323,7 +1331,6 @@ parse_header_error:
   {
     GST_ELEMENT_ERROR (wav, STREAM, DEMUX, (NULL),
         ("Couldn't parse audio header"));
-    gst_buffer_unref (buf);
     g_free (codec_name);
     return GST_FLOW_ERROR;
   }
@@ -1339,7 +1346,6 @@ no_bytes_per_sample:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
         ("could not caluclate bytes per sample - invalid data"));
-    g_free (header);
     g_free (codec_name);
     return GST_FLOW_ERROR;
   }
@@ -1348,6 +1354,7 @@ unknown_format:
     GST_ELEMENT_ERROR (wav, STREAM, TYPE_NOT_FOUND, (NULL),
         ("No caps found for format 0x%x, %d channels, %d Hz",
             wav->format, wav->channels, wav->rate));
+    g_free (header);
     g_free (codec_name);
     return GST_FLOW_ERROR;
   }
@@ -1359,7 +1366,7 @@ header_read_error:
   }
 }
 
-/*                       
+/*
  * Read WAV file tag when streaming
  */
 static GstFlowReturn
@@ -1432,17 +1439,21 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
   GstStructure *s;
   const guint8 dts_marker[] = { 0xFF, 0x1F, 0x00, 0xE8, 0xF1, 0x07 };
 
-  s = gst_caps_get_structure (wav->caps, 0);
-  if (s && gst_structure_has_name (s, "audio/x-raw-int") && buf &&
-      GST_BUFFER_SIZE (buf) > 6 &&
-      memcmp (GST_BUFFER_DATA (buf), dts_marker, 6) == 0) {
+  GST_DEBUG_OBJECT (wav, "adding src pad");
 
-    GST_WARNING_OBJECT (wav, "Found DTS marker in file marked as raw PCM");
-    gst_caps_unref (wav->caps);
-    wav->caps = gst_caps_from_string ("audio/x-dts");
+  if (wav->caps) {
+    s = gst_caps_get_structure (wav->caps, 0);
+    if (s && gst_structure_has_name (s, "audio/x-raw-int") && buf &&
+        GST_BUFFER_SIZE (buf) > 6 &&
+        memcmp (GST_BUFFER_DATA (buf), dts_marker, 6) == 0) {
 
-    gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
-        GST_TAG_AUDIO_CODEC, "dts", NULL);
+      GST_WARNING_OBJECT (wav, "Found DTS marker in file marked as raw PCM");
+      gst_caps_unref (wav->caps);
+      wav->caps = gst_caps_from_string ("audio/x-dts");
+
+      gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
+          GST_TAG_AUDIO_CODEC, "dts", NULL);
+    }
   }
 
   gst_wavparse_create_sourcepad (wav);

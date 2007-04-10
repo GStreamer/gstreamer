@@ -21,7 +21,7 @@
 /**
  * SECTION:element-auparse
  * @short_description: .au file parser
- * 
+ *
  * <refsect2>
  * <para>
  * Parses .au files.
@@ -269,6 +269,12 @@ gst_au_parse_parse_header (GstAuParse * auparse)
   auparse->samplerate = GST_READ_UINT32_BE (head + 16);
   auparse->channels = GST_READ_UINT32_BE (head + 20);
 
+  if (auparse->samplerate < 8000 || auparse->samplerate > 192000)
+    goto unsupported_sample_rate;
+
+  if (auparse->channels < 1 || auparse->channels > 2)
+    goto unsupported_number_of_channels;
+
   GST_DEBUG_OBJECT (auparse, "offset %" G_GINT64_FORMAT ", size %u, "
       "encoding %u, frequency %u, channels %u", auparse->offset, size,
       auparse->encoding, auparse->samplerate, auparse->channels);
@@ -402,9 +408,22 @@ unknown_header:
     GST_ELEMENT_ERROR (auparse, STREAM, WRONG_TYPE, (NULL), (NULL));
     return GST_FLOW_ERROR;
   }
+unsupported_sample_rate:
+  {
+    GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL),
+        ("Unsupported samplerate: %u", auparse->samplerate));
+    return GST_FLOW_ERROR;
+  }
+unsupported_number_of_channels:
+  {
+    GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL),
+        ("Unsupported number of channels: %u", auparse->channels));
+    return GST_FLOW_ERROR;
+  }
 unknown_format:
   {
-    GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL), (NULL));
+    GST_ELEMENT_ERROR (auparse, STREAM, FORMAT, (NULL),
+        ("Unsupported encoding: %u", auparse->encoding));
     return GST_FLOW_ERROR;
   }
 add_pad_failed:
