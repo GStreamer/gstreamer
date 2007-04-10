@@ -169,6 +169,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/pbutils/install-plugins.h
 %{_includedir}/gstreamer-%{majorminor}/gst/pbutils/missing-plugins.h
 %{_includedir}/gstreamer-%{majorminor}/gst/pbutils/pbutils.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtcpbuffer.h
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
 %{_libdir}/libgsttag-%{majorminor}.so
