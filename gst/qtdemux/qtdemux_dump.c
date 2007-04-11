@@ -83,14 +83,36 @@ qtdemux_dump_elst (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 void
 qtdemux_dump_mdhd (GstQTDemux * qtdemux, guint8 * buffer, int depth)
 {
-  GST_LOG ("%*s  version/flags: %08x", depth, "", QT_UINT32 (buffer + 8));
-  GST_LOG ("%*s  creation time: %u", depth, "", QT_UINT32 (buffer + 12));
-  GST_LOG ("%*s  modify time:   %u", depth, "", QT_UINT32 (buffer + 16));
-  GST_LOG ("%*s  time scale:    1/%u sec", depth, "", QT_UINT32 (buffer + 20));
-  GST_LOG ("%*s  duration:      %u", depth, "", QT_UINT32 (buffer + 24));
-  GST_LOG ("%*s  language:      %u", depth, "", QT_UINT16 (buffer + 28));
-  GST_LOG ("%*s  quality:       %u", depth, "", QT_UINT16 (buffer + 30));
+  guint32 version;
+  guint64 duration, ctime, mtime;
+  guint32 time_scale;
+  guint16 language, quality;
 
+  version = QT_UINT32 (buffer + 8);
+  GST_LOG ("%*s  version/flags: %08x", depth, "", version);
+
+  if (version == 0x01000000) {
+    ctime = QT_UINT64 (buffer + 12);
+    mtime = QT_UINT64 (buffer + 20);
+    time_scale = QT_UINT32 (buffer + 28);
+    duration = QT_UINT64 (buffer + 32);
+    language = QT_UINT16 (buffer + 40);
+    quality = QT_UINT16 (buffer + 42);
+  } else {
+    ctime = QT_UINT32 (buffer + 12);
+    mtime = QT_UINT32 (buffer + 16);
+    time_scale = QT_UINT32 (buffer + 20);
+    duration = QT_UINT32 (buffer + 24);
+    language = QT_UINT16 (buffer + 28);
+    quality = QT_UINT16 (buffer + 30);
+  }
+
+  GST_LOG ("%*s  creation time: %" G_GUINT64_FORMAT, depth, "", ctime);
+  GST_LOG ("%*s  modify time:   %" G_GUINT64_FORMAT, depth, "", mtime);
+  GST_LOG ("%*s  time scale:    1/%u sec", depth, "", time_scale);
+  GST_LOG ("%*s  duration:      %" G_GUINT64_FORMAT, depth, "", duration);
+  GST_LOG ("%*s  language:      %u", depth, "", language);
+  GST_LOG ("%*s  quality:       %u", depth, "", quality);
 }
 
 void
