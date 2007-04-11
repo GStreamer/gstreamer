@@ -116,8 +116,8 @@ struct _QtDemuxStream
   guint32 fourcc;
 
   /* duration/scale */
-  guint32 duration;             /* in timescale */
-  guint32 timescale;
+  guint64 duration;             /* in timescale */
+  guint64 timescale;
 
   /* our samples */
   guint32 n_samples;
@@ -401,7 +401,7 @@ gst_qtdemux_get_duration (GstQTDemux * qtdemux, gint64 * duration)
 
   if (qtdemux->duration != 0) {
     if (qtdemux->duration != G_MAXINT32 && qtdemux->timescale != 0) {
-      *duration = gst_util_uint64_scale_int (qtdemux->duration,
+      *duration = gst_util_uint64_scale (qtdemux->duration,
           GST_SECOND, qtdemux->timescale);
     }
   }
@@ -2385,8 +2385,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
           stream->min_duration = duration;
         /* add non-scaled values to avoid rounding errors */
         time += duration;
-        timestamp = gst_util_uint64_scale_int (time,
-            GST_SECOND, stream->timescale);
+        timestamp = gst_util_uint64_scale (time, GST_SECOND, stream->timescale);
         samples[index].duration = timestamp - samples[index].timestamp;
 
         index++;
@@ -2481,7 +2480,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         samples[j].timestamp = timestamp;
         sample_index += samples_per_chunk;
 
-        timestamp = gst_util_uint64_scale_int (sample_index,
+        timestamp = gst_util_uint64_scale (sample_index,
             GST_SECOND, stream->timescale);
         samples[j].duration = timestamp - samples[j].timestamp;
 
@@ -2572,12 +2571,12 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
       segment->time = stime;
       /* add non scaled values so we don't cause roundoff errors */
       time += duration;
-      stime = gst_util_uint64_scale_int (time, GST_SECOND, qtdemux->timescale);
+      stime = gst_util_uint64_scale (time, GST_SECOND, qtdemux->timescale);
       segment->stop_time = stime;
       segment->duration = stime - segment->time;
       /* media_time expressed in stream timescale */
       segment->media_start =
-          gst_util_uint64_scale_int (media_time, GST_SECOND, stream->timescale);
+          gst_util_uint64_scale (media_time, GST_SECOND, stream->timescale);
       segment->media_stop = segment->media_start + segment->duration;
       segment->rate = QT_FP32 (buffer + 24 + i * 12);
 
@@ -2636,6 +2635,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GstTagList *list = NULL;
   const gchar *codec = NULL;
   const guint8 *stsd_data;
+  guint32 version;
 
   /* new streams always need a discont */
   stream = g_new0 (QtDemuxStream, 1);
@@ -2657,11 +2657,20 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   if (!(mdhd = qtdemux_tree_get_child_by_type (mdia, FOURCC_mdhd)))
     goto corrupt_file;
 
-  stream->timescale = QT_UINT32 ((guint8 *) mdhd->data + 20);
-  stream->duration = QT_UINT32 ((guint8 *) mdhd->data + 24);
+  version = QT_UINT32 ((guint8 *) mdhd->data + 8);
+  GST_LOG_OBJECT (qtdemux, "track version/flags: %08x", version);
+  if (version == 0x01000000) {
+    stream->timescale = QT_UINT32 ((guint8 *) mdhd->data + 28);
+    stream->duration = QT_UINT64 ((guint8 *) mdhd->data + 32);
+  } else {
+    stream->timescale = QT_UINT32 ((guint8 *) mdhd->data + 20);
+    stream->duration = QT_UINT32 ((guint8 *) mdhd->data + 24);
+  }
 
-  GST_LOG_OBJECT (qtdemux, "track timescale: %d", stream->timescale);
-  GST_LOG_OBJECT (qtdemux, "track duration: %d", stream->duration);
+  GST_LOG_OBJECT (qtdemux, "track timescale: %" G_GUINT64_FORMAT,
+      stream->timescale);
+  GST_LOG_OBJECT (qtdemux, "track duration: %" G_GUINT64_FORMAT,
+      stream->duration);
 
   if (qtdemux->duration != G_MAXINT32 && stream->duration != G_MAXINT32) {
     guint64 tdur1, tdur2;
@@ -3501,8 +3510,8 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   qtdemux->timescale = QT_UINT32 ((guint8 *) mvhd->data + 20);
   qtdemux->duration = QT_UINT32 ((guint8 *) mvhd->data + 24);
 
-  GST_INFO_OBJECT (qtdemux, "timescale: %d", qtdemux->timescale);
-  GST_INFO_OBJECT (qtdemux, "duration: %d", qtdemux->duration);
+  GST_INFO_OBJECT (qtdemux, "timescale: %u", qtdemux->timescale);
+  GST_INFO_OBJECT (qtdemux, "duration: %u", qtdemux->duration);
 
   /* set duration in the segment info */
   gst_qtdemux_get_duration (qtdemux, &duration);

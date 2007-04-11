@@ -1,3 +1,12 @@
+2007-04-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_duration),
+	(qtdemux_parse_samples), (qtdemux_parse_segments),
+	(qtdemux_parse_trak), (qtdemux_parse_tree):
+	* gst/qtdemux/qtdemux_dump.c: (qtdemux_dump_mdhd):
+	Handle version 1 mdhd atoms to get extended precision durations.
+	Fixes #426972.
+
 2007-04-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/.cvsignore:
