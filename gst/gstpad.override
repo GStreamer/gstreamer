@@ -729,7 +729,9 @@ _wrap_gst_pad_query(PyGObject *self, PyObject *args, PyObject *kwargs)
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!:GstPad.query", kwlist, &PyGstQuery_Type, &query))
         return NULL;
 
+    pyg_begin_allow_threads;
     ret = gst_pad_query(GST_PAD(self->obj), GST_QUERY (query->obj));
+    pyg_end_allow_threads;
 
     return PyBool_FromLong(ret);   
 }
