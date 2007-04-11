@@ -1,3 +1,9 @@
+2007-04-11  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/gstudp.c: (plugin_init):
+	Register GstNetBuffer in plugin_init so that the type can be used from
+	multiple threads without races.
+
 2007-04-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_setcaps),

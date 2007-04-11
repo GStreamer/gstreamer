@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <gst/netbuffer/gstnetbuffer.h>
+
 #include "gstudpsrc.h"
 #include "gstmultiudpsink.h"
 #include "gstudpsink.h"
@@ -33,6 +35,10 @@ plugin_init (GstPlugin * plugin)
   if (!gst_udp_net_utils_win32_wsa_startup (GST_OBJECT (plugin)))
     return FALSE;
 #endif
+
+  /* register type of the netbuffer so that we can use it from multiple threads
+   * right away. Note that the plugin loading is always serialized */
+  gst_netbuffer_get_type ();
 
   if (!gst_element_register (plugin, "udpsink", GST_RANK_NONE,
           GST_TYPE_UDPSINK))
