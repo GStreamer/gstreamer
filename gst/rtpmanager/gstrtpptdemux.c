@@ -83,6 +83,7 @@ struct _GstRTPPtDemuxPad
 /* signals */
 enum
 {
+  SIGNAL_REQUEST_PT_MAP,
   SIGNAL_NEW_PAYLOAD_TYPE,
   SIGNAL_PAYLOAD_TYPE_CHANGE,
   LAST_SIGNAL
@@ -134,20 +135,45 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
   gobject_klass = (GObjectClass *) klass;
   gstelement_klass = (GstElementClass *) klass;
 
+  /**
+   * GstRTPPtDemux::request-pt-map:
+   * @demux: the object which received the signal
+   * @pt: the payload type
+   *
+   * Request the payload type as #GstCaps for @pt.
+   */
+  gst_rtp_pt_demux_signals[SIGNAL_REQUEST_PT_MAP] =
+      g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPPtDemuxClass, request_pt_map),
+      NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT, GST_TYPE_CAPS, 1,
+      G_TYPE_UINT);
+
+  /**
+   * GstRTPPtDemux::new-payload-type
+   * @demux: the object which received the signal
+   * @pt: the payload type
+   * @pad: the pad with the new payload
+   *
+   * Emited when a new payload type pad has been created in @demux.
+   */
   gst_rtp_pt_demux_signals[SIGNAL_NEW_PAYLOAD_TYPE] =
-      g_signal_new ("new-payload-type",
-      G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstRTPPtDemuxClass, new_payload_type),
-      NULL, NULL,
-      gst_rtp_bin_marshal_VOID__UINT_OBJECT,
-      G_TYPE_NONE, 2, G_TYPE_INT, GST_TYPE_PAD);
+      g_signal_new ("new-payload-type", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPPtDemuxClass, new_payload_type),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_OBJECT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, GST_TYPE_PAD);
+
+  /**
+   * GstRTPPtDemux::payload-type-change
+   * @demux: the object which received the signal
+   * @pt: the new payload type
+   *
+   * Emited when the payload type changed.
+   */
   gst_rtp_pt_demux_signals[SIGNAL_PAYLOAD_TYPE_CHANGE] =
-      g_signal_new ("payload-type-change",
-      G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstRTPPtDemuxClass, payload_type_change),
-      NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      g_signal_new ("payload-type-change", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPPtDemuxClass,
+          payload_type_change), NULL, NULL, g_cclosure_marshal_VOID__UINT,
+      G_TYPE_NONE, 1, G_TYPE_UINT);
 
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_rtp_pt_demux_finalize);
 
@@ -215,7 +241,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     srcpad = gst_pad_new_from_template (templ, padname);
     g_free (padname);
 
-    caps = gst_pad_get_caps (srcpad);
+    caps = gst_buffer_get_caps (buf);
     caps = gst_caps_make_writable (caps);
     gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
     gst_pad_set_caps (srcpad, caps);

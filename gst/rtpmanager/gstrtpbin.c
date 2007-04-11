@@ -123,6 +123,8 @@ typedef struct _GstRTPBinSession GstRTPBinSession;
 typedef struct _GstRTPBinStream GstRTPBinStream;
 typedef struct _GstRTPBinClient GstRTPBinClient;
 
+static guint gst_rtp_bin_signals[LAST_SIGNAL] = { 0 };
+
 /* Manages the RTP stream for one SSRC.
  *
  * We pipe the stream (comming from the SSRC demuxer) into a jitterbuffer.
@@ -143,6 +145,7 @@ struct _GstRTPBinStream
   /* the PT demuxer of the SSRC */
   GstElement *demux;
   gulong demux_newpad_sig;
+  gulong demux_ptreq_sig;
 };
 
 /* Manages the receiving end of the packets.
@@ -167,6 +170,9 @@ struct _GstRTPBinSession
 
   /* list of GstRTPBinStream */
   GSList *streams;
+
+  /* mapping of payload type to caps */
+  GHashTable *ptmap;
 
   /* the pads of the session */
   GstPad *recv_rtp_sink;
@@ -211,6 +217,7 @@ create_session (GstRTPBin * rtpbin, gint id)
   sess->bin = rtpbin;
   sess->session = elem;
   sess->demux = demux;
+  sess->ptmap = g_hash_table_new (g_int_hash, g_int_equal);
   rtpbin->sessions = g_slist_prepend (rtpbin->sessions, sess);
 
   gst_bin_add (GST_BIN_CAST (rtpbin), elem);
@@ -250,6 +257,80 @@ find_stream_by_ssrc (GstRTPBinSession * session, guint32 ssrc)
 }
 #endif
 
+/* get the payload type caps for the specific payload @pt in @session */
+static GstCaps *
+get_pt_map (GstRTPBinSession * session, guint pt)
+{
+  GstCaps *caps = NULL;
+  GstRTPBin *bin;
+
+  GST_DEBUG ("finding pt %d in cache", pt);
+
+  /* first look in the cache */
+  caps = g_hash_table_lookup (session->ptmap, GINT_TO_POINTER (pt));
+  if (caps)
+    goto done;
+
+  bin = session->bin;
+
+  GST_DEBUG ("emiting signal for pt %d in session %d", pt, session->id);
+
+  /* not in cache, send signal to request caps */
+  g_signal_emit (G_OBJECT (bin), gst_rtp_bin_signals[SIGNAL_REQUEST_PT_MAP], 0,
+      session->id, pt, &caps);
+  if (!caps)
+    goto no_caps;
+
+  /* store in cache */
+  g_hash_table_insert (session->ptmap, GINT_TO_POINTER (pt), caps);
+
+done:
+  return caps;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG ("no pt map could be obtained");
+    return NULL;
+  }
+}
+
+/* callback from the jitterbuffer when it needs to know the clockrate of a
+ * specific payload type. */
+static guint32
+clock_rate_request (GstElement * buffer, guint pt, GstRTPBinStream * stream)
+{
+  GstCaps *caps;
+  GstRTPBinSession *session;
+  GstStructure *s;
+  gint32 clock_rate;
+
+  session = stream->session;
+
+  caps = get_pt_map (session, pt);
+  if (!caps)
+    goto no_map;
+
+  s = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_get_int (s, "clock-rate", &clock_rate))
+    goto no_clock_rate;
+
+  return clock_rate;
+
+  /* ERRORS */
+no_map:
+  {
+    GST_DEBUG ("no pt map found");
+    return 0;
+  }
+no_clock_rate:
+  {
+    GST_DEBUG ("no clock-rate in caps found");
+    return 0;
+  }
+}
+
 static GstRTPBinStream *
 create_stream (GstRTPBinSession * session, guint32 ssrc)
 {
@@ -269,6 +350,10 @@ create_stream (GstRTPBinSession * session, guint32 ssrc)
   stream->buffer = buffer;
   stream->demux = demux;
   session->streams = g_slist_prepend (session->streams, stream);
+
+  /* provide clock_rate to the jitterbuffer when needed */
+  g_signal_connect (buffer, "request-clock-rate",
+      (GCallback) clock_rate_request, stream);
 
   gst_bin_add (GST_BIN_CAST (session->bin), buffer);
   gst_element_set_state (buffer, GST_STATE_PLAYING);
@@ -320,8 +405,6 @@ static GstPad *gst_rtp_bin_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_rtp_bin_release_pad (GstElement * element, GstPad * pad);
 
-static guint gst_rtp_bin_signals[LAST_SIGNAL] = { 0 };
-
 GST_BOILERPLATE (GstRTPBin, gst_rtp_bin, GstBin, GST_TYPE_BIN);
 
 static void
@@ -363,11 +446,19 @@ gst_rtp_bin_class_init (GstRTPBinClass * klass)
   gobject_class->set_property = gst_rtp_bin_set_property;
   gobject_class->get_property = gst_rtp_bin_get_property;
 
+  /**
+   * GstRTPBin::request-pt-map:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @pt: the pt
+   *
+   * Request the payload type as #GstCaps for @pt in @session.
+   */
   gst_rtp_bin_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, request_pt_map),
-      NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT, GST_TYPE_CAPS, 1,
-      G_TYPE_UINT);
+      NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 1,
+      G_TYPE_UINT, G_TYPE_UINT);
 
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_provide_clock);
@@ -497,6 +588,25 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
   gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
 }
 
+static GstCaps *
+pt_map_requested (GstElement * element, guint pt, GstRTPBinStream * stream)
+{
+  GstRTPBin *rtpbin;
+  GstRTPBinSession *session;
+  gint id;
+
+  rtpbin = stream->bin;
+  session = stream->session;
+
+  /* find session id */
+  id = session->id;
+
+  GST_DEBUG_OBJECT (rtpbin, "payload map requested for pt %d in session %d", pt,
+      id);
+
+  return NULL;
+}
+
 /* a new pad (SSRC) was created in @session */
 static void
 new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
@@ -518,9 +628,15 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
   gst_pad_link (pad, sinkpad);
   gst_object_unref (sinkpad);
 
-  /* connect to the new-pad signal of the payload demuxer */
+  /* connect to the new-pad signal of the payload demuxer, this will expose the
+   * new pad by ghosting it. */
   stream->demux_newpad_sig = g_signal_connect (stream->demux,
       "new-payload-type", (GCallback) new_payload_found, stream);
+  /* connect to the request-pt-map signal. This signal will be emited by the
+   * demuxer so that it can apply a proper caps on the buffers for the
+   * depayloaders. */
+  stream->demux_ptreq_sig = g_signal_connect (stream->demux,
+      "request-pt-map", (GCallback) pt_map_requested, stream);
 
   return;
 
@@ -582,7 +698,7 @@ create_recv_rtp (GstRTPBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   if (lres != GST_PAD_LINK_OK)
     goto link_failed;
 
-  /* connect to the new-ssrc-pad signal of the demuxer */
+  /* connect to the new-ssrc-pad signal of the SSRC demuxer */
   session->demux_newpad_sig = g_signal_connect (session->demux,
       "new-ssrc-pad", (GCallback) new_ssrc_pad_found, session);
 

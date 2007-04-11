@@ -58,8 +58,10 @@
 
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
-#include "gstrtpjitterbuffer.h"
 
+#include "gstrtpbin-marshal.h"
+
+#include "gstrtpjitterbuffer.h"
 #include "async_jitter_queue.h"
 
 GST_DEBUG_CATEGORY (rtpjitterbuffer_debug);
@@ -81,6 +83,7 @@ GST_ELEMENT_DETAILS ("RTP packet jitter-buffer",
 enum
 {
   /* FILL ME */
+  SIGNAL_REQUEST_CLOCK_RATE,
   LAST_SIGNAL
 };
 
@@ -152,6 +155,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
          */ )
     );
 
+static guint gst_rtp_jitter_buffer_signals[LAST_SIGNAL] = { 0 };
+
 GST_BOILERPLATE (GstRTPJitterBuffer, gst_rtp_jitter_buffer, GstElement,
     GST_TYPE_ELEMENT);
 
@@ -220,6 +225,19 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
           "Drop buffers when maximum latency is reached",
           "Tells the jitterbuffer to never exceed the given latency in size",
           DEFAULT_DROP_ON_LATENCY, G_PARAM_READWRITE));
+
+  /**
+   * GstRTPJitterBuffer::request-clock-rate:
+   * @buffer: the object which received the signal
+   * @pt: the pt
+   *
+   * Request the payload type as #GstCaps for @pt.
+   */
+  gst_rtp_jitter_buffer_signals[SIGNAL_REQUEST_CLOCK_RATE] =
+      g_signal_new ("request-clock-rate", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPJitterBufferClass,
+          request_clock_rate), NULL, NULL, gst_rtp_bin_marshal_UINT__UINT,
+      G_TYPE_UINT, 1, G_TYPE_UINT);
 
   gstelement_class->change_state = gst_rtp_jitter_buffer_change_state;
 
@@ -365,8 +383,6 @@ gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (jitterbuffer, "got seqnum-base %d", priv->next_seqnum);
   } else
     priv->next_seqnum = -1;
-
-
 
   async_jitter_queue_set_max_queue_length (priv->queue,
       priv->latency_ms * priv->clock_rate / 1000);
@@ -859,8 +875,7 @@ again:
     rtp_time -= priv->clock_base;
 
     /* bring timestamp to gst time */
-    timestamp =
-        gst_util_uint64_scale_int (GST_SECOND, rtp_time, priv->clock_rate);
+    timestamp = gst_util_uint64_scale (GST_SECOND, rtp_time, priv->clock_rate);
 
     GST_DEBUG_OBJECT (jitterbuffer, "timestamp %" GST_TIME_FORMAT,
         GST_TIME_ARGS (timestamp));

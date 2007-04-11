@@ -1,5 +1,30 @@
 2007-04-11  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtpmanager/gstrtpbin-marshal.list:
+	Some more custom marshallers.
+
+	* gst/rtpmanager/gstrtpbin.c: (create_session), (get_pt_map),
+	(clock_rate_request), (create_stream), (gst_rtp_bin_class_init),
+	(pt_map_requested), (new_ssrc_pad_found), (create_recv_rtp):
+	* gst/rtpmanager/gstrtpbin.h:
+	Prepare for caching pt maps.
+	Connect to signals to collect pt maps.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_class_init),
+	(gst_jitter_buffer_sink_setcaps), (gst_rtp_jitter_buffer_loop):
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	Add request_clock_rate signal.
+	Use scale insteat of scale_int because the later does not deal with
+	negative numbers.
+
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_class_init),
+	(gst_rtp_pt_demux_chain):
+	* gst/rtpmanager/gstrtpptdemux.h:
+	Implement request-pt-map signal.
+
+2007-04-11  Wim Taymans  <wim@fluendo.com>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_get_duration),
 	(qtdemux_parse_samples), (qtdemux_parse_segments),
 	(qtdemux_parse_trak), (qtdemux_parse_tree):
