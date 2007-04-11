@@ -45,11 +45,14 @@ struct _GstRTPPtDemuxClass
 {
   GstElementClass parent_class;
 
+  /* get the caps for pt */
+  GstCaps* (*request_pt_map)      (GstRTPPtDemux *demux, guint pt);
+
   /* signal emmited when a new PT is found from the incoming stream */
-  void (*new_payload_type) (GstElement * element, gint pt, GstPad * pad);
+  void     (*new_payload_type)    (GstRTPPtDemux *demux, guint pt, GstPad * pad);
 
   /* signal emitted when the payload type changes */
-  void (*payload_type_change) (GstElement * element, gint pt);
+  void     (*payload_type_change) (GstRTPPtDemux *demux, guint pt);
 };
 
 GType gst_rtp_pt_demux_get_type (void);
