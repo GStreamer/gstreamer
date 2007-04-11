@@ -1,5 +1,10 @@
 2007-04-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/gstbase.override:
+	Unroll the GIL state in an error case where it was missing.
+
+2007-04-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/gstpad.override:
 	Release the GIL lock while executing queries in GStreamer.
 

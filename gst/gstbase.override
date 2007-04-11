@@ -580,6 +580,7 @@ _wrap_GstBaseSink__proxy_do_get_times (GstBaseSink * self,
     if (!py_self) {
         if (PyErr_Occurred())
             PyErr_Print();
+	pyg_gil_state_release(__py_state);
 	return;
     }
 
