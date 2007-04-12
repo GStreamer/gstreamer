@@ -563,6 +563,7 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
     } else {
       GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
       GST_BUFFER_DURATION (outbuffer) = 0;
+      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
       GST_DEBUG_OBJECT (this, "Storing buffer %p as new_segment_buf",
           outbuffer);
       this->new_segment_buf = outbuffer;
@@ -661,22 +662,25 @@ gst_gdp_pay_sink_event (GstPad * pad, GstEvent * event)
    * and not send it on */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-      GST_DEBUG_OBJECT (this, "Storing buffer %p as new_segment_buf",
+      GST_DEBUG_OBJECT (this, "Storing in caps buffer %p as new_segment_buf",
           outbuffer);
 
       if (this->new_segment_buf)
         gst_buffer_unref (this->new_segment_buf);
       this->new_segment_buf = outbuffer;
 
+      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
       gst_gdp_pay_reset_streamheader (this);
       break;
     case GST_EVENT_TAG:
-      GST_DEBUG_OBJECT (this, "Storing buffer %p as tag_buf", outbuffer);
+      GST_DEBUG_OBJECT (this, "Storing in caps buffer %p as tag_buf",
+          outbuffer);
 
       if (this->tag_buf)
         gst_buffer_unref (this->tag_buf);
       this->tag_buf = outbuffer;
 
+      GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
       gst_gdp_pay_reset_streamheader (this);
       break;
     default:

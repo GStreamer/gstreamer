@@ -2374,6 +2374,9 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   if (!padcaps && !bufcaps)
     goto no_caps;
 
+  /* get IN_CAPS first, code below might mess with the flags */
+  in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+
   /* stamp the buffer with previous caps if no caps set */
   if (!bufcaps) {
     if (!gst_buffer_is_metadata_writable (buf)) {
@@ -2397,8 +2400,6 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     /* since we keep this buffer out of the scope of this method */
     gst_buffer_ref (buf);
   }
-
-  in_caps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
 
   GST_LOG_OBJECT (sink, "received buffer %p, in_caps: %d", buf, in_caps);
 

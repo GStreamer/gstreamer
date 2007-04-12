@@ -1,3 +1,12 @@
+2007-04-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gdp/gstgdppay.c: (gst_gdp_pay_chain),
+	(gst_gdp_pay_sink_event):
+	Make sure we set the IN_CAPS flag correctly.
+
+	* gst/tcp/gstmultifdsink.c: (gst_multi_fd_sink_render):
+	Get the IN_CAPS flag before we call functions that mess with the flags.
+
 2007-04-10  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gdp/gstgdppay.c (gst_gdp_pay_reset_streamheader,
