@@ -534,6 +534,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp3", NULL);
       break;
 
+#ifdef CODEC_ID_VP5
     case CODEC_ID_VP5:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp5", NULL);
       break;
@@ -545,6 +546,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_VP6F:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp6-flash", NULL);
       break;
+#endif
 
     case CODEC_ID_THEORA:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-theora", NULL);
@@ -1493,6 +1495,7 @@ gst_ffmpeg_caps_with_codectype (enum CodecType type,
 /*
  * caps_with_codecid () transforms a GstCaps for a known codec
  * ID into a filled-in context.
+ * codec_data from caps will override possible extradata already in the context
  */
 
 void
@@ -1513,12 +1516,16 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     buf = GST_BUFFER_CAST (gst_value_get_mini_object (value));
     size = GST_BUFFER_SIZE (buf);
 
+    /* free the old one if it is there */
+    if (context->extradata)
+      av_free (context->extradata);
+
     /* allocate with enough padding */
     context->extradata =
         av_mallocz (GST_ROUND_UP_16 (size + FF_INPUT_BUFFER_PADDING_SIZE));
     memcpy (context->extradata, GST_BUFFER_DATA (buf), size);
     context->extradata_size = size;
-  } else {
+  } else if (context->extradata == NULL) {
     /* no extradata, alloc dummy with 0 sized, some codecs insist on reading
      * extradata anyway which makes then segfault. */
     context->extradata =
@@ -2128,6 +2135,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-vp3")) {
     id = CODEC_ID_VP3;
     video = TRUE;
+#ifdef CODEC_ID_VP5
   } else if (!strcmp (mimetype, "video/x-vp5")) {
     id = CODEC_ID_VP5;
     video = TRUE;
@@ -2137,6 +2145,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-vp6-flash")) {
     id = CODEC_ID_VP6F;
     video = TRUE;
+#endif
   } else if (!strcmp (mimetype, "video/x-flash-screen")) {
     id = CODEC_ID_FLASHSV;
     video = TRUE;
@@ -2532,6 +2541,7 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_VP3:
       name = "VP3 video";
       break;
+#ifdef CODEC_ID_VP5
     case CODEC_ID_VP5:
       name = "VP5 video";
       break;
@@ -2541,6 +2551,7 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_VP6F:
       name = "VP6 Flash video";
       break;
+#endif
     case CODEC_ID_FLASHSV:
       name = "Flash Screen Video";
       break;

@@ -267,6 +267,7 @@ gst_ffmpeg_flags_get_type (void)
       {CODEC_FLAG_GRAY, "Only decode/encode grayscale", "gray"},
       {CODEC_FLAG_NORMALIZE_AQP, "Normalize Adaptive Quantization (masking, etc)", "aqp"},
       {CODEC_FLAG_TRELLIS_QUANT, "Trellis Quantization", "trellis"},
+      {CODEC_FLAG_GLOBAL_HEADER, "Global headers in extradata instead of every keyframe", "global-headers"},
       {CODEC_FLAG_AC_PRED, "H263 Advanced Intra Coding / MPEG4 AC prediction", "aic"},
       {CODEC_FLAG_H263P_UMV, "Unlimited Motion Vector", "umv"},
       {CODEC_FLAG_CBP_RD, "Rate Distoration Optimization for CBP", "cbp-rd"},

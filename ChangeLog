@@ -1,5 +1,17 @@
 2007-04-12  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Mark Nauwelaerts <manauw at skynet dot be> and
+	          Thomas Vander Stichele  <thomas at apestaart dot org>
+	
+	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_flags_get_type):
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_caps_to_codecid),
+	(gst_ffmpeg_get_codecid_longname):
+	Add the CODEC_FLAG_GLOBAL_HEADER to the exposed flags, and makes it as such
+	configurable as a property. Fixes #393187.
+
+2007-04-12  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Yves Lefebvre <ivanohe at abacom dot com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps):
