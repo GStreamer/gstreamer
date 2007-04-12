@@ -1159,7 +1159,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
    * buffers (because it's a new client, or because they changed) */
   caps = gst_buffer_get_caps (buffer);  /* cleaned up after streamheader */
   if (!client->caps) {
-    GST_LOG_OBJECT (sink,
+    GST_DEBUG_OBJECT (sink,
         "[fd %5d] no previous caps for this client, send streamheader",
         client->fd.fd);
     send_streamheader = TRUE;
@@ -1173,7 +1173,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
       s = gst_caps_get_structure (caps, 0);
       if (!gst_structure_has_field (s, "streamheader")) {
         /* no new streamheader, so nothing new to send */
-        GST_LOG_OBJECT (sink,
+        GST_DEBUG_OBJECT (sink,
             "[fd %5d] new caps do not have streamheader, not sending",
             client->fd.fd);
       } else {
@@ -1181,7 +1181,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
         s = gst_caps_get_structure (client->caps, 0);
         if (!gst_structure_has_field (s, "streamheader")) {
           /* no previous streamheader, so send the new one */
-          GST_LOG_OBJECT (sink,
+          GST_DEBUG_OBJECT (sink,
               "[fd %5d] previous caps did not have streamheader, sending",
               client->fd.fd);
           send_streamheader = TRUE;
@@ -1191,7 +1191,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
           s = gst_caps_get_structure (caps, 0);
           sh2 = gst_structure_get_value (s, "streamheader");
           if (gst_value_compare (sh1, sh2) != GST_VALUE_EQUAL) {
-            GST_LOG_OBJECT (sink,
+            GST_DEBUG_OBJECT (sink,
                 "[fd %5d] new streamheader different from old, sending",
                 client->fd.fd);
             send_streamheader = TRUE;
@@ -1214,7 +1214,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
         client->fd.fd, caps);
     s = gst_caps_get_structure (caps, 0);
     if (!gst_structure_has_field (s, "streamheader")) {
-      GST_LOG_OBJECT (sink,
+      GST_DEBUG_OBJECT (sink,
           "[fd %5d] no new streamheader, so nothing to send", client->fd.fd);
     } else {
       GST_LOG_OBJECT (sink,
@@ -1223,6 +1223,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
       sh = gst_structure_get_value (s, "streamheader");
       g_assert (G_VALUE_TYPE (sh) == GST_TYPE_ARRAY);
       buffers = g_value_peek_pointer (sh);
+      GST_DEBUG_OBJECT (sink, "%d streamheader buffers", buffers->len);
       for (i = 0; i < buffers->len; ++i) {
         GValue *bufval;
         GstBuffer *buffer;
@@ -1230,7 +1231,7 @@ gst_multi_fd_sink_client_queue_buffer (GstMultiFdSink * sink,
         bufval = &g_array_index (buffers, GValue, i);
         g_assert (G_VALUE_TYPE (bufval) == GST_TYPE_BUFFER);
         buffer = g_value_peek_pointer (bufval);
-        GST_LOG_OBJECT (sink,
+        GST_DEBUG_OBJECT (sink,
             "[fd %5d] queueing streamheader buffer of length %d",
             client->fd.fd, GST_BUFFER_SIZE (buffer));
         gst_buffer_ref (buffer);
@@ -1458,7 +1459,7 @@ find_limits (GstMultiFdSink * sink,
       if (time_max != -1 && first - time >= time_max)
         max_hit = TRUE;
     } else {
-      GST_DEBUG_OBJECT (sink, "No timestamp on buffer");
+      GST_LOG_OBJECT (sink, "No timestamp on buffer");
     }
     /* time is OK or unknown, check and increase if not enough bytes */
     if (bytes_min != -1) {
@@ -2401,7 +2402,13 @@ gst_multi_fd_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     gst_buffer_ref (buf);
   }
 
-  GST_LOG_OBJECT (sink, "received buffer %p, in_caps: %d", buf, in_caps);
+  GST_LOG_OBJECT (sink, "received buffer %p, in_caps: %s, offset %"
+      G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT
+      ", timestamp %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
+      buf, in_caps ? "yes" : "no", GST_BUFFER_OFFSET (buf),
+      GST_BUFFER_OFFSET_END (buf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
   /* if we get IN_CAPS buffers, but the previous buffer was not IN_CAPS,
    * it means we're getting new streamheader buffers, and we should clear
