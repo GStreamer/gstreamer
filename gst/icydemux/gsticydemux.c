@@ -26,14 +26,20 @@
  *
  * <refsect2>
  * <para>
- * icydemux accepts data streams with ICY metadata at known intervals, as transmitted from an upstream element (usually read as response headers from an HTTP stream). The mime type of the data between the tag blocks is detected using typefind functions, and the appropriate output mime type set on outgoing buffers. 
+ * icydemux accepts data streams with ICY metadata at known intervals, as
+ * transmitted from an upstream element (usually read as response headers from
+ * an HTTP stream). The mime type of the data between the tag blocks is
+ * detected using typefind functions, and the appropriate output mime type set
+ * on outgoing buffers. 
  * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
  * gst-launch gnomevfssrc location=http://some.server/ ! icydemux ! fakesink -t
  * </programlisting>
- * This pipeline should read any available ICY tag information and output it. The contents of the stream should be detected, and the appropriate mime type set on buffers produced from icydemux.
+ * This pipeline should read any available ICY tag information and output it.
+ * The contents of the stream should be detected, and the appropriate mime
+ * type set on buffers produced from icydemux.
  * </para>
  * </refsect2>
  */
@@ -285,40 +291,91 @@ gst_icydemux_remove_srcpad (GstICYDemux * icydemux)
   return res;
 };
 
-/* The following two charset mangling functions were copied from gnomevfssrc.
- * Preserve them under the unverified assumption that they do something vaguely
- * worthwhile.
- */
-static char *
-unicodify (const char *str, int len, ...)
+/* FIXME: remove this once we depend on gst-plugins-base >= 0.10.12.1 */
+static gchar *
+notgst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
+    const gchar ** env_vars)
 {
-  char *ret = NULL, *cset;
-  va_list args;
-  gsize bytes_read, bytes_written;
+  const gchar *cur_loc = NULL;
+  gsize bytes_read;
+  gchar *utf8 = NULL;
 
-  if (g_utf8_validate (str, len, NULL))
-    return g_strndup (str, len >= 0 ? len : strlen (str));
+  g_return_val_if_fail (data != NULL, NULL);
 
-  va_start (args, len);
-  while ((cset = va_arg (args, char *)) != NULL)
-  {
-    if (!strcmp (cset, "locale"))
-      ret = g_locale_to_utf8 (str, len, &bytes_read, &bytes_written, NULL);
-    else
-      ret = g_convert (str, len, "UTF-8", cset,
-          &bytes_read, &bytes_written, NULL);
-    if (ret)
-      break;
+  if (size < 0)
+    size = strlen (data);
+
+  /* Should we try the charsets specified
+   * via environment variables FIRST ? */
+  if (g_utf8_validate (data, size, NULL))
+    return g_strndup (data, size);
+
+  while (env_vars != NULL && *env_vars != NULL) {
+    const gchar *env = NULL;
+
+    /* Try charsets specified via the environment */
+    env = g_getenv (*env_vars);
+    if (env != NULL && *env != '\0') {
+      gchar **c, **csets;
+
+      csets = g_strsplit (env, G_SEARCHPATH_SEPARATOR_S, -1);
+
+      for (c = csets; c && *c; ++c) {
+        if ((utf8 =
+                g_convert (data, size, "UTF-8", *c, &bytes_read, NULL, NULL))) {
+          if (bytes_read == size) {
+            g_strfreev (csets);
+            goto beach;
+          }
+          g_free (utf8);
+          utf8 = NULL;
+        }
+      }
+
+      g_strfreev (csets);
+    }
+
+    ++env_vars;
   }
-  va_end (args);
 
-  return ret;
+  /* Try current locale (if not UTF-8) */
+  if (!g_get_charset (&cur_loc)) {
+    if ((utf8 = g_locale_to_utf8 (data, size, &bytes_read, NULL, NULL))) {
+      if (bytes_read == size) {
+        goto beach;
+      }
+      g_free (utf8);
+      utf8 = NULL;
+    }
+  }
+
+  /* Try ISO-8859-1 */
+  utf8 = g_convert (data, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL, NULL);
+  if (utf8 != NULL && bytes_read == size) {
+    goto beach;
+  }
+
+  g_free (utf8);
+  return NULL;
+
+beach:
+
+  g_strchomp (utf8);
+  if (utf8 && utf8[0] != '\0')
+    return utf8;
+
+  g_free (utf8);
+  return NULL;
 }
 
-static char *
-gst_icydemux_unicodify (const char *str)
+static gchar *
+gst_icydemux_unicodify (const gchar * str)
 {
-  return unicodify (str, -1, "locale", "ISO-8859-1", NULL);
+  const gchar *env_vars[] = { "GST_ICY_TAG_ENCODING",
+    "GST_TAG_ENCODING", NULL
+  };
+
+  return notgst_tag_freeform_string_to_utf8 (str, -1, env_vars);
 }
 
 static void

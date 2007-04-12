@@ -1,3 +1,13 @@
+2007-04-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/icydemux/gsticydemux.c: (notgst_tag_freeform_string_to_utf8),
+	(gst_icydemux_unicodify):
+	  If the metadata strings we get in the stream are not UTF-8, try to
+	  interpret them according to the character encodings specified in the
+	  GST_ICY_TAG_ENCODING and GST_TAG_ENCODING environment variables, and
+	  only fall back to locale/ISO-8859-1 if those aren't set or don't
+	  work. Should fix #428901.
+
 2007-04-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtph264depay.c:
