@@ -1,3 +1,11 @@
+2007-04-12  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Yves Lefebvre <ivanohe at abacom dot com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_setcaps):
+	Draw edges for h264. Fixes #364139.
+	Set the error resilience flag just in case...
+
 2007-03-17  Johan Dahlin  <jdahlin@async.com.br>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c (gst_ffmpeg_get_codecid_longname): 

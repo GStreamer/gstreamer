@@ -605,11 +605,15 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (ffmpegdec, "Using framerate from codec");
   }
 
-  /* do *not* draw edges */
-  ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
+  if(oclass->in_plugin->id != CODEC_ID_H264) {
+    /* do *not* draw edges */
+    ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
+  }
 
   /* workaround encoder bugs */
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
+
+  ffmpegdec->context->error_resilience = 1;
 
   /* for slow cpus */
   ffmpegdec->context->lowres = ffmpegdec->lowres;
