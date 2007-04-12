@@ -964,9 +964,8 @@ gst_pad_is_active (GstPad * pad)
  * You can pass NULL as the callback to make this call block. Be careful with
  * this blocking call as it might not return for reasons stated above.
  *
- * Returns: TRUE if the pad could be blocked. This function can fail
- *   if wrong parameters were passed or the pad was already in the
- *   requested state.
+ * Returns: TRUE if the pad could be blocked. This function can fail if the
+ * wrong parameters were passed or the pad was already in the requested state.
  *
  * MT safe.
  */
@@ -1035,9 +1034,8 @@ had_right_state:
  * a shortcut for gst_pad_set_blocked_async() with a NULL
  * callback.
  *
- * Returns: TRUE if the pad could be blocked. This function can fail
- *   wrong parameters were passed or the pad was already in the
- *   requested state.
+ * Returns: TRUE if the pad could be blocked. This function can fail if the
+ * wrong parameters were passed or the pad was already in the requested state.
  *
  * MT safe.
  */

@@ -1,3 +1,10 @@
+2007-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/faq/gst-uninstalled:
+	  don't get empty paths on the PATH variables
+	* gst/gstpad.c (gst_pad_is_active, gst_pad_set_blocked_async):
+	  Don't format for the uncommon terminal width of 84 characters.
+
 2007-04-06  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpipeline.c: (reset_stream_time),
