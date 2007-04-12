@@ -117,7 +117,7 @@ struct _QtDemuxStream
 
   /* duration/scale */
   guint64 duration;             /* in timescale */
-  guint64 timescale;
+  guint32 timescale;
 
   /* our samples */
   guint32 n_samples;
