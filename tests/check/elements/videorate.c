@@ -48,6 +48,12 @@ GstPad *mysrcpad, *mysinkpad;
     "height = (int) 240, "              \
     "format = (fourcc) I420"
 
+#define VIDEO_CAPS_NEWSIZE_STRING       \
+    "video/x-raw-yuv, "                 \
+    "width = (int) 240, "               \
+    "height = (int) 120, "              \
+    "framerate = (fraction) 25/1 , "	\
+    "format = (fourcc) I420"
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -511,7 +517,98 @@ GST_START_TEST (test_no_framerate)
 
 GST_END_TEST;
 
+/* This test outputs 2 buffers of same dimensions (320x240), then 1 buffer of 
+ * differing dimensions (240x120), and then another buffer of previous 
+ * dimensions (320x240) and checks that the 3 buffers output as a result have 
+ * correct caps (first 2 with 320x240 and 3rd with 240x120).
+ */
+GST_START_TEST (test_changing_size)
+{
+  GstElement *videorate;
+  GstBuffer *first;
+  GstBuffer *second;
+  GstBuffer *third;
+  GstBuffer *fourth;
+  GstBuffer *fifth;
+  GstBuffer *outbuf;
+  GstEvent *newsegment;
+  GstCaps *caps, *caps_newsize;
 
+  videorate = setup_videorate ();
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  newsegment = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, 0, -1,
+      0);
+  fail_unless (gst_pad_push_event (mysrcpad, newsegment) == TRUE);
+
+  first = gst_buffer_new_and_alloc (4);
+  memset (GST_BUFFER_DATA (first), 0, 4);
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  GST_BUFFER_TIMESTAMP (first) = 0;
+  gst_buffer_set_caps (first, caps);
+
+  GST_DEBUG ("pushing first buffer");
+  fail_unless (gst_pad_push (mysrcpad, first) == GST_FLOW_OK);
+
+  /* second buffer */
+  second = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (second) = GST_SECOND / 25;
+  memset (GST_BUFFER_DATA (second), 0, 4);
+  gst_buffer_set_caps (second, caps);
+
+  fail_unless (gst_pad_push (mysrcpad, second) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  outbuf = buffers->data;
+  /* first buffer should be output here */
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (outbuf), caps));
+  fail_unless (GST_BUFFER_TIMESTAMP (outbuf) == 0);
+
+  /* third buffer with new size */
+  third = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (third) = 2 * GST_SECOND / 25;
+  memset (GST_BUFFER_DATA (third), 0, 4);
+  caps_newsize = gst_caps_from_string (VIDEO_CAPS_NEWSIZE_STRING);
+  gst_buffer_set_caps (third, caps_newsize);
+
+  fail_unless (gst_pad_push (mysrcpad, third) == GST_FLOW_OK);
+  /* new caps flushed the internal state, no new output yet */
+  fail_unless_equals_int (g_list_length (buffers), 1);
+  outbuf = g_list_last (buffers)->data;
+  /* first buffer should be output here */
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (outbuf), caps));
+  fail_unless (GST_BUFFER_TIMESTAMP (outbuf) == 0);
+
+  /* fourth buffer with original size */
+  fourth = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (fourth) = 3 * GST_SECOND / 25;
+  memset (GST_BUFFER_DATA (fourth), 0, 4);
+  gst_buffer_set_caps (fourth, caps);
+
+  fail_unless (gst_pad_push (mysrcpad, fourth) == GST_FLOW_OK);
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  /* fifth buffer with original size */
+  fifth = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (fifth) = 4 * GST_SECOND / 25;
+  memset (GST_BUFFER_DATA (fifth), 0, 4);
+  gst_buffer_set_caps (fifth, caps);
+
+  fail_unless (gst_pad_push (mysrcpad, fifth) == GST_FLOW_OK);
+  /* all four missing buffers here, dups of fourth buffer */
+  fail_unless_equals_int (g_list_length (buffers), 4);
+  outbuf = g_list_last (buffers)->data;
+  /* third buffer should be output here */
+  fail_unless (GST_BUFFER_TIMESTAMP (outbuf) == 3 * GST_SECOND / 25);
+  fail_unless (gst_caps_is_equal (GST_BUFFER_CAPS (outbuf), caps));
+
+  gst_caps_unref (caps);
+  gst_caps_unref (caps_newsize);
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
 Suite *
 videorate_suite (void)
 {
@@ -524,6 +621,7 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_wrong_order_from_zero);
   tcase_add_test (tc_chain, test_wrong_order);
   tcase_add_test (tc_chain, test_no_framerate);
+  tcase_add_test (tc_chain, test_changing_size);
 
   return s;
 }

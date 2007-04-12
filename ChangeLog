@@ -1,3 +1,13 @@
+2007-04-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videorate/gstvideorate.c: (gst_video_rate_setcaps),
+	(gst_video_rate_chain):
+	Add some debug.
+
+	* tests/check/elements/videorate.c: (GST_START_TEST),
+	(videorate_suite):
+	Added check for videorate changing caps handling. Closes #421834.
+
 2007-04-12  Michael Smith  <msmith@fluendo.com>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):

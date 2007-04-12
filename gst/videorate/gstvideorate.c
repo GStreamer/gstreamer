@@ -288,6 +288,8 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
 
   videorate = GST_VIDEO_RATE (gst_pad_get_parent (pad));
 
+  GST_DEBUG ("setcaps called %" GST_PTR_FORMAT, caps);
+
   structure = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_fraction (structure, "framerate",
           &rate_numerator, &rate_denominator))
@@ -362,7 +364,8 @@ gst_video_rate_setcaps (GstPad * pad, GstCaps * caps)
 done:
   /* After a setcaps, our caps may have changed. In that case, we can't use
    * the old buffer, if there was one (it might have different dimensions) */
-  gst_video_rate_swap_prev (videorate, NULL, 0);
+  GST_DEBUG ("swapping old buffers");
+  gst_video_rate_swap_prev (videorate, NULL, GST_CLOCK_TIME_NONE);
 
   gst_object_unref (videorate);
   return ret;
@@ -612,6 +615,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 
     /* got 2 buffers, see which one is the best */
     do {
+
       diff1 = prevtime - videorate->next_ts;
       diff2 = intime - videorate->next_ts;
 
