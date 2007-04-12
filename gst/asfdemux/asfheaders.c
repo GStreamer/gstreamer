@@ -74,8 +74,11 @@ const ASFGuidHash asf_object_guids[] = {
   {ASF_OBJ_CODEC_COMMENT1, "ASF_OBJ_CODEC_COMMENT1",
         {0x86d15241, 0x11d0311d, 0xA000A4a3, 0xF64803c9}
       },
-  {ASF_OBJ_INDEX, "ASF_OBJ_INDEX",
+  {ASF_OBJ_SIMPLE_INDEX, "ASF_OBJ_SIMPLE_INDEX",
         {0x33000890, 0x11cfe5b1, 0xA000F489, 0xCB4903c9}
+      },
+  {ASF_OBJ_INDEX, "ASF_OBJ_INDEX",
+        {0xd6e229d3, 0x11d135da, 0xa0003490, 0xbe4903c9}
       },
   {ASF_OBJ_HEAD1, "ASF_OBJ_HEAD1",
         {0x5fbf03b5, 0x11cfa92e, 0xC000E38e, 0x6553200c}

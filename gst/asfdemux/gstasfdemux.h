@@ -51,8 +51,6 @@ typedef struct
   guint64     last_pts;
   GstBuffer  *payload;
 
-  gboolean    need_newsegment;  /* do we need to send a new-segment event? */
-
   /* video-only */
   guint64     last_buffer_timestamp;  /* timestamp of last buffer sent out */
   gboolean    is_video;
@@ -62,6 +60,8 @@ typedef struct
   GstCaps    *caps;
 
   GstTagList *pending_tags;
+
+  gboolean    discont;
 } asf_stream_context;
 
 typedef enum {
@@ -83,10 +83,11 @@ struct _GstASFDemux {
   GstTagList        *taglist;
   GstAsfDemuxState   state;
   
-  guint64            data_offset;  /* byte offset where packets start    */
-  guint64            data_size;    /* total size of packet data in bytes */
-  guint64            num_packets;  /* total number of data packets       */
-  guint64            packet;       /* current packet                     */
+  guint64            index_offset; /* byte offset where index might be, or 0   */
+  guint64            data_offset;  /* byte offset where packets start          */
+  guint64            data_size;    /* total size of packet data in bytes, or 0 */
+  guint64            num_packets;  /* total number of data packets, or 0       */
+  guint64            packet;       /* current packet                           */
 
   /* bitrates are unused at the moment */
   guint32              bitrate[GST_ASF_DEMUX_NUM_STREAM_IDS];
@@ -102,8 +103,8 @@ struct _GstASFDemux {
   guint32              num_streams;
   asf_stream_context   stream[GST_ASF_DEMUX_NUM_STREAMS];
 
-  guint32              packet_size; /* -1 if not fixed or not known */
-  guint32              timestamp;   /* in milliseconds              */
+  guint32              packet_size;
+  guint32              timestamp;       /* in milliseconds              */
   guint64              play_time;
 
   guint64              preroll;
@@ -112,7 +113,11 @@ struct _GstASFDemux {
   gboolean             seekable;
   gboolean             broadcast;
 
-  GstSegment           segment; /* configured play segment */
+  GstSegment           segment;          /* configured play segment                 */
+
+  gboolean             need_newsegment;  /* do we need to send a new-segment event? */
+  gboolean             segment_running;  /* if we've started the current segment    */
+  gboolean             streaming;        /* TRUE if we are operating chain-based    */
 
   /* Descrambler settings */
   guint8               span;
@@ -122,6 +127,11 @@ struct _GstASFDemux {
 
   /* for debugging only */
   gchar               *objpath;
+
+  /* simple index, if available */
+  GstClockTime         sidx_interval;    /* interval between entries in ns */
+  guint                sidx_num_entries; /* number of index entries        */
+  guint32             *sidx_entries;     /* packet number for each entry   */
 };
 
 struct _GstASFDemuxClass {

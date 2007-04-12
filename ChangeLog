@@ -1,3 +1,28 @@
+2007-04-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/asfheaders.c:
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_free_stream),
+	(gst_asf_demux_reset), (gst_asf_demux_init),
+	(gst_asf_demux_activate), (gst_asf_demux_activate_push),
+	(gst_asf_demux_activate_pull), (gst_asf_demux_sink_event),
+	(gst_asf_demux_seek_index_lookup),
+	(gst_asf_demux_reset_stream_state_after_discont),
+	(gst_asf_demux_handle_seek_event),
+	(gst_asf_demux_handle_src_event), (gst_asf_demux_chain_headers),
+	(gst_asf_demux_chain), (gst_asf_demux_pull_data),
+	(gst_asf_demux_pull_indices),
+	(gst_asf_demux_parse_data_object_start),
+	(gst_asf_demux_pull_headers), (gst_asf_demux_loop),
+	(gst_asf_demux_setup_pad), (gst_asf_demux_process_file),
+	(gst_asf_demux_process_simple_index),
+	(gst_asf_demux_process_object),
+	(gst_asf_demux_send_event_unlocked), (gst_asf_demux_push_buffer),
+	(gst_asf_demux_handle_data), (gst_asf_demux_change_state):
+	* gst/asfdemux/gstasfdemux.h:
+	  Make asfdemux work in pull mode where possible. If there's an index
+	  at the end of the file, read it and use it for seeking purposes.
+
 2007-04-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/synaesthesia/gstsynaesthesia.c: (gst_synaesthesia_init),
