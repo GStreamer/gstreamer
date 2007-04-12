@@ -160,6 +160,9 @@ _gst_core_errors_init (void)
       N_("Your GStreamer installation is missing a plug-in."));
   TABLE (t, CORE, CLOCK,
       N_("Internal GStreamer error: clock problem." FILE_A_BUG));
+  TABLE (t, CORE, DISABLED,
+      N_("This application is trying to use GStreamer functionality that "
+          "has been disabled."));
 
   return t;
 }

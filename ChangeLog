@@ -1,3 +1,9 @@
+2007-04-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gsterror.c: (_gst_core_errors_init):
+	* gst/gsterror.h:
+	  API: add GST_CORE_ERROR_DISABLED (#392804).
+
 2007-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/faq/gst-uninstalled:

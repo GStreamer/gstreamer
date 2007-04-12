@@ -52,6 +52,8 @@ G_BEGIN_DECLS
  * @GST_CORE_ERROR_TAG: used for negotiation-related errors.
  * @GST_CORE_ERROR_MISSING_PLUGIN: used if a plugin is missing.
  * @GST_CORE_ERROR_CLOCK: used for clock related errors.
+ * @GST_CORE_ERROR_DISABLED: used if functionality has been disabled at
+ *                           compile time (Since: 0.10.13).
  * @GST_CORE_ERROR_NUM_ERRORS: the number of core error types.
  *
  * Core errors are errors inside the core GStreamer library.
@@ -73,6 +75,7 @@ typedef enum
   GST_CORE_ERROR_TAG,
   GST_CORE_ERROR_MISSING_PLUGIN,
   GST_CORE_ERROR_CLOCK,
+  GST_CORE_ERROR_DISABLED,
   GST_CORE_ERROR_NUM_ERRORS
 } GstCoreError;
 
