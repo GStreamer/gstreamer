@@ -376,16 +376,15 @@ gst_rmdemux_validate_offset (GstRMDemux * rmdemux)
 static gboolean
 find_seek_offset_bytes (GstRMDemux * rmdemux, guint target)
 {
-  int i, n;
+  int i;
+  GSList *cur;
   gboolean ret = FALSE;
 
   if (target < 0)
     return FALSE;
 
-  for (n = 0; n < rmdemux->n_streams; n++) {
-    GstRMDemuxStream *stream;
-
-    stream = rmdemux->streams[n];
+  for (cur = rmdemux->streams; cur; cur = cur->next) {
+    GstRMDemuxStream *stream = cur->data;
 
     /* Search backwards through this stream's index until we find the first
      * timestamp before our target time */
@@ -406,14 +405,14 @@ find_seek_offset_bytes (GstRMDemux * rmdemux, guint target)
 static gboolean
 find_seek_offset_time (GstRMDemux * rmdemux, GstClockTime time)
 {
-  int i, n;
+  int i, n_stream;
   gboolean ret = FALSE;
+  GSList *cur;
   GstClockTime earliest = GST_CLOCK_TIME_NONE;
 
-  for (n = 0; n < rmdemux->n_streams; n++) {
-    GstRMDemuxStream *stream;
-
-    stream = rmdemux->streams[n];
+  n_stream = 0;
+  for (cur = rmdemux->streams; cur; cur = cur->next, n_stream++) {
+    GstRMDemuxStream *stream = cur->data;
 
     /* Search backwards through this stream's index until we find the first
      * timestamp before our target time */
@@ -433,7 +432,7 @@ find_seek_offset_time (GstRMDemux * rmdemux, GstClockTime time)
           GST_DEBUG_OBJECT (rmdemux,
               "We're looking for %" GST_TIME_FORMAT
               " and we found that stream %d has the latest index at %"
-              GST_TIME_FORMAT, GST_TIME_ARGS (rmdemux->segment.start), n,
+              GST_TIME_FORMAT, GST_TIME_ARGS (rmdemux->segment.start), n_stream,
               GST_TIME_ARGS (earliest));
         }
 
@@ -675,22 +674,24 @@ gst_rmdemux_src_query_types (GstPad * pad)
 static void
 gst_rmdemux_reset (GstRMDemux * rmdemux)
 {
-  guint n;
+  GSList *cur;
 
   GST_OBJECT_LOCK (rmdemux);
   rmdemux->running = FALSE;
   GST_OBJECT_UNLOCK (rmdemux);
 
-  for (n = 0; n < rmdemux->n_streams; ++n) {
-    gst_rmdemux_stream_clear_cached_subpackets (rmdemux, rmdemux->streams[n]);
-    gst_element_remove_pad (GST_ELEMENT (rmdemux), rmdemux->streams[n]->pad);
-    if (rmdemux->streams[n]->subpackets)
-      g_ptr_array_free (rmdemux->streams[n]->subpackets, TRUE);
-    g_free (rmdemux->streams[n]->index);
-    g_free (rmdemux->streams[n]);
-    rmdemux->streams[n] = NULL;
+  for (cur = rmdemux->streams; cur; cur = cur->next) {
+    GstRMDemuxStream *stream = cur->data;
+
+    gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
+    gst_element_remove_pad (GST_ELEMENT (rmdemux), stream->pad);
+    if (stream->subpackets)
+      g_ptr_array_free (stream->subpackets, TRUE);
+    g_free (stream->index);
+    g_free (stream);
   }
-  rmdemux->n_streams = 0;
+  g_slist_free (rmdemux->streams);
+  rmdemux->streams = NULL;
   rmdemux->n_audio_streams = 0;
   rmdemux->n_video_streams = 0;
 
@@ -1203,12 +1204,11 @@ unlock:
 static GstRMDemuxStream *
 gst_rmdemux_get_stream_by_id (GstRMDemux * rmdemux, int id)
 {
-  int i;
+  GSList *cur;
 
-  for (i = 0; i < rmdemux->n_streams; i++) {
-    GstRMDemuxStream *stream;
+  for (cur = rmdemux->streams; cur; cur = cur->next) {
+    GstRMDemuxStream *stream = cur->data;
 
-    stream = rmdemux->streams[i];
     if (stream->id == id) {
       return stream;
     }
@@ -1220,10 +1220,10 @@ gst_rmdemux_get_stream_by_id (GstRMDemux * rmdemux, int id)
 static void
 gst_rmdemux_send_event (GstRMDemux * rmdemux, GstEvent * event)
 {
-  int i;
+  GSList *cur;
 
-  for (i = 0; i < rmdemux->n_streams; i++) {
-    GstRMDemuxStream *stream = rmdemux->streams[i];
+  for (cur = rmdemux->streams; cur; cur = cur->next) {
+    GstRMDemuxStream *stream = cur->data;
 
     GST_DEBUG_OBJECT (rmdemux, "Pushing %s event on pad %s",
         GST_EVENT_TYPE_NAME (event), GST_PAD_NAME (stream->pad));
@@ -1403,9 +1403,9 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
   }
 
   GST_PAD_ELEMENT_PRIVATE (stream->pad) = stream;
-  rmdemux->streams[rmdemux->n_streams] = stream;
-  rmdemux->n_streams++;
-  GST_LOG_OBJECT (rmdemux, "n_streams is now %d", rmdemux->n_streams);
+  rmdemux->streams = g_slist_append (rmdemux->streams, stream);
+  GST_LOG_OBJECT (rmdemux, "n_streams is now %d",
+      g_slist_length (rmdemux->streams));
 
   GST_LOG ("stream->pad = %p, stream_caps = %" GST_PTR_FORMAT, stream->pad,
       stream_caps);
@@ -1803,7 +1803,7 @@ static GstFlowReturn
 gst_rmdemux_combine_flows (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     GstFlowReturn ret)
 {
-  gint i;
+  GSList *cur;
 
   /* store the value */
   stream->last_flow = ret;
@@ -1817,8 +1817,8 @@ gst_rmdemux_combine_flows (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
   if (ret != GST_FLOW_NOT_LINKED)
     goto done;
 
-  for (i = 0; i < rmdemux->n_streams; ++i) {
-    GstRMDemuxStream *ostream = rmdemux->streams[i];
+  for (cur = rmdemux->streams; cur; cur = cur->next) {
+    GstRMDemuxStream *ostream = cur->data;
 
     ret = ostream->last_flow;
     /* some other return value (must be SUCCESS but we can return

@@ -37,8 +37,6 @@ G_BEGIN_DECLS
 #define GST_IS_RMDEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RMDEMUX))
 
-#define GST_RMDEMUX_MAX_STREAMS         8
-
 typedef enum
 {
   RMDEMUX_STATE_NULL,
@@ -83,8 +81,7 @@ struct _GstRMDemux {
   /* pads */
   GstPad *sinkpad;
 
-  GstRMDemuxStream *streams[GST_RMDEMUX_MAX_STREAMS];
-  int n_streams;
+  GSList *streams;
   int n_video_streams;
   int n_audio_streams;
   GstAdapter *adapter;

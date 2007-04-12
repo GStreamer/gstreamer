@@ -1,3 +1,14 @@
+2007-04-12  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: René Stadler <mail at renestadler dot de>
+
+	* gst/realmedia/rmdemux.c: (find_seek_offset_bytes),
+	(find_seek_offset_time), (gst_rmdemux_reset),
+	(gst_rmdemux_get_stream_by_id), (gst_rmdemux_send_event),
+	(gst_rmdemux_add_stream), (gst_rmdemux_combine_flows):
+	* gst/realmedia/rmdemux.h:
+	Make rmdemux handle any number of logical streams. Fixes #428698.
+
 2007-04-05  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	submitted by: Mogens Jaeger <mogens@jaeger.tf>
