@@ -1,5 +1,11 @@
 2007-04-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/qtdemux/qtdemux.c:
+	Make timescale 32 bits again so we don't screw up the pts_offset
+	calculations.
+
+2007-04-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtpmanager/gstrtpbin.c: (create_session), (get_pt_map),
 	(create_stream), (gst_rtp_bin_class_init), (pt_map_requested):
 	Emit pt map requests and cache results.
