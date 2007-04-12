@@ -1,5 +1,15 @@
 2007-04-12  Wim Taymans  <wim@fluendo.com>
 
+	* gst/synaesthesia/gstsynaesthesia.c: (gst_synaesthesia_init),
+	(gst_synaesthesia_sink_setcaps), (gst_synaesthesia_src_setcaps),
+	(gst_synaesthesia_chain), (gst_synaesthesia_change_state):
+	Some timestamp fixes.
+
+	* gst/synaesthesia/synaescope.c: (synaescope_coreGo):
+	Fix for 64-bit machines.
+
+2007-04-12  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: René Stadler <mail at renestadler dot de>
 
 	* gst/realmedia/rmdemux.c: (find_seek_offset_bytes),

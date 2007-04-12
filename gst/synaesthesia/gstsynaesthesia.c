@@ -69,12 +69,11 @@ struct _GstSynaesthesia
   GstPad *sinkpad, *srcpad;
   GstAdapter *adapter;
 
-  guint64 audio_basetime;       /* the timestamp of the next frame */
+  guint64 next_ts;              /* the timestamp of the next frame */
   guint64 frame_duration;
   guint bps;                    /* bytes per sample        */
   guint spf;                    /* samples per video frame */
 
-  guint64 samples_consumed;
   gint16 datain[2][SYNAES_SAMPLES];
 
   /* video state */
@@ -236,8 +235,7 @@ gst_synaesthesia_init (GstSynaesthesia * synaesthesia)
   synaesthesia->rate = GST_AUDIO_DEF_RATE;
   synaesthesia->channels = 2;
 
-  synaesthesia->audio_basetime = GST_CLOCK_TIME_NONE;
-  synaesthesia->samples_consumed = 0;
+  synaesthesia->next_ts = GST_CLOCK_TIME_NONE;
 
   /* FIXME: the size is currently ignored by the engine. It should
    * not be, and also there should be a way to change the size later.
@@ -296,7 +294,6 @@ gst_synaesthesia_sink_setcaps (GstPad * pad, GstCaps * caps)
   if (rate <= 0)
     goto wrong_rate;
 
-
   synaesthesia->channels = channels;
   synaesthesia->rate = rate;
 
@@ -306,17 +303,25 @@ done:
 
   /* Errors */
 missing_caps_details:
-  GST_WARNING ("missing channels or rate in the caps");
-  res = FALSE;
-  goto done;
+  {
+    GST_WARNING_OBJECT (synaesthesia, "missing channels or rate in the caps");
+    res = FALSE;
+    goto done;
+  }
 wrong_channels:
-  GST_WARNING ("number of channels must be 2, but is %d", channels);
-  res = FALSE;
-  goto done;
+  {
+    GST_WARNING_OBJECT (synaesthesia, "number of channels must be 2, but is %d",
+        channels);
+    res = FALSE;
+    goto done;
+  }
 wrong_rate:
-  GST_WARNING ("sample rate must be >0, but is %d", rate);
-  res = FALSE;
-  goto done;
+  {
+    GST_WARNING_OBJECT (synaesthesia, "sample rate must be >0, but is %d",
+        rate);
+    res = FALSE;
+    goto done;
+  }
 }
 
 static GstCaps *
@@ -387,14 +392,19 @@ done:
 
   /* Errors */
 missing_caps_details:
-  GST_WARNING ("missing channels or rate in the caps");
-  res = FALSE;
-  goto done;
+  {
+    GST_WARNING_OBJECT (synaesthesia, "missing channels or rate in the caps");
+    res = FALSE;
+    goto done;
+  }
 wrong_resolution:
-  GST_WARNING ("unsupported resolution: %d x %d (wanted %d x %d)",
-      w, h, SYNAES_WIDTH, SYNAES_HEIGHT);
-  res = FALSE;
-  goto done;
+  {
+    GST_WARNING_OBJECT (synaesthesia,
+        "unsupported resolution: %d x %d (wanted %d x %d)", w, h, SYNAES_WIDTH,
+        SYNAES_HEIGHT);
+    res = FALSE;
+    goto done;
+  }
 }
 
 static GstFlowReturn
@@ -410,8 +420,7 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
 
   /* resync on DISCONT */
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
-    synaesthesia->audio_basetime = GST_CLOCK_TIME_NONE;
-    synaesthesia->samples_consumed = 0;
+    synaesthesia->next_ts = GST_CLOCK_TIME_NONE;
     gst_adapter_clear (synaesthesia->adapter);
   }
 
@@ -428,11 +437,9 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
     }
   }
 
-  if (synaesthesia->audio_basetime == GST_CLOCK_TIME_NONE)
-    synaesthesia->audio_basetime = GST_BUFFER_TIMESTAMP (buffer);
-
-  if (synaesthesia->audio_basetime == GST_CLOCK_TIME_NONE)
-    synaesthesia->audio_basetime = 0;
+  /* Match timestamps from the incoming audio */
+  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE)
+    synaesthesia->next_ts = GST_BUFFER_TIMESTAMP (buffer);
 
   gst_adapter_push (synaesthesia->adapter, buffer);
 
@@ -469,9 +476,7 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
     if (ret != GST_FLOW_OK)
       break;
 
-    GST_BUFFER_TIMESTAMP (outbuf) =
-        synaesthesia->audio_basetime +
-        (GST_SECOND * synaesthesia->samples_consumed / synaesthesia->rate);
+    GST_BUFFER_TIMESTAMP (outbuf) = synaesthesia->next_ts;
     GST_BUFFER_DURATION (outbuf) = synaesthesia->frame_duration;
 
     out_frame = (guchar *)
@@ -484,8 +489,10 @@ gst_synaesthesia_chain (GstPad * pad, GstBuffer * buffer)
     if (ret != GST_FLOW_OK)
       break;
 
-    /* FIXME: flush what we actually read */
-    synaesthesia->samples_consumed += synaesthesia->spf;
+    if (synaesthesia->next_ts != GST_CLOCK_TIME_NONE)
+      synaesthesia->next_ts += synaesthesia->frame_duration;
+
+    /* flush sampled for one frame */
     gst_adapter_flush (synaesthesia->adapter, synaesthesia->spf *
         synaesthesia->channels * sizeof (gint16));
 
@@ -506,7 +513,7 @@ gst_synaesthesia_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      synaesthesia->audio_basetime = GST_CLOCK_TIME_NONE;
+      synaesthesia->next_ts = GST_CLOCK_TIME_NONE;
       gst_adapter_clear (synaesthesia->adapter);
       break;
     default:

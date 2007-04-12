@@ -127,8 +127,8 @@ static void
 synaescope_coreGo (syn_instance * si)
 {
   int i, j;
-  register unsigned long *ptr;
-  register unsigned long *end;
+  register guint32 *ptr;
+  register guint32 *end;
   int heightFactor;
   int actualHeight;
   int heightAdd;
@@ -160,8 +160,8 @@ synaescope_coreGo (syn_instance * si)
 
   /* Asger Alstrupt's optimized 32 bit fade */
   /* (alstrup@diku.dk) */
-  ptr = (unsigned long *) si->output;
-  end = (unsigned long *) (si->output + syn_width * syn_height * 2);
+  ptr = (guint32 *) si->output;
+  end = (guint32 *) (si->output + syn_width * syn_height * 2);
   do {
     /*Bytewize version was: *(ptr++) -= *ptr+(*ptr>>1)>>4; */
     if (*ptr) {
