@@ -97,7 +97,6 @@ static void gst_rtp_pt_demux_release (GstElement * element);
 static gboolean gst_rtp_pt_demux_setup (GstElement * element);
 
 static GstFlowReturn gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf);
-static GstCaps *gst_rtp_pt_demux_getcaps (GstPad * pad);
 static GstStateChangeReturn gst_rtp_pt_demux_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -234,6 +233,11 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     gchar *padname;
     GstCaps *caps;
     GstRTPPtDemuxPad *rtpdemuxpad;
+    GValue ret = { 0 };
+    GValue args[2] = { {0}
+    , {0}
+    };
+
 
     klass = GST_ELEMENT_GET_CLASS (rtpdemux);
     templ = gst_element_class_get_pad_template (klass, "src_%d");
@@ -241,21 +245,34 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     srcpad = gst_pad_new_from_template (templ, padname);
     g_free (padname);
 
-    caps = gst_buffer_get_caps (buf);
+    /* figure out the caps */
+    g_value_init (&args[0], GST_TYPE_ELEMENT);
+    g_value_set_object (&args[0], rtpdemux);
+    g_value_init (&args[1], G_TYPE_UINT);
+    g_value_set_uint (&args[1], pt);
+
+    g_value_init (&ret, GST_TYPE_CAPS);
+    g_value_set_boxed (&ret, NULL);
+
+    g_signal_emitv (args, gst_rtp_pt_demux_signals[SIGNAL_REQUEST_PT_MAP], 0,
+        &ret);
+
+    caps = g_value_get_boxed (&ret);
+    if (!caps)
+      goto no_caps;
+
     caps = gst_caps_make_writable (caps);
     gst_caps_set_simple (caps, "payload", G_TYPE_INT, pt, NULL);
     gst_pad_set_caps (srcpad, caps);
-
-    /* XXX: set _link () function */
-    gst_pad_set_getcaps_function (srcpad, gst_rtp_pt_demux_getcaps);
-    gst_pad_set_active (srcpad, TRUE);
-    gst_element_add_pad (element, srcpad);
 
     GST_DEBUG ("Adding pt=%d to the list.", pt);
     rtpdemuxpad = g_new0 (GstRTPPtDemuxPad, 1);
     rtpdemuxpad->pt = pt;
     rtpdemuxpad->pad = srcpad;
     rtpdemux->srcpads = g_slist_append (rtpdemux->srcpads, rtpdemuxpad);
+
+    gst_pad_set_active (srcpad, TRUE);
+    gst_element_add_pad (element, srcpad);
 
     GST_DEBUG ("emitting new-payload_type for pt %d", pt);
     g_signal_emit (G_OBJECT (rtpdemux),
@@ -272,6 +289,8 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
         gst_rtp_pt_demux_signals[SIGNAL_PAYLOAD_TYPE_CHANGE], 0, emit_pt);
   }
 
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (srcpad));
+
   /* push to srcpad */
   if (srcpad)
     ret = gst_pad_push (srcpad, GST_BUFFER (buf));
@@ -287,19 +306,13 @@ invalid_buffer:
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
-}
-
-static GstCaps *
-gst_rtp_pt_demux_getcaps (GstPad * pad)
-{
-  GstCaps *caps;
-
-  GST_OBJECT_LOCK (pad);
-  if ((caps = GST_PAD_CAPS (pad)))
-    caps = gst_caps_ref (caps);
-  GST_OBJECT_UNLOCK (pad);
-
-  return caps;
+no_caps:
+  {
+    GST_ELEMENT_ERROR (rtpdemux, STREAM, DECODE, (NULL),
+        ("Could not get caps for payload"));
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstPad *

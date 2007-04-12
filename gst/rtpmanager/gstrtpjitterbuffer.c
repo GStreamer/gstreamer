@@ -83,7 +83,7 @@ GST_ELEMENT_DETAILS ("RTP packet jitter-buffer",
 enum
 {
   /* FILL ME */
-  SIGNAL_REQUEST_CLOCK_RATE,
+  SIGNAL_REQUEST_PT_MAP,
   LAST_SIGNAL
 };
 
@@ -227,17 +227,17 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
           DEFAULT_DROP_ON_LATENCY, G_PARAM_READWRITE));
 
   /**
-   * GstRTPJitterBuffer::request-clock-rate:
+   * GstRTPJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
    * @pt: the pt
    *
    * Request the payload type as #GstCaps for @pt.
    */
-  gst_rtp_jitter_buffer_signals[SIGNAL_REQUEST_CLOCK_RATE] =
-      g_signal_new ("request-clock-rate", G_TYPE_FROM_CLASS (klass),
+  gst_rtp_jitter_buffer_signals[SIGNAL_REQUEST_PT_MAP] =
+      g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPJitterBufferClass,
-          request_clock_rate), NULL, NULL, gst_rtp_bin_marshal_UINT__UINT,
-      G_TYPE_UINT, 1, G_TYPE_UINT);
+          request_pt_map), NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT,
+      GST_TYPE_CAPS, 1, G_TYPE_UINT);
 
   gstelement_class->change_state = gst_rtp_jitter_buffer_change_state;
 
@@ -341,14 +341,13 @@ gst_rtp_jitter_buffer_getcaps (GstPad * pad)
 }
 
 static gboolean
-gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_jitter_buffer_sink_parse_caps (GstRTPJitterBuffer * jitterbuffer,
+    GstCaps * caps)
 {
-  GstRTPJitterBuffer *jitterbuffer;
   GstRTPJitterBufferPrivate *priv;
   GstStructure *caps_struct;
   const GValue *value;
 
-  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
   priv = jitterbuffer->priv;
 
   /* first parse the caps */
@@ -387,26 +386,40 @@ gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps)
   async_jitter_queue_set_max_queue_length (priv->queue,
       priv->latency_ms * priv->clock_rate / 1000);
 
-  /* set same caps on srcpad */
-  gst_pad_set_caps (priv->srcpad, caps);
-
-  gst_object_unref (jitterbuffer);
-
   return TRUE;
 
   /* ERRORS */
 error:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "No clock-rate in caps!");
-    gst_object_unref (jitterbuffer);
     return FALSE;
   }
 wrong_rate:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "Invalid clock-rate %d", priv->clock_rate);
-    gst_object_unref (jitterbuffer);
     return FALSE;
   }
+}
+
+static gboolean
+gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstRTPJitterBuffer *jitterbuffer;
+  GstRTPJitterBufferPrivate *priv;
+  gboolean res;
+
+  jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
+  priv = jitterbuffer->priv;
+
+  res = gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
+
+  /* set same caps on srcpad on success */
+  if (res)
+    gst_pad_set_caps (priv->srcpad, caps);
+
+  gst_object_unref (jitterbuffer);
+
+  return res;
 }
 
 static void
@@ -670,6 +683,42 @@ newseg_wrong_format:
   }
 }
 
+static gboolean
+gst_rtp_jitter_buffer_get_clock_rate (GstRTPJitterBuffer * jitterbuffer,
+    guint8 pt)
+{
+  GValue ret = { 0 };
+  GValue args[2] = { {0}, {0} };
+  GstCaps *caps;
+  gboolean res;
+
+  g_value_init (&args[0], GST_TYPE_ELEMENT);
+  g_value_set_object (&args[0], jitterbuffer);
+  g_value_init (&args[1], G_TYPE_UINT);
+  g_value_set_uint (&args[1], pt);
+
+  g_value_init (&ret, GST_TYPE_CAPS);
+  g_value_set_boxed (&ret, NULL);
+
+  g_signal_emitv (args, gst_rtp_jitter_buffer_signals[SIGNAL_REQUEST_PT_MAP], 0,
+      &ret);
+
+  caps = (GstCaps *) g_value_get_boxed (&ret);
+  if (!caps)
+    goto no_caps;
+
+  res = gst_jitter_buffer_sink_parse_caps (jitterbuffer, caps);
+
+  return res;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (jitterbuffer, "could not get caps");
+    return FALSE;
+  }
+}
+
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -678,14 +727,23 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   guint16 seqnum;
   GstFlowReturn ret;
 
-
-  g_return_val_if_fail (gst_rtp_buffer_validate (buffer), GST_FLOW_ERROR);
-
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
+
+  if (!gst_rtp_buffer_validate (buffer))
+    goto invalid_buffer;
+
   priv = jitterbuffer->priv;
 
-  if (priv->clock_rate == -1)
-    goto not_negotiated;
+  if (priv->clock_rate == -1) {
+    guint8 pt;
+
+    /* no clock rate given on the caps, try to get one with the signal */
+    pt = gst_rtp_buffer_get_payload_type (buffer);
+
+    gst_rtp_jitter_buffer_get_clock_rate (jitterbuffer, pt);
+    if (priv->clock_rate == -1)
+      goto not_negotiated;
+  }
 
   seqnum = gst_rtp_buffer_get_seq (buffer);
   GST_DEBUG_OBJECT (jitterbuffer, "Received packet #%d", seqnum);
@@ -743,6 +801,15 @@ finished:
   return ret;
 
   /* ERRORS */
+invalid_buffer:
+  {
+    /* this is fatal and should be filtered earlier */
+    GST_ELEMENT_ERROR (jitterbuffer, STREAM, DECODE, (NULL),
+        ("Received invalid RTP payload"));
+    gst_buffer_unref (buffer);
+    gst_object_unref (jitterbuffer);
+    return GST_FLOW_ERROR;
+  }
 not_negotiated:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "No clock-rate in caps!");
