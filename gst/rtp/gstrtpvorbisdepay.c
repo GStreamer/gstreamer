@@ -227,7 +227,7 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
     size -= 5;
     data += 5;
 
-    GST_DEBUG_OBJECT (rtpvorbisdepay, "header %d, ident %08x, length %u", i,
+    GST_DEBUG_OBJECT (rtpvorbisdepay, "header %d, ident 0x%08x, length %u", i,
         ident, length);
 
     if (size < length + VORBIS_ID_LEN)
@@ -363,6 +363,7 @@ gst_rtp_vorbis_depay_switch_codebook (GstRtpVorbisDepay * rtpvorbisdepay,
   GList *walk;
   gboolean res = FALSE;
 
+  GST_DEBUG_OBJECT (rtpvorbisdepay, "Looking up code book ident 0x%08x", ident);
   for (walk = rtpvorbisdepay->configs; walk; walk = g_list_next (walk)) {
     GstRtpVorbisConfig *conf = (GstRtpVorbisConfig *) walk->data;
 
@@ -436,6 +437,7 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (G_UNLIKELY (VDT == 3))
     goto ignore_reserved;
 
+  GST_DEBUG_OBJECT (depayload, "header: 0x%08x", header);
   ident = (header >> 8) & 0xffffff;
   F = (header & 0xc0) >> 6;
   packets = (header & 0xf);
@@ -447,9 +449,11 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     if (!rtpvorbisdepay->config) {
       /* we don't have an active codebook, find the codebook and
        * activate it */
+      GST_DEBUG_OBJECT (rtpvorbisdepay, "No active codebook, switching");
       do_switch = TRUE;
     } else if (rtpvorbisdepay->config->ident != ident) {
       /* codebook changed */
+      GST_DEBUG_OBJECT (rtpvorbisdepay, "codebook changed, switching");
       do_switch = TRUE;
     }
     if (do_switch) {

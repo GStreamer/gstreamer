@@ -1,3 +1,23 @@
+2007-04-12  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/fnv1hash.c (MASK_24, FNV1_HASH_32_INIT, FNV1_HASH_32_PRIME,
+	  fnv1_hash_32_new, fnv1_hash_32_update, fnv1_hash_32_to_24):
+	* gst/rtp/fnv1hash.h (__GST_FNV1_HASH_H__):
+	  Add a simple hashing implementation that we can use to generate
+	  a 24-bit ident value based on the codebooks for vorbis and theora.
+	* gst/rtp/gstrtptheorapay.c (gst_rtp_theora_pay_finish_headers,
+	  gst_rtp_theora_pay_handle_buffer):
+	* gst/rtp/gstrtpvorbisdepay.c
+	  (gst_rtp_vorbis_depay_parse_configuration,
+	  gst_rtp_vorbis_depay_switch_codebook, gst_rtp_vorbis_depay_process):
+	* gst/rtp/gstrtpvorbispay.c (gst_rtp_vorbis_pay_reset_packet,
+	  gst_rtp_vorbis_pay_init_packet, gst_rtp_vorbis_pay_flush_packet,
+	  gst_rtp_vorbis_pay_finish_headers, gst_rtp_vorbis_pay_handle_buffer):
+	  Use the hashing function, ensuring that the same codebooks result
+	  in the same ident and thus the same SDP description.
+	  Various log fixes/changes.
+
 2007-04-12  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: jerry tan <jerry dot tan at sun dot com>

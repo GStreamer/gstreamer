@@ -25,6 +25,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include "fnv1hash.h"
 #include "gstrtptheorapay.h"
 
 #define THEORA_ID_LEN	42
@@ -230,8 +231,11 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
     goto no_headers;
 
   /* we need exactly 2 header packets */
-  if (g_list_length (rtptheorapay->headers) != 2)
+  if (g_list_length (rtptheorapay->headers) != 2) {
+    GST_DEBUG_OBJECT (rtptheorapay, "We need 2 headers but have %d",
+        g_list_length (rtptheorapay->headers));
     goto no_headers;
+  }
 
   /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    * |                     Number of packed headers                  |
@@ -266,9 +270,13 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
 
   /* count the size of the headers first */
   length = 0;
+  ident = fnv1_hash_32_new ();
   for (walk = rtptheorapay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
 
+    ident =
+        fnv1_hash_32_update (ident, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
     length += GST_BUFFER_SIZE (buf);
   }
 
@@ -283,8 +291,8 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
   data[2] = 0;
   data[3] = 1;
 
-  /* we generate a random ident for this configuration */
-  ident = rtptheorapay->payload_ident = g_random_int ();
+  ident = fnv1_hash_32_to_24 (ident);
+  rtptheorapay->payload_ident = ident;
 
   /* take lower 3 bytes */
   data[4] = (ident >> 16) & 0xff;
@@ -427,7 +435,8 @@ gst_rtp_theora_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   if (data[0] & 0x80) {
     /* header */
     if (data[0] == 0x80) {
-      /* identification, we need to parse this in order to get the clock rate. */
+      /* identification, we need to parse this in order to get the clock rate.
+       */
       if (G_UNLIKELY (!gst_rtp_theora_pay_parse_id (basepayload, data, size)))
         goto parse_id_failed;
       TDT = 1;
@@ -451,7 +460,7 @@ gst_rtp_theora_pay_handle_buffer (GstBaseRTPPayload * basepayload,
       ret = GST_FLOW_OK;
       goto done;
     } else if (TDT != 0) {
-      GST_DEBUG_OBJECT (rtptheorapay, "collecting header");
+      GST_DEBUG_OBJECT (rtptheorapay, "collecting header, buffer %p", buffer);
       /* append header to the list of headers */
       rtptheorapay->headers = g_list_append (rtptheorapay->headers, buffer);
       ret = GST_FLOW_OK;

@@ -25,6 +25,7 @@
 
 #include <gst/rtp/gstrtpbuffer.h>
 
+#include "fnv1hash.h"
 #include "gstrtpvorbispay.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtpvorbispay_debug);
@@ -133,7 +134,7 @@ gst_rtp_vorbis_pay_reset_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT)
 {
   guint payload_len;
 
-  GST_DEBUG_OBJECT (rtpvorbispay, "reset packet");
+  GST_LOG_OBJECT (rtpvorbispay, "reset packet");
 
   rtpvorbispay->payload_pos = 4;
   payload_len = gst_rtp_buffer_get_payload_len (rtpvorbispay->packet);
@@ -148,7 +149,7 @@ static void
 gst_rtp_vorbis_pay_init_packet (GstRtpVorbisPay * rtpvorbispay, guint8 VDT,
     GstClockTime timestamp)
 {
-  GST_DEBUG_OBJECT (rtpvorbispay, "starting new packet, VDT: %d", VDT);
+  GST_LOG_OBJECT (rtpvorbispay, "starting new packet, VDT: %d", VDT);
 
   if (rtpvorbispay->packet)
     gst_buffer_unref (rtpvorbispay->packet);
@@ -172,7 +173,7 @@ gst_rtp_vorbis_pay_flush_packet (GstRtpVorbisPay * rtpvorbispay)
   if (!rtpvorbispay->packet || rtpvorbispay->payload_pos <= 4)
     return GST_FLOW_OK;
 
-  GST_DEBUG_OBJECT (rtpvorbispay, "flushing packet");
+  GST_LOG_OBJECT (rtpvorbispay, "flushing packet");
 
   /* fix header */
   payload = gst_rtp_buffer_get_payload (rtpvorbispay->packet);
@@ -261,9 +262,13 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
 
   /* count the size of the headers first */
   length = 0;
+  ident = fnv1_hash_32_new ();
   for (walk = rtpvorbispay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
 
+    ident =
+        fnv1_hash_32_update (ident, GST_BUFFER_DATA (buf),
+        GST_BUFFER_SIZE (buf));
     length += GST_BUFFER_SIZE (buf);
   }
 
@@ -278,8 +283,9 @@ gst_rtp_vorbis_pay_finish_headers (GstBaseRTPPayload * basepayload)
   data[2] = 0;
   data[3] = 1;
 
-  /* we generate a random ident for this configuration */
-  ident = rtpvorbispay->payload_ident = g_random_int ();
+  ident = fnv1_hash_32_to_24 (ident);
+  rtpvorbispay->payload_ident = ident;
+  GST_DEBUG_OBJECT (rtpvorbispay, "ident 0x%08x", ident);
 
   /* take lower 3 bytes */
   data[4] = (ident >> 16) & 0xff;
@@ -416,7 +422,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   duration = GST_BUFFER_DURATION (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  GST_DEBUG_OBJECT (rtpvorbispay, "size %u, duration %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (rtpvorbispay, "size %u, duration %" GST_TIME_FORMAT,
       size, GST_TIME_ARGS (duration));
 
   if (G_UNLIKELY (size < 1 || size > 0xffff))
@@ -496,7 +502,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   while (size) {
     plen = MIN (rtpvorbispay->payload_left - 2, size);
 
-    GST_DEBUG_OBJECT (rtpvorbispay, "append %u bytes", plen);
+    GST_LOG_OBJECT (rtpvorbispay, "append %u bytes", plen);
 
     /* data is copied in the payload with a 2 byte length header */
     ppos[0] = (plen >> 8) & 0xff;

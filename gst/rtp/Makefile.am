@@ -1,6 +1,7 @@
 plugin_LTLIBRARIES = libgstrtp.la
 
 libgstrtp_la_SOURCES = \
+	fnv1hash.c \
 	gstrtp.c \
 	gstrtpdepay.c \
 	gstrtpac3depay.c \
@@ -54,6 +55,7 @@ libgstrtp_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
 libgstrtp_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) 
 
 noinst_HEADERS =			\
+		 fnv1hash.h 		\
 		 gstrtpL16depay.h 	\
 		 gstrtpL16pay.h 	\
 		 gstrtpac3depay.h 	\
