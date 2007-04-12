@@ -210,8 +210,12 @@ gboolean                gst_tag_parse_extended_comment (const gchar  * ext_comme
                                                         gchar       ** value,
                                                         gboolean       fail_if_no_key);
 
+gchar                 * gst_tag_freeform_string_to_utf8 (const gchar  * data,
+                                                         gint           size,
+                                                         const gchar ** env_vars);
+
 /* FIXME 0.11: replace with a more general gst_tag_library_init() */
-void gst_tag_register_musicbrainz_tags (void);
+void                    gst_tag_register_musicbrainz_tags (void);
 
 G_END_DECLS
 

@@ -960,6 +960,7 @@ GST_TAG_CMML_CLIP
 GST_TAG_CMML_HEAD
 GST_TAG_CMML_STREAM
 gst_tag_register_musicbrainz_tags
+gst_tag_freeform_string_to_utf8
 gst_tag_parse_extended_comment
 GstTagImageType
 <SUBSECTION Standard>

@@ -320,66 +320,14 @@ static void
 gst_tag_extract_id3v1_string (GstTagList * list, const gchar * tag,
     const gchar * start, const guint size)
 {
-  const gchar *env;
-  gsize bytes_read;
+  const gchar *env_vars[] = { "GST_ID3V1_TAG_ENCODING",
+    "GST_ID3_TAG_ENCODING", "GST_TAG_ENCODING", NULL
+  };
   gchar *utf8;
 
-  /* Should we try the charsets specified
-   * via environment variables FIRST ? */
-  if (g_utf8_validate (start, size, NULL)) {
-    utf8 = g_strndup (start, size);
-    goto beach;
-  }
+  utf8 = gst_tag_freeform_string_to_utf8 (start, size, env_vars);
 
-  env = g_getenv ("GST_ID3V1_TAG_ENCODING");
-  if (!env || *env == '\0')
-    env = g_getenv ("GST_ID3_TAG_ENCODING");
-  if (!env || *env == '\0')
-    env = g_getenv ("GST_TAG_ENCODING");
-
-  /* Try charsets specified via the environment */
-  if (env && *env != '\0') {
-    gchar **c, **csets;
-
-    csets = g_strsplit (env, G_SEARCHPATH_SEPARATOR_S, -1);
-
-    for (c = csets; c && *c; ++c) {
-      if ((utf8 =
-              g_convert (start, size, "UTF-8", *c, &bytes_read, NULL, NULL))) {
-        if (bytes_read == size) {
-          g_strfreev (csets);
-          goto beach;
-        }
-        g_free (utf8);
-        utf8 = NULL;
-      }
-    }
-  }
-  /* Try current locale (if not UTF-8) */
-  if (!g_get_charset (&env)) {
-    if ((utf8 = g_locale_to_utf8 (start, size, &bytes_read, NULL, NULL))) {
-      if (bytes_read == size) {
-        goto beach;
-      }
-      g_free (utf8);
-      utf8 = NULL;
-    }
-  }
-
-  /* Try ISO-8859-1 */
-  utf8 =
-      g_convert (start, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL, NULL);
-  if (utf8 != NULL && bytes_read == size) {
-    goto beach;
-  }
-
-  g_free (utf8);
-  return;
-
-beach:
-
-  g_strchomp (utf8);
-  if (utf8 && utf8[0] != '\0') {
+  if (utf8 && *utf8 != '\0') {
     gst_tag_list_add (list, GST_TAG_MERGE_REPLACE, tag, utf8, NULL);
   }
 

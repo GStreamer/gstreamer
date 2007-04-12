@@ -1,3 +1,13 @@
+2007-04-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/tag/tag.h:
+	* gst-libs/gst/tag/tags.c: (gst_tag_freeform_string_to_utf8):
+	  API: add gst_tag_freeform_string_to_utf8() (#405072).
+
+	* gst-libs/gst/tag/gstid3tag.c: (gst_tag_extract_id3v1_string):
+	  Use gst_tag_freeform_string_to_utf8() here.
+
 2007-04-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gdp/gstgdppay.c: (gst_gdp_pay_chain),
