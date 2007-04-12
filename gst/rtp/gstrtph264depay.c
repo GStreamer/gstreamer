@@ -29,8 +29,8 @@
 GST_DEBUG_CATEGORY_STATIC (rtph264depay_debug);
 #define GST_CAT_DEFAULT (rtph264depay_debug)
 
-/* 2 or 3 bytes syncword */
-static const guint8 sync_bytes[] = { 0, 0, 1 };
+/* 3 zero bytes syncword */
+static const guint8 sync_bytes[] = { 0, 0, 0, 1 };
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h264depay_details =
