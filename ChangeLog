@@ -1,3 +1,19 @@
+2007-04-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (create_session), (get_pt_map),
+	(create_stream), (gst_rtp_bin_class_init), (pt_map_requested):
+	Emit pt map requests and cache results.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_class_init),
+	(gst_jitter_buffer_sink_parse_caps),
+	(gst_jitter_buffer_sink_setcaps),
+	(gst_rtp_jitter_buffer_get_clock_rate),
+	(gst_rtp_jitter_buffer_chain), (gst_rtp_jitter_buffer_loop):
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_chain):
+	Emit request-pt-map signals.
+
 2007-04-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/gstrtpbin-marshal.list:

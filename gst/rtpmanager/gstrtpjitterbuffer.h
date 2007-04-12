@@ -63,7 +63,7 @@ struct _GstRTPJitterBufferClass
 {
   GstElementClass parent_class;
 
-  guint (*request_clock_rate) (GstRTPJitterBuffer *buffer, guint pt);
+  GstCaps* (*request_pt_map) (GstRTPJitterBuffer *buffer, guint pt);
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];

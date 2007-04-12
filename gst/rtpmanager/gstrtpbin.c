@@ -125,6 +125,9 @@ typedef struct _GstRTPBinClient GstRTPBinClient;
 
 static guint gst_rtp_bin_signals[LAST_SIGNAL] = { 0 };
 
+static GstCaps *pt_map_requested (GstElement * element, guint pt,
+    GstRTPBinStream * stream);
+
 /* Manages the RTP stream for one SSRC.
  *
  * We pipe the stream (comming from the SSRC demuxer) into a jitterbuffer.
@@ -217,7 +220,7 @@ create_session (GstRTPBin * rtpbin, gint id)
   sess->bin = rtpbin;
   sess->session = elem;
   sess->demux = demux;
-  sess->ptmap = g_hash_table_new (g_int_hash, g_int_equal);
+  sess->ptmap = g_hash_table_new (NULL, NULL);
   rtpbin->sessions = g_slist_prepend (rtpbin->sessions, sess);
 
   gst_bin_add (GST_BIN_CAST (rtpbin), elem);
@@ -263,23 +266,39 @@ get_pt_map (GstRTPBinSession * session, guint pt)
 {
   GstCaps *caps = NULL;
   GstRTPBin *bin;
+  GValue ret = { 0 };
+  GValue args[3] = { {0}, {0}, {0} };
 
-  GST_DEBUG ("finding pt %d in cache", pt);
+  GST_DEBUG ("searching pt %d in cache", pt);
 
   /* first look in the cache */
   caps = g_hash_table_lookup (session->ptmap, GINT_TO_POINTER (pt));
-  if (caps)
+  if (caps) {
     goto done;
+  }
 
   bin = session->bin;
 
   GST_DEBUG ("emiting signal for pt %d in session %d", pt, session->id);
 
   /* not in cache, send signal to request caps */
-  g_signal_emit (G_OBJECT (bin), gst_rtp_bin_signals[SIGNAL_REQUEST_PT_MAP], 0,
-      session->id, pt, &caps);
+  g_value_init (&args[0], GST_TYPE_ELEMENT);
+  g_value_set_object (&args[0], bin);
+  g_value_init (&args[1], G_TYPE_UINT);
+  g_value_set_uint (&args[1], session->id);
+  g_value_init (&args[2], G_TYPE_UINT);
+  g_value_set_uint (&args[2], pt);
+
+  g_value_init (&ret, GST_TYPE_CAPS);
+  g_value_set_boxed (&ret, NULL);
+
+  g_signal_emitv (args, gst_rtp_bin_signals[SIGNAL_REQUEST_PT_MAP], 0, &ret);
+
+  caps = (GstCaps *) g_value_get_boxed (&ret);
   if (!caps)
     goto no_caps;
+
+  GST_DEBUG ("caching pt %d as %" GST_PTR_FORMAT, pt, caps);
 
   /* store in cache */
   g_hash_table_insert (session->ptmap, GINT_TO_POINTER (pt), caps);
@@ -292,42 +311,6 @@ no_caps:
   {
     GST_DEBUG ("no pt map could be obtained");
     return NULL;
-  }
-}
-
-/* callback from the jitterbuffer when it needs to know the clockrate of a
- * specific payload type. */
-static guint32
-clock_rate_request (GstElement * buffer, guint pt, GstRTPBinStream * stream)
-{
-  GstCaps *caps;
-  GstRTPBinSession *session;
-  GstStructure *s;
-  gint32 clock_rate;
-
-  session = stream->session;
-
-  caps = get_pt_map (session, pt);
-  if (!caps)
-    goto no_map;
-
-  s = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (s, "clock-rate", &clock_rate))
-    goto no_clock_rate;
-
-  return clock_rate;
-
-  /* ERRORS */
-no_map:
-  {
-    GST_DEBUG ("no pt map found");
-    return 0;
-  }
-no_clock_rate:
-  {
-    GST_DEBUG ("no clock-rate in caps found");
-    return 0;
   }
 }
 
@@ -352,8 +335,8 @@ create_stream (GstRTPBinSession * session, guint32 ssrc)
   session->streams = g_slist_prepend (session->streams, stream);
 
   /* provide clock_rate to the jitterbuffer when needed */
-  g_signal_connect (buffer, "request-clock-rate",
-      (GCallback) clock_rate_request, stream);
+  g_signal_connect (buffer, "request-pt-map",
+      (GCallback) pt_map_requested, stream);
 
   gst_bin_add (GST_BIN_CAST (session->bin), buffer);
   gst_element_set_state (buffer, GST_STATE_PLAYING);
@@ -457,7 +440,7 @@ gst_rtp_bin_class_init (GstRTPBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, request_pt_map),
-      NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 1,
+      NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 2,
       G_TYPE_UINT, G_TYPE_UINT);
 
   gstelement_class->provide_clock =
@@ -593,18 +576,26 @@ pt_map_requested (GstElement * element, guint pt, GstRTPBinStream * stream)
 {
   GstRTPBin *rtpbin;
   GstRTPBinSession *session;
-  gint id;
+  GstCaps *caps;
 
   rtpbin = stream->bin;
   session = stream->session;
 
-  /* find session id */
-  id = session->id;
-
   GST_DEBUG_OBJECT (rtpbin, "payload map requested for pt %d in session %d", pt,
-      id);
+      session->id);
 
-  return NULL;
+  caps = get_pt_map (session, pt);
+  if (!caps)
+    goto no_caps;
+
+  return caps;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (rtpbin, "could not get caps");
+    return NULL;
+  }
 }
 
 /* a new pad (SSRC) was created in @session */
