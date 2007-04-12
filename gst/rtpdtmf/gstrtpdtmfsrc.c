@@ -391,6 +391,22 @@ gst_rtp_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
       gst_rtp_dtmf_src_stop (dtmfsrc);
       result = TRUE;
       break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
+      break;
+    case GST_EVENT_NEWSEGMENT:
+      {
+        gboolean update;
+        gdouble rate;
+        GstFormat fmt;
+        gint64 start, stop, position;
+
+        gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
+            &position);
+        gst_segment_set_newsegment (&dtmfsrc->segment, update, rate, fmt,
+            start, stop, position);
+      }
+      /* fallthrough */
     default:
       result = gst_pad_event_default (pad, event);
       break;
@@ -497,8 +513,9 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc *dtmfsrc)
 
   dtmfsrc->rtp_timestamp = dtmfsrc->ts_base +
       gst_util_uint64_scale_int (
-      dtmfsrc->timestamp - gst_element_get_base_time (GST_ELEMENT (dtmfsrc)),  
-      dtmfsrc->clock_rate, GST_SECOND);
+          gst_segment_to_running_time (&dtmfsrc->segment, GST_FORMAT_TIME,
+              dtmfsrc->timestamp - gst_element_get_base_time (GST_ELEMENT (dtmfsrc))), 
+          dtmfsrc->clock_rate, GST_SECOND);
 }
 
 static void
@@ -676,6 +693,8 @@ gst_rtp_dtmf_src_set_caps (GstRTPDTMFSrc *dtmfsrc)
 static void
 gst_rtp_dtmf_src_ready_to_paused (GstRTPDTMFSrc *dtmfsrc)
 {
+  gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
+  
   if (dtmfsrc->ssrc == -1)
     dtmfsrc->current_ssrc = g_random_int ();
   else

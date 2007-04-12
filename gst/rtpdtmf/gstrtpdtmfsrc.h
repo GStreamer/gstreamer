@@ -83,6 +83,7 @@ struct _GstRTPDTMFSrc {
   gboolean          first_packet;
   
   GstClockTime      timestamp;
+  GstSegment        segment;
 };
 
 struct _GstRTPDTMFSrcClass {
