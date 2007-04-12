@@ -234,12 +234,11 @@ static gboolean
 gst_sunaudiosrc_open (GstAudioSrc * asrc)
 {
   GstSunAudioSrc *sunaudiosrc = GST_SUNAUDIO_SRC (asrc);
-  int fd, ret, err;
+  int fd, ret;
 
   fd = open (sunaudiosrc->device, O_RDONLY);
-  err = ioctl (fd, AUDIO_MIXER_MULTIPLE_OPEN);
 
-  if (fd == -1 || err == -1) {
+  if (fd == -1) {
     GST_ELEMENT_ERROR (sunaudiosrc, RESOURCE, OPEN_READ, (NULL),
         ("can't open connection to Sun Audio device %s", sunaudiosrc->device));
 
@@ -284,7 +283,7 @@ gst_sunaudiosrc_open (GstAudioSrc * asrc)
     if (audiodev == NULL) {
       sunaudiosrc->mixer = gst_sunaudiomixer_ctrl_new ("/dev/audioctl");
     } else {
-      gchar *device = g_strdup_printf ("/dev/%sctl", audiodev);
+      gchar *device = g_strdup_printf ("%sctl", audiodev);
 
       sunaudiosrc->mixer = gst_sunaudiomixer_ctrl_new (device);
       g_free (device);

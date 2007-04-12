@@ -1,5 +1,14 @@
 2007-04-12  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: jerry tan <jerry dot tan at sun dot com>
+
+	* sys/sunaudio/gstsunaudiosrc.c: (gst_sunaudiosrc_open):
+	remove the call of  ioctl (fd, AUDIO_MIXER_MULTIPLE_OPEN), it is the
+	application's responsibility to make sure it open the device once.
+	Remove a careless error if AUDIODEV is set. Fixes #392620.
+
+2007-04-12  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtpdec.c: (gst_rtp_dec_marshal_BOXED__UINT_UINT),
 	(gst_rtp_dec_class_init), (gst_rtp_dec_chain_rtp):
 	* gst/rtsp/gstrtpdec.h:
