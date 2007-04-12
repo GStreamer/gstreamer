@@ -246,7 +246,7 @@ gchar *
 gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
     const gchar ** env_vars)
 {
-  const gchar *env = NULL;
+  const gchar *cur_loc = NULL;
   gsize bytes_read;
   gchar *utf8 = NULL;
 
@@ -260,33 +260,35 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
   if (g_utf8_validate (data, size, NULL))
     return g_strndup (data, size);
 
-  while ((env == NULL || *env == '\0') && env_vars && *env_vars != NULL) {
+  while (env_vars && *env_vars != NULL) {
+    const gchar *env = NULL;
+
+    /* Try charsets specified via the environment */
     env = g_getenv (*env_vars);
+    if (env != NULL && *env != '\0') {
+      gchar **c, **csets;
+
+      csets = g_strsplit (env, G_SEARCHPATH_SEPARATOR_S, -1);
+
+      for (c = csets; c && *c; ++c) {
+        if ((utf8 =
+                g_convert (data, size, "UTF-8", *c, &bytes_read, NULL, NULL))) {
+          if (bytes_read == size) {
+            g_strfreev (csets);
+            goto beach;
+          }
+          g_free (utf8);
+          utf8 = NULL;
+        }
+      }
+
+      g_strfreev (csets);
+    }
     ++env_vars;
   }
 
-  /* Try charsets specified via the environment */
-  if (env != NULL && *env != '\0') {
-    gchar **c, **csets;
-
-    csets = g_strsplit (env, G_SEARCHPATH_SEPARATOR_S, -1);
-
-    for (c = csets; c && *c; ++c) {
-      if ((utf8 = g_convert (data, size, "UTF-8", *c, &bytes_read, NULL, NULL))) {
-        if (bytes_read == size) {
-          g_strfreev (csets);
-          goto beach;
-        }
-        g_free (utf8);
-        utf8 = NULL;
-      }
-    }
-
-    g_strfreev (csets);
-  }
-
   /* Try current locale (if not UTF-8) */
-  if (!g_get_charset (&env)) {
+  if (!g_get_charset (&cur_loc)) {
     if ((utf8 = g_locale_to_utf8 (data, size, &bytes_read, NULL, NULL))) {
       if (bytes_read == size) {
         goto beach;
