@@ -1,3 +1,19 @@
+2007-04-12  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtpdec.c: (gst_rtp_dec_marshal_BOXED__UINT_UINT),
+	(gst_rtp_dec_class_init), (gst_rtp_dec_chain_rtp):
+	* gst/rtsp/gstrtpdec.h:
+	Make backward compat with rtpbin by adding the request-pt-map signals.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_stream),
+	(new_session_pad), (request_pt_map),
+	(gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_stream_configure_caps),
+	(gst_rtspsrc_activate_streams):
+	* gst/rtsp/gstrtspsrc.h:
+	Implement request-pt-map signals instead of setting caps on the buffers
+	for the session manager.
+
 2007-04-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/gstudp.c: (plugin_init):

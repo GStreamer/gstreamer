@@ -149,6 +149,7 @@ struct _GstRTSPSrc {
   /* session management */
   GstElement      *session;
   gulong           session_sig_id;
+  gulong           session_ptmap_id;
 
   RTSPConnection  *connection;
 

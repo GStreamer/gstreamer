@@ -519,6 +519,8 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
   src->streams = g_list_append (src->streams, stream);
 
   return stream;
+
+  /* ERRORS */
 }
 
 static void
@@ -1061,6 +1063,7 @@ new_session_pad (GstElement * session, GstPad * pad, GstRTSPSrc * src)
     if (!stream->added)
       goto done;
   }
+  GST_DEBUG_OBJECT (src, "We added all streams");
   /* when we get here, all stream are added and we can fire the no-more-pads
    * signal. */
   gst_element_no_more_pads (GST_ELEMENT_CAST (src));
@@ -1074,6 +1077,30 @@ unknown_stream:
     GST_DEBUG_OBJECT (src, "ignoring unknown stream");
     g_free (name);
     return;
+  }
+}
+
+static GstCaps *
+request_pt_map (GstElement * sess, guint session, guint pt, GstRTSPSrc * src)
+{
+  GstRTSPStream *stream;
+  GList *lstream;
+
+  lstream = g_list_find_custom (src->streams, GINT_TO_POINTER (session),
+      (GCompareFunc) find_stream_by_id);
+  if (!lstream)
+    goto unknown_stream;
+
+  stream = (GstRTSPStream *) lstream->data;
+
+  GST_DEBUG_OBJECT (src, "getting pt map for pt %d in session %d", pt, session);
+
+  return stream->caps;
+
+unknown_stream:
+  {
+    GST_DEBUG_OBJECT (src, "unknown stream %d", session);
+    return NULL;
   }
 }
 
@@ -1288,10 +1315,13 @@ use_no_manager:
   }
 
   if (src->session && !src->session_sig_id) {
-    GST_DEBUG_OBJECT (src, "connect to pad-added on session manager");
+    GST_DEBUG_OBJECT (src, "connect to signals on session manager");
     src->session_sig_id =
         g_signal_connect (src->session, "pad-added",
         (GCallback) new_session_pad, src);
+    src->session_ptmap_id =
+        g_signal_connect (src->session, "request-pt-map",
+        (GCallback) request_pt_map, src);
   }
 
   if (outpad) {
@@ -1347,10 +1377,10 @@ gst_rtspsrc_stream_configure_caps (GstRTSPStream * stream)
 {
   /* configure the caps on the UDP source and the channelpad */
   if (stream->udpsrc[0]) {
-    g_object_set (G_OBJECT (stream->udpsrc[0]), "caps", stream->caps, NULL);
+    //g_object_set (G_OBJECT (stream->udpsrc[0]), "caps", stream->caps, NULL);
   }
   if (stream->channelpad[0]) {
-    gst_pad_set_caps (stream->channelpad[0], stream->caps);
+    //gst_pad_set_caps (stream->channelpad[0], stream->caps);
   }
   return TRUE;
 }
@@ -1380,7 +1410,7 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
       gst_pad_set_active (stream->srcpad, TRUE);
       /* add the pad */
       if (!stream->added) {
-        gst_pad_set_caps (stream->srcpad, stream->caps);
+        //gst_pad_set_caps (stream->srcpad, stream->caps);
         gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
         stream->added = TRUE;
       }

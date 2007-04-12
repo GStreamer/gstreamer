@@ -76,6 +76,7 @@ GST_ELEMENT_DETAILS ("RTP Decoder",
 /* GstRTPDec signals and args */
 enum
 {
+  SIGNAL_REQUEST_PT_MAP,
   LAST_SIGNAL
 };
 
@@ -189,7 +190,7 @@ free_session (GstRTPDecSession * session)
   g_free (session);
 }
 
-/*static guint gst_rtp_dec_signals[LAST_SIGNAL] = { 0 };*/
+static guint gst_rtp_dec_signals[LAST_SIGNAL] = { 0 };
 
 GST_BOILERPLATE (GstRTPDec, gst_rtp_dec, GstElement, GST_TYPE_ELEMENT);
 
@@ -212,6 +213,44 @@ gst_rtp_dec_base_init (gpointer klass)
   gst_element_class_set_details (element_class, &rtpdec_details);
 }
 
+/* BOXED:UINT,UINT */
+#define g_marshal_value_peek_uint(v)     g_value_get_uint (v)
+
+void
+gst_rtp_dec_marshal_BOXED__UINT_UINT (GClosure * closure,
+    GValue * return_value,
+    guint n_param_values,
+    const GValue * param_values,
+    gpointer invocation_hint, gpointer marshal_data)
+{
+  typedef gpointer (*GMarshalFunc_BOXED__UINT_UINT) (gpointer data1,
+      guint arg_1, guint arg_2, gpointer data2);
+  register GMarshalFunc_BOXED__UINT_UINT callback;
+  register GCClosure *cc = (GCClosure *) closure;
+  register gpointer data1, data2;
+  gpointer v_return;
+
+  g_return_if_fail (return_value != NULL);
+  g_return_if_fail (n_param_values == 3);
+
+  if (G_CCLOSURE_SWAP_DATA (closure)) {
+    data1 = closure->data;
+    data2 = g_value_peek_pointer (param_values + 0);
+  } else {
+    data1 = g_value_peek_pointer (param_values + 0);
+    data2 = closure->data;
+  }
+  callback =
+      (GMarshalFunc_BOXED__UINT_UINT) (marshal_data ? marshal_data : cc->
+      callback);
+
+  v_return = callback (data1,
+      g_marshal_value_peek_uint (param_values + 1),
+      g_marshal_value_peek_uint (param_values + 2), data2);
+
+  g_value_take_boxed (return_value, v_return);
+}
+
 static void
 gst_rtp_dec_class_init (GstRTPDecClass * g_class)
 {
@@ -226,6 +265,20 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
   gobject_class->finalize = gst_rtp_dec_finalize;
   gobject_class->set_property = gst_rtp_dec_set_property;
   gobject_class->get_property = gst_rtp_dec_get_property;
+
+  /**
+   * GstRTPDec::request-pt-map:
+   * @rtpdec: the object which received the signal
+   * @session: the session
+   * @pt: the pt
+   *
+   * Request the payload type as #GstCaps for @pt in @session.
+   */
+  gst_rtp_dec_signals[SIGNAL_REQUEST_PT_MAP] =
+      g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPDecClass, request_pt_map),
+      NULL, NULL, gst_rtp_dec_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
 
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_dec_provide_clock);
@@ -308,17 +361,41 @@ gst_rtp_dec_chain_rtp (GstPad * pad, GstBuffer * buffer)
     GstPadTemplate *templ;
     GstElementClass *klass;
     gchar *name;
+    GstCaps *caps;
+    GValue ret = { 0 };
+    GValue args[3] = { {0}
+    , {0}
+    , {0}
+    };
 
     GST_DEBUG_OBJECT (rtpdec, "creating stream");
 
     session->ssrc = ssrc;
     session->pt = pt;
 
+    /* get pt map */
+    g_value_init (&args[0], GST_TYPE_ELEMENT);
+    g_value_set_object (&args[0], rtpdec);
+    g_value_init (&args[1], G_TYPE_UINT);
+    g_value_set_uint (&args[1], session->id);
+    g_value_init (&args[2], G_TYPE_UINT);
+    g_value_set_uint (&args[2], pt);
+
+    g_value_init (&ret, GST_TYPE_CAPS);
+    g_value_set_boxed (&ret, NULL);
+
+    g_signal_emitv (args, gst_rtp_dec_signals[SIGNAL_REQUEST_PT_MAP], 0, &ret);
+
+    caps = (GstCaps *) g_value_get_boxed (&ret);
+
     name = g_strdup_printf ("recv_rtp_src_%d_%u_%d", session->id, ssrc, pt);
     klass = GST_ELEMENT_GET_CLASS (rtpdec);
     templ = gst_element_class_get_pad_template (klass, "recv_rtp_src_%d_%d_%d");
     session->recv_rtp_src = gst_pad_new_from_template (templ, name);
     g_free (name);
+
+    gst_pad_set_caps (session->recv_rtp_src, caps);
+
     gst_pad_set_element_private (session->recv_rtp_src, session);
     gst_pad_set_query_function (session->recv_rtp_src, gst_rtp_dec_query_src);
     gst_pad_set_active (session->recv_rtp_src, TRUE);
@@ -326,6 +403,8 @@ gst_rtp_dec_chain_rtp (GstPad * pad, GstBuffer * buffer)
 
     session->active = TRUE;
   }
+
+  gst_buffer_set_caps (buffer, GST_PAD_CAPS (session->recv_rtp_src));
 
   res = gst_pad_push (session->recv_rtp_src, buffer);
 

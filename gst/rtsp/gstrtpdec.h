@@ -66,6 +66,9 @@ struct _GstRTPDec {
 
 struct _GstRTPDecClass {
   GstElementClass parent_class;
+
+  /* get the caps for pt */
+  GstCaps* (*request_pt_map)  (GstRTPDec *rtpdec, guint session, guint pt);
 };
 
 GType gst_rtp_dec_get_type(void);
