@@ -1,5 +1,21 @@
 2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/gstelement.c: (gst_element_get_state_func):
+	Don't output the same debug statement twice.
+
+	* libs/gst/base/gstadapter.c: (gst_adapter_try_to_merge_up),
+	(gst_adapter_peek), (gst_adapter_take_buffer):
+	Optimise the case where we have buffers at the head of the queue that
+	can be joined quickly (because they're contiguous sub-buffers) by
+	merging them together rather than copying data out into new memory.
+
+	* gst/parse/grammar.y:
+	* tests/check/pipelines/parse-launch.c:
+	Fix a leak in an error path for parse_launch, and add a check 
+	for it to the testsuite.
+
+2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_release_pad):
 	  Don't deadlock when releasing a pad - gst_pad_set_active may try
 	  and take the multiqueue lock too.

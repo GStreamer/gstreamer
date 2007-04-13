@@ -1804,9 +1804,6 @@ gst_element_get_state_func (GstElement * element,
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "RETURN is %s",
       gst_element_state_change_return_get_name (ret));
 
-  GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "RETURN is %s",
-      gst_element_state_change_return_get_name (ret));
-
   /* we got an error, report immediatly */
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto done;

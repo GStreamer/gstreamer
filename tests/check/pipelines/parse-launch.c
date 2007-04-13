@@ -295,6 +295,10 @@ static const gchar *expected_failures[] = {
   "fakesink silent=true ! fakesink silent=true",
   /* checks multi-chain link without src element fails. */
   "! identity silent=true ! identity silent=true ! fakesink silent=true",
+  /* Empty bin not allowed */
+  "bin.( )",
+  /* bin with non-existent element counts as empty, and not allowed */
+  "bin.( non_existent_element )",
   /* END: */
   NULL
 };

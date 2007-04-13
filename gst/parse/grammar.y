@@ -196,7 +196,7 @@ YYPRINTF(const char *format, ...)
 
 #endif /* GST_DISABLE_GST_DEBUG */
 
-#define GST_BIN_MAKE(res, type, chainval, assign) \
+#define GST_BIN_MAKE(res, type, chainval, assign, free_string) \
 G_STMT_START { \
   chain_t *chain = chainval; \
   GSList *walk; \
@@ -206,6 +206,9 @@ G_STMT_START { \
         _("specified empty bin \"%s\", not allowed"), type); \
     g_slist_foreach (assign, (GFunc) gst_parse_strfree, NULL); \
     g_slist_free (assign); \
+    gst_object_unref (bin); \
+    if (free_string) \
+      gst_parse_strfree (type); /* Need to clean up the string */ \
     YYERROR; \
   } else if (!bin) { \
     SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, \
@@ -504,14 +507,14 @@ element:	IDENTIFIER     		      { $$ = gst_element_factory_make ($1, NULL);
 assignments:	/* NOP */		      { $$ = NULL; }
 	|	assignments ASSIGNMENT	      { $$ = g_slist_prepend ($1, $2); }
 	;		
-bin:	        '(' assignments chain ')' { GST_BIN_MAKE ($$, "bin", $3, $2); }
-        |       BINREF assignments chain ')'  { GST_BIN_MAKE ($$, $1, $3, $2); 
+bin:	        '(' assignments chain ')' { GST_BIN_MAKE ($$, "bin", $3, $2, FALSE); }
+        |       BINREF assignments chain ')'  { GST_BIN_MAKE ($$, $1, $3, $2, TRUE); 
 						gst_parse_strfree ($1);
 					      }
-        |       BINREF assignments ')'	      { GST_BIN_MAKE ($$, $1, NULL, $2); 
+        |       BINREF assignments ')'	      { GST_BIN_MAKE ($$, $1, NULL, $2, TRUE); 
 						gst_parse_strfree ($1);
 					      }
-        |       BINREF assignments error ')'  { GST_BIN_MAKE ($$, $1, NULL, $2); 
+        |       BINREF assignments error ')'  { GST_BIN_MAKE ($$, $1, NULL, $2, TRUE); 
 						gst_parse_strfree ($1);
 					      }
 	;

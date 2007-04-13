@@ -240,6 +240,50 @@ gst_adapter_peek_into (GstAdapter * adapter, guint8 * data, guint size)
   }
 }
 
+/* Internal method only. Tries to merge buffers at the head of the queue
+ * to form a single larger buffer of size 'size'. Only merges buffers that
+ * where 'gst_buffer_is_span_fast' returns TRUE.
+ *
+ * Returns TRUE if it managed to merge anything.
+ */
+static gboolean
+gst_adapter_try_to_merge_up (GstAdapter * adapter, guint size)
+{
+  GstBuffer *cur, *head;
+  GSList *g;
+
+  g = adapter->buflist;
+  if (g == NULL)
+    return FALSE;
+
+  head = g->data;
+  g = g_slist_next (g);
+
+  /* How large do we want our head buffer? The requested size, plus whatever's
+   * been skipped already */
+  size += adapter->skip;
+
+  while (g != NULL && GST_BUFFER_SIZE (head) < size) {
+    cur = g->data;
+    if (!gst_buffer_is_span_fast (head, cur))
+      return TRUE;
+
+    /* Merge the head buffer and the next in line */
+    GST_LOG_OBJECT (adapter,
+        "Merging buffers of size %u & %u in search of target %u",
+        GST_BUFFER_SIZE (head), GST_BUFFER_SIZE (cur), size);
+
+    head = gst_buffer_join (head, cur);
+
+    /* Delete the front list item, and store our new buffer in the 2nd list 
+     * item */
+    adapter->buflist = g_slist_delete_link (adapter->buflist, adapter->buflist);
+    g->data = head;
+  }
+
+  return FALSE;
+}
+
 /**
  * gst_adapter_peek:
  * @adapter: a #GstAdapter
@@ -284,10 +328,16 @@ gst_adapter_peek (GstAdapter * adapter, guint size)
   if (GST_BUFFER_SIZE (cur) >= size + adapter->skip)
     return GST_BUFFER_DATA (cur) + adapter->skip;
 
-  /* FIXME, optimize further - we may be able to efficiently
-   * merge buffers in our pool to gather a big enough chunk to 
-   * return it from the head buffer directly */
+  /* We may be able to efficiently merge buffers in our pool to 
+   * gather a big enough chunk to return it from the head buffer directly */
+  if (gst_adapter_try_to_merge_up (adapter, size)) {
+    /* Merged something! Check if there's enough avail now */
+    cur = adapter->buflist->data;
+    if (GST_BUFFER_SIZE (cur) >= size + adapter->skip)
+      return GST_BUFFER_DATA (cur) + adapter->skip;
+  }
 
+  /* Gonna need to copy stuff out */
   if (adapter->assembled_size < size) {
     adapter->assembled_size = (size / DEFAULT_SIZE + 1) * DEFAULT_SIZE;
     GST_DEBUG_OBJECT (adapter, "setting size of internal buffer to %u",
@@ -465,7 +515,7 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
   GST_LOG_OBJECT (adapter, "taking buffer of %u bytes", nbytes);
 
   /* we don't have enough data, return NULL. This is unlikely
-   * as one usually does an _available() first instead of peeking a
+   * as one usually does an _available() first instead of grabbing a
    * random size. */
   if (G_UNLIKELY (nbytes > adapter->size))
     return NULL;
@@ -480,6 +530,20 @@ gst_adapter_take_buffer (GstAdapter * adapter, guint nbytes)
     gst_adapter_flush (adapter, nbytes);
 
     return buffer;
+  }
+
+  if (gst_adapter_try_to_merge_up (adapter, nbytes)) {
+    /* Merged something, let's try again for sub-buffering */
+    cur = adapter->buflist->data;
+    if (GST_BUFFER_SIZE (cur) >= nbytes + adapter->skip) {
+      GST_LOG_OBJECT (adapter, "providing buffer of %d bytes via sub-buffer",
+          nbytes);
+      buffer = gst_buffer_create_sub (cur, adapter->skip, nbytes);
+
+      gst_adapter_flush (adapter, nbytes);
+
+      return buffer;
+    }
   }
 
   buffer = gst_buffer_new_and_alloc (nbytes);
