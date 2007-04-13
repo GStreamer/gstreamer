@@ -76,7 +76,7 @@ struct _GstWavParse {
 
   /* useful audio data */
   guint16 depth;
-  gint    rate;
+  guint32 rate;
   guint16 channels;
   guint16 blockalign;
   guint16 width;
@@ -95,7 +95,7 @@ struct _GstWavParse {
   /* offset/length of data part */
   guint64 	datastart;
   guint64 	datasize;
-  
+
   /* pending seek */
   GstEvent *seek_event;
 
@@ -107,7 +107,7 @@ struct _GstWavParse {
   /* configured segment, start/stop expressed in time */
   GstSegment segment;
   gboolean segment_running;
-  
+
   /* for late pad configuration */
   gboolean first;
 };

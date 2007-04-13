@@ -1,3 +1,12 @@
+2007-04-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c: (uint64_ceiling_scale_int),
+	(gst_wavparse_perform_seek), (gst_wavparse_stream_headers),
+	(gst_wavparse_stream_data):
+	* gst/wavparse/gstwavparse.h:
+	  More sanity check for the header fields. Fix type for 'rate' header
+	  field.
+
 2007-04-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/icydemux/gsticydemux.c: (notgst_tag_freeform_string_to_utf8),

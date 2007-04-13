@@ -58,6 +58,7 @@
 #include "config.h"
 #endif
 #include <string.h>
+#include <math.h>
 
 #include "gstwavparse.h"
 #include "gst/riff/riff-ids.h"
@@ -108,6 +109,7 @@ static GstStaticPadTemplate src_template_factory =
     GST_STATIC_PAD_TEMPLATE ("wavparse_src",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
+    /* FIXME: we need to sync this better with gst_riff_create_audio_caps() */
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "endianness = (int) little_endian, "
         "signed = (boolean) true, "
@@ -131,11 +133,11 @@ static GstStaticPadTemplate src_template_factory =
         "audio/mpeg, "
         "mpegversion = (int) 1, "
         "layer = (int) [ 1, 3 ], "
-        "rate = (int) [ 8000, 48000 ], "
+        "rate = (int) [ 16000, 48000 ], "
         "channels = (int) [ 1, 2 ]; "
         "audio/mpeg, "
         "mpegversion = (int) 4, "
-        "rate = (int) [ 8000, 48000 ], "
+        "rate = (int) [ 8000, 96000 ], "
         "channels = (int) [ 1, 8 ]; "
         "audio/x-alaw, "
         "rate = (int) [ 8000, 48000 ], "
@@ -193,7 +195,6 @@ gst_wavparse_class_init (GstWavParseClass * klass)
   gstelement_class->change_state = gst_wavparse_change_state;
   gstelement_class->send_event = gst_wavparse_send_event;
 }
-
 
 static void
 gst_wavparse_dispose (GObject * object)
@@ -1107,8 +1108,11 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
     buf = NULL;                 /* parse_strf_auds() took ownership of buffer */
 
+    /* do sanity checks of header fields */
     if (header->channels == 0)
       goto no_channels;
+    if (header->rate == 0)
+      goto no_rate;
 
     GST_DEBUG_OBJECT (wav, "creating the caps");
 
@@ -1122,6 +1126,13 @@ gst_wavparse_stream_headers (GstWavParse * wav)
 
     if (!caps)
       goto unknown_format;
+
+    /* do more sanity checks of header fields
+     * (these can be sanitized by gst_riff_create_audio_caps()
+     */
+    if (header->blockalign >
+        header->channels * (guint) ceil (header->size / 8.0))
+      goto invalid_blockalign;
 
     wav->format = header->format;
     wav->rate = header->rate;
@@ -1144,6 +1155,8 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         break;
       }
       default:
+        if (wav->av_bps > wav->blockalign * wav->rate)
+          goto invalid_bps;
         /* use the configured bps */
         wav->bps = wav->av_bps;
         break;
@@ -1159,7 +1172,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     GST_DEBUG_OBJECT (wav, "width      = %u", (guint) wav->width);
     GST_DEBUG_OBJECT (wav, "depth      = %u", (guint) wav->depth);
     GST_DEBUG_OBJECT (wav, "av_bps     = %u", (guint) wav->av_bps);
-    GST_DEBUG_OBJECT (wav, "frequency  = %d", wav->rate);
+    GST_DEBUG_OBJECT (wav, "frequency  = %u", (guint) wav->rate);
     GST_DEBUG_OBJECT (wav, "channels   = %u", (guint) wav->channels);
     GST_DEBUG_OBJECT (wav, "bytes_per_sample = %u", wav->bytes_per_sample);
 
@@ -1342,10 +1355,36 @@ no_channels:
     g_free (codec_name);
     return GST_FLOW_ERROR;
   }
+no_rate:
+  {
+    GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
+        ("Stream with sample_rate == 0 - invalid data"));
+    g_free (header);
+    g_free (codec_name);
+    return GST_FLOW_ERROR;
+  }
+invalid_blockalign:
+  {
+    GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
+        ("Stream claims blockalign = %u, which is more than %u - invalid data",
+            header->blockalign,
+            header->channels * (guint) ceil (header->size / 8.0)));
+    g_free (header);
+    g_free (codec_name);
+    return GST_FLOW_ERROR;
+  }
+invalid_bps:
+  {
+    GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
+        ("Stream claims av_bsp = %lu, which is more than %lu - invalid data",
+            wav->av_bps, wav->blockalign * wav->rate));
+    g_free (codec_name);
+    return GST_FLOW_ERROR;
+  }
 no_bytes_per_sample:
   {
     GST_ELEMENT_ERROR (wav, STREAM, FAILED, (NULL),
-        ("could not caluclate bytes per sample - invalid data"));
+        ("Could not caluclate bytes per sample - invalid data"));
     g_free (codec_name);
     return GST_FLOW_ERROR;
   }
