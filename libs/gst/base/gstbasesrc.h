@@ -137,6 +137,11 @@ struct _GstBaseSrc {
  * @event: Override this to implement custom event handling.
  * @create: Ask the subclass to create a buffer with offset and size.
  * @do_seek: Perform seeking on the resource to the indicated segment.
+ * @prepare_seek_segment: Prepare the GstSegment that will be passed to the 
+ *   do_seek vmethod for executing a seek request. Sub-classes should override 
+ *   this if they support seeking in formats other than the configured native 
+ *   format. By default, it tries to convert the seek arguments to the 
+ *   configured native format and prepare a segment in that format.
  * @query: Handle a requested query. 
  * @check_get_range: Check whether the source would support pull-based 
  *   operation if it were to be opened now. This vfunc is optional, but 
@@ -213,8 +218,13 @@ struct _GstBaseSrcClass {
   /* Clear any pending unlock request, as we succeeded in unlocking */
   gboolean      (*unlock_stop)  (GstBaseSrc *src);
 
+  /* Prepare the segment on which to perform do_seek(), converting to the
+   * current basesrc format. */
+  gboolean      (*prepare_seek_segment) (GstBaseSrc *src, GstEvent *seek, 
+                                         GstSegment *segment); 
+
   /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING_LARGE - 5];
+  gpointer       _gst_reserved[GST_PADDING_LARGE - 6];
 };
 
 GType gst_base_src_get_type (void);

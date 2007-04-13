@@ -288,6 +288,8 @@ static gboolean gst_base_src_default_negotiate (GstBaseSrc * basesrc);
 static gboolean gst_base_src_default_do_seek (GstBaseSrc * src,
     GstSegment * segment);
 static gboolean gst_base_src_default_query (GstBaseSrc * src, GstQuery * query);
+static gboolean gst_base_src_default_prepare_seek_segment (GstBaseSrc * src,
+    GstEvent * event, GstSegment * segment);
 
 static gboolean gst_base_src_unlock (GstBaseSrc * basesrc);
 static gboolean gst_base_src_unlock_stop (GstBaseSrc * basesrc);
@@ -353,6 +355,8 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
   klass->query = GST_DEBUG_FUNCPTR (gst_base_src_default_query);
   klass->check_get_range =
       GST_DEBUG_FUNCPTR (gst_base_src_default_check_get_range);
+  klass->prepare_seek_segment =
+      GST_DEBUG_FUNCPTR (gst_base_src_default_prepare_seek_segment);
 }
 
 static void
@@ -808,6 +812,84 @@ gst_base_src_do_seek (GstBaseSrc * src, GstSegment * segment)
   return result;
 }
 
+#define SEEK_TYPE_IS_RELATIVE(t) (((t) != GST_SEEK_TYPE_NONE) && ((t) != GST_SEEK_TYPE_SET))
+
+static gboolean
+gst_base_src_default_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
+    GstSegment * segment)
+{
+  /* By default, we try one of 2 things:
+   *   - For absolute seek positions, convert the requested position to our 
+   *     configured processing format and place it in the output segment \
+   *   - For relative seek positions, convert our current (input) values to the
+   *     seek format, adjust by the relative seek offset and then convert back to
+   *     the processing format
+   */
+  GstSeekType cur_type, stop_type;
+  gint64 cur, stop;
+  GstSeekFlags flags;
+  GstFormat seek_format, dest_format;
+  gdouble rate;
+  gboolean update;
+  gboolean res = TRUE;
+
+  gst_event_parse_seek (event, &rate, &seek_format, &flags,
+      &cur_type, &cur, &stop_type, &stop);
+  dest_format = segment->format;
+
+  if (seek_format == dest_format) {
+    gst_segment_set_seek (segment, rate, seek_format, flags,
+        cur_type, cur, stop_type, stop, &update);
+    return TRUE;
+  }
+
+  if (cur_type != GST_SEEK_TYPE_NONE) {
+    /* FIXME: Handle seek_cur & seek_end by converting the input segment vals */
+    res =
+        gst_pad_query_convert (src->srcpad, seek_format, cur, &dest_format,
+        &cur);
+    cur_type = GST_SEEK_TYPE_SET;
+  }
+
+  if (res && stop_type != GST_SEEK_TYPE_NONE) {
+    /* FIXME: Handle seek_cur & seek_end by converting the input segment vals */
+    res =
+        gst_pad_query_convert (src->srcpad, seek_format, stop, &dest_format,
+        &stop);
+    stop_type = GST_SEEK_TYPE_SET;
+  }
+
+  /* And finally, configure our output segment in the desired format */
+  gst_segment_set_seek (segment, rate, dest_format, flags, cur_type, cur,
+      stop_type, stop, &update);
+
+  if (!res)
+    goto no_format;
+
+  return res;
+
+no_format:
+  {
+    GST_DEBUG_OBJECT (src, "undefined format given, seek aborted.");
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_base_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
+    GstSegment * seeksegment)
+{
+  GstBaseSrcClass *bclass;
+  gboolean result = FALSE;
+
+  bclass = GST_BASE_SRC_GET_CLASS (src);
+
+  if (bclass->prepare_seek_segment)
+    result = bclass->prepare_seek_segment (src, event, seeksegment);
+
+  return result;
+}
+
 /* this code implements the seeking. It is a good example
  * handling all cases.
  *
@@ -861,43 +943,45 @@ gst_base_src_do_seek (GstBaseSrc * src, GstSegment * segment)
 static gboolean
 gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
 {
-  gboolean res;
+  gboolean res = TRUE;
   gdouble rate;
-  GstFormat format;
+  GstFormat seek_format, dest_format;
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
   gboolean flush;
   gboolean update;
+  gboolean relative_seek = FALSE;
+  gboolean seekseg_configured = FALSE;
   GstSegment seeksegment;
 
   GST_DEBUG_OBJECT (src, "doing seek");
 
+  dest_format = src->segment.format;
+
   if (event) {
-    gst_event_parse_seek (event, &rate, &format, &flags,
+    gst_event_parse_seek (event, &rate, &seek_format, &flags,
         &cur_type, &cur, &stop_type, &stop);
 
-    /* we have to have a format as the segment format. Try to convert
-     * if not. */
-    if (src->segment.format != format) {
-      GstFormat fmt;
+    relative_seek = SEEK_TYPE_IS_RELATIVE (cur_type) ||
+        SEEK_TYPE_IS_RELATIVE (stop_type);
 
-      fmt = src->segment.format;
-      res = TRUE;
-      if (cur_type != GST_SEEK_TYPE_NONE)
-        res = gst_pad_query_convert (src->srcpad, format, cur, &fmt, &cur);
-      if (res && stop_type != GST_SEEK_TYPE_NONE)
-        res = gst_pad_query_convert (src->srcpad, format, stop, &fmt, &stop);
-      if (!res)
-        goto no_format;
+    if (dest_format != seek_format && !relative_seek) {
+      /* If we have an ABSOLUTE position (SEEK_SET only), we can convert it
+       * here before taking the stream lock, otherwise we must convert it later,
+       * once we have the stream lock and can read the current position */
+      gst_segment_init (&seeksegment, dest_format);
 
-      format = fmt;
+      if (!gst_base_src_prepare_seek_segment (src, event, &seeksegment))
+        goto prepare_failed;
+
+      seekseg_configured = TRUE;
     }
-  } else {
-    flags = 0;
-  }
 
-  flush = flags & GST_SEEK_FLAG_FLUSH;
+    flush = flags & GST_SEEK_FLAG_FLUSH;
+  } else {
+    flush = FALSE;
+  }
 
   /* send flush start */
   if (flush)
@@ -917,22 +1001,42 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   if (unlock)
     gst_base_src_unlock_stop (src);
 
-  /* make copy into temp structure, we can only update the main one
-   * when the subclass actually could do the seek. */
-  memcpy (&seeksegment, &src->segment, sizeof (GstSegment));
+  /* If we configured the seeksegment above, don't overwrite it now. Otherwise
+   * copy the current segment info into the temp segment that we can actually
+   * attempt the seek with. We only update the real segment if the seek suceeds. */
+  if (!seekseg_configured) {
+    memcpy (&seeksegment, &src->segment, sizeof (GstSegment));
 
-  /* now configure the seek segment */
-  if (event) {
-    gst_segment_set_seek (&seeksegment, rate, format, flags,
-        cur_type, cur, stop_type, stop, &update);
+    /* now configure the final seek segment */
+    if (event) {
+      if (src->segment.format != seek_format) {
+        /* OK, here's where we give the subclass a chance to convert the relative
+         * seek into an absolute one in the processing format. We set up any
+         * absolute seek above, before taking the stream lock. */
+        if (!gst_base_src_prepare_seek_segment (src, event, &seeksegment)) {
+          GST_DEBUG_OBJECT (src, "Preparing the seek failed after flushing. "
+              "Aborting seek");
+          res = FALSE;
+        }
+      } else {
+        /* The seek format matches our processing format, no need to ask the
+         * the subclass to configure the segment. */
+        gst_segment_set_seek (&seeksegment, rate, seek_format, flags,
+            cur_type, cur, stop_type, stop, &update);
+      }
+    }
+    /* Else, no seek event passed, so we're just (re)starting the 
+       current segment. */
   }
 
-  GST_DEBUG_OBJECT (src, "segment configured from %" G_GINT64_FORMAT
-      " to %" G_GINT64_FORMAT ", position %" G_GINT64_FORMAT,
-      seeksegment.start, seeksegment.stop, seeksegment.last_stop);
+  if (res) {
+    GST_DEBUG_OBJECT (src, "segment configured from %" G_GINT64_FORMAT
+        " to %" G_GINT64_FORMAT ", position %" G_GINT64_FORMAT,
+        seeksegment.start, seeksegment.stop, seeksegment.last_stop);
 
-  /* do the seek, segment.last_stop contains new position. */
-  res = gst_base_src_do_seek (src, &seeksegment);
+    /* do the seek, segment.last_stop contains the new position. */
+    res = gst_base_src_do_seek (src, &seeksegment);
+  }
 
   /* and prepare to continue streaming */
   if (flush) {
@@ -952,6 +1056,14 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
         gst_event_new_new_segment_full (TRUE,
         src->segment.rate, src->segment.applied_rate, src->segment.format,
         src->segment.start, src->segment.last_stop, src->segment.time);
+  }
+
+  /* The subclass must have converted the segment to the processing format 
+   * by now */
+  if (res && seeksegment.format != dest_format) {
+    GST_DEBUG_OBJECT (src, "Subclass failed to prepare a seek segment "
+        "in the correct format. Aborting seek.");
+    res = FALSE;
   }
 
   /* if successfull seek, we update our real segment and push
@@ -996,11 +1108,10 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   return res;
 
   /* ERROR */
-no_format:
-  {
-    GST_DEBUG_OBJECT (src, "undefined format given, seek aborted.");
-    return FALSE;
-  }
+prepare_failed:
+  GST_DEBUG_OBJECT (src, "Preparing the seek failed before flushing. "
+      "Aborting seek");
+  return FALSE;
 }
 
 static const GstQueryType *

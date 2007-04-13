@@ -1,5 +1,19 @@
 2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_default_prepare_seek_segment),
+	(gst_base_src_prepare_seek_segment), (gst_base_src_perform_seek):
+	* libs/gst/base/gstbasesrc.h:
+	Allow basesrc derived classes to execute seeks in other formats
+	by providing a prepare_seek_segment vmethod. Sub-classes can choose
+	to prepare the GstSegment in any format that their perform_seek method
+	will be able to understand. The default implementation provides the
+	old behaviour of attempting to convert the seek offsets to the 
+	configured native format.
+
+2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/gstelement.c: (gst_element_get_state_func):
 	Don't output the same debug statement twice.
 
