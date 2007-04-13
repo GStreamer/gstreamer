@@ -312,7 +312,7 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
 
         /* set caps and push */
         gst_buffer_set_caps (buf, this->caps);
-        GST_LOG_OBJECT (this, "pushing buffer %p, timestamp %"
+        GST_LOG_OBJECT (this, "deserialized buffer %p, pushing, timestamp %"
             GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT
             ", offset %" G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT
             ", size %d, flags 0x%x",
@@ -342,7 +342,7 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         if (!caps)
           goto caps_failed;
 
-        GST_DEBUG_OBJECT (this, "read caps %" GST_PTR_FORMAT, caps);
+        GST_DEBUG_OBJECT (this, "deserialized caps %" GST_PTR_FORMAT, caps);
         gst_caps_replace (&(this->caps), caps);
         gst_pad_set_caps (this->srcpad, caps);
         /* drop the creation ref we still have */
@@ -369,7 +369,7 @@ gst_gdp_depay_chain (GstPad * pad, GstBuffer * buffer)
         if (!event)
           goto event_failed;
 
-        GST_DEBUG_OBJECT (this, "sending deserialized event %p of type %s",
+        GST_DEBUG_OBJECT (this, "deserialized event %p of type %s, pushing",
             event, gst_event_type_get_name (event->type));
         gst_pad_push_event (this->srcpad, event);
 

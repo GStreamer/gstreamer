@@ -408,6 +408,7 @@ gst_ogg_mux_request_new_pad (GstElement * element,
       serial = atoi (&req_name[5]);
     }
     /* create new pad with the name */
+    GST_DEBUG_OBJECT (ogg_mux, "Creating new pad for serial %d", serial);
     name = g_strdup_printf ("sink_%d", serial);
     newpad = gst_pad_new_from_template (templ, name);
     g_free (name);
