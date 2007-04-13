@@ -1,3 +1,9 @@
+2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_release_pad):
+	  Don't deadlock when releasing a pad - gst_pad_set_active may try
+	  and take the multiqueue lock too.
+
 2007-04-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsterror.c: (_gst_core_errors_init):
