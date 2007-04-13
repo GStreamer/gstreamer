@@ -37,8 +37,10 @@ _wrap_gst_element_get_pad_template(PyGObject *self, PyObject *args)
 	if (!PyArg_ParseTuple(args, "s:GstElement.get_pad_template", &name))
 		return NULL;
 
+        pyg_begin_allow_threads;
         tmpl = gst_element_class_get_pad_template
             (GST_ELEMENT_GET_CLASS (self->obj), name);
+        pyg_end_allow_threads;
 
         if (tmpl) {
                 ret = pygobject_new (G_OBJECT (tmpl));
@@ -137,9 +139,14 @@ _wrap_gst_element_link_many(PyObject *self, PyObject *args)
 
 	i = 2;
 	while (1) {
+                gboolean res;
 
-		if (!gst_element_link(GST_ELEMENT(element->obj),
-                                      GST_ELEMENT(element2->obj)))
+                pyg_begin_allow_threads;
+		res = gst_element_link(GST_ELEMENT(element->obj),
+                                      GST_ELEMENT(element2->obj));
+                pyg_end_allow_threads;
+
+                if (!res) 
                 {
                     PyErr_Format(PyGstExc_LinkError,
 				 "failed to link %s with %s",
@@ -186,7 +193,10 @@ _wrap_gst_element_link(PyGObject *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+    pyg_begin_allow_threads;
     ret = gst_element_link_filtered(GST_ELEMENT(self->obj), GST_ELEMENT(dest->obj), caps);
+    pyg_end_allow_threads;
+
     if (caps && caps_is_copy)
         gst_caps_unref (caps);
     if (!ret) {
@@ -246,8 +256,11 @@ _wrap_gst_element_link_pads(PyGObject *self, PyObject *args, PyObject *kwargs)
     if (!pad_name_from_object (srcpad, &srcpadname) ||
         !pad_name_from_object (destpad, &destpadname))
 	return NULL;
+
+    pyg_begin_allow_threads;
     ret = gst_element_link_pads(GST_ELEMENT(self->obj), srcpadname,
                                 GST_ELEMENT(dest->obj), destpadname);
+    pyg_end_allow_threads;
     if (!ret) {
         PyErr_SetString(PyGstExc_LinkError, "link failed");
         return NULL;
@@ -281,9 +294,11 @@ _wrap_gst_element_link_pads_filtered(PyGObject *self, PyObject *args,
         PyErr_SetString(PyExc_TypeError, "filtercaps should be a GstCaps");
         return NULL;
     }
+    pyg_begin_allow_threads;
     ret = gst_element_link_pads_filtered(GST_ELEMENT(self->obj), srcpadname,
                                          GST_ELEMENT(dest->obj), destpadname,
                                          filtercaps);
+    pyg_end_allow_threads;
     if (!ret) {
         PyErr_SetString(PyGstExc_LinkError, "link failed");
         return NULL;
@@ -323,7 +338,9 @@ _wrap_gst_element_unlink_many(PyObject *self, PyObject *args)
 
 	i = 2;
 	while (1) {
+                pyg_begin_allow_threads;
 		gst_element_unlink(GST_ELEMENT(element->obj), GST_ELEMENT(element2->obj));
+                pyg_end_allow_threads;
 
 		if (i >= len)
 			break;
@@ -358,9 +375,11 @@ _wrap_gst_element_send_event(PyGObject *self, PyObject *args, PyObject *kwargs)
     /* The pipeline unrefs the event, but we want to keep the ownership */
     gst_event_ref(event);
     
+    pyg_begin_allow_threads;
     ret = gst_element_send_event(GST_ELEMENT(self->obj), event);
-    return PyBool_FromLong(ret);
+    pyg_end_allow_threads;
 
+    return PyBool_FromLong(ret);
 }
 %%
 override gst_element_query_position args
@@ -370,6 +389,7 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
     gint64	cur;
     gint	format;
     PyObject	*pformat;
+    gboolean    res;
 
     pformat = (PyObject*)PyTuple_GetItem(args, 0);
     if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
@@ -377,7 +397,11 @@ _wrap_gst_element_query_position (PyGObject *self, PyObject *args)
         return NULL;
     }
 
-    if (!(gst_element_query_position(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur))) {
+    pyg_begin_allow_threads;
+    res = gst_element_query_position(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur);
+    pyg_end_allow_threads;
+
+    if (!res) {
 	PyErr_Format(PyGstExc_QueryError,
 		     "query failed");
         return NULL;
@@ -394,6 +418,7 @@ _wrap_gst_element_query_duration (PyGObject *self, PyObject *args)
     gint64	cur;
     gint	format;
     PyObject	*pformat;
+    gboolean    res;
 
     pformat = (PyObject*)PyTuple_GetItem(args, 0);
     if (pyg_enum_get_value (GST_TYPE_FORMAT, pformat, &format)) {
@@ -401,7 +426,11 @@ _wrap_gst_element_query_duration (PyGObject *self, PyObject *args)
         return NULL;
     }
 
-    if (!(gst_element_query_duration(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur))) {
+    pyg_begin_allow_threads;
+    res = gst_element_query_duration(GST_ELEMENT (self->obj), (GstFormat*) &format, &cur);
+    pyg_end_allow_threads;
+
+    if (!res) {
 	PyErr_Format(PyGstExc_QueryError,
 		     "query failed");
         return NULL;
@@ -419,6 +448,7 @@ _wrap_gst_element_query_convert (PyGObject *self, PyObject *args, PyObject *kwar
     PyObject	*pfromformat, *pdestformat;
     GstFormat	srcformat, destformat;
     gint64	fromval, dstval;
+    gboolean    res;
 
     /* Input : src_format, src_val, dst_format */
     /* Returns : dst_format, dst_val OR None */
@@ -437,13 +467,17 @@ _wrap_gst_element_query_convert (PyGObject *self, PyObject *args, PyObject *kwar
 	return NULL;
     }
 
-    if (!(gst_element_query_convert (GST_ELEMENT(self->obj),
+    pyg_begin_allow_threads;
+    res = gst_element_query_convert (GST_ELEMENT(self->obj),
 				     srcformat, fromval,
-				     &destformat, &dstval))) {
+				     &destformat, &dstval);
+    pyg_end_allow_threads;
+
+    if (!res) {
 	Py_INCREF(Py_None);
 	return Py_None;
     }
-    
+
     return Py_BuildValue("(OL)", 
 			 pyg_enum_from_gtype(GST_TYPE_FORMAT, destformat),
 			 dstval);					     
@@ -458,7 +492,9 @@ _wrap_gst_element_get_query_types (PyGObject *self)
     int		i;
     GstQueryType	*tab;
 
+    pyg_begin_allow_threads;
     tab = (GstQueryType*) gst_element_get_query_types(GST_ELEMENT(self->obj));
+    pyg_end_allow_threads;
     if (tab == NULL) {
 	Py_INCREF(Py_None);
 	return Py_None;
@@ -488,8 +524,10 @@ _wrap_gst_element_get_pad_template_list(PyGObject *self)
 	GList *res = NULL;
 	guint i;
     
+        pyg_begin_allow_threads;
         res = gst_element_class_get_pad_template_list
             (GST_ELEMENT_GET_CLASS (self->obj));
+        pyg_end_allow_threads;
 
         if (res) {
 		i = g_list_length (res);
