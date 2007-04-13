@@ -1,3 +1,20 @@
+2007-04-13  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	Fix docs.
+
+	* gst/rtsp/URLS:
+	Add some more example urls.
+
+	* gst/rtsp/gstrtpdec.c: (gst_rtp_dec_marshal_BOXED__UINT_UINT),
+	(gst_rtp_dec_chain_rtp):
+	Better debugging.
+
+	* gst/rtsp/gstrtspsrc.c: (request_pt_map),
+	(gst_rtspsrc_activate_streams), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_parse_rtpinfo):
+	Remove unused code.
+
 2007-04-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/wavparse/gstwavparse.c: (uint64_ceiling_scale_int),

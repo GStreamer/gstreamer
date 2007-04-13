@@ -1372,19 +1372,6 @@ start_session_failure:
   }
 }
 
-static gboolean
-gst_rtspsrc_stream_configure_caps (GstRTSPStream * stream)
-{
-  /* configure the caps on the UDP source and the channelpad */
-  if (stream->udpsrc[0]) {
-    //g_object_set (G_OBJECT (stream->udpsrc[0]), "caps", stream->caps, NULL);
-  }
-  if (stream->channelpad[0]) {
-    //gst_pad_set_caps (stream->channelpad[0], stream->caps);
-  }
-  return TRUE;
-}
-
 /* Adds the source pads of all configured streams to the element.
  * This code is performed when we detected dataflow.
  *
@@ -1410,7 +1397,6 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
       gst_pad_set_active (stream->srcpad, TRUE);
       /* add the pad */
       if (!stream->added) {
-        //gst_pad_set_caps (stream->srcpad, stream->caps);
         gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
         stream->added = TRUE;
       }
@@ -1508,7 +1494,6 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   guint8 *data;
   guint size;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstCaps *caps = NULL;
   GstBuffer *buf;
   gboolean is_rtcp = FALSE;
 
@@ -1531,7 +1516,6 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   stream = (GstRTSPStream *) lstream->data;
   if (channel == stream->channel[0]) {
     outpad = stream->channelpad[0];
-    caps = stream->caps;
   } else if (channel == stream->channel[1]) {
     outpad = stream->channelpad[1];
     is_rtcp = TRUE;
@@ -1566,9 +1550,6 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 
   /* don't need message anymore */
   rtsp_message_unset (&response);
-
-  if (caps)
-    gst_buffer_set_caps (buf, caps);
 
   GST_DEBUG_OBJECT (src, "pushing data of size %d on channel %d", size,
       channel);
@@ -2806,9 +2787,6 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
         /* update caps */
         gst_caps_set_simple (caps, "clock-base", G_TYPE_UINT, timebase,
             "seqnum-base", G_TYPE_UINT, seqbase, NULL);
-
-        /* and configure the stream caps */
-        gst_rtspsrc_stream_configure_caps (stream);
       }
     }
   }

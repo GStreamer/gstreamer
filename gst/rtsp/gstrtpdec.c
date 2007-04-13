@@ -351,7 +351,7 @@ gst_rtp_dec_chain_rtp (GstPad * pad, GstBuffer * buffer)
   ssrc = gst_rtp_buffer_get_ssrc (buffer);
   pt = gst_rtp_buffer_get_payload_type (buffer);
 
-  GST_DEBUG_OBJECT (rtpdec, "SSRC %d, PT %d", ssrc, pt);
+  GST_DEBUG_OBJECT (rtpdec, "SSRC %08x, PT %d", ssrc, pt);
 
   /* find session */
   session = gst_pad_get_element_private (pad);

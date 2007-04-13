@@ -14,10 +14,15 @@ MP4V-ES/mpeg4-generic(ACC):
   rtsp://vod.nwec.jp/quicktime/505.mov
   rtsp://203.140.68.241:554/hirakataeizou9.mp4
   rtsp://kmdi.utoronto.ca:555/osconf/2004_may9.1.mp4
+
+X-QT(h264)/mpeg4-generic(ACC):
   rtsp://a2047.v1413b.c1413.g.vq.akamaistream.net/5/2047/1413/1_h264_110/1a1a1ae656c632970267e04ebd3196c428970e7ce857b81c4aab1677e445aedc3fae1b4a7bafe013/8848125_1_110.mov
 
 MP4V-ES/MP4A-LATM
   rtsp://68.251.168.13/thisislove.3gp
+
+H264/MPA
+  rtsp://130.192.86.166/ed.mov
 
 REAL:
   rtsp://213.254.239.61/farm/*/encoder/tagesschau/live1high.rm
