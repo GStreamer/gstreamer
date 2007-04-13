@@ -109,7 +109,9 @@ static GstStaticPadTemplate src_template_factory =
     GST_STATIC_PAD_TEMPLATE ("wavparse_src",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    /* FIXME: we need to sync this better with gst_riff_create_audio_caps() */
+    /* FIXME: we need to sync this better with gst_riff_create_audio_caps()
+     * shouldn't we use: gst_riff_create_audio_template_caps() ?
+     */
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "endianness = (int) little_endian, "
         "signed = (boolean) true, "
@@ -133,7 +135,7 @@ static GstStaticPadTemplate src_template_factory =
         "audio/mpeg, "
         "mpegversion = (int) 1, "
         "layer = (int) [ 1, 3 ], "
-        "rate = (int) [ 16000, 48000 ], "
+        "rate = (int) [ 8000, 48000 ], "
         "channels = (int) [ 1, 2 ]; "
         "audio/mpeg, "
         "mpegversion = (int) 4, "
