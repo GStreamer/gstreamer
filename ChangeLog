@@ -1,3 +1,19 @@
+2007-04-13  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (create_session), (get_pt_map),
+	(gst_rtp_bin_init), (gst_rtp_bin_finalize), (new_ssrc_pad_found),
+	(create_recv_rtp), (gst_rtp_bin_request_new_pad):
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtpmanager/gstrtpclient.c:
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_class_init),
+	(gst_rtp_session_init), (gst_rtp_session_finalize),
+	(gst_rtp_session_event_recv_rtp_sink),
+	(gst_rtp_session_event_recv_rtcp_sink),
+	(gst_rtp_session_chain_recv_rtcp),
+	(gst_rtp_session_request_new_pad):
+	Protect lists and structures with locks.
+	Return FLOW_OK from RTCP messages for now.
+
 2007-04-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c:
