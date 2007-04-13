@@ -1,3 +1,8 @@
+2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/theora/theoradec.c: (theora_dec_sink_event):
+	Fix misleading comment.
+
 2007-04-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):

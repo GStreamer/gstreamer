@@ -681,7 +681,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
-      /* we need TIME and a positive rate */
+      /* we need TIME format */
       if (format != GST_FORMAT_TIME)
         goto newseg_wrong_format;
 
