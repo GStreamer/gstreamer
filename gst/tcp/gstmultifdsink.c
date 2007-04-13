@@ -1553,6 +1553,8 @@ gst_multi_fd_sink_new_client (GstMultiFdSink * sink, GstTCPClient * client)
 
   GST_DEBUG_OBJECT (sink,
       "[fd %5d] new client, deciding where to start in queue", client->fd.fd);
+  GST_DEBUG_OBJECT (sink, "queue is currently %d buffers long",
+      sink->bufqueue->len);
   switch (client->sync_method) {
     case GST_SYNC_METHOD_LATEST:
       /* no syncing, we are happy with whatever the client is going to get */
