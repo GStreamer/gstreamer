@@ -1,6 +1,16 @@
 2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/libs/gstreamer-libs-sections.txt:
+	Remove bogus addition for API I didn't end up keeping.
+
+	* libs/gst/base/gstbasesrc.h:
+	Mention Since: 0.10.13 in the documentation.
+
+	Add the API keyword to the previous ChangeLog entry.
+
+2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
 	(gst_base_src_default_prepare_seek_segment),
 	(gst_base_src_prepare_seek_segment), (gst_base_src_perform_seek):
@@ -11,6 +21,8 @@
 	will be able to understand. The default implementation provides the
 	old behaviour of attempting to convert the seek offsets to the 
 	configured native format.
+
+	API: basesrc::prepare_seek_segment vmethod.
 
 2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
 

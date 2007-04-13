@@ -142,6 +142,7 @@ struct _GstBaseSrc {
  *   this if they support seeking in formats other than the configured native 
  *   format. By default, it tries to convert the seek arguments to the 
  *   configured native format and prepare a segment in that format.
+ *   Since: 0.10.13
  * @query: Handle a requested query. 
  * @check_get_range: Check whether the source would support pull-based 
  *   operation if it were to be opened now. This vfunc is optional, but 
