@@ -1,5 +1,12 @@
 2007-04-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* tests/check/pipelines/streamheader.c (tag_event_probe_cb,
+	  GST_START_TEST, n_in_caps, buffer_probe_cb, GST_START_TEST,
+	  streamheader_suite):
+	  Add another test set up for failure
+
+2007-04-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* tests/check/Makefile.am:
 	* tests/check/pipelines/streamheader.c (n_tags, tag_event_probe_cb,
 	  GST_START_TEST, streamheader_suite, main):
