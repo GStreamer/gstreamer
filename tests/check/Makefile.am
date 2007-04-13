@@ -86,7 +86,8 @@ check_PROGRAMS = \
 	libs/pbutils \
 	libs/tag \
 	libs/video \
-	pipelines/simple-launch-lines
+	pipelines/simple-launch-lines \
+	pipelines/streamheader
 
 # TORTURE_TO_FIX = \
 #       elements/adder

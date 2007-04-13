@@ -1,3 +1,10 @@
+2007-04-13  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/streamheader.c (n_tags, tag_event_probe_cb,
+	  GST_START_TEST, streamheader_suite, main):
+	  Add a test for the streamheader bug Wim fixed.
+
 2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/theora/theoradec.c: (theora_dec_sink_event):
