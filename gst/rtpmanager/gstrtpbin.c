@@ -101,9 +101,12 @@ GST_STATIC_PAD_TEMPLATE ("send_rtp_src_%d",
 #define GST_RTP_BIN_GET_PRIVATE(obj)  \
    (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_BIN, GstRTPBinPrivate))
 
+#define GST_RTP_BIN_LOCK(bin)   g_mutex_lock ((bin)->priv->bin_lock)
+#define GST_RTP_BIN_UNLOCK(bin) g_mutex_unlock ((bin)->priv->bin_lock)
+
 struct _GstRTPBinPrivate
 {
-  guint foo;
+  GMutex *bin_lock;
 };
 
 /* signals and args */
@@ -151,6 +154,9 @@ struct _GstRTPBinStream
   gulong demux_ptreq_sig;
 };
 
+#define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock ((sess)->lock)
+#define GST_RTP_SESSION_UNLOCK(sess) g_mutex_unlock ((sess)->lock)
+
 /* Manages the receiving end of the packets.
  *
  * There is one such structure for each RTP session (audio/video/...).
@@ -171,6 +177,8 @@ struct _GstRTPBinSession
   GstElement *demux;
   gulong demux_newpad_sig;
 
+  GMutex *lock;
+
   /* list of GstRTPBinStream */
   GSList *streams;
 
@@ -187,7 +195,7 @@ struct _GstRTPBinSession
   GstPad *rtcp_src;
 };
 
-/* find a session with the given id */
+/* find a session with the given id. Must be called with RTP_BIN_LOCK */
 static GstRTPBinSession *
 find_session_by_id (GstRTPBin * rtpbin, gint id)
 {
@@ -202,7 +210,7 @@ find_session_by_id (GstRTPBin * rtpbin, gint id)
   return NULL;
 }
 
-/* create a session with the given id */
+/* create a session with the given id.  Must be called with RTP_BIN_LOCK */
 static GstRTPBinSession *
 create_session (GstRTPBin * rtpbin, gint id)
 {
@@ -216,6 +224,7 @@ create_session (GstRTPBin * rtpbin, gint id)
     goto no_demux;
 
   sess = g_new0 (GstRTPBinSession, 1);
+  sess->lock = g_mutex_new ();
   sess->id = id;
   sess->bin = rtpbin;
   sess->session = elem;
@@ -271,11 +280,12 @@ get_pt_map (GstRTPBinSession * session, guint pt)
 
   GST_DEBUG ("searching pt %d in cache", pt);
 
+  GST_RTP_SESSION_LOCK (session);
+
   /* first look in the cache */
   caps = g_hash_table_lookup (session->ptmap, GINT_TO_POINTER (pt));
-  if (caps) {
+  if (caps)
     goto done;
-  }
 
   bin = session->bin;
 
@@ -304,16 +314,21 @@ get_pt_map (GstRTPBinSession * session, guint pt)
   g_hash_table_insert (session->ptmap, GINT_TO_POINTER (pt), caps);
 
 done:
+  GST_RTP_SESSION_UNLOCK (session);
+
   return caps;
 
   /* ERRORS */
 no_caps:
   {
+    GST_RTP_SESSION_UNLOCK (session);
     GST_DEBUG ("no pt map could be obtained");
     return NULL;
   }
 }
 
+/* create a new stream with @ssrc in @session. Must be called with
+ * RTP_SESSION_LOCK. */
 static GstRTPBinStream *
 create_stream (GstRTPBinSession * session, guint32 ssrc)
 {
@@ -457,6 +472,7 @@ static void
 gst_rtp_bin_init (GstRTPBin * rtpbin, GstRTPBinClass * klass)
 {
   rtpbin->priv = GST_RTP_BIN_GET_PRIVATE (rtpbin);
+  rtpbin->priv->bin_lock = g_mutex_new ();
   rtpbin->provided_clock = gst_system_clock_obtain ();
 }
 
@@ -466,6 +482,8 @@ gst_rtp_bin_finalize (GObject * object)
   GstRTPBin *rtpbin;
 
   rtpbin = GST_RTP_BIN (object);
+
+  g_mutex_free (rtpbin->priv->bin_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -608,6 +626,8 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
 
   GST_DEBUG_OBJECT (session->bin, "new SSRC pad %08x", ssrc);
 
+  GST_RTP_SESSION_LOCK (session);
+
   /* create new stream */
   stream = create_stream (session, ssrc);
   if (!stream)
@@ -629,17 +649,21 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
   stream->demux_ptreq_sig = g_signal_connect (stream->demux,
       "request-pt-map", (GCallback) pt_map_requested, stream);
 
+  GST_RTP_SESSION_UNLOCK (session);
+
   return;
 
   /* ERRORS */
 no_stream:
   {
+    GST_RTP_SESSION_UNLOCK (session);
     GST_DEBUG ("could not create stream");
     return;
   }
 }
 
-/* Create a pad for receiving RTP for the session in @name
+/* Create a pad for receiving RTP for the session in @name. Must be called with
+ * RTP_BIN_LOCK.
  */
 static GstPad *
 create_recv_rtp (GstRTPBin * rtpbin, GstPadTemplate * templ, const gchar * name)
@@ -664,6 +688,7 @@ create_recv_rtp (GstRTPBin * rtpbin, GstPadTemplate * templ, const gchar * name)
     if (session == NULL)
       goto create_error;
   }
+
   /* check if pad was requested */
   if (session->recv_rtp_sink != NULL)
     goto existed;
@@ -729,7 +754,8 @@ link_failed:
   }
 }
 
-/* Create a pad for receiving RTCP for the session in @name
+/* Create a pad for receiving RTCP for the session in @name. Must be called with
+ * RTP_BIN_LOCK.
  */
 static GstPad *
 create_recv_rtcp (GstRTPBin * rtpbin, GstPadTemplate * templ,
@@ -821,7 +847,8 @@ link_failed:
 #endif
 }
 
-/* Create a pad for sending RTP for the session in @name
+/* Create a pad for sending RTP for the session in @name. Must be called with
+ * RTP_BIN_LOCK.
  */
 static GstPad *
 create_send_rtp (GstRTPBin * rtpbin, GstPadTemplate * templ, const gchar * name)
@@ -905,7 +932,8 @@ no_srcpad:
   }
 }
 
-/* Create a pad for sending RTCP for the session in @name
+/* Create a pad for sending RTCP for the session in @name. Must be called with
+ * RTP_BIN_LOCK.
  */
 static GstPad *
 create_rtcp (GstRTPBin * rtpbin, GstPadTemplate * templ, const gchar * name)
@@ -978,6 +1006,8 @@ gst_rtp_bin_request_new_pad (GstElement * element,
   rtpbin = GST_RTP_BIN (element);
   klass = GST_ELEMENT_GET_CLASS (element);
 
+  GST_RTP_BIN_LOCK (rtpbin);
+
   /* figure out the template */
   if (templ == gst_element_class_get_pad_template (klass, "recv_rtp_sink_%d")) {
     result = create_recv_rtp (rtpbin, templ, name);
@@ -992,11 +1022,14 @@ gst_rtp_bin_request_new_pad (GstElement * element,
   } else
     goto wrong_template;
 
+  GST_RTP_BIN_UNLOCK (rtpbin);
+
   return result;
 
   /* ERRORS */
 wrong_template:
   {
+    GST_RTP_BIN_UNLOCK (rtpbin);
     g_warning ("rtpbin: this is not our template");
     return NULL;
   }

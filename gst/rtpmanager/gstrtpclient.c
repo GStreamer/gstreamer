@@ -83,6 +83,7 @@ GST_STATIC_PAD_TEMPLATE ("rtp_src_%d_%d",
 
 struct _GstRTPClientPrivate
 {
+  gint foo;
 };
 
 /* all the info needed to handle the stream with SSRC */

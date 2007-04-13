@@ -114,6 +114,17 @@ enum
   PROP_0
 };
 
+#define GST_RTP_SESSION_GET_PRIVATE(obj)  \
+	   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_SESSION, GstRTPSessionPrivate))
+
+#define GST_RTP_SESSION_LOCK(sess)   g_mutex_lock ((sess)->priv->lock)
+#define GST_RTP_SESSION_UNLOCK(sess) g_mutex_unlock ((sess)->priv->lock)
+
+struct _GstRTPSessionPrivate
+{
+  GMutex *lock;
+};
+
 /* GObject vmethods */
 static void gst_rtp_session_finalize (GObject * object);
 static void gst_rtp_session_set_property (GObject * object, guint prop_id,
@@ -167,6 +178,8 @@ gst_rtp_session_class_init (GstRTPSessionClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  g_type_class_add_private (klass, sizeof (GstRTPSessionPrivate));
+
   gobject_class->finalize = gst_rtp_session_finalize;
   gobject_class->set_property = gst_rtp_session_set_property;
   gobject_class->get_property = gst_rtp_session_get_property;
@@ -185,6 +198,8 @@ gst_rtp_session_class_init (GstRTPSessionClass * klass)
 static void
 gst_rtp_session_init (GstRTPSession * rtpsession, GstRTPSessionClass * klass)
 {
+  rtpsession->priv = GST_RTP_SESSION_GET_PRIVATE (rtpsession);
+  rtpsession->priv->lock = g_mutex_new ();
 }
 
 static void
@@ -193,6 +208,7 @@ gst_rtp_session_finalize (GObject * object)
   GstRTPSession *rtpsession;
 
   rtpsession = GST_RTP_SESSION (object);
+  g_mutex_free (rtpsession->priv->lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -269,7 +285,8 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
 
-  GST_DEBUG_OBJECT (rtpsession, "received event");
+  GST_DEBUG_OBJECT (rtpsession, "received event %s",
+      GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     default:
@@ -310,7 +327,8 @@ gst_rtp_session_event_recv_rtcp_sink (GstPad * pad, GstEvent * event)
 
   rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
 
-  GST_DEBUG_OBJECT (rtpsession, "received event");
+  GST_DEBUG_OBJECT (rtpsession, "received event %s",
+      GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     default:
@@ -340,7 +358,7 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
 
   gst_object_unref (rtpsession);
 
-  return ret;
+  return GST_FLOW_OK;
 }
 
 static GstFlowReturn
@@ -504,6 +522,8 @@ gst_rtp_session_request_new_pad (GstElement * element,
 
   GST_DEBUG_OBJECT (element, "requesting pad %s", GST_STR_NULL (name));
 
+  GST_RTP_SESSION_LOCK (rtpsession);
+
   /* figure out the template */
   if (templ == gst_element_class_get_pad_template (klass, "recv_rtp_sink")) {
     if (rtpsession->recv_rtp_sink != NULL)
@@ -530,16 +550,20 @@ gst_rtp_session_request_new_pad (GstElement * element,
   } else
     goto wrong_template;
 
+  GST_RTP_SESSION_UNLOCK (rtpsession);
+
   return result;
 
   /* ERRORS */
 wrong_template:
   {
+    GST_RTP_SESSION_UNLOCK (rtpsession);
     g_warning ("rtpsession: this is not our template");
     return NULL;
   }
 exists:
   {
+    GST_RTP_SESSION_UNLOCK (rtpsession);
     g_warning ("rtpsession: pad already requested");
     return NULL;
   }
