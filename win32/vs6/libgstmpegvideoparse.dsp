@@ -1,24 +1,24 @@
-# Microsoft Developer Studio Project File - Name="libgstqtdemux" - Package Owner=<4>
+# Microsoft Developer Studio Project File - Name="libgstmpegvideoparse" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
 # ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Dynamic-Link Library" 0x0102
 
-CFG=libgstqtdemux - Win32 Debug
+CFG=libgstmpegvideoparse - Win32 Debug
 !MESSAGE This is not a valid makefile. To build this project using NMAKE,
 !MESSAGE use the Export Makefile command and run
 !MESSAGE 
-!MESSAGE NMAKE /f "libgstqtdemux.mak".
+!MESSAGE NMAKE /f "libgstmpegvideoparse.mak".
 !MESSAGE 
 !MESSAGE You can specify a configuration when running NMAKE
 !MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
-!MESSAGE NMAKE /f "libgstqtdemux.mak" CFG="libgstqtdemux - Win32 Debug"
+!MESSAGE NMAKE /f "libgstmpegvideoparse.mak" CFG="libgstmpegvideoparse - Win32 Debug"
 !MESSAGE 
 !MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "libgstqtdemux - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
-!MESSAGE "libgstqtdemux - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "libgstmpegvideoparse - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "libgstmpegvideoparse - Win32 Debug" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
@@ -29,7 +29,7 @@ CPP=cl.exe
 MTL=midl.exe
 RSC=rc.exe
 
-!IF  "$(CFG)" == "libgstqtdemux - Win32 Release"
+!IF  "$(CFG)" == "libgstmpegvideoparse - Win32 Release"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 0
@@ -42,8 +42,9 @@ RSC=rc.exe
 # PROP Intermediate_Dir "Release"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTQTDEMUX_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /GX /O2 /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /I "../../../gst-plugins-bad/gst/qtdemux" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTQTDEMUX_EXPORTS" /D "HAVE_CONFIG_H" /YX /FD /c
+# ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTMPEGVIDEOPARSE_EXPORTS" /YX /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "./" /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTMPEGVIDEOPARSE_EXPORTS" /D "HAVE_CONFIG_H" /FD /c
+# SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x40c /d "NDEBUG"
@@ -53,14 +54,14 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 glib-2.0.lib gobject-2.0.lib libgstreamer-0.10.lib libgstbase-0.10.lib libgstrtp-0.10.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"../../../gst-plugins-base/win32/vs6/release" /libpath:"./release"
+# ADD LINK32 libgstriff-0.10.lib libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib /nologo /dll /machine:I386 /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release" /libpath:"../../../gst-plugins-base/win32/vs6/release"
 # Begin Special Build Tool
-TargetPath=.\Release\libgstqtdemux.dll
+TargetPath=.\Release\libgstmpegvideoparse.dll
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\lib\gstreamer-0.10
 # End Special Build Tool
 
-!ELSEIF  "$(CFG)" == "libgstqtdemux - Win32 Debug"
+!ELSEIF  "$(CFG)" == "libgstmpegvideoparse - Win32 Debug"
 
 # PROP BASE Use_MFC 0
 # PROP BASE Use_Debug_Libraries 1
@@ -73,8 +74,9 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\lib\gstreamer-0.10
 # PROP Intermediate_Dir "Debug"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
-# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTQTDEMUX_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /GX /ZI /Od /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /I "../../../gst-plugins-bad/gst/qtdemux" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTQTDEMUX_EXPORTS" /D "HAVE_CONFIG_H" /YX /FD /GZ /c
+# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTMPEGVIDEOPARSE_EXPORTS" /YX /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTMPEGVIDEOPARSE_EXPORTS" /D "HAVE_CONFIG_H" /FD /GZ /c
+# SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x40c /d "_DEBUG"
@@ -84,9 +86,9 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib libgstreamer-0.10.lib libgstbase-0.10.lib libgstrtp-0.10.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"../../../gst-plugins-base/win32/vs6/debug" /libpath:"./debug"
+# ADD LINK32 libgstriff-0.10.lib libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0D.lib gobject-2.0D.lib /nologo /dll /debug /machine:I386 /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"./debug" /libpath:"../../../gst-plugins-base/win32/vs6/debug"
 # Begin Special Build Tool
-TargetPath=.\Debug\libgstqtdemux.dll
+TargetPath=.\Debug\libgstmpegvideoparse.dll
 SOURCE="$(InputPath)"
 PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 # End Special Build Tool
@@ -95,35 +97,18 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 
 # Begin Target
 
-# Name "libgstqtdemux - Win32 Release"
-# Name "libgstqtdemux - Win32 Debug"
+# Name "libgstmpegvideoparse - Win32 Release"
+# Name "libgstmpegvideoparse - Win32 Debug"
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
 # Begin Source File
 
-SOURCE=..\..\gst\qtdemux\gstrtpxqtdepay.c
-# SUBTRACT CPP /YX
+SOURCE=..\..\gst\mpegvideoparse\mpegpacketiser.c
 # End Source File
 # Begin Source File
 
-SOURCE=..\..\gst\qtdemux\qtdemux.c
-# SUBTRACT CPP /YX
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\qtdemux\qtdemux_dump.c
-# SUBTRACT CPP /YX
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\qtdemux\qtdemux_types.c
-# SUBTRACT CPP /YX
-# End Source File
-# Begin Source File
-
-SOURCE=..\..\gst\qtdemux\quicktime.c
-# SUBTRACT CPP /YX
+SOURCE=..\..\gst\mpegvideoparse\mpegvideoparse.c
 # End Source File
 # End Group
 # Begin Group "Header Files"
@@ -131,7 +116,11 @@ SOURCE=..\..\gst\qtdemux\quicktime.c
 # PROP Default_Filter "h;hpp;hxx;hm;inl"
 # Begin Source File
 
-SOURCE=..\..\gst\qtdemux\qtdemux.h
+SOURCE=..\..\gst\mpegvideoparse\mpegpacketiser.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\mpegvideoparse\mpegvideoparse.h
 # End Source File
 # End Group
 # Begin Group "Resource Files"

@@ -1,3 +1,14 @@
+2007-04-14  Sebastien Moutte <sebastien@moutte.net>
+
+	* docs/plugins/inspect/plugin-directdraw.xml:
+	* docs/plugins/inspect/plugin-directsound.xml:
+	* docs/plugins/inspect/plugin-waveform.xml:
+	  Add xml doc files for Windows sinks
+	* win32/vs6/libgstqtdemux.dsp:
+	* win32/vs6/libgstmpegvideoparse.dsp:
+	* win32/vs6/gst_plugins_bad.dsw:
+	 Update projects files.
+	
 2007-04-13  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/gstrtpbin.c: (create_session), (get_pt_map),
