@@ -103,22 +103,27 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 # Begin Source File
 
 SOURCE=..\..\gst\qtdemux\gstrtpxqtdepay.c
+# SUBTRACT CPP /YX
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\gst\qtdemux\qtdemux.c
+# SUBTRACT CPP /YX
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\gst\qtdemux\qtdemux_dump.c
+# SUBTRACT CPP /YX
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\gst\qtdemux\qtdemux_types.c
+# SUBTRACT CPP /YX
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\gst\qtdemux\quicktime.c
+# SUBTRACT CPP /YX
 # End Source File
 # End Group
 # Begin Group "Header Files"
