@@ -1,3 +1,10 @@
+2007-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* gst/gdp/gstgdppay.c (gst_gdp_pay_chain):
+	* tests/check/pipelines/streamheader.c (tag_event_probe_cb,
+	  GST_START_TEST, buffer_probe_cb, GST_START_TEST):
+	  Fix a bug where serialized IN_CAPS buffers needed to be set IN_CAPS.
+
 2007-04-13  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* tests/check/pipelines/streamheader.c (tag_event_probe_cb,

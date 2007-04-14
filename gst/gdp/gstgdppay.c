@@ -599,6 +599,15 @@ gst_gdp_pay_chain (GstPad * pad, GstBuffer * buffer)
   if (!outbuffer)
     goto no_buffer;
 
+  /* If the incoming buffer is IN_CAPS, that means we have it on the caps
+   * as streamheader, and we have serialized a GDP version of it and put it
+   * on our caps */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS)) {
+    GST_DEBUG_OBJECT (this, "Setting IN_CAPS flag on outgoing buffer %p",
+        outbuffer);
+    GST_BUFFER_FLAG_SET (outbuffer, GST_BUFFER_FLAG_IN_CAPS);
+  }
+
   gst_gdp_stamp_buffer (this, outbuffer);
   GST_BUFFER_TIMESTAMP (outbuffer) = GST_BUFFER_TIMESTAMP (buffer);
   GST_BUFFER_DURATION (outbuffer) = GST_BUFFER_DURATION (buffer);

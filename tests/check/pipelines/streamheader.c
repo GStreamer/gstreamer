@@ -195,8 +195,7 @@ GST_START_TEST (test_multifdsink_gdp_vorbisenc)
 
   g_main_loop_run (loop);
 
-  //FIXME: here's the bug
-  //assert_equals_int (n_in_caps, 3);
+  assert_equals_int (n_in_caps, 3);
 }
 
 GST_END_TEST;
