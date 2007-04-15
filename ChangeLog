@@ -1,3 +1,10 @@
+2007-04-15  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/theora/theoraenc.c (theora_buffer_from_packet, theora_enc_chain):
+	  Don't use pad_alloc_buffer_and_set_caps to create a small header
+	  packet, or, worse, to create a big temporary video buffer using the
+	  src pad.
+
 2007-04-14  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/gdp/gstgdppay.c (gst_gdp_pay_chain):

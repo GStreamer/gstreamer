@@ -420,14 +420,17 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
     GstClockTime timestamp, GstClockTime duration, GstBuffer ** buffer)
 {
   GstBuffer *buf;
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
 
-  ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
-      GST_BUFFER_OFFSET_NONE, packet->bytes, GST_PAD_CAPS (enc->srcpad), &buf);
-  if (ret != GST_FLOW_OK)
-    goto no_buffer;
+  buf = gst_buffer_new_and_alloc (packet->bytes);
+  if (!buf) {
+    GST_WARNING_OBJECT (enc, "Could not allocate buffer");
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
 
   memcpy (GST_BUFFER_DATA (buf), packet->packet, packet->bytes);
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (enc->srcpad));
   /* see ext/ogg/README; OFFSET_END takes "our" granulepos, OFFSET its
    * time representation */
   GST_BUFFER_OFFSET_END (buf) =
@@ -453,14 +456,9 @@ theora_buffer_from_packet (GstTheoraEnc * enc, ogg_packet * packet,
   }
   enc->packetno++;
 
+done:
   *buffer = buf;
   return ret;
-
-no_buffer:
-  {
-    *buffer = NULL;
-    return ret;
-  }
 }
 
 /* push out the buffer and do internal bookkeeping */
@@ -610,14 +608,15 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
 
   in_time = GST_BUFFER_TIMESTAMP (buffer);
 
-  /* no packets written yet, setup headers */
   if (enc->packetno == 0) {
+    /* no packets written yet, setup headers */
     GstCaps *caps;
     GstBuffer *buf1, *buf2, *buf3;
 
     enc->granulepos_offset = 0;
     enc->timestamp_offset = 0;
 
+    GST_DEBUG_OBJECT (enc, "output headers");
     /* Theora streams begin with three headers; the initial header (with
        most of the codec setup parameters) which is mandated by the Ogg
        bitstream spec.  The second header holds any comment fields.  The
@@ -717,6 +716,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     y_size = enc->info_width * enc->info_height;
 
     if (enc->width == enc->info_width && enc->height == enc->info_height) {
+      GST_LOG_OBJECT (enc, "no cropping/conversion needed");
       /* easy case, no cropping/conversion needed */
       pixels = GST_BUFFER_DATA (buffer);
 
@@ -735,6 +735,7 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       gint cwidth, cheight;
       gint offset_x, right_x, right_border;
 
+      GST_LOG_OBJECT (enc, "cropping/conversion needed for strides");
       /* source width/height */
       width = enc->width;
       height = enc->height;
@@ -750,11 +751,13 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
       dst_y_stride = enc->info_width;
       dst_uv_stride = enc->info_width / 2;
 
-      ret = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
-          GST_BUFFER_OFFSET_NONE, y_size * 3 / 2, GST_PAD_CAPS (enc->srcpad),
-          &newbuf);
-      if (ret != GST_FLOW_OK)
+      newbuf = gst_buffer_new_and_alloc (y_size * 3 / 2);
+      if (!newbuf) {
+        ret = GST_FLOW_ERROR;
         goto no_buffer;
+      }
+      GST_BUFFER_OFFSET (newbuf) = GST_BUFFER_OFFSET_NONE;
+      gst_buffer_set_caps (newbuf, GST_PAD_CAPS (enc->srcpad));
 
       dest_y = yuv.y = GST_BUFFER_DATA (newbuf);
       dest_u = yuv.u = yuv.y + y_size;
@@ -891,7 +894,6 @@ header_push:
   }
 no_buffer:
   {
-    gst_buffer_unref (buffer);
     return ret;
   }
 data_push:
