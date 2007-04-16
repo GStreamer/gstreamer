@@ -84,7 +84,7 @@ A wide range of video and audio decoders, encoders, and filters are included.
    <revision>0.10.8</revision>
    <branch>0.10</branch>
    <name>Moar gij zie mij nie</name>
-   <created>2006-05-14</created>
+   <created>2006-06-10</created>
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.8.tar.bz2" />
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.8.tar.gz" />
   </Version>
