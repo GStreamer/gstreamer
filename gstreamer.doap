@@ -44,7 +44,7 @@ hierarchy, and a set of media-agnostic core elements.
    <revision>0.10.12</revision>
    <branch>0.10</branch>
    <name>Inevitable Demise</name>
-   <created>2006-12-06</created>
+   <created>2007-03-07</created>
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.12.tar.bz2" />
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-0.10.12.tar.gz" />
   </Version>
