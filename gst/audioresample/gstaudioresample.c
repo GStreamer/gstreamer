@@ -564,7 +564,7 @@ audioresample_do_output (GstAudioresample * audioresample, GstBuffer * outbuf)
     audioresample->need_discont = FALSE;
   }
 
-  GST_LOG_OBJECT (audioresample, "transformed to buffer of %ld bytes, ts %"
+  GST_LOG_OBJECT (audioresample, "transformed to buffer of %d bytes, ts %"
       GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT ", offset %"
       G_GINT64_FORMAT ", offset_end %" G_GINT64_FORMAT,
       outsize, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
