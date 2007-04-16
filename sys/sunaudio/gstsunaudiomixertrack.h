@@ -1,5 +1,6 @@
-/* GStreamer SunAudio Mixer implementation
- * Copyright (C) 2005 Brian Cameron <brian.cameron@sun.com>
+/*
+ * GStreamer SunAudio mixer track implementation
+ * Copyright (C) 2005,2006 Brian Cameron <brian.cameron@sun.com>
  *
  * gstsunaudiomixertrack.h: SunAudio mixer tracks
  *

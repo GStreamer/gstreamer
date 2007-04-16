@@ -1,6 +1,6 @@
-/* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *               2000,2005 Wim Taymans <wim@fluendo.com>
+/*
+ * GStreamer - SunAudio source
+ * Copyright (C) 2005,2006 Brian Cameron <brian.cameron@sun.com>
  *
  * gstsunaudiosrc.c: 
  *

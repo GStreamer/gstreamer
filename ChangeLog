@@ -1,3 +1,19 @@
+2007-04-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Brian Cameron  <brian.cameron at sun dot com>
+
+	* sys/sunaudio/gstsunaudio.c:
+	* sys/sunaudio/gstsunaudiomixer.c:
+	* sys/sunaudio/gstsunaudiomixer.h:
+	* sys/sunaudio/gstsunaudiomixerctrl.c:
+	* sys/sunaudio/gstsunaudiomixerctrl.h:
+	* sys/sunaudio/gstsunaudiomixertrack.h:
+	* sys/sunaudio/gstsunaudiosink.c:
+	* sys/sunaudio/gstsunaudiosink.h:
+	* sys/sunaudio/gstsunaudiosrc.c:
+	* sys/sunaudio/gstsunaudiosrc.h:
+	  Fix and/or update copyright attributions (#430228).
+
 2007-04-13  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:

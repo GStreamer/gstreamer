@@ -1,6 +1,6 @@
 /*
- * GStreamer
- * Copyright (C) 2005 Brian Cameron <brian.cameron@sun.com>
+ * GStreamer - SunAudio mixer
+ * Copyright (C) 2005,2006 Brian Cameron <brian.cameron@sun.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
