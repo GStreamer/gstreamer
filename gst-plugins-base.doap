@@ -40,7 +40,7 @@ A wide range of video and audio decoders, encoders, and filters are included.
    <revision>0.10.12</revision>
    <branch>0.10</branch>
    <name>Zombie Horde</name>
-   <created>2006-12-06</created>
+   <created>2007-03-07</created>
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.12.tar.bz2" />
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.12.tar.gz" />
   </Version>
