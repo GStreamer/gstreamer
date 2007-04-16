@@ -48,7 +48,7 @@ static void gst_amrnbparse_base_init (GstAmrnbParseClass * klass);
 static void gst_amrnbparse_class_init (GstAmrnbParseClass * klass);
 static void gst_amrnbparse_init (GstAmrnbParse * amrnbparse);
 
-//static const GstFormat *gst_amrnbparse_formats (GstPad * pad);
+/*static const GstFormat *gst_amrnbparse_formats (GstPad * pad);*/
 static const GstQueryType *gst_amrnbparse_querytypes (GstPad * pad);
 static gboolean gst_amrnbparse_query (GstPad * pad, GstQuery * query);
 
@@ -56,6 +56,8 @@ static gboolean gst_amrnbparse_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_amrnbparse_chain (GstPad * pad, GstBuffer * buffer);
 static void gst_amrnbparse_loop (GstPad * pad);
 static gboolean gst_amrnbparse_sink_activate (GstPad * sinkpad);
+static gboolean gst_amrnbparse_sink_activate_pull (GstPad * sinkpad,
+    gboolean active);
 static GstStateChangeReturn gst_amrnbparse_state_change (GstElement * element,
     GstStateChange transition);
 
@@ -131,6 +133,8 @@ gst_amrnbparse_init (GstAmrnbParse * amrnbparse)
       GST_DEBUG_FUNCPTR (gst_amrnbparse_sink_event));
   gst_pad_set_activate_function (amrnbparse->sinkpad,
       gst_amrnbparse_sink_activate);
+  gst_pad_set_activatepull_function (amrnbparse->sinkpad,
+      gst_amrnbparse_sink_activate_pull);
   gst_element_add_pad (GST_ELEMENT (amrnbparse), amrnbparse->sinkpad);
 
   /* create the src pad */
@@ -487,36 +491,36 @@ gst_amrnbparse_sink_activate (GstPad * sinkpad)
 {
   gboolean result = FALSE;
   GstAmrnbParse *amrnbparse;
-  GstActivateMode mode;
 
-  amrnbparse = GST_AMRNBPARSE (GST_OBJECT_PARENT (sinkpad));
+  amrnbparse = GST_AMRNBPARSE (gst_pad_get_parent (sinkpad));
 
-  /* FIXME, this will never activate the element in pull mode.
-   * see -base/ext/ogg/gstoggdemux.c for an example. */
-  GST_OBJECT_LOCK (sinkpad);
-  mode = GST_PAD_ACTIVATE_MODE (sinkpad);
-  GST_OBJECT_UNLOCK (sinkpad);
-
-  switch (mode) {
-    case GST_ACTIVATE_PUSH:
-      amrnbparse->seekable = FALSE;
-      result = TRUE;
-      break;
-    case GST_ACTIVATE_PULL:
-      /*gst_pad_peer_set_active (sinkpad, mode); */
-      amrnbparse->seekable = TRUE;
-      amrnbparse->ts = 0;
-
-      result = gst_pad_start_task (sinkpad,
-          (GstTaskFunction) gst_amrnbparse_loop, sinkpad);
-      break;
-    case GST_ACTIVATE_NONE:
-      /* step 1, unblock clock sync (if any) */
-
-      /* step 2, make sure streaming finishes */
-      result = gst_pad_stop_task (sinkpad);
-      break;
+  if (gst_pad_check_pull_range (sinkpad)) {
+    GST_DEBUG ("Trying to activate in pull mode");
+    amrnbparse->seekable = TRUE;
+    amrnbparse->ts = 0;
+    result = gst_pad_activate_pull (sinkpad, TRUE);
+  } else {
+    GST_DEBUG ("Try to activate in push mode");
+    amrnbparse->seekable = FALSE;
+    result = gst_pad_activate_push (sinkpad, TRUE);
   }
+
+  gst_object_unref (amrnbparse);
+  return result;
+}
+
+static gboolean
+gst_amrnbparse_sink_activate_pull (GstPad * sinkpad, gboolean active)
+{
+  gboolean result;
+
+  if (active) {
+    result = gst_pad_start_task (sinkpad,
+        (GstTaskFunction) gst_amrnbparse_loop, sinkpad);
+  } else {
+    result = gst_pad_stop_task (sinkpad);
+  }
+
   return result;
 }
 
