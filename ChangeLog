@@ -1,3 +1,13 @@
+2007-04-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_write_cache),
+	(gst_registry_binary_read_cache):
+	* gst/gstregistrybinary.h:
+	  Remove unnecessary <sys/mman.h> include which broke the win32 build
+	  with MingW; move includes from header file to .c file, even if the
+	  header file isn't installed; use g_strerror() where UTF-8 strings
+	  are expected, such as in GST_DEBUG messages.
+
 2007-04-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/libs/gstreamer-libs-sections.txt:

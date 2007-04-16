@@ -1,7 +1,7 @@
 /* GStreamer
- * Copyright (C)      2006 Josep Torra <josep@fluendo.com>
- *                    2006 Mathieu Garcia  <matthieu@fluendo.com>
- *		      2006 Stefan Kost <ensonic@sonicpulse.de>
+ * Copyright (C) 2006 Josep Torra <josep@fluendo.com>
+ * Copyright (C) 2006 Mathieu Garcia  <matthieu@fluendo.com>
+ * Copyright (C) 2006 Stefan Kost <ensonic@sonicpulse.de>
  *
  * gstregistrybinary.h: Header for registry handling
  *
@@ -31,34 +31,8 @@
 #ifndef __GST_REGISTRYBINARY_H__
 #define __GST_REGISTRYBINARY_H__
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
-
-#include <stdio.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <sys/mman.h>
-#ifdef HAVE_UNISTD_H
-#include <unistd.h>
-#endif
-
-#include <gst/gstconfig.h>
-#include <gst/gst_private.h>
-#include <gst/gstelement.h>
-#include <gst/gsttypefind.h>
-#include <gst/gsttypefindfactory.h>
-#include <gst/gsturi.h>
-#include <gst/gstinfo.h>
-#include <gst/gstenumtypes.h>
+#include <gst/gstpad.h>
 #include <gst/gstregistry.h>
-#include <gst/gstpadtemplate.h>
-
-#include "glib-compat-private.h"
-#include <glib/gstdio.h>
 
 /*
  * GST_MAGIC_BINARY_REGISTRY_STR:

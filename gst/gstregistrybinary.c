@@ -35,7 +35,31 @@
  *   - include md5-sum ?
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#include <errno.h>
+#include <stdio.h>
+
+#include <gst/gst_private.h>
+#include <gst/gstconfig.h>
+#include <gst/gstelement.h>
+#include <gst/gsttypefind.h>
+#include <gst/gsttypefindfactory.h>
+#include <gst/gsturi.h>
+#include <gst/gstinfo.h>
+#include <gst/gstenumtypes.h>
+#include <gst/gstpadtemplate.h>
+
 #include <gst/gstregistrybinary.h>
+
+#include <glib/gstdio.h>        /* for g_stat() */
+
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
@@ -438,7 +462,7 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
   g_list_free (to_write);
 
   if (close (registry->cache_file) < 0) {
-    GST_DEBUG ("Can't close registry file : %s", strerror (errno));
+    GST_DEBUG ("Can't close registry file : %s", g_strerror (errno));
     goto fail;
   }
 
@@ -753,7 +777,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   }
 
   if ((contents = g_mapped_file_get_contents (mapped)) == NULL) {
-    GST_ERROR ("Can't load file %s : %s", location, strerror (errno));
+    GST_ERROR ("Can't load file %s : %s", location, g_strerror (errno));
     g_mapped_file_free (mapped);
     return FALSE;
   }
