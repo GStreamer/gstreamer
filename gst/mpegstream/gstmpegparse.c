@@ -407,9 +407,20 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
       gst_mpeg_packetize_flush_cache (mpeg_parse->packetize);
       break;
     }
-    case GST_EVENT_EOS:
+    case GST_EVENT_EOS:{
       GST_DEBUG_OBJECT (mpeg_parse, "EOS");
-      /* fall through to default handler */
+
+      if (CLASS (mpeg_parse)->send_event) {
+        ret = CLASS (mpeg_parse)->send_event (mpeg_parse, event);
+      } else {
+        gst_event_unref (event);
+      }
+      if (!ret) {
+        GST_ELEMENT_ERROR (mpeg_parse, STREAM, DEMUX, (NULL),
+            ("Pushing EOS event didn't work on any of the source pads"));
+      }
+      break;
+    }
     default:
       if (CLASS (mpeg_parse)->send_event) {
         ret = CLASS (mpeg_parse)->send_event (mpeg_parse, event);
@@ -422,12 +433,13 @@ gst_mpeg_parse_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
   return ret;
 }
 
+/* returns TRUE if pushing the event worked on at least one pad */
 static gboolean
 gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse, GstEvent * event)
 {
   GstIterator *it;
   gpointer pad;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
   /* Send event to all source pads of this element. */
   it = gst_element_iterate_src_pads (GST_ELEMENT (mpeg_parse));
@@ -435,7 +447,8 @@ gst_mpeg_parse_send_event (GstMPEGParse * mpeg_parse, GstEvent * event)
     switch (gst_iterator_next (it, &pad)) {
       case GST_ITERATOR_OK:
         gst_event_ref (event);
-        gst_pad_push_event (GST_PAD (pad), event);
+        if (gst_pad_push_event (GST_PAD (pad), event))
+          ret = TRUE;
         gst_object_unref (GST_OBJECT (pad));
         break;
       case GST_ITERATOR_RESYNC:

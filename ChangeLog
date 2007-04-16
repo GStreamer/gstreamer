@@ -1,3 +1,14 @@
+2007-04-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/mpegstream/gstmpegparse.c: (gst_mpeg_parse_process_event),
+	(gst_mpeg_parse_send_event):
+	  Post an error message if EOS wasn't handled by anything downstream.
+	  This should fix playbin freezing/hanging with small VobSub subtitle
+	  files (background: not-linked flow returns from downstream are
+	  ignored for a while at the beginning, so if the file is small
+	  upstream will never get a not-linked flow return even if nothing
+	  is connected downstream). (#429960).
+
 2007-04-16  Michael Smith  <msmith@fluendo.com>
 
 	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_init),
