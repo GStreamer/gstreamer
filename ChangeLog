@@ -1,3 +1,14 @@
+2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Vincent Torri <vtorri at univ-evry dot fr>
+
+	* ext/pango/gstclockoverlay.c: (gst_clock_overlay_render_time):
+	Fix unused variable warning if HAVE_LOCALTIME_R is undefinied
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	* gst/audioresample/gstaudioresample.c: (audioresample_do_output):
+	Use the correct format strings for integer formats.
+
 2007-04-15  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* ext/theora/theoraenc.c (theora_buffer_from_packet, theora_enc_chain):

@@ -1179,13 +1179,13 @@ gst_riff_create_audio_caps (guint16 codec_id,
   /* ERROR */
 too_many_channels:
   GST_WARNING
-      ("Stream claims to contain %lu channels, but format only supports %lu",
+      ("Stream claims to contain %u channels, but format only supports %d",
       strf->channels, channels_max);
   gst_caps_unref (caps);
   return NULL;
 invalid_rate:
   GST_WARNING
-      ("Stream with sample_rate %lu, but format only supports %lu .. %lu",
+      ("Stream with sample_rate %u, but format only supports %d .. %d",
       strf->rate, rate_min, rate_max);
   gst_caps_unref (caps);
   return NULL;

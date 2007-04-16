@@ -76,8 +76,12 @@ GST_BOILERPLATE (GstClockOverlay, gst_clock_overlay, GstTextOverlay,
 static gchar *
 gst_clock_overlay_render_time (GstClockOverlay * overlay)
 {
-  struct tm dummy, *t;
+  struct tm *t;
   time_t now;
+
+#ifdef HAVE_LOCALTIME_R
+  struct tm dummy;
+#endif
 
   now = time (NULL);
 
