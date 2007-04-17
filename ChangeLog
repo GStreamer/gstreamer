@@ -1,3 +1,11 @@
+2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_base_init),
+	(gst_wavparse_create_sourcepad):
+	Use gst_riff_create_audio_template_caps () instead of the local caps.
+	This makes updates of the local caps unecessary whenever libgstriff
+	gets support for new formats.
+
 2007-04-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Brian Cameron  <brian.cameron at sun dot com>

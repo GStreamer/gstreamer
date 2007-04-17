@@ -101,67 +101,6 @@ GST_STATIC_PAD_TEMPLATE ("wavparse_sink",
     GST_STATIC_CAPS ("audio/x-wav")
     );
 
-/* the pad is marked a sometimes and is added to the element when the
- * exact type is known. This makes it much easier for a static autoplugger
- * to connect the right decoder when needed.
- */
-static GstStaticPadTemplate src_template_factory =
-    GST_STATIC_PAD_TEMPLATE ("wavparse_src",
-    GST_PAD_SRC,
-    GST_PAD_SOMETIMES,
-    /* FIXME: we need to sync this better with gst_riff_create_audio_caps()
-     * shouldn't we use: gst_riff_create_audio_template_caps() ?
-     */
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) little_endian, "
-        "signed = (boolean) true, "
-        "width = (int) { 16, 24, 32 }, "
-        "depth = (int) [ 1, 32 ], "
-        "rate = (int) [ 8000, 96000 ], "
-        "channels = (int) [ 1, 8 ]; "
-        "audio/x-raw-int, "
-        "endianness = (int) little_endian, "
-        "signed = (boolean) false, "
-        "width = (int) 8, "
-        "depth = (int) [ 1, 8 ], "
-        "rate = (int) [ 8000, 96000 ], "
-        "channels = (int) [ 1, 8 ]; "
-        "audio/x-raw-float, "
-        "width = (int) { 32, 64 }, "
-        "endianness = (int) little_endian, "
-        "rate = (int) [ 8000, 96000 ], "
-        "channels = (int) [ 1, 8 ]; "
-        "audio/ms-gsm; "
-        "audio/mpeg, "
-        "mpegversion = (int) 1, "
-        "layer = (int) [ 1, 3 ], "
-        "rate = (int) [ 8000, 48000 ], "
-        "channels = (int) [ 1, 2 ]; "
-        "audio/mpeg, "
-        "mpegversion = (int) 4, "
-        "rate = (int) [ 8000, 96000 ], "
-        "channels = (int) [ 1, 8 ]; "
-        "audio/x-alaw, "
-        "rate = (int) [ 8000, 48000 ], "
-        "channels = (int) [ 1, 2 ]; "
-        "audio/x-mulaw, "
-        "rate = (int) [ 8000, 48000 ], "
-        "channels = (int) [ 1, 2 ];"
-        "audio/x-adpcm, "
-        "layout = (string) microsoft, "
-        "block_align = (int) [ 1, 8192 ], "
-        "rate = (int) [ 8000, 48000 ], "
-        "channels = (int) [ 1, 2 ]; "
-        "audio/x-adpcm, "
-        "layout = (string) dvi, "
-        "block_align = (int) [ 1, 8192 ], "
-        "rate = (int) [ 8000, 48000 ], "
-        "channels = (int) [ 1, 2 ];"
-        "audio/x-vnd.sony.atrac3;"
-        "audio/x-dts;" "audio/x-wma, " "wmaversion = (int) [ 1, 2 ]")
-    );
-
-
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (wavparse_debug, "wavparse", 0, "WAV parser");
 
@@ -172,12 +111,16 @@ static void
 gst_wavparse_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstPadTemplate *src_template;
 
-  /* register src pads */
+  /* register pads */
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template_factory));
+
+  src_template = gst_pad_template_new ("wavparse_src", GST_PAD_SRC,
+      GST_PAD_SOMETIMES, gst_riff_create_audio_template_caps ());
+  gst_element_class_add_pad_template (element_class, src_template);
+
   gst_element_class_set_details (element_class, &gst_wavparse_details);
 }
 
@@ -274,12 +217,15 @@ gst_wavparse_destroy_sourcepad (GstWavParse * wavparse)
 static void
 gst_wavparse_create_sourcepad (GstWavParse * wavparse)
 {
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (wavparse);
+  GstPadTemplate *src_template;
+
   /* destroy previous one */
   gst_wavparse_destroy_sourcepad (wavparse);
 
   /* source */
-  wavparse->srcpad =
-      gst_pad_new_from_static_template (&src_template_factory, "src");
+  src_template = gst_element_class_get_pad_template (klass, "wavparse_src");
+  wavparse->srcpad = gst_pad_new_from_template (src_template, "src");
   gst_pad_use_fixed_caps (wavparse->srcpad);
   gst_pad_set_query_type_function (wavparse->srcpad,
       GST_DEBUG_FUNCPTR (gst_wavparse_get_query_types));
