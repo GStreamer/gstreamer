@@ -1,5 +1,23 @@
 2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	Correctly support 4, 6 and 8 channels with normal PCM and float
+	wav files.
+
+	Fix the depth and signedness calculation in extensible wav files and
+	also handle 1, 2, 4, 6, 8 channels here when a file without channel
+	mask is found.
+
+	Add support for float, alaw and mulaw in extensible wav files.
+
+	This allows correct playback of all but 5 files from
+	http://www-mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/Samples.html
+	
+	(gst_riff_create_audio_template_caps):
+	Add voxware and float formats to the template caps.	
+
+2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Vincent Torri <vtorri at univ-evry dot fr>
 
 	* ext/pango/gstclockoverlay.c: (gst_clock_overlay_render_time):

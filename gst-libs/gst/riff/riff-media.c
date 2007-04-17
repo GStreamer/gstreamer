@@ -759,6 +759,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
         gint wd = ba * 8 / ch;
         gint ws;
 
+        channels_max = 8;
+
         if (strf->size > 32) {
           GST_WARNING ("invalid depth (%d) of pcm audio, overwriting.",
               strf->size);
@@ -786,6 +788,9 @@ gst_riff_create_audio_caps (guint16 codec_id,
               break;
             case 6:
               channel_mask = 0x3f;
+              break;
+            case 8:
+              channel_mask = 0xff;
               break;
             default:
               GST_WARNING ("don't know default layout for %d channels", ch);
@@ -827,6 +832,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
         gint ch = strf->channels;
         gint wd = ba * 8 / ch;
 
+        channels_max = 8;
+
         caps = gst_caps_new_simple ("audio/x-raw-float",
             "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
             "channels", G_TYPE_INT, ch, "width", G_TYPE_INT, wd, NULL);
@@ -845,6 +852,9 @@ gst_riff_create_audio_caps (guint16 codec_id,
               break;
             case 6:
               channel_mask = 0x3f;
+              break;
+            case 8:
+              channel_mask = 0xff;
               break;
             default:
               GST_WARNING ("don't know default layout for %d channels", ch);
@@ -1043,6 +1053,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
       guint32 subformat_guid[4];
       const guint8 *data;
 
+      channels_max = 8;
+
       /* should be at least 22 bytes */
       if (strf_data == NULL || GST_BUFFER_SIZE (strf_data) < 22) {
         GST_WARNING ("WAVE_FORMAT_EXTENSIBLE data size is %d (expected: 22)",
@@ -1071,20 +1083,39 @@ gst_riff_create_audio_caps (guint16 codec_id,
           if (strf != NULL) {
             gint ba = strf->blockalign;
             gint ws = strf->size;
-            gint depth = ws;
+            gint wd = ba * 8 / strf->channels;
 
             if (valid_bits_per_sample != 0)
-              depth = valid_bits_per_sample;
+              ws = valid_bits_per_sample;
 
             caps = gst_caps_new_simple ("audio/x-raw-int",
                 "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
                 "channels", G_TYPE_INT, strf->channels,
-                "width", G_TYPE_INT, (int) (ba * 8 / strf->channels),
-                "depth", G_TYPE_INT, depth,
+                "width", G_TYPE_INT, wd,
+                "depth", G_TYPE_INT, ws,
                 "rate", G_TYPE_INT, strf->rate,
-                "signed", G_TYPE_BOOLEAN, (depth > 8) ? TRUE : FALSE, NULL);
+                "signed", G_TYPE_BOOLEAN, wd != 8, NULL);
 
-            if (!gst_riff_wavext_add_channel_layout (caps, channel_mask)) {
+            /* If channel_mask == 0 and channels <= 2, 4, 6 or 8 let's
+             * assume default layout as some wav files don't have the
+             * channel mask set */
+
+            if (channel_mask == 0) {
+              switch (strf->channels) {
+                case 4:
+                  channel_mask = 0x33;
+                  break;
+                case 6:
+                  channel_mask = 0x3f;
+                  break;
+                case 8:
+                  channel_mask = 0xff;
+                  break;
+              }
+            }
+
+            if ((channel_mask != 0 || strf->channels > 2) &&
+                !gst_riff_wavext_add_channel_layout (caps, channel_mask)) {
               GST_WARNING ("failed to add channel layout");
               gst_caps_unref (caps);
               caps = NULL;
@@ -1097,7 +1128,97 @@ gst_riff_create_audio_caps (guint16 codec_id,
             }
           }
         } else if (subformat_guid[0] == 0x00000003) {
-          GST_DEBUG ("FIXME: handle IEEE float format");
+          GST_DEBUG ("FLOAT");
+          if (strf != NULL) {
+            gint ba = strf->blockalign;
+            gint ws = strf->size;
+            gint wd = ba * 8 / strf->channels;
+
+            if (valid_bits_per_sample != 0)
+              ws = valid_bits_per_sample;
+
+            caps = gst_caps_new_simple ("audio/x-raw-float",
+                "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
+                "channels", G_TYPE_INT, strf->channels,
+                "width", G_TYPE_INT, wd, "rate", G_TYPE_INT, strf->rate, NULL);
+
+            /* If channel_mask == 0 and channels <= 2, 4, 6 or 8 let's
+             * assume default layout as some wav files don't have the
+             * channel mask set */
+
+            if (channel_mask == 0) {
+              switch (strf->channels) {
+                case 4:
+                  channel_mask = 0x33;
+                  break;
+                case 6:
+                  channel_mask = 0x3f;
+                  break;
+                case 8:
+                  channel_mask = 0xff;
+                  break;
+              }
+            }
+
+            if ((channel_mask != 0 || strf->channels > 2) &&
+                !gst_riff_wavext_add_channel_layout (caps, channel_mask)) {
+              GST_WARNING ("failed to add channel layout");
+              gst_caps_unref (caps);
+              caps = NULL;
+            }
+            rate_chan = FALSE;
+
+            if (codec_name) {
+              *codec_name =
+                  g_strdup_printf ("Uncompressed %d-bit IEEE float audio",
+                  strf->size);
+            }
+          }
+        } else if (subformat_guid[0] == 00000006) {
+          GST_DEBUG ("ALAW");
+          if (strf != NULL) {
+            if (strf->size != 8) {
+              GST_WARNING ("invalid depth (%d) of alaw audio, overwriting.",
+                  strf->size);
+              strf->size = 8;
+              strf->av_bps = 8;
+              strf->blockalign = strf->av_bps * strf->channels;
+            }
+            if (strf->av_bps == 0 || strf->blockalign == 0) {
+              GST_WARNING
+                  ("fixing av_bps (%d) and blockalign (%d) of alaw audio",
+                  strf->av_bps, strf->blockalign);
+              strf->av_bps = strf->size;
+              strf->blockalign = strf->av_bps * strf->channels;
+            }
+          }
+          rate_max = 48000;
+          caps = gst_caps_new_simple ("audio/x-alaw", NULL);
+
+          if (codec_name)
+            *codec_name = g_strdup ("A-law audio");
+        } else if (subformat_guid[0] == 0x00000007) {
+          GST_DEBUG ("MULAW");
+          if (strf != NULL) {
+            if (strf->size != 8) {
+              GST_WARNING ("invalid depth (%d) of mulaw audio, overwriting.",
+                  strf->size);
+              strf->size = 8;
+              strf->av_bps = 8;
+              strf->blockalign = strf->av_bps * strf->channels;
+            }
+            if (strf->av_bps == 0 || strf->blockalign == 0) {
+              GST_WARNING
+                  ("fixing av_bps (%d) and blockalign (%d) of mulaw audio",
+                  strf->av_bps, strf->blockalign);
+              strf->av_bps = strf->size;
+              strf->blockalign = strf->av_bps * strf->channels;
+            }
+          }
+          rate_max = 48000;
+          caps = gst_caps_new_simple ("audio/x-mulaw", NULL);
+          if (codec_name)
+            *codec_name = g_strdup ("Mu-law audio");
         } else if (subformat_guid[0] == 0x00000092) {
           GST_DEBUG ("FIXME: handle DOLBY AC3 SPDIF format");
         }
@@ -1316,7 +1437,9 @@ gst_riff_create_audio_template_caps (void)
     GST_RIFF_WAVE_FORMAT_WMAV1,
     GST_RIFF_WAVE_FORMAT_WMAV2,
     GST_RIFF_WAVE_FORMAT_WMAV3,
-    GST_RIFF_WAVE_FORMAT_SONY_ATRAC3
+    GST_RIFF_WAVE_FORMAT_SONY_ATRAC3,
+    GST_RIFF_WAVE_FORMAT_IEEE_FLOAT,
+    GST_RIFF_WAVE_FORMAT_VOXWARE
         /* FILL ME */
   };
   guint i;
