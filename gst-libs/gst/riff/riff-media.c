@@ -753,13 +753,13 @@ gst_riff_create_audio_caps (guint16 codec_id,
 
   switch (codec_id) {
     case GST_RIFF_WAVE_FORMAT_PCM:     /* PCM */
+      channels_max = 8;
+
       if (strf != NULL) {
         gint ba = strf->blockalign;
         gint ch = strf->channels;
         gint wd = ba * 8 / ch;
         gint ws;
-
-        channels_max = 8;
 
         if (strf->size > 32) {
           GST_WARNING ("invalid depth (%d) of pcm audio, overwriting.",
@@ -827,12 +827,12 @@ gst_riff_create_audio_caps (guint16 codec_id,
       break;
 
     case GST_RIFF_WAVE_FORMAT_IEEE_FLOAT:
+      channels_max = 8;
+
       if (strf != NULL) {
         gint ba = strf->blockalign;
         gint ch = strf->channels;
         gint wd = ba * 8 / ch;
-
-        channels_max = 8;
 
         caps = gst_caps_new_simple ("audio/x-raw-float",
             "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,

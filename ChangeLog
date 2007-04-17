@@ -1,6 +1,12 @@
 2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	Set the maximum number of channels for PCM and float in the correct
+	place to have it also used when creating the template caps.
+
+2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
 	Correctly support 4, 6 and 8 channels with normal PCM and float
 	wav files.
 
