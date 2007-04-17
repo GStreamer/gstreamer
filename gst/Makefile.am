@@ -9,7 +9,11 @@ endif
 if GST_DISABLE_REGISTRY
 GST_REGISTRY_SRC = 
 else
-GST_REGISTRY_SRC = gstregistryxml.c gstregistrybinary.c
+if USE_BINARY_REGISTRY
+GST_REGISTRY_SRC = gstregistrybinary.c
+else
+GST_REGISTRY_SRC = gstregistryxml.c
+endif
 endif
 
 if GST_DISABLE_PARSE

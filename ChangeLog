@@ -1,3 +1,11 @@
+2007-04-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gstconfig.h.in:
+	  Drop libxml2 dependency when building with 
+	  --enable-binary-registry --disable-loadsave
+
 2007-04-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_write_cache),

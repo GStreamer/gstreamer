@@ -136,7 +136,7 @@ AC_ARG_WITH(cachedir,
       no)  AC_MSG_ERROR(bad value ${withval} for --with-cachedir) ;;
       *)   GST_CACHE_DIR="${withval}" ;;
     esac
-  ], 
+  ],
   [:]) dnl Default value
 
 AS_AC_EXPAND(GST_CACHE_DIR, $GST_CACHE_DIR)
@@ -152,7 +152,7 @@ AC_ARG_ENABLE(tests,
       no)  BUILD_TESTS=no ;;
       *)   AC_MSG_ERROR(bad value ${enableval} for --disable-tests) ;;
     esac
-  ], 
+  ],
 [BUILD_TESTS=yes]) dnl Default value
 AM_CONDITIONAL(BUILD_TESTS,         test "x$BUILD_TESTS" = "xyes")
 
@@ -166,7 +166,7 @@ AC_ARG_ENABLE(failing-tests,
       no)  BUILD_FAILING_TESTS=no ;;
       *)   AC_MSG_ERROR(bad value ${enableval} for --disable-failing-tests) ;;
     esac
-  ], 
+  ],
   [BUILD_FAILING_TESTS=no]) dnl Default value
 AM_CONDITIONAL(BUILD_FAILING_TESTS, test "x$BUILD_FAILING_TESTS" = "xyes")
 if test x$BUILD_FAILING_TESTS = xyes; then
@@ -185,7 +185,7 @@ AC_ARG_ENABLE(poisoning,
       no)  USE_POISONING=no ;;
       *)   AC_MSG_ERROR(bad value ${enableval} for --enable-poisoning) ;;
     esac
-  ], 
+  ],
   [USE_POISONING=no]) dnl Default value
 if test "x$USE_POISONING" = xyes; then
   AC_DEFINE(USE_POISONING, 1,
@@ -202,12 +202,13 @@ AC_ARG_ENABLE(binary-registry,
       no)  USE_BINARY_REGISTRY=no ;;
       *)   AC_MSG_ERROR(bad value ${enableval} for --enable-binary-registry) ;;
     esac
-  ], 
+  ],
   [USE_BINARY_REGISTRY=no]) dnl Default value
 if test "x$USE_BINARY_REGISTRY" = xyes; then
   AC_DEFINE(USE_BINARY_REGISTRY, 1,
     [Define if we should use binary registry instead xml registry])
 fi
+AM_CONDITIONAL(USE_BINARY_REGISTRY, test "x$USE_BINARY_REGISTRY" = "xyes")
 
 dnl *** checks for platform ***
 
@@ -404,7 +405,8 @@ AC_SUBST(GLIB_PREFIX)
 dnl libxml 2, which is/should be optional (FIXME)
 dnl (FIXME) if we use binary registry, the DISABLE_REGISTRY check need to go
 if test "x$GST_DISABLE_LOADSAVE" = "xyes" && \
-   test "x$GST_DISABLE_REGISTRY" = "xyes"
+   ( test "x$GST_DISABLE_REGISTRY" = "xyes" || \
+   test "x$USE_BINARY_REGISTRY" = "xyes" )
 then
   AC_MSG_NOTICE([Registry and load/save are disabled, not checking for libxml2])
 else
