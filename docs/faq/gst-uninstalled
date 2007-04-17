@@ -67,7 +67,11 @@ export GST_PLUGIN_SYSTEM_PATH=
 # set our registry somewhere else so we don't mess up the registry generated
 # by an installed copy
 export GST_REGISTRY=$GST/gstreamer/registry.xml
-export MANPATH=$GST/gstreamer/tools:$GST/prefix/share/man${MANPATH:+:$MANPATH}
+# once MANPATH is set, it needs at least an "empty"component to keep pulling
+# in the system-configured man paths from man.config
+# this still doesn't make it work for the uninstalled case, since man goes
+# look for a man directory "nearby" instead of the directory I'm telling it to
+export MANPATH=$GST/gstreamer/tools:$GST/prefix/share/man:$MANPATH
 pythonver=`python -c "import sys; print sys.version[:3]"`
 export PYTHONPATH=$GST/gst-python:$GST/prefix/lib/python$pythonver/site-packages${PYTHONPATH:+:$PYTHONPATH}
 
