@@ -1,3 +1,10 @@
+2007-04-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Snaik <snaik32 gmail com>
+
+	* gst/smpte/barboxwipes.c: (gst_wipe_boxes_draw):
+	  Add missing break statement for BOX_HORIZONTAL case.
+
 2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Vincent Torri <vtorri at univ-evry dot fr>

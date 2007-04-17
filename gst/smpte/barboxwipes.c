@@ -577,6 +577,7 @@ gst_wipe_boxes_draw (GstMask * mask)
             impacts[1] * width, impacts[2] * height, impacts[3] * depth,
             impacts[4] * width, impacts[5] * height, impacts[6] * depth);
         impacts += 7;
+        break;
       case BOX_CLOCK:
       {
         gint x0, y0, x1, y1, x2, y2;
