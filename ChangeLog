@@ -1,3 +1,10 @@
+2007-04-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/mve/gstmvedemux.c: (gst_mve_audio_init):
+	  Use G_LITTLE_ENDIAN instead of LITTLE_ENDIAN, so stuff compiles on
+	  MingW (no idea though why we add a BYTE_ORDER endianness field if
+	  the audio is compressed).
+
 2007-04-14  Sebastien Moutte <sebastien@moutte.net>
 
 	* docs/plugins/inspect/plugin-directdraw.xml:

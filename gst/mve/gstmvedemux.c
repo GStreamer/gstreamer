@@ -706,7 +706,7 @@ gst_mve_audio_init (GstMveDemux * mve, guint8 version, const guint8 * data,
     /* for uncompressed audio we can simply copy the incoming buffer
        which is always in little endian format */
     gst_caps_set_simple (stream->caps, "endianness", G_TYPE_INT,
-        (stream->compression ? G_BYTE_ORDER : LITTLE_ENDIAN), NULL);
+        (stream->compression ? G_BYTE_ORDER : G_LITTLE_ENDIAN), NULL);
   } else if (stream->compression) {
     GST_WARNING_OBJECT (mve,
         "compression is only supported for 16-bit samples");
