@@ -23,11 +23,17 @@
 ** $Id$
 */
 
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#ifndef _NSF_TYPES_H_
+#define _NSF_TYPES_H_
 
+#include <glib.h> /* for types, endianness */
+
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
 /* Define this if running on little-endian (x86) systems */
 #define  HOST_LITTLE_ENDIAN
+#else
+#undef  HOST_LITTLE_ENDIAN
+#endif
 
 #ifdef __GNUC__
 #define  INLINE      static inline
@@ -37,16 +43,15 @@
 #define  INLINE      static
 #endif
 
-/* These should be changed depending on the platform */
-typedef  char     int8;
-typedef  short    int16;
-typedef  int      int32;
+typedef  gint8     int8;
+typedef  gint16    int16;
+typedef  gint32    int32;
 
-typedef  unsigned char  uint8;
-typedef  unsigned short uint16;
-typedef  unsigned int   uint32;
+typedef  guint8    uint8;
+typedef  guint16   uint16;
+typedef  guint32   uint32;
 
-typedef  uint8    boolean;
+typedef  guint8    boolean;
 
 #ifndef  TRUE
 #define  TRUE     1
@@ -79,10 +84,17 @@ typedef  uint8    boolean;
 #define  ASSERT_MSG(msg)
 #endif
 
-#endif /* _TYPES_H_ */
+#endif /* _NSF_TYPES_H_ */
 
 /*
 ** $Log$
+** Revision 1.3  2007/04/17 08:48:34  tpm
+** * gst/nsf/types.h:
+** Rename #ifndef header guard symbol to something less generic, so
+** types.h doesn't get skipped over when compiling on MingW. Include
+** GLib headers and use those to set the endianness and the basic
+** types so that this isn't entirely broken for non-x86 architectures.
+**
 ** Revision 1.2  2006/07/14 09:11:11  wtay
 ** * gst/nsf/Makefile.am:
 ** * gst/nsf/memguard.c:

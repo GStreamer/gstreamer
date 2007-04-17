@@ -1,5 +1,13 @@
 2007-04-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/nsf/types.h:
+	  Rename #ifndef header guard symbol to something less generic, so
+	  types.h doesn't get skipped over when compiling on MingW. Include
+	  GLib headers and use those to set the endianness and the basic
+	  types so that this isn't entirely broken for non-x86 architectures.
+
+2007-04-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/mve/gstmvedemux.c: (gst_mve_audio_init):
 	  Use G_LITTLE_ENDIAN instead of LITTLE_ENDIAN, so stuff compiles on
 	  MingW (no idea though why we add a BYTE_ORDER endianness field if
