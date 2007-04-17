@@ -1,5 +1,12 @@
 2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Vincent Torri <vtorri at univ-evry dot fr>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):
+	Use correct format strings for integer types.
+
+2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_base_init),
 	(gst_wavparse_create_sourcepad):
 	Use gst_riff_create_audio_template_caps () instead of the local caps.
