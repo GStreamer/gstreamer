@@ -1,5 +1,10 @@
 2007-04-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/app/Makefile.am:
+	  Fix CFLAGS and hopefully #430594.
+
+2007-04-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/nsf/types.h:
 	  Rename #ifndef header guard symbol to something less generic, so
 	  types.h doesn't get skipped over when compiling on MingW. Include
