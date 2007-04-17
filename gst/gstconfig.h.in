@@ -50,8 +50,6 @@
 #ifndef __GST_CONFIG_H__
 #define __GST_CONFIG_H__
 
-#include "config.h"
-
 /* trick gtk-doc into believing these symbols are defined (yes, it's ugly) */
 
 #if 0
@@ -171,10 +169,7 @@
 
 /***** Deal with XML stuff, we have to handle both loadsave and registry *****/
 
-/*#if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) ) */
-/* this works better, but requires the above config.h include, its a bit strange
- * that we include stuff here anyway */
-#ifdef HAVE_LIBXML2
+#if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) ) 
 # include <libxml/parser.h>
 #else
 # define GST_DISABLE_LOADSAVE_REGISTRY

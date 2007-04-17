@@ -1,3 +1,8 @@
+2007-04-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstconfig.h.in:
+	Revert previous change that broke the build.
+
 2007-04-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
