@@ -456,7 +456,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
       packet = demux->num_packets;
   }
 
-  GST_DEBUG_OBJECT (demux, "seeking to packet %" G_GINT64_FORMAT, packet);
+  GST_DEBUG_OBJECT (demux, "seeking to packet %u", packet);
 
   GST_OBJECT_LOCK (demux);
   demux->segment = segment;
@@ -773,7 +773,7 @@ gst_asf_demux_pull_indices (GstASFDemux * demux)
       break;
 
     GST_LOG_OBJECT (demux, "index object at offset 0x%" G_GINT64_MODIFIER "X"
-        ", size %u", offset, obj.size);
+        ", size %u", offset, (guint) obj.size);
 
     offset += obj.size;         /* increase before _process_object changes it */
 
