@@ -1,6 +1,11 @@
 2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	Allow random depths between 1 and 32 instead of only multiplies of 8.
+
+2007-04-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
 	Set the maximum number of channels for PCM and float in the correct
 	place to have it also used when creating the template caps.
 

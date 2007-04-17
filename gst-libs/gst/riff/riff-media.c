@@ -810,8 +810,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
         caps = gst_caps_from_string ("audio/x-raw-int, "
             "endianness = (int) LITTLE_ENDIAN, "
             "signed = (boolean) { true, false }, "
-            "width = (int) { 8, 16, 24, 32 }, "
-            "depth = (int) { 8, 16, 24, 32 }");
+            "width = (int) { 8, 16, 24, 32 }, " "depth = (int) [ 1, 32 ]");
       }
       if (codec_name && strf)
         *codec_name = g_strdup_printf ("Uncompressed %d-bit PCM audio",
