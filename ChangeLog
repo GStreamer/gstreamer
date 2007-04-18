@@ -1,5 +1,10 @@
 2007-04-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/Makefile.am:
+	Add rtpmanager dir to dist.
+
+2007-04-18  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	Disable rtpmanager for now because it depends on CVS -base.
 
