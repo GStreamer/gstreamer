@@ -1,3 +1,54 @@
+2007-04-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Marc-Andre Lureau <marcandre dot lureau at gmail dot com>
+	* gst/parse/Makefile.am:
+	* gst/parse/grammar.y:
+	* gst/parse/parse.l:
+	Make the parser reentrant and recursively callable. This requires flex
+	>= 2.5.31, for older versions pregenerated sources are used as we
+	can't bump the build dependency. Finally fixes #349180.
+
+	* gst/gstparse.c: (gst_parse_launch):
+	Drop the HAVE_MT_SAVE_FLEX #ifdefs as we always use a new enough flex
+	now anyway.
+
+	* docs/gst/Makefile.am:
+	* docs/gst/Makefile.am:
+	* gst/parse/grammar.tab.pre.c: (__gst_parse_strdup),
+	(__gst_parse_strfree), (__gst_parse_link_new),
+	(__gst_parse_link_free), (__gst_parse_chain_new),
+	(__gst_parse_chain_free), (SET_ERROR), (YYPRINTF),
+	(gst_parse_element_set), (gst_parse_free_link),
+	(gst_parse_found_pad), (gst_parse_perform_delayed_link),
+	(gst_parse_perform_link), (yytnamerr), (yysyntax_error), (yyerror),
+	(_gst_parse_launch):
+	* gst/parse/grammar.tab.pre.h:
+	* gst/parse/lex._gst_parse_yy.pre.c: (PRINT), (yy_get_next_buffer),
+	(yy_get_previous_state), (yy_try_NUL_trans), (input),
+	(_gst_parse_yyrestart), (_gst_parse_yy_switch_to_buffer),
+	(_gst_parse_yy_load_buffer_state), (_gst_parse_yy_create_buffer),
+	(_gst_parse_yy_delete_buffer), (_gst_parse_yy_init_buffer),
+	(_gst_parse_yy_flush_buffer), (_gst_parse_yypush_buffer_state),
+	(_gst_parse_yypop_buffer_state),
+	(_gst_parse_yyensure_buffer_stack), (_gst_parse_yy_scan_buffer),
+	(_gst_parse_yy_scan_string), (_gst_parse_yy_scan_bytes),
+	(yy_fatal_error), (_gst_parse_yyget_extra),
+	(_gst_parse_yyget_lineno), (_gst_parse_yyget_column),
+	(_gst_parse_yyget_in), (_gst_parse_yyget_out),
+	(_gst_parse_yyget_leng), (_gst_parse_yyget_text),
+	(_gst_parse_yyset_extra), (_gst_parse_yyset_lineno),
+	(_gst_parse_yyset_column), (_gst_parse_yyset_in),
+	(_gst_parse_yyset_out), (_gst_parse_yyget_debug),
+	(_gst_parse_yyset_debug), (_gst_parse_yyget_lval),
+	(_gst_parse_yyset_lval), (_gst_parse_yylex_init),
+	(yy_init_globals), (_gst_parse_yylex_destroy), (yy_flex_strncpy),
+	(yy_flex_strlen), (_gst_parse_yyalloc), (_gst_parse_yyrealloc),
+	(_gst_parse_yyfree):
+	If the installed flex version is too old use pre-generated parser
+	sources. These pre-generated parser sources are always updated when
+	the actual flex/bison sources change but require everybody who wants
+	to change something in the parser to have flex >= 2.5.31 installed.
+
 2007-04-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* common/m4/gst-gettext.m4:

@@ -73,6 +73,7 @@ IGNORE_HFILES= \
 	types.h \
 	glib-compat.h \
 	grammar.tab.h \
+	grammar.tab.pre.h \
 	gstmarshal.h \
 	gstaggregator.h \
 	gstbufferstore.h \
