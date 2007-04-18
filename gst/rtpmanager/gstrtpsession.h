@@ -32,6 +32,7 @@
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_SESSION))
 #define GST_IS_RTP_SESSION_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_SESSION))
+#define GST_RTP_SESSION_CAST(obj) ((GstRTPSession *)(obj))
 
 typedef struct _GstRTPSession GstRTPSession;
 typedef struct _GstRTPSessionClass GstRTPSessionClass;
@@ -48,13 +49,16 @@ struct _GstRTPSession {
   GstPad        *recv_rtp_src;
   GstPad        *sync_src;
   GstPad        *send_rtp_src;
-  GstPad        *rtcp_src;
+  GstPad        *send_rtcp_src;
 
   GstRTPSessionPrivate *priv;
 };
 
 struct _GstRTPSessionClass {
   GstElementClass parent_class;
+
+  /* signals */
+  GstCaps* (*request_pt_map) (GstRTPSession *sess, guint pt);
 };
 
 GType gst_rtp_session_get_type (void);

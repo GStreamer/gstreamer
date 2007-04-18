@@ -129,7 +129,7 @@ typedef struct _GstRTPBinClient GstRTPBinClient;
 static guint gst_rtp_bin_signals[LAST_SIGNAL] = { 0 };
 
 static GstCaps *pt_map_requested (GstElement * element, guint pt,
-    GstRTPBinStream * stream);
+    GstRTPBinSession * session);
 
 /* Manages the RTP stream for one SSRC.
  *
@@ -215,9 +215,9 @@ static GstRTPBinSession *
 create_session (GstRTPBin * rtpbin, gint id)
 {
   GstRTPBinSession *sess;
-  GstElement *elem, *demux;
+  GstElement *session, *demux;
 
-  if (!(elem = gst_element_factory_make ("rtpsession", NULL)))
+  if (!(session = gst_element_factory_make ("rtpsession", NULL)))
     goto no_session;
 
   if (!(demux = gst_element_factory_make ("rtpssrcdemux", NULL)))
@@ -227,13 +227,17 @@ create_session (GstRTPBin * rtpbin, gint id)
   sess->lock = g_mutex_new ();
   sess->id = id;
   sess->bin = rtpbin;
-  sess->session = elem;
+  sess->session = session;
   sess->demux = demux;
   sess->ptmap = g_hash_table_new (NULL, NULL);
   rtpbin->sessions = g_slist_prepend (rtpbin->sessions, sess);
 
-  gst_bin_add (GST_BIN_CAST (rtpbin), elem);
-  gst_element_set_state (elem, GST_STATE_PLAYING);
+  /* provide clock_rate to the session manager when needed */
+  g_signal_connect (session, "request-pt-map",
+      (GCallback) pt_map_requested, sess);
+
+  gst_bin_add (GST_BIN_CAST (rtpbin), session);
+  gst_element_set_state (session, GST_STATE_PLAYING);
   gst_bin_add (GST_BIN_CAST (rtpbin), demux);
   gst_element_set_state (demux, GST_STATE_PLAYING);
 
@@ -247,7 +251,7 @@ no_session:
   }
 no_demux:
   {
-    gst_object_unref (elem);
+    gst_object_unref (session);
     g_warning ("rtpbin: could not create rtpssrcdemux element");
     return NULL;
   }
@@ -351,7 +355,7 @@ create_stream (GstRTPBinSession * session, guint32 ssrc)
 
   /* provide clock_rate to the jitterbuffer when needed */
   g_signal_connect (buffer, "request-pt-map",
-      (GCallback) pt_map_requested, stream);
+      (GCallback) pt_map_requested, session);
 
   gst_bin_add (GST_BIN_CAST (session->bin), buffer);
   gst_element_set_state (buffer, GST_STATE_PLAYING);
@@ -590,14 +594,12 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
 }
 
 static GstCaps *
-pt_map_requested (GstElement * element, guint pt, GstRTPBinStream * stream)
+pt_map_requested (GstElement * element, guint pt, GstRTPBinSession * session)
 {
   GstRTPBin *rtpbin;
-  GstRTPBinSession *session;
   GstCaps *caps;
 
-  rtpbin = stream->bin;
-  session = stream->session;
+  rtpbin = session->bin;
 
   GST_DEBUG_OBJECT (rtpbin, "payload map requested for pt %d in session %d", pt,
       session->id);
@@ -647,7 +649,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
    * demuxer so that it can apply a proper caps on the buffers for the
    * depayloaders. */
   stream->demux_ptreq_sig = g_signal_connect (stream->demux,
-      "request-pt-map", (GCallback) pt_map_requested, stream);
+      "request-pt-map", (GCallback) pt_map_requested, session);
 
   GST_RTP_SESSION_UNLOCK (session);
 

@@ -63,6 +63,7 @@ struct _GstRTPJitterBufferClass
 {
   GstElementClass parent_class;
 
+  /* signals */
   GstCaps* (*request_pt_map) (GstRTPJitterBuffer *buffer, guint pt);
 
   /*< private > */

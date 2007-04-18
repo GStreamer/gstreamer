@@ -1,3 +1,81 @@
+2007-04-18  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	Disable rtpmanager for now because it depends on CVS -base.
+
+	* gst/rtpmanager/Makefile.am:
+	Added new files for session manager.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	* gst/rtpmanager/gstrtpbin.c: (create_session), (get_pt_map),
+	(create_stream), (pt_map_requested), (new_ssrc_pad_found):
+	Some cleanups. 
+	the session manager can now also request a pt-map.
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_base_init),
+	(gst_rtp_session_class_init), (gst_rtp_session_init),
+	(gst_rtp_session_finalize), (rtcp_thread), (start_rtcp_thread),
+	(stop_rtcp_thread), (gst_rtp_session_change_state),
+	(gst_rtp_session_process_rtp), (gst_rtp_session_send_rtp),
+	(gst_rtp_session_send_rtcp), (gst_rtp_session_clock_rate),
+	(gst_rtp_session_get_time), (gst_rtp_session_event_recv_rtp_sink),
+	(gst_rtp_session_chain_recv_rtp),
+	(gst_rtp_session_event_recv_rtcp_sink),
+	(gst_rtp_session_chain_recv_rtcp),
+	(gst_rtp_session_event_send_rtp_sink),
+	(gst_rtp_session_chain_send_rtp), (create_send_rtcp_src),
+	(gst_rtp_session_request_new_pad):
+	* gst/rtpmanager/gstrtpsession.h:
+	We can ask for pt-map now too when the session manager needs it.
+	Hook up to the new session manager, implement the needed callbacks for
+	pushing data, getting clock time and requesting clock-rates.
+	Rename rtcp_src to send_rtcp_src to make it clear that this RTCP is to
+	be send to clients.
+	Add code to start and stop the thread that will schedule RTCP through
+	the session manager.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
+	(rtp_session_init), (rtp_session_finalize),
+	(rtp_session_set_property), (rtp_session_get_property),
+	(on_new_ssrc), (on_ssrc_collision), (on_ssrc_validated),
+	(on_bye_ssrc), (rtp_session_new), (rtp_session_set_callbacks),
+	(rtp_session_set_bandwidth), (rtp_session_get_bandwidth),
+	(rtp_session_set_rtcp_bandwidth), (rtp_session_get_rtcp_bandwidth),
+	(source_push_rtp), (source_clock_rate), (check_collision),
+	(obtain_source), (rtp_session_add_source),
+	(rtp_session_get_num_sources),
+	(rtp_session_get_num_active_sources),
+	(rtp_session_get_source_by_ssrc),
+	(rtp_session_get_source_by_cname), (rtp_session_create_source),
+	(update_arrival_stats), (rtp_session_process_rtp),
+	(rtp_session_process_sr), (rtp_session_process_rr),
+	(rtp_session_process_sdes), (rtp_session_process_bye),
+	(rtp_session_process_app), (rtp_session_process_rtcp),
+	(rtp_session_send_rtp), (rtp_session_get_rtcp_interval),
+	(rtp_session_produce_rtcp):
+	* gst/rtpmanager/rtpsession.h:
+	The advanced beginnings of the main session manager that handles the
+	participant database of RTPSources, SSRC probation, SSRC collisions,
+	parse RTCP to update source stats. etc..
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_class_init),
+	(rtp_source_init), (rtp_source_finalize), (rtp_source_new),
+	(rtp_source_set_callbacks), (rtp_source_set_as_csrc),
+	(rtp_source_set_rtp_from), (rtp_source_set_rtcp_from),
+	(push_packet), (get_clock_rate), (calculate_jitter),
+	(rtp_source_process_rtp), (rtp_source_process_bye),
+	(rtp_source_send_rtp), (rtp_source_process_sr),
+	(rtp_source_process_rb):
+	* gst/rtpmanager/rtpsource.h:
+	Object that encapsulates an SSRC and its state in the database.
+	Calculates the jitter and transit times of data packets.
+
+	* gst/rtpmanager/rtpstats.c: (rtp_stats_init_defaults),
+	(rtp_stats_calculate_rtcp_interval), (rtp_stats_add_rtcp_jitter):
+	* gst/rtpmanager/rtpstats.h:
+	Various stats regarding the session and sources.
+	Used to calculate the RTCP interval.
+
 2007-04-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/app/Makefile.am:

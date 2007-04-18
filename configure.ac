@@ -95,7 +95,6 @@ GST_PLUGINS_ALL="\
   nuvdemux \
   real \
   replaygain \
-  rtpmanager \
   spectrum \
   speed \
   qtdemux \
