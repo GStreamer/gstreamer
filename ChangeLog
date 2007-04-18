@@ -1,3 +1,11 @@
+2007-04-18  Michael Smith  <msmith@fluendo.com>
+
+	* gst/cutter/gstcutter.c: (gst_cutter_init), (gst_cutter_chain),
+	(gst_cutter_get_caps):
+	* gst/cutter/gstcutter.h:
+	  Fix some of the most obvious bugs in cutter. Now doesn't leak
+	  everything if input is silent.
+
 2007-04-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/wavenc/gstwavenc.c: (gst_wavenc_create_header_buf),

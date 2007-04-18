@@ -144,6 +144,7 @@ gst_cutter_init (GstCutter * filter, GstCutterClass * g_class)
   filter->threshold_length = CUTTER_DEFAULT_THRESHOLD_LENGTH;
   filter->silent_run_length = 0 * GST_SECOND;
   filter->silent = TRUE;
+  filter->silent_prev = FALSE;  /* previous value of silent */
 
   filter->pre_length = CUTTER_DEFAULT_PRE_LENGTH;
   filter->pre_run_length = 0 * GST_SECOND;
@@ -213,7 +214,6 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
   gdouble NCS = 0.0;            /* Normalized Cumulative Square of buffer */
   gdouble RMS = 0.0;            /* RMS of signal in buffer */
   gdouble NMS = 0.0;            /* Normalized Mean Square of buffer */
-  static gboolean silent_prev = FALSE;  /* previous value of silent */
   GstBuffer *prebuf;            /* pointer to a prebuffer element */
 
   g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
@@ -223,11 +223,6 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
   filter = GST_CUTTER (GST_OBJECT_PARENT (pad));
   g_return_val_if_fail (filter != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_CUTTER (filter), GST_FLOW_ERROR);
-
-  if (gst_audio_is_buffer_framed (pad, buf) == FALSE) {
-    g_warning ("audio buffer is not framed !\n");
-    return GST_FLOW_ERROR;
-  }
 
   if (!filter->have_caps)
     gst_cutter_get_caps (pad, filter);
@@ -254,7 +249,7 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
       break;
   }
 
-  silent_prev = filter->silent;
+  filter->silent_prev = filter->silent;
 
   RMS = sqrt (NMS);
   /* if RMS below threshold, add buffer length to silent run length count
@@ -280,7 +275,7 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
   /* has the silent status changed ? if so, send right signal
    * and, if from silent -> not silent, flush pre_record buffer
    */
-  if (filter->silent != silent_prev) {
+  if (filter->silent != filter->silent_prev) {
     if (filter->silent) {
       GstMessage *m =
           gst_cutter_message_new (filter, FALSE, GST_BUFFER_TIMESTAMP (buf));
@@ -323,6 +318,8 @@ gst_cutter_chain (GstPad * pad, GstBuffer * buf)
       /* only pass buffers if we don't leak */
       if (!filter->leaky)
         gst_pad_push (filter->srcpad, prebuf);
+      else
+        gst_buffer_unref (prebuf);
     }
   } else
     gst_pad_push (filter->srcpad, buf);
@@ -422,14 +419,16 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
 void
 gst_cutter_get_caps (GstPad * pad, GstCutter * filter)
 {
-  const GstCaps *caps = NULL;
+  GstCaps *caps;
   GstStructure *structure;
 
-  caps = GST_PAD_CAPS (pad);
+  caps = gst_pad_get_caps (pad);
   /* FIXME : Please change this to a better warning method ! */
   g_assert (caps != NULL);
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "width", &filter->width);
   filter->max_sample = 1 << (filter->width - 1);        /* signed */
   filter->have_caps = TRUE;
+
+  gst_caps_unref (caps);
 }

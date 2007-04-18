@@ -57,6 +57,7 @@ struct _GstCutter
 
   double silent_run_length;     /* how long has it been below threshold ? */
   gboolean silent;
+  gboolean silent_prev;
 
   double pre_length;            /* how long can the pre-record buffer be ? */
   double pre_run_length;        /* how long is it currently ? */
