@@ -48,7 +48,6 @@ struct _GstWavEnc {
 
   /* useful audio data */
   guint      depth;
-  guint      width;
   guint      rate;
   guint      channels;
   guint32    length;

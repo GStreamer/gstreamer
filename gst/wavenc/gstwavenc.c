@@ -78,8 +78,24 @@ GST_ELEMENT_DETAILS ("WAV audio muxer",
     "rate = (int) [ 1, MAX ], "          \
     "channels = (int) [ 1, 2 ], "        \
     "endianness = (int) LITTLE_ENDIAN, " \
-    "width = (int) { 16, 24, 32 }, "     \
-    "depth = (int) [ 1, 32 ], "          \
+    "width = (int) 32, "                 \
+    "depth = (int) [ 25, 32 ], "         \
+    "signed = (boolean) true"            \
+    "; "                                 \
+    "audio/x-raw-int, "                  \
+    "rate = (int) [ 1, MAX ], "          \
+    "channels = (int) [ 1, 2 ], "        \
+    "endianness = (int) LITTLE_ENDIAN, " \
+    "width = (int) 24, "                 \
+    "depth = (int) [ 17, 24 ], "         \
+    "signed = (boolean) true"            \
+    "; "                                 \
+    "audio/x-raw-int, "                  \
+    "rate = (int) [ 1, MAX ], "          \
+    "channels = (int) [ 1, 2 ], "        \
+    "endianness = (int) LITTLE_ENDIAN, " \
+    "width = (int) 16, "                 \
+    "depth = (int) [ 9, 16 ], "          \
     "signed = (boolean) true"            \
     "; "                                 \
     "audio/x-raw-int, "                  \
@@ -179,9 +195,10 @@ gst_wavenc_create_header_buf (GstWavEnc * wavenc, guint audio_data_size)
   wave.format.len = 16;
 
   wave.common.wFormatTag = WAVE_FORMAT_PCM;
-  wave.common.wBlockAlign = (wavenc->width / 8) * wave.common.wChannels;
-  wave.common.dwAvgBytesPerSec = wave.common.wBlockAlign *
-      wave.common.dwSamplesPerSec;
+  wave.common.wBlockAlign =
+      (GST_ROUND_UP_8 (wavenc->depth) / 8) * wave.common.wChannels;
+  wave.common.dwAvgBytesPerSec =
+      wave.common.wBlockAlign * wave.common.dwSamplesPerSec;
 
   memcpy (wave.data.id, "data", 4);
   wave.data.len = audio_data_size;
@@ -257,12 +274,11 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
   }
 
   wavenc->channels = chans;
-  wavenc->width = width;
   wavenc->depth = depth;
   wavenc->rate = rate;
 
   GST_LOG_OBJECT (wavenc, "accepted caps: chans=%u width=%u depth=%u rate=%u",
-      wavenc->channels, wavenc->width, wavenc->depth, wavenc->rate);
+      wavenc->channels, width, wavenc->depth, wavenc->rate);
 
   gst_object_unref (wavenc);
   return TRUE;
@@ -636,7 +652,6 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       wavenc->channels = 0;
-      wavenc->width = 0;
       wavenc->depth = 0;
       wavenc->rate = 0;
       wavenc->length = 0;

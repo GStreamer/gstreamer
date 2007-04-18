@@ -1,3 +1,11 @@
+2007-04-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_create_header_buf),
+	(gst_wavenc_sink_setcaps), (gst_wavenc_change_state):
+	* gst/wavenc/gstwavenc.h:
+	Wav apparently only supports width==GST_ROUND_UP(depth), everything
+	else results in a invalid block align and invalid files.
+
 2007-04-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Snaik <snaik32 gmail com>
