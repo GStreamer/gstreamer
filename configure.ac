@@ -45,7 +45,7 @@ AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=0.10.11.1
-GSTPB_REQ=0.10.11.1
+GSTPB_REQ=0.10.12.1
 
 dnl *** autotools stuff ****
 
@@ -95,6 +95,7 @@ GST_PLUGINS_ALL="\
   nuvdemux \
   real \
   replaygain \
+  rtpmanager \
   spectrum \
   speed \
   qtdemux \
@@ -263,6 +264,9 @@ AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)
 if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/librfb//`
 fi
+
+# Disable rtpmanager
+GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/rtpmanager//`
 
 AC_SUBST(GST_PLUGINS_SELECTED)
 

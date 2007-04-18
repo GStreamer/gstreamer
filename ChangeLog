@@ -1,3 +1,10 @@
+2007-04-18  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	  Fix wtay's hack.  rtpmanager is disabled in configure.ac on
+	  line 268.
+
 2007-04-18  Wim Taymans  <wim@fluendo.com>
 
 	* gst/Makefile.am:
