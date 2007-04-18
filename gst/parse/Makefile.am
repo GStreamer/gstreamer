@@ -26,6 +26,7 @@ noinst_HEADERS = grammar.tab.h
 all: grammar.tab.pre.c grammar.tab.pre.h lex._gst_parse_yy.pre.c
 
 grammar.tab.pre.c grammar.tab.pre.h: grammar.y
+if GENERATE_PARSER
 	$(BISON_PATH) -d -v -p_gst_parse_yy $(srcdir)/grammar.y -o grammar.tab.c && \
 	mv grammar.tab.c grammar.tab_tmp.c && \
 	echo '#ifdef HAVE_CONFIG_H' > grammar.tab_tmp2.c && \
@@ -36,9 +37,15 @@ grammar.tab.pre.c grammar.tab.pre.h: grammar.y
 	mv grammar.tab_tmp2.c grammar.tab.c
 	cp grammar.tab.c grammar.tab.pre.c
 	cp grammar.tab.h grammar.tab.pre.h
+else
+	echo "Timestamp issue on pregenerated bison output."
+	echo "Using probably outdated pregenerated sources..."
+	touch grammar.tab.pre.c grammar.tab.pre.h
+endif
 
 lex._gst_parse_yy.pre.c: parse.l grammar.tab.pre.h
-	$(FLEX_PATH) -P_gst_parse_yy $^ && \
+if GENERATE_PARSER
+	$(FLEX_PATH) -P_gst_parse_yy lex._gst_parse_yy.c && \
 	mv lex._gst_parse_yy.c lex._gst_parse_yy_tmp.c && \
 	echo '#ifdef HAVE_CONFIG_H' > lex._gst_parse_yy_tmp2.c && \
 	echo '#include <config.h>' >> lex._gst_parse_yy_tmp2.c && \
@@ -47,6 +54,11 @@ lex._gst_parse_yy.pre.c: parse.l grammar.tab.pre.h
 	rm lex._gst_parse_yy_tmp.c && \
 	mv lex._gst_parse_yy_tmp2.c lex._gst_parse_yy.c
 	cp lex._gst_parse_yy.c lex._gst_parse_yy.pre.c
+else
+	echo "Timestamp issue on pregenerated flex output."
+	echo "Using probably outdated pregenerated sources..."
+	touch lex._gst_parse_yy.pre.c
+endif
 
 if GENERATE_PARSER
 grammar.tab.c grammar.tab.h: grammar.y 

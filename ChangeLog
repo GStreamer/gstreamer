@@ -1,5 +1,12 @@
 2007-04-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/parse/Makefile.am:
+	Fix typo and use outdated sources if the flex/bison sources are newer
+	than the pregenerated ones but flex is too old. Print a warning in
+	that case. This should fix the build on the build bot.
+
+2007-04-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Marc-Andre Lureau <marcandre dot lureau at gmail dot com>
 	* gst/parse/Makefile.am:
 	* gst/parse/grammar.y:
