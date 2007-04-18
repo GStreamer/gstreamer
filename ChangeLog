@@ -1,3 +1,9 @@
+2007-04-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* common/m4/gst-gettext.m4:
+	* gst/gst-i18n-lib.h:
+	  Make --disable-nls to work
+
 2007-04-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstconfig.h.in:
