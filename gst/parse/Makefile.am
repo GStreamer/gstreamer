@@ -35,8 +35,8 @@ if GENERATE_PARSER
 	cat grammar.tab_tmp.c >> grammar.tab_tmp2.c && \
 	rm grammar.tab_tmp.c && \
 	mv grammar.tab_tmp2.c grammar.tab.c
-	cp grammar.tab.c grammar.tab.pre.c
-	cp grammar.tab.h grammar.tab.pre.h
+	mv grammar.tab.c grammar.tab.pre.c
+	mv grammar.tab.h grammar.tab.pre.h
 else
 	echo "Timestamp issue on pregenerated bison output."
 	echo "Using probably outdated pregenerated sources..."
@@ -45,7 +45,7 @@ endif
 
 lex._gst_parse_yy.pre.c: parse.l grammar.tab.pre.h
 if GENERATE_PARSER
-	$(FLEX_PATH) -P_gst_parse_yy $^ && \
+	$(FLEX_PATH) -P_gst_parse_yy lex._gst_parse_yy.c && \
 	mv lex._gst_parse_yy.c lex._gst_parse_yy_tmp.c && \
 	echo '#ifdef HAVE_CONFIG_H' > lex._gst_parse_yy_tmp2.c && \
 	echo '#include <config.h>' >> lex._gst_parse_yy_tmp2.c && \
@@ -53,7 +53,7 @@ if GENERATE_PARSER
 	cat lex._gst_parse_yy_tmp.c >> lex._gst_parse_yy_tmp2.c && \
 	rm lex._gst_parse_yy_tmp.c && \
 	mv lex._gst_parse_yy_tmp2.c lex._gst_parse_yy.c && \
-	cp lex._gst_parse_yy.c lex._gst_parse_yy.pre.c
+	mv lex._gst_parse_yy.c lex._gst_parse_yy.pre.c
 else
 	echo "Timestamp issue on pregenerated flex output."
 	echo "Using probably outdated pregenerated sources..."
@@ -78,7 +78,7 @@ endif
 
 if GENERATE_PARSER
 lex._gst_parse_yy.c: parse.l grammar.tab.h
-	$(FLEX_PATH) -P_gst_parse_yy $^ && \
+	$(FLEX_PATH) -P_gst_parse_yy lex._gst_parse_yy.c && \
 	mv lex._gst_parse_yy.c lex._gst_parse_yy_tmp.c && \
 	echo '#ifdef HAVE_CONFIG_H' > lex._gst_parse_yy_tmp2.c && \
 	echo '#include <config.h>' >> lex._gst_parse_yy_tmp2.c && \
@@ -87,7 +87,7 @@ lex._gst_parse_yy.c: parse.l grammar.tab.h
 	rm lex._gst_parse_yy_tmp.c && \
 	mv lex._gst_parse_yy_tmp2.c lex._gst_parse_yy.c
 else
-lex._gst_parse_yy.c: lex._gst_parse_yy.pre.c grammar.tab.h
+lex._gst_parse_yy.c: lex._gst_parse_yy.pre.c grammar.tab.h grammar.tab.c
 	cp $(srcdir)/lex._gst_parse_yy.pre.c lex._gst_parse_yy.c
 endif
 
