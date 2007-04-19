@@ -396,6 +396,7 @@ theora_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
       enc->info.keyframe_frequency_force, enc->granule_shift);
 
   theora_enc_reset (enc);
+  enc->initialised = TRUE;
 
   gst_object_unref (enc);
 
@@ -550,14 +551,17 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      /* push last packet with eos flag */
-      while (theora_encode_packetout (&enc->state, 1, &op)) {
-        /* See comment in the chain function */
-        GstClockTime next_time = theora_granule_time (&enc->state,
-            granulepos_add (op.granulepos, 1, enc->granule_shift)) * GST_SECOND;
+      if (enc->initialised) {
+        /* push last packet with eos flag */
+        while (theora_encode_packetout (&enc->state, 1, &op)) {
+          /* See comment in the chain function */
+          GstClockTime next_time = theora_granule_time (&enc->state,
+              granulepos_add (op.granulepos, 1, enc->granule_shift)) *
+              GST_SECOND;
 
-        theora_push_packet (enc, &op, enc->next_ts, next_time - enc->next_ts);
-        enc->next_ts = next_time;
+          theora_push_packet (enc, &op, enc->next_ts, next_time - enc->next_ts);
+          enc->next_ts = next_time;
+        }
       }
       res = gst_pad_push_event (enc->srcpad, event);
       break;
@@ -945,6 +949,7 @@ theora_enc_change_state (GstElement * element, GstStateChange transition)
       theora_info_clear (&enc->info);
 
       theora_enc_clear (enc);
+      enc->initialised = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

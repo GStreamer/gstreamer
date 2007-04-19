@@ -72,6 +72,7 @@ struct _GstTheoraEnc
   theora_state state;
   theora_info info;
   theora_comment comment;
+  gboolean initialised;
 
   gboolean center;
   GstTheoraEncBorderMode border;
