@@ -1,5 +1,13 @@
 2007-04-19  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/benchmarks/complexity.gnuplot:
+	* tests/benchmarks/complexity.scm:
+	* tests/benchmarks/mass-elements.gnuplot:
+	* tests/benchmarks/mass-elements.scm:
+	  Total licensification.
+
+2007-04-19  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/parse/Makefile.am:
 	  Fix the build by correcting the rule that gave wrong files to flex.
 
