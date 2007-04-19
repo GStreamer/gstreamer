@@ -45,7 +45,7 @@ endif
 
 lex._gst_parse_yy.pre.c: parse.l grammar.tab.pre.h
 if GENERATE_PARSER
-	$(FLEX_PATH) -P_gst_parse_yy lex._gst_parse_yy.c && \
+	$(FLEX_PATH) -P_gst_parse_yy $^ && \
 	mv lex._gst_parse_yy.c lex._gst_parse_yy_tmp.c && \
 	echo '#ifdef HAVE_CONFIG_H' > lex._gst_parse_yy_tmp2.c && \
 	echo '#include <config.h>' >> lex._gst_parse_yy_tmp2.c && \
@@ -78,7 +78,7 @@ endif
 
 if GENERATE_PARSER
 lex._gst_parse_yy.c: parse.l grammar.tab.h
-	$(FLEX_PATH) -P_gst_parse_yy lex._gst_parse_yy.c && \
+	$(FLEX_PATH) -P_gst_parse_yy $^ && \
 	mv lex._gst_parse_yy.c lex._gst_parse_yy_tmp.c && \
 	echo '#ifdef HAVE_CONFIG_H' > lex._gst_parse_yy_tmp2.c && \
 	echo '#include <config.h>' >> lex._gst_parse_yy_tmp2.c && \

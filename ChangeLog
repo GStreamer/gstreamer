@@ -1,6 +1,12 @@
 2007-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/parse/Makefile.am:
+	And now fix the building of the flex sources. Now everything should
+	work as expected.
+
+2007-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/parse/Makefile.am:
 	Now hopefully fix the build failures by setting proper rule
 	dependencies and moving instead of copying.
 
