@@ -45,7 +45,7 @@ AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=0.10.11.1
-GSTPB_REQ=0.10.12.1
+GSTPB_REQ=0.10.11.1
 
 dnl *** autotools stuff ****
 
@@ -265,8 +265,11 @@ if test "x$HAVE_SYS_SOCKET_H" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/librfb//`
 fi
 
-# Disable rtpmanager
-GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/rtpmanager//`
+dnl Disable rtpmanager if -base isn't the latest
+dnl remove this when GSTPB_REQ is updated
+if ! pkg-config --atleast-version=0.10.12.1 gstreamer-plugins-base-0.10 ; then
+  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/rtpmanager//`
+fi
 
 AC_SUBST(GST_PLUGINS_SELECTED)
 
