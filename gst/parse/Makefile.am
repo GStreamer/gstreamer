@@ -87,7 +87,7 @@ lex._gst_parse_yy.c: parse.l grammar.tab.h
 	rm lex._gst_parse_yy_tmp.c && \
 	mv lex._gst_parse_yy_tmp2.c lex._gst_parse_yy.c
 else
-lex._gst_parse_yy.c: lex._gst_parse_yy.pre.c
+lex._gst_parse_yy.c: lex._gst_parse_yy.pre.c grammar.tab.h
 	cp $(srcdir)/lex._gst_parse_yy.pre.c lex._gst_parse_yy.c
 endif
 

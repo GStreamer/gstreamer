@@ -1,3 +1,9 @@
+2007-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/parse/Makefile.am:
+	Add correct grammar.tab.h dependency if compiling without new enough
+	flex. Fixes #431150.
+
 2007-04-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/parse/Makefile.am:
