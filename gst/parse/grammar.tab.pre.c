@@ -317,7 +317,7 @@ YYPRINTF (const char *format, ...)
 
 #endif /* GST_DISABLE_GST_DEBUG */
 
-#define GST_BIN_MAKE(res, type, chainval, assign) \
+#define GST_BIN_MAKE(res, type, chainval, assign, free_string) \
 G_STMT_START { \
   chain_t *chain = chainval; \
   GSList *walk; \
@@ -327,6 +327,9 @@ G_STMT_START { \
         _("specified empty bin \"%s\", not allowed"), type); \
     g_slist_foreach (assign, (GFunc) gst_parse_strfree, NULL); \
     g_slist_free (assign); \
+    gst_object_unref (bin); \
+    if (free_string) \
+      gst_parse_strfree (type); /* Need to clean up the string */ \
     YYERROR; \
   } else if (!bin) { \
     SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_NO_SUCH_ELEMENT, \
@@ -605,7 +608,7 @@ static int yyerror (void *scanner, graph_t * graph, const char *s);
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 468 "./grammar.y"
+#line 471 "./grammar.y"
 {
   gchar *s;
   chain_t *c;
@@ -615,7 +618,7 @@ typedef union YYSTYPE
   graph_t *g;
 }
 /* Line 187 of yacc.c.  */
-#line 598 "grammar.tab.c"
+#line 601 "grammar.tab.c"
 YYSTYPE;
 
 # define yystype YYSTYPE        /* obsolescent; will be withdrawn */
@@ -629,7 +632,7 @@ YYSTYPE;
 
 
 /* Line 216 of yacc.c.  */
-#line 611 "grammar.tab.c"
+#line 614 "grammar.tab.c"
 
 #ifdef short
 # undef short
@@ -918,10 +921,10 @@ static const yytype_int8 yyrhs[] = {
 
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] = {
-  0, 503, 503, 511, 515, 516, 518, 519, 522, 525,
-  530, 531, 535, 536, 539, 540, 543, 544, 545, 548,
-  561, 562, 563, 566, 571, 572, 607, 635, 636, 650,
-  670, 695, 698
+  0, 506, 506, 514, 518, 519, 521, 522, 525, 528,
+  533, 534, 538, 539, 542, 543, 546, 547, 548, 551,
+  564, 565, 566, 569, 574, 575, 610, 638, 639, 653,
+  673, 698, 701
 };
 #endif
 
@@ -1864,7 +1867,7 @@ yyreduce:
   YY_REDUCE_PRINT (yyn);
   switch (yyn) {
     case 2:
-#line 503 "./grammar.y"
+#line 506 "./grammar.y"
     {
       (yyval.e) = gst_element_factory_make ((yyvsp[(1) - (1)].s), NULL);
       if ((yyval.e) == NULL) {
@@ -1879,7 +1882,7 @@ yyreduce:
       break;
 
     case 3:
-#line 511 "./grammar.y"
+#line 514 "./grammar.y"
     {
       gst_parse_element_set ((yyvsp[(2) - (2)].s), (yyvsp[(1) - (2)].e), graph);
       (yyval.e) = (yyvsp[(1) - (2)].e);
@@ -1888,66 +1891,66 @@ yyreduce:
       break;
 
     case 4:
-#line 515 "./grammar.y"
+#line 518 "./grammar.y"
     {
       (yyval.p) = NULL;;
     }
       break;
 
     case 5:
-#line 516 "./grammar.y"
+#line 519 "./grammar.y"
     {
       (yyval.p) = g_slist_prepend ((yyvsp[(1) - (2)].p), (yyvsp[(2) - (2)].s));;
     }
       break;
 
     case 6:
-#line 518 "./grammar.y"
+#line 521 "./grammar.y"
     {
       GST_BIN_MAKE ((yyval.c), "bin", (yyvsp[(3) - (4)].c),
-          (yyvsp[(2) - (4)].p));;
+          (yyvsp[(2) - (4)].p), FALSE);;
     }
       break;
 
     case 7:
-#line 519 "./grammar.y"
+#line 522 "./grammar.y"
     {
       GST_BIN_MAKE ((yyval.c), (yyvsp[(1) - (4)].s), (yyvsp[(3) - (4)].c),
-          (yyvsp[(2) - (4)].p));
+          (yyvsp[(2) - (4)].p), TRUE);
       gst_parse_strfree ((yyvsp[(1) - (4)].s));
       ;
     }
       break;
 
     case 8:
-#line 522 "./grammar.y"
+#line 525 "./grammar.y"
     {
-      GST_BIN_MAKE ((yyval.c), (yyvsp[(1) - (3)].s), NULL,
-          (yyvsp[(2) - (3)].p));
+      GST_BIN_MAKE ((yyval.c), (yyvsp[(1) - (3)].s), NULL, (yyvsp[(2) - (3)].p),
+          TRUE);
       gst_parse_strfree ((yyvsp[(1) - (3)].s));
       ;
     }
       break;
 
     case 9:
-#line 525 "./grammar.y"
+#line 528 "./grammar.y"
     {
-      GST_BIN_MAKE ((yyval.c), (yyvsp[(1) - (4)].s), NULL,
-          (yyvsp[(2) - (4)].p));
+      GST_BIN_MAKE ((yyval.c), (yyvsp[(1) - (4)].s), NULL, (yyvsp[(2) - (4)].p),
+          TRUE);
       gst_parse_strfree ((yyvsp[(1) - (4)].s));
       ;
     }
       break;
 
     case 10:
-#line 530 "./grammar.y"
+#line 533 "./grammar.y"
     {
       (yyval.p) = g_slist_prepend (NULL, (yyvsp[(1) - (1)].s));;
     }
       break;
 
     case 11:
-#line 531 "./grammar.y"
+#line 534 "./grammar.y"
     {
       (yyval.p) = (yyvsp[(2) - (2)].p);
       (yyval.p) = g_slist_prepend ((yyval.p), (yyvsp[(1) - (2)].s));
@@ -1956,56 +1959,56 @@ yyreduce:
       break;
 
     case 12:
-#line 535 "./grammar.y"
+#line 538 "./grammar.y"
     {
       (yyval.p) = g_slist_prepend (NULL, (yyvsp[(2) - (2)].s));;
     }
       break;
 
     case 13:
-#line 536 "./grammar.y"
+#line 539 "./grammar.y"
     {
       (yyval.p) = g_slist_prepend ((yyvsp[(3) - (3)].p), (yyvsp[(2) - (3)].s));;
     }
       break;
 
     case 14:
-#line 539 "./grammar.y"
+#line 542 "./grammar.y"
     {
       MAKE_REF ((yyval.l), (yyvsp[(1) - (1)].s), NULL);;
     }
       break;
 
     case 15:
-#line 540 "./grammar.y"
+#line 543 "./grammar.y"
     {
       MAKE_REF ((yyval.l), (yyvsp[(1) - (2)].s), (yyvsp[(2) - (2)].p));;
     }
       break;
 
     case 16:
-#line 543 "./grammar.y"
+#line 546 "./grammar.y"
     {
       (yyval.l) = (yyvsp[(1) - (1)].l);;
     }
       break;
 
     case 17:
-#line 544 "./grammar.y"
+#line 547 "./grammar.y"
     {
       MAKE_REF ((yyval.l), NULL, (yyvsp[(1) - (1)].p));;
     }
       break;
 
     case 18:
-#line 545 "./grammar.y"
+#line 548 "./grammar.y"
     {
       MAKE_REF ((yyval.l), NULL, NULL);;
     }
       break;
 
     case 19:
-#line 548 "./grammar.y"
+#line 551 "./grammar.y"
     {
       (yyval.l) = (yyvsp[(1) - (3)].l);
       if ((yyvsp[(2) - (3)].s)) {
@@ -2023,28 +2026,28 @@ yyreduce:
       break;
 
     case 20:
-#line 561 "./grammar.y"
+#line 564 "./grammar.y"
     {
       (yyval.p) = g_slist_prepend (NULL, (yyvsp[(1) - (1)].l));;
     }
       break;
 
     case 21:
-#line 562 "./grammar.y"
+#line 565 "./grammar.y"
     {
       (yyval.p) = g_slist_prepend ((yyvsp[(2) - (2)].p), (yyvsp[(1) - (2)].l));;
     }
       break;
 
     case 22:
-#line 563 "./grammar.y"
+#line 566 "./grammar.y"
     {
       (yyval.p) = (yyvsp[(1) - (2)].p);;
     }
       break;
 
     case 23:
-#line 566 "./grammar.y"
+#line 569 "./grammar.y"
     {
       (yyval.c) = gst_parse_chain_new ();
       (yyval.c)->first = (yyval.c)->last = (yyvsp[(1) - (1)].e);
@@ -2055,14 +2058,14 @@ yyreduce:
       break;
 
     case 24:
-#line 571 "./grammar.y"
+#line 574 "./grammar.y"
     {
       (yyval.c) = (yyvsp[(1) - (1)].c);;
     }
       break;
 
     case 25:
-#line 572 "./grammar.y"
+#line 575 "./grammar.y"
     {
       if ((yyvsp[(1) - (2)].c)->back && (yyvsp[(2) - (2)].c)->front) {
         if (!(yyvsp[(1) - (2)].c)->back->sink_name) {
@@ -2113,7 +2116,7 @@ yyreduce:
       break;
 
     case 26:
-#line 607 "./grammar.y"
+#line 610 "./grammar.y"
     {
       GSList *walk;
 
@@ -2154,14 +2157,14 @@ yyreduce:
       break;
 
     case 27:
-#line 635 "./grammar.y"
+#line 638 "./grammar.y"
     {
       (yyval.c) = (yyvsp[(1) - (2)].c);;
     }
       break;
 
     case 28:
-#line 636 "./grammar.y"
+#line 639 "./grammar.y"
     {
       if ((yyvsp[(2) - (2)].c)->front) {
         if (!(yyvsp[(2) - (2)].c)->front->src_name) {
@@ -2184,7 +2187,7 @@ yyreduce:
       break;
 
     case 29:
-#line 650 "./grammar.y"
+#line 653 "./grammar.y"
     {
       (yyval.c) = (yyvsp[(2) - (2)].c);
       if ((yyval.c)->front) {
@@ -2211,7 +2214,7 @@ yyreduce:
       break;
 
     case 30:
-#line 670 "./grammar.y"
+#line 673 "./grammar.y"
     {
       GstElement *element =
           gst_element_make_from_uri (GST_URI_SINK, (yyvsp[(2) - (2)].s), NULL);
@@ -2243,7 +2246,7 @@ yyreduce:
       break;
 
     case 31:
-#line 695 "./grammar.y"
+#line 698 "./grammar.y"
     {
       SET_ERROR (((graph_t *) graph)->error, GST_PARSE_ERROR_EMPTY,
           _("empty pipeline not allowed"));
@@ -2253,7 +2256,7 @@ yyreduce:
       break;
 
     case 32:
-#line 698 "./grammar.y"
+#line 701 "./grammar.y"
     {
       (yyval.g) = (graph_t *) graph;
       if ((yyvsp[(1) - (1)].c)->front) {
@@ -2285,7 +2288,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 2199 "grammar.tab.c"
+#line 2202 "grammar.tab.c"
     default:
       break;
   }
@@ -2485,7 +2488,7 @@ yyreturn:
 }
 
 
-#line 721 "./grammar.y"
+#line 724 "./grammar.y"
 
 
 

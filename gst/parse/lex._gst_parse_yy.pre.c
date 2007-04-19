@@ -2442,7 +2442,7 @@ enum yytokentype
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 468 "./grammar.y"
+#line 471 "./grammar.y"
 {
   gchar *s;
   chain_t *c;

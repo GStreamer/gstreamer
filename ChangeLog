@@ -1,5 +1,12 @@
 2007-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/parse/grammar.tab.pre.c:
+	* gst/parse/grammar.tab.pre.h:
+	* gst/parse/lex._gst_parse_yy.pre.c:
+	Update the prebuild parser sources.
+
+2007-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/parse/Makefile.am:
 	And now fix the building of the flex sources. Now everything should
 	work as expected.
