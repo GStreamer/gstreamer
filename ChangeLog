@@ -1,5 +1,10 @@
 2007-04-19  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/parse/Makefile.am:
+	  Fix the build by correcting the rule that gave wrong files to flex.
+
+2007-04-19  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/benchmarks/complexity.c:
 	* tests/benchmarks/mass-elements.c:
 	  Change licence to LGPL as granted by Benjamin and Andy.
