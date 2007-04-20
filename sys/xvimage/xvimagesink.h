@@ -40,6 +40,7 @@
 
 #include <string.h>
 #include <math.h>
+#include <stdlib.h>
 
 G_BEGIN_DECLS
 
@@ -79,7 +80,7 @@ typedef struct _GstXvImageSinkClass GstXvImageSinkClass;
  * @height: the height in pixels of Display @disp
  * @widthmm: the width in millimeters of Display @disp
  * @heightmm: the height in millimeters of Display @disp
- * @par: the pixel aspect ratio calculated from @width, @widthmm and @height, 
+ * @par: the pixel aspect ratio calculated from @width, @widthmm and @height,
  * @heightmm ratio
  * @use_xshm: used to known wether of not XShm extension is usable or not even
  * if the Extension is present
@@ -207,7 +208,7 @@ struct _GstXvImageBuffer {
  * @pool_lock: used to protect the buffer pool
  * @image_pool: a list of #GstXvImageBuffer that could be reused at next buffer
  * allocation call
- * @synchronous: used to store if XSynchronous should be used or not (for 
+ * @synchronous: used to store if XSynchronous should be used or not (for
  * debugging purpose only)
  * @keep_aspect: used to remember if reverse negotiation scaling should respect
  * aspect ratio
@@ -233,26 +234,26 @@ struct _GstXvImageSink {
   GstXWindow *xwindow;
   GstXvImageBuffer *xvimage;
   GstXvImageBuffer *cur_image;
-  
+
   GThread *event_thread;
   gboolean running;
 
   gint fps_n;
   gint fps_d;
-  
+
   GMutex *x_lock;
   GMutex *flow_lock;
 
   /* object-set pixel aspect ratio */
   GValue *par;
-  
+
   GMutex *pool_lock;
   GSList *image_pool;
-  
+
   gboolean synchronous;
   gboolean keep_aspect;
   gboolean handle_events;
-  
+
   gint brightness;
   gint contrast;
   gint hue;

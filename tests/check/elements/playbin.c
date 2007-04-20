@@ -26,7 +26,7 @@
 #include <gst/base/gstpushsrc.h>
 #include <unistd.h>
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_REGISTRY
 
 #define DEFINE_TEST(func) \
     static void func (void);                            \
@@ -591,7 +591,7 @@ GST_PLUGIN_DEFINE_STATIC
     "static elements for the playbin unit test",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
 
-#endif /* GST_DISABLE_LOADSAVE_REGISTRY */
+#endif /* GST_DISABLE_REGISTRY */
 
 
 static Suite *
@@ -602,7 +602,7 @@ playbin_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_REGISTRY
   /* with the old decodebin */
   tcase_add_test (tc_chain, test_sink_usage_video_only_stream_decodebin1);
   tcase_add_test (tc_chain, test_suburi_error_wrongproto_decodebin1);

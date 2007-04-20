@@ -23,19 +23,19 @@
  * <refsect2>
  * <para>
  * XvImageSink renders video frames to a drawable (XWindow) on a local display
- * using the XVideo extension. Rendering to a remote display is theorically 
- * possible but i doubt that the XVideo extension is actually available when 
+ * using the XVideo extension. Rendering to a remote display is theorically
+ * possible but i doubt that the XVideo extension is actually available when
  * connecting to a remote display. This element can receive a Window ID from the
  * application through the XOverlay interface and will then render video frames
- * in this drawable. If no Window ID was provided by the application, the 
+ * in this drawable. If no Window ID was provided by the application, the
  * element will create its own internal window and render into it.
  * </para>
  * <title>Scaling</title>
  * <para>
- * The XVideo extension, when it's available, handles hardware accelerated 
+ * The XVideo extension, when it's available, handles hardware accelerated
  * scaling of video frames. This means that the element will just accept
  * incoming video frames no matter their geometry and will then put them to the
- * drawable scaling them on the fly. Using the 
+ * drawable scaling them on the fly. Using the
  * <link linkend="GstXvImageSink--force-aspect-ratio">force-aspect-ratio</link>
  * property it is possible to enforce scaling with a constant aspect ratio,
  * which means drawing black borders around the video frame.
@@ -43,7 +43,7 @@
  * <title>Events</title>
  * <para>
  * XvImageSink creates a thread to handle events coming from the drawable. There
- * are several kind of events that can be grouped in 2 big categories: input 
+ * are several kind of events that can be grouped in 2 big categories: input
  * events and window state related events. Input events will be translated to
  * navigation events and pushed upstream for other elements to react on them.
  * This includes events such as pointer moves, key press/release, clicks etc...
@@ -59,7 +59,7 @@
  * <link linkend="GstXvImageSink--display">display</link> property or the
  * default display if nothing specified. Once this connection is open it will
  * inspect the display configuration including the physical display geometry and
- * then calculate the pixel aspect ratio. When receiving video frames with a 
+ * then calculate the pixel aspect ratio. When receiving video frames with a
  * different pixel aspect ratio, XvImageSink will use hardware scaling to
  * display the video frames correctly on display's pixel aspect ratio.
  * Sometimes the calculated pixel aspect ratio can be wrong, it is
@@ -87,13 +87,13 @@
  * gst-launch -v videotestsrc ! navigationtest ! xvimagesink
  * </programlisting>
  * While moving the mouse pointer over the test signal you will see a black box
- * following the mouse pointer. If you press the mouse button somewhere on the 
+ * following the mouse pointer. If you press the mouse button somewhere on the
  * video and release it somewhere else a green box will appear where you pressed
  * the button and a red one where you released it. (The navigationtest element
  * is part of gst-plugins-good.) You can observe here that even if the images
  * are scaled through hardware the pointer coordinates are converted back to the
- * original video frame geometry so that the box can be drawn to the correct 
- * position. This also handles borders correctly, limiting coordinates to the 
+ * original video frame geometry so that the box can be drawn to the correct
+ * position. This also handles borders correctly, limiting coordinates to the
  * image area
  * </para>
  * <para>
@@ -103,9 +103,9 @@
  * </programlisting>
  * This is faking a 4/3 pixel aspect ratio caps on video frames produced by
  * videotestsrc, in most cases the pixel aspect ratio of the display will be
- * 1/1. This means that XvImageSink will have to do the scaling to convert 
+ * 1/1. This means that XvImageSink will have to do the scaling to convert
  * incoming frames to a size that will match the display pixel aspect ratio
- * (from 320x240 to 320x180 in this case). Note that you might have to escape 
+ * (from 320x240 to 320x180 in this case). Note that you might have to escape
  * some characters for your shell like '\(fraction\)'.
  * </para>
  * <para>
@@ -741,7 +741,7 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
 
   gst_xvimagesink_xwindow_update_geometry (xvimagesink, xvimagesink->xwindow);
 
-  /* We use the calculated geometry from _setcaps as a source to respect 
+  /* We use the calculated geometry from _setcaps as a source to respect
      source and screen pixel aspect ratios. */
   src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
   src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);
@@ -856,7 +856,7 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
       0, 0, xwindow->width, xwindow->height,
       0, 0, xvimagesink->xcontext->black);
 
-  /* We have to do that to prevent X from redrawing the background on 
+  /* We have to do that to prevent X from redrawing the background on
    * ConfigureNotify. This takes away flickering of video when resizing. */
   XSetWindowBackgroundPixmap (xvimagesink->xcontext->disp, xwindow->win, None);
 
@@ -1288,7 +1288,7 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
           bits++;
 
         /* set a colorkey in the right format RGB565/RGB888
-         * note that the colorkey is independent from the display 
+         * note that the colorkey is independent from the display
          * depth (xcontext->depth). We only handle these 2 cases, because
          * they're the only types of devices we've encountered. If we don't
          * recognise it, leave it alone  */
@@ -2226,7 +2226,7 @@ gst_xvimagesink_buffer_alloc (GstBaseSink * bsink, guint64 offset, guint size,
   image_format = gst_xvimagesink_get_format_from_caps (xvimagesink,
       intersection);
 
-  /* Store our caps and format as the last_caps to avoid expensive 
+  /* Store our caps and format as the last_caps to avoid expensive
    * caps intersection next time */
   gst_caps_replace (&xvimagesink->xcontext->last_caps, intersection);
   xvimagesink->xcontext->last_format = image_format;
@@ -2335,7 +2335,7 @@ gst_xvimagesink_navigation_send_event (GstNavigation * navigation,
       return;
     }
 
-    /* We get the frame position using the calculated geometry from _setcaps 
+    /* We get the frame position using the calculated geometry from _setcaps
        that respect pixel aspect ratios */
     src.w = GST_VIDEO_SINK_WIDTH (xvimagesink);
     src.h = GST_VIDEO_SINK_HEIGHT (xvimagesink);

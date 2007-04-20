@@ -1,3 +1,19 @@
+2007-04-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/subparse/gstsubparse.c:
+	* gst/subparse/samiparse.c:
+	  Use GST_DISABLE_XML here
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_put),
+	(gst_xvimagesink_xwindow_new), (gst_xvimagesink_get_xv_support),
+	(gst_xvimagesink_buffer_alloc),
+	(gst_xvimagesink_navigation_send_event):
+	* sys/xvimage/xvimagesink.h:
+	  Include stdlib.h when using atoi.
+	  
+	* tests/check/elements/playbin.c: (playbin_suite):
+	  Use GST_DISABLE_REGISTRY here
+
 2007-04-19  Michael Smith  <msmith@fluendo.com>
 
 	* ext/theora/gsttheoraenc.h:

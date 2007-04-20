@@ -20,7 +20,7 @@
 #include "samiparse.h"
 
 /* FIXME: use Makefile stuff */
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_XML
 #include <libxml/HTMLparser.h>
 #include <string.h>
 
@@ -435,7 +435,7 @@ parse_sami (ParserState * state, const gchar * line)
   return NULL;
 }
 
-#else /* GST_DISABLE_LOADSAVE_REGISTRY */
+#else /* GST_DISABLE_XML */
 
 gchar *
 parse_sami (ParserState * state, const gchar * line)
@@ -462,4 +462,4 @@ sami_context_reset (ParserState * state)
   return;
 }
 
-#endif /* GST_DISABLE_LOADSAVE_REGISTRY */
+#endif /* GST_DISABLE_XML */

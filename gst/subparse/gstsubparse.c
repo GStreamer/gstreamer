@@ -59,7 +59,7 @@ GST_ELEMENT_DETAILS ("Subtitle parser",
     "Gustavo J. A. M. Carneiro <gjc@inescporto.pt>\n"
     "Ronald S. Bultje <rbultje@ronald.bitfreak.net>");
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_XML
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
