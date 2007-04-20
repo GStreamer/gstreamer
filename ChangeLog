@@ -1,3 +1,9 @@
+2007-04-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/debug/progressreport.c: (gst_progress_report_report):
+	  Don't try to post NULL message (in case we can't query upstream
+	  position or duration).
+
 2007-04-18  Michael Smith  <msmith@fluendo.com>
 
 	* gst/cutter/gstcutter.c: (gst_cutter_init), (gst_cutter_chain),

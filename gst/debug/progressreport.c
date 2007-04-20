@@ -358,7 +358,9 @@ gst_progress_report_report (GstProgressReport * filter, GTimeVal cur_time)
   filter->pending_msg = NULL;
   GST_OBJECT_UNLOCK (filter);
 
-  gst_element_post_message (GST_ELEMENT_CAST (filter), msg);
+  if (msg) {
+    gst_element_post_message (GST_ELEMENT_CAST (filter), msg);
+  }
 }
 
 static gboolean
