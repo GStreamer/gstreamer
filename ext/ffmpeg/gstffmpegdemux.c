@@ -1113,14 +1113,21 @@ gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
   GstFFMpegDemuxClassParams *params = (GstFFMpegDemuxClassParams *) priv;
   AVInputFormat *in_plugin = params->in_plugin;
   gint res = 0;
+  guint64 length;
+
+  /* We want GST_FFMPEG_TYPE_FIND_SIZE bytes, but if the file is shorter than
+   * that we'll give it a try... */
+  length = gst_type_find_get_length (tf);
+  if (length == 0 || length > GST_FFMPEG_TYPE_FIND_SIZE)
+    length = GST_FFMPEG_TYPE_FIND_SIZE;
 
   if (in_plugin->read_probe &&
-      (data = gst_type_find_peek (tf, 0, GST_FFMPEG_TYPE_FIND_SIZE)) != NULL) {
+      (data = gst_type_find_peek (tf, 0, length)) != NULL) {
     AVProbeData probe_data;
 
     probe_data.filename = "";
     probe_data.buf = data;
-    probe_data.buf_size = GST_FFMPEG_TYPE_FIND_SIZE;
+    probe_data.buf_size = length;
 
     res = in_plugin->read_probe (&probe_data);
     if (res > 0) {

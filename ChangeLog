@@ -1,3 +1,9 @@
+2007-04-20  Michael Smith  <msmith@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_type_find):
+	  Allow ffmpeg typefinders to try and typefind very short (<4kB)
+	  files.
+
 2007-04-12  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Mark Nauwelaerts <manauw at skynet dot be> and
