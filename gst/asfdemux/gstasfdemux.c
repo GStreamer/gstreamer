@@ -76,8 +76,7 @@ GST_STATIC_PAD_TEMPLATE ("video_%02d",
   (flow == ASF_FLOW_NEED_MORE_DATA) ?  \
   "need-more-data" : gst_flow_get_name (flow)
 
-GST_DEBUG_CATEGORY_STATIC (asf_debug);
-#define GST_CAT_DEFAULT asf_debug
+GST_DEBUG_CATEGORY (asf_debug);
 
 static GstStateChangeReturn gst_asf_demux_change_state (GstElement * element,
     GstStateChange transition);
@@ -144,7 +143,7 @@ gst_asf_demux_class_init (GstASFDemuxClass * klass)
 }
 
 static void
-gst_asf_demux_free_stream (GstASFDemux * demux, asf_stream_context * stream)
+gst_asf_demux_free_stream (GstASFDemux * demux, AsfStream * stream)
 {
   gst_buffer_replace (&stream->cache, NULL);
   gst_buffer_replace (&stream->payload, NULL);
@@ -336,8 +335,9 @@ gst_asf_demux_seek_index_lookup (GstASFDemux * demux, guint * packet,
 
   *packet = demux->sidx_entries[idx];
 
-  GST_DEBUG_OBJECT (demux, "%" GST_TIME_FORMAT " => packet %u",
-      GST_TIME_ARGS (seek_time), *packet);
+  GST_DEBUG_OBJECT (demux, "%" GST_TIME_FORMAT " => packet %u at %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (seek_time), *packet,
+      GST_TIME_ARGS (demux->sidx_interval * idx));
 
   return TRUE;
 }
@@ -440,6 +440,8 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 
   seek_time = segment.start;
 
+  /* FIXME: should check the KEY_UNIT flag; need to adjust last_stop to
+   * real start of data and segment_start to indexed time for key unit seek*/
   if (!gst_asf_demux_seek_index_lookup (demux, &packet, seek_time)) {
     /* Hackety hack, this sucks. We just seek to an earlier position
      *  and let the sinks throw away the stuff before the segment start */
@@ -1184,18 +1186,6 @@ gst_asf_demux_get_obj_stream (asf_obj_stream * stream, guint8 ** p_data,
 }
 
 static gboolean
-gst_asf_demux_get_replicated_data (asf_replicated_data * rep, guint8 ** p_data,
-    guint64 * p_size)
-{
-  if (*p_size < (4 + 4))
-    return FALSE;
-
-  rep->object_size = gst_asf_demux_get_uint32 (p_data, p_size);
-  rep->frag_timestamp = gst_asf_demux_get_uint32 (p_data, p_size);
-  return TRUE;
-}
-
-static gboolean
 gst_asf_demux_get_obj_data_correction (asf_obj_data_correction * object,
     guint8 ** p_data, guint64 * p_size)
 {
@@ -1261,23 +1251,17 @@ gst_asf_demux_get_stream_video_format (asf_stream_video_format * fmt,
   return TRUE;
 }
 
-static asf_stream_context *
+AsfStream *
 gst_asf_demux_get_stream (GstASFDemux * demux, guint16 id)
 {
-  guint8 i;
-  asf_stream_context *stream;
+  guint i;
 
   for (i = 0; i < demux->num_streams; i++) {
-    stream = &demux->stream[i];
-    if (stream->id == id) {
-      /* We've found the one with the matching id */
+    if (demux->stream[i].id == id)
       return &demux->stream[i];
-    }
   }
 
-  /* Base case if we haven't found one at all */
   GST_WARNING ("Segment found for undefined stream: (%d)", id);
-
   return NULL;
 }
 
@@ -1301,7 +1285,7 @@ static void
 gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
     GstCaps * caps, guint16 id, gboolean is_video, GstTagList * tags)
 {
-  asf_stream_context *stream;
+  AsfStream *stream;
 
   gst_pad_use_fixed_caps (src_pad);
   gst_pad_set_caps (src_pad, caps);
@@ -1322,6 +1306,7 @@ gst_asf_demux_setup_pad (GstASFDemux * demux, GstPad * src_pad,
   stream->delay = 0;
   stream->first_pts = GST_CLOCK_TIME_NONE;
   stream->last_pts = GST_CLOCK_TIME_NONE;
+  stream->last_buffer_timestamp = GST_CLOCK_TIME_NONE;
   stream->fps_known = !is_video;        /* bit hacky for audio */
   stream->is_video = is_video;
   stream->pending_tags = tags;
@@ -1441,6 +1426,9 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
     caps = gst_caps_new_simple ("video/x-asf-unknown", "fourcc",
         GST_TYPE_FOURCC, video->tag, NULL);
   }
+
+  /* add fourcc format to caps, some proprietary decoders seem to need it */
+  gst_caps_set_simple (caps, "format", GST_TYPE_FOURCC, video->tag, NULL);
 
   if (codec_name) {
     tags = gst_tag_list_new ();
@@ -1766,6 +1754,7 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
             } else {
               g_value_init (&tag_value, G_TYPE_STRING);
               g_value_set_string (&tag_value, value_utf8);
+              /* FIXME: convert to target value type if required */
             }
           } else if (value_utf8 == NULL) {
             GST_WARNING ("Failed to convert string value to UTF8, skipping");
@@ -1893,7 +1882,10 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   demux->packet_size = max_pktsize;
 
   /* FIXME: do we need send_time as well? what is it? */
-  demux->play_time = (guint64) play_time *(GST_SECOND / 10000000);
+  if ((play_time * 100) >= (preroll * GST_MSECOND))
+    demux->play_time = (play_time * 100) - (preroll * GST_MSECOND);
+  else
+    demux->play_time = 0;
 
   demux->preroll = preroll;
 
@@ -1902,7 +1894,8 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
 
   GST_DEBUG_OBJECT (demux,
       "play_time %" GST_TIME_FORMAT " preroll %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (demux->play_time), GST_TIME_ARGS (demux->preroll));
+      GST_TIME_ARGS (demux->play_time),
+      GST_TIME_ARGS (demux->preroll * GST_MSECOND));
 
   if (demux->play_time > 0) {
     gst_segment_set_duration (&demux->segment, GST_FORMAT_TIME,
@@ -2556,7 +2549,7 @@ error_encrypted:
 
 static void
 gst_asf_demux_descramble_segment (GstASFDemux * demux,
-    asf_segment_info * segment_info, asf_stream_context * stream)
+    asf_segment_info * segment_info, AsfStream * stream)
 {
   GstBuffer *scrambled_buffer;
   GstBuffer *descrambled_buffer;
@@ -2644,7 +2637,7 @@ gst_asf_demux_send_event_unlocked (GstASFDemux * demux, GstEvent * event)
 }
 
 static GstFlowReturn
-gst_asf_demux_push_buffer (GstASFDemux * demux, asf_stream_context * stream,
+gst_asf_demux_push_buffer (GstASFDemux * demux, AsfStream * stream,
     GstBuffer * buf)
 {
   GstFlowReturn ret;
@@ -2703,7 +2696,7 @@ gst_asf_demux_process_chunk (GstASFDemux * demux,
     guint8 ** p_data, guint64 * p_size)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  asf_stream_context *stream;
+  AsfStream *stream;
   GstBuffer *buffer;
 
   stream = gst_asf_demux_get_stream (demux, segment_info->stream_number);
@@ -2931,7 +2924,7 @@ gst_asf_demux_process_segment (GstASFDemux * demux,
   /* FIXME: check (doesn't work) */
 #if 0
   {
-    asf_stream_context *stream;
+    AsfStream *stream;
 
     stream = gst_asf_demux_get_stream (demux, segment_info.stream_number);
     if (stream && stream->last_pts == GST_CLOCK_TIME_NONE &&
@@ -2971,38 +2964,35 @@ gst_asf_demux_process_segment (GstASFDemux * demux,
       segment_info.sequence, segment_info.frag_offset, replic_size);
 
   if (replic_size > 1) {
-    asf_replicated_data replicated_data_header;
-
     segment_info.compressed = FALSE;
 
     /* It's uncompressed with replic data */
-    if (!gst_asf_demux_get_replicated_data (&replicated_data_header, p_data,
-            p_size))
-      return ASF_FLOW_NEED_MORE_DATA;
-/*    {
-      GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
-          ("The payload has replicated data but the size is less than 8"));
-      return GST_FLOW_ERROR;
-    }
-*/
-    segment_info.frag_timestamp = replicated_data_header.frag_timestamp;
-    segment_info.segment_size = replicated_data_header.object_size;
+    if (*p_size < (4 + 4))
+      goto short_repdata;
+
+    segment_info.segment_size = gst_asf_demux_get_uint32 (p_data, p_size);
+    segment_info.frag_timestamp = gst_asf_demux_get_uint32 (p_data, p_size);
+
+    GST_LOG ("frag_timestamp: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (segment_info.frag_timestamp * GST_MSECOND));
 
     if (replic_size > 8) {
       if (!gst_asf_demux_skip_bytes ((replic_size - 8), p_data, p_size))
         return ASF_FLOW_NEED_MORE_DATA;
     }
+  } else if (replic_size == 1) {
+    /* It's compressed */
+    segment_info.compressed = TRUE;
+    if (*p_size < 1)
+      return ASF_FLOW_NEED_MORE_DATA;
+    time_delta = gst_asf_demux_get_uint8 (p_data, p_size);
+    GST_DEBUG ("time_delta = %u", time_delta);
+
+    time_start = segment_info.frag_offset;
+    segment_info.frag_offset = 0;
+    segment_info.frag_timestamp = time_start;   /* was: demux->timestamp */
   } else {
-    if (replic_size == 1) {
-      /* It's compressed */
-      segment_info.compressed = TRUE;
-      if (*p_size < 1)
-        return ASF_FLOW_NEED_MORE_DATA;
-      time_delta = gst_asf_demux_get_uint8 (p_data, p_size);
-      GST_DEBUG ("time_delta = %u", time_delta);
-    } else {
-      segment_info.compressed = FALSE;
-    }
+    segment_info.compressed = FALSE;
 
     time_start = segment_info.frag_offset;
     segment_info.frag_offset = 0;
@@ -3073,6 +3063,20 @@ gst_asf_demux_process_segment (GstASFDemux * demux,
   }
 
   return ret;
+
+/* ERRORS */
+short_repdata:
+  {
+    if (replic_size < 8) {
+      GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+          ("payload has replicated data, but size is less than 8"));
+    } else {
+      GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL),
+          ("payload has %u bytes of replicated data, but size is only %u",
+              replic_size, (guint) * p_size));
+    }
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn
@@ -3168,6 +3172,7 @@ gst_asf_demux_handle_data (GstASFDemux * demux, guint8 ** p_data,
     return ASF_FLOW_NEED_MORE_DATA;
   }
 
+  /* FIXME: isn't this the send time, ie. not the presentation time? (tpm) */
   demux->timestamp = gst_asf_demux_get_uint32 (p_data, p_size);
   duration = gst_asf_demux_get_uint16 (p_data, p_size);
 

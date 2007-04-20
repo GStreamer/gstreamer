@@ -1,3 +1,26 @@
+2007-04-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_free_stream),
+	(gst_asf_demux_seek_index_lookup),
+	(gst_asf_demux_handle_seek_event), (gst_asf_demux_get_stream),
+	(gst_asf_demux_setup_pad), (gst_asf_demux_add_video_stream),
+	(gst_asf_demux_process_ext_content_desc),
+	(gst_asf_demux_process_file), (gst_asf_demux_descramble_segment),
+	(gst_asf_demux_push_buffer), (gst_asf_demux_process_chunk),
+	(gst_asf_demux_process_segment), (gst_asf_demux_handle_data):
+	* gst/asfdemux/gstasfdemux.h:
+	  Some clean-ups and small fixes: rename asf_stream_context structure to
+	  AsfStream; inline some three-line utility functions that are only used
+	  once anyway and get rid of their associated helper structs; make debug
+	  category global so that it is used by the debug statements in the other
+	  file as well; simplify gst_asf_demux_get_stream(); fix accidental
+	  implicit initialisation of stream->last_buffer_timestamp to 0, which
+	  would lead to missing timestamps on the first buffer; put fourcc format
+	  into video caps to make certain proprietary wmv decoders happy (for the
+	  case of WMVA in particular); play_time is offset by preroll as well, so
+	  fix overreporting of duration for some files.
+
 2007-04-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_handle_seek_event),

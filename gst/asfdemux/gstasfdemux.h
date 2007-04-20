@@ -37,6 +37,9 @@ G_BEGIN_DECLS
 #define GST_IS_ASF_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ASF_DEMUX))
 
+GST_DEBUG_CATEGORY_EXTERN (asf_debug);
+#define GST_CAT_DEFAULT asf_debug
+
 typedef struct _GstASFDemux GstASFDemux;
 typedef struct _GstASFDemuxClass GstASFDemuxClass;
 
@@ -62,7 +65,7 @@ typedef struct
   GstTagList *pending_tags;
 
   gboolean    discont;
-} asf_stream_context;
+} AsfStream;
 
 typedef enum {
   GST_ASF_DEMUX_STATE_HEADER,
@@ -101,7 +104,7 @@ struct _GstASFDemux {
   guint32              num_audio_streams;
   guint32              num_video_streams;
   guint32              num_streams;
-  asf_stream_context   stream[GST_ASF_DEMUX_NUM_STREAMS];
+  AsfStream            stream[GST_ASF_DEMUX_NUM_STREAMS];
 
   guint32              packet_size;
   guint32              timestamp;       /* in milliseconds              */

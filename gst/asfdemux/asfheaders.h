@@ -174,13 +174,6 @@ struct _asf_obj_data_correction {
 
 typedef struct _asf_obj_data_correction asf_obj_data_correction;
 
-struct _asf_obj_data_packet {
-  guint8  flags;
-  guint8  property;
-};
-
-typedef struct _asf_obj_data_packet asf_obj_data_packet;
-
 struct _asf_packet_info {
   guint32  padsize;
   guint8   replicsizetype;
@@ -204,12 +197,5 @@ struct _asf_segment_info {
 };
 
 typedef struct _asf_segment_info asf_segment_info;
-
-struct _asf_replicated_data {
-  guint32 object_size;
-  guint32 frag_timestamp;
-};
-
-typedef struct _asf_replicated_data asf_replicated_data;
 
 #endif /* __ASFHEADERS_H__ */
