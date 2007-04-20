@@ -1,0 +1,430 @@
+/* GStreamer ASF/WMV/WMA demuxer
+ * Copyright (C) 2007 Tim-Philipp Müller <tim centricular net>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+/* FIXME:
+ *  file:///home/tpm/samples/video/asf//336370-regis-velo862.wmv
+ *  file:///home/tpm/samples/video/asf//336370-eichhoer.wmv
+ * throw errors (not always necessarily) in this code path
+ * (looks like they carry broken payloads/packets though) */
+
+#include "asfpacket.h"
+
+#include <gst/gstutils.h>
+#include <gst/gstinfo.h>
+#include <string.h>
+
+/* we are unlikely to deal with lengths > 2GB here any time soon, so just
+ * return a signed int and use that for error reporting */
+static gint
+asf_packet_read_varlen_int (guint lentype_flags, guint lentype_bit_offset,
+    const guint8 ** p_data, guint * p_size)
+{
+  const guint lens[4] = { 0, 1, 2, 4 };
+  guint len, val;
+
+  len = lens[(lentype_flags >> lentype_bit_offset) & 0x03];
+
+  /* will make caller bail out with a short read if there's not enough data */
+  if (*p_size < len) {
+    GST_WARNING ("need %u bytes, but only %u bytes available", len, *p_size);
+    return -1;
+  }
+
+  switch (len) {
+    case 0:
+      val = 0;
+      break;
+    case 1:
+      val = GST_READ_UINT8 (*p_data);
+      break;
+    case 2:
+      val = GST_READ_UINT16_LE (*p_data);
+      break;
+    case 4:
+      val = GST_READ_UINT32_LE (*p_data);
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+
+  *p_data += len;
+  *p_size -= len;
+
+  return (gint) val;
+}
+
+static GstBuffer *
+asf_packet_create_payload_buffer (AsfPacket * packet, const guint8 ** p_data,
+    guint * p_size, guint payload_len)
+{
+  guint off;
+
+  g_assert (payload_len <= *p_size);
+
+  off = (guint) (*p_data - GST_BUFFER_DATA (packet->buf));
+  g_assert (off < GST_BUFFER_SIZE (packet->buf));
+
+  *p_data += payload_len;
+  *p_size -= payload_len;
+
+  return gst_buffer_create_sub (packet->buf, off, payload_len);
+}
+
+static AsfPayload *
+asf_payload_find_previous_fragment (AsfPayload * payload, AsfStream * stream)
+{
+  AsfPayload *ret;
+
+  if (stream->payloads->len == 0) {
+    GST_DEBUG ("No previous fragments to merge with for stream %u", stream->id);
+    return NULL;
+  }
+
+  ret =
+      &g_array_index (stream->payloads, AsfPayload, stream->payloads->len - 1);
+
+  if (ret->mo_size != payload->mo_size ||
+      ret->mo_number != payload->mo_number || ret->mo_offset != 0) {
+    GST_WARNING ("Previous fragment does not match continued fragment");
+    return NULL;
+  }
+#if 0
+  if (this_fragment->mo_offset + this_payload_len > first_fragment->mo_size) {
+    GST_WARNING ("Merged fragments would be bigger than the media object");
+    return FALSE;
+  }
+#endif
+
+  return ret;
+}
+
+static void
+gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
+    AsfStream * stream)
+{
+  /* remove any incomplete payloads that will never be completed */
+  while (stream->payloads->len > 0) {
+    AsfPayload *prev;
+    guint idx_last;
+
+    idx_last = stream->payloads->len - 1;
+    prev = &g_array_index (stream->payloads, AsfPayload, idx_last);
+
+    if (gst_asf_payload_is_complete (prev))
+      break;
+
+    GST_DEBUG_OBJECT (demux, "Dropping incomplete fragmented media object "
+        "queued for stream %u", stream->id);
+
+    gst_buffer_replace (&prev->buf, NULL);
+    g_array_remove_index (stream->payloads, idx_last);
+
+    /* there's data missing, so there's a discontinuity now */
+    GST_BUFFER_FLAG_SET (payload->buf, GST_BUFFER_FLAG_DISCONT);
+  }
+
+  g_array_append_vals (stream->payloads, payload, 1);
+}
+
+static gboolean
+gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
+    gint lentype, const guint8 ** p_data, guint * p_size)
+{
+  AsfPayload payload = { 0, };
+  AsfStream *stream;
+  gboolean is_compressed;
+  guint payload_len;
+  guint stream_num;
+
+  if (*p_size < 1) {
+    GST_WARNING_OBJECT (demux, "Short packet!");
+    return FALSE;
+  }
+
+  stream_num = GST_READ_UINT8 (*p_data) & 0x7f;
+  payload.keyframe = ((GST_READ_UINT8 (*p_data) & 0x80) != 0);
+
+  *p_data += 1;
+  *p_size -= 1;
+
+  payload.mo_number =
+      asf_packet_read_varlen_int (packet->prop_flags, 4, p_data, p_size);
+  payload.mo_offset =
+      asf_packet_read_varlen_int (packet->prop_flags, 2, p_data, p_size);
+  payload.rep_data_len =
+      asf_packet_read_varlen_int (packet->prop_flags, 0, p_data, p_size);
+
+  is_compressed = (payload.rep_data_len == 1);
+
+  GST_LOG_OBJECT (demux, "payload for stream %u", stream_num);
+  GST_LOG_OBJECT (demux, "keyframe   : %s", (payload.keyframe) ? "yes" : "no");
+  GST_LOG_OBJECT (demux, "compressed : %s", (is_compressed) ? "yes" : "no");
+
+  if (*p_size < payload.rep_data_len) {
+    GST_WARNING_OBJECT (demux, "Short packet! rep_data_len=%u, size=%u",
+        payload.rep_data_len, *p_size);
+    return FALSE;
+  }
+
+  memcpy (payload.rep_data, *p_data,
+      MIN (sizeof (payload.rep_data), payload.rep_data_len));
+
+  *p_data += payload.rep_data_len;
+  *p_size -= payload.rep_data_len;
+
+  if (*p_size == 0) {
+    GST_WARNING_OBJECT (demux, "payload without data!?");
+    return FALSE;
+  }
+
+  /* we use -1 as lentype for a single payload that's the size of the packet */
+  if (lentype >= 0 && lentype <= 3) {
+    payload_len = asf_packet_read_varlen_int (lentype, 0, p_data, p_size);
+    if (*p_size < payload_len) {
+      GST_WARNING_OBJECT (demux, "Short packet! payload_len=%u, size=%u",
+          payload_len, *p_size);
+      return FALSE;
+    }
+  } else {
+    payload_len = *p_size;
+  }
+
+  GST_LOG_OBJECT (demux, "payload length: %u", payload_len);
+
+  stream = gst_asf_demux_get_stream (demux, stream_num);
+
+  if (stream == NULL) {
+    GST_WARNING_OBJECT (demux, "Payload for unknown stream %u, skipping",
+        stream_num);
+    *p_data += payload_len;
+    *p_size -= payload_len;
+    return TRUE;
+  }
+
+  if (!is_compressed) {
+    GstClockTime ts = GST_CLOCK_TIME_NONE;
+
+    GST_LOG_OBJECT (demux, "replicated data length: %u", payload.rep_data_len);
+
+    if (payload.rep_data_len >= 8) {
+      payload.mo_size = GST_READ_UINT32_LE (payload.rep_data);
+      ts = GST_READ_UINT32_LE (payload.rep_data + 4) * GST_MSECOND;
+      ts -= demux->preroll * GST_MSECOND;
+
+      GST_LOG_OBJECT (demux, "media object size   : %u", payload.mo_size);
+      GST_LOG_OBJECT (demux, "media object ts     : %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (ts));
+      /* TODO: parse payload extensions, if there are any */
+    } else if (payload.rep_data_len != 0) {
+      GST_WARNING_OBJECT (demux, "invalid replicated data length, very bad");
+    }
+
+    GST_LOG_OBJECT (demux, "media object offset : %u", payload.mo_offset);
+
+    GST_LOG_OBJECT (demux, "payload length: %u", payload_len);
+
+    if ((stream = gst_asf_demux_get_stream (demux, stream_num))) {
+      payload.buf = asf_packet_create_payload_buffer (packet, p_data, p_size,
+          payload_len);
+
+      /* n-th fragment of a fragmented media object? */
+      if (payload.mo_offset != 0) {
+        AsfPayload *prev;
+
+        if ((prev = asf_payload_find_previous_fragment (&payload, stream))) {
+          if (payload.mo_offset != GST_BUFFER_SIZE (prev->buf)) {
+            GST_WARNING_OBJECT (demux, "Offset doesn't match previous data?!");
+          }
+          /* note: buffer join/merge might not preserve buffer flags */
+          prev->buf = gst_buffer_join (prev->buf, payload.buf);
+          GST_LOG_OBJECT (demux, "Merged fragments, merged size: %u",
+              GST_BUFFER_SIZE (prev->buf));
+        } else {
+          gst_buffer_unref (payload.buf);
+        }
+        payload.buf = NULL;
+      } else {
+        GST_BUFFER_TIMESTAMP (payload.buf) = ts;
+        gst_asf_payload_queue_for_stream (demux, &payload, stream);
+      }
+    }
+  } else {
+    const guint8 *payload_data;
+    GstClockTime ts, ts_delta;
+    guint num;
+
+    GST_LOG_OBJECT (demux, "Compressed payload, length=%u", payload_len);
+
+    payload_data = *p_data;
+
+    *p_data += payload_len;
+    *p_size -= payload_len;
+
+    ts = (payload.mo_offset - demux->preroll) * GST_MSECOND;
+    ts_delta = payload.rep_data[0] * GST_MSECOND;
+
+    for (num = 0; payload_len > 0; ++num) {
+      guint sub_payload_len;
+
+      sub_payload_len = GST_READ_UINT8 (payload_data);
+
+      GST_LOG_OBJECT (demux, "subpayload #%u: len=%u, ts=%" GST_TIME_FORMAT,
+          num, sub_payload_len, GST_TIME_ARGS (ts));
+
+      ++payload_data;
+      --payload_len;
+
+      if (payload_len < sub_payload_len) {
+        GST_WARNING_OBJECT (demux, "Short payload! %u bytes left", payload_len);
+        return FALSE;
+      }
+
+      payload.buf = asf_packet_create_payload_buffer (packet,
+          &payload_data, &payload_len, sub_payload_len);
+
+      GST_BUFFER_TIMESTAMP (payload.buf) = ts;
+      GST_BUFFER_DURATION (payload.buf) = ts_delta;
+      gst_asf_payload_queue_for_stream (demux, &payload, stream);
+
+      ts += ts_delta;
+    }
+  }
+
+  return TRUE;
+}
+
+gboolean
+gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
+{
+  AsfPacket packet = { 0, };
+  const guint8 *data;
+  gboolean has_multiple_payloads;
+  gboolean ret = TRUE;
+  guint8 ec_flags, flags1;
+  guint size;
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
+
+  /* need at least two payload flag bytes, send time, and duration */
+  if (size < 2 + 4 + 2)
+    goto short_packet;
+
+  packet.buf = buf;
+
+  ec_flags = GST_READ_UINT8 (data);
+
+  /* skip optional error correction stuff */
+  if ((ec_flags & 0x80) != 0) {
+    guint ec_len_type, ec_len;
+
+    ec_len_type = (ec_flags & 0x60) >> 5;
+    if (ec_len_type == 0) {
+      ec_len = ec_flags & 0x0f;
+    } else {
+      GST_WARNING_OBJECT (demux, "unexpected error correction length type %u",
+          ec_len_type);
+      ec_len = 2;
+    }
+    GST_LOG ("packet has error correction (%u bytes)", ec_len);
+
+    /* still need at least two payload flag bytes, send time, and duration */
+    if (size <= (1 + ec_len) + 2 + 4 + 2)
+      goto short_packet;
+
+    data += 1 + ec_len;
+    size -= 1 + ec_len;
+  }
+
+  /* parse payload info */
+  flags1 = GST_READ_UINT8 (data);
+  packet.prop_flags = GST_READ_UINT8 (data + 1);
+
+  data += 2;
+  size -= 2;
+
+  has_multiple_payloads = (flags1 & 0x01) != 0;
+
+  packet.length = asf_packet_read_varlen_int (flags1, 5, &data, &size);
+
+  packet.sequence = asf_packet_read_varlen_int (flags1, 1, &data, &size);
+
+  packet.padding = asf_packet_read_varlen_int (flags1, 3, &data, &size);
+
+  if (size < 6)
+    goto short_packet;
+
+  packet.send_time = GST_READ_UINT32_LE (data) * GST_MSECOND;
+  packet.duration = GST_READ_UINT16_LE (data + 4) * GST_MSECOND;
+
+  data += 4 + 2;
+  size -= 4 + 2;
+
+  GST_LOG_OBJECT (demux, "multiple payloads: %u", has_multiple_payloads);
+  GST_LOG_OBJECT (demux, "packet length    : %u", packet.length);
+  GST_LOG_OBJECT (demux, "sequence         : %u", packet.sequence);
+  GST_LOG_OBJECT (demux, "padding          : %u", packet.padding);
+  GST_LOG_OBJECT (demux, "send time        : %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (packet.send_time));
+  GST_LOG_OBJECT (demux, "duration         : %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (packet.duration));
+
+  if (packet.padding == (guint) - 1 || size < packet.padding)
+    goto short_packet;
+
+  size -= packet.padding;
+
+  if (has_multiple_payloads) {
+    guint i, num, lentype;
+
+    if (size < 1)
+      goto short_packet;
+
+    num = (GST_READ_UINT8 (data) & 0x3F) >> 0;
+    lentype = (GST_READ_UINT8 (data) & 0xC0) >> 6;
+
+    ++data;
+    --size;
+
+    GST_LOG_OBJECT (demux, "num payloads     : %u", num);
+
+    for (i = 0; i < num; ++i) {
+      GST_LOG_OBJECT (demux, "Parsing payload %u/%u", i + 1, num);
+
+      ret = gst_asf_demux_parse_payload (demux, &packet, lentype, &data, &size);
+
+      if (!ret) {
+        GST_WARNING_OBJECT (demux, "Failed to parse payload %u/%u", i + 1, num);
+        break;
+      }
+    }
+  } else {
+    GST_LOG_OBJECT (demux, "Parsing single payload");
+    ret = gst_asf_demux_parse_payload (demux, &packet, -1, &data, &size);
+  }
+
+  return ret;
+
+/* ERRORS */
+short_packet:
+  {
+    GST_WARNING_OBJECT (demux, "Short packet!");
+    return FALSE;
+  }
+}

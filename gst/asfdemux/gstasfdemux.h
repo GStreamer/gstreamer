@@ -65,6 +65,11 @@ typedef struct
   GstTagList *pending_tags;
 
   gboolean    discont;
+
+  /* for new parsing code */
+  GstFlowReturn   last_flow; /* last flow return */
+  GArray         *payloads;  /* pending payloads */
+
 } AsfStream;
 
 typedef enum {
@@ -141,7 +146,9 @@ struct _GstASFDemuxClass {
   GstElementClass parent_class;
 };
 
-GType gst_asf_demux_get_type (void);
+GType           gst_asf_demux_get_type (void);
+
+AsfStream     * gst_asf_demux_get_stream (GstASFDemux * demux, guint16 id);
 
 G_END_DECLS
 

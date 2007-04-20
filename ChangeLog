@@ -1,5 +1,27 @@
 2007-04-20  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/asfdemux/Makefile.am:
+	* gst/asfdemux/asfpacket.c: (asf_packet_read_varlen_int),
+	(asf_packet_create_payload_buffer),
+	(asf_payload_find_previous_fragment),
+	(gst_asf_payload_queue_for_stream), (gst_asf_demux_parse_payload),
+	(gst_asf_demux_parse_packet):
+	* gst/asfdemux/asfpacket.h:
+	* gst/asfdemux/gstasfdemux.c:
+	(gst_asf_demux_reset_stream_state_after_discont),
+	(gst_asf_demux_push_complete_payloads), (gst_asf_demux_loop),
+	(gst_asf_demux_setup_pad), (gst_asf_demux_descramble_buffer),
+	(gst_asf_demux_process_chunk):
+	* gst/asfdemux/gstasfdemux.h:
+	  New packet parsing code: should put halfway decent timestamps on
+	  buffers, and might even set the appropriate keyframe/discont buffer
+	  flags from time to time (and even if it doesn't, I'm at least able
+	  to debug this code); only used in pull-mode so far. Still needs
+	  some more work, like payload extensions parsing and proper flow
+	  aggregation, and stream activation based on preroll. Stay tuned.
+	  
+2007-04-20  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/asfdemux/asfheaders.h:
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_free_stream),
 	(gst_asf_demux_seek_index_lookup),
