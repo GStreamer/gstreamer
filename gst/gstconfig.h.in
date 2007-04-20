@@ -53,7 +53,6 @@
 /* trick gtk-doc into believing these symbols are defined (yes, it's ugly) */
 
 #if 0
-#define GST_DISABLE_LOADSAVE_REGISTRY 1
 #define GST_DISABLE_GST_DEBUG 1
 #define GST_DISABLE_LOADSAVE 1
 #define GST_DISABLE_PARSE 1
@@ -64,6 +63,8 @@
 #define GST_DISABLE_INDEX 1
 #define GST_DISABLE_PLUGIN 1
 #define GST_DISABLE_URI 1
+#define GST_DISABLE_XML 1
+#define GST_DISABLE_LOADSAVE_REGISTRY 1
 #define GST_HAVE_GLIB_2_8 1
 #endif
 
@@ -86,7 +87,7 @@
 /**
  * GST_DISABLE_LOADSAVE:
  *
- * Configures the inclusion of the plugin graph xml-serialisation 
+ * Configures the inclusion of the plugin graph xml-serialisation
  * (was used in 0.8 by gst-editor)
  */
 @GST_DISABLE_LOADSAVE_DEFINE@
@@ -117,11 +118,19 @@
 /**
  * GST_DISABLE_REGISTRY:
  *
- * Configures the use of the plugin registry
- * if one disables this, required plugins need to be loaded and registered
+ * Configures the use of the plugin registry.
+ * If one disables this, required plugins need to be loaded and registered
  * manualy
  */
 @GST_DISABLE_REGISTRY_DEFINE@
+
+/**
+ * GST_DISABLE_XML:
+ *
+ * Configures the use libxml2. This setting is derived from the settings of
+ * %GST_DISABLE_LOADSAVE and %GST_DISABLE_REGISTRY (in the xml registry case).
+ */
+@GST_DISABLE_XML_DEFINE@
 
 /* FIXME: test and document these! */
 /* Configure the use of glib enumtypes (useful for introspection)
@@ -163,15 +172,18 @@
 /* whether or not the CPU supports unaligned access */
 @GST_HAVE_UNALIGNED_ACCESS_DEFINE@
 
-/* whether or not we are using glib 2.8 api, e.g. atomic gobject
-   refcounting */
+/* FIXME: 0.11 (remove)
+ * whether or not we are using glib 2.8 api, e.g. atomic gobject
+ * refcounting */
 @GST_HAVE_GLIB_2_8_DEFINE@
 
 /***** Deal with XML stuff, we have to handle both loadsave and registry *****/
-
-#if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) ) 
+/* FIXME: move include to where we need it */
+/*#if (! (defined(GST_DISABLE_LOADSAVE) && defined(GST_DISABLE_REGISTRY)) )*/
+#ifndef GST_DISABLE_XML
 # include <libxml/parser.h>
 #else
+  /* FIXME: 0.11 (replace by GST_DISABLE_XML) */
 # define GST_DISABLE_LOADSAVE_REGISTRY
 #endif
 

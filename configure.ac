@@ -391,7 +391,7 @@ dnl GLib
 
 AG_GST_GLIB_CHECK([2.8])
 
-dnl Guess we need to keep this around until 0.11
+dnl FIXME: 0.11: Guess we need to keep this around until 0.11
 GST_HAVE_GLIB_2_8_DEFINE="#define GST_HAVE_GLIB_2_8 1"
 AC_SUBST(GST_HAVE_GLIB_2_8_DEFINE)
 
@@ -408,11 +408,14 @@ if test "x$GST_DISABLE_LOADSAVE" = "xyes" && \
    ( test "x$GST_DISABLE_REGISTRY" = "xyes" || \
    test "x$USE_BINARY_REGISTRY" = "xyes" )
 then
-  AC_MSG_NOTICE([Registry and load/save are disabled, not checking for libxml2])
+  AC_MSG_NOTICE([XML registry and load/save are disabled, not checking for libxml2])
+  GST_DISABLE_XML_DEFINE="#define GST_DISABLE_XML 1"
 else
   dnl check for libxml2 with minimum req version
   AG_GST_LIBXML2_CHECK(2.4.9)
+  GST_DISABLE_XML_DEFINE="/* #undef GST_DISABLE_XML */"
 fi
+AC_SUBST(GST_DISABLE_XML_DEFINE)
 
 dnl check for "check", unit testing library/header
 AM_PATH_CHECK(0.9.2,
@@ -438,7 +441,7 @@ AC_DEFINE_UNQUOTED(LIBDIR, "$LIBDIR", [library dir])
 dnl set location of plugin directory
 AG_GST_SET_PLUGINDIR
 
-dnl FIXME: add LIBXML_PKG here
+dnl FIXME: add LIBXML_PKG here if we use it
 GST_PKG_DEPS="glib-2.0, gobject-2.0, gmodule-no-export-2.0, gthread-2.0"
 AC_SUBST(GST_PKG_DEPS)
 
@@ -484,9 +487,11 @@ dnl   will need the GStreamer source and generated headers
 dnl LIBS: XML doesn't need to be added because we don't explicitly use symbols
 dnl       from LibXML except for in the core library
 GST_ALL_CFLAGS="-I\$(top_srcdir)/libs -I\$(top_srcdir) -I\$(top_builddir) $GLIB_CFLAGS $XML_CFLAGS \$(GST_OPTION_CFLAGS)"
+
 dnl FIXME: check if LTLIBINTL is needed everywhere
 dnl I presume it is given that it contains the symbols that _() stuff maps to
 GST_ALL_LIBS="$GLIB_LIBS $LTLIBINTL \$(GCOV_LIBS)"
+
 dnl LDFLAGS really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_ALL_LDFLAGS="-no-undefined"

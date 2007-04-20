@@ -392,6 +392,7 @@ GST_DISABLE_ENUMTYPES
 GST_DISABLE_INDEX
 GST_DISABLE_PLUGIN
 GST_DISABLE_URI
+GST_DISABLE_XML
 <SUBSECTION Private>
 GST_DISABLE_LOADSAVE_REGISTRY
 GST_HAVE_GLIB_2_8
@@ -1177,7 +1178,7 @@ GST_PAD_LINK_SUCCESSFUL
 GstFlowReturn
 GstActivateMode
 
-<SUBSECTION Application> 
+<SUBSECTION Application>
 gst_pad_get_name
 gst_pad_get_direction
 gst_pad_get_parent
@@ -1640,7 +1641,7 @@ gst_query_new_segment
 gst_query_set_segment
 gst_query_parse_segment
 
-<SUBSECTION Standard>
+SUBSECTION Standard>
 GstQueryClass
 GST_QUERY
 GST_IS_QUERY

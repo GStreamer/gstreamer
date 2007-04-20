@@ -102,7 +102,7 @@ enum
 {
   PARENT_SET,
   PARENT_UNSET,
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_LOADSAVE
   OBJECT_SAVED,
 #endif
   DEEP_NOTIFY,
@@ -134,7 +134,7 @@ static GType gst_signal_object_get_type (void);
 static void gst_signal_object_class_init (GstSignalObjectClass * klass);
 static void gst_signal_object_init (GstSignalObject * object);
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_LOADSAVE
 static guint gst_signal_object_signals[SO_LAST_SIGNAL] = { 0 };
 #endif
 
@@ -153,7 +153,7 @@ static void gst_object_finalize (GObject * object);
 
 static gboolean gst_object_set_name_default (GstObject * object);
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_LOADSAVE
 static void gst_object_real_restore_thyself (GstObject * object,
     xmlNodePtr self);
 #endif
@@ -231,7 +231,7 @@ gst_object_class_init (GstObjectClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, parent_unset), NULL,
       NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_LOADSAVE
   /**
    * GstObject::object-saved:
    * @gstobject: a #GstObject
@@ -358,12 +358,12 @@ gst_object_unref (gpointer object)
  * gst_object_sink:
  * @object: a #GstObject to sink
  *
- * If @object was floating, the #GST_OBJECT_FLOATING flag is removed 
+ * If @object was floating, the #GST_OBJECT_FLOATING flag is removed
  * and @object is unreffed. When @object was not floating,
  * this function does nothing.
  *
- * Any newly created object has a refcount of 1 and is floating. 
- * This function should be used when creating a new object to 
+ * Any newly created object has a refcount of 1 and is floating.
+ * This function should be used when creating a new object to
  * symbolically 'take ownership' of @object. This done by first doing a
  * gst_object_ref() to keep a reference to @object and then gst_object_sink()
  * to remove and unref any floating references to @object.
@@ -639,7 +639,7 @@ gst_object_set_name_default (GstObject * object)
 
 /**
  * gst_object_set_name:
- * @object: a #GstObject 
+ * @object: a #GstObject
  * @name:   new name of object
  *
  * Sets the name of @object, or gives @object a guaranteed unique
@@ -715,7 +715,7 @@ gst_object_get_name (GstObject * object)
 
 /**
  * gst_object_set_name_prefix:
- * @object:      a #GstObject 
+ * @object:      a #GstObject
  * @name_prefix: new name prefix of @object
  *
  * Sets the name prefix of @object to @name_prefix.
@@ -737,7 +737,7 @@ gst_object_set_name_prefix (GstObject * object, const gchar * name_prefix)
 
 /**
  * gst_object_get_name_prefix:
- * @object: a #GstObject 
+ * @object: a #GstObject
  *
  * Returns a copy of the name prefix of @object.
  * Caller should g_free() the return value after usage.
@@ -764,10 +764,10 @@ gst_object_get_name_prefix (GstObject * object)
 
 /**
  * gst_object_set_parent:
- * @object: a #GstObject 
+ * @object: a #GstObject
  * @parent: new parent of object
  *
- * Sets the parent of @object to @parent. The object's reference count will 
+ * Sets the parent of @object to @parent. The object's reference count will
  * be incremented, and any floating reference will be removed (see gst_object_sink()).
  *
  * This function causes the parent-set signal to be emitted when the parent
@@ -821,7 +821,7 @@ had_parent:
 
 /**
  * gst_object_get_parent:
- * @object: a #GstObject 
+ * @object: a #GstObject
  *
  * Returns the parent of @object. This function increases the refcount
  * of the parent object so you should gst_object_unref() it after usage.
@@ -923,7 +923,7 @@ gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
  * will lock each #GstObject in the list to compare the name, so be
  * carefull when passing a list with a locked object.
  *
- * Returns: TRUE if a #GstObject named @name does not appear in @list, 
+ * Returns: TRUE if a #GstObject named @name does not appear in @list,
  * FALSE if it does.
  *
  * MT safe. Grabs and releases the LOCK of each object in the list.
@@ -954,7 +954,7 @@ gst_object_check_uniqueness (GList * list, const gchar * name)
 }
 
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_LOADSAVE
 /**
  * gst_object_save_thyself:
  * @object: a #GstObject to save
@@ -1012,7 +1012,7 @@ gst_object_real_restore_thyself (GstObject * object, xmlNodePtr self)
 
   gst_class_signal_emit_by_name (object, "object_loaded", self);
 }
-#endif /* GST_DISABLE_LOADSAVE_REGISTRY */
+#endif /* GST_DISABLE_LOADSAVE */
 
 static void
 gst_object_set_property (GObject * object, guint prop_id,
@@ -1133,10 +1133,10 @@ struct _GstSignalObjectClass
   GObjectClass parent_class;
 
   /* signals */
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_LOADSAVE
   void (*object_loaded) (GstSignalObject * object, GstObject * new,
       xmlNodePtr self);
-#endif                          /* GST_DISABLE_LOADSAVE_REGISTRY */
+#endif
 };
 
 static GType
@@ -1174,7 +1174,7 @@ gst_signal_object_class_init (GstSignalObjectClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_LOADSAVE
   gst_signal_object_signals[SO_OBJECT_LOADED] =
       g_signal_new ("object-loaded", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstSignalObjectClass, object_loaded),
@@ -1209,7 +1209,7 @@ gst_class_signal_connect (GstObjectClass * klass,
       func_data);
 }
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_LOADSAVE
 /**
  * gst_class_signal_emit_by_name:
  * @object: a #GstObject that emits the signal
@@ -1229,4 +1229,4 @@ gst_class_signal_emit_by_name (GstObject * object,
   g_signal_emit_by_name (oclass->signal_object, name, object, self);
 }
 
-#endif /* GST_DISABLE_LOADSAVE_REGISTRY */
+#endif /* GST_DISABLE_LOADSAVE */

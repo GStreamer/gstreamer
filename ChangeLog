@@ -1,5 +1,17 @@
 2007-04-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* configure.ac:
+	* docs/gst/gstreamer-sections.txt:
+	* gst/Makefile.am:
+	* gst/gstconfig.h.in:
+	* gst/gstobject.c: (gst_object_class_init),
+	(gst_signal_object_class_init):
+	* gst/gstobject.h:
+	  2nd attempt to have a xml-less build as a joined effort of #413123
+	  and #421480.
+
+2007-04-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/design/draft-tagreading.txt:
 	  Added open issues/thoughts to draft.
 

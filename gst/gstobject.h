@@ -41,7 +41,7 @@ G_BEGIN_DECLS
 
 /* make sure we don't change the object size but still make it compile
  * without libxml */
-#ifdef GST_DISABLE_LOADSAVE_REGISTRY
+#ifdef GST_DISABLE_LOADSAVE
 #define GstXmlNodePtr	gpointer
 #else
 #define GstXmlNodePtr	xmlNodePtr
@@ -302,7 +302,7 @@ gchar *		gst_object_get_path_string	(GstObject *object);
 gboolean	gst_object_check_uniqueness	(GList *list, const gchar *name);
 
 /* load/save */
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_LOADSAVE
 GstXmlNodePtr   gst_object_save_thyself    (GstObject *object, GstXmlNodePtr parent);
 void            gst_object_restore_thyself (GstObject *object, GstXmlNodePtr self);
 #else
@@ -318,7 +318,7 @@ guint		gst_class_signal_connect	(GstObjectClass	*klass,
 						 gpointer	 func,
 						 gpointer	 func_data);
 
-#ifndef GST_DISABLE_LOADSAVE_REGISTRY
+#ifndef GST_DISABLE_LOADSAVE
 void        gst_class_signal_emit_by_name   (GstObject     * object,
                                              const gchar   * name,
                                              GstXmlNodePtr   self);
