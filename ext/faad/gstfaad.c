@@ -1461,7 +1461,7 @@ gst_faad_open_decoder (GstFaad * faad)
 
   conf = faacDecGetCurrentConfiguration (faad->handle);
   conf->defObjectType = LC;
-  /* conf->dontUpSampleImplicitSBR = 1; */
+  conf->dontUpSampleImplicitSBR = 1;
   conf->outputFormat = FAAD_FMT_16BIT;
 
   if (faacDecSetConfiguration (faad->handle, conf) == 0) {

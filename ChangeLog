@@ -1,3 +1,11 @@
+2007-04-20  Michael Smith  <msmith@fluendo.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_open_decoder):
+	  FAAD fails to decode low (e.g. 8 kHz) sample rate AAC data in
+	  quicktime because of sample rate mismatches.
+	  Reenable overriding the implicit SBR behaviour (accidently changed?)
+	  to allow playback of these files.
+
 2007-04-19  David Schleef  <ds@schleef.org>
 
 	* configure.ac:
