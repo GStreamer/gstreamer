@@ -1,5 +1,10 @@
 2007-04-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-sections.txt:
+	  That was one byte missing.
+
+2007-04-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* docs/gst/gstreamer-sections.txt:
 	* gst/Makefile.am:
