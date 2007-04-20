@@ -1,3 +1,8 @@
+2007-04-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/design/draft-tagreading.txt:
+	  Added open issues/thoughts to draft.
+
 2007-04-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/parse/grammar.tab.pre.c:

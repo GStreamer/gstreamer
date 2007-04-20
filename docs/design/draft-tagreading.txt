@@ -36,6 +36,22 @@ The plan is that applications can do the following:
 * tagread-elements should have RANK_NONE to be not autoplugged by decodebin
 
 
+Open Issues
+-----------
+* would it make sense to have 2-phase tag-reading
+  * 1st phase: get tag-data that are directly embedded in the data
+  * 2nd phase: get tag-data that has to be generated fetched
+    * e.g. album-art via web, video-thumbnails
+* what about caching backends
+  * it would be good to allow applications to supply tagbin with a tagcache-
+    object instance. whenever tagbin gets a uri to tagread, it consults the
+    cache first. whenever there is a cache-miss it will tag-read and then store
+    in the cache
+
+    GstTagList *gst_tag_cache_load_tag_data (GstTagCache *self, const gchar *uri);
+    gst_tag_cache_store_tag_data (GstTagCache *self, const gchar *uri, GstTagList *tags);
+
+
 Reuse
 -----
 
