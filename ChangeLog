@@ -525,12 +525,14 @@
 
 2007-03-14 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
 
+	Patch by Olivier Crete <olivier.crete@collabora.co.uk>
+
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
-	Add min-ptime property to RTP base audio payloader. Patch by
-	olivier.crete@collabora.co.uk.
+	API: add "min-ptime" property to RTP base audio payloader.
+	API: add gst_base_rtp_audio_payload_push().
+	API: add gst_base_rtp_audio_payload_get_adapter().
 	Fixes #415001
-
 	Indentation/whitespace/documentation fixes.
 
 2007-03-14  Julien MOUTTE  <julien@moutte.net>
