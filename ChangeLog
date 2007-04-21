@@ -1,5 +1,10 @@
 2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/Makefile.am:
+	  Fix distcheck, hopefully (rtpmanager is already in GST_PLUGINS_ALL).
+
+2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/rtpmanager/rtpsession.c: (rtp_session_finalize):
 	  Don't use GLib-2.10 API, we only require GLib 2.8 at the moment.
 
