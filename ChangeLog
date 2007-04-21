@@ -1,5 +1,16 @@
 2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Olivier Crete  <tester at tester ca>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	(gst_base_rtp_audio_payload_class_init),
+	(gst_base_rtp_audio_payload_init),
+	(gst_base_rtp_audio_payload_dispose):
+	  Chain up to parent class in dispose function; get rid of
+	  unnecessary 'diposed' flag in private structure (#415001).
+
+2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/libs/gst-plugins-base-libs.types:
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
 	(gst_base_rtp_audio_payload_class_init):

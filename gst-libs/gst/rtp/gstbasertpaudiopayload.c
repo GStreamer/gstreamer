@@ -81,7 +81,6 @@ struct _GstBaseRTPAudioPayloadPrivate
   AudioCodecType type;
   GstAdapter *adapter;
   guint64 min_ptime;
-  gboolean disposed;
 };
 
 #define DEFAULT_MIN_PTIME 0
@@ -153,7 +152,7 @@ gst_base_rtp_audio_payload_class_init (GstBaseRTPAudioPayloadClass * klass)
   gobject_class->set_property = gst_base_rtp_payload_audio_set_property;
   gobject_class->get_property = gst_base_rtp_payload_audio_get_property;
 
-  parent_class = g_type_class_ref (GST_TYPE_BASE_RTP_PAYLOAD);
+  parent_class = g_type_class_peek_parent (klass);
 
   gstbasertppayload_class->handle_buffer =
       GST_DEBUG_FUNCPTR (gst_base_rtp_audio_payload_handle_buffer);
@@ -199,7 +198,6 @@ gst_base_rtp_audio_payload_init (GstBaseRTPAudioPayload * basertpaudiopayload,
   basertpaudiopayload->sample_size = 0;
 
   basertpaudiopayload->priv->adapter = gst_adapter_new ();
-  basertpaudiopayload->priv->disposed = FALSE;
 
   gst_pad_add_event_probe (basertppayload->sinkpad,
       G_CALLBACK (gst_base_rtp_payload_audio_handle_event), NULL);
@@ -213,14 +211,12 @@ gst_base_rtp_audio_payload_dispose (GObject * object)
 
   basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (object);
 
-  if (basertpaudiopayload->priv->disposed)
-    return;
-  basertpaudiopayload->priv->disposed = TRUE;
-
   if (basertpaudiopayload->priv->adapter) {
     g_object_unref (basertpaudiopayload->priv->adapter);
     basertpaudiopayload->priv->adapter = NULL;
   }
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 
