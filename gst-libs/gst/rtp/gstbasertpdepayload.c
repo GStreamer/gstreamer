@@ -18,6 +18,17 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:gstbasertpdepayload
+ * @short_description: Base class for RTP depayloader
+ *
+ * <refsect2>
+ * <para>
+ * Provides a base class for RTP depayloaders
+ * </para>
+ * </refsect2>
+ */
+
 #include "gstbasertpdepayload.h"
 
 GST_DEBUG_CATEGORY_STATIC (basertpdepayload_debug);

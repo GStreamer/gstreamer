@@ -12,6 +12,17 @@
  * Library General Public License for more 
  */
 
+/**
+ * SECTION:gstbasertppayload
+ * @short_description: Base class for RTP payloader
+ *
+ * <refsect2>
+ * <para>
+ * Provides a base class for RTP payloaders
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -78,6 +89,8 @@ static GstStateChangeReturn gst_basertppayload_change_state (GstElement *
     element, GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
+
+/* FIXME 0.11: API should be changed to gst_base_typ_payload_xyz */
 
 GType
 gst_basertppayload_get_type (void)

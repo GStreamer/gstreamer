@@ -46,6 +46,8 @@ gst_x_overlay_get_type
 gst_base_rtp_depayload_get_type
 #include <gst/rtp/gstbasertppayload.h>
 gst_basertppayload_get_type
+#include <gst/rtp/gstbasertpaudiopayload.h>
+gst_base_rtp_audio_payload_get_type
 
 
 #include <gst/video/gstvideofilter.h>

@@ -161,6 +161,13 @@ gst_base_rtp_audio_payload_class_init (GstBaseRTPAudioPayloadClass * klass)
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_rtp_payload_audio_change_state);
 
+  /**
+   * GstBaseRTPAudioPayload:min-ptime:
+   *
+   * Minimum duration of the packet data in ns (can't go above MTU)
+   *
+   * Since: 0.10.13
+   **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MIN_PTIME,
       g_param_spec_int64 ("min-ptime", "Min packet time",
           "Minimum duration of the packet data in ns (can't go above MTU)",
@@ -612,6 +619,8 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
  * the buffer downstream.
  *
  * Returns: a #GstFlowReturn
+ *
+ * Since: 0.10.13
  */
 GstFlowReturn
 gst_base_rtp_audio_payload_push (GstBaseRTPAudioPayload * baseaudiopayload,
@@ -737,6 +746,8 @@ gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event,
  * Gets the internal adapter used by the depayloader.
  *
  * Returns: a #GstAdapter.
+ *
+ * Since: 0.10.13
  */
 GstAdapter *
 gst_base_rtp_audio_payload_get_adapter (GstBaseRTPAudioPayload

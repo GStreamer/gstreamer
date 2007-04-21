@@ -1,5 +1,14 @@
 2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/libs/gst-plugins-base-libs.types:
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	(gst_base_rtp_audio_payload_class_init):
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	  Some minor docs fixes and additions; also add missing 'Since' bits.
+
+2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Zeeshan Ali  <zeenix gmail com>
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
