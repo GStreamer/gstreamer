@@ -1,5 +1,17 @@
 2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Zeeshan Ali  <zeenix gmail com>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	(gst_base_rtp_audio_payload_handle_frame_based_buffer),
+	(gst_base_rtp_audio_payload_handle_sample_based_buffer),
+	(gst_base_rtp_audio_payload_push):
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
+	  The recently-added gst_base_rtp_audio_payload_push() should take an
+	  object of type GstBaseRTPAudioPayload as first argument (#431672).
+
+2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/audioresample/gstaudioresample.c:
 	  Make more functions static, just because we can.
 
