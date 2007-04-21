@@ -1670,6 +1670,11 @@ gst_base_transform_activate (GstBaseTransform * trans, gboolean active)
 
     GST_OBJECT_UNLOCK (trans);
   } else {
+    /* We must make sure streaming has finished before resetting things
+     * and calling the ::stop vfunc */
+    GST_PAD_STREAM_LOCK (trans->sinkpad);
+    GST_PAD_STREAM_UNLOCK (trans->sinkpad);
+
     trans->have_same_caps = FALSE;
     /* We can only reset the passthrough mode if the instance told us to 
        handle it in configure_caps */

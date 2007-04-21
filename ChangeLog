@@ -1,3 +1,11 @@
+2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gstbasetransform.c: (gst_base_transform_activate):
+	  Make sure streaming has finished before calling the ::stop() vfunc,
+	  since that vfunc might clear state which is being used in the
+	  streaming thread. This fixes a race that caused crashes in
+	  audioresample when shutting down a pipeline (#420106).
+
 2007-04-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-sections.txt:
