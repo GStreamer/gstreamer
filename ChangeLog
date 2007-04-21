@@ -1,5 +1,10 @@
 2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/audioresample/gstaudioresample.c:
+	  Make more functions static, just because we can.
+
+2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/elements/audioresample.c:
 	  Add unit test for audioresample shutdown crasher (#420106).
 

@@ -110,15 +110,15 @@ static void gst_audioresample_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 /* vmethods */
-gboolean audioresample_get_unit_size (GstBaseTransform * base,
+static gboolean audioresample_get_unit_size (GstBaseTransform * base,
     GstCaps * caps, guint * size);
-GstCaps *audioresample_transform_caps (GstBaseTransform * base,
+static GstCaps *audioresample_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps);
-gboolean audioresample_transform_size (GstBaseTransform * trans,
+static gboolean audioresample_transform_size (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * incaps, guint insize,
     GstCaps * outcaps, guint * outsize);
-gboolean audioresample_set_caps (GstBaseTransform * base, GstCaps * incaps,
-    GstCaps * outcaps);
+static gboolean audioresample_set_caps (GstBaseTransform * base,
+    GstCaps * incaps, GstCaps * outcaps);
 static GstFlowReturn audioresample_pushthrough (GstAudioresample *
     audioresample);
 static GstFlowReturn audioresample_transform (GstBaseTransform * base,
@@ -231,7 +231,7 @@ audioresample_stop (GstBaseTransform * base)
   return TRUE;
 }
 
-gboolean
+static gboolean
 audioresample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     guint * size)
 {
@@ -252,7 +252,7 @@ audioresample_get_unit_size (GstBaseTransform * base, GstCaps * caps,
   return TRUE;
 }
 
-GstCaps *
+static GstCaps *
 audioresample_transform_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps)
 {
@@ -362,7 +362,7 @@ no_out_rate:
   }
 }
 
-gboolean
+static gboolean
 audioresample_transform_size (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, guint size, GstCaps * othercaps,
     guint * othersize)
@@ -417,7 +417,7 @@ audioresample_transform_size (GstBaseTransform * base,
   return ret;
 }
 
-gboolean
+static gboolean
 audioresample_set_caps (GstBaseTransform * base, GstCaps * incaps,
     GstCaps * outcaps)
 {
