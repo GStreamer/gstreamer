@@ -371,7 +371,52 @@ GST_START_TEST (test_reuse)
 
 GST_END_TEST;
 
-Suite *
+GST_START_TEST (test_shutdown)
+{
+  GstElement *pipeline, *src, *cf1, *ar, *cf2, *sink;
+  GstCaps *caps;
+  guint i;
+
+  /* create pipeline, force audioresample to actually resample */
+  pipeline = gst_pipeline_new (NULL);
+
+  src = gst_check_setup_element ("audiotestsrc");
+  cf1 = gst_check_setup_element ("capsfilter");
+  ar = gst_check_setup_element ("audioresample");
+  cf2 = gst_check_setup_element ("capsfilter");
+  g_object_set (cf2, "name", "capsfilter2", NULL);
+  sink = gst_check_setup_element ("fakesink");
+
+  caps =
+      gst_caps_new_simple ("audio/x-raw-int", "rate", G_TYPE_INT, 11025, NULL);
+  g_object_set (cf1, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  caps =
+      gst_caps_new_simple ("audio/x-raw-int", "rate", G_TYPE_INT, 48000, NULL);
+  g_object_set (cf2, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  /* don't want to sync against the clock, the more throughput the better */
+  g_object_set (src, "is-live", FALSE, NULL);
+  g_object_set (sink, "sync", FALSE, NULL);
+
+  gst_bin_add_many (GST_BIN (pipeline), src, cf1, ar, cf2, sink, NULL);
+  fail_if (!gst_element_link_many (src, cf1, ar, cf2, sink, NULL));
+
+  /* now, wait until pipeline is running and then shut it down again; repeat */
+  for (i = 0; i < 20; ++i) {
+    gst_element_set_state (pipeline, GST_STATE_PAUSED);
+    gst_element_get_state (pipeline, NULL, NULL, -1);
+    gst_element_set_state (pipeline, GST_STATE_PLAYING);
+    g_usleep (100);
+    gst_element_set_state (pipeline, GST_STATE_NULL);
+  }
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST static Suite *
 audioresample_suite (void)
 {
   Suite *s = suite_create ("audioresample");
@@ -381,23 +426,9 @@ audioresample_suite (void)
   tcase_add_test (tc_chain, test_perfect_stream);
   tcase_add_test (tc_chain, test_discont_stream);
   tcase_add_test (tc_chain, test_reuse);
+  tcase_add_test (tc_chain, test_shutdown);
 
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = audioresample_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (audioresample);
