@@ -147,8 +147,8 @@ rtp_session_finalize (GObject * object)
   sess = RTP_SESSION_CAST (object);
 
   g_mutex_free (sess->lock);
-  g_hash_table_unref (sess->ssrcs);
-  g_hash_table_unref (sess->cnames);
+  g_hash_table_destroy (sess->ssrcs);
+  g_hash_table_destroy (sess->cnames);
   g_object_unref (sess->source);
 
   G_OBJECT_CLASS (rtp_session_parent_class)->finalize (object);
