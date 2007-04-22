@@ -83,6 +83,9 @@ gst_amrnbparse_get_type (void)
 
     amrnbparse_type = g_type_register_static (GST_TYPE_ELEMENT,
         "GstAmrnbParse", &amrnbparse_info, 0);
+
+    GST_DEBUG_CATEGORY_INIT (amrnbparse_debug,
+        "amrnbparse", 0, "AMR-NB stream parsing");
   }
 
   return amrnbparse_type;
@@ -115,9 +118,6 @@ gst_amrnbparse_class_init (GstAmrnbParseClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   element_class->change_state = gst_amrnbparse_state_change;
-
-  GST_DEBUG_CATEGORY_INIT (amrnbparse_debug,
-      "amrnbparse", 0, "AMR-NB stream parsing");
 }
 
 static void
@@ -125,8 +125,7 @@ gst_amrnbparse_init (GstAmrnbParse * amrnbparse)
 {
   /* create the sink pad */
   amrnbparse->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
+      gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (amrnbparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_amrnbparse_chain));
   gst_pad_set_event_function (amrnbparse->sinkpad,
@@ -138,13 +137,12 @@ gst_amrnbparse_init (GstAmrnbParse * amrnbparse)
   gst_element_add_pad (GST_ELEMENT (amrnbparse), amrnbparse->sinkpad);
 
   /* create the src pad */
-  amrnbparse->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+  amrnbparse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_query_function (amrnbparse->srcpad,
       GST_DEBUG_FUNCPTR (gst_amrnbparse_query));
   gst_pad_set_query_type_function (amrnbparse->srcpad,
       GST_DEBUG_FUNCPTR (gst_amrnbparse_querytypes));
+  gst_pad_use_fixed_caps (amrnbparse->srcpad);
   gst_element_add_pad (GST_ELEMENT (amrnbparse), amrnbparse->srcpad);
 
   amrnbparse->adapter = gst_adapter_new ();
@@ -369,15 +367,14 @@ done:
 }
 
 static gboolean
-gst_amrnbparse_read_header (GstAmrnbParse * amrnbparse)
+gst_amrnbparse_pull_header (GstAmrnbParse * amrnbparse)
 {
   GstBuffer *buffer;
   GstFlowReturn ret;
   guint8 *data;
   gint size;
 
-  ret =
-      gst_pad_pull_range (amrnbparse->sinkpad, amrnbparse->offset, 6, &buffer);
+  ret = gst_pad_pull_range (amrnbparse->sinkpad, 0, 6, &buffer);
   if (ret != GST_FLOW_OK)
     return FALSE;
 
@@ -389,8 +386,9 @@ gst_amrnbparse_read_header (GstAmrnbParse * amrnbparse)
   if (memcmp (data, "#!AMR\n", 6))
     goto no_header;
 
-  amrnbparse->offset += 6;
+  gst_buffer_unref (buffer);
 
+  amrnbparse->offset = 6;
   return TRUE;
 
 not_enough:
@@ -421,27 +419,36 @@ gst_amrnbparse_loop (GstPad * pad)
 
   /* init */
   if (amrnbparse->need_header) {
-    gboolean got_header;
-
-    got_header = gst_amrnbparse_read_header (amrnbparse);
-    if (!got_header) {
+    if (!gst_amrnbparse_pull_header (amrnbparse)) {
+      GST_ELEMENT_ERROR (amrnbparse, STREAM, WRONG_TYPE, (NULL), (NULL));
       GST_LOG_OBJECT (amrnbparse, "could not read header");
       goto need_pause;
     }
+
+    GST_DEBUG_OBJECT (amrnbparse, "Sending newsegment event");
+    gst_pad_push_event (amrnbparse->srcpad,
+        gst_event_new_new_segment_full (FALSE, 1.0, 1.0,
+            GST_FORMAT_TIME, 0, -1, 0));
+
     amrnbparse->need_header = FALSE;
   }
 
   ret =
       gst_pad_pull_range (amrnbparse->sinkpad, amrnbparse->offset, 1, &buffer);
-  if (ret != GST_FLOW_OK)
+
+  if (ret == GST_FLOW_UNEXPECTED)
+    goto eos;
+  else if (ret != GST_FLOW_OK)
     goto need_pause;
 
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
   /* EOS */
-  if (size < 1)
+  if (size < 1) {
+    gst_buffer_unref (buffer);
     goto eos;
+  }
 
   /* get size */
   mode = (data[0] >> 3) & 0x0F;
@@ -452,22 +459,43 @@ gst_amrnbparse_loop (GstPad * pad)
   ret =
       gst_pad_pull_range (amrnbparse->sinkpad, amrnbparse->offset, block,
       &buffer);
-  if (ret != GST_FLOW_OK)
+
+  if (ret == GST_FLOW_UNEXPECTED)
+    goto eos;
+  else if (ret != GST_FLOW_OK)
     goto need_pause;
+
+  if (GST_BUFFER_SIZE (buffer) < block) {
+    gst_buffer_unref (buffer);
+    goto eos;
+  }
 
   amrnbparse->offset += block;
 
   /* output */
+  buffer = gst_buffer_make_metadata_writable (buffer);
   GST_BUFFER_DURATION (buffer) = GST_SECOND * 160 / 8000;
   GST_BUFFER_TIMESTAMP (buffer) = amrnbparse->ts;
-  amrnbparse->ts += GST_BUFFER_DURATION (buffer);
+
   gst_buffer_set_caps (buffer,
       (GstCaps *) gst_pad_get_pad_template_caps (amrnbparse->srcpad));
 
-  GST_DEBUG ("Pushing %d bytes of data", block);
+  GST_DEBUG_OBJECT (amrnbparse, "Pushing %2d bytes, ts=%" GST_TIME_FORMAT,
+      block, GST_TIME_ARGS (amrnbparse->ts));
+
   ret = gst_pad_push (amrnbparse->srcpad, buffer);
-  if (ret != GST_FLOW_OK)
+
+  if (ret != GST_FLOW_OK) {
+    GST_DEBUG_OBJECT (amrnbparse, "Flow: %s", gst_flow_get_name (ret));
+    if (GST_FLOW_IS_FATAL (ret)) {
+      GST_ELEMENT_ERROR (amrnbparse, STREAM, FAILED, (NULL),    /* _("Internal data flow error.")), */
+          ("streaming task paused, reason: %s", gst_flow_get_name (ret)));
+      gst_pad_push_event (pad, gst_event_new_eos ());
+    }
     goto need_pause;
+  }
+
+  amrnbparse->ts += GST_BUFFER_DURATION (buffer);
 
   return;
 
@@ -479,7 +507,7 @@ need_pause:
   }
 eos:
   {
-    GST_LOG_OBJECT (amrnbparse, "pausing task");
+    GST_LOG_OBJECT (amrnbparse, "pausing task (eos)");
     gst_pad_push_event (amrnbparse->srcpad, gst_event_new_eos ());
     gst_pad_pause_task (pad);
     return;

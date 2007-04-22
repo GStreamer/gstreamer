@@ -1,3 +1,12 @@
+2007-04-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_get_type),
+	(gst_amrnbparse_class_init), (gst_amrnbparse_init),
+	(gst_amrnbparse_pull_header), (gst_amrnbparse_loop):
+	  Fix pull mode operation some more: send newsegment event before
+	  sending data; handle EOS and fatal flow returns a bit better; don't
+	  leak buffers in some cases. Misc. minor cleanups. Fixes #431707.
+
 2007-04-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/Makefile.am:
