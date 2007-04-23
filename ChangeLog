@@ -1,3 +1,9 @@
+2007-04-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/adder/gstadder.c: (gst_adder_setcaps), (gst_adder_src_event),
+	(gst_adder_sink_event), (gst_adder_collected):
+	  Fix non-flushing segmented seeks, Fixes #340060 for me
+
 2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Olivier Crete  <tester at tester ca>

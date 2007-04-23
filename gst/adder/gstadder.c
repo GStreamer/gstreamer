@@ -169,6 +169,9 @@ gst_adder_setcaps (GstPad * pad, GstCaps * caps)
 
   adder = GST_ADDER (GST_PAD_PARENT (pad));
 
+  GST_LOG_OBJECT (adder, "setting caps on pad %p,%s to %" GST_PTR_FORMAT, pad,
+      GST_PAD_NAME (pad), caps);
+
   /* FIXME, see if the other pads can accept the format. Also lock the
    * format on the other pads to this new format. */
   GST_OBJECT_LOCK (adder);
@@ -248,7 +251,7 @@ not_supported:
 }
 
 /* FIXME, the duration query should reflect how long you will produce
- * data, that is the amount of stream time until you will emit EOS. 
+ * data, that is the amount of stream time until you will emit EOS.
  *
  * For synchronized mixing this is always the max of all the durations
  * of upstream since we emit EOS when all of them finished.
@@ -261,7 +264,7 @@ not_supported:
  * also become invalid again and we need to post a new DURATION
  * message to notify this fact to the parent.
  * For now we take the max of all the upstream elements so the simple
- * cases work at least somewhat. 
+ * cases work at least somewhat.
  */
 static gboolean
 gst_adder_query_duration (GstAdder * adder, GstQuery * query)
@@ -388,7 +391,7 @@ forward_event_func (GstPad * pad, GValue * ret, GstEvent * event)
   return TRUE;
 }
 
-/* forwards the event to all sinkpads, takes ownership of the 
+/* forwards the event to all sinkpads, takes ownership of the
  * event
  *
  * Returns: TRUE if the event could be forwarded on all
@@ -442,18 +445,17 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       gst_event_parse_seek (event, NULL, NULL, &flags, &curtype, &cur, NULL,
           NULL);
 
-      /* if we are not flushing, just forward */
-      if (!flags & GST_SEEK_FLAG_FLUSH)
-        goto done;
+      /* check if we are flushing */
+      if (flags & GST_SEEK_FLAG_FLUSH) {
+        /* make sure we accept nothing anymore and return WRONG_STATE */
+        gst_collect_pads_set_flushing (adder->collect, TRUE);
 
-      /* make sure we accept nothing anymore and return WRONG_STATE */
-      gst_collect_pads_set_flushing (adder->collect, TRUE);
+        /* flushing seek, start flush downstream, the flush will be done
+         * when all pads received a FLUSH_STOP. */
+        gst_pad_push_event (adder->srcpad, gst_event_new_flush_start ());
+      }
 
-      /* flushing seek, start flush downstream, the flush will be done
-       * when all pads received a FLUSH_STOP. */
-      gst_pad_push_event (adder->srcpad, gst_event_new_flush_start ());
-
-      /* now wait for the collected to be finished and mark a new 
+      /* now wait for the collected to be finished and mark a new
        * segment */
       GST_OBJECT_LOCK (adder->collect);
       if (curtype == GST_SEEK_TYPE_SET)
@@ -463,7 +465,6 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       adder->segment_pending = TRUE;
       GST_OBJECT_UNLOCK (adder->collect);
 
-    done:
       result = forward_event (adder, event);
       break;
     }
@@ -495,7 +496,7 @@ gst_adder_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       /* mark a pending new segment. This event is synchronized
-       * with the streaming thread so we can safely update the 
+       * with the streaming thread so we can safely update the
        * variable without races. It's somewhat weird because we
        * assume the collectpads forwarded the FLUSH_STOP past us
        * and downstream (using our source pad, the bastard!).
@@ -670,16 +671,17 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (G_UNLIKELY (adder->func == NULL))
     goto not_negotiated;
 
-  outbuf = NULL;
-  outbytes = NULL;
-
   /* get available bytes for reading, this can be 0 which could mean
    * empty buffers or EOS, which we will catch when we loop over the
    * pads. */
   size = gst_collect_pads_available (pads);
 
   GST_LOG_OBJECT (adder,
-      "starting to cycle through channels, %d bytes available", size);
+      "starting to cycle through channels, %d bytes available (bps = %d)", size,
+      adder->bps);
+
+  outbuf = NULL;
+  outbytes = NULL;
 
   for (collected = pads->data; collected; collected = g_slist_next (collected)) {
     GstCollectData *data;
@@ -730,7 +732,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   if (outbuf == NULL)
     goto eos;
 
-  /* our timestamping is very simple, just an ever incrementing 
+  /* our timestamping is very simple, just an ever incrementing
    * counter, the new segment time will take care of their respective
    * stream time. */
   if (adder->segment_pending) {
