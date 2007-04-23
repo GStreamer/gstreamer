@@ -104,7 +104,7 @@ then
   else
     IGNORE_GST_0_10_4=""
   fi
-  
+
   if test $GST_MINOR_VERSION -lt "5"
   then
     IGNORE_GST_0_10_5="gst-0.10.5.ignore"
@@ -151,7 +151,7 @@ then
     IGNORE_GST_0_10_12=""
   fi
 
-  dnl plugins base 
+  dnl plugins base
   if test $GST_PB_MINOR_VERSION -lt "11"
   then
     IGNORE_GST_PB_0_10_11="gst-pb-0.10.11.ignore"
@@ -194,6 +194,15 @@ fi
 
 AC_SUBST(GST_BASE_LIBS)
 AC_SUBST(GST_BASE_CFLAGS)
+
+
+dnl check for gstreamer core features (subsystems)
+GST_CONFIGPATH=`$PKG_CONFIG --variable=includedir gstreamer-0.10`"/gst/gstconfig.h"
+AG_GST_PARSE_SUBSYSTEM_DISABLES($GST_CONFIGPATH)
+if test $GST_DISABLE_LOADSAVE = "1"; then
+  AC_MSG_WARN("Load/Save XML persistence disabled")
+fi
+
 
 dnl check for gstreamer-controller
 PKG_CHECK_MODULES(GST_CONTROLLER, gstreamer-controller-$GST_MAJORMINOR >= $GST_REQ,

@@ -1,3 +1,8 @@
+2007-04-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Add example for the new AG_GST_PARSE_SUBSYSTEM_DISABLE macro.
+
 2007-04-19  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstbin.override:
