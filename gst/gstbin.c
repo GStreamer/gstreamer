@@ -104,8 +104,8 @@
  *   <varlistentry>
  *     <term>GST_MESSAGE_CLOCK_PROVIDE</term>
  *     <listitem><para> This message is generated when an element
- *     can provide a clock. This mostly happens when a new clock 
- *     provider is added to the bin. The default behaviour of the bin is to 
+ *     can provide a clock. This mostly happens when a new clock
+ *     provider is added to the bin. The default behaviour of the bin is to
  *     mark the currently selected clock as dirty, which will perform a clock
  *     recalculation the next time the bin is asked to provide a clock.
  *     This message is never sent tot the application but is forwarded to
@@ -128,7 +128,7 @@
  *     and the bin is a toplevel bin (ie. has no parent),
  *     use the cached previous value. If no previous value was cached, the
  *     query is sent to all sink elements in the bin and the MAXIMUM of all
- *     values is returned. If the bin is a toplevel bin the value is cached. 
+ *     values is returned. If the bin is a toplevel bin the value is cached.
  *     If no sinks are available in the bin, the query fails.
  *     </para></listitem>
  *   </varlistentry>
@@ -171,7 +171,7 @@
 #include "gstutils.h"
 #include "gstchildproxy.h"
 
-/* enable for DURATION caching. 
+/* enable for DURATION caching.
  * FIXME currently too many elements don't update
  * their duration when it changes so we return inaccurate values. */
 #undef DURATION_CACHING
@@ -540,7 +540,7 @@ gst_bin_set_clock_func (GstElement * element, GstClock * clock)
  *
  * The ref of the returned clock in increased so unref after usage.
  *
- * We loop the elements in state order and pick the last clock we can 
+ * We loop the elements in state order and pick the last clock we can
  * get. This makes sure we get a clock from the source.
  *
  * MT safe
@@ -637,7 +637,7 @@ message_check (GstMessage * message, MessageFind * target)
 }
 
 /* with LOCK, returns TRUE if message had a valid SRC, takes ref on
- * the message. 
+ * the message.
  *
  * A message that is cached and has the same SRC and type is replaced
  * by the given message.
@@ -1321,7 +1321,7 @@ src_iterator_filter (GstElement * child, GstBin * bin)
  * gst_bin_iterate_sources:
  * @bin: a #GstBin
  *
- * Gets an iterator for all elements in the bin that have no sinkpads and have 
+ * Gets an iterator for all elements in the bin that have no sinkpads and have
  * the #GST_ELEMENT_IS_SINK flag unset.
  *
  * Each element yielded by the iterator will have its refcount increased, so
@@ -1841,12 +1841,12 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
   GST_OBJECT_LOCK (bin);
   if ((found = g_list_find_custom (bin->messages, &find,
               (GCompareFunc) message_check))) {
+#ifndef GST_DISABLE_GST_DEBUG
     GstMessage *message = GST_MESSAGE_CAST (found->data);
-    GstObject *src = GST_MESSAGE_SRC (message);
-
+#endif
 
     GST_DEBUG_OBJECT (element, "element message %p, %s async busy",
-        message, GST_ELEMENT_NAME (src));
+        message, GST_ELEMENT_NAME (GST_MESSAGE_SRC (message)));
     /* only wait for upward state changes */
     if (next > current) {
       /* We found an async element check if we can force its state to change or
@@ -1935,7 +1935,7 @@ iterator_activate_fold_with_resync (GstIterator * iter, gpointer user_data)
         /* all pads iterated, return collected value */
         goto done;
       default:
-        /* iterator returned _ERROR or premature end with _OK, 
+        /* iterator returned _ERROR or premature end with _OK,
          * mark an error and exit */
         g_value_set_boolean (&ret, FALSE);
         goto done;
@@ -2297,8 +2297,8 @@ complete:
     /* don't post silly messages with the same state. This can happen
      * when an element state is changed to what it already was. For bins
      * this can be the result of a lost state, which we check with the
-     * previous return value. 
-     * We do signal the cond though as a _get_state() might be blocking 
+     * previous return value.
+     * We do signal the cond though as a _get_state() might be blocking
      * on it. */
     if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
       gst_element_post_message (GST_ELEMENT_CAST (bin),
@@ -2449,8 +2449,8 @@ complete:
     /* don't post silly messages with the same state. This can happen
      * when an element state is changed to what it already was. For bins
      * this can be the result of a lost state, which we check with the
-     * previous return value. 
-     * We do signal the cond though as a _get_state() might be blocking 
+     * previous return value.
+     * We do signal the cond though as a _get_state() might be blocking
      * on it. */
     if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
       *message = gst_message_new_state_changed (GST_OBJECT_CAST (bin),
@@ -2466,7 +2466,7 @@ complete:
 /* handle child messages:
  *
  * This method is called synchronously when a child posts a message on
- * the internal bus. 
+ * the internal bus.
  *
  * GST_MESSAGE_EOS: This message is only posted by sinks
  *     in the PLAYING state. If all sinks posted the EOS message, post
@@ -2495,8 +2495,8 @@ complete:
  * GST_MESSAGE_CLOCK_LOST: This message is posted by an element when it
  *     can no longer provide a clock. The default bin behaviour is to
  *     check if the lost clock was the one provided by the bin. If so and
- *     we are currently in the PLAYING state, we forward the message to 
- *     our parent. 
+ *     we are currently in the PLAYING state, we forward the message to
+ *     our parent.
  *     This message is also generated when we remove a clock provider from
  *     a bin. If this message is received by the application, it should
  *     PAUSE the pipeline and set it back to PLAYING to force a new clock
@@ -2511,7 +2511,7 @@ complete:
  *     the parent.
  *
  * GST_MESSAGE_ASYNC_START: Create an internal ELEMENT message that stores
- *     the state of the element and the fact that the element will need a 
+ *     the state of the element and the fact that the element will need a
  *     new base_time.
  *
  * GST_MESSAGE_ASYNC_DONE: Find the internal ELEMENT message we kept for the
@@ -2561,7 +2561,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
     }
     case GST_MESSAGE_SEGMENT_START:
       GST_OBJECT_LOCK (bin);
-      /* replace any previous segment_start message from this source 
+      /* replace any previous segment_start message from this source
        * with the new segment start message */
       bin_replace_message (bin, message, GST_MESSAGE_SEGMENT_START);
       GST_OBJECT_UNLOCK (bin);
@@ -2620,7 +2620,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
 
       GST_OBJECT_LOCK (bin);
       bin->clock_dirty = TRUE;
-      /* if we lost the clock that we provided, post to parent but 
+      /* if we lost the clock that we provided, post to parent but
        * only if we are PLAYING. */
       provided = (clock == bin->provided_clock);
       playing = (GST_STATE (bin) == GST_STATE_PLAYING);
@@ -2800,7 +2800,7 @@ typedef struct
 typedef void (*QueryInitFunction) (GstBin * bin, QueryFold * fold);
 typedef void (*QueryDoneFunction) (GstBin * bin, QueryFold * fold);
 
-/* for duration/position we collect all durations/positions and take 
+/* for duration/position we collect all durations/positions and take
  * the MAX of all valid results */
 static void
 bin_query_min_max_init (GstBin * bin, QueryFold * fold)

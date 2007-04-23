@@ -1,3 +1,10 @@
+2007-04-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstbin.c: (gst_bin_element_set_state),
+	(iterator_activate_fold_with_resync), (gst_bin_continue_func),
+	(bin_handle_async_done), (gst_bin_handle_message_func):
+	  Fix build with --gst-disable-gst-debug
+
 2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gstbasetransform.c: (gst_base_transform_activate):
