@@ -1,3 +1,15 @@
+2007-04-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Dan Williams <dcbw redhat com>
+
+	* gst/videorate/gstvideorate.c: (gst_video_rate_chain):
+	  Don't leak incoming buffer if gst_pad_push() returns a
+	  non-OK flow. Fixes #432755.
+	 
+	* tests/check/elements/videorate.c: (GST_START_TEST),
+	(videorate_suite):
+	  Unit test for the above by Yours Truly.
+
 2007-04-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/adder/gstadder.c: (gst_adder_setcaps), (gst_adder_src_event),

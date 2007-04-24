@@ -609,7 +609,56 @@ GST_START_TEST (test_changing_size)
 }
 
 GST_END_TEST;
-Suite *
+
+GST_START_TEST (test_non_ok_flow)
+{
+  GstElement *videorate;
+  GstClockTime ts;
+  GstBuffer *buf;
+  GstCaps *caps;
+
+  videorate = setup_videorate ();
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  buf = gst_buffer_new_and_alloc (4);
+  memset (GST_BUFFER_DATA (buf), 0, 4);
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_buffer_set_caps (buf, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (buf, "inbuffer", 1);
+
+  /* push a few 'normal' buffers */
+  for (ts = 0; ts < 100 * GST_SECOND; ts += GST_SECOND / 33) {
+    GstBuffer *inbuf;
+
+    inbuf = gst_buffer_copy (buf);
+    GST_BUFFER_TIMESTAMP (inbuf) = ts;
+
+    fail_unless_equals_int (gst_pad_push (mysrcpad, inbuf), GST_FLOW_OK);
+  }
+
+  /* we should have buffers according to the output framerate of 25/1 */
+  fail_unless_equals_int (g_list_length (buffers), 100 * 25);
+
+  /* now deactivate pad so we get a WRONG_STATE flow return */
+  gst_pad_set_active (mysinkpad, FALSE);
+
+  /* push buffer on deactivated pad */
+  fail_unless (gst_buffer_is_metadata_writable (buf));
+  GST_BUFFER_TIMESTAMP (buf) = ts;
+
+  /* pushing gives away our reference */
+  fail_unless_equals_int (gst_pad_push (mysrcpad, buf), GST_FLOW_WRONG_STATE);
+
+  /* cleanup */
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+static Suite *
 videorate_suite (void)
 {
   Suite *s = suite_create ("videorate");
@@ -622,23 +671,9 @@ videorate_suite (void)
   tcase_add_test (tc_chain, test_wrong_order);
   tcase_add_test (tc_chain, test_no_framerate);
   tcase_add_test (tc_chain, test_changing_size);
+  tcase_add_test (tc_chain, test_non_ok_flow);
 
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = videorate_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (videorate)

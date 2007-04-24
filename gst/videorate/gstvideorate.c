@@ -560,7 +560,7 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn res = GST_FLOW_OK;
   GstClockTime intime, in_ts;
 
-  videorate = GST_VIDEO_RATE (gst_pad_get_parent (pad));
+  videorate = GST_VIDEO_RATE (GST_PAD_PARENT (pad));
 
   /* make sure the denominators are not 0 */
   if (videorate->from_rate_denominator == 0 ||
@@ -636,8 +636,10 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
         count++;
 
         /* on error the _flush function posted a warning already */
-        if ((res = gst_video_rate_flush_prev (videorate)) != GST_FLOW_OK)
+        if ((res = gst_video_rate_flush_prev (videorate)) != GST_FLOW_OK) {
+          gst_buffer_unref (buffer);
           goto done;
+        }
       }
       /* continue while the first one was the best */
     }
@@ -671,7 +673,6 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
     gst_video_rate_swap_prev (videorate, buffer, intime);
   }
 done:
-  gst_object_unref (videorate);
   return res;
 
   /* ERRORS */
