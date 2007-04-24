@@ -84,6 +84,9 @@ struct _GstRTPDTMFSrc {
   
   GstClockTime      timestamp;
   GstSegment        segment;
+
+  guint16	    interval;
+  guint16	    packet_redundancy;
 };
 
 struct _GstRTPDTMFSrcClass {

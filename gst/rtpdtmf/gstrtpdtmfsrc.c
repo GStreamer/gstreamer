@@ -130,7 +130,9 @@
 #include "gstrtpdtmfsrc.h"
 
 #define GST_RTP_DTMF_TYPE_EVENT  1
-#define DEFAULT_PACKET_INTERVAL  ((guint16) 50) /* ms */
+#define DEFAULT_PACKET_INTERVAL  50 /* ms */
+#define MIN_PACKET_INTERVAL      10 /* ms */
+#define MAX_PACKET_INTERVAL      50 /* ms */
 #define DEFAULT_SSRC             -1
 #define DEFAULT_PT               96
 #define DEFAULT_TIMESTAMP_OFFSET -1
@@ -142,6 +144,10 @@
 #define MAX_EVENT_STRING         "16"
 #define MIN_VOLUME               0
 #define MAX_VOLUME               36
+
+#define DEFAULT_PACKET_REDUNDANCY 1
+#define MIN_PACKET_REDUNDANCY 1
+#define MAX_PACKET_REDUNDANCY 5
 
 /* elementfactory information */
 static const GstElementDetails gst_rtp_dtmf_src_details =
@@ -169,7 +175,9 @@ enum
   PROP_PT,
   PROP_CLOCK_RATE,
   PROP_TIMESTAMP,
-  PROP_SEQNUM
+  PROP_SEQNUM,
+  PROP_INTERVAL,
+  PROP_REDUNDANCY
 };
 
 static GstStaticPadTemplate gst_rtp_dtmf_src_template =
@@ -289,6 +297,15 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
       g_param_spec_uint ("pt", "payload type",
           "The payload type of the packets",
           0, 0x80, DEFAULT_PT, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_INTERVAL,
+      g_param_spec_int ("interval", "Interval between rtp packets",
+          "Interval in ms between two rtp packets", MIN_PACKET_INTERVAL,
+          MAX_PACKET_INTERVAL, DEFAULT_PACKET_INTERVAL, G_PARAM_READWRITE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_REDUNDANCY,
+      g_param_spec_int ("packet-redundancy", "Packet Redundancy",
+          "Number of packets to send to indicate start and stop dtmf events",
+          MIN_PACKET_REDUNDANCY, MAX_PACKET_REDUNDANCY,
+          DEFAULT_PACKET_REDUNDANCY, G_PARAM_READWRITE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_change_state);
@@ -309,6 +326,9 @@ gst_rtp_dtmf_src_init (GstRTPDTMFSrc * dtmfsrc, gpointer g_class)
   dtmfsrc->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   dtmfsrc->pt = DEFAULT_PT;
   dtmfsrc->clock_rate = DEFAULT_CLOCK_RATE;
+  dtmfsrc->payload = NULL;
+  dtmfsrc->interval = DEFAULT_PACKET_INTERVAL;
+  dtmfsrc->packet_redundancy = DEFAULT_PACKET_REDUNDANCY;
   
   GST_DEBUG_OBJECT (dtmfsrc, "init done");
 }
@@ -457,6 +477,12 @@ gst_rtp_dtmf_src_set_property (GObject * object, guint prop_id,
       dtmfsrc->pt = g_value_get_uint (value);
       gst_rtp_dtmf_src_set_caps (dtmfsrc);
       break;
+    case PROP_INTERVAL :
+      dtmfsrc->interval = g_value_get_int (value);
+      break;
+    case PROP_REDUNDANCY :
+      dtmfsrc->packet_redundancy = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -492,6 +518,12 @@ gst_rtp_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SEQNUM:
       g_value_set_uint (value, dtmfsrc->seqnum);
+      break;
+    case PROP_INTERVAL:
+      g_value_set_uint (value, dtmfsrc->interval);
+      break;
+    case PROP_REDUNDANCY:
+      g_value_set_uint (value, dtmfsrc->packet_redundancy);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -616,7 +648,7 @@ gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
   /* timestamp of RTP header */
   gst_rtp_buffer_set_timestamp (buf, dtmfsrc->rtp_timestamp);
   dtmfsrc->rtp_timestamp += 
-      DEFAULT_PACKET_INTERVAL * dtmfsrc->clock_rate / 1000;
+      dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
 }
 
 static void
@@ -628,10 +660,10 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
 
   /* duration of DTMF payload */
   dtmfsrc->payload->duration +=
-      DEFAULT_PACKET_INTERVAL * dtmfsrc->clock_rate / 1000;
+      dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
   
   /* timestamp and duration of GstBuffer */ 
-  GST_BUFFER_DURATION (buf) = DEFAULT_PACKET_INTERVAL * GST_MSECOND;
+  GST_BUFFER_DURATION (buf) = dtmfsrc->interval * GST_MSECOND;
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
   dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
   
@@ -666,17 +698,40 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
 {
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
+  gint redundancy_count = 1;
+
+  if (dtmfsrc->first_packet == TRUE || dtmfsrc->payload->e) {
+    redundancy_count = dtmfsrc->packet_redundancy;
+
+    if(dtmfsrc->first_packet == TRUE) {
+      GST_DEBUG_OBJECT (dtmfsrc,
+          "redundancy count set to %d due to dtmf start",
+          redundancy_count);
+    }
+    if(dtmfsrc->payload->e) {
+      GST_DEBUG_OBJECT (dtmfsrc,
+          "redundancy count set to %d due to dtmf stop",
+          redundancy_count);
+    }
+
+  }
 
   /* create buffer to hold the payload */
   buf = gst_rtp_dtmf_src_create_next_rtp_packet (dtmfsrc);
 
-  GST_DEBUG_OBJECT (dtmfsrc,
-          "pushing buffer on src pad of size %d", GST_BUFFER_SIZE (buf));
-  ret = gst_pad_push (dtmfsrc->srcpad, buf);
-  if (ret != GST_FLOW_OK)
-    GST_ERROR_OBJECT (dtmfsrc,
-            "Failed to push buffer on src pad", GST_BUFFER_SIZE (buf));
-    
+  while ( redundancy_count-- ) {
+    gst_buffer_ref(buf);
+
+    GST_DEBUG_OBJECT (dtmfsrc,
+        "pushing buffer on src pad of size %d with redundancy count %d",
+        GST_BUFFER_SIZE (buf), redundancy_count);
+    ret = gst_pad_push (dtmfsrc->srcpad, buf);
+    if (ret != GST_FLOW_OK)
+      GST_ERROR_OBJECT (dtmfsrc,
+          "Failed to push buffer on src pad", GST_BUFFER_SIZE (buf));
+  }
+
+  gst_buffer_unref(buf);
   GST_DEBUG_OBJECT (dtmfsrc,
           "pushed DTMF event '%d' on src pad", dtmfsrc->payload->event);
 }
