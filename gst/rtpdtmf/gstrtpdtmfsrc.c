@@ -386,7 +386,8 @@ failure:
 }
 
 static gboolean
-gst_rtp_dtmf_src_handle_custom_upstream (GstRTPDTMFSrc *dtmfsrc, GstEvent * event)
+gst_rtp_dtmf_src_handle_custom_upstream (GstRTPDTMFSrc *dtmfsrc,
+    GstEvent * event)
 {
   gboolean result = FALSE;
   const GstStructure *structure;
@@ -436,8 +437,8 @@ gst_rtp_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
         GstFormat fmt;
         gint64 start, stop, position;
 
-        gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
-            &position);
+        gst_event_parse_new_segment (event, &update, &rate, &fmt, &start,
+            &stop, &position);
         gst_segment_set_newsegment (&dtmfsrc->segment, update, rate, fmt,
             start, stop, position);
       }
@@ -477,10 +478,10 @@ gst_rtp_dtmf_src_set_property (GObject * object, guint prop_id,
       dtmfsrc->pt = g_value_get_uint (value);
       gst_rtp_dtmf_src_set_caps (dtmfsrc);
       break;
-    case PROP_INTERVAL :
+    case PROP_INTERVAL:
       dtmfsrc->interval = g_value_get_int (value);
       break;
-    case PROP_REDUNDANCY :
+    case PROP_REDUNDANCY:
       dtmfsrc->packet_redundancy = g_value_get_int (value);
       break;
     default:
@@ -554,14 +555,16 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc *dtmfsrc)
     dtmfsrc->timestamp = gst_clock_get_time (GST_ELEMENT_CLOCK (dtmfsrc));
 
   else {
-    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", GST_ELEMENT_NAME (dtmfsrc));
+    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s",
+        GST_ELEMENT_NAME (dtmfsrc));
     dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
   }
 
   dtmfsrc->rtp_timestamp = dtmfsrc->ts_base +
       gst_util_uint64_scale_int (
           gst_segment_to_running_time (&dtmfsrc->segment, GST_FORMAT_TIME,
-              dtmfsrc->timestamp - gst_element_get_base_time (GST_ELEMENT (dtmfsrc))), 
+              dtmfsrc->timestamp -
+              gst_element_get_base_time (GST_ELEMENT (dtmfsrc))),
           dtmfsrc->clock_rate, GST_SECOND);
 }
 
@@ -629,7 +632,8 @@ gst_rtp_dtmf_src_wait_for_buffer_ts (GstRTPDTMFSrc *dtmfsrc, GstBuffer * buf)
   }
 
   else {
-    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", GST_ELEMENT_NAME (dtmfsrc));
+    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s",
+        GST_ELEMENT_NAME (dtmfsrc));
   }
 }
 
