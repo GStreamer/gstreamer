@@ -77,6 +77,7 @@ IGNORE_CFILES =
 # the registry won't have the element
 
 EXTRA_HFILES = \
+	$(top_srcdir)/gst/alpha/gstalphacolor.h \
 	$(top_srcdir)/gst/apetag/gstapedemux.h \
 	$(top_srcdir)/gst/audiofx/audiopanorama.h \
 	$(top_srcdir)/gst/audiofx/audioinvert.h \

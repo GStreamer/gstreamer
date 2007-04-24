@@ -11,3 +11,5 @@ libgstalphacolor_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstalphacolor_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS)
 libgstalphacolor_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+noinst_HEADERS = gstalphacolor.h

@@ -12,6 +12,7 @@
 
   <chapter>
     <title>gst-plugins-good Elements</title>
+    <xi:include href="xml/element-alphacolor.xml" />
     <xi:include href="xml/element-apedemux.xml" />
     <xi:include href="xml/element-apev2mux.xml" />
     <xi:include href="xml/element-audiopanorama.xml" />

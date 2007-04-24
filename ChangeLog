@@ -1,3 +1,15 @@
+2007-04-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* gst/alpha/Makefile.am:
+	* gst/alpha/gstalphacolor.c:
+	* gst/alpha/gstalphacolor.h:
+	  Add minimal docs blurb to alphacolor; split out headers into
+	  separate header file for gtk-doc.
+
 2007-04-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/debug/progressreport.c: (gst_progress_report_report):

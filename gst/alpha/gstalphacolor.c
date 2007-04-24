@@ -17,11 +17,24 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-alphacolor
+ *
+ * <refsect2>
+ * <para>
+ * The alphacolor element does memory-efficient (in-place) colourspace
+ * conversion from RGBA to AYUV, preserving the alpha channel.
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include "gstalphacolor.h"
+
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 
 #include <string.h>
@@ -29,40 +42,11 @@
 GST_DEBUG_CATEGORY_STATIC (alpha_color_debug);
 #define GST_CAT_DEFAULT alpha_color_debug
 
-#define GST_TYPE_ALPHA_COLOR \
-  (gst_alpha_color_get_type())
-#define GST_ALPHA_COLOR(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALPHA_COLOR,GstAlphaColor))
-#define GST_ALPHA_COLOR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALPHA_COLOR,GstAlphaColorClass))
-#define GST_IS_ALPHA_COLOR(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALPHA_COLOR))
-#define GST_IS_ALPHA_COLOR_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALPHA_COLOR))
-
-typedef struct _GstAlphaColor GstAlphaColor;
-typedef struct _GstAlphaColorClass GstAlphaColorClass;
-
-struct _GstAlphaColor
-{
-  GstBaseTransform element;
-
-  /* caps */
-  gint in_width, in_height;
-  gboolean in_rgba;
-  gint out_width, out_height;
-};
-
-struct _GstAlphaColorClass
-{
-  GstBaseTransformClass parent_class;
-};
-
 /* elementfactory information */
 static const GstElementDetails gst_alpha_color_details =
 GST_ELEMENT_DETAILS ("Alpha color filter",
     "Filter/Effect/Video",
-    "RGB->YUV colorspace conversion preserving the alpha channels",
+    "RGBA to AYUV colorspace conversion preserving the alpha channel",
     "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_alpha_color_sink_template =
@@ -285,5 +269,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "alphacolor",
-    "RGB->YUV colorspace conversion preserving the alpha channels",
+    "RGBA to AYUV colorspace conversion preserving the alpha channel",
     plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

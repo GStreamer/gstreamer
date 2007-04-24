@@ -1,6 +1,6 @@
 <plugin>
   <name>alphacolor</name>
-  <description>RGB-&gt;YUV colorspace conversion preserving the alpha channels</description>
+  <description>RGBA to AYUV colorspace conversion preserving the alpha channel</description>
   <filename>../../gst/alpha/.libs/libgstalphacolor.so</filename>
   <basename>libgstalphacolor.so</basename>
   <version>0.10.5.1</version>
@@ -13,7 +13,7 @@
       <name>alphacolor</name>
       <longname>Alpha color filter</longname>
       <class>Filter/Effect/Video</class>
-      <description>RGB-&gt;YUV colorspace conversion preserving the alpha channels</description>
+      <description>RGBA to AYUV colorspace conversion preserving the alpha channel</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
   </elements>

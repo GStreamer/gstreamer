@@ -1,4 +1,18 @@
 <SECTION>
+<FILE>element-alphacolor</FILE>
+GstAlphaColor
+<TITLE>alphacolor</TITLE>
+<SUBSECTION Standard>
+GstAlphaColorClass
+GST_ALPHA_COLOR
+GST_IS_ALPHA_COLOR
+GST_TYPE_ALPHA_COLOR
+gst_alpha_color_get_type
+GST_ALPHA_COLOR_CLASS
+GST_IS_ALPHA_COLOR_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-apedemux</FILE>
 GstApeDemux
 <TITLE>apedemux</TITLE>
