@@ -293,7 +293,6 @@ gst_ximage_buffer_get_type (void)
 
 /* X11 stuff */
 
-#ifdef HAVE_XSHM                /* Check that XShm calls actually work */
 static gboolean error_caught = FALSE;
 
 static int
@@ -306,6 +305,8 @@ gst_ximagesink_handle_xerror (Display * display, XErrorEvent * xevent)
   error_caught = TRUE;
   return 0;
 }
+
+#ifdef HAVE_XSHM                /* Check that XShm calls actually work */
 
 static gboolean
 gst_ximagesink_check_xshm_calls (GstXImageSink * ximagesink,
