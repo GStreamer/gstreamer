@@ -226,6 +226,7 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
 static void
 gst_audio_convert_init (GstAudioConvert * this, GstAudioConvertClass * g_class)
 {
+  memset (&this->ctx, 0, sizeof (AudioConvertCtx));
 }
 
 static void
