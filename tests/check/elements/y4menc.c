@@ -115,7 +115,7 @@ GST_START_TEST (test_y4m)
       case 0:
         fail_unless (strlen (data0) == 40);
         fail_unless (GST_BUFFER_SIZE (outbuffer) == size + 40);
-        fail_unless (strncmp (data0, GST_BUFFER_DATA (outbuffer),
+        fail_unless (memcmp (data0, GST_BUFFER_DATA (outbuffer),
                 strlen (data0)) == 0);
         break;
       default:

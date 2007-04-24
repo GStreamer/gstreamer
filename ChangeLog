@@ -1,3 +1,10 @@
+2007-04-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/y4m/gsty4mencode.c: (gst_y4m_encode_init),
+	(gst_y4m_encode_setcaps):
+	* tests/check/elements/y4menc.c: (GST_START_TEST):
+	  Plug some leaks; try to make build bot happy again.
+
 2007-04-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/Makefile.am:

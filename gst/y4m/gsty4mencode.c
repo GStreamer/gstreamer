@@ -109,8 +109,7 @@ static void
 gst_y4m_encode_init (GstY4mEncode * filter, GstY4mEncodeClass * klass)
 {
   filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&y4mencode_sink_factory), "sink");
+      gst_pad_new_from_static_template (&y4mencode_sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_y4m_encode_chain));
@@ -118,8 +117,7 @@ gst_y4m_encode_init (GstY4mEncode * filter, GstY4mEncodeClass * klass)
       GST_DEBUG_FUNCPTR (gst_y4m_encode_setcaps));
 
   filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&y4mencode_src_factory), "src");
+      gst_pad_new_from_static_template (&y4mencode_src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   gst_pad_use_fixed_caps (filter->srcpad);
 
@@ -140,6 +138,7 @@ gst_y4m_encode_setcaps (GstPad * pad, GstCaps * vscaps)
 {
   GstY4mEncode *filter;
   GstStructure *structure;
+  gboolean res;
   gint w, h;
   const GValue *fps, *par;
 
@@ -147,11 +146,13 @@ gst_y4m_encode_setcaps (GstPad * pad, GstCaps * vscaps)
 
   structure = gst_caps_get_structure (vscaps, 0);
 
-  g_return_val_if_fail (gst_structure_get_int (structure, "width", &w), FALSE);
-  g_return_val_if_fail (gst_structure_get_int (structure, "height", &h), FALSE);
-  fps = gst_structure_get_value (structure, "framerate");
-  g_return_val_if_fail (w > 0 && h > 0
-      && fps != NULL && GST_VALUE_HOLDS_FRACTION (fps), FALSE);
+  res = gst_structure_get_int (structure, "width", &w);
+  res &= gst_structure_get_int (structure, "height", &h);
+  res &= ((fps = gst_structure_get_value (structure, "framerate")) != NULL);
+
+  if (!res || w <= 0 || h <= 0 || !GST_VALUE_HOLDS_FRACTION (fps))
+    return FALSE;
+
   /* optional par info */
   par = gst_structure_get_value (structure, "pixel-aspect-ratio");
 
@@ -169,7 +170,7 @@ gst_y4m_encode_setcaps (GstPad * pad, GstCaps * vscaps)
 
   /* the template caps will do for the src pad, should always accept */
   return gst_pad_set_caps (filter->srcpad,
-      gst_caps_copy (gst_pad_get_pad_template_caps (filter->srcpad)));
+      gst_static_pad_template_get_caps (&y4mencode_src_factory));
 }
 
 static inline GstBuffer *
