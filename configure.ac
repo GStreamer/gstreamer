@@ -71,7 +71,7 @@ dnl *** check for arguments to configure ***
 dnl subsystems - can influence other decisions so needs to be high up
 dnl we need to AM_CONDITIONAL them here for automake 1.6.x compatibility
 AG_GST_CHECK_SUBSYSTEM_DISABLE(GST_DEBUG,[debugging subsystem])
-AM_CONDITIONAL(GST_DISABLE_GST_DEBUG, test "x$GST_GST_DISABLE_DEBUG" = "xyes")
+AM_CONDITIONAL(GST_DISABLE_GST_DEBUG, test "x$GST_DISABLE_GST_DEBUG" = "xyes")
 AG_GST_CHECK_SUBSYSTEM_DISABLE(LOADSAVE,[pipeline XML load/save])
 AM_CONDITIONAL(GST_DISABLE_LOADSAVE, test "x$GST_DISABLE_LOADSAVE" = "xyes")
 dnl define a substitution to use in docs/gst/gstreamer.types
@@ -402,8 +402,7 @@ dnl Checks for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 AC_SUBST(GLIB_PREFIX)
 
-dnl libxml 2, which is/should be optional (FIXME)
-dnl (FIXME) if we use binary registry, the DISABLE_REGISTRY check need to go
+dnl libxml 2 is optional in some cases
 if test "x$GST_DISABLE_LOADSAVE" = "xyes" && \
    ( test "x$GST_DISABLE_REGISTRY" = "xyes" || \
    test "x$USE_BINARY_REGISTRY" = "xyes" )

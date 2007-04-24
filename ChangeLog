@@ -1,3 +1,10 @@
+2007-04-24  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: Peter Kjellerstedt <Peter.Kjellerstedt@axis.com>
+
+	* configure.ac:
+	  Fix AM_CONDITIONAL(GST_DISABLE_GST_DEBUG,...) and update comment.
+
 2007-04-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstbin.c: (gst_bin_element_set_state),
