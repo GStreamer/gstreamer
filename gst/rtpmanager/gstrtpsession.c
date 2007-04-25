@@ -293,6 +293,13 @@ rtcp_thread (GstRTPSession * rtpsession)
 {
   GstClock *clock;
   GstClockID id;
+  gdouble interval;
+  GstClockTime current_time;
+  GstClockTime next_rtcp_check_time;
+  GstClockTime new_rtcp_send_time;
+  GstClockTime last_rtcp_send_time;
+  GstClockTimeDiff jitter;
+  guint members, prev_members;
 
   clock = gst_element_get_clock (GST_ELEMENT_CAST (rtpsession));
   if (clock == NULL)
@@ -301,34 +308,83 @@ rtcp_thread (GstRTPSession * rtpsession)
   GST_DEBUG_OBJECT (rtpsession, "entering RTCP thread");
 
   GST_RTP_SESSION_LOCK (rtpsession);
+
+  /* get initial estimate */
+  interval = rtp_session_get_reporting_interval (rtpsession->priv->session);
+  current_time = gst_clock_get_time (clock);
+  last_rtcp_send_time = current_time;
+  next_rtcp_check_time = current_time + (GST_SECOND * interval);
+  /* we keep track of members before and after the timeout to do reverse
+   * reconsideration. */
+  prev_members = rtp_session_get_num_active_sources (rtpsession->priv->session);
+
+  GST_DEBUG_OBJECT (rtpsession, "first RTCP interval: %lf seconds", interval);
+
   while (!rtpsession->priv->stop_thread) {
-    gdouble timeout;
-    GstClockTime target;
     GstClockReturn res;
 
-    timeout = rtp_session_get_reporting_interval (rtpsession->priv->session);
-    GST_DEBUG_OBJECT (rtpsession, "next RTCP timeout: %lf", timeout);
+    GST_DEBUG_OBJECT (rtpsession, "next check time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (next_rtcp_check_time));
 
-    target = gst_clock_get_time (clock);
-    target += GST_SECOND * timeout;
-
-
-    id = rtpsession->priv->id = gst_clock_new_single_shot_id (clock, target);
+    id = rtpsession->priv->id =
+        gst_clock_new_single_shot_id (clock, next_rtcp_check_time);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
-    res = gst_clock_id_wait (id, NULL);
-    if (res != GST_CLOCK_UNSCHEDULED) {
-      GST_DEBUG_OBJECT (rtpsession, "got RTCP timeout");
-
-      /* make the session manager produce RTCP, we ignore the result. */
-      rtp_session_perform_reporting (rtpsession->priv->session);
-    } else {
-      GST_DEBUG_OBJECT (rtpsession, "got unscheduled");
-    }
+    res = gst_clock_id_wait (id, &jitter);
 
     GST_RTP_SESSION_LOCK (rtpsession);
     gst_clock_id_unref (id);
     rtpsession->priv->id = NULL;
+
+    if (rtpsession->priv->stop_thread)
+      break;
+
+    if (res != GST_CLOCK_UNSCHEDULED)
+      if (jitter < 0)
+        current_time = next_rtcp_check_time;
+      else
+        current_time = next_rtcp_check_time - jitter;
+    else
+      current_time = gst_clock_get_time (clock);
+
+    GST_DEBUG_OBJECT (rtpsession, "unlocked %d, jitter %" G_GINT64_FORMAT
+        ", current %" GST_TIME_FORMAT, res, jitter,
+        GST_TIME_ARGS (current_time));
+
+    members = rtp_session_get_num_active_sources (rtpsession->priv->session);
+
+    if (members < prev_members) {
+      GstClockTime time_remaining;
+
+      /* some members went away */
+      GST_DEBUG_OBJECT (rtpsession, "reverse reconsideration");
+      time_remaining = next_rtcp_check_time - current_time;
+      new_rtcp_send_time =
+          current_time + (time_remaining * members / prev_members);
+    } else {
+      interval = rtp_session_get_reporting_interval (rtpsession->priv->session);
+      GST_DEBUG_OBJECT (rtpsession, "forward reconsideration: %lf seconds",
+          interval);
+      new_rtcp_send_time = (interval * GST_SECOND) + last_rtcp_send_time;
+    }
+    prev_members = members;
+
+    if (current_time >= new_rtcp_send_time) {
+      GST_DEBUG_OBJECT (rtpsession, "sending RTCP now");
+
+      /* make the session manager produce RTCP, we ignore the result. */
+      rtp_session_perform_reporting (rtpsession->priv->session);
+
+      interval = rtp_session_get_reporting_interval (rtpsession->priv->session);
+
+      GST_DEBUG_OBJECT (rtpsession, "next RTCP interval: %lf seconds",
+          interval);
+      next_rtcp_check_time = (interval * GST_SECOND) + current_time;
+      last_rtcp_send_time = current_time;
+    } else {
+      GST_DEBUG_OBJECT (rtpsession, "reconsider RTCP");
+      next_rtcp_check_time = new_rtcp_send_time;
+    }
   }
   GST_RTP_SESSION_UNLOCK (rtpsession);
 

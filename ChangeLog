@@ -1,5 +1,16 @@
 2007-04-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtpmanager/gstrtpsession.c: (rtcp_thread):
+	Implement forward and reverse reconsideration.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_get_num_sources),
+	(rtp_session_get_num_active_sources), (rtp_session_process_sr),
+	(session_report_blocks):
+	* gst/rtpmanager/rtpsession.h:
+	Small cleanups.
+
+2007-04-25  Wim Taymans  <wim@fluendo.com>
+
 	reviewed by: <delete if not using a buddy>
 
 	* gst/rtpmanager/gstrtpbin.c: (create_stream),
