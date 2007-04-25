@@ -1,3 +1,9 @@
+2007-04-25  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid), (gst_ffmpeg_get_codecid_longname):
+	Remove cruft inserted by wim's last commit.
+
 2007-04-20  Michael Smith  <msmith@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_type_find):

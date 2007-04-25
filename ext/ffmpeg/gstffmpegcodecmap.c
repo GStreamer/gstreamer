@@ -534,7 +534,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp3", NULL);
       break;
 
-#ifdef CODEC_ID_VP5
     case CODEC_ID_VP5:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp5", NULL);
       break;
@@ -546,7 +545,6 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_VP6F:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp6-flash", NULL);
       break;
-#endif
 
     case CODEC_ID_THEORA:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-theora", NULL);
@@ -2135,7 +2133,6 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-vp3")) {
     id = CODEC_ID_VP3;
     video = TRUE;
-#ifdef CODEC_ID_VP5
   } else if (!strcmp (mimetype, "video/x-vp5")) {
     id = CODEC_ID_VP5;
     video = TRUE;
@@ -2145,7 +2142,6 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
   } else if (!strcmp (mimetype, "video/x-vp6-flash")) {
     id = CODEC_ID_VP6F;
     video = TRUE;
-#endif
   } else if (!strcmp (mimetype, "video/x-flash-screen")) {
     id = CODEC_ID_FLASHSV;
     video = TRUE;
@@ -2541,7 +2537,6 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_VP3:
       name = "VP3 video";
       break;
-#ifdef CODEC_ID_VP5
     case CODEC_ID_VP5:
       name = "VP5 video";
       break;
@@ -2551,7 +2546,6 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_VP6F:
       name = "VP6 Flash video";
       break;
-#endif
     case CODEC_ID_FLASHSV:
       name = "Flash Screen Video";
       break;
