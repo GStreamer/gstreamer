@@ -138,6 +138,7 @@ struct _GstRTSPSrc {
   gboolean         debug;
   guint   	   retry;
   guint64          timeout;
+  guint            latency;
 
   /* state */
   gchar           *content_base;

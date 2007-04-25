@@ -1,3 +1,20 @@
+2007-04-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtpdec.c: (gst_rtp_dec_class_init),
+	(gst_rtp_dec_init), (gst_rtp_dec_set_property),
+	(gst_rtp_dec_get_property):
+	* gst/rtsp/gstrtpdec.h:
+	Add dummy latency property to be backwards compat with rtpbin.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_class_init),
+	(gst_rtspsrc_set_property), (gst_rtspsrc_get_property),
+	(gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_parse_rtpinfo):
+	* gst/rtsp/gstrtspsrc.h:
+	Add latency property and configure in the session manager.
+	Don't set invalid clock-base and seqnum-base on caps, some servers
+	sometimes don't send them.
+
 2007-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/alpha/gstalphacolor.c: (gst_alpha_color_base_init),

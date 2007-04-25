@@ -80,9 +80,12 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_LATENCY_MS      200
+
 enum
 {
   PROP_0,
+  PROP_LATENCY
 };
 
 static GstStaticPadTemplate gst_rtp_dec_recv_rtp_sink_template =
@@ -266,6 +269,11 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
   gobject_class->set_property = gst_rtp_dec_set_property;
   gobject_class->get_property = gst_rtp_dec_get_property;
 
+  g_object_class_install_property (gobject_class, PROP_LATENCY,
+      g_param_spec_uint ("latency", "Buffer latency in ms",
+          "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
+          G_PARAM_READWRITE));
+
   /**
    * GstRTPDec::request-pt-map:
    * @rtpdec: the object which received the signal
@@ -294,6 +302,7 @@ static void
 gst_rtp_dec_init (GstRTPDec * rtpdec, GstRTPDecClass * klass)
 {
   rtpdec->provided_clock = gst_system_clock_obtain ();
+  rtpdec->latency = DEFAULT_LATENCY_MS;
 }
 
 static void
@@ -584,7 +593,11 @@ gst_rtp_dec_set_property (GObject * object, guint prop_id,
   src = GST_RTP_DEC (object);
 
   switch (prop_id) {
+    case PROP_LATENCY:
+      src->latency = g_value_get_uint (value);
+      break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -598,7 +611,11 @@ gst_rtp_dec_get_property (GObject * object, guint prop_id, GValue * value,
   src = GST_RTP_DEC (object);
 
   switch (prop_id) {
+    case PROP_LATENCY:
+      g_value_set_uint (value, src->latency);
+      break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

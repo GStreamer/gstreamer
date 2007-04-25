@@ -60,6 +60,7 @@ typedef struct _GstRTPDecSession GstRTPDecSession;
 struct _GstRTPDec {
   GstElement  element;
 
+  guint       latency;
   GSList     *sessions;
   GstClock   *provided_clock;
 };

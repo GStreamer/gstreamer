@@ -131,6 +131,7 @@ enum
 #define DEFAULT_DEBUG           FALSE
 #define DEFAULT_RETRY           20
 #define DEFAULT_TIMEOUT         5000000
+#define DEFAULT_LATENCY_MS      3000
 
 enum
 {
@@ -140,6 +141,7 @@ enum
   PROP_DEBUG,
   PROP_RETRY,
   PROP_TIMEOUT,
+  PROP_LATENCY,
 };
 
 #define GST_TYPE_RTSP_LOWER_TRANS (gst_rtsp_lower_trans_get_type())
@@ -272,6 +274,11 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           0, G_MAXUINT64, DEFAULT_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  g_object_class_install_property (gobject_class, PROP_LATENCY,
+      g_param_spec_uint ("latency", "Buffer latency in ms",
+          "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
@@ -349,6 +356,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_TIMEOUT:
       rtspsrc->timeout = g_value_get_uint64 (value);
       break;
+    case PROP_LATENCY:
+      rtspsrc->latency = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -378,6 +388,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TIMEOUT:
       g_value_set_uint64 (value, rtspsrc->timeout);
+      break;
+    case PROP_LATENCY:
+      g_value_set_uint (value, rtspsrc->latency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1173,6 +1186,8 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
       ret = gst_element_set_state (src->session, GST_STATE_PAUSED);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto start_session_failure;
+
+      g_object_set (src->session, "latency", src->latency, NULL);
     }
 
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
@@ -2839,8 +2854,10 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
       stream->timebase = timebase;
       if ((caps = stream->caps)) {
         /* update caps */
-        gst_caps_set_simple (caps, "clock-base", G_TYPE_UINT, timebase,
-            "seqnum-base", G_TYPE_UINT, seqbase, NULL);
+        if (timebase != -1)
+          gst_caps_set_simple (caps, "clock-base", G_TYPE_UINT, timebase, NULL);
+        if (seqbase != -1)
+          gst_caps_set_simple (caps, "seqnum-base", G_TYPE_UINT, seqbase, NULL);
       }
     }
   }
