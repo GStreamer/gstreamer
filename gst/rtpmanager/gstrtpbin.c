@@ -116,9 +116,12 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_LATENCY_MS	200
+
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_LATENCY
 };
 
 /* helper objects */
@@ -357,6 +360,9 @@ create_stream (GstRTPBinSession * session, guint32 ssrc)
   g_signal_connect (buffer, "request-pt-map",
       (GCallback) pt_map_requested, session);
 
+  /* configure latency */
+  g_object_set (buffer, "latency", session->bin->latency, NULL);
+
   gst_bin_add (GST_BIN_CAST (session->bin), buffer);
   gst_element_set_state (buffer, GST_STATE_PLAYING);
   gst_bin_add (GST_BIN_CAST (session->bin), demux);
@@ -448,6 +454,11 @@ gst_rtp_bin_class_init (GstRTPBinClass * klass)
   gobject_class->set_property = gst_rtp_bin_set_property;
   gobject_class->get_property = gst_rtp_bin_get_property;
 
+  g_object_class_install_property (gobject_class, PROP_LATENCY,
+      g_param_spec_uint ("latency", "Buffer latency in ms",
+          "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
+          G_PARAM_READWRITE));
+
   /**
    * GstRTPBin::request-pt-map:
    * @rtpbin: the object which received the signal
@@ -501,6 +512,9 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
   rtpbin = GST_RTP_BIN (object);
 
   switch (prop_id) {
+    case PROP_LATENCY:
+      rtpbin->latency = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -516,6 +530,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
   rtpbin = GST_RTP_BIN (object);
 
   switch (prop_id) {
+    case PROP_LATENCY:
+      g_value_set_uint (value, rtpbin->latency);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

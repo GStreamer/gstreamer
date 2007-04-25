@@ -92,9 +92,9 @@ enum
 
 enum
 {
-  ARG_0,
-  ARG_LATENCY,
-  ARG_DROP_ON_LATENCY
+  PROP_0,
+  PROP_LATENCY,
+  PROP_DROP_ON_LATENCY
 };
 
 struct _GstRTPJitterBufferPrivate
@@ -114,7 +114,7 @@ struct _GstRTPJitterBufferPrivate
 
   /* clock rate and rtp timestamp offset */
   gint32 clock_rate;
-  guint64 clock_base;
+  gint64 clock_base;
 
   /* when we are shutting down */
   GstFlowReturn srcresult;
@@ -215,12 +215,12 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
   gobject_class->set_property = gst_rtp_jitter_buffer_set_property;
   gobject_class->get_property = gst_rtp_jitter_buffer_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_LATENCY,
+  g_object_class_install_property (gobject_class, PROP_LATENCY,
       g_param_spec_uint ("latency", "Buffer latency in ms",
           "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
           G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class, ARG_DROP_ON_LATENCY,
+  g_object_class_install_property (gobject_class, PROP_DROP_ON_LATENCY,
       g_param_spec_boolean ("drop_on_latency",
           "Drop buffers when maximum latency is reached",
           "Tells the jitterbuffer to never exceed the given latency in size",
@@ -371,7 +371,8 @@ gst_jitter_buffer_sink_parse_caps (GstRTPJitterBuffer * jitterbuffer,
   value = gst_structure_get_value (caps_struct, "clock-base");
   if (value && G_VALUE_HOLDS_UINT (value)) {
     priv->clock_base = g_value_get_uint (value);
-    GST_DEBUG_OBJECT (jitterbuffer, "got clock-base %d", priv->clock_base);
+    GST_DEBUG_OBJECT (jitterbuffer, "got clock-base %" G_GINT64_FORMAT,
+        priv->clock_base);
   } else
     priv->clock_base = -1;
 
@@ -933,8 +934,8 @@ again:
      * of the currently popped packet */
     rtp_time = gst_rtp_buffer_get_timestamp (outbuf);
 
-    GST_DEBUG_OBJECT (jitterbuffer, "rtp_time %u, base %u", rtp_time,
-        priv->clock_base);
+    GST_DEBUG_OBJECT (jitterbuffer, "rtp_time %u, base %" G_GINT64_FORMAT,
+        rtp_time, priv->clock_base);
 
     /* if no clock_base was given, take first ts as base */
     if (priv->clock_base == -1)
@@ -946,8 +947,8 @@ again:
     /* bring timestamp to gst time */
     timestamp = gst_util_uint64_scale (GST_SECOND, rtp_time, priv->clock_rate);
 
-    GST_DEBUG_OBJECT (jitterbuffer, "timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timestamp));
+    GST_DEBUG_OBJECT (jitterbuffer, "rtptime %u, timestamp %" GST_TIME_FORMAT,
+        rtp_time, GST_TIME_ARGS (timestamp));
 
     /* bring to running time */
     running_time = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME,
@@ -1125,7 +1126,7 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
   GstRTPJitterBuffer *jitterbuffer = GST_RTP_JITTER_BUFFER (object);
 
   switch (prop_id) {
-    case ARG_LATENCY:
+    case PROP_LATENCY:
     {
       guint new_latency, old_latency;
 
@@ -1147,7 +1148,7 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       }
       break;
     }
-    case ARG_DROP_ON_LATENCY:
+    case PROP_DROP_ON_LATENCY:
     {
       jitterbuffer->priv->drop_on_latency = g_value_get_boolean (value);
       break;
@@ -1165,10 +1166,10 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
   GstRTPJitterBuffer *jitterbuffer = GST_RTP_JITTER_BUFFER (object);
 
   switch (prop_id) {
-    case ARG_LATENCY:
+    case PROP_LATENCY:
       g_value_set_uint (value, jitterbuffer->priv->latency_ms);
       break;
-    case ARG_DROP_ON_LATENCY:
+    case PROP_DROP_ON_LATENCY:
       g_value_set_boolean (value, jitterbuffer->priv->drop_on_latency);
       break;
     default:
