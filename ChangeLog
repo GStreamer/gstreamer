@@ -1,3 +1,12 @@
+2007-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c: (_do_init),
+	(gst_base_audio_src_create):
+	* po/POTFILES.in:
+	  When posting a warning message because samples were dropped, post
+	  something more intelligible than he default error message for clock
+	  errors which is just confusing in this context (#432984).
+
 2007-04-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstrtcpbuffer.c: (gst_rtcp_buffer_new),

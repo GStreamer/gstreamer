@@ -32,9 +32,15 @@
  * Last reviewed on 2006-09-27 (0.10.12)
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include <string.h>
 
 #include "gstbaseaudiosrc.h"
+
+#include "gst/gst-i18n-plugin.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_base_audio_src_debug);
 #define GST_CAT_DEFAULT gst_base_audio_src_debug
@@ -56,8 +62,18 @@ enum
   PROP_LATENCY_TIME,
 };
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gst_base_audio_src_debug, "baseaudiosrc", 0, "baseaudiosrc element");
+static void
+_do_init (GType type)
+{
+  GST_DEBUG_CATEGORY_INIT (gst_base_audio_src_debug, "baseaudiosrc", 0,
+      "baseaudiosrc element");
+
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
+}
 
 GST_BOILERPLATE_FULL (GstBaseAudioSrc, gst_base_audio_src, GstPushSrc,
     GST_TYPE_PUSH_SRC, _do_init);
@@ -579,7 +595,8 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     GST_WARNING_OBJECT (src,
         "create DISCONT of %" G_GUINT64_FORMAT " samples at sample %"
         G_GUINT64_FORMAT, sample - src->next_sample, sample);
-    GST_ELEMENT_WARNING (src, CORE, CLOCK, (NULL),
+    GST_ELEMENT_WARNING (src, CORE, CLOCK,
+        (_("Can't record audio fast enough")),
         ("dropped %" G_GUINT64_FORMAT " samples", sample - src->next_sample));
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
   }
