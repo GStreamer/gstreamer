@@ -1,3 +1,43 @@
+2007-04-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (create_rtcp):
+	fix for pad name change
+
+	* gst/rtpmanager/gstrtpsession.c: (rtcp_thread),
+	(gst_rtp_session_send_rtcp), (gst_rtp_session_clock_rate):
+	Fix for renamed methods.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_init),
+	(rtp_session_finalize), (rtp_session_set_cname),
+	(rtp_session_get_cname), (rtp_session_set_name),
+	(rtp_session_get_name), (rtp_session_set_email),
+	(rtp_session_get_email), (rtp_session_set_phone),
+	(rtp_session_get_phone), (rtp_session_set_location),
+	(rtp_session_get_location), (rtp_session_set_tool),
+	(rtp_session_get_tool), (rtp_session_set_note),
+	(rtp_session_get_note), (source_push_rtp), (obtain_source),
+	(rtp_session_add_source), (rtp_session_get_source_by_ssrc),
+	(rtp_session_create_source), (rtp_session_process_rtp),
+	(rtp_session_process_sr), (rtp_session_process_sdes),
+	(rtp_session_process_rtcp), (rtp_session_send_rtp),
+	(rtp_session_get_reporting_interval), (session_report_blocks),
+	(session_sdes), (rtp_session_perform_reporting):
+	* gst/rtpmanager/rtpsession.h:
+	Prepare for implementing SSRC sampling.
+	Create SSRC for the session. 
+	Add methods to set the SDES entries.
+	fix accounting of senders/receivers.
+	Implement SR/RR/SDES RTCP reporting.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_init), (init_seq),
+	(rtp_source_process_rtp), (rtp_source_process_sr):
+	* gst/rtpmanager/rtpsource.h:
+	Implement extended sequence number.
+
+	* gst/rtpmanager/rtpstats.c: (rtp_stats_calculate_rtcp_interval):
+	* gst/rtpmanager/rtpstats.h:
+	Rename some fields.
+
 2007-04-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/y4m/gsty4mencode.c: (gst_y4m_encode_init),

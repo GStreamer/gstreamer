@@ -92,13 +92,22 @@ typedef struct {
  * Stats about a source.
  */
 typedef struct {
-  guint64      packetsreceived;
-  guint64      prevpacketsreceived;
-  guint64      octetsreceived;
-  guint64      bytesreceived;
-  guint16      max_seqnr;
+  guint64      packets_received;
+  guint64      octets_received;
+  guint64      bytes_received;
+
+  guint32      prev_expected;
+  guint32      prev_received;
+
+  guint16      max_seq;
+  guint32      cycles;
+  guint32      base_seq;
+  guint32      bad_seq;
   guint32      transit;
   guint32      jitter;
+
+  guint64      packets_sent;
+  guint64      octets_sent;
 
   /* when we received stuff */
   GstClockTime prev_rtptime;
