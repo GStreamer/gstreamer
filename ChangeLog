@@ -1,5 +1,27 @@
 2007-04-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_change_state):
+	Report NO_PREROLL when going to PAUSED.
+
+	* gst/rtpmanager/gstrtpsession.c: (rtcp_thread):
+	Don't send RTCP right before we are shutting down.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_process_rtp),
+	(rtp_session_process_sr), (session_report_blocks),
+	(rtp_session_perform_reporting):
+	Improve report blocks.
+
+	* gst/rtpmanager/rtpsource.c: (calculate_jitter), (init_seq),
+	(rtp_source_process_rtp), (rtp_source_process_sr),
+	(rtp_source_process_rb), (rtp_source_get_last_sr),
+	(rtp_source_get_last_rb):
+	* gst/rtpmanager/rtpsource.h:
+	* gst/rtpmanager/rtpstats.h:
+	Cleanups, add methods to access stats. 
+
+2007-04-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtpmanager/gstrtpbin.c: (create_rtcp):
 	fix for pad name change
 

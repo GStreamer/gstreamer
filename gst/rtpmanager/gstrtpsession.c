@@ -304,21 +304,27 @@ rtcp_thread (GstRTPSession * rtpsession)
   while (!rtpsession->priv->stop_thread) {
     gdouble timeout;
     GstClockTime target;
+    GstClockReturn res;
 
     timeout = rtp_session_get_reporting_interval (rtpsession->priv->session);
     GST_DEBUG_OBJECT (rtpsession, "next RTCP timeout: %lf", timeout);
 
     target = gst_clock_get_time (clock);
     target += GST_SECOND * timeout;
+
+
     id = rtpsession->priv->id = gst_clock_new_single_shot_id (clock, target);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
-    gst_clock_id_wait (id, NULL);
+    res = gst_clock_id_wait (id, NULL);
+    if (res != GST_CLOCK_UNSCHEDULED) {
+      GST_DEBUG_OBJECT (rtpsession, "got RTCP timeout");
 
-    GST_DEBUG_OBJECT (rtpsession, "got RTCP timeout");
-
-    /* make the session manager produce RTCP, we ignore the result. */
-    rtp_session_perform_reporting (rtpsession->priv->session);
+      /* make the session manager produce RTCP, we ignore the result. */
+      rtp_session_perform_reporting (rtpsession->priv->session);
+    } else {
+      GST_DEBUG_OBJECT (rtpsession, "got unscheduled");
+    }
 
     GST_RTP_SESSION_LOCK (rtpsession);
     gst_clock_id_unref (id);

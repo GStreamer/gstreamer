@@ -34,6 +34,7 @@ typedef struct {
   guint32 rtptime;
   guint32 packet_count;
   guint32 octet_count;
+  GstClockTime time;
 } RTPSenderReport;
 
 /**
@@ -100,7 +101,7 @@ typedef struct {
   guint32      prev_received;
 
   guint16      max_seq;
-  guint32      cycles;
+  guint64      cycles;
   guint32      base_seq;
   guint32      bad_seq;
   guint32      transit;

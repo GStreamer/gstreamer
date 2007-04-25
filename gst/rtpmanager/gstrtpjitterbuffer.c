@@ -553,6 +553,8 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       async_jitter_queue_set_blocking_unlocked (jitterbuffer->priv->queue,
           TRUE);
       async_jitter_queue_unlock (priv->queue);
+      if (ret != GST_STATE_CHANGE_FAILURE)
+        ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
