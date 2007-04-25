@@ -92,6 +92,20 @@ typedef enum
 #define GST_RTCP_MAX_SDES 255
 
 /**
+ * GST_RTCP_MAX_RB_COUNT:
+ *
+ * The maximum amount of Receiver report blocks in RR and SR messages.
+ */
+#define GST_RTCP_MAX_RB_COUNT   31
+
+/**
+ * GST_RTCP_MAX_SDES_ITEM_COUNT:
+ *
+ * The maximum amount of SDES items.
+ */
+#define GST_RTCP_MAX_SDES_ITEM_COUNT   31
+
+/**
  * GST_RTCP_VALID_MASK:
  *
  * Mask for version, padding bit and packet type pair
@@ -126,8 +140,9 @@ struct _GstRTCPPacket
   GstRTCPType  type;         /* type of current packet */
   guint16      length;       /* length of current packet in 32-bits words */
 
-  guint        chunk_offset; /* current chunk offset for navigating SDES */
-  guint        item_offset;  /* current item offset for navigating SDE */
+  guint        item_offset;  /* current item offset for navigating SDES */
+  guint        item_count;   /* current item count */
+  guint        entry_offset; /* current entry offset for navigating SDES items */
 };
 
 /* creating buffers */
@@ -137,12 +152,15 @@ GstBuffer*      gst_rtcp_buffer_new_copy_data     (gpointer data, guint len);
 gboolean        gst_rtcp_buffer_validate_data     (guint8 *data, guint len);
 gboolean        gst_rtcp_buffer_validate          (GstBuffer *buffer);
 
+GstBuffer*      gst_rtcp_buffer_new               (guint mtu);
+void            gst_rtcp_buffer_end               (GstBuffer *buffer);
+
 /* adding/retrieving packets */
 guint           gst_rtcp_buffer_get_packet_count  (GstBuffer *buffer);
 gboolean        gst_rtcp_buffer_get_first_packet  (GstBuffer *buffer, GstRTCPPacket *packet);
 gboolean        gst_rtcp_packet_move_to_next      (GstRTCPPacket *packet);
 
-void            gst_rtcp_buffer_add_packet        (GstBuffer *buffer, GstRTCPType type,
+gboolean        gst_rtcp_buffer_add_packet        (GstBuffer *buffer, GstRTCPType type,
 		                                   GstRTCPPacket *packet);
 void            gst_rtcp_packet_remove            (GstRTCPPacket *packet);
 
@@ -171,7 +189,7 @@ void            gst_rtcp_packet_get_rb                (GstRTCPPacket *packet, gu
 		                                       guint8 *fractionlost, gint32 *packetslost,
 						       guint32 *exthighestseq, guint32 *jitter,
 						       guint32 *lsr, guint32 *dlsr);
-void            gst_rtcp_packet_add_rb                (GstRTCPPacket *packet, guint32 ssrc,
+gboolean        gst_rtcp_packet_add_rb                (GstRTCPPacket *packet, guint32 ssrc,
 		                                       guint8 fractionlost, gint32 packetslost,
 						       guint32 exthighestseq, guint32 jitter,
 						       guint32 lsr, guint32 dlsr);
@@ -181,15 +199,19 @@ void            gst_rtcp_packet_set_rb                (GstRTCPPacket *packet, gu
 						       guint32 lsr, guint32 dlsr);
 
 /* source description packet */
-guint           gst_rtcp_packet_sdes_get_chunk_count   (GstRTCPPacket *packet);
-gboolean        gst_rtcp_packet_sdes_first_chunk       (GstRTCPPacket *packet);
-gboolean        gst_rtcp_packet_sdes_next_chunk        (GstRTCPPacket *packet);
-guint32         gst_rtcp_packet_sdes_get_ssrc          (GstRTCPPacket *packet); 
-gboolean        gst_rtcp_packet_sdes_first_item        (GstRTCPPacket *packet);
-gboolean        gst_rtcp_packet_sdes_next_item         (GstRTCPPacket *packet);
-gboolean        gst_rtcp_packet_sdes_get_item          (GstRTCPPacket *packet, 
-                                                        GstRTCPSDESType *type, guint8 *len,
-							gchar **data);
+guint           gst_rtcp_packet_sdes_get_item_count   (GstRTCPPacket *packet);
+gboolean        gst_rtcp_packet_sdes_first_item       (GstRTCPPacket *packet);
+gboolean        gst_rtcp_packet_sdes_next_item        (GstRTCPPacket *packet);
+guint32         gst_rtcp_packet_sdes_get_ssrc         (GstRTCPPacket *packet); 
+gboolean        gst_rtcp_packet_sdes_first_entry      (GstRTCPPacket *packet);
+gboolean        gst_rtcp_packet_sdes_next_entry       (GstRTCPPacket *packet);
+gboolean        gst_rtcp_packet_sdes_get_entry        (GstRTCPPacket *packet, 
+                                                       GstRTCPSDESType *type, guint8 *len,
+						       guint8 **data);
+
+gboolean        gst_rtcp_packet_sdes_add_item         (GstRTCPPacket *packet, guint32 ssrc);
+gboolean        gst_rtcp_packet_sdes_add_entry        (GstRTCPPacket *packet, GstRTCPSDESType type, 
+                                                       guint8 len, const guint8 *data);
 
 /* bye packet */
 guint           gst_rtcp_packet_bye_get_ssrc_count     (GstRTCPPacket *packet);

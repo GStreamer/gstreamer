@@ -1,3 +1,20 @@
+2007-04-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c: (gst_rtcp_buffer_new),
+	(gst_rtcp_buffer_end), (gst_rtcp_buffer_get_packet_count),
+	(read_packet_header), (gst_rtcp_packet_move_to_next),
+	(gst_rtcp_buffer_add_packet), (gst_rtcp_packet_sr_set_sender_info),
+	(gst_rtcp_packet_rr_set_ssrc), (gst_rtcp_packet_add_rb),
+	(gst_rtcp_packet_sdes_get_item_count),
+	(gst_rtcp_packet_sdes_first_item),
+	(gst_rtcp_packet_sdes_next_item), (gst_rtcp_packet_sdes_get_ssrc),
+	(gst_rtcp_packet_sdes_first_entry),
+	(gst_rtcp_packet_sdes_next_entry),
+	(gst_rtcp_packet_sdes_get_entry), (gst_rtcp_packet_sdes_add_item),
+	(gst_rtcp_packet_sdes_add_entry):
+	* gst-libs/gst/rtp/gstrtcpbuffer.h:
+	Implement code to write SR, RR and SDES packets.
+
 2007-04-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Christian Kirbach <Christian dot Kirbach at googlemail com>
