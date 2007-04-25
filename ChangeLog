@@ -1,3 +1,11 @@
+2007-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/libpng/gstpngdec.c: (gst_pngdec_task):
+	  If we get a fatal flow return in the loop function, first post the
+	  error message and only then send the EOS event downstream, otherwise
+	  applications might get an eos message before the error message and
+	  think everything was ok (related to #429319).
+
 2007-04-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/rtspconnection.c: (rtsp_connection_receive):
