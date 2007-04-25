@@ -38,19 +38,19 @@
  * GST_MAGIC_BINARY_REGISTRY_STR:
  *
  * A tag, written at the beginning of the file
- */ 
+ */
 #define GST_MAGIC_BINARY_REGISTRY_STR "\xc0\xde\xf0\x0d"
 /*
  * GST_MAGIC_BINARY_REGISTRY_LEN:
  *
  * length of the header tag.
- */ 
+ */
 #define GST_MAGIC_BINARY_REGISTRY_LEN (4)
 /*
  * GST_MAGIC_BINARY_VERSION_LEN:
  *
  * length of the version string.
- */ 
+ */
 #define GST_MAGIC_BINARY_VERSION_LEN (64)
 
 typedef struct _GstBinaryRegistryMagic
@@ -84,7 +84,7 @@ typedef struct _GstBinaryChunk
 /*
  * GstBinaryPluginElement:
  *
- * @nfeatures: says how many GstBinaryPluginFeature structures we will have
+ * @nfeatures: says how many binary plugin feature structures we will have
  * right after the structure itself.
  *
  * A structure containing (staticely) every information needed for a plugin
@@ -111,17 +111,26 @@ typedef struct _GstBinaryPluginElement
 typedef struct _GstBinaryPluginFeature
 {
   gulong rank;
+} GstBinaryPluginFeature;
+
+typedef struct _GstBinaryElementFactory {
+  GstBinaryPluginFeature plugin_feature;
 
   guint npadtemplates;
   guint ninterfaces;
   guint nuriprotocols;
-} GstBinaryPluginFeature;
+} GstBinaryElementFactory;
 
+typedef struct _GstBinaryTypeFindFactory {
+  GstBinaryPluginFeature plugin_feature;
+
+  guint nextensions;
+} GstBinaryTypeFindFactory;
 
 /*
  * GstBinaryPadTemplate:
  *
- * A structure containing the static pad templates of a plugin feature 
+ * A structure containing the static pad templates of a plugin feature
  */
 typedef struct _GstBinaryPadTemplate
 {

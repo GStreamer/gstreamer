@@ -1,3 +1,11 @@
+2007-04-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_save_feature),
+	(gst_registry_binary_load_feature):
+	* gst/gstregistrybinary.h:
+	  Refactor so that we can implement multiple features. Add support for
+	  TypeFindFactory features.
+
 2007-04-24  Stefan Kost  <ensonic@users.sf.net>
 
 	Patch by: Peter Kjellerstedt <Peter.Kjellerstedt@axis.com>
