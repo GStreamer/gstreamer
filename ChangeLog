@@ -1,5 +1,22 @@
 2007-04-25  Wim Taymans  <wim@fluendo.com>
 
+	reviewed by: <delete if not using a buddy>
+
+	* gst/rtpmanager/gstrtpbin.c: (create_stream),
+	(gst_rtp_bin_class_init), (gst_rtp_bin_set_property),
+	(gst_rtp_bin_get_property):
+	* gst/rtpmanager/gstrtpbin.h:
+	Make default jitterbuffer latency configurable.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_class_init),
+	(gst_jitter_buffer_sink_parse_caps), (gst_rtp_jitter_buffer_loop),
+	(gst_rtp_jitter_buffer_set_property),
+	(gst_rtp_jitter_buffer_get_property):
+	Debuging cleanups.
+
+2007-04-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_rtp_jitter_buffer_change_state):
 	Report NO_PREROLL when going to PAUSED.
