@@ -248,15 +248,19 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
 
   /* transit time is difference with RTP timestamp */
   transit = rtparrival - rtptime;
-  /* get diff with previous transit time */
-  if (src->stats.transit != -1)
-    diff = transit - src->stats.transit;
-  else
+
+  /* get ABS diff with previous transit time */
+  if (src->stats.transit != -1) {
+    if (transit > src->stats.transit)
+      diff = transit - src->stats.transit;
+    else
+      diff = src->stats.transit - transit;
+  } else
     diff = 0;
+
   src->stats.transit = transit;
-  if (diff < 0)
-    diff = -diff;
-  /* update jitter */
+
+  /* update jitter, the value we store is scaled up so we can keep precision. */
   src->stats.jitter += diff - ((src->stats.jitter + 8) >> 4);
 
   src->stats.prev_rtptime = src->stats.last_rtptime;
@@ -292,6 +296,8 @@ init_seq (RTPSource * src, guint16 seq)
   src->stats.bytes_received = 0;
   src->stats.prev_received = 0;
   src->stats.prev_expected = 0;
+
+  GST_DEBUG ("base_seq %d", seq);
 }
 
 /**
@@ -319,7 +325,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   seqnr = gst_rtp_buffer_get_seq (buffer);
 
   if (stats->cycles == -1) {
-    GST_DEBUG ("first buffer");
+    GST_DEBUG ("received first buffer");
     /* first time we heard of this source */
     init_seq (src, seqnr);
     src->stats.max_seq = seqnr - 1;
@@ -366,7 +372,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
     /* in order, with permissible gap */
     if (seqnr < stats->max_seq) {
       /* sequence number wrapped - count another 64K cycle. */
-      stats->cycles++;
+      stats->cycles += RTP_SEQ_MOD;
     }
     stats->max_seq = seqnr;
   } else if (udelta <= RTP_SEQ_MOD - RTP_MAX_MISORDER) {
@@ -392,8 +398,8 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
   src->is_sender = TRUE;
   src->validated = TRUE;
 
-  GST_DEBUG ("PC: %" G_GUINT64_FORMAT ", OC: %" G_GUINT64_FORMAT,
-      src->stats.packets_received, src->stats.octets_received);
+  GST_DEBUG ("seq %d, PC: %" G_GUINT64_FORMAT ", OC: %" G_GUINT64_FORMAT,
+      seqnr, src->stats.packets_received, src->stats.octets_received);
 
   /* calculate jitter */
   calculate_jitter (src, buffer, arrival);
@@ -470,20 +476,21 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer)
  * @rtptime: the RTP time
  * @packet_count: the packet count
  * @octet_count: the octect count
+ * @time: time of packet arrival
  *
  * Update the sender report in @src.
  */
 void
 rtp_source_process_sr (RTPSource * src, guint64 ntptime, guint32 rtptime,
-    guint32 packet_count, guint32 octet_count)
+    guint32 packet_count, guint32 octet_count, GstClockTime time)
 {
   RTPSenderReport *curr;
   gint curridx;
 
   g_return_if_fail (RTP_IS_SOURCE (src));
 
-  GST_DEBUG ("got SR packet: SSRC %08x, NTP %" G_GUINT64_FORMAT
-      ", RTP %u, PC %u, OC %u", src->ssrc, ntptime, rtptime, packet_count,
+  GST_DEBUG ("got SR packet: SSRC %08x, NTP %08x:%08x, RTP %u, PC %u, OC %u",
+      src->ssrc, ntptime >> 32, ntptime & 0xffffffff, rtptime, packet_count,
       octet_count);
 
   curridx = src->stats.curr_sr ^ 1;
@@ -498,6 +505,7 @@ rtp_source_process_sr (RTPSource * src, guint64 ntptime, guint32 rtptime,
   curr->rtptime = rtptime;
   curr->packet_count = packet_count;
   curr->octet_count = octet_count;
+  curr->time = time;
 
   /* make current */
   src->stats.curr_sr = curridx;
@@ -525,7 +533,7 @@ rtp_source_process_rb (RTPSource * src, guint8 fractionlost, gint32 packetslost,
   g_return_if_fail (RTP_IS_SOURCE (src));
 
   GST_DEBUG ("got RB packet %d: SSRC %08x, FL %u"
-      ", PL %u, HS %u, JITTER %u, LSR %u, DLSR %u", src->ssrc, fractionlost,
+      ", PL %u, HS %u, JITTER %u, LSR %08x, DLSR %08x", src->ssrc, fractionlost,
       packetslost, exthighestseq, jitter, lsr, dlsr);
 
   curridx = src->stats.curr_rr ^ 1;
@@ -542,4 +550,86 @@ rtp_source_process_rb (RTPSource * src, guint8 fractionlost, gint32 packetslost,
 
   /* make current */
   src->stats.curr_rr = curridx;
+}
+
+/**
+ * rtp_source_get_last_sr:
+ * @src: an #RTPSource
+ * @ntptime: the NTP time
+ * @rtptime: the RTP time
+ * @packet_count: the packet count
+ * @octet_count: the octect count
+ * @time: time of packet arrival
+ *
+ * Get the values of the last sender report as set with rtp_source_process_sr().
+ *
+ * Returns: %TRUE if there was a valid SR report.
+ */
+gboolean
+rtp_source_get_last_sr (RTPSource * src, guint64 * ntptime, guint32 * rtptime,
+    guint32 * packet_count, guint32 * octet_count, GstClockTime * time)
+{
+  RTPSenderReport *curr;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
+
+  curr = &src->stats.sr[src->stats.curr_sr];
+  if (!curr->is_valid)
+    return FALSE;
+
+  if (ntptime)
+    *ntptime = curr->ntptime;
+  if (rtptime)
+    *rtptime = curr->rtptime;
+  if (packet_count)
+    *packet_count = curr->packet_count;
+  if (octet_count)
+    *octet_count = curr->octet_count;
+  if (time)
+    *time = curr->time;
+
+  return TRUE;
+}
+
+/**
+ * rtp_source_get_last_rb:
+ * @src: an #RTPSource
+ * @fractionlost: fraction lost since last SR/RR
+ * @packetslost: the cumululative number of packets lost
+ * @exthighestseq: the extended last sequence number received
+ * @jitter: the interarrival jitter
+ * @lsr: the last SR packet from this source
+ * @dlsr: the delay since last SR packet
+ *
+ * Get the values of the last RB report set with rtp_source_process_rb().
+ *
+ * Returns: %TRUE if there was a valid SB report.
+ */
+gboolean
+rtp_source_get_last_rb (RTPSource * src, guint8 * fractionlost,
+    gint32 * packetslost, guint32 * exthighestseq, guint32 * jitter,
+    guint32 * lsr, guint32 * dlsr)
+{
+  RTPReceiverReport *curr;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
+
+  curr = &src->stats.rr[src->stats.curr_rr];
+  if (!curr->is_valid)
+    return FALSE;
+
+  if (fractionlost)
+    *fractionlost = curr->fractionlost;
+  if (packetslost)
+    *packetslost = curr->packetslost;
+  if (exthighestseq)
+    *exthighestseq = curr->exthighestseq;
+  if (jitter)
+    *jitter = curr->jitter;
+  if (lsr)
+    *lsr = curr->lsr;
+  if (dlsr)
+    *dlsr = curr->dlsr;
+
+  return TRUE;
 }

@@ -893,6 +893,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer)
   prevsender = RTP_SOURCE_IS_SENDER (source);
   prevactive = RTP_SOURCE_IS_ACTIVE (source);
 
+  /* we need to ref so that we can process the CSRCs later */
   gst_buffer_ref (buffer);
 
   /* let source process the packet */
@@ -982,7 +983,8 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
   prevsender = RTP_SOURCE_IS_SENDER (source);
 
   /* first update the source */
-  rtp_source_process_sr (source, ntptime, rtptime, packet_count, octet_count);
+  rtp_source_process_sr (source, ntptime, rtptime, packet_count, octet_count,
+      arrival->time);
 
   if (prevsender != RTP_SOURCE_IS_SENDER (source)) {
     sess->stats.sender_sources++;
@@ -1004,7 +1006,7 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
 
     if (ssrc == sess->source->ssrc) {
       /* only deal with report blocks for our session, we update the stats of
-       * the sender of the TCP message. We could also compare our stats against
+       * the sender of the RTCP message. We could also compare our stats against
        * the other sender to see if we are better or worse. */
       rtp_source_process_rb (source, fractionlost, packetslost,
           exthighestseq, jitter, lsr, dlsr);
@@ -1292,6 +1294,7 @@ typedef struct
 {
   RTPSession *sess;
   GstBuffer *rtcp;
+  GstClockTime time;
   GstRTCPPacket packet;
 } ReportData;
 
@@ -1322,29 +1325,25 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
     }
   }
   if (gst_rtcp_packet_get_rb_count (packet) < GST_RTCP_MAX_RB_COUNT) {
-    /* only report about other sources */
-    if (source != sess->source) {
+    /* only report about other sender sources */
+    if (source != sess->source && RTP_SOURCE_IS_SENDER (source)) {
       RTPSourceStats *stats;
-      guint32 extended_max, expected;
-      guint32 expected_interval, received_interval;
-      guint32 lost, lost_interval, fraction;
+      guint64 extended_max, expected;
+      guint64 expected_interval, received_interval, ntptime;
+      gint64 lost, lost_interval;
+      guint32 fraction, LSR, DLSR;
+      GstClockTime time;
 
       stats = &source->stats;
 
-      extended_max = (stats->cycles << 16) + stats->max_seq;
+      extended_max = stats->cycles + stats->max_seq;
       expected = extended_max - stats->base_seq + 1;
 
-      if (expected > stats->packets_received) {
-        lost = expected - stats->packets_received;
-        if (lost > 0x7fffff)
-          lost = 0x7fffff;
-      } else {
-        lost = stats->packets_received - expected;
-        if (lost > 0x800000)
-          lost = 0x800000;
-        else
-          lost = -lost;
-      }
+      GST_DEBUG ("ext_max %d, expected %d, received %d, base_seq %d",
+          extended_max, expected, stats->packets_received, stats->base_seq);
+
+      lost = expected - stats->packets_received;
+      lost = CLAMP (lost, -0x800000, 0x7fffff);
 
       expected_interval = expected - stats->prev_expected;
       stats->prev_expected = expected;
@@ -1363,9 +1362,21 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
       GST_DEBUG ("fraction %d, lost %d, extseq %u, jitter %d", fraction, lost,
           extended_max, stats->jitter >> 4);
 
+      if (rtp_source_get_last_sr (source, &ntptime, NULL, NULL, NULL, &time)) {
+        /* LSR is middle bits of the last ntptime */
+        LSR = (ntptime >> 16) & 0xffffffff;
+        /* DLSR, delay since last SR is expressed in 1/65536 second units */
+        DLSR = gst_util_uint64_scale_int (data->time - time, 65536, GST_SECOND);
+      } else {
+        /* No valid SR received, LSR/DLSR are set to 0 then */
+        LSR = 0;
+        DLSR = 0;
+      }
+      GST_DEBUG ("LSR %08x, DLSR %08x", LSR, DLSR);
+
       /* packet is not yet filled, add report block for this source. */
       gst_rtcp_packet_add_rb (packet, source->ssrc, fraction, lost,
-          extended_max, stats->jitter >> 4, 0, 0);
+          extended_max, stats->jitter >> 4, LSR, DLSR);
     }
   }
 }
@@ -1412,6 +1423,9 @@ rtp_session_perform_reporting (RTPSession * sess)
 
   data.sess = sess;
   data.rtcp = NULL;
+
+  /* get time so it can be used later */
+  data.time = sess->callbacks.get_time (sess, sess->user_data);
 
   RTP_SESSION_LOCK (sess);
   /* loop over all known sources and do something */
