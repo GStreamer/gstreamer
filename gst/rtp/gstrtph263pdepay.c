@@ -142,16 +142,21 @@ gst_rtp_h263p_depay_finalize (GObject * object)
 gboolean
 gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 {
-
+  GstCaps *srccaps;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint clock_rate = 90000;      /* default */
 
   gst_structure_get_int (structure, "clock-rate", &clock_rate);
   filter->clock_rate = clock_rate;
 
+  srccaps = gst_caps_new_simple ("video/x-h263",
+      "variant", G_TYPE_STRING, "itu",
+      "h263version", G_TYPE_STRING, "h263p", NULL);
+  gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (filter), srccaps);
+  gst_caps_unref (srccaps);
+
   return TRUE;
 }
-
 
 static GstBuffer *
 gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)

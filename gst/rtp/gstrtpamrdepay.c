@@ -136,7 +136,6 @@ gst_rtp_amr_depay_init (GstRtpAMRDepay * rtpamrdepay,
 
   depayload = GST_BASE_RTP_DEPAYLOAD (rtpamrdepay);
 
-  depayload->clock_rate = 8000;
   gst_pad_use_fixed_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload));
 }
 
@@ -148,7 +147,7 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstRtpAMRDepay *rtpamrdepay;
   const gchar *params;
   const gchar *str;
-  gint clock_rate;
+  gint clock_rate = 8000;       /* default */
 
   rtpamrdepay = GST_RTP_AMR_DEPAY (depayload);
 
@@ -195,8 +194,7 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     rtpamrdepay->channels = atoi (params);
   }
 
-  if (!gst_structure_get_int (structure, "clock-rate", &clock_rate))
-    clock_rate = 8000;
+  gst_structure_get_int (structure, "clock-rate", &clock_rate);
   depayload->clock_rate = clock_rate;
 
   /* we require 1 channel, 8000 Hz, octet aligned, no CRC,

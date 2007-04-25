@@ -103,19 +103,26 @@ static void
 gst_rtp_gsm_depay_init (GstRTPGSMDepay * rtpgsmdepay,
     GstRTPGSMDepayClass * klass)
 {
-  GST_BASE_RTP_DEPAYLOAD (rtpgsmdepay)->clock_rate = 8000;
 }
 
 static gboolean
-gst_rtp_gsm_depay_setcaps (GstBaseRTPDepayload * _depayload, GstCaps * caps)
+gst_rtp_gsm_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 {
   GstCaps *srccaps;
   gboolean ret;
+  GstStructure *structure;
+  gint clock_rate = 8000;       /* default */
 
-  srccaps = gst_static_pad_template_get_caps (&gst_rtp_gsm_depay_src_template);
-  ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (_depayload), srccaps);
+  structure = gst_caps_get_structure (caps, 0);
 
+  gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  depayload->clock_rate = clock_rate;
+
+  srccaps = gst_caps_new_simple ("audio/x-gsm",
+      "channels", G_TYPE_INT, 1, "rate", G_TYPE_INT, clock_rate, NULL);
+  ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
+
   return ret;
 }
 

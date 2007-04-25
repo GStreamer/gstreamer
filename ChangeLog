@@ -1,5 +1,27 @@
 2007-04-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16_depay_set_property):
+	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_init),
+	(gst_rtp_amr_depay_setcaps), (gst_rtp_amr_depay_process):
+	* gst/rtp/gstrtpgsmdepay.c: (gst_rtp_gsm_depay_init),
+	(gst_rtp_gsm_depay_setcaps):
+	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_setcaps):
+	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_setcaps):
+	* gst/rtp/gstrtpilbcdepay.c: (gst_rtp_ilbc_depay_class_init),
+	(gst_rtp_ilbc_depay_init), (gst_rtp_ilbc_depay_setcaps),
+	(gst_rtp_ilbc_depay_process), (gst_ilbc_depay_set_property),
+	(gst_ilbc_depay_get_property):
+	* gst/rtp/gstrtpmp2tdepay.c: (gst_rtp_mp2t_depay_setcaps):
+	* gst/rtp/gstrtpmp4adepay.c:
+	* gst/rtp/gstrtppcmadepay.c: (gst_rtp_pcma_depay_init),
+	(gst_rtp_pcma_depay_setcaps):
+	* gst/rtp/gstrtppcmudepay.c: (gst_rtp_pcmu_depay_init),
+	(gst_rtp_pcmu_depay_setcaps):
+	Make sure we configure the clock_rate in the baseclass in the setcaps
+	function. Fixes #431282.
+
+2007-04-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_finalize),
 	(gst_rtspsrc_stream_free), (request_pt_map),
 	(gst_rtspsrc_stream_configure_transport), (gst_rtspsrc_open):

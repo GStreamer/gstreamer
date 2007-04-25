@@ -260,6 +260,7 @@ gst_rtp_L16_depay_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }

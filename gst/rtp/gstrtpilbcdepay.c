@@ -39,12 +39,15 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_MODE GST_ILBC_MODE_30
+
 enum
 {
-  ARG_0,
-  ARG_MODE
+  PROP_0,
+  PROP_MODE
 };
 
+/* FIXME, mode should be string because it is a parameter in SDP fmtp */
 static GstStaticPadTemplate gst_rtp_ilbc_depay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -119,11 +122,10 @@ gst_rtp_ilbc_depay_class_init (GstRTPiLBCDepayClass * klass)
   gobject_class->set_property = gst_ilbc_depay_set_property;
   gobject_class->get_property = gst_ilbc_depay_get_property;
 
-  g_object_class_install_property (gobject_class, ARG_MODE, g_param_spec_enum ("mode", "Mode", "iLBC frame mode", GST_TYPE_ILBC_MODE,   /* enum type */
-          GST_ILBC_MODE_30,     /* default value */
-          G_PARAM_READWRITE));
-
-  parent_class = g_type_class_peek_parent (klass);
+  /* FIXME, mode is in the caps */
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode", "iLBC frame mode",
+          GST_TYPE_ILBC_MODE, DEFAULT_MODE, G_PARAM_READWRITE));
 
   gstbasertpdepayload_class->process = gst_rtp_ilbc_depay_process;
   gstbasertpdepayload_class->set_caps = gst_rtp_ilbc_depay_setcaps;
@@ -137,10 +139,8 @@ gst_rtp_ilbc_depay_init (GstRTPiLBCDepay * rtpilbcdepay,
 
   depayload = GST_BASE_RTP_DEPAYLOAD (rtpilbcdepay);
 
-  depayload->clock_rate = 8000;
-
-  /* Set default mode to 30 */
-  rtpilbcdepay->mode = GST_ILBC_MODE_30;
+  /* Set default mode */
+  rtpilbcdepay->mode = DEFAULT_MODE;
 }
 
 static gboolean
@@ -149,26 +149,33 @@ gst_rtp_ilbc_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstRTPiLBCDepay *rtpilbcdepay = GST_RTP_ILBC_DEPAY (depayload);
   GstCaps *srccaps;
   GstStructure *structure;
+  gint mode;
   gboolean ret;
 
-  srccaps = gst_caps_copy (gst_static_pad_template_get_caps
-      (&gst_rtp_ilbc_depay_src_template));
-  structure = gst_caps_get_structure (srccaps, 0);
-  gst_structure_set (structure, "mode", G_TYPE_INT,
-      rtpilbcdepay->mode == GST_ILBC_MODE_30 ? 30 : 20, NULL);
+  structure = gst_caps_get_structure (caps, 0);
 
+  /* parse mode, if we can */
+  mode = rtpilbcdepay->mode;
+  gst_structure_get_int (structure, "mode", &mode);
+  rtpilbcdepay->mode = mode;
+
+  srccaps = gst_caps_new_simple ("audio/x-iLBC",
+      "mode", G_TYPE_INT, rtpilbcdepay->mode, NULL);
   ret = gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
 
   GST_DEBUG ("set caps on source: %" GST_PTR_FORMAT " (ret=%d)", srccaps, ret);
-
   gst_caps_unref (srccaps);
+
+  /* always fixed clock rate of 8000 */
+  depayload->clock_rate = 8000;
+
   return ret;
 }
 
 static GstBuffer *
 gst_rtp_ilbc_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 {
-  GstBuffer *outbuf = NULL;
+  GstBuffer *outbuf;
 
   GST_DEBUG ("process : got %d bytes, mark %d ts %u seqn %d",
       GST_BUFFER_SIZE (buf),
@@ -187,7 +194,7 @@ gst_ilbc_depay_set_property (GObject * object,
   GstRTPiLBCDepay *rtpilbcdepay = GST_RTP_ILBC_DEPAY (object);
 
   switch (prop_id) {
-    case ARG_MODE:
+    case PROP_MODE:
       rtpilbcdepay->mode = g_value_get_enum (value);
       break;
     default:
@@ -203,7 +210,7 @@ gst_ilbc_depay_get_property (GObject * object,
   GstRTPiLBCDepay *rtpilbcdepay = GST_RTP_ILBC_DEPAY (object);
 
   switch (prop_id) {
-    case ARG_MODE:
+    case PROP_MODE:
       g_value_set_enum (value, rtpilbcdepay->mode);
       break;
     default:

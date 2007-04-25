@@ -220,8 +220,7 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
   rtph264depay = GST_RTP_H264_DEPAY (depayload);
 
-  if (gst_structure_has_field (structure, "clock-rate"))
-    gst_structure_get_int (structure, "clock-rate", &clock_rate);
+  gst_structure_get_int (structure, "clock-rate", &clock_rate);
   depayload->clock_rate = clock_rate;
 
   srccaps = gst_caps_new_simple ("video/x-h264", NULL);
