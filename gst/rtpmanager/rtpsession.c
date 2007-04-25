@@ -703,10 +703,10 @@ rtp_session_add_source (RTPSession * sess, RTPSource * src)
  *
  * Returns: The number of sources in @sess.
  */
-gint
+guint
 rtp_session_get_num_sources (RTPSession * sess)
 {
-  gint result;
+  guint result;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), FALSE);
 
@@ -726,12 +726,12 @@ rtp_session_get_num_sources (RTPSession * sess)
  *
  * Returns: The number of active sources in @sess.
  */
-gint
+guint
 rtp_session_get_num_active_sources (RTPSession * sess)
 {
-  gint result;
+  guint result;
 
-  g_return_val_if_fail (RTP_IS_SESSION (sess), FALSE);
+  g_return_val_if_fail (RTP_IS_SESSION (sess), 0);
 
   RTP_SESSION_LOCK (sess);
   result = sess->stats.active_sources;

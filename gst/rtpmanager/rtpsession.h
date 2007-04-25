@@ -216,8 +216,8 @@ gchar*          rtp_session_get_note               (RTPSession *sess);
 
 /* handling sources */
 gboolean        rtp_session_add_source             (RTPSession *sess, RTPSource *src);
-gint            rtp_session_get_num_sources        (RTPSession *sess);
-gint            rtp_session_get_num_active_sources (RTPSession *sess);
+guint           rtp_session_get_num_sources        (RTPSession *sess);
+guint           rtp_session_get_num_active_sources (RTPSession *sess);
 RTPSource*      rtp_session_get_source_by_ssrc     (RTPSession *sess, guint32 ssrc);
 RTPSource*      rtp_session_get_source_by_cname    (RTPSession *sess, const gchar *cname);
 RTPSource*      rtp_session_create_source          (RTPSession *sess);
