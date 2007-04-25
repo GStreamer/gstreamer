@@ -1,3 +1,11 @@
+2007-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* win32/MANIFEST:
+	  Generate a win32 config.h into win32/common and add to MANIFEST so
+	  it gets disted (#393890). Looks like win32/common/config.h.in needs
+	  some work though.
+
 2007-04-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_get_type),

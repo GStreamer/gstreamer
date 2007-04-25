@@ -464,6 +464,7 @@ common/Makefile
 common/m4/Makefile
 m4/Makefile
 po/Makefile.in
+win32/common/config.h
 gst-plugins-ugly.spec
 )
 AC_OUTPUT
