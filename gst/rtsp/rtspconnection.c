@@ -683,7 +683,7 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
   res = RTSP_OK;
   /* parse first line and headers */
   while (res == RTSP_OK) {
-    gchar c;
+    guint8 c;
 
     /* read first character, this identifies data messages */
     RTSP_CHECK (rtsp_connection_read (conn, &c, 1), read_error);

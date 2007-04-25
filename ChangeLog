@@ -1,5 +1,10 @@
 2007-04-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_receive):
+	Read the channel byte as an unsigned byte.
+
+2007-04-25  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpL16depay.c: (gst_rtp_L16_depay_set_property):
 	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_init),
 	(gst_rtp_amr_depay_setcaps), (gst_rtp_amr_depay_process):
