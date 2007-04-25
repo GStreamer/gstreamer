@@ -1,5 +1,13 @@
 2007-04-25  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstregistrybinary.h (GstBinaryPluginElement,
+	  GstBinaryPluginFeature, _GstBinaryElementFactory, plugin_feature,
+	  GstBinaryElementFactory, _GstBinaryTypeFindFactory, plugin_feature):
+	  Comment structs and reformat to fix the build (that stuff should go
+	  into a priv. header).
+
+2007-04-25  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstregistrybinary.c: (gst_registry_binary_save_feature),
 	(gst_registry_binary_load_feature):
 	* gst/gstregistrybinary.h:

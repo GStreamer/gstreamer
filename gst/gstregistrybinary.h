@@ -101,10 +101,7 @@ typedef struct _GstBinaryPluginElement
 
 /*
  * GstBinaryPluginFeature:
- * @npadtemplates: stores the number of GstBinaryPadTemplate structures
- * following the structure
- * @ninterfaces: stores the number of interface names following the structure
- * @nuriprotocols: stores the number of protocol strings following the structure
+ * @rank: rank of the feature
  *
  * A structure containing the plugin features
  */
@@ -113,7 +110,17 @@ typedef struct _GstBinaryPluginFeature
   gulong rank;
 } GstBinaryPluginFeature;
 
-typedef struct _GstBinaryElementFactory {
+/*
+ * GstBinaryElementFactory:
+ * @npadtemplates: stores the number of GstBinaryPadTemplate structures
+ * following the structure
+ * @ninterfaces: stores the number of interface names following the structure
+ * @nuriprotocols: stores the number of protocol strings following the structure
+ *
+ * A structure containing the element factory fields
+ */
+typedef struct _GstBinaryElementFactory
+{
   GstBinaryPluginFeature plugin_feature;
 
   guint npadtemplates;
@@ -121,7 +128,14 @@ typedef struct _GstBinaryElementFactory {
   guint nuriprotocols;
 } GstBinaryElementFactory;
 
-typedef struct _GstBinaryTypeFindFactory {
+/*
+ * GstBinaryTypeFindFactory:
+ * @nextensions: stores the number of typefind extensions
+ *
+ * A structure containing the element factory fields
+ */
+typedef struct _GstBinaryTypeFindFactory
+{
   GstBinaryPluginFeature plugin_feature;
 
   guint nextensions;
