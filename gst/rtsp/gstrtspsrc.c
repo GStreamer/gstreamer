@@ -311,6 +311,7 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->req_location);
   g_free (rtspsrc->content_base);
   rtsp_url_free (rtspsrc->url);
+  g_free (rtspsrc->addr);
 
   if (rtspsrc->extension) {
 #ifdef WITH_EXT_REAL
@@ -555,6 +556,12 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
       gst_object_unref (stream->udpsrc[i]);
       stream->udpsrc[i] = NULL;
     }
+  }
+  if (stream->udpsink) {
+    gst_element_set_state (stream->udpsink, GST_STATE_NULL);
+    gst_bin_remove (GST_BIN_CAST (src), stream->udpsink);
+    gst_object_unref (stream->udpsink);
+    stream->udpsink = NULL;
   }
   if (stream->srcpad) {
     gst_pad_set_active (stream->srcpad, FALSE);
@@ -1086,14 +1093,14 @@ request_pt_map (GstElement * sess, guint session, guint pt, GstRTSPSrc * src)
   GstRTSPStream *stream;
   GList *lstream;
 
+  GST_DEBUG_OBJECT (src, "getting pt map for pt %d in session %d", pt, session);
+
   lstream = g_list_find_custom (src->streams, GINT_TO_POINTER (session),
       (GCompareFunc) find_stream_by_id);
   if (!lstream)
     goto unknown_stream;
 
   stream = (GstRTSPStream *) lstream->data;
-
-  GST_DEBUG_OBJECT (src, "getting pt map for pt %d in session %d", pt, session);
 
   return stream->caps;
 
@@ -1312,6 +1319,38 @@ use_no_manager:
         gst_object_unref (pad);
       }
     }
+    /* configure udpsink back to the server for RTCP messages. */
+    {
+      GstPad *pad;
+
+      stream->udpsink = gst_element_factory_make ("udpsink", NULL);
+      if (stream->udpsink == NULL)
+        goto no_sink_element;
+
+      /* we keep this playing always */
+      gst_element_set_locked_state (stream->udpsink, TRUE);
+      gst_element_set_state (stream->udpsink, GST_STATE_PLAYING);
+
+      /* no sync needed */
+      g_object_set (G_OBJECT (stream->udpsink), "sync", FALSE, NULL);
+
+      /* configure host and port */
+      g_object_set (G_OBJECT (stream->udpsink), "host", src->addr, "port",
+          transport->server_port.max, NULL);
+
+      gst_object_ref (stream->udpsink);
+      gst_bin_add (GST_BIN_CAST (src), stream->udpsink);
+
+      stream->rtcppad = gst_element_get_pad (stream->udpsink, "sink");
+
+      /* get session RTCP pad */
+      name = g_strdup_printf ("rtcp_src_%d", stream->id);
+      pad = gst_element_get_request_pad (src->session, name);
+      g_free (name);
+
+      /* and link */
+      gst_pad_link (pad, stream->rtcppad);
+    }
   }
 
   if (src->session && !src->session_sig_id) {
@@ -1363,6 +1402,11 @@ manager_failed:
 no_element:
   {
     GST_DEBUG_OBJECT (src, "no UDP source element found");
+    return FALSE;
+  }
+no_sink_element:
+  {
+    GST_DEBUG_OBJECT (src, "no UDP sink element found");
     return FALSE;
   }
 start_session_failure:
@@ -2569,6 +2613,16 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   if (src->extension && src->extension->parse_sdp)
     src->extension->parse_sdp (src->extension, &sdp);
+
+  /* parse address */
+  {
+    SDPOrigin *origin;
+
+    origin = sdp_message_get_origin (&sdp);
+
+    g_free (src->addr);
+    src->addr = g_strdup (origin->addr);
+  }
 
   /* create streams */
   n_streams = sdp_message_medias_len (&sdp);

@@ -47,18 +47,43 @@
 
 G_BEGIN_DECLS
 
+/**
+ * RTSPTransMode:
+ * @RTSP_TRANS_UNKNOWN: invalid tansport mode
+ * @RTSP_TRANS_RTP: transfer RTP data
+ * @RTSP_TRANS_RDT: transfer RDT (RealMedia) data
+ *
+ * The transfer mode to use.
+ */
 typedef enum {
   RTSP_TRANS_UNKNOWN =  0,
   RTSP_TRANS_RTP     = (1 << 0),
   RTSP_TRANS_RDT     = (1 << 1)
 } RTSPTransMode;
 
+/**
+ * RTSPProfile:
+ * @RTSP_PROFILE_UNKNOWN: invalid profile
+ * @RTSP_PROFILE_AVP: the Audio/Visual profile
+ * @RTSP_PROFILE_SAVP: the secure Audio/Visual profile
+ *
+ * The transfer profile to use.
+ */
 typedef enum {
   RTSP_PROFILE_UNKNOWN =  0,
   RTSP_PROFILE_AVP     = (1 << 0),
   RTSP_PROFILE_SAVP    = (1 << 1)
 } RTSPProfile;
 
+/**
+ * RTSPLowerTrans:
+ * @RTSP_LOWER_TRANS_UNKNOWN: invalid transport flag
+ * @RTSP_LOWER_TRANS_UDP: stream data over UDP
+ * @RTSP_LOWER_TRANS_UDP_MCAST: stream data over UDP multicast
+ * @RTSP_LOWER_TRANS_TCP: stream data over TCP
+ *
+ * The different transport methods.
+ */
 typedef enum {
   RTSP_LOWER_TRANS_UNKNOWN   = 0,
   RTSP_LOWER_TRANS_UDP       = (1 << 0),
@@ -66,13 +91,26 @@ typedef enum {
   RTSP_LOWER_TRANS_TCP       = (1 << 2)
 } RTSPLowerTrans;
 
+/**
+ * RTSPRange:
+ * @min: minimum value of the range
+ * @max: maximum value of the range
+ *
+ * A type to specify a range.
+ */
 typedef struct
 {
   gint min;
   gint max;
 } RTSPRange;
 
+/**
+ * RTSPTransport:
+ *
+ * A structure holding the RTSP transport values.
+ */
 typedef struct _RTSPTransport {
+  /*< private >*/
   RTSPTransMode  trans;
   RTSPProfile    profile;
   RTSPLowerTrans lower_transport;

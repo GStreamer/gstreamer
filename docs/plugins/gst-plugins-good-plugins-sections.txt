@@ -489,6 +489,7 @@ gst_progress_report_get_type
 
 <SECTION>
 <FILE>element-rtspsrc</FILE>
+RTSPLowerTrans
 GstRTSPSrc
 <TITLE>rtspsrc</TITLE>
 <SUBSECTION Standard>

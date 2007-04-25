@@ -1,3 +1,16 @@
+2007-04-25  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_finalize),
+	(gst_rtspsrc_stream_free), (request_pt_map),
+	(gst_rtspsrc_stream_configure_transport), (gst_rtspsrc_open):
+	* gst/rtsp/gstrtspsrc.h:
+	Parse server address from SDP.
+	Hook up a udpsink to send RTCP back to the server.
+
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* gst/rtsp/rtsptransport.h:
+	Add some docs.
+
 2007-04-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):

@@ -96,6 +96,7 @@ struct _GstRTSPStream {
 
   /* our udp sink back to the server */
   GstElement   *udpsink;
+  GstPad       *rtcppad;
 
   /* state */
   gint          pt;
@@ -142,6 +143,7 @@ struct _GstRTSPSrc {
   gchar           *content_base;
   RTSPLowerTrans   cur_protocols;
   gboolean         tried_url_auth;
+  gchar           *addr;
 
   /* supported methods */
   gint             methods;
