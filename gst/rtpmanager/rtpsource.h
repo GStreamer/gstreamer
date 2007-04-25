@@ -31,6 +31,10 @@
 #define RTP_NO_PROBATION        0
 #define RTP_DEFAULT_PROBATION   2
 
+#define RTP_SEQ_MOD          (1 << 16)
+#define RTP_MAX_DROPOUT      3000
+#define RTP_MAX_MISORDER     100
+
 typedef struct _RTPSource RTPSource;
 typedef struct _RTPSourceClass RTPSourceClass;
 
@@ -69,7 +73,8 @@ typedef struct _RTPSourceClass RTPSourceClass;
  *
  * Returns: a #GstFlowReturn.
  */
-typedef GstFlowReturn (*RTPSourcePushRTP) (RTPSource *src, GstBuffer *buffer, gpointer user_data);
+typedef GstFlowReturn (*RTPSourcePushRTP) (RTPSource *src, GstBuffer *buffer, 
+	gpointer user_data);
 
 /**
  * RTPSourceClockRate:
@@ -106,18 +111,22 @@ struct _RTPSource {
   GObject       object;
 
   /*< private >*/
-  RTPSourceCallbacks callbacks;
-  gpointer           user_data;
-
   guint32       ssrc;
-  gchar        *cname;
+
   gint          probation;
   gboolean      validated;
-  gboolean      received_bye;
-  gchar        *bye_reason;
-
   gboolean      is_csrc;
   gboolean      is_sender;
+
+  gchar        *cname;
+  gchar        *name;
+  gchar        *email;
+  gchar        *phone;
+  gchar        *location;
+  gchar        *tool;
+  gchar        *note;
+  gboolean      received_bye;
+  gchar        *bye_reason;
 
   gboolean      have_rtp_from;
   GstNetAddress rtp_from;
@@ -128,6 +137,9 @@ struct _RTPSource {
   gint          clock_rate;
 
   GQueue       *packets;
+
+  RTPSourceCallbacks callbacks;
+  gpointer           user_data;
 
   RTPSourceStats stats;
 };
@@ -147,6 +159,7 @@ void            rtp_source_set_as_csrc    (RTPSource *src);
 void            rtp_source_set_rtp_from   (RTPSource *src, GstNetAddress *address);
 void            rtp_source_set_rtcp_from  (RTPSource *src, GstNetAddress *address);
 
+/* handling RTP */
 GstFlowReturn   rtp_source_process_rtp    (RTPSource *src, GstBuffer *buffer, RTPArrivalStats *arrival);
 
 GstFlowReturn   rtp_source_send_rtp       (RTPSource *src, GstBuffer *buffer);

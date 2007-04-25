@@ -143,9 +143,24 @@ struct _RTPSession {
   GMutex       *lock;
 
   guint         header_len;
+  guint         mtu;
 
   RTPSource    *source;
-  GHashTable   *ssrcs;
+
+  /* info for creating reports */
+  gchar        *cname;
+  gchar        *name;
+  gchar        *email;
+  gchar        *phone;
+  gchar        *location;
+  gchar        *tool;
+  gchar        *note;
+
+  /* for sender/receiver counting */
+  guint32       key;
+  guint32       mask_idx;
+  guint32       mask;
+  GHashTable   *ssrcs[32];
   GHashTable   *cnames;
   guint         total_sources;
 
@@ -184,6 +199,21 @@ gdouble         rtp_session_get_bandwidth          (RTPSession *sess);
 void            rtp_session_set_rtcp_fraction      (RTPSession *sess, gdouble fraction);
 gdouble         rtp_session_get_rtcp_fraction      (RTPSession *sess);
 
+void            rtp_session_set_cname              (RTPSession *sess, const gchar *cname);
+gchar*          rtp_session_get_cname              (RTPSession *sess);
+void            rtp_session_set_name               (RTPSession *sess, const gchar *name);
+gchar*          rtp_session_get_name               (RTPSession *sess);
+void            rtp_session_set_email              (RTPSession *sess, const gchar *email);
+gchar*          rtp_session_get_email              (RTPSession *sess);
+void            rtp_session_set_phone              (RTPSession *sess, const gchar *phone);
+gchar*          rtp_session_get_phone              (RTPSession *sess);
+void            rtp_session_set_location           (RTPSession *sess, const gchar *location);
+gchar*          rtp_session_get_location           (RTPSession *sess);
+void            rtp_session_set_tool               (RTPSession *sess, const gchar *tool);
+gchar*          rtp_session_get_tool               (RTPSession *sess);
+void            rtp_session_set_note               (RTPSession *sess, const gchar *note);
+gchar*          rtp_session_get_note               (RTPSession *sess);
+
 /* handling sources */
 gboolean        rtp_session_add_source             (RTPSession *sess, RTPSource *src);
 gint            rtp_session_get_num_sources        (RTPSession *sess);
@@ -200,7 +230,7 @@ GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer 
 GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, GstBuffer *buffer);
 
 /* get interval for next RTCP interval */
-gdouble         rtp_session_get_rtcp_interval      (RTPSession *sess);
-GstFlowReturn   rtp_session_produce_rtcp           (RTPSession *sess);
+gdouble         rtp_session_get_reporting_interval (RTPSession *sess);
+GstFlowReturn   rtp_session_perform_reporting      (RTPSession *sess);
 
 #endif /* __RTP_SESSION_H__ */

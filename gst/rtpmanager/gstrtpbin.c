@@ -959,7 +959,7 @@ create_rtcp (GstRTPBin * rtpbin, GstPadTemplate * templ, const gchar * name)
 
   /* get rtcp_src pad and store */
   session->rtcp_src =
-      gst_element_get_request_pad (session->session, "rtcp_src");
+      gst_element_get_request_pad (session->session, "send_rtcp_src");
   if (session->rtcp_src == NULL)
     goto pad_failed;
 

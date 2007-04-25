@@ -65,7 +65,7 @@ rtp_stats_calculate_rtcp_interval (RTPSessionStats * stats, gboolean sender)
   GST_DEBUG ("senders: %f, receivers %f, avg_rtcp %f, sfraction %f",
       senders, receivers, avg_rtcp, sfraction);
 
-  if (sfraction <= stats->sender_fraction) {
+  if (senders > 0 && sfraction <= stats->sender_fraction) {
     if (sender) {
       interval =
           (avg_rtcp * senders) / (stats->sender_fraction *

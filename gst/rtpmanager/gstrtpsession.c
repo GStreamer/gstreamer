@@ -305,7 +305,7 @@ rtcp_thread (GstRTPSession * rtpsession)
     gdouble timeout;
     GstClockTime target;
 
-    timeout = rtp_session_get_rtcp_interval (rtpsession->priv->session);
+    timeout = rtp_session_get_reporting_interval (rtpsession->priv->session);
     GST_DEBUG_OBJECT (rtpsession, "next RTCP timeout: %lf", timeout);
 
     target = gst_clock_get_time (clock);
@@ -318,7 +318,7 @@ rtcp_thread (GstRTPSession * rtpsession)
     GST_DEBUG_OBJECT (rtpsession, "got RTCP timeout");
 
     /* make the session manager produce RTCP, we ignore the result. */
-    rtp_session_produce_rtcp (rtpsession->priv->session);
+    rtp_session_perform_reporting (rtpsession->priv->session);
 
     GST_RTP_SESSION_LOCK (rtpsession);
     gst_clock_id_unref (id);
@@ -472,6 +472,8 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
   rtpsession = GST_RTP_SESSION (user_data);
   priv = rtpsession->priv;
 
+  GST_DEBUG_OBJECT (rtpsession, "sending RTCP");
+
   if (rtpsession->send_rtcp_src) {
     result = gst_pad_push (rtpsession->send_rtcp_src, buffer);
   } else {
@@ -514,6 +516,8 @@ gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
   caps_struct = gst_caps_get_structure (caps, 0);
   if (!gst_structure_get_int (caps_struct, "clock-rate", &result))
     goto no_clock_rate;
+
+  GST_DEBUG_OBJECT (rtpsession, "parsed clock-rate %d", result);
 
   return result;
 
