@@ -1078,10 +1078,6 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     /* do more sanity checks of header fields
      * (these can be sanitized by gst_riff_create_audio_caps()
      */
-    if (header->blockalign >
-        header->channels * (guint) ceil (header->size / 8.0))
-      goto invalid_blockalign;
-
     wav->format = header->format;
     wav->rate = header->rate;
     wav->channels = header->channels;
@@ -1102,6 +1098,10 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         wav->bps = 0;
         break;
       }
+      case GST_RIFF_WAVE_FORMAT_PCM:
+        if (wav->blockalign > wav->channels * (guint) ceil (wav->depth / 8.0))
+          goto invalid_blockalign;
+        /* fall through */
       default:
         if (wav->av_bps > wav->blockalign * wav->rate)
           goto invalid_bps;
@@ -1317,7 +1317,6 @@ invalid_blockalign:
         ("Stream claims blockalign = %u, which is more than %u - invalid data",
             header->blockalign,
             header->channels * (guint) ceil (header->size / 8.0)));
-    g_free (header);
     g_free (codec_name);
     return GST_FLOW_ERROR;
   }

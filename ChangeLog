@@ -1,3 +1,8 @@
+2007-04-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):
+	  Make header field check conditional. Fixes #433135
+
 2007-04-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/Makefile.am:
