@@ -49,15 +49,13 @@ GST_ELEMENT_DETAILS ("Alpha color filter",
     "RGBA to AYUV colorspace conversion preserving the alpha channel",
     "Wim Taymans <wim@fluendo.com>");
 
-static GstStaticPadTemplate gst_alpha_color_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBA ";" GST_VIDEO_CAPS_BGRA)
     );
 
-static GstStaticPadTemplate gst_alpha_color_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("AYUV"))
@@ -81,9 +79,9 @@ gst_alpha_color_base_init (gpointer g_class)
   gst_element_class_set_details (element_class, &gst_alpha_color_details);
 
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_alpha_color_sink_template));
+      gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_alpha_color_src_template));
+      gst_static_pad_template_get (&src_template));
 }
 
 static void
@@ -123,8 +121,8 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
     GstPadDirection direction, GstCaps * caps)
 {
   GstAlphaColor *alpha = NULL;
+  const GstCaps *tmpl_caps = NULL;
   GstCaps *result = NULL, *local_caps = NULL;
-  GstPadTemplate *tmpl = NULL;
   guint i;
 
   alpha = GST_ALPHA_COLOR (btrans);
@@ -153,13 +151,13 @@ gst_alpha_color_transform_caps (GstBaseTransform * btrans,
 
   /* Get the appropriate template */
   if (direction == GST_PAD_SINK) {
-    tmpl = gst_static_pad_template_get (&gst_alpha_color_src_template);
+    tmpl_caps = gst_static_pad_template_get_caps (&src_template);
   } else if (direction == GST_PAD_SRC) {
-    tmpl = gst_static_pad_template_get (&gst_alpha_color_sink_template);
+    tmpl_caps = gst_static_pad_template_get_caps (&sink_template);
   }
 
   /* Intersect with our template caps */
-  result = gst_caps_intersect (local_caps, gst_pad_template_get_caps (tmpl));
+  result = gst_caps_intersect (local_caps, tmpl_caps);
 
   gst_caps_unref (local_caps);
   gst_caps_do_simplify (result);
@@ -177,20 +175,30 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
   GstStructure *structure;
   gboolean ret;
   const GValue *fps;
-  gint red_mask;
+  gint red_mask, alpha_mask;
+  gint w, h, depth, bpp;
 
   alpha = GST_ALPHA_COLOR (btrans);
   structure = gst_caps_get_structure (incaps, 0);
 
-  ret = gst_structure_get_int (structure, "width", &alpha->in_width);
-  ret &= gst_structure_get_int (structure, "height", &alpha->in_height);
+  ret = gst_structure_get_int (structure, "width", &w);
+  ret &= gst_structure_get_int (structure, "height", &h);
   fps = gst_structure_get_value (structure, "framerate");
   ret &= (fps != NULL && GST_VALUE_HOLDS_FRACTION (fps));
   ret &= gst_structure_get_int (structure, "red_mask", &red_mask);
 
-  if (!ret)
-    return FALSE;
+  /* make sure these are really full RGBA caps */
+  ret &= gst_structure_get_int (structure, "alpha_mask", &alpha_mask);
+  ret &= gst_structure_get_int (structure, "depth", &depth);
+  ret &= gst_structure_get_int (structure, "bpp", &bpp);
 
+  if (!ret || alpha_mask == 0 || red_mask == 0 || depth != 32 || bpp != 32) {
+    GST_DEBUG_OBJECT (alpha, "incomplete or non-RGBA input caps!");
+    return FALSE;
+  }
+
+  alpha->in_width = w;
+  alpha->in_height = h;
   alpha->in_rgba = TRUE;
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
   if (red_mask != 0x000000ff)

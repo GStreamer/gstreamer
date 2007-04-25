@@ -43,6 +43,7 @@ endif
 check_PROGRAMS = \
 	generic/states \
 	$(check_annodex) \
+	elements/alphacolor \
 	elements/audiopanorama \
 	elements/audioinvert \
 	elements/audioamplify \
@@ -83,6 +84,8 @@ elements_audiopanorama_CFLAGS = \
 
 elements_cmmldec_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
 elements_cmmlenc_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
+
+elements_alphacolor_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS)
 
 elements_sunaudio_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \

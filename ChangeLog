@@ -1,5 +1,22 @@
 2007-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/alpha/gstalphacolor.c: (gst_alpha_color_base_init),
+	(gst_alpha_color_transform_caps), (gst_alpha_color_set_caps):
+	  Double-check that RGB input caps are really RGBA caps (apparently
+	  the core doesn't always catch it if those caps aren't a subset of
+	  our template caps, also see #421543). Fixes #429319 in a way.
+	  Also, don't leak the pad template in the transform_caps function.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/alphacolor.c: (setup_alphacolor),
+	(cleanup_alphacolor), (create_caps_rgb24), (create_caps_rgba32),
+	(create_buffer_rgb24_3x4), (create_buffer_rgba32_3x4),
+	(GST_START_TEST), (alphacolor_suite):
+	  Add some basic unit tests for alphacolor.
+
+2007-04-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/libpng/gstpngdec.c: (gst_pngdec_task):
 	  If we get a fatal flow return in the loop function, first post the
 	  error message and only then send the EOS event downstream, otherwise
