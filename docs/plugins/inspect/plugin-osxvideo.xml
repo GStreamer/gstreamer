@@ -1,0 +1,20 @@
+<plugin>
+  <name>osxvideo</name>
+  <description>OSX native video output plugin</description>
+  <filename>../../ext/osxvideo/.libs/libgstosxvideo.so</filename>
+  <basename>libgstosxvideo.so</basename>
+  <version>0.10.4</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>Gstreamer</package>
+  <origin>http://gstreamer.freedesktop.org</origin>
+  <elements>
+    <element>
+      <name>osxvideosink</name>
+      <longname>OSX Video sink</longname>
+      <class>Sink/Video</class>
+      <description>OSX native videosink</description>
+      <author>Zaheer Abbas Merali &lt;zaheerabas at merali dot org&gt;</author>
+    </element>
+  </elements>
+</plugin>
