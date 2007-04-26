@@ -474,6 +474,24 @@ gst_oss_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-osxaudiosink</FILE>
+GstOsxAudioSink
+<TITLE>osxaudiosink</TITLE>
+<SUBSECTION Standard>
+GstOsxAudioSinkClass
+GST_TYPE_OSX_AUDIO_SINK
+</SECTION>
+
+<SECTION>
+<FILE>element-osxaudiosrc</FILE>
+GstOsxAudioSrc
+<TITLE>osxaudiosrc</TITLE>
+<SUBSECTION Standard>
+GstOsxAudioSrcClass
+GST_TYPE_OSX_AUDIO_SINK
+</SECTION>
+
+<SECTION>
 <FILE>element-progressreport</FILE>
 GstProgressReport
 <TITLE>progressreport</TITLE>

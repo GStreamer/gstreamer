@@ -46,6 +46,8 @@
     <xi:include href="xml/element-ossmixer.xml" />
     <xi:include href="xml/element-osssink.xml" />
     <xi:include href="xml/element-osssrc.xml" />
+    <xi:include href="xml/element-osxaudiosink.xml" />
+    <xi:include href="xml/element-osxaudiosrc.xml" />
     <xi:include href="xml/element-progressreport.xml" />
     <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
@@ -96,6 +98,7 @@
     <xi:include href="xml/plugin-multipart.xml" />
     <xi:include href="xml/plugin-navigationtest.xml" />
     <xi:include href="xml/plugin-ossaudio.xml" />
+    <xi:include href="xml/plugin-osxaudio.xml" />
     <xi:include href="xml/plugin-png.xml" />
     <xi:include href="xml/plugin-rtp.xml" />
     <xi:include href="xml/plugin-rtsp.xml" />

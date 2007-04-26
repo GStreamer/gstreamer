@@ -1,0 +1,27 @@
+<plugin>
+  <name>osxaudio</name>
+  <description>OSX (Mac OS X) audio support for GStreamer</description>
+  <filename>../../sys/osxaudio/.libs/libgstosxaudio.so</filename>
+  <basename>libgstosxaudio.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>osxaudiosink</name>
+      <longname>Audio Sink (OSX)</longname>
+      <class>Sink/Audio</class>
+      <description>Output to a sound card in OS X</description>
+      <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+    </element>
+    <element>
+      <name>osxaudiosrc</name>
+      <longname>Audio Source (OSX)</longname>
+      <class>Source/Audio</class>
+      <description>Input from a sound card in OS X</description>
+      <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+    </element>
+  </elements>
+</plugin>
