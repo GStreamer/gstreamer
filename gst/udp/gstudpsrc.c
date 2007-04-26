@@ -451,12 +451,17 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
       goto stopped;
   } while (try_again);
 
-  /* ask how much is available for reading on the socket, this is exactly one
-   * UDP packet. */
+  /* ask how much is available for reading on the socket, this should be exactly
+   * one UDP packet. We will check the return value, though, because in some
+   * case it can return 0 and we don't want a 0 sized buffer. */
+  readsize = 0;
   if ((ret = IOCTL_SOCKET (udpsrc->sock, FIONREAD, &readsize)) < 0)
     goto ioctl_failed;
 
   GST_LOG_OBJECT (udpsrc, "ioctl says %d bytes available", (int) readsize);
+
+  if (!readsize)
+    goto nothing_to_read;
 
   pktdata = g_malloc (readsize);
   pktsize = readsize;
@@ -514,6 +519,13 @@ ioctl_failed:
   {
     GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
         ("ioctl failed %d: %s (%d)", ret, g_strerror (errno), errno));
+    return GST_FLOW_ERROR;
+  }
+nothing_to_read:
+  {
+    GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
+        ("ioctl returned readsize 0 %d: %s (%d)", ret, g_strerror (errno),
+            errno));
     return GST_FLOW_ERROR;
   }
 receive_error:

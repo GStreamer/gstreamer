@@ -1,5 +1,11 @@
 2007-04-26  Wim Taymans  <wim@fluendo.com>
 
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):
+	Handle the case where there are exactly 0 bytes to read and the ioctl
+	did not report an error. Fixes #433530.
+
+2007-04-26  Wim Taymans  <wim@fluendo.com>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
 	(gst_wavparse_stream_headers), (gst_wavparse_stream_data):
 	* gst/wavparse/gstwavparse.h:
