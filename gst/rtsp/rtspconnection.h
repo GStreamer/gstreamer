@@ -61,7 +61,6 @@ typedef struct _RTSPConnection
   gint control_sock[2];
 
   /* Session state */
-  RTSPState     state;
   gint          cseq;                   /* sequence number */
   gchar         session_id[512];        /* session id */
 

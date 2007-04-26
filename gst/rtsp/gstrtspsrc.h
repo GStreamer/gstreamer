@@ -67,6 +67,10 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPSrc GstRTSPSrc;
 typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
 
+#define GST_RTSP_STATE_GET_LOCK(rtsp)    (GST_RTSPSRC_CAST(rtsp)->state_lock)
+#define GST_RTSP_STATE_LOCK(rtsp)        (g_mutex_lock (GST_RTSP_STATE_GET_LOCK(rtsp)))
+#define GST_RTSP_STATE_UNLOCK(rtsp)      (g_mutex_unlock (GST_RTSP_STATE_GET_LOCK(rtsp)))
+
 #define GST_RTSP_LOOP_GET_COND(rtsp)     (GST_RTSPSRC_CAST(rtsp)->loop_cond)
 #define GST_RTSP_LOOP_WAIT(rtsp)         (g_cond_wait(GST_RTSP_LOOP_GET_COND (rtsp), GST_OBJECT_GET_LOCK (rtsp)))
 #define GST_RTSP_LOOP_SIGNAL(rtsp)       (g_cond_signal(GST_RTSP_LOOP_GET_COND (rtsp)))
@@ -124,6 +128,7 @@ struct _GstRTSPSrc {
   /* cond to signal loop */
   GCond           *loop_cond;
   gint             loop_cmd;
+  GMutex          *state_lock;
 
   gint             numstreams;
   GList           *streams;
@@ -141,6 +146,7 @@ struct _GstRTSPSrc {
   guint            latency;
 
   /* state */
+  RTSPState        state;
   gchar           *content_base;
   RTSPLowerTrans   cur_protocols;
   gboolean         tried_url_auth;

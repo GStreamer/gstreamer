@@ -1,5 +1,20 @@
 2007-04-26  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
+	(gst_rtspsrc_finalize), (gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_open), (gst_rtspsrc_close),
+	(gst_rtspsrc_parse_rtpinfo), (gst_rtspsrc_play),
+	(gst_rtspsrc_pause):
+	* gst/rtsp/gstrtspsrc.h:
+	Protect state changes with a lock.
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_create),
+	(parse_line):
+	* gst/rtsp/rtspconnection.h:
+	Remove some unused stuff.
+
+2007-04-26  Wim Taymans  <wim@fluendo.com>
+
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):
 	Handle the case where there are exactly 0 bytes to read and the ioctl
 	did not report an error. Fixes #433530.

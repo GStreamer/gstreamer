@@ -302,6 +302,9 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
   src->extension = rtsp_ext_wms_get_context ();
 #endif
   src->extension->src = (gpointer) src;
+
+  src->state_lock = g_mutex_new ();
+  src->state = RTSP_STATE_INVALID;
 }
 
 static void
@@ -319,6 +322,7 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->content_base);
   rtsp_url_free (rtspsrc->url);
   g_free (rtspsrc->addr);
+  g_mutex_free (rtspsrc->state_lock);
 
   if (rtspsrc->extension) {
 #ifdef WITH_EXT_REAL
@@ -2554,6 +2558,8 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   GstRTSPStream *stream = NULL;
   gchar *respcont = NULL;
 
+  GST_RTSP_STATE_LOCK (src);
+
   /* reset our state */
   gst_segment_init (&src->segment, GST_FORMAT_TIME);
 
@@ -2645,8 +2651,14 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     stream = gst_rtspsrc_create_stream (src, &sdp, i);
   }
 
+  src->state = RTSP_STATE_INIT;
+
   /* setup streams */
-  gst_rtspsrc_setup_streams (src);
+  if (!gst_rtspsrc_setup_streams (src))
+    goto setup_failed;
+
+  src->state = RTSP_STATE_READY;
+  GST_RTSP_STATE_UNLOCK (src);
 
   /* clean up any messages */
   rtsp_message_unset (&request);
@@ -2705,8 +2717,14 @@ wrong_content_type:
         ("Server does not support SDP, got %s.", respcont));
     goto cleanup_error;
   }
+setup_failed:
+  {
+    /* error was posted */
+    goto cleanup_error;
+  }
 cleanup_error:
   {
+    GST_RTSP_STATE_UNLOCK (src);
     rtsp_message_unset (&request);
     rtsp_message_unset (&response);
     return FALSE;
@@ -2721,6 +2739,8 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   RTSPResult res;
 
   GST_DEBUG_OBJECT (src, "TEARDOWN...");
+
+  GST_RTSP_STATE_LOCK (src);
 
   gst_rtspsrc_loop_send_cmd (src, CMD_STOP);
 
@@ -2767,17 +2787,22 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   /* cleanup */
   gst_rtspsrc_cleanup (src);
 
+  src->state = RTSP_STATE_INVALID;
+  GST_RTSP_STATE_UNLOCK (src);
+
   return TRUE;
 
   /* ERRORS */
 create_request_failed:
   {
+    GST_RTSP_STATE_UNLOCK (src);
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
         ("Could not create request."));
     return FALSE;
   }
 send_error:
   {
+    GST_RTSP_STATE_UNLOCK (src);
     rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message."));
@@ -2785,6 +2810,7 @@ send_error:
   }
 close_failed:
   {
+    GST_RTSP_STATE_UNLOCK (src);
     GST_ELEMENT_ERROR (src, RESOURCE, CLOSE, (NULL), ("Close failed."));
     return FALSE;
   }
@@ -2874,10 +2900,15 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   RTSPResult res;
   gchar *rtpinfo;
 
-  if (!(src->methods & RTSP_PLAY))
-    return TRUE;
+  GST_RTSP_STATE_LOCK (src);
 
   GST_DEBUG_OBJECT (src, "PLAY...");
+
+  if (!(src->methods & RTSP_PLAY))
+    goto not_supported;
+
+  if (src->state == RTSP_STATE_PLAYING)
+    goto was_playing;
 
   /* do play */
   res = rtsp_message_init_request (&request, RTSP_PLAY, src->req_location);
@@ -2908,20 +2939,36 @@ gst_rtspsrc_play (GstRTSPSrc * src)
     gst_task_set_lock (src->task, src->stream_rec_lock);
   }
   src->running = TRUE;
+  src->state = RTSP_STATE_PLAYING;
   gst_rtspsrc_loop_send_cmd (src, CMD_WAIT);
   gst_task_start (src->task);
+
+done:
+  GST_RTSP_STATE_UNLOCK (src);
 
   return TRUE;
 
   /* ERRORS */
+not_supported:
+  {
+    GST_DEBUG_OBJECT (src, "PLAY is not supported");
+    goto done;
+  }
+was_playing:
+  {
+    GST_DEBUG_OBJECT (src, "we were already PLAYING");
+    goto done;
+  }
 create_request_failed:
   {
+    GST_RTSP_STATE_UNLOCK (src);
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
         ("Could not create request."));
     return FALSE;
   }
 send_error:
   {
+    GST_RTSP_STATE_UNLOCK (src);
     rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message."));
@@ -2936,10 +2983,16 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
   RTSPMessage response = { 0 };
   RTSPResult res;
 
-  if (!(src->methods & RTSP_PAUSE))
-    return TRUE;
+  GST_RTSP_STATE_LOCK (src);
 
   GST_DEBUG_OBJECT (src, "PAUSE...");
+
+  if (!(src->methods & RTSP_PAUSE))
+    goto not_supported;
+
+  if (src->state == RTSP_STATE_READY)
+    goto was_paused;
+
   /* do pause */
   res = rtsp_message_init_request (&request, RTSP_PAUSE, src->req_location);
   if (res < 0)
@@ -2951,17 +3004,34 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
   rtsp_message_unset (&request);
   rtsp_message_unset (&response);
 
+  src->state = RTSP_STATE_READY;
+
+done:
+  GST_RTSP_STATE_UNLOCK (src);
+
   return TRUE;
 
   /* ERRORS */
+not_supported:
+  {
+    GST_DEBUG_OBJECT (src, "PAUSE is not supported");
+    goto done;
+  }
+was_paused:
+  {
+    GST_DEBUG_OBJECT (src, "we were already PAUSED");
+    goto done;
+  }
 create_request_failed:
   {
+    GST_RTSP_STATE_UNLOCK (src);
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
         ("Could not create request."));
     return FALSE;
   }
 send_error:
   {
+    GST_RTSP_STATE_UNLOCK (src);
     rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message."));

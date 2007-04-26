@@ -142,7 +142,6 @@ rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
   newconn->fd = -1;
   newconn->cseq = 0;
   newconn->session_id[0] = 0;
-  newconn->state = RTSP_STATE_INIT;
 
   newconn->auth_method = RTSP_AUTH_NONE;
   newconn->username = NULL;
@@ -524,7 +523,7 @@ parse_line (gchar * buffer, RTSPMessage * msg)
   /* read key */
   read_key (key, sizeof (key), &bptr);
   if (*bptr != ':')
-    return RTSP_EINVAL;
+    goto no_column;
 
   bptr++;
 
@@ -536,6 +535,11 @@ parse_line (gchar * buffer, RTSPMessage * msg)
   }
 
   return RTSP_OK;
+
+no_column:
+  {
+    return RTSP_EINVAL;
+  }
 }
 
 RTSPResult
