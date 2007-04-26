@@ -24,9 +24,14 @@
 /* FIXME:
  * - Add random key to libgstreamer during build and only accept registry,
  *   if key matches (or is the version check enough)
- * - handle cases where we can't mmap
  * - keep registry binary blob and reference strings
- *   (need const flags in GstPlugin, etc.)
+ *   - don't free/unmmap contents when leaving gst_registry_binary_read_cache()
+ *     - free at gst_deinit() / _priv_gst_registry_cleanup() ?
+ *   - GstPlugin:
+ *     - GST_PLUGIN_FLAG_CONST
+ *   -GstPluginFeature, GstIndexFactory, GstElementFactory
+ *     - needs Flags (GST_PLUGIN_FEATURE_FLAG_CONST)
+ *     - can we turn loaded into flag?
  * - why do we collect a list of binary chunks and not write immediately
  *   - because we need to process subchunks, before we can set e.g. nr_of_items
  *     in parent chunk
@@ -58,7 +63,7 @@
 
 #include <gst/gstregistrybinary.h>
 
-#include <glib/gstdio.h>        /* for g_stat() */
+#include <glib/gstdio.h>        /* for g_stat(), g_mapped_file(), ... */
 
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
@@ -80,6 +85,7 @@
 #  define alignment32(_address)  0
 #  define align32(_ptr)          do {} while(0)
 #endif
+
 
 /* Registry saving */
 
@@ -117,6 +123,7 @@ gst_registry_binary_write (GstRegistry * registry, const void *mem,
   return TRUE;
 }
 
+
 /*
  * gst_registry_binary_initialize_magic:
  *
@@ -134,6 +141,7 @@ gst_registry_binary_initialize_magic (GstBinaryRegistryMagic * m)
   }
   return TRUE;
 }
+
 
 /*
  * gst_registry_binary_save_string:
@@ -156,6 +164,7 @@ gst_registry_binary_save_string (GList ** list, gchar * str)
   return TRUE;
 }
 
+
 /*
  * gst_registry_binary_save_data:
  *
@@ -175,6 +184,7 @@ gst_registry_binary_make_data (gpointer data, gulong size)
   chunk->align = TRUE;
   return chunk;
 }
+
 
 /*
  * gst_registry_binary_save_pad_template:
@@ -205,6 +215,7 @@ gst_registry_binary_save_pad_template (GList ** list,
 
   return TRUE;
 }
+
 
 /*
  * gst_registry_binary_save_feature:
@@ -343,6 +354,7 @@ fail:
   return FALSE;
 }
 
+
 /*
  * gst_registry_binary_save_plugin:
  *
@@ -405,6 +417,7 @@ fail:
   return FALSE;
 }
 
+
 /**
  * gst_registry_binary_write_cache:
  *
@@ -414,7 +427,7 @@ gboolean
 gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
 {
   GList *walk;
-  char *tmp_location;
+  gchar *tmp_location;
   GstBinaryRegistryMagic *magic;
   GstBinaryChunk *magic_chunk;
   GList *to_write = NULL;
@@ -426,7 +439,7 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
   tmp_location = g_strconcat (location, ".tmpXXXXXX", NULL);
   registry->cache_file = g_mkstemp (tmp_location);
   if (registry->cache_file == -1) {
-    char *dir;
+    gchar *dir;
 
     /* oops, I bet the directory doesn't exist */
     dir = g_path_get_dirname (location);
@@ -522,6 +535,7 @@ fail:
   return FALSE;
 }
 
+
 /* Registry loading */
 
 /*
@@ -562,6 +576,7 @@ gst_registry_binary_check_magic (gchar ** in)
   return TRUE;
 }
 
+
 /*
  * gst_registry_binary_load_pad_template:
  *
@@ -579,7 +594,6 @@ gst_registry_binary_load_pad_template (GstElementFactory * factory, gchar ** in)
   GST_DEBUG ("Reading/casting for GstBinaryPadTemplate at address %p", *in);
   unpack_element (*in, pt, GstBinaryPadTemplate);
 
-
   template = g_new0 (GstStaticPadTemplate, 1);
   template->presence = pt->presence;
   template->direction = pt->direction;
@@ -593,6 +607,7 @@ gst_registry_binary_load_pad_template (GstElementFactory * factory, gchar ** in)
 
   return TRUE;
 }
+
 
 /*
  * gst_registry_binary_load_feature:
@@ -741,6 +756,7 @@ fail:
   return FALSE;
 }
 
+
 /*
  * gst_registry_binary_load_plugin:
  *
@@ -774,6 +790,7 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
 
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
 
+  /* TODO: also set GST_PLUGIN_FLAG_CONST */
   plugin->flags |= GST_PLUGIN_FLAG_CACHED;
   plugin->file_mtime = pe->file_mtime;
   plugin->file_size = pe->file_size;
@@ -829,6 +846,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   gdouble seconds;
   gsize size;
   GError *err = NULL;
+  gboolean res = FALSE;
 
   /* make sure these types exist */
   GST_TYPE_ELEMENT_FACTORY;
@@ -841,30 +859,35 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
 
   mapped = g_mapped_file_new (location, FALSE, &err);
   if (err != NULL) {
-    GST_INFO ("Unable to mmap file: %s", err->message);
+    GST_INFO ("Unable to mmap file %s : %s", location, err->message);
     g_error_free (err);
-    return FALSE;
-  }
+    err = NULL;
 
-  if ((contents = g_mapped_file_get_contents (mapped)) == NULL) {
-    GST_ERROR ("Can't load file %s : %s", location, g_strerror (errno));
-    g_mapped_file_free (mapped);
-    return FALSE;
+    g_file_get_contents (location, &contents, &size, &err);
+    if (err != NULL) {
+      GST_INFO ("Unable to read file %s : %s", location, err->message);
+      g_error_free (err);
+      return FALSE;
+    }
+  } else {
+    if ((contents = g_mapped_file_get_contents (mapped)) == NULL) {
+      GST_ERROR ("Can't load file %s : %s", location, g_strerror (errno));
+      goto Error;
+    }
+    /* check length for header */
+    size = g_mapped_file_get_length (mapped);
   }
   /* in is a cursor pointer, we initialize it with the begin of registry and is updated on each read */
   in = contents;
-  GST_DEBUG ("File mapped at address %p", in);
-  /* check length for header */
-  size = g_mapped_file_get_length (mapped);
+  GST_DEBUG ("File data at address %p", in);
   if (size < sizeof (GstBinaryRegistryMagic)) {
-    GST_INFO ("No or broken registry header");
-    return FALSE;
+    GST_ERROR ("No or broken registry header");
+    goto Error;
   }
   /* check if header is valid */
   if (!gst_registry_binary_check_magic (&in)) {
     GST_ERROR ("Binary registry type not recognized (invalid magic)");
-    g_mapped_file_free (mapped);
-    return FALSE;
+    goto Error;
   }
 
   /* check if there are plugins in the file */
@@ -872,18 +895,18 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   if (!(((size_t) in + sizeof (GstBinaryPluginElement)) <
           (size_t) contents + size)) {
     GST_INFO ("No binary plugins structure to read");
-    return TRUE;                /* empty file, this is not an error */
-  }
-
-  for (;
-      ((size_t) in + sizeof (GstBinaryPluginElement)) <
-      (size_t) contents + size;) {
-    GST_INFO ("reading binary registry %" G_GSIZE_FORMAT "(%x)/%"
-        G_GSIZE_FORMAT, (size_t) in - (size_t) contents,
-        (guint) ((size_t) in - (size_t) contents), size);
-    if (!gst_registry_binary_load_plugin (registry, &in)) {
-      GST_ERROR ("Problem while reading binary registry");
-      return FALSE;
+    /* empty file, this is not an error */
+  } else {
+    for (;
+        ((size_t) in + sizeof (GstBinaryPluginElement)) <
+        (size_t) contents + size;) {
+      GST_INFO ("reading binary registry %" G_GSIZE_FORMAT "(%x)/%"
+          G_GSIZE_FORMAT, (size_t) in - (size_t) contents,
+          (guint) ((size_t) in - (size_t) contents), size);
+      if (!gst_registry_binary_load_plugin (registry, &in)) {
+        GST_ERROR ("Problem while reading binary registry");
+        goto Error;
+      }
     }
   }
 
@@ -893,6 +916,14 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
 
   GST_INFO ("loaded %s in %lf seconds", location, seconds);
 
-  g_mapped_file_free (mapped);
-  return TRUE;
+  res = TRUE;
+  /* TODO: once we re-use the pointers to registry contents return here */
+
+Error:
+  if (mapped) {
+    g_mapped_file_free (mapped);
+  } else {
+    g_free (contents);
+  }
+  return res;
 }

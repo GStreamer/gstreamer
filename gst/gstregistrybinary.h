@@ -25,7 +25,6 @@
 ** ====================
 ** - Use a compressed registry, but would induce performance loss
 ** - Encrypt the registry, for security purpose, but would also reduce performances
-** - Also have a non-mmap based cache reading (work with file descriptors)
 */
 
 #ifndef __GST_REGISTRYBINARY_H__

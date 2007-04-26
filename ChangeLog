@@ -1,3 +1,14 @@
+2007-04-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_write_cache),
+	(gst_registry_binary_load_pad_template),
+	(gst_registry_binary_load_plugin),
+	(gst_registry_binary_read_cache):
+	* gst/gstregistrybinary.h:
+	  Implement no-mmap alternative for registry reading. Do code cleanups.
+	  Add more comments about avoiding strdups for all text data. Comments
+	  welcome.
+
 2007-04-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstregistrybinary.h (GstBinaryPluginElement,
