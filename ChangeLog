@@ -1,3 +1,12 @@
+2007-04-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbuffer.c: (gst_buffer_try_new_and_alloc):
+	* gst/gstbuffer.h:
+	* tests/check/gst/gstbuffer.c: (GST_START_TEST),
+	(gst_buffer_suite):
+	  API: add gst_buffer_try_new_and_alloc() plus unit test (#431940).
+
 2007-04-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_write_cache),

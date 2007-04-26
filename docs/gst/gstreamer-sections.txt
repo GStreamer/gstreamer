@@ -157,6 +157,7 @@ GST_BUFFER_TRACE_NAME
 
 gst_buffer_new
 gst_buffer_new_and_alloc
+gst_buffer_try_new_and_alloc
 
 gst_buffer_ref
 gst_buffer_unref

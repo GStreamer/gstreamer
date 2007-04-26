@@ -20,6 +20,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
+#ifdef HAVE_VALGRIND
+# include <valgrind/valgrind.h>
+#else
+# define RUNNING_ON_VALGRIND FALSE
+#endif
+
 #include <gst/check/gstcheck.h>
 
 GST_START_TEST (test_caps)
@@ -401,7 +411,40 @@ GST_START_TEST (test_copy)
 
 GST_END_TEST;
 
-Suite *
+GST_START_TEST (test_try_new_and_alloc)
+{
+  GstBuffer *buf;
+
+  /* special case: alloc of 0 bytes results in new buffer with NULL data */
+  buf = gst_buffer_try_new_and_alloc (0);
+  fail_unless (buf != NULL);
+  fail_unless (GST_IS_BUFFER (buf));
+  fail_unless (GST_BUFFER_SIZE (buf) == 0);
+  fail_unless (GST_BUFFER_DATA (buf) == NULL);
+  fail_unless (GST_BUFFER_MALLOCDATA (buf) == NULL);
+  gst_buffer_unref (buf);
+
+  /* normal alloc should still work */
+  buf = gst_buffer_try_new_and_alloc (640 * 480 * 4);
+  fail_unless (buf != NULL);
+  fail_unless (GST_IS_BUFFER (buf));
+  fail_unless (GST_BUFFER_SIZE (buf) == (640 * 480 * 4));
+  fail_unless (GST_BUFFER_DATA (buf) != NULL);
+  fail_unless (GST_BUFFER_MALLOCDATA (buf) != NULL);
+  GST_BUFFER_DATA (buf)[640 * 479 * 4 + 479] = 0xff;
+  gst_buffer_unref (buf);
+
+  /* now this better fail (don't run in valgrind, it will abort
+   * or warn when passing silly arguments to malloc) */
+  if (!RUNNING_ON_VALGRIND) {
+    buf = gst_buffer_try_new_and_alloc ((guint) - 1);
+    fail_unless (buf == NULL);
+  }
+}
+
+GST_END_TEST;
+
+static Suite *
 gst_buffer_suite (void)
 {
   Suite *s = suite_create ("GstBuffer");
@@ -416,6 +459,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_span);
   tcase_add_test (tc_chain, test_metadata_writable);
   tcase_add_test (tc_chain, test_copy);
+  tcase_add_test (tc_chain, test_try_new_and_alloc);
 
   return s;
 }

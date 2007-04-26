@@ -305,7 +305,12 @@ gst_buffer_new (void)
  * @size: the size of the new buffer's data.
  *
  * Creates a newly allocated buffer with data of the given size.
- * The buffer memory is not cleared.
+ * The buffer memory is not cleared. If the requested amount of
+ * memory can't be allocated, the program will abort. Use
+ * gst_buffer_try_new_and_alloc() if you want to handle this case
+ * gracefully or have gotten the size to allocate from an untrusted
+ * source such as a media stream.
+ * 
  *
  * Note that when @size == 0, the buffer data pointer will be NULL.
  *
@@ -321,6 +326,48 @@ gst_buffer_new_and_alloc (guint size)
 
   newbuf->malloc_data = g_malloc (size);
   GST_BUFFER_DATA (newbuf) = newbuf->malloc_data;
+  GST_BUFFER_SIZE (newbuf) = size;
+
+  GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);
+
+  return newbuf;
+}
+
+/**
+ * gst_buffer_try_new_and_alloc:
+ * @size: the size of the new buffer's data.
+ *
+ * Tries to create a newly allocated buffer with data of the given size. If
+ * the requested amount of memory can't be allocated, NULL will be returned.
+ * The buffer memory is not cleared.
+ *
+ * Note that when @size == 0, the buffer data pointer will be NULL.
+ *
+ * MT safe.
+ *
+ * Returns: a new #GstBuffer, or NULL if the memory couldn't be allocated.
+ *
+ * Since: 0.10.13
+ */
+GstBuffer *
+gst_buffer_try_new_and_alloc (guint size)
+{
+  GstBuffer *newbuf;
+  guint8 *malloc_data;
+
+  malloc_data = g_try_malloc (size);
+
+  if (G_UNLIKELY (malloc_data == NULL && size != 0)) {
+    GST_CAT_WARNING (GST_CAT_BUFFER, "failed to allocate %d bytes", size);
+    return NULL;
+  }
+
+  /* FIXME: there's no g_type_try_create_instance() in GObject yet, so this
+   * will still abort if a new GstBuffer structure can't be allocated */
+  newbuf = gst_buffer_new ();
+
+  GST_BUFFER_MALLOCDATA (newbuf) = malloc_data;
+  GST_BUFFER_DATA (newbuf) = malloc_data;
   GST_BUFFER_SIZE (newbuf) = size;
 
   GST_CAT_LOG (GST_CAT_BUFFER, "new %p of size %d", newbuf, size);

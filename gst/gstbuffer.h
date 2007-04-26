@@ -267,10 +267,12 @@ struct _GstBufferClass {
   GstMiniObjectClass    mini_object_class;
 };
 
+GType       gst_buffer_get_type (void);
+
 /* allocation */
-GType		gst_buffer_get_type		(void);
-GstBuffer*	gst_buffer_new			(void);
-GstBuffer*	gst_buffer_new_and_alloc	(guint size);
+GstBuffer * gst_buffer_new               (void);
+GstBuffer * gst_buffer_new_and_alloc     (guint size);
+GstBuffer * gst_buffer_try_new_and_alloc (guint size);
 
 /**
  * gst_buffer_set_data:
