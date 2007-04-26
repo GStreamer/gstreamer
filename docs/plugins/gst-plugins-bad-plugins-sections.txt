@@ -24,6 +24,14 @@ GstQTDemuxClass
 </SECTION>
 
 <SECTION>
+<FILE>element-osxvideosink</FILE>
+GstOSXVideoSink
+<TITLE>osxvideosink</TITLE>
+<SUBSECTION Standard>
+GstOSXVideoSinkClass
+</SECTION>
+
+<SECTION>
 <FILE>element-rganalysis</FILE>
 GstRgAnalysis
 <TITLE>rganalysis</TITLE>

@@ -1,3 +1,11 @@
+2007-04-26  Edward Hervey  <edward@fluendo.com>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-osxvideo.xml:
+	Add documentation for osxvideo
+
 2007-04-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/gstrtpsession.c: (rtcp_thread):

@@ -17,6 +17,7 @@ GObject
           GstGLImageSink
           GstSDLVideoSink
           GstDfbVideoSink
+          GstOSXVideoSink
         GstMultiFileSink
         AlsaSPDIFSink
       GstQTDemux
