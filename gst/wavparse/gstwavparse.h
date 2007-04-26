@@ -110,6 +110,8 @@ struct _GstWavParse {
 
   /* for late pad configuration */
   gboolean first;
+  /* discont after seek */
+  gboolean discont;
 };
 
 struct _GstWavParseClass {

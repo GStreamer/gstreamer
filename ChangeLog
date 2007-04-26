@@ -1,3 +1,12 @@
+2007-04-26  Wim Taymans  <wim@fluendo.com>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
+	(gst_wavparse_stream_headers), (gst_wavparse_stream_data):
+	* gst/wavparse/gstwavparse.h:
+	Apply DISCONT to buffers.
+	Only apply timestamp to the first sample after a DISCONT, too many VBR
+	files cause random jitter in the timestamps. Fixes #433119.
+
 2007-04-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtpdec.c: (gst_rtp_dec_class_init),

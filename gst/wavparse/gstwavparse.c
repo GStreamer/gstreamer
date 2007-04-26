@@ -905,6 +905,9 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
       wav->segment.format, wav->segment.last_stop, stop,
       wav->segment.last_stop);
 
+  /* mark discont */
+  wav->discont = TRUE;
+
   /* and start the streaming task again */
   wav->segment_running = TRUE;
   if (!wav->streaming) {
@@ -1167,6 +1170,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
     }
 
+    GST_DEBUG_OBJECT (wav, "Got TAG: %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (tag));
+
     gst_wavparse_get_upstream_size (wav, &upstream_size);
 
     /* wav is a st00pid format, we don't know for sure where data starts.
@@ -1222,6 +1228,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
           wav->fact = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
           gst_buffer_unref (buf);
         }
+        GST_DEBUG_OBJECT (wav, "have fact %u", wav->fact);
         wav->offset += 8 + 4;
         break;
       }
@@ -1541,10 +1548,23 @@ iterate_adapter:
 
     /* update current running segment position */
     gst_segment_set_last_stop (&wav->segment, GST_FORMAT_TIME, next_timestamp);
+
+    /* only apply the timestamp to the first DISCONT buffer because we might be
+     * dealing with VBR data that can make the timestamps drift a lot */
+    if (wav->discont) {
+      GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+      wav->discont = FALSE;
+    } else {
+      timestamp = GST_CLOCK_TIME_NONE;
+      duration = GST_CLOCK_TIME_NONE;
+    }
   } else {
-    /* no bitrate, don't timestamp */
-    timestamp = GST_CLOCK_TIME_NONE;
-    next_timestamp = GST_CLOCK_TIME_NONE;
+    /* no bitrate, all we know is that the first sample has timestamp 0, all
+     * other positions and durations have unknown timestamp. */
+    if (pos == 0)
+      timestamp = 0;
+    else
+      timestamp = GST_CLOCK_TIME_NONE;
     duration = GST_CLOCK_TIME_NONE;
     /* update current running segment position with byte offset */
     gst_segment_set_last_stop (&wav->segment, GST_FORMAT_BYTES, nextpos);
