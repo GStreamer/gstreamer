@@ -136,6 +136,10 @@ struct _RTPSource {
   guint8        payload;
   gint          clock_rate;
 
+  GstClockTime  bye_time;
+  GstClockTime  last_activity;
+  GstClockTime  last_rtp_activity;
+
   GQueue       *packets;
 
   RTPSourceCallbacks callbacks;

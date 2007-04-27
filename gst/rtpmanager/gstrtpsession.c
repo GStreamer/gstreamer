@@ -144,13 +144,15 @@ static gint gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
     gpointer user_data);
 static GstClockTime gst_rtp_session_get_time (RTPSession * sess,
     gpointer user_data);
+static void gst_rtp_session_reconsider (RTPSession * sess, gpointer user_data);
 
 static RTPSessionCallbacks callbacks = {
   gst_rtp_session_process_rtp,
   gst_rtp_session_send_rtp,
   gst_rtp_session_send_rtcp,
   gst_rtp_session_clock_rate,
-  gst_rtp_session_get_time
+  gst_rtp_session_get_time,
+  gst_rtp_session_reconsider
 };
 
 /* GObject vmethods */
@@ -293,44 +295,39 @@ rtcp_thread (GstRTPSession * rtpsession)
 {
   GstClock *clock;
   GstClockID id;
-  gdouble interval;
   GstClockTime current_time;
-  GstClockTime next_rtcp_check_time;
-  GstClockTime new_rtcp_send_time;
-  GstClockTime last_rtcp_send_time;
-  GstClockTimeDiff jitter;
-  guint members, prev_members;
+  GstClockTime next_timeout;
 
   clock = gst_element_get_clock (GST_ELEMENT_CAST (rtpsession));
   if (clock == NULL)
     return;
 
+  current_time = gst_clock_get_time (clock);
+
   GST_DEBUG_OBJECT (rtpsession, "entering RTCP thread");
 
   GST_RTP_SESSION_LOCK (rtpsession);
 
-  /* get initial estimate */
-  interval = rtp_session_get_reporting_interval (rtpsession->priv->session);
-  current_time = gst_clock_get_time (clock);
-  last_rtcp_send_time = current_time;
-  next_rtcp_check_time = current_time + (GST_SECOND * interval);
-  /* we keep track of members before and after the timeout to do reverse
-   * reconsideration. */
-  prev_members = rtp_session_get_num_active_sources (rtpsession->priv->session);
-
-  GST_DEBUG_OBJECT (rtpsession, "first RTCP interval: %lf seconds", interval);
-
   while (!rtpsession->priv->stop_thread) {
     GstClockReturn res;
 
+    /* get initial estimate */
+    next_timeout =
+        rtp_session_next_timeout (rtpsession->priv->session, current_time);
+
+
     GST_DEBUG_OBJECT (rtpsession, "next check time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (next_rtcp_check_time));
+        GST_TIME_ARGS (next_timeout));
+
+    /* leave if no more timeouts, the session ended */
+    if (next_timeout == GST_CLOCK_TIME_NONE)
+      break;
 
     id = rtpsession->priv->id =
-        gst_clock_new_single_shot_id (clock, next_rtcp_check_time);
+        gst_clock_new_single_shot_id (clock, next_timeout);
     GST_RTP_SESSION_UNLOCK (rtpsession);
 
-    res = gst_clock_id_wait (id, &jitter);
+    res = gst_clock_id_wait (id, NULL);
 
     GST_RTP_SESSION_LOCK (rtpsession);
     gst_clock_id_unref (id);
@@ -339,52 +336,16 @@ rtcp_thread (GstRTPSession * rtpsession)
     if (rtpsession->priv->stop_thread)
       break;
 
-    if (res != GST_CLOCK_UNSCHEDULED)
-      if (jitter < 0)
-        current_time = next_rtcp_check_time;
-      else
-        current_time = next_rtcp_check_time - jitter;
-    else
-      current_time = gst_clock_get_time (clock);
+    /* update current time */
+    current_time = gst_clock_get_time (clock);
 
-    GST_DEBUG_OBJECT (rtpsession, "unlocked %d, jitter %" G_GINT64_FORMAT
-        ", current %" GST_TIME_FORMAT, res, jitter,
-        GST_TIME_ARGS (current_time));
+    /* we get unlocked because we need to perform reconsideration, don't perform
+     * the timeout but get a new reporting estimate. */
+    GST_DEBUG_OBJECT (rtpsession, "unlocked %d, current %" GST_TIME_FORMAT,
+        res, GST_TIME_ARGS (current_time));
 
-    members = rtp_session_get_num_active_sources (rtpsession->priv->session);
-
-    if (members < prev_members) {
-      GstClockTime time_remaining;
-
-      /* some members went away */
-      GST_DEBUG_OBJECT (rtpsession, "reverse reconsideration");
-      time_remaining = next_rtcp_check_time - current_time;
-      new_rtcp_send_time =
-          current_time + (time_remaining * members / prev_members);
-    } else {
-      interval = rtp_session_get_reporting_interval (rtpsession->priv->session);
-      GST_DEBUG_OBJECT (rtpsession, "forward reconsideration: %lf seconds",
-          interval);
-      new_rtcp_send_time = (interval * GST_SECOND) + last_rtcp_send_time;
-    }
-    prev_members = members;
-
-    if (current_time >= new_rtcp_send_time) {
-      GST_DEBUG_OBJECT (rtpsession, "sending RTCP now");
-
-      /* make the session manager produce RTCP, we ignore the result. */
-      rtp_session_perform_reporting (rtpsession->priv->session);
-
-      interval = rtp_session_get_reporting_interval (rtpsession->priv->session);
-
-      GST_DEBUG_OBJECT (rtpsession, "next RTCP interval: %lf seconds",
-          interval);
-      next_rtcp_check_time = (interval * GST_SECOND) + current_time;
-      last_rtcp_send_time = current_time;
-    } else {
-      GST_DEBUG_OBJECT (rtpsession, "reconsider RTCP");
-      next_rtcp_check_time = new_rtcp_send_time;
-    }
+    /* perform actions, we ignore result. */
+    rtp_session_on_timeout (rtpsession->priv->session, current_time);
   }
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
@@ -536,6 +497,8 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
 
   GST_DEBUG_OBJECT (rtpsession, "sending RTCP");
 
+  gst_util_dump_mem (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+
   if (rtpsession->send_rtcp_src) {
     result = gst_pad_push (rtpsession->send_rtcp_src, buffer);
   } else {
@@ -614,6 +577,21 @@ gst_rtp_session_get_time (RTPSession * sess, gpointer user_data)
     result = GST_CLOCK_TIME_NONE;
 
   return result;
+}
+
+/* called when the session manager asks us to reconsider the timeout */
+static void
+gst_rtp_session_reconsider (RTPSession * sess, gpointer user_data)
+{
+  GstRTPSession *rtpsession;
+
+  rtpsession = GST_RTP_SESSION_CAST (user_data);
+
+  GST_RTP_SESSION_LOCK (rtpsession);
+  GST_DEBUG_OBJECT (rtpsession, "unlock timer for reconsideration");
+  if (rtpsession->priv->id)
+    gst_clock_id_unschedule (rtpsession->priv->id);
+  GST_RTP_SESSION_UNLOCK (rtpsession);
 }
 
 static GstFlowReturn

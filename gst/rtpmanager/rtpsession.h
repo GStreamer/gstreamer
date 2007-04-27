@@ -106,6 +106,17 @@ typedef gint (*RTPSessionClockRate) (RTPSession *sess, guint8 payload, gpointer 
 typedef GstClockTime (*RTPSessionGetTime) (RTPSession *sess, gpointer user_data);
 
 /**
+ * RTPSessionReconsider:
+ * @sess: an #RTPSession
+ * @user_data: user data specified when registering
+ *
+ * This callback will be called when @sess needs to cancel the previous timeout. 
+ * The currently running timeout should be canceled and a new reporting interval
+ * should be requested from @sess.
+ */
+typedef void (*RTPSessionReconsider) (RTPSession *sess, gpointer user_data);
+
+/**
  * RTPSessionCallbacks:
  * @RTPSessionProcessRTP: callback to process RTP packets
  * @RTPSessionSendRTP: callback for sending RTP packets
@@ -122,6 +133,7 @@ typedef struct {
   RTPSessionSendRTCP    send_rtcp;
   RTPSessionClockRate   clock_rate;
   RTPSessionGetTime     get_time;
+  RTPSessionReconsider  reconsider;
 } RTPSessionCallbacks;
 
 /**
@@ -164,6 +176,14 @@ struct _RTPSession {
   GHashTable   *cnames;
   guint         total_sources;
 
+  GstClockTime  next_rtcp_check_time;
+  GstClockTime  last_rtcp_send_time;
+  gboolean      first_rtcp;
+
+  GstBuffer    *bye_packet;
+  gchar        *bye_reason;
+  gboolean      sent_bye;
+
   RTPSessionCallbacks callbacks;
   gpointer            user_data;
 
@@ -185,6 +205,8 @@ struct _RTPSessionClass {
   void (*on_ssrc_collision) (RTPSession *sess, RTPSource *source);
   void (*on_ssrc_validated) (RTPSession *sess, RTPSource *source);
   void (*on_bye_ssrc)       (RTPSession *sess, RTPSource *source);
+  void (*on_bye_timeout)    (RTPSession *sess, RTPSource *source);
+  void (*on_timeout)        (RTPSession *sess, RTPSource *source);
 };
 
 GType rtp_session_get_type (void);
@@ -229,8 +251,11 @@ GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer 
 /* processing packets for sending */
 GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, GstBuffer *buffer);
 
+/* stopping the session */
+GstFlowReturn   rtp_session_send_bye               (RTPSession *sess, const gchar *reason);
+
 /* get interval for next RTCP interval */
-gdouble         rtp_session_get_reporting_interval (RTPSession *sess);
-GstFlowReturn   rtp_session_perform_reporting      (RTPSession *sess);
+GstClockTime    rtp_session_next_timeout          (RTPSession *sess, GstClockTime time);
+GstFlowReturn   rtp_session_on_timeout            (RTPSession *sess, GstClockTime time);
 
 #endif /* __RTP_SESSION_H__ */

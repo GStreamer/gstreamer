@@ -1,3 +1,37 @@
+2007-04-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/gstrtpsession.c: (rtcp_thread),
+	(gst_rtp_session_send_rtcp), (gst_rtp_session_reconsider):
+	Move reconsideration code to the rtpsession object.
+	Simplify timout handling and add reconsideration.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
+	(rtp_session_init), (rtp_session_finalize), (on_bye_ssrc),
+	(on_bye_timeout), (on_timeout), (rtp_session_set_callbacks),
+	(obtain_source), (rtp_session_create_source),
+	(update_arrival_stats), (rtp_session_process_rtp),
+	(rtp_session_process_sr), (rtp_session_process_rr),
+	(rtp_session_process_bye), (rtp_session_process_rtcp),
+	(calculate_rtcp_interval), (rtp_session_send_bye),
+	(rtp_session_next_timeout), (session_start_rtcp),
+	(session_report_blocks), (session_cleanup), (session_sdes),
+	(session_bye), (is_rtcp_time), (rtp_session_on_timeout):
+	* gst/rtpmanager/rtpsession.h:
+	Handle timeout of inactive sources and senders.
+	Implement BYE scheduling.
+
+	* gst/rtpmanager/rtpsource.c: (calculate_jitter),
+	(rtp_source_process_sr), (rtp_source_get_last_sr),
+	(rtp_source_get_last_rb):
+	* gst/rtpmanager/rtpsource.h:
+	Add members to check for timeouts.
+
+	* gst/rtpmanager/rtpstats.c: (rtp_stats_init_defaults),
+	(rtp_stats_calculate_rtcp_interval), (rtp_stats_add_rtcp_jitter),
+	(rtp_stats_calculate_bye_interval):
+	* gst/rtpmanager/rtpstats.h:
+	Use RFC algorithm for calculating the reporting interval.
+
 2007-04-26  Edward Hervey  <edward@fluendo.com>
 
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
