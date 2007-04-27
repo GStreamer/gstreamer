@@ -40,8 +40,8 @@ typedef struct _GstRTPiLBCDepayClass GstRTPiLBCDepayClass;
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_ILBC_DEPAY))
   
 typedef enum {
-  GST_ILBC_MODE_20,
-  GST_ILBC_MODE_30
+  GST_ILBC_MODE_20 = 20,
+  GST_ILBC_MODE_30 = 30
 } GstiLBCMode; 
 
 struct _GstRTPiLBCDepay

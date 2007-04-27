@@ -1,3 +1,8 @@
+2007-04-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtpilbcdepay.h:
+	Fix mode property when specified as an arg.
+
 2007-04-26  Edward Hervey  <edward@fluendo.com>
 
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
