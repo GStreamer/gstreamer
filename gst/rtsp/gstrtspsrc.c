@@ -2898,7 +2898,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   RTSPMessage request = { 0 };
   RTSPMessage response = { 0 };
   RTSPResult res;
-  gchar *rtpinfo;
+  gchar *rtpinfo, *range;
 
   GST_RTSP_STATE_LOCK (src);
 
@@ -2921,6 +2921,11 @@ gst_rtspsrc_play (GstRTSPSrc * src)
     goto send_error;
 
   rtsp_message_unset (&request);
+
+  /* parse RTP npt field. This is the current position in the stream (Normal
+   * Play Time) and should be put in the NEWSEGMENT position field. */
+  rtsp_message_get_header (&response, RTSP_HDR_RANGE, &range);
+
 
   /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
    * for the RTP packets. If this is not present, we assume all starts from 0... 
@@ -3099,6 +3104,11 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);
       break;
     }
+    case GST_MESSAGE_ASYNC_START:
+    case GST_MESSAGE_ASYNC_DONE:
+      /* ignore messages from our internal sinks */
+      gst_message_unref (message);
+      break;
     default:
     {
       GST_BIN_CLASS (parent_class)->handle_message (bin, message);

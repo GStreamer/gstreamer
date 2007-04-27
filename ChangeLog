@@ -1,5 +1,13 @@
 2007-04-27  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_parse_rtpinfo), (gst_rtspsrc_play),
+	(gst_rtspsrc_handle_message):
+	Ignore ASYNC state messages from the udpsink, it's irrelevant for the
+	parent.
+
+2007-04-27  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpilbcdepay.h:
 	Fix mode property when specified as an arg.
 
