@@ -749,7 +749,7 @@ gst_asf_demux_pull_data (GstASFDemux * demux, guint64 offset, guint size,
     GST_DEBUG_OBJECT (demux, "short read pulling buffer at %" G_GUINT64_FORMAT
         "+%u (got only %u bytes)", offset, size, GST_BUFFER_SIZE (*p_buf));
     gst_buffer_unref (*p_buf);
-    if (*p_flow)
+    if (p_flow)
       *p_flow = GST_FLOW_UNEXPECTED;
     *p_buf = NULL;
     return FALSE;
@@ -940,6 +940,14 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux)
       if (!gst_asf_payload_is_complete (payload))
         break;
 
+      /* Do we have tags pending for this stream? */
+      if (stream->pending_tags) {
+        GST_LOG_OBJECT (stream->pad, "%" GST_PTR_FORMAT, stream->pending_tags);
+        gst_element_found_tags_for_pad (GST_ELEMENT (demux), stream->pad,
+            stream->pending_tags);
+        stream->pending_tags = NULL;
+      }
+
       /* We have the whole packet now so we should push the packet to
        * the src pad now. First though we should check if we need to do
        * descrambling */
@@ -1093,6 +1101,7 @@ read_failed:
   {
     /* upstream should already have posted an error */
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX, (NULL), ("pull_range failed"));
+    gst_asf_demux_send_event_unlocked (demux, gst_event_new_eos ());
     goto pause;
   }
 }

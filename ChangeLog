@@ -1,3 +1,10 @@
+2007-04-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_pull_data),
+	(gst_asf_demux_push_complete_payloads), (gst_asf_demux_loop):
+	  Fix silly bug when we can't pull as much data as we want; don't
+	  forget to announce pending tags in the new packet parsing code.
+
 2007-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
