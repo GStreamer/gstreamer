@@ -2,6 +2,14 @@
 
 	* plugins/elements/gstfilesink.c: (gst_file_sink_uri_set_uri):
 	* plugins/elements/gstfilesrc.c: (gst_file_src_uri_set_uri):
+	Set the location to NULL if "file://" is set as URI. Otherwise
+	some random previous URI would still be set if "file://" is
+	set on an already used filesink/filesrc.
+
+2007-04-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* plugins/elements/gstfilesink.c: (gst_file_sink_uri_set_uri):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_uri_set_uri):
 	Special case the "file://" URI as as this is used by some
 	applications to test with gst_element_make_from_uri if there's
 	an element that supports the URI protocol.

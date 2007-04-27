@@ -1078,6 +1078,7 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     /* Special case for "file://" as this is used by some applications
      *  to test with gst_element_make_from_uri if there's an element
      *  that supports the URI protocol. */
+    gst_file_src_set_location (src, NULL);
     return TRUE;
   } else {
     location = gst_uri_get_location (uri);
