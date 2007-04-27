@@ -749,10 +749,10 @@ gst_rtcp_packet_get_rb (GstRTCPPacket * packet, guint nth, guint32 * ssrc,
   if (packet->type == GST_RTCP_TYPE_RR)
     data += 4;
   else
-    data += 36;
+    data += 24;
 
   /* move to requested index */
-  data += (nth * 36);
+  data += (nth * 24);
 
   if (ssrc)
     *ssrc = GST_READ_UINT32_BE (data);
@@ -822,24 +822,23 @@ gst_rtcp_packet_add_rb (GstRTCPPacket * packet, guint32 ssrc,
   /* skip header */
   offset = packet->offset + 4;
   if (packet->type == GST_RTCP_TYPE_RR)
-    offset += 4;
+    offset += 8;
   else
-    offset += 36;
+    offset += 28;
 
   /* move to current index */
-  offset += (packet->count * 36);
+  offset += (packet->count * 24);
 
-  if (offset >= size)
+  /* we need 24 free bytes now */
+  if (offset + 24 >= size)
     goto no_space;
-
-  data += packet->offset;
 
   /* increment packet count and length */
   packet->count++;
-  data[0]++;
+  data[packet->offset]++;
   packet->length += 6;
-  data[2] = (packet->length) >> 8;
-  data[3] = (packet->length) & 0xff;
+  data[packet->offset + 2] = (packet->length) >> 8;
+  data[packet->offset + 3] = (packet->length) & 0xff;
 
   /* move to new report block offset */
   data += offset;
@@ -1202,12 +1201,10 @@ gst_rtcp_packet_sdes_add_item (GstRTCPPacket * packet, guint32 ssrc)
   /* ERRORS */
 no_space:
   {
-    g_print ("no space\n");
     return FALSE;
   }
 no_next:
   {
-    g_print ("no next\n");
     packet->count--;
     return FALSE;
   }
@@ -1270,7 +1267,6 @@ gst_rtcp_packet_sdes_add_entry (GstRTCPPacket * packet, GstRTCPSDESType type,
   /* ERRORS */
 no_space:
   {
-    g_print ("no space\n");
     return FALSE;
   }
 }
@@ -1347,16 +1343,53 @@ gst_rtcp_packet_bye_get_nth_ssrc (GstRTCPPacket * packet, guint nth)
  *
  * Add @ssrc to the BYE @packet.
  *
- * Note: Not implemented.
+ * Returns: %TRUE if the ssrc was added. This function can return %FALSE if
+ * the max MTU is exceeded or the number of sources blocks is greater than
+ * #GST_RTCP_MAX_BYE_SSRC_COUNT.
  */
-void
+gboolean
 gst_rtcp_packet_bye_add_ssrc (GstRTCPPacket * packet, guint32 ssrc)
 {
-  g_return_if_fail (packet != NULL);
-  g_return_if_fail (packet->type == GST_RTCP_TYPE_BYE);
-  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
+  guint8 *data;
+  guint size, offset;
 
-  g_warning ("not implemented");
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
+
+  if (packet->count >= GST_RTCP_MAX_BYE_SSRC_COUNT)
+    goto no_space;
+
+  data = GST_BUFFER_DATA (packet->buffer);
+  size = GST_BUFFER_SIZE (packet->buffer);
+
+  /* skip header */
+  offset = packet->offset + 4;
+
+  /* move to current index */
+  offset += (packet->count * 4);
+
+  if (offset + 4 >= size)
+    goto no_space;
+
+  /* increment packet count and length */
+  packet->count++;
+  data[packet->offset]++;
+  packet->length += 1;
+  data[packet->offset + 2] = (packet->length) >> 8;
+  data[packet->offset + 3] = (packet->length) & 0xff;
+
+  /* move to new SSRC offset and write ssrc */
+  data += offset;
+  GST_WRITE_UINT32_BE (data, ssrc);
+
+  return TRUE;
+
+  /* ERRORS */
+no_space:
+  {
+    return FALSE;
+  }
 }
 
 /**
@@ -1367,30 +1400,37 @@ gst_rtcp_packet_bye_add_ssrc (GstRTCPPacket * packet, guint32 ssrc)
  *
  * Adds @len SSRCs in @ssrc to BYE @packet.
  *
- * Note: Not implemented.
+ * Returns: %TRUE if the all the SSRCs were added. This function can return %FALSE if
+ * the max MTU is exceeded or the number of sources blocks is greater than
+ * #GST_RTCP_MAX_BYE_SSRC_COUNT.
  */
-void
+gboolean
 gst_rtcp_packet_bye_add_ssrcs (GstRTCPPacket * packet, guint32 * ssrc,
     guint len)
 {
-  g_return_if_fail (packet != NULL);
-  g_return_if_fail (packet->type == GST_RTCP_TYPE_BYE);
-  g_return_if_fail (GST_IS_BUFFER (packet->buffer));
+  guint i;
+  gboolean res;
 
-  g_warning ("not implemented");
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
+
+  res = TRUE;
+  for (i = 0; i < len && res; i++) {
+    res = gst_rtcp_packet_bye_add_ssrc (packet, ssrc[i]);
+  }
+  return res;
 }
 
 /* get the offset in packet of the reason length */
 static guint
 get_reason_offset (GstRTCPPacket * packet)
 {
-  guint sc;
   guint offset;
 
-  /* get amount of sources */
-  sc = packet->count;
+  /* get amount of sources plus header */
+  offset = 1 + packet->count;
 
-  offset = 1 + sc;
   /* check that we don't go past the packet length */
   if (offset > packet->length)
     return 0;
@@ -1489,11 +1529,52 @@ gst_rtcp_packet_bye_get_reason (GstRTCPPacket * packet)
 gboolean
 gst_rtcp_packet_bye_set_reason (GstRTCPPacket * packet, const gchar * reason)
 {
+  guint8 *data;
+  guint roffset, size;
+  guint8 len, padded;
+
   g_return_val_if_fail (packet != NULL, FALSE);
   g_return_val_if_fail (packet->type == GST_RTCP_TYPE_BYE, FALSE);
   g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
 
-  g_warning ("not implemented");
+  if (reason == NULL)
+    return TRUE;
 
-  return FALSE;
+  len = strlen (reason);
+  if (len == 0)
+    return TRUE;
+
+  /* make room for the string before we get the offset */
+  packet->length++;
+
+  roffset = get_reason_offset (packet);
+  if (roffset == 0)
+    goto no_space;
+
+  data = GST_BUFFER_DATA (packet->buffer);
+  size = GST_BUFFER_SIZE (packet->buffer);
+
+  /* we have 1 byte length and we need to pad to 4 bytes */
+  padded = ((len + 1) + 3) & ~3;
+
+  /* we need enough space for the padded length */
+  if (roffset + padded >= size)
+    goto no_space;
+
+  data[roffset] = len;
+  memcpy (&data[roffset + 1], reason, len);
+
+  /* update packet length, we made room for 1 double word already */
+  packet->length += (padded >> 2) - 1;
+  data[packet->offset + 2] = (packet->length) >> 8;
+  data[packet->offset + 3] = (packet->length) & 0xff;
+
+  return TRUE;
+
+  /* ERRORS */
+no_space:
+  {
+    packet->length--;
+    return FALSE;
+  }
 }

@@ -106,6 +106,13 @@ typedef enum
 #define GST_RTCP_MAX_SDES_ITEM_COUNT   31
 
 /**
+ * GST_RTCP_MAX_BYE_SSRC_COUNT:
+ *
+ * The maximum amount of SSRCs in a BYE packet.
+ */
+#define GST_RTCP_MAX_BYE_SSRC_COUNT   31
+
+/**
  * GST_RTCP_VALID_MASK:
  *
  * Mask for version, padding bit and packet type pair
@@ -216,8 +223,8 @@ gboolean        gst_rtcp_packet_sdes_add_entry        (GstRTCPPacket *packet, Gs
 /* bye packet */
 guint           gst_rtcp_packet_bye_get_ssrc_count     (GstRTCPPacket *packet);
 guint32         gst_rtcp_packet_bye_get_nth_ssrc       (GstRTCPPacket *packet, guint nth);
-void            gst_rtcp_packet_bye_add_ssrc           (GstRTCPPacket *packet, guint32 ssrc);
-void            gst_rtcp_packet_bye_add_ssrcs          (GstRTCPPacket *packet, guint32 *ssrc, guint len);
+gboolean        gst_rtcp_packet_bye_add_ssrc           (GstRTCPPacket *packet, guint32 ssrc);
+gboolean        gst_rtcp_packet_bye_add_ssrcs          (GstRTCPPacket *packet, guint32 *ssrc, guint len);
 guint8          gst_rtcp_packet_bye_get_reason_len     (GstRTCPPacket *packet);
 gchar*          gst_rtcp_packet_bye_get_reason         (GstRTCPPacket *packet);
 gboolean        gst_rtcp_packet_bye_set_reason         (GstRTCPPacket *packet, const gchar *reason);

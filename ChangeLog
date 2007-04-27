@@ -1,3 +1,14 @@
+2007-04-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c: (gst_rtcp_packet_get_rb),
+	(gst_rtcp_packet_add_rb), (gst_rtcp_packet_sdes_add_item),
+	(gst_rtcp_packet_sdes_add_entry), (gst_rtcp_packet_bye_add_ssrc),
+	(gst_rtcp_packet_bye_add_ssrcs), (get_reason_offset),
+	(gst_rtcp_packet_bye_set_reason):
+	* gst-libs/gst/rtp/gstrtcpbuffer.h:
+	Fix RB block parsing and writing.
+	Add support for constructing BYE packets.
+
 2007-04-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c: (_do_init),
