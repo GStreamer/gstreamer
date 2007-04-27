@@ -1,3 +1,13 @@
+2007-04-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* plugins/elements/gstfilesink.c: (gst_file_sink_uri_set_uri):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_uri_set_uri):
+	Special case the "file://" URI as as this is used by some
+	applications to test with gst_element_make_from_uri if there's
+	an element that supports the URI protocol.
+	Also move the g_path_is_absolute() check for the location part
+	of the URI to also check this for "file://localhost/bla" URIs.
+
 2007-04-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:

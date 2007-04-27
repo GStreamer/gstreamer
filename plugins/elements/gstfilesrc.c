@@ -1074,14 +1074,20 @@ gst_file_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
      * "location" with uri + 16 because it provides unescaping */
     location = gst_uri_get_location (tmp);
     g_free (tmp);
+  } else if (strcmp (uri, "file://") == 0) {
+    /* Special case for "file://" as this is used by some applications
+     *  to test with gst_element_make_from_uri if there's an element
+     *  that supports the URI protocol. */
+    return TRUE;
   } else {
     location = gst_uri_get_location (uri);
-    if (!location)
-      return FALSE;
-    if (!g_path_is_absolute (location)) {
-      g_free (location);
-      return FALSE;
-    }
+  }
+
+  if (!location)
+    return FALSE;
+  if (!g_path_is_absolute (location)) {
+    g_free (location);
+    return FALSE;
   }
 
   ret = gst_file_src_set_location (src, location);
