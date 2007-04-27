@@ -134,7 +134,7 @@ typedef struct {
  * a network partition.
  */
 #define RTP_STATS_MIN_INTERVAL      5.0
- /*
+/*
  * Fraction of the RTCP bandwidth to be shared among active
  * senders.  (This fraction was chosen so that in a typical
  * session with one or two active senders, the computed report
@@ -144,6 +144,12 @@ typedef struct {
  */
 #define RTP_STATS_SENDER_FRACTION       (0.25)
 #define RTP_STATS_RECEIVER_FRACTION     (1.0 - RTP_STATS_SENDER_FRACTION)
+
+/*
+ * When receiving a BYE from a source, remove the source fomr the database
+ * after this timeout.
+ */
+#define RTP_STATS_BYE_TIMEOUT           (2 * GST_SECOND)
 
 /**
  * RTPSessionStats:
@@ -156,16 +162,17 @@ typedef struct {
   gdouble       receiver_fraction;
   gdouble       rtcp_bandwidth;
   gdouble       min_interval;
+  GstClockTime  bye_timeout;
   guint         sender_sources;
   guint         active_sources;
   guint         avg_rtcp_packet_size;
-  guint         avg_bye_packet_size;
-  gboolean      sent_rtcp;
+  guint         bye_members;
 } RTPSessionStats;
 
 void           rtp_stats_init_defaults               (RTPSessionStats *stats);
 
-gdouble        rtp_stats_calculate_rtcp_interval    (RTPSessionStats *stats, gboolean sender);
-gdouble        rtp_stats_add_rtcp_jitter            (RTPSessionStats *stats, gdouble interval);
+GstClockTime   rtp_stats_calculate_rtcp_interval    (RTPSessionStats *stats, gboolean sender, gboolean first);
+GstClockTime   rtp_stats_add_rtcp_jitter            (RTPSessionStats *stats, GstClockTime interval);
+GstClockTime   rtp_stats_calculate_bye_interval     (RTPSessionStats *stats);
 
 #endif /* __RTP_STATS_H__ */
