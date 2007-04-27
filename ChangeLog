@@ -1,5 +1,14 @@
 2007-04-27  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsturi.c: (get_element_factories_from_uri_protocol),
+	(gst_uri_protocol_is_supported), (gst_element_make_from_uri):
+	* gst/gsturi.h:
+	API: Add gst_uri_protocol_is_supported(), which checks if an sink
+	or src that supports a given URI protocol exists.
+
+2007-04-27  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* plugins/elements/gstfilesink.c: (gst_file_sink_uri_set_uri):
 	* plugins/elements/gstfilesrc.c: (gst_file_src_uri_set_uri):
 	Set the location to NULL if "file://" is set as URI. Otherwise

@@ -458,7 +458,7 @@ gst_uri_construct (const gchar * protocol, const gchar * location)
 typedef struct
 {
   GstURIType type;
-  gchar *protocol;
+  const gchar *protocol;
 }
 SearchEntry;
 
@@ -502,6 +502,50 @@ sort_by_rank (gconstpointer a, gconstpointer b)
       gst_plugin_feature_get_rank (first);
 }
 
+static GList *
+get_element_factories_from_uri_protocol (const GstURIType type,
+    const gchar * protocol)
+{
+  GList *possibilities;
+  SearchEntry entry;
+
+  g_return_val_if_fail (protocol, NULL);
+
+  entry.type = type;
+  entry.protocol = protocol;
+  possibilities = gst_registry_feature_filter (gst_registry_get_default (),
+      search_by_entry, FALSE, &entry);
+
+  return possibilities;
+}
+
+/**
+ * gst_uri_protocol_is_supported:
+ * @type: Wether to check for a source or a sink
+ * @protocol: Protocol that should be checkd for.
+ *
+ * Checks if an element exists that supports the given URI protocol.
+ *
+ * Returns: TRUE
+ *
+ * Since: 0.10.13
+*/
+gboolean
+gst_uri_protocol_is_supported (const GstURIType type, const gchar * protocol)
+{
+  GList *possibilities;
+
+  g_return_val_if_fail (protocol, FALSE);
+
+  possibilities = get_element_factories_from_uri_protocol (type, protocol);
+
+  if (possibilities) {
+    g_list_free (possibilities);
+    return TRUE;
+  } else
+    return FALSE;
+}
+
 /**
  * gst_element_make_from_uri:
  * @type: Wether to create a source or a sink
@@ -517,17 +561,15 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
     const gchar * elementname)
 {
   GList *possibilities, *walk;
-  SearchEntry entry;
+  gchar *protocol;
   GstElement *ret = NULL;
 
   g_return_val_if_fail (GST_URI_TYPE_IS_VALID (type), NULL);
   g_return_val_if_fail (gst_uri_is_valid (uri), NULL);
 
-  entry.type = type;
-  entry.protocol = gst_uri_get_protocol (uri);
-  possibilities = gst_registry_feature_filter (gst_registry_get_default (),
-      search_by_entry, FALSE, &entry);
-  g_free (entry.protocol);
+  protocol = gst_uri_get_protocol (uri);
+  possibilities = get_element_factories_from_uri_protocol (type, protocol);
+  g_free (protocol);
 
   if (!possibilities) {
     GST_DEBUG ("No %s for URI '%s'", type == GST_URI_SINK ? "sink" : "source",

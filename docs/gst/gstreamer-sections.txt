@@ -2070,6 +2070,7 @@ GstURIHandlerInterface
 GstURIType
 GST_URI_TYPE_IS_VALID
 gst_uri_protocol_is_valid
+gst_uri_protocol_is_supported
 gst_uri_is_valid
 gst_uri_has_protocol
 gst_uri_get_protocol
