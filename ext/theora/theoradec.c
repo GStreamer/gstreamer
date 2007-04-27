@@ -230,7 +230,7 @@ _theora_granule_frame (GstTheoraDec * dec, gint64 granulepos)
 static GstClockTime
 _theora_granule_time (GstTheoraDec * dec, gint64 granulepos)
 {
-  gint framecount;
+  gint64 framecount;
 
   /* invalid granule results in invalid time */
   if (granulepos == -1)
@@ -936,6 +936,10 @@ theora_dec_push_forward (GstTheoraDec * dec, GstBuffer * buf)
 
         GST_DEBUG_OBJECT (dec, "patch buffer %lld %lld", size, time);
         GST_BUFFER_TIMESTAMP (buffer) = time;
+        /* Next timestamp - this one is duration */
+        GST_BUFFER_DURATION (buffer) =
+            (outtime - gst_util_uint64_scale_int ((size - 1) * GST_SECOND,
+                dec->info.fps_denominator, dec->info.fps_numerator)) - time;
 
         if (dec->discont) {
           GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
@@ -1103,9 +1107,16 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
   if (dec->frame_nr != -1)
     dec->frame_nr++;
   GST_BUFFER_OFFSET_END (out) = dec->frame_nr;
-  GST_BUFFER_DURATION (out) =
-      gst_util_uint64_scale_int (GST_SECOND, dec->info.fps_denominator,
-      dec->info.fps_numerator);
+  if (dec->granulepos != -1) {
+    gint64 cf = _theora_granule_frame (dec, dec->granulepos) + 1;
+
+    GST_BUFFER_DURATION (out) = gst_util_uint64_scale_int (cf * GST_SECOND,
+        dec->info.fps_denominator, dec->info.fps_numerator) - outtime;
+  } else {
+    GST_BUFFER_DURATION (out) =
+        gst_util_uint64_scale_int (GST_SECOND, dec->info.fps_denominator,
+        dec->info.fps_numerator);
+  }
   GST_BUFFER_TIMESTAMP (out) = outtime;
 
   if (dec->segment.rate >= 0.0)
@@ -1190,8 +1201,9 @@ theora_dec_decode_buffer (GstTheoraDec * dec, GstBuffer * buf)
     dec->last_timestamp = -1;
   }
 
-  GST_DEBUG_OBJECT (dec, "header=%02x packetno=%lld, outtime=%" GST_TIME_FORMAT,
-      packet.bytes ? packet.packet[0] : -1, packet.packetno,
+  GST_DEBUG_OBJECT (dec, "header=%02x packetno=%lld, granule pos=%"
+      G_GINT64_FORMAT ", outtime=%" GST_TIME_FORMAT,
+      packet.bytes ? packet.packet[0] : -1, packet.packetno, packet.granulepos,
       GST_TIME_ARGS (dec->last_timestamp));
 
   /* switch depending on packet type. A zero byte packet is always a data

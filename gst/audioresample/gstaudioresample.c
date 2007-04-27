@@ -575,8 +575,6 @@ audioresample_do_output (GstAudioresample * audioresample, GstBuffer * outbuf)
   return GST_FLOW_OK;
 }
 
-/* llabs() is C99, so we might not have it; just use a simple macro... */
-#define LLABS(x) ((x>0)?x:-x)
 static gboolean
 audioresample_check_discont (GstAudioresample * audioresample,
     GstClockTime timestamp)
@@ -592,7 +590,7 @@ audioresample_check_discont (GstAudioresample * audioresample,
     GstClockTimeDiff diff = timestamp -
         (audioresample->prev_ts + audioresample->prev_duration);
 
-    if (LLABS (diff) > GST_SECOND / audioresample->i_rate) {
+    if (ABS (diff) > GST_SECOND / audioresample->i_rate) {
       GST_WARNING_OBJECT (audioresample,
           "encountered timestamp discontinuity of %" G_GINT64_FORMAT, diff);
       return TRUE;

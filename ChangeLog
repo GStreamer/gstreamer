@@ -1,3 +1,12 @@
+2007-04-27  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/theora/theoradec.c: (_theora_granule_time),
+	(theora_dec_push_forward), (theora_handle_data_packet),
+	(theora_dec_decode_buffer): Calculate buffer duration correctly
+	to generate a perfect stream (#433888).
+	* gst/audioresample/gstaudioresample.c:
+	(audioresample_check_discont): Glib provides ABS.
+
 2007-04-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstrtcpbuffer.c: (gst_rtcp_packet_get_rb),
