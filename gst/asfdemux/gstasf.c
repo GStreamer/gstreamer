@@ -31,6 +31,8 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (asfdemux_dbg, "asfdemux", 0, "asf demuxer element");
+
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);

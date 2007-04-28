@@ -77,7 +77,7 @@ GST_STATIC_PAD_TEMPLATE ("video_%02d",
   (flow == ASF_FLOW_NEED_MORE_DATA) ?  \
   "need-more-data" : gst_flow_get_name (flow)
 
-GST_DEBUG_CATEGORY (asf_debug);
+GST_DEBUG_CATEGORY (asfdemux_dbg);
 
 static GstStateChangeReturn gst_asf_demux_change_state (GstElement * element,
     GstStateChange transition);
@@ -128,8 +128,6 @@ gst_asf_demux_base_init (gpointer g_class)
       gst_static_pad_template_get (&gst_asf_demux_sink_template));
 
   gst_element_class_set_details (element_class, &gst_asf_demux_details);
-
-  GST_DEBUG_CATEGORY_INIT (asf_debug, "asfdemux", 0, "asf demuxer element");
 }
 
 static void
