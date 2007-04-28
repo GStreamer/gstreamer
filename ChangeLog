@@ -1,3 +1,10 @@
+2007-04-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Don't build equalizer unless we have core from CVS (it won't
+	  work with earlier versions due to GstChildProxy brokeness).
+	  Also up requirements to last released core/base.
+
 2007-04-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/gstrtpsession.c: (rtcp_thread),

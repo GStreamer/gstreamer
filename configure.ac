@@ -44,8 +44,9 @@ dnl AS_LIBTOOL_TAGS([CXX])
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.11.1
-GSTPB_REQ=0.10.11.1
+dnl *** remove rtpmanager/equalizer stuff below when this is updated
+GST_REQ=0.10.12
+GSTPB_REQ=0.10.12
 
 dnl *** autotools stuff ****
 
@@ -267,8 +268,16 @@ fi
 
 dnl Disable rtpmanager if -base isn't the latest
 dnl remove this when GSTPB_REQ is updated
-if ! pkg-config --atleast-version=0.10.12.1 gstreamer-plugins-base-0.10 ; then
+if ! $PKG_CONFIG --atleast-version=0.10.12.1 gstreamer-plugins-base-0.10 ; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/rtpmanager//`
+  AC_MSG_NOTICE([Not building rtpmanager, requires -base CVS (>= 0.10.12.1)])
+fi
+
+dnl Disable equalizer if we don't have core CVS (won't work otherwise)
+dnl remove this when GST_REQ is updated
+if ! $PKG_CONFIG --atleast-version=0.10.12.1 gstreamer-0.10 ; then
+  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/equalizer//`
+  AC_MSG_NOTICE([Not building equalizer, requires core CVS (>= 0.10.12.1)])
 fi
 
 AC_SUBST(GST_PLUGINS_SELECTED)
