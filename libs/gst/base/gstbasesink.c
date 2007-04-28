@@ -126,7 +126,7 @@
  * The qos property will enable the quality-of-service features of the basesink
  * which gather statistics about the real-time performance of the clock
  * synchronisation. For each buffer received in the sink, statistics are
- * gathered and a QOS event is send upstream with these numbers. This
+ * gathered and a QOS event is sent upstream with these numbers. This
  * information can then be used by upstream elements to reduce their processing
  * rate, for example.
  *

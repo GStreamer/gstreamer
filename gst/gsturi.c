@@ -521,10 +521,12 @@ get_element_factories_from_uri_protocol (const GstURIType type,
 
 /**
  * gst_uri_protocol_is_supported:
- * @type: Wether to check for a source or a sink
- * @protocol: Protocol that should be checkd for.
+ * @type: Whether to check for a source or a sink
+ * @protocol: Protocol that should be checked for (e.g. "http" or "smb")
  *
- * Checks if an element exists that supports the given URI protocol.
+ * Checks if an element exists that supports the given URI protocol. Note
+ * that a positive return value does not imply that a subsequent call to
+ * gst_element_make_from_uri() is guaranteed to work.
  *
  * Returns: TRUE
  *
@@ -548,7 +550,7 @@ gst_uri_protocol_is_supported (const GstURIType type, const gchar * protocol)
 
 /**
  * gst_element_make_from_uri:
- * @type: Wether to create a source or a sink
+ * @type: Whether to create a source or a sink
  * @uri: URI to create an element for
  * @elementname: Name of created element, can be NULL.
  *

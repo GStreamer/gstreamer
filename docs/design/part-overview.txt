@@ -216,8 +216,8 @@ Dataflow and buffers
  automatically and will call the gst_pad_set_caps() function of the element before
  sending the buffer to the element.
 
- Both gst_pad_push() and gst_pad_pull_range() have a return value indicating wether
- the operation succeeded. An error code means that no more data should be send
+ Both gst_pad_push() and gst_pad_pull_range() have a return value indicating whether
+ the operation succeeded. An error code means that no more data should be sent
  to that pad. A source element that initiates the data flow in a thread typically
  pauses the producing thread when this happens.
  

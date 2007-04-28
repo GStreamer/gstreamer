@@ -351,14 +351,14 @@ gst_event_get_structure (GstEvent * event)
 /**
  * gst_event_new_flush_start:
  *
- * Allocate a new flush start event. The flush start event can be send
+ * Allocate a new flush start event. The flush start event can be sent
  * upstream and downstream and travels out-of-bounds with the dataflow.
  *
  * It marks pads as being flushing and will make them return
  * #GST_FLOW_WRONG_STATE when used for data flow with gst_pad_push(),
  * gst_pad_chain(), gst_pad_alloc_buffer(), gst_pad_get_range() and
  * gst_pad_pull_range(). Any event (except a #GST_EVENT_FLUSH_STOP) received
- * on a flushing pad will return %FALSE immediatly.
+ * on a flushing pad will return %FALSE immediately.
  *
  * Elements should unlock any blocking functions and exit their streaming
  * functions as fast as possible when this event is received.
@@ -377,9 +377,9 @@ gst_event_new_flush_start (void)
 /**
  * gst_event_new_flush_stop:
  *
- * Allocate a new flush stop event. The flush start event can be send
+ * Allocate a new flush stop event. The flush stop event can be sent
  * upstream and downstream and travels out-of-bounds with the dataflow.
- * It is typically send after sending a FLUSH_START event to make the
+ * It is typically sent after sending a FLUSH_START event to make the
  * pads accept data again.
  *
  * Elements can process this event synchronized with the dataflow since

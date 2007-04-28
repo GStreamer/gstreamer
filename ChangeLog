@@ -1,3 +1,13 @@
+2007-04-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/design/part-events.txt:
+	* docs/design/part-overview.txt:
+	* gst/gstevent.c:
+	* gst/gsturi.c:
+	* gst/gsturi.h:
+	* libs/gst/base/gstbasesink.c:
+	  Typo fixes; minor docs addition.
+
 2007-04-27  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/gst/gstreamer-sections.txt:
