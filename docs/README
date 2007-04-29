@@ -272,11 +272,15 @@ in the various plugin packages.
      make sure the xinclude is in the source itself instead ?)
   - to rebuild the docs, do:
     make clean
+    make scanobj-update
     make inspect-update
     make
   - examples will only show up using gtk-doc 1.4 or later - it relies on
     merging stuff from .sgml with inline docs.  We might want to change
     this to only get stuff from the source.
+  - you need to commit resulting files to CVS:
+    - changes to *.signals and *.args
+    - new files for your plugin created in inspect/
 
 - to add a plugin to be documented:
   - make sure inspect/ has generated a .xml file for it. If it has not, make
