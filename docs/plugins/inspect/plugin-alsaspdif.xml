@@ -3,7 +3,7 @@
   <description>Alsa plugin for S/PDIF output</description>
   <filename>../../ext/alsaspdif/.libs/libgstalsaspdif.so</filename>
   <basename>libgstalsaspdif.so</basename>
-  <version>0.10.4</version>
+  <version>0.10.4.1</version>
   <license>unknown</license>
   <source>gst-plugins-bad</source>
   <package>gst-plugins-bad</package>
@@ -12,7 +12,7 @@
     <element>
       <name>alsaspdifsink</name>
       <longname>S/PDIF ALSA audiosink</longname>
-      <class>audio/x-iec958</class>
+      <class>Sink/Audio</class>
       <description>Feeds audio to S/PDIF interfaces through the ALSA sound driver</description>
       <author>Martin Soto &lt;martinsoto@users.sourceforge.net&gt;
     Michael Smith &lt;msmith@fluendo.com&gt;</author>

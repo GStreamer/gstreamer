@@ -3,16 +3,16 @@
   <description>Uses nosefart to decode .nsf files</description>
   <filename>../../gst/nsf/.libs/libgstnsf.so</filename>
   <basename>libgstnsf.so</basename>
-  <version>0.10.4</version>
+  <version>0.10.4.1</version>
   <license>GPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
       <name>nsfdec</name>
       <longname>Nsf decoder</longname>
-      <class>Codec/Audio/Decoder</class>
+      <class>Codec/Decoder/Audio</class>
       <description>Using nosefart to decode NSF audio tunes</description>
       <author>Johan Dahlin &lt;johan@gnome.org&gt;</author>
     </element>
