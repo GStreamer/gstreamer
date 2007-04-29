@@ -13,3 +13,62 @@ GstCDAudio *gstcdaudio
 gint  arg1
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstRTPSsrcDemux::new-ssrc-pad</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPSsrcDemux *gstrtpssrcdemux
+guint  arg1
+GstPad *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPSession::request-pt-map</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPPtDemux::new-payload-type</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPPtDemux *gstrtpptdemux
+guint  arg1
+GstPad *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPPtDemux::payload-type-change</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPPtDemux *gstrtpptdemux
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPPtDemux::request-pt-map</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPPtDemux *gstrtpptdemux
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPJitterBuffer::request-pt-map</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPJitterBuffer *gstrtpjitterbuffer
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPBin::request-pt-map</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+

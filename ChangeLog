@@ -1,5 +1,11 @@
 2007-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	  Commit result of running scanobj-update
+
+2007-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* autogen.sh:
 	  Require automake 1.7
 	* ext/alsaspdif/Makefile.am:
