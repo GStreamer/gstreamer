@@ -1,3 +1,8 @@
+2007-04-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c: (gst_rtcp_packet_add_rb):
+	Fix offset bug in generation RR packets.
+
 2007-04-27  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/theora/theoradec.c: (_theora_granule_time),

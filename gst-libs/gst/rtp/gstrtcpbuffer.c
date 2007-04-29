@@ -822,9 +822,9 @@ gst_rtcp_packet_add_rb (GstRTCPPacket * packet, guint32 ssrc,
   /* skip header */
   offset = packet->offset + 4;
   if (packet->type == GST_RTCP_TYPE_RR)
-    offset += 8;
+    offset += 4;
   else
-    offset += 28;
+    offset += 24;
 
   /* move to current index */
   offset += (packet->count * 24);
