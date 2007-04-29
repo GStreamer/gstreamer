@@ -1,3 +1,8 @@
+2007-04-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstutils.c:
+	  Improve docs for gst_element_{link,unlink}.
+
 2007-04-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/design/part-events.txt:
@@ -1161,6 +1166,14 @@
 	  
 	* gst/gstcaps.c:
 	  Fix doc example, framerate is a fraction.
+
+2007-02-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/gst/Makefile.am:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/libs/Makefile.am:
+	  Erm, forgot a bunch of --extra-dir.
 
 2007-02-12  Stefan Kost  <ensonic@users.sf.net>
 

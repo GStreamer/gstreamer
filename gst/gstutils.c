@@ -1651,6 +1651,7 @@ gst_element_link_pads_filtered (GstElement * src, const gchar * srcpadname,
  * Links @src to @dest. The link must be from source to
  * destination; the other direction will not be tried. The function looks for
  * existing pads that aren't linked yet. It will request new pads if necessary.
+ * Such pads need to be released manualy when unlinking.
  * If multiple links are possible, only one is established.
  *
  * Make sure you have added your elements to a bin or pipeline with
@@ -1800,6 +1801,9 @@ gst_element_unlink_many (GstElement * element_1, GstElement * element_2, ...)
  *
  * Unlinks all source pads of the source element with all sink pads
  * of the sink element to which they are linked.
+ *
+ * If the link has been made using gst_element_link(), it could have created an
+ * requestpad, which has to be released using gst_element_release_request_pad().
  */
 void
 gst_element_unlink (GstElement * src, GstElement * dest)
@@ -2417,7 +2421,7 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
  * gst_buffer_copy_metadata(@dest, @src, GST_BUFFER_COPY_TIMESTAMPS).
  *
  * Deprecated: use gst_buffer_copy_metadata() instead, it provides more
- * control. 
+ * control.
  */
 void
 gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
