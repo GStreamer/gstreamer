@@ -550,6 +550,8 @@ gst_udpsrc_update_uri (GstUDPSrc * src)
 {
   g_free (src->uri);
   src->uri = g_strdup_printf ("udp://%s:%d", src->multi_group, src->port);
+
+  GST_DEBUG_OBJECT (src, "updated uri to %s", src->uri);
 }
 
 static gboolean

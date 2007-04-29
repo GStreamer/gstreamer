@@ -478,18 +478,19 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
   /* if its an IP address */
   if (inet_aton (host, &addr)) {
     /* check if its a multicast address */
-    if ((ntohl (addr.s_addr) & 0xe0000000) == 0xe0000000) {
-      GST_DEBUG_OBJECT (sink, "multicast address  detected");
+    if ((ntohl (addr.s_addr) & 0xf0000000) == 0xe0000000) {
+      GST_DEBUG_OBJECT (sink, "multicast address detected");
       client->multi_addr.imr_multiaddr.s_addr = addr.s_addr;
       client->multi_addr.imr_interface.s_addr = INADDR_ANY;
 
       client->theiraddr.sin_addr = client->multi_addr.imr_multiaddr;
 
     } else {
+      GST_DEBUG_OBJECT (sink, "normal address detected");
       client->theiraddr.sin_addr = *((struct in_addr *) &addr);
     }
     /* if init_send has already been called, set sockopts for multicast */
-    if (*client->sock > 0)
+    if (*client->sock > 0 && client->multi_addr.imr_multiaddr.s_addr)
       join_multicast (client);
   }
   /* we dont need to lookup for localhost */

@@ -1,3 +1,12 @@
+2007-04-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_add):
+	Fix multicast detection.
+	Don't try to join a multicast group if the address is not multicast.
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_update_uri):
+	Small debug improvement.
+
 2007-04-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_transport),
