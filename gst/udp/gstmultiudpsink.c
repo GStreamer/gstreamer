@@ -400,6 +400,14 @@ join_multicast (GstUDPClient * client)
     perror ("setsockopt IP_MULTICAST_LOOP\n");
 }
 
+static void
+leave_multicast (GstUDPClient * client)
+{
+  if (setsockopt (*(client->sock), IPPROTO_IP, IP_DROP_MEMBERSHIP,
+          &(client->multi_addr), sizeof (client->multi_addr)) < 0)
+    perror ("setsockopt IP_DROP_MEMBERSHIP\n");
+}
+
 /* create a socket for sending to remote machine */
 static gboolean
 gst_multiudpsink_init_send (GstMultiUDPSink * sink)
@@ -562,6 +570,9 @@ gst_multiudpsink_remove (GstMultiUDPSink * sink, const gchar * host, gint port)
 
   g_get_current_time (&now);
   client->disconnect_time = GST_TIMEVAL_TO_TIME (now);
+
+  if (client->multi_addr.imr_multiaddr.s_addr)
+    leave_multicast (client);
 
   /* Unlock to emit signal before we delete the actual client */
   g_mutex_unlock (sink->client_lock);

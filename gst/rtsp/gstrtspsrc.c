@@ -1341,8 +1341,24 @@ use_no_manager:
     /* configure udpsink back to the server for RTCP messages. */
     {
       GstPad *pad;
+      gint port;
+      gchar *destination, *uri;
 
-      stream->udpsink = gst_element_factory_make ("udpsink", NULL);
+      /* get host and port */
+      if (transport->lower_transport == RTSP_LOWER_TRANS_UDP_MCAST)
+        port = transport->port.max;
+      else
+        port = transport->server_port.max;
+
+      destination = transport->destination;
+      if (destination == NULL)
+        destination = src->addr;
+
+      GST_DEBUG_OBJECT (src, "configure UDP sink for %s:%d", destination, port);
+
+      uri = g_strdup_printf ("udp://%s:%d", destination, port);
+      stream->udpsink = gst_element_make_from_uri (GST_URI_SINK, uri, NULL);
+      g_free (uri);
       if (stream->udpsink == NULL)
         goto no_sink_element;
 
@@ -1352,10 +1368,6 @@ use_no_manager:
 
       /* no sync needed */
       g_object_set (G_OBJECT (stream->udpsink), "sync", FALSE, NULL);
-
-      /* configure host and port */
-      g_object_set (G_OBJECT (stream->udpsink), "host", src->addr, "port",
-          transport->server_port.max, NULL);
 
       gst_object_ref (stream->udpsink);
       gst_bin_add (GST_BIN_CAST (src), stream->udpsink);
@@ -2819,6 +2831,11 @@ close_failed:
 /* RTP-Info is of the format:
  *
  * url=<URL>;[seq=<seqbase>;rtptime=<timebase>] [, url=...]
+ *
+ * rtptime corresponds to the timestamp for the NPT time given in the header 
+ * seqbase corresponds to the next sequence number we received. This number
+ * indicates the first seqnum after the seek and should be used to discard
+ * packets that are from before the seek.
  */
 static gboolean
 gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)

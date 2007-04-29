@@ -1,5 +1,20 @@
 2007-04-29  Wim Taymans  <wim@fluendo.com>
 
+	* gst/udp/gstmultiudpsink.c: (leave_multicast),
+	(gst_multiudpsink_add), (gst_multiudpsink_remove):
+	Add code to drop membership of a multicast group.
+
+	* gst/udp/gstudpsink.c: (gst_udpsink_update_uri),
+	(gst_udpsink_set_uri):
+	Implement URI handler.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_parse_rtpinfo):
+	Use URI handler to make udpsink instace.
+	Improve code to configure port and destination.
+
+2007-04-29  Wim Taymans  <wim@fluendo.com>
+
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_add):
 	Fix multicast detection.
 	Don't try to join a multicast group if the address is not multicast.

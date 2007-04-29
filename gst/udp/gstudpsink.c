@@ -153,10 +153,59 @@ gst_udpsink_finalize (GstUDPSink * udpsink)
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) udpsink);
 }
 
+static void
+gst_udpsink_update_uri (GstUDPSink * sink)
+{
+  g_free (sink->uri);
+  sink->uri = g_strdup_printf ("udp://%s:%d", sink->host, sink->port);
+
+  GST_DEBUG_OBJECT (sink, "updated uri to %s", sink->uri);
+}
+
 static gboolean
 gst_udpsink_set_uri (GstUDPSink * sink, const gchar * uri)
 {
-  return FALSE;
+  gchar *protocol;
+  gchar *location;
+  gchar *colptr;
+
+  protocol = gst_uri_get_protocol (uri);
+  if (strcmp (protocol, "udp") != 0)
+    goto wrong_protocol;
+  g_free (protocol);
+
+  location = gst_uri_get_location (uri);
+  if (!location)
+    return FALSE;
+  colptr = strstr (location, ":");
+
+  gst_multiudpsink_remove (GST_MULTIUDPSINK (sink), sink->host, sink->port);
+
+  if (colptr != NULL) {
+    g_free (sink->host);
+    sink->host = g_strndup (location, colptr - location);
+    sink->port = atoi (colptr + 1);
+  } else {
+    g_free (sink->host);
+    sink->host = g_strdup (location);
+    sink->port = UDP_DEFAULT_PORT;
+  }
+  g_free (location);
+
+  gst_multiudpsink_add (GST_MULTIUDPSINK (sink), sink->host, sink->port);
+
+  gst_udpsink_update_uri (sink);
+
+  return TRUE;
+
+  /* ERRORS */
+wrong_protocol:
+  {
+    g_free (protocol);
+    GST_ELEMENT_ERROR (sink, RESOURCE, READ, (NULL),
+        ("error parsing uri %s: wrong protocol (%s != udp)", uri, protocol));
+    return FALSE;
+  }
 }
 
 static void
@@ -216,6 +265,7 @@ gst_udpsink_uri_get_type (void)
 {
   return GST_URI_SINK;
 }
+
 static gchar **
 gst_udpsink_uri_get_protocols (void)
 {
