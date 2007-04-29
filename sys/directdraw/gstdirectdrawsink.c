@@ -30,9 +30,9 @@
  *
  * <refsect2>
  * <para>
- * DirectdrawSink renders video RGB frames to any win32 window. This element can receive
- * a window ID from the application through the XOverlay interface and will then render
- * video frames in this window.
+ * DirectdrawSink renders video RGB frames to any win32 window. This element
+ * can receive a window ID from the application through the XOverlay interface
+ * and will then render video frames in this window.
  * If no Window ID was provided by the application, the element will create its
  * own internal window and render into it.
  * </para>
@@ -95,7 +95,7 @@ static gboolean gst_directdraw_sink_check_offscreen_surface (GstDirectDrawSink *
 static GstCaps *gst_directdraw_sink_get_ddrawcaps (GstDirectDrawSink *
     ddrawsink);
 static GstCaps
-    *gst_directdraw_sink_create_caps_from_surfacedesc (LPDDSURFACEDESC2 desc);
+    * gst_directdraw_sink_create_caps_from_surfacedesc (LPDDSURFACEDESC2 desc);
 static void gst_directdraw_sink_cleanup (GstDirectDrawSink * ddrawsink);
 static void gst_directdraw_sink_bufferpool_clear (GstDirectDrawSink *
     ddrawsink);
