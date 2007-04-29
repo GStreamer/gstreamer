@@ -1051,7 +1051,8 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
   gst_rtcp_packet_sr_get_sender_info (packet, &senderssrc, &ntptime, &rtptime,
       &packet_count, &octet_count);
 
-  GST_DEBUG ("got SR packet: SSRC %08x", senderssrc);
+  GST_DEBUG ("got SR packet: SSRC %08x, time %" GST_TIME_FORMAT,
+      senderssrc, GST_TIME_ARGS (arrival->time));
 
   source = obtain_source (sess, senderssrc, &created, arrival, FALSE);
 
@@ -1158,7 +1159,8 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
 
       gst_rtcp_packet_sdes_get_entry (packet, &type, &len, &data);
 
-      GST_DEBUG ("entry %d, type %d, len %d, data %s", j, type, len, data);
+      GST_DEBUG ("entry %d, type %d, len %d, data %.*s", j, type, len, len,
+          data);
 
       more_entries = gst_rtcp_packet_sdes_next_entry (packet);
       j++;
@@ -1395,14 +1397,14 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
   GstClockTime result;
 
   if (sess->source->received_bye) {
+    result = rtp_stats_calculate_bye_interval (&sess->stats);
+  } else {
     result = rtp_stats_calculate_rtcp_interval (&sess->stats,
         RTP_SOURCE_IS_SENDER (sess->source), first);
-  } else {
-    result = rtp_stats_calculate_bye_interval (&sess->stats);
   }
 
-  GST_DEBUG ("next deterministic interval: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (result));
+  GST_DEBUG ("next deterministic interval: %" GST_TIME_FORMAT ", first %d",
+      GST_TIME_ARGS (result), first);
 
   if (!deterministic)
     result = rtp_stats_add_rtcp_jitter (&sess->stats, result);
@@ -1495,7 +1497,7 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime time)
       result = GST_CLOCK_TIME_NONE;
     else if (sess->stats.active_sources >= 50)
       /* reconsider BYE if members >= 50 */
-      result = time + calculate_rtcp_interval (sess, FALSE, TRUE);;
+      result = time + calculate_rtcp_interval (sess, FALSE, TRUE);
   } else {
     if (sess->first_rtcp)
       /* we are called for the first time */
@@ -1597,10 +1599,14 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
           extended_max, stats->jitter >> 4);
 
       if (rtp_source_get_last_sr (source, &ntptime, NULL, NULL, NULL, &time)) {
+        GstClockTime diff;
+
         /* LSR is middle bits of the last ntptime */
         LSR = (ntptime >> 16) & 0xffffffff;
+        diff = data->time - time;
+        GST_DEBUG ("last SR time diff %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
         /* DLSR, delay since last SR is expressed in 1/65536 second units */
-        DLSR = gst_util_uint64_scale_int (data->time - time, 65536, GST_SECOND);
+        DLSR = gst_util_uint64_scale_int (diff, 65536, GST_SECOND);
       } else {
         /* No valid SR received, LSR/DLSR are set to 0 then */
         LSR = 0;
