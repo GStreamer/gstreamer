@@ -497,8 +497,6 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
 
   GST_DEBUG_OBJECT (rtpsession, "sending RTCP");
 
-  gst_util_dump_mem (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
-
   if (rtpsession->send_rtcp_src) {
     result = gst_pad_push (rtpsession->send_rtcp_src, buffer);
   } else {

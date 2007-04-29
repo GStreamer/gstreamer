@@ -1,3 +1,15 @@
+2007-04-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_send_rtcp):
+	Remove debug.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_process_sr),
+	(rtp_session_process_sdes), (calculate_rtcp_interval),
+	(rtp_session_next_timeout), (session_report_blocks):
+	* gst/rtpmanager/rtpstats.c: (rtp_stats_calculate_rtcp_interval):
+	Improve debugging
+	Fix interval for BYE/RTCP packets.
+
 2007-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/gst-plugins-bad-plugins.args:

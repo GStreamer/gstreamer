@@ -56,7 +56,6 @@ rtp_stats_calculate_rtcp_interval (RTPSessionStats * stats, gboolean we_send,
   gdouble interval;
   gdouble rtcp_min_time;
 
-
   /* Very first call at application start-up uses half the min
    * delay for quicker notification while still allowing some time
    * before reporting for randomization and to learn about other
