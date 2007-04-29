@@ -1,5 +1,22 @@
 2007-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* autogen.sh:
+	  Require automake 1.7
+	* ext/alsaspdif/Makefile.am:
+	* ext/divx/Makefile.am:
+	* ext/ivorbis/Makefile.am:
+	* ext/musicbrainz/Makefile.am:
+	* ext/neon/Makefile.am:
+	* ext/sdl/Makefile.am:
+	* ext/swfdec/Makefile.am:
+	* ext/theora/Makefile.am:
+	* ext/wavpack/Makefile.am:
+	* ext/xvid/Makefile.am:
+	* gst/modplug/Makefile.am:
+	  Fix up Makefile.am accordingly.
+
+2007-04-29  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* docs/plugins/inspect/plugin-alsaspdif.xml:
 	* docs/plugins/inspect/plugin-bz2.xml:
 	* docs/plugins/inspect/plugin-cdxaparse.xml:

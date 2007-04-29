@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstwavpack.la
 
 libgstwavpack_la_SOURCES = \

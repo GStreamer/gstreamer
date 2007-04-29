@@ -1,4 +1,3 @@
-
 plugin_LTLIBRARIES = libgstivorbis.la
 
 libgstivorbis_la_SOURCES = vorbis.c vorbisfile.c vorbisdec.c
