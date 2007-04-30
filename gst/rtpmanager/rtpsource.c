@@ -453,18 +453,29 @@ GstFlowReturn
 rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer)
 {
   GstFlowReturn result = GST_FLOW_OK;
+  guint len;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
+  len = gst_rtp_buffer_get_payload_len (buffer);
+
   /* we are a sender now */
   src->is_sender = TRUE;
 
+  /* update stats for the SR */
+  src->stats.packets_sent++;
+  src->stats.octets_sent += len;
+
+
   /* push packet */
-  if (src->callbacks.push_rtp)
+  if (src->callbacks.push_rtp) {
+    GST_DEBUG ("pushing RTP packet %u", src->stats.packets_sent);
     result = src->callbacks.push_rtp (src, buffer, src->user_data);
-  else
+  } else {
+    GST_DEBUG ("no callback installed");
     gst_buffer_unref (buffer);
+  }
 
   return result;
 }

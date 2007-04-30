@@ -100,6 +100,7 @@ signal_waiting_threads (AsyncJitterQueue * queue)
 {
   if (async_jitter_queue_length_ts_units_unlocked (queue) >=
       queue->high_threshold * queue->max_queue_length) {
+    GST_DEBUG ("stop buffering");
     queue->buffering = FALSE;
   }
 
@@ -473,6 +474,7 @@ async_jitter_queue_pop_intern_unlocked (AsyncJitterQueue * queue)
 {
   gpointer retval;
   GstBuffer *tail_buffer = NULL;
+  guint tsunits;
 
   if (queue->pop_flushing)
     return NULL;
@@ -485,20 +487,27 @@ async_jitter_queue_pop_intern_unlocked (AsyncJitterQueue * queue)
       return NULL;
   }
 
-  if (async_jitter_queue_length_ts_units_unlocked (queue) <=
-      queue->low_threshold * queue->max_queue_length
+
+  tsunits = async_jitter_queue_length_ts_units_unlocked (queue);
+
+  GST_DEBUG ("tsunits %u, pops: %u, limit %d", tsunits, queue->pops_remaining,
+      queue->low_threshold * queue->max_queue_length);
+
+  if (tsunits <= queue->low_threshold * queue->max_queue_length
       && queue->pops_remaining == 0) {
     if (!queue->buffering) {
+      GST_DEBUG ("start buffering");
       queue->buffering = TRUE;
       queue->pops_remaining = queue->queue->length;
-    } else {
-      while (!g_queue_peek_tail (queue->queue) || queue->pop_blocking) {
-        queue->waiting_threads++;
-        g_cond_wait (queue->cond, queue->mutex);
-        queue->waiting_threads--;
-        if (queue->pop_flushing)
-          return NULL;
-      }
+    }
+
+    GST_DEBUG ("wait for data");
+    while (!g_queue_peek_tail (queue->queue) || queue->pop_blocking) {
+      queue->waiting_threads++;
+      g_cond_wait (queue->cond, queue->mutex);
+      queue->waiting_threads--;
+      if (queue->pop_flushing)
+        return NULL;
     }
   }
 

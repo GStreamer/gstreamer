@@ -451,6 +451,8 @@ gst_rtp_session_process_rtp (RTPSession * sess, RTPSource * src,
   rtpsession = GST_RTP_SESSION (user_data);
   priv = rtpsession->priv;
 
+  GST_DEBUG_OBJECT (rtpsession, "reading receiving RTP packet");
+
   if (rtpsession->recv_rtp_src) {
     result = gst_pad_push (rtpsession->recv_rtp_src, buffer);
   } else {
@@ -472,6 +474,8 @@ gst_rtp_session_send_rtp (RTPSession * sess, RTPSource * src,
 
   rtpsession = GST_RTP_SESSION (user_data);
   priv = rtpsession->priv;
+
+  GST_DEBUG_OBJECT (rtpsession, "sending RTP packet");
 
   if (rtpsession->send_rtp_src) {
     result = gst_pad_push (rtpsession->send_rtp_src, buffer);
@@ -737,7 +741,7 @@ create_recv_rtp_sink (GstRTPSession * rtpsession)
 
   rtpsession->recv_rtp_sink =
       gst_pad_new_from_static_template (&rtpsession_recv_rtp_sink_template,
-      NULL);
+      "recv_rtp_sink");
   gst_pad_set_chain_function (rtpsession->recv_rtp_sink,
       gst_rtp_session_chain_recv_rtp);
   gst_pad_set_event_function (rtpsession->recv_rtp_sink,
@@ -766,7 +770,7 @@ create_recv_rtcp_sink (GstRTPSession * rtpsession)
 
   rtpsession->recv_rtcp_sink =
       gst_pad_new_from_static_template (&rtpsession_recv_rtcp_sink_template,
-      NULL);
+      "recv_rtcp_sink");
   gst_pad_set_chain_function (rtpsession->recv_rtcp_sink,
       gst_rtp_session_chain_recv_rtcp);
   gst_pad_set_event_function (rtpsession->recv_rtcp_sink,
@@ -795,18 +799,18 @@ create_send_rtp_sink (GstRTPSession * rtpsession)
 
   rtpsession->send_rtp_sink =
       gst_pad_new_from_static_template (&rtpsession_send_rtp_sink_template,
-      NULL);
+      "send_rtp_sink");
   gst_pad_set_chain_function (rtpsession->send_rtp_sink,
       gst_rtp_session_chain_send_rtp);
   gst_pad_set_event_function (rtpsession->send_rtp_sink,
       gst_rtp_session_event_send_rtp_sink);
   gst_pad_set_active (rtpsession->send_rtp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
-      rtpsession->recv_rtcp_sink);
+      rtpsession->send_rtp_sink);
 
   rtpsession->send_rtp_src =
       gst_pad_new_from_static_template (&rtpsession_send_rtp_src_template,
-      NULL);
+      "send_rtp_src");
   gst_pad_set_active (rtpsession->send_rtp_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession), rtpsession->send_rtp_src);
 
@@ -824,7 +828,7 @@ create_send_rtcp_src (GstRTPSession * rtpsession)
 
   rtpsession->send_rtcp_src =
       gst_pad_new_from_static_template (&rtpsession_send_rtcp_src_template,
-      NULL);
+      "send_rtcp_src");
   gst_pad_set_active (rtpsession->send_rtcp_src, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->send_rtcp_src);
