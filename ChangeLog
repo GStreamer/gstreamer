@@ -1,3 +1,38 @@
+2007-04-30  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/async_jitter_queue.c: (signal_waiting_threads),
+	(async_jitter_queue_pop_intern_unlocked):
+	Fix the case where the buffer underruns and does not block.
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_base_init),
+	(create_recv_rtcp), (create_send_rtp), (create_rtcp),
+	(gst_rtp_bin_request_new_pad):
+	Rename RTCP send pad, like in the session manager.
+	Allow getting an RTCP pad for receiving even if we don't receive RTP.
+	fix handling of send_rtp_src pad.
+
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_chain):
+	When no pt map could be found, fall back to the sinkpad caps.
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_process_rtp),
+	(gst_rtp_session_send_rtp), (create_recv_rtp_sink),
+	(create_recv_rtcp_sink), (create_send_rtp_sink),
+	(create_send_rtcp_src):
+	Fix pad names.
+
+	* gst/rtpmanager/rtpsession.c: (source_push_rtp),
+	(rtp_session_create_source), (rtp_session_process_sr),
+	(rtp_session_send_rtp), (session_start_rtcp):
+	* gst/rtpmanager/rtpsession.h:
+	Unlock session when performing a callback.
+	Add callbacks for the internal session object.
+	Fix sending of RTP packets.
+	first attempt at adding NTP times in the SR packets.
+	Small debug and doc improvements.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_send_rtp):
+	Update stats for SR reports.
+
 2007-04-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_send_rtcp):

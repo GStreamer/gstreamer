@@ -258,6 +258,8 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
         &ret);
 
     caps = g_value_get_boxed (&ret);
+    if (caps == NULL)
+      caps = GST_PAD_CAPS (rtpdemux->sink);
     if (!caps)
       goto no_caps;
 

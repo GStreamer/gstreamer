@@ -110,7 +110,7 @@ typedef GstClockTime (*RTPSessionGetTime) (RTPSession *sess, gpointer user_data)
  * @sess: an #RTPSession
  * @user_data: user data specified when registering
  *
- * This callback will be called when @sess needs to cancel the previous timeout. 
+ * This callback will be called when @sess needs to cancel the current timeout. 
  * The currently running timeout should be canceled and a new reporting interval
  * should be requested from @sess.
  */
@@ -122,6 +122,7 @@ typedef void (*RTPSessionReconsider) (RTPSession *sess, gpointer user_data);
  * @RTPSessionSendRTP: callback for sending RTP packets
  * @RTPSessionSendRTCP: callback for sending RTCP packets
  * @RTPSessionGetTime: callback for returning the current time
+ * @RTPSessionReconsider: callback for reconsidering the timeout
  *
  * These callbacks can be installed on the session manager to get notification
  * when RTP and RTCP packets are ready for further processing. These callbacks

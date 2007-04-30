@@ -622,6 +622,7 @@ source_push_rtp (RTPSource * source, GstBuffer * buffer, RTPSession * session)
   if (source == session->source) {
     GST_DEBUG ("source %08x pushed sender RTP packet", source->ssrc);
 
+    RTP_SESSION_UNLOCK (session);
 
     if (session->callbacks.send_rtp)
       result =
@@ -629,8 +630,11 @@ source_push_rtp (RTPSource * source, GstBuffer * buffer, RTPSession * session)
           session->user_data);
     else
       gst_buffer_unref (buffer);
+
   } else {
     GST_DEBUG ("source %08x pushed receiver RTP packet", source->ssrc);
+    RTP_SESSION_UNLOCK (session);
+
     if (session->callbacks.process_rtp)
       result =
           session->callbacks.process_rtp (session, source, buffer,
@@ -638,6 +642,8 @@ source_push_rtp (RTPSource * source, GstBuffer * buffer, RTPSession * session)
     else
       gst_buffer_unref (buffer);
   }
+  RTP_SESSION_LOCK (session);
+
   return result;
 }
 
@@ -877,6 +883,7 @@ rtp_session_create_source (RTPSession * sess)
   }
   source = rtp_source_new (ssrc);
   g_object_ref (source);
+  rtp_source_set_callbacks (source, &callbacks, sess);
   g_hash_table_insert (sess->ssrcs[sess->mask_idx], GINT_TO_POINTER (ssrc),
       source);
   /* we have one more source now */
@@ -1079,6 +1086,8 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
 
     gst_rtcp_packet_get_rb (packet, i, &ssrc, &fractionlost,
         &packetslost, &exthighestseq, &jitter, &lsr, &dlsr);
+
+    GST_DEBUG ("RB %d: %08x, %u", i, ssrc, jitter);
 
     if (ssrc == sess->source->ssrc) {
       /* only deal with report blocks for our session, we update the stats of
@@ -1361,7 +1370,8 @@ ignore:
  * @sess: an #RTPSession
  * @buffer: an RTP buffer
  *
- * Send the RTP buffer in the session manager.
+ * Send the RTP buffer in the session manager. This function takes ownership of
+ * @buffer.
  *
  * Returns: a #GstFlowReturn.
  */
@@ -1375,8 +1385,18 @@ rtp_session_send_rtp (RTPSession * sess, GstBuffer * buffer)
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
+  if (!gst_rtp_buffer_validate (buffer))
+    goto invalid_packet;
+
+  GST_DEBUG ("received RTP packet for sending");
+
   RTP_SESSION_LOCK (sess);
   source = sess->source;
+
+  /* update last activity */
+  if (sess->callbacks.get_time)
+    source->last_rtp_activity =
+        sess->callbacks.get_time (sess, sess->user_data);
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
 
@@ -1388,6 +1408,14 @@ rtp_session_send_rtp (RTPSession * sess, GstBuffer * buffer)
   RTP_SESSION_UNLOCK (sess);
 
   return result;
+
+  /* ERRORS */
+invalid_packet:
+  {
+    gst_buffer_unref (buffer);
+    GST_DEBUG ("invalid RTP packet received");
+    return GST_FLOW_OK;
+  }
 }
 
 static GstClockTime
@@ -1534,13 +1562,22 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
   data->rtcp = gst_rtcp_buffer_new (sess->mtu);
 
   if (RTP_SOURCE_IS_SENDER (own)) {
+    guint64 ntptime;
+    guint32 rtptime;
+
     /* we are a sender, create SR */
     GST_DEBUG ("create SR for SSRC %08x", own->ssrc);
     gst_rtcp_buffer_add_packet (data->rtcp, GST_RTCP_TYPE_SR, packet);
 
-    /* fill in sender report info, FIXME NTP and RTP timestamps missing */
+    /* convert clock time to NTP time */
+    ntptime = gst_util_uint64_scale (data->time, (1LL << 32), GST_SECOND);
+    ntptime += (2208988800LL << 32);
+
+    rtptime = 0;
+
+    /* fill in sender report info, FIXME RTP timestamps missing */
     gst_rtcp_packet_sr_set_sender_info (packet, own->ssrc,
-        0, 0, own->stats.packets_sent, own->stats.octets_sent);
+        ntptime, rtptime, own->stats.packets_sent, own->stats.octets_sent);
   } else {
     /* we are only receiver, create RR */
     GST_DEBUG ("create RR for SSRC %08x", own->ssrc);
