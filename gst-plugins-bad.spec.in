@@ -122,7 +122,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_OPENGL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstglimagesink.so
 @USE_MUSICBRAINZ_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttrm.so
 # @USE_POLYP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libpolypaudio.so
-@USE_SDL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsdlvideosink.so
+@USE_SDL_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsdl.so
 @USE_SWFDEC_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstswfdec.so
 @USE_LIBMMS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmms.so
 @USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
