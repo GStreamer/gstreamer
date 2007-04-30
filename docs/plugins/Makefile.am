@@ -122,7 +122,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/sys/oss/gstossmixerelement.h \
 	$(top_srcdir)/sys/oss/gstosssrc.h \
 	$(top_srcdir)/sys/oss/gstosssink.h \
-        $(top_srcdir)/sys/v4l2/gstv4l2src.h \
+	$(top_srcdir)/sys/v4l2/gstv4l2src.h \
 	$(top_srcdir)/sys/ximage/gstximagesrc.h
 
 # example code that needs to be converted to xml and placed in xml/

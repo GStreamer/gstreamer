@@ -1,3 +1,12 @@
+2007-04-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	  Remove v4l2src from docs, since it breaks the docs build, and the
+	  plugin is only built if --enable-experimental is used anyway.
+
+	* docs/plugins/Makefile.am:
+	  Spaces => tab.
+
 2007-04-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/gstmultiudpsink.c: (leave_multicast),
