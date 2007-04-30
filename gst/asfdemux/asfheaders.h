@@ -20,6 +20,8 @@
 #ifndef __ASFHEADERS_H__
 #define __ASFHEADERS_H__
 
+G_BEGIN_DECLS
+
 typedef struct {
   guint32 v1;
   guint32 v2;
@@ -68,17 +70,17 @@ typedef enum {
   ASF_OBJ_MARKER
 } AsfObjectID;
 
-enum {
+typedef enum {
   ASF_STREAM_UNDEFINED = 0,
   ASF_STREAM_VIDEO,
   ASF_STREAM_AUDIO
-};
+} AsfStreamType;
 
-enum {
+typedef enum {
   ASF_CORRECTION_UNDEFINED = 0,
   ASF_CORRECTION_ON,
   ASF_CORRECTION_OFF
-};
+} AsfCorrectionType;
 
 extern const ASFGuidHash asf_correction_guids[];
 
@@ -92,43 +94,6 @@ guint32        gst_asf_identify_guid (const ASFGuidHash * guids,
 
 const gchar   *gst_asf_get_guid_nick (const ASFGuidHash * guids,
                                       guint32             obj_id);
-
-struct _asf_obj_ext_stream_properties {
-  guint64  start_time;
-  guint64  end_time;
-  guint64  avg_time_per_frame;
-  guint32  data_bitrate;
-  guint32  buffer_size;
-  guint32  intial_buf_fullness;
-  guint32  data_bitrate2;
-  guint32  buffer_size2;
-  guint32  intial_buf_fullness2;
-  guint32  max_obj_size;
-  guint32  flags;
-  guint16  stream_num;
-  guint16  lang_idx;
-  /* missing: stream names */
-  /* missing: payload extension system stuff */
-
-  /* for delayed processing of these stream objects */
-  guint8   *stream_obj_data;
-  guint64   stream_obj_len;
-};
-
-typedef struct _asf_obj_ext_stream_properties asf_obj_ext_stream_properties;
-
-struct _asf_obj_stream {
-  ASFGuid type;
-  ASFGuid correction;
-  guint64 time_offset;
-  guint32 type_specific_size;
-  guint32 stream_specific_size;
-  guint8  id;
-  guint8  encrypted;
-  guint32 unknown2;
-};
-
-typedef struct _asf_obj_stream asf_obj_stream;
 
 struct _asf_stream_audio {
   guint16 codec_tag;
@@ -197,5 +162,7 @@ struct _asf_segment_info {
 };
 
 typedef struct _asf_segment_info asf_segment_info;
+
+G_END_DECLS
 
 #endif /* __ASFHEADERS_H__ */

@@ -1,3 +1,19 @@
+2007-04-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_free_stream),
+	(gst_asf_demux_reset), (gst_asf_demux_parse_data_object_start),
+	(gst_asf_demux_loop), (gst_asf_demux_setup_pad),
+	(gst_asf_demux_add_audio_stream), (gst_asf_demux_activate_stream),
+	(gst_asf_demux_parse_stream_object),
+	(gst_asf_demux_process_ext_stream_props),
+	(gst_asf_demux_process_queued_extended_stream_objects),
+	(gst_asf_demux_activate_ext_props_streams),
+	(gst_asf_demux_process_object):
+	* gst/asfdemux/gstasfdemux.h:
+	  Refactor stream parse/activation a bit (stream activation heuristics
+	  are still the same though); some more clean-ups.
+
 2007-04-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* win32/common/.cvsignore:

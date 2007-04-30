@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
+#include "asfheaders.h"
+
 G_BEGIN_DECLS
   
 #define GST_TYPE_ASF_DEMUX \
@@ -45,6 +47,31 @@ typedef struct _GstASFDemuxClass GstASFDemuxClass;
 
 typedef struct
 {
+  gboolean        valid;               /* TRUE if structure is valid/filled */
+
+  GstClockTime    start_time;
+  GstClockTime    end_time;
+  GstClockTime    avg_time_per_frame;
+  guint32         data_bitrate;
+  guint32         buffer_size;
+  guint32         intial_buf_fullness;
+  guint32         data_bitrate2;
+  guint32         buffer_size2;
+  guint32         intial_buf_fullness2;
+  guint32         max_obj_size;
+  guint32         flags;
+  guint16         lang_idx;
+
+  /* missing: stream names */
+  /* missing: payload extension system stuff */
+} AsfStreamExtProps;
+
+typedef struct
+{
+  AsfStreamType      type;
+
+  gboolean           active;  /* if the stream has been activated (pad added) */
+
   GstPad     *pad;
   guint16     id;
   guint32     frag_offset;
@@ -69,6 +96,9 @@ typedef struct
   /* for new parsing code */
   GstFlowReturn   last_flow; /* last flow return */
   GArray         *payloads;  /* pending payloads */
+
+  /* extended stream properties (optional) */
+  AsfStreamExtProps  ext_props;
 
 } AsfStream;
 
@@ -103,8 +133,8 @@ struct _GstASFDemux {
   gchar              **languages;
   guint                num_languages;
 
-  GSList              *ext_stream_props;
-  GSList              *mut_ex_streams; /* mutually exclusive streams */
+  GSList              *ext_stream_props; /* for delayed processing (buffers) */
+  GSList              *mut_ex_streams;   /* mutually exclusive streams */
 
   guint32              num_audio_streams;
   guint32              num_video_streams;
