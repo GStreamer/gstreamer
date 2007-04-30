@@ -114,6 +114,9 @@ asf_payload_find_previous_fragment (AsfPayload * payload, AsfStream * stream)
   return ret;
 }
 
+/* TODO: if we have another payload already queued for this stream and that
+ * payload doesn't have a duration, maybe we can calculate a duration for it
+ * (if the previous timestamp is smaller etc. etc.) */
 static void
 gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
     AsfStream * stream)
@@ -142,6 +145,38 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
   g_array_append_vals (stream->payloads, payload, 1);
 }
 
+static void
+asf_payload_parse_replicated_data_extensions (AsfStream * stream,
+    AsfPayload * payload)
+{
+  AsfPayloadExtension *ext;
+  guint off;
+
+  if (!stream->ext_props.valid || stream->ext_props.payload_extensions == NULL)
+    return;
+
+  off = 8;
+  for (ext = stream->ext_props.payload_extensions; ext->len > 0; ++ext) {
+    if (off + ext->len > payload->rep_data_len) {
+      GST_WARNING ("not enough replicated data for defined extensions");
+      return;
+    }
+    switch (ext->id) {
+      case ASF_PAYLOAD_EXTENSION_DURATION:
+        if (ext->len == 2) {
+          payload->duration =
+              GST_READ_UINT16_LE (payload->rep_data + off) * GST_MSECOND;
+        } else {
+          GST_WARNING ("unexpected DURATION extensions len %u", ext->len);
+        }
+        break;
+      default:
+        break;
+    }
+    off += ext->len;
+  }
+}
+
 static gboolean
 gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
     gint lentype, const guint8 ** p_data, guint * p_size)
@@ -162,6 +197,9 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
 
   *p_data += 1;
   *p_size -= 1;
+
+  payload.ts = GST_CLOCK_TIME_NONE;
+  payload.duration = GST_CLOCK_TIME_NONE;
 
   payload.mo_number =
       asf_packet_read_varlen_int (packet->prop_flags, 4, p_data, p_size);
@@ -218,19 +256,19 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
   }
 
   if (!is_compressed) {
-    GstClockTime ts = GST_CLOCK_TIME_NONE;
-
     GST_LOG_OBJECT (demux, "replicated data length: %u", payload.rep_data_len);
 
     if (payload.rep_data_len >= 8) {
       payload.mo_size = GST_READ_UINT32_LE (payload.rep_data);
-      ts = GST_READ_UINT32_LE (payload.rep_data + 4) * GST_MSECOND;
-      ts -= demux->preroll * GST_MSECOND;
+      payload.ts = GST_READ_UINT32_LE (payload.rep_data + 4) * GST_MSECOND;
+      payload.ts -= demux->preroll * GST_MSECOND;
+      asf_payload_parse_replicated_data_extensions (stream, &payload);
 
       GST_LOG_OBJECT (demux, "media object size   : %u", payload.mo_size);
       GST_LOG_OBJECT (demux, "media object ts     : %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (ts));
-      /* TODO: parse payload extensions, if there are any */
+          GST_TIME_ARGS (payload.ts));
+      GST_LOG_OBJECT (demux, "media object dur    : %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (payload.duration));
     } else if (payload.rep_data_len != 0) {
       GST_WARNING_OBJECT (demux, "invalid replicated data length, very bad");
     }
@@ -260,7 +298,6 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
         }
         payload.buf = NULL;
       } else {
-        GST_BUFFER_TIMESTAMP (payload.buf) = ts;
         gst_asf_payload_queue_for_stream (demux, &payload, stream);
       }
     }
@@ -298,8 +335,9 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
       payload.buf = asf_packet_create_payload_buffer (packet,
           &payload_data, &payload_len, sub_payload_len);
 
-      GST_BUFFER_TIMESTAMP (payload.buf) = ts;
-      GST_BUFFER_DURATION (payload.buf) = ts_delta;
+      payload.ts = ts;
+      payload.duration = ts_delta;
+
       gst_asf_payload_queue_for_stream (demux, &payload, stream);
 
       ts += ts_delta;

@@ -161,6 +161,14 @@ gst_asf_demux_free_stream (GstASFDemux * demux, AsfStream * stream)
       gst_object_unref (stream->pad);
     stream->pad = NULL;
   }
+  if (stream->payloads) {
+    g_array_free (stream->payloads, TRUE);
+    stream->payloads = NULL;
+  }
+  if (stream->ext_props.valid) {
+    g_free (stream->ext_props.payload_extensions);
+    stream->ext_props.payload_extensions = NULL;
+  }
 }
 
 static void
@@ -972,6 +980,9 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux)
 
       gst_buffer_set_caps (payload->buf, stream->caps);
 
+      GST_BUFFER_TIMESTAMP (payload->buf) = payload->ts;
+      GST_BUFFER_DURATION (payload->buf) = payload->duration;
+
       /* FIXME: we should really set durations on buffers if we can */
       /* (this is a hack, obviously) 
          if (strncmp (GST_PAD_NAME (stream->pad), "video", 5) == 0 &&
@@ -981,7 +992,9 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux)
        */
 
       GST_LOG_OBJECT (stream->pad, "pushing buffer, ts=%" GST_TIME_FORMAT
-          ", size=%u", GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (payload->buf)),
+          ", dur=%" GST_TIME_FORMAT " size=%u",
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (payload->buf)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (payload->buf)),
           GST_BUFFER_SIZE (payload->buf));
 
       stream->last_flow = gst_pad_push (stream->pad, payload->buf);
@@ -2329,7 +2342,7 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
   AsfStream *stream = NULL;
   AsfObject stream_obj;
   guint16 stream_name_count;
-  guint16 payload_ext_sys_count;
+  guint16 num_payload_ext;
   guint64 len;
   guint8 *stream_obj_data = NULL;
   guint8 *data_start = data;
@@ -2354,7 +2367,7 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
   esp.lang_idx = gst_asf_demux_get_uint16 (&data, &size);
   esp.avg_time_per_frame = gst_asf_demux_get_uint64 (&data, &size) * 100;
   stream_name_count = gst_asf_demux_get_uint16 (&data, &size);
-  payload_ext_sys_count = gst_asf_demux_get_uint16 (&data, &size);
+  num_payload_ext = gst_asf_demux_get_uint16 (&data, &size);
 
   GST_INFO ("start_time             = %" GST_TIME_FORMAT,
       GST_TIME_ARGS (esp.start_time));
@@ -2384,16 +2397,31 @@ gst_asf_demux_process_ext_stream_props (GstASFDemux * demux, guint8 * data,
   }
 
   /* read payload extension systems stuff */
-  GST_LOG ("payload ext sys count = %u", payload_ext_sys_count);
-  for (i = 0; i < payload_ext_sys_count; ++i) {
+  GST_LOG ("payload extension systems count = %u", num_payload_ext);
+
+  if (num_payload_ext > 0)
+    esp.payload_extensions = g_new0 (AsfPayloadExtension, num_payload_ext + 1);
+  else
+    esp.payload_extensions = NULL;
+
+  for (i = 0; i < num_payload_ext; ++i) {
+    AsfPayloadExtension ext;
+    ASFGuid ext_guid;
     guint32 sys_info_len;
 
-    if (!gst_asf_demux_skip_bytes (16 + 2, &data, &size) || size < 4)
+    if (size < 16 + 2 + 4)
       goto not_enough_data;
+
+    gst_asf_demux_get_guid (&ext_guid, &data, &size);
+    ext.id = gst_asf_demux_identify_guid (asf_payload_ext_guids, &ext_guid);
+    ext.len = gst_asf_demux_get_uint16 (&data, &size);
+
     sys_info_len = gst_asf_demux_get_uint32 (&data, &size);
     GST_LOG ("payload systems info len = %u", sys_info_len);
     if (!gst_asf_demux_skip_bytes (sys_info_len, &data, &size))
       goto not_enough_data;
+
+    esp.payload_extensions[i] = ext;
   }
 
   GST_LOG ("bytes read: %u/%u", (guint) (data - data_start), obj_size);

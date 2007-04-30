@@ -82,6 +82,13 @@ typedef enum {
   ASF_CORRECTION_OFF
 } AsfCorrectionType;
 
+typedef enum {
+  ASF_PAYLOAD_EXTENSION_UNDEFINED = 0,
+  ASF_PAYLOAD_EXTENSION_DURATION
+} AsfPayloadExtensionID;
+
+extern const ASFGuidHash asf_payload_ext_guids[];
+
 extern const ASFGuidHash asf_correction_guids[];
 
 extern const ASFGuidHash asf_stream_guids[];

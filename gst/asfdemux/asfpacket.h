@@ -34,7 +34,8 @@ typedef struct {
   guint         mo_size;           /* size of media-object-to-be, or 0       */
   guint         rep_data_len;      /* should never be more than 256, since   */
   guint8        rep_data[256];     /* the length should be stored in a byte  */
-  /* GstClockTime  duration; */    /* TODO:get from payload extension system */
+  GstClockTime  ts;
+  GstClockTime  duration;          /* is not always available                */
   GstBuffer    *buf;
 } AsfPayload;
 

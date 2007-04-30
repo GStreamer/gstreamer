@@ -21,6 +21,15 @@
 
 #include "asfheaders.h"
 
+const ASFGuidHash asf_payload_ext_guids[] = {
+  {ASF_PAYLOAD_EXTENSION_DURATION, "ASF_PAYLOAD_EXTENSION_DURATION",
+        {0xC6BD9450, 0x4907867F, 0x79C7A383, 0xAD33B721}
+      },
+  {ASF_PAYLOAD_EXTENSION_UNDEFINED, "ASF_PAYLOAD_EXTENSION_UNDEFINED",
+        {0, 0, 0, 0}
+      }
+};
+
 const ASFGuidHash asf_correction_guids[] = {
   {ASF_CORRECTION_ON, "ASF_CORRECTION_ON",
         {0xBFC3CD50, 0x11CF618F, 0xAA00B28B, 0x20E2B400}

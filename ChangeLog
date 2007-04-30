@@ -1,5 +1,20 @@
 2007-04-30  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/asfdemux/asfheaders.c:
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/asfpacket.c:
+	(asf_payload_parse_replicated_data_extensions),
+	(gst_asf_demux_parse_payload):
+	* gst/asfdemux/asfpacket.h:
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_free_stream),
+	(gst_asf_demux_push_complete_payloads),
+	(gst_asf_demux_process_ext_stream_props):
+	* gst/asfdemux/gstasfdemux.h:
+	  Implement payload extension system/extended replicated data parsing,
+	  so we can extract payload durations if they're specified.
+
+2007-04-30  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/asfdemux/asfheaders.h:
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_free_stream),
 	(gst_asf_demux_reset), (gst_asf_demux_parse_data_object_start),

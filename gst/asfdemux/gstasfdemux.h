@@ -45,6 +45,12 @@ GST_DEBUG_CATEGORY_EXTERN (asfdemux_dbg);
 typedef struct _GstASFDemux GstASFDemux;
 typedef struct _GstASFDemuxClass GstASFDemuxClass;
 
+typedef struct {
+  AsfPayloadExtensionID   id : 16;  /* extension ID; the :16 makes sure the
+                                     * struct gets packed into 4 bytes       */
+  guint16                 len;      /* save this so we can skip unknown IDs  */
+} AsfPayloadExtension;
+
 typedef struct
 {
   gboolean        valid;               /* TRUE if structure is valid/filled */
@@ -62,8 +68,11 @@ typedef struct
   guint32         flags;
   guint16         lang_idx;
 
+  /* may be NULL if there are no extensions; otherwise, terminated by
+   * an AsfPayloadExtension record with len 0 */
+  AsfPayloadExtension  *payload_extensions;
+
   /* missing: stream names */
-  /* missing: payload extension system stuff */
 } AsfStreamExtProps;
 
 typedef struct
