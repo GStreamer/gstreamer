@@ -1,3 +1,12 @@
+2007-05-01  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Sjoerd Simons <sjoerd at luon dot net>
+
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_init),
+	(gst_rtp_mp4v_pay_empty), (gst_rtp_mp4v_pay_event):
+	* gst/rtp/gstrtpmp4vpay.h:
+	Handle NEWSEGMENT and FLUSH events. Fixes #434824.
+
 2007-04-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:

@@ -52,6 +52,8 @@ struct _GstRtpMP4VPay
   gint          profile;
   GstBuffer    *config;
   gboolean      send_config;
+
+  GstPadEventFunction old_event_func;
 };
 
 struct _GstRtpMP4VPayClass

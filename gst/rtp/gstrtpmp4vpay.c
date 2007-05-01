@@ -84,6 +84,7 @@ static gboolean gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
 static GstFlowReturn gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload *
     payload, GstBuffer * buffer);
+static gboolean gst_rtp_mp4v_pay_event (GstPad * pad, GstEvent * event);
 
 static GstBaseRTPPayloadClass *parent_class = NULL;
 
@@ -159,10 +160,17 @@ gst_rtp_mp4v_pay_class_init (GstRtpMP4VPayClass * klass)
 static void
 gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay)
 {
+  GstPad *sinkpad;
+
   rtpmp4vpay->adapter = gst_adapter_new ();
   rtpmp4vpay->rate = 90000;
   rtpmp4vpay->profile = 1;
   rtpmp4vpay->send_config = DEFAULT_SEND_CONFIG;
+
+  sinkpad = GST_BASE_RTP_PAYLOAD_SINKPAD (rtpmp4vpay);
+
+  rtpmp4vpay->old_event_func = sinkpad->eventfunc;
+  gst_pad_set_event_function (sinkpad, gst_rtp_mp4v_pay_event);
 }
 
 static void
@@ -241,6 +249,12 @@ gst_rtp_mp4v_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
 
 done:
   return TRUE;
+}
+
+static void
+gst_rtp_mp4v_pay_empty (GstRtpMP4VPay * rtpmp4vpay)
+{
+  gst_adapter_clear (rtpmp4vpay->adapter);
 }
 
 static GstFlowReturn
@@ -448,6 +462,34 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* push new data */
   gst_adapter_push (rtpmp4vpay->adapter, buffer);
   rtpmp4vpay->duration += duration;
+
+  return ret;
+}
+
+static gboolean
+gst_rtp_mp4v_pay_event (GstPad * pad, GstEvent * event)
+{
+  GstRtpMP4VPay *rtpmp4vpay;
+  gboolean ret;
+
+  rtpmp4vpay = GST_RTP_MP4V_PAY (gst_pad_get_parent (pad));
+
+  GST_DEBUG ("Got event: %s", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      gst_rtp_mp4v_pay_flush (rtpmp4vpay);
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_mp4v_pay_empty (rtpmp4vpay);
+      break;
+    default:
+      break;
+  }
+
+  ret = rtpmp4vpay->old_event_func (pad, event);
+
+  g_object_unref (rtpmp4vpay);
 
   return ret;
 }
