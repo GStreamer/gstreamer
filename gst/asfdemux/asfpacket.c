@@ -357,13 +357,15 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
         return FALSE;
       }
 
-      payload.buf = asf_packet_create_payload_buffer (packet,
-          &payload_data, &payload_len, sub_payload_len);
+      if (sub_payload_len > 0) {
+        payload.buf = asf_packet_create_payload_buffer (packet,
+            &payload_data, &payload_len, sub_payload_len);
 
-      payload.ts = ts;
-      payload.duration = ts_delta;
+        payload.ts = ts;
+        payload.duration = ts_delta;
 
-      gst_asf_payload_queue_for_stream (demux, &payload, stream);
+        gst_asf_payload_queue_for_stream (demux, &payload, stream);
+      }
 
       ts += ts_delta;
     }
@@ -452,6 +454,13 @@ gst_asf_demux_parse_packet (GstASFDemux * demux, GstBuffer * buf)
     goto short_packet;
 
   size -= packet.padding;
+
+  /* adjust available size for parsing if there's less actual packet data for
+   * parsing than there is data in bytes (for sample see bug 431318) */
+  if (packet.length != 0 && packet.length < demux->packet_size) {
+    GST_LOG_OBJECT (demux, "shortened packet, adjusting available data size");
+    size -= (demux->packet_size - packet.length);
+  }
 
   if (has_multiple_payloads) {
     guint i, num, lentype;

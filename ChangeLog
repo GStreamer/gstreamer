@@ -1,5 +1,15 @@
 2007-05-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/asfdemux/asfpacket.c: (gst_asf_demux_parse_payload),
+	(gst_asf_demux_parse_packet):
+	  If packet size is specified within the packet and smaller than
+	  the actual packet size, don't parse beyond the size specified in
+	  the packet (this makes us parse some cases of packets with single
+	  compressed payloads cleanly, see e.g stream from #431318). Also
+	  add a sanity check when parsing compressed single payloads.
+
+2007-05-01  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/asfdemux/asfpacket.c: (gst_asf_payload_queue_for_stream):
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_seek_index_lookup),
 	(gst_asf_demux_handle_seek_event),
