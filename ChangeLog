@@ -1,3 +1,14 @@
+2007-05-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/asfpacket.c: (gst_asf_payload_queue_for_stream):
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_seek_index_lookup),
+	(gst_asf_demux_handle_seek_event),
+	(gst_asf_demux_push_complete_payloads):
+	  Seeking improvements: honour the KEY_UNIT seek flag; after a seek, only
+	  send data from the keyframe right before the new segment start to
+	  make sure the decoder doesn't have to decode more than absolutely
+	  necessary.
+
 2007-04-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/asfheaders.c:

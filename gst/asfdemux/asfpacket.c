@@ -142,6 +142,31 @@ gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
     GST_BUFFER_FLAG_SET (payload->buf, GST_BUFFER_FLAG_DISCONT);
   }
 
+  /* If we're about to queue a key frame that is before the segment start, we
+   * can ditch any previously queued payloads (which would also be before the
+   * segment start). This makes sure the decoder doesn't decode more than
+   * absolutely necessary after a seek (we don't push out payloads that are
+   * before the segment start until we have at least one that falls within the
+   * segment) */
+  if (GST_CLOCK_TIME_IS_VALID (payload->ts) &&
+      payload->ts < demux->segment.start && payload->keyframe) {
+    GST_DEBUG_OBJECT (demux, "Queueing keyframe before segment start, removing"
+        " %u previously-queued payloads, which would be out of segment too and"
+        " hence don't have to be decoded", stream->payloads->len);
+    while (stream->payloads->len > 0) {
+      AsfPayload *last;
+      guint idx_last;
+
+      idx_last = stream->payloads->len - 1;
+      last = &g_array_index (stream->payloads, AsfPayload, idx_last);
+      gst_buffer_replace (&last->buf, NULL);
+      g_array_remove_index (stream->payloads, idx_last);
+    }
+
+    /* Mark discontinuity (should be done via stream->discont anyway though) */
+    GST_BUFFER_FLAG_SET (payload->buf, GST_BUFFER_FLAG_DISCONT);
+  }
+
   g_array_append_vals (stream->payloads, payload, 1);
 }
 

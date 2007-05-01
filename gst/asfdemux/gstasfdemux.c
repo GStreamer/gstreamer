@@ -336,22 +336,40 @@ gst_asf_demux_sink_event (GstPad * pad, GstEvent * event)
 
 static gboolean
 gst_asf_demux_seek_index_lookup (GstASFDemux * demux, guint * packet,
-    GstClockTime seek_time)
+    GstClockTime seek_time, GstClockTime * p_idx_time)
 {
+  GstClockTime idx_time;
   guint idx;
 
   if (demux->sidx_num_entries == 0 || demux->sidx_interval == 0)
     return FALSE;
 
   idx = (guint) (seek_time / demux->sidx_interval);
+
+  /* FIXME: seek beyond end of file should result in immediate EOS from
+   * streaming thread instead of a failed seek */
   if (idx >= demux->sidx_num_entries)
     return FALSE;
 
   *packet = demux->sidx_entries[idx];
 
+  /* so we get closer to the actual time of the packet ... actually, let's not
+   * do this, since we throw away superfluous payloads before the seek position
+   * anyway; this way, our key unit seek 'snap resolution' is a bit better
+   * (ie. same as index resolution) */
+  /*
+     while (idx > 0 && demux->sidx_entries[idx-1] == demux->sidx_entries[idx])
+     --idx;
+   */
+
+  idx_time = demux->sidx_interval * idx;
+
   GST_DEBUG_OBJECT (demux, "%" GST_TIME_FORMAT " => packet %u at %"
       GST_TIME_FORMAT, GST_TIME_ARGS (seek_time), *packet,
-      GST_TIME_ARGS (demux->sidx_interval * idx));
+      GST_TIME_ARGS (idx_time));
+
+  if (p_idx_time)
+    *p_idx_time = idx_time;
 
   return TRUE;
 }
@@ -389,6 +407,7 @@ gst_asf_demux_reset_stream_state_after_discont (GstASFDemux * demux)
 static gboolean
 gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 {
+  GstClockTime idx_time;
   GstSegment segment;
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
@@ -467,7 +486,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 
   /* FIXME: should check the KEY_UNIT flag; need to adjust last_stop to
    * real start of data and segment_start to indexed time for key unit seek*/
-  if (!gst_asf_demux_seek_index_lookup (demux, &packet, seek_time)) {
+  if (!gst_asf_demux_seek_index_lookup (demux, &packet, seek_time, &idx_time)) {
     /* Hackety hack, this sucks. We just seek to an earlier position
      *  and let the sinks throw away the stuff before the segment start */
     if (flush && (accurate || keyunit_sync)) {
@@ -481,6 +500,15 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 
     if (packet > demux->num_packets)
       packet = demux->num_packets;
+  } else {
+    if (keyunit_sync) {
+      GST_DEBUG_OBJECT (demux, "key unit seek, adjust seek_time = %"
+          GST_TIME_FORMAT " to index_time = %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (seek_time), GST_TIME_ARGS (idx_time));
+      segment.start = idx_time;
+      segment.last_stop = idx_time;
+      segment.time = idx_time;
+    }
   }
 
   GST_DEBUG_OBJECT (demux, "seeking to packet %u", packet);
@@ -945,6 +973,27 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux)
     AsfStream *stream;
 
     stream = &demux->stream[i];
+
+    /* Don't push any data until we have at least one payload that falls within
+     * the current segment. This way we can remove out-of-segment payloads that
+     * don't need to be decoded after a seek, sending only data from the
+     * keyframe directly before our segment start */
+    if (stream->payloads->len > 0) {
+      AsfPayload *payload;
+      guint last_idx;
+
+      last_idx = stream->payloads->len - 1;
+      payload = &g_array_index (stream->payloads, AsfPayload, last_idx);
+      if (GST_CLOCK_TIME_IS_VALID (payload->ts) &&
+          payload->ts < demux->segment.start) {
+        GST_DEBUG_OBJECT (stream->pad, "Last queued payload has timestamp %"
+            GST_TIME_FORMAT " which is before our segment start %"
+            GST_TIME_FORMAT ", not pushing yet", GST_TIME_ARGS (payload->ts),
+            GST_TIME_ARGS (demux->segment.start));
+        continue;
+      }
+    }
+
     while (stream->payloads->len > 0) {
       AsfPayload *payload;
 
