@@ -21,6 +21,8 @@
 #include "config.h"
 #endif
 
+#include <gst/gst-i18n-plugin.h>
+
 #include <string.h>
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
@@ -1545,7 +1547,8 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
       gst_structure_has_name (gst_caps_get_structure (caps, 0), "text/plain")) {
     gst_element_no_more_pads (GST_ELEMENT (decode_bin));
     /* we can't handle this type of stream */
-    GST_ELEMENT_ERROR (decode_bin, STREAM, WRONG_TYPE, (NULL),
+    GST_ELEMENT_ERROR (decode_bin, STREAM, WRONG_TYPE,
+        (_("This appears to be a text file")),
         ("decodebin cannot decode plain text files"));
     goto shutting_down;
   }
@@ -1726,6 +1729,12 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_decode_bin_debug, "decodebin", 0, "decoder bin");
+
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
 
   return gst_element_register (plugin, "decodebin", GST_RANK_NONE,
       GST_TYPE_DECODE_BIN);

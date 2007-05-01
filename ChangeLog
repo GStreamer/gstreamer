@@ -1,3 +1,9 @@
+2007-05-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstdecodebin.c: (type_found), (plugin_init):
+	* gst/playback/gstdecodebin2.c: (plugin_init):
+	  Better error message for text files.
+
 2007-04-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstrtcpbuffer.c: (gst_rtcp_packet_add_rb):
