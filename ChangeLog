@@ -1,3 +1,8 @@
+2007-05-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c:
+	Fix documentation as spotted by rg on IRC. 
+
 2007-04-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstutils.c:

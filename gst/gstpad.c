@@ -1223,7 +1223,7 @@ gst_pad_set_checkgetrange_function (GstPad * pad,
 
 /**
  * gst_pad_set_event_function:
- * @pad: a source #GstPad.
+ * @pad: a #GstPad of either direction.
  * @event: the #GstPadEventFunction to set.
  *
  * Sets the given event handler for the pad.
