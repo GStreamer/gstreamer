@@ -1,5 +1,10 @@
 2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_loop):
+	Add handling for segment seeks.
+
+2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_pull_buffer),
 	(gst_wavpack_parse_create_src_pad),
 	(gst_wavpack_parse_resync_loop), (gst_wavpack_parse_loop),
