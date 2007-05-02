@@ -1,5 +1,24 @@
 2007-05-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
+	(gst_rtspsrc_finalize), (new_session_pad), (request_pt_map),
+	(gst_rtspsrc_loop_send_cmd), (gst_rtspsrc_try_send),
+	(gst_rtspsrc_send), (gst_rtspsrc_async_open), (gst_rtspsrc_close),
+	(gst_rtspsrc_play), (gst_rtspsrc_handle_message),
+	(gst_rtspsrc_change_state):
+	* gst/rtsp/gstrtspsrc.h:
+	Fix race when multiple udp sources post timeouts, just act on the first
+	received timeout.
+	Protect stream list with a recursive lock to fix some races.
+	Flush connection when we need to do a reconnect or stop.
+	Make state lock recursive.
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_connect),
+	(rtsp_connection_close):
+	Some small cleanups.
+
+2007-05-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
 	(gst_wavparse_stream_headers), (gst_wavparse_stream_data):
 	Only set DISCONT when there actually is a discont or when we just

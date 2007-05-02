@@ -205,6 +205,9 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
   if (fd == -1)
     goto sys_error;
 
+  /* set to non-blocking mode so that we can cancel the connect */
+  //fcntl (fd, F_SETFL, O_NONBLOCK);
+
   ret = connect (fd, (struct sockaddr *) &sin, sizeof (sin));
   if (ret != 0)
     goto sys_error;
@@ -216,6 +219,8 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
 
 sys_error:
   {
+    if (fd != -1)
+      CLOSE_SOCKET (fd);
     return RTSP_ESYS;
   }
 not_resolved:
@@ -828,7 +833,6 @@ rtsp_connection_close (RTSPConnection * conn)
   gint res;
 
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
-  g_return_val_if_fail (conn->fd >= 0, RTSP_EINVAL);
 
   if (conn->fd != -1) {
     res = CLOSE_SOCKET (conn->fd);
