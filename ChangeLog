@@ -1,3 +1,12 @@
+2007-05-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tools/Makefile.am:
+	* tools/gst-launch.1.in:
+	  Don't create a customised man page based on the host architecture,
+	  describe the default registry path generically. That way the man
+	  page is the same for all architectures and packagers have one
+	  multilib issue less to deal with. Fixes #434926.
+
 2007-05-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstpad.c:

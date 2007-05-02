@@ -1,4 +1,4 @@
-.TH "GStreamer" "1" "December 2005"
+.TH "GStreamer" "1" "May 2007"
 .SH "NAME"
 gst\-launch \- build and run a GStreamer pipeline
 .SH "SYNOPSIS"
@@ -390,7 +390,10 @@ GST_DEBUG=totem:4,typefind:5
 When this environment variable is set, coloured debug output is disabled.
 .TP
 \fBGST_REGISTRY\fR
-Path of the registry file. Default is ~/.gstreamer-GST_MAJORMINOR/registry-HOST_CPU.xml.
+Path of the plugin registry file. Default is
+~/.gstreamer-GST_MAJORMINOR/registry-CPU.xml where CPU is the machine/cpu type
+GStreamer was compiled for, e.g. 'i486', 'i686', 'x86-64', 'ppc', etc. (check
+the output of "uname -i" and "uname -m" for details).
 .TP
 \fBGST_PLUGIN_PATH\fR
 Specifies a list of directories to scan for additional plugins.

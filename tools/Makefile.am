@@ -134,6 +134,5 @@ EXTRA_DIST = \
 		-e s,gst-xmlinspect,gst-xmlinspect-@GST_MAJORMINOR@,g \
 		-e s,gst-xmllaunch,gst-xmllaunch-@GST_MAJORMINOR@,g \
 		-e s,GST_MAJORMINOR,@GST_MAJORMINOR@,g \
-		-e s,HOST_CPU,@HOST_CPU@,g \
 		$< >$@
 
