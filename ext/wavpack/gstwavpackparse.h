@@ -60,6 +60,7 @@ struct _GstWavpackParse
   guint total_samples;
 
   gboolean need_newsegment;
+  gboolean discont;
 
   gint64 current_offset;        /* byte offset on sink pad */
   gint64 upstream_length;       /* length of file in bytes */

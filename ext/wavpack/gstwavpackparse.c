@@ -221,6 +221,7 @@ gst_wavpack_parse_reset (GstWavpackParse * parse)
 
   parse->current_offset = 0;
   parse->need_newsegment = TRUE;
+  parse->discont = TRUE;
   parse->upstream_length = -1;
 
   if (parse->entries) {
@@ -499,6 +500,7 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
   gint64 byte_offset;           /* byte offset the chunk we seek to starts at */
   gint64 chunk_start;           /* first sample in chunk we seek to           */
   guint rate;
+  gint64 last_stop;
 
   if (wvparse->adapter) {
     GST_DEBUG_OBJECT (wvparse, "seeking in streaming mode not implemented yet");
@@ -572,6 +574,9 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
 
   GST_PAD_STREAM_LOCK (wvparse->sinkpad);
 
+  /* Save current position */
+  last_stop = wvparse->segment.last_stop;
+
   gst_pad_push_event (wvparse->sinkpad, gst_event_new_flush_stop ());
 
   if (flush) {
@@ -594,7 +599,8 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
      * the output buffers accordingly */
     wvparse->segment = segment;
     wvparse->segment.last_stop = chunk_start;
-    gst_wavpack_parse_send_newsegment (wvparse, FALSE);
+    wvparse->need_newsegment = TRUE;
+    wvparse->discont = (last_stop != chunk_start) ? TRUE : FALSE;
 
     /* if we're doing a segment seek, post a SEGMENT_START message */
     if (wvparse->segment.flags & GST_SEEK_FLAG_SEGMENT) {
@@ -883,6 +889,12 @@ gst_wavpack_parse_push_buffer (GstWavpackParse * wvparse, GstBuffer * buf,
       GST_SECOND, wvparse->samplerate);
   GST_BUFFER_OFFSET (buf) = header->block_index;
   GST_BUFFER_OFFSET_END (buf) = header->block_index + header->block_samples;
+
+  if (wvparse->discont) {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    wvparse->discont = FALSE;
+  }
+
   gst_buffer_set_caps (buf, GST_PAD_CAPS (wvparse->srcpad));
 
   GST_LOG_OBJECT (wvparse, "Pushing buffer with time %" GST_TIME_FORMAT,
@@ -1092,8 +1104,9 @@ gst_wavpack_parse_chain (GstPad * pad, GstBuffer * buf)
     wvparse->adapter = gst_adapter_new ();
   }
 
-  if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+  if (GST_BUFFER_IS_DISCONT (buf)) {
     gst_adapter_clear (wvparse->adapter);
+    wvparse->discont = TRUE;
   }
 
   gst_adapter_push (wvparse->adapter, buf);

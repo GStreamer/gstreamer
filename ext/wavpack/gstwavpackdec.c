@@ -359,6 +359,11 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
     goto out;
 
   gst_buffer_stamp (outbuf, buf);
+  /* If we got a DISCONT buffer forward the flag. Nothing else
+   * has to be done as libwavpack doesn't store state between
+   * Wavpack blocks */
+  if (GST_BUFFER_IS_DISCONT (buf))
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
 
   /* decode */
   decoded = WavpackUnpackSamples (dec->context,

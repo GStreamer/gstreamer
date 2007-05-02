@@ -23,6 +23,8 @@
 #include "config.h"
 #endif
 
+#include <gst/gst-i18n-plugin.h>
+
 #include "gstwavpackparse.h"
 #include "gstwavpackdec.h"
 #include "gstwavpackenc.h"
@@ -34,6 +36,13 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (wavpack_debug, "wavpack", 0, "Wavpack elements");
+
+#if ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif
+
   return (gst_wavpack_parse_plugin_init (plugin)
       && gst_wavpack_dec_plugin_init (plugin)
       && gst_wavpack_enc_plugin_init (plugin));
