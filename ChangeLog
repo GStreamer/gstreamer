@@ -1,3 +1,15 @@
+2007-05-02  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),
+	(gst_ffmpegdec_open), (gst_ffmpegdec_save_incoming_values),
+	(gst_ffmpegdec_get_best_values), (gst_ffmpegdec_video_frame),
+	(gst_ffmpegdec_sink_event):
+	Fix timestamping for out-of-order incoming buffers. Instead of blindly
+	copying the incoming buffer timestamps on the outgoing buffers we cache
+	the latest 2 incoming buffer timestamps and duration and make a wise
+	choice as to what the outgoing buffer timestamp and duration should be.
+	Fixes #342962
+
 2007-04-25  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),

@@ -88,6 +88,11 @@ struct _GstFFMpegDec
 
   /* clipping segment */
   GstSegment segment;
+
+  /* out-of-order incoming buffer special handling */
+  gboolean outoforder;
+  GstClockTime tstamp1, tstamp2;
+  GstClockTime dur1, dur2;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -310,6 +315,9 @@ gst_ffmpegdec_init (GstFFMpegDec * ffmpegdec)
   ffmpegdec->format.video.fps_n = -1;
   ffmpegdec->format.video.old_fps_n = -1;
   gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
+
+  ffmpegdec->tstamp1 = ffmpegdec->tstamp2 = GST_CLOCK_TIME_NONE;
+  ffmpegdec->dur1 = ffmpegdec->dur2 = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -522,6 +530,11 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
     default:
       break;
   }
+
+  /* out-of-order incoming buffer handling */
+  if ((oclass->in_plugin->id == CODEC_ID_H264) && (ffmpegdec->context->extradata_size != 0))
+    ffmpegdec->outoforder = TRUE;
+
   ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
   ffmpegdec->last_buffer = NULL;
   /* FIXME, reset_qos holds the LOCK */
@@ -824,6 +837,64 @@ no_par:
         "Neither demuxer nor codec provide a pixel-aspect-ratio");
     return;
   }
+}
+
+static void
+gst_ffmpegdec_save_incoming_values (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
+				    GstClockTime duration)
+{
+  GST_LOG_OBJECT (ffmpegdec, "BEFORE timestamp:%"GST_TIME_FORMAT"/%"GST_TIME_FORMAT
+		  " duration:%"GST_TIME_FORMAT"/%"GST_TIME_FORMAT,
+		  GST_TIME_ARGS (ffmpegdec->tstamp1), GST_TIME_ARGS (ffmpegdec->tstamp2),
+		  GST_TIME_ARGS (ffmpegdec->dur1), GST_TIME_ARGS (ffmpegdec->dur2));
+
+  /* shift previous new values to oldest */
+  if (ffmpegdec->tstamp2 != GST_CLOCK_TIME_NONE)
+    ffmpegdec->tstamp1 = ffmpegdec->tstamp2;
+  ffmpegdec->dur1 = ffmpegdec->dur2;
+
+  /* store new values */
+  ffmpegdec->tstamp2 = timestamp;
+  ffmpegdec->dur2 = duration;
+
+  GST_LOG_OBJECT (ffmpegdec, "AFTER timestamp:%"GST_TIME_FORMAT"/%"GST_TIME_FORMAT
+		  " duration:%"GST_TIME_FORMAT"/%"GST_TIME_FORMAT,
+		  GST_TIME_ARGS (ffmpegdec->tstamp1), GST_TIME_ARGS (ffmpegdec->tstamp2),
+		  GST_TIME_ARGS (ffmpegdec->dur1), GST_TIME_ARGS (ffmpegdec->dur2));
+
+}
+
+static void
+gst_ffmpegdec_get_best_values (GstFFMpegDec * ffmpegdec, GstClockTime *timestamp,
+			       GstClockTime *duration)
+{
+  /* Best timestamp is the smallest valid timestamp */
+  if (ffmpegdec->tstamp1 == GST_CLOCK_TIME_NONE) {
+    *timestamp = ffmpegdec->tstamp2;
+    ffmpegdec->tstamp2 = GST_CLOCK_TIME_NONE;
+  } else if (ffmpegdec->tstamp2 == GST_CLOCK_TIME_NONE) {
+    *timestamp = ffmpegdec->tstamp1;
+    ffmpegdec->tstamp1 = GST_CLOCK_TIME_NONE;
+  } else if (ffmpegdec->tstamp1 < ffmpegdec->tstamp2) {
+    *timestamp = ffmpegdec->tstamp1;
+    ffmpegdec->tstamp1 = GST_CLOCK_TIME_NONE;
+  } else {
+    *timestamp = ffmpegdec->tstamp2;
+    ffmpegdec->tstamp2 = GST_CLOCK_TIME_NONE;
+  }
+
+  /* Best duration is the oldest valid one */
+  if (ffmpegdec->dur1 == GST_CLOCK_TIME_NONE) {
+    *duration = ffmpegdec->dur2;
+    ffmpegdec->dur2 = GST_CLOCK_TIME_NONE;
+  } else {
+    *duration = ffmpegdec->dur1;
+    ffmpegdec->dur1 = GST_CLOCK_TIME_NONE;
+  }
+
+  GST_LOG_OBJECT (ffmpegdec, "Returning timestamp:%"GST_TIME_FORMAT" duration:%"GST_TIME_FORMAT,
+		  GST_TIME_ARGS (*timestamp),
+		  GST_TIME_ARGS (*duration));
 }
 
 static gboolean
@@ -1222,6 +1293,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   ffmpegdec->context->opaque = ffmpegdec;
 
+  /* incoming out-of-order buffer timestamp buffering */
+  if (ffmpegdec->outoforder)
+    gst_ffmpegdec_save_incoming_values (ffmpegdec, in_timestamp, in_duration);
+
   /* run QoS code, returns FALSE if we can skip decoding this
    * frame entirely. */
   if (G_UNLIKELY (!gst_ffmpegdec_do_qos (ffmpegdec, in_timestamp,
@@ -1271,6 +1346,10 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
   *ret = get_output_buffer (ffmpegdec, outbuf);
   if (G_UNLIKELY (*ret != GST_FLOW_OK))
     goto no_output;
+
+  /* Special handling for out-of-order incoming buffers */
+  if (ffmpegdec->outoforder)
+    gst_ffmpegdec_get_best_values (ffmpegdec, &in_timestamp, &in_duration);
 
   /*
    * Timestamps:
@@ -1707,6 +1786,8 @@ gst_ffmpegdec_sink_event (GstPad * pad, GstEvent * event)
       gst_ffmpegdec_flush_pcache (ffmpegdec);
       ffmpegdec->waiting_for_key = TRUE;
       gst_segment_init (&ffmpegdec->segment, GST_FORMAT_TIME);
+      ffmpegdec->tstamp1 = ffmpegdec->tstamp2 = GST_CLOCK_TIME_NONE;
+      ffmpegdec->dur1 = ffmpegdec->dur2 = GST_CLOCK_TIME_NONE;
       break;
     }
     case GST_EVENT_NEWSEGMENT:{
