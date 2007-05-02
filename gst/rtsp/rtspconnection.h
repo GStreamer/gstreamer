@@ -57,12 +57,14 @@ typedef struct _RTSPConnection
   RTSPUrl *url;
 
   /* connection state */
-  gint fd;
-  gint control_sock[2];
+  gint   fd;
+  gint   control_sock[2];
+  gchar *ip;
 
   /* Session state */
   gint          cseq;                   /* sequence number */
   gchar         session_id[512];        /* session id */
+  gint          timeout;                /* session timeout in seconds */
 
   /* Authentication */
   RTSPAuthMethod auth_method;
@@ -71,20 +73,20 @@ typedef struct _RTSPConnection
 } RTSPConnection;
 
 /* opening/closing a connection */
-RTSPResult      rtsp_connection_create  (RTSPUrl *url, RTSPConnection **conn);
-RTSPResult      rtsp_connection_connect (RTSPConnection *conn);
-RTSPResult      rtsp_connection_close   (RTSPConnection *conn);
-RTSPResult      rtsp_connection_free    (RTSPConnection *conn);
+RTSPResult      rtsp_connection_create   (RTSPUrl *url, RTSPConnection **conn);
+RTSPResult      rtsp_connection_connect  (RTSPConnection *conn, GTimeVal *timeout);
+RTSPResult      rtsp_connection_close    (RTSPConnection *conn);
+RTSPResult      rtsp_connection_free     (RTSPConnection *conn);
 
 /* sending/receiving messages */
-RTSPResult      rtsp_connection_send    (RTSPConnection *conn, RTSPMessage *message);
-RTSPResult      rtsp_connection_receive (RTSPConnection *conn, RTSPMessage *message);
+RTSPResult      rtsp_connection_send     (RTSPConnection *conn, RTSPMessage *message, GTimeVal *timeout);
+RTSPResult      rtsp_connection_receive  (RTSPConnection *conn, RTSPMessage *message, GTimeVal *timeout);
 
-RTSPResult      rtsp_connection_flush   (RTSPConnection *conn, gboolean flush);
+RTSPResult      rtsp_connection_flush    (RTSPConnection *conn, gboolean flush);
 
 /* Configure Authentication data */
-RTSPResult      rtsp_connection_set_auth (RTSPConnection *conn, 
-                    RTSPAuthMethod method, gchar *user, gchar *pass);
+RTSPResult      rtsp_connection_set_auth (RTSPConnection *conn, RTSPAuthMethod method,
+                                          gchar *user, gchar *pass);
 
 G_END_DECLS
 

@@ -160,7 +160,7 @@ no_socket_pair:
 }
 
 RTSPResult
-rtsp_connection_connect (RTSPConnection * conn)
+rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
 {
   gint fd;
   struct sockaddr_in sin;
@@ -210,6 +210,7 @@ rtsp_connection_connect (RTSPConnection * conn)
     goto sys_error;
 
   conn->fd = fd;
+  conn->ip = ip;
 
   return RTSP_OK;
 
@@ -259,7 +260,8 @@ append_auth_header (RTSPConnection * conn, RTSPMessage * message, GString * str)
 }
 
 RTSPResult
-rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message)
+rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message,
+    GTimeVal * timeout)
 {
   GString *str;
   gint towrite;
@@ -543,11 +545,13 @@ no_column:
 }
 
 RTSPResult
-rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size)
+rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size,
+    GTimeVal * timeout)
 {
   fd_set readfds;
   guint toread;
   gint retval;
+  struct timeval tv_timeout, *ptv_timeout = NULL;
 
 #ifndef G_OS_WIN32
   gint avail;
@@ -570,6 +574,13 @@ rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size)
   else if (avail >= toread)
     goto do_read;
 
+  /* configure timeout if any */
+  if (timeout != NULL) {
+    tv_timeout.tv_sec = timeout->tv_sec;
+    tv_timeout.tv_usec = timeout->tv_usec;
+    ptv_timeout = &tv_timeout;
+  }
+
   FD_ZERO (&readfds);
   FD_SET (conn->fd, &readfds);
   FD_SET (READ_SOCKET (conn), &readfds);
@@ -578,11 +589,15 @@ rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size)
     gint bytes;
 
     do {
-      retval = select (FD_SETSIZE, &readfds, NULL, NULL, NULL);
+      retval = select (FD_SETSIZE, &readfds, NULL, NULL, ptv_timeout);
     } while ((retval == -1 && errno == EINTR));
 
     if (retval == -1)
       goto select_error;
+
+    /* check for timeout */
+    if (retval == 0)
+      goto select_timeout;
 
     if (FD_ISSET (READ_SOCKET (conn), &readfds)) {
       /* read all stop commands */
@@ -621,6 +636,10 @@ select_error:
   {
     return RTSP_ESYS;
   }
+select_timeout:
+  {
+    return RTSP_ETIMEOUT;
+  }
 stopped:
   {
     return RTSP_EINTR;
@@ -636,7 +655,8 @@ read_error:
 }
 
 static RTSPResult
-read_body (RTSPConnection * conn, glong content_length, RTSPMessage * msg)
+read_body (RTSPConnection * conn, glong content_length, RTSPMessage * msg,
+    GTimeVal * timeout)
 {
   gchar *body;
   RTSPResult res;
@@ -650,7 +670,8 @@ read_body (RTSPConnection * conn, glong content_length, RTSPMessage * msg)
   body = g_malloc (content_length + 1);
   body[content_length] = '\0';
 
-  RTSP_CHECK (rtsp_connection_read (conn, body, content_length), read_error);
+  RTSP_CHECK (rtsp_connection_read (conn, body, content_length, timeout),
+      read_error);
 
   content_length += 1;
 
@@ -668,7 +689,8 @@ read_error:
 }
 
 RTSPResult
-rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
+rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg,
+    GTimeVal * timeout)
 {
   gchar buffer[4096];
   gint line;
@@ -690,7 +712,7 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
     guint8 c;
 
     /* read first character, this identifies data messages */
-    RTSP_CHECK (rtsp_connection_read (conn, &c, 1), read_error);
+    RTSP_CHECK (rtsp_connection_read (conn, &c, 1, timeout), read_error);
 
     /* check for data packet, first character is $ */
     if (c == '$') {
@@ -699,18 +721,18 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
       /* data packets are $<1 byte channel><2 bytes length,BE><data bytes> */
 
       /* read channel, which is the next char */
-      RTSP_CHECK (rtsp_connection_read (conn, &c, 1), read_error);
+      RTSP_CHECK (rtsp_connection_read (conn, &c, 1, timeout), read_error);
 
       /* now we create a data message */
       rtsp_message_init_data (msg, (gint) c);
 
       /* next two bytes are the length of the data */
-      RTSP_CHECK (rtsp_connection_read (conn, &size, 2), read_error);
+      RTSP_CHECK (rtsp_connection_read (conn, &size, 2, timeout), read_error);
 
       size = GUINT16_FROM_BE (size);
 
       /* and read the body */
-      res = read_body (conn, size, msg);
+      res = read_body (conn, size, msg, timeout);
       need_body = FALSE;
       break;
     } else {
@@ -754,7 +776,7 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
             &hdrval) == RTSP_OK) {
       /* there is, read the body */
       content_length = atol (hdrval);
-      RTSP_CHECK (read_body (conn, content_length, msg), read_error);
+      RTSP_CHECK (read_body (conn, content_length, msg, timeout), read_error);
     }
 
     /* save session id in the connection for further use */
@@ -765,13 +787,25 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg)
               &session_id) == RTSP_OK) {
         gint sesslen, maxlen, i;
 
+        /* default session timeout */
+        conn->timeout = 60;
+
         sesslen = strlen (session_id);
         maxlen = sizeof (conn->session_id) - 1;
         /* the sessionid can have attributes marked with ;
          * Make sure we strip them */
         for (i = 0; i < sesslen; i++) {
-          if (session_id[i] == ';')
+          if (session_id[i] == ';') {
             maxlen = i;
+            /* parse timeout */
+            if (g_str_has_prefix (&session_id[i], ";timeout=")) {
+              gint timeout;
+
+              /* if we parsed something valid, configure */
+              if ((timeout = atoi (&session_id[i + 9])) > 0)
+                conn->timeout = timeout;
+            }
+          }
         }
 
         /* make sure to not overflow */
@@ -796,13 +830,15 @@ rtsp_connection_close (RTSPConnection * conn)
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
   g_return_val_if_fail (conn->fd >= 0, RTSP_EINVAL);
 
-  res = CLOSE_SOCKET (conn->fd);
+  if (conn->fd != -1) {
+    res = CLOSE_SOCKET (conn->fd);
 #ifdef G_OS_WIN32
-  WSACleanup ();
+    WSACleanup ();
 #endif
-  conn->fd = -1;
-  if (res != 0)
-    goto sys_error;
+    conn->fd = -1;
+    if (res != 0)
+      goto sys_error;
+  }
 
   return RTSP_OK;
 

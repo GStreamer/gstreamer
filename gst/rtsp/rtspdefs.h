@@ -66,8 +66,9 @@ typedef enum {
   RTSP_EEOF        = -11,
   RTSP_ENET        = -12,
   RTSP_ENOTIP      = -13,
+  RTSP_ETIMEOUT    = -14,
 
-  RTSP_ELAST       = -14,
+  RTSP_ELAST       = -15,
 } RTSPResult;
 
 typedef enum {

@@ -142,10 +142,12 @@ rtsp_message_init_response (RTSPMessage * msg, RTSPStatusCode code,
   if (request) {
     gchar *header;
 
+    /* copy CSEQ */
     if (rtsp_message_get_header (request, RTSP_HDR_CSEQ, &header) == RTSP_OK) {
       rtsp_message_add_header (msg, RTSP_HDR_CSEQ, header);
     }
 
+    /* copy session id */
     if (rtsp_message_get_header (request, RTSP_HDR_SESSION, &header) == RTSP_OK) {
       char *pos;
 

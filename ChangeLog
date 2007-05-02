@@ -1,3 +1,35 @@
+2007-05-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
+	(gst_rtspsrc_finalize), (gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_handle_request), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_send_keep_alive), (gst_rtspsrc_loop_udp),
+	(gst_rtspsrc_loop_send_cmd), (gst_rtspsrc_try_send),
+	(gst_rtspsrc_open), (gst_rtspsrc_handle_message):
+	* gst/rtsp/gstrtspsrc.h:
+	Fix sending RTCP to the right place.
+	Fix bug in reffing the wrong UDP element.
+	Use new pad names for the session manager.
+	Implement handling server requests in interleaved and UDP modes.
+	Handle session keep-alive in UDP modes.
+	Remove GCond for handling UDP timeouts.
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_connect),
+	(rtsp_connection_send), (rtsp_connection_read), (read_body),
+	(rtsp_connection_receive), (rtsp_connection_close):
+	* gst/rtsp/rtspconnection.h:
+	Store connection IP address for later.
+	Add timeout args to all operations that might block forever.
+	Parse session timeout.
+	Only close sockets when not already closed.
+
+	* gst/rtsp/rtspdefs.c:
+	* gst/rtsp/rtspdefs.h:
+	Add timeout return value and error string.
+
+	* gst/rtsp/rtspmessage.c: (rtsp_message_init_response):
+	Add small comment.
+
 2007-05-01  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Sjoerd Simons <sjoerd at luon dot net>

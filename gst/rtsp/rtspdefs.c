@@ -66,6 +66,7 @@ static const gchar *rtsp_results[] = {
   "Received end-of-file",
   "Network error: %s",
   "Host is not a valid IP address",
+  "Timout while waiting for server response",
   "Unknown error (%d)",
   NULL
 };
