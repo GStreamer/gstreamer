@@ -66,7 +66,8 @@ struct _GstWavParse {
    * the format for sure */
   GstCaps     *caps;
   GstTagList  *tags;
-  GstEvent    *newsegment;
+  GstEvent    *close_segment;
+  GstEvent    *start_segment;
 
   /* WAVE decoding state */
   GstWavParseState state;
@@ -85,6 +86,7 @@ struct _GstWavParse {
 
   /* real bps used or 0 when no bitrate is known */
   guint32 bps;
+  gboolean vbr;
 
   guint bytes_per_sample;
 

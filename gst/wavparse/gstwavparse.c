@@ -873,10 +873,12 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
       GST_DEBUG_OBJECT (wav, "closing running segment %" G_GINT64_FORMAT
           " to %" G_GINT64_FORMAT, wav->segment.accum, wav->segment.last_stop);
 
-      gst_pad_push_event (wav->srcpad,
-          gst_event_new_new_segment (TRUE,
-              wav->segment.rate, wav->segment.format,
-              wav->segment.accum, wav->segment.last_stop, wav->segment.accum));
+      /* queue the segment for sending in the stream thread */
+      if (wav->close_segment)
+        gst_event_unref (wav->close_segment);
+      wav->close_segment = gst_event_new_new_segment (TRUE,
+          wav->segment.rate, wav->segment.format,
+          wav->segment.accum, wav->segment.last_stop, wav->segment.accum);
 
       /* keep track of our last_stop */
       seeksegment.accum = wav->segment.last_stop;
@@ -898,9 +900,9 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
       " to %" G_GINT64_FORMAT, wav->segment.last_stop, stop);
 
   /* store the newsegment event so it can be sent from the streaming thread. */
-  if (wav->newsegment)
-    gst_event_unref (wav->newsegment);
-  wav->newsegment =
+  if (wav->start_segment)
+    gst_event_unref (wav->start_segment);
+  wav->start_segment =
       gst_event_new_new_segment (FALSE, wav->segment.rate,
       wav->segment.format, wav->segment.last_stop, stop,
       wav->segment.last_stop);
@@ -1087,6 +1089,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     wav->blockalign = header->blockalign;
     wav->depth = header->size;
     wav->av_bps = header->av_bps;
+    wav->vbr = FALSE;
 
     g_free (header);
 
@@ -1260,6 +1263,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         (guint32) gst_util_uint64_scale ((guint64) wav->rate, wav->datasize,
         (guint64) wav->fact);
     GST_DEBUG_OBJECT (wav, "calculated bps : %d", wav->bps);
+    wav->vbr = TRUE;
   }
 
   if (wav->bps > 0) {
@@ -1457,10 +1461,15 @@ gst_wavparse_add_src_pad (GstWavParse * wav, GstBuffer * buf)
   gst_element_add_pad (GST_ELEMENT_CAST (wav), wav->srcpad);
   gst_element_no_more_pads (GST_ELEMENT_CAST (wav));
 
-  GST_DEBUG_OBJECT (wav, "Send newsegment event on newpad");
-  if (wav->newsegment) {
-    gst_pad_push_event (wav->srcpad, wav->newsegment);
-    wav->newsegment = NULL;
+  if (wav->close_segment) {
+    GST_DEBUG_OBJECT (wav, "Send close segment event on newpad");
+    gst_pad_push_event (wav->srcpad, wav->close_segment);
+    wav->close_segment = NULL;
+  }
+  if (wav->start_segment) {
+    GST_DEBUG_OBJECT (wav, "Send start segment event on newpad");
+    gst_pad_push_event (wav->srcpad, wav->start_segment);
+    wav->start_segment = NULL;
   }
 
   if (wav->tags) {
@@ -1521,13 +1530,18 @@ iterate_adapter:
    * we can detect broken .wav files with dts disguised as raw PCM (sigh) */
   if (G_UNLIKELY (wav->first)) {
     wav->first = FALSE;
+    /* this will also push the segment events */
     gst_wavparse_add_src_pad (wav, buf);
-  }
-
-  /* If we have a pending newsegment send it now. */
-  if (G_UNLIKELY (wav->newsegment != NULL)) {
-    gst_pad_push_event (wav->srcpad, wav->newsegment);
-    wav->newsegment = NULL;
+  } else {
+    /* If we have a pending close/start segment, send it now. */
+    if (G_UNLIKELY (wav->close_segment != NULL)) {
+      gst_pad_push_event (wav->srcpad, wav->close_segment);
+      wav->close_segment = NULL;
+    }
+    if (G_UNLIKELY (wav->start_segment != NULL)) {
+      gst_pad_push_event (wav->srcpad, wav->start_segment);
+      wav->start_segment = NULL;
+    }
   }
 
   obtained = GST_BUFFER_SIZE (buf);
@@ -1549,12 +1563,11 @@ iterate_adapter:
     /* update current running segment position */
     gst_segment_set_last_stop (&wav->segment, GST_FORMAT_TIME, next_timestamp);
 
-    /* only apply the timestamp to the first DISCONT buffer because we might be
-     * dealing with VBR data that can make the timestamps drift a lot */
     if (wav->discont) {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       wav->discont = FALSE;
-    } else {
+    } else if (wav->vbr) {
+      /* don't set timestamps for VBR files if it's not the first buffer */
       timestamp = GST_CLOCK_TIME_NONE;
       duration = GST_CLOCK_TIME_NONE;
     }

@@ -1,3 +1,14 @@
+2007-05-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
+	(gst_wavparse_stream_headers), (gst_wavparse_add_src_pad),
+	(gst_wavparse_stream_data):
+	* gst/wavparse/gstwavparse.h:
+	Be a bit more clever when dealing with VBR files with FACT tags, we
+	don't want to timestamp buffers in that case but the estimated BPS can
+	be used for seeking.
+	Only send close segment in the streaming thread.
+
 2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_loop):
