@@ -1,3 +1,12 @@
+2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_pull_buffer),
+	(gst_wavpack_parse_create_src_pad),
+	(gst_wavpack_parse_resync_loop), (gst_wavpack_parse_loop),
+	(gst_wavpack_parse_chain):
+	Correctly handle errors, especially in the loop function. Before it
+	was easy to get the task paused but no error being posted on the bus.
+
 2007-04-30  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/async_jitter_queue.c: (signal_waiting_threads),

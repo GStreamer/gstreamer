@@ -40,7 +40,11 @@
  * </refsect2>
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 #include <gst/gst.h>
+#include <gst/gst-i18n-plugin.h>
 
 #include <math.h>
 #include <string.h>
@@ -734,7 +738,8 @@ gst_wavpack_parse_pull_buffer (GstWavpackParse * wvparse, gint64 offset,
   if (flow_ret != GST_FLOW_OK) {
     GST_DEBUG_OBJECT (wvparse, "pull_range (%" G_GINT64_FORMAT ", %u) "
         "failed, flow: %s", offset, size, gst_flow_get_name (flow_ret));
-    return NULL;
+    buf = NULL;
+    goto done;
   }
 
   if (GST_BUFFER_SIZE (buf) < size) {
@@ -809,7 +814,7 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
         break;
       }
       default:{
-        GST_WARNING_OBJECT (wvparse, "unhandled ID: 0x%02x", meta.id);
+        GST_LOG_OBJECT (wvparse, "unhandled ID: 0x%02x", meta.id);
         break;
       }
     }
@@ -930,7 +935,7 @@ gst_wavpack_parse_resync_loop (GstWavpackParse * parse, WavpackHeader * header)
         len, &flow_ret);
 
     /* whatever the problem is, there's nothing more for us to do for now */
-    if (buf == NULL)
+    if (flow_ret != GST_FLOW_OK)
       break;
 
     data = GST_BUFFER_DATA (buf);
@@ -972,11 +977,8 @@ gst_wavpack_parse_loop (GstElement * element)
 
   flow_ret = gst_wavpack_parse_resync_loop (parse, &header);
 
-  if (flow_ret == GST_FLOW_UNEXPECTED) {
-    goto eos;
-  } else if (flow_ret != GST_FLOW_OK) {
+  if (flow_ret != GST_FLOW_OK)
     goto pause;
-  }
 
   GST_LOG_OBJECT (parse, "Read header at offset %" G_GINT64_FORMAT
       ": chunk size = %u+8", parse->current_offset, header.ckSize);
@@ -984,15 +986,13 @@ gst_wavpack_parse_loop (GstElement * element)
   buf = gst_wavpack_parse_pull_buffer (parse, parse->current_offset,
       header.ckSize + 8, &flow_ret);
 
-  if (buf == NULL && flow_ret == GST_FLOW_UNEXPECTED) {
-    goto eos;
-  } else if (buf == NULL) {
+  if (flow_ret != GST_FLOW_OK)
     goto pause;
-  }
 
   if (parse->srcpad == NULL) {
     if (!gst_wavpack_parse_create_src_pad (parse, buf, &header)) {
-      GST_ELEMENT_ERROR (parse, STREAM, DECODE, (NULL), (NULL));
+      GST_ERROR_OBJECT (parse, "Failed to create src pad");
+      flow_ret = GST_FLOW_ERROR;
       goto pause;
     }
   }
@@ -1001,26 +1001,29 @@ gst_wavpack_parse_loop (GstElement * element)
       header.block_index, header.block_samples);
 
   flow_ret = gst_wavpack_parse_push_buffer (parse, buf, &header);
-  if (flow_ret != GST_FLOW_OK) {
-    GST_DEBUG_OBJECT (parse, "Push failed, flow: %s",
-        gst_flow_get_name (flow_ret));
+  if (flow_ret != GST_FLOW_OK)
     goto pause;
-  }
 
   return;
 
-eos:
-  {
-    GST_DEBUG_OBJECT (parse, "sending EOS");
-    if (parse->srcpad) {
-      gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
-    }
-    /* fall through and pause task */
-  }
 pause:
   {
-    GST_DEBUG_OBJECT (parse, "Pausing task");
+    const gchar *reason = gst_flow_get_name (flow_ret);
+
+    GST_LOG_OBJECT (parse, "pausing task, reason %s", reason);
     gst_pad_pause_task (parse->sinkpad);
+
+    if (GST_FLOW_IS_FATAL (flow_ret) || flow_ret == GST_FLOW_NOT_LINKED) {
+      if (flow_ret == GST_FLOW_UNEXPECTED) {
+        GST_LOG_OBJECT (parse, "Sending EOS, at end of stream");
+      } else {
+        GST_ELEMENT_ERROR (parse, STREAM, FAILED,
+            (_("Internal data stream error.")),
+            ("stream stopped, reason %s", reason));
+      }
+      if (parse->srcpad)
+        gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
+    }
     return;
   }
 }
@@ -1092,7 +1095,7 @@ gst_wavpack_parse_chain (GstPad * pad, GstBuffer * buf)
 
     if (wvparse->srcpad == NULL) {
       if (!gst_wavpack_parse_create_src_pad (wvparse, outbuf, &wph)) {
-        GST_ELEMENT_ERROR (wvparse, STREAM, DECODE, (NULL), (NULL));
+        GST_ERROR_OBJECT (wvparse, "Failed to create src pad");
         ret = GST_FLOW_ERROR;
         break;
       }
