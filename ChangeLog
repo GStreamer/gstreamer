@@ -1,3 +1,10 @@
+2007-05-02  Wim Taymans  <wim@fluendo.com>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),
+	(gst_wavparse_stream_headers), (gst_wavparse_stream_data):
+	Only set DISCONT when there actually is a discont or when we just
+	started.
+
 2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/flac/gstflac.c: (plugin_init):

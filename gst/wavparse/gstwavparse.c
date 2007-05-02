@@ -736,6 +736,7 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   gboolean flush;
   gboolean update;
   GstSegment seeksegment = { 0, };
+  gint64 last_stop;
 
   if (event) {
     GstFormat fmt;
@@ -792,6 +793,11 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   /* we should now be able to grab the streaming thread because we stopped it
    * with the above flush/pause code */
   GST_PAD_STREAM_LOCK (wav->sinkpad);
+
+  /* save current position */
+  last_stop = wav->segment.last_stop;
+
+  GST_DEBUG_OBJECT (wav, "stopped streaming at %" G_GINT64_FORMAT, last_stop);
 
   /* copy segment, we need this because we still need the old
    * segment when we close the current segment. */
@@ -907,8 +913,11 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
       wav->segment.format, wav->segment.last_stop, stop,
       wav->segment.last_stop);
 
-  /* mark discont */
-  wav->discont = TRUE;
+  /* mark discont if we are going to stream from another position. */
+  if (last_stop != wav->segment.last_stop) {
+    GST_DEBUG_OBJECT (wav, "mark DISCONT, we did a seek to another position");
+    wav->discont = TRUE;
+  }
 
   /* and start the streaming task again */
   wav->segment_running = TRUE;
@@ -1286,6 +1295,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
   event_p = &wav->seek_event;
   gst_event_replace (event_p, NULL);
 
+  /* we just started, we are discont */
+  wav->discont = TRUE;
+
   wav->state = GST_WAVPARSE_DATA;
 
   return GST_FLOW_OK;
@@ -1564,6 +1576,7 @@ iterate_adapter:
     gst_segment_set_last_stop (&wav->segment, GST_FORMAT_TIME, next_timestamp);
 
     if (wav->discont) {
+      GST_DEBUG_OBJECT (wav, "marking DISCONT");
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       wav->discont = FALSE;
     } else if (wav->vbr) {
