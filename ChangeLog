@@ -1,3 +1,8 @@
+2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/flac/gstflac.c: (plugin_init):
+	Call bindtextdomain() to get localized strings.
+
 2007-05-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_seek),

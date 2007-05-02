@@ -26,10 +26,17 @@
 /* #include "gstflactag.h" */
 
 #include <gst/tag/tag.h>
+#include <gst/gst-i18n-plugin.h>
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#if ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif
+
   if (!gst_element_register (plugin, "flacenc", GST_RANK_NONE,
           GST_TYPE_FLAC_ENC))
     return FALSE;
