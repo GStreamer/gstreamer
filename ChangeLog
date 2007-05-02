@@ -1,5 +1,13 @@
 2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackparse.c:
+	(gst_wavpack_parse_handle_seek_event):
+	Handle segment seeks in the seek event handler, correctly work with
+	stop position == -1 and instead of stopping the task on seek just
+	pause it.
+
+2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_loop):
 	Add handling for segment seeks.
 

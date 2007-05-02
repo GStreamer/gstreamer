@@ -527,6 +527,11 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
     return FALSE;
   }
 
+  /* figure out the last position we need to play. If it's configured (stop !=
+   * -1), use that, else we play until the total duration of the file */
+  if (stop == -1)
+    stop = wvparse->segment.duration;
+
   /* convert from time to samples if necessary */
   if (format == GST_FORMAT_TIME) {
     if (start_type != GST_SEEK_TYPE_NONE)
@@ -567,7 +572,7 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
   if (flush) {
     gst_pad_push_event (wvparse->srcpad, gst_event_new_flush_start ());
   } else {
-    gst_pad_stop_task (wvparse->sinkpad);
+    gst_pad_pause_task (wvparse->sinkpad);
   }
 
   GST_PAD_STREAM_LOCK (wvparse->sinkpad);
@@ -595,6 +600,13 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
     wvparse->segment = segment;
     wvparse->segment.last_stop = chunk_start;
     gst_wavpack_parse_send_newsegment (wvparse, FALSE);
+
+    /* if we're doing a segment seek, post a SEGMENT_START message */
+    if (wvparse->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+      gst_element_post_message (GST_ELEMENT_CAST (wvparse),
+          gst_message_new_segment_start (GST_OBJECT_CAST (wvparse),
+              wvparse->segment.format, wvparse->segment.last_stop));
+    }
   } else {
     GST_DEBUG_OBJECT (wvparse, "seek failed: don't know where to seek to");
   }
