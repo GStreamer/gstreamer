@@ -57,7 +57,7 @@ main (int argc, gchar * argv[])
 
   /* open connection */
   g_print ("opening connection...\n");
-  res = rtsp_connection_connect (conn);
+  res = rtsp_connection_connect (conn, NULL);
   if (res != RTSP_OK) {
     g_print ("error opening connection to \"%s\"\n", urlstr);
     return (-1);
@@ -74,13 +74,13 @@ main (int argc, gchar * argv[])
 
     rtsp_message_dump (&request);
 
-    res = rtsp_connection_send (conn, &request);
+    res = rtsp_connection_send (conn, &request, NULL);
     if (res != RTSP_OK) {
       g_print ("error sending request\n");
       return (-1);
     }
 
-    res = rtsp_connection_receive (conn, &response);
+    res = rtsp_connection_receive (conn, &response, NULL);
     if (res != RTSP_OK) {
       g_print ("error receiving response\n");
       return (-1);
@@ -129,13 +129,13 @@ main (int argc, gchar * argv[])
           "RTP/AVP/TCP");
       rtsp_message_dump (&request);
 
-      res = rtsp_connection_send (conn, &request);
+      res = rtsp_connection_send (conn, &request, NULL);
       if (res != RTSP_OK) {
         g_print ("error sending request\n");
         return (-1);
       }
 
-      res = rtsp_connection_receive (conn, &response);
+      res = rtsp_connection_receive (conn, &response, NULL);
       if (res != RTSP_OK) {
         g_print ("error receiving response\n");
         return (-1);
@@ -152,13 +152,13 @@ main (int argc, gchar * argv[])
     }
     rtsp_message_dump (&request);
 
-    res = rtsp_connection_send (conn, &request);
+    res = rtsp_connection_send (conn, &request, NULL);
     if (res != RTSP_OK) {
       g_print ("error sending request\n");
       return (-1);
     }
 
-    res = rtsp_connection_receive (conn, &response);
+    res = rtsp_connection_receive (conn, &response, NULL);
     if (res != RTSP_OK) {
       g_print ("error receiving response\n");
       return (-1);
@@ -167,7 +167,7 @@ main (int argc, gchar * argv[])
   }
 
   while (TRUE) {
-    res = rtsp_connection_receive (conn, &response);
+    res = rtsp_connection_receive (conn, &response, NULL);
     if (res != RTSP_OK) {
       g_print ("error receiving response\n");
       return (-1);

@@ -1,5 +1,11 @@
 2007-05-02  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/test.c: (main):
+	Fix compilation of deprecated test just because I'm too lazy to delete
+	it.
+
+2007-05-02  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
 	(gst_rtspsrc_finalize), (gst_rtspsrc_stream_configure_transport),
 	(gst_rtspsrc_handle_request), (gst_rtspsrc_loop_interleaved),
