@@ -1,5 +1,19 @@
 2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpack.c: (plugin_init):
+	Call bindtextdomain() to get localized strings.
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_reset),
+	(gst_wavpack_parse_handle_seek_event),
+	(gst_wavpack_parse_push_buffer), (gst_wavpack_parse_chain):
+	* ext/wavpack/gstwavpackparse.h:
+	Handle DISCONT buffers by correctly setting the DISCONT flag
+	on outgoing buffers when necessary.
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_handle_seek_event)
+	Send newsegment from the streaming thread.
+
+2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/wavpack/gstwavpackparse.c:
 	(gst_wavpack_parse_handle_seek_event):
 	Remove old workaround that was needed when seeking after the last
