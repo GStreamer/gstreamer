@@ -2,6 +2,14 @@
 
 	* ext/wavpack/gstwavpackparse.c:
 	(gst_wavpack_parse_handle_seek_event):
+	Remove old workaround that was needed when seeking after the last
+	sample. With the fixed error handling this works now as expected
+	without pushing the last sample although it wasn't requested.
+
+2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackparse.c:
+	(gst_wavpack_parse_handle_seek_event):
 	Handle segment seeks in the seek event handler, correctly work with
 	stop position == -1 and instead of stopping the task on seek just
 	pause it.

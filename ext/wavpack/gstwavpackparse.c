@@ -540,11 +540,6 @@ gst_wavpack_parse_handle_seek_event (GstWavpackParse * wvparse,
       stop = gst_util_uint64_scale_int (stop, rate, GST_SECOND);
   }
 
-  /* if seek is to something after the end of the stream seek only
-   * to the end. this can be caused by rounding errors */
-  if (start >= wvparse->total_samples)
-    start = wvparse->total_samples - 1;
-
   if (start < 0) {
     GST_OBJECT_UNLOCK (wvparse);
     GST_DEBUG_OBJECT (wvparse, "Invalid start sample %" G_GINT64_FORMAT, start);
