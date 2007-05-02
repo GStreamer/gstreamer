@@ -1,3 +1,10 @@
+2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/flac/gstflacdec.c: (gst_flac_dec_loop):
+	Correctly post an error on the bus if something went wrong in the loop
+	function. This fixes a few cases where the task was paused and nothing
+	happened anymore.
+
 2007-05-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/test.c: (main):

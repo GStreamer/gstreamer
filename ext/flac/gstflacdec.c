@@ -52,6 +52,7 @@
 #include <string.h>
 
 #include "gstflacdec.h"
+#include <gst/gst-i18n-plugin.h>
 #include <gst/gsttagsetter.h>
 
 #include <gst/tag/tag.h>
@@ -931,10 +932,14 @@ analyze_state:
     case FLAC__SEEKABLE_STREAM_DECODER_SEEKING:{
       GST_DEBUG_OBJECT (flacdec, "everything ok");
 
-      if (flacdec->last_flow != GST_FLOW_OK &&
-          flacdec->last_flow != GST_FLOW_NOT_LINKED) {
-        GST_DEBUG_OBJECT (flacdec, "last_flow return was %s, pausing",
-            gst_flow_get_name (flacdec->last_flow));
+      if (GST_FLOW_IS_FATAL (flacdec->last_flow) ||
+          flacdec->last_flow == GST_FLOW_NOT_LINKED) {
+        GST_ELEMENT_ERROR (flacdec, STREAM, FAILED,
+            (_("Internal data stream error.")),
+            ("stream stopped, reason %s",
+                gst_flow_get_name (flacdec->last_flow)));
+        goto eos_and_pause;
+      } else if (flacdec->last_flow != GST_FLOW_OK) {
         goto pause;
       }
 
