@@ -35,26 +35,24 @@ G_BEGIN_DECLS
 #define GST_IS_SWITCH_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_SWITCH))
 
-typedef struct _GstSwitchPad GstSwitchPad;
-
 typedef struct _GstSwitch GstSwitch;
 typedef struct _GstSwitchClass GstSwitchClass;
-
-struct _GstSwitchPad {
-  GstPad *sinkpad;
-  GstData *data;
-  gboolean forwarded;
-  gboolean eos;
-};
 
 struct _GstSwitch {
   GstElement element;
   
-  GList *sinkpads;
+  GstPad *active_sinkpad;
   GstPad *srcpad;
   
   guint nb_sinkpads;
-  guint active_sinkpad;
+  /* this hash table stores for key of the pad pointer
+   * the last new segment event received for this pad
+   * so when switching we can send new segment events
+   */
+  GHashTable *newsegment_events;
+  /* flag to decide whether we need to send a new segment event
+   * before we receive the next buffer */
+  gboolean need_to_send_newsegment;
 };
 
 struct _GstSwitchClass {

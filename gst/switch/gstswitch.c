@@ -23,7 +23,27 @@
 
 /* Object header */
 #include "gstswitch.h"
+#include <gst/gst.h>
 
+#include <string.h>
+
+/**
+ * This element allows runtime switching between many sources. It outputs a
+ * new segment every time it switches. The input sources are expected to be
+ * rate controlled/live or synced to the clock using identity sync=true upstream
+ * of this element. If they are not, your cpu usage will hike up.
+ *
+ * Example pipelines:
+ * videotestsrc pattern=0 ! identity sync=true \
+ *                                              switch ! ximagesink
+ * videotestsrc pattern=1 ! identity sync=true /
+ *
+ * videotestsrc pattern=0 ! identity sync=true \
+ *                                              switch ! 
+ *                                               identity single-segment=true !
+ *                                               theoraenc ! oggmux ! filesink
+ * videotestsrc pattern=1 ! identity sync=true /
+ */
 enum
 {
   ARG_0,
@@ -32,13 +52,14 @@ enum
 };
 
 GST_DEBUG_CATEGORY_STATIC (switch_debug);
-
+#define GST_CAT_DEFAULT switch_debug
 /* ElementFactory information */
 static const GstElementDetails gst_switch_details =
 GST_ELEMENT_DETAILS ("Switch",
     "Generic",
     "N-to-1 input switching",
-    "Julien Moutte <julien@moutte.net>");
+    "Julien Moutte <julien@moutte.net>\n"
+    "Zaheer Merali <zaheerabbas at merali dot org>");
 
 static GstStaticPadTemplate gst_switch_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink%d",
@@ -46,7 +67,19 @@ GST_STATIC_PAD_TEMPLATE ("sink%d",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
+static GstStaticPadTemplate gst_switch_src_factory =
+GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS_ANY);
+
 static GstElementClass *parent_class = NULL;
+static GstCaps *gst_switch_getcaps (GstPad * pad);
+static GList *gst_switch_get_linked_pads (GstPad * pad);
+static GstFlowReturn gst_switch_bufferalloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf);
+static GstFlowReturn gst_switch_chain (GstPad * pad, GstBuffer * buf);
+static gboolean gst_switch_event (GstPad * pad, GstEvent * event);
 
 /* ============================================================= */
 /*                                                               */
@@ -54,12 +87,11 @@ static GstElementClass *parent_class = NULL;
 /*                                                               */
 /* ============================================================= */
 
+
 static void
 gst_switch_release_pad (GstElement * element, GstPad * pad)
 {
-  GList *sinkpads = NULL;
   GstSwitch *gstswitch = NULL;
-  GstSwitchPad *switchpad = NULL;
 
   g_return_if_fail (GST_IS_SWITCH (element));
 
@@ -67,45 +99,36 @@ gst_switch_release_pad (GstElement * element, GstPad * pad)
 
   GST_LOG_OBJECT (gstswitch, "releasing requested pad %p", pad);
 
-  sinkpads = gstswitch->sinkpads;
+  gst_element_remove_pad (element, pad);
+  GST_OBJECT_LOCK (gstswitch);
+  gstswitch->nb_sinkpads--;
+  if (gstswitch->active_sinkpad == pad) {
+    gst_object_unref (gstswitch->active_sinkpad);
+    gstswitch->active_sinkpad = NULL;
+    if (gstswitch->nb_sinkpads == 0) {
+      GstIterator *iter =
+          gst_element_iterate_sink_pads (GST_ELEMENT (gstswitch));
+      gpointer active_sinkpad_store = (gpointer) gstswitch->active_sinkpad;
 
-  /* Walking through our pad list searching for the pad we want to release */
-  while (sinkpads) {
-    switchpad = sinkpads->data;
-
-    if (switchpad && switchpad->sinkpad == pad)
-      break;
-    else
-      switchpad = NULL;
-
-    sinkpads = g_list_next (sinkpads);
-  }
-
-  /* Releasing the found pad */
-  if (switchpad) {
-    /* We unref the data of that pad to loose our reference */
-    gst_data_unref (switchpad->data);
-    /* If data has not been forwarded we have to destroy it */
-    if (!switchpad->forwarded && switchpad->data) {
-      gst_data_unref (switchpad->data);
+      if (gst_iterator_next (iter, &active_sinkpad_store) == GST_ITERATOR_DONE) {
+        GST_LOG_OBJECT (gstswitch, "active pad now %p",
+            gstswitch->active_sinkpad);
+      } else {
+        GST_LOG_OBJECT (gstswitch, "could not get first sinkpad");
+      }
+      gst_iterator_free (iter);
     }
-    gst_element_remove_pad (element, pad);
-    gstswitch->sinkpads = g_list_remove (gstswitch->sinkpads, switchpad);
-    gstswitch->nb_sinkpads--;
-    if (gstswitch->active_sinkpad >= gstswitch->nb_sinkpads)
-      gstswitch->active_sinkpad = 0;
-    g_free (switchpad);
   }
+  GST_OBJECT_UNLOCK (gstswitch);
 }
 
 static GstPad *
 gst_switch_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * unused)
 {
-  char *name = NULL;
+  gchar *name = NULL;
   GstPad *sinkpad = NULL;
   GstSwitch *gstswitch = NULL;
-  GstSwitchPad *switchpad = NULL;
 
   g_return_val_if_fail (GST_IS_SWITCH (element), NULL);
 
@@ -117,6 +140,7 @@ gst_switch_request_new_pad (GstElement * element,
     return NULL;
   }
 
+  GST_OBJECT_LOCK (gstswitch);
   name = g_strdup_printf ("sink%d", gstswitch->nb_sinkpads);
 
   sinkpad = gst_pad_new_from_template (templ, name);
@@ -124,185 +148,109 @@ gst_switch_request_new_pad (GstElement * element,
   if (name)
     g_free (name);
 
-  /* That pad will proxy caps and link */
-  gst_pad_set_link_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
+  if (gstswitch->active_sinkpad == NULL)
+    gstswitch->active_sinkpad = gst_object_ref (sinkpad);
+  GST_OBJECT_UNLOCK (gstswitch);
+
   gst_pad_set_getcaps_function (sinkpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_switch_getcaps));
+  gst_pad_set_chain_function (sinkpad, GST_DEBUG_FUNCPTR (gst_switch_chain));
+  gst_pad_set_internal_link_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_switch_get_linked_pads));
+  gst_pad_set_bufferalloc_function (sinkpad,
+      GST_DEBUG_FUNCPTR (gst_switch_bufferalloc));
+  gst_pad_set_event_function (sinkpad, GST_DEBUG_FUNCPTR (gst_switch_event));
+  gst_pad_set_active (sinkpad, TRUE);
 
   gst_element_add_pad (GST_ELEMENT (gstswitch), sinkpad);
 
-  switchpad = g_new0 (GstSwitchPad, 1);
-  if (!switchpad)
-    return NULL;
-
-  switchpad->sinkpad = sinkpad;
-  switchpad->data = NULL;
-  switchpad->forwarded = FALSE;
-  switchpad->eos = FALSE;
-
-  gstswitch->sinkpads = g_list_insert (gstswitch->sinkpads, switchpad,
-      gstswitch->nb_sinkpads);
   gstswitch->nb_sinkpads++;
-
-  if (GST_PAD_CAPS (gstswitch->srcpad)) {
-    gst_pad_try_set_caps (sinkpad, GST_PAD_CAPS (gstswitch->srcpad));
-  }
 
   return sinkpad;
 }
 
+static GstFlowReturn
+gst_switch_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstSwitch *gstswitch = GST_SWITCH (gst_pad_get_parent (pad));
+  GstFlowReturn res;
+  GstPad *active_sinkpad;
+
+  GST_OBJECT_LOCK (gstswitch);
+  active_sinkpad = gstswitch->active_sinkpad;
+  GST_OBJECT_UNLOCK (gstswitch);
+
+  /* Ignore buffers from pads except the selected one */
+  if (pad != active_sinkpad) {
+    GST_DEBUG_OBJECT (gstswitch, "Ignoring buffer %p from pad %s:%s",
+        buf, GST_DEBUG_PAD_NAME (pad));
+
+    gst_object_unref (gstswitch);
+    gst_buffer_unref (buf);
+    return GST_FLOW_OK;
+  }
+
+  /* check if we need to send a new segment event */
+  GST_OBJECT_LOCK (gstswitch);
+  if (gstswitch->need_to_send_newsegment) {
+    /* retrieve event from hash table */
+    GstEvent *event =
+        (GstEvent *) g_hash_table_lookup (gstswitch->newsegment_events, pad);
+    if (event) {
+      /* create a copy of this event so we can change start to match
+       * the start time of this buffer */
+      gboolean update;
+      gdouble rate, applied_rate;
+      GstFormat format;
+      gint64 start, stop, position;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+          &format, &start, &stop, &position);
+      gst_pad_push_event (gstswitch->srcpad,
+          gst_event_new_new_segment_full (update, rate, applied_rate, format,
+              GST_BUFFER_TIMESTAMP (buf), stop, position));
+      gstswitch->need_to_send_newsegment = FALSE;
+      GST_DEBUG_OBJECT (gstswitch,
+          "Sending new segment with start of %" G_GINT64_FORMAT,
+          GST_BUFFER_TIMESTAMP (buf));
+    }
+  }
+  GST_OBJECT_UNLOCK (gstswitch);
+  /* forward */
+  GST_DEBUG_OBJECT (gstswitch, "Forwarding buffer %p from pad %s:%s",
+      buf, GST_DEBUG_PAD_NAME (pad));
+  res = gst_pad_push (gstswitch->srcpad, buf);
+
+  gst_object_unref (gstswitch);
+
+  return res;
+}
+
 static gboolean
-gst_switch_poll_sinkpads (GstSwitch * gstswitch)
+gst_switch_event (GstPad * pad, GstEvent * event)
 {
-  GList *pads;
+  GstSwitch *gstswitch = GST_SWITCH (gst_pad_get_parent (pad));
+  gboolean ret = TRUE;
 
-  g_return_val_if_fail (gstswitch != NULL, FALSE);
-  g_return_val_if_fail (GST_IS_SWITCH (gstswitch), FALSE);
-
-  pads = gstswitch->sinkpads;
-
-  while (pads) {
-    GstSwitchPad *switchpad = pads->data;
-
-    /* We only pull from usable pads and non EOS pads */
-    if (GST_PAD_IS_USABLE (switchpad->sinkpad) && !switchpad->eos) {
-
-      GST_LOG_OBJECT (gstswitch, "polling pad %p", switchpad->sinkpad);
-
-      /* We loose the reference to the data we stored */
-      if (switchpad->data) {
-        gst_data_unref (switchpad->data);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      GST_OBJECT_LOCK (gstswitch);
+      /* need to put in or replace what's in hash table */
+      g_hash_table_replace (gstswitch->newsegment_events, pad, event);
+      if (pad == gstswitch->active_sinkpad) {
+        /* want to ref event because we have kept it */
+        gst_event_ref (event);
+        /* need to send it across if we are active pad */
+        ret = gst_pad_push_event (gstswitch->srcpad, event);
       }
-
-      /* If that data was not forwarded we unref it another time to destroy it */
-      if (!switchpad->forwarded && switchpad->data) {
-        gst_data_unref (switchpad->data);
-      }
-
-      switchpad->data = NULL;
-      switchpad->data = gst_pad_pull (switchpad->sinkpad);
-
-      if (!switchpad->data) {
-        GST_LOG_OBJECT (gstswitch,
-            "received NULL data from pad %p", switchpad->sinkpad);
-      } else {
-        gst_data_ref (switchpad->data);
-        switchpad->forwarded = FALSE;
-
-        /* If the buffer is an EOS event we tag the pad as being in EOS. That 
-           means we won't try to pull more data from that pad */
-        if (GST_IS_EVENT (switchpad->data) &&
-            (GST_EVENT_TYPE (GST_EVENT (switchpad->data)) == GST_EVENT_EOS)) {
-          GST_LOG_OBJECT (gstswitch,
-              "received EOS event on pad %p", switchpad->sinkpad);
-          switchpad->eos = TRUE;
-        }
-      }
-    } else {
-      GST_LOG_OBJECT (gstswitch,
-          "not pulling from pad %s (eos is %d)",
-          gst_pad_get_name (switchpad->sinkpad), switchpad->eos);
-    }
-    pads = g_list_next (pads);
-  }
-
-  return TRUE;
-}
-
-static void
-gst_switch_loop (GstElement * element)
-{
-  GstSwitch *gstswitch = NULL;
-  GstSwitchPad *switchpad = NULL;
-
-  g_return_if_fail (element != NULL);
-  g_return_if_fail (GST_IS_SWITCH (element));
-
-  gstswitch = GST_SWITCH (element);
-
-  /* We poll all our sinkpads */
-  gst_switch_poll_sinkpads (gstswitch);
-
-  /* We get the active sinkpad */
-  switchpad = g_list_nth_data (gstswitch->sinkpads, gstswitch->active_sinkpad);
-
-  if (switchpad && switchpad->data) {
-    GstData *data = switchpad->data;
-
-    /* Loose our reference to that data */
-    gst_data_unref (switchpad->data);
-    switchpad->data = NULL;
-
-    GST_LOG_OBJECT (gstswitch,
-        "using data from active pad %p", switchpad->sinkpad);
-
-    if (GST_IS_EVENT (data)) {
-      GstEvent *event = GST_EVENT (data);
-
-      GST_LOG_OBJECT (gstswitch,
-          "handling event from active pad %p", switchpad->sinkpad);
-      /* Handling event */
-      gst_pad_event_default (switchpad->sinkpad, event);
-    } else {
-      /* Pushing active sinkpad data to srcpad */
-      GST_LOG_OBJECT (gstswitch,
-          "pushing data from active pad %p to %p",
-          switchpad->sinkpad, gstswitch->srcpad);
-      gst_pad_push (gstswitch->srcpad, data);
-    }
-
-    /* Mark this data as forwarded so that it won't get unrefed on next poll */
-    switchpad->forwarded = TRUE;
-  }
-}
-
-static GstStateChangeReturn
-gst_switch_change_state (GstElement * element, GstStateChange transition)
-{
-  GstSwitch *gstswitch;
-
-  gstswitch = GST_SWITCH (element);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
+      GST_OBJECT_UNLOCK (gstswitch);
       break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-    {
-      GList *sinkpads = NULL;
-
-      sinkpads = gstswitch->sinkpads;
-
-      while (sinkpads) {
-        GstSwitchPad *switchpad = sinkpads->data;
-
-        /* If a data is still stored in our structure we unref it */
-        if (switchpad->data) {
-          gst_data_unref (switchpad->data);
-          switchpad->data = NULL;
-        }
-
-        switchpad->forwarded = FALSE;
-        switchpad->eos = FALSE;
-
-        sinkpads = g_list_next (sinkpads);
-      }
-    }
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
+    default:
+      ret = gst_pad_event_default (pad, event);
       break;
   }
-
-  if (GST_ELEMENT_CLASS (parent_class)->change_state)
-    return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  else
-    return GST_STATE_CHANGE_SUCCESS;
+  gst_object_unref (gstswitch);
+  return ret;
 }
 
 /* =========================================== */
@@ -316,6 +264,9 @@ gst_switch_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstSwitch *gstswitch = NULL;
+  const gchar *pad_name;
+  GstPad *pad = NULL;
+  GstPad **active_pad_p;
 
   g_return_if_fail (GST_IS_SWITCH (object));
 
@@ -323,7 +274,27 @@ gst_switch_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_ACTIVE_SOURCE:
-      gstswitch->active_sinkpad = g_value_get_int (value);
+      pad_name = g_value_get_string (value);
+      if (strcmp (pad_name, "") != 0) {
+        pad = gst_element_get_pad (GST_ELEMENT (object), pad_name);
+      }
+
+      GST_OBJECT_LOCK (object);
+      if (pad == gstswitch->active_sinkpad) {
+        GST_OBJECT_UNLOCK (object);
+        if (pad)
+          gst_object_unref (pad);
+        break;
+      }
+      active_pad_p = &gstswitch->active_sinkpad;
+      gst_object_replace ((GstObject **) active_pad_p, GST_OBJECT_CAST (pad));
+      if (pad)
+        gst_object_unref (pad);
+
+      GST_DEBUG_OBJECT (gstswitch, "New active pad is %" GST_PTR_FORMAT,
+          gstswitch->active_sinkpad);
+      gstswitch->need_to_send_newsegment = TRUE;
+      GST_OBJECT_UNLOCK (object);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -343,16 +314,122 @@ gst_switch_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_ACTIVE_SOURCE:
-      g_value_set_int (value, gstswitch->active_sinkpad);
+      GST_OBJECT_LOCK (object);
+      if (gstswitch->active_sinkpad != NULL) {
+        g_value_take_string (value,
+            gst_pad_get_name (gstswitch->active_sinkpad));
+      } else {
+        g_value_set_string (value, "");
+      }
+      GST_OBJECT_UNLOCK (object);
       break;
     case ARG_NB_SOURCES:
-      g_value_set_int (value, gstswitch->nb_sinkpads);
+      g_value_set_uint (value, gstswitch->nb_sinkpads);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
+
+static GstPad *
+gst_switch_get_linked_pad (GstPad * pad, gboolean strict)
+{
+  GstSwitch *gstswitch = GST_SWITCH (gst_pad_get_parent (pad));
+  GstPad *otherpad = NULL;
+
+  if (pad == gstswitch->srcpad)
+    otherpad = gstswitch->active_sinkpad;
+  else if (pad == gstswitch->active_sinkpad || !strict)
+    otherpad = gstswitch->srcpad;
+
+  gst_object_unref (gstswitch);
+
+  return otherpad;
+}
+
+static GstCaps *
+gst_switch_getcaps (GstPad * pad)
+{
+  GstPad *otherpad = gst_switch_get_linked_pad (pad, FALSE);
+  GstObject *parent;
+  GstCaps *caps;
+
+  parent = gst_object_get_parent (GST_OBJECT (pad));
+  if (!otherpad) {
+    GST_DEBUG_OBJECT (parent,
+        "Pad %s:%s not linked, returning ANY", GST_DEBUG_PAD_NAME (pad));
+
+    gst_object_unref (parent);
+    return gst_caps_new_any ();
+  }
+
+  GST_DEBUG_OBJECT (parent,
+      "Pad %s:%s is linked (to %s:%s), returning allowed-caps",
+      GST_DEBUG_PAD_NAME (pad), GST_DEBUG_PAD_NAME (otherpad));
+
+  gst_object_unref (parent);
+
+  caps = gst_pad_peer_get_caps (otherpad);
+  if (caps == NULL) {
+    caps = gst_caps_new_any ();
+  }
+  return caps;
+}
+
+static GstFlowReturn
+gst_switch_bufferalloc (GstPad * pad, guint64 offset,
+    guint size, GstCaps * caps, GstBuffer ** buf)
+{
+  GstSwitch *gstswitch = GST_SWITCH (gst_pad_get_parent (pad));
+  GstFlowReturn result;
+  GstPad *active_sinkpad;
+
+  GST_OBJECT_LOCK (gstswitch);
+  active_sinkpad = gstswitch->active_sinkpad;
+  GST_OBJECT_UNLOCK (gstswitch);
+
+  /* Fallback allocation for buffers from pads except the selected one */
+  if (pad != active_sinkpad) {
+    GST_DEBUG_OBJECT (gstswitch,
+        "Pad %s:%s is not selected. Performing fallback allocation",
+        GST_DEBUG_PAD_NAME (pad));
+
+    *buf = NULL;
+    result = GST_FLOW_OK;
+  } else {
+    result = gst_pad_alloc_buffer (gstswitch->srcpad, offset, size, caps, buf);
+
+    /* FIXME: HACK. If buffer alloc returns not-linked, perform a fallback
+     * allocation.  This should NOT be necessary, because playbin should
+     * properly block the source pad from running until it's finished hooking 
+     * everything up, but playbin needs refactoring first. */
+    if (result == GST_FLOW_NOT_LINKED) {
+      GST_DEBUG_OBJECT (gstswitch,
+          "No peer pad yet - performing fallback allocation for pad %s:%s",
+          GST_DEBUG_PAD_NAME (pad));
+
+      *buf = NULL;
+      result = GST_FLOW_OK;
+    }
+  }
+
+  gst_object_unref (gstswitch);
+
+  return result;
+}
+
+static GList *
+gst_switch_get_linked_pads (GstPad * pad)
+{
+  GstPad *otherpad = gst_switch_get_linked_pad (pad, TRUE);
+
+  if (!otherpad)
+    return NULL;
+
+  return g_list_append (NULL, otherpad);
+}
+
 
 /* =========================================== */
 /*                                             */
@@ -364,33 +441,16 @@ static void
 gst_switch_dispose (GObject * object)
 {
   GstSwitch *gstswitch = NULL;
-  GList *sinkpads = NULL;
 
   gstswitch = GST_SWITCH (object);
 
-  sinkpads = gstswitch->sinkpads;
-
-  while (sinkpads) {
-    GstSwitchPad *switchpad = sinkpads->data;
-
-    /* If a data is still stored in our structure we unref it */
-    if (switchpad->data) {
-      gst_data_unref (switchpad->data);
-      switchpad->data = NULL;
-    }
-
-    /* Freeing our structure */
-    g_free (switchpad);
-
-    sinkpads = g_list_next (sinkpads);
+  if (gstswitch->active_sinkpad) {
+    gst_object_unref (gstswitch->active_sinkpad);
+    gstswitch->active_sinkpad = NULL;
   }
-
-  /* Freeing the list correctly */
-  if (gstswitch->sinkpads) {
-    g_list_free (gstswitch->sinkpads);
-    gstswitch->sinkpads = NULL;
+  if (gstswitch->newsegment_events) {
+    g_hash_table_destroy (gstswitch->newsegment_events);
   }
-
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -398,16 +458,17 @@ static void
 gst_switch_init (GstSwitch * gstswitch)
 {
   gstswitch->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (gstswitch), gstswitch->srcpad);
-  gst_pad_set_link_function (gstswitch->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_pad_link));
+  gst_pad_set_internal_link_function (gstswitch->srcpad,
+      GST_DEBUG_FUNCPTR (gst_switch_get_linked_pads));
   gst_pad_set_getcaps_function (gstswitch->srcpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
-  gst_element_set_loop_function (GST_ELEMENT (gstswitch), gst_switch_loop);
+      GST_DEBUG_FUNCPTR (gst_switch_getcaps));
+  gst_element_add_pad (GST_ELEMENT (gstswitch), gstswitch->srcpad);
 
-  gstswitch->sinkpads = NULL;
-  gstswitch->active_sinkpad = 0;
+  gstswitch->active_sinkpad = NULL;
   gstswitch->nb_sinkpads = 0;
+  gstswitch->newsegment_events = g_hash_table_new_full (g_direct_hash,
+      g_direct_equal, NULL, (GDestroyNotify) gst_mini_object_unref);
+  gstswitch->need_to_send_newsegment = FALSE;
 }
 
 static void
@@ -419,6 +480,9 @@ gst_switch_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_switch_sink_factory));
+  gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&gst_switch_src_factory));
+
 }
 
 static void
@@ -431,23 +495,22 @@ gst_switch_class_init (GstSwitchClass * klass)
   gstelement_class = (GstElementClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_switch_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_switch_get_property);
 
   g_object_class_install_property (gobject_class,
       ARG_NB_SOURCES,
-      g_param_spec_int ("nb_sources",
+      g_param_spec_uint ("num-sources",
           "number of sources",
-          "number of sources", G_MININT, G_MAXINT, 0, G_PARAM_READABLE));
+          "number of sources", 0, G_MAXUINT, 0, G_PARAM_READABLE));
   g_object_class_install_property (gobject_class,
       ARG_ACTIVE_SOURCE,
-      g_param_spec_int ("active_source",
-          "active source",
-          "active source", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));
+      g_param_spec_string ("active-pad",
+          "Active Pad",
+          "Name of the currently active sink pad", NULL, G_PARAM_READWRITE));
 
   gobject_class->dispose = gst_switch_dispose;
-  gobject_class->set_property = gst_switch_set_property;
-  gobject_class->get_property = gst_switch_get_property;
 
-  gstelement_class->change_state = gst_switch_change_state;
   gstelement_class->request_new_pad = gst_switch_request_new_pad;
   gstelement_class->release_pad = gst_switch_release_pad;
 }

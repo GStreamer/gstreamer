@@ -99,6 +99,7 @@ GST_PLUGINS_ALL="\
   rtpmanager \
   spectrum \
   speed \
+  switch \
   qtdemux \
   tta \
   videocrop \
@@ -1098,6 +1099,7 @@ gst/replaygain/Makefile
 gst/rtpmanager/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
+gst/switch/Makefile
 gst/qtdemux/Makefile
 gst/tta/Makefile
 gst/videocrop/Makefile
@@ -1120,6 +1122,7 @@ sys/osxvideo/Makefile
 examples/Makefile
 examples/app/Makefile
 examples/directfb/Makefile
+examples/switch/Makefile
 ext/amrwb/Makefile
 ext/alsaspdif/Makefile
 ext/bz2/Makefile

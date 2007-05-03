@@ -1,3 +1,22 @@
+2007-05-03  Zaheer Abbas Merali  <<zaheerabbas at merali dot org>>
+
+	* configure.ac:
+	* examples/Makefile.am:
+	* examples/switch/switcher.c (loop, my_bus_callback, switch_timer,
+	  last_message_received, main):
+	* gst/switch/gstswitch.c (GST_CAT_DEFAULT, gst_switch_details,
+	  gst_switch_src_factory, parent_class, gst_switch_release_pad,
+	  gst_switch_request_new_pad, gst_switch_chain, gst_switch_event,
+	  gst_switch_set_property, gst_switch_get_property,
+	  gst_switch_get_linked_pad, gst_switch_getcaps,
+	  gst_switch_bufferalloc, gst_switch_get_linked_pads,
+	  gst_switch_dispose, gst_switch_init, gst_switch_base_init,
+	  gst_switch_class_init):
+	* gst/switch/gstswitch.h (GstSwitch, GstSwitchClass, _GstSwitch,
+	  element, active_sinkpad, srcpad, nb_sinkpads, newsegment_events,
+	  need_to_send_newsegment):
+	Port switch element and example program to 0.10.
+
 2007-05-02  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpack.c: (plugin_init):

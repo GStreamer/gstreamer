@@ -20,51 +20,85 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <string.h>
 
 #include <gst/gst.h>
 
 static GMainLoop *loop = NULL;
 
-
-
-static void
-got_eos (GstElement * pipeline)
-{
-  g_main_loop_quit (loop);
-}
-
 static gboolean
-idle_iterate (GstElement * pipeline)
+my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
-  gst_bin_iterate (GST_BIN (pipeline));
-  return (GST_STATE (GST_ELEMENT (pipeline)) == GST_STATE_PLAYING);
+  g_print ("Got %s message\n", GST_MESSAGE_TYPE_NAME (message));
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:{
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_error (message, &err, &debug);
+      g_print ("Error: %s\n", err->message);
+      g_error_free (err);
+      g_free (debug);
+
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      /* end-of-stream */
+      g_main_loop_quit (loop);
+      break;
+    default:
+      /* unhandled message */
+      break;
+  }
+
+  /* we want to be notified again the next time there is a message
+   * on the bus, so returning TRUE (FALSE means we want to stop watching
+   * for messages on the bus and our callback should not be called again)
+   */
+  return TRUE;
 }
+
+
 
 static gboolean
 switch_timer (GstElement * video_switch)
 {
-  gint nb_sources, active_source;
+  gint nb_sources;
+  gchar *active_pad;
 
-  g_object_get (G_OBJECT (video_switch), "nb_sources", &nb_sources, NULL);
-  g_object_get (G_OBJECT (video_switch), "active_source", &active_source, NULL);
+  g_object_get (G_OBJECT (video_switch), "num-sources", &nb_sources, NULL);
+  g_object_get (G_OBJECT (video_switch), "active-pad", &active_pad, NULL);
 
-  active_source++;
+  if (strcmp (active_pad, "sink0") == 0) {
 
-  if (active_source > nb_sources - 1)
-    active_source = 0;
-
-  g_object_set (G_OBJECT (video_switch), "active_source", active_source, NULL);
-
-  g_message ("current number of sources : %d, active source %d",
-      nb_sources, active_source);
+    g_object_set (G_OBJECT (video_switch), "active-pad", "sink1", NULL);
+  } else {
+    g_object_set (G_OBJECT (video_switch), "active-pad", "sink0", NULL);
+  }
+  g_message ("current number of sources : %d, active source %s",
+      nb_sources, active_pad);
 
   return (GST_STATE (GST_ELEMENT (video_switch)) == GST_STATE_PLAYING);
+}
+
+static void
+last_message_received (GObject * segment)
+{
+  gchar *last_message;
+
+  g_object_get (segment, "last_message", &last_message, NULL);
+  g_print ("last-message: %s\n", last_message);
+  g_free (last_message);
 }
 
 int
 main (int argc, char *argv[])
 {
-  GstElement *pipeline, *src1, *src2, *video_switch, *video_sink;
+  GstElement *pipeline, *src1, *src2, *video_switch, *video_sink, *segment;
+  GstElement *sink1_sync, *sink2_sync;
+  GstBus *bus;
 
   /* Initing GStreamer library */
   gst_init (&argc, &argv);
@@ -77,20 +111,30 @@ main (int argc, char *argv[])
   src2 = gst_element_factory_make ("videotestsrc", "src2");
   g_object_set (G_OBJECT (src2), "pattern", 1, NULL);
   video_switch = gst_element_factory_make ("switch", "video_switch");
-  video_sink = gst_element_factory_make (DEFAULT_VIDEOSINK, "video_sink");
+  segment = gst_element_factory_make ("identity", "identity-segment");
+  g_signal_connect (G_OBJECT (segment), "notify::last-message",
+      G_CALLBACK (last_message_received), segment);
+  g_object_set (G_OBJECT (segment), "single-segment", TRUE, NULL);
+  video_sink = gst_element_factory_make ("ximagesink", "video_sink");
+  //g_object_set (G_OBJECT (video_sink), "sync", FALSE, NULL);
+  sink1_sync = gst_element_factory_make ("identity", "sink0_sync");
+  g_object_set (G_OBJECT (sink1_sync), "sync", TRUE, NULL);
+  sink2_sync = gst_element_factory_make ("identity", "sink1_sync");
+  g_object_set (G_OBJECT (sink2_sync), "sync", TRUE, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), src1, src2, segment, video_switch,
+      video_sink, sink1_sync, sink2_sync, NULL);
+  gst_element_link (src1, sink1_sync);
+  gst_element_link (sink1_sync, video_switch);
+  gst_element_link (src2, sink2_sync);
+  gst_element_link (sink2_sync, video_switch);
+  gst_element_link (video_switch, segment);
+  gst_element_link (segment, video_sink);
 
-  gst_bin_add_many (GST_BIN (pipeline), src1, src2, video_switch,
-      video_sink, NULL);
-
-  gst_element_link (src1, video_switch);
-  gst_element_link (src2, video_switch);
-  gst_element_link (video_switch, video_sink);
-
-  g_signal_connect (G_OBJECT (pipeline), "eos", G_CALLBACK (got_eos), NULL);
-
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_watch (bus, my_bus_callback, NULL);
+  gst_object_unref (bus);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  g_idle_add ((GSourceFunc) idle_iterate, pipeline);
   g_timeout_add (2000, (GSourceFunc) switch_timer, video_switch);
 
   g_main_loop_run (loop);
