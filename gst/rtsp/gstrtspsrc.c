@@ -120,6 +120,12 @@ static GstStaticPadTemplate rtptemplate = GST_STATIC_PAD_TEMPLATE ("stream%d",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-rtp; application/x-rdt"));
 
+/* template used internally */
+static GstStaticPadTemplate anytemplate = GST_STATIC_PAD_TEMPLATE ("internal%d",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS_ANY);
+
 enum
 {
   /* FILL ME */
@@ -313,7 +319,6 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->req_location);
   g_free (rtspsrc->content_base);
   rtsp_url_free (rtspsrc->url);
-  g_free (rtspsrc->addr);
   g_static_rec_mutex_free (rtspsrc->state_rec_lock);
   g_free (rtspsrc->state_rec_lock);
 
@@ -939,7 +944,7 @@ again:
   g_object_get (G_OBJECT (udpsrc0), "port", rtpport, NULL);
   g_object_get (G_OBJECT (udpsrc1), "port", rtcpport, NULL);
 
-  /* this should not happen */
+  /* this should not happen... */
   if (*rtpport != tmp_rtp || *rtcpport != tmp_rtcp)
     goto port_error;
 
@@ -1003,6 +1008,77 @@ cleanup:
     }
     return FALSE;
   }
+}
+
+static gboolean
+gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
+{
+  GstRTSPSrc *src;
+  gboolean res = TRUE;
+
+  src = GST_RTSPSRC_CAST (gst_pad_get_element_private (pad));
+
+  GST_DEBUG_OBJECT (src, "pad %s:%s received event %s",
+      GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_QOS:
+      break;
+    case GST_EVENT_SEEK:
+      break;
+    case GST_EVENT_NAVIGATION:
+      break;
+    case GST_EVENT_LATENCY:
+      break;
+    default:
+      break;
+  }
+
+  return res;
+}
+
+static gboolean
+gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
+{
+  GstRTSPSrc *src;
+  gboolean res = TRUE;
+
+  src = GST_RTSPSRC_CAST (gst_pad_get_element_private (pad));
+
+  GST_DEBUG_OBJECT (src, "pad %s:%s received query %s",
+      GST_DEBUG_PAD_NAME (pad), GST_QUERY_TYPE_NAME (query));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+    {
+      break;
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+
+      gst_query_parse_duration (query, &format, NULL);
+
+      switch (format) {
+        case GST_FORMAT_TIME:
+          break;
+        default:
+          res = FALSE;
+          break;
+      }
+      break;
+    }
+    case GST_QUERY_LATENCY:
+    {
+      /* we are live with a min latency of 0 and unlimted max latency */
+      gst_query_set_latency (query, TRUE, 0, -1);
+      break;
+    }
+    default:
+      break;
+  }
+
+  return res;
 }
 
 static void
@@ -1135,39 +1211,15 @@ unknown_stream:
   }
 }
 
-/* sets up all elements needed for streaming over the specified transport.
- * Does not yet expose the element pads, this will be done when there is actuall
- * dataflow detected, which might never happen when UDP is blocked in a
- * firewall, for example.
- */
+/* try to get and configure a manager */
 static gboolean
-gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
+gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
     RTSPTransport * transport)
 {
-  GstRTSPSrc *src;
-  GstPad *outpad = NULL;
-  GstPadTemplate *template;
-  GstStateChangeReturn ret;
+  const gchar *manager;
   gchar *name;
-  GstStructure *s;
-  const gchar *mime, *manager;
   RTSPResult res;
-
-  src = stream->parent;
-
-  GST_DEBUG_OBJECT (src, "configuring transport for stream %p", stream);
-
-  s = gst_caps_get_structure (stream->caps, 0);
-
-  /* get the proper mime type for this stream now */
-  if ((res = rtsp_transport_get_mime (transport->trans, &mime)) < 0)
-    goto no_mime;
-  if (!mime)
-    goto no_mime;
-
-  /* configure the final mime type */
-  GST_DEBUG_OBJECT (src, "setting mime to %s", mime);
-  gst_structure_set_name (s, mime);
+  GstStateChangeReturn ret;
 
   /* find a manager */
   if ((res = rtsp_transport_get_manager (transport->trans, &manager, 0)) < 0)
@@ -1199,6 +1251,15 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
         goto start_session_failure;
 
       g_object_set (src->session, "latency", src->latency, NULL);
+
+      /* connect to signals if we did not already do so */
+      GST_DEBUG_OBJECT (src, "connect to signals on session manager");
+      src->session_sig_id =
+          g_signal_connect (src->session, "pad-added",
+          (GCallback) new_session_pad, src);
+      src->session_ptmap_id =
+          g_signal_connect (src->session, "request-pt-map",
+          (GCallback) request_pt_map, src);
     }
 
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
@@ -1210,197 +1271,341 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     stream->channelpad[1] = gst_element_get_request_pad (src->session, name);
     g_free (name);
   }
+
+
 use_no_manager:
+  return TRUE;
 
-  if (transport->lower_transport == RTSP_LOWER_TRANS_TCP) {
-    gint i;
+  /* ERRORS */
+no_manager:
+  {
+    GST_DEBUG_OBJECT (src, "cannot get a session manager");
+    return FALSE;
+  }
+manager_failed:
+  {
+    GST_DEBUG_OBJECT (src, "no session manager element %s found", manager);
+    return FALSE;
+  }
+start_session_failure:
+  {
+    GST_DEBUG_OBJECT (src, "could not start session");
+    return FALSE;
+  }
+}
 
-    /* configure for interleaved delivery, nothing needs to be done
-     * here, the loop function will call the chain functions of the
-     * session manager. */
-    stream->channel[0] = transport->interleaved.min;
-    stream->channel[1] = transport->interleaved.max;
-    GST_DEBUG_OBJECT (src, "stream %p on channels %d-%d", stream,
-        stream->channel[0], stream->channel[1]);
+/* free the UDP sources allocated when negotiating a transport.
+ * This function is called when the server negotiated to a transport where the
+ * UDP sources are not needed anymore, such as TCP or multicast. */
+static void
+gst_rtspsrc_stream_free_udp (GstRTSPStream * stream)
+{
+  gint i;
 
-    /* we can remove the allocated UDP ports now */
-    for (i = 0; i < 2; i++) {
-      if (stream->udpsrc[i]) {
-        gst_element_set_state (stream->udpsrc[i], GST_STATE_NULL);
-        gst_object_unref (stream->udpsrc[i]);
-        stream->udpsrc[i] = NULL;
-      }
+  for (i = 0; i < 2; i++) {
+    if (stream->udpsrc[i]) {
+      gst_element_set_state (stream->udpsrc[i], GST_STATE_NULL);
+      gst_object_unref (stream->udpsrc[i]);
+      stream->udpsrc[i] = NULL;
     }
+  }
+}
 
-    /* no session manager, send data to srcpad directly */
-    if (!stream->channelpad[0]) {
-      GST_DEBUG_OBJECT (src, "no manager, creating pad");
+/* for TCP, create pads to send and receive data to and from the manager and to
+ * intercept various events and queries
+ */
+static gboolean
+gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
+    RTSPTransport * transport, GstPad ** outpad)
+{
+  gchar *name;
+  GstPadTemplate *template;
+  GstPad *pad0, *pad1;
 
-      /* create a new pad we will use to stream to */
-      name = g_strdup_printf ("stream%d", stream->id);
-      template = gst_static_pad_template_get (&rtptemplate);
-      stream->channelpad[0] = gst_pad_new_from_template (template, name);
-      gst_object_unref (template);
-      g_free (name);
+  /* configure for interleaved delivery, nothing needs to be done
+   * here, the loop function will call the chain functions of the
+   * session manager. */
+  stream->channel[0] = transport->interleaved.min;
+  stream->channel[1] = transport->interleaved.max;
+  GST_DEBUG_OBJECT (src, "stream %p on channels %d-%d", stream,
+      stream->channel[0], stream->channel[1]);
 
-      /* set caps and activate */
-      gst_pad_use_fixed_caps (stream->channelpad[0]);
-      gst_pad_set_active (stream->channelpad[0], TRUE);
+  /* we can remove the allocated UDP ports now */
+  gst_rtspsrc_stream_free_udp (stream);
 
-      outpad = gst_object_ref (stream->channelpad[0]);
-    } else {
-      GST_DEBUG_OBJECT (src, "using manager source pad");
-      /* we connected to pad-added signal to get pads from the manager */
-    }
+  /* no session manager, send data to srcpad directly */
+  if (!stream->channelpad[0]) {
+    GST_DEBUG_OBJECT (src, "no manager, creating pad");
+
+    /* create a new pad we will use to stream to */
+    name = g_strdup_printf ("stream%d", stream->id);
+    template = gst_static_pad_template_get (&rtptemplate);
+    stream->channelpad[0] = gst_pad_new_from_template (template, name);
+    gst_object_unref (template);
+    g_free (name);
+
+    /* set caps and activate */
+    gst_pad_use_fixed_caps (stream->channelpad[0]);
+    gst_pad_set_active (stream->channelpad[0], TRUE);
+
+    *outpad = gst_object_ref (stream->channelpad[0]);
   } else {
-    /* multicast was selected, create UDP sources and join the multicast
-     * group. */
-    if (transport->lower_transport == RTSP_LOWER_TRANS_UDP_MCAST) {
-      gchar *uri;
+    GstPadTemplate *template;
 
-      GST_DEBUG_OBJECT (src, "creating UDP sources for multicast");
+    GST_DEBUG_OBJECT (src, "using manager source pad");
 
-      /* creating UDP source */
-      if (transport->port.min != -1) {
-        uri = g_strdup_printf ("udp://%s:%d", transport->destination,
-            transport->port.min);
-        stream->udpsrc[0] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
-        g_free (uri);
-        if (stream->udpsrc[0] == NULL)
-          goto no_element;
+    template = gst_static_pad_template_get (&anytemplate);
 
-        /* take ownership */
-        gst_object_ref (stream->udpsrc[0]);
-        gst_object_sink (stream->udpsrc[0]);
+    /* allocate pads for sending the channel data into the manager */
+    pad0 = gst_pad_new_from_template (template, "internal0");
+    gst_pad_set_event_function (pad0, gst_rtspsrc_handle_src_event);
+    gst_pad_set_query_function (pad0, gst_rtspsrc_handle_src_query);
+    gst_pad_link (pad0, stream->channelpad[0]);
+    stream->channelpad[0] = pad0;
+    gst_pad_set_element_private (pad0, src);
 
-        /* change state */
-        gst_element_set_state (stream->udpsrc[0], GST_STATE_READY);
-      }
-
-      /* creating another UDP source */
-      if (transport->port.max != -1) {
-        uri = g_strdup_printf ("udp://%s:%d", transport->destination,
-            transport->port.max);
-        stream->udpsrc[1] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
-        g_free (uri);
-        if (stream->udpsrc[1] == NULL)
-          goto no_element;
-
-        /* take ownership */
-        gst_object_ref (stream->udpsrc[1]);
-        gst_object_sink (stream->udpsrc[1]);
-
-        gst_element_set_state (stream->udpsrc[1], GST_STATE_READY);
-      }
+    if (stream->channelpad[1]) {
+      /* if we have a sinkpad for the other channel, create a pad and link to the
+       * manager. */
+      pad1 = gst_pad_new_from_template (template, "internal1");
+      gst_pad_link (pad1, stream->channelpad[1]);
+      stream->channelpad[1] = pad1;
     }
+    gst_object_unref (template);
+  }
+  return TRUE;
+}
 
-    /* we manage the UDP elements now. For unicast, the UDP sources where
-     * allocated in the stream when we suggested a transport. */
-    if (stream->udpsrc[0]) {
-      gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[0]);
+/* For multicast create UDP sources and join the multicast group. */
+static gboolean
+gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
+    RTSPTransport * transport, GstPad ** outpad)
+{
+  gchar *uri;
 
-      GST_DEBUG_OBJECT (src, "setting up UDP source");
+  GST_DEBUG_OBJECT (src, "creating UDP sources for multicast");
 
-      /* configure a timeout on the UDP port. When the timeout message is
-       * posted, we assume UDP transport is not possible. We reconnect using TCP
-       * if we can. */
-      g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", src->timeout,
-          NULL);
+  /* we can remove the allocated UDP ports now */
+  gst_rtspsrc_stream_free_udp (stream);
 
-      /* get output pad of the UDP source. */
-      outpad = gst_element_get_pad (stream->udpsrc[0], "src");
+  /* creating UDP source */
+  if (transport->port.min != -1) {
+    uri = g_strdup_printf ("udp://%s:%d", transport->destination,
+        transport->port.min);
+    stream->udpsrc[0] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
+    g_free (uri);
+    if (stream->udpsrc[0] == NULL)
+      goto no_element;
 
-      /* save it so we can unblock */
-      stream->blockedpad = outpad;
+    /* take ownership */
+    gst_object_ref (stream->udpsrc[0]);
+    gst_object_sink (stream->udpsrc[0]);
 
-      /* configure pad block on the pad. As soon as there is dataflow on the
-       * UDP source, we know that UDP is not blocked by a firewall and we can
-       * configure all the streams to let the application autoplug decoders. */
-      gst_pad_set_blocked_async (outpad, TRUE,
-          (GstPadBlockCallback) pad_blocked, src);
+    /* change state */
+    gst_element_set_state (stream->udpsrc[0], GST_STATE_READY);
+  }
 
-      if (stream->channelpad[0]) {
-        GST_DEBUG_OBJECT (src, "connecting UDP source 0 to manager");
-        /* configure for UDP delivery, we need to connect the UDP pads to
-         * the session plugin. */
-        gst_pad_link (outpad, stream->channelpad[0]);
-        gst_object_unref (outpad);
-        outpad = NULL;
-        /* we connected to pad-added signal to get pads from the manager */
-      } else {
-        GST_DEBUG_OBJECT (src, "using UDP src pad as output");
-      }
-    }
+  /* creating another UDP source */
+  if (transport->port.max != -1) {
+    uri = g_strdup_printf ("udp://%s:%d", transport->destination,
+        transport->port.max);
+    stream->udpsrc[1] = gst_element_make_from_uri (GST_URI_SRC, uri, NULL);
+    g_free (uri);
+    if (stream->udpsrc[1] == NULL)
+      goto no_element;
 
-    if (stream->udpsrc[1]) {
-      gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[1]);
+    /* take ownership */
+    gst_object_ref (stream->udpsrc[1]);
+    gst_object_sink (stream->udpsrc[1]);
 
-      if (stream->channelpad[1]) {
-        GstPad *pad;
+    gst_element_set_state (stream->udpsrc[1], GST_STATE_READY);
+  }
+  return TRUE;
 
-        GST_DEBUG_OBJECT (src, "connecting UDP source 1 to manager");
+  /* ERRORS */
+no_element:
+  {
+    GST_DEBUG_OBJECT (src, "no UDP source element found");
+    return FALSE;
+  }
+}
 
-        pad = gst_element_get_pad (stream->udpsrc[1], "src");
-        gst_pad_link (pad, stream->channelpad[1]);
-        gst_object_unref (pad);
-      }
-    }
-    /* configure udpsink back to the server for RTCP messages. */
-    {
-      GstPad *pad;
-      gint port;
-      gchar *destination, *uri;
+/* configure the remainder of the UDP ports */
+static gboolean
+gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
+    RTSPTransport * transport, GstPad ** outpad)
+{
+  /* we manage the UDP elements now. For unicast, the UDP sources where
+   * allocated in the stream when we suggested a transport. */
+  if (stream->udpsrc[0]) {
+    gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[0]);
 
-      /* get host and port */
-      if (transport->lower_transport == RTSP_LOWER_TRANS_UDP_MCAST)
-        port = transport->port.max;
-      else
-        port = transport->server_port.max;
+    GST_DEBUG_OBJECT (src, "setting up UDP source");
 
-      /* first take the source, then the endpoint to figure out where to send
-       * the RTCP. */
-      destination = transport->source;
-      if (destination == NULL)
-        destination = src->connection->ip;
+    /* configure a timeout on the UDP port. When the timeout message is
+     * posted, we assume UDP transport is not possible. We reconnect using TCP
+     * if we can. */
+    g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", src->timeout, NULL);
 
-      GST_DEBUG_OBJECT (src, "configure UDP sink for %s:%d", destination, port);
+    /* get output pad of the UDP source. */
+    *outpad = gst_element_get_pad (stream->udpsrc[0], "src");
 
-      uri = g_strdup_printf ("udp://%s:%d", destination, port);
-      stream->udpsink = gst_element_make_from_uri (GST_URI_SINK, uri, NULL);
-      g_free (uri);
-      if (stream->udpsink == NULL)
-        goto no_sink_element;
+    /* save it so we can unblock */
+    stream->blockedpad = *outpad;
 
-      /* we keep this playing always */
-      gst_element_set_locked_state (stream->udpsink, TRUE);
-      gst_element_set_state (stream->udpsink, GST_STATE_PLAYING);
+    /* configure pad block on the pad. As soon as there is dataflow on the
+     * UDP source, we know that UDP is not blocked by a firewall and we can
+     * configure all the streams to let the application autoplug decoders. */
+    gst_pad_set_blocked_async (stream->blockedpad, TRUE,
+        (GstPadBlockCallback) pad_blocked, src);
 
-      /* no sync needed */
-      g_object_set (G_OBJECT (stream->udpsink), "sync", FALSE, NULL);
-
-      gst_object_ref (stream->udpsink);
-      gst_bin_add (GST_BIN_CAST (src), stream->udpsink);
-
-      stream->rtcppad = gst_element_get_pad (stream->udpsink, "sink");
-
-      /* get session RTCP pad */
-      name = g_strdup_printf ("send_rtcp_src_%d", stream->id);
-      pad = gst_element_get_request_pad (src->session, name);
-      g_free (name);
-
-      /* and link */
-      gst_pad_link (pad, stream->rtcppad);
+    if (stream->channelpad[0]) {
+      GST_DEBUG_OBJECT (src, "connecting UDP source 0 to manager");
+      /* configure for UDP delivery, we need to connect the UDP pads to
+       * the session plugin. */
+      gst_pad_link (*outpad, stream->channelpad[0]);
+      gst_object_unref (*outpad);
+      *outpad = NULL;
+      /* we connected to pad-added signal to get pads from the manager */
+    } else {
+      GST_DEBUG_OBJECT (src, "using UDP src pad as output");
     }
   }
 
-  if (src->session && !src->session_sig_id) {
-    GST_DEBUG_OBJECT (src, "connect to signals on session manager");
-    src->session_sig_id =
-        g_signal_connect (src->session, "pad-added",
-        (GCallback) new_session_pad, src);
-    src->session_ptmap_id =
-        g_signal_connect (src->session, "request-pt-map",
-        (GCallback) request_pt_map, src);
+  /* RTCP port */
+  if (stream->udpsrc[1]) {
+    gst_bin_add (GST_BIN_CAST (src), stream->udpsrc[1]);
+
+    if (stream->channelpad[1]) {
+      GstPad *pad;
+
+      GST_DEBUG_OBJECT (src, "connecting UDP source 1 to manager");
+
+      pad = gst_element_get_pad (stream->udpsrc[1], "src");
+      gst_pad_link (pad, stream->channelpad[1]);
+      gst_object_unref (pad);
+    } else {
+      /* leave unlinked */
+    }
+  }
+  return TRUE;
+}
+
+/* configure the UDP sink back to the server for status reports */
+static gboolean
+gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
+    RTSPTransport * transport)
+{
+  GstPad *pad;
+  gint port;
+  gchar *destination, *uri, *name;
+
+  /* get host and port */
+  if (transport->lower_transport == RTSP_LOWER_TRANS_UDP_MCAST)
+    port = transport->port.max;
+  else
+    port = transport->server_port.max;
+
+  /* first take the source, then the endpoint to figure out where to send
+   * the RTCP. */
+  destination = transport->source;
+  if (destination == NULL)
+    destination = src->connection->ip;
+
+  GST_DEBUG_OBJECT (src, "configure UDP sink for %s:%d", destination, port);
+
+  uri = g_strdup_printf ("udp://%s:%d", destination, port);
+  stream->udpsink = gst_element_make_from_uri (GST_URI_SINK, uri, NULL);
+  g_free (uri);
+  if (stream->udpsink == NULL)
+    goto no_sink_element;
+
+  /* we keep this playing always */
+  gst_element_set_locked_state (stream->udpsink, TRUE);
+  gst_element_set_state (stream->udpsink, GST_STATE_PLAYING);
+
+  /* no sync needed */
+  g_object_set (G_OBJECT (stream->udpsink), "sync", FALSE, NULL);
+
+  gst_object_ref (stream->udpsink);
+  gst_bin_add (GST_BIN_CAST (src), stream->udpsink);
+
+  stream->rtcppad = gst_element_get_pad (stream->udpsink, "sink");
+
+  /* get session RTCP pad */
+  name = g_strdup_printf ("send_rtcp_src_%d", stream->id);
+  pad = gst_element_get_request_pad (src->session, name);
+  g_free (name);
+
+  /* and link */
+  gst_pad_link (pad, stream->rtcppad);
+
+  return TRUE;
+
+  /* ERRORS */
+no_sink_element:
+  {
+    GST_DEBUG_OBJECT (src, "no UDP sink element found");
+    return FALSE;
+  }
+}
+
+/* sets up all elements needed for streaming over the specified transport.
+ * Does not yet expose the element pads, this will be done when there is actuall
+ * dataflow detected, which might never happen when UDP is blocked in a
+ * firewall, for example.
+ */
+static gboolean
+gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
+    RTSPTransport * transport)
+{
+  GstRTSPSrc *src;
+  GstPad *outpad = NULL;
+  GstPadTemplate *template;
+  gchar *name;
+  GstStructure *s;
+  const gchar *mime;
+  RTSPResult res;
+
+  src = stream->parent;
+
+  GST_DEBUG_OBJECT (src, "configuring transport for stream %p", stream);
+
+  s = gst_caps_get_structure (stream->caps, 0);
+
+  /* get the proper mime type for this stream now */
+  if ((res = rtsp_transport_get_mime (transport->trans, &mime)) < 0)
+    goto unknown_transport;
+  if (!mime)
+    goto unknown_transport;
+
+  /* configure the final mime type */
+  GST_DEBUG_OBJECT (src, "setting mime to %s", mime);
+  gst_structure_set_name (s, mime);
+
+  /* try to get and configure a manager, channelpad[0-1] will be configured with
+   * the pads for the manager, or NULL when no manager is needed. */
+  if (!gst_rtspsrc_stream_configure_manager (src, stream, transport))
+    goto no_manager;
+
+  switch (transport->lower_transport) {
+    case RTSP_LOWER_TRANS_TCP:
+      if (!gst_rtspsrc_stream_configure_tcp (src, stream, transport, &outpad))
+        goto transport_failed;
+      break;
+    case RTSP_LOWER_TRANS_UDP_MCAST:
+      if (!gst_rtspsrc_stream_configure_mcast (src, stream, transport, &outpad))
+        goto transport_failed;
+      /* fallthrough, the rest is the same for UDP and MCAST */
+    case RTSP_LOWER_TRANS_UDP:
+      if (!gst_rtspsrc_stream_configure_udp (src, stream, transport, &outpad))
+        goto transport_failed;
+      /* configure udpsink back to the server for RTCP messages. */
+      if (!gst_rtspsrc_stream_configure_udp_sink (src, stream, transport))
+        goto transport_failed;
+      break;
+    default:
+      goto unknown_transport;
   }
 
   if (outpad) {
@@ -1424,7 +1629,12 @@ use_no_manager:
   return TRUE;
 
   /* ERRORS */
-no_mime:
+transport_failed:
+  {
+    GST_DEBUG_OBJECT (src, "failed to configure transport");
+    return FALSE;
+  }
+unknown_transport:
   {
     GST_DEBUG_OBJECT (src, "unknown transport");
     return FALSE;
@@ -1432,26 +1642,6 @@ no_mime:
 no_manager:
   {
     GST_DEBUG_OBJECT (src, "cannot get a session manager");
-    return FALSE;
-  }
-manager_failed:
-  {
-    GST_DEBUG_OBJECT (src, "no session manager element %s found", manager);
-    return FALSE;
-  }
-no_element:
-  {
-    GST_DEBUG_OBJECT (src, "no UDP source element found");
-    return FALSE;
-  }
-no_sink_element:
-  {
-    GST_DEBUG_OBJECT (src, "no UDP sink element found");
-    return FALSE;
-  }
-start_session_failure:
-  {
-    GST_DEBUG_OBJECT (src, "could not start session");
     return FALSE;
   }
 }
@@ -1543,7 +1733,7 @@ gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event)
   for (streams = src->streams; streams; streams = g_list_next (streams)) {
     GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
 
-    /* only pads that have a connection to the outside world */
+    /* only streams that have a connection to the outside world */
     if (ostream->srcpad == NULL)
       continue;
 
@@ -1867,7 +2057,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
           rtsp_connection_flush (src->connection, FALSE);
           goto interrupt;
         case RTSP_ETIMEOUT:
-          /* ignore result, a warning was posted */
+          /* send keep-alive, ignore the result, a warning will be posted. */
           GST_DEBUG_OBJECT (src, "timout, sending keep-alive");
           res = gst_rtspsrc_send_keep_alive (src);
           continue;
@@ -2814,14 +3004,13 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if (src->extension && src->extension->parse_sdp)
     src->extension->parse_sdp (src->extension, &sdp);
 
-  /* parse address */
+  /* parse range */
   {
-    SDPOrigin *origin;
+    gchar *range;
 
-    origin = sdp_message_get_origin (&sdp);
+    range = sdp_message_get_attribute_val (&sdp, "range");
 
-    g_free (src->addr);
-    src->addr = g_strdup (origin->addr);
+    GST_DEBUG_OBJECT (src, "got range: %s", GST_STR_NULL (range));
   }
 
   /* create streams */
@@ -3070,6 +3259,7 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
         timebase = atol (fields[j] + 8);
       }
     }
+    g_strfreev (fields);
     /* now we need to store the values in the caps of the stream and make sure
      * that the UDP elements have the same caps property set before they receive
      * the first buffer. */
@@ -3132,7 +3322,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
 
   /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
    * for the RTP packets. If this is not present, we assume all starts from 0... 
-   * FIXME, this is info for the RTP session manager ideally. */
+   * This is info for the RTP session manager that we pass to it in caps. */
   rtsp_message_get_header (&response, RTSP_HDR_RTP_INFO, &rtpinfo);
   if (rtpinfo)
     gst_rtspsrc_parse_rtpinfo (src, rtpinfo);
@@ -3200,6 +3390,12 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
 
   if (src->state == RTSP_STATE_READY)
     goto was_paused;
+
+  /* wait for streaming to finish */
+  GST_RTSP_STREAM_LOCK (src);
+  GST_RTSP_STREAM_UNLOCK (src);
+
+  rtsp_connection_flush (src->connection, FALSE);
 
   /* do pause */
   res = rtsp_message_init_request (&request, RTSP_PAUSE, src->req_location);

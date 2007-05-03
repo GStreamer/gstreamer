@@ -1,3 +1,24 @@
+2007-05-03  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_finalize),
+	(gst_rtspsrc_alloc_udp_ports), (gst_rtspsrc_handle_src_event),
+	(gst_rtspsrc_handle_src_query),
+	(gst_rtspsrc_stream_configure_manager),
+	(gst_rtspsrc_stream_free_udp), (gst_rtspsrc_stream_configure_tcp),
+	(gst_rtspsrc_stream_configure_mcast),
+	(gst_rtspsrc_stream_configure_udp),
+	(gst_rtspsrc_stream_configure_udp_sink),
+	(gst_rtspsrc_stream_configure_transport), (gst_rtspsrc_push_event),
+	(gst_rtspsrc_loop_udp), (gst_rtspsrc_open),
+	(gst_rtspsrc_parse_rtpinfo), (gst_rtspsrc_play),
+	(gst_rtspsrc_pause):
+	Refactor transport configuration code.
+	Create internal pads for TCP transport so that we can implement events
+	and queries.
+	Handle events and queries.
+	Parse range from the SDP.
+	Fix race in pause handler where the connection could still be flushing.
+
 2007-05-02  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
