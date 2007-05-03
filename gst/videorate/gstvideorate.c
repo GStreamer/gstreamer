@@ -569,6 +569,9 @@ gst_video_rate_chain (GstPad * pad, GstBuffer * buffer)
 
   in_ts = GST_BUFFER_TIMESTAMP (buffer);
 
+  if (G_UNLIKELY (in_ts == GST_CLOCK_TIME_NONE))
+    goto invalid_buffer;
+
   GST_DEBUG_OBJECT (videorate, "got buffer with timestamp %" GST_TIME_FORMAT,
       GST_TIME_ARGS (in_ts));
 
@@ -681,6 +684,14 @@ not_negotiated:
     GST_WARNING_OBJECT (videorate, "no framerate negotiated");
     gst_buffer_unref (buffer);
     res = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
+
+invalid_buffer:
+  {
+    GST_WARNING_OBJECT (videorate,
+        "Got buffer with GST_CLOCK_TIME_NONE timestamp, discarding it");
+    gst_buffer_unref (buffer);
     goto done;
   }
 }
