@@ -1566,9 +1566,18 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstBaseTransform *trans;
   GstFlowReturn ret;
+  GstClockTime last_stop = GST_CLOCK_TIME_NONE;
   GstBuffer *outbuf = NULL;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+
+  /* calculate end position of the incoming buffer */
+  if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE) {
+    if (GST_BUFFER_DURATION (buffer) != GST_CLOCK_TIME_NONE)
+      last_stop = GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
+    else
+      last_stop = GST_BUFFER_TIMESTAMP (buffer);
+  }
 
   /* protect transform method and concurrent buffer alloc */
   g_mutex_lock (trans->transform_lock);
@@ -1579,6 +1588,11 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
    * GST_BASE_TRANSFORM_FLOW_DROPPED we will not push either. */
   if (outbuf != NULL) {
     if ((ret == GST_FLOW_OK)) {
+      /* Remember last stop position */
+      if ((last_stop != GST_CLOCK_TIME_NONE) &&
+          (trans->segment.format == GST_FORMAT_TIME))
+        gst_segment_set_last_stop (&trans->segment, GST_FORMAT_TIME, last_stop);
+
       /* apply DISCONT flag if the buffer is not yet marked as such */
       if (trans->priv->discont) {
         if (!GST_BUFFER_IS_DISCONT (outbuf)) {
