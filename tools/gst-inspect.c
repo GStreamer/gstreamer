@@ -606,8 +606,6 @@ print_implementation_info (GstElement * element)
   n_print ("\n");
   n_print ("Element Implementation:\n");
 
-  n_print ("  No loopfunc(), must be chain-based or not configured yet\n");
-
   n_print ("  Has change_state() function: %s\n",
       GST_DEBUG_FUNCPTR_NAME (gstelement_class->change_state));
 #ifndef GST_DISABLE_LOADSAVE
