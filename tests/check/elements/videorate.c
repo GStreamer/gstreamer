@@ -138,6 +138,7 @@ GST_START_TEST (test_one)
   memset (GST_BUFFER_DATA (inbuffer), 0, 4);
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
   gst_buffer_set_caps (inbuffer, caps);
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
 

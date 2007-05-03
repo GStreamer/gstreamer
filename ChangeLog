@@ -1,5 +1,11 @@
 2007-05-03  Edward Hervey  <edward@fluendo.com>
 
+	* tests/check/elements/videorate.c: (GST_START_TEST):
+	Set buffer timestamp to a valid value in order to test the buffer
+	really does stay in videorate.
+
+2007-05-03  Edward Hervey  <edward@fluendo.com>
+
 	* gst/videorate/gstvideorate.c: (gst_video_rate_chain):
 	There is no sensible way to handle incoming buffers which don't have a
 	valid timestamp. We therefore discard them and wait for the next one.
