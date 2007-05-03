@@ -94,6 +94,7 @@ struct _GstMultipartMux
   gchar *boundary;
 
   gboolean negotiated;
+  gboolean need_segment;
 };
 
 struct _GstMultipartMuxClass
@@ -248,28 +249,6 @@ gst_multipart_mux_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static GstPadLinkReturn
-gst_multipart_mux_sinkconnect (GstPad * pad, GstPad * peer)
-{
-  GstMultipartMux *multipart_mux;
-  GstMultipartPad *mppad;
-  gchar *pad_name = NULL;
-
-  multipart_mux = GST_MULTIPART_MUX (gst_pad_get_parent (pad));
-
-  mppad = (GstMultipartPad *) gst_pad_get_element_private (pad);
-
-  pad_name = gst_pad_get_name (pad);
-
-  GST_DEBUG_OBJECT (multipart_mux, "sinkconnect triggered on %s", pad_name);
-
-  g_free (pad_name);
-
-  gst_object_unref (multipart_mux);
-
-  return GST_PAD_LINK_OK;
-}
-
 static GstPad *
 gst_multipart_mux_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * req_name)
@@ -277,51 +256,43 @@ gst_multipart_mux_request_new_pad (GstElement * element,
   GstMultipartMux *multipart_mux;
   GstPad *newpad;
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+  gchar *name;
 
-  g_return_val_if_fail (templ != NULL, NULL);
-
-  if (templ->direction != GST_PAD_SINK) {
-    g_warning ("multipart_mux: request pad that is not a SINK pad\n");
-    return NULL;
-  }
-
-  g_return_val_if_fail (GST_IS_MULTIPART_MUX (element), NULL);
+  if (templ != gst_element_class_get_pad_template (klass, "sink_%d"))
+    goto wrong_template;
 
   multipart_mux = GST_MULTIPART_MUX (element);
 
-  if (templ == gst_element_class_get_pad_template (klass, "sink_%d")) {
-    gchar *name;
+  /* create new pad with the name */
+  name = g_strdup_printf ("sink_%02d", multipart_mux->numpads);
+  newpad = gst_pad_new_from_template (templ, name);
+  g_free (name);
 
-    /* create new pad with the name */
-    name = g_strdup_printf ("sink_%02d", multipart_mux->numpads);
-    newpad = gst_pad_new_from_template (templ, name);
-    g_free (name);
+  /* construct our own wrapper data structure for the pad to
+   * keep track of its status */
+  {
+    GstMultipartPad *multipartpad;
 
-    /* construct our own wrapper data structure for the pad to
-     * keep track of its status */
-    {
-      GstMultipartPad *multipartpad;
+    multipartpad = (GstMultipartPad *)
+        gst_collect_pads_add_pad (multipart_mux->collect, newpad,
+        sizeof (GstMultipartPad));
 
-      multipartpad = (GstMultipartPad *)
-          gst_collect_pads_add_pad (multipart_mux->collect, newpad,
-          sizeof (GstMultipartPad));
-
-      /* save a pointer to our data in the pad */
-      gst_pad_set_element_private (newpad, multipartpad);
-      multipart_mux->numpads++;
-    }
-  } else {
-    g_warning ("multipart_mux: this is not our template!\n");
-    return NULL;
+    /* save a pointer to our data in the pad */
+    gst_pad_set_element_private (newpad, multipartpad);
+    multipart_mux->numpads++;
   }
-
-  /* setup some pad functions */
-  gst_pad_set_link_function (newpad, gst_multipart_mux_sinkconnect);
 
   /* add the pad to the element */
   gst_element_add_pad (element, newpad);
 
   return newpad;
+
+  /* ERRORS */
+wrong_template:
+  {
+    g_warning ("multipart_mux: this is not our template!");
+    return NULL;
+  }
 }
 
 /* handle events */
@@ -472,6 +443,26 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
     mux->negotiated = TRUE;
   }
 
+  /* see if we need to push a segment */
+  if (mux->need_segment) {
+    GstEvent *event;
+    GstClockTime time;
+
+    if (best->timestamp != -1)
+      time = best->timestamp;
+    else
+      time = 0;
+
+    /* for the segment, we take the first timestamp we see, we don't know the
+     * length and the position is 0 */
+    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
+        time, -1, 0);
+
+    gst_pad_push_event (mux->srcpad, event);
+
+    mux->need_segment = FALSE;
+  }
+
   structure = gst_caps_get_structure (GST_BUFFER_CAPS (best->buffer), 0);
   if (!structure)
     goto no_caps;
@@ -490,9 +481,13 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   memcpy (GST_BUFFER_DATA (headerbuf), header, headerlen);
   g_free (header);
 
-  gst_buffer_stamp (headerbuf, best->buffer);
+  /* the header has the same timestamp as the data buffer (which we will push
+   * below) and has a duration of 0 */
+  GST_BUFFER_TIMESTAMP (headerbuf) = best->timestamp;
+  GST_BUFFER_DURATION (headerbuf) = 0;
   GST_BUFFER_OFFSET (headerbuf) = mux->offset;
   mux->offset += headerlen;
+  GST_BUFFER_OFFSET_END (headerbuf) = mux->offset;
 
   GST_DEBUG_OBJECT (mux, "pushing %" G_GSIZE_FORMAT " bytes header buffer",
       headerlen);
@@ -510,6 +505,7 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   gst_buffer_set_caps (databuf, GST_PAD_CAPS (mux->srcpad));
   GST_BUFFER_OFFSET (databuf) = mux->offset;
   mux->offset += GST_BUFFER_SIZE (databuf);
+  GST_BUFFER_OFFSET_END (databuf) = mux->offset;
 
   GST_DEBUG_OBJECT (mux, "pushing %u bytes data buffer",
       GST_BUFFER_SIZE (databuf));
@@ -609,6 +605,7 @@ gst_multipart_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       multipart_mux->offset = 0;
       multipart_mux->negotiated = FALSE;
+      multipart_mux->need_segment = TRUE;
       GST_DEBUG_OBJECT (multipart_mux, "starting collect pads");
       gst_collect_pads_start (multipart_mux->collect);
       break;

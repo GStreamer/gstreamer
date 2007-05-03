@@ -1,5 +1,12 @@
 2007-05-03  Wim Taymans  <wim@fluendo.com>
 
+	* gst/multipart/multipartmux.c:
+	(gst_multipart_mux_request_new_pad), (gst_multipart_mux_collected),
+	(gst_multipart_mux_change_state):
+	Emit NEWSEGMENT events before pushing the first buffer.
+
+2007-05-03  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_finalize),
 	(gst_rtspsrc_alloc_udp_ports), (gst_rtspsrc_handle_src_event),
 	(gst_rtspsrc_handle_src_query),
