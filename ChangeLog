@@ -1,3 +1,16 @@
+2007-05-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new):
+	  When XShm is not available, we might get row strides that are not
+	  rounded up to multiples of four; this is bad, because virtually
+	  every RGB-processing element in GStreamer assumes rowstrides are
+	  rounded up to multiples of four, so let's allocate at least enough
+	  memory to avoid crashes in this case. The image will still be
+	  displayed distorted though if this happens, so that still needs
+	  fixing (maybe by allocating a bigger image with an 'even' width
+	  and then clipping it appropriately when rendering - something for
+	  Xlib aficionados in any case).
+
 2007-05-03  Michael Smith <msmith@fluendo.com>
 
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):

@@ -500,6 +500,8 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
   } else
 #endif /* HAVE_XSHM */
   {
+    guint allocsize;
+
     ximage->ximage = XCreateImage (ximagesink->xcontext->disp,
         ximagesink->xcontext->visual,
         ximagesink->xcontext->depth,
@@ -519,9 +521,27 @@ gst_ximagesink_ximage_new (GstXImageSink * ximagesink, GstCaps * caps)
       goto beach;
     }
 
+    /* upstream will assume that rowstrides are multiples of 4, but this
+     * doesn't always seem to be the case with XCreateImage() */
+    if ((ximage->ximage->bytes_per_line % 4) != 0) {
+      GST_WARNING_OBJECT (ximagesink, "returned stride not a multiple of 4 as "
+          "usually assumed");
+    }
+
     /* we have to use the returned bytes_per_line for our image size */
     ximage->size = ximage->ximage->bytes_per_line * ximage->ximage->height;
-    ximage->ximage->data = g_malloc (ximage->size);
+
+    /* alloc a bit more for unexpected strides to avoid crashes upstream.
+     * FIXME: if we get an unrounded stride, the image will be displayed
+     * distorted, since all upstream elements assume a rounded stride */
+    allocsize =
+        GST_ROUND_UP_4 (ximage->ximage->bytes_per_line) *
+        ximage->ximage->height;
+    ximage->ximage->data = g_malloc (allocsize);
+    GST_LOG_OBJECT (ximagesink,
+        "non-XShm image size is %" G_GSIZE_FORMAT " (alloced: %u), width %d, "
+        "stride %d", ximage->size, allocsize, ximage->width,
+        ximage->ximage->bytes_per_line);
 
     XSync (ximagesink->xcontext->disp, FALSE);
   }
