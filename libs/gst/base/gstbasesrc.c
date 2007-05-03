@@ -546,6 +546,40 @@ gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
   gst_segment_init (&src->segment, format);
 }
 
+/**
+ * gst_base_src_query_latency:
+ * @src: the source
+ * @live: if the source is live
+ * @min_latency: the min latency of the source
+ * @max_latency: the max latency of the source
+ *
+ * Query the source for the latency parameters. @live will be TRUE when @src is
+ * configured as a live source. @min_latency will be set as the latency between
+ * calling the create function and the timestamp on the resulting buffer.
+ * @max_latency is always the undefined value of -1.
+ *
+ * This function is mostly used by subclasses. 
+ *
+ * Returns: TRUE if the query succeeded.
+ *
+ * Since: 0.10.13
+ */
+gboolean
+gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
+    GstClockTime * min_latency, GstClockTime * max_latency)
+{
+  GST_LIVE_LOCK (src);
+  if (live)
+    *live = src->is_live;
+  if (min_latency)
+    *min_latency = 0;
+  if (max_latency)
+    *max_latency = -1;
+  GST_LIVE_UNLOCK (src);
+
+  return TRUE;
+}
+
 static gboolean
 gst_base_src_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -740,14 +774,16 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       break;
     }
     case GST_QUERY_LATENCY:
-      /* we can only report the fact that we are live or not, we know nothing
-       * about latency. Subclasses should override and implement something
-       * usefull */
-      GST_LIVE_LOCK (src);
-      gst_query_set_latency (query, src->is_live, 0, -1);
-      GST_LIVE_UNLOCK (src);
-      res = TRUE;
+    {
+      GstClockTime min, max;
+      gboolean live;
+
+      /* Subclasses should override and implement something usefull */
+      res = gst_base_src_query_latency (src, &live, &min, &max);
+
+      gst_query_set_latency (query, live, min, max);
       break;
+    }
     case GST_QUERY_JITTER:
     case GST_QUERY_RATE:
     default:

@@ -237,6 +237,10 @@ gboolean	gst_base_src_is_live	   (GstBaseSrc *src);
 
 void		gst_base_src_set_format	   (GstBaseSrc *src, GstFormat format);
 
+gboolean        gst_base_src_query_latency (GstBaseSrc *src, gboolean * live,
+                                            GstClockTime * min_latency, 
+					    GstClockTime * max_latency);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_SRC_H__ */
