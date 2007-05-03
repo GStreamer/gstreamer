@@ -1189,7 +1189,7 @@ not_configured:
     /* let the default allocator handle it... */
     GST_DEBUG_OBJECT (trans, "not configured");
     gst_buffer_replace (buf, NULL);
-    if (trans->passthrough || trans->always_in_place) {
+    if (trans->passthrough) {
       /* ...by calling alloc_buffer without setting caps on the src pad, which
        * will force negotiation in the chain function. */
       res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);
@@ -1204,7 +1204,7 @@ unknown_size:
     /* let the default allocator handle it... */
     GST_DEBUG_OBJECT (trans, "unknown size");
     gst_buffer_replace (buf, NULL);
-    if (trans->passthrough || trans->always_in_place) {
+    if (trans->passthrough) {
       /* ...by calling alloc_buffer without setting caps on the src pad, which
        * will force negotiation in the chain function. */
       res = gst_pad_alloc_buffer (trans->srcpad, offset, size, caps, buf);

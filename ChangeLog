@@ -1,5 +1,12 @@
 2007-05-03  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstbasetransform.c:
+	(gst_base_transform_buffer_alloc):
+	always_in_place does not mean that the sink and source caps are the
+	same! Make sure we don't blindly proxy the buffer_alloc in this case.
+
+2007-05-03  Wim Taymans  <wim@fluendo.com>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_query_latency),
 	(gst_base_src_default_query), (gst_base_src_get_range):
