@@ -66,7 +66,8 @@ typedef struct
   GstCollectData collect;       /* we extend the CollectData */
 
   GstBuffer *buffer;            /* the queued buffer for this pad */
-  GstClockTime timestamp;       /* its timestamp */
+  GstClockTime timestamp;       /* its timestamp, converted to running_time so that we can
+                                   correctly sort over multiple segments. */
 }
 GstMultipartPad;
 
@@ -382,10 +383,13 @@ gst_multipart_mux_queue_pads (GstMultipartMux * mux)
       buf = gst_collect_pads_pop (mux->collect, data);
 
       /* Store timestamp with segment_start and preroll */
-      if (buf && GST_BUFFER_TIMESTAMP_IS_VALID (buf))
-        pad->timestamp = GST_BUFFER_TIMESTAMP (buf) - data->segment.start;
-      else
+      if (buf && GST_BUFFER_TIMESTAMP_IS_VALID (buf)) {
+        pad->timestamp =
+            gst_segment_to_running_time (&data->segment, GST_FORMAT_TIME,
+            GST_BUFFER_TIMESTAMP (buf));
+      } else {
         pad->timestamp = GST_CLOCK_TIME_NONE;
+      }
 
       pad->buffer = buf;
     }
@@ -503,6 +507,8 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   best->buffer = NULL;
 
   gst_buffer_set_caps (databuf, GST_PAD_CAPS (mux->srcpad));
+  /* we need to updated the timestamp to match the running_time */
+  GST_BUFFER_TIMESTAMP (databuf) = best->timestamp;
   GST_BUFFER_OFFSET (databuf) = mux->offset;
   mux->offset += GST_BUFFER_SIZE (databuf);
   GST_BUFFER_OFFSET_END (databuf) = mux->offset;

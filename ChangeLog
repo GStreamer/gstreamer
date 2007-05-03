@@ -1,5 +1,11 @@
 2007-05-03  Wim Taymans  <wim@fluendo.com>
 
+	* gst/multipart/multipartmux.c: (gst_multipart_mux_queue_pads),
+	(gst_multipart_mux_collected):
+	Fix timestamps on outgoing buffers.
+
+2007-05-03  Wim Taymans  <wim@fluendo.com>
+
 	* gst/multipart/multipartmux.c:
 	(gst_multipart_mux_request_new_pad), (gst_multipart_mux_collected),
 	(gst_multipart_mux_change_state):
