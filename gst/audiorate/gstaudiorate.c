@@ -510,6 +510,11 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
   audiorate->in++;
 
   in_time = GST_BUFFER_TIMESTAMP (buf);
+  if (in_time == GST_CLOCK_TIME_NONE) {
+    GST_DEBUG_OBJECT (audiorate, "no timestamp, using expected next time");
+    in_time = audiorate->next_ts;
+  }
+
   in_size = GST_BUFFER_SIZE (buf);
   in_samples = in_size / audiorate->bytes_per_sample;
   /* get duration from the size because we can and it's more accurate */
