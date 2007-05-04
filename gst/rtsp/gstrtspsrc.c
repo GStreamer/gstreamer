@@ -2043,17 +2043,22 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   RTSPMessage response = { 0 };
   RTSPResult res;
   RTSPStatusCode code;
+  RTSPMethod method;
 
   GST_DEBUG_OBJECT (src, "creating server keep-alive");
 
-  res =
-      rtsp_message_init_request (&request, RTSP_GET_PARAMETER,
-      src->req_location);
+  /* find a method to use for keep-alive */
+  if (src->methods & RTSP_GET_PARAMETER)
+    method = RTSP_GET_PARAMETER;
+  else
+    method = RTSP_OPTIONS;
+
+  res = rtsp_message_init_request (&request, method, src->req_location);
   if (res < 0)
     goto send_error;
 
   /* let us handle the error code because we don't care */
-  if (!gst_rtspsrc_send (src, &request, &response, &code))
+  if ((res = gst_rtspsrc_send (src, &request, &response, &code)) < 0)
     goto send_error;
 
   rtsp_message_unset (&request);
@@ -2224,6 +2229,11 @@ receive_error:
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("Could not receive message. (%s)", str));
     g_free (str);
+    /* don't bother continueing if we the connection was closed */
+    if (res == RTSP_EEOF) {
+      src->running = FALSE;
+      gst_task_pause (src->task);
+    }
     return;
   }
 handle_request_failed:
@@ -2419,7 +2429,7 @@ no_user_pass:
   }
 }
 
-static gboolean
+static RTSPResult
 gst_rtspsrc_try_send (GstRTSPSrc * src, RTSPMessage * request,
     RTSPMessage * response, RTSPStatusCode * code)
 {
@@ -2463,13 +2473,15 @@ next:
 
   thecode = response->type_data.response.code;
 
+  GST_DEBUG_OBJECT (src, "got response message %d", thecode);
+
   /* if the caller wanted the result code, we store it. */
   if (code)
     *code = thecode;
 
   /* If the request didn't succeed, bail out before doing any more */
   if (thecode != RTSP_STS_OK)
-    return FALSE;
+    return RTSP_OK;
 
   /* store new content base if any */
   rtsp_message_get_header (response, RTSP_HDR_CONTENT_BASE, &content_base);
@@ -2479,7 +2491,7 @@ next:
   if (src->extension && src->extension->after_send)
     src->extension->after_send (src->extension, request, response);
 
-  return TRUE;
+  return RTSP_OK;
 
   /* ERRORS */
 send_error:
@@ -2489,7 +2501,7 @@ send_error:
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message. (%s)", str));
     g_free (str);
-    return FALSE;
+    return res;
   }
 receive_error:
   {
@@ -2498,12 +2510,12 @@ receive_error:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not receive message. (%s)", str));
     g_free (str);
-    return FALSE;
+    return res;
   }
 handle_request_failed:
   {
     /* ERROR was posted */
-    return FALSE;
+    return res;
   }
 }
 
@@ -2526,19 +2538,20 @@ handle_request_failed:
  * to retrieve authentication credentials via gst_rtspsrc_setup_auth and retry
  * the request.
  *
- * Returns: TRUE if the processing was successful.
+ * Returns: RTSP_OK if the processing was successful.
  */
-gboolean
+RTSPResult
 gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
     RTSPMessage * response, RTSPStatusCode * code)
 {
   RTSPStatusCode int_code = RTSP_STS_OK;
-  gboolean res;
+  RTSPResult res;
   gboolean retry;
 
   do {
     retry = FALSE;
-    res = gst_rtspsrc_try_send (src, request, response, &int_code);
+    if ((res = gst_rtspsrc_try_send (src, request, response, &int_code)) < 0)
+      goto error;
 
     if (int_code == RTSP_STS_UNAUTHORIZED) {
       if (gst_rtspsrc_setup_auth (src, response)) {
@@ -2558,6 +2571,12 @@ gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
 
   return res;
 
+  /* ERRORS */
+error:
+  {
+    GST_DEBUG_OBJECT (src, "got error %d", res);
+    return res;
+  }
 error_response:
   {
     switch (response->type_data.response.code) {
@@ -2573,7 +2592,7 @@ error_response:
     }
     /* we return FALSE so we should unset the response ourselves */
     rtsp_message_unset (response);
-    return FALSE;
+    return RTSP_ERROR;
   }
 }
 
@@ -2872,7 +2891,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     rtsp_message_add_header (&request, RTSP_HDR_TRANSPORT, transports);
     g_free (transports);
 
-    if (!gst_rtspsrc_send (src, &request, &response, NULL))
+    if ((res = gst_rtspsrc_send (src, &request, &response, NULL) < 0))
       goto send_error;
 
     /* parse response transport */
@@ -3019,7 +3038,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   /* send OPTIONS */
   GST_DEBUG_OBJECT (src, "send options...");
-  if (!gst_rtspsrc_send (src, &request, &response, NULL))
+  if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
     goto send_error;
 
   /* parse OPTIONS */
@@ -3043,7 +3062,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   /* send DESCRIBE */
   GST_DEBUG_OBJECT (src, "send describe...");
-  if (!gst_rtspsrc_send (src, &request, &response, NULL))
+  if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
     goto send_error;
 
   /* check if reply is SDP */
@@ -3219,7 +3238,7 @@ gst_rtspsrc_close (GstRTSPSrc * src)
     if (res < 0)
       goto create_request_failed;
 
-    if (!gst_rtspsrc_send (src, &request, &response, NULL))
+    if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
       goto send_error;
 
     /* FIXME, parse result? */
@@ -3375,7 +3394,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
 
   rtsp_message_add_header (&request, RTSP_HDR_RANGE, "npt=0-");
 
-  if (!gst_rtspsrc_send (src, &request, &response, NULL))
+  if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
     goto send_error;
 
   rtsp_message_unset (&request);
@@ -3466,7 +3485,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
   if (res < 0)
     goto create_request_failed;
 
-  if (!gst_rtspsrc_send (src, &request, &response, NULL))
+  if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
     goto send_error;
 
   rtsp_message_unset (&request);
@@ -3621,7 +3640,7 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (rtspsrc, "start flush");
-      rtsp_connection_flush (rtspsrc->connection, TRUE);
+      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_STOP, TRUE);
       break;
     default:
       break;

@@ -1,5 +1,18 @@
 2007-05-04  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send_keep_alive),
+	(gst_rtspsrc_loop_udp), (gst_rtspsrc_try_send), (gst_rtspsrc_send),
+	(gst_rtspsrc_setup_streams), (gst_rtspsrc_open),
+	(gst_rtspsrc_close), (gst_rtspsrc_play), (gst_rtspsrc_pause),
+	(gst_rtspsrc_change_state):
+	Let more error state trickle down so that we can catch more error
+	cases.
+	Handle keep-alive a little smarter by selecting a method the server
+	actually supports.
+	Fix a race in UDP streaming shutdown.
+
+2007-05-04  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send_keep_alive):
 	Ignore errors when trying to use the keep-alive messages.
 
