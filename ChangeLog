@@ -1,3 +1,13 @@
+2007-05-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_query):
+	Add some debug info.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_init),
+	(rtp_session_send_rtp):
+	Store real user name in the session.
+
 2007-05-03  Zaheer Abbas Merali  <<zaheerabbas at merali dot org>>
 
 	* configure.ac:

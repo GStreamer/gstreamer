@@ -1100,6 +1100,10 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
         if ((res = gst_pad_query (peer, query))) {
           gst_query_parse_latency (query, &us_live, &min_latency, &max_latency);
 
+          GST_DEBUG_OBJECT (jitterbuffer, "Peer latency: min %"
+              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
           min_latency += priv->latency_ms * GST_MSECOND;
           max_latency += priv->latency_ms * GST_MSECOND;
 
