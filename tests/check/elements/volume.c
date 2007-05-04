@@ -24,6 +24,7 @@
 
 #include <gst/base/gstbasetransform.h>
 #include <gst/check/gstcheck.h>
+#include <gst/controller/gstcontroller.h>
 
 gboolean have_eos = FALSE;
 
@@ -369,7 +370,39 @@ GST_START_TEST (test_passthrough)
 
 GST_END_TEST;
 
-Suite *
+GST_START_TEST (test_controller_usability)
+{
+  GstController *c;
+  GstElement *volume;
+  GValue value = { 0, };
+
+  /* note: the volume element should init the controller library for us */
+  volume = setup_volume ();
+
+  g_value_init (&value, G_TYPE_DOUBLE);
+
+  c = gst_controller_new (G_OBJECT (volume), "volume", NULL);
+
+  fail_unless (GST_IS_CONTROLLER (c));
+
+  /* this shouldn't crash, whether this mode is implemented or not */
+  gst_controller_set_interpolation_mode (c, "volume", GST_INTERPOLATE_CUBIC);
+
+  g_value_set_double (&value, 1.0);
+  gst_controller_set (c, "volume", 0 * GST_SECOND, &value);
+  g_value_set_double (&value, 1.0);
+  gst_controller_set (c, "volume", 5 * GST_SECOND, &value);
+  g_value_set_double (&value, 0.0);
+  gst_controller_set (c, "volume", 10 * GST_SECOND, &value);
+
+  g_object_unref (c);
+
+  cleanup_volume (volume);
+}
+
+GST_END_TEST;
+
+static Suite *
 volume_suite (void)
 {
   Suite *s = suite_create ("volume");
@@ -382,23 +415,9 @@ volume_suite (void)
   tcase_add_test (tc_chain, test_mute);
   tcase_add_test (tc_chain, test_wrong_caps);
   tcase_add_test (tc_chain, test_passthrough);
+  tcase_add_test (tc_chain, test_controller_usability);
 
   return s;
 }
 
-int
-main (int argc, char **argv)
-{
-  int nf;
-
-  Suite *s = volume_suite ();
-  SRunner *sr = srunner_create (s);
-
-  gst_check_init (&argc, &argv);
-
-  srunner_run_all (sr, CK_NORMAL);
-  nf = srunner_ntests_failed (sr);
-  srunner_free (sr);
-
-  return nf;
-}
+GST_CHECK_MAIN (volume)

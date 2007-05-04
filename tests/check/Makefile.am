@@ -188,11 +188,13 @@ elements_textoverlay_LDADD = $(GST_BASE_LIBS) $(LDADD)
 elements_textoverlay_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 elements_volume_LDADD = \
+	$(GST_CONTROLLER_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
 elements_volume_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_CONTROLLER_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 
