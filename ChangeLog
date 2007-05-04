@@ -1,3 +1,9 @@
+2007-05-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cdda_base_src_add_track):
+	  Fix build when disabling asserts.
+
 2007-05-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_new):

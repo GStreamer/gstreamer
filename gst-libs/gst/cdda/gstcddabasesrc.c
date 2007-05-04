@@ -1025,7 +1025,10 @@ gst_cdda_base_src_add_track (GstCddaBaseSrc * src, GstCddaBaseSrcTrack * track)
   if (src->num_tracks > 0) {
     guint end_of_previous_track = src->tracks[src->num_tracks - 1].end;
 
-    g_return_val_if_fail (track->start >= end_of_previous_track, FALSE);
+    if (track->start >= end_of_previous_track) {
+      GST_WARNING ("track %2u overlaps with previous tracks", track->num);
+      return FALSE;
+    }
   }
 
   GST_OBJECT_LOCK (src);
