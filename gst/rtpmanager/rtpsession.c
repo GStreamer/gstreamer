@@ -186,8 +186,8 @@ rtp_session_init (RTPSession * sess)
   sess->mtu = 1400;
 
   /* some default SDES entries */
-  //sess->cname = g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
-  sess->cname = g_strdup_printf ("foo@%s", g_get_host_name ());
+  sess->cname =
+      g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
   sess->name = g_strdup (g_get_real_name ());
   sess->tool = g_strdup ("GStreamer");
 
