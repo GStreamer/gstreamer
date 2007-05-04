@@ -1,3 +1,13 @@
+2007-05-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/asfpacket.c: (gst_asf_payload_queue_for_stream):
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_reset),
+	(gst_asf_demux_init), (gst_asf_demux_push_complete_payloads),
+	(gst_asf_demux_process_file):
+	* gst/asfdemux/gstasfdemux.h:
+	  Make all timestamps start from zero in pull-mode too; some small
+	  clean-ups and FIXMEs here and there.
+
 2007-05-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/asfpacket.c: (gst_asf_demux_parse_payload),

@@ -87,7 +87,7 @@ typedef struct
   guint32     sequence;
   guint64     delay;
   guint64     first_pts;
-  guint64     last_pts;
+  guint64     last_pts; /* FIXME: remove, not actually evaluated */
   GstBuffer  *payload;
 
   /* video-only */
@@ -150,11 +150,13 @@ struct _GstASFDemux {
   guint32              num_streams;
   AsfStream            stream[GST_ASF_DEMUX_NUM_STREAMS];
 
+  GstClockTime         first_ts;        /* first timestamp found        */
+
   guint32              packet_size;
   guint32              timestamp;       /* in milliseconds              */
   guint64              play_time;
 
-  guint64              preroll;
+  guint64              preroll;         /* FIXME: make into GstClockTime */
   guint64              pts;
 
   gboolean             seekable;

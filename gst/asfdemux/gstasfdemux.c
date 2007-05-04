@@ -205,6 +205,7 @@ gst_asf_demux_reset (GstASFDemux * demux)
   demux->num_audio_streams = 0;
   demux->num_video_streams = 0;
   demux->num_streams = 0;
+  demux->first_ts = GST_CLOCK_TIME_NONE;
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
   demux->seekable = FALSE;
   demux->broadcast = FALSE;
@@ -237,6 +238,7 @@ gst_asf_demux_init (GstASFDemux * demux, GstASFDemuxClass * klass)
   demux->num_streams = 0;
 
   demux->taglist = NULL;
+  demux->first_ts = GST_CLOCK_TIME_NONE;
   demux->state = GST_ASF_DEMUX_STATE_HEADER;
 }
 
@@ -1033,12 +1035,6 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux)
       GST_BUFFER_DURATION (payload->buf) = payload->duration;
 
       /* FIXME: we should really set durations on buffers if we can */
-      /* (this is a hack, obviously) 
-         if (strncmp (GST_PAD_NAME (stream->pad), "video", 5) == 0 &&
-         !GST_BUFFER_DURATION_IS_VALID (payload->buf)) {
-         GST_BUFFER_DURATION (payload->buf) = GST_SECOND / 30;
-         }
-       */
 
       GST_LOG_OBJECT (stream->pad, "pushing buffer, ts=%" GST_TIME_FORMAT
           ", dur=%" GST_TIME_FORMAT " size=%u",
@@ -2047,14 +2043,14 @@ gst_asf_demux_process_file (GstASFDemux * demux, guint8 * data, guint64 size)
   else
     demux->play_time = 0;
 
-  demux->preroll = preroll;
+  demux->preroll = preroll;     /* FIXME: make GstClockTime */
 
   if (demux->play_time == 0)
     demux->seekable = FALSE;
 
-  GST_DEBUG_OBJECT (demux,
-      "play_time %" GST_TIME_FORMAT " preroll %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (demux->play_time),
+  GST_DEBUG_OBJECT (demux, "play_time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (demux->play_time));
+  GST_DEBUG_OBJECT (demux, "preroll   %" GST_TIME_FORMAT,
       GST_TIME_ARGS (demux->preroll * GST_MSECOND));
 
   if (demux->play_time > 0) {

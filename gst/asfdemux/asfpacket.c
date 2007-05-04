@@ -121,6 +121,27 @@ static void
 gst_asf_payload_queue_for_stream (GstASFDemux * demux, AsfPayload * payload,
     AsfStream * stream)
 {
+  /* remember the first timestamp in the stream */
+  if (!GST_CLOCK_TIME_IS_VALID (demux->first_ts) &&
+      GST_CLOCK_TIME_IS_VALID (payload->ts)) {
+    GST_DEBUG_OBJECT (demux, "first ts: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (payload->ts));
+    demux->first_ts = payload->ts;
+  }
+
+  /* better drop a few frames at the beginning than send bogus timestamps */
+  if (G_UNLIKELY (payload->ts < demux->first_ts)) {
+    GST_LOG_OBJECT (stream->pad, "Dropping payload with timestamp %"
+        GST_TIME_FORMAT " which is before the first timestamp %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (payload->ts),
+        GST_TIME_ARGS (demux->first_ts));
+    gst_buffer_replace (&payload->buf, NULL);
+    return;
+  }
+
+  /* make timestamps start from 0 */
+  payload->ts -= demux->first_ts;
+
   /* remove any incomplete payloads that will never be completed */
   while (stream->payloads->len > 0) {
     AsfPayload *prev;
