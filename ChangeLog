@@ -1,3 +1,10 @@
+2007-05-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c:
+	(gst_cdda_base_src_add_track):
+	  Fix it so that it (a) makes sense and (b) doesn't break
+	  everything cdda-related including the unit test.
+
 2007-05-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/cdda/gstcddabasesrc.c:
