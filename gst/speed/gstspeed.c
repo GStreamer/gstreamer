@@ -18,6 +18,31 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-speed
+ *
+ * <refsect2>
+ * <para>
+ * Plays an audio stream at a different speed.
+ * </para>
+ * <para>
+ * Do not use this element. Either use the 'pitch' element, or do a seek with
+ * a non-1.0 rate parameter, this will have the same effect as using the speed
+ * element (but relies on the decoder/demuxer to handle this correctly, also
+ * requires a fairly up-to-date gst-plugins-base, as of February 2007).
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=test.ogg ! decodebin ! audioconvert ! speed speed=1.5 ! audioconvert ! audioresample ! autoaudiosink
+ * </programlisting>
+ * Plays an .ogg file at 1.5x speed.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2007-02-26 (0.10.4.1)
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
@@ -28,6 +53,9 @@
 #include <gst/audio/audio.h>
 
 #include "gstspeed.h"
+
+GST_DEBUG_CATEGORY_STATIC (speed_debug);
+#define GST_CAT_DEFAULT speed_debug
 
 /* elementfactory information */
 static const GstElementDetails speed_details = GST_ELEMENT_DETAILS ("Speed",
@@ -336,7 +364,6 @@ speed_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       GstFormat rformat = GST_FORMAT_TIME;
       gint64 cur;
-      GstPad *peer;
       GstFormat conv_format = GST_FORMAT_TIME;
 
       /* save requested format */
@@ -345,15 +372,10 @@ speed_src_query (GstPad * pad, GstQuery * query)
       /* query peer for current position in time */
       gst_query_set_position (query, GST_FORMAT_TIME, -1);
 
-      if ((peer = gst_pad_get_peer (filter->sinkpad)) == NULL)
-        goto error;
-
-      if (!gst_pad_query_position (peer, &rformat, &cur)) {
+      if (!gst_pad_query_peer_position (filter->sinkpad, &rformat, &cur)) {
         GST_LOG_OBJECT (filter, "query on peer pad failed");
-        gst_object_unref (peer);
         goto error;
       }
-      gst_object_unref (peer);
 
       if (rformat == GST_FORMAT_BYTES)
         GST_LOG_OBJECT (filter, "peer pad returned current=%lld bytes", cur);
@@ -386,7 +408,6 @@ speed_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       GstFormat rformat = GST_FORMAT_TIME;
       gint64 end;
-      GstPad *peer;
       GstFormat conv_format = GST_FORMAT_TIME;
 
       /* save requested format */
@@ -395,15 +416,10 @@ speed_src_query (GstPad * pad, GstQuery * query)
       /* query peer for total length in time */
       gst_query_set_duration (query, GST_FORMAT_TIME, -1);
 
-      if ((peer = gst_pad_get_peer (filter->sinkpad)) == NULL)
-        goto error;
-
-      if (!gst_pad_query_duration (peer, &rformat, &end)) {
+      if (!gst_pad_query_peer_duration (filter->sinkpad, &rformat, &end)) {
         GST_LOG_OBJECT (filter, "query on peer pad failed");
-        gst_object_unref (peer);
         goto error;
       }
-      gst_object_unref (peer);
 
       if (rformat == GST_FORMAT_BYTES)
         GST_LOG_OBJECT (filter, "peer pad returned total=%lld bytes", end);
@@ -673,27 +689,26 @@ speed_chain (GstPad * pad, GstBuffer * in_buf)
   GstBuffer *out_buf;
   GstSpeed *filter;
   guint c, in_samples, out_samples, out_size;
-  GstFlowReturn result = GST_FLOW_OK;
+  GstFlowReturn flow;
 
-  g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
-  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  filter = GST_SPEED (GST_PAD_PARENT (pad));
 
-  filter = GST_SPEED (gst_pad_get_parent (pad));
+  if (G_UNLIKELY (filter->sample_size == 0 || filter->rate == 0)) {
+    flow = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
 
   /* buffersize has to be aligned by samplesize */
   out_size = ceil ((gfloat) GST_BUFFER_SIZE (in_buf) / filter->speed);
   out_size = ((out_size + filter->sample_size - 1) / filter->sample_size) *
       filter->sample_size;
 
-  result =
+  flow =
       gst_pad_alloc_buffer_and_set_caps (filter->srcpad, -1, out_size,
       GST_PAD_CAPS (filter->srcpad), &out_buf);
 
-  if (result != GST_FLOW_OK) {
-    gst_buffer_unref (in_buf);
-    gst_object_unref (filter);
-    return result;
-  }
+  if (flow != GST_FLOW_OK)
+    goto done;
 
   in_samples = GST_BUFFER_SIZE (in_buf) / filter->sample_size;
 
@@ -714,17 +729,22 @@ speed_chain (GstPad * pad, GstBuffer * in_buf)
   GST_BUFFER_TIMESTAMP (out_buf) = filter->timestamp;
 
   filter->offset += GST_BUFFER_SIZE (out_buf) / filter->sample_size;
-  filter->timestamp = filter->offset * GST_SECOND / filter->rate;
+  filter->timestamp =
+      gst_util_uint64_scale_int (filter->offset, GST_SECOND, filter->rate);
 
+  /* make sure it's at least nominally a perfect stream */
   GST_BUFFER_DURATION (out_buf) =
       filter->timestamp - GST_BUFFER_TIMESTAMP (out_buf);
 
-  result = gst_pad_push (filter->srcpad, out_buf);
+  flow = gst_pad_push (filter->srcpad, out_buf);
+
+done:
+
+  if (G_UNLIKELY (flow != GST_FLOW_OK))
+    GST_DEBUG_OBJECT (filter, "flow: %s", gst_flow_get_name (flow));
 
   gst_buffer_unref (in_buf);
-  gst_object_unref (filter);
-  return result;
-
+  return flow;
 }
 
 static void
@@ -784,6 +804,8 @@ speed_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (speed_debug, "speed", 0, "speed element");
+
   return gst_element_register (plugin, "speed", GST_RANK_NONE, GST_TYPE_SPEED);
 }
 

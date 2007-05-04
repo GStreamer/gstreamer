@@ -1,3 +1,10 @@
+2007-05-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/speed/gstspeed.c: (speed_src_query), (speed_chain),
+	(plugin_init):
+	  Add debug category; use gst_pad_query_peer_*() utility functions;
+	  use gst_util_scale*(); add gtk-doc blurb.
+
 2007-05-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
