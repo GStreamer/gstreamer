@@ -1,3 +1,10 @@
+2007-05-04  Sebastien Moutte <sebastien@moutte.net>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	  Add docs for Windows sinks.
+
 2007-05-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/speed/gstspeed.c: (speed_src_event), (speed_sink_event),

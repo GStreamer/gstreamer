@@ -13,7 +13,9 @@
   <chapter>
     <title>gst-plugins-bad Elements</title>
 
-    <xi:include href="xml/element-dfbvideosink.xml" />
+	<xi:include href="xml/element-directdrawsink.xml" />
+    <xi:include href="xml/element-directsoundsink.xml" />
+	<xi:include href="xml/element-dfbvideosink.xml" />
     <xi:include href="xml/element-jackaudiosink.xml" />
     <xi:include href="xml/element-qtdemux.xml" />
     <xi:include href="xml/element-osxvideosink.xml" />
@@ -22,6 +24,7 @@
     <xi:include href="xml/element-sdlvideosink.xml" />
     <xi:include href="xml/element-trm.xml" />
     <xi:include href="xml/element-videocrop.xml" />
+	<xi:include href="xml/element-waveformsink.xml" />
     <xi:include href="xml/element-wavpackdec.xml" />
     <xi:include href="xml/element-wavpackenc.xml" />
     <xi:include href="xml/element-wavpackparse.xml" />
@@ -32,7 +35,9 @@
     <xi:include href="xml/plugin-alsaspdif.xml" />
     <xi:include href="xml/plugin-bz2.xml" />
     <xi:include href="xml/plugin-cdxaparse.xml" />
-    <xi:include href="xml/plugin-dfbvideosink.xml" />
+    <xi:include href="xml/plugin-directdraw.xml" />
+	<xi:include href="xml/plugin-directsound.xml" />
+	<xi:include href="xml/plugin-dfbvideosink.xml" />
     <xi:include href="xml/plugin-faad.xml" />
     <xi:include href="xml/plugin-freeze.xml" />
     <xi:include href="xml/plugin-glimagesink.xml" />
@@ -51,7 +56,8 @@
     <xi:include href="xml/plugin-speed.xml" />
     <xi:include href="xml/plugin-tta.xml" />
     <xi:include href="xml/plugin-videocrop.xml" />
-    <xi:include href="xml/plugin-wavpack.xml" />
+    <xi:include href="xml/plugin-waveform.xml" />
+	<xi:include href="xml/plugin-wavpack.xml" />
     <xi:include href="xml/plugin-xingheader.xml" />
 
   </chapter>

@@ -1,4 +1,20 @@
 <SECTION>
+<FILE>element-directdrawsink</FILE>
+GstDirectDrawSink
+<TITLE>directdrawsink</TITLE>
+<SUBSECTION Standard>
+GstDirectDrawSinkClass
+</SECTION>
+
+<SECTION>
+<FILE>element-directsoundsink</FILE>
+GstDirectSoundSink
+<TITLE>directsoundsink</TITLE>
+<SUBSECTION Standard>
+GstDirectSoundSinkClass
+</SECTION>
+
+<SECTION>
 <FILE>element-dfbvideosink</FILE>
 GstDfbVideoSink
 <TITLE>dfbvideosink</TITLE>
@@ -69,6 +85,14 @@ GstVideoCrop
 <TITLE>videocrop</TITLE>
 <SUBSECTION Standard>
 GstVideoCropClass
+</SECTION>
+
+<SECTION>
+<FILE>element-waveformsink</FILE>
+GstWaveFormSink
+<TITLE>waveformsink</TITLE>
+<SUBSECTION Standard>
+GstWaveFormSinkClass
 </SECTION>
 
 <SECTION>
