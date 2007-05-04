@@ -2042,6 +2042,7 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   RTSPMessage request = { 0 };
   RTSPMessage response = { 0 };
   RTSPResult res;
+  RTSPStatusCode code;
 
   GST_DEBUG_OBJECT (src, "creating server keep-alive");
 
@@ -2051,7 +2052,8 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   if (res < 0)
     goto send_error;
 
-  if (!gst_rtspsrc_send (src, &request, &response, NULL))
+  /* let us handle the error code because we don't care */
+  if (!gst_rtspsrc_send (src, &request, &response, &code))
     goto send_error;
 
   rtsp_message_unset (&request);

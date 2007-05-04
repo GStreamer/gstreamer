@@ -1,5 +1,10 @@
 2007-05-04  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send_keep_alive):
+	Ignore errors when trying to use the keep-alive messages.
+
+2007-05-04  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_handle_src_event),
 	(gst_rtspsrc_handle_src_query), (gst_rtspsrc_sink_chain),
 	(gst_rtspsrc_stream_configure_manager),
