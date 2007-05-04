@@ -84,7 +84,15 @@
  * <entry>start</entry>
  * <entry>G_TYPE_BOOLEAN</entry>
  * <entry>True or False</entry>
- * <entry>Wether the event is starting or ending.</entry>
+ * <entry>Whether the event is starting or ending.</entry>
+ * </row>
+ * <row>
+ * <entry>method</entry>
+ * <entry>G_TYPE_INT</entry>
+ * <entry>1</entry>
+ * <entry>The method used for sending event, this element will react if this field
+ * is absent or 1.
+ * </entry>
  * </row>
  * </tbody>
  * </tgroup>
@@ -321,11 +329,18 @@ gst_rtp_dtmf_src_handle_dtmf_event (GstRTPDTMFSrc *dtmfsrc,
 {
   gint event_type;
   gboolean start;
+  gint method;
 
   if (!gst_structure_get_int (event_structure, "type", &event_type) ||
           !gst_structure_get_boolean (event_structure, "start", &start) ||
           event_type != GST_RTP_DTMF_TYPE_EVENT)
     goto failure;
+
+  if (gst_structure_get_int (event_structure, "method", &method)) {
+    if (method != 1) {
+      goto failure;
+    }
+  }
 
   if (start) {
     gint event_number;
