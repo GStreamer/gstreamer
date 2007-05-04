@@ -78,10 +78,17 @@ RTSPResult      rtsp_connection_connect  (RTSPConnection *conn, GTimeVal *timeou
 RTSPResult      rtsp_connection_close    (RTSPConnection *conn);
 RTSPResult      rtsp_connection_free     (RTSPConnection *conn);
 
+/* sending/receiving raw bytes */
+RTSPResult      rtsp_connection_read     (RTSPConnection * conn, guint8 * data,
+                                          guint size, GTimeVal * timeout);
+RTSPResult      rtsp_connection_write    (RTSPConnection * conn, const guint8 * data, 
+		                          guint size, GTimeVal * timeout);
+
 /* sending/receiving messages */
 RTSPResult      rtsp_connection_send     (RTSPConnection *conn, RTSPMessage *message, GTimeVal *timeout);
 RTSPResult      rtsp_connection_receive  (RTSPConnection *conn, RTSPMessage *message, GTimeVal *timeout);
 
+/* flushing state */
 RTSPResult      rtsp_connection_flush    (RTSPConnection *conn, gboolean flush);
 
 /* Configure Authentication data */

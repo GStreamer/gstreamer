@@ -120,9 +120,16 @@ static GstStaticPadTemplate rtptemplate = GST_STATIC_PAD_TEMPLATE ("stream%d",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-rtp; application/x-rdt"));
 
-/* template used internally */
-static GstStaticPadTemplate anytemplate = GST_STATIC_PAD_TEMPLATE ("internal%d",
+/* templates used internally */
+static GstStaticPadTemplate anysrctemplate =
+GST_STATIC_PAD_TEMPLATE ("internalsrc%d",
     GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS_ANY);
+
+static GstStaticPadTemplate anysinktemplate =
+GST_STATIC_PAD_TEMPLATE ("internalsink%d",
+    GST_PAD_SINK,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
 
@@ -1081,6 +1088,40 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
+/* callback for RTCP messages to be sent to the server when operating in TCP
+ * mode. */
+static GstFlowReturn
+gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
+{
+  GstRTSPSrc *src;
+  GstRTSPStream *stream;
+  GstFlowReturn res = GST_FLOW_OK;
+  guint8 *data;
+  guint size;
+  RTSPResult ret;
+  RTSPMessage message = { 0 };
+
+  stream = (GstRTSPStream *) gst_pad_get_element_private (pad);
+  src = stream->parent;
+
+  data = GST_BUFFER_DATA (buffer);
+  size = GST_BUFFER_SIZE (buffer);
+
+  rtsp_message_init_data (&message, stream->channel[1]);
+
+  rtsp_message_take_body (&message, data, size);
+
+  GST_DEBUG_OBJECT (src, "sending %u bytes RTCP", size);
+  ret = rtsp_connection_send (src->connection, &message, NULL);
+  GST_DEBUG_OBJECT (src, "sent RTCP, %d", ret);
+
+  rtsp_message_steal_body (&message, &data, &size);
+
+  gst_buffer_unref (buffer);
+
+  return res;
+}
+
 static void
 pad_unblocked (GstPad * pad, gboolean blocked, GstRTSPSrc * src)
 {
@@ -1350,14 +1391,12 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
 
     *outpad = gst_object_ref (stream->channelpad[0]);
   } else {
-    GstPadTemplate *template;
-
     GST_DEBUG_OBJECT (src, "using manager source pad");
 
-    template = gst_static_pad_template_get (&anytemplate);
+    template = gst_static_pad_template_get (&anysrctemplate);
 
     /* allocate pads for sending the channel data into the manager */
-    pad0 = gst_pad_new_from_template (template, "internal0");
+    pad0 = gst_pad_new_from_template (template, "internalsrc0");
     gst_pad_set_event_function (pad0, gst_rtspsrc_handle_src_event);
     gst_pad_set_query_function (pad0, gst_rtspsrc_handle_src_query);
     gst_pad_link (pad0, stream->channelpad[0]);
@@ -1367,11 +1406,30 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     if (stream->channelpad[1]) {
       /* if we have a sinkpad for the other channel, create a pad and link to the
        * manager. */
-      pad1 = gst_pad_new_from_template (template, "internal1");
+      pad1 = gst_pad_new_from_template (template, "internalsrc1");
       gst_pad_link (pad1, stream->channelpad[1]);
       stream->channelpad[1] = pad1;
     }
     gst_object_unref (template);
+  }
+  /* setup RTCP transport back to the server */
+  if (src->session) {
+    GstPad *pad;
+
+    template = gst_static_pad_template_get (&anysinktemplate);
+
+    stream->rtcppad = gst_pad_new_from_template (template, "internalsink0");
+    gst_pad_set_chain_function (stream->rtcppad, gst_rtspsrc_sink_chain);
+    gst_pad_set_element_private (stream->rtcppad, stream);
+    gst_pad_set_active (stream->rtcppad, TRUE);
+
+    /* get session RTCP pad */
+    name = g_strdup_printf ("send_rtcp_src_%d", stream->id);
+    pad = gst_element_get_request_pad (src->session, name);
+    g_free (name);
+
+    /* and link */
+    gst_pad_link (pad, stream->rtcppad);
   }
   return TRUE;
 }
@@ -1499,6 +1557,10 @@ gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
   GstPad *pad;
   gint port;
   gchar *destination, *uri, *name;
+
+  /* no session, we're done */
+  if (src->session == NULL)
+    return TRUE;
 
   /* get host and port */
   if (transport->lower_transport == RTSP_LOWER_TRANS_UDP_MCAST)

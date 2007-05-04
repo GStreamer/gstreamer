@@ -265,12 +265,43 @@ append_auth_header (RTSPConnection * conn, RTSPMessage * message, GString * str)
 }
 
 RTSPResult
+rtsp_connection_write (RTSPConnection * conn, const guint8 * data, guint size,
+    GTimeVal * timeout)
+{
+  guint towrite;
+
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (data != NULL || size == 0, RTSP_EINVAL);
+
+  towrite = size;
+
+  while (towrite > 0) {
+    gint written;
+
+    written = write (conn->fd, data, towrite);
+    if (written < 0) {
+      if (errno != EAGAIN && errno != EINTR)
+        goto write_error;
+    } else {
+      towrite -= written;
+      data += written;
+    }
+  }
+  return RTSP_OK;
+
+  /* ERRORS */
+write_error:
+  {
+    return RTSP_ESYS;
+  }
+}
+
+RTSPResult
 rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message,
     GTimeVal * timeout)
 {
-  GString *str;
-  gint towrite;
-  gchar *data;
+  GString *str = NULL;
+  RTSPResult res;
 
 #ifdef G_OS_WIN32
   WSADATA w;
@@ -305,57 +336,69 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message,
       g_string_append_printf (str, "RTSP/1.0 %d %s\r\n",
           message->type_data.response.code, message->type_data.response.reason);
       break;
+    case RTSP_MESSAGE_DATA:
+    {
+      guint8 data_header[4];
+
+      /* prepare data header */
+      data_header[0] = '$';
+      data_header[1] = message->type_data.data.channel;
+      data_header[2] = (message->body_size >> 8) & 0xff;
+      data_header[3] = message->body_size & 0xff;
+
+      /* create string with header and data */
+      str = g_string_append_len (str, (gchar *) data_header, 4);
+      str =
+          g_string_append_len (str, (gchar *) message->body,
+          message->body_size);
+      break;
+    }
     default:
       g_assert_not_reached ();
       break;
   }
 
-  /* append session id if we have one */
-  if (conn->session_id[0] != '\0') {
-    append_header (RTSP_HDR_SESSION, conn->session_id, str);
-  }
+  /* append specific headers and body */
+  switch (message->type) {
+    case RTSP_MESSAGE_REQUEST:
+    case RTSP_MESSAGE_RESPONSE:
+      /* append session id if we have one */
+      if (conn->session_id[0] != '\0') {
+        append_header (RTSP_HDR_SESSION, conn->session_id, str);
+      }
+      /* append headers */
+      g_hash_table_foreach (message->hdr_fields, (GHFunc) append_header, str);
 
-  /* append headers */
-  g_hash_table_foreach (message->hdr_fields, (GHFunc) append_header, str);
+      /* Append any authentication headers */
+      append_auth_header (conn, message, str);
 
-  /* Append any authentication headers */
-  append_auth_header (conn, message, str);
+      /* append Content-Length and body if needed */
+      if (message->body != NULL && message->body_size > 0) {
+        gchar *len;
 
-  /* append Content-Length and body if needed */
-  if (message->body != NULL && message->body_size > 0) {
-    gchar *len;
-
-    len = g_strdup_printf ("%d", message->body_size);
-    append_header (RTSP_HDR_CONTENT_LENGTH, len, str);
-    g_free (len);
-    /* header ends here */
-    g_string_append (str, "\r\n");
-    str =
-        g_string_append_len (str, (gchar *) message->body, message->body_size);
-  } else {
-    /* just end headers */
-    g_string_append (str, "\r\n");
+        len = g_strdup_printf ("%d", message->body_size);
+        append_header (RTSP_HDR_CONTENT_LENGTH, len, str);
+        g_free (len);
+        /* header ends here */
+        g_string_append (str, "\r\n");
+        str =
+            g_string_append_len (str, (gchar *) message->body,
+            message->body_size);
+      } else {
+        /* just end headers */
+        g_string_append (str, "\r\n");
+      }
+      break;
+    default:
+      break;
   }
 
   /* write request */
-  towrite = str->len;
-  data = str->str;
+  res = rtsp_connection_write (conn, (guint8 *) str->str, str->len, timeout);
 
-  while (towrite > 0) {
-    gint written;
-
-    written = write (conn->fd, data, towrite);
-    if (written < 0) {
-      if (errno != EAGAIN && errno != EINTR)
-        goto write_error;
-    } else {
-      towrite -= written;
-      data += written;
-    }
-  }
   g_string_free (str, TRUE);
 
-  return RTSP_OK;
+  return res;
 
 #ifdef G_OS_WIN32
 startup_error:
@@ -371,11 +414,6 @@ version_error:
     return RTSP_EWSAVERSION;
   }
 #endif
-write_error:
-  {
-    g_string_free (str, TRUE);
-    return RTSP_ESYS;
-  }
 }
 
 static RTSPResult
@@ -550,7 +588,7 @@ no_column:
 }
 
 RTSPResult
-rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size,
+rtsp_connection_read (RTSPConnection * conn, guint8 * data, guint size,
     GTimeVal * timeout)
 {
   fd_set readfds;
@@ -631,7 +669,7 @@ rtsp_connection_read (RTSPConnection * conn, gpointer data, guint size,
         goto read_error;
     } else {
       toread -= bytes;
-      data = (char *) data + bytes;
+      data += bytes;
     }
   }
   return RTSP_OK;
@@ -663,7 +701,7 @@ static RTSPResult
 read_body (RTSPConnection * conn, glong content_length, RTSPMessage * msg,
     GTimeVal * timeout)
 {
-  gchar *body;
+  guint8 *body;
   RTSPResult res;
 
   if (content_length <= 0) {
@@ -732,7 +770,8 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg,
       rtsp_message_init_data (msg, (gint) c);
 
       /* next two bytes are the length of the data */
-      RTSP_CHECK (rtsp_connection_read (conn, &size, 2, timeout), read_error);
+      RTSP_CHECK (rtsp_connection_read (conn, (guint8 *) & size, 2, timeout),
+          read_error);
 
       size = GUINT16_FROM_BE (size);
 

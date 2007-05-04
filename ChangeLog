@@ -1,3 +1,22 @@
+2007-05-04  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_handle_src_event),
+	(gst_rtspsrc_handle_src_query), (gst_rtspsrc_sink_chain),
+	(gst_rtspsrc_stream_configure_manager),
+	(gst_rtspsrc_stream_free_udp), (gst_rtspsrc_stream_configure_tcp),
+	(gst_rtspsrc_stream_configure_mcast),
+	(gst_rtspsrc_stream_configure_udp),
+	(gst_rtspsrc_stream_configure_udp_sink),
+	(gst_rtspsrc_stream_configure_transport):
+	Send RTCP messages back to the server over the TCP connection.
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_write),
+	(rtsp_connection_send), (rtsp_connection_read), (read_body),
+	(rtsp_connection_receive):
+	* gst/rtsp/rtspconnection.h:
+	Factor out and expose lowlevel _write and _read methods.
+	Implement sending data messages to the server.
+
 2007-05-03  Wim Taymans  <wim@fluendo.com>
 
 	* gst/multipart/multipartmux.c: (gst_multipart_mux_queue_pads),
