@@ -24,8 +24,10 @@
  * SECTION:element-adder
  *
  * <refsect2>
+ * <para>
  * The Adder allows to mix several streams into one by adding the data.
  * Mixed data is clamped to the min/max values of the data format.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>

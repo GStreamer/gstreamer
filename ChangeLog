@@ -1,3 +1,17 @@
+2007-05-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	* gst/adder/gstadder.c:
+	* gst/audiotestsrc/gstaudiotestsrc.c
+	  (gst_audio_test_src_create_white_noise):
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/volume/gstvolume.c (VOLUME_UNITY_INT16,
+	  VOLUME_UNITY_INT16_BIT_SHIFT, VOLUME_MAX_DOUBLE,
+	  volume_sink_template, volume_src_template, gst_volume_init,
+	  volume_process_double, volume_process_int16,
+	  volume_process_int16_clamp):
+	  Doc fixes and formatting.
+
 2007-05-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:

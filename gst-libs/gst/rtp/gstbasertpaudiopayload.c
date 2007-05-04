@@ -42,11 +42,11 @@
  * <title>Usage</title>
  * <para>
  * To use this base class, your child element needs to call either
- * gst_basertpaudiopayload_set_frame_based() or
- * gst_basertpaudiopayload_set_sample_based(). This is usually done in the
+ * gst_base_rtp_audio_payload_set_frame_based() or
+ * gst_base_rtp_audio_payload_set_sample_based(). This is usually done in the
  * element's _init() function. Then, the child element must call either
- * gst_basertpaudiopayload_set_frame_options() or
- * gst_basertpaudiopayload_set_sample_options(). Since GstBaseRTPAudioPayload
+ * gst_base_rtp_audio_payload_set_frame_options() or
+ * gst_base_rtp_audio_payload_set_sample_options(). Since GstBaseRTPAudioPayload
  * derives from GstBaseRTPPayload, the child element must set any variables or
  * call/override any functions required by that base class. The child element
  * does not need to override any other functions specific to

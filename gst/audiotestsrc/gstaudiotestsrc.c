@@ -20,8 +20,10 @@
  * SECTION:element-audiotestsrc
  *
  * <refsect2>
+ * <para>
  * AudioTestSrc can be used to generate basic audio signals. It support several
  * different waveforms and allows you to set the base frequency and volume.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
@@ -408,7 +410,7 @@ gst_audio_test_src_create_white_noise (GstAudioTestSrc * src, gint16 * samples)
   }
 }
 
-/* pink noise calculation is based on 
+/* pink noise calculation is based on
  * http://www.firstpr.com.au/dsp/pink-noise/phil_burk_19990905_patest_pink.c
  * which has been released under public domain
  * Many thanks Phil!

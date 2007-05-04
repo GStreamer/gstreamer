@@ -25,10 +25,10 @@
  * SECTION:element-volume
  *
  * <refsect2>
- * <title>Example launch line</title>
  * <para>
  * The volume element changes the volume of the audio data.
  * </para>
+ * <title>Example launch line</title>
  * <para>
  * <programlisting>
  * gst-launch -v -m audiotestsrc ! volume volume=0.5 ! level ! fakesink silent=TRUE
@@ -127,12 +127,12 @@ static void gst_volume_mixer_init (GstMixerClass * iface);
 
 #define _init_interfaces(type)                                          \
   {                                                                     \
-    static const GInterfaceInfo voliface_info = {                       \
+    static const GInterfaceInfo voliface_info = {                     \
       (GInterfaceInitFunc) gst_volume_interface_init,                   \
       NULL,                                                             \
       NULL                                                              \
     };                                                                  \
-    static const GInterfaceInfo volmixer_info = {                       \
+    static const GInterfaceInfo volmixer_info = {                     \
       (GInterfaceInitFunc) gst_volume_mixer_init,                       \
       NULL,                                                             \
       NULL                                                              \
@@ -417,7 +417,7 @@ volume_process_int16 (GstVolume * this, gpointer bytes, guint n_bytes)
 
   num_samples = n_bytes / sizeof (gint16);
 
-  /* FIXME: need... liboil... 
+  /* FIXME: need... liboil...
    * oil_scalarmultiply_s16_ns ?
    * https://bugs.freedesktop.org/show_bug.cgi?id=7060
    */
@@ -438,7 +438,7 @@ volume_process_int16_clamp (GstVolume * this, gpointer bytes, guint n_bytes)
 
   num_samples = n_bytes / sizeof (gint16);
 
-  /* FIXME: need... liboil... 
+  /* FIXME: need... liboil...
    * oil_scalarmultiply_s16_ns ?
    * https://bugs.freedesktop.org/show_bug.cgi?id=7060
    */
