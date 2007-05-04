@@ -1,5 +1,13 @@
 2007-05-04  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/speed/gstspeed.c: (speed_src_event), (speed_sink_event),
+	(speed_chain), (speed_change_state):
+	  Fix event handling a bit by replacing completely dubious code
+	  written by someone else with completely dubious code written
+	  by me. Should at least fix #412077 though.
+
+2007-05-04  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/speed/gstspeed.c: (speed_src_query), (speed_chain),
 	(plugin_init):
 	  Add debug category; use gst_pad_query_peer_*() utility functions;

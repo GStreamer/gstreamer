@@ -221,47 +221,41 @@ static gboolean
 speed_src_event (GstPad * pad, GstEvent * event)
 {
   GstSpeed *filter;
-  gboolean ret = TRUE;
+  gboolean ret = FALSE;
 
   filter = GST_SPEED (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_SEEK:
-    {
-
+    case GST_EVENT_SEEK:{
       gdouble rate;
       GstFormat format;
       GstSeekFlags flags;
       GstSeekType start_type, stop_type;
       gint64 start, stop;
 
-      gst_event_parse_seek (event, &rate, &format, &flags,
-          &start_type, &start, &stop_type, &stop);
-      switch (format) {
-        case GST_FORMAT_DEFAULT:
-          /* fall through */
-        case GST_FORMAT_BYTES:
-          /* fall through */
-        case GST_FORMAT_TIME:
-          gst_event_unref (event);
+      gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
+          &stop_type, &stop);
+      gst_event_unref (event);
 
-          if (start_type != GST_SEEK_TYPE_NONE) {
-            start *= filter->speed;
-          }
-
-          if (stop_type != GST_SEEK_TYPE_NONE) {
-            stop *= filter->speed;
-          }
-
-          event = gst_event_new_seek (rate, format, flags, start_type, start,
-              stop_type, stop);
-
-          ret = gst_pad_send_event (GST_PAD_PEER (filter->sinkpad), event);
-          break;
-        default:
-          break;
+      if (format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (filter, "only support seeks in TIME format");
+        break;
       }
 
+      if (start_type != GST_SEEK_TYPE_NONE && start != -1) {
+        start *= filter->speed;
+      }
+
+      if (stop_type != GST_SEEK_TYPE_NONE && stop != -1) {
+        stop *= filter->speed;
+      }
+
+      event = gst_event_new_seek (rate, format, flags, start_type, start,
+          stop_type, stop);
+
+      GST_LOG ("sending seek event: %" GST_PTR_FORMAT, event->structure);
+
+      ret = gst_pad_send_event (GST_PAD_PEER (filter->sinkpad), event);
       break;
     }
     default:
@@ -589,87 +583,47 @@ speed_chain_float32 (GstSpeed * filter, GstBuffer * in_buf, GstBuffer * out_buf,
 static gboolean
 speed_sink_event (GstPad * pad, GstEvent * event)
 {
-
-
   GstSpeed *filter;
-  gboolean ret;
+  gboolean ret = FALSE;
 
   filter = GST_SPEED (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-    {
-
+    case GST_EVENT_NEWSEGMENT:{
       gdouble rate;
       gboolean update = FALSE;
-      GstFormat format, conv_format;
+      GstFormat format;
       gint64 start_value, stop_value, base;
 
       gst_event_parse_new_segment (event, &update, &rate, &format, &start_value,
           &stop_value, &base);
+      gst_event_unref (event);
+
+      if (format != GST_FORMAT_TIME) {
+        GST_WARNING_OBJECT (filter, "newsegment event not in TIME format!");
+        break;
+      }
 
       g_assert (filter->speed > 0);
 
-      start_value /= filter->speed;
-      stop_value /= filter->speed;
+      if (start_value >= 0)
+        start_value /= filter->speed;
+      if (stop_value >= 0)
+        stop_value /= filter->speed;
+      base /= filter->speed;
 
-      if (format == GST_FORMAT_TIME) {
+      /* this would only really be correct if we clipped incoming data */
+      filter->timestamp = start_value;
 
-        conv_format = GST_FORMAT_BYTES;
+      /* set to NONE so it gets reset later based on the timestamp when we have
+       * the samplerate */
+      filter->offset = GST_BUFFER_OFFSET_NONE;
 
-        filter->timestamp = start_value;
-        ret = gst_speed_convert (pad, GST_FORMAT_TIME, filter->timestamp,
-            &conv_format, &filter->offset);
-
-
-      } else if (format == GST_FORMAT_BYTES) {
-
-        conv_format = GST_FORMAT_TIME;
-
-        filter->offset = start_value;
-        ret = gst_speed_convert (pad, GST_FORMAT_BYTES, filter->offset,
-            &conv_format, &filter->timestamp);
-
-
-      } else if (format == GST_FORMAT_DEFAULT) {
-
-        conv_format = GST_FORMAT_TIME;
-
-        ret = gst_speed_convert (pad, GST_FORMAT_BYTES, start_value,
-            &conv_format, &filter->timestamp);
-
-        conv_format = GST_FORMAT_BYTES;
-
-        ret = gst_speed_convert (pad, GST_FORMAT_TIME, start_value,
-            &conv_format, &filter->offset);
-
-      }
-
-      gst_event_unref (event);
-      event =
-          gst_event_new_new_segment (update, rate, format, start_value,
-          stop_value, base);
-
-
-      if (!(ret = gst_pad_event_default (pad, event))) {
-        gst_event_unref (event);
-      }
-
-      ret = TRUE;
-
+      ret =
+          gst_pad_event_default (pad, gst_event_new_new_segment (update, rate,
+              format, start_value, stop_value, base));
       break;
     }
-
-    case GST_EVENT_EOS:
-
-      if (!(ret = gst_pad_event_default (pad, event))) {
-        gst_event_unref (event);
-      }
-
-      ret = TRUE;
-
-      break;
-
     default:
       ret = gst_pad_event_default (pad, event);
       break;
@@ -696,6 +650,11 @@ speed_chain (GstPad * pad, GstBuffer * in_buf)
   if (G_UNLIKELY (filter->sample_size == 0 || filter->rate == 0)) {
     flow = GST_FLOW_NOT_NEGOTIATED;
     goto done;
+  }
+
+  if (G_UNLIKELY (filter->offset == GST_BUFFER_OFFSET_NONE)) {
+    filter->offset =
+        gst_util_uint64_scale_int (filter->timestamp, filter->rate, GST_SECOND);
   }
 
   /* buffersize has to be aligned by samplesize */
@@ -788,7 +747,7 @@ speed_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      speed->offset = 0;
+      speed->offset = GST_BUFFER_OFFSET_NONE;
       speed->timestamp = 0;
       break;
     default:
