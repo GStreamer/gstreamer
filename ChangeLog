@@ -1,3 +1,15 @@
+2007-05-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_set_interpolation_mode):
+	* libs/gst/controller/gstinterpolation.c:
+	  Don't crash if someone tries to set an interpolation mode that
+	  is invalid or that isn't supported yet. Fixes #422295.
+
+	* tests/check/libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+	  Add a test case for the above.
+
 2007-05-03  Edward Hervey  <edward@fluendo.com>
 
 	* libs/gst/base/gstbasetransform.c: (gst_base_transform_chain):

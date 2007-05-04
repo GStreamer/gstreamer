@@ -319,3 +319,5 @@ GstInterpolateMethod *interpolation_methods[] = {
   NULL,
   NULL
 };
+
+guint num_interpolation_methods = G_N_ELEMENTS (interpolation_methods);

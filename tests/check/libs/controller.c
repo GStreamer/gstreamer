@@ -638,6 +638,38 @@ GST_START_TEST (controller_interpolate_linear)
 
 GST_END_TEST;
 
+/* make sure we don't crash when someone sets an unsupported interpolation
+ * mode */
+GST_START_TEST (controller_interpolate_unimplemented)
+{
+  GstController *ctrl;
+  GstElement *elem;
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* set unsupported interpolation mode */
+  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_CUBIC);
+
+  /* set another unsupported interpolation mode */
+  gst_controller_set_interpolation_mode (ctrl, "ulong",
+      GST_INTERPOLATE_QUADRATIC);
+
+  /* set completely bogus interpolation mode */
+  gst_controller_set_interpolation_mode (ctrl, "ulong",
+      (GstInterpolateMode) 93871);
+
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 /* test _unset() */
 GST_START_TEST (controller_unset)
 {
@@ -958,6 +990,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_interpolate_none);
   tcase_add_test (tc, controller_interpolate_trigger);
   tcase_add_test (tc, controller_interpolate_linear);
+  tcase_add_test (tc, controller_interpolate_unimplemented);
   tcase_add_test (tc, controller_unset);
   tcase_add_test (tc, controller_unset_all);
   tcase_add_test (tc, controller_live);

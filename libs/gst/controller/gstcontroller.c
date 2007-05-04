@@ -95,6 +95,7 @@ extern GList
     * gst_controlled_property_find_timed_value_node (GstControlledProperty *
     prop, GstClockTime timestamp);
 extern GstInterpolateMethod *interpolation_methods[];
+extern guint num_interpolation_methods;
 
 /* callbacks */
 
@@ -180,6 +181,11 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
     GstInterpolateMode mode)
 {
   gboolean res = TRUE;
+
+  if (mode >= num_interpolation_methods || interpolation_methods[mode] == NULL) {
+    GST_WARNING ("interpolation mode %d invalid or not implemented yet", mode);
+    return FALSE;
+  }
 
   self->interpolation = mode;
   if (mode != GST_INTERPOLATE_USER) {
