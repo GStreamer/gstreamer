@@ -76,6 +76,7 @@ IGNORE_CFILES =
 # the registry won't have the element
 
 EXTRA_HFILES = \
+	$(top_srcdir)/plugins/elements/gstcapsfilter.h \
 	$(top_srcdir)/plugins/elements/gstfakesrc.h \
 	$(top_srcdir)/plugins/elements/gstfakesink.h \
 	$(top_srcdir)/plugins/elements/gstfdsrc.h \

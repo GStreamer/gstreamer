@@ -1,3 +1,25 @@
+2007-05-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	  Correct fixxrefs options.
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gstreamer-plugins-docs.sgml:
+	* docs/plugins/gstreamer-plugins-sections.txt:
+	* plugins/elements/Makefile.am:
+	* plugins/elements/gstcapsfilter.c (gst_capsfilter_details):
+	* plugins/elements/gstcapsfilter.h (__GST_CAPSFILTER_H__,
+	  GST_TYPE_CAPSFILTER, GST_CAPSFILTER, GST_CAPSFILTER_CLASS,
+	  GST_IS_CAPSFILTER, GST_IS_CAPSFILTER_CLASS, GstCapsFilter,
+	  GstCapsFilterClass, _GstCapsFilter, trans, filter_caps,
+	  _GstCapsFilterClass, trans_class):
+	* plugins/elements/gstelements.c (name, rank, type, _elements):
+	* plugins/elements/gstidentity.c
+	  (gst_identity_check_imperfect_timestamp,
+	  gst_identity_check_imperfect_offset):
+	  Document capsfilter and add doc-blurb to identity.
+
 2007-05-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/controller/gstcontroller.c:

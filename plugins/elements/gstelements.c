@@ -27,6 +27,7 @@
 
 #include <gst/gst.h>
 
+#include "gstcapsfilter.h"
 #include "gstfakesink.h"
 #include "gstfakesrc.h"
 #include "gstfdsrc.h"
@@ -41,14 +42,11 @@
 
 struct _elements_entry
 {
-  gchar *name;
+  const gchar *name;
   guint rank;
     GType (*type) (void);
 };
 
-
-/* this declaration is here because there's no gstcapsfilter.h */
-extern GType gst_capsfilter_get_type (void);
 
 static struct _elements_entry _elements[] = {
   {"capsfilter", GST_RANK_NONE, gst_capsfilter_get_type},

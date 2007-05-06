@@ -19,51 +19,26 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-capsfilter
+ * @short_description: pass data though unmodified, but enforces format limmits
+ *
+ * The element does not modify data as such, but can enforce limmitations on the
+ * data format.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
 
 #include "../../gst/gst-i18n-lib.h"
-#include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
-
+#include "gstcapsfilter.h"
 
 static const GstElementDetails gst_capsfilter_details =
 GST_ELEMENT_DETAILS ("CapsFilter",
     "Generic",
     "Pass data without modification, limiting formats",
     "David Schleef <ds@schleef.org>");
-
-
-#define GST_TYPE_CAPSFILTER \
-  (gst_capsfilter_get_type())
-#define GST_CAPSFILTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_CAPSFILTER,GstCapsFilter))
-#define GST_CAPSFILTER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_CAPSFILTER,GstCapsFilterClass))
-#define GST_IS_CAPSFILTER(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_CAPSFILTER))
-#define GST_IS_CAPSFILTER_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_CAPSFILTER))
-
-typedef struct _GstCapsFilter GstCapsFilter;
-typedef struct _GstCapsFilterClass GstCapsFilterClass;
-
-struct _GstCapsFilter
-{
-  GstBaseTransform trans;
-
-  GstCaps *filter_caps;
-};
-
-struct _GstCapsFilterClass
-{
-  GstBaseTransformClass trans_class;
-};
-
-GType gst_capsfilter_get_type (void);
-
 
 enum
 {

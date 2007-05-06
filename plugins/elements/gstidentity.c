@@ -20,7 +20,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-
+/**
+ * SECTION:element-identity
+ * @short_description: pass data through without modification
+ *
+ * Dummy element that passes incomming data through unmodified. I has some
+ * useful diagnostic functions, such as offset and timestamp checking.
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -394,7 +400,7 @@ gst_identity_check_imperfect_timestamp (GstIdentity * identity, GstBuffer * buf)
          * @prev-duration:   the previous buffer duration
          * @prev-offset:     the previous buffer offset
          * @prev-offset-end: the previous buffer offset end
-         * @cur-timestamp:   the current buffer timestamp 
+         * @cur-timestamp:   the current buffer timestamp
          * @cur-duration:    the current buffer duration
          * @cur-offset:      the current buffer offset
          * @cur-offset-end:  the current buffer offset end
@@ -440,7 +446,7 @@ gst_identity_check_imperfect_offset (GstIdentity * identity, GstBuffer * buf)
      * @prev-duration:   the previous buffer duration
      * @prev-offset:     the previous buffer offset
      * @prev-offset-end: the previous buffer offset end
-     * @cur-timestamp:   the current buffer timestamp 
+     * @cur-timestamp:   the current buffer timestamp
      * @cur-duration:    the current buffer duration
      * @cur-offset:      the current buffer offset
      * @cur-offset-end:  the current buffer offset end
