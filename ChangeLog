@@ -1,3 +1,11 @@
+2007-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audiofx/audioamplify.c: (gst_audio_amplify_transform_ip):
+	* gst/audiofx/audiodynamic.c: (gst_audio_dynamic_transform_ip):
+	* gst/audiofx/audioinvert.c: (gst_audio_invert_transform_ip):
+	Sync the GObject properties before each processing step to properly
+	work with the controller.
+
 2007-05-04  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send_keep_alive),

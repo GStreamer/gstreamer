@@ -151,14 +151,14 @@ static GstAudioAmplifyProcessFunc processing_functions[2][3] = {
         (GstAudioAmplifyProcessFunc) gst_audio_amplify_transform_int_clip,
         (GstAudioAmplifyProcessFunc)
         gst_audio_amplify_transform_int_wrap_negative,
-      (GstAudioAmplifyProcessFunc)
-        gst_audio_amplify_transform_int_wrap_positive},
+        (GstAudioAmplifyProcessFunc)
+      gst_audio_amplify_transform_int_wrap_positive},
   {
         (GstAudioAmplifyProcessFunc) gst_audio_amplify_transform_float_clip,
         (GstAudioAmplifyProcessFunc)
         gst_audio_amplify_transform_float_wrap_negative,
-      (GstAudioAmplifyProcessFunc)
-        gst_audio_amplify_transform_float_wrap_positive}
+        (GstAudioAmplifyProcessFunc)
+      gst_audio_amplify_transform_float_wrap_positive}
 };
 
 /* GObject vmethod implementations */
@@ -418,6 +418,9 @@ gst_audio_amplify_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 
   if (!gst_buffer_is_writable (buf))
     return GST_FLOW_OK;
+
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf)))
+    gst_object_sync_values (G_OBJECT (filter), GST_BUFFER_TIMESTAMP (buf));
 
   filter->process (filter, GST_BUFFER_DATA (buf), num_samples);
 
