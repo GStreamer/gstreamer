@@ -1,3 +1,12 @@
+2007-05-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_setcaps),
+	(gst_real_audio_dec_finalize):
+	* gst/real/gstrealaudiodec.h:
+	* gst/real/gstrealvideodec.c: (open_library), (close_library):
+	* gst/real/gstrealvideodec.h:
+	  Use GModule instead of using dlsym() directly. Fixes #430598.
+
 2007-05-04  Sebastien Moutte <sebastien@moutte.net>
 
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:

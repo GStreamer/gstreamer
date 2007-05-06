@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2006 Lutz Mueller <lutz@topfrose.de>
- *		 2006 Edward Hervey <bilboed@bilbod.com>
+ * Copyright (C) 2006 Edward Hervey <bilboed@bilbod.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -43,7 +43,7 @@ enum _GstRealVideoDecVersion
 };
 
 typedef struct {
-  gpointer handle;
+  GModule *module;
 
   guint32 (*custom_message) (gpointer, gpointer);
   guint32 (*free) (gpointer);
@@ -91,4 +91,7 @@ struct _GstRealVideoDecClass
 GType gst_real_video_dec_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_REAL_VIDEO_DEC_H__ */
+
+

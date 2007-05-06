@@ -1,7 +1,7 @@
 /* RealVideo wrapper plugin
  *
  * Copyright (C) 2005 Lutz Mueller <lutz@topfrose.de>
- *		 2006 Edward Hervey <bilboed@bilboed.com>
+ * Copyright (C) 2006 Edward Hervey <bilboed@bilboed.com>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,7 +25,6 @@
 
 #include "gstrealvideodec.h"
 
-#include <dlfcn.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (realvideode_debug);
@@ -626,6 +625,8 @@ static gboolean
 open_library (GstRealVideoDec * dec, GstRealVideoDecHooks * hooks,
     GstRealVideoDecVersion version)
 {
+  gpointer rv_custom_msg, rv_free, rv_init, rv_transform;
+  GModule *module;
   gchar *path = NULL;
 
   GST_DEBUG_OBJECT (dec,
@@ -677,28 +678,33 @@ open_library (GstRealVideoDec * dec, GstRealVideoDecHooks * hooks,
       goto unknown_version;
   }
 
-  hooks->handle = dlopen (path, RTLD_LAZY);
-  if (!hooks->handle)
+  GST_LOG_OBJECT (dec, "Trying to open '%s'", path);
+  hooks->module = g_module_open (path, G_MODULE_BIND_LAZY);
+
+  if (hooks->module == NULL)
     goto could_not_open;
 
-  /* First try opening legacy symbols */
-  hooks->custom_message = dlsym (hooks->handle, "RV20toYUV420CustomMessage");
-  hooks->free = dlsym (hooks->handle, "RV20toYUV420Free");
-  hooks->init = dlsym (hooks->handle, "RV20toYUV420Init");
-  hooks->transform = dlsym (hooks->handle, "RV20toYUV420Transform");
+  module = hooks->module;
 
-  if (!(hooks->custom_message && hooks->free && hooks->init
-          && hooks->transform)) {
-    /* Else try loading new symbols */
-    hooks->custom_message = dlsym (hooks->handle, "RV40toYUV420CustomMessage");
-    hooks->free = dlsym (hooks->handle, "RV40toYUV420Free");
-    hooks->init = dlsym (hooks->handle, "RV40toYUV420Init");
-    hooks->transform = dlsym (hooks->handle, "RV40toYUV420Transform");
-
-    if (!(hooks->custom_message && hooks->free && hooks->init
-            && hooks->transform))
-      goto could_not_load;
+  /* First try opening legacy symbols, if that fails try loading new symbols */
+  if (g_module_symbol (module, "RV20toYUV420Init", &rv_init) &&
+      g_module_symbol (module, "RV20toYUV420Free", &rv_free) &&
+      g_module_symbol (module, "RV20toYUV420Transform", &rv_transform) &&
+      g_module_symbol (module, "RV20toYUV420CustomMessage", &rv_custom_msg)) {
+    GST_LOG_OBJECT (dec, "Loaded legacy symbols");
+  } else if (g_module_symbol (module, "RV40toYUV420Init", &rv_init) &&
+      g_module_symbol (module, "RV40toYUV420Free", &rv_free) &&
+      g_module_symbol (module, "RV40toYUV420Transform", &rv_transform) &&
+      g_module_symbol (module, "RV40toYUV420CustomMessage", &rv_custom_msg)) {
+    GST_LOG_OBJECT (dec, "Loaded new symbols");
+  } else {
+    goto could_not_load;
   }
+
+  hooks->init = rv_init;
+  hooks->free = rv_free;
+  hooks->transform = rv_transform;
+  hooks->custom_message = rv_custom_msg;
 
   return TRUE;
 
@@ -718,14 +724,15 @@ unknown_version:
 
 could_not_open:
   {
-    GST_ERROR_OBJECT (dec, "Could not open library '%s'.", path);
+    GST_ERROR_OBJECT (dec, "Could not open library '%s':%s", path,
+        g_module_error ());
     return FALSE;
   }
 
 could_not_load:
   {
     close_library (*hooks);
-    GST_ERROR_OBJECT (dec, "Could not load all symbols.");
+    GST_ERROR_OBJECT (dec, "Could not load all symbols: %s", g_module_error ());
     return FALSE;
   }
 }
@@ -736,8 +743,10 @@ close_library (GstRealVideoDecHooks hooks)
   if (hooks.context && hooks.free)
     hooks.free (hooks.context);
 
-  if (hooks.handle)
-    dlclose (hooks.handle);
+  if (hooks.module) {
+    g_module_close (hooks.module);
+    hooks.module = NULL;
+  }
 }
 
 static void

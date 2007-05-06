@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2006 Lutz Mueller <lutz@topfrose.de>
- *		 2006 Edward Hervey <bilboed@bilboed.com>
+ * Copyright (C) 2006 Edward Hervey <bilboed@bilboed.com>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,7 +25,6 @@
 
 #include "gstrealaudiodec.h"
 
-#include <dlfcn.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (real_audio_dec_debug);
@@ -115,7 +114,7 @@ struct _GstRealAudioDec
   guint width, height, leaf_size;
 
   /* Hooks */
-  gpointer handle;
+  GModule *module;
   RealFunctions funcs;
 
   /* Used by the REAL library. */
@@ -169,6 +168,9 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstRealAudioDec *dec = GST_REAL_AUDIO_DEC (GST_PAD_PARENT (pad));
   GstStructure *s = gst_caps_get_structure (caps, 0);
+  gpointer ra_close_codec, ra_decode, ra_free_decoder;
+  gpointer ra_open_codec2, ra_init_decoder, ra_set_flavor;
+  gpointer set_dll_access_path = NULL, ra_set_pwd = NULL;
   gchar *path;
   gint version, flavor, channels, rate, leaf_size, packet_size, width, height;
   guint16 res;
@@ -177,8 +179,9 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
   const GValue *v;
   GstBuffer *buf = NULL;
   const gchar *name = gst_structure_get_name (s);
-  gpointer context = NULL, handle;
-  RealFunctions funcs;
+  GModule *module;
+  gpointer context = NULL;
+  RealFunctions funcs = { NULL, };
 
   if (!strcmp (name, "audio/x-sipro"))
     version = GST_REAL_AUDIO_DEC_VERSION_SIPR;
@@ -218,24 +221,33 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
       goto unknown_version;
   }
 
-  handle = dlopen (path, RTLD_LAZY);
-  if (!handle)
-    goto could_not_open;
-  funcs.RACloseCodec = dlsym (handle, "RACloseCodec");
-  funcs.RADecode = dlsym (handle, "RADecode");
-  funcs.RAFreeDecoder = dlsym (handle, "RAFreeDecoder");
-  funcs.RAOpenCodec2 = dlsym (handle, "RAOpenCodec2");
-  funcs.RAInitDecoder = dlsym (handle, "RAInitDecoder");
-  funcs.RASetFlavor = dlsym (handle, "RASetFlavor");
-  funcs.SetDLLAccessPath = dlsym (handle, "SetDLLAccessPath");
-  funcs.RASetPwd = dlsym (handle, "RASetPwd");
-  if (!(funcs.RACloseCodec && funcs.RADecode &&
-          funcs.RAFreeDecoder && funcs.RAOpenCodec2 &&
-          funcs.RAInitDecoder && funcs.RASetFlavor))
-    goto could_not_load;
+  module = g_module_open (path, G_MODULE_BIND_LAZY);
 
-  if (funcs.SetDLLAccessPath)
+  if (module == NULL)
+    goto could_not_open;
+
+  if (!g_module_symbol (module, "RACloseCodec", &ra_close_codec) ||
+      !g_module_symbol (module, "RADecode", &ra_decode) ||
+      !g_module_symbol (module, "RAFreeDecoder", &ra_free_decoder) ||
+      !g_module_symbol (module, "RAOpenCodec2", &ra_open_codec2) ||
+      !g_module_symbol (module, "RAInitDecoder", &ra_init_decoder) ||
+      !g_module_symbol (module, "RASetFlavor", &ra_set_flavor)) {
+    goto could_not_load;
+  }
+
+  g_module_symbol (module, "RASetPwd", &ra_set_pwd);
+
+  if (g_module_symbol (module, "SetDLLAccessPath", &set_dll_access_path))
     funcs.SetDLLAccessPath (DEFAULT_PATH);
+
+  funcs.RACloseCodec = ra_close_codec;
+  funcs.RADecode = ra_decode;
+  funcs.RAFreeDecoder = ra_free_decoder;
+  funcs.RAOpenCodec2 = ra_open_codec2;
+  funcs.RAInitDecoder = ra_init_decoder;
+  funcs.RASetFlavor = ra_set_flavor;
+  funcs.RASetPwd = ra_set_pwd;
+  funcs.SetDLLAccessPath = set_dll_access_path;
 
   if ((res = funcs.RAOpenCodec2 (&context, NULL))) {
     GST_DEBUG_OBJECT (dec, "RAOpenCodec2() failed");
@@ -284,9 +296,9 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
     dec->funcs.RAFreeDecoder (dec->context);
   }
   dec->context = context;
-  if (dec->handle)
-    dlclose (dec->handle);
-  dec->handle = handle;
+  if (dec->module)
+    g_module_close (dec->module);
+  dec->module = module;
   dec->funcs = funcs;
 
   return TRUE;
@@ -298,18 +310,19 @@ unknown_version:
   GST_DEBUG_OBJECT (dec, "Cannot handle version %i.", version);
   return FALSE;
 could_not_open:
-  GST_DEBUG_OBJECT (dec, "Could not open library '%s'.", path);
+  GST_DEBUG_OBJECT (dec, "Could not open library '%s': %s", path,
+      g_module_error ());
   return FALSE;
 could_not_load:
-  dlclose (handle);
-  GST_DEBUG_OBJECT (dec, "Could not load all symbols.");
+  g_module_close (module);
+  GST_DEBUG_OBJECT (dec, "Could not load all symbols: %s", g_module_error ());
   return FALSE;
 could_not_initialize:
   if (context) {
     funcs.RACloseCodec (context);
     funcs.RAFreeDecoder (context);
   }
-  dlclose (handle);
+  g_module_close (module);
   GST_DEBUG_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
   return FALSE;
 could_not_set_caps:
@@ -317,7 +330,7 @@ could_not_set_caps:
     funcs.RACloseCodec (context);
     funcs.RAFreeDecoder (context);
   }
-  dlclose (handle);
+  g_module_close (module);
   GST_DEBUG_OBJECT (dec, "Could not convince peer to accept caps.");
   return FALSE;
 }
@@ -377,9 +390,9 @@ gst_real_audio_dec_finalize (GObject * object)
     /*     dec->funcs.RAFreeDecoder (dec->context); */
     dec->context = NULL;
   }
-  if (dec->handle) {
-    dlclose (dec->handle);
-    dec->handle = NULL;
+  if (dec->module) {
+    g_module_close (dec->module);
+    dec->module = NULL;
   }
 
   if (dec->path_racook) {
