@@ -1,3 +1,13 @@
+2007-05-07  Michael Smith <msmith@fluendo.com>
+
+	* ext/theora/gsttheoradec.h:
+	* ext/theora/theoradec.c: (gst_theora_dec_reset),
+	(theora_dec_sink_event), (theora_handle_comment_packet),
+	(theora_handle_type_packet), (theora_dec_change_state):
+	  Don't push events (newsegment, tags) before initialising the
+	  decoder.
+	  This is neccesary for seeking to work correctly in gnonlin.
+
 2007-05-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:

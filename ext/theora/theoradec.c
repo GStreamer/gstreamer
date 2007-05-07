@@ -172,6 +172,7 @@ static void
 gst_theora_dec_reset (GstTheoraDec * dec)
 {
   dec->need_keyframe = TRUE;
+  dec->sent_newsegment = FALSE;
   dec->last_timestamp = -1;
   dec->granulepos = -1;
   dec->discont = TRUE;
@@ -192,6 +193,11 @@ gst_theora_dec_reset (GstTheoraDec * dec)
   g_list_foreach (dec->decode, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (dec->decode);
   dec->decode = NULL;
+
+  if (dec->tags) {
+    gst_tag_list_free (dec->tags);
+    dec->tags = NULL;
+  }
 }
 
 static int
@@ -689,8 +695,14 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&dec->segment, update,
           rate, arate, format, start, stop, time);
 
-      /* and forward */
-      ret = gst_pad_push_event (dec->srcpad, event);
+      /* iWe don't forward this unless/until the decoder is initialised */
+      if (dec->have_header) {
+        ret = gst_pad_push_event (dec->srcpad, event);
+        dec->sent_newsegment = TRUE;
+      } else {
+        gst_event_unref (event);
+        ret = TRUE;
+      }
       break;
     }
     default:
@@ -748,7 +760,7 @@ theora_handle_comment_packet (GstTheoraDec * dec, ogg_packet * packet)
         GST_TAG_NOMINAL_BITRATE, dec->info.target_bitrate, NULL);
   }
 
-  gst_element_found_tags_for_pad (GST_ELEMENT_CAST (dec), dec->srcpad, list);
+  dec->tags = list;
 
   return GST_FLOW_OK;
 }
@@ -758,6 +770,8 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
 {
   GstCaps *caps;
   gint par_num, par_den;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstEvent *event;
 
   GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
       dec->info.fps_numerator, dec->info.fps_denominator,
@@ -824,8 +838,24 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   gst_caps_unref (caps);
 
   dec->have_header = TRUE;
+  if (!dec->sent_newsegment) {
+    GST_DEBUG_OBJECT (dec, "Sending newsegment event");
 
-  return GST_FLOW_OK;
+    event = gst_event_new_new_segment_full (FALSE,
+        dec->segment.rate, dec->segment.applied_rate,
+        dec->segment.format, dec->segment.start, dec->segment.stop,
+        dec->segment.time);
+    ret = gst_pad_push_event (dec->srcpad, event);
+    dec->sent_newsegment = TRUE;
+  }
+
+  if (dec->tags) {
+    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (dec), dec->srcpad,
+        dec->tags);
+    dec->tags = NULL;
+  }
+
+  return ret;
 }
 
 static GstFlowReturn
@@ -1432,6 +1462,7 @@ theora_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       theora_info_init (&dec->info);
       theora_comment_init (&dec->comment);
+      GST_DEBUG_OBJECT (dec, "Setting have_header to FALSE in READY->PAUSED");
       dec->have_header = FALSE;
       gst_theora_dec_reset (dec);
       break;
