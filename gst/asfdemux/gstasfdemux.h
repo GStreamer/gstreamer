@@ -149,6 +149,7 @@ struct _GstASFDemux {
   guint32              num_video_streams;
   guint32              num_streams;
   AsfStream            stream[GST_ASF_DEMUX_NUM_STREAMS];
+  gboolean             activated_streams;
 
   GstClockTime         first_ts;        /* first timestamp found        */
 

@@ -1,3 +1,21 @@
+2007-05-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_reset),
+	(gst_asf_demux_chain_headers),
+	(gst_asf_demux_parse_data_object_start), (all_streams_prerolled),
+	(gst_asf_demux_have_mutually_exclusive_active_stream),
+	(gst_asf_demux_check_activate_streams),
+	(gst_asf_demux_find_stream_with_complete_payload),
+	(gst_asf_demux_push_complete_payloads), (gst_asf_demux_loop),
+	(gst_asf_demux_activate_ext_props_streams),
+	(gst_asf_demux_process_object):
+	* gst/asfdemux/gstasfdemux.h:
+	  Activate streams (ie. add the pads to the element) depending on
+	  whether we actually get data for those streams within the ASF
+	  preroll value specified. Currently only done in pull-mode though
+	  (this will fix problems with playbin hanging on mms streams once
+	  we use this in push-mode as well).
+
 2007-05-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/asfpacket.c: (gst_asf_payload_queue_for_stream):
