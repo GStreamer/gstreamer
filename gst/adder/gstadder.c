@@ -443,9 +443,9 @@ gst_adder_src_event (GstPad * pad, GstEvent * event)
       GstSeekType curtype;
       gint64 cur;
 
-      /* parse the flushing flag */
-      gst_event_parse_seek (event, NULL, NULL, &flags, &curtype, &cur, NULL,
-          NULL);
+      /* parse the seek parameters */
+      gst_event_parse_seek (event, &adder->segment_rate, NULL, &flags, &curtype,
+          &cur, NULL, NULL);
 
       /* check if we are flushing */
       if (flags & GST_SEEK_FLAG_FLUSH) {
@@ -741,6 +741,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     GstEvent *event;
 
     /* FIXME, use rate/applied_rate as set on all sinkpads.
+     * - currently we just set rate as received from last seek-event
      * We could potentially figure out the duration as well using
      * the current segment positions and the stated stop positions.
      * Also we just start from stream time 0 which is rather
@@ -752,7 +753,7 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
      * the later streams would be delayed until the stream times
      * match.
      */
-    event = gst_event_new_new_segment_full (FALSE, 1.0,
+    event = gst_event_new_new_segment_full (FALSE, adder->segment_rate,
         1.0, GST_FORMAT_TIME, adder->timestamp, -1, adder->segment_position);
 
     gst_pad_push_event (adder->srcpad, event);
@@ -812,6 +813,7 @@ gst_adder_change_state (GstElement * element, GstStateChange transition)
       adder->offset = 0;
       adder->segment_pending = TRUE;
       adder->segment_position = 0;
+      adder->segment_rate = 1.0;
       gst_segment_init (&adder->segment, GST_FORMAT_UNDEFINED);
       gst_collect_pads_start (adder->collect);
       break;

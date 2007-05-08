@@ -1,3 +1,11 @@
+2007-05-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/adder/gstadder.c (gst_adder_src_event, gst_adder_collected,
+	  gst_adder_change_state):
+	* gst/adder/gstadder.h (bps, offset, collect_event, segment,
+	  segment_pending, segment_position, segment_rate):
+	  Handle playback-rate on adder.
+
 2007-05-07  Michael Smith <msmith@fluendo.com>
 
 	* ext/theora/gsttheoradec.h:

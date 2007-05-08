@@ -72,7 +72,7 @@ struct _GstAdder {
   gboolean        is_signed;
 
   /* number of bytes per sample, actually width/8 * channels */
-  gint            bps; 
+  gint            bps;
 
   /* function to add samples */
   GstAdderFunction func;
@@ -80,12 +80,13 @@ struct _GstAdder {
   /* counters to keep track of timestamps */
   gint64          timestamp;
   gint64          offset;
-  
+
   /* sink event handling */
   GstPadEventFunction  collect_event;
   GstSegment      segment;
   gboolean        segment_pending;
   guint64         segment_position;
+  gdouble         segment_rate;
 };
 
 struct _GstAdderClass {
