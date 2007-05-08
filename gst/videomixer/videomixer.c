@@ -924,10 +924,6 @@ error:
 #define BLEND_MODE BLEND_HARDLIGHT
 #endif
 
-#define ROUND_UP_2(x) (((x) + 1) & ~1)
-#define ROUND_UP_4(x) (((x) + 3) & ~3)
-#define ROUND_UP_8(x) (((x) + 7) & ~7)
-
 /* note that this function does packing conversion and blending at the
  * same time */
 static void
@@ -941,8 +937,8 @@ gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
   gint src_add, dest_add;
   gint Y, U, V;
 
-  src_stride = ROUND_UP_2 (src_width) * 4;
-  dest_stride = ROUND_UP_2 (dest_width) * 4;
+  src_stride = src_width * 4;
+  dest_stride = dest_width * 4;
 
   b_alpha = (gint) (src_alpha * 255);
 
@@ -965,14 +961,14 @@ gst_videomixer_blend_ayuv_ayuv (guint8 * src, gint xpos, gint ypos,
     src_height = dest_height - ypos;
   }
 
-  src_add = src_stride - (4 * ROUND_UP_2 (src_width));
-  dest_add = dest_stride - (4 * ROUND_UP_2 (src_width));
+  src_add = src_stride - (4 * src_width);
+  dest_add = dest_stride - (4 * src_width);
 
   dest = dest + 4 * xpos + (ypos * dest_stride);
 
   /* we convert a square of 2x2 samples to generate 4 Luma and 2 chroma samples */
-  for (i = 0; i < ROUND_UP_2 (src_height); i++) {
-    for (j = 0; j < ROUND_UP_2 (src_width); j++) {
+  for (i = 0; i < src_height; i++) {
+    for (j = 0; j < src_width; j++) {
       alpha = (src[0] * b_alpha) >> 8;
       BLEND_MODE (dest[1], dest[2], dest[3], src[1], src[2], src[3],
           alpha, Y, U, V);
@@ -1009,14 +1005,11 @@ gst_videomixer_sort_pads (GstVideoMixer * mix)
 static void
 gst_videomixer_fill_checker (guint8 * dest, gint width, gint height)
 {
-  gint stride;
   gint i, j;
   static int tab[] = { 80, 160, 80, 160 };
 
-  stride = ROUND_UP_2 (width);
-
   for (i = 0; i < height; i++) {
-    for (j = 0; j < stride; j++) {
+    for (j = 0; j < width; j++) {
       *dest++ = 0xff;
       *dest++ = tab[((i & 0x8) >> 3) + ((j & 0x8) >> 3)];
       *dest++ = 128;
@@ -1029,13 +1022,10 @@ static void
 gst_videomixer_fill_color (guint8 * dest, gint width, gint height,
     gint colY, gint colU, gint colV)
 {
-  gint stride;
   gint i, j;
 
-  stride = ROUND_UP_2 (width);
-
   for (i = 0; i < height; i++) {
-    for (j = 0; j < stride; j++) {
+    for (j = 0; j < width; j++) {
       *dest++ = 0xff;
       *dest++ = colY;
       *dest++ = colU;
@@ -1190,7 +1180,7 @@ gst_videomixer_collected (GstCollectPads * pads, GstVideoMixer * mix)
   }
 
   /* Calculating out buffer size from input size */
-  outsize = ROUND_UP_2 (mix->in_width) * ROUND_UP_2 (mix->in_height) * 4;
+  outsize = 4 * mix->in_width * GST_ROUND_UP_2 (mix->in_height);
 
   /* If geometry has changed we need to set new caps on the buffer */
   if (mix->in_width != mix->out_width || mix->in_height != mix->out_height

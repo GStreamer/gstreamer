@@ -1,3 +1,10 @@
+2007-05-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videomixer/videomixer.c: (gst_videomixer_blend_ayuv_ayuv),
+	(gst_videomixer_fill_checker), (gst_videomixer_fill_color),
+	(gst_videomixer_collected):
+	  Fix strides calculation for AYUV (it's just width*4) (#436910).
+
 2007-05-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audiofx/audioamplify.c: (gst_audio_amplify_transform_ip):
