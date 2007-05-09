@@ -1032,7 +1032,7 @@ gst_ffmpegdemux_open (GstFFMpegDemux * demux)
   if (res < 0)
     goto open_failed;
 
-  res = av_find_stream_info (demux->context);
+  res = gst_ffmpeg_av_find_stream_info (demux->context);
   GST_DEBUG_OBJECT (demux, "av_find_stream_info returned %d", res);
   if (res < 0)
     goto no_info;

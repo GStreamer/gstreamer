@@ -1,3 +1,12 @@
+2007-05-09  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpeg.c: (gst_ffmpeg_av_find_stream_info):
+	* ext/ffmpeg/gstffmpeg.h:
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_open):
+	Protect calls to ffmpeg functions that will implicitly call 
+	avcodec_open/close with the avcodec mutex.
+	Fixes #433245
+
 2007-05-02  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_init),

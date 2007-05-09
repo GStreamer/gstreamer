@@ -63,6 +63,17 @@ gst_ffmpeg_avcodec_close (AVCodecContext *avctx) {
   return ret;
 }
 
+int
+gst_ffmpeg_av_find_stream_info(AVFormatContext *ic) {
+  int ret;
+
+  g_static_mutex_lock (&gst_avcodec_mutex);
+  ret = av_find_stream_info (ic);
+  g_static_mutex_unlock (&gst_avcodec_mutex);
+
+  return ret;
+}
+
 #ifndef GST_DISABLE_GST_DEBUG
 static void
 gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
