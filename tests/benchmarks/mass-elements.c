@@ -38,6 +38,7 @@ gst_get_current_time (void)
 gint
 main (gint argc, gchar * argv[])
 {
+  GstMessage *msg;
   GstElement *pipeline, *src, *sink, *current, *last;
   guint i, buffers = BUFFER_COUNT, identities = IDENTITY_COUNT;
   GstClockTime start, end;
@@ -98,9 +99,10 @@ main (gint argc, gchar * argv[])
       GST_TIME_ARGS (end - start));
 
   start = gst_get_current_time ();
-  gst_bus_poll (gst_element_get_bus (pipeline),
+  msg = gst_bus_poll (gst_element_get_bus (pipeline),
       GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
   end = gst_get_current_time ();
+  gst_message_unref (msg);
   g_print ("%" GST_TIME_FORMAT " - putting %u buffers through\n",
       GST_TIME_ARGS (end - start), buffers);
 

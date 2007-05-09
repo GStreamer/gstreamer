@@ -1,3 +1,9 @@
+2007-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/benchmarks/complexity.c: (main):
+	* tests/benchmarks/mass-elements.c: (main):
+	  Set a good example and don't leak messages.
+
 2007-05-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/Makefile.am:
