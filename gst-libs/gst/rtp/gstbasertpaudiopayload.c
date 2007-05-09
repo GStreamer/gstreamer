@@ -353,6 +353,7 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
   guint min_payload_len;
   guint max_payload_len;
   gboolean use_adapter = FALSE;
+  guint minptime_ms;
 
   ret = GST_FLOW_OK;
 
@@ -389,7 +390,7 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
 
   /* min number of bytes based on a given ptime, has to be a multiple
      of frame duration */
-  guint minptime_ms = basertpaudiopayload->priv->min_ptime / 1000000;
+  minptime_ms = basertpaudiopayload->priv->min_ptime / 1000000;
 
   minptime_octets = frame_size * (int) (minptime_ms / frame_duration);
 

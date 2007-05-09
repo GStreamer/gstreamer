@@ -1,3 +1,13 @@
+2007-05-09  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	(gst_base_rtp_audio_payload_handle_frame_based_buffer):
+	Move variable declaration before the first instruction.
+	* gst/videotestsrc/videotestsrc.c:
+	Define M_PI if it's not defined yet.
+	* win32/common/libgstrtp.def:
+	Add new exported functions.
+
 2007-05-09  Michael Smith <msmith@fluendo.com>
 
 	* ext/theora/theoradec.c: (theora_handle_type_packet):

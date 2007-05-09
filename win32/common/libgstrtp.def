@@ -7,6 +7,8 @@ EXPORTS
 	gst_base_rtp_audio_payload_get_type
 	gst_base_rtp_audio_payload_set_frame_based
 	gst_base_rtp_audio_payload_set_frame_options
+	gst_base_rtp_audio_payload_set_sample_based
+	gst_base_rtp_audio_payload_set_sample_options
 	gst_base_rtp_depayload_get_type
 	gst_base_rtp_depayload_push
 	gst_base_rtp_depayload_push_ts
@@ -20,6 +22,7 @@ EXPORTS
 	gst_rtp_buffer_get_payload_subbuffer
 	gst_rtp_buffer_get_payload_type
 	gst_rtp_buffer_get_seq
+	gst_rtp_buffer_get_ssrc
 	gst_rtp_buffer_get_timestamp
 	gst_rtp_buffer_new_allocate
 	gst_rtp_buffer_new_allocate_len
