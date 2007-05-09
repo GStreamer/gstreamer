@@ -17085,3 +17085,22 @@
 <DEFAULT>200</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstDirectDrawSink::keep-aspect-ratio</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>keep-aspect-ratio</NICK>
+<BLURB>keep the aspect ratio or not</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDirectSoundSink::attenuation</NAME>
+<TYPE>glong</TYPE>
+<RANGE>[-1000,0]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Attenuation of the sound</NICK>
+<BLURB>The attenuation for the directsound buffer (default is 0 so the directsound buffer will not be attenuated).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
