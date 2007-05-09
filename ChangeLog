@@ -1,3 +1,9 @@
+2007-05-09  Wim Taymans  <wim@fluendo.com>
+
+	* tests/examples/seek/scrubby.c: (stop_cb), (main):
+	* tests/examples/seek/seek.c: (do_seek):
+	Some small cosmetic changes.
+
 2007-05-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/adder/gstadder.c (gst_adder_src_event, gst_adder_collected,

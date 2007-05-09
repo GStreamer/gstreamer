@@ -364,9 +364,10 @@ stop_cb (GtkButton * button, gpointer data)
   gst_element_get_state (pipeline, &state, NULL, GST_CLOCK_TIME_NONE);
   if (state != GST_STATE_READY) {
     g_print ("READY pipeline\n");
-    gst_element_set_state (pipeline, GST_STATE_PAUSED);
     gst_element_set_state (pipeline, GST_STATE_READY);
+    /* position and speed return to their default values */
     gtk_adjustment_set_value (adjustment, 0.0);
+    gtk_adjustment_set_value (sadjustment, 1.0);
     g_source_remove (update_id);
   }
 }
@@ -507,7 +508,7 @@ main (int argc, char **argv)
   gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
   sadjustment =
-      GTK_ADJUSTMENT (gtk_adjustment_new (1.0, 0.0, 5.0, 0.1, 1.0, 1.0));
+      GTK_ADJUSTMENT (gtk_adjustment_new (1.0, 0.0, 5.0, 0.1, 1.0, 0.0));
   shscale = gtk_hscale_new (sadjustment);
   gtk_scale_set_digits (GTK_SCALE (shscale), 2);
   gtk_range_set_update_policy (GTK_RANGE (shscale), GTK_UPDATE_CONTINUOUS);

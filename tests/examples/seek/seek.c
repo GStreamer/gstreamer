@@ -1134,8 +1134,10 @@ do_seek (GtkWidget * widget)
     } else {
       set_update_scale (TRUE);
     }
-  } else
+  } else {
     g_print ("seek failed\n");
+    set_update_scale (TRUE);
+  }
 }
 
 static void
