@@ -7,6 +7,7 @@ libgstrtsp_la_SOURCES = gstrtsp.c gstrtspsrc.c \
 			rtspextwms.c		\
 			rtspmessage.c		\
 			rtsptransport.c		\
+			rtsprange.c		\
 			rtspurl.c		\
 			sdpmessage.c            \
 			base64.c
@@ -23,4 +24,18 @@ test_SOURCES = test.c rtspdefs.c rtspurl.c rtspconnection.c rtspmessage.c rtsptr
 test_CFLAGS = $(GST_CFLAGS)
 test_LDFLAGS = $(GST_LIBS) $(WIN32_LIBS)
 
-noinst_HEADERS = gstrtspsrc.h gstrtsp.h gstrtpdec.h rtsptransport.h rtsp.h rtspurl.h rtspconnection.h rtspdefs.h rtspmessage.h sdp.h sdpmessage.h rtspextwms.h rtspext.h base64.h
+noinst_HEADERS = gstrtspsrc.h     \
+		 gstrtsp.h        \
+		 gstrtpdec.h      \
+		 rtsptransport.h  \
+		 rtsp.h           \
+		 rtspurl.h        \
+		 rtsprange.h      \
+		 rtspconnection.h \
+		 rtspdefs.h       \
+		 rtspmessage.h    \
+		 sdp.h            \
+		 sdpmessage.h     \
+		 rtspextwms.h     \
+		 rtspext.h        \
+		 base64.h

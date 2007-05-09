@@ -1,3 +1,15 @@
+2007-05-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/Makefile.am:
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_handle_src_query),
+	(gst_rtspsrc_send_keep_alive), (gst_rtspsrc_open):
+	* gst/rtsp/rtsprange.c: (parse_npt_time), (parse_npt_range),
+	(parse_clock_range), (parse_smpte_range), (rtsp_range_parse),
+	(rtsp_range_free):
+	* gst/rtsp/rtsprange.h:
+	Add code to parse time ranges.
+	Report DURATION on the stream when possible.
+
 2007-05-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videomixer/videomixer.c: (gst_videomixer_blend_ayuv_ayuv),

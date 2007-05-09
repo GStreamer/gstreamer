@@ -94,6 +94,7 @@
 
 #include "gstrtspsrc.h"
 #include "sdp.h"
+#include "rtsprange.h"
 
 /* define for experimental real support */
 #undef WITH_EXT_REAL
@@ -1068,6 +1069,7 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
 
       switch (format) {
         case GST_FORMAT_TIME:
+          gst_query_set_duration (query, format, src->segment.duration);
           break;
         default:
           res = FALSE;
@@ -3087,13 +3089,22 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if (src->extension && src->extension->parse_sdp)
     src->extension->parse_sdp (src->extension, &sdp);
 
-  /* parse range */
+  /* parse range for duration reporting. */
   {
     gchar *range;
+    RTSPTimeRange *therange;
 
     range = sdp_message_get_attribute_val (&sdp, "range");
 
-    GST_DEBUG_OBJECT (src, "got range: %s", GST_STR_NULL (range));
+    rtsp_range_parse (range, &therange);
+
+    GST_DEBUG_OBJECT (src, "range: '%s', min %f - max %f ",
+        GST_STR_NULL (range), therange->min.seconds, therange->max.seconds);
+
+    gst_segment_set_duration (&src->segment, GST_FORMAT_TIME,
+        therange->max.seconds * GST_SECOND);
+    gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME,
+        therange->min.seconds * GST_SECOND);
   }
 
   /* create streams */
