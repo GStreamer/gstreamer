@@ -1,3 +1,10 @@
+2007-05-09  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/common/libgstreamer.def:
+	Add new exported functions.
+	* win32/vs6/grammar.dsp:
+	Use grammar pre-generated files.
+
 2007-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Based on patch by: Peter Kjellerstedt  <pkj at axis com>

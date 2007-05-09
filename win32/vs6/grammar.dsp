@@ -69,8 +69,9 @@ SOURCE=..\..\gst\parse\grammar.y
 InputPath=..\..\gst\parse\grammar.y
 
 BuildCmds= \
-	bison -d -v -p_gst_parse__yy ..\..\gst\parse\grammar.y -o ..\..\gst\parse\grammar.tab.c \
-	flex -P_gst_parse_yy -o..\..\gst\parse\lex._gst_parse_yy.c ..\..\gst\parse\parse.l \
+	copy /y ..\..\gst\parse\grammar.tab.pre.c ..\..\gst\parse\grammar.tab.c \
+	copy /y ..\..\gst\parse\grammar.tab.pre.h ..\..\gst\parse\grammar.tab.h \
+	copy /y ..\..\gst\parse\lex._gst_parse_yy.pre.c ..\..\gst\parse\lex._gst_parse_yy.c \
 	
 
 "..\..\gst\parse\lex._gst_parse_yy.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -89,8 +90,9 @@ BuildCmds= \
 InputPath=..\..\gst\parse\grammar.y
 
 BuildCmds= \
-	bison -d -v -p_gst_parse__yy ..\..\gst\parse\grammar.y -o ..\..\gst\parse\grammar.tab.c \
-	flex -P_gst_parse_yy -o..\..\gst\parse\lex._gst_parse_yy.c ..\..\gst\parse\parse.l \
+	copy /y ..\..\gst\parse\grammar.tab.pre.c ..\..\gst\parse\grammar.tab.c \
+	copy /y ..\..\gst\parse\grammar.tab.pre.h ..\..\gst\parse\grammar.tab.h \
+	copy /y ..\..\gst\parse\lex._gst_parse_yy.pre.c ..\..\gst\parse\lex._gst_parse_yy.c \
 	
 
 "..\..\gst\parse\lex._gst_parse_yy.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
@@ -116,6 +118,7 @@ SOURCE=..\..\gst\gst.h
 SOURCE=..\common\gstconfig.h
 
 !IF  "$(CFG)" == "grammar - Win32 Release"
+
 # Begin Custom Build
 InputPath=..\common\gstconfig.h
 
@@ -123,6 +126,7 @@ InputPath=..\common\gstconfig.h
 	copy /y ..\common\gstconfig.h ..\..\gst
 
 # End Custom Build
+
 !ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
 
 # Begin Custom Build
@@ -182,6 +186,7 @@ BuildCmds= \
 SOURCE=..\..\gst\gstmarshal.list
 
 !IF  "$(CFG)" == "grammar - Win32 Release"
+
 # Begin Custom Build
 InputPath=..\..\gst\gstmarshal.list
 

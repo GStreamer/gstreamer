@@ -331,6 +331,8 @@ EXPORTS
 	gst_message_get_structure
 	gst_message_get_type
 	gst_message_new_application
+	gst_message_new_async_done
+	gst_message_new_async_start
 	gst_message_new_buffering
 	gst_message_new_clock_lost
 	gst_message_new_clock_provide
