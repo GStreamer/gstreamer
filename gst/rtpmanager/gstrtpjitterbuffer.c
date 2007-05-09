@@ -1118,6 +1118,7 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
       break;
     }
     default:
+      res = gst_pad_query_default (pad, query);
       break;
   }
   return res;

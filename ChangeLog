@@ -1,3 +1,9 @@
+2007-05-09  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_query):
+	Pass queries upstream.
+
 2007-05-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_setcaps),
