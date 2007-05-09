@@ -34,6 +34,7 @@
 #include <string.h>
 
 #include "gstparse.h"
+#include "gsterror.h"
 #include "gstinfo.h"
 
 extern GstElement *_gst_parse_launch (const gchar *, GError **);
@@ -55,6 +56,7 @@ gst_parse_error_quark (void)
   return quark;
 }
 
+#ifndef GST_DISABLE_PARSE
 static gchar *
 _gst_parse_escape (const gchar * str)
 {
@@ -77,6 +79,7 @@ _gst_parse_escape (const gchar * str)
 
   return newstr;
 }
+#endif /* !GST_DISABLE_PARSE */
 
 /**
  * gst_parse_launchv:
@@ -92,6 +95,7 @@ _gst_parse_escape (const gchar * str)
 GstElement *
 gst_parse_launchv (const gchar ** argv, GError ** error)
 {
+#ifndef GST_DISABLE_PARSE
   GstElement *element;
   GString *str;
   const gchar **argvp, *arg;
@@ -117,6 +121,17 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
   g_string_free (str, TRUE);
 
   return element;
+#else
+  gchar *msg;
+
+  GST_WARNING ("Disabled API called: gst_parse_launchv()");
+
+  msg = gst_error_get_message (GST_CORE_ERROR, GST_CORE_ERROR_DISABLED);
+  g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_DISABLED, "%s", msg);
+  g_free (msg);
+
+  return NULL;
+#endif
 }
 
 /**
@@ -136,6 +151,7 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
 GstElement *
 gst_parse_launch (const gchar * pipeline_description, GError ** error)
 {
+#ifndef GST_DISABLE_PARSE
   GstElement *element;
 
   g_return_val_if_fail (pipeline_description != NULL, NULL);
@@ -146,6 +162,15 @@ gst_parse_launch (const gchar * pipeline_description, GError ** error)
   element = _gst_parse_launch (pipeline_description, error);
 
   return element;
+#else
+  gchar *msg;
 
-  /* ERRORS */
+  GST_WARNING ("Disabled API called: gst_parse_launch()");
+
+  msg = gst_error_get_message (GST_CORE_ERROR, GST_CORE_ERROR_DISABLED);
+  g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_DISABLED, "%s", msg);
+  g_free (msg);
+
+  return NULL;
+#endif
 }

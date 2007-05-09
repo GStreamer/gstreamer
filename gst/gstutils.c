@@ -34,6 +34,7 @@
 
 #include "gstghostpad.h"
 #include "gstutils.h"
+#include "gsterror.h"
 #include "gstinfo.h"
 #include "gstparse.h"
 #include "gst-i18n-lib.h"
@@ -3181,7 +3182,6 @@ gst_bin_find_unconnected_pad (GstBin * bin, GstPadDirection direction)
   return pad;
 }
 
-#ifndef GST_DISABLE_PARSE
 /**
  * gst_parse_bin_from_description:
  * @bin_description: command line describing the bin
@@ -3208,6 +3208,7 @@ GstElement *
 gst_parse_bin_from_description (const gchar * bin_description,
     gboolean ghost_unconnected_pads, GError ** err)
 {
+#ifndef GST_DISABLE_PARSE
   GstPad *pad = NULL;
   GstBin *bin;
   gchar *desc;
@@ -3241,5 +3242,15 @@ gst_parse_bin_from_description (const gchar * bin_description,
   }
 
   return GST_ELEMENT (bin);
-}
+#else
+  gchar *msg;
+
+  GST_WARNING ("Disabled API called: gst_parse_bin_from_description()");
+
+  msg = gst_error_get_message (GST_CORE_ERROR, GST_CORE_ERROR_DISABLED);
+  g_set_error (err, GST_CORE_ERROR, GST_CORE_ERROR_DISABLED, "%s", msg);
+  g_free (msg);
+
+  return NULL;
 #endif
+}

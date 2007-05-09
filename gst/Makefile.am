@@ -17,13 +17,9 @@ endif
 endif
 
 if GST_DISABLE_PARSE
-GST_PARSE_SRC =
-GST_PARSE_H =
 SUBDIRS_PARSE =
 GST_PARSE_LA =
 else
-GST_PARSE_SRC = gstparse.c
-GST_PARSE_H = gstparse.h
 SUBDIRS_PARSE = parse
 GST_PARSE_LA = parse/libgstparse.la
 endif
@@ -70,7 +66,7 @@ built_header_make = gstenumtypes.h gstmarshal.h
 built_source_make = $(GST_ENUMTYPES_SRC) gstmarshal.c
 
 EXTRA_libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
-	gstmarshal.list gstparse.c gsttrace.c gstxml.c \
+	gstmarshal.list gsttrace.c gstxml.c \
 	gstregistryxml.c gstregistrybinary.c
 
 
@@ -119,7 +115,7 @@ libgstreamer_@GST_MAJORMINOR@_la_SOURCES = \
 	$(GST_URI_SRC)		\
 	gstutils.c		\
 	gstvalue.c		\
-	$(GST_PARSE_SRC)	\
+	gstparse.c		\
 	$(GST_REGISTRY_SRC)	\
 	$(GST_LOADSAVE_SRC)
 
@@ -199,15 +195,12 @@ gst_headers =			\
 	gstutils.h		\
 	gstvalue.h		\
 	gstregistry.h		\
-	$(GST_PARSE_H)		\
+	gstparse.h		\
 	gstxml.h
 
 libgstreamer_@GST_MAJORMINOR@include_HEADERS = $(gst_headers)
 nodist_libgstreamer_@GST_MAJORMINOR@include_HEADERS = \
 	$(built_header_configure) $(built_header_make)
-
-EXTRA_DIST = \
-	gstparse.h
 
 noinst_HEADERS = 		\
 	gettext.h		\

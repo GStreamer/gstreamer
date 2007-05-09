@@ -23,13 +23,9 @@
 #ifndef __GST_PARSE_H__
 #define __GST_PARSE_H__
 
-#include <gst/gstconfig.h>
-
 #include <gst/gstelement.h>
 
 G_BEGIN_DECLS
-
-#ifndef GST_DISABLE_PARSE
 
 GQuark gst_parse_error_quark (void);
 /**
@@ -65,15 +61,6 @@ typedef enum
 
 GstElement*	gst_parse_launch	(const gchar *pipeline_description, GError **error);
 GstElement*	gst_parse_launchv	(const gchar **argv, GError **error);
-
-#else /* GST_DISABLE_PARSE */
-
-#if defined _GNUC_ && _GNUC_ >= 3
-#pragma GCC poison gst_parse_launch
-#pragma GCC poison gst_parse_launchv
-#endif
-
-#endif /* GST_DISABLE_PARSE */
 
 G_END_DECLS
 

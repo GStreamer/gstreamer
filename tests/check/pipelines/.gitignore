@@ -4,3 +4,4 @@ simple-launch-lines
 stress
 parse-launch
 *.check.xml
+parse-disabled

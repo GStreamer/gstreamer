@@ -27,7 +27,7 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 clean-local: clean-local-check
 
 if GST_DISABLE_PARSE
-PARSE_CHECKS =
+PARSE_CHECKS = pipelines/parse-disabled
 else
 PARSE_CHECKS = pipelines/simple-launch-lines pipelines/cleanup pipelines/parse-launch
 endif

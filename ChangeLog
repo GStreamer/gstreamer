@@ -1,5 +1,25 @@
 2007-05-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Based on patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst/Makefile.am:
+	* gst/gstparse.c: (gst_parse_launchv), (gst_parse_launch):
+	* gst/gstparse.h:
+	* gst/gstutils.c: (gst_parse_bin_from_description):
+	* gst/gstutils.h:
+	  Maintain API and ABI when --disable-parse is used. Now that
+	  we have an appropriate error code, we can just return NULL and the
+	  appropriate error when gst_parse_launch() is used despite it having
+	  been disabled (#342564).
+
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/.cvsignore:
+	* tests/check/pipelines/parse-disabled.c:
+	  Make sure these functions exist and return NULL plus a GError when
+	  --disable-parse is used.
+
+2007-05-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/benchmarks/complexity.c: (main):
 	* tests/benchmarks/mass-elements.c: (main):
 	  Set a good example and don't leak messages.
