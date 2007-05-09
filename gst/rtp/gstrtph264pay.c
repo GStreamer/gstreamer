@@ -207,14 +207,14 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     ret = gst_basertppayload_push (basepayload, outbuf);
     return ret;
   } else {
-    GST_DEBUG_OBJECT (basepayload,
-        "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", idxdata, mtu);
-
     /* Fragmentation Units FU-A */
     guint8 nalHeader;
     guint limitedSize;
 
     int ii = 0, start = 1, end = 0, first = 0;
+
+    GST_DEBUG_OBJECT (basepayload,
+        "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", idxdata, mtu);
 
     nalHeader = *pdata;
     pdata++;

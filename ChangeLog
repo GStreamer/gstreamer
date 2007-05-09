@@ -1,3 +1,16 @@
+2007-05-09  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/level/gstlevel.c: (gst_level_calculate_##TYPE),
+	(gst_level_transform_ip):
+	Use guint8 * instead of gpointer then vs6 know the size of data
+	pointed when moving the pointer.
+	* gst/rtp/gstrtph264pay.c: (gst_rtp_h264_pay_handle_buffer):
+	Move instructions after variables declaration.
+	* win32/vs6/autogen.dsp:
+	* win32/vs6/libgstrtp.dsp:
+	* win32/vs6/libgstrtsp.dsp:
+	Update vs6 project files.
+
 2007-05-09  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/Makefile.am:

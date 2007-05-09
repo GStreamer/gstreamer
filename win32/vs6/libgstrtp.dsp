@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTRTP_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /MD /W3 /O2 /I "./" /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTRTP_EXPORTS" /D "HAVE_CONFIG_H" /FD /c
+# ADD CPP /nologo /MD /W3 /O2 /I "./" /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /I "../../gst/rtsp" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTRTP_EXPORTS" /D "HAVE_CONFIG_H" /FD /c
 # SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -75,7 +75,7 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\lib\gstreamer-0.10
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MTd /W3 /Gm /GX /ZI /Od /D "WIN32" /D "_DEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTRTP_EXPORTS" /YX /FD /GZ /c
-# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTRTP_EXPORTS" /D "HAVE_CONFIG_H" /FD /GZ /c
+# ADD CPP /nologo /MDd /W3 /Gm /ZI /Od /I "../../gst-libs" /I "../../../gstreamer" /I "../common" /I "../../../gstreamer/libs" /I "../../../gst-plugins-base/gst-libs" /I "../../gst/rtsp" /D "_DEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "LIBGSTRTP_EXPORTS" /D "HAVE_CONFIG_H" /FD /GZ /c
 # SUBTRACT CPP /YX
 # ADD BASE MTL /nologo /D "_DEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "_DEBUG" /mktyplib203 /win32
@@ -102,6 +102,10 @@ PostBuild_Cmds=copy /Y $(TargetPath) c:\gstreamer\debug\lib\gstreamer-0.10
 # Begin Group "Source Files"
 
 # PROP Default_Filter "cpp;c;cxx;rc;def;r;odl;idl;hpj;bat"
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\fnv1hash.c
+# End Source File
 # Begin Source File
 
 SOURCE=..\..\gst\rtp\gstasteriskh263.c
@@ -152,6 +156,10 @@ SOURCE=..\..\gst\rtp\gstrtph264depay.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\rtp\gstrtph264pay.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\rtp\gstrtpilbcdepay.c
 # End Source File
 # Begin Source File
@@ -173,6 +181,10 @@ SOURCE=..\..\gst\rtp\gstrtpmp2tdepay.c
 # Begin Source File
 
 SOURCE=..\..\gst\rtp\gstrtpmp2tpay.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\rtp\gstrtpmp4adepay.c
 # End Source File
 # Begin Source File
 

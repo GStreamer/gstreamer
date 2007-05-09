@@ -313,7 +313,7 @@ gst_level_get_property (GObject * object, guint prop_id,
 
 #define DEFINE_INT_LEVEL_CALCULATOR(TYPE, RESOLUTION)                         \
 static void inline                                                            \
-gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
+gst_level_calculate_##TYPE (guint8 *data, guint num, guint channels,         \
                             gdouble *NCS, gdouble *NPS)                       \
 {                                                                             \
   TYPE * in = (TYPE *)data;                                                   \
@@ -344,7 +344,7 @@ DEFINE_INT_LEVEL_CALCULATOR (gint8, 7);
 
 #define DEFINE_FLOAT_LEVEL_CALCULATOR(TYPE)                                   \
 static void inline                                                            \
-gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
+gst_level_calculate_##TYPE (guint8 *data, guint num, guint channels,         \
                             gdouble *NCS, gdouble *NPS)                       \
 {                                                                             \
   TYPE * in = (TYPE *)data;                                                   \
@@ -534,7 +534,7 @@ static GstFlowReturn
 gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 {
   GstLevel *filter;
-  gpointer in_data;
+  guint8 *in_data;
   double CS = 0.0;
   guint num_frames = 0;
   guint num_int_samples = 0;    /* number of interleaved samples

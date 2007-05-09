@@ -117,7 +117,7 @@ SOURCE="..\common\gstudp-enumtypes.c"
 !IF  "$(CFG)" == "autogen - Win32 Release"
 
 # Begin Custom Build
-InputPath=..\common\gstudp-enumtypes.c
+InputPath="..\common\gstudp-enumtypes.c"
 
 BuildCmds= \
 	copy /y ..\common\gstudp-enumtypes.c ..\..\gst\udp\gstudp-enumtypes.c \
@@ -134,7 +134,7 @@ BuildCmds= \
 !ELSEIF  "$(CFG)" == "autogen - Win32 Debug"
 
 # Begin Custom Build
-InputPath=..\common\gstudp-enumtypes.c
+InputPath="..\common\gstudp-enumtypes.c"
 
 "..\..\gst\udp\gstudp-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
 	copy /y ..\common\gstudp-enumtypes.c ..\..\gst\udp\gstudp-enumtypes.c 
