@@ -1,3 +1,8 @@
+2007-05-09  Michael Smith <msmith@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_handle_type_packet):
+	  gst_pad_push_event() does not return a GstFlowReturn!
+
 2007-05-09  Wim Taymans  <wim@fluendo.com>
 
 	* tests/examples/seek/scrubby.c: (stop_cb), (main):

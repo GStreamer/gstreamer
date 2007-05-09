@@ -771,6 +771,7 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
   GstCaps *caps;
   gint par_num, par_den;
   GstFlowReturn ret = GST_FLOW_OK;
+  gboolean eret;
   GstEvent *event;
 
   GST_DEBUG_OBJECT (dec, "fps %d/%d, PAR %d/%d",
@@ -845,7 +846,9 @@ theora_handle_type_packet (GstTheoraDec * dec, ogg_packet * packet)
         dec->segment.rate, dec->segment.applied_rate,
         dec->segment.format, dec->segment.start, dec->segment.stop,
         dec->segment.time);
-    ret = gst_pad_push_event (dec->srcpad, event);
+    eret = gst_pad_push_event (dec->srcpad, event);
+    if (!eret)
+      ret = GST_FLOW_ERROR;
     dec->sent_newsegment = TRUE;
   }
 
