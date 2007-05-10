@@ -1,5 +1,13 @@
 2007-05-10  Stefan Kost  <ensonic@users.sf.net>
 
+	* common/m4/gst-x11.m4:
+	  Restore CFLAGS and LIBS.
+
+	* configure.ac:
+	  Revert previous patch.
+
+2007-05-10  Stefan Kost  <ensonic@users.sf.net>
+
 	Patch by: Ali Sabil <ali.sabil@gmail.com>
 
 	* configure.ac:

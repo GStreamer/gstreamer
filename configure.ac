@@ -290,7 +290,6 @@ dnl OpenGL
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENGL, true)
 AG_GST_CHECK_X
 save_CPPFLAGS="$CPPFLAGS"
-save_CFLAGS="$CFLAGS"
 save_LIBS="$LIBS"
 CPPFLAGS="$CPPFLAGS $X_CFLAGS"
 LIBS="$LIBS $X_LIBS"
@@ -299,7 +298,6 @@ AG_GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
                       GL/gl.h, HAVE_OPENGL="yes", HAVE_OPENGL="no")
 ])
 CPPFLAGS="$save_CPPFLAGS"
-CFLAGS="$save_CFLAGS"
 LIBS="$save_LIBS"
 
 dnl Check for X11
