@@ -1,3 +1,16 @@
+2007-05-10  Wim Taymans  <wim@fluendo.com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_class_init),
+	(update_time_level), (gst_queue_locked_flush),
+	(gst_queue_handle_sink_event), (gst_queue_chain),
+	(gst_queue_push_one), (gst_queue_loop):
+	* plugins/elements/gstqueue.h:
+	Be smarter when calculating the current amount of data in the queue by
+	measuring the difference between start and end timestamps (in running
+	time) inside the queue. Fixes #432876.
+	API: GstQueue::pushing to notify elements that we are pushing data again
+	since the running signal is rather broken for this purpose.
+
 2007-05-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* plugins/elements/gstqueue.c (_do_init, gst_queue_signals,

@@ -75,6 +75,10 @@ struct _GstQueue {
   GstPad *sinkpad;
   GstPad *srcpad;
 
+  /* segments to keep track of timestamps */
+  GstSegment sink_segment;
+  GstSegment src_segment;
+
   /* flowreturn when srcpad is paused */
   GstFlowReturn srcresult;
 
@@ -105,6 +109,8 @@ struct _GstQueueClass {
   void (*underrun)	(GstQueue *queue);
   void (*running)	(GstQueue *queue);
   void (*overrun)	(GstQueue *queue);
+
+  void (*pushing)	(GstQueue *queue);
 
   gpointer _gst_reserved[GST_PADDING];
 };
