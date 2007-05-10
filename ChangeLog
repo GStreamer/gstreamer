@@ -1,3 +1,11 @@
+2007-05-10  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: Ali Sabil <ali.sabil@gmail.com>
+
+	* configure.ac:
+	  Save and restore CFLAGS for OpenGL check. Fixes #437260.
+	
+
 2007-05-09  Sebastien Moutte  <sebastien@moutte.net>
 
 	* docs/plugins/gst-plugins-bad-plugins.args:
