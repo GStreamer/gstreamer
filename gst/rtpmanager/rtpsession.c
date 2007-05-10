@@ -364,7 +364,7 @@ rtp_session_get_bandwidth (RTPSession * sess)
  * @bandwidth: the RTCP bandwidth
  *
  * Set the bandwidth that should be used for RTCP
- * messages. 
+ * messages.
  */
 void
 rtp_session_set_rtcp_bandwidth (RTPSession * sess, gdouble bandwidth)
@@ -395,7 +395,7 @@ rtp_session_get_rtcp_bandwidth (RTPSession * sess)
  * @sess: an #RTPSession
  * @cname: a CNAME for the session
  *
- * Set the CNAME for the session. 
+ * Set the CNAME for the session.
  */
 void
 rtp_session_set_cname (RTPSession * sess, const gchar * cname)
@@ -427,7 +427,7 @@ rtp_session_get_cname (RTPSession * sess)
  * @sess: an #RTPSession
  * @name: a NAME for the session
  *
- * Set the NAME for the session. 
+ * Set the NAME for the session.
  */
 void
 rtp_session_set_name (RTPSession * sess, const gchar * name)
@@ -459,7 +459,7 @@ rtp_session_get_name (RTPSession * sess)
  * @sess: an #RTPSession
  * @email: an EMAIL for the session
  *
- * Set the EMAIL the session. 
+ * Set the EMAIL the session.
  */
 void
 rtp_session_set_email (RTPSession * sess, const gchar * email)
@@ -491,7 +491,7 @@ rtp_session_get_email (RTPSession * sess)
  * @sess: an #RTPSession
  * @phone: a PHONE for the session
  *
- * Set the PHONE the session. 
+ * Set the PHONE the session.
  */
 void
 rtp_session_set_phone (RTPSession * sess, const gchar * phone)
@@ -523,7 +523,7 @@ rtp_session_get_phone (RTPSession * sess)
  * @sess: an #RTPSession
  * @location: a LOCATION for the session
  *
- * Set the LOCATION the session. 
+ * Set the LOCATION the session.
  */
 void
 rtp_session_set_location (RTPSession * sess, const gchar * location)
@@ -555,7 +555,7 @@ rtp_session_get_location (RTPSession * sess)
  * @sess: an #RTPSession
  * @tool: a TOOL for the session
  *
- * Set the TOOL the session. 
+ * Set the TOOL the session.
  */
 void
 rtp_session_set_tool (RTPSession * sess, const gchar * tool)
@@ -587,7 +587,7 @@ rtp_session_get_tool (RTPSession * sess)
  * @sess: an #RTPSession
  * @note: a NOTE for the session
  *
- * Set the NOTE the session. 
+ * Set the NOTE the session.
  */
 void
 rtp_session_set_note (RTPSession * sess, const gchar * note)
@@ -1228,7 +1228,7 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
     members = sess->stats.active_sources;
 
     if (!sess->source->received_bye && members < pmembers) {
-      /* some members went away since the previous timeout estimate. 
+      /* some members went away since the previous timeout estimate.
        * Perform reverse reconsideration but only when we are not scheduling a
        * BYE ourselves. */
       if (arrival->time < sess->next_rtcp_check_time) {
@@ -1612,7 +1612,8 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
       extended_max = stats->cycles + stats->max_seq;
       expected = extended_max - stats->base_seq + 1;
 
-      GST_DEBUG ("ext_max %d, expected %d, received %d, base_seq %d",
+      GST_DEBUG ("ext_max %" G_GUINT64_FORMAT ", expected %" G_GUINT64_FORMAT
+          ", received %" G_GUINT64_FORMAT ", base_seq %" G_GUINT32_FORMAT,
           extended_max, expected, stats->packets_received, stats->base_seq);
 
       lost = expected - stats->packets_received;
@@ -1632,7 +1633,8 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
 
       GST_DEBUG ("add RR for SSRC %08x", source->ssrc);
       /* we scaled the jitter up for additional precision */
-      GST_DEBUG ("fraction %d, lost %d, extseq %u, jitter %d", fraction, lost,
+      GST_DEBUG ("fraction %" G_GUINT32_FORMAT ", lost %" G_GINT64_FORMAT
+          ", extseq %" G_GUINT64_FORMAT ", jitter %d", fraction, lost,
           extended_max, stats->jitter >> 4);
 
       if (rtp_source_get_last_sr (source, &ntptime, NULL, NULL, NULL, &time)) {

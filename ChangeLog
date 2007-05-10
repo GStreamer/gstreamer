@@ -1,5 +1,24 @@
 2007-05-10  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/qtdemux/qtdemux.c (gst_qtdemux_move_stream,
+	  gst_qtdemux_loop_state_header, gst_qtdemux_activate_segment,
+	  gst_qtdemux_prepare_current_sample, gst_qtdemux_combine_flows,
+	  gst_qtdemux_loop_state_movie, gst_qtdemux_loop,
+	  qtdemux_parse_segments, qtdemux_parse_trak):
+	* gst/rtpmanager/rtpsession.c (rtp_session_get_bandwidth,
+	  rtp_session_get_rtcp_bandwidth, rtp_session_get_cname,
+	  rtp_session_get_name, rtp_session_get_email, rtp_session_get_phone,
+	  rtp_session_get_location, rtp_session_get_tool,
+	  rtp_session_process_bye, session_report_blocks):
+	* gst/rtpmanager/rtpsource.c (rtp_source_process_rtp,
+	  rtp_source_send_rtp, rtp_source_process_sr, rtp_source_process_rb):
+	  More format arg fixing (spotted by Ali Sabil <ali.sabil@gmail.com>).
+
+	* gst/switch/Makefile.am:
+	  Add require libraries(spotted by Ali Sabil <ali.sabil@gmail.com>).
+
+2007-05-10  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/rtpmanager/async_jitter_queue.c (tail_buffer_duration,
 	  async_jitter_queue_ref, async_jitter_queue_ref_unlocked,
 	  async_jitter_queue_set_low_threshold,
@@ -11,7 +30,7 @@
 	  async_jitter_queue_pop_unlocked, async_jitter_queue_length_unlocked,
 	  async_jitter_queue_set_flushing_unlocked,
 	  async_jitter_queue_unset_flushing_unlocked):
-	  Format arg fix (spotted by Ali Sabil <ali.sabil@gmail.com>)
+	  Format arg fix (spotted by Ali Sabil <ali.sabil@gmail.com>).
 
 2007-05-10  Stefan Kost  <ensonic@users.sf.net>
 

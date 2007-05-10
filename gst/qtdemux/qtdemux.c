@@ -585,7 +585,7 @@ gst_qtdemux_move_stream (GstQTDemux * qtdemux, QtDemuxStream * str,
  * streaming from the desired position.
  *
  * Keyframe seeking is a little more complicated when dealing with
- * segments. Ideally we want to move to the previous keyframe in 
+ * segments. Ideally we want to move to the previous keyframe in
  * the segment but there might not be a keyframe in the segment. In
  * fact, none of the segments could contain a keyframe. We take a
  * practical approach: seek to the previous keyframe in the segment,
@@ -1024,7 +1024,7 @@ beach:
  * @offset is an absolute global position over all the segments.
  *
  * This will push out a NEWSEGMENT event with the right values and
- * position the stream index to the first decodable sample before 
+ * position the stream index to the first decodable sample before
  * @offset.
  */
 static gboolean
@@ -1107,7 +1107,7 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
 }
 
 /* prepare to get the current sample of @stream, getting essential values.
- * 
+ *
  * This function will also prepare and send the segment when needed.
  *
  * Return FALSE if the stream is EOS.
@@ -1141,6 +1141,9 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   /* different segment, activate it, sample_index will be set. */
   if (stream->segment_index != seg_idx)
     gst_qtdemux_activate_segment (qtdemux, stream, seg_idx, time_position);
+
+  GST_LOG_OBJECT (qtdemux, "segment active, index = %lu of %lu",
+      stream->sample_index, stream->n_samples);
 
   if (stream->sample_index >= stream->n_samples)
     goto eos;
@@ -1248,6 +1251,7 @@ gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
   /* if we get here, all other pads were unlinked and we return
    * NOT_LINKED then */
 done:
+  GST_LOG_OBJECT (demux, "combined flow return: %s", gst_flow_get_name (ret));
   return ret;
 }
 
@@ -1350,8 +1354,9 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
     GST_LOG_OBJECT (qtdemux,
         "Pushing buffer with time %" GST_TIME_FORMAT ", duration %"
-        GST_TIME_FORMAT " on pad %p", GST_TIME_ARGS (timestamp),
-        GST_TIME_ARGS (duration), stream->pad);
+        GST_TIME_FORMAT " on pad %s",
+        GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration),
+        GST_PAD_NAME (stream->pad));
     ret = gst_pad_push (stream->pad, buf);
   } else {
     ret = GST_FLOW_OK;
@@ -1464,7 +1469,7 @@ pause:
 
 /*
  * next_entry_size
- * 
+ *
  * Returns the size of the first entry at the current offset.
  * If -1, there are none (which means EOS or empty file).
  */
@@ -2613,7 +2618,7 @@ done:
 
 /* parse the traks.
  * With each track we associate a new QtDemuxStream that contains all the info
- * about the trak. 
+ * about the trak.
  * traks that do not decode to something (like strm traks) will not have a pad.
  */
 static gboolean
@@ -2667,7 +2672,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->duration = QT_UINT32 ((guint8 *) mdhd->data + 24);
   }
 
-  GST_LOG_OBJECT (qtdemux, "track timescale: %" G_GUINT64_FORMAT,
+  GST_LOG_OBJECT (qtdemux, "track timescale: %" G_GUINT32_FORMAT,
       stream->timescale);
   GST_LOG_OBJECT (qtdemux, "track duration: %" G_GUINT64_FORMAT,
       stream->duration);
@@ -2685,7 +2690,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
      * identify those yet, except for just looking at their duration. */
     if (tdur1 != 0 && (tdur2 * 10 / tdur1) < 2) {
       GST_WARNING_OBJECT (qtdemux,
-          "Track shorter than 20%% (%d/%d vs. %d/%d) of the stream "
+          "Track shorter than 20%% (%" G_GUINT64_FORMAT "/%" G_GUINT32_FORMAT
+          " vs. %" G_GUINT32_FORMAT "/%" G_GUINT32_FORMAT ") of the stream "
           "found, assuming preview image or something; skipping track",
           stream->duration, stream->timescale, qtdemux->duration,
           qtdemux->timescale);
