@@ -1,3 +1,9 @@
+2007-05-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* plugins/elements/gstqueue.c (_do_init, gst_queue_signals,
+	  gst_queue_base_init, gst_queue_init):
+	  use GST_BOILERPLATE
+
 2007-05-09  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/common/libgstreamer.def:

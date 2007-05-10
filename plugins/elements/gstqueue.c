@@ -155,10 +155,14 @@ enum
   g_mutex_unlock (q->qlock);                                            \
 } G_STMT_END
 
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (queue_debug, "queue", 0, "queue element"); \
+    GST_DEBUG_CATEGORY_INIT (queue_dataflow, "queue_dataflow", 0, \
+        "dataflow inside the queue element");
 
-static void gst_queue_base_init (GstQueueClass * klass);
-static void gst_queue_class_init (GstQueueClass * klass);
-static void gst_queue_init (GstQueue * queue);
+GST_BOILERPLATE_FULL (GstQueue, gst_queue, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
+
 static void gst_queue_finalize (GObject * object);
 
 static void gst_queue_set_property (GObject * object,
@@ -211,42 +215,12 @@ queue_leaky_get_type (void)
   return queue_leaky_type;
 }
 
-static GstElementClass *parent_class = NULL;
 static guint gst_queue_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_queue_get_type (void)
-{
-  static GType queue_type = 0;
-
-  if (!queue_type) {
-    static const GTypeInfo queue_info = {
-      sizeof (GstQueueClass),
-      (GBaseInitFunc) gst_queue_base_init,
-      NULL,
-      (GClassInitFunc) gst_queue_class_init,
-      NULL,
-      NULL,
-      sizeof (GstQueue),
-      0,
-      (GInstanceInitFunc) gst_queue_init,
-      NULL
-    };
-
-    queue_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstQueue", &queue_info, 0);
-    GST_DEBUG_CATEGORY_INIT (queue_debug, "queue", 0, "queue element");
-    GST_DEBUG_CATEGORY_INIT (queue_dataflow, "queue_dataflow", 0,
-        "dataflow inside the queue element");
-  }
-
-  return queue_type;
-}
-
 static void
-gst_queue_base_init (GstQueueClass * klass)
+gst_queue_base_init (gpointer g_class)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
@@ -260,8 +234,6 @@ gst_queue_class_init (GstQueueClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
-
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_queue_set_property);
   gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_queue_get_property);
@@ -358,7 +330,7 @@ gst_queue_class_init (GstQueueClass * klass)
 }
 
 static void
-gst_queue_init (GstQueue * queue)
+gst_queue_init (GstQueue * queue, GstQueueClass * g_class)
 {
   queue->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
 
