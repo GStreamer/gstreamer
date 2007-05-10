@@ -347,7 +347,7 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
       src->probation--;
       src->stats.max_seq = seqnr;
       if (src->probation == 0) {
-        GST_DEBUG ("probation done!", src->probation);
+        GST_DEBUG ("probation done!");
         init_seq (src, seqnr);
       } else {
         GstBuffer *q;
@@ -470,7 +470,8 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer)
 
   /* push packet */
   if (src->callbacks.push_rtp) {
-    GST_DEBUG ("pushing RTP packet %u", src->stats.packets_sent);
+    GST_DEBUG ("pushing RTP packet %" G_GUINT64_FORMAT,
+        src->stats.packets_sent);
     result = src->callbacks.push_rtp (src, buffer, src->user_data);
   } else {
     GST_DEBUG ("no callback installed");
@@ -500,9 +501,10 @@ rtp_source_process_sr (RTPSource * src, guint64 ntptime, guint32 rtptime,
 
   g_return_if_fail (RTP_IS_SOURCE (src));
 
-  GST_DEBUG ("got SR packet: SSRC %08x, NTP %08x:%08x, RTP %u, PC %u, OC %u",
-      src->ssrc, ntptime >> 32, ntptime & 0xffffffff, rtptime, packet_count,
-      octet_count);
+  GST_DEBUG ("got SR packet: SSRC %08x, NTP %08x:%08x, RTP %" G_GUINT32_FORMAT
+      ", PC %" G_GUINT32_FORMAT ", OC %" G_GUINT32_FORMAT, src->ssrc,
+      (guint32) (ntptime >> 32), (guint32) (ntptime & 0xffffffff), rtptime,
+      packet_count, octet_count);
 
   curridx = src->stats.curr_sr ^ 1;
   curr = &src->stats.sr[curridx];
@@ -543,9 +545,10 @@ rtp_source_process_rb (RTPSource * src, guint8 fractionlost, gint32 packetslost,
 
   g_return_if_fail (RTP_IS_SOURCE (src));
 
-  GST_DEBUG ("got RB packet %d: SSRC %08x, FL %u"
-      ", PL %u, HS %u, JITTER %u, LSR %08x, DLSR %08x", src->ssrc, fractionlost,
-      packetslost, exthighestseq, jitter, lsr, dlsr);
+  GST_DEBUG ("got RB packet: SSRC %08x, FL %" G_GUINT32_FORMAT ""
+      ", PL %d, HS %" G_GUINT32_FORMAT ", JITTER %" G_GUINT32_FORMAT
+      ", LSR %08x, DLSR %08x", src->ssrc, fractionlost, packetslost,
+      exthighestseq, jitter, lsr, dlsr);
 
   curridx = src->stats.curr_rr ^ 1;
   curr = &src->stats.rr[curridx];
