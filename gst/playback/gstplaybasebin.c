@@ -496,6 +496,7 @@ group_is_muted (GstPlayBaseGroup * group)
 static inline void
 fill_buffer (GstPlayBaseBin * play_base_bin, gint percent)
 {
+  GST_DEBUG_OBJECT (play_base_bin, "buffering %d", percent);
   gst_element_post_message (GST_ELEMENT_CAST (play_base_bin),
       gst_message_new_buffering (GST_OBJECT_CAST (play_base_bin), percent));
 }
@@ -528,10 +529,12 @@ check_queue (GstPad * pad, GstBuffer * data, gpointer user_data)
   GstPlayBaseBin *play_base_bin = g_object_get_data (G_OBJECT (queue), "pbb");
   guint64 level = 0;
 
-  GST_DEBUG ("check queue triggered");
+  GST_DEBUG_OBJECT (queue, "check queue triggered");
 
   g_object_get (G_OBJECT (queue), "current-level-time", &level, NULL);
-  GST_DEBUG ("Queue size: %" GST_TIME_FORMAT, GST_TIME_ARGS (level));
+  GST_DEBUG_OBJECT (play_base_bin, "Queue size: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (level));
+
   if (play_base_bin->queue_threshold > 0) {
     level = level * 99 / play_base_bin->queue_threshold;
     if (level > 99)
@@ -678,7 +681,7 @@ queue_out_of_data (GstElement * queue, GstPlayBaseBin * play_base_bin)
    * This signal could never be called because the queue max-size limits are set
    * too low. We take care of this possible deadlock in the the overrun signal
    * handler. */
-  g_signal_connect (G_OBJECT (queue), "running",
+  g_signal_connect (G_OBJECT (queue), "pushing",
       G_CALLBACK (queue_threshold_reached), play_base_bin);
   GST_DEBUG_OBJECT (play_base_bin,
       "setting min threshold time to %" G_GUINT64_FORMAT,
@@ -686,7 +689,7 @@ queue_out_of_data (GstElement * queue, GstPlayBaseBin * play_base_bin)
   g_object_set (queue, "min-threshold-time",
       (guint64) play_base_bin->queue_threshold, NULL);
 
-  /* re-connect probe, this will five feedback about the percentage that we
+  /* re-connect probe, this will fire feedback about the percentage that we
    * buffered and is posted in the BUFFERING message. */
   if (!g_object_get_data (G_OBJECT (queue), "probe")) {
     GstPad *sinkpad;

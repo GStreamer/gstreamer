@@ -1,3 +1,10 @@
+2007-05-10  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (fill_buffer), (check_queue),
+	(queue_out_of_data):
+	Connect to the new queue "pushing" signal instead of the broken
+	"running" one.
+
 2007-05-09  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
