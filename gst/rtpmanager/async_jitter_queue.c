@@ -1,9 +1,9 @@
-/* 
+/*
  * Async Jitter Queue based on g_async_queue
  * This code is GST RTP smart and deals with timestamps
  *
  * Farsight Voice+Video library
- *  Copyright 2007 Collabora Ltd, 
+ *  Copyright 2007 Collabora Ltd,
  *  Copyright 2007 Nokia Corporation
  *   @author: Philippe Khalaf <philippe.khalaf@collabora.co.uk>.
  *
@@ -69,9 +69,9 @@ struct _AsyncJitterQueue
 
 /**
  * async_jitter_queue_new:
- * 
+ *
  * Creates a new asynchronous queue with the initial reference count of 1.
- * 
+ *
  * Return value: the new #AsyncJitterQueue.
  **/
 AsyncJitterQueue *
@@ -134,7 +134,7 @@ async_jitter_queue_ref (AsyncJitterQueue * queue)
 /**
  * async_jitter_queue_ref_unlocked:
  * @queue: a #AsyncJitterQueue.
- * 
+ *
  * Increases the reference count of the asynchronous @queue by 1.
  **/
 void
@@ -150,7 +150,7 @@ async_jitter_queue_ref_unlocked (AsyncJitterQueue * queue)
  * async_jitter_queue_set_low_threshold:
  * @queue: a #AsyncJitterQueue.
  * @threshold: the lower threshold (fraction of max size)
- * 
+ *
  * Sets the low threshold on the queue. This threshold indicates the minimum
  * number of items allowed in the queue before we refill it up to the set
  * maximum threshold.
@@ -169,7 +169,7 @@ async_jitter_queue_set_low_threshold (AsyncJitterQueue * queue,
  * async_jitter_queue_set_max_threshold:
  * @queue: a #AsyncJitterQueue.
  * @threshold: the higher threshold (fraction of max size)
- * 
+ *
  * Sets the high threshold on the queue. This threshold indicates the amount of
  * items to fill in the queue before releasing any blocking pop calls. This
  * blocking mecanism is only triggered when we reach the low threshold and must
@@ -255,7 +255,7 @@ async_jitter_queue_length_ts_units_unlocked (AsyncJitterQueue * queue)
 /**
  * async_jitter_queue_unref_and_unlock:
  * @queue: a #AsyncJitterQueue.
- * 
+ *
  * Decreases the reference count of the asynchronous @queue by 1 and
  * releases the lock. This function must be called while holding the
  * @queue's lock. If the reference count went to 0, the @queue will be
@@ -274,7 +274,7 @@ async_jitter_queue_unref_and_unlock (AsyncJitterQueue * queue)
 /**
  * async_jitter_queue_unref:
  * @queue: a #AsyncJitterQueue.
- * 
+ *
  * Decreases the reference count of the asynchronous @queue by 1. If
  * the reference count went to 0, the @queue will be destroyed and the
  * memory allocated will be freed. So you are not allowed to use the
@@ -300,7 +300,7 @@ async_jitter_queue_unref (AsyncJitterQueue * queue)
 /**
  * async_jitter_queue_lock:
  * @queue: a #AsyncJitterQueue.
- * 
+ *
  * Acquires the @queue's lock. After that you can only call the
  * <function>async_jitter_queue_*_unlocked()</function> function variants on that
  * @queue. Otherwise it will deadlock.
@@ -317,7 +317,7 @@ async_jitter_queue_lock (AsyncJitterQueue * queue)
 /**
  * async_jitter_queue_unlock:
  * @queue: a #AsyncJitterQueue.
- * 
+ *
  * Releases the queue's lock.
  **/
 void
@@ -352,7 +352,7 @@ async_jitter_queue_push (AsyncJitterQueue * queue, gpointer data)
  * async_jitter_queue_push_unlocked:
  * @queue: a #AsyncJitterQueue.
  * @data: @data to push into the @queue.
- * 
+ *
  * Pushes the @data into the @queue. @data must not be %NULL. This
  * function must be called while holding the @queue's lock.
  **/
@@ -378,17 +378,17 @@ async_jitter_queue_push_unlocked (AsyncJitterQueue * queue, gpointer data)
  *     should be higher in the @queue or a positive value if the first
  *     element should be lower in the @queue than the second element.
  * @user_data: user data passed to @func.
- * 
+ *
  * Inserts @data into @queue using @func to determine the new
- * position. 
- * 
+ * position.
+ *
  * This function requires that the @queue is sorted before pushing on
  * new elements.
- * 
+ *
  * This function will lock @queue before it sorts the queue and unlock
  * it when it is finished.
- * 
- * For an example of @func see async_jitter_queue_sort(). 
+ *
+ * For an example of @func see async_jitter_queue_sort().
  *
  * Since: 2.10
  **/
@@ -416,19 +416,19 @@ async_jitter_queue_push_sorted (AsyncJitterQueue * queue,
  *     should be higher in the @queue or a positive value if the first
  *     element should be lower in the @queue than the second element.
  * @user_data: user data passed to @func.
- * 
+ *
  * Inserts @data into @queue using @func to determine the new
  * position.
- * 
+ *
  * This function requires that the @queue is sorted before pushing on
  * new elements.
  *
  * If @GCompareDataFunc returns 0, this function does not insert @data and
  * return FALSE.
- * 
+ *
  * This function is called while holding the @queue's lock.
- * 
- * For an example of @func see async_jitter_queue_sort(). 
+ *
+ * For an example of @func see async_jitter_queue_sort().
  *
  * Since: 2.10
  **/
@@ -491,7 +491,7 @@ async_jitter_queue_pop_intern_unlocked (AsyncJitterQueue * queue)
   tsunits = async_jitter_queue_length_ts_units_unlocked (queue);
 
   GST_DEBUG ("tsunits %u, pops: %u, limit %d", tsunits, queue->pops_remaining,
-      queue->low_threshold * queue->max_queue_length);
+      (int) (queue->low_threshold * queue->max_queue_length));
 
   if (tsunits <= queue->low_threshold * queue->max_queue_length
       && queue->pops_remaining == 0) {
@@ -539,7 +539,7 @@ async_jitter_queue_pop_intern_unlocked (AsyncJitterQueue * queue)
 /**
  * async_jitter_queue_pop:
  * @queue: a #AsyncJitterQueue.
- * 
+ *
  * Pops data from the @queue. This function blocks until data become
  * available. If pop is disabled, tis function return NULL.
  *
@@ -563,7 +563,7 @@ async_jitter_queue_pop (AsyncJitterQueue * queue)
 /**
  * async_jitter_queue_pop_unlocked:
  * @queue: a #AsyncJitterQueue.
- * 
+ *
  * Pops data from the @queue. This function blocks until data become
  * available. This function must be called while holding the @queue's
  * lock.
@@ -582,7 +582,7 @@ async_jitter_queue_pop_unlocked (AsyncJitterQueue * queue)
 /**
  * async_jitter_queue_length:
  * @queue: a #AsyncJitterQueue.
- * 
+ *
  * Returns the length of the queue
  * Return value: the length of the @queue.
  **/
@@ -623,7 +623,7 @@ async_jitter_queue_length_unlocked (AsyncJitterQueue * queue)
  * @queue: a #AsyncJitterQueue.
  * @free_func: a function to call to free the elements
  * @user_data: user data passed to @free_func
- * 
+ *
  * This function is used to set/unset flushing. If flushing is set any
  * waiting/blocked pops will be unblocked. Any subsequent calls to pop will
  * return NULL. Flushing is set by default.
@@ -648,7 +648,7 @@ async_jitter_queue_set_flushing_unlocked (AsyncJitterQueue * queue,
  * @queue: a #AsyncJitterQueue.
  * @free_func: a function to call to free the elements
  * @user_data: user data passed to @free_func
- * 
+ *
  * This function is used to set/unset flushing. If flushing is set any
  * waiting/blocked pops will be unblocked. Any subsequent calls to pop will
  * return NULL. Flushing is set by default.
@@ -669,7 +669,7 @@ async_jitter_queue_unset_flushing_unlocked (AsyncJitterQueue * queue)
  * async_jitter_queue_set_blocking_unlocked:
  * @queue: a #AsyncJitterQueue.
  * @enabled: a boolean to enable/disable blocking
- * 
+ *
  * This function is used to enable/disable blocking. If blocking is enabled any
  * pops will be blocked until the queue is unblocked. The queue is blocked by
  * default.

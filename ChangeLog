@@ -1,5 +1,20 @@
 2007-05-10  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/rtpmanager/async_jitter_queue.c (tail_buffer_duration,
+	  async_jitter_queue_ref, async_jitter_queue_ref_unlocked,
+	  async_jitter_queue_set_low_threshold,
+	  async_jitter_queue_length_ts_units_unlocked,
+	  async_jitter_queue_unref_and_unlock, async_jitter_queue_unref,
+	  async_jitter_queue_lock, async_jitter_queue_push,
+	  async_jitter_queue_push_unlocked, async_jitter_queue_push_sorted,
+	  async_jitter_queue_pop_intern_unlocked, async_jitter_queue_pop,
+	  async_jitter_queue_pop_unlocked, async_jitter_queue_length_unlocked,
+	  async_jitter_queue_set_flushing_unlocked,
+	  async_jitter_queue_unset_flushing_unlocked):
+	  Format arg fix (spotted by Ali Sabil <ali.sabil@gmail.com>)
+
+2007-05-10  Stefan Kost  <ensonic@users.sf.net>
+
 	* common/m4/gst-x11.m4:
 	  Restore CFLAGS and LIBS.
 
