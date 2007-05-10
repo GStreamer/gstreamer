@@ -1,3 +1,8 @@
+2007-05-09  David Schleef  <ds@schleef.org>
+
+	* gst/level/gstlevel.c:
+	  Revert last change.
+
 2007-05-09  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/level/gstlevel.c: (gst_level_calculate_##TYPE),
