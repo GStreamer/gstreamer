@@ -203,6 +203,7 @@ static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
 
 static gboolean gst_rtspsrc_activate_streams (GstRTSPSrc * src);
 static void gst_rtspsrc_loop (GstRTSPSrc * src);
+static void gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event);
 
 /* commands we send to out loop to notify it of events */
 #define CMD_WAIT	0
@@ -1018,11 +1019,192 @@ cleanup:
   }
 }
 
+static void
+gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
+{
+  GstEvent *event;
+
+  if (flush) {
+    event = gst_event_new_flush_start ();
+  } else {
+    event = gst_event_new_flush_stop ();
+  }
+
+  rtsp_connection_flush (src->connection, flush);
+
+  gst_rtspsrc_push_event (src, event);
+}
+
+static gboolean
+gst_rtspsrc_do_seek (GstRTSPSrc * src, GstSegment * segment)
+{
+  gboolean res;
+
+  /* PLAY from new position, we are flushing now */
+  src->position = ((gdouble) segment->last_stop) / GST_SECOND;
+
+  src->state = RTSP_STATE_SEEKING;
+
+  res = gst_rtspsrc_play (src);
+
+  return res;
+}
+
+static gboolean
+gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
+{
+  gboolean res;
+  gdouble rate;
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType cur_type = GST_SEEK_TYPE_NONE, stop_type;
+  gint64 cur, stop;
+  gboolean flush;
+  gboolean update;
+  GstSegment seeksegment = { 0, };
+  gint64 last_stop;
+
+  if (event) {
+    GST_DEBUG_OBJECT (src, "doing seek with event");
+
+    gst_event_parse_seek (event, &rate, &format, &flags,
+        &cur_type, &cur, &stop_type, &stop);
+
+    /* no negative rates yet */
+    if (rate < 0.0)
+      goto negative_rate;
+
+    /* we need TIME format */
+    if (format != src->segment.format)
+      goto no_format;
+  } else {
+    GST_DEBUG_OBJECT (src, "doing seek without event");
+    flags = 0;
+    cur_type = GST_SEEK_TYPE_SET;
+    stop_type = GST_SEEK_TYPE_SET;
+  }
+
+  /* get flush flag */
+  flush = flags & GST_SEEK_FLAG_FLUSH;
+
+  /* now we need to make sure the streaming thread is stopped. We do this by
+   * either sending a FLUSH_START event downstream which will cause the
+   * streaming thread to stop with a WRONG_STATE.
+   * For a non-flushing seek we simply pause the task, which will happen as soon
+   * as it completes one iteration (and thus might block when the sink is
+   * blocking in preroll). */
+  if (flush) {
+    GST_DEBUG_OBJECT (src, "starting flush");
+    gst_rtspsrc_flush (src, TRUE);
+  } else {
+    //gst_pad_pause_task (src->sinkpad);
+  }
+
+  /* we should now be able to grab the streaming thread because we stopped it
+   * with the above flush/pause code */
+  //GST_PAD_STREAM_LOCK (src->sinkpad);
+
+  /* save current position */
+  last_stop = src->segment.last_stop;
+
+  GST_DEBUG_OBJECT (src, "stopped streaming at %" G_GINT64_FORMAT, last_stop);
+
+  /* copy segment, we need this because we still need the old
+   * segment when we close the current segment. */
+  memcpy (&seeksegment, &src->segment, sizeof (GstSegment));
+
+  /* configure the seek parameters in the seeksegment. We will then have the
+   * right values in the segment to perform the seek */
+  if (event) {
+    GST_DEBUG_OBJECT (src, "configuring seek");
+    gst_segment_set_seek (&seeksegment, rate, format, flags,
+        cur_type, cur, stop_type, stop, &update);
+  }
+
+  /* figure out the last position we need to play. If it's configured (stop !=
+   * -1), use that, else we play until the total duration of the file */
+  if ((stop = seeksegment.stop) == -1)
+    stop = seeksegment.duration;
+
+  res = gst_rtspsrc_do_seek (src, &seeksegment);
+
+  /* prepare for streaming again */
+  if (flush) {
+    /* if we started flush, we stop now */
+    GST_DEBUG_OBJECT (src, "stopping flush");
+    gst_rtspsrc_flush (src, FALSE);
+  } else if (src->running) {
+    /* we are running the current segment and doing a non-flushing seek,
+     * close the segment first based on the previous last_stop. */
+    GST_DEBUG_OBJECT (src, "closing running segment %" G_GINT64_FORMAT
+        " to %" G_GINT64_FORMAT, src->segment.accum, src->segment.last_stop);
+
+    /* queue the segment for sending in the stream thread */
+    if (src->close_segment)
+      gst_event_unref (src->close_segment);
+    src->close_segment = gst_event_new_new_segment (TRUE,
+        src->segment.rate, src->segment.format,
+        src->segment.accum, src->segment.last_stop, src->segment.accum);
+
+    /* keep track of our last_stop */
+    seeksegment.accum = src->segment.last_stop;
+  }
+
+  /* now we did the seek and can activate the new segment values */
+  memcpy (&src->segment, &seeksegment, sizeof (GstSegment));
+
+  /* if we're doing a segment seek, post a SEGMENT_START message */
+  if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+    gst_element_post_message (GST_ELEMENT_CAST (src),
+        gst_message_new_segment_start (GST_OBJECT_CAST (src),
+            src->segment.format, src->segment.last_stop));
+  }
+
+  /* now create the newsegment */
+  GST_DEBUG_OBJECT (src, "Creating newsegment from %" G_GINT64_FORMAT
+      " to %" G_GINT64_FORMAT, src->segment.last_stop, stop);
+
+  /* store the newsegment event so it can be sent from the streaming thread. */
+  if (src->start_segment)
+    gst_event_unref (src->start_segment);
+  src->start_segment =
+      gst_event_new_new_segment (FALSE, src->segment.rate,
+      src->segment.format, src->segment.last_stop, stop,
+      src->segment.last_stop);
+
+  /* mark discont if we are going to stream from another position. */
+  if (last_stop != src->segment.last_stop) {
+    GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
+    //src->discont = TRUE;
+  }
+
+  /* and start the streaming task again */
+  src->running = TRUE;
+  //gst_pad_start_task (src->sinkpad, (GstTaskFunction) gst_srcparse_loop,
+  //    src->sinkpad);
+
+  //GST_PAD_STREAM_UNLOCK (src->sinkpad);
+
+  return TRUE;
+
+  /* ERRORS */
+negative_rate:
+  {
+    GST_DEBUG_OBJECT (src, "negative playback rates are not supported yet.");
+    return FALSE;
+  }
+no_format:
+  {
+    GST_DEBUG_OBJECT (src, "unsupported format given, seek aborted.");
+    return FALSE;
+  }
+}
+
 static gboolean
 gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
 {
   GstRTSPSrc *src;
-  gboolean res = TRUE;
+  gboolean res = FALSE;
 
   src = GST_RTSPSRC_CAST (gst_pad_get_element_private (pad));
 
@@ -1033,6 +1215,7 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_QOS:
       break;
     case GST_EVENT_SEEK:
+      res = gst_rtspsrc_perform_seek (src, event);
       break;
     case GST_EVENT_NAVIGATION:
       break;
@@ -1041,7 +1224,6 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
-
   return res;
 }
 
@@ -1315,7 +1497,6 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
     g_free (name);
   }
 
-
 use_no_manager:
   return TRUE;
 
@@ -1403,6 +1584,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     gst_pad_set_query_function (pad0, gst_rtspsrc_handle_src_query);
     gst_pad_link (pad0, stream->channelpad[0]);
     stream->channelpad[0] = pad0;
+    gst_pad_set_active (pad0, TRUE);
     gst_pad_set_element_private (pad0, src);
 
     if (stream->channelpad[1]) {
@@ -1411,6 +1593,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
       pad1 = gst_pad_new_from_template (template, "internalsrc1");
       gst_pad_link (pad1, stream->channelpad[1]);
       stream->channelpad[1] = pad1;
+      gst_pad_set_active (pad1, TRUE);
     }
     gst_object_unref (template);
   }
@@ -1981,9 +2164,6 @@ receive_error:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not receive message. (%s)", str));
     g_free (str);
-
-    if (src->debug)
-      rtsp_message_dump (&message);
 
     rtsp_message_unset (&message);
     ret = GST_FLOW_UNEXPECTED;
@@ -3016,6 +3196,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   /* reset our state */
   gst_segment_init (&src->segment, GST_FORMAT_TIME);
+  src->position = 0.0;
 
   /* can't continue without a valid url */
   if (G_UNLIKELY (src->url == NULL))
@@ -3092,19 +3273,21 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   /* parse range for duration reporting. */
   {
     gchar *range;
-    RTSPTimeRange *therange;
 
     range = sdp_message_get_attribute_val (&sdp, "range");
+    if (range) {
+      RTSPTimeRange *therange;
 
-    rtsp_range_parse (range, &therange);
+      if (rtsp_range_parse (range, &therange) == RTSP_OK) {
+        GST_DEBUG_OBJECT (src, "range: '%s', min %f - max %f ",
+            GST_STR_NULL (range), therange->min.seconds, therange->max.seconds);
 
-    GST_DEBUG_OBJECT (src, "range: '%s', min %f - max %f ",
-        GST_STR_NULL (range), therange->min.seconds, therange->max.seconds);
-
-    gst_segment_set_duration (&src->segment, GST_FORMAT_TIME,
-        therange->max.seconds * GST_SECOND);
-    gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME,
-        therange->min.seconds * GST_SECOND);
+        gst_segment_set_duration (&src->segment, GST_FORMAT_TIME,
+            therange->max.seconds * GST_SECOND);
+        gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME,
+            therange->min.seconds * GST_SECOND);
+      }
+    }
   }
 
   /* create streams */
@@ -3367,11 +3550,20 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
       stream->seqbase = seqbase;
       stream->timebase = timebase;
       if ((caps = stream->caps)) {
+        caps = gst_caps_make_writable (caps);
         /* update caps */
         if (timebase != -1)
           gst_caps_set_simple (caps, "clock-base", G_TYPE_UINT, timebase, NULL);
         if (seqbase != -1)
           gst_caps_set_simple (caps, "seqnum-base", G_TYPE_UINT, seqbase, NULL);
+
+        if (stream->caps != caps) {
+          gst_caps_unref (stream->caps);
+          stream->caps = caps;
+        }
+        if (src->session) {
+          g_signal_emit_by_name (src->session, "clear-pt-map", NULL);
+        }
       }
     }
   }
@@ -3403,7 +3595,13 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   if (res < 0)
     goto create_request_failed;
 
-  rtsp_message_add_header (&request, RTSP_HDR_RANGE, "npt=0-");
+  if (src->position == 0.0)
+    range = g_strdup_printf ("npt=0-");
+  else
+    range = g_strdup_printf ("npt=%f-", src->position);
+
+  rtsp_message_add_header (&request, RTSP_HDR_RANGE, range);
+  g_free (range);
 
   if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
     goto send_error;

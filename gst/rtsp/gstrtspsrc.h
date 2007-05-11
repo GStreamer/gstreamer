@@ -123,7 +123,10 @@ struct _GstRTSPSrc {
   GStaticRecMutex *stream_rec_lock;
   GstSegment       segment;
   gboolean         running;
+  gdouble          position;
   gint             free_channel;
+  GstEvent        *close_segment;
+  GstEvent        *start_segment;
 
   /* UDP mode loop */
   gint             loop_cmd;

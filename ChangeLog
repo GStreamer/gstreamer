@@ -1,5 +1,20 @@
 2007-05-11  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_flush),
+	(gst_rtspsrc_do_seek), (gst_rtspsrc_perform_seek),
+	(gst_rtspsrc_handle_src_event),
+	(gst_rtspsrc_stream_configure_manager),
+	(gst_rtspsrc_stream_configure_tcp), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_send_keep_alive), (gst_rtspsrc_open),
+	(gst_rtspsrc_parse_rtpinfo), (gst_rtspsrc_play):
+	* gst/rtsp/gstrtspsrc.h:
+	* gst/rtsp/rtspdefs.h:
+	Preliminary seek support.
+	Activate internal pads so that we can receive events on them.
+	Don't try to parse a range string when it's NULL.
+
+2007-05-11  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/README:
 	Update README with new RTP variables that will be used for
 	synchronisation.
