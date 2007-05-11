@@ -1094,219 +1094,259 @@ static GstStaticCaps mpeg_sys_caps = GST_STATIC_CAPS ("video/mpeg, "
                                          (((guint8 *)(data))[1] == 0x00) &&  \
                                          (((guint8 *)(data))[2] == 0x01))
 
+#define IS_MPEG_PACK_CODE(b) ((b) == 0xBA)
+#define IS_MPEG_SYS_CODE(b) ((b) == 0xBB)
 #define IS_MPEG_PACK_HEADER(data)       (IS_MPEG_HEADER (data) &&            \
-                                         (((guint8 *)(data))[3] == 0xBA))
+                                         IS_MPEG_PACK_CODE (((guint8 *)(data))[3]))
 
-#define IS_MPEG_SYSTEM_HEADER(data)     (IS_MPEG_HEADER (data) &&            \
-                                         (((guint8 *)(data))[3] == 0xBB))
-#define IS_MPEG_PACKET_HEADER(data)     (IS_MPEG_HEADER (data) &&            \
-                                         ((((guint8 *)(data))[3] & 0x80) == 0x80))
-
+#define IS_MPEG_PES_CODE(b) (((b) & 0xF0) == 0xE0 || ((b) & 0xF0) == 0xC0 || \
+                             (b) >= 0xBD)
 #define IS_MPEG_PES_HEADER(data)        (IS_MPEG_HEADER (data) &&            \
-                                         ((((guint8 *)(data))[3] == 0xE0) || \
-                                          (((guint8 *)(data))[3] == 0xC0) || \
-                                          (((guint8 *)(data))[3] == 0xBD)))
+                                         IS_MPEG_PES_CODE (((guint8 *)(data))[3]))
 
-#define MPEG2_MAX_PROBE_LENGTH 4096     /* 4kB (random value) */
+#define MPEG2_MAX_PROBE_LENGTH (32 * 1024)      /* 32kB should be 16 packs of the 
+                                                 * most common 2kB pack size, but HD
+                                                 * streams might be bigger. */
 
-static void
-mpeg2_sys_type_find (GstTypeFind * tf, gpointer unused)
+#define MPEG2_MIN_SYS_HEADERS 2
+#define MPEG2_MAX_SYS_HEADERS 5
+
+static gboolean
+mpeg_sys_is_valid_pack (GstTypeFind * tf, guint8 * data, guint len,
+    guint * pack_size)
 {
-  guint8 *data, *data0;
-  gint mpegversion, len;
+  /* Check the pack header @ offset for validity, assuming that the 4 byte header
+   * itself has already been checked. */
+  guint8 stuff_len;
 
-  len = MPEG2_MAX_PROBE_LENGTH * 2;
-  do {
-    len = len / 2;
-    data = gst_type_find_peek (tf, 0, 5 + len);
-  } while (data == NULL && len >= 32);
+  if (len < 12)
+    return FALSE;
 
-  if (!data)
-    return;
+  /* Check marker bits */
+  if ((data[4] & 0xC4) == 0x44) {
+    /* MPEG-2 PACK */
+    if (len < 14)
+      return FALSE;
 
-  data0 = data;
-  while (len > 0) {
-    if (IS_MPEG_PACK_HEADER (data)) {
-      if ((data[4] & 0xC0) == 0x40) {
-        /* type 2 */
-        mpegversion = 2;
-        goto suggest;
-      } else if ((data[4] & 0xF0) == 0x20) {
-        mpegversion = 1;
-        goto suggest;
-      }
-    } else if (IS_MPEG_PES_HEADER (data)) {
-      /* PES stream */
-      mpegversion = 2;
-      goto suggest;
+    if ((data[6] & 0x04) != 0x04 ||
+        (data[8] & 0x04) != 0x04 ||
+        (data[9] & 0x01) != 0x01 || (data[12] & 0x03) != 0x03)
+      return FALSE;
+
+    stuff_len = data[13] & 0x07;
+
+    /* Check the following header bytes, if we can */
+    if ((14 + stuff_len + 4) <= len) {
+      if (!IS_MPEG_HEADER (data + 14 + stuff_len))
+        return FALSE;
     }
-    ++data;
-    --len;
-  }
-  return;
-suggest:
-  {
-    GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
+    if (pack_size)
+      *pack_size = 14 + stuff_len;
+    return TRUE;
+  } else if ((data[4] & 0xF1) == 0x21) {
+    /* MPEG-1 PACK */
+    if ((data[6] & 0x01) != 0x01 ||
+        (data[8] & 0x01) != 0x01 ||
+        (data[9] & 0x80) != 0x80 || (data[11] & 0x01) != 0x01)
+      return FALSE;
 
-    gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-        G_TYPE_INT, mpegversion, NULL);
-    /* lower probability if the marker isn't right at the start */
-    if (data0 == data)
-      gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, caps);
-    else
-      gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE - 10, caps);
-    gst_caps_unref (caps);
+    /* Check the following header bytes, if we can */
+    if ((12 + 4) <= len) {
+      if (!IS_MPEG_HEADER (data + 12))
+        return FALSE;
+    }
+    if (pack_size)
+      *pack_size = 12;
+    return TRUE;
   }
-};
 
-/* ATTENTION: ugly return value:
- * 0 -  invalid data
- * 1 - not enough data
- * anything else - size until next package
- */
-static guint
-mpeg1_parse_header (GstTypeFind * tf, guint64 offset)
+  return FALSE;
+}
+
+static gboolean
+mpeg_sys_is_valid_pes (GstTypeFind * tf, guint8 * data, guint len,
+    guint * pack_size)
 {
-  guint8 *data = gst_type_find_peek (tf, offset, 4);
-  guint size;
+  guint pes_packet_len;
 
-  if (!data) {
-    GST_LOG ("couldn't get MPEG header bytes");
-    return 1;
+  /* Check the PES header at the given position, assuming the header code itself
+   * was already checked */
+  if (len < 6)
+    return FALSE;
+
+  /* For MPEG Program streams, unbounded PES is not allowed, so we must have a
+   * valid length present */
+  pes_packet_len = GST_READ_UINT16_BE (data + 4);
+  if (pes_packet_len == 0)
+    return FALSE;
+
+  /* Check the following header, if we can */
+  if (6 + pes_packet_len + 4 <= len) {
+    if (!IS_MPEG_HEADER (data + 6 + pes_packet_len))
+      return FALSE;
   }
 
-  if (data[0] != 0 || data[1] != 0 || data[2] != 1) {
-    GST_LOG ("no sync");
-    return 0;
-  }
-  offset += 4;
+  if (pack_size)
+    *pack_size = 6 + pes_packet_len;
+  return TRUE;
+}
 
-  GST_LOG ("sync %02x", data[3]);
+static gboolean
+mpeg_sys_is_valid_sys (GstTypeFind * tf, guint8 * data, guint len,
+    guint * pack_size)
+{
+  guint sys_hdr_len;
 
-  switch (data[3]) {
-    case 0xBA:                 /* pack header */
-      data = gst_type_find_peek (tf, offset, 8);
-      if (!data) {
-        GST_LOG ("couldn't get MPEG pack header bytes");
-        return 1;
-      }
-      size = 12;
-      /* check marker bits */
-      if ((data[0] & 0xF1) != 0x21 ||
-          (data[2] & 0x01) != 0x01 ||
-          (data[4] & 0x01) != 0x01 ||
-          (data[5] & 0x80) != 0x80 || (data[7] & 0x01) != 0x01) {
-        GST_LOG ("wrong marker bits");
-        return 0;
-      }
-      break;
+  /* Check the System header at the given position, assuming the header code itself
+   * was already checked */
+  if (len < 6)
+    return FALSE;
+  sys_hdr_len = GST_READ_UINT16_BE (data + 4);
+  if (sys_hdr_len < 6)
+    return FALSE;
 
-    case 0xB9:                 /* ISO end code */
-      size = 4;
-      break;
-
-    case 0xBB:                 /* system header */
-      data = gst_type_find_peek (tf, offset, 2);
-      if (!data) {
-        GST_LOG ("couldn't get MPEG pack header bytes");
-        return 1;
-      }
-      size = GST_READ_UINT16_BE (data) + 6;
-      offset += 2;
-      data = gst_type_find_peek (tf, offset, size - 6);
-      if (!data) {
-        GST_LOG ("couldn't get MPEG pack header bytes");
-        return 1;
-      }
-      /* check marker bits */
-      if ((data[0] & 0x80) != 0x80 ||
-          (data[2] & 0x01) != 0x01 || (data[4] & 0x20) != 0x20) {
-        GST_LOG ("wrong marker bits");
-        return 0;
-      }
-      /* check stream marker bits */
-      for (offset = 6; offset < (size - 6); offset += 3) {
-        if (data[offset] <= 0xBB || (data[offset + 1] & 0xC0) != 0xC0) {
-          GST_LOG ("wrong marker bits");
-          return 0;
-        }
-      }
-      break;
-
-    default:
-      if (data[3] < 0xB9)
-        return 0;
-      data = gst_type_find_peek (tf, offset, 2);
-      if (!data) {
-        GST_LOG ("couldn't get MPEG pack header bytes");
-        return 1;
-      }
-      size = GST_READ_UINT16_BE (data) + 6;
-      /* FIXME: we could check PTS/DTS marker bits here... (bit overkill) */
-      break;
+  /* Check the following header, if we can */
+  if (6 + sys_hdr_len + 4 <= len) {
+    if (!IS_MPEG_HEADER (data + 6 + sys_hdr_len))
+      return FALSE;
   }
 
-  return size;
+  if (pack_size)
+    *pack_size = 6 + sys_hdr_len;
+
+  return TRUE;
 }
 
 /* calculation of possibility to identify random data as mpeg systemstream:
  * bits that must match in header detection:            32 (or more)
  * chance that random data is identifed:                1/2^32
- * chance that GST_MPEG_TYPEFIND_TRY_HEADERS headers are identified:
- *                                      1/2^(32*GST_MPEG_TYPEFIND_TRY_HEADERS)
- * chance that this happens in GST_MPEG_TYPEFIND_TRY_SYNC bytes:
- *                                      1-(1+1/2^(32*GST_MPEG_TYPEFIND_TRY_HEADERS)^GST_MPEG_TYPEFIND_TRY_SYNC)
+ * chance that MPEG2_MIN_PACK_HEADERS headers are identified:
+ *       1/2^(32*MPEG2_MIN_PACK_HEADERS)
+ * chance that this happens in MPEG2_MAX_PROBE_LENGTH bytes:
+ *       1-(1+1/2^(32*MPEG2_MIN_PACK_HEADERS)^MPEG2_MAX_PROBE_LENGTH)
  * for current values:
- *                                      1-(1+1/2^(32*4)^101024)
- *                                    = <some_number>
+ *       1-(1+1/2^(32*4)^101024)
+ *       = <some_number>
+ * Since we also check marker bits and pes packet lengths, this probability is a
+ * very coarse upper bound.
  */
-#define GST_MPEG_TYPEFIND_TRY_HEADERS 4
-#define GST_MPEG_TYPEFIND_TRY_SYNC (100 * 1024) /* 100kB */
-#define GST_MPEG_TYPEFIND_SYNC_SIZE 2048
 static void
-mpeg1_sys_type_find (GstTypeFind * tf, gpointer unused)
+mpeg_sys_type_find (GstTypeFind * tf, gpointer unused)
 {
-  guint8 *data = NULL;
-  guint size = 0;
-  guint64 skipped = 0;
-  GstCaps *caps;
+  guint8 *data, *data0, *first_sync, *end;
+  gint mpegversion = 0;
+  guint pack_headers = 0;
+  guint pes_headers = 0;
+  guint pack_size;
+  guint since_last_sync = 0;
+  guint32 sync_word = 0xffffffff;
 
-  while (skipped < GST_MPEG_TYPEFIND_TRY_SYNC) {
-    if (size < 4) {
-      data = gst_type_find_peek (tf, skipped, GST_MPEG_TYPEFIND_SYNC_SIZE);
-      if (!data)
-        break;
-      size = GST_MPEG_TYPEFIND_SYNC_SIZE;
-    }
-    if (IS_MPEG_PACK_HEADER (data)) {
-      /* found packet start code */
-      guint found = 0;
-      guint packet_size = 0;
-      guint64 offset = skipped;
+  G_STMT_START {
+    gint len;
 
-      while (found < GST_MPEG_TYPEFIND_TRY_HEADERS) {
-        packet_size = mpeg1_parse_header (tf, offset);
-        if (packet_size <= 1)
-          break;
-        offset += packet_size;
-        found++;
-      }
-      g_assert (found <= GST_MPEG_TYPEFIND_TRY_HEADERS);
-      if (found == GST_MPEG_TYPEFIND_TRY_HEADERS || packet_size == 1) {
-        GST_LOG ("suggesting mpeg1 system steeam");
-        caps = gst_caps_copy (MPEG_SYS_CAPS);
-        gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
-            G_TYPE_INT, 1, NULL);
-        gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
-        gst_caps_unref (caps);
-        return;
-      }
-    }
-    data++;
-    skipped++;
-    size--;
+    len = MPEG2_MAX_PROBE_LENGTH;
+    do {
+      len = len / 2;
+      data = gst_type_find_peek (tf, 0, 5 + len);
+    } while (data == NULL && len >= 32);
+
+    if (!data)
+      return;
+
+    end = data + len;
   }
-}
+  G_STMT_END;
+
+  data0 = data;
+  first_sync = NULL;
+
+  while (data < end) {
+    sync_word <<= 8;
+    if (sync_word == 0x00000100) {
+      /* Found potential sync word */
+      if (first_sync == NULL)
+        first_sync = data - 3;
+
+      if (since_last_sync > 4) {
+        /* If more than 4 bytes since the last sync word, reset our counters,
+         * as we're only interested in counting contiguous packets */
+        pes_headers = pack_headers = 0;
+      }
+      pack_size = 0;
+
+      if (IS_MPEG_PACK_CODE (data[0])) {
+        if ((data[1] & 0xC0) == 0x40) {
+          /* MPEG-2 */
+          mpegversion = 2;
+        } else if ((data[1] & 0xF0) == 0x20) {
+          mpegversion = 1;
+        }
+        if (mpegversion != 0 &&
+            mpeg_sys_is_valid_pack (tf, data - 3, end - data + 3, &pack_size)) {
+          pack_headers++;
+        }
+      } else if (IS_MPEG_PES_CODE (data[0])) {
+        /* PES stream */
+        if (mpeg_sys_is_valid_pes (tf, data - 3, end - data + 3, &pack_size)) {
+          pes_headers++;
+          if (mpegversion == 0)
+            mpegversion = 2;
+        }
+      } else if (IS_MPEG_SYS_CODE (data[0])) {
+        if (mpeg_sys_is_valid_sys (tf, data - 3, end - data + 3, &pack_size)) {
+          pack_headers++;
+        }
+      }
+
+      /* If we found a packet with a known size, skip the bytes in it and loop
+       * around to check the next packet. */
+      if (pack_size != 0) {
+        data += pack_size - 3;
+        sync_word = 0xffffffff;
+        since_last_sync = 0;
+        continue;
+      }
+    }
+
+    sync_word |= data[0];
+    since_last_sync++;
+    data++;
+
+    /* If we have found MAX headers, and *some* were pes headers (pack headers
+     * are optional in an mpeg system stream) then return our high-probability
+     * result */
+    if (pes_headers > 0 && (pack_headers + pes_headers) > MPEG2_MAX_SYS_HEADERS)
+      goto suggest;
+  }
+
+  /* If we at least saw MIN headers, and *some* were pes headers (pack headers
+   * are optional in an mpeg system stream) then return a lower-probability 
+   * result */
+  if (pes_headers > 0 && (pack_headers + pes_headers) > MPEG2_MIN_SYS_HEADERS)
+    goto suggest;
+
+  return;
+suggest:
+  {
+    GstCaps *caps = gst_caps_copy (MPEG_SYS_CAPS);
+    guint prob;
+
+    prob = GST_TYPE_FIND_POSSIBLE + (10 * (pack_headers + pes_headers));
+    prob = MIN (prob, GST_TYPE_FIND_MAXIMUM);
+
+    /* lower probability if the first packet wasn't right at the start */
+    if (data0 != first_sync && prob >= 10)
+      prob -= 10;
+
+    GST_LOG ("Suggesting MPEG %d system stream, %d packs, %d pes, prob %u%%\n",
+        mpegversion, pack_headers, pes_headers, prob);
+
+    gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
+        G_TYPE_INT, mpegversion, NULL);
+    gst_type_find_suggest (tf, prob, caps);
+    gst_caps_unref (caps);
+  }
+};
 
 /** video/mpegts Transport Stream **/
 static GstStaticCaps mpegts_caps = GST_STATIC_CAPS ("video/mpegts, "
@@ -1315,13 +1355,14 @@ static GstStaticCaps mpegts_caps = GST_STATIC_CAPS ("video/mpegts, "
 
 #define GST_MPEGTS_TYPEFIND_MIN_HEADERS 4
 #define GST_MPEGTS_TYPEFIND_MAX_HEADERS 10
-#define GST_MPEGTS_MAX_PACKET_SIZE 204
+#define GST_MPEGTS_MAX_PACKET_SIZE 208
 #define GST_MPEGTS_TYPEFIND_SYNC_SIZE \
             (GST_MPEGTS_TYPEFIND_MIN_HEADERS * GST_MPEGTS_MAX_PACKET_SIZE)
 #define GST_MPEGTS_TYPEFIND_MAX_SYNC \
             (GST_MPEGTS_TYPEFIND_MAX_HEADERS * GST_MPEGTS_MAX_PACKET_SIZE)
 
 #define MPEGTS_HDR_SIZE 4
+/* Check for sync byte, error_indicator == 0 and packet has payload */
 #define IS_MPEGTS_HEADER(data) (((data)[0] == 0x47) && \
                                 (((data)[1] & 0x80) == 0x00) && \
                                 (((data)[3] & 0x10) == 0x10))
@@ -1389,8 +1430,7 @@ mpeg_ts_type_find (GstTypeFind * tf, gpointer unused)
           /* found at least 4 headers. 10 headers = MAXIMUM probability. 
            * Arbitrarily, I assigned 10% probability for each header we
            * found, 40% -> 100% */
-
-          probability = 10 * MIN (found, 10);
+          probability = MIN (10 * found, GST_TYPE_FIND_MAXIMUM);
 
           gst_type_find_suggest (tf, probability, caps);
           gst_caps_unref (caps);
@@ -1424,7 +1464,7 @@ mpeg4_video_type_find (GstTypeFind * tf, gpointer unused)
 
   while (TRUE) {
     data = gst_type_find_peek (tf, offset, 4);
-    if (data && data[0] == 0 && data[1] == 0 && data[2] == 1) {
+    if (data && IS_MPEG_HEADER (data)) {
       int sc = data[3];
 
       if (sc == 0xB0)           /* visual_object_sequence_start_code */
@@ -1468,7 +1508,7 @@ mpeg_video_type_find (GstTypeFind * tf, gpointer unused)
 
     gst_structure_set (gst_caps_get_structure (caps, 0), "mpegversion",
         G_TYPE_INT, 1, NULL);
-    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM - 1, caps);
+    gst_type_find_suggest (tf, GST_TYPE_FIND_POSSIBLE, caps);
     gst_caps_unref (caps);
   }
 }
@@ -1514,25 +1554,33 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
       size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
     }
 
-    /* are we a sequence (0xB3) or GOP (0xB8) header? */
-    if (data[0] == 0x0 && data[1] == 0x0 && data[2] == 0x1 &&
-        (data[3] == 0xB3 || data[3] == 0xB8)) {
-      size -= 8;
-      data += 8;
-      skipped += 8;
-      if (data[3] == 0xB3)
-        continue;
-      else if (size < 4) {
-        data = gst_type_find_peek (tf, skipped, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
-        size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
-        if (!data)
+    if (IS_MPEG_HEADER (data)) {
+      /* An MPEG PACK header indicates that this isn't an elementary stream */
+      if (IS_MPEG_PACK_CODE (data[3])) {
+        if (mpeg_sys_is_valid_pack (tf, data, size, NULL))
           break;
       }
-      /* else, we should now see an image */
+
+      /* are we a sequence (0xB3) or GOP (0xB8) header? */
+      if (data[3] == 0xB3 || data[3] == 0xB8) {
+        size -= 8;
+        data += 8;
+        skipped += 8;
+        if (data[3] == 0xB3)
+          continue;
+        else if (size < 4) {
+          data =
+              gst_type_find_peek (tf, skipped, GST_MPEGVID_TYPEFIND_SYNC_SIZE);
+          size = GST_MPEGVID_TYPEFIND_SYNC_SIZE;
+          if (!data)
+            break;
+        }
+        /* else, we should now see an image */
+      }
     }
 
     /* image header (and, when found, slice header) */
-    if (data[0] == 0x0 && data[1] == 0x0 && data[2] == 0x1 && data[4] == 0x0) {
+    if (IS_MPEG_HEADER (data) && data[4] == 0x0) {
       size -= 8;
       data += 8;
       skipped += 8;
@@ -1542,10 +1590,8 @@ mpeg_video_stream_type_find (GstTypeFind * tf, gpointer unused)
         if (!data)
           break;
       }
-      if ((data[0] == 0x0 && data[1] == 0x0 &&
-              data[2] == 0x1 && data[3] == 0x1) ||
-          (data[1] == 0x0 && data[2] == 0x0 &&
-              data[3] == 0x1 && data[4] == 0x1)) {
+      if ((IS_MPEG_HEADER (data) && data[3] == 0x1) ||
+          (IS_MPEG_HEADER (data + 1) && data[4] == 0x1)) {
         size -= 4;
         data += 4;
         skipped += 4;
@@ -2823,15 +2869,13 @@ plugin_init (GstPlugin * plugin)
       mp3_exts, MP3_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-ac3", GST_RANK_PRIMARY, ac3_type_find,
       ac3_exts, AC3_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "video/mpeg1", GST_RANK_PRIMARY,
-      mpeg1_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "video/mpeg2", GST_RANK_SECONDARY,
-      mpeg2_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "video/mpeg-sys", GST_RANK_PRIMARY,
+      mpeg_sys_type_find, mpeg_sys_exts, MPEG_SYS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpegts", GST_RANK_PRIMARY,
       mpeg_ts_type_find, mpeg_ts_exts, MPEGTS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/ogg", GST_RANK_PRIMARY,
       ogganx_type_find, ogg_exts, OGGANX_CAPS, NULL, NULL);
-  TYPE_FIND_REGISTER (plugin, "video/mpeg", GST_RANK_SECONDARY,
+  TYPE_FIND_REGISTER (plugin, "video/mpeg,elementary", GST_RANK_SECONDARY,
       mpeg_video_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/mpeg-stream", GST_RANK_MARGINAL,
       mpeg_video_stream_type_find, mpeg_video_exts, MPEG_VIDEO_CAPS, NULL,

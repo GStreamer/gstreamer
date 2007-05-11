@@ -1,3 +1,24 @@
+2007-05-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (mpeg_sys_is_valid_pack),
+	(mpeg_sys_is_valid_pes), (mpeg_sys_is_valid_sys),
+	(mpeg_sys_type_find), (mpeg_ts_type_find), (mpeg4_video_type_find),
+	(mpeg_video_type_find), (mpeg_video_stream_type_find),
+	(plugin_init):
+
+	Consolidate and re-work our mpeg system stream detection to probe
+	more packets and produce a higher confidence result. Fixes a
+	regression caused by lowering the typefind probability last year
+	- related to bug #397810. Remove the redundant MPEG-1 specific 
+	typefind function, as the new one detects both MPEG-1 & MPEG-2
+	happily.
+
+	Also cleanup the MPEG elementary and MPEG-TS detection functions a
+	little. 
+
+	Tested against my media test directory, with some improvements and
+	no regressions.
+
 2007-05-10  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (fill_buffer), (check_queue),
