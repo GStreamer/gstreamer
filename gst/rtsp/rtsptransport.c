@@ -84,7 +84,7 @@ static const RTSPLTransMap ltrans[] = {
   {"udp", RTSP_LOWER_TRANS_UDP},
   {"mcast", RTSP_LOWER_TRANS_UDP_MCAST},
   {"tcp", RTSP_LOWER_TRANS_TCP},
-  {NULL, RTSP_LOWER_TRANS_UNKNOWN}
+  {NULL, RTSP_LOWER_TRANS_UDP}  /* UDP is default */
 };
 
 RTSPResult
