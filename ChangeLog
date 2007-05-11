@@ -1,5 +1,19 @@
 2007-05-11  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/README:
+	Update README with new RTP variables that will be used for
+	synchronisation.
+
+	* gst/rtp/gstrtpvorbisdepay.c: (decode_base64),
+	(gst_rtp_vorbis_depay_parse_configuration),
+	(gst_rtp_vorbis_depay_process):
+	* gst/rtp/gstrtpvorbispay.c: (encode_base64),
+	(gst_rtp_vorbis_pay_finish_headers),
+	(gst_rtp_vorbis_pay_handle_buffer):
+	Update vorbis pay and depayloader to draft-04.
+
+2007-05-11  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/rtsptransport.c:
 	UDP MCAST is actually the default for RTP/AVP.
 

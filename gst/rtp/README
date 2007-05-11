@@ -22,16 +22,41 @@ The following fields can or must (*) be specified in the structure:
      set.
 
  * clock-rate: (int) [0 - MAXINT]
-    the RTP clock rate
+    The RTP clock rate. 
 
    ssrc: (uint) [0 - MAXINT]
-    The ssrc value currently in use.
+    The ssrc value currently in use. (default = the SSRC of the first RTP
+    packet)
+
+   npt-start: (uint64) [0 - MAXINT]
+    The Normal Play Time for clock-base. This is the position in the stream and
+    is between 0 and the duration of the stream. This value is expressed in
+    nanoseconds GstClockTime. (default = 0)
+
+   npt-stop: (uint64) [0 - MAXINT] 
+    The last position in the stream. This value is expressed in nanoseconds
+    GstClockTime. (default = -1, stop unknown)
 
    clock-base: (uint) [0 - MAXINT]
-    The RTP time representing time 0
+    The RTP time representing time npt-start. (default = rtptime of first RTP
+    packet).
+
+   play-speed: (gdouble) [-MIN - MAX]
+    The intended playback speed of the stream. The client is delivered data at
+    the adjusted speed. The client should adjust its playback speed with this
+    value and thus corresponds to the GStreamer rate field in the NEWSEGMENT
+    event. (default = 1.0)
+    
+   play-scale: (gdouble) [-MIN - MAX]
+    The rate already applied to the stream. The client is delivered a stream
+    that is scaled by this amount. This value is used to adjust position
+    reporting and corresponds to the GStream applied-rate field in the
+    NEWSEGMENT event. (default = 1.0)
 
    seqnum-base: (uint) [0 - MAXINT]
-    The RTP sequence number representing the first rtp packet
+    The RTP sequence number representing the first rtp packet. When this
+    parameter is given, all sequence numbers below this seqnum should be
+    ignored. (default = seqnum of first RTP packet).
 
    encoding-name: (String) ANY
      typically second part of the mime type. ex. MP4V-ES. only required if
@@ -50,15 +75,15 @@ The following fields can or must (*) be specified in the structure:
  Example:
 
   "application/x-rtp",
-      "media", G_TYPE_STRING, "audio",		-]
-      "payload", G_TYPE_INT, 96,                 ] - required
-      "clock-rate", G_TYPE_INT, 8000,           -]
-      "encoding-name", G_TYPE_STRING, "AMR",    -] - required since payload >= 96
-      "encoding-params", G_TYPE_STRING, "1",	-] - optional param for AMR
-      "octet-align", G_TYPE_STRING, "1",	-]
-      "crc", G_TYPE_STRING, "0",                 ]
-      "robust-sorting", G_TYPE_STRING, "0",      ]  AMR specific params.
-      "interleaving", G_TYPE_STRING, "0",       -]
+      "media", G_TYPE_STRING, "audio",		-.
+      "payload", G_TYPE_INT, 96,                 | - required
+      "clock-rate", G_TYPE_INT, 8000,           -'
+      "encoding-name", G_TYPE_STRING, "AMR",    -. - required since payload >= 96
+      "encoding-params", G_TYPE_STRING, "1",	-' - optional param for AMR
+      "octet-align", G_TYPE_STRING, "1",	-.
+      "crc", G_TYPE_STRING, "0",                 |
+      "robust-sorting", G_TYPE_STRING, "0",      |  AMR specific params.
+      "interleaving", G_TYPE_STRING, "0",       -'
   
  Mapping of caps to and from SDP fields:
 
@@ -78,6 +103,18 @@ The following fields can or must (*) be specified in the structure:
  The optional parameters in the SDP fields are case insensitive. In the caps we
  always use the lowercase names so that the SDP -> caps mapping remains
  possible.
+
+ Mapping of caps to NEWSEGMENT:
+
+  rate:         <play-speed>
+  applied-rate: <play-scale>
+  format:       GST_FORMAT_TIME
+  start:        <clock-base> * GST_SECOND / <clock-rate>
+  stop:         if <ntp-stop> != -1
+                  <npt-stop> - <npt-start> + start
+		else 
+		  -1
+  time:         <npt-start>
 
 
 usage with UDP

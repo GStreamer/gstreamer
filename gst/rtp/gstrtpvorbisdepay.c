@@ -30,11 +30,15 @@
 GST_DEBUG_CATEGORY_STATIC (rtpvorbisdepay_debug);
 #define GST_CAT_DEFAULT (rtpvorbisdepay_debug)
 
+/* references:
+ * http://svn.xiph.org/trunk/vorbis/doc/draft-ietf-avt-rtp-vorbis-04.txt
+ */
+
 /* elementfactory information */
 static const GstElementDetails gst_rtp_vorbis_depay_details =
 GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Depayloader/Network",
-    "Extracts Vorbis Audio from RTP packets (draft-01 of RFC XXXX)",
+    "Extracts Vorbis Audio from RTP packets (draft-04 of RFC XXXX)",
     "Wim Taymans <wim@fluendo.com>");
 
 /* RtpVorbisDepay signals and args */
@@ -151,28 +155,70 @@ gst_rtp_vorbis_depay_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static const guint8 a2bin[256] = {
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 64, 64, 63,
+  52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64,
+  64, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14,
+  15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 64,
+  64, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
+  41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 64, 64, 64, 64, 64,
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
+  64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64
+};
+
+static guint
+decode_base64 (const gchar * in, guint8 * out)
+{
+  guint8 v1, v2;
+  guint len = 0;
+
+  v1 = a2bin[(gint) * in];
+  while (v1 <= 63) {
+    /* read 4 bytes, write 3 bytes, invalid base64 are zeroes */
+    v2 = a2bin[(gint) * ++in];
+    *out++ = (v1 << 2) | ((v2 & 0x3f) >> 4);
+    v1 = (v2 > 63 ? 64 : a2bin[(gint) * ++in]);
+    *out++ = (v2 << 4) | ((v1 & 0x3f) >> 2);
+    v2 = (v1 > 63 ? 64 : a2bin[(gint) * ++in]);
+    *out++ = (v1 << 6) | (v2 & 0x3f);
+    v1 = (v2 > 63 ? 64 : a2bin[(gint) * ++in]);
+    len += 3;
+  }
+  /* move to '\0' */
+  while (*in != '\0')
+    in++;
+
+  /* subtract padding */
+  while (len > 0 && *--in == '=')
+    len--;
+
+  return len;
+}
+
 static gboolean
 gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
     const gchar * configuration)
 {
-  GValue v = { 0 };
   GstBuffer *buf;
   guint32 num_headers;
   guint8 *data;
   guint size;
-  gint i;
+  gint i, j;
 
-  /* deserialize base16 to buffer */
-  g_value_init (&v, GST_TYPE_BUFFER);
-  if (!gst_value_deserialize (&v, configuration))
-    goto wrong_configuration;
+  /* deserialize base64 to buffer */
+  size = strlen (configuration);
+  GST_DEBUG_OBJECT (rtpvorbisdepay, "base64 config size %u", size);
 
-  buf = gst_value_get_buffer (&v);
-  gst_buffer_ref (buf);
-  g_value_unset (&v);
-
-  data = GST_BUFFER_DATA (buf);
-  size = GST_BUFFER_SIZE (buf);
+  data = g_malloc (size);
+  size = decode_base64 (configuration, data);
 
   GST_DEBUG_OBJECT (rtpvorbisdepay, "config size %u", size);
 
@@ -216,59 +262,73 @@ gst_rtp_vorbis_depay_parse_configuration (GstRtpVorbisDepay * rtpvorbisdepay,
   for (i = 0; i < num_headers; i++) {
     guint32 ident;
     guint16 length;
+    guint8 n_headers, b;
     GstRtpVorbisConfig *conf;
-    GstTagList *list;
+    guint *h_sizes;
 
-    if (size < 5)
+    if (size < 6)
       goto too_small;
 
     ident = (data[0] << 16) | (data[1] << 8) | data[2];
     length = (data[3] << 8) | data[4];
-    size -= 5;
-    data += 5;
+    n_headers = data[5];
+    size -= 6;
+    data += 6;
 
-    GST_DEBUG_OBJECT (rtpvorbisdepay, "header %d, ident 0x%08x, length %u", i,
-        ident, length);
+    GST_DEBUG_OBJECT (rtpvorbisdepay,
+        "header %d, ident 0x%08x, length %u, left %u", i, ident, length, size);
 
-    if (size < length + VORBIS_ID_LEN)
+    if (size < length)
       goto too_small;
 
-    GST_DEBUG_OBJECT (rtpvorbisdepay, "preparing headers");
+    /* read header sizes we read 2 sizes, the third size (for which we allocate
+     * space) must be derived from the total packed header length. */
+    h_sizes = g_newa (guint, n_headers + 1);
+    for (j = 0; j < n_headers; j++) {
+      guint h_size;
 
+      h_size = 0;
+      do {
+        if (size < 1)
+          goto too_small;
+        b = *data++;
+        size--;
+        h_size = (h_size << 7) | (b & 0x7f);
+      } while (b & 0x80);
+      GST_DEBUG_OBJECT (rtpvorbisdepay, "headers %d: size: %u", j, h_size);
+      h_sizes[j] = h_size;
+      length -= h_size;
+    }
+    /* last header length is the remaining space */
+    GST_DEBUG_OBJECT (rtpvorbisdepay, "last header size: %u", length);
+    h_sizes[j] = length;
+
+    GST_DEBUG_OBJECT (rtpvorbisdepay, "preparing headers");
     conf = g_new0 (GstRtpVorbisConfig, 1);
     conf->ident = ident;
 
-    buf = gst_buffer_new_and_alloc (VORBIS_ID_LEN);
-    memcpy (GST_BUFFER_DATA (buf), data, VORBIS_ID_LEN);
-    conf->headers = g_list_append (conf->headers, buf);
-    data += VORBIS_ID_LEN;
-    size -= VORBIS_ID_LEN;
+    for (j = 0; j <= n_headers; j++) {
+      guint h_size;
 
-    /* create a dummy comment */
-    list = gst_tag_list_new ();
-    buf =
-        gst_tag_list_to_vorbiscomment_buffer (list, (guint8 *) "\003vorbis", 7,
-        "Vorbis RTP depayloader");
-    conf->headers = g_list_append (conf->headers, buf);
-    gst_tag_list_free (list);
+      h_size = h_sizes[j];
+      if (size < h_size)
+        goto too_small;
 
-    buf = gst_buffer_new_and_alloc (length);
-    memcpy (GST_BUFFER_DATA (buf), data, length);
-    conf->headers = g_list_append (conf->headers, buf);
-    data += length;
-    size -= length;
+      GST_DEBUG_OBJECT (rtpvorbisdepay, "reading header %d, size %u", j,
+          h_size);
 
+      buf = gst_buffer_new_and_alloc (h_size);
+      memcpy (GST_BUFFER_DATA (buf), data, h_size);
+      conf->headers = g_list_append (conf->headers, buf);
+      data += h_size;
+      size -= h_size;
+    }
     rtpvorbisdepay->configs = g_list_append (rtpvorbisdepay->configs, conf);
   }
 
   return TRUE;
 
   /* ERRORS */
-wrong_configuration:
-  {
-    GST_DEBUG_OBJECT (rtpvorbisdepay, "error parsing configuration");
-    return FALSE;
-  }
 too_small:
   {
     GST_DEBUG_OBJECT (rtpvorbisdepay, "configuration too small");
@@ -420,6 +480,8 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   payload = gst_rtp_buffer_get_payload (buf);
   free_payload = FALSE;
+
+  gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
   header = GST_READ_UINT32_BE (payload);
   /*
