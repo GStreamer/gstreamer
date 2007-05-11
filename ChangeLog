@@ -1,3 +1,13 @@
+2007-05-11  Zaheer Abbas Merali  <<zaheerabbas at merali dot org>>
+
+	Patch by: Eric Anholt
+
+	* sys/ximage/gstximagesrc.c (gst_ximage_src_open_display,
+	  gst_ximage_src_ximage_get):
+	Use union of all damage between frames to make it faster.
+	Fixes bug #342463.
+	Also fix crasher when cursor is at bottom right of window.
+
 2007-05-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):

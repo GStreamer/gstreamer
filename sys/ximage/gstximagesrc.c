@@ -164,8 +164,7 @@ gst_ximage_src_open_display (GstXImageSrc * s, const gchar * name)
     if (XDamageQueryExtension (s->xcontext->disp, &s->damage_event_base,
             &error_base)) {
       s->damage =
-          XDamageCreate (s->xcontext->disp, s->xwindow,
-          XDamageReportRawRectangles);
+          XDamageCreate (s->xcontext->disp, s->xwindow, XDamageReportNonEmpty);
       if (s->damage != None) {
         s->damage_region = XFixesCreateRegion (s->xcontext->disp, NULL, 0);
         if (s->damage_region != None) {
@@ -399,7 +398,8 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
   g_return_val_if_fail (GST_IS_XIMAGE_SRC (ximagesrc), NULL);
 #ifdef HAVE_XDAMAGE
-  if (ximagesrc->have_xdamage && ximagesrc->use_damage) {
+  if (ximagesrc->have_xdamage && ximagesrc->use_damage &&
+      ximagesrc->last_ximage != NULL) {
     XEvent ev;
 
     /* have_frame is TRUE when either the entire screen has been
@@ -410,92 +410,84 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
 
     do {
       XNextEvent (ximagesrc->xcontext->disp, &ev);
+
       if (ev.type == ximagesrc->damage_event_base + XDamageNotify) {
-        XDamageNotifyEvent *dev = (XDamageNotifyEvent *) & ev;
+        XserverRegion parts;
+        XRectangle *rects;
+        int nrects;
 
-#ifdef HAVE_XSHM
-        if (ximagesrc->xcontext->use_xshm &&
-            dev->area.width == ximagesrc->xcontext->width &&
-            dev->area.height == ximagesrc->xcontext->height) {
-          GST_DEBUG_OBJECT (ximagesrc, "Entire screen was damaged");
-          XShmGetImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-              ximage->ximage, ximagesrc->startx, ximagesrc->starty, AllPlanes);
-          /* No need to collect more events */
-          while (XPending (ximagesrc->xcontext->disp)) {
-            XNextEvent (ximagesrc->xcontext->disp, &ev);
-          }
-          have_frame = TRUE;
-          break;
-        } else
-#endif
-        {
-          /* if we only want a small area, clip this damage region to
-           * area we want */
-          if (ximagesrc->endx > ximagesrc->startx &&
-              ximagesrc->endy > ximagesrc->starty) {
-            /* see if damage area intersects */
-            if (dev->area.x + dev->area.width < ximagesrc->startx ||
-                dev->area.x > ximagesrc->endx) {
-              /* trivial reject */
-            } else if (dev->area.y + dev->area.height < ximagesrc->starty ||
-                dev->area.y > ximagesrc->endy) {
-              /* trivial reject */
-            } else {
-              /* find intersect region */
-              int startx, starty, width, height;
+        parts = XFixesCreateRegion (ximagesrc->xcontext->disp, 0, 0);
+        XDamageSubtract (ximagesrc->xcontext->disp, ximagesrc->damage, None,
+            parts);
+        /* Now copy out all of the damaged rectangles. */
+        rects = XFixesFetchRegion (ximagesrc->xcontext->disp, parts, &nrects);
+        if (rects != NULL) {
+          int i;
 
-              startx = (dev->area.x < ximagesrc->startx) ? ximagesrc->startx :
-                  dev->area.x;
-              starty = (dev->area.y < ximagesrc->starty) ? ximagesrc->starty :
-                  dev->area.y;
-              width = (dev->area.x + dev->area.width < ximagesrc->endx) ?
-                  dev->area.x + dev->area.width - startx :
-                  ximagesrc->endx - startx;
-              height = (dev->area.y + dev->area.height < ximagesrc->endy) ?
-                  dev->area.y + dev->area.height - starty : ximagesrc->endy -
-                  starty;
-              if (!have_frame) {
-                GST_LOG_OBJECT (ximagesrc,
-                    "Copying from last frame ximage->size: %d",
-                    GST_BUFFER_SIZE (GST_BUFFER (ximage)));
-                memcpy (GST_BUFFER_DATA (GST_BUFFER (ximage)),
-                    GST_BUFFER_DATA (GST_BUFFER (ximagesrc->last_ximage)),
-                    GST_BUFFER_SIZE (GST_BUFFER (ximage)));
-                have_frame = TRUE;
-              }
-
-              GST_LOG_OBJECT (ximagesrc,
-                  "Retrieving damaged sub-region @ %d,%d size %dx%d as intersect region",
-                  startx, starty, width, height);
-              XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-                  startx, starty, width, height, AllPlanes, ZPixmap,
-                  ximage->ximage, startx - ximagesrc->startx,
-                  starty - ximagesrc->starty);
-            }
-          } else {
-            if (!have_frame) {
-              GST_LOG_OBJECT (ximagesrc,
-                  "Copying from last frame ximage->size: %d",
-                  GST_BUFFER_SIZE (GST_BUFFER (ximage)));
-              memcpy (GST_BUFFER_DATA (GST_BUFFER (ximage)),
-                  GST_BUFFER_DATA (GST_BUFFER (ximagesrc->last_ximage)),
-                  GST_BUFFER_SIZE (GST_BUFFER (ximage)));
-              have_frame = TRUE;
-            }
-
+          if (!have_frame) {
             GST_LOG_OBJECT (ximagesrc,
-                "Retrieving damaged sub-region @ %d,%d size %dx%d",
-                dev->area.x, dev->area.y, dev->area.width, dev->area.height);
-
-            XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
-                dev->area.x, dev->area.y,
-                dev->area.width, dev->area.height,
-                AllPlanes, ZPixmap, ximage->ximage, dev->area.x, dev->area.y);
+                "Copying from last frame ximage->size: %d",
+                GST_BUFFER_SIZE (GST_BUFFER (ximage)));
+            memcpy (GST_BUFFER_DATA (GST_BUFFER (ximage)),
+                GST_BUFFER_DATA (GST_BUFFER (ximagesrc->last_ximage)),
+                GST_BUFFER_SIZE (GST_BUFFER (ximage)));
+            have_frame = TRUE;
           }
+          for (i = 0; i < nrects; i++) {
+            GST_LOG_OBJECT (ximagesrc,
+                "Damaged sub-region @ %d,%d size %dx%d reported",
+                rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+
+            /* if we only want a small area, clip this damage region to
+             * area we want */
+            if (ximagesrc->endx > ximagesrc->startx &&
+                ximagesrc->endy > ximagesrc->starty) {
+              /* see if damage area intersects */
+              if (rects[i].x + rects[i].width < ximagesrc->startx ||
+                  rects[i].x > ximagesrc->endx) {
+                /* trivial reject */
+              } else if (rects[i].y + rects[i].height < ximagesrc->starty ||
+                  rects[i].y > ximagesrc->endy) {
+                /* trivial reject */
+              } else {
+                /* find intersect region */
+                int startx, starty, width, height;
+
+                startx = (rects[i].x < ximagesrc->startx) ? ximagesrc->startx :
+                    rects[i].x;
+                starty = (rects[i].y < ximagesrc->starty) ? ximagesrc->starty :
+                    rects[i].y;
+                width = (rects[i].x + rects[i].width < ximagesrc->endx) ?
+                    rects[i].x + rects[i].width - startx :
+                    ximagesrc->endx - startx;
+                height = (rects[i].y + rects[i].height < ximagesrc->endy) ?
+                    rects[i].y + rects[i].height - starty : ximagesrc->endy -
+                    starty;
+
+                GST_LOG_OBJECT (ximagesrc,
+                    "Retrieving damaged sub-region @ %d,%d size %dx%d as intersect region",
+                    startx, starty, width, height);
+                XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
+                    startx, starty, width, height, AllPlanes, ZPixmap,
+                    ximage->ximage, startx - ximagesrc->startx,
+                    starty - ximagesrc->starty);
+              }
+            } else {
+
+              GST_LOG_OBJECT (ximagesrc,
+                  "Retrieving damaged sub-region @ %d,%d size %dx%d",
+                  rects[i].x, rects[i].y, rects[i].width, rects[i].height);
+
+              XGetSubImage (ximagesrc->xcontext->disp, ximagesrc->xwindow,
+                  rects[i].x, rects[i].y,
+                  rects[i].width, rects[i].height,
+                  AllPlanes, ZPixmap, ximage->ximage, rects[i].x, rects[i].y);
+            }
+          }
+          free (rects);
         }
       }
     } while (XPending (ximagesrc->xcontext->disp));
-    XDamageSubtract (ximagesrc->xcontext->disp, ximagesrc->damage, None, None);
     if (!have_frame) {
       GST_LOG_OBJECT (ximagesrc,
           "Copying from last frame ximage->size: %d",
@@ -644,9 +636,11 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
           ximagesrc->cursor_image->pixels[i] =
               GUINT_TO_LE (ximagesrc->cursor_image->pixels[i]);
         /* copy those pixels across */
-        for (j = starty; j < starty + iheight && j < starty + ximagesrc->height;
+        for (j = starty;
+            j < starty + iheight && j < ximagesrc->starty + ximagesrc->height;
             j++) {
-          for (i = startx; i < startx + iwidth && i < startx + ximagesrc->width;
+          for (i = startx;
+              i < startx + iwidth && i < ximagesrc->startx + ximagesrc->width;
               i++) {
             guint8 *src, *dest;
 
