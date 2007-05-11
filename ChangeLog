@@ -1,3 +1,12 @@
+2007-05-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstplugin.c (gst_plugin_load_file):
+	* gst/gstregistry.c (GST_CAT_DEFAULT,
+	  gst_registry_lookup_feature_locked, gst_registry_scan_path_level):
+	  Print a g_warning if there was an error when loading a plugins during
+	  registry scan. The shuld help beginners starting with gst-plugin
+	  template.
+
 2007-05-10  Wim Taymans  <wim@fluendo.com>
 
 	* plugins/elements/gstqueue.c: (gst_queue_class_init),

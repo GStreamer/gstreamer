@@ -28,7 +28,7 @@
  *
  * One registry holds the metadata of a set of plugins.
  * All registries build the #GstRegistryPool.
- * 
+ *
  * <emphasis role="bold">Design:</emphasis>
  *
  * The #GstRegistry object is a list of plugins and some functions for dealing
@@ -109,7 +109,7 @@
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
-/* the one instance of the default registry and the mutex protecting the 
+/* the one instance of the default registry and the mutex protecting the
  * variable. */
 static GStaticMutex _gst_registry_mutex = G_STATIC_MUTEX_INIT;
 static GstRegistry *_gst_registry_default = NULL;
@@ -718,7 +718,7 @@ gst_registry_lookup_feature_locked (GstRegistry * registry, const char *name)
  * @name: a #GstPluginFeature name
  *
  * Find a #GstPluginFeature with @name in @registry.
- * 
+ *
  * Returns: a #GstPluginFeature with its refcount incremented, use
  * gst_object_unref() after usage.
  *
@@ -803,6 +803,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
   GstPlugin *plugin;
   GstPlugin *newplugin;
   gboolean changed = FALSE;
+  GError *err = NULL;
 
   dir = g_dir_open (path, 0, NULL);
   if (!dir)
@@ -867,7 +868,7 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
         GST_LOG_OBJECT (registry, "marking plugin %p as registered as %s",
             plugin, filename);
         plugin->registered = TRUE;
-        /* Update the file path on which we've seen this cached plugin 
+        /* Update the file path on which we've seen this cached plugin
          * to ensure the registry cache will reflect up to date information */
         if (strcmp (plugin->filename, filename) != 0) {
           g_free (plugin->filename);
@@ -881,12 +882,19 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
             G_GINT64_FORMAT, plugin->file_mtime, file_status.st_mtime,
             (gint64) plugin->file_size, (gint64) file_status.st_size);
         gst_registry_remove_plugin (gst_registry_get_default (), plugin);
-        newplugin = gst_plugin_load_file (filename, NULL);
+        newplugin = gst_plugin_load_file (filename, &err);
         if (newplugin) {
           GST_DEBUG_OBJECT (registry, "marking new plugin %p as registered",
               newplugin);
           newplugin->registered = TRUE;
           gst_object_unref (newplugin);
+        } else {
+          if (err) {
+            /* Report error to user, and free error */
+            g_warning ("Failed to load plugin: %s", err->message);
+            g_error_free (err);
+            err = NULL;
+          }
         }
         changed = TRUE;
       }
@@ -894,11 +902,18 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
 
     } else {
       GST_DEBUG_OBJECT (registry, "file %s not yet in registry", filename);
-      newplugin = gst_plugin_load_file (filename, NULL);
+      newplugin = gst_plugin_load_file (filename, &err);
       if (newplugin) {
         newplugin->registered = TRUE;
         gst_object_unref (newplugin);
         changed = TRUE;
+      } else {
+        if (err) {
+          /* Report error to user, and free error */
+          g_warning ("Failed to load plugin: %s", err->message);
+          g_error_free (err);
+          err = NULL;
+        }
       }
     }
 

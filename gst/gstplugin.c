@@ -413,7 +413,8 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     GST_CAT_WARNING (GST_CAT_PLUGIN_LOADING, "module_open failed: %s",
         g_module_error ());
     g_set_error (error,
-        GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE, "Opening module failed");
+        GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE, "Opening module failed: %s",
+        g_module_error ());
     goto return_error;
   }
 
