@@ -1049,13 +1049,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     }
 
     if (tag == GST_RIFF_TAG_JUNK || tag == GST_RIFF_TAG_bext ||
-        tag == GST_RIFF_TAG_BEXT) {
+        tag == GST_RIFF_TAG_BEXT || tag == GST_RIFF_TAG_LIST) {
       GST_DEBUG_OBJECT (wav, "skipping %" GST_FOURCC_FORMAT " chunk",
           GST_FOURCC_ARGS (tag));
-      if (wav->streaming) {
-        gst_adapter_flush (wav->adapter, size);
-        wav->offset += size;
-      }
       gst_buffer_unref (buf);
       buf = NULL;
       continue;

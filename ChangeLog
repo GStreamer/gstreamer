@@ -1,3 +1,10 @@
+2007-05-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers):
+	  Skip LIST chunks before the fmt chunk (fixes #437499). Also fix
+	  streaming mode regression for file from #343837 with 'bext' chunk
+	  before the 'fmt' chunk.
+
 2007-05-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_flush),
