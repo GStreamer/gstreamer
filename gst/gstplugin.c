@@ -415,6 +415,10 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     g_set_error (error,
         GST_PLUGIN_ERROR, GST_PLUGIN_ERROR_MODULE, "Opening module failed: %s",
         g_module_error ());
+    /* If we failed to open the shared object, then it's probably because a
+     * plugin is linked against the wrong libraries. Print out an easy-to-see
+     * message in this case. */
+    g_warning ("Failed to load plugin: %s", g_module_error ());
     goto return_error;
   }
 

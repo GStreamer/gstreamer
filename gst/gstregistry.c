@@ -803,7 +803,6 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
   GstPlugin *plugin;
   GstPlugin *newplugin;
   gboolean changed = FALSE;
-  GError *err = NULL;
 
   dir = g_dir_open (path, 0, NULL);
   if (!dir)
@@ -882,19 +881,15 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
             G_GINT64_FORMAT, plugin->file_mtime, file_status.st_mtime,
             (gint64) plugin->file_size, (gint64) file_status.st_size);
         gst_registry_remove_plugin (gst_registry_get_default (), plugin);
-        newplugin = gst_plugin_load_file (filename, &err);
+        /* We don't use a GError here because a failure to load some shared 
+         * objects as plugins is normal (particularly in the uninstalled case)
+         */
+        newplugin = gst_plugin_load_file (filename, NULL);
         if (newplugin) {
           GST_DEBUG_OBJECT (registry, "marking new plugin %p as registered",
               newplugin);
           newplugin->registered = TRUE;
           gst_object_unref (newplugin);
-        } else {
-          if (err) {
-            /* Report error to user, and free error */
-            g_warning ("Failed to load plugin: %s", err->message);
-            g_error_free (err);
-            err = NULL;
-          }
         }
         changed = TRUE;
       }
@@ -902,18 +897,11 @@ gst_registry_scan_path_level (GstRegistry * registry, const gchar * path,
 
     } else {
       GST_DEBUG_OBJECT (registry, "file %s not yet in registry", filename);
-      newplugin = gst_plugin_load_file (filename, &err);
+      newplugin = gst_plugin_load_file (filename, NULL);
       if (newplugin) {
         newplugin->registered = TRUE;
         gst_object_unref (newplugin);
         changed = TRUE;
-      } else {
-        if (err) {
-          /* Report error to user, and free error */
-          g_warning ("Failed to load plugin: %s", err->message);
-          g_error_free (err);
-          err = NULL;
-        }
       }
     }
 

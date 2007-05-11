@@ -1,3 +1,12 @@
+2007-05-11  Michael Smith <msmith@fluendo.com>
+
+	* gst/gstplugin.c: (gst_plugin_load_file):
+	* gst/gstregistry.c: (gst_registry_scan_path_level):
+	  Don't print a g_warning for any failure to load a shared object.
+	  Instead, push this down into gstplugin.c, and warn _only_ if we
+	  failed to open the module (i.e. failure to link).
+	  Avoids warnings on normal, working, non-plugin .so files.
+
 2007-05-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstplugin.c (gst_plugin_load_file):
