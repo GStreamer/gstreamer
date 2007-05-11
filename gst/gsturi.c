@@ -593,7 +593,7 @@ gst_element_make_from_uri (const GstURIType type, const gchar * uri,
     }
     walk = walk->next;
   }
-  g_list_free (possibilities);
+  gst_plugin_feature_list_free (possibilities);
 
   GST_LOG_OBJECT (ret, "created %s for URL '%s'",
       type == GST_URI_SINK ? "sink" : "source", uri);

@@ -52,6 +52,7 @@ REGISTRY_CHECKS =				\
 	gst/gstplugin				\
 	gst/gstquery				\
 	gst/gstregistry				\
+	gst/gsturi  				\
 	gst/gstutils				\
 	generic/sinks				\
 	elements/fakesink			\
