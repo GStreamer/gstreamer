@@ -369,7 +369,7 @@ gst_uri_get_protocol (const gchar * uri)
 
   colon = strstr (uri, "://");
 
-  return g_strndup (uri, colon - uri);
+  return g_strdown (g_strndup (uri, colon - uri));
 }
 
 /**
@@ -485,7 +485,7 @@ search_by_entry (GstPluginFeature * feature, gpointer search_entry)
   }
 
   while (*protocols != NULL) {
-    if (strcmp (*protocols, entry->protocol) == 0)
+    if (g_ascii_strcasecmp (*protocols, entry->protocol) == 0)
       return TRUE;
     protocols++;
   }

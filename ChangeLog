@@ -1,3 +1,10 @@
+2007-05-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Jeroen Wouters <woutersj at gmail com>
+
+	* gst/gsturi.c: (gst_uri_get_protocol), (search_by_entry):
+	  Treat protocol strings in a case-insensitive way (#437563).
+
 2007-05-11  Michael Smith <msmith@fluendo.com>
 
 	* gst/gstplugin.c: (gst_plugin_load_file):
