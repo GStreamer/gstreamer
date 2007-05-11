@@ -92,6 +92,7 @@ struct _GstXImageSrc
   int damage_event_base;
   XserverRegion damage_region;
   GC damage_copy_gc;
+  GstXImageSrcBuffer *last_ximage;
 #endif
 };
 

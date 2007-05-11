@@ -1,3 +1,13 @@
+2007-05-11  Zaheer Abbas Merali  <<zaheerabbas at merali dot org>>
+
+	* sys/ximage/gstximagesrc.c (gst_ximage_src_start,
+	  gst_ximage_src_ximage_get):
+	* sys/ximage/gstximagesrc.h (last_ximage):
+	When using Damage actually keep the last frame, and not assume
+	that the buffer we get already has the last frame on it.
+	Copy the cursor over if we specify a non-zero start x and
+	start y.
+
 2007-05-11  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/rtsptransport.c:

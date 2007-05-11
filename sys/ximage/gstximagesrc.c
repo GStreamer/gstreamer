@@ -205,7 +205,9 @@ gst_ximage_src_start (GstBaseSrc * basesrc)
   GstXImageSrc *s = GST_XIMAGE_SRC (basesrc);
 
   s->last_frame_no = -1;
-
+#ifdef HAVE_XDAMAGE
+  s->last_ximage = NULL;
+#endif
   return gst_ximage_src_open_display (s, NULL);
 }
 
@@ -400,6 +402,10 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
   if (ximagesrc->have_xdamage && ximagesrc->use_damage) {
     XEvent ev;
 
+    /* have_frame is TRUE when either the entire screen has been
+     * grabbed or when the last image has been copied */
+    gboolean have_frame = FALSE;
+
     GST_DEBUG_OBJECT (ximagesrc, "Retrieving screen using XDamage");
 
     do {
@@ -418,6 +424,7 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
           while (XPending (ximagesrc->xcontext->disp)) {
             XNextEvent (ximagesrc->xcontext->disp, &ev);
           }
+          have_frame = TRUE;
           break;
         } else
 #endif
@@ -447,6 +454,16 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
               height = (dev->area.y + dev->area.height < ximagesrc->endy) ?
                   dev->area.y + dev->area.height - starty : ximagesrc->endy -
                   starty;
+              if (!have_frame) {
+                GST_LOG_OBJECT (ximagesrc,
+                    "Copying from last frame ximage->size: %d",
+                    GST_BUFFER_SIZE (GST_BUFFER (ximage)));
+                memcpy (GST_BUFFER_DATA (GST_BUFFER (ximage)),
+                    GST_BUFFER_DATA (GST_BUFFER (ximagesrc->last_ximage)),
+                    GST_BUFFER_SIZE (GST_BUFFER (ximage)));
+                have_frame = TRUE;
+              }
+
               GST_LOG_OBJECT (ximagesrc,
                   "Retrieving damaged sub-region @ %d,%d size %dx%d as intersect region",
                   startx, starty, width, height);
@@ -456,6 +473,15 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
                   starty - ximagesrc->starty);
             }
           } else {
+            if (!have_frame) {
+              GST_LOG_OBJECT (ximagesrc,
+                  "Copying from last frame ximage->size: %d",
+                  GST_BUFFER_SIZE (GST_BUFFER (ximage)));
+              memcpy (GST_BUFFER_DATA (GST_BUFFER (ximage)),
+                  GST_BUFFER_DATA (GST_BUFFER (ximagesrc->last_ximage)),
+                  GST_BUFFER_SIZE (GST_BUFFER (ximage)));
+              have_frame = TRUE;
+            }
 
             GST_LOG_OBJECT (ximagesrc,
                 "Retrieving damaged sub-region @ %d,%d size %dx%d",
@@ -470,6 +496,15 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
       }
     } while (XPending (ximagesrc->xcontext->disp));
     XDamageSubtract (ximagesrc->xcontext->disp, ximagesrc->damage, None, None);
+    if (!have_frame) {
+      GST_LOG_OBJECT (ximagesrc,
+          "Copying from last frame ximage->size: %d",
+          GST_BUFFER_SIZE (GST_BUFFER (ximage)));
+      memcpy (GST_BUFFER_DATA (GST_BUFFER (ximage)),
+          GST_BUFFER_DATA (GST_BUFFER (ximagesrc->last_ximage)),
+          GST_BUFFER_SIZE (GST_BUFFER (ximage)));
+      have_frame = TRUE;
+    }
 #ifdef HAVE_XFIXES
     /* re-get area where last mouse pointer was  but only if in our clipping
      * bounds */
@@ -608,10 +643,11 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
         for (i = 0; i < count; i++)
           ximagesrc->cursor_image->pixels[i] =
               GUINT_TO_LE (ximagesrc->cursor_image->pixels[i]);
-
         /* copy those pixels across */
-        for (j = starty; j < starty + iheight && j < ximagesrc->height; j++) {
-          for (i = startx; i < startx + iwidth && i < ximagesrc->width; i++) {
+        for (j = starty; j < starty + iheight && j < starty + ximagesrc->height;
+            j++) {
+          for (i = startx; i < startx + iwidth && i < startx + ximagesrc->width;
+              i++) {
             guint8 *src, *dest;
 
             src =
@@ -631,7 +667,17 @@ gst_ximage_src_ximage_get (GstXImageSrc * ximagesrc)
     }
   }
 #endif
-
+#ifdef HAVE_XDAMAGE
+  if (ximagesrc->have_xdamage && ximagesrc->use_damage) {
+    /* need to ref ximage to put in last_ximage */
+    gst_buffer_ref (GST_BUFFER (ximage));
+    if (ximagesrc->last_ximage) {
+      gst_buffer_unref (GST_BUFFER (ximagesrc->last_ximage));
+    }
+    ximagesrc->last_ximage = ximage;
+    GST_LOG_OBJECT (ximagesrc, "reffing current buffer for last_ximage");
+  }
+#endif
   return ximage;
 }
 
