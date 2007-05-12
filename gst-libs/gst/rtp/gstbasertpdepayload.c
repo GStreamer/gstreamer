@@ -39,7 +39,12 @@ GST_DEBUG_CATEGORY_STATIC (basertpdepayload_debug);
 
 struct _GstBaseRTPDepayloadPrivate
 {
-  guint32 clock_base;
+  guint64 clock_base;
+
+  GstClockTime npt_start;
+  GstClockTime npt_stop;
+  gdouble play_speed;
+  gdouble play_scale;
 };
 
 /* Filter signals and args */
@@ -192,6 +197,31 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
     priv->clock_base = g_value_get_uint (value);
   else
     priv->clock_base = -1;
+
+  /* get other values for newsegment */
+  value = gst_structure_get_value (caps_struct, "npt-start");
+  if (value && G_VALUE_HOLDS_UINT64 (value))
+    priv->npt_start = g_value_get_uint64 (value);
+  else
+    priv->npt_start = 0;
+
+  value = gst_structure_get_value (caps_struct, "npt-stop");
+  if (value && G_VALUE_HOLDS_UINT64 (value))
+    priv->npt_stop = g_value_get_uint64 (value);
+  else
+    priv->npt_stop = -1;
+
+  value = gst_structure_get_value (caps_struct, "play-speed");
+  if (value && G_VALUE_HOLDS_DOUBLE (value))
+    priv->play_speed = g_value_get_double (value);
+  else
+    priv->play_speed = 1.0;
+
+  value = gst_structure_get_value (caps_struct, "play-scale");
+  if (value && G_VALUE_HOLDS_DOUBLE (value))
+    priv->play_scale = g_value_get_double (value);
+  else
+    priv->play_scale = 1.0;
 
   if (bclass->set_caps)
     res = bclass->set_caps (filter, caps);
@@ -447,12 +477,18 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     guint32 timestamp, GstBuffer * buf)
 {
   GstClockTime ts, adjusted;
+  GstBaseRTPDepayloadPrivate *priv;
 
-  ts = gst_util_uint64_scale_int (timestamp, GST_SECOND, filter->clock_rate);
+  priv = filter->priv;
+
+  /* no clock-base set, take first timestamp as base */
+  if (priv->clock_base == -1)
+    priv->clock_base = timestamp;
 
   /* rtp timestamps are based on the clock_rate
-   * gst timesamps are in nanoseconds
-   */
+   * gst timesamps are in nanoseconds */
+  ts = gst_util_uint64_scale_int (timestamp, GST_SECOND, filter->clock_rate);
+
   GST_DEBUG_OBJECT (filter, "ts : timestamp : %u, clockrate : %u",
       timestamp, filter->clock_rate);
 
@@ -467,18 +503,24 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
   /* if this is the first buf send a NEWSEGMENT */
   if (filter->need_newsegment) {
     GstEvent *event;
-    GstClockTime start;
+    GstClockTime start, stop, position;
 
-    if (filter->priv->clock_base != -1)
-      start = gst_util_uint64_scale_int (filter->priv->clock_base, GST_SECOND,
-          filter->clock_rate);
+    start = gst_util_uint64_scale_int (priv->clock_base, GST_SECOND,
+        filter->clock_rate);
+
+    if (priv->npt_stop != -1)
+      stop = priv->npt_stop - priv->npt_start + start;
     else
-      start = adjusted;
+      stop = -1;
 
-    event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-        start, GST_CLOCK_TIME_NONE, 0);
+    position = priv->npt_start;
+
+    event =
+        gst_event_new_new_segment_full (FALSE, priv->play_speed,
+        priv->play_scale, GST_FORMAT_TIME, start, stop, position);
 
     gst_pad_push_event (filter->srcpad, event);
+
     filter->need_newsegment = FALSE;
     GST_DEBUG_OBJECT (filter, "Pushed newsegment event on this first buffer");
   }
