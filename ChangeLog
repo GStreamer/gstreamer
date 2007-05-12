@@ -2,6 +2,15 @@
 
 	Patch by: Peter Kjellerstedt  <pkj at axis com>
 
+	* gst/rtsp/rtspurl.c: (rtsp_url_parse), (rtsp_url_free),
+	(rtsp_url_get_request_uri):
+	* gst/rtsp/rtspurl.h:
+	Add support for query parameters to RTSP URLs.
+
+2007-05-12  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
 	* gst/rtsp/rtsptransport.c: (rtsp_transport_init), (parse_mode),
 	(parse_range), (range_as_text), (rtsp_transport_mode_as_text),
 	(rtsp_transport_profile_as_text), (rtsp_transport_ltrans_as_text),

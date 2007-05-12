@@ -60,6 +60,7 @@ typedef struct _RTSPUrl {
   gchar          *host;
   guint16         port;
   gchar          *abspath;
+  gchar          *query;
 } RTSPUrl;
 
 RTSPResult      rtsp_url_parse          (const gchar *urlstr, RTSPUrl **url);

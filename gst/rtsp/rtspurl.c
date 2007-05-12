@@ -52,13 +52,13 @@
 #define RTSPT_PROTO     "rtspt://"
 #define RTSPT_PROTO_LEN 8
 
-/* format is rtsp[u]://[user:passwd@]host[:port]/abspath */
+/* format is rtsp[u]://[user:passwd@]host[:port]/abspath[?query] */
 
 RTSPResult
 rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
 {
   RTSPUrl *res;
-  gchar *p, *slash, *at, *col;
+  gchar *p, *delim, *at, *col;
 
   g_return_val_if_fail (urlstr != NULL, RTSP_EINVAL);
   g_return_val_if_fail (url != NULL, RTSP_EINVAL);
@@ -80,14 +80,14 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
   } else
     goto invalid;
 
-  slash = strstr (p, "/");
-  at = strstr (p, "@");
+  delim = strpbrk (p, "/?");
+  at = strchr (p, '@');
 
-  if (at && slash && at > slash)
+  if (at && delim && at > delim)
     at = NULL;
 
   if (at) {
-    col = strstr (p, ":");
+    col = strchr (p, ':');
 
     /* must have a ':' and it must be before the '@' */
     if (col == NULL || col > at)
@@ -101,32 +101,45 @@ rtsp_url_parse (const gchar * urlstr, RTSPUrl ** url)
     p = at + 1;
   }
 
-  col = strstr (p, ":");
-  /* we have a ':' and a slash but the ':' is after the slash, it's not really
-   * part of the hostname */
-  if (col && slash && col >= slash)
+  col = strchr (p, ':');
+  /* we have a ':' and a delimiter but the ':' is after the delimiter, it's
+   * not really part of the hostname */
+  if (col && delim && col >= delim)
     col = NULL;
 
   if (col) {
     res->host = g_strndup (p, col - p);
     p = col + 1;
     res->port = strtoul (p, (char **) &p, 10);
-    if (slash)
-      p = slash + 1;
+    if (delim)
+      p = delim;
   } else {
     /* no port specified, set to 0. _get_port() will return the default port. */
     res->port = 0;
-    if (!slash) {
+    if (!delim) {
       res->host = g_strdup (p);
       p = NULL;
     } else {
-      res->host = g_strndup (p, slash - p);
-      p = slash + 1;
+      res->host = g_strndup (p, delim - p);
+      p = delim;
     }
   }
-  /* FIXME, this strips the slash from the absolute path */
-  if (p)
-    res->abspath = g_strdup (p);
+
+  if (p && *p == '/') {
+    delim = strchr (p, '?');
+    if (!delim) {
+      res->abspath = g_strdup (p);
+      p = NULL;
+    } else {
+      res->abspath = g_strndup (p, delim - p);
+      p = delim;
+    }
+  } else {
+    res->abspath = g_strdup ("/");
+  }
+
+  if (p && *p == '?')
+    res->query = g_strdup (p + 1);
 
   *url = res;
 
@@ -150,6 +163,7 @@ rtsp_url_free (RTSPUrl * url)
   g_free (url->passwd);
   g_free (url->host);
   g_free (url->abspath);
+  g_free (url->query);
   g_free (url);
 }
 
@@ -186,10 +200,11 @@ rtsp_url_get_request_uri (RTSPUrl * url)
   g_return_val_if_fail (url != NULL, NULL);
 
   if (url->port != 0) {
-    uri = g_strdup_printf ("rtsp://%s:%u/%s", url->host, url->port,
-        url->abspath);
+    uri = g_strdup_printf ("rtsp://%s:%u/%s%s%s", url->host, url->port,
+        url->abspath, url->query ? "?" : "", url->query ? url->query : "");
   } else {
-    uri = g_strdup_printf ("rtsp://%s/%s", url->host, url->abspath);
+    uri = g_strdup_printf ("rtsp://%s/%s%s%s", url->host, url->abspath,
+        url->query ? "?" : "", url->query ? url->query : "");
   }
 
   return uri;
