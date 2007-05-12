@@ -1,3 +1,21 @@
+2007-05-12  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst/rtsp/rtsptransport.c: (rtsp_transport_init), (parse_mode),
+	(parse_range), (range_as_text), (rtsp_transport_mode_as_text),
+	(rtsp_transport_profile_as_text), (rtsp_transport_ltrans_as_text),
+	(rtsp_transport_parse), (rtsp_transport_as_text):
+	* gst/rtsp/rtsptransport.h:
+	Add validation to rtsp_transport_parse().
+	Add rtsp_transport_as_text() to generate an RTSP header from an
+	RTSPTransport.
+	Change ssrc to guint (was a string) since that is what it is, even
+	though it is sent as a hex string.
+	Correctly identify PLAY|RECORD mode parameters (the syntax in the RFC is
+	incorrect, which can be seen when looking at the examples in the RFC).
+	Fixes #437670.
+
 2007-05-11  Zaheer Abbas Merali  <<zaheerabbas at merali dot org>>
 
 	Patch by: Eric Anholt

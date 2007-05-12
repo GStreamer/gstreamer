@@ -117,28 +117,29 @@ typedef struct _RTSPTransport {
 
   gchar         *destination;
   gchar         *source;
-  gint           layers;
+  guint          layers;
   gboolean       mode_play;
   gboolean       mode_record;
   gboolean       append;
   RTSPRange      interleaved;
 
   /* multicast specific */
-  gint  ttl;
+  guint  ttl;
 
   /* UDP specific */
   RTSPRange      port;
   RTSPRange      client_port;
   RTSPRange      server_port;
   /* RTP specific */
-  gchar         *ssrc;
-  
+  guint          ssrc;
+
 } RTSPTransport;
 
 RTSPResult      rtsp_transport_new          (RTSPTransport **transport);
 RTSPResult      rtsp_transport_init         (RTSPTransport *transport);
 
 RTSPResult      rtsp_transport_parse        (const gchar *str, RTSPTransport *transport);
+gchar          *rtsp_transport_as_text      (RTSPTransport *transport);
 
 RTSPResult      rtsp_transport_get_mime     (RTSPTransMode trans, const gchar **mime);
 RTSPResult      rtsp_transport_get_manager  (RTSPTransMode trans, const gchar **manager, guint option);
