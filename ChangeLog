@@ -1,5 +1,12 @@
 2007-05-12  Wim Taymans  <wim@fluendo.com>
 
+	* tools/gst-launch.c: (event_loop):
+	Give more interesting info when buffering starts and stops.
+	Fix case where buffering starts but we fail to update the buffering flag
+	because the target state is not PLAYING.
+
+2007-05-12  Wim Taymans  <wim@fluendo.com>
+
 	* plugins/elements/gstqueue.c: (gst_queue_init),
 	(gst_queue_finalize), (update_time_level), (apply_segment),
 	(apply_buffer), (gst_queue_locked_flush),

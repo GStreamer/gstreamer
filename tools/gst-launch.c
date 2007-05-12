@@ -482,8 +482,11 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         /* ignore when we are buffering since then we mess with the states
          * ourselves. */
-        if (buffering)
+        if (buffering) {
+          fprintf (stderr,
+              _("Prerolled, waiting for buffering to finish...\n"));
           break;
+        }
 
         /* if we reached the final target state, exit */
         if (target_state == GST_STATE_PAUSED && new == target_state)
@@ -503,7 +506,8 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           buffering = FALSE;
           /* if the desired state is playing, go back */
           if (target_state == GST_STATE_PLAYING) {
-            fprintf (stderr, _("Setting pipeline to PLAYING ...\n"));
+            fprintf (stderr,
+                _("Done buffering, setting pipeline to PLAYING ...\n"));
             gst_element_set_state (pipeline, GST_STATE_PLAYING);
           } else
             goto exit;
@@ -511,10 +515,10 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           /* buffering busy */
           if (buffering == FALSE && target_state == GST_STATE_PLAYING) {
             /* we were not buffering but PLAYING, PAUSE  the pipeline. */
-            fprintf (stderr, _("Setting pipeline to PAUSED ...\n"));
+            fprintf (stderr, _("Buffering, setting pipeline to PAUSED ...\n"));
             gst_element_set_state (pipeline, GST_STATE_PAUSED);
-            buffering = TRUE;
           }
+          buffering = TRUE;
         }
         break;
       }
