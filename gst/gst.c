@@ -154,8 +154,10 @@ static gboolean init_pre (GOptionContext * context, GOptionGroup * group,
     gpointer data, GError ** error);
 static gboolean init_post (GOptionContext * context, GOptionGroup * group,
     gpointer data, GError ** error);
+#ifndef GST_DISABLE_OPTION_PARSING
 static gboolean parse_goption_arg (const gchar * s_opt,
     const gchar * arg, gpointer data, GError ** err);
+#endif
 
 static GSList *preload_plugins = NULL;
 
@@ -292,6 +294,7 @@ parse_debug_list (const gchar * list)
 GOptionGroup *
 gst_init_get_option_group (void)
 {
+#ifndef GST_DISABLE_OPTION_PARSING
   GOptionGroup *group;
   const static GOptionEntry gst_args[] = {
     {"gst-version", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
@@ -368,6 +371,9 @@ gst_init_get_option_group (void)
   g_option_group_set_translation_domain (group, GETTEXT_PACKAGE);
 
   return group;
+#else
+  return NULL;
+#endif
 }
 
 /**
@@ -392,8 +398,10 @@ gst_init_get_option_group (void)
 gboolean
 gst_init_check (int *argc, char **argv[], GError ** err)
 {
+#ifndef GST_DISABLE_OPTION_PARSING
   GOptionGroup *group;
   GOptionContext *ctx;
+#endif
   gboolean res;
 
   if (!g_thread_supported ())
@@ -405,13 +413,18 @@ gst_init_check (int *argc, char **argv[], GError ** err)
     GST_DEBUG ("already initialized gst");
     return TRUE;
   }
-
+#ifndef GST_DISABLE_OPTION_PARSING
   ctx = g_option_context_new ("- GStreamer initialization");
   g_option_context_set_ignore_unknown_options (ctx, TRUE);
   group = gst_init_get_option_group ();
   g_option_context_add_group (ctx, group);
   res = g_option_context_parse (ctx, argc, argv, err);
   g_option_context_free (ctx);
+#else
+  init_pre (NULL, NULL, NULL, NULL);
+  init_post (NULL, NULL, NULL, NULL);
+  res = TRUE;
+#endif
 
   gst_initialized = res;
 
@@ -471,11 +484,13 @@ add_path_func (gpointer data, gpointer user_data)
 }
 #endif
 
+#ifndef GST_DISABLE_OPTION_PARSING
 static void
 prepare_for_load_plugin_func (gpointer data, gpointer user_data)
 {
   preload_plugins = g_slist_prepend (preload_plugins, g_strdup (data));
 }
+#endif
 
 static void
 load_plugin_func (gpointer data, gpointer user_data)
@@ -503,6 +518,7 @@ load_plugin_func (gpointer data, gpointer user_data)
   }
 }
 
+#ifndef GST_DISABLE_OPTION_PARSING
 static void
 split_and_iterate (const gchar * stringlist, gchar * separator, GFunc iterator,
     gpointer user_data)
@@ -527,6 +543,7 @@ split_and_iterate (const gchar * stringlist, gchar * separator, GFunc iterator,
     g_strfreev (strings);
   }
 }
+#endif
 
 /* we have no fail cases yet, but maybe in the future */
 static gboolean
@@ -1058,6 +1075,7 @@ gst_debug_help (void)
 }
 #endif
 
+#ifndef GST_DISABLE_OPTION_PARSING
 static gboolean
 parse_one_option (gint opt, const gchar * arg, GError ** err)
 {
@@ -1160,6 +1178,7 @@ parse_goption_arg (const gchar * opt,
 
   return parse_one_option (val, arg, err);
 }
+#endif
 
 extern GstRegistry *_gst_registry_default;
 

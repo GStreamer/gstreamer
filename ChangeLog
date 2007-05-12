@@ -1,3 +1,12 @@
+2007-05-12  David Schleef  <ds@schleef.org>
+
+	* gst/gst.c:
+	  Add GST_DISABLE_OPTION_PARSING, in order to disable option
+	  parsing for embedded systems.
+	* gst/gstelementfactory.c:
+	  Allow gst_element_register() to be called with plugin==NULL.
+	  Did nobody notice that static elements were broken?
+
 2007-05-12  Wim Taymans  <wim@fluendo.com>
 
 	* tools/gst-launch.c: (event_loop):
