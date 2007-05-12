@@ -1023,7 +1023,8 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
     /* check if complete chain has start time */
     if (chain == ogg->building_chain) {
 
-      /* see if we have enough info to activate the chain */
+      /* see if we have enough info to activate the chain, we have enough info
+       * when all streams have a valid start time. */
       if (gst_ogg_demux_collect_chain_info (ogg, chain)) {
         GstEvent *event;
         GstClockTime segment_start, segment_stop, segment_time;
@@ -2564,10 +2565,12 @@ gst_ogg_demux_find_chain (GstOggDemux * ogg, int serialno)
   return NULL;
 }
 
+/* returns TRUE if all streams have valid start time */
 static gboolean
 gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
 {
   gint i;
+  gboolean res = TRUE;
 
   chain->total_time = GST_CLOCK_TIME_NONE;
   chain->segment_start = G_MAXINT64;
@@ -2580,25 +2583,16 @@ gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
 
     /*  can do this if the pad start time is not defined */
     if (pad->start_time == GST_CLOCK_TIME_NONE)
-      goto no_start_time;
-
-    chain->segment_start = MIN (chain->segment_start, pad->start_time);
+      res = FALSE;
+    else
+      chain->segment_start = MIN (chain->segment_start, pad->start_time);
   }
 
-  if (chain->segment_stop != GST_CLOCK_TIME_NONE)
+  if (chain->segment_stop != GST_CLOCK_TIME_NONE
+      && chain->segment_start != G_MAXINT64)
     chain->total_time = chain->segment_stop - chain->segment_start;
 
-  return TRUE;
-
-  /* ERROR */
-no_start_time:
-  {
-    chain->total_time = GST_CLOCK_TIME_NONE;
-    chain->segment_start = GST_CLOCK_TIME_NONE;
-    chain->segment_stop = GST_CLOCK_TIME_NONE;
-    chain->begin_time = GST_CLOCK_TIME_NONE;
-    return FALSE;
-  }
+  return res;
 }
 
 static void

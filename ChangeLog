@@ -1,3 +1,10 @@
+2007-05-12  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_collect_chain_info):
+	If there is a stream in a chain without any data packets, ignore the
+	stream in the total length calculations. Might be related to #436820.
+
 2007-05-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/typefind/gsttypefindfunctions.c: (mpeg_sys_is_valid_pack),
