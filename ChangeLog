@@ -2,6 +2,28 @@
 
 	Patch by: Peter Kjellerstedt  <pkj at axis com>
 
+	* gst/rtsp/gstrtspsrc.h:
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_receive):
+	* gst/rtsp/rtspmessage.c: (rtsp_message_init_data),
+	(rtsp_message_get_header):
+	* gst/rtsp/rtspmessage.h:
+	Make channel guint8 where possible.
+	Make rtsp_message_init_data() take the channel as a guint8.
+
+	* gst/rtsp/rtspdefs.c:
+	Fixed a typo: Timout -> Timeout
+
+	* gst/rtsp/rtspdefs.h:
+	Make RTSP_CHECK() behave as a statement.
+
+	* gst/rtsp/sdpmessage.c:
+	Avoid a compiler warning in INIT_ARRAY().
+	Fixes #437692.
+
+2007-05-12  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
 	* gst/rtsp/rtspurl.c: (rtsp_url_parse), (rtsp_url_free),
 	(rtsp_url_get_request_uri):
 	* gst/rtsp/rtspurl.h:

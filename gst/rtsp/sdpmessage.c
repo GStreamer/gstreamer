@@ -60,7 +60,7 @@ G_STMT_START {                  \
 #define INIT_ARRAY(field,type,init_func)  		\
 G_STMT_START {                   			\
   if (field) {                   			\
-    gint i;			 			\
+    guint i;			 			\
     for(i=0; i<field->len; i++)				\
       init_func (&g_array_index(field, type, i));	\
     g_array_set_size (field,0); 			\

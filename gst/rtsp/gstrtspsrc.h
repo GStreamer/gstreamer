@@ -90,7 +90,7 @@ struct _GstRTSPStream {
   gboolean      added;
 
   /* for interleaved mode */
-  gint          channel[2];
+  guint8        channel[2];
   GstCaps      *caps;
   GstPad       *channelpad[2];
 

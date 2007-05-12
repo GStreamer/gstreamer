@@ -48,7 +48,10 @@
 G_BEGIN_DECLS
 
 #define RTSP_CHECK(stmt, label)  \
-if (G_UNLIKELY ((res = (stmt)) != RTSP_OK)) goto label
+G_STMT_START { \
+  if (G_UNLIKELY ((res = (stmt)) != RTSP_OK)) \
+    goto label; \
+} G_STMT_END
 
 typedef enum {
   RTSP_OK          =  0,

@@ -167,7 +167,7 @@ rtsp_message_init_response (RTSPMessage * msg, RTSPStatusCode code,
 }
 
 RTSPResult
-rtsp_message_init_data (RTSPMessage * msg, gint channel)
+rtsp_message_init_data (RTSPMessage * msg, guint8 channel)
 {
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
@@ -255,7 +255,7 @@ rtsp_message_get_header (const RTSPMessage * msg, RTSPHeaderField field,
 
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
-  if (msg->type != RTSP_MESSAGE_RESPONSE && msg->type != RTSP_MESSAGE_REQUEST)
+  if (msg->type == RTSP_MESSAGE_INVALID || msg->type == RTSP_MESSAGE_DATA)
     return RTSP_ENOTIMPL;
 
   val = g_hash_table_lookup (msg->hdr_fields, GINT_TO_POINTER (field));

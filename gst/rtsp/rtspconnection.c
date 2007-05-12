@@ -767,7 +767,7 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg,
       RTSP_CHECK (rtsp_connection_read (conn, &c, 1, timeout), read_error);
 
       /* now we create a data message */
-      rtsp_message_init_data (msg, (gint) c);
+      rtsp_message_init_data (msg, c);
 
       /* next two bytes are the length of the data */
       RTSP_CHECK (rtsp_connection_read (conn, (guint8 *) & size, 2, timeout),

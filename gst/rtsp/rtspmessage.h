@@ -71,7 +71,7 @@ typedef struct _RTSPMessage
       gchar             *reason;
     } response;
     struct {
-      gint               channel;
+      guint8             channel;
     } data;
   } type_data;
 
@@ -102,7 +102,7 @@ RTSPResult      rtsp_message_init_response      (RTSPMessage *msg,
                                                  const RTSPMessage *request);
 
 RTSPResult      rtsp_message_init_data          (RTSPMessage *msg,
-                                                 gint channel);
+                                                 guint8 channel);
 
 RTSPResult      rtsp_message_unset              (RTSPMessage *msg);
 RTSPResult      rtsp_message_free               (RTSPMessage *msg);
