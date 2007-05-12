@@ -63,6 +63,12 @@ struct _GstQueueSize {
     guint64 time;
 };
 
+#define GST_QUEUE_CLEAR_LEVEL(l) G_STMT_START {         \
+  l.buffers = 0;                                        \
+  l.bytes = 0;                                          \
+  l.time = 0;                                           \
+} G_STMT_END
+
 /**
  * GstQueue:
  *

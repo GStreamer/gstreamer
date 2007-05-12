@@ -1,3 +1,21 @@
+2007-05-12  Wim Taymans  <wim@fluendo.com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_init),
+	(gst_queue_finalize), (update_time_level), (apply_segment),
+	(apply_buffer), (gst_queue_locked_flush),
+	(gst_queue_locked_enqueue), (gst_queue_locked_dequeue),
+	(gst_queue_handle_sink_event), (gst_queue_chain),
+	(gst_queue_push_one), (gst_queue_loop):
+	* plugins/elements/gstqueue.h:
+	Refactor an cleanup queue a bit.
+	Do better time level calculations that also work when the srcpad is not
+	yet running.
+	Remove some unneeded debug lines.
+
+	* tests/check/elements/queue.c: (GST_START_TEST), (queue_suite):
+	Added testcase for time level measurement.
+	Try to make some stuff more racefree.
+
 2007-05-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gsturi.c: (gst_element_make_from_uri):

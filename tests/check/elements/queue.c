@@ -100,11 +100,10 @@ GST_START_TEST (test_non_leaky_underrun)
 
   GST_DEBUG ("starting");
 
+  g_mutex_lock (check_mutex);
   fail_unless (gst_element_set_state (queue,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
-
-  g_mutex_lock (check_mutex);
   g_cond_wait (check_cond, check_mutex);
   g_mutex_unlock (check_mutex);
 
@@ -231,10 +230,9 @@ GST_START_TEST (test_leaky_upstream)
   /* pushing gives away my reference ... */
   gst_pad_push (mysrcpad, gst_buffer_ref (buffer3));
 
+  g_mutex_lock (check_mutex);
   /* start the src-task briefly leak buffer3 */
   gst_pad_set_active (mysinkpad, TRUE);
-
-  g_mutex_lock (check_mutex);
   g_cond_wait (check_cond, check_mutex);
   g_mutex_unlock (check_mutex);
 
@@ -301,10 +299,9 @@ GST_START_TEST (test_leaky_downstream)
   /* pushing gives away my reference ... */
   gst_pad_push (mysrcpad, buffer3);
 
+  g_mutex_lock (check_mutex);
   /* start the src-task briefly and leak buffer1 */
   gst_pad_set_active (mysinkpad, TRUE);
-
-  g_mutex_lock (check_mutex);
   g_cond_wait (check_cond, check_mutex);
   g_mutex_unlock (check_mutex);
 
@@ -330,6 +327,110 @@ GST_START_TEST (test_leaky_downstream)
 
 GST_END_TEST;
 
+/* set queue size to 5 buffers
+ * pull 1 buffer
+ * check over/underuns
+ */
+GST_START_TEST (test_time_level)
+{
+  GstElement *queue;
+  GstBuffer *buffer = NULL;
+  GstClockTime time;
+
+  queue = setup_queue ();
+  mysrcpad = gst_check_setup_src_pad (queue, &srctemplate, NULL);
+  mysinkpad = gst_check_setup_sink_pad (queue, &sinktemplate, NULL);
+  g_object_set (G_OBJECT (queue), "max-size-buffers", 6, NULL);
+  g_object_set (G_OBJECT (queue), "max-size-time", 10 * GST_SECOND, NULL);
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  GST_DEBUG ("starting");
+
+  fail_unless (gst_element_set_state (queue,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  /* push buffer without duration */
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = GST_SECOND;
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, buffer);
+
+  /* level should be 1 seconds because buffer has no duration and starts at 1
+   * SECOND (sparse stream). */
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_if (time != GST_SECOND);
+
+  /* second push should set the level to 2 second */
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, buffer);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_if (time != 2 * GST_SECOND);
+
+  /* third push should set the level to 4 seconds, the 1 second diff with the
+   * previous buffer (without duration) and the 1 second duration of this
+   * buffer. */
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 3 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, buffer);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_if (time != 4 * GST_SECOND);
+
+  /* fourth push should set the level to 6 seconds, the 2 second diff with the
+   * previous buffer, same duration. */
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 5 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, buffer);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_if (time != 6 * GST_SECOND);
+
+  /* fifth push should not adjust the level, the timestamp and duration are the
+   * same, meaning the previous buffer did not really have a duration. */
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 5 * GST_SECOND;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, buffer);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_if (time != 6 * GST_SECOND);
+
+  /* sixth push should adjust the level with 1 second, we now know the
+   * previous buffer actually had a duration of 2 SECONDS */
+  buffer = gst_buffer_new_and_alloc (4);
+  GST_BUFFER_TIMESTAMP (buffer) = 7 * GST_SECOND;
+  ASSERT_BUFFER_REFCOUNT (buffer, "buffer", 1);
+  /* pushing gives away my reference ... */
+  gst_pad_push (mysrcpad, buffer);
+
+  g_object_get (G_OBJECT (queue), "current-level-time", &time, NULL);
+  fail_if (time != 7 * GST_SECOND);
+
+  GST_DEBUG ("stopping");
+
+  /* cleanup */
+  gst_pad_set_active (mysinkpad, FALSE);
+  gst_check_teardown_sink_pad (queue);
+  cleanup_queue (queue);
+}
+
+GST_END_TEST;
+
 Suite *
 queue_suite (void)
 {
@@ -341,6 +442,7 @@ queue_suite (void)
   tcase_add_test (tc_chain, test_non_leaky_overrun);
   tcase_add_test (tc_chain, test_leaky_upstream);
   tcase_add_test (tc_chain, test_leaky_downstream);
+  tcase_add_test (tc_chain, test_time_level);
 
   return s;
 }
