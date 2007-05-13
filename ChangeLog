@@ -1,5 +1,12 @@
 2007-05-13  David Schleef  <ds@schleef.org>
 
+	* docs/Makefile.am: the gtk-doc makefile snippet correctly
+	  handles the case when ENABLE_GTK_DOC is false, and installs
+	  the prebuilt documentation.  So gtk-doc subdirs are 
+	  unconditionally enabled.  Fixes: #349099.
+
+2007-05-13  David Schleef  <ds@schleef.org>
+
 	* gst/gstutils.h: Reword some documentation.
 
 2007-05-12  David Schleef  <ds@schleef.org>

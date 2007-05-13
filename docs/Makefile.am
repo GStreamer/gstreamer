@@ -1,15 +1,3 @@
-if ENABLE_GTK_DOC
-SUBDIRS_GTK_DOC = gst libs
-else
-SUBDIRS_GTK_DOC =
-endif
-
-if ENABLE_PLUGIN_DOCS
-SUBDIRS_PLUGIN_DOCS = plugins
-else
-SUBDIRS_PLUGIN_DOCS =
-endif
-
 if ENABLE_DOCBOOK
 SUBDIRS_DOCBOOK = faq manual pwg
 else
@@ -18,7 +6,7 @@ endif
 
 BUILT_SOURCES = version.entities
 
-SUBDIRS = design $(SUBDIRS_DOCBOOK) $(SUBDIRS_GTK_DOC) $(SUBDIRS_PLUGIN_DOCS)
+SUBDIRS = design gst libs plugins $(SUBDIRS_DOCBOOK)
 DIST_SUBDIRS = design gst libs plugins faq manual pwg slides xsl
 
 EXTRA_DIST = \
