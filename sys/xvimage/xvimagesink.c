@@ -543,6 +543,8 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
 
 #ifdef HAVE_XSHM
   if (xvimagesink->xcontext->use_xshm) {
+    int expected_size;
+
     xvimage->xvimage = XvShmCreateImage (xvimagesink->xcontext->disp,
         xvimagesink->xcontext->xv_port_id,
         xvimage->im_format, NULL,
@@ -565,6 +567,31 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
     xvimage->size = xvimage->xvimage->data_size;
     GST_LOG_OBJECT (xvimagesink, "XShm image size is %" G_GSIZE_FORMAT,
         xvimage->size);
+
+    /* calculate the expected size.  This is only for sanity checking the
+     * number we get from X. */
+    switch (xvimagesink->xcontext->im_format) {
+      case GST_MAKE_FOURCC ('I', '4', '2', '0'):
+        expected_size =
+            GST_ROUND_UP_2 (xvimage->height) * GST_ROUND_UP_4 (xvimage->width);
+        expected_size +=
+            GST_ROUND_UP_2 (xvimage->height) * GST_ROUND_UP_8 (xvimage->width) /
+            2;
+        break;
+      case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
+      case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
+      case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
+        expected_size = xvimage->height * GST_ROUND_UP_4 (xvimage->width * 2);
+        break;
+      default:
+        expected_size = 0;
+        break;
+    }
+    if (expected_size != 0 && xvimage->size != expected_size) {
+      GST_WARNING_OBJECT (xvimagesink,
+          "unexpected XShm image size (got %" G_GSIZE_FORMAT ", expected %d)",
+          xvimage->size, expected_size);
+    }
 
     xvimage->SHMInfo.shmid = shmget (IPC_PRIVATE, xvimage->size,
         IPC_CREAT | 0777);

@@ -1,3 +1,9 @@
+2007-05-12  David Schleef  <ds@schleef.org>
+
+	* sys/xvimage/xvimagesink.c:
+	  Add some sanity checking for the XVImage size returned by X.
+	  Related to #377400.
+
 2007-05-12  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
