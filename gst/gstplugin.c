@@ -74,8 +74,8 @@
 
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
 
-static GModule *main_module = NULL;
 static GList *_gst_plugin_static = NULL;
+static gboolean _gst_plugin_inited;
 
 /* static variables for segfault handling of plugin loading */
 static char *_gst_plugin_fault_handler_filename = NULL;
@@ -107,7 +107,7 @@ static const gchar *valid_licenses[] = {
 };
 
 static GstPlugin *gst_plugin_register_func (GstPlugin * plugin,
-    GModule * module, GstPluginDesc * desc);
+    GstPluginDesc * desc);
 static void
 gst_plugin_desc_copy (GstPluginDesc * dest, const GstPluginDesc * src);
 static void gst_plugin_desc_free (GstPluginDesc * desc);
@@ -166,7 +166,7 @@ gst_plugin_error_quark (void)
 void
 _gst_plugin_register_static (GstPluginDesc * desc)
 {
-  if (main_module == NULL) {
+  if (!_gst_plugin_inited) {
     if (GST_CAT_DEFAULT)
       GST_LOG ("queueing static plugin \"%s\" for loading later on",
           desc->name);
@@ -177,7 +177,7 @@ _gst_plugin_register_static (GstPluginDesc * desc)
     if (GST_CAT_DEFAULT)
       GST_LOG ("attempting to load static plugin \"%s\" now...", desc->name);
     plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
-    if (gst_plugin_register_func (plugin, main_module, desc)) {
+    if (gst_plugin_register_func (plugin, desc)) {
       if (GST_CAT_DEFAULT)
         GST_INFO ("loaded static plugin \"%s\"", desc->name);
       gst_default_registry_add_plugin (plugin);
@@ -188,7 +188,7 @@ _gst_plugin_register_static (GstPluginDesc * desc)
 void
 _gst_plugin_initialize (void)
 {
-  main_module = g_module_open (NULL, G_MODULE_BIND_LAZY);
+  _gst_plugin_inited = TRUE;
 
   /* now register all static plugins */
   g_list_foreach (_gst_plugin_static, (GFunc) _gst_plugin_register_static,
@@ -226,8 +226,7 @@ gst_plugin_check_version (gint major, gint minor)
 }
 
 static GstPlugin *
-gst_plugin_register_func (GstPlugin * plugin, GModule * module,
-    GstPluginDesc * desc)
+gst_plugin_register_func (GstPlugin * plugin, GstPluginDesc * desc)
 {
   if (!gst_plugin_check_version (desc->major_version, desc->minor_version)) {
     if (GST_CAT_DEFAULT)
@@ -452,7 +451,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
   GST_LOG ("Plugin %p for file \"%s\" prepared, registering...",
       plugin, filename);
 
-  if (!gst_plugin_register_func (plugin, module, plugin->orig_desc)) {
+  if (!gst_plugin_register_func (plugin, plugin->orig_desc)) {
     /* remove signal handler */
     _gst_plugin_fault_handler_restore ();
     GST_DEBUG ("gst_plugin_register_func failed for plugin \"%s\"", filename);

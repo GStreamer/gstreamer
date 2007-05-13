@@ -1,5 +1,11 @@
 2007-05-12  David Schleef  <ds@schleef.org>
 
+	* gst/gstplugin.c: gst_plugin_register_func() doesn't actually
+	  do anything with the passed "module" parameter, so remove it.
+	  Allows removal of additional vestigal code.
+
+2007-05-12  David Schleef  <ds@schleef.org>
+
 	* gst/gstplugin.c:
 	  Using sigaction should depend on HAVE_SIGACTION, not HAVE_WIN32.
 	  Switch to using g_stat() because it's more portable.
