@@ -115,8 +115,10 @@ struct _RgAnalysisCtx
  * loudness filter.  XFilter[ctx->sample_rate_index] gives the array
  * of the X coefficients (A or B) for the configured sample rate. */
 
-#ifdef G_OS_WIN32
+#ifdef _MSC_VER
 /* Disable double-to-float warning: */
+/* A better solution would be to append 'f' to each constant, but that
+ * makes the code ugly. */
 #pragma warning ( disable : 4305 )
 #endif
 
@@ -213,7 +215,7 @@ static const gfloat BButter[9][3] = {
   {0.94597685600279, -1.89195371200558, 0.94597685600279}
 };
 
-#ifdef G_OS_WIN32
+#ifdef _MSC_VER
 #pragma warning ( default : 4305 )
 #endif
 
