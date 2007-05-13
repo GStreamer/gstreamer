@@ -204,7 +204,7 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
       (gobject_class, PROP_NEON_HTTP_REDIRECT,
       g_param_spec_boolean ("automatic-redirect", "automatic-redirect",
           "Enable Neon HTTP Redirects (HTTP Status Code 302)",
-          FALSE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE));
 
 #ifndef GST_DISABLE_GST_DEBUG
   g_object_class_install_property
@@ -254,6 +254,7 @@ gst_neonhttp_src_init (GstNeonhttpSrc * src, GstNeonhttpSrcClass * g_class)
   src->icy_metaint = 0;
   src->user_agent = g_strdup ("neonhttpsrc");
   src->seekable = TRUE;
+  src->neon_http_redirect = TRUE;
 }
 
 static void

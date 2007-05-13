@@ -1,3 +1,8 @@
+2007-05-12  David Schleef  <ds@schleef.org>
+
+	* ext/neon/gstneonhttpsrc.c:
+	  Make redirection the default behavior.  Fixes #413818.
+
 2007-05-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/qtdemux/qtdemux.c (gst_qtdemux_move_stream,
