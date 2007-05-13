@@ -97,6 +97,11 @@
 
 	* gst/rtsp/rtsptransport.c:
 	UDP MCAST is actually the default for RTP/AVP.
+2007-05-13  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/level/gstlevel.c: (gst_level_transform_ip):
+	Use guint8 * instead of gpointer then vs6 can build 
+	in_data += (filter->width / 8).
 
 2007-05-11  Zaheer Abbas Merali  <<zaheerabbas at merali dot org>>
 

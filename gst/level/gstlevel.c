@@ -534,7 +534,7 @@ static GstFlowReturn
 gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 {
   GstLevel *filter;
-  gpointer in_data;
+  guint8 *in_data;
   double CS = 0.0;
   guint num_frames = 0;
   guint num_int_samples = 0;    /* number of interleaved samples
