@@ -1,3 +1,7 @@
+2007-05-13  David Schleef  <ds@schleef.org>
+
+	* gst/gstutils.h: Reword some documentation.
+
 2007-05-12  David Schleef  <ds@schleef.org>
 
 	* gst/gstplugin.c: gst_plugin_register_func() doesn't actually
