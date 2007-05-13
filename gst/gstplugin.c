@@ -51,8 +51,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <glib/gstdio.h>
 #include <sys/types.h>
-#include <sys/stat.h>
 #ifdef HAVE_DIRENT_H
 #include <dirent.h>
 #endif
@@ -269,7 +269,7 @@ gst_plugin_register_func (GstPlugin * plugin, GModule * module,
   return plugin;
 }
 
-#ifndef HAVE_WIN32
+#ifdef HAVE_SIGACTION
 static struct sigaction oldaction;
 
 /*
@@ -399,7 +399,7 @@ gst_plugin_load_file (const gchar * filename, GError ** error)
     goto return_error;
   }
 
-  if (stat (filename, &file_status)) {
+  if (g_stat (filename, &file_status)) {
     GST_CAT_DEBUG (GST_CAT_PLUGIN_LOADING, "problem accessing file");
     g_set_error (error,
         GST_PLUGIN_ERROR,
