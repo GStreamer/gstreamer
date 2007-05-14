@@ -1,5 +1,12 @@
 2007-05-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send):
+	When we try to execute a method that is not supported by the server,
+	don't error out but remove the method from the accepted methods so that
+	we never try to perform this method again.
+
+2007-05-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtp/gstrtpvorbisdepay.c: (gst_rtp_vorbis_depay_process):
 	Remove annoying _dump_mem.
 

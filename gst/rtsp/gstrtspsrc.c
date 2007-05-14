@@ -2772,9 +2772,14 @@ gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
   RTSPStatusCode int_code = RTSP_STS_OK;
   RTSPResult res;
   gboolean retry;
+  RTSPMethod method;
 
   do {
     retry = FALSE;
+
+    /* save method so we can disable it when the server complains */
+    method = request->type_data.request.method;
+
     if ((res = gst_rtspsrc_try_send (src, request, response, &int_code)) < 0)
       goto error;
 
@@ -2804,10 +2809,19 @@ error:
   }
 error_response:
   {
+    res = RTSP_ERROR;
+
     switch (response->type_data.response.code) {
       case RTSP_STS_NOT_FOUND:
         GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), ("%s",
                 response->type_data.response.reason));
+        break;
+      case RTSP_STS_NOT_ACCEPTABLE:
+      case RTSP_STS_NOT_IMPLEMENTED:
+        GST_WARNING_OBJECT (src, "got NOT IMPLEMENTED, disable method %s",
+            rtsp_method_as_text (method));
+        src->methods &= ~method;
+        res = RTSP_OK;
         break;
       default:
         GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
@@ -2817,7 +2831,7 @@ error_response:
     }
     /* we return FALSE so we should unset the response ourselves */
     rtsp_message_unset (response);
-    return RTSP_ERROR;
+    return res;
   }
 }
 
