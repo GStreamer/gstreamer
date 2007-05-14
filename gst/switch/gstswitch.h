@@ -43,7 +43,8 @@ struct _GstSwitch {
   
   GstPad *active_sinkpad;
   GstPad *srcpad;
-  
+  GstPad *previous_sinkpad;
+
   guint nb_sinkpads;
   /* this hash table stores for key of the pad pointer
    * the last new segment event received for this pad
@@ -53,6 +54,9 @@ struct _GstSwitch {
   /* flag to decide whether we need to send a new segment event
    * before we receive the next buffer */
   gboolean need_to_send_newsegment;
+  GstClockTime stop_value;
+  GstClockTime current_start;
+  GstClockTime last_ts;
 };
 
 struct _GstSwitchClass {

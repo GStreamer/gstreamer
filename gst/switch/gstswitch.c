@@ -48,7 +48,9 @@ enum
 {
   ARG_0,
   ARG_NB_SOURCES,
-  ARG_ACTIVE_SOURCE
+  ARG_ACTIVE_SOURCE,
+  ARG_STOP_VALUE,
+  ARG_LAST_TS
 };
 
 GST_DEBUG_CATEGORY_STATIC (switch_debug);
@@ -193,6 +195,31 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
   /* check if we need to send a new segment event */
   GST_OBJECT_LOCK (gstswitch);
   if (gstswitch->need_to_send_newsegment) {
+    /* check to see if we need to send a new segment update for stop */
+    if (gstswitch->previous_sinkpad != NULL) {
+      if (gstswitch->stop_value != GST_CLOCK_TIME_NONE &&
+          gstswitch->stop_value > gstswitch->last_ts) {
+        GstEvent *prev_newsegment =
+            (GstEvent *) g_hash_table_lookup (gstswitch->newsegment_events,
+            gstswitch->previous_sinkpad);
+        if (prev_newsegment) {
+          /* need to send a new segment update changing stop */
+          gboolean update;
+          gdouble rate, applied_rate;
+          GstFormat format;
+          gint64 start, stop, position;
+
+          gst_event_parse_new_segment_full (prev_newsegment, &update, &rate,
+              &applied_rate, &format, &start, &stop, &position);
+          gst_pad_push_event (gstswitch->srcpad,
+              gst_event_new_new_segment_full (TRUE, rate, applied_rate,
+                  format, gstswitch->current_start, gstswitch->stop_value,
+                  position));
+        }
+      }
+      gst_object_unref (GST_OBJECT (gstswitch->previous_sinkpad));
+      gstswitch->previous_sinkpad = NULL;
+    }
     /* retrieve event from hash table */
     GstEvent *event =
         (GstEvent *) g_hash_table_lookup (gstswitch->newsegment_events, pad);
@@ -207,14 +234,16 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &position);
       gst_pad_push_event (gstswitch->srcpad,
-          gst_event_new_new_segment_full (update, rate, applied_rate, format,
+          gst_event_new_new_segment_full (FALSE, rate, applied_rate, format,
               GST_BUFFER_TIMESTAMP (buf), stop, position));
       gstswitch->need_to_send_newsegment = FALSE;
+      gstswitch->current_start = GST_BUFFER_TIMESTAMP (buf);
       GST_DEBUG_OBJECT (gstswitch,
           "Sending new segment with start of %" G_GINT64_FORMAT,
           GST_BUFFER_TIMESTAMP (buf));
     }
   }
+  gstswitch->last_ts = GST_BUFFER_TIMESTAMP (buf);
   GST_OBJECT_UNLOCK (gstswitch);
   /* forward */
   GST_DEBUG_OBJECT (gstswitch, "Forwarding buffer %p from pad %s:%s",
@@ -238,10 +267,20 @@ gst_switch_event (GstPad * pad, GstEvent * event)
       /* need to put in or replace what's in hash table */
       g_hash_table_replace (gstswitch->newsegment_events, pad, event);
       if (pad == gstswitch->active_sinkpad) {
+        gboolean update;
+        gdouble rate, applied_rate;
+        GstFormat format;
+        gint64 start, stop, position;
+
+        gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+            &format, &start, &stop, &position);
+
         /* want to ref event because we have kept it */
         gst_event_ref (event);
         /* need to send it across if we are active pad */
+
         ret = gst_pad_push_event (gstswitch->srcpad, event);
+        gstswitch->current_start = start;
       }
       GST_OBJECT_UNLOCK (gstswitch);
       break;
@@ -287,6 +326,11 @@ gst_switch_set_property (GObject * object, guint prop_id,
         break;
       }
       active_pad_p = &gstswitch->active_sinkpad;
+      if (gstswitch->previous_sinkpad != NULL) {
+        gst_object_unref (GST_OBJECT (gstswitch->previous_sinkpad));
+      }
+      gstswitch->previous_sinkpad = gstswitch->active_sinkpad;
+      gst_object_ref (GST_OBJECT (gstswitch->previous_sinkpad));
       gst_object_replace ((GstObject **) active_pad_p, GST_OBJECT_CAST (pad));
       if (pad)
         gst_object_unref (pad);
@@ -294,6 +338,11 @@ gst_switch_set_property (GObject * object, guint prop_id,
       GST_DEBUG_OBJECT (gstswitch, "New active pad is %" GST_PTR_FORMAT,
           gstswitch->active_sinkpad);
       gstswitch->need_to_send_newsegment = TRUE;
+      GST_OBJECT_UNLOCK (object);
+      break;
+    case ARG_STOP_VALUE:
+      GST_OBJECT_LOCK (object);
+      gstswitch->stop_value = g_value_get_uint64 (value);
       GST_OBJECT_UNLOCK (object);
       break;
     default:
@@ -324,7 +373,19 @@ gst_switch_get_property (GObject * object, guint prop_id,
       GST_OBJECT_UNLOCK (object);
       break;
     case ARG_NB_SOURCES:
+      GST_OBJECT_LOCK (object);
       g_value_set_uint (value, gstswitch->nb_sinkpads);
+      GST_OBJECT_UNLOCK (object);
+      break;
+    case ARG_STOP_VALUE:
+      GST_OBJECT_LOCK (object);
+      g_value_set_uint64 (value, gstswitch->stop_value);
+      GST_OBJECT_UNLOCK (object);
+      break;
+    case ARG_LAST_TS:
+      GST_OBJECT_LOCK (object);
+      g_value_set_uint64 (value, gstswitch->last_ts);
+      GST_OBJECT_UNLOCK (object);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -451,6 +512,10 @@ gst_switch_dispose (GObject * object)
   if (gstswitch->newsegment_events) {
     g_hash_table_destroy (gstswitch->newsegment_events);
   }
+  if (gstswitch->previous_sinkpad) {
+    gst_object_unref (GST_OBJECT (gstswitch->previous_sinkpad));
+    gstswitch->previous_sinkpad = NULL;
+  }
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -465,10 +530,14 @@ gst_switch_init (GstSwitch * gstswitch)
   gst_element_add_pad (GST_ELEMENT (gstswitch), gstswitch->srcpad);
 
   gstswitch->active_sinkpad = NULL;
+  gstswitch->previous_sinkpad = NULL;
   gstswitch->nb_sinkpads = 0;
   gstswitch->newsegment_events = g_hash_table_new_full (g_direct_hash,
       g_direct_equal, NULL, (GDestroyNotify) gst_mini_object_unref);
   gstswitch->need_to_send_newsegment = FALSE;
+  gstswitch->stop_value = GST_CLOCK_TIME_NONE;
+  gstswitch->current_start = 0;
+  gstswitch->last_ts = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -508,6 +577,18 @@ gst_switch_class_init (GstSwitchClass * klass)
       g_param_spec_string ("active-pad",
           "Active Pad",
           "Name of the currently active sink pad", NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class,
+      ARG_STOP_VALUE,
+      g_param_spec_uint64 ("stop-value",
+          "Stop Value",
+          "Timestamp that current source will stop at",
+          0, G_MAXUINT64, GST_CLOCK_TIME_NONE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_LAST_TS,
+      g_param_spec_uint64 ("last-timestamp",
+          "Timestamp of last buffer sent",
+          "Timestamp of last buffer sent", 0, G_MAXUINT, 0, G_PARAM_READABLE));
 
   gobject_class->dispose = gst_switch_dispose;
 
