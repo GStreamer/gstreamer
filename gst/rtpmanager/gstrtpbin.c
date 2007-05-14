@@ -113,6 +113,7 @@ struct _GstRTPBinPrivate
 enum
 {
   SIGNAL_REQUEST_PT_MAP,
+  SIGNAL_CLEAR_PT_MAP,
   LAST_SIGNAL
 };
 
@@ -334,6 +335,22 @@ no_caps:
   }
 }
 
+static void
+gst_rtp_bin_clear_pt_map (GstRTPBin * bin)
+{
+  GSList *walk;
+
+  GST_RTP_BIN_LOCK (bin);
+  for (walk = bin->sessions; walk; walk = g_slist_next (walk)) {
+    GstRTPBinSession *session = (GstRTPBinSession *) walk->data;
+
+    GST_RTP_SESSION_LOCK (session);
+    g_hash_table_remove_all (session->ptmap);
+    GST_RTP_SESSION_UNLOCK (session);
+  }
+  GST_RTP_BIN_UNLOCK (bin);
+}
+
 /* create a new stream with @ssrc in @session. Must be called with
  * RTP_SESSION_LOCK. */
 static GstRTPBinStream *
@@ -412,6 +429,7 @@ static GstStateChangeReturn gst_rtp_bin_change_state (GstElement * element,
 static GstPad *gst_rtp_bin_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_rtp_bin_release_pad (GstElement * element, GstPad * pad);
+static void gst_rtp_bin_clear_pt_map (GstRTPBin * bin);
 
 GST_BOILERPLATE (GstRTPBin, gst_rtp_bin, GstBin, GST_TYPE_BIN);
 
@@ -473,12 +491,19 @@ gst_rtp_bin_class_init (GstRTPBinClass * klass)
       NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 2,
       G_TYPE_UINT, G_TYPE_UINT);
 
+  gst_rtp_bin_signals[SIGNAL_CLEAR_PT_MAP] =
+      g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, clear_pt_map),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_provide_clock);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_rtp_bin_release_pad);
+
+  klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_bin_clear_pt_map);
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_bin_debug, "rtpbin", 0, "RTP bin");
 }
