@@ -1,5 +1,10 @@
 2007-05-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtpvorbisdepay.c: (gst_rtp_vorbis_depay_process):
+	Remove annoying _dump_mem.
+
+2007-05-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_range):
 	Parse range correctly.
 

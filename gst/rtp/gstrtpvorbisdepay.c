@@ -481,8 +481,6 @@ gst_rtp_vorbis_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   payload = gst_rtp_buffer_get_payload (buf);
   free_payload = FALSE;
 
-  gst_util_dump_mem (GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
-
   header = GST_READ_UINT32_BE (payload);
   /*
    *  0                   1                   2                   3
