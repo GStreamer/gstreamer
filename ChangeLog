@@ -1,5 +1,13 @@
 2007-05-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_range):
+	Parse range correctly.
+
+	* gst/rtsp/rtspurl.c: (rtsp_url_get_request_uri):
+	The baseurl now always has a '/' at the start.
+
+2007-05-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_configure_caps),
 	(gst_rtspsrc_parse_range), (gst_rtspsrc_open),
 	(gst_rtspsrc_parse_rtpinfo), (gst_rtspsrc_play):

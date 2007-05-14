@@ -3228,13 +3228,28 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range)
   RTSPTimeRange *therange;
 
   if (rtsp_range_parse (range, &therange) == RTSP_OK) {
+    gint64 seconds;
+
     GST_DEBUG_OBJECT (src, "range: '%s', min %f - max %f ",
         GST_STR_NULL (range), therange->min.seconds, therange->max.seconds);
 
-    gst_segment_set_duration (&src->segment, GST_FORMAT_TIME,
-        therange->max.seconds * GST_SECOND);
-    gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME,
-        therange->min.seconds * GST_SECOND);
+    if (therange->min.type == RTSP_TIME_NOW)
+      seconds = 0;
+    else if (therange->min.type == RTSP_TIME_END)
+      seconds = 0;
+    else
+      seconds = therange->min.seconds * GST_SECOND;
+
+    gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME, seconds);
+
+    if (therange->max.type == RTSP_TIME_NOW)
+      seconds = -1;
+    else if (therange->max.type == RTSP_TIME_END)
+      seconds = -1;
+    else
+      seconds = therange->max.seconds * GST_SECOND;
+
+    gst_segment_set_duration (&src->segment, GST_FORMAT_TIME, seconds);
   }
 }
 

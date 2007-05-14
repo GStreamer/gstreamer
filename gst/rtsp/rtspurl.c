@@ -200,10 +200,10 @@ rtsp_url_get_request_uri (RTSPUrl * url)
   g_return_val_if_fail (url != NULL, NULL);
 
   if (url->port != 0) {
-    uri = g_strdup_printf ("rtsp://%s:%u/%s%s%s", url->host, url->port,
+    uri = g_strdup_printf ("rtsp://%s:%u%s%s%s", url->host, url->port,
         url->abspath, url->query ? "?" : "", url->query ? url->query : "");
   } else {
-    uri = g_strdup_printf ("rtsp://%s/%s%s%s", url->host, url->abspath,
+    uri = g_strdup_printf ("rtsp://%s%s%s%s", url->host, url->abspath,
         url->query ? "?" : "", url->query ? url->query : "");
   }
 
