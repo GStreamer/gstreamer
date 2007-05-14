@@ -1,5 +1,18 @@
 2007-05-14  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtptheoradepay.c: (decode_base64),
+	(gst_rtp_theora_depay_parse_configuration):
+	* gst/rtp/gstrtptheorapay.c: (encode_base64),
+	(gst_rtp_theora_pay_finish_headers),
+	(gst_rtp_theora_pay_handle_buffer):
+	Update theora pay/depayloader in a similar to vorbis.
+
+	* gst/rtp/gstrtpvorbisdepay.c:
+	(gst_rtp_vorbis_depay_parse_configuration):
+	Update docs.
+
+2007-05-14  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send):
 	When we try to execute a method that is not supported by the server,
 	don't error out but remove the method from the accepted methods so that

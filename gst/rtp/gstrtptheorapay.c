@@ -212,30 +212,45 @@ gst_rtp_theora_pay_flush_packet (GstRtpTheoraPay * rtptheorapay)
   return ret;
 }
 
+static gchar *
+encode_base64 (const guint8 * in, guint size, guint * len)
+{
+  gchar *ret, *d;
+  static const gchar *v =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+  *len = ((size + 2) / 3) * 4;
+  d = ret = (gchar *) g_malloc (*len + 1);
+  for (; size; in += 3) {       /* process tuplets */
+    *d++ = v[in[0] >> 2];       /* byte 1: high 6 bits (1) */
+    /* byte 2: low 2 bits (1), high 4 bits (2) */
+    *d++ = v[((in[0] << 4) + (--size ? (in[1] >> 4) : 0)) & 0x3f];
+    /* byte 3: low 4 bits (2), high 2 bits (3) */
+    *d++ = size ? v[((in[1] << 2) + (--size ? (in[2] >> 6) : 0)) & 0x3f] : '=';
+    /* byte 4: low 6 bits (3) */
+    *d++ = size ? v[in[2] & 0x3f] : '=';
+    if (size)
+      size--;                   /* count third character if processed */
+  }
+  *d = '\0';                    /* tie off string */
+
+  return ret;                   /* return the resulting string */
+}
+
 static gboolean
 gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
 {
   GstRtpTheoraPay *rtptheorapay = GST_RTP_THEORA_PAY (basepayload);
   GList *walk;
-  guint length;
-  gchar *configuration;
-  gchar *wstr, *hstr;
-  guint8 *data;
+  guint length, size, n_headers, configlen;
+  gchar *wstr, *hstr, *configuration;
+  guint8 *data, *config;
   guint32 ident;
-  GValue v = { 0 };
-  GstBuffer *config;
 
   GST_DEBUG_OBJECT (rtptheorapay, "finish headers");
 
   if (!rtptheorapay->headers)
     goto no_headers;
-
-  /* we need exactly 2 header packets */
-  if (g_list_length (rtptheorapay->headers) != 2) {
-    GST_DEBUG_OBJECT (rtptheorapay, "We need 2 headers but have %d",
-        g_list_length (rtptheorapay->headers));
-    goto no_headers;
-  }
 
   /* +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    * |                     Number of packed headers                  |
@@ -255,35 +270,60 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
    *  0                   1                   2                   3
    *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   * |                   Ident                       |              ..
+   * |                   Ident                       | length       ..
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   * ..   length     |              Identification Header           ..
+   * ..              | n. of headers |    length1    |    length2   ..
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   * ..                    Identification Header                     |
+   * ..              |             Identification Header            ..
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * .................................................................
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * ..              |         Comment Header                       ..
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * .................................................................
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * ..                        Comment Header                        |
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    * |                          Setup Header                        ..
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * .................................................................
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
    * ..                         Setup Header                         |
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-   *
    */
 
-  /* count the size of the headers first */
+  /* we need 4 bytes for the number of headers (which is always 1), 3 bytes for
+   * the ident, 2 bytes for length, 1 byte for n. of headers. */
+  size = 4 + 3 + 2 + 1;
+
+  /* count the size of the headers first and update the hash */
   length = 0;
+  n_headers = 0;
   ident = fnv1_hash_32_new ();
   for (walk = rtptheorapay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+    guint bsize;
 
-    ident =
-        fnv1_hash_32_update (ident, GST_BUFFER_DATA (buf),
+    bsize = GST_BUFFER_SIZE (buf);
+    length += bsize;
+    n_headers++;
+
+    /* count number of bytes needed for length fields, we don't need this for
+     * the last header. */
+    if (g_list_next (walk)) {
+      do {
+        size++;
+        bsize >>= 7;
+      } while (bsize);
+    }
+    /* update hash */
+    ident = fnv1_hash_32_update (ident, GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf));
-    length += GST_BUFFER_SIZE (buf);
   }
 
-  /* total config length is 4 bytes header number + size of the
-   *  headers + 2 bytes length + 3 bytes for the ident */
-  config = gst_buffer_new_and_alloc (length + 4 + 2 + 3);
-  data = GST_BUFFER_DATA (config);
+  /* packet length is header size + packet length */
+  configlen = size + length;
+  config = data = g_malloc (configlen);
 
   /* number of packed headers, we only pack 1 header */
   data[0] = 0;
@@ -293,18 +333,51 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
 
   ident = fnv1_hash_32_to_24 (ident);
   rtptheorapay->payload_ident = ident;
+  GST_DEBUG_OBJECT (rtptheorapay, "ident 0x%08x", ident);
 
   /* take lower 3 bytes */
   data[4] = (ident >> 16) & 0xff;
   data[5] = (ident >> 8) & 0xff;
   data[6] = ident & 0xff;
 
-  /* store length minus the length of the fixed theora header */
-  data[7] = ((length - THEORA_ID_LEN) >> 8) & 0xff;
-  data[8] = (length - THEORA_ID_LEN) & 0xff;
+  /* store length of all theora headers */
+  data[7] = ((length) >> 8) & 0xff;
+  data[8] = (length) & 0xff;
+
+  /* store number of headers minus one. */
+  data[9] = n_headers - 1;
+  data += 10;
+
+  /* store length for each header */
+  for (walk = rtptheorapay->headers; walk; walk = g_list_next (walk)) {
+    GstBuffer *buf = GST_BUFFER_CAST (walk->data);
+    guint bsize, size, temp;
+
+    /* only need to store the length when it's not the last header */
+    if (!g_list_next (walk))
+      break;
+
+    bsize = GST_BUFFER_SIZE (buf);
+
+    /* calc size */
+    size = 0;
+    do {
+      size++;
+      bsize >>= 7;
+    } while (bsize);
+    temp = size;
+
+    bsize = GST_BUFFER_SIZE (buf);
+    /* write the size backwards */
+    while (size) {
+      size--;
+      data[size] = bsize & 0x7f;
+      bsize >>= 7;
+    }
+    data += temp;
+  }
 
   /* copy header data */
-  data += 9;
   for (walk = rtptheorapay->headers; walk; walk = g_list_next (walk)) {
     GstBuffer *buf = GST_BUFFER_CAST (walk->data);
 
@@ -312,10 +385,9 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
     data += GST_BUFFER_SIZE (buf);
   }
 
-  /* serialize buffer to base16 */
-  g_value_init (&v, GST_TYPE_BUFFER);
-  gst_value_take_buffer (&v, config);
-  configuration = gst_value_serialize (&v);
+  /* serialize to base64 */
+  configuration = encode_base64 (config, configlen, &size);
+  g_free (config);
 
   /* configure payloader settings */
   wstr = g_strdup_printf ("%d", rtptheorapay->width);
@@ -333,7 +405,6 @@ gst_rtp_theora_pay_finish_headers (GstBaseRTPPayload * basepayload)
   g_free (wstr);
   g_free (hstr);
   g_free (configuration);
-  g_value_unset (&v);
 
   return TRUE;
 
@@ -454,12 +525,7 @@ gst_rtp_theora_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   if (rtptheorapay->need_headers) {
     /* we need to collect the headers and construct a config string from them */
-    if (TDT == 2) {
-      GST_DEBUG_OBJECT (rtptheorapay,
-          "discard comment packet while collecting headers");
-      ret = GST_FLOW_OK;
-      goto done;
-    } else if (TDT != 0) {
+    if (TDT != 0) {
       GST_DEBUG_OBJECT (rtptheorapay, "collecting header, buffer %p", buffer);
       /* append header to the list of headers */
       rtptheorapay->headers = g_list_append (rtptheorapay->headers, buffer);
