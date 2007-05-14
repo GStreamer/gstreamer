@@ -1,5 +1,6 @@
 /* GStreamer
- * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2005,2006,2007> Wim Taymans <wim@fluendo.com>
+ *               <2007> Peter Kjellerstedt  <pkj at axis com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

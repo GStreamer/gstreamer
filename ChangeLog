@@ -1,3 +1,14 @@
+2007-05-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_configure_caps),
+	(gst_rtspsrc_parse_range), (gst_rtspsrc_open),
+	(gst_rtspsrc_parse_rtpinfo), (gst_rtspsrc_play):
+	Factor out caps configuration and configure more stuff such as the time
+	ranges and speed/scale values.
+
+	* gst/rtsp/rtsptransport.c:
+	Add Copyright after non-trival fixes.
+
 2007-05-12  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Peter Kjellerstedt  <pkj at axis com>

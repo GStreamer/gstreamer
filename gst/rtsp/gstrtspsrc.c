@@ -1938,6 +1938,49 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
   return TRUE;
 }
 
+static void
+gst_rtspsrc_configure_caps (GstRTSPSrc * src)
+{
+  GList *walk;
+  guint64 start, stop;
+  gdouble play_speed, play_scale;
+
+  GST_DEBUG_OBJECT (src, "configuring stream caps");
+
+  start = src->segment.last_stop;
+  stop = src->segment.duration;
+  play_speed = src->segment.rate;
+  play_scale = src->segment.applied_rate;
+
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+    GstCaps *caps;
+
+    if ((caps = stream->caps)) {
+      caps = gst_caps_make_writable (caps);
+      /* update caps */
+      if (stream->timebase != -1)
+        gst_caps_set_simple (caps, "clock-base", G_TYPE_UINT, stream->timebase,
+            NULL);
+      if (stream->seqbase != -1)
+        gst_caps_set_simple (caps, "seqnum-base", G_TYPE_UINT, stream->seqbase,
+            NULL);
+      gst_caps_set_simple (caps, "npt-start", G_TYPE_UINT64, start, NULL);
+      if (stop != -1)
+        gst_caps_set_simple (caps, "npt-stop", G_TYPE_UINT64, stop, NULL);
+      gst_caps_set_simple (caps, "play-speed", G_TYPE_DOUBLE, play_speed, NULL);
+      gst_caps_set_simple (caps, "play-scale", G_TYPE_DOUBLE, play_scale, NULL);
+
+      if (stream->caps != caps) {
+        gst_caps_unref (stream->caps);
+        stream->caps = caps;
+      }
+    }
+  }
+  if (src->session)
+    g_signal_emit_by_name (src->session, "clear-pt-map", NULL);
+}
+
 static GstFlowReturn
 gst_rtspsrc_combine_flows (GstRTSPSrc * src, GstRTSPStream * stream,
     GstFlowReturn ret)
@@ -3179,6 +3222,22 @@ cleanup_error:
   }
 }
 
+static void
+gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range)
+{
+  RTSPTimeRange *therange;
+
+  if (rtsp_range_parse (range, &therange) == RTSP_OK) {
+    GST_DEBUG_OBJECT (src, "range: '%s', min %f - max %f ",
+        GST_STR_NULL (range), therange->min.seconds, therange->max.seconds);
+
+    gst_segment_set_duration (&src->segment, GST_FORMAT_TIME,
+        therange->max.seconds * GST_SECOND);
+    gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME,
+        therange->min.seconds * GST_SECOND);
+  }
+}
+
 static gboolean
 gst_rtspsrc_open (GstRTSPSrc * src)
 {
@@ -3275,19 +3334,8 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     gchar *range;
 
     range = sdp_message_get_attribute_val (&sdp, "range");
-    if (range) {
-      RTSPTimeRange *therange;
-
-      if (rtsp_range_parse (range, &therange) == RTSP_OK) {
-        GST_DEBUG_OBJECT (src, "range: '%s', min %f - max %f ",
-            GST_STR_NULL (range), therange->min.seconds, therange->max.seconds);
-
-        gst_segment_set_duration (&src->segment, GST_FORMAT_TIME,
-            therange->max.seconds * GST_SECOND);
-        gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME,
-            therange->min.seconds * GST_SECOND);
-      }
-    }
+    if (range)
+      gst_rtspsrc_parse_range (src, range);
   }
 
   /* create streams */
@@ -3537,34 +3585,15 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
       }
     }
     g_strfreev (fields);
-    /* now we need to store the values in the caps of the stream and make sure
-     * that the UDP elements have the same caps property set before they receive
-     * the first buffer. */
+    /* now we need to store the values for the caps of the stream */
     if (stream != NULL) {
-      GstCaps *caps;
-
       GST_DEBUG_OBJECT (src,
-          "found stream %p, seqbase %d, timebase %" G_GINT64_FORMAT, stream,
-          seqbase, timebase);
+          "found stream %p, setting: seqbase %d, timebase %" G_GINT64_FORMAT,
+          stream, seqbase, timebase);
+
       /* we have a stream, configure detected params */
       stream->seqbase = seqbase;
       stream->timebase = timebase;
-      if ((caps = stream->caps)) {
-        caps = gst_caps_make_writable (caps);
-        /* update caps */
-        if (timebase != -1)
-          gst_caps_set_simple (caps, "clock-base", G_TYPE_UINT, timebase, NULL);
-        if (seqbase != -1)
-          gst_caps_set_simple (caps, "seqnum-base", G_TYPE_UINT, seqbase, NULL);
-
-        if (stream->caps != caps) {
-          gst_caps_unref (stream->caps);
-          stream->caps = caps;
-        }
-        if (src->session) {
-          g_signal_emit_by_name (src->session, "clear-pt-map", NULL);
-        }
-      }
     }
   }
   g_strfreev (infos);
@@ -3610,16 +3639,20 @@ gst_rtspsrc_play (GstRTSPSrc * src)
 
   /* parse RTP npt field. This is the current position in the stream (Normal
    * Play Time) and should be put in the NEWSEGMENT position field. */
-  rtsp_message_get_header (&response, RTSP_HDR_RANGE, &range);
+  if (rtsp_message_get_header (&response, RTSP_HDR_RANGE, &range) == RTSP_OK)
+    gst_rtspsrc_parse_range (src, range);
 
   /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
    * for the RTP packets. If this is not present, we assume all starts from 0... 
    * This is info for the RTP session manager that we pass to it in caps. */
-  rtsp_message_get_header (&response, RTSP_HDR_RTP_INFO, &rtpinfo);
-  if (rtpinfo)
+  if (rtsp_message_get_header (&response, RTSP_HDR_RTP_INFO,
+          &rtpinfo) == RTSP_OK)
     gst_rtspsrc_parse_rtpinfo (src, rtpinfo);
 
   rtsp_message_unset (&response);
+
+  /* configure the caps of the streams after we parsed all headers. */
+  gst_rtspsrc_configure_caps (src);
 
   /* for interleaved transport, we receive the data on the RTSP connection
    * instead of UDP. We start a task to select and read from that connection.
