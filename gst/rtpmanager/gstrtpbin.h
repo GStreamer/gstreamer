@@ -56,6 +56,8 @@ struct _GstRTPBinClass {
 
   /* get the caps for pt */
   GstCaps* (*request_pt_map)  (GstRTPBin *rtpbin, guint session, guint pt);
+
+  void     (*clear_pt_map)    (GstRTPBin *rtpbin);
 };
 
 GType gst_rtp_bin_get_type (void);

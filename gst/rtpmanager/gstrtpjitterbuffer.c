@@ -468,6 +468,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRTPJitterBuffer * jitterbuffer)
   gst_segment_init (&priv->segment, GST_FORMAT_TIME);
   priv->last_popped_seqnum = -1;
   priv->next_seqnum = -1;
+  priv->clock_rate = -1;
   /* allow pops from the src pad task */
   async_jitter_queue_unset_flushing_unlocked (jitterbuffer->priv->queue);
   async_jitter_queue_unlock (priv->queue);
@@ -617,6 +618,8 @@ gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstEvent * event)
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
   priv = jitterbuffer->priv;
 
+  GST_DEBUG_OBJECT (jitterbuffer, "received %s", GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
     {
@@ -649,14 +652,17 @@ gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstEvent * event)
     }
     case GST_EVENT_FLUSH_START:
       gst_rtp_jitter_buffer_flush_start (jitterbuffer);
+      ret = gst_pad_push_event (priv->srcpad, event);
       break;
     case GST_EVENT_FLUSH_STOP:
-      gst_rtp_jitter_buffer_flush_stop (jitterbuffer);
+      ret = gst_pad_push_event (priv->srcpad, event);
+      ret = gst_rtp_jitter_buffer_src_activate_push (priv->srcpad, TRUE);
       break;
     case GST_EVENT_EOS:
     {
       /* push EOS in queue. We always push it at the head */
       async_jitter_queue_lock (priv->queue);
+      GST_DEBUG_OBJECT (jitterbuffer, "queuing EOS");
       /* check for flushing, we need to discard the event and return FALSE when
        * we are flushing */
       ret = priv->srcresult == GST_FLOW_OK;
@@ -947,8 +953,9 @@ again:
     /* bring timestamp to gst time */
     timestamp = gst_util_uint64_scale (GST_SECOND, rtp_time, priv->clock_rate);
 
-    GST_DEBUG_OBJECT (jitterbuffer, "rtptime %u, timestamp %" GST_TIME_FORMAT,
-        rtp_time, GST_TIME_ARGS (timestamp));
+    GST_DEBUG_OBJECT (jitterbuffer,
+        "rtptime %u, clock-rate %u, timestamp %" GST_TIME_FORMAT, rtp_time,
+        priv->clock_rate, GST_TIME_ARGS (timestamp));
 
     /* bring to running time */
     running_time = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME,

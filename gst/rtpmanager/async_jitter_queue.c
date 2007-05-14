@@ -632,6 +632,8 @@ void
 async_jitter_queue_set_flushing_unlocked (AsyncJitterQueue * queue,
     GFunc free_func, gpointer user_data)
 {
+  gpointer elem;
+
   g_return_if_fail (queue);
   g_return_if_fail (g_atomic_int_get (&queue->ref_count) > 0);
 
@@ -640,7 +642,8 @@ async_jitter_queue_set_flushing_unlocked (AsyncJitterQueue * queue,
   if (queue->waiting_threads > 0)
     g_cond_broadcast (queue->cond);
   /* free data from queue */
-  g_queue_foreach (queue->queue, free_func, user_data);
+  while ((elem = g_queue_pop_head (queue->queue)))
+    free_func (elem, user_data);
 }
 
 /**

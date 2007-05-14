@@ -1,3 +1,20 @@
+2007-05-14  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtpmanager/async_jitter_queue.c:
+	(async_jitter_queue_set_flushing_unlocked):
+	Fix leak when flushing.
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_clear_pt_map),
+	(gst_rtp_bin_class_init):
+	* gst/rtpmanager/gstrtpbin.h:
+	Add clear-pt-map signal.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_flush_stop),
+	(gst_rtp_jitter_buffer_sink_event), (gst_rtp_jitter_buffer_loop):
+	Init clock-rate to -1 to mark unknow clock rate.
+	Fix flushing.
+
 2007-05-13  David Schleef  <ds@schleef.org>
 
 	* gst/replaygain/rganalysis.c:
