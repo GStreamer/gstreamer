@@ -22,6 +22,11 @@
 
 #include <glib.h>
 
+enum {
+  VTS_YUV,
+  VTS_RGB,
+  VTS_BAYER
+};
 
 struct vts_color_struct {
         guint8 Y, U, V;
@@ -47,12 +52,12 @@ struct paintinfo_struct
 
 struct fourcc_list_struct
 {
+  int type;
   char *fourcc;
   char *name;
   int bitspp;
   void (*paint_setup) (paintinfo * p, unsigned char *dest);
   void (*paint_hline) (paintinfo * p, int x, int y, int w);
-  int ext_caps;
   int depth;
   unsigned int red_mask;
   unsigned int green_mask;

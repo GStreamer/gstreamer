@@ -1,3 +1,9 @@
+2007-05-14  David Schleef  <ds@schleef.org>
+
+	* gst/videotestsrc/videotestsrc.c:
+	* gst/videotestsrc/videotestsrc.h:
+	  Add support for video/x-raw-bayer.
+
 2007-05-12  David Schleef  <ds@schleef.org>
 
 	* sys/xvimage/xvimagesink.c:

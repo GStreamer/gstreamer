@@ -285,6 +285,8 @@ static void paint_setup_BGR888 (paintinfo * p, unsigned char *dest);
 static void paint_setup_RGB565 (paintinfo * p, unsigned char *dest);
 static void paint_setup_xRGB1555 (paintinfo * p, unsigned char *dest);
 
+static void paint_setup_bayer (paintinfo * p, unsigned char *dest);
+
 static void paint_hline_I420 (paintinfo * p, int x, int y, int w);
 static void paint_hline_YUY2 (paintinfo * p, int x, int y, int w);
 static void paint_hline_IYU2 (paintinfo * p, int x, int y, int w);
@@ -302,88 +304,93 @@ static void paint_hline_str3 (paintinfo * p, int x, int y, int w);
 static void paint_hline_RGB565 (paintinfo * p, int x, int y, int w);
 static void paint_hline_xRGB1555 (paintinfo * p, int x, int y, int w);
 
+static void paint_hline_bayer (paintinfo * p, int x, int y, int w);
+
 struct fourcc_list_struct fourcc_list[] = {
 /* packed */
-  {"YUY2", "YUY2", 16, paint_setup_YUY2, paint_hline_YUY2},
-  {"UYVY", "UYVY", 16, paint_setup_UYVY, paint_hline_YUY2},
-  {"Y422", "Y422", 16, paint_setup_UYVY, paint_hline_YUY2},
-  {"UYNV", "UYNV", 16, paint_setup_UYVY, paint_hline_YUY2},     /* FIXME: UYNV? */
-  {"YVYU", "YVYU", 16, paint_setup_YVYU, paint_hline_YUY2},
-  {"AYUV", "AYUV", 32, paint_setup_AYUV, paint_hline_AYUV},
+  {VTS_YUV, "YUY2", "YUY2", 16, paint_setup_YUY2, paint_hline_YUY2},
+  {VTS_YUV, "UYVY", "UYVY", 16, paint_setup_UYVY, paint_hline_YUY2},
+  {VTS_YUV, "Y422", "Y422", 16, paint_setup_UYVY, paint_hline_YUY2},
+  {VTS_YUV, "UYNV", "UYNV", 16, paint_setup_UYVY, paint_hline_YUY2},    /* FIXME: UYNV? */
+  {VTS_YUV, "YVYU", "YVYU", 16, paint_setup_YVYU, paint_hline_YUY2},
+  {VTS_YUV, "AYUV", "AYUV", 32, paint_setup_AYUV, paint_hline_AYUV},
 
   /* interlaced */
-  /*{ "IUYV", "IUY2", 16, paint_setup_YVYU, paint_hline_YUY2 }, */
+  /*{ VTS_YUV,  "IUYV", "IUY2", 16, paint_setup_YVYU, paint_hline_YUY2 }, */
 
   /* inverted */
-  /*{ "cyuv", "cyuv", 16, paint_setup_YVYU, paint_hline_YUY2 }, */
+  /*{ VTS_YUV,  "cyuv", "cyuv", 16, paint_setup_YVYU, paint_hline_YUY2 }, */
 
-  /*{ "Y41P", "Y41P", 12, paint_setup_YVYU, paint_hline_YUY2 }, */
+  /*{ VTS_YUV,  "Y41P", "Y41P", 12, paint_setup_YVYU, paint_hline_YUY2 }, */
 
   /* interlaced */
-  /*{ "IY41", "IY41", 12, paint_setup_YVYU, paint_hline_YUY2 }, */
+  /*{ VTS_YUV,  "IY41", "IY41", 12, paint_setup_YVYU, paint_hline_YUY2 }, */
 
-  /*{ "Y211", "Y211", 8, paint_setup_YVYU, paint_hline_YUY2 }, */
+  /*{ VTS_YUV,  "Y211", "Y211", 8, paint_setup_YVYU, paint_hline_YUY2 }, */
 
-  /*{ "Y41T", "Y41T", 12, paint_setup_YVYU, paint_hline_YUY2 }, */
-  /*{ "Y42P", "Y42P", 16, paint_setup_YVYU, paint_hline_YUY2 }, */
-  /*{ "CLJR", "CLJR", 8, paint_setup_YVYU, paint_hline_YUY2 }, */
-  /*{ "IYU1", "IYU1", 12, paint_setup_YVYU, paint_hline_YUY2 }, */
-  {"IYU2", "IYU2", 24, paint_setup_IYU2, paint_hline_IYU2},
+  /*{ VTS_YUV,  "Y41T", "Y41T", 12, paint_setup_YVYU, paint_hline_YUY2 }, */
+  /*{ VTS_YUV,  "Y42P", "Y42P", 16, paint_setup_YVYU, paint_hline_YUY2 }, */
+  /*{ VTS_YUV,  "CLJR", "CLJR", 8, paint_setup_YVYU, paint_hline_YUY2 }, */
+  /*{ VTS_YUV,  "IYU1", "IYU1", 12, paint_setup_YVYU, paint_hline_YUY2 }, */
+  {VTS_YUV, "IYU2", "IYU2", 24, paint_setup_IYU2, paint_hline_IYU2},
 
 /* planar */
   /* YVU9 */
-  {"YVU9", "YVU9", 9, paint_setup_YVU9, paint_hline_YUV9},
+  {VTS_YUV, "YVU9", "YVU9", 9, paint_setup_YVU9, paint_hline_YUV9},
   /* YUV9 */
-  {"YUV9", "YUV9", 9, paint_setup_YUV9, paint_hline_YUV9},
+  {VTS_YUV, "YUV9", "YUV9", 9, paint_setup_YUV9, paint_hline_YUV9},
   /* IF09 */
   /* YV12 */
-  {"YV12", "YV12", 12, paint_setup_YV12, paint_hline_I420},
+  {VTS_YUV, "YV12", "YV12", 12, paint_setup_YV12, paint_hline_I420},
   /* I420 */
-  {"I420", "I420", 12, paint_setup_I420, paint_hline_I420},
+  {VTS_YUV, "I420", "I420", 12, paint_setup_I420, paint_hline_I420},
   /* NV12 */
   /* NV21 */
 #if 0
   /* IMC1 */
-  {"IMC1", "IMC1", 16, paint_setup_IMC1, paint_hline_IMC1},
+  {VTS_YUV, "IMC1", "IMC1", 16, paint_setup_IMC1, paint_hline_IMC1},
   /* IMC2 */
-  {"IMC2", "IMC2", 12, paint_setup_IMC2, paint_hline_IMC1},
+  {VTS_YUV, "IMC2", "IMC2", 12, paint_setup_IMC2, paint_hline_IMC1},
   /* IMC3 */
-  {"IMC3", "IMC3", 16, paint_setup_IMC3, paint_hline_IMC1},
+  {VTS_YUV, "IMC3", "IMC3", 16, paint_setup_IMC3, paint_hline_IMC1},
   /* IMC4 */
-  {"IMC4", "IMC4", 12, paint_setup_IMC4, paint_hline_IMC1},
+  {VTS_YUV, "IMC4", "IMC4", 12, paint_setup_IMC4, paint_hline_IMC1},
 #endif
   /* CLPL */
   /* Y41B */
-  {"Y41B", "Y41B", 12, paint_setup_Y41B, paint_hline_Y41B},
+  {VTS_YUV, "Y41B", "Y41B", 12, paint_setup_Y41B, paint_hline_Y41B},
   /* Y42B */
-  {"Y42B", "Y42B", 16, paint_setup_Y42B, paint_hline_Y42B},
+  {VTS_YUV, "Y42B", "Y42B", 16, paint_setup_Y42B, paint_hline_Y42B},
   /* Y800 grayscale */
-  {"Y800", "Y800", 8, paint_setup_Y800, paint_hline_Y800},
+  {VTS_YUV, "Y800", "Y800", 8, paint_setup_Y800, paint_hline_Y800},
 
-  {"RGB ", "xRGB8888", 32, paint_setup_xRGB8888, paint_hline_str4, 1, 24,
+  {VTS_RGB, "RGB ", "xRGB8888", 32, paint_setup_xRGB8888, paint_hline_str4, 24,
       0x00ff0000, 0x0000ff00, 0x000000ff},
-  {"RGB ", "xBGR8888", 32, paint_setup_xBGR8888, paint_hline_str4, 1, 24,
+  {VTS_RGB, "RGB ", "xBGR8888", 32, paint_setup_xBGR8888, paint_hline_str4, 24,
       0x000000ff, 0x0000ff00, 0x00ff0000},
-  {"RGB ", "RGBx8888", 32, paint_setup_RGBx8888, paint_hline_str4, 1, 24,
+  {VTS_RGB, "RGB ", "RGBx8888", 32, paint_setup_RGBx8888, paint_hline_str4, 24,
       0xff000000, 0x00ff0000, 0x0000ff00},
-  {"RGB ", "BGRx8888", 32, paint_setup_BGRx8888, paint_hline_str4, 1, 24,
+  {VTS_RGB, "RGB ", "BGRx8888", 32, paint_setup_BGRx8888, paint_hline_str4, 24,
       0x0000ff00, 0x00ff0000, 0xff000000},
-  {"RGB ", "ARGB8888", 32, paint_setup_ARGB8888, paint_hline_str4, 1, 32,
+  {VTS_RGB, "RGB ", "ARGB8888", 32, paint_setup_ARGB8888, paint_hline_str4, 32,
       0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000},
-  {"RGB ", "ABGR8888", 32, paint_setup_ABGR8888, paint_hline_str4, 1, 32,
+  {VTS_RGB, "RGB ", "ABGR8888", 32, paint_setup_ABGR8888, paint_hline_str4, 32,
       0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000},
-  {"RGB ", "RGBA8888", 32, paint_setup_RGBA8888, paint_hline_str4, 1, 32,
+  {VTS_RGB, "RGB ", "RGBA8888", 32, paint_setup_RGBA8888, paint_hline_str4, 32,
       0xff000000, 0x00ff0000, 0x0000ff00, 0x000000ff},
-  {"RGB ", "BGRA8888", 32, paint_setup_BGRA8888, paint_hline_str4, 1, 32,
+  {VTS_RGB, "RGB ", "BGRA8888", 32, paint_setup_BGRA8888, paint_hline_str4, 32,
       0x0000ff00, 0x00ff0000, 0xff000000, 0x000000ff},
-  {"RGB ", "RGB888", 24, paint_setup_RGB888, paint_hline_str3, 1, 24,
+  {VTS_RGB, "RGB ", "RGB888", 24, paint_setup_RGB888, paint_hline_str3, 24,
       0x00ff0000, 0x0000ff00, 0x000000ff},
-  {"RGB ", "BGR888", 24, paint_setup_BGR888, paint_hline_str3, 1, 24,
+  {VTS_RGB, "RGB ", "BGR888", 24, paint_setup_BGR888, paint_hline_str3, 24,
       0x000000ff, 0x0000ff00, 0x00ff0000},
-  {"RGB ", "RGB565", 16, paint_setup_RGB565, paint_hline_RGB565, 1, 16,
+  {VTS_RGB, "RGB ", "RGB565", 16, paint_setup_RGB565, paint_hline_RGB565, 16,
       0x0000f800, 0x000007e0, 0x0000001f},
-  {"RGB ", "xRGB1555", 16, paint_setup_xRGB1555, paint_hline_xRGB1555, 1, 15,
+  {VTS_RGB, "RGB ", "xRGB1555", 16, paint_setup_xRGB1555, paint_hline_xRGB1555,
+        15,
       0x00007c00, 0x000003e0, 0x0000001f},
+
+  {VTS_BAYER, "BAY8", "Bayer", 8, paint_setup_bayer, paint_hline_bayer}
 };
 int n_fourccs = G_N_ELEMENTS (fourcc_list);
 
@@ -408,7 +415,7 @@ paintinfo_find_by_structure (const GstStructure * structure)
       s = fourcc_list[i].fourcc;
       /* g_print("testing %" GST_FOURCC_FORMAT " and %s\n", GST_FOURCC_ARGS(format), s); */
       fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
-      if (fourcc == format) {
+      if (fourcc_list[i].type == VTS_YUV && fourcc == format) {
         return fourcc_list + i;
       }
     }
@@ -439,12 +446,19 @@ paintinfo_find_by_structure (const GstStructure * structure)
     }
 
     for (i = 0; i < n_fourccs; i++) {
-      if (strcmp (fourcc_list[i].fourcc, "RGB ") == 0 &&
+      if (fourcc_list[i].type == VTS_RGB &&
           fourcc_list[i].red_mask == red_mask &&
           fourcc_list[i].green_mask == green_mask &&
           fourcc_list[i].blue_mask == blue_mask &&
           (alpha_mask == 0 || fourcc_list[i].alpha_mask == alpha_mask) &&
           fourcc_list[i].depth == depth && fourcc_list[i].bitspp == bpp) {
+        return fourcc_list + i;
+      }
+    }
+    return NULL;
+  } else if (strcmp (media_type, "video/x-raw-bayer") == 0) {
+    for (i = 0; i < n_fourccs; i++) {
+      if (fourcc_list[i].type == VTS_BAYER) {
         return fourcc_list + i;
       }
     }
@@ -469,7 +483,7 @@ paintrect_find_fourcc (int find_fourcc)
     fourcc = GST_MAKE_FOURCC (s[0], s[1], s[2], s[3]);
     if (find_fourcc == fourcc) {
       /* If YUV format, it's good */
-      if (!fourcc_list[i].ext_caps) {
+      if (!fourcc_list[i].type == VTS_YUV) {
         return fourcc_list + i;
       }
 
@@ -498,6 +512,7 @@ paint_get_structure (struct fourcc_list_struct * format)
 {
   GstStructure *structure = NULL;
   unsigned int fourcc;
+  int endianness;
 
   g_return_val_if_fail (format, NULL);
 
@@ -505,28 +520,35 @@ paint_get_structure (struct fourcc_list_struct * format)
       GST_MAKE_FOURCC (format->fourcc[0], format->fourcc[1], format->fourcc[2],
       format->fourcc[3]);
 
-  if (format->ext_caps) {
-    int endianness;
-
-    if (format->bitspp == 16) {
-      endianness = G_BYTE_ORDER;
-    } else {
-      endianness = G_BIG_ENDIAN;
-    }
-    structure = gst_structure_new ("video/x-raw-rgb",
-        "bpp", G_TYPE_INT, format->bitspp,
-        "endianness", G_TYPE_INT, endianness,
-        "depth", G_TYPE_INT, format->depth,
-        "red_mask", G_TYPE_INT, format->red_mask,
-        "green_mask", G_TYPE_INT, format->green_mask,
-        "blue_mask", G_TYPE_INT, format->blue_mask, NULL);
-    if (format->depth == 32 && format->alpha_mask > 0) {
-      gst_structure_set (structure, "alpha_mask", G_TYPE_INT,
-          format->alpha_mask, NULL);
-    }
-  } else {
-    structure = gst_structure_new ("video/x-raw-yuv",
-        "format", GST_TYPE_FOURCC, fourcc, NULL);
+  switch (format->type) {
+    case VTS_RGB:
+      if (format->bitspp == 16) {
+        endianness = G_BYTE_ORDER;
+      } else {
+        endianness = G_BIG_ENDIAN;
+      }
+      structure = gst_structure_new ("video/x-raw-rgb",
+          "bpp", G_TYPE_INT, format->bitspp,
+          "endianness", G_TYPE_INT, endianness,
+          "depth", G_TYPE_INT, format->depth,
+          "red_mask", G_TYPE_INT, format->red_mask,
+          "green_mask", G_TYPE_INT, format->green_mask,
+          "blue_mask", G_TYPE_INT, format->blue_mask, NULL);
+      if (format->depth == 32 && format->alpha_mask > 0) {
+        gst_structure_set (structure, "alpha_mask", G_TYPE_INT,
+            format->alpha_mask, NULL);
+      }
+      break;
+    case VTS_YUV:
+      structure = gst_structure_new ("video/x-raw-yuv",
+          "format", GST_TYPE_FOURCC, fourcc, NULL);
+      break;
+    case VTS_BAYER:
+      structure = gst_structure_new ("video/x-raw-bayer", NULL);
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
   }
   return structure;
 }
@@ -1439,4 +1461,39 @@ paint_hline_xRGB1555 (paintinfo * p, int x, int y, int w)
   oil_splat_u8 (p->yp + offset + x * 2 + 0, 2, &a, w);
   oil_splat_u8 (p->yp + offset + x * 2 + 1, 2, &b, w);
 #endif
+}
+
+
+static void
+paint_setup_bayer (paintinfo * p, unsigned char *dest)
+{
+  p->yp = dest;
+  p->ystride = GST_ROUND_UP_4 (p->width);
+  p->endptr = p->dest + p->ystride * p->height;
+}
+
+static void
+paint_hline_bayer (paintinfo * p, int x, int y, int w)
+{
+  int offset = y * p->ystride;
+  uint8_t *dest = p->yp + offset;
+  int i;
+
+  if (y & 1) {
+    for (i = x; i < x + w; i++) {
+      if (i & 1) {
+        dest[i] = p->color->G;
+      } else {
+        dest[i] = p->color->B;
+      }
+    }
+  } else {
+    for (i = x; i < x + w; i++) {
+      if (i & 1) {
+        dest[i] = p->color->R;
+      } else {
+        dest[i] = p->color->G;
+      }
+    }
+  }
 }
