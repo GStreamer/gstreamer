@@ -243,6 +243,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     templ = gst_element_class_get_pad_template (klass, "src_%d");
     padname = g_strdup_printf ("src_%d", pt);
     srcpad = gst_pad_new_from_template (templ, padname);
+    gst_pad_use_fixed_caps (srcpad);
     g_free (padname);
 
     /* figure out the caps */
