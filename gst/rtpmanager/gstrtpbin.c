@@ -335,6 +335,12 @@ no_caps:
   }
 }
 
+static gboolean
+return_true (gpointer key, gpointer value, gpointer user_data)
+{
+  return TRUE;
+}
+
 static void
 gst_rtp_bin_clear_pt_map (GstRTPBin * bin)
 {
@@ -345,7 +351,12 @@ gst_rtp_bin_clear_pt_map (GstRTPBin * bin)
     GstRTPBinSession *session = (GstRTPBinSession *) walk->data;
 
     GST_RTP_SESSION_LOCK (session);
+#if 0
+    /* This requires GLib 2.12 */
     g_hash_table_remove_all (session->ptmap);
+#else
+    g_hash_table_foreach_remove (session->ptmap, return_true, NULL);
+#endif
     GST_RTP_SESSION_UNLOCK (session);
   }
   GST_RTP_BIN_UNLOCK (bin);
