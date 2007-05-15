@@ -165,15 +165,6 @@ dnl *** checks for programs ***
 dnl find a compiler
 AC_PROG_CC
 
-dnl determine c++ compiler
-AC_PROG_CXX
-dnl determine if c++ is available on this system
-AC_CHECK_PROG(HAVE_CXX, $CXX, yes, no)
-
-dnl determine c++ preprocessor
-dnl FIXME: do we need this ?
-AC_PROG_CXXCPP
-
 AC_PATH_PROG(VALGRIND_PATH, valgrind, no)
 AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 
