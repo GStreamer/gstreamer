@@ -340,7 +340,7 @@ gst_mixer_record_toggled (GstMixer * mixer,
 
 void
 gst_mixer_volume_changed (GstMixer * mixer,
-    GstMixerTrack * track, gint * volumes)
+    GstMixerTrack * track, const gint * volumes)
 {
   g_return_if_fail (mixer != NULL);
   g_return_if_fail (track != NULL);
@@ -353,7 +353,7 @@ gst_mixer_volume_changed (GstMixer * mixer,
 
 void
 gst_mixer_option_changed (GstMixer * mixer,
-    GstMixerOptions * opts, gchar * value)
+    GstMixerOptions * opts, const gchar * value)
 {
   g_return_if_fail (mixer != NULL);
   g_return_if_fail (opts != NULL);
@@ -361,5 +361,5 @@ gst_mixer_option_changed (GstMixer * mixer,
   g_signal_emit (G_OBJECT (mixer),
       gst_mixer_signals[SIGNAL_OPTION_CHANGED], 0, opts, value);
 
-  g_signal_emit_by_name (G_OBJECT (opts), "value_changed", value);
+  g_signal_emit_by_name (G_OBJECT (opts), "option_changed", value);
 }

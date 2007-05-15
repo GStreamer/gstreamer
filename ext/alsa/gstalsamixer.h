@@ -51,7 +51,9 @@ struct _GstAlsaMixer
   GList *               tracklist;      /* list of available tracks */
 
   snd_mixer_t *         handle;
+  GSource *		handle_source;
 
+  GstMixer *		interface;
   gchar *               device;
   gchar *               cardname;
 
@@ -61,6 +63,8 @@ struct _GstAlsaMixer
 
 GstAlsaMixer*   gst_alsa_mixer_new              (const gchar *device,
                                                  GstAlsaMixerDirection dir);
+void		_gst_alsa_mixer_set_interface   (GstAlsaMixer * mixer,
+					        GstMixer * interface);
 void            gst_alsa_mixer_free             (GstAlsaMixer *mixer);
 
 const GList*    gst_alsa_mixer_list_tracks      (GstAlsaMixer * mixer);
@@ -81,7 +85,6 @@ void            gst_alsa_mixer_set_option       (GstAlsaMixer * mixer,
                                                  gchar * value);
 const gchar*    gst_alsa_mixer_get_option       (GstAlsaMixer * mixer,
                                                  GstMixerOptions * opts);
-
 
 #define GST_IMPLEMENT_ALSA_MIXER_METHODS(Type, interface_as_function)           \
 static gboolean                                                                 \

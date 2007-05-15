@@ -74,6 +74,11 @@ struct _GstMixerClass {
   void           (* set_record)    (GstMixer      *mixer,
                                     GstMixerTrack *track,
                                     gboolean       record);
+  void          (* set_option)     (GstMixer      *mixer,
+                                    GstMixerOptions *opts,
+                                    gchar         *value);
+  const gchar * (* get_option)     (GstMixer      *mixer,
+                                    GstMixerOptions *opts);
 
   /* signals */
   void (* mute_toggled)   (GstMixer      *mixer,
@@ -84,17 +89,11 @@ struct _GstMixerClass {
                            gboolean       record);
   void (* volume_changed) (GstMixer      *mixer,
                            GstMixerTrack *channel,
-                           gint          *volumes);
-
-  void          (* set_option)     (GstMixer      *mixer,
-                                    GstMixerOptions *opts,
-                                    gchar         *value);
-  const gchar * (* get_option)     (GstMixer      *mixer,
-                                    GstMixerOptions *opts);
+                           const gint    *volumes);
 
   void (* option_changed) (GstMixer      *mixer,
                            GstMixerOptions *opts,
-                           gchar         *option);
+                           const gchar   *option);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -131,10 +130,10 @@ void            gst_mixer_record_toggled (GstMixer      *mixer,
                                           gboolean       record);
 void            gst_mixer_volume_changed (GstMixer      *mixer,
                                           GstMixerTrack *track,
-                                          gint          *volumes);
+                                          const gint    *volumes);
 void            gst_mixer_option_changed (GstMixer      *mixer,
                                           GstMixerOptions *opts,
-                                          gchar         *value);
+                                          const gchar   *value);
 
 G_END_DECLS
 

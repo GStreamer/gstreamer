@@ -1,3 +1,33 @@
+2007-05-15  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Marc-Andre Lureau <marcandre.lureau@gmail.com>
+
+	* ext/alsa/gstalsamixer.c (main_context, GstAlsaMixerWatch,
+	  _GstAlsaMixerWatch, source, n_poll_fds, poll_fds,
+	  gst_alsa_mixer_watch_funcs, gst_alsa_mixer_prepare,
+	  gst_alsa_mixer_check, gst_alsa_mixer_dispatch,
+	  gst_alsa_mixer_finalize, gst_alsa_mixer_find_master_mixer,
+	  gst_alsa_mixer_handle_source_callback,
+	  gst_alsa_mixer_handle_callback, gst_alsa_mixer_elem_handle_callback,
+	  gst_alsa_mixer_ensure_track_list, gst_alsa_mixer_free,
+	  gst_alsa_mixer_get_volume, gst_alsa_mixer_set_volume,
+	  gst_alsa_mixer_set_mute, gst_alsa_mixer_set_record,
+	  gst_alsa_mixer_get_option, gst_alsa_mixer_update_option,
+	  gst_alsa_mixer_update_track, _gst_alsa_mixer_set_interface):
+	* ext/alsa/gstalsamixer.h (handle_source, interface, dir):
+	* ext/alsa/gstalsamixerelement.c (gst_alsa_mixer_element_details,
+	  gst_alsa_mixer_element_interface_supported,
+	  gst_alsa_mixer_element_finalize, gst_alsa_mixer_element_init,
+	  gst_alsa_mixer_element_set_property,
+	  gst_alsa_mixer_element_get_property,
+	  gst_alsa_mixer_element_change_state):
+	* ext/alsa/gstalsamixertrack.c (gst_alsa_mixer_track_update):
+	* gst-libs/gst/interfaces/mixer.c (gst_mixer_volume_changed,
+	  gst_mixer_option_changed):
+	* gst-libs/gst/interfaces/mixer.h (set_option, get_option,
+	  volume_changed, option_changed, _gst_reserved):
+	  Implement notification for alsamixer. Fixes #152864
+
 2007-05-14  David Schleef  <ds@schleef.org>
 
 	* gst/videotestsrc/videotestsrc.c:
