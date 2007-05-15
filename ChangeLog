@@ -1,5 +1,10 @@
 2007-05-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/debug/breakmydata.c (gst_break_my_data_init):
+	  One more try. This should be the proper fix now.
+
+2007-05-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/debug/breakmydata.c:
 	  Ooops, no // comments please.
 

@@ -154,7 +154,7 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
 static void
 gst_break_my_data_init (GstBreakMyData * bmd, GstBreakMyDataClass * g_class)
 {
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (bmd), FALSE);
+  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (bmd), TRUE);
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (bmd), TRUE);
 }
 
