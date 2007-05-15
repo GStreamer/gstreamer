@@ -1,6 +1,12 @@
 2007-05-15  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_handle_page):
+	Some more chained streaming ogg timestamp fixes.
+
+2007-05-15  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
 	(gst_ogg_demux_activate_chain), (gst_ogg_demux_perform_seek),
 	(gst_ogg_demux_handle_page):
 	Add some FIXMEs.

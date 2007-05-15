@@ -2759,19 +2759,12 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
       current_time = ogg->segment.last_stop;
 
       if (current_chain) {
-        GstClockTime duration;
-
-        /* this was the duration of the previous chain */
-        duration = current_time - current_chain->segment_start;
-        /* the new chain time starts at duration + begin_time */
-        chain_time = duration + current_chain->begin_time;
-
         /* remove existing pads */
         gst_ogg_demux_deactivate_current_chain (ogg);
-      } else {
-        /* non previous chain, start at configured current time */
-        chain_time = current_time;
       }
+      /* time of new chain is current time */
+      chain_time = current_time;
+
       if (ogg->building_chain == NULL) {
         GstOggChain *newchain;
 
