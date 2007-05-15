@@ -577,7 +577,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     encoder->x264param.vui.i_vidformat = 5;     /* unspecified */
   encoder->x264param.analyse.i_trellis = encoder->trellis ? 1 : 0;
   encoder->x264param.analyse.b_psnr = 0;
-  encoder->x264param.analyse.b_ssim = 0;
+  /*encoder->x264param.analyse.b_ssim = 0; */
   encoder->x264param.analyse.i_me_method = encoder->me;
   encoder->x264param.analyse.i_subpel_refine = encoder->subme;
   encoder->x264param.analyse.inter = encoder->analyse;

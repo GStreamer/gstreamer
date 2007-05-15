@@ -1,3 +1,11 @@
+2007-05-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/x264/gstx264enc.c (gst_x264_enc_init_encoder):
+	  This needs a version check.
+
+	* gst/bayer/Makefile.am:
+	  Fix the build.
+
 2007-05-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
