@@ -1,5 +1,10 @@
 2007-05-14  David Schleef  <ds@schleef.org>
 
+	* gst/rtpmanager/gstrtpbin.c:
+	  g_hash_table_remove_all() only exists in 2.12.  Work around.
+
+2007-05-14  David Schleef  <ds@schleef.org>
+
 	* configure.ac:
 	* gst/bayer/Makefile.am:
 	* gst/bayer/gstbayer.c:
