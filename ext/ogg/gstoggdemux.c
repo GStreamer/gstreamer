@@ -1027,39 +1027,18 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
        * when all streams have a valid start time. */
       if (gst_ogg_demux_collect_chain_info (ogg, chain)) {
         GstEvent *event;
-        GstClockTime segment_start, segment_stop, segment_time;
-
-        GST_DEBUG_OBJECT (ogg, "chain->begin_time:    %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (chain->begin_time));
-        GST_DEBUG_OBJECT (ogg, "chain->segment_start: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (chain->segment_start));
-        GST_DEBUG_OBJECT (ogg, "chain->segment_stop:  %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (chain->segment_stop));
-
-        if (chain->begin_time != GST_CLOCK_TIME_NONE) {
-          segment_time = chain->begin_time;
-          segment_start = chain->segment_start - chain->begin_time;
-          if (chain->segment_stop != GST_CLOCK_TIME_NONE) {
-            segment_stop = chain->segment_stop - chain->begin_time;
-          } else {
-            segment_stop = GST_CLOCK_TIME_NONE;
-          }
-        } else {
-          segment_start = chain->segment_start;
-          segment_stop = chain->segment_stop;
-          segment_time = 0;
-        }
 
         GST_DEBUG_OBJECT (ogg, "segment_start: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (segment_start));
+            GST_TIME_ARGS (chain->segment_start));
         GST_DEBUG_OBJECT (ogg, "segment_stop:  %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (segment_stop));
+            GST_TIME_ARGS (chain->segment_stop));
         GST_DEBUG_OBJECT (ogg, "segment_time:  %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (segment_time));
+            GST_TIME_ARGS (chain->begin_time));
 
         /* create the newsegment event we are going to send out */
         event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
-            GST_FORMAT_TIME, segment_start, segment_stop, segment_time);
+            GST_FORMAT_TIME, chain->segment_start, chain->segment_stop,
+            chain->begin_time);
 
         gst_ogg_demux_activate_chain (ogg, chain, event);
 
@@ -1819,6 +1798,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
   gst_element_no_more_pads (GST_ELEMENT (ogg));
   ogg->current_chain = chain;
 
+  /* FIXME, must be sent from the streaming thread */
   if (event)
     gst_ogg_demux_send_event (ogg, event);
 
@@ -2107,7 +2087,7 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
           GST_FORMAT_TIME, ogg->segment.start + chain->segment_start,
           ogg->segment.last_stop + chain->segment_start, ogg->segment.time);
 
-      /* send segment on old chain */
+      /* send segment on old chain, FIXME, must be sent from streaming thread. */
       gst_ogg_demux_send_event (ogg, newseg);
     }
   }
@@ -2152,22 +2132,41 @@ gst_ogg_demux_perform_seek (GstOggDemux * ogg, GstEvent * event)
     GstEvent *event;
     gint64 stop;
     gint64 start;
-    gint64 last_stop;
+    gint64 last_stop, begin_time;
 
     /* we have to send the flush to the old chain, not the new one */
     if (flush)
       gst_ogg_demux_send_event (ogg, gst_event_new_flush_stop ());
 
-    if ((stop = ogg->segment.stop) == -1)
-      stop = ogg->segment.duration;
-    if (stop != -1)
-      stop += chain->segment_start;
+    /* we need this to see how far inside the chain we need to start */
+    if (chain->begin_time != GST_CLOCK_TIME_NONE)
+      begin_time = chain->begin_time;
+    else
+      begin_time = 0;
 
-    start = ogg->segment.start;
+    /* segment.start gives the start over all chains, we calculate the amount
+     * of time into this chain we need to start */
+    start = ogg->segment.start - begin_time;
     if (chain->segment_start != GST_CLOCK_TIME_NONE)
       start += chain->segment_start;
 
-    last_stop = ogg->segment.last_stop;
+    if ((stop = ogg->segment.stop) == -1)
+      stop = ogg->segment.duration;
+
+    /* segment.stop gives the stop time over all chains, calculate the amount of
+     * time we need to stop in this chain */
+    if (stop != -1) {
+      if (stop > begin_time)
+        stop -= begin_time;
+      else
+        stop = 0;
+      stop += chain->segment_start;
+      /* we must stop when this chain ends and switch to the next chain to play
+       * the remainder of the segment. */
+      stop = MIN (stop, chain->segment_stop);
+    }
+
+    last_stop = ogg->segment.last_stop - begin_time;
     if (chain->segment_start != GST_CLOCK_TIME_NONE)
       last_stop += chain->segment_start;
 
@@ -2731,8 +2730,21 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
     /* see if we know about the chain already */
     chain = gst_ogg_demux_find_chain (ogg, serialno);
     if (chain) {
-      /* we do, activate it as it means we have a non-header */
-      gst_ogg_demux_activate_chain (ogg, chain, NULL);
+      GstEvent *event;
+
+      /* create the newsegment event we are going to send out */
+      event = gst_event_new_new_segment (FALSE, ogg->segment.rate,
+          GST_FORMAT_TIME, chain->segment_start, chain->segment_stop,
+          chain->begin_time);
+
+      GST_DEBUG_OBJECT (ogg,
+          "segment: start %" GST_TIME_FORMAT ", stop %" GST_TIME_FORMAT
+          ", time %" GST_TIME_FORMAT, GST_TIME_ARGS (chain->segment_start),
+          GST_TIME_ARGS (chain->segment_stop),
+          GST_TIME_ARGS (chain->begin_time));
+
+      /* activate it as it means we have a non-header */
+      gst_ogg_demux_activate_chain (ogg, chain, event);
       pad = gst_ogg_demux_find_pad (ogg, serialno);
     } else {
       GstClockTime chain_time;
