@@ -1,3 +1,9 @@
+2007-05-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/debug/breakmydata.c: (gst_break_my_data_class_init),
+	(gst_break_my_data_init):
+	  Fix gst_buffer_is_writable() assertion.
+
 2007-05-14  David Schleef  <ds@schleef.org>
 
 	* sys/v4l2/gstv4l2src.c: Add support for Bayer images as

@@ -27,7 +27,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_break_my_data_debug);
 #define GST_CAT_DEFAULT gst_break_my_data_debug
 
-/* This plugin modifies the contents of the buffer it is passed randomly 
+/* This plugin modifies the contents of the buffer it is passed randomly
  * according to the parameters set.
  * It otherwise acts as an identity.
  */
@@ -149,13 +149,14 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
       GST_DEBUG_FUNCPTR (gst_break_my_data_transform_ip);
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_break_my_data_start);
   gstbasetrans_class->stop = GST_DEBUG_FUNCPTR (gst_break_my_data_stop);
-  gstbasetrans_class->passthrough_on_same_caps = TRUE;
+  //gstbasetrans_class->passthrough_on_same_caps = TRUE;
 }
 
 static void
 gst_break_my_data_init (GstBreakMyData * bmd, GstBreakMyDataClass * g_class)
 {
-  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (bmd), TRUE);
+  gst_base_transform_set_in_place (GST_BASE_TRANSFORM (bmd), FALSE);
+  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (bmd), TRUE);
 }
 
 static void
