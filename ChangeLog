@@ -1,5 +1,10 @@
 2007-05-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/debug/breakmydata.c:
+	  Ooops, no // comments please.
+
+2007-05-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/debug/breakmydata.c: (gst_break_my_data_class_init),
 	(gst_break_my_data_init):
 	  Fix gst_buffer_is_writable() assertion.

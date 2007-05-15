@@ -149,7 +149,6 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
       GST_DEBUG_FUNCPTR (gst_break_my_data_transform_ip);
   gstbasetrans_class->start = GST_DEBUG_FUNCPTR (gst_break_my_data_start);
   gstbasetrans_class->stop = GST_DEBUG_FUNCPTR (gst_break_my_data_stop);
-  //gstbasetrans_class->passthrough_on_same_caps = TRUE;
 }
 
 static void
