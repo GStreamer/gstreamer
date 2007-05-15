@@ -80,6 +80,7 @@ AG_GST_ARG_EXAMPLES
 dnl these are all the gst plug-ins, compilable without additional libs
 GST_PLUGINS_ALL="\
   app \
+  bayer \
   cdxaparse \
   deinterlace \
   equalizer \
@@ -1090,6 +1091,7 @@ Makefile
 gst-plugins-bad.spec
 gst/Makefile
 gst/app/Makefile
+gst/bayer/Makefile
 gst/cdxaparse/Makefile
 gst/deinterlace/Makefile
 gst/equalizer/Makefile

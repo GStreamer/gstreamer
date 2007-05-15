@@ -1,3 +1,12 @@
+2007-05-14  David Schleef  <ds@schleef.org>
+
+	* configure.ac:
+	* gst/bayer/Makefile.am:
+	* gst/bayer/gstbayer.c:
+	* gst/bayer/gstbayer2rgb.c:
+	  Add a Bayer-to-RGB converter.  You know you want one, uh-huh.
+	  Partial fix for #314160.
+
 2007-05-14  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/switch/gstswitch.c (ARG_ACTIVE_SOURCE, ARG_STOP_VALUE,
