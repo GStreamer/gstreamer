@@ -583,6 +583,9 @@ gst_v4l2src_v4l2fourcc_to_caps (guint32 fourcc)
       break;
     case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
       break;
+    case V4L2_PIX_FMT_SBGGR8:
+      structure = gst_structure_new ("video/x-raw-bayer", NULL);
+      break;
     default:
       GST_DEBUG ("Unknown fourcc 0x%08x %" GST_FOURCC_FORMAT,
           fourcc, GST_FOURCC_ARGS (fourcc));

@@ -1,3 +1,8 @@
+2007-05-14  David Schleef  <ds@schleef.org>
+
+	* sys/v4l2/gstv4l2src.c: Add support for Bayer images as
+	  video/x-raw-bayer.  Fixes #314160.
+
 2007-05-14  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtptheoradepay.c: (decode_base64),
