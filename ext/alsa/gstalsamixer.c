@@ -91,7 +91,7 @@ gst_alsa_mixer_check (GSource * source)
   }
 
   if (revents & G_IO_ERR || revents & G_IO_HUP) {
-    GST_WARNING ("ALSA poll fds returned ERR or HUP");
+    GST_DEBUG ("ALSA poll fds returned ERR or HUP");
     return FALSE;
   }
 
@@ -102,10 +102,7 @@ static gboolean
 gst_alsa_mixer_dispatch (GSource * source, GSourceFunc callback,
     gpointer user_data)
 {
-  if (!callback) {
-    GST_WARNING ("Cannot get callback from ALSA mixer watcher");
-  }
-
+  g_return_val_if_fail (callback, FALSE);
   return (*callback) (user_data);
 }
 
@@ -253,7 +250,7 @@ gst_alsa_mixer_handle_source_callback (gpointer data)
 {
   GstAlsaMixer *mixer = (GstAlsaMixer *) data;
 
-  GST_WARNING ("Source cb");
+  GST_LOG ("Source cb");
   snd_mixer_handle_events (mixer->handle);
 
   return TRUE;
@@ -267,7 +264,7 @@ gst_alsa_mixer_handle_callback (snd_mixer_t * handle, unsigned int mask,
       (GstAlsaMixer *) snd_mixer_get_callback_private (handle);
   GList *item;
 
-  GST_WARNING ("ALSA cb");
+  GST_LOG ("ALSA cb");
   snd_mixer_handle_events (mixer->handle);
 
   for (item = mixer->tracklist; item != NULL; item = item->next) {
@@ -292,7 +289,7 @@ gst_alsa_mixer_elem_handle_callback (snd_mixer_elem_t * elem, unsigned int mask)
       (GstAlsaMixer *) snd_mixer_elem_get_callback_private (elem);
   GList *item;
 
-  GST_WARNING ("ALSA elem cb");
+  GST_LOG ("ALSA elem cb");
 
   for (item = mixer->tracklist; item != NULL; item = item->next) {
     if (GST_IS_ALSA_MIXER_TRACK (item->data)) {
@@ -415,7 +412,6 @@ gst_alsa_mixer_ensure_track_list (GstAlsaMixer * mixer)
       }
     }
 
-
     if (play_track && cap_track) {
       GST_ALSA_MIXER_TRACK (play_track)->shared_mute =
           GST_ALSA_MIXER_TRACK (cap_track);
@@ -444,20 +440,19 @@ gst_alsa_mixer_ensure_track_list (GstAlsaMixer * mixer)
       g_source_new (&gst_alsa_mixer_watch_funcs, sizeof (GstAlsaMixerWatch));
   g_return_if_fail (main_context != NULL && mixer->handle_source != NULL);
 
-  watch = (GstAlsaMixerWatch *) mixer->handle_source;
-
   count = snd_mixer_poll_descriptors_count (mixer->handle);
-
-  pfds = g_newa (struct pollfd, count);
-
-  watch->n_poll_fds = snd_mixer_poll_descriptors (mixer->handle, pfds, count);;
-  watch->poll_fds = g_new0 (GPollFD, count);
-  if (watch->poll_fds == NULL) {
-    GST_WARNING ("Cannot allocate poll descriptors");
+  if (count < 1) {
+    GST_WARNING ("Poll descriptors count < 0: %d", count);
     g_source_destroy (mixer->handle_source);
     mixer->handle_source = NULL;
     return;
   }
+
+  pfds = g_newa (struct pollfd, count);
+
+  watch = (GstAlsaMixerWatch *) mixer->handle_source;
+  watch->n_poll_fds = snd_mixer_poll_descriptors (mixer->handle, pfds, count);;
+  watch->poll_fds = g_new0 (GPollFD, count);
 
   for (i = 0; i < watch->n_poll_fds; ++i) {
     watch->poll_fds[i].fd = pfds[i].fd;
