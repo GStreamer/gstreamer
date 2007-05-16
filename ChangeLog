@@ -1,5 +1,12 @@
 2007-05-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_descramble_cook_audio):
+	  After descrambling, push the packets out as individual packets
+	  instead of one big descrambled buffer. Makes cook audio decoding
+	  work with the 'realaudiodec' decoder from gst-plugins-bad.
+
+2007-05-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_init),
 	(gst_rmdemux_sink_event), (gst_rmdemux_perform_seek),
 	(gst_rmdemux_reset), (gst_rmdemux_chain), (gst_rmdemux_add_stream),

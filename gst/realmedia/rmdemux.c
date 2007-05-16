@@ -1876,7 +1876,18 @@ gst_rmdemux_descramble_cook_audio (GstRMDemux * rmdemux,
     }
   }
 
-  ret = gst_pad_push (stream->pad, outbuf);
+  /* some decoders, such as realaudiodec, need to be fed in packet units */
+  for (p = 0; p < height; ++p) {
+    GstBuffer *subbuf;
+
+    subbuf = gst_buffer_create_sub (outbuf, p * packet_size, packet_size);
+    gst_buffer_set_caps (subbuf, GST_PAD_CAPS (stream->pad));
+    ret = gst_pad_push (stream->pad, subbuf);
+    if (ret != GST_FLOW_OK)
+      break;
+  }
+
+  gst_buffer_unref (outbuf);
 
 done:
 
