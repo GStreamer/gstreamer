@@ -1,3 +1,10 @@
+2007-05-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstplugin.c: (gst_plugin_load_file):
+	  If we fail to load a plugin because of unresolved symbols or missing
+	  libraries and spew a warning to stderr, we may just as well mention
+	  which plugin it was that failed to load.
+
 2007-05-13  David Schleef  <ds@schleef.org>
 
 	* docs/Makefile.am: the gtk-doc makefile snippet correctly
