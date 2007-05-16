@@ -1,4 +1,4 @@
-/* GStreamer
+/* GStreamer RealMedia demuxer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  * Copyright (C) <2003> David A. Schleef <ds@schleef.org>
  * Copyright (C) <2004> Stephane Loeuillet <gstreamer@leroutier.net>
@@ -77,6 +77,8 @@ struct _GstRMDemuxStream
   gboolean needs_descrambling;
   guint subpackets_needed;      /* subpackets needed for descrambling    */
   GPtrArray *subpackets;        /* array containing subpacket GstBuffers */
+
+  GstTagList *pending_tags;
 };
 
 struct _GstRMDemuxIndex
@@ -244,29 +246,31 @@ gst_rmdemux_init (GstRMDemux * rmdemux)
   gst_element_add_pad (GST_ELEMENT (rmdemux), rmdemux->sinkpad);
 
   rmdemux->adapter = gst_adapter_new ();
+  rmdemux->first_ts = GST_CLOCK_TIME_NONE;
+  rmdemux->need_newsegment = TRUE;
 }
 
 static gboolean
 gst_rmdemux_sink_event (GstPad * pad, GstEvent * event)
 {
-  gboolean ret = TRUE;
+  GstRMDemux *rmdemux;
+  gboolean ret;
 
-#ifndef GST_DISABLE_GST_DEBUG
-  GstRMDemux *rmdemux = GST_RMDEMUX (GST_PAD_PARENT (pad));
-#endif
+  rmdemux = GST_RMDEMUX (gst_pad_get_parent (pad));
+
+  GST_LOG_OBJECT (pad, "%s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
-      GST_LOG_OBJECT (rmdemux, "Event on sink: NEWSEGMENT");
       gst_event_unref (event);
+      ret = TRUE;
       break;
     default:
-      GST_LOG_OBJECT (rmdemux, "Event on sink: type=%d",
-          GST_EVENT_TYPE (event));
       ret = gst_pad_event_default (pad, event);
       break;
   }
 
+  gst_object_unref (rmdemux);
   return ret;
 }
 
@@ -562,23 +566,14 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, GstEvent * event)
 
   /* now we have a new position, prepare for streaming again */
   {
-    GstEvent *event;
-
     /* Reset the demuxer state */
     rmdemux->state = RMDEMUX_STATE_DATA_PACKET;
 
     if (flush)
       gst_rmdemux_send_event (rmdemux, gst_event_new_flush_stop ());
 
-    /* create the discont event we are going to send out */
-    event = gst_event_new_new_segment (FALSE, rmdemux->segment.rate,
-        rmdemux->segment.format, rmdemux->segment.start,
-        rmdemux->segment.stop, rmdemux->segment.time);
-
-    GST_DEBUG_OBJECT (rmdemux,
-        "sending NEWSEGMENT event to all src pads with segment.start= %"
-        GST_TIME_FORMAT, GST_TIME_ARGS (rmdemux->segment.start));
-    gst_rmdemux_send_event (rmdemux, event);
+    /* must send newsegment event from streaming thread, so just set flag */
+    rmdemux->need_newsegment = TRUE;
 
     /* notify start of new segment */
     if (rmdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
@@ -586,6 +581,7 @@ gst_rmdemux_perform_seek (GstRMDemux * rmdemux, GstEvent * event)
           gst_message_new_segment_start (GST_OBJECT_CAST (rmdemux),
               GST_FORMAT_TIME, rmdemux->segment.last_stop));
     }
+
     /* restart our task since it might have been stopped when we did the 
      * flush. */
     gst_pad_start_task (rmdemux->sinkpad, (GstTaskFunction) gst_rmdemux_loop,
@@ -685,6 +681,8 @@ gst_rmdemux_reset (GstRMDemux * rmdemux)
 
     gst_rmdemux_stream_clear_cached_subpackets (rmdemux, stream);
     gst_element_remove_pad (GST_ELEMENT (rmdemux), stream->pad);
+    if (stream->pending_tags)
+      gst_tag_list_free (stream->pending_tags);
     if (stream->subpackets)
       g_ptr_array_free (stream->subpackets, TRUE);
     g_free (stream->index);
@@ -700,6 +698,8 @@ gst_rmdemux_reset (GstRMDemux * rmdemux)
   rmdemux->have_pads = FALSE;
 
   gst_segment_init (&rmdemux->segment, GST_FORMAT_UNDEFINED);
+  rmdemux->first_ts = GST_CLOCK_TIME_NONE;
+  rmdemux->need_newsegment = TRUE;
 }
 
 static GstStateChangeReturn
@@ -1084,18 +1084,14 @@ gst_rmdemux_chain (GstPad * pad, GstBuffer * buffer)
       {
         /* If we haven't already done so then signal there are no more pads */
         if (!rmdemux->have_pads) {
+          GST_LOG_OBJECT (rmdemux, "no more pads");
           gst_element_no_more_pads (GST_ELEMENT (rmdemux));
           rmdemux->have_pads = TRUE;
-
-          GST_LOG_OBJECT (rmdemux, "no more pads.");
-          gst_rmdemux_send_event (rmdemux,
-              gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
-                  (gint64) 0, (gint64) - 1, 0));
         }
 
         /* The actual header is only 8 bytes */
         rmdemux->size = DATA_SIZE;
-        GST_DEBUG_OBJECT (rmdemux, "data available %d",
+        GST_LOG_OBJECT (rmdemux, "data available %d",
             gst_adapter_available (rmdemux->adapter));
         if (gst_adapter_available (rmdemux->adapter) < rmdemux->size)
           goto unlock;
@@ -1444,16 +1440,11 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     gst_pad_set_active (stream->pad, TRUE);
     gst_element_add_pad (GST_ELEMENT_CAST (rmdemux), stream->pad);
 
-    gst_pad_push_event (stream->pad,
-        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME, (gint64) 0,
-            (gint64) - 1, 0));
-
-    if (codec_name && codec_tag) {
-      GstTagList *tags = NULL;
-
-      tags = gst_tag_list_new ();
-      gst_tag_list_add (tags, GST_TAG_MERGE_KEEP, codec_tag, codec_name, NULL);
-      gst_element_found_tags_for_pad (GST_ELEMENT (rmdemux), stream->pad, tags);
+    /* save for later, we must send the tags after the newsegment event */
+    if (codec_name != NULL && codec_tag != NULL) {
+      stream->pending_tags = gst_tag_list_new ();
+      gst_tag_list_add (stream->pending_tags, GST_TAG_MERGE_KEEP,
+          codec_tag, codec_name, NULL);
     }
   }
 
@@ -1988,6 +1979,33 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const guint8 * data,
   if (!stream || !stream->pad)
     goto unknown_stream;
 
+  if (rmdemux->first_ts == GST_CLOCK_TIME_NONE) {
+    GST_DEBUG_OBJECT (rmdemux, "First timestamp: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+    rmdemux->first_ts = timestamp;
+  }
+
+  if (rmdemux->need_newsegment) {
+    GstEvent *event;
+
+    event = gst_event_new_new_segment (FALSE, rmdemux->segment.rate,
+        rmdemux->segment.format, rmdemux->segment.start,
+        rmdemux->segment.stop, rmdemux->segment.time);
+
+    GST_DEBUG_OBJECT (rmdemux, "sending NEWSEGMENT event, segment.start= %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (rmdemux->segment.start));
+
+    gst_rmdemux_send_event (rmdemux, event);
+    rmdemux->need_newsegment = FALSE;
+  }
+
+  if (stream->pending_tags != NULL) {
+    GST_LOG_OBJECT (stream->pad, "tags %" GST_PTR_FORMAT, stream->pending_tags);
+    gst_element_found_tags_for_pad (GST_ELEMENT_CAST (rmdemux), stream->pad,
+        stream->pending_tags);
+    stream->pending_tags = NULL;
+  }
+
   if ((rmdemux->offset + packet_size) <= stream->seek_offset) {
     GST_DEBUG_OBJECT (rmdemux,
         "Stream %d is skipping: seek_offset=%d, offset=%d, packet_size=%u",
@@ -2004,7 +2022,7 @@ gst_rmdemux_parse_packet (GstRMDemux * rmdemux, const guint8 * data,
     goto alloc_failed;
 
   memcpy (GST_BUFFER_DATA (buffer), (guint8 *) data, packet_size);
-  GST_BUFFER_TIMESTAMP (buffer) = timestamp;
+  GST_BUFFER_TIMESTAMP (buffer) = timestamp - rmdemux->first_ts;
 
   if (stream->needs_descrambling) {
     ret = gst_rmdemux_handle_scrambled_packet (rmdemux, stream, buffer, key);

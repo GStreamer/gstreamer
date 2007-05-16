@@ -1,5 +1,17 @@
 2007-05-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_init),
+	(gst_rmdemux_sink_event), (gst_rmdemux_perform_seek),
+	(gst_rmdemux_reset), (gst_rmdemux_chain), (gst_rmdemux_add_stream),
+	(gst_rmdemux_parse_packet):
+	* gst/realmedia/rmdemux.h:
+	  Remember first timestamp encountered in stream and re-timestamp
+	  stream to start from zero (fixes #397219); only send one newsegment
+	  event, not two; when seeking, send newsegment events from the
+	  streaming thread and not from the seeking thread.
+
+2007-05-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Based on patch by: Mark Nauwelaerts  <manauw skynet be>
 
 	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_process_event):

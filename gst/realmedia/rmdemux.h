@@ -1,4 +1,4 @@
-/* GStreamer
+/* GStreamer RealMedia demuxer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *
  * This library is free software; you can redistribute it and/or
@@ -106,8 +106,14 @@ struct _GstRMDemux {
   gboolean segment_running;
   gboolean running;
 
+  /* Whether we need to send a newsegment event */
+  gboolean need_newsegment;
+
   /* Current timestamp */
   GstClockTime cur_timestamp;
+
+  /* First timestamp */
+  GstClockTime first_ts;
 
   int n_chunks;
   int chunk_index;
