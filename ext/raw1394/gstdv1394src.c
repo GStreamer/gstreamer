@@ -1084,7 +1084,7 @@ gst_dv1394src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   g_free (protocol);
 
   location = gst_uri_get_location (uri);
-  if (location && (!(location == "")))
+  if (location && *location != '\0')
     gst_dv1394src->port = strtol (location, NULL, 10);
   else
     gst_dv1394src->port = DEFAULT_PORT;

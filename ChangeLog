@@ -1,3 +1,9 @@
+2007-05-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_uri_set_uri):
+	Replace direct comparison of a string with the string literal "" with
+	a comparison of the first character with '\0'. Fixes #438926.
+
 2007-05-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/debug/breakmydata.c (gst_break_my_data_init):
