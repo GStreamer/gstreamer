@@ -319,6 +319,10 @@ gst_dvd_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
       dvd_demux->segment_filter = TRUE;
       ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
           event);
+
+      /* parent class will have reset the other streams */
+      gst_mpeg_streams_reset_last_flow (dvd_demux->subpicture_stream,
+          GST_DVD_DEMUX_NUM_SUBPICTURE_STREAMS);
       break;
     case GST_EVENT_CUSTOM_DOWNSTREAM:
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:

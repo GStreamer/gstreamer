@@ -92,6 +92,9 @@ GST_BOILERPLATE_FULL (GstMPEGDemux, gst_mpeg_demux, GstMPEGParse,
 
 static void gst_mpeg_demux_class_init (GstMPEGDemuxClass * klass);
 
+static gboolean gst_mpeg_demux_process_event (GstMPEGParse * mpeg_parse,
+    GstEvent * event);
+
 static GstPad *gst_mpeg_demux_new_output_pad (GstMPEGDemux * mpeg_demux,
     const gchar * name, GstPadTemplate * temp);
 static void gst_mpeg_demux_init_stream (GstMPEGDemux * mpeg_demux,
@@ -190,6 +193,7 @@ gst_mpeg_demux_class_init (GstMPEGDemuxClass * klass)
   mpeg_parse_class->parse_packet = gst_mpeg_demux_parse_packet;
   mpeg_parse_class->parse_pes = gst_mpeg_demux_parse_pes;
   mpeg_parse_class->send_buffer = NULL;
+  mpeg_parse_class->process_event = gst_mpeg_demux_process_event;
 
   klass->new_output_pad = gst_mpeg_demux_new_output_pad;
   klass->init_stream = gst_mpeg_demux_init_stream;
@@ -227,6 +231,34 @@ gst_mpeg_demux_init (GstMPEGDemux * mpeg_demux, GstMPEGDemuxClass * klass)
   mpeg_demux->max_gap_tolerance = GST_CLOCK_TIME_NONE;
 
   mpeg_demux->last_pts = -1;
+}
+
+
+static gboolean
+gst_mpeg_demux_process_event (GstMPEGParse * mpeg_parse, GstEvent * event)
+{
+  GstMPEGDemux *demux = GST_MPEG_DEMUX (mpeg_parse);
+  gboolean ret;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
+          event);
+
+      gst_mpeg_streams_reset_last_flow (demux->video_stream,
+          GST_MPEG_DEMUX_NUM_VIDEO_STREAMS);
+      gst_mpeg_streams_reset_last_flow (demux->audio_stream,
+          GST_MPEG_DEMUX_NUM_AUDIO_STREAMS);
+      gst_mpeg_streams_reset_last_flow (demux->private_stream,
+          GST_MPEG_DEMUX_NUM_PRIVATE_STREAMS);
+      break;
+    default:
+      ret = GST_MPEG_PARSE_CLASS (parent_class)->process_event (mpeg_parse,
+          event);
+      break;
+  }
+
+  return ret;
 }
 
 static gint
@@ -1310,6 +1342,16 @@ gst_mpeg_demux_get_index (GstElement * element)
   return mpeg_demux->index;
 }
 
+void
+gst_mpeg_streams_reset_last_flow (GstMPEGStream * streams[], guint num)
+{
+  guint i;
+
+  for (i = 0; i < num; ++i) {
+    if (streams[i] != NULL)
+      streams[i]->last_flow = GST_FLOW_OK;
+  }
+}
 
 gboolean
 gst_mpeg_demux_plugin_init (GstPlugin * plugin)

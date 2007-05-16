@@ -1,3 +1,16 @@
+2007-05-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Mark Nauwelaerts  <manauw skynet be>
+
+	* gst/mpegstream/gstdvddemux.c: (gst_dvd_demux_process_event):
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_class_init),
+	(gst_mpeg_demux_process_event), (gst_mpeg_streams_reset_last_flow):
+	* gst/mpegstream/gstmpegdemux.h:
+	  Reset last_flow values for the various streams after a flushing
+	  seek, otherwise we might aggregate wrong flow returns afterwards
+	  that will make upstream pause silently. This should fix seeking
+	  in DVDs and also fix the Thoggen cropping dialog (#438610).
+
 2007-05-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_reset),

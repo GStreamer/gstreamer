@@ -204,9 +204,12 @@ struct _GstMPEGDemuxClass {
                                         GstClockTime last_ts);
 };
 
-GType           gst_mpeg_demux_get_type         (void);
+void            gst_mpeg_streams_reset_last_flow (GstMPEGStream *streams[],
+                                                  guint          num);
 
-gboolean        gst_mpeg_demux_plugin_init      (GstPlugin *plugin);
+GType           gst_mpeg_demux_get_type          (void);
+
+gboolean        gst_mpeg_demux_plugin_init       (GstPlugin *plugin);
 
 G_END_DECLS
 
