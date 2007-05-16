@@ -1,3 +1,8 @@
+2007-05-16  Edward Hervey  <edward@fluendo.com>
+
+	* ext/libpng/gstpngdec.c: (user_endrow_callback), (user_read_data):
+	Fix build on macosx.
+
 2007-05-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/raw1394/gstdv1394src.c: (gst_dv1394src_uri_set_uri):

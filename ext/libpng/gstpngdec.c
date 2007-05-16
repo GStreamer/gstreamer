@@ -221,8 +221,8 @@ user_endrow_callback (png_structp png_ptr, png_bytep new_row,
   if (GST_IS_BUFFER (pngdec->buffer_out)) {
     size_t offset = row_num * GST_ROUND_UP_4 (pngdec->rowbytes);
 
-    GST_LOG ("got row %u, copying in buffer %p at offset %d", (guint) row_num,
-        pngdec->buffer_out, offset);
+    GST_LOG ("got row %u, copying in buffer %p at offset %" G_GSIZE_FORMAT,
+        (guint) row_num, pngdec->buffer_out, offset);
     memcpy (GST_BUFFER_DATA (pngdec->buffer_out) + offset, new_row,
         pngdec->rowbytes);
     pngdec->ret = GST_FLOW_OK;
@@ -307,7 +307,8 @@ user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
 
   pngdec = GST_PNGDEC (png_ptr->io_ptr);
 
-  GST_LOG ("reading %d bytes of data at offset %d", length, pngdec->offset);
+  GST_LOG ("reading %" G_GSIZE_FORMAT " bytes of data at offset %d", length,
+      pngdec->offset);
 
   ret = gst_pad_pull_range (pngdec->sinkpad, pngdec->offset, length, &buffer);
   if ((ret != GST_FLOW_OK) || (GST_BUFFER_SIZE (buffer) != length))
