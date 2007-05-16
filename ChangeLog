@@ -1,5 +1,25 @@
 2007-05-16  Stefan Kost  <ensonic@users.sf.net>
 
+	patch by: Stanislav Brabec <sbrabec@suse.cz>
+
+	* configure.ac:
+	* ext/amrwb/Makefile.am:
+	* ext/amrwb/amrwb-code/Makefile.am:
+	* ext/amrwb/amrwb-code/amrwb/Makefile.am:
+	* ext/amrwb/amrwb-code/amrwb/README:
+	* ext/amrwb/gstamrwbdec.c:
+	* ext/amrwb/gstamrwbdec.h (__GST_AMRWBDEC_H__):
+	* ext/amrwb/gstamrwbenc.h (__GST_AMRWBENC_H__):
+	* ext/amrwb/gstamrwbparse.c:
+	* ext/amrwb/gstamrwbparse.h (__GST_AMRWBPARSE_H__):
+	* gst-libs/Makefile.am:
+	* gst-libs/ext/Makefile.am:
+	* gst-libs/ext/amrwb/Makefile.am:
+	* gst-libs/ext/amrwb/README:
+	  Use external shared libamrwb. Fixes #423741 (with lots of cleanup).
+
+2007-05-16  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/x264/gstx264enc.c (gst_x264_enc_init_encoder):
 	  This needs a version check.
 

@@ -22,8 +22,8 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include "enc_if.h"
-#include "typedef.h"
+#include <amrwb/enc_if.h>
+#include <amrwb/typedef.h>
 
 
 G_BEGIN_DECLS

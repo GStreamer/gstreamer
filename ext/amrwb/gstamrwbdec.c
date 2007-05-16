@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ *
+ * gst-launch filesrc location=abc.amr ! audio/AMR-WB ! amrwbdec ! audioresample ! audioconvert ! alsasink
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

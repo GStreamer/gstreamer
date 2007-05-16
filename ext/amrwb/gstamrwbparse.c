@@ -23,9 +23,7 @@
 
 #include <string.h>
 
-#include "typedef.h"
 #include "gstamrwbparse.h"
-#include "dec_if.h"
 
 
 GST_DEBUG_CATEGORY_STATIC (amrwbparse_debug);

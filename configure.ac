@@ -449,14 +449,12 @@ AG_GST_CHECK_FEATURE(ALSA, [alsa plug-ins], gstalsa, [
 
 dnl *** amrwb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AMRWB, true)
-AG_GST_CHECK_FEATURE(AMRWB, [amrwb code], amrwb, [
-  if test -f "gst-libs/ext/amrwb/26204-600.zip"; then
-    HAVE_AMRWB="yes"
-  else
-    AC_MSG_WARN(amrwb code zipfile not found. See README at ext/amrwb/)
-    HAVE_AMRWB="no"
-  fi
-  AC_SUBST(HAVE_AMRWB)
+AG_GST_CHECK_FEATURE(AMRWB, [amrwb library], amrwb, [
+  AG_GST_CHECK_LIBHEADER(AMRWB, amrwb,
+                        GP3D_IF_decode, ,
+                        amrwb/dec.h,
+                        AMRWB_LIBS="-lamrwb"
+                        AC_SUBST(AMRWB_LIBS))
 ])
 
 dnl *** BZ2 ***
@@ -634,7 +632,7 @@ AG_GST_CHECK_FEATURE(GSM, [GSM library], gsmenc gsmdec, [
   AG_GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm.h, GSM_LIBS="-lgsm")
   if test $HAVE_GSM != "yes"; then
     AG_GST_CHECK_LIBHEADER(GSM, gsm, gsm_create, , gsm/gsm.h, GSM_LIBS="-lgsm")
-    if test $HAVE_GSM = "yes"; then 
+    if test $HAVE_GSM = "yes"; then
       AC_DEFINE(GSM_HEADER_IN_SUBDIR, 1, [Define if GSM header in gsm/ subdir])
     fi
   fi
@@ -650,7 +648,7 @@ AG_GST_CHECK_FEATURE(IVORBIS, [integer vorbis plug-in], ivorbisdec, [
   AC_CHECK_LIB(vorbisidec, vorbis_block_init,
     [IVORBIS_LIBS=-lvorbisidec
      HAVE_IVORBIS=yes
-     case $host in 
+     case $host in
      arm-*-*)
        IVORBIS_CFLAGS="-D_ARM_ASSEM_ $IVORBIS_CFLAGS"
      esac
@@ -825,7 +823,7 @@ AG_GST_CHECK_FEATURE(NEON, [neon http client plugins], neonhttpsrc, [
 dnl *** timidity ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_TIMIDITY, true)
 AG_GST_CHECK_FEATURE(TIMIDITY, [timidity midi soft synth plugin], timidity, [
-  PKG_CHECK_MODULES(TIMIDITY, libtimidity, [ 
+  PKG_CHECK_MODULES(TIMIDITY, libtimidity, [
     HAVE_TIMIDITY="yes",
 	AC_MSG_CHECKING([for timidity.cfg])
 	timidity_cfg=""
@@ -858,7 +856,7 @@ AG_GST_CHECK_FEATURE(WILDMIDI, [wildmidi midi soft synth plugin], wildmidi, [
   AC_CHECK_HEADER([wildmidi_lib.h],HAVE_WILDMIDI=yes, HAVE_WILDMIDI=no)
   if test "x$HAVE_WILDMIDI" = "xyes"; then
 	 WILDMIDI_CFLAGS=
-	 WILDMIDI_LIBS=-lWildMidi		
+	 WILDMIDI_LIBS=-lWildMidi
 	 AC_MSG_NOTICE(compiling gstWildMidi)
   else
 	 WILDMIDI_CFLAGS=
@@ -1137,8 +1135,6 @@ gst/y4m/Makefile
 gst-libs/Makefile
 gst-libs/gst/Makefile
 gst-libs/gst/app/Makefile
-gst-libs/ext/Makefile
-gst-libs/ext/amrwb/Makefile
 sys/Makefile
 sys/glsink/Makefile
 sys/dvb/Makefile

@@ -22,8 +22,9 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
-#include "typedef.h"
-#include "dec_if.h"
+#include <amrwb/typedef.h>
+#include <amrwb/dec_if.h>
+#include <amrwb/if_rom.h>
 
 G_BEGIN_DECLS
 
