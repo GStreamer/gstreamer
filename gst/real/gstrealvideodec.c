@@ -446,6 +446,9 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
   guint len = GST_BUFFER_SIZE (in);
   GstFlowReturn ret;
 
+  if (G_UNLIKELY (dec->hooks.transform == NULL || dec->hooks.module == NULL))
+    goto not_negotiated;
+
   /* Flags */
   if (len < 1)
     goto not_enough_data;
@@ -471,6 +474,13 @@ not_enough_data:
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Not enough data."), (NULL));
     gst_buffer_unref (in);
     return GST_FLOW_ERROR;
+  }
+not_negotiated:
+  {
+    GST_WARNING_OBJECT (dec, "decoder not open, probably no input caps set "
+        "yet, caps on input buffer: %" GST_PTR_FORMAT, GST_BUFFER_CAPS (in));
+    gst_buffer_unref (in);
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 

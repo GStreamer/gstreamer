@@ -1,3 +1,11 @@
+2007-05-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_chain),
+	(gst_real_audio_dec_setcaps):
+	* gst/real/gstrealvideodec.c: (gst_real_video_dec_chain):
+	  Don't crash when we get a buffer and our input caps haven't been set
+	  yet; also, don't leak all the input buffers (realaudiodec only).
+
 2007-05-16  Stefan Kost  <ensonic@users.sf.net>
 
 	patch by: Stanislav Brabec <sbrabec@suse.cz>

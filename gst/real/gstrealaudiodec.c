@@ -1,4 +1,4 @@
-/* GStreamer
+/* RealAudio wrapper plugin
  *
  * Copyright (C) 2006 Lutz Mueller <lutz@topfrose.de>
  * Copyright (C) 2006 Edward Hervey <bilboed@bilboed.com>
@@ -137,30 +137,55 @@ static GstFlowReturn
 gst_real_audio_dec_chain (GstPad * pad, GstBuffer * in)
 {
   GstRealAudioDec *dec = GST_REAL_AUDIO_DEC (GST_PAD_PARENT (pad));
-  guint len;
+  GstFlowReturn flow;
+  GstClockTime timestamp;
   GstBuffer *out = NULL;
   guint16 res = 0;
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstClockTime timestamp = GST_BUFFER_TIMESTAMP (in);
+  guint len;
 
-  if ((ret = gst_pad_alloc_buffer (dec->src, GST_BUFFER_OFFSET_NONE,
-              dec->width * dec->leaf_size * dec->height * 16,
-              GST_PAD_CAPS (dec->src), &out)) != GST_FLOW_OK)
-    return ret;
+  if (G_UNLIKELY (dec->funcs.RADecode == NULL || dec->module == NULL))
+    goto not_negotiated;
+
+  timestamp = GST_BUFFER_TIMESTAMP (in);
+
+  flow = gst_pad_alloc_buffer (dec->src, GST_BUFFER_OFFSET_NONE,
+      dec->width * dec->leaf_size * dec->height * 16,
+      GST_PAD_CAPS (dec->src), &out);
+
+  if (flow != GST_FLOW_OK)
+    goto done;
+
   res = dec->funcs.RADecode (dec->context, GST_BUFFER_DATA (in),
       GST_BUFFER_SIZE (in), GST_BUFFER_DATA (out), &len, -1);
-  if (res)
+
+  if (res != 0)
     goto could_not_decode;
+
   GST_BUFFER_SIZE (out) = len;
   GST_BUFFER_TIMESTAMP (out) = timestamp;
-  return gst_pad_push (dec->src, out);
+
+  flow = gst_pad_push (dec->src, out);
+
+done:
+  gst_buffer_unref (in);
+  return flow;
 
   /* Errors */
 could_not_decode:
-  gst_buffer_unref (out);
-  GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Could not decode buffer (%i).",
-          res), (NULL));
-  return GST_FLOW_ERROR;
+  {
+    gst_buffer_unref (out);
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
+        ("Could not decode buffer (%i).", res));
+    flow = GST_FLOW_ERROR;
+    goto done;
+  }
+not_negotiated:
+  {
+    GST_WARNING_OBJECT (dec, "decoder not open, probably no input caps set "
+        "yet, caps on input buffer: %" GST_PTR_FORMAT, GST_BUFFER_CAPS (in));
+    flow = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
 }
 
 static gboolean
@@ -198,6 +223,7 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
       !gst_structure_get_int (s, "leaf_size", &leaf_size) ||
       !gst_structure_get_int (s, "packet_size", &packet_size))
     goto missing_keys;
+
   if ((v = gst_structure_get_value (s, "codec_data")))
     buf = g_value_peek_pointer (v);
 
