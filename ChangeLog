@@ -1,3 +1,23 @@
+2007-05-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/Makefile.am:
+	* gst/playback/gstqueue2.c: (gst_queue_get_type),
+	(gst_queue_class_init), (gst_queue_init), (gst_queue_finalize),
+	(gst_queue_getcaps), (gst_queue_bufferalloc),
+	(gst_queue_acceptcaps), (update_time_level), (apply_segment),
+	(apply_buffer), (update_buffering), (reset_rate_timer),
+	(update_rates), (gst_queue_locked_flush),
+	(gst_queue_locked_enqueue), (gst_queue_locked_dequeue),
+	(gst_queue_handle_sink_event), (gst_queue_is_empty),
+	(gst_queue_is_filled), (gst_queue_chain), (gst_queue_push_one),
+	(gst_queue_loop), (gst_queue_handle_src_event),
+	(gst_queue_handle_src_query), (gst_queue_sink_activate_push),
+	(gst_queue_src_activate_push), (gst_queue_change_state),
+	(gst_queue_set_property), (gst_queue_get_property), (plugin_init):
+	On our way to playbin2 this is the new network queue that does buffering
+	all by itself using high and low watermarks. It can also measure up and
+	downstream bandwidth to optimally size the queue.
+
 2007-05-17  Michael Smith <msmith@fluendo.com>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_do_seek):
