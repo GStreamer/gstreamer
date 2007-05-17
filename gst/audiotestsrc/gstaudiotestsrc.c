@@ -607,7 +607,8 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (basesrc);
   GstClockTime time;
 
-  time = segment->time = segment->start;
+  segment->time = segment->start;
+  time = segment->last_stop;
 
   /* now move to the time indicated */
   src->n_samples = time * src->samplerate / GST_SECOND;

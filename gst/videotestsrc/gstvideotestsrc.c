@@ -497,7 +497,8 @@ gst_video_test_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 
   src = GST_VIDEO_TEST_SRC (bsrc);
 
-  time = segment->time = segment->start;
+  segment->time = segment->start;
+  time = segment->last_stop;
 
   /* now move to the time indicated */
   if (src->rate_numerator) {

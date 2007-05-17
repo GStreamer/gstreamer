@@ -1,3 +1,10 @@
+2007-05-17  Michael Smith <msmith@fluendo.com>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_do_seek):
+	* gst/videotestsrc/gstvideotestsrc.c: (gst_video_test_src_do_seek):
+	  Use the segment->last_stop value to calculate the next timestamp to
+	  generate after a seek; not the segment->start value.
+
 2007-05-15  David Schleef  <ds@schleef.org>
 
 	* docs/Makefile.am: Install docs even when --disable-gtk-doc
