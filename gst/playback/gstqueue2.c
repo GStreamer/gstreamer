@@ -80,8 +80,8 @@ enum
 #define DEFAULT_MAX_SIZE_TIME      2 * GST_SECOND       /* 2 seconds */
 #define DEFAULT_USE_BUFFERING      FALSE
 #define DEFAULT_USE_RATE_ESTIMATE  TRUE
-#define DEFAULT_LOW_PERCENT        15
-#define DEFAULT_HIGH_PERCENT       95
+#define DEFAULT_LOW_PERCENT        10
+#define DEFAULT_HIGH_PERCENT       99
 
 enum
 {
@@ -683,39 +683,40 @@ update_rates (GstQueue * queue)
   elapsed = g_timer_elapsed (queue->timer, NULL);
 
   /* recalc after each interval. */
-  if (queue->last_elapsed + RATE_INTERVAL >= elapsed)
-    return;
+  if (queue->last_elapsed + RATE_INTERVAL < elapsed) {
+    period = elapsed - queue->last_elapsed;
 
-  period = elapsed - queue->last_elapsed;
+    GST_DEBUG_OBJECT (queue,
+        "rates: period %f, in %" G_GUINT64_FORMAT ", out %" G_GUINT64_FORMAT,
+        period, queue->bytes_in, queue->bytes_out);
 
-  GST_DEBUG_OBJECT (queue,
-      "rates: period %f, in %" G_GUINT64_FORMAT ", out %" G_GUINT64_FORMAT,
-      period, queue->bytes_in, queue->bytes_out);
+    byte_in_rate = queue->bytes_in / period;
+    byte_out_rate = queue->bytes_out / period;
 
-  byte_in_rate = queue->bytes_in / period;
-  byte_out_rate = queue->bytes_out / period;
+    if (queue->byte_in_rate == 0.0)
+      queue->byte_in_rate = byte_in_rate;
+    else
+      queue->byte_in_rate = AVG_IN (queue->byte_in_rate, byte_in_rate);
 
-  if (queue->byte_in_rate == 0.0)
-    queue->byte_in_rate = byte_in_rate;
-  else
-    queue->byte_in_rate = AVG_IN (queue->byte_in_rate, byte_in_rate);
+    if (queue->byte_out_rate == 0.0)
+      queue->byte_out_rate = byte_out_rate;
+    else
+      queue->byte_out_rate = AVG_OUT (queue->byte_out_rate, byte_out_rate);
 
-  if (queue->byte_out_rate == 0.0)
-    queue->byte_out_rate = byte_out_rate;
-  else
-    queue->byte_out_rate = AVG_OUT (queue->byte_out_rate, byte_out_rate);
+    /* reset the values to calculate rate over the next interval */
+    queue->last_elapsed = elapsed;
+    queue->bytes_in = 0;
+    queue->bytes_out = 0;
+  }
 
-  queue->cur_level.rate_time =
-      queue->cur_level.bytes / queue->byte_in_rate * GST_SECOND;
+  if (queue->byte_in_rate > 0.0) {
+    queue->cur_level.rate_time =
+        queue->cur_level.bytes / queue->byte_in_rate * GST_SECOND;
+  }
 
   GST_DEBUG_OBJECT (queue, "rates: in %f, out %f, time %" GST_TIME_FORMAT,
       queue->byte_in_rate, queue->byte_out_rate,
       GST_TIME_ARGS (queue->cur_level.rate_time));
-
-  /* reset the values to calculate rate over the next interval */
-  queue->last_elapsed = elapsed;
-  queue->bytes_in = 0;
-  queue->bytes_out = 0;
 }
 
 static void
