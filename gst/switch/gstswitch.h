@@ -54,9 +54,18 @@ struct _GstSwitch {
   /* flag to decide whether we need to send a new segment event
    * before we receive the next buffer */
   gboolean need_to_send_newsegment;
+  /* flag to decide whether to queue buffers received from current
+   * pads */
+  gboolean queue_buffers;
   GstClockTime stop_value;
+  GstClockTime start_value;
   GstClockTime current_start;
   GstClockTime last_ts;
+  /* this hash tables stores for key of the pad pointer
+   * a GList of stored buffers that need to be sent once the
+   * new segment has been sent
+   */
+  GHashTable *stored_buffers;
 };
 
 struct _GstSwitchClass {

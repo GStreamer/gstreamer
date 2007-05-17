@@ -1,3 +1,17 @@
+2007-05-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/switch/gstswitch.c (ARG_0, ARG_NB_SOURCES, ARG_ACTIVE_SOURCE,
+	  ARG_START_VALUE, ARG_STOP_VALUE, ARG_LAST_TS, ARG_QUEUE_BUFFERS,
+	  parent_class, gst_switch_release_pad, gst_switch_request_new_pad,
+	  gst_switch_chain, gst_switch_event, gst_switch_set_property,
+	  gst_switch_get_property, gst_switch_getcaps, gst_switch_dispose,
+	  unref_buffer, unref_buffers_and_destroy_list, gst_switch_init,
+	  gst_switch_base_init, gst_switch_class_init):
+	* gst/switch/gstswitch.h (need_to_send_newsegment, queue_buffers,
+	  stop_value, start_value, current_start, last_ts, stored_buffers):
+	Add handling of application provided stop and start values, allowing
+	A/V sync across 2 switch elements.
+
 2007-05-17  Edward Hervey  <edward@fluendo.com>
 
 	* sys/osxvideo/osxvideosink.h:
