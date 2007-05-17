@@ -883,6 +883,8 @@ GST_START_TEST (controller_misc)
   fail_unless (gst_controller_set_from_list (ctrl, "ulong", list));
 
   /* allocated GstTimedValue now belongs to the controller, but list not */
+  g_value_unset (&tval->value);
+  g_free (tval);
   g_slist_free (list);
   g_object_unref (ctrl);
   gst_object_unref (elem);

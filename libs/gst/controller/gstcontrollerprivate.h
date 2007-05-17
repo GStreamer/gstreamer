@@ -66,6 +66,24 @@ typedef struct _GstInterpolateMethod
 } GstInterpolateMethod;
 
 /**
+ * GstControlPoint:
+ *
+ * a internal structure for value+time and various temporary
+ * values used for interpolation. This "inherits" from
+ * GstTimedValue.
+ */
+/* FIXME 0.11: This should be merged with GstTimedValue for 0.11 */
+typedef struct _GstControlPoint
+{
+  /* fields from GstTimedValue. DO NOT CHANGE! */
+  GstClockTime timestamp;       /* timestamp of the value change */
+  GValue value;                 /* the new value */
+
+  /* internal fields */
+
+} GstControlPoint;
+
+/**
  * GstControlledProperty:
  */
 typedef struct _GstControlledProperty
@@ -75,8 +93,8 @@ typedef struct _GstControlledProperty
   GType base;                   /* base-type of the handled property */
   GValue default_value;         /* default value for the handled property */
   GValue result_value;          /* result value location for the interpolation method */
-  GstTimedValue last_value;     /* the last value a _sink call wrote */
-  GstTimedValue live_value;     /* temporary value override for live input */
+  GstControlPoint last_value;     /* the last value a _sink call wrote */
+  GstControlPoint live_value;     /* temporary value override for live input */
   gulong notify_handler_id;     /* id of the notify::<name> signal handler */
   GstInterpolateMode interpolation;     /* Interpolation mode */
   /* TODO instead of *method, have pointers to get() and get_value_array() here
@@ -87,7 +105,7 @@ typedef struct _GstControlledProperty
   InterpolateGet get;
   InterpolateGetValueArray get_value_array;
 
-  GList *values;                /* List of GstTimedValue */
+  GList *values;                /* List of GstControlPoint */
   /* TODO keep the last search result to be able to continue
      GList      *last_value;     // last search result, can be used for incremental searches
    */

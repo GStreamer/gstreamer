@@ -92,7 +92,7 @@ struct _GstControllerPrivate
 /* imports from gst-interpolation.c */
 
 extern GList
-    * gst_controlled_property_find_timed_value_node (GstControlledProperty *
+    * gst_controlled_property_find_control_point_node (GstControlledProperty *
     prop, GstClockTime timestamp);
 extern GstInterpolateMethod *interpolation_methods[];
 extern guint num_interpolation_methods;
@@ -127,18 +127,18 @@ on_object_controlled_property_changed (const GObject * object, GParamSpec * arg,
 /* helper */
 
 /*
- * gst_timed_value_compare:
- * @p1: a pointer to a #GstTimedValue
- * @p2: a pointer to a #GstTimedValue
+ * gst_control_point_compare:
+ * @p1: a pointer to a #GstControlPoint
+ * @p2: a pointer to a #GstControlPoint
  *
- * Compare function for g_list operations that operates on two #GstTimedValue
+ * Compare function for g_list operations that operates on two #GstControlPoint
  * parameters.
  */
 static gint
-gst_timed_value_compare (gconstpointer p1, gconstpointer p2)
+gst_control_point_compare (gconstpointer p1, gconstpointer p2)
 {
-  GstClockTime ct1 = ((GstTimedValue *) p1)->timestamp;
-  GstClockTime ct2 = ((GstTimedValue *) p2)->timestamp;
+  GstClockTime ct1 = ((GstControlPoint *) p1)->timestamp;
+  GstClockTime ct2 = ((GstControlPoint *) p2)->timestamp;
 
   return ((ct1 < ct2) ? -1 : ((ct1 == ct2) ? 0 : 1));
 /* this does not produce an gint :(
@@ -147,17 +147,17 @@ gst_timed_value_compare (gconstpointer p1, gconstpointer p2)
 }
 
 /*
- * gst_timed_value_find:
- * @p1: a pointer to a #GstTimedValue
+ * gst_control_point_find:
+ * @p1: a pointer to a #GstControlPoint
  * @p2: a pointer to a #GstClockTime
  *
- * Compare function for g_list operations that operates on a #GstTimedValue and
+ * Compare function for g_list operations that operates on a #GstControlPoint and
  * a #GstClockTime.
  */
 static gint
-gst_timed_value_find (gconstpointer p1, gconstpointer p2)
+gst_control_point_find (gconstpointer p1, gconstpointer p2)
 {
-  GstClockTime ct1 = ((GstTimedValue *) p1)->timestamp;
+  GstClockTime ct1 = ((GstControlPoint *) p1)->timestamp;
   GstClockTime ct2 = *(GstClockTime *) p2;
 
   return ((ct1 < ct2) ? -1 : ((ct1 == ct2) ? 0 : 1));
@@ -373,7 +373,7 @@ gst_controlled_property_new (GObject * object, const gchar * name)
           GST_WARNING ("incomplete implementation for paramspec type '%s'",
               G_PARAM_SPEC_TYPE_NAME (pspec));
       }
-      /* TODO what about adding a timed-val with timestamp=0 and value=default
+      /* TODO what about adding a control point with timestamp=0 and value=default
        * a bit easier for interpolators, example:
        * first timestamp is at 5
        * requested value if for timestamp=3
@@ -398,6 +398,23 @@ Error:
 }
 
 /*
+ * gst_control_point_free:
+ * @prop: the object to free
+ *
+ * Private method which frees all data allocated by a #GstControlPoint
+ * instance.
+ */
+static void
+gst_control_point_free (GstControlPoint * cp)
+{
+  g_return_if_fail (cp);
+
+  g_value_unset (&cp->value);
+  g_free (cp);
+}
+
+/*
+
  * gst_controlled_property_free:
  * @prop: the object to free
  *
@@ -407,12 +424,15 @@ Error:
 static void
 gst_controlled_property_free (GstControlledProperty * prop)
 {
-  GList *node;
-
-  for (node = prop->values; node; node = g_list_next (node)) {
-    g_free (node->data);
-  }
+  g_list_foreach (prop->values, (GFunc) gst_control_point_free, NULL);
   g_list_free (prop->values);
+
+  g_value_unset (&prop->default_value);
+  g_value_unset (&prop->result_value);
+  g_value_unset (&prop->last_value.value);
+  if (G_IS_VALUE (&prop->live_value.value))
+    g_value_unset (&prop->live_value.value);
+
   g_free (prop);
 }
 
@@ -723,22 +743,24 @@ gst_controller_set (GstController * self, gchar * property_name,
   g_mutex_lock (self->lock);
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
     if (G_VALUE_TYPE (value) == prop->type) {
-      GstTimedValue *tv;
+      GstControlPoint *cp;
       GList *node;
 
-      /* check if a timed_value for the timestamp already exists */
+      /* check if a control point for the timestamp already exists */
       if ((node = g_list_find_custom (prop->values, &timestamp,
-                  gst_timed_value_find))) {
-        tv = node->data;
-        memcpy (&tv->value, value, sizeof (GValue));
+                  gst_control_point_find))) {
+        cp = node->data;
+        g_value_reset (&cp->value);
+        g_value_copy (value, &cp->value);
       } else {
-        /* create a new GstTimedValue */
-        tv = g_new (GstTimedValue, 1);
-        tv->timestamp = timestamp;
-        memcpy (&tv->value, value, sizeof (GValue));
+        /* create a new GstControlPoint */
+        cp = g_new0 (GstControlPoint, 1);
+        cp->timestamp = timestamp;
+        g_value_init (&cp->value, prop->type);
+        g_value_copy (value, &cp->value);
         /* and sort it into the prop->values list */
         prop->values =
-            g_list_insert_sorted (prop->values, tv, gst_timed_value_compare);
+            g_list_insert_sorted (prop->values, cp, gst_control_point_compare);
       }
       res = TRUE;
     } else {
@@ -769,6 +791,7 @@ gst_controller_set_from_list (GstController * self, gchar * property_name,
   GstControlledProperty *prop;
   GSList *node;
   GstTimedValue *tv;
+  GstControlPoint *cp;
 
   g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
   g_return_val_if_fail (property_name, FALSE);
@@ -779,9 +802,13 @@ gst_controller_set_from_list (GstController * self, gchar * property_name,
       tv = node->data;
       if (G_VALUE_TYPE (&tv->value) == prop->type) {
         if (GST_CLOCK_TIME_IS_VALID (tv->timestamp)) {
-          /* TODO copy the timed value or just link in? */
+          cp = g_new0 (GstControlPoint, 1);
+          cp->timestamp = tv->timestamp;
+          g_value_init (&cp->value, prop->type);
+          g_value_copy (&tv->value, &cp->value);
           prop->values =
-              g_list_insert_sorted (prop->values, tv, gst_timed_value_compare);
+              g_list_insert_sorted (prop->values, cp,
+              gst_control_point_compare);
           res = TRUE;
         } else {
           g_warning ("GstTimedValued with invalid timestamp passed to %s "
@@ -823,10 +850,10 @@ gst_controller_unset (GstController * self, gchar * property_name,
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
     GList *node;
 
-    /* check if a timed_value for the timestamp exists */
+    /* check if a control point for the timestamp exists */
     if ((node = g_list_find_custom (prop->values, &timestamp,
-                gst_timed_value_find))) {
-      g_free (node->data);      /* free GstTimedValue */
+                gst_control_point_find))) {
+      gst_control_point_free (node->data);      /* free GstControlPoint */
       prop->values = g_list_delete_link (prop->values, node);
       res = TRUE;
     }
@@ -858,8 +885,8 @@ gst_controller_unset_all (GstController * self, gchar * property_name)
 
   g_mutex_lock (self->lock);
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    /* free GstTimedValue structures */
-    g_list_foreach (prop->values, (GFunc) g_free, NULL);
+    /* free GstControlPoint structures */
+    g_list_foreach (prop->values, (GFunc) gst_control_point_free, NULL);
     g_list_free (prop->values);
     prop->values = NULL;
     res = TRUE;
@@ -963,14 +990,14 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
     live = FALSE;
     if (G_UNLIKELY (G_IS_VALUE (&prop->live_value.value))) {
       GList *lnode =
-          gst_controlled_property_find_timed_value_node (prop, timestamp);
+          gst_controlled_property_find_control_point_node (prop, timestamp);
       if (G_UNLIKELY (!lnode)) {
         GST_DEBUG ("    no control changes in the queue");
         live = TRUE;
       } else {
-        GstTimedValue *tv = lnode->data;
+        GstControlPoint *cp = lnode->data;
 
-        if (prop->live_value.timestamp < tv->timestamp) {
+        if (prop->live_value.timestamp < cp->timestamp) {
           g_value_unset (&prop->live_value.value);
           GST_DEBUG ("    live value resetted");
         } else if (prop->live_value.timestamp < timestamp) {

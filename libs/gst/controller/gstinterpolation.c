@@ -32,22 +32,22 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 /* common helper */
 
 /*
- * gst_controlled_property_find_timed_value_node:
+ * gst_controlled_property_find_control_point_node:
  * @prop: the controlled property to search in
  * @timestamp: the search key
  *
- * Find last value before given timestamp in timed value list.
+ * Find last value before given timestamp in control point list.
  *
  * Returns: the found #GList node or %NULL
  */
 GList *
-gst_controlled_property_find_timed_value_node (GstControlledProperty * prop,
+gst_controlled_property_find_control_point_node (GstControlledProperty * prop,
     GstClockTime timestamp)
 {
   /* GList *prev_node = NULL; */
   GList *prev_node = g_list_last (prop->values);
   GList *node;
-  GstTimedValue *tv;
+  GstControlPoint *cp;
 
   /*
      if((prop->last_value) &&
@@ -61,9 +61,9 @@ gst_controlled_property_find_timed_value_node (GstControlledProperty * prop,
 
   /* iterate over timed value list */
   for (node = prop->values; node; node = g_list_next (node)) {
-    tv = node->data;
+    cp = node->data;
     /* this timestamp is newer that the one we look for */
-    if (timestamp < tv->timestamp) {
+    if (timestamp < cp->timestamp) {
       /* get previous one again */
       prev_node = g_list_previous (node);
       break;
@@ -85,10 +85,11 @@ interpolate_none_get (GstControlledProperty * prop, GstClockTime timestamp)
 {
   GList *node;
 
-  if ((node = gst_controlled_property_find_timed_value_node (prop, timestamp))) {
-    GstTimedValue *tv = node->data;
+  if ((node =
+          gst_controlled_property_find_control_point_node (prop, timestamp))) {
+    GstControlPoint *cp = node->data;
 
-    return (&tv->value);
+    return (&cp->value);
   }
   return (&prop->default_value);
 }
@@ -180,13 +181,13 @@ static GValue *
 interpolate_trigger_get (GstControlledProperty * prop, GstClockTime timestamp)
 {
   GList *node;
-  GstTimedValue *tv;
+  GstControlPoint *cp;
 
   /* check if there is a value at the registered timestamp */
   for (node = prop->values; node; node = g_list_next (node)) {
-    tv = node->data;
-    if (timestamp == tv->timestamp) {
-      return (&tv->value);
+    cp = node->data;
+    if (timestamp == cp->timestamp) {
+      return (&cp->value);
     }
   }
 
@@ -230,25 +231,25 @@ _interpolate_linear_get_##type (GstControlledProperty * prop, GstClockTime times
 { \
   GList *node; \
   \
-  if ((node = gst_controlled_property_find_timed_value_node (prop, timestamp))) { \
-    GstTimedValue *tv1, *tv2; \
+  if ((node = gst_controlled_property_find_control_point_node (prop, timestamp))) { \
+    GstControlPoint *cp1, *cp2; \
     \
-    tv1 = node->data; \
+    cp1 = node->data; \
     if ((node = g_list_next (node))) { \
       gdouble timediff,valuediff; \
       g##type value1,value2; \
       \
-      tv2 = node->data; \
+      cp2 = node->data; \
       \
-      timediff = gst_guint64_to_gdouble (tv2->timestamp - tv1->timestamp); \
-      value1 = g_value_get_##type (&tv1->value); \
-      value2 = g_value_get_##type (&tv2->value); \
+      timediff = gst_guint64_to_gdouble (cp2->timestamp - cp1->timestamp); \
+      value1 = g_value_get_##type (&cp1->value); \
+      value2 = g_value_get_##type (&cp2->value); \
       valuediff = (gdouble) (value2 - value1); \
       \
-      return ((g##type) (value1 + valuediff * (gst_guint64_to_gdouble (timestamp - tv1->timestamp) / timediff))); \
+      return ((g##type) (value1 + valuediff * (gst_guint64_to_gdouble (timestamp - cp1->timestamp) / timediff))); \
     } \
     else { \
-      return (g_value_get_##type (&tv1->value)); \
+      return (g_value_get_##type (&cp1->value)); \
     } \
   } \
   return (g_value_get_##type (&prop->default_value)); \

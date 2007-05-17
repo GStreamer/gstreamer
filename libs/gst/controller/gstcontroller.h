@@ -51,11 +51,6 @@ typedef struct _GstTimedValue
 {
   GstClockTime timestamp;       /* timestamp of the value change */
   GValue value;                 /* the new value */
-  /* TODO what about storing the difference to next timestamp and value here
-     + make calculations slightly easier and faster
-     - determining the GType for the value_dif is not simple
-     e.g. if value is G_TYPE_UCHAR value_diff needs to be G_TYPE_INT
-   */
 } GstTimedValue;
 
 

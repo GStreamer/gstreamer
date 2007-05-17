@@ -1,3 +1,26 @@
+2007-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	reviewed by: Stefan Kost <ensonic@users.sf.net>
+
+	* libs/gst/controller/gstcontroller.c: (gst_control_point_compare),
+	(gst_control_point_find), (gst_controlled_property_new),
+	(gst_control_point_free), (gst_controlled_property_free),
+	(gst_controller_set), (gst_controller_set_from_list),
+	(gst_controller_unset), (gst_controller_unset_all),
+	(gst_controller_sync_values):
+	* libs/gst/controller/gstcontroller.h:
+	* libs/gst/controller/gstcontrollerprivate.h:
+	* libs/gst/controller/gstinterpolation.c:
+	(gst_controlled_property_find_control_point_node),
+	(interpolate_none_get), (interpolate_trigger_get):
+	Add a new private GstControlPoint struct which "inherits" from
+	GstTimedValue to allow different interpolators to store internal
+	values next to each control point. From the outside everything is
+	still a GstControlPoint so we don't loose binary compatibility.
+	Also fixup all the GValue handling to not leak GValues or list nodes.
+	* tests/check/libs/controller.c: (GST_START_TEST):
+	Free the list nodes and GValues in the controller_misc test.
+
 2007-05-17  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstsegment.c:
