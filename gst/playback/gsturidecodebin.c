@@ -662,6 +662,10 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
   if (!gst_element_link (bin->source, decoder))
     goto could_not_link;
 
+  GST_DEBUG_OBJECT (bin, "linked decoder to new pad");
+
+  gst_element_set_state (decoder, GST_STATE_PLAYING);
+
   return;
 
   /* ERRORS */

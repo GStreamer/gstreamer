@@ -448,7 +448,8 @@ gst_decode_bin_factory_filter (GstPluginFeature * feature,
   klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
   /* only demuxers, decoders and parsers can play */
   if (strstr (klass, "Demux") == NULL &&
-      strstr (klass, "Decoder") == NULL && strstr (klass, "Parse") == NULL) {
+      strstr (klass, "Decoder") == NULL && strstr (klass, "Parse") == NULL &&
+      strstr (klass, "Depayloader") == NULL) {
     return FALSE;
   }
 
