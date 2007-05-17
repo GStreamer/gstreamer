@@ -259,10 +259,7 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
 
     [NSApp setRunning];
     // insert event dispatch in the glib main loop
-    g_static_rec_mutex_init (&osxvideosink->loop_lock);
-    osxvideosink->event_loop = gst_task_create ((GstTaskFunction) cocoa_event_loop, osxvideosink);
-    gst_task_set_lock (osxvideosink->event_loop, &osxvideosink->loop_lock);
-    gst_task_start (osxvideosink->event_loop);
+    g_idle_add ((GSourceFunc) cocoa_event_loop, osxvideosink);
   } else {
     GstStructure *s;
     GstMessage *msg;
@@ -302,8 +299,6 @@ gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink,
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
 
   [osxwindow->pool release];
-  if (osxvideosink->event_loop)
-    gst_task_stop (osxvideosink->event_loop);
 
   g_free (osxwindow);
 }
