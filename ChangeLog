@@ -1,3 +1,30 @@
+2007-05-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstqueue2.c: (update_rates):
+	Tweak the buffering thresholds a little.
+	Update the buffer size with the previously calculate rate instead of
+	only when we calculate a new rate so that we get smoother buffering
+	updates.
+
+	* gst/playback/Makefile.am:
+	* gst/playback/gsturidecodebin.c: (gst_uri_decode_bin_base_init),
+	(gst_uri_decode_bin_class_init), (gst_uri_decode_bin_init),
+	(gst_uri_decode_bin_finalize), (gst_uri_decode_bin_set_property),
+	(gst_uri_decode_bin_get_property), (unknown_type),
+	(add_element_stream), (no_more_pads_full), (no_more_pads),
+	(source_no_more_pads), (new_decoded_pad), (array_has_value),
+	(gen_source_element), (has_all_raw_caps), (analyse_source),
+	(remove_decoders), (make_decoder), (remove_source),
+	(source_new_pad), (setup_source), (decoder_query_init),
+	(decoder_query_duration_fold), (decoder_query_duration_done),
+	(decoder_query_position_fold), (decoder_query_position_done),
+	(decoder_query_latency_fold), (decoder_query_latency_done),
+	(decoder_query_seeking_fold), (decoder_query_seeking_done),
+	(decoder_query_generic_fold), (gst_uri_decode_bin_query),
+	(gst_uri_decode_bin_change_state), (plugin_init):
+	New element that intergrates a source, optional buffering element and
+	decodebin.
+
 2007-05-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
