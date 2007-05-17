@@ -43,11 +43,11 @@
  * two seconds worth of data, whichever is reached first.
  *
  */
-
-#include "gst/gst_private.h"
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <gst/gst.h>
-
 #include <gst/gst-i18n-plugin.h>
 
 static const GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
