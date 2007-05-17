@@ -3069,6 +3069,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     gchar *transports;
+    RTSPStatusCode code;
 
     stream = (GstRTSPStream *) walk->data;
 
@@ -3130,8 +3131,20 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     rtsp_message_add_header (&request, RTSP_HDR_TRANSPORT, transports);
     g_free (transports);
 
-    if ((res = gst_rtspsrc_send (src, &request, &response, NULL) < 0))
+    /* handle the code ourselves */
+    if ((res = gst_rtspsrc_send (src, &request, &response, &code) < 0))
       goto send_error;
+
+    switch (code) {
+      case RTSP_STS_OK:
+        break;
+      case RTSP_STS_UNSUPPORTED_TRANSPORT:
+        /* cleanup of leftover transport */
+        gst_rtspsrc_stream_free_udp (stream);
+        goto next_stream;
+      default:
+        goto send_error;
+    }
 
     /* parse response transport */
     {
@@ -3185,6 +3198,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
               stream);
         }
       }
+    next_stream:
       /* clean up our transport struct */
       rtsp_transport_init (&transport);
     }

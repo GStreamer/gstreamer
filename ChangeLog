@@ -1,3 +1,14 @@
+2007-05-17  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send),
+	(gst_rtspsrc_setup_streams):
+	Ignore streams that fail the setup command, we will retry with a
+	different transport later on.
+
+	* gst/rtsp/rtspextwms.c: (rtsp_ext_wms_parse_sdp),
+	(rtsp_ext_wms_configure_stream):
+	Fix encoding name case.
+
 2007-05-16  Edward Hervey  <edward@fluendo.com>
 
 	* ext/libpng/gstpngdec.c: (user_endrow_callback), (user_read_data):

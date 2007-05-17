@@ -127,7 +127,7 @@ rtsp_ext_wms_parse_sdp (RTSPExtensionCtx * ctx, SDPMessage * sdp)
   if (maxps)
     gst_structure_set (src->props, "maxps", G_TYPE_STRING, maxps, NULL);
 
-  gst_structure_set (src->props, "encoding-name", G_TYPE_STRING, "x-asf-pf",
+  gst_structure_set (src->props, "encoding-name", G_TYPE_STRING, "X-ASF-PF",
       NULL);
   gst_structure_set (src->props, "media", G_TYPE_STRING, "application", NULL);
 
@@ -159,7 +159,7 @@ rtsp_ext_wms_configure_stream (RTSPExtensionCtx * ctx, GstRTSPStream * stream)
       encoding);
 
   /* rtx streams do not need to be configured */
-  if (!strcmp (encoding, "x-wms-rtx"))
+  if (!strcmp (encoding, "X-WMS-RTX"))
     return FALSE;
 
   return TRUE;
