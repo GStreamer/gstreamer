@@ -62,9 +62,9 @@
  *
  * For elements that perform seeks, the current segment should be updated with the
  * gst_segment_set_seek() and the values from the seek event. This method will update
- * all the segment fields. The last_pos field will contain the new playback position.
+ * all the segment fields. The last_stop field will contain the new playback position.
  * If the cur_type was different from GST_SEEK_TYPE_NONE, playback continues from
- * the last_pos position, possibly with updated flags or rate.
+ * the last_stop position, possibly with updated flags or rate.
  *
  * For elements that want to use #GstSegment to track the playback region, use
  * gst_segment_set_newsegment() to update the segment fields with the information from
@@ -80,7 +80,7 @@
  * gst_segment_to_stream_time() can be used to convert a timestamp and the segment
  * info to stream time (which is always between 0 and the duration of the stream).
  *
- * Last reviewed on 2006-05-03 (0.10.6)
+ * Last reviewed on 2007-05-17 (0.10.13)
  */
 
 static GstSegment *
