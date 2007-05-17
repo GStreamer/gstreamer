@@ -1,3 +1,11 @@
+2007-05-17  Edward Hervey  <edward@fluendo.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	Fix a stupid #if vs #ifdef bug. Should use the proper colorspace now.
+	Use a separate thread/task for the cocoa event_loop, else it wouldn't
+	stop.
+
 2007-05-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_chain),

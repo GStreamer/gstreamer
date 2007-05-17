@@ -51,7 +51,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "framerate = (fraction) [ 0, MAX ], "
         "width = (int) [ 1, MAX ], "
 	"height = (int) [ 1, MAX ], "
-#ifdef G_BYTE_ORDER == G_BIG_ENDIAN
+#if G_BYTE_ORDER == G_BIG_ENDIAN
        "format = (fourcc) YUY2")
 #else
         "format = (fourcc) UYVY")
@@ -92,7 +92,10 @@ gint
 cocoa_event_loop (GstOSXVideoSink * vsink)
 {
   NSAutoreleasePool *pool;
+  gboolean ret = TRUE;
 
+  GST_DEBUG_OBJECT (vsink, "Entering event loop");
+  
   pool = [[NSAutoreleasePool alloc] init];
 
   if ([NSApp isRunning]) {
@@ -110,7 +113,9 @@ cocoa_event_loop (GstOSXVideoSink * vsink)
 
   [pool release];
 
-  return TRUE;
+  GST_DEBUG_OBJECT (vsink, "Leaving event loop with ret : %d", ret);
+  
+  return ret;
 }
 
 static NSString *
@@ -254,7 +259,10 @@ gst_osx_video_sink_osxwindow_new (GstOSXVideoSink * osxvideosink, gint width,
 
     [NSApp setRunning];
     // insert event dispatch in the glib main loop
-    g_idle_add ((GSourceFunc) cocoa_event_loop, osxvideosink);
+    g_static_rec_mutex_init (&osxvideosink->loop_lock);
+    osxvideosink->event_loop = gst_task_create ((GstTaskFunction) cocoa_event_loop, osxvideosink);
+    gst_task_set_lock (osxvideosink->event_loop, &osxvideosink->loop_lock);
+    gst_task_start (osxvideosink->event_loop);
   } else {
     GstStructure *s;
     GstMessage *msg;
@@ -294,6 +302,8 @@ gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink,
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
 
   [osxwindow->pool release];
+  if (osxvideosink->event_loop)
+    gst_task_stop (osxvideosink->event_loop);
 
   g_free (osxwindow);
 }
@@ -378,6 +388,10 @@ gst_osx_video_sink_change_state (GstElement * element,
   GstOSXVideoSink *osxvideosink;
 
   osxvideosink = GST_OSX_VIDEO_SINK (element);
+
+  GST_DEBUG_OBJECT (osxvideosink, "%s => %s", 
+		    gst_element_state_get_name(GST_STATE_TRANSITION_CURRENT (transition)),
+		    gst_element_state_get_name(GST_STATE_TRANSITION_NEXT (transition)));
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
