@@ -1,3 +1,11 @@
+2007-05-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gststreaminfo.c: (cb_probe):
+	  Ignore video-codec tag for audio streams and ignore audio-codec tags
+	  for video streams. Should make codec name collection a bit more
+	  robust against sloppy demuxers that send tag events containing both
+	  tags down each pad.
+
 2007-05-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstqueue2.c: (update_rates):

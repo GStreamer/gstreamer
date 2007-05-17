@@ -184,12 +184,14 @@ cb_probe (GstPad * pad, GstEvent * e, gpointer user_data)
 
     gst_event_parse_tag (e, &list);
 
-    if (gst_tag_list_get_string (list, GST_TAG_VIDEO_CODEC, &codec)) {
+    if (info->type != GST_STREAM_TYPE_AUDIO &&
+        gst_tag_list_get_string (list, GST_TAG_VIDEO_CODEC, &codec)) {
       g_free (info->codec);
       info->codec = codec;
       GST_LOG_OBJECT (pad, "codec = %s (video)", codec);
       g_object_notify (G_OBJECT (info), "codec");
-    } else if (gst_tag_list_get_string (list, GST_TAG_AUDIO_CODEC, &codec)) {
+    } else if (info->type != GST_STREAM_TYPE_VIDEO &&
+        gst_tag_list_get_string (list, GST_TAG_AUDIO_CODEC, &codec)) {
       g_free (info->codec);
       info->codec = codec;
       GST_LOG_OBJECT (pad, "codec = %s (audio)", codec);
