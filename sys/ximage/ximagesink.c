@@ -668,13 +668,13 @@ gst_ximagesink_xwindow_draw_borders (GstXImageSink * ximagesink,
 }
 
 /* This function puts a GstXImageBuffer on a GstXImageSink's window */
-static void
+static gboolean
 gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
 {
   GstVideoRectangle src, dst, result;
   gboolean draw_border = FALSE;
 
-  g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
+  g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), FALSE);
 
   /* We take the flow_lock. If expose is in there we don't want to run
      concurrently from the data flow thread */
@@ -682,7 +682,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
 
   if (G_UNLIKELY (ximagesink->xwindow == NULL)) {
     g_mutex_unlock (ximagesink->flow_lock);
-    return;
+    return FALSE;
   }
 
   /* Draw borders when displaying the first frame. After this
@@ -709,7 +709,7 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
       ximage = ximagesink->cur_image;
     } else {
       g_mutex_unlock (ximagesink->flow_lock);
-      return;
+      return TRUE;
     }
   }
 
@@ -754,6 +754,8 @@ gst_ximagesink_ximage_put (GstXImageSink * ximagesink, GstXImageBuffer * ximage)
   g_mutex_unlock (ximagesink->x_lock);
 
   g_mutex_unlock (ximagesink->flow_lock);
+
+  return TRUE;
 }
 
 static gboolean
@@ -818,9 +820,18 @@ gst_ximagesink_xwindow_new (GstXImageSink * ximagesink, gint width, gint height)
   XSetWindowBackgroundPixmap (ximagesink->xcontext->disp, xwindow->win, None);
 
   if (ximagesink->handle_events) {
+    Atom wm_delete;
+
     XSelectInput (ximagesink->xcontext->disp, xwindow->win, ExposureMask |
         StructureNotifyMask | PointerMotionMask | KeyPressMask |
         KeyReleaseMask | ButtonPressMask | ButtonReleaseMask);
+
+    /* Tell the window manager we'd like delete client messages instead of
+     * being killed */
+    wm_delete = XInternAtom (ximagesink->xcontext->disp,
+        "WM_DELETE_WINDOW", False);
+    (void) XSetWMProtocols (ximagesink->xcontext->disp, xwindow->win,
+        &wm_delete, 1);
   }
 
   xwindow->gc = XCreateGC (ximagesink->xcontext->disp, xwindow->win,
@@ -911,48 +922,48 @@ static void
 gst_ximagesink_handle_xevents (GstXImageSink * ximagesink)
 {
   XEvent e;
+  guint pointer_x = 0, pointer_y = 0;
+  gboolean pointer_moved = FALSE;
+  gboolean exposed = FALSE, configured = FALSE;
 
   g_return_if_fail (GST_IS_XIMAGESINK (ximagesink));
 
-  {
-    guint pointer_x = 0, pointer_y = 0;
-    gboolean pointer_moved = FALSE;
-
-    /* Then we get all pointer motion events, only the last position is
-       interesting. */
-    g_mutex_lock (ximagesink->flow_lock);
-    g_mutex_lock (ximagesink->x_lock);
-    while (XCheckWindowEvent (ximagesink->xcontext->disp,
-            ximagesink->xwindow->win, PointerMotionMask, &e)) {
-      g_mutex_unlock (ximagesink->x_lock);
-      g_mutex_unlock (ximagesink->flow_lock);
-
-      switch (e.type) {
-        case MotionNotify:
-          pointer_x = e.xmotion.x;
-          pointer_y = e.xmotion.y;
-          pointer_moved = TRUE;
-          break;
-        default:
-          break;
-      }
-      g_mutex_lock (ximagesink->flow_lock);
-      g_mutex_lock (ximagesink->x_lock);
-    }
+  /* Then we get all pointer motion events, only the last position is
+     interesting. */
+  g_mutex_lock (ximagesink->flow_lock);
+  g_mutex_lock (ximagesink->x_lock);
+  while (XCheckWindowEvent (ximagesink->xcontext->disp,
+          ximagesink->xwindow->win, PointerMotionMask, &e)) {
     g_mutex_unlock (ximagesink->x_lock);
     g_mutex_unlock (ximagesink->flow_lock);
 
-    if (pointer_moved) {
-      GST_DEBUG ("ximagesink pointer moved over window at %d,%d",
-          pointer_x, pointer_y);
-      gst_navigation_send_mouse_event (GST_NAVIGATION (ximagesink),
-          "mouse-move", 0, pointer_x, pointer_y);
+    switch (e.type) {
+      case MotionNotify:
+        pointer_x = e.xmotion.x;
+        pointer_y = e.xmotion.y;
+        pointer_moved = TRUE;
+        break;
+      default:
+        break;
     }
+    g_mutex_lock (ximagesink->flow_lock);
+    g_mutex_lock (ximagesink->x_lock);
+  }
+
+  if (pointer_moved) {
+    g_mutex_unlock (ximagesink->x_lock);
+    g_mutex_unlock (ximagesink->flow_lock);
+
+    GST_DEBUG ("ximagesink pointer moved over window at %d,%d",
+        pointer_x, pointer_y);
+    gst_navigation_send_mouse_event (GST_NAVIGATION (ximagesink),
+        "mouse-move", 0, pointer_x, pointer_y);
+
+    g_mutex_lock (ximagesink->flow_lock);
+    g_mutex_lock (ximagesink->x_lock);
   }
 
   /* We get all remaining events on our window to throw them upstream */
-  g_mutex_lock (ximagesink->flow_lock);
-  g_mutex_lock (ximagesink->x_lock);
   while (XCheckWindowEvent (ximagesink->xcontext->disp,
           ximagesink->xwindow->win,
           KeyPressMask | KeyReleaseMask |
@@ -1009,36 +1020,60 @@ gst_ximagesink_handle_xevents (GstXImageSink * ximagesink)
     g_mutex_lock (ximagesink->flow_lock);
     g_mutex_lock (ximagesink->x_lock);
   }
-  g_mutex_unlock (ximagesink->x_lock);
-  g_mutex_unlock (ximagesink->flow_lock);
 
-  {
-    gboolean exposed = FALSE;
-
-    g_mutex_lock (ximagesink->flow_lock);
-    g_mutex_lock (ximagesink->x_lock);
-    while (XCheckWindowEvent (ximagesink->xcontext->disp,
-            ximagesink->xwindow->win, ExposureMask, &e)) {
-      g_mutex_unlock (ximagesink->x_lock);
-      g_mutex_unlock (ximagesink->flow_lock);
-
-      switch (e.type) {
-        case Expose:
-          exposed = TRUE;
-          break;
-        default:
-          break;
-      }
-      g_mutex_lock (ximagesink->flow_lock);
-      g_mutex_lock (ximagesink->x_lock);
+  while (XCheckWindowEvent (ximagesink->xcontext->disp,
+          ximagesink->xwindow->win, ExposureMask | StructureNotifyMask, &e)) {
+    switch (e.type) {
+      case Expose:
+        exposed = TRUE;
+        break;
+      case ConfigureNotify:
+        configured = TRUE;
+        break;
+      default:
+        break;
     }
+  }
+
+  if (exposed || configured) {
     g_mutex_unlock (ximagesink->x_lock);
     g_mutex_unlock (ximagesink->flow_lock);
 
-    if (exposed) {
-      gst_ximagesink_expose (GST_X_OVERLAY (ximagesink));
+    gst_ximagesink_expose (GST_X_OVERLAY (ximagesink));
+
+    g_mutex_lock (ximagesink->x_lock);
+    g_mutex_lock (ximagesink->flow_lock);
+  }
+
+  /* Handle Display events */
+  while (XPending (ximagesink->xcontext->disp)) {
+    XNextEvent (ximagesink->xcontext->disp, &e);
+
+    switch (e.type) {
+      case ClientMessage:{
+        Atom wm_delete;
+
+        wm_delete = XInternAtom (ximagesink->xcontext->disp,
+            "WM_DELETE_WINDOW", False);
+        if (wm_delete == (Atom) e.xclient.data.l[0]) {
+          /* Handle window deletion by posting an error on the bus */
+          GST_ELEMENT_ERROR (ximagesink, RESOURCE, NOT_FOUND,
+              ("Output window was closed"), (NULL));
+
+          g_mutex_unlock (ximagesink->x_lock);
+          gst_ximagesink_xwindow_destroy (ximagesink, ximagesink->xwindow);
+          ximagesink->xwindow = NULL;
+          g_mutex_lock (ximagesink->x_lock);
+        }
+        break;
+      }
+      default:
+        break;
     }
   }
+
+  g_mutex_unlock (ximagesink->x_lock);
+  g_mutex_unlock (ximagesink->flow_lock);
 }
 
 static gpointer
@@ -1543,7 +1578,8 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
      put the ximage which is in the PRIVATE pointer */
   if (GST_IS_XIMAGE_BUFFER (buf)) {
     GST_LOG_OBJECT (ximagesink, "buffer from our pool, writing directly");
-    gst_ximagesink_ximage_put (ximagesink, GST_XIMAGE_BUFFER (buf));
+    if (!gst_ximagesink_ximage_put (ximagesink, GST_XIMAGE_BUFFER (buf)))
+      goto no_window;
   } else {
     /* Else we have to copy the data into our private image, */
     /* if we have one... */
@@ -1569,7 +1605,8 @@ gst_ximagesink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     }
     memcpy (GST_BUFFER_DATA (ximagesink->ximage), GST_BUFFER_DATA (buf),
         MIN (GST_BUFFER_SIZE (buf), ximagesink->ximage->size));
-    gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage);
+    if (!gst_ximagesink_ximage_put (ximagesink, ximagesink->ximage))
+      goto no_window;
   }
 
   return GST_FLOW_OK;
@@ -1579,6 +1616,12 @@ no_ximage:
   {
     /* No image available. That's very bad ! */
     GST_DEBUG ("could not create image");
+    return GST_FLOW_ERROR;
+  }
+no_window:
+  {
+    /* No Window available to put our image into */
+    GST_WARNING_OBJECT (ximagesink, "could not output image - no window");
     return GST_FLOW_ERROR;
   }
 }

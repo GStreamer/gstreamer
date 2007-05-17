@@ -1,3 +1,23 @@
+2007-05-17  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_put),
+	(gst_ximagesink_xwindow_new), (gst_ximagesink_handle_xevents),
+	(gst_ximagesink_show_frame):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_put),
+	(gst_xvimagesink_xwindow_new), (gst_xvimagesink_handle_xevents),
+	(gst_xvimagesink_show_frame):
+	When we create our own window, indicate that we handle the 
+	WM_DELETE client message from the window manager, so that it won't 
+	kill our window (and our app) along with it. Handle ClientMessage,
+	post an error on the bus, and close the window. Further buffers
+	arriving will result in a FlowError because the window has been
+	destroyed.
+
+	Fixes: #393975
+
+	Clean up the X event handling loop and make them the same for
+	both xvimagesink and ximagesink while I'm at it.
+
 2007-05-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstdecodebin2.c: (gst_decode_bin_factory_filter):
