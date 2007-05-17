@@ -171,6 +171,18 @@ dnl check for "check", unit testing library/header
 AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
 AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
 
+dnl Add MacOSX specific flags
+AC_CANONICAL_HOST
+case $host_os in
+     darwin*)
+	DARWIN_LDFLAGS="-Wl,-read_only_relocs,suppress"
+	;;
+     *)
+        DARWIN_LDFLAGS=""
+	;;
+esac
+AC_SUBST(DARWIN_LDFLAGS)
+
 dnl *** configure external libs ***
 
 HAVE_FFMPEG_UNINSTALLED=1

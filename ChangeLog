@@ -1,3 +1,14 @@
+2007-05-17  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* ext/ffmpeg/Makefile.am:
+	* ext/libpostproc/Makefile.am:
+	Fix the build on MacOSX.
+	This requires a recent enough version of libtool (ex : 1.5.22), since
+	the one shipped by Apple is from the middle ages and is packed with
+	issues.
+	Fixes #435742
+
 2007-05-09  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpeg.c: (gst_ffmpeg_av_find_stream_info):
