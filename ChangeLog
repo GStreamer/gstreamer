@@ -1,5 +1,10 @@
 2007-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* docs/libs/gstreamer-libs-sections.txt:
+	Add the two new controller functions to the appropiate places.
+
+2007-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	reviewed by: Stefan Kost <ensonic@users.sf.net>
 
 	* libs/gst/controller/gstcontroller.c:
