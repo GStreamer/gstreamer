@@ -84,6 +84,8 @@ struct _GstOSXVideoSink {
   gboolean embed;
   gboolean fullscreen; 
   gboolean sw_scaling_failed;
+  GstTask *event_loop;
+  GStaticRecMutex loop_lock;
 };
 
 struct _GstOSXVideoSinkClass {
