@@ -1,3 +1,11 @@
+2007-05-17  Edward Hervey  <edward@fluendo.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	Remove the event-loop-in-separate-thread modifications, because MacOSX
+	is $#@(*%$# ! For those wondering, the event handling needs to be done
+	in the main thread after all..
+
 2007-05-17  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/switch/gstswitch.c (ARG_0, ARG_NB_SOURCES, ARG_ACTIVE_SOURCE,
