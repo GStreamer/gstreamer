@@ -86,7 +86,8 @@ enum
 
 struct _GstControllerPrivate
 {
-  guint control_rate;
+  GstClockTime control_rate;
+  GstClockTime last_sync;
 };
 
 /* imports from gst-interpolation.c */
@@ -960,6 +961,38 @@ gst_controller_get_all (GstController * self, gchar * property_name)
 }
 
 /**
+ * gst_controller_suggest_next_sync:
+ * @self: the controller that handles the values
+ *
+ * Returns a suggestion for timestamps where buffers should be split
+ * to get best controller results.
+ *
+ * Returns: Returns the suggested timestamp or %GST_CLOCK_TIME_NONE
+ * if no control-rate was set.
+ *
+ * Since: 0.10.13
+ */
+GstClockTime
+gst_controller_suggest_next_sync (GstController * self)
+{
+  GstClockTime ret;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), GST_CLOCK_TIME_NONE);
+  g_return_val_if_fail (self->priv->control_rate != GST_CLOCK_TIME_NONE,
+      GST_CLOCK_TIME_NONE);
+
+  g_mutex_lock (self->lock);
+
+  /* TODO: Implement more logic, depending on interpolation mode
+   * and control points */
+  ret = self->priv->last_sync + self->priv->control_rate;
+
+  g_mutex_unlock (self->lock);
+
+  return ret;
+}
+
+/**
  * gst_controller_sync_values:
  * @self: the controller that handles the values
  * @timestamp: the time that should be processed
@@ -976,7 +1009,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
   GstControlledProperty *prop;
   GList *node;
   GValue *value;
-  gboolean live;
+  gboolean live = FALSE;
 
   g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
@@ -1016,6 +1049,9 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
       g_object_set_property (self->object, prop->name, value);
     }
   }
+  if (G_LIKELY (!live))
+    self->priv->last_sync = timestamp;
+
   g_mutex_unlock (self->lock);
   /* TODO what can here go wrong, to return FALSE ?
      BilboEd : Nothing I guess, as long as all the checks are made when creating the controller,
@@ -1182,7 +1218,7 @@ _gst_controller_get_property (GObject * object, guint property_id,
          (ret == GST_STATE_CHANGE_ASYNC &&
          (p_state == GST_STATE_NULL || p_state == GST_STATE_READY))) {
        */
-      g_value_set_uint (value, self->priv->control_rate);
+      g_value_set_uint64 (value, self->priv->control_rate);
       /*
          }
          else {
@@ -1208,7 +1244,7 @@ _gst_controller_set_property (GObject * object, guint property_id,
 
   switch (property_id) {
     case PROP_CONTROL_RATE:{
-      self->priv->control_rate = g_value_get_uint (value);
+      self->priv->control_rate = g_value_get_uint64 (value);
     }
       break;
     default:{
@@ -1270,6 +1306,8 @@ _gst_controller_init (GTypeInstance * instance, gpointer g_class)
   self->priv =
       G_TYPE_INSTANCE_GET_PRIVATE (self, GST_TYPE_CONTROLLER,
       GstControllerPrivate);
+  self->priv->last_sync = GST_CLOCK_TIME_NONE;
+  self->priv->control_rate = 100 * GST_MSECOND;
 }
 
 static void
@@ -1289,10 +1327,10 @@ _gst_controller_class_init (GstControllerClass * klass)
 
   /* register properties */
   g_object_class_install_property (gobject_class, PROP_CONTROL_RATE,
-      g_param_spec_uint ("control-rate",
+      g_param_spec_uint64 ("control-rate",
           "control rate",
-          "Controlled properties will be updated this many times per second",
-          1, G_MAXUINT, 10, G_PARAM_READWRITE));
+          "Controlled properties will be updated at least every control-rate nanoseconds",
+          1, G_MAXUINT, 100 * GST_MSECOND, G_PARAM_READWRITE));
 
   /* register signals */
   /* set defaults for overridable methods */

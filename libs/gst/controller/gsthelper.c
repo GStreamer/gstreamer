@@ -145,6 +145,29 @@ gst_object_set_controller (GObject * object, GstController * controller)
   return (FALSE);
 }
 
+ /**
+ * gst_object_suggest_next_sync:
+ * @object: the object that has controlled properties
+ * @timestamp: the time that should be processed
+ *
+ * Convenience function for GObject
+ *
+ * Returns: same thing as gst_controller_suggest_next_sync()
+ * Since: 0.10.13
+ */
+GstClockTime
+gst_object_suggest_next_sync (GObject * object)
+{
+  GstController *ctrl = NULL;
+
+  g_return_val_if_fail (G_IS_OBJECT (object), GST_CLOCK_TIME_NONE);
+
+  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+    return gst_controller_suggest_next_sync (ctrl);
+  }
+  return (GST_CLOCK_TIME_NONE);
+}
+
 /**
  * gst_object_sync_values:
  * @object: the object that has controlled properties
@@ -240,22 +263,22 @@ gst_object_get_value_array (GObject * object, GstClockTime timestamp,
  * Obtain the control-rate for this @object. Audio processing #GstElement
  * objects will use this rate to sub-divide their processing loop and call
  * gst_object_sync_values() inbetween. The length of the processing segment
- * should be sampling-rate/control-rate.
+ * should be up to @control-rate nanoseconds.
  *
- * If the @object is not under property control, this will return 0. This allows
- * the element to avoid the sub-dividing.
+ * If the @object is not under property control, this will return
+ * %GST_CLOCK_TIME_NONE. This allows the element to avoid the sub-dividing.
  *
- * The control-rate is not expected to change if the elemnt is in
+ * The control-rate is not expected to change if the element is in
  * %GST_STATE_PAUSED or %GST_STATE_PLAYING.
  *
- * Returns: the control rate
+ * Returns: the control rate in nanoseconds
  * Since: 0.10.10
  */
-guint
+GstClockTime
 gst_object_get_control_rate (GObject * object)
 {
   GstController *ctrl;
-  guint control_rate = 0;
+  GstClockTime control_rate = GST_CLOCK_TIME_NONE;
 
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
 
@@ -268,20 +291,20 @@ gst_object_get_control_rate (GObject * object)
 /**
  * gst_object_set_control_rate:
  * @object: the object that has controlled properties
- * @control_rate: the new control-rate (1 .. sampling_rate)
+ * @control_rate: the new control-rate in nanoseconds.
  *
  * Change the control-rate for this @object. Audio processing #GstElement
  * objects will use this rate to sub-divide their processing loop and call
  * gst_object_sync_values() inbetween. The length of the processing segment
- * should be sampling-rate/control-rate.
+ * should be up to @control-rate nanoseconds.
  *
- * The control-rate should not change if the elemnt is in %GST_STATE_PAUSED or
+ * The control-rate should not change if the element is in %GST_STATE_PAUSED or
  * %GST_STATE_PLAYING.
  *
  * Since: 0.10.10
  */
 void
-gst_object_set_control_rate (GObject * object, guint control_rate)
+gst_object_set_control_rate (GObject * object, GstClockTime control_rate)
 {
   GstController *ctrl;
 

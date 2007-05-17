@@ -164,7 +164,7 @@ GValue *gst_controller_get (GstController * self, gchar * property_name,
 const GList *gst_controller_get_all (GstController * self,
     gchar * property_name);
 
-
+GstClockTime gst_controller_suggest_next_sync (GstController *self);
 gboolean gst_controller_sync_values (GstController * self,
     GstClockTime timestamp);
 
@@ -185,6 +185,7 @@ gboolean gst_object_uncontrol_properties (GObject * object, ...) G_GNUC_NULL_TER
 GstController *gst_object_get_controller (GObject * object);
 gboolean gst_object_set_controller (GObject * object, GstController * controller);
 
+GstClockTime gst_object_suggest_next_sync (GObject * object);
 gboolean gst_object_sync_values (GObject * object, GstClockTime timestamp);
 
 gboolean gst_object_get_value_arrays (GObject * object,
@@ -192,8 +193,8 @@ gboolean gst_object_get_value_arrays (GObject * object,
 gboolean gst_object_get_value_array (GObject * object,
     GstClockTime timestamp, GstValueArray * value_array);
 
-guint gst_object_get_control_rate (GObject * object);
-void gst_object_set_control_rate (GObject * object, guint control_rate);
+GstClockTime gst_object_get_control_rate (GObject * object);
+void gst_object_set_control_rate (GObject * object, GstClockTime control_rate);
 
 /* lib init/done */
 

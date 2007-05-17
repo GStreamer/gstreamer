@@ -2,6 +2,31 @@
 
 	reviewed by: Stefan Kost <ensonic@users.sf.net>
 
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controller_suggest_next_sync), (gst_controller_sync_values),
+	(_gst_controller_get_property), (_gst_controller_set_property),
+	(_gst_controller_init), (_gst_controller_class_init):
+	* libs/gst/controller/gstcontroller.h:
+	* libs/gst/controller/gsthelper.c: (gst_object_suggest_next_sync),
+	(gst_object_get_control_rate), (gst_object_set_control_rate):
+	API: gst_controller_suggest_next_sync(), gst_object_suggest_next_sync()
+	Add API that provides sync suggestion timestamps for elements that
+	call gst_object_sync_values() from which those elements can subdivide
+	their processing loop to get the best results for the controlled
+	properties. For now it just suggests last_sync + control_rate as
+	new timestamp but this will be improved in the future.
+
+	While doing that change the control-rate property to a GstClockTime
+	from guint and change it's meaning from samples to nanoseconds as
+	the GstController doesn't know anything about sampling rate. Strictly
+	speaking this breaks ABI but as the control-rate property didn't do
+	anything in the past and as such couldn't be used this should be no
+	problem.	
+
+2007-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	reviewed by: Stefan Kost <ensonic@users.sf.net>
+
 	* libs/gst/controller/gstcontroller.c: (gst_controller_unset),
 	(gst_controller_unset_all):
 	* libs/gst/controller/gstcontrollerprivate.h:
