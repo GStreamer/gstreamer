@@ -481,12 +481,9 @@ AG_GST_CHECK_FEATURE(PANGO, [Pango font rendering], pango, [
 dnl *** theora ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_THEORA, true)
 AG_GST_CHECK_FEATURE(THEORA, [Xiph Theora video codec], theora, [
-  AG_GST_PKG_CHECK_MODULES(THEORA, theora)
-  if test $HAVE_THEORA = no
-  then
-    AG_GST_CHECK_LIBHEADER(THEORA, theora, theora_version_string, "-logg", theora/theora.h, THEORA_LIBS="-ltheora -logg")
-    AC_SUBST(THEORA_LIBS)
-  fi
+  dnl this check will work as long as theora uses 1.0.x or similar for the
+  dnl first post-alpha release and not just 1.0
+  AG_GST_PKG_CHECK_MODULES(THEORA, theora >= 1.0alpha5)
 ])
 
 dnl *** vorbis ***

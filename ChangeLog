@@ -1,3 +1,10 @@
+2007-05-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Bump libtheora requirement to 1.0alpha5 for the pixformat check
+	  (also has a .pc file, so we don't need the fallback check any
+	  longer). Fixes #438840.
+
 2007-05-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstqueue2.c: (gst_queue_get_type),
