@@ -44,23 +44,20 @@ GList *
 gst_controlled_property_find_control_point_node (GstControlledProperty * prop,
     GstClockTime timestamp)
 {
-  /* GList *prev_node = NULL; */
   GList *prev_node = g_list_last (prop->values);
   GList *node;
   GstControlPoint *cp;
 
-  /*
-     if((prop->last_value) &&
-     (timestamp>((GstTimedValue *)(prop->last_value->data))->timestamp)) {
-     node=prop->last_value;
-     }
-     else {
-     node=prop->values;
-     }
-   */
+  node = prop->values;
+  if (prop->last_requested_value) {
+    GstControlPoint *last_cp = prop->last_requested_value->data;
+
+    if (timestamp > last_cp->timestamp)
+      node = prop->last_requested_value;
+  }
 
   /* iterate over timed value list */
-  for (node = prop->values; node; node = g_list_next (node)) {
+  for (; node; node = g_list_next (node)) {
     cp = node->data;
     /* this timestamp is newer that the one we look for */
     if (timestamp < cp->timestamp) {
@@ -69,11 +66,10 @@ gst_controlled_property_find_control_point_node (GstControlledProperty * prop,
       break;
     }
   }
-  /*
-     if(node) {
-     prop->last_value=prev_node;
-     }
-   */
+
+  if (prev_node)
+    prop->last_requested_value = prev_node;
+
   return (prev_node);
 }
 

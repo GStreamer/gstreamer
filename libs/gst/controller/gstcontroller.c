@@ -853,6 +853,8 @@ gst_controller_unset (GstController * self, gchar * property_name,
     /* check if a control point for the timestamp exists */
     if ((node = g_list_find_custom (prop->values, &timestamp,
                 gst_control_point_find))) {
+      if (node == prop->last_requested_value)
+        prop->last_requested_value = NULL;
       gst_control_point_free (node->data);      /* free GstControlPoint */
       prop->values = g_list_delete_link (prop->values, node);
       res = TRUE;
@@ -888,6 +890,7 @@ gst_controller_unset_all (GstController * self, gchar * property_name)
     /* free GstControlPoint structures */
     g_list_foreach (prop->values, (GFunc) gst_control_point_free, NULL);
     g_list_free (prop->values);
+    prop->last_requested_value = NULL;
     prop->values = NULL;
     res = TRUE;
   }

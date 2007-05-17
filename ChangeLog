@@ -2,6 +2,18 @@
 
 	reviewed by: Stefan Kost <ensonic@users.sf.net>
 
+	* libs/gst/controller/gstcontroller.c: (gst_controller_unset),
+	(gst_controller_unset_all):
+	* libs/gst/controller/gstcontrollerprivate.h:
+	* libs/gst/controller/gstinterpolation.c:
+	(gst_controlled_property_find_control_point_node):
+	Save last synced value from the list to continue searching from there
+	in future syncs. This speeds everything up a bit.
+	
+2007-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	reviewed by: Stefan Kost <ensonic@users.sf.net>
+
 	* libs/gst/controller/gstcontroller.c: (gst_control_point_compare),
 	(gst_control_point_find), (gst_controlled_property_new),
 	(gst_control_point_free), (gst_controlled_property_free),

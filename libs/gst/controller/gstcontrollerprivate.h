@@ -106,9 +106,7 @@ typedef struct _GstControlledProperty
   InterpolateGetValueArray get_value_array;
 
   GList *values;                /* List of GstControlPoint */
-  /* TODO keep the last search result to be able to continue
-     GList      *last_value;     // last search result, can be used for incremental searches
-   */
+  GList *last_requested_value;  /* last search result, can be used for incremental searches */
 
   /*< private >*/
   gpointer       _gst_reserved[GST_PADDING];
