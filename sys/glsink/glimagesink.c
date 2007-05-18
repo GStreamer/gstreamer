@@ -783,6 +783,7 @@ gst_glimage_sink_init_display (GstGLImageSink * glimage_sink)
 #else
   glimage_sink->have_yuv = FALSE;
 #endif
+  gst_glimage_sink_update_caps (glimage_sink);
 
   glXMakeCurrent (glimage_sink->display, None, NULL);
   XDestroyWindow (glimage_sink->display, window);

@@ -1,3 +1,10 @@
+2007-05-18  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/glsink/glimagesink.c: (gst_glimage_sink_init_display):
+	Update the cached caps after opening the display so that we report
+	only the supported caps formats, not just the template caps.
+	Fixes: #439405
+
 2007-05-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrwb/gstamrwbdec.c (gst_amrwbdec_debug, GST_CAT_DEFAULT,
