@@ -145,6 +145,7 @@ enum
 #define DEFAULT_DEBUG           FALSE
 #define DEFAULT_RETRY           20
 #define DEFAULT_TIMEOUT         5000000
+#define DEFAULT_TCP_TIMEOUT     20000000
 #define DEFAULT_LATENCY_MS      3000
 
 enum
@@ -155,6 +156,7 @@ enum
   PROP_DEBUG,
   PROP_RETRY,
   PROP_TIMEOUT,
+  PROP_TCP_TIMEOUT,
   PROP_LATENCY,
 };
 
@@ -279,8 +281,14 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_TIMEOUT,
       g_param_spec_uint64 ("timeout", "Timeout",
-          "Retry TCP transport after timeout microseconds (0 = disabled)",
+          "Retry TCP transport after UDP timeout microseconds (0 = disabled)",
           0, G_MAXUINT64, DEFAULT_TIMEOUT,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
+  g_object_class_install_property (gobject_class, PROP_TCP_TIMEOUT,
+      g_param_spec_uint64 ("tcp-timeout", "TCP Timeout",
+          "Fail after timeout microseconds on TCP connections (0 = disabled)",
+          0, G_MAXUINT64, DEFAULT_TCP_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   g_object_class_install_property (gobject_class, PROP_LATENCY,
@@ -365,8 +373,16 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
       rtspsrc->retry = g_value_get_uint (value);
       break;
     case PROP_TIMEOUT:
-      rtspsrc->timeout = g_value_get_uint64 (value);
+      rtspsrc->udp_timeout = g_value_get_uint64 (value);
       break;
+    case PROP_TCP_TIMEOUT:
+    {
+      guint64 timeout = g_value_get_uint64 (value);
+
+      rtspsrc->tcp_timeout.tv_sec = timeout / G_USEC_PER_SEC;
+      rtspsrc->tcp_timeout.tv_usec = timeout % G_USEC_PER_SEC;
+      break;
+    }
     case PROP_LATENCY:
       rtspsrc->latency = g_value_get_uint (value);
       break;
@@ -398,8 +414,17 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_uint (value, rtspsrc->retry);
       break;
     case PROP_TIMEOUT:
-      g_value_set_uint64 (value, rtspsrc->timeout);
+      g_value_set_uint64 (value, rtspsrc->udp_timeout);
       break;
+    case PROP_TCP_TIMEOUT:
+    {
+      guint64 timeout;
+
+      timeout = rtspsrc->tcp_timeout.tv_sec * G_USEC_PER_SEC +
+          rtspsrc->tcp_timeout.tv_usec;
+      g_value_set_uint64 (value, timeout);
+      break;
+    }
     case PROP_LATENCY:
       g_value_set_uint (value, rtspsrc->latency);
       break;
@@ -1688,7 +1713,8 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
     /* configure a timeout on the UDP port. When the timeout message is
      * posted, we assume UDP transport is not possible. We reconnect using TCP
      * if we can. */
-    g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", src->timeout, NULL);
+    g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", src->udp_timeout,
+        NULL);
 
     /* get output pad of the UDP source. */
     *outpad = gst_element_get_pad (stream->udpsrc[0], "src");
@@ -2137,7 +2163,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 
   have_data = FALSE;
   do {
-    GTimeVal tv_timeout;
+    GTimeVal tv_timeout, *tv;
 
     /* get the next timeout interval */
     rtsp_connection_next_timeout (src->connection, &tv_timeout);
@@ -2149,9 +2175,14 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
       res = gst_rtspsrc_send_keep_alive (src);
     }
 
+    if ((src->tcp_timeout.tv_sec | src->tcp_timeout.tv_usec))
+      tv = &src->tcp_timeout;
+    else
+      tv = NULL;
+
     GST_DEBUG_OBJECT (src, "doing receive");
 
-    res = rtsp_connection_receive (src->connection, &message, NULL);
+    res = rtsp_connection_receive (src->connection, &message, tv);
 
     switch (res) {
       case RTSP_OK:
@@ -2425,7 +2456,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
       ("Could not receive any UDP packets for %.4f seconds, maybe your "
           "firewall is blocking it. Retrying using a TCP connection.",
-          gst_guint64_to_gdouble (src->timeout / 1000000)));
+          gst_guint64_to_gdouble (src->udp_timeout / 1000000)));
   /* we can try only TCP now */
   src->cur_protocols = RTSP_LOWER_TRANS_TCP;
 
@@ -2685,6 +2716,7 @@ gst_rtspsrc_try_send (GstRTSPSrc * src, RTSPMessage * request,
   RTSPResult res;
   RTSPStatusCode thecode;
   gchar *content_base = NULL;
+  GTimeVal *tv;
 
   if (src->extension && src->extension->before_send)
     src->extension->before_send (src->extension, request);
@@ -2694,13 +2726,18 @@ gst_rtspsrc_try_send (GstRTSPSrc * src, RTSPMessage * request,
   if (src->debug)
     rtsp_message_dump (request);
 
-  if ((res = rtsp_connection_send (src->connection, request, NULL)) < 0)
+  if ((src->tcp_timeout.tv_sec | src->tcp_timeout.tv_usec))
+    tv = &src->tcp_timeout;
+  else
+    tv = NULL;
+
+  if ((res = rtsp_connection_send (src->connection, request, tv)) < 0)
     goto send_error;
 
   rtsp_connection_reset_timeout (src->connection);
 
 next:
-  if ((res = rtsp_connection_receive (src->connection, response, NULL)) < 0)
+  if ((res = rtsp_connection_receive (src->connection, response, tv)) < 0)
     goto receive_error;
 
   if (src->debug)
@@ -3338,7 +3375,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   /* connect */
   GST_DEBUG_OBJECT (src, "connecting (%s)...", src->req_location);
-  if ((res = rtsp_connection_connect (src->connection, NULL)) < 0)
+  if ((res = rtsp_connection_connect (src->connection, &src->tcp_timeout)) < 0)
     goto could_not_connect;
 
   /* create OPTIONS */

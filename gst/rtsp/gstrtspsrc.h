@@ -147,7 +147,8 @@ struct _GstRTSPSrc {
   RTSPLowerTrans   protocols;
   gboolean         debug;
   guint   	   retry;
-  guint64          timeout;
+  guint64          udp_timeout;
+  GTimeVal         tcp_timeout;
   guint            latency;
 
   /* state */

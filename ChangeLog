@@ -1,5 +1,20 @@
 2007-05-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_class_init),
+	(gst_rtspsrc_set_property), (gst_rtspsrc_get_property),
+	(gst_rtspsrc_stream_configure_udp), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_loop_udp), (gst_rtspsrc_try_send), (gst_rtspsrc_send),
+	(gst_rtspsrc_setup_streams), (gst_rtspsrc_open):
+	* gst/rtsp/gstrtspsrc.h:
+	Add TCP timeout property and use it for all TCP connection.
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_connect),
+	(rtsp_connection_write), (rtsp_connection_next_timeout),
+	(rtsp_connection_reset_timeout):
+	Make connect and writes cancelable and make them use the timeout.
+
+2007-05-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send_keep_alive),
 	(gst_rtspsrc_loop_interleaved), (gst_rtspsrc_loop_udp),
 	(gst_rtspsrc_try_send), (gst_rtspsrc_send),

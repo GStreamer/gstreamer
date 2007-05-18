@@ -172,6 +172,10 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
   gint ret;
   guint16 port;
   RTSPUrl *url;
+  fd_set writefds;
+  fd_set readfds;
+  struct timeval tv, *tvp;
+  gint max_fd, retval;
 
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
   g_return_val_if_fail (conn->url != NULL, RTSP_EINVAL);
@@ -207,12 +211,42 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
     goto sys_error;
 
   /* set to non-blocking mode so that we can cancel the connect */
-  //fcntl (fd, F_SETFL, O_NONBLOCK);
+  fcntl (fd, F_SETFL, O_NONBLOCK);
 
+  /* we are going to connect ASYNC now */
   ret = connect (fd, (struct sockaddr *) &sin, sizeof (sin));
-  if (ret != 0)
+  if (ret == 0)
+    goto done;
+  if (errno != EINPROGRESS)
     goto sys_error;
 
+  /* wait for connect to complete up to the specified timeout or until we got
+   * interrupted. */
+  FD_ZERO (&writefds);
+  FD_SET (fd, &writefds);
+  FD_ZERO (&readfds);
+  FD_SET (READ_SOCKET (conn), &readfds);
+
+  if (timeout->tv_sec != 0 || timeout->tv_usec != 0) {
+    tv.tv_sec = timeout->tv_sec;
+    tv.tv_usec = timeout->tv_usec;
+    tvp = &tv;
+  } else {
+    tvp = NULL;
+  }
+
+  max_fd = MAX (fd, READ_SOCKET (conn));
+
+  do {
+    retval = select (max_fd + 1, &readfds, &writefds, NULL, tvp);
+  } while ((retval == -1 && errno == EINTR));
+
+  if (retval == 0)
+    goto timeout;
+  else if (retval == -1)
+    goto sys_error;
+
+done:
   conn->fd = fd;
   conn->ip = ip;
 
@@ -231,6 +265,10 @@ not_resolved:
 not_ip:
   {
     return RTSP_ENOTIP;
+  }
+timeout:
+  {
+    return RTSP_ETIMEOUT;
   }
 }
 
@@ -270,15 +308,61 @@ rtsp_connection_write (RTSPConnection * conn, const guint8 * data, guint size,
     GTimeVal * timeout)
 {
   guint towrite;
+  fd_set writefds;
+  fd_set readfds;
+  int max_fd;
+  gint retval;
+  struct timeval tv, *tvp;
 
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
   g_return_val_if_fail (data != NULL || size == 0, RTSP_EINVAL);
+
+  FD_ZERO (&writefds);
+  FD_SET (conn->fd, &writefds);
+  FD_ZERO (&readfds);
+  FD_SET (READ_SOCKET (conn), &readfds);
+
+  max_fd = MAX (conn->fd, READ_SOCKET (conn));
+
+  if (timeout) {
+    tv.tv_sec = timeout->tv_sec;
+    tv.tv_usec = timeout->tv_usec;
+    tvp = &tv;
+  } else {
+    tvp = NULL;
+  }
 
   towrite = size;
 
   while (towrite > 0) {
     gint written;
 
+    do {
+      retval = select (max_fd + 1, &readfds, &writefds, NULL, tvp);
+    } while ((retval == -1 && errno == EINTR));
+
+    if (retval == 0)
+      goto timeout;
+
+    if (retval == -1)
+      goto select_error;
+
+    if (FD_ISSET (READ_SOCKET (conn), &readfds)) {
+      /* read all stop commands */
+      while (TRUE) {
+        gchar command;
+        int res;
+
+        READ_COMMAND (conn, command, res);
+        if (res <= 0) {
+          /* no more commands */
+          break;
+        }
+      }
+      goto stopped;
+    }
+
+    /* now we can write */
     written = write (conn->fd, data, towrite);
     if (written < 0) {
       if (errno != EAGAIN && errno != EINTR)
@@ -291,6 +375,18 @@ rtsp_connection_write (RTSPConnection * conn, const guint8 * data, guint size,
   return RTSP_OK;
 
   /* ERRORS */
+timeout:
+  {
+    return RTSP_ETIMEOUT;
+  }
+select_error:
+  {
+    return RTSP_ESYS;
+  }
+stopped:
+  {
+    return RTSP_EINTR;
+  }
 write_error:
   {
     return RTSP_ESYS;
