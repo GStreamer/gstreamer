@@ -1005,6 +1005,7 @@ out_flushing:
     gst_pad_pause_task (queue->srcpad);
     GST_CAT_LOG_OBJECT (queue_dataflow, queue,
         "pause task, reason:  %s", gst_flow_get_name (queue->srcresult));
+    GST_QUEUE_SIGNAL_DEL (queue);
     GST_QUEUE_MUTEX_UNLOCK (queue);
     return;
   }

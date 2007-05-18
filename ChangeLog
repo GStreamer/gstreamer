@@ -1,5 +1,13 @@
 2007-05-18  Edward Hervey  <edward@fluendo.com>
 
+	* plugins/elements/gstqueue.c: (gst_queue_loop):
+	Hello, I am Mr Taymans' personal debugger. Today I will introduce a fix
+	for the subtle art of warning a potentially blocking thread that it
+	should check the source pad return value, and relay the information
+	upstream.
+
+2007-05-18  Edward Hervey  <edward@fluendo.com>
+
 	* plugins/elements/gstqueue.c: (gst_queue_handle_sink_event):
 	Release the queue lock !
 
