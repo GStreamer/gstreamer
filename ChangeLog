@@ -1,3 +1,8 @@
+2007-05-18  Edward Hervey  <edward@fluendo.com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_handle_sink_event):
+	Release the queue lock !
+
 2007-05-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/libs/gstreamer-libs-sections.txt:

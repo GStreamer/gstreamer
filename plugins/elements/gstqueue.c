@@ -776,6 +776,7 @@ done:
   /* ERRORS */
 out_flushing:
   {
+    GST_QUEUE_MUTEX_UNLOCK (queue);
     gst_buffer_unref (event);
     return FALSE;
   }
