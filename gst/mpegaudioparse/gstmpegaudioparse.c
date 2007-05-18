@@ -21,6 +21,9 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <string.h>
+
 #include "gstmpegaudioparse.h"
 
 GST_DEBUG_CATEGORY_STATIC (mp3parse_debug);
@@ -138,8 +141,8 @@ static guint mp3types_freqs[3][3] = { {44100, 48000, 32000},
 
 static inline guint
 mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
-    guint * put_layer, guint * put_channels, guint * put_bitrate,
-    guint * put_samplerate)
+    guint * put_version, guint * put_layer, guint * put_channels,
+    guint * put_bitrate, guint * put_samplerate)
 {
   guint length;
   gulong mode, samplerate, bitrate, layer, channels, padding;
@@ -186,6 +189,8 @@ mp3_type_frame_length_from_header (GstMPEGAudioParse * mp3parse, guint32 header,
   GST_DEBUG_OBJECT (mp3parse, "samplerate = %lu, bitrate = %lu, layer = %lu, "
       "channels = %lu", samplerate, bitrate, layer, channels);
 
+  if (put_version)
+    *put_version = lsf ? 2 : 1;
   if (put_layer)
     *put_layer = layer;
   if (put_channels)
@@ -268,11 +273,13 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
   gst_adapter_clear (mp3parse->adapter);
 
   mp3parse->rate = mp3parse->channels = mp3parse->layer = -1;
+  mp3parse->version = 1;
 
   mp3parse->avg_bitrate = 0;
   mp3parse->bitrate_sum = 0;
   mp3parse->last_posted_bitrate = 0;
   mp3parse->frame_count = 0;
+  mp3parse->sent_codec_tag = FALSE;
 }
 
 static void
@@ -390,26 +397,13 @@ static GstFlowReturn
 gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
 {
   GstBuffer *outbuf;
-  gint spf;                     /* samples per frame */
 
   GST_DEBUG_OBJECT (mp3parse, "pushing buffer of %d bytes", size);
 
   outbuf = gst_adapter_take_buffer (mp3parse->adapter, size);
 
-  /* see http://www.codeproject.com/audio/MPEGAudioInfo.asp */
-  if (mp3parse->layer == 1)
-    spf = 384;
-  else if (mp3parse->layer == 2)
-    spf = 1152;
-  else {
-    /* Any sample_rate < 32000 indicates MPEG-2 or MPEG-2.5 */
-    if (mp3parse->rate < 32000)
-      spf = 576;
-    else
-      spf = 1152;
-  }
   GST_BUFFER_DURATION (outbuf) =
-      gst_util_uint64_scale (GST_SECOND, spf, mp3parse->rate);
+      gst_util_uint64_scale (GST_SECOND, mp3parse->spf, mp3parse->rate);
 
   GST_BUFFER_OFFSET (outbuf) = mp3parse->cur_offset;
 
@@ -441,12 +435,6 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
     }
   }
 
-  /* Update our byte offset tracking */
-  if (mp3parse->cur_offset != -1) {
-    mp3parse->cur_offset += size;
-  }
-  mp3parse->tracked_offset += size;
-
   /* Decide what timestamp we're going to apply */
   if (GST_CLOCK_TIME_IS_VALID (mp3parse->next_ts)) {
     GST_BUFFER_TIMESTAMP (outbuf) = mp3parse->next_ts;
@@ -461,6 +449,12 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
       GST_BUFFER_TIMESTAMP (outbuf) = 0;
     }
   }
+
+  /* Update our byte offset tracking */
+  if (mp3parse->cur_offset != -1) {
+    mp3parse->cur_offset += size;
+  }
+  mp3parse->tracked_offset += size;
 
   mp3parse->next_ts =
       GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf);
@@ -480,6 +474,142 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
   }
 
   return gst_pad_push (mp3parse->srcpad, outbuf);
+}
+
+#define XING_FRAMES_FLAG     0x0001
+#define XING_BYTES_FLAG      0x0002
+#define XING_TOC_FLAG        0x0004
+#define XING_VBR_SCALE_FLAG  0x0008
+
+static void
+gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
+{
+  GstTagList *taglist;
+  gchar *codec;
+  const guint32 xing_id = 0x58696e67;   /* 'Xing' in hex */
+  const guint32 info_id = 0x496e666f;   /* 'Info' in hex - found in LAME CBR files */
+  const guint XING_HDR_MIN = 8;
+  gint xing_offset;
+
+  guint64 avail;
+  guint32 read_id;
+  const guint8 *data;
+
+  /* Output codec tag */
+  if (!mp3parse->sent_codec_tag) {
+    if (mp3parse->layer == 3) {
+      codec = g_strdup_printf ("MPEG %d Audio, Layer %d (MP3)",
+          mp3parse->version, mp3parse->layer);
+    } else {
+      codec = g_strdup_printf ("MPEG %d Audio, Layer %d",
+          mp3parse->version, mp3parse->layer);
+    }
+
+    taglist = gst_tag_list_new ();
+    gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_AUDIO_CODEC, codec, NULL);
+    gst_element_found_tags_for_pad (GST_ELEMENT (mp3parse),
+        mp3parse->srcpad, taglist);
+    g_free (codec);
+
+    mp3parse->sent_codec_tag = TRUE;
+  }
+  /* end setting the tag */
+
+  /* Check first frame for Xing info */
+  if (mp3parse->version == 1) { /* MPEG-1 file */
+    if (mp3parse->channels == 1)
+      xing_offset = 0x11;
+    else
+      xing_offset = 0x20;
+  } else {                      /* MPEG-2 header */
+    if (mp3parse->channels == 1)
+      xing_offset = 0x09;
+    else
+      xing_offset = 0x11;
+  }
+  /* Skip the 4 bytes of the MP3 header too */
+  xing_offset += 4;
+
+  /* Check if we have enough data to read the Xing header */
+  avail = gst_adapter_available (mp3parse->adapter);
+
+  if (avail < xing_offset + XING_HDR_MIN)
+    return;
+
+  data = gst_adapter_peek (mp3parse->adapter, xing_offset + XING_HDR_MIN);
+  if (data == NULL)
+    return;
+  /* The header starts at the provided offset */
+  data += xing_offset;
+
+  read_id = GST_READ_UINT32_BE (data);
+  if (read_id == xing_id || read_id == info_id) {
+    guint32 xing_flags;
+    guint bytes_needed = xing_offset + XING_HDR_MIN;
+
+    GST_DEBUG_OBJECT (mp3parse, "Found Xing header marker 0x%x", xing_id);
+
+    /* Read 4 base bytes of flags, big-endian */
+    xing_flags = GST_READ_UINT32_BE (data + 4);
+    if (xing_flags & XING_FRAMES_FLAG)
+      bytes_needed += 4;
+    if (xing_flags & XING_BYTES_FLAG)
+      bytes_needed += 4;
+    if (xing_flags & XING_TOC_FLAG)
+      bytes_needed += 100;
+    if (xing_flags & XING_VBR_SCALE_FLAG)
+      bytes_needed += 4;
+    if (avail < bytes_needed) {
+      GST_DEBUG_OBJECT (mp3parse,
+          "Not enough data to read Xing header (need %d)", bytes_needed);
+      return;
+    }
+
+    GST_DEBUG_OBJECT (mp3parse, "Reading Xing header");
+    mp3parse->xing_flags = xing_flags;
+    data = gst_adapter_peek (mp3parse->adapter, bytes_needed);
+    data += xing_offset + XING_HDR_MIN;
+
+    if (xing_flags & XING_FRAMES_FLAG) {
+      mp3parse->xing_frames = GST_READ_UINT32_BE (data);
+      mp3parse->xing_total_time = gst_util_uint64_scale (GST_SECOND,
+          (guint64) (mp3parse->xing_frames) * (mp3parse->spf), mp3parse->rate);
+      data += 4;
+    } else {
+      mp3parse->xing_frames = 0;
+      mp3parse->xing_total_time = 0;
+    }
+
+    if (xing_flags & XING_BYTES_FLAG) {
+      mp3parse->xing_bytes = GST_READ_UINT32_BE (data);
+      data += 4;
+    } else
+      mp3parse->xing_bytes = 0;
+
+    if (xing_flags & XING_TOC_FLAG) {
+      gint i;
+
+      for (i = 0; i < 100; i++) {
+        mp3parse->xing_seek_table[i] = data[0];
+        data++;
+      }
+    } else {
+      memset (mp3parse->xing_seek_table, 0, 100);
+    }
+
+    if (xing_flags & XING_VBR_SCALE_FLAG) {
+      mp3parse->xing_vbr_scale = GST_READ_UINT32_BE (data);
+      data += 4;
+    } else
+      mp3parse->xing_vbr_scale = 0;
+
+    GST_DEBUG_OBJECT (mp3parse, "Xing header reported %u frames, time %"
+        G_GUINT64_FORMAT ", vbr scale %u", mp3parse->xing_frames,
+        mp3parse->xing_total_time, mp3parse->xing_vbr_scale);
+  } else {
+    GST_DEBUG_OBJECT (mp3parse, "Xing header not found in first frame");
+  }
 }
 
 static GstFlowReturn
@@ -540,10 +670,10 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
     header = GST_READ_UINT32_BE (data);
     /* if it's a valid header, go ahead and send off the frame */
     if (head_check (mp3parse, header)) {
-      guint bitrate = 0, layer = 0, rate = 0, channels = 0;
+      guint bitrate = 0, layer = 0, rate = 0, channels = 0, version;
 
-      if (!(bpf = mp3_type_frame_length_from_header (mp3parse, header, &layer,
-                  &channels, &bitrate, &rate)))
+      if (!(bpf = mp3_type_frame_length_from_header (mp3parse, header,
+                  &version, &layer, &channels, &bitrate, &rate)))
         goto header_error;
 
       /*************************************************************************
@@ -612,6 +742,24 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
         mp3parse->layer = layer;
         mp3parse->rate = rate;
         mp3parse->bit_rate = bitrate;
+        mp3parse->version = version;
+
+        /* see http://www.codeproject.com/audio/MPEGAudioInfo.asp */
+        if (mp3parse->layer == 1)
+          mp3parse->spf = 384;
+        else if (mp3parse->layer == 2)
+          mp3parse->spf = 1152;
+        else if (mp3parse->version == 2) {
+          mp3parse->spf = 576;
+        } else
+          mp3parse->spf = 1152;
+      }
+
+      /* Check the first frame for a Xing header to get our total length */
+      if (mp3parse->frame_count == 0) {
+        /* For the first frame in the file, look for a Xing frame after 
+         * the header, and output a codec tag */
+        gst_mp3parse_handle_first_frame (mp3parse);
       }
 
       /* Update VBR stats */
@@ -813,21 +961,24 @@ mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total)
   GstQuery *query;
   GstPad *peer;
 
-  if ((peer = gst_pad_get_peer (mp3parse->sinkpad)) == NULL)
-    return FALSE;
+  if ((peer = gst_pad_get_peer (mp3parse->sinkpad)) != NULL) {
+    query = gst_query_new_duration (GST_FORMAT_BYTES);
+    gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
 
-  query = gst_query_new_duration (GST_FORMAT_BYTES);
-  gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
-
-  if (!gst_pad_query (peer, query)) {
+    if (gst_pad_query (peer, query)) {
+      gst_object_unref (peer);
+      gst_query_parse_duration (query, NULL, total);
+      return TRUE;
+    }
     gst_object_unref (peer);
-    return FALSE;
   }
 
-  gst_object_unref (peer);
-  gst_query_parse_duration (query, NULL, total);
+  if (mp3parse->xing_flags & XING_BYTES_FLAG) {
+    *total = mp3parse->xing_bytes;
+    return TRUE;
+  }
 
-  return TRUE;
+  return FALSE;
 }
 
 static gboolean
@@ -836,6 +987,11 @@ mp3parse_total_time (GstMPEGAudioParse * mp3parse, GstClockTime * total)
   gint64 total_bytes;
 
   *total = GST_CLOCK_TIME_NONE;
+
+  if (mp3parse->xing_flags & XING_FRAMES_FLAG) {
+    *total = mp3parse->xing_total_time;
+    return TRUE;
+  }
 
   /* Calculate time from the measured bitrate */
   if (!mp3parse_total_bytes (mp3parse, &total_bytes))

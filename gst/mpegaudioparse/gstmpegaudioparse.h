@@ -61,16 +61,26 @@ struct _GstMPEGAudioParse {
 
   guint skip; /* number of frames to skip */
   guint bit_rate; /* in kbps */
-  gint channels, rate, layer;
+  gint channels, rate, layer, version;
+  gint spf; /* Samples per frame */
 
   gboolean resyncing; /* True when attempting to resync (stricter checks are
                          performed) */
+  gboolean sent_codec_tag;
 
   /* VBR tracking */
   guint   avg_bitrate;
   guint64 bitrate_sum;
   guint   frame_count;
   guint   last_posted_bitrate;
+
+  /* Xing info */
+  guint32 xing_flags;
+  guint32 xing_frames;
+  GstClockTime xing_total_time;
+  guint32 xing_bytes;
+  guchar xing_seek_table[100];
+  guint32 xing_vbr_scale;
 };
 
 struct _GstMPEGAudioParseClass {
