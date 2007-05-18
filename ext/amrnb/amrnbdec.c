@@ -40,13 +40,12 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) 8000," "channels = (int) 1")
     );
 
+GST_DEBUG_CATEGORY_STATIC (gst_amrnbdec_debug);
+#define GST_CAT_DEFAULT gst_amrnbdec_debug
+
 static const gint block_size[16] = { 12, 13, 15, 17, 19, 20, 26, 31, 5,
   0, 0, 0, 0, 0, 0, 0
 };
-
-static void gst_amrnbdec_base_init (GstAmrnbDecClass * klass);
-static void gst_amrnbdec_class_init (GstAmrnbDecClass * klass);
-static void gst_amrnbdec_init (GstAmrnbDec * amrnbdec);
 
 static gboolean gst_amrnbdec_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer);
@@ -54,50 +53,27 @@ static gboolean gst_amrnbdec_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_amrnbdec_state_change (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_amrnbdec_debug, "amrnbdec", 0, "AMR-NB audio decoder");
 
-GType
-gst_amrnbdec_get_type (void)
-{
-  static GType amrnbdec_type = 0;
-
-  if (!amrnbdec_type) {
-    static const GTypeInfo amrnbdec_info = {
-      sizeof (GstAmrnbDecClass),
-      (GBaseInitFunc) gst_amrnbdec_base_init,
-      NULL,
-      (GClassInitFunc) gst_amrnbdec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAmrnbDec),
-      0,
-      (GInstanceInitFunc) gst_amrnbdec_init,
-    };
-
-    amrnbdec_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstAmrnbDec", &amrnbdec_info, 0);
-  }
-
-  return amrnbdec_type;
-}
+GST_BOILERPLATE_FULL (GstAmrnbDec, gst_amrnbdec, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
 static void
-gst_amrnbdec_base_init (GstAmrnbDecClass * klass)
+gst_amrnbdec_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails gst_amrnbdec_details = {
-    "AMR-NB decoder",
-    "Codec/Decoder/Audio",
-    "Adaptive Multi-Rate Narrow-Band audio decoder",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-  };
+  GstElementDetails details = GST_ELEMENT_DETAILS ("AMR-NB audio decoder",
+      "Codec/Decoder/Audio",
+      "Adaptive Multi-Rate Narrow-Band audio decoder",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_amrnbdec_details);
+  gst_element_class_set_details (element_class, &details);
 }
 
 static void
@@ -105,13 +81,11 @@ gst_amrnbdec_class_init (GstAmrnbDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
-  element_class->change_state = gst_amrnbdec_state_change;
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrnbdec_state_change);
 }
 
 static void
-gst_amrnbdec_init (GstAmrnbDec * amrnbdec)
+gst_amrnbdec_init (GstAmrnbDec * amrnbdec, GstAmrnbDecClass * klass)
 {
   /* create the sink pad */
   amrnbdec->sinkpad =

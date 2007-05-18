@@ -1,3 +1,16 @@
+2007-05-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/amrnb/amrnbdec.c (gst_amrnbdec_debug, GST_CAT_DEFAULT,
+	  block_size, _do_init, gst_amrnbdec_base_init,
+	  gst_amrnbdec_class_init, gst_amrnbdec_init):
+	* ext/amrnb/amrnbenc.c (gst_amrnbenc_debug, GST_CAT_DEFAULT, _do_init,
+	  gst_amrnbenc_base_init, gst_amrnbenc_class_init, gst_amrnbenc_init):
+	* ext/amrnb/amrnbparse.c (gst_amrnbparse_debug, GST_CAT_DEFAULT,
+	  block_size, _do_init, gst_amrnbparse_base_init,
+	  gst_amrnbparse_class_init, gst_amrnbparse_init):
+	  First round of cleanups, that use GST_BOILERPLATE, GST_ELEMENT_DETAILS,
+	  GST_DEBUG_FUNCPTR and add log-category.
+
 2007-05-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
@@ -2919,7 +2932,7 @@
 
 === release 0.10.0 ===
 
-2005-12-05   <thomas (at) apestaart (dot) org>
+2005-12-05  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
 	  releasing 0.10.0, "Brie"
@@ -2947,7 +2960,7 @@
 
 === release 0.9.7 ===
 
-2005-12-01   <thomas (at) apestaart (dot) org>
+2005-12-01  Thomas Vander Stichele  <thomas (at) apestaart (dot) org>
 
 	* configure.ac:
 	  releasing 0.9.7, "Canis Meus Naso Non Habet"

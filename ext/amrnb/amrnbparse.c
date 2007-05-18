@@ -22,11 +22,7 @@
 #endif
 
 #include <string.h>
-
 #include "amrnbparse.h"
-
-GST_DEBUG_CATEGORY_STATIC (amrnbparse_debug);
-#define GST_CAT_DEFAULT amrnbparse_debug
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -40,13 +36,12 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-amr-nb-sh")
     );
 
+GST_DEBUG_CATEGORY_STATIC (gst_amrnbparse_debug);
+#define GST_CAT_DEFAULT gst_amrnbparse_debug
+
 static const gint block_size[16] = { 12, 13, 15, 17, 19, 20, 26, 31, 5,
   0, 0, 0, 0, 0, 0, 0
 };
-
-static void gst_amrnbparse_base_init (GstAmrnbParseClass * klass);
-static void gst_amrnbparse_class_init (GstAmrnbParseClass * klass);
-static void gst_amrnbparse_init (GstAmrnbParse * amrnbparse);
 
 /*static const GstFormat *gst_amrnbparse_formats (GstPad * pad);*/
 static const GstQueryType *gst_amrnbparse_querytypes (GstPad * pad);
@@ -61,53 +56,27 @@ static gboolean gst_amrnbparse_sink_activate_pull (GstPad * sinkpad,
 static GstStateChangeReturn gst_amrnbparse_state_change (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_amrnbparse_debug, "amrnbparse", 0, "AMR-NB audio stream parser");
 
-GType
-gst_amrnbparse_get_type (void)
-{
-  static GType amrnbparse_type = 0;
-
-  if (!amrnbparse_type) {
-    static const GTypeInfo amrnbparse_info = {
-      sizeof (GstAmrnbParseClass),
-      (GBaseInitFunc) gst_amrnbparse_base_init,
-      NULL,
-      (GClassInitFunc) gst_amrnbparse_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAmrnbParse),
-      0,
-      (GInstanceInitFunc) gst_amrnbparse_init,
-    };
-
-    amrnbparse_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstAmrnbParse", &amrnbparse_info, 0);
-
-    GST_DEBUG_CATEGORY_INIT (amrnbparse_debug,
-        "amrnbparse", 0, "AMR-NB stream parsing");
-  }
-
-  return amrnbparse_type;
-}
+GST_BOILERPLATE_FULL (GstAmrnbParse, gst_amrnbparse, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
 
 static void
-gst_amrnbparse_base_init (GstAmrnbParseClass * klass)
+gst_amrnbparse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails gst_amrnbparse_details = {
-    "AMR-NB parser",
-    "Codec/Parser/Audio",
-    "Adaptive Multi-Rate Narrow-Band audio parser",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-  };
+  GstElementDetails details = GST_ELEMENT_DETAILS ("AMR-NB audio stream parser",
+      "Codec/Parser/Audio",
+      "Adaptive Multi-Rate Narrow-Band audio parser",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_amrnbparse_details);
+  gst_element_class_set_details (element_class, &details);
 }
 
 static void
@@ -115,13 +84,11 @@ gst_amrnbparse_class_init (GstAmrnbParseClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
-  element_class->change_state = gst_amrnbparse_state_change;
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrnbparse_state_change);
 }
 
 static void
-gst_amrnbparse_init (GstAmrnbParse * amrnbparse)
+gst_amrnbparse_init (GstAmrnbParse * amrnbparse, GstAmrnbParseClass * klass)
 {
   /* create the sink pad */
   amrnbparse->sinkpad =

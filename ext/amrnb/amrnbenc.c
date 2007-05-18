@@ -40,9 +40,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/AMR, " "rate = (int) 8000, " "channels = (int) 1")
     );
 
-static void gst_amrnbenc_base_init (GstAmrnbEncClass * klass);
-static void gst_amrnbenc_class_init (GstAmrnbEncClass * klass);
-static void gst_amrnbenc_init (GstAmrnbEnc * amrnbenc);
+GST_DEBUG_CATEGORY_STATIC (gst_amrnbenc_debug);
+#define GST_CAT_DEFAULT gst_amrnbenc_debug
+
 static void gst_amrnbenc_finalize (GObject * object);
 
 static GstFlowReturn gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer);
@@ -50,51 +50,28 @@ static gboolean gst_amrnbenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_amrnbenc_state_change (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_amrnbenc_debug, "amrnbenc", 0, "AMR-NB audio encoder");
 
-GType
-gst_amrnbenc_get_type (void)
-{
-  static GType amrnbenc_type = 0;
-
-  if (!amrnbenc_type) {
-    static const GTypeInfo amrnbenc_info = {
-      sizeof (GstAmrnbEncClass),
-      (GBaseInitFunc) gst_amrnbenc_base_init,
-      NULL,
-      (GClassInitFunc) gst_amrnbenc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstAmrnbEnc),
-      0,
-      (GInstanceInitFunc) gst_amrnbenc_init,
-    };
-
-    amrnbenc_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstAmrnbEnc", &amrnbenc_info, 0);
-  }
-
-  return amrnbenc_type;
-}
+GST_BOILERPLATE_FULL (GstAmrnbEnc, gst_amrnbenc, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
 static void
-gst_amrnbenc_base_init (GstAmrnbEncClass * klass)
+gst_amrnbenc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstElementDetails gst_amrnbenc_details = {
-    "AMR-NB encoder",
-    "Codec/Encoder/Audio",
-    "Adaptive Multi-Rate Narrow-Band audio encoder",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
-        "Wim Taymans <wim@fluendo.com>"
-  };
+  GstElementDetails details = GST_ELEMENT_DETAILS ("AMR-NB audio encoder",
+      "Codec/Encoder/Audio",
+      "Adaptive Multi-Rate Narrow-Band audio encoder",
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
+      "Wim Taymans <wim@fluendo.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_amrnbenc_details);
+  gst_element_class_set_details (element_class, &details);
 }
 
 static void
@@ -103,15 +80,13 @@ gst_amrnbenc_class_init (GstAmrnbEncClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   object_class->finalize = gst_amrnbenc_finalize;
 
-  element_class->change_state = gst_amrnbenc_state_change;
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrnbenc_state_change);
 }
 
 static void
-gst_amrnbenc_init (GstAmrnbEnc * amrnbenc)
+gst_amrnbenc_init (GstAmrnbEnc * amrnbenc, GstAmrnbEncClass * klass)
 {
   /* create the sink pad */
   amrnbenc->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
