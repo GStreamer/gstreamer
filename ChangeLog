@@ -1,3 +1,14 @@
+2007-05-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/amrwb/gstamrwbdec.c (gst_amrwbdec_debug, GST_CAT_DEFAULT,
+	  _do_init, gst_amrwbdec_base_init, gst_amrwbdec_class_init):
+	* ext/amrwb/gstamrwbenc.c (gst_amrwbenc_debug, GST_CAT_DEFAULT,
+	  _do_init, gst_amrwbenc_base_init, gst_amrwbenc_class_init):
+	* ext/amrwb/gstamrwbparse.c (gst_amrwbparse_debug, GST_CAT_DEFAULT,
+	  _do_init, gst_amrwbparse_base_init, gst_amrwbparse_class_init):
+	  First round of cleanups, that use GST_BOILERPLATE, GST_ELEMENT_DETAILS,
+	  GST_DEBUG_FUNCPTR and add log-category.
+
 2007-05-17  Edward Hervey  <edward@fluendo.com>
 
 	* sys/osxvideo/osxvideosink.h:

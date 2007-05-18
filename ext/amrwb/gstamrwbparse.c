@@ -22,19 +22,7 @@
 #endif
 
 #include <string.h>
-
 #include "gstamrwbparse.h"
-
-
-GST_DEBUG_CATEGORY_STATIC (amrwbparse_debug);
-#define GST_CAT_DEFAULT amrwbparse_debug
-
-static const GstElementDetails gst_amrwbparse_details =
-GST_ELEMENT_DETAILS ("AMR-WB parser",
-    "Codec/Parser/Audio",
-    "Adaptive Multi-Rate WideBand audio parser",
-    "Renato Filho <renato.filho@indt.org.br>");
-
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -48,6 +36,9 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-amr-wb-sh")
     );
+
+GST_DEBUG_CATEGORY_STATIC (gst_amrwbparse_debug);
+#define GST_CAT_DEFAULT gst_amrwbparse_debug
 
 extern const UWord8 block_size[];
 
@@ -67,19 +58,27 @@ static gboolean gst_amrwbparse_sink_activate_pull (GstPad * sinkpad,
 static GstStateChangeReturn gst_amrwbparse_state_change (GstElement * element,
     GstStateChange transition);
 
-GST_BOILERPLATE (GstAmrwbParse, gst_amrwbparse, GstElement, GST_TYPE_ELEMENT);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_amrwbparse_debug, "amrwbparse", 0, "AMR-WB audio stream parser");
+
+GST_BOILERPLATE_FULL (GstAmrwbParse, gst_amrwbparse, GstElement,
+    GST_TYPE_ELEMENT, _do_init);
 
 static void
 gst_amrwbparse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-
-  gst_element_class_set_details (element_class, &gst_amrwbparse_details);
+  GstElementDetails details = GST_ELEMENT_DETAILS ("AMR-WB audio stream parser",
+      "Codec/Parser/Audio",
+      "Adaptive Multi-Rate WideBand audio parser",
+      "Renato Filho <renato.filho@indt.org.br>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
+
+  gst_element_class_set_details (element_class, &details);
 
 }
 
@@ -88,12 +87,7 @@ gst_amrwbparse_class_init (GstAmrwbParseClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
-  element_class->change_state = gst_amrwbparse_state_change;
-
-  GST_DEBUG_CATEGORY_INIT (amrwbparse_debug,
-      "amrwbparse", 0, "AMR-WB stream parsing");
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrwbparse_state_change);
 }
 
 static void

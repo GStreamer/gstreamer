@@ -18,8 +18,7 @@
  */
 
 /*
- *
- * gst-launch filesrc location=abc.amr ! audio/AMR-WB ! amrwbdec ! audioresample ! audioconvert ! alsasink
+ * gst-launch filesrc locationabc.amr ! audio/AMR-WB ! amrwbdec ! audioresample ! audioconvert ! alsasink
  */
 
 #ifdef HAVE_CONFIG_H
@@ -27,13 +26,6 @@
 #endif
 
 #include "gstamrwbdec.h"
-
-static const GstElementDetails gst_amrwbdec_details =
-GST_ELEMENT_DETAILS ("AMR-WB audio decoder",
-    "Codec/Decoder/Audio",
-    "Adaptive Multi-Rate Wideband audio decoder",
-    "Renato Araujo <renato.filho@indt.org.br>");
-
 
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
@@ -53,12 +45,10 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) 16000, " "channels = (int) 1")
     );
 
-extern const UWord8 block_size[];
+GST_DEBUG_CATEGORY_STATIC (gst_amrwbdec_debug);
+#define GST_CAT_DEFAULT gst_amrwbdec_debug
 
-static void gst_amrwbdec_base_init (gpointer klass);
-static void gst_amrwbdec_class_init (GstAmrwbDecClass * klass);
-static void gst_amrwbdec_init (GstAmrwbDec * amrwbdec,
-    GstAmrwbDecClass * klass);
+extern const UWord8 block_size[];
 
 static gboolean gst_amrwbdec_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_amrwbdec_chain (GstPad * pad, GstBuffer * buffer);
@@ -66,20 +56,27 @@ static gboolean gst_amrwbdec_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_amrwbdec_state_change (GstElement * element,
     GstStateChange transition);
 
-GST_BOILERPLATE (GstAmrwbDec, gst_amrwbdec, GstElement, GST_TYPE_ELEMENT);
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_amrwbdec_debug, "amrwbdec", 0, "AMR-WB audio decoder");
+
+GST_BOILERPLATE_FULL (GstAmrwbDec, gst_amrwbdec, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
 static void
 gst_amrwbdec_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementDetails details = GST_ELEMENT_DETAILS ("AMR-WB audio decoder",
+      "Codec/Decoder/Audio",
+      "Adaptive Multi-Rate Wideband audio decoder",
+      "Renato Araujo <renato.filho@indt.org.br>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_amrwbdec_details);
+  gst_element_class_set_details (element_class, &details);
 }
 
 static void
@@ -87,9 +84,7 @@ gst_amrwbdec_class_init (GstAmrwbDecClass * klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
-  element_class->change_state = gst_amrwbdec_state_change;
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrwbdec_state_change);
 }
 
 static void

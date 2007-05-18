@@ -23,13 +23,6 @@
 
 #include "gstamrwbenc.h"
 
-static const GstElementDetails gst_amrwbenc_details =
-GST_ELEMENT_DETAILS ("AMR-WB audio encoder",
-    "Codec/Encoder/Audio",
-    "Adaptive Multi-Rate Wideband audio encoder",
-    "Renato Araujo <renato.filho@indt.org.br>");
-
-
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -48,10 +41,9 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         "rate = (int) 16000, " "channels = (int) 1")
     );
 
-static void gst_amrwbenc_base_init (gpointer klass);
-static void gst_amrwbenc_class_init (GstAmrwbEncClass * klass);
-static void gst_amrwbenc_init (GstAmrwbEnc * amrwbenc,
-    GstAmrwbEncClass * klass);
+GST_DEBUG_CATEGORY_STATIC (gst_amrwbenc_debug);
+#define GST_CAT_DEFAULT gst_amrwbenc_debug
+
 static void gst_amrwbenc_finalize (GObject * object);
 
 static GstFlowReturn gst_amrwbenc_chain (GstPad * pad, GstBuffer * buffer);
@@ -59,20 +51,27 @@ static gboolean gst_amrwbenc_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_amrwbenc_state_change (GstElement * element,
     GstStateChange transition);
 
+#define _do_init(bla) \
+    GST_DEBUG_CATEGORY_INIT (gst_amrwbenc_debug, "amrwbenc", 0, "AMR-WB audio encoder");
 
-GST_BOILERPLATE (GstAmrwbEnc, gst_amrwbenc, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE_FULL (GstAmrwbEnc, gst_amrwbenc, GstElement, GST_TYPE_ELEMENT,
+    _do_init);
 
 static void
 gst_amrwbenc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+  GstElementDetails details = GST_ELEMENT_DETAILS ("AMR-WB audio encoder",
+      "Codec/Encoder/Audio",
+      "Adaptive Multi-Rate Wideband audio encoder",
+      "Renato Araujo <renato.filho@indt.org.br>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_amrwbenc_details);
+  gst_element_class_set_details (element_class, &details);
 }
 
 static void
@@ -81,11 +80,9 @@ gst_amrwbenc_class_init (GstAmrwbEncClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
-
   object_class->finalize = gst_amrwbenc_finalize;
 
-  element_class->change_state = gst_amrwbenc_state_change;
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrwbenc_state_change);
 }
 
 static void
