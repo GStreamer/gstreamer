@@ -142,6 +142,7 @@ rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
   newconn->fd = -1;
   newconn->cseq = 0;
   newconn->session_id[0] = 0;
+  newconn->timer = g_timer_new ();
 
   newconn->auth_method = RTSP_AUTH_NONE;
   newconn->username = NULL;
@@ -900,10 +901,45 @@ rtsp_connection_free (RTSPConnection * conn)
   WSACleanup ();
 #endif
 
+  g_timer_destroy (conn->timer);
   g_free (conn->username);
   g_free (conn->passwd);
 
   g_free (conn);
+
+  return RTSP_OK;
+}
+
+RTSPResult
+rtsp_connection_next_timeout (RTSPConnection * conn, GTimeVal * timeout)
+{
+  gdouble elapsed;
+  glong sec;
+  gulong usec;
+
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+  g_return_val_if_fail (timeout != NULL, RTSP_EINVAL);
+
+  elapsed = g_timer_elapsed (conn->timer, &usec);
+  if (elapsed >= conn->timeout) {
+    sec = 0;
+    usec = 0;
+  } else {
+    sec = conn->timeout - elapsed;
+  }
+
+  timeout->tv_sec = sec;
+  timeout->tv_usec = usec;
+
+  return RTSP_OK;
+}
+
+RTSPResult
+rtsp_connection_reset_timeout (RTSPConnection * conn)
+{
+  g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
+
+  g_timer_start (conn->timer);
 
   return RTSP_OK;
 }

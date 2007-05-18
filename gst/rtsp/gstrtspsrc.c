@@ -2079,6 +2079,47 @@ send_error:
   }
 }
 
+/* send server keep-alive */
+static RTSPResult
+gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
+{
+  RTSPMessage request = { 0 };
+  RTSPResult res;
+  RTSPMethod method;
+
+  GST_DEBUG_OBJECT (src, "creating server keep-alive");
+
+  /* find a method to use for keep-alive */
+  if (src->methods & RTSP_GET_PARAMETER)
+    method = RTSP_GET_PARAMETER;
+  else
+    method = RTSP_OPTIONS;
+
+  res = rtsp_message_init_request (&request, method, src->req_location);
+  if (res < 0)
+    goto send_error;
+
+  if ((res = rtsp_connection_send (src->connection, &request, NULL)) < 0)
+    goto send_error;
+
+  rtsp_connection_reset_timeout (src->connection);
+  rtsp_message_unset (&request);
+
+  return RTSP_OK;
+
+  /* ERRORS */
+send_error:
+  {
+    gchar *str = rtsp_strresult (res);
+
+    rtsp_message_unset (&request);
+    GST_ELEMENT_WARNING (src, RESOURCE, WRITE, (NULL),
+        ("Could not send keep-alive. (%s)", str));
+    g_free (str);
+    return res;
+  }
+}
+
 static void
 gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 {
@@ -2096,10 +2137,35 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 
   have_data = FALSE;
   do {
+    GTimeVal tv_timeout;
+
+    /* get the next timeout interval */
+    rtsp_connection_next_timeout (src->connection, &tv_timeout);
+
+    /* see if the timeout period expired */
+    if ((tv_timeout.tv_usec | tv_timeout.tv_usec) == 0) {
+      GST_DEBUG_OBJECT (src, "timout, sending keep-alive");
+      /* send keep-alive, ignore the result, a warning will be posted. */
+      res = gst_rtspsrc_send_keep_alive (src);
+    }
+
     GST_DEBUG_OBJECT (src, "doing receive");
 
-    if ((res = rtsp_connection_receive (src->connection, &message, NULL)) < 0)
-      goto receive_error;
+    res = rtsp_connection_receive (src->connection, &message, NULL);
+
+    switch (res) {
+      case RTSP_OK:
+        GST_DEBUG_OBJECT (src, "we received a server message");
+        break;
+      case RTSP_EINTR:
+        /* we got interrupted, see what we have to do */
+        GST_DEBUG_OBJECT (src, "we got interrupted, unset flushing");
+        /* unset flushing so we can do something else */
+        rtsp_connection_flush (src->connection, FALSE);
+        goto interrupt;
+      default:
+        goto receive_error;
+    }
 
     switch (message.type) {
       case RTSP_MESSAGE_REQUEST:
@@ -2200,6 +2266,13 @@ unknown_stream:
     rtsp_message_unset (&message);
     return;
   }
+interrupt:
+  {
+    GST_DEBUG_OBJECT (src, "we got interrupted");
+    rtsp_message_unset (&message);
+    ret = GST_FLOW_WRONG_STATE;
+    goto need_pause;
+  }
 receive_error:
   {
     gchar *str = rtsp_strresult (res);
@@ -2260,49 +2333,6 @@ need_pause:
   }
 }
 
-/* send server keep-alive */
-static RTSPResult
-gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
-{
-  RTSPMessage request = { 0 };
-  RTSPMessage response = { 0 };
-  RTSPResult res;
-  RTSPStatusCode code;
-  RTSPMethod method;
-
-  GST_DEBUG_OBJECT (src, "creating server keep-alive");
-
-  /* find a method to use for keep-alive */
-  if (src->methods & RTSP_GET_PARAMETER)
-    method = RTSP_GET_PARAMETER;
-  else
-    method = RTSP_OPTIONS;
-
-  res = rtsp_message_init_request (&request, method, src->req_location);
-  if (res < 0)
-    goto send_error;
-
-  /* let us handle the error code because we don't care */
-  if ((res = gst_rtspsrc_send (src, &request, &response, &code)) < 0)
-    goto send_error;
-
-  rtsp_message_unset (&request);
-
-  return RTSP_OK;
-
-  /* ERRORS */
-send_error:
-  {
-    gchar *str = rtsp_strresult (res);
-
-    rtsp_message_unset (&request);
-    GST_ELEMENT_WARNING (src, RESOURCE, WRITE, (NULL),
-        ("Could not send keep-alive. (%s)", str));
-    g_free (str);
-    return res;
-  }
-}
-
 static void
 gst_rtspsrc_loop_udp (GstRTSPSrc * src)
 {
@@ -2314,26 +2344,17 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
     goto stopping;
 
   while (src->loop_cmd == CMD_WAIT) {
-    GTimeVal tv_timeout;
-    gint timeout;
-
     GST_OBJECT_UNLOCK (src);
 
     while (TRUE) {
       RTSPMessage message = { 0 };
+      GTimeVal tv_timeout;
 
-      /* calculate the session timeout. We should send the keep-alive request a
-       * little earlier to compensate for the round trip time to the server. We
-       * subtract 1 second here. */
-      timeout = src->connection->timeout;
-      if (timeout > 1)
-        timeout -= 1;
+      /* get the next timeout interval */
+      rtsp_connection_next_timeout (src->connection, &tv_timeout);
 
-      /* use the session timeout for receiving data */
-      tv_timeout.tv_sec = timeout;
-      tv_timeout.tv_usec = 0;
-
-      GST_DEBUG_OBJECT (src, "doing receive with timeout %d seconds", timeout);
+      GST_DEBUG_OBJECT (src, "doing receive with timeout %d seconds",
+          tv_timeout.tv_sec);
 
       /* we should continue reading the TCP socket because the server might
        * send us requests. When the session timeout expires, we need to send a
@@ -2366,9 +2387,12 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
             goto handle_request_failed;
           break;
         case RTSP_MESSAGE_RESPONSE:
+          /* we ignore response and data messages */
+          GST_DEBUG_OBJECT (src, "ignoring response message");
+          break;
         case RTSP_MESSAGE_DATA:
           /* we ignore response and data messages */
-          GST_DEBUG_OBJECT (src, "ignoring message");
+          GST_DEBUG_OBJECT (src, "ignoring data message");
           break;
         default:
           GST_WARNING_OBJECT (src, "ignoring unknown message type %d",
@@ -2672,6 +2696,8 @@ gst_rtspsrc_try_send (GstRTSPSrc * src, RTSPMessage * request,
 
   if ((res = rtsp_connection_send (src->connection, request, NULL)) < 0)
     goto send_error;
+
+  rtsp_connection_reset_timeout (src->connection);
 
 next:
   if ((res = rtsp_connection_receive (src->connection, response, NULL)) < 0)

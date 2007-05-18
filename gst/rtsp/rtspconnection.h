@@ -65,11 +65,12 @@ typedef struct _RTSPConnection
   gint          cseq;                   /* sequence number */
   gchar         session_id[512];        /* session id */
   gint          timeout;                /* session timeout in seconds */
+  GTimer       *timer;                  /* timeout timer */
 
   /* Authentication */
-  RTSPAuthMethod auth_method;
-  gchar *username;
-  gchar *passwd;
+  RTSPAuthMethod  auth_method;
+  gchar          *username;
+  gchar          *passwd;
 } RTSPConnection;
 
 /* opening/closing a connection */
@@ -87,6 +88,10 @@ RTSPResult      rtsp_connection_write    (RTSPConnection * conn, const guint8 * 
 /* sending/receiving messages */
 RTSPResult      rtsp_connection_send     (RTSPConnection *conn, RTSPMessage *message, GTimeVal *timeout);
 RTSPResult      rtsp_connection_receive  (RTSPConnection *conn, RTSPMessage *message, GTimeVal *timeout);
+
+/* reset the timeout */
+RTSPResult      rtsp_connection_next_timeout   (RTSPConnection *conn, GTimeVal *timeout);
+RTSPResult      rtsp_connection_reset_timeout  (RTSPConnection *conn);
 
 /* flushing state */
 RTSPResult      rtsp_connection_flush    (RTSPConnection *conn, gboolean flush);

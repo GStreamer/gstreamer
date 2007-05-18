@@ -1,3 +1,19 @@
+2007-05-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send_keep_alive),
+	(gst_rtspsrc_loop_interleaved), (gst_rtspsrc_loop_udp),
+	(gst_rtspsrc_try_send), (gst_rtspsrc_send),
+	(gst_rtspsrc_setup_streams):
+	Refactor timeout handling.
+	Also send keep-alive when dealing with TCP transport.
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_create),
+	(rtsp_connection_free), (rtsp_connection_next_timeout),
+	(rtsp_connection_reset_timeout):
+	* gst/rtsp/rtspconnection.h:
+	Use a timer to handle the session timeouts, add some methods to deal
+	with timeouts.
+
 2007-05-17  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_send),
