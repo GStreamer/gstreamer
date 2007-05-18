@@ -57,7 +57,7 @@ struct _GstMixerClass {
   GTypeInterface klass;
 
   GstMixerType mixer_type;
-  
+
   /* virtual functions */
   const GList *  (* list_tracks)   (GstMixer      *mixer);
 
@@ -74,12 +74,6 @@ struct _GstMixerClass {
   void           (* set_record)    (GstMixer      *mixer,
                                     GstMixerTrack *track,
                                     gboolean       record);
-  void          (* set_option)     (GstMixer      *mixer,
-                                    GstMixerOptions *opts,
-                                    gchar         *value);
-  const gchar * (* get_option)     (GstMixer      *mixer,
-                                    GstMixerOptions *opts);
-
   /* signals */
   void (* mute_toggled)   (GstMixer      *mixer,
                            GstMixerTrack *channel,
@@ -94,6 +88,13 @@ struct _GstMixerClass {
   void (* option_changed) (GstMixer      *mixer,
                            GstMixerOptions *opts,
                            const gchar   *option);
+
+  /* FIXME 0.11: move set/get function to virtual functions part */
+  void          (* set_option)     (GstMixer      *mixer,
+                                    GstMixerOptions *opts,
+                                    gchar         *value);
+  const gchar * (* get_option)     (GstMixer      *mixer,
+                                    GstMixerOptions *opts);
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
@@ -128,6 +129,7 @@ void            gst_mixer_mute_toggled   (GstMixer      *mixer,
 void            gst_mixer_record_toggled (GstMixer      *mixer,
                                           GstMixerTrack *track,
                                           gboolean       record);
+
 void            gst_mixer_volume_changed (GstMixer      *mixer,
                                           GstMixerTrack *track,
                                           const gint    *volumes);

@@ -1,3 +1,11 @@
+2007-05-18  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Marc-Andre Lureau <marcandre.lureau@gmail.com>
+
+	* gst-libs/gst/interfaces/mixer.h (mixer_type, option_changed,
+	  set_option, get_option, _gst_reserved):
+	  Revert reordering functions (keep ABI).
+
 2007-05-17  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_ximage_put),
