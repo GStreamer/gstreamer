@@ -237,7 +237,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
 /* check if the bin is dynamic.
  *
- * If there are no outstanding dynamic connections, the bin is 
+ * If there are no outstanding dynamic connections, the bin is
  * considered to be non-dynamic.
  */
 static gboolean
@@ -496,7 +496,7 @@ free_dynamics (GstDecodeBin * decode_bin)
 }
 
 /* this function runs through the element factories and returns a list
- * of all elements that are able to sink the given caps 
+ * of all elements that are able to sink the given caps
  */
 static GList *
 find_compatibles (GstDecodeBin * decode_bin, const GstCaps * caps)
@@ -670,7 +670,7 @@ pad_probe (GstPad * pad, GstMiniObject * data, GstDecodeBin * decode_bin)
  * If the pad has a raw format, this function will create a ghostpad
  * for the pad onto the decodebin.
  *
- * If no compatible elements could be found, this function will signal 
+ * If no compatible elements could be found, this function will signal
  * the unknown_type signal.
  */
 static void
@@ -798,7 +798,7 @@ setup_caps_delay:
   }
 }
 
-/* Decide whether an element is a demuxer based on the 
+/* Decide whether an element is a demuxer based on the
  * klass and number/type of src pad templates it has */
 static gboolean
 is_demuxer_element (GstElement * srcelement)
@@ -911,7 +911,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
     }
 
     /* try to link the given pad to a sinkpad */
-    /* FIXME, find the sinkpad by looping over the pads instead of 
+    /* FIXME, find the sinkpad by looping over the pads instead of
      * looking it up by name */
     if ((sinkpad = gst_element_get_pad (element, "sink")) == NULL) {
       /* if no pad is found we can't do anything */
@@ -967,7 +967,7 @@ try_to_link_1 (GstDecodeBin * decode_bin, GstElement * srcelement, GstPad * pad,
       /* get rid of the sinkpad now */
       gst_object_unref (sinkpad);
 
-      /* Set the queue to paused and set the pointer to NULL so we don't 
+      /* Set the queue to paused and set the pointer to NULL so we don't
        * remove it below */
       if (queue != NULL) {
         gst_element_set_state (queue, GST_STATE_PAUSED);
@@ -1047,7 +1047,7 @@ get_our_ghost_pad (GstDecodeBin * decode_bin, GstPad * pad)
 }
 
 /* remove all downstream elements starting from the given pad.
- * Also make sure to remove the ghostpad we created for the raw 
+ * Also make sure to remove the ghostpad we created for the raw
  * decoded stream.
  */
 static void
@@ -1069,7 +1069,7 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
   GST_DEBUG_OBJECT (decode_bin, "%s:%s", GST_DEBUG_PAD_NAME (pad));
   int_links = gst_pad_get_internal_links (pad);
 
-  /* remove all elements linked to this pad up to the ghostpad 
+  /* remove all elements linked to this pad up to the ghostpad
    * that we created for this stream */
   for (walk = int_links; walk; walk = g_list_next (walk)) {
     GstPad *pad;
@@ -1133,7 +1133,7 @@ remove_element_chain (GstDecodeBin * decode_bin, GstPad * pad)
   gst_bin_remove (GST_BIN (decode_bin), elem);
 }
 
-/* there are @bytes bytes in @queue, enlarge it 
+/* there are @bytes bytes in @queue, enlarge it
  *
  * Returns: new max number of bytes in @queue
  */
@@ -1166,7 +1166,7 @@ queue_underrun_cb (GstElement * queue, GstDecodeBin * decode_bin)
 {
   /* FIXME: we don't really do anything here for now. Ideally we should
    * see if some of the queues are filled and increase their values
-   * in that case. 
+   * in that case.
    * Note: be very carefull with thread safety here as this underrun
    * signal is done from the streaming thread of queue srcpad which
    * is different from the pad_added (where we add the queue to the
@@ -1496,7 +1496,7 @@ close_link (GstElement * element, GstDecodeBin * decode_bin)
   }
 
   /* Check if this is an element with more than 1 pad. If this element
-   * has more than 1 pad, we need to be carefull not to signal the 
+   * has more than 1 pad, we need to be carefull not to signal the
    * no_more_pads signal after connecting the first pad. */
   more = g_list_length (to_connect) > 1;
 

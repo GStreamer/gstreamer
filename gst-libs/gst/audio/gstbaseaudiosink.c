@@ -1321,7 +1321,7 @@ gst_base_audio_sink_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      /* slop slaving ourselves to the master, if any */
+      /* stop slaving ourselves to the master, if any */
       gst_clock_set_master (sink->provided_clock, NULL);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:

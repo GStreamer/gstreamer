@@ -6,7 +6,7 @@ libgstvolume_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvolume_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la \
 	$(GST_BASE_LIBS) \
-        $(GST_CONTROLLER_LIBS) \
+	$(GST_CONTROLLER_LIBS) \
 	$(GST_LIBS) \
 	$(LIBOIL_LIBS)
 

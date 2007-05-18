@@ -1,5 +1,22 @@
 2007-05-18  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c
+	  (gst_base_audio_sink_change_state):
+	  Fix typo in comment.
+
+	* gst/playback/gstdecodebin.c (gst_decode_bin_class_init,
+	  free_dynamics, pad_probe, close_pad_link, try_to_link_1,
+	  get_our_ghost_pad, remove_element_chain, queue_underrun_cb,
+	  close_link):
+	* gst/playback/gstplaybin.c (gst_play_bin_set_property,
+	  gen_audio_element, remove_sinks, gst_play_bin_send_event_to_sink):
+	  Remove trailing whitespaces in comments.
+
+	* gst/volume/Makefile.am:
+	  Fix tabs.
+
+2007-05-18  Stefan Kost  <ensonic@users.sf.net>
+
 	patch by: Marc-Andre Lureau <marcandre.lureau@gmail.com>
 
 	* gst-libs/gst/interfaces/mixer.h (mixer_type, option_changed,

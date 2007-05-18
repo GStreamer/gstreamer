@@ -26,7 +26,7 @@
  * audio and/or video player.
  * </para>
  * <para>
- * It can handle both audio and video files and features 
+ * It can handle both audio and video files and features
  * <itemizedlist>
  * <listitem>
  * automatic file type recognition and based on that automatic
@@ -644,7 +644,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
         gst_object_sink (GST_OBJECT_CAST (play_bin->video_sink));
       }
       /* when changing the videosink, we just remove the
-       * video pipeline from the cache so that it will be 
+       * video pipeline from the cache so that it will be
        * regenerated with the new sink element */
       g_hash_table_remove (play_bin->cache, "vbin");
       break;
@@ -1131,7 +1131,7 @@ link_failed:
 }
 
 /* make the element (bin) that contains the elements needed to perform
- * visualisation ouput.  The idea is to split the audio using tee, then 
+ * visualisation ouput.  The idea is to split the audio using tee, then
  * sending the output to the regular audio bin and the other output to
  * the vis plugin that transforms it into a video that is rendered with the
  * normal video bin. The video and audio bins are run in threads to make sure
@@ -1385,7 +1385,7 @@ remove_sinks (GstPlayBin * play_bin)
  * media file. First we count the number of audio and video streams.
  * If there is no video stream but there exists an audio stream,
  * we install a visualisation pipeline.
- * 
+ *
  * Also make sure to only connect the first audio and video pad. FIXME
  * this should eventually be handled with a tuner interface so that
  * one can switch the streams.
@@ -1660,7 +1660,7 @@ gst_play_bin_send_event_to_sink (GstPlayBin * play_bin, GstEvent * event)
   return res;
 }
 
-/* We only want to send the event to a single sink (overriding GstBin's 
+/* We only want to send the event to a single sink (overriding GstBin's
  * behaviour), but we want to keep GstPipeline's behaviour - wrapping seek
  * events appropriately. So, this is a messy duplication of code. */
 static gboolean
