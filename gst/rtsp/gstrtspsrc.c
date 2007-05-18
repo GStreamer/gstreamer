@@ -3126,6 +3126,9 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
    * transports and the replies from the server we narrow them down. */
   protocols = src->url->transports & src->cur_protocols;
 
+  if (protocols == 0)
+    goto no_protocols;
+
   /* reset some state */
   src->free_channel = 0;
   src->interleaved = FALSE;
@@ -3202,9 +3205,11 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
       case RTSP_STS_OK:
         break;
       case RTSP_STS_UNSUPPORTED_TRANSPORT:
-        /* cleanup of leftover transport */
+        rtsp_message_unset (&request);
+        rtsp_message_unset (&response);
+        /* cleanup of leftover transport and move to the next stream */
         gst_rtspsrc_stream_free_udp (stream);
-        goto next_stream;
+        continue;
       default:
         goto send_error;
     }
@@ -3218,7 +3223,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
       if (!resptrans)
         goto no_transport;
 
-      /* parse transport */
+      /* parse transport, go to next stream on parse error */
       if (rtsp_transport_parse (resptrans, &transport) != RTSP_OK)
         continue;
 
@@ -3261,7 +3266,6 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
               stream);
         }
       }
-    next_stream:
       /* clean up our transport struct */
       rtsp_transport_init (&transport);
     }
@@ -3275,6 +3279,13 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   return TRUE;
 
   /* ERRORS */
+no_protocols:
+  {
+    /* no transport possible, post an error and stop */
+    GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
+        ("Could not connect to server, no protocols left"));
+    return FALSE;
+  }
 create_request_failed:
   {
     gchar *str = rtsp_strresult (res);

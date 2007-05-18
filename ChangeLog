@@ -1,5 +1,11 @@
 2007-05-18  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_setup_streams):
+	Don't crash when an unsupported transport error was returned by the
+	server, just try to configure the next stream. Fixes #439255.
+
+2007-05-18  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_class_init),
 	(gst_rtspsrc_set_property), (gst_rtspsrc_get_property),
 	(gst_rtspsrc_stream_configure_udp), (gst_rtspsrc_loop_interleaved),
