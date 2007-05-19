@@ -57,7 +57,6 @@ VALGRIND_TESTS_DISABLE = \
 	$(VALGRIND_TO_FIX)
 
 check_PROGRAMS = \
-	elements/deinterleave \
 	$(check_mpeg2enc)  \
 	$(check_neon)      \
 	elements/rganalysis \
@@ -76,5 +75,3 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 elements_videocrop_LDADD = $(LDADD) $(GST_BASE_LIBS)
 elements_videocrop_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(GST_BASE_CFLAGS)
 
-elements_deinterleave_LDADD = $(LDADD) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GST_MAJORMINOR)
-elements_deinterleave_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS)

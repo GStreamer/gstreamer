@@ -1,5 +1,10 @@
 2007-05-19  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/Makefile.am:
+	  Remove bits for deinterleave check which isn't in CVS yet.
+
+2007-05-19  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: René Stadler <mail at renestadler de>
 
 	* docs/plugins/Makefile.am:
