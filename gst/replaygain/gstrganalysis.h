@@ -78,6 +78,8 @@ struct _GstRgAnalysisClass
   GstBaseTransformClass parent_class;
 };
 
+GType gst_rg_analysis_get_type (void);
+
 G_END_DECLS
 
 #endif /* __GST_RG_ANALYSIS_H__ */

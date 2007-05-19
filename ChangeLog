@@ -1,3 +1,49 @@
+2007-05-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: René Stadler <mail at renestadler de>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* gst/replaygain/Makefile.am:
+	* gst/replaygain/gstrganalysis.c: (gst_rg_analysis_class_init),
+	(gst_rg_analysis_start), (gst_rg_analysis_set_caps),
+	(gst_rg_analysis_transform_ip), (gst_rg_analysis_event),
+	(gst_rg_analysis_stop), (gst_rg_analysis_handle_tags),
+	(gst_rg_analysis_handle_eos), (gst_rg_analysis_track_result),
+	(gst_rg_analysis_album_result):
+	* gst/replaygain/gstrganalysis.h:
+	* gst/replaygain/gstrglimiter.c: (gst_rg_limiter_base_init),
+	(gst_rg_limiter_class_init), (gst_rg_limiter_init),
+	(gst_rg_limiter_set_property), (gst_rg_limiter_get_property),
+	(gst_rg_limiter_transform_ip):
+	* gst/replaygain/gstrglimiter.h:
+	* gst/replaygain/gstrgvolume.c: (gst_rg_volume_base_init),
+	(gst_rg_volume_class_init), (gst_rg_volume_init),
+	(gst_rg_volume_set_property), (gst_rg_volume_get_property),
+	(gst_rg_volume_dispose), (gst_rg_volume_change_state),
+	(gst_rg_volume_sink_event), (gst_rg_volume_tag_event),
+	(gst_rg_volume_reset), (gst_rg_volume_update_gain),
+	(gst_rg_volume_determine_gain):
+	* gst/replaygain/gstrgvolume.h:
+	* gst/replaygain/replaygain.c: (plugin_init):
+	* gst/replaygain/replaygain.h:
+	* gst/replaygain/rganalysis.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/rganalysis.c: (send_eos_event),
+	(GST_START_TEST):
+	* tests/check/elements/rglimiter.c: (setup_rglimiter),
+	(cleanup_rglimiter), (set_playing_state), (create_test_buffer),
+	(verify_test_buffer), (GST_START_TEST), (rglimiter_suite), (main):
+	* tests/check/elements/rgvolume.c: (event_func), (setup_rgvolume),
+	(cleanup_rgvolume), (set_playing_state), (set_null_state),
+	(send_eos_event), (send_tag_event), (test_buffer_new),
+	(fail_unless_target_gain), (fail_unless_result_gain),
+	(fail_unless_gain), (GST_START_TEST), (rgvolume_suite), (main):
+	  Add replaygain playback elements (#412710).
+
 2007-05-18  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/glsink/glimagesink.c: (gst_glimage_sink_init_display):

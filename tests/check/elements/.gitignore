@@ -1,8 +1,10 @@
 .dirstamp
-tagid3v2mux
+deinterleave
 gdpdepay
 gdppay
 mpeg2enc
+rglimiter
+rgvolume
 wavpackdec
 wavpackenc
 wavpackparse

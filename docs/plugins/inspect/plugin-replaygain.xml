@@ -1,6 +1,6 @@
 <plugin>
   <name>replaygain</name>
-  <description>ReplayGain analysis</description>
+  <description>ReplayGain volume normalization</description>
   <filename>../../gst/replaygain/.libs/libgstreplaygain.so</filename>
   <basename>libgstreplaygain.so</basename>
   <version>0.10.4.1</version>
@@ -14,6 +14,20 @@
       <longname>ReplayGain analysis</longname>
       <class>Filter/Analyzer/Audio</class>
       <description>Perform the ReplayGain analysis</description>
+      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
+    </element>
+    <element>
+      <name>rglimiter</name>
+      <longname>ReplayGain limiter</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Apply signal compression to raw audio data</description>
+      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
+    </element>
+    <element>
+      <name>rgvolume</name>
+      <longname>ReplayGain volume</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Apply ReplayGain volume adjustment</description>
       <author>René Stadler &lt;mail@renestadler.de&gt;</author>
     </element>
   </elements>

@@ -56,6 +56,22 @@ GstRgAnalysisClass
 </SECTION>
 
 <SECTION>
+<FILE>element-rglimiter</FILE>
+GstRgLimiter
+<TITLE>rglimiter</TITLE>
+<SUBSECTION Standard>
+GstRgLimiterClass
+</SECTION>
+
+<SECTION>
+<FILE>element-rgvolume</FILE>
+GstRgVolume
+<TITLE>rgvolume</TITLE>
+<SUBSECTION Standard>
+GstRgVolumeClass
+</SECTION>
+
+<SECTION>
 <FILE>element-sdlaudiosink</FILE>
 GstSDLAudioSink
 <TITLE>sdlaudiosink</TITLE>

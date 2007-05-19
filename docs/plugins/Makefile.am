@@ -99,6 +99,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/wavpack/gstwavpackparse.h \
 	$(top_srcdir)/gst/qtdemux/qtdemux.h \
 	$(top_srcdir)/gst/replaygain/gstrganalysis.h \
+	$(top_srcdir)/gst/replaygain/gstrglimiter.h \
+	$(top_srcdir)/gst/replaygain/gstrgvolume.h \
 	$(top_srcdir)/gst/videocrop/gstvideocrop.h
 
 # Images to copy into HTML directory.
