@@ -20,77 +20,72 @@
  * 02110-1301 USA
  */
 
-/* Some things to note about the RMS window length of the analysis
- * algorithm and thus the implementation used in the element:
- * Processing divides input data into 50ms windows at some point.
- * Some details about this that normally do not matter:
+/* Some things to note about the RMS window length of the analysis algorithm and
+ * thus the implementation used in the element: Processing divides input data
+ * into 50ms windows at some point.  Some details about this that normally do
+ * not matter:
  *
- *  1. At the end of a stream, the remainder of data that did not fill
- *     up the last 50ms window is simply discarded.
+ *  1. At the end of a stream, the remainder of data that did not fill up the
+ *     last 50ms window is simply discarded.
  *
- *  2. If the sample rate changes during a stream, the currently
- *     running window is discarded and the equal loudness filter gets
- *     reset as if a new stream started.
+ *  2. If the sample rate changes during a stream, the currently running window
+ *     is discarded and the equal loudness filter gets reset as if a new stream
+ *     started.
  *
- *  3. For the album gain, it is not entirely correct to think of
- *     obtaining it like "as if all the tracks are analyzed as one
- *     track".  There isn't a separate window being tracked for album
- *     processing, so at stream (track) end, the remaining unfilled
- *     window does not contribute to the album gain either.
+ *  3. For the album gain, it is not entirely correct to think of obtaining it
+ *     like "as if all the tracks are analyzed as one track".  There isn't a
+ *     separate window being tracked for album processing, so at stream (track)
+ *     end, the remaining unfilled window does not contribute to the album gain
+ *     either.
  *
- *  4. If a waveform with a result gain G is concatenated to itself
- *     and the result processed as a track, the gain can be different
- *     from G if and only if the duration of the original waveform is
- *     not an integer multiple of 50ms.  If the original waveform gets
- *     processed as a single track and then the same data again as a
- *     subsequent track, the album result gain will always match G
- *     (this is implied by 3.).
+ *  4. If a waveform with a result gain G is concatenated to itself and the
+ *     result processed as a track, the gain can be different from G if and only
+ *     if the duration of the original waveform is not an integer multiple of
+ *     50ms.  If the original waveform gets processed as a single track and then
+ *     the same data again as a subsequent track, the album result gain will
+ *     always match G (this is implied by 3.).
  *
- *  5. A stream shorter than 50ms cannot be analyzed.  At 8000 and
- *     48000 Hz, this corresponds to 400 resp. 2400 frames.  If a
- *     stream is shorter than 50ms, the element will not generate tags
- *     at EOS (only if an album finished, but only album tags are
- *     generated then).  This is not an erroneous condition, the
- *     element should behave normally.
+ *  5. A stream shorter than 50ms cannot be analyzed.  At 8000 and 48000 Hz,
+ *     this corresponds to 400 resp. 2400 frames.  If a stream is shorter than
+ *     50ms, the element will not generate tags at EOS (only if an album
+ *     finished, but only album tags are generated then).  This is not an
+ *     erroneous condition, the element should behave normally.
  *
- * The limitations outlined in 1.-4. do not apply to the peak values.
- * Every single sample is accounted for when looking for the peak.
- * Thus the album peak is guaranteed to be the maximum value of all
- * track peaks.
+ * The limitations outlined in 1.-4. do not apply to the peak values.  Every
+ * single sample is accounted for when looking for the peak.  Thus the album
+ * peak is guaranteed to be the maximum value of all track peaks.
  *
- * In normal day-to-day use, these little facts are unlikely to be
- * relevant, but they have to be kept in mind for writing the tests
- * here.
+ * In normal day-to-day use, these little facts are unlikely to be relevant, but
+ * they have to be kept in mind for writing the tests here.
  */
 
 #include <gst/check/gstcheck.h>
 
 GList *buffers = NULL;
 
-/* For ease of programming we use globals to keep refs for our floating
- * src and sink pads we create; otherwise we always have to do get_pad,
- * get_peer, and then remove references in every test function */
+/* For ease of programming we use globals to keep refs for our floating src and
+ * sink pads we create; otherwise we always have to do get_pad, get_peer, and
+ * then remove references in every test function */
 static GstPad *mysrcpad, *mysinkpad;
 
-/* Mapping from supported sample rates to the correct result gain for
- * the following test waveform: 20 * 512 samples with a quarter-full
- * amplitude of toggling sign, changing every 48 samples and starting
- * with the positive value.
+/* Mapping from supported sample rates to the correct result gain for the
+ * following test waveform: 20 * 512 samples with a quarter-full amplitude of
+ * toggling sign, changing every 48 samples and starting with the positive
+ * value.
  *
- * Even if we would generate a wave describing a signal with the same
- * frequency at each sampling rate, the results would vary (slightly).
- * Hence the simple generation method, since we cannot use a constant
- * value as expected result anyways.  For all sample rates, changing
- * the sign every 48 frames gives a sane frequency.  Buffers
- * containing data that forms such a waveform is created using the
- * test_buffer_square_{float,int16}_{mono,stereo} functions below.
+ * Even if we would generate a wave describing a signal with the same frequency
+ * at each sampling rate, the results would vary (slightly).  Hence the simple
+ * generation method, since we cannot use a constant value as expected result
+ * anyways.  For all sample rates, changing the sign every 48 frames gives a
+ * sane frequency.  Buffers containing data that forms such a waveform is
+ * created using the test_buffer_square_{float,int16}_{mono,stereo} functions
+ * below.
  *
- * The results have been checked against what the metaflac and
- * wavegain programs generate for such a stream.  If you want to
- * verify these, be sure that the metaflac program does not produce
- * incorrect results in your environment: I found a strange bug in the
- * (defacto) reference code for the analysis that sometimes leads to
- * incorrect RMS window lengths. */
+ * The results have been checked against what the metaflac and wavegain programs
+ * generate for such a stream.  If you want to verify these, be sure that the
+ * metaflac program does not produce incorrect results in your environment: I
+ * found a strange bug in the (defacto) reference code for the analysis that
+ * sometimes leads to incorrect RMS window lengths. */
 
 struct rate_test
 {
@@ -212,11 +207,10 @@ send_eos_event (GstElement * element)
   fail_unless (gst_pad_send_event (pad, event),
       "Cannot send EOS event: Not handled.");
 
-  /* There is no sink element, so _we_ post the EOS message on the bus
-   * here.  Of course we generate any EOS ourselves, but this allows
-   * us to poll for the EOS message in poll_eos if we expect the
-   * element to _not_ generate a TAG message.  That's better than
-   * waiting for a timeout to lapse. */
+  /* There is no sink element, so _we_ post the EOS message on the bus here.  Of
+   * course we generate any EOS ourselves, but this allows us to poll for the
+   * EOS message in poll_eos if we expect the element to _not_ generate a TAG
+   * message.  That's better than waiting for a timeout to lapse. */
   fail_unless (gst_bus_post (bus, gst_message_new_eos (NULL)));
 
   gst_object_unref (bus);
@@ -251,8 +245,8 @@ poll_eos (GstElement * element)
   gst_object_unref (bus);
 }
 
-/* This also polls for EOS since the TAG message comes right before
- * the end of streams. */
+/* This also polls for EOS since the TAG message comes right before the end of
+ * streams. */
 
 static GstTagList *
 poll_tags (GstElement * element)
@@ -749,14 +743,13 @@ GST_END_TEST;
 
 /* Tests for correctness of the peak values. */
 
-/* Float peak test.  For stereo, one channel has the constant value of
- * -1.369, the other one 0.0.  This tests many things: The result peak
- * value should occur on any channel.  The peak is of course the
- * absolute amplitude, so 1.369 should be the result.  This will also
- * detect if the code uses the absolute value during the comparison.
- * If it is buggy it will return 0.0 since 0.0 > -1.369.  Furthermore,
- * this makes sure that there is no problem with headroom (exceeding
- * 0dBFS).  In the wild you get float samples > 1.0 from stuff like
+/* Float peak test.  For stereo, one channel has the constant value of -1.369,
+ * the other one 0.0.  This tests many things: The result peak value should
+ * occur on any channel.  The peak is of course the absolute amplitude, so 1.369
+ * should be the result.  This will also detect if the code uses the absolute
+ * value during the comparison.  If it is buggy it will return 0.0 since 0.0 >
+ * -1.369.  Furthermore, this makes sure that there is no problem with headroom
+ * (exceeding 0dBFS).  In the wild you get float samples > 1.0 from stuff like
  * vorbis. */
 
 GST_START_TEST (test_peak_float)
@@ -1089,11 +1082,10 @@ GST_START_TEST (test_peak_track_album)
 
 GST_END_TEST;
 
-/* Disabling album processing before the end of the album.  Probably a
- * rare edge case and applications should not rely on this to work.
- * They need to send the element to the READY state to clear up after
- * an aborted album anyway since they might need to process another
- * album afterwards. */
+/* Disabling album processing before the end of the album.  Probably a rare edge
+ * case and applications should not rely on this to work.  They need to send the
+ * element to the READY state to clear up after an aborted album anyway since
+ * they might need to process another album afterwards. */
 
 GST_START_TEST (test_peak_album_abort_to_track)
 {
@@ -1136,8 +1128,8 @@ GST_START_TEST (test_gain_album)
   g_object_set (element, "num-tracks", 3, NULL);
   set_playing_state (element);
 
-  /* The three tracks are constructed such that if any of these is in
-   * fact ignored for the album gain, the album gain will differ. */
+  /* The three tracks are constructed such that if any of these is in fact
+   * ignored for the album gain, the album gain will differ. */
 
   accumulator = 0;
   for (i = 8; i--;)
@@ -1268,12 +1260,11 @@ GST_START_TEST (test_forced_separate)
 
 GST_END_TEST;
 
-/* A TAG event is sent _after_ data has already been processed.  In
- * real pipelines, this could happen if there is more than one
- * rganalysis element (by accident).  While it would have analyzed all
- * the data prior to receiving the event, I expect it to not post its
- * results if not forced.  This test is almost equivalent to
- * test_forced. */
+/* A TAG event is sent _after_ data has already been processed.  In real
+ * pipelines, this could happen if there is more than one rganalysis element (by
+ * accident).  While it would have analyzed all the data prior to receiving the
+ * event, I expect it to not post its results if not forced.  This test is
+ * almost equivalent to test_forced. */
 
 GST_START_TEST (test_forced_after_data)
 {
@@ -1311,8 +1302,8 @@ GST_START_TEST (test_forced_after_data)
 
 GST_END_TEST;
 
-/* Like test_forced, but *analyze* an album afterwards.  The two tests
- * following this one check the *skipping* of albums. */
+/* Like test_forced, but *analyze* an album afterwards.  The two tests following
+ * this one check the *skipping* of albums. */
 
 GST_START_TEST (test_forced_album)
 {
@@ -1441,9 +1432,8 @@ GST_START_TEST (test_forced_album_no_skip)
   gst_tag_list_free (tag_list);
   fail_unless_num_tracks (element, 1);
 
-  /* The second track has indeed full tags, but although being not
-   * forced, this one has to be processed because album processing is
-   * on. */
+  /* The second track has indeed full tags, but although being not forced, this
+   * one has to be processed because album processing is on. */
   tag_list = gst_tag_list_new ();
   /* Provided values are totally arbitrary. */
   gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
@@ -1515,11 +1505,26 @@ GST_START_TEST (test_reference_level)
 {
   GstElement *element = setup_rganalysis ();
   GstTagList *tag_list;
+  gdouble ref_level;
   gint accumulator = 0;
   gint i;
 
-  g_object_set (element, "reference-level", 83., "num-tracks", 2, NULL);
   set_playing_state (element);
+
+  for (i = 20; i--;)
+    push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
+            0.25, 0.25));
+  send_eos_event (element);
+  tag_list = poll_tags (element);
+  fail_unless_track_peak (tag_list, 0.25);
+  fail_unless_track_gain (tag_list, get_expected_gain (44100));
+  fail_if_album_tags (tag_list);
+  fail_unless (gst_tag_list_get_double (tag_list, GST_TAG_REFERENCE_LEVEL,
+          &ref_level) && MATCH_GAIN (ref_level, 89.),
+      "Incorrect reference level tag");
+  gst_tag_list_free (tag_list);
+
+  g_object_set (element, "reference-level", 83., "num-tracks", 2, NULL);
 
   for (i = 20; i--;)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
@@ -1529,6 +1534,9 @@ GST_START_TEST (test_reference_level)
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100) - 6.);
   fail_if_album_tags (tag_list);
+  fail_unless (gst_tag_list_get_double (tag_list, GST_TAG_REFERENCE_LEVEL,
+          &ref_level) && MATCH_GAIN (ref_level, 83.),
+      "Incorrect reference level tag");
   gst_tag_list_free (tag_list);
 
   accumulator = 0;
@@ -1543,6 +1551,9 @@ GST_START_TEST (test_reference_level)
   /* We provided the same waveform twice, with a reset separating
    * them.  Therefore, the album gain matches the track gain. */
   fail_unless_album_gain (tag_list, get_expected_gain (44100) - 6.);
+  fail_unless (gst_tag_list_get_double (tag_list, GST_TAG_REFERENCE_LEVEL,
+          &ref_level) && MATCH_GAIN (ref_level, 83.),
+      "Incorrect reference level tag");
   gst_tag_list_free (tag_list);
 
   cleanup_rganalysis (element);

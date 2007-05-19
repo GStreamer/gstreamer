@@ -29,8 +29,6 @@
 
 G_BEGIN_DECLS
 
-#define RG_REFERENCE_LEVEL 89.
-
 typedef struct _RgAnalysisCtx RgAnalysisCtx;
 
 RgAnalysisCtx *rg_analysis_new (void);
