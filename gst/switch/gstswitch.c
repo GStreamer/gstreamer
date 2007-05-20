@@ -225,6 +225,7 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
         GstEvent *prev_newsegment =
             (GstEvent *) g_hash_table_lookup (gstswitch->newsegment_events,
             gstswitch->previous_sinkpad);
+
         if (prev_newsegment) {
           /* need to send a new segment update changing stop */
           gboolean update;
@@ -272,8 +273,8 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG_OBJECT (gstswitch,
           "Sending new segment with start of %" G_GUINT64_FORMAT, start);
     } else {
-      GST_WARNING_OBJECT (gstswitch,
-          "Could not find new segment for pad %r in hashtable", pad);
+      GST_WARNING_OBJECT (pad,
+          "Couldn't find new segment for pad in hashtable");
     }
     /* reset stop and start value */
     gstswitch->start_value = GST_CLOCK_TIME_NONE;
