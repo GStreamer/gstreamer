@@ -89,6 +89,9 @@ EXAMPLE_CFILES = \
         $(top_srcdir)/ext/directfb/dfb-example.c
 
 EXTRA_HFILES = \
+	$(top_srcdir)/sys/directdraw/gstdirectdrawsink.h \
+	$(top_srcdir)/sys/directsound/gstdirectsoundsink.h \
+	$(top_srcdir)/sys/waveform/gstwaveformsink.h \
 	$(top_srcdir)/ext/directfb/dfbvideosink.h \
 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \

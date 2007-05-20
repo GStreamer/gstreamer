@@ -12,12 +12,12 @@ GObject
         GstBaseAudioSink
           GstJackAudioSink
           GstAudioSink
-			GstDirectSoundSink
-            GstSDLAudioSink
-			GstWaveFormSink
+          GstDirectSoundSink
+          GstSDLAudioSink
+          GstWaveFormSink
         GstVideoSink
           GstDirectDrawSink
-		  GstGLImageSink
+          GstGLImageSink
           GstSDLVideoSink
           GstDfbVideoSink
           GstOSXVideoSink

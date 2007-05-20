@@ -1,3 +1,9 @@
+2007-05-20  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	  Fix docs build and hierarchy.
+
 2007-05-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/directdraw/gstdirectdrawsink.c: (gst_ddrawsurface_finalize),
