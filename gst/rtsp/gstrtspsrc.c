@@ -2385,7 +2385,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
       rtsp_connection_next_timeout (src->connection, &tv_timeout);
 
       GST_DEBUG_OBJECT (src, "doing receive with timeout %d seconds",
-          tv_timeout.tv_sec);
+          (gint) tv_timeout.tv_sec);
 
       /* we should continue reading the TCP socket because the server might
        * send us requests. When the session timeout expires, we need to send a
