@@ -29,20 +29,20 @@
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch audiotestsrc num-buffers=500 ! wavpackenc ! filesink location=sinewave.wv
+ * gst-launch audiotestsrc num-buffers=500 ! audioconvert ! wavpackenc ! filesink location=sinewave.wv
  * </programlisting>
  * This pipeline encodes audio from audiotestsrc into a Wavpack file.
  * </para>
  * <para>
  * <programlisting>
- * gst-launch cdda://1 ! wavpackenc ! filesink location=track1.wv
+ * gst-launch cdda://1 ! audioconvert ! wavpackenc ! filesink location=track1.wv
  * </programlisting>
  * This pipeline encodes audio from an audio CD into a Wavpack file using
  * lossless encoding (the file output will be fairly large).
  * </para>
  * <para>
  * <programlisting>
- * gst-launch cdda://1 ! wavpackenc bitrate=128000 ! filesink location=track1.wv
+ * gst-launch cdda://1 ! audioconvert ! wavpackenc bitrate=128000 ! filesink location=track1.wv
  * </programlisting>
  * This pipeline encodes audio from an audio CD into a Wavpack file using
  * lossy encoding at a certain bitrate (the file will be fairly small).

@@ -1,3 +1,11 @@
+2007-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackenc.c:
+	Add missing audioconverts in the example pipelines of wavpackenc. As
+	the wavpack stuff now needs input with 32 bit width (and random depth)
+	this is needed now. The example pipelines for the parser and decoder
+	are still fine.
+
 2007-05-20  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* docs/plugins/Makefile.am:
