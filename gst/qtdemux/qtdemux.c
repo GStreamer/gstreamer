@@ -1142,7 +1142,7 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   if (stream->segment_index != seg_idx)
     gst_qtdemux_activate_segment (qtdemux, stream, seg_idx, time_position);
 
-  GST_LOG_OBJECT (qtdemux, "segment active, index = %lu of %lu",
+  GST_LOG_OBJECT (qtdemux, "segment active, index = %u of %u",
       stream->sample_index, stream->n_samples);
 
   if (stream->sample_index >= stream->n_samples)
