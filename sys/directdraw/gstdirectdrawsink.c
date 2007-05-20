@@ -99,8 +99,7 @@ static GstCaps
 static void gst_directdraw_sink_cleanup (GstDirectDrawSink * ddrawsink);
 static void gst_directdraw_sink_bufferpool_clear (GstDirectDrawSink *
     ddrawsink);
-static void gst_directdraw_sink_ddraw_put (GstDirectDrawSink * ddrawsink,
-    GstDDrawSurface * surface);
+static int gst_directdraw_sink_get_depth (LPDDPIXELFORMAT lpddpfPixelFormat);
 static gboolean gst_ddrawvideosink_get_format_from_caps (GstDirectDrawSink *
     ddrawsink, GstCaps * caps, DDPIXELFORMAT * pPixelFormat);
 static void gst_directdraw_sink_center_rect (GstDirectDrawSink * ddrawsink,
@@ -203,7 +202,7 @@ gst_directdraw_sink_init_interfaces (GType type)
 }
 
 /* Subclass of GstBuffer which manages buffer_pool surfaces lifetime    */
-static void gst_ddrawsurface_finalize (GstDDrawSurface * surface);
+static void gst_ddrawsurface_finalize (GstMiniObject * mini_object);
 
 static void
 gst_ddrawsurface_init (GstDDrawSurface * surface, gpointer g_class)
@@ -250,11 +249,12 @@ gst_ddrawsurface_get_type (void)
 }
 
 static void
-gst_ddrawsurface_finalize (GstDDrawSurface * surface)
+gst_ddrawsurface_finalize (GstMiniObject * mini_object)
 {
   GstDirectDrawSink *ddrawsink = NULL;
+  GstDDrawSurface *surface;
 
-  g_return_if_fail (surface != NULL);
+  surface = (GstDDrawSurface *) mini_object;
 
   ddrawsink = surface->ddrawsink;
   if (!ddrawsink)
@@ -288,7 +288,7 @@ gst_ddrawsurface_finalize (GstDDrawSurface * surface)
   return;
 
 no_sink:
-  GST_WARNING (directdrawsink_debug, "no sink found");
+  GST_CAT_WARNING (directdrawsink_debug, "no sink found");
   return;
 }
 
@@ -597,7 +597,7 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
     hres = IDirectDraw7_GetDisplayMode (ddrawsink->ddraw_object, &surface_desc);
     if (hres != DD_OK) {
       GST_CAT_DEBUG_OBJECT (directdrawsink_debug, ddrawsink,
-          "Can't get current display mode (error=%d)", hres);
+          "Can't get current display mode (error=%ld)", (glong) hres);
       return GST_FLOW_ERROR;
     }
 
@@ -1486,9 +1486,6 @@ static GstCaps *
 gst_directdraw_sink_get_ddrawcaps (GstDirectDrawSink * ddrawsink)
 {
   HRESULT hRes = S_OK;
-  DWORD dwFourccCodeIndex = 0;
-  LPDWORD pdwFourccCodes = NULL;
-  DWORD dwNbFourccCodes = 0;
   DDCAPS ddcaps_hardware;
   DDCAPS ddcaps_emulation;
   GstCaps *format_caps = NULL;
@@ -1611,62 +1608,64 @@ gst_directdraw_sink_surface_create (GstDirectDrawSink * ddrawsink,
    * when a surface memory is locked but we need to disable this lock to return multiple buffers (surfaces)
    * and do not lock directdraw API calls.
    */
-  if (0) {
+#if 0
 /*  if (ddrawsink->ddraw_object) {*/
-    /* Creating an internal surface which will be used as GstBuffer, we used
-       the detected pixel format and video dimensions */
+  /* Creating an internal surface which will be used as GstBuffer, we used
+     the detected pixel format and video dimensions */
 
-    surf_desc.ddsCaps.dwCaps =
-        DDSCAPS_OFFSCREENPLAIN /* | DDSCAPS_SYSTEMMEMORY */ ;
-    surf_desc.dwFlags =
-        DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_PITCH;
-    surf_desc.dwHeight = surface->height;
-    surf_desc.dwWidth = surface->width;
-    memcpy (&(surf_desc.ddpfPixelFormat), &surface->dd_pixel_format,
-        sizeof (DDPIXELFORMAT));
+  surf_desc.ddsCaps.dwCaps =
+      DDSCAPS_OFFSCREENPLAIN /* | DDSCAPS_SYSTEMMEMORY */ ;
+  surf_desc.dwFlags =
+      DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH | DDSD_PIXELFORMAT | DDSD_PITCH;
+  surf_desc.dwHeight = surface->height;
+  surf_desc.dwWidth = surface->width;
+  memcpy (&(surf_desc.ddpfPixelFormat), &surface->dd_pixel_format,
+      sizeof (DDPIXELFORMAT));
 
-    hRes = IDirectDraw7_CreateSurface (ddrawsink->ddraw_object, &surf_desc,
-        &surface->surface, NULL);
-    if (hRes != DD_OK) {
-      goto surface_pitch_bad;
-    }
-
-    /* Locking the surface to acquire the memory pointer.
-       Use DDLOCK_NOSYSLOCK to disable syslock which can cause a deadlock 
-       if directdraw api is used while a buffer is lock */
-  lock:
-    hRes = IDirectDrawSurface7_Lock (surface->surface, NULL, &surf_lock_desc,
-        DDLOCK_WAIT | DDLOCK_NOSYSLOCK, NULL);
-    if (hRes == DDERR_SURFACELOST) {
-      IDirectDrawSurface7_Restore (surface->surface);
-      goto lock;
-    }
-    surface->locked = TRUE;
-
-    if (surf_lock_desc.lPitch != pitch) {
-      GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
-          "DDraw stride/pitch %ld isn't as expected value %d, let's continue allocating a system memory buffer.",
-          surf_lock_desc.lPitch, pitch);
-
-      /*Unlock the surface as we will change it to use system memory with a GStreamer compatible pitch */
-      hRes = IDirectDrawSurface_Unlock (surface->surface, NULL);
-      goto surface_pitch_bad;
-    }
-    GST_BUFFER_DATA (surface) = surf_lock_desc.lpSurface;
-    GST_BUFFER_SIZE (surface) = surf_lock_desc.lPitch * surface->height;
-    GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
-        "allocating a surface of %d bytes (stride=%ld)\n", size,
-        surf_lock_desc.lPitch);
-  } else {
-
-  surface_pitch_bad:
-    GST_BUFFER (surface)->malloc_data = g_malloc (size);
-    GST_BUFFER_DATA (surface) = GST_BUFFER (surface)->malloc_data;
-    GST_BUFFER_SIZE (surface) = size;
-    surface->surface = NULL;
-    GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
-        "allocating a system memory buffer of %d bytes", size);
+  hRes = IDirectDraw7_CreateSurface (ddrawsink->ddraw_object, &surf_desc,
+      &surface->surface, NULL);
+  if (hRes != DD_OK) {
+    goto surface_pitch_bad;
   }
+
+  /* Locking the surface to acquire the memory pointer.
+     Use DDLOCK_NOSYSLOCK to disable syslock which can cause a deadlock 
+     if directdraw api is used while a buffer is lock */
+lock:
+  hRes = IDirectDrawSurface7_Lock (surface->surface, NULL, &surf_lock_desc,
+      DDLOCK_WAIT | DDLOCK_NOSYSLOCK, NULL);
+  if (hRes == DDERR_SURFACELOST) {
+    IDirectDrawSurface7_Restore (surface->surface);
+    goto lock;
+  }
+  surface->locked = TRUE;
+
+  if (surf_lock_desc.lPitch != pitch) {
+    GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
+        "DDraw stride/pitch %ld isn't as expected value %d, let's continue allocating a system memory buffer.",
+        surf_lock_desc.lPitch, pitch);
+
+    /*Unlock the surface as we will change it to use system memory with a GStreamer compatible pitch */
+    hRes = IDirectDrawSurface_Unlock (surface->surface, NULL);
+    goto surface_pitch_bad;
+  }
+  GST_BUFFER_DATA (surface) = surf_lock_desc.lpSurface;
+  GST_BUFFER_SIZE (surface) = surf_lock_desc.lPitch * surface->height;
+  GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
+      "allocating a surface of %d bytes (stride=%ld)\n", size,
+      surf_lock_desc.lPitch);
+
+#else
+
+surface_pitch_bad:
+  GST_BUFFER (surface)->malloc_data = g_malloc (size);
+  GST_BUFFER_DATA (surface) = GST_BUFFER (surface)->malloc_data;
+  GST_BUFFER_SIZE (surface) = size;
+  surface->surface = NULL;
+  GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
+      "allocating a system memory buffer of %d bytes", size);
+
+#endif
 
   /* Keep a ref to our sink */
   surface->ddrawsink = gst_object_ref (ddrawsink);

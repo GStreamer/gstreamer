@@ -1,5 +1,16 @@
 2007-05-20  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* sys/directdraw/gstdirectdrawsink.c: (gst_ddrawsurface_finalize),
+	(gst_directdraw_sink_buffer_alloc),
+	(gst_directdraw_sink_get_ddrawcaps),
+	(gst_directdraw_sink_surface_create):
+	  Bunch of small fixes: remove static function that doesn't exist;
+	  declare another one that does; printf format fix; use right macro
+	  when specifying debug category; remove a bunch of unused variables;
+	  #if 0 out an unused chunk of code (partially fixes #439914).
+
+2007-05-20  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_prepare_current_sample):
 	* gst/switch/gstswitch.c: (gst_switch_chain):
 	  Printf format fixes (#439910, #439911).
