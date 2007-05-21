@@ -1,3 +1,14 @@
+2007-05-21  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
+
+	* gst/rtp/gstrtph263ppay.c: (gst_fragmentation_mode_get_type),
+	(gst_rtp_h263p_pay_class_init), (gst_rtp_h263p_pay_init),
+	(gst_rtp_h263p_pay_set_property), (gst_rtp_h263p_pay_get_property),
+	(gst_rtp_h263p_pay_flush):
+	* gst/rtp/gstrtph263ppay.h:
+	Add new fragmentation mode base on GOB headers. Fixes #438940.
+
 2007-05-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_loop_udp):

@@ -27,6 +27,36 @@
 
 #include "gstrtph263ppay.h"
 
+#define DEFAULT_FRAGMENTATION_MODE   GST_FRAGMENTATION_MODE_NORMAL
+
+enum
+{
+  PROP_0,
+  PROP_FRAGMENTATION_MODE
+};
+
+#define GST_TYPE_FRAGMENTATION_MODE (gst_fragmentation_mode_get_type())
+static GType
+gst_fragmentation_mode_get_type (void)
+{
+  static GType fragmentation_mode_type = 0;
+  static const GFlagsValue fragmentation_mode[] = {
+    {GST_FRAGMENTATION_MODE_NORMAL, "Normal", "normal"},
+    {GST_FRAGMENTATION_MODE_SYNC, "Fragment at sync points", "sync"},
+    {0, NULL, NULL},
+  };
+
+  if (!fragmentation_mode_type) {
+    fragmentation_mode_type =
+        g_flags_register_static ("GstFragmentationMode", fragmentation_mode);
+  }
+  return fragmentation_mode_type;
+}
+
+
+GST_DEBUG_CATEGORY_STATIC (rtph263ppay_debug);
+#define GST_CAT_DEFAULT rtph263ppay_debug
+
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h263ppay_details =
 GST_ELEMENT_DETAILS ("RTP packet payloader",
@@ -56,6 +86,12 @@ static void gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass);
 static void gst_rtp_h263p_pay_base_init (GstRtpH263PPayClass * klass);
 static void gst_rtp_h263p_pay_init (GstRtpH263PPay * rtph263ppay);
 static void gst_rtp_h263p_pay_finalize (GObject * object);
+
+static void gst_rtp_h263p_pay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+
+static void gst_rtp_h263p_pay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload,
     GstCaps * caps);
@@ -116,15 +152,29 @@ gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_rtp_h263p_pay_finalize;
+  gobject_class->set_property = gst_rtp_h263p_pay_set_property;
+  gobject_class->get_property = gst_rtp_h263p_pay_get_property;
 
   gstbasertppayload_class->set_caps = gst_rtp_h263p_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_h263p_pay_handle_buffer;
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass),
+      PROP_FRAGMENTATION_MODE, g_param_spec_enum ("fragmentation-mode",
+          "Fragmentation Mode",
+          "Packet Fragmentation Mode", GST_TYPE_FRAGMENTATION_MODE,
+          DEFAULT_FRAGMENTATION_MODE, G_PARAM_READWRITE));
+
+  GST_DEBUG_CATEGORY_INIT (rtph263ppay_debug, "rtph263ppay",
+      0, "rtph263ppay (RFC 2429)");
+
 }
 
 static void
 gst_rtp_h263p_pay_init (GstRtpH263PPay * rtph263ppay)
 {
   rtph263ppay->adapter = gst_adapter_new ();
+
+  rtph263ppay->fragmentation_mode = DEFAULT_FRAGMENTATION_MODE;
 }
 
 static void
@@ -149,6 +199,43 @@ gst_rtp_h263p_pay_setcaps (GstBaseRTPPayload * payload, GstCaps * caps)
   return TRUE;
 }
 
+static void
+gst_rtp_h263p_pay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstRtpH263PPay *rtph263ppay;
+
+  rtph263ppay = GST_RTP_H263P_PAY (object);
+
+  switch (prop_id) {
+    case PROP_FRAGMENTATION_MODE:
+      rtph263ppay->fragmentation_mode = g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_h263p_pay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstRtpH263PPay *rtph263ppay;
+
+  rtph263ppay = GST_RTP_H263P_PAY (object);
+
+  switch (prop_id) {
+    case PROP_FRAGMENTATION_MODE:
+      g_value_set_enum (value, rtph263ppay->fragmentation_mode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+
 
 static GstFlowReturn
 gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
@@ -163,28 +250,61 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     return GST_FLOW_OK;
 
   fragmented = FALSE;
-
   /* This algorithm assumes the H263+ encoder sends complete frames in each
    * buffer */
-  /* This algorithm implements the Follow-on packets method for packetization.
-   * This assumes low packet loss network. A more resilient method would be to
-   * separate large frames at synchronisation points (Segments) (See RFC 2429
-   * section 6). It would be interesting to have a property such as network
-   * quality to select between both packetization methods */
+  /* With Fragmentation Mode at GST_FRAGMENTATION_MODE_NORMAL:
+   *  This algorithm implements the Follow-on packets method for packetization.
+   *  This assumes low packet loss network. 
+   * With Fragmentation Mode at GST_FRAGMENTATION_MODE_SYNC:
+   *  This algorithm separates large frames at synchronisation points (Segments)
+   *  (See RFC 2429 section 6). It would be interesting to have a property such as network
+   *  quality to select between both packetization methods */
   /* TODO Add VRC supprt (See RFC 2429 section 4.2) */
+
   while (avail > 0) {
     guint towrite;
     guint8 *payload;
     guint8 *data;
     guint payload_len;
     gint header_len;
+    guint next_gop = 0;
+    gboolean found_gob = FALSE;
+
+    if (rtph263ppay->fragmentation_mode == GST_FRAGMENTATION_MODE_SYNC) {
+      /* start after 1st gop possible */
+      guint parsed_len = 3;
+      const guint8 *parse_data = NULL;
+
+      parse_data = gst_adapter_peek (rtph263ppay->adapter, avail);
+
+      /* Check if we have a gob or eos , eossbs */
+      if (avail >= 3 && *parse_data == 0 && *(parse_data + 1) == 0
+          && *(parse_data + 2) >= 0x80) {
+        GST_DEBUG_OBJECT (rtph263ppay, " Found GOB header");
+        found_gob = TRUE;
+      }
+      /* Find next and cut the packet accordingly */
+      while (parsed_len + 2 < avail) {
+        if (parse_data[parsed_len] == 0 && parse_data[parsed_len + 1] == 0
+            && parse_data[parsed_len + 2] >= 0x80) {
+          next_gop = parsed_len;
+          GST_DEBUG_OBJECT (rtph263ppay, " Next GOB Detected at :  %d",
+              next_gop);
+          break;
+        }
+        parsed_len++;
+      }
+    }
 
     /* for picture start frames (non-fragmented), we need to remove the first
      * two 0x00 bytes and set P=1 */
-    header_len = (fragmented ? 2 : 0);
+    header_len = (fragmented && !found_gob) ? 2 : 0;
 
     towrite = MIN (avail, gst_rtp_buffer_calc_payload_len
         (GST_BASE_RTP_PAYLOAD_MTU (rtph263ppay) - header_len, 0, 0));
+
+    if (next_gop > 0)
+      towrite = MIN (next_gop, towrite);
 
     payload_len = header_len + towrite;
 
@@ -203,7 +323,8 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
      * |   RR    |P|V|   PLEN    |PEBIT|
      * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
      */
-    payload[0] = fragmented ? 0x00 : 0x04;
+    /* if fragmented or gop header , write p bit =1 */
+    payload[0] = (fragmented && !found_gob) ? 0x00 : 0x04;
     payload[1] = 0;
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtph263ppay->first_ts;

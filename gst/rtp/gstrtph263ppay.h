@@ -40,12 +40,19 @@ G_BEGIN_DECLS
 typedef struct _GstRtpH263PPay GstRtpH263PPay;
 typedef struct _GstRtpH263PPayClass GstRtpH263PPayClass;
 
+typedef enum
+{
+  GST_FRAGMENTATION_MODE_NORMAL = 0,
+  GST_FRAGMENTATION_MODE_SYNC   = 1
+} GstFragmentationMode;
+
 struct _GstRtpH263PPay
 {
-  GstBaseRTPPayload payload;
+  GstBaseRTPPayload    payload;
 
-  GstAdapter *adapter;
-  GstClockTime first_ts;
+  GstAdapter          *adapter;
+  GstClockTime         first_ts;
+  GstFragmentationMode fragmentation_mode;
 };
 
 struct _GstRtpH263PPayClass
