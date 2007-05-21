@@ -459,6 +459,58 @@ GST_START_TEST (test_flowreturn)
 
 GST_END_TEST;
 
+GST_START_TEST (test_push_negotiation)
+{
+  GstPad *src, *sink;
+  GstPadLinkReturn plr;
+  GstPadTemplate *src_template = gst_pad_template_new ("src", GST_PAD_SRC,
+      GST_PAD_ALWAYS,
+      gst_caps_from_string ("audio/x-raw-int,width={16,32},depth={16,32}"));
+  GstPadTemplate *sink_template = gst_pad_template_new ("sink", GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      gst_caps_from_string ("audio/x-raw-int,width=32,depth={16,32}"));
+  GstCaps *caps;
+  GstBuffer *buffer;
+
+  /* setup */
+  sink = gst_pad_new_from_template (sink_template, "sink");
+  fail_if (sink == NULL);
+  gst_pad_set_chain_function (sink, gst_check_chain_func);
+
+  src = gst_pad_new_from_template (src_template, "src");
+  fail_if (src == NULL);
+
+  plr = gst_pad_link (src, sink);
+  fail_unless (GST_PAD_LINK_SUCCESSFUL (plr));
+
+  buffer = gst_buffer_new ();
+
+  /* activate pads */
+  gst_pad_set_active (src, TRUE);
+  gst_pad_set_active (sink, TRUE);
+
+  caps = gst_caps_from_string ("audio/x-raw-int,width=16,depth=16");
+
+  /* Should fail if src pad caps are incompatible with sink pad caps */
+  gst_pad_set_caps (src, caps);
+  gst_buffer_ref (buffer);
+  gst_buffer_set_caps (buffer, caps);
+  fail_unless (gst_pad_push (src, buffer) == GST_FLOW_NOT_NEGOTIATED);
+  ASSERT_MINI_OBJECT_REFCOUNT (buffer, "buffer", 1);
+  gst_buffer_unref (buffer);
+
+  /* teardown */
+  gst_pad_unlink (src, sink);
+  gst_object_unref (src);
+  gst_object_unref (sink);
+  gst_caps_unref (caps);
+  gst_object_unref (sink_template);
+  gst_object_unref (src_template);
+}
+
+GST_END_TEST;
+
+
 Suite *
 gst_pad_suite (void)
 {
@@ -477,6 +529,7 @@ gst_pad_suite (void)
   tcase_add_test (tc_chain, test_push_unlinked);
   tcase_add_test (tc_chain, test_push_linked);
   tcase_add_test (tc_chain, test_flowreturn);
+  tcase_add_test (tc_chain, test_push_negotiation);
 
   return s;
 }
