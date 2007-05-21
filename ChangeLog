@@ -1,3 +1,9 @@
+2007-05-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtpdec.c: (gst_rtp_dec_class_init):
+	* gst/rtsp/gstrtpdec.h:
+	Added signal for backwards compat.
+
 2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 	
 	Patch by: René Stadler <mail at renestadler dot de>

@@ -77,6 +77,7 @@ GST_ELEMENT_DETAILS ("RTP Decoder",
 enum
 {
   SIGNAL_REQUEST_PT_MAP,
+  SIGNAL_CLEAR_PT_MAP,
   LAST_SIGNAL
 };
 
@@ -287,6 +288,11 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPDecClass, request_pt_map),
       NULL, NULL, gst_rtp_dec_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 2,
       G_TYPE_UINT, G_TYPE_UINT);
+
+  gst_rtp_dec_signals[SIGNAL_CLEAR_PT_MAP] =
+      g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPDecClass, clear_pt_map),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_dec_provide_clock);

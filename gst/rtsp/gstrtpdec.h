@@ -70,6 +70,8 @@ struct _GstRTPDecClass {
 
   /* get the caps for pt */
   GstCaps* (*request_pt_map)  (GstRTPDec *rtpdec, guint session, guint pt);
+
+  void     (*clear_pt_map)    (GstRTPDec *rtpdec);
 };
 
 GType gst_rtp_dec_get_type(void);
