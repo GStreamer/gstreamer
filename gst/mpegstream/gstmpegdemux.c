@@ -1020,14 +1020,17 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
   } else {
     GST_DEBUG_OBJECT (mpeg_demux, "Creating subbuffer size %d", size);
   }
+
+  if (G_UNLIKELY (offset + size > GST_BUFFER_SIZE (buffer)))
+    goto broken_file;
+
   outbuf = gst_buffer_create_sub (buffer, offset, size);
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (outstream->pad));
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_OFFSET (outbuf) = GST_BUFFER_OFFSET (buffer) + offset;
   ret = gst_pad_push (outstream->pad, outbuf);
-  GST_LOG ("flow on %s: %s", GST_PAD_NAME (outstream->pad),
-      gst_flow_get_name (ret));
+  GST_LOG_OBJECT (outstream->pad, "flow: %s", gst_flow_get_name (ret));
   ++outstream->buffers_sent;
 
   if (GST_CLOCK_TIME_IS_VALID (mpeg_demux->max_gap) &&
@@ -1041,6 +1044,14 @@ gst_mpeg_demux_send_subbuffer (GstMPEGDemux * mpeg_demux,
   ret = CLASS (mpeg_demux)->combine_flows (mpeg_demux, outstream, ret);
 
   return ret;
+
+/* ERRORS */
+broken_file:
+  {
+    GST_ELEMENT_ERROR (mpeg_demux, STREAM, DEMUX, (NULL),
+        ("Either broken file or not an MPEG stream"));
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn

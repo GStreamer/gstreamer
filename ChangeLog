@@ -1,3 +1,11 @@
+2007-05-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/mpegstream/gstmpegdemux.c: (gst_mpeg_demux_send_subbuffer):
+	  Add sanity check so we don't abort for broken or non-MPEG streams,
+	  but instead error out. Fixes crashes/aborts for when our typefinder
+	  wrongly identifies quicktime files as mpeg (which should be fixed in
+	  -base now too). (#440120).
+
 2007-05-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrnb/amrnbdec.c (gst_amrnbdec_debug, GST_CAT_DEFAULT,
