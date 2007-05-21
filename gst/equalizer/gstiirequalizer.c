@@ -389,6 +389,8 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
   /* set center frequencies and name band objects
    * FIXME: arg! we can't change the name of parented objects :(
    *   application should read band->freq
+   * FIXME: the code that calculates the center-frequencies for the bands should
+   *   take the number of bands into account, when chooding the lowest frequency
    */
   equ->bands[0]->freq = LOWEST_FREQ;
   GST_DEBUG ("band[ 0] = '%lf'", equ->bands[0]->freq);
