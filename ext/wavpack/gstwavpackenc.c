@@ -270,7 +270,7 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
           GST_TYPE_WAVPACK_ENC_MODE, GST_WAVPACK_ENC_MODE_DEFAULT,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BITRATE,
-      g_param_spec_int ("bitrate", "Bitrate",
+      g_param_spec_uint ("bitrate", "Bitrate",
           "Try to encode with this average bitrate (bits/sec). "
           "This enables lossy encoding, values smaller than 24000 disable it again.",
           0, 9600000, 0, G_PARAM_READWRITE));
@@ -289,7 +289,7 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
           "Store MD5 hash of raw samples within the file.", FALSE,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_EXTRA_PROCESSING,
-      g_param_spec_int ("extra-processing", "Extra processing",
+      g_param_spec_uint ("extra-processing", "Extra processing",
           "Use better but slower filters for better compression/quality.",
           0, 6, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_JOINT_STEREO_MODE,
@@ -811,7 +811,7 @@ gst_wavpack_enc_set_property (GObject * object, guint prop_id,
       enc->mode = g_value_get_enum (value);
       break;
     case ARG_BITRATE:{
-      gint val = g_value_get_int (value);
+      guint val = g_value_get_uint (value);
 
       if ((val >= 24000) && (val <= 9600000)) {
         enc->bitrate = val;
@@ -841,7 +841,7 @@ gst_wavpack_enc_set_property (GObject * object, guint prop_id,
       enc->md5 = g_value_get_boolean (value);
       break;
     case ARG_EXTRA_PROCESSING:
-      enc->extra_processing = g_value_get_int (value);
+      enc->extra_processing = g_value_get_uint (value);
       break;
     case ARG_JOINT_STEREO_MODE:
       enc->joint_stereo_mode = g_value_get_enum (value);
@@ -864,9 +864,9 @@ gst_wavpack_enc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_BITRATE:
       if (enc->bps == 0.0) {
-        g_value_set_int (value, enc->bitrate);
+        g_value_set_uint (value, enc->bitrate);
       } else {
-        g_value_set_int (value, 0);
+        g_value_set_uint (value, 0);
       }
       break;
     case ARG_BITSPERSAMPLE:
@@ -883,7 +883,7 @@ gst_wavpack_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, enc->md5);
       break;
     case ARG_EXTRA_PROCESSING:
-      g_value_set_int (value, enc->extra_processing);
+      g_value_set_uint (value, enc->extra_processing);
       break;
     case ARG_JOINT_STEREO_MODE:
       g_value_set_enum (value, enc->joint_stereo_mode);
