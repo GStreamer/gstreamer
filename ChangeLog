@@ -1,5 +1,12 @@
 2007-05-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init),
+	(gst_udpsrc_create), (gst_udpsrc_unlock), (gst_udpsrc_unlock_stop):
+	Since we depend on 0.10.13 -core, override the unlock_stop vmethod for
+	safer shutdown.
+
+2007-05-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtpdec.c: (gst_rtp_dec_class_init):
 	* gst/rtsp/gstrtpdec.h:
 	Added signal for backwards compat.

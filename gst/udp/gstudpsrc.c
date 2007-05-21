@@ -201,6 +201,7 @@ static GstFlowReturn gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf);
 static gboolean gst_udpsrc_start (GstBaseSrc * bsrc);
 static gboolean gst_udpsrc_stop (GstBaseSrc * bsrc);
 static gboolean gst_udpsrc_unlock (GstBaseSrc * bsrc);
+static gboolean gst_udpsrc_unlock_stop (GstBaseSrc * bsrc);
 static void gst_udpsrc_finalize (GObject * object);
 
 static void gst_udpsrc_set_property (GObject * object, guint prop_id,
@@ -290,6 +291,7 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
   gstbasesrc_class->unlock = gst_udpsrc_unlock;
+  gstbasesrc_class->unlock_stop = gst_udpsrc_unlock_stop;
   gstbasesrc_class->get_caps = gst_udpsrc_getcaps;
 
   gstpushsrc_class->create = gst_udpsrc_create;
@@ -419,36 +421,9 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
                   "timeout", G_TYPE_UINT64, udpsrc->timeout, NULL)));
       try_again = TRUE;
     } else {
-      if (FD_ISSET (READ_SOCKET (udpsrc), &read_fds)) {
-        /* got control message */
-        while (TRUE) {
-          gchar command;
-          int res;
-
-          READ_COMMAND (udpsrc, command, res);
-          if (res <= 0) {
-            GST_LOG_OBJECT (udpsrc, "no more commands");
-            /* no more commands */
-            break;
-          }
-
-          switch (command) {
-            case CONTROL_STOP:
-              /* break out of the select loop */
-              GST_LOG_OBJECT (udpsrc, "stop");
-              /* stop this function */
-              stop = TRUE;
-              break;
-            default:
-              GST_WARNING_OBJECT (udpsrc, "unkown");
-              g_warning ("multiudpsink: unknown control message received");
-              break;
-          }
-        }
-      }
+      if (FD_ISSET (READ_SOCKET (udpsrc), &read_fds))
+        goto stopped;
     }
-    if (stop)
-      goto stopped;
   } while (try_again);
 
   /* ask how much is available for reading on the socket, this should be exactly
@@ -883,9 +858,35 @@ gst_udpsrc_unlock (GstBaseSrc * bsrc)
 
   src = GST_UDPSRC (bsrc);
 
-  GST_DEBUG ("sending stop command");
+  GST_LOG_OBJECT (src, "sending stop command");
   SEND_COMMAND (src, CONTROL_STOP, res);
-  GST_DEBUG ("sent stop command %d", res);
+  GST_LOG_OBJECT (src, "sent stop command %d", res);
+
+  return TRUE;
+}
+
+static gboolean
+gst_udpsrc_unlock_stop (GstBaseSrc * bsrc)
+{
+  GstUDPSrc *src;
+
+  src = GST_UDPSRC (bsrc);
+
+  GST_LOG_OBJECT (src, "clearing unlock command queue");
+
+  while (TRUE) {
+    gchar command;
+    int res;
+
+    GST_LOG_OBJECT (src, "reading command");
+
+    READ_COMMAND (src, command, res);
+    if (res <= 0) {
+      GST_LOG_OBJECT (src, "no more commands");
+      /* no more commands */
+      break;
+    }
+  }
 
   return TRUE;
 }
