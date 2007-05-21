@@ -1,3 +1,15 @@
+2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+	
+	Patch by: René Stadler <mail at renestadler dot de>
+
+	* configure.ac:
+	* gst/auparse/gstauparse.c: (gst_au_parse_reset),
+	(gst_au_parse_parse_header), (gst_au_parse_chain):
+	* gst/auparse/gstauparse.h:
+	Use audioconvert for converting from non-native endianness floats
+	in auparse instead of doing it ourself. Fixes #424527.
+	This needs the audioconvert from plugins-base CVS.
+	
 2007-05-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtp/gstrtph263ppay.c: (gst_fragmentation_mode_get_type),

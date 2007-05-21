@@ -62,10 +62,6 @@ struct _GstAuParse {
   guint       samplerate;
   guint       endianness;
   guint       channels;
-
-  /* audioconvert only handles float in native endianness,
-   * so we need to swap endianness here ourselves for now */
-  guint       float_swap; /* 0, 32 or 64 */
 };
 
 struct _GstAuParseClass {
