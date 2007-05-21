@@ -1,5 +1,20 @@
 2007-05-21  Stefan Kost  <ensonic@users.sf.net>
 
+	* ChangeLog:
+	  ChangeLog surgery.
+	* gst/equalizer/gstiirequalizer.c (ARG_BAND_WIDTH, _do_init, ARG_GAIN,
+	  _GstIirEqualizerBand, object, _GstIirEqualizerBandClass,
+	  parent_class, gst_iir_equalizer_band_set_property,
+	  gst_iir_equalizer_band_class_init, gst_iir_equalizer_band_get_type,
+	  gst_iir_equalizer_child_proxy_get_child_by_index,
+	  gst_iir_equalizer_child_proxy_get_children_count,
+	  gst_iir_equalizer_child_proxy_interface_init, setup_filter,
+	  gst_iir_equalizer_compute_frequencies, plugin_init):
+	* tests/icles/equalizer-test.c:
+	  Add fixme and comment for example.
+
+2007-05-21  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/spectrum/gstspectrum.c (gst_spectrum_set_property,
 	  gst_spectrum_event, gst_spectrum_transform_ip):
 	  Use lock to protect from concurrent access.
@@ -9,27 +24,6 @@
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_class_init),
 	(gst_wavpack_enc_set_property), (gst_wavpack_enc_get_property):
 	Specify and use properties as unsigned int that are an unsigned int.
-
-2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
-
-	reviewed by: <delete if not using a buddy>
-
-	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_set_property):
-	* po/af.po:
-	* po/az.po:
-	* po/cs.po:
-	* po/da.po:
-	* po/en_GB.po:
-	* po/hu.po:
-	* po/it.po:
-	* po/nb.po:
-	* po/nl.po:
-	* po/or.po:
-	* po/sq.po:
-	* po/sr.po:
-	* po/sv.po:
-	* po/uk.po:
-	* po/vi.po:
 
 2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 

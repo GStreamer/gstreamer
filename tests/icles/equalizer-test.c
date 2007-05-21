@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * Will tests the equalizer by fading all bands in and out one by one and
+ * finaly all together.
+ */
+
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
