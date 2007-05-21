@@ -40,7 +40,7 @@ static GType
 gst_fragmentation_mode_get_type (void)
 {
   static GType fragmentation_mode_type = 0;
-  static const GFlagsValue fragmentation_mode[] = {
+  static const GEnumValue fragmentation_mode[] = {
     {GST_FRAGMENTATION_MODE_NORMAL, "Normal", "normal"},
     {GST_FRAGMENTATION_MODE_SYNC, "Fragment at sync points", "sync"},
     {0, NULL, NULL},
@@ -48,7 +48,7 @@ gst_fragmentation_mode_get_type (void)
 
   if (!fragmentation_mode_type) {
     fragmentation_mode_type =
-        g_flags_register_static ("GstFragmentationMode", fragmentation_mode);
+        g_enum_register_static ("GstFragmentationMode", fragmentation_mode);
   }
   return fragmentation_mode_type;
 }

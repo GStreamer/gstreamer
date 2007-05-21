@@ -1,5 +1,11 @@
 2007-05-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtp/gstrtph263ppay.c: (gst_fragmentation_mode_get_type),
+	(gst_rtp_h263p_pay_flush):
+	Fix enum registration.
+
+2007-05-21  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
 
 	* gst/rtp/gstrtph263ppay.c: (gst_fragmentation_mode_get_type),
