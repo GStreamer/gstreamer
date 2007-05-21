@@ -1029,8 +1029,8 @@ theora_handle_data_packet (GstTheoraDec * dec, ogg_packet * packet,
     goto not_initialized;
 
   /* the second most significant bit of the first data byte is cleared 
-   * for keyframes */
-  keyframe = (packet->packet[0] & 0x40) == 0;
+   * for keyframes. We can only check it if it's not a zero-length packet. */
+  keyframe = packet->bytes && ((packet->packet[0] & 0x40) == 0);
   if (G_UNLIKELY (keyframe)) {
     GST_DEBUG_OBJECT (dec, "we have a keyframe");
     dec->need_keyframe = FALSE;

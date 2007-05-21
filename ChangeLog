@@ -1,3 +1,9 @@
+2007-05-21  Michael Smith <msmith@fluendo.com>
+
+	* ext/theora/theoradec.c: (theora_handle_data_packet):
+	  Don't look inside 0-length packets (which indicate duplicated
+	  frames)
+
 2007-05-21  Wim Taymans  <wim@fluendo.com>
 
 	* ext/cdparanoia/gstcdparanoiasrc.c:
