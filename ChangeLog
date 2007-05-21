@@ -1,6 +1,33 @@
 2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_class_init),
+	(gst_wavpack_enc_set_property), (gst_wavpack_enc_get_property):
+	Specify and use properties as unsigned int that are an unsigned int.
+
+2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	reviewed by: <delete if not using a buddy>
+
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_set_property):
+	* po/af.po:
+	* po/az.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/en_GB.po:
+	* po/hu.po:
+	* po/it.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+
+2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_class_init),
 	(gst_wavpack_enc_init), (gst_wavpack_enc_set_wp_config),
 	(gst_wavpack_enc_set_property), (gst_wavpack_enc_get_property):
 	* ext/wavpack/gstwavpackenc.h:
