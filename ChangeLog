@@ -1,5 +1,13 @@
 2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* libs/gst/controller/gstinterpolation.c:
+	(interpolate_trigger_get_enum_value_array),
+	(interpolate_trigger_get_string_value_array):
+	Add support for retrieving value arrays when using the trigger
+	interpolation mode. 
+
+2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* libs/gst/controller/gstcontroller.c:
 	(gst_controller_get_value_array):
 	* libs/gst/controller/gstcontroller.h:

@@ -190,32 +190,84 @@ interpolate_trigger_get (GstControlledProperty * prop, GstClockTime timestamp)
   return (&prop->default_value);
 }
 
+#define DEFINE_TRIGGER_GET(type) \
+static gboolean \
+interpolate_trigger_get_##type##_value_array (GstControlledProperty * prop, \
+    GstClockTime timestamp, GstValueArray * value_array) \
+{ \
+  gint i; \
+  GstClockTime ts = timestamp; \
+  g##type *values = (g##type *) value_array->values; \
+  \
+  for(i = 0; i < value_array->nbsamples; i++) { \
+    *values = g_value_get_##type (interpolate_trigger_get (prop,ts)); \
+    ts += value_array->sample_interval; \
+    values++; \
+  } \
+  return (TRUE); \
+}
+
+DEFINE_TRIGGER_GET (int);
+DEFINE_TRIGGER_GET (uint);
+DEFINE_TRIGGER_GET (long);
+
+DEFINE_TRIGGER_GET (ulong);
+DEFINE_TRIGGER_GET (float);
+DEFINE_TRIGGER_GET (double);
+
+DEFINE_TRIGGER_GET (boolean);
+
 static gboolean
-interpolate_trigger_get_value_array (GstControlledProperty * prop,
+interpolate_trigger_get_enum_value_array (GstControlledProperty * prop,
     GstClockTime timestamp, GstValueArray * value_array)
 {
-  return (FALSE);
+  gint i;
+  GstClockTime ts = timestamp;
+  gint *values = (gint *) value_array->values;
+
+  for (i = 0; i < value_array->nbsamples; i++) {
+    *values = g_value_get_enum (interpolate_trigger_get (prop, ts));
+    ts += value_array->sample_interval;
+    values++;
+  }
+  return (TRUE);
+}
+
+static gboolean
+interpolate_trigger_get_string_value_array (GstControlledProperty * prop,
+    GstClockTime timestamp, GstValueArray * value_array)
+{
+  gint i;
+  GstClockTime ts = timestamp;
+  gchar **values = (gchar **) value_array->values;
+
+  for (i = 0; i < value_array->nbsamples; i++) {
+    *values = (gchar *) g_value_get_string (interpolate_trigger_get (prop, ts));
+    ts += value_array->sample_interval;
+    values++;
+  }
+  return (TRUE);
 }
 
 static GstInterpolateMethod interpolate_trigger = {
   interpolate_trigger_get,
-  interpolate_trigger_get_value_array,
+  interpolate_trigger_get_int_value_array,
   interpolate_trigger_get,
-  NULL,
+  interpolate_trigger_get_uint_value_array,
   interpolate_trigger_get,
-  NULL,
+  interpolate_trigger_get_long_value_array,
   interpolate_trigger_get,
-  NULL,
+  interpolate_trigger_get_ulong_value_array,
   interpolate_trigger_get,
-  NULL,
+  interpolate_trigger_get_float_value_array,
   interpolate_trigger_get,
-  NULL,
+  interpolate_trigger_get_double_value_array,
   interpolate_trigger_get,
-  NULL,
+  interpolate_trigger_get_boolean_value_array,
   interpolate_trigger_get,
-  NULL,
+  interpolate_trigger_get_enum_value_array,
   interpolate_trigger_get,
-  NULL
+  interpolate_trigger_get_string_value_array
 };
 
 /*  linear interpolation */
