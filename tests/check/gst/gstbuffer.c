@@ -434,12 +434,19 @@ GST_START_TEST (test_try_new_and_alloc)
   GST_BUFFER_DATA (buf)[640 * 479 * 4 + 479] = 0xff;
   gst_buffer_unref (buf);
 
+#if 0
+  /* Disabled this part of the test, because it happily succeeds on 64-bit
+   * machines that have enough memory+swap, because the address space is large
+   * enough. There's not really any way to test the failure case except by 
+   * allocating chunks of memory until it fails, which would suck. */
+
   /* now this better fail (don't run in valgrind, it will abort
    * or warn when passing silly arguments to malloc) */
   if (!RUNNING_ON_VALGRIND) {
     buf = gst_buffer_try_new_and_alloc ((guint) - 1);
     fail_unless (buf == NULL);
   }
+#endif
 }
 
 GST_END_TEST;

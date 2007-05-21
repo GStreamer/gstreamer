@@ -1,3 +1,11 @@
+2007-05-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/gst/gstbuffer.c: (GST_START_TEST):
+
+	Disable part of the gst_buffer_try_new_and_alloc test, because
+	it can happily succeed on 64-bit systems where there's more address
+	space available.
+
 2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/gst/gstpad.c: (GST_START_TEST), (gst_pad_suite):
