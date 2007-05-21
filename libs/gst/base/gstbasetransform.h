@@ -85,7 +85,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.13
  */
-#define GST_BASE_TRANSFORM_LOCK(obj)   g_mutex_lock (obj->transform_lock)
+#define GST_BASE_TRANSFORM_LOCK(obj)   g_mutex_lock (GST_BASE_TRANSFORM_CAST (obj)->transform_lock)
 
 /**
  * GST_BASE_TRANSFORM_UNLOCK:
@@ -95,7 +95,7 @@ G_BEGIN_DECLS
  *
  * Since: 0.10.13
  */
-#define GST_BASE_TRANSFORM_UNLOCK(obj) g_mutex_unlock (obj->transform_lock)
+#define GST_BASE_TRANSFORM_UNLOCK(obj) g_mutex_unlock (GST_BASE_TRANSFORM_CAST (obj)->transform_lock)
 
 typedef struct _GstBaseTransform GstBaseTransform;
 typedef struct _GstBaseTransformClass GstBaseTransformClass;
