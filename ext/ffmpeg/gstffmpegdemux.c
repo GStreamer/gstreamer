@@ -1132,6 +1132,12 @@ gst_ffmpegdemux_type_find (GstTypeFind * tf, gpointer priv)
     res = in_plugin->read_probe (&probe_data);
     if (res > 0) {
       res = MAX (1, res * GST_TYPE_FIND_MAXIMUM / AVPROBE_SCORE_MAX);
+      /* Restrict the probability for MPEG-TS streams, because there is
+       * probably a better version in plugins-base, if the user has a recent
+       * plugins-base */
+      if (!strcmp (in_plugin->name, "mpegts"))
+        res = MIN (res, GST_TYPE_FIND_POSSIBLE);
+
       gst_type_find_suggest (tf, res, params->sinkcaps);
     }
   }

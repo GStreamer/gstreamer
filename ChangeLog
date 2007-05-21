@@ -1,3 +1,9 @@
+2007-05-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_type_find):
+	Reduce the probability of the MPEG-TS typefinder, because there's a
+	better one in recent base releases.
+
 2007-05-17  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:
