@@ -1,3 +1,10 @@
+2007-05-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_handle_xevents):
+	Fix a locking-order bug I introduced with my changes the other day.
+	Patch by Mike Smith.
+
 2007-05-21  Michael Smith <msmith@fluendo.com>
 
 	* ext/theora/theoradec.c: (theora_handle_data_packet):

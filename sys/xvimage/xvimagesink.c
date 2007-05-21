@@ -1177,8 +1177,8 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
 
     gst_xvimagesink_expose (GST_X_OVERLAY (xvimagesink));
 
-    g_mutex_lock (xvimagesink->x_lock);
     g_mutex_lock (xvimagesink->flow_lock);
+    g_mutex_lock (xvimagesink->x_lock);
   }
 
   /* Handle Display events */
