@@ -1,5 +1,15 @@
 2007-05-21  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstpad.c: (gst_pad_get_caps_unlocked),
+	(gst_pad_acceptcaps_default), (gst_pad_configure_sink),
+	(gst_pad_configure_src):
+	Added simple version of improved caps checking. It was previously
+	assumed that a setcaps function would check the validity of the caps but
+	people prefer us to check caps against the template automatically. 
+	Fixes #421543.
+
+2007-05-21  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasetransform.h:
 	Fix macro for locking/unlocking the transform lock.
 

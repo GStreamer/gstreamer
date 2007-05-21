@@ -1954,6 +1954,7 @@ static GstCaps *
 gst_pad_get_caps_unlocked (GstPad * pad)
 {
   GstCaps *result = NULL;
+  GstPadTemplate *templ;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "get pad caps");
 
@@ -1997,9 +1998,7 @@ gst_pad_get_caps_unlocked (GstPad * pad)
       goto done;
     }
   }
-  if (GST_PAD_PAD_TEMPLATE (pad)) {
-    GstPadTemplate *templ = GST_PAD_PAD_TEMPLATE (pad);
-
+  if ((templ = GST_PAD_PAD_TEMPLATE (pad))) {
     result = GST_PAD_TEMPLATE_CAPS (templ);
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
@@ -2008,9 +2007,7 @@ gst_pad_get_caps_unlocked (GstPad * pad)
     result = gst_caps_ref (result);
     goto done;
   }
-  if (GST_PAD_CAPS (pad)) {
-    result = GST_PAD_CAPS (pad);
-
+  if ((result = GST_PAD_CAPS (pad))) {
     GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
         "using pad caps %p %" GST_PTR_FORMAT, result, result);
 
@@ -2203,11 +2200,17 @@ gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
   GstCaps *allowed;
   gboolean result = FALSE;
 
+  GST_DEBUG_OBJECT (pad, "caps %" GST_PTR_FORMAT, caps);
+
   allowed = gst_pad_get_caps (pad);
   if (!allowed)
     goto nothing_allowed;
 
+  GST_DEBUG_OBJECT (pad, "allowed caps %" GST_PTR_FORMAT, allowed);
+
   intersect = gst_caps_intersect (allowed, caps);
+
+  GST_DEBUG_OBJECT (pad, "intersection %" GST_PTR_FORMAT, intersect);
 
   result = !gst_caps_is_empty (intersect);
   if (!result)
@@ -2404,16 +2407,11 @@ could_not_set:
 static gboolean
 gst_pad_configure_sink (GstPad * pad, GstCaps * caps)
 {
-  GstPadSetCapsFunction setcaps;
   gboolean res;
 
-  setcaps = GST_PAD_SETCAPSFUNC (pad);
-
-  /* See if pad accepts the caps - only needed if 
-   * no setcaps function */
-  if (setcaps == NULL)
-    if (!gst_pad_accept_caps (pad, caps))
-      goto not_accepted;
+  /* See if pad accepts the caps */
+  if (!gst_pad_accept_caps (pad, caps))
+    goto not_accepted;
 
   /* set caps on pad if call succeeds */
   res = gst_pad_set_caps (pad, caps);
@@ -2434,16 +2432,11 @@ not_accepted:
 static gboolean
 gst_pad_configure_src (GstPad * pad, GstCaps * caps, gboolean dosetcaps)
 {
-  GstPadSetCapsFunction setcaps;
   gboolean res;
 
-  setcaps = GST_PAD_SETCAPSFUNC (pad);
-
-  /* See if pad accepts the caps - only needed if 
-   * no setcaps function */
-  if (setcaps == NULL)
-    if (!gst_pad_accept_caps (pad, caps))
-      goto not_accepted;
+  /* See if pad accepts the caps */
+  if (!gst_pad_accept_caps (pad, caps))
+    goto not_accepted;
 
   if (dosetcaps)
     res = gst_pad_set_caps (pad, caps);
