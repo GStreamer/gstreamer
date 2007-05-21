@@ -55,6 +55,7 @@ enum
 #define DEFAULT_TIMESTAMP_OFFSET        -1
 #define DEFAULT_SEQNUM_OFFSET           -1
 #define DEFAULT_MAX_PTIME               -1
+#define DEFAULT_MIN_PTIME               0
 
 enum
 {
@@ -65,6 +66,7 @@ enum
   PROP_TIMESTAMP_OFFSET,
   PROP_SEQNUM_OFFSET,
   PROP_MAX_PTIME,
+  PROP_MIN_PTIME,
   PROP_TIMESTAMP,
   PROP_SEQNUM
 };
@@ -163,6 +165,17 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
       g_param_spec_int64 ("max-ptime", "Max packet time",
           "Maximum duration of the packet data in ns (-1 = unlimited up to MTU)",
           -1, G_MAXINT64, DEFAULT_MAX_PTIME, G_PARAM_READWRITE));
+  /**
+   * GstBaseRTPAudioPayload:min-ptime:
+   *
+   * Minimum duration of the packet data in ns (can't go above MTU)
+   *
+   * Since: 0.10.13
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MIN_PTIME,
+      g_param_spec_int64 ("min-ptime", "Min packet time",
+          "Minimum duration of the packet data in ns (can't go above MTU)",
+          0, G_MAXINT64, DEFAULT_MIN_PTIME, G_PARAM_READWRITE));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMESTAMP,
       g_param_spec_uint ("timestamp", "Timestamp",
@@ -214,6 +227,7 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
   basertppayload->ssrc = DEFAULT_SSRC;
   basertppayload->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
   basertppayload->max_ptime = DEFAULT_MAX_PTIME;
+  basertppayload->min_ptime = DEFAULT_MIN_PTIME;
 
   basertppayload->media = NULL;
   basertppayload->encoding_name = NULL;
@@ -266,9 +280,20 @@ static gboolean
 gst_basertppayload_event (GstPad * pad, GstEvent * event)
 {
   GstBaseRTPPayload *basertppayload;
+  GstBaseRTPPayloadClass *basertppayload_class;
   gboolean res;
 
   basertppayload = GST_BASE_RTP_PAYLOAD (gst_pad_get_parent (pad));
+  basertppayload_class = GST_BASE_RTP_PAYLOAD_GET_CLASS (basertppayload);
+
+  if (basertppayload_class->handle_event) {
+    res = basertppayload_class->handle_event (pad, event);
+    if (res) {
+      gst_object_unref (basertppayload);
+
+      return res;
+    }
+  }
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
@@ -477,6 +502,9 @@ gst_basertppayload_set_property (GObject * object, guint prop_id,
     case PROP_MAX_PTIME:
       basertppayload->max_ptime = g_value_get_int64 (value);
       break;
+    case PROP_MIN_PTIME:
+      basertppayload->min_ptime = g_value_get_int64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -509,6 +537,9 @@ gst_basertppayload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_MAX_PTIME:
       g_value_set_int64 (value, basertppayload->max_ptime);
+      break;
+    case PROP_MIN_PTIME:
+      g_value_set_int64 (value, basertppayload->min_ptime);
       break;
     case PROP_TIMESTAMP:
       g_value_set_uint (value, basertppayload->timestamp);

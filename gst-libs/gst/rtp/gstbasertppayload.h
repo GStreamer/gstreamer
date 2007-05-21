@@ -78,8 +78,11 @@ struct _GstBaseRTPPayload
 
   GstSegment segment;
 
+  guint64  min_ptime;
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+
+  gpointer _gst_reserved[GST_PADDING - (sizeof(guint64)/sizeof(gpointer))];
 };
 
 struct _GstBaseRTPPayloadClass
@@ -92,9 +95,10 @@ struct _GstBaseRTPPayloadClass
    * the RTP buffers */
   GstFlowReturn (*handle_buffer)        (GstBaseRTPPayload *payload, 
                                          GstBuffer *buffer);
+  gboolean      (*handle_event)         (GstPad * pad, GstEvent * event);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 GType           gst_basertppayload_get_type             (void);

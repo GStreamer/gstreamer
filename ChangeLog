@@ -1,3 +1,24 @@
+2007-05-21  Wim Taymans  <wim@fluendo.com>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	(gst_base_rtp_audio_payload_class_init),
+	(gst_base_rtp_audio_payload_init),
+	(gst_base_rtp_audio_payload_finalize),
+	(gst_base_rtp_audio_payload_handle_frame_based_buffer),
+	(gst_base_rtp_audio_payload_handle_sample_based_buffer),
+	(gst_base_rtp_payload_audio_handle_event):
+	Some cleanups, remove minptime property as it is now in the parent
+	class.
+	Override parent class event function.
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_class_init), (gst_basertppayload_init),
+	(gst_basertppayload_event), (gst_basertppayload_set_property),
+	(gst_basertppayload_get_property):
+	* gst-libs/gst/rtp/gstbasertppayload.h:
+	Add min-ptime property.
+	Add handle-event vmethod. Fixes #415001.
+
 2007-05-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c

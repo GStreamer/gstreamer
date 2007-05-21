@@ -83,20 +83,11 @@ struct _GstBaseRTPAudioPayloadPrivate
   guint64 min_ptime;
 };
 
-#define DEFAULT_MIN_PTIME 0
-
-enum
-{
-  PROP_0,
-  PROP_MIN_PTIME
-};
-
 
 #define GST_BASE_RTP_AUDIO_PAYLOAD_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_BASE_RTP_AUDIO_PAYLOAD, \
                                 GstBaseRTPAudioPayloadPrivate))
 
-static void gst_base_rtp_audio_payload_dispose (GObject * object);
 static void gst_base_rtp_audio_payload_finalize (GObject * object);
 
 static GstFlowReturn gst_base_rtp_audio_payload_handle_buffer (GstBaseRTPPayload
@@ -114,15 +105,7 @@ static GstStateChangeReturn
 gst_base_rtp_payload_audio_change_state (GstElement * element,
     GstStateChange transition);
 static gboolean
-gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event,
-    gpointer data);
-
-static void
-gst_base_rtp_payload_audio_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void
-gst_base_rtp_payload_audio_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
+gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event);
 
 GST_BOILERPLATE (GstBaseRTPAudioPayload, gst_base_rtp_audio_payload,
     GstBaseRTPPayload, GST_TYPE_BASE_RTP_PAYLOAD);
@@ -144,33 +127,17 @@ gst_base_rtp_audio_payload_class_init (GstBaseRTPAudioPayloadClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstbasertppayload_class = (GstBaseRTPPayloadClass *) klass;
+
   gobject_class->finalize =
       GST_DEBUG_FUNCPTR (gst_base_rtp_audio_payload_finalize);
-  gobject_class->dispose =
-      GST_DEBUG_FUNCPTR (gst_base_rtp_audio_payload_dispose);
-
-  gobject_class->set_property = gst_base_rtp_payload_audio_set_property;
-  gobject_class->get_property = gst_base_rtp_payload_audio_get_property;
-
-  parent_class = g_type_class_peek_parent (klass);
-
-  gstbasertppayload_class->handle_buffer =
-      GST_DEBUG_FUNCPTR (gst_base_rtp_audio_payload_handle_buffer);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_rtp_payload_audio_change_state);
 
-  /**
-   * GstBaseRTPAudioPayload:min-ptime:
-   *
-   * Minimum duration of the packet data in ns (can't go above MTU)
-   *
-   * Since: 0.10.13
-   **/
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MIN_PTIME,
-      g_param_spec_int64 ("min-ptime", "Min packet time",
-          "Minimum duration of the packet data in ns (can't go above MTU)",
-          0, G_MAXINT64, DEFAULT_MIN_PTIME, G_PARAM_READWRITE));
+  gstbasertppayload_class->handle_buffer =
+      GST_DEBUG_FUNCPTR (gst_base_rtp_audio_payload_handle_buffer);
+  gstbasertppayload_class->handle_event =
+      GST_DEBUG_FUNCPTR (gst_base_rtp_payload_audio_handle_event);
 
   GST_DEBUG_CATEGORY_INIT (basertpaudiopayload_debug, "basertpaudiopayload", 0,
       "base audio RTP payloader");
@@ -180,9 +147,6 @@ static void
 gst_base_rtp_audio_payload_init (GstBaseRTPAudioPayload * basertpaudiopayload,
     GstBaseRTPAudioPayloadClass * klass)
 {
-  GstBaseRTPPayload *basertppayload =
-      GST_BASE_RTP_PAYLOAD (basertpaudiopayload);
-
   basertpaudiopayload->priv =
       GST_BASE_RTP_AUDIO_PAYLOAD_GET_PRIVATE (basertpaudiopayload);
 
@@ -198,27 +162,7 @@ gst_base_rtp_audio_payload_init (GstBaseRTPAudioPayload * basertpaudiopayload,
   basertpaudiopayload->sample_size = 0;
 
   basertpaudiopayload->priv->adapter = gst_adapter_new ();
-
-  gst_pad_add_event_probe (basertppayload->sinkpad,
-      G_CALLBACK (gst_base_rtp_payload_audio_handle_event), NULL);
 }
-
-
-static void
-gst_base_rtp_audio_payload_dispose (GObject * object)
-{
-  GstBaseRTPAudioPayload *basertpaudiopayload;
-
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (object);
-
-  if (basertpaudiopayload->priv->adapter) {
-    g_object_unref (basertpaudiopayload->priv->adapter);
-    basertpaudiopayload->priv->adapter = NULL;
-  }
-
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
 
 static void
 gst_base_rtp_audio_payload_finalize (GObject * object)
@@ -226,6 +170,8 @@ gst_base_rtp_audio_payload_finalize (GObject * object)
   GstBaseRTPAudioPayload *basertpaudiopayload;
 
   basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (object);
+
+  g_object_unref (basertpaudiopayload->priv->adapter);
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
@@ -390,7 +336,7 @@ gst_base_rtp_audio_payload_handle_frame_based_buffer (GstBaseRTPPayload *
 
   /* min number of bytes based on a given ptime, has to be a multiple
      of frame duration */
-  minptime_ms = basertpaudiopayload->priv->min_ptime / 1000000;
+  minptime_ms = basepayload->min_ptime / 1000000;
 
   minptime_octets = frame_size * (int) (minptime_ms / frame_duration);
 
@@ -518,8 +464,8 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
 
   /* min number of bytes based on a given ptime, has to be a multiple
      of sample rate */
-  minptime_octets = basertpaudiopayload->priv->min_ptime *
-      basepayload->clock_rate / (sample_size * GST_SECOND);
+  minptime_octets = basepayload->min_ptime * basepayload->clock_rate /
+      (sample_size * GST_SECOND);
 
   min_payload_len = MAX (minptime_octets, sample_size);
 
@@ -671,45 +617,8 @@ gst_base_rtp_payload_audio_change_state (GstElement * element,
   return ret;
 }
 
-static void
-gst_base_rtp_payload_audio_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstBaseRTPAudioPayload *basertpaudiopayload;
-
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (object);
-
-  switch (prop_id) {
-    case PROP_MIN_PTIME:
-      basertpaudiopayload->priv->min_ptime = g_value_get_int64 (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_base_rtp_payload_audio_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstBaseRTPAudioPayload *basertpaudiopayload;
-
-  basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (object);
-
-  switch (prop_id) {
-    case PROP_MIN_PTIME:
-      g_value_set_int64 (value, basertpaudiopayload->priv->min_ptime);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
 static gboolean
-gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event,
-    gpointer data)
+gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
   gboolean res = TRUE;
