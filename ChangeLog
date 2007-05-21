@@ -1,3 +1,9 @@
+2007-05-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/spectrum/gstspectrum.c (gst_spectrum_set_property,
+	  gst_spectrum_event, gst_spectrum_transform_ip):
+	  Use lock to protect from concurrent access.
+
 2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_class_init),

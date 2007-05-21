@@ -237,10 +237,11 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
       filter->interval = g_value_get_uint64 (value);
       break;
     case PROP_BANDS:
-      /* FIXME, this will segfault when the transform function is running */
+      GST_OBJECT_LOCK (filter);
       filter->bands = g_value_get_uint (value);
       g_free (filter->spect);
       filter->spect = g_malloc (filter->bands * sizeof (guchar));
+      GST_OBJECT_UNLOCK (filter);
       GST_DEBUG_OBJECT (filter, "reallocation, spect = %p, bands =%d ",
           filter->spect, filter->bands);
       break;
