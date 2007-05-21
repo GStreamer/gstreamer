@@ -70,11 +70,12 @@ struct _GstWavpackEnc
   GstWavpackEncWriteID wvc_id;
 
   guint mode;
-  gdouble bitrate;
+  guint bitrate;
+  gdouble bps;
   guint correction_mode;
   gboolean md5;
   MD5_CTX *md5_context;
-  gboolean extra_processing;
+  guint extra_processing;
   guint joint_stereo_mode;
 
   void *first_block;
