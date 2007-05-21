@@ -1,3 +1,13 @@
+2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_class_init),
+	(gst_wavpack_enc_init), (gst_wavpack_enc_set_wp_config),
+	(gst_wavpack_enc_set_property), (gst_wavpack_enc_get_property):
+	* ext/wavpack/gstwavpackenc.h:
+	Fixup docs, make the bitrate property an int as it should be and
+	allow to set the different extra processing modes instead of only
+	allowing none and the default one.
+
 2007-05-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackenc.c:

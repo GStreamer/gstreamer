@@ -31,7 +31,8 @@
  * <programlisting>
  * gst-launch audiotestsrc num-buffers=500 ! audioconvert ! wavpackenc ! filesink location=sinewave.wv
  * </programlisting>
- * This pipeline encodes audio from audiotestsrc into a Wavpack file.
+ * This pipeline encodes audio from audiotestsrc into a Wavpack file. The audioconvert element is needed
+ * as the Wavpack encoder only accepts input with 32 bit width (and every depth between 1 and 32 bits).
  * </para>
  * <para>
  * <programlisting>
@@ -269,18 +270,18 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
           GST_TYPE_WAVPACK_ENC_MODE, GST_WAVPACK_ENC_MODE_DEFAULT,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BITRATE,
-      g_param_spec_double ("bitrate", "Bitrate",
+      g_param_spec_int ("bitrate", "Bitrate",
           "Try to encode with this average bitrate (bits/sec). "
-          "This enables lossy encoding! A value smaller than 24000.0 disables this.",
-          0.0, 9600000.0, 0.0, G_PARAM_READWRITE));
+          "This enables lossy encoding, values smaller than 24000 disable it again.",
+          0, 9600000, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_BITSPERSAMPLE,
       g_param_spec_double ("bits-per-sample", "Bits per sample",
           "Try to encode with this amount of bits per sample. "
-          "This enables lossy encoding! A value smaller than 2.0 disables this.",
+          "This enables lossy encoding, values smaller than 2.0 disable it again.",
           0.0, 24.0, 0.0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_CORRECTION_MODE,
-      g_param_spec_enum ("correction-mode", "Correction file mode",
-          "Use this mode for correction file creation. Only works in lossy mode!",
+      g_param_spec_enum ("correction-mode", "Correction stream mode",
+          "Use this mode for the correction stream. Only works in lossy mode!",
           GST_TYPE_WAVPACK_ENC_CORRECTION_MODE, GST_WAVPACK_CORRECTION_MODE_OFF,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_MD5,
@@ -288,8 +289,9 @@ gst_wavpack_enc_class_init (GstWavpackEncClass * klass)
           "Store MD5 hash of raw samples within the file.", FALSE,
           G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_EXTRA_PROCESSING,
-      g_param_spec_boolean ("extra-processing", "Extra processing",
-          "Extra encode processing.", FALSE, G_PARAM_READWRITE));
+      g_param_spec_int ("extra-processing", "Extra processing",
+          "Use better but slower filters for better compression/quality.",
+          0, 6, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_JOINT_STEREO_MODE,
       g_param_spec_enum ("joint-stereo-mode", "Joint-Stereo mode",
           "Use this joint-stereo mode.", GST_TYPE_WAVPACK_ENC_JOINT_STEREO_MODE,
@@ -359,10 +361,11 @@ gst_wavpack_enc_init (GstWavpackEnc * enc, GstWavpackEncClass * gclass)
 
   /* set default values of params */
   enc->mode = GST_WAVPACK_ENC_MODE_DEFAULT;
-  enc->bitrate = 0.0;
+  enc->bitrate = 0;
+  enc->bps = 0.0;
   enc->correction_mode = GST_WAVPACK_CORRECTION_MODE_OFF;
   enc->md5 = FALSE;
-  enc->extra_processing = FALSE;
+  enc->extra_processing = 0;
   enc->joint_stereo_mode = GST_WAVPACK_JS_MODE_AUTO;
 }
 
@@ -450,14 +453,13 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
   }
 
   /* Bitrate, enables lossy mode */
-  if (enc->bitrate >= 2.0) {
+  if (enc->bitrate) {
     enc->wp_config->flags |= CONFIG_HYBRID_FLAG;
-    if (enc->bitrate >= 24000.0) {
-      enc->wp_config->bitrate = enc->bitrate / 1000.0;
-      enc->wp_config->flags |= CONFIG_BITRATE_KBPS;
-    } else {
-      enc->wp_config->bitrate = enc->bitrate;
-    }
+    enc->wp_config->flags |= CONFIG_BITRATE_KBPS;
+    enc->wp_config->bitrate = enc->bitrate / 1000.0;
+  } else if (enc->bps) {
+    enc->wp_config->flags |= CONFIG_HYBRID_FLAG;
+    enc->wp_config->bitrate = enc->bps;
   }
 
   /* Correction Mode, only in lossy mode */
@@ -505,6 +507,7 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
   /* Extra encode processing */
   if (enc->extra_processing) {
     enc->wp_config->flags |= CONFIG_EXTRA_MODE;
+    enc->wp_config->xmode = enc->extra_processing;
   }
 
   /* Joint stereo mode */
@@ -808,12 +811,14 @@ gst_wavpack_enc_set_property (GObject * object, guint prop_id,
       enc->mode = g_value_get_enum (value);
       break;
     case ARG_BITRATE:{
-      gdouble val = g_value_get_double (value);
+      gint val = g_value_get_int (value);
 
-      if ((val >= 24000.0) && (val <= 9600000.0)) {
+      if ((val >= 24000) && (val <= 9600000)) {
         enc->bitrate = val;
+        enc->bps = 0.0;
       } else {
-        enc->bitrate = 0.0;
+        enc->bitrate = 0;
+        enc->bps = 0.0;
       }
       break;
     }
@@ -821,9 +826,11 @@ gst_wavpack_enc_set_property (GObject * object, guint prop_id,
       gdouble val = g_value_get_double (value);
 
       if ((val >= 2.0) && (val <= 24.0)) {
-        enc->bitrate = val;
+        enc->bps = val;
+        enc->bitrate = 0;
       } else {
-        enc->bitrate = 0.0;
+        enc->bps = 0.0;
+        enc->bitrate = 0;
       }
       break;
     }
@@ -834,7 +841,7 @@ gst_wavpack_enc_set_property (GObject * object, guint prop_id,
       enc->md5 = g_value_get_boolean (value);
       break;
     case ARG_EXTRA_PROCESSING:
-      enc->extra_processing = g_value_get_boolean (value);
+      enc->extra_processing = g_value_get_int (value);
       break;
     case ARG_JOINT_STEREO_MODE:
       enc->joint_stereo_mode = g_value_get_enum (value);
@@ -856,15 +863,15 @@ gst_wavpack_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_enum (value, enc->mode);
       break;
     case ARG_BITRATE:
-      if (enc->bitrate >= 24000.0) {
-        g_value_set_double (value, enc->bitrate);
+      if (enc->bps == 0.0) {
+        g_value_set_int (value, enc->bitrate);
       } else {
-        g_value_set_double (value, 0.0);
+        g_value_set_int (value, 0);
       }
       break;
     case ARG_BITSPERSAMPLE:
-      if (enc->bitrate <= 24.0) {
-        g_value_set_double (value, enc->bitrate);
+      if (enc->bitrate == 0) {
+        g_value_set_double (value, enc->bps);
       } else {
         g_value_set_double (value, 0.0);
       }
@@ -876,7 +883,7 @@ gst_wavpack_enc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_boolean (value, enc->md5);
       break;
     case ARG_EXTRA_PROCESSING:
-      g_value_set_boolean (value, enc->extra_processing);
+      g_value_set_int (value, enc->extra_processing);
       break;
     case ARG_JOINT_STEREO_MODE:
       g_value_set_enum (value, enc->joint_stereo_mode);
