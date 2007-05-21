@@ -79,7 +79,8 @@ The following notation is used:
   - NS.rate: rate field of NEWSEGMENT event
   - NS.abs_rate: absolute value of rate field of NEWSEGMENT event
   - NS.time: time field in the NEWSEGMENT event
-  - NS.accum: total accumulated time of all previous segments
+  - NS.accum: total accumulated time of all previous NEWSEGMENT events. This
+              field is kept in the GstSegment structure.
 
 Valid buffers for synchronisation are those with B.timestamp between NS.start
 and NS.stop. All other buffers outside this range should be dropped or clipped

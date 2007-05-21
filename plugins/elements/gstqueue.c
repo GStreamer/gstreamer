@@ -564,6 +564,9 @@ apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment)
   gst_segment_set_newsegment_full (segment, update,
       rate, arate, format, start, stop, time);
 
+  GST_DEBUG_OBJECT (queue,
+      "configured NEWSEGMENT %" GST_SEGMENT_FORMAT, segment);
+
   /* segment can update the time level of the queue */
   update_time_level (queue);
 }

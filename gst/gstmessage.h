@@ -30,21 +30,33 @@ typedef struct _GstMessageClass GstMessageClass;
 /**
  * GstMessageType:
  * @GST_MESSAGE_UNKNOWN: an undefined message
- * @GST_MESSAGE_EOS: end-of-stream reached in a pipeline
- * @GST_MESSAGE_ERROR: an error occured
+ * @GST_MESSAGE_EOS: end-of-stream reached in a pipeline. The application will
+ * only receive this message in the PLAYING state and every time it sets a
+ * pipeline to PLAYING that is in the EOS state. The application can perform a
+ * seek in the pipeline to a new position.
+ * @GST_MESSAGE_ERROR: an error occured. Whe the application receives an error
+ * message it should stop playback of the pipeline and not assume that more
+ * data will be played.
  * @GST_MESSAGE_WARNING: a warning occured.
  * @GST_MESSAGE_INFO: an info message occured
  * @GST_MESSAGE_TAG: a tag was found.
- * @GST_MESSAGE_BUFFERING: the pipeline is buffering
+ * @GST_MESSAGE_BUFFERING: the pipeline is buffering. When the application
+ * receives a buffering message in the PLAYING state for a non-live pipeline it
+ * must PAUSE the pipeline until the buffering completes, when the percentage
+ * field in the message is 100%. For live pipelines, no action must be
+ * performed and the buffering percentage can be used to infor the user about
+ * the progress.
  * @GST_MESSAGE_STATE_CHANGED: a state change happened
- * @GST_MESSAGE_STATE_DIRTY: an element changed state in a streaming thread
- * @GST_MESSAGE_STEP_DONE: a framestep finished.
+ * @GST_MESSAGE_STATE_DIRTY: an element changed state in a streaming thread.
+ * This message is deprecated.
+ * @GST_MESSAGE_STEP_DONE: a framestep finished. This message is not yet
+ * implemented.
  * @GST_MESSAGE_CLOCK_PROVIDE: an element notifies its capability of providing
  *                             a clock.
  * @GST_MESSAGE_CLOCK_LOST: The current clock as selected by the pipeline became
  *                          unusable. The pipeline will select a new clock on
  *                          the next PLAYING state change.
- * @GST_MESSAGE_NEW_CLOCK: a new clock was selected in the pipeline
+ * @GST_MESSAGE_NEW_CLOCK: a new clock was selected in the pipeline.
  * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed.
  * @GST_MESSAGE_STREAM_STATUS: status about a stream, emitted when it starts,
  *                             stops, errors, etc..

@@ -1,5 +1,17 @@
 2007-05-21  Wim Taymans  <wim@fluendo.com>
 
+	* docs/design/part-synchronisation.txt:
+	Small addition.
+
+	* gst/gstbin.c: (gst_bin_query):
+	* plugins/elements/gstqueue.c: (apply_segment):
+	Improve debugging.
+
+	* gst/gstmessage.h:
+	Improve docs.
+
+2007-05-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstpad.c: (gst_pad_get_caps_unlocked),
 	(gst_pad_acceptcaps_default), (gst_pad_configure_sink),
 	(gst_pad_configure_src):
