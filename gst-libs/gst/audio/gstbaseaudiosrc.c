@@ -538,6 +538,7 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
   gint bps;
   GstRingBuffer *ringbuffer;
   guint read;
+  GstClockTime timestamp;
 
   ringbuffer = src->ringbuffer;
 
@@ -565,6 +566,8 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
      * create a DISCONT. */
     sample = gst_base_audio_src_get_offset (src);
   }
+
+  GST_DEBUG_OBJECT (src, "reading from sample %" G_GUINT64_FORMAT, sample);
 
   /* get the number of samples to read */
   samples = length / bps;
@@ -605,8 +608,10 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
    * where we are slaved to another clock. We currently refuse to accept
    * any other clock than the one we provide, so this code is fine for
    * now. */
-  GST_BUFFER_TIMESTAMP (buf) = gst_util_uint64_scale_int (sample,
-      GST_SECOND, ringbuffer->spec.rate);
+  timestamp =
+      gst_util_uint64_scale_int (sample, GST_SECOND, ringbuffer->spec.rate);
+
+  GST_BUFFER_TIMESTAMP (buf) = timestamp;
   src->next_sample = sample + samples;
   GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (src->next_sample,
       GST_SECOND, ringbuffer->spec.rate) - GST_BUFFER_TIMESTAMP (buf);

@@ -485,6 +485,8 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
   if (priv->clock_base == -1)
     priv->clock_base = timestamp;
 
+  /* FIXME, timestamp wraparound */
+
   /* rtp timestamps are based on the clock_rate
    * gst timesamps are in nanoseconds */
   ts = gst_util_uint64_scale_int (timestamp, GST_SECOND, filter->clock_rate);

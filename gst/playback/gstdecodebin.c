@@ -1173,6 +1173,7 @@ queue_underrun_cb (GstElement * queue, GstDecodeBin * decode_bin)
    * list) and the overrun signals that are signalled from the
    * demuxer thread.
    */
+  GST_DEBUG_OBJECT (decode_bin, "got underrun");
 }
 
 /* Make sure we don't have a full queue and empty queue situation */

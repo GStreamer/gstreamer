@@ -695,7 +695,7 @@ theora_dec_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&dec->segment, update,
           rate, arate, format, start, stop, time);
 
-      /* iWe don't forward this unless/until the decoder is initialised */
+      /* We don't forward this unless/until the decoder is initialised */
       if (dec->have_header) {
         ret = gst_pad_push_event (dec->srcpad, event);
         dec->sent_newsegment = TRUE;

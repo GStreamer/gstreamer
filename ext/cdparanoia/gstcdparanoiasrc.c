@@ -327,13 +327,9 @@ gst_cd_paranoia_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
 #endif
 
   if (src->next_sector == -1 || src->next_sector != sector) {
-    if (paranoia_seek (src->p, sector, SEEK_SET) == -1) {
-      GST_WARNING_OBJECT (src, "seek to sector %d failed!", sector);
-      GST_ELEMENT_ERROR (src, RESOURCE, SEEK,
-          (_("Could not seek CD.")),
-          ("paranoia_seek to %d failed: %s", sector, g_strerror (errno)));
-      return NULL;
-    }
+    if (paranoia_seek (src->p, sector, SEEK_SET) == -1)
+      goto seek_failed;
+
     GST_DEBUG_OBJECT (src, "successfully seeked to sector %d", sector);
     src->next_sector = sector;
   }
@@ -357,13 +353,8 @@ gst_cd_paranoia_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
     cdda_buf = paranoia_read (src->p, gst_cd_paranoia_dummy_callback);
   }
 
-  if (cdda_buf == NULL) {
-    GST_WARNING_OBJECT (src, "read at sector %d failed!", sector);
-    GST_ELEMENT_ERROR (src, RESOURCE, READ,
-        (_("Could not read CD.")),
-        ("paranoia_read at %d failed: %s", sector, g_strerror (errno)));
-    return NULL;
-  }
+  if (cdda_buf == NULL)
+    goto read_failed;
 
   buf = gst_buffer_new_and_alloc (CD_FRAMESIZE_RAW);
   memcpy (GST_BUFFER_DATA (buf), cdda_buf, CD_FRAMESIZE_RAW);
@@ -372,6 +363,24 @@ gst_cd_paranoia_src_read_sector (GstCddaBaseSrc * cddabasesrc, gint sector)
   ++src->next_sector;
 
   return buf;
+
+  /* ERRORS */
+seek_failed:
+  {
+    GST_WARNING_OBJECT (src, "seek to sector %d failed!", sector);
+    GST_ELEMENT_ERROR (src, RESOURCE, SEEK,
+        (_("Could not seek CD.")),
+        ("paranoia_seek to %d failed: %s", sector, g_strerror (errno)));
+    return NULL;
+  }
+read_failed:
+  {
+    GST_WARNING_OBJECT (src, "read at sector %d failed!", sector);
+    GST_ELEMENT_ERROR (src, RESOURCE, READ,
+        (_("Could not read CD.")),
+        ("paranoia_read at %d failed: %s", sector, g_strerror (errno)));
+    return NULL;
+  }
 }
 
 static void

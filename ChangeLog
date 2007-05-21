@@ -1,5 +1,23 @@
 2007-05-21  Wim Taymans  <wim@fluendo.com>
 
+	* ext/cdparanoia/gstcdparanoiasrc.c:
+	(gst_cd_paranoia_src_read_sector):
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_create):
+	Small cleanups.
+
+	* ext/theora/theoradec.c: (theora_dec_sink_event):
+	Fix typo.
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_set_gst_timestamp):
+	Add some FIXME
+
+	* gst/playback/gstdecodebin.c: (queue_underrun_cb):
+	And some debug info when a FIXME path is hit.
+
+2007-05-21  Wim Taymans  <wim@fluendo.com>
+
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
 	(gst_base_rtp_audio_payload_class_init),
 	(gst_base_rtp_audio_payload_init),
