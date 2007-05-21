@@ -62,7 +62,6 @@ typedef struct _GstTimedValue
  * @values: pointer to the array
  *
  * Structure to receive multiple values at once.
- * If the pointer to the values array is NULL, it will be allocated (CHECKME).
  */
 typedef struct _GstValueArray
 {

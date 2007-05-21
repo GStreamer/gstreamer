@@ -1070,9 +1070,11 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
  * Function to be able to get an array of values for one or more given element
  * properties.
  *
- * If the GstValueArray->values array in list nodes is NULL, it will be created
- * by the function.
- * The type of the values in the array are the same as the property's type.
+ * All fields of the %GstValueArray in the list must be filled correctly.
+ * Especially the GstValueArray->values arrays must be big enough to keep
+ * the requested amount of values.
+ *
+ * The types of the values in the array are the same as the property's type.
  *
  * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
  */
@@ -1100,12 +1102,15 @@ gst_controller_get_value_arrays (GstController * self,
  * @timestamp: the time that should be processed
  * @value_array: array to put control-values in
  *
- * Function to be able to get an array of values for one element properties
+ * Function to be able to get an array of values for one element property.
  *
- * If the GstValueArray->values array is NULL, it will be created by the function.
- * The type of the values in the array are the same as the property's type.
+ * All fields of @value_array must be filled correctly. Especially the
+ * @value_array->values array must be big enough to keep the requested amount
+ * of values.
  *
- * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
+ * The type of the values in the array is the same as the property's type.
+ *
+ * Returns: %TRUE if the given array could be filled, %FALSE otherwise
  */
 gboolean
 gst_controller_get_value_array (GstController * self, GstClockTime timestamp,
@@ -1118,23 +1123,17 @@ gst_controller_get_value_array (GstController * self, GstClockTime timestamp,
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
   g_return_val_if_fail (value_array, FALSE);
   g_return_val_if_fail (value_array->property_name, FALSE);
-
-  /* TODO and if GstValueArray->values is not NULL, the caller is resposible that
-     is is big enough for nbsamples values, right?
-   */
+  g_return_val_if_fail (value_array->values, FALSE);
 
   g_mutex_lock (self->lock);
+
   if ((prop =
           gst_controller_find_controlled_property (self,
               value_array->property_name))) {
-    if (!value_array->values) {
-      /* TODO from where to get the base size
-         value_array->values=g_new(sizeof(???),nbsamples);
-       */
-    }
     /* get current value_array via interpolator */
     res = prop->get_value_array (prop, timestamp, value_array);
   }
+
   g_mutex_unlock (self->lock);
   return (res);
 }
@@ -1147,7 +1146,7 @@ gst_controller_get_value_array (GstController * self, GstClockTime timestamp,
  *
  * Sets the given interpolation mode on the given property.
  *
- * <note><para>Quadratic, qubic and user interpolation is not yet available.
+ * <note><para>Quadratic, cubic and user interpolation is not yet available.
  * </para></note>
  *
  * Returns: %TRUE if the property is handled by the controller, %FALSE otherwise
@@ -1173,28 +1172,6 @@ gst_controller_set_interpolation_mode (GstController * self,
 
   return (res);
 }
-
-/*
-void
-gst_controller_set_live_value(GstController * self, gchar *property_name,
-    GstClockTime timestamp, GValue *value)
-{
-  GstControlledProperty *prop;
-
-  g_return_if_fail (GST_IS_CONTROLLER (self));
-  g_return_if_fail (property_name);
-
-  g_mutex_lock (self->lock);
-  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    g_value_unset (&prop->live_value.value);
-    g_value_init (&prop->live_value.value, prop->type);
-    g_value_copy (value, &prop->live_value.value);
-    prop->live_value.timestamp = timestamp;
-  }
-  g_mutex_unlock (self->lock);
-}
-
-*/
 
 /* gobject handling */
 

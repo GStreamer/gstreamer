@@ -970,6 +970,55 @@ GST_START_TEST (controller_refcount_new_list)
 
 GST_END_TEST;
 
+
+/* test retrieval of an array of values with get_value_array() */
+GST_START_TEST (controller_interpolate_linear_value_array)
+{
+  GstController *ctrl;
+  GstElement *elem;
+  gboolean res;
+  GValue val_ulong = { 0, };
+  GstValueArray values = { 0, };
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* set interpolation mode */
+  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_LINEAR);
+
+  /* set control values */
+  g_value_init (&val_ulong, G_TYPE_ULONG);
+  g_value_set_ulong (&val_ulong, 0);
+  res = gst_controller_set (ctrl, "ulong", 0 * GST_SECOND, &val_ulong);
+  fail_unless (res, NULL);
+  g_value_set_ulong (&val_ulong, 100);
+  res = gst_controller_set (ctrl, "ulong", 2 * GST_SECOND, &val_ulong);
+  fail_unless (res, NULL);
+
+  /* now pull in values for some timestamps */
+  values.property_name = "ulong";
+  values.nbsamples = 3;
+  values.sample_interval = GST_SECOND;
+  values.values = (gpointer) g_new (gulong, 3);
+
+  fail_unless (gst_controller_get_value_array (ctrl, 0, &values));
+  fail_unless_equals_int (((gulong *) values.values)[0], 0);
+  fail_unless_equals_int (((gulong *) values.values)[1], 50);
+  fail_unless_equals_int (((gulong *) values.values)[2], 100);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_free (values.values);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_controller_suite (void)
 {
@@ -998,6 +1047,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_live);
   tcase_add_test (tc, controller_helper_any_gobject);
   tcase_add_test (tc, controller_misc);
+  tcase_add_test (tc, controller_interpolate_linear_value_array);
 
   return s;
 }

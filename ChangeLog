@@ -1,3 +1,18 @@
+2007-05-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controller_get_value_array):
+	* libs/gst/controller/gstcontroller.h:
+	Clarify the docs of gst_controller_get_value_array(): The array where
+	the values should be written to must be allocated as there seems to be
+	no way to get the size of a random GType. This doesn't change any
+	behaviour. Also fix some typos all over the place and remove an unused,
+	commented function that is not necessary as g_object_set() could be
+	used instead.
+	* tests/check/libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+	Add unit test for gst_controller_get_value_array().
+
 2007-05-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/gst/gstbuffer.c: (GST_START_TEST):
