@@ -1,3 +1,9 @@
+2007-05-22  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	Specify the full valid range for MP3 samplerates. Fixes a regression
+	caused by extra header checks since the last release.
+
 2007-05-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents):

@@ -970,7 +970,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
       break;
 
     case GST_RIFF_WAVE_FORMAT_MPEGL3:  /* mp3 */
-      rate_min = 16000;
+      rate_min = 8000;
       rate_max = 48000;
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3, NULL);
