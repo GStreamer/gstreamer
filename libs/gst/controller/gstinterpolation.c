@@ -316,7 +316,7 @@ interpolate_linear_get_##type##_value_array (GstControlledProperty * prop, \
 { \
   gint i; \
   GstClockTime ts = timestamp; \
-  gint *values = (gint *) value_array->values; \
+  g##type *values = (g##type *) value_array->values; \
   \
   for(i = 0; i < value_array->nbsamples; i++) { \
     *values = _interpolate_linear_get_##type (prop, ts); \

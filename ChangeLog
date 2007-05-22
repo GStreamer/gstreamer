@@ -1,3 +1,9 @@
+2007-05-22  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* libs/gst/controller/gstinterpolation.c:
+	Use an array of the correct type when using _get_value_array with
+	linear interpolation.
+
 2007-05-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstelement.c (gst_element_requires_clock,
