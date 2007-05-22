@@ -1,5 +1,19 @@
 2007-05-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* plugins/elements/gstelements.c:
+	* plugins/elements/gstfilesink.c: (gst_file_sink_do_seek),
+	(gst_file_sink_get_current_offset):
+	* plugins/indexers/gstindexers.c: (plugin_init):
+	  Use #ifdef for HAVE_XYZ for consistency.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/filesink.c: (setup_filesink),
+	(cleanup_filesink), (GST_START_TEST), (filesink_suite):
+	  Add some unit tests for filesink.
+
+2007-05-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Mark Nauwelaerts <manauw at skynet be>
 
 	* plugins/elements/gstfilesink.c: (gst_file_sink_open_file),

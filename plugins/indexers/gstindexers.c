@@ -33,7 +33,7 @@ plugin_init (GstPlugin * plugin)
   gboolean res = TRUE;
 
   res &= gst_mem_index_plugin_init (plugin);
-#if HAVE_MMAP && !GST_DISABLE_LOADSAVE
+#if defined(HAVE_MMAP) && !defined(GST_DISABLE_LOADSAVE)
   res &= gst_file_index_plugin_init (plugin);
 #endif
 

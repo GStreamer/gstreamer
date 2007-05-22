@@ -58,6 +58,7 @@ REGISTRY_CHECKS =				\
 	elements/fakesink			\
 	elements/fakesrc			\
 	elements/fdsrc			  	\
+	elements/filesink			\
 	elements/filesrc			\
 	elements/identity			\
 	elements/multiqueue			\

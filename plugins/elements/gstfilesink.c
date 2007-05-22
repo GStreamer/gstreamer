@@ -319,9 +319,9 @@ gst_file_sink_query (GstPad * pad, GstQuery * query)
   }
 }
 
-#if HAVE_FSEEKO
+#ifdef HAVE_FSEEKO
 # define __GST_STDIO_SEEK_FUNCTION "fseeko"
-#elif G_OS_UNIX
+#elif defined (G_OS_UNIX)
 # define __GST_STDIO_SEEK_FUNCTION "lseek"
 #else
 # define __GST_STDIO_SEEK_FUNCTION "fseek"
@@ -336,10 +336,10 @@ gst_file_sink_do_seek (GstFileSink * filesink, guint64 new_offset)
   if (fflush (filesink->file))
     goto flush_failed;
 
-#if HAVE_FSEEKO
+#ifdef HAVE_FSEEKO
   if (fseeko (filesink->file, (off_t) new_offset, SEEK_SET) != 0)
     goto seek_failed;
-#elif G_OS_UNIX
+#elif defined (G_OS_UNIX)
   if (lseek (fileno (filesink->file), (off_t) new_offset,
           SEEK_SET) == (off_t) - 1)
     goto seek_failed;
@@ -432,9 +432,9 @@ gst_file_sink_get_current_offset (GstFileSink * filesink, guint64 * p_pos)
 {
   off_t ret;
 
-#if HAVE_FTELLO
+#ifdef HAVE_FTELLO
   ret = ftello (filesink->file);
-#elif G_OS_UNIX
+#elif defined (G_OS_UNIX)
   if (fflush (filesink->file)) {
     GST_DEBUG_OBJECT (filesink, "Flush failed: %s", g_strerror (errno));
     /* ignore and continue */

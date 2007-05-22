@@ -2,6 +2,7 @@
 fakesrc
 fakesink
 fdsrc
+filesink
 filesrc
 identity
 multiqueue
