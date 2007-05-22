@@ -65,7 +65,7 @@ struct _GstGnomeVFSSink
   /* whether we opened the handle ourselves */
   gboolean own_handle;
 
-  guint64  data_written;
+  guint64  current_pos;
 };
 
 struct _GstGnomeVFSSinkClass

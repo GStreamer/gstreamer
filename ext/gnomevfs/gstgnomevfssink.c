@@ -3,7 +3,7 @@
  *                    2000 Wim Taymans <wtay@chello.be>
  *                    2001 Bastien Nocera <hadess@hadess.net>
  *                    2003 Colin Walters <walters@verbum.org>
- *                    2005 Tim-Philipp M??ller <tim centricular net>
+ *                    2005 Tim-Philipp Müller <tim centricular net>
  *
  * gstgnomevfssink.c: 
  *
@@ -242,7 +242,7 @@ gst_gnome_vfs_sink_init (GstGnomeVFSSink * sink, GstGnomeVFSSinkClass * klass)
   sink->uri_name = NULL;
   sink->handle = NULL;
   sink->own_handle = FALSE;
-  sink->data_written = 0;
+  sink->current_pos = 0;
 
   GST_BASE_SINK (sink)->sync = FALSE;
 }
@@ -398,7 +398,7 @@ gst_gnome_vfs_sink_open_file (GstGnomeVFSSink * sink)
     sink->own_handle = FALSE;
   }
 
-  sink->data_written = 0;
+  sink->current_pos = 0;
 
   return TRUE;
 }
@@ -474,6 +474,8 @@ gst_gnome_vfs_sink_handle_event (GstBaseSink * basesink, GstEvent * event)
       if (res != GNOME_VFS_OK) {
         GST_ERROR_OBJECT (sink, "Failed to seek to offset %"
             G_GINT64_FORMAT ": %s", offset, gnome_vfs_result_to_string (res));
+      } else {
+        sink->current_pos = offset;
       }
 
       break;
@@ -505,7 +507,7 @@ gst_gnome_vfs_sink_query (GstPad * pad, GstQuery * query)
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          gst_query_set_position (query, GST_FORMAT_BYTES, sink->data_written);
+          gst_query_set_position (query, GST_FORMAT_BYTES, sink->current_pos);
           return TRUE;
         default:
           return FALSE;
@@ -527,13 +529,12 @@ gst_gnome_vfs_sink_render (GstBaseSink * basesink, GstBuffer * buf)
   GstGnomeVFSSink *sink;
   GnomeVFSResult result;
   GstFlowReturn ret;
-  guint64 back_pending = 0;
 
   sink = GST_GNOME_VFS_SINK (basesink);
 
   if (gnome_vfs_tell (sink->handle, &cur_pos) == GNOME_VFS_OK) {
-    if (cur_pos < sink->data_written)
-      back_pending = sink->data_written - cur_pos;
+    /* bring up to date with current position for proper reporting */
+    sink->current_pos = cur_pos;
   }
 
   result = gnome_vfs_write (sink->handle, GST_BUFFER_DATA (buf),
@@ -551,7 +552,7 @@ gst_gnome_vfs_sink_render (GstBaseSink * basesink, GstBuffer * buf)
             GST_BUFFER_SIZE (buf), written);
       }
 
-      sink->data_written += GST_BUFFER_SIZE (buf) - back_pending;
+      sink->current_pos += GST_BUFFER_SIZE (buf);
       ret = GST_FLOW_OK;
       break;
     }

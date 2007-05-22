@@ -1,5 +1,16 @@
 2007-05-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
+	* ext/gnomevfs/gstgnomevfssink.c: (gst_gnome_vfs_sink_init),
+	(gst_gnome_vfs_sink_open_file), (gst_gnome_vfs_sink_handle_event),
+	(gst_gnome_vfs_sink_query), (gst_gnome_vfs_sink_render):
+	* ext/gnomevfs/gstgnomevfssink.h:
+	  Fix position reporting, especially after a seek (from upstream),
+	  see #412648.
+
+2007-05-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/cdparanoia/gstcdparanoiasrc.c:
 	  Repair umlaut.
 
