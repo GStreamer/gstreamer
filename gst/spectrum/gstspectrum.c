@@ -98,6 +98,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
 #define DEFAULT_BANDS			128
 #define DEFAULT_THRESHOLD		-60
 
+#define SPECTRUM_WINDOW_BASE 9
+#define SPECTRUM_WINDOW_LEN (1 << (SPECTRUM_WINDOW_BASE+1))
+
 enum
 {
   PROP_0,
@@ -191,12 +194,10 @@ gst_spectrum_init (GstSpectrum * spectrum, GstSpectrumClass * g_class)
   spectrum->interval = DEFAULT_SIGNAL_INTERVAL;
   spectrum->bands = DEFAULT_BANDS;
   spectrum->threshold = DEFAULT_THRESHOLD;
-  spectrum->base = 9;
-  spectrum->len = 1024;         /* 2 ^ (base+1) */
 
-  spectrum->loud = g_malloc (spectrum->len * sizeof (gint16));
-  spectrum->im = g_malloc0 (spectrum->len * sizeof (gint16));
-  spectrum->re = g_malloc0 (spectrum->len * sizeof (gint16));
+  spectrum->loud = g_malloc (SPECTRUM_WINDOW_LEN * sizeof (gint16));
+  spectrum->im = g_malloc0 (SPECTRUM_WINDOW_LEN * sizeof (gint16));
+  spectrum->re = g_malloc0 (SPECTRUM_WINDOW_LEN * sizeof (gint16));
   spectrum->spect = g_malloc (spectrum->bands * sizeof (guchar));
 }
 
@@ -237,11 +238,11 @@ gst_spectrum_set_property (GObject * object, guint prop_id,
       filter->interval = g_value_get_uint64 (value);
       break;
     case PROP_BANDS:
-      GST_OBJECT_LOCK (filter);
+      GST_BASE_TRANSFORM_LOCK (filter);
       filter->bands = g_value_get_uint (value);
       g_free (filter->spect);
       filter->spect = g_malloc (filter->bands * sizeof (guchar));
-      GST_OBJECT_UNLOCK (filter);
+      GST_BASE_TRANSFORM_UNLOCK (filter);
       GST_DEBUG_OBJECT (filter, "reallocation, spect = %p, bands =%d ",
           filter->spect, filter->bands);
       break;
@@ -391,15 +392,15 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       gst_segment_to_running_time (&spectrum->segment, GST_FORMAT_TIME,
       GST_BUFFER_TIMESTAMP (in));
   GstClockTime blktime =
-      GST_FRAMES_TO_CLOCK_TIME (spectrum->len, spectrum->rate);
+      GST_FRAMES_TO_CLOCK_TIME (SPECTRUM_WINDOW_LEN, spectrum->rate);
 
   GST_LOG_OBJECT (spectrum, "input size: %d bytes", GST_BUFFER_SIZE (in));
 
   gst_adapter_push (spectrum->adapter, gst_buffer_ref (in));
   /* required number of bytes */
-  wanted = spectrum->channels * spectrum->len * sizeof (gint16);
+  wanted = spectrum->channels * SPECTRUM_WINDOW_LEN * sizeof (gint16);
   /* FIXME: 4.0 was 2.0 before, but that include the mirrored spectrum */
-  step = (gfloat) spectrum->len / (spectrum->bands * 4.0);
+  step = (gfloat) SPECTRUM_WINDOW_LEN / (spectrum->bands * 4.0);
 
   while (gst_adapter_available (spectrum->adapter) >= wanted) {
     const gint16 *samples;
@@ -408,17 +409,18 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
     /* the current fft code is gint16 based, so supporting other formats would
      * not really benefit now */
-    for (i = 0, j = 0; i < spectrum->len; i++) {
+    for (i = 0, j = 0; i < SPECTRUM_WINDOW_LEN; i++) {
       /* convert to mono */
       for (k = 0, acc = 0; k < spectrum->channels; k++)
         acc += samples[j++];
       spectrum->re[i] = (gint16) (acc / spectrum->channels);
     }
 
-    gst_spectrum_window (spectrum->re, spectrum->len);
-    gst_spectrum_fix_fft (spectrum->re, spectrum->im, spectrum->base, FALSE);
+    gst_spectrum_window (spectrum->re, SPECTRUM_WINDOW_LEN);
+    gst_spectrum_fix_fft (spectrum->re, spectrum->im, SPECTRUM_WINDOW_BASE,
+        FALSE);
     gst_spectrum_fix_loud (spectrum->loud, spectrum->re, spectrum->im,
-        spectrum->len, 0);
+        SPECTRUM_WINDOW_LEN, 0);
 
     /* resample to requested number of bands */
     for (i = 0, pos = 0.0; i < spectrum->bands; i++, pos += step) {
@@ -433,7 +435,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
         spect[i] = 0;
     }
 
-    spectrum->num_frames += spectrum->len;
+    spectrum->num_frames += SPECTRUM_WINDOW_LEN;
     endtime += blktime;
     /* do we need to message ? */
     if (spectrum->num_frames >=
