@@ -1,3 +1,32 @@
+2007-05-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Depend on gstreamer-0.10.12.1.
+	
+	* gst/equalizer/gstiirequalizer.c (ARG_BAND_WIDTH, _do_init, ARG_GAIN,
+	  _GstIirEqualizerBand, object, _GstIirEqualizerBandClass,
+	  parent_class, gst_iir_equalizer_band_set_property,
+	  gst_iir_equalizer_band_class_init, gst_iir_equalizer_band_get_type,
+	  gst_iir_equalizer_child_proxy_get_child_by_index,
+	  gst_iir_equalizer_child_proxy_get_children_count,
+	  gst_iir_equalizer_child_proxy_interface_init, setup_filter,
+	  gst_iir_equalizer_compute_frequencies,
+	  gst_iir_equalizer_set_property, gst_iir_equalizer_get_property,
+	  plugin_init):
+	* gst/equalizer/gstiirequalizer.h (audiofilter):
+	* gst/equalizer/gstiirequalizernbands.c (ARG_NUM_BANDS,
+	  gst_iir_equalizer_nbands_base_init, gst_iir_equalizer_nbands_init,
+	  gst_iir_equalizer_nbands_set_property):
+	  Use new locking macros.
+
+	* gst/filter/gstbpwsinc.c (bpwsinc_set_caps):
+	  Add fixme.
+
+	* gst/spectrum/gstspectrum.c (SPECTRUM_WINDOW_BASE,
+	  SPECTRUM_WINDOW_LEN, gst_spectrum_init, gst_spectrum_set_property,
+	  gst_spectrum_event, gst_spectrum_transform_ip):
+	  Use new locking macros. Turn two fixed values into #defines.
+
 2007-05-22  Edward Hervey  <edward@fluendo.com>
 
 	* docs/plugins/Makefile.am:

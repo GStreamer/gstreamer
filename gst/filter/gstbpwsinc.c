@@ -181,7 +181,9 @@ bpwsinc_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
       "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
   len = this->wing_size;
-  /* fill the lp kernel */
+  /* fill the lp kernel
+   * FIXME: refactor to own function, this is not caps related
+   */
   GST_DEBUG ("bpwsinc: initializing LP kernel of length %d with cut-off %f",
       len * 2 + 1, this->lower_frequency);
   kernel_lp = (double *) g_malloc (sizeof (double) * (2 * len + 1));

@@ -433,7 +433,8 @@ gst_iir_equalizer_set_property (GObject * object, guint prop_id,
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
 
-  GST_EQUALIZER_TRANSFORM_LOCK (equ);
+  g_mutex_lock (((GstBaseTransform *) (equ))->transform_lock);
+  //GST_BASE_TRANSFORM_LOCK (equ);
   GST_OBJECT_LOCK (equ);
   switch (prop_id) {
     case ARG_BAND_WIDTH:
@@ -453,7 +454,7 @@ gst_iir_equalizer_set_property (GObject * object, guint prop_id,
       break;
   }
   GST_OBJECT_UNLOCK (equ);
-  GST_EQUALIZER_TRANSFORM_UNLOCK (equ);
+  GST_BASE_TRANSFORM_UNLOCK (equ);
 }
 
 static void
@@ -462,7 +463,7 @@ gst_iir_equalizer_get_property (GObject * object, guint prop_id,
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
 
-  GST_EQUALIZER_TRANSFORM_LOCK (equ);
+  GST_BASE_TRANSFORM_LOCK (equ);
   GST_OBJECT_LOCK (equ);
   switch (prop_id) {
     case ARG_BAND_WIDTH:
@@ -473,7 +474,7 @@ gst_iir_equalizer_get_property (GObject * object, guint prop_id,
       break;
   }
   GST_OBJECT_UNLOCK (equ);
-  GST_EQUALIZER_TRANSFORM_UNLOCK (equ);
+  GST_BASE_TRANSFORM_UNLOCK (equ);
 }
 
 /* start of code that is type specific */

@@ -25,14 +25,6 @@
 #include <gst/audio/gstringbuffer.h>
 #include <gst/controller/gstcontroller.h>
 
-
-#define GST_EQUALIZER_TRANSFORM_LOCK(eq) \
-    g_mutex_lock (GST_BASE_TRANSFORM(eq)->transform_lock)
-
-#define GST_EQUALIZER_TRANSFORM_UNLOCK(eq) \
-    g_mutex_unlock (GST_BASE_TRANSFORM(eq)->transform_lock)
-
-
 typedef struct _GstIirEqualizer GstIirEqualizer;
 typedef struct _GstIirEqualizerClass GstIirEqualizerClass;
 typedef struct _GstIirEqualizerBand GstIirEqualizerBand;
@@ -59,7 +51,7 @@ struct _GstIirEqualizer
   GstAudioFilter audiofilter;
 
   /*< private >*/
-  
+
   GstIirEqualizerBand **bands;
 
   /* properties */

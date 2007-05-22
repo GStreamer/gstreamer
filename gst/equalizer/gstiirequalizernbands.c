@@ -103,7 +103,7 @@ gst_iir_equalizer_nbands_set_property (GObject * object, guint prop_id,
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
 
-  GST_EQUALIZER_TRANSFORM_LOCK (equ);
+  GST_BASE_TRANSFORM_LOCK (equ);
   GST_OBJECT_LOCK (equ);
   switch (prop_id) {
     case ARG_NUM_BANDS:
@@ -114,7 +114,7 @@ gst_iir_equalizer_nbands_set_property (GObject * object, guint prop_id,
       break;
   }
   GST_OBJECT_UNLOCK (equ);
-  GST_EQUALIZER_TRANSFORM_UNLOCK (equ);
+  GST_BASE_TRANSFORM_UNLOCK (equ);
 }
 
 static void
