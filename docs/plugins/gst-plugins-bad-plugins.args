@@ -17104,3 +17104,23 @@
 <BLURB>The attenuation for the directsound buffer (default is 0 so the directsound buffer will not be attenuated).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
+
+<ARG>
+<NAME>GstOSXVideoSink::embed</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>embed</NICK>
+<BLURB>When enabled, it can be embedded.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOSXVideoSink::fullscreen</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>fullscreen</NICK>
+<BLURB>When enabled, the view is fullscreen.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>

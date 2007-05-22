@@ -23,6 +23,29 @@
  * 
  */
 
+/**
+ * SECTION:element-osxvideosink
+ *
+ * <refsect2>
+ * <para>
+ * The OSXVideoSink renders video frames to a MacOSX window. The video output
+ * can be directed to a window embedded in an existing NSApp. This can be done
+ * by setting the "embed" property to #TRUE. When the NSView to be embedded is
+ * created an element #GstMessage with a name of 'have-ns-view' will be created
+ * and posted on the bus. The pointer to the NSView to embed will be in the
+ * 'nsview' field of that message. If no embedding is requested, the plugin will
+ * create a standalone window.
+ * </para>
+ * <title>Examples</title>
+ * <para>
+ * Simple timeline to test the sink :
+ * <programlisting>
+ * gst-launch-0.10 -v videotestsrc ! osxvideosink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #include "config.h"
 
 /* Object header */
@@ -560,9 +583,23 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
   gstbasesink_class->render = gst_osx_video_sink_show_frame;
   gstelement_class->change_state = gst_osx_video_sink_change_state;
 
+  /**
+   * GstOSXVideoSink:embed
+   *
+   * Set to #TRUE if you are embedding the video window in an application.
+   *
+   **/
+
   g_object_class_install_property (gobject_class, ARG_EMBED,
       g_param_spec_boolean ("embed", "embed", "When enabled, it  "
           "can be embedded", FALSE, G_PARAM_READWRITE));
+
+  /**
+   * GstOSXVideoSink:fullscreen
+   *
+   * Set to #TRUE to have the video displayed in fullscreen.
+   **/
+
   g_object_class_install_property (gobject_class, ARG_FULLSCREEN,
       g_param_spec_boolean ("fullscreen", "fullscreen",
           "When enabled, the view  " "is fullscreen", FALSE,

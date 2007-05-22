@@ -1,3 +1,12 @@
+2007-05-22  Edward Hervey  <edward@fluendo.com>
+
+	* docs/plugins/Makefile.am:
+	Also look for .m (objectivec) files.
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* sys/osxvideo/osxvideosink.m:
+	Add documentation for element and properties.
+
 2007-05-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* ChangeLog:
