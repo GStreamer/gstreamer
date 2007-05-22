@@ -8,6 +8,7 @@ audiotestsrc
 decodebin
 gdpdepay
 gdppay
+gnomevfssink
 multifdsink
 videorate
 videotestsrc

@@ -31,6 +31,12 @@ else
 check_alsa =
 endif
 
+if USE_GNOME_VFS
+check_gnomevfs = elements/gnomevfssink
+else
+check_gnomevfs = 
+endif
+
 if USE_OGG
 check_ogg = pipelines/oggmux
 else
@@ -58,6 +64,7 @@ endif
 
 check_PROGRAMS = \
 	$(check_alsa) \
+	$(check_gnomevfs) \
 	$(check_ogg) \
 	$(check_pango) \
 	$(check_vorbis) \
