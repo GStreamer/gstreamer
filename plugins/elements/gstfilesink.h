@@ -57,7 +57,7 @@ struct _GstFileSink {
   FILE *file;
 
   gboolean seekable;
-  guint64 data_written;
+  guint64 current_pos;
 };
 
 struct _GstFileSinkClass {

@@ -83,6 +83,8 @@ static GstFlowReturn gst_file_sink_render (GstBaseSink * sink,
 
 static gboolean gst_file_sink_do_seek (GstFileSink * filesink,
     guint64 new_offset);
+static gboolean gst_file_sink_get_current_offset (GstFileSink * filesink,
+    guint64 * p_pos);
 
 static gboolean gst_file_sink_query (GstPad * pad, GstQuery * query);
 
@@ -242,7 +244,7 @@ gst_file_sink_open_file (GstFileSink * sink)
   if (sink->file == NULL)
     goto open_failed;
 
-  sink->data_written = 0;
+  sink->current_pos = 0;
   /* try to seek in the file to figure out if it is seekable */
   sink->seekable = gst_file_sink_do_seek (sink, 0);
 
@@ -302,7 +304,7 @@ gst_file_sink_query (GstPad * pad, GstQuery * query)
       switch (format) {
         case GST_FORMAT_DEFAULT:
         case GST_FORMAT_BYTES:
-          gst_query_set_position (query, GST_FORMAT_BYTES, self->data_written);
+          gst_query_set_position (query, GST_FORMAT_BYTES, self->current_pos);
           return TRUE;
         default:
           return FALSE;
@@ -345,6 +347,10 @@ gst_file_sink_do_seek (GstFileSink * filesink, guint64 new_offset)
   if (fseek (filesink->file, (long) new_offset, SEEK_SET) != 0)
     goto seek_failed;
 #endif
+
+  /* adjust position reporting after seek;
+   * presumably this should basically yield new_offset */
+  gst_file_sink_get_current_offset (filesink, &filesink->current_pos);
 
   return TRUE;
 
@@ -438,7 +444,8 @@ gst_file_sink_get_current_offset (GstFileSink * filesink, guint64 * p_pos)
   ret = (off_t) ftell (filesink->file);
 #endif
 
-  *p_pos = (guint64) ret;
+  if (ret != (off_t) - 1)
+    *p_pos = (guint64) ret;
 
   return (ret != (off_t) - 1);
 }
@@ -447,32 +454,20 @@ static GstFlowReturn
 gst_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
   GstFileSink *filesink;
-  guint64 cur_pos;
   guint size;
-  guint64 back_pending = 0;
 
   size = GST_BUFFER_SIZE (buffer);
 
   filesink = GST_FILE_SINK (sink);
 
-  if (filesink->seekable) {
-    if (!gst_file_sink_get_current_offset (filesink, &cur_pos))
-      goto handle_error;
-  } else {
-    cur_pos = filesink->data_written;
-  }
-
-  if (cur_pos < filesink->data_written)
-    back_pending = filesink->data_written - cur_pos;
-
   GST_DEBUG_OBJECT (filesink, "writing %u bytes at %" G_GUINT64_FORMAT,
-      size, cur_pos);
+      size, filesink->current_pos);
 
   if (size > 0 && GST_BUFFER_DATA (buffer) != NULL) {
     if (fwrite (GST_BUFFER_DATA (buffer), size, 1, filesink->file) != 1)
       goto handle_error;
 
-    filesink->data_written += size - back_pending;
+    filesink->current_pos += size;
   }
 
   return GST_FLOW_OK;

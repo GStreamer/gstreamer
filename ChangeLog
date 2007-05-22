@@ -1,3 +1,14 @@
+2007-05-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
+	* plugins/elements/gstfilesink.c: (gst_file_sink_open_file),
+	(gst_file_sink_query), (gst_file_sink_do_seek),
+	(gst_file_sink_get_current_offset), (gst_file_sink_render):
+	* plugins/elements/gstfilesink.h:
+	  Fix position reporting; rename data_written member to current_pos to
+	  reflect its real meaning (fixes #412648).
+
 2007-05-22  Edward Hervey  <edward@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:
