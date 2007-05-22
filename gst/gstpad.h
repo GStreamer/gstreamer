@@ -92,9 +92,10 @@ typedef enum {
 /**
  * GstFlowReturn:
  * @GST_FLOW_CUSTOM_SUCCESS:	 Elements can use values starting from
- *                               this to define custom success codes. 
+ *                               this to define custom success codes.
  *                               Since 0.10.7.
- * @GST_FLOW_RESEND:		 Resend buffer, possibly with new caps.
+ * @GST_FLOW_RESEND:		 Resend buffer, possibly with new caps (not
+ *                                 send yet).
  * @GST_FLOW_OK:		 Data passing was ok.
  * @GST_FLOW_NOT_LINKED:	 Pad is not linked.
  * @GST_FLOW_WRONG_STATE:	 Pad is in wrong state.
@@ -107,16 +108,16 @@ typedef enum {
  * @GST_FLOW_CUSTOM_ERROR:	 Elements can use values starting from
  *                               this to define custom error codes. Since 0.10.7.
  *
- * The result of passing data to a pad. 
+ * The result of passing data to a pad.
  *
- * Note that the custom return values should not be exposed outside of the 
+ * Note that the custom return values should not be exposed outside of the
  * element scope and are available since 0.10.7.
  */
 typedef enum {
-  /* custom success starts here */ 
+  /* custom success starts here */
   GST_FLOW_CUSTOM_SUCCESS = 100,
 
-  /* core predefined */ 
+  /* core predefined */
   GST_FLOW_RESEND	  =  1,
   GST_FLOW_OK		  =  0,
   /* expected failures */
@@ -128,7 +129,7 @@ typedef enum {
   GST_FLOW_ERROR	  = -5,
   GST_FLOW_NOT_SUPPORTED  = -6,
 
-  /* custom error starts here */ 
+  /* custom error starts here */
   GST_FLOW_CUSTOM_ERROR   = -100
 } GstFlowReturn;
 
@@ -146,7 +147,7 @@ typedef enum {
  * GST_FLOW_IS_SUCCESS:
  * @ret: a #GstFlowReturn value
  *
- * Macro to test if the given #GstFlowReturn value indicates a 
+ * Macro to test if the given #GstFlowReturn value indicates a
  * successfull result
  * This macro is mainly used in elements to decide if the processing
  * of a buffer was successfull.
@@ -201,7 +202,7 @@ typedef gboolean		(*GstPadActivateFunction)	(GstPad *pad);
  * @pad: a #GstPad
  * @active: activate or deactivate the pad.
  *
- * The prototype of the push and pull activate functions. 
+ * The prototype of the push and pull activate functions.
  *
  * Returns: TRUE if the pad could be activated or deactivated.
  */
@@ -215,7 +216,7 @@ typedef gboolean		(*GstPadActivateModeFunction)	(GstPad *pad, gboolean active);
  * @buffer: the #GstBuffer that is chained, not %NULL.
  *
  * A function that will be called on sinkpads when chaining buffers.
- * The function typically processes the data contained in the buffer and 
+ * The function typically processes the data contained in the buffer and
  * either consumes the data or passes it on to the internally linked pad(s).
  *
  * The implementer of this function receives a refcount to @buffer and should
@@ -236,17 +237,17 @@ typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
  *
  * This function will be called on source pads when a peer element
  * request a buffer at the specified @offset and @length. If this function
- * returns #GST_FLOW_OK, the result buffer will be stored in @buffer. The 
+ * returns #GST_FLOW_OK, the result buffer will be stored in @buffer. The
  * contents of @buffer is invalid for any other return value.
  *
  * This function is installed on a source pad with
- * gst_pad_set_getrange_function() and can only be called on source pads after 
+ * gst_pad_set_getrange_function() and can only be called on source pads after
  * they are successfully activated with gst_pad_activate_pull().
  *
  * @offset and @length are always given in byte units. @offset must normally be a value
  * between 0 and the length in bytes of the data available on @pad. The
  * length (duration in bytes) can be retrieved with a #GST_QUERY_DURATION or with a
- * #GST_QUERY_SEEKING. 
+ * #GST_QUERY_SEEKING.
  *
  * Any @offset larger or equal than the length will make the function return
  * #GST_FLOW_UNEXPECTED, which corresponds to EOS. In this case @buffer does not
@@ -255,12 +256,12 @@ typedef GstFlowReturn		(*GstPadChainFunction)		(GstPad *pad, GstBuffer *buffer);
  * The buffer size of @buffer might be smaller than @length when @offset is near
  * the end of the stream.
  *
- * It is allowed to call this function with a 0 @length and valid @offset, in 
+ * It is allowed to call this function with a 0 @length and valid @offset, in
  * which case @buffer will contain a 0-sized buffer and the function returns
  * #GST_FLOW_OK.
  *
  * When this function is called with a -1 @offset, the sequentially next buffer
- * of length @length in the stream is returned. 
+ * of length @length in the stream is returned.
  *
  * When this function is called with a -1 @length, a buffer with a default
  * optimal length is returned in @buffer. The length might depend on the value
@@ -373,7 +374,7 @@ typedef GstCaps*		(*GstPadGetCapsFunction)	(GstPad *pad);
  * @caps: the #GstCaps to set
  *
  * Set @caps on @pad. By default this function updates the caps of the
- * pad but the function can be overriden by elements to perform extra 
+ * pad but the function can be overriden by elements to perform extra
  * actions or verifications.
  *
  * Returns: TRUE if the caps could be set on the pad.
@@ -393,10 +394,10 @@ typedef gboolean		(*GstPadSetCapsFunction)	(GstPad *pad, GstCaps *caps);
 typedef gboolean		(*GstPadAcceptCapsFunction)	(GstPad *pad, GstCaps *caps);
 /**
  * GstPadFixateCapsFunction:
- * @pad: a #GstPad  
+ * @pad: a #GstPad
  * @caps: the #GstCaps to fixate
  *
- * Given possibly unfixed caps @caps, let @pad use its default prefered 
+ * Given possibly unfixed caps @caps, let @pad use its default prefered
  * format to make a fixed caps. @caps should be writable. By default this
  * function will pick the first value of any ranges or lists in the caps but
  * elements can override this function to perform other behaviour.
@@ -404,7 +405,7 @@ typedef gboolean		(*GstPadAcceptCapsFunction)	(GstPad *pad, GstCaps *caps);
 typedef void			(*GstPadFixateCapsFunction)	(GstPad *pad, GstCaps *caps);
 /**
  * GstPadBufferAllocFunction:
- * @pad: a sink #GstPad  
+ * @pad: a sink #GstPad
  * @offset: the desired offset of the buffer
  * @size: the desired size of the buffer
  * @caps: the desired caps of the buffer
@@ -534,7 +535,7 @@ typedef struct _GstPadTemplate GstPadTemplate;
  * @bufferallocfunc: function to allocate a buffer for this pad
  * @do_buffer_signals: counter counting installed buffer signals
  * @do_event_signals: counter counting installed event signals
- * 
+ *
  * The #GstPad structure. Use the functions to update the variables.
  */
 struct _GstPad {

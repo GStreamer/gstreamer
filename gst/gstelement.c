@@ -25,7 +25,7 @@
  * @short_description: Abstract base class for all pipeline elements
  * @see_also: #GstElementFactory, #GstPad
  *
- * GstElement is the abstract base class needed to construct an element that 
+ * GstElement is the abstract base class needed to construct an element that
  * can be used in a GStreamer pipeline. Please refer to the plugin writers
  * guide for more information on creating #GstElement subclasses.
  *
@@ -349,7 +349,7 @@ gst_element_requires_clock (GstElement * element)
  * @element: a #GstElement to query
  *
  * Query if the element provides a clock. A #GstClock provided by an
- * element can be used as the global #GstClock for the pipeline. 
+ * element can be used as the global #GstClock for the pipeline.
  * An element that can provide a clock is only required to do so in the PAUSED
  * state, this means when it is fully negotiated and has allocated the resources
  * to operate the clock.
@@ -374,7 +374,7 @@ gst_element_provides_clock (GstElement * element)
  * gst_element_provide_clock:
  * @element: a #GstElement to query
  *
- * Get the clock provided by the given element. 
+ * Get the clock provided by the given element.
  * <note>An element is only required to provide a clock in the PAUSED
  * state. Some elements can provide a clock in other states.</note>
  *
@@ -902,7 +902,7 @@ gst_element_request_pad (GstElement * element, GstPadTemplate * templ,
  * @name: the name of the request #GstPad to retrieve.
  *
  * Retrieves a pad from the element by name. This version only retrieves
- * request pads. The pad should be released with 
+ * request pads. The pad should be released with
  * gst_element_release_request_pad().
  *
  * Returns: requested #GstPad if found, otherwise %NULL. Release after usage.
@@ -1301,7 +1301,7 @@ gst_element_default_send_event (GstElement * element, GstEvent * event)
  *
  * Sends an event to an element. If the element doesn't implement an
  * event handler, the event will be pushed on a random linked sink pad for
- * upstream events or a random linked source pad for downstream events. 
+ * upstream events or a random linked source pad for downstream events.
  *
  * This function takes owership of the provided event so you should
  * gst_event_ref() it if you want to reuse the event after this call.
@@ -2003,25 +2003,25 @@ nothing_aborted:
 }
 
 /**
- * gst_element_continue_state:   
- * @element: a #GstElement to continue the state change of.      
+ * gst_element_continue_state:
+ * @element: a #GstElement to continue the state change of.
  * @ret: The previous state return value
- *       
- * Commit the state change of the element and proceed to the next 
- * pending state if any. This function is used   
- * by elements that do asynchronous state changes.       
- * The core will normally call this method automatically when an         
- * element returned %GST_STATE_CHANGE_SUCCESS from the state change function.      
  *
- * If after calling this method the element still has not reached        
- * the pending state, the next state change is performed.        
- *       
+ * Commit the state change of the element and proceed to the next
+ * pending state if any. This function is used
+ * by elements that do asynchronous state changes.
+ * The core will normally call this method automatically when an
+ * element returned %GST_STATE_CHANGE_SUCCESS from the state change function.
+ *
+ * If after calling this method the element still has not reached
+ * the pending state, the next state change is performed.
+ *
  * This method is used internally and should normally not be called by plugins
  * or applications.
- *       
- * Returns: The result of the commit state change.       
- *       
- * MT safe.      
+ *
+ * Returns: The result of the commit state change.
+ *
+ * MT safe.
  */
 GstStateChangeReturn
 gst_element_continue_state (GstElement * element, GstStateChangeReturn ret)
@@ -2096,8 +2096,8 @@ complete:
     /* don't post silly messages with the same state. This can happen
      * when an element state is changed to what it already was. For bins
      * this can be the result of a lost state, which we check with the
-     * previous return value. 
-     * We do signal the cond though as a _get_state() might be blocking 
+     * previous return value.
+     * We do signal the cond though as a _get_state() might be blocking
      * on it. */
     if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
       message = gst_message_new_state_changed (GST_OBJECT_CAST (element),
@@ -2222,7 +2222,7 @@ gst_element_set_state (GstElement * element, GstState state)
 
 /*
  * default set state function, calculates the next state based
- * on current state and calls the change_state function 
+ * on current state and calls the change_state function
  */
 static GstStateChangeReturn
 gst_element_set_state_func (GstElement * element, GstState state)
@@ -2237,7 +2237,7 @@ gst_element_set_state_func (GstElement * element, GstState state)
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element, "set_state to %s",
       gst_element_state_get_name (state));
 
-  /* state lock is taken to protect the set_state() and get_state() 
+  /* state lock is taken to protect the set_state() and get_state()
    * procedures, it does not lock any variables. */
   GST_STATE_LOCK (element);
 
@@ -2486,7 +2486,7 @@ iterator_activate_fold_with_resync (GstIterator * iter,
         /* all pads iterated, return collected value */
         goto done;
       default:
-        /* iterator returned _ERROR or premature end with _OK, 
+        /* iterator returned _ERROR or premature end with _OK,
          * mark an error and exit */
         g_value_set_boolean (&ret, FALSE);
         goto done;
@@ -2499,7 +2499,7 @@ done:
 
 /* is called with STATE_LOCK
  *
- * Pads are activated from source pads to sinkpads. 
+ * Pads are activated from source pads to sinkpads.
  */
 static gboolean
 gst_element_pads_activate (GstElement * element, gboolean active)

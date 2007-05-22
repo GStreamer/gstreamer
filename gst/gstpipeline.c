@@ -27,8 +27,8 @@
  * @see_also: #GstElement, #GstBin, #GstClock, #GstBus
  *
  * A #GstPipeline is a special #GstBin used as the toplevel container for
- * the filter graph. The #GstPipeline will manage the selection and 
- * distribution of a global #GstClock as well as provide a #GstBus to the 
+ * the filter graph. The #GstPipeline will manage the selection and
+ * distribution of a global #GstClock as well as provide a #GstBus to the
  * application. It will also implement a default behavour for managing
  * seek events (see gst_element_seek()).
  *
@@ -36,7 +36,7 @@
  * the pipeline, use gst_object_unref() to free its resources including all
  * added #GstElement objects (if not otherwise referenced).
  *
- * Elements are added and removed from the pipeline using the #GstBin 
+ * Elements are added and removed from the pipeline using the #GstBin
  * methods like gst_bin_add() and gst_bin_remove() (see #GstBin).
  *
  * Before changing the state of the #GstPipeline (see #GstElement) a #GstBus
@@ -50,8 +50,8 @@
  *
  * When the #GstPipeline performs the PAUSED to PLAYING state change it will
  * select a clock for the elements. The clock selection algorithm will by
- * default select a clock provided by an element that is most upstream 
- * (closest to the source). For live pipelines (ones that return 
+ * default select a clock provided by an element that is most upstream
+ * (closest to the source). For live pipelines (ones that return
  * #GST_STATE_CHANGE_NO_PREROLL from the gst_element_set_state() call) this
  * will select the clock provided by the live source. For normal pipelines
  * this will select a clock provided by the sinks (most likely the audio
@@ -59,20 +59,20 @@
  *
  * The clock selection can be controlled with the gst_pipeline_use_clock()
  * method, which will enforce a given clock on the pipeline. With
- * gst_pipeline_auto_clock() the default clock selection algorithm can be 
+ * gst_pipeline_auto_clock() the default clock selection algorithm can be
  * restored.
  *
  * A #GstPipeline maintains a stream time for the elements. The stream
  * time is defined as the difference between the current clock time and
  * the base time. When the pipeline goes to READY or a flushing seek is
  * performed on it, the stream time is reset to 0. When the pipeline is
- * set from PLAYING to PAUSED, the current clock time is sampled and used to 
+ * set from PLAYING to PAUSED, the current clock time is sampled and used to
  * configure the base time for the elements when the pipeline is set
  * to PLAYING again. This default behaviour can be changed with the
- * gst_pipeline_set_new_stream_time() method. 
- * 
- * When sending a flushing seek event to a GstPipeline (see 
- * gst_element_seek()), it will make sure that the pipeline is properly 
+ * gst_pipeline_set_new_stream_time() method.
+ *
+ * When sending a flushing seek event to a GstPipeline (see
+ * gst_element_seek()), it will make sure that the pipeline is properly
  * PAUSED and resumed as well as set the new stream time to 0 when the
  * seek succeeded.
  *
@@ -235,7 +235,6 @@ gst_pipeline_class_init (gpointer g_class, gpointer class_data)
       GST_DEBUG_FUNCPTR (gst_pipeline_change_state);
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_pipeline_provide_clock_func);
-
   gstbin_class->handle_message =
       GST_DEBUG_FUNCPTR (gst_pipeline_handle_message);
 }
@@ -426,7 +425,7 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
           if (!gst_element_set_clock (element, clock))
             goto invalid_clock;
 
-          /* if we selected and distributed a new clock, let the app 
+          /* if we selected and distributed a new clock, let the app
            * know about it */
           gst_element_post_message (element,
               gst_message_new_new_clock (GST_OBJECT_CAST (element), clock));
@@ -600,7 +599,6 @@ gst_pipeline_handle_message (GstBin * bin, GstMessage * message)
   GST_BIN_CLASS (parent_class)->handle_message (bin, message);
 }
 
-
 /**
  * gst_pipeline_get_bus:
  * @pipeline: a #GstPipeline
@@ -657,11 +655,11 @@ gst_pipeline_set_new_stream_time (GstPipeline * pipeline, GstClockTime time)
  *
  * Gets the last stream time of @pipeline. If the pipeline is PLAYING,
  * the returned time is the stream time used to configure the element's
- * base time in the PAUSED->PLAYING state. If the pipeline is PAUSED, the 
+ * base time in the PAUSED->PLAYING state. If the pipeline is PAUSED, the
  * returned time is the stream time when the pipeline was paused.
  *
  * This function returns #GST_CLOCK_TIME_NONE if the pipeline was
- * configured to not handle the management of the element's base time 
+ * configured to not handle the management of the element's base time
  * (see gst_pipeline_set_new_stream_time()).
  *
  * Returns: a #GstClockTime.
@@ -773,7 +771,7 @@ gst_pipeline_use_clock (GstPipeline * pipeline, GstClock * clock)
  * @clock: the clock to set
  *
  * Set the clock for @pipeline. The clock will be distributed
- * to all the elements managed by the pipeline. 
+ * to all the elements managed by the pipeline.
  *
  * Returns: TRUE if the clock could be set on the pipeline. FALSE if
  *   some element did not accept the clock.
@@ -795,9 +793,9 @@ gst_pipeline_set_clock (GstPipeline * pipeline, GstClock * clock)
  * @pipeline: a #GstPipeline
  *
  * Let @pipeline select a clock automatically. This is the default
- * behaviour. 
+ * behaviour.
  *
- * Use this function if you previous forced a fixed clock with 
+ * Use this function if you previous forced a fixed clock with
  * gst_pipeline_use_clock() and want to restore the default
  * pipeline clock selection algorithm.
  *
@@ -832,7 +830,7 @@ gst_pipeline_auto_clock (GstPipeline * pipeline)
  * amount of time before starting to process buffers and cannot be
  * #GST_CLOCK_TIME_NONE.
  *
- * This option is used for tuning purposes and should normally not be 
+ * This option is used for tuning purposes and should normally not be
  * used.
  *
  * MT safe.
@@ -884,15 +882,15 @@ gst_pipeline_get_delay (GstPipeline * pipeline)
  *
  * Usually, when a pipeline goes from READY to NULL state, it automatically
  * flushes all pending messages on the bus, which is done for refcounting
- * purposes, to break circular references. 
+ * purposes, to break circular references.
  *
- * This means that applications that update state using (async) bus messages 
- * (e.g. do certain things when a pipeline goes from PAUSED to READY) might 
- * not get to see messages when the pipeline is shut down, because they might 
+ * This means that applications that update state using (async) bus messages
+ * (e.g. do certain things when a pipeline goes from PAUSED to READY) might
+ * not get to see messages when the pipeline is shut down, because they might
  * be flushed before they can be dispatched in the main thread. This behaviour
  * can be disabled using this function.
  *
- * It is important that all messages on the bus are handled when the 
+ * It is important that all messages on the bus are handled when the
  * automatic flushing is disabled else memory leaks will be introduced.
  *
  * MT safe.

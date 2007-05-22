@@ -755,7 +755,7 @@ gst_pad_activate_pull (GstPad * pad, gboolean active)
     }
   } else {
     if (G_UNLIKELY (GST_PAD_GETRANGEFUNC (pad) == NULL))
-      goto failure;             /* Can't activate pull on a src without a 
+      goto failure;             /* Can't activate pull on a src without a
                                    getrange function */
   }
 
@@ -1439,7 +1439,7 @@ gst_pad_set_getcaps_function (GstPad * pad, GstPadGetCapsFunction getcaps)
  *
  * Sets the given acceptcaps function for the pad.  The acceptcaps function
  * will be called to check if the pad can accept the given caps. Setting the
- * acceptcaps function to NULL restores the default behaviour of allowing 
+ * acceptcaps function to NULL restores the default behaviour of allowing
  * any caps that matches the caps from gst_pad_get_caps.
  */
 void
@@ -2189,7 +2189,7 @@ gst_pad_fixate_caps (GstPad * pad, GstCaps * caps)
   }
 }
 
-/* Default accept caps implementation just checks against 
+/* Default accept caps implementation just checks against
  * against the allowed caps for the pad */
 static gboolean
 gst_pad_acceptcaps_default (GstPad * pad, GstCaps * caps)
@@ -2474,7 +2474,6 @@ gst_pad_get_pad_template_caps (GstPad * pad)
 
   return gst_static_caps_get (&anycaps);
 }
-
 
 /**
  * gst_pad_get_peer:
@@ -3068,9 +3067,9 @@ no_func:
  * @pad: a #GstPad to call the default query handler on.
  * @query: the #GstQuery to handle.
  *
- * Invokes the default query handler for the given pad. 
- * The query is sent to all pads internally linked to @pad. Note that 
- * if there are many possible sink pads that are internally linked to 
+ * Invokes the default query handler for the given pad.
+ * The query is sent to all pads internally linked to @pad. Note that
+ * if there are many possible sink pads that are internally linked to
  * @pad, only one will be sent the query.
  * Multi-sinkpad elements should implement custom query handlers.
  *
@@ -3240,19 +3239,19 @@ gst_ghost_pad_save_thyself (GstPad * pad, xmlNodePtr parent)
 #endif /* GST_DISABLE_LOADSAVE */
 
 /*
- * should be called with pad OBJECT_LOCK and STREAM_LOCK held. 
+ * should be called with pad OBJECT_LOCK and STREAM_LOCK held.
  * GST_PAD_IS_BLOCKED (pad) == TRUE when this function is
  * called.
  *
  * This function performs the pad blocking when an event, buffer push
  * or buffer_alloc is performed on a _SRC_ pad. It blocks the
- * streaming thread after informing the pad has been blocked. 
+ * streaming thread after informing the pad has been blocked.
  *
  * An application can with this method wait and block any streaming
  * thread and perform operations such as seeking or linking.
  *
  * Two methods are available for notifying the application of the
- * block: 
+ * block:
  * - the callback method, which happens in the STREAMING thread with
  *   the STREAM_LOCK held. With this method, the most useful way of
  *   dealing with the callback is to post a message to the main thread
@@ -3285,7 +3284,7 @@ handle_pad_block (GstPad * pad)
   /* we grab an extra ref for the callbacks, this is probably not
    * needed (callback code does not have a ref and cannot unref). I
    * think this was done to make it possible to unref the element in
-   * the callback, which is in the end totally impossible as it 
+   * the callback, which is in the end totally impossible as it
    * requires grabbing the STREAM_LOCK and OBJECT_LOCK which are
    * all taken when calling this function. */
   gst_object_ref (pad);
@@ -3315,7 +3314,7 @@ handle_pad_block (GstPad * pad)
    * then could have made the pad unblock so we need to check the blocking
    * condition again.   */
   while (GST_PAD_IS_BLOCKED (pad)) {
-    /* now we block the streaming thread. It can be unlocked when we 
+    /* now we block the streaming thread. It can be unlocked when we
      * deactivate the pad (which will also set the FLUSHING flag) or
      * when the pad is unblocked. A flushing event will also unblock
      * the pad after setting the FLUSHING flag. */
@@ -3601,7 +3600,7 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   /* take ref to peer pad before releasing the lock */
   gst_object_ref (peer);
 
-  /* Before pushing the buffer to the peer pad, ensure that caps 
+  /* Before pushing the buffer to the peer pad, ensure that caps
    * are set on this pad */
   caps = GST_BUFFER_CAPS (buffer);
   caps_changed = caps && caps != GST_PAD_CAPS (pad);
@@ -3792,7 +3791,7 @@ gst_pad_get_range (GstPad * pad, guint64 offset, guint size,
     gboolean caps_changed;
 
     GST_OBJECT_LOCK (pad);
-    /* Before pushing the buffer to the peer pad, ensure that caps 
+    /* Before pushing the buffer to the peer pad, ensure that caps
      * are set on this pad */
     caps = GST_BUFFER_CAPS (*buffer);
     caps_changed = caps && caps != GST_PAD_CAPS (pad);
@@ -3877,7 +3876,7 @@ not_negotiated:
  * Returns: a #GstFlowReturn from the peer pad.
  * When this function returns #GST_FLOW_OK, @buffer will contain a valid
  * #GstBuffer that should be freed with gst_buffer_unref() after usage.
- * @buffer may not be used or freed when any other return value than 
+ * @buffer may not be used or freed when any other return value than
  * #GST_FLOW_OK is returned.
  *
  * MT safe.
@@ -3925,7 +3924,7 @@ gst_pad_pull_range (GstPad * pad, guint64 offset, guint size,
     gboolean caps_changed;
 
     GST_OBJECT_LOCK (pad);
-    /* Before pushing the buffer to the peer pad, ensure that caps 
+    /* Before pushing the buffer to the peer pad, ensure that caps
      * are set on this pad */
     caps = GST_BUFFER_CAPS (*buffer);
     caps_changed = caps && caps != GST_PAD_CAPS (pad);
