@@ -474,8 +474,8 @@ gst_bin_init (GstBin * bin)
       bus);
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bin_bus_handler, bin);
 
-  bin->private = g_new0 (GstBinPrivate, 1);
-  bin->private->asynchandling = FALSE;
+  bin->priv = g_new0 (GstBinPrivate, 1);
+  bin->priv->asynchandling = FALSE;
 }
 
 static void
@@ -502,9 +502,9 @@ gst_bin_dispose (GObject * object)
         GST_STR_NULL (GST_OBJECT_NAME (object)));
   }
 
-  if (bin->private) {
-    g_free (bin->private);
-    bin->private = NULL;
+  if (bin->priv) {
+    g_free (bin->priv);
+    bin->priv = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -535,7 +535,7 @@ gst_bin_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_ASYNC_HANDLING:
       GST_OBJECT_LOCK (gstbin);
-      gstbin->private->asynchandling = g_value_get_boolean (value);
+      gstbin->priv->asynchandling = g_value_get_boolean (value);
       GST_OBJECT_UNLOCK (gstbin);
       break;
     default:
@@ -555,7 +555,7 @@ gst_bin_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_ASYNC_HANDLING:
       GST_OBJECT_LOCK (gstbin);
-      g_value_set_boolean (value, gstbin->private->asynchandling);
+      g_value_set_boolean (value, gstbin->priv->asynchandling);
       GST_OBJECT_UNLOCK (gstbin);
       break;
     default:
@@ -1091,7 +1091,7 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   if (!other_async && this_async) {
     GST_DEBUG_OBJECT (bin, "we removed the last async element");
 
-    cont = ((GST_OBJECT_PARENT (bin) == NULL) || bin->private->asynchandling);
+    cont = ((GST_OBJECT_PARENT (bin) == NULL) || bin->priv->asynchandling);
     if (!cont) {
       bin_handle_async_done (bin, &smessage);
       async_message = gst_message_new_async_done (GST_OBJECT_CAST (bin));
@@ -2764,7 +2764,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       bin_handle_async_start (bin, &smessage);
 
       /* prepare an ASYNC_START message */
-      if (GST_OBJECT_PARENT (bin) && (!bin->private->asynchandling)) {
+      if (GST_OBJECT_PARENT (bin) && (!bin->priv->asynchandling)) {
         forward = TRUE;
         message =
             gst_message_new_async_start (GST_OBJECT_CAST (bin), new_base_time);
@@ -2819,7 +2819,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         /* nothing found, remove all old ASYNC_DONE messages */
         bin_remove_messages (bin, NULL, GST_MESSAGE_ASYNC_DONE);
         done = TRUE;
-        toplevel = bin->private->asynchandling
+        toplevel = bin->priv->asynchandling
             || (GST_OBJECT_PARENT (bin) == NULL);
         if (!toplevel)
           bin_handle_async_done (bin, &smessage);
