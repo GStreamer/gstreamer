@@ -2,7 +2,7 @@
 /* GStreamer
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
  *               <2005> Wim Taymans <wim@fluendo.com>
- *               <2005> Tim-Philipp M??ller <tim centricular net>
+ *               <2005> Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
