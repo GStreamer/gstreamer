@@ -80,6 +80,7 @@ GST_BIN_CAST
 <SUBSECTION Private>
 gst_bin_get_type
 gst_bin_flags_get_type
+GstBinPrivate
 </SECTION>
 
 

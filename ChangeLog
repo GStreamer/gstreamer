@@ -1,3 +1,13 @@
+2007-05-22  Edward Hervey  <edward@fluendo.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_init),
+	(gst_bin_dispose), (gst_bin_set_property), (gst_bin_get_property),
+	(gst_bin_remove_func), (gst_bin_handle_message_func):
+	* gst/gstbin.h:
+	Add a property for bins that handle the state change of their childs.
+	Fixes #435880
+
 2007-05-22  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* libs/gst/controller/gstinterpolation.c:

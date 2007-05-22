@@ -54,6 +54,7 @@ typedef enum {
 
 typedef struct _GstBin GstBin;
 typedef struct _GstBinClass GstBinClass;
+typedef struct _GstBinPrivate GstBinPrivate;
 
 /**
  * GST_BIN_NUMCHILDREN:
@@ -113,8 +114,10 @@ struct _GstBin {
   GstClock	*provided_clock;
   GstElement    *clock_provider;
 
+  GstBinPrivate *private;
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 /**
