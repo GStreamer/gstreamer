@@ -51,7 +51,7 @@
 /* elementfactory information */
 static const GstElementDetails rtpclient_details =
 GST_ELEMENT_DETAILS ("RTP Client",
-    "Filter/Editor/Video",
+    "Filter/Network/RTP",
     "Implement an RTP client",
     "Wim Taymans <wim@fluendo.com>");
 

@@ -38,6 +38,15 @@
  * <para>
  * This element acts as a live element and so adds ::latency to the pipeline.
  * </para>
+ * <para>
+ * The element needs the clock-rate of the RTP payload in order to estimate the
+ * delay. This information is obtained either from the caps on the sink pad or,
+ * when no caps are present, from the ::request-pt-map signal. To clear the
+ * previous pt-map use the ::clear-pt-map signal.
+ * </para>
+ * <para>
+ * This element will automatically be used inside rtpbin.
+ * </para>
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
@@ -49,7 +58,7 @@
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2007-03-27 (0.10.13)
+ * Last reviewed on 2007-05-22 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -74,7 +83,7 @@ GST_DEBUG_CATEGORY (rtpjitterbuffer_debug);
 /* elementfactory information */
 static const GstElementDetails gst_rtp_jitter_buffer_details =
 GST_ELEMENT_DETAILS ("RTP packet jitter-buffer",
-    "Filter/Network",
+    "Filter/Network/RTP",
     "A buffer that deals with network jitter and other transmission faults",
     "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
     "Wim Taymans <wim@fluendo.com>");
@@ -82,8 +91,8 @@ GST_ELEMENT_DETAILS ("RTP packet jitter-buffer",
 /* RTPJitterBuffer signals and args */
 enum
 {
-  /* FILL ME */
   SIGNAL_REQUEST_PT_MAP,
+  SIGNAL_CLEAR_PT_MAP,
   LAST_SIGNAL
 };
 
@@ -188,6 +197,9 @@ static void gst_rtp_jitter_buffer_loop (GstRTPJitterBuffer * jitterbuffer);
 static gboolean gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query);
 
 static void
+gst_rtp_jitter_buffer_clear_pt_map (GstRTPJitterBuffer * jitterbuffer);
+
+static void
 gst_rtp_jitter_buffer_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
@@ -215,17 +227,26 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
   gobject_class->set_property = gst_rtp_jitter_buffer_set_property;
   gobject_class->get_property = gst_rtp_jitter_buffer_get_property;
 
+  /**
+   * GstRTPJitterBuffer::latency:
+   * 
+   * The maximum latency of the jitterbuffer. Packets will be kept in the buffer
+   * for at most this time.
+   */
   g_object_class_install_property (gobject_class, PROP_LATENCY,
       g_param_spec_uint ("latency", "Buffer latency in ms",
           "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
           G_PARAM_READWRITE));
-
+  /**
+   * GstRTPJitterBuffer::drop-on-latency:
+   * 
+   * Drop oldest buffers when the queue is completely filled. 
+   */
   g_object_class_install_property (gobject_class, PROP_DROP_ON_LATENCY,
-      g_param_spec_boolean ("drop_on_latency",
+      g_param_spec_boolean ("drop-on-latency",
           "Drop buffers when maximum latency is reached",
           "Tells the jitterbuffer to never exceed the given latency in size",
           DEFAULT_DROP_ON_LATENCY, G_PARAM_READWRITE));
-
   /**
    * GstRTPJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
@@ -238,8 +259,21 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPJitterBufferClass,
           request_pt_map), NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT,
       GST_TYPE_CAPS, 1, G_TYPE_UINT);
+  /**
+   * GstRTPJitterBuffer::clear-pt-map:
+   * @buffer: the object which received the signal
+   *
+   * Invalidate the clock-rate as obtained with the ::request-pt-map signal.
+   */
+  gst_rtp_jitter_buffer_signals[SIGNAL_CLEAR_PT_MAP] =
+      g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPJitterBufferClass,
+          clear_pt_map), NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
 
   gstelement_class->change_state = gst_rtp_jitter_buffer_change_state;
+
+  klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_clear_pt_map);
 
   GST_DEBUG_CATEGORY_INIT
       (rtpjitterbuffer_debug, "rtpjitterbuffer", 0, "RTP Jitter Buffer");
@@ -303,6 +337,17 @@ gst_rtp_jitter_buffer_dispose (GObject * object)
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_rtp_jitter_buffer_clear_pt_map (GstRTPJitterBuffer * jitterbuffer)
+{
+  GstRTPJitterBufferPrivate *priv;
+
+  priv = jitterbuffer->priv;
+
+  /* this will trigger a new pt-map request signal, FIXME, do something better. */
+  priv->clock_rate = -1;
 }
 
 static GstCaps *

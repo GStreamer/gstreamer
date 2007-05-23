@@ -20,20 +20,64 @@
 /**
  * SECTION:element-rtpbin
  * @short_description: handle media from one RTP bin
- * @see_also: rtpjitterbuffer, rtpclient, rtpsession
+ * @see_also: rtpjitterbuffer, rtpsession, rtpptdemux, rtpssrcdemux
  *
  * <refsect2>
  * <para>
+ * RTP bin combines the functions of rtpsession, rtpssrcdemux, rtpjitterbuffer
+ * and rtpptdemux in one element. It allows for multiple rtpsessions that will
+ * be synchronized together using RTCP SR packets.
+ * </para>
+ * <para>
+ * rtpbin is configured with a number of request pads that define the
+ * functionality that is activated, similar to the rtpsession element.
+ * </para>
+ * <para>
+ * To use rtpbin as an RTP receiver, request a recv_rtp_sink_%%d pad. The session
+ * number must be specified in the pad name. 
+ * Data received on the recv_rtp_sink_%%d pad will be processed in the rtpsession
+ * manager and after being validated forwarded on rtpssrcdemuxer element. Each
+ * RTP stream is demuxed based on the SSRC and send to a rtpjitterbuffer. After
+ * the packets are released from the jitterbuffer, they will be forwarded to an
+ * rtpptdemuxer element. The rtpptdemuxer element will demux the packets based
+ * on the payload type and will create a unique pad recv_rtp_src_%%d_%%d_%%d on
+ * rtpbin with the session number, SSRC and payload type respectively as the pad
+ * name.
+ * </para>
+ * <para>
+ * To also use rtpbin as an RTCP receiver, request a recv_rtcp_sink_%%d pad. The
+ * session number must be specified in the pad name.
+ * </para>
+ * <para>
+ * If you want the session manager to generate and send RTCP packets, request
+ * the send_rtcp_src_%%d pad with the session number in the pad name. Packet pushed
+ * on this pad contain SR/RR RTCP reports that should be sent to all participants
+ * in the session.
+ * </para>
+ * <para>
+ * To use rtpbin as a sender, request a send_rtp_sink_%%d pad, which will
+ * automatically create a send_rtp_src_%%d pad. The session number must be specified when
+ * requesting the sink pad. The session manager will modify the
+ * SSRC in the RTP packets to its own SSRC and wil forward the packets on the
+ * send_rtp_src_%%d pad after updating its internal state.
+ * </para>
+ * <para>
+ * The session manager needs the clock-rate of the payload types it is handling
+ * and will signal the GstRTPSession::request-pt-map signal when it needs such a
+ * mapping. One can clear the cached values with the GstRTPSession::clear-pt-map
+ * signal.
  * </para>
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! alsasink
+ * gst-launch udpsrc port=5000 caps="application/x-rtp, ..." ! .recv_rtp_sink_0 \
+ *     rtpbin ! rtptheoradepay ! theoradec ! xvimagesink
  * </programlisting>
+ * Receive RTP data from port 5000 and send to the session 0 in rtpbin.
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2007-04-02 (0.10.6)
+ * Last reviewed on 2007-05-23 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -50,7 +94,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_bin_debug);
 
 /* elementfactory information */
 static const GstElementDetails rtpbin_details = GST_ELEMENT_DETAILS ("RTP Bin",
-    "Filter/Editor/Video",
+    "Filter/Network/RTP",
     "Implement an RTP bin",
     "Wim Taymans <wim@fluendo.com>");
 
@@ -485,8 +529,8 @@ gst_rtp_bin_class_init (GstRTPBinClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LATENCY,
       g_param_spec_uint ("latency", "Buffer latency in ms",
-          "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
-          G_PARAM_READWRITE));
+          "Default amount of ms to buffer in the jitterbuffers", 0,
+          G_MAXUINT, DEFAULT_LATENCY_MS, G_PARAM_READWRITE));
 
   /**
    * GstRTPBin::request-pt-map:
@@ -501,10 +545,16 @@ gst_rtp_bin_class_init (GstRTPBinClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, request_pt_map),
       NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 2,
       G_TYPE_UINT, G_TYPE_UINT);
-
+  /**
+   * GstRTPBin::clear-pt-map:
+   * @rtpbin: the object which received the signal
+   *
+   * Clear all previously cached pt-mapping obtained with
+   * GstRTPBin::request-pt-map.
+   */
   gst_rtp_bin_signals[SIGNAL_CLEAR_PT_MAP] =
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, clear_pt_map),
+      G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTPBinClass, clear_pt_map),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   gstelement_class->provide_clock =

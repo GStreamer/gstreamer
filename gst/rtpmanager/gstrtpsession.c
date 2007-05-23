@@ -20,20 +20,112 @@
 /**
  * SECTION:element-rtpsession
  * @short_description: an RTP session manager
- * @see_also: rtpjitterbuffer, rtpbin
+ * @see_also: rtpjitterbuffer, rtpbin, rtpptdemux, rtpssrcdemux
  *
  * <refsect2>
  * <para>
+ * The RTP session manager models one participant with a unique SSRC in an RTP
+ * session. This session can be used to send and receive RTP and RTCP packets.
+ * Based on what REQUEST pads are requested from the session manager, specific
+ * functionality can be activated.
+ * </para>
+ * <para>
+ * The session manager currently implements RFC 3550 including:
+ * <itemizedlist>
+ *   <listitem>
+ *     <para>RTP packet validation based on consecutive sequence numbers.</para>
+ *   </listitem>
+ *   <listitem>
+ *     <para>Maintainance of the SSRC participant database.</para>
+ *   </listitem>
+ *   <listitem>
+ *     <para>Keeping per participant statistics based on received RTCP packets.</para>
+ *   </listitem>
+ *   <listitem>
+ *     <para>Scheduling of RR/SR RTCP packets.</para>
+ *   </listitem>
+ * </itemizedlist>
+ * </para>
+ * <para>
+ * The rtpsession will not demux packets based on SSRC or payload type, nor will
+ * it correct for packet reordering and jitter. Use rtpssrcdemux, rtpptdemux and
+ * rtpjitterbuffer in addition to rtpsession to perform these tasks. It is
+ * usually a good idea to use rtpbin, which combines all these features in one
+ * element.
+ * </para>
+ * <para>
+ * To use rtpsession as an RTP receiver, request a recv_rtp_sink pad, which will
+ * automatically create recv_rtp_src pad. Data received on the recv_rtp_sink pad
+ * will be processed in the session and after being validated forwarded on the
+ * recv_rtp_src pad.
+ * </para>
+ * <para>
+ * To also use rtpsession as an RTCP receiver, request a recv_rtcp_sink pad,
+ * which will automatically create a sync_src pad. Packets received on the RTCP
+ * pad will be used by the session manager to update the stats and database of
+ * the other participants. SR packets will be forwarded on the sync_src pad
+ * so that they can be used to perform inter-stream synchronisation when needed.
+ * </para>
+ * <para>
+ * If you want the session manager to generate and send RTCP packets, request
+ * the send_rtcp_src pad. Packet pushed on this pad contain SR/RR RTCP reports
+ * that should be sent to all participants in the session.
+ * </para>
+ * <para>
+ * To use rtpsession as a sender, request a send_rtp_sink pad, which will
+ * automatically create a send_rtp_src pad. The session manager will modify the
+ * SSRC in the RTP packets to its own SSRC and wil forward the packets on the
+ * send_rtp_src pad after updating its internal state.
+ * </para>
+ * <para>
+ * The session manager needs the clock-rate of the payload types it is handling
+ * and will signal the GstRTPSession::request-pt-map signal when it needs such a
+ * mapping. One can clear the cached values with the GstRTPSession::clear-pt-map
+ * signal.
  * </para>
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
- * gst-launch -v filesrc location=sine.ogg ! oggdemux ! vorbisdec ! audioconvert ! alsasink
+ * gst-launch udpsrc port=5000 caps="application/x-rtp, ..." ! .recv_rtp_sink rtpsession .recv_rtp_src ! rtptheoradepay ! theoradec ! xvimagesink
  * </programlisting>
+ * Receive theora RTP packets from port 5000 and send them to the depayloader,
+ * decoder and display. Note that the application/x-rtp caps on udpsrc should be
+ * configured based on some negotiation process such as RTSP for this pipeline
+ * to work correctly.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch udpsrc port=5000 caps="application/x-rtp, ..." ! .recv_rtp_sink rtpsession name=session \
+ *        .recv_rtp_src ! rtptheoradepay ! theoradec ! xvimagesink \
+ *     udpsrc port=5001 caps="application/x-rtcp" ! session.recv_rtcp_sink
+ * </programlisting>
+ * Receive theora RTP packets from port 5000 and send them to the depayloader,
+ * decoder and display. Receive RTCP packets from port 5001 and process them in
+ * the session manager.
+ * Note that the application/x-rtp caps on udpsrc should be
+ * configured based on some negotiation process such as RTSP for this pipeline
+ * to work correctly.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch videotestsrc ! theoraenc ! rtptheorapay ! .send_rtp_sink rtpsession .send_rtp_src ! udpsink port=5000
+ * </programlisting>
+ * Send theora RTP packets through the session manager and out on UDP port 5000.
+ * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch videotestsrc ! theoraenc ! rtptheorapay ! .send_rtp_sink rtpsession name=session .send_rtp_src \
+ *     ! udpsink port=5000  session.send_rtcp_src ! udpsink port=5001
+ * </programlisting>
+ * Send theora RTP packets through the session manager and out on UDP port 5000.
+ * Send RTCP packets on port 5001. Not that this pipeline will not preroll
+ * correctly because the second udpsink will not preroll correctly (no RTCP
+ * packets are sent in the PAUSED state). Applications should manually set and
+ * keep (see #gst_element_set_locked_state()) the RTCP udpsink to the PLAYING state.
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2007-04-02 (0.10.6)
+ * Last reviewed on 2007-05-23 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -50,7 +142,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_session_debug);
 /* elementfactory information */
 static const GstElementDetails rtpsession_details =
 GST_ELEMENT_DETAILS ("RTP Session",
-    "Filter/Editor/Video",
+    "Filter/Network/RTP",
     "Implement an RTP session",
     "Wim Taymans <wim@fluendo.com>");
 
@@ -109,6 +201,7 @@ GST_STATIC_PAD_TEMPLATE ("send_rtcp_src",
 enum
 {
   SIGNAL_REQUEST_PT_MAP,
+  SIGNAL_CLEAR_PT_MAP,
   LAST_SIGNAL
 };
 
@@ -169,6 +262,8 @@ static GstPad *gst_rtp_session_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_rtp_session_release_pad (GstElement * element, GstPad * pad);
 
+static void gst_rtp_session_clear_pt_map (GstRTPSession * rtpsession);
+
 static guint gst_rtp_session_signals[LAST_SIGNAL] = { 0 };
 
 GST_BOILERPLATE (GstRTPSession, gst_rtp_session, GstElement, GST_TYPE_ELEMENT);
@@ -226,6 +321,16 @@ gst_rtp_session_class_init (GstRTPSessionClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPSessionClass, request_pt_map),
       NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT, GST_TYPE_CAPS, 1,
       G_TYPE_UINT);
+  /**
+   * GstRTPSession::clear-pt-map:
+   * @sess: the object which received the signal
+   *
+   * Clear the cached pt-maps requested with GstRTPSession::request-pt-map.
+   */
+  gst_rtp_session_signals[SIGNAL_CLEAR_PT_MAP] =
+      g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTPSessionClass, clear_pt_map),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
@@ -233,6 +338,8 @@ gst_rtp_session_class_init (GstRTPSessionClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_session_request_new_pad);
   gstelement_class->release_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_session_release_pad);
+
+  klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_session_clear_pt_map);
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_session_debug,
       "rtpsession", 0, "RTP Session");
@@ -314,7 +421,6 @@ rtcp_thread (GstRTPSession * rtpsession)
     /* get initial estimate */
     next_timeout =
         rtp_session_next_timeout (rtpsession->priv->session, current_time);
-
 
     GST_DEBUG_OBJECT (rtpsession, "next check time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (next_timeout));
@@ -436,6 +542,12 @@ failed_thread:
   {
     return GST_STATE_CHANGE_FAILURE;
   }
+}
+
+static void
+gst_rtp_session_clear_pt_map (GstRTPSession * rtpsession)
+{
+  /* FIXME, do something */
 }
 
 /* called when the session manager has an RTP packet ready for further
