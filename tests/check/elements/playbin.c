@@ -106,10 +106,10 @@ DEFINE_TEST (test_suburi_error_unknowntype)
   g_object_set (playbin, "video-sink", fakesink, NULL);
 
   /* suburi file format unknown: playbin should just ignore the suburi and
-   * preroll normally (if /dev/urandom does not exist, this test should behave
+   * preroll normally (if /dev/zero does not exist, this test should behave
    * the same as test_suburi_error_invalidfile() */
   g_object_set (playbin, "uri", "redvideo://", NULL);
-  g_object_set (playbin, "suburi", "file:///dev/urandom", NULL);
+  g_object_set (playbin, "suburi", "file:///dev/zero", NULL);
   fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_READY),
       GST_STATE_CHANGE_SUCCESS);
   fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_PAUSED),

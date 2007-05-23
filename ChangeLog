@@ -1,3 +1,10 @@
+2007-05-23  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/elements/playbin.c: (test_suburi_error_unknowntype):
+	Use /dev/zero instead of /dev/urandom to produce an invalid subtitle
+	file. Avoids flukes where the input gets typefound to some valid but
+	useless type.
+
 2007-05-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:
