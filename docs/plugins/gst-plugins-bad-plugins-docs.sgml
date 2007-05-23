@@ -22,6 +22,11 @@
     <xi:include href="xml/element-rganalysis.xml" />
     <xi:include href="xml/element-rglimiter.xml" />
     <xi:include href="xml/element-rgvolume.xml" />
+    <xi:include href="xml/element-rtpbin.xml" />
+    <xi:include href="xml/element-rtpjitterbuffer.xml" />
+    <xi:include href="xml/element-rtpptdemux.xml" />
+    <xi:include href="xml/element-rtpsession.xml" />
+    <xi:include href="xml/element-rtpssrcdemux.xml" />
     <xi:include href="xml/element-sdlaudiosink.xml" />
     <xi:include href="xml/element-sdlvideosink.xml" />
     <xi:include href="xml/element-trm.xml" />
@@ -53,6 +58,7 @@
     <xi:include href="xml/plugin-osxvideo.xml" />
     <xi:include href="xml/plugin-qtdemux.xml" />
     <xi:include href="xml/plugin-replaygain.xml" />
+    <xi:include href="xml/plugin-rtpmanager.xml" />
     <xi:include href="xml/plugin-sdl.xml" />
     <xi:include href="xml/plugin-spectrum.xml" />
     <xi:include href="xml/plugin-speed.xml" />

@@ -59,6 +59,8 @@ struct _GstRTPSessionClass {
 
   /* signals */
   GstCaps* (*request_pt_map) (GstRTPSession *sess, guint pt);
+
+  void     (*clear_pt_map)   (GstRTPSession *sess);
 };
 
 GType gst_rtp_session_get_type (void);

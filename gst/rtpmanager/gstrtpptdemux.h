@@ -53,6 +53,8 @@ struct _GstRTPPtDemuxClass
 
   /* signal emitted when the payload type changes */
   void     (*payload_type_change) (GstRTPPtDemux *demux, guint pt);
+
+  void     (*clear_pt_map)        (GstRTPPtDemux *demux);
 };
 
 GType gst_rtp_pt_demux_get_type (void);

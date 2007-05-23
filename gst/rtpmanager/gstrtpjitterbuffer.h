@@ -49,13 +49,18 @@ typedef struct _GstRTPJitterBuffer GstRTPJitterBuffer;
 typedef struct _GstRTPJitterBufferClass GstRTPJitterBufferClass;
 typedef struct _GstRTPJitterBufferPrivate GstRTPJitterBufferPrivate;
 
+/**
+ * GstRTPJitterBuffer:
+ *
+ * Opaque jitterbuffer structure.
+ */
 struct _GstRTPJitterBuffer
 {
   GstElement parent;
 
+  /*< private >*/
   GstRTPJitterBufferPrivate *priv;
 
-  /*< private > */
   gpointer _gst_reserved[GST_PADDING];
 };
 
@@ -65,6 +70,8 @@ struct _GstRTPJitterBufferClass
 
   /* signals */
   GstCaps* (*request_pt_map) (GstRTPJitterBuffer *buffer, guint pt);
+
+  void     (*clear_pt_map)   (GstRTPJitterBuffer *buffer);
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];

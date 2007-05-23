@@ -19,6 +19,33 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-rtpssrcdemux
+ * @short_description: separate RTP payloads based on the SSRC
+ *
+ * <refsect2>
+ * <para>
+ * rtpssrcdemux acts as a demuxer for RTP packets based on the SSRC of the
+ * packets. Its main purpose is to allow an application to easily receive and
+ * decode an RTP stream with multiple SSRCs.
+ * </para>
+ * <para>
+ * For each SSRC that is detected, a new pad will be created and the
+ * ::new-ssrc-pad signal will be emitted. 
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * <programlisting>
+ * gst-launch udpsrc caps="application/x-rtp" ! rtpssrcdemux ! fakesink
+ * </programlisting>
+ * Takes an RTP stream and send the RTP packets with the first detected SSRC
+ * to fakesink, discarding the other SSRCs.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2007-05-23 (0.10.6)
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -49,7 +76,7 @@ GST_STATIC_PAD_TEMPLATE ("src_%d",
 
 static GstElementDetails gst_rtp_ssrc_demux_details = {
   "RTP SSRC Demux",
-  "Codec/Demux/Network",
+  "Demux/Network/RTP",
   "Splits RTP streams based on the SSRC",
   "Wim Taymans <wim@fluendo.com>"
 };
@@ -165,6 +192,14 @@ gst_rtp_ssrc_demux_class_init (GstRTPSsrcDemuxClass * klass)
 
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_rtp_ssrc_demux_finalize);
 
+  /**
+   * GstRTPSsrcDemux::new-ssrc-pad:
+   * @demux: the object which received the signal
+   * @ssrc: the SSRC of the pad
+   * @pad: the new pad.
+   *
+   * Emited when a new SSRC pad has been created.
+   */
   gst_rtp_ssrc_demux_signals[SIGNAL_NEW_SSRC_PAD] =
       g_signal_new ("new-ssrc-pad",
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,

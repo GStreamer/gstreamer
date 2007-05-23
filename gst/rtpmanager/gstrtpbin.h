@@ -40,6 +40,7 @@ typedef struct _GstRTPBinPrivate GstRTPBinPrivate;
 struct _GstRTPBin {
   GstBin         bin;
 
+  /*< private >*/
   /* default latency for sessions */
   guint           latency;
   /* a list of session */

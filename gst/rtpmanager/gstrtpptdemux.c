@@ -23,11 +23,42 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-rtpptdemux
+ * @short_description: separate RTP payloads based on the payload type
+ *
+ * <refsect2>
+ * <para>
+ * rtpptdemux acts as a demuxer for RTP packets based on the payload type of the
+ * packets. Its main purpose is to allow an application to easily receive and
+ * decode an RTP stream with multiple payload types.
+ * </para>
+ * <para>
+ * For each payload type that is detected, a new pad will be created and the
+ * ::new-payload-type signal will be emitted. When the payload for the RTP
+ * stream changes, the ::payload-type-change signal will be emitted.
+ * </para>
+ * <para>
+ * The element will try to set complete and unique application/x-rtp caps on the
+ * outgoing buffers and pads based on the result of the ::request-pt-map signal.
+ * </para>
+ * <title>Example pipelines</title>
+ * <para>
+ * <programlisting>
+ * gst-launch udpsrc caps="application/x-rtp" ! rtpptdemux ! fakesink
+ * </programlisting>
+ * Takes an RTP stream and send the RTP packets with the first detected payload
+ * type to fakesink, discarding the other payload types.
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2007-05-22 (0.10.6)
+ */
+
 /*
  * Contributors:
  * Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>
  */
-
 /*
  * Status:
  *  - works with the test_rtpdemux.c tool
@@ -86,6 +117,7 @@ enum
   SIGNAL_REQUEST_PT_MAP,
   SIGNAL_NEW_PAYLOAD_TYPE,
   SIGNAL_PAYLOAD_TYPE_CHANGE,
+  SIGNAL_CLEAR_PT_MAP,
   LAST_SIGNAL
 };
 
@@ -99,6 +131,7 @@ static gboolean gst_rtp_pt_demux_setup (GstElement * element);
 static GstFlowReturn gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_rtp_pt_demux_change_state (GstElement * element,
     GstStateChange transition);
+static void gst_rtp_pt_demux_clear_pt_map (GstRTPPtDemux * rtpdemux);
 
 static GstPad *find_pad_for_pt (GstRTPPtDemux * rtpdemux, guint8 pt);
 
@@ -106,8 +139,7 @@ static guint gst_rtp_pt_demux_signals[LAST_SIGNAL] = { 0 };
 
 static GstElementDetails gst_rtp_pt_demux_details = {
   "RTP Demux",
-  /* XXX: what's the correct hierarchy? */
-  "Codec/Demux/Network",
+  "Demux/Network/RTP",
   "Parses codec streams transmitted in the same RTP session",
   "Kai Vehmanen <kai.vehmanen@nokia.com>"
 };
@@ -148,7 +180,7 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
       G_TYPE_UINT);
 
   /**
-   * GstRTPPtDemux::new-payload-type
+   * GstRTPPtDemux::new-payload-type:
    * @demux: the object which received the signal
    * @pt: the payload type
    * @pad: the pad with the new payload
@@ -162,7 +194,7 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
       G_TYPE_UINT, GST_TYPE_PAD);
 
   /**
-   * GstRTPPtDemux::payload-type-change
+   * GstRTPPtDemux::payload-type-change:
    * @demux: the object which received the signal
    * @pt: the new payload type
    *
@@ -174,14 +206,28 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
           payload_type_change), NULL, NULL, g_cclosure_marshal_VOID__UINT,
       G_TYPE_NONE, 1, G_TYPE_UINT);
 
+  /**
+   * GstRTPPtDemux::clear-pt-map:
+   * @demux: the object which received the signal
+   *
+   * The application can call this signal to instruct the element to discard the
+   * currently cached payload type map.
+   */
+  gst_rtp_pt_demux_signals[SIGNAL_CLEAR_PT_MAP] =
+      g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_ACTION | G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPPtDemuxClass,
+          clear_pt_map), NULL, NULL, g_cclosure_marshal_VOID__VOID,
+      G_TYPE_NONE, 0, G_TYPE_NONE);
+
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_rtp_pt_demux_finalize);
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_pt_demux_change_state);
 
+  klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_pt_demux_clear_pt_map);
+
   GST_DEBUG_CATEGORY_INIT (gst_rtp_pt_demux_debug,
       "rtpptdemux", 0, "RTP codec demuxer");
-
 }
 
 static void
@@ -205,6 +251,12 @@ gst_rtp_pt_demux_finalize (GObject * object)
   gst_rtp_pt_demux_release (GST_ELEMENT (object));
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
+static void
+gst_rtp_pt_demux_clear_pt_map (GstRTPPtDemux * rtpdemux)
+{
+  /* FIXME, do something */
 }
 
 static GstFlowReturn

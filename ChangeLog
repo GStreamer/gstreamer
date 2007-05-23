@@ -1,3 +1,26 @@
+2007-05-23  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_class_init):
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtpmanager/gstrtpclient.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_class_init),
+	(gst_rtp_jitter_buffer_clear_pt_map), (gst_rtp_jitter_buffer_loop):
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_class_init),
+	(gst_rtp_pt_demux_clear_pt_map):
+	* gst/rtpmanager/gstrtpptdemux.h:
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_class_init),
+	(rtcp_thread), (gst_rtp_session_clear_pt_map):
+	* gst/rtpmanager/gstrtpsession.h:
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	(gst_rtp_ssrc_demux_class_init):
+	Document stuff.
+	Add clear-pt-map action signal where needed.
+
 2007-05-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
