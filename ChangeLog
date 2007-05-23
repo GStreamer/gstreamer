@@ -1,3 +1,10 @@
+2007-05-23  Wim Taymans  <wim@fluendo.com>
+
+	* tests/check/gst/gstsystemclock.c: (store_callback),
+	(GST_START_TEST):
+	Improve test_async_order to also work when both timers are already
+	expired when we get scheduled to check it.
+
 2007-05-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbin.c: (gst_bin_init), (gst_bin_dispose),

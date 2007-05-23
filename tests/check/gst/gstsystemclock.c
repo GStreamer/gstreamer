@@ -69,10 +69,10 @@ static gboolean
 store_callback (GstClock * clock, GstClockTime time,
     GstClockID id, gpointer user_data)
 {
-  GstClockID *store_id = user_data;
+  GList **list = user_data;
 
   g_message ("unlocked async id %p\n", id);
-  *store_id = id;
+  *list = g_list_append (*list, id);
   return FALSE;
 }
 
@@ -216,7 +216,8 @@ GST_END_TEST
 GST_START_TEST (test_async_order)
 {
   GstClock *clock;
-  GstClockID id1, id2, last_id = NULL;
+  GstClockID id1, id2;
+  GList *cb_list = NULL, *next;
   GstClockTime base;
   GstClockReturn result;
 
@@ -228,17 +229,24 @@ GST_START_TEST (test_async_order)
 
   id1 = gst_clock_new_single_shot_id (clock, base + 2 * TIME_UNIT);
   id2 = gst_clock_new_single_shot_id (clock, base + 1 * TIME_UNIT);
-  result = gst_clock_id_wait_async (id1, store_callback, &last_id);
+  result = gst_clock_id_wait_async (id1, store_callback, &cb_list);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / (2 * 1000));
-  result = gst_clock_id_wait_async (id2, store_callback, &last_id);
+  result = gst_clock_id_wait_async (id2, store_callback, &cb_list);
   fail_unless (result == GST_CLOCK_OK, "Waiting did not return OK");
   g_usleep (TIME_UNIT / 1000);
-  fail_unless (last_id == id2, "Expected notification for id2 to come first");
+  /* at this point at least one of the timers should have timed out */
+  fail_unless (cb_list != NULL, "expected notification");
+  fail_unless (cb_list->data == id2,
+      "Expected notification for id2 to come first");
   g_usleep (TIME_UNIT / 1000);
-  fail_unless (last_id == id1, "Missing notification for id1");
+  /* now both should have timed out */
+  next = g_list_next (cb_list);
+  fail_unless (next != NULL, "expected second notification");
+  fail_unless (next->data == id1, "Missing notification for id1");
   gst_clock_id_unref (id1);
   gst_clock_id_unref (id2);
+  g_list_free (cb_list);
 }
 
 GST_END_TEST
@@ -367,7 +375,8 @@ GST_START_TEST (test_mixed)
   gst_object_unref (info.clock);
 }
 
-GST_END_TEST Suite * gst_systemclock_suite (void)
+GST_END_TEST Suite *
+gst_systemclock_suite (void)
 {
   Suite *s = suite_create ("GstSystemClock");
   TCase *tc_chain = tcase_create ("waiting");
