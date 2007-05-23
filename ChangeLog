@@ -1,5 +1,10 @@
 2007-05-23  Wim Taymans  <wim@fluendo.com>
 
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	Add doc xml file.
+
+2007-05-23  Wim Taymans  <wim@fluendo.com>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
