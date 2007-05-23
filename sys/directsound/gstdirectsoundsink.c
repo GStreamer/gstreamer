@@ -76,13 +76,8 @@ static void gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass);
 static void gst_directsound_sink_init (GstDirectSoundSink * dsoundsink,
     GstDirectSoundSinkClass * g_class);
 static void gst_directsound_sink_finalise (GObject * object);
-static void gst_directsound_sink_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_directsound_sink_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstCaps *gst_directsound_sink_getcaps (GstBaseSink * bsink);
-
 static gboolean gst_directsound_sink_prepare (GstAudioSink * asink,
     GstRingBufferSpec * spec);
 static gboolean gst_directsound_sink_unprepare (GstAudioSink * asink);
@@ -94,6 +89,12 @@ static guint gst_directsound_sink_write (GstAudioSink * asink, gpointer data,
 static guint gst_directsound_sink_delay (GstAudioSink * asink);
 static void gst_directsound_sink_reset (GstAudioSink * asink);
 
+/* interfaces */
+static void gst_directsound_sink_interfaces_init (GType type);
+static void
+gst_directsound_sink_implements_interface_init (GstImplementsInterfaceClass *
+    iface);
+static void gst_directsound_sink_mixer_interface_init (GstMixerClass * iface);
 
 static GstStaticPadTemplate directsoundsink_sink_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -110,22 +111,108 @@ static GstStaticPadTemplate directsoundsink_sink_factory =
         "depth = (int) 8, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]"));
 
-enum
-{
-  PROP_0,
-  PROP_ATTENUATION
-};
+GST_BOILERPLATE_FULL (GstDirectSoundSink, gst_directsound_sink, GstAudioSink,
+    GST_TYPE_AUDIO_SINK, gst_directsound_sink_interfaces_init);
 
+/* interfaces stuff */
 static void
-_do_init (GType directsoundsink_type)
+gst_directsound_sink_interfaces_init (GType type)
 {
-  GST_DEBUG_CATEGORY_INIT (directsoundsink_debug, "directsoundsink", 0,
-      "DirectSound sink");
+  static const GInterfaceInfo implements_interface_info = {
+    (GInterfaceInitFunc) gst_directsound_sink_implements_interface_init,
+    NULL,
+    NULL,
+  };
+
+  static const GInterfaceInfo mixer_interface_info = {
+    (GInterfaceInitFunc) gst_directsound_sink_mixer_interface_init,
+    NULL,
+    NULL,
+  };
+
+  g_type_add_interface_static (type,
+      GST_TYPE_IMPLEMENTS_INTERFACE, &implements_interface_info);
+  g_type_add_interface_static (type, GST_TYPE_MIXER, &mixer_interface_info);
 }
 
-GST_BOILERPLATE_FULL (GstDirectSoundSink, gst_directsound_sink, GstAudioSink,
-    GST_TYPE_AUDIO_SINK, _do_init);
+static gboolean
+gst_directsound_sink_interface_supported (GstImplementsInterface * iface,
+    GType iface_type)
+{
+  g_return_val_if_fail (iface_type == GST_TYPE_MIXER, FALSE);
 
+  /* for the sake of this example, we'll always support it. However, normally,
+   * you would check whether the device you've opened supports mixers. */
+  return TRUE;
+}
+
+static void
+gst_directsound_sink_implements_interface_init (GstImplementsInterfaceClass *
+    iface)
+{
+  iface->supported = gst_directsound_sink_interface_supported;
+}
+
+/*
+ * This function returns the list of support tracks (inputs, outputs)
+ * on this element instance. Elements usually build this list during
+ * _init () or when going from NULL to READY.
+ */
+
+static const GList *
+gst_directsound_sink_mixer_list_tracks (GstMixer * mixer)
+{
+  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (mixer);
+
+  return dsoundsink->tracks;
+}
+
+/*
+ * Set volume. volumes is an array of size track->num_channels, and
+ * each value in the array gives the wanted volume for one channel
+ * on the track.
+ */
+
+static void
+gst_directsound_sink_mixer_set_volume (GstMixer * mixer,
+    GstMixerTrack * track, gint * volumes)
+{
+  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (mixer);
+
+  if (volumes[0] != dsoundsink->volume) {
+    dsoundsink->volume = volumes[0];
+
+    if (dsoundsink->pDSBSecondary) {
+      /* DirectSound is using attenuation in the following range 
+       * (DSBVOLUME_MIN=-10000, DSBVOLUME_MAX=0) */
+      glong ds_attenuation = DSBVOLUME_MIN + (dsoundsink->volume * 100);
+
+      IDirectSoundBuffer_SetVolume (dsoundsink->pDSBSecondary, ds_attenuation);
+    }
+  }
+}
+
+static void
+gst_directsound_sink_mixer_get_volume (GstMixer * mixer,
+    GstMixerTrack * track, gint * volumes)
+{
+  GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (mixer);
+
+  volumes[0] = dsoundsink->volume;
+}
+
+static void
+gst_directsound_sink_mixer_interface_init (GstMixerClass * iface)
+{
+  /* the mixer interface requires a definition of the mixer type:
+   * hardware or software? */
+  GST_MIXER_TYPE (iface) = GST_MIXER_SOFTWARE;
+
+  /* virtual function pointers */
+  iface->list_tracks = gst_directsound_sink_mixer_list_tracks;
+  iface->set_volume = gst_directsound_sink_mixer_set_volume;
+  iface->get_volume = gst_directsound_sink_mixer_get_volume;
+}
 
 static void
 gst_directsound_sink_finalise (GObject * object)
@@ -133,6 +220,12 @@ gst_directsound_sink_finalise (GObject * object)
   GstDirectSoundSink *dsoundsink = GST_DIRECTSOUND_SINK (object);
 
   g_mutex_free (dsoundsink->dsound_lock);
+
+  if (dsoundsink->tracks) {
+    g_list_foreach (dsoundsink->tracks, (GFunc) g_object_unref, NULL);
+    g_list_free (dsoundsink->tracks);
+    dsoundsink->tracks = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -162,13 +255,12 @@ gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
   gstbaseaudiosink_class = (GstBaseAudioSinkClass *) klass;
   gstaudiosink_class = (GstAudioSinkClass *) klass;
 
+  GST_DEBUG_CATEGORY_INIT (directsoundsink_debug, "directsoundsink", 0,
+      "DirectSound sink");
+
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_directsound_sink_finalise);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_directsound_sink_get_property);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_directsound_sink_set_property);
 
   gstbasesink_class->get_caps =
       GST_DEBUG_FUNCPTR (gst_directsound_sink_getcaps);
@@ -182,69 +274,28 @@ gst_directsound_sink_class_init (GstDirectSoundSinkClass * klass)
   gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_directsound_sink_write);
   gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_directsound_sink_delay);
   gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_directsound_sink_reset);
-
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_ATTENUATION,
-      g_param_spec_long ("attenuation", "Attenuation of the sound",
-          "The attenuation for the directsound buffer (default is 0 so the directsound buffer will not be attenuated)",
-          -10000, 0, 0, G_PARAM_READWRITE));
-}
-
-static void
-gst_directsound_sink_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstDirectSoundSink *dsoundsink;
-
-  dsoundsink = GST_DIRECTSOUND_SINK (object);
-
-  switch (prop_id) {
-    case PROP_ATTENUATION:
-    {
-      glong attenuation = g_value_get_long (value);
-
-      if (attenuation != dsoundsink->attenuation) {
-        dsoundsink->attenuation = attenuation;
-
-        if (dsoundsink->pDSBSecondary)
-          IDirectSoundBuffer_SetVolume (dsoundsink->pDSBSecondary,
-              dsoundsink->attenuation);
-      }
-
-      break;
-    }
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_directsound_sink_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstDirectSoundSink *dsoundsink;
-
-  dsoundsink = GST_DIRECTSOUND_SINK (object);
-
-  switch (prop_id) {
-    case PROP_ATTENUATION:
-      g_value_set_long (value, dsoundsink->attenuation);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
 }
 
 static void
 gst_directsound_sink_init (GstDirectSoundSink * dsoundsink,
     GstDirectSoundSinkClass * g_class)
 {
+  GstMixerTrack *track = NULL;
+
+  dsoundsink->tracks = NULL;
+  track = g_object_new (GST_TYPE_MIXER_TRACK, NULL);
+  track->label = g_strdup ("DSoundTrack");
+  track->num_channels = 2;
+  track->min_volume = 0;
+  track->max_volume = 100;
+  track->flags = GST_MIXER_TRACK_OUTPUT;
+  dsoundsink->tracks = g_list_append (dsoundsink->tracks, track);
+
   dsoundsink->pDS = NULL;
   dsoundsink->pDSBSecondary = NULL;
   dsoundsink->current_circular_offset = 0;
   dsoundsink->buffer_size = DSBSIZE_MIN;
-  dsoundsink->attenuation = 0;
+  dsoundsink->volume = 100;
   dsoundsink->dsound_lock = g_mutex_new ();
   dsoundsink->first_buffer_after_reset = FALSE;
 }
@@ -334,10 +385,6 @@ gst_directsound_sink_prepare (GstAudioSink * asink, GstRingBufferSpec * spec)
             DXGetErrorString9 (hRes)), (NULL));
     return FALSE;
   }
-
-  if (dsoundsink->attenuation != 0)
-    IDirectSoundBuffer_SetVolume (dsoundsink->pDSBSecondary,
-        dsoundsink->attenuation);
 
   return TRUE;
 }
