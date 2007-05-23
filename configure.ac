@@ -201,8 +201,11 @@ GST_CONFIGPATH=`$PKG_CONFIG --variable=includedir gstreamer-0.10`"/gst/gstconfig
 AG_GST_PARSE_SUBSYSTEM_DISABLES($GST_CONFIGPATH)
 if test $GST_DISABLE_LOADSAVE = "1"; then
   AC_MSG_WARN("Load/Save XML persistence disabled")
+  IGNORE_GST_LOADSAVE="gst-disable-loadsave.ignore"
+else
+  IGNORE_GST_LOADSAVE=""
 fi
-
+AC_SUBST(IGNORE_GST_LOADSAVE)
 
 dnl check for gstreamer-controller
 PKG_CHECK_MODULES(GST_CONTROLLER, gstreamer-controller-$GST_MAJORMINOR >= $GST_REQ,

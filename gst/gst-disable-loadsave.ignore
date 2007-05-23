@@ -1,0 +1,5 @@
+%%
+ignore
+  gst_element_save_thyself
+  gst_element_restore_thyself
+%%

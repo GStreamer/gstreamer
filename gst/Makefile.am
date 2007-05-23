@@ -31,7 +31,8 @@ versioned_overrides = \
 	gst-0.10.10.ignore	\
 	gst-0.10.11.ignore 	\
 	gst-0.10.12.ignore 	\
-	gst-pb-0.10.11.ignore
+	gst-pb-0.10.11.ignore	\
+	gst-disable-loadsave.ignore
 
 INCLUDES = $(PYTHON_INCLUDES)
 EXTRA_DIST = $(defs_DATA) $(versioned_overrides) common.h arg-types.py

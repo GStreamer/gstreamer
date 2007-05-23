@@ -1,3 +1,12 @@
+2007-05-23  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-disable-loadsave.ignore:
+	* gst/gstversion.override.in:
+	Example of how to properly ignore methods that aren't available if
+	some feature is disabled in GStreamer core.
+
 2007-04-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
