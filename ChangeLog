@@ -1,3 +1,10 @@
+2007-05-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by René Stadler <mail at renestadler dot de>:
+
+	* ext/sdl/sdlvideosink.c:
+	Separate the authors by newlines instead of nothing. Fixes #440774.
+
 2007-05-23  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/inspect/plugin-rtpmanager.xml:

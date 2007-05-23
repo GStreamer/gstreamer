@@ -53,8 +53,8 @@ static const GstElementDetails gst_sdlvideosink_details =
 GST_ELEMENT_DETAILS ("SDL video sink",
     "Sink/Video",
     "An SDL-based videosink",
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>"
-    "Edgard Lima <edgard.lima@indt.org.br>"
+    "Ronald Bultje <rbultje@ronald.bitfreak.net>\n"
+    "Edgard Lima <edgard.lima@indt.org.br>\n"
     "Jan Schmidt <thaytan@mad.scientist.com>");
 
 
