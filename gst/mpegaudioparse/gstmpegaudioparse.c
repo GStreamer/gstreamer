@@ -670,7 +670,7 @@ gst_mp3parse_chain (GstPad * pad, GstBuffer * buf)
     header = GST_READ_UINT32_BE (data);
     /* if it's a valid header, go ahead and send off the frame */
     if (head_check (mp3parse, header)) {
-      guint bitrate = 0, layer = 0, rate = 0, channels = 0, version;
+      guint bitrate = 0, layer = 0, rate = 0, channels = 0, version = 0;
 
       if (!(bpf = mp3_type_frame_length_from_header (mp3parse, header,
                   &version, &layer, &channels, &bitrate, &rate)))
