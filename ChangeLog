@@ -1,3 +1,40 @@
+2007-05-24  Sebastian Moutte  <sebastien@moutte.net>
+
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	Remove directsoundsink property doc as this sink use the mixer
+	interface now.
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	Add interfaces implemented by Windows sinks.
+	* sys/directsound/gstdirectsoundsink.c:
+	* sys/directsound/gstdirectsoundsink.h:
+	Remove directsoundsink property  and implement the mixer interface.
+	* win32/vs6/gst_plugins_bad.dsw:
+	* win32/vs6/libgstdirectsound.dsp:
+	Update project files.
+	* gst-libs/gst/dshow/gstdshow.cpp:
+	* gst-libs/gst/dshow/gstdshow.h:
+	* gst-libs/gst/dshow/gstdshowfakesink.cpp:
+	* gst-libs/gst/dshow/gstdshowfakesink.h:
+	* gst-libs/gst/dshow/gstdshowfakesrc.cpp:
+	* gst-libs/gst/dshow/gstdshowfakesrc.h:
+	* gst-libs/gst/dshow/gstdshowinterface.cpp:
+	* gst-libs/gst/dshow/gstdshowinterface.h:
+	* win32/common/libgstdshow.def:
+	* win32/vs6/libgstdshow.dsp:
+	Add a new gst library which allow to create internal Direct Show
+	graph (pipelines) to wrap Windows sources, decoders or encoders.
+	It includes a DirectShow fake source and sink and utility functions.	
+	* sys/dshowsrcwrapper/gstdshowaudiosrc.c:
+	* sys/dshowsrcwrapper/gstdshowaudiosrc.h:
+	* sys/dshowsrcwrapper/gstdshowsrcwrapper.c:
+	* sys/dshowsrcwrapper/gstdshowsrcwrapper.h:
+	* sys/dshowsrcwrapper/gstdshowvideosrc.c:
+	* sys/dshowsrcwrapper/gstdshowvideosrc.h:
+	* win32/vs6/libdshowsrcwrapper.dsp:
+	Add a new plugin to wrap DirectShow sources on Windows.
+	It gets data from any webcam, dv cam, micro. We could add 
+	tv tunner card later.
+	
 2007-05-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by René Stadler <mail at renestadler dot de>:

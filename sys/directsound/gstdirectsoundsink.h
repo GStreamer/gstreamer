@@ -30,6 +30,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/gstaudiosink.h>
+#include <gst/interfaces/mixer.h>
 
 #include <windows.h>
 #include <dxerr9.h>
@@ -51,20 +52,27 @@ struct _GstDirectSoundSink
 {
   GstAudioSink sink;
 
+  /* directsound object interface pointer */
   LPDIRECTSOUND pDS;
 
+  /* directsound sound object interface pointer */
   LPDIRECTSOUNDBUFFER pDSBSecondary;
 
-  /*DirectSound buffer size */
+  /* directSound buffer size */
   guint buffer_size;
 
-  /*Offset of the circular buffer where we must write next */
+  /* offset of the circular buffer where we must write next */
   guint current_circular_offset;
 
   guint bytes_per_sample;
 
-  glong attenuation;
+  /* current volume setup by mixer interface */
+  glong volume;
 
+  /* tracks list of our mixer interface implementation */
+  GList *tracks;
+
+  /* lock used to protect writes and resets */
   GMutex *dsound_lock;
 
   gboolean first_buffer_after_reset;

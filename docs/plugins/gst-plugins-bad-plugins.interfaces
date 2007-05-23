@@ -4,3 +4,5 @@ GstSDLVideoSink GstImplementsInterface GstXOverlay GstNavigation
 GstDfbVideoSink GstImplementsInterface GstNavigation
 GstNeonhttpSrc GstURIHandler
 GstMMS GstURIHandler
+GstDirectDrawSink GstImplementsInterface GstXOverlay
+GstDirectSoundSink GstImplementsInterface GstMixer
