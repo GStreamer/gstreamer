@@ -1,3 +1,17 @@
+2007-05-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Vincent Torri  <vtorri at univ-evry fr>
+
+	* sys/directdraw/gstdirectdrawsink.c:
+	(gst_directdraw_sink_buffer_alloc),
+	(gst_directdraw_sink_show_frame),
+	(gst_directdraw_sink_check_primary_surface),
+	(gst_directdraw_sink_check_offscreen_surface),
+	(EnumModesCallback2), (gst_directdraw_sink_get_ddrawcaps),
+	(gst_directdraw_sink_surface_create):
+	* sys/directdraw/gstdirectdrawsink.h:
+	  Fix more warnings when compiling with MingW (#439914).
+
 2007-05-24  Sebastian Moutte  <sebastien@moutte.net>
 
 	* docs/plugins/gst-plugins-bad-plugins.args:

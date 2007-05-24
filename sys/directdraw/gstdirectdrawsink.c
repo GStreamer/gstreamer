@@ -585,6 +585,7 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
     guint depth;
     HRESULT hres;
     DDSURFACEDESC2 surface_desc;
+    DDSURFACEDESC2 *sd;
     GstStructure *structure = NULL;
 
     structure = gst_caps_get_structure (caps, 0);
@@ -593,8 +594,11 @@ gst_directdraw_sink_buffer_alloc (GstBaseSink * bsink, guint64 offset,
           "Can't get depth from buffer_alloc caps");
       return GST_FLOW_ERROR;
     }
-    surface_desc.dwSize = sizeof (DDSURFACEDESC);
-    hres = IDirectDraw7_GetDisplayMode (ddrawsink->ddraw_object, &surface_desc);
+    surface_desc.dwSize = sizeof (surface_desc);
+    sd = &surface_desc;
+    hres =
+        IDirectDraw7_GetDisplayMode (ddrawsink->ddraw_object,
+        (DDSURFACEDESC *) sd);
     if (hres != DD_OK) {
       GST_CAT_DEBUG_OBJECT (directdrawsink_debug, ddrawsink,
           "Can't get current display mode (error=%ld)", (glong) hres);
@@ -744,14 +748,16 @@ gst_directdraw_sink_show_frame (GstBaseSink * bsink, GstBuffer * buf)
     LPBYTE data = NULL;
     guint src_pitch, line;
     DDSURFACEDESC2 surf_desc;
+    DDSURFACEDESC2 *sd;
 
     ZeroMemory (&surf_desc, sizeof (surf_desc));
     surf_desc.dwSize = sizeof (surf_desc);
+    sd = &surf_desc;
 
     /* Lock the surface */
     hRes =
         IDirectDrawSurface7_Lock (ddrawsink->offscreen_surface, NULL,
-        &surf_desc, DDLOCK_WAIT, NULL);
+        (DDSURFACEDESC *) sd, DDLOCK_WAIT, NULL);
     if (hRes != DD_OK) {
       GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
           "gst_directdraw_sink_show_frame failed locking surface %s",
@@ -1284,6 +1290,7 @@ gst_directdraw_sink_check_primary_surface (GstDirectDrawSink * ddrawsink)
 {
   HRESULT hres;
   DDSURFACEDESC2 dd_surface_desc;
+  DDSURFACEDESC2 *sd;
 
   /* if our primary surface already exist, check if it's not lost */
   if (ddrawsink->primary_surface) {
@@ -1320,7 +1327,9 @@ gst_directdraw_sink_check_primary_surface (GstDirectDrawSink * ddrawsink)
   dd_surface_desc.dwSize = sizeof (dd_surface_desc);
   dd_surface_desc.dwFlags = DDSD_CAPS;
   dd_surface_desc.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
-  hres = IDirectDraw7_CreateSurface (ddrawsink->ddraw_object, &dd_surface_desc,
+  sd = &dd_surface_desc;
+  hres =
+      IDirectDraw7_CreateSurface (ddrawsink->ddraw_object, (DDSURFACEDESC *) sd,
       &ddrawsink->primary_surface, NULL);
   if (hres != DD_OK) {
     GST_ELEMENT_ERROR (ddrawsink, RESOURCE, WRITE,
@@ -1342,6 +1351,7 @@ static gboolean
 gst_directdraw_sink_check_offscreen_surface (GstDirectDrawSink * ddrawsink)
 {
   DDSURFACEDESC2 dd_surface_desc;
+  DDSURFACEDESC2 *sd;
   HRESULT hres;
 
   /* if our offscreen surface already exist, check if it's not lost */
@@ -1380,7 +1390,9 @@ gst_directdraw_sink_check_offscreen_surface (GstDirectDrawSink * ddrawsink)
       sizeof (DDPIXELFORMAT));
 
   dd_surface_desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
-  hres = IDirectDraw7_CreateSurface (ddrawsink->ddraw_object, &dd_surface_desc,
+  sd = &dd_surface_desc;
+  hres =
+      IDirectDraw7_CreateSurface (ddrawsink->ddraw_object, (DDSURFACEDESC *) sd,
       &ddrawsink->offscreen_surface, NULL);
   if (hres != DD_OK) {
     GST_CAT_WARNING_OBJECT (directdrawsink_debug, ddrawsink,
@@ -1412,25 +1424,26 @@ gst_directdraw_sink_get_depth (LPDDPIXELFORMAT lpddpfPixelFormat)
 }
 
 HRESULT WINAPI
-EnumModesCallback2 (LPDDSURFACEDESC2 lpDDSurfaceDesc, LPVOID lpContext)
+EnumModesCallback2 (LPDDSURFACEDESC lpDDSurfaceDesc, LPVOID lpContext)
 {
   GstDirectDrawSink *ddrawsink = (GstDirectDrawSink *) lpContext;
   GstCaps *format_caps = NULL;
+  LPDDSURFACEDESC2 sd;
 
   if (!ddrawsink || !lpDDSurfaceDesc)
     return DDENUMRET_CANCEL;
 
-  if ((lpDDSurfaceDesc->dwFlags & DDSD_PIXELFORMAT) != DDSD_PIXELFORMAT) {
+  sd = (LPDDSURFACEDESC2) lpDDSurfaceDesc;
+  if ((sd->dwFlags & DDSD_PIXELFORMAT) != DDSD_PIXELFORMAT) {
     GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
         "Display mode found with DDSD_PIXELFORMAT not set");
     return DDENUMRET_OK;
   }
 
-  if ((lpDDSurfaceDesc->ddpfPixelFormat.dwFlags & DDPF_RGB) != DDPF_RGB)
+  if ((sd->ddpfPixelFormat.dwFlags & DDPF_RGB) != DDPF_RGB)
     return DDENUMRET_OK;
 
-  format_caps =
-      gst_directdraw_sink_create_caps_from_surfacedesc (lpDDSurfaceDesc);
+  format_caps = gst_directdraw_sink_create_caps_from_surfacedesc (sd);
 
   if (format_caps) {
     gst_caps_append (ddrawsink->caps, format_caps);
@@ -1503,6 +1516,7 @@ gst_directdraw_sink_get_ddrawcaps (GstDirectDrawSink * ddrawsink)
   /*  we don't test for DDCAPS_BLTSTRETCH on the hardware as the directdraw emulation layer can do it */
   if (!(ddcaps_hardware.dwCaps & DDCAPS_BLTFOURCC)) {
     DDSURFACEDESC2 surface_desc;
+    DDSURFACEDESC2 *sd;
 
     GST_CAT_INFO_OBJECT (directdrawsink_debug, ddrawsink,
         "hardware doesn't support blit from one colorspace to another one. "
@@ -1511,8 +1525,11 @@ gst_directdraw_sink_get_ddrawcaps (GstDirectDrawSink * ddrawsink)
     /* save blit caps */
     ddrawsink->can_blit_between_colorspace = FALSE;
 
-    surface_desc.dwSize = sizeof (DDSURFACEDESC);
-    hRes = IDirectDraw7_GetDisplayMode (ddrawsink->ddraw_object, &surface_desc);
+    surface_desc.dwSize = sizeof (surface_desc);
+    sd = &surface_desc;
+    hRes =
+        IDirectDraw7_GetDisplayMode (ddrawsink->ddraw_object,
+        (DDSURFACEDESC *) sd);
     if (hRes != DD_OK) {
       GST_ELEMENT_ERROR (ddrawsink, CORE, NEGOTIATION,
           ("Error getting the current display mode error=%s",
@@ -1572,7 +1589,10 @@ gst_directdraw_sink_surface_create (GstDirectDrawSink * ddrawsink,
   GstDDrawSurface *surface = NULL;
   GstStructure *structure = NULL;
   gint pitch;
+
+#if 0
   HRESULT hRes;
+#endif
   DDSURFACEDESC2 surf_desc, surf_lock_desc;
 
   g_return_val_if_fail (GST_IS_DIRECTDRAW_SINK (ddrawsink), NULL);
@@ -1655,9 +1675,8 @@ lock:
       "allocating a surface of %d bytes (stride=%ld)\n", size,
       surf_lock_desc.lPitch);
 
-#else
-
 surface_pitch_bad:
+#else
   GST_BUFFER (surface)->malloc_data = g_malloc (size);
   GST_BUFFER_DATA (surface) = GST_BUFFER (surface)->malloc_data;
   GST_BUFFER_SIZE (surface) = size;
