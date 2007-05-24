@@ -2906,7 +2906,7 @@ static gboolean
 gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
 {
   RTSPHeaderField field;
-  gchar *respoptions = NULL;
+  gchar *respoptions;
   gchar **options;
   gint indx = 0;
   gint i;
@@ -2917,6 +2917,7 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
   /* try the Allow header first */
   field = RTSP_HDR_ALLOW;
   while (TRUE) {
+    respoptions = NULL;
     rtsp_message_get_header (response, field, &respoptions, indx);
     if (indx == 0 && !respoptions) {
       /* if no Allow header was found then try the Public header... */

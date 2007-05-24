@@ -1,5 +1,10 @@
 2007-05-24  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_methods):
+	Init value to avoid infinte loops.
+
+2007-05-24  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Peter Kjellerstedt  <pkj at axis com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_setup_auth),
