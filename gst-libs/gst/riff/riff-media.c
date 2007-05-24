@@ -1000,6 +1000,8 @@ gst_riff_create_audio_caps (guint16 codec_id,
       caps = gst_caps_new_simple ("audio/x-dts", NULL);
       if (codec_name)
         *codec_name = g_strdup ("DTS audio");
+      /* wavparse is not always able to specify rate/channels for DTS-in-wav */
+      rate_chan = FALSE;
       break;
     case GST_RIFF_WAVE_FORMAT_AAC:
     {

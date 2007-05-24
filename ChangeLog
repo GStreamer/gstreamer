@@ -1,3 +1,11 @@
+2007-05-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	  Don't add channels and rate fields to the template caps for
+	  audio/x-dts, as wavparse might not always be able to set them,
+	  which would then lead to 'caps are not a real subset of the
+	  template caps' warnings.
+
 2007-05-24  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstplaybasebin.c: (new_decoded_pad_full):
