@@ -1,3 +1,11 @@
+2007-05-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Add -no-undefined to GST_ALL_LDFLAGS; without it, no shared libs
+	  will be built or installed on MingW for our plugins in ext/; also,
+	  it looks like the right thing to do and we do it for all our other
+	  plugin modules as well. Fixes #440253.
+
 2007-05-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_type_find):
