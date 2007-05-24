@@ -373,8 +373,8 @@ gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
   GstFlacEnc *flacenc;
   GstStructure *structure;
   FLAC__SeekableStreamEncoderState state;
+  gint depth, chans, rate, width;
 
-  /* takes a ref on flacenc */
   flacenc = GST_FLAC_ENC (gst_pad_get_parent (pad));
 
   if (FLAC__seekable_stream_encoder_get_state (flacenc->encoder) !=
@@ -383,11 +383,17 @@ gst_flac_enc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  if (!gst_structure_get_int (structure, "channels", &flacenc->channels)
-      || !gst_structure_get_int (structure, "depth", &flacenc->depth)
-      || !gst_structure_get_int (structure, "rate", &flacenc->sample_rate))
-    /* we got caps incompatible with the template? */
-    g_return_val_if_reached (FALSE);
+  if (!gst_structure_get_int (structure, "channels", &chans) ||
+      !gst_structure_get_int (structure, "width", &width) ||
+      !gst_structure_get_int (structure, "depth", &depth) ||
+      !gst_structure_get_int (structure, "rate", &rate)) {
+    GST_DEBUG_OBJECT (flacenc, "incomplete caps: %" GST_PTR_FORMAT, caps);
+    return FALSE;
+  }
+
+  flacenc->channels = chans;
+  flacenc->depth = depth;
+  flacenc->sample_rate = rate;
 
   caps = gst_caps_new_simple ("audio/x-flac",
       "channels", G_TYPE_INT, flacenc->channels,
@@ -662,7 +668,11 @@ gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer)
   gulong i;
   FLAC__bool res;
 
-  flacenc = GST_FLAC_ENC (gst_pad_get_parent (pad));
+  flacenc = GST_FLAC_ENC (GST_PAD_PARENT (pad));
+
+  /* make sure setcaps has been called and the encoder is setup */
+  if (G_UNLIKELY (flacenc->depth == 0))
+    return GST_FLOW_NOT_NEGOTIATED;
 
   depth = flacenc->depth;
 
@@ -691,8 +701,6 @@ gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer)
       (const FLAC__int32 *) data, samples / flacenc->channels);
 
   g_free (data);
-
-  gst_object_unref (flacenc);
 
   if (res)
     return GST_FLOW_OK;
