@@ -136,7 +136,7 @@ struct _GstDirectDrawSinkClass
   GstVideoSinkClass parent_class;
 };
 
-GType gst_direct_drawsink_get_type (void);
+GType gst_directdraw_sink_get_type (void);
 
 G_END_DECLS
 #endif /* __GST_DIRECTDRAWSINK_H__ */
