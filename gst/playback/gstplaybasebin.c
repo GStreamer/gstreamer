@@ -1248,11 +1248,12 @@ new_decoded_pad_full (GstElement * element, GstPad * pad, gboolean last,
   const gchar *mimetype;
   GstCaps *caps;
   GstStreamInfo *info;
-  GstStreamType type;
+  GstStreamType type = GST_STREAM_TYPE_UNKNOWN;
   GstPad *sinkpad;
   GstPlayBaseGroup *group;
   guint sig;
   GstObject *parent;
+  gboolean first_pad;
 
   GST_DEBUG ("play base: new decoded pad. Last: %d", last);
 
@@ -1280,18 +1281,32 @@ new_decoded_pad_full (GstElement * element, GstPad * pad, gboolean last,
     type = GST_STREAM_TYPE_VIDEO;
   } else if (g_str_has_prefix (mimetype, "text/")) {
     type = GST_STREAM_TYPE_TEXT;
-  } else {
-    type = GST_STREAM_TYPE_UNKNOWN;
   }
   gst_object_unref (parent);
 
   info = gst_stream_info_new (GST_OBJECT_CAST (pad), type, NULL, caps);
-  if (type > 0 && type <= NUM_TYPES) {
-    /* first pad of each type gets a selector + preroll queue */
-    if (group->type[type - 1].npads == 0) {
-      GST_DEBUG ("play base: pad needs new preroll");
-      gen_preroll_element (play_base_bin, group, type, pad, info);
-    }
+  gst_caps_unref (caps);
+
+  if (type == GST_STREAM_TYPE_UNKNOWN) {
+    /* Unknown streams get added to the group, but the data
+     * just gets ignored */
+    add_stream (group, info);
+
+    GROUP_UNLOCK (play_base_bin);
+
+    /* signal the no more pads after adding the stream */
+    if (last)
+      no_more_pads_full (element, is_subs, play_base_bin);
+
+    return;
+  }
+
+  /* first pad of each type gets a selector + preroll queue */
+  first_pad = (group->type[type - 1].npads == 0);
+
+  if (first_pad) {
+    GST_DEBUG ("play base: pad needs new preroll");
+    gen_preroll_element (play_base_bin, group, type, pad, info);
   }
 
   /* add to stream selector */
@@ -1309,12 +1324,8 @@ new_decoded_pad_full (GstElement * element, GstPad * pad, gboolean last,
   gst_pad_link (pad, sinkpad);
   gst_object_unref (sinkpad);
 
-  /* add the stream to the list */
-  gst_caps_unref (caps);
-  info->origin = GST_OBJECT_CAST (pad);
-
   /* select 1st for now - we'll select a preferred one after preroll */
-  if (type == GST_STREAM_TYPE_UNKNOWN || group->type[type - 1].npads > 0) {
+  if (!first_pad) {
     guint id;
 
     GST_DEBUG ("Adding silence_stream data probe on type %d (npads %d)", type,
@@ -1325,6 +1336,7 @@ new_decoded_pad_full (GstElement * element, GstPad * pad, gboolean last,
     g_object_set_data (G_OBJECT (pad), "eat_probe", GINT_TO_POINTER (id));
   }
 
+  /* add the stream to the list */
   add_stream (group, info);
 
   GROUP_UNLOCK (play_base_bin);

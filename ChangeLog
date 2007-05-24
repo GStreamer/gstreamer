@@ -1,5 +1,12 @@
 2007-05-24  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/playback/gstplaybasebin.c: (new_decoded_pad_full):
+	Handle unknown or invalid pads without crashing, as might occur if
+	a media file like an mp3 is specified as a subtitle file.
+	Fixes: #410039
+
+2007-05-24  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/playback/gstplaybin.c: (add_sink), (dummy_blocked_cb),
 	(setup_sinks):
 	Block the subtitle bin output queue before ghosting it and linking,
