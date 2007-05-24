@@ -23,9 +23,9 @@
  * SECTION:gstdataqueue
  * @short_description: Threadsafe queueing object
  *
- * #GstDataQueue is an object that handles threadsafe queueing of object. It
- * also provides size-related functionnality. This object should be used for
- * any #GstElement that wishes to provide some sort of queueing functionnality.
+ * #GstDataQueue is an object that handles threadsafe queueing of objects. It
+ * also provides size-related functionality. This object should be used for
+ * any #GstElement that wishes to provide some sort of queueing functionality.
  */
 
 #include <gst/gst.h>
@@ -49,43 +49,43 @@ enum
   ARG_0,
   ARG_CUR_LEVEL_VISIBLE,
   ARG_CUR_LEVEL_BYTES,
-  ARG_CUR_LEVEL_TIME,
-  /* FILL ME */
+  ARG_CUR_LEVEL_TIME
+      /* FILL ME */
 };
 
 #define GST_DATA_QUEUE_MUTEX_LOCK(q) G_STMT_START {                     \
-    GST_CAT_LOG (data_queue_dataflow,					\
+    GST_CAT_LOG (data_queue_dataflow,                                   \
       "locking qlock from thread %p",                                   \
       g_thread_self ());                                                \
   g_mutex_lock (q->qlock);                                              \
-  GST_CAT_LOG (data_queue_dataflow,					\
+  GST_CAT_LOG (data_queue_dataflow,                                     \
       "locked qlock from thread %p",                                    \
       g_thread_self ());                                                \
 } G_STMT_END
 
-#define GST_DATA_QUEUE_MUTEX_LOCK_CHECK(q, label) G_STMT_START {	\
-    GST_DATA_QUEUE_MUTEX_LOCK (q);					\
-    if (q->flushing)							\
-      goto label;							\
+#define GST_DATA_QUEUE_MUTEX_LOCK_CHECK(q, label) G_STMT_START {        \
+    GST_DATA_QUEUE_MUTEX_LOCK (q);                                      \
+    if (q->flushing)                                                    \
+      goto label;                                                       \
   } G_STMT_END
 
 #define GST_DATA_QUEUE_MUTEX_UNLOCK(q) G_STMT_START {                   \
-    GST_CAT_LOG (data_queue_dataflow,					\
+    GST_CAT_LOG (data_queue_dataflow,                                   \
       "unlocking qlock from thread %p",                                 \
       g_thread_self ());                                                \
   g_mutex_unlock (q->qlock);                                            \
 } G_STMT_END
 
-#define STATUS(q, msg)							\
-  GST_CAT_LOG (data_queue_dataflow,					\
-	       "queue:%p " msg ": %u visible items, %u "	\
-	       "bytes, %"G_GUINT64_FORMAT	\
-	       " ns, %u elements",					\
-	       queue,							\
-	       q->cur_level.visible,					\
-	       q->cur_level.bytes,					\
-	       q->cur_level.time,					\
-	       q->queue->length)
+#define STATUS(q, msg)                                                  \
+  GST_CAT_LOG (data_queue_dataflow,                                     \
+               "queue:%p " msg ": %u visible items, %u "                \
+               "bytes, %"G_GUINT64_FORMAT                               \
+               " ns, %u elements",                                      \
+               queue,                                                   \
+               q->cur_level.visible,                                    \
+               q->cur_level.bytes,                                      \
+               q->cur_level.time,                                       \
+               q->queue->length)
 
 static void gst_data_queue_base_init (GstDataQueueClass * klass);
 static void gst_data_queue_class_init (GstDataQueueClass * klass);
