@@ -75,7 +75,7 @@ typedef struct _RTSPMessage
     } data;
   } type_data;
 
-  GHashTable    *hdr_fields;
+  GArray        *hdr_fields;
 
   guint8        *body;
   guint          body_size;
@@ -112,10 +112,15 @@ RTSPResult      rtsp_message_add_header         (RTSPMessage *msg,
                                                  RTSPHeaderField field,
                                                  const gchar *value);
 RTSPResult      rtsp_message_remove_header      (RTSPMessage *msg,
-                                                 RTSPHeaderField field);
+                                                 RTSPHeaderField field,
+                                                 gint indx);
 RTSPResult      rtsp_message_get_header         (const RTSPMessage *msg,
                                                  RTSPHeaderField field,
-                                                 gchar **value);
+                                                 gchar **value,
+                                                 gint indx);
+
+void            rtsp_message_append_headers     (const RTSPMessage *msg,
+                                                 GString *str);
 
 RTSPResult      rtsp_message_set_body           (RTSPMessage *msg,
                                                  const guint8 *data,

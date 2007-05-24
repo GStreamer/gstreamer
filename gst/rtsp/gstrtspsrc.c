@@ -2640,7 +2640,7 @@ gst_rtspsrc_setup_auth (GstRTSPSrc * src, RTSPMessage * response)
   gchar *hdr;
 
   /* Identify the available auth methods and see if any are supported */
-  if (rtsp_message_get_header (response, RTSP_HDR_WWW_AUTHENTICATE, &hdr) ==
+  if (rtsp_message_get_header (response, RTSP_HDR_WWW_AUTHENTICATE, &hdr, 0) ==
       RTSP_OK) {
     gst_rtspsrc_parse_auth_hdr (hdr, &avail_methods);
   }
@@ -2772,7 +2772,7 @@ next:
     return RTSP_OK;
 
   /* store new content base if any */
-  rtsp_message_get_header (response, RTSP_HDR_CONTENT_BASE, &content_base);
+  rtsp_message_get_header (response, RTSP_HDR_CONTENT_BASE, &content_base, 0);
   g_free (src->content_base);
   src->content_base = g_strdup (content_base);
 
@@ -2905,45 +2905,56 @@ error_response:
 static gboolean
 gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
 {
+  RTSPHeaderField field;
   gchar *respoptions = NULL;
   gchar **options;
+  gint indx = 0;
   gint i;
 
   /* clear supported methods */
   src->methods = 0;
 
-  /* Try Allow Header first */
-  rtsp_message_get_header (response, RTSP_HDR_ALLOW, &respoptions);
-  if (!respoptions)
-    /* Then maybe Public Header... */
-    rtsp_message_get_header (response, RTSP_HDR_PUBLIC, &respoptions);
-  if (!respoptions) {
-    /* this field is not required, assume the server supports
-     * DESCRIBE, SETUP and PLAY */
+  /* try the Allow header first */
+  field = RTSP_HDR_ALLOW;
+  while (TRUE) {
+    rtsp_message_get_header (response, field, &respoptions, indx);
+    if (indx == 0 && !respoptions) {
+      /* if no Allow header was found then try the Public header... */
+      field = RTSP_HDR_PUBLIC;
+      rtsp_message_get_header (response, field, &respoptions, indx);
+    }
+    if (!respoptions)
+      break;
+
+    /* If we get here, the server gave a list of supported methods, parse
+     * them here. The string is like:
+     *
+     * OPTIONS, DESCRIBE, ANNOUNCE, PLAY, SETUP, ...
+     */
+    options = g_strsplit (respoptions, ",", 0);
+
+    for (i = 0; options[i]; i++) {
+      gchar *stripped;
+      gint method;
+
+      stripped = g_strstrip (options[i]);
+      method = rtsp_find_method (stripped);
+
+      /* keep bitfield of supported methods */
+      if (method != RTSP_INVALID)
+        src->methods |= method;
+    }
+    g_strfreev (options);
+
+    indx++;
+  }
+
+  if (src->methods == 0) {
+    /* neither Allow nor Public are required, assume the server supports
+     * DESCRIBE, SETUP, PLAY and PAUSE */
     GST_DEBUG_OBJECT (src, "could not get OPTIONS");
     src->methods = RTSP_DESCRIBE | RTSP_SETUP | RTSP_PLAY | RTSP_PAUSE;
-    goto done;
   }
-
-  /* If we get here, the server gave a list of supported methods, parse
-   * them here. The string is like: 
-   *
-   * OPTIONS, DESCRIBE, ANNOUNCE, PLAY, SETUP, ...
-   */
-  options = g_strsplit (respoptions, ",", 0);
-
-  for (i = 0; options[i]; i++) {
-    gchar *stripped;
-    gint method;
-
-    stripped = g_strstrip (options[i]);
-    method = rtsp_find_method (stripped);
-
-    /* keep bitfield of supported methods */
-    if (method != RTSP_INVALID)
-      src->methods |= method;
-  }
-  g_strfreev (options);
 
   /* we need describe and setup */
   if (!(src->methods & RTSP_DESCRIBE))
@@ -2951,7 +2962,6 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
   if (!(src->methods & RTSP_SETUP))
     goto no_setup;
 
-done:
   return TRUE;
 
   /* ERRORS */
@@ -3219,7 +3229,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
       gchar *resptrans = NULL;
       RTSPTransport transport = { 0 };
 
-      rtsp_message_get_header (&response, RTSP_HDR_TRANSPORT, &resptrans);
+      rtsp_message_get_header (&response, RTSP_HDR_TRANSPORT, &resptrans, 0);
       if (!resptrans)
         goto no_transport;
 
@@ -3425,7 +3435,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     goto send_error;
 
   /* check if reply is SDP */
-  rtsp_message_get_header (&response, RTSP_HDR_CONTENT_TYPE, &respcont);
+  rtsp_message_get_header (&response, RTSP_HDR_CONTENT_TYPE, &respcont, 0);
   /* could not be set but since the request returned OK, we assume it
    * was SDP, else check it. */
   if (respcont) {
@@ -3756,14 +3766,14 @@ gst_rtspsrc_play (GstRTSPSrc * src)
 
   /* parse RTP npt field. This is the current position in the stream (Normal
    * Play Time) and should be put in the NEWSEGMENT position field. */
-  if (rtsp_message_get_header (&response, RTSP_HDR_RANGE, &range) == RTSP_OK)
+  if (rtsp_message_get_header (&response, RTSP_HDR_RANGE, &range, 0) == RTSP_OK)
     gst_rtspsrc_parse_range (src, range);
 
   /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
    * for the RTP packets. If this is not present, we assume all starts from 0... 
    * This is info for the RTP session manager that we pass to it in caps. */
   if (rtsp_message_get_header (&response, RTSP_HDR_RTP_INFO,
-          &rtpinfo) == RTSP_OK)
+          &rtpinfo, 0) == RTSP_OK)
     gst_rtspsrc_parse_rtpinfo (src, rtpinfo);
 
   rtsp_message_unset (&response);

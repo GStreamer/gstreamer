@@ -45,6 +45,24 @@
 
 #include "rtspmessage.h"
 
+typedef struct _RTSPKeyValue
+{
+  RTSPHeaderField field;
+  gchar *value;
+} RTSPKeyValue;
+
+static void
+key_value_foreach (GArray * array, GFunc func, gpointer user_data)
+{
+  guint i;
+
+  g_return_if_fail (array != NULL);
+
+  for (i = 0; i < array->len; i++) {
+    (*func) (&g_array_index (array, RTSPKeyValue, i), user_data);
+  }
+}
+
 RTSPResult
 rtsp_message_new (RTSPMessage ** msg)
 {
@@ -67,8 +85,7 @@ rtsp_message_init (RTSPMessage * msg)
   rtsp_message_unset (msg);
 
   msg->type = RTSP_MESSAGE_INVALID;
-  msg->hdr_fields =
-      g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
+  msg->hdr_fields = g_array_new (FALSE, FALSE, sizeof (RTSPKeyValue));
 
   return RTSP_OK;
 }
@@ -101,8 +118,7 @@ rtsp_message_init_request (RTSPMessage * msg, RTSPMethod method,
   msg->type = RTSP_MESSAGE_REQUEST;
   msg->type_data.request.method = method;
   msg->type_data.request.uri = g_strdup (uri);
-  msg->hdr_fields =
-      g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
+  msg->hdr_fields = g_array_new (FALSE, FALSE, sizeof (RTSPKeyValue));
 
   return RTSP_OK;
 }
@@ -136,19 +152,19 @@ rtsp_message_init_response (RTSPMessage * msg, RTSPStatusCode code,
   msg->type = RTSP_MESSAGE_RESPONSE;
   msg->type_data.response.code = code;
   msg->type_data.response.reason = g_strdup (reason);
-  msg->hdr_fields =
-      g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
+  msg->hdr_fields = g_array_new (FALSE, FALSE, sizeof (RTSPKeyValue));
 
   if (request) {
     gchar *header;
 
     /* copy CSEQ */
-    if (rtsp_message_get_header (request, RTSP_HDR_CSEQ, &header) == RTSP_OK) {
+    if (rtsp_message_get_header (request, RTSP_HDR_CSEQ, &header, 0) == RTSP_OK) {
       rtsp_message_add_header (msg, RTSP_HDR_CSEQ, header);
     }
 
     /* copy session id */
-    if (rtsp_message_get_header (request, RTSP_HDR_SESSION, &header) == RTSP_OK) {
+    if (rtsp_message_get_header (request, RTSP_HDR_SESSION, &header,
+            0) == RTSP_OK) {
       char *pos;
 
       header = g_strdup (header);
@@ -201,7 +217,7 @@ rtsp_message_unset (RTSPMessage * msg)
   }
 
   if (msg->hdr_fields != NULL)
-    g_hash_table_destroy (msg->hdr_fields);
+    g_array_free (msg->hdr_fields, TRUE);
 
   g_free (msg->body);
 
@@ -228,44 +244,80 @@ RTSPResult
 rtsp_message_add_header (RTSPMessage * msg, RTSPHeaderField field,
     const gchar * value)
 {
+  RTSPKeyValue key_value;
+
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
   g_return_val_if_fail (value != NULL, RTSP_EINVAL);
 
-  g_hash_table_insert (msg->hdr_fields, GINT_TO_POINTER (field),
-      g_strdup (value));
+  key_value.field = field;
+  key_value.value = g_strdup (value);
+
+  g_array_append_val (msg->hdr_fields, key_value);
 
   return RTSP_OK;
 }
 
 RTSPResult
-rtsp_message_remove_header (RTSPMessage * msg, RTSPHeaderField field)
+rtsp_message_remove_header (RTSPMessage * msg, RTSPHeaderField field, gint indx)
 {
+  RTSPResult res = RTSP_ENOTIMPL;
+  guint i = 0;
+  gint cnt = 0;
+
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
-  g_hash_table_remove (msg->hdr_fields, GINT_TO_POINTER (field));
+  while (i < msg->hdr_fields->len) {
+    RTSPKeyValue key_value = g_array_index (msg->hdr_fields, RTSPKeyValue, i);
 
-  return RTSP_ENOTIMPL;
+    if (key_value.field == field && (indx == -1 || cnt++ == indx)) {
+      g_array_remove_index (msg->hdr_fields, i);
+      res = RTSP_OK;
+      if (indx != -1)
+        break;
+    } else {
+      i++;
+    }
+  }
+
+  return res;
 }
 
 RTSPResult
 rtsp_message_get_header (const RTSPMessage * msg, RTSPHeaderField field,
-    gchar ** value)
+    gchar ** value, gint indx)
 {
-  gchar *val;
+  guint i;
+  gint cnt = 0;
 
   g_return_val_if_fail (msg != NULL, RTSP_EINVAL);
 
-  if (msg->type == RTSP_MESSAGE_INVALID || msg->type == RTSP_MESSAGE_DATA)
-    return RTSP_ENOTIMPL;
+  for (i = 0; i < msg->hdr_fields->len; i++) {
+    RTSPKeyValue key_value = g_array_index (msg->hdr_fields, RTSPKeyValue, i);
 
-  val = g_hash_table_lookup (msg->hdr_fields, GINT_TO_POINTER (field));
-  if (val == NULL)
-    return RTSP_ENOTIMPL;
+    if (key_value.field == field && cnt++ == indx) {
+      if (value)
+        *value = key_value.value;
+      return RTSP_OK;
+    }
+  }
 
-  if (value)
-    *value = val;
+  return RTSP_ENOTIMPL;
+}
 
-  return RTSP_OK;
+void
+rtsp_message_append_headers (const RTSPMessage * msg, GString * str)
+{
+  guint i;
+
+  g_return_if_fail (msg != NULL);
+  g_return_if_fail (str != NULL);
+
+  for (i = 0; i < msg->hdr_fields->len; i++) {
+    RTSPKeyValue key_value = g_array_index (msg->hdr_fields, RTSPKeyValue, i);
+    const gchar *keystr = rtsp_header_as_text (key_value.field);
+
+    g_string_append_printf (str, "%s: %s\r\n", keystr, key_value.value);
+  }
 }
 
 RTSPResult
@@ -352,12 +404,12 @@ dump_mem (guint8 * mem, guint size)
 }
 
 static void
-dump_key_value (gpointer key, gpointer value, gpointer data)
+dump_key_value (gpointer data, gpointer user_data)
 {
-  RTSPHeaderField field = GPOINTER_TO_INT (key);
+  RTSPKeyValue *key_value = (RTSPKeyValue *) data;
 
-  g_print ("   key: '%s', value: '%s'\n", rtsp_header_as_text (field),
-      (gchar *) value);
+  g_print ("   key: '%s', value: '%s'\n",
+      rtsp_header_as_text (key_value->field), key_value->value);
 }
 
 RTSPResult
@@ -376,7 +428,7 @@ rtsp_message_dump (RTSPMessage * msg)
           rtsp_method_as_text (msg->type_data.request.method));
       g_print ("   uri:    '%s'\n", msg->type_data.request.uri);
       g_print (" headers:\n");
-      g_hash_table_foreach (msg->hdr_fields, dump_key_value, NULL);
+      key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
       g_print (" body:\n");
       rtsp_message_get_body (msg, &data, &size);
       dump_mem (data, size);
@@ -387,7 +439,7 @@ rtsp_message_dump (RTSPMessage * msg)
       g_print ("   code:   '%d'\n", msg->type_data.response.code);
       g_print ("   reason: '%s'\n", msg->type_data.response.reason);
       g_print (" headers:\n");
-      g_hash_table_foreach (msg->hdr_fields, dump_key_value, NULL);
+      key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
       rtsp_message_get_body (msg, &data, &size);
       g_print (" body: length %d\n", size);
       dump_mem (data, size);

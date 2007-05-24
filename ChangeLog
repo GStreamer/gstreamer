@@ -1,3 +1,28 @@
+2007-05-24  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_setup_auth),
+	(gst_rtspsrc_try_send), (gst_rtspsrc_parse_methods),
+	(gst_rtspsrc_setup_streams), (gst_rtspsrc_open),
+	(gst_rtspsrc_play):
+	(rtsp_connection_send), (rtsp_connection_receive):
+	* gst/rtsp/rtspextwms.c: (rtsp_ext_wms_after_send):
+	Fix for new API.
+
+	* gst/rtsp/rtspconnection.c: (add_auth_header),
+	Only add authorisation and session headers when sending messages.
+
+	* gst/rtsp/rtspmessage.c: (key_value_foreach), (rtsp_message_init),
+	(rtsp_message_init_request), (rtsp_message_init_response),
+	(rtsp_message_unset), (rtsp_message_add_header),
+	(rtsp_message_remove_header), (rtsp_message_get_header),
+	(rtsp_message_append_headers), (dump_key_value),
+	(rtsp_message_dump):
+	* gst/rtsp/rtspmessage.h:
+	Add support for multiple headers of the same type by storing the parsed
+	headers in a GArray instaed of a hashtable.
+
 2007-05-21  Wim Taymans  <wim@fluendo.com>
 
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_class_init),

@@ -86,7 +86,7 @@ rtsp_ext_wms_after_send (RTSPExtensionCtx * ctx, RTSPMessage * req,
     {
       gchar *server = NULL;
 
-      rtsp_message_get_header (resp, RTSP_HDR_SERVER, &server);
+      rtsp_message_get_header (resp, RTSP_HDR_SERVER, &server, 0);
       if (server && g_str_has_prefix (server, SERVER_PREFIX))
         rext->active = TRUE;
       else

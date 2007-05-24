@@ -273,15 +273,7 @@ timeout:
 }
 
 static void
-append_header (gint key, gchar * value, GString * str)
-{
-  const gchar *keystr = rtsp_header_as_text (key);
-
-  g_string_append_printf (str, "%s: %s\r\n", keystr, value);
-}
-
-static void
-append_auth_header (RTSPConnection * conn, RTSPMessage * message, GString * str)
+add_auth_header (RTSPConnection * conn, RTSPMessage * message)
 {
   switch (conn->auth_method) {
     case RTSP_AUTH_BASIC:{
@@ -290,7 +282,7 @@ append_auth_header (RTSPConnection * conn, RTSPMessage * message, GString * str)
       gchar *user_pass64 = util_base64_encode (user_pass, strlen (user_pass));
       gchar *auth_string = g_strdup_printf ("Basic %s", user_pass64);
 
-      append_header (RTSP_HDR_AUTHORIZATION, auth_string, str);
+      rtsp_message_add_header (message, RTSP_HDR_AUTHORIZATION, auth_string);
 
       g_free (user_pass);
       g_free (user_pass64);
@@ -427,6 +419,12 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message,
           "CSeq: %d\r\n",
           rtsp_method_as_text (message->type_data.request.method),
           message->type_data.request.uri, conn->cseq++);
+      /* add session id if we have one */
+      if (conn->session_id[0] != '\0') {
+        rtsp_message_add_header (message, RTSP_HDR_SESSION, conn->session_id);
+      }
+      /* add any authentication headers */
+      add_auth_header (conn, message);
       break;
     case RTSP_MESSAGE_RESPONSE:
       /* create response string */
@@ -455,39 +453,28 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message,
       break;
   }
 
-  /* append specific headers and body */
-  switch (message->type) {
-    case RTSP_MESSAGE_REQUEST:
-    case RTSP_MESSAGE_RESPONSE:
-      /* append session id if we have one */
-      if (conn->session_id[0] != '\0') {
-        append_header (RTSP_HDR_SESSION, conn->session_id, str);
-      }
-      /* append headers */
-      g_hash_table_foreach (message->hdr_fields, (GHFunc) append_header, str);
+  /* append headers and body */
+  if (message->type != RTSP_MESSAGE_DATA) {
+    /* append headers */
+    rtsp_message_append_headers (message, str);
 
-      /* Append any authentication headers */
-      append_auth_header (conn, message, str);
+    /* append Content-Length and body if needed */
+    if (message->body != NULL && message->body_size > 0) {
+      gchar *len;
 
-      /* append Content-Length and body if needed */
-      if (message->body != NULL && message->body_size > 0) {
-        gchar *len;
-
-        len = g_strdup_printf ("%d", message->body_size);
-        append_header (RTSP_HDR_CONTENT_LENGTH, len, str);
-        g_free (len);
-        /* header ends here */
-        g_string_append (str, "\r\n");
-        str =
-            g_string_append_len (str, (gchar *) message->body,
-            message->body_size);
-      } else {
-        /* just end headers */
-        g_string_append (str, "\r\n");
-      }
-      break;
-    default:
-      break;
+      len = g_strdup_printf ("%d", message->body_size);
+      g_string_append_printf (str, "%s: %s\r\n",
+          rtsp_header_as_text (RTSP_HDR_CONTENT_LENGTH), len);
+      g_free (len);
+      /* header ends here */
+      g_string_append (str, "\r\n");
+      str =
+          g_string_append_len (str, (gchar *) message->body,
+          message->body_size);
+    } else {
+      /* just end headers */
+      g_string_append (str, "\r\n");
+    }
   }
 
   /* write request */
@@ -914,7 +901,7 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg,
   if (need_body) {
     /* see if there is a Content-Length header */
     if (rtsp_message_get_header (msg, RTSP_HDR_CONTENT_LENGTH,
-            &hdrval) == RTSP_OK) {
+            &hdrval, 0) == RTSP_OK) {
       /* there is, read the body */
       content_length = atol (hdrval);
       RTSP_CHECK (read_body (conn, content_length, msg, timeout), read_error);
@@ -925,7 +912,7 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg,
       gchar *session_id;
 
       if (rtsp_message_get_header (msg, RTSP_HDR_SESSION,
-              &session_id) == RTSP_OK) {
+              &session_id, 0) == RTSP_OK) {
         gint sesslen, maxlen, i;
 
         /* default session timeout */
