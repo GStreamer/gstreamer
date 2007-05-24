@@ -300,7 +300,9 @@ GST_START_TEST (test_message_state_changed_children)
    * base_sink_chain has taken a refcount on the sink, and is blocked on
    * preroll */
   ASSERT_OBJECT_REFCOUNT (src, "src", 3);
-  ASSERT_OBJECT_REFCOUNT (sink, "sink", 3);
+  /* refcount can be 4 if the bin is still processing the async_done message of
+   * the sink. */
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 3, 4);
   /* 2 or 3 is valid, because the pipeline might still be posting 
    * its state_change message */
   ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "pipeline", 2, 3);

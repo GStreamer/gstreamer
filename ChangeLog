@@ -1,3 +1,9 @@
+2007-05-24  Wim Taymans  <wim@fluendo.com>
+
+	* tests/check/gst/gstbin.c: (GST_START_TEST):
+	Allow refcount of 3 and 4 because some state thread might still be busy
+	with it.
+
 2007-05-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/Makefile.am:
