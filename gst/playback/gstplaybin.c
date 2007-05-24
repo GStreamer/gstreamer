@@ -1409,7 +1409,8 @@ add_sink (GstPlayBin * play_bin, GstElement * sink, GstPad * srcpad,
   /* this is only for debugging */
   parent = gst_pad_get_parent_element (srcpad);
   if (parent) {
-    GST_DEBUG ("Adding sink with state %d (parent: %d, peer: %d)",
+    GST_DEBUG ("Adding sink %" GST_PTR_FORMAT
+        " with state %d (parent: %d, peer: %d)", sink,
         GST_STATE (sink), GST_STATE (play_bin), GST_STATE (parent));
     gst_object_unref (parent);
   }
@@ -1489,6 +1490,11 @@ subtitle_failed:
   }
 }
 
+static void
+dummy_blocked_cb (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+}
+
 static gboolean
 setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
 {
@@ -1496,7 +1502,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
   GList *streaminfo = NULL, *s;
   gboolean need_vis = FALSE;
   gboolean need_text = FALSE;
-  GstPad *textsrcpad = NULL, *pad = NULL;
+  GstPad *textsrcpad = NULL, *pad = NULL, *origtextsrcpad = NULL;
   GstElement *sink;
   gboolean res = TRUE;
 
@@ -1553,6 +1559,7 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
       textsrcpad =
           gst_element_get_pad (group->type[GST_STREAM_TYPE_TEXT - 1].preroll,
           "src");
+
       /* This pad is from subtitle-bin, we need to create a ghost pad to have
          common grandparents */
       parent = gst_object_get_parent (GST_OBJECT_CAST (textsrcpad));
@@ -1577,6 +1584,11 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
       if (!GST_IS_PLAY_BIN (grandparent)) {
         GST_DEBUG_OBJECT (textsrcpad, "this subtitle pad is from a subtitle "
             "file, ghosting to a suitable hierarchy");
+        /* Block the pad first, because as soon as we add a ghostpad, the queue
+         * will try and start pushing */
+        gst_pad_set_blocked_async (textsrcpad, TRUE, dummy_blocked_cb, NULL);
+        origtextsrcpad = gst_object_ref (textsrcpad);
+
         ghost = gst_ghost_pad_new ("text_src", textsrcpad);
         if (!GST_IS_PAD (ghost)) {
           GST_WARNING_OBJECT (textsrcpad, "failed creating ghost pad for "
@@ -1618,6 +1630,10 @@ setup_sinks (GstPlayBaseBin * play_base_bin, GstPlayBaseGroup * group)
     gst_object_unref (pad);
     if (textsrcpad)
       gst_object_unref (textsrcpad);
+    if (origtextsrcpad) {
+      gst_pad_set_blocked_async (origtextsrcpad, FALSE, dummy_blocked_cb, NULL);
+      gst_object_unref (origtextsrcpad);
+    }
   }
 
   /* remove the sinks now, pipeline get_state will now wait for the

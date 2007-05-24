@@ -1,3 +1,12 @@
+2007-05-24  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstplaybin.c: (add_sink), (dummy_blocked_cb),
+	(setup_sinks):
+	Block the subtitle bin output queue before ghosting it and linking,
+	then unblock after. This avoids spurious not-linked errors caused 
+	by the queue starting up (because it gets linked when it is ghosted). 
+	Fixes: #350299
+
 2007-05-23  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/elements/playbin.c: (test_suburi_error_unknowntype):
