@@ -499,7 +499,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         gint percent;
 
         gst_message_parse_buffering (message, &percent);
-        fprintf (stderr, "buffering... %d\r", percent);
+        fprintf (stderr, "buffering... %d  \r", percent);
 
         if (percent == 100) {
           /* a 100% message means buffering is done */

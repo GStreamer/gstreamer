@@ -1,3 +1,9 @@
+2007-05-24  Wim Taymans  <wim@fluendo.com>
+
+	* tools/gst-launch.c: (event_loop):
+	When buffering goes from a two digit to a single digit number, make sure
+	to remove the old second digit by writing a blank over it.
+
 2007-05-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gstdataqueue.c:
