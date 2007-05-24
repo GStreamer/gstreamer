@@ -66,8 +66,6 @@ struct _GstMultiQueue {
 			/* GstMultiQueueSize, counter and highid */
 
   gint nextnotlinked;	/* ID of the next queue not linked (-1 : none) */
-  
-  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 struct _GstMultiQueueClass {
@@ -76,8 +74,6 @@ struct _GstMultiQueueClass {
   /* signals emitted when ALL queues are either full or empty */
   void (*underrun)	(GstMultiQueue *queue);
   void (*overrun)	(GstMultiQueue *queue);
-
-  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType gst_multi_queue_get_type (void);

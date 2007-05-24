@@ -103,8 +103,6 @@ struct _GstQueue {
   GMutex *qlock;	/* lock for queue (vs object lock) */
   GCond *item_add;	/* signals buffers now available for reading */
   GCond *item_del;	/* signals space now available for writing */
-
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstQueueClass {
@@ -117,8 +115,6 @@ struct _GstQueueClass {
   void (*overrun)	(GstQueue *queue);
 
   void (*pushing)	(GstQueue *queue);
-
-  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_queue_get_type (void);

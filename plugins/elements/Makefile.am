@@ -39,7 +39,7 @@ libgstcoreelements_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS =		\
 	gstbufferstore.h	\
-    gstcapsfilter.h		\
+	gstcapsfilter.h		\
 	gstfakesink.h		\
 	gstfakesrc.h		\
 	gstfdsrc.h		\
