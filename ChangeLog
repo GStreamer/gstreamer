@@ -1,3 +1,12 @@
+2007-05-24  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_get_state_func),
+	(gst_bin_continue_func):
+	Enable latency for next release.
+	Restore STATE_LOCK around recalc_state that was left out during the
+	rewrite and could result in racy behaviour when _get_state and
+	recalc_state are run concurrently. See #440463.
+
 2007-05-23  Wim Taymans  <wim@fluendo.com>
 
 	* tests/check/gst/gstsystemclock.c: (store_callback),

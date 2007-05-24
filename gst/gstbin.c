@@ -176,15 +176,11 @@
  * their duration when it changes so we return inaccurate values. */
 #undef DURATION_CACHING
 
-/* latency is by default disabled for non CVS for now.
+/* latency is by default enabled now.
  * live-preroll and no-live-preroll in the environment var GST_COMPAT
  * to enables or disable it respectively.
  */
-#if GST_VERSION_NANO == 1
 static gboolean enable_latency = TRUE;
-#else
-static gboolean enable_latency = FALSE;
-#endif
 
 GST_DEBUG_CATEGORY_STATIC (bin_debug);
 #define GST_CAT_DEFAULT bin_debug
@@ -390,8 +386,7 @@ gst_bin_class_init (GstBinClass * klass)
    * of its childs on its own.
    *
    * Since: 0.10.13
-   **/
-
+   */
   g_object_class_install_property (gobject_class, PROP_ASYNC_HANDLING,
       g_param_spec_boolean ("async-handling", "Async Handling",
           "The bin will handle Asynchronous state changes",
@@ -1603,7 +1598,9 @@ gst_bin_get_state_func (GstElement * element, GstState * state,
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "getting state");
 
   /* do a non forced recalculation of the state */
+  GST_STATE_LOCK (bin);
   gst_bin_recalc_state (bin, FALSE);
+  GST_STATE_UNLOCK (bin);
 
   ret = parent_class->get_state (element, state, pending, timeout);
 
@@ -2272,7 +2269,7 @@ gst_bin_continue_func (GstBin * bin, gpointer data)
   GstState current, next, pending, target, old_state, old_next;
   GstStateChangeReturn old_ret, ret;
   GstStateChange transition;
-  gboolean busy, post;
+  gboolean post;
 
   GST_DEBUG_OBJECT (bin, "waiting for state lock");
   GST_STATE_LOCK (bin);
@@ -2282,7 +2279,6 @@ gst_bin_continue_func (GstBin * bin, gpointer data)
 
   old_ret = GST_STATE_RETURN (bin);
   GST_STATE_RETURN (bin) = GST_STATE_CHANGE_SUCCESS;
-  busy = (old_ret == GST_STATE_CHANGE_ASYNC);
   target = GST_STATE_TARGET (bin);
   pending = GST_STATE_PENDING (bin);
 
@@ -2294,8 +2290,8 @@ gst_bin_continue_func (GstBin * bin, gpointer data)
   /* this is the state we should go to next */
   old_next = GST_STATE_NEXT (bin);
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "busy %d, target %s",
-      busy, gst_element_state_get_name (target));
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "target %s",
+      gst_element_state_get_name (target));
 
   if (old_next == GST_STATE_PLAYING) {
     post = FALSE;
@@ -2338,11 +2334,9 @@ gst_bin_continue_func (GstBin * bin, gpointer data)
             old_state, old_next, pending));
   }
 
-  if (busy) {
-    GST_DEBUG_OBJECT (bin, "posting ASYNC_DONE");
-    gst_element_post_message (GST_ELEMENT_CAST (bin),
-        gst_message_new_async_done (GST_OBJECT_CAST (bin)));
-  }
+  GST_DEBUG_OBJECT (bin, "posting ASYNC_DONE");
+  gst_element_post_message (GST_ELEMENT_CAST (bin),
+      gst_message_new_async_done (GST_OBJECT_CAST (bin)));
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
       "continue state change %s to %s, final %s",
@@ -2362,6 +2356,11 @@ nothing_pending:
   {
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "nothing pending");
     GST_OBJECT_UNLOCK (bin);
+
+    GST_DEBUG_OBJECT (bin, "posting ASYNC_DONE");
+    gst_element_post_message (GST_ELEMENT_CAST (bin),
+        gst_message_new_async_done (GST_OBJECT_CAST (bin)));
+
     goto done;
   }
 complete:
@@ -2380,6 +2379,11 @@ complete:
      * We do signal the cond though as a _get_state() might be blocking
      * on it. */
     if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
+          "changed %s to %s, VOID pending",
+          gst_element_state_get_name (old_state),
+          gst_element_state_get_name (old_next));
+
       gst_element_post_message (GST_ELEMENT_CAST (bin),
           gst_message_new_state_changed (GST_OBJECT_CAST (bin),
               old_state, old_next, GST_STATE_VOID_PENDING));
