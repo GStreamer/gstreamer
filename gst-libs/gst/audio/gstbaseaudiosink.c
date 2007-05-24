@@ -853,9 +853,9 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   gint bps;
   gint accum;
   gint out_samples;
-  GstClockTime base_time, latency;
+  GstClockTime base_time = -1, latency;
   GstClock *clock;
-  gboolean sync, slaved;
+  gboolean sync, slaved, align_next;
 
   sink = GST_BASE_AUDIO_SINK (bsink);
 
@@ -1062,6 +1062,7 @@ no_sync:
 
   /* we need to accumulate over different runs for when we get interrupted */
   accum = 0;
+  align_next = TRUE;
   do {
     written =
         gst_ring_buffer_commit_full (ringbuf, &sample_offset, data, samples,
@@ -1076,11 +1077,18 @@ no_sync:
     if (gst_base_sink_wait_preroll (bsink) != GST_FLOW_OK)
       goto stopping;
 
+    /* if we got interrupted, we cannot assume that the next sample should
+     * be aligned to this one */
+    align_next = FALSE;
+
     samples -= written;
     data += written * bps;
   } while (TRUE);
 
-  sink->next_sample = sample_offset;
+  if (align_next)
+    sink->next_sample = sample_offset;
+  else
+    sink->next_sample = -1;
 
   GST_DEBUG_OBJECT (sink, "next sample expected at %" G_GUINT64_FORMAT,
       sink->next_sample);
