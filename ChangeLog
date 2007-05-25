@@ -1,5 +1,12 @@
 2007-05-25  Wim Taymans  <wim@fluendo.com>
 
+	* gst/gstbin.c: (bin_handle_async_done):
+	Make sure that the child bin stops after completing the async state
+	change so that the parent can continue the state change to PLAYING.
+	Fixes #441159.
+
+2007-05-25  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_finalize),
 	(unref_data), (gst_collect_pads_remove_pad),
 	(gst_collect_pads_check_pads):

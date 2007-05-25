@@ -2481,6 +2481,7 @@ bin_handle_async_done (GstBin * bin, GstMessage ** message)
   GstStateChangeReturn old_ret;
   GstState old_state, old_next;
   GstState current, next;
+  gboolean cont;
 
   old_ret = GST_STATE_RETURN (bin);
   GST_STATE_RETURN (bin) = GST_STATE_CHANGE_SUCCESS;
@@ -2496,8 +2497,14 @@ bin_handle_async_done (GstBin * bin, GstMessage ** message)
   /* update current state */
   current = GST_STATE (bin) = old_next;
 
-  /* see if we reached the final state */
-  if (pending == current)
+  /* see if we need to continue the state change on our own. This happens when
+   * we were asked to do so or when we are the toplevel bin. */
+  cont = bin->priv->asynchandling || (GST_OBJECT_PARENT (bin) == NULL);
+
+  /* see if we reached the final state. If we are not a toplevel bin we also
+   * must stop at this state change, the parent will set us to the required
+   * state eventually. */
+  if (pending == current || !cont)
     goto complete;
 
   next = GST_STATE_GET_NEXT (current, pending);
