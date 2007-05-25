@@ -1,3 +1,10 @@
+2007-05-25  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (clip_video_buffer),
+	(gst_ffmpegdec_video_frame):
+	Be a bit smarter when clipping the frame without a duration, we don't
+	want the frame to extend to the end of the segment in this case.
+
 2007-05-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

@@ -1141,11 +1141,20 @@ clip_video_buffer (GstFFMpegDec * dec, GstBuffer * buf, GstClockTime in_ts,
   if (G_UNLIKELY (!res))
     goto beach;
 
+  /* we're pretty sure the duration of this buffer is not till the end of this
+   * segment (which _clip will assume when the stop is -1) */
+  if (stop == GST_CLOCK_TIME_NONE)
+    cstop = GST_CLOCK_TIME_NONE;
+
   /* update timestamp and possibly duration if the clipped stop time is
    * valid */
   GST_BUFFER_TIMESTAMP (buf) = cstart;
   if (GST_CLOCK_TIME_IS_VALID (cstop))
     GST_BUFFER_DURATION (buf) = cstop - cstart;
+
+  GST_LOG_OBJECT (dec,
+      "clipped timestamp:%" GST_TIME_FORMAT " , duration:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (cstart), GST_TIME_ARGS (GST_BUFFER_DURATION (buf)));
 
 beach:
   GST_LOG_OBJECT (dec, "%sdropping", (res ? "not " : ""));
@@ -1406,6 +1415,9 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
         GST_LOG_OBJECT (ffmpegdec, "no valid duration found");
       }
     }
+  }
+  else {
+    GST_LOG_OBJECT (ffmpegdec, "using in_duration");
   }
 
   /* Take repeat_pict into account */
