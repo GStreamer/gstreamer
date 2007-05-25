@@ -86,6 +86,8 @@ static gboolean gst_collect_pads_event (GstPad * pad, GstEvent * event);
 static void gst_collect_pads_finalize (GObject * object);
 static void gst_collect_pads_init (GstCollectPads * pads,
     GstCollectPadsClass * g_class);
+static void ref_data (GstCollectData * data);
+static void unref_data (GstCollectData * data);
 
 static void
 gst_collect_pads_base_init (gpointer g_class)
@@ -134,25 +136,11 @@ gst_collect_pads_finalize (GObject * object)
   collected = pads->abidata.ABI.pad_list;
   for (; collected; collected = g_slist_next (collected)) {
     GstCollectData *pdata = (GstCollectData *) collected->data;
-    GstCollectDataDestroyNotify destroy_notify;
 
-    /* FIXME: Ugly hack as we can't add more fields to GstCollectData */
-    destroy_notify = (GstCollectDataDestroyNotify)
-        g_object_get_data (G_OBJECT (pdata->pad),
-        "gst-collect-data-destroy-notify");
-
-    if (destroy_notify)
-      destroy_notify (pdata);
-
-    if (pdata->pad) {
-      GST_DEBUG ("finalize pad %s:%s", GST_DEBUG_PAD_NAME (pdata->pad));
-      gst_object_unref (pdata->pad);
-      pdata->pad = NULL;
-    }
-
-    g_free (pdata);
+    unref_data (pdata);
   }
   /* Free pads list */
+  g_slist_foreach (pads->data, (GFunc) unref_data, NULL);
   g_slist_free (pads->data);
   g_slist_free (pads->abidata.ABI.pad_list);
 
@@ -233,8 +221,6 @@ unref_data (GstCollectData * data)
   if (data->buffer) {
     gst_buffer_unref (data->buffer);
   }
-
-
   g_free (data);
 }
 
@@ -400,13 +386,18 @@ gst_collect_pads_remove_pad (GstCollectPads * pads, GstPad * pad)
   gst_pad_set_element_private (pad, NULL);
   GST_OBJECT_UNLOCK (pad);
 
-  /* backward compat, also remove from data if stopped */
+  /* backward compat, also remove from data if stopped, note that this function
+   * can only be called when we are stopped because we don't take the LOCK to
+   * protect the pads->data list. */
   if (!pads->started) {
     GSList *dlist;
 
     dlist = g_slist_find_custom (pads->data, pad, (GCompareFunc) find_pad);
     if (dlist) {
+      GstCollectData *pdata = dlist->data;
+
       pads->data = g_slist_delete_link (pads->data, dlist);
+      unref_data (pdata);
     }
   }
   /* remove from the pad list */
@@ -908,6 +899,7 @@ gst_collect_pads_check_pads (GstCollectPads * pads)
     GSList *collected;
 
     /* clear list and stats */
+    g_slist_foreach (pads->data, (GFunc) unref_data, NULL);
     g_slist_free (pads->data);
     pads->data = NULL;
     pads->numpads = 0;
@@ -928,6 +920,7 @@ gst_collect_pads_check_pads (GstCollectPads * pads)
         pads->eospads++;
 
       /* add to the list of pads to collect */
+      ref_data (data);
       pads->data = g_slist_prepend (pads->data, data);
     }
     /* and update the cookie */

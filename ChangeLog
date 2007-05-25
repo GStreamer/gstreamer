@@ -1,3 +1,11 @@
+2007-05-25  Wim Taymans  <wim@fluendo.com>
+
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_finalize),
+	(unref_data), (gst_collect_pads_remove_pad),
+	(gst_collect_pads_check_pads):
+	Use additional refcounting to avoid crashes when dynamically adding and
+	removing pads. Fixes #420206.
+
 2007-05-24  Wim Taymans  <wim@fluendo.com>
 
 	* tools/gst-launch.c: (event_loop):
