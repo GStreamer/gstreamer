@@ -44,26 +44,26 @@ GST_ELEMENT_DETAILS ("Alsa mixer",
 static void gst_alsa_mixer_element_init_interfaces (GType type);
 
 GST_BOILERPLATE_FULL (GstAlsaMixerElement, gst_alsa_mixer_element,
-    GstElement, GST_TYPE_ELEMENT, gst_alsa_mixer_element_init_interfaces);
+    GstElement, GST_TYPE_ELEMENT, gst_alsa_mixer_element_init_interfaces)
 
 /* massive macro that takes care of all the GstMixer stuff */
-GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaMixerElement, gst_alsa_mixer_element);
+    GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaMixerElement, gst_alsa_mixer_element);
 
-static void gst_alsa_mixer_element_get_property (GObject * object,
+     static void gst_alsa_mixer_element_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static void gst_alsa_mixer_element_set_property (GObject * object,
+     static void gst_alsa_mixer_element_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_alsa_mixer_element_finalize (GObject * object);
+     static void gst_alsa_mixer_element_finalize (GObject * object);
 
-static GstStateChangeReturn gst_alsa_mixer_element_change_state (GstElement
+     static GstStateChangeReturn gst_alsa_mixer_element_change_state (GstElement
     * element, GstStateChange transition);
 
-static gboolean
-gst_alsa_mixer_element_interface_supported (GstAlsaMixerElement * self,
+     static gboolean
+         gst_alsa_mixer_element_interface_supported (GstAlsaMixerElement * this,
     GType interface_type)
 {
   if (interface_type == GST_TYPE_MIXER) {
-    return gst_alsa_mixer_element_supported (self, interface_type);
+    return gst_alsa_mixer_element_supported (this, interface_type);
   }
 
   g_return_val_if_reached (FALSE);
@@ -133,37 +133,37 @@ gst_alsa_mixer_element_class_init (GstAlsaMixerElementClass * klass)
 static void
 gst_alsa_mixer_element_finalize (GObject * obj)
 {
-  GstAlsaMixerElement *self = GST_ALSA_MIXER_ELEMENT (obj);
+  GstAlsaMixerElement *this = GST_ALSA_MIXER_ELEMENT (obj);
 
-  g_free (self->device);
+  g_free (this->device);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
-gst_alsa_mixer_element_init (GstAlsaMixerElement * self,
+gst_alsa_mixer_element_init (GstAlsaMixerElement * this,
     GstAlsaMixerElementClass * klass)
 {
-  self->mixer = NULL;
-  self->device = g_strdup (DEFAULT_PROP_DEVICE);
+  this->mixer = NULL;
+  this->device = g_strdup (DEFAULT_PROP_DEVICE);
 }
 
 static void
 gst_alsa_mixer_element_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstAlsaMixerElement *self = GST_ALSA_MIXER_ELEMENT (object);
+  GstAlsaMixerElement *this = GST_ALSA_MIXER_ELEMENT (object);
 
   switch (prop_id) {
     case PROP_DEVICE:{
-      GST_OBJECT_LOCK (self);
-      g_free (self->device);
-      self->device = g_value_dup_string (value);
+      GST_OBJECT_LOCK (this);
+      g_free (this->device);
+      this->device = g_value_dup_string (value);
       /* make sure we never set NULL, this is nice when we want to open the
        * device. */
-      if (self->device == NULL)
-        self->device = g_strdup (DEFAULT_PROP_DEVICE);
-      GST_OBJECT_UNLOCK (self);
+      if (this->device == NULL)
+        this->device = g_strdup (DEFAULT_PROP_DEVICE);
+      GST_OBJECT_UNLOCK (this);
       break;
     }
     default:
@@ -176,23 +176,23 @@ static void
 gst_alsa_mixer_element_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstAlsaMixerElement *self = GST_ALSA_MIXER_ELEMENT (object);
+  GstAlsaMixerElement *this = GST_ALSA_MIXER_ELEMENT (object);
 
   switch (prop_id) {
     case PROP_DEVICE:{
-      GST_OBJECT_LOCK (self);
-      g_value_set_string (value, self->device);
-      GST_OBJECT_UNLOCK (self);
+      GST_OBJECT_LOCK (this);
+      g_value_set_string (value, this->device);
+      GST_OBJECT_UNLOCK (this);
       break;
     }
     case PROP_DEVICE_NAME:{
-      GST_OBJECT_LOCK (self);
-      if (self->mixer) {
-        g_value_set_string (value, self->mixer->cardname);
+      GST_OBJECT_LOCK (this);
+      if (this->mixer) {
+        g_value_set_string (value, this->mixer->cardname);
       } else {
         g_value_set_string (value, NULL);
       }
-      GST_OBJECT_UNLOCK (self);
+      GST_OBJECT_UNLOCK (this);
       break;
     }
     default:
@@ -206,15 +206,14 @@ gst_alsa_mixer_element_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstAlsaMixerElement *self = GST_ALSA_MIXER_ELEMENT (element);
+  GstAlsaMixerElement *this = GST_ALSA_MIXER_ELEMENT (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (!self->mixer) {
-        self->mixer = gst_alsa_mixer_new (self->device, GST_ALSA_MIXER_ALL);
-        if (!self->mixer)
+      if (!this->mixer) {
+        this->mixer = gst_alsa_mixer_new (this->device, GST_ALSA_MIXER_ALL);
+        if (!this->mixer)
           goto open_failed;
-        _gst_alsa_mixer_set_interface (self->mixer, GST_MIXER (element));
       }
       break;
     default:
@@ -227,9 +226,9 @@ gst_alsa_mixer_element_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-      if (self->mixer) {
-        gst_alsa_mixer_free (self->mixer);
-        self->mixer = NULL;
+      if (this->mixer) {
+        gst_alsa_mixer_free (this->mixer);
+        this->mixer = NULL;
       }
       break;
     default:
@@ -242,7 +241,7 @@ gst_alsa_mixer_element_change_state (GstElement * element,
 open_failed:
   {
     GST_ELEMENT_ERROR (element, RESOURCE, OPEN_READ_WRITE, (NULL),
-        ("Failed to open alsa mixer device '%s'", self->device));
+        ("Failed to open alsa mixer device '%s'", this->device));
     return GST_STATE_CHANGE_FAILURE;
   }
 }

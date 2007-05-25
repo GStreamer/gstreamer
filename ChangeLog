@@ -1,3 +1,24 @@
+2007-05-25  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_ensure_track_list),
+	(gst_alsa_mixer_free), (gst_alsa_mixer_update),
+	(gst_alsa_mixer_get_volume), (gst_alsa_mixer_set_volume),
+	(gst_alsa_mixer_set_mute), (gst_alsa_mixer_set_record),
+	(gst_alsa_mixer_set_option), (gst_alsa_mixer_get_option):
+	* ext/alsa/gstalsamixer.h:
+	* ext/alsa/gstalsamixerelement.c:
+	(gst_alsa_mixer_element_interface_supported),
+	(gst_alsa_mixer_element_finalize), (gst_alsa_mixer_element_init),
+	(gst_alsa_mixer_element_set_property),
+	(gst_alsa_mixer_element_get_property),
+	(gst_alsa_mixer_element_change_state):
+	* ext/alsa/gstalsamixertrack.c: (gst_alsa_mixer_track_update):
+	* gst-libs/gst/interfaces/mixer.c: (gst_mixer_volume_changed),
+	(gst_mixer_option_changed):
+	* gst-libs/gst/interfaces/mixer.h:
+	Revert commits towards #152864 made so far. We'll pick it up again
+	after the 0.10.13 release.
+
 2007-05-24  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
