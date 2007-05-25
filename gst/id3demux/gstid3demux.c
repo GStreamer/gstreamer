@@ -117,6 +117,7 @@ static gboolean gst_id3demux_pad_query (GstPad * pad, GstQuery * query);
 static const GstQueryType *gst_id3demux_get_query_types (GstPad * pad);
 static gboolean id3demux_get_upstream_size (GstID3Demux * id3demux);
 static void gst_id3demux_send_tag_event (GstID3Demux * id3demux);
+static gboolean gst_id3demux_send_new_segment (GstID3Demux * id3demux);
 
 static GstElementClass *parent_class = NULL;
 
@@ -206,6 +207,88 @@ gst_id3demux_reset (GstID3Demux * id3demux)
     id3demux->parsed_tags = NULL;
   }
 
+  gst_segment_init (&id3demux->segment, GST_FORMAT_UNDEFINED);
+  id3demux->need_newseg = TRUE;
+  id3demux->newseg_update = FALSE;
+}
+
+static gboolean
+gst_id3demux_send_new_segment (GstID3Demux * id3demux)
+{
+  GstEvent *event;
+  gint64 start, stop, position;
+  GstSegment *seg = &id3demux->segment;
+
+  if (seg->format == GST_FORMAT_UNDEFINED) {
+    GST_LOG_OBJECT (id3demux,
+        "No new segment received before first buffer. Using default");
+    gst_segment_set_newsegment (seg, FALSE, 1.0,
+        GST_FORMAT_BYTES, id3demux->strip_start, -1, id3demux->strip_start);
+  }
+
+  /* Can't adjust segments in non-BYTES formats */
+  if (id3demux->segment.format != GST_FORMAT_BYTES) {
+    event = gst_event_new_new_segment_full (id3demux->newseg_update,
+        seg->rate, seg->applied_rate, seg->format, seg->start,
+        seg->stop, seg->time);
+    return gst_pad_push_event (id3demux->srcpad, event);
+  }
+
+  start = seg->start;
+  stop = seg->stop;
+  position = seg->time;
+
+  g_return_val_if_fail (start != -1, FALSE);
+  g_return_val_if_fail (position != -1, FALSE);
+
+  if (id3demux->strip_end > 0) {
+    if (id3demux_get_upstream_size (id3demux)) {
+      guint64 v1tag_offset = id3demux->upstream_size - id3demux->strip_end;
+
+      if (start >= v1tag_offset) {
+        /* Segment is completely within the ID3v1 tag, output an open-ended
+         * segment, even though all the buffers will get trimmed away */
+        start = v1tag_offset;
+        stop = -1;
+      }
+
+      if (stop != -1 && stop >= v1tag_offset) {
+        GST_DEBUG_OBJECT (id3demux,
+            "Segment crosses the ID3v1 tag. Trimming end");
+        stop = v1tag_offset;
+      }
+    }
+  }
+
+  if (id3demux->strip_start > 0) {
+    if (start > id3demux->strip_start)
+      start -= id3demux->strip_start;
+    else
+      start = 0;
+
+    if (position > id3demux->strip_start)
+      position -= id3demux->strip_start;
+    else
+      position = 0;
+
+    if (stop != -1) {
+      if (stop > id3demux->strip_start)
+        stop -= id3demux->strip_start;
+      else
+        stop = 0;
+    }
+  }
+
+  GST_DEBUG_OBJECT (id3demux,
+      "Sending new segment update %d, rate %g, format %d, "
+      "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT ", position %"
+      G_GINT64_FORMAT, id3demux->newseg_update, seg->rate, seg->format,
+      start, stop, position);
+
+  event = gst_event_new_new_segment_full (id3demux->newseg_update,
+      seg->rate, seg->applied_rate, seg->format, start, stop, position);
+
+  return gst_pad_push_event (id3demux->srcpad, event);
 }
 
 static void
@@ -409,6 +492,18 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
   id3demux = GST_ID3DEMUX (GST_PAD_PARENT (pad));
   g_return_val_if_fail (GST_IS_ID3DEMUX (id3demux), GST_FLOW_ERROR);
 
+  /* Update our segment last_stop info */
+  if (id3demux->segment.format == GST_FORMAT_BYTES) {
+    if (GST_BUFFER_OFFSET_IS_VALID (buf))
+      id3demux->segment.last_stop = GST_BUFFER_OFFSET (buf);
+    id3demux->segment.last_stop += GST_BUFFER_SIZE (buf);
+  } else if (id3demux->segment.format == GST_FORMAT_TIME) {
+    if (GST_BUFFER_TIMESTAMP_IS_VALID (buf))
+      id3demux->segment.last_stop = GST_BUFFER_TIMESTAMP (buf);
+    if (GST_BUFFER_DURATION_IS_VALID (buf))
+      id3demux->segment.last_stop += GST_BUFFER_DURATION (buf);
+  }
+
   if (id3demux->collect == NULL) {
     id3demux->collect = buf;
   } else {
@@ -549,6 +644,15 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
         outbuf = gst_buffer_make_metadata_writable (outbuf);
         gst_buffer_set_caps (outbuf, GST_PAD_CAPS (id3demux->srcpad));
 
+        /* Might need a new segment before the buffer */
+        if (id3demux->need_newseg) {
+          if (!gst_id3demux_send_new_segment (id3demux)) {
+            GST_DEBUG_OBJECT (id3demux, "Failed to send new segment event");
+            goto error;
+          }
+          id3demux->need_newseg = FALSE;
+        }
+
         return gst_pad_push (id3demux->srcpad, outbuf);
       }
     }
@@ -577,6 +681,22 @@ gst_id3demux_sink_event (GstPad * pad, GstEvent * event)
       }
       ret = gst_pad_event_default (pad, event);
       break;
+    case GST_EVENT_NEWSEGMENT:{
+      gboolean update;
+      gdouble rate, arate;
+      GstFormat format;
+      gint64 start, stop, position;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate,
+          &format, &start, &stop, &position);
+
+      gst_segment_set_newsegment_full (&demux->segment, update, rate,
+          arate, format, start, stop, position);
+      demux->newseg_update = update;
+      demux->need_newseg = TRUE;
+      ret = TRUE;
+      break;
+    }
     default:
       ret = gst_pad_event_default (pad, event);
       break;

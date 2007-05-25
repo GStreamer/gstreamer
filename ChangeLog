@@ -1,5 +1,20 @@
 2007-05-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_reset),
+	(gst_id3demux_send_new_segment), (gst_id3demux_chain),
+	(gst_id3demux_sink_event):
+	* gst/id3demux/gstid3demux.h:
+	* gst/apetag/gsttagdemux.c: (gst_tag_demux_reset),
+	(gst_tag_demux_chain), (gst_tag_demux_sink_event),
+	(gst_tag_demux_send_new_segment):
+	Handle and adjust new-segment events so that downstream really
+	sees a stream with the tag pieces stripped off the front and back.
+	Fixes strangeness in seeking when mp3 decoders use the new-segment
+	byte position to estimate their current playback position timestamp
+	and then the arriving buffers don't match up.
+
+2007-05-25  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/autodetect/gstautoaudiosink.c: (gst_auto_audio_sink_detect):
 	  Don't unnecessarily perform a READY->NULL->READY transition on the
 	  detected audio sink when starting up. Fixes: #440127

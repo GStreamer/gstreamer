@@ -65,6 +65,10 @@ struct _GstID3Demux
   GstTagList *event_tags;
   GstTagList *parsed_tags;
   gboolean send_tag_event;
+
+  GstSegment segment;
+  gboolean need_newseg;
+  gboolean newseg_update;
 };
 
 struct _GstID3DemuxClass 
