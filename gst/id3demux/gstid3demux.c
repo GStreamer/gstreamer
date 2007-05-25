@@ -694,6 +694,7 @@ gst_id3demux_sink_event (GstPad * pad, GstEvent * event)
           arate, format, start, stop, position);
       demux->newseg_update = update;
       demux->need_newseg = TRUE;
+      gst_event_unref (event);
       ret = TRUE;
       break;
     }
