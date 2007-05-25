@@ -290,7 +290,12 @@ gst_auto_audio_sink_detect (GstAutoAudioSink * sink)
   }
 
   sink->kid = esink;
-  gst_element_set_state (sink->kid, GST_STATE (sink));
+  /* Ensure the child is brought up to the right state to match the parent
+   * although it's currently always in READY and 
+   * we're always doing NULL->READY. */
+  if (GST_STATE (sink->kid) < GST_STATE (sink))
+    gst_element_set_state (sink->kid, GST_STATE (sink));
+
   gst_bin_add (GST_BIN (sink), esink);
 
   /* attach ghost pad */

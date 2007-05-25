@@ -1,3 +1,9 @@
+2007-05-25  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/autodetect/gstautoaudiosink.c: (gst_auto_audio_sink_detect):
+	  Don't unnecessarily perform a READY->NULL->READY transition on the
+	  detected audio sink when starting up. Fixes: #440127
+
 2007-05-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflacenc.c: (gst_flac_enc_sink_setcaps),
