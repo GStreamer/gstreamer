@@ -184,20 +184,23 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
 static gboolean gst_rtp_mux_src_event (GstPad * pad,
     GstEvent * event)
 {
-  gboolean result = TRUE;
-  GList *orig, *pads;
+  GstElement *rtp_mux;
+  GstIterator *iter;
+  GstPad *sinkpad;
+  gboolean result = FALSE;
+  
+  rtp_mux = gst_pad_get_parent_element (pad);
+  g_return_val_if_fail (rtp_mux != NULL, FALSE);
 
-  orig = pads = gst_pad_get_internal_links (pad);
+  iter = gst_element_iterate_sink_pads (rtp_mux);
 
-  while (pads) {
-    GstPad *eventpad = GST_PAD_CAST (pads->data);
-    pads = g_list_next (pads);
-
+  while (gst_iterator_next (iter, (gpointer) &sinkpad) == GST_ITERATOR_OK) {
     gst_event_ref (event);
-    result &= gst_pad_push_event (eventpad, event);
+    result = gst_pad_push_event (sinkpad, event);
+    gst_object_unref (sinkpad);
+    if (result)
+            break;
   }
-
-  g_list_free (orig);
 
   gst_event_unref (event);
 
