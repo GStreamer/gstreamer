@@ -1,3 +1,16 @@
+2007-05-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/flac/gstflacenc.c: (gst_flac_enc_init),
+	(notgst_value_array_append_buffer),
+	(gst_flac_enc_process_stream_headers),
+	(gst_flac_enc_write_callback), (gst_flac_enc_chain),
+	(gst_flac_enc_change_state):
+	* ext/flac/gstflacenc.h:
+	  Collect headers, add "streamheader" field to output caps and set
+	  BUFFER_IN_CAPS flag on pushed header buffers. That way oggmux
+	  produces output according to the official FLAC-to-Ogg mapping
+	  instead of completely broken files. Fixes #426044.
+
 2007-05-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_reset),

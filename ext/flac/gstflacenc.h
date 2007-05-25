@@ -39,7 +39,8 @@ typedef struct _GstFlacEncClass GstFlacEncClass;
 struct _GstFlacEnc {
   GstElement     element;
 
-  GstPad *sinkpad,*srcpad;
+  GstPad        *sinkpad;
+  GstPad        *srcpad;
 
   gboolean       first;
   GstBuffer     *first_buf;
@@ -58,6 +59,10 @@ struct _GstFlacEnc {
   FLAC__StreamMetadata **meta;
 
   GstTagList *     tags;
+
+  /* queue headers until we have them all so we can add streamheaders to caps */
+  gboolean         got_headers;
+  GList           *headers;
 };
 
 struct _GstFlacEncClass {

@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/* FIXME:
+ *  - we assume timestamps start from 0 and that we get a perfect stream; we
+ *    don't handle non-zero starts and mid-stream discontinuities, esp. not if
+ *    we're muxing into ogg
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -308,6 +313,8 @@ gst_flac_enc_init (GstFlacEnc * flacenc, GstFlacEncClass * klass)
   flacenc->samples_written = 0;
   gst_flac_enc_update_quality (flacenc, DEFAULT_QUALITY);
   flacenc->tags = gst_tag_list_new ();
+  flacenc->got_headers = FALSE;
+  flacenc->headers = NULL;
 }
 
 static void
@@ -535,12 +542,134 @@ gst_flac_enc_seek_callback (const FLAC__SeekableStreamEncoder * encoder,
   return FLAC__SEEKABLE_STREAM_ENCODER_SEEK_STATUS_OK;
 }
 
+static void
+notgst_value_array_append_buffer (GValue * array_val, GstBuffer * buf)
+{
+  GValue value = { 0, };
+
+  g_value_init (&value, GST_TYPE_BUFFER);
+  /* copy buffer to avoid problems with circular refcounts */
+  buf = gst_buffer_copy (buf);
+  /* again, for good measure */
+  GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
+  gst_value_set_buffer (&value, buf);
+  gst_buffer_unref (buf);
+  gst_value_array_append_value (array_val, &value);
+  g_value_unset (&value);
+}
+
+#define HDR_TYPE_STREAMINFO     0
+#define HDR_TYPE_VORBISCOMMENT  4
+
+static void
+gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
+{
+  GstBuffer *vorbiscomment = NULL;
+  GstBuffer *streaminfo = NULL;
+  GstBuffer *marker = NULL;
+  GValue array = { 0, };
+  GstCaps *caps;
+  GList *l;
+
+  caps = gst_caps_new_simple ("audio/x-flac",
+      "channels", G_TYPE_INT, enc->channels,
+      "rate", G_TYPE_INT, enc->sample_rate, NULL);
+
+  for (l = enc->headers; l != NULL; l = l->next) {
+    const guint8 *data;
+    guint size;
+
+    /* mark buffers so oggmux will ignore them if it already muxed the
+     * header buffers from the streamheaders field in the caps */
+    l->data = gst_buffer_make_metadata_writable (GST_BUFFER (l->data));
+    GST_BUFFER_FLAG_SET (GST_BUFFER (l->data), GST_BUFFER_FLAG_IN_CAPS);
+
+    data = GST_BUFFER_DATA (GST_BUFFER_CAST (l->data));
+    size = GST_BUFFER_SIZE (GST_BUFFER_CAST (l->data));
+
+    /* find initial 4-byte marker which we need to skip later on */
+    if (size == 4 && memcmp (data, "fLaC", 4) == 0) {
+      marker = GST_BUFFER_CAST (l->data);
+    } else if (size > 1 && (data[0] & 0x7f) == HDR_TYPE_STREAMINFO) {
+      streaminfo = GST_BUFFER_CAST (l->data);
+    } else if (size > 1 && (data[0] & 0x7f) == HDR_TYPE_VORBISCOMMENT) {
+      vorbiscomment = GST_BUFFER_CAST (l->data);
+    }
+  }
+
+  if (marker == NULL || streaminfo == NULL || vorbiscomment == NULL) {
+    GST_WARNING_OBJECT (enc, "missing header %p %p %p, muxing into container "
+        "formats may be broken", marker, streaminfo, vorbiscomment);
+    goto push_headers;
+  }
+
+  g_value_init (&array, GST_TYPE_ARRAY);
+
+  /* add marker including STREAMINFO header */
+  {
+    GstBuffer *buf;
+    guint16 num;
+
+    /* minus one for the marker that is merged with streaminfo here */
+    num = g_list_length (enc->headers) - 1;
+
+    buf = gst_buffer_new_and_alloc (13 + GST_BUFFER_SIZE (streaminfo));
+    GST_BUFFER_DATA (buf)[0] = 0x7f;
+    memcpy (GST_BUFFER_DATA (buf) + 1, "FLAC", 4);
+    GST_BUFFER_DATA (buf)[5] = 0x01;    /* mapping version major */
+    GST_BUFFER_DATA (buf)[6] = 0x00;    /* mapping version minor */
+    GST_BUFFER_DATA (buf)[7] = (num & 0xFF00) >> 8;
+    GST_BUFFER_DATA (buf)[8] = (num & 0x00FF) >> 0;
+    memcpy (GST_BUFFER_DATA (buf) + 9, "fLaC", 4);
+    memcpy (GST_BUFFER_DATA (buf) + 13, GST_BUFFER_DATA (streaminfo),
+        GST_BUFFER_SIZE (streaminfo));
+    notgst_value_array_append_buffer (&array, buf);
+    gst_buffer_unref (buf);
+  }
+
+  /* add VORBISCOMMENT header */
+  notgst_value_array_append_buffer (&array, vorbiscomment);
+
+  /* add other headers, if there are any */
+  for (l = enc->headers; l != NULL; l = l->next) {
+    if (GST_BUFFER_CAST (l->data) != marker &&
+        GST_BUFFER_CAST (l->data) != streaminfo &&
+        GST_BUFFER_CAST (l->data) != vorbiscomment) {
+      notgst_value_array_append_buffer (&array, GST_BUFFER_CAST (l->data));
+    }
+  }
+
+  gst_structure_set_value (gst_caps_get_structure (caps, 0),
+      "streamheader", &array);
+  g_value_unset (&array);
+
+push_headers:
+
+  gst_pad_set_caps (enc->srcpad, caps);
+
+  /* push header buffers; update caps, so when we push the first buffer the
+   * negotiated caps will change to caps that include the streamheader field */
+  for (l = enc->headers; l != NULL; l = l->next) {
+    GstBuffer *buf;
+
+    buf = GST_BUFFER (l->data);
+    gst_buffer_set_caps (buf, caps);
+    GST_LOG ("Pushing header buffer, size %u bytes", GST_BUFFER_SIZE (buf));
+    (void) gst_pad_push (enc->srcpad, buf);
+    l->data = NULL;
+  }
+  g_list_free (enc->headers);
+  enc->headers = NULL;
+
+  gst_caps_unref (caps);
+}
+
 static FLAC__StreamEncoderWriteStatus
 gst_flac_enc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
     const FLAC__byte buffer[], unsigned bytes,
     unsigned samples, unsigned current_frame, void *client_data)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;
   GstFlacEnc *flacenc;
   GstBuffer *outbuf;
 
@@ -549,36 +678,56 @@ gst_flac_enc_write_callback (const FLAC__SeekableStreamEncoder * encoder,
   if (flacenc->stopped)
     return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
 
-  if (gst_pad_alloc_buffer_and_set_caps (flacenc->srcpad, flacenc->offset,
-          bytes, GST_PAD_CAPS (flacenc->srcpad), &outbuf) != GST_FLOW_OK) {
-    return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
-  }
-
+  outbuf = gst_buffer_new_and_alloc (bytes);
   memcpy (GST_BUFFER_DATA (outbuf), buffer, bytes);
 
   if (samples > 0 && flacenc->samples_written != (guint64) - 1) {
+    guint64 granulepos;
+
     GST_BUFFER_TIMESTAMP (outbuf) =
         GST_FRAMES_TO_CLOCK_TIME (flacenc->samples_written,
         flacenc->sample_rate);
     GST_BUFFER_DURATION (outbuf) =
         GST_FRAMES_TO_CLOCK_TIME (samples, flacenc->sample_rate);
     /* offset_end = granulepos for ogg muxer */
-    GST_BUFFER_OFFSET_END (outbuf) = flacenc->samples_written + samples;
+    granulepos = flacenc->samples_written + samples;
+    GST_BUFFER_OFFSET_END (outbuf) = granulepos;
+    /* offset = timestamp corresponding to granulepos for ogg muxer
+     * (see vorbisenc for a much more elaborate version of this) */
+    GST_BUFFER_OFFSET (outbuf) =
+        GST_FRAMES_TO_CLOCK_TIME (granulepos, flacenc->sample_rate);
   } else {
     GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
     GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
   }
 
-  GST_DEBUG ("Pushing buffer: ts=%" GST_TIME_FORMAT ", samples=%u, size=%u, "
+  /* we assume libflac passes us stuff neatly framed */
+  if (!flacenc->got_headers) {
+    if (samples == 0) {
+      GST_DEBUG_OBJECT (flacenc, "Got header, queueing (%u bytes)", bytes);
+      flacenc->headers = g_list_append (flacenc->headers, outbuf);
+      /* note: it's important that we increase our byte offset */
+      goto out;
+    } else {
+      GST_INFO_OBJECT (flacenc, "Non-header packet, we have all headers now");
+      gst_flac_enc_process_stream_headers (flacenc);
+      flacenc->got_headers = TRUE;
+    }
+  }
+
+  GST_LOG ("Pushing buffer: ts=%" GST_TIME_FORMAT ", samples=%u, size=%u, "
       "pos=%" G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
       samples, bytes, flacenc->offset);
 
+  gst_buffer_set_caps (outbuf, GST_PAD_CAPS (flacenc->srcpad));
   ret = gst_pad_push (flacenc->srcpad, outbuf);
+
+out:
 
   flacenc->offset += bytes;
   flacenc->samples_written += samples;
 
-  if (ret != GST_FLOW_OK && GST_FLOW_IS_FATAL (ret))
+  if (GST_FLOW_IS_FATAL (ret))
     return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 
   return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
@@ -670,7 +819,7 @@ gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer)
 
   flacenc = GST_FLAC_ENC (GST_PAD_PARENT (pad));
 
-  /* make sure setcaps has been called and the encoder is setup */
+  /* make sure setcaps has been called and the encoder is set up */
   if (G_UNLIKELY (flacenc->depth == 0))
     return GST_FLOW_NOT_NEGOTIATED;
 
@@ -880,11 +1029,18 @@ gst_flac_enc_change_state (GstElement * element, GstStateChange transition)
       }
       flacenc->offset = 0;
       flacenc->samples_written = 0;
+      flacenc->channels = 0;
+      flacenc->depth = 0;
+      flacenc->sample_rate = 0;
       if (flacenc->meta) {
         FLAC__metadata_object_delete (flacenc->meta[0]);
         g_free (flacenc->meta);
         flacenc->meta = NULL;
       }
+      g_list_foreach (flacenc->headers, (GFunc) gst_mini_object_unref, NULL);
+      g_list_free (flacenc->headers);
+      flacenc->headers = NULL;
+      flacenc->got_headers = FALSE;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
     default:
