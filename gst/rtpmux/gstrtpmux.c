@@ -181,6 +181,29 @@ gst_rtp_mux_class_init (GstRTPMuxClass * klass)
   klass->chain_func = gst_rtp_mux_chain;
 }
 
+static gboolean gst_rtp_mux_src_event (GstPad * pad,
+    GstEvent * event)
+{
+  gboolean result = TRUE;
+  GList *orig, *pads;
+
+  orig = pads = gst_pad_get_internal_links (pad);
+
+  while (pads) {
+    GstPad *eventpad = GST_PAD_CAST (pads->data);
+    pads = g_list_next (pads);
+
+    gst_event_ref (event);
+    result &= gst_pad_push_event (eventpad, event);
+  }
+
+  g_list_free (orig);
+
+  gst_event_unref (event);
+
+  return result;
+}
+
 static void
 gst_rtp_mux_init (GstRTPMux * rtp_mux)
 {
@@ -189,6 +212,7 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
   rtp_mux->srcpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
+  gst_pad_set_event_function (rtp_mux->srcpad, gst_rtp_mux_src_event);
   gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
   
   rtp_mux->ssrc = DEFAULT_SSRC;
