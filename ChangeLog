@@ -1,5 +1,11 @@
 2007-05-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/wavparse/Makefile.am:
+	  Add '-lm' to LIBS for ceil(), don't assume one of our dependencies
+	  drags it in.
+
+2007-05-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/flac/gstflacenc.c: (gst_flac_enc_init),
 	(notgst_value_array_append_buffer),
 	(gst_flac_enc_process_stream_headers),

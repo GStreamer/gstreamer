@@ -9,7 +9,8 @@ libgstwavparse_la_CFLAGS = \
 libgstwavparse_la_LIBADD = \
 	-lgstriff-@GST_MAJORMINOR@ \
 	$(GST_PLUGINS_BASE_LIBS) \
-	$(GST_BASE_LIBS)
+	$(GST_BASE_LIBS) \
+	$(LIBM)
 libgstwavparse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstwavparse.h
