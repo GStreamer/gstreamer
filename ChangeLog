@@ -1,3 +1,11 @@
+2007-05-26  Wim Taymans  <wim@fluendo.com>
+
+	* ext/speex/gstspeexdec.c: (speex_dec_chain_parse_data):
+	Use different variables for nested for loops so that the outer loop
+	functions properly and speex files with multiple frames per buffer work
+	properly.
+	Fixes #441408.
+
 2007-05-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_sink_event):

@@ -626,18 +626,28 @@ static GstFlowReturn
 speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf)
 {
   GstFlowReturn res = GST_FLOW_OK;
-  gint i;
+  gint i, fpp;
+  guint size;
+  guint8 *data;
+
+  data = GST_BUFFER_DATA (buf);
+  size = GST_BUFFER_SIZE (buf);
 
   /* send data to the bitstream */
-  speex_bits_read_from (&dec->bits, (char *) GST_BUFFER_DATA (buf),
-      GST_BUFFER_SIZE (buf));
+  speex_bits_read_from (&dec->bits, (char *) data, size);
+
+  fpp = dec->header->frames_per_packet;
+
+  GST_DEBUG_OBJECT (dec, "received buffer of size %u, fpp %d", size, fpp);
 
   /* now decode each frame */
-  for (i = 0; i < dec->header->frames_per_packet; i++) {
+  for (i = 0; i < fpp; i++) {
     GstBuffer *outbuf;
     gint64 timestamp;
     gint16 *out_data;
-    gint ret;
+    gint ret, j;
+
+    GST_LOG_OBJECT (dec, "decoding frame %d/%d", i, fpp);
 
     ret = speex_decode (dec->state, &dec->bits, dec->output);
     if (ret == -1) {
@@ -648,6 +658,7 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf)
       GST_WARNING_OBJECT (dec, "Decoding error: corrupted stream?");
       break;
     }
+
     if (speex_bits_remaining (&dec->bits) < 0) {
       GST_WARNING_OBJECT (dec, "Decoding overflow: corrupted stream?");
       break;
@@ -667,13 +678,13 @@ speex_dec_chain_parse_data (GstSpeexDec * dec, GstBuffer * buf)
     out_data = (gint16 *) GST_BUFFER_DATA (outbuf);
 
     /*PCM saturation (just in case) */
-    for (i = 0; i < dec->frame_size * dec->header->nb_channels; i++) {
-      if (dec->output[i] > 32767.0)
-        out_data[i] = 32767;
+    for (j = 0; j < dec->frame_size * dec->header->nb_channels; j++) {
+      if (dec->output[j] > 32767.0)
+        out_data[j] = 32767;
       else if (dec->output[i] < -32768.0)
-        out_data[i] = -32768;
+        out_data[j] = -32768;
       else
-        out_data[i] = (gint16) dec->output[i];
+        out_data[j] = (gint16) dec->output[j];
     }
 
     if (dec->granulepos == -1) {
