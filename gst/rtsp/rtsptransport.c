@@ -73,7 +73,7 @@ typedef struct
 } RTSPTransMap;
 
 static const RTSPTransMap transports[] = {
-  {"rtp", RTSP_TRANS_RTP, "application/x-rtp", {"rtpbin", "rtpdec"}},
+  {"rtp", RTSP_TRANS_RTP, "application/x-rtp", {"gstrtpbin", "rtpdec"}},
   {"x-real-rdt", RTSP_TRANS_RDT, "application/x-rdt", {NULL, NULL}},
   {"x-pn-tng", RTSP_TRANS_RDT, "application/x-rdt", {NULL, NULL}},
   {NULL, RTSP_TRANS_UNKNOWN, NULL, {NULL, NULL}}

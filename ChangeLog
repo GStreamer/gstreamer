@@ -1,5 +1,10 @@
 2007-05-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/rtsptransport.c:
+	Use renamed RTP bin.
+
+2007-05-28  Wim Taymans  <wim@fluendo.com>
+
 	Based on patch by: Dejan Sakelšak <sakdean at gmail dot com>
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
