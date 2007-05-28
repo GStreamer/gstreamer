@@ -188,18 +188,30 @@ static gboolean gst_rtp_mux_src_event (GstPad * pad,
   GstIterator *iter;
   GstPad *sinkpad;
   gboolean result = FALSE;
+  gboolean done = FALSE;
   
   rtp_mux = gst_pad_get_parent_element (pad);
   g_return_val_if_fail (rtp_mux != NULL, FALSE);
 
   iter = gst_element_iterate_sink_pads (rtp_mux);
 
-  while (gst_iterator_next (iter, (gpointer) &sinkpad) == GST_ITERATOR_OK) {
-    gst_event_ref (event);
-    result = gst_pad_push_event (sinkpad, event);
-    gst_object_unref (sinkpad);
-    if (result)
-            break;
+  while (!done) {
+    switch (gst_iterator_next (iter, (gpointer) &sinkpad)) {
+      case GST_ITERATOR_OK:
+        gst_event_ref (event);
+        result = gst_pad_push_event (sinkpad, event);
+        gst_object_unref (sinkpad);
+        if (result)
+          done = TRUE;
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
   }
 
   gst_event_unref (event);
