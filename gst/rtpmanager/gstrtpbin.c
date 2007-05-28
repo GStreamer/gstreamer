@@ -18,34 +18,34 @@
  */
 
 /**
- * SECTION:element-rtpbin
+ * SECTION:element-gstrtpbin
  * @short_description: handle media from one RTP bin
- * @see_also: rtpjitterbuffer, rtpsession, rtpptdemux, rtpssrcdemux
+ * @see_also: gstrtpjitterbuffer, gstrtpsession, gstrtpptdemux, gstrtpssrcdemux
  *
  * <refsect2>
  * <para>
- * RTP bin combines the functions of rtpsession, rtpssrcdemux, rtpjitterbuffer
- * and rtpptdemux in one element. It allows for multiple rtpsessions that will
+ * RTP bin combines the functions of gstrtpsession, gstrtpssrcdemux, gstrtpjitterbuffer
+ * and gstrtpptdemux in one element. It allows for multiple RTP sessions that will
  * be synchronized together using RTCP SR packets.
  * </para>
  * <para>
- * rtpbin is configured with a number of request pads that define the
- * functionality that is activated, similar to the rtpsession element.
+ * gstrtpbin is configured with a number of request pads that define the
+ * functionality that is activated, similar to the gstrtpsession element.
  * </para>
  * <para>
- * To use rtpbin as an RTP receiver, request a recv_rtp_sink_%%d pad. The session
+ * To use gstrtpbin as an RTP receiver, request a recv_rtp_sink_%%d pad. The session
  * number must be specified in the pad name. 
- * Data received on the recv_rtp_sink_%%d pad will be processed in the rtpsession
- * manager and after being validated forwarded on rtpssrcdemuxer element. Each
- * RTP stream is demuxed based on the SSRC and send to a rtpjitterbuffer. After
- * the packets are released from the jitterbuffer, they will be forwarded to an
- * rtpptdemuxer element. The rtpptdemuxer element will demux the packets based
+ * Data received on the recv_rtp_sink_%%d pad will be processed in the gstrtpsession
+ * manager and after being validated forwarded on gstrtpssrcdemuxer element. Each
+ * RTP stream is demuxed based on the SSRC and send to a gstrtpjitterbuffer. After
+ * the packets are released from the jitterbuffer, they will be forwarded to a
+ * gstrtpptdemuxer element. The gstrtpptdemuxer element will demux the packets based
  * on the payload type and will create a unique pad recv_rtp_src_%%d_%%d_%%d on
- * rtpbin with the session number, SSRC and payload type respectively as the pad
+ * gstrtpbin with the session number, SSRC and payload type respectively as the pad
  * name.
  * </para>
  * <para>
- * To also use rtpbin as an RTCP receiver, request a recv_rtcp_sink_%%d pad. The
+ * To also use gstrtpbin as an RTCP receiver, request a recv_rtcp_sink_%%d pad. The
  * session number must be specified in the pad name.
  * </para>
  * <para>
@@ -55,7 +55,7 @@
  * in the session.
  * </para>
  * <para>
- * To use rtpbin as a sender, request a send_rtp_sink_%%d pad, which will
+ * To use gstrtpbin as a sender, request a send_rtp_sink_%%d pad, which will
  * automatically create a send_rtp_src_%%d pad. The session number must be specified when
  * requesting the sink pad. The session manager will modify the
  * SSRC in the RTP packets to its own SSRC and wil forward the packets on the
@@ -71,13 +71,13 @@
  * <para>
  * <programlisting>
  * gst-launch udpsrc port=5000 caps="application/x-rtp, ..." ! .recv_rtp_sink_0 \
- *     rtpbin ! rtptheoradepay ! theoradec ! xvimagesink
+ *     gstrtpbin ! rtptheoradepay ! theoradec ! xvimagesink
  * </programlisting>
- * Receive RTP data from port 5000 and send to the session 0 in rtpbin.
+ * Receive RTP data from port 5000 and send to the session 0 in gstrtpbin.
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2007-05-23 (0.10.6)
+ * Last reviewed on 2007-05-28 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -265,10 +265,10 @@ create_session (GstRTPBin * rtpbin, gint id)
   GstRTPBinSession *sess;
   GstElement *session, *demux;
 
-  if (!(session = gst_element_factory_make ("rtpsession", NULL)))
+  if (!(session = gst_element_factory_make ("gstrtpsession", NULL)))
     goto no_session;
 
-  if (!(demux = gst_element_factory_make ("rtpssrcdemux", NULL)))
+  if (!(demux = gst_element_factory_make ("gstrtpssrcdemux", NULL)))
     goto no_demux;
 
   sess = g_new0 (GstRTPBinSession, 1);
@@ -294,13 +294,13 @@ create_session (GstRTPBin * rtpbin, gint id)
   /* ERRORS */
 no_session:
   {
-    g_warning ("rtpbin: could not create rtpsession element");
+    g_warning ("gstrtpbin: could not create gstrtpsession element");
     return NULL;
   }
 no_demux:
   {
     gst_object_unref (session);
-    g_warning ("rtpbin: could not create rtpssrcdemux element");
+    g_warning ("gstrtpbin: could not create gstrtpssrcdemux element");
     return NULL;
   }
 }
@@ -414,10 +414,10 @@ create_stream (GstRTPBinSession * session, guint32 ssrc)
   GstElement *buffer, *demux;
   GstRTPBinStream *stream;
 
-  if (!(buffer = gst_element_factory_make ("rtpjitterbuffer", NULL)))
+  if (!(buffer = gst_element_factory_make ("gstrtpjitterbuffer", NULL)))
     goto no_jitterbuffer;
 
-  if (!(demux = gst_element_factory_make ("rtpptdemux", NULL)))
+  if (!(demux = gst_element_factory_make ("gstrtpptdemux", NULL)))
     goto no_demux;
 
   stream = g_new0 (GstRTPBinStream, 1);
@@ -448,13 +448,13 @@ create_stream (GstRTPBinSession * session, guint32 ssrc)
   /* ERRORS */
 no_jitterbuffer:
   {
-    g_warning ("rtpbin: could not create rtpjitterbuffer element");
+    g_warning ("gstrtpbin: could not create gstrtpjitterbuffer element");
     return NULL;
   }
 no_demux:
   {
     gst_object_unref (buffer);
-    g_warning ("rtpbin: could not create rtpptdemux element");
+    g_warning ("gstrtpbin: could not create gstrtpptdemux element");
     return NULL;
   }
 }
@@ -834,7 +834,7 @@ create_recv_rtp (GstRTPBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   /* ERRORS */
 no_name:
   {
-    g_warning ("rtpbin: invalid name given");
+    g_warning ("gstrtpbin: invalid name given");
     return NULL;
   }
 create_error:
@@ -844,17 +844,18 @@ create_error:
   }
 existed:
   {
-    g_warning ("rtpbin: recv_rtp pad already requested for session %d", sessid);
+    g_warning ("gstrtpbin: recv_rtp pad already requested for session %d",
+        sessid);
     return NULL;
   }
 pad_failed:
   {
-    g_warning ("rtpbin: failed to get session pad");
+    g_warning ("gstrtpbin: failed to get session pad");
     return NULL;
   }
 link_failed:
   {
-    g_warning ("rtpbin: failed to link pads");
+    g_warning ("gstrtpbin: failed to link pads");
     return NULL;
   }
 }
@@ -929,7 +930,7 @@ create_recv_rtcp (GstRTPBin * rtpbin, GstPadTemplate * templ,
   /* ERRORS */
 no_name:
   {
-    g_warning ("rtpbin: invalid name given");
+    g_warning ("gstrtpbin: invalid name given");
     return NULL;
   }
 create_error:
@@ -939,19 +940,19 @@ create_error:
   }
 existed:
   {
-    g_warning ("rtpbin: recv_rtcp pad already requested for session %d",
+    g_warning ("gstrtpbin: recv_rtcp pad already requested for session %d",
         sessid);
     return NULL;
   }
 pad_failed:
   {
-    g_warning ("rtpbin: failed to get session pad");
+    g_warning ("gstrtpbin: failed to get session pad");
     return NULL;
   }
 #if 0
 link_failed:
   {
-    g_warning ("rtpbin: failed to link pads");
+    g_warning ("gstrtpbin: failed to link pads");
     return NULL;
   }
 #endif
@@ -1018,7 +1019,7 @@ create_send_rtp (GstRTPBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   /* ERRORS */
 no_name:
   {
-    g_warning ("rtpbin: invalid name given");
+    g_warning ("gstrtpbin: invalid name given");
     return NULL;
   }
 create_error:
@@ -1028,17 +1029,19 @@ create_error:
   }
 existed:
   {
-    g_warning ("rtpbin: send_rtp pad already requested for session %d", sessid);
+    g_warning ("gstrtpbin: send_rtp pad already requested for session %d",
+        sessid);
     return NULL;
   }
 pad_failed:
   {
-    g_warning ("rtpbin: failed to get session pad for session %d", sessid);
+    g_warning ("gstrtpbin: failed to get session pad for session %d", sessid);
     return NULL;
   }
 no_srcpad:
   {
-    g_warning ("rtpbin: failed to get rtp source pad for session %d", sessid);
+    g_warning ("gstrtpbin: failed to get rtp source pad for session %d",
+        sessid);
     return NULL;
   }
 }
@@ -1082,23 +1085,23 @@ create_rtcp (GstRTPBin * rtpbin, GstPadTemplate * templ, const gchar * name)
   /* ERRORS */
 no_name:
   {
-    g_warning ("rtpbin: invalid name given");
+    g_warning ("gstrtpbin: invalid name given");
     return NULL;
   }
 no_session:
   {
-    g_warning ("rtpbin: session with id %d does not exist", sessid);
+    g_warning ("gstrtpbin: session with id %d does not exist", sessid);
     return NULL;
   }
 existed:
   {
-    g_warning ("rtpbin: send_rtcp_src pad already requested for session %d",
+    g_warning ("gstrtpbin: send_rtcp_src pad already requested for session %d",
         sessid);
     return NULL;
   }
 pad_failed:
   {
-    g_warning ("rtpbin: failed to get rtcp pad for session %d", sessid);
+    g_warning ("gstrtpbin: failed to get rtcp pad for session %d", sessid);
     return NULL;
   }
 }
@@ -1144,7 +1147,7 @@ gst_rtp_bin_request_new_pad (GstElement * element,
 wrong_template:
   {
     GST_RTP_BIN_UNLOCK (rtpbin);
-    g_warning ("rtpbin: this is not our template");
+    g_warning ("gstrtpbin: this is not our template");
     return NULL;
   }
 }
