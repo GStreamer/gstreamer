@@ -208,6 +208,7 @@ static gboolean gst_rtp_mux_src_event (GstPad * pad,
         gst_iterator_resync (iter);
         break;
       case GST_ITERATOR_ERROR:
+        GST_WARNING_OBJECT (rtp_mux, "Error iterating sinkpads");
       case GST_ITERATOR_DONE:
         done = TRUE;
         break;
