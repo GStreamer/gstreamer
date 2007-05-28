@@ -80,9 +80,9 @@ GstRgVolumeClass
 </SECTION>
 
 <SECTION>
-<FILE>element-rtpbin</FILE>
+<FILE>element-gstrtpbin</FILE>
 GstRTPBin
-<TITLE>rtpbin</TITLE>
+<TITLE>gstrtpbin</TITLE>
 <SUBSECTION Standard>
 GstRTPBinPrivate
 GstRTPBinClass
@@ -95,8 +95,8 @@ GST_IS_RTP_BIN_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>element-rtpclient</FILE>
-<TITLE>rtpclient</TITLE>
+<FILE>element-gstrtpclient</FILE>
+<TITLE>gstrtpclient</TITLE>
 GstRTPClient
 <SUBSECTION Standard>
 GstRTPClientClass
@@ -110,8 +110,8 @@ GST_IS_RTP_CLIENT_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>element-rtpjitterbuffer</FILE>
-<TITLE>rtpjitterbuffer</TITLE>
+<FILE>element-gstrtpjitterbuffer</FILE>
+<TITLE>gstrtpjitterbuffer</TITLE>
 GstRTPJitterBuffer
 <SUBSECTION Standard>
 GstRTPJitterBufferClass
@@ -125,8 +125,8 @@ GST_IS_RTP_JITTER_BUFFER_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>element-rtpptdemux</FILE>
-<TITLE>rtpptdemux</TITLE>
+<FILE>element-gstrtpptdemux</FILE>
+<TITLE>gstrtpptdemux</TITLE>
 GstRTPPtDemux
 <SUBSECTION Standard>
 GstRTPPtDemuxClass
@@ -140,8 +140,8 @@ GST_IS_RTP_PT_DEMUX_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>element-rtpsession</FILE>
-<TITLE>rtpsession</TITLE>
+<FILE>element-gstrtpsession</FILE>
+<TITLE>gstrtpsession</TITLE>
 GstRTPSession
 <SUBSECTION Standard>
 GstRTPSessionClass
@@ -155,8 +155,8 @@ GST_IS_RTP_SESSION_CLASS
 </SECTION>
 
 <SECTION>
-<FILE>element-rtpssrcdemux</FILE>
-<TITLE>rtpssrcdemux</TITLE>
+<FILE>element-gstrtpssrcdemux</FILE>
+<TITLE>gstrtpssrcdemux</TITLE>
 GstRTPSsrcDemux
 <SUBSECTION Standard>
 GstRTPSsrcDemuxClass

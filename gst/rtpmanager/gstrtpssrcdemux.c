@@ -20,12 +20,12 @@
  */
 
 /**
- * SECTION:element-rtpssrcdemux
+ * SECTION:element-gstrtpssrcdemux
  * @short_description: separate RTP payloads based on the SSRC
  *
  * <refsect2>
  * <para>
- * rtpssrcdemux acts as a demuxer for RTP packets based on the SSRC of the
+ * gstrtpssrcdemux acts as a demuxer for RTP packets based on the SSRC of the
  * packets. Its main purpose is to allow an application to easily receive and
  * decode an RTP stream with multiple SSRCs.
  * </para>
@@ -36,14 +36,14 @@
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
- * gst-launch udpsrc caps="application/x-rtp" ! rtpssrcdemux ! fakesink
+ * gst-launch udpsrc caps="application/x-rtp" ! gstrtpssrcdemux ! fakesink
  * </programlisting>
  * Takes an RTP stream and send the RTP packets with the first detected SSRC
  * to fakesink, discarding the other SSRCs.
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2007-05-23 (0.10.6)
+ * Last reviewed on 2007-05-28 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H

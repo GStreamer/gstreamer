@@ -1,3 +1,22 @@
+2007-05-28  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* gst/rtpmanager/gstrtpbin.c: (create_session), (create_stream),
+	(gst_rtp_bin_class_init), (create_recv_rtp), (create_recv_rtcp),
+	(create_send_rtp), (create_rtcp), (gst_rtp_bin_request_new_pad):
+	* gst/rtpmanager/gstrtpclient.c: (create_stream),
+	(gst_rtp_client_request_new_pad):
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_clear_pt_map), (gst_rtp_jitter_buffer_loop):
+	* gst/rtpmanager/gstrtpmanager.c: (plugin_init):
+	* gst/rtpmanager/gstrtpptdemux.c:
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_class_init),
+	(gst_rtp_session_request_new_pad):
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	Rename elements to avoid conflict with farsight elements with the same
+	name. Fixes #430664.
+
 2007-05-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Vincent Torri  <vtorri at univ-evry fr>

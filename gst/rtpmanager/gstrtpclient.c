@@ -18,9 +18,9 @@
  */
 
 /**
- * SECTION:element-rtpclient
+ * SECTION:element-gstrtpclient
  * @short_description: handle media from one RTP client
- * @see_also: rtpjitterbuffer, rtpbin, rtpsession
+ * @see_also: gstrtpjitterbuffer, gstrtpbin, gstrtpsession
  *
  * <refsect2>
  * <para>
@@ -38,7 +38,7 @@
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2007-04-02 (0.10.6)
+ * Last reviewed on 2007-04-02 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -136,11 +136,11 @@ create_stream (GstRTPClient * rtpclient, guint32 ssrc)
   stream->ssrc = ssrc;
   stream->client = rtpclient;
 
-  stream->jitterbuffer = gst_element_factory_make ("rtpjitterbuffer", NULL);
+  stream->jitterbuffer = gst_element_factory_make ("gstrtpjitterbuffer", NULL);
   if (!stream->jitterbuffer)
     goto no_jitterbuffer;
 
-  stream->ptdemux = gst_element_factory_make ("rtpptdemux", NULL);
+  stream->ptdemux = gst_element_factory_make ("gstrtpptdemux", NULL);
   if (!stream->ptdemux)
     goto no_ptdemux;
 
@@ -180,14 +180,14 @@ create_stream (GstRTPClient * rtpclient, guint32 ssrc)
 no_jitterbuffer:
   {
     g_free (stream);
-    g_warning ("could not create rtpjitterbuffer element");
+    g_warning ("gstrtpclient: could not create gstrtpjitterbuffer element");
     return NULL;
   }
 no_ptdemux:
   {
     gst_object_unref (stream->jitterbuffer);
     g_free (stream);
-    g_warning ("could not create rtpptdemux element");
+    g_warning ("gstrtpclient: could not create gstrtpptdemux element");
     return NULL;
   }
 could_not_link:
@@ -195,7 +195,7 @@ could_not_link:
     gst_bin_remove (GST_BIN_CAST (rtpclient), stream->jitterbuffer);
     gst_bin_remove (GST_BIN_CAST (rtpclient), stream->ptdemux);
     g_free (stream);
-    g_warning ("could not link jitterbuffer and rtpptdemux element");
+    g_warning ("gstrtpclient: could not link jitterbuffer and ptdemux element");
     return NULL;
   }
 }
@@ -455,27 +455,27 @@ gst_rtp_client_request_new_pad (GstElement * element,
   /* ERRORS */
 wrong_direction:
   {
-    g_warning ("rtpclient: request pad that is not a SINK pad");
+    g_warning ("gstrtpclient: request pad that is not a SINK pad");
     return NULL;
   }
 wrong_template:
   {
-    g_warning ("rtpclient: this is not our template");
+    g_warning ("gstrtpclient: this is not our template");
     return NULL;
   }
 no_name:
   {
-    g_warning ("rtpclient: no padname was specified");
+    g_warning ("gstrtpclient: no padname was specified");
     return NULL;
   }
 stream_exists:
   {
-    g_warning ("rtpclient: stream with SSRC %d already registered", ssrc);
+    g_warning ("gstrtpclient: stream with SSRC %d already registered", ssrc);
     return NULL;
   }
 stream_not_found:
   {
-    g_warning ("rtpclient: stream with SSRC %d not yet registered", ssrc);
+    g_warning ("gstrtpclient: stream with SSRC %d not yet registered", ssrc);
     return NULL;
   }
 }

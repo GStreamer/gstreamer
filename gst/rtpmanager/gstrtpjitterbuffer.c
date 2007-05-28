@@ -24,7 +24,7 @@
  */
 
 /**
- * SECTION:element-rtpjitterbuffer
+ * SECTION:element-gstrtpjitterbuffer
  * @short_description: buffer, reorder and remove duplicate RTP packets to
  * compensate for network oddities.
  *
@@ -33,7 +33,7 @@
  * This element reorders and removes duplicate RTP packets as they are received
  * from a network source. It will also wait for missing packets up to a
  * configurable time limit using the ::latency property. Packets arriving too
- * late are considered as lost packets.
+ * late are considered to be lost packets.
  * </para>
  * <para>
  * This element acts as a live element and so adds ::latency to the pipeline.
@@ -45,12 +45,12 @@
  * previous pt-map use the ::clear-pt-map signal.
  * </para>
  * <para>
- * This element will automatically be used inside rtpbin.
+ * This element will automatically be used inside gstrtpbin.
  * </para>
  * <title>Example pipelines</title>
  * <para>
  * <programlisting>
- * gst-launch rtspsrc location=rtsp://192.168.1.133:8554/mpeg1or2AudioVideoTest ! rtpjitterbuffer ! rtpmpvdepay ! mpeg2dec ! xvimagesink
+ * gst-launch rtspsrc location=rtsp://192.168.1.133:8554/mpeg1or2AudioVideoTest ! gstrtpjitterbuffer ! rtpmpvdepay ! mpeg2dec ! xvimagesink
  * </programlisting>
  * Connect to a streaming server and decode the MPEG video. The jitterbuffer is
  * inserted into the pipeline to smooth out network jitter and to reorder the
@@ -58,7 +58,7 @@
  * </para>
  * </refsect2>
  *
- * Last reviewed on 2007-05-22 (0.10.6)
+ * Last reviewed on 2007-05-28 (0.10.5)
  */
 
 #ifdef HAVE_CONFIG_H
