@@ -1,3 +1,19 @@
+2007-05-28  Wim Taymans  <wim@fluendo.com>
+
+	Based on patch by: Dejan Sakelšak <sakdean at gmail dot com>
+
+	* gst/videobox/gstvideobox.c: (gst_video_box_class_init),
+	(gst_video_box_set_property), (gst_video_box_transform_caps),
+	(video_box_recalc_transform), (gst_video_box_set_caps),
+	(gst_video_box_get_unit_size), (gst_video_box_apply_alpha),
+	(gst_video_box_ayuv_ayuv), (gst_video_box_clear), (UVfloor),
+	(UVceil), (gst_video_box_ayuv_i420), (gst_video_box_i420_ayuv),
+	(gst_video_box_i420_i420), (gst_video_box_transform),
+	(plugin_init):
+	Add AYUV->AYUV and AYUV->I420 formats. 
+	Fix negotiation and I420->AYUV conversion.
+	Fixes #429329.
+
 2007-05-26  Wim Taymans  <wim@fluendo.com>
 
 	* ext/speex/gstspeexdec.c: (speex_dec_chain_parse_data):
