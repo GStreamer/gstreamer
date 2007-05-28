@@ -199,10 +199,8 @@ static gboolean gst_rtp_mux_src_event (GstPad * pad,
     switch (gst_iterator_next (iter, (gpointer) &sinkpad)) {
       case GST_ITERATOR_OK:
         gst_event_ref (event);
-        result = gst_pad_push_event (sinkpad, event);
+        result |= gst_pad_push_event (sinkpad, event);
         gst_object_unref (sinkpad);
-        if (result)
-          done = TRUE;
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
