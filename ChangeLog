@@ -1,3 +1,10 @@
+2007-05-29  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (queue_overrun),
+	(no_more_pads_full):
+	Stop buffering when the group is commited because the queues filled up.
+	Fixes #442024.
+
 2007-05-25  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/alsa/gstalsamixer.c: (gst_alsa_mixer_ensure_track_list),

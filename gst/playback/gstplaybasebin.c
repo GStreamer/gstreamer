@@ -597,25 +597,6 @@ queue_deadlock_check (GstElement * queue, GstPlayBaseBin * play_base_bin)
   }
 }
 
-/* this signal will be fired when one of the queues with raw
- * data is filled. This means that the group building stage is over 
- * and playback of the new queued group should start. This is a rather unusual
- * situation because normally the group is commited when the "no_more_pads"
- * signal is fired.
- */
-static void
-queue_overrun (GstElement * queue, GstPlayBaseBin * play_base_bin)
-{
-  GST_DEBUG_OBJECT (play_base_bin, "queue %s overrun",
-      GST_ELEMENT_NAME (queue));
-
-  preroll_remove_overrun (queue, play_base_bin);
-
-  group_commit (play_base_bin, FALSE,
-      GST_OBJECT_PARENT (GST_OBJECT_CAST (queue)) ==
-      GST_OBJECT_CAST (play_base_bin->subtitle));
-}
-
 /* Used for time-based buffering in streaming mode and is called when a queue
  * emits the running signal. This means that the high watermark threshold is
  * reached and the buffering is completed. */
@@ -665,6 +646,28 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
   /* we post a 100% buffering message to notify the app that buffering is
    * completed and playback can start/continue */
   fill_buffer (play_base_bin, 100);
+}
+
+/* this signal will be fired when one of the queues with raw
+ * data is filled. This means that the group building stage is over 
+ * and playback of the new queued group should start. This is a rather unusual
+ * situation because normally the group is commited when the "no_more_pads"
+ * signal is fired.
+ */
+static void
+queue_overrun (GstElement * queue, GstPlayBaseBin * play_base_bin)
+{
+  GST_DEBUG_OBJECT (play_base_bin, "queue %s overrun",
+      GST_ELEMENT_NAME (queue));
+
+  preroll_remove_overrun (queue, play_base_bin);
+
+  group_commit (play_base_bin, FALSE,
+      GST_OBJECT_PARENT (GST_OBJECT_CAST (queue)) ==
+      GST_OBJECT_CAST (play_base_bin->subtitle));
+
+  /* notify end of buffering */
+  queue_threshold_reached (queue, play_base_bin);
 }
 
 /* this signal is only added when in streaming mode to catch underruns
@@ -1047,6 +1050,8 @@ no_more_pads_full (GstElement * element, gboolean subs,
   /* the object has no pending no_more_pads */
   if (!g_object_get_data (G_OBJECT (element), "pending"))
     return;
+
+  GST_DEBUG_OBJECT (element, "remove pending");
 
   g_object_set_data (G_OBJECT (element), "pending", NULL);
 
