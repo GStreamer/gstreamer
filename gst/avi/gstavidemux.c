@@ -142,8 +142,8 @@ gst_avi_demux_base_init (GstAviDemuxClass * klass)
       "Wim Taymans <wim.taymans@chello.be>\n"
       "Ronald Bultje <rbultje@ronald.bitfreak.net>");
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  GstPadTemplate *videosrctempl, *audiosrctempl;
-  GstCaps *audcaps, *vidcaps;
+  GstPadTemplate *videosrctempl, *audiosrctempl, *subsrctempl;
+  GstCaps *audcaps, *vidcaps, *subcaps;
 
   audcaps = gst_riff_create_audio_template_caps ();
   gst_caps_append (audcaps, gst_caps_new_simple ("audio/x-avi-unknown", NULL));
@@ -156,8 +156,12 @@ gst_avi_demux_base_init (GstAviDemuxClass * klass)
   videosrctempl = gst_pad_template_new ("video_%02d",
       GST_PAD_SRC, GST_PAD_SOMETIMES, vidcaps);
 
+  subcaps = gst_caps_new_simple ("application/x-subtitle-avi", NULL);
+  subsrctempl = gst_pad_template_new ("subtitle_%02d",
+      GST_PAD_SRC, GST_PAD_SOMETIMES, subcaps);
   gst_element_class_add_pad_template (element_class, audiosrctempl);
   gst_element_class_add_pad_template (element_class, videosrctempl);
+  gst_element_class_add_pad_template (element_class, subsrctempl);
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_templ));
   gst_element_class_set_details (element_class, &gst_avi_demux_details);
@@ -235,6 +239,7 @@ gst_avi_demux_reset (GstAviDemux * avi)
   avi->num_streams = 0;
   avi->num_v_streams = 0;
   avi->num_a_streams = 0;
+  avi->num_t_streams = 0;
 
   avi->state = GST_AVI_DEMUX_START;
   avi->offset = 0;
@@ -1210,6 +1215,12 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
                 &stream->strf.iavs, &stream->extradata);
             GST_DEBUG_OBJECT (element, "marking iavs as VBR, res %d", res);
             break;
+          case GST_RIFF_FCC_txts:
+            /* nothing to parse here */
+            stream->is_vbr = (stream->strh->samplesize == 0)
+                && (stream->strh->scale > 1);
+            res = TRUE;
+            break;
           default:
             GST_ERROR_OBJECT (avi,
                 "Don´t know how to handle stream type %" GST_FOURCC_FORMAT,
@@ -1321,6 +1332,14 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
       }
       tag_name = GST_TAG_VIDEO_CODEC;
       avi->num_v_streams++;
+      break;
+    }
+    case GST_RIFF_FCC_txts:{
+      padname = g_strdup_printf ("subtitle_%02d", avi->num_t_streams);
+      templ = gst_element_class_get_pad_template (klass, "subtitle_%02d");
+      caps = gst_caps_new_simple ("application/x-subtitle-avi", NULL);
+      tag_name = NULL;
+      avi->num_t_streams++;
       break;
     }
     default:

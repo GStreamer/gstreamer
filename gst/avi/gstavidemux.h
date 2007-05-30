@@ -142,6 +142,7 @@ typedef struct _GstAviDemux {
   guint          num_streams;
   guint          num_v_streams;
   guint          num_a_streams;
+  guint          num_t_streams;  /* subtitle text streams */
 
   avi_stream_context stream[GST_AVI_DEMUX_MAX_STREAMS];
 
