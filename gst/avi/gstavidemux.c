@@ -2451,22 +2451,22 @@ gst_avi_demux_calculate_durations_from_index (GstAviDemux * avi)
 static gboolean
 gst_avi_demux_push_event (GstAviDemux * avi, GstEvent * event)
 {
+  gboolean result = FALSE;
   gint i;
-  gboolean result = TRUE;
 
-  GST_DEBUG_OBJECT (avi, "sending event to %d streams", avi->num_streams);
+  GST_DEBUG_OBJECT (avi, "sending %s event to %d streams",
+      GST_EVENT_TYPE_NAME (event), avi->num_streams);
+
   if (avi->num_streams) {
     for (i = 0; i < avi->num_streams; i++) {
       avi_stream_context *stream = &avi->stream[i];
 
       if (stream->pad) {
         gst_event_ref (event);
-        result &= gst_pad_push_event (stream->pad, event);
+        if (gst_pad_push_event (stream->pad, event))
+          result = TRUE;
       }
     }
-  } else {
-    /* return error, as the event was not send */
-    result = FALSE;
   }
   gst_event_unref (event);
   return result;
@@ -3725,9 +3725,10 @@ pause:
     if (push_eos) {
       GST_INFO_OBJECT (avi, "sending eos");
       if (!(gst_avi_demux_push_event (avi, gst_event_new_eos ()))) {
-        /* if we don't error out here it will hand */
+        /* if we don't error out here it will hang */
         GST_ELEMENT_ERROR (avi, STREAM, FAILED,
-            (_("Internal data stream error.")), ("corrupted file"));
+            (_("Internal data stream error.")),
+            ("downstream did not handle EOS"));
       }
     }
   }
