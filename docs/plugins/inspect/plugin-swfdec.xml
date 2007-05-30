@@ -3,10 +3,10 @@
   <description>Uses libswfdec to decode Flash video streams</description>
   <filename>../../ext/swfdec/.libs/libgstswfdec.so</filename>
   <basename>libgstswfdec.so</basename>
-  <version>0.10.4</version>
+  <version>0.10.4.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>

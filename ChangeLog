@@ -1,3 +1,17 @@
+2007-05-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-gstrtpmanager.xml:
+	* docs/plugins/inspect/plugin-musepack.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-sdl.xml:
+	* docs/plugins/inspect/plugin-spcdec.xml:
+	* docs/plugins/inspect/plugin-swfdec.xml:
+	  Updates; update inspect info for rtpmanager => gstrtpmanager rename,
+	  hopefully that makes the build bots happy again.
+
 2007-05-28  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:

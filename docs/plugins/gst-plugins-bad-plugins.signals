@@ -31,6 +31,13 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRTPSession::clear-pt-map</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>a</FLAGS>
+GstRTPSession *gstrtpsession
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRTPPtDemux::new-payload-type</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
@@ -56,11 +63,25 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRTPPtDemux::clear-pt-map</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstRTPPtDemux *gstrtpptdemux
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRTPJitterBuffer::request-pt-map</NAME>
 <RETURNS>GstCaps*</RETURNS>
 <FLAGS>l</FLAGS>
 GstRTPJitterBuffer *gstrtpjitterbuffer
 guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPJitterBuffer::clear-pt-map</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPJitterBuffer *gstrtpjitterbuffer
 </SIGNAL>
 
 <SIGNAL>
@@ -70,5 +91,12 @@ guint  arg1
 GstRTPBin *gstrtpbin
 guint  arg1
 guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPBin::clear-pt-map</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>a</FLAGS>
+GstRTPBin *gstrtpbin
 </SIGNAL>
 

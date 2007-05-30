@@ -1,5 +1,5 @@
 <plugin>
-  <name>rtpmanager</name>
+  <name>gstrtpmanager</name>
   <description>RTP session management plugin library</description>
   <filename>../../gst/rtpmanager/.libs/libgstrtpmanager.so</filename>
   <basename>libgstrtpmanager.so</basename>
@@ -10,42 +10,42 @@
   <origin>Unknown package origin</origin>
   <elements>
     <element>
-      <name>rtpbin</name>
+      <name>gstrtpbin</name>
       <longname>RTP Bin</longname>
       <class>Filter/Network/RTP</class>
       <description>Implement an RTP bin</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
-      <name>rtpclient</name>
+      <name>gstrtpclient</name>
       <longname>RTP Client</longname>
       <class>Filter/Network/RTP</class>
       <description>Implement an RTP client</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
-      <name>rtpjitterbuffer</name>
+      <name>gstrtpjitterbuffer</name>
       <longname>RTP packet jitter-buffer</longname>
       <class>Filter/Network/RTP</class>
       <description>A buffer that deals with network jitter and other transmission faults</description>
       <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
-      <name>rtpptdemux</name>
+      <name>gstrtpptdemux</name>
       <longname>RTP Demux</longname>
       <class>Demux/Network/RTP</class>
       <description>Parses codec streams transmitted in the same RTP session</description>
       <author>Kai Vehmanen &lt;kai.vehmanen@nokia.com&gt;</author>
     </element>
     <element>
-      <name>rtpsession</name>
+      <name>gstrtpsession</name>
       <longname>RTP Session</longname>
       <class>Filter/Network/RTP</class>
       <description>Implement an RTP session</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
-      <name>rtpssrcdemux</name>
+      <name>gstrtpssrcdemux</name>
       <longname>RTP SSRC Demux</longname>
       <class>Demux/Network/RTP</class>
       <description>Splits RTP streams based on the SSRC</description>

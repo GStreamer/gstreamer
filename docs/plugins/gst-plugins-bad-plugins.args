@@ -450,11 +450,11 @@
 
 <ARG>
 <NAME>GstWavpackEnc::bitrate</NAME>
-<TYPE>gdouble</TYPE>
-<RANGE>[0,9.6e+06]</RANGE>
+<TYPE>guint</TYPE>
+<RANGE><= 9600000</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bitrate</NICK>
-<BLURB>Try to encode with this average bitrate (bits/sec). This enables lossy encoding! A value smaller than 24000.0 disables this.</BLURB>
+<BLURB>Try to encode with this average bitrate (bits/sec). This enables lossy encoding, values smaller than 24000 disable it again.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -464,7 +464,7 @@
 <RANGE>[0,24]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bits per sample</NICK>
-<BLURB>Try to encode with this amount of bits per sample. This enables lossy encoding! A value smaller than 2.0 disables this.</BLURB>
+<BLURB>Try to encode with this amount of bits per sample. This enables lossy encoding, values smaller than 2.0 disable it again.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -473,19 +473,19 @@
 <TYPE>GstWavpackEncCorrectionMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Correction file mode</NICK>
-<BLURB>Use this mode for correction file creation. Only works in lossy mode!.</BLURB>
+<NICK>Correction stream mode</NICK>
+<BLURB>Use this mode for the correction stream. Only works in lossy mode!.</BLURB>
 <DEFAULT>Create no correction file</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstWavpackEnc::extra-processing</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Extra processing</NICK>
-<BLURB>Extra encode processing.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<BLURB>Use better but slower filters for better compression/quality.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -572,7 +572,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>automatic-redirect</NICK>
 <BLURB>Enable Neon HTTP Redirects (HTTP Status Code 302).</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1072,7 +1072,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Output format</NICK>
 <BLURB>Format of output frames.</BLURB>
-<DEFAULT>OUTPUTFORMAT_ADTS</DEFAULT>
+<DEFAULT>OUTPUTFORMAT_RAW</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1092,7 +1092,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Block type</NICK>
 <BLURB>Block type encorcing.</BLURB>
-<DEFAULT>SHORTCTL_NOSHORT</DEFAULT>
+<DEFAULT>SHORTCTL_NORMAL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1200,8 +1200,8 @@
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Force processing</NICK>
-<BLURB>Analyze streams even when ReplayGain tags exist.</BLURB>
+<NICK>Forced</NICK>
+<BLURB>Analyze even if ReplayGain tags exist.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -1211,17 +1211,17 @@
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Number of album tracks</NICK>
-<BLURB>Number of remaining tracks in the album.</BLURB>
+<BLURB>Number of remaining album tracks.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstRgAnalysis::reference-level</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>>= 0</RANGE>
+<RANGE>[0,150]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Reference level</NICK>
-<BLURB>Reference level in dB (83.0 for original proposal).</BLURB>
+<BLURB>Reference level [dB].</BLURB>
 <DEFAULT>89</DEFAULT>
 </ARG>
 
@@ -17081,7 +17081,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer latency in ms</NICK>
-<BLURB>Amount of ms to buffer.</BLURB>
+<BLURB>Default amount of ms to buffer in the jitterbuffers.</BLURB>
 <DEFAULT>200</DEFAULT>
 </ARG>
 
@@ -17114,3 +17114,184 @@
 <BLURB>When enabled, the view is fullscreen.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
+
+<ARG>
+<NAME>GstSFSrc::location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Location of the file to read.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSFSink::buffer-frames</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Buffer frames</NICK>
+<BLURB>Number of frames per buffer, in pull mode.</BLURB>
+<DEFAULT>256</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSFSink::location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>File Location</NICK>
+<BLURB>Location of the file to write.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSFSink::major-type</NAME>
+<TYPE>GstSndfileMajorTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Major type</NICK>
+<BLURB>Major output type.</BLURB>
+<DEFAULT>WAV (Microsoft)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSFSink::minor-type</NAME>
+<TYPE>GstSndfileMinorTypes</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Minor type</NICK>
+<BLURB>Minor output type.</BLURB>
+<DEFAULT>32 bit float</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSwitch::active-pad</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Active Pad</NICK>
+<BLURB>Name of the currently active sink pad.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSwitch::last-timestamp</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= G_MAXUINT</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Time at the end of the last buffer</NICK>
+<BLURB>Time at the end of the last buffer.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSwitch::num-sources</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>number of sources</NICK>
+<BLURB>number of sources.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSwitch::queue-buffers</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Queue new segment and buffers instead of sending them</NICK>
+<BLURB>Queue new segment and buffers instead of sending them.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSwitch::start-value</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Start Value</NICK>
+<BLURB>Timestamp that next segment will start at (-1 to use first buffer).</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSwitch::stop-value</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stop Value</NICK>
+<BLURB>Timestamp that current source will stop at (-1 if unknown or don't care).</BLURB>
+<DEFAULT>18446744073709551615</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::album-mode</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Album mode</NICK>
+<BLURB>Prefer album over track gain.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::fallback-gain</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-60,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fallback gain</NICK>
+<BLURB>Gain for streams missing tags [dB].</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::headroom</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Headroom</NICK>
+<BLURB>Extra headroom [dB].</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::pre-amp</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-60,60]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Pre-amp</NICK>
+<BLURB>Extra gain [dB].</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::result-gain</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-120,120]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Result-gain</NICK>
+<BLURB>Applied gain [dB].</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgVolume::target-gain</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[-120,120]</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Target-gain</NICK>
+<BLURB>Applicable gain [dB].</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRgLimiter::enabled</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Enabled</NICK>
+<BLURB>Enable processing.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
