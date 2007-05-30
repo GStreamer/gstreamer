@@ -249,7 +249,8 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class)
 GstV4l2Object *
 gst_v4l2_object_new (GstElement * element,
     GstV4l2GetInOutFunction get_in_out_func,
-    GstV4l2SetInOutFunction set_in_out_func)
+    GstV4l2SetInOutFunction set_in_out_func,
+    GstV4l2UpdateFpsFunction update_fps_func)
 {
   GstV4l2Object *v4l2object;
 
@@ -261,6 +262,7 @@ gst_v4l2_object_new (GstElement * element,
   v4l2object->element = element;
   v4l2object->get_in_out_func = get_in_out_func;
   v4l2object->set_in_out_func = set_in_out_func;
+  v4l2object->update_fps_func = update_fps_func;
 
   v4l2object->video_fd = -1;
   v4l2object->buffer = NULL;
