@@ -111,7 +111,9 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/rtpmanager/gstrtpptdemux.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpsession.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpssrcdemux.h \
-	$(top_srcdir)/gst/videocrop/gstvideocrop.h
+	$(top_srcdir)/gst/videocrop/gstvideocrop.h \
+	$(top_srcdir)/gst/videosignal/gstvideoanalyse.h \
+	$(top_srcdir)/gst/videosignal/gstvideodetect.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

@@ -105,6 +105,7 @@ GST_PLUGINS_ALL="\
   tta \
   videocrop \
   videoparse \
+  videosignal \
   vmnc \
   xingheader \
   y4m \
@@ -1128,6 +1129,7 @@ gst/qtdemux/Makefile
 gst/tta/Makefile
 gst/videocrop/Makefile
 gst/videoparse/Makefile
+gst/videosignal/Makefile
 gst/vmnc/Makefile
 gst/xingheader/Makefile
 gst/real/Makefile

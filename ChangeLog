@@ -1,3 +1,33 @@
+2007-05-30  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-videosignal.xml:
+	* gst/videosignal/Makefile.am:
+	* gst/videosignal/gstvideoanalyse.c: (gst_video_analyse_set_caps),
+	(gst_video_analyse_post_message), (gst_video_analyse_420),
+	(gst_video_analyse_transform_ip), (gst_video_analyse_set_property),
+	(gst_video_analyse_get_property), (gst_video_analyse_base_init),
+	(gst_video_analyse_class_init), (gst_video_analyse_init),
+	(gst_video_analyse_get_type):
+	* gst/videosignal/gstvideoanalyse.h:
+	* gst/videosignal/gstvideodetect.c: (gst_video_detect_set_caps),
+	(gst_video_detect_post_message),
+	(gst_video_detect_calc_brightness), (gst_video_detect_420),
+	(gst_video_detect_transform_ip), (gst_video_detect_set_property),
+	(gst_video_detect_get_property), (gst_video_detect_base_init),
+	(gst_video_detect_class_init), (gst_video_detect_init),
+	(gst_video_detect_get_type):
+	* gst/videosignal/gstvideodetect.h:
+	* gst/videosignal/gstvideosignal.c: (plugin_init):
+	* gst/videosignal/gstvideosignal.h:
+	Added videosignal plugin with two plugins to analyse video frames.
+	Added videoanalyse to report about brightness and variance in video
+	frames.
+	Added videodetect to detect predefined patterns in a video signal.
+
 2007-05-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
