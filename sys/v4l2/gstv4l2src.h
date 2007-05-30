@@ -85,22 +85,23 @@ struct _GstV4l2Src
   /* pads */
   GstPad *srcpad;
 
+  GstCaps *probed_caps;
+
   /* internal lists */
   GSList *formats;              /* list of available capture formats */
 
   /* buffers */
   GstV4l2BufferPool *pool;
 
-  struct v4l2_requestbuffers breq;
-  struct v4l2_format format;
+  guint32 num_buffers;
+  gboolean use_mmap;
+  guint32 frame_byte_size;
 
   /* True if we want to stop */
-  gboolean quit, is_capturing;
+  gboolean quit;
+  gboolean is_capturing;
 
   guint64 offset;
-
-  /* how are we going to push buffers? */
-  guint fps_n, fps_d;
 };
 
 struct _GstV4l2SrcClass

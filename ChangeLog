@@ -1,3 +1,51 @@
+2007-05-30  Andy Wingo  <wingo@pobox.com>
+
+	* sys/v4l2/v4l2src_calls.h: 
+	* sys/v4l2/v4l2src_calls.c (gst_v4l2src_fill_format_list): Store
+	the format list in the order that the driver gives it to us.
+	(gst_v4l2src_probe_caps_for_format_and_size)
+	(gst_v4l2src_probe_caps_for_format): New functions, fill GstCaps
+	based on the capabilities of the device.
+	(gst_v4l2src_grab_frame): Update for object variable renaming.
+	(gst_v4l2src_set_capture): Update to be strict in its parameters,
+	as in the set_caps below.
+	(gst_v4l2src_capture_init): Update for object variable renaming,
+	and reflow.
+	(gst_v4l2src_capture_start, gst_v4l2src_capture_stop)
+	(gst_v4l2src_capture_deinit): Update for object variable renaming.
+	(gst_v4l2src_update_fps, gst_v4l2src_set_fps)
+	(gst_v4l2src_get_fps): Remove; these functions don't have much
+	meaning outside of an atomic set_caps method.
+	(gst_v4l2src_buffer_new): Don't set buffer duration, it is not
+	known.
+
+	* sys/v4l2/gstv4l2tuner.c (gst_v4l2_tuner_set_channel): Remove
+	call to update_fps; not sure about this change.
+	(gst_v4l2_tuner_set_norm): Work around the fact that for the
+	moment we don't have an update_fps_func.
+
+	* sys/v4l2/gstv4l2src.h (struct _GstV4l2Src): Don't put v4l2
+	structures in the object, just store what we need. Do store the
+	probed caps of the device. Don't store the current frame rate.
+
+	* sys/v4l2/gstv4l2src.c (gst_v4l2src_init): Remove the
+	update_fps_function, for now. Update for new object variable
+	naming.
+	(gst_v4l2src_set_property, gst_v4l2src_get_property): Update for
+	new object variable naming.
+	(gst_v4l2src_v4l2fourcc_to_structure): Rename from ..._to_caps.
+	(gst_v4l2_structure_to_v4l2fourcc): Rename from ...caps_to_....
+	(gst_v4l2src_get_caps): Rework to probe the device for supported
+	frame sizes and frame rates.
+	(gst_v4l2src_set_caps): Rework to be strict in the given
+	parameters: if someone asks us to have a certain size and rate,
+	that is what we configure.
+	(gst_v4l2src_get_read): Update for object variable naming. Don't
+	leak buffers on short reads.
+	(gst_v4l2src_get_mmap): Update for object variable naming, and add
+	comments.
+	(gst_v4l2src_create): Update for object variable naming.
+
 2007-05-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/avi/gstavidemux.c: (gst_avi_demux_base_init),

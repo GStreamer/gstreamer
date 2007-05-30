@@ -154,7 +154,7 @@ gst_v4l2_tuner_set_channel (GstV4l2Object * v4l2object,
 
   if (v4l2object->set_in_out_func (v4l2object, v4l2channel->index)) {
     gst_tuner_channel_changed (GST_TUNER (v4l2object->element), channel);
-    v4l2object->update_fps_func (v4l2object);
+    /* can FPS change here? */
     return TRUE;
   }
 
@@ -223,7 +223,8 @@ gst_v4l2_tuner_set_norm (GstV4l2Object * v4l2object, GstTunerNorm * norm)
 
   if (gst_v4l2_set_norm (v4l2object, v4l2norm->index)) {
     gst_tuner_norm_changed (GST_TUNER (v4l2object->element), norm);
-    v4l2object->update_fps_func (v4l2object);
+    if (v4l2object->update_fps_func)
+      v4l2object->update_fps_func (v4l2object);
     return TRUE;
   }
 

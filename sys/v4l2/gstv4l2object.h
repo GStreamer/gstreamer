@@ -57,7 +57,6 @@ typedef struct _GstV4l2Xv GstV4l2Xv;
 
 typedef gboolean  (*GstV4l2GetInOutFunction)  (GstV4l2Object * v4l2object, gint * input);
 typedef gboolean  (*GstV4l2SetInOutFunction)  (GstV4l2Object * v4l2object, gint input);
-typedef gboolean  (*GstV4l2UpdateFpsFunction) (GstV4l2Object * v4l2object);
 
 struct _GstV4l2Object {
   GstElement * element;
@@ -97,7 +96,6 @@ struct _GstV4l2Object {
   /* funcs */
   GstV4l2GetInOutFunction  get_in_out_func;
   GstV4l2SetInOutFunction  set_in_out_func;
-  GstV4l2UpdateFpsFunction update_fps_func;
 };
 
 struct _GstV4l2ObjectClassHelper {
@@ -115,8 +113,7 @@ GType gst_v4l2_object_get_type (void);
 /* create/destroy */
 GstV4l2Object *	gst_v4l2_object_new 		 (GstElement * element,
                    				  GstV4l2GetInOutFunction get_in_out_func,
-                   				  GstV4l2SetInOutFunction set_in_out_func,
-		   				  GstV4l2UpdateFpsFunction   update_fps_func);
+                   				  GstV4l2SetInOutFunction set_in_out_func);
 void 	        gst_v4l2_object_destroy 	 (GstV4l2Object * v4l2object);
 
 /* properties */
