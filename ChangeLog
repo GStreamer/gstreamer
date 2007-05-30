@@ -1,5 +1,13 @@
 2007-05-30  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.prerequisites:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	  More updates.
+
+2007-05-30  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/plugins/gst-plugins-bad-plugins.args:
 	* docs/plugins/gst-plugins-bad-plugins.signals:
 	* docs/plugins/inspect/plugin-dtsdec.xml:

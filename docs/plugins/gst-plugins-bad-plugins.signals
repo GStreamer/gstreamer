@@ -6,20 +6,19 @@ GstXvidEnc *gstxvidenc
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstCDAudio::track-change</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstCDAudio *gstcdaudio
-gint  arg1
-</SIGNAL>
-
-<SIGNAL>
 <NAME>GstRTPSsrcDemux::new-ssrc-pad</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
 GstRTPSsrcDemux *gstrtpssrcdemux
 guint  arg1
 GstPad *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPSession::clear-pt-map</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>a</FLAGS>
+GstRTPSession *gstrtpsession
 </SIGNAL>
 
 <SIGNAL>
@@ -31,10 +30,10 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPSession::clear-pt-map</NAME>
+<NAME>GstRTPPtDemux::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>a</FLAGS>
-GstRTPSession *gstrtpsession
+<FLAGS>la</FLAGS>
+GstRTPPtDemux *gstrtpptdemux
 </SIGNAL>
 
 <SIGNAL>
@@ -63,10 +62,10 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPPtDemux::clear-pt-map</NAME>
+<NAME>GstRTPJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>la</FLAGS>
-GstRTPPtDemux *gstrtpptdemux
+<FLAGS>l</FLAGS>
+GstRTPJitterBuffer *gstrtpjitterbuffer
 </SIGNAL>
 
 <SIGNAL>
@@ -78,10 +77,10 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPJitterBuffer::clear-pt-map</NAME>
+<NAME>GstRTPBin::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstRTPJitterBuffer *gstrtpjitterbuffer
+<FLAGS>a</FLAGS>
+GstRTPBin *gstrtpbin
 </SIGNAL>
 
 <SIGNAL>
@@ -91,12 +90,5 @@ GstRTPJitterBuffer *gstrtpjitterbuffer
 GstRTPBin *gstrtpbin
 guint  arg1
 guint  arg2
-</SIGNAL>
-
-<SIGNAL>
-<NAME>GstRTPBin::clear-pt-map</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>a</FLAGS>
-GstRTPBin *gstrtpbin
 </SIGNAL>
 
