@@ -145,9 +145,11 @@ no_config:
 static gboolean
 rtsp_ext_wms_configure_stream (RTSPExtensionCtx * ctx, GstRTSPStream * stream)
 {
-  GstRTSPSrc *src = (GstRTSPSrc *) ctx->src;
+  GstRTSPSrc *src;
   GstStructure *s;
   const gchar *encoding;
+
+  src = (GstRTSPSrc *) ctx->src;
 
   s = gst_caps_get_structure (stream->caps, 0);
   encoding = gst_structure_get_string (s, "encoding-name");

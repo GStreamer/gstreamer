@@ -1,3 +1,8 @@
+2007-05-31  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/rtspextwms.c: (rtsp_ext_wms_configure_stream):
+	Fix compile warning when debug is disabled as spotted bu Saur on IRC.
+
 2007-05-30  Andy Wingo  <wingo@pobox.com>
 
 	* sys/v4l2/gstv4l2object.h: 
