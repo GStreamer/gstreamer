@@ -1,7 +1,18 @@
 2007-05-31  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	In riff, the depth is stored in the size field but it just means that
+	the least significant bits are cleared. We can therefore just play
+	the sample as if it had a depth == width. Fixes: #440997
+
+	Patch by: Wim Taymans <wim@fluendo.com> 
+	Patch by: Sebastian Dröge  <slomo@circular-chaos.org>
+
+2007-05-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst-libs/gst/floatcast/floatcast.h:
 	Define inline when needed on win32 builds. Fixes: #441295
+	Patch by: Sebastien Moutte  <sebastien@moutte.net>
 
 2007-05-29  Wim Taymans  <wim@fluendo.com>
 

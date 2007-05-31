@@ -766,7 +766,11 @@ gst_riff_create_audio_caps (guint16 codec_id,
               strf->size);
           strf->size = 8 * (guint) ceil (wd / 8.0);
         }
-        ws = strf->size;
+        /* in riff, the depth is stored in the size field but it just means that
+         * the _least_ significant bits are cleared. We can therefore just play
+         * the sample as if it had a depth == width */
+        /* For reference, the actual depth is in strf->size */
+        ws = wd;
 
         caps = gst_caps_new_simple ("audio/x-raw-int",
             "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
@@ -1083,11 +1087,18 @@ gst_riff_create_audio_caps (guint16 codec_id,
           GST_DEBUG ("PCM");
           if (strf != NULL) {
             gint ba = strf->blockalign;
-            gint ws = strf->size;
             gint wd = ba * 8 / strf->channels;
+            gint ws;
 
-            if (valid_bits_per_sample != 0)
-              ws = valid_bits_per_sample;
+            /* in riff, the depth is stored in the size field but it just
+             * means that the _least_ significant bits are cleared. We can
+             * therefore just play the sample as if it had a depth == width */
+            ws = wd;
+
+            /* For reference, use this to get the actual depth:
+             * ws = strf->size;
+             * if (valid_bits_per_sample != 0)
+             *   ws = valid_bits_per_sample; */
 
             caps = gst_caps_new_simple ("audio/x-raw-int",
                 "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
