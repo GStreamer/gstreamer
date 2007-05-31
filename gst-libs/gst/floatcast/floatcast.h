@@ -32,6 +32,11 @@
 
 #include <string.h>
 #include <glib/gtypes.h>
+#include <glib/gutils.h>  /* to make sure inline is defined properly */
+
+#if defined (_MSC_VER) && !defined (inline)
+#define inline __inline
+#endif
 
 G_BEGIN_DECLS
 

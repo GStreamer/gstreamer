@@ -1,3 +1,8 @@
+2007-05-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/gst/floatcast/floatcast.h:
+	Define inline when needed on win32 builds. Fixes: #441295
+
 2007-05-29  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (queue_overrun),
