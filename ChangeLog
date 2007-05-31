@@ -1,3 +1,15 @@
+2007-05-31  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/libmms/gstmms.h:
+	  No reason to use gpointers instead of typed pointes here as far as I
+	  can see.
+
+	* ext/mythtv/gstmythtvsrc.c:
+	* ext/neon/gstneonhttpsrc.c:
+	* gst/switch/gstswitch.c:
+	  Don't use gtk-doc magic markers for things that aren't meant to be
+	  parsed by gtk-doc. Makes gtk-doc complain a bit less.
+
 2007-05-30  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:

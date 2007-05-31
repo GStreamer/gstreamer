@@ -27,8 +27,7 @@
 
 #include <string.h>
 
-/**
- * This element allows runtime switching between many sources. It outputs a
+/* This element allows runtime switching between many sources. It outputs a
  * new segment every time it switches. The input sources are expected to be
  * rate controlled/live or synced to the clock using identity sync=true upstream
  * of this element. If they are not, your cpu usage will hike up.

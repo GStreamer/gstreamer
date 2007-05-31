@@ -772,8 +772,7 @@ error:
   }
 }
 
-/**
- * Try to send the HTTP request to the Icecast server, and if possible deals with
+/* Try to send the HTTP request to the Icecast server, and if possible deals with
  * all the probable redirections (HTTP status code == 302)
  */
 static gint

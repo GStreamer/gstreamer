@@ -31,9 +31,9 @@ struct _GstMMS
 {
   GstPushSrc parent;
 
-  gchar *uri_name;
-  gpointer connection;
-  gpointer connection_h;
+  gchar  *uri_name;
+  mms_t  *connection;
+  mmsh_t *connection_h;
 };
 
 struct _GstMMSClass 
