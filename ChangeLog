@@ -1,3 +1,13 @@
+2007-05-31  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
+	* gst/dvdsub/gstdvdsubdec.c: (gst_dvd_sub_dec_sink_event):
+	  Clear state when handling the serialized FLUSH_STOP event instead of
+	  the FLUSH_START event, thereby making sure we don't free buffers the
+	  chain function is still using. Fixes dvdsubdec crashing when flusing
+	  or seeking (#442706).
+
 2007-05-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_chain):

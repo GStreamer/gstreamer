@@ -870,7 +870,7 @@ gst_dvd_sub_dec_sink_event (GstPad * pad, GstEvent * event)
       }
       break;
     }
-    case GST_EVENT_FLUSH_START:{
+    case GST_EVENT_FLUSH_STOP:{
       /* Turn off forced highlight display */
       dec->forced_display = 0;
       dec->current_button = 0;
