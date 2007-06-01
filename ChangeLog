@@ -1,3 +1,8 @@
+2007-06-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_create):
+	  Don't leak buffer when returning an error.
+
 2007-06-01  Wim Taymans  <wim@fluendo.com>
 
 	Patch by René Stadler <mail at renestadler dot de>:

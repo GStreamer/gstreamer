@@ -473,6 +473,8 @@ read_error:
     GST_ELEMENT_ERROR (src, RESOURCE, READ,
         (NULL), ("Could not read any bytes (%i, %s)", read,
             ne_get_error (src->session)));
+    gst_buffer_unref (*outbuf);
+    *outbuf = NULL;
     return GST_FLOW_ERROR;
   }
 }
