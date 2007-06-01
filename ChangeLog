@@ -1,3 +1,17 @@
+2007-06-01  Wim Taymans  <wim@fluendo.com>
+
+	Based on Patch by: Daniel Charles <dcharles at ti dot com>
+
+	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_setcaps),
+	(gst_rtp_amr_depay_process):
+	* gst/rtp/gstrtpamrdepay.h:
+	* gst/rtp/gstrtpamrpay.c: (gst_rtp_amr_pay_base_init),
+	(gst_rtp_amr_pay_class_init), (gst_rtp_amr_pay_init),
+	(gst_rtp_amr_pay_setcaps), (gst_rtp_amr_pay_handle_buffer):
+	* gst/rtp/gstrtpamrpay.h:
+	Add support for AMR-WB.
+	Small cleanups such as using BOILERPLATE.
+
 2007-05-31  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/rtspextwms.c: (rtsp_ext_wms_configure_stream):

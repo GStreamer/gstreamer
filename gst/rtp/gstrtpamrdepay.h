@@ -39,11 +39,18 @@ G_BEGIN_DECLS
 typedef struct _GstRtpAMRDepay GstRtpAMRDepay;
 typedef struct _GstRtpAMRDepayClass GstRtpAMRDepayClass;
 
+typedef enum {
+  GST_RTP_AMR_DP_MODE_INVALID = 0,
+  GST_RTP_AMR_DP_MODE_NB      = 1,
+  GST_RTP_AMR_DP_MODE_WB      = 2
+} GstRtpAMRDepayMode;
+
 struct _GstRtpAMRDepay
 {
   GstBaseRTPDepayload depayload;
 
   gboolean negotiated;
+  GstRtpAMRDepayMode mode;
 
   gboolean octet_align;
   guint8   mode_set;

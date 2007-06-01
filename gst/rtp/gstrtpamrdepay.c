@@ -38,7 +38,7 @@
 static const GstElementDetails gst_rtp_amrdepay_details =
 GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Depayloader/Network",
-    "Extracts AMR audio from RTP packets (RFC 3267)",
+    "Extracts AMR or AMR-WB audio from RTP packets (RFC 3267)",
     "Wim Taymans <wim@fluendo.com>");
 
 /* RtpAMRDepay signals and args */
@@ -58,7 +58,7 @@ enum
  * params see RFC 3267, section 8.1
  */
 static GstStaticPadTemplate gst_rtp_amr_depay_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
@@ -66,6 +66,25 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 8000, "
         "encoding-name = (string) \"AMR\", "
+        "encoding-params = (string) \"1\", "
+        /* NOTE that all values must be strings in orde to be able to do SDP <->
+         * GstCaps mapping. */
+        "octet-align = (string) \"1\", "
+        "crc = (string) { \"0\", \"1\" }, "
+        "robust-sorting = (string) \"0\", " "interleaving = (string) \"0\";"
+        /* following options are not needed for a decoder
+         *
+         "mode-set = (int) [ 0, 7 ], "
+         "mode-change-period = (int) [ 1, MAX ], "
+         "mode-change-neighbor = (boolean) { TRUE, FALSE }, "
+         "maxptime = (int) [ 20, MAX ], "
+         "ptime = (int) [ 20, MAX ]"
+         */
+        "application/x-rtp, "
+        "media = (string) \"audio\", "
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) 16000, "
+        "encoding-name = (string) \"AMR-WB\", "
         "encoding-params = (string) \"1\", "
         /* NOTE that all values must be strings in orde to be able to do SDP <->
          * GstCaps mapping. */
@@ -84,10 +103,11 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 static GstStaticPadTemplate gst_rtp_amr_depay_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/AMR, " "channels = (int) 1," "rate = (int) 8000")
+    GST_STATIC_CAPS ("audio/AMR, " "channels = (int) 1," "rate = (int) 8000;"
+        "audio/AMR-WB, " "channels = (int) 1," "rate = (int) 16000")
     );
 
 static gboolean gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload,
@@ -146,12 +166,27 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstCaps *srccaps;
   GstRtpAMRDepay *rtpamrdepay;
   const gchar *params;
-  const gchar *str;
-  gint clock_rate = 8000;       /* default */
+  const gchar *str, *type;
+  gint clock_rate, need_clock_rate;
 
   rtpamrdepay = GST_RTP_AMR_DEPAY (depayload);
 
   structure = gst_caps_get_structure (caps, 0);
+
+  /* figure out the mode first and set the clock rates */
+  if ((str = gst_structure_get_string (structure, "encoding-name"))) {
+    if (strcmp (str, "AMR") == 0) {
+      rtpamrdepay->mode = GST_RTP_AMR_DP_MODE_NB;
+      clock_rate = need_clock_rate = 8000;
+      type = "audio/AMR";
+    } else if (strcmp (str, "AMR-WB") == 0) {
+      rtpamrdepay->mode = GST_RTP_AMR_DP_MODE_WB;
+      clock_rate = need_clock_rate = 16000;
+      type = "audio/AMR-WB";
+    } else
+      goto invalid_mode;
+  } else
+    goto invalid_mode;
 
   if (!(str = gst_structure_get_string (structure, "octet-align")))
     rtpamrdepay->octet_align = FALSE;
@@ -201,7 +236,7 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
    * no robust sorting, no interleaving for now */
   if (rtpamrdepay->channels != 1)
     return FALSE;
-  if (clock_rate != 8000)
+  if (clock_rate != need_clock_rate)
     return FALSE;
   if (rtpamrdepay->octet_align != TRUE)
     return FALSE;
@@ -210,21 +245,33 @@ gst_rtp_amr_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   if (rtpamrdepay->interleaving != FALSE)
     return FALSE;
 
-  srccaps = gst_caps_new_simple ("audio/AMR",
+  srccaps = gst_caps_new_simple (type,
       "channels", G_TYPE_INT, rtpamrdepay->channels,
       "rate", G_TYPE_INT, clock_rate, NULL);
+
   gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload), srccaps);
   gst_caps_unref (srccaps);
 
   rtpamrdepay->negotiated = TRUE;
 
   return TRUE;
+
+  /* ERRORS */
+invalid_mode:
+  {
+    GST_ERROR_OBJECT (rtpamrdepay, "invalid encoding-name");
+    return FALSE;
+  }
 }
 
 /* -1 is invalid */
-static gint frame_size[16] = {
+static gint nb_frame_size[16] = {
   12, 13, 15, 17, 19, 20, 26, 31,
   5, -1, -1, -1, -1, -1, -1, 0
+};
+static gint wb_frame_size[16] = {
+  17, 23, 32, 36, 40, 46, 50, 58,
+  60, -1, -1, -1, -1, -1, -1, 0
 };
 
 static GstBuffer *
@@ -233,6 +280,7 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   GstRtpAMRDepay *rtpamrdepay;
   GstBuffer *outbuf = NULL;
   gint payload_len;
+  gint *frame_size;
 
   rtpamrdepay = GST_RTP_AMR_DEPAY (depayload);
 
@@ -242,7 +290,13 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (!gst_rtp_buffer_validate (buf))
     goto invalid_packet;
 
-  /* when we get here, 1 channel, 8000 Hz, octet aligned, no CRC, 
+  /* setup frame size pointer */
+  if (rtpamrdepay->mode == GST_RTP_AMR_DP_MODE_NB)
+    frame_size = nb_frame_size;
+  else
+    frame_size = wb_frame_size;
+
+  /* when we get here, 1 channel, 8000/16000 Hz, octet aligned, no CRC, 
    * no robust sorting, no interleaving data is to be depayloaded */
   {
     guint8 *payload, *p, *dp;

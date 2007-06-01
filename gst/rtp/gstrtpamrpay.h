@@ -40,9 +40,17 @@ G_BEGIN_DECLS
 typedef struct _GstRtpAMRPay GstRtpAMRPay;
 typedef struct _GstRtpAMRPayClass GstRtpAMRPayClass;
 
+typedef enum {
+  GST_RTP_AMR_P_MODE_INVALID = 0,
+  GST_RTP_AMR_P_MODE_NB      = 1,
+  GST_RTP_AMR_P_MODE_WB      = 2
+} GstRtpAMRPayMode;
+
 struct _GstRtpAMRPay
 {
   GstBaseRTPPayload payload;
+
+  GstRtpAMRPayMode mode;
 };
 
 struct _GstRtpAMRPayClass
