@@ -50,6 +50,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
+#include <time.h>
+
 
 /* we include this here to get the G_OS_* defines */
 #include <glib.h>

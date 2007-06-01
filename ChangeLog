@@ -1,5 +1,10 @@
 2007-06-01  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/rtspconnection.c:
+	Add include to make buildbot happy.
+
+2007-06-01  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Peter Kjellerstedt  <pkj at axis com>
 
 	* gst/rtsp/rtspconnection.c: (rtsp_connection_create),
