@@ -28,14 +28,6 @@
 #define NEON_026_OR_LATER  1
 #endif
 
-#define HTTP_DEFAULT_HOST        "localhost"
-#define HTTP_DEFAULT_PORT        80
-#define HTTPS_DEFAULT_PORT       443
-#define HTTP_DEFAULT_URI        "http://localhost:80/"
-#define NEON_HTTP_DEBUG_DEFAULT FALSE
-#define HTTP_SOCKET_ERROR        -2
-#define HTTP_REQUEST_WRONG_PROXY -1
-
 GST_DEBUG_CATEGORY_STATIC (neonhttpsrc_debug);
 #define GST_CAT_DEFAULT neonhttpsrc_debug
 
@@ -57,20 +49,36 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+#define HTTP_SOCKET_ERROR        -2
+#define HTTP_REQUEST_WRONG_PROXY -1
+#define HTTP_DEFAULT_PORT        80
+#define HTTPS_DEFAULT_PORT       443
+#define HTTP_DEFAULT_HOST        "localhost"
+
+/* default properties */
+#define DEFAULT_LOCATION             "http://"HTTP_DEFAULT_HOST"/"G_STRINGIFY(HTTP_DEFAULT_PORT)
+#define DEFAULT_PROXY                ""
+#define DEFAULT_USER_AGENT           "GStreamer neonhttpsrc"
+#define DEFAULT_IRADIO_MODE          FALSE
+#define DEFAULT_IRADIO_NAME          NULL
+#define DEFAULT_IRADIO_GENRE         NULL
+#define DEFAULT_IRADIO_URL           NULL
+#define DEFAULT_AUTOMATIC_REDIRECT   TRUE
+#define DEFAULT_NEON_HTTP_DEBUG      FALSE
+
 enum
 {
   PROP_0,
   PROP_LOCATION,
-  PROP_URI,
   PROP_PROXY,
   PROP_USER_AGENT,
   PROP_IRADIO_MODE,
   PROP_IRADIO_NAME,
   PROP_IRADIO_GENRE,
   PROP_IRADIO_URL,
-  PROP_NEON_HTTP_REDIRECT,
+  PROP_AUTOMATIC_REDIRECT,
 #ifndef GST_DISABLE_GST_DEBUG
-  PROP_NEON_HTTP_DBG
+  PROP_NEON_HTTP_DEBUG
 #endif
 };
 
@@ -93,7 +101,7 @@ static gboolean gst_neonhttp_src_do_seek (GstBaseSrc * bsrc,
 
 static gboolean gst_neonhttp_src_set_proxy (GstNeonhttpSrc * src,
     const gchar * uri);
-static gboolean gst_neonhttp_src_set_uri (GstNeonhttpSrc * src,
+static gboolean gst_neonhttp_src_set_location (GstNeonhttpSrc * src,
     const gchar * uri);
 static gint gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
     ne_session ** ses, ne_request ** req, gint64 offset, gboolean do_redir);
@@ -150,33 +158,20 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_LOCATION,
       g_param_spec_string ("location", "Location",
-          "The location. In the form:"
-          "\n\t\t\thttp://a.com/file.txt - default port '80' "
-          "\n\t\t\thttp://a.com:80/file.txt "
-          "\n\t\t\ta.com/file.txt - defualt scheme 'HTTP' "
-          "\n\t\t\thttps://a.com/file.txt - default port '443' "
-          "\n\t\t\thttp:///file.txt - default host '" HTTP_DEFAULT_HOST "'",
-          "", G_PARAM_READWRITE));
-
-  g_object_class_install_property
-      (gobject_class, PROP_URI,
-      g_param_spec_string ("uri", "Uri",
-          "The location in form of a URI (deprecated; use location)",
-          "", G_PARAM_READWRITE));
+          "Location to read from", "", G_PARAM_READWRITE));
 
   g_object_class_install_property
       (gobject_class, PROP_PROXY,
       g_param_spec_string ("proxy", "Proxy",
-          "The proxy. In the form myproxy.mycompany.com:8080. "
-          "\n\t\t\tIf nothing is passed g_getenv(\"http_proxy\") will be used "
-          "\n\t\t\tIf that http_proxy enviroment var isn't define no proxy is used",
+          "Proxy server to use, in the form HOSTNAME:PORT. "
+          "Defaults to the http_proxy environment variable",
           "", G_PARAM_READWRITE));
 
   g_object_class_install_property
       (gobject_class, PROP_USER_AGENT,
       g_param_spec_string ("user-agent", "User-Agent",
-          "The User-Agent used for connection.",
-          "neonhttpsrc", G_PARAM_READWRITE));
+          "Value of the User-Agent HTTP request header field",
+          "GStreamer neonhttpsrc", G_PARAM_READWRITE));
 
   g_object_class_install_property
       (gobject_class, PROP_IRADIO_MODE,
@@ -201,17 +196,17 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
           "Homepage URL for radio stream", NULL, G_PARAM_READABLE));
 
   g_object_class_install_property
-      (gobject_class, PROP_NEON_HTTP_REDIRECT,
+      (gobject_class, PROP_AUTOMATIC_REDIRECT,
       g_param_spec_boolean ("automatic-redirect", "automatic-redirect",
-          "Enable Neon HTTP Redirects (HTTP Status Code 302)",
+          "Automatically follow HTTP redirects (HTTP Status Code 302)",
           TRUE, G_PARAM_READWRITE));
 
 #ifndef GST_DISABLE_GST_DEBUG
   g_object_class_install_property
-      (gobject_class, PROP_NEON_HTTP_DBG,
+      (gobject_class, PROP_NEON_HTTP_DEBUG,
       g_param_spec_boolean ("neon-http-debug", "neon-http-debug",
           "Enable Neon HTTP debug messages",
-          NEON_HTTP_DEBUG_DEFAULT, G_PARAM_READWRITE));
+          DEFAULT_NEON_HTTP_DEBUG, G_PARAM_READWRITE));
 #endif
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_neonhttp_src_start);
@@ -230,31 +225,33 @@ gst_neonhttp_src_class_init (GstNeonhttpSrcClass * klass)
 static void
 gst_neonhttp_src_init (GstNeonhttpSrc * src, GstNeonhttpSrcClass * g_class)
 {
-  const gchar *str = g_getenv ("http_proxy");
+  const gchar *str;
 
-  src->neon_http_msgs_dbg = NEON_HTTP_DEBUG_DEFAULT;
+  src->neon_http_debug = DEFAULT_NEON_HTTP_DEBUG;
+  src->iradio_mode = DEFAULT_IRADIO_MODE;
+  src->iradio_name = DEFAULT_IRADIO_NAME;
+  src->iradio_genre = DEFAULT_IRADIO_GENRE;
+  src->iradio_url = DEFAULT_IRADIO_URL;
+  src->user_agent = g_strdup (DEFAULT_USER_AGENT);
+  src->automatic_redirect = DEFAULT_AUTOMATIC_REDIRECT;
+
   src->session = NULL;
   src->request = NULL;
   memset (&src->uri, 0, sizeof (src->uri));
   memset (&src->proxy, 0, sizeof (src->proxy));
   src->content_size = -1;
-  src->uristr = NULL;
+  src->icy_caps = NULL;
+  src->icy_metaint = 0;
+  src->seekable = TRUE;
 
-  gst_neonhttp_src_set_uri (src, HTTP_DEFAULT_URI);
+  gst_neonhttp_src_set_location (src, DEFAULT_LOCATION);
+
+  /* configure proxy */
+  str = g_getenv ("http_proxy");
   if (str && !gst_neonhttp_src_set_proxy (src, str)) {
     GST_WARNING_OBJECT (src,
         "The proxy set on http_proxy env var ('%s') cannot be parsed.", str);
   }
-
-  src->iradio_mode = FALSE;
-  src->iradio_name = NULL;
-  src->iradio_genre = NULL;
-  src->iradio_url = NULL;
-  src->icy_caps = NULL;
-  src->icy_metaint = 0;
-  src->user_agent = g_strdup ("neonhttpsrc");
-  src->seekable = TRUE;
-  src->neon_http_redirect = TRUE;
 }
 
 static void
@@ -286,8 +283,8 @@ gst_neonhttp_src_dispose (GObject * gobject)
     src->session = NULL;
   }
 
-  if (src->uristr) {
-    ne_free (src->uristr);
+  if (src->location) {
+    ne_free (src->location);
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (gobject);
@@ -302,24 +299,31 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PROXY:
     {
-      if (!g_value_get_string (value)) {
+      const gchar *proxy;
+
+      proxy = g_value_get_string (value);
+
+      if (proxy == NULL) {
         GST_WARNING ("proxy property cannot be NULL");
         goto done;
       }
-      if (!gst_neonhttp_src_set_proxy (src, g_value_get_string (value))) {
+      if (!gst_neonhttp_src_set_proxy (src, proxy)) {
         GST_WARNING ("badly formated proxy");
         goto done;
       }
       break;
     }
-    case PROP_URI:
     case PROP_LOCATION:
     {
-      if (!g_value_get_string (value)) {
+      const gchar *location;
+
+      location = g_value_get_string (value);
+
+      if (location == NULL) {
         GST_WARNING ("location property cannot be NULL");
         goto done;
       }
-      if (!gst_neonhttp_src_set_uri (src, g_value_get_string (value))) {
+      if (!gst_neonhttp_src_set_location (src, location)) {
         GST_WARNING ("badly formated location");
         goto done;
       }
@@ -327,13 +331,9 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
     }
     case PROP_USER_AGENT:
     {
-      if (src->user_agent) {
+      if (src->user_agent)
         g_free (src->user_agent);
-        src->user_agent = NULL;
-      }
-      if (g_value_get_string (value)) {
-        src->user_agent = g_strdup (g_value_get_string (value));
-      }
+      src->user_agent = g_strdup (g_value_get_string (value));
       break;
     }
     case PROP_IRADIO_MODE:
@@ -341,15 +341,15 @@ gst_neonhttp_src_set_property (GObject * object, guint prop_id,
       src->iradio_mode = g_value_get_boolean (value);
       break;
     }
-    case PROP_NEON_HTTP_REDIRECT:
+    case PROP_AUTOMATIC_REDIRECT:
     {
-      src->neon_http_redirect = g_value_get_boolean (value);
+      src->automatic_redirect = g_value_get_boolean (value);
       break;
     }
 #ifndef GST_DISABLE_GST_DEBUG
-    case PROP_NEON_HTTP_DBG:
+    case PROP_NEON_HTTP_DEBUG:
     {
-      src->neon_http_msgs_dbg = g_value_get_boolean (value);
+      src->neon_http_debug = g_value_get_boolean (value);
       break;
     }
 #endif
@@ -383,7 +383,6 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
       }
       break;
     }
-    case PROP_URI:
     case PROP_LOCATION:
     {
       gchar *str;
@@ -416,12 +415,12 @@ gst_neonhttp_src_get_property (GObject * object, guint prop_id,
     case PROP_IRADIO_URL:
       g_value_set_string (value, neonhttpsrc->iradio_url);
       break;
-    case PROP_NEON_HTTP_REDIRECT:
-      g_value_set_boolean (value, neonhttpsrc->neon_http_redirect);
+    case PROP_AUTOMATIC_REDIRECT:
+      g_value_set_boolean (value, neonhttpsrc->automatic_redirect);
       break;
 #ifndef GST_DISABLE_GST_DEBUG
-    case PROP_NEON_HTTP_DBG:
-      g_value_set_boolean (value, neonhttpsrc->neon_http_msgs_dbg);
+    case PROP_NEON_HTTP_DEBUG:
+      g_value_set_boolean (value, neonhttpsrc->neon_http_debug);
       break;
 #endif
     default:
@@ -487,7 +486,7 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
   gint res;
 
 #ifndef GST_DISABLE_GST_DEBUG
-  if (src->neon_http_msgs_dbg)
+  if (src->neon_http_debug)
     ne_debug_init (stderr, NE_DBG_HTTP);
 #endif
 
@@ -497,19 +496,19 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
     return FALSE;
 
   res = gst_neonhttp_src_send_request_and_redirect (src,
-      &src->session, &src->request, 0, src->neon_http_redirect);
+      &src->session, &src->request, 0, src->automatic_redirect);
 
   if (res != NE_OK || !src->session) {
     if (res == HTTP_SOCKET_ERROR) {
 #ifndef GST_DISABLE_GST_DEBUG
-      if (src->neon_http_msgs_dbg) {
+      if (src->neon_http_debug) {
         GST_ERROR_OBJECT (src, "HTTP Request failed when opening socket!");
       }
 #endif
       goto init_failed;
     } else if (res == HTTP_REQUEST_WRONG_PROXY) {
 #ifndef GST_DISABLE_GST_DEBUG
-      if (src->neon_http_msgs_dbg) {
+      if (src->neon_http_debug) {
         GST_ERROR_OBJECT (src,
             "Proxy Server URI is invalid to the HTTP Request!");
       }
@@ -517,7 +516,7 @@ gst_neonhttp_src_start (GstBaseSrc * bsrc)
       goto wrong_proxy;
     } else {
 #ifndef GST_DISABLE_GST_DEBUG
-      if (src->neon_http_msgs_dbg) {
+      if (src->neon_http_debug) {
         GST_ERROR_OBJECT (src, "HTTP Request failed, error unrecognized!");
       }
 #endif
@@ -682,7 +681,7 @@ gst_neonhttp_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
     return TRUE;
 
   res = gst_neonhttp_src_send_request_and_redirect (src,
-      &session, &request, segment->start, src->neon_http_redirect);
+      &session, &request, segment->start, src->automatic_redirect);
 
   /* if we are able to seek, replace the session */
   if (res == NE_OK && session) {
@@ -697,12 +696,12 @@ gst_neonhttp_src_do_seek (GstBaseSrc * bsrc, GstSegment * segment)
 }
 
 static gboolean
-gst_neonhttp_src_set_uri (GstNeonhttpSrc * src, const gchar * uri)
+gst_neonhttp_src_set_location (GstNeonhttpSrc * src, const gchar * uri)
 {
   ne_uri_free (&src->uri);
-  if (src->uristr) {
-    ne_free (src->uristr);
-    src->uristr = NULL;
+  if (src->location) {
+    ne_free (src->location);
+    src->location = NULL;
   }
 
   if (ne_uri_parse (uri, &src->uri) != 0)
@@ -712,7 +711,7 @@ gst_neonhttp_src_set_uri (GstNeonhttpSrc * src, const gchar * uri)
     src->uri.scheme = g_strdup ("http");
 
   if (src->uri.host == NULL)
-    src->uri.host = g_strdup (HTTP_DEFAULT_HOST);
+    src->uri.host = g_strdup (DEFAULT_LOCATION);
 
   if (src->uri.port == 0) {
     if (!strcmp (src->uri.scheme, "https"))
@@ -724,16 +723,16 @@ gst_neonhttp_src_set_uri (GstNeonhttpSrc * src, const gchar * uri)
   if (!src->uri.path)
     src->uri.path = g_strdup ("");
 
-  src->uristr = ne_uri_unparse (&src->uri);
+  src->location = ne_uri_unparse (&src->uri);
 
   return TRUE;
 
   /* ERRORS */
 parse_error:
   {
-    if (src->uristr) {
-      ne_free (src->uristr);
-      src->uristr = NULL;
+    if (src->location) {
+      ne_free (src->location);
+      src->location = NULL;
     }
     ne_uri_free (&src->uri);
     return FALSE;
@@ -826,9 +825,9 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
         redir = ne_get_response_header (request, "Location");
         if (redir != NULL) {
           ne_uri_free (&src->uri);
-          gst_neonhttp_src_set_uri (src, redir);
+          gst_neonhttp_src_set_location (src, redir);
 #ifndef GST_DISABLE_GST_DEBUG
-          if (src->neon_http_msgs_dbg)
+          if (src->neon_http_debug)
             GST_LOG_OBJECT (src,
                 "--> Got HTTP Status Code %d; Using 'Location' header [%s]",
                 http_status, src->uri.host);
@@ -861,7 +860,7 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
       /* FIXME: when not redirecting automatically, shouldn't we post a 
        * redirect element message on the bus? */
 #ifndef GST_DISABLE_GST_DEBUG
-      if (src->neon_http_msgs_dbg)
+      if (src->neon_http_debug)
         GST_LOG_OBJECT (src, "--> request_count = %d", request_count);
 #endif
     }
@@ -994,7 +993,7 @@ gst_neonhttp_src_uri_get_uri (GstURIHandler * handler)
 {
   GstNeonhttpSrc *src = GST_NEONHTTP_SRC (handler);
 
-  return src->uristr;
+  return src->location;
 }
 
 static gboolean
@@ -1002,7 +1001,7 @@ gst_neonhttp_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstNeonhttpSrc *src = GST_NEONHTTP_SRC (handler);
 
-  return gst_neonhttp_src_set_uri (src, uri);
+  return gst_neonhttp_src_set_location (src, uri);
 }
 
 static void

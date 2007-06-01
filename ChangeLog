@@ -1,3 +1,20 @@
+2007-06-01  Wim Taymans  <wim@fluendo.com>
+
+	Patch by René Stadler <mail at renestadler dot de>:
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_class_init),
+	(gst_neonhttp_src_init), (gst_neonhttp_src_dispose),
+	(gst_neonhttp_src_set_property), (gst_neonhttp_src_get_property),
+	(gst_neonhttp_src_start), (gst_neonhttp_src_do_seek),
+	(gst_neonhttp_src_set_location),
+	(gst_neonhttp_src_send_request_and_redirect),
+	(gst_neonhttp_src_uri_get_uri), (gst_neonhttp_src_uri_set_uri):
+	* ext/neon/gstneonhttpsrc.h:
+	Deprecated "uri" property.  Clean up property descriptions.
+	Change default User-Agent to the slightly more descriptive
+	"GStreamer neonhttpsrc".
+	Various other small cleanups, mostly property related.
+
 2007-05-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/libmms/gstmms.h:

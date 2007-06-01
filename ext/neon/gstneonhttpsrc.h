@@ -48,7 +48,7 @@ struct _GstNeonhttpSrc {
   ne_session *session;
   ne_request *request;
   ne_uri uri;
-  gchar *uristr;
+  gchar *location;
   ne_uri proxy;
   gchar *user_agent;
 
@@ -65,10 +65,10 @@ struct _GstNeonhttpSrc {
   gint icy_metaint;
 
   /* enable Neon HTTP redirects (HTTP 302 status code) */
-  gboolean neon_http_redirect;
+  gboolean automatic_redirect;
 
   /* enable Neon HTTP debug messages */
-  gboolean neon_http_msgs_dbg;
+  gboolean neon_http_debug;
 
   gint64 read_position;
   gboolean seekable;
