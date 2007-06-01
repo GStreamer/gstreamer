@@ -1,3 +1,20 @@
+2007-06-01  Wim Taymans  <wim@fluendo.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-videosignal.xml:
+	* gst/videosignal/Makefile.am:
+	* gst/videosignal/gstvideomark.c: (gst_video_mark_set_caps),
+	(gst_video_mark_draw_box), (gst_video_mark_420),
+	(gst_video_mark_transform_ip), (gst_video_mark_set_property),
+	(gst_video_mark_get_property), (gst_video_mark_base_init),
+	(gst_video_mark_class_init), (gst_video_mark_init),
+	(gst_video_mark_get_type):
+	* gst/videosignal/gstvideomark.h:
+	* gst/videosignal/gstvideosignal.c: (plugin_init):
+	Add plugin to generate a pattern detectable by videodetect.
+
 2007-06-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_create):

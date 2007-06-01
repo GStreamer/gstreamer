@@ -23,6 +23,7 @@
 
 #include "gstvideoanalyse.h"
 #include "gstvideodetect.h"
+#include "gstvideomark.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -34,6 +35,9 @@ plugin_init (GstPlugin * plugin)
 
   res &= gst_element_register (plugin, "videodetect", GST_RANK_NONE,
       GST_TYPE_VIDEO_DETECT);
+
+  res &= gst_element_register (plugin, "videomark", GST_RANK_NONE,
+      GST_TYPE_VIDEO_MARK);
 
   return res;
 }
