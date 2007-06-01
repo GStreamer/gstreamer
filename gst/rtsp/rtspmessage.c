@@ -118,6 +118,7 @@ rtsp_message_init_request (RTSPMessage * msg, RTSPMethod method,
   msg->type = RTSP_MESSAGE_REQUEST;
   msg->type_data.request.method = method;
   msg->type_data.request.uri = g_strdup (uri);
+  msg->type_data.request.version = RTSP_VERSION_1_0;
   msg->hdr_fields = g_array_new (FALSE, FALSE, sizeof (RTSPKeyValue));
 
   return RTSP_OK;
@@ -152,6 +153,7 @@ rtsp_message_init_response (RTSPMessage * msg, RTSPStatusCode code,
   msg->type = RTSP_MESSAGE_RESPONSE;
   msg->type_data.response.code = code;
   msg->type_data.response.reason = g_strdup (reason);
+  msg->type_data.response.version = RTSP_VERSION_1_0;
   msg->hdr_fields = g_array_new (FALSE, FALSE, sizeof (RTSPKeyValue));
 
   if (request) {
@@ -424,9 +426,11 @@ rtsp_message_dump (RTSPMessage * msg)
     case RTSP_MESSAGE_REQUEST:
       g_print ("RTSP request message %p\n", msg);
       g_print (" request line:\n");
-      g_print ("   method: '%s'\n",
+      g_print ("   method:  '%s'\n",
           rtsp_method_as_text (msg->type_data.request.method));
-      g_print ("   uri:    '%s'\n", msg->type_data.request.uri);
+      g_print ("   uri:     '%s'\n", msg->type_data.request.uri);
+      g_print ("   version: '%s'\n",
+          rtsp_version_as_text (msg->type_data.request.version));
       g_print (" headers:\n");
       key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
       g_print (" body:\n");
@@ -436,8 +440,10 @@ rtsp_message_dump (RTSPMessage * msg)
     case RTSP_MESSAGE_RESPONSE:
       g_print ("RTSP response message %p\n", msg);
       g_print (" status line:\n");
-      g_print ("   code:   '%d'\n", msg->type_data.response.code);
-      g_print ("   reason: '%s'\n", msg->type_data.response.reason);
+      g_print ("   code:    '%d'\n", msg->type_data.response.code);
+      g_print ("   reason:  '%s'\n", msg->type_data.response.reason);
+      g_print ("   version: '%s'\n",
+          rtsp_version_as_text (msg->type_data.response.version));
       g_print (" headers:\n");
       key_value_foreach (msg->hdr_fields, dump_key_value, NULL);
       rtsp_message_get_body (msg, &data, &size);

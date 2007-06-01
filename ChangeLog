@@ -1,5 +1,32 @@
 2007-06-01  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_create),
+	(rtsp_connection_connect), (add_date_header),
+	(rtsp_connection_send), (parse_response_status),
+	(parse_request_line), (parse_line), (rtsp_connection_receive):
+	* gst/rtsp/rtspdefs.c: (rtsp_version_as_text):
+	* gst/rtsp/rtspdefs.h:
+	* gst/rtsp/rtspmessage.c: (key_value_foreach),
+	(rtsp_message_init_request), (rtsp_message_init_response),
+	(rtsp_message_remove_header), (rtsp_message_append_headers),
+	(rtsp_message_dump):
+	* gst/rtsp/rtspmessage.h:
+	Improves version checking, allowing an RTSP server to reply with "505
+	RTSP Version not supported.
+	Adds a Date header to all messages.
+	Replies with RTSP_EPARSE rather than RTSP_EINVALID in cases where we
+	want to be able to send a response even if something in the request was
+	invalid. EINVAL is only used when passing wrong arguments to functions.
+	Do not handle an invalid method in parse_request_line(). Defer this to
+	the caller so it can respond with "405 Method Not Allowed".
+	Improves parsing of the timeout parameter to the Session header,
+	allowing whitespace after the semicolon. 
+	Avoids a compiler warning due to variables shadowing a function argument.
+
+2007-06-01  Wim Taymans  <wim@fluendo.com>
+
 	Based on Patch by: Daniel Charles <dcharles at ti dot com>
 
 	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_setcaps),

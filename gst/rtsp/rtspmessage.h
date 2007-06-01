@@ -65,10 +65,12 @@ typedef struct _RTSPMessage
     struct {
       RTSPMethod         method;
       gchar             *uri;
+      RTSPVersion        version;
     } request;
     struct {
       RTSPStatusCode     code;
       gchar             *reason;
+      RTSPVersion        version;
     } response;
     struct {
       guint8             channel;

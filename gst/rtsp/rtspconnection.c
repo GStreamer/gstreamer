@@ -122,7 +122,7 @@ rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
 
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
 
-  newconn = g_new (RTSPConnection, 1);
+  newconn = g_new0 (RTSPConnection, 1);
 
 #ifdef G_OS_WIN32
   /* This should work on UNIX too. PF_UNIX sockets replaced with pipe */
@@ -140,8 +140,6 @@ rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
 
   newconn->url = url;
   newconn->fd = -1;
-  newconn->cseq = 0;
-  newconn->session_id[0] = 0;
   newconn->timer = g_timer_new ();
 
   newconn->auth_method = RTSP_AUTH_NONE;
@@ -164,7 +162,7 @@ RTSPResult
 rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
 {
   gint fd;
-  struct sockaddr_in sin;
+  struct sockaddr_in sa_in;
   struct hostent *hostinfo;
   char **addrs;
   gchar *ip;
@@ -201,10 +199,10 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
   /* get the port from the url */
   rtsp_url_get_port (url, &port);
 
-  memset (&sin, 0, sizeof (sin));
-  sin.sin_family = AF_INET;     /* network socket */
-  sin.sin_port = htons (port);  /* on port */
-  sin.sin_addr.s_addr = inet_addr (ip); /* on host ip */
+  memset (&sa_in, 0, sizeof (sa_in));
+  sa_in.sin_family = AF_INET;   /* network socket */
+  sa_in.sin_port = htons (port);        /* on port */
+  sa_in.sin_addr.s_addr = inet_addr (ip);       /* on host ip */
 
   fd = socket (AF_INET, SOCK_STREAM, 0);
   if (fd == -1)
@@ -214,7 +212,7 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
   fcntl (fd, F_SETFL, O_NONBLOCK);
 
   /* we are going to connect ASYNC now */
-  ret = connect (fd, (struct sockaddr *) &sin, sizeof (sin));
+  ret = connect (fd, (struct sockaddr *) &sa_in, sizeof (sa_in));
   if (ret == 0)
     goto done;
   if (errno != EINPROGRESS)
@@ -293,6 +291,19 @@ add_auth_header (RTSPConnection * conn, RTSPMessage * message)
       /* Nothing to do */
       break;
   }
+}
+
+static void
+add_date_header (RTSPMessage * message)
+{
+  GTimeVal tv;
+  gchar date_string[100];
+
+  g_get_current_time (&tv);
+  strftime (date_string, sizeof (date_string), "%a, %d %b %Y %H:%M:%S GMT",
+      gmtime (&tv.tv_sec));
+
+  rtsp_message_add_header (message, RTSP_HDR_DATE, date_string);
 }
 
 RTSPResult
@@ -389,7 +400,7 @@ RTSPResult
 rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message,
     GTimeVal * timeout)
 {
-  GString *str = NULL;
+  GString *str;
   RTSPResult res;
 
 #ifdef G_OS_WIN32
@@ -455,6 +466,9 @@ rtsp_connection_send (RTSPConnection * conn, RTSPMessage * message,
 
   /* append headers and body */
   if (message->type != RTSP_MESSAGE_DATA) {
+    /* add date header */
+    add_date_header (message);
+
     /* append headers */
     rtsp_message_append_headers (message, str);
 
@@ -576,6 +590,7 @@ read_key (gchar * dest, gint size, gchar ** src)
 static RTSPResult
 parse_response_status (gchar * buffer, RTSPMessage * msg)
 {
+  RTSPResult res;
   gchar versionstr[20];
   gchar codestr[4];
   gint code;
@@ -584,28 +599,34 @@ parse_response_status (gchar * buffer, RTSPMessage * msg)
   bptr = buffer;
 
   read_string (versionstr, sizeof (versionstr), &bptr);
-  if (strcmp (versionstr, "RTSP/1.0") != 0)
-    goto wrong_version;
-
   read_string (codestr, sizeof (codestr), &bptr);
   code = atoi (codestr);
 
   while (g_ascii_isspace (*bptr))
     bptr++;
 
-  rtsp_message_init_response (msg, code, bptr, NULL);
+  if (strcmp (versionstr, "RTSP/1.0") == 0)
+    RTSP_CHECK (rtsp_message_init_response (msg, code, bptr, NULL),
+        parse_error);
+  else if (strncmp (versionstr, "RTSP/", 5) == 0) {
+    RTSP_CHECK (rtsp_message_init_response (msg, code, bptr, NULL),
+        parse_error);
+    msg->type_data.response.version = RTSP_VERSION_INVALID;
+  } else
+    goto parse_error;
 
   return RTSP_OK;
 
-wrong_version:
+parse_error:
   {
-    return RTSP_EINVAL;
+    return RTSP_EPARSE;
   }
 }
 
 static RTSPResult
 parse_request_line (gchar * buffer, RTSPMessage * msg)
 {
+  RTSPResult res = RTSP_OK;
   gchar versionstr[20];
   gchar methodstr[20];
   gchar urlstr[4096];
@@ -616,27 +637,30 @@ parse_request_line (gchar * buffer, RTSPMessage * msg)
 
   read_string (methodstr, sizeof (methodstr), &bptr);
   method = rtsp_find_method (methodstr);
-  if (method == RTSP_INVALID)
-    goto wrong_method;
 
   read_string (urlstr, sizeof (urlstr), &bptr);
+  if (*urlstr == '\0')
+    res = RTSP_EPARSE;
 
   read_string (versionstr, sizeof (versionstr), &bptr);
-  if (strcmp (versionstr, "RTSP/1.0") != 0)
-    goto wrong_version;
 
-  rtsp_message_init_request (msg, method, urlstr);
+  if (*bptr != '\0')
+    res = RTSP_EPARSE;
 
-  return RTSP_OK;
-
-wrong_method:
-  {
-    return RTSP_EINVAL;
+  if (strcmp (versionstr, "RTSP/1.0") == 0) {
+    if (rtsp_message_init_request (msg, method, urlstr) != RTSP_OK)
+      res = RTSP_EPARSE;
+  } else if (strncmp (versionstr, "RTSP/", 5) == 0) {
+    if (rtsp_message_init_request (msg, method, urlstr) != RTSP_OK)
+      res = RTSP_EPARSE;
+    msg->type_data.request.version = RTSP_VERSION_INVALID;
+  } else {
+    rtsp_message_init_request (msg, method, urlstr);
+    msg->type_data.request.version = RTSP_VERSION_INVALID;
+    res = RTSP_EPARSE;
   }
-wrong_version:
-  {
-    return RTSP_EINVAL;
-  }
+
+  return res;
 }
 
 /* parsing lines means reading a Key: Value pair */
@@ -667,7 +691,7 @@ parse_line (gchar * buffer, RTSPMessage * msg)
 
 no_column:
   {
-    return RTSP_EINVAL;
+    return RTSP_EPARSE;
   }
 }
 
@@ -821,7 +845,6 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg,
 {
   gchar buffer[4096];
   gint line;
-  gchar *hdrval;
   glong content_length;
   RTSPResult res;
   gboolean need_body;
@@ -899,6 +922,9 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg,
 
   /* read the rest of the body if needed */
   if (need_body) {
+    gchar *session_id;
+    gchar *hdrval;
+
     /* see if there is a Content-Length header */
     if (rtsp_message_get_header (msg, RTSP_HDR_CONTENT_LENGTH,
             &hdrval, 0) == RTSP_OK) {
@@ -908,38 +934,37 @@ rtsp_connection_receive (RTSPConnection * conn, RTSPMessage * msg,
     }
 
     /* save session id in the connection for further use */
-    {
-      gchar *session_id;
+    if (rtsp_message_get_header (msg, RTSP_HDR_SESSION,
+            &session_id, 0) == RTSP_OK) {
+      gint maxlen, i;
 
-      if (rtsp_message_get_header (msg, RTSP_HDR_SESSION,
-              &session_id, 0) == RTSP_OK) {
-        gint sesslen, maxlen, i;
+      /* default session timeout */
+      conn->timeout = 60;
 
-        /* default session timeout */
-        conn->timeout = 60;
+      maxlen = sizeof (conn->session_id) - 1;
+      /* the sessionid can have attributes marked with ;
+       * Make sure we strip them */
+      for (i = 0; session_id[i] != '\0'; i++) {
+        if (session_id[i] == ';') {
+          maxlen = i;
+          /* parse timeout */
+          do {
+            i++;
+          } while (g_ascii_isspace (session_id[i]));
+          if (g_str_has_prefix (&session_id[i], "timeout=")) {
+            gint to;
 
-        sesslen = strlen (session_id);
-        maxlen = sizeof (conn->session_id) - 1;
-        /* the sessionid can have attributes marked with ;
-         * Make sure we strip them */
-        for (i = 0; i < sesslen; i++) {
-          if (session_id[i] == ';') {
-            maxlen = i;
-            /* parse timeout */
-            if (g_str_has_prefix (&session_id[i], ";timeout=")) {
-              gint timeout;
-
-              /* if we parsed something valid, configure */
-              if ((timeout = atoi (&session_id[i + 9])) > 0)
-                conn->timeout = timeout;
-            }
+            /* if we parsed something valid, configure */
+            if ((to = atoi (&session_id[i + 9])) > 0)
+              conn->timeout = to;
           }
+          break;
         }
-
-        /* make sure to not overflow */
-        strncpy (conn->session_id, session_id, maxlen);
-        conn->session_id[maxlen] = '\0';
       }
+
+      /* make sure to not overflow */
+      strncpy (conn->session_id, session_id, maxlen);
+      conn->session_id[maxlen] = '\0';
     }
   }
   return res;

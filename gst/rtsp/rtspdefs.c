@@ -255,6 +255,18 @@ rtsp_method_as_text (RTSPMethod method)
 }
 
 const gchar *
+rtsp_version_as_text (RTSPVersion version)
+{
+  switch (version) {
+    case RTSP_VERSION_1_0:
+      return "1.0";
+
+    default:
+      return "0.0";
+  }
+}
+
+const gchar *
 rtsp_header_as_text (RTSPHeaderField field)
 {
   if (field == RTSP_HDR_INVALID)

@@ -90,6 +90,11 @@ typedef enum {
 } RTSPState;
 
 typedef enum {
+  RTSP_VERSION_INVALID = 0x00,
+  RTSP_VERSION_1_0     = 0x10,
+} RTSPVersion;
+
+typedef enum {
   RTSP_INVALID          = 0,
   RTSP_DESCRIBE         = (1 <<  0),
   RTSP_ANNOUNCE         = (1 <<  1),
@@ -232,6 +237,7 @@ typedef enum {
 gchar*          rtsp_strresult          (RTSPResult result);
 
 const gchar*    rtsp_method_as_text     (RTSPMethod method);
+const gchar*    rtsp_version_as_text    (RTSPVersion version);
 const gchar*    rtsp_header_as_text     (RTSPHeaderField field);
 const gchar*    rtsp_status_as_text     (RTSPStatusCode code);
 
