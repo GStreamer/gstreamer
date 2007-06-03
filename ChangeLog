@@ -1,3 +1,12 @@
+2007-06-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/wavenc/gstwavenc.c: (gst_wavenc_create_header_buf),
+	(gst_wavenc_sink_setcaps), (gst_wavenc_format_samples),
+	(gst_wavenc_chain), (gst_wavenc_change_state):
+	* gst/wavenc/gstwavenc.h:
+	Properly write wav files with width!=depth by having the depth most
+	significant bytes set and all others zero. Fixes #442535.
+
 2007-06-01  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/rtspconnection.c:

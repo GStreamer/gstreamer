@@ -195,8 +195,7 @@ gst_wavenc_create_header_buf (GstWavEnc * wavenc, guint audio_data_size)
   wave.format.len = 16;
 
   wave.common.wFormatTag = WAVE_FORMAT_PCM;
-  wave.common.wBlockAlign =
-      (GST_ROUND_UP_8 (wavenc->depth) / 8) * wave.common.wChannels;
+  wave.common.wBlockAlign = (wavenc->width / 8) * wave.common.wChannels;
   wave.common.dwAvgBytesPerSec =
       wave.common.wBlockAlign * wave.common.dwSamplesPerSec;
 
@@ -275,10 +274,11 @@ gst_wavenc_sink_setcaps (GstPad * pad, GstCaps * caps)
 
   wavenc->channels = chans;
   wavenc->depth = depth;
+  wavenc->width = width;
   wavenc->rate = rate;
 
   GST_LOG_OBJECT (wavenc, "accepted caps: chans=%u width=%u depth=%u rate=%u",
-      wavenc->channels, width, wavenc->depth, wavenc->rate);
+      wavenc->channels, wavenc->width, wavenc->depth, wavenc->rate);
 
   gst_object_unref (wavenc);
   return TRUE;
@@ -608,6 +608,52 @@ gst_wavenc_event (GstPad * pad, GstEvent * event)
   return res;
 }
 
+/* Copied from gst-plugins-base/gst/audioconvert/audioconvert.c */
+#define READ24_FROM_LE(p) (p[0] | (p[1] << 8) | (p[2] << 16))
+#define WRITE24_TO_LE(p,v) p[0] = v & 0xff; p[1] = (v >> 8) & 0xff; p[2] = (v >> 16) & 0xff
+
+/* Correctly format samples with width!=depth for the wav format, i.e.
+ * have the data in the highest depth bits and all others zero */
+static void
+gst_wavenc_format_samples (GstBuffer * buf, guint width, guint depth)
+{
+  guint8 *data = GST_BUFFER_DATA (buf);
+  guint nsamples = (GST_BUFFER_SIZE (buf) * 8) / width;
+  guint32 tmp;
+
+  for (; nsamples; nsamples--) {
+    switch (width) {
+
+      case 8:
+        tmp = *data;
+        *data = *data << (width - depth);
+        data += 1;
+        break;
+      case 16:
+        tmp = GST_READ_UINT16_LE (data);
+        tmp = tmp << (width - depth);
+        GST_WRITE_UINT16_LE (data, tmp);
+        data += 2;
+        break;
+      case 24:
+        tmp = READ24_FROM_LE (data);
+        tmp = tmp << (width - depth);
+        WRITE24_TO_LE (data, tmp);
+        data += 3;
+        break;
+      case 32:
+        tmp = GST_READ_UINT32_LE (data);
+        tmp = tmp << (width - depth);
+        GST_WRITE_UINT32_LE (data, tmp);
+        data += 4;
+        break;
+    }
+  }
+}
+
+#undef READ24_FROM_LE
+#undef WRITE24_TO_LE
+
 static GstFlowReturn
 gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -633,7 +679,13 @@ gst_wavenc_chain (GstPad * pad, GstBuffer * buf)
   GST_LOG_OBJECT (wavenc, "pushing %u bytes raw audio, ts=%" GST_TIME_FORMAT,
       GST_BUFFER_SIZE (buf), GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
 
-  buf = gst_buffer_make_metadata_writable (buf);
+  if (wavenc->width != wavenc->depth) {
+    buf = gst_buffer_make_writable (buf);
+    gst_wavenc_format_samples (buf, wavenc->width, wavenc->depth);
+  } else {
+    buf = gst_buffer_make_metadata_writable (buf);
+  }
+
   gst_buffer_set_caps (buf, GST_PAD_CAPS (wavenc->srcpad));
   GST_BUFFER_OFFSET (buf) = WAV_HEADER_LEN + wavenc->length;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
@@ -653,6 +705,7 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       wavenc->channels = 0;
       wavenc->depth = 0;
+      wavenc->width = 0;
       wavenc->rate = 0;
       wavenc->length = 0;
       wavenc->sent_header = FALSE;
