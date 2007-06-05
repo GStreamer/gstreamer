@@ -54,6 +54,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_multipart_mux_debug);
 #define GST_TYPE_MULTIPART_MUX (gst_multipart_mux_get_type())
 #define GST_MULTIPART_MUX(obj) (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MULTIPART_MUX, GstMultipartMux))
 #define GST_MULTIPART_MUX_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MULTIPART_MUX, GstMultipartMux))
+#define GST_MULTIPART_MUX_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_MULTIPART_MUX, GstMultipartMuxClass))
 #define GST_IS_MULTIPART_MUX(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MULTIPART_MUX))
 #define GST_IS_MULTIPART_MUX_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MULTIPART_MUX))
 
@@ -101,6 +102,8 @@ struct _GstMultipartMux
 struct _GstMultipartMuxClass
 {
   GstElementClass parent_class;
+
+  GHashTable *mimetypes;
 };
 
 /* elementfactory information */
@@ -130,6 +133,18 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY         /* we can take anything, really */
     );
+
+typedef struct
+{
+  const gchar *key;
+  const gchar *val;
+} MimeTypeMap;
+
+/* convert from gst structure names to mime types. Add more when needed. */
+static const MimeTypeMap mimetypes[] = {
+  {"audio/x-mulaw", "audio/basic"},
+  {NULL, NULL}
+};
 
 static void gst_multipart_mux_base_init (gpointer g_class);
 static void gst_multipart_mux_class_init (GstMultipartMuxClass * klass);
@@ -197,6 +212,7 @@ gst_multipart_mux_class_init (GstMultipartMuxClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  gint i;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
@@ -213,6 +229,13 @@ gst_multipart_mux_class_init (GstMultipartMuxClass * klass)
 
   gstelement_class->request_new_pad = gst_multipart_mux_request_new_pad;
   gstelement_class->change_state = gst_multipart_mux_change_state;
+
+  /* populate mime types */
+  klass->mimetypes = g_hash_table_new (g_str_hash, g_str_equal);
+  for (i = 0; mimetypes[i].key; i++) {
+    g_hash_table_insert (klass->mimetypes, (gpointer) mimetypes[i].key,
+        (gpointer) mimetypes[i].val);
+  }
 }
 
 static void
@@ -320,6 +343,26 @@ gst_multipart_mux_handle_src_event (GstPad * pad, GstEvent * event)
   return gst_pad_event_default (pad, event);
 }
 
+static const gchar *
+gst_multipart_mux_get_mime (GstMultipartMux * mux, GstStructure * s)
+{
+  GstMultipartMuxClass *klass;
+  const gchar *mime;
+  const gchar *name;
+
+  klass = GST_MULTIPART_MUX_GET_CLASS (mux);
+
+  name = gst_structure_get_name (s);
+
+  /* use hashtable to convert to mime type */
+  mime = g_hash_table_lookup (klass->mimetypes, name);
+  if (mime == NULL) {
+    /* no mime type mapping, use name */
+    mime = name;
+  }
+  return mime;
+}
+
 /*
  * Given two pads, compare the buffers queued on it and return 0 if they have
  * an equal priority, 1 if the new pad is better, -1 if the old pad is better 
@@ -423,6 +466,7 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   GstBuffer *headerbuf = NULL;
   GstBuffer *databuf = NULL;
   GstStructure *structure = NULL;
+  const gchar *mime;
 
   GST_DEBUG_OBJECT (mux, "all pads are collected");
 
@@ -471,10 +515,12 @@ gst_multipart_mux_collected (GstCollectPads * pads, GstMultipartMux * mux)
   if (!structure)
     goto no_caps;
 
+  /* get the mime type for the structure */
+  mime = gst_multipart_mux_get_mime (mux, structure);
+
   header = g_strdup_printf ("\r\n--%s\r\nContent-Type: %s\r\n"
       "Content-Length: %u\r\n\r\n",
-      mux->boundary, gst_structure_get_name (structure),
-      GST_BUFFER_SIZE (best->buffer));
+      mux->boundary, mime, GST_BUFFER_SIZE (best->buffer));
   headerlen = strlen (header);
 
   ret = gst_pad_alloc_buffer_and_set_caps (mux->srcpad, GST_BUFFER_OFFSET_NONE,
