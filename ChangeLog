@@ -1,5 +1,13 @@
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Jan Arne Petersen <jpetersen at jpetersen dot org>
+
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_src_query):
+	Use total duration when the individual stream duration is not known.
+	Fixes #375534.
+
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
 
 	* ext/ffmpeg/gstffmpegscale.c: (gst_ffmpegscale_handle_src_event):

@@ -704,8 +704,12 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
 
       timeduration =
           gst_ffmpeg_time_ff_to_gst (avstream->duration, avstream->time_base);
-      if (!(GST_CLOCK_TIME_IS_VALID (timeduration)))
-        break;
+      if (!(GST_CLOCK_TIME_IS_VALID (timeduration))) {
+	/* use duration of complete file if the stream duration is not known */
+	timeduration = demux->duration;
+        if (!(GST_CLOCK_TIME_IS_VALID (timeduration)))
+          break;
+      }
 
       switch (format) {
         case GST_FORMAT_TIME:
