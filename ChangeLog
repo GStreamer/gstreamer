@@ -1,5 +1,16 @@
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/tcp/gstmultifdsink.c: (gst_client_status_get_type),
+	(gst_multi_fd_sink_class_init), (gst_multi_fd_sink_add_full),
+	(gst_multi_fd_sink_remove_flush),
+	(gst_multi_fd_sink_remove_client_link),
+	(gst_multi_fd_sink_handle_client_write),
+	(gst_multi_fd_sink_handle_clients):
+	* gst/tcp/gstmultifdsink.h:
+	Add support for remuve_flush.
+
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
 	* docs/design/draft-keyframe-force.txt:
 	* ext/theora/theoraenc.c: (theora_enc_sink_event),
 	(theora_enc_chain):

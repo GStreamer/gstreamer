@@ -50,7 +50,7 @@ typedef struct _GstMultiFdSinkClass GstMultiFdSinkClass;
 typedef enum {
   GST_MULTI_FD_SINK_OPEN             = (GST_ELEMENT_FLAG_LAST << 0),
 
-  GST_MULTI_FD_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2),
+  GST_MULTI_FD_SINK_FLAG_LAST        = (GST_ELEMENT_FLAG_LAST << 2)
 } GstMultiFdSinkFlags;
 
 /**
@@ -68,7 +68,7 @@ typedef enum
   GST_RECOVER_POLICY_NONE,
   GST_RECOVER_POLICY_RESYNC_LATEST,
   GST_RECOVER_POLICY_RESYNC_SOFT_LIMIT,
-  GST_RECOVER_POLICY_RESYNC_KEYFRAME,
+  GST_RECOVER_POLICY_RESYNC_KEYFRAME
 } GstRecoverPolicy;
 
 /**
@@ -93,7 +93,7 @@ typedef enum
   GST_SYNC_METHOD_LATEST_KEYFRAME,
   GST_SYNC_METHOD_BURST,
   GST_SYNC_METHOD_BURST_KEYFRAME,
-  GST_SYNC_METHOD_BURST_WITH_KEYFRAME,
+  GST_SYNC_METHOD_BURST_WITH_KEYFRAME
 } GstSyncMethod;
 
 /**
@@ -110,7 +110,7 @@ typedef enum
   GST_UNIT_TYPE_UNDEFINED,
   GST_UNIT_TYPE_BUFFERS,
   GST_UNIT_TYPE_TIME,
-  GST_UNIT_TYPE_BYTES,
+  GST_UNIT_TYPE_BYTES
 } GstUnitType;
 
 /**
@@ -121,6 +121,7 @@ typedef enum
  * @GST_CLIENT_STATUS_SLOW     : client is too slow
  * @GST_CLIENT_STATUS_ERROR    : client is in error
  * @GST_CLIENT_STATUS_DUPLICATE: same client added twice
+ * @GST_CLIENT_STATUS_FLUSHING : client is flushing out the remaining buffers.
  *
  * This specifies the reason why a client was removed from
  * multifdsink and is received in the "client-removed" signal.
@@ -133,6 +134,7 @@ typedef enum
   GST_CLIENT_STATUS_SLOW        = 3,
   GST_CLIENT_STATUS_ERROR       = 4,
   GST_CLIENT_STATUS_DUPLICATE   = 5,
+  GST_CLIENT_STATUS_FLUSHING    = 6
 } GstClientStatus;
 
 /* structure for a client
@@ -141,6 +143,8 @@ typedef struct {
   GstFD fd;
 
   gint bufpos;                  /* position of this client in the global queue */
+  gint flushcount;              /* the remaining number of buffers to flush out or -1 if the 
+                                   client is not flushing. */
 
   GstClientStatus status;
   gboolean is_socket;
@@ -249,6 +253,7 @@ struct _GstMultiFdSinkClass {
 		                 GstUnitType format, guint64 value, 
 				 GstUnitType max_unit, guint64 max_value);
   void          (*remove)       (GstMultiFdSink *sink, int fd);
+  void          (*remove_flush) (GstMultiFdSink *sink, int fd);
   void          (*clear)        (GstMultiFdSink *sink);
   GValueArray*  (*get_stats)    (GstMultiFdSink *sink, int fd);
 
@@ -266,14 +271,14 @@ struct _GstMultiFdSinkClass {
 
 GType gst_multi_fd_sink_get_type (void);
 
-void gst_multi_fd_sink_add (GstMultiFdSink *sink, int fd);
-void gst_multi_fd_sink_add_full (GstMultiFdSink *sink, int fd, GstSyncMethod sync, 
-		GstUnitType min_unit, guint64 min_value,
-		GstUnitType max_unit, guint64 max_value);
-void gst_multi_fd_sink_remove (GstMultiFdSink *sink, int fd);
-void gst_multi_fd_sink_clear (GstMultiFdSink *sink);
-GValueArray* gst_multi_fd_sink_get_stats (GstMultiFdSink *sink, int fd);
-
+void          gst_multi_fd_sink_add          (GstMultiFdSink *sink, int fd);
+void          gst_multi_fd_sink_add_full     (GstMultiFdSink *sink, int fd, GstSyncMethod sync, 
+                                              GstUnitType min_unit, guint64 min_value,
+                                              GstUnitType max_unit, guint64 max_value);
+void          gst_multi_fd_sink_remove       (GstMultiFdSink *sink, int fd);
+void          gst_multi_fd_sink_remove_flush (GstMultiFdSink *sink, int fd);
+void          gst_multi_fd_sink_clear        (GstMultiFdSink *sink);
+GValueArray*  gst_multi_fd_sink_get_stats    (GstMultiFdSink *sink, int fd);
 
 G_END_DECLS
 
