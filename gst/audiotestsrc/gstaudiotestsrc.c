@@ -611,14 +611,17 @@ gst_audio_test_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
   time = segment->last_stop;
 
   /* now move to the time indicated */
-  src->n_samples = time * src->samplerate / GST_SECOND;
-  src->running_time = src->n_samples * GST_SECOND / src->samplerate;
+  src->n_samples =
+      gst_util_uint64_scale_int (time, src->samplerate, GST_SECOND);
+  src->running_time =
+      gst_util_uint64_scale_int (src->n_samples, GST_SECOND, src->samplerate);
 
   g_assert (src->running_time <= time);
 
   if (GST_CLOCK_TIME_IS_VALID (segment->stop)) {
     time = segment->stop;
-    src->n_samples_stop = time * src->samplerate / GST_SECOND;
+    src->n_samples_stop = gst_util_uint64_scale_int (time, src->samplerate,
+        GST_SECOND);
     src->check_seek_stop = TRUE;
   } else {
     src->check_seek_stop = FALSE;

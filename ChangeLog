@@ -1,3 +1,9 @@
+2007-06-01  Michael Smith <msmith@fluendo.com>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_do_seek):
+	  Don't overflow intermediate values when seeking to large time values
+	  in audiotestsrc.
+
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstqueue2.c: (gst_queue_have_data),
