@@ -45,6 +45,9 @@ struct _GstBaseRTPDepayloadPrivate
   GstClockTime npt_stop;
   gdouble play_speed;
   gdouble play_scale;
+
+  GstClockTime ts_wraparound;
+  GstClockTime prev_timestamp;
 };
 
 /* Filter signals and args */
@@ -222,6 +225,8 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
     priv->play_scale = g_value_get_double (value);
   else
     priv->play_scale = 1.0;
+
+  priv->prev_timestamp = -1;
 
   if (bclass->set_caps)
     res = bclass->set_caps (filter, caps);
@@ -476,8 +481,9 @@ static void
 gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     guint32 timestamp, GstBuffer * buf)
 {
-  GstClockTime ts, adjusted;
+  GstClockTime ts, adjusted, exttimestamp;
   GstBaseRTPDepayloadPrivate *priv;
+  guint64 diff;
 
   priv = filter->priv;
 
@@ -485,14 +491,34 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
   if (priv->clock_base == -1)
     priv->clock_base = timestamp;
 
-  /* FIXME, timestamp wraparound */
+  if (priv->prev_timestamp == -1) {
+    priv->prev_timestamp = timestamp;
+    priv->ts_wraparound = 0;
+  }
+
+  /* check for timestamp wraparound */
+  exttimestamp = timestamp + priv->ts_wraparound;
+
+  if (exttimestamp < priv->prev_timestamp)
+    diff = priv->prev_timestamp - exttimestamp;
+  else
+    diff = exttimestamp - priv->prev_timestamp;
+
+  if (diff > G_MAXINT32) {
+    /* timestamp went backwards more than allowed, we wrap around and get
+     * updated extended timestamp. */
+    priv->ts_wraparound += (1LL << 32);
+    exttimestamp = timestamp + priv->ts_wraparound;
+  }
+  priv->prev_timestamp = exttimestamp;
 
   /* rtp timestamps are based on the clock_rate
    * gst timesamps are in nanoseconds */
-  ts = gst_util_uint64_scale_int (timestamp, GST_SECOND, filter->clock_rate);
+  ts = gst_util_uint64_scale_int (exttimestamp, GST_SECOND, filter->clock_rate);
 
-  GST_DEBUG_OBJECT (filter, "ts : timestamp : %u, clockrate : %u",
-      timestamp, filter->clock_rate);
+  GST_DEBUG_OBJECT (filter,
+      "timestamp: %u, wrap %" G_GUINT64_FORMAT ", clockrate : %u", timestamp,
+      priv->ts_wraparound, filter->clock_rate);
 
   /* add delay to timestamp */
   adjusted = ts + (filter->queue_delay * GST_MSECOND);
@@ -668,6 +694,7 @@ gst_base_rtp_depayload_change_state (GstElement * element,
       /* clock_rate needs to be overwritten by child */
       filter->clock_rate = 0;
       filter->priv->clock_base = -1;
+      filter->priv->ts_wraparound = 0;
       filter->need_newsegment = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

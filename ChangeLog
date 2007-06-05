@@ -1,5 +1,13 @@
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_setcaps),
+	(gst_base_rtp_depayload_set_gst_timestamp),
+	(gst_base_rtp_depayload_change_state):
+	Handle timestamp wraparound.
+
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gsturidecodebin.c: (no_more_pads_full),
 	(new_decoded_pad), (remove_pads), (make_decoder), (setup_source),
 	(gst_uri_decode_bin_change_state):
