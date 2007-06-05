@@ -2760,8 +2760,8 @@ gst_value_get_compare_func (const GValue * value1)
  *
  * Compares @value1 and @value2.  If @value1 and @value2 cannot be
  * compared, the function returns GST_VALUE_UNORDERED.  Otherwise,
- * if @value1 is greater than @value2, GST_VALUE_GREATER is returned.
- * If @value1 is less than @value2, GST_VALUE_LESSER is returned.
+ * if @value1 is greater than @value2, GST_VALUE_GREATER_THAN is returned.
+ * If @value1 is less than @value2, GST_VALUE_LESS_THAN is returned.
  * If the values are equal, GST_VALUE_EQUAL is returned.
  *
  * Returns: A #GstValueCompareType value
