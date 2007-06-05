@@ -12,6 +12,7 @@ libgstriff_@GST_MAJORMINOR@include_HEADERS = \
 	riff-read.h
 
 libgstriff_@GST_MAJORMINOR@_la_LIBADD = $(GST_BASE_LIBS) $(GST_LIBS) \
-  $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la
+  $(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
+  $(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la
 libgstriff_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstriff_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)

@@ -1,3 +1,10 @@
+2007-06-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/riff/Makefile.am:
+	* gst-libs/gst/riff/riff-read.c: (gst_riff_parse_info):
+	  Use gst_tag_utf8_from_freeform_string() from libgsttag instead of
+	  our own implementation.
+
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
@@ -59,7 +66,7 @@
 	(gst_multi_fd_sink_handle_client_write),
 	(gst_multi_fd_sink_handle_clients):
 	* gst/tcp/gstmultifdsink.h:
-	Add support for remuve_flush.
+	Add support for remove_flush.
 
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
