@@ -158,6 +158,10 @@ static void gst_decode_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_decode_bin_set_caps (GstDecodeBin * dbin, GstCaps * caps);
 static GstCaps *gst_decode_bin_get_caps (GstDecodeBin * dbin);
+static void caps_notify_group_cb (GstPad * pad, GParamSpec * unused,
+    GstDecodeGroup * group);
+static void caps_notify_cb (GstPad * pad, GParamSpec * unused,
+    GstDecodeBin * dbin);
 
 static GstPad *find_sink_pad (GstElement * element);
 static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
@@ -222,7 +226,8 @@ struct _GstDecodeGroup
 } G_STMT_END
 
 
-static GstDecodeGroup *gst_decode_group_new (GstDecodeBin * decode_bin);
+static GstDecodeGroup *gst_decode_group_new (GstDecodeBin * decode_bin,
+    gboolean use_queue);
 static GstPad *gst_decode_group_control_demuxer_pad (GstDecodeGroup * group,
     GstPad * pad);
 static gboolean gst_decode_group_control_source_pad (GstDecodeGroup * group,
@@ -762,7 +767,12 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if ((!apcontinue) || are_raw_caps (dbin, caps))
     goto expose_pad;
 
-  /* 1.b else if there's no compatible factory or 'autoplug-sort' returned FALSE, goto pad_not_used */
+  /* 1.b when the caps are not fixed yet, we can't be sure what element to
+   * connect. We delay autoplugging until the caps are fixed */
+  if (!gst_caps_is_fixed (caps))
+    goto non_fixed;
+
+  /* 1.c else if there's no compatible factory or 'autoplug-sort' returned FALSE, goto pad_not_used */
   if ((factories = find_compatibles (dbin, caps))) {
     /* emit autoplug-sort */
     g_signal_emit (G_OBJECT (dbin),
@@ -778,7 +788,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     goto unknown_type;
   }
 
-  /* 1.c else goto pad_is_valid */
+  /* 1.d else goto pad_is_valid */
   GST_LOG_OBJECT (pad, "Let's continue discovery on this pad");
 
   connect_pad (dbin, src, pad, factories, group);
@@ -814,11 +824,26 @@ unknown_type:
     return;
   }
 
+non_fixed:
+  {
+    GST_DEBUG_OBJECT (pad, "pad has non-fixed caps delay autoplugging");
+    goto setup_caps_delay;
+  }
 any_caps:
   {
     GST_WARNING_OBJECT (pad,
         "pad has ANY caps, not able to autoplug to anything");
-    /* FIXME : connect to caps notification */
+    goto setup_caps_delay;
+  }
+setup_caps_delay:
+  {
+    /* connect to caps notification */
+    if (group)
+      g_signal_connect (G_OBJECT (pad), "notify::caps",
+          G_CALLBACK (caps_notify_group_cb), group);
+    else
+      g_signal_connect (G_OBJECT (pad), "notify::caps",
+          G_CALLBACK (caps_notify_cb), dbin);
     return;
   }
 }
@@ -850,7 +875,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
     if (!group)
       if (!(group = get_current_group (dbin))) {
-        group = gst_decode_group_new (dbin);
+        group = gst_decode_group_new (dbin, TRUE);
         DECODE_BIN_LOCK (dbin);
         dbin->groups = g_list_append (dbin->groups, group);
         DECODE_BIN_UNLOCK (dbin);
@@ -1067,19 +1092,19 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   GST_DEBUG_OBJECT (dbin, "pad %s:%s, group:%p",
       GST_DEBUG_PAD_NAME (pad), group);
 
+  isdemux = is_demuxer_element (src);
+
   if (!group)
     if (!(group = get_current_group (dbin))) {
-      group = gst_decode_group_new (dbin);
+      group = gst_decode_group_new (dbin, isdemux);
       DECODE_BIN_LOCK (dbin);
       dbin->groups = g_list_append (dbin->groups, group);
       DECODE_BIN_UNLOCK (dbin);
       newgroup = TRUE;
     }
 
-  isdemux = is_demuxer_element (src);
-
-  if (isdemux || newgroup) {
-    GST_LOG_OBJECT (src, "is a demuxer, connecting the pad through multiqueue");
+  if (isdemux) {
+    GST_LOG_OBJECT (src, "connecting the pad through multiqueue");
 
     if (!(mqpad = gst_decode_group_control_demuxer_pad (group, pad)))
       goto beach;
@@ -1206,6 +1231,35 @@ no_group:
     GST_WARNING_OBJECT (dbin, "We couldn't find a non-completed group !!");
     return;
   }
+}
+
+static void
+caps_notify_cb (GstPad * pad, GParamSpec * unused, GstDecodeBin * dbin)
+{
+  GstElement *element;
+
+  GST_LOG_OBJECT (dbin, "Notified caps for pad %s:%s",
+      GST_DEBUG_PAD_NAME (pad));
+
+  element = GST_ELEMENT_CAST (gst_pad_get_parent (pad));
+
+  pad_added_cb (element, pad, dbin);
+
+  gst_object_unref (element);
+}
+
+static void
+caps_notify_group_cb (GstPad * pad, GParamSpec * unused, GstDecodeGroup * group)
+{
+  GstElement *element;
+
+  GST_LOG_OBJECT (pad, "Notified caps for pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+
+  element = GST_ELEMENT_CAST (gst_pad_get_parent (pad));
+
+  pad_added_group_cb (element, pad, group);
+
+  gst_object_unref (element);
 }
 
 /* this function runs through the element factories and returns a list
@@ -1372,21 +1426,21 @@ multi_queue_underrun_cb (GstElement * queue, GstDecodeGroup * group)
  * of groups.
  */
 static GstDecodeGroup *
-gst_decode_group_new (GstDecodeBin * dbin)
+gst_decode_group_new (GstDecodeBin * dbin, gboolean use_queue)
 {
   GstDecodeGroup *group;
   GstElement *mq;
 
   GST_LOG_OBJECT (dbin, "Creating new group");
 
-  if (!(mq = gst_element_factory_make ("multiqueue", NULL))) {
-    GST_WARNING ("Couldn't create multiqueue element");
-    return NULL;
+  if (use_queue) {
+    if (!(mq = gst_element_factory_make ("multiqueue", NULL))) {
+      GST_WARNING ("Couldn't create multiqueue element");
+      return NULL;
+    }
+  } else {
+    mq = NULL;
   }
-
-  g_object_set (G_OBJECT (mq),
-      "max-size-bytes", 2 * 1024 * 1024,
-      "max-size-time", 5 * GST_SECOND, "max-size-buffers", 0, NULL);
 
   group = g_new0 (GstDecodeGroup, 1);
   group->lock = g_mutex_new ();
@@ -1398,13 +1452,18 @@ gst_decode_group_new (GstDecodeBin * dbin)
   group->complete = FALSE;
   group->endpads = NULL;
 
-  group->overrunsig = g_signal_connect (G_OBJECT (mq), "overrun",
-      G_CALLBACK (multi_queue_overrun_cb), group);
-  group->underrunsig = g_signal_connect (G_OBJECT (mq), "underrun",
-      G_CALLBACK (multi_queue_underrun_cb), group);
+  if (mq) {
+    g_object_set (G_OBJECT (mq),
+        "max-size-bytes", 2 * 1024 * 1024,
+        "max-size-time", 5 * GST_SECOND, "max-size-buffers", 0, NULL);
+    group->overrunsig = g_signal_connect (G_OBJECT (mq), "overrun",
+        G_CALLBACK (multi_queue_overrun_cb), group);
+    group->underrunsig = g_signal_connect (G_OBJECT (mq), "underrun",
+        G_CALLBACK (multi_queue_underrun_cb), group);
 
-  gst_bin_add (GST_BIN (dbin), group->multiqueue);
-  gst_element_set_state (group->multiqueue, GST_STATE_PAUSED);
+    gst_bin_add (GST_BIN (dbin), mq);
+    gst_element_set_state (mq, GST_STATE_PAUSED);
+  }
 
   GST_LOG_OBJECT (dbin, "Returning new group %p", group);
 
@@ -1874,11 +1933,13 @@ gst_decode_group_free (GstDecodeGroup * group)
   group->endpads = NULL;
 
   /* disconnect signal handlers on multiqueue */
-  g_signal_handler_disconnect (group->multiqueue, group->underrunsig);
-  g_signal_handler_disconnect (group->multiqueue, group->overrunsig);
+  if (group->multiqueue) {
+    g_signal_handler_disconnect (group->multiqueue, group->underrunsig);
+    g_signal_handler_disconnect (group->multiqueue, group->overrunsig);
+    deactivate_free_recursive (group, group->multiqueue);
+  }
 
   /* remove all elements */
-  deactivate_free_recursive (group, group->multiqueue);
 
   GROUP_MUTEX_UNLOCK (group);
 

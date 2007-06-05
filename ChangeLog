@@ -1,5 +1,15 @@
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_factory_filter),
+	(analyze_new_pad), (connect_pad), (expose_pad), (caps_notify_cb),
+	(caps_notify_group_cb), (gst_decode_group_new),
+	(gst_decode_group_free):
+	Add support for delayed caps fixation when autoplugging.
+	Optimize cases where a multiqueue is not needed/wanted, like right after
+	anything that is not a demuxer.
+
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_parse_skeleton_fisbone),
 	(gst_ogg_pad_submit_packet), (gst_ogg_demux_perform_seek),
 	(gst_ogg_demux_read_chain), (gst_ogg_demux_collect_chain_info):
