@@ -1,3 +1,10 @@
+=== release 0.10.13 ===
+
+2007-06-05  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.13, "What's Going on?"
+
 2007-05-31  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):

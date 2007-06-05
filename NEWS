@@ -1,9 +1,54 @@
-This is GStreamer Base Plug-ins 0.10.12, "Zombie Horde"
+This is GStreamer Base Plug-ins 0.10.13, "What's going on?"
 
 Please note that decodebin2 API included in this release is still
 considered unstable and WILL change in future releases. At this stage, only
 developers or early adopters should consider using the decodebin2 API embodied
 in its signals and properties.
+
+Changes since 0.10.12:
+      * Many fixes and improvements
+      * RTP and RTCP support improved
+
+Bugs fixed since 0.10.12:
+
+      * 339838 : [audioconvert] support floats with non-native endianness
+      * 393975 : closing x/xvimagesink window crashes gst-launch
+      * 405072 : [API] add gst_tag_freeform_string_to_utf8()
+      * 413799 : [subparse] add support for MPL2 format
+      * 414645 : GstMixerTrack should make untranslated label available
+      * 420079 : [audioconvert] Uses biased rounding which results in dist...
+      * 420578 : [subparse] add more colour map in sami parser
+      * 421834 : videorate breaks on dimension changes
+      * 423051 : Vorbis tags of type double use locale-dependent formatting
+      * 423055 : Verify ReplayGain vorbistag processing in libs/tag testsuite
+      * 425455 : Decodebin2 leaks pads
+      * 426250 : GstPlayBaseBin leaks streaminfo objects
+      * 428187 : Rtp base depayloader class doesn't send new_segment after...
+      * 431672 : gst_base_rtp_audio_payload_push() should take object of i...
+      * 432362 : [ximagesink] doesn't build if XShm is not available
+      * 432755 : [videorate] leaks buffer if flow != OK
+      * 432984 : [baseaudiosrc] misleading warning message when dropping s...
+      * 433888 : [theoradec] does not generate a perfect stream
+      * 436562 : Theoradec doesn't work well with gnonlin
+      * 438840 : [theoradec] does not compile with old version of libtheora
+      * 440997 : [gstriff] Doesn't handle width!=depth files with audio/x-...
+      * 441295 : audioconvert doesn't build on VS6
+      * 442024 : regression in playbin buffering
+      * 350299 : [playbin] " Internal data flow error " opening movie with s...
+      * 410039 : totem crashed with SIGSEGV in new_decoded_pad_full()
+      * 340842 : do latency calculation for live sources
+      * 341078 : RB does not play beyond initially downloaded podcast file
+      * 414496 : [id3demux, id3v2mux] Add support for GST_TAG_MUSICBRAINZ_...
+
+API additions since 0.10.12:
+
+      * add gst_tag_freeform_string_to_utf8()
+      * GstRTPBuffer::gst_rtp_buffer_default_clock_rate()
+      * GstBaseAudioSink::slave-method property
+      * add "min-ptime" property to RTP base audio payloader
+      * gst_base_rtp_audio_payload_push()
+      * gst_base_rtp_audio_payload_get_adapter()
+      * GstMixerTrack::untranslated-label property
 
 Changes since 0.10.11:
 
