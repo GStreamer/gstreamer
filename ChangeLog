@@ -1,5 +1,15 @@
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gsturidecodebin.c: (no_more_pads_full),
+	(new_decoded_pad), (remove_pads), (make_decoder), (setup_source),
+	(gst_uri_decode_bin_change_state):
+	Make sure we name srcpads uniquely even when using different internal
+	decodebins.
+	Signal no-more-pads when no more dynamic elements exist.
+	Remove pads on cleanup.
+
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
 	Based on patch by: Thiago Sousa Santos <thiagossantos at gmail dot com>
 
 	* gst/playback/gstqueue2.c: (gst_queue_class_init),

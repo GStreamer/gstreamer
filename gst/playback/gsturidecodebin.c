@@ -57,6 +57,8 @@ struct _GstURIDecodeBin
   GstElement *source;
   GstElement *queue;
   GSList *decoders;
+  GSList *srcpads;
+  gint numpads;
 
   /* for dynamic sources */
   guint src_np_sig_id;          /* new-pad signal id */
@@ -69,7 +71,7 @@ struct _GstURIDecodeBinClass
   GstBinClass parent_class;
 };
 
-static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src%d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS_ANY);
@@ -225,24 +227,34 @@ static void
 no_more_pads_full (GstElement * element, gboolean subs,
     GstURIDecodeBin * decoder)
 {
+  gboolean final;
+
   /* setup phase */
   GST_DEBUG_OBJECT (element, "no more pads, %d pending", decoder->pending);
 
-  gst_element_no_more_pads (GST_ELEMENT_CAST (decoder));
+  GST_OBJECT_LOCK (decoder);
+  final = (decoder->pending == 0);
 
   /* nothing pending, we can exit */
-  if (decoder->pending == 0)
-    return;
+  if (final)
+    goto done;
 
   /* the object has no pending no_more_pads */
   if (!g_object_get_data (G_OBJECT (element), "pending"))
-    return;
-
+    goto done;
   g_object_set_data (G_OBJECT (element), "pending", NULL);
 
   decoder->pending--;
-  if (decoder->pending == 0) {
-  }
+  if (decoder->pending != 0)
+    final = FALSE;
+
+done:
+  GST_OBJECT_UNLOCK (decoder);
+
+  if (final)
+    gst_element_no_more_pads (GST_ELEMENT_CAST (decoder));
+
+  return;
 }
 
 static void
@@ -273,13 +285,20 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
     GstURIDecodeBin * decoder)
 {
   GstPad *newpad;
+  gchar *padname;
 
   GST_DEBUG_OBJECT (element, "new decoded pad, name: <%s>. Last: %d",
       GST_PAD_NAME (pad), last);
 
-  newpad = gst_ghost_pad_new (GST_PAD_NAME (pad), pad);
-  gst_pad_set_active (newpad, TRUE);
+  GST_OBJECT_LOCK (decoder);
+  padname = g_strdup_printf ("src%d", decoder->numpads);
+  decoder->numpads++;
+  GST_OBJECT_UNLOCK (decoder);
 
+  newpad = gst_ghost_pad_new (padname, pad);
+  g_free (padname);
+
+  gst_pad_set_active (newpad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (decoder), newpad);
 }
 
@@ -545,6 +564,22 @@ remove_decoders (GstURIDecodeBin * bin)
   bin->decoders = NULL;
 }
 
+static void
+remove_pads (GstURIDecodeBin * bin)
+{
+  GSList *walk;
+
+  for (walk = bin->srcpads; walk; walk = g_slist_next (walk)) {
+    GstPad *pad = GST_PAD_CAST (walk->data);
+
+    GST_DEBUG_OBJECT (bin, "removing old pad");
+    gst_pad_set_active (pad, FALSE);
+    gst_element_remove_pad (GST_ELEMENT_CAST (bin), pad);
+  }
+  g_slist_free (bin->srcpads);
+  bin->srcpads = NULL;
+}
+
 static GstElement *
 make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
 {
@@ -592,6 +627,7 @@ make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
   g_signal_connect (G_OBJECT (decodebin),
       "unknown-type", G_CALLBACK (unknown_type), decoder);
   g_object_set_data (G_OBJECT (decodebin), "pending", "1");
+  decoder->pending++;
 
   gst_bin_add (GST_BIN_CAST (decoder), result);
 
@@ -737,6 +773,7 @@ setup_source (GstURIDecodeBin * decoder)
         g_signal_connect (G_OBJECT (decoder->source), "no-more-pads",
         G_CALLBACK (source_no_more_pads), decoder);
     g_object_set_data (G_OBJECT (decoder->source), "pending", "1");
+    decoder->pending++;
   } else {
     GstElement *dec_elem;
 
@@ -1071,6 +1108,7 @@ gst_uri_decode_bin_change_state (GstElement * element,
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("paused to ready");
       remove_decoders (decoder);
+      remove_pads (decoder);
       remove_source (decoder);
       break;
     default:
