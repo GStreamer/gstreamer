@@ -114,6 +114,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
 %{_libdir}/gstreamer-%{majorminor}/libgstapp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvmnc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideosignal.so
 %{_libdir}/libgstapp-0.10.so
 %{_libdir}/libgstapp-0.10.so.0
 %{_libdir}/libgstapp-0.10.so.0.0.0
