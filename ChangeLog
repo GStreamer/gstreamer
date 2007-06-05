@@ -1,3 +1,12 @@
+2007-06-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/ext/ffmpeg/configure.ac:
+	* gst-libs/ext/ffmpeg/patches/autotools.patch:
+	* gst-libs/ext/ffmpeg/patches/memalign.patch:
+	Recognise x86_64 builds and set flags appropriately so that the
+	MMX/SSE codepaths get enabled there - makes things considerably
+	faster.
+
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: <bram at luon dot net>
