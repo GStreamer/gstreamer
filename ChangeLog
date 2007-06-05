@@ -1,3 +1,11 @@
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Edward Hervey  <edward@fluendo.com>
+
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_init), (gst_v4lsrc_fixate),
+	(gst_v4lsrc_query):
+	Make v4lsrc output segments in GST_FORMAT_TIME. Fixes #442553.
+
 2007-06-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/riff/Makefile.am:

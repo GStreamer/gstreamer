@@ -142,6 +142,7 @@ gst_v4lsrc_init (GstV4lSrc * v4lsrc, GstV4lSrcClass * klass)
 
   v4lsrc->fps_list = NULL;
 
+  gst_base_src_set_format (GST_BASE_SRC (v4lsrc), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (v4lsrc), TRUE);
 }
 
