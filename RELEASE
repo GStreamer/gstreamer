@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.12 "Inevitable Demise"
+Release notes for GStreamer 0.10.13 "With or without you"
         
 
 
@@ -37,69 +37,63 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Add a warning if GLib threading support is not properly initialised
-      * Add support for binary registry serialisation
-      * Preliminary support for pull-mode scheduling of entire chains
-      * Add support for HPPA
-      * Collectpads fixes
-      * Lots of bug fixes
+      * Latency handling infrastructure for live playback scenarios
+      * State change handling changes
+      * GstController property handling improved
+      * Various bug fixes and improvements
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
 
 Bugs fixed in this release
      
-      * 378931 : Bison version check doesn't work on Solaris 9
-      * 399875 : [multiqueue] dynamic growth not implemented.
-      * 339326 : pads not set to FLUSHING when created
-      * 380129 : gst_plugin_feature_load doesn't consistently ref a return...
-      * 381301 : [patch] Make GstBus watch work with any GMainContext
-      * 383382 : Removing pads from collectpads not threadsafe
-      * 383506 : Disallow CLOCK_TIME_NONE as periodic clock id interval
-      * 387073 : gst-launch videotestsrc ! ffmpegcolorspace ! ximagesink d...
-      * 387866 : [docs] Small fix for GstCollectPads docs
-      * 391278 : g_thread_init() called too late, possibly causing memory ...
-      * 391296 : [API] add gst_update_registry() to rescan registry at run...
-      * 391777 : GStreamer does not reset SEGV trap handler
-      * 391909 : Fix compilation with MinGW
-      * 399094 : gst_pad_start_task: small doc typo
-      * 401381 : GstRegistry signals documentation is missing
-      * 401781 : [API] add GST_ROUND_DOWN_* macros
-      * 402393 : [API][GstCollectPads] Allow elements to specify destroy n...
-      * 405284 : Changing state of pipeline can lock up with preroll queue...
-      * 400656 : [PATCH] filesrc seekability detection fix (NFS and 2GB+ f...
-      * 403172 : [filesrc] doesn't handle localhost file locations
-      * 404569 : [filesrc] Unexpected end of file
-      * 161922 : script to provide plugin installation info
-      * 391915 : adapter test doesn't compile with mingw
-      * 395554 : gst_tag_setter_merge_tags works at most once
-      * 403597 : [API] Add ReplayGain reference level tag
-      * 405288 : Configure checks use pkg-config directly
-      * 381492 : [SystemClock] ClockID wait_async notification broken
-      * 382592 : Multiple wait()ers break periodic clock ids
-      * 385084 : endless ghost pad pull/push activate recursion until crash
-      * 388201 : [API] add gst_adapter_copy()
+      * 440682 : gst/gstsystemclock unit test occasionally fails
+      * 342564 : Configure options causing compilation to fail
+      * 378255 : Swedish translation updated
+      * 392804 : [API] add GST_CORE_ERROR_DISABLED
+      * 412648 : [filesink] reports wrong (byte) position after seeking
+      * 413123 : No XML dependency patch
+      * 415394 : [identity] post message for imperfect streams if check-pe...
+      * 417992 : Quickly playing/pausing messes up synchronization
+      * 420106 : [basetransform] race on shutdown: setcaps func called aft...
+      * 420206 : Collectpads causes a segv. when stopping after a pad remove
+      * 421480 : Make it possible to build without libxml2 with --disable-...
+      * 421543 : [GstPad] Doesn't check if pad accepts caps after caps change
+      * 422295 : GstController crashes with quadratic and cubic interpolat...
+      * 425400 : Multiqueue leaks memory when releasing sink pads
+      * 431150 : compilation fails with flex 2.5.4
+      * 431940 : [API] add gst_buffer_try_new_and_alloc()
+      * 432876 : current time level in queue
+      * 434926 : Multilib conflicts with gst-launch-0.10 man page
+      * 435880 : [GstBin] Property to allow bins to handle child async cha...
+      * 437563 : URIs with upper-case protocol don't play
+      * 440463 : gstbin unit test sometimes hangs waiting for ASYNC_DONE m...
+      * 441159 : Regression in state change handling
+      * 349180 : gst_parse_launch is not reentrant (or recursively callable)
+      * 414986 : Don't start the async thread for the system clock until n...
+      * 393099 : GstBuffer copy vfunc broken?
+      * 419851 : pad-added and pad-removed signals parameter type incorrect
+      * 420133 : gst_element_sync_state_with_parent should look at pending...
+      * 421177 : Possible deadlock if pad eventfunc is not specified
 
 API changed in this release
      
 - API additions:
     
-* gst_update_registry()
-* gst_adapter_copy()
-* GST_ROUND_DOWN_* macros
-* GstCollectDataDestroyNotify
-* gst_query_new_latency()
-* gst_query_set_latency()
-* gst_query_parse_latency()
-* gst_message_new_lost_preroll()
-* gst_message_parse_lost_preroll()
-* gst_message_new_prerolled()
-* gst_message_new_latency()
-* gst_event_new_latency()
-* gst_event_parse_latency()
-* GST_TAG_REFERENCE_LEVEL
-* gst_base_sink_query_latency()
-* gst_base_sink_get_latency()
-* gst_bus_timed_pop()
-* gst_message_new_info()
-* gst_message_parse_info()
+* gst_element_change_state()
+* GST_STATE_TARGET
+* GST_BASE_TRANSFORM_LOCK/UNLOCK
+* GstClock::gst_clock_unadjust_unlocked()
+* fakesink::num-buffers property
+* GST_CORE_ERROR_DISABLED
+* basesrc::prepare_seek_segment vmethod
+* gst_buffer_try_new_and_alloc()
+* gst_uri_protocol_is_supported()
+* gst_base_src_query_latency()
+* GstQueue::pushing
+* gst_controller_suggest_next_sync()
+* gst_object_suggest_next_sync()
+* basesrc::unlock_stop
+* basesink::unlock_stop
 
 Download
 
@@ -134,21 +128,24 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Andy Wingo
-      * Carlos Sanmartin Dominguez
+      * Ville Syrjala
       * David Schleef
       * Edward Hervey
+      * Evan Nemerson
       * Jan Schmidt
-      * Jindrich Makovicka
+      * Jeroen Wouters
+      * Marc-Andre Lureau
       * Mark Nauwelaerts
-      * Michal Benes
-      * René Stadler
+      * Michael Smith
+      * Mogens Jaeger
+      * Olivier Crete
+      * Peter Kjellerstedt
       * Sebastian Dröge
-      * Sjoerd Simons
+      * Sebastien Moutte
       * Stefan Kost
-      * Sébastien Moutte
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Vincent Torri
+      * Tommi Myöhänen
       * Wim Taymans
+      * Zaheer Abbas Merali
  

@@ -259,6 +259,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstFakeSink::num-buffers</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>num-buffers</NICK>
+<BLURB>Number of buffers to accept going EOS.</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstFdSrc::fd</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -334,7 +344,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Check For Perfect Stream</NICK>
-<BLURB>Verify that the stream is time- and data-contiguous.</BLURB>
+<BLURB>Verify that the stream is time- and data-contiguous. This only logs in the debug log.  This will be deprecated in favor of the check-imperfect-timestamp/offset properties.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -354,7 +364,7 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Drop Probability</NICK>
-<BLURB>The Probability a buffer is dropped (not implemented).</BLURB>
+<BLURB>The Probability a buffer is dropped.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -425,6 +435,26 @@
 <FLAGS>rw</FLAGS>
 <NICK>Synchronize</NICK>
 <BLURB>Synchronize to pipeline clock.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::check-imperfect-offset</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Check for discontiguous offset</NICK>
+<BLURB>Send element messages if offset and offset_end do not match up.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstIdentity::check-imperfect-timestamp</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Check for discontiguous timestamps</NICK>
+<BLURB>Send element messages if timestamps and durations do not match up.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
@@ -696,5 +726,15 @@
 <NICK>Max. size (ns)</NICK>
 <BLURB>Max. amount of data in the queue (in ns, 0=disable).</BLURB>
 <DEFAULT>1000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBin::async-handling</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Async Handling</NICK>
+<BLURB>The bin will handle Asynchronous state changes.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 

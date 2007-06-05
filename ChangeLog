@@ -1,3 +1,10 @@
+=== release 0.10.13 ===
+
+2007-06-05  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.13, "With or without you"
+
 2007-05-25  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstbin.c: (bin_handle_async_done):
@@ -1013,7 +1020,7 @@
 
 2007-03-22  Wim Taymans  <wim@fluendo.com>
 
-	Patch by: <syrjala at sci dot fi>
+	Patch by: Ville Syrjala <syrjala at sci dot fi>
 
 	* gst/gstpad.c: (gst_pad_alloc_buffer_full), (gst_pad_send_event):
 	Fix possible deadlock if pad eventfunc is not specified.  Fixes #421177.
@@ -1072,6 +1079,8 @@
 	Add ::unlock_stop to basesrc and basesink. This allows an opportunity
 	for sub-classes to correctly clear any state they set trying to
 	unlock, such as clearing out unlock commands from a command fd.
+	API: basesrc::unlock_stop
+	API: basesink::unlock_stop
 
 	* plugins/elements/gstfdsink.c: (gst_fd_sink_class_init),
 	(gst_fd_sink_render), (gst_fd_sink_unlock),
@@ -1252,6 +1261,7 @@
 	* gst/gstbuffer.c: (gst_buffer_copy_metadata), (_gst_buffer_copy):
 	* gst/gstbuffer.h:
 	Add metadata copy functions. Fixes #393099.
+	API: gst_buffer_copy_metadata()
 
 	* gst/gstutils.c: (gst_buffer_stamp):
 	* libs/gst/base/gstbasetransform.c:

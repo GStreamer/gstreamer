@@ -1,4 +1,71 @@
-This is GStreamer 0.10.10.12 "Inevitable Demise"
+This is GStreamer 0.10.13 "With or without you"
+
+Changes since 0.10.12:
+
+      * Latency handling infrastructure for live playback scenarios
+      * State change handling changes
+      * GstController property handling improved
+      * Various bug fixes and improvements
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+
+Bugs fixed since 0.10.12: 
+
+      * 440682 : gst/gstsystemclock unit test occasionally fails
+      * 342564 : Configure options causing compilation to fail
+      * 378255 : Swedish translation updated
+      * 392804 : [API] add GST_CORE_ERROR_DISABLED
+      * 412648 : [filesink] reports wrong (byte) position after seeking
+      * 413123 : No XML dependency patch
+      * 415394 : [identity] post message for imperfect streams if check-pe...
+      * 417992 : Quickly playing/pausing messes up synchronization
+      * 420106 : [basetransform] race on shutdown: setcaps func called aft...
+      * 420206 : Collectpads causes a segv. when stopping after a pad remove
+      * 421480 : Make it possible to build without libxml2 with --disable-...
+      * 421543 : [GstPad] Doesn't check if pad accepts caps after caps change
+      * 422295 : GstController crashes with quadratic and cubic interpolat...
+      * 425400 : Multiqueue leaks memory when releasing sink pads
+      * 431150 : compilation fails with flex 2.5.4
+      * 431940 : [API] add gst_buffer_try_new_and_alloc()
+      * 432876 : current time level in queue
+      * 434926 : Multilib conflicts with gst-launch-0.10 man page
+      * 435880 : [GstBin] Property to allow bins to handle child async cha...
+      * 437563 : URIs with upper-case protocol don't play
+      * 440463 : gstbin unit test sometimes hangs waiting for ASYNC_DONE m...
+      * 441159 : Regression in state change handling
+      * 349180 : gst_parse_launch is not reentrant (or recursively callable)
+      * 414986 : Don't start the async thread for the system clock until n...
+      * 393099 : GstBuffer copy vfunc broken?
+      * 419851 : pad-added and pad-removed signals parameter type incorrect
+      * 420133 : gst_element_sync_state_with_parent should look at pending...
+      * 421177 : Possible deadlock if pad eventfunc is not specified
+
+API additions since 0.10.12:
+
+      * gst_element_change_state()
+      * GST_STATE_TARGET
+      * GST_BASE_TRANSFORM_LOCK/UNLOCK
+      * GstClock::gst_clock_unadjust_unlocked()
+      * fakesink::num-buffers property
+      * GST_CORE_ERROR_DISABLED
+      * basesrc::prepare_seek_segment vmethod
+      * gst_buffer_try_new_and_alloc()
+      * gst_buffer_copy_metadata()
+      * GstBufferCopyFlags enum
+      * GST_BUFFER_COPY_ALL flag
+      * gst_uri_protocol_is_supported()
+      * gst_base_src_query_latency()
+      * GstQueue::pushing
+      * gst_controller_suggest_next_sync()
+      * gst_object_suggest_next_sync()
+      * basesrc::unlock_stop
+      * basesink::unlock_stop
+      * GstBin::async-handling property
+      * gst_message_new_async_start()
+      * gst_message_parse_async_start()
+      * gst_message_new_async_done()
+      * GST_MESSAGE_ASYNC_START
+      * GST_MESSAGE_ASYNC_DONE
 
 Changes since 0.10.11:
 

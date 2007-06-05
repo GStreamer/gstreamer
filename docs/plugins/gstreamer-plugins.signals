@@ -71,6 +71,13 @@ GstQueue *gstqueue
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstQueue::pushing</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>f</FLAGS>
+GstQueue *gstqueue
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstTypeFindElement::have-type</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>f</FLAGS>
