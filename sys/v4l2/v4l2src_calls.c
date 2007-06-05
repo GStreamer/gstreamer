@@ -629,7 +629,6 @@ gboolean
 gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
 {
   gint n;
-  GstV4l2Buffer *buffer;
   gint fd = v4l2src->v4l2object->video_fd;
   struct v4l2_requestbuffers breq;
 
@@ -669,7 +668,7 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
     v4l2src->pool->buffers = g_new0 (GstV4l2Buffer, v4l2src->num_buffers);
 
     for (n = 0; n < v4l2src->num_buffers; n++) {
-      buffer = &v4l2src->pool->buffers[n];
+      GstV4l2Buffer *buffer = &v4l2src->pool->buffers[n];
 
       gst_atomic_int_set (&buffer->refcount, 1);
       buffer->pool = v4l2src->pool;
@@ -688,8 +687,6 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src)
         goto mmap_failed;
 
       buffer->length = buffer->buffer.length;
-      if (!gst_v4l2src_queue_frame (v4l2src, n))
-        goto queue_failed;
     }
 
     GST_INFO_OBJECT (v4l2src, "capturing buffers via mmap()");
@@ -741,17 +738,6 @@ mmap_failed:
             v4l2src->v4l2object->videodev),
         ("mmap failed: %s", g_strerror (errno)));
     gst_v4l2src_capture_deinit (v4l2src);
-    /* CHECKME: buffer->start = 0; */
-    return FALSE;
-  }
-queue_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
-        (_("Could not enqueue buffers in device '%s'."),
-            v4l2src->v4l2object->videodev),
-        ("enqueing buffer %d/%d failed: %s",
-            n, v4l2src->num_buffers, g_strerror (errno)));
-    gst_v4l2src_capture_deinit (v4l2src);
     return FALSE;
   }
 no_supported_capture_method:
@@ -773,6 +759,8 @@ gboolean
 gst_v4l2src_capture_start (GstV4l2Src * v4l2src)
 {
   gint type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  gint n;
+  gint fd = v4l2src->v4l2object->video_fd;
 
   GST_DEBUG_OBJECT (v4l2src, "starting the capturing");
   //GST_V4L2_CHECK_OPEN (v4l2src->v4l2object);
@@ -781,7 +769,11 @@ gst_v4l2src_capture_start (GstV4l2Src * v4l2src)
   v4l2src->quit = FALSE;
 
   if (v4l2src->use_mmap) {
-    if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_STREAMON, &type) < 0)
+    for (n = 0; n < v4l2src->num_buffers; n++)
+      if (!gst_v4l2src_queue_frame (v4l2src, n))
+        goto queue_failed;
+
+    if (ioctl (fd, VIDIOC_STREAMON, &type) < 0)
       goto streamon_failed;
   }
 
@@ -790,6 +782,15 @@ gst_v4l2src_capture_start (GstV4l2Src * v4l2src)
   return TRUE;
 
   /* ERRORS */
+queue_failed:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
+        (_("Could not enqueue buffers in device '%s'."),
+            v4l2src->v4l2object->videodev),
+        ("enqueing buffer %d/%d failed: %s",
+            n, v4l2src->num_buffers, g_strerror (errno)));
+    return FALSE;
+  }
 streamon_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, OPEN_READ,
@@ -867,9 +868,6 @@ gst_v4l2src_buffer_pool_free (GstV4l2BufferPool * pool, gboolean do_close)
 gboolean
 gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
 {
-  gint i;
-  gboolean try_reinit = FALSE;
-
   GST_DEBUG_OBJECT (v4l2src, "deinitting capture system");
 
   if (!GST_V4L2_IS_OPEN (v4l2src->v4l2object)) {
@@ -880,38 +878,12 @@ gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
   }
 
   if (v4l2src->pool) {
-    /* free the buffers */
-    for (i = 0; i < v4l2src->num_buffers; i++) {
-      if (g_atomic_int_dec_and_test (&v4l2src->pool->buffers[i].refcount)) {
-        if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_DQBUF,
-                &v4l2src->pool->buffers[i].buffer) < 0) {
-          GST_DEBUG_OBJECT (v4l2src,
-              "Could not dequeue buffer on uninitialization."
-              "system error: %s. Will try reinit instead", g_strerror (errno));
-          try_reinit = TRUE;
-        }
-      }
-    }
     if (g_atomic_int_dec_and_test (&v4l2src->pool->refcount)) {
-      /* we're last thing that used all this */
+      /* FIXME: this is crack, should either use user pointer io method or some
+         strategy similar to what filesrc uses with automatic freeing */
       gst_v4l2src_buffer_pool_free (v4l2src->pool, FALSE);
     }
     v4l2src->pool = NULL;
-    /* This is our second try to get the buffers dequeued.
-     * Since buffers are normally dequeued automatically when capturing is
-     * stopped, but may be enqueued before capturing has started, you get
-     * a problem when you abort before capturing started but have enqueued
-     * the buffers. We avoid that by starting/stopping capturing once so
-     * they get auto-dequeued.
-     */
-    if (try_reinit) {
-      gst_v4l2src_capture_start (v4l2src);
-      if (!gst_v4l2src_capture_stop (v4l2src)) {
-        /* stop throws an element-error on failure */
-        GST_WARNING_OBJECT (v4l2src, "failed reinit device");
-        return FALSE;
-      }
-    }
   }
 
   GST_V4L2_SET_INACTIVE (v4l2src->v4l2object);

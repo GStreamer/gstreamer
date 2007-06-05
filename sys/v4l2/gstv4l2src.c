@@ -835,6 +835,7 @@ gst_v4l2src_start (GstBaseSrc * src)
 {
   GstV4l2Src *v4l2src = GST_V4L2SRC (src);
 
+  /* open the device */
   if (!gst_v4l2_object_start (v4l2src->v4l2object))
     return FALSE;
 
@@ -857,6 +858,7 @@ gst_v4l2src_stop (GstBaseSrc * src)
       return FALSE;
   }
 
+  /* close the device */
   if (!gst_v4l2_object_stop (v4l2src->v4l2object))
     return FALSE;
 

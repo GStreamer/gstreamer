@@ -1,3 +1,18 @@
+2007-06-05  Andy Wingo  <wingo@pobox.com>
+
+	* sys/v4l2/gstv4l2src.c (gst_v4l2src_start, gst_v4l2src_stop): Add
+	some useless comments.
+
+	* sys/v4l2/v4l2src_calls.c (gst_v4l2src_capture_init): Don't queue
+	frames before calling STREAMON, that might leave them in a state
+	where they can't be dequeued if we go back to NULL without calling
+	STREAMON, according to the docs.
+	(gst_v4l2src_capture_start): Enqueue buffers here instead, right
+	before we call STREAMON.
+	(gst_v4l2src_capture_deinit): Remove crack to work around dequeue
+	failures. (For me this code hung.) The pool refcounting is still
+	crack; added a note to that effect.
+
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/multipart/multipartmux.c: (gst_multipart_mux_class_init),
