@@ -1,3 +1,10 @@
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
+
+	* ext/ffmpeg/gstffmpegscale.c: (gst_ffmpegscale_handle_src_event):
+	don't leak refcounts in event handler. Fixes #444332.
+
 2007-05-25  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (clip_video_buffer),

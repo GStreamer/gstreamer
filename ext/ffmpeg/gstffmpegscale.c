@@ -365,9 +365,12 @@ gst_ffmpegscale_transform (GstBaseTransform * trans, GstBuffer * inbuf,
 static gboolean
 gst_ffmpegscale_handle_src_event (GstPad * pad, GstEvent * event)
 {
-  GstFFMpegScale *scale = GST_FFMPEGSCALE (gst_pad_get_parent (pad));
+  GstFFMpegScale *scale;
   GstStructure *structure;
   gdouble pointer;
+  gboolean res;
+
+  scale = GST_FFMPEGSCALE (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NAVIGATION:
@@ -390,7 +393,11 @@ gst_ffmpegscale_handle_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
-  return gst_pad_event_default (pad, event);
+  res = gst_pad_event_default (pad, event);
+
+  gst_object_unref (scale);
+
+  return res;
 }
 
 gboolean
