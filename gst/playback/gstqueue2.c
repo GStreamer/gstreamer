@@ -52,6 +52,7 @@
 #include "config.h"
 #endif
 
+#include <stdio.h>
 #include <glib/gstdio.h>
 
 #include <gst/gst.h>

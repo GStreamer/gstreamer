@@ -1,5 +1,12 @@
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstqueue2.c: (gst_queue_have_data),
+	(gst_queue_create_read), (gst_queue_read_item_from_file),
+	(gst_queue_open_temp_location_file), (gst_queue_locked_enqueue):
+	Include stdio to define fseeko.
+
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Edward Hervey  <edward@fluendo.com>
 
 	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_init), (gst_v4lsrc_fixate),
