@@ -1,5 +1,14 @@
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: <bram at luon dot net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	(gst_ffmpeg_formatid_get_codecids):
+	Add MSMPEG4V3 video and MP3 audio to the asf muxer supported formats.
+	Fixes #444384.
+
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Jan Arne Petersen <jpetersen at jpetersen dot org>
 
 	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_src_query):

@@ -1821,9 +1821,9 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
     *audio_codec_list = flv_audio_list;
   } else if (!strcmp (format_name, "asf")) {
     static enum CodecID asf_video_list[] =
-        { CODEC_ID_WMV1, CODEC_ID_WMV2, CODEC_ID_NONE };
+        { CODEC_ID_WMV1, CODEC_ID_WMV2, CODEC_ID_MSMPEG4V3, CODEC_ID_NONE };
     static enum CodecID asf_audio_list[] =
-        { CODEC_ID_WMAV1, CODEC_ID_WMAV2, CODEC_ID_NONE };
+        { CODEC_ID_WMAV1, CODEC_ID_WMAV2, CODEC_ID_MP3, CODEC_ID_NONE };
 
     *video_codec_list = asf_video_list;
     *audio_codec_list = asf_audio_list;
