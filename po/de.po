@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base0.10 0.10.9-1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-05 11:20+0000\n"
+"POT-Creation-Date: 2007-05-31 19:16+0200\n"
 "PO-Revision-Date: 2006-07-23 18:58+0200\n"
 "Last-Translator: Holger Wansing <linux@wansing-online.de>\n"
 "Language-Team: German <debian-l10n-german@debian.lists.org>\n"
@@ -55,8 +55,8 @@ msgstr "PC-Lautspr."
 msgid "Playback"
 msgstr "Wiedergabe"
 
-#: ext/alsa/gstalsamixertrack.c:140 ext/alsa/gstalsamixertrack.c:201
-#: ext/alsa/gstalsamixertrack.c:204
+#: ext/alsa/gstalsamixertrack.c:140 ext/alsa/gstalsamixertrack.c:203
+#: ext/alsa/gstalsamixertrack.c:206
 msgid "Capture"
 msgstr "Aufnahme"
 
@@ -90,11 +90,11 @@ msgstr "Konnte Gerät nicht öffnen für Aufnahme im %d-Kanal-Modus."
 msgid "Could not open CD device for reading."
 msgstr "Konnte CD-Gerät nicht zum Lesen ansprechen."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:333
+#: ext/cdparanoia/gstcdparanoiasrc.c:372
 msgid "Could not seek CD."
 msgstr "Konnte CD nicht mit seek anspringen."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:363
+#: ext/cdparanoia/gstcdparanoiasrc.c:380
 msgid "Could not read CD."
 msgstr "Konnte CD nicht lesen."
 
@@ -112,47 +112,47 @@ msgstr "Kein Dateiname angegeben"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Konnte vfs-Datei »%s« nicht schließen."
 
-#: ext/gnomevfs/gstgnomevfssink.c:571
+#: ext/gnomevfs/gstgnomevfssink.c:572
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Fehler beim Schreiben in Datei »%s«."
 
-#: ext/ogg/gstoggdemux.c:3081
+#: ext/ogg/gstoggdemux.c:3084
 msgid "Internal data stream error."
 msgstr "Interner Datenstrom-Fehler."
 
-#: gst/playback/gstplaybasebin.c:1437
+#: gst/playback/gstplaybasebin.c:1458
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1454 gst/playback/gstplaybasebin.c:1580
+#: gst/playback/gstplaybasebin.c:1475 gst/playback/gstplaybasebin.c:1601
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1550
+#: gst/playback/gstplaybasebin.c:1571
 msgid "No URI specified to play from."
 msgstr "Keine URI zum Abspielen angegeben."
 
-#: gst/playback/gstplaybasebin.c:1556
+#: gst/playback/gstplaybasebin.c:1577
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Ungültige URI »%s«."
 
-#: gst/playback/gstplaybasebin.c:1562
+#: gst/playback/gstplaybasebin.c:1583
 msgid "RTSP streams cannot be played yet."
 msgstr "RTSP-Datenströme können noch nicht abgespielt werden."
 
-#: gst/playback/gstplaybasebin.c:1889
+#: gst/playback/gstplaybasebin.c:1910
 msgid "Could not create \"decodebin\" element."
 msgstr "Konnte »decodebin«-Element nicht erzeugen."
 
-#: gst/playback/gstplaybasebin.c:2100
+#: gst/playback/gstplaybasebin.c:2121
 msgid "Source element is invalid."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2176
+#: gst/playback/gstplaybasebin.c:2197
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
@@ -161,7 +161,7 @@ msgstr ""
 "Untertiteldatei bzw. eine andere Art von Textdatei oder die Mediendatei "
 "wurde nicht erkannt."
 
-#: gst/playback/gstplaybasebin.c:2181
+#: gst/playback/gstplaybasebin.c:2202
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
@@ -169,32 +169,32 @@ msgstr ""
 "Sie haben keinen Decoder installiert, der mit dieser Datei umgehen kann. Sie "
 "müssen vielleicht die benötigten Plugins installieren."
 
-#: gst/playback/gstplaybasebin.c:2185
+#: gst/playback/gstplaybasebin.c:2206
 msgid "This is not a media file"
 msgstr "Die ist keine Mediendatei"
 
-#: gst/playback/gstplaybasebin.c:2190
+#: gst/playback/gstplaybasebin.c:2211
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 "Es wurde ein Untertitel-Datenstrom erkannt, aber kein Video-Datenstrom."
 
-#: gst/playback/gstplaybin.c:909
+#: gst/playback/gstplaybin.c:906
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Die beiden Elemente »autovideosink« und »xvimagesink« fehlen."
 
-#: gst/playback/gstplaybin.c:917 gst/playback/gstplaybin.c:927
-#: gst/playback/gstplaybin.c:1112 gst/playback/gstplaybin.c:1122
-#: gst/playback/gstplaybin.c:1253 gst/playback/gstplaybin.c:1262
-#: gst/playback/gstplaybin.c:1271
+#: gst/playback/gstplaybin.c:914 gst/playback/gstplaybin.c:924
+#: gst/playback/gstplaybin.c:1109 gst/playback/gstplaybin.c:1119
+#: gst/playback/gstplaybin.c:1250 gst/playback/gstplaybin.c:1259
+#: gst/playback/gstplaybin.c:1268
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Element »%s« fehlt - überprüfen Sie Ihre GStreamer-Installation."
 
-#: gst/playback/gstplaybin.c:1105
+#: gst/playback/gstplaybin.c:1102
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Die beiden Elemente »autoaudiosink« und »alsasink« fehlen."
 
-#: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:268
+#: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:270
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Fehler beim Senden von Daten an »%s:%d«."
@@ -209,10 +209,14 @@ msgstr "Fehler beim Senden von gdp-Header-Daten an »%s:%d«."
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr "Fehler beim Senden von gdp-payload-Daten an »%s:%d«."
 
-#: gst/tcp/gsttcpclientsink.c:380 gst/tcp/gsttcpclientsrc.c:364
+#: gst/tcp/gsttcpclientsink.c:382 gst/tcp/gsttcpclientsrc.c:366
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "Verbindung zu %s:%d abgelehnt."
+
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:602
+msgid "Can't record audio fast enough"
+msgstr ""
 
 #: gst-libs/gst/tag/tags.c:57
 msgid "track ID"
@@ -262,8 +266,8 @@ msgstr "Interpreten-Sortiername"
 msgid "MusicBrainz artist sortname"
 msgstr "MusicBrainz Interpreten-Sortiername"
 
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1382
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1415
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1385
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1418
 msgid "This CD has no audio tracks"
 msgstr "Diese CD enthält keine Audio-Tracks"
 
