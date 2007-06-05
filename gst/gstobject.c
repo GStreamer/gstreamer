@@ -265,7 +265,7 @@ gst_object_class_init (GstObjectClass * klass)
       g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_FIRST | G_SIGNAL_NO_RECURSE | G_SIGNAL_DETAILED |
       G_SIGNAL_NO_HOOKS, G_STRUCT_OFFSET (GstObjectClass, deep_notify), NULL,
-      NULL, gst_marshal_VOID__OBJECT_PARAM, G_TYPE_NONE, 2, G_TYPE_OBJECT,
+      NULL, gst_marshal_VOID__OBJECT_PARAM, G_TYPE_NONE, 2, GST_TYPE_OBJECT,
       G_TYPE_PARAM);
 
   klass->path_string_separator = "/";

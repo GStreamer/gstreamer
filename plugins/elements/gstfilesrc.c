@@ -302,16 +302,14 @@ gst_file_src_finalize (GObject * object)
 static gboolean
 gst_file_src_set_location (GstFileSrc * src, const gchar * location)
 {
-  /* the element must be stopped in order to do this */
-  GST_STATE_LOCK (src);
-  {
-    GstState state;
+  GstState state;
 
-    state = GST_STATE (src);
-    if (state != GST_STATE_READY && state != GST_STATE_NULL)
-      goto wrong_state;
-  }
-  GST_STATE_UNLOCK (src);
+  /* the element must be stopped in order to do this */
+  GST_OBJECT_LOCK (src);
+  state = GST_STATE (src);
+  if (state != GST_STATE_READY && state != GST_STATE_NULL)
+    goto wrong_state;
+  GST_OBJECT_UNLOCK (src);
 
   g_free (src->filename);
   g_free (src->uri);
@@ -333,7 +331,7 @@ gst_file_src_set_location (GstFileSrc * src, const gchar * location)
 wrong_state:
   {
     GST_DEBUG_OBJECT (src, "setting location in wrong state");
-    GST_STATE_UNLOCK (src);
+    GST_OBJECT_UNLOCK (src);
     return FALSE;
   }
 }

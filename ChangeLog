@@ -1,3 +1,14 @@
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstobject.c: (gst_object_class_init):
+	Fix signal signature.
+
+	* gst/gstsegment.c:
+	Add small clarification in the api docs.
+
+	* plugins/elements/gstfilesrc.c: (gst_file_src_set_location):
+	States are protected with object lock.
+
 2007-06-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* AUTHORS:

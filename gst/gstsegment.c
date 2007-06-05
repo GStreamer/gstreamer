@@ -646,6 +646,9 @@ gst_segment_to_running_time (GstSegment * segment, GstFormat format,
  * updated. If @clip_start or @clip_stop are different from @start or @stop
  * respectively, the region fell partially in the segment.
  *
+ * Note that when @stop is -1, @clip_stop will be set to the end of the
+ * segment. Depending on the use case, this may or may not be what you want.
+ *
  * Returns: TRUE if the given @start and @stop times fall partially or 
  *     completely in @segment, FALSE if the values are completely outside 
  *     of the segment.
