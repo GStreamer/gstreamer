@@ -667,7 +667,8 @@ parse_subrip (ParserState * state, const gchar * line)
       }
       return NULL;
     case 2:
-    {                           /* No need to parse that text if it's out of segment */
+    {
+      /* No need to parse that text if it's out of segment */
       gint64 clip_start = 0, clip_stop = 0;
       gboolean in_seg = FALSE;
 
@@ -684,8 +685,7 @@ parse_subrip (ParserState * state, const gchar * line)
         return NULL;
       }
     }
-      /* looking for subtitle text; empty line ends this
-       * subtitle entry */
+      /* looking for subtitle text; empty line ends this subtitle entry */
       if (state->buf->len)
         g_string_append_c (state->buf, '\n');
       g_string_append (state->buf, line);
@@ -702,6 +702,94 @@ parse_subrip (ParserState * state, const gchar * line)
       return NULL;
     default:
       g_return_val_if_reached (NULL);
+  }
+}
+
+static void
+subviewer_unescape_newlines (gchar * read)
+{
+  gchar *write = read;
+
+  /* Replace all occurences of '[br]' with a newline as version 2
+   * of the subviewer format uses this for newlines */
+
+  if (read[0] == '\0' || read[1] == '\0' || read[2] == '\0' || read[3] == '\0')
+    return;
+
+  do {
+    if (strncmp (read, "[br]", 4) == 0) {
+      *write = '\n';
+      read += 4;
+    } else {
+      *write = *read;
+      read++;
+    }
+    write++;
+  } while (*read);
+
+  *write = '\0';
+}
+
+static gchar *
+parse_subviewer (ParserState * state, const gchar * line)
+{
+  guint h1, m1, s1, ms1;
+  guint h2, m2, s2, ms2;
+  gchar *ret;
+
+  /* TODO: Maybe also parse the fields in the header, especially DELAY.
+   * For examples see the unit test or
+   * http://www.doom9.org/index.html?/sub.htm */
+
+  switch (state->state) {
+    case 0:
+      /* looking for start_time,end_time */
+      if (sscanf (line, "%u:%u:%u.%u,%u:%u:%u.%u",
+              &h1, &m1, &s1, &ms1, &h2, &m2, &s2, &ms2) == 8) {
+        state->state = 1;
+        state->start_time =
+            (((guint64) h1) * 3600 + m1 * 60 + s1) * GST_SECOND +
+            ms1 * GST_MSECOND;
+        state->duration =
+            (((guint64) h2) * 3600 + m2 * 60 + s2) * GST_SECOND +
+            ms2 * GST_MSECOND - state->start_time;
+      }
+      return NULL;
+    case 1:
+    {
+      /* No need to parse that text if it's out of segment */
+      gint64 clip_start = 0, clip_stop = 0;
+      gboolean in_seg = FALSE;
+
+      /* Check our segment start/stop */
+      in_seg = gst_segment_clip (state->segment, GST_FORMAT_TIME,
+          state->start_time, state->start_time + state->duration,
+          &clip_start, &clip_stop);
+
+      if (in_seg) {
+        state->start_time = clip_start;
+        state->duration = clip_stop - clip_start;
+      } else {
+        state->state = 0;
+        return NULL;
+      }
+    }
+      /* looking for subtitle text; empty line ends this subtitle entry */
+      if (state->buf->len)
+        g_string_append_c (state->buf, '\n');
+      g_string_append (state->buf, line);
+      if (strlen (line) == 0) {
+        ret = g_strdup (state->buf->str);
+        subviewer_unescape_newlines (ret);
+        strip_trailing_newlines (ret);
+        g_string_truncate (state->buf, 0);
+        state->state = 0;
+        return ret;
+      }
+      return NULL;
+    default:
+      g_assert_not_reached ();
+      return NULL;
   }
 }
 
@@ -824,6 +912,7 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     GST_LOG ("SubRip (time based) format detected");
     return GST_SUB_PARSE_FORMAT_SUBRIP;
   }
+
   if (!strncmp (match_str, "FORMAT=TIME", 11)) {
     GST_LOG ("MPSub (time based) format detected");
     return GST_SUB_PARSE_FORMAT_MPSUB;
@@ -846,6 +935,11 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     GST_LOG ("MPL2 (time based) format detected");
     return GST_SUB_PARSE_FORMAT_MPL2;
   }
+  if (strstr (match_str, "[INFORMATION]") != NULL) {
+    GST_LOG ("SubViewer (time based) format detected");
+    return GST_SUB_PARSE_FORMAT_SUBVIEWER;
+  }
+
   GST_DEBUG ("no subtitle format detected");
   return GST_SUB_PARSE_FORMAT_UNKNOWN;
 }
@@ -888,6 +982,9 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
     case GST_SUB_PARSE_FORMAT_MPL2:
       self->parse_line = parse_mpl2;
       return gst_caps_new_simple ("text/x-pango-markup", NULL);
+    case GST_SUB_PARSE_FORMAT_SUBVIEWER:
+      self->parse_line = parse_subviewer;
+      return gst_caps_new_simple ("text/plain", NULL);
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
     default:
       GST_DEBUG ("no subtitle format detected");
@@ -1184,6 +1281,10 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
     case GST_SUB_PARSE_FORMAT_MPL2:
       GST_DEBUG ("MPL2 (time based) format detected");
       caps = MPL2_CAPS;
+      break;
+    case GST_SUB_PARSE_FORMAT_SUBVIEWER:
+      GST_DEBUG ("SubViewer format detected");
+      caps = SUB_CAPS;
       break;
     default:
     case GST_SUB_PARSE_FORMAT_UNKNOWN:

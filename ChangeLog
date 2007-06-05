@@ -1,3 +1,17 @@
+2007-06-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Based on a patch by Sven Arvidsson <sa at whiz dot se>:
+
+	* gst/subparse/gstsubparse.c: (parse_subrip),
+	(subviewer_unescape_newlines), (parse_subviewer),
+	(gst_sub_parse_data_format_autodetect),
+	(gst_sub_parse_format_autodetect), (gst_subparse_type_find):
+	* gst/subparse/gstsubparse.h:
+	Add support for SubViewer version 1 and 2 subtitles. Fixes #394061.
+	* tests/check/elements/subparse.c: (GST_START_TEST),
+	(subparse_suite):
+	Add a unit test for both SubViewer formats.
+
 2007-06-01  Michael Smith <msmith@fluendo.com>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_do_seek):

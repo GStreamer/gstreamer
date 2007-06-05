@@ -459,6 +459,69 @@ GST_START_TEST (test_mpl2)
 
 GST_END_TEST;
 
+GST_START_TEST (test_subviewer)
+{
+  SubParseInputChunk subviewer_input[] = {
+    {
+          "[INFORMATION]\n"
+          "[TITLE]xxxxxxxxxx\n"
+          "[AUTHOR]xxxxxxxx\n"
+          "[SOURCE]xxxxxxxxxxxxxxxx\n"
+          "[FILEPATH]\n"
+          "[DELAY]0\n"
+          "[COMMENT]\n"
+          "[END INFORMATION]\n"
+          "[SUBTITLE]\n"
+          "[COLF]&HFFFFFF,[STYLE]bd,[SIZE]18,[FONT]Arial\n"
+          "00:00:41.00,00:00:44.40\n"
+          "The Age of Gods was closing.\n"
+          "Eternity had come to an end.\n"
+          "\n", 41 * GST_SECOND, 44 * GST_SECOND + 40 * GST_MSECOND,
+        "The Age of Gods was closing.\nEternity had come to an end."}, {
+          "00:00:55.00,00:00:58.40\n"
+          "The heavens shook as the armies\n"
+          "of Falis, God of Light...\n\n", 55 * GST_SECOND,
+          58 * GST_SECOND + 40 * GST_MSECOND,
+        "The heavens shook as the armies\nof Falis, God of Light..."}
+  };
+
+  do_test (subviewer_input, G_N_ELEMENTS (subviewer_input), "text/plain");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_subviewer2)
+{
+  SubParseInputChunk subviewer2_input[] = {
+    {
+          "[INFORMATION]\n"
+          "[TITLE]xxxxxxxxxx\n"
+          "[AUTHOR]xxxxxxxxxx\n"
+          "[SOURCE]xxxxxxxxxx\n"
+          "[PRG]\n"
+          "[FILEPATH]\n"
+          "[DELAY]0\n"
+          "[CD TRACK]0\n"
+          "[COMMENT]\n"
+          "[END INFORMATION]\n"
+          "[SUBTITLE]\n"
+          "[COLF]&H00FFFF,[STYLE]no,[SIZE]12,[FONT]Courier New\n"
+          "00:00:07.00,00:00:11.91\n"
+          "THERE IS A PLACE ON EARTH WHERE IT[br]IS STILL THE MORNING OF LIFE...\n\n",
+          7 * GST_SECOND, 11 * GST_SECOND + 91 * GST_MSECOND,
+        "THERE IS A PLACE ON EARTH WHERE IT\nIS STILL THE MORNING OF LIFE..."}, {
+          "00:00:12.48,00:00:15.17\n"
+          "AND THE GREAT HERDS RUN FREE.[br]SO WHAT?!\n\n",
+          12 * GST_SECOND + 48 * GST_MSECOND,
+          15 * GST_SECOND + 17 * GST_MSECOND,
+        "AND THE GREAT HERDS RUN FREE.\nSO WHAT?!"}
+  };
+
+  do_test (subviewer2_input, G_N_ELEMENTS (subviewer2_input), "text/plain");
+}
+
+GST_END_TEST;
+
 /* TODO:
  *  - add/modify tests so that lines aren't dogfed to the parsers in complete
  *    lines or sets of complete lines, but rather in random chunks
@@ -482,6 +545,8 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_tmplayer_style4_with_bogus_lines);
   tcase_add_test (tc_chain, test_microdvd_with_fps);
   tcase_add_test (tc_chain, test_mpl2);
+  tcase_add_test (tc_chain, test_subviewer);
+  tcase_add_test (tc_chain, test_subviewer2);
   return s;
 }
 
