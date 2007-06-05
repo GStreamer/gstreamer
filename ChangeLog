@@ -1,5 +1,13 @@
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_parse_skeleton_fisbone),
+	(gst_ogg_pad_submit_packet), (gst_ogg_demux_perform_seek),
+	(gst_ogg_demux_read_chain), (gst_ogg_demux_collect_chain_info):
+	consideratly speedup ogg chain detection by not trying to find a base
+	timestamp for skeleton streams. 
+
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
 	* gst/tcp/gstmultifdsink.c: (gst_client_status_get_type),
 	(gst_multi_fd_sink_class_init), (gst_multi_fd_sink_add_full),
 	(gst_multi_fd_sink_remove_flush),

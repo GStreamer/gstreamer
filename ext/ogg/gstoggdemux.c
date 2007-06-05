@@ -598,7 +598,7 @@ gst_ogg_pad_parse_skeleton_fisbone (GstOggPad * pad, ogg_packet * packet)
         fisbone_pad->granuleshift);
 
     GST_INFO_OBJECT (pad->ogg, "skeleton fisbone parsed "
-        "(serialno: %" G_GUINT32_FORMAT " start time: %" GST_TIME_FORMAT
+        "(serialno: %08x start time: %" GST_TIME_FORMAT
         " granulerate_n: %" G_GINT64_FORMAT " granulerate_d: %" G_GINT64_FORMAT
         " preroll: %" G_GUINT32_FORMAT " granuleshift: %d)",
         serialno, GST_TIME_ARGS (fisbone_pad->start_time),
@@ -2390,6 +2390,9 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     for (i = 0; i < chain->streams->len; i++) {
       GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
+      GST_LOG_OBJECT (ogg, "serial %08lx time %" GST_TIME_FORMAT, pad->serialno,
+          GST_TIME_ARGS (pad->start_time));
+
       if (pad->serialno == serial) {
         known_serial = TRUE;
 
@@ -2404,14 +2407,16 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
         gst_ogg_pad_submit_page (pad, &op);
       }
       /* the timestamp will be filled in when we submit the pages */
-      done &= (pad->start_time != GST_CLOCK_TIME_NONE);
-      GST_LOG_OBJECT (ogg, "done %08lx now %d", serial, done);
+      if (!pad->is_skeleton)
+        done &= (pad->start_time != GST_CLOCK_TIME_NONE);
+      GST_LOG_OBJECT (ogg, "done %08lx now %d", pad->serialno, done);
     }
 
     /* we read a page not belonging to the current chain: seek back to the
      * beginning of the chain
      */
     if (!known_serial) {
+      GST_LOG_OBJECT (ogg, "unknown serial %08lx", serial);
       gst_ogg_demux_seek (ogg, offset);
       break;
     }
@@ -2574,6 +2579,8 @@ gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
   chain->total_time = GST_CLOCK_TIME_NONE;
   chain->segment_start = G_MAXINT64;
 
+  GST_DEBUG_OBJECT (ogg, "trying to collect chain info");
+
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
@@ -2590,6 +2597,8 @@ gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
   if (chain->segment_stop != GST_CLOCK_TIME_NONE
       && chain->segment_start != G_MAXINT64)
     chain->total_time = chain->segment_stop - chain->segment_start;
+
+  GST_DEBUG_OBJECT (ogg, "return %d", res);
 
   return res;
 }
