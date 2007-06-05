@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2004-07-15 22:30+0200\n"
+"POT-Creation-Date: 2007-05-25 19:18+0200\n"
 "PO-Revision-Date: 2004-08-07 23:46+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -15,94 +15,118 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:160
+#: gst/gst.c:301
 msgid "Print the GStreamer version"
 msgstr "Printo versionin e GStreamer"
 
-#: gst/gst.c:162
+#: gst/gst.c:303
 msgid "Make all warnings fatal"
 msgstr "Bëj që të gjithë paralajmërimet të jenë fatale"
 
-#: gst/gst.c:166
+#: gst/gst.c:307
 msgid "Print available debug categories and exit"
 msgstr "Printo kategoritë e debug në dispozicion dhe dil"
 
-#: gst/gst.c:169
-msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "Niveli i prezgjedhur i debug nga 1 (vetëm gabimi) në 5 (gjithçka) ose 0 për jo output"
+#: gst/gst.c:311
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Niveli i prezgjedhur i debug nga 1 (vetëm gabimi) në 5 (gjithçka) ose 0 për "
+"jo output"
 
-#: gst/gst.c:171
+#: gst/gst.c:313
 msgid "LEVEL"
 msgstr "NIVELI"
 
-#: gst/gst.c:173
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Lista e category_name, ndarë me presje:etiketë çifte për të përcaktuar etiketa specifike për kategoritë individuale. Shembull: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+#: gst/gst.c:315
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Lista e category_name, ndarë me presje:etiketë çifte për të përcaktuar "
+"etiketa specifike për kategoritë individuale. Shembull: GST_AUTOPLUG:5,"
+"GST_ELEMENT_*:3"
 
-#: gst/gst.c:176
+#: gst/gst.c:318
 msgid "LIST"
 msgstr "LISTË"
 
-#: gst/gst.c:178
+#: gst/gst.c:320
 msgid "Disable colored debugging output"
 msgstr "Ç'aktivo output shumëngjyrësh të debug"
 
-#: gst/gst.c:180
+#: gst/gst.c:323
 msgid "Disable debugging"
 msgstr "Ç'aktivo debug"
 
-#: gst/gst.c:184
-msgid "Disable accelerated CPU instructions"
-msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"
-
-#: gst/gst.c:186
+#: gst/gst.c:327
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Aktivo kërkesën e plugin të ngarkimit të diagnostikimeve"
 
-#: gst/gst.c:188
+#: gst/gst.c:331
+msgid "Colon-separated paths containing plugins"
+msgstr ""
+
+#: gst/gst.c:331
 msgid "PATHS"
 msgstr "POZICIONET"
 
-#: gst/gst.c:191
-msgid "Comma-separated list of plugins to preload in addition to the list stored in envronment variable GST_PLUGIN_PATH"
-msgstr "Lista e plugin, të ndarë me presje, që duhen parangarkuar në plotësim të listës së regjistruar tek e ndryshueshmja e ambientit GST_PLUGIN_PATH"
+#: gst/gst.c:334
+#, fuzzy
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Lista e plugin, të ndarë me presje, që duhen parangarkuar në plotësim të "
+"listës së regjistruar tek e ndryshueshmja e ambientit GST_PLUGIN_PATH"
 
-#: gst/gst.c:193
+#: gst/gst.c:336
 msgid "PLUGINS"
 msgstr "PLUGINS"
 
-#: gst/gst.c:196
+#: gst/gst.c:339
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr "Ç'aktivo regjistrimin e dështimeve të segmentuara gjatë ngarkimit të plugin"
+msgstr ""
+"Ç'aktivo regjistrimin e dështimeve të segmentuara gjatë ngarkimit të plugin"
 
-#: gst/gst.c:199
-msgid "SCHEDULER"
-msgstr "PLANIFIKUES"
+#: gst/gst.c:344
+msgid "Disable the use of fork() while scanning the registry"
+msgstr ""
 
-#: gst/gst.c:201
-msgid "Registry to use"
-msgstr "Regjistri që duhet përdorur"
+#: gst/gst.c:365
+msgid "GStreamer Options"
+msgstr ""
 
-#: gst/gst.c:201
-msgid "REGISTRY"
-msgstr "REGJISTRI"
+#: gst/gst.c:366
+#, fuzzy
+msgid "Show GStreamer Options"
+msgstr "Printo versionin e GStreamer"
 
-#: gst/gst.c:214
+#: gst/gst.c:744
 #, c-format
-msgid "path list for loading plugins (separated by '%s')"
-msgstr "pozicioni i listës për ngarkimin e plugins (ndarë me '%s')"
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
-#: gst/gst.c:218
+#: gst/gst.c:780 gst/gst.c:789 gst/gst.c:836
 #, c-format
-msgid "Scheduler to use (default is '%s')"
-msgstr "Planifikuesi që duhet përdorur (i prezgjedhuri është '%s')"
+msgid "Error re-scanning registry %s: %s"
+msgstr ""
 
-#: gst/gstelement.c:261
+#: gst/gst.c:851
+#, c-format
+msgid "Error re-scanning registry %s"
+msgstr ""
+
+#: gst/gst.c:1135
+msgid "Unknown option"
+msgstr ""
+
+#: gst/gstelement.c:290 gst/gstutils.c:2178
 #, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "GABIM: nga elementi %s: %s\n"
 
-#: gst/gstelement.c:263
+#: gst/gstelement.c:292 gst/gstutils.c:2180 tools/gst-launch.c:455
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -111,725 +135,1011 @@ msgstr ""
 "Informacione shtesë të debug:\n"
 "%s\n"
 
-#: gst/gsterror.c:56
+#: gst/gsterror.c:139
 msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer ndeshi në një gabim të përgjithshëm të librarisë bazë."
 
-#: gst/gsterror.c:58 gst/gsterror.c:95 gst/gsterror.c:115 gst/gsterror.c:145
-msgid "GStreamer developers were too lazy to assign an error code to this error.  Please file a bug."
-msgstr "Zhvilluesit e GStreamer ishin tepër të lodhur për t'i caktuar një kod gabimi këtij difekti.  Ju lutem dërgoni një raport."
+#: gst/gsterror.c:141 gst/gsterror.c:181 gst/gsterror.c:201 gst/gsterror.c:232
+#, fuzzy
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+"Zhvilluesit e GStreamer ishin tepër të lodhur për t'i caktuar një kod gabimi "
+"këtij difekti.  Ju lutem dërgoni një raport."
 
-#: gst/gsterror.c:61
-msgid "Internal GStreamer error: code not implemented.  File a bug."
+#: gst/gsterror.c:144
+#, fuzzy
+msgid "Internal GStreamer error: code not implemented."
 msgstr "Gabim i brendshëm i GStreamer: kodi mungon.  Raporto bug."
 
-#: gst/gsterror.c:63
-msgid "Internal GStreamer error: state change failed.  File a bug."
-msgstr "Gabim i brendshëm i GStreamer: ndryshimi i gjendjes dështoi.  Raporto bug."
+#: gst/gsterror.c:146
+#, fuzzy
+msgid "Internal GStreamer error: state change failed."
+msgstr ""
+"Gabim i brendshëm i GStreamer: ndryshimi i gjendjes dështoi.  Raporto bug."
 
-#: gst/gsterror.c:65
-msgid "Internal GStreamer error: pad problem.  File a bug."
+#: gst/gsterror.c:147
+#, fuzzy
+msgid "Internal GStreamer error: pad problem."
 msgstr "Gabim i brendshëm i GStreamer: problem me shtegun.  Raporto bug."
 
-#: gst/gsterror.c:67
-msgid "Internal GStreamer error: thread problem.  File a bug."
+#: gst/gsterror.c:149
+#, fuzzy
+msgid "Internal GStreamer error: thread problem."
 msgstr "Gabim i brendshëm i GStreamer: problem i thread.  Raporto bug."
 
-#: gst/gsterror.c:69
-msgid "Internal GStreamer error: scheduler problem.  File a bug."
-msgstr "Gabim i brendshëm i GStreamer: problem planifikimi.  Raporto bug."
-
-#: gst/gsterror.c:71
-msgid "Internal GStreamer error: negotiation problem.  File a bug."
+#: gst/gsterror.c:151
+#, fuzzy
+msgid "Internal GStreamer error: negotiation problem."
 msgstr "Gabim i brendshëm i GStreamer: problem negocimi.  Raporto bug."
 
-#: gst/gsterror.c:73
-msgid "Internal GStreamer error: event problem.  File a bug."
+#: gst/gsterror.c:153
+#, fuzzy
+msgid "Internal GStreamer error: event problem."
 msgstr "Gabim i brendshëm i GStreamer: problem ndodhie.  Raporto bug."
 
-#: gst/gsterror.c:75
-msgid "Internal GStreamer error: seek problem.  File a bug."
+#: gst/gsterror.c:155
+#, fuzzy
+msgid "Internal GStreamer error: seek problem."
 msgstr "Gabim i brendshëm i GStreamer: problem kërkimi.  Raporto bug."
 
-#: gst/gsterror.c:77
-msgid "Internal GStreamer error: caps problem.  File a bug."
+#: gst/gsterror.c:157
+#, fuzzy
+msgid "Internal GStreamer error: caps problem."
 msgstr "Gabim i brendshëm i GStreamer: problem drejtimi.  Raporto bug."
 
-#: gst/gsterror.c:79
-msgid "Internal GStreamer error: tag problem.  File a bug."
+#: gst/gsterror.c:158
+#, fuzzy
+msgid "Internal GStreamer error: tag problem."
 msgstr "Gabim i brendshëm i GStreamer: problem me tag.  Raporto bug."
 
-#: gst/gsterror.c:93 gst/gsterror.c:113 gst/gsterror.c:143
+#: gst/gsterror.c:160
+msgid "Your GStreamer installation is missing a plug-in."
+msgstr ""
+
+#: gst/gsterror.c:162
+#, fuzzy
+msgid "Internal GStreamer error: clock problem."
+msgstr "Gabim i brendshëm i GStreamer: problem kërkimi.  Raporto bug."
+
+#: gst/gsterror.c:164
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr ""
+
+#: gst/gsterror.c:179
 msgid "GStreamer encountered a general supporting library error."
 msgstr "GStreamer ndeshi në një gabim librarie të suportit të përgjithshëm."
 
-#: gst/gsterror.c:97
+#: gst/gsterror.c:183
 msgid "Could not initialize supporting library."
 msgstr "E pamundur nisja e librarisë mbështetëse."
 
-#: gst/gsterror.c:98 gst/gsterror.c:99
+#: gst/gsterror.c:184
 msgid "Could not close supporting library."
 msgstr "E pamundur mbyllja e librarisë mbështetëse."
 
-#: gst/gsterror.c:117
+#: gst/gsterror.c:185
+#, fuzzy
+msgid "Could not configure supporting library."
+msgstr "E pamundur mbyllja e librarisë mbështetëse."
+
+#: gst/gsterror.c:199
+#, fuzzy
+msgid "GStreamer encountered a general resource error."
+msgstr "GStreamer ndeshi në një gabim të përgjithshëm të librarisë bazë."
+
+#: gst/gsterror.c:203
 msgid "Resource not found."
 msgstr "Burimi nuk u gjet."
 
-#: gst/gsterror.c:118
+#: gst/gsterror.c:204
 msgid "Resource busy or not available."
 msgstr "Burimi është i zënë ose jo në dispozicion."
 
-#: gst/gsterror.c:119
+#: gst/gsterror.c:205
 msgid "Could not open resource for reading."
 msgstr "E pamundur hapja e burimit për lexim."
 
-#: gst/gsterror.c:120
+#: gst/gsterror.c:206
 msgid "Could not open resource for writing."
 msgstr "E pamundur hapja e burimit për shkrim."
 
-#: gst/gsterror.c:122
+#: gst/gsterror.c:208
 msgid "Could not open resource for reading and writing."
 msgstr "E pamundur hapja e burimit për lexim dhe shkrim."
 
-#: gst/gsterror.c:123
+#: gst/gsterror.c:209
 msgid "Could not close resource."
 msgstr "E pamundur mbyllja e burimit."
 
-#: gst/gsterror.c:124
+#: gst/gsterror.c:210
 msgid "Could not read from resource."
 msgstr "I pamundur leximi nga burimi."
 
-#: gst/gsterror.c:125
+#: gst/gsterror.c:211
 msgid "Could not write to resource."
 msgstr "I pamundur hkrimi në burim."
 
-#: gst/gsterror.c:126
+#: gst/gsterror.c:212
 msgid "Could not perform seek on resource."
 msgstr "E pamundur kryerja e kërkimit në burim."
 
-#: gst/gsterror.c:127
+#: gst/gsterror.c:213
 msgid "Could not synchronize on resource."
 msgstr "Sinkronizim i pamundur në burim."
 
-#: gst/gsterror.c:129
+#: gst/gsterror.c:215
 msgid "Could not get/set settings from/on resource."
 msgstr "E pamundur marrja/vendosja e rregullimeve nga/në burim."
 
-#: gst/gsterror.c:148
-msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr "Elementi nuk suporton trajtimin e kësaj vazhde. Ju lutem raporto një bug."
+#: gst/gsterror.c:216
+msgid "No space left on the resource."
+msgstr ""
 
-#: gst/gsterror.c:150
+#: gst/gsterror.c:230
+#, fuzzy
+msgid "GStreamer encountered a general stream error."
+msgstr "GStreamer ndeshi në një gabim të përgjithshëm të librarisë bazë."
+
+#: gst/gsterror.c:235
+msgid "Element doesn't implement handling of this stream. Please file a bug."
+msgstr ""
+"Elementi nuk suporton trajtimin e kësaj vazhde. Ju lutem raporto një bug."
+
+#: gst/gsterror.c:237
 msgid "Could not determine type of stream."
 msgstr "I pamundur përcaktimi i llojit të vazhdës."
 
-#: gst/gsterror.c:152
+#: gst/gsterror.c:239
 msgid "The stream is of a different type than handled by this element."
 msgstr "Vazhda është e një lloji të ndryshëm nga të trajtuarit nga ky element."
 
-#: gst/gsterror.c:154
+#: gst/gsterror.c:241
 msgid "There is no codec present that can handle the stream's type."
 msgstr "Asnjë kodues/dekodues në dispozicion për të trajtuar llojin e vazhdës."
 
-#: gst/gsterror.c:155
+#: gst/gsterror.c:242
 msgid "Could not decode stream."
 msgstr "I pamundur dekodifikimi i vazhdës."
 
-#: gst/gsterror.c:156
+#: gst/gsterror.c:243
 msgid "Could not encode stream."
 msgstr "I pamundur kodifikimi i vazhdës."
 
-#: gst/gsterror.c:157
+#: gst/gsterror.c:244
 msgid "Could not demultiplex stream."
 msgstr "I pamundur demultipleksimi i stream."
 
-#: gst/gsterror.c:158
+#: gst/gsterror.c:245
 msgid "Could not multiplex stream."
 msgstr "I pamundur multipleksimi i vazhdës."
 
-#: gst/gsterror.c:159
-msgid "Stream is of the wrong format."
+#: gst/gsterror.c:246
+#, fuzzy
+msgid "The stream is in the wrong format."
 msgstr "Vazhda është në një format të gabuar."
 
-#: gst/gsterror.c:207
+#: gst/gsterror.c:297
 #, c-format
 msgid "No error message for domain %s."
 msgstr "Asnjë mesazh gabimi për domain %s."
 
-#: gst/gsterror.c:215
+#: gst/gsterror.c:305
 #, c-format
 msgid "No standard error message for domain %s and code %d."
 msgstr "Asnjë mesazh gabimi standart për domain %s dhe kodin %d."
 
-#: gst/gsttag.c:83
+#: gst/gstpipeline.c:567
+msgid "Selected clock cannot be used in pipeline."
+msgstr ""
+
+#: gst/gsttaglist.c:97
 msgid "title"
 msgstr "titulli"
 
-#: gst/gsttag.c:83
+#: gst/gsttaglist.c:97
 msgid "commonly used title"
 msgstr "titulli i përdorur zakonisht"
 
-#: gst/gsttag.c:86
+#: gst/gsttaglist.c:100
 msgid "artist"
 msgstr "artisti"
 
-#: gst/gsttag.c:87
+#: gst/gsttaglist.c:101
 msgid "person(s) responsible for the recording"
 msgstr "personi(at) përgjegjës për regjistrimin"
 
-#: gst/gsttag.c:91
+#: gst/gsttaglist.c:105
 msgid "album"
 msgstr "albumi"
 
-#: gst/gsttag.c:92
+#: gst/gsttaglist.c:106
 msgid "album containing this data"
 msgstr "albumi që përmban këtë të dhënë"
 
-#: gst/gsttag.c:94
+#: gst/gsttaglist.c:108
 msgid "date"
 msgstr "data"
 
-#: gst/gsttag.c:95
-msgid "date the data was created (in Julian calendar days)"
+#: gst/gsttaglist.c:108
+#, fuzzy
+msgid "date the data was created (as a GDate structure)"
 msgstr "data e krijimit të së dhënës (në ditë të kalendarit Julian)"
 
-#: gst/gsttag.c:98
+#: gst/gsttaglist.c:111
 msgid "genre"
 msgstr "lloji"
 
-#: gst/gsttag.c:99
+#: gst/gsttaglist.c:112
 msgid "genre this data belongs to"
 msgstr "lloji së cilit i takon e dhëna"
 
-#: gst/gsttag.c:102
+#: gst/gsttaglist.c:115
 msgid "comment"
 msgstr "komenti"
 
-#: gst/gsttag.c:103
+#: gst/gsttaglist.c:116
 msgid "free text commenting the data"
 msgstr "tekst i lirë komentues i së dhënës"
 
-#: gst/gsttag.c:106
+#: gst/gsttaglist.c:119
+#, fuzzy
+msgid "extended comment"
+msgstr "komenti"
+
+#: gst/gsttaglist.c:120
+#, fuzzy
+msgid "free text commenting the data in key=value or key[en]=comment form"
+msgstr "tekst i lirë komentues i së dhënës"
+
+#: gst/gsttaglist.c:124
 msgid "track number"
 msgstr "numri i pistës"
 
-#: gst/gsttag.c:107
+#: gst/gsttaglist.c:125
 msgid "track number inside a collection"
 msgstr "numri i pjesës në brendësi të një koleksioni"
 
-#: gst/gsttag.c:110
+#: gst/gsttaglist.c:128
 msgid "track count"
 msgstr "numërimi i pjesës"
 
-#: gst/gsttag.c:111
+#: gst/gsttaglist.c:129
 msgid "count of tracks inside collection this track belongs to"
 msgstr "numurimi i pjesëve në brendësi të koleksionit të cilit i përket pjesa"
 
-#: gst/gsttag.c:115
+#: gst/gsttaglist.c:133
 msgid "disc number"
 msgstr "numri i diskut"
 
-#: gst/gsttag.c:116
+#: gst/gsttaglist.c:134
 msgid "disc number inside a collection"
 msgstr "numri i diskut në brendësi të një koleksioni"
 
-#: gst/gsttag.c:119
+#: gst/gsttaglist.c:137
 msgid "disc count"
 msgstr "numurimi i diskut"
 
-#: gst/gsttag.c:120
+#: gst/gsttaglist.c:138
 msgid "count of discs inside collection this disc belongs to"
 msgstr "numurimi i disqeve në brendësi të koleksionit të cilit i përket disku"
 
-#: gst/gsttag.c:124
+#: gst/gsttaglist.c:142
 msgid "location"
 msgstr "pozicioni"
 
-#: gst/gsttag.c:125
+#: gst/gsttaglist.c:143
 msgid "original location of file as a URI"
 msgstr "vendodhja orgjinale e file si një URI"
 
-#: gst/gsttag.c:129
+#: gst/gsttaglist.c:147
 msgid "description"
 msgstr "përshkrimi"
 
-#: gst/gsttag.c:130
+#: gst/gsttaglist.c:148
 msgid "short text describing the content of the data"
 msgstr "teks i shkurtër përshkrues i përmbajtjes së së dhënës"
 
-#: gst/gsttag.c:133
+#: gst/gsttaglist.c:151
 msgid "version"
 msgstr "versioni"
 
-#: gst/gsttag.c:133
+#: gst/gsttaglist.c:151
 msgid "version of this data"
 msgstr "versioni i kësaj të dhëne"
 
-#: gst/gsttag.c:136
+#: gst/gsttaglist.c:154
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttag.c:138
+#: gst/gsttaglist.c:156
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "International Standard Recording Code - shiko http://www.ifpi.org/isrc/"
+msgstr ""
+"International Standard Recording Code - shiko http://www.ifpi.org/isrc/"
 
-#: gst/gsttag.c:140
+#: gst/gsttaglist.c:158
 msgid "organization"
 msgstr "organizata"
 
-#: gst/gsttag.c:143
+#: gst/gsttaglist.c:161
 msgid "copyright"
 msgstr "copyright"
 
-#: gst/gsttag.c:143
+#: gst/gsttaglist.c:161
 msgid "copyright notice of the data"
 msgstr "shënime mbi të drejtat e së dhënës"
 
-#: gst/gsttag.c:146
+#: gst/gsttaglist.c:164
 msgid "contact"
 msgstr "kontakti"
 
-#: gst/gsttag.c:146
+#: gst/gsttaglist.c:164
 msgid "contact information"
 msgstr "informacione në lidhje me kontaktin"
 
-#: gst/gsttag.c:148
+#: gst/gsttaglist.c:166
 msgid "license"
 msgstr "liçenca"
 
-#: gst/gsttag.c:148
+#: gst/gsttaglist.c:166
 msgid "license of data"
 msgstr "liçenca e së dhënës"
 
-#: gst/gsttag.c:151
+#: gst/gsttaglist.c:169
 msgid "performer"
 msgstr "interpretuesi"
 
-#: gst/gsttag.c:152
+#: gst/gsttaglist.c:170
 msgid "person(s) performing"
 msgstr "personi(at) interpretues"
 
-#: gst/gsttag.c:155
+#: gst/gsttaglist.c:173
 msgid "duration"
 msgstr "kohëzgjatja"
 
-#: gst/gsttag.c:155
+#: gst/gsttaglist.c:173
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "gjatësia në njësi kohore të GStreamer (nanosekonda)"
 
-#: gst/gsttag.c:158
+#: gst/gsttaglist.c:176
 msgid "codec"
 msgstr "codec"
 
-#: gst/gsttag.c:159
+#: gst/gsttaglist.c:177
 msgid "codec the data is stored in"
 msgstr "codec ku janë regjistruar të dhënat"
 
-#: gst/gsttag.c:162
+#: gst/gsttaglist.c:180
 msgid "video codec"
 msgstr "video codec"
 
-#: gst/gsttag.c:162
+#: gst/gsttaglist.c:180
 msgid "codec the video data is stored in"
 msgstr "codec ku janë regjistruar të dhënat video"
 
-#: gst/gsttag.c:165
+#: gst/gsttaglist.c:183
 msgid "audio codec"
 msgstr "audio codec"
 
-#: gst/gsttag.c:165
+#: gst/gsttaglist.c:183
 msgid "codec the audio data is stored in"
 msgstr "codec ku janë regjistruar të dhënat audio"
 
-#: gst/gsttag.c:167
+#: gst/gsttaglist.c:185
 msgid "bitrate"
 msgstr "bitrate"
 
-#: gst/gsttag.c:167
+#: gst/gsttaglist.c:185
 msgid "exact or average bitrate in bits/s"
 msgstr "bitrate preçize ose mesatare në bits/s"
 
-#: gst/gsttag.c:169
+#: gst/gsttaglist.c:187
 msgid "nominal bitrate"
 msgstr "bitrate nominale"
 
-#: gst/gsttag.c:169
+#: gst/gsttaglist.c:187
 msgid "nominal bitrate in bits/s"
 msgstr "bitrate nominale në bits/s"
 
-#: gst/gsttag.c:171
+#: gst/gsttaglist.c:189
 msgid "minimum bitrate"
 msgstr "bitrate minimum"
 
-#: gst/gsttag.c:171
+#: gst/gsttaglist.c:189
 msgid "minimum bitrate in bits/s"
 msgstr "bitrate minimum në bits/s"
 
-#: gst/gsttag.c:173
+#: gst/gsttaglist.c:191
 msgid "maximum bitrate"
 msgstr "bitrate maksimum"
 
-#: gst/gsttag.c:173
+#: gst/gsttaglist.c:191
 msgid "maximum bitrate in bits/s"
 msgstr "bitrate maksimum në bits/s"
 
-#: gst/gsttag.c:176
+#: gst/gsttaglist.c:194
 msgid "encoder"
 msgstr "kodifikuesi"
 
-#: gst/gsttag.c:176
+#: gst/gsttaglist.c:194
 msgid "encoder used to encode this stream"
 msgstr "kodifikuesi i përdorur për të kodifikuar këtë fluks"
 
-#: gst/gsttag.c:179
+#: gst/gsttaglist.c:197
 msgid "encoder version"
 msgstr "versioni i kodifikuesit"
 
-#: gst/gsttag.c:180
+#: gst/gsttaglist.c:198
 msgid "version of the encoder used to encode this stream"
 msgstr "versioni i kodifikuesit të përdorur për të kodifikuar këtë fluks"
 
-#: gst/gsttag.c:182
+#: gst/gsttaglist.c:200
 msgid "serial"
 msgstr "seria"
 
-#: gst/gsttag.c:182
+#: gst/gsttaglist.c:200
 msgid "serial number of track"
 msgstr "numri serisë së pjesës"
 
-#: gst/gsttag.c:184
+#: gst/gsttaglist.c:202
 msgid "replaygain track gain"
 msgstr "ecuria i pjesës në replygain"
 
-#: gst/gsttag.c:184
+#: gst/gsttaglist.c:202
 msgid "track gain in db"
 msgstr "rritja e pjesës në db"
 
-#: gst/gsttag.c:186
+#: gst/gsttaglist.c:204
 msgid "replaygain track peak"
 msgstr "maksimumi i pjesës në replygain"
 
-#: gst/gsttag.c:186
+#: gst/gsttaglist.c:204
 msgid "peak of the track"
 msgstr "skaji i pistës"
 
-#: gst/gsttag.c:188
+#: gst/gsttaglist.c:206
 msgid "replaygain album gain"
 msgstr "replaygain album gain"
 
-#: gst/gsttag.c:188
+#: gst/gsttaglist.c:206
 msgid "album gain in db"
 msgstr "gain i albumit në db"
 
-#: gst/gsttag.c:190
+#: gst/gsttaglist.c:208
 msgid "replaygain album peak"
 msgstr "replaygain album peak"
 
-#: gst/gsttag.c:190
+#: gst/gsttaglist.c:208
 msgid "peak of the album"
 msgstr "kulmi i albumit"
 
-#: gst/gsttag.c:229
+#: gst/gsttaglist.c:210
+#, fuzzy
+msgid "replaygain reference level"
+msgstr "maksimumi i pjesës në replygain"
+
+#: gst/gsttaglist.c:211
+msgid "reference level of track and album gain values"
+msgstr ""
+
+#: gst/gsttaglist.c:213
+msgid "language code"
+msgstr ""
+
+#: gst/gsttaglist.c:214
+msgid "language code for this stream, conforming to ISO-639-1"
+msgstr ""
+
+#: gst/gsttaglist.c:216
+msgid "image"
+msgstr ""
+
+#: gst/gsttaglist.c:216
+#, fuzzy
+msgid "image related to this stream"
+msgstr "kodifikuesi i përdorur për të kodifikuar këtë fluks"
+
+#: gst/gsttaglist.c:218
+msgid "preview image"
+msgstr ""
+
+#: gst/gsttaglist.c:218
+msgid "preview image related to this stream"
+msgstr ""
+
+#: gst/gsttaglist.c:220
+msgid "beats per minute"
+msgstr ""
+
+#: gst/gsttaglist.c:220
+msgid "number of beats per minute in audio"
+msgstr ""
+
+#: gst/gsttaglist.c:260
 msgid ", "
 msgstr ", "
 
-#: gst/autoplug/gstspider.c:458
-#, c-format
-msgid "There is no element present to handle the stream's mime type %s."
-msgstr "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
-
-#: gst/elements/gstfilesink.c:259
-msgid "No file name specified for writing."
-msgstr "Nuk është përcaktuar asnjë emër file për tu shkruar."
-
-#: gst/elements/gstfilesink.c:266
-#, c-format
-msgid "Could not open file \"%s\" for writing."
-msgstr "E pamundur hapja e file \"%s\" në shkrim."
-
-#: gst/elements/gstfilesink.c:285
-#, c-format
-msgid "Error closing file \"%s\"."
-msgstr "Gabim gjatë mbylljes së file \"%s\"."
-
-#: gst/elements/gstfilesink.c:357 gst/elements/gstfilesink.c:392
-#: gst/elements/gstfilesink.c:445
-#, c-format
-msgid "Error while writing to file \"%s\"."
-msgstr "Gabim gjatë shkrimit tek file \"%s\"."
-
-#: gst/elements/gstfilesrc.c:754 gst/elements/gstmultifilesrc.c:248
-msgid "No file name specified for reading."
-msgstr "Nuk është përcaktuar asnjë emër file për tu lexuar."
-
-#: gst/elements/gstfilesrc.c:769 gst/elements/gstmultifilesrc.c:256
-#, c-format
-msgid "Could not open file \"%s\" for reading."
-msgstr "E pamundur hapja e file \"%s\" për lexim."
-
-#: gst/elements/gstfilesrc.c:780
-#, c-format
-msgid "\"%s\" is a directory."
-msgstr "\"%s\" është një directory."
-
-#: gst/elements/gstfilesrc.c:786
-#, c-format
-msgid "File \"%s\" is a socket."
-msgstr "File \"%s\" është një socket."
-
-#: gst/elements/gstidentity.c:267
-msgid "Failed after iterations as requested."
-msgstr "Dështoi mbas përsëritjeve sikurse të kërkuara."
-
-#: gst/elements/gsttypefindelement.c:148
-msgid "caps"
-msgstr "mbrojtëse"
-
-#: gst/elements/gsttypefindelement.c:149
-msgid "detected capabilities in stream"
-msgstr "u zbuluan mundësi në fluks"
-
-#: gst/elements/gsttypefindelement.c:152
-msgid "minimum"
-msgstr "minimum"
-
-#: gst/elements/gsttypefindelement.c:156
-msgid "maximum"
-msgstr "maksimum"
-
-#: gst/parse/grammar.y:186
+#: gst/parse/grammar.y:216
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
 msgstr "u specifikua bin bosh \"%s\", nuk lejohet"
 
-#: gst/parse/grammar.y:191
+#: gst/parse/grammar.y:225
 #, c-format
 msgid "no bin \"%s\", skipping"
 msgstr "asnjë bin \"%s\", u kapërcye"
 
-#: gst/parse/grammar.y:262
+#: gst/parse/grammar.y:306
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
 msgstr "asnjë pronësi \"%s\" tek elementi \"%s\""
 
-#: gst/parse/grammar.y:275
+#: gst/parse/grammar.y:319
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
 msgstr "e pamundur vendosja e pronësisë \"%s\" tek elementi \"%s\" në \"%s"
 
-#: gst/parse/grammar.y:460
+#: gst/parse/grammar.y:461
 #, c-format
 msgid "could not link %s to %s"
 msgstr "e pamundur lidhja e %s me %s"
 
-#: gst/parse/grammar.y:505
+#: gst/parse/grammar.y:508
 #, c-format
 msgid "no element \"%s\""
 msgstr "asnjë element \"%s\""
 
-#: gst/parse/grammar.y:556
+#: gst/parse/grammar.y:555
 #, c-format
 msgid "could not parse caps \"%s\""
 msgstr "i pamundur analizimi i caps \"%s\""
 
-#: gst/parse/grammar.y:578 gst/parse/grammar.y:626 gst/parse/grammar.y:642
-#: gst/parse/grammar.y:700
+#: gst/parse/grammar.y:577 gst/parse/grammar.y:625 gst/parse/grammar.y:641
+#: gst/parse/grammar.y:704
 msgid "link without source element"
 msgstr "lidhje ma element burues"
 
-#: gst/parse/grammar.y:584 gst/parse/grammar.y:623 gst/parse/grammar.y:709
+#: gst/parse/grammar.y:583 gst/parse/grammar.y:622 gst/parse/grammar.y:713
 msgid "link without sink element"
 msgstr "lidhje pa elementin sink"
 
-#: gst/parse/grammar.y:660
+#: gst/parse/grammar.y:659
 #, c-format
 msgid "no source element for URI \"%s\""
 msgstr "asnjë element burues për URI \"%s\""
 
-#: gst/parse/grammar.y:670
+#: gst/parse/grammar.y:669
 #, c-format
 msgid "no element to link URI \"%s\" to"
 msgstr "asnjë element për të lidhur URI \"%s\" me"
 
-#: gst/parse/grammar.y:678
+#: gst/parse/grammar.y:677
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr "asnjë element shpërndarës për URI \"%s\""
 
-#: gst/parse/grammar.y:682
+#: gst/parse/grammar.y:684
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr "e pamundur lidhja e elementit sink për URI \"%s\""
 
-#: gst/parse/grammar.y:694
+#: gst/parse/grammar.y:698
 msgid "empty pipeline not allowed"
 msgstr "nuk lejohet konduktori bosh"
 
-#: tools/gst-inspect.c:1115
+#: libs/gst/base/gstbasesrc.c:1571
+msgid "Internal clock error."
+msgstr ""
+
+#: libs/gst/base/gstbasesrc.c:1810 libs/gst/base/gstbasesrc.c:1821
+msgid "Internal data flow error."
+msgstr ""
+
+#: libs/gst/base/gstbasesink.c:2122
+msgid "Internal data flow problem."
+msgstr ""
+
+#: libs/gst/base/gstbasesink.c:2254
+msgid "Internal data stream error."
+msgstr ""
+
+#: plugins/elements/gstcapsfilter.c:108
+msgid "Filter caps"
+msgstr ""
+
+#: plugins/elements/gstcapsfilter.c:109
+msgid "Restrict the possible allowed capabilities (NULL means ANY)"
+msgstr ""
+
+#: plugins/elements/gstfdsink.c:332
+#, fuzzy, c-format
+msgid "Error while writing to file descriptor \"%d\"."
+msgstr "Gabim gjatë shkrimit tek file \"%s\"."
+
+#: plugins/elements/gstfdsink.c:372
+#, c-format
+msgid "File descriptor \"%d\" is not valid."
+msgstr ""
+
+#: plugins/elements/gstfilesink.c:260
+msgid "No file name specified for writing."
+msgstr "Nuk është përcaktuar asnjë emër file për tu shkruar."
+
+#: plugins/elements/gstfilesink.c:266
+#, c-format
+msgid "Could not open file \"%s\" for writing."
+msgstr "E pamundur hapja e file \"%s\" në shkrim."
+
+#: plugins/elements/gstfilesink.c:288
+#, c-format
+msgid "Error closing file \"%s\"."
+msgstr "Gabim gjatë mbylljes së file \"%s\"."
+
+#: plugins/elements/gstfilesink.c:417
+#, fuzzy, c-format
+msgid "Error while seeking in file \"%s\"."
+msgstr "Gabim gjatë shkrimit tek file \"%s\"."
+
+#: plugins/elements/gstfilesink.c:424 plugins/elements/gstfilesink.c:484
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "Gabim gjatë shkrimit tek file \"%s\"."
+
+#: plugins/elements/gstfilesrc.c:968
+msgid "No file name specified for reading."
+msgstr "Nuk është përcaktuar asnjë emër file për tu lexuar."
+
+#: plugins/elements/gstfilesrc.c:980
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "E pamundur hapja e file \"%s\" për lexim."
+
+#: plugins/elements/gstfilesrc.c:989
+#, fuzzy, c-format
+msgid "Could not get info on \"%s\"."
+msgstr "E pamundur marrja/vendosja e rregullimeve nga/në burim."
+
+#: plugins/elements/gstfilesrc.c:996
+#, c-format
+msgid "\"%s\" is a directory."
+msgstr "\"%s\" është një directory."
+
+#: plugins/elements/gstfilesrc.c:1003
+#, c-format
+msgid "File \"%s\" is a socket."
+msgstr "File \"%s\" është një socket."
+
+#: plugins/elements/gstidentity.c:499
+msgid "Failed after iterations as requested."
+msgstr "Dështoi mbas përsëritjeve sikurse të kërkuara."
+
+#: plugins/elements/gsttypefindelement.c:192
+msgid "caps"
+msgstr "mbrojtëse"
+
+#: plugins/elements/gsttypefindelement.c:193
+msgid "detected capabilities in stream"
+msgstr "u zbuluan mundësi në fluks"
+
+#: plugins/elements/gsttypefindelement.c:196
+msgid "minimum"
+msgstr "minimum"
+
+#: plugins/elements/gsttypefindelement.c:200
+msgid "maximum"
+msgstr "maksimum"
+
+#: tools/gst-inspect.c:250
+msgid "Implemented Interfaces:\n"
+msgstr ""
+
+#: tools/gst-inspect.c:292
+msgid "readable"
+msgstr ""
+
+#: tools/gst-inspect.c:297
+#, fuzzy
+msgid "writable"
+msgstr "titulli"
+
+#: tools/gst-inspect.c:302
+msgid "controllable"
+msgstr ""
+
+#: tools/gst-inspect.c:926
+#, fuzzy
+msgid "Total count: "
+msgstr "numërimi i pjesës"
+
+#: tools/gst-inspect.c:927
+#, c-format
+msgid "%d plugin"
+msgid_plural "%d plugins"
+msgstr[0] ""
+msgstr[1] ""
+
+#: tools/gst-inspect.c:929
+#, fuzzy, c-format
+msgid "%d feature"
+msgid_plural "%d features"
+msgstr[0] "karakteristika"
+msgstr[1] "karakteristikat"
+
+#: tools/gst-inspect.c:1238
 msgid "Print all elements"
 msgstr "Printo të gjithë elementët"
 
-#: tools/gst-launch.c:91
-msgid "Execution ended after %"
-msgstr "Ekzekutimi përfundoi mbas %"
+#: tools/gst-inspect.c:1240
+msgid ""
+"Print a machine-parsable list of features the specified plugin provides.\n"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
+msgstr ""
 
-#: tools/gst-launch.c:91
-msgid " iterations (sum %"
-msgstr " përsëritjet (shuma %"
+#: tools/gst-inspect.c:1320
+#, fuzzy, c-format
+msgid "Could not load plugin file: %s\n"
+msgstr "E pamundur hapja e file \"%s\" në shkrim."
 
-#: tools/gst-launch.c:92
-msgid " ns, average %"
-msgstr " ns, mesatarja %"
+#: tools/gst-inspect.c:1325
+#, fuzzy, c-format
+msgid "No such element or plugin '%s'\n"
+msgstr "asnjë element burues për URI \"%s\""
 
-#: tools/gst-launch.c:92
-msgid " ns, min %"
-msgstr " ns, min %"
-
-#: tools/gst-launch.c:93
-msgid " ns, max %"
-msgstr " ns, max %"
-
-#: tools/gst-launch.c:93
-msgid " ns).\n"
-msgstr " ns).\n"
-
-#: tools/gst-launch.c:114
+#: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Përdorimi: gst-xmllaunch <file.xml> [ element.property=vlera ... ]\n"
 
-#: tools/gst-launch.c:122
+#: tools/gst-launch.c:88
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "GABIM: analizimi i file xml '%s' dështoi.\n"
 
-#: tools/gst-launch.c:128
+#: tools/gst-launch.c:94
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "GABIM: asnjë element i pipline të toplevel tek file '%s'.\n"
 
-#: tools/gst-launch.c:135
+#: tools/gst-launch.c:101
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "KUJDES: vetëm një element toplevel suportohet aktualisht."
 
-#: tools/gst-launch.c:146
+#: tools/gst-launch.c:112
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
-msgstr "GABIM: i pamundur analizimi i argumentit %d të rreshtit të komandës: %s.\n"
+msgstr ""
+"GABIM: i pamundur analizimi i argumentit %d të rreshtit të komandës: %s.\n"
 
-#: tools/gst-launch.c:157
+#: tools/gst-launch.c:123
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "KUJDES: elementi me emrin '%s' nuk u gjet.\n"
 
-#: tools/gst-launch.c:294
+#: tools/gst-launch.c:393
+#, fuzzy, c-format
+msgid "Got Message from element \"%s\" (%s): "
+msgstr "GABIM: nga elementi %s: %s\n"
+
+#: tools/gst-launch.c:419
+#, fuzzy, c-format
+msgid "Got EOS from element \"%s\".\n"
+msgstr "GABIM: nga elementi %s: %s\n"
+
+#: tools/gst-launch.c:427
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "NDRYSHIM I GJETUR      : u gjet nga elementi \"%s\".\n"
 
-#: tools/gst-launch.c:374
+#: tools/gst-launch.c:440
+#, c-format
+msgid ""
+"INFO:\n"
+"%s\n"
+msgstr ""
+
+#: tools/gst-launch.c:453
+#, fuzzy, c-format
+msgid "WARNING: from element %s: %s\n"
+msgstr "GABIM: nga elementi %s: %s\n"
+
+#: tools/gst-launch.c:487
+#, c-format
+msgid "Prerolled, waiting for buffering to finish...\n"
+msgstr ""
+
+#: tools/gst-launch.c:510
+#, c-format
+msgid "Done buffering, setting pipeline to PLAYING ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:518
+#, c-format
+msgid "Buffering, setting pipeline to PAUSED ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:533
+#, c-format
+msgid "Interrupt: Setting pipeline to PAUSED ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:571
 msgid "Output tags (also known as metadata)"
 msgstr "Tags e output (njohur gjithashtu si metadata)"
 
-#: tools/gst-launch.c:376
+#: tools/gst-launch.c:573
 msgid "Output status information and property notifications"
 msgstr "Njoftime të informacioneve dhe pronësisë së kondicionit të daljes"
 
-#: tools/gst-launch.c:378
+#: tools/gst-launch.c:575
+msgid "Output messages"
+msgstr ""
+
+#: tools/gst-launch.c:577
 msgid "Do not output status information of TYPE"
 msgstr "Mos jep informacionin e gjendjes së LLOJIT"
 
-#: tools/gst-launch.c:378
+#: tools/gst-launch.c:577
 msgid "TYPE1,TYPE2,..."
 msgstr "LLOJI1,LLOJI2,..."
 
-#: tools/gst-launch.c:381
+#: tools/gst-launch.c:580
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Ruaj prezantimin xml të pipeline tek FILE dhe dil"
 
-#: tools/gst-launch.c:381
+#: tools/gst-launch.c:580
 msgid "FILE"
 msgstr "FILE"
 
-#: tools/gst-launch.c:384
+#: tools/gst-launch.c:583
 msgid "Do not install a fault handler"
 msgstr "Mos instalo një ushqyes të dëmtuar"
 
-#: tools/gst-launch.c:386
+#: tools/gst-launch.c:585
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Printo shenjat e alloc (nëse aktivuar në kohën e kompilimit)"
 
-#: tools/gst-launch.c:388
-msgid "Number of times to iterate pipeline"
-msgstr "Numri i herëve të përsëritjes së kanalit"
-
-#: tools/gst-launch.c:458
+#: tools/gst-launch.c:672
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "GABIM: i pamundur ndërtimi i pipeline: %s.\n"
 
-#: tools/gst-launch.c:462
+#: tools/gst-launch.c:676
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "GABIM: i pamundur ndërtimi i pipeline.\n"
 
-#: tools/gst-launch.c:466
+#: tools/gst-launch.c:680
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "KUJDES: pipline e gabuar: %s\n"
 
-#: tools/gst-launch.c:467
-#, c-format
-msgid "         Trying to run anyway.\n"
-msgstr "         Duke u përpjekur të zbatohet sidoqoftë.\n"
-
-#: tools/gst-launch.c:495
+#: tools/gst-launch.c:707
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "GABIM: elementi 'konduktor' nuk u gjet.\n"
 
-#: tools/gst-launch.c:502
+#: tools/gst-launch.c:713 tools/gst-launch.c:767
 #, c-format
-msgid "RUNNING pipeline ...\n"
-msgstr "DUKE ZBATUAR pipeline ...\n"
+msgid "Setting pipeline to PAUSED ...\n"
+msgstr ""
 
-#: tools/gst-launch.c:505
+#: tools/gst-launch.c:718
+#, fuzzy, c-format
+msgid "ERROR: Pipeline doesn't want to pause.\n"
+msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
+
+#: tools/gst-launch.c:723
+#, c-format
+msgid "Pipeline is live and does not need PREROLL ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:726
+#, c-format
+msgid "Pipeline is PREROLLING ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:729 tools/gst-launch.c:742
+#, fuzzy, c-format
+msgid "ERROR: pipeline doesn't want to preroll.\n"
+msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
+
+#: tools/gst-launch.c:735
+#, c-format
+msgid "Pipeline is PREROLLED ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:747
+#, c-format
+msgid "Setting pipeline to PLAYING ...\n"
+msgstr ""
+
+#: tools/gst-launch.c:750
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "GABIM: pipeline nuk dëshiron të luajë.\n"
 
-#: tools/gst-register.c:49
-#, c-format
-msgid "Added plugin %s with %d %s.\n"
-msgstr "U shtua plugin %s me %d %s.\n"
+#: tools/gst-launch.c:761
+msgid "Execution ended after %"
+msgstr "Ekzekutimi përfundoi mbas %"
 
-#: tools/gst-register.c:51 tools/gst-register.c:167
-msgid "feature"
-msgid_plural "features"
-msgstr[0] "karakteristika"
-msgstr[1] "karakteristikat"
-
-#: tools/gst-register.c:112
+#: tools/gst-launch.c:770
 #, c-format
-msgid "Added path   %s to %s \n"
-msgstr "U shtua pozicioni   %s tek %s \n"
+msgid "Setting pipeline to READY ...\n"
+msgstr ""
 
-#: tools/gst-register.c:127
+#: tools/gst-launch.c:775
 #, c-format
-msgid "Rebuilding %s (%s) ...\n"
-msgstr "Duke rindërtuar %s (%s) ...\n"
+msgid "Setting pipeline to NULL ...\n"
+msgstr ""
 
-#: tools/gst-register.c:132
-#, c-format
-msgid "Trying to load %s ...\n"
-msgstr "Duke u përpjekur të ngarkoj %s ...\n"
+#: tools/gst-launch.c:780
+#, fuzzy, c-format
+msgid "FREEING pipeline ...\n"
+msgstr "DUKE ZBATUAR pipeline ...\n"
 
-#: tools/gst-register.c:134
-#, c-format
-msgid "Error loading %s\n"
-msgstr "Gabim gjatë ngarkimit të %s\n"
+#~ msgid "Disable accelerated CPU instructions"
+#~ msgstr "Ç'aktivo instruksionet e përshpejtimit të CPU"
 
-#: tools/gst-register.c:166
-#, c-format
-msgid "Loaded %d plugins with %d %s.\n"
-msgstr "U ngarkuan %d plugins me %d %s.\n"
+#~ msgid "SCHEDULER"
+#~ msgstr "PLANIFIKUES"
+
+#~ msgid "Registry to use"
+#~ msgstr "Regjistri që duhet përdorur"
+
+#~ msgid "REGISTRY"
+#~ msgstr "REGJISTRI"
+
+#~ msgid "path list for loading plugins (separated by '%s')"
+#~ msgstr "pozicioni i listës për ngarkimin e plugins (ndarë me '%s')"
+
+#~ msgid "Scheduler to use (default is '%s')"
+#~ msgstr "Planifikuesi që duhet përdorur (i prezgjedhuri është '%s')"
+
+#~ msgid "Internal GStreamer error: scheduler problem.  File a bug."
+#~ msgstr "Gabim i brendshëm i GStreamer: problem planifikimi.  Raporto bug."
+
+#~ msgid "There is no element present to handle the stream's mime type %s."
+#~ msgstr ""
+#~ "Nuk ekziston asnjë element për të trajtuar llojin mime %s të fluksit."
+
+#~ msgid " iterations (sum %"
+#~ msgstr " përsëritjet (shuma %"
+
+#~ msgid " ns, average %"
+#~ msgstr " ns, mesatarja %"
+
+#~ msgid " ns, min %"
+#~ msgstr " ns, min %"
+
+#~ msgid " ns, max %"
+#~ msgstr " ns, max %"
+
+#~ msgid " ns).\n"
+#~ msgstr " ns).\n"
+
+#~ msgid "Number of times to iterate pipeline"
+#~ msgstr "Numri i herëve të përsëritjes së kanalit"
+
+#~ msgid "         Trying to run anyway.\n"
+#~ msgstr "         Duke u përpjekur të zbatohet sidoqoftë.\n"
+
+#~ msgid "Added plugin %s with %d %s.\n"
+#~ msgstr "U shtua plugin %s me %d %s.\n"
+
+#~ msgid "Added path   %s to %s \n"
+#~ msgstr "U shtua pozicioni   %s tek %s \n"
+
+#~ msgid "Rebuilding %s (%s) ...\n"
+#~ msgstr "Duke rindërtuar %s (%s) ...\n"
+
+#~ msgid "Trying to load %s ...\n"
+#~ msgstr "Duke u përpjekur të ngarkoj %s ...\n"
+
+#~ msgid "Error loading %s\n"
+#~ msgstr "Gabim gjatë ngarkimit të %s\n"
+
+#~ msgid "Loaded %d plugins with %d %s.\n"
+#~ msgstr "U ngarkuan %d plugins me %d %s.\n"
