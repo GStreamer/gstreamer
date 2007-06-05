@@ -243,7 +243,7 @@ gst_dvd_sub_dec_parse_subpic (GstDvdSubDec * dec)
   gboolean broken = FALSE;
   gboolean last_seq = FALSE;
   guchar *next_seq = NULL;
-  guint event_time;
+  GstClockTime event_time;
 
   /* nothing to do if we finished this buffer already */
   if (dec->parse_pos == NULL)
@@ -368,7 +368,7 @@ gst_dvd_sub_dec_parse_subpic (GstDvdSubDec * dec)
 
         /* Start a new control sequence */
         if (buf + 4 < end) {
-          gint ticks = GST_READ_UINT16_BE (buf);
+          guint16 ticks = GST_READ_UINT16_BE (buf);
 
           event_time = gst_util_uint64_scale (ticks, 1024 * GST_SECOND, 90000);
 

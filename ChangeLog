@@ -1,3 +1,11 @@
+2007-06-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by by: Mark Nauwelaerts <manauw at skynet dot be>
+
+	* gst/dvdsub/gstdvdsubdec.c: (gst_dvd_sub_dec_parse_subpic):
+	Use GstClockTime instead of guint for a time variable to prevent
+	overflows on too large subtitle durations. Fixes #444514.
+
 2007-05-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Mark Nauwelaerts <manauw at skynet be>
