@@ -18,7 +18,7 @@ when :
 - core developers get anxious to apply massive changes to the core bound
   to break everything
 - a few important plugins decide, as if by magic, to work again (avi, mad, ...)
-- Uraeus and thomasvs get tired of the general laziness
+- thaytan or thomasvs get tired of being lazy.
 
 Also, this should only be allowed after passing a few sanity checks :
 - make distcheck should pass
@@ -69,6 +69,9 @@ RELEASE PROCEDURE:
   - add entry on website; commit additions to website
   - change versions in www/src/htdocs/entities.gst
   - add versions and milestones in bugzilla
+  - Send release announcements to:
+    gstreamer-devel@lists.sourceforge.net gstreamer-announce@lists.sourceforge.net kde-multimedia@kde.org gnome-multimedia@gnome.org
+  - Update freshmeat with new releases (get Uraeus to do it)
 
 
 Old release notes - superceded by the www/bin/new-release script.
