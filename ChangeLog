@@ -1,3 +1,11 @@
+2007-06-05  Wim Taymans  <wim@fluendo.com>
+
+	* docs/design/draft-keyframe-force.txt:
+	* ext/theora/theoraenc.c: (theora_enc_sink_event),
+	(theora_enc_chain):
+	Add draft design for forcing keyframes in encoders and implement in
+	theoraenc.
+
 2007-06-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

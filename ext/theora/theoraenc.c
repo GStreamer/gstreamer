@@ -565,8 +565,31 @@ theora_enc_sink_event (GstPad * pad, GstEvent * event)
       }
       res = gst_pad_push_event (enc->srcpad, event);
       break;
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    {
+      const GstStructure *s;
+
+      s = gst_event_get_structure (event);
+
+      if (gst_structure_has_name (s, "GstForceKeyUnit")) {
+        GstClockTime next_ts;
+
+        /* make sure timestamps increment after reseting the decoder */
+        next_ts = enc->next_ts + enc->timestamp_offset;
+
+        theora_enc_reset (enc);
+        enc->granulepos_offset =
+            gst_util_uint64_scale (next_ts, enc->fps_n,
+            GST_SECOND * enc->fps_d);
+        enc->timestamp_offset = next_ts;
+        enc->next_ts = 0;
+      }
+      res = gst_pad_push_event (enc->srcpad, event);
+      break;
+    }
     default:
       res = gst_pad_push_event (enc->srcpad, event);
+      break;
   }
   return res;
 }
@@ -697,9 +720,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     }
 
     enc->granulepos_offset =
-        gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buffer), enc->fps_n,
-        GST_SECOND * enc->fps_d);
-    enc->timestamp_offset = GST_BUFFER_TIMESTAMP (buffer);
+        gst_util_uint64_scale (in_time, enc->fps_n, GST_SECOND * enc->fps_d);
+    enc->timestamp_offset = in_time;
     enc->next_ts = 0;
   }
 
@@ -855,9 +877,8 @@ theora_enc_chain (GstPad * pad, GstBuffer * buffer)
     if (theora_enc_is_discontinuous (enc, buffer)) {
       theora_enc_reset (enc);
       enc->granulepos_offset =
-          gst_util_uint64_scale (GST_BUFFER_TIMESTAMP (buffer), enc->fps_n,
-          GST_SECOND * enc->fps_d);
-      enc->timestamp_offset = GST_BUFFER_TIMESTAMP (buffer);
+          gst_util_uint64_scale (in_time, enc->fps_n, GST_SECOND * enc->fps_d);
+      enc->timestamp_offset = in_time;
       enc->next_ts = 0;
       enc->next_discont = TRUE;
     }
