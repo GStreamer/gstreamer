@@ -1,3 +1,12 @@
+2007-06-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Bump requirements to released versions (core and base 0.10.13).
+
+	* gst/icydemux/gsticydemux.c: (gst_icydemux_unicodify):
+	  Use gst_tag_utf8_from_freeform_string() from libgsttag instead of
+	  own implementation.
+
 2007-06-05  Andy Wingo  <wingo@pobox.com>
 
 	* sys/v4l2/gstv4l2src.c (gst_v4l2src_start, gst_v4l2src_stop): Add

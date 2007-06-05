@@ -48,6 +48,7 @@
 #endif
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
+#include <gst/tag/tag.h>
 
 #include "gsticydemux.h"
 
@@ -291,83 +292,6 @@ gst_icydemux_remove_srcpad (GstICYDemux * icydemux)
   return res;
 };
 
-/* FIXME: remove this once we depend on gst-plugins-base >= 0.10.12.1 */
-static gchar *
-notgst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
-    const gchar ** env_vars)
-{
-  const gchar *cur_loc = NULL;
-  gsize bytes_read;
-  gchar *utf8 = NULL;
-
-  g_return_val_if_fail (data != NULL, NULL);
-
-  if (size < 0)
-    size = strlen (data);
-
-  /* Should we try the charsets specified
-   * via environment variables FIRST ? */
-  if (g_utf8_validate (data, size, NULL))
-    return g_strndup (data, size);
-
-  while (env_vars != NULL && *env_vars != NULL) {
-    const gchar *env = NULL;
-
-    /* Try charsets specified via the environment */
-    env = g_getenv (*env_vars);
-    if (env != NULL && *env != '\0') {
-      gchar **c, **csets;
-
-      csets = g_strsplit (env, G_SEARCHPATH_SEPARATOR_S, -1);
-
-      for (c = csets; c && *c; ++c) {
-        if ((utf8 =
-                g_convert (data, size, "UTF-8", *c, &bytes_read, NULL, NULL))) {
-          if (bytes_read == size) {
-            g_strfreev (csets);
-            goto beach;
-          }
-          g_free (utf8);
-          utf8 = NULL;
-        }
-      }
-
-      g_strfreev (csets);
-    }
-
-    ++env_vars;
-  }
-
-  /* Try current locale (if not UTF-8) */
-  if (!g_get_charset (&cur_loc)) {
-    if ((utf8 = g_locale_to_utf8 (data, size, &bytes_read, NULL, NULL))) {
-      if (bytes_read == size) {
-        goto beach;
-      }
-      g_free (utf8);
-      utf8 = NULL;
-    }
-  }
-
-  /* Try ISO-8859-1 */
-  utf8 = g_convert (data, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL, NULL);
-  if (utf8 != NULL && bytes_read == size) {
-    goto beach;
-  }
-
-  g_free (utf8);
-  return NULL;
-
-beach:
-
-  g_strchomp (utf8);
-  if (utf8 && utf8[0] != '\0')
-    return utf8;
-
-  g_free (utf8);
-  return NULL;
-}
-
 static gchar *
 gst_icydemux_unicodify (const gchar * str)
 {
@@ -375,7 +299,7 @@ gst_icydemux_unicodify (const gchar * str)
     "GST_TAG_ENCODING", NULL
   };
 
-  return notgst_tag_freeform_string_to_utf8 (str, -1, env_vars);
+  return gst_tag_freeform_string_to_utf8 (str, -1, env_vars);
 }
 
 static void
