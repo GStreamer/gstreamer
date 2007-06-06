@@ -1,6 +1,12 @@
 2007-06-06  Wim Taymans  <wim@fluendo.com>
 
 	* configure.ac:
+	* gst/playback/gstqueue2.c: (gst_queue_create_read):
+	Some more fseeko checks.
+
+2007-06-06  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
 	check for large file support.
 
 2007-06-05  Sebastian Dröge  <slomo@circular-chaos.org>

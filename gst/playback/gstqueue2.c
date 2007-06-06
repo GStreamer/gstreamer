@@ -786,7 +786,6 @@ gst_queue_create_read (GstQueue * queue, guint64 offset, guint length,
 {
   size_t res;
   GstBuffer *buf;
-  off_t sres;
 
   /* check if we have enough data at @offset. If there is not enough data, we
    * block and wait. */
@@ -794,9 +793,17 @@ gst_queue_create_read (GstQueue * queue, guint64 offset, guint length,
     GST_QUEUE_WAIT_ADD_CHECK (queue, out_flushing);
   }
 
-  sres = fseeko (queue->temp_file, offset, SEEK_SET);
-  if (G_UNLIKELY (sres < 0))
+#ifdef HAVE_FSEEKO
+  if (fseeko (queue->temp_file, (off_t) offset, SEEK_SET) != 0)
     goto seek_failed;
+#elif defined (G_OS_UNIX)
+  if (lseek (fileno (queue->temp_file), (off_t) offset,
+          SEEK_SET) == (off_t) - 1)
+    goto seek_failed;
+#else
+  if (fseek (queue->temp_file, (long) offset, SEEK_SET) != 0)
+    goto seek_failed;
+#endif
 
   buf = gst_buffer_new_and_alloc (length);
 

@@ -230,6 +230,9 @@ AC_C_INLINE
 
 dnl *** checks for library functions ***
 
+dnl check for fseeko()
+AC_FUNC_FSEEKO
+
 dnl Check for fast float to int casting as defined in C99
 dnl used in gst-libs/gst/floatcast/floatcast.h
 AC_C99_FUNC_LRINT
