@@ -1,5 +1,11 @@
 2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstparamspecs.c: (gst_param_spec_fraction_get_type):
+	  Don't use GLib-2.10 functions, we still depend on
+	  GLib-how-old-is-it-again-2.8.
+
+2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/Makefile.am:
 	* gst/gst.c:

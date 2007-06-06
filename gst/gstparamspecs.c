@@ -124,9 +124,7 @@ gst_param_spec_fraction_get_type (void)
       _gst_param_fraction_values_cmp,   /* values_cmp        */
     };
     pspec_info.value_type = GST_TYPE_FRACTION;
-    type =
-        g_param_type_register_static (g_intern_static_string
-        ("GstParamFraction"), &pspec_info);
+    type = g_param_type_register_static ("GstParamFraction", &pspec_info);
   }
   return type;
 }
