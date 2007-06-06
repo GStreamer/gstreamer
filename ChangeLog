@@ -1,5 +1,18 @@
 2007-06-06  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: Thiago Sousa Santos <thiagossantos at gmail dot com>
+
+	* gst/playback/gstqueue2.c: (gst_queue_init),
+	(gst_queue_handle_sink_event), (gst_queue_chain),
+	(gst_queue_get_range), (gst_queue_src_checkgetrange_function),
+	(gst_queue_sink_activate_push), (gst_queue_src_activate_push),
+	(gst_queue_src_activate_pull):
+	Add pull based scheduling and fix some deadlocks. Fixes #444523.
+	Does not yet completely work because duration queries upstream won't
+	block yet.
+
+2007-06-06  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	* gst/playback/gstqueue2.c: (gst_queue_create_read):
 	Some more fseeko checks.
