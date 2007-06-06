@@ -1,3 +1,10 @@
+2007-06-06  Andy Wingo  <wingo@pobox.com>
+
+	* sys/v4l2/v4l2src_calls.c (gst_v4l2src_probe_caps_for_format)
+	(gst_v4l2src_probe_caps_for_format_and_size): Only probe for
+	format and size if the ioctls are defined; should fix compilation
+	on Linux < 2.16.19.
+
 2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/videobox/gstvideobox.c: (gst_video_box_ayuv_i420):

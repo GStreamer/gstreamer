@@ -114,6 +114,8 @@ gst_v4l2src_clear_format_list (GstV4l2Src * v4l2src)
   return TRUE;
 }
 
+/* The frame interval enumeration code first appeared in Linux 2.6.19. */
+#ifdef VIDIOC_ENUM_FRAMEINTERVALS
 static GstStructure *
 gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
     guint32 pixelformat,
@@ -260,11 +262,13 @@ unknown_type:
     return NULL;
   }
 }
+#endif /* defined VIDIOC_ENUM_FRAMEINTERVALS */
 
 GstCaps *
 gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
     const GstStructure * template)
 {
+#ifdef VIDIOC_ENUM_FRAMESIZES
   GstCaps *ret;
   GstStructure *tmp;
   gint fd = v4l2src->v4l2object->video_fd;
@@ -342,6 +346,22 @@ unknown_type:
         ": %u", GST_FOURCC_ARGS (pixelformat), size.type);
     return NULL;
   }
+#else /* defined VIDIOC_ENUM_FRAMESIZES */
+  GstCaps *ret;
+  GstStructure *tmp;
+
+  /* This code is for Linux < 2.6.19 */
+
+  ret = gst_caps_new_empty ();
+  tmp = gst_structure_copy (template);
+  gst_structure_set (tmp, "width", GST_TYPE_INT_RANGE, (gint) 1,
+      (gint) GST_V4L2_MAX_SIZE, "height", GST_TYPE_INT_RANGE,
+      (gint) 1, (gint) GST_V4L2_MAX_SIZE,
+      "framerate", GST_TYPE_FRACTION_RANGE, (gint) 0,
+      (gint) 1, (gint) 100, (gint) 1, NULL);
+  gst_caps_append_structure (ret, tmp);
+  return ret;
+#endif /* defined VIDIOC_ENUM_FRAMESIZES */
 }
 
 /******************************************************
