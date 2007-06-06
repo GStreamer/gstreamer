@@ -524,7 +524,8 @@ GST_START_TEST (controller_interpolate_none)
   fail_unless (ctrl != NULL, NULL);
 
   /* set interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_NONE);
+  fail_unless (gst_controller_set_interpolation_mode (ctrl, "ulong",
+          GST_INTERPOLATE_NONE));
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -567,8 +568,8 @@ GST_START_TEST (controller_interpolate_trigger)
   fail_unless (ctrl != NULL, NULL);
 
   /* set interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong",
-      GST_INTERPOLATE_TRIGGER);
+  fail_unless (gst_controller_set_interpolation_mode (ctrl, "ulong",
+          GST_INTERPOLATE_TRIGGER));
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -612,7 +613,8 @@ GST_START_TEST (controller_interpolate_linear)
   fail_unless (ctrl != NULL, NULL);
 
   /* set interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_LINEAR);
+  fail_unless (gst_controller_set_interpolation_mode (ctrl, "ulong",
+          GST_INTERPOLATE_LINEAR));
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -638,6 +640,63 @@ GST_START_TEST (controller_interpolate_linear)
 
 GST_END_TEST;
 
+/* test timed value handling with cubic interpolation */
+GST_START_TEST (controller_interpolate_cubic)
+{
+  GstController *ctrl;
+  GstElement *elem;
+  gboolean res;
+  GValue val_double = { 0, };
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "double", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* set interpolation mode */
+  fail_unless (gst_controller_set_interpolation_mode (ctrl, "double",
+          GST_INTERPOLATE_CUBIC));
+
+  /* set control values */
+  g_value_init (&val_double, G_TYPE_DOUBLE);
+  g_value_set_double (&val_double, 0.0);
+  res = gst_controller_set (ctrl, "double", 0 * GST_SECOND, &val_double);
+  fail_unless (res, NULL);
+  g_value_set_double (&val_double, 5.0);
+  res = gst_controller_set (ctrl, "double", 1 * GST_SECOND, &val_double);
+  fail_unless (res, NULL);
+  g_value_set_double (&val_double, 2.0);
+  res = gst_controller_set (ctrl, "double", 2 * GST_SECOND, &val_double);
+  fail_unless (res, NULL);
+  g_value_set_double (&val_double, 8.0);
+  res = gst_controller_set (ctrl, "double", 4 * GST_SECOND, &val_double);
+  fail_unless (res, NULL);
+
+  /* now pull in values for some timestamps */
+  gst_controller_sync_values (ctrl, 0 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 0.0, NULL);
+  gst_controller_sync_values (ctrl, 1 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 5.0, NULL);
+  gst_controller_sync_values (ctrl, 2 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 2.0, NULL);
+  gst_controller_sync_values (ctrl, 3 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double > 2.0 &&
+      GST_TEST_MONO_SOURCE (elem)->val_double < 8.0, NULL);
+  gst_controller_sync_values (ctrl, 4 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 8.0, NULL);
+  gst_controller_sync_values (ctrl, 5 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 8.0, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 /* make sure we don't crash when someone sets an unsupported interpolation
  * mode */
 GST_START_TEST (controller_interpolate_unimplemented)
@@ -653,16 +712,9 @@ GST_START_TEST (controller_interpolate_unimplemented)
   ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
   fail_unless (ctrl != NULL, NULL);
 
-  /* set unsupported interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_CUBIC);
-
-  /* set another unsupported interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong",
-      GST_INTERPOLATE_QUADRATIC);
-
   /* set completely bogus interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong",
-      (GstInterpolateMode) 93871);
+  fail_if (gst_controller_set_interpolation_mode (ctrl, "ulong",
+          (GstInterpolateMode) 93871));
 
   g_object_unref (ctrl);
   gst_object_unref (elem);
@@ -687,7 +739,8 @@ GST_START_TEST (controller_unset)
   fail_unless (ctrl != NULL, NULL);
 
   /* set interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_NONE);
+  fail_unless (gst_controller_set_interpolation_mode (ctrl, "ulong",
+          GST_INTERPOLATE_NONE));
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -743,7 +796,8 @@ GST_START_TEST (controller_unset_all)
   fail_unless (ctrl != NULL, NULL);
 
   /* set interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_NONE);
+  fail_unless (gst_controller_set_interpolation_mode (ctrl, "ulong",
+          GST_INTERPOLATE_NONE));
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -792,7 +846,8 @@ GST_START_TEST (controller_live)
   fail_unless (ctrl != NULL, NULL);
 
   /* set interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_LINEAR);
+  fail_unless (gst_controller_set_interpolation_mode (ctrl, "ulong",
+          GST_INTERPOLATE_LINEAR));
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -866,7 +921,8 @@ GST_START_TEST (controller_misc)
   fail_unless (ctrl != NULL, NULL);
 
   /* set interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_LINEAR);
+  fail_unless (gst_controller_set_interpolation_mode (ctrl, "ulong",
+          GST_INTERPOLATE_LINEAR));
 
   /* set control value */
   tval = g_new0 (GstTimedValue, 1);
@@ -876,7 +932,7 @@ GST_START_TEST (controller_misc)
 
   list = g_slist_append (list, tval);
 
-  ASSERT_WARNING (fail_if (gst_controller_set_from_list (ctrl, "ulong", list)));
+  fail_if (gst_controller_set_from_list (ctrl, "ulong", list));
 
   /* try again with a valid stamp, should work now */
   tval->timestamp = 0;
@@ -989,7 +1045,8 @@ GST_START_TEST (controller_interpolate_linear_value_array)
   fail_unless (ctrl != NULL, NULL);
 
   /* set interpolation mode */
-  gst_controller_set_interpolation_mode (ctrl, "ulong", GST_INTERPOLATE_LINEAR);
+  fail_unless (gst_controller_set_interpolation_mode (ctrl, "ulong",
+          GST_INTERPOLATE_LINEAR));
 
   /* set control values */
   g_value_init (&val_ulong, G_TYPE_ULONG);
@@ -1041,6 +1098,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_interpolate_none);
   tcase_add_test (tc, controller_interpolate_trigger);
   tcase_add_test (tc, controller_interpolate_linear);
+  tcase_add_test (tc, controller_interpolate_cubic);
   tcase_add_test (tc, controller_interpolate_unimplemented);
   tcase_add_test (tc, controller_unset);
   tcase_add_test (tc, controller_unset_all);

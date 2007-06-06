@@ -81,6 +81,14 @@ typedef struct _GstControlPoint
 
   /* internal fields */
 
+  /* Caches for the interpolators */
+  union {
+    struct {
+      gdouble h;
+      gdouble z;
+    } cubic;
+  } cache;
+
 } GstControlPoint;
 
 /**
@@ -106,10 +114,9 @@ typedef struct _GstControlledProperty
   InterpolateGetValueArray get_value_array;
 
   GList *values;                /* List of GstControlPoint */
+  gint nvalues;                 /* Number of control points */
   GList *last_requested_value;  /* last search result, can be used for incremental searches */
-
-  /*< private >*/
-  gpointer       _gst_reserved[GST_PADDING];
+  gboolean valid_cache;
 } GstControlledProperty;
 
 #define GST_CONTROLLED_PROPERTY(obj)    ((GstControlledProperty *)(obj))

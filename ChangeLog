@@ -1,3 +1,31 @@
+2007-06-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_set_interpolation_mode),
+	(gst_controlled_property_prepend_default),
+	(gst_controlled_property_new), (gst_controller_set_unlocked),
+	(gst_controller_set), (gst_controller_set_from_list),
+	(gst_controller_unset), (gst_controller_unset_all):
+	* libs/gst/controller/gstcontrollerprivate.h:
+	* libs/gst/controller/gstinterpolation.c:
+	Factor out the 'set' logic into gst_controller_set_unlocked for the
+	gst_controller_set and gst_controller_set_from_list functions.
+
+	To make life of the interpolators easier always add a control point
+	at timestamp zero with the default value.
+
+	In the linear interpolator make things more obvious by better variable
+	naming (slope).
+
+	Implement cubic interpolation mode (by using a natural cubic spline)
+	and map the quadratic interpolation mode to this too (as quadratic
+	doesn't make much sense, see discussion on the list).
+
+	* tests/check/libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+	Add unit test for the cubic interpolation mode and check everywhere
+	if the interpolation mode could be set as expected.
+
 2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstparamspecs.c: (gst_param_spec_fraction_get_type):

@@ -1,6 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) <2005> Stefan Kost <ensonic at users dot sf dot net>
+ * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstcontroller.c: dynamic parameter control subsystem
  *
@@ -240,11 +241,15 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
         self->get = NULL;
         self->get_value_array = NULL;
     }
-    if (!self->get) {           /* || !self->get_value_array) */
+    if (!self->get || !self->get_value_array) {
       GST_WARNING ("incomplete implementation for type %lu/%lu:'%s'/'%s'",
           self->type, self->base,
           g_type_name (self->type), g_type_name (self->base));
       res = FALSE;
+    }
+    if (mode == GST_INTERPOLATE_QUADRATIC) {
+      GST_WARNING ("Quadratic interpolation mode is deprecated, using cubic"
+          "interpolation mode");
     }
   } else {
     /* TODO shouldn't this also get a GstInterpolateMethod *user_method
@@ -252,7 +257,22 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
      */
     res = FALSE;
   }
+
+  self->valid_cache = FALSE;
+
   return (res);
+}
+
+static void
+gst_controlled_property_prepend_default (GstControlledProperty * prop)
+{
+  GstControlPoint *cp = g_new0 (GstControlPoint, 1);
+
+  cp->timestamp = 0;
+  g_value_init (&cp->value, prop->type);
+  g_value_copy (&prop->default_value, &cp->value);
+  prop->values = g_list_prepend (prop->values, cp);
+  prop->nvalues++;
 }
 
 /*
@@ -374,13 +394,14 @@ gst_controlled_property_new (GObject * object, const gchar * name)
           GST_WARNING ("incomplete implementation for paramspec type '%s'",
               G_PARAM_SPEC_TYPE_NAME (pspec));
       }
-      /* TODO what about adding a control point with timestamp=0 and value=default
-       * a bit easier for interpolators, example:
-       * first timestamp is at 5
-       * requested value if for timestamp=3
-       * LINEAR and Co. would need to interpolate from default value to value
-       * at timestamp 5
-       */
+
+      prop->valid_cache = FALSE;
+      prop->nvalues = 0;
+
+      /* Add a control point at timestamp 0 with the default value
+       * to make the life of interpolators easier. */
+      gst_controlled_property_prepend_default (prop);
+
       signal_name = g_alloca (8 + 1 + strlen (name));
       g_sprintf (signal_name, "notify::%s", name);
       prop->notify_handler_id =
@@ -718,6 +739,42 @@ gst_controller_remove_properties (GstController * self, ...)
   return (res);
 }
 
+static gboolean
+gst_controller_set_unlocked (GstController * self, GstControlledProperty * prop,
+    GstClockTime timestamp, GValue * value)
+{
+  gboolean res = FALSE;
+
+  if (G_VALUE_TYPE (value) == prop->type) {
+    GstControlPoint *cp;
+    GList *node;
+
+    /* check if a control point for the timestamp already exists */
+    if ((node = g_list_find_custom (prop->values, &timestamp,
+                gst_control_point_find))) {
+      cp = node->data;
+      g_value_reset (&cp->value);
+      g_value_copy (value, &cp->value);
+    } else {
+      /* create a new GstControlPoint */
+      cp = g_new0 (GstControlPoint, 1);
+      cp->timestamp = timestamp;
+      g_value_init (&cp->value, prop->type);
+      g_value_copy (value, &cp->value);
+      /* and sort it into the prop->values list */
+      prop->values =
+          g_list_insert_sorted (prop->values, cp, gst_control_point_compare);
+      prop->nvalues++;
+    }
+    prop->valid_cache = FALSE;
+    res = TRUE;
+  } else {
+    GST_WARNING ("incompatible value type for property '%s'", prop->name);
+  }
+
+  return res;
+}
+
 /**
  * gst_controller_set:
  * @self: the controller object which handles the properties
@@ -743,30 +800,7 @@ gst_controller_set (GstController * self, gchar * property_name,
 
   g_mutex_lock (self->lock);
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    if (G_VALUE_TYPE (value) == prop->type) {
-      GstControlPoint *cp;
-      GList *node;
-
-      /* check if a control point for the timestamp already exists */
-      if ((node = g_list_find_custom (prop->values, &timestamp,
-                  gst_control_point_find))) {
-        cp = node->data;
-        g_value_reset (&cp->value);
-        g_value_copy (value, &cp->value);
-      } else {
-        /* create a new GstControlPoint */
-        cp = g_new0 (GstControlPoint, 1);
-        cp->timestamp = timestamp;
-        g_value_init (&cp->value, prop->type);
-        g_value_copy (value, &cp->value);
-        /* and sort it into the prop->values list */
-        prop->values =
-            g_list_insert_sorted (prop->values, cp, gst_control_point_compare);
-      }
-      res = TRUE;
-    } else {
-      GST_WARNING ("incompatible value type for property '%s'", prop->name);
-    }
+    res = gst_controller_set_unlocked (self, prop, timestamp, value);
   }
   g_mutex_unlock (self->lock);
 
@@ -792,7 +826,6 @@ gst_controller_set_from_list (GstController * self, gchar * property_name,
   GstControlledProperty *prop;
   GSList *node;
   GstTimedValue *tv;
-  GstControlPoint *cp;
 
   g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
   g_return_val_if_fail (property_name, FALSE);
@@ -801,22 +834,15 @@ gst_controller_set_from_list (GstController * self, gchar * property_name,
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
     for (node = timedvalues; node; node = g_slist_next (node)) {
       tv = node->data;
-      if (G_VALUE_TYPE (&tv->value) == prop->type) {
-        if (GST_CLOCK_TIME_IS_VALID (tv->timestamp)) {
-          cp = g_new0 (GstControlPoint, 1);
-          cp->timestamp = tv->timestamp;
-          g_value_init (&cp->value, prop->type);
-          g_value_copy (&tv->value, &cp->value);
-          prop->values =
-              g_list_insert_sorted (prop->values, cp,
-              gst_control_point_compare);
-          res = TRUE;
-        } else {
-          g_warning ("GstTimedValued with invalid timestamp passed to %s "
-              "for property '%s'", GST_FUNCTION, property_name);
-        }
+      if (!GST_CLOCK_TIME_IS_VALID (tv->timestamp)) {
+        GST_WARNING ("GstTimedValued with invalid timestamp passed to %s "
+            "for property '%s'", GST_FUNCTION, property_name);
+      } else if (!G_IS_VALUE (&tv->value)) {
+        GST_WARNING ("GstTimedValued with invalid value passed to %s "
+            "for property '%s'", GST_FUNCTION, property_name);
       } else {
-        GST_WARNING ("incompatible value type for property '%s'", prop->name);
+        res =
+            gst_controller_set_unlocked (self, prop, tv->timestamp, &tv->value);
       }
     }
   }
@@ -854,10 +880,20 @@ gst_controller_unset (GstController * self, gchar * property_name,
     /* check if a control point for the timestamp exists */
     if ((node = g_list_find_custom (prop->values, &timestamp,
                 gst_control_point_find))) {
-      if (node == prop->last_requested_value)
-        prop->last_requested_value = NULL;
-      gst_control_point_free (node->data);      /* free GstControlPoint */
-      prop->values = g_list_delete_link (prop->values, node);
+      GstControlPoint *cp = node->data;
+
+      if (cp->timestamp == 0) {
+        /* Restore the default node */
+        g_value_reset (&cp->value);
+        g_value_copy (&prop->default_value, &cp->value);
+      } else {
+        if (node == prop->last_requested_value)
+          prop->last_requested_value = NULL;
+        gst_control_point_free (node->data);    /* free GstControlPoint */
+        prop->values = g_list_delete_link (prop->values, node);
+        prop->nvalues--;
+      }
+      prop->valid_cache = FALSE;
       res = TRUE;
     }
   }
@@ -893,6 +929,12 @@ gst_controller_unset_all (GstController * self, gchar * property_name)
     g_list_free (prop->values);
     prop->last_requested_value = NULL;
     prop->values = NULL;
+    prop->nvalues = 0;
+    prop->valid_cache = FALSE;
+
+    /* Insert the default control point again */
+    gst_controlled_property_prepend_default (prop);
+
     res = TRUE;
   }
   g_mutex_unlock (self->lock);
@@ -1146,8 +1188,8 @@ gst_controller_get_value_array (GstController * self, GstClockTime timestamp,
  *
  * Sets the given interpolation mode on the given property.
  *
- * <note><para>Quadratic, cubic and user interpolation is not yet available.
- * </para></note>
+ * <note><para>User interpolation is not yet available and quadratic interpolation
+ * is deprecated and maps to cubic interpolation.</para></note>
  *
  * Returns: %TRUE if the property is handled by the controller, %FALSE otherwise
  */
