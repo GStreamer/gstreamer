@@ -355,8 +355,16 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
   if (glimage_sink->display) {
+    if (glimage_sink->context) {
+      glXDestroyContext (glimage_sink->display, glimage_sink->context);
+      glimage_sink->context = NULL;
+    }
+    XSync (glimage_sink->display, False);
     XCloseDisplay (glimage_sink->display);
+    glimage_sink->display = NULL;
   }
+  glimage_sink->context = NULL;
+  glimage_sink->window = 0;
   return TRUE;
 }
 
@@ -696,6 +704,8 @@ gst_glimage_sink_create_window (GstGLImageSink * glimage_sink)
     XMapWindow (glimage_sink->display, glimage_sink->window);
   }
 
+  XSync (glimage_sink->display, False);
+
   gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (glimage_sink),
       glimage_sink->window);
 
@@ -768,6 +778,8 @@ gst_glimage_sink_init_display (GstGLImageSink * glimage_sink)
 
   window = XCreateWindow (glimage_sink->display, root, 0, 0,
       100, 100, 0, visinfo->depth, InputOutput, visinfo->visual, mask, &attr);
+
+  XSync (glimage_sink->display, FALSE);
 
   glXMakeCurrent (glimage_sink->display, window, glimage_sink->context);
 

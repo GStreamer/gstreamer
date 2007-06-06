@@ -1,5 +1,12 @@
 2007-06-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* sys/glsink/glimagesink.c: (gst_glimage_sink_stop),
+	(gst_glimage_sink_create_window), (gst_glimage_sink_init_display):
+	Sprinkle in some XSync calls to avoid raciness with broken
+	drivers (ATI) when re-using a single glimagesink.
+
+2007-06-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/mpegvideoparse/mpegpacketiser.c:
 	(mpeg_util_parse_extension_packet), (mpeg_util_parse_sequence_hdr),
 	(mpeg_util_parse_picture_hdr):
