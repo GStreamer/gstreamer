@@ -1,6 +1,12 @@
 2007-06-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* libs/gst/controller/gstcontroller.c:
+	Clarify docs: The get_all, get_value_array(s) functions
+	don't modify the GObject properties.
+
+2007-06-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* libs/gst/controller/gstcontroller.c:
 	(gst_controlled_property_set_interpolation_mode),
 	(gst_controlled_property_prepend_default),
 	(gst_controlled_property_new), (gst_controller_set_unlocked),

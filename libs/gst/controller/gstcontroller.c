@@ -982,6 +982,8 @@ gst_controller_get (GstController * self, gchar * property_name,
  * Returns a read-only copy of the list of GstTimedValue for the given property.
  * Free the list after done with it.
  *
+ * <note><para>This doesn't modify the controlled GObject property!</para></note>
+ *
  * Returns: a copy of the list, or %NULL if the property isn't handled by the controller
  */
 const GList *
@@ -1118,6 +1120,8 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
  *
  * The types of the values in the array are the same as the property's type.
  *
+ * <note><para>This doesn't modify the controlled GObject properties!</para></note>
+ *
  * Returns: %TRUE if the given array(s) could be filled, %FALSE otherwise
  */
 gboolean
@@ -1151,6 +1155,8 @@ gst_controller_get_value_arrays (GstController * self,
  * of values.
  *
  * The type of the values in the array is the same as the property's type.
+ *  
+ * <note><para>This doesn't modify the controlled GObject property!</para></note>
  *
  * Returns: %TRUE if the given array could be filled, %FALSE otherwise
  */
