@@ -1,3 +1,10 @@
+2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Bump requirements to released versions of core and -base, and remove
+	  special-casing for equalizer and rtpmanager as it's not needed any
+	  longer.
+
 2007-06-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/glsink/glimagesink.c: (gst_glimage_sink_stop),
