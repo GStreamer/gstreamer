@@ -79,6 +79,7 @@ check_PROGRAMS =				\
 	gst/gstminiobject 			\
 	gst/gstobject				\
 	gst/gstpad				\
+	gst/gstparamspecs			\
 	gst/gstsegment				\
 	gst/gstsystemclock			\
 	gst/gststructure			\

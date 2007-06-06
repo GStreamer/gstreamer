@@ -50,6 +50,7 @@
 #include <gst/gstminiobject.h>
 #include <gst/gstobject.h>
 #include <gst/gstpad.h>
+#include <gst/gstparamspecs.h>
 #include <gst/gstpipeline.h>
 #include <gst/gstplugin.h>
 #include <gst/gstquery.h>

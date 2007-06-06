@@ -965,6 +965,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   gst_structure_get_type ();
   _gst_value_initialize ();
+  gst_param_spec_fraction_get_type ();
   gst_caps_get_type ();
   _gst_event_initialize ();
   _gst_buffer_initialize ();

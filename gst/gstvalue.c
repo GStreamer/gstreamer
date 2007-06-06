@@ -19,9 +19,10 @@
 
 /**
  * SECTION:gstvalue
- * @short_description: GValue implementations specific to GStreamer
+ * @short_description: GValue and GParamSpec implementations specific
+ * to GStreamer
  *
- * GValue implementations specific to GStreamer.
+ * GValue and GParamSpec implementations specific to GStreamer.
  *
  * Note that operations on the same GstValue (or GValue) from multiple
  * threads may lead to undefined behaviour. 

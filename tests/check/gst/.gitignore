@@ -14,6 +14,7 @@ gstmessage
 gstminiobject
 gstobject
 gstpad
+gstparamspecs
 gstpipeline
 gstplugin
 gstregistry

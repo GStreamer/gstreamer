@@ -1,3 +1,24 @@
+2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/Makefile.am:
+	* gst/gst.c:
+	* gst/gst.h:
+	* gst/gstparamspecs.c: (_gst_param_fraction_init),
+	(_gst_param_fraction_set_default), (_gst_param_fraction_validate),
+	(_gst_param_fraction_values_cmp),
+	(gst_param_spec_fraction_get_type), (gst_param_spec_fraction):
+	* gst/gstparamspecs.h:
+	* gst/gstvalue.c:
+	* tests/check/Makefile.am:
+	* tests/check/gst/.cvsignore:
+	* tests/check/gst/gstparamspecs.c: (gst_dummy_obj_base_init),
+	(gst_dummy_obj_class_init), (gst_dummy_obj_init),
+	(gst_dummy_obj_set_property), (gst_dummy_obj_get_property),
+	(GST_START_TEST), (gst_param_spec_suite):
+	  API: add GstParamSpecFraction, so elements can have fraction
+	  properties without lots of painful string parsing (#444648).
+
 2007-06-05  Wim Taymans  <wim@fluendo.com>
 
 	* gst/gstobject.c: (gst_object_class_init):
