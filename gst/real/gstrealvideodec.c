@@ -409,8 +409,9 @@ too_many_fragments:
   {
     gst_buffer_unref (in);
     GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        ("Got more fragments (%i) than can be handled (%i).",
-            dec->fragment_count, sizeof (dec->fragments)), (NULL));
+        ("Got more fragments (%u) than can be handled (%u)",
+            dec->fragment_count, (guint) G_N_ELEMENTS (dec->fragments)),
+        (NULL));
     return GST_FLOW_ERROR;
   }
 

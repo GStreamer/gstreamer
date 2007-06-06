@@ -1,5 +1,10 @@
 2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/real/gstrealvideodec.c: (gst_real_video_dec_decode):
+	  Printf fix in debug statement; also print the right number there.
+
+2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/sdl/Makefile.am:
 	* ext/sdl/sdlvideosink.c: (gst_sdlv_process_events):
 	  Add GST_CFLAGS, which apparently somehow fixes the build somewhere
