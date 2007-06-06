@@ -496,7 +496,7 @@ gst_sdlv_process_events (GstSDLVideoSink * sdlvideosink)
 {
   SDL_Event event;
   int numevents;
-  char *keysym;
+  char *keysym = NULL;
 
   do {
     SDL_PumpEvents ();

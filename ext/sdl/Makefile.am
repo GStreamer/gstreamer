@@ -5,7 +5,7 @@ libgstsdl_la_SOURCES = \
 	sdlvideosink.c \
 	sdlaudiosink.c
 
-libgstsdl_la_CFLAGS =  $(GST_PLUGINS_BASE_CFLAGS) $(SDL_CFLAGS)
+libgstsdl_la_CFLAGS =  $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(SDL_CFLAGS)
 libgstsdl_la_LIBADD =  $(GST_PLUGINS_BASE_LIBS) \
 				-lgstvideo-$(GST_MAJORMINOR) \
 				-lgstaudio-$(GST_MAJORMINOR) \

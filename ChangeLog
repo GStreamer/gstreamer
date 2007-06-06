@@ -1,3 +1,10 @@
+2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/sdl/Makefile.am:
+	* ext/sdl/sdlvideosink.c: (gst_sdlv_process_events):
+	  Add GST_CFLAGS, which apparently somehow fixes the build somewhere
+	  (#444499); initialise variable to avoid false compiler warning.
+
 2007-06-01  Wim Taymans  <wim@fluendo.com>
 
 	* docs/plugins/Makefile.am:
