@@ -1,3 +1,11 @@
+2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/videobox/gstvideobox.c: (gst_video_box_ayuv_i420):
+	  Printf fixes in debug statements; use LOG level for debug statements
+	  that are printed for each and every frame; convert c++ comments to
+	  C-style comments; not much point using g_try_malloc() if we then not
+	  even check the return value.
+
 2007-06-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

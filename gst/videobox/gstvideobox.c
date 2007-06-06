@@ -690,7 +690,7 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
   gint i, j;
   guint Ywidth, Uwidth, Vwidth;
 
-  GST_DEBUG ("AYUV to I420 conversion");
+  GST_LOG ("AYUV to I420 conversion");
 
   crop_h = 0;
   crop_w = 0;
@@ -744,12 +744,12 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
     crop_h = video_box->in_height;
   }
 
-  Utemp = g_try_malloc0 (Uwidth);
-  Vtemp = g_try_malloc0 (Vwidth);
+  Utemp = g_malloc0 (Uwidth);
+  Vtemp = g_malloc0 (Vwidth);
 
-  GST_DEBUG ("Borders are: L:%d, R:%d, T:%d, B:%d", bl, br, bt, bb);
+  GST_LOG ("Borders are: L:%d, R:%d, T:%d, B:%d", bl, br, bt, bb);
 
-  GST_DEBUG ("Starting conversion");
+  GST_LOG ("Starting conversion");
 
   if (crop_h <= 0 || crop_w <= 0) {
 
@@ -790,16 +790,16 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
     if (bl >= 0)
       src_loc1 += bl;
 
-    GST_DEBUG ("Cropped area");
-    GST_DEBUG ("Ydest value: %d Ywidth: %d", Ydest, Ywidth);
-    GST_DEBUG ("Udest value: %d Uwidth: %d", Udest, Uwidth);
-    GST_DEBUG ("Vdest value: %d Vwidth: %d", Vdest, Vwidth);
-    GST_DEBUG ("Rest: %d", rest);
+    GST_LOG ("Cropped area");
+    GST_LOG ("Ydest value: %p Ywidth: %u", Ydest, Ywidth);
+    GST_LOG ("Udest value: %p Uwidth: %u", Udest, Uwidth);
+    GST_LOG ("Vdest value: %p Vwidth: %u", Vdest, Vwidth);
+    GST_LOG ("Rest: %d", rest);
     for (i = 0; i < crop_h; i++) {
 
       a = 0;
       if (sumbuff) {
-        // left border
+        /* left border */
         if (bl < 0) {
           oil_splat_u8_ns (Ydest, (guint8 *) & empty_px_values[0], -bl);
 
@@ -812,7 +812,7 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
         }
 
         for (j = 0; j < crop_w; j++) {
-          // check ARCH 
+          /* check ARCH */
           Ydest[j] = ((guint8 *) & src_loc1[j])[1];
           Utemp[UVfloor (a + j)] =
               (Utemp[UVfloor (a + j)] + ((guint8 *) & src_loc1[j])[2]) / 2;
@@ -821,7 +821,7 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
         }
         Ydest += crop_w;
 
-        // right border
+        /* right border */
         if (br < 0) {
           a = 0;
           oil_splat_u8_ns (Ydest, (guint8 *) & empty_px_values[0], -br);
@@ -845,10 +845,9 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 
       } else {
 
-        // left border
+        /* left border */
         a = 0;
         if (bl < 0) {
-          //GST_DEBUG("Left border");
           oil_splat_u8_ns (Ydest, (guint8 *) & empty_px_values[0], -bl);
           oil_splat_u8_ns (Vtemp, (guint8 *) & empty_px_values[1],
               UVceil (-bl));
@@ -860,7 +859,7 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 
         for (j = 0; j < crop_w; j++) {
 
-          // check ARCH 
+          /* check ARCH */
           Ydest[j] = ((guint8 *) & src_loc1[j])[1];
 
           if ((a + j) % 2 > 0) {
@@ -875,7 +874,7 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
         }
         Ydest += crop_w;
 
-        // right border
+        /* right border */
         if (br < 0) {
           j = 0;
           if ((a + crop_w) % 2 > 0) {
@@ -901,7 +900,7 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
       }
     }
 
-    // bottom border 
+    /* bottom border */
     if (bb < 0) {
       a = 0;
       oil_splat_u8_ns (Ydest, (guint8 *) & empty_px_values[0], (-bb) * Ywidth);
