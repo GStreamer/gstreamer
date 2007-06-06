@@ -487,7 +487,7 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
 {
   guint8 ext_code;
 
-  if (G_UNLIKELY ((end - data - 1) < 1))
+  if (G_UNLIKELY (data >= end))
     return FALSE;               /* short extension packet */
 
   ext_code = data[0] >> 4;
@@ -499,7 +499,7 @@ mpeg_util_parse_extension_packet (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
       guint8 horiz_size_ext, vert_size_ext;
       guint8 fps_n_ext, fps_d_ext;
 
-      if ((end - data - 1) < 6)
+      if (G_UNLIKELY ((end - data) < 6))
         /* need at least 10 bytes, minus 4 for the start code 000001b5 */
         return FALSE;
 
@@ -531,7 +531,7 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
   gboolean load_intra_flag;
   gboolean load_non_intra_flag;
 
-  if (G_UNLIKELY ((end - data - 1) < 12))
+  if (G_UNLIKELY ((end - data) < 12))
     return FALSE;               /* Too small to be a sequence header */
 
   code = GST_READ_UINT32_BE (data);
@@ -556,14 +556,14 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
   constrained_flag = (data[7] >> 2) & 0x01;
   load_intra_flag = (data[7] >> 1) & 0x01;
   if (load_intra_flag) {
-    if (G_UNLIKELY ((end - data - 1) < 64))
+    if (G_UNLIKELY ((end - data) < 64))
       return FALSE;
     data += 64;
   }
 
   load_non_intra_flag = data[7] & 0x01;
   if (load_non_intra_flag) {
-    if (G_UNLIKELY ((end - data - 1) < 64))
+    if (G_UNLIKELY ((end - data) < 64))
       return FALSE;
     data += 64;
   }
@@ -574,7 +574,7 @@ mpeg_util_parse_sequence_hdr (MPEGSeqHdr * hdr, guint8 * data, guint8 * end)
   /* Read MPEG-2 sequence extensions */
   data = mpeg_util_find_start_code (&sync_word, data, end);
   while (data != NULL) {
-    if (G_UNLIKELY ((end - data - 1) < 1))
+    if (G_UNLIKELY (data >= end))
       return FALSE;
 
     /* data points at the last byte of the start code */
@@ -595,7 +595,7 @@ mpeg_util_parse_picture_hdr (MPEGPictureHdr * hdr, guint8 * data, guint8 * end)
 {
   guint32 code;
 
-  if (G_UNLIKELY ((end - data - 1) < 6))
+  if (G_UNLIKELY ((end - data) < 6))
     return FALSE;               /* Packet too small */
 
   code = GST_READ_UINT32_BE (data);

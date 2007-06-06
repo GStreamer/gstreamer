@@ -1,3 +1,14 @@
+2007-06-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/mpegvideoparse/mpegpacketiser.c:
+	(mpeg_util_parse_extension_packet), (mpeg_util_parse_sequence_hdr),
+	(mpeg_util_parse_picture_hdr):
+	* gst/mpegvideoparse/mpegvideoparse.c:
+	(mpegvideoparse_handle_sequence), (mpegvideoparse_drain_avail):
+	Fix some silly bugs with calculating the guard sizes.
+	Properly compare the old sequence header structure with the new one.
+	Don't error out on an invalid sequence - just ignore it.
+
 2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/real/gstrealvideodec.c: (gst_real_video_dec_decode):

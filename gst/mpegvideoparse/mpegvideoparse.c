@@ -206,7 +206,7 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
   if (G_UNLIKELY (!mpeg_util_parse_sequence_hdr (&new_hdr, cur, end)))
     return FALSE;
 
-  if (memcmp (&mpegvideoparse, &new_hdr, sizeof (MPEGSeqHdr)) != 0) {
+  if (memcmp (&mpegvideoparse->seq_hdr, &new_hdr, sizeof (MPEGSeqHdr)) != 0) {
     GstCaps *caps;
     GstBuffer *seq_buf;
 
@@ -215,9 +215,6 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
     seq_buf = gst_buffer_copy (buf);
     gst_buffer_replace (&mpegvideoparse->seq_hdr_buf, seq_buf);
     gst_buffer_unref (seq_buf);
-
-    /* And update the new_hdr into our stored version */
-    mpegvideoparse->seq_hdr = new_hdr;
 
     caps = gst_caps_new_simple ("video/mpeg",
         "systemstream", G_TYPE_BOOLEAN, FALSE,
@@ -232,6 +229,9 @@ mpegvideoparse_handle_sequence (MpegVideoParse * mpegvideoparse,
     GST_DEBUG ("New mpegvideoparse caps: %" GST_PTR_FORMAT, caps);
     if (!gst_pad_set_caps (mpegvideoparse->srcpad, caps))
       return FALSE;
+
+    /* And update the new_hdr into our stored version */
+    mpegvideoparse->seq_hdr = new_hdr;
   }
 
   return TRUE;
@@ -312,8 +312,12 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
     if (mpegvideoparse->seq_hdr.mpeg_version == 0) {
       if (cur->flags & MPEG_BLOCK_FLAG_SEQUENCE) {
         /* Found a sequence header */
-        if (!mpegvideoparse_handle_sequence (mpegvideoparse, buf))
-          goto error;
+        if (!mpegvideoparse_handle_sequence (mpegvideoparse, buf)) {
+          GST_DEBUG_OBJECT (mpegvideoparse,
+              "Invalid sequence header. Dropping buffer.");
+          gst_buffer_unref (buf);
+          buf = NULL;
+        }
       } else {
         if (buf) {
           GST_DEBUG_OBJECT (mpegvideoparse,
@@ -364,10 +368,6 @@ mpegvideoparse_drain_avail (MpegVideoParse * mpegvideoparse)
   };
 
   return res;
-error:
-  if (buf != NULL)
-    gst_buffer_unref (buf);
-  return GST_FLOW_ERROR;
 }
 
 static GstFlowReturn
