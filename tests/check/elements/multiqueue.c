@@ -259,11 +259,7 @@ multiqueue_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_simple_create_destroy);
   tcase_add_test (tc_chain, test_simple_pipeline);
-
-  if (0) {
-    /* FIXME: this leaks buffers, disabled for now */
-    tcase_add_test (tc_chain, test_simple_shutdown_while_running);
-  }
+  tcase_add_test (tc_chain, test_simple_shutdown_while_running);
 
   /* FIXME: test_request_pads() needs some more fixes, see comments there */
   tcase_add_test (tc_chain, test_request_pads);

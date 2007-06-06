@@ -397,6 +397,11 @@ gst_data_queue_set_flushing (GstDataQueue * queue, gboolean flushing)
  * available, OR the @queue is set to flushing state.
  * MT safe.
  *
+ * Note that this function has slightly different semantics than gst_pad_push()
+ * and gst_pad_push_event(): this function only takes ownership of @item and
+ * the #GstMiniObject contained in @item if the push was successful. If FALSE
+ * is returned, the caller is responsible for freeing @item and its contents.
+ *
  * Returns: #TRUE if the @item was successfully pushed on the @queue.
  */
 gboolean

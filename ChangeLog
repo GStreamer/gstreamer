@@ -1,3 +1,17 @@
+2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/base/gstdataqueue.c:
+	* libs/gst/base/gstdataqueue.h:
+	* plugins/elements/gstmultiqueue.c: (gst_single_queue_push_one),
+	(gst_multi_queue_item_new), (gst_multi_queue_chain),
+	(gst_multi_queue_sink_event):
+	* tests/check/elements/multiqueue.c: (multiqueue_suite):
+	  Fix multiqueue leaking buffers and events when downstream or the
+	  queue are flushing. Make refcounting assumptions explicit and
+	  document them (shouldn't break existing code that uses it other than
+	  maybe leak miniobjects, but that already happens anyway). Add unit
+	  test for the most common flushing case. Fixes #423700.
+	  
 2007-06-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* libs/gst/controller/gstcontroller.c:

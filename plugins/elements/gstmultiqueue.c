@@ -427,7 +427,10 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     GstMiniObject * object)
 {
   if (GST_IS_BUFFER (object)) {
-    sq->srcresult = gst_pad_push (sq->srcpad, GST_BUFFER (object));
+    GstBuffer *buf;
+
+    buf = gst_buffer_ref (GST_BUFFER_CAST (object));
+    sq->srcresult = gst_pad_push (sq->srcpad, buf);
 
     if ((sq->srcresult != GST_FLOW_OK)
         && (sq->srcresult != GST_FLOW_NOT_LINKED)) {
@@ -437,7 +440,10 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
       gst_pad_pause_task (sq->srcpad);
     }
   } else if (GST_IS_EVENT (object)) {
-    if (GST_EVENT_TYPE (object) == GST_EVENT_EOS) {
+    GstEvent *event;
+
+    event = gst_event_ref (GST_EVENT_CAST (object));
+    if (GST_EVENT_TYPE (event) == GST_EVENT_EOS) {
       sq->srcresult = GST_FLOW_UNEXPECTED;
 
       GST_DEBUG_OBJECT (mq, "GstSingleQueue %d : pausing queue, got EOS",
@@ -445,7 +451,7 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
       gst_data_queue_set_flushing (sq->queue, TRUE);
       gst_pad_pause_task (sq->srcpad);
     }
-    gst_pad_push_event (sq->srcpad, GST_EVENT (object));
+    gst_pad_push_event (sq->srcpad, event);
   } else {
     g_warning ("Unexpected object in singlequeue %d (refcounting problem?)",
         sq->id);
@@ -461,13 +467,14 @@ gst_multi_queue_item_destroy (GstMultiQueueItem * item)
   g_free (item);
 }
 
+/* takes ownership of passed mini object! */
 static GstMultiQueueItem *
 gst_multi_queue_item_new (GstMiniObject * object)
 {
   GstMultiQueueItem *item;
 
   item = g_new0 (GstMultiQueueItem, 1);
-  item->object = gst_mini_object_ref (object);
+  item->object = object;
   item->destroy = (GDestroyNotify) gst_multi_queue_item_destroy;
 
   if (GST_IS_BUFFER (object)) {
@@ -621,7 +628,6 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
     GST_LOG_OBJECT (mq, "SingleQueue %d : exit because task paused, reason: %s",
         sq->id, gst_flow_get_name (sq->srcresult));
     gst_multi_queue_item_destroy (item);
-    gst_buffer_unref (buffer);
     ret = sq->srcresult;
   }
 
@@ -718,7 +724,6 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
     GST_LOG_OBJECT (mq, "SingleQueue %d : exit because task paused, reason: %s",
         sq->id, gst_flow_get_name (sq->srcresult));
     gst_multi_queue_item_destroy (item);
-    gst_event_unref (event);
   }
 
 done:

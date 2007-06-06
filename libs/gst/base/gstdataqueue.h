@@ -48,7 +48,9 @@ typedef struct _GstDataQueueItem GstDataQueueItem;
  * @duration: the duration in #GstClockTime of the miniobject. Can not be
  * #GST_CLOCK_TIME_NONE.
  * @visible: #TRUE if @object should be considered as a visible object.
- * @destroy: The #GDestroyNotify to use to free the #GstDataQueueItem.
+ * @destroy: The #GDestroyNotify function to use to free the #GstDataQueueItem.
+ * This function should also drop the reference to @object the owner of the
+ * #GstDataQueueItem is assumed to hold.
  *
  * Structure used by #GstDataQueue. You can supply a different structure, as
  * long as the top of the structure is identical to this structure.
