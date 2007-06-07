@@ -1970,7 +1970,8 @@ gst_element_query_convert (GstElement * element, GstFormat src_format,
  * gst_element_seek_simple
  * @element: a #GstElement to seek on
  * @format: a #GstFormat to execute the seek in, such as #GST_FORMAT_TIME
- * @seek_flags: seek options
+ * @seek_flags: seek options; playback applications will usually want to use
+ *            GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT here
  * @seek_pos: position to seek to (relative to the start); if you are doing
  *            a seek in #GST_FORMAT_TIME this value is in nanoseconds -
  *            multiply with #GST_SECOND to convert seconds to nanoseconds or
