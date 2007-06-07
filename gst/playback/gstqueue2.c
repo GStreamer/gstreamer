@@ -208,7 +208,7 @@ struct _GstQueueClass
   GST_CAT_LOG_OBJECT (queue_dataflow, queue, \
                       "(%s:%s) " msg ": %u of %u buffers, %u of %u " \
                       "bytes, %" G_GUINT64_FORMAT " of %" G_GUINT64_FORMAT \
-                      " ns, %u items", \
+                      " ns, %"G_GUINT64_FORMAT" items", \
                       GST_DEBUG_PAD_NAME (pad), \
                       queue->cur_level.buffers, \
                       queue->max_level.buffers, \
@@ -216,9 +216,9 @@ struct _GstQueueClass
                       queue->max_level.bytes, \
                       queue->cur_level.time, \
                       queue->max_level.time, \
-                      QUEUE_IS_USING_TEMP_FILE(queue) ? \
+                      (guint64) (QUEUE_IS_USING_TEMP_FILE(queue) ? \
                         queue->writing_pos - queue->reading_pos : \
-                        queue->queue->length)
+                        queue->queue->length))
 
 #define GST_QUEUE_MUTEX_LOCK(q) G_STMT_START {                          \
   g_mutex_lock (q->qlock);                                              \
