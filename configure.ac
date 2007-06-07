@@ -398,7 +398,7 @@ AC_SUBST(GST_HAVE_GLIB_2_8_DEFINE)
 dnl Check for glib2 without extra fat, useful for the unversioned tool frontends
 PKG_CHECK_MODULES(GLIB_ONLY, glib-2.0 >= $GLIB_REQ)
 
-dnl Checks for documentation xrefs
+dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 AC_SUBST(GLIB_PREFIX)
 

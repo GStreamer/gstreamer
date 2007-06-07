@@ -1,5 +1,10 @@
 2007-06-07  Stefan Kost  <ensonic@users.sf.net>
 
+	* configure.ac:
+	  Fix typo and test commit mail sending.
+
+2007-06-07  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/examples/controller/audio-example.c:
 	  Improve comment and test commit mail sending.
 
