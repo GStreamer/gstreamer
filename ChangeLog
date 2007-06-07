@@ -1,6 +1,11 @@
 2007-06-07  Stefan Kost  <ensonic@users.sf.net>
 
 	* README:
+	  Remove that test line again.
+
+2007-06-07  Stefan Kost  <ensonic@users.sf.net>
+
+	* README:
 	  Test commit mail sending.
 
 2007-06-07  Stefan Kost  <ensonic@users.sf.net>
