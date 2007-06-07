@@ -507,7 +507,7 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
   if (diff > G_MAXINT32) {
     /* timestamp went backwards more than allowed, we wrap around and get
      * updated extended timestamp. */
-    priv->ts_wraparound += (1LL << 32);
+    priv->ts_wraparound += (G_GINT64_CONSTANT (1) << 32);
     exttimestamp = timestamp + priv->ts_wraparound;
   }
   priv->prev_timestamp = exttimestamp;

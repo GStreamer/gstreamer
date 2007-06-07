@@ -8,6 +8,7 @@ EXPORTS
 	gst_color_balance_value_changed
 	gst_mixer_get_option
 	gst_mixer_get_type
+	gst_mixer_get_volume
 	gst_mixer_list_tracks
 	gst_mixer_mute_toggled
 	gst_mixer_option_changed
@@ -17,6 +18,7 @@ EXPORTS
 	gst_mixer_set_mute
 	gst_mixer_set_option
 	gst_mixer_set_record
+	gst_mixer_set_volume
 	gst_mixer_track_flags_get_type
 	gst_mixer_track_get_type
 	gst_mixer_type_get_type
@@ -24,7 +26,10 @@ EXPORTS
 	gst_navigation_send_event
 	gst_navigation_send_key_event
 	gst_navigation_send_mouse_event
+	gst_property_probe_get_properties
+	gst_property_probe_get_property
 	gst_property_probe_get_type
+	gst_property_probe_get_values_name
 	gst_property_probe_needs_probe_name
 	gst_property_probe_probe_property_name
 	gst_tuner_channel_changed
@@ -46,6 +51,11 @@ EXPORTS
 	gst_tuner_set_norm
 	gst_tuner_signal_changed
 	gst_tuner_signal_strength
+	gst_video_orientation_get_type
+	gst_video_orientation_set_hcenter
+	gst_video_orientation_set_hflip
+	gst_video_orientation_set_vcenter
+	gst_video_orientation_set_vflip
 	gst_x_overlay_expose
 	gst_x_overlay_get_type
 	gst_x_overlay_got_xwindow_id

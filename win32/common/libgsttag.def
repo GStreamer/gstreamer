@@ -1,4 +1,5 @@
 EXPORTS
+	gst_tag_freeform_string_to_utf8
 	gst_tag_from_id3_tag
 	gst_tag_from_id3_user_tag
 	gst_tag_id3_genre_get

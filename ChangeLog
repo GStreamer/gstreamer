@@ -1,3 +1,12 @@
+2007-06-07  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c: 
+	(gst_base_rtp_depayload_set_gst_timestamp):
+	Use G_GINT64_CONSTANT macro for int64 constant.
+	* win32/common/libgstinterfaces.def:
+	* win32/common/libgsttag.def:
+	Add new exported functions.
+
 2007-06-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/ogg/gstoggmux.c: (gst_ogg_mux_send_headers):
