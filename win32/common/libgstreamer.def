@@ -79,6 +79,7 @@ EXPORTS
 	gst_caps_is_subset
 	gst_caps_make_writable
 	gst_caps_merge
+	gst_caps_merge_structure
 	gst_caps_new_any
 	gst_caps_new_empty
 	gst_caps_new_full
@@ -233,6 +234,7 @@ EXPORTS
 	gst_element_set_index
 	gst_element_set_locked_state
 	gst_element_set_state
+	gst_element_state_change_return_get_name
 	gst_element_state_get_name
 	gst_element_sync_state_with_parent
 	gst_element_unlink
@@ -278,6 +280,7 @@ EXPORTS
 	gst_ghost_pad_get_type
 	gst_ghost_pad_new
 	gst_ghost_pad_new_no_target
+	gst_ghost_pad_new_no_target_from_template
 	gst_ghost_pad_new_from_template
 	gst_ghost_pad_set_target
 	gst_implements_interface_cast
@@ -481,6 +484,7 @@ EXPORTS
 	gst_pad_template_pad_created
 	gst_pad_unlink
 	gst_pad_use_fixed_caps
+	gst_param_spec_fraction_get_type
 	gst_param_spec_mini_object
 	gst_parse_bin_from_description
 	gst_parse_error_get_type
@@ -563,6 +567,8 @@ EXPORTS
 	gst_registry_feature_filter
 	gst_registry_find_feature
 	gst_registry_find_plugin
+	gst_registry_fork_is_enabled
+	gst_registry_fork_set_enabled
 	gst_registry_get_default
 	gst_registry_get_feature_list
 	gst_registry_get_feature_list_by_plugin
@@ -592,6 +598,8 @@ EXPORTS
 	gst_segment_set_seek
 	gst_segment_to_running_time
 	gst_segment_to_stream_time
+	gst_segtrap_is_enabled
+	gst_segtrap_set_enabled
 	gst_state_change_get_type
 	gst_state_change_return_get_type
 	gst_state_get_type
@@ -626,6 +634,7 @@ EXPORTS
 	gst_structure_has_name
 	gst_structure_id_set
 	gst_structure_id_set_valist
+	gst_structure_id_set_value
 	gst_structure_n_fields
 	gst_structure_new
 	gst_structure_new_valist
@@ -697,6 +706,7 @@ EXPORTS
 	gst_type_find_probability_get_type
 	gst_type_find_register
 	gst_type_find_suggest
+	gst_update_registry
 	gst_uri_construct
 	gst_uri_get_location
 	gst_uri_get_protocol

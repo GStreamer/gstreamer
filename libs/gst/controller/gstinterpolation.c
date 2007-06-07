@@ -403,7 +403,7 @@ _interpolate_cubic_update_cache_##type (GstControlledProperty *prop) \
   cp = node->data; \
   x_next = cp->timestamp; \
   y_next = g_value_get_##type (&cp->value); \
-  h[0] = x_next - x; \
+  h[0] = gst_util_guint64_to_gdouble (x_next - x); \
   \
   for (i = 1; i < n-1; i++) { \
     /* Shuffle x and y values */ \
@@ -416,7 +416,7 @@ _interpolate_cubic_update_cache_##type (GstControlledProperty *prop) \
     x_next = cp->timestamp; \
     y_next = g_value_get_##type (&cp->value); \
     \
-    h[i] = x_next - x; \
+    h[i] = gst_util_guint64_to_gdouble (x_next - x); \
     o[i] = h[i-1]; \
     p[i] = 2.0 * (h[i-1] + h[i]); \
     q[i] = h[i]; \
