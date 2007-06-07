@@ -417,6 +417,8 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
     ret = gst_pad_set_caps (rtp_mux->srcpad, caps);
   }
 
+  gst_object_unref (rtp_mux);
+
   return ret;
 }
 
