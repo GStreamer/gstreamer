@@ -1,9 +1,10 @@
 /*
  * audio-example.c
  *
- * Build a pipeline with testaudiosource->alsasink
- * and sweep frequency and volume
+ * Builds a pipeline with audiotestsource->alsasink and sweeps frequency and
+ * volume.
  *
+ * Needs gst-plugin-base installed.
  */
 
 #include <gst/gst.h>
