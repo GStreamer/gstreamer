@@ -1,3 +1,14 @@
+2007-06-07  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (find_message), (bin_replace_message), (is_eos),
+	(gst_bin_remove_func), (gst_bin_element_set_state),
+	(bin_handle_async_start), (bin_handle_async_done),
+	(gst_bin_handle_message_func):
+	Add helper function to find messages.
+	Generate the async-done messages together with the state change
+	messages.
+	Small cleanups in handling toplevel bins.
+
 2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gstdataqueue.c:
