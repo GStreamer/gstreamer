@@ -1,3 +1,10 @@
+2007-06-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_send_headers):
+	  The BOS page of the first Dirac video stream needs to come before
+	  the BOS page of any Vorbis streams or other audio streams, just like
+	  it is with Theora.
+
 2007-06-07  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstqueue2.c: (gst_queue_get_range):
