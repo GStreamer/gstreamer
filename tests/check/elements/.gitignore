@@ -16,3 +16,6 @@ audiopanorama
 videofilter
 sunaudio
 autodetect
+wavpackdec
+wavpackenc
+wavpackparse
