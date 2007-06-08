@@ -323,9 +323,9 @@ user_read_data (png_structp png_ptr, png_bytep data, png_size_t length)
   return;
 
 pause:
-  GST_LOG_OBJECT (pngdec, "pausing task, reason %s", gst_flow_get_name (ret));
+  GST_INFO_OBJECT (pngdec, "pausing task, reason %s", gst_flow_get_name (ret));
   gst_pad_pause_task (pngdec->sinkpad);
-  if (GST_FLOW_IS_FATAL (ret)) {
+  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
     gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
     GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
         (_("Internal data stream error.")),
@@ -506,9 +506,10 @@ gst_pngdec_task (GstPad * pad)
 
 pause:
   {
-    GST_LOG_OBJECT (pngdec, "pausing task, reason %s", gst_flow_get_name (ret));
+    GST_INFO_OBJECT (pngdec, "pausing task, reason %s",
+        gst_flow_get_name (ret));
     gst_pad_pause_task (pngdec->sinkpad);
-    if (GST_FLOW_IS_FATAL (ret)) {
+    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
       GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
           (_("Internal data stream error.")),
           ("stream stopped, reason %s", gst_flow_get_name (ret)));
