@@ -34,6 +34,8 @@ GST_DEBUG_CATEGORY_STATIC (videocrop_test_debug);
 #define TIME_PER_TEST   10      /* seconds each format is tested */
 #define FRAMERATE       15      /* frames per second             */
 
+#define DEFAULT_VIDEOSINK "xvimagesink"
+
 static gboolean
 check_bus_for_errors (GstBus * bus, GstClockTime max_wait_time)
 {
@@ -173,7 +175,7 @@ main (int argc, char **argv)
 {
   static const GOptionEntry test_goptions[] = {
     {"videosink", '\0', 0, G_OPTION_ARG_STRING, &opt_videosink_str,
-        "videosink to use (default: autovideosink)", NULL},
+        "videosink to use (default: " DEFAULT_VIDEOSINK ")", NULL},
     {"caps", '\0', 0, G_OPTION_ARG_STRING, &opt_filtercaps_str,
         "filter caps to narrow down formats to test", NULL},
     {"with-ffmpegcolorspace", '\0', 0, G_OPTION_ARG_NONE,
@@ -245,8 +247,8 @@ main (int argc, char **argv)
   }
 
   if (sink == NULL) {
-    g_print ("Trying videosink '%s' ...", "autovideosink");
-    sink = gst_element_factory_make ("autovideosink", "sink");
+    g_print ("Trying videosink '%s' ...", DEFAULT_VIDEOSINK);
+    sink = gst_element_factory_make (DEFAULT_VIDEOSINK, "sink");
     g_print ("%s\n", (sink) ? "ok" : "element couldn't be created");
   }
   if (sink == NULL) {

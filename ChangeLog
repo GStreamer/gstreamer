@@ -1,3 +1,10 @@
+2007-06-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/icles/videocrop-test.c: (main):
+	  Default to xvimagesink instead of autovideosink while
+	  autovideosink/ghostpads/whatever don't handle the way we use it in
+	  the way we expect it to.
+
 2007-06-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
