@@ -1,5 +1,10 @@
 2007-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* gst/rtp/gstrtpmp4vpay.c (gst_rtp_mp4vpay_details):
+	  Fix element description.
+
+2007-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* configure.ac:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
