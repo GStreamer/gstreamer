@@ -544,7 +544,8 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
   }
 
   if (identity->datarate > 0) {
-    GstClockTime time = identity->offset * GST_SECOND / identity->datarate;
+    GstClockTime time = gst_util_uint64_scale_int (identity->offset,
+        GST_SECOND, identity->datarate);
 
     GST_BUFFER_TIMESTAMP (buf) = time;
     GST_BUFFER_DURATION (buf) =
