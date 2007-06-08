@@ -38,15 +38,6 @@ else
 check_neon = 
 endif
 
-if USE_WAVPACK
-check_wavpack = \
-       elements/wavpackparse \
-       elements/wavpackdec \
-       elements/wavpackenc
-else
-check_wavpack =
-endif
-
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc
 
@@ -63,7 +54,6 @@ check_PROGRAMS = \
 	elements/rglimiter \
 	elements/rgvolume \
 	elements/videocrop \
-	$(check_wavpack)   \
 	elements/y4menc
 
 TESTS = $(check_PROGRAMS)

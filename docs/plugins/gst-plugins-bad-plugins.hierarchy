@@ -14,9 +14,6 @@ GObject
       GstX264Enc
       GstXvidEnc
       GstXvidDec
-      GstWavpackParse
-      GstWavpackDec
-      GstWavpackEnc
       GstSwfdec
       GstSpcDec
       GstPitch

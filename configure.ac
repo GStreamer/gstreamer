@@ -878,22 +878,6 @@ int main () { return 0; }
   ], )
 ])
 
-dnl *** wavpack ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_WAVPACK, true)
-AG_GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
-  PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.40.0, HAVE_WAVPACK=yes, [
-    PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.20, [
-      HAVE_WAVPACK=yes
-      AC_DEFINE(WAVPACK_OLD_API, 1, [old wavpack API])
-    ],[
-      HAVE_WAVPACK=no
-      AC_MSG_RESULT(no)
-    ])
-  ])
-  AC_SUBST(WAVPACK_CFLAGS)
-  AC_SUBST(WAVPACK_LIBS)
-])
-
 dnl *** dvb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVB, true)
 AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
@@ -949,7 +933,6 @@ AM_CONDITIONAL(USE_THEORADEC, false)
 AM_CONDITIONAL(USE_TIMIDITY, false)
 AM_CONDITIONAL(USE_X264, false)
 AM_CONDITIONAL(USE_XVID, false)
-AM_CONDITIONAL(USE_WAVPACK, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
 AM_CONDITIONAL(USE_DVB, false)
 AM_CONDITIONAL(USE_ZLIB, false)
@@ -1076,7 +1059,6 @@ ext/spc/Makefile
 ext/swfdec/Makefile
 ext/theora/Makefile
 ext/timidity/Makefile
-ext/wavpack/Makefile
 ext/x264/Makefile
 ext/xvid/Makefile
 po/Makefile.in

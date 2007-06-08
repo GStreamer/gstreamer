@@ -32,9 +32,6 @@
     <xi:include href="xml/element-videodetect.xml" />
     <xi:include href="xml/element-videomark.xml" />
     <xi:include href="xml/element-waveformsink.xml" />
-    <xi:include href="xml/element-wavpackdec.xml" />
-    <xi:include href="xml/element-wavpackenc.xml" />
-    <xi:include href="xml/element-wavpackparse.xml" />
   </chapter>
 
   <chapter>
@@ -64,7 +61,6 @@
     <xi:include href="xml/plugin-videocrop.xml" />
     <xi:include href="xml/plugin-videosignal.xml" />
     <xi:include href="xml/plugin-waveform.xml" />
-    <xi:include href="xml/plugin-wavpack.xml" />
     <xi:include href="xml/plugin-xingheader.xml" />
 
   </chapter>

@@ -96,9 +96,6 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
 	$(top_srcdir)/ext/sdl/sdlvideosink.h \
-	$(top_srcdir)/ext/wavpack/gstwavpackdec.h \
-	$(top_srcdir)/ext/wavpack/gstwavpackenc.h \
-	$(top_srcdir)/ext/wavpack/gstwavpackparse.h \
 	$(top_srcdir)/gst/qtdemux/qtdemux.h \
 	$(top_srcdir)/gst/replaygain/gstrganalysis.h \
 	$(top_srcdir)/gst/replaygain/gstrglimiter.h \

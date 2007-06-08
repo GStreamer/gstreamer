@@ -234,28 +234,3 @@ GstWaveFormSink
 <SUBSECTION Standard>
 GstWaveFormSinkClass
 </SECTION>
-
-<SECTION>
-<FILE>element-wavpackdec</FILE>
-GstWavpackDec
-<TITLE>wavpackdec</TITLE>
-<SUBSECTION Standard>
-GstWavpackDecClass
-</SECTION>
-
-<SECTION>
-<FILE>element-wavpackenc</FILE>
-GstWavpackEnc
-<TITLE>wavpackenc</TITLE>
-<SUBSECTION Standard>
-GstWavpackEncClass
-</SECTION>
-
-<SECTION>
-<FILE>element-wavpackparse</FILE>
-GstWavpackParse
-<TITLE>wavpackparse</TITLE>
-<SUBSECTION Standard>
-GstWavpackParseClass
-</SECTION>
-

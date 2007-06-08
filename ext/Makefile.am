@@ -94,12 +94,6 @@ endif
 HERMES_DIR=
 # endif
 
-if USE_WAVPACK
-WAVPACK_DIR=wavpack
-else
-WAVPACK_DIR=
-endif
-
 if USE_IVORBIS
  IVORBIS_DIR=ivorbis
 else
@@ -303,12 +297,11 @@ SUBDIRS=\
 	$(TARKIN_DIR) \
 	$(THEORA_DIR) \
 	$(TIMIDITY_DIR) \
-	$(WAVPACK_DIR) \
 	$(X264_DIR) \
 	$(XINE_DIR) \
 	$(XVID_DIR)
 
-DIST_SUBDIRS= \
+DIST_SUBDIRS = \
 	alsaspdif \
 	amrwb \
 	bz2 \
@@ -336,6 +329,5 @@ DIST_SUBDIRS= \
 	swfdec \
 	theora \
 	timidity \
-	wavpack \
 	x264 \
 	xvid

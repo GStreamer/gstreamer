@@ -1,3 +1,32 @@
+2007-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* ext/Makefile.am:
+	* ext/wavpack/Makefile.am:
+	* ext/wavpack/gstwavpack.c:
+	* ext/wavpack/gstwavpackcommon.c:
+	* ext/wavpack/gstwavpackcommon.h:
+	* ext/wavpack/gstwavpackdec.c:
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackenc.c:
+	* ext/wavpack/gstwavpackenc.h:
+	* ext/wavpack/gstwavpackparse.c:
+	* ext/wavpack/gstwavpackparse.h:
+	* ext/wavpack/gstwavpackstreamreader.c:
+	* ext/wavpack/gstwavpackstreamreader.h:
+	* ext/wavpack/md5.c:
+	* ext/wavpack/md5.h:
+	* tests/check/Makefile.am:
+	* tests/check/elements/wavpackdec.c:
+	* tests/check/elements/wavpackenc.c:
+	* tests/check/elements/wavpackparse.c:
+	  Move wavpack to good.
+
 2007-06-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
