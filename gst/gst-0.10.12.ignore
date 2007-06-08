@@ -16,4 +16,10 @@ ignore
    gst_bus_timed_pop
    gst_message_new_info
    gst_message_parse_info
+   GstBaseSink__do_fixate
+   GstBaseSink__proxy_do_fixate
+   GstBaseSink__do_activate_pull
+   GstBaseSink__proxy_do_activate_pull
+   GstBaseSrc__do_fixate
+   GstBaseSrc__proxy_do_fixate
 %%

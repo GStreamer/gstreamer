@@ -1,5 +1,12 @@
 2007-06-08  Edward Hervey  <edward@fluendo.com>
 
+	* gst/gst-0.10.12.ignore:
+	Add more API additions that weren't explicit in the release notes.
+	* gst/gst-0.10.13.ignore:
+	Personal note : remember to save file before commiting it.
+
+2007-06-08  Edward Hervey  <edward@fluendo.com>
+
 	* configure.ac:
 	* gst/Makefile.am:
 	* gst/gst-0.10.12.ignore:
