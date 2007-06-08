@@ -1,0 +1,73 @@
+GstController:
+==============
+
+Implementation:
+---------------
+
+Ideas and plans:
+  - Deprecate control-rate property and add a control-period property
+    that does the same and is named appropiately. Damn confusing names.
+
+  - gst_object_suggest_next_sync() will not be used at all anymore.
+    Note this in the docs and explain correct usage in elements.
+
+  - Optimize get_value_array() functions to not just call get() but be
+    a bit more intelligent.
+  - Optimize trigger interpolator's get_value_array() to set trigger if
+    a requested value's timestamp is before the trigger timestamp and
+    this timestamp + sample period is after the trigger timestamp.
+
+  - Get tempo interface in base (or core?) and have it modify the
+    control rate to get expected results.
+
+  - ? Let get_value_array() sample the values with control-period if
+    the given sample_interval is zero ?
+
+
+Usage in elements:
+------------------
+
+  - In the beginning of the processing loop call
+    gst_object_sync_values() with the current timestamp.
+  - Convert the controller's control-period property into frames/samples
+    and request values sampled with control-period to apply one value to
+    each control-period frames/samples.
+  - Update controlled GObject properties with the last values, i.e.
+    call gst_object_sync_values() with the end timestamp.
+
+  - ! The user has to choose a good control-period to prevent two trigger
+    timestamps separated by less than control-period nanoseconds.
+
+  code:
+
+  FIXME: can this be simplified? bugs in corner cases?
+  
+  [...]
+  GstController ctrl = gst_object_get_controller (self);
+  GstValueArray prop1;
+  prop1.property_name = "prop1";
+  if (ctrl) {
+    gst_controller_sync_values (ctrl, GST_BUFFER_TIMESTAMP);
+    samples_per_period = control-period / sample-rate;
+    nvalues = num_samples / samples_per_period;
+    prop1.nbsamples = nvalues;
+    prop1.sample_interval = control-period;
+    prop1.values = g_new (type, nvalues);
+    gst_controller_get_value_array (ctrl, GST_BUFFER_TIMESTAMP, &prop1);
+  } else {
+    prop1.values = &self->prop1;
+    samples_per_period = num_samples;
+  }
+  [...]
+
+  for (i = 0; i < num_samples; i++) {
+    prop1_val = prop1.values[i / samples_per_period];
+    process();
+  }
+
+  [...]
+  if (ctrl) {
+    gst_controller_sync_values (ctrl, GST_BUFFER_TIMESTAMP + GST_BUFFER_DURATION);
+    g_free (prop1.values);
+  }
+

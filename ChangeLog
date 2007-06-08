@@ -1,3 +1,8 @@
+2007-06-08  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* docs/random/slomo/controller.txt:
+	Add some thoughts about the future of the controller.
+
 2007-06-08  Wim Taymans  <wim@fluendo.com>
 
 	* plugins/elements/gstidentity.c: (gst_identity_transform_ip):
