@@ -1,3 +1,11 @@
+2007-06-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/timidity/gsttimidity.c: (gst_timidity_loop):
+	* ext/timidity/gstwildmidi.c: (gst_wildmidi_loop):
+	* gst/tta/gstttaparse.c: (gst_tta_parse_loop):
+	  When driving the pipeline, also post an error when we get a
+	  not-linked flow return from downstream.
+
 2007-06-08  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/plugins/gst-plugins-bad-plugins.args:

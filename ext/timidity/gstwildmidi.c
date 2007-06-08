@@ -672,18 +672,25 @@ gst_wildmidi_loop (GstPad * sinkpad)
   gst_buffer_set_caps (out, wildmidi->out_caps);
   ret = gst_pad_push (wildmidi->srcpad, out);
 
-  if (ret == GST_FLOW_OK)
-    return;
+  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED)
+    goto error;
 
-  if (GST_FLOW_IS_FATAL (ret)) {
-    GST_ELEMENT_ERROR (wildmidi, STREAM, FAILED,
-        ("Internal data stream error XXX"),
-        ("Streaming stopped, reason %s", gst_flow_get_name (ret)));
-  }
+  return;
 
 paused:
-  GST_LOG_OBJECT (wildmidi, "pausing task");
-  gst_pad_pause_task (wildmidi->sinkpad);
+  {
+    GST_DEBUG_OBJECT (wildmidi, "pausing task");
+    gst_pad_pause_task (wildmidi->sinkpad);
+    return;
+  }
+error:
+  {
+    GST_ELEMENT_ERROR (wildmidi, STREAM, FAILED,
+        ("Internal data stream error"),
+        ("Streaming stopped, reason %s", gst_flow_get_name (ret)));
+    gst_pad_push_event (wildmidi->srcpad, gst_event_new_eos ());
+    goto paused;
+  }
 }
 
 static GstStateChangeReturn

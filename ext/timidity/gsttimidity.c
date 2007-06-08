@@ -697,18 +697,25 @@ gst_timidity_loop (GstPad * sinkpad)
   gst_buffer_set_caps (out, timidity->out_caps);
   ret = gst_pad_push (timidity->srcpad, out);
 
-  if (ret == GST_FLOW_OK)
-    return;
+  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED)
+    goto error;
 
-  if (GST_FLOW_IS_FATAL (ret)) {
-    GST_ELEMENT_ERROR (timidity, STREAM, FAILED,
-        ("Internal data stream error XXX"),
-        ("Streaming stopped, reason %s", gst_flow_get_name (ret)));
-  }
+  return;
 
 paused:
-  GST_LOG_OBJECT (timidity, "pausing task");
-  gst_pad_pause_task (timidity->sinkpad);
+  {
+    GST_DEBUG_OBJECT (timidity, "pausing task");
+    gst_pad_pause_task (timidity->sinkpad);
+    return;
+  }
+error:
+  {
+    GST_ELEMENT_ERROR (timidity, STREAM, FAILED,
+        ("Internal data stream error"),
+        ("Streaming stopped, reason %s", gst_flow_get_name (ret)));
+    gst_pad_push_event (timidity->srcpad, gst_event_new_eos ());
+    goto paused;
+  }
 }
 
 static GstStateChangeReturn
