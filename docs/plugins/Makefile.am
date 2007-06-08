@@ -77,23 +77,6 @@ IGNORE_CFILES =
 # the registry won't have the element
 
 EXTRA_HFILES = \
-	$(top_srcdir)/gst/alpha/gstalphacolor.h \
-	$(top_srcdir)/gst/apetag/gstapedemux.h \
-	$(top_srcdir)/gst/audiofx/audiopanorama.h \
-	$(top_srcdir)/gst/audiofx/audioinvert.h \
-	$(top_srcdir)/gst/audiofx/audioamplify.h \
-	$(top_srcdir)/gst/audiofx/audiodynamic.h \
-	$(top_srcdir)/gst/autodetect/gstautoaudiosink.h \
-	$(top_srcdir)/gst/autodetect/gstautovideosink.h \
-	$(top_srcdir)/gst/avi/gstavidemux.h \
-	$(top_srcdir)/gst/avi/gstavimux.h \
-	$(top_srcdir)/gst/debug/progressreport.h \
-	$(top_srcdir)/gst/level/gstlevel.h \
-	$(top_srcdir)/gst/goom/gstgoom.h \
-	$(top_srcdir)/gst/id3demux/gstid3demux.h \
-	$(top_srcdir)/gst/rtsp/gstrtpdec.h \
-	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
-	$(top_srcdir)/gst/wavparse/gstwavparse.h \
 	$(top_srcdir)/ext/annodex/gstcmmldec.h \
 	$(top_srcdir)/ext/annodex/gstcmmlenc.h \
 	$(top_srcdir)/ext/cairo/gsttimeoverlay.h \
@@ -108,22 +91,39 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/jpeg/gstjpegenc.h \
 	$(top_srcdir)/ext/jpeg/gstsmokedec.h \
 	$(top_srcdir)/ext/jpeg/gstsmokeenc.h \
-	$(top_srcdir)/ext/taglib/gsttaglibmux.h \
-	$(top_srcdir)/ext/taglib/gstid3v2mux.h \
 	$(top_srcdir)/ext/taglib/gstapev2mux.h \
+	$(top_srcdir)/ext/taglib/gstid3v2mux.h \
+	$(top_srcdir)/ext/taglib/gsttaglibmux.h \
+	$(top_srcdir)/gst/alpha/gstalphacolor.h \
+	$(top_srcdir)/gst/apetag/gstapedemux.h \
+	$(top_srcdir)/gst/audiofx/audioamplify.h \
+	$(top_srcdir)/gst/audiofx/audiodynamic.h \
+	$(top_srcdir)/gst/audiofx/audioinvert.h \
+	$(top_srcdir)/gst/audiofx/audiopanorama.h \
+	$(top_srcdir)/gst/autodetect/gstautoaudiosink.h \
+	$(top_srcdir)/gst/autodetect/gstautovideosink.h \
+	$(top_srcdir)/gst/avi/gstavidemux.h \
+	$(top_srcdir)/gst/avi/gstavimux.h \
+	$(top_srcdir)/gst/debug/progressreport.h \
+	$(top_srcdir)/gst/goom/gstgoom.h \
 	$(top_srcdir)/gst/icydemux/gsticydemux.h \
-	$(top_srcdir)/gst/multipart/multipartmux.c \
+	$(top_srcdir)/gst/id3demux/gstid3demux.h \
+	$(top_srcdir)/gst/level/gstlevel.h \
 	$(top_srcdir)/gst/multipart/multipartdemux.c \
-	$(top_srcdir)/gst/udp/gstudpsrc.h \
+	$(top_srcdir)/gst/multipart/multipartmux.c \
+	$(top_srcdir)/gst/rtsp/gstrtpdec.h \
+	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
-	$(top_srcdir)/gst/videofilter/gstvideoflip.h \
+	$(top_srcdir)/gst/udp/gstudpsrc.h \
 	$(top_srcdir)/gst/videofilter/gstvideobalance.h \
+	$(top_srcdir)/gst/videofilter/gstvideoflip.h \
 	$(top_srcdir)/gst/videomixer/videomixer.c \
+	$(top_srcdir)/gst/wavparse/gstwavparse.h \
 	$(top_srcdir)/sys/directdraw/gstdirectdrawsink.h \
 	$(top_srcdir)/sys/directsound/gstdirectsoundsink.h \
 	$(top_srcdir)/sys/oss/gstossmixerelement.h \
-	$(top_srcdir)/sys/oss/gstosssrc.h \
 	$(top_srcdir)/sys/oss/gstosssink.h \
+	$(top_srcdir)/sys/oss/gstosssrc.h \
 	$(top_srcdir)/sys/v4l2/gstv4l2src.h \
 	$(top_srcdir)/sys/ximage/gstximagesrc.h
 
