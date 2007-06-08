@@ -1,3 +1,11 @@
+2007-06-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* sys/directdraw/gstdirectdrawsink.c:
+	(gst_directdraw_sink_class_init):
+	Rename the keep-aspect-ratio property to force-aspect-ratio to make
+	it consistent with xvimagesink and ximagesink.
+
 2007-06-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/icles/videocrop-test.c: (main):

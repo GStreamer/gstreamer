@@ -17086,12 +17086,12 @@
 </ARG>
 
 <ARG>
-<NAME>GstDirectDrawSink::keep-aspect-ratio</NAME>
+<NAME>GstDirectDrawSink::force-aspect-ratio</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>keep-aspect-ratio</NICK>
-<BLURB>keep the aspect ratio or not</BLURB>
+<NICK>Force aspect ratio</NICK>
+<BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 
