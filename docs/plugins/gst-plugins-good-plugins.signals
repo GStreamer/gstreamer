@@ -262,3 +262,19 @@ GstElement *arg1
 GstDV1394Src *gstdv1394src
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstRTPDec::clear-pt-map</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPDec *gstrtpdec
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPDec::request-pt-map</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPDec *gstrtpdec
+guint  arg1
+guint  arg2
+</SIGNAL>
+

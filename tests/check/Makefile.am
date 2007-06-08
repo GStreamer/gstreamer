@@ -40,6 +40,15 @@ else
 check_taglib =
 endif
 
+if USE_WAVPACK
+check_wavpack = \
+       elements/wavpackparse \
+       elements/wavpackdec \
+       elements/wavpackenc
+else
+check_wavpack =
+endif
+
 check_PROGRAMS = \
 	generic/states \
 	$(check_annodex) \
@@ -55,7 +64,8 @@ check_PROGRAMS = \
 	elements/icydemux \
 	elements/videofilter \
 	$(check_sunaudio) \
-	$(check_taglib)
+	$(check_taglib) \
+	$(check_wavpack)
     
 VALGRIND_TO_FIX =
 

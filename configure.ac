@@ -216,6 +216,9 @@ dnl *** checks for header files ***
 dnl check if we have ANSI C header files
 AC_HEADER_STDC
 
+dnl used by ext/wavpack
+AX_CREATE_STDINT_H
+
 dnl used in gst/rtp/gstasteriskh263.c
 AC_CHECK_HEADERS([netinet/in.h])
 AC_CHECK_HEADERS([winsock2.h])
@@ -849,6 +852,22 @@ AG_GST_CHECK_FEATURE(TAGLIB, [taglib tagging library], taglib, [
   fi
 ])
 
+dnl *** wavpack ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_WAVPACK, true)
+AG_GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
+  PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.40.0, HAVE_WAVPACK=yes, [
+    PKG_CHECK_MODULES(WAVPACK, wavpack >= 4.20, [
+      HAVE_WAVPACK=yes
+      AC_DEFINE(WAVPACK_OLD_API, 1, [old wavpack API])
+    ],[
+      HAVE_WAVPACK=no
+      AC_MSG_RESULT(no)
+    ])
+  ])
+  AC_SUBST(WAVPACK_CFLAGS)
+  AC_SUBST(WAVPACK_LIBS)
+])
+
 dnl *** id3demux prefers to have zlib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ZLIB, true)
 AG_GST_CHECK_FEATURE(ZLIB, [zlib support for id3demux],, [
@@ -890,6 +909,7 @@ AM_CONDITIONAL(USE_DV1394, false)
 AM_CONDITIONAL(USE_SHOUT2, false)
 AM_CONDITIONAL(USE_SPEEX, false)
 AM_CONDITIONAL(USE_TAGLIB, false)
+AM_CONDITIONAL(USE_WAVPACK, false)
 AM_CONDITIONAL(USE_ZLIB, false)
 
 fi dnl of EXT plugins
@@ -990,6 +1010,7 @@ ext/raw1394/Makefile
 ext/shout2/Makefile
 ext/speex/Makefile
 ext/taglib/Makefile
+ext/wavpack/Makefile
 sys/Makefile
 sys/directdraw/Makefile
 sys/directsound/Makefile

@@ -118,6 +118,9 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/videofilter/gstvideobalance.h \
 	$(top_srcdir)/gst/videofilter/gstvideoflip.h \
 	$(top_srcdir)/gst/videomixer/videomixer.c \
+        $(top_srcdir)/ext/wavpack/gstwavpackdec.h \
+        $(top_srcdir)/ext/wavpack/gstwavpackenc.h \
+        $(top_srcdir)/ext/wavpack/gstwavpackparse.h \
 	$(top_srcdir)/gst/wavparse/gstwavparse.h \
 	$(top_srcdir)/sys/directdraw/gstdirectdrawsink.h \
 	$(top_srcdir)/sys/directsound/gstdirectsoundsink.h \

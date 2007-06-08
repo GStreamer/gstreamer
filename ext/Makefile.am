@@ -118,6 +118,12 @@ else
 TAGLIB_DIR =
 endif
 
+if USE_WAVPACK
+WAVPACK_DIR=wavpack
+else
+WAVPACK_DIR=
+endif
+
 SUBDIRS = \
 	$(AALIB_DIR) \
 	$(ANNODEX_DIR) \
@@ -138,7 +144,8 @@ SUBDIRS = \
 	$(MIKMOD_DIR) \
 	$(SHOUT2_DIR) \
 	$(SPEEX_DIR) \
-	$(TAGLIB_DIR)
+	$(TAGLIB_DIR) \
+	$(WAVPACK_DIR)
 
 DIST_SUBDIRS = \
 	aalib \
@@ -158,4 +165,5 @@ DIST_SUBDIRS = \
 	raw1394 \
 	shout2 \
 	speex \
-	taglib
+	taglib \
+	wavpack

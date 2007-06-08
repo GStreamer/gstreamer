@@ -41,14 +41,14 @@
       <name>rtpamrdepay</name>
       <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
-      <description>Extracts AMR audio from RTP packets (RFC 3267)</description>
+      <description>Extracts AMR or AMR-WB audio from RTP packets (RFC 3267)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpamrpay</name>
       <longname>RTP packet payloader</longname>
       <class>Codec/Payloader/Network</class>
-      <description>Payload-encode AMR audio into RTP packets (RFC 3267)</description>
+      <description>Payload-encode AMR or AMR-WB audio into RTP packets (RFC 3267)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
@@ -101,6 +101,13 @@
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
+      <name>rtph264pay</name>
+      <longname>RTP packet payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload-encode H264 video into RTP packets (RFC 3984)</description>
+      <author>Laurent Glayal &lt;spglegle@yahoo.fr&gt;</author>
+    </element>
+    <element>
       <name>rtpilbcdepay</name>
       <longname>RTP iLBC packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
@@ -119,7 +126,22 @@
       <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Extracts MPEG2 TS from RTP packets (RFC 2250)</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;
+    Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpmp2tpay</name>
+      <longname>RTP MP2T audio payloader</longname>
+      <class>Codec/Payloader/Network</class>
+      <description>Payload-encodes MPEG2 TS into RTP packets (RFC 2250)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpmp4adepay</name>
+      <longname>RTP packet parser</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts MPEG4 audio from RTP packets (RFC 3016)</description>
+      <author>Nokia Corporation (contact &lt;stefan.kost@nokia.com&gt;), Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
       <name>rtpmp4gdepay</name>
@@ -144,9 +166,9 @@
     </element>
     <element>
       <name>rtpmp4vpay</name>
-      <longname>RTP packet payloader</longname>
+      <longname>RTP MPEG-4 Video packet payloader</longname>
       <class>Codec/Payloader/Network</class>
-      <description>Payload MPEG4 video as RTP packets (RFC 3016)</description>
+      <description>Payload MPEG-4 video as RTP packets (RFC 3016)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>
@@ -237,7 +259,7 @@
       <name>rtpvorbisdepay</name>
       <longname>RTP packet depayloader</longname>
       <class>Codec/Depayloader/Network</class>
-      <description>Extracts Vorbis Audio from RTP packets (draft-01 of RFC XXXX)</description>
+      <description>Extracts Vorbis Audio from RTP packets (draft-04 of RFC XXXX)</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
     <element>

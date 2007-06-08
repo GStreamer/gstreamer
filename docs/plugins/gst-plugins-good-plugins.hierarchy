@@ -35,7 +35,7 @@ GObject
           GstBaseAudioSrc
             GstAudioSrc
               GstOssSrc
-			  GstOsxAudioSrc
+              GstOsxAudioSrc
           GstUDPSrc
       GstPngDec
       GstPngEnc
@@ -72,6 +72,9 @@ GObject
       GstOssMixerElement
       GstWavParse
       GstWavEnc
+      GstWavpackParse
+      GstWavpackDec
+      GstWavpackEnc
       GstVideoMixer
       GstID3Demux
       GstSMPTE

@@ -14,14 +14,16 @@
       <longname>Auto audio sink</longname>
       <class>Sink/Audio</class>
       <description>Wrapper audio sink for automatically detected audio sink</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
+    Jan Schmidt &lt;thaytan@noraisin.net</author>
     </element>
     <element>
       <name>autovideosink</name>
       <longname>Auto video sink</longname>
       <class>Sink/Video</class>
       <description>Wrapper video sink for automatically detected video sink</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
+    Jan Schmidt &lt;thaytan@noraisin.net</author>
     </element>
   </elements>
 </plugin>

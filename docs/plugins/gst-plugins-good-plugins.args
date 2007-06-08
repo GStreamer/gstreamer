@@ -189,6 +189,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstUDPSrc::closefd</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Close sockfd</NICK>
+<BLURB>Close sockfd if passed as property on state change.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUDPSrc::skip-first-bytes</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip first bytes</NICK>
+<BLURB>number of bytes to skip for each udp packet.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstSMPTE::border</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>
@@ -284,8 +304,28 @@
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Timeout</NICK>
-<BLURB>Retry TCP transport after timeout microseconds (0 = disabled).</BLURB>
+<BLURB>Retry TCP transport after UDP timeout microseconds (0 = disabled).</BLURB>
 <DEFAULT>5000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::latency</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Buffer latency in ms</NICK>
+<BLURB>Amount of ms to buffer.</BLURB>
+<DEFAULT>3000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTSPSrc::tcp-timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>TCP Timeout</NICK>
+<BLURB>Fail after timeout microseconds on TCP connections (0 = disabled).</BLURB>
+<DEFAULT>20000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -296,6 +336,16 @@
 <NICK>Skip</NICK>
 <BLURB>skip (unused).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPDec::latency</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Buffer latency in ms</NICK>
+<BLURB>Amount of ms to buffer.</BLURB>
+<DEFAULT>200</DEFAULT>
 </ARG>
 
 <ARG>
@@ -586,6 +636,16 @@
 <NICK>url</NICK>
 <BLURB>url.</BLURB>
 <DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstShout2send::username</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>username</NICK>
+<BLURB>username.</BLURB>
+<DEFAULT>"source"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1741,11 +1801,21 @@
 <ARG>
 <NAME>GstDynUDPSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[0,32767]</RANGE>
+<RANGE>[-1,32767]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>socket handle</NICK>
-<BLURB>Socket to use for UDP reception.</BLURB>
-<DEFAULT>0</DEFAULT>
+<BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDynUDPSink::closefd</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Close sockfd</NICK>
+<BLURB>Close sockfd if passed as property on state change.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -16716,5 +16786,105 @@
 <NICK>Force aspect ratio</NICK>
 <BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::bitrate</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 9600000</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bitrate</NICK>
+<BLURB>Try to encode with this average bitrate (bits/sec). This enables lossy encoding, values smaller than 24000 disable it again.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::bits-per-sample</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,24]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bits per sample</NICK>
+<BLURB>Try to encode with this amount of bits per sample. This enables lossy encoding, values smaller than 2.0 disable it again.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::correction-mode</NAME>
+<TYPE>GstWavpackEncCorrectionMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Correction stream mode</NICK>
+<BLURB>Use this mode for the correction stream. Only works in lossy mode!.</BLURB>
+<DEFAULT>Create no correction file</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::extra-processing</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 6</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Extra processing</NICK>
+<BLURB>Use better but slower filters for better compression/quality.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::joint-stereo-mode</NAME>
+<TYPE>GstWavpackEncJSMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Joint-Stereo mode</NICK>
+<BLURB>Use this joint-stereo mode.</BLURB>
+<DEFAULT>auto</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::md5</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>MD5</NICK>
+<BLURB>Store MD5 hash of raw samples within the file.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWavpackEnc::mode</NAME>
+<TYPE>GstWavpackEncMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Encoding mode</NICK>
+<BLURB>Speed versus compression tradeoff.</BLURB>
+<DEFAULT>Normal Compression</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpMP2TDepay::skip-first-bytes</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Skip first bytes</NICK>
+<BLURB>The amount of bytes that need to be skipped at the beginning of the payload.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpH263PPay::fragmentation-mode</NAME>
+<TYPE>GstFragmentationMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Fragmentation Mode</NICK>
+<BLURB>Packet Fragmentation Mode.</BLURB>
+<DEFAULT>Normal</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGamma::gamma</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0.01,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Gamma</NICK>
+<BLURB>gamma.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 

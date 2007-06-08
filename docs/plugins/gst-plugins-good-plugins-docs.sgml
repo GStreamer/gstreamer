@@ -59,6 +59,9 @@
     <xi:include href="xml/element-videobalance.xml" />
     <xi:include href="xml/element-videoflip.xml" />
     <xi:include href="xml/element-videomixer.xml" />
+    <xi:include href="xml/element-wavpackdec.xml" />
+    <xi:include href="xml/element-wavpackenc.xml" />
+    <xi:include href="xml/element-wavpackparse.xml" />
     <xi:include href="xml/element-wavparse.xml" />
     <!-- <xi:include href="xml/element-v4l2src.xml" /> -->
     <xi:include href="xml/element-ximagesrc.xml" />
@@ -116,6 +119,7 @@
     <xi:include href="xml/plugin-videoflip.xml" />
     <xi:include href="xml/plugin-videomixer.xml" />
     <xi:include href="xml/plugin-wavenc.xml" />
+    <xi:include href="xml/plugin-wavpack.xml" />
     <xi:include href="xml/plugin-wavparse.xml" />
     <!-- <xi:include href="xml/plugin-video4linux2.xml" /> -->
     <xi:include href="xml/plugin-ximagesrc.xml" />
