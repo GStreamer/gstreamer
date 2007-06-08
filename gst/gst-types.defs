@@ -345,6 +345,17 @@
   )
 )
 
+(define-flags BufferCopyFlags
+  (in-module "Gst")
+  (c-name "GstBufferCopyFlags")
+  (gtype-id "GST_TYPE_BUFFER_COPY_FLAGS")
+  (values
+    '("flags" "GST_BUFFER_COPY_FLAGS")
+    '("timestamps" "GST_BUFFER_COPY_TIMESTAMPS")
+    '("caps" "GST_BUFFER_COPY_CAPS")
+  )
+)
+
 (define-flags BusFlags
   (in-module "Gst")
   (c-name "GstBusFlags")
@@ -445,6 +456,7 @@
     '("tag" "GST_CORE_ERROR_TAG")
     '("missing-plugin" "GST_CORE_ERROR_MISSING_PLUGIN")
     '("clock" "GST_CORE_ERROR_CLOCK")
+    '("disabled" "GST_CORE_ERROR_DISABLED")
     '("num-errors" "GST_CORE_ERROR_NUM_ERRORS")
   )
 )
@@ -534,7 +546,7 @@
     '("qos" "GST_EVENT_QOS")
     '("seek" "GST_EVENT_SEEK")
     '("navigation" "GST_EVENT_NAVIGATION")
-    '("set-latency" "GST_EVENT_SET_LATENCY")
+    '("latency" "GST_EVENT_LATENCY")
     '("custom-upstream" "GST_EVENT_CUSTOM_UPSTREAM")
     '("custom-downstream" "GST_EVENT_CUSTOM_DOWNSTREAM")
     '("custom-downstream-oob" "GST_EVENT_CUSTOM_DOWNSTREAM_OOB")
@@ -739,6 +751,9 @@
     '("segment-start" "GST_MESSAGE_SEGMENT_START")
     '("segment-done" "GST_MESSAGE_SEGMENT_DONE")
     '("duration" "GST_MESSAGE_DURATION")
+    '("latency" "GST_MESSAGE_LATENCY")
+    '("async-start" "GST_MESSAGE_ASYNC_START")
+    '("async-done" "GST_MESSAGE_ASYNC_DONE")
     '("any" "GST_MESSAGE_ANY")
   )
 )

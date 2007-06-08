@@ -203,6 +203,24 @@
   (return-type "gboolean")
 )
 
+(define-method query_latency
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_query_latency")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean*" "live")
+    '("gboolean*" "upstream_live")
+    '("GstClockTime*" "min_latency")
+    '("GstClockTime*" "max_latency")
+  )
+)
+
+(define-method get_latency
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_get_latency")
+  (return-type "GstClockTime")
+)
+
 (define-virtual get_caps
   (of-object "GstBaseSink")
   (return-type "GstCaps*")
@@ -276,6 +294,27 @@
   )
 )
 
+(define-virtual activate_pull
+  (of-object "GstBaseSink")
+  (return-type "gboolean")
+  (parameters
+   '("gboolean" "active")
+  )
+)
+
+(define-virtual fixate
+  (of-object "GstBaseSink")
+  (return-type "none")
+  (parameters
+   '("GstCaps*" "caps")
+  )
+)
+
+(define-virtual unlock_stop
+  (of-object "GstBaseSink")
+  (return-type "gboolean")
+)
+
 ;; From ../gstreamer/libs/gst/base/gstbasesrc.h
 
 (define-function gst_base_src_get_type
@@ -310,6 +349,17 @@
   (return-type "none")
   (parameters
     '("GstFormat" "format")
+  )
+)
+
+(define-method query_latency
+  (of-object "GstBaseSrc")
+  (c-name "gst_base_src_query_latency")
+  (return-type "gboolean")
+  (parameters
+    '("gboolean*" "live")
+    '("GstClockTime*" "min_latency")
+    '("GstClockTime*" "max_latency")
   )
 )
 
@@ -412,6 +462,29 @@
   (of-object "GstBaseSrc")
   (return-type "gboolean")
 )
+
+(define-virtual fixate
+  (of-object "GstBaseSrc")
+  (return-type "none")
+  (parameters
+   '("GstCaps*" "caps")
+  )
+)
+
+(define-virtual unlock_stop
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+)
+
+(define-virtual prepare_seek_segment
+  (of-object "GstBaseSrc")
+  (return-type "gboolean")
+  (parameters
+   '("GstEvent*" "seek")
+   '("GstSegment*" "segment")
+  )
+)
+
 
 ;; From ../gstreamer/libs/gst/base/gstbasetransform.h
 
@@ -571,6 +644,13 @@
   )
 )
 
+(define-virtual src_event
+  (of-object "GstBaseTransform")
+  (return-type "gboolean")
+  (parameters
+   '("GstEvent*" "event")
+  )
+)
 
 ;; From ../gstreamer/libs/gst/base/gstcollectpads.h
 
@@ -602,6 +682,17 @@
   (parameters
     '("GstPad*" "pad")
     '("guint" "size")
+  )
+)
+
+(define-method add_pad_full
+  (of-object "GstCollectPads")
+  (c-name "gst_collect_pads_add_pad_full")
+  (return-type "GstCollectData*")
+  (parameters
+    '("GstPad*" "pad")
+    '("guint" "size")
+    '("GstCollectDataDestroyNotify" "destroy_notify")
   )
 )
 

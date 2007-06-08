@@ -31,6 +31,7 @@ versioned_overrides = \
 	gst-0.10.10.ignore	\
 	gst-0.10.11.ignore 	\
 	gst-0.10.12.ignore 	\
+	gst-0.10.13.ignore 	\
 	gst-pb-0.10.11.ignore	\
 	gst-disable-loadsave.ignore
 
@@ -83,7 +84,7 @@ interfaces_la_LDFLAGS = $(common_ldflags) \
 interfaces_la_SOURCES = interfacesmodule.c
 nodist_interfaces_la_SOURCES = interfaces.c
 INTERFACES_OVERRIDES = interfaces.override xoverlay.override
-INTERFACES_DEFS = interfaces.defs xoverlay.defs xwindowlistener.defs
+INTERFACES_DEFS = interfaces.defs xoverlay.defs
 CLEANFILES += interfaces.c
 EXTRA_DIST += $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) 
 interfaces.c: $(INTERFACES_DEFS) $(INTERFACES_OVERRIDES) $(GEN_FILES)

@@ -184,6 +184,12 @@
   )
 )
 
+(define-method suggest_next_sync
+  (of-object "GstController")
+  (c-name "gst_controller_suggest_next_sync")
+  (return-type "GstClockTime")
+)
+
 (define-method sync_values
   (of-object "GstController")
   (c-name "gst_controller_sync_values")
@@ -257,6 +263,14 @@
   )
 )
 
+(define-function object_suggest_next_sync
+  (c-name "gst_object_suggest_next_sync")
+  (return-type "GstClockTime")
+  (parameters
+    '("GObject*" "object")
+  )
+)
+
 (define-function object_sync_values
   (c-name "gst_object_sync_values")
   (return-type "gboolean")
@@ -288,7 +302,7 @@
 
 (define-function object_get_control_rate
   (c-name "gst_object_get_control_rate")
-  (return-type "guint")
+  (return-type "GstClockTime")
   (parameters
     '("GObject*" "object")
   )
@@ -299,7 +313,7 @@
   (return-type "none")
   (parameters
     '("GObject*" "object")
-    '("guint" "control_rate")
+    '("GstClockTime" "control_rate")
   )
 )
 

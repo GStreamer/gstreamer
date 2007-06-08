@@ -151,6 +151,13 @@ then
     IGNORE_GST_0_10_12=""
   fi
 
+  if test $GST_MINOR_VERSION -lt "13"
+  then
+    IGNORE_GST_0_10_13="gst-0.10.13.ignore"
+  else
+    IGNORE_GST_0_10_13=""
+  fi
+
   dnl plugins base
   if test $GST_PB_MINOR_VERSION -lt "11"
   then
@@ -170,6 +177,7 @@ else
   IGNORE_GST_0_10_10=""
   IGNORE_GST_0_10_11=""
   IGNORE_GST_0_10_12=""
+  IGNORE_GST_0_10_13=""
   IGNORE_GST_PB_0_10_11=""
   AC_DEFINE_UNQUOTED(HAVE_VIDEO_ORIENTATION_INTERFACE, 1, [We can use the videoorientation interface])
 fi
@@ -181,6 +189,7 @@ AC_SUBST(IGNORE_GST_0_10_7)
 AC_SUBST(IGNORE_GST_0_10_10)
 AC_SUBST(IGNORE_GST_0_10_11)
 AC_SUBST(IGNORE_GST_0_10_12)
+AC_SUBST(IGNORE_GST_0_10_13)
 AC_SUBST(IGNORE_GST_PB_0_10_11)
 AC_SUBST(HAVE_VIDEO_ORIENTATION)
 

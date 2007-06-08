@@ -658,3 +658,34 @@ _wrap_GstBaseSink__do_get_times (PyObject *cls, PyObject *args, PyObject *kwargs
 
     return py_ret;
 }
+%%
+override gst_base_sink_query_latency noargs
+static PyObject *
+_wrap_gst_base_sink_query_latency (PyGObject *self)
+{
+    gboolean res, live = FALSE, upstream_live = FALSE;
+    GstClockTime minlat = GST_CLOCK_TIME_NONE, maxlat = GST_CLOCK_TIME_NONE;
+
+    res = gst_base_sink_query_latency (GST_BASE_SINK (self->obj), &live, &upstream_live,
+				       &minlat, &maxlat);
+    return Py_BuildValue("(OOOKK)",
+			 PyBool_FromLong(res),
+			 PyBool_FromLong(live),
+			 PyBool_FromLong(upstream_live),
+			 minlat, maxlat);
+}
+%%
+override gst_base_src_query_latency noargs
+static PyObject *
+_wrap_gst_base_src_query_latency (PyGObject *self)
+{
+    gboolean res, live = FALSE;
+    GstClockTime minlat = GST_CLOCK_TIME_NONE, maxlat = GST_CLOCK_TIME_NONE;
+
+    res = gst_base_src_query_latency (GST_BASE_SRC (self->obj), &live,
+				      &minlat, &maxlat);
+    return Py_BuildValue("(OOKK)",
+			 PyBool_FromLong(res),
+			 PyBool_FromLong(live),
+			 minlat, maxlat);
+}

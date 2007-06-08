@@ -1,3 +1,25 @@
+2007-06-08  Edward Hervey  <edward@fluendo.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.12.ignore:
+	* gst/gst-0.10.13.ignore:
+	* gst/gstversion.override.in:
+	Updating ignores for API additions
+	* gst/base.defs:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/interfaces.defs:
+	* gst/libs.defs:
+	Massive wrapping of new API additions
+	* gst/gstbase.override:
+	* gst/gstevent.override:
+	* gst/gstmessage.override:
+	* gst/gstquery.override:
+	Overrides for methods with return values as arguments.
+	* gst/xwindowlistener.defs:
+	What the $#@# is this file still doing here ?? Removing it.
+
 2007-05-23  Edward Hervey  <edward@fluendo.com>
 
 	* configure.ac:

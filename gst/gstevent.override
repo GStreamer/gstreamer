@@ -164,3 +164,19 @@ _wrap_gst_event_parse_buffer_size (PyGstMiniObject *self)
 			  minsize, maxsize,
 			  PyBool_FromLong(async));
 }
+%%
+override gst_event_parse_latency noargs
+static PyObject *
+_wrap_gst_event_parse_latency (PyGstMiniObject * self)
+{
+     GstClockTime	ctime = GST_CLOCK_TIME_NONE;
+
+     if (GST_EVENT_TYPE (self->obj) != GST_EVENT_LATENCY) {
+	  PyErr_SetString(PyExc_TypeError, "Event is not a 'latency' event");
+	  return NULL;
+     }
+     
+     gst_event_parse_latency (GST_EVENT (self->obj), &ctime);
+     
+     return PyLong_FromUnsignedLongLong(ctime);
+}

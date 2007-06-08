@@ -144,7 +144,7 @@ static PyObject *
 _wrap_gst_message_parse_warning (PyGstMiniObject *self)
 {
 	PyObject	*ret;
-	GError		*warning;
+	GError	*warning = NULL;
 	gchar	*debug;
 	
 	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_WARNING) {
@@ -154,11 +154,46 @@ _wrap_gst_message_parse_warning (PyGstMiniObject *self)
 
 	gst_message_parse_warning (GST_MESSAGE(self->obj), &warning, &debug);
 
-	ret = PyList_New(1);
+	ret = PyList_New(2);
 	PyList_SetItem(ret, 0, pyg_boxed_new (GST_TYPE_G_ERROR, warning, TRUE, TRUE));
-	if (debug != NULL)
-		PyList_Append(ret, PyString_FromString(debug));
+	if (warning)
+		g_error_free (warning);
+	if (debug != NULL) {
+		PyList_SetItem(ret, 1, PyString_FromString(debug));
+	} else {
+		Py_INCREF (Py_None);
+		PyList_SetItem(ret, 1, Py_None);
+	}
+	g_free(debug);
+	return ret;
+}
+%%
+override gst_message_parse_info noargs
+static PyObject *
+_wrap_gst_message_parse_info (PyGstMiniObject *self)
+{
+	PyObject	*ret;
+	GError	*info = NULL;
+	gchar	*debug;
+	
+	if (GST_MESSAGE_TYPE(self->obj) != GST_MESSAGE_INFO) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an info message");
+		return NULL;
+	}
 
+	gst_message_parse_info (GST_MESSAGE(self->obj), &info, &debug);
+
+	ret = PyList_New(2);
+	PyList_SetItem(ret, 0, pyg_boxed_new (GST_TYPE_G_ERROR, info, TRUE, TRUE));
+	if (info)
+		g_error_free (info);
+	if (debug != NULL) {
+		PyList_SetItem(ret, 1, PyString_FromString(debug));
+	} else {
+		Py_INCREF (Py_None);
+		PyList_SetItem(ret, 1, Py_None);
+	}
+	g_free(debug);
 	return ret;
 }
 %%
@@ -249,4 +284,20 @@ _wrap_gst_message_parse_duration (PyGstMiniObject *self)
   return Py_BuildValue("(OL)",
 		       pyg_enum_from_gtype (GST_TYPE_FORMAT, format),
 		       duration);
+}
+%%
+override gst_message_parse_async_start noargs
+static PyObject *
+_wrap_gst_message_parse_async_start (PyGstMiniObject *self)
+{
+	gboolean res = FALSE;
+
+	if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_ASYNC_START) {
+		PyErr_SetString(PyExc_TypeError, "Message is not an 'async-start' message");
+		return NULL;
+	}
+
+	gst_message_parse_async_start (GST_MESSAGE(self->obj), &res);
+
+	return PyBool_FromLong (res);
 }

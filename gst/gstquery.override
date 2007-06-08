@@ -210,3 +210,35 @@ _wrap_gst_query_set_formats (PyGstMiniObject *self, PyObject *args)
 	g_free(formats);
 	return ret;
 }
+%%
+override gst_query_get_structure noargs
+static PyObject *
+_wrap_gst_query_get_structure(PyGstMiniObject *self)
+{
+    GstStructure *ret;
+
+    pyg_begin_allow_threads;
+    ret = gst_query_get_structure(GST_QUERY(self->obj));
+    pyg_end_allow_threads;
+    /* pyg_boxed_new handles NULL checking */
+    return pyg_boxed_new(GST_TYPE_STRUCTURE, ret, FALSE, FALSE);
+}
+%%
+override gst_query_parse_latency noargs
+static PyObject *
+_wrap_gst_query_parse_latency (PyGstMiniObject * self)
+{
+	gboolean islive;
+	GstClockTime	minlat, maxlat;
+
+     if (GST_QUERY_TYPE (self->obj) != GST_QUERY_LATENCY) {
+	  PyErr_SetString(PyExc_TypeError, "Query is not a 'latency' query");
+	  return NULL;
+     }
+     
+     gst_query_parse_latency (GST_QUERY (self->obj), &islive, &minlat, &maxlat);
+     
+     return Py_BuildValue("(OKK)",
+			  PyBool_FromLong(islive),
+			  minlat, maxlat);
+}

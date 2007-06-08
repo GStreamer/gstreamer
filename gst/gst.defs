@@ -265,6 +265,15 @@
   )
 )
 
+(define-function buffer_try_new_and_alloc
+  (c-name "gst_buffer_try_new_and_alloc")
+  (return-type "GstBuffer*")
+  (caller-owns-return #t)
+  (parameters
+    '("guint" "size")
+  )
+)
+
 (define-method is_metadata_writable
   (of-object "GstBuffer")
   (c-name "gst_buffer_is_metadata_writable")
@@ -367,6 +376,16 @@
   (c-name "gst_bus_pop")
   (return-type "GstMessage*")
   (caller-owns-return #t)
+)
+
+(define-method timed_pop
+  (of-object "GstBus")
+  (c-name "gst_bus_timed_pop")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstClockTime" "timeout")
+  )
 )
 
 (define-method set_flushing
@@ -875,6 +894,15 @@
   )
 )
 
+(define-method unadjust_unlocked
+  (of-object "GstClock")
+  (c-name "gst_clock_unadjust_unlocked")
+  (return-type "GstClockTime")
+  (parameters
+    '("GstClockTime" "external")
+  )
+)
+
 (define-method new_single_shot_id
   (of-object "GstClock")
   (c-name "gst_clock_new_single_shot_id")
@@ -1321,6 +1349,15 @@
   (return-type "none")
 )
 
+(define-method change_state
+  (of-object "GstElement")
+  (c-name "gst_element_change_state")
+  (return-type "GstStateChangeReturn")
+  (parameters
+    '("GstStateChange" "transition")
+  )
+)
+
 (define-method continue_state
   (of-object "GstElement")
   (c-name "gst_element_continue_state")
@@ -1546,6 +1583,11 @@
 
 (define-function buffer_flag_get_type
   (c-name "gst_buffer_flag_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_buffer_copy_flags_get_type
+  (c-name "gst_buffer_copy_flags_get_type")
   (return-type "GType")
 )
 
@@ -2044,6 +2086,24 @@
   )
 )
 
+
+(define-function event_new_latency
+  (c-name "gst_event_new_latency")
+  (return-type "GstEvent*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstClockTime" "latency")
+  )
+)
+
+(define-method parse_latency
+  (of-object "GstEvent")
+  (c-name "gst_event_parse_latency")
+  (return-type "none")
+  (parameters
+    '("GstClockTime*" "latency")
+  )
+)
 
 ;; From ../gstreamer/gst/gstfilter.h
 
@@ -2869,6 +2929,17 @@
   )
 )
 
+(define-function message_new_info
+  (c-name "gst_message_new_info")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstObject*" "src")
+    '("GError*" "error")
+    '("gchar*" "debug")
+  )
+)
+
 (define-function message_new_tag
   (c-name "gst_message_new_tag")
   (return-type "GstMessage*")
@@ -2879,7 +2950,7 @@
   )
 )
 
-(define-function gst_message_new_buffering
+(define-function message_new_buffering
   (c-name "gst_message_new_buffering")
   (return-type "GstMessage*")
   (parameters
@@ -2993,6 +3064,34 @@
   )
 )
 
+(define-function message_new_async_start
+  (c-name "gst_message_new_async_start")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstObject*" "src")
+    '("gboolean" "new_base_time")
+  )
+)
+
+(define-function message_new_async_done
+  (c-name "gst_message_new_async_done")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstObject*" "src")
+  )
+)
+
+(define-function message_new_latency
+  (c-name "gst_message_new_latency")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstObject*" "src")
+  )
+)
+
 (define-function message_new_custom
   (c-name "gst_message_new_custom")
   (return-type "GstMessage*")
@@ -3017,6 +3116,16 @@
 (define-method parse_warning
   (of-object "GstMessage")
   (c-name "gst_message_parse_warning")
+  (return-type "none")
+  (parameters
+    '("GError**" "gerror")
+    '("gchar**" "debug")
+  )
+)
+
+(define-method parse_info
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_info")
   (return-type "none")
   (parameters
     '("GError**" "gerror")
@@ -3111,6 +3220,15 @@
   )
 )
 
+(define-method parse_async_start
+  (of-object "GstMessage")
+  (c-name "gst_message_parse_async_start")
+  (return-type "none")
+  (parameters
+    '("gboolean*" "new_base_time")
+  )
+)
+
 (define-method get_structure
   (of-object "GstMessage*")
   (c-name "gst_message_get_structure")
@@ -3187,6 +3305,24 @@
     '("GParamFlags" "flags")
   )
 )
+
+(define-function gst_param_spec_fraction
+  (c-name "gst_param_spec_fraction")
+  (return-type "GParamSpec*")
+  (parameters
+    '("const-gchar*" "name")
+    '("const-gchar*" "nick")
+    '("const-gchar*" "blurb")
+    '("gint" "min_num")
+    '("gint" "min_denom")
+    '("gint" "max_num")
+    '("gint" "max_denom")
+    '("gint" "default_num")
+    '("gint" "default_denom")
+    '("GParamFlags" "flags")
+  )
+)
+
 
 (define-function value_set_mini_object
   (c-name "gst_value_set_mini_object")
@@ -4039,7 +4175,7 @@
   )
 )
 
-(define-function gst_parse_bin_from_description
+(define-function parse_bin_from_description
   (c-name "gst_parse_bin_from_description")
   (return-type "GstElement*")
   (parameters
@@ -4533,6 +4669,34 @@
   (parameters
     '("GstFormat*" "format")
     '("gint64*" "duration")
+  )
+)
+
+(define-function query_new_latency
+  (c-name "gst_query_new_latency")
+  (caller-owns-return #t)
+  (return-type "GstQuery*")
+)
+
+(define-method set_latency
+  (of-object "GstQuery")
+  (c-name "gst_query_set_latency")
+  (return-type "none")
+  (parameters
+    '("gboolean" "live")
+    '("GstClockTime" "min_latency")
+    '("GstClockTime" "max_latency")
+  )
+)
+
+(define-method parse_latency
+  (of-object "GstQuery")
+  (c-name "gst_query_parse_latency")
+  (return-type "none")
+  (parameters
+    '("gboolean*" "live")
+    '("GstClockTime*" "min_latency")
+    '("GstClockTime*" "max_latency")
   )
 )
 
@@ -6282,6 +6446,15 @@
   (c-name "gst_uri_protocol_is_valid")
   (return-type "gboolean")
   (parameters
+    '("const-gchar*" "protocol")
+  )
+)
+
+(define-function uri_protocol_is_supported
+  (c-name "gst_uri_protocol_is_supported")
+  (return-type "gboolean")
+  (parameters
+    '("GstURIType" "type")
     '("const-gchar*" "protocol")
   )
 )
