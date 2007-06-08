@@ -10,6 +10,18 @@ else
 OSS_DIR=
 endif
 
+if USE_DIRECTDRAW
+DIRECTDRAW_DIR=directdraw
+else
+DIRECTDRAW_DIR=
+endif
+
+if USE_DIRECTSOUND
+DIRECTSOUND_DIR=directsound
+else
+DIRECTSOUND_DIR=
+endif
+
 if USE_SUNAUDIO
 SUNAUDIO_DIR=sunaudio
 else
@@ -64,6 +76,6 @@ else
 XIMAGE_DIR=
 endif
 
-SUBDIRS=$(OSS_DIR) $(OSX_AUDIO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
+SUBDIRS=$(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(OSS_DIR) $(OSX_AUDIO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
 
-DIST_SUBDIRS=oss osxaudio sunaudio v4l2 ximage
+DIST_SUBDIRS=directdraw directsound oss osxaudio sunaudio v4l2 ximage

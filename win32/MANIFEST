@@ -12,6 +12,8 @@ win32/vs6/libgstauparse.dsp
 win32/vs6/libgstautodetect.dsp
 win32/vs6/libgstavi.dsp
 win32/vs6/libgstcutter.dsp
+win32/vs6/libgstdirectdraw.dsp
+win32/vs6/libgstdirectsound.dsp
 win32/vs6/libgsteffectv.dsp
 win32/vs6/libgstflx.dsp
 win32/vs6/libgstgoom.dsp
@@ -36,6 +38,8 @@ win32/vs6/libgstvideoflip.dsp
 win32/vs6/libgstvideomixer.dsp
 win32/vs6/libgstwavenc.dsp
 win32/vs6/libgstwavparse.dsp
+win32/vs7/libgstdirectdraw.vcproj
+win32/vs7/libgstdirectsound.vcproj
 win32/vs8/gst-plugins-good.sln
 win32/vs8/libgst1394.vcproj
 win32/vs8/libgstaasink.vcproj
@@ -51,6 +55,8 @@ win32/vs8/libgstavi.vcproj
 win32/vs8/libgstcacasink.vcproj
 win32/vs8/libgstcdio.vcproj
 win32/vs8/libgstcutter.vcproj
+win32/vs8/libgstdirectdraw.vcproj
+win32/vs8/libgstdirectsound.vcproj
 win32/vs8/libgstdv.vcproj
 win32/vs8/libgsteffectv.vcproj
 win32/vs8/libgstflac.vcproj

@@ -27,6 +27,8 @@
     <xi:include href="xml/element-cdiocddasrc.xml" />
     <xi:include href="xml/element-cmmldec.xml" />
     <xi:include href="xml/element-cmmlenc.xml" />
+    <xi:include href="xml/element-directdrawsink.xml" />
+    <xi:include href="xml/element-directsoundsink.xml" />
     <xi:include href="xml/element-dvdec.xml" />
     <xi:include href="xml/element-dvdemux.xml" />
     <xi:include href="xml/element-esdsink.xml" />
@@ -80,6 +82,8 @@
     <xi:include href="xml/plugin-cdio.xml" />
     <xi:include href="xml/plugin-cutter.xml" />
     <xi:include href="xml/plugin-debug.xml" />
+    <xi:include href="xml/plugin-directdraw.xml" />
+    <xi:include href="xml/plugin-directsound.xml" />
     <xi:include href="xml/plugin-dv.xml" />
     <xi:include href="xml/plugin-efence.xml" />
     <xi:include href="xml/plugin-effectv.xml" />

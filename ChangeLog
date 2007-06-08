@@ -1,3 +1,14 @@
+2007-06-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* sys/Makefile.am:
+	* win32/MANIFEST:
+	Add DirectDraw & DirectSound plugins to the build and docs.
+
 2007-06-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dv/gstdvdemux.c: (gst_dvdemux_loop):

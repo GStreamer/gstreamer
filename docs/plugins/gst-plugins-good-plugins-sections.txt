@@ -197,6 +197,22 @@ gst_cdio_cdda_src_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-directdrawsink</FILE>
+GstDirectDrawSink
+<TITLE>directdrawsink</TITLE>
+<SUBSECTION Standard>
+GstDirectDrawSinkClass
+</SECTION>
+
+<SECTION>
+<FILE>element-directsoundsink</FILE>
+GstDirectSoundSink
+<TITLE>directsoundsink</TITLE>
+<SUBSECTION Standard>
+GstDirectSoundSinkClass
+</SECTION>
+
+<SECTION>
 <FILE>element-dvdec</FILE>
 GstDVDec
 <TITLE>dvdec</TITLE>
