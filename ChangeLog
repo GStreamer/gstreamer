@@ -1,3 +1,12 @@
+2007-06-08  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_reset),
+	(gst_mp3parse_emit_frame), (gst_mp3parse_handle_first_frame):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	If the Xing header provides a total time, use it to calculate the
+	correct average bitrate immediately, instead of sending updates as 
+	we parse the stream.
+
 2007-06-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by by: Mark Nauwelaerts <manauw at skynet dot be>

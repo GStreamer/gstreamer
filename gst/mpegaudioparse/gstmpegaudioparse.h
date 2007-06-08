@@ -81,6 +81,7 @@ struct _GstMPEGAudioParse {
   guint32 xing_bytes;
   guchar xing_seek_table[100];
   guint32 xing_vbr_scale;
+  guint   xing_bitrate;
 };
 
 struct _GstMPEGAudioParseClass {

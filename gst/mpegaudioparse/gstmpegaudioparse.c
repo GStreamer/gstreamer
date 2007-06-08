@@ -92,6 +92,8 @@ static GstStateChangeReturn gst_mp3parse_change_state (GstElement * element,
 
 static gboolean mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
     gint64 bytepos, GstClockTime * ts);
+static gboolean
+mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total);
 
 static GstElementClass *parent_class = NULL;
 
@@ -280,6 +282,9 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
   mp3parse->last_posted_bitrate = 0;
   mp3parse->frame_count = 0;
   mp3parse->sent_codec_tag = FALSE;
+
+  mp3parse->xing_flags = 0;
+  mp3parse->xing_bitrate = 0;
 }
 
 static void
@@ -397,6 +402,7 @@ static GstFlowReturn
 gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
 {
   GstBuffer *outbuf;
+  guint bitrate;
 
   GST_DEBUG_OBJECT (mp3parse, "pushing buffer of %d bytes", size);
 
@@ -462,11 +468,15 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mp3parse->srcpad));
 
   /* Post a bitrate tag if we need to before pushing the buffer */
-  if ((mp3parse->last_posted_bitrate / 10000) !=
-      (mp3parse->avg_bitrate / 10000)) {
+  if (mp3parse->xing_bitrate != 0)
+    bitrate = mp3parse->xing_bitrate;
+  else
+    bitrate = mp3parse->avg_bitrate;
+
+  if ((mp3parse->last_posted_bitrate / 10000) != (bitrate / 10000)) {
     GstTagList *taglist = gst_tag_list_new ();
 
-    mp3parse->last_posted_bitrate = mp3parse->avg_bitrate;
+    mp3parse->last_posted_bitrate = bitrate;
     gst_tag_list_add (taglist, GST_TAG_MERGE_REPLACE, GST_TAG_BITRATE,
         mp3parse->last_posted_bitrate, NULL);
     gst_element_found_tags_for_pad (GST_ELEMENT (mp3parse),
@@ -572,9 +582,21 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
     data += xing_offset + XING_HDR_MIN;
 
     if (xing_flags & XING_FRAMES_FLAG) {
+      gint64 total_bytes;
+
       mp3parse->xing_frames = GST_READ_UINT32_BE (data);
       mp3parse->xing_total_time = gst_util_uint64_scale (GST_SECOND,
           (guint64) (mp3parse->xing_frames) * (mp3parse->spf), mp3parse->rate);
+
+      /* We know the total time. If we also know the upstream size, compute the 
+       * total bitrate, rounded up to the nearest kbit/sec */
+      if (mp3parse_total_bytes (mp3parse, &total_bytes)) {
+        mp3parse->xing_bitrate = gst_util_uint64_scale (total_bytes,
+            8 * GST_SECOND, mp3parse->xing_total_time);
+        mp3parse->xing_bitrate += 500;
+        mp3parse->xing_bitrate -= mp3parse->xing_bitrate % 1000;
+      }
+
       data += 4;
     } else {
       mp3parse->xing_frames = 0;
