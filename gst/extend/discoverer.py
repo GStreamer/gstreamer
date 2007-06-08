@@ -70,6 +70,7 @@ class Discoverer(gst.Pipeline):
     otherstreams = []
 
     finished = False
+    sinknumber = 0
     tags = {}
 
 
@@ -102,6 +103,7 @@ class Discoverer(gst.Pipeline):
         self.finished = False
         self.tags = {}
         self._success = False
+        self._nomorepads = False
 
         self._timeoutid = 0
 
@@ -122,7 +124,16 @@ class Discoverer(gst.Pipeline):
         # callbacks
         self.typefind.connect("have-type", self._have_type_cb)
         self.dbin.connect("new-decoded-pad", self._new_decoded_pad_cb)
+        self.dbin.connect("no-more-pads", self._no_more_pads_cb)
         self.dbin.connect("unknown-type", self._unknown_type_cb)
+
+    def _timed_out_or_eos(self):
+        if (not self.is_audio and not self.is_video) or \
+                (self.is_audio and not self.audiocaps) or \
+                (self.is_video and not self.videocaps):
+            self._finished(False)
+        else:
+            self._finished(True)
 
     def _finished(self, success=False):
         self.debug("success:%d" % success)
@@ -140,15 +151,16 @@ class Discoverer(gst.Pipeline):
         self.set_state(gst.STATE_READY)
         self.debug("about to emit signal")
         self.emit('discovered', self._success)
-        
 
     def _bus_message_cb(self, bus, message):
         if message.type == gst.MESSAGE_EOS:
-            self._finished()
+            self.debug("Got EOS")
+            self._timed_out_or_eos()
         elif message.type == gst.MESSAGE_TAG:
             for key in message.parse_tag().keys():
                 self.tags[key] = message.structure[key]
         elif message.type == gst.MESSAGE_ERROR:
+            self.debug("Got error")
             self._finished()
 
     def discover(self):
@@ -163,7 +175,7 @@ class Discoverer(gst.Pipeline):
         self.bus.connect("message", self._bus_message_cb)
 
         # 3s timeout
-        self._timeoutid = gobject.timeout_add(3000, self._finished)
+        self._timeoutid = gobject.timeout_add(3000, self._timed_out_or_eos)
         
         self.info("setting to PLAY")
         if not self.set_state(gst.STATE_PLAYING):
@@ -219,6 +231,10 @@ class Discoverer(gst.Pipeline):
             for tag in self.tags.keys():
                 print "%20s :\t" % tag, self.tags[tag]
 
+    def _no_more_pads_cb(self, dbin):
+        self.info("no more pads")
+        self._nomorepads = True
+
     def _unknown_type_cb(self, dbin, pad, caps):
         self.debug("unknown type : %s" % caps.to_string())
         # if we get an unknown type and we don't already have an
@@ -236,7 +252,7 @@ class Discoverer(gst.Pipeline):
         if not caps:
             pad.info("no negotiated caps available")
             return
-        pad.info("caps:%s" % caps.to_string)
+        pad.info("caps:%s" % caps.to_string())
         # the caps are fixed
         # We now get the total length of that stream
         q = gst.query_new_duration(gst.FORMAT_TIME)
@@ -259,7 +275,7 @@ class Discoverer(gst.Pipeline):
                 self.audiofloat = True
             else:
                 self.audiodepth = caps[0]["depth"]
-            if (not self.is_video) or self.videocaps:
+            if self._nomorepads and ((not self.is_video) or self.videocaps):
                 self._finished(True)
         elif "video" in caps.to_string():
             self.videocaps = caps
@@ -267,7 +283,7 @@ class Discoverer(gst.Pipeline):
             self.videowidth = caps[0]["width"]
             self.videoheight = caps[0]["height"]
             self.videorate = caps[0]["framerate"]
-            if (not self.is_audio) or self.audiocaps:
+            if self._nomorepads and ((not self.is_audio) or self.audiocaps):
                 self._finished(True)
 
     def _new_decoded_pad_cb(self, dbin, pad, is_last):
@@ -282,11 +298,14 @@ class Discoverer(gst.Pipeline):
             self.warning("got a different caps.. %s" % caps.to_string())
             return
         if is_last and not self.is_video and not self.is_audio:
+            self.debug("is last, not video or audio")
             self._finished(False)
             return
         # we connect a fakesink to the new pad...
         pad.info("adding queue->fakesink")
-        fakesink = gst.element_factory_make("fakesink")
+        fakesink = gst.element_factory_make("fakesink", "fakesink%d-%s" % 
+            (self.sinknumber, "audio" in caps.to_string() and "audio" or "video"))
+        self.sinknumber += 1
         queue = gst.element_factory_make("queue")
         # we want the queue to buffer up to 2 seconds of data before outputting
         # This enables us to cope with formats that don't create their source
