@@ -140,7 +140,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mpeg1systemencode", "..\gst
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mp1videoparse", "..\gst\mpeg1videoparse\mp1videoparse.vcproj", "{979C216F-0ACF-4956-AE00-055A42D678E6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mpegvideoparse", "..\gst\mpegvideoparse\mpegvideoparse.vcproj", "{979C216F-0ACF-4956-AE00-055A42D678E6}"
 	ProjectSection(ProjectDependencies) = postProject
 	EndProjectSection
 EndProject

@@ -17086,16 +17086,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstDirectDrawSink::force-aspect-ratio</NAME>
-<TYPE>gboolean</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Force aspect ratio</NICK>
-<BLURB>When enabled, scaling will respect original aspect ratio.</BLURB>
-<DEFAULT>FALSE</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>GstOSXVideoSink::embed</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
