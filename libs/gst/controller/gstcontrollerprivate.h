@@ -100,6 +100,8 @@ typedef struct _GstControlledProperty
   GType type;                   /* type of the handled property */
   GType base;                   /* base-type of the handled property */
   GValue default_value;         /* default value for the handled property */
+  GValue min_value;             /* min value for the handled property */
+  GValue max_value;             /* max value for the handled property */
   GValue result_value;          /* result value location for the interpolation method */
   GstControlPoint last_value;     /* the last value a _sink call wrote */
   GstControlPoint live_value;     /* temporary value override for live input */

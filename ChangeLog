@@ -1,3 +1,29 @@
+2007-06-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_new):
+	* libs/gst/controller/gstcontrollerprivate.h:
+	* libs/gst/controller/gstinterpolation.c:
+	(gst_controlled_property_find_control_point_node),
+	(interpolate_none_get), (interpolate_none_get_enum_value_array),
+	(interpolate_none_get_string_value_array),
+	(interpolate_trigger_get),
+	(interpolate_trigger_get_enum_value_array),
+	(interpolate_trigger_get_string_value_array):
+	Protect against values larger or smaller than the minimum or maximum
+	allowed value for the property when using values that can be compared.
+
+	Optimize trigger interpolator a bit by taking the last requested value
+	into account instead of always looping through the complete list.
+
+	Fix coding style a bit, everywhere else we use "return foo" instead
+	of "return (foo)".
+	
+	* tests/check/libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+	Add unit test for the protection against too large or too small
+	values.
+
 2007-06-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/random/slomo/controller.txt:

@@ -71,7 +71,7 @@ gst_controlled_property_find_control_point_node (GstControlledProperty * prop,
   if (prev_node)
     prop->last_requested_value = prev_node;
 
-  return (prev_node);
+  return prev_node;
 }
 
 /*  steps-like (no-)interpolation, default */
@@ -86,26 +86,30 @@ interpolate_none_get (GstControlledProperty * prop, GstClockTime timestamp)
           gst_controlled_property_find_control_point_node (prop, timestamp))) {
     GstControlPoint *cp = node->data;
 
-    return (&cp->value);
+    return &cp->value;
   }
-  return (&prop->default_value);
+  return &prop->default_value;
 }
 
+#define interpolate_none_get_boolean interpolate_none_get
+
 #define DEFINE_NONE_GET(type) \
-static gboolean \
-interpolate_none_get_##type##_value_array (GstControlledProperty * prop, \
-    GstClockTime timestamp, GstValueArray * value_array) \
+static GValue * \
+interpolate_none_get_##type (GstControlledProperty * prop, GstClockTime timestamp) \
 { \
-  gint i; \
-  GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
+  GList *node; \
   \
-  for(i = 0; i < value_array->nbsamples; i++) { \
-    *values = g_value_get_##type (interpolate_none_get (prop,ts)); \
-    ts += value_array->sample_interval; \
-    values++; \
+  if ((node = \
+          gst_controlled_property_find_control_point_node (prop, timestamp))) { \
+    GstControlPoint *cp = node->data; \
+    g##type ret = g_value_get_##type (&cp->value); \
+    if (g_value_get_##type (&prop->min_value) > ret) \
+      return &prop->min_value; \
+    else if (g_value_get_##type (&prop->max_value) < ret) \
+      return &prop->max_value; \
+    return &cp->value; \
   } \
-  return (TRUE); \
+  return &prop->default_value; \
 }
 
 DEFINE_NONE_GET (int);
@@ -116,7 +120,33 @@ DEFINE_NONE_GET (ulong);
 DEFINE_NONE_GET (float);
 DEFINE_NONE_GET (double);
 
-DEFINE_NONE_GET (boolean);
+#define DEFINE_NONE_GET_VALUE_ARRAY(type) \
+static gboolean \
+interpolate_none_get_##type##_value_array (GstControlledProperty * prop, \
+    GstClockTime timestamp, GstValueArray * value_array) \
+{ \
+  gint i; \
+  GstClockTime ts = timestamp; \
+  g##type *values = (g##type *) value_array->values; \
+  \
+  for(i = 0; i < value_array->nbsamples; i++) { \
+    *values = g_value_get_##type (interpolate_none_get_##type (prop,ts)); \
+    ts += value_array->sample_interval; \
+    values++; \
+  } \
+  return TRUE; \
+}
+
+DEFINE_NONE_GET_VALUE_ARRAY (int);
+
+DEFINE_NONE_GET_VALUE_ARRAY (uint);
+DEFINE_NONE_GET_VALUE_ARRAY (long);
+
+DEFINE_NONE_GET_VALUE_ARRAY (ulong);
+DEFINE_NONE_GET_VALUE_ARRAY (float);
+DEFINE_NONE_GET_VALUE_ARRAY (double);
+
+DEFINE_NONE_GET_VALUE_ARRAY (boolean);
 
 static gboolean
 interpolate_none_get_enum_value_array (GstControlledProperty * prop,
@@ -131,7 +161,7 @@ interpolate_none_get_enum_value_array (GstControlledProperty * prop,
     ts += value_array->sample_interval;
     values++;
   }
-  return (TRUE);
+  return TRUE;
 }
 
 static gboolean
@@ -147,7 +177,7 @@ interpolate_none_get_string_value_array (GstControlledProperty * prop,
     ts += value_array->sample_interval;
     values++;
   }
-  return (TRUE);
+  return TRUE;
 }
 
 static GstInterpolateMethod interpolate_none = {
@@ -181,31 +211,41 @@ interpolate_trigger_get (GstControlledProperty * prop, GstClockTime timestamp)
   GstControlPoint *cp;
 
   /* check if there is a value at the registered timestamp */
-  for (node = prop->values; node; node = g_list_next (node)) {
+  if ((node =
+          gst_controlled_property_find_control_point_node (prop, timestamp))) {
     cp = node->data;
     if (timestamp == cp->timestamp) {
-      return (&cp->value);
+      return &cp->value;
     }
   }
 
-  return (&prop->default_value);
+  return &prop->default_value;
 }
 
+#define interpolate_trigger_get_boolean interpolate_trigger_get
+
 #define DEFINE_TRIGGER_GET(type) \
-static gboolean \
-interpolate_trigger_get_##type##_value_array (GstControlledProperty * prop, \
-    GstClockTime timestamp, GstValueArray * value_array) \
+static GValue * \
+interpolate_trigger_get_##type (GstControlledProperty * prop, GstClockTime timestamp) \
 { \
-  gint i; \
-  GstClockTime ts = timestamp; \
-  g##type *values = (g##type *) value_array->values; \
+  GList *node; \
+  GstControlPoint *cp; \
   \
-  for(i = 0; i < value_array->nbsamples; i++) { \
-    *values = g_value_get_##type (interpolate_trigger_get (prop,ts)); \
-    ts += value_array->sample_interval; \
-    values++; \
+  /* check if there is a value at the registered timestamp */ \
+  if ((node = \
+          gst_controlled_property_find_control_point_node (prop, timestamp))) { \
+    cp = node->data; \
+    if (timestamp == cp->timestamp) { \
+      g##type ret = g_value_get_##type (&cp->value); \
+      if (g_value_get_##type (&prop->min_value) > ret) \
+        return &prop->min_value; \
+      else if (g_value_get_##type (&prop->max_value) < ret) \
+        return &prop->max_value; \
+      return &cp->value; \
+    } \
   } \
-  return (TRUE); \
+  \
+  return &prop->default_value; \
 }
 
 DEFINE_TRIGGER_GET (int);
@@ -216,7 +256,33 @@ DEFINE_TRIGGER_GET (ulong);
 DEFINE_TRIGGER_GET (float);
 DEFINE_TRIGGER_GET (double);
 
-DEFINE_TRIGGER_GET (boolean);
+#define DEFINE_TRIGGER_GET_VALUE_ARRAY(type) \
+static gboolean \
+interpolate_trigger_get_##type##_value_array (GstControlledProperty * prop, \
+    GstClockTime timestamp, GstValueArray * value_array) \
+{ \
+  gint i; \
+  GstClockTime ts = timestamp; \
+  g##type *values = (g##type *) value_array->values; \
+  \
+  for(i = 0; i < value_array->nbsamples; i++) { \
+    *values = g_value_get_##type (interpolate_trigger_get_##type (prop,ts)); \
+    ts += value_array->sample_interval; \
+    values++; \
+  } \
+  return TRUE; \
+}
+
+DEFINE_TRIGGER_GET_VALUE_ARRAY (int);
+
+DEFINE_TRIGGER_GET_VALUE_ARRAY (uint);
+DEFINE_TRIGGER_GET_VALUE_ARRAY (long);
+
+DEFINE_TRIGGER_GET_VALUE_ARRAY (ulong);
+DEFINE_TRIGGER_GET_VALUE_ARRAY (float);
+DEFINE_TRIGGER_GET_VALUE_ARRAY (double);
+
+DEFINE_TRIGGER_GET_VALUE_ARRAY (boolean);
 
 static gboolean
 interpolate_trigger_get_enum_value_array (GstControlledProperty * prop,
@@ -231,7 +297,7 @@ interpolate_trigger_get_enum_value_array (GstControlledProperty * prop,
     ts += value_array->sample_interval;
     values++;
   }
-  return (TRUE);
+  return TRUE;
 }
 
 static gboolean
@@ -247,7 +313,7 @@ interpolate_trigger_get_string_value_array (GstControlledProperty * prop,
     ts += value_array->sample_interval;
     values++;
   }
-  return (TRUE);
+  return TRUE;
 }
 
 static GstInterpolateMethod interpolate_trigger = {
@@ -279,6 +345,7 @@ static g##type \
 _interpolate_linear_get_##type (GstControlledProperty * prop, GstClockTime timestamp) \
 { \
   GList *node; \
+  g##type ret; \
   \
   if ((node = gst_controlled_property_find_control_point_node (prop, timestamp))) { \
     GstControlPoint *cp1, *cp2; \
@@ -294,20 +361,23 @@ _interpolate_linear_get_##type (GstControlledProperty * prop, GstClockTime times
       value2 = g_value_get_##type (&cp2->value); \
       slope = (gdouble) (value2 - value1) / gst_guint64_to_gdouble (cp2->timestamp - cp1->timestamp); \
       \
-      return ((g##type) (value1 + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope)); \
+      ret = (g##type) (value1 + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope); \
     } \
     else { \
-      return (g_value_get_##type (&cp1->value)); \
+      ret = g_value_get_##type (&cp1->value); \
     } \
+  } else { \
+    ret = g_value_get_##type (&prop->default_value); \
   } \
-  return (g_value_get_##type (&prop->default_value)); \
+  ret = CLAMP (ret, g_value_get_##type (&prop->min_value), g_value_get_##type (&prop->max_value)); \
+  return ret; \
 } \
 \
 static GValue * \
 interpolate_linear_get_##type (GstControlledProperty * prop, GstClockTime timestamp) \
 { \
   g_value_set_##type (&prop->result_value,_interpolate_linear_get_##type (prop,timestamp)); \
-  return (&prop->result_value); \
+  return &prop->result_value; \
 } \
 \
 static gboolean \
@@ -323,7 +393,7 @@ interpolate_linear_get_##type##_value_array (GstControlledProperty * prop, \
     ts += value_array->sample_interval; \
     values++; \
   } \
-  return (TRUE); \
+  return TRUE; \
 }
 
 DEFINE_LINEAR_GET (int);
@@ -459,6 +529,7 @@ static g##type \
 _interpolate_cubic_get_##type (GstControlledProperty * prop, GstClockTime timestamp) \
 { \
   GList *node; \
+  g##type ret; \
   \
   if (prop->nvalues <= 2) \
     return _interpolate_linear_get_##type (prop, timestamp); \
@@ -475,7 +546,7 @@ _interpolate_cubic_get_##type (GstControlledProperty * prop, GstClockTime timest
     if ((node = g_list_next (node))) { \
       gdouble diff1, diff2; \
       g##type value1,value2; \
-      gdouble ret; \
+      gdouble out; \
       \
       cp2 = node->data; \
       \
@@ -485,24 +556,27 @@ _interpolate_cubic_get_##type (GstControlledProperty * prop, GstClockTime timest
       diff1 = gst_guint64_to_gdouble (timestamp - cp1->timestamp); \
       diff2 = gst_guint64_to_gdouble (cp2->timestamp - timestamp); \
       \
-      ret = (cp2->cache.cubic.z * diff1 * diff1 * diff1 + cp1->cache.cubic.z * diff2 * diff2 * diff2) / cp1->cache.cubic.h; \
-      ret += (value2 / cp1->cache.cubic.h - cp1->cache.cubic.h * cp2->cache.cubic.z) * diff1; \
-      ret += (value1 / cp1->cache.cubic.h - cp1->cache.cubic.h * cp1->cache.cubic.z) * diff2; \
+      out = (cp2->cache.cubic.z * diff1 * diff1 * diff1 + cp1->cache.cubic.z * diff2 * diff2 * diff2) / cp1->cache.cubic.h; \
+      out += (value2 / cp1->cache.cubic.h - cp1->cache.cubic.h * cp2->cache.cubic.z) * diff1; \
+      out += (value1 / cp1->cache.cubic.h - cp1->cache.cubic.h * cp1->cache.cubic.z) * diff2; \
       \
-      return (g##type) ret; \
+      ret = (g##type) out; \
     } \
     else { \
-      return (g_value_get_##type (&cp1->value)); \
+      ret = g_value_get_##type (&cp1->value); \
     } \
+  } else {\
+    ret = g_value_get_##type (&prop->default_value); \
   } \
-  return (g_value_get_##type (&prop->default_value)); \
+  ret = CLAMP (ret, g_value_get_##type (&prop->min_value), g_value_get_##type (&prop->max_value)); \
+  return ret; \
 } \
 \
 static GValue * \
 interpolate_cubic_get_##type (GstControlledProperty * prop, GstClockTime timestamp) \
 { \
   g_value_set_##type (&prop->result_value,_interpolate_cubic_get_##type (prop,timestamp)); \
-  return (&prop->result_value); \
+  return &prop->result_value; \
 } \
 \
 static gboolean \
@@ -518,7 +592,7 @@ interpolate_cubic_get_##type##_value_array (GstControlledProperty * prop, \
     ts += value_array->sample_interval; \
     values++; \
   } \
-  return (TRUE); \
+  return TRUE; \
 }
 
 DEFINE_CUBIC_GET (int);

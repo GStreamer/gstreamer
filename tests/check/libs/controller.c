@@ -1076,6 +1076,63 @@ GST_START_TEST (controller_interpolate_linear_value_array)
 
 GST_END_TEST;
 
+
+/* test if values below minimum and above maximum are clipped */
+GST_START_TEST (controller_linear_invalid_values)
+{
+  GstController *ctrl;
+  GstElement *elem;
+  gboolean res;
+  GValue val_float = { 0, };
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "float", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* set interpolation mode */
+  fail_unless (gst_controller_set_interpolation_mode (ctrl, "float",
+          GST_INTERPOLATE_LINEAR));
+
+  /* set control values */
+  g_value_init (&val_float, G_TYPE_FLOAT);
+  g_value_set_float (&val_float, 200.0);
+  res = gst_controller_set (ctrl, "float", 0 * GST_SECOND, &val_float);
+  fail_unless (res, NULL);
+  g_value_set_float (&val_float, -200.0);
+  res = gst_controller_set (ctrl, "float", 4 * GST_SECOND, &val_float);
+  fail_unless (res, NULL);
+
+  /* now pull in values for some timestamps and see if clipping works */
+  /* 200.0 */
+  gst_controller_sync_values (ctrl, 0 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 100.0, NULL);
+  /* 100.0 */
+  gst_controller_sync_values (ctrl, 1 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 100.0, NULL);
+  /* 50.0 */
+  gst_controller_sync_values (ctrl, 1 * GST_SECOND + 500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 50.0, NULL);
+  /* 0.0 */
+  gst_controller_sync_values (ctrl, 2 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 0.0, NULL);
+  /* -100.0 */
+  gst_controller_sync_values (ctrl, 3 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 0.0, NULL);
+  /* -200.0 */
+  gst_controller_sync_values (ctrl, 4 * GST_SECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 0.0, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_controller_suite (void)
 {
@@ -1106,6 +1163,7 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_helper_any_gobject);
   tcase_add_test (tc, controller_misc);
   tcase_add_test (tc, controller_interpolate_linear_value_array);
+  tcase_add_test (tc, controller_linear_invalid_values);
 
   return s;
 }

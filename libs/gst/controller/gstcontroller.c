@@ -340,36 +340,60 @@ gst_controlled_property_new (GObject * object, const gchar * name)
           GParamSpecInt *tpspec = G_PARAM_SPEC_INT (pspec);
 
           g_value_set_int (&prop->default_value, tpspec->default_value);
+          g_value_init (&prop->min_value, prop->type);
+          g_value_set_int (&prop->min_value, tpspec->minimum);
+          g_value_init (&prop->max_value, prop->type);
+          g_value_set_int (&prop->max_value, tpspec->maximum);
         }
           break;
         case G_TYPE_UINT:{
           GParamSpecUInt *tpspec = G_PARAM_SPEC_UINT (pspec);
 
           g_value_set_uint (&prop->default_value, tpspec->default_value);
+          g_value_init (&prop->min_value, prop->type);
+          g_value_set_uint (&prop->min_value, tpspec->minimum);
+          g_value_init (&prop->max_value, prop->type);
+          g_value_set_uint (&prop->max_value, tpspec->maximum);
         }
           break;
         case G_TYPE_LONG:{
           GParamSpecLong *tpspec = G_PARAM_SPEC_LONG (pspec);
 
           g_value_set_long (&prop->default_value, tpspec->default_value);
+          g_value_init (&prop->min_value, prop->type);
+          g_value_set_long (&prop->min_value, tpspec->minimum);
+          g_value_init (&prop->max_value, prop->type);
+          g_value_set_long (&prop->max_value, tpspec->maximum);
         }
           break;
         case G_TYPE_ULONG:{
           GParamSpecULong *tpspec = G_PARAM_SPEC_ULONG (pspec);
 
           g_value_set_ulong (&prop->default_value, tpspec->default_value);
+          g_value_init (&prop->min_value, prop->type);
+          g_value_set_ulong (&prop->min_value, tpspec->minimum);
+          g_value_init (&prop->max_value, prop->type);
+          g_value_set_ulong (&prop->max_value, tpspec->maximum);
         }
           break;
         case G_TYPE_FLOAT:{
           GParamSpecFloat *tpspec = G_PARAM_SPEC_FLOAT (pspec);
 
           g_value_set_float (&prop->default_value, tpspec->default_value);
+          g_value_init (&prop->min_value, prop->type);
+          g_value_set_float (&prop->min_value, tpspec->minimum);
+          g_value_init (&prop->max_value, prop->type);
+          g_value_set_float (&prop->max_value, tpspec->maximum);
         }
           break;
         case G_TYPE_DOUBLE:{
           GParamSpecDouble *tpspec = G_PARAM_SPEC_DOUBLE (pspec);
 
           g_value_set_double (&prop->default_value, tpspec->default_value);
+          g_value_init (&prop->min_value, prop->type);
+          g_value_set_double (&prop->min_value, tpspec->minimum);
+          g_value_init (&prop->max_value, prop->type);
+          g_value_set_double (&prop->max_value, tpspec->maximum);
         }
           break;
         case G_TYPE_BOOLEAN:{
