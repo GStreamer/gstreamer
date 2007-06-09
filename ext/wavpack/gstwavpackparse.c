@@ -218,6 +218,7 @@ gst_wavpack_parse_reset (GstWavpackParse * parse)
   parse->channels = 0;
 
   gst_segment_init (&parse->segment, GST_FORMAT_UNDEFINED);
+  parse->next_block_index = 0;
 
   parse->current_offset = 0;
   parse->need_newsegment = TRUE;
@@ -890,10 +891,12 @@ gst_wavpack_parse_push_buffer (GstWavpackParse * wvparse, GstBuffer * buf,
   GST_BUFFER_OFFSET (buf) = header->block_index;
   GST_BUFFER_OFFSET_END (buf) = header->block_index + header->block_samples;
 
-  if (wvparse->discont) {
+  if (wvparse->discont || wvparse->next_block_index != header->block_index) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     wvparse->discont = FALSE;
   }
+
+  wvparse->next_block_index = header->block_index + header->block_samples;
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (wvparse->srcpad));
 

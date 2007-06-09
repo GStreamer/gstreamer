@@ -57,6 +57,7 @@ struct _GstWavpackDec
   read_id wv_id;
 
   GstSegment segment;           /* used for clipping, TIME format */
+  guint32 next_block_index;
 
   gint sample_rate;
   gint depth;

@@ -1,3 +1,14 @@
+2007-06-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_reset),
+	(gst_wavpack_dec_chain):
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackparse.c: (gst_wavpack_parse_reset),
+	(gst_wavpack_parse_push_buffer):
+	* ext/wavpack/gstwavpackparse.h:
+	Improve discont handling by checking if the next Wavpack block has
+	the expected, following block index.
+
 2007-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* gst/rtp/gstrtpmp4vpay.c (gst_rtp_mp4vpay_details):

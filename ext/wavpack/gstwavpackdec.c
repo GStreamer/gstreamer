@@ -130,6 +130,7 @@ gst_wavpack_dec_reset (GstWavpackDec * dec)
   dec->depth = 0;
 
   gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
+  dec->next_block_index = 0;
 }
 
 static void
@@ -362,8 +363,10 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
   /* If we got a DISCONT buffer forward the flag. Nothing else
    * has to be done as libwavpack doesn't store state between
    * Wavpack blocks */
-  if (GST_BUFFER_IS_DISCONT (buf))
+  if (GST_BUFFER_IS_DISCONT (buf) || dec->next_block_index != wph.block_index)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+
+  dec->next_block_index = wph.block_index + wph.block_samples;
 
   /* decode */
   decoded = WavpackUnpackSamples (dec->context,
