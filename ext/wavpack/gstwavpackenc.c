@@ -375,10 +375,7 @@ gst_wavpack_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
   GstWavpackEnc *enc = GST_WAVPACK_ENC (gst_pad_get_parent (pad));
   GstStructure *structure = gst_caps_get_structure (caps, 0);
 
-  /* FIXME: Workaround for bug #421543: calls gst_pad_accept_caps() */
-  /* check caps and put relevant parts into our object attributes */
-  if (!gst_pad_accept_caps (pad, caps) ||
-      !gst_structure_get_int (structure, "channels", &enc->channels) ||
+  if (!gst_structure_get_int (structure, "channels", &enc->channels) ||
       !gst_structure_get_int (structure, "rate", &enc->samplerate) ||
       !gst_structure_get_int (structure, "depth", &enc->depth)) {
     GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL),
