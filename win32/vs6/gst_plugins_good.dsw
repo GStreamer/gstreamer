@@ -3,6 +3,18 @@ Microsoft Developer Studio Workspace File, Format Version 6.00
 
 ###############################################################################
 
+Project: "autogen"=".\autogen.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "libgstalaw"=".\libgstalaw.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -112,6 +124,30 @@ Package=<4>
 ###############################################################################
 
 Project: "libgstdebug"=".\libgstdebug.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstdirectdraw"=".\libgstdirectdraw.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstdirectsound"=".\libgstdirectsound.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{
@@ -415,18 +451,6 @@ Package=<4>
 ###############################################################################
 
 Project: "libgstwavparse"=".\libgstwavparse.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "autogen"=".\autogen.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

@@ -1,3 +1,10 @@
+2007-06-10  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/vs6/gst_plugins_good.dsw:
+	* win32/vs8/gst-plugins-good.sln:
+	Add DirectSound and DirectDraw sinks project files to
+	workspace and solution files.
+
 2007-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Josh Coalson <xflac at yahoo dot com>,
