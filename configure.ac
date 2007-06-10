@@ -652,11 +652,16 @@ AG_GST_CHECK_FEATURE(ESD, [ESounD sound daemon], esdsink, [
 
 dnl *** FLAC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
+AC_TRY_RUN([
+#include <FLAC/export.h>
+int main () { return FLAC_API_VERSION_CURRENT<8; }
+],legacy_flac=no,legacy_flac=yes,legacy_flac=no)
+
+if test "x$legacy_flac" = "xyes"; then
 AG_GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flac, [
   AG_GST_CHECK_LIBHEADER(FLAC, FLAC, FLAC__seekable_stream_encoder_new, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC -lm")
   dnl API change in FLAC 1.1.1, so require that...
-  dnl (this check will also fail with FLAC 1.1.3 which changed API again
-  dnl and with which our plugin does not compile or work yet)
+  dnl (this check will also fail with FLAC 1.1.3 which changed API again)
   if test x$HAVE_FLAC = xyes; then
     AC_CHECK_DECL(FLAC__SEEKABLE_STREAM_ENCODER_TELL_ERROR,
                   HAVE_FLAC="yes", HAVE_FLAC="no", [
@@ -665,6 +670,19 @@ AG_GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flac, [
   fi
   AC_SUBST(FLAC_LIBS)
 ])
+else
+AG_GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flac, [
+  AG_GST_CHECK_LIBHEADER(FLAC, FLAC, FLAC__stream_encoder_new, -lm, FLAC/all.h, FLAC_LIBS="-lFLAC -lm")
+  dnl API change in FLAC 1.1.3, so require that...
+  if test x$HAVE_FLAC = xyes; then
+    AC_CHECK_DECL(FLAC__STREAM_ENCODER_TELL_STATUS_ERROR,
+                  HAVE_FLAC="yes", HAVE_FLAC="no", [
+#include <FLAC/stream_encoder.h>
+                  ])
+  fi
+  AC_SUBST(FLAC_LIBS)
+])
+fi
 
 dnl *** GConf ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GCONF, true)

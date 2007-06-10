@@ -27,6 +27,12 @@
 
 #include <FLAC/all.h>
 
+#if !defined(FLAC_API_VERSION_CURRENT) || FLAC_API_VERSION_CURRENT < 8
+#define LEGACY_FLAC
+#else
+#undef LEGACY_FLAC
+#endif 
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_FLAC_DEC gst_flac_dec_get_type()
@@ -41,7 +47,11 @@ typedef struct _GstFlacDecClass GstFlacDecClass;
 struct _GstFlacDec {
   GstElement     element;
 
+#if !defined(FLAC_API_VERSION_CURRENT) || FLAC_API_VERSION_CURRENT < 8
   FLAC__SeekableStreamDecoder *seekable_decoder; /* for pull-based operation  */
+#else
+  FLAC__StreamDecoder         *seekable_decoder; /* for pull-based operation  */
+#endif
 
   FLAC__StreamDecoder         *stream_decoder;   /* for chain-based operation */
   GstAdapter                  *adapter;

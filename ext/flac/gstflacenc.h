@@ -25,6 +25,12 @@
 
 #include <FLAC/all.h>
 
+#if !defined(FLAC_API_VERSION_CURRENT) || FLAC_API_VERSION_CURRENT < 8
+#define LEGACY_FLAC
+#else
+#undef LEGACY_FLAC
+#endif 
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_FLAC_ENC (gst_flac_enc_get_type())
@@ -55,7 +61,11 @@ struct _GstFlacEnc {
   gboolean       stopped;
   FLAC__int32   *data;
 
+#if !defined(FLAC_API_VERSION_CURRENT) || FLAC_API_VERSION_CURRENT < 8
   FLAC__SeekableStreamEncoder *encoder;
+#else
+  FLAC__StreamEncoder *encoder;
+#endif
   FLAC__StreamMetadata **meta;
 
   GstTagList *     tags;

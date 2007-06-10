@@ -1,3 +1,25 @@
+2007-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Josh Coalson <xflac at yahoo dot com>,
+	updated by Alexis Ballier <aballier at gentoo dot org>:
+
+	* configure.ac:
+	* ext/flac/gstflacdec.c: (gst_flac_dec_reset_decoders),
+	(gst_flac_dec_setup_seekable_decoder),
+	(gst_flac_dec_setup_stream_decoder), (gst_flac_dec_seek),
+	(gst_flac_dec_tell), (gst_flac_dec_length), (gst_flac_dec_eof),
+	(gst_flac_dec_read_seekable), (gst_flac_dec_read_stream):
+	* ext/flac/gstflacdec.h:
+	* ext/flac/gstflacenc.c: (gst_flac_enc_init),
+	(gst_flac_enc_finalize), (gst_flac_enc_set_metadata),
+	(gst_flac_enc_sink_setcaps), (gst_flac_enc_update_quality),
+	(gst_flac_enc_seek_callback), (gst_flac_enc_write_callback),
+	(gst_flac_enc_tell_callback), (gst_flac_enc_sink_event),
+	(gst_flac_enc_chain), (gst_flac_enc_set_property),
+	(gst_flac_enc_get_property), (gst_flac_enc_change_state):
+	* ext/flac/gstflacenc.h:
+	Add support for flac >= 1.1.3 which changed the API. Fixes bug #385887.
+	
 2007-06-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_sink_set_caps):
