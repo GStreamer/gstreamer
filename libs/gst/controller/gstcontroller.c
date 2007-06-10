@@ -479,6 +479,11 @@ gst_controlled_property_free (GstControlledProperty * prop)
   if (G_IS_VALUE (&prop->live_value.value))
     g_value_unset (&prop->live_value.value);
 
+  if (G_IS_VALUE (&prop->min_value))
+    g_value_unset (&prop->min_value);
+  if (G_IS_VALUE (&prop->max_value))
+    g_value_unset (&prop->max_value);
+
   g_free (prop);
 }
 
