@@ -1,3 +1,10 @@
+2007-06-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* libs/gst/controller/gstinterpolation.c:
+	Actually use the new functions with min/max checks for the trigger and
+	none interpolation modes for get() and get_value_array() instead of
+	just the latter.
+
 2007-06-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* libs/gst/controller/gstcontroller.c:
