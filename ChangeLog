@@ -1,3 +1,12 @@
+2007-06-11  Wim Taymans  <wim@fluendo.com>
+
+	Based on patch by: Thiago Sousa Santos <thiagossantos at gmail dot com>
+
+	* gst/playback/gstqueue2.c: (gst_queue_peer_query),
+	(gst_queue_handle_src_query):
+	Wait for preroll before attempting to forward a duration query upstream.
+	Fixes #445505.
+
 2007-06-07  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c: 
