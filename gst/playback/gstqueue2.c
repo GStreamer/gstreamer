@@ -1391,25 +1391,33 @@ gst_queue_handle_src_event (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
+gst_queue_peer_query (GstQueue * queue, GstPad * pad, GstQuery * query)
+{
+  gboolean ret = FALSE;
+  GstPad *peer;
+
+  if ((peer = gst_pad_get_peer (pad))) {
+    ret = gst_pad_query (peer, query);
+    gst_object_unref (peer);
+  }
+  return ret;
+}
+
+static gboolean
 gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
 {
-  GstQueue *queue = GST_QUEUE (GST_PAD_PARENT (pad));
-  GstPad *peer;
-  gboolean res;
+  GstQueue *queue;
 
-  if (!(peer = gst_pad_get_peer (queue->sinkpad)))
-    return FALSE;
-
-  res = gst_pad_query (peer, query);
-  gst_object_unref (peer);
-  if (!res)
-    return FALSE;
+  queue = GST_QUEUE (GST_PAD_PARENT (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
       gint64 peer_pos;
       GstFormat format;
+
+      if (!gst_queue_peer_query (queue, queue->sinkpad, query))
+        goto peer_failed;
 
       /* get peer position */
       gst_query_parse_position (query, &format, &peer_pos);
@@ -1431,12 +1439,45 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_position (query, format, peer_pos);
       break;
     }
+    case GST_QUERY_DURATION:
+    {
+      GST_DEBUG_OBJECT (queue, "waiting for preroll in duration query");
+
+      GST_QUEUE_MUTEX_LOCK (queue);
+      /* we have to wait until the upstream element is at least paused, which
+       * happened when we received a first item. */
+      while (gst_queue_is_empty (queue)) {
+        GST_QUEUE_WAIT_ADD_CHECK (queue, flushing);
+      }
+      GST_QUEUE_MUTEX_UNLOCK (queue);
+
+      if (!gst_queue_peer_query (queue, queue->sinkpad, query))
+        goto peer_failed;
+
+      GST_DEBUG_OBJECT (queue, "peer query success");
+      break;
+    }
     default:
       /* peer handled other queries */
+      if (!gst_queue_peer_query (queue, queue->sinkpad, query))
+        goto peer_failed;
       break;
   }
 
   return TRUE;
+
+  /* ERRORS */
+peer_failed:
+  {
+    GST_DEBUG_OBJECT (queue, "failed peer query");
+    return FALSE;
+  }
+flushing:
+  {
+    GST_DEBUG_OBJECT (queue, "flushing while waiting for query");
+    GST_QUEUE_MUTEX_UNLOCK (queue);
+    return FALSE;
+  }
 }
 
 static GstFlowReturn
