@@ -207,7 +207,7 @@ gst_ximage_src_start (GstBaseSrc * basesrc)
 #ifdef HAVE_XDAMAGE
   s->last_ximage = NULL;
 #endif
-  return gst_ximage_src_open_display (s, NULL);
+  return gst_ximage_src_open_display (s, s->display_name);
 }
 
 static gboolean
@@ -903,7 +903,7 @@ gst_ximage_src_get_caps (GstBaseSrc * bs)
   GstXContext *xcontext;
   gint x, y, width, height;
 
-  if ((!s->xcontext) && (!gst_ximage_src_open_display (s, NULL)))
+  if ((!s->xcontext) && (!gst_ximage_src_open_display (s, s->display_name)))
     return gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC (s)->
             srcpad));
 

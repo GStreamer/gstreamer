@@ -1,5 +1,14 @@
 2007-06-11  Wim Taymans  <wim@fluendo.com>
 
+	Patch by: daniel fischer <dan at f3c dot com>
+
+	* sys/ximage/gstximagesrc.c: (gst_ximage_src_start),
+	(gst_ximage_src_get_caps):
+	Actually use the display_name property so that we can dump any
+	available X display. Fixes #445905.
+
+2007-06-11  Wim Taymans  <wim@fluendo.com>
+
 	Patch by: Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
 
 	* gst/rtp/gstrtppcmadepay.c: (gst_rtp_pcma_depay_setcaps):
