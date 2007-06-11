@@ -64,7 +64,7 @@ static GstStaticPadTemplate gst_rtp_pcma_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-alaw, " "channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-alaw, channels = (int) 1, rate = (int) 8000")
     );
 
 static GstBuffer *gst_rtp_pcma_depay_process (GstBaseRTPDepayload * depayload,
