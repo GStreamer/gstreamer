@@ -1,3 +1,8 @@
+2007-06-11  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/gstpad.override:
+	Wrap gst_pad_set_blocked_async in pyg thread unlock/lock.
+
 2007-06-08  Edward Hervey  <edward@fluendo.com>
 
 	Patch by : Michael Smith  <msmith@fluendo.com>
