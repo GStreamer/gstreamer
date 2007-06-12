@@ -1,3 +1,9 @@
+2007-06-12  Edward Hervey  <edward@fluendo.com>
+
+	* gst/__init__.py:
+	Fix API cleanups that cause API breakage.
+	Fixes #446674
+
 2007-06-11  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstpad.override:

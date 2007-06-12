@@ -153,6 +153,22 @@ version = get_gst_version
 sys.setdlopenflags(dlsave)
 del sys
 
+# Fixes for API cleanups that would cause an API breakage.
+# See #446674
+
+import warnings
+if "parse_bin_from_description" in _gst.__dict__:
+    def gst_parse_bin_from_description(*args, **kwargs):
+        warnings.warn("gst_parse_bin_from_description() is deprecated, please use parse_bin_from_description instead",
+                      DeprecationWarning)
+        return parse_bin_from_description(*args, **kwargs)
+
+if "message_new_buffering" in _gst.__dict__:
+    def gst_message_new_buffering(*args, **kwargs):
+        warnings.warn("gst_message_new_buffering() is deprecated, please use message_new_buffering() instead",
+                      DeprecationWarning)
+        return message_new_buffering(*args, **kwargs)
+
 # this restores previously installed importhooks, so we don't interfere
 # with other people's module importers
 # it also clears out the module completely as if it were never loaded,
