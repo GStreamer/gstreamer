@@ -226,11 +226,3 @@ gst_video_mark_get_type
 GST_VIDEO_MARK_CLASS
 GST_IS_VIDEO_MARK_CLASS
 </SECTION>
-
-<SECTION>
-<FILE>element-waveformsink</FILE>
-GstWaveFormSink
-<TITLE>waveformsink</TITLE>
-<SUBSECTION Standard>
-GstWaveFormSinkClass
-</SECTION>

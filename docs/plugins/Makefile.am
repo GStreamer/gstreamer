@@ -89,7 +89,6 @@ EXAMPLE_CFILES = \
         $(top_srcdir)/ext/directfb/dfb-example.c
 
 EXTRA_HFILES = \
-	$(top_srcdir)/sys/waveform/gstwaveformsink.h \
 	$(top_srcdir)/sys/osxvideo/osxvideosink.h \
 	$(top_srcdir)/ext/directfb/dfbvideosink.h \
 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \

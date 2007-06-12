@@ -1,3 +1,16 @@
+2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-waveform.xml:
+	* sys/waveform/gstwaveformplugin.c:
+	* sys/waveform/gstwaveformsink.c:
+	* sys/waveform/gstwaveformsink.h:
+	* win32/MANIFEST:
+	* win32/vs6/libgstwaveform.dsp:
+	Remove the waveform plugin now that it is in -good.
+
 2007-06-08  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* configure.ac:
