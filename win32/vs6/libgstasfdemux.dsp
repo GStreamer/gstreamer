@@ -108,6 +108,10 @@ SOURCE=..\..\gst\asfdemux\asfheaders.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\asfdemux\asfpacket.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\asfdemux\gstasf.c
 # End Source File
 # Begin Source File
