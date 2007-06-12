@@ -1,5 +1,10 @@
 2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* po/POTFILES.in:
+	Add qtdemux for translation
+
+2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* configure.ac:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
