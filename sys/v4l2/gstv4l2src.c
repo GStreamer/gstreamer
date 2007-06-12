@@ -817,7 +817,7 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
     /* error already posted */
     return FALSE;
 
-  if (!gst_v4l2src_capture_init (v4l2src))
+  if (!gst_v4l2src_capture_init (v4l2src, caps))
     return FALSE;
 
   if (!gst_v4l2src_capture_start (v4l2src))
@@ -873,7 +873,7 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
 
   buffersize = v4l2src->frame_byte_size;
 
-  *buf = gst_v4l2src_buffer_new (v4l2src, buffersize, NULL, NULL);
+  *buf = gst_buffer_new_and_alloc (buffersize);
 
   do {
     amount =
@@ -892,6 +892,34 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
     }
   } while (TRUE);
 
+  GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
+  GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
+  /* timestamps, LOCK to get clock and base time. */
+  {
+    GstClock *clock;
+    GstClockTime timestamp;
+
+    GST_OBJECT_LOCK (v4l2src);
+    if ((clock = GST_ELEMENT_CLOCK (v4l2src))) {
+      /* we have a clock, get base time and ref clock */
+      timestamp = GST_ELEMENT (v4l2src)->base_time;
+      gst_object_ref (clock);
+    } else {
+      /* no clock, can't set timestamps */
+      timestamp = GST_CLOCK_TIME_NONE;
+    }
+    GST_OBJECT_UNLOCK (v4l2src);
+
+    if (clock) {
+      /* the time now is the time of the clock minus the base time */
+      timestamp = gst_clock_get_time (clock) - timestamp;
+      gst_object_unref (clock);
+    }
+
+    /* FIXME: use the timestamp from the buffer itself! */
+    GST_BUFFER_TIMESTAMP (*buf) = timestamp;
+  }
+
   return GST_FLOW_OK;
 
   /* ERRORS */
@@ -908,52 +936,7 @@ read_error:
 static GstFlowReturn
 gst_v4l2src_get_mmap (GstV4l2Src * v4l2src, GstBuffer ** buf)
 {
-  gint i, num;
-
-  /* grab a frame from the device, post an error */
-  num = gst_v4l2src_grab_frame (v4l2src);
-  if (num == -1)
-    goto grab_failed;
-
-  i = v4l2src->frame_byte_size;
-
-  /* check if this is the last buffer in the queue. If so do a memcpy to put it back asap
-     to avoid framedrops and deadlocks because of stupid elements */
-  /* FIXME: we should use the userptr interface instead, will remove this
-     problem */
-  if (g_atomic_int_get (&v4l2src->pool->refcount) == v4l2src->num_buffers) {
-    GST_LOG_OBJECT (v4l2src, "using memcpy'd buffer");
-
-    *buf = gst_v4l2src_buffer_new (v4l2src, i, NULL, NULL);
-    memcpy (GST_BUFFER_DATA (*buf), v4l2src->pool->buffers[num].start, i);
-
-    /* posts an error message if something went wrong */
-    if (!gst_v4l2src_queue_frame (v4l2src, num))
-      goto queue_failed;
-  } else {
-    GST_LOG_OBJECT (v4l2src, "using mmap'd buffer");
-    *buf =
-        gst_v4l2src_buffer_new (v4l2src, i, v4l2src->pool->buffers[num].start,
-        &v4l2src->pool->buffers[num]);
-
-    /* no need to be careful here, both are > 0, because the element uses them */
-    g_atomic_int_inc (&v4l2src->pool->buffers[num].refcount);
-    g_atomic_int_inc (&v4l2src->pool->refcount);
-  }
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-grab_failed:
-  {
-    GST_DEBUG_OBJECT (v4l2src, "failed to grab a frame");
-    return GST_FLOW_ERROR;
-  }
-queue_failed:
-  {
-    GST_DEBUG_OBJECT (v4l2src, "failed to queue frame");
-    gst_buffer_unref (*buf);
-    return GST_FLOW_ERROR;
-  }
+  return gst_v4l2src_grab_frame (v4l2src, buf);
 }
 
 static GstFlowReturn

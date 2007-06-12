@@ -1,3 +1,38 @@
+2007-06-12  Andy Wingo  <wingo@pobox.com>
+
+	* sys/v4l2/v4l2src_calls.c (gst_v4l2_buffer_finalize)
+	(gst_v4l2_buffer_class_init, gst_v4l2_buffer_get_type)
+	(gst_v4l2_buffer_new): Behave more like ximagesink's buffers, with
+	finalization and resuscitation. No longer public.
+	(gst_v4l2_buffer_pool_finalize, gst_v4l2_buffer_pool_init)
+	(gst_v4l2_buffer_pool_class_init, gst_v4l2_buffer_pool_get_type)
+	(gst_v4l2_buffer_pool_new, gst_v4l2_buffer_pool_activate)
+	(gst_v4l2_buffer_pool_destroy): Make the pool follow common
+	miniobject semantics, and be threadsafe.
+	(gst_v4l2src_queue_frame): Remove this function, as we just call
+	the ioctls directly in the two places where we queue buffers.
+	(gst_v4l2src_grab_frame): Return a flowreturn and fill the buffer
+	directly.
+	(gst_v4l2src_capture_init): Use the new buffer_pool_new function
+	to allocate the pool, which also preallocates the GstBuffers.
+	(gst_v4l2src_capture_start): Call buffer_pool_activate instead of
+	queueing the frames directly.
+
+	* sys/v4l2/gstv4l2src.h (struct _GstV4l2BufferPool): Make this a
+	real MiniObject instead of rolling our own refcounting and
+	finalizing. Give it a lock.
+	(struct _GstV4l2Buffer): Remove one intermediary object, having
+	the buffers hold the struct v4l2_buffer directly.
+
+	* sys/v4l2/gstv4l2src.c (gst_v4l2src_set_caps): Pass the caps to
+	capture_init so that it can set them on the buffers that it will
+	create.
+	(gst_v4l2src_get_read): For better or for worse, include the
+	timestamping and offsetting code here; really we should be using
+	bufferalloc though.
+	(gst_v4l2src_get_mmap): Just make grab_frame return one of our
+	preallocated, mmap'd buffers.
+
 2007-06-11  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: daniel fischer <dan at f3c dot com>

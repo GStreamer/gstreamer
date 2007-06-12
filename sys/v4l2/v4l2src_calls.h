@@ -33,11 +33,10 @@ gboolean   gst_v4l2src_set_capture       (GstV4l2Src * v4l2src,
                                           guint32 width, guint32 height,
 				          guint32 fps_n, guint32 fps_d);
 
-gboolean   gst_v4l2src_capture_init      (GstV4l2Src * v4l2src);
+gboolean   gst_v4l2src_capture_init      (GstV4l2Src * v4l2src, GstCaps *caps);
 gboolean   gst_v4l2src_capture_start     (GstV4l2Src * v4l2src);
 
-gint       gst_v4l2src_grab_frame        (GstV4l2Src * v4l2src);
-gboolean   gst_v4l2src_queue_frame       (GstV4l2Src * v4l2src, guint i);
+GstFlowReturn gst_v4l2src_grab_frame     (GstV4l2Src * v4l2src, GstBuffer **buf);
 
 gboolean   gst_v4l2src_capture_stop      (GstV4l2Src * v4l2src);
 gboolean   gst_v4l2src_capture_deinit    (GstV4l2Src * v4l2src);
@@ -52,11 +51,5 @@ gboolean   gst_v4l2src_get_size_limits   (GstV4l2Src * v4l2src,
                                           struct v4l2_fmtdesc *fmt,
                                           gint * min_w, gint * max_w,
                                           gint * min_h, gint * max_h);
-/* buffers */
-GstBuffer* gst_v4l2src_buffer_new        (GstV4l2Src * v4l2src,
-                                          guint size, guint8 * data,
-                                          GstV4l2Buffer * srcbuf);
-void       gst_v4l2src_free_buffer       (GstBuffer * buffer);
-
 
 #endif /* __V4L2SRC_CALLS_H__ */

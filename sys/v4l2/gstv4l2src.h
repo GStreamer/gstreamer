@@ -54,18 +54,22 @@ typedef struct _GstV4l2SrcClass GstV4l2SrcClass;
 /* global info */
 struct _GstV4l2BufferPool
 {
-  gint refcount;                /* number of users: 1 for every buffer, 1 for element */
-  gint video_fd;
+  GstMiniObject parent;
+
+  GMutex *lock;
+  gboolean running; /* with lock */
+  gint num_live_buffers; /* with lock */
+  gint video_fd; /* a dup(2) of the v4l2object's video_fd */
   guint buffer_count;
-  GstV4l2Buffer *buffers;
+  GstV4l2Buffer **buffers; /* with lock; buffers[n] is NULL that buffer has been
+                            * dequeued and pushed out */
 };
 
-struct _GstV4l2Buffer
-{
-  struct v4l2_buffer buffer;
-  guint8 *start;
-  guint length;
-  gint refcount;                /* add 1 if in use by element, add 1 if in use by GstBuffer */
+struct _GstV4l2Buffer {
+  GstBuffer   buffer;
+
+  struct v4l2_buffer vbuffer;
+
   GstV4l2BufferPool *pool;
 };
 
