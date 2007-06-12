@@ -15,30 +15,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstdirectdraw"=".\libgstdirectdraw.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "libgstdirectsound"=".\libgstdirectsound.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "libgstdshow"=".\libgstdshow.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -76,30 +52,6 @@ Package=<4>
 ###############################################################################
 
 Project: "libgstneon"=".\libgstneon.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "libgstqtdemux"=".\libgstqtdemux.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "libgstwaveform"=".\libgstwaveform.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

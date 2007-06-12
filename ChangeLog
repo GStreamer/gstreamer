@@ -1,3 +1,12 @@
+2007-06-12  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/MANIFEST:
+	Add megvideoparse, libdshow and dshowsrcwrapper to win32
+	MANIFEST.
+	* win32/vs6/gst_plugins_bad.dsw:
+	Remove qtdemux, directdraw, directsound and waveform project files
+	from the workspace as they have been moved to -good.
+
 2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* po/POTFILES.in:
