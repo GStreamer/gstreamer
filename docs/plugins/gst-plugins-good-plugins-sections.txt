@@ -522,6 +522,14 @@ gst_progress_report_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-qtdemux</FILE>
+GstQTDemux
+<TITLE>qtdemux</TITLE>
+<SUBSECTION Standard>
+GstQTDemuxClass
+</SECTION>
+
+<SECTION>
 <FILE>element-rtspsrc</FILE>
 RTSPLowerTrans
 GstRTSPSrc

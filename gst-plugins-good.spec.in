@@ -95,6 +95,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstlevel.so
 %{_libdir}/gstreamer-%{majorminor}/libgstefence.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmulaw.so
+%{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrtsp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmpte.so
@@ -145,11 +146,15 @@ rm -rf $RPM_BUILD_ROOT
 @USE_AALIB_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstaasink.so
 @USE_LIBDV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdv.so
 @USE_DV1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgst1394.so
+@USE_WAVPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwavpack.so
 
 
 # schema files
 @USE_GCONF_TRUE@%{_sysconfdir}/gconf/schemas/gstreamer-%{majorminor}.schemas
 
 %changelog
+* Tue Jun 12 2007 Jan Schmidt <jan at fluendo dot com>
+- wavpack and qtdemux have moved from bad
+
 * Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
 - clean up for splitup

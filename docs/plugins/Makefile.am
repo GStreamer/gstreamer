@@ -111,6 +111,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/level/gstlevel.h \
 	$(top_srcdir)/gst/multipart/multipartdemux.c \
 	$(top_srcdir)/gst/multipart/multipartmux.c \
+	$(top_srcdir)/gst/qtdemux/qtdemux.h \
 	$(top_srcdir)/gst/rtsp/gstrtpdec.h \
 	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \

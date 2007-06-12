@@ -1,4 +1,19 @@
 2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/inspect/plugin-qtdemux.xml:
+	* docs/plugins/inspect/plugin-quicktime.xml:
+	* win32/MANIFEST:
+	Move qtdemux from -bad.
+
+	* gst-plugins-good.spec.in:
+	Update spec file to reflect moving of qtdemux and wavpack
+
+2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
 	
 	* win32/MANIFEST:
 	* docs/plugins/Makefile.am:

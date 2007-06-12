@@ -51,6 +51,7 @@
     <xi:include href="xml/element-osxaudiosink.xml" />
     <xi:include href="xml/element-osxaudiosrc.xml" />
     <xi:include href="xml/element-progressreport.xml" />
+    <xi:include href="xml/element-qtdemux.xml" />
     <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
     <xi:include href="xml/element-smokedec.xml" />
@@ -108,6 +109,7 @@
     <xi:include href="xml/plugin-ossaudio.xml" />
     <xi:include href="xml/plugin-osxaudio.xml" />
     <xi:include href="xml/plugin-png.xml" />
+    <xi:include href="xml/plugin-quicktime.xml" />
     <xi:include href="xml/plugin-rtp.xml" />
     <xi:include href="xml/plugin-rtsp.xml" />
     <xi:include href="xml/plugin-shout2send.xml" />

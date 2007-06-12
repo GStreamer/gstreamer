@@ -1,12 +1,12 @@
 <plugin>
-  <name>qtdemux</name>
-  <description>Quicktime stream demuxer</description>
+  <name>quicktime</name>
+  <description>Quicktime support</description>
   <filename>../../gst/qtdemux/.libs/libgstqtdemux.so</filename>
   <basename>libgstqtdemux.so</basename>
-  <version>0.10.4</version>
+  <version>0.10.5.1</version>
   <license>LGPL</license>
-  <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins source release</package>
+  <source>gst-plugins-good</source>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,13 @@
       <class>Codec/Demuxer</class>
       <description>Demultiplex a QuickTime file into audio and video streams</description>
       <author>David Schleef &lt;ds@schleef.org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+    </element>
+    <element>
+      <name>rtpxqtdepay</name>
+      <longname>RTP packet depayloader</longname>
+      <class>Codec/Depayloader/Network</class>
+      <description>Extracts Quicktime audio/video from RTP packets</description>
+      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
     </element>
   </elements>
 </plugin>

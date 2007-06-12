@@ -98,6 +98,7 @@ GST_PLUGINS_ALL="\
 		matroska \
 		monoscope \
 		multipart \
+                qtdemux \
 		rtp	\
 		rtsp	\
 		smpte	\
@@ -886,9 +887,9 @@ AG_GST_CHECK_FEATURE(WAVPACK, [wavpack plug-in], wavpack, [
   AC_SUBST(WAVPACK_LIBS)
 ])
 
-dnl *** id3demux prefers to have zlib ***
+dnl *** qtdemux & id3demux prefer to have zlib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_ZLIB, true)
-AG_GST_CHECK_FEATURE(ZLIB, [zlib support for id3demux],, [
+AG_GST_CHECK_FEATURE(ZLIB, [zlib support for id3demux/qtdemux],, [
   AG_GST_CHECK_LIBHEADER(ZLIB,
     z, uncompress,, zlib.h, [
     HAVE_ZLIB="yes"
@@ -999,6 +1000,7 @@ gst/level/Makefile
 gst/matroska/Makefile
 gst/monoscope/Makefile
 gst/multipart/Makefile
+gst/qtdemux/Makefile
 gst/rtp/Makefile
 gst/rtsp/Makefile
 gst/smpte/Makefile

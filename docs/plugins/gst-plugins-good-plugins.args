@@ -161,7 +161,7 @@
 <ARG>
 <NAME>GstUDPSrc::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Socket Handle</NICK>
 <BLURB>Socket to use for UDP reception. (-1 == allocate).</BLURB>
@@ -1141,7 +1141,7 @@
 <ARG>
 <NAME>GstDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,16]</RANGE>
+<RANGE>[G_MAXULONG,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -1341,7 +1341,7 @@
 <ARG>
 <NAME>GstTest::allowed-timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>allowed timestamp deviation</NICK>
 <BLURB>allowed average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
@@ -1351,7 +1351,7 @@
 <ARG>
 <NAME>GstTest::buffer-count</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>buffer count</NICK>
 <BLURB>number of buffers in stream.</BLURB>
@@ -1361,7 +1361,7 @@
 <ARG>
 <NAME>GstTest::expected-buffer-count</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected buffer count</NICK>
 <BLURB>expected number of buffers in stream.</BLURB>
@@ -1371,7 +1371,7 @@
 <ARG>
 <NAME>GstTest::expected-length</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>expected length</NICK>
 <BLURB>expected length of stream.</BLURB>
@@ -1391,7 +1391,7 @@
 <ARG>
 <NAME>GstTest::length</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>length</NICK>
 <BLURB>length of stream.</BLURB>
@@ -1411,7 +1411,7 @@
 <ARG>
 <NAME>GstTest::timestamp-deviation</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>r</FLAGS>
 <NICK>timestamp deviation</NICK>
 <BLURB>average difference in usec between timestamp of next buffer and expected timestamp from analyzing last buffer.</BLURB>
@@ -1481,7 +1481,7 @@
 <ARG>
 <NAME>GstBreakMyData::set-to</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,255]</RANGE>
+<RANGE>[G_MAXULONG,255]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>set-to</NICK>
 <BLURB>set changed bytes to this value (-1 means random value.</BLURB>
@@ -1801,7 +1801,7 @@
 <ARG>
 <NAME>GstDynUDPSink::sockfd</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,32767]</RANGE>
+<RANGE>[G_MAXULONG,32767]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>socket handle</NICK>
 <BLURB>Socket to use for UDP sending. (-1 == allocate).</BLURB>
@@ -1821,7 +1821,7 @@
 <ARG>
 <NAME>GstCdioCddaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
 <BLURB>Read from device at the specified speed (-1 = default).</BLURB>
