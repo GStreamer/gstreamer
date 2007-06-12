@@ -81,7 +81,6 @@ rm -rf $RPM_BUILD_ROOT
 %doc AUTHORS COPYING README REQUIREMENTS gst-plugins-bad.doap
 
 # non-core plugins without external dependencies
-%{_libdir}/gstreamer-%{majorminor}/libgstqtdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttta.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspeed.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcdxaparse.so
@@ -130,7 +129,6 @@ rm -rf $RPM_BUILD_ROOT
 @USE_LIBMMS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmms.so
 @USE_XVID_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 @USE_BZ2_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstbz2.so
-@USE_WAVPACK_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstwavpack.so
 @USE_IVORBIS_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstivorbis.so
 @USE_NEON_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstneonhttpsrc.so
 @USE_ALSA_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstalsaspdif.so
@@ -142,6 +140,9 @@ rm -rf $RPM_BUILD_ROOT
 @USE_X264_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstx264.so
 
 %changelog
+* Tue Jun 12 2007 Jan Schmidt <jan at fluendo dot com>
+- wavpack and qtdemux have moved to good.
+
 * Thu Mar 22 2007 Christian Schaller <christian at fluendo dot com>
 - Add x264 and mpegvideoparse plugins
 

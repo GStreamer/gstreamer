@@ -1,5 +1,31 @@
 2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* gst/qtdemux/Makefile.am:
+	* gst/qtdemux/gstrtpxqtdepay.c:
+	* gst/qtdemux/gstrtpxqtdepay.h:
+	* gst/qtdemux/qtdemux.c:
+	* gst/qtdemux/qtdemux.h:
+	* gst/qtdemux/qtdemux.vcproj:
+	* gst/qtdemux/qtdemux_dump.c:
+	* gst/qtdemux/qtdemux_dump.h:
+	* gst/qtdemux/qtdemux_fourcc.h:
+	* gst/qtdemux/qtdemux_types.c:
+	* gst/qtdemux/qtdemux_types.h:
+	* gst/qtdemux/qtpalette.h:
+	* gst/qtdemux/quicktime.c:
+	* win32/MANIFEST:
+	* win32/vs6/libgstqtdemux.dsp:
+	Move qtdemux to -good.
+
+	* gst-plugins-bad.spec.in:
+	Update spec file to reflect wavpack & qtdemux moving to -good.
+
+2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:

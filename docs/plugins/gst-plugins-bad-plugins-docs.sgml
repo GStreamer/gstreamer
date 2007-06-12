@@ -14,7 +14,6 @@
     <title>gst-plugins-bad Elements</title>
     <xi:include href="xml/element-dfbvideosink.xml" />
     <xi:include href="xml/element-jackaudiosink.xml" />
-    <xi:include href="xml/element-qtdemux.xml" />
     <xi:include href="xml/element-osxvideosink.xml" />
     <xi:include href="xml/element-rganalysis.xml" />
     <xi:include href="xml/element-rglimiter.xml" />
@@ -50,7 +49,6 @@
     <xi:include href="xml/plugin-musicbrainz.xml" />
     <xi:include href="xml/plugin-neon.xml" />
     <xi:include href="xml/plugin-osxvideo.xml" />
-    <xi:include href="xml/plugin-qtdemux.xml" />
     <xi:include href="xml/plugin-replaygain.xml" />
     <xi:include href="xml/plugin-gstrtpmanager.xml" />
     <xi:include href="xml/plugin-sdl.xml" />

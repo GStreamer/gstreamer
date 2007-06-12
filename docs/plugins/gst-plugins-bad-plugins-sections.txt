@@ -16,14 +16,6 @@ GstJackAudioSinkClass
 </SECTION>
 
 <SECTION>
-<FILE>element-qtdemux</FILE>
-GstQTDemux
-<TITLE>qtdemux</TITLE>
-<SUBSECTION Standard>
-GstQTDemuxClass
-</SECTION>
-
-<SECTION>
 <FILE>element-osxvideosink</FILE>
 GstOSXVideoSink
 <TITLE>osxvideosink</TITLE>

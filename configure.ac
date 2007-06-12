@@ -19,7 +19,7 @@ dnl check if this is a release version
 AS_NANO(GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
-AC_CONFIG_SRCDIR([gst/qtdemux/qtdemux.c])
+AC_CONFIG_SRCDIR([docs/plugins/gst-plugins-bad-plugins-docs.sgml])
 
 dnl define the output header for config
 AM_CONFIG_HEADER([config.h])
@@ -101,7 +101,6 @@ GST_PLUGINS_ALL="\
   spectrum \
   speed \
   switch \
-  qtdemux \
   tta \
   videocrop \
   videoparse \
@@ -885,17 +884,6 @@ AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
   AC_CHECK_HEADER(linux/dvb/frontend.h, [HAVE_DVB="yes"], [HAVE_DVB="no"])
 ])
 
-dnl *** qtdemux prefers to have zlib ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_ZLIB, true)
-AG_GST_CHECK_FEATURE(ZLIB, [zlib support for qtdemux],, [
-  AG_GST_CHECK_LIBHEADER(ZLIB,
-    z, uncompress,, zlib.h, [
-    HAVE_ZLIB="yes"
-    ZLIB_LIBS="-lz"
-    AC_SUBST(ZLIB_LIBS)
-  ])
-])
-
 else
 
 dnl not building plugins with external dependencies,
@@ -935,7 +923,6 @@ AM_CONDITIONAL(USE_X264, false)
 AM_CONDITIONAL(USE_XVID, false)
 AM_CONDITIONAL(USE_WILDMIDI, false)
 AM_CONDITIONAL(USE_DVB, false)
-AM_CONDITIONAL(USE_ZLIB, false)
 
 fi dnl of EXT plugins
 
@@ -1011,7 +998,6 @@ gst/rtpmanager/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
 gst/switch/Makefile
-gst/qtdemux/Makefile
 gst/tta/Makefile
 gst/videocrop/Makefile
 gst/videoparse/Makefile
