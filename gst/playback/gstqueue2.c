@@ -642,7 +642,7 @@ update_buffering (GstQueue * queue)
   gint percent;
   gboolean post = FALSE;
 
-  if (!queue->use_buffering)
+  if (!queue->use_buffering || queue->high_percent <= 0)
     return;
 
 #define GET_PERCENT(format) ((queue->max_level.format) > 0 ? \
@@ -997,8 +997,6 @@ gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
     apply_buffer (queue, buffer, &queue->sink_segment);
     /* update the byterate stats */
     update_rates (queue);
-    /* update the buffering status */
-    update_buffering (queue);
 
     if (QUEUE_IS_USING_TEMP_FILE (queue)) {
       gst_queue_write_buffer_to_file (queue, buffer);
@@ -1039,9 +1037,14 @@ gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
     item = NULL;
   }
 
-  if (!QUEUE_IS_USING_TEMP_FILE (queue) && item)
-    g_queue_push_tail (queue->queue, item);
-  GST_QUEUE_SIGNAL_ADD (queue);
+  if (item) {
+    /* update the buffering status */
+    update_buffering (queue);
+
+    if (!QUEUE_IS_USING_TEMP_FILE (queue))
+      g_queue_push_tail (queue->queue, item);
+    GST_QUEUE_SIGNAL_ADD (queue);
+  }
 
   return;
 

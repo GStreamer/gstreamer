@@ -1,3 +1,12 @@
+2007-06-12  Wim Taymans  <wim@fluendo.com>
+
+	Patches by: Thiago Sousa Santos <thiagossantos at gmail dot com>
+
+	* gst/playback/gstqueue2.c: (update_buffering),
+	(gst_queue_locked_enqueue):
+	Fix a division by zero when the max percent is <= 0. Fixes #446572.
+	also update the buffering status when receiving events. Fixes #446551.
+
 2007-06-11  Wim Taymans  <wim@fluendo.com>
 
 	Based on patch by: Thiago Sousa Santos <thiagossantos at gmail dot com>
