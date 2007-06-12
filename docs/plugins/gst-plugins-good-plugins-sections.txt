@@ -687,6 +687,14 @@ ROUND_UP_8
 </SECTION>
 
 <SECTION>
+<FILE>element-waveformsink</FILE>
+GstWaveFormSink
+<TITLE>waveformsink</TITLE>
+<SUBSECTION Standard>
+GstWaveFormSinkClass
+</SECTION>
+
+<SECTION>
 <FILE>element-wavpackdec</FILE>
 GstWavpackDec
 <TITLE>wavpackdec</TITLE>
