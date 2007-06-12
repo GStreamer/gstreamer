@@ -36,6 +36,7 @@ win32/vs6/libgstvideobalance.dsp
 win32/vs6/libgstvideobox.dsp
 win32/vs6/libgstvideoflip.dsp
 win32/vs6/libgstvideomixer.dsp
+win32/vs6/libgstwaveform.dsp
 win32/vs6/libgstwavenc.dsp
 win32/vs6/libgstwavparse.dsp
 win32/vs7/libgstdirectdraw.vcproj

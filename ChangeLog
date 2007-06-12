@@ -1,6 +1,6 @@
 2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
 	
-	* win32/MANIFEST
+	* win32/MANIFEST:
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
