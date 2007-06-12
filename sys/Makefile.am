@@ -34,11 +34,11 @@ else
 OSX_AUDIO_DIR=
 endif
 
-# if USE_OSX_VIDEO
-# OSX_VIDEO_DIR=osxvideo
-# else
-# OSX_VIDEO_DIR=
-# endif
+if USE_OSX_VIDEO
+OSX_VIDEO_DIR=osxvideo
+else
+OSX_VIDEO_DIR=
+endif
 
 # if USE_QCAM
 # QCAM_DIR=qcam
@@ -76,6 +76,6 @@ else
 XIMAGE_DIR=
 endif
 
-SUBDIRS=$(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(OSS_DIR) $(OSX_AUDIO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
+SUBDIRS=$(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(OSS_DIR) $(OSX_AUDIO_DIR) $(OSX_VIDEO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
 
-DIST_SUBDIRS=directdraw directsound oss osxaudio sunaudio v4l2 ximage
+DIST_SUBDIRS=directdraw directsound oss osxaudio osxvideo sunaudio v4l2 ximage

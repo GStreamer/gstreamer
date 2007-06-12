@@ -34,7 +34,9 @@ GST_DEBUG_CATEGORY_STATIC (videocrop_test_debug);
 #define TIME_PER_TEST   10      /* seconds each format is tested */
 #define FRAMERATE       15      /* frames per second             */
 
+#ifndef DEFAULT_VIDEOSINK
 #define DEFAULT_VIDEOSINK "xvimagesink"
+#endif
 
 static gboolean
 check_bus_for_errors (GstBus * bus, GstClockTime max_wait_time)

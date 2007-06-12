@@ -21,5 +21,10 @@ else
 X_TESTS =
 endif
 
-noinst_PROGRAMS = $(V4L2_TESTS) $(X_TESTS)
+videocrop_test_SOURCES = videocrop-test.c
+videocrop_test_CFLAGS  = $(GST_CFLAGS)
+videocrop_test_LDADD   = $(GST_LIBS)
+videocrop_test_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
+
+noinst_PROGRAMS = $(V4L2_TESTS) $(X_TESTS) videocrop-test
 

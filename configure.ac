@@ -104,6 +104,7 @@ GST_PLUGINS_ALL="\
 		smpte	\
 		udp     \
 		videobox \
+		videocrop \
 		videomixer \
 		wavenc \
 		wavparse \
@@ -466,6 +467,22 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_AUDIO, true)
 AG_GST_CHECK_FEATURE(OSX_AUDIO, [OSX audio], osxaudio, [
   AC_CHECK_HEADER(CoreAudio/CoreAudio.h, HAVE_OSX_AUDIO="yes", HAVE_OSX_AUDIO="no")
 ])
+
+dnl *** OS X video ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)
+HAVE_OSX_VIDEO="no"
+AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
+  AC_CHECK_HEADER(OpenGL/gl.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
+])
+dnl in case header OpenGL/gl.h is found on other platforms
+case "$host" in
+  *-*darwin*)
+    dnl do nothing
+    ;;
+  *)
+    HAVE_OSX_VIDEO="no"
+    ;;
+esac
 
 
 dnl *** Video 4 Linux 2 ***
@@ -908,6 +925,7 @@ AM_CONDITIONAL(USE_DIRECTSOUND, false)
 AM_CONDITIONAL(USE_OSS, false)
 AM_CONDITIONAL(USE_SUNAUDIO, false)
 AM_CONDITIONAL(USE_OSX_AUDIO, false)
+AM_CONDITIONAL(USE_OSX_VIDEO, false)
 AM_CONDITIONAL(USE_X, false)
 AM_CONDITIONAL(USE_XSHM, false)
 AM_CONDITIONAL(USE_AALIB, false)
@@ -1006,6 +1024,7 @@ gst/rtsp/Makefile
 gst/smpte/Makefile
 gst/udp/Makefile
 gst/videobox/Makefile
+gst/videocrop/Makefile
 gst/videofilter/Makefile
 gst/videomixer/Makefile
 gst/wavenc/Makefile
@@ -1037,6 +1056,7 @@ sys/directsound/Makefile
 sys/oss/Makefile
 sys/sunaudio/Makefile
 sys/osxaudio/Makefile
+sys/osxvideo/Makefile
 sys/v4l2/Makefile
 sys/ximage/Makefile
 po/Makefile.in

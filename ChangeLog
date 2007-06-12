@@ -4,6 +4,20 @@
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* gst-plugins-good.spec.in:
+	* sys/Makefile.am:
+	* tests/check/Makefile.am:
+	* tests/icles/Makefile.am:
+	* tests/icles/videocrop-test.c:
+	Move videocrop and osxvideo from -bad.
+
+2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
 	* docs/plugins/gst-plugins-good-plugins.args:
 	* docs/plugins/inspect/plugin-qtdemux.xml:
 	* docs/plugins/inspect/plugin-quicktime.xml:

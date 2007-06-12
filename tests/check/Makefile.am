@@ -62,6 +62,7 @@ check_PROGRAMS = \
 	elements/level \
 	elements/matroskamux \
 	elements/icydemux \
+	elements/videocrop \
 	elements/videofilter \
 	$(check_sunaudio) \
 	$(check_taglib) \
@@ -80,7 +81,10 @@ AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 
 # valgrind testing
-VALGRIND_TESTS_DISABLE = $(VALGRIND_TO_FIX)
+# videocrop disabled since it takes way too long in valgrind
+VALGRIND_TESTS_DISABLE = \
+	elements/videocrop \
+	$(VALGRIND_TO_FIX)
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
@@ -103,3 +107,7 @@ elements_sunaudio_CFLAGS = \
 elements_sunaudio_LDADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-@GST_MAJORMINOR@ \
 	$(LDADD)
+
+elements_videocrop_LDADD = $(LDADD) $(GST_BASE_LIBS)
+elements_videocrop_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(GST_BASE_CFLAGS)
+

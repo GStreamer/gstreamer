@@ -120,6 +120,7 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstapetag.so
 %{_libdir}/gstreamer-%{majorminor}/libgstannodex.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideobalance.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideocrop.so
 %{_libdir}/gstreamer-%{majorminor}/libgsticydemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgsttaglib.so
 %{_libdir}/gstreamer-%{majorminor}/libgstximagesrc.so

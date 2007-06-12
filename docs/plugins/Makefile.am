@@ -56,7 +56,7 @@ FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/gobject \
 
 # Used for dependencies.
 HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.h
-CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c $(DOC_SOURCE_DIR)/*/*/*.cc
+CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c $(DOC_SOURCE_DIR)/*/*/*.cc $(DOC_SOURCE_DIR)/*/*/*.m
 
 # this is a wingo addition
 # thomasvs: another nice wingo addition would be an explanation on why
@@ -116,6 +116,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \
+        $(top_srcdir)/gst/videocrop/gstvideocrop.h \
 	$(top_srcdir)/gst/videofilter/gstvideobalance.h \
 	$(top_srcdir)/gst/videofilter/gstvideoflip.h \
 	$(top_srcdir)/gst/videomixer/videomixer.c \
@@ -129,6 +130,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/sys/oss/gstossmixerelement.h \
 	$(top_srcdir)/sys/oss/gstosssink.h \
 	$(top_srcdir)/sys/oss/gstosssrc.h \
+	$(top_srcdir)/sys/osxvideo/osxvideosink.h \
 	$(top_srcdir)/sys/v4l2/gstv4l2src.h \
 	$(top_srcdir)/sys/ximage/gstximagesrc.h
 
