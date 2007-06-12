@@ -14,7 +14,6 @@
     <title>gst-plugins-bad Elements</title>
     <xi:include href="xml/element-dfbvideosink.xml" />
     <xi:include href="xml/element-jackaudiosink.xml" />
-    <xi:include href="xml/element-osxvideosink.xml" />
     <xi:include href="xml/element-rganalysis.xml" />
     <xi:include href="xml/element-rglimiter.xml" />
     <xi:include href="xml/element-rgvolume.xml" />
@@ -26,7 +25,6 @@
     <xi:include href="xml/element-sdlaudiosink.xml" />
     <xi:include href="xml/element-sdlvideosink.xml" />
     <xi:include href="xml/element-trm.xml" />
-    <xi:include href="xml/element-videocrop.xml" />
     <xi:include href="xml/element-videoanalyse.xml" />
     <xi:include href="xml/element-videodetect.xml" />
     <xi:include href="xml/element-videomark.xml" />
@@ -48,14 +46,12 @@
     <xi:include href="xml/plugin-musepack.xml" />
     <xi:include href="xml/plugin-musicbrainz.xml" />
     <xi:include href="xml/plugin-neon.xml" />
-    <xi:include href="xml/plugin-osxvideo.xml" />
     <xi:include href="xml/plugin-replaygain.xml" />
     <xi:include href="xml/plugin-gstrtpmanager.xml" />
     <xi:include href="xml/plugin-sdl.xml" />
     <xi:include href="xml/plugin-spectrum.xml" />
     <xi:include href="xml/plugin-speed.xml" />
     <xi:include href="xml/plugin-tta.xml" />
-    <xi:include href="xml/plugin-videocrop.xml" />
     <xi:include href="xml/plugin-videosignal.xml" />
     <xi:include href="xml/plugin-xingheader.xml" />
 

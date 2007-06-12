@@ -16,22 +16,6 @@ GstJackAudioSinkClass
 </SECTION>
 
 <SECTION>
-<FILE>element-osxvideosink</FILE>
-GstOSXVideoSink
-<TITLE>osxvideosink</TITLE>
-<SUBSECTION Standard>
-GstOSXVideoSinkClass
-<SUBSECTION Private>
-GST_IS_OSX_VIDEO_SINK
-GST_IS_OSX_VIDEO_SINK_CLASS
-GST_OSX_VIDEO_SINK
-GST_OSX_VIDEO_SINK_CLASS
-GST_TYPE_OSXVIDEOBUFFER
-GST_TYPE_OSX_VIDEO_SINK
-GstOSXWindow
-</SECTION>
-
-<SECTION>
 <FILE>element-rganalysis</FILE>
 GstRgAnalysis
 <TITLE>rganalysis</TITLE>
@@ -167,14 +151,6 @@ GstTRM
 <TITLE>trm</TITLE>
 <SUBSECTION Standard>
 GstTRMClass
-</SECTION>
-
-<SECTION>
-<FILE>element-videocrop</FILE>
-GstVideoCrop
-<TITLE>videocrop</TITLE>
-<SUBSECTION Standard>
-GstVideoCropClass
 </SECTION>
 
 <SECTION>

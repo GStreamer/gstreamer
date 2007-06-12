@@ -102,7 +102,6 @@ GST_PLUGINS_ALL="\
   speed \
   switch \
   tta \
-  videocrop \
   videoparse \
   videosignal \
   vmnc \
@@ -316,23 +315,6 @@ AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
   CFLAGS="$ac_cflags_save"
   CPPFLAGS="$ac_cppflags_save"
 ])
-
-dnl *** OS X video ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)
-HAVE_OSX_VIDEO="no"
-AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
-  AC_CHECK_HEADER(OpenGL/gl.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
-])
-dnl in case header OpenGL/gl.h is found on other platforms
-case "$host" in
-  *-*darwin*)
-    dnl do nothing
-    ;;
-  *)
-    HAVE_OSX_VIDEO="no"
-    ;;
-esac
-
 
 
 dnl *** ext plug-ins ***
@@ -911,7 +893,6 @@ AM_CONDITIONAL(USE_MUSICBRAINZ, false)
 AM_CONDITIONAL(USE_MYTHTV, false)
 AM_CONDITIONAL(USE_NAS, false)
 AM_CONDITIONAL(USE_NEON, false)
-AM_CONDITIONAL(USE_OSX_VIDEO, false)
 AM_CONDITIONAL(USE_SDL, false)
 AM_CONDITIONAL(USE_SNDFILE, false)
 AM_CONDITIONAL(USE_SOUNDTOUCH, false)
@@ -999,7 +980,6 @@ gst/spectrum/Makefile
 gst/speed/Makefile
 gst/switch/Makefile
 gst/tta/Makefile
-gst/videocrop/Makefile
 gst/videoparse/Makefile
 gst/videosignal/Makefile
 gst/vmnc/Makefile
@@ -1012,7 +992,6 @@ gst-libs/gst/app/Makefile
 sys/Makefile
 sys/glsink/Makefile
 sys/dvb/Makefile
-sys/osxvideo/Makefile
 examples/Makefile
 examples/app/Makefile
 examples/directfb/Makefile

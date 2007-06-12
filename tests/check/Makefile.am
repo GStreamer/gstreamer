@@ -42,9 +42,7 @@ VALGRIND_TO_FIX = \
 	elements/mpeg2enc
 
 # valgrind testing
-# videocrop disabled since it takes way too long in valgrind
 VALGRIND_TESTS_DISABLE = \
-	elements/videocrop \
 	$(VALGRIND_TO_FIX)
 
 check_PROGRAMS = \
@@ -53,15 +51,10 @@ check_PROGRAMS = \
 	elements/rganalysis \
 	elements/rglimiter \
 	elements/rgvolume \
-	elements/videocrop \
 	elements/y4menc
 
 TESTS = $(check_PROGRAMS)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
-
-
-elements_videocrop_LDADD = $(LDADD) $(GST_BASE_LIBS)
-elements_videocrop_CFLAGS = $(CFLAGS) $(AM_CFLAGS) $(GST_BASE_CFLAGS)
 

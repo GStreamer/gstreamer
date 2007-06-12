@@ -34,12 +34,6 @@ else
 DVB_DIR=
 endif
 
-if USE_OSX_VIDEO
-OSX_VIDEO_DIR=osxvideo
-else
-OSX_VIDEO_DIR=
-endif
+SUBDIRS = $(GL_DIR) $(DVB_DIR)
 
-SUBDIRS = $(GL_DIR) $(DVB_DIR) $(OSX_VIDEO_DIR)
-
-DIST_SUBDIRS = glsink dvb osxvideo
+DIST_SUBDIRS = glsink dvb

@@ -4,6 +4,31 @@
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-osxvideo.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* gst-plugins-bad.spec.in:
+	* gst/videocrop/Makefile.am:
+	* gst/videocrop/gstvideocrop.c:
+	* gst/videocrop/gstvideocrop.h:
+	* gst/videocrop/videocrop.vcproj:
+	* sys/Makefile.am:
+	* sys/osxvideo/Makefile.am:
+	* sys/osxvideo/cocoawindow.h:
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	* tests/check/Makefile.am:
+	* tests/check/elements/videocrop.c:
+	* tests/icles/Makefile.am:
+	* tests/icles/videocrop-test.c:
+	Move videocrop and osxvideo to -good.
+
+2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
 	* gst/qtdemux/Makefile.am:
 	* gst/qtdemux/gstrtpxqtdepay.c:
 	* gst/qtdemux/gstrtpxqtdepay.h:
