@@ -667,6 +667,8 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
 #define NUM_TRIALS 50
   struct v4l2_buffer buffer;
   gint32 trials = NUM_TRIALS;
+  GstBuffer *pool_buffer;
+  gboolean need_copy;
 
   memset (&buffer, 0x00, sizeof (buffer));
   buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -674,7 +676,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
 
   while (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_DQBUF, &buffer) < 0) {
 
-    GST_LOG_OBJECT (v4l2src,
+    GST_WARNING_OBJECT (v4l2src,
         "problem grabbing frame %d (ix=%d), trials=%d, pool-ct=%d, buf.flags=%d",
         buffer.sequence, buffer.index, trials,
         GST_MINI_OBJECT_REFCOUNT (v4l2src->pool), buffer.flags);
@@ -738,17 +740,19 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
 
   g_mutex_lock (v4l2src->pool->lock);
 
-  *buf = GST_BUFFER (v4l2src->pool->buffers[buffer.index]);
+  pool_buffer = GST_BUFFER (v4l2src->pool->buffers[buffer.index]);
+
   v4l2src->pool->buffers[buffer.index] = NULL;
   v4l2src->pool->num_live_buffers++;
+  need_copy = v4l2src->pool->num_live_buffers == v4l2src->pool->buffer_count;
 
   g_mutex_unlock (v4l2src->pool->lock);
 
   /* this can change at every frame, esp. with jpeg */
-  GST_BUFFER_SIZE (*buf) = buffer.bytesused;
+  GST_BUFFER_SIZE (pool_buffer) = buffer.bytesused;
 
-  GST_BUFFER_OFFSET (*buf) = v4l2src->offset++;
-  GST_BUFFER_OFFSET_END (*buf) = v4l2src->offset;
+  GST_BUFFER_OFFSET (pool_buffer) = v4l2src->offset++;
+  GST_BUFFER_OFFSET_END (pool_buffer) = v4l2src->offset;
 
   /* timestamps, LOCK to get clock and base time. */
   {
@@ -773,7 +777,15 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
     }
 
     /* FIXME: use the timestamp from the buffer itself! */
-    GST_BUFFER_TIMESTAMP (*buf) = timestamp;
+    GST_BUFFER_TIMESTAMP (pool_buffer) = timestamp;
+  }
+
+  if (G_UNLIKELY (need_copy)) {
+    *buf = gst_buffer_copy (pool_buffer);
+    /* this will requeue */
+    gst_buffer_unref (pool_buffer);
+  } else {
+    *buf = pool_buffer;
   }
 
   GST_LOG_OBJECT (v4l2src, "grabbed frame %d (ix=%d), pool-ct=%d",

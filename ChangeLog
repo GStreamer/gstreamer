@@ -17,6 +17,8 @@
 	to allocate the pool, which also preallocates the GstBuffers.
 	(gst_v4l2src_capture_start): Call buffer_pool_activate instead of
 	queueing the frames directly.
+	(gst_v4l2src_grab_frame): Return a copy of the pool buffer if all
+	mmap buffers have been dequeued.
 
 	* sys/v4l2/gstv4l2src.h (struct _GstV4l2BufferPool): Make this a
 	real MiniObject instead of rolling our own refcounting and
