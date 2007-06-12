@@ -327,6 +327,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libgstqtdemux"=".\libgstqtdemux.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "libgstrtp"=".\libgstrtp.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -414,6 +426,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libgstvideocrop"=".\libgstvideocrop.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "libgstvideoflip"=".\libgstvideoflip.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -427,6 +451,18 @@ Package=<4>
 ###############################################################################
 
 Project: "libgstvideomixer"=".\libgstvideomixer.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
+Project: "libgstwaveform"=".\libgstwaveform.dsp" - Package Owner=<4>
 
 Package=<5>
 {{{

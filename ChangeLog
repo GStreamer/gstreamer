@@ -1,3 +1,14 @@
+2007-06-12  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/MANIFEST:
+	Add videocrop project file to the win32 manifest.
+	* win32/vs6/gst_plugins_good.dsw:
+	Add qtdemux,videocrop and waveform projects to the workspace.
+	* win32/vs6/libgstqtdemux.dsp:
+	Add zlib to the link list of qtdemux.
+	* win32/vs6/libgstvideocrop.dsp:
+	Add a project file for videocrop.
+
 2007-06-12  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* po/POTFILES.in:
