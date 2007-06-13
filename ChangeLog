@@ -1,3 +1,8 @@
+2007-06-13  Edward Hervey  <edward@fluendo.com>
+
+	* gst/playback/gstqueue2.c: (gst_queue_create_read):
+	Fix build on MacOSX.
+
 2007-06-13  Wim Taymans  <wim@fluendo.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),

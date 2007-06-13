@@ -823,7 +823,7 @@ gst_queue_create_read (GstQueue * queue, guint64 offset, guint length,
   /* this should not block */
   GST_LOG_OBJECT (queue, "Reading %d bytes", length);
   res = fread (GST_BUFFER_DATA (buf), 1, length, queue->temp_file);
-  GST_LOG_OBJECT (queue, "read %d bytes", res);
+  GST_LOG_OBJECT (queue, "read %" G_GSIZE_FORMAT " bytes", res);
 
   if (G_UNLIKELY (res == 0)) {
     /* check for errors or EOF */
