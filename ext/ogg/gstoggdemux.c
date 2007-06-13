@@ -2390,7 +2390,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     for (i = 0; i < chain->streams->len; i++) {
       GstOggPad *pad = g_array_index (chain->streams, GstOggPad *, i);
 
-      GST_LOG_OBJECT (ogg, "serial %08lx time %" GST_TIME_FORMAT, pad->serialno,
+      GST_LOG_OBJECT (ogg, "serial %08x time %" GST_TIME_FORMAT, pad->serialno,
           GST_TIME_ARGS (pad->start_time));
 
       if (pad->serialno == serial) {
@@ -2409,7 +2409,7 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
       /* the timestamp will be filled in when we submit the pages */
       if (!pad->is_skeleton)
         done &= (pad->start_time != GST_CLOCK_TIME_NONE);
-      GST_LOG_OBJECT (ogg, "done %08lx now %d", pad->serialno, done);
+      GST_LOG_OBJECT (ogg, "done %08x now %d", pad->serialno, done);
     }
 
     /* we read a page not belonging to the current chain: seek back to the

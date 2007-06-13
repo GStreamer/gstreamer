@@ -1,3 +1,9 @@
+2007-06-13  Wim Taymans  <wim@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_pad_submit_packet),
+	(gst_ogg_demux_perform_seek), (gst_ogg_demux_read_chain):
+	Fix compilation on mingw. Fixes #446972.
+
 2007-06-12  Wim Taymans  <wim@fluendo.com>
 
 	Patches by: Thiago Sousa Santos <thiagossantos at gmail dot com>
