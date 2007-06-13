@@ -10,11 +10,11 @@
 # QCAM_DIR=
 # endif
 
-# if USE_VCD
-# VCD_DIR=vcd
-# else
-# VCD_DIR=
-# endif
+if USE_VCD
+VCD_DIR=vcd
+else
+VCD_DIR=
+endif
 
 # if USE_CDROM
 #  CDROM_DIR=cdrom
@@ -34,6 +34,6 @@ else
 DVB_DIR=
 endif
 
-SUBDIRS = $(GL_DIR) $(DVB_DIR)
+SUBDIRS = $(GL_DIR) $(DVB_DIR) $(VCD_DIR)
 
-DIST_SUBDIRS = glsink dvb
+DIST_SUBDIRS = glsink dvb vcd

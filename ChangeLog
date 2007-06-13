@@ -1,3 +1,17 @@
+2007-06-13  Wim Taymans  <wim@fluendo.com>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/vcd/Makefile.am:
+	* sys/vcd/vcdsrc.c: (gst_vcdsrc_setup_interfaces),
+	(gst_vcdsrc_base_init), (gst_vcdsrc_class_init), (gst_vcdsrc_init),
+	(gst_vcdsrc_msf), (gst_vcdsrc_recalculate),
+	(gst_vcdsrc_set_property), (gst_vcdsrc_get_property),
+	(gst_vcdsrc_create), (gst_vcdsrc_start), (gst_vcdsrc_stop),
+	(gst_vcdsrc_uri_set_uri):
+	* sys/vcd/vcdsrc.h:
+	Port VCD element.
+
 2007-06-12  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/MANIFEST:

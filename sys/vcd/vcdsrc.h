@@ -21,8 +21,10 @@
 #ifndef __VCDSRC_H__
 #define __VCDSRC_H__
 
-#include <gst/gst.h>
 #include <linux/cdrom.h>
+
+#include <gst/gst.h>
+#include <gst/base/gstpushsrc.h>
 
 G_BEGIN_DECLS
 
@@ -39,52 +41,33 @@ G_BEGIN_DECLS
 #define GST_IS_VCDSRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VCDSRC))
 
-/* NOTE: per-element flags start with 16 for now */
-typedef enum {
-  VCDSRC_OPEN           = (GST_ELEMENT_FLAG_LAST << 0),
-
-  VCDSRC_FLAG_LAST      = (GST_ELEMENT_FLAG_LAST << 2),
-} GstVCDSrcFlags;
-
 typedef struct _GstVCDSrc GstVCDSrc;
 typedef struct _GstVCDSrcClass GstVCDSrcClass;
 
 struct _GstVCDSrc {
-  GstElement element;
-  /* pads */
-  GstPad *srcpad;
+  GstPushSrc parent_object;
 
   /* device */
   gchar *device;
   /* track number */
   gint track;
+  int max_errors;
+
   /* fd */
   gint fd;
-
-  struct cdrom_tochdr tochdr;
   gint numtracks;
+  struct cdrom_tochdr tochdr;
   struct cdrom_tocentry *tracks;
 
   /* current time offset */
   gulong trackoffset;
-  gulong frameoffset;
-
-  /* bytes offset in next buf */
-  gulong tempoffset;
-  gboolean discont, flush;
-
   gulong curoffset;                     /* current offset in file */
   gulong bytes_per_read;                /* bytes per read */
-
-  gulong seq;                           /* buffer sequence number */
-  int max_errors;
 };
 
 struct _GstVCDSrcClass {
-  GstElementClass parent_class;
+  GstPushSrcClass parent_class;
 };
-
-GType gst_vcdsrc_get_type(void);
 
 G_END_DECLS
 

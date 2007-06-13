@@ -286,6 +286,12 @@ AG_GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
 CPPFLAGS="$save_CPPFLAGS"
 LIBS="$save_LIBS"
 
+dnl check for Video CD
+translit(dnm, m, l) AM_CONDITIONAL(USE_VCD, true)
+AG_GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
+  AC_CHECK_HEADER(linux/cdrom.h, HAVE_VCD="yes", HAVE_VCD="no")
+])
+
 dnl Check for X11
 translit(dnm, m, l) AM_CONDITIONAL(USE_X, true)
 AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
@@ -872,6 +878,7 @@ dnl not building plugins with external dependencies,
 dnl but we still need to set the conditionals
 
 AM_CONDITIONAL(USE_OPENGL, false)
+AM_CONDITIONAL(USE_VCD, false)
 AM_CONDITIONAL(USE_X, false)
 AM_CONDITIONAL(USE_ALSA, false)
 AM_CONDITIONAL(USE_AMRWB, false)
@@ -992,6 +999,7 @@ gst-libs/gst/app/Makefile
 sys/Makefile
 sys/glsink/Makefile
 sys/dvb/Makefile
+sys/vcd/Makefile
 examples/Makefile
 examples/app/Makefile
 examples/directfb/Makefile
