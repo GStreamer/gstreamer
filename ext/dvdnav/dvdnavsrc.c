@@ -330,6 +330,7 @@ gst_dvd_nav_src_set_property (GObject * object, guint prop_id,
       } else {
         g_warning ("dvdnavsrc: cannot change device while running");
       }
+      GST_OBJECT_UNLOCK (src);
       break;
 #if 0
     case ARG_TITLE:
