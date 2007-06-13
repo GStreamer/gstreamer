@@ -34,6 +34,6 @@ else
 DVB_DIR=
 endif
 
-SUBDIRS = $(GL_DIR) $(DVB_DIR) $(VCD_DIR)
+SUBDIRS = $(GL_DIR) $(DVB_DIR)
 
 DIST_SUBDIRS = glsink dvb vcd

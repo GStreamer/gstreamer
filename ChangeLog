@@ -1,5 +1,10 @@
 2007-06-13  Wim Taymans  <wim@fluendo.com>
 
+	* sys/Makefile.am:
+	Disable VCD build because we're frozen..
+
+2007-06-13  Wim Taymans  <wim@fluendo.com>
+
 	* configure.ac:
 	* sys/Makefile.am:
 	* sys/vcd/Makefile.am:
