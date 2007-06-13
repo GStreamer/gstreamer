@@ -36,6 +36,20 @@ gst_fake_sink_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-fdsink</FILE>
+<TITLE>fdsink</TITLE>
+GstFdSink
+<SUBSECTION Standard>
+GST_FD_SINK
+GST_IS_FD_SINK
+GST_TYPE_FD_SINK
+GST_FD_SINK_CLASS
+GST_IS_FD_SINK_CLASS
+<SUBSECTION Private>
+gst_fd_sink_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-fdsrc</FILE>
 <TITLE>fdsrc</TITLE>
 GstFdSrc

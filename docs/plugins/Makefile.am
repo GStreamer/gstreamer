@@ -79,6 +79,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/plugins/elements/gstcapsfilter.h \
 	$(top_srcdir)/plugins/elements/gstfakesrc.h \
 	$(top_srcdir)/plugins/elements/gstfakesink.h \
+	$(top_srcdir)/plugins/elements/gstfdsink.h \
 	$(top_srcdir)/plugins/elements/gstfdsrc.h \
 	$(top_srcdir)/plugins/elements/gstfilesrc.h \
 	$(top_srcdir)/plugins/elements/gstfilesink.h \
