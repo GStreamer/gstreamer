@@ -2,6 +2,7 @@ element-capsfilter.sgml
 element-fakesink.sgml
 element-fakesrc.sgml
 element-fdsrc.sgml
+element-fdsink.sgml
 element-filesink.sgml
 element-filesrc.sgml
 element-identity.sgml

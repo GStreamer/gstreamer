@@ -1,5 +1,10 @@
 2007-06-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* docs/plugins/tmpl/.cvsignore:
+	Ignore file to keep the buildbots happy
+
+2007-06-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gstreamer-plugins-docs.sgml:
 	* docs/plugins/gstreamer-plugins-sections.txt:
