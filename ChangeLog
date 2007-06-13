@@ -1,3 +1,9 @@
+2007-06-13  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_setcaps):
+	Make sure we allocate enough memory for the codec_data.
+	Fixes #447210.
+
 2007-06-12  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/MANIFEST:

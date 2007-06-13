@@ -237,10 +237,12 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
     ps = gst_structure_get_string (structure, "sprop-parameter-sets");
     params = g_strsplit (ps, ",", 0);
 
-    /* count total number of bytes in base64 */
+    /* count total number of bytes in base64. Also include the sync bytes in
+     * front of the params. */
     len = 0;
     for (i = 0; params[i]; i++) {
       len += strlen (params[i]);
+      len += sizeof (sync_bytes);
     }
     /* we seriously overshoot the length, but it's fine. */
     codec_data = gst_buffer_new_and_alloc (len);
