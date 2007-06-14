@@ -228,7 +228,7 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
             interpolation_methods[mode]->get_boolean_value_array;
         break;
       case G_TYPE_ENUM:
-        self->get = interpolation_methods[mode]->get_uint;
+        self->get = interpolation_methods[mode]->get_enum;
         self->get_value_array =
             interpolation_methods[mode]->get_enum_value_array;
         break;
@@ -1008,7 +1008,7 @@ gst_controller_get (GstController * self, gchar * property_name,
  * @self: the controller to get the list from
  * @property_name: the name of the property to get the list for
  *
- * Returns a read-only copy of the list of GstTimedValue for the given property.
+ * Returns a read-only copy of the list of #GstTimedValue for the given property.
  * Free the list after done with it.
  *
  * <note><para>This doesn't modify the controlled GObject property!</para></note>
@@ -1184,7 +1184,7 @@ gst_controller_get_value_arrays (GstController * self,
  * of values.
  *
  * The type of the values in the array is the same as the property's type.
- *  
+ *
  * <note><para>This doesn't modify the controlled GObject property!</para></note>
  *
  * Returns: %TRUE if the given array could be filled, %FALSE otherwise

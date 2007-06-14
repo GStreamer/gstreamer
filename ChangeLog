@@ -1,3 +1,9 @@
+2007-06-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_set_interpolation_mode):
+	  Fix wrong getter for enums in controller.
+
 2007-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/check/gstcheck.c: (gst_check_init):
