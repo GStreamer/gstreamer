@@ -1530,6 +1530,7 @@ gst_base_sink_reset_qos (GstBaseSink * sink)
   priv->avg_render = -1;
   priv->rendered = 0;
   priv->dropped = 0;
+
 }
 
 /* Checks if the object was scheduled too late.
@@ -1733,6 +1734,7 @@ gst_base_sink_render_object (GstBaseSink * basesink, GstPad * pad,
           /* configure the segment */
           gst_base_sink_configure_segment (basesink, pad, event,
               &basesink->segment);
+          break;
         default:
           break;
       }
@@ -2680,6 +2682,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
           GST_TIME_FORMAT " + time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (now), GST_TIME_ARGS (base),
           GST_TIME_ARGS (accum), GST_TIME_ARGS (time));
+      break;
     }
     default:
       /* cannot answer other than TIME, we return FALSE, which will

@@ -1,3 +1,9 @@
+2007-06-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_reset_qos),
+	(gst_base_sink_render_object), (gst_base_sink_get_position):
+	  Add two breaks thats where missing.
+
 2007-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/gstreamer-libs-sections.txt:
