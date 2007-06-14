@@ -1,5 +1,11 @@
 2007-06-14  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/elements/.cvsignore:
+	* tests/icles/.cvsignore:
+	Hush the buildbots up
+
+2007-06-14  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* configure.ac:
 	* sys/Makefile.am:
 	* sys/directdraw/Makefile.am:

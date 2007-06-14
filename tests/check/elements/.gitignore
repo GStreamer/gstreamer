@@ -14,6 +14,7 @@ id3v2mux
 apev2mux
 audiopanorama
 videofilter
+videocrop
 sunaudio
 autodetect
 wavpackdec
