@@ -390,14 +390,14 @@ GST_START_TEST (controller_new_okay2)
   fail_unless (ctrl != NULL, NULL);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
-  fail_unless (G_OBJECT (ctrl)->ref_count == 1);
+  fail_unless_equals_int (G_OBJECT (ctrl)->ref_count, 1);
 
   ctrl2 = gst_controller_new (G_OBJECT (elem), "boolean", NULL);
   fail_unless (ctrl2 != NULL, NULL);
   fail_unless (ctrl2 == ctrl, NULL);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
-  fail_unless (G_OBJECT (ctrl)->ref_count == 2);
+  fail_unless_equals_int (G_OBJECT (ctrl)->ref_count, 2);
 
   /* trying to control the same properties again should correctly
    * increase the refcount of the object returned as well */
@@ -407,7 +407,7 @@ GST_START_TEST (controller_new_okay2)
   fail_unless (ctrl3 == ctrl, NULL);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
-  fail_unless (G_OBJECT (ctrl)->ref_count == 3);
+  fail_unless_equals_int (G_OBJECT (ctrl)->ref_count, 3);
 
   g_object_unref (ctrl);
   g_object_unref (ctrl2);
@@ -442,7 +442,7 @@ GST_START_TEST (controller_new_okay3)
   fail_unless (ctrl1 == ctrl3, NULL);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl1)->ref_count);
-  fail_unless (G_OBJECT (ctrl1)->ref_count == 3);
+  fail_unless_equals_int (G_OBJECT (ctrl1)->ref_count, 3);
   g_object_unref (ctrl1);
   g_object_unref (ctrl2);
   g_object_unref (ctrl3);
@@ -677,18 +677,18 @@ GST_START_TEST (controller_interpolate_cubic)
 
   /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 0.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_double, 0.0);
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 5.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_double, 5.0);
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 2.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_double, 2.0);
   gst_controller_sync_values (ctrl, 3 * GST_SECOND);
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double > 2.0 &&
       GST_TEST_MONO_SOURCE (elem)->val_double < 8.0, NULL);
   gst_controller_sync_values (ctrl, 4 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 8.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_double, 8.0);
   gst_controller_sync_values (ctrl, 5 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 8.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_double, 8.0);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -962,7 +962,7 @@ GST_START_TEST (controller_refcount_new_list)
   ctrl = gst_controller_new_list (G_OBJECT (elem), list);
   fail_unless (ctrl != NULL, NULL);
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
-  fail_unless (G_OBJECT (ctrl)->ref_count == 1);
+  fail_unless_equals_int (G_OBJECT (ctrl)->ref_count, 1);
   g_list_free (list);
   g_object_unref (ctrl);
   gst_object_unref (elem);
@@ -974,7 +974,7 @@ GST_START_TEST (controller_refcount_new_list)
   ctrl = gst_controller_new_list (G_OBJECT (elem), list);
   fail_unless (ctrl != NULL, NULL);
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
-  fail_unless (G_OBJECT (ctrl)->ref_count == 1);
+  fail_unless_equals_int (G_OBJECT (ctrl)->ref_count, 1);
   g_list_free (list);
   g_object_unref (ctrl);
   gst_object_unref (elem);
@@ -986,7 +986,7 @@ GST_START_TEST (controller_refcount_new_list)
   ctrl = gst_controller_new_list (G_OBJECT (elem), list);
   fail_unless (ctrl != NULL, NULL);
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
-  fail_unless (G_OBJECT (ctrl)->ref_count == 1);
+  fail_unless_equals_int (G_OBJECT (ctrl)->ref_count, 1);
   g_list_free (list);
   g_object_unref (ctrl);
   gst_object_unref (elem);
@@ -1001,7 +1001,7 @@ GST_START_TEST (controller_refcount_new_list)
   fail_unless (ctrl2 != NULL, NULL);
   fail_unless (ctrl == ctrl2, NULL);
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
-  fail_unless (G_OBJECT (ctrl)->ref_count == 2);
+  fail_unless_equals_int (G_OBJECT (ctrl)->ref_count, 2);
   g_list_free (list);
   g_object_unref (ctrl);
   g_object_unref (ctrl2);
@@ -1017,7 +1017,7 @@ GST_START_TEST (controller_refcount_new_list)
   fail_unless (ctrl2 != NULL, NULL);
   fail_unless (ctrl == ctrl2, NULL);
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
-  fail_unless (G_OBJECT (ctrl)->ref_count == 2);
+  fail_unless_equals_int (G_OBJECT (ctrl)->ref_count, 2);
   g_list_free (list);
   g_object_unref (ctrl);
   g_object_unref (ctrl2);
@@ -1109,22 +1109,22 @@ GST_START_TEST (controller_linear_invalid_values)
   /* now pull in values for some timestamps and see if clipping works */
   /* 200.0 */
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 100.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_float, 100.0);
   /* 100.0 */
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 100.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_float, 100.0);
   /* 50.0 */
   gst_controller_sync_values (ctrl, 1 * GST_SECOND + 500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 50.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_float, 50.0);
   /* 0.0 */
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 0.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_float, 0.0);
   /* -100.0 */
   gst_controller_sync_values (ctrl, 3 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 0.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_float, 0.0);
   /* -200.0 */
   gst_controller_sync_values (ctrl, 4 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_float == 0.0, NULL);
+  fail_unless_equals_float (GST_TEST_MONO_SOURCE (elem)->val_float, 0.0);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);

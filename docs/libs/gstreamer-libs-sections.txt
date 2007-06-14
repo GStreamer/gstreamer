@@ -412,11 +412,13 @@ ASSERT_OBJECT_REFCOUNT_BETWEEN
 ASSERT_SET_STATE
 
 fail_unless_equals_int
+fail_unless_equals_float
 fail_unless_equals_string
 fail_unless_equals_uint64
 fail_unless_message_error
 
 assert_equals_int
+assert_equals_float
 assert_equals_string
 assert_equals_uint64
 assert_message_error

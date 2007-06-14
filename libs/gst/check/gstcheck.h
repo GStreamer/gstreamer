@@ -105,6 +105,15 @@ static void __testname ()\
 
 
 /* additional fail macros */
+/**
+ * fail_unless_equals_int:
+ * @a: a #gint value or expression
+ * @b: a #gint value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to. This
+ * macro is for use in unit tests.
+ */
 #define fail_unless_equals_int(a, b)					\
 G_STMT_START {								\
   int first = a;							\
@@ -112,8 +121,26 @@ G_STMT_START {								\
   fail_unless(first == second,						\
     "'" #a "' (%d) is not equal to '" #b"' (%d)", first, second);	\
 } G_STMT_END;
+/**
+ * assert_equals_int:
+ * @a: a #gint value or expression
+ * @b: a #gint value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to. This
+ * macro is for use in unit tests.
+ */
 #define assert_equals_int(a, b) fail_unless_equals_int(a, b)
 
+/**
+ * fail_unless_equals_uint64:
+ * @a: a #guint64 value or expression
+ * @b: a #guint64 value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to. This
+ * macro is for use in unit tests.
+ */
 #define fail_unless_equals_uint64(a, b)					\
 G_STMT_START {								\
   guint64 first = a;							\
@@ -122,8 +149,26 @@ G_STMT_START {								\
     "'" #a "' (%" G_GUINT64_FORMAT ") is not equal to '" #b"' (%"	\
     G_GUINT64_FORMAT ")", first, second);				\
 } G_STMT_END;
+/**
+ * assert_equals_uint64:
+ * @a: a #guint64 value or expression
+ * @b: a #guint64 value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to. This
+ * macro is for use in unit tests.
+ */
 #define assert_equals_uint64(a, b) fail_unless_equals_uint64(a, b)
 
+/**
+ * fail_unless_equals_string:
+ * @a: a string literal or expression
+ * @b: a string literal or expression
+ *
+ * This macro checks that @a and @b are equal (as per strcmp) and aborts if
+ * this is not the case, printing both expressions and the values they
+ * evaluated to. This macro is for use in unit tests.
+ */
 #define fail_unless_equals_string(a, b)                             \
 G_STMT_START {                                                      \
   const gchar * first = a;                                          \
@@ -131,7 +176,47 @@ G_STMT_START {                                                      \
   fail_unless(strcmp (first, second) == 0,                          \
     "'" #a "' (%s) is not equal to '" #b"' (%s)", first, second);   \
 } G_STMT_END;
+/**
+ * assert_equals_string:
+ * @a: a string literal or expression
+ * @b: a string literal or expression
+ *
+ * This macro checks that @a and @b are equal (as per strcmp) and aborts if
+ * this is not the case, printing both expressions and the values they
+ * evaluated to. This macro is for use in unit tests.
+ */
 #define assert_equals_string(a, b) fail_unless_equals_string(a, b)
+
+/**
+ * fail_unless_equals_float:
+ * @a: a #gdouble or #gfloat value or expression
+ * @b: a #gdouble or #gfloat value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to. This
+ * macro is for use in unit tests.
+ *
+ * Since: 0.10.14
+ */
+#define fail_unless_equals_float(a, b)                            \
+G_STMT_START {                                                    \
+  double first = a;                                               \
+  double second = b;                                              \
+  fail_unless(first == second,                                    \
+    "'" #a "' (%f) is not equal to '" #b"' (%f)", first, second); \
+} G_STMT_END;
+/**
+ * assert_equals_float:
+ * @a: a #gdouble or #gfloat value or expression
+ * @b: a #gdouble or #gfloat value or expression
+ *
+ * This macro checks that @a and @b are equal and aborts if this is not the
+ * case, printing both expressions and the values they evaluated to. This
+ * macro is for use in unit tests.
+ *
+ * Since: 0.10.14
+ */
+#define assert_equals_float(a, b) fail_unless_equals_float(a, b)
 
 
 /***

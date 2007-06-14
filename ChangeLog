@@ -1,3 +1,13 @@
+2007-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/check/gstcheck.h:
+	  API: add fail_unless_equals_float() and assert_equals_float().
+	  Add documentation for some of the macros.
+
+	* tests/check/libs/controller.c: (GST_START_TEST):
+	  Use newly-added asserts.
+
 2007-06-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstpad.c: (gst_pad_alloc_buffer_full), (gst_pad_push):
