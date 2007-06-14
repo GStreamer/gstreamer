@@ -1,3 +1,10 @@
+2007-06-14  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* examples/sinkelement-registry.py:
+	A quick modification of the sinkelement.py example that
+	shows how to register a pure-python gst.Element into the 
+	registry for use in autoplugging or parse_launch lines.
+
 2007-06-12  Edward Hervey  <edward@fluendo.com>
 
 	* gst/__init__.py:
