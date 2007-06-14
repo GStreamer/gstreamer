@@ -3021,6 +3021,21 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               "samplesize", G_TYPE_INT, samplesize, NULL);
           break;
         }
+        case FOURCC_samr:
+        {
+          gint len = QT_UINT32 (stsd_data);
+
+          if (len > 0x34) {
+            GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x34);
+
+            memcpy (GST_BUFFER_DATA (buf), stsd_data + 0x34, len - 0x34);
+
+            gst_caps_set_simple (stream->caps,
+                "codec_data", GST_TYPE_BUFFER, buf, NULL);
+            gst_buffer_unref (buf);
+          }
+          break;
+        }
         default:
           break;
       }
