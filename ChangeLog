@@ -1,3 +1,8 @@
+2007-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/pwg/building-boiler.xml:
+	  Fix typos, spotted by Thijs Vermeir (#447190).
+
 2007-06-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/plugins/tmpl/.cvsignore:

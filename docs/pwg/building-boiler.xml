@@ -77,7 +77,7 @@ U gst-template/gst-app/src/Makefile.am
       easiest way to do this is to copy a template and add functionality
       according to your needs. To help you do so, there is a tool in the
       <filename class="directory">./gst-plugins/tools/</filename> directory.
-      This tool, <filename>make_element</filename>, is a command line utillity
+      This tool, <filename>make_element</filename>, is a command line utility
       that creates the boilerplate code for you.
     </para>
     <para>
@@ -116,10 +116,10 @@ U gst-template/gst-app/src/Makefile.am
     </para>
     <note>
       <para>
-        It is recommened that you reate a copy of the <filename
+        It is recommended that you create a copy of the <filename
 	class="directory">gst-plugin</filename>
 	directory before continuing. Do not copy the <filename
-	class="directory">CVS</filename> direcories though.
+	class="directory">CVS</filename> directories though.
       </para>
     </note>
   </sect1>
@@ -205,11 +205,8 @@ GST_BOILERPLATE (GstMyFilter, gst_my_filter, GstElement, GST_TYPE_ELEMENT);
       <listitem><para>
         A long, english, name for the element.
       </para></listitem><listitem><para>
-        The type of the element, as a hierarchy. The hierarchy is defined by
-        specifying the top level category, followed by a "/", followed by the
-        next level category, etc. The type should be defined according to the
-        guidelines elsewhere in this document. (FIXME: write the guidelines, and
-        give a better reference to them)
+        The type of the element, see the docs/design/draft-klass.txt document
+        in the GStreamer core source tree for details and examples.
       </para></listitem><listitem><para>
         A brief description of the purpose of the element.
       </para></listitem><listitem><para>
@@ -233,7 +230,7 @@ static const GstElementDetails my_filter_details = {
       the <function>_base_init ()</function> function, which is part of
       the GObject system. The <function>_base_init ()</function> function
       should be set for this GObject in the function where you register
-      the type with Glib.
+      the type with GLib.
     </para>
     <programlisting><!-- example-begin boilerplate.c c -->
 static void
