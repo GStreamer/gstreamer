@@ -1058,6 +1058,7 @@ sys/sunaudio/Makefile
 sys/osxaudio/Makefile
 sys/osxvideo/Makefile
 sys/v4l2/Makefile
+sys/waveform/Makefile
 sys/ximage/Makefile
 po/Makefile.in
 tests/Makefile

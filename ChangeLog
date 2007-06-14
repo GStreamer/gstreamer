@@ -1,3 +1,12 @@
+2007-06-14  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/directdraw/Makefile.am:
+	* sys/directsound/Makefile.am:
+	* sys/waveform/Makefile.am:
+	Make sure to dist everything needed for win32 builds.
+
 2007-06-14  Edward Hervey  <edward@fluendo.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_trak):

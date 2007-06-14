@@ -78,4 +78,4 @@ endif
 
 SUBDIRS=$(DIRECTDRAW_DIR) $(DIRECTSOUND_DIR) $(OSS_DIR) $(OSX_AUDIO_DIR) $(OSX_VIDEO_DIR) $(SUNAUDIO_DIR) $(V4L2_DIR) $(XIMAGE_DIR)
 
-DIST_SUBDIRS=directdraw directsound oss osxaudio osxvideo sunaudio v4l2 ximage
+DIST_SUBDIRS=directdraw directsound oss osxaudio osxvideo sunaudio v4l2 waveform ximage

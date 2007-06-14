@@ -7,3 +7,5 @@ libgstdirectdrawsink_la_LIBADD = $(DIRECTDRAW_LIBS) \
 	$(GST_BASE_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_MAJORMINOR) \
 	-lgstinterfaces-$(GST_MAJORMINOR)
 libgstdirectdrawsink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(DIRECTDRAW_LDFLAGS)
+
+noinst_HEADERS= gstdirectdrawsink.h
