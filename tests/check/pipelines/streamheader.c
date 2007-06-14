@@ -20,6 +20,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <unistd.h>
 
 #include <gst/check/gstcheck.h>
@@ -108,6 +112,7 @@ GST_END_TEST;
  * exactly three in_caps buffers for the three header packets */
 
 static int n_in_caps = 0;
+
 gboolean
 buffer_probe_cb (GstPad * pad, GstBuffer * buffer)
 {
@@ -212,7 +217,12 @@ streamheader_suite (void)
   suite_add_tcase (s, tc_chain);
 #ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_multifdsink_gdp_tag);
-  tcase_add_test (tc_chain, test_multifdsink_gdp_vorbisenc);
+#ifdef HAVE_CPU_PPC64
+  g_print ("\n\n***** skipping test test_multifdsink_gdp_vorbisenc.  May fail "
+      "on PPC64 due to compiler bug. See bug #348114 for details\n\n\n");
+  if (0)                        /* this avoids the 'function not used' warning */
+#endif
+    tcase_add_test (tc_chain, test_multifdsink_gdp_vorbisenc);
 #endif
 
   return s;
