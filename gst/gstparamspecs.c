@@ -67,13 +67,17 @@ _gst_param_fraction_validate (GParamSpec * pspec, GValue * value)
   gst_value_set_fraction (&f_max, fspec->max_num, fspec->max_den);
 
   res = gst_value_compare (&f_min, &f_this);
+#ifndef GST_DISABLE_GST_DEBUG
   GST_LOG ("comparing %d/%d to %d/%d, result = %d", fspec->min_num,
       fspec->min_den, value->data[0].v_int, value->data[1].v_int, res);
+#endif
   if (res != GST_VALUE_LESS_THAN && res != GST_VALUE_EQUAL)
     goto out;
 
+#ifndef GST_DISABLE_GST_DEBUG
   GST_LOG ("comparing %d/%d to %d/%d, result = %d", value->data[0].v_int,
       value->data[1].v_int, fspec->max_num, fspec->max_den, res);
+#endif
   res = gst_value_compare (&f_this, &f_max);
   if (res != GST_VALUE_LESS_THAN && res != GST_VALUE_EQUAL)
     goto out;
@@ -86,7 +90,9 @@ out:
   g_value_unset (&f_max);
   g_value_unset (&f_this);
 
+#ifndef GST_DISABLE_GST_DEBUG
   GST_LOG ("%swithin range", (within_range) ? "" : "not ");
+#endif
 
   /* return FALSE if everything ok, otherwise TRUE */
   return !within_range;

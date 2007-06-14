@@ -1,3 +1,9 @@
+2007-06-14  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstparamspecs.c: (_gst_param_fraction_validate):
+	Since this file doesn't include "gst.h" it will not go through the
+	macros that disable GST_LOG if debugging was disabled.
+
 2007-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/check/Makefile.am:
