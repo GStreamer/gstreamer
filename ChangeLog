@@ -1,3 +1,10 @@
+2007-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/pipelines/streamheader.c: (streamheader_suite):
+	  Disable test_multifdsink_gdp_vorbisenc() on ppc64 since it
+	  fails on the p5-ppc64 build bot and the failure looks like it is due
+	  to the same issue as #348114, ie. a compiler bug.
+
 2007-06-13  Edward Hervey  <edward@fluendo.com>
 
 	* gst/playback/gstqueue2.c: (gst_queue_create_read):
