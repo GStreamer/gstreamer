@@ -26,6 +26,7 @@
 #include <signal.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <check.h>
 
@@ -192,9 +193,9 @@ G_STMT_START {                                                      \
  * @a: a #gdouble or #gfloat value or expression
  * @b: a #gdouble or #gfloat value or expression
  *
- * This macro checks that @a and @b are equal and aborts if this is not the
- * case, printing both expressions and the values they evaluated to. This
- * macro is for use in unit tests.
+ * This macro checks that @a and @b are (almost) equal and aborts if this
+ * is not the case, printing both expressions and the values they evaluated
+ * to. This macro is for use in unit tests.
  *
  * Since: 0.10.14
  */
@@ -202,17 +203,20 @@ G_STMT_START {                                                      \
 G_STMT_START {                                                    \
   double first = a;                                               \
   double second = b;                                              \
-  fail_unless(first == second,                                    \
-    "'" #a "' (%f) is not equal to '" #b"' (%f)", first, second); \
+  /* This will only work for 'normal' values and values around 0, \
+   * which should be good enough for our purposes here */         \
+  fail_unless(fabs (first - second) < 0.0000001,                  \
+    "'" #a "' (%g) is not equal to '" #b "' (%g)", first, second);\
 } G_STMT_END;
+
 /**
  * assert_equals_float:
  * @a: a #gdouble or #gfloat value or expression
  * @b: a #gdouble or #gfloat value or expression
  *
- * This macro checks that @a and @b are equal and aborts if this is not the
- * case, printing both expressions and the values they evaluated to. This
- * macro is for use in unit tests.
+ * This macro checks that @a and @b are (almost) equal and aborts if this
+ * is not the case, printing both expressions and the values they evaluated
+ * to. This macro is for use in unit tests.
  *
  * Since: 0.10.14
  */

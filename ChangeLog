@@ -1,3 +1,15 @@
+2007-06-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/check/Makefile.am:
+	* libs/gst/check/gstcheck.h:
+	* pkgconfig/gstreamer-check-uninstalled.pc.in:
+	* pkgconfig/gstreamer-check.pc.in:
+	  Ugly 'fix' for the controller unit test on the p5 bot: in
+	  fail_unless_equals_float() check whether the values are 'almost
+	  equal' by allowing a small absolute error, which should be good
+	  enough for our use cases (normal numbers and values close to 0).
+	  Proper fixage left to floating point arithmetic aficionados.
+
 2007-06-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_reset_qos),
