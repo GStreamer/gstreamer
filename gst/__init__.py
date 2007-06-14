@@ -157,13 +157,13 @@ del sys
 # See #446674
 
 import warnings
-if "parse_bin_from_description" in _gst.__dict__:
+if locals().has_key("parse_bin_from_description"):
     def gst_parse_bin_from_description(*args, **kwargs):
         warnings.warn("gst_parse_bin_from_description() is deprecated, please use parse_bin_from_description instead",
                       DeprecationWarning)
         return parse_bin_from_description(*args, **kwargs)
 
-if "message_new_buffering" in _gst.__dict__:
+if locals().has_key("message_new_buffering"):
     def gst_message_new_buffering(*args, **kwargs):
         warnings.warn("gst_message_new_buffering() is deprecated, please use message_new_buffering() instead",
                       DeprecationWarning)
