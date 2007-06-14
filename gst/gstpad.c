@@ -2731,7 +2731,9 @@ gst_pad_alloc_buffer_full (GstPad * pad, guint64 offset, gint size,
 
   /* we got a new datatype on the pad, see if it can handle it */
   if (G_UNLIKELY (caps_changed)) {
-    GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
+    GST_DEBUG_OBJECT (pad,
+        "caps changed from %" GST_PTR_FORMAT " to %p %" GST_PTR_FORMAT,
+        GST_PAD_CAPS (pad), caps, caps);
     if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, setcaps)))
       goto not_negotiated;
   }
@@ -3609,7 +3611,9 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
 
   /* we got a new datatype from the pad, it had better handle it */
   if (G_UNLIKELY (caps_changed)) {
-    GST_DEBUG_OBJECT (pad, "caps changed to %p %" GST_PTR_FORMAT, caps, caps);
+    GST_DEBUG_OBJECT (pad,
+        "caps changed from %" GST_PTR_FORMAT " to %p %" GST_PTR_FORMAT,
+        GST_PAD_CAPS (pad), caps, caps);
     if (G_UNLIKELY (!gst_pad_configure_src (pad, caps, TRUE)))
       goto not_negotiated;
   }

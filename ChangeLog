@@ -1,3 +1,9 @@
+2007-06-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstpad.c: (gst_pad_alloc_buffer_full), (gst_pad_push):
+	  Show the caps change in the log to help spotting the case of not
+	  exactly matching caps.
+
 2007-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/building-boiler.xml:
