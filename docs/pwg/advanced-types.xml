@@ -149,7 +149,7 @@ plugin_init (GstPlugin *plugin)
   </sect1>
 
   <!-- ############ sect1 ############# -->
-                                                                                
+
   <sect1 id="section-types-definitions" xreflabel="List of Defined Types">
     <title>List of Defined Types</title>
       <para>
@@ -249,7 +249,7 @@ plugin_init (GstPlugin *plugin)
           </row>
 
           <!-- ############ subtitle ############# -->
-                                                                                
+
           <row>
             <entry spanname="fullwidth">
               <emphasis>All raw audio types.</emphasis>
@@ -1159,15 +1159,29 @@ plugin_init (GstPlugin *plugin)
           </row>
 
           <!-- ############ subtitle ############# -->
-                                                                                
+
           <row>
             <entry spanname="fullwidth">
               <emphasis>All image types.</emphasis>
             </entry>
           </row>
-                                                                                
+
+	  <!-- ############ type ############# -->
+
+          <row>
+            <entry>image/gif</entry>
+            <entry>Graphics Interchange Format.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
           <!-- ############ type ############# -->
-                                                                                
+
           <row>
             <entry>image/jpeg</entry>
             <entry>Joint Picture Expert Group Image.</entry>
@@ -1181,12 +1195,26 @@ plugin_init (GstPlugin *plugin)
               video/x-jpeg ("Motion JPEG").
             </entry>
           </row>
-	  
+
 	  <!-- ############ type ############# -->
-                                                                                
+
           <row>
             <entry>image/png</entry>
             <entry>Portable Network Graphics Image.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
+            <entry>
+              There are currently no specific properties defined or needed for
+              this type.
+            </entry>
+          </row>
+
+	  <!-- ############ type ############# -->
+
+          <row>
+            <entry>image/tiff</entry>
+            <entry>Tagged Image File Format.</entry>
             <entry></entry>
             <entry></entry>
             <entry></entry>

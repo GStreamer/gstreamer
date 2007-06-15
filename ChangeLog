@@ -1,5 +1,10 @@
 2007-06-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/pwg/advanced-types.xml:
+	  Added more formats to caps table.
+
+2007-06-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* tools/gst-launch.c: (main):
 	  Remove crufy code. GOption does not need this workaround.
 
