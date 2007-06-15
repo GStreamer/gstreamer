@@ -795,6 +795,10 @@ gst_ogg_mux_queue_pads (GstOggMux * ogg_mux)
 
       /* On EOS we get a NULL buffer */
       if (buf != NULL) {
+        if (ogg_mux->delta_pad == NULL &&
+            GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT))
+          ogg_mux->delta_pad = pad;
+
         incaps = GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_IN_CAPS);
         /* if we need headers */
         if (pad->state == GST_OGG_PAD_STATE_CONTROL) {
@@ -1365,11 +1369,6 @@ gst_ogg_mux_process_best_pad (GstOggMux * ogg_mux, GstOggPad * best)
     /* if this is the first packet of a new page figure out the delta flag */
     if (pad->new_page) {
       if (delta_unit) {
-        /* This page is a delta frame */
-        if (ogg_mux->delta_pad == NULL) {
-          /* we got a delta unit on this pad */
-          ogg_mux->delta_pad = pad;
-        }
         /* mark the page as delta */
         pad->first_delta = TRUE;
       } else {

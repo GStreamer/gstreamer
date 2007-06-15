@@ -1,3 +1,16 @@
+2007-06-15  Michael Smith <msmith@fluendo.com>
+
+	* tests/check/pipelines/oggmux.c: (validate_ogg_page), (is_video),
+	(eos_buffer_probe):
+	  Add a test that ensures we set DELTA_UNIT on all non-header,
+	  non-video buffers, if we have a video stream.
+	* ext/ogg/gstoggmux.c: (gst_ogg_mux_queue_pads),
+	(gst_ogg_mux_process_best_pad):
+	  Move setting delta_pad to earlier, where we inspect all pads, so
+	  that leading audio pages don't get DELTA_UNIT unset if they come
+	  before the first DELTA_UNIT from video pages. Fixes the newly-added
+	  test. Fixes #385527.
+
 2007-06-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/pipelines/streamheader.c: (streamheader_suite):

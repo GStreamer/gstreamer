@@ -94,7 +94,7 @@ fail_if_audio (gpointer key, ChainState * state, gpointer data)
   fail_if (state->codec == CODEC_SPEEX, "speex BOS occurred before theora BOS");
 }
 
-static void
+static ChainState *
 validate_ogg_page (ogg_page * page)
 {
   gulong serialno;
@@ -146,7 +146,17 @@ validate_ogg_page (ogg_page * page)
         G_GINT64_FORMAT, serialno, state->last_granule, granule);
     state->last_granule = granule;
   }
+
+  return state;
 }
+
+static void
+is_video (gpointer key, ChainState * state, gpointer data)
+{
+  if (state->codec == CODEC_THEORA)
+    *((gboolean *) data) = TRUE;
+}
+
 
 static gboolean
 eos_buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
@@ -155,6 +165,8 @@ eos_buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
   gint size;
   guint8 *data;
   gchar *oggbuffer;
+  ChainState *state = NULL;
+  gboolean has_video = FALSE;
 
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
@@ -168,9 +180,23 @@ eos_buffer_probe (GstPad * pad, GstBuffer * buffer, gpointer unused)
 
     ret = ogg_sync_pageout (&oggsync, &page);
     if (ret > 0)
-      validate_ogg_page (&page);
+      state = validate_ogg_page (&page);
   }
   while (ret != 0);
+
+  if (state) {
+    /* Now, we can do buffer-level checks...
+     * If we have video somewhere, then we should have DELTA_UNIT set on all
+     * non-header (not IN_CAPS), non-video buffers
+     */
+    g_hash_table_foreach (eos_chain_states, (GHFunc) is_video, &has_video);
+    if (has_video && state->codec != CODEC_THEORA) {
+      if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_IN_CAPS))
+        fail_unless (GST_BUFFER_FLAG_IS_SET (buffer,
+                GST_BUFFER_FLAG_DELTA_UNIT),
+            "Non-video buffer doesn't have DELTA_UNIT in stream with video");
+    }
+  }
 
   return TRUE;
 }
