@@ -1,3 +1,8 @@
+2007-06-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* tools/gst-launch.c: (main):
+	  Remove crufy code. GOption does not need this workaround.
+
 2007-06-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/controller/gstcontroller.c:

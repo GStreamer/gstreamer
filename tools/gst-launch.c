@@ -558,8 +558,6 @@ exit:
 int
 main (int argc, char *argv[])
 {
-  gint i, j;
-
   /* options */
   gboolean verbose = FALSE;
   gboolean no_fault = FALSE;
@@ -618,25 +616,6 @@ main (int argc, char *argv[])
   g_option_context_free (ctx);
 
   gst_tools_print_version ("gst-launch");
-
-  /* FIXpopt: strip short args, too. We do it ourselves for now */
-  j = 1;
-  for (i = 1; i < argc; i++) {
-    if (*(argv[i]) == '-') {
-      if (strlen (argv[i]) == 2) {
-        gchar *c = argv[i];
-
-        c++;
-        if (*c == 'X' || *c == 'o') {
-          i++;
-        }
-      }
-    } else {
-      argv[j] = argv[i];
-      j++;
-    }
-  }
-  argc = j;
 
 #ifndef DISABLE_FAULT_HANDLER
   if (!no_fault)
