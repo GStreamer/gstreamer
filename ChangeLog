@@ -1,3 +1,11 @@
+2007-06-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_create),
+	(rtsp_connection_connect):
+	Fix the MingW build. 
+	Patch By: Vincent Torri <vtorri at univ-evry dot fr>
+	Fixes: #446981
+
 2007-06-14  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/elements/.cvsignore:

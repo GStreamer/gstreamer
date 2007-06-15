@@ -58,6 +58,7 @@
 
 #ifdef G_OS_WIN32
 #include <winsock2.h>
+#define EINPROGRESS WSAEINPROGRESS
 #else
 #include <sys/ioctl.h>
 #include <netdb.h>
@@ -122,6 +123,10 @@ rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
   gint ret;
   RTSPConnection *newconn;
 
+#ifdef G_OS_WIN32
+  unsigned long flags;
+#endif /* G_OS_WIN32 */
+
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
 
   newconn = g_new0 (RTSPConnection, 1);
@@ -131,6 +136,9 @@ rtsp_connection_create (RTSPUrl * url, RTSPConnection ** conn)
   /* pipe( CONTROL_SOCKETS(newconn) ) */
   if ((ret = pipe (CONTROL_SOCKETS (newconn))) < 0)
     goto no_socket_pair;
+
+  ioctlsocket (READ_SOCKET (newconn), FIONBIO, &flags);
+  ioctlsocket (WRITE_SOCKET (newconn), FIONBIO, &flags);
 #else
   if ((ret =
           socketpair (PF_UNIX, SOCK_STREAM, 0, CONTROL_SOCKETS (newconn))) < 0)
@@ -177,6 +185,10 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
   struct timeval tv, *tvp;
   gint max_fd, retval;
 
+#ifdef G_OS_WIN32
+  unsigned long flags;
+#endif /* G_OS_WIN32 */
+
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
   g_return_val_if_fail (conn->url != NULL, RTSP_EINVAL);
   g_return_val_if_fail (conn->fd < 0, RTSP_EINVAL);
@@ -211,7 +223,11 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
     goto sys_error;
 
   /* set to non-blocking mode so that we can cancel the connect */
+#ifndef G_OS_WIN32
   fcntl (fd, F_SETFL, O_NONBLOCK);
+#else
+  ioctlsocket (fd, FIONBIO, &flags);
+#endif /* G_OS_WIN32 */
 
   /* we are going to connect ASYNC now */
   ret = connect (fd, (struct sockaddr *) &sa_in, sizeof (sa_in));
