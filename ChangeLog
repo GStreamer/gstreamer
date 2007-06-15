@@ -1,5 +1,10 @@
 2007-06-15  Wim Taymans  <wim@fluendo.com>
 
+	* docs/libs/gstreamer-libs-sections.txt:
+	Add docs for new methods.
+
+2007-06-15  Wim Taymans  <wim@fluendo.com>
+
 	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_item_destroy),
 	(gst_multi_queue_item_new):
 	Don't use GSlice because we don't depend on >= 2.10 yet.

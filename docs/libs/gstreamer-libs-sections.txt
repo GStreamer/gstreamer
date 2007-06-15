@@ -332,6 +332,8 @@ gst_data_queue_set_flushing
 gst_data_queue_drop_head
 gst_data_queue_is_full
 gst_data_queue_is_empty
+gst_data_queue_get_level
+gst_data_queue_limits_changed
 <SUBSECTION Standard>
 GstDataQueueClass
 GST_DATA_QUEUE
