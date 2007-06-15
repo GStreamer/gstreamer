@@ -2572,7 +2572,7 @@ no_peer:
  * always negotiated before sinkpads so it is possible that the negotiated caps
  * on the srcpad do not match the negotiated caps of the peer.
  *
- * Returns: the negotiated #GstCaps of the pad link.  Free the caps when
+ * Returns: the negotiated #GstCaps of the pad link.  Unref the caps when
  * you no longer need it. This function returns NULL when the @pad has no
  * peer or is not negotiated yet.
  *
