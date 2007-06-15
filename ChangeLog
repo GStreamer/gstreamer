@@ -1,3 +1,12 @@
+2007-06-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* win32/vs6/gst_plugins_bad.dsw:
+	* win32/vs6/libdshowsrcwrapper.dsp:
+	* win32/vs6/libgstdshow.dsp:
+	* win32/vs6/libgstmpegvideoparse.dsp:
+	* win32/vs6/libgstneon.dsp:
+	Convert line endings to CRLF and mark as binary files.
+
 2007-06-13  Wim Taymans  <wim@fluendo.com>
 
 	* sys/Makefile.am:
