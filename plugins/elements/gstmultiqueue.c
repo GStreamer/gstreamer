@@ -1053,7 +1053,6 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
         GST_DEBUG_OBJECT (mq,
             "Another queue is empty, bumping single queue %d max visible to %d",
             sq->id, sq->max_size.visible);
-        g_print ("overrun: queue %d, limit %d\n", sq->id, sq->max_size.visible);
       }
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       goto beach;
@@ -1091,8 +1090,6 @@ single_queue_underrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
         sq->max_size.visible++;
         GST_DEBUG_OBJECT (mq,
             "queue %d is filled, bumping its max visible to %d", sq->id,
-            sq->max_size.visible);
-        g_print ("underrun: queue %d, limit %d\n", sq->id,
             sq->max_size.visible);
         gst_data_queue_limits_changed (sq->queue);
       }
