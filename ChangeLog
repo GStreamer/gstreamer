@@ -1,3 +1,9 @@
+2007-06-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* win32/vs6/gst_ffmpeg.dsw:
+	* win32/vs6/libgstffmpeg.dsp:
+	Convert line endings to CRLF and mark files as binary.
+
 2007-06-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst-libs/ext/ffmpeg/configure.ac:
