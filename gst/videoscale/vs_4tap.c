@@ -172,7 +172,7 @@ vs_image_scale_4tap_Y (const VSImage * dest, const VSImage * src,
 
     j = yacc >> 16;
 
-    if (j > k) {
+    while (j > k) {
       k++;
       if (k + 3 < src->height) {
         xacc = 0;

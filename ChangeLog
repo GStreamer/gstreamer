@@ -1,5 +1,12 @@
 2007-06-15  Michael Smith <msmith@fluendo.com>
 
+	* gst/videoscale/vs_4tap.c: (vs_image_scale_4tap_Y):
+	  Update tmpbuf for all neccesary rows, not just one, as is required
+	  when downscaling.
+	  Fixes #402076.
+
+2007-06-15  Michael Smith <msmith@fluendo.com>
+
 	* tests/check/pipelines/oggmux.c: (validate_ogg_page), (is_video),
 	(eos_buffer_probe):
 	  Add a test that ensures we set DELTA_UNIT on all non-header,
