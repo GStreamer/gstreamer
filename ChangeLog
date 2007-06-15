@@ -1,3 +1,19 @@
+2007-06-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* win32/vs6/gst_plugins_ugly.dsw:
+	* win32/vs6/libgstac3parse.dsp:
+	* win32/vs6/libgstasfdemux.dsp:
+	* win32/vs6/libgstdvdlpcmdec.dsp:
+	* win32/vs6/libgstdvdsub.dsp:
+	* win32/vs6/libgstiec958.dsp:
+	* win32/vs6/libgstlame.dsp:
+	* win32/vs6/libgstmad.dsp:
+	* win32/vs6/libgstmpegaudioparse.dsp:
+	* win32/vs6/libgstmpegstream.dsp:
+	* win32/vs6/libgstrealmedia.dsp:
+	* win32/vs6/libgstsynaesthesia.dsp:
+	  Convert line endings to CRLF and mark as binary files.
+
 2007-06-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/dvdnav/dvdnavsrc.c: (gst_dvd_nav_src_set_property):
