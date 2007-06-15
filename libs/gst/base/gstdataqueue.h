@@ -137,19 +137,23 @@ struct _GstDataQueueClass
 
 GType gst_data_queue_get_type (void);
 
-GstDataQueue *gst_data_queue_new (GstDataQueueCheckFullFunction checkfull,
-    gpointer checkdata);
+GstDataQueue * gst_data_queue_new            (GstDataQueueCheckFullFunction checkfull,
+                                              gpointer checkdata);
 
-gboolean gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item);
-gboolean gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item);
+gboolean       gst_data_queue_push           (GstDataQueue * queue, GstDataQueueItem * item);
+gboolean       gst_data_queue_pop            (GstDataQueue * queue, GstDataQueueItem ** item);
 
-void gst_data_queue_flush (GstDataQueue * queue);
-void gst_data_queue_set_flushing (GstDataQueue * queue, gboolean flushing);
+void           gst_data_queue_flush          (GstDataQueue * queue);
+void           gst_data_queue_set_flushing   (GstDataQueue * queue, gboolean flushing);
 
-gboolean gst_data_queue_drop_head (GstDataQueue * queue, GType type);
+gboolean       gst_data_queue_drop_head      (GstDataQueue * queue, GType type);
 
-gboolean gst_data_queue_is_full (GstDataQueue * queue);
-gboolean gst_data_queue_is_empty (GstDataQueue * queue);
+gboolean       gst_data_queue_is_full        (GstDataQueue * queue);
+gboolean       gst_data_queue_is_empty       (GstDataQueue * queue);
+
+void           gst_data_queue_get_level      (GstDataQueue * queue, GstDataQueueSize *level);
+void           gst_data_queue_limits_changed (GstDataQueue * queue);
 
 G_END_DECLS
+
 #endif /* __GST_DATA_QUEUE_H__ */

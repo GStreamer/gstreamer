@@ -1,5 +1,48 @@
 2007-06-15  Wim Taymans  <wim@fluendo.com>
 
+	* libs/gst/base/gstdataqueue.c: (gst_data_queue_cleanup),
+	(gst_data_queue_finalize), (gst_data_queue_locked_is_empty),
+	(gst_data_queue_set_flushing), (gst_data_queue_push),
+	(gst_data_queue_pop), (gst_data_queue_drop_head),
+	(gst_data_queue_limits_changed), (gst_data_queue_get_level):
+	* libs/gst/base/gstdataqueue.h:
+	Various cleanups.
+	Added methods to get the current levels and to inform the queue that the
+	'full' limits changed.
+
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_init),
+	(gst_multi_queue_finalize), (gst_multi_queue_set_property),
+	(gst_single_queue_flush), (update_time_level), (apply_segment),
+	(apply_buffer), (gst_single_queue_push_one),
+	(gst_multi_queue_item_steal_object),
+	(gst_multi_queue_item_destroy), (gst_multi_queue_item_new),
+	(gst_multi_queue_loop), (gst_multi_queue_chain),
+	(gst_multi_queue_sink_activate_push), (gst_multi_queue_sink_event),
+	(gst_multi_queue_getcaps), (gst_multi_queue_src_activate_push),
+	(gst_multi_queue_src_query), (single_queue_overrun_cb),
+	(single_queue_underrun_cb), (single_queue_check_full),
+	(gst_single_queue_new):
+	Keep track of time in the queue by measuring the difference between
+	running_time on input and output. This gives more accurate results and
+	can compensate for segments correctly.
+	Make a queue by default only 5 buffers deep. We will now increase the
+	buffer size depending on the filledness of the other queues.
+	Factor out commong flush code.
+	Make sure we don't add additional refcounts to buffers when we can avoid
+	it.
+	Propagate GstFlowReturn differently.
+	Use GSlice for intermediate GstMultiQueueItems.
+	Keep track of EOS.
+	Resize queues on over and underruns based on filled level of other
+	queues.
+	When checking if the queue is filled, prefer to measure in time if we
+	can and fall back to bytes when no time is known.
+
+	* plugins/elements/gstqueue.c:
+	Fix return value.
+
+2007-06-15  Wim Taymans  <wim@fluendo.com>
+
 	* libs/gst/base/gstbasetransform.c:
 	(gst_base_transform_sink_event):
 	Work around the brokenness of the event vmethod in basetransform. Prefer

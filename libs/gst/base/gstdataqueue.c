@@ -248,7 +248,6 @@ gst_data_queue_cleanup (GstDataQueue * queue)
   queue->cur_level.visible = 0;
   queue->cur_level.bytes = 0;
   queue->cur_level.time = 0;
-
 }
 
 /* called only once, as opposed to dispose */
@@ -269,8 +268,7 @@ gst_data_queue_finalize (GObject * object)
   g_cond_free (queue->item_add);
   g_cond_free (queue->item_del);
 
-  if (G_OBJECT_CLASS (parent_class)->finalize)
-    G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -304,7 +302,6 @@ gst_data_queue_locked_is_full (GstDataQueue * queue)
  * #gst_data_queue_pop will be released.
  * MT safe.
  */
-
 void
 gst_data_queue_flush (GstDataQueue * queue)
 {
@@ -323,7 +320,6 @@ gst_data_queue_flush (GstDataQueue * queue)
  *
  * Returns: #TRUE if @queue is empty.
  */
-
 gboolean
 gst_data_queue_is_empty (GstDataQueue * queue)
 {
@@ -346,7 +342,6 @@ gst_data_queue_is_empty (GstDataQueue * queue)
  *
  * Returns: #TRUE if @queue is full.
  */
-
 gboolean
 gst_data_queue_is_full (GstDataQueue * queue)
 {
@@ -369,14 +364,14 @@ gst_data_queue_is_full (GstDataQueue * queue)
  * blocking on #gst_data_queue_push or #gst_data_queue_pop will return straight
  * away with a return value of #FALSE. While the @queue is in flushing state, 
  * all calls to those two functions will return #FALSE.
+ *
  * MT Safe.
  */
-
 void
 gst_data_queue_set_flushing (GstDataQueue * queue, gboolean flushing)
 {
-
   GST_DEBUG ("queue:%p , flushing:%d", queue, flushing);
+
   GST_DATA_QUEUE_MUTEX_LOCK (queue);
   queue->flushing = flushing;
   if (flushing) {
@@ -407,28 +402,28 @@ gst_data_queue_set_flushing (GstDataQueue * queue, gboolean flushing)
 gboolean
 gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
 {
-  gboolean res = FALSE;
+  g_return_val_if_fail (GST_IS_DATA_QUEUE (queue), FALSE);
+  g_return_val_if_fail (item != NULL, FALSE);
 
-  GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, done);
+  GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
 
   STATUS (queue, "before pushing");
 
   /* We ALWAYS need to check for queue fillness */
-  while (gst_data_queue_locked_is_full (queue)) {
+  if (gst_data_queue_locked_is_full (queue)) {
     GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
     g_signal_emit (G_OBJECT (queue), gst_data_queue_signals[SIGNAL_FULL], 0);
-    GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, done);
+    GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
 
     /* signal might have removed some items */
     while (gst_data_queue_locked_is_full (queue)) {
       g_cond_wait (queue->item_del, queue->qlock);
       if (queue->flushing)
-        goto done;
+        goto flushing;
     }
   }
 
   g_queue_push_tail (queue->queue, item);
-  res = TRUE;
 
   if (item->visible)
     queue->cur_level.visible++;
@@ -436,15 +431,19 @@ gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
   queue->cur_level.time += item->duration;
 
   STATUS (queue, "after pushing");
-
   g_cond_signal (queue->item_add);
 
-done:
   GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
 
-  GST_DEBUG ("queue:%p, result:%d", queue, res);
+  return TRUE;
 
-  return res;
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG ("queue:%p, we are flushing", queue);
+    GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
+    return FALSE;
+  }
 }
 
 /**
@@ -459,35 +458,30 @@ done:
  *
  * Returns: #TRUE if an @item was successfully retrieved from the @queue.
  */
-
 gboolean
 gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
 {
-  gboolean res = FALSE;
-
-  GST_DEBUG ("queue:%p", queue);
-
+  g_return_val_if_fail (GST_IS_DATA_QUEUE (queue), FALSE);
   g_return_val_if_fail (item != NULL, FALSE);
 
-  GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, done);
+  GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
 
   STATUS (queue, "before popping");
 
-  while (gst_data_queue_locked_is_empty (queue)) {
+  if (gst_data_queue_locked_is_empty (queue)) {
     GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
     g_signal_emit (G_OBJECT (queue), gst_data_queue_signals[SIGNAL_EMPTY], 0);
-    GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, done);
+    GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
 
     while (gst_data_queue_locked_is_empty (queue)) {
       g_cond_wait (queue->item_add, queue->qlock);
       if (queue->flushing)
-        goto done;
+        goto flushing;
     }
   }
 
   /* Get the item from the GQueue */
   *item = g_queue_pop_head (queue->queue);
-  res = TRUE;
 
   /* update current level counter */
   if ((*item)->visible)
@@ -495,14 +489,20 @@ gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
   queue->cur_level.bytes -= (*item)->size;
   queue->cur_level.time -= (*item)->duration;
 
+  STATUS (queue, "after popping");
   g_cond_signal (queue->item_del);
 
-done:
   GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
 
-  GST_DEBUG ("queue:%p , res:%d", queue, res);
+  return TRUE;
 
-  return res;
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG ("queue:%p, we are flushing", queue);
+    GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
+    return FALSE;
+  }
 }
 
 /**
@@ -514,13 +514,14 @@ done:
  *
  * Returns: TRUE if an element was removed.
  */
-
 gboolean
 gst_data_queue_drop_head (GstDataQueue * queue, GType type)
 {
   gboolean res = FALSE;
   GList *item;
   GstDataQueueItem *leak = NULL;
+
+  g_return_val_if_fail (GST_IS_DATA_QUEUE (queue), FALSE);
 
   GST_DEBUG ("queue:%p", queue);
 
@@ -554,6 +555,39 @@ done:
   GST_DEBUG ("queue:%p , res:%d", queue, res);
 
   return res;
+}
+
+/**
+ * gst_data_queue_limits_changed:
+ * @queue: The #GstDataQueue 
+ *
+ * Inform the queue that the limits for the fullness check have changed and that
+ * any blocking gst_data_queue_push() should be unblocked to recheck the limts.
+ */
+void
+gst_data_queue_limits_changed (GstDataQueue * queue)
+{
+  g_return_if_fail (GST_IS_DATA_QUEUE (queue));
+
+  GST_DATA_QUEUE_MUTEX_LOCK (queue);
+  GST_DEBUG ("signal del");
+  g_cond_signal (queue->item_del);
+  GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
+}
+
+/**
+ * gst_data_queue_get_level:
+ * @queue: The #GstDataQueue
+ * @level: the location to store the result
+ *
+ * Get the current level of the queue.
+ */
+void
+gst_data_queue_get_level (GstDataQueue * queue, GstDataQueueSize * level)
+{
+  level->visible = queue->cur_level.visible;
+  level->bytes = queue->cur_level.bytes;
+  level->time = queue->cur_level.time;
 }
 
 static void
