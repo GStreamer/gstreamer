@@ -37,6 +37,9 @@ setup_pipeline (const gchar * pipe_descr)
   GError *error = NULL;
 
   pipeline = gst_parse_launch (pipe_descr, &error);
+
+  GST_DEBUG ("created %s", pipe_descr);
+
   if (error != NULL) {
     fail_if (error != NULL, "Error parsing pipeline %s: %s", pipe_descr,
         error->message);

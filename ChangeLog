@@ -1,3 +1,12 @@
+2007-06-15  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstpad.c: (gst_pad_push_event), (gst_pad_send_event):
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_query_latency),
+	(gst_base_src_default_query), (gst_base_src_get_range),
+	(gst_base_src_start):
+	* tests/check/pipelines/parse-launch.c: (setup_pipeline):
+	Improve debugging.
+
 2007-06-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/pwg/advanced-types.xml:

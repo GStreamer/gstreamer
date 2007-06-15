@@ -4062,7 +4062,8 @@ gst_pad_push_event (GstPad * pad, GstEvent * event)
   result = gst_pad_send_event (peerpad, event);
 
   /* Note: we gave away ownership of the event at this point */
-  GST_LOG_OBJECT (pad, "sent event to peerpad %" GST_PTR_FORMAT, peerpad);
+  GST_LOG_OBJECT (pad, "sent event to peerpad %" GST_PTR_FORMAT ", result %d",
+      peerpad, result);
   gst_object_unref (peerpad);
 
   return result;
@@ -4206,6 +4207,8 @@ gst_pad_send_event (GstPad * pad, GstEvent * event)
 
   if (need_unlock)
     GST_PAD_STREAM_UNLOCK (pad);
+
+  GST_DEBUG_OBJECT (pad, "sent event, result %d", result);
 
   return result;
 

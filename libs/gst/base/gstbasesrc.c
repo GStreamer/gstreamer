@@ -694,6 +694,9 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       GstFormat format;
 
       gst_query_parse_duration (query, &format, NULL);
+
+      GST_DEBUG_OBJECT (src, "duration query in format %s",
+          gst_format_get_name (format));
       switch (format) {
         case GST_FORMAT_PERCENT:
           gst_query_set_duration (query, GST_FORMAT_PERCENT,
@@ -790,6 +793,8 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
       res = FALSE;
       break;
   }
+  GST_DEBUG_OBJECT (src, "query %s returns %d", GST_QUERY_TYPE_NAME (query),
+      res);
   return res;
 }
 
@@ -2001,6 +2006,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
       result = FALSE;
       size = -1;
     }
+    GST_DEBUG_OBJECT (basesrc, "setting size %" G_GUINT64_FORMAT, size);
     /* only update the size when operating in bytes, subclass is supposed
      * to set duration in the start method for other formats */
     gst_segment_set_duration (&basesrc->segment, GST_FORMAT_BYTES, size);
