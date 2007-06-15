@@ -1,5 +1,50 @@
 2007-06-15  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* win32/vs6/autogen.dsp:
+	* win32/vs6/gst_plugins_good.dsw:
+	* win32/vs6/libgstalaw.dsp:
+	* win32/vs6/libgstalpha.dsp:
+	* win32/vs6/libgstalphacolor.dsp:
+	* win32/vs6/libgstapetag.dsp:
+	* win32/vs6/libgstaudiofx.dsp:
+	* win32/vs6/libgstauparse.dsp:
+	* win32/vs6/libgstautodetect.dsp:
+	* win32/vs6/libgstavi.dsp:
+	* win32/vs6/libgstcutter.dsp:
+	* win32/vs6/libgstdirectdraw.dsp:
+	* win32/vs6/libgstdirectsound.dsp:
+	* win32/vs6/libgsteffectv.dsp:
+	* win32/vs6/libgstflx.dsp:
+	* win32/vs6/libgstgoom.dsp:
+	* win32/vs6/libgsticydemux.dsp:
+	* win32/vs6/libgstid3demux.dsp:
+	* win32/vs6/libgstinterleave.dsp:
+	* win32/vs6/libgstjpeg.dsp:
+	* win32/vs6/libgstlevel.dsp:
+	* win32/vs6/libgstmatroska.dsp:
+	* win32/vs6/libgstmedian.dsp:
+	* win32/vs6/libgstmonoscope.dsp:
+	* win32/vs6/libgstmulaw.dsp:
+	* win32/vs6/libgstmultipart.dsp:
+	* win32/vs6/libgstqtdemux.dsp:
+	* win32/vs6/libgstrtp.dsp:
+	* win32/vs6/libgstrtsp.dsp:
+	* win32/vs6/libgstsmpte.dsp:
+	* win32/vs6/libgstspeex.dsp:
+	* win32/vs6/libgstudp.dsp:
+	* win32/vs6/libgstvideobalance.dsp:
+	* win32/vs6/libgstvideobox.dsp:
+	* win32/vs6/libgstvideocrop.dsp:
+	* win32/vs6/libgstvideoflip.dsp:
+	* win32/vs6/libgstvideomixer.dsp:
+	* win32/vs6/libgstwaveform.dsp:
+	* win32/vs6/libgstwavenc.dsp:
+	* win32/vs6/libgstwavparse.dsp:
+	Mark *.dsp & *.dsw as binary files and convert to DOS line
+	endings, as they don't load into VS6 correctly otherwise.
+
+2007-06-15  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/rtsp/rtspconnection.c: (rtsp_connection_create),
 	(rtsp_connection_connect):
 	Fix the MingW build. 
