@@ -1,5 +1,11 @@
 2007-06-15  Wim Taymans  <wim@fluendo.com>
 
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_item_destroy),
+	(gst_multi_queue_item_new):
+	Don't use GSlice because we don't depend on >= 2.10 yet.
+
+2007-06-15  Wim Taymans  <wim@fluendo.com>
+
 	* plugins/elements/gstmultiqueue.c: (gst_single_queue_flush),
 	(update_time_level), (apply_segment), (apply_buffer),
 	(gst_single_queue_push_one), (gst_multi_queue_item_new),
