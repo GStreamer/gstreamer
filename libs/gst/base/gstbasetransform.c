@@ -1222,16 +1222,17 @@ gst_base_transform_sink_event (GstPad * pad, GstEvent * event)
   GstBaseTransform *trans;
   GstBaseTransformClass *bclass;
   gboolean ret = TRUE;
+  gboolean forward = TRUE;
 
   trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
   bclass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
   if (bclass->event)
-    ret = bclass->event (trans, event);
+    forward = bclass->event (trans, event);
 
   /* FIXME, do this in the default event handler so the subclass can do
    * something different. */
-  if (ret)
+  if (forward)
     ret = gst_pad_push_event (trans->srcpad, event);
 
   gst_object_unref (trans);
