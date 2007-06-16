@@ -1,3 +1,8 @@
+2007-06-15  David Schleef  <ds@schleef.org>
+
+	* gst/playback/gstqueue2.c:
+	  Fix compile error from ignored return value.
+
 2007-06-15  Michael Smith <msmith@fluendo.com>
 
 	* gst/videoscale/vs_4tap.c: (vs_image_scale_4tap_Y):

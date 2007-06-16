@@ -767,13 +767,18 @@ gst_queue_write_buffer_to_file (GstQueue * queue, GstBuffer * buffer)
 {
   guint size;
   guint8 *data;
+  int ret;
 
   fseek (queue->temp_file, queue->writing_pos, SEEK_SET);
 
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
-  fwrite (data, 1, size, queue->temp_file);
+  ret = fwrite (data, 1, size, queue->temp_file);
+  if (ret < size) {
+    /* FIXME do something useful here */
+    GST_ERROR_OBJECT (queue, "fwrite returned error");
+  }
   queue->writing_pos += size;
 }
 
