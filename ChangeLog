@@ -1,3 +1,10 @@
+2007-06-16  Edward Hervey  <edward@fluendo.com>
+
+	* gst/extend/jukebox.py:
+	* gst/extend/sources.py:
+	Fixes for thread-safety, changes in behaviour with gst.Pad and 
+	cleanup. Still has some issues.
+
 2007-06-14  Edward Hervey  <edward@fluendo.com>
 
 	* gst/__init__.py:

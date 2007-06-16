@@ -10,12 +10,12 @@
 # modify it under the terms of the GNU Lesser General Public
 # License as published by the Free Software Foundation; either
 # version 2.1 of the License, or (at your option) any later version.
-# 
+#
 # This library is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 # Lesser General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
@@ -26,6 +26,7 @@ import pickle
 import random as rand
 
 import gobject
+gobject.threads_init()
 import pygst
 pygst.require('0.10')
 import gst
@@ -99,7 +100,7 @@ class Jukebox(gst.Bin):
             raise Exception, "baby"
         self.set_state(gst.STATE_PAUSED)
 
-         
+
     ## Scanning private methods
 
     def _scan(self):
@@ -116,7 +117,7 @@ class Jukebox(gst.Bin):
             self._check_prerolled()
             gobject.timeout_add(0, self._scan)
             return
-            
+
         gst.debug("creating leveller for %s" % file)
         leveller = Leveller(file)
         leveller.connect('done', self._leveller_done_cb, file)
@@ -134,7 +135,7 @@ class Jukebox(gst.Bin):
 
         # store infos
         self._levels[file] = (l.rms, l.mixin, l.mixout, l.length)
-        
+
         gst.debug("writing level pickle")
         file = open(self._picklepath, "w")
         pickle.dump(self._levels, file)
@@ -205,7 +206,7 @@ class Jukebox(gst.Bin):
         if self._lastadded:
             start += self._levels[self._lastadded][2]
             start -= self._levels[location][1]
-        
+
         gnls = self._new_gnl_source(location, start)
         self._composition.add(gnls)
 
@@ -217,7 +218,7 @@ class Jukebox(gst.Bin):
 
         self._lastposition = start
         self._lastadded = location
-        
+
         self.debug("lastposition:%s , lastadded:%s" % (gst.TIME_ARGS(self._lastposition),
                                                        self._lastadded))
 
@@ -249,6 +250,7 @@ class Jukebox(gst.Bin):
             return
         self.debug("Ghosting source pad %s" % pad)
         self._srcpad = gst.GhostPad("src", pad)
+        self._srcpad.set_active(True)
         self.add_pad(self._srcpad)
 
     ## gst.Bin/Element virtual methods
@@ -265,9 +267,9 @@ class Jukebox(gst.Bin):
             return gst.STATE_CHANGE_FAILURE
         # chaining up
         return gst.Bin.do_state_change(self, message)
-        
+
 gobject.type_register(Jukebox)
-        
+
 # helper functions
 def _find_elements_recurse(element):
     if not isinstance(element, gst.Bin):
@@ -303,7 +305,7 @@ if __name__ == "__main__":
 
     def _jukebox_looped_cb(jukebox):
         print "jukebox looped"
-        
+
     def _start():
         source.start()
         print "setting pipeline to PLAYING"
@@ -334,7 +336,7 @@ if __name__ == "__main__":
     p = "alsasink"
     if len(sys.argv) > 2:
         p = " ".join(sys.argv[2:])
-    
+
     print "parsing output pipeline %s" % p
     sinkbin = gst.parse_launch("bin.( %s )" % p)
     pipeline.add(sinkbin)

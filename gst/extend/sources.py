@@ -80,7 +80,8 @@ class AudioSource(gst.Bin):
         gst.debug("linking pad %r to audioconvert" % pad)
         pad.link(self.audioconvert.get_pad("sink"))
 
-        self._srcpad = gst.GhostPad("src", self.volume.get_pad("src")) 
+        self._srcpad = gst.GhostPad("src", self.volume.get_pad("src"))
+        self._srcpad.set_active(True)
         self.add_pad(self._srcpad)
 
     def _unknown_type_cb(self, pad, caps):
