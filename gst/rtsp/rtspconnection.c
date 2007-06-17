@@ -264,7 +264,7 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
 
 done:
   conn->fd = fd;
-  conn->ip = ip;
+  conn->ip = g_strdup (ip);
 
   return RTSP_OK;
 
@@ -1030,6 +1030,7 @@ rtsp_connection_free (RTSPConnection * conn)
   g_timer_destroy (conn->timer);
   g_free (conn->username);
   g_free (conn->passwd);
+  g_free (conn->ip);
 
   g_free (conn);
 

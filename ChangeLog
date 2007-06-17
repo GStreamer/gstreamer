@@ -1,3 +1,12 @@
+2007-06-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Peter Kjellerstedt <pkj at axis com>
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_connect),
+	(rtsp_connection_free):
+	  inet_ntoa() uses a static buffer internally, so we need to copy the
+	  returned string if we want to store it for later (#447961).
+
 2007-06-15  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* win32/vs6/autogen.dsp:
