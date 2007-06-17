@@ -1,5 +1,11 @@
 2007-06-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_connect),
+	(rtsp_connection_free):
+	  Revert previous commit again, since we are frozen (sorry).
+
+2007-06-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Peter Kjellerstedt <pkj at axis com>
 
 	* gst/rtsp/rtspconnection.c: (rtsp_connection_connect),
