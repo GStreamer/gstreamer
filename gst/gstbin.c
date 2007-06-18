@@ -196,6 +196,13 @@ struct _GstBinPrivate
   gboolean asynchandling;
 };
 
+typedef struct
+{
+  GstBin *bin;
+  guint32 cookie;
+  GstState pending;
+} BinContinueData;
+
 static void gst_bin_dispose (GObject * object);
 
 static void gst_bin_set_property (GObject * object, guint prop_id,
@@ -208,8 +215,9 @@ static GstStateChangeReturn gst_bin_change_state_func (GstElement * element,
 static GstStateChangeReturn gst_bin_get_state_func (GstElement * element,
     GstState * state, GstState * pending, GstClockTime timeout);
 static void bin_handle_async_done (GstBin * bin, GstMessage ** smessage,
-    GstMessage ** amessage);
-static void bin_push_state_continue (GstBin * bin);
+    GstMessage ** amessage, BinContinueData ** cont, GstStateChangeReturn ret);
+static void bin_handle_async_start (GstBin * bin, GstMessage ** message);
+static void bin_push_state_continue (BinContinueData * data);
 
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
 static gboolean gst_bin_remove_func (GstBin * bin, GstElement * element);
@@ -233,7 +241,7 @@ static void gst_bin_restore_thyself (GstObject * object, xmlNodePtr self);
 
 static void bin_remove_messages (GstBin * bin, GstObject * src,
     GstMessageType types);
-static void gst_bin_continue_func (GstBin * child, gpointer data);
+static void gst_bin_continue_func (BinContinueData * data);
 static gint bin_element_is_sink (GstElement * child, GstBin * bin);
 static gint bin_element_is_src (GstElement * child, GstBin * bin);
 
@@ -460,7 +468,6 @@ gst_bin_init (GstBin * bin)
   bin->children_cookie = 0;
   bin->messages = NULL;
   bin->provided_clock = NULL;
-  bin->state_dirty = FALSE;
   bin->clock_dirty = FALSE;
 
   /* Set up a bus for listening to child elements */
@@ -847,7 +854,12 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gchar *elem_name;
   GstIterator *it;
   gboolean is_sink;
-  GstMessage *clock_message = NULL;
+  GstMessage *clock_message = NULL, *async_message = NULL, *state_message =
+      NULL;
+  BinContinueData *cont = NULL;
+  GstStateChangeReturn ret;
+
+  GST_DEBUG_OBJECT (bin, "element :%s", GST_ELEMENT_NAME (element));
 
   /* we obviously can't add ourself to ourself */
   if (G_UNLIKELY (GST_ELEMENT_CAST (element) == GST_ELEMENT_CAST (bin)))
@@ -890,6 +902,32 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   bin->numchildren++;
   bin->children_cookie++;
 
+  ret = GST_STATE_RETURN (bin);
+
+  /* no need to update the state if we are in error */
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto no_state_recalc;
+
+  /* update the bin state, the new element could have been an ASYNC or
+   * NO_PREROLL element */
+  ret = GST_STATE_RETURN (element);
+  GST_DEBUG_OBJECT (bin, "added %s element",
+      gst_element_state_change_return_get_name (ret));
+
+  switch (ret) {
+    case GST_STATE_CHANGE_ASYNC:
+      bin_handle_async_start (bin, &state_message);
+      break;
+    case GST_STATE_CHANGE_NO_PREROLL:
+      bin_handle_async_done (bin, &state_message, &async_message, &cont, ret);
+      break;
+    case GST_STATE_CHANGE_FAILURE:
+      break;
+    default:
+      break;
+  }
+
+no_state_recalc:
   /* distribute the bus */
   gst_element_set_bus (element, bin->child_bus);
 
@@ -899,13 +937,19 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
    * that is not important right now. When the pipeline goes to PLAYING,
    * a new clock will be selected */
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
-  GST_DEBUG_OBJECT (bin, "marking state dirty");
-  bin->state_dirty = TRUE;
   GST_OBJECT_UNLOCK (bin);
 
-  if (clock_message) {
+  if (state_message)
+    gst_element_post_message (GST_ELEMENT_CAST (bin), state_message);
+
+  if (async_message)
+    gst_element_post_message (GST_ELEMENT_CAST (bin), async_message);
+
+  if (clock_message)
     gst_element_post_message (GST_ELEMENT_CAST (bin), clock_message);
-  }
+
+  if (cont)
+    bin_push_state_continue (cont);
 
   /* unlink all linked pads */
   it = gst_element_iterate_pads (element);
@@ -1001,11 +1045,13 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
 {
   gchar *elem_name;
   GstIterator *it;
-  gboolean is_sink;
+  gboolean is_sink, othersink, found;
   GstMessage *clock_message = NULL, *async_message = NULL, *state_message =
       NULL;
+  BinContinueData *cont = NULL;
   GList *walk, *next;
-  gboolean other_async = FALSE, this_async = FALSE, toplevel = FALSE;
+  gboolean other_async, this_async, have_no_preroll;
+  GstStateChangeReturn ret;
 
   GST_DEBUG_OBJECT (bin, "element :%s", GST_ELEMENT_NAME (element));
 
@@ -1027,26 +1073,48 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   gst_iterator_free (it);
 
   GST_OBJECT_LOCK (bin);
-  /* the element must be in the bin's list of children */
-  if (G_UNLIKELY (g_list_find (bin->children, element) == NULL))
+  found = FALSE;
+  othersink = FALSE;
+  have_no_preroll = FALSE;
+  /* iterate the elements, we collect which ones are async and no_preroll. We
+   * also remove the element when we find it. */
+  for (walk = bin->children; walk; walk = next) {
+    GstElement *child = GST_ELEMENT_CAST (walk->data);
+
+    next = g_list_next (walk);
+
+    if (child == element) {
+      found = TRUE;
+      /* remove the element */
+      bin->children = g_list_delete_link (bin->children, walk);
+    } else {
+      gboolean child_sink;
+
+      GST_OBJECT_LOCK (child);
+      child_sink = GST_OBJECT_FLAG_IS_SET (child, GST_ELEMENT_IS_SINK);
+      /* when we remove a sink, check if there are other sinks. */
+      if (is_sink && !othersink && child_sink)
+        othersink = TRUE;
+      /* check if we have NO_PREROLL children */
+      if (GST_STATE_RETURN (child) == GST_STATE_CHANGE_NO_PREROLL)
+        have_no_preroll = TRUE;
+      GST_OBJECT_UNLOCK (child);
+    }
+  }
+
+  /* the element must have been in the bin's list of children */
+  if (G_UNLIKELY (!found))
     goto not_in_bin;
 
-  /* now remove the element from the list of elements */
-  bin->children = g_list_remove (bin->children, element);
+  /* we now removed the element from the list of elements, increment the cookie
+   * so that others can detect a change in the children list. */
   bin->numchildren--;
   bin->children_cookie++;
 
-  /* check if we removed a sink */
-  if (is_sink) {
-    GList *other_sink;
-
-    /* check if we removed the last sink */
-    other_sink = g_list_find_custom (bin->children,
-        bin, (GCompareFunc) bin_element_is_sink);
-    if (!other_sink) {
-      /* yups, we're not a sink anymore */
-      GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
-    }
+  if (is_sink && !othersink) {
+    /* we're not a sink anymore */
+    GST_DEBUG_OBJECT (bin, "we removed the last sink");
+    GST_OBJECT_FLAG_UNSET (bin, GST_ELEMENT_IS_SINK);
   }
 
   /* if the clock provider for this element is removed, we lost
@@ -1062,6 +1130,8 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   /* remove messages for the element, if there was a pending ASYNC_START
    * message we must see if removing the element caused the bin to lose its
    * async state. */
+  this_async = FALSE;
+  other_async = FALSE;
   for (walk = bin->messages; walk; walk = next) {
     GstMessage *message = (GstMessage *) walk->data;
     GstElement *src = GST_ELEMENT_CAST (GST_MESSAGE_SRC (message));
@@ -1085,18 +1155,50 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
       gst_message_unref (message);
     }
   }
-  /* all other elements were not async and we removed the async one,
-   * post a ASYNC_DONE message because we are not async anymore now. */
-  if (!other_async && this_async) {
-    GST_DEBUG_OBJECT (bin, "we removed the last async element");
 
-    toplevel = ((GST_OBJECT_PARENT (bin) == NULL) || bin->priv->asynchandling);
-    if (!toplevel) {
-      bin_handle_async_done (bin, &state_message, &async_message);
+  /* get last return */
+  ret = GST_STATE_RETURN (bin);
+
+  /* no need to update the state if we are in error */
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto no_state_recalc;
+
+  if (!other_async && this_async) {
+    GstStateChangeReturn ret;
+
+    /* all other elements were not async and we removed the async one,
+     * handle the async-done case because we are not async anymore now. */
+    GST_DEBUG_OBJECT (bin,
+        "we removed the last async element, have no_preroll %d",
+        have_no_preroll);
+
+    /* the current state return of the bin depends on if there are no_preroll
+     * elements in the pipeline or not */
+    if (have_no_preroll)
+      ret = GST_STATE_CHANGE_NO_PREROLL;
+    else
+      ret = GST_STATE_CHANGE_SUCCESS;
+
+    bin_handle_async_done (bin, &state_message, &async_message, &cont, ret);
+  } else {
+    GST_DEBUG_OBJECT (bin,
+        "recalc state preroll: %d, other async: %d, this async %d",
+        have_no_preroll, other_async, this_async);
+
+    if (have_no_preroll) {
+      ret = GST_STATE_CHANGE_NO_PREROLL;
+    } else if (other_async) {
+      /* there are other async elements and we were not doing an async state
+       * change, change our pending state and go async */
+      if (GST_STATE_PENDING (bin) == GST_STATE_VOID_PENDING) {
+        GST_STATE_NEXT (bin) = GST_STATE (bin);
+        GST_STATE_PENDING (bin) = GST_STATE (bin);
+      }
+      ret = GST_STATE_CHANGE_ASYNC;
     }
+    GST_STATE_RETURN (bin) = ret;
   }
-  GST_DEBUG_OBJECT (bin, "marking state dirty");
-  bin->state_dirty = TRUE;
+no_state_recalc:
   GST_OBJECT_UNLOCK (bin);
 
   if (clock_message)
@@ -1108,8 +1210,8 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
   if (async_message)
     gst_element_post_message (GST_ELEMENT_CAST (bin), async_message);
 
-  if (toplevel)
-    bin_push_state_continue (bin);
+  if (cont)
+    bin_push_state_continue (cont);
 
   GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "removed child \"%s\"",
       elem_name);
@@ -1423,171 +1525,6 @@ gst_bin_iterate_sources (GstBin * bin)
   return result;
 }
 
-static void
-gst_bin_recalc_state (GstBin * bin, gboolean force)
-{
-  GstStateChangeReturn ret;
-  GList *children;
-  guint32 children_cookie;
-  guint32 state_cookie;
-  gboolean have_no_preroll;
-  gboolean have_async;
-
-  ret = GST_STATE_CHANGE_SUCCESS;
-
-  /* lock bin, no element can be added or removed while we have this lock */
-  GST_OBJECT_LOCK (bin);
-  /* forced recalc, make state dirty again */
-  if (force)
-    bin->state_dirty = TRUE;
-
-  /* no point in scanning if nothing changed and it's no forced recalc */
-  if (!bin->state_dirty)
-    goto not_dirty;
-
-  /* no point in having two scans run concurrently */
-  if (bin->polling)
-    goto was_polling;
-
-  bin->polling = TRUE;
-  state_cookie = GST_ELEMENT_CAST (bin)->state_cookie;
-
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "recalc state");
-
-restart:
-  /* when we leave this function, the state must not be dirty, whenever
-   * we are scanning and the state becomes dirty again, we restart. */
-  bin->state_dirty = FALSE;
-
-  have_no_preroll = FALSE;
-  have_async = FALSE;
-
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "checking element states");
-
-  /* scan all element states with a zero timeout so we don't block on
-   * anything */
-  children = bin->children;
-  children_cookie = bin->children_cookie;
-  while (children) {
-    GstElement *child = GST_ELEMENT_CAST (children->data);
-
-    gst_object_ref (child);
-    /* now we release the lock to enter a non blocking wait. We
-     * release the lock anyway since we can. */
-    GST_OBJECT_UNLOCK (bin);
-
-    ret = gst_element_get_state (child, NULL, NULL, 0);
-
-    gst_object_unref (child);
-
-    /* now grab the lock to iterate to the next child */
-    GST_OBJECT_LOCK (bin);
-    if (G_UNLIKELY (children_cookie != bin->children_cookie)) {
-      /* child added/removed during state change, restart. We need
-       * to restart with the quick check as a no-preroll element could
-       * have been added here and we don't want to block on sinks then.*/
-      GST_DEBUG_OBJECT (bin, "children added or removed, restarting recalc");
-      goto restart;
-    }
-    if (state_cookie != GST_ELEMENT_CAST (bin)->state_cookie) {
-      GST_DEBUG_OBJECT (bin, "concurrent state change");
-      goto concurrent_state;
-    }
-    if (bin->state_dirty) {
-      GST_DEBUG_OBJECT (bin, "state dirty again, restarting recalc");
-      goto restart;
-    }
-
-    switch (ret) {
-      case GST_STATE_CHANGE_FAILURE:
-        /* report FAILURE  immediatly */
-        goto done;
-      case GST_STATE_CHANGE_NO_PREROLL:
-        /* we have to continue scanning as there might be
-         * ERRORS too */
-        have_no_preroll = TRUE;
-        break;
-      case GST_STATE_CHANGE_ASYNC:
-        /* we have to continue scanning as there might be
-         * ERRORS too */
-        have_async = TRUE;
-        break;
-      default:
-        break;
-    }
-    children = g_list_next (children);
-  }
-  /* if we get here, we have no FAILURES */
-
-  /* if we have NO_PREROLL, return that */
-  if (have_no_preroll) {
-    ret = GST_STATE_CHANGE_NO_PREROLL;
-  }
-  /* else return ASYNC if async elements where found. */
-  else if (have_async) {
-    ret = GST_STATE_CHANGE_ASYNC;
-  }
-
-done:
-  bin->polling = FALSE;
-  GST_STATE_RETURN (bin) = ret;
-  GST_OBJECT_UNLOCK (bin);
-
-  /* now we can take the state lock, it is possible that new elements
-   * are added now and we still report the old state. No problem though as
-   * the return is still consistent, the effect is as if the element was
-   * added after this function completed. */
-  switch (ret) {
-    case GST_STATE_CHANGE_SUCCESS:
-    case GST_STATE_CHANGE_NO_PREROLL:
-      ret = gst_element_continue_state (GST_ELEMENT_CAST (bin), ret);
-      break;
-    case GST_STATE_CHANGE_ASYNC:
-      gst_element_lost_state (GST_ELEMENT_CAST (bin));
-      break;
-    case GST_STATE_CHANGE_FAILURE:
-      gst_element_abort_state (GST_ELEMENT_CAST (bin));
-      break;
-    default:
-      goto unknown_state;
-  }
-
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "bin RETURN is now %s",
-      gst_element_state_change_return_get_name (ret));
-
-  return;
-
-not_dirty:
-  {
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "not dirty");
-    GST_OBJECT_UNLOCK (bin);
-    return;
-  }
-was_polling:
-  {
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "was polling");
-    GST_OBJECT_UNLOCK (bin);
-    return;
-  }
-concurrent_state:
-  {
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "concurrent_state");
-    bin->polling = FALSE;
-    GST_OBJECT_UNLOCK (bin);
-    return;
-  }
-unknown_state:
-  {
-    /* somebody added a GST_STATE_ and forgot to do stuff here ! */
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
-        "unknown return value %d from a state change function", ret);
-    g_critical ("unknown return value %d from a state change function", ret);
-    GST_STATE_RETURN (bin) = GST_STATE_CHANGE_FAILURE;
-    GST_STATE_UNLOCK (bin);
-    return;
-  }
-}
-
 /*
  * MT safe
  */
@@ -1599,11 +1536,6 @@ gst_bin_get_state_func (GstElement * element, GstState * state,
   GstStateChangeReturn ret;
 
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "getting state");
-
-  /* do a non forced recalculation of the state */
-  GST_STATE_LOCK (bin);
-  gst_bin_recalc_state (bin, FALSE);
-  GST_STATE_UNLOCK (bin);
 
   ret = parent_class->get_state (element, state, pending, timeout);
 
@@ -1905,6 +1837,8 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
   /* peel off the locked flag */
   GST_OBJECT_LOCK (element);
   locked = GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_LOCKED_STATE);
+  /* get previous state return */
+  ret = GST_STATE_RETURN (element);
   GST_OBJECT_UNLOCK (element);
 
   /* skip locked elements */
@@ -1957,8 +1891,9 @@ no_latency:
 locked:
   {
     GST_DEBUG_OBJECT (element,
-        "element is locked, pretending state change succeeded");
-    return GST_STATE_CHANGE_SUCCESS;
+        "element is locked, return previous return %s",
+        gst_element_state_change_return_get_name (ret));
+    return ret;
   }
 was_busy:
   {
@@ -2264,12 +2199,14 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
 }
 
 static void
-gst_bin_continue_func (GstBin * bin, gpointer data)
+gst_bin_continue_func (BinContinueData * data)
 {
-  GstState current, next, pending, target, old_state, old_next;
-  GstStateChangeReturn old_ret, ret;
-  GstStateChange transition;
-  gboolean post;
+  GstBin *bin;
+  GstState current, next, pending, transition;
+  GstStateChangeReturn ret;
+
+  bin = data->bin;
+  pending = data->pending;
 
   GST_DEBUG_OBJECT (bin, "waiting for state lock");
   GST_STATE_LOCK (bin);
@@ -2277,43 +2214,7 @@ gst_bin_continue_func (GstBin * bin, gpointer data)
   GST_DEBUG_OBJECT (bin, "doing state continue");
   GST_OBJECT_LOCK (bin);
 
-  old_ret = GST_STATE_RETURN (bin);
-  GST_STATE_RETURN (bin) = GST_STATE_CHANGE_SUCCESS;
-  target = GST_STATE_TARGET (bin);
-  pending = GST_STATE_PENDING (bin);
-
-  /* check if there is something to commit */
-  if (pending == GST_STATE_VOID_PENDING)
-    goto nothing_pending;
-
-  old_state = GST_STATE (bin);
-  /* this is the state we should go to next */
-  old_next = GST_STATE_NEXT (bin);
-
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "target %s",
-      gst_element_state_get_name (target));
-
-  if (old_next == GST_STATE_PLAYING) {
-    post = FALSE;
-  } else {
-    post = TRUE;
-  }
-
-  /* we're going to PLAYING, always do the PAUSED->PLAYING state change */
-  if (target == GST_STATE_PLAYING) {
-    next = GST_STATE_PAUSED;
-    GST_STATE_PENDING (bin) = pending = target;
-  } else {
-    next = old_next;
-  }
-
-  /* update current state */
-  current = GST_STATE (bin) = next;
-
-  /* see if we reached the final state */
-  if (pending == current)
-    goto complete;
-
+  current = GST_STATE (bin);
   next = GST_STATE_GET_NEXT (current, pending);
   transition = (GstStateChange) GST_STATE_TRANSITION (current, next);
 
@@ -2322,22 +2223,6 @@ gst_bin_continue_func (GstBin * bin, gpointer data)
   GST_STATE_RETURN (bin) = GST_STATE_CHANGE_ASYNC;
   GST_OBJECT_UNLOCK (bin);
 
-  if (post) {
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
-        "committing state from %s to %s, pending %s",
-        gst_element_state_get_name (old_state),
-        gst_element_state_get_name (old_next),
-        gst_element_state_get_name (pending));
-
-    gst_element_post_message (GST_ELEMENT_CAST (bin),
-        gst_message_new_state_changed (GST_OBJECT_CAST (bin),
-            old_state, old_next, pending));
-  }
-
-  GST_DEBUG_OBJECT (bin, "posting ASYNC_DONE");
-  gst_element_post_message (GST_ELEMENT_CAST (bin),
-      gst_message_new_async_done (GST_OBJECT_CAST (bin)));
-
   GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
       "continue state change %s to %s, final %s",
       gst_element_state_get_name (current),
@@ -2345,58 +2230,10 @@ gst_bin_continue_func (GstBin * bin, gpointer data)
 
   ret = gst_element_change_state (GST_ELEMENT_CAST (bin), transition);
 
-done:
   GST_STATE_UNLOCK (bin);
   GST_DEBUG_OBJECT (bin, "state continue done");
   gst_object_unref (bin);
-
-  return;
-
-nothing_pending:
-  {
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "nothing pending");
-    GST_OBJECT_UNLOCK (bin);
-
-    GST_DEBUG_OBJECT (bin, "posting ASYNC_DONE");
-    gst_element_post_message (GST_ELEMENT_CAST (bin),
-        gst_message_new_async_done (GST_OBJECT_CAST (bin)));
-
-    goto done;
-  }
-complete:
-  {
-    GST_STATE_PENDING (bin) = GST_STATE_VOID_PENDING;
-    GST_STATE_NEXT (bin) = GST_STATE_VOID_PENDING;
-
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "completed state change to %s",
-        gst_element_state_get_name (pending));
-    GST_OBJECT_UNLOCK (bin);
-
-    /* don't post silly messages with the same state. This can happen
-     * when an element state is changed to what it already was. For bins
-     * this can be the result of a lost state, which we check with the
-     * previous return value.
-     * We do signal the cond though as a _get_state() might be blocking
-     * on it. */
-    if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
-      GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
-          "changed %s to %s, VOID pending",
-          gst_element_state_get_name (old_state),
-          gst_element_state_get_name (old_next));
-
-      gst_element_post_message (GST_ELEMENT_CAST (bin),
-          gst_message_new_state_changed (GST_OBJECT_CAST (bin),
-              old_state, old_next, GST_STATE_VOID_PENDING));
-    }
-
-    GST_DEBUG_OBJECT (bin, "posting ASYNC_DONE");
-    gst_element_post_message (GST_ELEMENT_CAST (bin),
-        gst_message_new_async_done (GST_OBJECT_CAST (bin)));
-
-    GST_STATE_BROADCAST (bin);
-
-    goto done;
-  }
+  g_free (data);
 }
 
 static GstBusSyncReply
@@ -2414,16 +2251,18 @@ bin_bus_handler (GstBus * bus, GstMessage * message, GstBin * bin)
 }
 
 static void
-bin_push_state_continue (GstBin * bin)
+bin_push_state_continue (BinContinueData * data)
 {
   GstBinClass *klass;
+  GstBin *bin;
 
-  /* mark the bin dirty */
-  GST_OBJECT_LOCK (bin);
+  /* ref was taken */
+  bin = data->bin;
   klass = GST_BIN_GET_CLASS (bin);
+
+  GST_OBJECT_LOCK (bin);
   GST_DEBUG_OBJECT (bin, "pushing continue on thread pool");
-  gst_object_ref (bin);
-  g_thread_pool_push (klass->pool, bin, NULL);
+  g_thread_pool_push (klass->pool, data, NULL);
   GST_OBJECT_UNLOCK (bin);
 }
 
@@ -2440,6 +2279,10 @@ bin_handle_async_start (GstBin * bin, GstMessage ** message)
 
   if (GST_STATE_PENDING (bin) != GST_STATE_VOID_PENDING)
     goto was_busy;
+
+  /* async starts are ignored when we are NO_PREROLL */
+  if (GST_STATE_RETURN (bin) == GST_STATE_CHANGE_NO_PREROLL)
+    goto was_no_preroll;
 
   old_state = GST_STATE (bin);
 
@@ -2474,88 +2317,111 @@ was_busy:
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin, "state change busy");
     return;
   }
+was_no_preroll:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin, "ignoring, we are NO_PREROLL");
+    return;
+  }
 }
 
 /* this function is called when there are no more async elements in the bin. We
  * post a state changed message and an ASYNC_DONE message. */
 static void
 bin_handle_async_done (GstBin * bin, GstMessage ** smessage,
-    GstMessage ** amessage)
+    GstMessage ** amessage, BinContinueData ** cont, GstStateChangeReturn ret)
 {
-  GstState pending;
+  GstState current, pending, target;
   GstStateChangeReturn old_ret;
   GstState old_state, old_next;
-  GstState current, next;
   gboolean toplevel;
 
-  old_ret = GST_STATE_RETURN (bin);
-  GST_STATE_RETURN (bin) = GST_STATE_CHANGE_SUCCESS;
+  if (GST_STATE_RETURN (bin) == GST_STATE_CHANGE_FAILURE)
+    goto had_error;
+
   pending = GST_STATE_PENDING (bin);
 
   /* check if there is something to commit */
   if (pending == GST_STATE_VOID_PENDING)
     goto nothing_pending;
 
+  old_ret = GST_STATE_RETURN (bin);
+  GST_STATE_RETURN (bin) = ret;
+
+  /* move to the next target state */
+  target = GST_STATE_TARGET (bin);
+  pending = GST_STATE_PENDING (bin) = target;
+
   *amessage = gst_message_new_async_done (GST_OBJECT_CAST (bin));
 
   old_state = GST_STATE (bin);
   /* this is the state we should go to next */
   old_next = GST_STATE_NEXT (bin);
-  /* update current state */
-  current = GST_STATE (bin) = old_next;
 
-  /* see if we need to continue the state change on our own. This happens when
-   * we were asked to do so or when we are the toplevel bin. */
+  if (old_next != GST_STATE_PLAYING) {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
+        "committing state from %s to %s, old pending %s",
+        gst_element_state_get_name (old_state),
+        gst_element_state_get_name (old_next),
+        gst_element_state_get_name (pending));
+
+    /* update current state */
+    current = GST_STATE (bin) = old_next;
+  } else {
+    current = old_state;
+  }
+
+  /* get our toplevel state */
   toplevel = ((GST_OBJECT_PARENT (bin) == NULL) || bin->priv->asynchandling);
 
-  /* see if we reached the final state. If we are not a toplevel bin we also
-   * must stop at this state change, the parent will set us to the required
-   * state eventually. */
-  if (pending == current || !toplevel)
-    goto complete;
+  /* see if we reached the final state. If we are not toplevel, we also have to
+   * stop here, the parent will continue our state. */
+  if ((pending == current) || !toplevel) {
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
+        "completed state change, pending VOID");
 
-  next = GST_STATE_GET_NEXT (current, pending);
+    /* mark VOID pending */
+    pending = GST_STATE_VOID_PENDING;
+    GST_STATE_PENDING (bin) = pending;
+    GST_STATE_NEXT (bin) = GST_STATE_VOID_PENDING;
 
-  GST_STATE_NEXT (bin) = next;
-  /* mark busy */
-  GST_STATE_RETURN (bin) = GST_STATE_CHANGE_ASYNC;
+    GST_STATE_BROADCAST (bin);
+  } else {
+    BinContinueData *data;
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
-      "committing state from %s to %s, pending %s",
-      gst_element_state_get_name (old_state),
-      gst_element_state_get_name (old_next),
-      gst_element_state_get_name (pending));
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin,
+        "continue state change, pending %s",
+        gst_element_state_get_name (pending));
 
-  *smessage = gst_message_new_state_changed (GST_OBJECT_CAST (bin),
-      old_state, old_next, pending);
+    data = g_new0 (BinContinueData, 1);
 
+    /* ref to the bin */
+    data->bin = gst_object_ref (bin);
+    /* cookie to detect concurrent state change */
+    data->cookie = GST_ELEMENT_CAST (bin)->state_cookie;
+    /* pending target state */
+    data->pending = pending;
+    /* mark busy */
+    GST_STATE_RETURN (bin) = GST_STATE_CHANGE_ASYNC;
+
+    *cont = data;
+  }
+
+  if (old_next != GST_STATE_PLAYING) {
+    if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
+      *smessage = gst_message_new_state_changed (GST_OBJECT_CAST (bin),
+          old_state, old_next, pending);
+    }
+  }
   return;
 
+had_error:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin, "we had an error");
+    return;
+  }
 nothing_pending:
   {
     GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "nothing pending");
-    return;
-  }
-complete:
-  {
-    GST_STATE_PENDING (bin) = GST_STATE_VOID_PENDING;
-    GST_STATE_NEXT (bin) = GST_STATE_VOID_PENDING;
-
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "completed state change");
-
-    /* don't post silly messages with the same state. This can happen
-     * when an element state is changed to what it already was. For bins
-     * this can be the result of a lost state, which we check with the
-     * previous return value.
-     * We do signal the cond though as a _get_state() might be blocking
-     * on it. */
-    if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
-      *smessage = gst_message_new_state_changed (GST_OBJECT_CAST (bin),
-          old_state, old_next, GST_STATE_VOID_PENDING);
-    }
-
-    GST_STATE_BROADCAST (bin);
-
     return;
   }
 }
@@ -2772,6 +2638,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       if (target <= GST_STATE_READY)
         goto ignore_start_message;
 
+      /* takes ownership of the message */
       bin_replace_message (bin, message, GST_MESSAGE_ASYNC_START);
 
       bin_handle_async_start (bin, &smessage);
@@ -2786,6 +2653,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         message =
             gst_message_new_async_start (GST_OBJECT_CAST (bin), new_base_time);
       } else {
+        /* toplevel bin, we don't post async start */
         message = NULL;
       }
       GST_OBJECT_UNLOCK (bin);
@@ -2810,9 +2678,9 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
     }
     case GST_MESSAGE_ASYNC_DONE:
     {
-      gboolean toplevel = FALSE;
       GstState target;
       GstMessage *smessage = NULL, *amessage = NULL;
+      BinContinueData *cont = NULL;
 
       GST_DEBUG_OBJECT (bin, "ASYNC_DONE message %p, %s", message,
           GST_OBJECT_NAME (src));
@@ -2831,10 +2699,8 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         /* nothing found, remove all old ASYNC_DONE messages */
         bin_remove_messages (bin, NULL, GST_MESSAGE_ASYNC_DONE);
 
-        toplevel = ((GST_OBJECT_PARENT (bin) == NULL)
-            || bin->priv->asynchandling);
-        if (!toplevel)
-          bin_handle_async_done (bin, &smessage, &amessage);
+        bin_handle_async_done (bin, &smessage, &amessage, &cont,
+            GST_STATE_CHANGE_SUCCESS);
       }
       GST_OBJECT_UNLOCK (bin);
 
@@ -2848,10 +2714,10 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
       }
 
-      if (toplevel) {
+      if (cont) {
         /* toplevel, start continue state */
         GST_DEBUG_OBJECT (bin, "all async-done, starting state continue");
-        bin_push_state_continue (bin);
+        bin_push_state_continue (cont);
       }
       break;
 

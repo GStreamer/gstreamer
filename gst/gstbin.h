@@ -86,7 +86,7 @@ typedef struct _GstBinPrivate GstBinPrivate;
  * @child_bus: internal bus for handling child messages
  * @messages: queued and cached messages
  * @polling: the bin is currently calculating its state
- * @state_dirty: the bin needs to recalculate its state
+ * @state_dirty: the bin needs to recalculate its state (deprecated)
  * @clock_dirty: the bin needs to select a new clock
  * @provided_clock: the last clock selected
  * @clock_provider: the element that provided @provided_clock

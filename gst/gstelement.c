@@ -1858,11 +1858,11 @@ gst_element_get_state_func (GstElement * element,
         ret = GST_STATE_CHANGE_FAILURE;
       }
     }
-  }
-  /* if nothing is pending anymore we can return SUCCESS */
-  if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING) {
-    GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "nothing pending");
-    ret = GST_STATE_CHANGE_SUCCESS;
+    /* if nothing is pending anymore we can return SUCCESS */
+    if (GST_STATE_PENDING (element) == GST_STATE_VOID_PENDING) {
+      GST_CAT_LOG_OBJECT (GST_CAT_STATES, element, "nothing pending");
+      ret = GST_STATE_CHANGE_SUCCESS;
+    }
   }
 
 done:
@@ -1887,7 +1887,7 @@ interrupted:
     if (pending)
       *pending = GST_STATE_VOID_PENDING;
 
-    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "get_state() interruped");
+    GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "interruped");
 
     GST_OBJECT_UNLOCK (element);
 
@@ -2100,8 +2100,13 @@ complete:
      * We do signal the cond though as a _get_state() might be blocking
      * on it. */
     if (old_state != old_next || old_ret == GST_STATE_CHANGE_ASYNC) {
-      message = gst_message_new_state_changed (GST_OBJECT_CAST (element),
-          old_state, old_next, GST_STATE_VOID_PENDING);
+      GST_CAT_INFO_OBJECT (GST_CAT_STATES, element,
+          "posting state-changed %s to %s",
+          gst_element_state_get_name (old_state),
+          gst_element_state_get_name (old_next));
+      message =
+          gst_message_new_state_changed (GST_OBJECT_CAST (element), old_state,
+          old_next, GST_STATE_VOID_PENDING);
       gst_element_post_message (element, message);
     }
 
@@ -2891,7 +2896,8 @@ gst_element_set_bus (GstElement * element, GstBus * bus)
  * gst_element_get_bus:
  * @element: a #GstElement to get the bus of.
  *
- * Returns the bus of the element.
+ * Returns the bus of the element. Note that only a #GstPipeline will provide a
+ * bus for the application.
  *
  * Returns: the element's #GstBus. unref after usage.
  *

@@ -1,3 +1,35 @@
+2007-06-18  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_init), (gst_bin_add_func),
+	(gst_bin_remove_func), (gst_bin_get_state_func),
+	(gst_bin_element_set_state), (gst_bin_continue_func),
+	(bin_push_state_continue), (bin_handle_async_start),
+	(bin_handle_async_done), (gst_bin_handle_message_func):
+	* gst/gstbin.h:
+	Immediatly commit the toplevel bin state when receiving an async-done
+	message. This enables us to avoid spawning a thread to commit the state
+	in some common cases and it also avoids some races.
+	Avoid spawning a state thread when adding/removing async elements to a
+	toplevel bin. Instead we immediatly update the bin state.
+	Get rid of iterating all the children when getting the state in the bin
+	because it is now always up-to-date.
+	Fix bug where locked elements would always return _SUCCESS even it they
+	returned NO_PREROLL before being locked.
+	Fix the order of the state_change, async-start/done messages that was
+	sometimes incorrect.
+	Mark the state_dirty field as deprecated, we don't need it anymore as we
+	are always up-to-date.
+
+	* gst/gstelement.c: (gst_element_get_state_func),
+	(gst_element_continue_state):
+	Small debug inprovements.
+	Return the previous element state return when nothing is pending instead
+	of blindly returning SUCCESS.
+
+	* tests/check/generic/sinks.c: (GST_START_TEST), (pad_blocked_cb),
+	(gst_sinks_suite):
+	Add a whole bunch of new testcases.
+
 2007-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/uk.po:
