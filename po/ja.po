@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good HEAD\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-09 19:50+0000\n"
+"POT-Creation-Date: 2007-06-15 11:41+0200\n"
 "PO-Revision-Date: 2006-08-08 19:05+0200\n"
 "Last-Translator: takao.fujiwara@sun.com\n"
 "Language-Team: takao.fujiwara@sun.com\n"
@@ -27,8 +27,8 @@ msgstr "CD デバイスを読み取り用に開くことができません。"
 msgid "Disc is not an Audio CD."
 msgstr "デバイスが開いていません。"
 
-#: ext/libpng/gstpngdec.c:330 ext/libpng/gstpngdec.c:513
-#: gst/avi/gstavidemux.c:3684 gst/avi/gstavidemux.c:3692
+#: ext/libpng/gstpngdec.c:331 ext/libpng/gstpngdec.c:514
+#: gst/avi/gstavidemux.c:3741 gst/avi/gstavidemux.c:3749
 msgid "Internal data stream error."
 msgstr ""
 
@@ -53,7 +53,32 @@ msgstr ""
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr "入力オーディオが存在しないか無効であるため、AVI ストリームは壊れます。"
 
-#: gst/wavparse/gstwavparse.c:1672
+#: gst/qtdemux/qtdemux.c:987
+msgid "This file is incomplete and cannot be played."
+msgstr ""
+
+#: gst/qtdemux/qtdemux.c:1443
+msgid "This file contains no playable streams."
+msgstr ""
+
+#: gst/qtdemux/qtdemux.c:2186
+msgid "The video in this file might not play correctly."
+msgstr ""
+
+#: gst/qtdemux/qtdemux.c:2261
+#, c-format
+msgid "This file contains too many streams. Only playing first %d"
+msgstr ""
+
+#: gst/qtdemux/qtdemux.c:2521 gst/qtdemux/qtdemux.c:3096
+msgid "This file is corrupt and cannot be played."
+msgstr ""
+
+#: gst/qtdemux/qtdemux.c:3103
+msgid "This file is encrypted and cannot be played."
+msgstr ""
+
+#: gst/wavparse/gstwavparse.c:1718
 msgid "Internal data flow error."
 msgstr ""
 
@@ -187,14 +212,9 @@ msgstr "モニター"
 msgid "Gain"
 msgstr "ゲイン"
 
-#: sys/v4l2/gstv4l2src.c:945
+#: sys/v4l2/gstv4l2src.c:929
 #, c-format
 msgid "Error read()ing %d bytes on device '%s'."
-msgstr ""
-
-#: sys/v4l2/gstv4l2src.c:953
-#, c-format
-msgid "Error reading from device '%s'"
 msgstr ""
 
 #: sys/v4l2/v4l2_calls.c:68
@@ -211,7 +231,7 @@ msgstr ""
 
 #: sys/v4l2/v4l2_calls.c:126
 #, c-format
-msgid "Failed to get setting of tuner &d on device '%s'."
+msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr ""
 
 #: sys/v4l2/v4l2_calls.c:166
@@ -219,9 +239,14 @@ msgstr ""
 msgid "Failed to query norm on device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2_calls.c:214 sys/v4l2/v4l2_calls.c:285
+#: sys/v4l2/v4l2_calls.c:214
 #, c-format
-msgid "Failed getting controls attributes on device '%s."
+msgid "Failed getting controls attributes on device '%s.'"
+msgstr ""
+
+#: sys/v4l2/v4l2_calls.c:285
+#, c-format
+msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
 
 #: sys/v4l2/v4l2_calls.c:403
@@ -285,22 +310,22 @@ msgstr ""
 msgid "Failed to set input %d on device %s."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:95
+#: sys/v4l2/v4l2src_calls.c:314
+#, c-format
+msgid "Could not enqueue buffers in device '%s'."
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:388
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:137 sys/v4l2/v4l2src_calls.c:259
-#, c-format
-msgid "Could not exchange data with device '%s'."
-msgstr ""
-
-#: sys/v4l2/v4l2src_calls.c:233 sys/v4l2/v4l2src_calls.c:250
+#: sys/v4l2/v4l2src_calls.c:800 sys/v4l2/v4l2src_calls.c:817
 #, c-format
 msgid "Failed trying to get video frames from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:235
+#: sys/v4l2/v4l2src_calls.c:802
 #, c-format
 msgid ""
 "The buffer type is not supported, or the index is out of bounds, or no "
@@ -308,88 +333,94 @@ msgid ""
 "device %s"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:244
+#: sys/v4l2/v4l2src_calls.c:811
 #, c-format
 msgid "Failed trying to get video frames from device '%s'. Not enough memory."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:244
+#: sys/v4l2/v4l2src_calls.c:811
 #, c-format
 msgid "insufficient memory to enqueue a user pointer buffer. device %s."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:252
+#: sys/v4l2/v4l2src_calls.c:819
 #, c-format
 msgid "Failed after %d tries. device %s. system error: %s"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:292
+#: sys/v4l2/v4l2src_calls.c:826
 #, c-format
-msgid "Failed querying in which video format device '%s' is working with"
+msgid "Could not exchange data with device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:336
+#: sys/v4l2/v4l2src_calls.c:900
 #, c-format
-msgid ""
-"The closest size from %dx%d is %dx%d, for video format %s on device '%s'"
+msgid "Device '%s' does not support video capture"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:350
+#: sys/v4l2/v4l2src_calls.c:908 sys/v4l2/v4l2src_calls.c:917
 #, c-format
-msgid "The closest framerate from %u/%u is %u/%u, on device '%s'"
+msgid "Device '%s' cannot capture at %dx%d"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:377 sys/v4l2/v4l2src_calls.c:387
+#: sys/v4l2/v4l2src_calls.c:926
 #, c-format
-msgid "Failed setting the video format for device '%s'"
+msgid "Device '%s' cannot capture in the specified format"
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:505
+# SUN REVIEWED
+#: sys/v4l2/v4l2src_calls.c:937
+#, fuzzy, c-format
+msgid "Could not get parameters on device '%s'"
+msgstr "CD デバイスを読み取り用に開くことができません。"
+
+# SUN REVIEWED
+#: sys/v4l2/v4l2src_calls.c:944
+#, fuzzy, c-format
+msgid "Could not set parameters on device '%s'"
+msgstr "CD デバイスを読み取り用に開くことができません。"
+
+#: sys/v4l2/v4l2src_calls.c:951
+#, c-format
+msgid "Device '%s' cannot capture at %d/%d frames per second"
+msgstr ""
+
+#: sys/v4l2/v4l2src_calls.c:1022
 #, c-format
 msgid "Could not get buffers from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:514
-#, c-format
-msgid "The driver of device '%s' is broken."
-msgstr ""
-
-#: sys/v4l2/v4l2src_calls.c:523
+#: sys/v4l2/v4l2src_calls.c:1031
 #, c-format
 msgid "Could not get enough buffers from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:534
-#, c-format
-msgid "Could not get properties of data comming from device '%s'"
-msgstr ""
-
 # SUN REVIEWED
-#: sys/v4l2/v4l2src_calls.c:544
+#: sys/v4l2/v4l2src_calls.c:1040
 #, fuzzy, c-format
-msgid "Could not map memory in device '%s'."
+msgid "Could not map buffers from device '%s'"
 msgstr "CD デバイスを読み取り用に開くことができません。"
 
-#: sys/v4l2/v4l2src_calls.c:554
+#: sys/v4l2/v4l2src_calls.c:1048
 #, c-format
-msgid "Could not enqueue buffers in device '%s'."
+msgid "The driver of device '%s' does not support any known capture method."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:593
+#: sys/v4l2/v4l2src_calls.c:1093
 #, c-format
 msgid "Error starting streaming capture from device '%s'."
 msgstr ""
 
-#: sys/v4l2/v4l2src_calls.c:637
+#: sys/v4l2/v4l2src_calls.c:1137
 #, c-format
 msgid "Error stopping streaming capture from device '%s'."
 msgstr ""
 
-#: sys/ximage/gstximagesrc.c:650
+#: sys/ximage/gstximagesrc.c:690
 msgid "Changing resolution at runtime is not yet supported."
 msgstr ""
 
-#: sys/ximage/gstximagesrc.c:664
+#: sys/ximage/gstximagesrc.c:704
 msgid "Cannot operate without a clock"
 msgstr ""
 
