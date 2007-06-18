@@ -523,14 +523,9 @@ apply_segment (GstMultiQueue * mq, GstSingleQueue * sq, GstEvent * event,
 
 /* take a buffer and update segment, updating the time level of the queue. */
 static void
-apply_buffer (GstMultiQueue * mq, GstSingleQueue * sq, GstBuffer * buffer,
-    GstSegment * segment)
+apply_buffer (GstMultiQueue * mq, GstSingleQueue * sq, GstClockTime timestamp,
+    GstClockTime duration, GstSegment * segment)
 {
-  GstClockTime duration, timestamp;
-
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  duration = GST_BUFFER_DURATION (buffer);
-
   /* if no timestamp is set, assume it's continuous with the previous 
    * time */
   if (timestamp == GST_CLOCK_TIME_NONE)
@@ -557,10 +552,13 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
 
   if (GST_IS_BUFFER (object)) {
     GstBuffer *buffer;
+    GstClockTime timestamp, duration;
 
     buffer = GST_BUFFER_CAST (object);
+    timestamp = GST_BUFFER_TIMESTAMP (buffer);
+    duration = GST_BUFFER_DURATION (buffer);
 
-    apply_buffer (mq, sq, buffer, &sq->src_segment);
+    apply_buffer (mq, sq, timestamp, duration, &sq->src_segment);
 
     result = gst_pad_push (sq->srcpad, buffer);
   } else if (GST_IS_EVENT (object)) {
@@ -747,6 +745,7 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
   GstMultiQueueItem *item;
   GstFlowReturn ret = GST_FLOW_OK;
   guint32 curid;
+  GstClockTime timestamp, duration;
 
   sq = gst_pad_get_element_private (pad);
   mq = (GstMultiQueue *) gst_pad_get_parent (pad);
@@ -761,12 +760,15 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
 
   item = gst_multi_queue_item_new (GST_MINI_OBJECT_CAST (buffer), curid);
 
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+
   if (!(gst_data_queue_push (sq->queue, (GstDataQueueItem *) item)))
     goto flushing;
 
   /* update time level, we must do this after pushing the data in the queue so
    * that we never end up filling the queue first. */
-  apply_buffer (mq, sq, buffer, &sq->sink_segment);
+  apply_buffer (mq, sq, timestamp, duration, &sq->sink_segment);
 
 done:
   gst_object_unref (mq);
@@ -809,6 +811,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
   GstMultiQueueItem *item;
   gboolean res;
   GstEventType type;
+  GstEvent *sref = NULL;
 
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
   mq = (GstMultiQueue *) gst_pad_get_parent (pad);
@@ -833,6 +836,11 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
 
       gst_single_queue_flush (mq, sq, FALSE);
       goto done;
+    case GST_EVENT_NEWSEGMENT:
+      /* take ref because the queue will take ownership and we need the event
+       * afterwards to update the segment */
+      sref = gst_event_ref (event);
+      break;
 
     default:
       if (!(GST_EVENT_IS_SERIALIZED (event))) {
@@ -865,7 +873,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
       sq->is_eos = TRUE;
       break;
     case GST_EVENT_NEWSEGMENT:
-      apply_segment (mq, sq, event, &sq->sink_segment);
+      apply_segment (mq, sq, sref, &sq->sink_segment);
       break;
     default:
       break;
@@ -878,6 +886,8 @@ flushing:
   {
     GST_LOG_OBJECT (mq, "SingleQueue %d : exit because task paused, reason: %s",
         sq->id, gst_flow_get_name (sq->srcresult));
+    if (sref)
+      gst_event_unref (sref);
     gst_multi_queue_item_destroy (item);
     goto done;
   }

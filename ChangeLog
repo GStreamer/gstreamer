@@ -1,5 +1,13 @@
 2007-06-18  Wim Taymans  <wim@fluendo.com>
 
+	* plugins/elements/gstmultiqueue.c: (apply_buffer),
+	(gst_single_queue_push_one), (gst_multi_queue_chain),
+	(gst_multi_queue_sink_event):
+	Make sure we don't reference the buffer/event after we have given away
+	ownership in the queue.
+
+2007-06-18  Wim Taymans  <wim@fluendo.com>
+
 	* plugins/elements/gstmultiqueue.c: (gst_single_queue_flush),
 	(gst_multi_queue_chain), (gst_multi_queue_sink_event):
 	Update queue state _after_ adding the item in the queue because else we
