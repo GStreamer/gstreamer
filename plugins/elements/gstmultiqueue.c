@@ -446,6 +446,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
     gst_segment_init (&sq->sink_segment, GST_FORMAT_TIME);
     gst_segment_init (&sq->src_segment, GST_FORMAT_TIME);
     sq->srcresult = GST_FLOW_OK;
+    sq->cur_time = 0;
     sq->max_size.visible = mq->max_size.visible;
     sq->is_eos = FALSE;
     sq->inextra = FALSE;
@@ -760,11 +761,12 @@ gst_multi_queue_chain (GstPad * pad, GstBuffer * buffer)
 
   item = gst_multi_queue_item_new (GST_MINI_OBJECT_CAST (buffer), curid);
 
-  /* update time level */
-  apply_buffer (mq, sq, buffer, &sq->sink_segment);
-
   if (!(gst_data_queue_push (sq->queue, (GstDataQueueItem *) item)))
     goto flushing;
+
+  /* update time level, we must do this after pushing the data in the queue so
+   * that we never end up filling the queue first. */
+  apply_buffer (mq, sq, buffer, &sq->sink_segment);
 
 done:
   gst_object_unref (mq);
@@ -832,10 +834,6 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
       gst_single_queue_flush (mq, sq, FALSE);
       goto done;
 
-    case GST_EVENT_NEWSEGMENT:
-      apply_segment (mq, sq, event, &sq->sink_segment);
-      break;
-
     default:
       if (!(GST_EVENT_IS_SERIALIZED (event))) {
         res = gst_pad_push_event (sq->srcpad, event);
@@ -862,9 +860,16 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
    * buffer in the queue because EOS marks the buffer as filled. No need to take
    * a lock, the _check_full happens from this thread only, right before pushing
    * into dataqueue. */
-  if (type == GST_EVENT_EOS)
-    sq->is_eos = TRUE;
-
+  switch (type) {
+    case GST_EVENT_EOS:
+      sq->is_eos = TRUE;
+      break;
+    case GST_EVENT_NEWSEGMENT:
+      apply_segment (mq, sq, event, &sq->sink_segment);
+      break;
+    default:
+      break;
+  }
 done:
   gst_object_unref (mq);
   return res;
