@@ -1,12 +1,12 @@
 <plugin>
   <name>sdl</name>
   <description>SDL (Simple DirectMedia Layer) support for GStreamer</description>
-  <filename>../../ext/sdl/.libs/libgstsdl.so</filename>
-  <basename>libgstsdl.so</basename>
-  <version>0.10.4.1</version>
+  <filename>../../ext/sdl/.libs/libgstsdlvideosink.so</filename>
+  <basename>libgstsdlvideosink.so</basename>
+  <version>0.10.4</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
-  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <package>GStreamer Bad Plug-ins source release</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -21,9 +21,7 @@
       <longname>SDL video sink</longname>
       <class>Sink/Video</class>
       <description>An SDL-based videosink</description>
-      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
-    Edgard Lima &lt;edgard.lima@indt.org.br&gt;
-    Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+      <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;Edgard Lima &lt;edgard.lima@indt.org.br&gt;Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
     </element>
   </elements>
 </plugin>

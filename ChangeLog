@@ -1,3 +1,10 @@
+=== release 0.10.5 ===
+
+2007-06-19  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.5, "Expedition to Lake Pahoe"
+
 2007-06-15  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* win32/vs6/gst_plugins_bad.dsw:

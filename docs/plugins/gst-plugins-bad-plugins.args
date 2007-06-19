@@ -41,7 +41,7 @@
 <ARG>
 <NAME>GstXvidEnc::averaging-period</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Averaging Period</NICK>
 <BLURB>[CBR] Number of frames for which XviD averages bitrate.</BLURB>
@@ -91,7 +91,7 @@
 <ARG>
 <NAME>GstXvidEnc::buffer</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffer Size</NICK>
 <BLURB>[CBR] Size of the video buffers.</BLURB>
@@ -121,7 +121,7 @@
 <ARG>
 <NAME>GstXvidEnc::container-frame-overhead</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Container Frame Overhead</NICK>
 <BLURB>[PASS2] Average container overhead per frame.</BLURB>
@@ -151,7 +151,7 @@
 <ARG>
 <NAME>GstXvidEnc::flow-control-strength</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Flow Control Strength</NICK>
 <BLURB>[PASS2] Overflow control strength per frame.</BLURB>
@@ -211,7 +211,7 @@
 <ARG>
 <NAME>GstXvidEnc::keyframe-reduction</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe Reduction</NICK>
 <BLURB>[PASS2] Keyframe size reduction in % of those within threshold.</BLURB>
@@ -221,7 +221,7 @@
 <ARG>
 <NAME>GstXvidEnc::keyframe-threshold</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Keyframe Threshold</NICK>
 <BLURB>[PASS2] Distance between keyframes not to be subject to reduction.</BLURB>
@@ -281,7 +281,7 @@
 <ARG>
 <NAME>GstXvidEnc::max-overflow-degradation</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Overflow Degradation</NICK>
 <BLURB>[PASS2] Amount in % that flow control can decrease frame size compared to ideal curve.</BLURB>
@@ -291,7 +291,7 @@
 <ARG>
 <NAME>GstXvidEnc::max-overflow-improvement</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max Overflow Improvement</NICK>
 <BLURB>[PASS2] Amount in % that flow control can increase frame size compared to ideal curve.</BLURB>
@@ -421,7 +421,7 @@
 <ARG>
 <NAME>GstXvidEnc::reaction-delay-factor</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,100]</RANGE>
+<RANGE>[G_MAXULONG,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Reaction Delay Factor</NICK>
 <BLURB>[CBR] Reaction delay factor.</BLURB>
@@ -450,11 +450,11 @@
 
 <ARG>
 <NAME>GstWavpackEnc::bitrate</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 9600000</RANGE>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,9.6e+06]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bitrate</NICK>
-<BLURB>Try to encode with this average bitrate (bits/sec). This enables lossy encoding, values smaller than 24000 disable it again.</BLURB>
+<BLURB>Try to encode with this average bitrate (bits/sec). This enables lossy encoding! A value smaller than 24000.0 disables this.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -464,7 +464,7 @@
 <RANGE>[0,24]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bits per sample</NICK>
-<BLURB>Try to encode with this amount of bits per sample. This enables lossy encoding, values smaller than 2.0 disable it again.</BLURB>
+<BLURB>Try to encode with this amount of bits per sample. This enables lossy encoding! A value smaller than 2.0 disables this.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -473,19 +473,19 @@
 <TYPE>GstWavpackEncCorrectionMode</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Correction stream mode</NICK>
-<BLURB>Use this mode for the correction stream. Only works in lossy mode!.</BLURB>
+<NICK>Correction file mode</NICK>
+<BLURB>Use this mode for correction file creation. Only works in lossy mode!.</BLURB>
 <DEFAULT>Create no correction file</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstWavpackEnc::extra-processing</NAME>
-<TYPE>guint</TYPE>
-<RANGE><= 6</RANGE>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Extra processing</NICK>
-<BLURB>Use better but slower filters for better compression/quality.</BLURB>
-<DEFAULT>0</DEFAULT>
+<BLURB>Extra encode processing.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -534,12 +534,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Location</NICK>
-<BLURB>The location. In the form:
-			http://a.com/file.txt - default port '80' 
-			http://a.com:80/file.txt 
-			a.com/file.txt - defualt scheme 'HTTP' 
-			https://a.com/file.txt - default port '443' 
-			http:///file.txt - default host 'localhost'.</BLURB>
+<BLURB>Location to read from.</BLURB>
 <DEFAULT>""</DEFAULT>
 </ARG>
 
@@ -549,9 +544,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Proxy</NICK>
-<BLURB>The proxy. In the form myproxy.mycompany.com:8080. 
-			If nothing is passed g_getenv("http_proxy") will be used 
-			If that http_proxy enviroment var isn't define no proxy is used.</BLURB>
+<BLURB>Proxy server to use, in the form HOSTNAME:PORT. Defaults to the http_proxy environment variable.</BLURB>
 <DEFAULT>""</DEFAULT>
 </ARG>
 
@@ -571,7 +564,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>automatic-redirect</NICK>
-<BLURB>Enable Neon HTTP Redirects (HTTP Status Code 302).</BLURB>
+<BLURB>Automatically follow HTTP redirects (HTTP Status Code 302).</BLURB>
 <DEFAULT>TRUE</DEFAULT>
 </ARG>
 
@@ -631,8 +624,8 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>User-Agent</NICK>
-<BLURB>The User-Agent used for connection.</BLURB>
-<DEFAULT>"neonhttpsrc"</DEFAULT>
+<BLURB>Value of the User-Agent HTTP request header field.</BLURB>
+<DEFAULT>"GStreamer neonhttpsrc"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1648,7 +1641,7 @@
 <ARG>
 <NAME>GstDvbSrc::diseqc-src</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[-1,7]</RANGE>
+<RANGE>[G_MAXULONG,7]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>diseqc_src</NICK>
 <BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
@@ -16982,7 +16975,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path to 14_4 driver</NICK>
 <BLURB>Path to 14_4 driver.</BLURB>
-<DEFAULT>"/usr/lib/win32/14_4.so.6.0"</DEFAULT>
+<DEFAULT>"/usr/lib/14_4.so.6.0"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -16992,7 +16985,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path to 28_8 driver</NICK>
 <BLURB>Path to 28_8 driver.</BLURB>
-<DEFAULT>"/usr/lib/win32/28_8.so.6.0"</DEFAULT>
+<DEFAULT>"/usr/lib/28_8.so.6.0"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17002,7 +16995,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path to atrk driver</NICK>
 <BLURB>Path to atrk driver.</BLURB>
-<DEFAULT>"/usr/lib/win32/atrk.so.6.0"</DEFAULT>
+<DEFAULT>"/usr/lib/atrk.so.6.0"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17012,7 +17005,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path to cook driver</NICK>
 <BLURB>Path to cook driver.</BLURB>
-<DEFAULT>"/usr/lib/win32/cook.so.6.0"</DEFAULT>
+<DEFAULT>"/usr/lib/cook.so.6.0"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17022,7 +17015,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path to sipr driver</NICK>
 <BLURB>Path to sipr driver.</BLURB>
-<DEFAULT>"/usr/lib/win32/sipr.so.6.0"</DEFAULT>
+<DEFAULT>"/usr/lib/sipr.so.6.0"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17032,7 +17025,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path to rv20 driver</NICK>
 <BLURB>Path to rv20 driver.</BLURB>
-<DEFAULT>"/usr/lib/win32/drv2.so.6.0"</DEFAULT>
+<DEFAULT>"/usr/lib/drvc.so"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17042,7 +17035,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path to rv30 driver</NICK>
 <BLURB>Path to rv30 driver.</BLURB>
-<DEFAULT>"/usr/lib/win32/drv3.so.6.0"</DEFAULT>
+<DEFAULT>"/usr/lib/drvc.so"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17052,7 +17045,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Path to rv40 driver</NICK>
 <BLURB>Path to rv40 driver.</BLURB>
-<DEFAULT>"/usr/lib/win32/drv4.so.6.0"</DEFAULT>
+<DEFAULT>"/usr/lib/drvc.so"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17283,5 +17276,135 @@
 <NICK>Enabled</NICK>
 <BLURB>Enable processing.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoAnalyse::message</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Message</NICK>
+<BLURB>Post statics messages.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoDetect::message</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Message</NICK>
+<BLURB>Post statics messages.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoDetect::pattern-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern count</NICK>
+<BLURB>The number of pattern markers.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoDetect::pattern-data-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern data count</NICK>
+<BLURB>The number of extra data pattern markers.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoDetect::pattern-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern height</NICK>
+<BLURB>The height of the pattern markers.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoDetect::pattern-sensitivity</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,0.5]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern sensitivity</NICK>
+<BLURB>The sensitivity for detecting the markers (0.0 = highest, 0.5 lowest).</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoDetect::pattern-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern width</NICK>
+<BLURB>The width of the pattern markers.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMark::enabled</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Enabled</NICK>
+<BLURB>Enable or disable the filter.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMark::pattern-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern count</NICK>
+<BLURB>The number of pattern markers.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMark::pattern-data</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern data</NICK>
+<BLURB>The extra data pattern markers.</BLURB>
+<DEFAULT>10</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMark::pattern-data-count</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern data count</NICK>
+<BLURB>The number of extra data pattern markers.</BLURB>
+<DEFAULT>5</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMark::pattern-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern height</NICK>
+<BLURB>The height of the pattern markers.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMark::pattern-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern width</NICK>
+<BLURB>The width of the pattern markers.</BLURB>
+<DEFAULT>4</DEFAULT>
 </ARG>
 
