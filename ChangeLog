@@ -1,5 +1,11 @@
 2007-06-19  Wim Taymans  <wim@fluendo.com>
 
+	* plugins/elements/gstmultiqueue.c: (apply_buffer),
+	(gst_multi_queue_sink_event):
+	Fix event leak.
+
+2007-06-19  Wim Taymans  <wim@fluendo.com>
+
 	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_remove_func),
 	(gst_bin_change_state_func), (bin_push_state_continue),
 	(bin_handle_async_start), (bin_handle_async_done),

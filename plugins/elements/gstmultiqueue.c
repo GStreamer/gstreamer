@@ -874,6 +874,7 @@ gst_multi_queue_sink_event (GstPad * pad, GstEvent * event)
       break;
     case GST_EVENT_NEWSEGMENT:
       apply_segment (mq, sq, sref, &sq->sink_segment);
+      gst_event_unref (sref);
       break;
     default:
       break;
