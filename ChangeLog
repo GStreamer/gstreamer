@@ -1,3 +1,8 @@
+2007-06-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/random/release:
+	Add a note about updating the doap file to the release checklist
+
 2007-06-18  Wim Taymans  <wim@fluendo.com>
 
 	* plugins/elements/gstmultiqueue.c: (apply_buffer),

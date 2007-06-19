@@ -58,6 +58,7 @@ RELEASE PROCEDURE:
   - build packages to test
 
 - release:
+  - Update the doap file to insert the new release info
   - cvs commit in the tree
   - tag tree
     for example for 0.6.3 :
