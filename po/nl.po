@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly-0.10.5\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-12-10 19:24+0100\n"
+"POT-Creation-Date: 2007-06-13 12:52+0200\n"
 "PO-Revision-Date: 2007-03-20 11:05+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -33,13 +33,29 @@ msgstr "Kan niet naar hoofdstuk %d van DVD-titel %d gaan"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
-msgstr "Kan de DVD-titel %d niet openen. Interactieve titels worden door dit element niet ondersteund"
+msgid ""
+"Could not open DVD title %d. Interactive titles are not supported by this "
+"element"
+msgstr ""
+"Kan de DVD-titel %d niet openen. Interactieve titels worden door dit element "
+"niet ondersteund"
 
-#: ext/lame/gstlame.c:549
+#: ext/lame/gstlame.c:560
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr "Kan de LAME-encoder niet configureren. Controleer uw encodingparameters."
+msgstr ""
+"Kan de LAME-encoder niet configureren. Controleer uw encodingparameters."
 
-#: gst/asfdemux/gstasfdemux.c:1944
+#: ext/lame/gstlame.c:691
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+
+#: gst/asfdemux/gstasfdemux.c:322
+msgid "This stream contains no data."
+msgstr ""
+
+#: gst/asfdemux/gstasfdemux.c:2936
 msgid "This file is encrypted and cannot be played."
 msgstr "Dit bestand is geëncrypt en kan niet afgespeeld worden."

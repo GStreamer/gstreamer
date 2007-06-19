@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-12-10 19:24+0100\n"
+"POT-Creation-Date: 2007-06-13 12:52+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -37,11 +37,22 @@ msgid ""
 "element"
 msgstr ""
 
-#: ext/lame/gstlame.c:549
+#: ext/lame/gstlame.c:560
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
 msgstr ""
 
-#: gst/asfdemux/gstasfdemux.c:1944
+#: ext/lame/gstlame.c:691
+#, c-format
+msgid ""
+"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
+"bitrate was changed to %d kbit/s."
+msgstr ""
+
+#: gst/asfdemux/gstasfdemux.c:322
+msgid "This stream contains no data."
+msgstr ""
+
+#: gst/asfdemux/gstasfdemux.c:2936
 msgid "This file is encrypted and cannot be played."
 msgstr ""
 
