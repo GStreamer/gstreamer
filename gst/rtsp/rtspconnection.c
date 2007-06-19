@@ -175,7 +175,8 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
   struct sockaddr_in sa_in;
   struct hostent *hostinfo;
   char **addrs;
-  gchar *ip;
+  const gchar *ip;
+  gchar ipbuf[INET_ADDRSTRLEN];
   struct in_addr addr;
   gint ret;
   guint16 port;
@@ -207,7 +208,8 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
       goto not_ip;              /* host not an IP host */
 
     addrs = hostinfo->h_addr_list;
-    ip = inet_ntoa (*(struct in_addr *) *addrs);
+    ip = inet_ntop (AF_INET, (struct in_addr *) addrs[0], ipbuf,
+        sizeof (ipbuf));
   }
 
   /* get the port from the url */
@@ -264,7 +266,7 @@ rtsp_connection_connect (RTSPConnection * conn, GTimeVal * timeout)
 
 done:
   conn->fd = fd;
-  conn->ip = ip;
+  conn->ip = g_strdup (ip);
 
   return RTSP_OK;
 
@@ -1000,6 +1002,9 @@ rtsp_connection_close (RTSPConnection * conn)
 
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
 
+  g_free (conn->ip);
+  conn->ip = NULL;
+
   if (conn->fd != -1) {
     res = CLOSE_SOCKET (conn->fd);
 #ifdef G_OS_WIN32
@@ -1021,19 +1026,20 @@ sys_error:
 RTSPResult
 rtsp_connection_free (RTSPConnection * conn)
 {
+  RTSPResult res;
+
   g_return_val_if_fail (conn != NULL, RTSP_EINVAL);
 
 #ifdef G_OS_WIN32
   WSACleanup ();
 #endif
-
+  res = rtsp_connection_close (conn);
   g_timer_destroy (conn->timer);
   g_free (conn->username);
   g_free (conn->passwd);
-
   g_free (conn);
 
-  return RTSP_OK;
+  return res;
 }
 
 RTSPResult

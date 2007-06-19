@@ -1,3 +1,12 @@
+2007-06-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/rtspconnection.c: (rtsp_connection_connect),
+	(rtsp_connection_close), (rtsp_connection_free):
+	Use threadsafe inet_ntop to convert an ip number to a string. 
+	Fixes #447961.
+	Don't leak fd (and ip) when freeing a connection without first closing
+	it.
+
 2007-06-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
