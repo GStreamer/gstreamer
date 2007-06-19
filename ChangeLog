@@ -1,3 +1,18 @@
+2007-06-19  Wim Taymans  <wim@fluendo.com>
+
+	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_remove_func),
+	(gst_bin_change_state_func), (bin_push_state_continue),
+	(bin_handle_async_start), (bin_handle_async_done),
+	(gst_bin_handle_message_func):
+	Move the common code for posting state-change messages into
+	one function.
+	Broadcast the state signal after we posted the messages.
+	Mark the bin as busy when it's doing a state-change.
+	Make sure async-start/done messages don't interfere with the bin's
+	state when it's busy.
+	After the state change, let the bin check which elements completed the
+	state change while it was busy so that it can update its state.
+
 2007-06-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/random/release:
