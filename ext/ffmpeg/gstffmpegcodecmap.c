@@ -1766,7 +1766,7 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
 
   if (!strcmp (format_name, "mp4")) {
     static enum CodecID mp4_video_list[] = {
-      CODEC_ID_MPEG4, CODEC_ID_H264, CODEC_ID_NONE
+      CODEC_ID_MPEG4, CODEC_ID_H263, CODEC_ID_H264, CODEC_ID_NONE
     };
     static enum CodecID mp4_audio_list[] = {
       CODEC_ID_AAC, CODEC_ID_MP3, CODEC_ID_AMR_NB, CODEC_ID_AMR_WB,
@@ -1852,12 +1852,12 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
     *audio_codec_list = mov_audio_list;
   } else if ((!strcmp (format_name, "3gp") || !strcmp (format_name, "3g2"))) {
     static enum CodecID tgp_video_list[] = {
-      CODEC_ID_H263,
+      CODEC_ID_MPEG4, CODEC_ID_H263, CODEC_ID_H264,
       CODEC_ID_NONE
     };
     static enum CodecID tgp_audio_list[] = {
-      CODEC_ID_AMR_NB,
-      CODEC_ID_AMR_WB,
+      CODEC_ID_AMR_NB, CODEC_ID_AMR_WB,
+      CODEC_ID_AAC,
       CODEC_ID_NONE
     };
 

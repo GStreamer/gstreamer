@@ -24,6 +24,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+#include <stdio.h>
+#include <string.h>
 #include <gst/gst.h>
 #ifdef HAVE_FFMPEG_UNINSTALLED
 #include <avcodec.h>
@@ -79,6 +81,8 @@ static void
 gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
 {
   GstDebugLevel gst_level;
+  gint len = strlen (fmt);
+  gchar *fmt2 = NULL;
 
   if (_shut_up_I_am_probing)
     return;
@@ -101,7 +105,15 @@ gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
       break;
   }
 
-  gst_debug_log_valist (ffmpeg_debug, gst_level, "", "", 0, NULL, fmt, vl);
+  /* remove trailing newline as it gets already appended by the logger */
+  if (fmt[len-1] == '\n') {
+    fmt2 = g_strdup (fmt);
+    fmt2[len-1] = '\0';
+  }
+
+  gst_debug_log_valist (ffmpeg_debug, gst_level, "", "", 0, NULL, fmt2?fmt2:fmt, vl);
+
+  g_free(fmt2);
 }
 #endif
 
