@@ -53,6 +53,8 @@ static gboolean gst_amrnbdec_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_amrnbdec_state_change (GstElement * element,
     GstStateChange transition);
 
+static void gst_amrnbdec_finalize (GObject * object);
+
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_amrnbdec_debug, "amrnbdec", 0, "AMR-NB audio decoder");
 
@@ -79,7 +81,10 @@ gst_amrnbdec_base_init (gpointer klass)
 static void
 gst_amrnbdec_class_init (GstAmrnbDecClass * klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  object_class->finalize = gst_amrnbdec_finalize;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrnbdec_state_change);
 }
@@ -107,6 +112,19 @@ gst_amrnbdec_init (GstAmrnbDec * amrnbdec, GstAmrnbDecClass * klass)
 
   /* init rest */
   amrnbdec->handle = NULL;
+}
+
+static void
+gst_amrnbdec_finalize (GObject * object)
+{
+  GstAmrnbDec *amrnbdec;
+
+  amrnbdec = GST_AMRNBDEC (object);
+
+  gst_adapter_clear (amrnbdec->adapter);
+  g_object_unref (amrnbdec->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

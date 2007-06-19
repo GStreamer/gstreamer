@@ -1,3 +1,12 @@
+2007-06-19  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_class_init),
+	(gst_amrnbdec_finalize):
+	Don't leak the adapter, unref it in a new finalize method instead.
+	Fixes #448782.
+
 2007-06-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
