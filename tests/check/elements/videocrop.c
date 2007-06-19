@@ -74,7 +74,6 @@ GST_START_TEST (test_unit_sizes)
   GstBaseTransformClass *csp_klass, *vcrop_klass;
   GstElement *videocrop, *csp;
   GList *caps_list, *l;
-  gint i;
 
   videocrop = gst_element_factory_make ("videocrop", "videocrop");
   fail_unless (videocrop != NULL, "Failed to create videocrop element");
@@ -111,7 +110,6 @@ GST_START_TEST (test_unit_sizes)
 
     for (i = 0; i < G_N_ELEMENTS (sizes_to_try); ++i) {
       gchar *caps_str;
-      guint32 format = 0;
       guint csp_size = 0;
       guint vc_size = 0;
 

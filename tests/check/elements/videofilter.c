@@ -79,7 +79,7 @@ cleanup_filter (GstElement * filter)
   gst_check_teardown_element (filter);
 }
 
-
+static void
 check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
 {
   GstElement *filter;

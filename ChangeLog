@@ -1,3 +1,15 @@
+2007-06-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/audiopanorama.c: (GST_START_TEST):
+	* tests/check/elements/videocrop.c: (GST_START_TEST):
+	* tests/check/elements/videofilter.c:
+	* tests/check/elements/wavpackdec.c: (GST_START_TEST):
+	* tests/check/elements/wavpackparse.c: (GST_START_TEST):
+	  Add GST_OPTION_CFLAGS to CFLAGS when building unit tests, so the
+	  error flags are included and it errors out on compiler warnings
+	  for CVS builds; remove unused variables in various unit tests.
+
 2007-06-19  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/rtspconnection.c: (rtsp_connection_connect),

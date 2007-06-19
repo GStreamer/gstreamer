@@ -148,7 +148,7 @@ GST_END_TEST;
 GST_START_TEST (test_decode_frame_with_broken_header)
 {
   GstElement *wavpackdec;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstBus *bus;
   GstMessage *message;
 
@@ -187,7 +187,7 @@ GST_END_TEST;
 GST_START_TEST (test_decode_frame_with_incomplete_frame)
 {
   GstElement *wavpackdec;
-  GstBuffer *inbuffer, *outbuffer;
+  GstBuffer *inbuffer;
   GstBus *bus;
   GstMessage *message;
 

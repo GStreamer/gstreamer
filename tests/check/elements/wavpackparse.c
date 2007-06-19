@@ -214,8 +214,6 @@ GST_START_TEST (test_parsing_invalid_first_header)
 {
   GstBuffer *inbuffer, *outbuffer;
   int i, num_buffers;
-  GstFormat format = GST_FORMAT_DEFAULT;
-  gint64 pos;
 
   setup_wavpackparse ();
 
