@@ -218,7 +218,8 @@ mp3_caps_create (guint layer, guint channels, guint bitrate, guint samplerate)
   new = gst_caps_new_simple ("audio/mpeg",
       "mpegversion", G_TYPE_INT, 1,
       "layer", G_TYPE_INT, layer,
-      "rate", G_TYPE_INT, samplerate, "channels", G_TYPE_INT, channels, NULL);
+      "rate", G_TYPE_INT, samplerate,
+      "channels", G_TYPE_INT, channels, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   return new;
 }
