@@ -7,21 +7,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.2\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-12-19 16:56+0100\n"
+"POT-Creation-Date: 2007-06-13 12:47+0200\n"
 "PO-Revision-Date: 2004-08-03 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: gst/qtdemux/qtdemux.c:3977
-msgid "This file is corrupt and cannot be played."
-msgstr ""
-
-#: gst/qtdemux/qtdemux.c:3983
-msgid "This file is encrypted and cannot be played."
-msgstr ""
 
 #: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
 #, c-format

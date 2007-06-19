@@ -6,21 +6,13 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.4\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2006-12-19 16:56+0100\n"
+"POT-Creation-Date: 2007-06-13 12:47+0200\n"
 "PO-Revision-Date: 2007-03-09 08:24+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-
-#: gst/qtdemux/qtdemux.c:3977
-msgid "This file is corrupt and cannot be played."
-msgstr "Den här filen är skadad och kan inte spelas upp."
-
-#: gst/qtdemux/qtdemux.c:3983
-msgid "This file is encrypted and cannot be played."
-msgstr "Den här filen är krypterad och kan inte spelas upp."
 
 #: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
 #, c-format
@@ -43,3 +35,9 @@ msgstr "Kunde inte få inställningar från gränssnittsenheten \"%s\"."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunde inte öppna filen \"%s\" för läsning."
+
+#~ msgid "This file is corrupt and cannot be played."
+#~ msgstr "Den här filen är skadad och kan inte spelas upp."
+
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Den här filen är krypterad och kan inte spelas upp."
