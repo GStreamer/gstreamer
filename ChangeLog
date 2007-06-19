@@ -1,3 +1,8 @@
+2007-06-19  Andy Wingo  <wingo@pobox.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c
+	(gst_base_audio_sink_init): Enable pull-mode operation.
+
 2007-06-19  Michael Smith <msmith@fluendo.com>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
