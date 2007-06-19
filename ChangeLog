@@ -1,3 +1,11 @@
+2007-06-19  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	Back to CVS.
+
+	* gst-plugins-bad.doap:
+	Add 0.10.5 to the doap file.
+
 === release 0.10.5 ===
 
 2007-06-19  Jan Schmidt <thaytan@mad.scientist.com>
