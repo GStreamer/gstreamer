@@ -1,3 +1,9 @@
+2007-06-19  Andy Wingo  <wingo@pobox.com>
+
+	* tests/check/pipelines/simple-launch-lines.c
+	(test_state_change_returns): New test, partially disabled until
+	basesink is fixed.
+
 2007-06-19  Wim Taymans  <wim@fluendo.com>
 
 	* plugins/elements/gstmultiqueue.c: (apply_buffer),

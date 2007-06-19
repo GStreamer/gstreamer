@@ -123,6 +123,61 @@ GST_START_TEST (test_2_elements)
 
 GST_END_TEST;
 
+static void
+check_state_change_return (GstElement * pipeline, GstState state,
+    GstStateChangeReturn immediate, GstStateChangeReturn final)
+{
+  GstStateChangeReturn ret;
+
+  ret = gst_element_set_state (pipeline, state);
+  if (ret != immediate)
+    g_critical ("Unexpected set_state return ->%s: %d != %d",
+        gst_element_state_get_name (state), ret, immediate);
+  ret = gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
+  if (ret != final)
+    g_critical ("Unexpected get_state return ->%s: %d != %d",
+        gst_element_state_get_name (state), ret, final);
+}
+
+
+GST_START_TEST (test_state_change_returns)
+{
+  gchar *s;
+  GstElement *pipeline;
+
+  s = "fakesrc can-activate-pull=false ! fakesink";
+  pipeline = gst_parse_launch (s, NULL);
+  fail_unless (GST_IS_PIPELINE (pipeline));
+  check_state_change_return (pipeline, GST_STATE_READY,
+      GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
+  check_state_change_return (pipeline, GST_STATE_PAUSED, GST_STATE_CHANGE_ASYNC,
+      GST_STATE_CHANGE_SUCCESS);
+  check_state_change_return (pipeline, GST_STATE_PLAYING,
+      GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
+  check_state_change_return (pipeline, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS,
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pipeline);
+
+  s = "fakesrc can-activate-push=false ! fakesink can-activate-pull=true";
+  pipeline = gst_parse_launch (s, NULL);
+  fail_unless (GST_IS_PIPELINE (pipeline));
+  check_state_change_return (pipeline, GST_STATE_READY,
+      GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
+#if 0
+  /* FIXME, there is no need to preroll in pull-mode pipelines. However the
+   * current basesink code returns ASYNC always when going to PAUSED */
+  check_state_change_return (pipeline, GST_STATE_PAUSED,
+      GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
+  check_state_change_return (pipeline, GST_STATE_PLAYING,
+      GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
+#endif
+  check_state_change_return (pipeline, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS,
+      GST_STATE_CHANGE_SUCCESS);
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 G_GNUC_UNUSED
 GST_START_TEST (test_tee)
 {
@@ -271,6 +326,7 @@ simple_launch_lines_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_2_elements);
+  tcase_add_test (tc_chain, test_state_change_returns);
   /* tcase_add_test (tc_chain, test_tee); FIXME */
   tcase_add_test (tc_chain, test_stop_from_app);
   return s;
