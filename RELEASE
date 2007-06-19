@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plug-ins 0.10.5 "The Path of Thorns"
+Release notes for GStreamer Good Plug-ins 0.10.6 "Wobble Board"
         
 
 
@@ -54,87 +54,119 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
+      * Much improved RTSP/RTP and V4l2 support
+      * New plugins - audiopanorama, audioinvert, audiodynamic, audioamplify
+      * OSX and Windows video/audio support elements moved from Bad Plugins
+      * qtdemux, videocrop and wavpack elements moved from Bad Plugins
+      * Fixes in avi and matroska muxing
+      * Fixes in wavparse, sunaudio, AVI demuxing, ID3 tag handling
+      * gamma element ported to 0.10
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
-      * RTP/RTSP improvements
-      * Fixes in OSS support
-      * Addition of the audiopanorama element
-      * Improvements in AVI playback
-      * Annodex playback fixes
-      * Support FLAC in OGG and Matroska
-      * Fixes in the Speex decoder
-      * V4L2 source moved from Bad Plugins
-      * SMPTE element ported to 0.10
-      * GStreamer Data Protocol (GDP) Payloader and Depayloader elements added
-      * Many other bug-fixes
 
 Bugs fixed in this release
      
-      * 336465 : [patch] Streaming support for avidemuxer
-      * 349207 : [PLUGIN-ADD] audiopanorama
-      * 341278 : [autoaudiosink] should fallback to fakesink
-      * 342950 : Implement device profiles in autoaudiosink/autoaudiosrc
-      * 348233 : dv1394src crashes with libavc1394 0.5.3 - cause known
-      * 349015 : [sunaudio] open source with O_NONBLOCK
-      * 349894 : RTSP Multicast
-      * 351347 : --disable-schemas-install now works too well
-      * 351794 : [id3demux] try harder to extract wrongly marked strings
-      * 352577 : [avidemux] regression in CVS with Elephant's Dream
-      * 355210 : Sample pipeline from the documentation doesn't work properly
-      * 356142 : GST Sun Audio Mixer doesn't set only Output Track as Mast...
-      * 356147 : [avimux] duration in header not correct for big avi ( > 2 ...
-      * 357592 : Avoid compiler warnings with uClibc and -Werror
-      * 361637 : h263 variant missing from RTP (de)payloaders' caps
-      * 361639 : MPA payloader's payload number is incorrect
-      * 362603 : Fixes compiling with forte: warning clean up (part 4)
-      * 362673 : Playback with 4Front OSS driver not working due to blocki...
-      * 366492 : add windows vs8 project files
-      * 369621 : [avidemux] Out-of-sync playback with VBR MP3 audio
-      * 372021 : flxdec has wrong classification
-      * 374213 : Seeking with LADSPA plug-ins fails
-      * 374479 : [PATCH] videomixer memleak fix and enhancement
-      * 374737 : [matroskademux] doesn't recognise opaque " A_AAC " codec ID
-      * 376594 : id3demux crashes when reading compressed ID3 frames
-      * 379433 : [PATCH] avidemux audio pad reports wrong position upon query
-      * 379792 : Remove memcpy in multipartmux and fix RFC compliance
-      * 379918 : Doesn't compile with newer libcaca versions (0.99.beta4+)
-      * 380199 : [matroskademux] Wrong framerate conversion
-      * 380825 : make avimux accept video/mpeg in versions 1, 2 and 4
-      * 381857 : [id3v2mux] crashes trying to write empty frames
-      * 382179 : Videomixer shouldn't reset position to 0 when the caps ar...
-      * 382277 : multipartmux modifies buffer timestamp
-      * 382982 : [apedemux] Fails to read track gain or other doubles
-      * 383001 : [PATCH] if using multicast in udpsrc, bind to the multica...
-      * 383043 : Videomixer can crash when adding/removing pads  while pla...
-      * 383596 : mixer doesnot work if set AUDIODEV on solaris
-      * 384587 : libcaca check breaks cross-compile
-      * 385031 : [id3demux] autoplug loop if first buffer has nonzero offs...
-      * 385623 : [quarktv] crash when plugged dynamically into a pipeline
-      * 343348 : [matroska] add support for vobsub subtitles
-      * 345449 : [icydemux] Internet radio hangs when connecting to radio....
-      * 348762 : [ID3v2] comment frame extraction/writing doesn't retain d...
-      * 351116 : 'make check' tries to run annodex unit tests even if anno...
-      * 352110 : [flacdec] no support for ogg flac
-      * 366155 : [matroskademux] Several problems in encoding handling code
-      * 374658 : [matroskamux] add tag writing support and implement relea...
-      * 378184 : g-s-p crash due to incorrect free from do_toggle_element
-      * 360673 : [PATCH] Stuttering with SunAudio Sink
-      * 349068 : multipart demuxer improvements
-      * 350006 : [LADSPA] after changing state from PLAYING to READY/NULL,...
-      * 350340 : CMML test cases and small fixes
-      * 350785 : [ossmixer] provides no way to set mixer device
-      * 353908 : Error seeking at the beginning of a CMML file
-      * 356596 : [wavparse] Does not support GSM encoded audio
-      * 358156 : in udpsrc.c gst_udpsrc_create function read command could...
-      * 361252 : Memory leak in udpsrc
-      * 364958 : [avidemux] broken timestamping in streaming mode
-      * 367221 : [PATCH] videomixer does not mix for some framerate combin...
-      * 368162 : iLBc rtp payloaders and depayloaders not compiled
-      * 377792 : rtspsrc tries to stream application/x-wms-rtx
-      * 383323 : smpte doesn't handle sink1 and sink2 correctly
-      * 383726 : [audiopanorama] only transforms half of the samples in fl...
-      * 349901 : [LADSPA] gst_element_class_add_pad_template: assertion `g...
-      * 375476 : v4l2src cannot close /dev/video0
+      * 392189 : [esdsink] pipeline hung in state change from PAUSED to PL...
+      * 407590 : crash using gconfaudiosink
+      * 439255 : [rtspsrc] crash on unsupported transport
+      * 441118 : Incorrect caps in G.711 RTP depayloaders
+      * 323471 : [PLUGIN-MOVE] osxaudio
+      * 407780 : avimux does not handle video/x-h264
+      * 316203 : MinGW: udp and rtsp plugin should be disabled on windows
+      * 340362 : [PATCH] new plugin - hardlimiter
+      * 342463 : [ximagesrc] performance improvement
+      * 347806 : [v4l2src] try_capture(): Error getting buffer information...
+      * 350296 : [udpsrc] add property to remove extra headers from buffers
+      * 354007 : [PLUGIN-MOVE] videocrop should be moved to -good
+      * 356692 : wavparse drops final sample in most files
+      * 358040 : Fix speex rtp (de)payloader
+      * 362566 : [dv1394src] Random segfault and kernel oopses
+      * 374489 : rtspdec never sends out RTCP Receiver reports
+      * 377306 : [sunaudiomixer] mixer track labels not localized
+      * 379298 : [avimux] allow multiple audio streams
+      * 392620 : gnome-sound-record can not be started on sunray client on...
+      * 393427 : error/warnings when compiling with mingw
+      * 395688 : playbin is unable to play rtsp stream for 3gp from Darwin...
+      * 396057 : [audiofx] New audioinvert element
+      * 397162 : [audiofx] New element audioamplify
+      * 397946 : [audiopanorama] another trivial docs fix
+      * 398299 : [smpte] crashes if fed empty buffers from fakesrc
+      * 398325 : [smpte] Segfaults with big width/height
+      * 399338 : Hang in PREROLLING when trying to play a specially crafte...
+      * 399825 : Tags don't work properly for shout2send plugin
+      * 406042 : [v4l2src] fails with radio chips
+      * 407369 : [v4l2src] Wrong way of EIO error handling
+      * 407793 : memory leaks of sdpmessage.c
+      * 407797 : bug of rtsp_url_parse() in gst/rtsp/rtspurl.c
+      * 408544 : totem crashed with SIGSEGV to rtsp_ext_wms_configure_stre...
+      * 410997 : Fails to build with -z defs
+      * 412597 : Simplify GstSunAudioSrc
+      * 412608 : [avidemux] flow return aggregation can ignore errors
+      * 414168 : Mixes spaces and tabs in Makefile.am defs
+      * 416445 : [avidemux] seeking regressions
+      * 416727 : [v4l2src] typo in printf format string
+      * 416728 : [v4l2src] typo in translated strings
+      * 417729 : [autoaudiosink] plugs alsaspdifsink, breaking playbin
+      * 419338 : [wavparse] critical warning from plugin viewer
+      * 420208 : Probably typo
+      * 426044 : [flacenc] broken files when used with oggmux
+      * 427990 : [rtph264depay] sprop-parameter-set erros
+      * 428611 : [ximagesrc] segfaults when used from a non-X terminal
+      * 428901 : [icydemux]  broken tags for non-UTF-8/ISO-8859-1-using ra...
+      * 429319 : [alphacolor] distorts png images without alpha channel
+      * 429666 : [goom] totem skips mp3 (while Rhythmbox doesn't)
+      * 430228 : [sunaudio] copyright bug
+      * 430632 : memory problem
+      * 430804 : [PATCH] navseek only seeks (sort-of) partially
+      * 431282 : broken RTP depayloaders
+      * 433119 : wavparse causes skipping for MPEG-encoded RIFF Wav files ...
+      * 433135 : [wavparse] regression in CVS with mp3-in-wav
+      * 433530 : udpsrc read of size 0
+      * 434824 : rtp mp4 payloader doesn't handle newsegments and flush ev...
+      * 436910 : [videomixer] wrong strides with odd input width
+      * 437499 : [wavparse] can't handle WAV file with 'LIST'  header chunk
+      * 437670 : Improvements for rtsptransport.[ch]
+      * 437692 : Some more fixes for the RTSP support
+      * 438926 : invalid comparison of pointer with string literal
+      * 438940 : [rtph263ppay] Support for Segment Fragmentation based on ...
+      * 440127 : Autoaudiosink does extra switching between null and ready...
+      * 440203 : Support multiple RTSP headers of the same type
+      * 440928 : Improved RTSP version support, and added Date header
+      * 441408 : speexdec plays incorrectly files made with nframes=4
+      * 442535 : [wavenc] Doesn't handle width!=depth files with audio/x-r...
+      * 442677 : WideBand AMR payloaders
+      * 443081 : [wavparse] fails to post error on FLOW_NOT_LINKED
+      * 445905 : ximagesrc disregards display_name property
+      * 446981 : error during the compilation of rtspconnection.c
+      * 447210 : wrong length calculation for codec_data
+      * 447458 : [qtdemux] export AMRSpecificBox as codec_data
+      * 385887 : [flac] make work with libflac-1.1.3
+      * 404646 : [audiofx] Compressor/Expander element
+      * 424527 : [auparse] don't convert non-native endianness floats in t...
+      * 387121 : [matroskamux] Can't mux raw audio
+      * 392855 : [matroska] plugin must link against zlib (error with MinGW)
+      * 394851 : [audiopanorama] Some trivial docs fixes
+      * 394859 : [audiopanorama] New simple method for adjusting the panorama
+      * 398086 : [smpte] crashes if input dimensions differ
+      * 406018 : 64bit uncleanness in gstavimux.c
+      * 407057 : [wavparse] leaks contents of every buffer pushed when in ...
+      * 407349 : [id3demux] wrongly interprets TDAT as year
+      * 350278 : [rtpmp2tdepay] Add support for proprietary headers
+      * 380895 : A couple of corrections and improvements for the RTSP sup...
+      * 380944 : [dvdec] Doesn't set pixel-aspect-ratio
+      * 394977 : multipartmux not honoring flow return
+      * 403956 : Add float32 support for " level " element
+      * 405213 : mp3 plays too fast in totem or rhythmbox
+      * 407006 : [goom] odd adapter behaviour
+      * 412704 : [PATCH] gamma filter ported to 0.10
+      * 414887 : [gconf] gconfaudiosink doesn't set GST_ELEMENT_IS_SINK un...
+      * 415446 : [avidemux] fails parsing mjpeg file from digital camera
+      * 417792 : rtp depayloader for AAC
+      * 423304 : file descriptor closed in udpsrc and dynudpsink
+      * 423782 : Code for H264 payloader
+      * 428182 : Current CVS generates compiler warnings
+      * 429329 : [videobox] add support for AYUV input
+      * 442874 : Multipartmux assumes caps == mime
 
 Download
 
@@ -164,40 +196,46 @@ Applications
   
 Contributors to this release
     
-      * Alessandro Decina
+      * Alex Lancaster
       * Andy Wingo
       * Antoine Tremblay
       * Brian Cameron
-      * Darren Kenny
+      * Christian Schallerr
+      * Christophe Dehais
+      * Daniel Charles
       * David Schleef
+      * Dejan Sakelšak
       * Edgard Lima
       * Edward Hervey
-      * Fredrik Persson
-      * Frédéric Riss
+      * Eric Anholt
       * Jan Schmidt
-      * Jens Granseuer
-      * Jerome Alet
-      * Jerry Tan
       * Jonas Holmberg
       * Jonathan Matthew
-      * Josep Torra Valles
+      * Josh Coalson
+      * Julien MOUTTE
+      * Laurent Glayal
+      * Loïc Minier
       * Lutz Mueller
       * Mark Nauwelaerts
-      * Michal Benes
+      * Michael Smith
       * Peter Kjellerstedt
-      * Philippe Kalaf
       * René Stadler
-      * Rob Taylor
       * Sebastian Dröge
-      * Sebastien Cote
-      * Sergey Scobich
+      * Sebastien Moutte
       * Sjoerd Simons
+      * Snaik
       * Stefan Kost
+      * Sébastien Moutte
       * Thijs Vermeir
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Vijay Santhanam
-      * Ville Syrjala
+      * Tommi Myöhänen
+      * Vincent Torri
       * Wim Taymans
-      * Yves Lefebvre
+      * Zaheer Abbas Merali
+      * Charles
+      * Daniel Fischer
+      * Jerry Tan
+      * jp.Liu
+      * Zhangfei Gao
  

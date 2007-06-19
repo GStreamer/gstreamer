@@ -16888,3 +16888,43 @@
 <DEFAULT>1</DEFAULT>
 </ARG>
 
+<ARG>
+<NAME>GstVideoCrop::bottom</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bottom</NICK>
+<BLURB>Pixels to crop at bottom.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoCrop::left</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Left</NICK>
+<BLURB>Pixels to crop at left.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoCrop::right</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Right</NICK>
+<BLURB>Pixels to crop at right.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoCrop::top</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Top</NICK>
+<BLURB>Pixels to crop at top.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+

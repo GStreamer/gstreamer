@@ -1,3 +1,10 @@
+=== release 0.10.6 ===
+
+2007-06-18  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.6, "Wobble Board"
+
 2007-06-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/rtsp/rtspconnection.c: (rtsp_connection_connect),
@@ -2449,7 +2456,6 @@
 	rtsp://user:pass@hostname/rtspstream work on hosts that require
 	authentication.
 
->>>>>>> 1.2755
 2007-02-22  Edgard Lima <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2object.c:
