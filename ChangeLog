@@ -1,3 +1,9 @@
+2007-06-19  Michael Smith <msmith@fluendo.com>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	  Change minimum rate back to 1000 to allow low-sample-rate wav files
+	  to play back.
+
 2007-06-17  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/vi.po:
