@@ -1,6 +1,23 @@
 2007-06-19  Andy Wingo  <wingo@pobox.com>
 
 	* tests/check/pipelines/simple-launch-lines.c
+	(test_state_change_returns): Enable pull-mode tests now that
+	basesink has been fixed.
+
+	* libs/gst/base/gstbasesink.c (gst_base_sink_needs_preroll):
+	Changed from gst_base_sink_is_prerolled, reversing the sense of
+	the return value. Returns FALSE also if the sink is in pull mode,
+	in which case it needs no preroll.
+	(gst_base_sink_query, gst_base_sink_change_state): Update for
+	needs_preroll change.
+	(gst_base_sink_change_state): Add a case for READY_TO_PAUSED after
+	chaining up, in which we return SUCCESS directly if we activated
+	in pull mode instead of ASYNC. Involves countering an async_start
+	message sent before chaining up; not sure if this is correct, in
+	an ideal world we only send async-start when activating in push
+	mode.
+
+	* tests/check/pipelines/simple-launch-lines.c
 	(test_state_change_returns): New test, partially disabled until
 	basesink is fixed.
 

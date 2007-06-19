@@ -2083,12 +2083,13 @@ gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
 
 /* must be called with PREROLL_LOCK */
 static gboolean
-gst_base_sink_is_prerolled (GstBaseSink * basesink)
+gst_base_sink_needs_preroll (GstBaseSink * basesink)
 {
-  gboolean res;
+  gboolean is_prerolled, res;
 
-  res = basesink->have_preroll || basesink->eos;
-  GST_DEBUG_OBJECT (basesink, "have_preroll: %d, EOS: %d => prerolled: %d",
+  is_prerolled = basesink->have_preroll || basesink->eos;
+  res = !is_prerolled && basesink->pad_mode != GST_ACTIVATE_PULL;
+  GST_DEBUG_OBJECT (basesink, "have_preroll: %d, EOS: %d => needs preroll: %d",
       basesink->have_preroll, basesink->eos, res);
   return res;
 }
@@ -2763,7 +2764,7 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       GstClockTime min, max;
 
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
-      if (!gst_base_sink_is_prerolled (basesink)) {
+      if (gst_base_sink_needs_preroll (basesink)) {
         GST_DEBUG_OBJECT (basesink, "not prerolled yet, can't report latency");
         res = FALSE;
         goto done;
@@ -2852,7 +2853,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
-      if (gst_base_sink_is_prerolled (basesink)) {
+      if (!gst_base_sink_needs_preroll (basesink)) {
         /* no preroll needed anymore now. */
         GST_DEBUG_OBJECT (basesink, "PAUSED to PLAYING, don't need preroll");
         basesink->playing_async = FALSE;
@@ -2890,6 +2891,19 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
   }
 
   switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* note that this is the upward case, which doesn't follow most
+         patterns */
+      if (basesink->pad_mode == GST_ACTIVATE_PULL) {
+        GST_DEBUG_OBJECT (basesink, "basesink activated in pull mode, "
+            "returning SUCCESS directly");
+        GST_PAD_PREROLL_LOCK (basesink->sinkpad);
+        gst_element_post_message (GST_ELEMENT_CAST (basesink),
+            gst_message_new_async_done (GST_OBJECT_CAST (basesink)));
+        GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
+        ret = GST_STATE_CHANGE_SUCCESS;
+      }
+      break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED");
       /* FIXME, make sure we cannot enter _render first */
@@ -2911,7 +2925,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
 
       /* if we don't have a preroll buffer we need to wait for a preroll and
        * return ASYNC. */
-      if (gst_base_sink_is_prerolled (basesink)) {
+      if (!gst_base_sink_needs_preroll (basesink)) {
         GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, we are prerolled");
         basesink->playing_async = FALSE;
       } else {

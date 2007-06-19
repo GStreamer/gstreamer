@@ -154,6 +154,9 @@ GST_START_TEST (test_state_change_returns)
       GST_STATE_CHANGE_SUCCESS);
   check_state_change_return (pipeline, GST_STATE_PLAYING,
       GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
+  /* can't check PAUSED, it's not deterministic */
+  check_state_change_return (pipeline, GST_STATE_READY,
+      GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
   check_state_change_return (pipeline, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS,
       GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (pipeline);
@@ -163,14 +166,14 @@ GST_START_TEST (test_state_change_returns)
   fail_unless (GST_IS_PIPELINE (pipeline));
   check_state_change_return (pipeline, GST_STATE_READY,
       GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
-#if 0
-  /* FIXME, there is no need to preroll in pull-mode pipelines. However the
-   * current basesink code returns ASYNC always when going to PAUSED */
   check_state_change_return (pipeline, GST_STATE_PAUSED,
       GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
   check_state_change_return (pipeline, GST_STATE_PLAYING,
       GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
-#endif
+  check_state_change_return (pipeline, GST_STATE_PAUSED,
+      GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
+  check_state_change_return (pipeline, GST_STATE_READY,
+      GST_STATE_CHANGE_SUCCESS, GST_STATE_CHANGE_SUCCESS);
   check_state_change_return (pipeline, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS,
       GST_STATE_CHANGE_SUCCESS);
   gst_object_unref (pipeline);
