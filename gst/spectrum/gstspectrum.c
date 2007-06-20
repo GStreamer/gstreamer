@@ -396,7 +396,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   GST_LOG_OBJECT (spectrum, "input size: %d bytes", GST_BUFFER_SIZE (in));
 
-  gst_adapter_push (spectrum->adapter, gst_buffer_ref (in));
+  /* can we do this nicer? */
+  gst_adapter_push (spectrum->adapter, gst_buffer_copy (in));
   /* required number of bytes */
   wanted = spectrum->channels * SPECTRUM_WINDOW_LEN * sizeof (gint16);
   /* FIXME: 4.0 was 2.0 before, but that include the mirrored spectrum */
@@ -422,7 +423,7 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     gst_spectrum_fix_loud (spectrum->loud, spectrum->re, spectrum->im,
         SPECTRUM_WINDOW_LEN, 0);
 
-    /* resample to requested number of bands */
+    /* resample to requested number of bands and offset by threshold */
     for (i = 0, pos = 0.0; i < spectrum->bands; i++, pos += step) {
       if (spectrum->loud[(gint) pos] > spectrum->threshold) {
         spect[i] = spectrum->loud[(gint) pos] - spectrum->threshold;
