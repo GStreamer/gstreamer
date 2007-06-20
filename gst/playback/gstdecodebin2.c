@@ -838,10 +838,14 @@ any_caps:
 setup_caps_delay:
   {
     /* connect to caps notification */
-    if (group)
+    if (group) {
+      GROUP_MUTEX_LOCK (group);
+      group->nbdynamic++;
+      GST_LOG ("Group %p has now %d dynamic elements", group, group->nbdynamic);
+      GROUP_MUTEX_UNLOCK (group);
       g_signal_connect (G_OBJECT (pad), "notify::caps",
           G_CALLBACK (caps_notify_group_cb), group);
-    else
+    } else
       g_signal_connect (G_OBJECT (pad), "notify::caps",
           G_CALLBACK (caps_notify_cb), dbin);
     return;

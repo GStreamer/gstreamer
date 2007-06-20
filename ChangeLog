@@ -1,3 +1,11 @@
+2007-06-20  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstdecodebin2.c: (analyze_new_pad):
+	When handling a delayed-caps notification case, mark
+	the group as dynamic so that the nbdynamic count is
+	incremented and decremented correctly. Fixes: #449156
+	Patch by: Wim Taymans <wim@fluendo.com>
+
 2007-06-19  Andy Wingo  <wingo@pobox.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c
