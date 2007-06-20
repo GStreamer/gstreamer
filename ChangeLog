@@ -1,5 +1,10 @@
 2007-06-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/equalizer/gstiirequalizer.c:
+	  Document parameter mapping.
+
+2007-06-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_event),
 	(gst_spectrum_transform_ip):
 	  Fix leaking buffers.
