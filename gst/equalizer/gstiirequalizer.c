@@ -311,9 +311,17 @@ gst_iir_equalizer_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-/* args are in the range [-1 ... 1] with 0 meaning "no action"
- * convert to [-0.2 ... 1] with 0 meaning no action via the function
- * f(x) = 0.25 * 5 ^ x - 0.25
+/*
+ * converts gain values to scale factors.
+ *
+ * arguments are in the range [-1 ... 1] with 0 meaning "no action"
+ * results are in the range [-0.2 ... 1] with 0 meaning "no action"
+ * via the function
+ *   f(x) = 0.25 * 5 ^ x - 0.25
+ *
+ * visualize via gnuplot:
+ *   set xrange [-1:1]
+ *   plot 0.25 * exp (log (5) * x) - 0.25
  */
 static gdouble
 arg_to_scale (gdouble arg)
