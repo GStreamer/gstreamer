@@ -51,6 +51,7 @@ check_PROGRAMS = \
 	elements/rganalysis \
 	elements/rglimiter \
 	elements/rgvolume \
+	elements/spectrum \
 	elements/y4menc
 
 TESTS = $(check_PROGRAMS)

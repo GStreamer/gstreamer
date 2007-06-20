@@ -1,5 +1,16 @@
 2007-06-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_event),
+	(gst_spectrum_transform_ip):
+	  Fix leaking buffers.
+	  
+	* tests/check/Makefile.am:
+	* tests/check/elements/spectrum.c: (setup_spectrum),
+	(cleanup_spectrum), (GST_START_TEST), (spectrum_suite), (main):
+	  Add simple test for spectrum element.
+
+2007-06-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/amrwb/gstamrwbdec.c: (gst_amrwbdec_base_init),
 	(gst_amrwbdec_class_init), (gst_amrwbdec_finalize),
 	(gst_amrwbdec_event), (gst_amrwbdec_chain),
