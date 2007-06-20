@@ -1,3 +1,8 @@
+2007-06-20  Michael Smith <msmith@fluendo.com>
+
+	* gst/rtp/gstrtpdepay.c:
+	  Fix description - rtpdepay is not a payloader.
+
 2007-06-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_samples),

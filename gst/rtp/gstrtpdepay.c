@@ -25,7 +25,7 @@ GST_DEBUG_CATEGORY_STATIC (rtpdepay_debug);
 
 /* elementfactory information */
 static const GstElementDetails rtpdepay_details =
-GST_ELEMENT_DETAILS ("RTP payloader",
+GST_ELEMENT_DETAILS ("RTP depayloader",
     "Codec/Depayloader/Network",
     "Accepts raw RTP and RTCP packets and sends them forward",
     "Wim Taymans <wim@fluendo.com>");
