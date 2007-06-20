@@ -18,7 +18,8 @@
  */
 
 /*
- * gst-launch filesrc locationabc.amr ! audio/AMR-WB ! amrwbdec ! audioresample ! audioconvert ! alsasink
+ * library can be found at http://www.penguin.cz/~utx/amr
+ * gst-launch filesrc location=abc.amr ! amrwbparse ! amrwbdec ! audioresample ! audioconvert ! alsasink
  */
 
 #ifdef HAVE_CONFIG_H
@@ -56,6 +57,8 @@ static gboolean gst_amrwbdec_setcaps (GstPad * pad, GstCaps * caps);
 static GstStateChangeReturn gst_amrwbdec_state_change (GstElement * element,
     GstStateChange transition);
 
+static void gst_amrwbdec_finalize (GObject * object);
+
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_amrwbdec_debug, "amrwbdec", 0, "AMR-WB audio decoder");
 
@@ -82,7 +85,10 @@ gst_amrwbdec_base_init (gpointer klass)
 static void
 gst_amrwbdec_class_init (GstAmrwbDecClass * klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  object_class->finalize = gst_amrwbdec_finalize;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrwbdec_state_change);
 }
@@ -114,6 +120,19 @@ gst_amrwbdec_init (GstAmrwbDec * amrwbdec, GstAmrwbDecClass * klass)
   amrwbdec->rate = 0;
   amrwbdec->duration = 0;
   amrwbdec->ts = -1;
+}
+
+static void
+gst_amrwbdec_finalize (GObject * object)
+{
+  GstAmrwbDec *amrwbdec;
+
+  amrwbdec = GST_AMRWBDEC (object);
+
+  gst_adapter_clear (amrwbdec->adapter);
+  g_object_unref (amrwbdec->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean
@@ -171,13 +190,47 @@ gst_amrwbdec_event (GstPad * pad, GstEvent * event)
       gst_adapter_clear (amrwbdec->adapter);
       ret = gst_pad_push_event (amrwbdec->srcpad, event);
       break;
+    case GST_EVENT_NEWSEGMENT:
+    {
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time;
+      gboolean update;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+
+      /* we need time for now */
+      if (format != GST_FORMAT_TIME)
+        goto newseg_wrong_format;
+
+      GST_DEBUG_OBJECT (amrwbdec,
+          "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
+          ", stop %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
+          update, rate, arate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+          GST_TIME_ARGS (time));
+
+      /* now configure the values */
+      gst_segment_set_newsegment_full (&amrwbdec->segment, update,
+          rate, arate, format, start, stop, time);
+      ret = gst_pad_push_event (amrwbdec->srcpad, event);
+    }
+      break;
     default:
       ret = gst_pad_push_event (amrwbdec->srcpad, event);
       break;
   }
+done:
   gst_object_unref (amrwbdec);
 
   return ret;
+
+  /* ERRORS */
+newseg_wrong_format:
+  {
+    GST_DEBUG_OBJECT (amrwbdec, "received non TIME newsegment");
+    goto done;
+  }
 }
 
 static GstFlowReturn
@@ -188,14 +241,19 @@ gst_amrwbdec_chain (GstPad * pad, GstBuffer * buffer)
 
   amrwbdec = GST_AMRWBDEC (gst_pad_get_parent (pad));
 
-  if (amrwbdec->rate == 0 || amrwbdec->channels == 0) {
-    GST_ELEMENT_ERROR (amrwbdec, STREAM, TYPE_NOT_FOUND, (NULL),
-        ("Decoder is not initialized"));
-    ret = GST_FLOW_NOT_NEGOTIATED;
-    goto done;
+  if (amrwbdec->rate == 0 || amrwbdec->channels == 0)
+    goto not_negotiated;
+
+  /* discontinuity, don't combine samples before and after the
+   * DISCONT */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
+    gst_adapter_clear (amrwbdec->adapter);
+    amrwbdec->ts = -1;
+    amrwbdec->discont = TRUE;
   }
 
-
+  /* take latest timestamp, FIXME timestamp is the one of the
+   * first buffer in the adapter. */
   if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
     amrwbdec->ts = GST_BUFFER_TIMESTAMP (buffer);
 
@@ -203,53 +261,62 @@ gst_amrwbdec_chain (GstPad * pad, GstBuffer * buffer)
 
   while (TRUE) {
     GstBuffer *out;
-    UWord8 *data;
-    Word16 block, mode;
+    const guint8 *data;
+    gint block, mode;
 
-
+    /* need to peek data to get the size */
     if (gst_adapter_available (amrwbdec->adapter) < 1)
       break;
-
-    data = (UWord8 *) gst_adapter_peek (amrwbdec->adapter, 1);
+    data = gst_adapter_peek (amrwbdec->adapter, 1);
 
     /* get size */
-    mode = (Word16) (data[0] >> 3) & 0x0F;
+    mode = (data[0] >> 3) & 0x0F;
     block = block_size[mode];
 
-    if (gst_adapter_available (amrwbdec->adapter) < block) {
-      break;
-    }
+    GST_DEBUG_OBJECT (amrwbdec, "mode %d, block %d", mode, block);
 
-    /* the library seems to write into the source data, hence
-     * the copy. */
-    data = (UWord8 *) gst_adapter_take (amrwbdec->adapter, block);
+    if (!block || gst_adapter_available (amrwbdec->adapter) < block)
+      break;
+
+    /* the library seems to write into the source data, hence the copy. */
+    data = gst_adapter_take (amrwbdec->adapter, block);
 
     /* get output */
-    out = gst_buffer_new_and_alloc (sizeof (Word16) * L_FRAME16k);
+    out = gst_buffer_new_and_alloc (sizeof (gint16) * L_FRAME16k);
 
     GST_BUFFER_DURATION (out) = amrwbdec->duration;
     GST_BUFFER_TIMESTAMP (out) = amrwbdec->ts;
 
     if (amrwbdec->ts != -1)
-      amrwbdec->ts += GST_BUFFER_DURATION (out);
+      amrwbdec->ts += amrwbdec->duration;
+    if (amrwbdec->discont) {
+      GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
+      amrwbdec->discont = FALSE;
+    }
 
     gst_buffer_set_caps (out, GST_PAD_CAPS (amrwbdec->srcpad));
 
     /* decode */
-    D_IF_decode (amrwbdec->handle, data,
+    D_IF_decode (amrwbdec->handle, (Word8 *) data,
         (Word16 *) GST_BUFFER_DATA (out), _good_frame);
 
-    g_free (data);
+    g_free ((gpointer) data);
 
-    /* play */
+    /* send out */
     ret = gst_pad_push (amrwbdec->srcpad, out);
   }
-
-done:
 
   gst_object_unref (amrwbdec);
   return ret;
 
+  /* ERRORS */
+not_negotiated:
+  {
+    GST_ELEMENT_ERROR (amrwbdec, STREAM, TYPE_NOT_FOUND, (NULL),
+        ("Decoder is not initialized"));
+    gst_object_unref (amrwbdec);
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstStateChangeReturn
@@ -270,6 +337,8 @@ gst_amrwbdec_state_change (GstElement * element, GstStateChange transition)
       amrwbdec->rate = 0;
       amrwbdec->channels = 0;
       amrwbdec->ts = -1;
+      amrwbdec->discont = TRUE;
+      gst_segment_init (&amrwbdec->segment, GST_FORMAT_TIME);
       break;
     default:
       break;

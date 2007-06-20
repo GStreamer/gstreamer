@@ -1,3 +1,16 @@
+2007-06-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/amrwb/gstamrwbdec.c: (gst_amrwbdec_base_init),
+	(gst_amrwbdec_class_init), (gst_amrwbdec_finalize),
+	(gst_amrwbdec_event), (gst_amrwbdec_chain),
+	(gst_amrwbdec_state_change):
+	* ext/amrwb/gstamrwbdec.h:
+	* ext/amrwb/gstamrwbparse.c: (gst_amrwbparse_base_init),
+	(gst_amrwbparse_pull_header), (gst_amrwbparse_loop):
+	  Add newsegment and discont handling. Some code cleanups. Don't leak
+	  the adapter, unref it in a new finalize method instead. Sync the
+	  parser with the amr-nb changes.
+
 2007-06-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
