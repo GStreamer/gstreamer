@@ -1,3 +1,9 @@
+2007-06-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c:
+	(gst_ffmpeg_formatid_get_codecids):
+	  Enable mjpeg-codec in more containers.
+
 2007-06-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ffmpeg/gstffmpeg.c: (gst_ffmpeg_log_callback):
