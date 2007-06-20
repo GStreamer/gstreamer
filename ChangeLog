@@ -1,3 +1,10 @@
+2007-06-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_samples),
+	(qtdemux_video_caps):
+	* gst/qtdemux/qtdemux_fourcc.h:
+	  Add MJPG to the variants of motion jpeg.
+
 2007-06-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/Makefile.am:

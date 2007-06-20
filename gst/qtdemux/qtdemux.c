@@ -2381,7 +2381,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
       n = QT_UINT32 ((guint8 *) stts->data + 16 + 8 * i);
       duration = QT_UINT32 ((guint8 *) stts->data + 16 + 8 * i + 4);
       for (j = 0; j < n; j++) {
-        GST_INFO_OBJECT (qtdemux, "sample %d: timestamp %" GST_TIME_FORMAT,
+        GST_DEBUG_OBJECT (qtdemux, "sample %d: timestamp %" GST_TIME_FORMAT,
             index, GST_TIME_ARGS (timestamp));
 
         samples[index].timestamp = timestamp;
@@ -2479,7 +2479,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
           samples[j].size = samples_per_chunk;
         }
 
-        GST_INFO_OBJECT (qtdemux, "sample %d: timestamp %" GST_TIME_FORMAT
+        GST_DEBUG_OBJECT (qtdemux, "sample %d: timestamp %" GST_TIME_FORMAT
             ", size %u", j, GST_TIME_ARGS (timestamp), samples[j].size);
 
         samples[j].timestamp = timestamp;
@@ -3705,6 +3705,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, guint32 fourcc,
       return gst_caps_from_string ("image/jpeg");
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'a'):
     case GST_MAKE_FOURCC ('A', 'V', 'D', 'J'):
+    case GST_MAKE_FOURCC ('M', 'J', 'P', 'G'):
       _codec ("Motion-JPEG");
       return gst_caps_from_string ("image/jpeg");
     case GST_MAKE_FOURCC ('m', 'j', 'p', 'b'):

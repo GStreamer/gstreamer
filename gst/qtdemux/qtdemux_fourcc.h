@@ -126,7 +126,7 @@ G_BEGIN_DECLS
 #define FOURCC_alis     GST_MAKE_FOURCC('a','l','i','s')
 #define FOURCC_url_     GST_MAKE_FOURCC('u','r','l',' ')
 #define FOURCC_frma     GST_MAKE_FOURCC('f','r','m','a')
-#define FOURCC_ctts	GST_MAKE_FOURCC('c','t','t','s')
+#define FOURCC_ctts     GST_MAKE_FOURCC('c','t','t','s')
 
 G_END_DECLS
 
