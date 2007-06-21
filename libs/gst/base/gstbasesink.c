@@ -211,13 +211,7 @@ struct _GstBaseSinkPrivate
 #define UPDATE_RUNNING_AVG_P(avg,val) DO_RUNNING_AVG(avg,val,16)
 #define UPDATE_RUNNING_AVG_N(avg,val) DO_RUNNING_AVG(avg,val,4)
 
-/* BaseSink signals and properties */
-enum
-{
-  /* FILL ME */
-  SIGNAL_HANDOFF,
-  LAST_SIGNAL
-};
+/* BaseSink properties */
 
 #define DEFAULT_SIZE 1024
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE /* fixme: enable me */
