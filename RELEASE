@@ -76,7 +76,6 @@ Features of this release
       * libsndfile output ported to 0.10
       * mpegvideoparse ported to 0.10 and improved
       * switch element ported to 0.10
-      * VCD source element ported to 0.10
       * AMR-WB support fixes
       * MIDI renderer plugin based on timidity
       * Windows and OS/X output plugins moved to the Good module

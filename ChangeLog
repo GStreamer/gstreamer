@@ -1,3 +1,9 @@
+2007-06-21  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* RELEASE:
+	* sys/Makefile.am:
+	  Re-enable VCD source and fix up release notes.
+
 2007-06-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/equalizer/gstiirequalizer.c:
