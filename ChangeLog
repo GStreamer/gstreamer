@@ -1,5 +1,14 @@
 2007-06-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstelement.c:
+	* gst/gstutils.c: (gst_type_register_static_full):
+	Beef up and include the docs for gst_type_register_static_full and
+	gst_element_class_set_details_simple and add the API keyword
+	in the ChangeLog.
+
+2007-06-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_set_property),
 	(update_time_level), (gst_single_queue_push_one),
 	(gst_multi_queue_chain), (gst_multi_queue_sink_event),
@@ -33,6 +42,8 @@
 	(gst_type_find_element_base_init),
 	(gst_type_find_element_class_init):
 	  Saving relocations for GTypeInfo and GstElementDetails. Fixes #437457.
+	  API: add gst_type_register_static_full
+	  API: add gst_element_class_set_details_simple
 
 2007-06-21  Tim-Philipp Müller  <tim at centricular dot net>
 

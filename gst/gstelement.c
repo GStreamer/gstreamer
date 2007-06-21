@@ -1140,16 +1140,23 @@ gst_element_class_set_details (GstElementClass * klass,
 /**
  * gst_element_class_set_details_simple:
  * @klass: class to set details for
- * @longname: details
- * @classification: details
- * @description: details
- * @author: details
+ * @longname: The long English name of the element. E.g. "File Sink"
+ * @classification: String describing the type of element, as an unordered list
+ * separated with slashes ('/'). See draft-klass.txt of the design docs
+ * for more details and common types. E.g: "Sink/File"
+ * @description: Sentence describing the purpose of the element. 
+ * E.g: "Write stream to a file"
+ * @author: Name and contact details of the author(s). Use \n to separate 
+ * multiple author details. E.g: "Joe Bloggs &lt;joe.blogs at foo.com&gt;"
  *
  * Sets the detailed information for a #GstElementClass. Simpler version of 
- * gst_element_class_set_details() that generates less liker overhead.
+ * gst_element_class_set_details() that generates less linker overhead.
  * <note>This function is for use in _base_init functions only.</note>
  *
- * The detail-strings are copied.
+ * The detail parameter strings are copied into the #GstElementDetails for
+ * the element class.
+ *
+ * Since: 0.10.14
  */
 void
 gst_element_class_set_details_simple (GstElementClass * klass, gchar * longname,
