@@ -158,7 +158,7 @@ plugin_init (GstPlugin *plugin)
         types, for the sake of readability. Below each table might follow a
         list of notes that apply to that table. In the definition of each type,
         we try to follow the types and rules as defined by <ulink type="http"
-        url="http://www.iana.org/assignmentsmedia-types">
+        url="http://www.iana.org/assignments/media-types">
         IANA</ulink> for as far as possible.
       </para>
       <para>
