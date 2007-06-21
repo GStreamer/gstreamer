@@ -1,3 +1,16 @@
+2007-06-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_set_property),
+	(update_time_level), (gst_single_queue_push_one),
+	(gst_multi_queue_chain), (gst_multi_queue_sink_event),
+	(single_queue_overrun_cb), (single_queue_underrun_cb),
+	(single_queue_check_full):
+	Fix setting max-* properties after adding queues.
+	Use IS_FILLED for checking visible items.
+	Signal overrun if multiple queues overrun.
+	Add extra debug output.
+	Patch by: Wim Taymans <wim@fluendo.com>
+
 2007-06-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstelement.c: (gst_element_class_set_details_simple):
