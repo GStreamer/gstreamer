@@ -1,3 +1,10 @@
+2007-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/examples/seek/seek.c: (update_scale), (play_cb), (stop_cb),
+	(main):
+	  Destroy and recreate parse-launch based pipeline after stop to be able
+	  to play again. Reorder some code and add more comments.
+
 2007-06-20  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstdecodebin2.c: (analyze_new_pad):

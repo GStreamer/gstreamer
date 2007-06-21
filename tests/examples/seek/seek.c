@@ -33,36 +33,14 @@
 GST_DEBUG_CATEGORY_STATIC (seek_debug);
 #define GST_CAT_DEFAULT (seek_debug)
 
-static GList *seekable_pads = NULL;
-static GList *rate_pads = NULL;
-static GList *seekable_elements = NULL;
-
-static gboolean accurate_seek = FALSE;
-static gboolean keyframe_seek = FALSE;
-static gboolean loop_seek = FALSE;
-static gboolean flush_seek = TRUE;
-static gboolean scrub = TRUE;
-static gboolean play_scrub = FALSE;
-static gdouble rate = 1.0;
-
-static GstElement *pipeline;
-static gint64 position = -1;
-static gint64 duration = -1;
-static GtkAdjustment *adjustment;
-static GtkWidget *hscale;
-static gboolean stats = FALSE;
-static gboolean elem_seek = FALSE;
-static gboolean verbose = FALSE;
-
-static GstState state = GST_STATE_NULL;
-static guint update_id = 0;
-static guint seek_timeout_id = 0;
-static gulong changed_id;
+/* configuration */
 
 //#define SOURCE "filesrc"
 #define SOURCE "gnomevfssrc"
+
 #define ASINK "alsasink"
 //#define ASINK "osssink"
+
 #define VSINK "xvimagesink"
 //#define VSINK "sdlvideosink"
 //#define VSINK "ximagesink"
@@ -76,11 +54,40 @@ static gulong changed_id;
 /* number of milliseconds to play for after a seek */
 #define SCRUB_TIME 100
 
-/* seek timeout */
+/* timeout for gst_element_get_state() after a seek */
 #define SEEK_TIMEOUT 40 * GST_MSECOND
 
-#define THREAD
-#define PAD_SEEK
+
+static GList *seekable_pads = NULL;
+static GList *rate_pads = NULL;
+static GList *seekable_elements = NULL;
+
+static gboolean accurate_seek = FALSE;
+static gboolean keyframe_seek = FALSE;
+static gboolean loop_seek = FALSE;
+static gboolean flush_seek = TRUE;
+static gboolean scrub = TRUE;
+static gboolean play_scrub = FALSE;
+static gdouble rate = 1.0;
+
+static GstElement *pipeline;
+static gint pipeline_type;
+static const gchar *pipeline_spec;
+static gint64 position = -1;
+static gint64 duration = -1;
+static GtkAdjustment *adjustment;
+static GtkWidget *hscale;
+static gboolean stats = FALSE;
+static gboolean elem_seek = FALSE;
+static gboolean verbose = FALSE;
+
+static GstState state = GST_STATE_NULL;
+static guint update_id = 0;
+static guint seek_timeout_id = 0;
+static gulong changed_id;
+
+
+/* pipeline construction */
 
 typedef struct
 {
@@ -858,6 +865,39 @@ make_parselaunch_pipeline (const gchar * description)
 }
 #endif
 
+typedef struct
+{
+  gchar *name;
+  GstElement *(*func) (const gchar * location);
+}
+Pipeline;
+
+static Pipeline pipelines[] = {
+  {"mp3", make_mp3_pipeline},
+  {"avi", make_avi_pipeline},
+  {"mpeg1", make_mpeg_pipeline},
+  {"mpegparse", make_parse_pipeline},
+  {"vorbis", make_vorbis_pipeline},
+  {"theora", make_theora_pipeline},
+  {"ogg/v/t", make_vorbis_theora_pipeline},
+  {"avi/msmpeg4v3/mp3", make_avi_msmpeg4v3_mp3_pipeline},
+  {"sid", make_sid_pipeline},
+  {"flac", make_flac_pipeline},
+  {"wav", make_wav_pipeline},
+  {"mod", make_mod_pipeline},
+  {"dv", make_dv_pipeline},
+  {"mpeg1nothreads", make_mpegnt_pipeline},
+  {"playerbin", make_playerbin_pipeline},
+#ifndef GST_DISABLE_PARSE
+  {"parse-launch", make_parselaunch_pipeline},
+#endif
+  {NULL, NULL},
+};
+
+#define NUM_TYPES       ((sizeof (pipelines) / sizeof (Pipeline)) - 1)
+
+/* ui callbacks and helpers */
+
 static gchar *
 format_value (GtkScale * scale, gdouble value)
 {
@@ -1005,8 +1045,8 @@ update_scale (gpointer data)
 {
   GstFormat format = GST_FORMAT_TIME;
 
-  position = 0;
-  duration = 0;
+  //position = 0;
+  //duration = 0;
 
   if (elem_seek) {
     if (seekable_elements) {
@@ -1245,6 +1285,7 @@ play_cb (GtkButton * button, gpointer data)
     ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
     if (ret == GST_STATE_CHANGE_FAILURE)
       goto failed;
+    //do_seek(hscale);
 
     state = GST_STATE_PLAYING;
   }
@@ -1291,12 +1332,24 @@ stop_cb (GtkButton * button, gpointer data)
     set_scale (0.0);
 
     state = GST_STATE_READY;
+
+    /* if one uses parse_launch, play, stop and play again it fails as all the
+     * pads after the demuxer can't be reconnected
+     */
+    if (!strcmp (pipelines[pipeline_type].name, "parse-launch")) {
+      gst_element_set_state (pipeline, GST_STATE_NULL);
+      gst_object_unref (pipeline);
+
+      pipeline = pipelines[pipeline_type].func (pipeline_spec);
+      g_assert (pipeline);
+      gst_element_set_state (pipeline, GST_STATE_READY);
+    }
   }
   return;
 
 failed:
   {
-    g_print ("READY failed\n");
+    g_print ("STOP failed\n");
   }
 }
 
@@ -1475,37 +1528,6 @@ msg_segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   set_update_scale (TRUE);
 }
 
-typedef struct
-{
-  gchar *name;
-  GstElement *(*func) (const gchar * location);
-}
-Pipeline;
-
-static Pipeline pipelines[] = {
-  {"mp3", make_mp3_pipeline},
-  {"avi", make_avi_pipeline},
-  {"mpeg1", make_mpeg_pipeline},
-  {"mpegparse", make_parse_pipeline},
-  {"vorbis", make_vorbis_pipeline},
-  {"theora", make_theora_pipeline},
-  {"ogg/v/t", make_vorbis_theora_pipeline},
-  {"avi/msmpeg4v3/mp3", make_avi_msmpeg4v3_mp3_pipeline},
-  {"sid", make_sid_pipeline},
-  {"flac", make_flac_pipeline},
-  {"wav", make_wav_pipeline},
-  {"mod", make_mod_pipeline},
-  {"dv", make_dv_pipeline},
-  {"mpeg1nothreads", make_mpegnt_pipeline},
-  {"playerbin", make_playerbin_pipeline},
-#ifndef GST_DISABLE_PARSE
-  {"parse-launch", make_parselaunch_pipeline},
-#endif
-  {NULL, NULL},
-};
-
-#define NUM_TYPES       ((sizeof (pipelines) / sizeof (Pipeline)) - 1)
-
 static void
 print_usage (int argc, char **argv)
 {
@@ -1537,7 +1559,6 @@ main (int argc, char **argv)
         "Verbose properties", NULL},
     {NULL}
   };
-  gint type;
   GOptionContext *ctx;
   GError *err = NULL;
 
@@ -1562,14 +1583,16 @@ main (int argc, char **argv)
     exit (-1);
   }
 
-  type = atoi (argv[1]);
+  pipeline_type = atoi (argv[1]);
 
-  if (type < 0 || type >= NUM_TYPES) {
+  if (pipeline_type < 0 || pipeline_type >= NUM_TYPES) {
     print_usage (argc, argv);
     exit (-1);
   }
 
-  pipeline = pipelines[type].func (argv[2]);
+  pipeline_spec = argv[2];
+
+  pipeline = pipelines[pipeline_type].func (pipeline_spec);
   g_assert (pipeline);
 
   /* initialize gui elements ... */
