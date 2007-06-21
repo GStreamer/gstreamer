@@ -292,15 +292,13 @@ static void
 gst_mp3parse_init (GstMPEGAudioParse * mp3parse)
 {
   mp3parse->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&mp3_sink_template), "sink");
+      gst_pad_new_from_static_template (&mp3_sink_template, "sink");
   gst_pad_set_event_function (mp3parse->sinkpad, gst_mp3parse_sink_event);
   gst_pad_set_chain_function (mp3parse->sinkpad, gst_mp3parse_chain);
   gst_element_add_pad (GST_ELEMENT (mp3parse), mp3parse->sinkpad);
 
   mp3parse->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&mp3_src_template), "src");
+      gst_pad_new_from_static_template (&mp3_src_template, "src");
   gst_pad_use_fixed_caps (mp3parse->srcpad);
   gst_pad_set_event_function (mp3parse->srcpad, mp3parse_src_event);
   gst_pad_set_query_function (mp3parse->srcpad, mp3parse_src_query);

@@ -1,3 +1,8 @@
+2007-06-21  Edward Hervey  <edward@fluendo.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_init):
+	"She's leaking me", said valgrind.
+
 2007-06-19  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (mp3_caps_create):
