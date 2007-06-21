@@ -1138,6 +1138,32 @@ gst_element_class_set_details (GstElementClass * klass,
 }
 
 /**
+ * gst_element_class_set_details_simple:
+ * @klass: class to set details for
+ * @longname: details
+ * @classification: details
+ * @description: details
+ * @author: details
+ *
+ * Sets the detailed information for a #GstElementClass. Simpler version of 
+ * gst_element_class_set_details() that generates less liker overhead.
+ * <note>This function is for use in _base_init functions only.</note>
+ *
+ * The detail-strings are copied.
+ */
+void
+gst_element_class_set_details_simple (GstElementClass * klass, gchar * longname,
+    gchar * classification, gchar * description, gchar * author)
+{
+  const GstElementDetails details =
+      GST_ELEMENT_DETAILS (longname, classification, description, author);
+
+  g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
+
+  __gst_element_details_copy (&klass->details, &details);
+}
+
+/**
  * gst_element_class_get_pad_template_list:
  * @element_class: a #GstElementClass to get pad templates of.
  *

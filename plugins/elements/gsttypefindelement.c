@@ -63,12 +63,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_type_find_element_debug);
 #define GST_CAT_DEFAULT gst_type_find_element_debug
 
-static const GstElementDetails gst_type_find_element_details =
-GST_ELEMENT_DETAILS ("TypeFind",
-    "Generic",
-    "Finds the media type of a stream",
-    "Benjamin Otte <in7y118@public.uni-hamburg.de>");
-
 /* generic templates */
 GstStaticPadTemplate type_find_element_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -167,13 +161,17 @@ gst_type_find_element_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "TypeFind",
+      "Generic",
+      "Finds the media type of a stream",
+      "Benjamin Otte <in7y118@public.uni-hamburg.de>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&type_find_element_src_template));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&type_find_element_sink_template));
-  gst_element_class_set_details (gstelement_class,
-      &gst_type_find_element_details);
 }
+
 static void
 gst_type_find_element_class_init (GstTypeFindElementClass * typefind_class)
 {

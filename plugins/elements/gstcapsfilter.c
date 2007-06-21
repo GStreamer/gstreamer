@@ -34,12 +34,6 @@
 #include "../../gst/gst-i18n-lib.h"
 #include "gstcapsfilter.h"
 
-static const GstElementDetails gst_capsfilter_details =
-GST_ELEMENT_DETAILS ("CapsFilter",
-    "Generic",
-    "Pass data without modification, limiting formats",
-    "David Schleef <ds@schleef.org>");
-
 enum
 {
   PROP_0,
@@ -84,13 +78,17 @@ static GstFlowReturn gst_capsfilter_prepare_buf (GstBaseTransform * trans,
 static void
 gst_capsfilter_base_init (gpointer g_class)
 {
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_set_details_simple (gstelement_class,
+      "CapsFilter",
+      "Generic",
+      "Pass data without modification, limiting formats",
+      "David Schleef <ds@schleef.org>");
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
-  gst_element_class_add_pad_template (element_class,
+  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (element_class, &gst_capsfilter_details);
 }
 
 static void

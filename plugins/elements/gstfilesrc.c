@@ -118,12 +118,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_file_src_debug);
 #define GST_CAT_DEFAULT gst_file_src_debug
 
-static const GstElementDetails gst_file_src_details =
-GST_ELEMENT_DETAILS ("File Source",
-    "Source/File",
-    "Read from arbitrary point in a file",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
-
 /* FileSrc signals and args */
 enum
 {
@@ -188,10 +182,13 @@ gst_file_src_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "File Source",
+      "Source/File",
+      "Read from arbitrary point in a file",
+      "Erik Walthinsen <omega@cse.ogi.edu>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
-
-  gst_element_class_set_details (gstelement_class, &gst_file_src_details);
 }
 
 static void

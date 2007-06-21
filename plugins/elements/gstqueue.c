@@ -94,11 +94,6 @@ GST_DEBUG_CATEGORY_STATIC (queue_dataflow);
                       queue->max_size.time, \
                       queue->queue->length)
 
-static const GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
-    "Generic",
-    "Simple data queue",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
-
 /* Queue signals and args */
 enum
 {
@@ -243,11 +238,13 @@ gst_queue_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Queue",
+      "Generic", "Simple data queue", "Erik Walthinsen <omega@cse.ogi.edu>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (gstelement_class, &gst_queue_details);
 }
 
 static void

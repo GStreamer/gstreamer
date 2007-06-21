@@ -88,12 +88,6 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_fd_sink__debug);
 #define GST_CAT_DEFAULT gst_fd_sink__debug
 
-static const GstElementDetails gst_fd_sink__details =
-GST_ELEMENT_DETAILS ("Filedescriptor Sink",
-    "Sink/File",
-    "Write data to a file descriptor",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
-
 
 /* FdSink signals and args */
 enum
@@ -148,9 +142,12 @@ gst_fd_sink_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Filedescriptor Sink",
+      "Sink/File",
+      "Write data to a file descriptor", "Erik Walthinsen <omega@cse.ogi.edu>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (gstelement_class, &gst_fd_sink__details);
 }
 
 static void

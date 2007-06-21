@@ -3255,3 +3255,33 @@ gst_parse_bin_from_description (const gchar * bin_description,
   return NULL;
 #endif
 }
+
+GType
+gst_type_register_static_full (GType parent_type,
+    const gchar * type_name,
+    guint class_size,
+    GBaseInitFunc base_init,
+    GBaseFinalizeFunc base_finalize,
+    GClassInitFunc class_init,
+    GClassFinalizeFunc class_finalize,
+    gconstpointer class_data,
+    guint instance_size,
+    guint16 n_preallocs,
+    GInstanceInitFunc instance_init,
+    const GTypeValueTable * value_table, GTypeFlags flags)
+{
+  GTypeInfo info;
+
+  info.class_size = class_size;
+  info.base_init = base_init;
+  info.base_finalize = base_finalize;
+  info.class_init = class_init;
+  info.class_finalize = class_finalize;
+  info.class_data = class_data;
+  info.instance_size = instance_size;
+  info.n_preallocs = n_preallocs;
+  info.instance_init = instance_init;
+  info.value_table = value_table;
+
+  return g_type_register_static (parent_type, type_name, &info, flags);
+}

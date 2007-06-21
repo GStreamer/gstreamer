@@ -70,6 +70,21 @@ void		gst_print_pad_caps		(GString *buf, gint indent, GstPad *pad);
 void		gst_print_element_args		(GString *buf, gint indent, GstElement *element);
 
 
+GType gst_type_register_static_full (GType parent_type,
+			                   const gchar       *type_name,
+                               guint              class_size,
+                               GBaseInitFunc      base_init,
+                               GBaseFinalizeFunc  base_finalize,
+                               GClassInitFunc     class_init,
+                               GClassFinalizeFunc class_finalize,
+                               gconstpointer      class_data,
+                               guint              instance_size,
+                               guint16            n_preallocs,
+                               GInstanceInitFunc  instance_init,
+                               const GTypeValueTable *value_table,
+                               GTypeFlags	 flags);
+
+
 /* Macros for defining classes.  Ideas taken from Bonobo, which took theirs
    from Nautilus and GOB. */
 
@@ -115,19 +130,18 @@ type_as_function ## _get_type (void)					\
 {									\
   static GType object_type = 0;						\
   if (G_UNLIKELY (object_type == 0)) {					\
-    static const GTypeInfo object_info = {				\
-      sizeof (type ## Class),						\
-      type_as_function ## _base_init,					\
-      NULL,		  /* base_finalize */				\
-      type_as_function ## _class_init_trampoline,			\
-      NULL,		  /* class_finalize */				\
-      NULL,               /* class_data */				\
-      sizeof (type),							\
-      0,                  /* n_preallocs */				\
-      (GInstanceInitFunc) type_as_function ## _init			\
-    };									\
-    object_type = g_type_register_static (parent_type_macro, #type,	\
-	&object_info, (GTypeFlags) 0);					\
+    object_type = gst_type_register_static_full (parent_type_macro, #type,	\
+	sizeof (type ## Class),					\
+        type_as_function ## _base_init,					\
+        NULL,		  /* base_finalize */				\
+        type_as_function ## _class_init_trampoline,			\
+        NULL,		  /* class_finalize */				\
+        NULL,               /* class_data */				\
+        sizeof (type),							\
+        0,                  /* n_preallocs */				\
+        (GInstanceInitFunc) type_as_function ## _init,                  \
+        NULL,                                                           \
+        (GTypeFlags) 0);				                \
     additional_initializations (object_type);				\
   }									\
   return object_type;							\

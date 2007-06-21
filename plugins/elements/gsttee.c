@@ -45,13 +45,6 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_tee_debug);
 #define GST_CAT_DEFAULT gst_tee_debug
 
-static const GstElementDetails gst_tee_details =
-GST_ELEMENT_DETAILS ("Tee pipe fitting",
-    "Generic",
-    "1-to-N pipe fitting",
-    "Erik Walthinsen <omega@cse.ogi.edu>, "
-    "Wim \"Tim\" Taymans <wim@fluendo.com>");
-
 #define GST_TYPE_TEE_PULL_MODE (gst_tee_pull_mode_get_type())
 static GType
 gst_tee_pull_mode_get_type (void)
@@ -123,9 +116,13 @@ gst_tee_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Tee pipe fitting",
+      "Generic",
+      "1-to-N pipe fitting",
+      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (gstelement_class, &gst_tee_details);
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&tee_src_template));
 }

@@ -51,13 +51,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 GST_DEBUG_CATEGORY_STATIC (gst_identity_debug);
 #define GST_CAT_DEFAULT gst_identity_debug
 
-static const GstElementDetails gst_identity_details =
-GST_ELEMENT_DETAILS ("Identity",
-    "Generic",
-    "Pass data without modification",
-    "Erik Walthinsen <omega@cse.ogi.edu>");
-
-
 /* Identity signals and args */
 enum
 {
@@ -122,11 +115,14 @@ gst_identity_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Identity",
+      "Generic",
+      "Pass data without modification", "Erik Walthinsen <omega@cse.ogi.edu>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (gstelement_class, &gst_identity_details);
 }
 
 static void

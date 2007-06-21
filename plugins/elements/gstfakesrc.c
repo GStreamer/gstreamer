@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2000 Wim Taymans <wtay@chello.be>
+ *                    2000 Wim Taymans <wim@fluendo.com>
  *
  * gstfakesrc.c:
  *
@@ -64,13 +64,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 
 GST_DEBUG_CATEGORY_STATIC (gst_fake_src_debug);
 #define GST_CAT_DEFAULT gst_fake_src_debug
-
-static const GstElementDetails gst_fake_src_details =
-GST_ELEMENT_DETAILS ("Fake Source",
-    "Source",
-    "Push empty (no data) buffers around",
-    "Erik Walthinsen <omega@cse.ogi.edu>, "
-    "Wim Taymans <wim.taymans@chello.be>");
 
 
 /* FakeSrc signals and args */
@@ -238,10 +231,13 @@ gst_fake_src_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Fake Source",
+      "Source",
+      "Push empty (no data) buffers around",
+      "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
-
-  gst_element_class_set_details (gstelement_class, &gst_fake_src_details);
 }
 
 static void

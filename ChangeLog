@@ -1,3 +1,26 @@
+2007-06-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstelement.c: (gst_element_class_set_details_simple):
+	* gst/gstelement.h:
+	* gst/gstutils.c: (gst_type_register_static_full):
+	* gst/gstutils.h:
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_base_init):
+	* plugins/elements/gstfakesink.c: (gst_fake_sink_base_init):
+	* plugins/elements/gstfakesrc.c: (gst_fake_src_base_init):
+	* plugins/elements/gstfdsink.c: (gst_fd_sink_base_init):
+	* plugins/elements/gstfdsrc.c: (gst_fd_src_base_init):
+	* plugins/elements/gstfilesink.c: (gst_file_sink_base_init):
+	* plugins/elements/gstfilesrc.c: (gst_file_src_base_init):
+	* plugins/elements/gstidentity.c: (gst_identity_base_init):
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_base_init):
+	* plugins/elements/gstqueue.c: (gst_queue_base_init),
+	(apply_buffer), (gst_queue_chain):
+	* plugins/elements/gsttee.c: (gst_tee_base_init):
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_base_init),
+	(gst_type_find_element_class_init):
+	  Saving relocations for GTypeInfo and GstElementDetails. Fixes #437457.
+
 2007-06-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/pwg/advanced-types.xml:

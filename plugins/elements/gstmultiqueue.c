@@ -98,12 +98,6 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src%d",
 GST_DEBUG_CATEGORY_STATIC (multi_queue_debug);
 #define GST_CAT_DEFAULT (multi_queue_debug)
 
-static const GstElementDetails gst_multi_queue_details =
-GST_ELEMENT_DETAILS ("MultiQueue",
-    "Generic",
-    "Multiple data queue",
-    "Edward Hervey <edward@fluendo.com>");
-
 /* default limits, we try to keep up to 2 seconds of data and if there is not
  * time, up to 10 MB. The number of buffers is dynamically scaled to make sure
  * there is data in the queues. Normally, the byte and time limits are not hit
@@ -171,11 +165,13 @@ gst_multi_queue_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "MultiQueue",
+      "Generic", "Multiple data queue", "Edward Hervey <edward@fluendo.com>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
-  gst_element_class_set_details (gstelement_class, &gst_multi_queue_details);
 }
 
 static void

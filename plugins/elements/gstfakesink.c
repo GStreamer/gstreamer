@@ -42,15 +42,6 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
 GST_DEBUG_CATEGORY_STATIC (gst_fake_sink_debug);
 #define GST_CAT_DEFAULT gst_fake_sink_debug
 
-static const GstElementDetails gst_fake_sink_details =
-GST_ELEMENT_DETAILS ("Fake Sink",
-    "Sink",
-    "Black hole for data",
-    "Erik Walthinsen <omega@cse.ogi.edu>, "
-    "Wim Taymans <wim@fluendo.com>, "
-    "Mr. 'frag-me-more' Vanderwingo <wingo@fluendo.com>");
-
-
 /* FakeSink signals and args */
 enum
 {
@@ -140,9 +131,15 @@ gst_fake_sink_base_init (gpointer g_class)
 {
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
 
+  gst_element_class_set_details_simple (gstelement_class,
+      "Fake Sink",
+      "Sink",
+      "Black hole for data",
+      "Erik Walthinsen <omega@cse.ogi.edu>, "
+      "Wim Taymans <wim@fluendo.com>, "
+      "Mr. 'frag-me-more' Vanderwingo <wingo@fluendo.com>");
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sinktemplate));
-  gst_element_class_set_details (gstelement_class, &gst_fake_sink_details);
 }
 
 static void
