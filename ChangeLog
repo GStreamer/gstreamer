@@ -1,3 +1,11 @@
+2007-06-21  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/gconf/gconf.h:
+	Make the prototype of gst_gconf_get_key_for_sink_profile
+	match the implementation.
+	Patch by: Damien Carbery <damien dot carbery at sun dot com>
+	Fixes: #449747
+
 2007-06-20  Michael Smith <msmith@fluendo.com>
 
 	* gst/rtp/gstrtpdepay.c:

@@ -49,7 +49,7 @@ gchar *         gst_gconf_get_string            (const gchar *key);
 void            gst_gconf_set_string            (const gchar *key, 
                                                  const gchar *value);
 
-const gchar *   gst_gconf_get_key_for_sink_profile (guint profile);
+const gchar *   gst_gconf_get_key_for_sink_profile (GstGConfProfile profile);
 
 GstElement *    gst_gconf_render_bin_from_key           (const gchar *key);
 GstElement *    gst_gconf_render_bin_with_default       (const gchar *bin,
