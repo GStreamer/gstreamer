@@ -54,7 +54,7 @@ static void gst_iir_equalizer_3bands_set_property (GObject * object,
 static void gst_iir_equalizer_3bands_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
-GST_DEBUG_CATEGORY_EXTERN ()(equalizer_debug);
+GST_DEBUG_CATEGORY_EXTERN (equalizer_debug);
 #define GST_CAT_DEFAULT equalizer_debug
 
 GST_BOILERPLATE (GstIirEqualizer3Bands, gst_iir_equalizer_3bands,

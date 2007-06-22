@@ -222,6 +222,9 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
 
   /* check if we need to send a new segment event */
   if (gstswitch->need_to_send_newsegment && !gstswitch->queue_buffers) {
+    GstEvent *event;
+    GList *buffers;
+
     /* check to see if we need to send a new segment update for stop */
     if (gstswitch->previous_sinkpad != NULL) {
       if (gstswitch->stop_value != GST_CLOCK_TIME_NONE) {
@@ -252,7 +255,7 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
       gstswitch->previous_sinkpad = NULL;
     }
     /* retrieve event from hash table */
-    GstEvent *event =
+    event =
         (GstEvent *) g_hash_table_lookup (gstswitch->newsegment_events, pad);
     if (event) {
       /* create a copy of this event so we can change start to match
@@ -285,8 +288,7 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
     gstswitch->start_value = GST_CLOCK_TIME_NONE;
     gstswitch->stop_value = GST_CLOCK_TIME_NONE;
     /* send all the stored buffers if any */
-    GList *buffers =
-        g_hash_table_lookup (gstswitch->stored_buffers, active_sinkpad);
+    buffers = g_hash_table_lookup (gstswitch->stored_buffers, active_sinkpad);
     while (buffers != NULL) {
       gst_buffer_ref (GST_BUFFER (buffers->data));
       GST_SWITCH_UNLOCK (gstswitch);

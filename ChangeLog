@@ -1,3 +1,19 @@
+2007-06-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Jens Granseuer  <jensgr at gmx net>
+
+	* gst/equalizer/gstiirequalizer.c:
+	* gst/equalizer/gstiirequalizer10bands.c:
+	* gst/equalizer/gstiirequalizer3bands.c:
+	* gst/equalizer/gstiirequalizernbands.c:
+	* gst/rtpmanager/async_jitter_queue.c:
+	(async_jitter_queue_push_sorted):
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_chain):
+	* gst/switch/gstswitch.c: (gst_switch_chain):
+	  Build fixes for gcc-2.9x (no mid-block variable declarations etc.).
+	  Fixes #450185.
+
 2007-06-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* examples/switch/switcher.c (my_bus_callback, switch_timer,
