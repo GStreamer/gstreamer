@@ -130,9 +130,7 @@ gst_multifilesrc_init (GstMultiFileSrc * multifilesrc,
 {
 /*  GST_OBJECT_FLAG_SET (filesrc, GST_SRC_); */
 
-  multifilesrc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&srctemplate),
-      "src");
+  multifilesrc->srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
   gst_pad_set_get_function (multifilesrc->srcpad, gst_multifilesrc_get);
 /*  gst_pad_set_getregion_function (multifilesrc->srcpad,gst_multifilesrc_get_region); */
   gst_element_add_pad (GST_ELEMENT (multifilesrc), multifilesrc->srcpad);

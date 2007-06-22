@@ -162,16 +162,13 @@ void
 gst_median_init (GstMedian * median)
 {
   median->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&median_sink_factory), "sink");
+      gst_pad_new_from_static_template (&media_sink_factory, "sink");
   gst_pad_set_getcaps_function (median->sinkpad, gst_pad_proxy_getcaps);
   gst_pad_set_link_function (median->sinkpad, gst_median_link);
   gst_pad_set_chain_function (median->sinkpad, gst_median_chain);
   gst_element_add_pad (GST_ELEMENT (median), median->sinkpad);
 
-  median->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&median_src_factory), "src");
+  median->srcpad = gst_pad_new_from_static_template (&media_src_factory, "src");
   gst_pad_set_getcaps_function (median->srcpad, gst_pad_proxy_getcaps);
   gst_pad_set_link_function (median->sinkpad, gst_median_link);
   gst_element_add_pad (GST_ELEMENT (median), median->srcpad);

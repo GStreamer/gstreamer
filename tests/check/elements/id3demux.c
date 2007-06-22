@@ -28,7 +28,6 @@ static void
 pad_added_cb (GstElement * id3demux, GstPad * pad, GstBin * pipeline)
 {
   GstElement *sink;
-  GstPad *sinkpad;
 
   sink = gst_bin_get_by_name (pipeline, "fakesink");
   fail_unless (gst_element_link (id3demux, sink));

@@ -1,3 +1,15 @@
+2007-06-22  Edward Hervey  <edward@fluendo.com>
+
+	* ext/flac/gstflactag.c: (gst_flac_tag_init):
+	* gst/interleave/deinterleave.c: (deinterleave_init),
+	(deinterleave_sink_link):
+	* gst/interleave/interleave.c: (interleave_init):
+	* gst/median/gstmedian.c: (gst_median_init):
+	* gst/oldcore/gstmultifilesrc.c: (gst_multifilesrc_init):
+	Fix memory leaks.
+	* tests/check/elements/id3demux.c: (pad_added_cb):
+	Remove unused variable.
+
 2007-06-21  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/gconf/gconf.h:

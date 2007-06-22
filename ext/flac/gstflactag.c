@@ -243,15 +243,13 @@ gst_flac_tag_init (GstFlacTag * tag)
 {
   /* create the sink and src pads */
   tag->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&flac_tag_sink_template), "sink");
+      gst_pad_new_from_static_template (&flac_tag_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (tag), tag->sinkpad);
   gst_pad_set_chain_function (tag->sinkpad,
       GST_DEBUG_FUNCPTR (gst_flac_tag_chain));
 
   tag->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&flac_tag_src_template), "src");
+      gst_pad_new_from_static_template (&flac_tag_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (tag), tag->srcpad);
 
   tag->buffer = NULL;
