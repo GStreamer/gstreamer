@@ -53,7 +53,7 @@ static gboolean gst_iir_equalizer_setup (GstAudioFilter * filter,
 static GstFlowReturn gst_iir_equalizer_transform_ip (GstBaseTransform * btrans,
     GstBuffer * buf);
 
-GST_DEBUG_CATEGORY_EXTERN ()(equalizer_debug);
+GST_DEBUG_CATEGORY_EXTERN (equalizer_debug);
 #define GST_CAT_DEFAULT equalizer_debug
 
 #define ALLOWED_CAPS \
