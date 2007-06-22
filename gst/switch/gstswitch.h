@@ -66,7 +66,11 @@ struct _GstSwitch {
    * new segment has been sent
    */
   GHashTable *stored_buffers;
+  GMutex *switch_mutex;
 };
+
+#define GST_SWITCH_LOCK(obj) g_mutex_lock(obj->switch_mutex)
+#define GST_SWITCH_UNLOCK(obj) g_mutex_unlock(obj->switch_mutex)
 
 struct _GstSwitchClass {
   GstElementClass parent_class;

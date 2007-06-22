@@ -1,3 +1,19 @@
+2007-06-22  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* examples/switch/switcher.c (my_bus_callback, switch_timer,
+	  last_message_received, main):
+	* gst/switch/gstswitch.c (gst_switch_release_pad,
+	  gst_switch_request_new_pad, gst_switch_chain, gst_switch_event,
+	  gst_switch_set_property, gst_switch_get_property,
+	  gst_switch_get_linked_pad, gst_switch_getcaps,
+	  gst_switch_bufferalloc, gst_switch_dispose, gst_switch_init):
+	* gst/switch/gstswitch.h (switch_mutex, GST_SWITCH_LOCK,
+	  GST_SWITCH_UNLOCK):
+	Add an extra lock to protect against certain variables instead of
+	using the object lock. Fix case where caps are different in the
+	sink pads causes deadlock. Update example to use different caps
+	on each sink pad.
+
 2007-06-22  Jan Schmidt  <thaytan@noraisin.net>
 
 	* MAINTAINERS:
