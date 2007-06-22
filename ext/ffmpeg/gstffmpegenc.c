@@ -567,6 +567,18 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
   return TRUE;
 }
 
+static void
+ffmpegenc_setup_working_buf (GstFFMpegEnc *ffmpegenc)
+{
+   if (ffmpegenc->working_buf == NULL || 
+      ffmpegenc->working_buf_size != ffmpegenc->buffer_size) {
+    if (ffmpegenc->working_buf)
+      g_free (ffmpegenc->working_buf);
+    ffmpegenc->working_buf_size = ffmpegenc->buffer_size;
+    ffmpegenc->working_buf = g_malloc (ffmpegenc->working_buf_size);
+  }
+}
+
 static GstFlowReturn
 gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
 {
@@ -588,9 +600,11 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
       gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (inbuf),
       ffmpegenc->context->time_base);
 
-  outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
+  ffmpegenc_setup_working_buf (ffmpegenc);
+
   ret_size = avcodec_encode_video (ffmpegenc->context,
-      GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), ffmpegenc->picture);
+                 ffmpegenc->working_buf, ffmpegenc->working_buf_size, 
+                 ffmpegenc->picture);
 
   if (ret_size < 0) {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -600,7 +614,6 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
         "ffenc_%s: failed to encode buffer", oclass->in_plugin->name);
 #endif /* GST_DISABLE_GST_DEBUG */
     gst_buffer_unref (inbuf);
-    gst_buffer_unref (outbuf);
     return GST_FLOW_OK;
   }
 
@@ -620,7 +633,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
           (("Could not write to file \"%s\"."), ffmpegenc->filename),
           GST_ERROR_SYSTEM);
 
-  GST_BUFFER_SIZE (outbuf) = ret_size;
+  outbuf = gst_buffer_new_and_alloc (ret_size);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
   if (!ffmpegenc->context->coded_frame->key_frame)
@@ -739,9 +752,10 @@ gst_ffmpegenc_flush_buffers (GstFFMpegEnc * ffmpegenc, gboolean send)
 
   while (!g_queue_is_empty (ffmpegenc->delay)) {
 
-    outbuf = gst_buffer_new_and_alloc (ffmpegenc->buffer_size);
+    ffmpegenc_setup_working_buf (ffmpegenc);
+    
     ret_size = avcodec_encode_video (ffmpegenc->context,
-        GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf), NULL);
+                   ffmpegenc->working_buf, ffmpegenc->working_buf_size, NULL);
 
     if (ret_size < 0) {         /* there should be something, notify and give up */
 #ifndef GST_DISABLE_GST_DEBUG
@@ -763,9 +777,10 @@ gst_ffmpegenc_flush_buffers (GstFFMpegEnc * ffmpegenc, gboolean send)
     /* handle b-frame delay when no output, so we don't output empty frames */
     inbuf = g_queue_pop_head (ffmpegenc->delay);
 
-    GST_BUFFER_SIZE (outbuf) = ret_size;
+    outbuf = gst_buffer_new_and_alloc (ret_size);
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
+
     if (!ffmpegenc->context->coded_frame->key_frame)
       GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
     gst_buffer_set_caps (outbuf, GST_PAD_CAPS (ffmpegenc->srcpad));
@@ -897,6 +912,10 @@ gst_ffmpegenc_change_state (GstElement * element, GstStateChange transition)
       if (ffmpegenc->file) {
         fclose (ffmpegenc->file);
         ffmpegenc->file = NULL;
+      }
+      if (ffmpegenc->working_buf) {
+        g_free (ffmpegenc->working_buf);
+        ffmpegenc->working_buf = NULL;
       }
       break;
     default:

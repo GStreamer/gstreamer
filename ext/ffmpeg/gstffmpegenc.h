@@ -48,6 +48,9 @@ struct _GstFFMpegEnc
   gulong buffer_size;
   gulong rtp_payload_size;
 
+  guint8 *working_buf;
+  gulong working_buf_size;
+
   /* settings with some special handling */
   guint pass;
   gfloat quantizer;
