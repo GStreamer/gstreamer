@@ -819,9 +819,10 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   if (priv->drop_on_latency) {
     if (async_jitter_queue_length_ts_units_unlocked (priv->queue) >=
         priv->latency_ms * priv->clock_rate / 1000) {
+      GstBuffer *old_buf;
+
       GST_DEBUG_OBJECT (jitterbuffer, "Queue full, dropping old packet #%d",
           seqnum);
-      GstBuffer *old_buf;
 
       old_buf = async_jitter_queue_pop_unlocked (priv->queue);
       gst_buffer_unref (old_buf);

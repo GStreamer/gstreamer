@@ -396,8 +396,9 @@ gboolean
 async_jitter_queue_push_sorted (AsyncJitterQueue * queue,
     gpointer data, GCompareDataFunc func, gpointer user_data)
 {
-  g_return_val_if_fail (queue != NULL, FALSE);
   gboolean ret;
+
+  g_return_val_if_fail (queue != NULL, FALSE);
 
   g_mutex_lock (queue->mutex);
   ret = async_jitter_queue_push_sorted_unlocked (queue, data, func, user_data);
