@@ -1,3 +1,8 @@
+2007-06-22  Jan Schmidt  <thaytan@noraisin.net>
+
+	* MAINTAINERS:
+	Updating all the maintainers files
+
 2007-06-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/seek/seek.c: (update_scale), (play_cb), (stop_cb),
