@@ -205,8 +205,7 @@ static void
 gst_mpeg2subt_init (GstMpeg2Subt * mpeg2subt)
 {
   mpeg2subt->videopad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&video_template), "video");
+      gst_pad_new_from_static_template (&video_template, "video");
   gst_element_add_pad (GST_ELEMENT (mpeg2subt), mpeg2subt->videopad);
   gst_pad_set_link_function (mpeg2subt->videopad,
       GST_DEBUG_FUNCPTR (gst_mpeg2subt_link_video));
@@ -214,13 +213,10 @@ gst_mpeg2subt_init (GstMpeg2Subt * mpeg2subt)
       GST_DEBUG_FUNCPTR (gst_mpeg2subt_getcaps_video));
 
   mpeg2subt->subtitlepad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&subtitle_template), "subtitle");
+      gst_pad_new_from_static_template (&subtitle_template, "subtitle");
   gst_element_add_pad (GST_ELEMENT (mpeg2subt), mpeg2subt->subtitlepad);
 
-  mpeg2subt->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&src_template), "src");
+  mpeg2subt->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (mpeg2subt), mpeg2subt->srcpad);
   gst_pad_set_getcaps_function (mpeg2subt->srcpad,
       GST_DEBUG_FUNCPTR (gst_mpeg2subt_getcaps_video));

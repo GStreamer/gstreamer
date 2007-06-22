@@ -381,9 +381,7 @@ gst_mixmatrix_request_new_pad (GstElement * element, GstPadTemplate * templ,
       mixmatrix_resize (mix, ROUND_UP (padnum, mix->grpsize),
           mix->sinkpadalloc);
 
-    pad =
-        gst_pad_new_from_template (gst_static_pad_template_get
-        (&mixmatrix_sink_template), name);
+    pad = gst_pad_new_from_static_template (&mixmatrix_sink_template, name);
     GST_PAD_ELEMENT_PRIVATE (pad) = GINT_TO_POINTER (padnum);
     gst_element_add_pad (GST_ELEMENT (mix), pad);
 /*    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix); */
@@ -405,9 +403,7 @@ gst_mixmatrix_request_new_pad (GstElement * element, GstPadTemplate * templ,
     if (padnum >= mix->srcpadalloc)
       mixmatrix_resize (mix, ROUND_UP (padnum, mix->grpsize), mix->srcpadalloc);
 
-    pad =
-        gst_pad_new_from_template (gst_static_pad_template_get
-        (&mixmatrix_src_template), name);
+    pad = gst_pad_new_from_static_template (&mixmatrix_src_template, name);
     GST_PAD_ELEMENT_PRIVATE (pad) = GINT_TO_POINTER (padnum);
     gst_element_add_pad (GST_ELEMENT (mix), pad);
 /*    g_signal_connect(G_OBJECT(pad), "unlink", G_CALLBACK(sink_unlinked), mix); */

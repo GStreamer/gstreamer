@@ -282,8 +282,8 @@ static void gst_audioresample_init (Audioresample * audioresample)
   ResampleState *r;
 
   audioresample->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_audioresample_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_audioresample_sink_template,
+      "sink");
   gst_element_add_pad (GST_ELEMENT (audioresample), audioresample->sinkpad);
   gst_pad_set_chain_function (audioresample->sinkpad, gst_audioresample_chain);
   gst_pad_set_link_function (audioresample->sinkpad, gst_audioresample_link);
@@ -293,8 +293,7 @@ static void gst_audioresample_init (Audioresample * audioresample)
       gst_audioresample_fixate);
 
   audioresample->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_audioresample_src_template), "src");
+      gst_pad_new_from_static_template (&gst_audioresample_src_template, "src");
 
   gst_element_add_pad (GST_ELEMENT (audioresample), audioresample->srcpad);
   gst_pad_set_link_function (audioresample->srcpad, gst_audioresample_link);

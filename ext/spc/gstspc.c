@@ -124,17 +124,13 @@ gst_spc_dec_class_init (GstSpcDecClass * klass)
 static void
 gst_spc_dec_init (GstSpcDec * spc, GstSpcDecClass * klass)
 {
-  spc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_factory),
-      "sink");
+  spc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_pad_set_query_function (spc->sinkpad, NULL);
   gst_pad_set_event_function (spc->sinkpad, gst_spc_dec_sink_event);
   gst_pad_set_chain_function (spc->sinkpad, gst_spc_dec_chain);
   gst_element_add_pad (GST_ELEMENT (spc), spc->sinkpad);
 
-  spc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_factory),
-      "src");
+  spc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_set_event_function (spc->srcpad, gst_spc_dec_src_event);
   gst_pad_set_query_function (spc->srcpad, gst_spc_dec_src_query);
   gst_pad_use_fixed_caps (spc->srcpad);

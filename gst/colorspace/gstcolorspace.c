@@ -516,16 +516,14 @@ static void
 gst_colorspace_init (GstColorspace * space)
 {
   space->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_colorspace_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_colorspace_sink_template, "sink");
   gst_pad_set_link_function (space->sinkpad, gst_colorspace_link);
   gst_pad_set_getcaps_function (space->sinkpad, gst_colorspace_getcaps);
   gst_pad_set_chain_function (space->sinkpad, gst_colorspace_chain);
   gst_element_add_pad (GST_ELEMENT (space), space->sinkpad);
 
   space->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_colorspace_src_template), "src");
+      gst_pad_new_from_static_template (&gst_colorspace_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (space), space->srcpad);
   gst_pad_set_link_function (space->srcpad, gst_colorspace_link);
 }

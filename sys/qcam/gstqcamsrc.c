@@ -213,8 +213,7 @@ static void
 gst_qcamsrc_init (GstQCamSrc * qcamsrc)
 {
   qcamsrc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_qcamsrc_src_factory), "src");
+      gst_pad_new_from_static_template (&gst_qcamsrc_src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (qcamsrc), qcamsrc->srcpad);
   gst_pad_set_get_function (qcamsrc->srcpad, gst_qcamsrc_get);
 

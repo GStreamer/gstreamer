@@ -156,11 +156,8 @@ gst_smoothwave_init (GstSmoothWave * smoothwave)
   int i;
 
   smoothwave->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
-  smoothwave->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+      gst_pad_new_from_static_template (&sink_template, "sink");
+  smoothwave->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (smoothwave), smoothwave->sinkpad);
   gst_pad_set_chain_function (smoothwave->sinkpad, gst_smoothwave_chain);
   gst_pad_set_link_function (smoothwave->sinkpad, gst_sw_sinklink);

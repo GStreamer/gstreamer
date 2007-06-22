@@ -193,12 +193,10 @@ static void
 passthrough_init (GstPassthrough * filter)
 {
   filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&passthrough_src_template), "src");
+      gst_pad_new_from_static_template (&passthrough_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
   filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&passthrough_sink_template), "sink");
+      gst_pad_new_from_static_template (&passthrough_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
 
   gst_pad_set_link_function (filter->sinkpad, passthrough_connect_sink);

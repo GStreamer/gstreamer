@@ -194,15 +194,13 @@ static void
 gst_snapshot_init (GstSnapshot * snapshot)
 {
   snapshot->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&snapshot_sink_factory), "sink");
+      gst_pad_new_from_static_template (&snapshot_sink_factory, "sink");
   gst_pad_set_link_function (snapshot->sinkpad, gst_snapshot_sinkconnect);
   gst_pad_set_chain_function (snapshot->sinkpad, gst_snapshot_chain);
   gst_element_add_pad (GST_ELEMENT (snapshot), snapshot->sinkpad);
 
   snapshot->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&snapshot_src_factory), "src");
+      gst_pad_new_from_static_template (&snapshot_src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (snapshot), snapshot->srcpad);
 
   snapshot->cur_frame = 0;

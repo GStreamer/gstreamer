@@ -149,8 +149,7 @@ static void
 gst_system_encode_init (GstMPEG1SystemEncode * system_encode)
 {
   system_encode->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_factory),
-      "src");
+      gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (system_encode), system_encode->srcpad);
 
   system_encode->video_buffer = mpeg1mux_buffer_new (BUFFER_TYPE_VIDEO, 0xE0);

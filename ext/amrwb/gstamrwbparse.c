@@ -95,8 +95,7 @@ gst_amrwbparse_init (GstAmrwbParse * amrwbparse, GstAmrwbParseClass * klass)
 {
   /* create the sink pad */
   amrwbparse->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
+      gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_chain_function (amrwbparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_amrwbparse_chain));
 
@@ -108,9 +107,7 @@ gst_amrwbparse_init (GstAmrwbParse * amrwbparse, GstAmrwbParseClass * klass)
   gst_element_add_pad (GST_ELEMENT (amrwbparse), amrwbparse->sinkpad);
 
   /* create the src pad */
-  amrwbparse->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+  amrwbparse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_query_function (amrwbparse->srcpad,
       GST_DEBUG_FUNCPTR (gst_amrwbparse_query));
   gst_pad_set_query_type_function (amrwbparse->srcpad,

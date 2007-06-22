@@ -92,8 +92,7 @@ gst_cdxa_parse_init (GstCDXAParse * cdxaparse, GstCDXAParseClass * klass)
   GstCaps *caps;
 
   cdxaparse->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&sink_template_factory), "sink");
+      gst_pad_new_from_static_template (&sink_template_factory, "sink");
   gst_pad_set_activate_function (cdxaparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_cdxa_parse_sink_activate));
   gst_pad_set_activatepull_function (cdxaparse->sinkpad,
@@ -102,8 +101,7 @@ gst_cdxa_parse_init (GstCDXAParse * cdxaparse, GstCDXAParseClass * klass)
   gst_element_add_pad (GST_ELEMENT (cdxaparse), cdxaparse->sinkpad);
 
   cdxaparse->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&src_template_factory), "src");
+      gst_pad_new_from_static_template (&src_template_factory, "src");
 
   gst_pad_set_event_function (cdxaparse->srcpad,
       GST_DEBUG_FUNCPTR (gst_cdxa_parse_src_event));

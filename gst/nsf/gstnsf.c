@@ -180,17 +180,13 @@ gst_nsfdec_class_init (GstNsfDec * klass)
 static void
 gst_nsfdec_init (GstNsfDec * nsfdec)
 {
-  nsfdec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_templ),
-      "sink");
+  nsfdec->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
   gst_pad_set_query_function (nsfdec->sinkpad, NULL);
   gst_pad_set_event_function (nsfdec->sinkpad, gst_nsfdec_sink_event);
   gst_pad_set_chain_function (nsfdec->sinkpad, gst_nsfdec_chain);
   gst_element_add_pad (GST_ELEMENT (nsfdec), nsfdec->sinkpad);
 
-  nsfdec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_templ),
-      "src");
+  nsfdec->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
   gst_pad_set_event_function (nsfdec->srcpad, gst_nsfdec_src_event);
   gst_pad_set_query_function (nsfdec->srcpad, gst_nsfdec_src_query);
   gst_pad_use_fixed_caps (nsfdec->srcpad);

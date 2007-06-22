@@ -186,14 +186,12 @@ static void
 gst_festival_init (GstFestival * festival)
 {
   festival->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&sink_template_factory), "sink");
+      gst_pad_new_from_static_template (&sink_template_factory, "sink");
   gst_pad_set_chain_function (festival->sinkpad, gst_festival_chain);
   gst_element_add_pad (GST_ELEMENT (festival), festival->sinkpad);
 
   festival->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&src_template_factory), "src");
+      gst_pad_new_from_static_template (&src_template_factory, "src");
   gst_element_add_pad (GST_ELEMENT (festival), festival->srcpad);
 
   festival->info = festival_default_info ();

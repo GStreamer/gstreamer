@@ -139,16 +139,14 @@ gst_gsmdec_init (GstGSMDec * gsmdec)
 {
   /* create the sink and src pads */
   gsmdec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gsmdec_sink_template), "sink");
+      gst_pad_new_from_static_template (&gsmdec_sink_template, "sink");
   gst_pad_set_setcaps_function (gsmdec->sinkpad, gst_gsmdec_sink_setcaps);
   gst_pad_set_event_function (gsmdec->sinkpad, gst_gsmdec_sink_event);
   gst_pad_set_chain_function (gsmdec->sinkpad, gst_gsmdec_chain);
   gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->sinkpad);
 
   gsmdec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gsmdec_src_template), "src");
+      gst_pad_new_from_static_template (&gsmdec_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (gsmdec), gsmdec->srcpad);
 
   gsmdec->state = gsm_create ();

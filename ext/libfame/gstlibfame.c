@@ -363,16 +363,12 @@ gst_fameenc_init (GstFameEnc * fameenc)
   g_assert (fameenc->fc != NULL);
 
   /* create the sink and src pads */
-  fameenc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
+  fameenc->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (fameenc), fameenc->sinkpad);
   gst_pad_set_chain_function (fameenc->sinkpad, gst_fameenc_chain);
   gst_pad_set_link_function (fameenc->sinkpad, gst_fameenc_sink_link);
 
-  fameenc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+  fameenc->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_element_add_pad (GST_ELEMENT (fameenc), fameenc->srcpad);
   /* FIXME: set some more handler functions here */
 

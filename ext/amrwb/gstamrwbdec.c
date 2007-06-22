@@ -97,18 +97,14 @@ static void
 gst_amrwbdec_init (GstAmrwbDec * amrwbdec, GstAmrwbDecClass * klass)
 {
   /* create the sink pad */
-  amrwbdec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
+  amrwbdec->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_pad_set_setcaps_function (amrwbdec->sinkpad, gst_amrwbdec_setcaps);
   gst_pad_set_event_function (amrwbdec->sinkpad, gst_amrwbdec_event);
   gst_pad_set_chain_function (amrwbdec->sinkpad, gst_amrwbdec_chain);
   gst_element_add_pad (GST_ELEMENT (amrwbdec), amrwbdec->sinkpad);
 
   /* create the src pad */
-  amrwbdec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+  amrwbdec->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_use_fixed_caps (amrwbdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (amrwbdec), amrwbdec->srcpad);
 

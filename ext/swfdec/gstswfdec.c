@@ -536,16 +536,14 @@ gst_swfdec_init (GstSwfdec * swfdec)
 {
   /* create the sink and src pads */
   swfdec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&sink_template_factory), "sink");
+      gst_pad_new_from_static_template (&sink_template_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (swfdec), swfdec->sinkpad);
 
   gst_pad_set_chain_function (swfdec->sinkpad, gst_swfdec_chain);
   gst_pad_set_event_function (swfdec->sinkpad, gst_swfdec_sink_event);
 
   swfdec->videopad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&video_template_factory), "video_00");
+      gst_pad_new_from_static_template (&video_template_factory, "video_00");
   gst_pad_set_query_function (swfdec->videopad, gst_swfdec_src_query);
   gst_pad_set_getcaps_function (swfdec->videopad, gst_swfdec_video_getcaps);
   gst_pad_set_setcaps_function (swfdec->videopad, gst_swfdec_video_link);
@@ -557,8 +555,7 @@ gst_swfdec_init (GstSwfdec * swfdec)
   gst_element_add_pad (GST_ELEMENT (swfdec), swfdec->videopad);
 
   swfdec->audiopad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&audio_template_factory), "audio_00");
+      gst_pad_new_from_static_template (&audio_template_factory, "audio_00");
   gst_pad_set_query_function (swfdec->audiopad, gst_swfdec_src_query);
   gst_pad_set_event_function (swfdec->audiopad, gst_swfdec_src_event);
 

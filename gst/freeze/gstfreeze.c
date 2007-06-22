@@ -111,8 +111,7 @@ static void
 gst_freeze_init (GstFreeze * freeze, GstFreezeClass * klass)
 {
   freeze->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_freeze_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_freeze_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (freeze), freeze->sinkpad);
   gst_pad_set_activate_function (freeze->sinkpad, gst_freeze_sink_activate);
   gst_pad_set_activatepull_function (freeze->sinkpad,
@@ -121,8 +120,8 @@ gst_freeze_init (GstFreeze * freeze, GstFreezeClass * klass)
   gst_pad_set_getcaps_function (freeze->sinkpad, gst_pad_proxy_getcaps);
   gst_pad_set_event_function (freeze->sinkpad, gst_freeze_sink_event);
 
-  freeze->srcpad = gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_freeze_src_template), "src");
+  freeze->srcpad =
+      gst_pad_new_from_static_template (&gst_freeze_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (freeze), freeze->srcpad);
   gst_pad_set_getcaps_function (freeze->srcpad, gst_pad_proxy_getcaps);
 

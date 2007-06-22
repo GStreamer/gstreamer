@@ -198,18 +198,14 @@ static void
 gst_divxenc_init (GstDivxEnc * divxenc)
 {
   /* create the sink pad */
-  divxenc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_template),
-      "sink");
+  divxenc->sinkpad = gst_pad_new_from_static_template (&sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (divxenc), divxenc->sinkpad);
 
   gst_pad_set_chain_function (divxenc->sinkpad, gst_divxenc_chain);
   gst_pad_set_setcaps_function (divxenc->sinkpad, gst_divxenc_setcaps);
 
   /* create the src pad */
-  divxenc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_template),
-      "src");
+  divxenc->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_use_fixed_caps (divxenc->srcpad);
   gst_element_add_pad (GST_ELEMENT (divxenc), divxenc->srcpad);
 

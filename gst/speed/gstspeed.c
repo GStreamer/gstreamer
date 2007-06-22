@@ -490,16 +490,14 @@ static void
 speed_init (GstSpeed * filter)
 {
   filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_speed_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_speed_sink_template, "sink");
   gst_pad_set_setcaps_function (filter->sinkpad, speed_setcaps);
   gst_pad_set_chain_function (filter->sinkpad, speed_chain);
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_pad_set_event_function (filter->sinkpad, speed_sink_event);
 
   filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_speed_src_template), "src");
+      gst_pad_new_from_static_template (&gst_speed_src_template, "src");
   gst_pad_set_setcaps_function (filter->srcpad, speed_setcaps);
   gst_pad_set_query_type_function (filter->srcpad, speed_get_query_types);
   gst_pad_set_query_function (filter->srcpad, speed_src_query);

@@ -172,12 +172,8 @@ static void
 gst_chart_init (GstChart * chart)
 {
   /* create the sink and src pads */
-  chart->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_factory),
-      "sink");
-  chart->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_factory),
-      "src");
+  chart->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
+  chart->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (chart), chart->sinkpad);
   gst_element_add_pad (GST_ELEMENT (chart), chart->srcpad);
 

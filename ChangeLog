@@ -1,3 +1,46 @@
+2007-06-22  Edward Hervey  <edward@fluendo.com>
+
+	* ext/amrwb/gstamrwbdec.c: (gst_amrwbdec_init):
+	* ext/amrwb/gstamrwbenc.c: (gst_amrwbenc_init):
+	* ext/amrwb/gstamrwbparse.c: (gst_amrwbparse_init):
+	* ext/audioresample/gstaudioresample.c:
+	* ext/bz2/gstbz2dec.c: (gst_bz2dec_init):
+	* ext/bz2/gstbz2enc.c: (gst_bz2enc_init):
+	* ext/divx/gstdivxdec.c: (gst_divxdec_init):
+	* ext/divx/gstdivxenc.c: (gst_divxenc_init):
+	* ext/faac/gstfaac.c: (gst_faac_init):
+	* ext/gsm/gstgsmdec.c: (gst_gsmdec_init):
+	* ext/gsm/gstgsmenc.c: (gst_gsmenc_init):
+	* ext/hermes/gsthermescolorspace.c: (gst_hermes_colorspace_init):
+	* ext/lcs/gstcolorspace.c: (gst_colorspace_init):
+	* ext/libfame/gstlibfame.c: (gst_fameenc_init):
+	* ext/snapshot/gstsnapshot.c: (gst_snapshot_init):
+	* ext/spc/gstspc.c: (gst_spc_dec_init):
+	* ext/swfdec/gstswfdec.c: (gst_swfdec_init):
+	* ext/xvid/gstxvidenc.c: (gst_xvidenc_init):
+	* gst/cdxaparse/gstcdxaparse.c: (gst_cdxa_parse_init):
+	* gst/cdxaparse/gstcdxastrip.c: (gst_cdxastrip_init):
+	* gst/chart/gstchart.c: (gst_chart_init):
+	* gst/colorspace/gstcolorspace.c: (gst_colorspace_init):
+	* gst/festival/gstfestival.c: (gst_festival_init):
+	* gst/freeze/gstfreeze.c: (gst_freeze_init):
+	* gst/mixmatrix/mixmatrix.c: (gst_mixmatrix_request_new_pad):
+	* gst/mpeg1sys/gstmpeg1systemencode.c: (gst_system_encode_init):
+	* gst/mpeg2sub/gstmpeg2subt.c: (gst_mpeg2subt_init):
+	* gst/nsf/gstnsf.c: (gst_nsfdec_init):
+	* gst/overlay/gstoverlay.c: (gst_overlay_init):
+	* gst/passthrough/gstpassthrough.c: (passthrough_init):
+	* gst/playondemand/gstplayondemand.c: (play_on_demand_init):
+	* gst/smooth/gstsmooth.c: (gst_smooth_init):
+	* gst/smoothwave/gstsmoothwave.c: (gst_smoothwave_init):
+	* gst/speed/gstspeed.c: (speed_init):
+	* gst/vbidec/gstvbidec.c: (gst_vbidec_init):
+	* gst/videodrop/gstvideodrop.c: (gst_videodrop_init):
+	* sys/dxr3/dxr3spusink.c: (dxr3spusink_init):
+	* sys/dxr3/dxr3videosink.c: (dxr3videosink_init):
+	* sys/qcam/gstqcamsrc.c: (gst_qcamsrc_init):
+	Fix leaks.
+
 2007-06-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* RELEASE:

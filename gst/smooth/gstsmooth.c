@@ -160,15 +160,13 @@ static void
 gst_smooth_init (GstSmooth * smooth)
 {
   smooth->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_smooth_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_smooth_sink_template, "sink");
   gst_pad_set_link_function (smooth->sinkpad, gst_smooth_link);
   gst_pad_set_chain_function (smooth->sinkpad, gst_smooth_chain);
   gst_element_add_pad (GST_ELEMENT (smooth), smooth->sinkpad);
 
   smooth->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_smooth_sink_template), "src");
+      gst_pad_new_from_static_template (&gst_smooth_sink_template, "src");
   gst_pad_set_link_function (smooth->srcpad, gst_smooth_link);
   gst_element_add_pad (GST_ELEMENT (smooth), smooth->srcpad);
 

@@ -236,11 +236,9 @@ static void
 play_on_demand_init (GstPlayOnDemand * filter)
 {
   filter->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&play_on_demand_src_template), "src");
+      gst_pad_new_from_static_template (&play_on_demand_src_template, "src");
   filter->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&play_on_demand_sink_template), "sink");
+      gst_pad_new_from_static_template (&play_on_demand_sink_template, "sink");
 
   gst_pad_set_link_function (filter->sinkpad, play_on_demand_pad_link);
 

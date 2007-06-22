@@ -537,16 +537,16 @@ static void
 gst_hermes_colorspace_init (GstHermesColorspace * space)
 {
   space->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_hermes_colorspace_sink_pad_template), "sink");
+      gst_pad_new_from_static_template
+      (&gst_hermes_colorspace_sink_pad_template, "sink");
   gst_pad_set_link_function (space->sinkpad, gst_hermes_colorspace_link);
   gst_pad_set_getcaps_function (space->sinkpad, gst_hermes_colorspace_getcaps);
   gst_pad_set_chain_function (space->sinkpad, gst_hermes_colorspace_chain);
   gst_element_add_pad (GST_ELEMENT (space), space->sinkpad);
 
   space->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_hermes_colorspace_src_pad_template), "src");
+      gst_pad_new_from_static_template (&gst_hermes_colorspace_src_pad_template,
+      "src");
   gst_element_add_pad (GST_ELEMENT (space), space->srcpad);
   gst_pad_set_link_function (space->srcpad, gst_hermes_colorspace_link);
 

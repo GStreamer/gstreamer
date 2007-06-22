@@ -198,9 +198,7 @@ dxr3videosink_init (Dxr3VideoSink * sink)
 {
   GstPad *pad;
 
-  pad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&dxr3videosink_sink_factory), "sink");
+  pad = gst_pad_new_from_static_template (&dxr3videosink_sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (sink), pad);
   gst_pad_set_chain_function (pad, dxr3videosink_chain);
 

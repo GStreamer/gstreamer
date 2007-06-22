@@ -232,16 +232,14 @@ gst_videodrop_init (GstVideodrop * videodrop)
 
   GST_DEBUG ("gst_videodrop_init");
   videodrop->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_videodrop_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_videodrop_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (videodrop), videodrop->sinkpad);
   gst_pad_set_chain_function (videodrop->sinkpad, gst_videodrop_chain);
   gst_pad_set_getcaps_function (videodrop->sinkpad, gst_videodrop_getcaps);
   gst_pad_set_link_function (videodrop->sinkpad, gst_videodrop_link);
 
   videodrop->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_videodrop_src_template), "src");
+      gst_pad_new_from_static_template (&gst_videodrop_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (videodrop), videodrop->srcpad);
   gst_pad_set_getcaps_function (videodrop->srcpad, gst_videodrop_getcaps);
   gst_pad_set_link_function (videodrop->srcpad, gst_videodrop_link);

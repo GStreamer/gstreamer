@@ -195,26 +195,22 @@ static void
 gst_overlay_init (GstOverlay * overlay)
 {
   overlay->sinkpad1 =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&overlay_sink1_factory), "sink1");
+      gst_pad_new_from_static_template (&overlay_sink1_factory, "sink1");
   gst_pad_set_link_function (overlay->sinkpad1, gst_overlay_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->sinkpad1);
 
   overlay->sinkpad2 =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&overlay_sink2_factory), "sink2");
+      gst_pad_new_from_static_template (&overlay_sink2_factory, "sink2");
   gst_pad_set_link_function (overlay->sinkpad2, gst_overlay_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->sinkpad2);
 
   overlay->sinkpad3 =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&overlay_sink3_factory), "sink3");
+      gst_pad_new_from_static_template (&overlay_sink3_factory, "sink3");
   gst_pad_set_link_function (overlay->sinkpad3, gst_overlay_sinkconnect);
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->sinkpad3);
 
   overlay->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&overlay_src_factory), "src");
+      gst_pad_new_from_static_template (&overlay_src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
   gst_element_set_loop_function (GST_ELEMENT (overlay), gst_overlay_loop);
