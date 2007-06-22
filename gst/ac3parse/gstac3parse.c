@@ -183,14 +183,12 @@ static void
 gst_ac3parse_init (GstAc3Parse * ac3parse)
 {
   ac3parse->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_ac3parse_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_ac3parse_sink_template, "sink");
   gst_element_add_pad (GST_ELEMENT (ac3parse), ac3parse->sinkpad);
   gst_pad_set_chain_function (ac3parse->sinkpad, gst_ac3parse_chain);
 
   ac3parse->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_ac3parse_src_template), "src");
+      gst_pad_new_from_static_template (&gst_ac3parse_src_template, "src");
   gst_pad_use_explicit_caps (ac3parse->srcpad);
   gst_element_add_pad (GST_ELEMENT (ac3parse), ac3parse->srcpad);
 

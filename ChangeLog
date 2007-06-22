@@ -1,3 +1,14 @@
+2007-06-22  Edward Hervey  <edward@fluendo.com>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_init):
+	* gst/ac3parse/gstac3parse.c: (gst_ac3parse_init):
+	* gst/asfdemux/gstasfmux.c: (gst_asfmux_init):
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c: (gst_dvdlpcmdec_init):
+	* gst/dvdsub/gstdvdsubdec.c: (gst_dvd_sub_dec_init):
+	* gst/iec958/ac3iec.c: (ac3iec_init):
+	* gst/mpegstream/gstrfc2250enc.c: (gst_rfc2250_enc_init):
+	Fix leaks some more.
+
 2007-06-21  Edward Hervey  <edward@fluendo.com>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_init):

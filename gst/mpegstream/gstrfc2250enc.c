@@ -142,14 +142,11 @@ static void
 gst_rfc2250_enc_init (GstRFC2250Enc * rfc2250_enc)
 {
   rfc2250_enc->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_factory),
-      "sink");
+      gst_pad_new_from_static_template (&sink_factory, "sink");
   gst_element_add_pad (GST_ELEMENT (rfc2250_enc), rfc2250_enc->sinkpad);
   gst_element_set_loop_function (GST_ELEMENT (rfc2250_enc),
       gst_rfc2250_enc_loop);
-  rfc2250_enc->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_factory),
-      "src");
+  rfc2250_enc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_element_add_pad (GST_ELEMENT (rfc2250_enc), rfc2250_enc->srcpad);
 
   /* initialize parser state */

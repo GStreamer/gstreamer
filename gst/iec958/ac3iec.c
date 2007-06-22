@@ -177,15 +177,12 @@ static void
 ac3iec_init (AC3IEC * ac3iec)
 {
   ac3iec->sink =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&ac3iec_sink_template), "sink");
+      gst_pad_new_from_static_template (&ac3iec_sink_template, "sink");
   gst_pad_set_setcaps_function (ac3iec->sink, ac3iec_setcaps);
   gst_pad_set_chain_function (ac3iec->sink, ac3iec_chain_dvd);
   gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->sink);
 
-  ac3iec->src =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&ac3iec_src_template), "src");
+  ac3iec->src = gst_pad_new_from_static_template (&ac3iec_src_template, "src");
   gst_pad_use_fixed_caps (ac3iec->src);
   gst_element_add_pad (GST_ELEMENT (ac3iec), ac3iec->src);
 

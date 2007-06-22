@@ -162,15 +162,13 @@ static void
 gst_dvdlpcmdec_init (GstDvdLpcmDec * dvdlpcmdec)
 {
   dvdlpcmdec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_dvdlpcmdec_sink_template), "sink");
+      gst_pad_new_from_static_template (&gst_dvdlpcmdec_sink_template, "sink");
   gst_pad_set_setcaps_function (dvdlpcmdec->sinkpad, gst_dvdlpcmdec_setcaps);
   gst_pad_set_event_function (dvdlpcmdec->sinkpad, dvdlpcmdec_sink_event);
   gst_element_add_pad (GST_ELEMENT (dvdlpcmdec), dvdlpcmdec->sinkpad);
 
   dvdlpcmdec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_dvdlpcmdec_src_template), "src");
+      gst_pad_new_from_static_template (&gst_dvdlpcmdec_src_template, "src");
   gst_pad_use_fixed_caps (dvdlpcmdec->srcpad);
   gst_element_add_pad (GST_ELEMENT (dvdlpcmdec), dvdlpcmdec->srcpad);
 

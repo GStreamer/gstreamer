@@ -130,9 +130,7 @@ gst_dvd_sub_dec_init (GstDvdSubDec * dec, GstDvdSubDecClass * klass)
 {
   GstPadTemplate *tmpl;
 
-  dec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&subtitle_template), "sink");
+  dec->sinkpad = gst_pad_new_from_static_template (&subtitle_template, "sink");
   gst_pad_set_chain_function (dec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_dvd_sub_dec_chain));
   gst_pad_set_event_function (dec->sinkpad,

@@ -236,8 +236,7 @@ gst_asfmux_init (GstAsfMux * asfmux)
   gint n;
 
   asfmux->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get
-      (&gst_asfmux_src_template), "src");
+      gst_pad_new_from_static_template (&gst_asfmux_src_template, "src");
   gst_element_add_pad (GST_ELEMENT (asfmux), asfmux->srcpad);
 
   GST_OBJECT_FLAG_SET (GST_ELEMENT (asfmux), GST_ELEMENT_EVENT_AWARE);
