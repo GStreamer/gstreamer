@@ -2712,6 +2712,8 @@ no_first_chain:
 no_last_page:
   {
     GST_DEBUG_OBJECT (ogg, "can't get last page");
+    if (chain)
+      gst_ogg_chain_free (chain);
     return ret;
   }
 }

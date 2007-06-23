@@ -1,3 +1,11 @@
+2007-06-23  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_find_chains):
+	The chain should be freed if we error out here, else it will leak.
+	* gst/playback/gstdecodebin.c: (disconnect_unlinked_signals),
+	(cleanup_decodebin):
+	Don't forget to *properly* remove the signals, else it will leak.
+
 2007-06-22  Jan Schmidt  <thaytan@noraisin.net>
 
 	* MAINTAINERS:

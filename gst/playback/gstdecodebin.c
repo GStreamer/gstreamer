@@ -1576,6 +1576,34 @@ shutting_down:
 }
 
 static void
+disconnect_unlinked_signals (GstDecodeBin * decode_bin, GstElement * element)
+{
+  GstIterator *pad_it = NULL;
+  gboolean done = FALSE;
+
+  pad_it = gst_element_iterate_src_pads (element);
+  while (!done) {
+    GstPad *pad = NULL;
+
+    switch (gst_iterator_next (pad_it, (gpointer) & pad)) {
+      case GST_ITERATOR_OK:
+        g_signal_handlers_disconnect_by_func (pad, (gpointer) unlinked,
+            decode_bin);
+        gst_object_unref (pad);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (pad_it);
+        break;
+      default:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (pad_it);
+}
+
+
+static void
 cleanup_decodebin (GstDecodeBin * decode_bin)
 {
   GstIterator *elem_it = NULL, *gpad_it = NULL;
@@ -1600,8 +1628,7 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
       case GST_ITERATOR_OK:
         if (element != decode_bin->typefind && element != decode_bin->fakesink) {
           GST_DEBUG_OBJECT (element, "removing autoplugged element");
-          g_signal_handlers_disconnect_by_func (element, (gpointer) unlinked,
-              decode_bin);
+          disconnect_unlinked_signals (decode_bin, element);
           gst_element_set_state (element, GST_STATE_NULL);
           gst_bin_remove (GST_BIN (decode_bin), element);
         }
@@ -1650,6 +1677,8 @@ cleanup_decodebin (GstDecodeBin * decode_bin)
 
   if (GST_IS_PAD (typefind_pad)) {
     g_signal_handlers_unblock_by_func (typefind_pad, (gpointer) unlinked,
+        decode_bin);
+    g_signal_handlers_disconnect_by_func (typefind_pad, (gpointer) unlinked,
         decode_bin);
     gst_object_unref (typefind_pad);
   }
