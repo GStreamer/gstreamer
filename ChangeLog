@@ -1,5 +1,10 @@
 2007-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/vi.po:
+	  Updated Vietnames translation.
+
+2007-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	contributed by: Wenzheng Hu <db_lobster@163.com>
 
 	* po/LINGUAS:
