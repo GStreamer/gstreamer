@@ -77,9 +77,9 @@ G_BEGIN_DECLS
  * @GST_STATE_CHANGE_FAILURE   : the state change failed
  * @GST_STATE_CHANGE_SUCCESS   : the state change succeeded
  * @GST_STATE_CHANGE_ASYNC     : the state change will happen asynchronously
- * @GST_STATE_CHANGE_NO_PREROLL: the state change succeeded but the element cannot
- *                               produce data in PAUSED. This typically happens
- *                               with live sources.
+ * @GST_STATE_CHANGE_NO_PREROLL: the state change succeeded but the element
+ *                               cannot produce data in PAUSED. This typically
+ *                               happens with live sources.
  *
  * The possible return values from a state change function. Only
  * @GST_STATE_CHANGE_FAILURE is a real failure.
