@@ -1,0 +1,53 @@
+# Chinese (simplified) translation for gst-plugins-ugly.
+# Copyright (C) 2007 Free Software Foundation, Inc.
+# This file is distributed under the same license as the gst-plugins-ugly package.
+# Wenzheng Hu <db_lobster@163.com>, 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-ugly 0.10.6\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-06-13 12:52+0200\n"
+"PO-Revision-Date: 2007-06-22 23:19+0800\n"
+"Last-Translator: LI Daobing <lidaobing@gmail.com>\n"
+"Language-Team: Chinese (simplified) <translation-team-zh-cn@lists.sourceforge.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ext/dvdread/dvdreadsrc.c:228 ext/dvdread/dvdreadsrc.c:235
+msgid "Could not open DVD"
+msgstr "无法打开 DVD"
+
+#: ext/dvdread/dvdreadsrc.c:242 ext/dvdread/dvdreadsrc.c:594
+#: ext/dvdread/dvdreadsrc.c:601
+#, c-format
+msgid "Could not open DVD title %d"
+msgstr "无法打开 DVD 标题 %d"
+
+#: ext/dvdread/dvdreadsrc.c:248
+#, c-format
+msgid "Failed to go to chapter %d of DVD title %d"
+msgstr "跳转到章节 %d, DVD 标题 %d 失败"
+
+#: ext/dvdread/dvdreadsrc.c:608
+#, c-format
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "无法打开 DVD 标题 %d. 这个元素不支持互动标题"
+
+#: ext/lame/gstlame.c:560
+msgid "Failed to configure LAME encoder. Check your encoding parameters."
+msgstr "设置 LAME 编码器失败. 请检查你的编码参数."
+
+#: ext/lame/gstlame.c:691
+#, c-format
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "不允许的比特率 %d kbit/s 于 '%s'. 比特率已改变成 %d kbit/s."
+
+#: gst/asfdemux/gstasfdemux.c:322
+msgid "This stream contains no data."
+msgstr "这个串流中没有包含数据."
+
+#: gst/asfdemux/gstasfdemux.c:2936
+msgid "This file is encrypted and cannot be played."
+msgstr "这个文件是加密的, 不能播放."
