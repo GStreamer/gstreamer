@@ -1,3 +1,11 @@
+2007-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	Contributed by: Wenzheng Hu <db_lobster@163.com>
+
+	* po/LINGUAS:
+	* po/zh_CN.po:
+	  Added Chinese (simplified) translation.
+
 2007-06-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Jens Granseuer  <jensgr at gmx net>
