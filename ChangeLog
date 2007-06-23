@@ -1,3 +1,9 @@
+2007-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ChangeLog:
+	* po/vi.po:
+	  Update Vietnamese translations.
+
 2007-06-21  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* libs/gst/base/gstbasesink.c:
@@ -1057,7 +1063,7 @@
 	* gst/gsturi.c: (get_element_factories_from_uri_protocol),
 	(gst_uri_protocol_is_supported), (gst_element_make_from_uri):
 	* gst/gsturi.h:
-	API: Add gst_uri_protocol_is_supported(), which checks if an sink
+	API: Add gst_uri_protocol_is_supported(), which checks if a sink
 	or src that supports a given URI protocol exists.
 
 2007-04-27  Sebastian Dröge  <slomo@circular-chaos.org>
