@@ -601,7 +601,7 @@
 <ARG>
 <NAME>GstMPEGParse::max-scr-gap</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max SCR gap</NICK>
 <BLURB>Maximum allowed gap between expected and actual SCR values. -1 means never adjust.</BLURB>

@@ -3,10 +3,10 @@
   <description>Demuxes and muxes audio and video in Microsofts ASF format</description>
   <filename>../../gst/asfdemux/.libs/libgstasf.so</filename>
   <basename>libgstasf.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
-  <package>GStreamer Ugly Plug-ins source release</package>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,26 @@
       <class>Codec/Demuxer</class>
       <description>Demultiplexes ASF Streams</description>
       <author>Owen Fraser-Green &lt;owen@discobabe.net&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-ms-asf</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

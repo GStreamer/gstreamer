@@ -3,7 +3,7 @@
   <description>Adaptive Multi-Rate Narrow-Band</description>
   <filename>../../ext/amrnb/.libs/libgstamrnb.so</filename>
   <basename>libgstamrnb.so</basename>
-  <version>0.10.4.1</version>
+  <version>0.10.6.1</version>
   <license>unknown</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
@@ -11,24 +11,66 @@
   <elements>
     <element>
       <name>amrnbdec</name>
-      <longname>AMR-NB decoder</longname>
+      <longname>AMR-NB audio decoder</longname>
       <class>Codec/Decoder/Audio</class>
       <description>Adaptive Multi-Rate Narrow-Band audio decoder</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/AMR, rate=(int)8000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean)true, endianness=(int)1234, rate=(int)8000, channels=(int)1</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>amrnbenc</name>
-      <longname>AMR-NB encoder</longname>
+      <longname>AMR-NB audio encoder</longname>
       <class>Codec/Encoder/Audio</class>
       <description>Adaptive Multi-Rate Narrow-Band audio encoder</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, signed=(boolean)true, endianness=(int)1234, rate=(int)8000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/AMR, rate=(int)8000, channels=(int)1</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>amrnbparse</name>
-      <longname>AMR-NB parser</longname>
+      <longname>AMR-NB audio stream parser</longname>
       <class>Codec/Parser/Audio</class>
       <description>Adaptive Multi-Rate Narrow-Band audio parser</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-amr-nb-sh</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/AMR, rate=(int)8000, channels=(int)1</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>
