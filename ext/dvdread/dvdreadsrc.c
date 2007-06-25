@@ -777,21 +777,21 @@ again:
   }
 
   /* read NAV packet */
-nav_retry:
-
   len = DVDReadBlocks (src->dvd_title, src->cur_pack, 1, oneblock);
   if (len == 0)
     goto read_error;
 
   if (!gst_dvd_read_src_is_nav_pack (oneblock)) {
-    GST_LOG_OBJECT (src, "Skipping nav packet @ pack %d", src->cur_pack);
-    src->cur_pack++;
-    goto nav_retry;
+    GST_LOG_OBJECT (src, "Expected nav packet @ pack %d", src->cur_pack);
+    goto read_error;
   }
 
   /* parse the contained dsi packet */
   navRead_DSI (&dsi_pack, &oneblock[DSI_START_BYTE]);
-  g_assert (src->cur_pack == dsi_pack.dsi_gi.nv_pck_lbn);
+  if (src->cur_pack != dsi_pack.dsi_gi.nv_pck_lbn) {
+    GST_ERROR ("src->cur_pack = %d, dsi_pack.dsi_gi.nv_pck_lbn = %d",
+        src->cur_pack, dsi_pack.dsi_gi.nv_pck_lbn);
+  }
 
   /* determine where we go next. These values are the ones we
    * mostly care about */
