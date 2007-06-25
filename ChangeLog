@@ -1,3 +1,21 @@
+2007-06-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gconf/.cvsignore:
+	* gconf/Makefile.am:
+	* gconf/gstreamer.schemas.in:
+	  Remove dysfunctional directory (this stuff is in -good).
+
+	* ext/sndfile/gstsf.c: (plugin_init):
+	* sys/dvb/gstdvbsrc.c: (plugin_init):
+	  Add i18n bindtextdomain stuff.
+
+	* gst/nuvdemux/gstnuvdemux.c: (gst_nuv_demux_class_init),
+	(plugin_init):
+	  Post an error message when returning GST_FLOW_ERROR; minor cleanups.
+
+	* po/POTFILES.in:
+	  Add more source files with translatable strings (fixes #450605).
+
 2007-06-23  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	Contributed by: Wenzheng Hu <db_lobster@163.com>

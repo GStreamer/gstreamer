@@ -1,4 +1,4 @@
-/* GStreamer
+/* GStreamer NUV demuxer
  * Copyright (C) <2006> Renato Araujo Oliveira Filho <renato.filho@indt.org.br>
  *                      Rosfran Borges <rosfran.borges@indt.org.br>
  *
@@ -151,13 +151,10 @@ gst_nuv_demux_class_init (GstNuvDemuxClass * klass)
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  GST_DEBUG_CATEGORY_INIT (nuvdemux_debug, "nuvdemux",
-      0, "Demuxer for NUV streams");
-
-  parent_class = g_type_class_peek_parent (klass);
-
   gobject_class->finalize = gst_nuv_demux_finalize;
-  gstelement_class->change_state = gst_nuv_demux_change_state;
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_nuv_demux_change_state);
 }
 
 static void
@@ -203,7 +200,7 @@ gst_nuv_demux_finalize (GObject * object)
 }
 
 /*****************************************************************************
- * Utils fucntions
+ * Utils functions
  *****************************************************************************/
 
 static gboolean
@@ -642,9 +639,9 @@ gst_nuv_demux_stream_extend_header (GstNuvDemux * nuv)
     nuv->state = GST_NUV_DEMUX_EXTEND_HEADER_DATA;
   } else {
     nuv->state = GST_NUV_DEMUX_INVALID_DATA;
+    GST_ELEMENT_ERROR (nuv, STREAM, DEMUX, (NULL),
+        ("Unsupported extended header (0x%02x)", buf->data[0]));
     g_object_unref (buf);
-    GST_ELEMENT_WARNING (nuv, STREAM, FAILED,
-        (_("incomplete NUV support")), ("incomplete NUV support"));
     return GST_FLOW_ERROR;
   }
   return res;
@@ -921,8 +918,12 @@ done:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (nuvdemux_debug, "nuvdemux",
+      0, "Demuxer for NUV streams");
+
 #ifdef ENABLE_NLS
-  setlocale (LC_ALL, "");
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #endif /* ENABLE_NLS */
 

@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include <gst/gst-i18n-plugin.h>
 #include <string.h>
 
 #include "gstsf.h"
@@ -104,6 +105,12 @@ gst_sf_minor_types_get_type (void)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
+
   if (!gst_element_register (plugin, "sfsink", GST_RANK_NONE,
           gst_sf_sink_get_type ()))
     return FALSE;

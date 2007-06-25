@@ -1,6 +1,4 @@
-/*
- *
- * GStreamer
+/* GStreamer DVB source
  * Copyright (C) 2006 Zaheer Abbas Merali <zaheerabbas at merali
  *                                         dot org>
  *
@@ -40,7 +38,7 @@
 #include <linux/dvb/frontend.h>
 #include <linux/dvb/dmx.h>
 
-#include "../../gst-libs/gst/gst-i18n-plugin.h"
+#include <gst/gst-i18n-plugin.h>
 
 GST_DEBUG_CATEGORY_STATIC (gstdvbsrc_debug);
 #define GST_CAT_DEFAULT (gstdvbsrc_debug)
@@ -296,11 +294,7 @@ static GstStaticPadTemplate ts_src_factory = GST_STATIC_PAD_TEMPLATE ("src",
  ******************************
  */
 
-#define _do_init(bla) \
-    GST_DEBUG_CATEGORY_INIT (gstdvbsrc_debug, "dvbsrc", 0, "DVB Source Element");
-
-GST_BOILERPLATE_FULL (GstDvbSrc, gst_dvbsrc, GstPushSrc,
-    GST_TYPE_PUSH_SRC, _do_init);
+GST_BOILERPLATE (GstDvbSrc, gst_dvbsrc, GstPushSrc, GST_TYPE_PUSH_SRC);
 
 static void
 gst_dvbsrc_base_init (gpointer gclass)
@@ -764,6 +758,14 @@ gst_dvbsrc_finalize (GObject * _object)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gstdvbsrc_debug, "dvbsrc", 0, "DVB Source Element");
+
+#ifdef ENABLE_NLS
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
+  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
+#endif /* ENABLE_NLS */
+
   return gst_element_register (plugin, "dvbsrc", GST_RANK_NONE,
       GST_TYPE_DVBSRC);
 }
