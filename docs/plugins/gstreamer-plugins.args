@@ -261,7 +261,7 @@
 <ARG>
 <NAME>GstFakeSink::num-buffers</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>num-buffers</NICK>
 <BLURB>Number of buffers to accept going EOS.</BLURB>
@@ -633,8 +633,8 @@
 <TYPE>GstCaps</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
-<NICK>caps</NICK>
-<BLURB>detected capabilities in stream.</BLURB>
+<NICK>Fähigkeiten</NICK>
+<BLURB>Erkannte Fähigkeiten im Datenstrom.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -643,7 +643,7 @@
 <TYPE>guint</TYPE>
 <RANGE>[1,100]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>maximum</NICK>
+<NICK>Maximum</NICK>
 <BLURB>probability to stop typefinding (deprecated; non-functional).</BLURB>
 <DEFAULT>100</DEFAULT>
 </ARG>
@@ -653,7 +653,7 @@
 <TYPE>guint</TYPE>
 <RANGE>[1,100]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>minimum</NICK>
+<NICK>Minimum</NICK>
 <BLURB>minimum probability required to accept caps.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>
@@ -675,7 +675,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Extra Size (buffers)</NICK>
 <BLURB>Amount of buffers the queues can grow if one of them is empty (0=disable).</BLURB>
-<DEFAULT>200</DEFAULT>
+<DEFAULT>5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -695,7 +695,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Extra Size (ns)</NICK>
 <BLURB>Amount of time the queues can grow if one of them is empty (in ns, 0=disable).</BLURB>
-<DEFAULT>1000000000</DEFAULT>
+<DEFAULT>3000000000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -705,7 +705,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Max. size (buffers)</NICK>
 <BLURB>Max. number of buffers in the queue (0=disable).</BLURB>
-<DEFAULT>200</DEFAULT>
+<DEFAULT>5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -725,7 +725,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Max. size (ns)</NICK>
 <BLURB>Max. amount of data in the queue (in ns, 0=disable).</BLURB>
-<DEFAULT>1000000000</DEFAULT>
+<DEFAULT>2000000000</DEFAULT>
 </ARG>
 
 <ARG>
