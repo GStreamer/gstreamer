@@ -3,7 +3,7 @@
   <description>lib neon http client src</description>
   <filename>../../ext/neon/.libs/libgstneonhttpsrc.so</filename>
   <basename>libgstneonhttpsrc.so</basename>
-  <version>0.10.5</version>
+  <version>0.10.5.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>
@@ -15,6 +15,14 @@
       <class>Source/Network</class>
       <description>Receive data as a client over the network via HTTP using NEON</description>
       <author>Edgard Lima &lt;edgard.lima@indt.org.br&gt;, Rosfran Borges &lt;rosfran.borges@indt.org.br&gt;, Andre Moreira Magalhaes &lt;andre.magalhaes@indt.org.br&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

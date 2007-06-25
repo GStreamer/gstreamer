@@ -3,7 +3,7 @@
   <description>Microsoft Multi Media Server streaming protocol support</description>
   <filename>../../ext/libmms/.libs/libgstmms.so</filename>
   <basename>libgstmms.so</basename>
-  <version>0.10.5</version>
+  <version>0.10.5.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer</package>
@@ -15,6 +15,14 @@
       <class>Source/Network</class>
       <description>Receive data streamed via MSFT Multi Media Server protocol</description>
       <author>Maciej Katafiasz &lt;mathrick@users.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-ms-asf</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>
