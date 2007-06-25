@@ -3,10 +3,10 @@
   <description>elements to read from and write to  Gnome-VFS uri's</description>
   <filename>../../ext/gnomevfs/.libs/libgstgnomevfs.so</filename>
   <basename>libgstgnomevfs.so</basename>
-  <version>0.10.13</version>
+  <version>0.10.13.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,14 @@
       <class>Sink/File</class>
       <description>Write a stream to a GnomeVFS URI</description>
       <author>Bastien Nocera &lt;hadess@hadess.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>gnomevfssrc</name>
@@ -23,6 +31,14 @@
       <description>Read from any GnomeVFS-supported file</description>
       <author>Bastien Nocera &lt;hadess@hadess.net&gt;
     Ronald S. Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

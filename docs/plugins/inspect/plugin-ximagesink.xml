@@ -3,10 +3,10 @@
   <description>X11 video output element based on standard Xlib calls</description>
   <filename>../../sys/ximage/.libs/libgstximagesink.so</filename>
   <basename>libgstximagesink.so</basename>
-  <version>0.10.13</version>
+  <version>0.10.13.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,14 @@
       <class>Sink/Video</class>
       <description>A standard X based videosink</description>
       <author>Julien Moutte &lt;julien@moutte.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

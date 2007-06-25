@@ -68,6 +68,14 @@ guint64  arg6
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstMultiFdSink::remove-flush</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstMultiFdSink *gstmultifdsink
+gint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstDecodeBin::new-decoded-pad</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>

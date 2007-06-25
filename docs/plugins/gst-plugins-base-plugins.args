@@ -441,7 +441,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-max</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers max</NICK>
 <BLURB>max number of buffers to queue for a client (-1 = no limit).</BLURB>
@@ -461,7 +461,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-soft-max</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers soft max</NICK>
 <BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
@@ -551,7 +551,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-min</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers min</NICK>
 <BLURB>min number of buffers to queue (-1 = as few as possible).</BLURB>
@@ -581,7 +581,7 @@
 <ARG>
 <NAME>GstMultiFdSink::bytes-min</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bytes min</NICK>
 <BLURB>min number of bytes to queue (-1 = as little as possible).</BLURB>
@@ -591,7 +591,7 @@
 <ARG>
 <NAME>GstMultiFdSink::time-min</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Time min</NICK>
 <BLURB>min number of time to queue (-1 = as little as possible).</BLURB>
@@ -611,7 +611,7 @@
 <ARG>
 <NAME>GstMultiFdSink::units-max</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Units max</NICK>
 <BLURB>max number of units to queue (-1 = no limit).</BLURB>
@@ -621,7 +621,7 @@
 <ARG>
 <NAME>GstMultiFdSink::units-soft-max</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Units soft max</NICK>
 <BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
@@ -761,7 +761,7 @@
 <ARG>
 <NAME>GstVorbisEnc::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250001]</RANGE>
+<RANGE>[-1,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Target Bitrate</NICK>
 <BLURB>Attempt to encode at a bitrate averaging this (in bps). This uses the bitrate management engine, and is not recommended for most users. Quality is a better alternative. (-1 == disabled).</BLURB>
@@ -791,7 +791,7 @@
 <ARG>
 <NAME>GstVorbisEnc::max-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250001]</RANGE>
+<RANGE>[-1,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum Bitrate</NICK>
 <BLURB>Specify a maximum bitrate (in bps). Useful for streaming applications. (-1 == disabled).</BLURB>
@@ -801,7 +801,7 @@
 <ARG>
 <NAME>GstVorbisEnc::min-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250001]</RANGE>
+<RANGE>[-1,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Minimum Bitrate</NICK>
 <BLURB>Specify a minimum bitrate (in bps). Useful for encoding for a fixed-size channel. (-1 == disabled).</BLURB>
@@ -811,11 +811,11 @@
 <ARG>
 <NAME>GstVorbisEnc::quality</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[-0.1,1]</RANGE>
+<RANGE>[-0,1,1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Quality</NICK>
 <BLURB>Specify quality instead of specifying a particular bitrate.</BLURB>
-<DEFAULT>0.3</DEFAULT>
+<DEFAULT>0,3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1019,6 +1019,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstGnomeVFSSrc::random-access</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>random-mode</NICK>
+<BLURB>Enable random file access.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstOggMux::max-delay</NAME>
 <TYPE>guint64</TYPE>
 <RANGE></RANGE>
@@ -1125,7 +1135,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Volume</NICK>
 <BLURB>Volume of test signal.</BLURB>
-<DEFAULT>0.8</DEFAULT>
+<DEFAULT>0,8</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1581,7 +1591,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
 <BLURB>Read from device at specified speed.</BLURB>
@@ -1591,7 +1601,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::search-overlap</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,75]</RANGE>
+<RANGE>[-1,75]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Search overlap</NICK>
 <BLURB>Force minimum overlap search during verification to n sectors.</BLURB>
@@ -1754,7 +1764,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Temporary File Location</NICK>
-<BLURB>Location of a temporary file to store data in (unused).</BLURB>
+<BLURB>Location of a temporary file to store data in.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -1776,5 +1786,25 @@
 <NICK>Use Rate Estimate</NICK>
 <BLURB>Estimate the bitrate of the stream to calculate time level.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioConvert::dithering</NAME>
+<TYPE>GstAudioConvertDithering</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Dithering</NICK>
+<BLURB>Selects between different dithering methods.</BLURB>
+<DEFAULT>No dithering (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioConvert::noise-shaping</NAME>
+<TYPE>GstAudioConvertNoiseShaping</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Noise shaping</NICK>
+<BLURB>Selects between different noise shaping methods.</BLURB>
+<DEFAULT>No noise shaping (default)</DEFAULT>
 </ARG>
 

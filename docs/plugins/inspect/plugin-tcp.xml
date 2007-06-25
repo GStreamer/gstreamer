@@ -3,10 +3,10 @@
   <description>transfer data over the network via TCP</description>
   <filename>../../gst/tcp/.libs/libgsttcp.so</filename>
   <basename>libgsttcp.so</basename>
-  <version>0.10.13</version>
+  <version>0.10.13.1</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
-  <package>GStreamer Base Plug-ins source release</package>
+  <package>GStreamer Base Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,14 @@
       <class>Sink/Network</class>
       <description>Send data to multiple filedescriptors</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>tcpclientsink</name>
@@ -22,6 +30,14 @@
       <class>Sink/Network</class>
       <description>Send data as a client over the network via TCP</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>tcpclientsrc</name>
@@ -29,6 +45,14 @@
       <class>Source/Network</class>
       <description>Receive data as a client over the network via TCP</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>tcpserversink</name>
@@ -36,6 +60,14 @@
       <class>Sink/Network</class>
       <description>Send data as a server over the network via TCP</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>tcpserversrc</name>
@@ -43,6 +75,14 @@
       <class>Source/Network</class>
       <description>Receive data as a server over the network via TCP</description>
       <author>Thomas Vander Stichele &lt;thomas at apestaart dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>
