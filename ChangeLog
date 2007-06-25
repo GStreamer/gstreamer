@@ -1,3 +1,8 @@
+2007-06-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* po/POTFILES.in:
+	  Add more files with translatable strings (#450878).
+
 2007-06-22  Jan Schmidt  <thaytan@noraisin.net>
 
 	* MAINTAINERS:
