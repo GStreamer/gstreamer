@@ -3,10 +3,10 @@
   <description>Tag writing plug-in based on taglib</description>
   <filename>../../ext/taglib/.libs/libgsttaglib.so</filename>
   <basename>libgsttaglib.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,20 @@
       <class>Formatter/Metadata</class>
       <description>Adds an APEv2 header to the beginning of files using taglib</description>
       <author>Sebastian Dröge &lt;mail@slomosnail.de&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-apetag</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>id3v2mux</name>
@@ -22,6 +36,20 @@
       <class>Formatter/Metadata</class>
       <description>Adds an ID3v2 header to the beginning of MP3 files using taglib</description>
       <author>Christophe Fergeau &lt;teuf@gnome.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-id3</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

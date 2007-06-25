@@ -3,10 +3,10 @@
   <description>elements for testing and debugging</description>
   <filename>../../gst/debug/.libs/libgstdebug.so</filename>
   <basename>libgstdebug.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,20 @@
       <class>Testing</class>
       <description>randomly change data in the stream</description>
       <author>Benjamin Otte &lt;otte@gnome&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>navseek</name>
@@ -22,6 +36,20 @@
       <class>Filter/Video</class>
       <description>Seek based on navigation keys left-right</description>
       <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>progressreport</name>
@@ -29,6 +57,20 @@
       <class>Testing</class>
       <description>Periodically query and report on processing progress</description>
       <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>testsink</name>
@@ -36,6 +78,14 @@
       <class>Testing</class>
       <description>perform a number of tests</description>
       <author>Benjamin Otte &lt;otte@gnome&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

@@ -3,10 +3,10 @@
   <description>ALaw audio conversion routines</description>
   <filename>../../gst/law/.libs/libgstalaw.so</filename>
   <basename>libgstalaw.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,20 @@
       <class>Codec/Decoder/Audio</class>
       <description>Convert 8bit A law to 16bit PCM</description>
       <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-alaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>alawenc</name>
@@ -22,6 +36,20 @@
       <class>Codec/Encoder/Audio</class>
       <description>Convert 16bit PCM to 8bit A law</description>
       <author>Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-alaw, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)16, depth=(int)16, endianness=(int)1234, signed=(boolean)true, rate=(int)[ 8000, 192000 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

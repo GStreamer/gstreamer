@@ -3,10 +3,10 @@
   <description>transfer data via UDP</description>
   <filename>../../gst/udp/.libs/libgstudp.so</filename>
   <basename>libgstudp.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,14 @@
       <class>Sink/Network</class>
       <description>Send data over the network via UDP</description>
       <author>Philippe Khalaf &lt;burger@speedy.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>multiudpsink</name>
@@ -22,6 +30,14 @@
       <class>Sink/Network</class>
       <description>Send data over the network via UDP</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>udpsink</name>
@@ -29,6 +45,14 @@
       <class>Sink/Network</class>
       <description>Send data over the network via UDP</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>udpsrc</name>
@@ -37,6 +61,14 @@
       <description>Receive data over the network via UDP</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;
     Thijs Vermeir &lt;thijs.vermeir@barco.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

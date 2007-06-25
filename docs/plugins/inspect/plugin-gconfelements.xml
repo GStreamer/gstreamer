@@ -3,10 +3,10 @@
   <description>elements wrapping the GStreamer/GConf audio/video output settings</description>
   <filename>../../ext/gconf/.libs/libgstgconfelements.so</filename>
   <basename>libgstgconfelements.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -16,6 +16,9 @@
       <description>Audio sink embedding the GConf-settings for audio output</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
     Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+      <pads>
+    
+      </pads>
     </element>
     <element>
       <name>gconfaudiosrc</name>
@@ -23,6 +26,14 @@
       <class>Source/Audio</class>
       <description>Audio source embedding the GConf-settings for audio input</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>gconfvideosink</name>
@@ -30,6 +41,14 @@
       <class>Sink/Video</class>
       <description>Video sink embedding the GConf-settings for video output</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>gconfvideosrc</name>
@@ -37,6 +56,14 @@
       <class>Source/Video</class>
       <description>Video source embedding the GConf-settings for video input</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

@@ -3,10 +3,10 @@
   <description>OSS (Open Sound System) support for GStreamer</description>
   <filename>../../sys/oss/.libs/libgstossaudio.so</filename>
   <basename>libgstossaudio.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,9 @@
       <class>Generic/Audio</class>
       <description>Control sound input and output levels with OSS</description>
       <author>Andrew Vander Wingo &lt;wingo@pobox.com&gt;</author>
+      <pads>
+    
+      </pads>
     </element>
     <element>
       <name>osssink</name>
@@ -22,6 +25,14 @@
       <class>Sink/Audio</class>
       <description>Output to a sound card via OSS</description>
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int){ 1234 }, signed=(boolean){ true, false }, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]; audio/x-raw-int, signed=(boolean){ true, false }, width=(int)8, depth=(int)8, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>osssrc</name>
@@ -29,6 +40,14 @@
       <class>Source/Audio</class>
       <description>Capture from a sound card via OSS</description>
       <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int){ 1234 }, signed=(boolean){ true, false }, width=(int)16, depth=(int)16, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]; audio/x-raw-int, signed=(boolean){ true, false }, width=(int)8, depth=(int)8, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

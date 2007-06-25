@@ -3,10 +3,10 @@
   <description>X11 video input plugin using standard Xlib calls</description>
   <filename>../../sys/ximage/.libs/libgstximagesrc.so</filename>
   <basename>libgstximagesrc.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,14 @@
       <class>Source/Video</class>
       <description>Creates a screenshot video stream</description>
       <author>Lutz Mueller &lt;lutz@users.sourceforge.net&gt;, Jan Schmidt &lt;thaytan@mad.scientist.com&gt;, Zaheer Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

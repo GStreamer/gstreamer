@@ -3,10 +3,10 @@
   <description>Demux ID3v1 and ID3v2 tags from a file</description>
   <filename>../../gst/id3demux/.libs/libgstid3demux.so</filename>
   <basename>libgstid3demux.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -15,6 +15,20 @@
       <class>Codec/Demuxer/Metadata</class>
       <description>Read and output ID3v1 and ID3v2 tags while demuxing the contents</description>
       <author>Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-id3</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

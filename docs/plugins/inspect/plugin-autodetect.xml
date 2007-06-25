@@ -3,10 +3,10 @@
   <description>Plugin contains auto-detection plugins for video/audio outputs</description>
   <filename>../../gst/autodetect/.libs/libgstautodetect.so</filename>
   <basename>libgstautodetect.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -16,6 +16,14 @@
       <description>Wrapper audio sink for automatically detected audio sink</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
     Jan Schmidt &lt;thaytan@noraisin.net</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
     <element>
       <name>autovideosink</name>
@@ -24,6 +32,14 @@
       <description>Wrapper video sink for automatically detected video sink</description>
       <author>Ronald Bultje &lt;rbultje@ronald.bitfreak.net&gt;
     Jan Schmidt &lt;thaytan@noraisin.net</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>
