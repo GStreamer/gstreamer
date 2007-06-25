@@ -1,3 +1,10 @@
+2007-06-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* po/POTFILES.in:
+	  Make sure dvdnav strings get translated too (no reason not to have
+	  them in the .po file, even if the plugin is disabled for now).
+	  Fixes #450879.
+
 2007-06-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_base_init),
