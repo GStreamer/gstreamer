@@ -5,8 +5,12 @@ ext/cdparanoia/gstcdparanoiasrc.c
 ext/gnomevfs/gstgnomevfssrc.c
 ext/gnomevfs/gstgnomevfssink.c
 ext/ogg/gstoggdemux.c
+gst/playback/gstdecodebin.c
+gst/playback/gstdecodebin2.c
 gst/playback/gstplaybasebin.c
 gst/playback/gstplaybin.c
+gst/playback/gstqueue2.c
+gst/playback/gsturidecodebin.c
 gst/tcp/gsttcp.c
 gst/tcp/gsttcpclientsink.c
 gst/tcp/gsttcpclientsrc.c
