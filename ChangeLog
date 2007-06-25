@@ -1,3 +1,13 @@
+2007-06-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_base_init),
+	(gst_amrnbdec_event), (gst_amrnbdec_chain),
+	(gst_amrnbdec_state_change):
+	* ext/amrnb/amrnbdec.h:
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_base_init),
+	(gst_amrnbparse_loop):
+	  Add newsegment and discont handling. Some code cleanups.
+
 2007-06-25  David Schleef  <ds@schleef.org>
 
 	* ext/dvdread/dvdreadsrc.c: check for an error from

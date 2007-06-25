@@ -17,6 +17,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * library can be found at http://www.penguin.cz/~utx/amr
+ * gst-launch filesrc location=./bugdata/Bug24403/Ganga9_21_nb.amr ! amrnbparse ! amrnbdec ! audioresample ! audioconvert ! alsasink
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -179,16 +184,47 @@ gst_amrnbdec_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (amrnbdec->srcpad, event);
       break;
     case GST_EVENT_NEWSEGMENT:
-      /* FIXME, store, forward and use for clipping */
+    {
+      GstFormat format;
+      gdouble rate, arate;
+      gint64 start, stop, time;
+      gboolean update;
+
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+
+      /* we need time for now */
+      if (format != GST_FORMAT_TIME)
+        goto newseg_wrong_format;
+
+      GST_DEBUG_OBJECT (amrnbdec,
+          "newsegment: update %d, rate %g, arate %g, start %" GST_TIME_FORMAT
+          ", stop %" GST_TIME_FORMAT ", time %" GST_TIME_FORMAT,
+          update, rate, arate, GST_TIME_ARGS (start), GST_TIME_ARGS (stop),
+          GST_TIME_ARGS (time));
+
+      /* now configure the values */
+      gst_segment_set_newsegment_full (&amrnbdec->segment, update,
+          rate, arate, format, start, stop, time);
       ret = gst_pad_push_event (amrnbdec->srcpad, event);
+    }
+      break;
       break;
     default:
       ret = gst_pad_push_event (amrnbdec->srcpad, event);
       break;
   }
+done:
   gst_object_unref (amrnbdec);
 
   return ret;
+
+  /* ERRORS */
+newseg_wrong_format:
+  {
+    GST_DEBUG_OBJECT (amrnbdec, "received non TIME newsegment");
+    goto done;
+  }
 }
 
 static GstFlowReturn
@@ -207,6 +243,7 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
     gst_adapter_clear (amrnbdec->adapter);
     amrnbdec->ts = -1;
+    amrnbdec->discont = TRUE;
   }
 
   /* take latest timestamp, FIXME timestamp is the one of the
@@ -223,6 +260,7 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
     guint8 *data;
     gint block, mode;
 
+    /* need to peek data to get the size */
     if (gst_adapter_available (amrnbdec->adapter) < 1)
       break;
     data = (guint8 *) gst_adapter_peek (amrnbdec->adapter, 1);
@@ -233,8 +271,9 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
 
     GST_DEBUG_OBJECT (amrnbdec, "mode %d, block %d", mode, block);
 
-    if (gst_adapter_available (amrnbdec->adapter) < block)
+    if (!block || gst_adapter_available (amrnbdec->adapter) < block)
       break;
+
     /* the library seems to write into the source data, hence
      * the copy. */
     data = gst_adapter_take (amrnbdec->adapter, block);
@@ -243,8 +282,14 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
     out = gst_buffer_new_and_alloc (160 * 2);
     GST_BUFFER_DURATION (out) = amrnbdec->duration;
     GST_BUFFER_TIMESTAMP (out) = amrnbdec->ts;
+
     if (amrnbdec->ts != -1)
       amrnbdec->ts += amrnbdec->duration;
+    if (amrnbdec->discont) {
+      GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DISCONT);
+      amrnbdec->discont = FALSE;
+    }
+
     gst_buffer_set_caps (out, GST_PAD_CAPS (amrnbdec->srcpad));
 
     /* decode */
@@ -252,9 +297,10 @@ gst_amrnbdec_chain (GstPad * pad, GstBuffer * buffer)
         (short *) GST_BUFFER_DATA (out), 0);
     g_free (data);
 
-    /* play */
+    /* send out */
     ret = gst_pad_push (amrnbdec->srcpad, out);
   }
+
   gst_object_unref (amrnbdec);
 
   return ret;
@@ -287,6 +333,8 @@ gst_amrnbdec_state_change (GstElement * element, GstStateChange transition)
       amrnbdec->rate = 0;
       amrnbdec->channels = 0;
       amrnbdec->ts = -1;
+      amrnbdec->discont = TRUE;
+      gst_segment_init (&amrnbdec->segment, GST_FORMAT_TIME);
       break;
     default:
       break;

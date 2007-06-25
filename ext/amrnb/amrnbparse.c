@@ -385,7 +385,7 @@ gst_amrnbparse_loop (GstPad * pad)
   amrnbparse = GST_AMRNBPARSE (GST_PAD_PARENT (pad));
 
   /* init */
-  if (amrnbparse->need_header) {
+  if (G_UNLIKELY (amrnbparse->need_header)) {
     if (!gst_amrnbparse_pull_header (amrnbparse)) {
       GST_ELEMENT_ERROR (amrnbparse, STREAM, WRONG_TYPE, (NULL), (NULL));
       GST_LOG_OBJECT (amrnbparse, "could not read header");

@@ -55,6 +55,9 @@ struct _GstAmrnbDec {
   /* output settings */
   gint channels, rate;
   gint duration;
+
+  GstSegment        segment;
+  gboolean          discont;
 };
 
 struct _GstAmrnbDecClass {
