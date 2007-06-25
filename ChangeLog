@@ -1,5 +1,10 @@
 2007-06-25  David Schleef  <ds@schleef.org>
 
+	* ext/dvdread/dvdreadsrc.c: check for an error from
+	  DVDReadBlocks() correctly.
+
+2007-06-25  David Schleef  <ds@schleef.org>
+
 	* ext/dvdread/dvdreadsrc.c:
 	  If we can't read a nav packet, or it doesn't look like a nav
 	  packet, that's an error.  Previous behavior was to look at

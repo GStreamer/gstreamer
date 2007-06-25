@@ -778,7 +778,7 @@ again:
 
   /* read NAV packet */
   len = DVDReadBlocks (src->dvd_title, src->cur_pack, 1, oneblock);
-  if (len == 0)
+  if (len != 1)
     goto read_error;
 
   if (!gst_dvd_read_src_is_nav_pack (oneblock)) {
