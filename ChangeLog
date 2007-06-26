@@ -1,3 +1,8 @@
+2007-06-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/random/release:
+	  Some updates to the release procedure.
+
 2007-06-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstelementfactory.c: (__gst_element_details_clear):

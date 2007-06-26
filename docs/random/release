@@ -39,6 +39,23 @@ RELEASE PROCEDURE:
 - before release:
   - make sure all blocker bugs for that release are fixed or deferred
   - make sure you have a local copy of all online files
+  - Make one or more prereleases
+    - Make sure you've got the latest clean CVS of the module
+    - Run bin/data-get in www/ to sync data from website
+    - Bump the nano number to > 2 (eg, first pre-release for 
+      0.10.12 is 0.10.11.2)
+    - Re-autogen if not in maintainer-mode (which you should be)
+    - run 'make release' to build the tarballs
+    - copy tarballs+md5 sums to the data/src/$module/pre/ dir
+    - Run bin/data-put in www/ to sync the new tarballs to the website
+    - Announce the availability of the new tarballs
+    - Tell the translation project by sending an email to 
+      translation@iro.umontreal.ca, eg:
+        Subject: gst-plugins-bad-0.10.5.2.pot available
+        Tarball is at http://gstreamer.freedesktop.org/src/gst-plugins-bad/pre/gst-plugins-bad-0.10.5.2.tar.bz2 
+      FIXME: Not sure if the translation project bot parses version strings 
+      with a nano correctly.
+
   - bin/new-release (module) (version) (checkoutdir) (release name)
     - updates cvs
     - allows you to update versioning in configure.ac
@@ -63,17 +80,25 @@ RELEASE PROCEDURE:
   - tag tree
     for example for 0.6.3 :
            cvs tag RELEASE-0_6_3
-  - bump nano number, commit
+  - bump nano number in configure.ac, commit
   - if working in the "stable" release branch, update to this tag to freeze it:
     cvs up -r RELEASE-0_6_3
   - sync source and packages to website
-  - add entry on website; commit additions to website
+    + run /bin/data-put in www
   - change versions in www/src/htdocs/entities.gst
+  - add entry on website
+    + Edit src/htdocs/news/news.xml and add a new item at the bottom.
+  - commit additions to website
   - add versions and milestones in bugzilla
+  - upload new tarballs to gnome ftp
+    + e.g:
+       scp gstreamer-0.10.42.tar.gz master.gnome.org:
+       ssh master.gnome.org
+       install-module gstreamer-0.10.42.tar.gz
+
   - Send release announcements to:
     gstreamer-devel@lists.sourceforge.net gstreamer-announce@lists.sourceforge.net kde-multimedia@kde.org gnome-multimedia@gnome.org
   - Update freshmeat with new releases (get Uraeus to do it)
-
 
 Old release notes - superceded by the www/bin/new-release script.
 ----------------------------------------------------------------
