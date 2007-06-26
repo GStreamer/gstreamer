@@ -66,6 +66,8 @@ struct _GstMultiQueue {
 			/* GstMultiQueueSize, counter and highid */
 
   gint nextnotlinked;	/* ID of the next queue not linked (-1 : none) */
+
+  gint numwaiting;	/* number of not-linked pads waiting */
 };
 
 struct _GstMultiQueueClass {

@@ -1,3 +1,30 @@
+2007-06-26  Jan Schmidt  <thaytan@noraisin.net>
+
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_init),
+	(gst_single_queue_flush), (apply_segment), (apply_buffer),
+	(gst_single_queue_push_one), (gst_multi_queue_loop),
+	(gst_multi_queue_sink_activate_push), (gst_multi_queue_sink_event),
+	(gst_multi_queue_src_activate_push), (wake_up_next_non_linked),
+	(compute_high_id), (gst_single_queue_new):
+	* plugins/elements/gstmultiqueue.h:
+	Take the multiqueue lock when updating the fill level so we don't get
+	confused. 
+
+	After applying a buffer or event on the src pad segment, make sure to
+	call gst_data_queue_limits_changed() to get the data queue to unblock
+	and check the filled state again.
+	
+	Rework the not-linked pad handling so the logic is that not-linked 
+	pads can push as fast as they like, but only so they never get 
+	ahead of any linked pads.
+
+	* tests/check/elements/multiqueue.c: (mq_sinkpad_to_srcpad),
+	(mq_dummypad_getcaps), (mq_dummypad_chain), (mq_dummypad_event),
+	(run_output_order_test), (GST_START_TEST), (multiqueue_suite):
+
+	Add a test to check that not-linked pads always stay behind
+	linked pads.
+
 2007-06-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/random/release:
