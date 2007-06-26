@@ -169,13 +169,10 @@ void
 __gst_element_details_clear (GstElementDetails * dp)
 {
   g_free (dp->longname);
-  dp->longname = NULL;
   g_free (dp->klass);
-  dp->klass = NULL;
   g_free (dp->description);
-  dp->description = NULL;
   g_free (dp->author);
-  dp->author = NULL;
+  memset (dp, 0, sizeof (GstElementDetails));
 }
 
 #define VALIDATE_SET(__dest, __src, __entry)                            \
