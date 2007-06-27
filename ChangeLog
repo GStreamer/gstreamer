@@ -1,3 +1,8 @@
+2007-06-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstminiobject.c: (gst_mini_object_get_type):
+	  Remove 3 do-nothing methods.
+
 2007-06-27  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Tim Angus <tim at ngus dot net>

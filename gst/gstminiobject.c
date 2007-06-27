@@ -45,9 +45,11 @@ static GstAllocTrace *_gst_mini_object_trace;
 
 #define DEBUG_REFCOUNT
 
+#if 0
 static void gst_mini_object_base_init (gpointer g_class);
 static void gst_mini_object_base_finalize (gpointer g_class);
 static void gst_mini_object_class_init (gpointer g_class, gpointer class_data);
+#endif
 static void gst_mini_object_init (GTypeInstance * instance, gpointer klass);
 
 static void gst_value_mini_object_init (GValue * value);
@@ -78,9 +80,13 @@ gst_mini_object_get_type (void)
     };
     GTypeInfo mini_object_info = {
       sizeof (GstMiniObjectClass),
+#if 0
       gst_mini_object_base_init,
       gst_mini_object_base_finalize,
       gst_mini_object_class_init,
+#else
+      NULL, NULL, NULL,
+#endif
       NULL,
       NULL,
       sizeof (GstMiniObject),
@@ -108,6 +114,7 @@ gst_mini_object_get_type (void)
   return _gst_mini_object_type;
 }
 
+#if 0
 static void
 gst_mini_object_base_init (gpointer g_class)
 {
@@ -125,6 +132,7 @@ gst_mini_object_class_init (gpointer g_class, gpointer class_data)
 {
   /* do nothing */
 }
+#endif
 
 static void
 gst_mini_object_init (GTypeInstance * instance, gpointer klass)
