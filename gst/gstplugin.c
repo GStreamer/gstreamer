@@ -108,8 +108,8 @@ static const gchar *valid_licenses[] = {
 
 static GstPlugin *gst_plugin_register_func (GstPlugin * plugin,
     GstPluginDesc * desc);
-static void
-gst_plugin_desc_copy (GstPluginDesc * dest, const GstPluginDesc * src);
+static void gst_plugin_desc_copy (GstPluginDesc * dest,
+    const GstPluginDesc * src);
 static void gst_plugin_desc_free (GstPluginDesc * desc);
 
 
@@ -118,7 +118,7 @@ G_DEFINE_TYPE (GstPlugin, gst_plugin, GST_TYPE_OBJECT);
 static void
 gst_plugin_init (GstPlugin * plugin)
 {
-
+  /* do nothing, needed because of G_DEFINE_TYPE */
 }
 
 static void

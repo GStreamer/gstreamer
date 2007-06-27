@@ -39,8 +39,6 @@
 
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
 
-static void gst_plugin_feature_class_init (GstPluginFeatureClass * klass);
-static void gst_plugin_feature_init (GstPluginFeature * feature);
 static void gst_plugin_feature_finalize (GObject * object);
 
 /* static guint gst_plugin_feature_signals[LAST_SIGNAL] = { 0 }; */
@@ -60,7 +58,7 @@ gst_plugin_feature_class_init (GstPluginFeatureClass * klass)
 static void
 gst_plugin_feature_init (GstPluginFeature * feature)
 {
-
+  /* do nothing, needed because of G_DEFINE_TYPE */
 }
 
 static void

@@ -38,7 +38,6 @@
 #include "gstregistry.h"
 
 static void gst_index_factory_class_init (GstIndexFactoryClass * klass);
-static void gst_index_factory_init (GstIndexFactory * factory);
 static void gst_index_factory_finalize (GObject * object);
 
 static GstPluginFeatureClass *factory_parent_class = NULL;
@@ -60,7 +59,7 @@ gst_index_factory_get_type (void)
       NULL,
       sizeof (GstIndexFactory),
       0,
-      (GInstanceInitFunc) gst_index_factory_init,
+      NULL,
       NULL
     };
 
@@ -84,11 +83,6 @@ gst_index_factory_class_init (GstIndexFactoryClass * klass)
   factory_parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_index_factory_finalize);
-}
-
-static void
-gst_index_factory_init (GstIndexFactory * factory)
-{
 }
 
 static void

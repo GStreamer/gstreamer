@@ -85,7 +85,7 @@ gst_uri_handler_base_init (gpointer g_class)
 {
   static gboolean initialized = FALSE;
 
-  if (!initialized) {
+  if (G_UNLIKELY (!initialized)) {
 
     /**
      * GstURIHandler::new-uri:

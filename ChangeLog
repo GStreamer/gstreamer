@@ -1,3 +1,15 @@
+2007-06-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstindexfactory.c: (gst_index_factory_get_type):
+	* gst/gstplugin.c: (gst_plugin_init):
+	* gst/gstpluginfeature.c: (gst_plugin_feature_init):
+	* gst/gstquery.c: (gst_query_get_type):
+	* gst/gstregistry.c: (gst_registry_init):
+	* gst/gsturi.c: (gst_uri_handler_base_init):
+	  Remove empty instance_init() functions to save relocs and lessen the
+	  noise. Remove some of the function prototypes that are doubled by
+	  G_DEFINE_TYPE.
+	  
 2007-06-27  Wim Taymans  <wim@fluendo.com>
 
 	Patch by: Étienne Noreau-Hébert <etienne at deepunder dot org>

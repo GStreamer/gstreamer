@@ -122,8 +122,6 @@ enum
   LAST_SIGNAL
 };
 
-static void gst_registry_class_init (GstRegistryClass * klass);
-static void gst_registry_init (GstRegistry * registry);
 static void gst_registry_finalize (GObject * object);
 
 static guint gst_registry_signals[LAST_SIGNAL] = { 0 };
@@ -177,6 +175,7 @@ gst_registry_class_init (GstRegistryClass * klass)
 static void
 gst_registry_init (GstRegistry * registry)
 {
+  /* do nothing, needed because of G_DEFINE_TYPE */
 }
 
 static void

@@ -69,7 +69,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_query_debug);
 #define GST_CAT_DEFAULT gst_query_debug
 
-static void gst_query_init (GTypeInstance * instance, gpointer g_class);
 static void gst_query_class_init (gpointer g_class, gpointer class_data);
 static void gst_query_finalize (GstQuery * query);
 static GstQuery *_gst_query_copy (GstQuery * query);
@@ -174,7 +173,7 @@ gst_query_get_type (void)
       NULL,
       sizeof (GstQuery),
       0,
-      gst_query_init,
+      NULL,
       NULL
     };
 
@@ -205,12 +204,6 @@ gst_query_finalize (GstQuery * query)
     gst_structure_set_parent_refcount (query->structure, NULL);
     gst_structure_free (query->structure);
   }
-}
-
-static void
-gst_query_init (GTypeInstance * instance, gpointer g_class)
-{
-
 }
 
 static GstQuery *
