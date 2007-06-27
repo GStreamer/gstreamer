@@ -600,6 +600,80 @@ GST_START_TEST (test_id3_tags)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_id3v1_utf8_tag)
+{
+  const guint8 id3v1[128] = {
+    /* marker */
+    'T', 'A', 'G',
+    /* title (30 bytes) */
+    'D', 0xc3, 0xad, 'v', 'k', 'a', ' ', 's',
+    ' ', 'p', 'e', 'r', 'l', 'a', 'm', 'i',
+    ' ', 'v', 'e', ' ', 'v', 'l', 'a', 's',
+    'e', 'c', 'h', 0, 0, 0,
+    /* artist (30 bytes) */
+    'A', 'l', 'e', 0xc5, 0xa1, ' ', 'B', 'r', 'i', 'c', 'h', 't', 'a',
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    /* album (30 bytes) */
+    'B', 'e', 's', 't', ' ', 'o', 'f', ' ', '(', 'P', 'r', 'o', 's', 't',
+    0xc4, 0x9b, ' ', 0xc3, 0xba, 0xc5, 0xbe, 'a', 's', 'n', 0xc3, 0xbd, ')',
+    0, 0, 0,
+    /* year (4 bytes) */
+    '2', '0', '0', '0',
+    /* comment (28 bytes) */
+    '-', '-', '-', ' ', 0xc4, 0x8d, 'e', 's', 'k', 0xc3, 0xa9, ' ', 'p',
+    0xc3, 0xad, 's', 'n', 'i', 0xc4, 0x8d, 'k', 'y', ' ', '-', '-', '-',
+    0, 0,
+    /* track number */
+    0, 0,
+    /* genre */
+    0x11
+  };
+  GstTagList *tags;
+  GDate *d;
+  gchar *s;
+
+  /* set this, to make sure UTF-8 strings are really interpreted properly
+   * as UTF-8, regardless of the locale set */
+  g_setenv ("GST_ID3V1_TAG_ENCODING", "WINDOWS-1250", TRUE);
+
+  tags = gst_tag_list_new_from_id3v1 (id3v1);
+  fail_unless (tags != NULL);
+
+  GST_LOG ("Got tags: %" GST_PTR_FORMAT, tags);
+
+  s = NULL;
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_TITLE, &s));
+  fail_unless (s != NULL);
+  fail_unless_equals_string (s, "Dívka s perlami ve vlasech");
+  g_free (s);
+
+  s = NULL;
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_ARTIST, &s));
+  fail_unless (s != NULL);
+  fail_unless_equals_string (s, "Aleš Brichta");
+  g_free (s);
+
+  s = NULL;
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_ALBUM, &s));
+  fail_unless (s != NULL);
+  fail_unless_equals_string (s, "Best of (Prostě úžasný)");
+  g_free (s);
+
+  d = NULL;
+  fail_unless (gst_tag_list_get_date (tags, GST_TAG_DATE, &d));
+  fail_unless (d != NULL);
+  fail_unless_equals_int (g_date_get_year (d), 2000);
+  g_date_free (d);
+  d = NULL;
+
+  gst_tag_list_free (tags);
+
+  g_unsetenv ("GST_ID3V1_TAG_ENCODING");
+}
+
+GST_END_TEST;
+
 static Suite *
 tag_suite (void)
 {
@@ -611,6 +685,7 @@ tag_suite (void)
   tcase_add_test (tc_chain, test_parse_extended_comment);
   tcase_add_test (tc_chain, test_vorbis_tags);
   tcase_add_test (tc_chain, test_id3_tags);
+  tcase_add_test (tc_chain, test_id3v1_utf8_tag);
   return s;
 }
 

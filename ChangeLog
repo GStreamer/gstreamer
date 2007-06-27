@@ -1,5 +1,16 @@
 2007-06-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/tag/tags.c: (gst_tag_freeform_string_to_utf8):
+	  Don't pass trailing zeroes in fixed-size string arrays in ID3v1 tags
+	  to utf8-validate; fixes recognition of ID3v1 tags in UTF-8 encoding
+	  (#451707); also, output some debugging info when dealing with
+	  freeform strings.
+
+	* tests/check/libs/tag.c: (GST_START_TEST), (tag_suite):
+	  Add unit test for the above.
+
+2007-06-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/pbutils/descriptions.c: (caps_are_rtp_caps):
 	  Add description for Windows Media RTP caps.
 

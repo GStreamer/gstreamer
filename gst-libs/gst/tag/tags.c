@@ -255,10 +255,18 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
   if (size < 0)
     size = strlen (data);
 
+  /* chop off trailing string terminators to make sure utf8_validate doesn't
+   * get to see them (since that would make the utf8 check fail) */
+  while (size > 0 && data[size - 1] == '\0')
+    --size;
+
   /* Should we try the charsets specified
    * via environment variables FIRST ? */
-  if (g_utf8_validate (data, size, NULL))
-    return g_strndup (data, size);
+  if (g_utf8_validate (data, size, NULL)) {
+    utf8 = g_strndup (data, size);
+    GST_LOG ("String '%s' is valid UTF-8 already", utf8);
+    goto beach;
+  }
 
   while (env_vars && *env_vars != NULL) {
     const gchar *env = NULL;
@@ -271,6 +279,7 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
       csets = g_strsplit (env, G_SEARCHPATH_SEPARATOR_S, -1);
 
       for (c = csets; c && *c; ++c) {
+        GST_LOG ("Trying to convert freeform string to UTF-8 from '%s'", *c);
         if ((utf8 =
                 g_convert (data, size, "UTF-8", *c, &bytes_read, NULL, NULL))) {
           if (bytes_read == size) {
@@ -289,6 +298,7 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
 
   /* Try current locale (if not UTF-8) */
   if (!g_get_charset (&cur_loc)) {
+    GST_LOG ("Trying to convert freeform string using locale ('%s')", cur_loc);
     if ((utf8 = g_locale_to_utf8 (data, size, &bytes_read, NULL, NULL))) {
       if (bytes_read == size) {
         goto beach;
@@ -299,6 +309,7 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
   }
 
   /* Try ISO-8859-1 */
+  GST_LOG ("Trying to convert freeform string using ISO-8859-1 fallback");
   utf8 = g_convert (data, size, "UTF-8", "ISO-8859-1", &bytes_read, NULL, NULL);
   if (utf8 != NULL && bytes_read == size) {
     goto beach;
@@ -310,8 +321,10 @@ gst_tag_freeform_string_to_utf8 (const gchar * data, gint size,
 beach:
 
   g_strchomp (utf8);
-  if (utf8 && utf8[0] != '\0')
+  if (utf8 && utf8[0] != '\0') {
+    GST_LOG ("Returning '%s'", utf8);
     return utf8;
+  }
 
   g_free (utf8);
   return NULL;
