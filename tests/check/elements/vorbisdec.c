@@ -24,6 +24,9 @@
 
 #include <gst/check/gstcheck.h>
 
+#include <vorbis/codec.h>
+#include <vorbis/vorbisenc.h>
+
 /* For ease of programming we use globals to keep refs for our floating
  * src and sink pads we create; otherwise we always have to do get_pad,
  * get_peer, and then remove references in every test function */
@@ -230,7 +233,137 @@ GST_START_TEST (test_identification_header)
 
 GST_END_TEST;
 
-Suite *
+vorbis_comment vc;
+vorbis_dsp_state vd;
+vorbis_info vi;
+vorbis_block vb;
+
+static GstBuffer *
+_create_codebook_header_buffer (void)
+{
+  GstBuffer *buffer;
+  ogg_packet header;
+  ogg_packet header_comm;
+  ogg_packet header_code;
+
+  vorbis_info_init (&vi);
+  vorbis_encode_setup_vbr (&vi, 1, 44000, 0.5);
+  vorbis_encode_setup_init (&vi);
+  vorbis_analysis_init (&vd, &vi);
+  vorbis_block_init (&vd, &vb);
+  vorbis_comment_init (&vc);
+  vorbis_analysis_headerout (&vd, &vc, &header, &header_comm, &header_code);
+
+  buffer = gst_buffer_new_and_alloc (header_code.bytes);
+  memcpy (GST_BUFFER_DATA (buffer), header_code.packet, header_code.bytes);
+
+  return buffer;
+}
+
+static GstBuffer *
+_create_audio_buffer (void)
+{
+  GstBuffer *buffer;
+  ogg_packet packet;
+  float **vorbis_buffer;
+  gint i;
+
+  vorbis_buffer = vorbis_analysis_buffer (&vd, 44100);
+  for (i = 0; i < 44100 * 1; ++i)
+    vorbis_buffer[0][i] = 0.0;
+  vorbis_analysis_wrote (&vd, 44100);
+  vorbis_analysis_blockout (&vd, &vb);
+  vorbis_analysis (&vb, NULL);
+  vorbis_bitrate_addblock (&vb);
+  vorbis_bitrate_flushpacket (&vd, &packet);
+  buffer = gst_buffer_new_and_alloc (packet.bytes);
+  memcpy (GST_BUFFER_DATA (buffer), packet.packet, packet.bytes);
+
+  vorbis_comment_clear (&vc);
+  vorbis_block_clear (&vb);
+  vorbis_dsp_clear (&vd);
+  vorbis_info_clear (&vi);
+
+  return buffer;
+}
+
+GST_START_TEST (test_empty_vorbis_packet)
+{
+  GstElement *vorbisdec;
+  GstBuffer *inbuffer;
+  GstMessage *message;
+  GstBus *bus;
+
+  vorbisdec = setup_vorbisdec ();
+  fail_unless_equals_int (gst_element_set_state (vorbisdec, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_SUCCESS);
+
+  bus = gst_bus_new ();
+
+  inbuffer = gst_buffer_new_and_alloc (30);
+  memcpy (GST_BUFFER_DATA (inbuffer), identification_header, 30);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_ref (inbuffer);
+
+  gst_element_set_bus (vorbisdec, bus);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... and nothing ends up on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_unref (inbuffer);
+  fail_unless (g_list_length (buffers) == 0);
+  fail_if ((message = gst_bus_pop (bus)) != NULL);
+
+  inbuffer = gst_buffer_new_and_alloc (sizeof (comment_header));
+  memcpy (GST_BUFFER_DATA (inbuffer), comment_header, sizeof (comment_header));
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_ref (inbuffer);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  /* ... and nothing ends up on the global buffer list */
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_unref (inbuffer);
+  fail_unless (g_list_length (buffers) == 0);
+
+  /* send minimal codebook header and audio packers */
+  inbuffer = _create_codebook_header_buffer ();
+  fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
+
+  /* now send an empty vorbis packet, which should just be skipped */
+  inbuffer = gst_buffer_new_and_alloc (0);
+  gst_buffer_ref (inbuffer);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_unref (inbuffer);
+  fail_unless (g_list_length (buffers) == 0);
+
+  /* create and push an encoded audio packet */
+  inbuffer = _create_audio_buffer ();
+  fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
+
+  /* now send another empty vorbis packet, which should just be skipped */
+  inbuffer = gst_buffer_new_and_alloc (0);
+  gst_buffer_ref (inbuffer);
+  fail_unless_equals_int (gst_pad_push (mysrcpad, inbuffer), GST_FLOW_OK);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  gst_buffer_unref (inbuffer);
+
+  /* make sure there's no error on the bus */
+  message = gst_bus_poll (bus, GST_MESSAGE_ERROR, 0);
+  fail_if (message != NULL);
+
+  /* cleanup */
+  gst_bus_set_flushing (bus, TRUE);
+  gst_element_set_bus (vorbisdec, NULL);
+  gst_object_unref (GST_OBJECT (bus));
+  cleanup_vorbisdec (vorbisdec);
+}
+
+GST_END_TEST;
+
+static Suite *
 vorbisdec_suite (void)
 {
   Suite *s = suite_create ("vorbisdec");
@@ -240,6 +373,7 @@ vorbisdec_suite (void)
   tcase_add_test (tc_chain, test_empty_identification_header);
   tcase_add_test (tc_chain, test_wrong_channels_identification_header);
   tcase_add_test (tc_chain, test_identification_header);
+  tcase_add_test (tc_chain, test_empty_vorbis_packet);
 
   return s;
 }

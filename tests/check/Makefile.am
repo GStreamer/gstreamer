@@ -205,6 +205,16 @@ elements_volume_CFLAGS = \
 	$(GST_BASE_CFLAGS) \
 	$(AM_CFLAGS)
 
+elements_vorbisdec_LDADD = \
+	$(LDADD) \
+	$(VORBIS_LIBS)
+
+elements_vorbisdec_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS) \
+	$(VORBIS_CFLAGS) \
+	$(CFLAGS)
+
 elements_vorbistag_LDADD = \
 	$(LDADD) \
 	$(VORBIS_LIBS)

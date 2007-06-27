@@ -1127,8 +1127,13 @@ vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer)
    */
   packet.e_o_s = 0;
 
-  if (G_UNLIKELY (packet.bytes < 1))
-    goto wrong_size;
+  /* error out on empty header packets, but just skip empty data packets */
+  if (G_UNLIKELY (packet.bytes == 0)) {
+    if (vd->initialized)
+      goto empty_buffer;
+    else
+      goto empty_header;
+  }
 
   GST_DEBUG_OBJECT (vd, "vorbis granule: %" G_GINT64_FORMAT,
       (gint64) packet.granulepos);
@@ -1147,14 +1152,22 @@ vorbis_dec_decode_buffer (GstVorbisDec * vd, GstBuffer * buffer)
 done:
   return result;
 
-  /* ERRORS */
-wrong_size:
+empty_buffer:
   {
-    /* don't error out here, just ignore the buffer, it's invalid for vorbis but
-     * not fatal. */
-    GST_ELEMENT_WARNING (vd, STREAM, DECODE, (NULL),
-        ("empty buffer received, ignoring"));
+    /* don't error out here, just ignore the buffer, it's invalid for vorbis
+     * but not fatal. */
+    GST_WARNING_OBJECT (vd, "empty buffer received, ignoring");
+    if (packet.granulepos != -1)
+      vd->granulepos = packet.granulepos;
     result = GST_FLOW_OK;
+    goto done;
+  }
+
+/* ERRORS */
+empty_header:
+  {
+    GST_ELEMENT_ERROR (vd, STREAM, DECODE, (NULL), ("empty header received"));
+    result = GST_FLOW_ERROR;
     vd->discont = TRUE;
     goto done;
   }

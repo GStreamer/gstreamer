@@ -1,3 +1,16 @@
+2007-06-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_decode_buffer):
+	  Skip empty buffers, but not empty header buffers. That way the original
+	  vorbisdec unit test still passes (#451145); also, take into account
+	  that those empty packets might carry a granulepos.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/vorbisdec.c:
+	(_create_codebook_header_buffer), (_create_audio_buffer),
+	(GST_START_TEST), (vorbisdec_suite):
+	  Add unit test that sends an empty packet.
+
 2007-06-27  Wim Taymans  <wim@fluendo.com>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_decode_buffer):
