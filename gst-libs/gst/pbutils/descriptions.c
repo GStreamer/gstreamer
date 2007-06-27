@@ -606,7 +606,15 @@ caps_are_rtp_caps (const GstCaps * caps, const gchar * media, gchar ** format)
   str = gst_structure_get_string (s, "encoding-name");
   if (str == NULL || *str == '\0')
     return FALSE;
-  *format = g_strdup (str);
+
+  if (strcmp (str, "X-ASF-PF") == 0) {
+    *format = g_strdup ("Windows Media");
+  } else if (g_str_has_prefix (str, "X-")) {
+    *format = g_strdup (str + 2);
+  } else {
+    *format = g_strdup (str);
+  }
+
   return TRUE;
 }
 

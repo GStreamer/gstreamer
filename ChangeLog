@@ -1,5 +1,13 @@
 2007-06-27  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/pbutils/descriptions.c: (caps_are_rtp_caps):
+	  Add description for Windows Media RTP caps.
+
+	* gst-libs/gst/pbutils/missing-plugins.c: (copy_and_clean_caps):
+	  Remove RTP fields that don't define the format from caps.
+
+2007-06-27  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_decode_buffer):
 	  Skip empty buffers, but not empty header buffers. That way the original
 	  vorbisdec unit test still passes (#451145); also, take into account

@@ -137,6 +137,16 @@ copy_and_clean_caps (const GstCaps * caps)
   gst_structure_remove_field (s, "height");
   gst_structure_remove_field (s, "channels");
   gst_structure_remove_field (s, "rate");
+  /* rtp fields */
+  gst_structure_remove_field (s, "config");
+  gst_structure_remove_field (s, "clock-rate");
+  gst_structure_remove_field (s, "clock-base");
+  gst_structure_remove_field (s, "maxps");
+  gst_structure_remove_field (s, "seqnum-base");
+  gst_structure_remove_field (s, "npt-start");
+  gst_structure_remove_field (s, "npt-stop");
+  gst_structure_remove_field (s, "play-speed");
+  gst_structure_remove_field (s, "play-scale");
 
   return ret;
 }
