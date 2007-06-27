@@ -1,3 +1,11 @@
+2007-06-27  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Étienne Noreau-Hébert <etienne at deepunder dot org>
+
+	* gst/gstghostpad.c: (gst_proxy_pad_save_thyself):
+	Add peer and direction in the XML serialisation of ghostpads.
+	Fixes #449226.
+
 2007-06-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

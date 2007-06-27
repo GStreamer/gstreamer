@@ -48,6 +48,7 @@
 #include "gstinfo.h"
 
 #include "gstghostpad.h"
+#include "gst.h"
 
 #define GST_CAT_DEFAULT GST_CAT_PADS
 
@@ -85,7 +86,6 @@ struct _GstProxyPadClass
   /*< private > */
   gpointer _gst_reserved[1];
 };
-
 
 G_DEFINE_TYPE (GstProxyPad, gst_proxy_pad, GST_TYPE_PAD);
 
@@ -438,6 +438,9 @@ static xmlNodePtr
 gst_proxy_pad_save_thyself (GstObject * object, xmlNodePtr parent)
 {
   xmlNodePtr self;
+  GstProxyPad *proxypad;
+  GstPad *pad;
+  GstPad *peer;
 
   g_return_val_if_fail (GST_IS_PROXY_PAD (object), NULL);
 
@@ -447,7 +450,29 @@ gst_proxy_pad_save_thyself (GstObject * object, xmlNodePtr parent)
   xmlNewChild (self, NULL, (xmlChar *) "parent",
       (xmlChar *) GST_OBJECT_NAME (GST_OBJECT_PARENT (object)));
 
-  /* FIXME FIXME FIXME! */
+  proxypad = GST_PROXY_PAD_CAST (object);
+  pad = GST_PAD_CAST (proxypad);
+  peer = GST_PAD_CAST (pad->peer);
+
+  if (GST_IS_PAD (pad)) {
+    if (GST_PAD_IS_SRC (pad))
+      xmlNewChild (self, NULL, (xmlChar *) "direction", (xmlChar *) "source");
+    else if (GST_PAD_IS_SINK (pad))
+      xmlNewChild (self, NULL, (xmlChar *) "direction", (xmlChar *) "sink");
+    else
+      xmlNewChild (self, NULL, (xmlChar *) "direction", (xmlChar *) "unknown");
+  } else {
+    xmlNewChild (self, NULL, (xmlChar *) "direction", (xmlChar *) "unknown");
+  }
+  if (GST_IS_PAD (peer)) {
+    gchar *content = g_strdup_printf ("%s.%s",
+        GST_OBJECT_NAME (GST_PAD_PARENT (peer)), GST_PAD_NAME (peer));
+
+    xmlNewChild (self, NULL, (xmlChar *) "peer", (xmlChar *) content);
+    g_free (content);
+  } else {
+    xmlNewChild (self, NULL, (xmlChar *) "peer", NULL);
+  }
 
   return self;
 }
