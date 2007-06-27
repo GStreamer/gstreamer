@@ -104,8 +104,9 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FILTER_CAPS,
       g_param_spec_boxed ("caps", _("Filter caps"),
-          _("Restrict the possible allowed capabilities (NULL means ANY)"),
-          GST_TYPE_CAPS, G_PARAM_READWRITE));
+          _("Restrict the possible allowed capabilities (NULL means ANY). "
+              "Setting this property takes a reference to the supplied GstCaps "
+              "object."), GST_TYPE_CAPS, G_PARAM_READWRITE));
 
   trans_class = GST_BASE_TRANSFORM_CLASS (klass);
   trans_class->transform_caps = gst_capsfilter_transform_caps;
@@ -134,7 +135,8 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
       if (new_caps_val == NULL) {
         new_caps = gst_caps_new_any ();
       } else {
-        new_caps = gst_caps_copy (new_caps_val);
+        new_caps = (GstCaps *) new_caps_val;
+        gst_caps_ref (new_caps);
       }
 
       old_caps = capsfilter->filter_caps;

@@ -1,3 +1,12 @@
+2007-06-27  Wim Taymans  <wim@fluendo.com>
+
+	Patch by: Tim Angus <tim at ngus dot net>
+
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_class_init),
+	(gst_capsfilter_set_property):
+	Take a reference instead of a copy when setting "caps".
+	Fix documentation to clarify this behaviour. Fixes #449414.
+
 2007-06-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstindexfactory.c: (gst_index_factory_get_type):
