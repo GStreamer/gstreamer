@@ -68,6 +68,8 @@
 #define DEFAULT_PATTERN_DATA_COUNT   5
 #define DEFAULT_PATTERN_DATA         10
 #define DEFAULT_ENABLED              TRUE
+#define DEFAULT_LEFT_OFFSET          0
+#define DEFAULT_BOTTOM_OFFSET        0
 
 enum
 {
@@ -77,7 +79,9 @@ enum
   PROP_PATTERN_COUNT,
   PROP_PATTERN_DATA_COUNT,
   PROP_PATTERN_DATA,
-  PROP_ENABLED
+  PROP_ENABLED,
+  PROP_LEFT_OFFSET,
+  PROP_BOTTOM_OFFSET
 };
 
 GST_DEBUG_CATEGORY_STATIC (video_mark_debug);
@@ -171,7 +175,8 @@ gst_video_mark_420 (GstVideoMark * videomark, GstBuffer * buffer)
   for (i = 0; i < videomark->pattern_count; i++) {
     d = data;
     /* move to start of bottom left */
-    d += stride * (height - ph);
+    d += stride * (height - ph - videomark->bottom_offset) +
+        videomark->left_offset;
     /* move to i-th pattern */
     d += pw * i;
 
@@ -190,8 +195,11 @@ gst_video_mark_420 (GstVideoMark * videomark, GstBuffer * buffer)
   /* get the data of the pattern */
   for (i = 0; i < videomark->pattern_data_count; i++) {
     d = data;
-    /* move to start of bottom left, after the pattern */
-    d += stride * (height - ph) + (videomark->pattern_count * pw);
+    /* move to start of bottom left, adjust for offsets */
+    d += stride * (height - ph - videomark->bottom_offset) +
+        videomark->left_offset;
+    /* move after the fixed pattern */
+    d += (videomark->pattern_count * pw);
     /* move to i-th pattern data */
     d += pw * i;
 
@@ -247,6 +255,12 @@ gst_video_mark_set_property (GObject * object, guint prop_id,
     case PROP_ENABLED:
       videomark->enabled = g_value_get_boolean (value);
       break;
+    case PROP_LEFT_OFFSET:
+      videomark->left_offset = g_value_get_int (value);
+      break;
+    case PROP_BOTTOM_OFFSET:
+      videomark->bottom_offset = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -279,6 +293,12 @@ gst_video_mark_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_ENABLED:
       g_value_set_boolean (value, videomark->enabled);
+      break;
+    case PROP_LEFT_OFFSET:
+      g_value_set_int (value, videomark->left_offset);
+      break;
+    case PROP_BOTTOM_OFFSET:
+      g_value_set_int (value, videomark->bottom_offset);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -337,6 +357,16 @@ gst_video_mark_class_init (gpointer klass, gpointer class_data)
       g_param_spec_boolean ("enabled", "Enabled",
           "Enable or disable the filter",
           DEFAULT_ENABLED, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (gobject_class, PROP_LEFT_OFFSET,
+      g_param_spec_int ("left-offset", "Left Offset",
+          "The offset from the left border where the pattern starts", 0,
+          G_MAXINT, DEFAULT_LEFT_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (gobject_class, PROP_BOTTOM_OFFSET,
+      g_param_spec_int ("bottom-offset", "Bottom Offset",
+          "The offset from the bottom border where the pattern starts", 0,
+          G_MAXINT, DEFAULT_BOTTOM_OFFSET,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_video_mark_set_caps);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_video_mark_transform_ip);

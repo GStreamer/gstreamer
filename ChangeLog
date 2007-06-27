@@ -1,3 +1,16 @@
+2007-06-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/videosignal/gstvideodetect.c: (gst_video_detect_420),
+	(gst_video_detect_set_property), (gst_video_detect_get_property),
+	(gst_video_detect_class_init):
+	* gst/videosignal/gstvideodetect.h:
+	* gst/videosignal/gstvideomark.c: (gst_video_mark_draw_box),
+	(gst_video_mark_420), (gst_video_mark_set_property),
+	(gst_video_mark_get_property), (gst_video_mark_class_init):
+	* gst/videosignal/gstvideomark.h:
+	Add left and bottom offset properties to control the position of the
+	pattern.
+
 2007-06-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-bad-plugins.args:

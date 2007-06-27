@@ -55,6 +55,8 @@ struct _GstVideoMark {
   gint pattern_data_count;
   gint pattern_data;
   gboolean enabled;
+  gint left_offset;
+  gint bottom_offset;
 };
 
 struct _GstVideoMarkClass {
