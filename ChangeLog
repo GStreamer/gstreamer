@@ -1,5 +1,10 @@
 2007-06-27  Wim Taymans  <wim@fluendo.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_configure_caps):
+	Cast stack args to the proper types. Fixes #451249.
+
+2007-06-27  Wim Taymans  <wim@fluendo.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_stream),
 	(new_session_pad), (gst_rtspsrc_setup_streams):
 	* gst/rtsp/gstrtspsrc.h:

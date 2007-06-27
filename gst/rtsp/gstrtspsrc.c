@@ -1989,11 +1989,11 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src)
       caps = gst_caps_make_writable (caps);
       /* update caps */
       if (stream->timebase != -1)
-        gst_caps_set_simple (caps, "clock-base", G_TYPE_UINT, stream->timebase,
-            NULL);
+        gst_caps_set_simple (caps, "clock-base", G_TYPE_UINT,
+            (guint) stream->timebase, NULL);
       if (stream->seqbase != -1)
-        gst_caps_set_simple (caps, "seqnum-base", G_TYPE_UINT, stream->seqbase,
-            NULL);
+        gst_caps_set_simple (caps, "seqnum-base", G_TYPE_UINT,
+            (guint) stream->seqbase, NULL);
       gst_caps_set_simple (caps, "npt-start", G_TYPE_UINT64, start, NULL);
       if (stop != -1)
         gst_caps_set_simple (caps, "npt-stop", G_TYPE_UINT64, stop, NULL);
