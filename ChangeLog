@@ -1,3 +1,10 @@
+2007-06-27  Edward Hervey  <edward@fluendo.com>
+
+	* gst/gstbuffer.override:
+	whoapadoooo wabada bada ...
+	nothing here... :)
+	Fixes #451645
+
 2007-06-16  Edward Hervey  <edward@fluendo.com>
 
 	* gst/extend/jukebox.py:

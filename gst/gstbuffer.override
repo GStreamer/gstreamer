@@ -508,7 +508,7 @@ _wrap_gst_buffer_stamp (PyGstMiniObject *self, PyObject *args, PyObject *kwargs)
 	GstBuffer	*dest, *src;
 
 	if (!PyArg_ParseTupleAndKeywords (args, kwargs,
-					  "0:GstBuffer.stamp",
+					  "O:GstBuffer.stamp",
 					  kwlist, &srcobj))
 		return NULL;
 	dest = GST_BUFFER(pygstminiobject_get(self));
