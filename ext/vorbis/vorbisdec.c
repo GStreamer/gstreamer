@@ -1150,8 +1150,11 @@ done:
   /* ERRORS */
 wrong_size:
   {
-    GST_ELEMENT_ERROR (vd, STREAM, DECODE, (NULL), ("empty buffer received"));
-    result = GST_FLOW_ERROR;
+    /* don't error out here, just ignore the buffer, it's invalid for vorbis but
+     * not fatal. */
+    GST_ELEMENT_WARNING (vd, STREAM, DECODE, (NULL),
+        ("empty buffer received, ignoring"));
+    result = GST_FLOW_OK;
     vd->discont = TRUE;
     goto done;
   }

@@ -1,3 +1,9 @@
+2007-06-27  Wim Taymans  <wim@fluendo.com>
+
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_decode_buffer):
+	Don't error out on 0-sized packets, just emit a warning because this is
+	not a fatal error. Fixes #451145.
+
 2007-06-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-base-plugins.args:
