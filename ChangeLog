@@ -64,6 +64,8 @@
 	Add a test to check that not-linked pads always stay behind
 	linked pads.
 
+	Fixes: #430682
+
 2007-06-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/random/release:
