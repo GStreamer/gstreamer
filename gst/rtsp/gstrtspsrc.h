@@ -88,6 +88,7 @@ struct _GstRTSPStream {
   GstPad       *srcpad;
   GstFlowReturn last_ret;
   gboolean      added;
+  gboolean      disabled;
 
   /* for interleaved mode */
   guint8        channel[2];

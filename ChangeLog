@@ -1,3 +1,11 @@
+2007-06-27  Wim Taymans  <wim@fluendo.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_stream),
+	(new_session_pad), (gst_rtspsrc_setup_streams):
+	* gst/rtsp/gstrtspsrc.h:
+	For container formats we only need to activate one of the streams so
+	that we correctly signal no-more-pads. Fixes #451015.
+
 2007-06-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-good-plugins.args:

@@ -516,6 +516,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
    * the element. */
   stream->last_ret = GST_FLOW_NOT_LINKED;
   stream->added = FALSE;
+  stream->disabled = FALSE;
   stream->id = src->numstreams++;
 
   /* we must have a payload. No payload means we cannot create caps */
@@ -1406,7 +1407,9 @@ new_session_pad (GstElement * session, GstPad * pad, GstRTSPSrc * src)
   all_added = TRUE;
   for (lstream = src->streams; lstream; lstream = g_list_next (lstream)) {
     stream = (GstRTSPStream *) lstream->data;
-    if (!stream->added) {
+    /* a container stream only needs one pad added. Also disabled streams don't
+     * count */
+    if (!stream->container && !stream->disabled && !stream->added) {
       all_added = FALSE;
       break;
     }
@@ -3155,6 +3158,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
       if (!src->extension->configure_stream (src->extension, stream)) {
         GST_DEBUG_OBJECT (src, "skipping stream %p, disabled by extension",
             stream);
+        stream->disabled = TRUE;
         continue;
       }
     }
