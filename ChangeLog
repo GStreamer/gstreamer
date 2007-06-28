@@ -1,5 +1,10 @@
 2007-06-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/videosignal/gstvideodetect.c: (gst_video_detect_class_init):
+	Register new property as well.
+
+2007-06-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/videosignal/gstvideodetect.c: (gst_video_detect_420),
 	(gst_video_detect_set_property), (gst_video_detect_get_property):
 	* gst/videosignal/gstvideodetect.h:
