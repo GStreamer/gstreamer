@@ -86,6 +86,8 @@ static void gst_gdk_pixbuf_set_property (GObject * object, guint prop_id,
 static void gst_gdk_pixbuf_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static GstStateChangeReturn
+gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition);
 static GstFlowReturn gst_gdk_pixbuf_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_gdk_pixbuf_sink_event (GstPad * pad, GstEvent * event);
 
@@ -102,19 +104,20 @@ gst_gdk_pixbuf_sink_setcaps (GstPad * pad, GstCaps * caps)
   const GValue *framerate;
   GstStructure *s;
 
-  filter = GST_GDK_PIXBUF (gst_pad_get_parent (pad));
+  filter = GST_GDK_PIXBUF (GST_PAD_PARENT (pad));
   s = gst_caps_get_structure (caps, 0);
 
-  filter->framerate_numerator = 0;
-  filter->framerate_denominator = 1;
   if ((framerate = gst_structure_get_value (s, "framerate")) != NULL) {
     filter->framerate_numerator = gst_value_get_fraction_numerator (framerate);
     filter->framerate_denominator =
         gst_value_get_fraction_denominator (framerate);
-    GST_DEBUG ("got framerate of %d/%d fps => packetized mode",
+    GST_DEBUG_OBJECT (filter, "got framerate of %d/%d fps => packetized mode",
         filter->framerate_numerator, filter->framerate_denominator);
+  } else {
+    filter->framerate_numerator = 0;
+    filter->framerate_denominator = 1;
+    GST_DEBUG_OBJECT (filter, "no framerate, assuming single image");
   }
-  gst_object_unref (filter);
 
   return TRUE;
 }
@@ -186,6 +189,9 @@ gst_gdk_pixbuf_class_init (GstGdkPixbufClass * klass)
   g_object_class_install_property (gobject_class, ARG_SILENT,
       g_param_spec_boolean ("silent", "Silent",
           "Produce verbose output ? (deprecated)", FALSE, G_PARAM_READWRITE));
+
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_gdk_pixbuf_change_state);
 }
 
 static void
@@ -280,7 +286,12 @@ gst_gdk_pixbuf_flush (GstGdkPixbuf * filter)
   }
 
   GST_DEBUG ("pushing... %d bytes", GST_BUFFER_SIZE (outbuf));
-  return gst_pad_push (filter->srcpad, outbuf);
+  ret = gst_pad_push (filter->srcpad, outbuf);
+
+  if (ret != GST_FLOW_OK)
+    GST_DEBUG_OBJECT (filter, "flow: %s", gst_flow_get_name (ret));
+
+  return ret;
 
   /* ERRORS */
 no_pixbuf:
@@ -317,6 +328,13 @@ gst_gdk_pixbuf_sink_event (GstPad * pad, GstEvent * event)
         res = gst_gdk_pixbuf_flush (pixbuf);
         g_object_unref (G_OBJECT (pixbuf->pixbuf_loader));
         pixbuf->pixbuf_loader = NULL;
+        /* as long as we don't have flow returns for event functions we need
+         * to post an error here, or the application might never know that
+         * things failed */
+        if (res != GST_FLOW_OK && res != GST_FLOW_WRONG_STATE) {
+          GST_ELEMENT_ERROR (pixbuf, STREAM, FAILED, (NULL),
+              ("Flow: %s", gst_flow_get_name (res)));
+        }
       }
       break;
     case GST_EVENT_NEWSEGMENT:
@@ -429,6 +447,38 @@ gst_gdk_pixbuf_get_property (GObject * object, guint prop_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstStateChangeReturn
+gst_gdk_pixbuf_change_state (GstElement * element, GstStateChange transition)
+{
+  GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
+  GstGdkPixbuf *dec = GST_GDK_PIXBUF (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      /* default to single image mode, setcaps function might not be called */
+      dec->framerate_numerator = 0;
+      dec->framerate_denominator = 1;
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    return ret;
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      dec->framerate_numerator = 0;
+      dec->framerate_denominator = 0;
+      break;
+    default:
+      break;
+  }
+
+  return ret;
 }
 
 #define GST_GDK_PIXBUF_TYPE_FIND_SIZE 1024

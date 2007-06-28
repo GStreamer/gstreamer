@@ -1,3 +1,16 @@
+2007-06-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_setcaps),
+	(gst_gdk_pixbuf_class_init), (gst_gdk_pixbuf_flush),
+	(gst_gdk_pixbuf_sink_event), (gst_gdk_pixbuf_change_state):
+	  Add state change function where we set 0/1 as default framerate in
+	  case our setcaps function isn't called, like it might not in a
+	  filesrc ! gdkpixbufdec scenario. Fixes assertion triggered by
+	  gdkpixbufdec trying to create caps with a 0/0 framerate.
+	  Also post an error message on the bus if gst_pad_push() fails when
+	  called from our sink event handler (+1 for flow returns for event
+	  functions in 0.11) instead of failing silently.
+
 2007-06-27  Wim Taymans  <wim@fluendo.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_configure_caps):
