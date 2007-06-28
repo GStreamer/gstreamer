@@ -74,6 +74,7 @@
 
 #include "gstaudioconvert.h"
 #include "gstchannelmix.h"
+#include "gstaudioquantize.h"
 #include "plugin.h"
 
 GST_DEBUG_CATEGORY (audio_convert_debug);
@@ -102,6 +103,11 @@ static GstFlowReturn gst_audio_convert_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static GstFlowReturn gst_audio_convert_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
+static void gst_audio_convert_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_audio_convert_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
 
 /* AudioConvert signals and args */
 enum
@@ -113,7 +119,8 @@ enum
 enum
 {
   ARG_0,
-  ARG_AGGRESSIVE
+  ARG_DITHERING,
+  ARG_NOISE_SHAPING,
 };
 
 #define DEBUG_INIT(bla) \
@@ -179,6 +186,50 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     STATIC_CAPS);
 
+#define GST_TYPE_AUDIO_CONVERT_DITHERING (gst_audio_convert_dithering_get_type ())
+static GType
+gst_audio_convert_dithering_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {DITHER_NONE, "No dithering",
+          "none"},
+      {DITHER_RPDF, "Rectangular dithering", "rpdf"},
+      {DITHER_TPDF, "Triangular dithering (default)", "tpdf"},
+      {DITHER_TPDF_HF, "High frequency triangular dithering", "tpdf-hf"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstAudioConvertDithering", values);
+  }
+  return gtype;
+}
+
+#define GST_TYPE_AUDIO_CONVERT_NOISE_SHAPING (gst_audio_convert_ns_get_type ())
+static GType
+gst_audio_convert_ns_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {NOISE_SHAPING_NONE, "No noise shaping (default)",
+          "none"},
+      {NOISE_SHAPING_ERROR_FEEDBACK, "Error feedback", "error-feedback"},
+      {NOISE_SHAPING_SIMPLE, "Simple 2-pole noise shaping", "simple"},
+      {NOISE_SHAPING_MEDIUM, "Medium 5-pole noise shaping", "medium"},
+      {NOISE_SHAPING_HIGH, "High 8-pole noise shaping", "high"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstAudioConvertNoiseShaping", values);
+  }
+  return gtype;
+}
+
+
 /*** TYPE FUNCTIONS ***********************************************************/
 
 static void
@@ -201,11 +252,24 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
   gint i;
 
   gobject_class->dispose = gst_audio_convert_dispose;
+  gobject_class->set_property = gst_audio_convert_set_property;
+  gobject_class->get_property = gst_audio_convert_get_property;
 
   supported_positions = g_new0 (GstAudioChannelPosition,
       GST_AUDIO_CHANNEL_POSITION_NUM);
   for (i = 0; i < GST_AUDIO_CHANNEL_POSITION_NUM; i++)
     supported_positions[i] = i;
+
+  g_object_class_install_property (gobject_class, ARG_DITHERING,
+      g_param_spec_enum ("dithering", "Dithering",
+          "Selects between different dithering methods.",
+          GST_TYPE_AUDIO_CONVERT_DITHERING, DITHER_TPDF, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_NOISE_SHAPING,
+      g_param_spec_enum ("noise-shaping", "Noise shaping",
+          "Selects between different noise shaping methods.",
+          GST_TYPE_AUDIO_CONVERT_NOISE_SHAPING, NOISE_SHAPING_NONE,
+          G_PARAM_READWRITE));
 
   basetransform_class->get_unit_size =
       GST_DEBUG_FUNCPTR (gst_audio_convert_get_unit_size);
@@ -226,6 +290,8 @@ gst_audio_convert_class_init (GstAudioConvertClass * klass)
 static void
 gst_audio_convert_init (GstAudioConvert * this, GstAudioConvertClass * g_class)
 {
+  this->dither = DITHER_TPDF;
+  this->ns = NOISE_SHAPING_NONE;
   memset (&this->ctx, 0, sizeof (AudioConvertCtx));
 }
 
@@ -672,7 +738,8 @@ gst_audio_convert_set_caps (GstBaseTransform * base, GstCaps * incaps,
   if (!gst_audio_convert_parse_caps (outcaps, &out_ac_caps))
     return FALSE;
 
-  if (!audio_convert_prepare_context (&this->ctx, &in_ac_caps, &out_ac_caps))
+  if (!audio_convert_prepare_context (&this->ctx, &in_ac_caps, &out_ac_caps,
+          this->dither, this->ns))
     goto no_converter;
 
   return TRUE;
@@ -751,5 +818,43 @@ convert_error:
     GST_ELEMENT_ERROR (this, STREAM, FORMAT,
         (NULL), ("error while converting"));
     return GST_FLOW_ERROR;
+  }
+}
+
+static void
+gst_audio_convert_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAudioConvert *this = GST_AUDIO_CONVERT (object);
+
+  switch (prop_id) {
+    case ARG_DITHERING:
+      this->dither = g_value_get_enum (value);
+      break;
+    case ARG_NOISE_SHAPING:
+      this->ns = g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_audio_convert_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAudioConvert *this = GST_AUDIO_CONVERT (object);
+
+  switch (prop_id) {
+    case ARG_DITHERING:
+      g_value_set_enum (value, this->dither);
+      break;
+    case ARG_NOISE_SHAPING:
+      g_value_set_enum (value, this->ns);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
   }
 }

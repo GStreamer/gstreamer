@@ -26,12 +26,9 @@
 #include <string.h>
 
 #include "gstchannelmix.h"
+#include "gstaudioquantize.h"
 #include "audioconvert.h"
 #include "gst/floatcast/floatcast.h"
-
-/* int to float/double conversion: int2xxx(i) = 1 / (2^31-1) * i */
-#define INT2FLOAT(i) (4.6566128752457969e-10 * ((gfloat)i))
-#define INT2DOUBLE(i) (4.6566128752457969e-10 * ((gdouble)i))
 
 /* sign bit in the intermediate format */
 #define SIGNED  (1U<<31)
@@ -43,7 +40,7 @@
 audio_convert_unpack_##name
 
 /* unpack from integer to signed integer 32 */
-#define MAKE_UNPACK_FUNC_II(name, stride, sign, READ_FUNC)                 \
+#define MAKE_UNPACK_FUNC_II(name, stride, sign, READ_FUNC)              \
 static void                                                             \
 MAKE_UNPACK_FUNC_NAME (name) (guint8 *src, gint32 *dst,                 \
         gint scale, gint count)                                         \
@@ -63,7 +60,7 @@ MAKE_UNPACK_FUNC_NAME (name) (type * src, gint32 * dst, gint s, gint count)   \
                                                                               \
   for (; count; count--) {                                                    \
     /* blow up to 32 bit */                                                   \
-    temp = (READ_FUNC (*src++) * 2147483647.0) + 0.5;                         \
+    temp = floor ((READ_FUNC (*src++) * 2147483647.0) + 0.5);                 \
     *dst++ = (gint32) CLAMP (temp, G_MININT32, G_MAXINT32);                   \
   }                                                                           \
 }
@@ -76,6 +73,20 @@ MAKE_UNPACK_FUNC_NAME (name) (type * src, gdouble * dst, gint s,              \
 {                                                                             \
   for (; count; count--)                                                      \
     *dst++ = (gdouble) FUNC (*src++);                                         \
+}
+
+/* unpack from int to float 64 (double) */
+#define MAKE_UNPACK_FUNC_IF(name, stride, sign, READ_FUNC)                    \
+static void                                                                   \
+MAKE_UNPACK_FUNC_NAME (name) (guint8 * src, gdouble * dst, gint scale,        \
+    gint count)                                                               \
+{                                                                             \
+  gdouble tmp;                                                                \
+  for (; count; count--) {                                                    \
+    tmp = (gdouble) ((((gint32) READ_FUNC (src)) << scale) ^ (sign));         \
+    *dst++ = tmp * (1.0 / 2147483647.0);                                      \
+    src += stride;                                                            \
+  }                                                                           \
 }
 
 #define READ8(p)          GST_READ_UINT8(p)
@@ -108,6 +119,20 @@ MAKE_UNPACK_FUNC_FF (float_hq_le, gfloat, GFLOAT_FROM_LE);
 MAKE_UNPACK_FUNC_FF (float_hq_be, gfloat, GFLOAT_FROM_BE);
 MAKE_UNPACK_FUNC_FF (double_hq_le, gdouble, GDOUBLE_FROM_LE);
 MAKE_UNPACK_FUNC_FF (double_hq_be, gdouble, GDOUBLE_FROM_BE);
+MAKE_UNPACK_FUNC_IF (u8_float, 1, SIGNED, READ8);
+MAKE_UNPACK_FUNC_IF (s8_float, 1, 0, READ8);
+MAKE_UNPACK_FUNC_IF (u16_le_float, 2, SIGNED, READ16_FROM_LE);
+MAKE_UNPACK_FUNC_IF (s16_le_float, 2, 0, READ16_FROM_LE);
+MAKE_UNPACK_FUNC_IF (u16_be_float, 2, SIGNED, READ16_FROM_BE);
+MAKE_UNPACK_FUNC_IF (s16_be_float, 2, 0, READ16_FROM_BE);
+MAKE_UNPACK_FUNC_IF (u24_le_float, 3, SIGNED, READ24_FROM_LE);
+MAKE_UNPACK_FUNC_IF (s24_le_float, 3, 0, READ24_FROM_LE);
+MAKE_UNPACK_FUNC_IF (u24_be_float, 3, SIGNED, READ24_FROM_BE);
+MAKE_UNPACK_FUNC_IF (s24_be_float, 3, 0, READ24_FROM_BE);
+MAKE_UNPACK_FUNC_IF (u32_le_float, 4, SIGNED, READ32_FROM_LE);
+MAKE_UNPACK_FUNC_IF (s32_le_float, 4, 0, READ32_FROM_LE);
+MAKE_UNPACK_FUNC_IF (u32_be_float, 4, SIGNED, READ32_FROM_BE);
+MAKE_UNPACK_FUNC_IF (s32_be_float, 4, 0, READ32_FROM_BE);
 
 /* One of the double_hq_* functions generated above is ineffecient, but it's
  * never used anyway.  The same is true for one of the s32_* functions. */
@@ -122,64 +147,36 @@ audio_convert_pack_##name
  * These functions convert the signed 32 bit integers to the
  * target format. For this to work the following steps are done:
  *
- * 1) If the output format is smaller than 32 bit we add 0.5LSB of
- *    the target format (i.e. 1<<(scale-1)) to get proper rounding.
- *    Shifting will result in rounding towards negative infinity (for
- *    signed values) or zero (for unsigned values). As we might overflow
- *    an overflow check is performed.
- *    Additionally, if our target format is signed and the value is smaller
- *    than zero we decrease it by one to round -X.5 downwards.
- *    This leads to the following rounding:
- *    -1.2 => -1    1.2 => 1
- *    -1.5 => -2    1.5 => 2
- *    -1.7 => -2    1.7 => 2
- * 2) If the output format is unsigned we will XOR the sign bit. This
+ * 1) If the output format is unsigned we will XOR the sign bit. This
  *    will do the same as if we add 1<<31.
- * 3) Afterwards we shift to the target depth. It's necessary to left-shift
+ * 2) Afterwards we shift to the target depth. It's necessary to left-shift
  *    on signed values here to get arithmetical shifting.
- * 4) This is then written into our target array by the corresponding write
+ * 3) This is then written into our target array by the corresponding write
  *    function for the target width.
  */
 
 /* pack from signed integer 32 to integer */
 #define MAKE_PACK_FUNC_II(name, stride, sign, WRITE_FUNC)               \
 static void                                                             \
-MAKE_PACK_FUNC_NAME (name) (gint32 *src, gpointer dst,                  \
+MAKE_PACK_FUNC_NAME (name) (gint32 *src, guint8 * dst,                  \
         gint scale, gint count)                                         \
 {                                                                       \
-  guint8 *p = (guint8 *)dst;                                            \
   gint32 tmp;                                                           \
-  if (scale > 0) {                                                      \
-    guint32 bias = 1 << (scale - 1);                                    \
-    for (;count; count--) {                                             \
-      tmp = *src++;                                                     \
-      if (tmp > 0 && G_MAXINT32 - tmp < bias)                           \
-        tmp = G_MAXINT32;                                               \
-      else                                                              \
-        tmp += bias;                                                    \
-      if (sign == 0 && tmp < 0)                                         \
-        tmp--;                                                          \
-      tmp = ((tmp) ^ (sign)) >> scale;                                  \
-      WRITE_FUNC (p, tmp);                                              \
-      p+=stride;                                                        \
-    }                                                                   \
-  } else {                                                              \
-    for (;count; count--) {                                             \
-      tmp = (*src++ ^ (sign));                                          \
-      WRITE_FUNC (p, tmp);                                              \
-      p+=stride;                                                        \
-    }                                                                   \
+  for (;count; count--) {                                               \
+    tmp = (*src++ ^ (sign)) >> scale;                                   \
+    WRITE_FUNC (dst, tmp);                                              \
+    dst += stride;                                                      \
   }                                                                     \
 }
 
 /* pack from signed integer 32 to float */
-#define MAKE_PACK_FUNC_IF(name, type, FUNC, FUNC2)                      \
+#define MAKE_PACK_FUNC_IF(name, type, FUNC)                             \
 static void                                                             \
 MAKE_PACK_FUNC_NAME (name) (gint32 * src, type * dst, gint scale,       \
     gint count)                                                         \
 {                                                                       \
   for (; count; count--)                                                \
-    *dst++ = FUNC (FUNC2 (*src++));                                     \
+    *dst++ = FUNC ((type) ((*src++) * (1.0 / 2147483647.0)));           \
 }
 
 /* pack from float 64 (double) to float */
@@ -190,6 +187,42 @@ MAKE_PACK_FUNC_NAME (name) (gdouble * src, type * dst, gint s,          \
 {                                                                       \
   for (; count; count--)                                                \
     *dst++ = FUNC ((type) (*src++));                                    \
+}
+
+/* pack from float 64 (double) to signed int.
+ * the floats are already in the correct range. Only a cast is needed.
+ */
+#define MAKE_PACK_FUNC_FI_S(name, stride, WRITE_FUNC)                   \
+static void                                                             \
+MAKE_PACK_FUNC_NAME (name) (gdouble * src, guint8 * dst, gint scale,    \
+    gint count)                                                         \
+{                                                                       \
+  gint32 tmp;                                                           \
+  for (; count; count--) {                                              \
+    tmp = (gint32) (*src);                                              \
+    WRITE_FUNC (dst, tmp);                                              \
+    src++;                                                              \
+    dst += stride;                                                      \
+  }                                                                     \
+}
+
+/* pack from float 64 (double) to unsigned int.
+ * the floats are already in the correct range. Only a cast is needed
+ * and an addition of 2^(target_depth-1) to get in the correct unsigned
+ * range. */
+#define MAKE_PACK_FUNC_FI_U(name, stride, WRITE_FUNC)                   \
+static void                                                             \
+MAKE_PACK_FUNC_NAME (name) (gdouble * src, guint8 * dst, gint scale,    \
+    gint count)                                                         \
+{                                                                       \
+  guint32 tmp;                                                          \
+  gdouble limit = (1U<<(32-scale-1));                                   \
+  for (; count; count--) {                                              \
+    tmp = (guint32) (*src + limit);                                     \
+    WRITE_FUNC (dst, tmp);                                              \
+    src++;                                                              \
+    dst += stride;                                                      \
+  }                                                                     \
 }
 
 #define WRITE8(p, v)       GST_WRITE_UINT8 (p, v)
@@ -214,12 +247,27 @@ MAKE_PACK_FUNC_II (u32_le, 4, SIGNED, WRITE32_TO_LE);
 MAKE_PACK_FUNC_II (s32_le, 4, 0, WRITE32_TO_LE);
 MAKE_PACK_FUNC_II (u32_be, 4, SIGNED, WRITE32_TO_BE);
 MAKE_PACK_FUNC_II (s32_be, 4, 0, WRITE32_TO_BE);
-MAKE_PACK_FUNC_IF (float_le, gfloat, GFLOAT_TO_LE, INT2FLOAT);
-MAKE_PACK_FUNC_IF (float_be, gfloat, GFLOAT_TO_BE, INT2FLOAT);
-MAKE_PACK_FUNC_IF (double_le, gdouble, GDOUBLE_TO_LE, INT2DOUBLE);
-MAKE_PACK_FUNC_IF (double_be, gdouble, GDOUBLE_TO_BE, INT2DOUBLE);
+MAKE_PACK_FUNC_IF (float_le, gfloat, GFLOAT_TO_LE);
+MAKE_PACK_FUNC_IF (float_be, gfloat, GFLOAT_TO_BE);
+MAKE_PACK_FUNC_IF (double_le, gdouble, GDOUBLE_TO_LE);
+MAKE_PACK_FUNC_IF (double_be, gdouble, GDOUBLE_TO_BE);
 MAKE_PACK_FUNC_FF (float_hq_le, gfloat, GFLOAT_TO_LE);
 MAKE_PACK_FUNC_FF (float_hq_be, gfloat, GFLOAT_TO_BE);
+MAKE_PACK_FUNC_FI_U (u8_float, 1, WRITE8);
+MAKE_PACK_FUNC_FI_S (s8_float, 1, WRITE8);
+MAKE_PACK_FUNC_FI_U (u16_le_float, 2, WRITE16_TO_LE);
+MAKE_PACK_FUNC_FI_S (s16_le_float, 2, WRITE16_TO_LE);
+MAKE_PACK_FUNC_FI_U (u16_be_float, 2, WRITE16_TO_BE);
+MAKE_PACK_FUNC_FI_S (s16_be_float, 2, WRITE16_TO_BE);
+MAKE_PACK_FUNC_FI_U (u24_le_float, 3, WRITE24_TO_LE);
+MAKE_PACK_FUNC_FI_S (s24_le_float, 3, WRITE24_TO_LE);
+MAKE_PACK_FUNC_FI_U (u24_be_float, 3, WRITE24_TO_BE);
+MAKE_PACK_FUNC_FI_S (s24_be_float, 3, WRITE24_TO_BE);
+MAKE_PACK_FUNC_FI_U (u32_le_float, 4, WRITE32_TO_LE);
+MAKE_PACK_FUNC_FI_S (s32_le_float, 4, WRITE32_TO_LE);
+MAKE_PACK_FUNC_FI_U (u32_be_float, 4, WRITE32_TO_BE);
+MAKE_PACK_FUNC_FI_S (s32_be_float, 4, WRITE32_TO_BE);
+
 /* For double_hq, packing and unpacking is the same, so we reuse the unpacking
  * functions here. */
 #define audio_convert_pack_double_hq_le MAKE_UNPACK_FUNC_NAME (double_hq_le)
@@ -250,6 +298,22 @@ static AudioConvertUnpack unpack_funcs[] = {
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (float_hq_be),
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (double_hq_le),
   (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (double_hq_be),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u8_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s8_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u8_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s8_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u16_le_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s16_le_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u16_be_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s16_be_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u24_le_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s24_le_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u24_be_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s24_be_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u32_le_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s32_le_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (u32_be_float),
+  (AudioConvertUnpack) MAKE_UNPACK_FUNC_NAME (s32_be_float),
 };
 
 static AudioConvertPack pack_funcs[] = {
@@ -277,10 +341,29 @@ static AudioConvertPack pack_funcs[] = {
   (AudioConvertPack) MAKE_PACK_FUNC_NAME (float_hq_be),
   (AudioConvertPack) MAKE_PACK_FUNC_NAME (double_hq_le),
   (AudioConvertPack) MAKE_PACK_FUNC_NAME (double_hq_be),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u8_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s8_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u8_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s8_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u16_le_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s16_le_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u16_be_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s16_be_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u24_le_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s24_le_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u24_be_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s24_be_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u32_le_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s32_le_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (u32_be_float),
+  (AudioConvertPack) MAKE_PACK_FUNC_NAME (s32_be_float),
 };
 
+#define DOUBLE_INTERMEDIATE_FORMAT(ctx)                                 \
+    ((!ctx->in.is_int && !ctx->out.is_int) || (ctx->ns != NOISE_SHAPING_NONE))
+
 static gint
-audio_convert_get_func_index (AudioConvertFmt * fmt)
+audio_convert_get_func_index (AudioConvertCtx * ctx, AudioConvertFmt * fmt)
 {
   gint index = 0;
 
@@ -288,19 +371,22 @@ audio_convert_get_func_index (AudioConvertFmt * fmt)
     index += (fmt->width / 8 - 1) * 4;
     index += fmt->endianness == G_LITTLE_ENDIAN ? 0 : 2;
     index += fmt->sign ? 1 : 0;
+    index += (ctx->ns == NOISE_SHAPING_NONE) ? 0 : 24;
   } else {
     /* this is float/double */
     index = 16;
     index += (fmt->width == 32) ? 0 : 2;
     index += (fmt->endianness == G_LITTLE_ENDIAN) ? 0 : 1;
+    index += (DOUBLE_INTERMEDIATE_FORMAT (ctx)) ? 4 : 0;
   }
+
   return index;
 }
 
-static gboolean
+static inline gboolean
 check_default (AudioConvertCtx * ctx, AudioConvertFmt * fmt)
 {
-  if (ctx->in.is_int || ctx->out.is_int) {
+  if (!DOUBLE_INTERMEDIATE_FORMAT (ctx)) {
     return (fmt->width == 32 && fmt->depth == 32 &&
         fmt->endianness == G_BYTE_ORDER && fmt->sign == TRUE);
   } else {
@@ -322,7 +408,7 @@ audio_convert_clean_fmt (AudioConvertFmt * fmt)
 
 gboolean
 audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
-    AudioConvertFmt * out)
+    AudioConvertFmt * out, DitherType dither, NoiseShapingType ns)
 {
   gint idx_in, idx_out;
 
@@ -336,26 +422,40 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   ctx->in = *in;
   ctx->out = *out;
 
+  /* Don't dither or apply noise shaping if out depth is bigger than 20 bits
+   * as DA converters only can do a SNR up to 20 bits in reality.
+   * Also don't dither or apply noise shaping if target depth is larger than
+   * source depth. */
+  if (ctx->out.depth <= 20 && (!ctx->in.is_int
+          || ctx->in.depth >= ctx->out.depth)) {
+    ctx->dither = dither;
+    ctx->ns = ns;
+  } else {
+    ctx->dither = DITHER_NONE;
+    ctx->ns = NOISE_SHAPING_NONE;
+  }
+
+  /* Use simple error feedback when output sample rate is smaller than
+   * 32000 as the other methods might move the noise to audible ranges */
+  if (ctx->ns > NOISE_SHAPING_ERROR_FEEDBACK && ctx->out.rate < 32000)
+    ctx->ns = NOISE_SHAPING_ERROR_FEEDBACK;
+
   gst_channel_mix_setup_matrix (ctx);
 
-  idx_in = audio_convert_get_func_index (in);
+  idx_in = audio_convert_get_func_index (ctx, in);
   ctx->unpack = unpack_funcs[idx_in];
 
-  idx_out = audio_convert_get_func_index (out);
+  idx_out = audio_convert_get_func_index (ctx, out);
   ctx->pack = pack_funcs[idx_out];
 
-  /* if both formats are float/double use double as intermediate format and
-   * and switch mixing */
-  if (in->is_int || out->is_int) {
+  /* if both formats are float/double or we use noise shaping use double as
+   * intermediate format and and switch mixing */
+  if (!DOUBLE_INTERMEDIATE_FORMAT (ctx)) {
     GST_INFO ("use int mixing");
     ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_int;
   } else {
     GST_INFO ("use float mixing");
     ctx->channel_mix = (AudioConvertMix) gst_channel_mix_mix_float;
-    /* Bump the pack/unpack function indices by 4 to use double as intermediary
-     * format (float_hq_*, double_hq_* functions).*/
-    ctx->unpack = unpack_funcs[idx_in + 4];
-    ctx->pack = pack_funcs[idx_out + 4];
   }
   GST_INFO ("unitsizes: %d -> %d", in->unit_size, out->unit_size);
 
@@ -372,6 +472,8 @@ audio_convert_prepare_context (AudioConvertCtx * ctx, AudioConvertFmt * in,
   ctx->in_scale = (in->is_int) ? (32 - in->depth) : 0;
   ctx->out_scale = (out->is_int) ? (32 - out->depth) : 0;
 
+  gst_audio_quantize_setup (ctx);
+
   return TRUE;
 }
 
@@ -380,6 +482,7 @@ audio_convert_clean_context (AudioConvertCtx * ctx)
 {
   g_return_val_if_fail (ctx != NULL, FALSE);
 
+  gst_audio_quantize_free (ctx);
   audio_convert_clean_fmt (&ctx->in);
   audio_convert_clean_fmt (&ctx->out);
   gst_channel_mix_unset_matrix (ctx);
@@ -425,12 +528,12 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
   outsize = ctx->out.unit_size * samples;
 
   /* find biggest temp buffer size */
-  size = (ctx->in.is_int || ctx->out.is_int) ?
-      sizeof (gint32) : sizeof (gdouble);
+  size = (DOUBLE_INTERMEDIATE_FORMAT (ctx)) ? sizeof (gdouble)
+      : sizeof (gint32);
 
   if (!ctx->in_default)
     intemp = insize * size * 8 / ctx->in.width;
-  if (!ctx->mix_passthrough)
+  if (!ctx->mix_passthrough || !ctx->out_default)
     outtemp = outsize * size * 8 / ctx->out.width;
   biggest = MAX (intemp, outtemp);
 
@@ -472,6 +575,15 @@ audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
     ctx->channel_mix (ctx, src, outbuf, samples);
 
     src = outbuf;
+  }
+
+  /* we only need to quantize if output format is int */
+  if (ctx->out.is_int) {
+    if (ctx->out_default)
+      outbuf = dst;
+    else
+      outbuf = tmpbuf;
+    ctx->quantize (ctx, src, outbuf, samples);
   }
 
   if (!ctx->out_default) {

@@ -87,6 +87,8 @@ setup_audioconvert (GstCaps * outcaps)
 
   GST_DEBUG ("setup_audioconvert with caps %" GST_PTR_FORMAT, outcaps);
   audioconvert = gst_check_setup_element ("audioconvert");
+  g_object_set (G_OBJECT (audioconvert), "dithering", 0, NULL);
+  g_object_set (G_OBJECT (audioconvert), "noise-shaping", 0, NULL);
   mysrcpad = gst_check_setup_src_pad (audioconvert, &srctemplate, NULL);
   mysinkpad = gst_check_setup_sink_pad (audioconvert, &sinktemplate, NULL);
   /* this installs a getcaps func that will always return the caps we set
@@ -532,7 +534,7 @@ GST_START_TEST (test_int_conversion)
     gint16 out[] = { 0, G_MININT16, G_MAXINT16,
       32, 33, 32,
       33, 31,
-      -32, -33,
+      -31, -32,
       -31, -33,
       -32
     };
@@ -633,9 +635,9 @@ GST_START_TEST (test_float_conversion)
   {
     gint16 in[] = { 0, -32768, 16384, -16384 };
     gdouble out[] = { 0.0,
-      4.6566128752457969e-10 * (gdouble) (-32768L << 16),       /* ~ -1.0 */
-      4.6566128752457969e-10 * (gdouble) (16384L << 16),        /* ~ 0.5 */
-      4.6566128752457969e-10 * (gdouble) (-16384L << 16),       /* ~ -0.5 */
+      (gdouble) (-32768L << 16) / 2147483647.0, /* ~ -1.0 */
+      (gdouble) (16384L << 16) / 2147483647.0,  /* ~  0.5 */
+      (gdouble) (-16384L << 16) / 2147483647.0, /* ~ -0.5 */
     };
 
     RUN_CONVERSION ("16 signed to 64 float",
@@ -645,9 +647,9 @@ GST_START_TEST (test_float_conversion)
   {
     gint32 in[] = { 0, (-1L << 31), (1L << 30), (-1L << 30) };
     gdouble out[] = { 0.0,
-      4.6566128752457969e-10 * (gdouble) (-1L << 31),   /* ~ -1.0 */
-      4.6566128752457969e-10 * (gdouble) (1L << 30),    /* ~ 0.5 */
-      4.6566128752457969e-10 * (gdouble) (-1L << 30),   /* ~ -0.5 */
+      (gdouble) (-1L << 31) / 2147483647.0,     /* ~ -1.0 */
+      (gdouble) (1L << 30) / 2147483647.0,      /* ~  0.5 */
+      (gdouble) (-1L << 30) / 2147483647.0,     /* ~ -0.5 */
     };
 
     RUN_CONVERSION ("32 signed to 64 float",

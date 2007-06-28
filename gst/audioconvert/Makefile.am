@@ -4,6 +4,7 @@ libgstaudioconvert_la_SOURCES = \
 	gstaudioconvert.c \
 	audioconvert.c \
 	gstchannelmix.c \
+	gstaudioquantize.c \
 	plugin.c
 
 libgstaudioconvert_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
@@ -16,6 +17,7 @@ noinst_HEADERS = \
 	gstaudioconvert.h \
 	audioconvert.h \
 	gstchannelmix.h \
+	gstaudioquantize.h \
 	plugin.h
 
 #TESTS = channelmixtest

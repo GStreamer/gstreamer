@@ -1,3 +1,35 @@
+2007-06-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audioconvert/Makefile.am:
+	* gst/audioconvert/audioconvert.c: (audio_convert_get_func_index),
+	(check_default), (audio_convert_prepare_context),
+	(audio_convert_clean_context), (audio_convert_convert):
+	* gst/audioconvert/audioconvert.h:
+	* gst/audioconvert/gstaudioconvert.c:
+	(gst_audio_convert_dithering_get_type),
+	(gst_audio_convert_ns_get_type), (gst_audio_convert_class_init),
+	(gst_audio_convert_init), (gst_audio_convert_set_caps),
+	(gst_audio_convert_set_property), (gst_audio_convert_get_property):
+	* gst/audioconvert/gstaudioconvert.h:
+	* gst/audioconvert/gstaudioquantize.c:
+	(gst_audio_quantize_setup_noise_shaping),
+	(gst_audio_quantize_free_noise_shaping),
+	(gst_audio_quantize_setup_dither),
+	(gst_audio_quantize_free_dither),
+	(gst_audio_quantize_setup_quantize_func),
+	(gst_audio_quantize_setup), (gst_audio_quantize_free):
+	* gst/audioconvert/gstaudioquantize.h:
+	Implement dithering and noise shaping in audioconvert. By default now
+	TPDF dithering (and no noise shaping) will be used when converting
+	from a higher bit depth to 20 bit depth or smaller, otherwise
+	everything will be as it is now.
+	For the last audioconvert in a pipeline it would make sense to
+	use some kind of noise shaping, enabling it by default for all
+	conversions would give undesired results though. Fixes #360246.
+	* tests/check/elements/audioconvert.c: (setup_audioconvert),
+	(GST_START_TEST):
+	Adjust unit test for the new audioconvert.
+
 2007-06-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/playback/gstqueue2.c: (apply_segment), (update_buffering):

@@ -47,6 +47,9 @@ struct _GstAudioConvert
   GstBaseTransform element;
 
   AudioConvertCtx ctx;
+
+  DitherType dither;
+  NoiseShapingType ns;
 };
 
 struct _GstAudioConvertClass

@@ -25,6 +25,23 @@
 #include <gst/gst.h>
 #include <gst/audio/multichannel.h>
 
+typedef enum
+{
+  DITHER_NONE = 0,
+  DITHER_RPDF,
+  DITHER_TPDF,
+  DITHER_TPDF_HF
+} DitherType;
+
+typedef enum
+{
+  NOISE_SHAPING_NONE = 0,
+  NOISE_SHAPING_ERROR_FEEDBACK,
+  NOISE_SHAPING_SIMPLE,
+  NOISE_SHAPING_MEDIUM,
+  NOISE_SHAPING_HIGH
+} NoiseShapingType;
+
 typedef struct _AudioConvertCtx AudioConvertCtx;
 typedef struct _AudioConvertFmt AudioConvertFmt;
 
@@ -45,10 +62,14 @@ struct _AudioConvertFmt
   gint unit_size;
 };
 
-typedef void (*AudioConvertUnpack) (gpointer src, gpointer dst, gint scale, gint count);
-typedef void (*AudioConvertPack) (gpointer src, gpointer dst, gint scale, gint count);
+typedef void (*AudioConvertUnpack) (gpointer src, gpointer dst, gint scale,
+    gint count);
+typedef void (*AudioConvertPack) (gpointer src, gpointer dst, gint scale,
+    gint count);
 
 typedef void (*AudioConvertMix) (AudioConvertCtx *, gpointer, gpointer, gint);
+typedef void (*AudioConvertQuantize) (AudioConvertCtx * ctx, gpointer src,
+    gpointer dst, gint count);
 
 struct _AudioConvertCtx
 {
@@ -73,20 +94,31 @@ struct _AudioConvertCtx
 
   gint in_scale;
   gint out_scale;
-  
+
   AudioConvertMix channel_mix;
+
+  AudioConvertQuantize quantize;
+  DitherType dither;
+  NoiseShapingType ns;
+  /* random number generate for dither noise */
+  GRand *dither_random;
+  /* last random number generated per channel for hifreq TPDF dither */
+  gpointer last_random;
+  /* contains the past quantization errors, error[out_channels][count] */
+  gdouble *error_buf;
 };
 
-gboolean        audio_convert_clean_fmt         (AudioConvertFmt *fmt); 
+gboolean audio_convert_clean_fmt (AudioConvertFmt * fmt);
 
-gboolean        audio_convert_prepare_context   (AudioConvertCtx *ctx, AudioConvertFmt *in, 
-                                                 AudioConvertFmt *out);
-gboolean        audio_convert_get_sizes         (AudioConvertCtx *ctx, gint samples, gint *srcsize,
-                                                 gint *dstsize);
+gboolean audio_convert_prepare_context (AudioConvertCtx * ctx,
+    AudioConvertFmt * in, AudioConvertFmt * out, DitherType dither,
+    NoiseShapingType ns);
+gboolean audio_convert_get_sizes (AudioConvertCtx * ctx, gint samples,
+    gint * srcsize, gint * dstsize);
 
-gboolean        audio_convert_clean_context     (AudioConvertCtx *ctx);
+gboolean audio_convert_clean_context (AudioConvertCtx * ctx);
 
-gboolean        audio_convert_convert           (AudioConvertCtx *ctx, gpointer src, 
-                                                 gpointer dst, gint samples, gboolean src_writable);
+gboolean audio_convert_convert (AudioConvertCtx * ctx, gpointer src,
+    gpointer dst, gint samples, gboolean src_writable);
 
 #endif /* __AUDIO_CONVERT_H__ */
