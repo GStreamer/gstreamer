@@ -1,3 +1,16 @@
+2007-06-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_handle_first_frame):
+	Copy the complete Xing seek table in the 100 byte array instead of
+	copying the first byte 100 times.
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (mp3parse_total_bytes),
+	(mp3parse_total_time), (mp3parse_time_to_bytepos):
+	Add seeking support based on the Xing header but comment it out for
+	now as it seems to yield worse result than the other method.
+	Also use gst_pad_query_peer_duration() instead of getting the peer pad
+	ourself, creating a new GstQuery, etc.
+
 2007-06-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/gst-plugins-ugly-plugins.args:

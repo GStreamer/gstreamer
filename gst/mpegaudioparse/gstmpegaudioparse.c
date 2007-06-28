@@ -609,12 +609,8 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
       mp3parse->xing_bytes = 0;
 
     if (xing_flags & XING_TOC_FLAG) {
-      gint i;
-
-      for (i = 0; i < 100; i++) {
-        mp3parse->xing_seek_table[i] = data[0];
-        data++;
-      }
+      memcpy (mp3parse->xing_seek_table, data, 100);
+      data += 100;
     } else {
       memset (mp3parse->xing_seek_table, 0, 100);
     }
@@ -929,6 +925,45 @@ gst_mp3parse_change_state (GstElement * element, GstStateChange transition)
   return result;
 }
 
+static gboolean
+mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total)
+{
+  GstFormat fmt = GST_FORMAT_BYTES;
+
+  if (gst_pad_query_peer_duration (mp3parse->sinkpad, &fmt, total))
+    return TRUE;
+
+  if (mp3parse->xing_flags & XING_BYTES_FLAG) {
+    *total = mp3parse->xing_bytes;
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
+mp3parse_total_time (GstMPEGAudioParse * mp3parse, GstClockTime * total)
+{
+  gint64 total_bytes;
+
+  *total = GST_CLOCK_TIME_NONE;
+
+  if (mp3parse->xing_flags & XING_FRAMES_FLAG) {
+    *total = mp3parse->xing_total_time;
+    return TRUE;
+  }
+
+  /* Calculate time from the measured bitrate */
+  if (!mp3parse_total_bytes (mp3parse, &total_bytes))
+    return FALSE;
+
+  if (total_bytes != -1
+      && !mp3parse_bytepos_to_time (mp3parse, total_bytes, total))
+    return FALSE;
+
+  return TRUE;
+}
+
 /* Convert a timestamp to the file position required to start decoding that
  * timestamp. For now, this just uses the avg bitrate. Later, use an 
  * incrementally accumulated seek table */
@@ -936,11 +971,41 @@ static gboolean
 mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
     gint64 * bytepos)
 {
+#if 0
+  gint64 total_bytes;
+  GstClockTime total_time;
+#endif
+
   /* -1 always maps to -1 */
   if (ts == -1) {
     *bytepos = -1;
     return TRUE;
   }
+
+/* FIXME: this seems to yield worse results than seeking based on the average
+ * bitrate */
+#if 0
+  /* If XING seek table exists use this for time->byte conversion */
+  if ((mp3parse->xing_flags & XING_TOC_FLAG) &&
+      mp3parse_total_bytes (mp3parse, &total_bytes) &&
+      mp3parse_total_time (mp3parse, &total_time)) {
+    gdouble fa, fb, fx;
+    gdouble percent = CLAMP ((100.0 * ts) / total_time, 0.0, 100.0);
+    gint index = CLAMP (percent, 0, 99);
+
+    fa = mp3parse->xing_seek_table[index];
+    if (index < 99)
+      fb = mp3parse->xing_seek_table[index + 1];
+    else
+      fb = 256.0;
+
+    fx = fa + (fb - fa) * (percent - index);
+
+    *bytepos = (1.0 / 256.0) * fx * total_bytes;
+
+    return TRUE;
+  }
+#endif
 
   if (mp3parse->avg_bitrate == 0)
     goto no_bitrate;
@@ -973,55 +1038,6 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
 
   *ts = (GstClockTime) gst_util_uint64_scale (GST_SECOND, bytepos * 8,
       mp3parse->avg_bitrate);
-  return TRUE;
-}
-
-static gboolean
-mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total)
-{
-  GstQuery *query;
-  GstPad *peer;
-
-  if ((peer = gst_pad_get_peer (mp3parse->sinkpad)) != NULL) {
-    query = gst_query_new_duration (GST_FORMAT_BYTES);
-    gst_query_set_duration (query, GST_FORMAT_BYTES, -1);
-
-    if (gst_pad_query (peer, query)) {
-      gst_object_unref (peer);
-      gst_query_parse_duration (query, NULL, total);
-      return TRUE;
-    }
-    gst_object_unref (peer);
-  }
-
-  if (mp3parse->xing_flags & XING_BYTES_FLAG) {
-    *total = mp3parse->xing_bytes;
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-static gboolean
-mp3parse_total_time (GstMPEGAudioParse * mp3parse, GstClockTime * total)
-{
-  gint64 total_bytes;
-
-  *total = GST_CLOCK_TIME_NONE;
-
-  if (mp3parse->xing_flags & XING_FRAMES_FLAG) {
-    *total = mp3parse->xing_total_time;
-    return TRUE;
-  }
-
-  /* Calculate time from the measured bitrate */
-  if (!mp3parse_total_bytes (mp3parse, &total_bytes))
-    return FALSE;
-
-  if (total_bytes != -1
-      && !mp3parse_bytepos_to_time (mp3parse, total_bytes, total))
-    return FALSE;
-
   return TRUE;
 }
 
