@@ -1126,7 +1126,10 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
     GstSingleQueue *ssq = (GstSingleQueue *) tmp->data;
     GstDataQueueSize ssize;
 
+    GST_LOG_OBJECT (mq, "Checking Queue %d", ssq->id);
+
     if (gst_data_queue_is_empty (ssq->queue)) {
+      GST_LOG_OBJECT (mq, "Queue %d is empty", ssq->id);
       if (IS_FILLED (visible, size.visible)) {
         sq->max_size.visible++;
         GST_DEBUG_OBJECT (mq,
@@ -1139,8 +1142,14 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
     /* check if we reached the hard time/bytes limits */
     gst_data_queue_get_level (ssq->queue, &ssize);
 
+    GST_DEBUG_OBJECT (mq,
+        "queue %d: visible %u/%u, bytes %u/%u, time %" G_GUINT64_FORMAT "/%"
+        G_GUINT64_FORMAT, ssq->id, ssize.visible, sq->max_size.visible,
+        ssize.bytes, sq->max_size.bytes, sq->cur_time, sq->max_size.time);
+
     /* if this queue is filled completely we must signal overrun */
-    if (IS_FILLED (bytes, ssize.bytes) || IS_FILLED (time, ssize.time)) {
+    if (IS_FILLED (bytes, ssize.bytes) || IS_FILLED (time, sq->cur_time)) {
+      GST_LOG_OBJECT (mq, "Queue %d is filled", ssq->id);
       filled = TRUE;
     }
   }

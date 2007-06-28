@@ -1,3 +1,10 @@
+2007-06-28  Wim Taymans  <wim@fluendo.com>
+
+	* plugins/elements/gstmultiqueue.c: (apply_buffer),
+	(single_queue_overrun_cb):
+	When figuring out when a queue is filled, use our internal time estimate
+	based on segments, just like check_full does.
+
 2007-06-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstminiobject.c: (gst_mini_object_get_type):
