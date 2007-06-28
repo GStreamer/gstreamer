@@ -1,5 +1,16 @@
 2007-06-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstplaybasebin.c: (make_decoder), (setup_source):
+	Small debug improvement.
+
+	* gst/playback/gstqueue2.c: (apply_segment), (update_buffering),
+	(plugin_init):
+	Tweak the rate estimation period.
+	When calculating the buffer filledness in rate estimation mode, don't
+	mix it with other metrics.
+
+2007-06-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstdecodebin2.c: (gst_decode_group_new),
 	(gst_decode_group_expose), (gst_decode_group_free), (add_fakesink):
 	When creating the groups, allow for a 5 second, unlimited buffers

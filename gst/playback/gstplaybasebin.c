@@ -1899,6 +1899,9 @@ make_decoder (GstPlayBaseBin * play_base_bin)
   g_object_set_data (G_OBJECT (decoder), "pending", "1");
   play_base_bin->pending++;
 
+  GST_DEBUG_OBJECT (play_base_bin, "created decodebin, %d pending",
+      play_base_bin->pending);
+
   play_base_bin->decoders = g_slist_prepend (play_base_bin->decoders, decoder);
 
   return decoder;
@@ -2080,7 +2083,6 @@ setup_source (GstPlayBaseBin * play_base_bin)
     return TRUE;
   }
   if (is_dynamic) {
-    GST_DEBUG_OBJECT (play_base_bin, "Source has dynamic output pads");
     /* connect a handler for the new-pad signal */
     play_base_bin->src_np_sig_id =
         g_signal_connect (G_OBJECT (play_base_bin->source), "pad-added",
@@ -2090,6 +2092,8 @@ setup_source (GstPlayBaseBin * play_base_bin)
         G_CALLBACK (source_no_more_pads), play_base_bin);
     g_object_set_data (G_OBJECT (play_base_bin->source), "pending", "1");
     play_base_bin->pending++;
+    GST_DEBUG_OBJECT (play_base_bin,
+        "Source has dynamic output pads, %d pending", play_base_bin->pending);
   } else {
     GstElement *decoder;
 
