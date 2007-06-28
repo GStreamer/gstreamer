@@ -1,3 +1,13 @@
+2007-06-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackparse.c:
+	(gst_wavpack_parse_index_get_last_entry),
+	(gst_wavpack_parse_index_get_entry_from_sample),
+	(gst_wavpack_parse_index_append_entry), (gst_wavpack_parse_reset),
+	(gst_wavpack_parse_scan_to_find_sample):
+	* ext/wavpack/gstwavpackparse.h:
+	Use a GSList for the GArray that is used like a list anyway.
+
 2007-06-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/gdk_pixbuf/gstgdkpixbuf.c: (gst_gdk_pixbuf_sink_setcaps),

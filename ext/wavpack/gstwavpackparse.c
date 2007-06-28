@@ -141,13 +141,9 @@ gst_wavpack_parse_class_init (GstWavpackParseClass * klass)
 static GstWavpackParseIndexEntry *
 gst_wavpack_parse_index_get_last_entry (GstWavpackParse * wvparse)
 {
-  gint last;
-
   g_assert (wvparse->entries != NULL);
-  g_assert (wvparse->entries->len > 0);
 
-  last = wvparse->entries->len - 1;
-  return &g_array_index (wvparse->entries, GstWavpackParseIndexEntry, last);
+  return wvparse->entries->data;
 }
 
 static GstWavpackParseIndexEntry *
@@ -155,14 +151,15 @@ gst_wavpack_parse_index_get_entry_from_sample (GstWavpackParse * wvparse,
     gint64 sample_offset)
 {
   gint i;
+  GSList *node;
 
-  if (wvparse->entries == NULL || wvparse->entries->len == 0)
+  if (wvparse->entries == NULL)
     return NULL;
 
-  for (i = wvparse->entries->len - 1; i >= 0; --i) {
+  for (node = wvparse->entries, i = 0; node; node = node->next, i++) {
     GstWavpackParseIndexEntry *entry;
 
-    entry = &g_array_index (wvparse->entries, GstWavpackParseIndexEntry, i);
+    entry = node->data;
 
     GST_LOG_OBJECT (wvparse, "Index entry %03u: sample %" G_GINT64_FORMAT " @"
         " byte %" G_GINT64_FORMAT, i, entry->sample_offset, entry->byte_offset);
@@ -187,15 +184,12 @@ static void
 gst_wavpack_parse_index_append_entry (GstWavpackParse * wvparse,
     gint64 byte_offset, gint64 sample_offset, gint64 num_samples)
 {
-  GstWavpackParseIndexEntry entry;
+  GstWavpackParseIndexEntry *entry;
 
-  if (wvparse->entries == NULL) {
-    wvparse->entries = g_array_new (FALSE, TRUE,
-        sizeof (GstWavpackParseIndexEntry));
-  } else {
-    /* do we have this one already? */
-    entry = *gst_wavpack_parse_index_get_last_entry (wvparse);
-    if (entry.byte_offset >= byte_offset)
+  /* do we have this one already? */
+  if (wvparse->entries) {
+    entry = gst_wavpack_parse_index_get_last_entry (wvparse);
+    if (entry->byte_offset >= byte_offset)
       return;
   }
 
@@ -204,10 +198,11 @@ gst_wavpack_parse_index_append_entry (GstWavpackParse * wvparse,
       GST_TIME_ARGS (gst_util_uint64_scale_int (sample_offset,
               GST_SECOND, wvparse->samplerate)), byte_offset);
 
-  entry.byte_offset = byte_offset;
-  entry.sample_offset = sample_offset;
-  entry.sample_offset_end = sample_offset + num_samples;
-  g_array_append_val (wvparse->entries, entry);
+  entry = g_new0 (GstWavpackParseIndexEntry, 1);
+  entry->byte_offset = byte_offset;
+  entry->sample_offset = sample_offset;
+  entry->sample_offset_end = sample_offset + num_samples;
+  wvparse->entries = g_slist_prepend (wvparse->entries, entry);
 }
 
 static void
@@ -226,7 +221,8 @@ gst_wavpack_parse_reset (GstWavpackParse * parse)
   parse->upstream_length = -1;
 
   if (parse->entries) {
-    g_array_free (parse->entries, TRUE);
+    g_slist_foreach (parse->entries, (GFunc) g_free, NULL);
+    g_slist_free (parse->entries);
     parse->entries = NULL;
   }
 
@@ -405,7 +401,7 @@ gst_wavpack_parse_scan_to_find_sample (GstWavpackParse * parse,
 
   /* if we have an index, we can start scanning from the last known offset
    * in there, after all we know our wanted sample is not in the index */
-  if (parse->entries && parse->entries->len > 0) {
+  if (parse->entries) {
     GstWavpackParseIndexEntry *entry;
 
     entry = gst_wavpack_parse_index_get_last_entry (parse);

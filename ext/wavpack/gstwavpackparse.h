@@ -71,11 +71,11 @@ struct _GstWavpackParse
 
   GstAdapter *adapter;          /* when operating chain-based, otherwise NULL */
 
-  /* Array of GstWavpackParseIndexEntry structs, mapping known
+  /* List of GstWavpackParseIndexEntry structs, mapping known
    * sample offsets to byte offsets. Is kept increasing without
    * gaps (ie. append only and consecutive entries must always
    * map to consecutive chunks in the file). */
-  GArray *entries;
+  GSList *entries;
 
   /* Queued events (e.g. tag events we receive before we create the src pad) */
   GList *queued_events;         /* STREAM_LOCK */
