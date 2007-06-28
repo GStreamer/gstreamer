@@ -588,6 +588,16 @@ apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment)
   gst_event_parse_new_segment_full (event, &update, &rate, &arate,
       &format, &start, &stop, &time);
 
+  GST_DEBUG_OBJECT (queue,
+      "received NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+      "format %d, "
+      "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
+      G_GINT64_FORMAT ", accum %" G_GINT64_FORMAT, update, rate, arate,
+      format, start, stop, time);
+
+  if (format == GST_FORMAT_BYTES) {
+  }
+
   /* now configure the values, we use these to track timestamps on the
    * sinkpad. */
   if (format != GST_FORMAT_TIME) {
@@ -654,11 +664,13 @@ update_buffering (GstQueue * queue)
     percent = 100;
   } else {
     /* figure out the percent we are filled, we take the max of all formats. */
-    percent = GET_PERCENT (bytes);
-    percent = MAX (percent, GET_PERCENT (time));
-    percent = MAX (percent, GET_PERCENT (buffers));
-    if (queue->use_rate_estimate)
-      percent = MAX (percent, GET_PERCENT (rate_time));
+    if (queue->use_rate_estimate) {
+      percent = GET_PERCENT (rate_time);
+    } else {
+      percent = GET_PERCENT (bytes);
+      percent = MAX (percent, GET_PERCENT (time));
+      percent = MAX (percent, GET_PERCENT (buffers));
+    }
   }
 
   if (queue->is_buffering) {
@@ -702,11 +714,12 @@ reset_rate_timer (GstQueue * queue)
   queue->timer_started = FALSE;
 }
 
+/* the interval in seconds to recalculate the rate */
+#define RATE_INTERVAL    0.2
 /* Tuning for rate estimation. We use a large window for the input rate because
  * it should be stable when connected to a network. The output rate is less
  * stable (the elements preroll, queues behind a demuxer fill, ...) and should
  * therefore adapt more quickly. */
-#define RATE_INTERVAL    0.5
 #define AVG_IN(avg,val)  ((avg) * 15.0 + (val)) / 16.0
 #define AVG_OUT(avg,val) ((avg) * 3.0 + (val)) / 4.0
 
@@ -1825,8 +1838,8 @@ gst_queue_get_property (GObject * object,
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (queue_debug, "queue", 0, "queue element");
-  GST_DEBUG_CATEGORY_INIT (queue_dataflow, "queue_dataflow", 0,
+  GST_DEBUG_CATEGORY_INIT (queue_debug, "queue2", 0, "queue element");
+  GST_DEBUG_CATEGORY_INIT (queue_dataflow, "queue2_dataflow", 0,
       "dataflow inside the queue element");
 
 #ifdef ENABLE_NLS
