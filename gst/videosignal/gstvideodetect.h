@@ -54,6 +54,7 @@ struct _GstVideoDetect {
   gint pattern_height;
   gint pattern_count;
   gint pattern_data_count;
+  gdouble pattern_center;
   gdouble pattern_sensitivity;
   gint left_offset;
   gint bottom_offset;

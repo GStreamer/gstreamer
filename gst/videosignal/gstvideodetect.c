@@ -120,7 +120,8 @@
 #define DEFAULT_PATTERN_HEIGHT       16
 #define DEFAULT_PATTERN_COUNT        4
 #define DEFAULT_PATTERN_DATA_COUNT   5
-#define DEFAULT_PATTERN_SENSITIVITY  0.2
+#define DEFAULT_PATTERN_CENTER       0.5
+#define DEFAULT_PATTERN_SENSITIVITY  0.3
 #define DEFAULT_LEFT_OFFSET          0
 #define DEFAULT_BOTTOM_OFFSET        0
 
@@ -132,6 +133,7 @@ enum
   PROP_PATTERN_HEIGHT,
   PROP_PATTERN_COUNT,
   PROP_PATTERN_DATA_COUNT,
+  PROP_PATTERN_CENTER,
   PROP_PATTERN_SENSITIVITY,
   PROP_LEFT_OFFSET,
   PROP_BOTTOM_OFFSET
@@ -273,12 +275,16 @@ gst_video_detect_420 (GstVideoDetect * videodetect, GstBuffer * buffer)
     GST_DEBUG_OBJECT (videodetect, "brightness %f", brightness);
 
     if (i & 1) {
-      /* odd pixels must be white */
-      if (brightness < (1.0 - videodetect->pattern_sensitivity))
+      /* odd pixels must be white, all pixels darker than the center +
+       * sensitivity are considered wrong. */
+      if (brightness <
+          (videodetect->pattern_center + videodetect->pattern_sensitivity))
         goto no_pattern;
     } else {
-      /* even pixels must be black */
-      if (brightness > videodetect->pattern_sensitivity)
+      /* even pixels must be black, pixels lighter than the center - sensitivity
+       * are considered wrong. */
+      if (brightness >
+          (videodetect->pattern_center - videodetect->pattern_sensitivity))
         goto no_pattern;
     }
   }
@@ -300,9 +306,9 @@ gst_video_detect_420 (GstVideoDetect * videodetect, GstBuffer * buffer)
     /* calc brightness of width * height box */
     brightness =
         gst_video_detect_calc_brightness (videodetect, d, pw, ph, stride);
-    /* update pattern */
+    /* update pattern, we just use the center to decide between black and white. */
     pattern_data <<= 1;
-    if (brightness > 0.5)
+    if (brightness > videodetect->pattern_center)
       pattern_data |= 1;
   }
 
@@ -361,6 +367,9 @@ gst_video_detect_set_property (GObject * object, guint prop_id,
     case PROP_PATTERN_DATA_COUNT:
       videodetect->pattern_data_count = g_value_get_int (value);
       break;
+    case PROP_PATTERN_CENTER:
+      videodetect->pattern_center = g_value_get_double (value);
+      break;
     case PROP_PATTERN_SENSITIVITY:
       videodetect->pattern_sensitivity = g_value_get_double (value);
       break;
@@ -399,6 +408,9 @@ gst_video_detect_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_PATTERN_DATA_COUNT:
       g_value_set_int (value, videodetect->pattern_data_count);
+      break;
+    case PROP_PATTERN_CENTER:
+      g_value_set_double (value, videodetect->pattern_center);
       break;
     case PROP_PATTERN_SENSITIVITY:
       g_value_set_double (value, videodetect->pattern_sensitivity);
