@@ -664,13 +664,13 @@ update_buffering (GstQueue * queue)
     percent = 100;
   } else {
     /* figure out the percent we are filled, we take the max of all formats. */
-    if (queue->use_rate_estimate) {
-      percent = GET_PERCENT (rate_time);
-    } else {
-      percent = GET_PERCENT (bytes);
-      percent = MAX (percent, GET_PERCENT (time));
-      percent = MAX (percent, GET_PERCENT (buffers));
-    }
+    percent = GET_PERCENT (bytes);
+    percent = MAX (percent, GET_PERCENT (time));
+    percent = MAX (percent, GET_PERCENT (buffers));
+
+    /* also apply the rate estimate when we need to */
+    if (queue->use_rate_estimate)
+      percent = MAX (percent, GET_PERCENT (rate_time));
   }
 
   if (queue->is_buffering) {

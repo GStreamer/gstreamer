@@ -1,5 +1,10 @@
 2007-06-28  Wim Taymans  <wim@fluendo.com>
 
+	* gst/playback/gstqueue2.c: (apply_segment), (update_buffering):
+	Use other metrics as well when estimating the buffer level.
+
+2007-06-28  Wim Taymans  <wim@fluendo.com>
+
 	* gst/playback/gstplaybasebin.c: (make_decoder), (setup_source):
 	Small debug improvement.
 
