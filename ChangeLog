@@ -1,3 +1,13 @@
+2007-06-28  Wim Taymans  <wim@fluendo.com>
+
+	* gst/playback/gstdecodebin2.c: (gst_decode_group_new),
+	(gst_decode_group_expose), (gst_decode_group_free), (add_fakesink):
+	When creating the groups, allow for a 5 second, unlimited buffers
+	preroll phase after which we expose the group.
+	When the group is exposed, use a small number of buffers up to a 2
+	second limit. Also disconnect the overrun signal from multiqueue when we
+	exposed the group because it is not needed anymore.
+
 2007-06-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/tags.c: (gst_tag_freeform_string_to_utf8):

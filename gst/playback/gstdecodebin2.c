@@ -1457,11 +1457,18 @@ gst_decode_group_new (GstDecodeBin * dbin, gboolean use_queue)
   group->endpads = NULL;
 
   if (mq) {
+    /* we first configure the mulitqueue to buffer an unlimited number of
+     * buffers up to 5 seconds or, when no timestamps are present, up to 2 MB of
+     * memory. When this queue overruns, we assume the group is complete and can
+     * be exposed. */
     g_object_set (G_OBJECT (mq),
         "max-size-bytes", 2 * 1024 * 1024,
         "max-size-time", 5 * GST_SECOND, "max-size-buffers", 0, NULL);
+    /* will expose the group */
     group->overrunsig = g_signal_connect (G_OBJECT (mq), "overrun",
         G_CALLBACK (multi_queue_overrun_cb), group);
+    /* will hide the group again, this is usually called when the multiqueue is
+     * drained because of EOS. */
     group->underrunsig = g_signal_connect (G_OBJECT (mq), "underrun",
         G_CALLBACK (multi_queue_underrun_cb), group);
 
@@ -1740,7 +1747,6 @@ sort_end_pads (GstDecodePad * da, GstDecodePad * db)
  *
  * Not MT safe, please take the group lock
  */
-
 static gboolean
 gst_decode_group_expose (GstDecodeGroup * group)
 {
@@ -1770,6 +1776,21 @@ gst_decode_group_expose (GstDecodeGroup * group)
   }
 
   GST_LOG ("Exposing group %p", group);
+
+  if (group->multiqueue) {
+    /* update runtime limits. At runtime, we try to keep the amount of buffers
+     * in the queues as low as possible (but at least 5 buffers). */
+    g_object_set (G_OBJECT (group->multiqueue),
+        "max-size-bytes", 2 * 1024 * 1024,
+        "max-size-time", 2 * GST_SECOND, "max-size-buffers", 5, NULL);
+    /* we can now disconnect any overrun signal, which is used to expose the
+     * group. */
+    if (group->overrunsig) {
+      GST_LOG ("Disconnecting overrun");
+      g_signal_handler_disconnect (group->multiqueue, group->overrunsig);
+      group->overrunsig = 0;
+    }
+  }
 
   /* re-order pads : video, then audio, then others */
   group->endpads = g_list_sort (group->endpads, (GCompareFunc) sort_end_pads);
@@ -1938,8 +1959,10 @@ gst_decode_group_free (GstDecodeGroup * group)
 
   /* disconnect signal handlers on multiqueue */
   if (group->multiqueue) {
-    g_signal_handler_disconnect (group->multiqueue, group->underrunsig);
-    g_signal_handler_disconnect (group->multiqueue, group->overrunsig);
+    if (group->underrunsig)
+      g_signal_handler_disconnect (group->multiqueue, group->underrunsig);
+    if (group->overrunsig)
+      g_signal_handler_disconnect (group->multiqueue, group->overrunsig);
     deactivate_free_recursive (group, group->multiqueue);
   }
 
@@ -2064,6 +2087,9 @@ add_fakesink (GstDecodeBin * decode_bin)
       gst_element_factory_make ("fakesink", "async-fakesink");
   if (!decode_bin->fakesink)
     goto no_fakesink;
+
+  /* enable sync so that we force ASYNC preroll */
+  g_object_set (G_OBJECT (decode_bin->fakesink), "sync", TRUE, NULL);
 
   /* hacky, remove sink flag, we don't want our decodebin to become a sink
    * just because we add a fakesink element to make us ASYNC */
