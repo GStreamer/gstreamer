@@ -632,9 +632,9 @@ gst_dc1394_set_caps_color (GstStructure * gs, gint mc)
 
     case DC1394_COLOR_CODING_YUV411:
       gst_structure_set_name (gs, "video/x-raw-yuv");
-      fourcc = GST_MAKE_FOURCC ('Y', '4', '1', 'P');
+      fourcc = GST_MAKE_FOURCC ('I', 'Y', 'U', '1');
       gst_structure_set (gs,
-          "format", GST_TYPE_FOURCC, fourcc, "bpp", G_TYPE_INT, 16, NULL);
+          "format", GST_TYPE_FOURCC, fourcc, "bpp", G_TYPE_INT, 12, NULL);
       break;
     case DC1394_COLOR_CODING_RGB8:
       gst_structure_set_name (gs, "video/x-raw-rgb");

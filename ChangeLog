@@ -1,6 +1,14 @@
 2007-06-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/dc1394/gstdc1394.c: (gst_dc1394_set_caps_color):
+
+	The correct fourcc for the 4:1:1 packed format is 'IYU1'.
+	With CVS of ffmpegcolorspace from plugins-base, I can now
+	get 30 fps from the iSight.
+
+2007-06-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/dc1394/gstdc1394.c: (gst_dc1394_set_caps_color):
 	Change a g_print to a GST_DEBUG message.
 
 2007-06-29  Jan Schmidt  <thaytan@mad.scientist.com>
