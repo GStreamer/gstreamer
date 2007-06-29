@@ -20,6 +20,7 @@
 	(gst_dc1394_change_camera_transmission), (plugin_init):
 	* ext/dc1394/gstdc1394.h:
 	Commit new dc1394src element.
+	Patch By: Antoine Tremblay < hexa00 at gmail dot com >
 	Patch By: Eric Jonas < jonas at mit dot edu >
 	Close: #387251
 
