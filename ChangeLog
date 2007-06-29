@@ -1,3 +1,11 @@
+2007-06-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_pixfmt_to_caps), (gst_ffmpeg_caps_to_pixfmt):
+	Add a mapping for YUV format "IYU1", which is a 4:1:1 packed pixel
+	format, as produced by some dc1394 cameras like the iSight.
+	See http://www.fourcc.org/yuv.php#IYU1
+
 2007-06-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audioconvert/Makefile.am:
