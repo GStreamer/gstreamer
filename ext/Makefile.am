@@ -46,6 +46,12 @@ else
 CDAUDIO_DIR=
 endif
 
+if USE_DC1394
+DC1394_DIR=dc1394
+else
+DC1394_DIR=
+endif
+
 # if USE_DIRAC
 # DIRAC_DIR=dirac
 # else
@@ -265,6 +271,7 @@ SUBDIRS=\
 	$(AUDIORESAMPLE_DIR) \
 	$(BZ2_DIR) \
 	$(CDAUDIO_DIR) \
+	$(DC1394_DIR) \
 	$(DIRAC_DIR) \
 	$(DIRECTFB_DIR) \
 	$(DIVX_DIR) \
@@ -306,6 +313,7 @@ DIST_SUBDIRS = \
 	amrwb \
 	bz2 \
 	cdaudio \
+	dc1394 \
 	directfb \
 	faac \
 	faad \

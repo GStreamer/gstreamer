@@ -1,3 +1,28 @@
+2007-06-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/dc1394/Makefile.am:
+	* ext/dc1394/gstdc1394.c: (gst_dc1394_base_init),
+	(gst_dc1394_class_init), (gst_dc1394_init),
+	(gst_dc1394_src_fixate), (gst_dc1394_set_property),
+	(gst_dc1394_get_property), (gst_dc1394_getcaps),
+	(gst_dc1394_setcaps), (gst_dc1394_get_times), (gst_dc1394_create),
+	(gst_dc1394_parse_caps), (gst_dc1394_change_state),
+	(gst_dc1394_caps_set_format_vmode_caps),
+	(gst_dc1394_set_caps_color), (gst_dc1394_set_caps_framesize),
+	(gst_dc1394_set_caps_framesize_range),
+	(gst_dc1394_caps_set_framerate_list),
+	(gst_dc1394_framerate_const_to_frac),
+	(gst_dc1394_get_all_dc1394_caps), (gst_dc1394_get_cam_caps),
+	(gst_dc1394_framerate_frac_to_const),
+	(gst_dc1394_open_cam_with_best_caps),
+	(gst_dc1394_change_camera_transmission), (plugin_init):
+	* ext/dc1394/gstdc1394.h:
+	Commit new dc1394src element.
+	Patch By: Eric Jonas < jonas at mit dot edu >
+	Close: #387251
+
 2007-06-28  Wim Taymans  <wim@fluendo.com>
 
 	* gst/videosignal/gstvideodetect.c: (gst_video_detect_class_init):
