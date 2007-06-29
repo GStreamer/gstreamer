@@ -73,37 +73,36 @@ static void gst_dc1394_get_times (GstBaseSrc * basesrc,
 
 static GstFlowReturn gst_dc1394_create (GstPushSrc * psrc, GstBuffer ** buffer);
 
-
 static GstStateChangeReturn
 gst_dc1394_change_state (GstElement * element, GstStateChange transition);
-
 
 static gboolean gst_dc1394_parse_caps (const GstCaps * caps,
     gint * width,
     gint * height,
     gint * rate_numerator, gint * rate_denominator, gint * vmode, gint * bpp);
 
-
-gint gst_dc1394_caps_set_format_vmode_caps (GstStructure * st, gint mode);
-gboolean gst_dc1394_set_caps_color (GstStructure * gs, gint mc);
-void gst_dc1394_set_caps_framesize (GstStructure * gs, gint width, gint height);
-void gst_dc1394_set_caps_framesize_range (GstStructure * gs, gint minwidth,
-    gint maxwidth, gint incwidth,
+static gint gst_dc1394_caps_set_format_vmode_caps (GstStructure * st,
+    gint mode);
+static gboolean gst_dc1394_set_caps_color (GstStructure * gs, gint mc);
+static void gst_dc1394_set_caps_framesize (GstStructure * gs, gint width,
+    gint height);
+static void gst_dc1394_set_caps_framesize_range (GstStructure * gs,
+    gint minwidth, gint maxwidth, gint incwidth,
     gint minheight, gint maxheight, gint incheight);
 
-gint gst_dc1394_caps_set_framerate_list (GstStructure * gs,
+static gint gst_dc1394_caps_set_framerate_list (GstStructure * gs,
     dc1394framerates_t * framerates);
-void gst_dc1394_framerate_const_to_frac (int framerateconst,
+static void gst_dc1394_framerate_const_to_frac (int framerateconst,
     GValue * framefrac);
 
-GstCaps *gst_dc1394_get_all_dc1394_caps ();
-GstCaps *gst_dc1394_get_cam_caps (GstDc1394 * src);
-gboolean gst_dc1394_open_cam_with_best_caps (GstDc1394 * src);
-gint gst_dc1394_framerate_frac_to_const (gint num, gint denom);
-void gst_dc1394_framerate_const_to_frac (gint framerateconst,
+static GstCaps *gst_dc1394_get_all_dc1394_caps ();
+static GstCaps *gst_dc1394_get_cam_caps (GstDc1394 * src);
+static gboolean gst_dc1394_open_cam_with_best_caps (GstDc1394 * src);
+static gint gst_dc1394_framerate_frac_to_const (gint num, gint denom);
+static void gst_dc1394_framerate_const_to_frac (gint framerateconst,
     GValue * framefrac);
-gboolean gst_dc1394_change_camera_transmission (GstDc1394 * src, gboolean on);
-
+static gboolean
+gst_dc1394_change_camera_transmission (GstDc1394 * src, gboolean on);
 
 static void
 gst_dc1394_base_init (gpointer g_class)
@@ -186,10 +185,10 @@ gst_dc1394_src_fixate (GstPad * pad, GstCaps * caps)
 {
 
   GstDc1394 *src = GST_DC1394 (gst_pad_get_parent (pad));
+  GstStructure *structure;
+  int i;
 
   GST_LOG_OBJECT (src, " fixating caps to closest to 320x240 , 30 fps");
-  GstStructure *structure;
-  int i = 0;
 
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     structure = gst_caps_get_structure (caps, i);
@@ -320,15 +319,13 @@ gst_dc1394_create (GstPushSrc * psrc, GstBuffer ** buffer)
   GstCaps *caps;
   dc1394video_frame_t *frame[1];
   GstFlowReturn res = GST_FLOW_OK;
+  dc1394error_t err;
 
   src = GST_DC1394 (psrc);
 
-  dc1394error_t err = dc1394_capture_dequeue (src->camera,
-      DC1394_CAPTURE_POLICY_WAIT,
-      frame);
+  err = dc1394_capture_dequeue (src->camera, DC1394_CAPTURE_POLICY_WAIT, frame);
 
   if (err != DC1394_SUCCESS) {
-
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
         ("failed to dequeue frame"), ("failed to dequeue frame"));
     goto error;
@@ -498,11 +495,9 @@ gst_dc1394_change_state (GstElement * element, GstStateChange transition)
 }
 
 
-
-gint
+static gint
 gst_dc1394_caps_set_format_vmode_caps (GstStructure * gs, gint mode)
 {
-
   gint retval = 0;
 
   switch (mode) {
@@ -608,7 +603,7 @@ gst_dc1394_caps_set_format_vmode_caps (GstStructure * gs, gint mode)
 }
 
 
-gboolean
+static gboolean
 gst_dc1394_set_caps_color (GstStructure * gs, gint mc)
 {
   gboolean ret = TRUE;
@@ -667,14 +662,14 @@ gst_dc1394_set_caps_color (GstStructure * gs, gint mc)
 }
 
 
-void
+static void
 gst_dc1394_set_caps_framesize (GstStructure * gs, gint width, gint height)
 {
   gst_structure_set (gs,
       "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
 }
 
-void
+static void
 gst_dc1394_set_caps_framesize_range (GstStructure * gs,
     gint minwidth,
     gint maxwidth,
@@ -698,8 +693,10 @@ gst_dc1394_set_caps_framesize_range (GstStructure * gs,
     g_value_set_int (&widthval, x);
     gst_value_list_append_value (&widthlist, &widthval);
   }
-
   gst_structure_set_value (gs, "width", &widthlist);
+
+  g_value_unset (&widthlist);
+  g_value_unset (&widthval);
 
   g_value_init (&heightlist, GST_TYPE_LIST);
   g_value_init (&heightval, G_TYPE_INT);
@@ -710,14 +707,15 @@ gst_dc1394_set_caps_framesize_range (GstStructure * gs,
 
   gst_structure_set_value (gs, "height", &heightlist);
 
+  g_value_unset (&heightlist);
+  g_value_unset (&heightval);
 }
 
 
-gint
+static gint
 gst_dc1394_caps_set_framerate_list (GstStructure * gs,
     dc1394framerates_t * framerates)
 {
-
   GValue framefrac = { 0 };
   GValue frameratelist = { 0 };
   gint f;
@@ -745,7 +743,7 @@ gst_dc1394_caps_set_framerate_list (GstStructure * gs,
 
 
 
-void
+static void
 gst_dc1394_framerate_const_to_frac (gint framerateconst, GValue * framefrac)
 {
 
@@ -911,15 +909,14 @@ gst_dc1394_get_cam_caps (GstDc1394 * src)
       }
     } else {
       // FORMAT 7
-
+      guint maxx, maxy;
       GstStructure *gs = gst_structure_empty_new ("");
+      dc1394color_codings_t colormodes;
+      guint xunit, yunit;
 
       gst_structure_set (gs, "vmode", G_TYPE_INT, m, NULL);
 
-
       // Get the maximum frame size
-      guint maxx, maxy;
-
       camerr = dc1394_format7_get_max_image_size (camera, m, &maxx, &maxy);
       if (camerr != DC1394_SUCCESS) {
         GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
@@ -928,8 +925,6 @@ gst_dc1394_get_cam_caps (GstDc1394 * src)
         goto error;
       }
       GST_LOG_OBJECT (src, "Format 7 maxx=%d maxy=%d", maxx, maxy);
-
-      guint xunit, yunit;
 
       camerr = dc1394_format7_get_unit_size (camera, m, &xunit, &yunit);
       if (camerr != DC1394_SUCCESS) {
@@ -943,16 +938,12 @@ gst_dc1394_get_cam_caps (GstDc1394 * src)
       gst_dc1394_set_caps_framesize_range (gs, xunit, maxx, xunit,
           yunit, maxy, yunit);
 
-
       // note that format 7 has no concept of a framerate, so we pass the 
       // full range
       gst_structure_set (gs,
           "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
 
-
       // get the available color codings
-      dc1394color_codings_t colormodes;
-
       camerr = dc1394_format7_get_color_codings (camera, m, &colormodes);
       if (camerr != DC1394_SUCCESS) {
         GST_ELEMENT_ERROR (src, RESOURCE, FAILED,
@@ -971,7 +962,6 @@ gst_dc1394_get_cam_caps (GstDc1394 * src)
         // multiple structures.
         gst_caps_append_structure (gcaps, newgs);
       }
-
     }
   }
 
@@ -995,11 +985,10 @@ error:
   return NULL;
 }
 
-gint
+static gint
 gst_dc1394_framerate_frac_to_const (gint num, gint denom)
 {
   // frac must have been already initialized
-
   int retvalue = -1;
 
   if (num == 15 && denom == 8)
@@ -1025,14 +1014,14 @@ gst_dc1394_framerate_frac_to_const (gint num, gint denom)
 }
 
 
-gboolean
+static gboolean
 gst_dc1394_open_cam_with_best_caps (GstDc1394 * src)
 {
-
   dc1394camera_t **cameras = NULL;
   guint numCameras;
   gint i;
   gint err;
+  int framerateconst;
 
   GST_LOG_OBJECT (src, "Opening the camera!!!");
 
@@ -1064,7 +1053,7 @@ gst_dc1394_open_cam_with_best_caps (GstDc1394 * src)
   free (cameras);
 
   // figure out mode
-  int framerateconst = gst_dc1394_framerate_frac_to_const (src->rate_numerator,
+  framerateconst = gst_dc1394_framerate_frac_to_const (src->rate_numerator,
       src->rate_denominator);
 
   GST_LOG_OBJECT (src, "The dma buffer queue size is %d  buffers",
@@ -1114,20 +1103,16 @@ gst_dc1394_open_cam_with_best_caps (GstDc1394 * src)
     }
 
   }
-  err =
-      dc1394_capture_setup (src->camera, src->bufsize,
+  err = dc1394_capture_setup (src->camera, src->bufsize,
       DC1394_CAPTURE_FLAGS_DEFAULT);
   if (err != DC1394_SUCCESS) {
-
     GST_ELEMENT_ERROR (src, RESOURCE, FAILED, ("Error setting capture mode"),
         ("Error setting capture mode"));
-
   }
   if (err != DC1394_SUCCESS) {
-
     if (err == DC1394_NO_BANDWIDTH) {
-      GST_LOG_OBJECT (src,
-          "Capture setup_dma failed , trying to cleanup the iso_channels_and_bandwidth and retrying");
+      GST_LOG_OBJECT (src, "Capture setup_dma failed."
+          "Trying to cleanup the iso_channels_and_bandwidth and retrying");
 
       // try to cleanup the bandwidth and retry 
       err = dc1394_cleanup_iso_channels_and_bandwidth (src->camera);

@@ -1,5 +1,18 @@
 2007-06-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* ext/dc1394/gstdc1394.c: (gst_dc1394_src_fixate),
+	(gst_dc1394_create), (gst_dc1394_caps_set_format_vmode_caps),
+	(gst_dc1394_set_caps_framesize_range),
+	(gst_dc1394_caps_set_framerate_list), (gst_dc1394_get_cam_caps),
+	(gst_dc1394_framerate_frac_to_const),
+	(gst_dc1394_open_cam_with_best_caps):
+	Make a bunch of functions static, and move variable declarations
+	to the start of blocks to avoid problems on older gcc.
+
+	Make sure to unset value types.
+
+2007-06-29  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* ext/dc1394/gstdc1394.c: (gst_dc1394_set_caps_color):
 
 	The correct fourcc for the 4:1:1 packed format is 'IYU1'.
