@@ -659,8 +659,9 @@ gst_dc1394_set_caps_color (GstStructure * gs, gint mc)
       // there is no fourcc for this format
       break;
     default:
+      GST_DEBUG ("Ignoring unsupported color format %d", mc);
       ret = FALSE;
-      printf ("We should never get here; invalid color mode!!\n");
+      break;
   }
   return ret;
 }
