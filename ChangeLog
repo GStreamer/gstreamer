@@ -1,5 +1,11 @@
 2007-07-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	* po/nl.po:
+	* po/sv.po:
+	  Updated translations.
+
+2007-07-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	translation by: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>
 
 	* po/LINGUAS:
