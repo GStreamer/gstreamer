@@ -71,8 +71,9 @@ enum
 
 
 static void gst_mp3parse_class_init (GstMPEGAudioParseClass * klass);
-static void gst_mp3parse_base_init (GstMPEGAudioParseClass * klass);
-static void gst_mp3parse_init (GstMPEGAudioParse * mp3parse);
+static void gst_mp3parse_base_init (gpointer klass);
+static void gst_mp3parse_init (GstMPEGAudioParse * mp3parse,
+    GstMPEGAudioParseClass * klass);
 
 static gboolean gst_mp3parse_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_mp3parse_chain (GstPad * pad, GstBuffer * buffer);
@@ -95,33 +96,9 @@ static gboolean mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
 static gboolean
 mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total);
 
-static GstElementClass *parent_class = NULL;
-
 /*static guint gst_mp3parse_signals[LAST_SIGNAL] = { 0 }; */
 
-GType
-gst_mp3parse_get_type (void)
-{
-  static GType mp3parse_type = 0;
-
-  if (!mp3parse_type) {
-    static const GTypeInfo mp3parse_info = {
-      sizeof (GstMPEGAudioParseClass),
-      (GBaseInitFunc) gst_mp3parse_base_init,
-      NULL,
-      (GClassInitFunc) gst_mp3parse_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMPEGAudioParse),
-      0,
-      (GInstanceInitFunc) gst_mp3parse_init,
-    };
-
-    mp3parse_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstMPEGAudioParse", &mp3parse_info, 0);
-  }
-  return mp3parse_type;
-}
+GST_BOILERPLATE (GstMPEGAudioParse, gst_mp3parse, GstElement, GST_TYPE_ELEMENT);
 
 static guint mp3types_bitrates[2][3][16] = {
   {
@@ -225,7 +202,7 @@ mp3_caps_create (guint layer, guint channels, guint bitrate, guint samplerate)
 }
 
 static void
-gst_mp3parse_base_init (GstMPEGAudioParseClass * klass)
+gst_mp3parse_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -289,7 +266,7 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
 }
 
 static void
-gst_mp3parse_init (GstMPEGAudioParse * mp3parse)
+gst_mp3parse_init (GstMPEGAudioParse * mp3parse, GstMPEGAudioParseClass * klass)
 {
   mp3parse->sinkpad =
       gst_pad_new_from_static_template (&mp3_sink_template, "sink");
@@ -609,10 +586,41 @@ gst_mp3parse_handle_first_frame (GstMPEGAudioParse * mp3parse)
       mp3parse->xing_bytes = 0;
 
     if (xing_flags & XING_TOC_FLAG) {
+      int i, percent = 0;
+      guchar *table = mp3parse->xing_seek_table;
+
+      /* xing seek table: percent time -> 1/256 bytepos */
       memcpy (mp3parse->xing_seek_table, data, 100);
+
+      /* build inverse table: 1/256 bytepos -> 1/100 percent time */
+      for (i = 0; i < 256; i++) {
+        while (percent < 99 && table[percent + 1] <= i)
+          percent++;
+
+        if (table[percent] == i) {
+          mp3parse->xing_seek_table_inverse[i] = percent * 100;
+        } else if (table[percent] < i && percent < 99) {
+          gdouble fa, fb, fx;
+          gint a = percent, b = percent + 1;
+
+          fa = table[a];
+          fb = table[b];
+          fx = (b - a) / (fb - fa) * (i - fa) + a;
+          mp3parse->xing_seek_table_inverse[i] = (guint16) (fx * 100);
+        } else if (percent == 98 && table[percent + 1] <= i) {
+          gdouble fa, fb, fx;
+          gint a = percent + 1, b = 100;
+
+          fa = table[a];
+          fb = 256.0;
+          fx = (b - a) / (fb - fa) * (i - fa) + a;
+          mp3parse->xing_seek_table_inverse[i] = (guint16) (fx * 100);
+        }
+      }
       data += 100;
     } else {
       memset (mp3parse->xing_seek_table, 0, 100);
+      memset (mp3parse->xing_seek_table_inverse, 0, 256);
     }
 
     if (xing_flags & XING_VBR_SCALE_FLAG) {
@@ -971,10 +979,8 @@ static gboolean
 mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
     gint64 * bytepos)
 {
-#if 0
   gint64 total_bytes;
   GstClockTime total_time;
-#endif
 
   /* -1 always maps to -1 */
   if (ts == -1) {
@@ -982,9 +988,6 @@ mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
     return TRUE;
   }
 
-/* FIXME: this seems to yield worse results than seeking based on the average
- * bitrate */
-#if 0
   /* If XING seek table exists use this for time->byte conversion */
   if ((mp3parse->xing_flags & XING_TOC_FLAG) &&
       mp3parse_total_bytes (mp3parse, &total_bytes) &&
@@ -1005,7 +1008,6 @@ mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
 
     return TRUE;
   }
-#endif
 
   if (mp3parse->avg_bitrate == 0)
     goto no_bitrate;
@@ -1022,6 +1024,9 @@ static gboolean
 mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
     gint64 bytepos, GstClockTime * ts)
 {
+  gint64 total_bytes;
+  GstClockTime total_time;
+
   if (bytepos == -1) {
     *ts = GST_CLOCK_TIME_NONE;
     return TRUE;
@@ -1029,6 +1034,27 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
 
   if (bytepos == 0) {
     *ts = 0;
+    return TRUE;
+  }
+
+  /* If XING seek table exists use this for byte->time conversion */
+  if ((mp3parse->xing_flags & XING_TOC_FLAG) &&
+      mp3parse_total_bytes (mp3parse, &total_bytes) &&
+      mp3parse_total_time (mp3parse, &total_time)) {
+    gdouble fa, fb, fx;
+    gdouble pos = CLAMP ((bytepos * 256.0) / total_bytes, 0.0, 256.0);
+    gint index = CLAMP (pos, 0, 255);
+
+    fa = mp3parse->xing_seek_table_inverse[index];
+    if (index < 255)
+      fb = mp3parse->xing_seek_table_inverse[index + 1];
+    else
+      fb = 10000.0;
+
+    fx = fa + (fb - fa) * (pos - index);
+
+    *ts = (1.0 / 10000.0) * fx * total_time;
+
     return TRUE;
   }
 

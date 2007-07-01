@@ -79,7 +79,10 @@ struct _GstMPEGAudioParse {
   guint32 xing_frames;
   GstClockTime xing_total_time;
   guint32 xing_bytes;
+  /* percent -> filepos mapping */
   guchar xing_seek_table[100];
+  /* filepos -> percent mapping */
+  guint16 xing_seek_table_inverse[256];
   guint32 xing_vbr_scale;
   guint   xing_bitrate;
 };

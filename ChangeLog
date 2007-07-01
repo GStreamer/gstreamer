@@ -1,3 +1,16 @@
+2007-07-01  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_base_init),
+	(gst_mp3parse_init):
+	Use GST_BOILERPLATE instead of manual GType magic.
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_handle_first_frame), (mp3parse_time_to_bytepos),
+	(mp3parse_bytepos_to_time):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	Implement seeking, byte->time, time->byte conversions with the Xing
+	seek table if available. This allows better at least a bit more
+	accurate seeks and file position reporting.
+
 2007-06-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
