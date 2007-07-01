@@ -1,3 +1,11 @@
+2007-07-01  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	translation by: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>
+
+	* po/LINGUAS:
+	* po/fi.po:
+	  Added new Finnish translation.
+
 2007-06-28  Wim Taymans  <wim@fluendo.com>
 
 	* plugins/elements/gstmultiqueue.c: (apply_buffer),
