@@ -1,5 +1,10 @@
 2007-07-03  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/musicbrainz/gsttrm.h:
+	  Fix _get_type signature.
+
+2007-07-03  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/replaygain/gstrgvolume.h:
 	  Fix GObject macros.
 

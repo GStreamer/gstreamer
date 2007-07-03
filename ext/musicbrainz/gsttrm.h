@@ -69,7 +69,7 @@ struct _GstTRMClass {
   GstElementClass parent_class;
 };
 
-GType gst_musicbrainz_get_type(void);
+GType gst_trm_get_type(void);
 
 G_END_DECLS
 
