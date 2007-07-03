@@ -476,13 +476,13 @@ gst_video_detect_class_init (gpointer klass, gpointer class_data)
           DEFAULT_PATTERN_DATA_COUNT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, PROP_PATTERN_CENTER,
       g_param_spec_double ("pattern-center", "Pattern center",
-          "The center of the black/white region (0.0 = highest, 0.5 lowest)",
+          "The center of the black/white separation (0.0 = lowest, 1.0 highest)",
           0.0, 1.0, DEFAULT_PATTERN_CENTER,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, PROP_PATTERN_SENSITIVITY,
       g_param_spec_double ("pattern-sensitivity", "Pattern sensitivity",
-          "The sensitivity for detecting the markers (0.0 = lowest, 1.0 highest)",
-          0.0, 1.0, DEFAULT_PATTERN_SENSITIVITY,
+          "The sensitivity around the center for detecting the markers "
+          "(0.0 = lowest, 1.0 highest)", 0.0, 1.0, DEFAULT_PATTERN_SENSITIVITY,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, PROP_LEFT_OFFSET,
       g_param_spec_int ("left-offset", "Left Offset",
