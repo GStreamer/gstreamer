@@ -1,5 +1,10 @@
 2007-07-03  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/modplug/gstmodplug.cc:
+	  Activate doc section.
+
+2007-07-03  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/timidity/gsttimidity.c:
 	* ext/timidity/gstwildmidi.c:
 	* ext/timidity/gstwildmidi.h:

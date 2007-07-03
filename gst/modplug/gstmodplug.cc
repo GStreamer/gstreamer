@@ -25,7 +25,7 @@
      Olivier Lapicque <olivierl@jps.net>  
 */
 
-/*
+/**
  * SECTION:element-modplug
  * 
  * <refsect2>
