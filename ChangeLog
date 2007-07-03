@@ -1,5 +1,11 @@
 2007-07-03  Wim Taymans  <wim.taymans@gmail.com>
 
+	* tools/gst-launch.c: (main):
+	When we got an error, there is no point in waiting for preroll when
+	shutting down.
+
+2007-07-03  Wim Taymans  <wim.taymans@gmail.com>
+
 	* plugins/elements/gsttee.c: (gst_tee_base_init),
 	(gst_tee_request_new_pad), (gst_tee_release_pad),
 	(gst_tee_find_buffer_alloc), (gst_tee_buffer_alloc),

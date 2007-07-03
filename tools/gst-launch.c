@@ -745,7 +745,8 @@ main (int argc, char *argv[])
 
     fprintf (stderr, _("Setting pipeline to PAUSED ...\n"));
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
-    gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
+    if (!caught_error)
+      gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
     fprintf (stderr, _("Setting pipeline to READY ...\n"));
     gst_element_set_state (pipeline, GST_STATE_READY);
     gst_element_get_state (pipeline, &state, &pending, GST_CLOCK_TIME_NONE);
