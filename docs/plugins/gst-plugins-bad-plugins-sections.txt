@@ -1,48 +1,169 @@
 <SECTION>
 <FILE>element-dfbvideosink</FILE>
-GstDfbVideoSink
 <TITLE>dfbvideosink</TITLE>
+GstDfbVideoSink
+GstDfbSurface
+GstDfbVMode
 <SUBSECTION Standard>
 GstDfbVideoSinkClass
+GST_DFBVIDEOSINK
+GST_DFBVIDEOSINK_CLASS
+GST_IS_DFBVIDEOSINK
+GST_IS_DFBVIDEOSINK_CLASS
+GST_TYPE_DFBVIDEOSINK
+gst_dfbvideosink_get_type
+GST_DFBSURFACE
+GST_IS_DFBSURFACE
+GST_TYPE_DFBSURFACE
+gst_dfbsurface_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-equalizer-3bands</FILE>
+<TITLE>equalizer-3bands</TITLE>
+GstIirEqualizer3Bands
+<SUBSECTION Standard>
+GstIirEqualizer3BandsClass
+GST_IIR_EQUALIZER_3BANDS
+GST_IIR_EQUALIZER_3BANDS_CLASS
+GST_IS_IIR_EQUALIZER_3BANDS
+GST_IS_IIR_EQUALIZER_3BANDS_CLASS
+GST_TYPE_IIR_EQUALIZER_3BANDS
+gst_iir_equalizer_3bands_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-equalizer-10bands</FILE>
+<TITLE>equalizer-10bands</TITLE>
+GstIirEqualizer10Bands
+<SUBSECTION Standard>
+GstIirEqualizer10BandsClass
+GST_IIR_EQUALIZER_10BANDS
+GST_IIR_EQUALIZER_10BANDS_CLASS
+GST_IS_IIR_EQUALIZER_10BANDS
+GST_IS_IIR_EQUALIZER_10BANDS_CLASS
+GST_TYPE_IIR_EQUALIZER_10BANDS
+gst_iir_equalizer_10bands_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-equalizer-nbands</FILE>
+<TITLE>equalizer-nbands</TITLE>
+GstIirEqualizerNBands
+<SUBSECTION Standard>
+GstIirEqualizerNBandsClass
+GST_IIR_EQUALIZER_NBANDS
+GST_IIR_EQUALIZER_NBANDS_CLASS
+GST_IS_IIR_EQUALIZER_NBANDS
+GST_IS_IIR_EQUALIZER_NBANDS_CLASS
+GST_TYPE_IIR_EQUALIZER_NBANDS
+gst_iir_equalizer_nbands_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-jackaudiosink</FILE>
+<TITLE>jackaudiosink</TITLE>
 GstJackAudioSink
 GstJackConnect
-<TITLE>jackaudiosink</TITLE>
 <SUBSECTION Standard>
 GstJackAudioSinkClass
+GST_JACK_AUDIO_SINK
+GST_JACK_AUDIO_SINK_CLASS
+GST_JACK_AUDIO_SINK_GET_CLASS
+GST_IS_JACK_AUDIO_SINK
+GST_IS_JACK_AUDIO_SINK_CLASS
+GST_TYPE_JACK_AUDIO_SINK
+gst_jack_audio_sink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-modplug</FILE>
+<TITLE>modplug</TITLE>
+GstModPlug
+<SUBSECTION Standard>
+GstModPlugClass
+GST_MODPLUG
+GST_MODPLUG_CLASS
+GST_IS_MODPLUG
+GST_IS_MODPLUG_CLASS
+GST_TYPE_MODPLUG
+gst_modplug_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-multifilesrc</FILE>
+<TITLE>multifilesrc</TITLE>
+GstMultiFileSrc
+<SUBSECTION Standard>
+GstMultiFileSrcClass
+GST_MULTI_FILE_SRC
+GST_MULTI_FILE_SRC_CLASS
+GST_IS_MULTI_FILE_SRC
+GST_IS_MULTI_FILE_SRC_CLASS
+GST_TYPE_MULTI_FILE_SRC
+gst_multi_file_src_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-multifilesink</FILE>
+<TITLE>multifilesink</TITLE>
+GstMultiFileSink
+<SUBSECTION Standard>
+GstMultiFileSinkClass
+GST_MULTI_FILE_SINK
+GST_MULTI_FILE_SINK_CLASS
+GST_IS_MULTI_FILE_SINK
+GST_IS_MULTI_FILE_SINK_CLASS
+GST_TYPE_MULTI_FILE_SINK
+gst_multi_file_sink_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-rganalysis</FILE>
-GstRgAnalysis
 <TITLE>rganalysis</TITLE>
+GstRgAnalysis
 <SUBSECTION Standard>
 GstRgAnalysisClass
+GST_RG_ANALYSIS
+GST_RG_ANALYSIS_CLASS
+GST_IS_RG_ANALYSIS
+GST_IS_RG_ANALYSIS_CLASS
+GST_TYPE_RG_ANALYSIS
+gst_rg_analysis_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-rglimiter</FILE>
-GstRgLimiter
 <TITLE>rglimiter</TITLE>
+GstRgLimiter
 <SUBSECTION Standard>
 GstRgLimiterClass
+GST_RG_LIMITER
+GST_RG_LIMITER_CLASS
+GST_IS_RG_LIMITER
+GST_IS_RG_LIMITER_CLASS
+GST_TYPE_RG_LIMITER
+gst_rg_limiter_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-rgvolume</FILE>
-GstRgVolume
 <TITLE>rgvolume</TITLE>
+GstRgVolume
 <SUBSECTION Standard>
 GstRgVolumeClass
+GST_RG_VOLUME
+GST_RG_VOLUME_CLASS
+GST_IS_RG_VOLUME
+GST_TYPE_RG_VOLUME
+GST_IS_RG_VOLUME_CLASS
+gst_rg_volume_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-gstrtpbin</FILE>
-GstRTPBin
 <TITLE>gstrtpbin</TITLE>
+GstRTPBin
 <SUBSECTION Standard>
 GstRTPBinPrivate
 GstRTPBinClass
@@ -112,6 +233,7 @@ GST_TYPE_RTP_SESSION
 gst_rtp_session_get_type
 GST_RTP_SESSION_CLASS
 GST_IS_RTP_SESSION_CLASS
+GST_RTP_SESSION_CAST
 </SECTION>
 
 <SECTION>
@@ -131,26 +253,75 @@ GST_IS_RTP_SSRC_DEMUX_CLASS
 
 <SECTION>
 <FILE>element-sdlaudiosink</FILE>
-GstSDLAudioSink
 <TITLE>sdlaudiosink</TITLE>
+GstSDLAudioSink
 <SUBSECTION Standard>
 GstSDLAudioSinkClass
+GST_SDLAUDIOSINK
+GST_SDLAUDIOSINK_CLASS
+GST_IS_SDLAUDIOSINK
+GST_IS_SDLAUDIOSINK_CLASS
+GST_TYPE_SDLAUDIOSINK
+gst_sdlaudio_sink_get_type
+<SUBSECTION Private>
+gstsdl_semaphore
 </SECTION>
 
 <SECTION>
 <FILE>element-sdlvideosink</FILE>
-GstSDLVideoSink
 <TITLE>sdlvideosink</TITLE>
+GstSDLVideoSink
+GstSDLVideoSinkFlags
 <SUBSECTION Standard>
 GstSDLVideoSinkClass
+GST_SDLVIDEOSINK
+GST_SDLVIDEOSINK_CLASS
+GST_IS_SDLVIDEOSINK
+GST_IS_SDLVIDEOSINK_CLASS
+GST_TYPE_SDLVIDEOSINK
+gst_sdlvideosink_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-spectrum</FILE>
+<TITLE>spectrum</TITLE>
+GstSpectrum
+<SUBSECTION Standard>
+GstSpectrumClass
+GST_SPECTRUM
+GST_SPECTRUM_CLASS
+GST_IS_SPECTRUM
+GST_IS_SPECTRUM_CLASS
+GST_TYPE_SPECTRUM
+gst_spectrum_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-timidity</FILE>
+<TITLE>timidity</TITLE>
+GstTimidity
+<SUBSECTION Standard>
+GstTimidityClass
+GST_TIMIDITY
+GST_TIMIDITY_CLASS
+GST_IS_TIMIDITY
+GST_IS_TIMIDITY_CLASS
+GST_TYPE_TIMIDITY
+gst_timidity_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-trm</FILE>
-GstTRM
 <TITLE>trm</TITLE>
+GstTRM
 <SUBSECTION Standard>
 GstTRMClass
+GST_TRM
+GST_TRM_CLASS
+GST_IS_TRM
+GST_IS_TRM_CLASS
+GST_TYPE_TRM
+gst_trm_get_type
 </SECTION>
 
 <SECTION>
@@ -165,6 +336,7 @@ GST_TYPE_VIDEO_ANALYSE
 gst_video_analyse_get_type
 GST_VIDEO_ANALYSE_CLASS
 GST_IS_VIDEO_ANALYSE_CLASS
+gst_wildmidi_get_type
 </SECTION>
 
 <SECTION>
@@ -194,3 +366,17 @@ gst_video_mark_get_type
 GST_VIDEO_MARK_CLASS
 GST_IS_VIDEO_MARK_CLASS
 </SECTION>
+
+<SECTION>
+<FILE>element-wildmidi</FILE>
+<TITLE>wildmidi</TITLE>
+GstWildmidi
+<SUBSECTION Standard>
+GstWildmidiClass
+GST_WILDMIDI
+GST_WILDMIDI_CLASS
+GST_IS_WILDMIDI
+GST_IS_WILDMIDI_CLASS
+GST_TYPE_WILDMIDI
+</SECTION>
+

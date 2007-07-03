@@ -17691,11 +17691,11 @@
 <ARG>
 <NAME>GstVideoDetect::pattern-sensitivity</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,0,5]</RANGE>
+<RANGE>[0,1]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
-<BLURB>The sensitivity for detecting the markers (0.0 = highest, 0.5 lowest).</BLURB>
-<DEFAULT>0,2</DEFAULT>
+<BLURB>The sensitivity for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
+<DEFAULT>0,3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17706,6 +17706,36 @@
 <NICK>Pattern width</NICK>
 <BLURB>The width of the pattern markers.</BLURB>
 <DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoDetect::bottom-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bottom Offset</NICK>
+<BLURB>The offset from the bottom border where the pattern starts.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoDetect::left-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Left Offset</NICK>
+<BLURB>The offset from the left border where the pattern starts.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoDetect::pattern-center</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Pattern center</NICK>
+<BLURB>The center of the black/white region (0.0 = highest, 0.5 lowest).</BLURB>
+<DEFAULT>0,5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17769,6 +17799,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstVideoMark::bottom-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Bottom Offset</NICK>
+<BLURB>The offset from the bottom border where the pattern starts.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVideoMark::left-offset</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Left Offset</NICK>
+<BLURB>The offset from the left border where the pattern starts.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstWildmidi::high-quality</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -17786,5 +17836,35 @@
 <NICK>Linear volume</NICK>
 <BLURB>Linear volume.</BLURB>
 <DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVCDSrc::device</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Device</NICK>
+<BLURB>CD device location.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVCDSrc::max-errors</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max. errors</NICK>
+<BLURB>Maximum number of errors before bailing out.</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstVCDSrc::track</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Track</NICK>
+<BLURB>Track number to play.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

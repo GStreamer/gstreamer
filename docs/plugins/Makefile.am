@@ -94,6 +94,14 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
 	$(top_srcdir)/ext/sdl/sdlvideosink.h \
+	$(top_srcdir)/ext/timidity/gsttimidity.h \
+	$(top_srcdir)/ext/timidity/gstwildmidi.h \
+	$(top_srcdir)/gst/equalizer/gstiirequalizer3bands.h \
+	$(top_srcdir)/gst/equalizer/gstiirequalizer10bands.h \
+	$(top_srcdir)/gst/equalizer/gstiirequalizernbands.h \
+	$(top_srcdir)/gst/modplug/gstmodplug.h \
+	$(top_srcdir)/gst/multifile/gstmultifilesink.h \
+	$(top_srcdir)/gst/multifile/gstmultifilesrc.h \
 	$(top_srcdir)/gst/replaygain/gstrganalysis.h \
 	$(top_srcdir)/gst/replaygain/gstrglimiter.h \
 	$(top_srcdir)/gst/replaygain/gstrgvolume.h \
@@ -103,6 +111,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/rtpmanager/gstrtpptdemux.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpsession.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpssrcdemux.h \
+	$(top_srcdir)/gst/spectrum/gstspectrum.h \
 	$(top_srcdir)/gst/videosignal/gstvideoanalyse.h \
 	$(top_srcdir)/gst/videosignal/gstvideodetect.h \
 	$(top_srcdir)/gst/videosignal/gstvideomark.h
