@@ -125,32 +125,46 @@ gst_rtpilbcpay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_get_int (structure, "mode", &mode);
-  if (mode != 20 && mode != 30) {
-    return FALSE;
-  }
+  if (mode != 20 && mode != 30)
+    goto wrong_mode;
 
   payload_name = gst_structure_get_name (structure);
-  if (g_strcasecmp ("audio/x-iLBC", payload_name) == 0) {
-    gst_basertppayload_set_options (basertppayload, "audio", TRUE, "iLBC",
-        8000);
-    /* set options for this frame based audio codec */
-    gst_base_rtp_audio_payload_set_frame_options (basertpaudiopayload,
-        mode, mode == 30 ? 50 : 38);
-  } else {
-    return FALSE;
-  }
+  if (g_strcasecmp ("audio/x-iLBC", payload_name))
+    goto wrong_caps;
+
+  gst_basertppayload_set_options (basertppayload, "audio", TRUE, "ILBC", 8000);
+  /* set options for this frame based audio codec */
+  gst_base_rtp_audio_payload_set_frame_options (basertpaudiopayload,
+      mode, mode == 30 ? 50 : 38);
 
   ret =
       gst_basertppayload_set_outcaps (basertppayload, "mode", G_TYPE_INT, mode,
       NULL);
-  if (mode != rtpilbcpay->mode && rtpilbcpay->mode != -1) {
+  if (mode != rtpilbcpay->mode && rtpilbcpay->mode != -1)
+    goto mode_changed;
+
+  rtpilbcpay->mode = mode;
+
+  return ret;
+
+  /* ERRORS */
+wrong_mode:
+  {
+    GST_ERROR_OBJECT (rtpilbcpay, "mode must be 20 or 30, received %d", mode);
+    return FALSE;
+  }
+wrong_caps:
+  {
+    GST_ERROR_OBJECT (rtpilbcpay, "expected audio/x-iLBC, received %s",
+        payload_name);
+    return FALSE;
+  }
+mode_changed:
+  {
     GST_ERROR_OBJECT (rtpilbcpay, "Mode has changed from %d to %d! "
         "Mode cannot change while streaming", rtpilbcpay->mode, mode);
     return FALSE;
   }
-  rtpilbcpay->mode = mode;
-
-  return ret;
 }
 
 gboolean
