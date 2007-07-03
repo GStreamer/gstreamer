@@ -3,6 +3,16 @@
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* gst/synaesthesia/Makefile.am:
+	* gst/synaesthesia/gstsynaesthesia.c:
+	* gst/synaesthesia/gstsynaesthesia.h:
+	  And yet more docs enabled.
+
+2007-07-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
 	* docs/plugins/inspect/plugin-a52dec.xml:
 	* docs/plugins/inspect/plugin-amrnb.xml:
 	* docs/plugins/inspect/plugin-asf.xml:
