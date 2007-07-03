@@ -1,3 +1,8 @@
+2007-07-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/replaygain/gstrgvolume.h:
+	  Fix GObject macros.
+
 2007-06-29  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/dc1394/gstdc1394.c: (gst_dc1394_src_fixate),
