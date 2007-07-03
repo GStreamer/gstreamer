@@ -1,5 +1,15 @@
 2007-07-03  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/multifile/Makefile.am:
+	* gst/multifile/gstmultifile.c:
+	* gst/multifile/gstmultifilesink.c:
+	* gst/multifile/gstmultifilesink.h:
+	* gst/multifile/gstmultifilesrc.c:
+	* gst/multifile/gstmultifilesrc.h:
+	  Add .h files to be able to add it to the docs.
+
+2007-07-03  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/modplug/gstmodplug.cc:
 	  Activate doc section.
 

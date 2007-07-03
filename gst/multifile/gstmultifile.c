@@ -21,13 +21,6 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-/**
- * SECTION:element-multifilesink
- * @short_description: write buffers to sequentially-named files
- * @see_also: #GstFileSrc
- *
- * Write incoming data to a series of files in the local file system.
- */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
