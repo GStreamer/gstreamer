@@ -1,24 +1,86 @@
 <SECTION>
+<FILE>element-amrnbdec</FILE>
+<TITLE>amrnbdec</TITLE>
+GstAmrnbDec
+<SUBSECTION Standard>
+GstAmrnbDecClass
+GST_AMRNBDEC
+GST_AMRNBDEC_CLASS
+GST_IS_AMRNBDEC
+GST_IS_AMRNBDEC_CLASS
+GST_TYPE_AMRNBDEC
+gst_amrnbdec_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-amrnbenc</FILE>
+<TITLE>amrnbenc</TITLE>
+GstAmrnbEnc
+<SUBSECTION Standard>
+GstAmrnbEncClass
+GST_AMRNBENC
+GST_AMRNBENC_CLASS
+GST_IS_AMRNBENC
+GST_IS_AMRNBENC_CLASS
+GST_TYPE_AMRNBENC
+gst_amrnbenc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-amrnbparse</FILE>
+<TITLE>amrnbparse</TITLE>
+GstAmrnbParse
+<SUBSECTION Standard>
+GstAmrnbParseClass
+GST_AMRNBPARSE
+GST_AMRNBPARSE_CLASS
+GST_IS_AMRNBPARSE
+GST_IS_AMRNBPARSE_CLASS
+GST_TYPE_AMRNBPARSE
+gst_amrnbparse_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-mad</FILE>
-GstMad
 <TITLE>mad</TITLE>
+GstMad
 <SUBSECTION Standard>
 GstMadClass
+GST_MAD
+GST_MAD_CLASS
+GST_IS_MAD
+GST_IS_MAD_CLASS
+GST_TYPE_MAD
+gst_mad_get_type
+gst_id3_tag_get_type
+gst_mad_id3_to_tag_list
 </SECTION>
 
 <SECTION>
 <FILE>element-lame</FILE>
-GstLame
 <TITLE>lame</TITLE>
+GstLame
 <SUBSECTION Standard>
 GstLameClass
+GST_LAME
+GST_LAME_CLASS
+GST_IS_LAME
+GST_IS_LAME_CLASS
+GST_TYPE_LAME
+gst_lame_get_type
 </SECTION>
 
 <SECTION>
 <FILE>element-siddec</FILE>
-GstSidDec
 <TITLE>siddec</TITLE>
+GstSidDec
 <SUBSECTION Standard>
 GstSidDecClass
+GST_SIDDEC
+GST_SIDDEC_CLASS
+GST_IS_SIDDEC
+GST_IS_SIDDEC_CLASS
+GST_TYPE_SIDDEC
+gst_siddec_get_type
 </SECTION>
 

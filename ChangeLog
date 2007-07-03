@@ -1,3 +1,32 @@
+2007-07-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-ugly-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-ugly-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-iec958.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-mpegaudioparse.xml:
+	* docs/plugins/inspect/plugin-mpegstream.xml:
+	  Add new docs. Scan c++ files too.
+	
+	* ext/amrnb/amrnbdec.c: (gst_amrnbdec_base_init),
+	(gst_amrnbdec_event):
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_base_init):
+	* ext/amrnb/amrnbparse.c: (gst_amrnbparse_base_init),
+	(gst_amrnbparse_loop):
+	  Add documentation headers.
+
+	* ext/mad/gstmad.c:
+	* ext/mad/gstmad.h:
+	  Refactor for docs.
+
 2007-07-01  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_base_init),

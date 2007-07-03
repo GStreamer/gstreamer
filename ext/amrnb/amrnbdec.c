@@ -17,9 +17,22 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/*
- * library can be found at http://www.penguin.cz/~utx/amr
- * gst-launch filesrc location=./bugdata/Bug24403/Ganga9_21_nb.amr ! amrnbparse ! amrnbdec ! audioresample ! audioconvert ! alsasink
+/**
+ * SECTION:element-amrnbdec
+ * @see_also: #GstAmrnbEnc, #GstAmrnbParse
+ *
+ * <refsect2>
+ * <para>
+ * This is an AMR narrowband decoder based on the 
+ * <ulink url="http://www.penguin.cz/~utx/amr">reference codec implementation</ulink>.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=abc.amr ! amrnbparse ! amrnbdec ! audioresample ! audioconvert ! alsasink
+ * </programlisting>
+ * </para>
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

@@ -28,6 +28,76 @@
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_MAD \
+  (gst_mad_get_type())
+#define GST_MAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_MAD,GstMad))
+#define GST_MAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_MAD,GstMadClass))
+#define GST_IS_MAD(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_MAD))
+#define GST_IS_MAD_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_MAD))
+
+
+typedef struct _GstMad GstMad;
+typedef struct _GstMadClass GstMadClass;
+
+struct _GstMad
+{
+  GstElement element;
+
+  /* pads */
+  GstPad *sinkpad, *srcpad;
+
+  /* state */
+  struct mad_stream stream;
+  struct mad_frame frame;
+  struct mad_synth synth;
+  guchar *tempbuffer;           /* temporary buffer to serve to mad */
+  glong tempsize;               /* running count of temp buffer size */
+  GstClockTime last_ts;
+  guint64 base_byte_offset;
+  guint64 bytes_consumed;       /* since the base_byte_offset */
+  guint64 total_samples;        /* the number of samples since the sync point */
+
+  gboolean in_error;            /* set when mad's in an error state */
+  gboolean restart;
+  guint64 segment_start;
+  gboolean need_newsegment;
+
+  /* info */
+  struct mad_header header;
+  gboolean new_header;
+  guint framecount;
+  gint vbr_average;             /* average bitrate */
+  guint64 vbr_rate;             /* average * framecount */
+
+  gboolean half;
+  gboolean ignore_crc;
+
+  GstTagList *tags;
+
+  /* negotiated format */
+  gint rate, pending_rate;
+  gint channels, pending_channels;
+  gint times_pending;
+
+  gboolean caps_set;            /* used to keep track of whether to change/update caps */
+  GstIndex *index;
+  gint index_id;
+
+  gboolean check_for_xing;
+  gboolean xing_found;
+
+  gboolean framed;              /* whether there is a demuxer in front of us */
+};
+
+struct _GstMadClass
+{
+  GstElementClass parent_class;
+};
+
 
 GType                   gst_mad_get_type                (void);
 GType                   gst_id3_tag_get_type            (guint type);

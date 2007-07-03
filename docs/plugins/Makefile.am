@@ -50,7 +50,7 @@ SCAN_OPTIONS=
 #EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode
+MKDB_OPTIONS=--sgml-mode --source-suffixes=c,h,cc,m
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/gobject \
@@ -61,7 +61,7 @@ FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html/gobject \
 
 # Used for dependencies.
 HFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.h
-CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c
+CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c $(DOC_SOURCE_DIR)/*/*/*.cc
 
 # this is a wingo addition
 # thomasvs: another nice wingo addition would be an explanation on why
@@ -85,8 +85,11 @@ IGNORE_CFILES =
 #	$(top_srcdir)/ext/gnomevfs/gstgnomevfssink.c 
 
 EXTRA_HFILES = \
+	$(top_srcdir)/ext/amrnb/amrnbdec.h \
+	$(top_srcdir)/ext/amrnb/amrnbenc.h \
+	$(top_srcdir)/ext/amrnb/amrnbparse.h \
 	$(top_srcdir)/ext/lame/gstlame.h \
-	$(top_srcdir)/ext/mad/gstmad.h	 \
+	$(top_srcdir)/ext/mad/gstmad.h \
 	$(top_srcdir)/ext/sidplay/gstsiddec.h
 
 # Images to copy into HTML directory.

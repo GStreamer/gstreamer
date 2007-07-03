@@ -12,6 +12,9 @@
 
   <chapter>
     <title>gst-plugins-ugly Elements</title>
+    <xi:include href="xml/element-amrnbdec.xml" />
+    <xi:include href="xml/element-amrnbenc.xml" />
+    <xi:include href="xml/element-amrnbparse.xml" />
     <xi:include href="xml/element-lame.xml" />
     <xi:include href="xml/element-mad.xml" />
     <xi:include href="xml/element-siddec.xml" />
@@ -19,7 +22,7 @@
 
   <chapter>
     <title>gst-plugins-ugly Plugins</title>
-
+    <xi:include href="xml/plugin-amrnb.xml" />
     <xi:include href="xml/plugin-dvdlpcmdec.xml" />
     <xi:include href="xml/plugin-lame.xml" />
     <xi:include href="xml/plugin-mad.xml" />

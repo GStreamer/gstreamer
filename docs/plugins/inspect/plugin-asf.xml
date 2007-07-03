@@ -17,10 +17,10 @@
       <author>Owen Fraser-Green &lt;owen@discobabe.net&gt;</author>
       <pads>
         <caps>
-          <name>audio_%02d</name>
-          <direction>source</direction>
-          <presence>sometimes</presence>
-          <details>ANY</details>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-ms-asf</details>
         </caps>
         <caps>
           <name>video_%02d</name>
@@ -29,10 +29,10 @@
           <details>ANY</details>
         </caps>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
-          <presence>always</presence>
-          <details>video/x-ms-asf</details>
+          <name>audio_%02d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
         </caps>
       </pads>
     </element>
