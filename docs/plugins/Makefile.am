@@ -89,6 +89,9 @@ EXAMPLE_CFILES = \
         $(top_srcdir)/ext/directfb/dfb-example.c
 
 EXTRA_HFILES = \
+	$(top_srcdir)/ext/amrwb/gstamrwbdec.h \
+	$(top_srcdir)/ext/amrwb/gstamrwbenc.h \
+	$(top_srcdir)/ext/amrwb/gstamrwbparse.h \
 	$(top_srcdir)/ext/directfb/dfbvideosink.h \
 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \

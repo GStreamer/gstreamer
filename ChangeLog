@@ -3,6 +3,16 @@
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* ext/amrwb/gstamrwbdec.c:
+	* ext/amrwb/gstamrwbenc.c:
+	* ext/amrwb/gstamrwbparse.c:
+	  Also document AMR-WB elements.
+
+2007-07-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
 	* docs/plugins/gst-plugins-bad-plugins.args:
 	  Cleanup the section file so that -unused is empty again (and useful to
 	  spot new docs). Add not yet added docs to sgml file. Add more header

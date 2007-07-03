@@ -12,9 +12,9 @@
 
   <chapter>
     <title>gst-plugins-bad Elements</title>
-    <!--xi:include href="xml/element-amrwbdec.xml" />
+    <xi:include href="xml/element-amrwbdec.xml" />
     <xi:include href="xml/element-amrwbenc.xml" />
-    <xi:include href="xml/element-amrwbparse.xml" /-->
+    <xi:include href="xml/element-amrwbparse.xml" />
     <xi:include href="xml/element-dfbvideosink.xml" />
     <xi:include href="xml/element-equalizer-3bands.xml" />
     <xi:include href="xml/element-equalizer-10bands.xml" />

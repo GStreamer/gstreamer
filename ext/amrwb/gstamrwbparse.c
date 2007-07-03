@@ -17,6 +17,23 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-amrwbparse
+ * @see_also: #GstAmrwbDec, #GstAmrwbEnc
+ *
+ * <refsect2>
+ * <para>
+ * This is an AMR wideband parser.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=abc.amr ! amrwbparse ! amrwbdec ! audioresample ! audioconvert ! alsasink
+ * </programlisting>
+ * </para>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

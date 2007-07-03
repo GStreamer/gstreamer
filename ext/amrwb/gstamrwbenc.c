@@ -17,6 +17,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
+ /**
+ * SECTION:element-amrwbenc
+ * @see_also: #GstAmrwbDec, #GstAmrwbParse
+ *
+ * <refsect2>
+ * <para>
+ * This is an AMR wideband encoder based on the 
+ * <ulink url="http://www.penguin.cz/~utx/amr">reference codec implementation</ulink>.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch filesrc location=abc.wav ! wavparse ! audioresample ! audioconvert ! amrwbenc ! filesink location=abc.amr
+ * </programlisting>
+ * </para>
+ * Please not that the above stream misses the header, that is needed to play
+ * the stream.
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
