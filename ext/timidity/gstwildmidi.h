@@ -1,5 +1,5 @@
 /*
- * gsttimdity - timidity plugin for gstreamer
+ * gstwildmidi - wildmidi plugin for gstreamer
  * 
  * Copyright 2007 Wouter Paesen <wouter@blue-gate.be>
  *

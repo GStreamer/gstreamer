@@ -11,13 +11,35 @@
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-
  * Library General Public License for more details.
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
+ */
+
+/**
+ * SECTION:element-wildmidi
+ * @see_also: timidity
+ *
+ * <refsect2>
+ * <para>
+ * This element renders midi-files as audio streams using
+ * <ulink url="http://wildmidi.sourceforge.net//">Wildmidi</ulink>.
+ * It offers better sound quality compared to the timidity element. Wildmidi
+ * uses the same sound-patches as timidity (it tries the path in $WILDMIDI_CFG,
+ * $HOME/.wildmidirc and /etc/wildmidi.cfg)
+ * </para>
+ * <para>
+ * </para>
+ * <title>Example pipeline</title>
+ * <programlisting>
+ * gst-launch filesrc location=song.mid ! wildmidi ! alsasink
+ * </programlisting>
+ * This example pipeline will parse the midi and render to raw audio which is
+ * played via alsa.
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -884,4 +906,4 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "wildmidi",
     "Wildmidi Plugin",
-    plugin_init, VERSION, "LGPL", "GStreamer", "http://gstreamer.net/")
+    plugin_init, VERSION, "GPL", "GStreamer", "http://gstreamer.net/")

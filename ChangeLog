@@ -1,5 +1,12 @@
 2007-07-03  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/timidity/gsttimidity.c:
+	* ext/timidity/gstwildmidi.c:
+	* ext/timidity/gstwildmidi.h:
+	  Fix licence (both are GPL). Add element docs.
+
+2007-07-03  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/musicbrainz/gsttrm.h:
 	  Fix _get_type signature.
 
