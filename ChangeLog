@@ -1,3 +1,21 @@
+2007-07-03  Wim Taymans  <wim.taymans@gmail.com>
+
+	* plugins/elements/gsttee.c: (gst_tee_base_init),
+	(gst_tee_request_new_pad), (gst_tee_release_pad),
+	(gst_tee_find_buffer_alloc), (gst_tee_buffer_alloc),
+	(gst_tee_do_push), (clear_pads), (gst_tee_handle_buffer),
+	(gst_tee_chain):
+	Be a lot smarter when deciding what srcpad to use for proxying
+	the buffer_alloc. Also handle pad added/removed when doing so.
+	Fixes #357959.
+	Keep track of what pads we already pushed on in case we have pads
+	added/removed while pushing. Fixes #374639 
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/tee.c: (handoff), (GST_START_TEST),
+	(tee_suite):
+	Added unit test for pad resync.
+
 2007-07-01  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/nl.po:

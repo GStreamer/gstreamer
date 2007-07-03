@@ -62,6 +62,7 @@ REGISTRY_CHECKS =				\
 	elements/filesrc			\
 	elements/identity			\
 	elements/multiqueue			\
+	elements/tee			  	\
 	libs/basesrc				\
 	libs/controller				\
 	libs/typefindhelper			\
