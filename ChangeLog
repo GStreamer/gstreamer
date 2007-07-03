@@ -1,4 +1,12 @@
-2007-06-29  Wim Taymans,,,  <set EMAIL_ADDRESS environment variable>
+2007-07-03  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/adder/gstadder.c: (gst_adder_sink_getcaps),
+	(gst_adder_request_new_pad):
+	Make getcaps more robust by not using the proxycaps function. This makes
+	sure that we don't end up recursively calling getcaps upstream.
+	See #316248.
+
+2007-06-29  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/audioconvert/audioconvert.c:
 	Include math.h to fix compilation.

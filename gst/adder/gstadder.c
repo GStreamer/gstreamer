@@ -161,6 +161,41 @@ MAKE_FUNC_NC (add_float64, gdouble, gdouble)
 MAKE_FUNC_NC (add_float32, gfloat, gfloat)
 /* *INDENT-ON* */
 
+/* we can only accept caps that we and downstream can handle. */
+static GstCaps *
+gst_adder_sink_getcaps (GstPad * pad)
+{
+  GstAdder *adder;
+  GstCaps *result, *peercaps, *sinkcaps;
+
+  adder = GST_ADDER (GST_PAD_PARENT (pad));
+
+  GST_OBJECT_LOCK (adder);
+  /* get the downstream possible caps */
+  peercaps = gst_pad_peer_get_caps (adder->srcpad);
+  /* get the allowed caps on this sinkpad, we use the fixed caps function so
+   * that it does not call recursively in this function. */
+  sinkcaps = gst_pad_get_fixed_caps_func (pad);
+  if (peercaps) {
+    /* if the peer has caps, intersect */
+    GST_DEBUG_OBJECT (adder, "intersecting peer and template caps");
+    result = gst_caps_intersect (peercaps, sinkcaps);
+    gst_caps_unref (peercaps);
+    gst_caps_unref (sinkcaps);
+  } else {
+    /* the peer has no caps (or there is no peer), just use the allowed caps
+     * of this sinkpad. */
+    GST_DEBUG_OBJECT (adder, "no peer caps, using sinkcaps");
+    result = sinkcaps;
+  }
+  GST_OBJECT_UNLOCK (adder);
+
+  return result;
+}
+
+/* the first caps we receive on any of the sinkpads will define the caps for all
+ * the other sinkpads because we can only mix streams with the same caps.
+ * */
 static gboolean
 gst_adder_setcaps (GstPad * pad, GstCaps * caps)
 {
@@ -603,7 +638,7 @@ gst_adder_request_new_pad (GstElement * element, GstPadTemplate * templ,
   g_free (name);
 
   gst_pad_set_getcaps_function (newpad,
-      GST_DEBUG_FUNCPTR (gst_pad_proxy_getcaps));
+      GST_DEBUG_FUNCPTR (gst_adder_sink_getcaps));
   gst_pad_set_setcaps_function (newpad, GST_DEBUG_FUNCPTR (gst_adder_setcaps));
   gst_collect_pads_add_pad (adder->collect, newpad, sizeof (GstCollectData));
 
