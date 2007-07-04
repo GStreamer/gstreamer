@@ -52,10 +52,8 @@ G_BEGIN_DECLS
 
     int adapter_type;
 
-    char *device;       /* the device directory with the sub-devices */
-    char *frontend_dev;
-    char *dvr_dev;
-    char *demux_dev;
+    int adapter_number;       /* the device directory with the sub-devices */
+    int frontend_number;
 
     int fd_frontend;
     int fd_dvr;

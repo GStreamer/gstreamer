@@ -1,3 +1,16 @@
+2007-07-04  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c (dvbsrc_details, ARG_DVBSRC_ADAPTER,
+	  ARG_DVBSRC_FRONTEND, ARG_DVBSRC_DISEQC_SRC, ARG_DVBSRC_FREQUENCY,
+	  ARG_DVBSRC_POLARITY, gst_dvbsrc_class_init, gst_dvbsrc_init,
+	  gst_dvbsrc_set_property, gst_dvbsrc_get_property,
+	  gst_dvbsrc_open_frontend, gst_dvbsrc_open_dvr, read_device,
+	  gst_dvbsrc_create, gst_dvbsrc_set_pes_filters):
+	* sys/dvb/gstdvbsrc.h (adapter_number, frontend_number):
+	Removed property "device". Added properties "adapter" and "frontend".
+	Fixes #453636.
+	Rename freq property to frequency.
+
 2007-07-03  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/videosignal/gstvideodetect.c: (gst_video_detect_class_init):
