@@ -348,6 +348,44 @@ gst_multi_queue_get_property (GObject * object, guint prop_id,
   GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 }
 
+GList *
+gst_multi_queue_get_internal_links (GstPad * pad)
+{
+  GList *res = NULL;
+  GstMultiQueue *mqueue;
+  GstSingleQueue *sq = NULL;
+  GList *tmp;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), NULL);
+
+  mqueue = GST_MULTI_QUEUE (GST_PAD_PARENT (pad));
+  if (!mqueue)
+    goto no_parent;
+
+  GST_MULTI_QUEUE_MUTEX_LOCK (mqueue);
+  /* Find which single queue it belongs to */
+  for (tmp = mqueue->queues; tmp && !res; tmp = g_list_next (tmp)) {
+    sq = (GstSingleQueue *) tmp->data;
+
+    if (sq->sinkpad == pad)
+      res = g_list_prepend (res, sq->srcpad);
+    if (sq->srcpad == pad)
+      res = g_list_prepend (res, sq->sinkpad);
+  }
+
+  if (!res)
+    GST_WARNING_OBJECT (mqueue, "That pad doesn't belong to this element ???");
+  GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
+
+  return res;
+
+no_parent:
+  {
+    GST_DEBUG_OBJECT (pad, "no parent");
+    return NULL;
+  }
+}
+
 
 /*
  * GstElement methods
@@ -1298,6 +1336,8 @@ gst_single_queue_new (GstMultiQueue * mqueue)
       GST_DEBUG_FUNCPTR (gst_multi_queue_getcaps));
   gst_pad_set_bufferalloc_function (sq->sinkpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_bufferalloc));
+  gst_pad_set_internal_link_function (sq->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_multi_queue_get_internal_links));
 
   tmp = g_strdup_printf ("src%d", sq->id);
   sq->srcpad = gst_pad_new_from_static_template (&srctemplate, tmp);
@@ -1313,6 +1353,8 @@ gst_single_queue_new (GstMultiQueue * mqueue)
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_event));
   gst_pad_set_query_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_query));
+  gst_pad_set_internal_link_function (sq->srcpad,
+      GST_DEBUG_FUNCPTR (gst_multi_queue_get_internal_links));
 
   gst_pad_set_element_private (sq->sinkpad, (gpointer) sq);
   gst_pad_set_element_private (sq->srcpad, (gpointer) sq);

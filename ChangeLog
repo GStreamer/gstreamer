@@ -1,3 +1,13 @@
+2007-07-05  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Mark Nauwelaerts <manauw at skynet be>
+
+	* plugins/elements/gstmultiqueue.c:
+	(gst_multi_queue_get_internal_links), (apply_buffer),
+	(single_queue_overrun_cb), (gst_single_queue_new):
+	Implement non-default GstPadIntLinkFunction for multiqueue pads so that
+	the pipeline layout can be tracked correctly. Fixes #453732.
+
 2007-07-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/Makefile.am:
