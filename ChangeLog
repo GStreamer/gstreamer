@@ -1,3 +1,11 @@
+2007-07-05  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_chain_video),
+	(gst_ffmpegenc_flush_buffers):
+	Fix the encoders by actually copying the encoded output data from the
+	working area into the output buffer.
+	Fixes: #453135.
+
 2007-06-22  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ffmpeg/gstffmpegenc.c: (ffmpegenc_setup_working_buf),

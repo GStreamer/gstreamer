@@ -634,6 +634,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
           GST_ERROR_SYSTEM);
 
   outbuf = gst_buffer_new_and_alloc (ret_size);
+  memcpy (GST_BUFFER_DATA (outbuf), ffmpegenc->working_buf, ret_size);
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
   GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
   if (!ffmpegenc->context->coded_frame->key_frame)
@@ -778,6 +779,7 @@ gst_ffmpegenc_flush_buffers (GstFFMpegEnc * ffmpegenc, gboolean send)
     inbuf = g_queue_pop_head (ffmpegenc->delay);
 
     outbuf = gst_buffer_new_and_alloc (ret_size);
+    memcpy (GST_BUFFER_DATA (outbuf), ffmpegenc->working_buf, ret_size);
     GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (inbuf);
     GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (inbuf);
 
