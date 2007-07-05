@@ -1,3 +1,11 @@
+2007-07-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	  Simplify --extra-dir as gtkdoc scans recursively.
+
+	* ext/amrwb/gstamrwbenc.c:
+	  Fix comment start.
+
 2007-07-04  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c (dvbsrc_details, ARG_DVBSRC_ADAPTER,
