@@ -316,7 +316,25 @@ class ConstStringReturn(ReturnType):
             failure_expression="!PyString_Check(py_retval)",
             failure_cleanup='PyErr_SetString(PyExc_TypeError, "retval should be a string");')
         self.wrapper.write_code("retval = g_strdup(PyString_AsString(py_retval));")
-			
+
+class StringArrayArg(ArgType):
+    """Arg type for NULL-terminated string pointer arrays (GStrv, aka gchar**)."""
+    def write_return(self, ptype, ownsreturn, info):
+        if ownsreturn:
+            raise NotImplementedError ()
+        else:
+            info.varlist.add("gchar", "**ret")
+            info.codeafter.append("    if (ret) {\n"
+                                  "        guint size = g_strv_length(ret);\n"
+                                  "        PyObject *py_ret = PyTuple_New(size);\n"
+                                  "        gint i;\n"
+                                  "        for (i = 0; i < size; i++)\n"
+                                  "            PyTuple_SetItem(py_ret, i,\n"
+                                  "                PyString_FromString(ret[i]));\n"
+                                  "        return py_ret;\n"
+                                  "    }\n"
+                                  "    return PyTuple_New (0);\n")
+
 matcher.register('GstClockTime', UInt64Arg())
 matcher.register('GstClockTimeDiff', Int64Arg())
 matcher.register('xmlNodePtr', XmlNodeArg())
@@ -352,5 +370,7 @@ matcher.register_reverse_ret("GType", IntReturn)
 
 matcher.register_reverse("gulong", ULongParam)
 matcher.register_reverse_ret("gulong", ULongReturn)
+
+matcher.register("GStrv", StringArrayArg())
 
 del arg

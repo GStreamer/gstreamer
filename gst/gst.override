@@ -706,29 +706,6 @@ _wrap_gst_g_error_tp_str(PyGObject *self)
 						      error->code));
 }
 %%
-override gst_uri_handler_get_protocols noargs
-static PyObject *
-_wrap_gst_uri_handler_get_protocols (PyGObject *self)
-{
-    gchar	**tab;
-    int		i, len;
-    PyObject	*ret;
-
-    tab = gst_uri_handler_get_protocols (GST_URI_HANDLER (self->obj));
-    if (!tab) {
-	Py_INCREF (Py_None);
-	return Py_None;
-    }
-    
-    len = g_strv_length (tab);
-    ret = PyList_New(len);
-    for (i = 0; i < len; i++) {
-        PyList_SetItem(ret, i, PyString_FromString(tab[i]));
-    }
-
-    return ret;
-}
-%%
 override gst_flow_get_name kwargs
 static PyObject *
 _wrap_gst_flow_get_name(PyObject *self, PyObject *args, PyObject *kwargs)

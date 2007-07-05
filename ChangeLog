@@ -1,3 +1,12 @@
+2007-07-05  Edward Hervey  <bilboed@bilboed.com>
+
+	Patch by: Rene Stadler <mail@renestadler.de>
+	* gst/arg-types.py:
+	* gst/gst.defs:
+	* gst/gst.override:
+	Handle 'gchar**' (GStrv) arguments in a uniform way.
+	Fixes #385841
+
 2007-06-27  Edward Hervey  <edward@fluendo.com>
 
 	* gst/gstbuffer.override:
