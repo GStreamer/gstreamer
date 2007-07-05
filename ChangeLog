@@ -1,3 +1,9 @@
+2007-07-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/Makefile.am:
+	* docs/plugins/Makefile.am:
+	  Simplify --extra-dir as gtkdoc scans recursively.
+
 2007-07-03  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/adder/gstadder.c: (gst_adder_sink_getcaps),
