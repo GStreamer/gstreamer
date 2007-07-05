@@ -9,3 +9,4 @@ libgstivorbis_la_LIBADD = $(IVORBIS_LIBS)		\
 			  -lgstaudio-@GST_MAJORMINOR@
 libgstivorbis_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
+noinst_HEADERS = vorbisdec.h vorbisenc.h

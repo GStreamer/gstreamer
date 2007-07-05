@@ -1,3 +1,8 @@
+2007-07-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/ivorbis/Makefile.am:
+	  Dist header files. Fixes #454078.
+
 2007-07-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/Makefile.am:
