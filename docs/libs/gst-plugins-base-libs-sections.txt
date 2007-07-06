@@ -1001,14 +1001,14 @@ gst_tag_to_id3_tag
 
 <SECTION>
 <FILE>gstpbutils</FILE>
-<INCLUDE>gst/utils/base-utils.h</INCLUDE>
+<INCLUDE>gst/pbutils/base-utils.h</INCLUDE>
 <SUBSECTION>
 gst_pb_utils_init
 </SECTION>
 
 <SECTION>
 <FILE>gstpbutilsmissingplugins</FILE>
-<INCLUDE>gst/utils/missing-plugins.h</INCLUDE>
+<INCLUDE>gst/pbutils/missing-plugins.h</INCLUDE>
 <SUBSECTION>
 gst_missing_plugin_message_get_installer_detail
 gst_missing_plugin_message_get_description
@@ -1023,7 +1023,7 @@ gst_missing_element_message_new
 
 <SECTION>
 <FILE>gstpbutilsinstallplugins</FILE>
-<INCLUDE>gst/utils/install-plugins.h</INCLUDE>
+<INCLUDE>gst/pbutils/install-plugins.h</INCLUDE>
 <SUBSECTION>
 GstInstallPluginsReturn
 GstInstallPluginsResultFunc
@@ -1040,7 +1040,7 @@ gst_install_plugins_context_set_xid
 
 <SECTION>
 <FILE>gstpbutilsdescriptions</FILE>
-<INCLUDE>gst/utils/descriptions.h</INCLUDE>
+<INCLUDE>gst/pbutils/descriptions.h</INCLUDE>
 <SUBSECTION>
 gst_pb_utils_get_source_description
 gst_pb_utils_get_sink_description

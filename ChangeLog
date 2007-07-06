@@ -1,3 +1,8 @@
+2007-07-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	  Fix location of includes in the docs.
+
 2007-07-06  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/ffmpegcolorspace/avcodec.h:
