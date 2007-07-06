@@ -42,6 +42,7 @@ struct _GstMuLawDec {
   GstElement element;
 
   GstPad *sinkpad,*srcpad;
+  GstCaps *srccaps;
 };
 
 struct _GstMuLawDecClass {
