@@ -284,6 +284,8 @@ gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
   if (klass->sink_event_func)
     gst_pad_set_event_function (sinkpad, klass->sink_event_func);
 
+  gst_pad_set_active (sinkpad, TRUE);
+
   /* dd the pad to the element */
   gst_element_add_pad (GST_ELEMENT (rtp_mux), sinkpad);
 }
