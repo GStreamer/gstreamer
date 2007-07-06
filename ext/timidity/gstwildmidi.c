@@ -832,7 +832,7 @@ wildmidi_open_config ()
   gchar *path = g_strdup (g_getenv ("WILDMIDI_CFG"));
   gint ret;
 
-  GST_DEBUG ("trying %s", path);
+  GST_DEBUG ("trying %s", GST_STR_NULL (path));
   if (path && (g_access (path, R_OK) == -1)) {
     g_free (path);
     path = NULL;
@@ -866,7 +866,7 @@ wildmidi_open_config ()
      * has a redirect   
      * http://sourceforge.net/tracker/index.php?func=detail&aid=1657358&group_id=42635&atid=433744
      */
-    GST_INFO ("no config file");
+    GST_WARNING ("no config file, can't initialise");
     return FALSE;
   }
 
