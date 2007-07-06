@@ -1,3 +1,10 @@
+2007-07-06  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/libpng/gstpngdec.c: (gst_pngdec_caps_create_and_set):
+	Remove endianness-flipping hack that seems to have been required
+	only because of a bug in ffmpegcolorspace.
+	Partially Fixes: #451908
+
 2007-07-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/Makefile.am:
