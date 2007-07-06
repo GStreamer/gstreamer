@@ -266,6 +266,28 @@ static PixFmtInfo pix_fmt_info[PIX_FMT_NB] = {
         /* .y_chroma_shift = */ 0,
         /* .depth          = */ 8,
       },
+  /* [PIX_FMT_ARGB32] = */ {
+        /* .format         = */ PIX_FMT_ARGB32,
+        /* .name           = */ "argb32",
+        /* .nb_channels    = */ 4,
+        /* .color_type     = */ FF_COLOR_RGB,
+        /* .pixel_type     = */ FF_PIXEL_PACKED,
+        /* .is_alpha       = */ 1,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth          = */ 8,
+      },
+  /* [PIX_FMT_ABGR32] = */ {
+        /* .format         = */ PIX_FMT_ABGR32,
+        /* .name           = */ "abgr32",
+        /* .nb_channels    = */ 4,
+        /* .color_type     = */ FF_COLOR_RGB,
+        /* .pixel_type     = */ FF_PIXEL_PACKED,
+        /* .is_alpha       = */ 1,
+        /* .x_chroma_shift = */ 0,
+        /* .y_chroma_shift = */ 0,
+        /* .depth          = */ 8,
+      },
   /* [PIX_FMT_RGB565] = */ {
         /* .format         = */ PIX_FMT_RGB565,
         /* .name           = */ "rgb565",
@@ -1796,6 +1818,68 @@ bitcopy_n (unsigned int a, int n)
 
 #include "imgconvert_template.h"
 
+/* argb32 handling */
+
+#define RGB_NAME argb32
+#define FMT_ARGB32
+
+#define RGB_IN(r, g, b, s)\
+{\
+    unsigned int v = ((const uint32_t *)(s))[0];\
+    r = (v >> 24) & 0xff;\
+    g = (v >> 16) & 0xff;\
+    b = (v >> 8) & 0xff;\
+}
+
+#define RGBA_IN(r, g, b, a, s)\
+{\
+    unsigned int v = ((const uint32_t *)(s))[0];\
+    r = (v >> 24) & 0xff;\
+    g = (v >> 16) & 0xff;\
+    b = (v >> 8) & 0xff;\
+    a = v & 0xff;\
+}
+
+#define RGBA_OUT(d, r, g, b, a)\
+{\
+    ((uint32_t *)(d))[0] = (r << 24) | (g << 16) | (b << 8) | a;\
+}
+
+#define BPP 4
+
+#include "imgconvert_template.h"
+
+/* abgr32 handling */
+
+#define RGB_NAME abgr32
+#define FMT_ABGR32
+
+#define RGB_IN(r, g, b, s)\
+{\
+    unsigned int v = ((const uint32_t *)(s))[0];\
+    r = v & 0xff;\
+    g = (v >> 8) & 0xff;\
+    b = (v >> 16) & 0xff;\
+}
+
+#define RGBA_IN(r, g, b, a, s)\
+{\
+    unsigned int v = ((const uint32_t *)(s))[0];\
+    r = v & 0xff;\
+    g = (v >> 8) & 0xff;\
+    b = (v >> 16) & 0xff;\
+    a = (v >> 24) & 0xff;\
+}
+
+#define RGBA_OUT(d, r, g, b, a)\
+{\
+    ((uint32_t *)(d))[0] = r | (g << 8) | (b << 16) | (a << 24 );\
+}
+
+#define BPP 4
+
+#include "imgconvert_template.h"
+
 static void
 mono_to_gray (AVPicture * dst, const AVPicture * src,
     int width, int height, int xor_mask)
@@ -1948,6 +2032,8 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_YUV420P, PIX_FMT_BGRx32, yuv420p_to_bgrx32},
   {PIX_FMT_YUV420P, PIX_FMT_RGBA32, yuv420p_to_rgba32},
   {PIX_FMT_YUV420P, PIX_FMT_BGRA32, yuv420p_to_bgra32},
+  {PIX_FMT_YUV420P, PIX_FMT_ARGB32, yuv420p_to_argb32},
+  {PIX_FMT_YUV420P, PIX_FMT_ABGR32, yuv420p_to_abgr32},
 
   {PIX_FMT_YUV422P, PIX_FMT_YUV422, yuv422p_to_yuv422},
   {PIX_FMT_YUV422P, PIX_FMT_UYVY422, yuv422p_to_uyvy422},
@@ -1964,6 +2050,8 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_YUVJ420P, PIX_FMT_BGR32, yuvj420p_to_bgrx32},
   {PIX_FMT_YUVJ420P, PIX_FMT_RGBA32, yuvj420p_to_rgba32},
   {PIX_FMT_YUVJ420P, PIX_FMT_BGRA32, yuvj420p_to_bgra32},
+  {PIX_FMT_YUVJ420P, PIX_FMT_ARGB32, yuvj420p_to_argb32},
+  {PIX_FMT_YUVJ420P, PIX_FMT_ABGR32, yuvj420p_to_abgr32},
 
   {PIX_FMT_YUVJ444P, PIX_FMT_RGB24, yuvj444p_to_rgb24},
 
@@ -1983,6 +2071,8 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_RGB24, PIX_FMT_RGBA32, rgb24_to_rgba32},
   {PIX_FMT_RGB24, PIX_FMT_BGR24, rgb24_to_bgr24},
   {PIX_FMT_RGB24, PIX_FMT_BGRA32, rgb24_to_bgra32},
+  {PIX_FMT_RGB24, PIX_FMT_ARGB32, rgb24_to_argb32},
+  {PIX_FMT_RGB24, PIX_FMT_ABGR32, rgb24_to_abgr32},
   {PIX_FMT_RGB24, PIX_FMT_GRAY8, rgb24_to_gray},
   {PIX_FMT_RGB24, PIX_FMT_PAL8, rgb24_to_pal8},
   {PIX_FMT_RGB24, PIX_FMT_YUV444P, rgb24_to_yuv444p},
@@ -2002,15 +2092,17 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_xRGB32, PIX_FMT_GRAY8, xrgb32_to_gray},
 
   {PIX_FMT_RGBA32, PIX_FMT_BGRA32, rgba32_to_bgra32},
+  {PIX_FMT_RGBA32, PIX_FMT_ABGR32, rgba32_to_abgr32},
+  {PIX_FMT_RGBA32, PIX_FMT_ARGB32, rgba32_to_argb32},
   {PIX_FMT_RGBA32, PIX_FMT_BGR32, rgba32_to_bgr32},
   {PIX_FMT_RGBA32, PIX_FMT_BGRx32, rgba32_to_bgrx32},
+  {PIX_FMT_RGBA32, PIX_FMT_ABGR32, rgba32_to_abgr32},
   {PIX_FMT_RGBA32, PIX_FMT_RGB24, rgba32_to_rgb24},
   {PIX_FMT_RGBA32, PIX_FMT_RGB555, rgba32_to_rgb555},
   {PIX_FMT_RGBA32, PIX_FMT_PAL8, rgba32_to_pal8},
   {PIX_FMT_RGBA32, PIX_FMT_YUV420P, rgba32_to_yuv420p},
   {PIX_FMT_RGBA32, PIX_FMT_GRAY8, rgba32_to_gray},
   {PIX_FMT_RGBA32, PIX_FMT_AYUV4444, rgba32_to_ayuv4444},
-  {PIX_FMT_BGRA32, PIX_FMT_AYUV4444, bgra32_to_ayuv4444},
 
   {PIX_FMT_BGR24, PIX_FMT_RGB24, bgr24_to_rgb24},
   {PIX_FMT_BGR24, PIX_FMT_YUV420P, bgr24_to_yuv420p},
@@ -2030,6 +2122,17 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_BGRA32, PIX_FMT_RGBA32, bgra32_to_rgba32},
   {PIX_FMT_BGRA32, PIX_FMT_YUV420P, bgra32_to_yuv420p},
   {PIX_FMT_BGRA32, PIX_FMT_GRAY8, bgra32_to_gray},
+  {PIX_FMT_BGRA32, PIX_FMT_AYUV4444, bgra32_to_ayuv4444},
+
+  {PIX_FMT_ABGR32, PIX_FMT_RGB24, abgr32_to_rgb24},
+  {PIX_FMT_ABGR32, PIX_FMT_RGBA32, abgr32_to_rgba32},
+  {PIX_FMT_ABGR32, PIX_FMT_YUV420P, abgr32_to_yuv420p},
+  {PIX_FMT_ABGR32, PIX_FMT_GRAY8, abgr32_to_gray},
+
+  {PIX_FMT_ARGB32, PIX_FMT_RGB24, argb32_to_rgb24},
+  {PIX_FMT_ARGB32, PIX_FMT_RGBA32, argb32_to_rgba32},
+  {PIX_FMT_ARGB32, PIX_FMT_YUV420P, argb32_to_yuv420p},
+  {PIX_FMT_ARGB32, PIX_FMT_GRAY8, argb32_to_gray},
 
   {PIX_FMT_RGB555, PIX_FMT_RGB24, rgb555_to_rgb24},
   {PIX_FMT_RGB555, PIX_FMT_RGB32, rgb555_to_rgba32},
@@ -2051,6 +2154,8 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_GRAY8, PIX_FMT_BGRx32, gray_to_bgrx32},
   {PIX_FMT_GRAY8, PIX_FMT_RGBA32, gray_to_rgba32},
   {PIX_FMT_GRAY8, PIX_FMT_BGRA32, gray_to_bgra32},
+  {PIX_FMT_GRAY8, PIX_FMT_ARGB32, gray_to_argb32},
+  {PIX_FMT_GRAY8, PIX_FMT_ABGR32, gray_to_abgr32},
   {PIX_FMT_GRAY8, PIX_FMT_MONOWHITE, gray_to_monowhite},
   {PIX_FMT_GRAY8, PIX_FMT_MONOBLACK, gray_to_monoblack},
 
@@ -2068,6 +2173,8 @@ static ConvertEntry convert_table[] = {
   {PIX_FMT_PAL8, PIX_FMT_BGRx32, pal8_to_bgrx32},
   {PIX_FMT_PAL8, PIX_FMT_RGBA32, pal8_to_rgba32},
   {PIX_FMT_PAL8, PIX_FMT_BGRA32, pal8_to_bgra32},
+  {PIX_FMT_PAL8, PIX_FMT_ARGB32, pal8_to_argb32},
+  {PIX_FMT_PAL8, PIX_FMT_ABGR32, pal8_to_abgr32},
 
   {PIX_FMT_UYVY411, PIX_FMT_YUV411P, uyvy411_to_yuv411p},
 
@@ -2417,6 +2524,12 @@ img_get_alpha_info (const AVPicture * src, int pix_fmt, int width, int height)
       break;
     case PIX_FMT_BGRA32:
       ret = get_alpha_info_bgra32 (src, width, height);
+      break;
+    case PIX_FMT_ARGB32:
+      ret = get_alpha_info_argb32 (src, width, height);
+      break;
+    case PIX_FMT_ABGR32:
+      ret = get_alpha_info_abgr32 (src, width, height);
       break;
     case PIX_FMT_RGB555:
       ret = get_alpha_info_rgb555 (src, width, height);

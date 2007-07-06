@@ -287,6 +287,38 @@ gst_ffmpeg_pixfmt_to_caps (enum PixelFormat pix_fmt, AVCodecContext * context)
       a_mask = 0xff000000;
 #endif
       break;
+    case PIX_FMT_ARGB32:
+      bpp = 32;
+      depth = 32;
+      endianness = G_BIG_ENDIAN;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+      r_mask = 0xff000000;
+      g_mask = 0x00ff0000;
+      b_mask = 0x0000ff00;
+      a_mask = 0x000000ff;
+#else
+      r_mask = 0x000000ff;
+      g_mask = 0x0000ff00;
+      b_mask = 0x00ff0000;
+      a_mask = 0xff000000;
+#endif
+      break;
+    case PIX_FMT_ABGR32:
+      bpp = 32;
+      depth = 32;
+      endianness = G_BIG_ENDIAN;
+#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+      r_mask = 0x000000ff;
+      g_mask = 0x0000ff00;
+      b_mask = 0x00ff0000;
+      a_mask = 0xff000000;
+#else
+      r_mask = 0xff000000;
+      g_mask = 0x00ff0000;
+      b_mask = 0x0000ff00;
+      a_mask = 0x000000ff;
+#endif
+      break;
     case PIX_FMT_YUV410P:
       fmt = GST_MAKE_FOURCC ('Y', 'U', 'V', '9');
       break;
@@ -595,40 +627,43 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
             if (gst_structure_get_int (structure, "alpha_mask", &amask)) {
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
               if (rmask == 0x0000ff00)
+                context->pix_fmt = PIX_FMT_BGRA32;
+              else if (rmask == 0x00ff0000)
+                context->pix_fmt = PIX_FMT_RGBA32;
+              else if (rmask == 0xff000000)
+                context->pix_fmt = PIX_FMT_ARGB32;
+              else              // if (r_mask = 0x000000ff)
+                context->pix_fmt = PIX_FMT_ABGR32;
 #else
               if (rmask == 0x00ff0000)
-#endif
                 context->pix_fmt = PIX_FMT_BGRA32;
-              else
+              else if (rmask == 0x00ff0000)
                 context->pix_fmt = PIX_FMT_RGBA32;
+              else if (rmask == 0x000000ff)
+                context->pix_fmt = PIX_FMT_ARGB32;
+              else              // if (rmask == 0xff000000)
+                context->pix_fmt = PIX_FMT_ABGR32;
+#endif
             } else {
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
               if (rmask == 0x00ff0000)
-#else
-              if (rmask == 0x0000ff00)
-#endif
                 context->pix_fmt = PIX_FMT_RGB32;
-
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
+              elseif (rmask == 0x0000ff00)
+                  context->pix_fmt = PIX_FMT_BGR32;
+              elseif (rmask == 0xff000000)
+                  context->pix_fmt = PIX_FMT_xRGB32;
+              else              // if (rmask == 0x000000ff)
+              context->pix_fmt = PIX_FMT_BGRx32;
+#else
               if (rmask == 0x0000ff00)
-#else
-              if (rmask == 0x00ff0000)
-#endif
+                context->pix_fmt = PIX_FMT_RGB32;
+              else if (rmask == 0x00ff0000)
                 context->pix_fmt = PIX_FMT_BGR32;
-
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-              if (rmask == 0xff000000)
-#else
-              if (rmask == 0x000000ff)
-#endif
+              else if (rmask == 0x000000ff)
                 context->pix_fmt = PIX_FMT_xRGB32;
-
-#if (G_BYTE_ORDER == G_BIG_ENDIAN)
-              if (rmask == 0x000000ff)
-#else
-              if (rmask == 0xff000000)
-#endif
+              else              // if (rmask == 0xff000000)
                 context->pix_fmt = PIX_FMT_BGRx32;
+#endif
             }
             break;
           case 24:
@@ -776,8 +811,10 @@ gst_ffmpegcsp_avpicture_fill (AVPicture * picture,
     case PIX_FMT_AYUV4444:
     case PIX_FMT_RGB32:
     case PIX_FMT_RGBA32:
+    case PIX_FMT_ARGB32:
     case PIX_FMT_BGR32:
     case PIX_FMT_BGRA32:
+    case PIX_FMT_ABGR32:
     case PIX_FMT_xRGB32:
     case PIX_FMT_BGRx32:
       stride = width * 4;
