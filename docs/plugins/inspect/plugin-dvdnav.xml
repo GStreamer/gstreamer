@@ -1,0 +1,28 @@
+<plugin>
+  <name>dvdnav</name>
+  <description>Access a DVD with navigation features using libdvdnav</description>
+  <filename>../../ext/dvdnav/.libs/libgstdvdnav.so</filename>
+  <basename>libgstdvdnav.so</basename>
+  <version>0.10.6.1</version>
+  <license>GPL</license>
+  <source>gst-plugins-ugly</source>
+  <package>GStreamer Ugly Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dvdnavsrc</name>
+      <longname>DVD Source</longname>
+      <class>Source/File/DVD</class>
+      <description>Access a DVD with navigation features using libdvdnav</description>
+      <author>David I. Lehn &lt;dlehn@users.sourceforge.net&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)1, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

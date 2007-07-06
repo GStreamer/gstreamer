@@ -1,3 +1,12 @@
+2007-07-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/plugins/inspect/plugin-dvdnav.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-synaesthesia.xml:
+	  Add inspect file for synaesthesia so the docs can be built even if
+	  the plugin isn't built yet. Fixes #454311. Also add inspect files
+	  for dvdnavsrc and realmedia.
+
 2007-07-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/Makefile.am:
