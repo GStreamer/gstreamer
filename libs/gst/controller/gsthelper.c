@@ -148,7 +148,6 @@ gst_object_set_controller (GObject * object, GstController * controller)
  /**
  * gst_object_suggest_next_sync:
  * @object: the object that has controlled properties
- * @timestamp: the time that should be processed
  *
  * Convenience function for GObject
  *
@@ -190,6 +189,61 @@ gst_object_sync_values (GObject * object, GstClockTime timestamp)
     return gst_controller_sync_values (ctrl, timestamp);
   }
   return (FALSE);
+}
+
+/**
+ * gst_object_set_control_source:
+ * @object: the controller object
+ * @property_name: name of the property for which the #GstControlSource should be set
+ * @csource: the #GstControlSource that should be used for the property
+ *
+ * Sets the #GstControlSource for @property_name. If there already was a #GstControlSource
+ * for this property it will be unreferenced.
+ *
+ * Returns: %FALSE if the given property isn't handled by the controller or the new #GstControlSource
+ * couldn't be bound to the property, %TRUE if everything worked as expected.
+ *
+ * Since: 0.10.14
+ */
+gboolean
+gst_object_set_control_source (GObject * object, gchar * property_name,
+    GstControlSource * csource)
+{
+  GstController *ctrl = NULL;
+
+  g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
+  g_return_val_if_fail (GST_IS_CONTROL_SOURCE (csource), FALSE);
+
+  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+    return gst_controller_set_control_source (ctrl, property_name, csource);
+  }
+  return FALSE;
+}
+
+/**
+ * gst_object_get_control_source:
+ * @object: the object
+ * @property_name: name of the property for which the #GstControlSource should be get
+ *
+ * Gets the corresponding #GstControlSource for the property. This should be unreferenced
+ * again after use.
+ *
+ * Returns: the #GstControlSource for @property_name or NULL if the property is not
+ * controlled by this controller or no #GstControlSource was assigned yet.
+ *
+ * Since: 0.10.14
+ */
+GstControlSource *
+gst_object_get_control_source (GObject * object, gchar * property_name)
+{
+  GstController *ctrl = NULL;
+
+  g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
+
+  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+    return gst_controller_get_control_source (ctrl, property_name);
+  }
+  return FALSE;
 }
 
 /**

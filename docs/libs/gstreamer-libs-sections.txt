@@ -59,7 +59,6 @@ gst_dp_version_get_type
 <TITLE>GstController</TITLE>
 <INCLUDE>gst/controller/gstcontroller.h</INCLUDE>
 GstController
-GstInterpolateMode
 gst_controller_init
 gst_controller_new
 gst_controller_new_list
@@ -67,16 +66,20 @@ gst_controller_new_valist
 gst_controller_remove_properties
 gst_controller_remove_properties_list
 gst_controller_remove_properties_valist
+gst_controller_set_disabled
+gst_controller_set_property_disabled
+gst_controller_suggest_next_sync
+gst_controller_sync_values
+gst_controller_get_control_source
+gst_controller_set_control_source
+gst_controller_get
+gst_controller_get_value_arrays
+gst_controller_get_value_array
 gst_controller_set
 gst_controller_set_from_list
 gst_controller_unset
 gst_controller_unset_all
-gst_controller_get
 gst_controller_get_all
-gst_controller_suggest_next_sync
-gst_controller_sync_values
-gst_controller_get_value_arrays
-gst_controller_get_value_array
 gst_controller_set_interpolation_mode
 GST_PARAM_CONTROLLABLE
 <SUBSECTION Standard>
@@ -89,10 +92,60 @@ GST_IS_CONTROLLER_CLASS
 GST_CONTROLLER_GET_CLASS
 GST_TYPE_CONTROLLER
 <SUBSECTION Private>
-InterpolateGet
-InterpolateGetValueArray
 GST_CONTROLLED_PROPERTY
 gst_controller_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstcontrolsource</FILE>
+<TITLE>GstControlSource</TITLE>
+<INCLUDE>libs/controller/gstcontrolsource.h</INCLUDE>
+GstControlSource
+GstControlSourceClass
+GstControlSourceBind
+GstControlSourceGetValue
+GstControlSourceGetValueArray
+GstTimedValue
+GstValueArray
+gst_control_source_bind
+gst_control_source_get_value
+gst_control_source_get_value_array
+<SUBSECTION Standard>
+GST_CONTROL_SOURCE
+GST_IS_CONTROL_SOURCE
+GST_CONTROL_SOURCE_CLASS
+GST_IS_CONTROL_SOURCE_CLASS
+GST_CONTROL_SOURCE_GET_CLASS
+GST_TYPE_CONTROL_SOURCE
+<SUBSECTION Private>
+gst_control_source_get_type
+</SECTION>
+
+<SECTION>
+<FILE>gstinterpolationcontrolsource</FILE>
+<TITLE>GstInterpolationControlSource</TITLE>
+<INCLUDE>libs/controller/gstinterpolationcontrolsource.h</INCLUDE>
+GstInterpolationControlSource
+GstInterpolateMode
+gst_interpolation_control_source_new
+gst_interpolation_control_source_set
+gst_interpolation_control_source_set_from_list
+gst_interpolation_control_source_set_interpolation_mode
+gst_interpolation_control_source_get_all
+gst_interpolation_control_source_unset
+gst_interpolation_control_source_unset_all
+gst_interpolation_control_source_get_count
+<SUBSECTION Standard>
+GstInterpolationControlSourceClass
+GstInterpolationControlSourcePrivate
+GST_INTERPOLATION_CONTROL_SOURCE
+GST_IS_INTERPOLATION_CONTROL_SOURCE
+GST_INTERPOLATION_CONTROL_SOURCE_CLASS
+GST_IS_INTERPOLATION_CONTROL_SOURCE_CLASS
+GST_INTERPOLATION_CONTROL_SOURCE_GET_CLASS
+GST_TYPE_INTERPOLATION_CONTROL_SOURCE
+<SUBSECTION Private>
+gst_interpolation_control_source_get_type
 </SECTION>
 
 <SECTION>
@@ -105,6 +158,8 @@ gst_object_get_controller
 gst_object_set_controller
 gst_object_suggest_next_sync
 gst_object_sync_values
+gst_object_get_control_source
+gst_object_set_control_source
 gst_object_get_value_arrays
 gst_object_get_value_array
 gst_object_get_control_rate
@@ -112,7 +167,6 @@ gst_object_set_control_rate
 <SUBSECTION Standard>
 <SUBSECTION Private>
 </SECTION>
-
 
 # base classes
 

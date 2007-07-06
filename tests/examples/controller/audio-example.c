@@ -9,6 +9,7 @@
 
 #include <gst/gst.h>
 #include <gst/controller/gstcontroller.h>
+#include <gst/controller/gstinterpolationcontrolsource.h>
 
 gint
 main (gint argc, gchar ** argv)
@@ -17,6 +18,7 @@ main (gint argc, gchar ** argv)
   GstElement *src, *sink;
   GstElement *bin;
   GstController *ctrl;
+  GstInterpolationControlSource *csource1, *csource2;
   GstClock *clock;
   GstClockID clock_id;
   GstClockReturn wait_ret;
@@ -46,23 +48,38 @@ main (gint argc, gchar ** argv)
     goto Error;
   }
 
-  /* set interpolation */
-  gst_controller_set_interpolation_mode (ctrl, "volume",
+  csource1 = gst_interpolation_control_source_new ();
+  csource2 = gst_interpolation_control_source_new ();
+
+  gst_controller_set_control_source (ctrl, "volume",
+      GST_CONTROL_SOURCE (csource1));
+  gst_controller_set_control_source (ctrl, "freq",
+      GST_CONTROL_SOURCE (csource2));
+
+  /* Set interpolation mode */
+
+  gst_interpolation_control_source_set_interpolation_mode (csource1,
       GST_INTERPOLATE_LINEAR);
-  gst_controller_set_interpolation_mode (ctrl, "freq", GST_INTERPOLATE_LINEAR);
+  gst_interpolation_control_source_set_interpolation_mode (csource2,
+      GST_INTERPOLATE_LINEAR);
 
   /* set control values */
   g_value_init (&vol, G_TYPE_DOUBLE);
   g_value_set_double (&vol, 0.0);
-  gst_controller_set (ctrl, "volume", 0 * GST_SECOND, &vol);
+  gst_interpolation_control_source_set (csource1, 0 * GST_SECOND, &vol);
   g_value_set_double (&vol, 1.0);
-  gst_controller_set (ctrl, "volume", 5 * GST_SECOND, &vol);
+  gst_interpolation_control_source_set (csource1, 5 * GST_SECOND, &vol);
+
+  g_object_unref (csource1);
+
   g_value_set_double (&vol, 220.0);
-  gst_controller_set (ctrl, "freq", 0 * GST_SECOND, &vol);
+  gst_interpolation_control_source_set (csource2, 0 * GST_SECOND, &vol);
   g_value_set_double (&vol, 3520.0);
-  gst_controller_set (ctrl, "freq", 3 * GST_SECOND, &vol);
+  gst_interpolation_control_source_set (csource2, 3 * GST_SECOND, &vol);
   g_value_set_double (&vol, 440.0);
-  gst_controller_set (ctrl, "freq", 6 * GST_SECOND, &vol);
+  gst_interpolation_control_source_set (csource2, 6 * GST_SECOND, &vol);
+
+  g_object_unref (csource2);
 
   clock_id =
       gst_clock_new_single_shot_id (clock,

@@ -2,6 +2,10 @@
 
 #include <gst/controller/gstcontroller.h>
 gst_controller_get_type
+#include <gst/controller/gstcontrolsource.h>
+gst_control_source_get_type
+#include <gst/controller/gstinterpolationcontrolsource.h>
+gst_interpolation_control_source_get_type
 
 #include <gst/base/gstadapter.h>
 gst_adapter_get_type

@@ -17,6 +17,8 @@
 <!ENTITY GstCheckBufferStraw SYSTEM "xml/gstcheckbufferstraw.xml">
 
 <!ENTITY GstController SYSTEM "xml/gstcontroller.xml">
+<!ENTITY GstControlSource SYSTEM "xml/gstcontrolsource.xml">
+<!ENTITY GstInterpolationControlSource SYSTEM "xml/gstinterpolationcontrolsource.xml">
 <!ENTITY GstControllerGObject SYSTEM "xml/gstcontrollergobject.xml">
 <!ENTITY GstDataProtocol SYSTEM "xml/gstdataprotocol.xml">
 
@@ -66,6 +68,8 @@
     <chapter id="gstreamer-control">
       <title>GStreamer Dynamic Parameter Control</title>
       &GstController;
+      &GstControlSource;
+      &GstInterpolationControlSource;
       &GstControllerGObject;
     </chapter>
 

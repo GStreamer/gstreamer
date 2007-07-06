@@ -53,13 +53,15 @@
  *     controller = g_object_control_properties(object, "prop1", "prop2",...);
  *   </para></listitem>
  *   <listitem><para>
- *     set how the controller will smooth inbetween values.
- *     gst_controller_set_interpolation_mode(controller,"prop1",mode);
+ *     Get a #GstControlSource for the property and set it up.
+ *     csource = gst_interpolation_control_source_new ();
+ *     gst_interpolation_control_source_set_interpolation_mode(csource, mode);
+ *     gst_interpolation_control_source_set (csource,0 * GST_SECOND, value1);
+ *     gst_interpolation_control_source_set (csource,1 * GST_SECOND, value2);
  *   </para></listitem>
  *   <listitem><para>
- *     set key values
- *     gst_controller_set (controller, "prop1" ,0 * GST_SECOND, value1);
- *     gst_controller_set (controller, "prop1" ,1 * GST_SECOND, value2);
+ *     Set the #GstControlSource in the controller.
+ *     gst_controller_set_control_source (controller, "prop1", csource);
  *   </para></listitem>
  *   <listitem><para>
  *     start your pipeline
@@ -70,8 +72,11 @@
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
 #endif
-#include "gstcontrollerprivate.h"
+
 #include "gstcontroller.h"
+#include "gstcontrollerprivate.h"
+#include "gstcontrolsource.h"
+#include "gstinterpolationcontrolsource.h"
 
 #define GST_CAT_DEFAULT gst_controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
@@ -91,188 +96,20 @@ struct _GstControllerPrivate
   GstClockTime last_sync;
 };
 
-/* imports from gst-interpolation.c */
-
-extern GList
-    * gst_controlled_property_find_control_point_node (GstControlledProperty *
-    prop, GstClockTime timestamp);
-extern GstInterpolateMethod *interpolation_methods[];
-extern guint num_interpolation_methods;
-
-/* callbacks */
-
-void
-on_object_controlled_property_changed (const GObject * object, GParamSpec * arg,
-    gpointer user_data)
-{
-  GstControlledProperty *prop = GST_CONTROLLED_PROPERTY (user_data);
-  GstController *ctrl;
-
-  GST_LOG ("notify for '%s'", prop->name);
-
-  ctrl = g_object_get_qdata (G_OBJECT (object), __gst_controller_key);
-  g_return_if_fail (ctrl);
-
-  if (g_mutex_trylock (ctrl->lock)) {
-    if (!G_IS_VALUE (&prop->live_value.value)) {
-      g_value_init (&prop->live_value.value, prop->type);
-    }
-    g_object_get_property (G_OBJECT (object), prop->name,
-        &prop->live_value.value);
-    prop->live_value.timestamp = prop->last_value.timestamp;
-    g_mutex_unlock (ctrl->lock);
-    GST_DEBUG ("-> is live update : ts=%" G_GUINT64_FORMAT,
-        prop->live_value.timestamp);
-  }
-}
-
 /* helper */
 
-/*
- * gst_control_point_compare:
- * @p1: a pointer to a #GstControlPoint
- * @p2: a pointer to a #GstControlPoint
- *
- * Compare function for g_list operations that operates on two #GstControlPoint
- * parameters.
- */
-static gint
-gst_control_point_compare (gconstpointer p1, gconstpointer p2)
-{
-  GstClockTime ct1 = ((GstControlPoint *) p1)->timestamp;
-  GstClockTime ct2 = ((GstControlPoint *) p2)->timestamp;
-
-  return ((ct1 < ct2) ? -1 : ((ct1 == ct2) ? 0 : 1));
-/* this does not produce an gint :(
-  return ((ct1 - ct2));
-*/
-}
-
-/*
- * gst_control_point_find:
- * @p1: a pointer to a #GstControlPoint
- * @p2: a pointer to a #GstClockTime
- *
- * Compare function for g_list operations that operates on a #GstControlPoint and
- * a #GstClockTime.
- */
-static gint
-gst_control_point_find (gconstpointer p1, gconstpointer p2)
-{
-  GstClockTime ct1 = ((GstControlPoint *) p1)->timestamp;
-  GstClockTime ct2 = *(GstClockTime *) p2;
-
-  return ((ct1 < ct2) ? -1 : ((ct1 == ct2) ? 0 : 1));
-/* this does not produce an gint :(
-  return ((ct1 - ct2));
-*/
-}
-
-/*
- * gst_controlled_property_set_interpolation_mode:
- * @self: the controlled property object to change
- * @mode: the new interpolation mode
- *
- * Sets the given Interpolation mode for the controlled property and activates
- * the respective interpolation hooks.
- *
- * Returns: %TRUE for success
- */
-static gboolean
-gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
-    GstInterpolateMode mode)
-{
-  gboolean res = TRUE;
-
-  if (mode >= num_interpolation_methods || interpolation_methods[mode] == NULL) {
-    GST_WARNING ("interpolation mode %d invalid or not implemented yet", mode);
-    return FALSE;
-  }
-
-  self->interpolation = mode;
-  if (mode != GST_INTERPOLATE_USER) {
-    switch (self->base) {
-      case G_TYPE_INT:
-        self->get = interpolation_methods[mode]->get_int;
-        self->get_value_array =
-            interpolation_methods[mode]->get_int_value_array;
-        break;
-      case G_TYPE_UINT:
-        self->get = interpolation_methods[mode]->get_uint;
-        self->get_value_array =
-            interpolation_methods[mode]->get_uint_value_array;
-        break;
-      case G_TYPE_LONG:
-        self->get = interpolation_methods[mode]->get_long;
-        self->get_value_array =
-            interpolation_methods[mode]->get_long_value_array;
-        break;
-      case G_TYPE_ULONG:
-        self->get = interpolation_methods[mode]->get_ulong;
-        self->get_value_array =
-            interpolation_methods[mode]->get_ulong_value_array;
-        break;
-      case G_TYPE_FLOAT:
-        self->get = interpolation_methods[mode]->get_float;
-        self->get_value_array =
-            interpolation_methods[mode]->get_float_value_array;
-        break;
-      case G_TYPE_DOUBLE:
-        self->get = interpolation_methods[mode]->get_double;
-        self->get_value_array =
-            interpolation_methods[mode]->get_double_value_array;
-        break;
-      case G_TYPE_BOOLEAN:
-        self->get = interpolation_methods[mode]->get_boolean;
-        self->get_value_array =
-            interpolation_methods[mode]->get_boolean_value_array;
-        break;
-      case G_TYPE_ENUM:
-        self->get = interpolation_methods[mode]->get_enum;
-        self->get_value_array =
-            interpolation_methods[mode]->get_enum_value_array;
-        break;
-      case G_TYPE_STRING:
-        self->get = interpolation_methods[mode]->get_string;
-        self->get_value_array =
-            interpolation_methods[mode]->get_string_value_array;
-        break;
-      default:
-        self->get = NULL;
-        self->get_value_array = NULL;
-    }
-    if (!self->get || !self->get_value_array) {
-      GST_WARNING ("incomplete implementation for type %lu/%lu:'%s'/'%s'",
-          self->type, self->base,
-          g_type_name (self->type), g_type_name (self->base));
-      res = FALSE;
-    }
-    if (mode == GST_INTERPOLATE_QUADRATIC) {
-      GST_WARNING ("Quadratic interpolation mode is deprecated, using cubic"
-          "interpolation mode");
-    }
-  } else {
-    /* TODO shouldn't this also get a GstInterpolateMethod *user_method
-       for the case mode==GST_INTERPOLATE_USER
-     */
-    res = FALSE;
-  }
-
-  self->valid_cache = FALSE;
-
-  return (res);
-}
-
 static void
-gst_controlled_property_prepend_default (GstControlledProperty * prop)
+gst_controlled_property_add_interpolation_control_source (GstControlledProperty
+    * self)
 {
-  GstControlPoint *cp = g_new0 (GstControlPoint, 1);
+  GstControlSource *csource =
+      GST_CONTROL_SOURCE (gst_interpolation_control_source_new ());
 
-  cp->timestamp = 0;
-  g_value_init (&cp->value, prop->type);
-  g_value_copy (&prop->default_value, &cp->value);
-  prop->values = g_list_prepend (prop->values, cp);
-  prop->nvalues++;
+  GST_INFO
+      ("Adding a GstInterpolationControlSource because of backward compatibility");
+  g_return_if_fail (!self->csource);
+  gst_control_source_bind (GST_CONTROL_SOURCE (csource), self->pspec);
+  self->csource = csource;
 }
 
 /*
@@ -305,162 +142,19 @@ gst_controlled_property_new (GObject * object, const gchar * name)
     /* check if this param is not construct-only */
     g_return_val_if_fail (!(pspec->flags & G_PARAM_CONSTRUCT_ONLY), NULL);
 
-    /* TODO do sanity checks
-       we don't control some pspec->value_type:
-       G_TYPE_PARAM_BOXED
-       G_TYPE_PARAM_ENUM
-       G_TYPE_PARAM_FLAGS
-       G_TYPE_PARAM_OBJECT
-       G_TYPE_PARAM_PARAM
-       G_TYPE_PARAM_POINTER
-       G_TYPE_PARAM_STRING
-     */
-
     if ((prop = g_new0 (GstControlledProperty, 1))) {
-      gchar *signal_name;
-      GType base;
-
-      prop->name = pspec->name; /* so we don't use the same mem twice */
-      prop->type = G_PARAM_SPEC_VALUE_TYPE (pspec);
-      /* get the fundamental base type */
-      prop->base = prop->type;
-      while ((base = g_type_parent (prop->base))) {
-        prop->base = base;
-      }
-      /* initialize mode specific accessor callbacks */
-      if (!gst_controlled_property_set_interpolation_mode (prop,
-              GST_INTERPOLATE_NONE))
-        goto Error;
-      /* prepare our gvalues */
-      g_value_init (&prop->default_value, prop->type);
-      g_value_init (&prop->result_value, prop->type);
-      g_value_init (&prop->last_value.value, prop->type);
-      switch (prop->base) {
-        case G_TYPE_INT:{
-          GParamSpecInt *tpspec = G_PARAM_SPEC_INT (pspec);
-
-          g_value_set_int (&prop->default_value, tpspec->default_value);
-          g_value_init (&prop->min_value, prop->type);
-          g_value_set_int (&prop->min_value, tpspec->minimum);
-          g_value_init (&prop->max_value, prop->type);
-          g_value_set_int (&prop->max_value, tpspec->maximum);
-        }
-          break;
-        case G_TYPE_UINT:{
-          GParamSpecUInt *tpspec = G_PARAM_SPEC_UINT (pspec);
-
-          g_value_set_uint (&prop->default_value, tpspec->default_value);
-          g_value_init (&prop->min_value, prop->type);
-          g_value_set_uint (&prop->min_value, tpspec->minimum);
-          g_value_init (&prop->max_value, prop->type);
-          g_value_set_uint (&prop->max_value, tpspec->maximum);
-        }
-          break;
-        case G_TYPE_LONG:{
-          GParamSpecLong *tpspec = G_PARAM_SPEC_LONG (pspec);
-
-          g_value_set_long (&prop->default_value, tpspec->default_value);
-          g_value_init (&prop->min_value, prop->type);
-          g_value_set_long (&prop->min_value, tpspec->minimum);
-          g_value_init (&prop->max_value, prop->type);
-          g_value_set_long (&prop->max_value, tpspec->maximum);
-        }
-          break;
-        case G_TYPE_ULONG:{
-          GParamSpecULong *tpspec = G_PARAM_SPEC_ULONG (pspec);
-
-          g_value_set_ulong (&prop->default_value, tpspec->default_value);
-          g_value_init (&prop->min_value, prop->type);
-          g_value_set_ulong (&prop->min_value, tpspec->minimum);
-          g_value_init (&prop->max_value, prop->type);
-          g_value_set_ulong (&prop->max_value, tpspec->maximum);
-        }
-          break;
-        case G_TYPE_FLOAT:{
-          GParamSpecFloat *tpspec = G_PARAM_SPEC_FLOAT (pspec);
-
-          g_value_set_float (&prop->default_value, tpspec->default_value);
-          g_value_init (&prop->min_value, prop->type);
-          g_value_set_float (&prop->min_value, tpspec->minimum);
-          g_value_init (&prop->max_value, prop->type);
-          g_value_set_float (&prop->max_value, tpspec->maximum);
-        }
-          break;
-        case G_TYPE_DOUBLE:{
-          GParamSpecDouble *tpspec = G_PARAM_SPEC_DOUBLE (pspec);
-
-          g_value_set_double (&prop->default_value, tpspec->default_value);
-          g_value_init (&prop->min_value, prop->type);
-          g_value_set_double (&prop->min_value, tpspec->minimum);
-          g_value_init (&prop->max_value, prop->type);
-          g_value_set_double (&prop->max_value, tpspec->maximum);
-        }
-          break;
-        case G_TYPE_BOOLEAN:{
-          GParamSpecBoolean *tpspec = G_PARAM_SPEC_BOOLEAN (pspec);
-
-          g_value_set_boolean (&prop->default_value, tpspec->default_value);
-        }
-          break;
-        case G_TYPE_ENUM:{
-          GParamSpecEnum *tpspec = G_PARAM_SPEC_ENUM (pspec);
-
-          g_value_set_enum (&prop->default_value, tpspec->default_value);
-        }
-          break;
-        case G_TYPE_STRING:{
-          GParamSpecString *tpspec = G_PARAM_SPEC_STRING (pspec);
-
-          g_value_set_string (&prop->default_value, tpspec->default_value);
-        }
-          break;
-        default:
-          GST_WARNING ("incomplete implementation for paramspec type '%s'",
-              G_PARAM_SPEC_TYPE_NAME (pspec));
-      }
-
-      prop->valid_cache = FALSE;
-      prop->nvalues = 0;
-
-      /* Add a control point at timestamp 0 with the default value
-       * to make the life of interpolators easier. */
-      gst_controlled_property_prepend_default (prop);
-
-      signal_name = g_alloca (8 + 1 + strlen (name));
-      g_sprintf (signal_name, "notify::%s", name);
-      prop->notify_handler_id =
-          g_signal_connect (object, signal_name,
-          G_CALLBACK (on_object_controlled_property_changed), (gpointer) prop);
+      prop->pspec = pspec;
+      prop->name = pspec->name;
+      prop->disabled = FALSE;
     }
   } else {
     GST_WARNING ("class '%s' has no property '%s'", G_OBJECT_TYPE_NAME (object),
         name);
   }
-  return (prop);
-Error:
-  if (prop)
-    g_free (prop);
-  return (NULL);
+  return prop;
 }
 
 /*
- * gst_control_point_free:
- * @prop: the object to free
- *
- * Private method which frees all data allocated by a #GstControlPoint
- * instance.
- */
-static void
-gst_control_point_free (GstControlPoint * cp)
-{
-  g_return_if_fail (cp);
-
-  g_value_unset (&cp->value);
-  g_free (cp);
-}
-
-/*
-
  * gst_controlled_property_free:
  * @prop: the object to free
  *
@@ -470,20 +164,8 @@ gst_control_point_free (GstControlPoint * cp)
 static void
 gst_controlled_property_free (GstControlledProperty * prop)
 {
-  g_list_foreach (prop->values, (GFunc) gst_control_point_free, NULL);
-  g_list_free (prop->values);
-
-  g_value_unset (&prop->default_value);
-  g_value_unset (&prop->result_value);
-  g_value_unset (&prop->last_value.value);
-  if (G_IS_VALUE (&prop->live_value.value))
-    g_value_unset (&prop->live_value.value);
-
-  if (G_IS_VALUE (&prop->min_value))
-    g_value_unset (&prop->min_value);
-  if (G_IS_VALUE (&prop->max_value))
-    g_value_unset (&prop->max_value);
-
+  if (prop->csource)
+    g_object_unref (prop->csource);
   g_free (prop);
 }
 
@@ -507,12 +189,12 @@ gst_controller_find_controlled_property (GstController * self,
   for (node = self->properties; node; node = g_list_next (node)) {
     prop = node->data;
     if (!strcmp (prop->name, name)) {
-      return (prop);
+      return prop;
     }
   }
   GST_DEBUG ("controller does not (yet) manage property '%s'", name);
 
-  return (NULL);
+  return NULL;
 }
 
 /* methods */
@@ -537,17 +219,6 @@ gst_controller_new_valist (GObject * object, va_list var_args)
   g_return_val_if_fail (G_IS_OBJECT (object), NULL);
 
   GST_INFO ("setting up a new controller");
-
-  /* TODO should this method check if the given object implements GstParent and
-     if so instantiate a GstParentController ?
-
-     BilboEd: This is too specific to be put here, don't we want
-     GstController to be as generic as possible ?
-
-     Ensonic: So we will have gst_parent_controller_new as well and maybe a
-     convinience function that automatically chooses the right one (how to name it)?
-     GstParent will be in core after all.
-   */
 
   self = g_object_get_qdata (object, __gst_controller_key);
   /* create GstControlledProperty for each property */
@@ -585,7 +256,7 @@ gst_controller_new_valist (GObject * object, va_list var_args)
 
   if (self)
     GST_INFO ("controller->ref_count=%d", G_OBJECT (self)->ref_count);
-  return (self);
+  return self;
 }
 
 /**
@@ -646,7 +317,7 @@ gst_controller_new_list (GObject * object, GList * list)
 
   if (self)
     GST_INFO ("controller->ref_count=%d", G_OBJECT (self)->ref_count);
-  return (self);
+  return self;
 }
 
 /**
@@ -670,7 +341,7 @@ gst_controller_new (GObject * object, ...)
   self = gst_controller_new_valist (object, var_args);
   va_end (var_args);
 
-  return (self);
+  return self;
 }
 
 /**
@@ -696,7 +367,7 @@ gst_controller_remove_properties_valist (GstController * self, va_list var_args)
     g_mutex_lock (self->lock);
     if ((prop = gst_controller_find_controlled_property (self, name))) {
       self->properties = g_list_remove (self->properties, prop);
-      g_signal_handler_disconnect (self->object, prop->notify_handler_id);
+      //g_signal_handler_disconnect (self->object, prop->notify_handler_id);
       gst_controlled_property_free (prop);
     } else {
       res = FALSE;
@@ -704,7 +375,7 @@ gst_controller_remove_properties_valist (GstController * self, va_list var_args)
     g_mutex_unlock (self->lock);
   }
 
-  return (res);
+  return res;
 }
 
 /**
@@ -733,7 +404,7 @@ gst_controller_remove_properties_list (GstController * self, GList * list)
     g_mutex_lock (self->lock);
     if ((prop = gst_controller_find_controlled_property (self, name))) {
       self->properties = g_list_remove (self->properties, prop);
-      g_signal_handler_disconnect (self->object, prop->notify_handler_id);
+      //g_signal_handler_disconnect (self->object, prop->notify_handler_id);
       gst_controlled_property_free (prop);
     } else {
       res = FALSE;
@@ -741,7 +412,7 @@ gst_controller_remove_properties_list (GstController * self, GList * list)
     g_mutex_unlock (self->lock);
   }
 
-  return (res);
+  return res;
 }
 
 /**
@@ -765,210 +436,138 @@ gst_controller_remove_properties (GstController * self, ...)
   res = gst_controller_remove_properties_valist (self, var_args);
   va_end (var_args);
 
-  return (res);
-}
-
-static gboolean
-gst_controller_set_unlocked (GstController * self, GstControlledProperty * prop,
-    GstClockTime timestamp, GValue * value)
-{
-  gboolean res = FALSE;
-
-  if (G_VALUE_TYPE (value) == prop->type) {
-    GstControlPoint *cp;
-    GList *node;
-
-    /* check if a control point for the timestamp already exists */
-    if ((node = g_list_find_custom (prop->values, &timestamp,
-                gst_control_point_find))) {
-      cp = node->data;
-      g_value_reset (&cp->value);
-      g_value_copy (value, &cp->value);
-    } else {
-      /* create a new GstControlPoint */
-      cp = g_new0 (GstControlPoint, 1);
-      cp->timestamp = timestamp;
-      g_value_init (&cp->value, prop->type);
-      g_value_copy (value, &cp->value);
-      /* and sort it into the prop->values list */
-      prop->values =
-          g_list_insert_sorted (prop->values, cp, gst_control_point_compare);
-      prop->nvalues++;
-    }
-    prop->valid_cache = FALSE;
-    res = TRUE;
-  } else {
-    GST_WARNING ("incompatible value type for property '%s'", prop->name);
-  }
-
   return res;
 }
 
 /**
- * gst_controller_set:
- * @self: the controller object which handles the properties
- * @property_name: the name of the property to set
- * @timestamp: the time the control-change is schedules for
- * @value: the control-value
+ * gst_controller_set_property_disabled:
+ * @self: the #GstController which should be disabled
+ * @property_name: property to disable
+ * @disabled: boolean that specifies whether to disable the controller
+ * or not.
  *
- * Set the value of given controller-handled property at a certain time.
+ * This function is used to disable the #GstController on a property for
+ * some time, i.e. gst_controller_sync_values() will do nothing for the
+ * property.
  *
- * Returns: FALSE if the values couldn't be set (ex : properties not handled by controller), TRUE otherwise
+ * Since: 0.10.14
  */
-gboolean
-gst_controller_set (GstController * self, gchar * property_name,
-    GstClockTime timestamp, GValue * value)
+
+void
+gst_controller_set_property_disabled (GstController * self,
+    gchar * property_name, gboolean disabled)
 {
-  gboolean res = FALSE;
   GstControlledProperty *prop;
 
-  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
-  g_return_val_if_fail (property_name, FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
-  g_return_val_if_fail (G_IS_VALUE (value), FALSE);
+  g_return_if_fail (GST_IS_CONTROLLER (self));
+  g_return_if_fail (property_name);
 
   g_mutex_lock (self->lock);
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    res = gst_controller_set_unlocked (self, prop, timestamp, value);
+    prop->disabled = disabled;
   }
   g_mutex_unlock (self->lock);
+}
 
-  return (res);
+
+/**
+ * gst_controller_set_disabled:
+ * @self: the #GstController which should be disabled
+ * @disabled: boolean that specifies whether to disable the controller
+ * or not.
+ *
+ * This function is used to disable all properties of the #GstController
+ * for some time, i.e. gst_controller_sync_values() will do nothing.
+ *
+ * Since: 0.10.14
+ */
+
+void
+gst_controller_set_disabled (GstController * self, gboolean disabled)
+{
+  GList *node;
+  GstControlledProperty *prop;
+
+  g_return_if_fail (GST_IS_CONTROLLER (self));
+
+  g_mutex_lock (self->lock);
+  for (node = self->properties; node; node = node->next) {
+    prop = node->data;
+    prop->disabled = disabled;
+  }
+  g_mutex_unlock (self->lock);
 }
 
 /**
- * gst_controller_set_from_list:
- * @self: the controller object which handles the properties
- * @property_name: the name of the property to set
- * @timedvalues: a list with #GstTimedValue items
+ * gst_controller_set_control_source:
+ * @self: the controller object
+ * @property_name: name of the property for which the #GstControlSource should be set
+ * @csource: the #GstControlSource that should be used for the property
  *
- * Sets multiple timed values at once.
+ * Sets the #GstControlSource for @property_name. If there already was a #GstControlSource
+ * for this property it will be unreferenced.
  *
- * Returns: %FALSE if the values couldn't be set (ex : properties not handled by controller), %TRUE otherwise
+ * Returns: %FALSE if the given property isn't handled by the controller or the new #GstControlSource
+ * couldn't be bound to the property, %TRUE if everything worked as expected.
+ *
+ * Since: 0.10.14
  */
-
 gboolean
-gst_controller_set_from_list (GstController * self, gchar * property_name,
-    GSList * timedvalues)
+gst_controller_set_control_source (GstController * self, gchar * property_name,
+    GstControlSource * csource)
 {
-  gboolean res = FALSE;
   GstControlledProperty *prop;
-  GSList *node;
-  GstTimedValue *tv;
-
-  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
-  g_return_val_if_fail (property_name, FALSE);
+  gboolean ret = FALSE;
 
   g_mutex_lock (self->lock);
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    for (node = timedvalues; node; node = g_slist_next (node)) {
-      tv = node->data;
-      if (!GST_CLOCK_TIME_IS_VALID (tv->timestamp)) {
-        GST_WARNING ("GstTimedValued with invalid timestamp passed to %s "
-            "for property '%s'", GST_FUNCTION, property_name);
-      } else if (!G_IS_VALUE (&tv->value)) {
-        GST_WARNING ("GstTimedValued with invalid value passed to %s "
-            "for property '%s'", GST_FUNCTION, property_name);
-      } else {
-        res =
-            gst_controller_set_unlocked (self, prop, tv->timestamp, &tv->value);
-      }
+    GstControlSource *old = prop->csource;
+
+    if (csource && (ret = gst_control_source_bind (csource, prop->pspec))) {
+      g_object_ref (csource);
+      prop->csource = csource;
+    } else if (!csource) {
+      ret = TRUE;
+      prop->csource = NULL;
     }
+
+    if (ret && old)
+      g_object_unref (old);
   }
   g_mutex_unlock (self->lock);
 
-  return (res);
+  return ret;
 }
 
 /**
- * gst_controller_unset:
- * @self: the controller object which handles the properties
- * @property_name: the name of the property to unset
- * @timestamp: the time the control-change should be removed from
+ * gst_controller_get_control_source:
+ * @self: the controller object
+ * @property_name: name of the property for which the #GstControlSource should be get
  *
- * Used to remove the value of given controller-handled property at a certain
- * time.
+ * Gets the corresponding #GstControlSource for the property. This should be unreferenced
+ * again after use.
  *
- * Returns: %FALSE if the values couldn't be unset (ex : properties not handled by controller), %TRUE otherwise
+ * Returns: the #GstControlSource for @property_name or NULL if the property is not
+ * controlled by this controller or no #GstControlSource was assigned yet.
+ *
+ * Since: 0.10.14
  */
-gboolean
-gst_controller_unset (GstController * self, gchar * property_name,
-    GstClockTime timestamp)
+GstControlSource *
+gst_controller_get_control_source (GstController * self, gchar * property_name)
 {
-  gboolean res = FALSE;
   GstControlledProperty *prop;
-
-  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
-  g_return_val_if_fail (property_name, FALSE);
-  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+  GstControlSource *ret = NULL;
 
   g_mutex_lock (self->lock);
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    GList *node;
-
-    /* check if a control point for the timestamp exists */
-    if ((node = g_list_find_custom (prop->values, &timestamp,
-                gst_control_point_find))) {
-      GstControlPoint *cp = node->data;
-
-      if (cp->timestamp == 0) {
-        /* Restore the default node */
-        g_value_reset (&cp->value);
-        g_value_copy (&prop->default_value, &cp->value);
-      } else {
-        if (node == prop->last_requested_value)
-          prop->last_requested_value = NULL;
-        gst_control_point_free (node->data);    /* free GstControlPoint */
-        prop->values = g_list_delete_link (prop->values, node);
-        prop->nvalues--;
-      }
-      prop->valid_cache = FALSE;
-      res = TRUE;
-    }
+    ret = prop->csource;
   }
   g_mutex_unlock (self->lock);
 
-  return (res);
-}
+  if (ret)
+    g_object_ref (ret);
 
-/**
- * gst_controller_unset_all:
- * @self: the controller object which handles the properties
- * @property_name: the name of the property to unset
- *
- * Used to remove all time-stamped values of given controller-handled property
- *
- * Returns: %FALSE if the values couldn't be unset (ex : properties not handled
- * by controller), %TRUE otherwise
- * Since: 0.10.5
- */
-gboolean
-gst_controller_unset_all (GstController * self, gchar * property_name)
-{
-  gboolean res = FALSE;
-  GstControlledProperty *prop;
-
-  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
-  g_return_val_if_fail (property_name, FALSE);
-
-  g_mutex_lock (self->lock);
-  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    /* free GstControlPoint structures */
-    g_list_foreach (prop->values, (GFunc) gst_control_point_free, NULL);
-    g_list_free (prop->values);
-    prop->last_requested_value = NULL;
-    prop->values = NULL;
-    prop->nvalues = 0;
-    prop->valid_cache = FALSE;
-
-    /* Insert the default control point again */
-    gst_controlled_property_prepend_default (prop);
-
-    res = TRUE;
-  }
-  g_mutex_unlock (self->lock);
-
-  return (res);
+  return ret;
 }
 
 /**
@@ -995,42 +594,24 @@ gst_controller_get (GstController * self, gchar * property_name,
 
   g_mutex_lock (self->lock);
   if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    /* get current value via interpolator */
-    val = prop->get (prop, timestamp);
+    val = g_new0 (GValue, 1);
+    g_value_init (val, G_PARAM_SPEC_VALUE_TYPE (prop->pspec));
+    if (prop->csource) {
+      gboolean res;
+
+      /* get current value via control source */
+      res = gst_control_source_get_value (prop->csource, timestamp, val);
+      if (!res) {
+        g_free (val);
+        val = FALSE;
+      }
+    } else {
+      g_object_get_property (self->object, prop->name, val);
+    }
   }
   g_mutex_unlock (self->lock);
 
-  return (val);
-}
-
-/**
- * gst_controller_get_all:
- * @self: the controller to get the list from
- * @property_name: the name of the property to get the list for
- *
- * Returns a read-only copy of the list of #GstTimedValue for the given property.
- * Free the list after done with it.
- *
- * <note><para>This doesn't modify the controlled GObject property!</para></note>
- *
- * Returns: a copy of the list, or %NULL if the property isn't handled by the controller
- */
-const GList *
-gst_controller_get_all (GstController * self, gchar * property_name)
-{
-  GList *res = NULL;
-  GstControlledProperty *prop;
-
-  g_return_val_if_fail (GST_IS_CONTROLLER (self), NULL);
-  g_return_val_if_fail (property_name, NULL);
-
-  g_mutex_lock (self->lock);
-  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    res = g_list_copy (prop->values);
-  }
-  g_mutex_unlock (self->lock);
-
-  return (res);
+  return val;
 }
 
 /**
@@ -1081,8 +662,7 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
 {
   GstControlledProperty *prop;
   GList *node;
-  GValue *value;
-  gboolean live = FALSE;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
@@ -1092,46 +672,27 @@ gst_controller_sync_values (GstController * self, GstClockTime timestamp)
   g_mutex_lock (self->lock);
   /* go over the controlled properties of the controller */
   for (node = self->properties; node; node = g_list_next (node)) {
+    GValue value = { 0, };
     prop = node->data;
+
     GST_DEBUG ("  property '%s' at ts=%" G_GUINT64_FORMAT, prop->name,
         timestamp);
 
-    live = FALSE;
-    if (G_UNLIKELY (G_IS_VALUE (&prop->live_value.value))) {
-      GList *lnode =
-          gst_controlled_property_find_control_point_node (prop, timestamp);
-      if (G_UNLIKELY (!lnode)) {
-        GST_DEBUG ("    no control changes in the queue");
-        live = TRUE;
-      } else {
-        GstControlPoint *cp = lnode->data;
+    if (!prop->csource || prop->disabled)
+      continue;
 
-        if (prop->live_value.timestamp < cp->timestamp) {
-          g_value_unset (&prop->live_value.value);
-          GST_DEBUG ("    live value resetted");
-        } else if (prop->live_value.timestamp < timestamp) {
-          live = TRUE;
-        }
-      }
-    }
-    if (G_LIKELY (!live)) {
-      /* get current value via interpolator */
-      value = prop->get (prop, timestamp);
-      prop->last_value.timestamp = timestamp;
-      g_value_copy (value, &prop->last_value.value);
-      g_object_set_property (self->object, prop->name, value);
+    g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (prop->pspec));
+    ret = gst_control_source_get_value (prop->csource, timestamp, &value);
+    if (ret) {
+      g_object_set_property (self->object, prop->name, &value);
+      g_value_unset (&value);
     }
   }
-  if (G_LIKELY (!live))
-    self->priv->last_sync = timestamp;
+  self->priv->last_sync = timestamp;
 
   g_mutex_unlock (self->lock);
-  /* TODO what can here go wrong, to return FALSE ?
-     BilboEd : Nothing I guess, as long as all the checks are made when creating the controller,
-     adding/removing controlled properties, etc...
-   */
 
-  return (TRUE);
+  return ret;
 }
 
 /**
@@ -1207,47 +768,19 @@ gst_controller_get_value_array (GstController * self, GstClockTime timestamp,
   if ((prop =
           gst_controller_find_controlled_property (self,
               value_array->property_name))) {
-    /* get current value_array via interpolator */
-    res = prop->get_value_array (prop, timestamp, value_array);
+    /* get current value_array via control source */
+
+    if (!prop->csource)
+      goto out;
+
+    res =
+        gst_control_source_get_value_array (prop->csource, timestamp,
+        value_array);
   }
 
+out:
   g_mutex_unlock (self->lock);
-  return (res);
-}
-
-/**
- * gst_controller_set_interpolation_mode:
- * @self: the controller object
- * @property_name: the name of the property for which to change the interpolation
- * @mode: interpolation mode
- *
- * Sets the given interpolation mode on the given property.
- *
- * <note><para>User interpolation is not yet available and quadratic interpolation
- * is deprecated and maps to cubic interpolation.</para></note>
- *
- * Returns: %TRUE if the property is handled by the controller, %FALSE otherwise
- */
-gboolean
-gst_controller_set_interpolation_mode (GstController * self,
-    gchar * property_name, GstInterpolateMode mode)
-{
-  gboolean res = FALSE;
-  GstControlledProperty *prop;
-
-  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
-  g_return_val_if_fail (property_name, FALSE);
-
-  g_mutex_lock (self->lock);
-  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
-    /* TODO shouldn't this also get a GstInterpolateMethod *user_method
-       for the case mode==GST_INTERPOLATE_USER
-     */
-    res = gst_controlled_property_set_interpolation_mode (prop, mode);
-  }
-  g_mutex_unlock (self->lock);
-
-  return (res);
+  return res;
 }
 
 /* gobject handling */
@@ -1322,7 +855,6 @@ _gst_controller_dispose (GObject * object)
       for (node = self->properties; node; node = g_list_next (node)) {
         GstControlledProperty *prop = node->data;
 
-        g_signal_handler_disconnect (self->object, prop->notify_handler_id);
         gst_controlled_property_free (prop);
       }
       g_list_free (self->properties);
@@ -1391,7 +923,7 @@ _gst_controller_class_init (GstControllerClass * klass)
 }
 
 GType
-gst_controller_get_type (void)
+gst_controller_get_type ()
 {
   static GType type = 0;
 
@@ -1411,4 +943,278 @@ gst_controller_get_type (void)
     type = g_type_register_static (G_TYPE_OBJECT, "GstController", &info, 0);
   }
   return type;
+}
+
+/* FIXME: backward compatibility functions */
+
+/*
+ * gst_controlled_property_set_interpolation_mode:
+ * @self: the controlled property object to change
+ * @mode: the new interpolation mode
+ *
+ * Sets the given Interpolation mode for the controlled property and activates
+ * the respective interpolation hooks.
+ *
+ * Deprecated: Use #GstControlSource, for example #GstInterpolationControlSource
+ * directly.
+ *
+ * Returns: %TRUE for success
+ */
+static gboolean
+gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
+    GstInterpolateMode mode)
+{
+  GstInterpolationControlSource *icsource;
+
+  /* FIXME: backward compat, add GstInterpolationControlSource */
+  if (!self->csource)
+    gst_controlled_property_add_interpolation_control_source (self);
+
+  g_return_val_if_fail (GST_IS_INTERPOLATION_CONTROL_SOURCE (self->csource),
+      FALSE);
+
+  icsource = GST_INTERPOLATION_CONTROL_SOURCE (self->csource);
+
+  return gst_interpolation_control_source_set_interpolation_mode (icsource,
+      mode);
+}
+
+/**
+ * gst_controller_set:
+ * @self: the controller object which handles the properties
+ * @property_name: the name of the property to set
+ * @timestamp: the time the control-change is schedules for
+ * @value: the control-value
+ *
+ * Set the value of given controller-handled property at a certain time.
+ *
+ * Deprecated: Use #GstControlSource, for example #GstInterpolationControlSource
+ * directly.
+ *
+ * Returns: FALSE if the values couldn't be set (ex : properties not handled by controller), TRUE otherwise
+ */
+gboolean
+gst_controller_set (GstController * self, gchar * property_name,
+    GstClockTime timestamp, GValue * value)
+{
+  gboolean res = FALSE;
+  GstControlledProperty *prop;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
+  g_return_val_if_fail (property_name, FALSE);
+
+  g_mutex_lock (self->lock);
+  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
+    /* FIXME: backward compat, add GstInterpolationControlSource */
+    if (!prop->csource)
+      gst_controlled_property_add_interpolation_control_source (prop);
+
+    if (!GST_IS_INTERPOLATION_CONTROL_SOURCE (prop->csource))
+      goto out;
+    res =
+        gst_interpolation_control_source_set (GST_INTERPOLATION_CONTROL_SOURCE
+        (prop->csource), timestamp, value);
+  }
+
+out:
+  g_mutex_unlock (self->lock);
+
+  return res;
+}
+
+/**
+ * gst_controller_set_from_list:
+ * @self: the controller object which handles the properties
+ * @property_name: the name of the property to set
+ * @timedvalues: a list with #GstTimedValue items
+ *
+ * Sets multiple timed values at once.
+ *
+ * Deprecated: Use #GstControlSource, for example #GstInterpolationControlSource
+ * directly.
+ *
+ * Returns: %FALSE if the values couldn't be set (ex : properties not handled by controller), %TRUE otherwise
+ */
+
+gboolean
+gst_controller_set_from_list (GstController * self, gchar * property_name,
+    GSList * timedvalues)
+{
+  gboolean res = FALSE;
+  GstControlledProperty *prop;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
+  g_return_val_if_fail (property_name, FALSE);
+
+  g_mutex_lock (self->lock);
+  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
+    /* FIXME: backward compat, add GstInterpolationControlSource */
+    if (!prop->csource)
+      gst_controlled_property_add_interpolation_control_source (prop);
+
+    if (!GST_IS_INTERPOLATION_CONTROL_SOURCE (prop->csource))
+      goto out;
+
+    res =
+        gst_interpolation_control_source_set_from_list
+        (GST_INTERPOLATION_CONTROL_SOURCE (prop->csource), timedvalues);
+  }
+
+out:
+  g_mutex_unlock (self->lock);
+
+  return res;
+}
+
+/**
+ * gst_controller_unset:
+ * @self: the controller object which handles the properties
+ * @property_name: the name of the property to unset
+ * @timestamp: the time the control-change should be removed from
+ *
+ * Used to remove the value of given controller-handled property at a certain
+ * time.
+ *
+ * Deprecated: Use #GstControlSource, for example #GstInterpolationControlSource
+ * directly.
+ *
+ * Returns: %FALSE if the values couldn't be unset (ex : properties not handled by controller), %TRUE otherwise
+ */
+gboolean
+gst_controller_unset (GstController * self, gchar * property_name,
+    GstClockTime timestamp)
+{
+  gboolean res = FALSE;
+  GstControlledProperty *prop;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
+  g_return_val_if_fail (property_name, FALSE);
+  g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
+
+  g_mutex_lock (self->lock);
+  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
+    if (!prop->csource || !GST_IS_INTERPOLATION_CONTROL_SOURCE (prop->csource))
+      goto out;
+
+    res =
+        gst_interpolation_control_source_unset (GST_INTERPOLATION_CONTROL_SOURCE
+        (prop->csource), timestamp);
+  }
+
+out:
+  g_mutex_unlock (self->lock);
+
+  return res;
+}
+
+/**
+ * gst_controller_unset_all:
+ * @self: the controller object which handles the properties
+ * @property_name: the name of the property to unset
+ *
+ * Used to remove all time-stamped values of given controller-handled property
+ *
+ * Deprecated: Use #GstControlSource, for example #GstInterpolationControlSource
+ * directly.
+ *
+ * Returns: %FALSE if the values couldn't be unset (ex : properties not handled
+ * by controller), %TRUE otherwise
+ * Since: 0.10.5
+ */
+gboolean
+gst_controller_unset_all (GstController * self, gchar * property_name)
+{
+  GstControlledProperty *prop;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
+  g_return_val_if_fail (property_name, FALSE);
+
+  g_mutex_lock (self->lock);
+  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
+    if (!prop->csource || !GST_IS_INTERPOLATION_CONTROL_SOURCE (prop->csource))
+      goto out;
+
+    gst_interpolation_control_source_unset_all (GST_INTERPOLATION_CONTROL_SOURCE
+        (prop->csource));
+  }
+
+out:
+  g_mutex_unlock (self->lock);
+
+  return TRUE;
+}
+
+/**
+ * gst_controller_get_all:
+ * @self: the controller to get the list from
+ * @property_name: the name of the property to get the list for
+ *
+ * Returns a read-only copy of the list of #GstTimedValue for the given property.
+ * Free the list after done with it.
+ *
+ * <note><para>This doesn't modify the controlled GObject property!</para></note>
+ *
+ * Deprecated: Use #GstControlSource, for example #GstInterpolationControlSource
+ * directly.
+ *
+ * Returns: a copy of the list, or %NULL if the property isn't handled by the controller
+ */
+const GList *
+gst_controller_get_all (GstController * self, gchar * property_name)
+{
+  const GList *res = NULL;
+  GstControlledProperty *prop;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), NULL);
+  g_return_val_if_fail (property_name, NULL);
+
+  g_mutex_lock (self->lock);
+  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
+    if (!prop->csource || !GST_IS_INTERPOLATION_CONTROL_SOURCE (prop->csource))
+      goto out;
+
+    res =
+        gst_interpolation_control_source_get_all
+        (GST_INTERPOLATION_CONTROL_SOURCE (prop->csource));
+  }
+
+out:
+  g_mutex_unlock (self->lock);
+
+  return res;
+}
+
+/**
+ * gst_controller_set_interpolation_mode:
+ * @self: the controller object
+ * @property_name: the name of the property for which to change the interpolation
+ * @mode: interpolation mode
+ *
+ * Sets the given interpolation mode on the given property.
+ *
+ * <note><para>User interpolation is not yet available and quadratic interpolation
+ * is deprecated and maps to cubic interpolation.</para></note>
+ *
+ * Deprecated: Use #GstControlSource, for example #GstInterpolationControlSource
+ * directly.
+ *
+ * Returns: %TRUE if the property is handled by the controller, %FALSE otherwise
+ */
+gboolean
+gst_controller_set_interpolation_mode (GstController * self,
+    gchar * property_name, GstInterpolateMode mode)
+{
+  gboolean res = FALSE;
+  GstControlledProperty *prop;
+
+  g_return_val_if_fail (GST_IS_CONTROLLER (self), FALSE);
+  g_return_val_if_fail (property_name, FALSE);
+
+  g_mutex_lock (self->lock);
+  if ((prop = gst_controller_find_controlled_property (self, property_name))) {
+    res = gst_controlled_property_set_interpolation_mode (prop, mode);
+  }
+  g_mutex_unlock (self->lock);
+
+  return res;
 }

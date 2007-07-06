@@ -30,6 +30,9 @@
 #include <glib/gprintf.h>
 #include <gst/gst.h>
 
+#include "gstcontrolsource.h"
+#include "gstinterpolationcontrolsource.h"
+
 G_BEGIN_DECLS
 
 /**
@@ -40,59 +43,6 @@ G_BEGIN_DECLS
  * TODO: needs to go to gstelemnt.h (to avoid clashes on G_PARAM_USER_SHIFT)
  */
 #define	GST_PARAM_CONTROLLABLE	(1 << (G_PARAM_USER_SHIFT + 1))
-
-
-/**
- * GstTimedValue:
- *
- * a structure for value+time
- */
-typedef struct _GstTimedValue
-{
-  GstClockTime timestamp;       /* timestamp of the value change */
-  GValue value;                 /* the new value */
-} GstTimedValue;
-
-
-/**
- * GstValueArray:
- * @property_name: the name of the property this array belongs to
- * @nbsamples: number of samples requested
- * @sample_interval: interval between each sample
- * @values: pointer to the array
- *
- * Structure to receive multiple values at once.
- */
-typedef struct _GstValueArray
-{
-  gchar *property_name;
-  gint nbsamples;
-  GstClockTime sample_interval;
-  gpointer *values;
-} GstValueArray;
-
-
-/**
- * GstInterpolateMode:
- * @GST_INTERPOLATE_NONE: steps-like interpolation, default
- * @GST_INTERPOLATE_TRIGGER: returns the default value of the property,
- * except for times with specific values
- * @GST_INTERPOLATE_LINEAR: linear interpolation
- * @GST_INTERPOLATE_QUADRATIC: square interpolation (not yet available)
- * @GST_INTERPOLATE_CUBIC: cubic interpolation (not yet available)
- * @GST_INTERPOLATE_USER: user-provided interpolation (not yet available)
- *
- * The various interpolation modes available.
- */
-typedef enum
-{
-  GST_INTERPOLATE_NONE,
-  GST_INTERPOLATE_TRIGGER,
-  GST_INTERPOLATE_LINEAR,
-  GST_INTERPOLATE_QUADRATIC,
-  GST_INTERPOLATE_CUBIC,
-  GST_INTERPOLATE_USER
-} GstInterpolateMode;
 
 /* type macros */
 
@@ -106,7 +56,6 @@ typedef enum
 typedef struct _GstController GstController;
 typedef struct _GstControllerClass GstControllerClass;
 typedef struct _GstControllerPrivate GstControllerPrivate;
-
 
 /**
  * GstController:
@@ -135,7 +84,7 @@ struct _GstControllerClass
   gpointer       _gst_reserved[GST_PADDING];
 };
 
-GType gst_controller_get_type (void);
+GType gst_controller_get_type ();
 
 /* GstController functions */
 
@@ -149,32 +98,21 @@ gboolean gst_controller_remove_properties_list (GstController * self,
 						GList *list);
 gboolean gst_controller_remove_properties (GstController * self, ...) G_GNUC_NULL_TERMINATED;
 
-gboolean gst_controller_set (GstController * self, gchar * property_name,
-    GstClockTime timestamp, GValue * value);
-gboolean gst_controller_set_from_list (GstController * self,
-    gchar * property_name, GSList * timedvalues);
-
-gboolean gst_controller_unset (GstController * self, gchar * property_name,
-    GstClockTime timestamp);
-gboolean gst_controller_unset_all (GstController * self, gchar * property_name);
-
-GValue *gst_controller_get (GstController * self, gchar * property_name,
-    GstClockTime timestamp);
-const GList *gst_controller_get_all (GstController * self,
-    gchar * property_name);
+void gst_controller_set_disabled (GstController *self, gboolean disabled);
+void gst_controller_set_property_disabled (GstController *self, gchar * property_name, gboolean disabled);
+gboolean gst_controller_set_control_source (GstController *self, gchar * property_name, GstControlSource *csource);
+GstControlSource * gst_controller_get_control_source (GstController *self, gchar * property_name);
 
 GstClockTime gst_controller_suggest_next_sync (GstController *self);
 gboolean gst_controller_sync_values (GstController * self,
     GstClockTime timestamp);
 
+GValue *gst_controller_get (GstController * self, gchar * property_name,
+    GstClockTime timestamp);
 gboolean gst_controller_get_value_arrays (GstController * self,
     GstClockTime timestamp, GSList * value_arrays);
 gboolean gst_controller_get_value_array (GstController * self,
     GstClockTime timestamp, GstValueArray * value_array);
-
-gboolean gst_controller_set_interpolation_mode (GstController * self,
-    gchar * property_name, GstInterpolateMode mode);
-
 
 /* GObject convenience functions */
 
@@ -186,6 +124,9 @@ gboolean gst_object_set_controller (GObject * object, GstController * controller
 
 GstClockTime gst_object_suggest_next_sync (GObject * object);
 gboolean gst_object_sync_values (GObject * object, GstClockTime timestamp);
+
+gboolean gst_object_set_control_source (GObject *object, gchar * property_name, GstControlSource *csource);
+GstControlSource * gst_object_get_control_source (GObject *object, gchar * property_name);
 
 gboolean gst_object_get_value_arrays (GObject * object,
     GstClockTime timestamp, GSList * value_arrays);
@@ -199,5 +140,25 @@ void gst_object_set_control_rate (GObject * object, GstClockTime control_rate);
 
 gboolean gst_controller_init (int * argc, char ***argv);
 
+
+/* FIXME: deprecated functions */
+#ifndef GST_DISABLE_DEPRECATED
+gboolean gst_controller_set (GstController * self, gchar * property_name,
+    GstClockTime timestamp, GValue * value);
+gboolean gst_controller_set_from_list (GstController * self,
+    gchar * property_name, GSList * timedvalues);
+
+gboolean gst_controller_unset (GstController * self, gchar * property_name,
+    GstClockTime timestamp);
+gboolean gst_controller_unset_all (GstController * self, gchar * property_name);
+
+const GList *gst_controller_get_all (GstController * self,
+    gchar * property_name);
+
+gboolean gst_controller_set_interpolation_mode (GstController * self,
+    gchar * property_name, GstInterpolateMode mode);
+#endif /* GST_DISABLE_DEPRECATED */
+
 G_END_DECLS
+
 #endif /* __GST_CONTROLLER_H__ */

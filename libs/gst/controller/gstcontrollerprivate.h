@@ -28,97 +28,19 @@
 #include <gst/gst.h>
 
 #include "gstcontroller.h"
+#include "gstcontrolsource.h"
 
 G_BEGIN_DECLS
-
-struct _GstControlledProperty;
-
-typedef GValue *(*InterpolateGet) (struct _GstControlledProperty * prop,
-        GstClockTime timestamp);
-typedef gboolean (*InterpolateGetValueArray) (struct _GstControlledProperty * prop,
-        GstClockTime timestamp, GstValueArray * value_array);
-
-/**
- * GstInterpolateMethod:
- *
- * Function pointer structure to do user-defined interpolation methods
- */
-typedef struct _GstInterpolateMethod
-{
-  InterpolateGet get_int;
-  InterpolateGetValueArray get_int_value_array;
-  InterpolateGet get_uint;
-  InterpolateGetValueArray get_uint_value_array;
-  InterpolateGet get_long;
-  InterpolateGetValueArray get_long_value_array;
-  InterpolateGet get_ulong;
-  InterpolateGetValueArray get_ulong_value_array;
-  InterpolateGet get_float;
-  InterpolateGetValueArray get_float_value_array;
-  InterpolateGet get_double;
-  InterpolateGetValueArray get_double_value_array;
-  InterpolateGet get_boolean;
-  InterpolateGetValueArray get_boolean_value_array;
-  InterpolateGet get_enum;
-  InterpolateGetValueArray get_enum_value_array;
-  InterpolateGet get_string;
-  InterpolateGetValueArray get_string_value_array;
-} GstInterpolateMethod;
-
-/**
- * GstControlPoint:
- *
- * a internal structure for value+time and various temporary
- * values used for interpolation. This "inherits" from
- * GstTimedValue.
- */
-/* FIXME 0.11: This should be merged with GstTimedValue for 0.11 */
-typedef struct _GstControlPoint
-{
-  /* fields from GstTimedValue. DO NOT CHANGE! */
-  GstClockTime timestamp;       /* timestamp of the value change */
-  GValue value;                 /* the new value */
-
-  /* internal fields */
-
-  /* Caches for the interpolators */
-  union {
-    struct {
-      gdouble h;
-      gdouble z;
-    } cubic;
-  } cache;
-
-} GstControlPoint;
 
 /**
  * GstControlledProperty:
  */
 typedef struct _GstControlledProperty
 {
+  GParamSpec *pspec;            /* GParamSpec for this property */
   gchar *name;                  /* name of the property */
-  GType type;                   /* type of the handled property */
-  GType base;                   /* base-type of the handled property */
-  GValue default_value;         /* default value for the handled property */
-  GValue min_value;             /* min value for the handled property */
-  GValue max_value;             /* max value for the handled property */
-  GValue result_value;          /* result value location for the interpolation method */
-  GstControlPoint last_value;     /* the last value a _sink call wrote */
-  GstControlPoint live_value;     /* temporary value override for live input */
-  gulong notify_handler_id;     /* id of the notify::<name> signal handler */
-  GstInterpolateMode interpolation;     /* Interpolation mode */
-  /* TODO instead of *method, have pointers to get() and get_value_array() here
-     gst_controller_set_interpolation_mode() will pick the right ones for the
-     properties value type
-     GstInterpolateMethod *method; // User-implemented handler (if interpolation == GST_INTERPOLATE_USER)
-  */
-  InterpolateGet get;
-  InterpolateGetValueArray get_value_array;
-
-  GList *values;                /* List of GstControlPoint */
-  gint nvalues;                 /* Number of control points */
-  GList *last_requested_value;  /* last search result, can be used for incremental searches */
-  gboolean valid_cache;
+  GstControlSource *csource;    /* GstControlSource for this property */
+  gboolean disabled;
 } GstControlledProperty;
 
 #define GST_CONTROLLED_PROPERTY(obj)    ((GstControlledProperty *)(obj))

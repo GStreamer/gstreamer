@@ -1,3 +1,81 @@
+2007-07-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Reviewed by: Stefan Kost <ensonic@users.sf.net>
+
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/controller/gstcontroller.c:
+	(gst_controlled_property_add_interpolation_control_source),
+	(gst_controlled_property_new), (gst_controlled_property_free),
+	(gst_controller_find_controlled_property),
+	(gst_controller_new_valist), (gst_controller_new_list),
+	(gst_controller_new), (gst_controller_remove_properties_valist),
+	(gst_controller_remove_properties_list),
+	(gst_controller_remove_properties),
+	(gst_controller_set_property_disabled),
+	(gst_controller_set_disabled), (gst_controller_set_control_source),
+	(gst_controller_get_control_source), (gst_controller_get),
+	(gst_controller_sync_values), (gst_controller_get_value_array),
+	(_gst_controller_dispose), (gst_controller_get_type),
+	(gst_controlled_property_set_interpolation_mode),
+	(gst_controller_set), (gst_controller_set_from_list),
+	(gst_controller_unset), (gst_controller_unset_all),
+	(gst_controller_get_all), (gst_controller_set_interpolation_mode):
+	* libs/gst/controller/gstcontroller.h:
+	* libs/gst/controller/gstcontrollerprivate.h:
+	* libs/gst/controller/gstcontrolsource.c:
+	(gst_control_source_class_init), (gst_control_source_init),
+	(gst_control_source_get_value),
+	(gst_control_source_get_value_array), (gst_control_source_bind):
+	* libs/gst/controller/gstcontrolsource.h:
+	* libs/gst/controller/gsthelper.c: (gst_object_set_control_source),
+	(gst_object_get_control_source):
+	* libs/gst/controller/gstinterpolation.c:
+	(gst_interpolation_control_source_find_control_point_node),
+	(gst_interpolation_control_source_get_first_value),
+	(_interpolate_none_get), (interpolate_none_get),
+	(interpolate_none_get_boolean_value_array),
+	(interpolate_none_get_enum_value_array),
+	(interpolate_none_get_string_value_array),
+	(_interpolate_trigger_get), (interpolate_trigger_get),
+	(interpolate_trigger_get_boolean_value_array),
+	(interpolate_trigger_get_enum_value_array),
+	(interpolate_trigger_get_string_value_array):
+	* libs/gst/controller/gstinterpolationcontrolsource.c:
+	(gst_control_point_free), (gst_interpolation_control_source_reset),
+	(gst_interpolation_control_source_new),
+	(gst_interpolation_control_source_set_interpolation_mode),
+	(gst_interpolation_control_source_bind),
+	(gst_control_point_compare), (gst_control_point_find),
+	(gst_interpolation_control_source_set_internal),
+	(gst_interpolation_control_source_set),
+	(gst_interpolation_control_source_set_from_list),
+	(gst_interpolation_control_source_unset),
+	(gst_interpolation_control_source_unset_all),
+	(gst_interpolation_control_source_get_all),
+	(gst_interpolation_control_source_get_count),
+	(gst_interpolation_control_source_init),
+	(gst_interpolation_control_source_finalize),
+	(gst_interpolation_control_source_dispose),
+	(gst_interpolation_control_source_class_init):
+	* libs/gst/controller/gstinterpolationcontrolsource.h:
+	* libs/gst/controller/gstinterpolationcontrolsourceprivate.h:
+	API: Refactor GstController into the core controller which can take
+	a GstControlSource for providing actual values for timestamps.
+	Implement a interpolation control source and use this for backward
+	compatibility, deprecate a bunch of functions that are now handled
+	by GstControlSource or GstInterpolationControlSource.
+	Make it possible to disable the controller completely or only for
+	specific properties. Fixes #450711.
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/libs/gstreamer-libs.types:
+	Add new functions and classes to the docs.
+	* tests/check/libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+	* tests/examples/controller/audio-example.c: (main):
+	Port unit test and example to the new API and add some new
+	unit tests.
+
 2007-07-05  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Mark Nauwelaerts <manauw at skynet be>
