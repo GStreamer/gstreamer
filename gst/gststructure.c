@@ -1769,10 +1769,12 @@ gst_structure_parse_value (gchar * str,
     *value_end = 0;
     if (type == G_TYPE_INVALID) {
       GType try_types[] =
-          { G_TYPE_INT, G_TYPE_DOUBLE, GST_TYPE_FRACTION, G_TYPE_STRING };
+          { G_TYPE_INT, G_TYPE_DOUBLE, GST_TYPE_FRACTION, G_TYPE_BOOLEAN,
+        G_TYPE_STRING
+      };
       int i;
 
-      for (i = 0; i < 4; i++) {
+      for (i = 0; i < G_N_ELEMENTS (try_types); i++) {
         g_value_init (value, try_types[i]);
         ret = gst_value_deserialize (value, value_s);
         if (ret)

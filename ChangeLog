@@ -1,3 +1,15 @@
+2007-07-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gststructure.c: (gst_structure_parse_value):
+	  When deserialising foo=bar without a type cast, check if it's a
+	  boolean before falling back to a string type, otherwise things like
+	  audiotestsrc ! audio/x-raw-int,signed=true ! fakesink won't work,
+	  because the filtercaps end up having a signed=(string)true field,
+	  which causes problems later when intersection caps.
+
+	* tests/check/gst/gststructure.c: (GST_START_TEST):
+	  Add a unit test for this.
+
 2007-07-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Reviewed by: Stefan Kost <ensonic@users.sf.net>
