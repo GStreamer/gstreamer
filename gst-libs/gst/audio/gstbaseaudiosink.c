@@ -1191,8 +1191,13 @@ gst_base_audio_sink_callback (GstRingBuffer * rbuf, guint8 * data, guint len,
   GST_LOG_OBJECT (basesink, "pulling %d bytes offset %" G_GUINT64_FORMAT
       " to fill audio buffer", len, basesink->offset);
   ret = gst_pad_pull_range (basesink->sinkpad, basesink->offset, len, &buf);
-  if (ret != GST_FLOW_OK)
-    goto error;
+
+  if (ret != GST_FLOW_OK) {
+    if (ret == GST_FLOW_UNEXPECTED)
+      goto eos;
+    else
+      goto error;
+  }
 
   if (len != GST_BUFFER_SIZE (buf)) {
     GST_INFO_OBJECT (basesink, "short read pulling from sink pad: %d<%d",
@@ -1211,6 +1216,16 @@ error:
     GST_WARNING_OBJECT (basesink, "Got flow error but can't return it: %d",
         ret);
     return;
+  }
+eos:
+  {
+    /* FIXME: this is not quite correct; we'll be called endlessly until
+     * the sink gets shut down; maybe we should set a flag somewhere, or
+     * set segment.stop and segment.duration to the last sample or so */
+    GST_DEBUG_OBJECT (sink, "EOS");
+    gst_element_post_message (GST_ELEMENT_CAST (sink),
+        gst_message_new_eos (GST_OBJECT_CAST (sink)));
+    gst_base_audio_sink_drain (sink);
   }
 }
 

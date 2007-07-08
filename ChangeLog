@@ -1,3 +1,10 @@
+2007-07-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_callback):
+	  Quick hack to make audiosinks stop at EOS when operating in
+	  pull-mode; needs to be fixed properly some day.
+
 2007-07-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:
