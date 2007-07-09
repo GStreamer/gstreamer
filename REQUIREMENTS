@@ -97,8 +97,6 @@ gtk		(for the gdk_pixbuf plugin)
 		>= 2.2.1 preferred, 2.0 ok
 pango		(for the textoverlay plugins)
 			http://www.pango.org/
-libHermes       (for colorspace conversion;most use ffcolorspace instead)
-                        http://www.clanlib.org/hermes/
 librfb		(for capturing of VNC output into a videostream)
 			http://www.schleef.org/
 libHermes       (for colorspace conversions (should not be needed anymore))
@@ -119,11 +117,14 @@ libtheora	(for Ogg Theora video support)
 			(http://www.theora.org)
 libmms		(for MMS protocol support)
 			(http://www.sf.net/projects/libmms)
+libamrnb	(for AMR-NB support)
+			(http://http://www.penguin.cz/~utx/amr)
 libamrwb	(for AMR-WB support)
 			(http://http://www.penguin.cz/~utx/amr)
 
 
-Optional debian packages:
-=========================
+Optional (debian) packages:
+===========================
 
-gtk-doc-tools 0.4-0.2  -- needed to build documentation
+gtk-doc-tools 1.6  -- needed to build documentation
+python-xml  -- needed to build plugin documentation
