@@ -180,3 +180,58 @@ _wrap_gst_event_parse_latency (PyGstMiniObject * self)
      
      return PyLong_FromUnsignedLongLong(ctime);
 }
+%%
+override gst_event_new_navigation kwargs
+static PyObject *
+_wrap_gst_event_new_navigation(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "structure", NULL };
+    PyObject *py_structure, *py_ret;
+    GstEvent *ret;
+    GstStructure *structure = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O:event_new_navigation", kwlist, &py_structure))
+        return NULL;
+    if (pyg_boxed_check(py_structure, GST_TYPE_STRUCTURE))
+        structure = pyg_boxed_get(py_structure, GstStructure);
+    else {
+        PyErr_SetString(PyExc_TypeError, "structure should be a GstStructure");
+        return NULL;
+    }
+    pyg_begin_allow_threads;
+    ret = gst_event_new_navigation(gst_structure_copy(structure));
+    pyg_end_allow_threads;
+    py_ret = pygstminiobject_new((GstMiniObject *)ret);
+    if (ret != NULL)
+       gst_mini_object_unref((GstMiniObject *)ret);
+    return py_ret;
+}
+%%
+override gst_event_new_custom kwargs
+static PyObject *
+_wrap_gst_event_new_custom(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "type", "structure", NULL };
+    PyObject *py_type = NULL, *py_structure, *py_ret;
+    GstEvent *ret;
+    GstStructure *structure = NULL;
+    GstEventType type;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"OO:event_new_custom", kwlist, &py_type, &py_structure))
+        return NULL;
+    if (pyg_enum_get_value(GST_TYPE_EVENT_TYPE, py_type, (gint *)&type))
+        return NULL;
+    if (pyg_boxed_check(py_structure, GST_TYPE_STRUCTURE))
+        structure = pyg_boxed_get(py_structure, GstStructure);
+    else {
+        PyErr_SetString(PyExc_TypeError, "structure should be a GstStructure");
+        return NULL;
+    }
+    pyg_begin_allow_threads;
+    ret = gst_event_new_custom(type, gst_structure_copy(structure));
+    pyg_end_allow_threads;
+    py_ret = pygstminiobject_new((GstMiniObject *)ret);
+    if (ret != NULL)
+       gst_mini_object_unref((GstMiniObject *)ret);
+    return py_ret;
+}
