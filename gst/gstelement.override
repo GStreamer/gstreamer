@@ -543,3 +543,92 @@ _wrap_gst_element_get_pad_template_list(PyGObject *self)
 
         return ret;
 }
+%%
+override GstElement__proxy_do_request_new_pad
+static GstPad*
+_wrap_GstElement__proxy_do_request_new_pad(GstElement *self, GstPadTemplate*templ, const gchar*name)
+{
+    PyGILState_STATE __py_state;
+    PyObject *py_self;
+    PyObject *py_templ = NULL;
+    PyObject *py_name;
+    GstPad* retval;
+    PyObject *py_retval;
+    PyObject *py_args;
+    PyObject *py_method;
+    
+    __py_state = pyg_gil_state_ensure();
+    py_self = pygobject_new((GObject *) self);
+    if (!py_self) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        pyg_gil_state_release(__py_state);
+        return NULL;
+    }
+    if (templ)
+        py_templ = pygobject_new((GObject *) templ);
+    else {
+        Py_INCREF(Py_None);
+        py_templ = Py_None;
+    }
+
+    if (name == NULL) {
+	    Py_INCREF(Py_None);
+	    py_name = Py_None;
+    } else {
+	    py_name = PyString_FromString(name);
+	    if (!py_name) {
+		    if (PyErr_Occurred())
+			    PyErr_Print();
+		    Py_DECREF(py_templ);
+		    Py_DECREF(py_self);
+		    pyg_gil_state_release(__py_state);
+		    return NULL;
+	    }
+    }
+    
+    py_args = PyTuple_New(2);
+    PyTuple_SET_ITEM(py_args, 0, py_templ);
+    PyTuple_SET_ITEM(py_args, 1, py_name);
+    
+    py_method = PyObject_GetAttrString(py_self, "do_request_new_pad");
+    if (!py_method) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        Py_DECREF(py_args);
+        Py_DECREF(py_self);
+        pyg_gil_state_release(__py_state);
+        return NULL;
+    }
+    py_retval = PyObject_CallObject(py_method, py_args);
+    if (!py_retval) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        Py_DECREF(py_method);
+        Py_DECREF(py_args);
+        Py_DECREF(py_self);
+        pyg_gil_state_release(__py_state);
+        return NULL;
+    }
+    if (!PyObject_TypeCheck(py_retval, &PyGObject_Type)) {
+        PyErr_SetString(PyExc_TypeError, "retval should be a GObject");
+        PyErr_Print();
+        Py_DECREF(py_retval);
+        Py_DECREF(py_method);
+        Py_DECREF(py_args);
+        Py_DECREF(py_self);
+        pyg_gil_state_release(__py_state);
+        return NULL;
+    }
+    retval = (GstPad*) pygobject_get(py_retval);
+    g_object_ref((GObject *) retval);
+    
+    
+    Py_DECREF(py_retval);
+    Py_DECREF(py_method);
+    Py_DECREF(py_args);
+    Py_DECREF(py_self);
+    pyg_gil_state_release(__py_state);
+    
+    return retval;
+}

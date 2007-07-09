@@ -1,5 +1,12 @@
 2007-07-09  Edward Hervey  <bilboed@bilboed.com>
 
+	* gst/gstelement.override:
+	Override the proxy method for GstElement::request_new_pad virtual
+	methods since it can be called with NULL as the name.
+	Fixes #454259
+
+2007-07-09  Edward Hervey  <bilboed@bilboed.com>
+
 	Patch by: Zaheer Abbas Merali <zaheermerali@gmail.com>
 	* gst/gstevent.override:
 	Copy the GstStructure given as argument to gst_event_new_custom
