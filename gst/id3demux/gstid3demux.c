@@ -646,10 +646,7 @@ gst_id3demux_chain (GstPad * pad, GstBuffer * buf)
 
         /* Might need a new segment before the buffer */
         if (id3demux->need_newseg) {
-          if (!gst_id3demux_send_new_segment (id3demux)) {
-            GST_DEBUG_OBJECT (id3demux, "Failed to send new segment event");
-            goto error;
-          }
+          gst_id3demux_send_new_segment (id3demux);
           id3demux->need_newseg = FALSE;
         }
 

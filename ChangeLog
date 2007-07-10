@@ -1,3 +1,10 @@
+2007-07-10  Edward Hervey  <bilboed@gmail.com>
+
+	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain):
+	Don't return GST_FLOW_ERROR when pushing an event returns FALSE. We
+	don't have enough granularity to convert that boolean into a
+	GstFlowReturn.
+
 2007-07-06  Michael Smith <msmith@fluendo.com>
 
 	* gst/law/alaw-decode.c: (alawdec_sink_setcaps),
