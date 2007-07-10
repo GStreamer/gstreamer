@@ -1,3 +1,15 @@
+2007-07-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gsttaglist.c:
+	  Fix doc syntax.
+
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	  Add deprecation guards.
+
+	* libs/gst/base/gstcollectpads.h:
+	  Don't document object (this is implicitly private).
+
 2007-07-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gststructure.c: (gst_structure_parse_value):

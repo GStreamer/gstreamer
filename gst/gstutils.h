@@ -656,7 +656,9 @@ GstPad *                gst_bin_find_unconnected_pad    (GstBin *bin, GstPadDire
 /* buffer functions */
 GstBuffer *		gst_buffer_merge		(GstBuffer * buf1, GstBuffer * buf2);
 GstBuffer *		gst_buffer_join			(GstBuffer * buf1, GstBuffer * buf2);
+#ifndef GST_DISABLE_DEPRECATED
 void			gst_buffer_stamp		(GstBuffer * dest, const GstBuffer * src);
+#endif /* GST_DISABLE_DEPRECATED */
 
 /* atomic functions */
 void                    gst_atomic_int_set              (gint * atomic_int, gint value);

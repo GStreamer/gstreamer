@@ -298,7 +298,7 @@ gst_tag_lookup (GQuark entry)
  * any additional values will silenty be discarded when being added (unless
  * #GST_TAG_MERGE_REPLACE, #GST_TAG_MERGE_REPLACE_ALL, or
  * #GST_TAG_MERGE_PREPEND is used as merge mode, in which case the new
- * value will replace the old one in the list). 
+ * value will replace the old one in the list).
  *
  * The merge function will be called from gst_tag_list_copy_value() when
  * it is required that one or more values for a tag be condensed into
@@ -426,7 +426,7 @@ gst_tag_get_description (const gchar * tag)
  *
  * Gets the flag of @tag.
  *
- * Returns the flag of this tag.
+ * Returns: the flag of this tag.
  */
 GstTagFlag
 gst_tag_get_flag (const gchar * tag)
@@ -1330,8 +1330,8 @@ TAG_MERGE_FUNCS (pointer, gpointer)
  *
  * Use gst_tag_list_get_string_index (list, tag, 0, value) if you want
  * to retrieve the first string associated with this tag unmodified.
- * 
- * The resulting string in @value should be freed by the caller using g_free 
+ *
+ * The resulting string in @value should be freed by the caller using g_free
  * when no longer needed
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the
@@ -1347,7 +1347,7 @@ TAG_MERGE_FUNCS (pointer, gpointer)
  * Gets the value that is at the given index for the given tag in the given
  * list.
  *
- * The resulting string in @value should be freed by the caller using g_free 
+ * The resulting string in @value should be freed by the caller using g_free
  * when no longer needed
  *
  * Returns: TRUE, if a value was copied, FALSE if the tag didn't exist in the

@@ -2425,11 +2425,13 @@ gst_buffer_join (GstBuffer * buf1, GstBuffer * buf2)
  * Deprecated: use gst_buffer_copy_metadata() instead, it provides more
  * control.
  */
+#ifndef GST_REMOVE_DEPRECATED
 void
 gst_buffer_stamp (GstBuffer * dest, const GstBuffer * src)
 {
   gst_buffer_copy_metadata (dest, src, GST_BUFFER_COPY_TIMESTAMPS);
 }
+#endif
 
 static gboolean
 intersect_caps_func (GstPad * pad, GValue * ret, GstPad * orig)
