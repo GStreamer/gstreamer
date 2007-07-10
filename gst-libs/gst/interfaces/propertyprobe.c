@@ -88,7 +88,7 @@ gst_property_probe_iface_init (GstPropertyProbeInterface * iface)
  *
  * Get a list of properties for which probing is supported.
  *
- * Returns the list of properties for which probing is supported
+ * Returns: the list of properties for which probing is supported
  * by this element.
  */
 
@@ -147,11 +147,7 @@ gst_property_probe_probe_property (GstPropertyProbe * probe,
  * @probe: the #GstPropertyProbe to check.
  * @name: name of the property to return.
  *
- * Returns the #GParamSpec for the given property. It's similar to
- * g_object_class_find_property (), except that this function only
- * takes "probe'able" properties into account.
- *
- * Returns: the #GParamSpec that belongs to the given property.
+ * Runs a probe on the given property.
  */
 
 void

@@ -552,7 +552,7 @@ gst_base_rtp_audio_payload_handle_sample_based_buffer (GstBaseRTPPayload *
 
 /**
  * gst_base_rtp_audio_payload_push:
- * @basepayload: a #GstBaseRTPPayload
+ * @baseaudiopayload: a #GstBaseRTPPayload
  * @data: data to set as payload
  * @payload_len: length of payload
  * @timestamp: a #GstClockTime

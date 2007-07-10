@@ -1,3 +1,10 @@
+2007-07-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/interfaces/propertyprobe.c:
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  Make gtk-doc happy.
+
 2007-07-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

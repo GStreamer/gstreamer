@@ -24,7 +24,7 @@
  * @short_description: tag mappings and support functions for plugins
  *                     dealing with vorbiscomments
  * @see_also: #GstTagList
- * 
+ *
  * <refsect2>
  * <para>
  * Contains various utility functions for plugins to parse or create
@@ -145,7 +145,7 @@ gst_tag_to_vorbis_tag (const gchar * gst_tag)
  * gst_vorbis_tag_add:
  * @list: a #GstTagList
  * @tag: a vorbiscomment tag string (key in key=value), must be valid UTF-8
- * @val: a vorbiscomment value string (value in key=value), must be valid UTF-8
+ * @value: a vorbiscomment value string (value in key=value), must be valid UTF-8
  *
  * Convenience function using gst_tag_from_vorbis_tag(), parsing
  * a vorbis comment string into the right type and adding it to the
@@ -295,10 +295,10 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
  * @vendor_string: pointer to a string that should take the vendor string
  *                 of this vorbis comment or NULL if you don't need it.
  *
- * Creates a new tag list that contains the information parsed out of a 
+ * Creates a new tag list that contains the information parsed out of a
  * vorbiscomment packet.
  *
- * Returns: A new #GstTagList with all tags that could be extracted from the 
+ * Returns: A new #GstTagList with all tags that could be extracted from the
  *          given vorbiscomment buffer or NULL on error.
  */
 GstTagList *
@@ -378,7 +378,7 @@ MyForEach;
  * @list: a #GstTagList
  * @tag: a GStreamer tag identifier, such as #GST_TAG_ARTIST
  *
- * Creates a new tag list that contains the information parsed out of a 
+ * Creates a new tag list that contains the information parsed out of a
  * vorbiscomment packet.
  *
  * Returns: A #GList of newly-allowcated key=value strings. Free with
