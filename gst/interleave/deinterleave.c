@@ -251,7 +251,8 @@ gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
       goto alloc_buffer_bad_size;
 
     if (buffers_out[i])
-      gst_buffer_stamp (buffers_out[i], buf);
+      gst_buffer_copy_metadata (buffers_out[i], buf,
+          GST_BUFFER_COPY_TIMESTAMPS);
   }
 
   /* do the thing */
