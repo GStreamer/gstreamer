@@ -732,6 +732,9 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
     if (ret != GST_FLOW_OK)
       GST_ERROR_OBJECT (dtmfsrc,
           "Failed to push buffer on src pad", GST_BUFFER_SIZE (buf));
+
+    /* Make sure only the first packet sent has the marker set */
+    gst_rtp_buffer_set_marker (buf, FALSE);
   }
 
   gst_buffer_unref(buf);
