@@ -1,3 +1,9 @@
+2007-07-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/interleave/deinterleave.c: (gst_deinterleave_process):
+	* gst/vmnc/vmncdec.c: (vmnc_make_buffer):
+	  Fix build against core CVS.
+
 2007-07-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* REQUIREMENTS:

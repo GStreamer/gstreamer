@@ -488,7 +488,7 @@ vmnc_make_buffer (GstVMncDec * dec, GstBuffer * inbuf)
   }
 
   if (inbuf) {
-    gst_buffer_stamp (buf, inbuf);
+    gst_buffer_copy_metadata (buf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
   }
 
   gst_buffer_set_caps (buf, dec->caps);
