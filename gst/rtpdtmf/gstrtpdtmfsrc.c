@@ -622,7 +622,7 @@ gst_rtp_dtmf_src_wait_for_buffer_ts (GstRTPDTMFSrc *dtmfsrc, GstBuffer * buf)
     GstClockID clock_id;
     GstClockReturn clock_ret;
 
-    clock_id = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp);
+    clock_id = gst_clock_new_single_shot_id (clock, GST_BUFFER_TIMESTAMP (buf));
     clock_ret = gst_clock_id_wait (clock_id, NULL);
     if (clock_ret != GST_CLOCK_OK && clock_ret != GST_CLOCK_EARLY) {
       GST_ERROR_OBJECT (dtmfsrc, "Failed to wait on clock %s",
@@ -660,10 +660,6 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
   
   gst_rtp_dtmf_prepare_rtp_headers (dtmfsrc, buf);
 
-  /* duration of DTMF payload */
-  dtmfsrc->payload->duration +=
-      dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
-  
   /* timestamp and duration of GstBuffer */ 
   GST_BUFFER_DURATION (buf) = dtmfsrc->interval * GST_MSECOND;
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
@@ -674,6 +670,11 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
   /* copy payload and convert to network-byte order */
   g_memmove (payload, dtmfsrc->payload, sizeof (GstRTPDTMFPayload));
   payload->duration = g_htons (payload->duration);
+
+  /* duration of DTMF payload */
+  dtmfsrc->payload->duration +=
+      dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
+
 }
 
 static GstBuffer *
