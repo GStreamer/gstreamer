@@ -1,3 +1,9 @@
+2007-07-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* tests/check/elements/volume.c: (GST_START_TEST):
+	  Fix 'make check' build against core CVS.
+
 2007-07-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/interfaces/propertyprobe.c:

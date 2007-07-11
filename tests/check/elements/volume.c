@@ -372,6 +372,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_controller_usability)
 {
+  GstInterpolationControlSource *csource;
   GstController *c;
   GstElement *volume;
   GValue value = { 0, };
@@ -379,21 +380,25 @@ GST_START_TEST (test_controller_usability)
   /* note: the volume element should init the controller library for us */
   volume = setup_volume ();
 
-  g_value_init (&value, G_TYPE_DOUBLE);
-
   c = gst_controller_new (G_OBJECT (volume), "volume", NULL);
 
   fail_unless (GST_IS_CONTROLLER (c));
 
   /* this shouldn't crash, whether this mode is implemented or not */
-  gst_controller_set_interpolation_mode (c, "volume", GST_INTERPOLATE_CUBIC);
+  csource = gst_interpolation_control_source_new ();
+  gst_interpolation_control_source_set_interpolation_mode (csource,
+      GST_INTERPOLATE_CUBIC);
+  gst_controller_set_control_source (c, "volume", GST_CONTROL_SOURCE (csource));
+  g_object_unref (csource);
 
-  g_value_set_double (&value, 1.0);
-  gst_controller_set (c, "volume", 0 * GST_SECOND, &value);
-  g_value_set_double (&value, 1.0);
-  gst_controller_set (c, "volume", 5 * GST_SECOND, &value);
+  g_value_init (&value, G_TYPE_DOUBLE);
   g_value_set_double (&value, 0.0);
-  gst_controller_set (c, "volume", 10 * GST_SECOND, &value);
+  gst_interpolation_control_source_set (csource, 0 * GST_SECOND, &value);
+  g_value_set_double (&value, 1.0);
+  gst_interpolation_control_source_set (csource, 5 * GST_SECOND, &value);
+  g_value_set_double (&value, 0.0);
+  gst_interpolation_control_source_set (csource, 10 * GST_SECOND, &value);
+  g_value_unset (&value);
 
   g_object_unref (c);
 
