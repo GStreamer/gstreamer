@@ -316,7 +316,8 @@ gst_pngenc_chain (GstPad * pad, GstBuffer * buf)
 
   png_destroy_info_struct (pngenc->png_struct_ptr, &pngenc->png_info_ptr);
   png_destroy_write_struct (&pngenc->png_struct_ptr, (png_infopp) NULL);
-  gst_buffer_stamp (pngenc->buffer_out, buf);
+  gst_buffer_copy_metadata (pngenc->buffer_out, buf,
+      GST_BUFFER_COPY_TIMESTAMPS);
   gst_buffer_unref (buf);
   gst_buffer_set_caps (pngenc->buffer_out, GST_PAD_CAPS (pngenc->srcpad));
 

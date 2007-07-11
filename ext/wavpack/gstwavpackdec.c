@@ -359,7 +359,8 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
   if (ret != GST_FLOW_OK)
     goto out;
 
-  gst_buffer_stamp (outbuf, buf);
+  gst_buffer_copy_metadata (outbuf, buf, GST_BUFFER_COPY_TIMESTAMPS);
+
   /* If we got a DISCONT buffer forward the flag. Nothing else
    * has to be done as libwavpack doesn't store state between
    * Wavpack blocks */

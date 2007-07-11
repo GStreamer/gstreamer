@@ -316,7 +316,7 @@ gst_agingtv_transform (GstBaseTransform * trans, GstBuffer * in,
   gint area_scale = width * height / 64 / 480;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  gst_buffer_stamp (out, in);
+  gst_buffer_copy_metadata (out, in, GST_BUFFER_COPY_TIMESTAMPS);
 
   if (area_scale <= 0)
     area_scale = 1;

@@ -2416,7 +2416,7 @@ gst_matroska_demux_add_wvpk_header (GstMatroskaTrackContext * stream,
   GST_WRITE_UINT32_LE (data + 12, wvh.total_samples);
   GST_WRITE_UINT32_LE (data + 16, wvh.block_index);
   g_memmove (data + 20, GST_BUFFER_DATA (*buf), block_length);
-  gst_buffer_stamp (newbuf, *buf);
+  gst_buffer_copy_metadata (newbuf, *buf, GST_BUFFER_COPY_TIMESTAMPS);
   gst_buffer_unref (*buf);
   *buf = newbuf;
   return TRUE;
@@ -2485,7 +2485,7 @@ gst_matroska_demux_check_subtitle_buffer (GstMatroskaDemux * demux,
   GST_BUFFER_MALLOCDATA (newbuf) = (guint8 *) utf8;
   GST_BUFFER_DATA (newbuf) = (guint8 *) utf8;
   GST_BUFFER_SIZE (newbuf) = strlen (utf8);
-  gst_buffer_stamp (newbuf, buf);
+  gst_buffer_copy_metadata (newbuf, buf, GST_BUFFER_COPY_TIMESTAMPS);
 
   gst_buffer_unref (buf);
   return newbuf;
@@ -2572,7 +2572,7 @@ gst_matroska_decode_buffer (GstMatroskaTrackContext * context, GstBuffer * buf)
     GST_BUFFER_MALLOCDATA (new_buf) = (guint8 *) new_data;
     GST_BUFFER_DATA (new_buf) = (guint8 *) new_data;
     GST_BUFFER_SIZE (new_buf) = new_size;
-    gst_buffer_stamp (new_buf, buf);
+    gst_buffer_copy_metadata (new_buf, buf, GST_BUFFER_COPY_TIMESTAMPS);
 
     gst_buffer_unref (buf);
     buf = new_buf;

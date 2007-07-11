@@ -161,7 +161,7 @@ gst_quarktv_transform (GstBaseTransform * trans, GstBuffer * in,
 
   filter = GST_QUARKTV (trans);
 
-  gst_buffer_stamp (out, in);
+  gst_buffer_copy_metadata (out, in, GST_BUFFER_COPY_TIMESTAMPS);
 
   area = filter->area;
   src = (guint32 *) GST_BUFFER_DATA (in);

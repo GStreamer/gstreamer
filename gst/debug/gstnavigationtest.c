@@ -214,7 +214,7 @@ gst_navigationtest_transform (GstBaseTransform * trans, GstBuffer * in,
 
   /* do something interesting here.  This simply copies the source
    * to the destination. */
-  gst_buffer_stamp (out, in);
+  gst_buffer_copy_metadata (out, in, GST_BUFFER_COPY_TIMESTAMPS);
 
   memcpy (GST_BUFFER_DATA (out), GST_BUFFER_DATA (in),
       MIN (GST_BUFFER_SIZE (in), GST_BUFFER_SIZE (out)));

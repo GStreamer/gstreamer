@@ -193,7 +193,7 @@ gst_cairo_time_overlay_transform (GstBaseTransform * trans, GstBuffer * in,
 
   timeoverlay = GST_CAIRO_TIME_OVERLAY (trans);
 
-  gst_buffer_stamp (out, in);
+  gst_buffer_copy_metadata (out, in, GST_BUFFER_COPY_TIMESTAMPS);
 
   src = GST_BUFFER_DATA (in);
   dest = GST_BUFFER_DATA (out);

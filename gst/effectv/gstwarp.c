@@ -227,7 +227,7 @@ gst_warptv_transform (GstBaseTransform * trans, GstBuffer * in, GstBuffer * out)
   gint32 *sintable, *ctable;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  gst_buffer_stamp (out, in);
+  gst_buffer_copy_metadata (out, in, GST_BUFFER_COPY_TIMESTAMPS);
 
   xw = (gint) (sin ((warptv->tval + 100) * M_PI / 128) * 30);
   yw = (gint) (sin ((warptv->tval) * M_PI / 256) * -35);

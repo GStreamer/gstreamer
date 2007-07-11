@@ -430,7 +430,7 @@ gst_jpegenc_chain (GstPad * pad, GstBuffer * buf)
   if (ret != GST_FLOW_OK)
     goto done;
 
-  gst_buffer_stamp (outbuf, buf);
+  gst_buffer_copy_metadata (outbuf, buf, GST_BUFFER_COPY_TIMESTAMPS);
 
   width = jpegenc->width;
   height = jpegenc->height;

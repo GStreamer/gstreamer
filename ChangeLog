@@ -1,3 +1,25 @@
+2007-07-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/cairo/gsttimeoverlay.c: (gst_cairo_time_overlay_transform):
+	* ext/jpeg/gstjpegenc.c: (gst_jpegenc_chain):
+	* ext/libpng/gstpngenc.c: (gst_pngenc_chain):
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
+	* gst/debug/gstnavigationtest.c: (gst_navigationtest_transform):
+	* gst/effectv/gstaging.c: (gst_agingtv_transform):
+	* gst/effectv/gstdice.c: (gst_dicetv_transform):
+	* gst/effectv/gstedge.c: (gst_edgetv_transform):
+	* gst/effectv/gstquark.c: (gst_quarktv_transform):
+	* gst/effectv/gstrev.c: (gst_revtv_transform):
+	* gst/effectv/gstshagadelic.c: (gst_shagadelictv_transform):
+	* gst/effectv/gstvertigo.c: (gst_vertigotv_transform):
+	* gst/effectv/gstwarp.c: (gst_warptv_transform):
+	* gst/matroska/matroska-demux.c:
+	(gst_matroska_demux_add_wvpk_header),
+	(gst_matroska_demux_check_subtitle_buffer),
+	(gst_matroska_decode_buffer):
+	* gst/videofilter/gstvideoflip.c: (gst_video_flip_transform):
+	  Fix build against core CVS.
+
 2007-07-10  Edward Hervey  <bilboed@gmail.com>
 
 	* gst/id3demux/gstid3demux.c: (gst_id3demux_chain):
