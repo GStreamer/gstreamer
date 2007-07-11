@@ -651,8 +651,6 @@ gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
   
   /* timestamp of RTP header */
   gst_rtp_buffer_set_timestamp (buf, dtmfsrc->rtp_timestamp);
-  dtmfsrc->rtp_timestamp += 
-      dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
 }
 
 static void
