@@ -560,7 +560,7 @@ gst_dvdlpcmdec_chain_raw (GstPad * pad, GstBuffer * buf)
       if (ret != GST_FLOW_OK)
         goto buffer_alloc_failed;
 
-      gst_buffer_stamp (outbuf, buf);
+      gst_buffer_copy_metadata (outbuf, buf, GST_BUFFER_COPY_TIMESTAMPS);
 
       /* adjust samples so we can calc the new timestamp */
       samples = samples / dvdlpcmdec->channels;

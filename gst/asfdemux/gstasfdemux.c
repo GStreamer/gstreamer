@@ -2980,7 +2980,9 @@ gst_asf_demux_descramble_buffer (GstASFDemux * demux, AsfStream * stream,
     }
   }
 
-  gst_buffer_stamp (descrambled_buffer, scrambled_buffer);
+  gst_buffer_copy_metadata (descrambled_buffer, scrambled_buffer,
+      GST_BUFFER_COPY_TIMESTAMPS);
+
   /* FIXME/CHECK: do we need to transfer buffer flags here too? */
 
   gst_buffer_unref (scrambled_buffer);
