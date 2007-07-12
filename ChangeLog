@@ -1,3 +1,11 @@
+2007-07-12  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/playback/gstplaybasebin.c: (no_more_pads_full),
+	(setup_source):
+	Clear the dynamic pads counter when starting a new uri. This makes
+	reusing playbin work again.
+	Fixes #454264.
+
 2007-07-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

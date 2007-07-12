@@ -1051,11 +1051,13 @@ no_more_pads_full (GstElement * element, gboolean subs,
   if (!g_object_get_data (G_OBJECT (element), "pending"))
     return;
 
-  GST_DEBUG_OBJECT (element, "remove pending");
-
   g_object_set_data (G_OBJECT (element), "pending", NULL);
 
   play_base_bin->pending--;
+
+  GST_DEBUG_OBJECT (element, "remove pending, now %d pending",
+      play_base_bin->pending);
+
   if (play_base_bin->pending == 0) {
     /* we can commit this group for playback now */
     group_commit (play_base_bin, play_base_bin->is_stream, subs);
@@ -1988,6 +1990,9 @@ setup_source (GstPlayBaseBin * play_base_bin)
   /* remove our previous preroll queues */
   remove_groups (play_base_bin);
 
+  /* clear pending dynamic elements */
+  play_base_bin->pending = 0;
+
   /* do subs */
   if (subbin) {
     GstElement *db;
@@ -2005,6 +2010,9 @@ setup_source (GstPlayBaseBin * play_base_bin)
         G_CALLBACK (unknown_type), play_base_bin);
     g_object_set_data (G_OBJECT (db), "pending", "1");
     play_base_bin->pending++;
+
+    GST_DEBUG_OBJECT (play_base_bin, "we have subtitles, %d pending",
+        play_base_bin->pending);
 
     if (!play_base_bin->is_stream) {
       GstStateChangeReturn sret;
