@@ -578,6 +578,7 @@ gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc,
   dtmfsrc->payload->event = CLAMP (event_number, MIN_EVENT, MAX_EVENT);
   dtmfsrc->payload->volume = CLAMP (event_volume, MIN_VOLUME, MAX_VOLUME);
   dtmfsrc->first_packet = TRUE;
+  dtmfsrc->last_packet = FALSE;
 
   gst_rtp_dtmf_prepare_timestamps (dtmfsrc);
   gst_rtp_dtmf_src_set_caps (dtmfsrc);
@@ -596,20 +597,10 @@ gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
 {
   g_return_if_fail (dtmfsrc->payload != NULL);
 
-  if (!gst_pad_pause_task (dtmfsrc->srcpad)) {
-    GST_ERROR_OBJECT (dtmfsrc, "Failed to pause task on src pad");
-    return;
-  }
-
   /* Push the last packet with e-bit set */
-  dtmfsrc->payload->e = 1;
-  gst_rtp_dtmf_src_push_next_rtp_packet (dtmfsrc);
+  /* Next packet sent will be the last */
+  dtmfsrc->last_packet = TRUE;
 
-  /* Don't forget to release the stream lock */
-  gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
-  
-  g_free (dtmfsrc->payload);
-  dtmfsrc->payload = NULL;
 }
 
 static void
@@ -645,7 +636,11 @@ gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
   if (dtmfsrc->first_packet) {
     gst_rtp_buffer_set_marker (buf, TRUE);
     dtmfsrc->first_packet = FALSE;
+  } else if (dtmfsrc->last_packet) {
+    dtmfsrc->payload->e = 1;
+    dtmfsrc->last_packet = FALSE;
   }
+
   dtmfsrc->seqnum++;
   gst_rtp_buffer_set_seq (buf, dtmfsrc->seqnum);
   
@@ -709,15 +704,14 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
   GstFlowReturn ret;
   gint redundancy_count = 1;
 
-  if (dtmfsrc->first_packet == TRUE || dtmfsrc->payload->e) {
+  if (dtmfsrc->first_packet == TRUE || dtmfsrc->last_packet == TRUE) {
     redundancy_count = dtmfsrc->packet_redundancy;
 
     if(dtmfsrc->first_packet == TRUE) {
       GST_DEBUG_OBJECT (dtmfsrc,
           "redundancy count set to %d due to dtmf start",
           redundancy_count);
-    }
-    if(dtmfsrc->payload->e) {
+    } else if(dtmfsrc->last_packet == TRUE) {
       GST_DEBUG_OBJECT (dtmfsrc,
           "redundancy count set to %d due to dtmf stop",
           redundancy_count);
@@ -746,6 +740,21 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
   gst_buffer_unref(buf);
   GST_DEBUG_OBJECT (dtmfsrc,
           "pushed DTMF event '%d' on src pad", dtmfsrc->payload->event);
+
+  if (dtmfsrc->payload->e) {
+    /* Don't forget to release the stream lock */
+    gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+
+    g_free (dtmfsrc->payload);
+    dtmfsrc->payload = NULL;
+
+    if (!gst_pad_pause_task (dtmfsrc->srcpad)) {
+      GST_ERROR_OBJECT (dtmfsrc, "Failed to pause task on src pad");
+      return;
+    }
+
+  }
+
 }
 
 static void

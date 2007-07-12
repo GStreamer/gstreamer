@@ -81,6 +81,7 @@ struct _GstRTPDTMFSrc {
   guint             ssrc;
   guint             current_ssrc;
   gboolean          first_packet;
+  gboolean          last_packet;
   
   GstClockTime      timestamp;
   GstSegment        segment;
