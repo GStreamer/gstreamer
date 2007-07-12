@@ -31,6 +31,7 @@ enum {
 struct vts_color_struct {
         guint8 Y, U, V;
         guint8 R, G, B;
+	guint8 A;
 };
 
 typedef struct paintinfo_struct paintinfo;

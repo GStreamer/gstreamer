@@ -1,5 +1,13 @@
 2007-07-12  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/videotestsrc/videotestsrc.c: (paint_hline_AYUV),
+	(paint_hline_str4):
+	* gst/videotestsrc/videotestsrc.h:
+	Add alpha to the color struct.
+	Use a default alpha value of 255 instead of 128.
+
+2007-07-12  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/playback/gstplaybasebin.c: (no_more_pads_full),
 	(setup_source):
 	Clear the dynamic pads counter when starting a new uri. This makes

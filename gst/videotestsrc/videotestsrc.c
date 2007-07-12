@@ -211,29 +211,29 @@ enum
 
 static const struct vts_color_struct vts_colors[] = {
   /* 100% white */
-  {255, 128, 128, 255, 255, 255},
+  {255, 128, 128, 255, 255, 255, 255},
   /* yellow */
-  {226, 0, 155, 255, 255, 0},
+  {226, 0, 155, 255, 255, 0, 255},
   /* cyan */
-  {179, 170, 0, 0, 255, 255},
+  {179, 170, 0, 0, 255, 255, 255},
   /* green */
-  {150, 46, 21, 0, 255, 0},
+  {150, 46, 21, 0, 255, 0, 255},
   /* magenta */
-  {105, 212, 235, 255, 0, 255},
+  {105, 212, 235, 255, 0, 255, 255},
   /* red */
-  {76, 85, 255, 255, 0, 0},
+  {76, 85, 255, 255, 0, 0, 255},
   /* blue */
-  {29, 255, 107, 0, 0, 255},
+  {29, 255, 107, 0, 0, 255, 255},
   /* black */
-  {16, 128, 128, 0, 0, 0},
+  {16, 128, 128, 0, 0, 0, 255},
   /* -I */
-  {16, 198, 21, 0, 0, 128},
+  {16, 198, 21, 0, 0, 128, 255},
   /* +Q */
-  {16, 235, 198, 0, 128, 255},
+  {16, 235, 198, 0, 128, 255, 255},
   /* superblack */
-  {0, 128, 128, 0, 0, 0},
+  {0, 128, 128, 0, 0, 0, 255},
   /* 5% grey */
-  {32, 128, 128, 32, 32, 32},
+  {32, 128, 128, 32, 32, 32, 255},
 };
 
 
@@ -1094,15 +1094,13 @@ paint_setup_YVYU (paintinfo * p, unsigned char *dest)
 static void
 paint_hline_AYUV (paintinfo * p, int x, int y, int w)
 {
-  /* TODO: put into colour struct or take value from property maybe */
-  const uint8_t alpha_color = 128;
   int offset;
 
   offset = (y * p->ystride) + (x * 4);
   oil_splat_u8 (p->yp + offset, 4, &p->color->Y, w);
   oil_splat_u8 (p->up + offset, 4, &p->color->U, w);
   oil_splat_u8 (p->vp + offset, 4, &p->color->V, w);
-  oil_splat_u8 (p->ap + offset, 4, &alpha_color, w);
+  oil_splat_u8 (p->ap + offset, 4, &p->color->A, w);
 }
 
 static void
@@ -1394,10 +1392,7 @@ paint_hline_str4 (paintinfo * p, int x, int y, int w)
   oil_splat_u8 (p->vp + offset + x * 4, 4, &p->color->B, w);
 
   if (p->ap != NULL) {
-    /* TODO: put into colour struct or take value from property maybe */
-    const uint8_t alpha_color = 128;
-
-    oil_splat_u8 (p->ap + offset + (x * 4), 4, &alpha_color, w);
+    oil_splat_u8 (p->ap + offset + (x * 4), 4, &p->color->A, w);
   }
 }
 
