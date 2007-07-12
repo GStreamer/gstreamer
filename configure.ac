@@ -417,14 +417,10 @@ fi
 AC_SUBST(GST_DISABLE_XML_DEFINE)
 
 dnl check for "check", unit testing library/header
-AM_PATH_CHECK(0.9.2,
-    [
-        HAVE_CHECK=yes
-        AC_MSG_NOTICE(CHECK_CFLAGS: $CHECK_CFLAGS)
-        AC_MSG_NOTICE(CHECK_LIBS: $CHECK_LIBS)
-    ],
-    HAVE_CHECK=no)
-AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+PKG_CHECK_MODULES(CHECK, check >= 0.9.2,
+  AM_CONDITIONAL(HAVE_CHECK, true),
+  AM_CONDITIONAL(HAVE_CHECK, false)
+)
 
 dnl *** set variables based on configure arguments
 

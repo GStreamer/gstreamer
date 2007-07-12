@@ -1,3 +1,8 @@
+2007-07-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Use pkg-config to locate check.
+
 2007-07-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gsttaglist.c:
@@ -115,7 +120,7 @@
 	* docs/gst/Makefile.am:
 	* docs/libs/Makefile.am:
 	* docs/plugins/Makefile.am:
-	  Simplity --extra-dir as gtkdoc scans recursively.
+	  Simplify --extra-dir as gtkdoc scans recursively.
 
 2007-07-03  Wim Taymans  <wim.taymans@gmail.com>
 
