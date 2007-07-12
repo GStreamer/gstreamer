@@ -144,6 +144,7 @@
 #define MAX_EVENT_STRING         "16"
 #define MIN_VOLUME               0
 #define MAX_VOLUME               36
+#define MIN_EVENT_DURATION       50
 
 #define DEFAULT_PACKET_REDUNDANCY 1
 #define MIN_PACKET_REDUNDANCY 1
@@ -659,6 +660,10 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
   
   gst_rtp_dtmf_prepare_rtp_headers (dtmfsrc, buf);
 
+  /* duration of DTMF payload */
+  dtmfsrc->payload->duration +=
+      dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
+
   /* timestamp and duration of GstBuffer */ 
   GST_BUFFER_DURATION (buf) = dtmfsrc->interval * GST_MSECOND;
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
@@ -668,12 +673,14 @@ gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
   
   /* copy payload and convert to network-byte order */
   g_memmove (payload, dtmfsrc->payload, sizeof (GstRTPDTMFPayload));
+  /* Force the packet duration to a certain minumum
+   * if its the end of the event
+   */
+  if (payload->e &&
+      payload->duration < MIN_EVENT_DURATION * dtmfsrc->clock_rate / 1000)
+    payload->duration = MIN_EVENT_DURATION * dtmfsrc->clock_rate / 1000;
+
   payload->duration = g_htons (payload->duration);
-
-  /* duration of DTMF payload */
-  dtmfsrc->payload->duration +=
-      dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
-
 }
 
 static GstBuffer *
