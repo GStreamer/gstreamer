@@ -364,7 +364,9 @@ gst_rtp_mux_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret;
   
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
-  
+
+  buffer = gst_buffer_make_writable(buffer);
+
   rtp_mux->seqnum++;
   GST_LOG_OBJECT (rtp_mux, "setting RTP seqnum %d", rtp_mux->seqnum);
   gst_rtp_buffer_set_seq (buffer, rtp_mux->seqnum);
