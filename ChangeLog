@@ -1,3 +1,8 @@
+2007-07-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Use pkg-config to locate check.
+
 2007-07-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/interleave/deinterleave.c: (gst_deinterleave_process):
