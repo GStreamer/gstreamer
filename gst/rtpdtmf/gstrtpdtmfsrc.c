@@ -563,8 +563,7 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc *dtmfsrc)
   dtmfsrc->rtp_timestamp = dtmfsrc->ts_base +
       gst_util_uint64_scale_int (
           gst_segment_to_running_time (&dtmfsrc->segment, GST_FORMAT_TIME,
-              dtmfsrc->timestamp -
-              gst_element_get_base_time (GST_ELEMENT (dtmfsrc))),
+              dtmfsrc->timestamp),
           dtmfsrc->clock_rate, GST_SECOND);
 }
 
