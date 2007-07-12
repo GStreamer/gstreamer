@@ -263,8 +263,10 @@ AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
 
 dnl FIXME: get rid of this by making sure gstreamer-check brings it in
 dnl check for "check", unit testing library/header
-AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
-AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+PKG_CHECK_MODULES(CHECK, check >= 0.9.2,
+  AM_CONDITIONAL(HAVE_CHECK, true),
+  AM_CONDITIONAL(HAVE_CHECK, false)
+)
 
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
