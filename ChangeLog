@@ -1,3 +1,13 @@
+2007-07-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Use pkg-config to locate check. Bump core requirement.
+
+	* ext/ffmpeg/gstffmpegdeinterlace.c: (gst_ffmpegdeinterlace_chain):
+	* ext/ffmpeg/gstffmpegscale.c: (gst_ffmpegscale_transform):
+	  Replace deprecated method.
+	  
+
 2007-07-05  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_chain_video),

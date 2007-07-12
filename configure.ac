@@ -39,7 +39,7 @@ AC_SUBST(GST_MAJORMINOR)
 AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=0.10.4
+GST_REQ=0.10.13
 LIBOIL_MAJORMINOR=0.3
 LIBOIL_REQ=0.3.6
 
@@ -171,9 +171,10 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl FIXME: get rid of this by making sure gstreamer-check brings it in
 dnl check for "check", unit testing library/header
-AM_PATH_CHECK(0.9.2, HAVE_CHECK=yes, HAVE_CHECK=no)
-AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
-
+PKG_CHECK_MODULES(CHECK, check >= 0.9.2,
+  AM_CONDITIONAL(HAVE_CHECK, true),
+  AM_CONDITIONAL(HAVE_CHECK, false)
+)
 dnl Add MacOSX specific flags
 AC_CANONICAL_HOST
 case $host_os in

@@ -180,7 +180,7 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstBuffer * inbuf)
     avpicture_deinterlace (&deinterlace->to_frame, &deinterlace->from_frame,
         deinterlace->pixfmt, deinterlace->width, deinterlace->height);
 
-    gst_buffer_stamp (outbuf, inbuf);
+    gst_buffer_copy_metadata (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
 
     result = gst_pad_push (deinterlace->srcpad, outbuf);
   }

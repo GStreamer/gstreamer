@@ -347,7 +347,7 @@ gst_ffmpegscale_transform (GstBaseTransform * trans, GstBuffer * inbuf,
   GstFFMpegScale *scale = GST_FFMPEGSCALE (trans);
   AVPicture in_frame, out_frame;
 
-  gst_buffer_stamp (outbuf, inbuf);
+  gst_buffer_copy_metadata (outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
 
   gst_ffmpeg_avpicture_fill (&in_frame,
       GST_BUFFER_DATA (inbuf),
