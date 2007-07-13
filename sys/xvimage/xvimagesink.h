@@ -252,6 +252,7 @@ struct _GstXvImageSink {
 
   gboolean synchronous;
   gboolean keep_aspect;
+  gboolean draw_border;
   gboolean handle_events;
 
   gint brightness;

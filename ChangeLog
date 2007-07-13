@@ -1,5 +1,15 @@
 2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_put),
+	(gst_xvimagesink_setcaps):
+	* sys/xvimage/xvimagesink.h:
+	After a caps change, redraw our borders to avoid garbage left there
+	when the image format changes to a smaller size, like 16:9 -> 4:3
+	Also, hold the flow_lock a bit longer in the set_caps while we're
+	fiddling with the xcontext.
+
+2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* Makefile.am:
 	* configure.ac:
 	* tests/Makefile.am:

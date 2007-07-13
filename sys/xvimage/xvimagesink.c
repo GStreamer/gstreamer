@@ -740,9 +740,10 @@ gst_xvimagesink_xvimage_put (GstXvImageSink * xvimagesink,
   }
 
   /* Draw borders when displaying the first frame. After this
-     draw borders only on expose event. */
-  if (!xvimagesink->cur_image) {
+     draw borders only on expose event or after a size change. */
+  if (!xvimagesink->cur_image || xvimagesink->draw_border) {
     draw_border = TRUE;
+    xvimagesink->draw_border = FALSE;
   }
 
   /* Store a reference to the last image we put, lose the previous one */
@@ -2025,7 +2026,10 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
         GST_VIDEO_SINK_WIDTH (xvimagesink),
         GST_VIDEO_SINK_HEIGHT (xvimagesink));
   }
-  g_mutex_unlock (xvimagesink->flow_lock);
+
+  /* After a resize, we want to redraw the borders in case the new frame size 
+   * doesn't cover the same area */
+  xvimagesink->draw_border = TRUE;
 
   /* We renew our xvimage only if size or format changed;
    * the xvimage is the same size as the video pixel size */
@@ -2043,6 +2047,8 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   }
 
   xvimagesink->xcontext->im_format = im_format;
+
+  g_mutex_unlock (xvimagesink->flow_lock);
 
   return TRUE;
 }
