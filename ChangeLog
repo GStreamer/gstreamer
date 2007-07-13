@@ -1,3 +1,10 @@
+2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	Revert the pkg-config check for libcheck, since it pulls in the
+	wrong non-PIC libcheck.a on Ubuntu and probably Fedora too. We need
+	a proper solution, either from the check project, or something else.
+
 2007-07-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

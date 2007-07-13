@@ -417,10 +417,21 @@ fi
 AC_SUBST(GST_DISABLE_XML_DEFINE)
 
 dnl check for "check", unit testing library/header
-PKG_CHECK_MODULES(CHECK, check >= 0.9.2,
-  AM_CONDITIONAL(HAVE_CHECK, true),
-  AM_CONDITIONAL(HAVE_CHECK, false)
-)
+AM_PATH_CHECK(0.9.2,
+    [
+        HAVE_CHECK=yes
+        AC_MSG_NOTICE(CHECK_CFLAGS: $CHECK_CFLAGS)
+        AC_MSG_NOTICE(CHECK_LIBS: $CHECK_LIBS)
+    ],
+    HAVE_CHECK=no)
+AM_CONDITIONAL(HAVE_CHECK, test "x$HAVE_CHECK" = "xyes")
+
+dnl pkg-config check that for libcheck that works for cross-compiling
+dnl but not normal compilation on Fedora & Ubuntu:
+dnl PKG_CHECK_MODULES(CHECK, check >= 0.9.2,
+dnl   AM_CONDITIONAL(HAVE_CHECK, true),
+dnl   AM_CONDITIONAL(HAVE_CHECK, false)
+dnl )
 
 dnl *** set variables based on configure arguments
 
