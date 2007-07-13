@@ -4,7 +4,7 @@ else
 SUBDIRS_EXAMPLES =
 endif
 
-if HAVE_CHECK
+if HAVE_GST_CHECK
 SUBDIRS_CHECK = check
 else
 SUBDIRS_CHECK =

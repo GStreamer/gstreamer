@@ -45,7 +45,7 @@ include $(top_srcdir)/common/po.mak
 check-valgrind:
 	cd tests/check && make check-valgrind
 
-if HAVE_CHECK
+if HAVE_GST_CHECK
 check-torture:
 	cd tests/check && make torture
 else

@@ -1,5 +1,15 @@
 2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* Makefile.am:
+	* configure.ac:
+	* tests/Makefile.am:
+	Remove bogus check for libcheck, since we check for
+	gstreamer-check and it pulls in the required info from there, and we
+	weren't actually _using_ the information for libcheck ourselves
+	anyway.
+
+2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
 	(gst_ffmpeg_caps_to_pixfmt):
 	Fix the r_mask test for RGBA32 on little-endian.
