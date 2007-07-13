@@ -1,3 +1,11 @@
+2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/ffmpegcolorspace/gstffmpegcodecmap.c:
+	(gst_ffmpeg_caps_to_pixfmt):
+	Fix the r_mask test for RGBA32 on little-endian.
+	Fix a stupid typo that would have obviously broken 
+	compilation on big-endian, if anyone was testing.
+
 2007-07-12  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/videotestsrc/videotestsrc.c: (paint_hline_AYUV),

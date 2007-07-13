@@ -637,7 +637,7 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
 #else
               if (rmask == 0x00ff0000)
                 context->pix_fmt = PIX_FMT_BGRA32;
-              else if (rmask == 0x00ff0000)
+              else if (rmask == 0x0000ff00)
                 context->pix_fmt = PIX_FMT_RGBA32;
               else if (rmask == 0x000000ff)
                 context->pix_fmt = PIX_FMT_ARGB32;
@@ -648,12 +648,12 @@ gst_ffmpeg_caps_to_pixfmt (const GstCaps * caps,
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
               if (rmask == 0x00ff0000)
                 context->pix_fmt = PIX_FMT_RGB32;
-              elseif (rmask == 0x0000ff00)
-                  context->pix_fmt = PIX_FMT_BGR32;
-              elseif (rmask == 0xff000000)
-                  context->pix_fmt = PIX_FMT_xRGB32;
+              else if (rmask == 0x0000ff00)
+                context->pix_fmt = PIX_FMT_BGR32;
+              else if (rmask == 0xff000000)
+                context->pix_fmt = PIX_FMT_xRGB32;
               else              // if (rmask == 0x000000ff)
-              context->pix_fmt = PIX_FMT_BGRx32;
+                context->pix_fmt = PIX_FMT_BGRx32;
 #else
               if (rmask == 0x0000ff00)
                 context->pix_fmt = PIX_FMT_RGB32;
