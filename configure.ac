@@ -104,6 +104,7 @@ AG_GST_CHECK_GST($GST_MAJORMINOR, [$GST_REQ])
 AG_GST_CHECK_GST_BASE($GST_MAJORMINOR, [$GST_REQ])
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GST_REQ])
 AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
+AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 
 AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
@@ -169,12 +170,6 @@ dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 GST_PLUGIN_LDFLAGS="-module -avoid-version -export-symbols-regex '^[_]*gst_plugin_desc\$\$' $GST_ALL_LDFLAGS"
 AC_SUBST(GST_PLUGIN_LDFLAGS)
 
-dnl FIXME: get rid of this by making sure gstreamer-check brings it in
-dnl check for "check", unit testing library/header
-PKG_CHECK_MODULES(CHECK, check >= 0.9.2,
-  AM_CONDITIONAL(HAVE_CHECK, true),
-  AM_CONDITIONAL(HAVE_CHECK, false)
-)
 dnl Add MacOSX specific flags
 AC_CANONICAL_HOST
 case $host_os in
