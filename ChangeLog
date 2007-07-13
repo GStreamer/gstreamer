@@ -1,3 +1,12 @@
+2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* tests/Makefile.am:
+	Remove bogus check for libcheck, since we check for
+	gstreamer-check and it pulls in the required info from there,
+	and we weren't actually _using_ the information for libcheck
+	ourselves anyway.
+
 2007-07-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
