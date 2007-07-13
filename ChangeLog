@@ -1,3 +1,11 @@
+2007-07-13  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/videorate/gstvideorate.c: (gst_video_rate_init),
+	(gst_video_rate_query):
+	Use boilerplate.
+	Add latency query, might not be perfect yet but already works a lot
+	better. Fixes #442557.
+
 2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_put),

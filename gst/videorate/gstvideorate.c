@@ -130,13 +130,10 @@ static GstStaticPadTemplate gst_video_rate_sink_template =
     GST_STATIC_CAPS ("video/x-raw-yuv; video/x-raw-rgb")
     );
 
-static void gst_video_rate_base_init (gpointer g_class);
-static void gst_video_rate_class_init (GstVideoRateClass * klass);
-static void gst_video_rate_init (GstVideoRate * videorate);
-
 static void gst_video_rate_swap_prev (GstVideoRate * videorate,
     GstBuffer * buffer, gint64 time);
 static gboolean gst_video_rate_event (GstPad * pad, GstEvent * event);
+static gboolean gst_video_rate_query (GstPad * pad, GstQuery * query);
 static GstFlowReturn gst_video_rate_chain (GstPad * pad, GstBuffer * buffer);
 
 static void gst_video_rate_set_property (GObject * object,
@@ -147,34 +144,9 @@ static void gst_video_rate_get_property (GObject * object,
 static GstStateChangeReturn gst_video_rate_change_state (GstElement * element,
     GstStateChange transition);
 
-static GstElementClass *parent_class = NULL;
-
 /*static guint gst_video_rate_signals[LAST_SIGNAL] = { 0 }; */
 
-static GType
-gst_video_rate_get_type (void)
-{
-  static GType video_rate_type = 0;
-
-  if (!video_rate_type) {
-    static const GTypeInfo video_rate_info = {
-      sizeof (GstVideoRateClass),
-      gst_video_rate_base_init,
-      NULL,
-      (GClassInitFunc) gst_video_rate_class_init,
-      NULL,
-      NULL,
-      sizeof (GstVideoRate),
-      0,
-      (GInstanceInitFunc) gst_video_rate_init,
-    };
-
-    video_rate_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstVideoRate", &video_rate_info, 0);
-  }
-
-  return video_rate_type;
-}
+GST_BOILERPLATE (GstVideoRate, gst_video_rate, GstElement, GST_TYPE_ELEMENT);
 
 static void
 gst_video_rate_base_init (gpointer g_class)
@@ -399,22 +371,23 @@ gst_video_rate_reset (GstVideoRate * videorate)
 }
 
 static void
-gst_video_rate_init (GstVideoRate * videorate)
+gst_video_rate_init (GstVideoRate * videorate, GstVideoRateClass * klass)
 {
   GST_DEBUG ("gst_video_rate_init");
   videorate->sinkpad =
       gst_pad_new_from_static_template (&gst_video_rate_sink_template, "sink");
-  gst_element_add_pad (GST_ELEMENT (videorate), videorate->sinkpad);
   gst_pad_set_event_function (videorate->sinkpad, gst_video_rate_event);
   gst_pad_set_chain_function (videorate->sinkpad, gst_video_rate_chain);
   gst_pad_set_getcaps_function (videorate->sinkpad, gst_video_rate_getcaps);
   gst_pad_set_setcaps_function (videorate->sinkpad, gst_video_rate_setcaps);
+  gst_element_add_pad (GST_ELEMENT (videorate), videorate->sinkpad);
 
   videorate->srcpad =
       gst_pad_new_from_static_template (&gst_video_rate_src_template, "src");
-  gst_element_add_pad (GST_ELEMENT (videorate), videorate->srcpad);
+  gst_pad_set_query_function (videorate->srcpad, gst_video_rate_query);
   gst_pad_set_getcaps_function (videorate->srcpad, gst_video_rate_getcaps);
   gst_pad_set_setcaps_function (videorate->srcpad, gst_video_rate_setcaps);
+  gst_element_add_pad (GST_ELEMENT (videorate), videorate->srcpad);
 
   gst_video_rate_reset (videorate);
   videorate->silent = DEFAULT_SILENT;
@@ -551,6 +524,62 @@ format_error:
     ret = FALSE;
     goto done;
   }
+}
+
+static gboolean
+gst_video_rate_query (GstPad * pad, GstQuery * query)
+{
+  GstVideoRate *videorate;
+  gboolean res = FALSE;
+
+  videorate = GST_VIDEO_RATE (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      GstClockTime min, max;
+      gboolean live;
+      guint64 latency;
+      GstPad *peer;
+
+      if ((peer = gst_pad_get_peer (videorate->sinkpad))) {
+        if ((res = gst_pad_query (peer, query))) {
+          gst_query_parse_latency (query, &live, &min, &max);
+
+          GST_DEBUG_OBJECT (videorate, "Peer latency: min %"
+              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+          /* add latency. We don't really know since we hold on to the frames
+           * until we get a next frame, which can be anything. We assume
+           * however that this will take from_rate time. */
+          latency = gst_util_uint64_scale (GST_SECOND,
+              videorate->from_rate_denominator, videorate->from_rate_numerator);
+
+          GST_DEBUG_OBJECT (videorate, "Our latency: %"
+              GST_TIME_FORMAT, latency);
+
+          min += latency;
+          if (max != -1)
+            max += latency;
+
+          GST_DEBUG_OBJECT (videorate, "Calculated total latency : min %"
+              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+          gst_query_set_latency (query, live, min, max);
+        }
+        gst_object_unref (peer);
+      }
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  gst_object_unref (videorate);
+
+  return res;
 }
 
 static GstFlowReturn
