@@ -40,13 +40,31 @@ G_BEGIN_DECLS
 
 typedef struct _GstMPEGAudioParse GstMPEGAudioParse;
 typedef struct _GstMPEGAudioParseClass GstMPEGAudioParseClass;
+typedef struct _MPEGAudioSeekEntry MPEGAudioSeekEntry;
+typedef struct _MPEGAudioPendingAccurateSeek MPEGAudioPendingAccurateSeek;
+
+
+struct _MPEGAudioSeekEntry {
+  gint64 byte;
+  gint64 byte_end;
+  GstClockTime timestamp;
+  GstClockTime timestamp_end;
+};
+
+struct _MPEGAudioPendingAccurateSeek {
+  GstSegment segment;
+  gint64 upstream_start;
+  GstClockTime timestamp_start;
+};
 
 struct _GstMPEGAudioParse {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
 
+  GstSegment segment;
   GstClockTime next_ts;
+
   /* Offset as supplied by incoming buffers */
   gint64 cur_offset;
 
@@ -62,6 +80,7 @@ struct _GstMPEGAudioParse {
   guint skip; /* number of frames to skip */
   guint bit_rate; /* in kbps */
   gint channels, rate, layer, version;
+  GstClockTime max_bitreservoir;
   gint spf; /* Samples per frame */
 
   gboolean resyncing; /* True when attempting to resync (stricter checks are
@@ -85,6 +104,12 @@ struct _GstMPEGAudioParse {
   guint16 xing_seek_table_inverse[256];
   guint32 xing_vbr_scale;
   guint   xing_bitrate;
+
+  /* Accurate seeking */
+  GSList *seek_table;
+  GMutex *pending_accurate_seeks_lock;
+  GSList *pending_accurate_seeks;
+  gboolean exact_position;
 };
 
 struct _GstMPEGAudioParseClass {
