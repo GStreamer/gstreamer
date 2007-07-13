@@ -187,16 +187,12 @@ AG_GST_CHECK_GST_GDP($GST_MAJORMINOR, [$GST_REQ])
 AG_GST_CHECK_GST_CHECK($GST_MAJORMINOR, [$GST_REQ], no)
 AG_GST_CHECK_GST_CONTROLLER($GST_MAJORMINOR, [$GST_REQ])
 AG_GST_CHECK_GST_PLUGINS_BASE($GST_MAJORMINOR, [$GSTPB_REQ], no)
+AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
+
 GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_MAJORMINOR --variable pluginsdir`
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
-dnl FIXME: get rid of this by making sure gstreamer-check brings it in
-dnl check for "check", unit testing library/header
-PKG_CHECK_MODULES(CHECK, check >= 0.9.2,
-  AM_CONDITIONAL(HAVE_CHECK, true),
-  AM_CONDITIONAL(HAVE_CHECK, false)
-)
 dnl Check for documentation xrefs
 GLIB_PREFIX="`$PKG_CONFIG --variable=prefix glib-2.0`"
 GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_MAJORMINOR`"
