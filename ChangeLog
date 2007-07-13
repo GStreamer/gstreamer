@@ -1,5 +1,13 @@
 2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* pkgconfig/gstreamer-check-uninstalled.pc.in:
+	* pkgconfig/gstreamer-check.pc.in:
+	Substitute the CFLAGS for libcheck into our .pc file too so that
+	dependent modules will pick it up properly if libcheck is installed
+	into some other prefix.
+
+2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* configure.ac:
 	Revert the pkg-config check for libcheck, since it pulls in the
 	wrong non-PIC libcheck.a on Ubuntu and probably Fedora too. We need
