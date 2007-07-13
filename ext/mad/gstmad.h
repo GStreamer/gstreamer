@@ -64,6 +64,7 @@ struct _GstMad
   gboolean in_error;            /* set when mad's in an error state */
   gboolean restart;
   guint64 segment_start;
+  GstSegment segment;
   gboolean need_newsegment;
 
   /* info */

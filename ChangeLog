@@ -1,3 +1,12 @@
+2007-07-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/mad/gstmad.c: (_do_init), (gst_mad_init), (index_seek),
+	(normal_seek), (gst_mad_sink_event), (clip_outgoing_buffer),
+	(gst_mad_chain), (gst_mad_change_state):
+	* ext/mad/gstmad.h:
+	Implement buffer clipping and use GST_BOILERPLATE instead of manual
+	GType magic. Part one of bug #308312.
+
 2007-07-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

@@ -23,6 +23,7 @@
 
 #include <string.h>
 #include "gstmad.h"
+#include <gst/audio/audio.h>
 
 
 /* elementfactory information */
@@ -70,7 +71,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 
 static void gst_mad_base_init (gpointer g_class);
 static void gst_mad_class_init (GstMadClass * klass);
-static void gst_mad_init (GstMad * mad);
+static void gst_mad_init (GstMad * mad, GstMadClass * klass);
 static void gst_mad_dispose (GObject * object);
 
 static void gst_mad_set_property (GObject * object, guint prop_id,
@@ -97,33 +98,13 @@ static GstStateChangeReturn gst_mad_change_state (GstElement * element,
 static void gst_mad_set_index (GstElement * element, GstIndex * index);
 static GstIndex *gst_mad_get_index (GstElement * element);
 
-
-static GstElementClass *parent_class = NULL;
-
-GType
-gst_mad_get_type (void)
+static void
+_do_init (GType type)
 {
-  static GType mad_type = 0;
-
-  if (!mad_type) {
-    static const GTypeInfo mad_info = {
-      sizeof (GstMadClass),
-      gst_mad_base_init,
-      NULL,
-      (GClassInitFunc) gst_mad_class_init,
-      NULL,
-      NULL,
-      sizeof (GstMad),
-      0,
-      (GInstanceInitFunc) gst_mad_init,
-    };
-
-    mad_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstMad", &mad_info, 0);
-  }
   GST_DEBUG_CATEGORY_INIT (mad_debug, "mad", 0, "mad mp3 decoding");
-  return mad_type;
 }
+
+GST_BOILERPLATE_FULL (GstMad, gst_mad, GstElement, GST_TYPE_ELEMENT, _do_init);
 
 #define GST_TYPE_MAD_LAYER (gst_mad_layer_get_type())
 G_GNUC_UNUSED static GType
@@ -239,7 +220,7 @@ gst_mad_class_init (GstMadClass * klass)
 }
 
 static void
-gst_mad_init (GstMad * mad)
+gst_mad_init (GstMad * mad, GstMadClass * klass)
 {
   GstPadTemplate *template;
 
@@ -273,6 +254,7 @@ gst_mad_init (GstMad * mad)
   mad->vbr_rate = 0;
   mad->restart = TRUE;
   mad->segment_start = 0;
+  gst_segment_init (&mad->segment, GST_FORMAT_TIME);
   mad->header.mode = -1;
   mad->header.emphasis = -1;
   mad->tags = NULL;
@@ -621,6 +603,13 @@ index_seek (GstMad * mad, GstPad * pad, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
 
+  if (format == GST_FORMAT_TIME) {
+    gst_segment_set_seek (&mad->segment, rate, format, flags, cur_type,
+        cur, stop_type, stop, NULL);
+  } else {
+    gst_segment_init (&mad->segment, GST_FORMAT_UNDEFINED);
+  }
+
   entry = gst_index_get_assoc_entry (mad->index, mad->index_id,
       GST_INDEX_LOOKUP_BEFORE, 0, format, cur);
 
@@ -694,6 +683,9 @@ normal_seek (GstMad * mad, GstPad * pad, GstEvent * event)
     time_cur = cur;
     time_stop = stop;
   }
+
+  gst_segment_set_seek (&mad->segment, rate, GST_FORMAT_TIME, flags, cur_type,
+      time_cur, stop_type, time_stop, NULL);
 
   GST_DEBUG ("seek to time %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
       GST_TIME_ARGS (time_cur), GST_TIME_ARGS (time_stop));
@@ -944,9 +936,12 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:{
       GstFormat format;
+      gboolean update;
+      gdouble rate, applied_rate;
+      gint64 start, stop, pos;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &format, NULL, NULL,
-          NULL);
+      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+          &format, &start, &stop, &pos);
 
       if (format == GST_FORMAT_TIME) {
         /* FIXME: is this really correct? */
@@ -955,6 +950,8 @@ gst_mad_sink_event (GstPad * pad, GstEvent * event)
         /* we don't need to restart when we get here */
         mad->restart = FALSE;
         mad->framed = TRUE;
+        gst_segment_set_newsegment_full (&mad->segment, update, rate,
+            applied_rate, GST_FORMAT_TIME, start, stop, pos);
       } else {
         GST_DEBUG ("dropping newsegment event in format %s",
             gst_format_get_name (format));
@@ -1224,6 +1221,51 @@ gst_mad_check_caps_reset (GstMad * mad)
       mad->total_samples = mad->total_samples * rate / old_rate;
     }
   }
+}
+
+/*
+  clips buffer to currently configured segment. Returns FALSE if the buffer 
+  has to be dropped.
+*/
+static gboolean
+clip_outgoing_buffer (GstMad * mad, GstBuffer * buffer)
+{
+  gint64 start, stop, cstart, cstop, diff;
+  gboolean res = TRUE;
+
+  if (mad->segment.format != GST_FORMAT_TIME)
+    goto beach;
+
+  start = GST_BUFFER_TIMESTAMP (buffer);
+  stop = start + GST_BUFFER_DURATION (buffer);
+
+  if (gst_segment_clip (&mad->segment, GST_FORMAT_TIME,
+          start, stop, &cstart, &cstop)) {
+    diff = cstart - start;
+    if (diff > 0) {
+      GST_BUFFER_TIMESTAMP (buffer) = cstart;
+      GST_BUFFER_DURATION (buffer) -= diff;
+
+      /* time->frames->bytes */
+      diff = 4 * mad->channels * GST_CLOCK_TIME_TO_FRAMES (diff, mad->rate);
+      GST_BUFFER_DATA (buffer) += diff;
+      GST_BUFFER_SIZE (buffer) -= diff;
+    }
+    diff = cstop - stop;
+    if (diff > 0) {
+      GST_BUFFER_DURATION (buffer) -= diff;
+      /* time->frames->bytes */
+      diff = 4 * mad->channels * GST_CLOCK_TIME_TO_FRAMES (diff, mad->rate);
+      /* update size */
+      GST_BUFFER_SIZE (buffer) -= diff;
+    }
+  } else {
+    GST_DEBUG_OBJECT (mad, "buffer is outside configured segment");
+    res = FALSE;
+  }
+
+beach:
+  return res;
 }
 
 static GstFlowReturn
@@ -1516,6 +1558,9 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           GST_DEBUG ("Sending NEWSEGMENT event, start=%" GST_TIME_FORMAT,
               GST_TIME_ARGS (start));
 
+          gst_segment_set_newsegment (&mad->segment, FALSE, 1.0,
+              GST_FORMAT_TIME, start, GST_CLOCK_TIME_NONE, start);
+
           gst_pad_push_event (mad->srcpad,
               gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_TIME,
                   start, GST_CLOCK_TIME_NONE, start));
@@ -1563,10 +1608,23 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           }
         }
 
-        result = gst_pad_push (mad->srcpad, outbuffer);
-        if (result != GST_FLOW_OK) {
-          /* Head for the exit, dropping samples as we go */
-          goto_exit = TRUE;
+        if (clip_outgoing_buffer (mad, outbuffer)) {
+          GST_LOG_OBJECT (mad,
+              "pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%" GST_TIME_FORMAT,
+              GST_BUFFER_OFFSET (outbuffer),
+              GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuffer)));
+          mad->segment.last_stop = GST_BUFFER_TIMESTAMP (outbuffer);
+          result = gst_pad_push (mad->srcpad, outbuffer);
+          if (result != GST_FLOW_OK) {
+            /* Head for the exit, dropping samples as we go */
+            goto_exit = TRUE;
+          }
+        } else {
+          GST_LOG_OBJECT (mad, "Dropping buffer"
+              ", off=%" G_GUINT64_FORMAT ", ts=%" GST_TIME_FORMAT,
+              GST_BUFFER_OFFSET (outbuffer),
+              GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuffer)));
+          gst_buffer_unref (outbuffer);
         }
       }
 
@@ -1639,7 +1697,7 @@ gst_mad_change_state (GstElement * element, GstStateChange transition)
       mad->caps_set = FALSE;
       mad->times_pending = mad->pending_rate = mad->pending_channels = 0;
       mad->vbr_average = 0;
-      mad->segment_start = 0;
+      gst_segment_init (&mad->segment, GST_FORMAT_TIME);
       mad->new_header = TRUE;
       mad->framed = FALSE;
       mad->framecount = 0;
