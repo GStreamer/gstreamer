@@ -1,5 +1,20 @@
 2007-07-14  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: Jorn Baayen <jorn at openedhand dot com>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents),
+	(gst_ximagesink_set_property), (gst_ximagesink_get_property),
+	(gst_ximagesink_init), (gst_ximagesink_class_init):
+	* sys/ximage/ximagesink.h:
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_handle_xevents),
+	(gst_xvimagesink_set_property), (gst_xvimagesink_get_property),
+	(gst_xvimagesink_init), (gst_xvimagesink_class_init):
+	* sys/xvimage/xvimagesink.h:
+	add 'handle-expose' property. Useful for video widgets which may want to
+	be in control of Expose behaviour. Fixes #380625
+
+2007-07-14  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst-libs/gst/rtp/gstbasertppayload.c:
 	(gst_basertppayload_class_init), (gst_basertppayload_init),
 	(gst_basertppayload_event), (gst_basertppayload_push),

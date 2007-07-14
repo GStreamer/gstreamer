@@ -166,8 +166,8 @@ enum
   PROP_SYNCHRONOUS,
   PROP_PIXEL_ASPECT_RATIO,
   PROP_FORCE_ASPECT_RATIO,
-  PROP_HANDLE_EVENTS
-      /* FILL ME */
+  PROP_HANDLE_EVENTS,
+  PROP_HANDLE_EXPOSE
 };
 
 static GstVideoSinkClass *parent_class = NULL;
@@ -1035,7 +1035,7 @@ gst_ximagesink_handle_xevents (GstXImageSink * ximagesink)
     }
   }
 
-  if (exposed || configured) {
+  if (ximagesink->handle_expose && (exposed || configured)) {
     g_mutex_unlock (ximagesink->x_lock);
     g_mutex_unlock (ximagesink->flow_lock);
 
@@ -2041,6 +2041,9 @@ gst_ximagesink_set_property (GObject * object, guint prop_id,
       gst_ximagesink_set_event_handling (GST_X_OVERLAY (ximagesink),
           g_value_get_boolean (value));
       break;
+    case PROP_HANDLE_EXPOSE:
+      ximagesink->handle_expose = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2073,6 +2076,9 @@ gst_ximagesink_get_property (GObject * object, guint prop_id,
       break;
     case PROP_HANDLE_EVENTS:
       g_value_set_boolean (value, ximagesink->handle_events);
+      break;
+    case PROP_HANDLE_EXPOSE:
+      g_value_set_boolean (value, ximagesink->handle_expose);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2168,6 +2174,7 @@ gst_ximagesink_init (GstXImageSink * ximagesink)
   ximagesink->synchronous = FALSE;
   ximagesink->keep_aspect = FALSE;
   ximagesink->handle_events = TRUE;
+  ximagesink->handle_expose = TRUE;
 }
 
 static void
@@ -2216,6 +2223,10 @@ gst_ximagesink_class_init (GstXImageSinkClass * klass)
       g_param_spec_boolean ("handle-events", "Handle XEvents",
           "When enabled, XEvents will be selected and handled", TRUE,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_HANDLE_EXPOSE,
+      g_param_spec_boolean ("handle-expose", "Handle expose", "When enabled, "
+          "the current frame will always be drawn in response to X Expose "
+          "events", TRUE, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_ximagesink_change_state;
 

@@ -213,6 +213,7 @@ struct _GstXImageSink {
   gboolean synchronous;
   gboolean keep_aspect;
   gboolean handle_events;
+  gboolean handle_expose;
 };
 
 struct _GstXImageSinkClass {

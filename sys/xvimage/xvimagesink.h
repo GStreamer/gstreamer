@@ -254,6 +254,7 @@ struct _GstXvImageSink {
   gboolean keep_aspect;
   gboolean draw_border;
   gboolean handle_events;
+  gboolean handle_expose;
 
   gint brightness;
   gint contrast;

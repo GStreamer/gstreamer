@@ -194,8 +194,8 @@ enum
   ARG_FORCE_ASPECT_RATIO,
   ARG_HANDLE_EVENTS,
   ARG_DEVICE,
-  ARG_DEVICE_NAME
-      /* FILL ME */
+  ARG_DEVICE_NAME,
+  ARG_HANDLE_EXPOSE
 };
 
 static GstVideoSinkClass *parent_class = NULL;
@@ -1172,7 +1172,7 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
     }
   }
 
-  if (exposed || configured) {
+  if (xvimagesink->handle_expose && (exposed || configured)) {
     g_mutex_unlock (xvimagesink->x_lock);
     g_mutex_unlock (xvimagesink->flow_lock);
 
@@ -2851,6 +2851,9 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
     case ARG_DEVICE:
       xvimagesink->adaptor_no = atoi (g_value_get_string (value));
       break;
+    case ARG_HANDLE_EXPOSE:
+      xvimagesink->handle_expose = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2911,6 +2914,9 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
       } else {
         g_value_set_string (value, NULL);
       }
+      break;
+    case ARG_HANDLE_EXPOSE:
+      g_value_set_boolean (value, xvimagesink->handle_expose);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3011,6 +3017,7 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->keep_aspect = FALSE;
   xvimagesink->handle_events = TRUE;
   xvimagesink->par = NULL;
+  xvimagesink->handle_expose = TRUE;
 }
 
 static void
@@ -3077,6 +3084,10 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
   g_object_class_install_property (gobject_class, ARG_DEVICE_NAME,
       g_param_spec_string ("device-name", "Adaptor name",
           "The name of the video adaptor", NULL, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, ARG_HANDLE_EXPOSE,
+      g_param_spec_boolean ("handle-expose", "Handle expose", "When enabled, "
+          "the current frame will always be drawn in response to X Expose "
+          "events", TRUE, G_PARAM_READWRITE));
 
   gobject_class->finalize = gst_xvimagesink_finalize;
 
