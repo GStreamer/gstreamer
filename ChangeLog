@@ -1,3 +1,11 @@
+2007-07-14  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Hans de Goede <j.w.r.degoede at hhs dot nl>
+
+	* gst/modplug/gstmodplug.cc:
+	add several missing supported mime-types to the modplug plugin.
+	Fixes #456901.
+
 2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

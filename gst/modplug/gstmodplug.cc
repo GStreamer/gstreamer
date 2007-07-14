@@ -116,10 +116,11 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS (SRC_CAPS));
 
 static GstStaticPadTemplate modplug_sink_template_factory =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-mod"));
+    GST_STATIC_CAPS ("audio/x-mod; audio/x-xm; audio/x-it; audio/x-s3m; "
+        "audio/x-stm"));
 
 static void gst_modplug_dispose (GObject * object);
 static void gst_modplug_set_property (GObject * object,
