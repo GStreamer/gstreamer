@@ -1,3 +1,17 @@
+2007-07-14  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_class_init), (gst_basertppayload_init),
+	(gst_basertppayload_event), (gst_basertppayload_push),
+	(gst_basertppayload_set_property),
+	(gst_basertppayload_get_property),
+	(gst_basertppayload_change_state):
+	* gst-libs/gst/rtp/gstbasertppayload.h:
+	Fix ranges of rtp payloader properties so that the full range can be
+	used in addition to -1 (random).
+	Fix wrong seqnum reporting in caps.
+	Fixes #420326.
+
 2007-07-13  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/videorate/gstvideorate.c: (gst_video_rate_init),

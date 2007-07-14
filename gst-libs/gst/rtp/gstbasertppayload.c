@@ -36,6 +36,17 @@
 GST_DEBUG_CATEGORY_STATIC (basertppayload_debug);
 #define GST_CAT_DEFAULT (basertppayload_debug)
 
+#define GST_BASE_RTP_PAYLOAD_GET_PRIVATE(obj)  \
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_BASE_RTP_PAYLOAD, GstBaseRTPPayloadPrivate))
+
+struct _GstBaseRTPPayloadPrivate
+{
+  gboolean ts_offset_random;
+  gboolean seqnum_offset_random;
+  gboolean ssrc_random;
+  guint16 next_seqnum;
+};
+
 /* BaseRTPPayload signals and args */
 enum
 {
@@ -133,6 +144,8 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  g_type_class_add_private (klass, sizeof (GstBaseRTPPayloadPrivate));
+
   parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = gst_basertppayload_finalize;
@@ -149,17 +162,17 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
           "The payload type of the packets",
           0, 0x80, DEFAULT_PT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
-      g_param_spec_uint ("ssrc", "SSRC",
+      g_param_spec_int64 ("ssrc", "SSRC",
           "The SSRC of the packets (-1 == random)",
-          0, G_MAXUINT, DEFAULT_SSRC, G_PARAM_READWRITE));
+          -1, G_MAXUINT32, DEFAULT_SSRC, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_TIMESTAMP_OFFSET, g_param_spec_int ("timestamp-offset",
+      PROP_TIMESTAMP_OFFSET, g_param_spec_int64 ("timestamp-offset",
           "Timestamp Offset",
           "Offset to add to all outgoing timestamps (-1 = random)", -1,
-          G_MAXINT, DEFAULT_TIMESTAMP_OFFSET, G_PARAM_READWRITE));
+          G_MAXUINT32, DEFAULT_TIMESTAMP_OFFSET, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM_OFFSET,
       g_param_spec_int ("seqnum-offset", "Sequence number Offset",
-          "Offset to add to all outgoing seqnum (-1 = random)", -1, G_MAXINT,
+          "Offset to add to all outgoing seqnum (-1 = random)", -1, G_MAXUINT16,
           DEFAULT_SEQNUM_OFFSET, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_MAX_PTIME,
       g_param_spec_int64 ("max-ptime", "Max packet time",
@@ -180,11 +193,11 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_TIMESTAMP,
       g_param_spec_uint ("timestamp", "Timestamp",
           "The RTP timestamp of the last processed packet",
-          0, G_MAXUINT, 0, G_PARAM_READABLE));
+          0, G_MAXUINT32, 0, G_PARAM_READABLE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM,
       g_param_spec_uint ("seqnum", "Sequence number",
           "The RTP sequence number of the last processed packet",
-          0, G_MAXUINT, 0, G_PARAM_READABLE));
+          0, G_MAXUINT16, 0, G_PARAM_READABLE));
 
   gstelement_class->change_state = gst_basertppayload_change_state;
 
@@ -196,6 +209,10 @@ static void
 gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
 {
   GstPadTemplate *templ;
+  GstBaseRTPPayloadPrivate *priv;
+
+  basertppayload->priv = priv =
+      GST_BASE_RTP_PAYLOAD_GET_PRIVATE (basertppayload);
 
   templ =
       gst_element_class_get_pad_template (GST_ELEMENT_CLASS (g_class), "src");
@@ -226,6 +243,10 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
   basertppayload->seqnum_offset = DEFAULT_SEQNUM_OFFSET;
   basertppayload->ssrc = DEFAULT_SSRC;
   basertppayload->ts_offset = DEFAULT_TIMESTAMP_OFFSET;
+  priv->seqnum_offset_random = (basertppayload->seqnum_offset == -1);
+  priv->ts_offset_random = (basertppayload->ts_offset == -1);
+  priv->ssrc_random = (basertppayload->ssrc == -1);
+
   basertppayload->max_ptime = DEFAULT_MAX_PTIME;
   basertppayload->min_ptime = DEFAULT_MIN_PTIME;
 
@@ -288,11 +309,8 @@ gst_basertppayload_event (GstPad * pad, GstEvent * event)
 
   if (basertppayload_class->handle_event) {
     res = basertppayload_class->handle_event (pad, event);
-    if (res) {
-      gst_object_unref (basertppayload);
-
-      return res;
-    }
+    if (res)
+      goto done;
   }
 
   switch (GST_EVENT_TYPE (event)) {
@@ -321,6 +339,7 @@ gst_basertppayload_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+done:
   gst_object_unref (basertppayload);
 
   return res;
@@ -421,20 +440,25 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
   GstFlowReturn res;
   GstClockTime timestamp;
   guint32 ts;
+  GstBaseRTPPayloadPrivate *priv;
 
   if (payload->clock_rate == 0)
     goto no_rate;
+
+  priv = payload->priv;
 
   gst_rtp_buffer_set_ssrc (buffer, payload->current_ssrc);
 
   gst_rtp_buffer_set_payload_type (buffer, payload->pt);
 
-  /* can wrap around, which is perfectly fine */
   /* update first, so that the property is set to the last
    * seqnum pushed */
-  payload->seqnum++;
+  payload->seqnum = priv->next_seqnum;
   GST_LOG_OBJECT (payload, "setting RTP seqnum %d", payload->seqnum);
   gst_rtp_buffer_set_seq (buffer, payload->seqnum);
+
+  /* can wrap around, which is perfectly fine */
+  priv->next_seqnum++;
 
   /* add our random offset to the timestamp */
   ts = payload->ts_base;
@@ -480,8 +504,11 @@ gst_basertppayload_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstBaseRTPPayload *basertppayload;
+  GstBaseRTPPayloadPrivate *priv;
+  gint64 val;
 
   basertppayload = GST_BASE_RTP_PAYLOAD (object);
+  priv = basertppayload->priv;
 
   switch (prop_id) {
     case PROP_MTU:
@@ -491,13 +518,21 @@ gst_basertppayload_set_property (GObject * object, guint prop_id,
       basertppayload->pt = g_value_get_uint (value);
       break;
     case PROP_SSRC:
-      basertppayload->ssrc = g_value_get_uint (value);
+      val = g_value_get_int64 (value);
+      basertppayload->ssrc = val;
+      priv->ssrc_random = (val == -1);
       break;
     case PROP_TIMESTAMP_OFFSET:
-      basertppayload->ts_offset = g_value_get_int (value);
+      val = g_value_get_int64 (value);
+      basertppayload->ts_offset = val;
+      priv->ts_offset_random = (val == -1);
       break;
     case PROP_SEQNUM_OFFSET:
-      basertppayload->seqnum_offset = g_value_get_int (value);
+      val = g_value_get_int (value);
+      basertppayload->seqnum_offset = val;
+      priv->seqnum_offset_random = (val == -1);
+      GST_DEBUG_OBJECT (basertppayload, "seqnum offset 0x%04x, random %d",
+          basertppayload->seqnum_offset, priv->seqnum_offset_random);
       break;
     case PROP_MAX_PTIME:
       basertppayload->max_ptime = g_value_get_int64 (value);
@@ -516,8 +551,10 @@ gst_basertppayload_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstBaseRTPPayload *basertppayload;
+  GstBaseRTPPayloadPrivate *priv;
 
   basertppayload = GST_BASE_RTP_PAYLOAD (object);
+  priv = basertppayload->priv;
 
   switch (prop_id) {
     case PROP_MTU:
@@ -527,13 +564,22 @@ gst_basertppayload_get_property (GObject * object, guint prop_id,
       g_value_set_uint (value, basertppayload->pt);
       break;
     case PROP_SSRC:
-      g_value_set_uint (value, basertppayload->ssrc);
+      if (priv->ssrc_random)
+        g_value_set_int64 (value, -1);
+      else
+        g_value_set_int64 (value, basertppayload->ssrc);
       break;
     case PROP_TIMESTAMP_OFFSET:
-      g_value_set_int (value, basertppayload->ts_offset);
+      if (priv->ts_offset_random)
+        g_value_set_int64 (value, -1);
+      else
+        g_value_set_int64 (value, (guint32) basertppayload->ts_offset);
       break;
     case PROP_SEQNUM_OFFSET:
-      g_value_set_int (value, basertppayload->seqnum_offset);
+      if (priv->seqnum_offset_random)
+        g_value_set_int (value, -1);
+      else
+        g_value_set_int (value, (guint16) basertppayload->seqnum_offset);
       break;
     case PROP_MAX_PTIME:
       g_value_set_int64 (value, basertppayload->max_ptime);
@@ -558,9 +604,11 @@ gst_basertppayload_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstBaseRTPPayload *basertppayload;
+  GstBaseRTPPayloadPrivate *priv;
   GstStateChangeReturn ret;
 
   basertppayload = GST_BASE_RTP_PAYLOAD (element);
+  priv = basertppayload->priv;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -568,19 +616,19 @@ gst_basertppayload_change_state (GstElement * element,
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_segment_init (&basertppayload->segment, GST_FORMAT_UNDEFINED);
 
-      if (basertppayload->seqnum_offset == -1)
+      if (priv->seqnum_offset_random)
         basertppayload->seqnum_base =
             g_rand_int_range (basertppayload->seq_rand, 0, G_MAXUINT16);
       else
         basertppayload->seqnum_base = basertppayload->seqnum_offset;
-      basertppayload->seqnum = basertppayload->seqnum_base;
+      priv->next_seqnum = basertppayload->seqnum_base;
 
-      if (basertppayload->ssrc == -1)
+      if (priv->ssrc_random)
         basertppayload->current_ssrc = g_rand_int (basertppayload->ssrc_rand);
       else
         basertppayload->current_ssrc = basertppayload->ssrc;
 
-      if (basertppayload->ts_offset == -1)
+      if (priv->ts_offset_random)
         basertppayload->ts_base = g_rand_int (basertppayload->ts_rand);
       else
         basertppayload->ts_base = basertppayload->ts_offset;

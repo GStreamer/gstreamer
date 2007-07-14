@@ -38,6 +38,7 @@ G_BEGIN_DECLS
         (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_BASE_RTP_PAYLOAD))
 
 typedef struct _GstBaseRTPPayload GstBaseRTPPayload;
+typedef struct _GstBaseRTPPayloadPrivate GstBaseRTPPayloadPrivate;
 typedef struct _GstBaseRTPPayloadClass GstBaseRTPPayloadClass;
 
 #define GST_BASE_RTP_PAYLOAD_SINKPAD(payload) (GST_BASE_RTP_PAYLOAD (payload)->sinkpad)
@@ -81,8 +82,9 @@ struct _GstBaseRTPPayload
   guint64  min_ptime;
 
   /*< private >*/
+  GstBaseRTPPayloadPrivate *priv;
 
-  gpointer _gst_reserved[GST_PADDING - (sizeof(guint64)/sizeof(gpointer))];
+  gpointer _gst_reserved[GST_PADDING - (sizeof(guint64)/sizeof(gpointer)) - 1];
 };
 
 struct _GstBaseRTPPayloadClass
