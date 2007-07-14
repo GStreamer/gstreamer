@@ -251,6 +251,7 @@ struct _GstXvImageSink {
   GSList *image_pool;
 
   gboolean synchronous;
+  gboolean double_buffer;
   gboolean keep_aspect;
   gboolean draw_border;
   gboolean handle_events;

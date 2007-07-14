@@ -1,5 +1,16 @@
 2007-07-14  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: Bastien Nocera <hadess at hadess dot net>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_get_xv_support),
+	(gst_xvimagesink_set_property), (gst_xvimagesink_get_property),
+	(gst_xvimagesink_init), (gst_xvimagesink_class_init):
+	* sys/xvimage/xvimagesink.h:
+	Add option to turn off double-buffering for debugging purposes.
+	Fixes #437169.
+
+2007-07-14  Wim Taymans  <wim.taymans@gmail.com>
+
 	Patch by: Jorn Baayen <jorn at openedhand dot com>
 
 	* sys/ximage/ximagesink.c: (gst_ximagesink_handle_xevents),

@@ -195,7 +195,8 @@ enum
   ARG_HANDLE_EVENTS,
   ARG_DEVICE,
   ARG_DEVICE_NAME,
-  ARG_HANDLE_EXPOSE
+  ARG_HANDLE_EXPOSE,
+  ARG_DOUBLE_BUFFER
 };
 
 static GstVideoSinkClass *parent_class = NULL;
@@ -1330,7 +1331,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
       if (!strcmp (attr[i].name, dbl_buffer)) {
         const Atom atom = XInternAtom (xcontext->disp, dbl_buffer, False);
 
-        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom, 1);
+        XvSetPortAttribute (xcontext->disp, xcontext->xv_port_id, atom,
+            (xvimagesink->double_buffer ? 1 : 0));
         break;
       }
 
@@ -2854,6 +2856,9 @@ gst_xvimagesink_set_property (GObject * object, guint prop_id,
     case ARG_HANDLE_EXPOSE:
       xvimagesink->handle_expose = g_value_get_boolean (value);
       break;
+    case ARG_DOUBLE_BUFFER:
+      xvimagesink->double_buffer = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2917,6 +2922,9 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
       break;
     case ARG_HANDLE_EXPOSE:
       g_value_set_boolean (value, xvimagesink->handle_expose);
+      break;
+    case ARG_DOUBLE_BUFFER:
+      g_value_set_boolean (value, xvimagesink->double_buffer);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3013,6 +3021,7 @@ gst_xvimagesink_init (GstXvImageSink * xvimagesink)
   xvimagesink->pool_lock = g_mutex_new ();
 
   xvimagesink->synchronous = FALSE;
+  xvimagesink->double_buffer = TRUE;
   xvimagesink->running = FALSE;
   xvimagesink->keep_aspect = FALSE;
   xvimagesink->handle_events = TRUE;
@@ -3088,6 +3097,9 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
       g_param_spec_boolean ("handle-expose", "Handle expose", "When enabled, "
           "the current frame will always be drawn in response to X Expose "
           "events", TRUE, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_DOUBLE_BUFFER,
+      g_param_spec_boolean ("double-buffer", "Double-buffer",
+          "Whether to double-buffer the output", TRUE, G_PARAM_READWRITE));
 
   gobject_class->finalize = gst_xvimagesink_finalize;
 
