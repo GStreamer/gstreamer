@@ -582,7 +582,7 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
   if (mp3parse->segment.start == 0) {
     push_start = 0;
   } else if (GST_CLOCK_TIME_IS_VALID (mp3parse->max_bitreservoir)) {
-    if (mp3parse->segment.start - mp3parse->max_bitreservoir >= 0)
+    if (mp3parse->segment.start > mp3parse->max_bitreservoir)
       push_start = mp3parse->segment.start - mp3parse->max_bitreservoir;
     else
       push_start = 0;
@@ -590,14 +590,16 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
     push_start = mp3parse->segment.start;
   }
 
-  if (G_UNLIKELY ((GST_CLOCK_TIME_IS_VALID (mp3parse->segment.start) &&
+  if (G_UNLIKELY ((GST_CLOCK_TIME_IS_VALID (push_start) &&
               GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf)
               < push_start)
           || (GST_CLOCK_TIME_IS_VALID (mp3parse->segment.stop)
               && GST_BUFFER_TIMESTAMP (outbuf) >= mp3parse->segment.stop))) {
     GST_DEBUG_OBJECT (mp3parse,
-        "Buffer outside of configured segment, dropping, timestamp %"
+        "Buffer outside of configured segment range %" GST_TIME_FORMAT
+        " to %" GST_TIME_FORMAT ", dropping, timestamp %"
         GST_TIME_FORMAT ", offset 0x%08" G_GINT64_MODIFIER "x",
+        GST_TIME_ARGS (push_start), GST_TIME_ARGS (mp3parse->segment.stop),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         GST_BUFFER_OFFSET (outbuf));
     gst_buffer_unref (outbuf);

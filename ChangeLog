@@ -1,3 +1,11 @@
+2007-07-15  Jan Schmidt  <thaytan@noraisin.net>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_emit_frame):
+	Fix a calculation that was causing mp3parse to drop every incoming
+	frame when upstream delivered a segment in TIME format, breaking 
+	playback of all mpeg system streams.
+
 2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* Makefile.am:
