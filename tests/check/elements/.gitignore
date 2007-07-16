@@ -7,4 +7,5 @@ filesrc
 identity
 multiqueue
 queue
+tee
 *.check.xml

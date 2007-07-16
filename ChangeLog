@@ -1,5 +1,10 @@
 2007-07-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/elements/.cvsignore:
+	Add file to cvsignore as commanded.
+
+2007-07-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* tests/check/elements/multiqueue.c: (mq_dummypad_chain),
 	(mq_dummypad_event), (run_output_order_test):
 	Use a GStaticMutex to protect all cases where libcheck
