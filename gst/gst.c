@@ -641,6 +641,13 @@ static GstPluginDesc plugin_desc = {
 
 #ifndef GST_DISABLE_REGISTRY
 
+typedef enum
+{
+  REGISTRY_SCAN_AND_UPDATE_FAILURE = 0,
+  REGISTRY_SCAN_AND_UPDATE_SUCCESS_NOT_CHANGED,
+  REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED
+} GstRegistryScanAndUpdateResult;
+
 /*
  * scan_and_update_registry:
  * @default_registry: the #GstRegistry
@@ -649,9 +656,12 @@ static GstPluginDesc plugin_desc = {
  *
  * Scans for registry changes and eventually updates the registry cache. 
  *
- * Return: %TRUE if the registry could be updated
+ * Return: %REGISTRY_SCAN_AND_UPDATE_FAILURE if the registry could not scanned
+ *         or updated, %REGISTRY_SCAN_AND_UPDATE_SUCCESS_NOT_CHANGED if the
+ *         registry is clean and %REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED if
+ *         it has been updated and the cache needs to be re-read.
  */
-static gboolean
+static GstRegistryScanAndUpdateResult
 scan_and_update_registry (GstRegistry * default_registry,
     const gchar * registry_file, gboolean write_changes, GError ** error)
 {
@@ -659,12 +669,6 @@ scan_and_update_registry (GstRegistry * default_registry,
   gboolean changed = FALSE;
   GList *l;
 
-  GST_DEBUG ("reading registry cache: %s", registry_file);
-#ifdef USE_BINARY_REGISTRY
-  gst_registry_binary_read_cache (default_registry, registry_file);
-#else
-  gst_registry_xml_read_cache (default_registry, registry_file);
-#endif
   /* scan paths specified via --gst-plugin-path */
   GST_DEBUG ("scanning paths added via --gst-plugin-path");
   for (l = plugin_paths; l != NULL; l = l->next) {
@@ -704,10 +708,12 @@ scan_and_update_registry (GstRegistry * default_registry,
      * system-installed ones */
     home_plugins = g_build_filename (g_get_home_dir (),
         ".gstreamer-" GST_MAJORMINOR, "plugins", NULL);
+    GST_DEBUG ("scanning home plugins %s", home_plugins);
     changed |= gst_registry_scan_path (default_registry, home_plugins);
     g_free (home_plugins);
 
     /* add the main (installed) library path */
+    GST_DEBUG ("scanning home plugins %s", PLUGINDIR);
     changed |= gst_registry_scan_path (default_registry, PLUGINDIR);
   } else {
     gchar **list;
@@ -726,12 +732,12 @@ scan_and_update_registry (GstRegistry * default_registry,
 
   if (!changed) {
     GST_INFO ("Registry cache has not changed");
-    return TRUE;
+    return REGISTRY_SCAN_AND_UPDATE_SUCCESS_NOT_CHANGED;
   }
 
   if (!write_changes) {
     GST_INFO ("Registry cached changed, but writing is disabled. Not writing.");
-    return TRUE;
+    return REGISTRY_SCAN_AND_UPDATE_FAILURE;
   }
 
   GST_INFO ("Registry cache changed. Writing new registry cache");
@@ -743,11 +749,11 @@ scan_and_update_registry (GstRegistry * default_registry,
     g_set_error (error, GST_CORE_ERROR, GST_CORE_ERROR_FAILED,
         _("Error writing registry cache to %s: %s"),
         registry_file, g_strerror (errno));
-    return FALSE;
+    return REGISTRY_SCAN_AND_UPDATE_FAILURE;
   }
 
   GST_INFO ("Registry cache written successfully");
-  return TRUE;
+  return REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED;
 }
 
 static gboolean
@@ -755,6 +761,12 @@ ensure_current_registry_nonforking (GstRegistry * default_registry,
     const gchar * registry_file, GError ** error)
 {
   /* fork() not available */
+  GST_INFO ("reading registry cache: %s", registry_file);
+#ifdef USE_BINARY_REGISTRY
+  gst_registry_binary_read_cache (default_registry, registry_file);
+#else
+  gst_registry_xml_read_cache (default_registry, registry_file);
+#endif
   GST_DEBUG ("Updating registry cache in-process");
   scan_and_update_registry (default_registry, registry_file, TRUE, error);
   return TRUE;
@@ -782,6 +794,13 @@ ensure_current_registry_forking (GstRegistry * default_registry,
     return FALSE;
   }
 
+  GST_INFO ("reading registry cache: %s", registry_file);
+#ifdef USE_BINARY_REGISTRY
+  gst_registry_binary_read_cache (default_registry, registry_file);
+#else
+  gst_registry_xml_read_cache (default_registry, registry_file);
+#endif
+
   pid = fork ();
   if (pid == -1) {
     GST_ERROR ("Failed to fork()");
@@ -792,27 +811,25 @@ ensure_current_registry_forking (GstRegistry * default_registry,
   }
 
   if (pid == 0) {
-    gboolean res;
-    gchar res_byte;
+    gint result_code;
 
     /* this is the child. Close the read pipe */
     (void) close (pfd[0]);
 
     GST_DEBUG ("child reading registry cache");
-    res =
+    result_code =
         scan_and_update_registry (default_registry, registry_file, TRUE, NULL);
 
     /* need to use _exit, so that any exit handlers registered don't
      * bring down the main program */
-    GST_DEBUG ("child exiting: %s", (res) ? "SUCCESS" : "FAILURE");
+    GST_DEBUG ("child exiting: %d", result_code);
 
     /* make valgrind happy (yes, you can call it insane) */
     g_free ((char *) registry_file);
 
     /* write a result byte to the pipe */
-    res_byte = res ? '1' : '0';
     do {
-      ret = write (pfd[1], &res_byte, 1);
+      ret = write (pfd[1], &result_code, sizeof (result_code));
     } while (ret == -1 && errno == EINTR);
     /* if ret == -1 now, we could not write to pipe, probably 
      * means parent has exited before us */
@@ -820,7 +837,7 @@ ensure_current_registry_forking (GstRegistry * default_registry,
 
     _exit (0);
   } else {
-    gchar res_byte;
+    gint result_code;
 
     /* parent. Close write pipe */
     (void) close (pfd[1]);
@@ -828,7 +845,7 @@ ensure_current_registry_forking (GstRegistry * default_registry,
     /* Wait for result from the pipe */
     GST_DEBUG ("Waiting for data from child");
     do {
-      ret = read (pfd[0], &res_byte, 1);
+      ret = read (pfd[0], &result_code, sizeof (result_code));
     } while (ret == -1 && errno == EINTR);
 
     if (ret == -1) {
@@ -852,14 +869,15 @@ ensure_current_registry_forking (GstRegistry * default_registry,
       return FALSE;
     }
 
-    if (res_byte == '1') {
+    if (result_code == REGISTRY_SCAN_AND_UPDATE_SUCCESS_UPDATED) {
       GST_DEBUG ("Child succeeded. Parent reading registry cache");
+      _priv_gst_registry_remove_cache_plugins (default_registry);
 #ifdef USE_BINARY_REGISTRY
       gst_registry_binary_read_cache (default_registry, registry_file);
 #else
       gst_registry_xml_read_cache (default_registry, registry_file);
 #endif
-    } else {
+    } else if (result_code == REGISTRY_SCAN_AND_UPDATE_FAILURE) {
       GST_DEBUG ("Child failed. Parent re-scanning registry, ignoring errors.");
       scan_and_update_registry (default_registry, registry_file, FALSE, NULL);
     }

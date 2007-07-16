@@ -1,3 +1,8 @@
+2007-07-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gst.c:
+	  Avoid reading registry twice on startup. Fixes #457322.
+
 2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* pkgconfig/gstreamer-check-uninstalled.pc.in:
