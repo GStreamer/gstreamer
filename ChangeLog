@@ -1,5 +1,14 @@
 2007-07-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/elements/multiqueue.c: (mq_dummypad_chain),
+	(mq_dummypad_event), (run_output_order_test):
+	Use a GStaticMutex to protect all cases where libcheck
+	fail_if/fail_unless macros might be called from multiple threads
+	simultaneously to avoid errors like:
+	  "check_pack.c:107: :-1081725400:Bad message type arg"
+
+2007-07-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* tests/check/pipelines/stress.c: (GST_START_TEST):
 	Make sure we set the pipeline back to the NULL state before
 	dropping our final reference.
