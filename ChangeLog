@@ -1,3 +1,10 @@
+2007-07-16  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/elements/tee.c: (GST_START_TEST):
+	Make the tee stress-test a little less stressful so it doesn't just
+	time out on slow-machines, and remove a small race when it's starting 
+	up by adding a get_state() call.
+
 2007-07-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gst.c:

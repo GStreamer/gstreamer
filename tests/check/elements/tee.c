@@ -96,7 +96,11 @@ GST_START_TEST (test_stress)
   GstMessage *msg;
   gint i;
 
-  desc = "fakesrc num-buffers=100000 ! tee name=t ! queue ! fakesink";
+  /* Pump 1000 buffers (10 bytes each) per second through tee for 5 secs */
+  desc = "fakesrc datarate=10000 sizemin=10 sizemax=10 num-buffers=5000 ! "
+      "video/x-raw-rgb,framerate=25/1 ! tee name=t ! "
+      "queue max-size-buffers=2 ! fakesink sync=true";
+
   pipeline = gst_parse_launch (desc, NULL);
   fail_if (pipeline == NULL);
 
@@ -107,6 +111,10 @@ GST_START_TEST (test_stress)
   bus = gst_element_get_bus (pipeline);
   fail_if (bus == NULL);
   gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  /* Wait for the pipeline to hit playing so that parse_launch can do the
+   * initial link, otherwise we perform linking from multiple threads and cause
+   * trouble */
+  gst_element_get_state (pipeline, NULL, NULL, GST_CLOCK_TIME_NONE);
 
   for (i = 0; i < 50000; i++) {
     GstPad *pad;
@@ -114,10 +122,14 @@ GST_START_TEST (test_stress)
     pad = gst_element_get_request_pad (tee, "src%d");
     gst_element_release_request_pad (tee, pad);
     gst_object_unref (pad);
+
+    if ((msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, 0)))
+      break;
   }
 
   /* now wait for completion or error */
-  msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
+  if (msg == NULL)
+    msg = gst_bus_poll (bus, GST_MESSAGE_EOS | GST_MESSAGE_ERROR, -1);
   fail_if (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
