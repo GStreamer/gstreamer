@@ -162,13 +162,13 @@ gst_basertppayload_class_init (GstBaseRTPPayloadClass * klass)
           "The payload type of the packets",
           0, 0x80, DEFAULT_PT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SSRC,
-      g_param_spec_int64 ("ssrc", "SSRC",
-          "The SSRC of the packets (-1 == random)",
-          -1, G_MAXUINT32, DEFAULT_SSRC, G_PARAM_READWRITE));
+      g_param_spec_uint ("ssrc", "SSRC",
+          "The SSRC of the packets (default == random)",
+          0, G_MAXUINT32, DEFAULT_SSRC, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
-      PROP_TIMESTAMP_OFFSET, g_param_spec_int64 ("timestamp-offset",
+      PROP_TIMESTAMP_OFFSET, g_param_spec_uint ("timestamp-offset",
           "Timestamp Offset",
-          "Offset to add to all outgoing timestamps (-1 = random)", -1,
+          "Offset to add to all outgoing timestamps (default = random)", 0,
           G_MAXUINT32, DEFAULT_TIMESTAMP_OFFSET, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEQNUM_OFFSET,
       g_param_spec_int ("seqnum-offset", "Sequence number Offset",
@@ -518,14 +518,14 @@ gst_basertppayload_set_property (GObject * object, guint prop_id,
       basertppayload->pt = g_value_get_uint (value);
       break;
     case PROP_SSRC:
-      val = g_value_get_int64 (value);
+      val = g_value_get_uint (value);
       basertppayload->ssrc = val;
-      priv->ssrc_random = (val == -1);
+      priv->ssrc_random = FALSE;
       break;
     case PROP_TIMESTAMP_OFFSET:
-      val = g_value_get_int64 (value);
+      val = g_value_get_uint (value);
       basertppayload->ts_offset = val;
-      priv->ts_offset_random = (val == -1);
+      priv->ts_offset_random = FALSE;
       break;
     case PROP_SEQNUM_OFFSET:
       val = g_value_get_int (value);
@@ -565,15 +565,15 @@ gst_basertppayload_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SSRC:
       if (priv->ssrc_random)
-        g_value_set_int64 (value, -1);
+        g_value_set_uint (value, -1);
       else
-        g_value_set_int64 (value, basertppayload->ssrc);
+        g_value_set_uint (value, basertppayload->ssrc);
       break;
     case PROP_TIMESTAMP_OFFSET:
       if (priv->ts_offset_random)
-        g_value_set_int64 (value, -1);
+        g_value_set_uint (value, -1);
       else
-        g_value_set_int64 (value, (guint32) basertppayload->ts_offset);
+        g_value_set_uint (value, (guint32) basertppayload->ts_offset);
       break;
     case PROP_SEQNUM_OFFSET:
       if (priv->seqnum_offset_random)

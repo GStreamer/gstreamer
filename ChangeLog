@@ -1,3 +1,13 @@
+2007-07-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_class_init), (gst_basertppayload_init),
+	(gst_basertppayload_set_property),
+	(gst_basertppayload_get_property):
+	Don't break ABI, restore previous ranges. Keep the default random
+	selection of timestamp and seqnum offset but as soon as the app sets a
+	specific value, use that one.
+
 2007-07-14  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Bastien Nocera <hadess at hadess dot net>
