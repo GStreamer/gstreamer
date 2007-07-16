@@ -1,3 +1,9 @@
+2007-07-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackdec.c:
+	(gst_wavpack_dec_clip_outgoing_buffer):
+	Fix buffer clipping to correctly clip to the segment stop.
+
 2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

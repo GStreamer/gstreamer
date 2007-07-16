@@ -227,7 +227,7 @@ gst_wavpack_dec_clip_outgoing_buffer (GstWavpackDec * dec, GstBuffer * buf)
       GST_BUFFER_SIZE (buf) -= diff;
     }
 
-    diff = cstop - stop;
+    diff = stop - cstop;
     if (diff > 0) {
       GST_BUFFER_DURATION (buf) -= diff;
 
