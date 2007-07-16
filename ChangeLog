@@ -1,3 +1,8 @@
+2007-07-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/faad/gstfaad.c: (clip_outgoing_buffer):
+	Fix buffer clipping to correctly clip to the segment stop.
+
 2007-07-14  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Hans de Goede <j.w.r.degoede at hhs dot nl>
