@@ -1,3 +1,10 @@
+2007-07-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_node):
+	Fix parsing of esds atoms inside mp4a atoms so that we can set correct
+	codec_info for AAC audio. Fixes #457097 along with a whole other bunch
+	of qt/aac files.
+
 2007-07-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackdec.c:

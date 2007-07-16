@@ -1999,6 +1999,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
         guint32 offset;
 
         if (length < 20) {
+          /* small boxes are also inside wave inside the mp4a box */
           GST_LOG_OBJECT (qtdemux, "skipping small mp4a box");
           break;
         }
@@ -2010,10 +2011,10 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
         switch (version) {
           case 0x00000000:
           case 0x00010000:
-            offset = 0x24;
+            offset = 0x34;
             break;
           case 0x00020000:
-            offset = 0x48;
+            offset = 0x58;
             break;
           default:
             GST_WARNING_OBJECT (qtdemux, "unhandled mp4a version 0x%08x",
