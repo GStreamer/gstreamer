@@ -1251,7 +1251,7 @@ clip_outgoing_buffer (GstMad * mad, GstBuffer * buffer)
       GST_BUFFER_DATA (buffer) += diff;
       GST_BUFFER_SIZE (buffer) -= diff;
     }
-    diff = cstop - stop;
+    diff = stop - cstop;
     if (diff > 0) {
       GST_BUFFER_DURATION (buffer) -= diff;
       /* time->frames->bytes */
