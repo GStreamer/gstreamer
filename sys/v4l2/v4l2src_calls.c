@@ -379,6 +379,7 @@ gst_v4l2src_fill_format_list (GstV4l2Src * v4l2src)
     v4l2src->formats = g_slist_prepend (v4l2src->formats, format);
   }
   v4l2src->formats = g_slist_reverse (v4l2src->formats);
+  GST_DEBUG_OBJECT (v4l2src, "got %d format(s)", n);
   return TRUE;
 
   /* ERRORS */
@@ -560,9 +561,10 @@ GstCaps *
 gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
     const GstStructure * template)
 {
-#ifdef VIDIOC_ENUM_FRAMESIZES
   GstCaps *ret;
   GstStructure *tmp;
+
+#ifdef VIDIOC_ENUM_FRAMESIZES
   gint fd = v4l2src->v4l2object->video_fd;
   struct v4l2_frmsizeenum size;
   guint32 w, h;
@@ -629,18 +631,17 @@ enum_framesizes_failed:
     GST_DEBUG_OBJECT (v4l2src,
         "Failed to enumerate frame sizes for pixelformat %" GST_FOURCC_FORMAT
         " (%s)", GST_FOURCC_ARGS (pixelformat), g_strerror (errno));
-    return NULL;
+    goto default_frame_sizes;
   }
 unknown_type:
   {
     GST_WARNING_OBJECT (v4l2src,
         "Unknown frame sizeenum type for pixelformat %" GST_FOURCC_FORMAT
         ": %u", GST_FOURCC_ARGS (pixelformat), size.type);
-    return NULL;
+    goto default_frame_sizes;
   }
-#else /* defined VIDIOC_ENUM_FRAMESIZES */
-  GstCaps *ret;
-  GstStructure *tmp;
+default_frame_sizes:
+#endif /* defined VIDIOC_ENUM_FRAMESIZES */
 
   /* This code is for Linux < 2.6.19 */
 
@@ -653,7 +654,6 @@ unknown_type:
       (gint) 1, (gint) 100, (gint) 1, NULL);
   gst_caps_append_structure (ret, tmp);
   return ret;
-#endif /* defined VIDIOC_ENUM_FRAMESIZES */
 }
 
 /******************************************************
@@ -710,9 +710,17 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
              else {
            */
           GST_DEBUG_OBJECT (v4l2src, "reenqueing buffer");
-          if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF, &buffer) < 0) {
-            goto qbuf_failed;
-          }
+          /* FIXME: this is not a good idea, as drivers usualy return the buffer
+           * with index-number set to 0, thus the re-enque will fail unless it
+           * was incidentialy 0.
+           * We could try to re-enque all buffers without handling the ioctl
+           * return.
+           */
+          /*
+             if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_QBUF, &buffer) < 0) {
+             goto qbuf_failed;
+             }
+           */
           /*} */
         }
         break;
@@ -820,6 +828,7 @@ too_many_trials:
             NUM_TRIALS, v4l2src->v4l2object->videodev, g_strerror (errno)));
     return GST_FLOW_ERROR;
   }
+/*
 qbuf_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, WRITE,
@@ -829,6 +838,7 @@ qbuf_failed:
             v4l2src->v4l2object->videodev, g_strerror (errno)));
     return GST_FLOW_ERROR;
   }
+*/
 }
 
 

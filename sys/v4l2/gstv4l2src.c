@@ -298,7 +298,7 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
       gst_v4l2_get_input, gst_v4l2_set_input, NULL);
 
   /* number of buffers requested */
-  v4l2src->num_buffers = 0;
+  v4l2src->num_buffers = 2;
 
   v4l2src->formats = NULL;
 
@@ -324,6 +324,7 @@ gst_v4l2src_dispose (GObject * object)
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
+
 static void
 gst_v4l2src_finalize (GstV4l2Src * v4l2src)
 {
@@ -331,6 +332,7 @@ gst_v4l2src_finalize (GstV4l2Src * v4l2src)
 
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) (v4l2src));
 }
+
 
 static void
 gst_v4l2src_set_property (GObject * object,
