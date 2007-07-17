@@ -144,6 +144,27 @@ gst_registry_binary_initialize_magic (GstBinaryRegistryMagic * m)
 
 
 /*
+ * gst_registry_binary_save_const_string:
+ *
+ * Store a const string in a binary chunk.
+ *
+ * Returns: %TRUE for success
+ */
+inline static gboolean
+gst_registry_binary_save_const_string (GList ** list, gchar * str)
+{
+  GstBinaryChunk *chunk;
+
+  chunk = g_malloc (sizeof (GstBinaryChunk));
+  chunk->data = str;
+  chunk->size = strlen ((gchar *) chunk->data) + 1;
+  chunk->flags = GST_BINARY_REGISTRY_FLAG_CONST;
+  chunk->align = FALSE;
+  *list = g_list_prepend (*list, chunk);
+  return TRUE;
+}
+
+/*
  * gst_registry_binary_save_string:
  *
  * Store a string in a binary chunk.
@@ -158,7 +179,7 @@ gst_registry_binary_save_string (GList ** list, gchar * str)
   chunk = g_malloc (sizeof (GstBinaryChunk));
   chunk->data = str;
   chunk->size = strlen ((gchar *) chunk->data) + 1;
-  chunk->flags = GST_BINARY_REGISTRY_FLAG_CONST;
+  chunk->flags = GST_BINARY_REGISTRY_FLAG_NONE;
   chunk->align = FALSE;
   *list = g_list_prepend (*list, chunk);
   return TRUE;
@@ -207,9 +228,9 @@ gst_registry_binary_save_pad_template (GList ** list,
   pt->direction = template->direction;
 
   /* pack pad template strings */
-  gst_registry_binary_save_string (list,
+  gst_registry_binary_save_const_string (list,
       (gchar *) (template->static_caps.string));
-  gst_registry_binary_save_string (list, template->name_template);
+  gst_registry_binary_save_const_string (list, template->name_template);
 
   *list = g_list_prepend (*list, chk);
 
@@ -249,7 +270,7 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
     /* save interfaces */
     for (walk = factory->interfaces; walk;
         walk = g_list_next (walk), ef->ninterfaces++) {
-      gst_registry_binary_save_string (list, (gchar *) walk->data);
+      gst_registry_binary_save_const_string (list, (gchar *) walk->data);
     }
     GST_DEBUG ("Saved %d Interfaces", ef->ninterfaces);
     /* save uritypes */
@@ -265,7 +286,7 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
 
         protocol = factory->uri_protocols;
         while (*protocol) {
-          gst_registry_binary_save_string (list, *protocol++);
+          gst_registry_binary_save_const_string (list, *protocol++);
           ef->nuriprotocols++;
         }
         *list = g_list_prepend (*list, subchk);
@@ -288,10 +309,10 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
     }
 
     /* pack element factory strings */
-    gst_registry_binary_save_string (list, factory->details.author);
-    gst_registry_binary_save_string (list, factory->details.description);
-    gst_registry_binary_save_string (list, factory->details.klass);
-    gst_registry_binary_save_string (list, factory->details.longname);
+    gst_registry_binary_save_const_string (list, factory->details.author);
+    gst_registry_binary_save_const_string (list, factory->details.description);
+    gst_registry_binary_save_const_string (list, factory->details.klass);
+    gst_registry_binary_save_const_string (list, factory->details.longname);
   } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
     GstBinaryTypeFindFactory *tff;
     GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (feature);
@@ -310,7 +331,7 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
     /* save extensions */
     if (factory->extensions) {
       while (factory->extensions[tff->nextensions]) {
-        gst_registry_binary_save_string (list,
+        gst_registry_binary_save_const_string (list,
             factory->extensions[tff->nextensions++]);
       }
     }
@@ -329,7 +350,7 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
     pf->rank = feature->rank;
 
     /* pack element factory strings */
-    gst_registry_binary_save_string (list, factory->longdesc);
+    gst_registry_binary_save_const_string (list, factory->longdesc);
   }
 #endif
   else {
@@ -341,8 +362,8 @@ gst_registry_binary_save_feature (GList ** list, GstPluginFeature * feature)
     *list = g_list_prepend (*list, chk);
 
     /* pack plugin feature strings */
-    gst_registry_binary_save_string (list, feature->name);
-    gst_registry_binary_save_string (list, (gchar *) type_name);
+    gst_registry_binary_save_const_string (list, feature->name);
+    gst_registry_binary_save_const_string (list, (gchar *) type_name);
 
     return TRUE;
   }
@@ -394,14 +415,14 @@ gst_registry_binary_save_plugin (GList ** list, GstRegistry * registry,
   gst_plugin_feature_list_free (plugin_features);
 
   /* pack plugin element strings */
-  gst_registry_binary_save_string (list, plugin->desc.origin);
-  gst_registry_binary_save_string (list, plugin->desc.package);
-  gst_registry_binary_save_string (list, plugin->desc.source);
-  gst_registry_binary_save_string (list, plugin->desc.license);
-  gst_registry_binary_save_string (list, plugin->desc.version);
-  gst_registry_binary_save_string (list, plugin->filename);
-  gst_registry_binary_save_string (list, plugin->desc.description);
-  gst_registry_binary_save_string (list, plugin->desc.name);
+  gst_registry_binary_save_const_string (list, plugin->desc.origin);
+  gst_registry_binary_save_const_string (list, plugin->desc.package);
+  gst_registry_binary_save_const_string (list, plugin->desc.source);
+  gst_registry_binary_save_const_string (list, plugin->desc.license);
+  gst_registry_binary_save_const_string (list, plugin->desc.version);
+  gst_registry_binary_save_const_string (list, plugin->filename);
+  gst_registry_binary_save_const_string (list, plugin->desc.description);
+  gst_registry_binary_save_const_string (list, plugin->desc.name);
 
   *list = g_list_prepend (*list, chk);
 
@@ -657,8 +678,7 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
     GstElementFactory *factory = GST_ELEMENT_FACTORY (feature);
 
     align32 (*in);
-    GST_DEBUG ("Reading/casting for GstBinaryElementFactory at address %p",
-        *in);
+    GST_LOG ("Reading/casting for GstBinaryElementFactory at address %p", *in);
     unpack_element (*in, ef, GstBinaryElementFactory);
     pf = (GstBinaryPluginFeature *) ef;
 
@@ -772,7 +792,7 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
   guint i;
 
   align32 (*in);
-  GST_DEBUG ("Reading/casting for GstBinaryPluginElement at address %p", *in);
+  GST_LOG ("Reading/casting for GstBinaryPluginElement at address %p", *in);
   unpack_element (*in, pe, GstBinaryPluginElement);
 
   if (pe->nfeatures < 0) {
@@ -784,9 +804,6 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
     GST_ERROR ("Plugin time or file size is not valid !");
     return FALSE;
   }
-
-  GST_DEBUG ("Adding plugin with %d features from binary registry",
-      pe->nfeatures);
 
   plugin = g_object_new (GST_TYPE_PLUGIN, NULL);
 
@@ -804,12 +821,12 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
   unpack_string (*in, plugin->desc.source);
   unpack_string (*in, plugin->desc.package);
   unpack_string (*in, plugin->desc.origin);
-  GST_DEBUG ("read strings for '%s'", plugin->desc.name);
+  GST_LOG ("read strings for '%s'", plugin->desc.name);
 
   plugin->basename = g_path_get_basename (plugin->filename);
   gst_registry_add_plugin (registry, plugin);
-  GST_DEBUG ("Added plugin '%s' from binary registry", plugin->desc.name);
-  GST_DEBUG ("Number of features %d", pe->nfeatures);
+  GST_INFO ("Added plugin '%s' plugin with %d features from binary registry",
+      plugin->desc.name, pe->nfeatures);
   for (i = 0; i < pe->nfeatures; i++) {
     if (!gst_registry_binary_load_feature (registry, in,
             g_strdup (plugin->desc.name))) {
@@ -900,7 +917,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
     for (;
         ((size_t) in + sizeof (GstBinaryPluginElement)) <
         (size_t) contents + size;) {
-      GST_INFO ("reading binary registry %" G_GSIZE_FORMAT "(%x)/%"
+      GST_DEBUG ("reading binary registry %" G_GSIZE_FORMAT "(%x)/%"
           G_GSIZE_FORMAT, (size_t) in - (size_t) contents,
           (guint) ((size_t) in - (size_t) contents), size);
       if (!gst_registry_binary_load_plugin (registry, &in)) {

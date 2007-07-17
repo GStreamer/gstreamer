@@ -1,3 +1,15 @@
+2007-07-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_save_const_string),
+	(gst_registry_binary_save_string),
+	(gst_registry_binary_save_pad_template),
+	(gst_registry_binary_save_feature),
+	(gst_registry_binary_save_plugin),
+	(gst_registry_binary_load_feature),
+	(gst_registry_binary_load_plugin),
+	(gst_registry_binary_read_cache):
+	  Fix memory leak. Be less verbose in the log.
+
 2007-07-16  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/elements/.cvsignore:
