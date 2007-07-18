@@ -1,3 +1,18 @@
+2007-07-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* examples/app/appsrc_ex.c:
+	* examples/switch/switcher.c:
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/timidity/gstwildmidi.c:
+	* ext/x264/gstx264enc.c:
+	* gst/mve/mveaudioenc.c: (mve_compress_audio):
+	* gst/rtpmanager/gstrtpclient.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/spectrum/demo-audiotest.c:
+	* gst/spectrum/demo-osssrc.c:
+	* sys/dvb/gstdvbsrc.c:
+	Add stdlib include (free, atoi, exit).
+
 2007-07-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/faad/gstfaad.c: (clip_outgoing_buffer):
