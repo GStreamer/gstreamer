@@ -1,3 +1,15 @@
+2007-07-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* ext/jpeg/gstjpegdec.c:
+	* ext/libpng/gstpngdec.c: (gst_pngdec_task),
+	(gst_pngdec_sink_setcaps):
+	  More docs. More logs in pngdec.
+
 2007-07-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_init):

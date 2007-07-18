@@ -13,6 +13,13 @@
  *
  */
 
+/**
+ * SECTION:element-pngdec
+ *
+ * Decodes png images. If there is no framerate set on sink caps, it sends EOS
+ * after the first picture.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -457,6 +464,8 @@ gst_pngdec_task (GstPad * pad)
 
   pngdec = GST_PNGDEC (GST_OBJECT_PARENT (pad));
 
+  GST_LOG_OBJECT (pngdec, "read frame");
+
   /* Let libpng come back here on error */
   if (setjmp (png_jmpbuf (pngdec->png))) {
     ret = GST_FLOW_ERROR;
@@ -510,16 +519,13 @@ gst_pngdec_task (GstPad * pad)
   return;
 
 pause:
-  {
-    GST_INFO_OBJECT (pngdec, "pausing task, reason %s",
-        gst_flow_get_name (ret));
-    gst_pad_pause_task (pngdec->sinkpad);
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
-          (_("Internal data stream error.")),
-          ("stream stopped, reason %s", gst_flow_get_name (ret)));
-      gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
-    }
+  GST_INFO_OBJECT (pngdec, "pausing task, reason %s", gst_flow_get_name (ret));
+  gst_pad_pause_task (pngdec->sinkpad);
+  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+    gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
+    GST_ELEMENT_ERROR (pngdec, STREAM, FAILED,
+        (_("Internal data stream error.")),
+        ("stream stopped, reason %s", gst_flow_get_name (ret)));
   }
 }
 
@@ -593,6 +599,7 @@ gst_pngdec_sink_setcaps (GstPad * pad, GstCaps * caps)
     pngdec->fps_n = num;
     pngdec->fps_d = denom;
   } else {
+    GST_DEBUG_OBJECT (pngdec, "single picture input");
     pngdec->framed = FALSE;
     pngdec->fps_n = 0;
     pngdec->fps_d = 1;

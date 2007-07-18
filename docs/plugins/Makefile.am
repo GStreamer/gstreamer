@@ -89,6 +89,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/jpeg/gstjpegenc.h \
 	$(top_srcdir)/ext/jpeg/gstsmokedec.h \
 	$(top_srcdir)/ext/jpeg/gstsmokeenc.h \
+	$(top_srcdir)/ext/libpng/gstpngdec.h \
+	$(top_srcdir)/ext/libpng/gstpngenc.h \
 	$(top_srcdir)/ext/taglib/gstapev2mux.h \
 	$(top_srcdir)/ext/taglib/gstid3v2mux.h \
 	$(top_srcdir)/ext/taglib/gsttaglibmux.h \
@@ -114,14 +116,14 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/rtsp/gstrtspsrc.h \
 	$(top_srcdir)/gst/udp/gstmultiudpsink.h \
 	$(top_srcdir)/gst/udp/gstudpsrc.h \
-        $(top_srcdir)/gst/videocrop/gstvideocrop.h \
+	$(top_srcdir)/gst/videocrop/gstvideocrop.h \
 	$(top_srcdir)/gst/videofilter/gstvideobalance.h \
 	$(top_srcdir)/gst/videofilter/gstvideoflip.h \
 	$(top_srcdir)/gst/videomixer/videomixer.c \
-        $(top_srcdir)/sys/waveform/gstwaveformsink.h \
-        $(top_srcdir)/ext/wavpack/gstwavpackdec.h \
-        $(top_srcdir)/ext/wavpack/gstwavpackenc.h \
-        $(top_srcdir)/ext/wavpack/gstwavpackparse.h \
+	$(top_srcdir)/sys/waveform/gstwaveformsink.h \
+	$(top_srcdir)/ext/wavpack/gstwavpackdec.h \
+	$(top_srcdir)/ext/wavpack/gstwavpackenc.h \
+	$(top_srcdir)/ext/wavpack/gstwavpackparse.h \
 	$(top_srcdir)/gst/wavparse/gstwavparse.h \
 	$(top_srcdir)/sys/directdraw/gstdirectdrawsink.h \
 	$(top_srcdir)/sys/directsound/gstdirectsoundsink.h \

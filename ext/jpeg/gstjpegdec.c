@@ -17,6 +17,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/**
+ * SECTION:element-jpegdec
+ *
+ * Decodes jpeg images. If there is no framerate set on sink caps, it sends EOS
+ * after the first picture.
+ */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"

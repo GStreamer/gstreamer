@@ -52,6 +52,8 @@
     <xi:include href="xml/element-osxaudiosrc.xml" />
     <xi:include href="xml/element-osxvideosink.xml" />
     <xi:include href="xml/element-progressreport.xml" />
+    <xi:include href="xml/element-pngenc.xml" />
+    <xi:include href="xml/element-pngdec.xml" />
     <xi:include href="xml/element-qtdemux.xml" />
     <xi:include href="xml/element-rtspsrc.xml" />
     <xi:include href="xml/element-rtpdec.xml" />
