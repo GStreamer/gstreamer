@@ -62,6 +62,8 @@
  *
  * Last reviewed on 2006-11-30 (0.10.4)
  */
+
+#include <stdlib.h>
 #include <string.h>
 
 #include "gstjackaudiosink.h"

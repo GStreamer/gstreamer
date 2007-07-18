@@ -1,5 +1,11 @@
 2007-07-18  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/jack/gstjackaudiosink.c: (gst_jack_ring_buffer_open_device),
+	(gst_jack_ring_buffer_acquire):
+	  Add stdlib include here too.
+
+2007-07-18  Stefan Kost  <ensonic@users.sf.net>
+
 	* examples/app/appsrc_ex.c:
 	* examples/switch/switcher.c:
 	* ext/neon/gstneonhttpsrc.c:
@@ -11,7 +17,7 @@
 	* gst/spectrum/demo-audiotest.c:
 	* gst/spectrum/demo-osssrc.c:
 	* sys/dvb/gstdvbsrc.c:
-	Add stdlib include (free, atoi, exit).
+	  Add stdlib include (free, atoi, exit).
 
 2007-07-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
