@@ -266,7 +266,7 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
   mp3parse->xing_bitrate = 0;
 
   if (mp3parse->seek_table) {
-    g_slist_foreach (mp3parse->seek_table, (GFunc) g_free, NULL);
+    g_list_foreach (mp3parse->seek_table, (GFunc) g_free, NULL);
     mp3parse->seek_table = NULL;
   }
 
@@ -535,15 +535,11 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
     MPEGAudioSeekEntry *entry = g_new0 (MPEGAudioSeekEntry, 1);
 
     entry->byte = mp3parse->cur_offset;
-    entry->byte_end = mp3parse->cur_offset + size;
     entry->timestamp = GST_BUFFER_TIMESTAMP (outbuf);
-    entry->timestamp_end =
-        GST_BUFFER_TIMESTAMP (outbuf) + GST_BUFFER_DURATION (outbuf);
-    mp3parse->seek_table = g_slist_prepend (mp3parse->seek_table, entry);
-    GST_DEBUG_OBJECT (mp3parse, "Adding index entry %" GST_TIME_FORMAT " - %"
-        GST_TIME_FORMAT " @ offset 0x%08" G_GINT64_MODIFIER "x",
-        GST_TIME_ARGS (entry->timestamp), GST_TIME_ARGS (entry->timestamp_end),
-        entry->byte);
+    mp3parse->seek_table = g_list_prepend (mp3parse->seek_table, entry);
+    GST_DEBUG_OBJECT (mp3parse, "Adding index entry %" GST_TIME_FORMAT
+        " @ offset 0x%08" G_GINT64_MODIFIER "x",
+        GST_TIME_ARGS (entry->timestamp), entry->byte);
   }
 
   /* Update our byte offset tracking */
@@ -1282,7 +1278,6 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
   if (flags & GST_SEEK_FLAG_ACCURATE) {
     MPEGAudioPendingAccurateSeek *seek =
         g_new0 (MPEGAudioPendingAccurateSeek, 1);
-    gint frame_offset = (mp3parse->version == 1) ? 9 : 29;
     GstClockTime start;
 
     seek->segment = mp3parse->segment;
@@ -1296,19 +1291,16 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
       start = 0;
     } else {
       MPEGAudioSeekEntry *entry = NULL, *start_entry = NULL, *stop_entry = NULL;
-      GSList *start_node, *stop_node;
+      GList *start_node, *stop_node;
 
       for (start_node = mp3parse->seek_table; start_node;
           start_node = start_node->next) {
         entry = start_node->data;
 
-        if (cur >= entry->timestamp && cur < entry->timestamp_end) {
+        if (cur - mp3parse->max_bitreservoir >= entry->timestamp) {
           start_entry = entry;
           break;
         }
-
-        if (cur >= entry->timestamp_end)
-          break;
       }
 
       if (!start_entry) {
@@ -1316,13 +1308,6 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
         start = start_entry->timestamp;
         byte_cur = start_entry->byte;
       } else {
-        int i = frame_offset;
-
-        while (start_node->next && i > 1) {
-          start_node = start_node->next;
-          i--;
-        }
-        start_entry = start_node->data;
         start = start_entry->timestamp;
         byte_cur = start_entry->byte;
       }
@@ -1331,19 +1316,17 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
           stop_node = stop_node->next) {
         entry = stop_node->data;
 
-        if (stop >= entry->timestamp && stop < entry->timestamp_end) {
-          stop_entry = entry;
+        if (stop >= entry->timestamp) {
+          stop_node = stop_node->prev;
+          stop_entry = (stop_node) ? stop_node->data : NULL;
           break;
         }
-
-        if (stop >= entry->timestamp_end)
-          break;
       }
 
       if (!stop_entry) {
         byte_stop = -1;
       } else {
-        byte_stop = stop_entry->byte_end;
+        byte_stop = stop_entry->byte;
       }
 
     }

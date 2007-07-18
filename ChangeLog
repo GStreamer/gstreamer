@@ -1,3 +1,13 @@
+2007-07-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_reset),
+	(gst_mp3parse_emit_frame), (mp3parse_handle_seek):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	Save some memory for each frame by only saving the start timestamp
+	and start byte position instead of additionally the stop timestamp
+	and stop byte position. This requires us to use a doubly-linked list
+	but still saves 8-12 bytes per frame.
+
 2007-07-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/mad/gstmad.c: (clip_outgoing_buffer):

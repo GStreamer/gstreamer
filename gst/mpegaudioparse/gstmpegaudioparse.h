@@ -46,9 +46,7 @@ typedef struct _MPEGAudioPendingAccurateSeek MPEGAudioPendingAccurateSeek;
 
 struct _MPEGAudioSeekEntry {
   gint64 byte;
-  gint64 byte_end;
   GstClockTime timestamp;
-  GstClockTime timestamp_end;
 };
 
 struct _MPEGAudioPendingAccurateSeek {
@@ -106,7 +104,7 @@ struct _GstMPEGAudioParse {
   guint   xing_bitrate;
 
   /* Accurate seeking */
-  GSList *seek_table;
+  GList *seek_table;
   GMutex *pending_accurate_seeks_lock;
   GSList *pending_accurate_seeks;
   gboolean exact_position;
