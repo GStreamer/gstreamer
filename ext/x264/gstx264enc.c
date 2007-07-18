@@ -25,6 +25,8 @@
 #include "gstx264enc.h"
 
 #include <string.h>
+#include <stdlib.h>
+
 
 enum
 {
