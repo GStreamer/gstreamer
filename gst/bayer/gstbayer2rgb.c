@@ -18,6 +18,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
+/*
+ * SECTION:element-bayer2rgb
+ *
+ * Decodes raw camera sensor images.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -59,7 +65,8 @@ struct _GstBayer2RGBClass
   GstBaseTransformClass parent;
 };
 
-static const GstElementDetails element_details = GST_ELEMENT_DETAILS ("FIXME",
+static const GstElementDetails element_details =
+GST_ELEMENT_DETAILS ("RAW Camera sensor decoder",
     "Filter/Effect",
     "FIXME example filter",
     "FIXME <fixme@fixme.com>");
@@ -178,9 +185,9 @@ gst_bayer2rgb_set_caps (GstBaseTransform * base, GstCaps * incaps,
   filter->stride = GST_ROUND_UP_4 (filter->width);
 
   if (filter->tmpdata) {
-    free (filter->tmpdata);
+    g_free (filter->tmpdata);
   }
-  filter->tmpdata = malloc (filter->stride * (4 * 3 + 1));
+  filter->tmpdata = g_malloc (filter->stride * (4 * 3 + 1));
 
   return TRUE;
 }
@@ -192,7 +199,7 @@ gst_bayer2rgb_reset (GstBayer2RGB * filter)
   filter->height = 0;
   filter->stride = 0;
   if (filter->tmpdata) {
-    free (filter->tmpdata);
+    g_free (filter->tmpdata);
     filter->tmpdata = NULL;
   }
 }

@@ -1,5 +1,11 @@
 2007-07-18  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/bayer/gstbayer2rgb.c: (gst_bayer2rgb_set_caps),
+	(gst_bayer2rgb_reset):
+	  Add basic docs. Use glibs mem routines.
+
+2007-07-18  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_create):
 	  Add example to the docs. Fix buffer-offset-end and add some debug.
 
