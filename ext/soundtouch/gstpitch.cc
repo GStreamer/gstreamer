@@ -365,7 +365,7 @@ gst_pitch_prepare_buffer (GstPitch * pitch)
  * samples are sent out here as strictly necessary, because soundtouch could
  * append zero samples, which could disturb looping.  */
 static GstFlowReturn
-gst_pitch_flush_buffer (GstPitch * pitch)
+gst_pitch_flush_buffer (GstPitch * pitch, gboolean send)
 {
   GstBuffer *buffer;
 
@@ -375,6 +375,9 @@ gst_pitch_flush_buffer (GstPitch * pitch)
     return GST_FLOW_OK;
 
   pitch->priv->st->flush ();
+  if (!send)
+    return GST_FLOW_OK;
+
   buffer = gst_pitch_prepare_buffer (pitch);
 
   if (!buffer)
@@ -617,9 +620,11 @@ gst_pitch_sink_event (GstPad * pad, GstEvent * event)
   GST_LOG_OBJECT (pad, "received %s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_FLUSH_STOP:
+      gst_pitch_flush_buffer (pitch, FALSE);
+      break;
     case GST_EVENT_EOS:
-      gst_pitch_flush_buffer (pitch);
+      gst_pitch_flush_buffer (pitch, TRUE);
       break;
     default:
       break;

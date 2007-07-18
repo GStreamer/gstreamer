@@ -1,3 +1,11 @@
+2007-07-18  Michael Smith  <msmith@fluendo.com>
+
+	* ext/soundtouch/gstpitch.cc:
+	  If we receive a new segment event, don't try to push buffers out
+	  in response (without first sending it on!).
+	  Instead, flush internal buffers on receiving flush events.
+	  Fixes playback after seeking.
+
 2007-07-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/bayer/gstbayer2rgb.c: (gst_bayer2rgb_set_caps),
