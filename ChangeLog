@@ -1,3 +1,10 @@
+2007-07-18  Jan Schmidt  <thaytan@noraisin.net>
+
+	* gst/gstbin.c: (gst_bin_continue_func):
+	Check that the state_cookie hasn't changed since the continue_func
+	was scheduled. Avoids problems where the state changes back to
+	something it shouldn't be because it was changed in the meantime.
+
 2007-07-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_save_const_string),

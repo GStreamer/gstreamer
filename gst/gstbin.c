@@ -2220,6 +2220,9 @@ gst_bin_continue_func (BinContinueData * data)
   GST_DEBUG_OBJECT (bin, "doing state continue");
   GST_OBJECT_LOCK (bin);
 
+  if (data->cookie != GST_ELEMENT_CAST (bin)->state_cookie)
+    goto interrupted;
+
   current = GST_STATE (bin);
   next = GST_STATE_GET_NEXT (current, pending);
   transition = (GstStateChange) GST_STATE_TRANSITION (current, next);
@@ -2238,6 +2241,14 @@ gst_bin_continue_func (BinContinueData * data)
 
   GST_STATE_UNLOCK (bin);
   GST_DEBUG_OBJECT (bin, "state continue done");
+  gst_object_unref (bin);
+  g_free (data);
+  return;
+
+interrupted:
+  GST_OBJECT_UNLOCK (bin);
+  GST_STATE_UNLOCK (bin);
+  GST_DEBUG_OBJECT (bin, "state continue aborted due to intervening change");
   gst_object_unref (bin);
   g_free (data);
 }
