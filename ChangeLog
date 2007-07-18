@@ -1,5 +1,10 @@
 2007-07-18  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/multifile/gstmultifilesrc.c: (gst_multi_file_src_create):
+	  Add example to the docs. Fix buffer-offset-end and add some debug.
+
+2007-07-18  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/jack/gstjackaudiosink.c: (gst_jack_ring_buffer_open_device),
 	(gst_jack_ring_buffer_acquire):
 	  Add stdlib include here too.
