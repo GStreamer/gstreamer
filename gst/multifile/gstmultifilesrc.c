@@ -23,8 +23,22 @@
  * @short_description: reads buffers from sequentially-named files
  * @see_also: #GstFileSrc
  *
- * Reads buffers from sequentially named files.
- */
+ * <refsect2>
+ * <para>
+ * Reads buffers from sequentially named files. If used together with an image
+ * decoder one needs to use the GstMultiFileSrc::caps property or a capsfilter
+ * to force to caps containing a framerate. Otherwise imagedecoders send EOS
+ * after the first picture.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch multifilesrc location="img.%04d.png" index=0 ! image/png,framerate='(fraction)'1/1 ! pngdec ! ffmpegcolorspace ! ffenc_mpeg4 ! avimux ! filesink location="images.avi"
+ * </programlisting>
+ * This pipeline joins multiple frames into one video.
+ * </para>
+  * </refsect2>
+*/
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -246,6 +260,8 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   filename = gst_multi_file_src_get_filename (filesrc);
 
+  GST_DEBUG_OBJECT (filesrc, "reading from file \"%s\".", filename);
+
   file = fopen (filename, "rb");
   if (!file) {
     goto handle_error;
@@ -266,12 +282,13 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   GST_BUFFER_SIZE (buf) = size;
   GST_BUFFER_OFFSET (buf) = filesrc->offset;
-  GST_BUFFER_OFFSET (buf) = filesrc->offset + size;
+  GST_BUFFER_OFFSET_END (buf) = filesrc->offset + size;
   filesrc->offset += size;
   gst_buffer_set_caps (buf, filesrc->caps);
 
-  fclose (file);
+  GST_DEBUG_OBJECT (filesrc, "read file \"%s\".", filename);
 
+  fclose (file);
   g_free (filename);
   *buffer = buf;
   return GST_FLOW_OK;
