@@ -256,7 +256,9 @@ gst_v4l2_tuner_set_frequency_and_notify (GstV4l2Object * v4l2object,
     GstTunerChannel * channel, gulong frequency)
 {
   if (gst_v4l2_tuner_set_frequency (v4l2object, channel, frequency)) {
+#if 0
     g_object_notify (G_OBJECT (v4l2object->element), "frequency");
+#endif
   }
 }
 

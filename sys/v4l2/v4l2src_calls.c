@@ -642,17 +642,24 @@ unknown_type:
   }
 default_frame_sizes:
 #endif /* defined VIDIOC_ENUM_FRAMESIZES */
+  {
+    gint min_w, max_w, min_h, max_h;
 
-  /* This code is for Linux < 2.6.19 */
-
-  ret = gst_caps_new_empty ();
-  tmp = gst_structure_copy (template);
-  gst_structure_set (tmp, "width", GST_TYPE_INT_RANGE, (gint) 1,
-      (gint) GST_V4L2_MAX_SIZE, "height", GST_TYPE_INT_RANGE,
-      (gint) 1, (gint) GST_V4L2_MAX_SIZE,
-      "framerate", GST_TYPE_FRACTION_RANGE, (gint) 0,
-      (gint) 1, (gint) 100, (gint) 1, NULL);
-  gst_caps_append_structure (ret, tmp);
+    /* This code is for Linux < 2.6.19 */
+    if (!gst_v4l2src_get_size_limits (v4l2src, pixelformat, &min_w, &max_w,
+            &min_h, &max_h)) {
+      min_w = min_h = 1;
+      max_w = max_h = GST_V4L2_MAX_SIZE;
+    }
+    ret = gst_caps_new_empty ();
+    tmp = gst_structure_copy (template);
+    gst_structure_set (tmp,
+        "width", GST_TYPE_INT_RANGE, min_w, max_w,
+        "height", GST_TYPE_INT_RANGE, min_h, max_h,
+        "framerate", GST_TYPE_FRACTION_RANGE, (gint) 0, (gint) 1, (gint) 100,
+        (gint) 1, NULL);
+    gst_caps_append_structure (ret, tmp);
+  }
   return ret;
 }
 
@@ -1181,22 +1188,21 @@ gst_v4l2src_capture_deinit (GstV4l2Src * v4l2src)
  */
 gboolean
 gst_v4l2src_get_size_limits (GstV4l2Src * v4l2src,
-    struct v4l2_fmtdesc * format,
-    gint * min_w, gint * max_w, gint * min_h, gint * max_h)
+    guint32 pixelformat, gint * min_w, gint * max_w, gint * min_h, gint * max_h)
 {
 
   struct v4l2_format fmt;
 
   GST_LOG_OBJECT (v4l2src,
       "getting size limits with format %" GST_FOURCC_FORMAT,
-      GST_FOURCC_ARGS (format->pixelformat));
+      GST_FOURCC_ARGS (pixelformat));
 
   /* get size delimiters */
   memset (&fmt, 0, sizeof (fmt));
   fmt.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   fmt.fmt.pix.width = 0;
   fmt.fmt.pix.height = 0;
-  fmt.fmt.pix.pixelformat = format->pixelformat;
+  fmt.fmt.pix.pixelformat = pixelformat;
   fmt.fmt.pix.field = V4L2_FIELD_INTERLACED;
   if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_TRY_FMT, &fmt) < 0) {
     GST_DEBUG_OBJECT (v4l2src, "failed to get min size: %s",

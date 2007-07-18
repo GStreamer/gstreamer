@@ -1,5 +1,22 @@
 2007-07-18  Stefan Kost  <ensonic@users.sf.net>
 
+	Patch by: Alexander Eichner <alexeichi@yahoo.de>
+
+	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_init):
+	  Use define here.
+
+	* sys/v4l2/gstv4l2tuner.c:
+	(gst_v4l2_tuner_set_frequency_and_notify):
+	  Don't touch the property - its still disabled.
+
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_probe_caps_for_format),
+	(gst_v4l2src_grab_frame), (gst_v4l2src_get_size_limits):
+	* sys/v4l2/v4l2src_calls.h:
+	  Improve fallback format negotionation. Fixes #451388
+	  
+
+2007-07-18  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/elements/videocrop.c: (GST_START_TEST):
 	  Fix the test.
 

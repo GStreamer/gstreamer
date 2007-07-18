@@ -298,7 +298,7 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
       gst_v4l2_get_input, gst_v4l2_set_input, NULL);
 
   /* number of buffers requested */
-  v4l2src->num_buffers = 2;
+  v4l2src->num_buffers = GST_V4L2_MIN_BUFFERS;
 
   v4l2src->formats = NULL;
 

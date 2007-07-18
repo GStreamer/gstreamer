@@ -48,7 +48,7 @@ GstCaps*   gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixe
                                           const GstStructure *template);
 
 gboolean   gst_v4l2src_get_size_limits   (GstV4l2Src * v4l2src,
-                                          struct v4l2_fmtdesc *fmt,
+                                          guint32 pixelformat,
                                           gint * min_w, gint * max_w,
                                           gint * min_h, gint * max_h);
 
