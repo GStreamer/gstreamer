@@ -1,5 +1,10 @@
 2007-07-18  Stefan Kost  <ensonic@users.sf.net>
 
+	* sys/v4l2/gstv4l2src.c:
+	  Add another example pipeline.
+
+2007-07-18  Stefan Kost  <ensonic@users.sf.net>
+
 	Patch by: Alexander Eichner <alexeichi@yahoo.de>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_init):
@@ -13,7 +18,6 @@
 	(gst_v4l2src_grab_frame), (gst_v4l2src_get_size_limits):
 	* sys/v4l2/v4l2src_calls.h:
 	  Improve fallback format negotionation. Fixes #451388
-	  
 
 2007-07-18  Stefan Kost  <ensonic@users.sf.net>
 
