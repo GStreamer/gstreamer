@@ -38,6 +38,13 @@ else
 check_neon = 
 endif
 
+if USE_TIMIDITY
+check_timidity=elements/timidity
+else
+check_timidity=
+endif
+
+
 VALGRIND_TO_FIX = \
 	elements/mpeg2enc
 
@@ -48,6 +55,7 @@ VALGRIND_TESTS_DISABLE = \
 check_PROGRAMS = \
 	$(check_mpeg2enc)  \
 	$(check_neon)      \
+	$(check_timidity)  \
 	elements/rganalysis \
 	elements/rglimiter \
 	elements/rgvolume \
@@ -58,4 +66,7 @@ TESTS = $(check_PROGRAMS)
 
 AM_CFLAGS = $(GST_OBJ_CFLAGS) $(GST_CHECK_CFLAGS) $(CHECK_CFLAGS)
 LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
+
+elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
+elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
 
