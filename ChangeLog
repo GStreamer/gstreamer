@@ -1,3 +1,28 @@
+2007-07-19  Julien MOUTTE  <julien@moutte.net>
+
+	* configure.ac:
+	* gst/flv/Makefile.am:
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_flush),
+	(gst_flv_demux_cleanup), (gst_flv_demux_chain),
+	(gst_flv_demux_pull_tag), (gst_flv_demux_pull_header),
+	(gst_flv_demux_seek_to_prev_keyframe), (gst_flv_demux_loop),
+	(gst_flv_demux_sink_activate), (gst_flv_demux_sink_activate_push),
+	(gst_flv_demux_sink_activate_pull), (gst_flv_demux_sink_event),
+	(gst_flv_demux_change_state), (gst_flv_demux_dispose),
+	(gst_flv_demux_base_init), (gst_flv_demux_class_init),
+	(gst_flv_demux_init), (plugin_init):
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvparse.c: (FLV_GET_BEUI24), (FLV_GET_STRING),
+	(gst_flv_demux_query_types), (gst_flv_demux_query),
+	(gst_flv_parse_metadata_item), (gst_flv_parse_tag_script),
+	(gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	(gst_flv_parse_tag_type), (gst_flv_parse_header):
+	* gst/flv/gstflvparse.h: Adds a first draft of an FLV demuxer.
+	It does not do seeking yet, it supports pull and push mode so YES
+	you can use it to play youtube videos directly from an HTTP uri.
+	Not so much testing done yet but it parses metadata, reply to 
+	duration queries, etc...
+
 2007-07-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/Makefile.am:

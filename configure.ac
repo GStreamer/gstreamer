@@ -85,6 +85,7 @@ GST_PLUGINS_ALL="\
   deinterlace \
   equalizer \
   filter \
+  flv \
   freeze \
   h264parse \
   interleave \
@@ -980,6 +981,7 @@ gst/cdxaparse/Makefile
 gst/deinterlace/Makefile
 gst/equalizer/Makefile
 gst/filter/Makefile
+gst/flv/Makefile
 gst/freeze/Makefile
 gst/h264parse/Makefile
 gst/interleave/Makefile
