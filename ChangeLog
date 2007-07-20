@@ -1,3 +1,8 @@
+2007-07-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/icles/Makefile.am:
+	  This needs -lm.
+
 2007-07-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertppayload.c:
