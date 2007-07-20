@@ -1,5 +1,22 @@
 2007-07-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/equalizer/gstiirequalizer.c:
+	(gst_iir_equalizer_band_set_property),
+	(gst_iir_equalizer_child_proxy_get_child_by_index),
+	(gst_iir_equalizer_child_proxy_get_children_count),
+	(gst_iir_equalizer_child_proxy_interface_init),
+	(gst_iir_equalizer_class_init), (arg_to_scale), (setup_filter),
+	(gst_iir_equalizer_compute_frequencies):
+	* gst/equalizer/gstiirequalizer10bands.c:
+	(gst_iir_equalizer_10bands_class_init):
+	* gst/equalizer/gstiirequalizer3bands.c:
+	(gst_iir_equalizer_3bands_class_init):
+	* gst/equalizer/gstiirequalizernbands.c:
+	  Better algorith for the center frequencies. Subtract band filters from
+	  input for negative gains. Rework the gain mapping.
+
+2007-07-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* ext/dirac/Makefile.am:
 	  Also include stdlib here.
 

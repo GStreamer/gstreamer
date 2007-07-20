@@ -141,7 +141,7 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
       gdouble gain;
 
       gain = g_value_get_double (value);
-      GST_INFO_OBJECT (band, "gain = %lf -> %lf", band->gain, gain);
+      GST_DEBUG_OBJECT (band, "gain = %lf -> %lf", band->gain, gain);
       if (gain != band->gain) {
         GstIirEqualizer *equ =
             GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
@@ -151,7 +151,7 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
           setup_filter (equ, band);
         }
         gst_object_unref (equ);
-        GST_INFO_OBJECT (band, "changed gain = %lf ", band->gain);
+        GST_DEBUG_OBJECT (band, "changed gain = %lf ", band->gain);
       }
       break;
     }
@@ -233,8 +233,7 @@ gst_iir_equalizer_child_proxy_get_child_by_index (GstChildProxy * child_proxy,
 
   g_return_val_if_fail (index < equ->freq_band_count, NULL);
 
-  GST_INFO ("return child[%d] '%s'", index,
-      GST_OBJECT_NAME (equ->bands[index]));
+  GST_LOG ("return child[%d] '%s'", index, GST_OBJECT_NAME (equ->bands[index]));
   return (gst_object_ref (equ->bands[index]));
 }
 
@@ -243,7 +242,7 @@ gst_iir_equalizer_child_proxy_get_children_count (GstChildProxy * child_proxy)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (child_proxy);
 
-  GST_INFO ("we have %d children", equ->freq_band_count);
+  GST_LOG ("we have %d children", equ->freq_band_count);
   return (equ->freq_band_count);
 }
 
@@ -253,7 +252,7 @@ gst_iir_equalizer_child_proxy_interface_init (gpointer g_iface,
 {
   GstChildProxyInterface *iface = g_iface;
 
-  GST_INFO ("initializing iface");
+  GST_DEBUG ("initializing iface");
 
   iface->get_child_by_index = gst_iir_equalizer_child_proxy_get_child_by_index;
   iface->get_children_count = gst_iir_equalizer_child_proxy_get_children_count;
@@ -288,7 +287,7 @@ gst_iir_equalizer_class_init (GstIirEqualizerClass * klass)
   g_object_class_install_property (gobject_class, ARG_BAND_WIDTH,
       g_param_spec_double ("band-width", "band-width",
           "band width calculated as distance between bands * this value", 0.1,
-          5.0, 1.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          10.0, 1.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   audio_filter_class->setup = gst_iir_equalizer_setup;
   btrans_class->transform_ip = gst_iir_equalizer_transform_ip;
@@ -314,19 +313,20 @@ gst_iir_equalizer_finalize (GObject * object)
 /*
  * converts gain values to scale factors.
  *
- * arguments are in the range [-1 ... 1] with 0 meaning "no action"
- * results are in the range [-0.2 ... 1] with 0 meaning "no action"
- * via the function
- *   f(x) = 0.25 * 5 ^ x - 0.25
+ * we map -1 ... 1 to a db range.
+ * A suitable range would be -12db ... 0 ... + 6db which expressed as
+ * a factor is about          0.06 ... 1 ... 4.0
+ *
+ * We need to subtract one so that gain is centered around zero
  *
  * visualize via gnuplot:
  *   set xrange [-1:1]
- *   plot 0.25 * exp (log (5) * x) - 0.25
+ *   plot 10.0 ** (12*x/10.0)
  */
 static gdouble
 arg_to_scale (gdouble arg)
 {
-  return 0.25 * exp (log (5) * arg) - 0.25;
+  return (pow (10.0, (6.0 * fabs (arg)) / 10.0) - 1.0);
 }
 
 static void
@@ -334,6 +334,10 @@ setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
 {
   g_return_if_fail (GST_AUDIO_FILTER (equ)->format.rate);
 
+  /* FIXME: we need better filters
+   * - the band-width control is not good
+   * - we need shelf-filter for 1st and last band
+   */
   {
     gdouble gain = arg_to_scale (band->gain);
     gdouble frequency = band->freq / GST_AUDIO_FILTER (equ)->format.rate;
@@ -348,7 +352,9 @@ setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
     band->beta *= 2.0;
     band->alpha *= 2.0 * gain;
     band->gamma *= 2.0;
-    GST_INFO ("gain = %g, frequency = %g, alpha = %g, beta = %g, gamma=%g",
+
+    GST_INFO
+        ("gain = %7.5g, frequency = %7.5g, alpha = %7.5g, beta = %7.5g, gamma=%7.5g",
         gain, frequency, band->alpha, band->beta, band->gamma);
   }
 }
@@ -357,7 +363,7 @@ void
 gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
 {
   guint old_count, i;
-  gdouble step = pow (HIGHEST_FREQ / LOWEST_FREQ, 1.0 / (new_count - 1));
+  gdouble freq0, freq1, step;
   gchar name[20];
 
   old_count = equ->freq_band_count;
@@ -396,36 +402,23 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
 
   /* set center frequencies and name band objects
    * FIXME: arg! we can't change the name of parented objects :(
-   *   application should read band->freq
-   * FIXME: the code that calculates the center-frequencies for the bands should
-   *   take the number of bands into account, when chooding the lowest frequency
+   *   application should read band->freq to get the name
    */
-  equ->bands[0]->freq = LOWEST_FREQ;
-  GST_DEBUG ("band[ 0] = '%lf'", equ->bands[0]->freq);
-  /*
-     if(equ->bands[0]->freq<10000.0) {
-     sprintf (name,"%dHz",(gint)equ->bands[0]->freq);
-     }
-     else {
-     sprintf (name,"%dkHz",(gint)(equ->bands[0]->freq/1000.0));
-     }
-     gst_object_set_name( GST_OBJECT (equ->bands[0]), name);
-     GST_DEBUG ("band[ 0] = '%s'",name);
-   */
-
-  for (i = 1; i < new_count; i++) {
-    equ->bands[i]->freq = equ->bands[i - 1]->freq * step;
+  step = pow (HIGHEST_FREQ / LOWEST_FREQ, 1.0 / new_count);
+  freq0 = LOWEST_FREQ;
+  for (i = 0; i < new_count; i++) {
+    freq1 = freq0 * step;
+    equ->bands[i]->freq = freq0 + ((freq1 - freq0) / 2.0);
     GST_DEBUG ("band[%2d] = '%lf'", i, equ->bands[i]->freq);
     /*
-       if(equ->bands[i]->freq<10000.0) {
+       if(equ->bands[i]->freq<10000.0)
        sprintf (name,"%dHz",(gint)equ->bands[i]->freq);
-       }
-       else {
+       else
        sprintf (name,"%dkHz",(gint)(equ->bands[i]->freq/1000.0));
-       }
        gst_object_set_name( GST_OBJECT (equ->bands[i]), name);
        GST_DEBUG ("band[%2d] = '%s'",i,name);
      */
+    freq0 = freq1;
   }
 
   if (GST_AUDIO_FILTER (equ)->format.rate) {
@@ -506,14 +499,15 @@ one_step_ ## TYPE (GstIirEqualizerBand *filter,                         \
   history->x2 = history->x1;                                            \
   history->x1 = input;                                                  \
                                                                         \
-  return output;                                                        \
+  /* for negative gains we subtract */                                  \
+  return (filter->gain>0.0) ? output : -output;                         \
 }                                                                       \
                                                                         \
 static const guint                                                      \
 history_size_ ## TYPE = sizeof (SecondOrderHistory ## TYPE);            \
                                                                         \
 static void                                                             \
-gst_iir_equ_process_ ## TYPE (GstIirEqualizer *equ, guint8 *data, \
+gst_iir_equ_process_ ## TYPE (GstIirEqualizer *equ, guint8 *data,       \
 guint size, guint channels)                                             \
 {                                                                       \
   guint frames = size / channels / sizeof (TYPE);                       \
@@ -525,14 +519,13 @@ guint size, guint channels)                                             \
     for (c = 0; c < channels; c++) {                                    \
       SecondOrderHistory ## TYPE *history = equ->history;               \
       val = *((TYPE *) data);                                           \
-      cur = 0;                                                          \
+      cur = 0.25 * val; /* FIXME: should be without factor*/            \
       for (f = 0; f < equ->freq_band_count; f++) {                      \
         GstIirEqualizerBand *filter = equ->bands[f];                    \
                                                                         \
         cur += one_step_ ## TYPE (filter, history, val);                \
         history++;                                                      \
       }                                                                 \
-      cur += val * 0.25;                                                \
       cur = CLAMP (cur, MIN_VAL, MAX_VAL);                              \
       *((TYPE *) data) = (TYPE) cur;                                    \
       data += sizeof (TYPE);                                            \
