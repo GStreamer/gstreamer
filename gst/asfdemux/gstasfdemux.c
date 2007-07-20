@@ -41,6 +41,7 @@
 #include <gst/gstutils.h>
 #include <gst/riff/riff-media.h>
 #include <gst/gst-i18n-plugin.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "gstasfdemux.h"

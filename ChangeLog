@@ -1,3 +1,8 @@
+2007-07-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/asfdemux/gstasfdemux.c:
+	Include stdlib.
+
 2007-07-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_reset),
