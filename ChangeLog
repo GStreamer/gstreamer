@@ -1,3 +1,9 @@
+2007-07-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* libs/gst/check/Makefile.am:
+	  Add libm check as we use in for plugins.
+
 2007-07-18  Jan Schmidt  <thaytan@noraisin.net>
 
 	* gst/gstbin.c: (gst_bin_continue_func):
