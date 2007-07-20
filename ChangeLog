@@ -1,5 +1,11 @@
 2007-07-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/examples/volume/Makefile.am:
+	* tests/icles/Makefile.am:
+	  We should use $(LIBM).
+
+2007-07-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/icles/Makefile.am:
 	  This needs -lm.
 
