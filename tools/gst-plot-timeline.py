@@ -15,8 +15,10 @@ import cairo
 
 FONT_NAME = "Bitstream Vera Sans"
 FONT_SIZE = 8
-PIXELS_PER_SECOND = 1700
-PIXELS_PER_LINE = 12
+# how many pixels for a second on the timeline
+PIXELS_PER_SECOND = 300
+# how many pixels for one line of log
+PIXELS_PER_LINE = 10
 PLOT_WIDTH = 1400
 TIME_SCALE_WIDTH = 20
 SYSCALL_MARKER_WIDTH = 20
@@ -25,7 +27,8 @@ LOG_MARKER_WIDTH = 20
 BACKGROUND_COLOR = (0, 0, 0)
 
 # assumes GST_DEBUG_LOG_COLOR=1
-mark_regex = re.compile (r'^(\d:\d\d:\d\d\.\d+) +\d+ 0?x?[0-9a-f]+ [A-Z]+ +([a-zA-Z_]+ )(.*)')
+#                             timestamp          pid  thread        level   category,file,line,msg
+mark_regex = re.compile (r'^(\d:\d\d:\d\d\.\d+) +\d+ 0?x?[0-9a-f]+ [A-Z]+ +([-a-zA-Z0-9_]+ )(.*)')
 mark_timestamp_group = 1
 mark_program_group = 2
 mark_log_group = 3
@@ -115,6 +118,9 @@ def normalize_timestamps(syscalls):
         syscall.timestamp -= first_timestamp
 
 def compute_syscall_metrics(syscalls):
+    global PIXELS_PER_SECOND
+    global PIXELS_PER_LINE
+    
     num_syscalls = len(syscalls)
 
     metrics = Metrics()
@@ -122,8 +128,19 @@ def compute_syscall_metrics(syscalls):
 
     last_timestamp = syscalls[num_syscalls - 1].timestamp
     num_seconds = int(math.ceil(last_timestamp))
-    metrics.height = max(num_seconds * PIXELS_PER_SECOND,
-                         num_syscalls * PIXELS_PER_LINE)
+
+    time_height = num_seconds * PIXELS_PER_SECOND
+    line_height = num_syscalls * PIXELS_PER_LINE
+    if time_height > line_height:
+        metrics.height = time_height
+        print "Adjusting PIXELS_PER_LINE = %d" % PIXELS_PER_LINE
+        PIXELS_PER_LINE = metrics.height / num_syscalls
+        print "          PIXELS_PER_LINE = %d" % PIXELS_PER_LINE
+    else:
+        metrics.height = line_height
+        print "Adjusting PIXELS_PER_SECOND %d" % PIXELS_PER_SECOND
+        PIXELS_PER_SECOND = metrics.height / num_seconds
+        print "          PIXELS_PER_SECOND %d" % PIXELS_PER_SECOND
 
     text_ypos = 0
 
@@ -169,6 +186,8 @@ def plot_syscall(surface, ctx, syscall):
 
 def plot_syscalls_to_surface(syscalls, metrics):
     num_syscalls = len(syscalls)
+
+    print 'picture size: %d x %d' % (metrics.width, metrics.height);
 
     surface = cairo.ImageSurface(cairo.FORMAT_RGB24,
                                  metrics.width, metrics.height)

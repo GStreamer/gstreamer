@@ -1,5 +1,11 @@
 2007-07-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* tools/gst-plot-timeline.py:
+	  Better log parsing (categories can have -). Adjust text vs. lines, so
+	  that they span the same y-range.	  
+
+2007-07-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/random/ensonic/audiobaseclasses.txt:
 	* docs/random/ensonic/dynlink.txt:
 	* docs/random/ensonic/profiling.txt:
