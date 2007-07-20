@@ -25,8 +25,8 @@ gst_element_insert_linked(e1, e2, e3, e4); // e2 == e3 allowed
 gst_pads_insert_link (e1.src, e2.sink, e3.src, e4.sink);
   disconnect e1.src, e1.src.peer
   disconnect e4.sink, e4.sink.peer
-  connect e1.src e2.sink
-  connect e3.src e4.sink
+  connect e1.src, e2.sink
+  connect e3.src, e4.sink
 
 == removing an element ==
 
@@ -36,21 +36,22 @@ gst_pads_insert_link (e1.src, e2.sink, e3.src, e4.sink);
 gst_element_remove_linked(e2);
 gst_pads_remove_link (e1.src, e3.sink);
   disconnect e1.src, e1.src.peer
-  disconnect e3.sink, e3.sink..peer
-  connect e1.src e3.sink
+  disconnect e3.sink, e3.sink.peer
+  connect e1.src, e3.sink
 
 == swapping out an elelment ==
 
-* we have: e1 ! e2 ! e5
-* we want: e1 ! e3 ! e4 ! e5
-* we want: e1 ! e3      ! e5
+ * we have: e1 ! e2 ! e6
+ * we have: e1 ! e2 ! e3 ! e6
+ * we want: e1 ! e4 ! e5 ! e6
+ * we want: e1 ! e3      ! e6
 
-gst_element_swap_linked(e1, e3, e4, e5);
-gst_pads_insert_link (e1.src, e3.sink, e4.src, e5.sink);
+gst_element_swap_linked(e1, e4, e5, e6);
+gst_pads_insert_link (e1.src, e4.sink, e5.src, e6.sink);
   disconnect e1.src, e1.src.peer (=e2.sink)
-  disconnect e5.sink, e5.sink.peer
-  connect e1.src e3.sink
-  connect e4.src e5.sink
+  disconnect e6.sink, e6.sink.peer
+  connect e1.src, e4.sink
+  connect e5.src, e6.sink
 
 
 

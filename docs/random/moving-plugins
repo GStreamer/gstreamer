@@ -53,6 +53,8 @@ CHECKLIST
   - use correct value, name, nick for enums
   - use underscores in macros/function names/structs
     e.g.: GST_BASE_SINK, GstBaseSink, gst_base_sink_
+  - use g_assert(), g_return_if_fail(), g_return_val_if_fail() for pre/post
+    condition checks
 
 - The plug-in's build:
   - should be correctly integrated with configure.ac
@@ -121,7 +123,7 @@ CHECKLIST
   and following practice outlined in
   http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/gstreamer-GstGError.html
   - this includes:
-    - message strings need to be marked for translation 
+    - message strings need to be marked for translation
     - should be short, well-written, clear
     - in particular, should *not* contain debug info, strerror, errno, ...
       No, really ! NO STRERROR, NO ERRNO.  If you are too lazy to provide

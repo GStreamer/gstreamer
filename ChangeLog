@@ -1,5 +1,15 @@
 2007-07-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/random/ensonic/audiobaseclasses.txt:
+	* docs/random/ensonic/dynlink.txt:
+	* docs/random/ensonic/profiling.txt:
+	  Save my thoughts.
+
+	* docs/random/moving-plugins:
+	  Add note to use g_assert type macros.
+
+2007-07-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* libs/gst/check/Makefile.am:
 	  Add libm check as we use in for plugins.

@@ -4,6 +4,9 @@ $Id$
 We have gst-plugins-base/gst-libs/gst/audio with some audio helper and base
 classes.
 
+audiofilter: for src_caps=sink_caps
+basetransform: *
+
 = new stuff =
 
 
