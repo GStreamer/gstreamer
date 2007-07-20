@@ -1,3 +1,11 @@
+2007-07-20  Michael Smith <msmith@fluendo.com>
+
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),
+	(gst_xvimagesink_get_xv_support), (gst_xvimagesink_setcaps):
+	  xcontext->im_format is only for testing XShm support (as the header
+	  file comments document). Use xvimage->im_format for everything else.
+	  Avoids spurious warnings on buffer allocation before setcaps.
+
 2007-07-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/volume/Makefile.am:

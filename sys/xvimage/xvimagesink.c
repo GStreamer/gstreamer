@@ -571,7 +571,7 @@ gst_xvimagesink_xvimage_new (GstXvImageSink * xvimagesink, GstCaps * caps)
 
     /* calculate the expected size.  This is only for sanity checking the
      * number we get from X. */
-    switch (xvimagesink->xcontext->im_format) {
+    switch (xvimage->im_format) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
         expected_size =
             GST_ROUND_UP_2 (xvimage->height) * GST_ROUND_UP_4 (xvimage->width);
@@ -1411,9 +1411,8 @@ gst_xvimagesink_get_xv_support (GstXvImageSink * xvimagesink,
     GstCaps *format_caps = NULL;
     gboolean is_rgb_format = FALSE;
 
-    /* We set the image format of the xcontext to an existing one. Sink
-       connect method will override that but we need to have at least a
-       valid image format so that we can make our xshm calls check before
+    /* We set the image format of the xcontext to an existing one. This
+       is just some valid image format for making our xshm calls check before
        caps negotiation really happens. */
     xcontext->im_format = formats[i].id;
 
@@ -2041,14 +2040,12 @@ gst_xvimagesink_setcaps (GstBaseSink * bsink, GstCaps * caps)
           (video_height != xvimagesink->xvimage->height))) {
     GST_DEBUG_OBJECT (xvimagesink,
         "old format %" GST_FOURCC_FORMAT ", new format %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (xvimagesink->xcontext->im_format),
+        GST_FOURCC_ARGS (xvimagesink->xvimage->im_format),
         GST_FOURCC_ARGS (im_format));
     GST_DEBUG_OBJECT (xvimagesink, "renewing xvimage");
     gst_buffer_unref (GST_BUFFER (xvimagesink->xvimage));
     xvimagesink->xvimage = NULL;
   }
-
-  xvimagesink->xcontext->im_format = im_format;
 
   g_mutex_unlock (xvimagesink->flow_lock);
 
