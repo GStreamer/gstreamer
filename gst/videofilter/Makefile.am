@@ -34,7 +34,7 @@ libgstgamma_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 			$(GST_PLUGINS_BASE_CFLAGS)
 libgstgamma_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-@GST_MAJORMINOR@ \
 			$(GST_BASE_LIBS) $(GST_LIBS)
-libgstgamma_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -lm
+libgstgamma_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) $(LIBM)
 
 gstvideoexample.c: $(srcdir)/make_filter $(srcdir)/gstvideotemplate.c
 	$(srcdir)/make_filter Videoexample $(srcdir)/gstvideotemplate.c

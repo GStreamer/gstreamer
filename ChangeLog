@@ -1,3 +1,17 @@
+2007-07-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/annodex/Makefile.am:
+	  Fix CFLAGS/LIBS.
+
+	* ext/cdio/gstcdiocddasrc.c:
+	* ext/libpng/gstpngdec.c: (gst_pngdec_task):
+	  Include stdlib
+
+	* ext/cairo/Makefile.am:
+	* gst/videofilter/Makefile.am:
+	* tests/examples/level/Makefile.am:
+	  Use $(LIBM) instead of -lm
+
 2007-07-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/v4l2/gstv4l2src.c:

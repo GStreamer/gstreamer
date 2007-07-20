@@ -26,6 +26,7 @@
 
 #include "gstpngdec.h"
 
+#include <stdlib.h>
 #include <string.h>
 #include <gst/video/video.h>
 #include <gst/gst-i18n-plugin.h>

@@ -82,6 +82,7 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include <sys/types.h>
+#include <stdlib.h>
 #include <string.h>
 #include <errno.h>
 
