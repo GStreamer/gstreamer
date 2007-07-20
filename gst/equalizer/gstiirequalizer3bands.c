@@ -27,9 +27,9 @@
  * </para>
  * <para>
  * <programlisting>
- * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-3bands band1=-1.0 ! alsasink
+ * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-3bands band1=1.0 ! alsasink
  * </programlisting>
- * This lowers the volume of the 2nd band which is at 632 Hz by FIXME db.
+ * This raises the volume of the 2nd band which is at 1110 Hz by 6 db.
  * </para>
  * </refsect2>
  */
@@ -84,16 +84,16 @@ gst_iir_equalizer_3bands_class_init (GstIirEqualizer3BandsClass * klass)
   gobject_class->get_property = gst_iir_equalizer_3bands_get_property;
 
   g_object_class_install_property (gobject_class, ARG_BAND0,
-      g_param_spec_double ("band0", "20 Hz",
-          "gain for the frequency band 20 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band0", "110 Hz",
+          "gain for the frequency band 110 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND1,
-      g_param_spec_double ("band1", "632 Hz",
-          "gain for the frequency band 632 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band1", "1110 Hz",
+          "gain for the frequency band 1110 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND2,
-      g_param_spec_double ("band2", "20 kHz",
-          "gain for the frequency band 20 kHz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band2", "11 kHz",
+          "gain for the frequency band 11 kHz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 }
 

@@ -27,16 +27,11 @@
  * </para>
  * <para>
  * <programlisting>
- * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-10bands band2=-1.0 ! alsasink
+ * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-10bands band2=0.5 ! alsasink
  * </programlisting>
- * This lowers the volume of the 3rd band which is at 93 Hz by FIXME db.
+ * This raises the volume of the 3rd band which is at 119 Hz by 3 db.
  * </para>
  * </refsect2>
- */
-
-/*
- *
- * gst-launch filesrc location=song.ogg ! oggdemux ! vorbisdec ! audioconvert ! equalizer-10bands band1=-1.0 ! alsasink
  */
 
 #ifdef HAVE_CONFIG_H
@@ -96,44 +91,44 @@ gst_iir_equalizer_10bands_class_init (GstIirEqualizer10BandsClass * klass)
   gobject_class->get_property = gst_iir_equalizer_10bands_get_property;
 
   g_object_class_install_property (gobject_class, ARG_BAND0,
-      g_param_spec_double ("band0", "20 Hz",
-          "gain for the frequency band 20 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band0", "29 Hz",
+          "gain for the frequency band 29 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND1,
-      g_param_spec_double ("band1", "43 Hz",
-          "gain for the frequency band 43 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band1", "59 Hz",
+          "gain for the frequency band 59 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND2,
-      g_param_spec_double ("band2", "93 Hz",
-          "gain for the frequency band 93 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band2", "119 Hz",
+          "gain for the frequency band 119 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND3,
-      g_param_spec_double ("band3", "200 Hz",
-          "gain for the frequency band 200 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band3", "227 Hz",
+          "gain for the frequency band 227 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND4,
-      g_param_spec_double ("band4", "430 Hz",
-          "gain for the frequency band 430 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band4", "474 Hz",
+          "gain for the frequency band 474 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND5,
-      g_param_spec_double ("band5", "928 Hz",
-          "gain for the frequency band 928 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band5", "947 Hz",
+          "gain for the frequency band 947 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND6,
-      g_param_spec_double ("band6", "2000 Hz",
-          "gain for the frequency band 2000 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band6", "1889 Hz",
+          "gain for the frequency band 1889 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND7,
-      g_param_spec_double ("band7", "4308 Hz",
-          "gain for the frequency band 4308 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band7", "3770 Hz",
+          "gain for the frequency band 3770 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND8,
-      g_param_spec_double ("band8", "9283 Hz",
-          "gain for the frequency band 9283 Hz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band8", "7523 Hz",
+          "gain for the frequency band 7523 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, ARG_BAND9,
-      g_param_spec_double ("band9", "20 kHz",
-          "gain for the frequency band 20 kHz, ranging from -1.0 to +1.0",
+      g_param_spec_double ("band9", "15011 Hz",
+          "gain for the frequency band 15011 Hz, ranging from -1.0 to +1.0",
           -1.0, 1.0, 0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 }
 
