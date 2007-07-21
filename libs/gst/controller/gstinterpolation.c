@@ -533,7 +533,7 @@ static GstInterpolateMethod interpolate_trigger = {
 /*  linear interpolation */
 /*  smoothes inbetween values */
 
-#define DEFINE_LINEAR_GET(type) \
+#define DEFINE_LINEAR_GET(type,round) \
 static inline gboolean \
 _interpolate_linear_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp, g##type *ret) \
 { \
@@ -553,7 +553,10 @@ _interpolate_linear_get_##type (GstInterpolationControlSource *self, GstClockTim
       value2 = g_value_get_##type (&cp2->value); \
       slope = (gdouble) (value2 - value1) / gst_guint64_to_gdouble (cp2->timestamp - cp1->timestamp); \
       \
-      *ret = (g##type) (value1 + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope); \
+      if (round) \
+        *ret = (g##type) (value1 + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope + 0.5); \
+      else \
+        *ret = (g##type) (value1 + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope); \
     } \
     else { \
       *ret = g_value_get_##type (&cp1->value); \
@@ -603,16 +606,16 @@ interpolate_linear_get_##type##_value_array (GstInterpolationControlSource *self
   return TRUE; \
 }
 
-DEFINE_LINEAR_GET (int);
+DEFINE_LINEAR_GET (int, TRUE);
 
-DEFINE_LINEAR_GET (uint);
-DEFINE_LINEAR_GET (long);
+DEFINE_LINEAR_GET (uint, TRUE);
+DEFINE_LINEAR_GET (long, TRUE);
 
-DEFINE_LINEAR_GET (ulong);
-DEFINE_LINEAR_GET (int64);
-DEFINE_LINEAR_GET (uint64);
-DEFINE_LINEAR_GET (float);
-DEFINE_LINEAR_GET (double);
+DEFINE_LINEAR_GET (ulong, TRUE);
+DEFINE_LINEAR_GET (int64, TRUE);
+DEFINE_LINEAR_GET (uint64, TRUE);
+DEFINE_LINEAR_GET (float, FALSE);
+DEFINE_LINEAR_GET (double, FALSE);
 
 static GstInterpolateMethod interpolate_linear = {
   (GstControlSourceGetValue) interpolate_linear_get_int,
