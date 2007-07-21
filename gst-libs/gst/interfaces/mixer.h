@@ -53,6 +53,44 @@ typedef enum
   GST_MIXER_SOFTWARE
 } GstMixerType;
 
+/**
+ * GstMixerMessageType:
+ * @GST_MIXER_MESSAGE_INVALID: Not a GstMixer message
+ * @GST_MIXER_MESSAGE_MUTE_TOGGLED: A mute-toggled GstMixer message
+ * @GST_MIXER_MESSAGE_RECORD_TOGGLED: A record-toggled GstMixer message
+ * @GST_MIXER_MESSAGE_VOLUME_CHANGED: A volume-changed GstMixer message
+ * @GST_MIXER_MESSAGE_OPTION_CHANGED: An option-changed GstMixer message
+ * 
+ * An enumeration for the type of a GstMixer message received on the bus
+ *
+ * Since: 0.10.14
+ */
+typedef enum
+{
+  GST_MIXER_MESSAGE_INVALID,
+  GST_MIXER_MESSAGE_MUTE_TOGGLED,
+  GST_MIXER_MESSAGE_RECORD_TOGGLED,
+  GST_MIXER_MESSAGE_VOLUME_CHANGED,
+  GST_MIXER_MESSAGE_OPTION_CHANGED
+} GstMixerMessageType;
+
+/**
+ * GstMixerFlags:
+ * @GST_MIXER_FLAG_NONE: No flags
+ * @GST_MIXER_AUTO_NOTIFICATIONS: The mixer implementation automatically sends
+ *    notification messages.
+ * 
+ * Flags for supported features. Whether the element automatically sends 
+ * notifications on the bus is the only one for now. 
+ *
+ * Since: 0.10.14
+ */
+typedef enum
+{
+  GST_MIXER_FLAG_NONE                = 0,
+  GST_MIXER_FLAG_AUTO_NOTIFICATIONS  = (1<<0)
+} GstMixerFlags;
+
 struct _GstMixerClass {
   GTypeInterface klass;
 
@@ -74,8 +112,8 @@ struct _GstMixerClass {
   void           (* set_record)    (GstMixer      *mixer,
                                     GstMixerTrack *track,
                                     gboolean       record);
-
-  /* signals */
+#ifndef GST_DISABLE_DEPRECATED
+  /* signals (deprecated) */
   void (* mute_toggled)   (GstMixer      *mixer,
                            GstMixerTrack *channel,
                            gboolean       mute);
@@ -85,6 +123,7 @@ struct _GstMixerClass {
   void (* volume_changed) (GstMixer      *mixer,
                            GstMixerTrack *channel,
                            gint          *volumes);
+#endif /* not GST_DISABLE_DEPRECATED */
 
   void          (* set_option)     (GstMixer      *mixer,
                                     GstMixerOptions *opts,
@@ -92,12 +131,16 @@ struct _GstMixerClass {
   const gchar * (* get_option)     (GstMixer      *mixer,
                                     GstMixerOptions *opts);
 
+#ifndef GST_DISABLE_DEPRECATED
   void (* option_changed) (GstMixer      *mixer,
                            GstMixerOptions *opts,
-                           gchar         *option);
+                           gchar   *option);
+#endif /* not GST_DISABLE_DEPRECATED */
+
+  GstMixerFlags (* get_mixer_flags) (GstMixer *mixer); 
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 GType           gst_mixer_get_type      (void);
@@ -122,7 +165,7 @@ void            gst_mixer_set_option     (GstMixer      *mixer,
 const gchar *   gst_mixer_get_option     (GstMixer      *mixer,
                                           GstMixerOptions *opts);
 
-/* trigger signals */
+/* trigger bus messages */
 void            gst_mixer_mute_toggled   (GstMixer      *mixer,
                                           GstMixerTrack *track,
                                           gboolean       mute);
@@ -135,6 +178,24 @@ void            gst_mixer_volume_changed (GstMixer      *mixer,
 void            gst_mixer_option_changed (GstMixer      *mixer,
                                           GstMixerOptions *opts,
                                           gchar         *value);
+
+GstMixerFlags   gst_mixer_get_mixer_flags (GstMixer *mixer);
+
+/* Functions for recognising and parsing GstMixerMessages on the bus */
+GstMixerMessageType gst_mixer_message_get_type (GstMessage *message);
+void            gst_mixer_message_parse_mute_toggled (GstMessage *message,
+                                                      GstMixerTrack **track,
+                                                      gboolean *mute);
+void            gst_mixer_message_parse_record_toggled (GstMessage *message,
+                                                        GstMixerTrack **track,
+                                                        gboolean *record);
+void            gst_mixer_message_parse_volume_changed (GstMessage *message,
+                                                        GstMixerTrack **track,
+                                                        gint **volumes,
+                                                        gint *num_channels);
+void            gst_mixer_message_parse_option_changed (GstMessage *message,
+                                                        GstMixerOptions **options,
+                                                        const gchar **value);
 
 G_END_DECLS
 

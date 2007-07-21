@@ -1,3 +1,33 @@
+2007-07-20  Jan Schmidt  <thaytan@noraisin.net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* ext/alsa/gstalsamixer.c:
+	* ext/alsa/gstalsamixer.h:
+	* ext/alsa/gstalsamixerelement.c:
+	* ext/alsa/gstalsamixertrack.c:
+	* gst-libs/gst/interfaces/mixer.c:
+	* gst-libs/gst/interfaces/mixer.h:
+	* gst-libs/gst/interfaces/mixeroptions.c:
+	* gst-libs/gst/interfaces/mixeroptions.h:
+	* gst-libs/gst/interfaces/mixertrack.c:
+	* gst-libs/gst/interfaces/mixertrack.h:
+	* tests/check/Makefile.am:
+	* tests/check/libs/mixer.c:
+
+	Patch By: Marc-Andre Lureau <marcandre.lureau@gmail.com>
+	Fixes: #152864 
+
+	Add support for notifying mixer changes on the message bus, and
+	implement it in alsamixer.
+
+	API: gst_mixer_get_mixer_flags
+	API: gst_mixer_message_parse_mute_toggled
+	API: gst_mixer_message_parse_record_toggled
+	API: gst_mixer_message_parse_volume_changed
+	API: gst_mixer_message_parse_option_changed
+	API: GstMixerMessageType
+	API: GstMixerFlags
+
 2007-07-20  Michael Smith <msmith@fluendo.com>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xvimage_new),

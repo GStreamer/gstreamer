@@ -52,6 +52,13 @@ struct _GstAlsaMixer
 
   snd_mixer_t *         handle;
 
+  GstTask *		task;
+  GStaticRecMutex *	task_mutex;
+  GStaticRecMutex *	rec_mutex;
+
+  int			pfd[2];
+
+  GstMixer *		interface;
   gchar *               device;
   gchar *               cardname;
 
@@ -81,7 +88,9 @@ void            gst_alsa_mixer_set_option       (GstAlsaMixer * mixer,
                                                  gchar * value);
 const gchar*    gst_alsa_mixer_get_option       (GstAlsaMixer * mixer,
                                                  GstMixerOptions * opts);
-
+void		_gst_alsa_mixer_set_interface   (GstAlsaMixer * mixer,
+						 GstMixer * interface);
+GstMixerFlags   gst_alsa_mixer_get_mixer_flags  (GstAlsaMixer *mixer);
 
 #define GST_IMPLEMENT_ALSA_MIXER_METHODS(Type, interface_as_function)           \
 static gboolean                                                                 \
@@ -174,6 +183,17 @@ interface_as_function ## _get_option (GstMixer * mixer, GstMixerOptions * opts) 
   return gst_alsa_mixer_get_option (this->mixer, opts);                         \
 }                                                                               \
                                                                                 \
+static GstMixerFlags                                                            \
+interface_as_function ## _get_mixer_flags (GstMixer * mixer)                    \
+{                                                                               \
+  Type *this = (Type*) mixer;                                                   \
+                                                                                \
+  g_return_val_if_fail (this != NULL, GST_MIXER_FLAG_NONE);                     \
+  g_return_val_if_fail (this->mixer != NULL, GST_MIXER_FLAG_NONE);              \
+                                                                                \
+  return gst_alsa_mixer_get_mixer_flags (this->mixer);                          \
+}                                                                               \
+                                                                                \
 static void                                                                     \
 interface_as_function ## _interface_init (GstMixerClass * klass)                \
 {                                                                               \
@@ -187,6 +207,7 @@ interface_as_function ## _interface_init (GstMixerClass * klass)                
   klass->set_record = interface_as_function ## _set_record;                     \
   klass->set_option = interface_as_function ## _set_option;                     \
   klass->get_option = interface_as_function ## _get_option;                     \
+  klass->get_mixer_flags = interface_as_function ## _get_mixer_flags;           \
 }
 
 

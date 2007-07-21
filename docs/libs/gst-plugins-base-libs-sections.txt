@@ -288,6 +288,8 @@ gst_color_balance_channel_get_type
 <INCLUDE>gst/interfaces/mixer.h</INCLUDE>
 GstMixer
 GstMixerType
+GstMixerFlags
+GstMixerMessageType
 
 gst_mixer_list_tracks
 gst_mixer_get_volume
@@ -303,6 +305,14 @@ gst_mixer_volume_changed
 gst_mixer_option_changed
 gst_mixer_get_option
 
+gst_mixer_get_mixer_flags
+
+gst_mixer_message_get_type
+gst_mixer_message_parse_mute_toggled
+gst_mixer_message_parse_option_changed
+gst_mixer_message_parse_record_toggled
+gst_mixer_message_parse_volume_changed
+
 <SUBSECTION Standard>
 GstMixerClass
 GST_TYPE_MIXER
@@ -315,6 +325,8 @@ GST_IS_MIXER
 GST_IS_MIXER_CLASS
 gst_mixer_get_type
 gst_mixer_type_get_type
+gst_mixer_flags_get_type
+gst_mixer_message_type_get_type
 </SECTION>
 
 <SECTION>

@@ -89,6 +89,7 @@ check_PROGRAMS = \
 	gst/typefindfunctions \
 	libs/audio \
 	libs/cddabasesrc \
+	libs/mixer \
 	libs/netbuffer \
 	libs/pbutils \
 	libs/tag \
@@ -137,6 +138,16 @@ libs_cddabasesrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
+
+libs_mixer_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+        $(GST_BASE_CFLAGS) \
+        $(AM_CFLAGS)
+
+libs_mixer_LDADD = \
+	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-@GST_MAJORMINOR@.la \
+        $(GST_BASE_LIBS) \
+        $(LDADD)
 
 libs_netbuffer_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \

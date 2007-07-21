@@ -47,6 +47,7 @@ gst_alsa_mixer_track_get_type (void)
       sizeof (GstAlsaMixerTrack),
       0,
       (GInstanceInitFunc) gst_alsa_mixer_track_init,
+      0
     };
 
     track_type =
@@ -238,6 +239,26 @@ gst_alsa_mixer_track_update (GstAlsaMixerTrack * alsa_track)
   GstMixerTrack *track = (GstMixerTrack *) alsa_track;
   gint i;
   gint audible = !(track->flags & GST_MIXER_TRACK_MUTE);
+
+  if (alsa_track_has_cap (alsa_track, GST_ALSA_MIXER_TRACK_PVOLUME)) {
+    /* update playback volume */
+    for (i = 0; i < track->num_channels; i++) {
+      long vol = 0;
+
+      snd_mixer_selem_get_playback_volume (alsa_track->element, i, &vol);
+      alsa_track->volumes[i] = (gint) vol;
+    }
+  }
+
+  if (alsa_track_has_cap (alsa_track, GST_ALSA_MIXER_TRACK_CVOLUME)) {
+    /* update capture volume */
+    for (i = 0; i < track->num_channels; i++) {
+      long vol = 0;
+
+      snd_mixer_selem_get_capture_volume (alsa_track->element, i, &vol);
+      alsa_track->volumes[i] = (gint) vol;
+    }
+  }
 
   /* Any updates in flags? */
   if (alsa_track_has_cap (alsa_track, GST_ALSA_MIXER_TRACK_PSWITCH)) {

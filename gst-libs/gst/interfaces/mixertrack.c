@@ -24,7 +24,7 @@
 #endif
 
 #include "mixertrack.h"
-
+#ifndef GST_DISABLE_DEPRECATED
 enum
 {
   /* FILL ME */
@@ -33,6 +33,8 @@ enum
   SIGNAL_MUTE_TOGGLED,
   LAST_SIGNAL
 };
+static guint signals[LAST_SIGNAL] = { 0 };
+#endif
 
 enum
 {
@@ -55,7 +57,6 @@ static void gst_mixer_track_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static GObjectClass *parent_class = NULL;
-static guint signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_mixer_track_get_type (void)
@@ -135,6 +136,7 @@ gst_mixer_track_class_init (GstMixerTrackClass * klass)
           "The number of channels contained within the track",
           0, G_MAXINT, 0, G_PARAM_READABLE));
 
+#ifndef GST_DISABLE_DEPRECATED
   signals[SIGNAL_RECORD_TOGGLED] =
       g_signal_new ("record_toggled", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
@@ -156,6 +158,7 @@ gst_mixer_track_class_init (GstMixerTrackClass * klass)
           volume_changed),
       NULL, NULL, g_cclosure_marshal_VOID__POINTER,
       G_TYPE_NONE, 1, G_TYPE_POINTER);
+#endif
 
   object_klass->dispose = gst_mixer_track_dispose;
 }

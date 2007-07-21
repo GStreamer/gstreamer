@@ -25,19 +25,21 @@
 
 #include "mixeroptions.h"
 
+#ifndef GST_DISABLE_DEPRECATED
 enum
 {
   /* FILL ME */
   SIGNAL_OPTION_CHANGED,
   LAST_SIGNAL
 };
+static guint signals[LAST_SIGNAL] = { 0 };
+#endif
 
 static void gst_mixer_options_class_init (GstMixerOptionsClass * klass);
 static void gst_mixer_options_init (GstMixerOptions * mixer);
 static void gst_mixer_options_dispose (GObject * object);
 
 static GObjectClass *parent_class = NULL;
-static guint signals[LAST_SIGNAL] = { 0 };
 
 GType
 gst_mixer_options_get_type (void)
@@ -72,13 +74,14 @@ gst_mixer_options_class_init (GstMixerOptionsClass * klass)
   GObjectClass *object_klass = (GObjectClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
-
+#ifndef GST_DISABLE_DEPRECATED
   signals[SIGNAL_OPTION_CHANGED] =
       g_signal_new ("option_changed", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstMixerOptionsClass, option_changed),
       NULL, NULL, g_cclosure_marshal_VOID__STRING,
       G_TYPE_NONE, 1, G_TYPE_STRING);
+#endif
 
   object_klass->dispose = gst_mixer_options_dispose;
 }

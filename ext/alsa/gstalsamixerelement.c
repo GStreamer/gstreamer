@@ -44,22 +44,22 @@ GST_ELEMENT_DETAILS ("Alsa mixer",
 static void gst_alsa_mixer_element_init_interfaces (GType type);
 
 GST_BOILERPLATE_FULL (GstAlsaMixerElement, gst_alsa_mixer_element,
-    GstElement, GST_TYPE_ELEMENT, gst_alsa_mixer_element_init_interfaces)
+    GstElement, GST_TYPE_ELEMENT, gst_alsa_mixer_element_init_interfaces);
 
 /* massive macro that takes care of all the GstMixer stuff */
-    GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaMixerElement, gst_alsa_mixer_element);
+GST_IMPLEMENT_ALSA_MIXER_METHODS (GstAlsaMixerElement, gst_alsa_mixer_element);
 
-     static void gst_alsa_mixer_element_get_property (GObject * object,
+static void gst_alsa_mixer_element_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-     static void gst_alsa_mixer_element_set_property (GObject * object,
+static void gst_alsa_mixer_element_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
-     static void gst_alsa_mixer_element_finalize (GObject * object);
+static void gst_alsa_mixer_element_finalize (GObject * object);
 
-     static GstStateChangeReturn gst_alsa_mixer_element_change_state (GstElement
+static GstStateChangeReturn gst_alsa_mixer_element_change_state (GstElement
     * element, GstStateChange transition);
 
-     static gboolean
-         gst_alsa_mixer_element_interface_supported (GstAlsaMixerElement * this,
+static gboolean
+gst_alsa_mixer_element_interface_supported (GstAlsaMixerElement * this,
     GType interface_type)
 {
   if (interface_type == GST_TYPE_MIXER) {
@@ -214,6 +214,7 @@ gst_alsa_mixer_element_change_state (GstElement * element,
         this->mixer = gst_alsa_mixer_new (this->device, GST_ALSA_MIXER_ALL);
         if (!this->mixer)
           goto open_failed;
+        _gst_alsa_mixer_set_interface (this->mixer, GST_MIXER (element));
       }
       break;
     default:
