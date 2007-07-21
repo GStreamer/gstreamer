@@ -1,3 +1,10 @@
+2007-07-21  Jan Schmidt  <thaytan@noraisin.net>
+
+	* gst-libs/gst/interfaces/mixer.h:
+	Add padding vars in place of the signal pointers
+	when building with DISABLE_DEPRECATED so that the
+	interface structure doesn't change size.
+
 2007-07-20  Jan Schmidt  <thaytan@noraisin.net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

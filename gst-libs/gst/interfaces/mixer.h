@@ -123,6 +123,8 @@ struct _GstMixerClass {
   void (* volume_changed) (GstMixer      *mixer,
                            GstMixerTrack *channel,
                            gint          *volumes);
+#else
+  gpointer padding1[3];
 #endif /* not GST_DISABLE_DEPRECATED */
 
   void          (* set_option)     (GstMixer      *mixer,
@@ -135,6 +137,8 @@ struct _GstMixerClass {
   void (* option_changed) (GstMixer      *mixer,
                            GstMixerOptions *opts,
                            gchar   *option);
+#else
+  gpointer padding2;
 #endif /* not GST_DISABLE_DEPRECATED */
 
   GstMixerFlags (* get_mixer_flags) (GstMixer *mixer); 
