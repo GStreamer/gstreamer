@@ -659,7 +659,7 @@ static GstInterpolateMethod interpolate_linear = {
  *    .    .    .    .    .
  */
 
-#define DEFINE_CUBIC_GET(type) \
+#define DEFINE_CUBIC_GET(type,round) \
 static void \
 _interpolate_cubic_update_cache_##type (GstInterpolationControlSource *self) \
 { \
@@ -775,7 +775,10 @@ _interpolate_cubic_get_##type (GstInterpolationControlSource *self, GstClockTime
       out += (value2 / cp1->cache.cubic.h - cp1->cache.cubic.h * cp2->cache.cubic.z) * diff1; \
       out += (value1 / cp1->cache.cubic.h - cp1->cache.cubic.h * cp1->cache.cubic.z) * diff2; \
       \
-      *ret = (g##type) out; \
+      if (round) \
+        *ret = (g##type) (out + 0.5); \
+      else \
+        *ret = (g##type) out; \
     } \
     else { \
       *ret = g_value_get_##type (&cp1->value); \
@@ -825,16 +828,16 @@ interpolate_cubic_get_##type##_value_array (GstInterpolationControlSource *self,
   return TRUE; \
 }
 
-DEFINE_CUBIC_GET (int);
+DEFINE_CUBIC_GET (int, TRUE);
 
-DEFINE_CUBIC_GET (uint);
-DEFINE_CUBIC_GET (long);
+DEFINE_CUBIC_GET (uint, TRUE);
+DEFINE_CUBIC_GET (long, TRUE);
 
-DEFINE_CUBIC_GET (ulong);
-DEFINE_CUBIC_GET (int64);
-DEFINE_CUBIC_GET (uint64);
-DEFINE_CUBIC_GET (float);
-DEFINE_CUBIC_GET (double);
+DEFINE_CUBIC_GET (ulong, TRUE);
+DEFINE_CUBIC_GET (int64, TRUE);
+DEFINE_CUBIC_GET (uint64, TRUE);
+DEFINE_CUBIC_GET (float, FALSE);
+DEFINE_CUBIC_GET (double, FALSE);
 
 static GstInterpolateMethod interpolate_cubic = {
   (GstControlSourceGetValue) interpolate_cubic_get_int,
