@@ -858,7 +858,7 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
-            <entry>video/x-dx</entry>
+            <entry>video/x-dv</entry>
             <entry>Digital Video.</entry>
             <entry>systemstream</entry>
             <entry>boolean</entry>
@@ -1348,14 +1348,14 @@ plugin_init (GstPlugin *plugin)
           <!-- ############ type ############# -->
 
           <row>
-            <entry>video/x-pn-realvideo</entry>
-            <entry>Digital Video.</entry>
-            <entry>systemstream</entry>
-            <entry>boolean</entry>
-            <entry>TRUE</entry>
+            <entry>application/vnd.rn-realmedia</entry>
+            <entry>RealMedia.</entry>
+            <entry></entry>
+            <entry></entry>
+            <entry></entry>
             <entry>
-              Indicates that this is a container system stream rather than an
-              elementary video stream.
+              There are currently no specific properties defined or needed for
+              this type.
             </entry>
           </row>
 
