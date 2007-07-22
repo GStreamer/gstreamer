@@ -1,5 +1,12 @@
 2007-07-22  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstpad.h:
+	  Small addition to GST_FLOW_IS_FATAL() docs: mention that elements
+	  driving the pipeline may need to explicitly check for NOT_LINKED as
+	  well, since IS_FATAL doesn't cover that.
+
+2007-07-22  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/pwg/advanced-types.xml:
 	  Fix typo and duplicate entry in video formats list.
 

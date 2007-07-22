@@ -138,8 +138,10 @@ typedef enum {
  * @ret: a #GstFlowReturn value
  *
  * Macro to test if the given #GstFlowReturn value indicates a fatal
- * error. This macro is mainly used in elements to decide when an error
- * message should be posted on the bus.
+ * error. This macro is mainly used in elements driving the pipeline to decide
+ * whether an error message should be posted on the bus. Note that such
+ * elements may also need to post an error message in the #GST_FLOW_NOT_LINKED
+ * case which is not caught by this macro.
  */
 #define GST_FLOW_IS_FATAL(ret) ((ret) <= GST_FLOW_UNEXPECTED)
 
