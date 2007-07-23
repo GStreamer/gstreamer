@@ -1,5 +1,10 @@
 2007-07-23  Stefan Kost  <ensonic@users.sf.net>
 
+	* tools/gst-inspect.c: (print_plugin_features):
+	  Also give media-type for typefinders in element output.
+
+2007-07-23  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstregistry.c: (gst_registry_init), (gst_registry_finalize),
 	(gst_registry_remove_features_for_plugin_unlocked),
 	(gst_registry_add_feature), (gst_registry_remove_feature),

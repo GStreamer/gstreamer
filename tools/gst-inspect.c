@@ -989,14 +989,16 @@ print_plugin_features (GstPlugin * plugin)
       if (factory->extensions) {
         guint i = 0;
 
-        g_print ("%s type: ", plugin->desc.name);
+        g_print ("%s: %s: ", plugin->desc.name,
+            gst_plugin_feature_get_name (feature));
         while (factory->extensions[i]) {
           g_print ("%s%s", i > 0 ? ", " : "", factory->extensions[i]);
           i++;
         }
         g_print ("\n");
       } else
-        g_print ("%s type: N/A\n", plugin->desc.name);
+        g_print ("%s: %s: no extensions\n", plugin->desc.name,
+            gst_plugin_feature_get_name (feature));
 
       num_types++;
     } else {
