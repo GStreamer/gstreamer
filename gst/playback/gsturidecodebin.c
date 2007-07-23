@@ -135,9 +135,6 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_param_spec_string ("uri", "URI", "URI to decode",
           DEFAULT_PROP_URI, G_PARAM_READWRITE));
 
-  GST_DEBUG_CATEGORY_INIT (gst_uri_decode_bin_debug, "uridecodebin", 0,
-      "URI decoder element");
-
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_query);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_change_state);
@@ -1131,6 +1128,9 @@ setup_failed:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_uri_decode_bin_debug, "uridecodebin", 0,
+      "URI decoder element");
+
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);

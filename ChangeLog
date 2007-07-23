@@ -1,3 +1,8 @@
+2007-07-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gsturidecodebin.c:
+	  Init debug category before using it.
+
 2007-07-21  Jan Schmidt  <thaytan@noraisin.net>
 
 	* gst-libs/gst/interfaces/mixer.h:
