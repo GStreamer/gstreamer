@@ -8,6 +8,7 @@ dnl use a three digit version number for releases, and four for cvs/prerelease
 AC_INIT(GStreamer Ugly Plug-ins, 0.10.6.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gst-plugins-ugly)
+
 AG_GST_INIT
 
 dnl initialize automake
@@ -156,8 +157,13 @@ AM_CONDITIONAL(HAVE_VALGRIND, test ! "x$VALGRIND_PATH" = "xno")
 dnl check for documentation tools
 GTK_DOC_CHECK([1.3])
 AS_PATH_PYTHON([2.1])
+AG_GST_PLUGIN_DOCS([1.3],[2.1])
 
 dnl *** checks for libraries ***
+
+dnl check for libm, for sin()
+AC_CHECK_LIBM
+AC_SUBST(LIBM)
 
 dnl *** checks for header files ***
 
@@ -184,10 +190,10 @@ dnl GLib is required
 AG_GST_GLIB_CHECK([2.6])
 
 dnl liboil is required
-PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.6, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
+PKG_CHECK_MODULES(LIBOIL, liboil-0.3 >= 0.3.8, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 if test "x$HAVE_LIBOIL" != "xyes"
 then
-  AC_ERROR([liboil-0.3.6 or later is required])
+  AC_ERROR([liboil-0.3.8 or later is required])
 fi
 
 dnl checks for gstreamer

@@ -1,3 +1,11 @@
+2007-07-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Sync liboil check with plugins-base. Add libm check.
+
+	* gst/synaesthesia/Makefile.am:
+	  Link against libm. We're using sqrt here.
+
 2007-07-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/asfdemux/gstasfdemux.c:
