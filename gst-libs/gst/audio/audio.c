@@ -251,3 +251,162 @@ gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag)
     _gst_audio_structure_set_list (structure, "signed", G_TYPE_BOOLEAN, 2, TRUE,
         FALSE, NULL);
 }
+
+/**
+ * gst_audio_buffer_clip:
+ * @buffer: The buffer to clip.
+ * @segment: Segment in %GST_FORMAT_TIME or %GST_FORMAT_DEFAULT to which the buffer should be clipped.
+ * @rate: sample rate.
+ * @frame_size: size of one audio frame in bytes.
+ *
+ * Clip the the buffer to the given %GstSegment.
+ *
+ * After calling this function do not reference @buffer anymore.
+ *
+ * Returns: %NULL if the buffer is completely outside the configured segment,
+ * otherwise the clipped buffer is returned.
+ *
+ * Since: 0.10.14
+ */
+GstBuffer *
+gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
+    gint frame_size)
+{
+  GstBuffer *ret;
+  GstClockTime timestamp = GST_CLOCK_TIME_NONE, duration = GST_CLOCK_TIME_NONE;
+  guint64 offset = GST_BUFFER_OFFSET_NONE, offset_end = GST_BUFFER_OFFSET_NONE;
+  guint8 *data;
+  guint size;
+
+  gboolean change_duration = TRUE, change_offset = TRUE, change_offset_end =
+      TRUE;
+
+  g_return_val_if_fail (segment->format == GST_FORMAT_TIME ||
+      segment->format == GST_FORMAT_DEFAULT, buffer);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+  g_return_val_if_fail (GST_BUFFER_TIMESTAMP_IS_VALID (buffer), buffer);
+
+  /* Get copies of the buffer metadata to change later. 
+   * Calculate the missing values for the calculations,
+   * they won't be changed later though. */
+
+  data = GST_BUFFER_DATA (buffer);
+  size = GST_BUFFER_SIZE (buffer);
+
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  if (GST_BUFFER_DURATION_IS_VALID (buffer)) {
+    duration = GST_BUFFER_DURATION (buffer);
+  } else {
+    change_duration = FALSE;
+    duration = gst_util_uint64_scale (size / frame_size, GST_SECOND, rate);
+  }
+
+  if (GST_BUFFER_OFFSET_IS_VALID (buffer)) {
+    offset = GST_BUFFER_OFFSET (buffer);
+  } else {
+    change_offset = FALSE;
+    offset = 0;
+  }
+
+  if (GST_BUFFER_OFFSET_END_IS_VALID (buffer)) {
+    offset_end = GST_BUFFER_OFFSET_END (buffer);
+  } else {
+    change_offset_end = FALSE;
+    offset_end = offset + size / frame_size;
+  }
+
+  if (segment->format == GST_FORMAT_TIME) {
+    /* Handle clipping for GST_FORMAT_TIME */
+
+    gint64 start, stop, cstart, cstop, diff;
+
+    start = timestamp;
+    stop = timestamp + duration;
+
+    if (gst_segment_clip (segment, GST_FORMAT_TIME,
+            start, stop, &cstart, &cstop)) {
+
+      diff = cstart - start;
+      if (diff > 0) {
+        timestamp = cstart;
+
+        if (change_duration)
+          duration -= diff;
+
+        diff = gst_util_uint64_scale (diff, rate, GST_SECOND);
+        if (change_offset)
+          offset += diff;
+        data += diff * frame_size;
+        size -= diff * frame_size;
+      }
+
+      diff = stop - cstop;
+      if (diff > 0) {
+        /* duration is always valid if stop is valid */
+        duration -= diff;
+
+        diff = gst_util_uint64_scale (diff, rate, GST_SECOND);
+        if (change_offset_end)
+          offset_end -= diff;
+        size -= diff * frame_size;
+      }
+    } else {
+      gst_buffer_unref (buffer);
+      return NULL;
+    }
+  } else {
+    /* Handle clipping for GST_FORMAT_DEFAULT */
+    gint64 start, stop, cstart, cstop, diff;
+
+    g_return_val_if_fail (GST_BUFFER_OFFSET_IS_VALID (buffer), buffer);
+
+    start = offset;
+    stop = offset_end;
+
+    if (gst_segment_clip (segment, GST_FORMAT_DEFAULT,
+            start, stop, &cstart, &cstop)) {
+
+      diff = cstart - start;
+      if (diff > 0) {
+        offset = cstart;
+
+        timestamp = gst_util_uint64_scale (cstart, GST_SECOND, rate);
+
+        if (change_duration)
+          duration -= gst_util_uint64_scale (diff, GST_SECOND, rate);
+
+        data += diff * frame_size;
+        size -= diff * frame_size;
+      }
+
+      diff = stop - cstop;
+      if (diff > 0) {
+        offset_end = cstop;
+
+        if (change_duration)
+          duration -= gst_util_uint64_scale (diff, GST_SECOND, rate);
+
+        size -= diff * frame_size;
+      }
+    } else {
+      gst_buffer_unref (buffer);
+      return NULL;
+    }
+  }
+
+  /* Get a metadata writable buffer and apply all changes */
+  ret = gst_buffer_make_metadata_writable (buffer);
+
+  GST_BUFFER_TIMESTAMP (ret) = timestamp;
+  GST_BUFFER_SIZE (ret) = size;
+  GST_BUFFER_DATA (ret) = data;
+
+  if (change_duration)
+    GST_BUFFER_DURATION (ret) = duration;
+  if (change_offset)
+    GST_BUFFER_OFFSET (ret) = offset;
+  if (change_offset_end)
+    GST_BUFFER_OFFSET_END (ret) = offset_end;
+
+  return ret;
+}

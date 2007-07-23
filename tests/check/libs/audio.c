@@ -118,6 +118,343 @@ GST_START_TEST (test_multichannel_checks)
 
 GST_END_TEST;
 
+GST_START_TEST (test_buffer_clipping_time)
+{
+  GstSegment s;
+  GstBuffer *buf;
+  GstBuffer *ret;
+  guint8 *data;
+
+  /* Clip start and end */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_TIME);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 4 * GST_SECOND,
+      8 * GST_SECOND, 4 * GST_SECOND);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = 1200;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret != NULL);
+
+  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
+  fail_unless (GST_BUFFER_DURATION (ret) == 4 * GST_SECOND);
+  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
+  fail_unless (GST_BUFFER_OFFSET_END (ret) == 800);
+  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
+  fail_unless (GST_BUFFER_SIZE (ret) == 400);
+
+  gst_buffer_unref (ret);
+
+  /* Clip only start */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_TIME);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 4 * GST_SECOND,
+      12 * GST_SECOND, 4 * GST_SECOND);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = 1200;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret != NULL);
+
+  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
+  fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
+  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
+  fail_unless (GST_BUFFER_OFFSET_END (ret) == 1200);
+  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
+  fail_unless (GST_BUFFER_SIZE (ret) == 800);
+
+  gst_buffer_unref (ret);
+
+  /* Clip only stop */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_TIME);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 2 * GST_SECOND,
+      10 * GST_SECOND, 2 * GST_SECOND);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = 1200;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret != NULL);
+
+  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 2 * GST_SECOND);
+  fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
+  fail_unless (GST_BUFFER_OFFSET (ret) == 200);
+  fail_unless (GST_BUFFER_OFFSET_END (ret) == 1000);
+  fail_unless (GST_BUFFER_DATA (ret) == data);
+  fail_unless (GST_BUFFER_SIZE (ret) == 800);
+
+  gst_buffer_unref (ret);
+
+  /* Buffer outside segment */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_TIME);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 12 * GST_SECOND,
+      20 * GST_SECOND, 12 * GST_SECOND);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = 1200;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret == NULL);
+
+  /* Clip start and end but don't touch duration and offset_end */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_TIME);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 4 * GST_SECOND,
+      8 * GST_SECOND, 4 * GST_SECOND);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret != NULL);
+
+  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
+  fail_unless (GST_BUFFER_DURATION (ret) == GST_CLOCK_TIME_NONE);
+  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
+  fail_unless (GST_BUFFER_OFFSET_END (ret) == GST_BUFFER_OFFSET_NONE);
+  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
+  fail_unless (GST_BUFFER_SIZE (ret) == 400);
+
+  gst_buffer_unref (ret);
+
+  /* If the buffer has no timestamp it should assert()
+   * FIXME: check if return value is the same as the input buffer.
+   *        probably can't be done because the assert() does a SIGABRT.
+   */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_TIME);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_TIME, 0 * GST_SECOND,
+      10 * GST_SECOND, 0 * GST_SECOND);
+
+  GST_BUFFER_TIMESTAMP (buf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+
+  ASSERT_CRITICAL (ret = gst_audio_buffer_clip (buf, &s, 100, 1));
+
+  gst_buffer_unref (buf);
+
+  /* If the format is not TIME or DEFAULT it should assert()
+   * FIXME: check if return value is the same as the input buffer.
+   *        probably can't be done because the assert() does a SIGABRT.
+   */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_PERCENT);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_PERCENT, 0, 10, 0);
+
+  GST_BUFFER_TIMESTAMP (buf) = 0 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = 0;
+  GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+
+  ASSERT_CRITICAL (ret = gst_audio_buffer_clip (buf, &s, 100, 1));
+
+  gst_buffer_unref (buf);
+
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_buffer_clipping_samples)
+{
+  GstSegment s;
+  GstBuffer *buf;
+  GstBuffer *ret;
+  guint8 *data;
+
+  /* Clip start and end */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_DEFAULT);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 400,
+      800, 400);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = 1200;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret != NULL);
+
+  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
+  fail_unless (GST_BUFFER_DURATION (ret) == 4 * GST_SECOND);
+  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
+  fail_unless (GST_BUFFER_OFFSET_END (ret) == 800);
+  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
+  fail_unless (GST_BUFFER_SIZE (ret) == 400);
+
+  gst_buffer_unref (ret);
+
+  /* Clip only start */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_DEFAULT);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 400,
+      1200, 400);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = 1200;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret != NULL);
+
+  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
+  fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
+  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
+  fail_unless (GST_BUFFER_OFFSET_END (ret) == 1200);
+  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
+  fail_unless (GST_BUFFER_SIZE (ret) == 800);
+
+  gst_buffer_unref (ret);
+
+  /* Clip only stop */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_DEFAULT);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 200,
+      1000, 200);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = 1200;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret != NULL);
+
+  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 2 * GST_SECOND);
+  fail_unless (GST_BUFFER_DURATION (ret) == 8 * GST_SECOND);
+  fail_unless (GST_BUFFER_OFFSET (ret) == 200);
+  fail_unless (GST_BUFFER_OFFSET_END (ret) == 1000);
+  fail_unless (GST_BUFFER_DATA (ret) == data);
+  fail_unless (GST_BUFFER_SIZE (ret) == 800);
+
+  gst_buffer_unref (ret);
+
+  /* Buffer outside segment */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_DEFAULT);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 1200,
+      2000, 1200);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = 10 * GST_SECOND;
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = 1200;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret == NULL);
+
+  /* Clip start and end but don't touch duration and offset_end */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_DEFAULT);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 400,
+      800, 400);
+
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (buf) = 200;
+  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret != NULL);
+
+  fail_unless (GST_BUFFER_TIMESTAMP (ret) == 4 * GST_SECOND);
+  fail_unless (GST_BUFFER_DURATION (ret) == GST_CLOCK_TIME_NONE);
+  fail_unless (GST_BUFFER_OFFSET (ret) == 400);
+  fail_unless (GST_BUFFER_OFFSET_END (ret) == GST_BUFFER_OFFSET_NONE);
+  fail_unless (GST_BUFFER_DATA (ret) == data + 200);
+  fail_unless (GST_BUFFER_SIZE (ret) == 400);
+
+  gst_buffer_unref (ret);
+
+  /* If the buffer has no offset it should assert()
+   * FIXME: check if return value is the same as the input buffer.
+   *        probably can't be done because the assert() does a SIGABRT.
+   */
+  buf = gst_buffer_new ();
+  data = (guint8 *) g_malloc (1000);
+  GST_BUFFER_SIZE (buf) = 1000;
+  GST_BUFFER_DATA (buf) = GST_BUFFER_MALLOCDATA (buf) = data;
+
+  gst_segment_init (&s, GST_FORMAT_DEFAULT);
+  gst_segment_set_newsegment (&s, FALSE, 1.0, GST_FORMAT_DEFAULT, 0, 10, 0);
+
+  GST_BUFFER_TIMESTAMP (buf) = 0 * GST_SECOND;
+  GST_BUFFER_DURATION (buf) = GST_CLOCK_TIME_NONE;
+  GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
+  GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
+
+  ASSERT_CRITICAL (ret = gst_audio_buffer_clip (buf, &s, 100, 1));
+
+  gst_buffer_unref (buf);
+}
+
+GST_END_TEST;
+
 static Suite *
 audio_suite (void)
 {
@@ -126,6 +463,8 @@ audio_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_multichannel_checks);
+  tcase_add_test (tc_chain, test_buffer_clipping_time);
+  tcase_add_test (tc_chain, test_buffer_clipping_samples);
 
   return s;
 }

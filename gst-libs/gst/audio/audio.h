@@ -143,7 +143,11 @@ typedef enum {
   GST_AUDIO_FIELD_SIGNED        = (1 << 5),
 } GstAudioFieldFlag;
 
+#ifndef GST_DISABLE_DEPRECATED
 void gst_audio_structure_set_int (GstStructure *structure, GstAudioFieldFlag flag);
+#endif /* GST_DISABLE_DEPRECATED */
+
+GstBuffer *gst_audio_buffer_clip (GstBuffer *buffer, GstSegment *segment, gint rate, gint frame_size);
 
 G_END_DECLS
 

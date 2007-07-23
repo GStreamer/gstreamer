@@ -1,3 +1,13 @@
+2007-07-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/audio/audio.c: (gst_audio_buffer_clip):
+	* gst-libs/gst/audio/audio.h:
+	* tests/check/libs/audio.c: (GST_START_TEST), (audio_suite):
+	API: Add buffer clipping function for raw audio buffers. Fixes #456656.
+	Also add deprecation guards for gst_audio_structure_set_int() to the
+	header.
+
 2007-07-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

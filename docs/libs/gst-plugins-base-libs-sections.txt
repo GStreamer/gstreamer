@@ -17,6 +17,7 @@ gst_audio_frame_length
 gst_audio_duration_from_pad_buffer
 gst_audio_is_buffer_framed
 gst_audio_structure_set_int
+gst_audio_buffer_clip
 </SECTION>
 
 <SECTION>
