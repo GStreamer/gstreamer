@@ -1,3 +1,8 @@
+2007-07-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	  Cleanup the docs.
+
 2007-07-23  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Dan Williams <dcbw at redhat dot com>

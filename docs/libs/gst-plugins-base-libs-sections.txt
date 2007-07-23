@@ -317,6 +317,8 @@ gst_mixer_message_parse_volume_changed
 GstMixerClass
 GST_TYPE_MIXER
 GST_TYPE_MIXER_TYPE
+GST_TYPE_MIXER_FLAGS
+GST_TYPE_MIXER_MESSAGE_TYPE
 GST_MIXER
 GST_MIXER_CLASS
 GST_MIXER_GET_CLASS
@@ -501,6 +503,7 @@ gst_x_overlay_set_xwindow_id
 gst_x_overlay_got_xwindow_id
 gst_x_overlay_prepare_xwindow_id
 gst_x_overlay_expose
+gst_x_overlay_handle_events
 <SUBSECTION Standard>
 GstXOverlayClass
 GST_TYPE_X_OVERLAY
@@ -826,6 +829,9 @@ gst_basertppayload_get_type
 GST_RTCP_VERSION
 
 GST_RTCP_MAX_SDES
+GST_RTCP_MAX_BYE_SSRC_COUNT
+GST_RTCP_MAX_RB_COUNT
+GST_RTCP_MAX_SDES_ITEM_COUNT
 GST_RTCP_VALID_MASK
 GST_RTCP_VALID_VALUE
 
@@ -833,6 +839,8 @@ GstRTCPType
 GstRTCPPacket
 GstRTCPSDESType
 
+gst_rtcp_buffer_end
+gst_rtcp_buffer_new
 gst_rtcp_buffer_add_packet
 gst_rtcp_buffer_get_first_packet
 gst_rtcp_buffer_get_packet_count
@@ -858,12 +866,14 @@ gst_rtcp_packet_move_to_next
 gst_rtcp_packet_remove
 gst_rtcp_packet_rr_get_ssrc
 gst_rtcp_packet_rr_set_ssrc
-gst_rtcp_packet_sdes_first_chunk
+gst_rtcp_packet_sdes_add_entry
+gst_rtcp_packet_sdes_add_item
+gst_rtcp_packet_sdes_first_entry
 gst_rtcp_packet_sdes_first_item
-gst_rtcp_packet_sdes_get_chunk_count
-gst_rtcp_packet_sdes_get_item
+gst_rtcp_packet_sdes_get_entry
+gst_rtcp_packet_sdes_get_item_count
 gst_rtcp_packet_sdes_get_ssrc
-gst_rtcp_packet_sdes_next_chunk
+gst_rtcp_packet_sdes_next_entry
 gst_rtcp_packet_sdes_next_item
 gst_rtcp_packet_set_rb
 gst_rtcp_packet_sr_get_sender_info
@@ -968,6 +978,7 @@ GST_TAG_CDDA_CDDB_DISCID
 GST_TAG_CDDA_CDDB_DISCID_FULL
 GST_TAG_CDDA_MUSICBRAINZ_DISCID
 GST_TAG_CDDA_MUSICBRAINZ_DISCID_FULL
+GST_TAG_CDDA_TRACK_TAGS
 GST_TAG_CMML_CLIP
 GST_TAG_CMML_HEAD
 GST_TAG_CMML_STREAM
