@@ -68,7 +68,6 @@ gst_plugin_feature_finalize (GObject * object)
 
   GST_DEBUG ("finalizing feature %p: '%s'", feature,
       GST_PLUGIN_FEATURE_NAME (feature));
-  g_free (feature->name);
   g_free (feature->plugin_name);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -184,9 +183,9 @@ gst_plugin_feature_set_name (GstPluginFeature * feature, const gchar * name)
   if (feature->name) {
     g_return_if_fail (strcmp (feature->name, name) == 0);
   } else {
-    feature->name = g_strdup (name);
+    gst_object_set_name (GST_OBJECT (feature), name);
+    feature->name = GST_OBJECT_NAME (GST_OBJECT (feature));
   }
-  gst_object_set_name (GST_OBJECT (feature), feature->name);
 }
 
 /**

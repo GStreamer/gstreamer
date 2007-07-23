@@ -1,3 +1,9 @@
+2007-07-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstpluginfeature.c: (gst_plugin_feature_finalize),
+	(gst_plugin_feature_set_name):
+	  Avoid double memory usage for pluginfeature names. Fixes #459466.
+
 2007-07-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstpad.h:
