@@ -1,3 +1,13 @@
+2007-07-23  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment),
+	(gst_qtdemux_clip_buffer), (gst_qtdemux_loop_state_movie),
+	(qtdemux_parse_trak), (qtdemux_video_caps), (qtdemux_audio_caps):
+	Clip raw audio and video when we can, keep track of current output
+	segment.
+	Don't leak buffers and events when there is no output pad.
+	Improve debugging here and there.
+
 2007-07-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:
