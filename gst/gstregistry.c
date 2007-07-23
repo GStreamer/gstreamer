@@ -175,7 +175,7 @@ gst_registry_class_init (GstRegistryClass * klass)
 static void
 gst_registry_init (GstRegistry * registry)
 {
-  /* do nothing, needed because of G_DEFINE_TYPE */
+  registry->feature_hash = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 static void
@@ -218,6 +218,8 @@ gst_registry_finalize (GObject * object)
   }
   g_list_free (features);
 
+  g_hash_table_destroy (registry->feature_hash);
+  registry->feature_hash = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -383,6 +385,7 @@ gst_registry_remove_features_for_plugin_unlocked (GstRegistry * registry,
           gst_plugin_get_name (plugin));
 
       registry->features = g_list_delete_link (registry->features, f);
+      g_hash_table_remove (registry->feature_hash, feature->name);
       gst_object_unref (feature);
     }
     f = next;
@@ -440,15 +443,17 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   existing_feature = gst_registry_lookup_feature_locked (registry,
       feature->name);
   if (G_UNLIKELY (existing_feature)) {
-    GST_DEBUG_OBJECT (registry, "Replacing existing feature %p (%s)",
+    GST_DEBUG_OBJECT (registry, "replacing existing feature %p (%s)",
         existing_feature, feature->name);
     registry->features = g_list_remove (registry->features, existing_feature);
+    /* no need to remove from feature_hash, as insert will replace the value */
     gst_object_unref (existing_feature);
   }
 
   GST_DEBUG_OBJECT (registry, "adding feature %p (%s)", feature, feature->name);
 
   registry->features = g_list_prepend (registry->features, feature);
+  g_hash_table_insert (registry->feature_hash, feature->name, feature);
 
   gst_object_ref (feature);
   gst_object_sink (feature);
@@ -481,6 +486,7 @@ gst_registry_remove_feature (GstRegistry * registry, GstPluginFeature * feature)
 
   GST_OBJECT_LOCK (registry);
   registry->features = g_list_remove (registry->features, feature);
+  g_hash_table_remove (registry->feature_hash, feature->name);
   GST_OBJECT_UNLOCK (registry);
   gst_object_unref (feature);
 }
@@ -694,21 +700,10 @@ gst_registry_get_plugin_list (GstRegistry * registry)
 static GstPluginFeature *
 gst_registry_lookup_feature_locked (GstRegistry * registry, const char *name)
 {
-  GList *g;
-  GstPluginFeature *feature;
-
   if (G_UNLIKELY (name == NULL))
     return NULL;
 
-  /* FIXME: use GTree speed up lookups */
-  for (g = registry->features; g; g = g_list_next (g)) {
-    feature = GST_PLUGIN_FEATURE_CAST (g->data);
-    if (feature->name && strcmp (name, feature->name) == 0) {
-      return feature;
-    }
-  }
-
-  return NULL;
+  return g_hash_table_lookup (registry->feature_hash, name);
 }
 
 /**

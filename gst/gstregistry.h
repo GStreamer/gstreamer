@@ -50,9 +50,6 @@ struct _GstRegistry {
   GstObject 	 object;
 
   /*< private >*/
-  /* FIXME: shouldn't we use GTree for these to speedup
-   * gst_registry_lookup_feature_locked(), gst_registry_lookup_locked()
-   */
   GList *plugins;
   GList *features;
 
@@ -61,8 +58,11 @@ struct _GstRegistry {
   /* FIXME move these elsewhere */
   int            cache_file;
 
+  /* hash to speedup _lookup_feature_locked() */
+  GHashTable *feature_hash;
+
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING-1];
 };
 
 struct _GstRegistryClass {

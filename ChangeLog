@@ -1,5 +1,15 @@
 2007-07-23  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstregistry.c: (gst_registry_init), (gst_registry_finalize),
+	(gst_registry_remove_features_for_plugin_unlocked),
+	(gst_registry_add_feature), (gst_registry_remove_feature),
+	(gst_registry_lookup_feature_locked):
+	* gst/gstregistry.h:
+	  Speed up gst_registry_lookup_feature_locked() by using a hashmap.
+	  Fixes #459501.
+
+2007-07-23  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstpluginfeature.c: (gst_plugin_feature_finalize),
 	(gst_plugin_feature_set_name):
 	  Avoid double memory usage for pluginfeature names. Fixes #459466.
