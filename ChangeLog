@@ -1,5 +1,11 @@
 2007-07-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_push_forward),
+	(vorbis_dec_flush_decode):
+	Use the new buffer clipping function from gstaudio here.
+
+2007-07-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/audio/audio.c: (gst_audio_buffer_clip):
 	* gst-libs/gst/audio/audio.h:

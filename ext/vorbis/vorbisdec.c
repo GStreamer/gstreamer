@@ -802,58 +802,6 @@ copy_samples (float *out, float **in, guint samples, gint channels)
 #endif
 }
 
-/* clip output samples to the segment boundaries
- */
-static gboolean
-vorbis_do_clip (GstVorbisDec * dec, GstBuffer * buf)
-{
-  gint64 start, stop, cstart, cstop, diff;
-
-  start = GST_BUFFER_TIMESTAMP (buf);
-  stop = start + GST_BUFFER_DURATION (buf);
-
-  if (!gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
-          start, stop, &cstart, &cstop))
-    goto clipped;
-
-  /* see if some clipping happened */
-  diff = cstart - start;
-  if (diff > 0) {
-    GST_BUFFER_TIMESTAMP (buf) = cstart;
-    GST_BUFFER_DURATION (buf) -= diff;
-
-    /* bring clipped time to samples */
-    diff = gst_util_uint64_scale_int (diff, dec->vi.rate, GST_SECOND);
-    /* samples to bytes */
-    diff *= (sizeof (float) * dec->vi.channels);
-    GST_DEBUG_OBJECT (dec, "clipping start to %" GST_TIME_FORMAT " %"
-        G_GUINT64_FORMAT " bytes", GST_TIME_ARGS (cstart), diff);
-    GST_BUFFER_DATA (buf) += diff;
-    GST_BUFFER_SIZE (buf) -= diff;
-  }
-  diff = stop - cstop;
-  if (diff > 0) {
-    GST_BUFFER_DURATION (buf) -= diff;
-
-    /* bring clipped time to samples and then to bytes */
-    diff = gst_util_uint64_scale_int (diff, dec->vi.rate, GST_SECOND);
-    diff *= (sizeof (float) * dec->vi.channels);
-    GST_DEBUG_OBJECT (dec, "clipping stop to %" GST_TIME_FORMAT " %"
-        G_GUINT64_FORMAT " bytes", GST_TIME_ARGS (cstop), diff);
-    GST_BUFFER_SIZE (buf) -= diff;
-  }
-
-  return FALSE;
-
-  /* dropped buffer */
-clipped:
-  {
-    GST_DEBUG_OBJECT (dec, "clipped buffer");
-    gst_buffer_unref (buf);
-    return TRUE;
-  }
-}
-
 static GstFlowReturn
 vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
 {
@@ -899,9 +847,10 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
       for (walk = dec->queued; walk; walk = g_list_next (walk)) {
         GstBuffer *buffer = GST_BUFFER (walk->data);
 
-        /* clips or returns FALSE with buffer unreffed when completely
+        /* clips or returns NULL with buffer unreffed when completely
          * clipped */
-        if (vorbis_do_clip (dec, buffer))
+        if (!(buffer = gst_audio_buffer_clip (buffer, &dec->segment,
+                    dec->vi.rate, dec->vi.channels * sizeof (float))))
           continue;
 
         if (dec->discont) {
@@ -916,7 +865,8 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
     }
 
     /* clip */
-    if (vorbis_do_clip (dec, buf))
+    if (!(buf = gst_audio_buffer_clip (buf, &dec->segment, dec->vi.rate,
+                dec->vi.channels * sizeof (float))))
       return GST_FLOW_OK;
 
     if (dec->discont) {
@@ -1297,7 +1247,8 @@ vorbis_dec_flush_decode (GstVorbisDec * dec)
       GST_BUFFER_DURATION (buf) = endts - GST_BUFFER_TIMESTAMP (buf);
 
       /* clip, this will unref the buffer in case of clipping */
-      if (vorbis_do_clip (dec, buf)) {
+      if (!(buf = gst_audio_buffer_clip (buf, &dec->segment, dec->vi.rate,
+                  dec->vi.channels * sizeof (float)))) {
         GST_DEBUG_OBJECT (dec, "clipped buffer %p", buf);
         goto next;
       }
