@@ -1223,51 +1223,6 @@ gst_mad_check_caps_reset (GstMad * mad)
   }
 }
 
-/*
-  clips buffer to currently configured segment. Returns FALSE if the buffer 
-  has to be dropped.
-*/
-static gboolean
-clip_outgoing_buffer (GstMad * mad, GstBuffer * buffer)
-{
-  gint64 start, stop, cstart, cstop, diff;
-  gboolean res = TRUE;
-
-  if (mad->segment.format != GST_FORMAT_TIME)
-    goto beach;
-
-  start = GST_BUFFER_TIMESTAMP (buffer);
-  stop = start + GST_BUFFER_DURATION (buffer);
-
-  if (gst_segment_clip (&mad->segment, GST_FORMAT_TIME,
-          start, stop, &cstart, &cstop)) {
-    diff = cstart - start;
-    if (diff > 0) {
-      GST_BUFFER_TIMESTAMP (buffer) = cstart;
-      GST_BUFFER_DURATION (buffer) -= diff;
-
-      /* time->frames->bytes */
-      diff = 4 * mad->channels * GST_CLOCK_TIME_TO_FRAMES (diff, mad->rate);
-      GST_BUFFER_DATA (buffer) += diff;
-      GST_BUFFER_SIZE (buffer) -= diff;
-    }
-    diff = stop - cstop;
-    if (diff > 0) {
-      GST_BUFFER_DURATION (buffer) -= diff;
-      /* time->frames->bytes */
-      diff = 4 * mad->channels * GST_CLOCK_TIME_TO_FRAMES (diff, mad->rate);
-      /* update size */
-      GST_BUFFER_SIZE (buffer) -= diff;
-    }
-  } else {
-    GST_DEBUG_OBJECT (mad, "buffer is outside configured segment");
-    res = FALSE;
-  }
-
-beach:
-  return res;
-}
-
 static GstFlowReturn
 gst_mad_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -1608,7 +1563,8 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
           }
         }
 
-        if (clip_outgoing_buffer (mad, outbuffer)) {
+        if ((outbuffer = gst_audio_buffer_clip (outbuffer, &mad->segment,
+                    mad->rate, 4 * mad->channels))) {
           GST_LOG_OBJECT (mad,
               "pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%" GST_TIME_FORMAT,
               GST_BUFFER_OFFSET (outbuffer),
@@ -1620,11 +1576,7 @@ gst_mad_chain (GstPad * pad, GstBuffer * buffer)
             goto_exit = TRUE;
           }
         } else {
-          GST_LOG_OBJECT (mad, "Dropping buffer"
-              ", off=%" G_GUINT64_FORMAT ", ts=%" GST_TIME_FORMAT,
-              GST_BUFFER_OFFSET (outbuffer),
-              GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuffer)));
-          gst_buffer_unref (outbuffer);
+          GST_LOG_OBJECT (mad, "Dropping buffer");
         }
       }
 
