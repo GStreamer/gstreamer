@@ -1,3 +1,18 @@
+2007-07-24  Hans de Goede  <j.w.r.degoede@hhs.nl>
+
+	reviewed by: Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/real/gstreal.c: (plugin_init):
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_setcaps),
+	(gst_real_audio_dec_finalize), (gst_real_audio_dec_set_property),
+	(gst_real_audio_dec_get_property), (gst_real_audio_dec_class_init):
+	* gst/real/gstrealvideodec.c: (open_library),
+	(gst_real_video_dec_finalize), (gst_real_video_dec_set_property),
+	(gst_real_video_dec_get_property), (gst_real_video_dec_class_init):
+	* gst/real/gstrealvideodec.h:
+	Improved search algorithm for location of real .so files.
+	Fixes #393461
+
 2007-07-24  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

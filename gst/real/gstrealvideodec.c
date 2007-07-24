@@ -23,6 +23,7 @@
 #include "config.h"
 #endif
 
+#include "gstreal.h"
 #include "gstrealvideodec.h"
 
 #include <string.h>
@@ -45,23 +46,17 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "framerate = (fraction) [0/1, MAX], "
         "width = (int) [ 16, 4096 ], " "height = (int) [ 16, 4096 ] "));
 
-#ifdef HAVE_CPU_I386
-#define DEFAULT_PATH_RV20 "/usr/lib/win32/drv2.so.6.0"
-#define DEFAULT_PATH_RV30 "/usr/lib/win32/drv3.so.6.0"
-#define DEFAULT_PATH_RV40 "/usr/lib/win32/drv4.so.6.0"
-#endif
-#ifdef HAVE_CPU_X86_64
-#define DEFAULT_PATH_RV20 "/usr/lib/drvc.so"
-#define DEFAULT_PATH_RV30 "/usr/lib/drvc.so"
-#define DEFAULT_PATH_RV40 "/usr/lib/drvc.so"
-#endif
+#define DEFAULT_RV20_NAMES "drv2.so:drv2.so.6.0"
+#define DEFAULT_RV30_NAMES "drvc.so:drv3.so.6.0"
+#define DEFAULT_RV40_NAMES "drvc.so:drv4.so.6.0"
 
 enum
 {
   PROP_0,
-  PROP_PATH_RV20,
-  PROP_PATH_RV30,
-  PROP_PATH_RV40
+  PROP_REAL_CODECS_PATH,
+  PROP_RV20_NAMES,
+  PROP_RV30_NAMES,
+  PROP_RV40_NAMES
 };
 
 
@@ -637,65 +632,51 @@ open_library (GstRealVideoDec * dec, GstRealVideoDecHooks * hooks,
     GstRealVideoDecVersion version)
 {
   gpointer rv_custom_msg, rv_free, rv_init, rv_transform;
-  GModule *module;
-  gchar *path = NULL;
+  GModule *module = NULL;
+  gchar *path, *names;
+  gchar **split_names, **split_path;
+  int i, j;
 
   GST_DEBUG_OBJECT (dec,
       "Attempting to open shared library for real video version %d", version);
 
-  /* FIXME : Search for the correct library in various places if dec->path_rv20
-   *  isn't set explicitely !
-   * Library names can also be different (ex : drv30.so vs drvc.so)
-   */
+  path = dec->real_codecs_path ? dec->real_codecs_path :
+      DEFAULT_REAL_CODECS_PATH;
 
   switch (version) {
     case GST_REAL_VIDEO_DEC_VERSION_2:
-    {
-      if (dec->path_rv20)
-        path = dec->path_rv20;
-      else if (g_file_test (DEFAULT_PATH_RV20, G_FILE_TEST_EXISTS))
-        path = DEFAULT_PATH_RV20;
-      else if (g_file_test ("/usr/lib/drv2.so.6.0", G_FILE_TEST_EXISTS))
-        path = "/usr/lib/drv2.so.6.0";
-      else
-        goto no_known_libraries;
+      names = dec->rv20_names ? dec->rv20_names : DEFAULT_RV20_NAMES;
       break;
-    }
     case GST_REAL_VIDEO_DEC_VERSION_3:
-    {
-      if (dec->path_rv30)
-        path = dec->path_rv30;
-      else if (g_file_test (DEFAULT_PATH_RV30, G_FILE_TEST_EXISTS))
-        path = DEFAULT_PATH_RV30;
-      else if (g_file_test ("/usr/lib/drv3.so.6.0", G_FILE_TEST_EXISTS))
-        path = "/usr/lib/drv3.so.6.0";
-      else
-        goto no_known_libraries;
+      names = dec->rv30_names ? dec->rv30_names : DEFAULT_RV30_NAMES;
       break;
-    }
     case GST_REAL_VIDEO_DEC_VERSION_4:
-    {
-      if (dec->path_rv40)
-        path = dec->path_rv40;
-      else if (g_file_test (DEFAULT_PATH_RV40, G_FILE_TEST_EXISTS))
-        path = DEFAULT_PATH_RV40;
-      else if (g_file_test ("/usr/lib/drv4.so.6.0", G_FILE_TEST_EXISTS))
-        path = "/usr/lib/drv4.so.6.0";
-      else
-        goto no_known_libraries;
+      names = dec->rv40_names ? dec->rv40_names : DEFAULT_RV40_NAMES;
       break;
-    }
     default:
       goto unknown_version;
   }
 
-  GST_LOG_OBJECT (dec, "Trying to open '%s'", path);
-  hooks->module = g_module_open (path, G_MODULE_BIND_LAZY);
+  split_path = g_strsplit (path, ":", 0);
+  split_names = g_strsplit (names, ":", 0);
 
-  if (hooks->module == NULL)
+  for (i = 0; split_path[i]; i++) {
+    for (j = 0; split_names[j]; j++) {
+      gchar *codec = g_strconcat (split_path[i], "/", split_names[j], NULL);
+
+      module = g_module_open (codec, G_MODULE_BIND_LAZY);
+      g_free (codec);
+      if (module)
+        goto codec_search_done;
+    }
+  }
+
+codec_search_done:
+  g_strfreev (split_path);
+  g_strfreev (split_names);
+
+  if (module == NULL)
     goto could_not_open;
-
-  module = hooks->module;
 
   /* First try opening legacy symbols, if that fails try loading new symbols */
   if (g_module_symbol (module, "RV20toYUV420Init", &rv_init) &&
@@ -716,16 +697,9 @@ open_library (GstRealVideoDec * dec, GstRealVideoDecHooks * hooks,
   hooks->free = rv_free;
   hooks->transform = rv_transform;
   hooks->custom_message = rv_custom_msg;
+  hooks->module = module;
 
   return TRUE;
-
-no_known_libraries:
-  {
-    GST_ELEMENT_ERROR (dec, LIBRARY, INIT,
-        ("Couldn't find a realvideo shared library for version %d",
-            version), (NULL));
-    return FALSE;
-  }
 
 unknown_version:
   {
@@ -735,8 +709,7 @@ unknown_version:
 
 could_not_open:
   {
-    GST_ERROR_OBJECT (dec, "Could not open library '%s':%s", path,
-        g_module_error ());
+    GST_ERROR_OBJECT (dec, "Could not find library '%s' in '%s'", names, path);
     return FALSE;
   }
 
@@ -802,17 +775,21 @@ gst_real_video_dec_finalize (GObject * object)
   close_library (dec->hooks);
   memset (&dec->hooks, 0, sizeof (dec->hooks));
 
-  if (dec->path_rv20) {
-    g_free (dec->path_rv20);
-    dec->path_rv20 = NULL;
+  if (dec->real_codecs_path) {
+    g_free (dec->real_codecs_path);
+    dec->real_codecs_path = NULL;
   }
-  if (dec->path_rv30) {
-    g_free (dec->path_rv30);
-    dec->path_rv30 = NULL;
+  if (dec->rv20_names) {
+    g_free (dec->rv20_names);
+    dec->rv20_names = NULL;
   }
-  if (dec->path_rv40) {
-    g_free (dec->path_rv40);
-    dec->path_rv40 = NULL;
+  if (dec->rv30_names) {
+    g_free (dec->rv30_names);
+    dec->rv30_names = NULL;
+  }
+  if (dec->rv40_names) {
+    g_free (dec->rv40_names);
+    dec->rv40_names = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -829,20 +806,25 @@ gst_real_video_dec_set_property (GObject * object, guint prop_id,
    */
 
   switch (prop_id) {
-    case PROP_PATH_RV20:
-      if (dec->path_rv20)
-        g_free (dec->path_rv20);
-      dec->path_rv20 = g_value_dup_string (value);
+    case PROP_REAL_CODECS_PATH:
+      if (dec->real_codecs_path)
+        g_free (dec->real_codecs_path);
+      dec->real_codecs_path = g_value_dup_string (value);
       break;
-    case PROP_PATH_RV30:
-      if (dec->path_rv30)
-        g_free (dec->path_rv30);
-      dec->path_rv30 = g_value_dup_string (value);
+    case PROP_RV20_NAMES:
+      if (dec->rv20_names)
+        g_free (dec->rv20_names);
+      dec->rv20_names = g_value_dup_string (value);
       break;
-    case PROP_PATH_RV40:
-      if (dec->path_rv40)
-        g_free (dec->path_rv40);
-      dec->path_rv40 = g_value_dup_string (value);
+    case PROP_RV30_NAMES:
+      if (dec->rv30_names)
+        g_free (dec->rv30_names);
+      dec->rv30_names = g_value_dup_string (value);
+      break;
+    case PROP_RV40_NAMES:
+      if (dec->rv40_names)
+        g_free (dec->rv40_names);
+      dec->rv40_names = g_value_dup_string (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -857,17 +839,21 @@ gst_real_video_dec_get_property (GObject * object, guint prop_id,
   GstRealVideoDec *dec = GST_REAL_VIDEO_DEC (object);
 
   switch (prop_id) {
-    case PROP_PATH_RV20:
-      g_value_set_string (value, dec->path_rv20 ? dec->path_rv20 :
-          DEFAULT_PATH_RV20);
+    case PROP_REAL_CODECS_PATH:
+      g_value_set_string (value, dec->real_codecs_path ? dec->real_codecs_path
+          : DEFAULT_REAL_CODECS_PATH);
       break;
-    case PROP_PATH_RV30:
-      g_value_set_string (value, dec->path_rv30 ? dec->path_rv30 :
-          DEFAULT_PATH_RV30);
+    case PROP_RV20_NAMES:
+      g_value_set_string (value, dec->rv20_names ? dec->rv20_names :
+          DEFAULT_RV20_NAMES);
       break;
-    case PROP_PATH_RV40:
-      g_value_set_string (value, dec->path_rv40 ? dec->path_rv40 :
-          DEFAULT_PATH_RV40);
+    case PROP_RV30_NAMES:
+      g_value_set_string (value, dec->rv30_names ? dec->rv30_names :
+          DEFAULT_RV30_NAMES);
+      break;
+    case PROP_RV40_NAMES:
+      g_value_set_string (value, dec->rv40_names ? dec->rv40_names :
+          DEFAULT_RV40_NAMES);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -884,15 +870,20 @@ gst_real_video_dec_class_init (GstRealVideoDecClass * klass)
   object_class->get_property = gst_real_video_dec_get_property;
   object_class->finalize = gst_real_video_dec_finalize;
 
-  g_object_class_install_property (object_class, PROP_PATH_RV20,
-      g_param_spec_string ("path_rv20", "Path to rv20 driver",
-          "Path to rv20 driver", DEFAULT_PATH_RV20, G_PARAM_READWRITE));
-  g_object_class_install_property (object_class, PROP_PATH_RV30,
-      g_param_spec_string ("path_rv30", "Path to rv30 driver",
-          "Path to rv30 driver", DEFAULT_PATH_RV30, G_PARAM_READWRITE));
-  g_object_class_install_property (object_class, PROP_PATH_RV40,
-      g_param_spec_string ("path_rv40", "Path to rv40 driver",
-          "Path to rv40 driver", DEFAULT_PATH_RV40, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_REAL_CODECS_PATH,
+      g_param_spec_string ("real_codecs_path",
+          "Path where to search for RealPlayer codecs",
+          "Path where to search for RealPlayer codecs",
+          DEFAULT_REAL_CODECS_PATH, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_RV20_NAMES,
+      g_param_spec_string ("rv20_names", "Names of rv20 driver",
+          "Names of rv20 driver", DEFAULT_RV20_NAMES, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_RV30_NAMES,
+      g_param_spec_string ("rv30_names", "Names of rv30 driver",
+          "Names of rv30 driver", DEFAULT_RV30_NAMES, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_RV40_NAMES,
+      g_param_spec_string ("rv40_names", "Names of rv40 driver",
+          "Names of rv40 driver", DEFAULT_RV40_NAMES, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (realvideode_debug, "realvideodec", 0,
       "RealVideo decoder");

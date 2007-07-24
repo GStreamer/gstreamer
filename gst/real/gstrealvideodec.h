@@ -80,7 +80,7 @@ struct _GstRealVideoDec
   guint32 fragments[256];
 
   /* Properties */
-  gchar *path_rv20, *path_rv30, *path_rv40;
+  gchar *real_codecs_path, *rv20_names, *rv30_names, *rv40_names;
 };
 
 struct _GstRealVideoDecClass
