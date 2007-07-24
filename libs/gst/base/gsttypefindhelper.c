@@ -56,44 +56,53 @@ type_find_factory_rank_cmp (gconstpointer fac1, gconstpointer fac2)
 
 typedef struct
 {
+  GSList *buffers;              /* buffer cache */
+  guint64 size;
+  GstTypeFindHelperGetRangeFunction func;
   guint best_probability;
   GstCaps *caps;
-  guint64 size;
-  GSList *buffers;
-  GstTypeFindFactory *factory;
+  GstTypeFindFactory *factory;  /* for logging */
+  GstObject *obj;               /* for logging */
+} GstTypeFindHelper;
 
-  GstTypeFindHelperGetRangeFunction func;
-  GstObject *obj;
-}
-GstTypeFindHelper;
-
+/*
+ * helper_find_peek:
+ * @data: helper data struct
+ * @off: stream offset
+ * @size: block size
+ *
+ * Get data pointer within a stream. Keeps a cache of read buffers.
+ *
+ * Returns: address of the data or %NULL if buffer does not cover the
+ * requested range.
+ */
 static guint8 *
 helper_find_peek (gpointer data, gint64 offset, guint size)
 {
-  GstTypeFindHelper *find;
+  GstTypeFindHelper *helper;
   GstBuffer *buffer;
   GstFlowReturn ret;
 
-  find = (GstTypeFindHelper *) data;
+  helper = (GstTypeFindHelper *) data;
 
-  GST_LOG_OBJECT (find->obj, "'%s' called peek (%" G_GINT64_FORMAT
-      ", %u)", GST_PLUGIN_FEATURE_NAME (find->factory), offset, size);
+  GST_LOG_OBJECT (helper->obj, "'%s' called peek (%" G_GINT64_FORMAT
+      ", %u)", GST_PLUGIN_FEATURE_NAME (helper->factory), offset, size);
 
   if (size == 0)
     return NULL;
 
   if (offset < 0) {
-    if (find->size == -1 || find->size < -offset)
+    if (helper->size == -1 || helper->size < -offset)
       return NULL;
 
-    offset += find->size;
+    offset += helper->size;
   }
 
   /* see if we have a matching buffer already in our list */
   if (size > 0) {
     GSList *walk;
 
-    for (walk = find->buffers; walk; walk = walk->next) {
+    for (walk = helper->buffers; walk; walk = walk->next) {
       GstBuffer *buf = GST_BUFFER_CAST (walk->data);
       guint64 buf_offset = GST_BUFFER_OFFSET (buf);
       guint buf_size = GST_BUFFER_SIZE (buf);
@@ -104,7 +113,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   }
 
   buffer = NULL;
-  ret = find->func (find->obj, offset, size, &buffer);
+  ret = helper->func (helper->obj, offset, size, &buffer);
 
   if (ret != GST_FLOW_OK)
     goto error;
@@ -120,42 +129,52 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     return NULL;
   }
 
-  find->buffers = g_slist_prepend (find->buffers, buffer);
+  helper->buffers = g_slist_prepend (helper->buffers, buffer);
   return GST_BUFFER_DATA (buffer);
 
 error:
   {
+    GST_INFO ("typefind function returned: %s", gst_flow_get_name (ret));
     return NULL;
   }
 }
 
+/*
+ * helper_find_suggest:
+ * @data: helper data struct
+ * @probability: probability of the match
+ * @caps: caps of the type
+ *
+ * If given @probability is higher, replace previously store caps.
+ */
 static void
 helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
 {
-  GstTypeFindHelper *find = (GstTypeFindHelper *) data;
+  GstTypeFindHelper *helper = (GstTypeFindHelper *) data;
 
-  GST_LOG_OBJECT (find->obj,
+  GST_LOG_OBJECT (helper->obj,
       "'%s' called called suggest (%u, %" GST_PTR_FORMAT ")",
-      GST_PLUGIN_FEATURE_NAME (find->factory), probability, caps);
+      GST_PLUGIN_FEATURE_NAME (helper->factory), probability, caps);
 
-  if (probability > find->best_probability) {
+  if (probability > helper->best_probability) {
     GstCaps *copy = gst_caps_copy (caps);
 
-    gst_caps_replace (&find->caps, copy);
+    gst_caps_replace (&helper->caps, copy);
     gst_caps_unref (copy);
-    find->best_probability = probability;
+    helper->best_probability = probability;
   }
 }
 
 static guint64
 helper_find_get_length (gpointer data)
 {
-  GstTypeFindHelper *find = (GstTypeFindHelper *) data;
+  GstTypeFindHelper *helper = (GstTypeFindHelper *) data;
 
-  GST_LOG_OBJECT (find->obj, "'%s' called called get_length, returning %"
-      G_GUINT64_FORMAT, GST_PLUGIN_FEATURE_NAME (find->factory), find->size);
+  GST_LOG_OBJECT (helper->obj, "'%s' called called get_length, returning %"
+      G_GUINT64_FORMAT, GST_PLUGIN_FEATURE_NAME (helper->factory),
+      helper->size);
 
-  return find->size;
+  return helper->size;
 }
 
 /**
@@ -184,61 +203,56 @@ gst_type_find_helper_get_range (GstObject * obj,
     GstTypeFindHelperGetRangeFunction func, guint64 size,
     GstTypeFindProbability * prob)
 {
-  GstTypeFind gst_find;
-  GstTypeFindHelper find;
-  GSList *l;
-  GList *walk, *type_list = NULL;
+  GstTypeFindHelper helper;
+  GstTypeFind find;
+  GSList *walk;
+  GList *l, *type_list;
   GstCaps *result = NULL;
 
   g_return_val_if_fail (GST_IS_OBJECT (obj), NULL);
   g_return_val_if_fail (func != NULL, NULL);
 
-  type_list = gst_type_find_factory_get_list ();
+  helper.buffers = NULL;
+  helper.size = size;
+  helper.func = func;
+  helper.best_probability = 0;
+  helper.caps = NULL;
+  helper.obj = obj;
 
-  type_list = g_list_sort (type_list, type_find_factory_rank_cmp);
-
-  find.best_probability = 0;
-  find.caps = NULL;
-  find.size = size;
-  find.buffers = NULL;
-  find.func = func;
-  find.obj = obj;
-  gst_find.data = &find;
-  gst_find.peek = helper_find_peek;
-  gst_find.suggest = helper_find_suggest;
+  find.data = &helper;
+  find.peek = helper_find_peek;
+  find.suggest = helper_find_suggest;
 
   if (size == 0 || size == (guint64) - 1) {
-    gst_find.get_length = NULL;
+    find.get_length = NULL;
   } else {
-    gst_find.get_length = helper_find_get_length;
+    find.get_length = helper_find_get_length;
   }
 
-  walk = type_list;
+  /* FIXME: we need to keep this list within the registry */
+  type_list = gst_type_find_factory_get_list ();
+  type_list = g_list_sort (type_list, type_find_factory_rank_cmp);
 
-  while (walk) {
-    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (walk->data);
-
-    find.factory = factory;
-
-    gst_type_find_factory_call_function (factory, &gst_find);
-    if (find.best_probability >= GST_TYPE_FIND_MAXIMUM)
+  for (l = type_list; l; l = l->next) {
+    helper.factory = GST_TYPE_FIND_FACTORY (l->data);
+    gst_type_find_factory_call_function (helper.factory, &find);
+    if (helper.best_probability >= GST_TYPE_FIND_MAXIMUM)
       break;
-    walk = g_list_next (walk);
   }
   gst_plugin_feature_list_free (type_list);
 
-  if (find.best_probability > 0)
-    result = find.caps;
+  for (walk = helper.buffers; walk; walk = walk->next)
+    gst_buffer_unref (GST_BUFFER_CAST (walk->data));
+  g_slist_free (helper.buffers);
 
-  for (l = find.buffers; l; l = l->next)
-    gst_buffer_unref (GST_BUFFER_CAST (l->data));
-  g_slist_free (find.buffers);
+  if (helper.best_probability > 0)
+    result = helper.caps;
 
   if (prob)
-    *prob = find.best_probability;
+    *prob = helper.best_probability;
 
   GST_LOG_OBJECT (obj, "Returning %" GST_PTR_FORMAT " (probability = %u)",
-      result, (guint) find.best_probability);
+      result, (guint) helper.best_probability);
 
   return result;
 }
@@ -271,14 +285,25 @@ gst_type_find_helper (GstPad * src, guint64 size)
 
 typedef struct
 {
-  guint8 *data;
+  guint8 *data;                 /* buffer data */
   guint size;
   guint best_probability;
   GstCaps *caps;
-  GstObject *factory;           /* for logging */
+  GstTypeFindFactory *factory;  /* for logging */
   GstObject *obj;               /* for logging */
 } GstTypeFindBufHelper;
 
+/*
+ * buf_helper_find_peek:
+ * @data: helper data struct
+ * @off: stream offset
+ * @size: block size
+ *
+ * Get data pointer within a buffer.
+ *
+ * Returns: address inside the buffer or %NULL if buffer does not cover the
+ * requested range.
+ */
 static guint8 *
 buf_helper_find_peek (gpointer data, gint64 off, guint size)
 {
@@ -303,22 +328,30 @@ buf_helper_find_peek (gpointer data, gint64 off, guint size)
   return NULL;
 }
 
+/*
+ * buf_helper_find_suggest:
+ * @data: helper data struct
+ * @probability: probability of the match
+ * @caps: caps of the type
+ *
+ * If given @probability is higher, replace previously store caps.
+ */
 static void
-buf_helper_find_suggest (gpointer data, guint prob, const GstCaps * caps)
+buf_helper_find_suggest (gpointer data, guint probability, const GstCaps * caps)
 {
   GstTypeFindBufHelper *helper = (GstTypeFindBufHelper *) data;
 
   GST_LOG_OBJECT (helper->obj,
       "'%s' called called suggest (%u, %" GST_PTR_FORMAT ")",
-      GST_PLUGIN_FEATURE_NAME (helper->factory), prob, caps);
+      GST_PLUGIN_FEATURE_NAME (helper->factory), probability, caps);
 
   /* Note: not >= as we call typefinders in order of rank, highest first */
-  if (prob > helper->best_probability) {
+  if (probability > helper->best_probability) {
     GstCaps *copy = gst_caps_copy (caps);
 
     gst_caps_replace (&helper->caps, copy);
     gst_caps_unref (copy);
-    helper->best_probability = prob;
+    helper->best_probability = probability;
   }
 }
 
@@ -349,6 +382,7 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
   GstTypeFindBufHelper helper;
   GstTypeFind find;
   GList *l, *type_list;
+  GstCaps *result = NULL;
 
   g_return_val_if_fail (buf != NULL, NULL);
   g_return_val_if_fail (GST_IS_BUFFER (buf), NULL);
@@ -369,30 +403,26 @@ gst_type_find_helper_for_buffer (GstObject * obj, GstBuffer * buf,
   find.suggest = buf_helper_find_suggest;
   find.get_length = NULL;
 
+  /* FIXME: we need to keep this list within the registry */
   type_list = gst_type_find_factory_get_list ();
-
   type_list = g_list_sort (type_list, type_find_factory_rank_cmp);
 
-  for (l = type_list; l != NULL; l = l->next) {
-    GstTypeFindFactory *factory = GST_TYPE_FIND_FACTORY (l->data);
-
-    helper.factory = GST_OBJECT (factory);
-
-    gst_type_find_factory_call_function (factory, &find);
+  for (l = type_list; l; l = l->next) {
+    helper.factory = GST_TYPE_FIND_FACTORY (l->data);
+    gst_type_find_factory_call_function (helper.factory, &find);
     if (helper.best_probability >= GST_TYPE_FIND_MAXIMUM)
       break;
   }
-
   gst_plugin_feature_list_free (type_list);
 
-  if (helper.best_probability == 0)
-    return NULL;
+  if (helper.best_probability > 0)
+    result = helper.caps;
 
   if (prob)
     *prob = helper.best_probability;
 
   GST_LOG_OBJECT (obj, "Returning %" GST_PTR_FORMAT " (probability = %u)",
-      helper.caps, (guint) helper.best_probability);
+      result, (guint) helper.best_probability);
 
-  return helper.caps;
+  return result;
 }

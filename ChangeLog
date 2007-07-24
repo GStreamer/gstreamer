@@ -1,3 +1,11 @@
+2007-07-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/base/gsttypefindhelper.c: (helper_find_peek),
+	(helper_find_suggest), (helper_find_get_length),
+	(gst_type_find_helper_get_range), (buf_helper_find_suggest),
+	(gst_type_find_helper_for_buffer):
+	  Cleanup the typefindhelper code and add private doc comments.
+
 2007-07-24  Edward Hervey  <bilboed@bilboed.com>
 
 	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_class_init),
