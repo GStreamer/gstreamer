@@ -74,6 +74,9 @@ static GstFlowReturn gst_capsfilter_transform_ip (GstBaseTransform * base,
     GstBuffer * buf);
 static GstFlowReturn gst_capsfilter_prepare_buf (GstBaseTransform * trans,
     GstBuffer * input, gint size, GstCaps * caps, GstBuffer ** buf);
+static gboolean gst_capsfilter_transform_size (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, guint size,
+    GstCaps * othercaps, guint * othersize);
 
 static void
 gst_capsfilter_base_init (gpointer g_class)
@@ -112,6 +115,7 @@ gst_capsfilter_class_init (GstCapsFilterClass * klass)
   trans_class->transform_caps = gst_capsfilter_transform_caps;
   trans_class->transform_ip = gst_capsfilter_transform_ip;
   trans_class->prepare_output_buffer = gst_capsfilter_prepare_buf;
+  trans_class->transform_size = gst_capsfilter_transform_size;
 }
 
 static void
@@ -192,6 +196,17 @@ gst_capsfilter_transform_caps (GstBaseTransform * base,
   return ret;
 }
 
+static gboolean
+gst_capsfilter_transform_size (GstBaseTransform * trans,
+    GstPadDirection direction, GstCaps * caps, guint size,
+    GstCaps * othercaps, guint * othersize)
+{
+  /* return the same size */
+  *othersize = size;
+  return TRUE;
+}
+
+
 static GstFlowReturn
 gst_capsfilter_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
@@ -216,7 +231,12 @@ gst_capsfilter_prepare_buf (GstBaseTransform * trans, GstBuffer * input,
 {
   if (GST_BUFFER_CAPS (input) != NULL) {
     /* Output buffer already has caps */
-    GST_DEBUG_OBJECT (trans, "Input buffer already has caps");
+    GST_DEBUG_OBJECT (trans,
+        "Input buffer already has caps (implicitely fixed)");
+    /* FIXME : Move this behaviour to basetransform. The given caps are the ones
+     * of the source pad, therefore our outgoing buffers should always have
+     * those caps. */
+    gst_buffer_set_caps (input, caps);
     gst_buffer_ref (input);
     *buf = input;
   } else {

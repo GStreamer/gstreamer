@@ -1,3 +1,11 @@
+2007-07-24  Edward Hervey  <bilboed@bilboed.com>
+
+	* plugins/elements/gstcapsfilter.c: (gst_capsfilter_class_init),
+	(gst_capsfilter_transform_size), (gst_capsfilter_prepare_buf):
+	Fix capsfilter for cases where the caps set on capsfilter will provide
+	additional information.
+	Fixes #449197
+
 2007-07-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gsttypefindfactory.c:
