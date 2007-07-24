@@ -129,7 +129,7 @@ gst_wavpack_dec_reset (GstWavpackDec * dec)
   dec->sample_rate = 0;
   dec->depth = 0;
 
-  gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
+  gst_segment_init (&dec->segment, GST_FORMAT_TIME);
   dec->next_block_index = 0;
 }
 
@@ -198,47 +198,6 @@ gst_wavpack_dec_sink_set_caps (GstPad * pad, GstCaps * caps)
   }
 
   gst_object_unref (dec);
-
-  return TRUE;
-}
-
-static gboolean
-gst_wavpack_dec_clip_outgoing_buffer (GstWavpackDec * dec, GstBuffer * buf)
-{
-  gint64 start, stop, cstart, cstop, diff;
-
-  if (dec->segment.format != GST_FORMAT_TIME)
-    return TRUE;
-
-  start = GST_BUFFER_TIMESTAMP (buf);
-  stop = start + GST_BUFFER_DURATION (buf);
-
-  if (gst_segment_clip (&dec->segment, GST_FORMAT_TIME,
-          start, stop, &cstart, &cstop)) {
-
-    diff = cstart - start;
-    if (diff > 0) {
-      GST_BUFFER_TIMESTAMP (buf) = cstart;
-      GST_BUFFER_DURATION (buf) -= diff;
-
-      diff = 4 * dec->channels
-          * GST_CLOCK_TIME_TO_FRAMES (diff, dec->sample_rate);
-      GST_BUFFER_DATA (buf) += diff;
-      GST_BUFFER_SIZE (buf) -= diff;
-    }
-
-    diff = stop - cstop;
-    if (diff > 0) {
-      GST_BUFFER_DURATION (buf) -= diff;
-
-      diff = 4 * dec->channels
-          * GST_CLOCK_TIME_TO_FRAMES (diff, dec->sample_rate);
-      GST_BUFFER_SIZE (buf) -= diff;
-    }
-  } else {
-    GST_DEBUG_OBJECT (dec, "buffer is outside configured segment");
-    return FALSE;
-  }
 
   return TRUE;
 }
@@ -375,7 +334,8 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
   if (decoded != wph.block_samples)
     goto decode_error;
 
-  if (gst_wavpack_dec_clip_outgoing_buffer (dec, outbuf)) {
+  if ((outbuf = gst_audio_buffer_clip (outbuf, &dec->segment,
+              dec->sample_rate, 4 * dec->channels))) {
     GST_LOG_OBJECT (dec, "pushing buffer with time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
     ret = gst_pad_push (dec->srcpad, outbuf);
@@ -438,7 +398,7 @@ gst_wavpack_dec_sink_event (GstPad * pad, GstEvent * event)
         gst_segment_set_newsegment (&dec->segment, is_update, rate, fmt,
             start, end, base);
       } else {
-        gst_segment_init (&dec->segment, GST_FORMAT_UNDEFINED);
+        gst_segment_init (&dec->segment, GST_FORMAT_TIME);
       }
       break;
     }

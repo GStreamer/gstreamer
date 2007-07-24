@@ -1,3 +1,13 @@
+2007-07-24  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_reset),
+	(gst_wavpack_dec_chain), (gst_wavpack_dec_sink_event):
+	Use the new buffer clipping function from gstaudio here and
+	require gst-plugins-base CVS.
+	* tests/check/elements/wavpackdec.c: (GST_START_TEST):
+	For framed Wavpack buffers we require a valid timestamp.
+
 2007-07-23  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment),

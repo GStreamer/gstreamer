@@ -111,6 +111,7 @@ GST_START_TEST (test_decode_frame)
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_frame));
   memcpy (GST_BUFFER_DATA (inbuffer), test_frame, sizeof (test_frame));
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (wavpackdec, bus);
@@ -164,6 +165,7 @@ GST_START_TEST (test_decode_frame_with_broken_header)
   /* break header */
   GST_BUFFER_DATA (inbuffer)[2] = 'e';
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (wavpackdec, bus);
@@ -201,6 +203,7 @@ GST_START_TEST (test_decode_frame_with_incomplete_frame)
   inbuffer = gst_buffer_new_and_alloc (sizeof (test_frame) - 2);
   memcpy (GST_BUFFER_DATA (inbuffer), test_frame, sizeof (test_frame) - 2);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+  GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   gst_buffer_ref (inbuffer);
 
   gst_element_set_bus (wavpackdec, bus);
