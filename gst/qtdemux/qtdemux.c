@@ -3925,6 +3925,11 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_from_string ("video/x-raw-yuv, "
           "format = (fourcc) YUY2");
       break;
+    case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):
+      _codec ("Raw packed YUV 4:2:0");
+      caps = gst_caps_from_string ("video/x-raw-yuv, "
+          "format = (fourcc) UYVY");
+      break;
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
       _codec ("MPEG-1 video");
       caps = gst_caps_from_string ("video/mpeg, "
@@ -3962,6 +3967,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_from_string ("video/x-divx," "divxversion= (int) 3");
       break;
     case GST_MAKE_FOURCC ('D', 'I', 'V', 'X'):
+    case GST_MAKE_FOURCC ('d', 'i', 'v', 'x'):
       _codec ("DivX 4");
       caps = gst_caps_from_string ("video/x-divx," "divxversion= (int) 4");
       break;
