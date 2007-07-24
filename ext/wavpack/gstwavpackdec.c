@@ -339,8 +339,6 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
     GST_LOG_OBJECT (dec, "pushing buffer with time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
     ret = gst_pad_push (dec->srcpad, outbuf);
-  } else {
-    gst_buffer_unref (outbuf);
   }
 
 out:

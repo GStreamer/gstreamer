@@ -1,5 +1,11 @@
 2007-07-24  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
+	Don't unref the outgoing buffer twice when dropping it because it's
+	outside of the segment.
+
+2007-07-24  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_reset),
 	(gst_wavpack_dec_chain), (gst_wavpack_dec_sink_event):
