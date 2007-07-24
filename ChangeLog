@@ -1,3 +1,11 @@
+2007-07-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/timidity/gstwildmidi.c: (wildmidi_open_config),
+	(gst_wildmidi_init), (gst_wildmidi_change_state), (plugin_init):
+	* ext/timidity/gstwildmidi.h:
+	  Don't initialize wildmidi in plugin_init as it also setups audio
+	  filters which is slow.
+
 2007-07-24  Hans de Goede  <j.w.r.degoede@hhs.nl>
 
 	reviewed by: Edward Hervey  <bilboed@bilboed.com>

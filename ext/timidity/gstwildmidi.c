@@ -126,6 +126,57 @@ gst_wildmidi_base_init (gpointer gclass)
   gst_element_class_set_details (element_class, &gst_wildmidi_details);
 }
 
+static gboolean
+wildmidi_open_config ()
+{
+  gchar *path = g_strdup (g_getenv ("WILDMIDI_CFG"));
+  gint ret;
+
+  GST_DEBUG ("trying %s", GST_STR_NULL (path));
+  if (path && (g_access (path, R_OK) == -1)) {
+    g_free (path);
+    path = NULL;
+  }
+
+  if (path == NULL) {
+    path =
+        g_build_path (G_DIR_SEPARATOR_S, g_get_home_dir (), ".wildmidirc",
+        NULL);
+    GST_DEBUG ("trying %s", path);
+    if (path && (g_access (path, R_OK) == -1)) {
+      g_free (path);
+      path = NULL;
+    }
+  }
+
+  if (path == NULL) {
+    path = g_build_path (G_DIR_SEPARATOR_S, "/etc", "wildmidi.cfg", NULL);
+    GST_DEBUG ("trying %s", path);
+    if (path && (g_access (path, R_OK) == -1)) {
+      g_free (path);
+      path = NULL;
+    }
+  }
+
+  if (path == NULL) {
+    /* I've created a symlink to get it playing
+     * ln -s /usr/share/timidity/timidity.cfg /etc/wildmidi.cfg
+     * we could make it use : TIMIDITY_CFG
+     * but unfortunately it fails to create a proper filename if the config
+     * has a redirect   
+     * http://sourceforge.net/tracker/index.php?func=detail&aid=1657358&group_id=42635&atid=433744
+     */
+    GST_WARNING ("no config file, can't initialise");
+    return FALSE;
+  }
+
+  /* this also initializes a some filter and stuff and thus is slow */
+  ret = WildMidi_Init (path, WILDMIDI_RATE, 0);
+  g_free (path);
+
+  return (ret == 0);
+}
+
 /* initialize the plugin's class */
 static void
 gst_wildmidi_class_init (GstWildmidiClass * klass)
@@ -158,6 +209,13 @@ static void
 gst_wildmidi_init (GstWildmidi * filter, GstWildmidiClass * g_class)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
+
+  /* initialise wildmidi library */
+  if (wildmidi_open_config ()) {
+    filter->initialized = TRUE;
+  } else {
+    GST_WARNING ("can't initialize wildmidi");
+  }
 
   filter->sinkpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
@@ -722,6 +780,11 @@ gst_wildmidi_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstWildmidi *wildmidi = GST_WILDMIDI (element);
 
+  if (!wildmidi->initialized) {
+    GST_WARNING ("WildMidi renderer is not initialized");
+    return GST_STATE_CHANGE_FAILURE;
+  }
+
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       wildmidi->out_caps =
@@ -828,56 +891,6 @@ gst_wildmidi_typefind (GstTypeFind * tf, gpointer _data)
 }
 
 static gboolean
-wildmidi_open_config ()
-{
-  gchar *path = g_strdup (g_getenv ("WILDMIDI_CFG"));
-  gint ret;
-
-  GST_DEBUG ("trying %s", GST_STR_NULL (path));
-  if (path && (g_access (path, R_OK) == -1)) {
-    g_free (path);
-    path = NULL;
-  }
-
-  if (path == NULL) {
-    path =
-        g_build_path (G_DIR_SEPARATOR_S, g_get_home_dir (), ".wildmidirc",
-        NULL);
-    GST_DEBUG ("trying %s", path);
-    if (path && (g_access (path, R_OK) == -1)) {
-      g_free (path);
-      path = NULL;
-    }
-  }
-
-  if (path == NULL) {
-    path = g_build_path (G_DIR_SEPARATOR_S, "/etc", "wildmidi.cfg", NULL);
-    GST_DEBUG ("trying %s", path);
-    if (path && (g_access (path, R_OK) == -1)) {
-      g_free (path);
-      path = NULL;
-    }
-  }
-
-  if (path == NULL) {
-    /* I've created a symlink to get it playing
-     * ln -s /usr/share/timidity/timidity.cfg /etc/wildmidi.cfg
-     * we could make it use : TIMIDITY_CFG
-     * but unfortunately it fails to create a proper filename if the config
-     * has a redirect   
-     * http://sourceforge.net/tracker/index.php?func=detail&aid=1657358&group_id=42635&atid=433744
-     */
-    GST_WARNING ("no config file, can't initialise");
-    return FALSE;
-  }
-
-  ret = WildMidi_Init (path, WILDMIDI_RATE, 0);
-  g_free (path);
-
-  return (ret == 0);
-}
-
-static gboolean
 plugin_init (GstPlugin * plugin)
 {
   static gchar *exts[] = { "mid", "midi", NULL };
@@ -885,12 +898,6 @@ plugin_init (GstPlugin * plugin)
    * plugin name and description */
   GST_DEBUG_CATEGORY_INIT (gst_wildmidi_debug, "wildmidi",
       0, "Wildmidi plugin");
-
-  /* initialise wildmidi library, fail loading the plugin if this fails */
-  if (!wildmidi_open_config ()) {
-    GST_WARNING ("can't initialize wildmidi");
-    return FALSE;
-  }
 
   if (!gst_type_find_register (plugin, "audio/midi", GST_RANK_SECONDARY,
           gst_wildmidi_typefind, exts,
