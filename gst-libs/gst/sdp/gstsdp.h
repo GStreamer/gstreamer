@@ -43,6 +43,13 @@
 #ifndef __GST_SDP_H__
 #define __GST_SDP_H__
 
+/**
+ * GstSDPResult:
+ * @GST_SDP_OK: A successful return value
+ * @GST_SDP_EINVAL: a function was given invalid parameters
+ *
+ * Return values for the SDP functions.
+ */
 typedef enum {
   GST_SDP_OK     = 0,
   GST_SDP_EINVAL = -1

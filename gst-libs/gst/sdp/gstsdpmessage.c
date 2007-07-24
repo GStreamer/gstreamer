@@ -40,6 +40,21 @@
  * SOFTWARE.
  */
 
+/**
+ * SECTION:gstsdpmessage
+ * @short_description: Helper methods for dealing with SDP messages
+ *
+ * <refsect2>
+ * <para>
+ * The GstSDPMessage helper functions makes it easy to parse and create SDP
+ * messages. 
+ * </para>
+ * </refsect2>
+ *
+ * Last reviewed on 2007-07-24 (0.10.14)
+ */
+
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -70,13 +85,13 @@ G_STMT_START {                   			\
 } G_STMT_END
 
 #define DEFINE_STRING_SETTER(field)                                     \
-GstSDPResult gst_sdp_message_set_##field (GstSDPMessage *msg, gchar *val) {      \
+GstSDPResult gst_sdp_message_set_##field (GstSDPMessage *msg, const gchar *val) {      \
   g_free (msg->field);                                                  \
   msg->field = g_strdup (val);                                          \
   return GST_SDP_OK;                                                       \
 }
 #define DEFINE_STRING_GETTER(field)                                     \
-char* gst_sdp_message_get_##field (GstSDPMessage *msg) {                       \
+const gchar* gst_sdp_message_get_##field (GstSDPMessage *msg) {                       \
   return msg->field;                                                    \
 }
 
@@ -180,7 +195,7 @@ gst_sdp_message_new (GstSDPMessage ** msg)
 
 /**
  * gst_sdp_message_init:
- * @msg: an #GstSDPMessage
+ * @msg: a #GstSDPMessage
  *
  * Initialize @msg so that its contents are as if it was freshly allocated
  * with gst_sdp_message_new(). This function is mostly used to initialize a message
@@ -216,7 +231,7 @@ gst_sdp_message_init (GstSDPMessage * msg)
 
 /**
  * gst_sdp_message_uninit:
- * @msg: an #GstSDPMessage
+ * @msg: a #GstSDPMessage
  *
  * Free all resources allocated in @msg. @msg should not be used anymore after
  * this function. This function should be used when @msg was allocated on the
@@ -244,7 +259,7 @@ gst_sdp_message_uninit (GstSDPMessage * msg)
 
 /**
  * gst_sdp_message_free:
- * @msg: an #GstSDPMessage
+ * @msg: a #GstSDPMessage
  *
  * Free all resources allocated by @msg. @msg should not be used anymore after
  * this function. This function should be used when @msg was dynamically
@@ -262,6 +277,525 @@ gst_sdp_message_free (GstSDPMessage * msg)
 
   return GST_SDP_OK;
 }
+
+/**
+ * gst_sdp_message_set_version:
+ * @msg: a #GstSDPMessage
+ * @version: the version
+ *
+ * Set the version in @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+DEFINE_STRING_SETTER (version);
+/**
+ * gst_sdp_message_get_version:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the version in @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+DEFINE_STRING_GETTER (version);
+
+/**
+ * gst_sdp_message_set_origin:
+ * @msg: a #GstSDPMessage
+ * @username: the user name
+ * @sess_id: a session id
+ * @sess_version: a session version
+ * @nettype: a network type
+ * @addrtype: an address type
+ * @addr: an address
+ *
+ * Configure the SDP origin in @msg with the given parameters.
+ *
+ * Returns: #GST_SDP_OK.
+ */
+GstSDPResult
+gst_sdp_message_set_origin (GstSDPMessage * msg, const gchar * username,
+    const gchar * sess_id, const gchar * sess_version, const gchar * nettype,
+    const gchar * addrtype, const gchar * addr)
+{
+  REPLACE_STRING (msg->origin.username, username);
+  REPLACE_STRING (msg->origin.sess_id, sess_id);
+  REPLACE_STRING (msg->origin.sess_version, sess_version);
+  REPLACE_STRING (msg->origin.nettype, nettype);
+  REPLACE_STRING (msg->origin.addrtype, addrtype);
+  REPLACE_STRING (msg->origin.addr, addr);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_message_get_origin:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the origin of @msg.
+ *
+ * Returns: a #GstSDPOrigin. The result remains valid as long as @msg is valid.
+ */
+const GstSDPOrigin *
+gst_sdp_message_get_origin (GstSDPMessage * msg)
+{
+  return &msg->origin;
+}
+
+/**
+ * gst_sdp_message_set_session_name:
+ * @msg: a #GstSDPMessage
+ * @session_name: the session name
+ *
+ * Set the session name in @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+DEFINE_STRING_SETTER (session_name);
+/**
+ * gst_sdp_message_get_session_name:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the session name in @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+DEFINE_STRING_GETTER (session_name);
+/**
+ * gst_sdp_message_set_information:
+ * @msg: a #GstSDPMessage
+ * @information: the information
+ *
+ * Set the information in @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+DEFINE_STRING_SETTER (information);
+/**
+ * gst_sdp_message_get_information:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the information in @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+DEFINE_STRING_GETTER (information);
+/**
+ * gst_sdp_message_set_uri:
+ * @msg: a #GstSDPMessage
+ * @uri: the URI
+ *
+ * Set the URI in @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+DEFINE_STRING_SETTER (uri);
+/**
+ * gst_sdp_message_get_uri:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the URI in @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+DEFINE_STRING_GETTER (uri);
+
+/**
+ * gst_sdp_message_emails_len:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the number of emails in @msg.
+ *
+ * Returns: the number of emails in @msg.
+ */
+DEFINE_ARRAY_LEN (emails);
+/**
+ * gst_sdp_message_get_email:
+ * @msg: a #GstSDPMessage
+ * @idx: an email index
+ *
+ * Get the email with number @idx from @msg.
+ *
+ * Returns: the email at position @idx. 
+ */
+DEFINE_ARRAY_GETTER (email, emails, const gchar *);
+
+/**
+ * gst_sdp_message_add_email:
+ * @msg: a #GstSDPMessage
+ * @email: an email
+ *
+ * Add @email to the list of emails in @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+DEFINE_ARRAY_ADDER (email, emails, const gchar *, g_strdup);
+
+/**
+ * gst_sdp_message_phones_len:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the number of phones in @msg.
+ *
+ * Returns: the number of phones in @msg.
+ */
+DEFINE_ARRAY_LEN (phones);
+/**
+ * gst_sdp_message_get_phone:
+ * @msg: a #GstSDPMessage
+ * @idx: a phone index
+ *
+ * Get the phone with number @idx from @msg.
+ *
+ * Returns: the phone at position @idx. 
+ */
+DEFINE_ARRAY_GETTER (phone, phones, const gchar *);
+
+/**
+ * gst_sdp_message_add_phone:
+ * @msg: a #GstSDPMessage
+ * @phone: a phone
+ *
+ * Add @phone to the list of phones in @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+DEFINE_ARRAY_ADDER (phone, phones, const gchar *, g_strdup);
+
+/**
+ * gst_sdp_message_set_connection:
+ * @msg: a #GstSDPMessage
+ * @nettype: the type of network. "IN" is defined to have the meaning
+ * "Internet".
+ * @addrtype: the type of address.
+ * @address: the address
+ * @ttl: the time to live of the address
+ * @addr_number: the number of layers
+ *
+ * Configure the SDP connection in @msg with the given parameters.
+ *
+ * Returns: a #GstSDPResult.
+ */
+GstSDPResult
+gst_sdp_message_set_connection (GstSDPMessage * msg, const gchar * nettype,
+    const gchar * addrtype, const gchar * address, gint ttl, gint addr_number)
+{
+  REPLACE_STRING (msg->connection.nettype, nettype);
+  REPLACE_STRING (msg->connection.addrtype, addrtype);
+  REPLACE_STRING (msg->connection.address, address);
+  msg->connection.ttl = ttl;
+  msg->connection.addr_number = addr_number;
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_message_get_connection:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the connection of @msg.
+ *
+ * Returns: a #GstSDPConnection. The result remains valid as long as @msg is valid.
+ */
+const GstSDPConnection *
+gst_sdp_message_get_connection (GstSDPMessage * msg)
+{
+  return &msg->connection;
+}
+
+/**
+ * gst_sdp_message_bandwidths_len:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the number of bandwidth information in @msg.
+ *
+ * Returns: the number of bandwidth information in @msg.
+ */
+DEFINE_ARRAY_LEN (bandwidths);
+/**
+ * gst_sdp_message_get_bandwidth:
+ * @msg: a #GstSDPMessage
+ * @idx: the bandwidth index
+ *
+ * Get the bandwidth at index @idx from @msg.
+ *
+ * Returns: a #GstSDPBandwidth.
+ */
+DEFINE_ARRAY_P_GETTER (bandwidth, bandwidths, const GstSDPBandwidth);
+
+/**
+ * gst_sdp_message_add_bandwidth:
+ * @msg: a #GstSDPMessage
+ * @bwtype: the bandwidth modifier type 
+ * @bandwidth: the bandwidth in kilobits per second
+ *
+ * Add the specified bandwidth information to @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+GstSDPResult
+gst_sdp_message_add_bandwidth (GstSDPMessage * msg, const gchar * bwtype,
+    gint bandwidth)
+{
+  GstSDPBandwidth bw;
+
+  bw.bwtype = g_strdup (bwtype);
+  bw.bandwidth = bandwidth;
+
+  g_array_append_val (msg->bandwidths, bw);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_message_times_len:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the number of time information entries in @msg.
+ *
+ * Returns: the number of time information entries in @msg.
+ */
+DEFINE_ARRAY_LEN (times);
+
+/**
+ * gst_sdp_message_get_time:
+ * @msg: a #GstSDPMessage
+ * @idx: the time index
+ *
+ * Get time information with index @idx from @msg.
+ *
+ * Returns: a #GstSDPTime.
+ */
+DEFINE_ARRAY_P_GETTER (time, times, const GstSDPTime);
+
+/**
+ * gst_sdp_message_add_time:
+ * @msg: a #GstSDPMessage
+ * @time: a time information
+ *
+ * Add time information @time to @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+GstSDPResult
+gst_sdp_message_add_time (GstSDPMessage * msg, const gchar * time)
+{
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_message_zones_len:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the number of time zone information entries in @msg.
+ *
+ * Returns: the number of time zone information entries in @msg.
+ */
+DEFINE_ARRAY_LEN (zones);
+/**
+ * gst_sdp_message_get_zone:
+ * @msg: a #GstSDPMessage
+ * @idx: the zone index
+ *
+ * Get time zone information with index @idx from @msg.
+ *
+ * Returns: a #GstSDPZone.
+ */
+DEFINE_ARRAY_P_GETTER (zone, zones, const GstSDPZone);
+
+/**
+ * gst_sdp_message_add_zone:
+ * @msg: a #GstSDPMessage
+ * @time: the NTP time that a time zone adjustment happens
+ * @typed_time: the offset from the time when the session was first scheduled 
+ *
+ * Add time zone information to @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+GstSDPResult
+gst_sdp_message_add_zone (GstSDPMessage * msg, const gchar * time,
+    const gchar * typed_time)
+{
+  GstSDPZone zone;
+
+  zone.time = g_strdup (time);
+  zone.typed_time = g_strdup (typed_time);
+
+  g_array_append_val (msg->zones, zone);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_message_set_key:
+ * @msg: a #GstSDPMessage
+ * @type: the encryption type
+ * @data: the encryption data
+ *
+ * Adds the encryption information to @msg.
+ *
+ * Returns: a #GstSDPResult.
+ */
+GstSDPResult
+gst_sdp_message_set_key (GstSDPMessage * msg, const gchar * type,
+    const gchar * data)
+{
+  REPLACE_STRING (msg->key.type, type);
+  REPLACE_STRING (msg->key.data, data);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_message_get_key:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the encryption information from @msg.
+ *
+ * Returns: a #GstSDPKey.
+ */
+const GstSDPKey *
+gst_sdp_message_get_key (GstSDPMessage * msg)
+{
+  return &msg->key;
+}
+
+/**
+ * gst_sdp_message_attributes_len:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the number of attributes in @msg.
+ *
+ * Returns: the number of attributes in @msg.
+ */
+DEFINE_ARRAY_LEN (attributes);
+/**
+ * gst_sdp_message_get_attribute:
+ * @msg: a #GstSDPMessage
+ * @idx: the index
+ *
+ * Get the attribute at position @idx in @msg.
+ *
+ * Returns: the #GstSDPAttribute at position @idx.
+ */
+DEFINE_ARRAY_P_GETTER (attribute, attributes, const GstSDPAttribute);
+/**
+ * gst_sdp_message_get_attribute_val_n:
+ * @msg: a #GstSDPMessage
+ * @key: the key
+ * @nth: the index
+ *
+ * Get the @nth attribute with key @key in @msg.
+ *
+ * Returns: the attribute value of the @nth attribute with @key.
+ */
+const gchar *
+gst_sdp_message_get_attribute_val_n (GstSDPMessage * msg, const gchar * key,
+    guint nth)
+{
+  guint i;
+
+  for (i = 0; i < msg->attributes->len; i++) {
+    GstSDPAttribute *attr;
+
+    attr = &g_array_index (msg->attributes, GstSDPAttribute, i);
+    if (!strcmp (attr->key, key)) {
+      if (nth == 0)
+        return attr->value;
+      else
+        nth--;
+    }
+  }
+  return NULL;
+}
+
+/**
+ * gst_sdp_message_get_attribute_val:
+ * @msg: a #GstSDPMessage
+ * @key: the key
+ *
+ * Get the first attribute with key @key in @msg.
+ *
+ * Returns: the attribute value of the first attribute with @key.
+ */
+const gchar *
+gst_sdp_message_get_attribute_val (GstSDPMessage * msg, const gchar * key)
+{
+  return gst_sdp_message_get_attribute_val_n (msg, key, 0);
+}
+
+/**
+ * gst_sdp_message_add_attribute:
+ * @msg: a #GstSDPMessage
+ * @key: the key
+ * @value: the value
+ *
+ * Add the attribute with @key and @value to @msg.
+ *
+ * Returns: @GST_SDP_OK.
+ */
+GstSDPResult
+gst_sdp_message_add_attribute (GstSDPMessage * msg, const gchar * key,
+    const gchar * value)
+{
+  GstSDPAttribute attr;
+
+  attr.key = g_strdup (key);
+  attr.value = g_strdup (value);
+
+  g_array_append_val (msg->attributes, attr);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_message_medias_len:
+ * @msg: a #GstSDPMessage
+ *
+ * Get the number of media descriptions in @msg.
+ *
+ * Returns: the number of media descriptions in @msg.
+ */
+DEFINE_ARRAY_LEN (medias);
+/**
+ * gst_sdp_message_get_media:
+ * @msg: a #GstSDPMessage
+ * @idx: the index
+ *
+ * Get the media description at index @idx in @msg.
+ *
+ * Returns: a #GstSDPMedia.
+ */
+DEFINE_ARRAY_P_GETTER (media, medias, const GstSDPMedia);
+
+/**
+ * gst_sdp_message_add_media:
+ * @msg: a #GstSDPMessage
+ * @media: a #GstSDPMedia to add
+ *
+ * Adds @media to the array of medias in @msg. This function takes ownership of
+ * the contents of @media so that @media will have to be reinitialized with
+ * gst_media_init() before it can be used again.
+ *
+ * Returns: a #GstSDPResult.
+ */
+GstSDPResult
+gst_sdp_message_add_media (GstSDPMessage * msg, GstSDPMedia * media)
+{
+  gint len;
+  GstSDPMedia *nmedia;
+
+  len = msg->medias->len;
+  g_array_set_size (msg->medias, len + 1);
+  nmedia = &g_array_index (msg->medias, GstSDPMedia, len);
+
+  memcpy (nmedia, media, sizeof (GstSDPMedia));
+  memset (media, 0, sizeof (GstSDPMedia));
+
+  return GST_SDP_OK;
+}
+
+/* media access */
 
 /**
  * gst_sdp_media_new:
@@ -319,7 +853,7 @@ gst_sdp_media_init (GstSDPMedia * media)
 
 /**
  * gst_sdp_media_uninit:
- * @media: an #GstSDPMedia
+ * @media: a #GstSDPMedia
  *
  * Free all resources allocated in @media. @media should not be used anymore after
  * this function. This function should be used when @media was allocated on the
@@ -343,7 +877,7 @@ gst_sdp_media_uninit (GstSDPMedia * media)
 
 /**
  * gst_sdp_media_free:
- * @media: an #GstSDPMedia
+ * @media: a #GstSDPMedia
  *
  * Free all resources allocated by @media. @media should not be used anymore after
  * this function. This function should be used when @media was dynamically
@@ -362,206 +896,302 @@ gst_sdp_media_free (GstSDPMedia * media)
   return GST_SDP_OK;
 }
 
-DEFINE_STRING_SETTER (version);
-DEFINE_STRING_GETTER (version);
-
-GstSDPResult
-gst_sdp_message_set_origin (GstSDPMessage * msg, gchar * username,
-    gchar * sess_id, gchar * sess_version, gchar * nettype, gchar * addrtype,
-    gchar * addr)
+/**
+ * gst_sdp_media_get_media:
+ * @media: a #GstSDPMedia
+ *
+ * Get the media description of @media.
+ *
+ * Returns: the media description.
+ */
+const gchar *
+gst_sdp_media_get_media (GstSDPMedia * media)
 {
-  REPLACE_STRING (msg->origin.username, username);
-  REPLACE_STRING (msg->origin.sess_id, sess_id);
-  REPLACE_STRING (msg->origin.sess_version, sess_version);
-  REPLACE_STRING (msg->origin.nettype, nettype);
-  REPLACE_STRING (msg->origin.addrtype, addrtype);
-  REPLACE_STRING (msg->origin.addr, addr);
-  return GST_SDP_OK;
+  return media->media;
 }
-
-GstSDPOrigin *
-gst_sdp_message_get_origin (GstSDPMessage * msg)
-{
-  return &msg->origin;
-}
-
-DEFINE_STRING_SETTER (session_name);
-DEFINE_STRING_GETTER (session_name);
-DEFINE_STRING_SETTER (information);
-DEFINE_STRING_GETTER (information);
-DEFINE_STRING_SETTER (uri);
-DEFINE_STRING_GETTER (uri);
-
-DEFINE_ARRAY_LEN (emails);
-DEFINE_ARRAY_GETTER (email, emails, gchar *);
-DEFINE_ARRAY_ADDER (email, emails, gchar *, g_strdup);
-
-DEFINE_ARRAY_LEN (phones);
-DEFINE_ARRAY_GETTER (phone, phones, gchar *);
-DEFINE_ARRAY_ADDER (phone, phones, gchar *, g_strdup);
-
-GstSDPResult
-gst_sdp_message_set_connection (GstSDPMessage * msg, gchar * nettype,
-    gchar * addrtype, gchar * address, gint ttl, gint addr_number)
-{
-  REPLACE_STRING (msg->connection.nettype, nettype);
-  REPLACE_STRING (msg->connection.addrtype, addrtype);
-  REPLACE_STRING (msg->connection.address, address);
-  msg->connection.ttl = ttl;
-  msg->connection.addr_number = addr_number;
-  return GST_SDP_OK;
-}
-
-GstSDPConnection *
-gst_sdp_message_get_connection (GstSDPMessage * msg)
-{
-  return &msg->connection;
-}
-
-DEFINE_ARRAY_LEN (bandwidths);
-DEFINE_ARRAY_P_GETTER (bandwidth, bandwidths, GstSDPBandwidth);
-
-GstSDPResult
-gst_sdp_message_add_bandwidth (GstSDPMessage * msg, gchar * bwtype,
-    gint bandwidth)
-{
-  GstSDPBandwidth bw;
-
-  bw.bwtype = g_strdup (bwtype);
-  bw.bandwidth = bandwidth;
-
-  g_array_append_val (msg->bandwidths, bw);
-
-  return GST_SDP_OK;
-}
-
-DEFINE_ARRAY_LEN (times);
-DEFINE_ARRAY_P_GETTER (time, times, GstSDPTime);
-
-GstSDPResult
-gst_sdp_message_add_time (GstSDPMessage * msg, gchar * time)
-{
-  return GST_SDP_OK;
-}
-
-DEFINE_ARRAY_LEN (zones);
-DEFINE_ARRAY_P_GETTER (zone, zones, GstSDPZone);
-GstSDPResult
-gst_sdp_message_add_zone (GstSDPMessage * msg, gchar * time, gchar * typed_time)
-{
-  GstSDPZone zone;
-
-  zone.time = g_strdup (time);
-  zone.typed_time = g_strdup (typed_time);
-
-  g_array_append_val (msg->zones, zone);
-
-  return GST_SDP_OK;
-}
-
-GstSDPResult
-gst_sdp_message_set_key (GstSDPMessage * msg, gchar * type, gchar * data)
-{
-  REPLACE_STRING (msg->key.type, type);
-  REPLACE_STRING (msg->key.data, data);
-  return GST_SDP_OK;
-}
-
-GstSDPKey *
-gst_sdp_message_get_key (GstSDPMessage * msg)
-{
-  return &msg->key;
-}
-
-
-DEFINE_ARRAY_LEN (attributes);
-DEFINE_ARRAY_P_GETTER (attribute, attributes, GstSDPAttribute);
-gchar *
-gst_sdp_message_get_attribute_val_n (GstSDPMessage * msg, gchar * key,
-    guint nth)
-{
-  guint i;
-
-  for (i = 0; i < msg->attributes->len; i++) {
-    GstSDPAttribute *attr;
-
-    attr = &g_array_index (msg->attributes, GstSDPAttribute, i);
-    if (!strcmp (attr->key, key)) {
-      if (nth == 0)
-        return attr->value;
-      else
-        nth--;
-    }
-  }
-  return NULL;
-}
-
-gchar *
-gst_sdp_message_get_attribute_val (GstSDPMessage * msg, gchar * key)
-{
-  return gst_sdp_message_get_attribute_val_n (msg, key, 0);
-}
-
-GstSDPResult
-gst_sdp_message_add_attribute (GstSDPMessage * msg, gchar * key, gchar * value)
-{
-  GstSDPAttribute attr;
-
-  attr.key = g_strdup (key);
-  attr.value = g_strdup (value);
-
-  g_array_append_val (msg->attributes, attr);
-
-  return GST_SDP_OK;
-}
-
-DEFINE_ARRAY_LEN (medias);
-DEFINE_ARRAY_P_GETTER (media, medias, GstSDPMedia);
 
 /**
- * gst_sdp_message_add_media:
- * @msg: an #GstSDPMessage
- * @media: an #GstSDPMedia to add
+ * gst_sdp_media_set_media:
+ * @media: a #GstSDPMedia
+ * @med: the media description
  *
- * Adds @media to the array of medias in @msg. This function takes ownership of
- * the contents of @media so that @media will have to be reinitialized with
- * gst_media_init() before it can be used again.
+ * Set the media description of @media to @med.
  *
- * Returns: an #GstSDPResult.
+ * Returns: #GST_SDP_OK.
  */
 GstSDPResult
-gst_sdp_message_add_media (GstSDPMessage * msg, GstSDPMedia * media)
+gst_sdp_media_set_media (GstSDPMedia * media, const gchar * med)
 {
-  gint len;
-  GstSDPMedia *nmedia;
-
-  len = msg->medias->len;
-  g_array_set_size (msg->medias, len + 1);
-  nmedia = &g_array_index (msg->medias, GstSDPMedia, len);
-
-  memcpy (nmedia, media, sizeof (GstSDPMedia));
-  memset (media, 0, sizeof (GstSDPMedia));
+  g_free (media->media);
+  media->media = g_strdup (med);
 
   return GST_SDP_OK;
 }
 
-/* media access */
-
-GstSDPResult
-gst_sdp_media_add_attribute (GstSDPMedia * media, gchar * key, gchar * value)
+/**
+ * gst_sdp_media_get_port:
+ * @media: a #GstSDPMedia
+ *
+ * Get the port number for @media.
+ *
+ * Returns: the port number of @media.
+ */
+gint
+gst_sdp_media_get_port (GstSDPMedia * media)
 {
-  GstSDPAttribute attr;
+  return media->port;
+}
 
-  attr.key = g_strdup (key);
-  attr.value = g_strdup (value);
+/**
+ * gst_sdp_media_get_num_ports:
+ * @media: a #GstSDPMedia
+ *
+ * Get the number of ports for @media.
+ *
+ * Returns: the number of ports for @media.
+ */
+gint
+gst_sdp_media_get_num_ports (GstSDPMedia * media)
+{
+  return media->num_ports;
+}
 
-  g_array_append_val (media->attributes, attr);
+/**
+ * gst_sdp_media_set_port_info:
+ * @media: a #GstSDPMedia
+ * @port: the port number
+ * @num_ports: the number of ports
+ *
+ * Set the port information in @media.
+ *
+ * Returns: #GST_SDP_OK.
+ */
+GstSDPResult
+gst_sdp_media_set_port_info (GstSDPMedia * media, gint port, gint num_ports)
+{
+  media->port = port;
+  media->num_ports = num_ports;
 
   return GST_SDP_OK;
 }
 
+/**
+ * gst_sdp_media_get_proto:
+ * @media: a #GstSDPMedia
+ *
+ * Get the transport protocol of @media
+ *
+ * Returns: the transport protocol of @media.
+ */
+const gchar *
+gst_sdp_media_get_proto (GstSDPMedia * media)
+{
+  return media->proto;
+}
+
+/**
+ * gst_sdp_media_set_proto:
+ * @media: a #GstSDPMedia
+ * @proto: the media transport protocol
+ *
+ * Set the media transport protocol of @media to @proto.
+ *
+ * Returns: #GST_SDP_OK.
+ */
 GstSDPResult
-gst_sdp_media_add_bandwidth (GstSDPMedia * media, gchar * bwtype,
+gst_sdp_media_set_proto (GstSDPMedia * media, const gchar * proto)
+{
+  g_free (media->proto);
+  media->proto = g_strdup (proto);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_media_formats_len:
+ * @media: a #GstSDPMedia
+ *
+ * Get the number of formats in @media.
+ *
+ * Returns: the number of formats in @media.
+ */
+gint
+gst_sdp_media_formats_len (GstSDPMedia * media)
+{
+  return media->fmts->len;
+}
+
+/**
+ * gst_sdp_media_get_format:
+ * @media: a #GstSDPMedia
+ * @idx: an index
+ *
+ * Get the format information at position @idx in @media.
+ *
+ * Returns: the format at position @idx.
+ */
+const gchar *
+gst_sdp_media_get_format (GstSDPMedia * media, guint idx)
+{
+  if (idx >= media->fmts->len)
+    return NULL;
+  return g_array_index (media->fmts, gchar *, idx);
+}
+
+/**
+ * gst_sdp_media_add_format:
+ * @media: a #GstSDPMedia
+ * @format: the format
+ *
+ * Add the format information to @media.
+ *
+ * Returns: #GST_SDP_OK.
+ */
+GstSDPResult
+gst_sdp_media_add_format (GstSDPMedia * media, const gchar * format)
+{
+  gchar *fmt;
+
+  fmt = g_strdup (format);
+
+  g_array_append_val (media->fmts, fmt);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_media_get_information:
+ * @media: a #GstSDPMedia
+ *
+ * Get the information of @media
+ *
+ * Returns: the information of @media.
+ */
+const gchar *
+gst_sdp_media_get_information (GstSDPMedia * media)
+{
+  return media->information;
+}
+
+/**
+ * gst_sdp_media_set_information:
+ * @media: a #GstSDPMedia
+ * @information: the media information
+ *
+ * Set the media information of @media to @information.
+ *
+ * Returns: #GST_SDP_OK.
+ */
+GstSDPResult
+gst_sdp_media_set_information (GstSDPMedia * media, const gchar * information)
+{
+  g_free (media->information);
+  media->information = g_strdup (information);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_media_connections_len:
+ * @media: a #GstSDPMedia
+ *
+ * Get the number of connection fields in @media.
+ *
+ * Returns: the number of connections in @media.
+ */
+gint
+gst_sdp_media_connections_len (GstSDPMedia * media)
+{
+  return (media->connections->len);
+}
+
+/**
+ * gst_sdp_media_get_connection:
+ * @media: a #GstSDPMedia
+ * @idx: an index
+ *
+ * Get the connection at position @idx in @media.
+ *
+ * Returns: the #GstSDPConnection at position @idx.
+ */
+const GstSDPConnection *
+gst_sdp_media_get_connection (GstSDPMedia * media, guint idx)
+{
+  return &g_array_index (media->connections, GstSDPConnection, idx);
+}
+
+/**
+ * gst_sdp_media_add_connection:
+ * @media: a #GstSDPMedia
+ * @nettype: the type of network. "IN" is defined to have the meaning
+ * "Internet".
+ * @addrtype: the type of address.
+ * @address: the address
+ * @ttl: the time to live of the address
+ * @addr_number: the number of layers
+ *
+ * Add the given connection parameters to @media.
+ *
+ * Returns: a #GstSDPResult.
+ */
+GstSDPResult
+gst_sdp_media_add_connection (GstSDPMedia * media, const gchar * nettype,
+    const gchar * addrtype, const gchar * address, gint ttl, gint addr_number)
+{
+  GstSDPConnection conn;
+
+  conn.nettype = g_strdup (nettype);
+  conn.addrtype = g_strdup (addrtype);
+  conn.address = g_strdup (address);
+  conn.ttl = ttl;
+  conn.addr_number = addr_number;
+
+  g_array_append_val (media->connections, conn);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_media_bandwidths_len:
+ * @media: a #GstSDPMedia
+ *
+ * Get the number of bandwidth fields in @media.
+ *
+ * Returns: the number of bandwidths in @media.
+ */
+gint
+gst_sdp_media_bandwidths_len (GstSDPMedia * media)
+{
+  return (media->bandwidths->len);
+}
+
+/**
+ * gst_sdp_media_get_bandwidth:
+ * @media: a #GstSDPMedia
+ * @idx: an index
+ *
+ * Get the bandwidth at position @idx in @media.
+ *
+ * Returns: the #GstSDPBandwidth at position @idx.
+ */
+const GstSDPBandwidth *
+gst_sdp_media_get_badwidth (GstSDPMedia * media, guint idx)
+{
+  return &g_array_index (media->bandwidths, GstSDPBandwidth, idx);
+}
+
+/**
+ * gst_sdp_media_add_bandwidth:
+ * @media: a #GstSDPMedia
+ * @bwtype: the bandwidth modifier type
+ * @bandwidth: the bandwidth in kilobits per second
+ *
+ * Add the bandwidth information with @bwtype and @bandwidth to @media.
+ *
+ * Returns: #GST_SDP_OK.
+ */
+GstSDPResult
+gst_sdp_media_add_bandwidth (GstSDPMedia * media, const gchar * bwtype,
     gint bandwidth)
 {
   GstSDPBandwidth bw;
@@ -574,26 +1204,108 @@ gst_sdp_media_add_bandwidth (GstSDPMedia * media, gchar * bwtype,
   return GST_SDP_OK;
 }
 
+/**
+ * gst_sdp_media_set_key:
+ * @media: a #GstSDPMedia
+ * @type: the encryption type
+ * @data: the encryption data
+ *
+ * Adds the encryption information to @media.
+ *
+ * Returns: a #GstSDPResult.
+ */
 GstSDPResult
-gst_sdp_media_add_format (GstSDPMedia * media, gchar * format)
+gst_sdp_media_set_key (GstSDPMedia * media, const gchar * type,
+    const gchar * data)
 {
-  gchar *fmt;
-
-  fmt = g_strdup (format);
-
-  g_array_append_val (media->fmts, fmt);
+  g_free (media->key.type);
+  media->key.type = g_strdup (type);
+  g_free (media->key.data);
+  media->key.data = g_strdup (data);
 
   return GST_SDP_OK;
 }
 
-GstSDPAttribute *
+/**
+ * gst_sdp_media_get_key:
+ * @media: a #GstSDPMedia
+ *
+ * Get the encryption information from @media.
+ *
+ * Returns: a #GstSDPKey.
+ */
+const GstSDPKey *
+gst_sdp_media_get_key (GstSDPMedia * media)
+{
+  return &media->key;
+}
+
+/**
+ * gst_sdp_media_attributes_len:
+ * @media: a #GstSDPMedia
+ *
+ * Get the number of attribute fields in @media.
+ *
+ * Returns: the number of attributes in @media.
+ */
+gint
+gst_sdp_media_attributes_len (GstSDPMedia * media)
+{
+  return (media->attributes->len);
+}
+
+/**
+ * gst_sdp_media_add_attribute:
+ * @media: a #GstSDPMedia
+ * @key: a key
+ * @value: a value
+ *
+ * Add the attribute with @key and @value to @media.
+ *
+ * Returns: #GST_SDP_OK.
+ */
+GstSDPResult
+gst_sdp_media_add_attribute (GstSDPMedia * media, const gchar * key,
+    const gchar * value)
+{
+  GstSDPAttribute attr;
+
+  attr.key = g_strdup (key);
+  attr.value = g_strdup (value);
+
+  g_array_append_val (media->attributes, attr);
+
+  return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_media_get_attribute:
+ * @media: a #GstSDPMedia
+ * @idx: an index
+ *
+ * Get the attribute at position @idx in @media.
+ *
+ * Returns: the #GstSDPAttribute at position @idx.
+ */
+const GstSDPAttribute *
 gst_sdp_media_get_attribute (GstSDPMedia * media, guint idx)
 {
   return &g_array_index (media->attributes, GstSDPAttribute, idx);
 }
 
-gchar *
-gst_sdp_media_get_attribute_val_n (GstSDPMedia * media, gchar * key, guint nth)
+/**
+ * gst_sdp_media_get_attribute_val_n:
+ * @media: a #GstSDPMedia
+ * @key: a key
+ * @nth: an index
+ *
+ * Get the @nth attribute value for @key in @media.
+ *
+ * Returns: the @nth attribute value.
+ */
+const gchar *
+gst_sdp_media_get_attribute_val_n (GstSDPMedia * media, const gchar * key,
+    guint nth)
 {
   guint i;
 
@@ -611,18 +1323,19 @@ gst_sdp_media_get_attribute_val_n (GstSDPMedia * media, gchar * key, guint nth)
   return NULL;
 }
 
-gchar *
-gst_sdp_media_get_attribute_val (GstSDPMedia * media, gchar * key)
+/**
+ * gst_sdp_media_get_attribute_val:
+ * @media: a #GstSDPMedia
+ * @key: a key
+ *
+ * Get the first attribute value for @key in @media.
+ *
+ * Returns: the first attribute value for @key.
+ */
+const gchar *
+gst_sdp_media_get_attribute_val (GstSDPMedia * media, const gchar * key)
 {
   return gst_sdp_media_get_attribute_val_n (media, key, 0);
-}
-
-gchar *
-gst_sdp_media_get_format (GstSDPMedia * media, guint idx)
-{
-  if (idx >= media->fmts->len)
-    return NULL;
-  return g_array_index (media->fmts, gchar *, idx);
 }
 
 static void
@@ -788,8 +1501,20 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
   return TRUE;
 }
 
+/**
+ * gst_sdp_message_parse_buffer:
+ * @data: the start of the buffer
+ * @size: the size of the buffer
+ * @msg: the result #GstSDPMessage
+ *
+ * Parse the contents of @size bytes pointed to by @data and store the result in
+ * @msg.
+ *
+ * Returns: #GST_SDP_OK on success.
+ */
 GstSDPResult
-gst_sdp_message_parse_buffer (guint8 * data, guint size, GstSDPMessage * msg)
+gst_sdp_message_parse_buffer (const guint8 * data, guint size,
+    GstSDPMessage * msg)
 {
   gchar *p;
   SDPContext c;
@@ -869,6 +1594,14 @@ print_media (GstSDPMedia * media)
   }
 }
 
+/**
+ * gst_sdp_message_dump:
+ * @msg: a #GstSDPMessage
+ *
+ * Dump the parsed contents of @msg to stdout.
+ *
+ * Returns: a #GstSDPResult.
+ */
 GstSDPResult
 gst_sdp_message_dump (GstSDPMessage * msg)
 {

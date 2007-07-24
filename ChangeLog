@@ -1,5 +1,36 @@
 2007-07-24  Wim Taymans  <wim.taymans@gmail.com>
 
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/sdp/gstsdp.h:
+	* gst-libs/gst/sdp/gstsdpmessage.c: (gst_sdp_message_set_origin),
+	(gst_sdp_message_set_connection), (gst_sdp_message_add_bandwidth),
+	(gst_sdp_message_add_time), (gst_sdp_message_add_zone),
+	(gst_sdp_message_set_key), (gst_sdp_message_get_attribute_val_n),
+	(gst_sdp_message_get_attribute_val),
+	(gst_sdp_message_add_attribute), (gst_sdp_media_new),
+	(gst_sdp_media_init), (gst_sdp_media_uninit), (gst_sdp_media_free),
+	(gst_sdp_media_get_media), (gst_sdp_media_set_media),
+	(gst_sdp_media_get_port), (gst_sdp_media_get_num_ports),
+	(gst_sdp_media_set_port_info), (gst_sdp_media_get_proto),
+	(gst_sdp_media_set_proto), (gst_sdp_media_formats_len),
+	(gst_sdp_media_get_format), (gst_sdp_media_add_format),
+	(gst_sdp_media_get_information), (gst_sdp_media_set_information),
+	(gst_sdp_media_connections_len), (gst_sdp_media_get_connection),
+	(gst_sdp_media_add_connection), (gst_sdp_media_bandwidths_len),
+	(gst_sdp_media_get_badwidth), (gst_sdp_media_add_bandwidth),
+	(gst_sdp_media_set_key), (gst_sdp_media_get_key),
+	(gst_sdp_media_attributes_len), (gst_sdp_media_add_attribute),
+	(gst_sdp_media_get_attribute_val_n),
+	(gst_sdp_media_get_attribute_val), (gst_sdp_message_parse_buffer),
+	(print_media), (gst_sdp_message_dump):
+	* gst-libs/gst/sdp/gstsdpmessage.h:
+	Document the SDP library.
+	Add some of the missing SDPMedia methods.
+
+2007-07-24  Wim Taymans  <wim.taymans@gmail.com>
+
 	* configure.ac:
 	* gst-libs/gst/Makefile.am:
 	* gst-libs/gst/rtsp/Makefile.am:

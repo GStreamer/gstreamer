@@ -42,6 +42,9 @@
 <!ENTITY GstBaseRtpPayload SYSTEM "xml/gstbasertppayload.xml">
 <!ENTITY GstRtpBuffer SYSTEM "xml/gstrtpbuffer.xml">
 <!ENTITY GstRtcpBuffer SYSTEM "xml/gstrtcpbuffer.xml">
+<!-- sdp -->
+<!ENTITY GstSDP SYSTEM "xml/gstsdp.xml">
+<!ENTITY GstSDPMessage SYSTEM "xml/gstsdpmessage.xml">
 <!-- tag -->
 <!ENTITY GstTag SYSTEM "xml/gsttag.xml">
 <!ENTITY GstTagVorbis SYSTEM "xml/gsttagvorbis.xml">
@@ -155,7 +158,7 @@
     </chapter>
 
     <chapter id="gstreamer-rtp">
-      <title>Rtp Library</title>
+      <title>RTP Library</title>
       <para>
         This library should be linked to by getting cflags and libs from
         <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
@@ -166,6 +169,17 @@
       &GstBaseRtpPayload;
       &GstRtpBuffer;
       &GstRtcpBuffer;
+    </chapter>
+
+    <chapter id="gstreamer-SDP">
+      <title>SDP Library</title>
+      <para>
+        This library should be linked to by getting cflags and libs from
+        <filename>gstreamer-plugins-base-&GST_MAJORMINOR;.pc</filename> and adding
+        <filename>-lgstsdp-&GST_MAJORMINOR;</filename> to the library flags.
+      </para>
+      &GstSDP;
+      &GstSDPMessage;
     </chapter>
 
     <chapter id="gstreamer-tag">
