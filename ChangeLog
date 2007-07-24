@@ -1,3 +1,83 @@
+2007-07-24  Wim Taymans  <wim.taymans@gmail.com>
+
+	* configure.ac:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/rtsp/Makefile.am:
+	* gst-libs/gst/rtsp/gstrtspbase64.c: (gst_rtsp_base64_encode):
+	* gst-libs/gst/rtsp/gstrtspbase64.h:
+	* gst-libs/gst/rtsp/gstrtspconnection.c: (inet_aton),
+	(gst_rtsp_connection_create), (gst_rtsp_connection_connect),
+	(add_auth_header), (add_date_header), (gst_rtsp_connection_write),
+	(gst_rtsp_connection_send), (read_line), (read_string), (read_key),
+	(parse_response_status), (parse_request_line), (parse_line),
+	(gst_rtsp_connection_read), (read_body),
+	(gst_rtsp_connection_receive), (gst_rtsp_connection_close),
+	(gst_rtsp_connection_free), (gst_rtsp_connection_next_timeout),
+	(gst_rtsp_connection_reset_timeout), (gst_rtsp_connection_flush),
+	(gst_rtsp_connection_set_auth):
+	* gst-libs/gst/rtsp/gstrtspconnection.h:
+	* gst-libs/gst/rtsp/gstrtspdefs.c: (rtsp_init_status),
+	(gst_rtsp_strresult), (gst_rtsp_method_as_text),
+	(gst_rtsp_version_as_text), (gst_rtsp_header_as_text),
+	(gst_rtsp_status_as_text), (gst_rtsp_find_header_field),
+	(gst_rtsp_find_method):
+	* gst-libs/gst/rtsp/gstrtspdefs.h:
+	* gst-libs/gst/rtsp/gstrtspmessage.c: (key_value_foreach),
+	(gst_rtsp_message_new), (gst_rtsp_message_init),
+	(gst_rtsp_message_new_request), (gst_rtsp_message_init_request),
+	(gst_rtsp_message_new_response), (gst_rtsp_message_init_response),
+	(gst_rtsp_message_init_data), (gst_rtsp_message_unset),
+	(gst_rtsp_message_free), (gst_rtsp_message_add_header),
+	(gst_rtsp_message_remove_header), (gst_rtsp_message_get_header),
+	(gst_rtsp_message_append_headers), (gst_rtsp_message_set_body),
+	(gst_rtsp_message_take_body), (gst_rtsp_message_get_body),
+	(gst_rtsp_message_steal_body), (dump_mem), (dump_key_value),
+	(gst_rtsp_message_dump):
+	* gst-libs/gst/rtsp/gstrtspmessage.h:
+	* gst-libs/gst/rtsp/gstrtsprange.c: (parse_npt_time),
+	(parse_npt_range), (parse_clock_range), (parse_smpte_range),
+	(gst_rtsp_range_parse), (gst_rtsp_range_free):
+	* gst-libs/gst/rtsp/gstrtsprange.h:
+	* gst-libs/gst/rtsp/gstrtsptransport.c: (gst_rtsp_transport_new),
+	(gst_rtsp_transport_init), (gst_rtsp_transport_get_mime),
+	(gst_rtsp_transport_get_manager), (parse_mode), (parse_range),
+	(range_as_text), (rtsp_transport_mode_as_text),
+	(rtsp_transport_profile_as_text), (rtsp_transport_ltrans_as_text),
+	(gst_rtsp_transport_parse), (gst_rtsp_transport_as_text),
+	(gst_rtsp_transport_free):
+	* gst-libs/gst/rtsp/gstrtsptransport.h:
+	* gst-libs/gst/rtsp/gstrtspurl.c: (gst_rtsp_url_parse),
+	(gst_rtsp_url_free), (gst_rtsp_url_set_port),
+	(gst_rtsp_url_get_port), (gst_rtsp_url_get_request_uri):
+	* gst-libs/gst/rtsp/gstrtspurl.h:
+	* gst-libs/gst/sdp/Makefile.am:
+	* gst-libs/gst/sdp/gstsdp.h:
+	* gst-libs/gst/sdp/gstsdpmessage.c: (gst_sdp_origin_init),
+	(gst_sdp_connection_init), (gst_sdp_bandwidth_init),
+	(gst_sdp_time_init), (gst_sdp_zone_init), (gst_sdp_key_init),
+	(gst_sdp_attribute_init), (gst_sdp_message_new),
+	(gst_sdp_message_init), (gst_sdp_message_uninit),
+	(gst_sdp_message_free), (gst_sdp_media_new), (gst_sdp_media_init),
+	(gst_sdp_media_uninit), (gst_sdp_media_free),
+	(gst_sdp_message_set_origin), (gst_sdp_message_get_origin),
+	(gst_sdp_message_set_connection), (gst_sdp_message_get_connection),
+	(gst_sdp_message_add_bandwidth), (gst_sdp_message_add_time),
+	(gst_sdp_message_add_zone), (gst_sdp_message_set_key),
+	(gst_sdp_message_get_key), (gst_sdp_message_get_attribute_val_n),
+	(gst_sdp_message_get_attribute_val),
+	(gst_sdp_message_add_attribute), (gst_sdp_message_add_media),
+	(gst_sdp_media_add_attribute), (gst_sdp_media_add_bandwidth),
+	(gst_sdp_media_add_format), (gst_sdp_media_get_attribute),
+	(gst_sdp_media_get_attribute_val_n),
+	(gst_sdp_media_get_attribute_val), (gst_sdp_media_get_format),
+	(read_string), (read_string_del), (gst_sdp_parse_line),
+	(gst_sdp_message_parse_buffer), (print_media),
+	(gst_sdp_message_dump):
+	* gst-libs/gst/sdp/gstsdpmessage.h:
+	* pkgconfig/gstreamer-plugins-base-uninstalled.pc.in:
+	Move SDP and RTSP from helper objects in -good to a reusable library.
+	Use a proper gst_ namespace.
+
 2007-07-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_push_forward),

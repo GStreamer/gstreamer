@@ -646,6 +646,8 @@ gst-libs/gst/interfaces/Makefile
 gst-libs/gst/netbuffer/Makefile
 gst-libs/gst/riff/Makefile
 gst-libs/gst/rtp/Makefile
+gst-libs/gst/rtsp/Makefile
+gst-libs/gst/sdp/Makefile
 gst-libs/gst/tag/Makefile
 gst-libs/gst/pbutils/Makefile
 gst-libs/gst/video/Makefile
