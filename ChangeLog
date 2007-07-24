@@ -1,3 +1,10 @@
+2007-07-24  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/faad/gstfaad.c: (gst_faad_chain), (gst_faad_change_state):
+	Use the new buffer clipping function from gstaudio here and
+	require gst-plugins-base CVS.
+
 2007-07-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

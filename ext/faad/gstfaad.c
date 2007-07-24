@@ -1132,56 +1132,6 @@ looks_like_valid_header (guint8 * input_data, guint input_size)
   return TRUE;
 }
 
-/*
-  clips buffer to currently configured segment. Returns FALSE if the buffer 
-  has to be dropped.
-*/
-
-static gboolean
-clip_outgoing_buffer (GstFaad * faad, GstBuffer * buffer)
-{
-  gint64 start, stop, cstart, cstop, diff;
-  gboolean res = TRUE;
-
-  if (faad->segment->format != GST_FORMAT_TIME)
-    goto beach;
-
-  start = GST_BUFFER_TIMESTAMP (buffer);
-  stop = start + GST_BUFFER_DURATION (buffer);
-
-  if (gst_segment_clip (faad->segment, GST_FORMAT_TIME,
-          start, stop, &cstart, &cstop)) {
-    diff = cstart - start;
-    if (diff > 0) {
-      GST_BUFFER_TIMESTAMP (buffer) = cstart;
-      GST_BUFFER_DURATION (buffer) -= diff;
-
-      /* time->frames->bytes */
-      diff =
-          faad->bps * faad->channels * GST_CLOCK_TIME_TO_FRAMES (diff,
-          faad->samplerate);
-      GST_BUFFER_DATA (buffer) += diff;
-      GST_BUFFER_SIZE (buffer) -= diff;
-    }
-    diff = stop - cstop;
-    if (diff > 0) {
-      GST_BUFFER_DURATION (buffer) -= diff;
-      /* time->frames->bytes */
-      diff =
-          faad->bps * faad->channels * GST_CLOCK_TIME_TO_FRAMES (diff,
-          faad->samplerate);
-      /* update size */
-      GST_BUFFER_SIZE (buffer) -= diff;
-    }
-  } else {
-    GST_DEBUG_OBJECT (faad, "buffer is outside configured segment");
-    res = FALSE;
-  }
-
-beach:
-  return res;
-}
-
 static GstFlowReturn
 gst_faad_chain (GstPad * pad, GstBuffer * buffer)
 {
@@ -1389,7 +1339,8 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
         faad->sum_dur_out += GST_BUFFER_DURATION (outbuf);
         GST_OBJECT_UNLOCK (faad);
 
-        if (clip_outgoing_buffer (faad, outbuf)) {
+        if ((outbuf = gst_audio_buffer_clip (outbuf, faad->segment,
+                    faad->samplerate, faad->bps * faad->channels))) {
           GST_LOG_OBJECT (faad,
               "pushing buffer, off=%" G_GUINT64_FORMAT ", ts=%" GST_TIME_FORMAT,
               GST_BUFFER_OFFSET (outbuf),
@@ -1493,7 +1444,7 @@ gst_faad_change_state (GstElement * element, GstStateChange transition)
         return GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_segment_init (faad->segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (faad->segment, GST_FORMAT_TIME);
       break;
     default:
       break;
