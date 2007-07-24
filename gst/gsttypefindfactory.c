@@ -169,7 +169,7 @@ gst_type_find_factory_dispose (GObject * object)
  * gst_type_find_factory_get_list:
  *
  * Gets the list of all registered typefind factories. You must free the
- * list using g_list_free.
+ * list using gst_plugin_feature_list_free.
  *
  * Returns: the list of all registered #GstTypeFindFactory.
  */
