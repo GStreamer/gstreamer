@@ -7,7 +7,7 @@ libgstmad_la_CFLAGS = \
 	$(MAD_CFLAGS) $(ID3_CFLAGS)
 libgstmad_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_MAJORMINOR) \
-	$(MAD_LIBS) $(ID3_LIBS)
+	-lgstaudio-$(GST_MAJORMINOR) $(MAD_LIBS) $(ID3_LIBS)
 libgstmad_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstmad.h

@@ -1,3 +1,8 @@
+2007-07-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/mad/Makefile.am:
+	  Link to audio helper from plugins-base.
+
 2007-07-24  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
