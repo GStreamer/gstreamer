@@ -1,5 +1,13 @@
 2007-07-24  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstregistrybinary.c: (gst_registry_binary_check_magic),
+	(gst_registry_binary_load_feature),
+	(gst_registry_binary_load_plugin),
+	(gst_registry_binary_read_cache):
+	  Print error just once and with additional info.
+
+2007-07-24  Stefan Kost  <ensonic@users.sf.net>
+
 	* libs/gst/base/gsttypefindhelper.c: (helper_find_peek),
 	(helper_find_suggest), (helper_find_get_length),
 	(gst_type_find_helper_get_range), (buf_helper_find_suggest),

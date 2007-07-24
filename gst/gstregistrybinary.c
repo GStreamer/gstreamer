@@ -575,12 +575,12 @@ gst_registry_binary_check_magic (gchar ** in)
   unpack_element (*in, m, GstBinaryRegistryMagic);
 
   if (m == NULL || m->magic == NULL || m->version == NULL) {
-    GST_ERROR ("Binary registry magic structure is broken");
+    GST_WARNING ("Binary registry magic structure is broken");
     return FALSE;
   }
   if (strncmp (m->magic, GST_MAGIC_BINARY_REGISTRY_STR,
           GST_MAGIC_BINARY_REGISTRY_LEN) != 0) {
-    GST_ERROR
+    GST_WARNING
         ("Binary registry magic is different : %02x%02x%02x%02x != %02x%02x%02x%02x",
         GST_MAGIC_BINARY_REGISTRY_STR[0] & 0xff,
         GST_MAGIC_BINARY_REGISTRY_STR[1] & 0xff,
@@ -590,7 +590,7 @@ gst_registry_binary_check_magic (gchar ** in)
     return FALSE;
   }
   if (strncmp (m->version, GST_MAJORMINOR, GST_MAGIC_BINARY_VERSION_LEN)) {
-    GST_ERROR ("Binary registry magic version is different : %s != %s",
+    GST_WARNING ("Binary registry magic version is different : %s != %s",
         GST_MAJORMINOR, m->version);
     return FALSE;
   }
@@ -903,7 +903,9 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   }
   /* check if header is valid */
   if (!gst_registry_binary_check_magic (&in)) {
-    GST_ERROR ("Binary registry type not recognized (invalid magic)");
+    GST_ERROR
+        ("Binary registry type not recognized (invalid magic) for file at %s",
+        location);
     goto Error;
   }
 
