@@ -47,6 +47,14 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_RTSP_CHECK:
+ * @stmt: a statement
+ * @label: a label
+ *
+ * Macro that checks the return value of @stmt and jumps to @label when it does
+ * not equal #GST_RTSP_OK.
+ */
 #define GST_RTSP_CHECK(stmt, label)  \
 G_STMT_START { \
   if (G_UNLIKELY ((res = (stmt)) != GST_RTSP_OK)) \

@@ -24,7 +24,7 @@
 
 G_BEGIN_DECLS
 
-gchar *gst_rtsp_base64_encode(gchar *data, gint len);
+gchar *gst_rtsp_base64_encode(const gchar *data, gsize len);
 
 G_END_DECLS
 

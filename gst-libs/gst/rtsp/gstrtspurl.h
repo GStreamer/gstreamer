@@ -50,10 +50,28 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GST_RTSP_DEFAULT_PORT:
+ *
+ * The default RTSP port to connect to.
+ */
 #define GST_RTSP_DEFAULT_PORT       554
 
 typedef struct _GstRTSPUrl GstRTSPUrl;
 
+/**
+ * GstRTSPUrl:
+ * @transports: the transports allowed
+ * @family: the family
+ * @user: the user
+ * @passwd: the password
+ * @host: the host
+ * @port: the port
+ * @abspath: the absolute path
+ * @query: additional query parameters
+ *
+ * This structure contains the result of a parsed RTSP URL
+ */
 struct _GstRTSPUrl {
   GstRTSPLowerTrans  transports;
   GstRTSPFamily      family;

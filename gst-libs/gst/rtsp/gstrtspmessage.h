@@ -49,6 +49,15 @@
 
 G_BEGIN_DECLS
 
+/**
+ * GstRTSPMsgType:
+ * @GST_RTSP_MESSAGE_INVALID: invalid message type
+ * @GST_RTSP_MESSAGE_REQUEST: request message
+ * @GST_RTSP_MESSAGE_RESPONSE: response message
+ * @GST_RTSP_MESSAGE_DATA: data message
+ *
+ * The type of a message.
+ */
 typedef enum
 {
   GST_RTSP_MESSAGE_INVALID,
@@ -57,6 +66,12 @@ typedef enum
   GST_RTSP_MESSAGE_DATA,
 } GstRTSPMsgType;
 
+/**
+ * GstRTSPMessage:
+ * @type: the message type
+ *
+ * An RTSP message containing request, response or data messages.
+ */
 typedef struct _GstRTSPMessage
 {
   GstRTSPMsgType    type;
@@ -77,6 +92,7 @@ typedef struct _GstRTSPMessage
     } data;
   } type_data;
 
+  /*< private >*/
   GArray        *hdr_fields;
 
   guint8        *body;

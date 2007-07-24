@@ -51,8 +51,16 @@
 
 G_BEGIN_DECLS
 
-typedef struct _GstRTSPConnection
+typedef struct _GstRTSPConnection GstRTSPConnection;
+
+/**
+ * GstRTSPConnection:
+ *
+ * Opaque RTSP connection object.
+ */
+struct _GstRTSPConnection
 {
+  /*< private >*/
   /* URL for the connection */
   GstRTSPUrl *url;
 
@@ -71,34 +79,36 @@ typedef struct _GstRTSPConnection
   GstRTSPAuthMethod  auth_method;
   gchar             *username;
   gchar             *passwd;
-} GstRTSPConnection;
+};
 
 /* opening/closing a connection */
-GstRTSPResult      gst_rtsp_connection_create   (GstRTSPUrl *url, GstRTSPConnection **conn);
-GstRTSPResult      gst_rtsp_connection_connect  (GstRTSPConnection *conn, GTimeVal *timeout);
-GstRTSPResult      gst_rtsp_connection_close    (GstRTSPConnection *conn);
-GstRTSPResult      gst_rtsp_connection_free     (GstRTSPConnection *conn);
+GstRTSPResult      gst_rtsp_connection_create        (GstRTSPUrl *url, GstRTSPConnection **conn);
+GstRTSPResult      gst_rtsp_connection_connect       (GstRTSPConnection *conn, GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_close         (GstRTSPConnection *conn);
+GstRTSPResult      gst_rtsp_connection_free          (GstRTSPConnection *conn);
 
 /* sending/receiving raw bytes */
-GstRTSPResult      gst_rtsp_connection_read     (GstRTSPConnection * conn, guint8 * data,
-                                                 guint size, GTimeVal * timeout);
-GstRTSPResult      gst_rtsp_connection_write    (GstRTSPConnection * conn, const guint8 * data, 
-		                                 guint size, GTimeVal * timeout);
+GstRTSPResult      gst_rtsp_connection_read          (GstRTSPConnection * conn, guint8 * data,
+                                                      guint size, GTimeVal * timeout);
+GstRTSPResult      gst_rtsp_connection_write         (GstRTSPConnection * conn, const guint8 * data, 
+		                                      guint size, GTimeVal * timeout);
 
 /* sending/receiving messages */
-GstRTSPResult      gst_rtsp_connection_send     (GstRTSPConnection *conn, GstRTSPMessage *message, GTimeVal *timeout);
-GstRTSPResult      gst_rtsp_connection_receive  (GstRTSPConnection *conn, GstRTSPMessage *message, GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_send          (GstRTSPConnection *conn, GstRTSPMessage *message,
+                                                      GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_receive       (GstRTSPConnection *conn, GstRTSPMessage *message,
+                                                      GTimeVal *timeout);
 
 /* reset the timeout */
-GstRTSPResult      gst_rtsp_connection_next_timeout   (GstRTSPConnection *conn, GTimeVal *timeout);
-GstRTSPResult      gst_rtsp_connection_reset_timeout  (GstRTSPConnection *conn);
+GstRTSPResult      gst_rtsp_connection_next_timeout  (GstRTSPConnection *conn, GTimeVal *timeout);
+GstRTSPResult      gst_rtsp_connection_reset_timeout (GstRTSPConnection *conn);
 
 /* flushing state */
-GstRTSPResult      gst_rtsp_connection_flush    (GstRTSPConnection *conn, gboolean flush);
+GstRTSPResult      gst_rtsp_connection_flush         (GstRTSPConnection *conn, gboolean flush);
 
 /* Configure Authentication data */
-GstRTSPResult      gst_rtsp_connection_set_auth (GstRTSPConnection *conn, GstRTSPAuthMethod method,
-                                                 gchar *user, gchar *pass);
+GstRTSPResult      gst_rtsp_connection_set_auth      (GstRTSPConnection *conn, GstRTSPAuthMethod method,
+                                                      const gchar *user, const gchar *pass);
 
 G_END_DECLS
 

@@ -40,6 +40,20 @@
  * SOFTWARE.
  */
 
+/**
+ * SECTION:gstrtspdefs
+ * @short_description: common RTSP defines
+ * @see_also: gstrtspurl, gstrtspconnection
+ *  
+ * <refsect2>
+ * <para>
+ * Provides common defines for the RTSP library. 
+ * </para>
+ * </refsect2>
+ *  
+ * Last reviewed on 2007-07-24 (0.10.14)
+ */
+
 #include <errno.h>
 
 extern int h_errno;
@@ -209,6 +223,14 @@ rtsp_init_status (void)
   return statuses;
 }
 
+/**
+ * gst_rtsp_strresult:
+ * @result: a #GstRTSPResult
+ *
+ * Convert @result in a human readable string.
+ *
+ * Returns: a newly allocated string. g_free() after usage.
+ */
 gchar *
 gst_rtsp_strresult (GstRTSPResult result)
 {
@@ -241,6 +263,14 @@ gst_rtsp_strresult (GstRTSPResult result)
   return res;
 }
 
+/**
+ * gst_rtsp_method_as_text:
+ * @method: a #GstRTSPMethod
+ *
+ * Convert @method to a string.
+ *
+ * Returns: a string representation of @method.
+ */
 const gchar *
 gst_rtsp_method_as_text (GstRTSPMethod method)
 {
@@ -257,6 +287,14 @@ gst_rtsp_method_as_text (GstRTSPMethod method)
   return rtsp_methods[i];
 }
 
+/**
+ * gst_rtsp_version_as_text:
+ * @version: a #GstRTSPVersion
+ *
+ * Convert @version to a string.
+ *
+ * Returns: a string representation of @version.
+ */
 const gchar *
 gst_rtsp_version_as_text (GstRTSPVersion version)
 {
@@ -269,6 +307,14 @@ gst_rtsp_version_as_text (GstRTSPVersion version)
   }
 }
 
+/**
+ * gst_rtsp_header_as_text:
+ * @field: a #GstRTSPHeaderField
+ *
+ * Convert @field to a string.
+ *
+ * Returns: a string representation of @field.
+ */
 const gchar *
 gst_rtsp_header_as_text (GstRTSPHeaderField field)
 {
@@ -278,6 +324,14 @@ gst_rtsp_header_as_text (GstRTSPHeaderField field)
     return rtsp_headers[field - 1];
 }
 
+/**
+ * gst_rtsp_status_as_text:
+ * @code: a #GstRTSPStatusCode
+ *
+ * Convert @code to a string.
+ *
+ * Returns: a string representation of @code.
+ */
 const gchar *
 gst_rtsp_status_as_text (GstRTSPStatusCode code)
 {
@@ -289,6 +343,15 @@ gst_rtsp_status_as_text (GstRTSPStatusCode code)
   return g_hash_table_lookup (statuses, GUINT_TO_POINTER (code));
 }
 
+/**
+ * gst_rtsp_find_header_field:
+ * @header: a header string
+ *
+ * Convert @header to a #GstRTSPHeaderField.
+ *
+ * Returns: a #GstRTSPHeaderField for @header or #GST_RTSP_HDR_INVALID if the
+ * header field is unknown.
+ */
 GstRTSPHeaderField
 gst_rtsp_find_header_field (const gchar * header)
 {
@@ -302,6 +365,15 @@ gst_rtsp_find_header_field (const gchar * header)
   return GST_RTSP_HDR_INVALID;
 }
 
+/**
+ * gst_rtsp_find_method:
+ * @method: a method
+ *
+ * Convert @method to a #GstRTSPMethod.
+ *
+ * Returns: a #GstRTSPMethod for @method or #GST_RTSP_INVALID if the
+ * method is unknown.
+ */
 GstRTSPMethod
 gst_rtsp_find_method (const gchar * method)
 {

@@ -40,6 +40,21 @@
  * SOFTWARE.
  */
 
+/**
+ * SECTION:gstrtspconnection
+ * @short_description: manage RTSP connections
+ * @see_also: gstrtspurl
+ *  
+ * <refsect2>
+ * <para>
+ * This object manages the RTSP connection to the server. It provides function
+ * to receive and send bytes and messages.
+ * </para>
+ * </refsect2>
+ *  
+ * Last reviewed on 2007-07-24 (0.10.14)
+ */
+
 #ifdef HAVE_CONFIG_H
 #  include <config.h>
 #endif
@@ -117,6 +132,17 @@ inet_aton (const char *c, struct in_addr *paddr)
 }
 #endif
 
+/**
+ * gst_rtsp_connection_create:
+ * @url: a #GstRTSPUrl 
+ * @conn: a #GstRTSPConnection
+ *
+ * Create a newly allocated #GstRTSPConnection from @url and store it in @conn.
+ * The connection will not yet attempt to connect to @url, use
+ * gst_rtsp_connection_connect().
+ *
+ * Returns: #GST_RTSP_OK when @conn contains a valid connection.
+ */
 GstRTSPResult
 gst_rtsp_connection_create (GstRTSPUrl * url, GstRTSPConnection ** conn)
 {
@@ -168,6 +194,18 @@ no_socket_pair:
   }
 }
 
+/**
+ * gst_rtsp_connection_connect:
+ * @conn: a #GstRTSPConnection 
+ * @timeout: a #GTimeVal timeout
+ *
+ * Attempt to connect to the url of @conn made with
+ * gst_rtsp_connection_create(). If @timeout is #NULL this function can block
+ * forever. If @timeout contains a valid timeout, this function will return
+ * #GST_RTSP_ETIMEOUT after the timeout expired.
+ *
+ * Returns: #GST_RTSP_OK when a connection could be made.
+ */
 GstRTSPResult
 gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 {
@@ -328,6 +366,21 @@ add_date_header (GstRTSPMessage * message)
   gst_rtsp_message_add_header (message, GST_RTSP_HDR_DATE, date_string);
 }
 
+/**
+ * gst_rtsp_connection_write:
+ * @conn: a #GstRTSPConnection
+ * @data: the data to write
+ * @size: the size of @data
+ * @timeout: a timeout value or #NULL
+ *
+ * Attempt to write @size bytes of @data to the connected @conn, blocking up to
+ * the specified @timeout. @timeout can be #NULL, in which case this function
+ * might block forever.
+ * 
+ * This function can be canceled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ */
 GstRTSPResult
 gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
     guint size, GTimeVal * timeout)
@@ -418,6 +471,20 @@ write_error:
   }
 }
 
+/**
+ * gst_rtsp_connection_send:
+ * @conn: a #GstRTSPConnection
+ * @message: the message to send
+ * @timeout: a timeout value or #NULL
+ *
+ * Attempt to send @message to the connected @conn, blocking up to
+ * the specified @timeout. @timeout can be #NULL, in which case this function
+ * might block forever.
+ * 
+ * This function can be canceled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ */
 GstRTSPResult
 gst_rtsp_connection_send (GstRTSPConnection * conn, GstRTSPMessage * message,
     GTimeVal * timeout)
@@ -719,6 +786,21 @@ no_column:
   }
 }
 
+/**
+ * gst_rtsp_connection_read:
+ * @conn: a #GstRTSPConnection
+ * @data: the data to read
+ * @size: the size of @data
+ * @timeout: a timeout value or #NULL
+ *
+ * Attempt to read @size bytes into @data from the connected @conn, blocking up to
+ * the specified @timeout. @timeout can be #NULL, in which case this function
+ * might block forever.
+ * 
+ * This function can be canceled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ */
 GstRTSPResult
 gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
     GTimeVal * timeout)
@@ -863,8 +945,22 @@ read_error:
   }
 }
 
+/**
+ * gst_rtsp_connection_receive:
+ * @conn: a #GstRTSPConnection
+ * @message: the message to read
+ * @timeout: a timeout value or #NULL
+ *
+ * Attempt to read into @message from the connected @conn, blocking up to
+ * the specified @timeout. @timeout can be #NULL, in which case this function
+ * might block forever.
+ * 
+ * This function can be canceled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ */
 GstRTSPResult
-gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * msg,
+gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
     GTimeVal * timeout)
 {
   gchar buffer[4096];
@@ -874,7 +970,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * msg,
   gboolean need_body;
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
 
   line = 0;
 
@@ -900,7 +996,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * msg,
           read_error);
 
       /* now we create a data message */
-      gst_rtsp_message_init_data (msg, c);
+      gst_rtsp_message_init_data (message, c);
 
       /* next two bytes are the length of the data */
       GST_RTSP_CHECK (gst_rtsp_connection_read (conn, (guint8 *) & size, 2,
@@ -909,7 +1005,7 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * msg,
       size = GUINT16_FROM_BE (size);
 
       /* and read the body */
-      res = read_body (conn, size, msg, timeout);
+      res = read_body (conn, size, message, timeout);
       need_body = FALSE;
       break;
     } else {
@@ -934,13 +1030,13 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * msg,
       if (line == 0) {
         /* first line, check for response status */
         if (g_str_has_prefix (buffer, "RTSP")) {
-          res = parse_response_status (buffer, msg);
+          res = parse_response_status (buffer, message);
         } else {
-          res = parse_request_line (buffer, msg);
+          res = parse_request_line (buffer, message);
         }
       } else {
         /* else just parse the line */
-        parse_line (buffer, msg);
+        parse_line (buffer, message);
       }
     }
     line++;
@@ -952,16 +1048,16 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * msg,
     gchar *hdrval;
 
     /* see if there is a Content-Length header */
-    if (gst_rtsp_message_get_header (msg, GST_RTSP_HDR_CONTENT_LENGTH,
+    if (gst_rtsp_message_get_header (message, GST_RTSP_HDR_CONTENT_LENGTH,
             &hdrval, 0) == GST_RTSP_OK) {
       /* there is, read the body */
       content_length = atol (hdrval);
-      GST_RTSP_CHECK (read_body (conn, content_length, msg, timeout),
+      GST_RTSP_CHECK (read_body (conn, content_length, message, timeout),
           read_error);
     }
 
     /* save session id in the connection for further use */
-    if (gst_rtsp_message_get_header (msg, GST_RTSP_HDR_SESSION,
+    if (gst_rtsp_message_get_header (message, GST_RTSP_HDR_SESSION,
             &session_id, 0) == GST_RTSP_OK) {
       gint maxlen, i;
 
@@ -1002,6 +1098,14 @@ read_error:
   }
 }
 
+/**
+ * gst_rtsp_connection_close:
+ * @conn: a #GstRTSPConnection
+ *
+ * Close the connected @conn.
+ * 
+ * Returns: #GST_RTSP_OK on success.
+ */
 GstRTSPResult
 gst_rtsp_connection_close (GstRTSPConnection * conn)
 {
@@ -1030,6 +1134,14 @@ sys_error:
   }
 }
 
+/**
+ * gst_rtsp_connection_free:
+ * @conn: a #GstRTSPConnection
+ *
+ * Close and free @conn.
+ * 
+ * Returns: #GST_RTSP_OK on success.
+ */
 GstRTSPResult
 gst_rtsp_connection_free (GstRTSPConnection * conn)
 {
@@ -1049,6 +1161,15 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
   return res;
 }
 
+/**
+ * gst_rtsp_connection_next_timeout:
+ * @conn: a #GstRTSPConnection
+ * @timeout: a timeout
+ *
+ * Calculate the next timeout for @conn, storing the result in @timeout.
+ * 
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_connection_next_timeout (GstRTSPConnection * conn, GTimeVal * timeout)
 {
@@ -1073,6 +1194,14 @@ gst_rtsp_connection_next_timeout (GstRTSPConnection * conn, GTimeVal * timeout)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_connection_reset_timeout:
+ * @conn: a #GstRTSPConnection
+ *
+ * Reset the timeout of @conn.
+ * 
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_connection_reset_timeout (GstRTSPConnection * conn)
 {
@@ -1083,6 +1212,17 @@ gst_rtsp_connection_reset_timeout (GstRTSPConnection * conn)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_connection_flush:
+ * @conn: a #GstRTSPConnection
+ * @flush: start or stop the flush
+ *
+ * Start or stop the flushing action on @conn. When flushing, all current
+ * and future actions on @conn will return #GST_RTSP_EINTR until the connection
+ * is set to non-flushing mode again.
+ * 
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_connection_flush (GstRTSPConnection * conn, gboolean flush)
 {
@@ -1105,9 +1245,21 @@ gst_rtsp_connection_flush (GstRTSPConnection * conn, gboolean flush)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_connection_set_auth:
+ * @conn: a #GstRTSPConnection
+ * @method: authentication method
+ * @user: the user
+ * @pass: the password
+ *
+ * Configure @conn for authentication mode @method with @user and @pass as the
+ * user and password respectively.
+ * 
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_connection_set_auth (GstRTSPConnection * conn,
-    GstRTSPAuthMethod method, gchar * user, gchar * pass)
+    GstRTSPAuthMethod method, const gchar * user, const gchar * pass)
 {
   /* Digest isn't implemented yet */
   if (method == GST_RTSP_AUTH_DIGEST)

@@ -115,7 +115,7 @@ parse_smpte_range (const gchar * str, GstRTSPTimeRange * range)
 }
 
 /**
- * rtsp_range_parse:
+ * gst_rtsp_range_parse:
  * @rangestr: a range string to parse
  * @range: location to hold the #GstRTSPTimeRange result
  *
@@ -166,6 +166,12 @@ invalid:
   }
 }
 
+/**
+ * gst_rtsp_range_free:
+ * @range: a #GstRTSPTimeRange
+ *
+ * Free the memory alocated by @range.
+ */
 void
 gst_rtsp_range_free (GstRTSPTimeRange * range)
 {

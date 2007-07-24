@@ -1,5 +1,28 @@
 2007-07-24  Wim Taymans  <wim.taymans@gmail.com>
 
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/rtsp/gstrtspbase64.c: (gst_rtsp_base64_encode):
+	* gst-libs/gst/rtsp/gstrtspbase64.h:
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_connect), (add_auth_header),
+	(gst_rtsp_connection_write), (gst_rtsp_connection_send),
+	(read_body), (gst_rtsp_connection_receive),
+	(gst_rtsp_connection_next_timeout),
+	(gst_rtsp_connection_reset_timeout),
+	(gst_rtsp_connection_set_auth):
+	* gst-libs/gst/rtsp/gstrtspconnection.h:
+	* gst-libs/gst/rtsp/gstrtspdefs.c: (rtsp_init_status):
+	* gst-libs/gst/rtsp/gstrtspdefs.h:
+	* gst-libs/gst/rtsp/gstrtspmessage.h:
+	* gst-libs/gst/rtsp/gstrtsprange.c: (parse_npt_time),
+	(parse_npt_range), (parse_clock_range), (parse_smpte_range),
+	(gst_rtsp_range_parse):
+	* gst-libs/gst/rtsp/gstrtspurl.h:
+	Added beginnings of RTSP documentation.
+
+2007-07-24  Wim Taymans  <wim.taymans@gmail.com>
+
 	* docs/libs/Makefile.am:
 	* docs/libs/gst-plugins-base-libs-docs.sgml:
 	* docs/libs/gst-plugins-base-libs-sections.txt:
