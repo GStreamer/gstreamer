@@ -1,5 +1,20 @@
 2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst-libs/gst/interfaces/Makefile.am:
+	* gst-libs/gst/interfaces/rtspextension.c:
+	(gst_rtsp_extension_get_type), (gst_rtsp_extension_iface_init),
+	(gst_rtsp_extension_detect_server),
+	(gst_rtsp_extension_before_send), (gst_rtsp_extension_after_send),
+	(gst_rtsp_extension_parse_sdp), (gst_rtsp_extension_setup_media),
+	(gst_rtsp_extension_configure_stream),
+	(gst_rtsp_extension_get_transports),
+	(gst_rtsp_extension_stream_select), (gst_rtsp_extension_send):
+	* gst-libs/gst/interfaces/rtspextension.h:
+	Move interface for RTSP extensions from -good to here.
+	Added helper methods to invoke interface methods.
+
+2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
+
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/rtsp/gstrtspdefs.h:
 	* gst-libs/gst/rtsp/gstrtspmessage.c: (key_value_foreach),
