@@ -1,3 +1,17 @@
+2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/asfdemux/Makefile.am:
+	* gst/asfdemux/gstasf.c: (plugin_init):
+	* gst/asfdemux/gstrtspwms.c: (gst_rtsp_wms_before_send),
+	(gst_rtsp_wms_after_send), (gst_rtsp_wms_parse_sdp),
+	(gst_rtsp_wms_configure_stream), (_do_init),
+	(gst_rtsp_wms_base_init), (gst_rtsp_wms_class_init),
+	(gst_rtsp_wms_init), (gst_rtsp_wms_finalize),
+	(gst_rtsp_wms_change_state), (gst_rtsp_wms_extension_init):
+	* gst/asfdemux/gstrtspwms.h:
+	Move WMS RTSP extension from -good to here.
+	Port it to the new pluggable extension interface.
+
 2007-07-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/mad/Makefile.am:

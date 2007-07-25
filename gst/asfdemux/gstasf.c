@@ -26,6 +26,7 @@
 #include "gst/gst-i18n-plugin.h"
 
 #include "gstasfdemux.h"
+#include "gstrtspwms.h"
 /* #include "gstasfmux.h" */
 
 static gboolean
@@ -43,6 +44,10 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "asfdemux", GST_RANK_SECONDARY,
           GST_TYPE_ASF_DEMUX)) {
+    return FALSE;
+  }
+  if (!gst_element_register (plugin, "rtspwms", GST_RANK_SECONDARY,
+          GST_TYPE_RTSP_WMS)) {
     return FALSE;
   }
 /*
