@@ -48,8 +48,11 @@
 
 G_BEGIN_DECLS
 
-#include "gstrtsp.h"
-#include "rtsp.h"
+#include <gst/rtsp/gstrtspconnection.h>
+#include <gst/rtsp/gstrtspmessage.h>
+#include <gst/rtsp/gstrtspurl.h>
+
+#include "gstrtspext.h"
 
 #define GST_TYPE_RTSPSRC \
   (gst_rtspsrc_get_type())
@@ -76,8 +79,6 @@ typedef struct _GstRTSPSrcClass GstRTSPSrcClass;
 #define GST_RTSP_STREAM_UNLOCK(rtsp)      (g_static_rec_mutex_unlock (GST_RTSP_STREAM_GET_LOCK(rtsp)))
 
 typedef struct _GstRTSPStream GstRTSPStream;
-
-#include "rtspext.h"
 
 struct _GstRTSPStream {
   gint          id;
@@ -142,34 +143,35 @@ struct _GstRTSPSrc {
   gboolean         need_activate;
 
   /* properties */
-  gchar           *location;
-  gchar           *req_location; /* Sanitised URL to use in network requests */
-  RTSPUrl         *url;
-  RTSPLowerTrans   protocols;
-  gboolean         debug;
-  guint   	   retry;
-  guint64          udp_timeout;
-  GTimeVal         tcp_timeout;
-  guint            latency;
+  gchar            *location;
+  gchar            *req_location; /* Sanitised URL to use in network requests */
+  GstRTSPUrl       *url;
+  GstRTSPLowerTrans protocols;
+  gboolean          debug;
+  guint   	    retry;
+  guint64           udp_timeout;
+  GTimeVal          tcp_timeout;
+  guint             latency;
 
   /* state */
-  RTSPState        state;
-  gchar           *content_base;
-  RTSPLowerTrans   cur_protocols;
-  gboolean         tried_url_auth;
-  gchar           *addr;
+  GstRTSPState       state;
+  gchar             *content_base;
+  GstRTSPLowerTrans  cur_protocols;
+  gboolean           tried_url_auth;
+  gchar             *addr;
 
   /* supported methods */
-  gint             methods;
+  gint               methods;
 
   /* session management */
   GstElement      *session;
   gulong           session_sig_id;
   gulong           session_ptmap_id;
 
-  RTSPConnection  *connection;
+  GstRTSPConnection  *connection;
 
-  RTSPExtensionCtx *extension;
+  /* a list of RTSP extensions as GstElement */
+  GstRTSPExtensionList  *extensions;
 };
 
 struct _GstRTSPSrcClass {
@@ -177,10 +179,6 @@ struct _GstRTSPSrcClass {
 };
 
 GType gst_rtspsrc_get_type(void);
-
-gboolean   gst_rtspsrc_send 		(GstRTSPSrc * src, RTSPMessage * request,
-		   			 RTSPMessage * response, RTSPStatusCode * code);
-
 
 G_END_DECLS
 

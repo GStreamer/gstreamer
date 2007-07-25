@@ -1,3 +1,64 @@
+2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/Makefile.am:
+	* gst/rtsp/base64.c:
+	* gst/rtsp/base64.h:
+	* gst/rtsp/gstrtspext.c: (gst_rtsp_ext_list_filter),
+	(gst_rtsp_ext_list_init), (gst_rtsp_ext_list_get),
+	(gst_rtsp_ext_list_detect_server), (gst_rtsp_ext_list_before_send),
+	(gst_rtsp_ext_list_after_send), (gst_rtsp_ext_list_parse_sdp),
+	(gst_rtsp_ext_list_setup_media),
+	(gst_rtsp_ext_list_configure_stream),
+	(gst_rtsp_ext_list_get_transports),
+	(gst_rtsp_ext_list_stream_select):
+	* gst/rtsp/gstrtspext.h:
+	* gst/rtsp/gstrtspsrc.c: (gst_rtsp_lower_trans_get_type),
+	(gst_rtspsrc_class_init), (gst_rtspsrc_init),
+	(gst_rtspsrc_finalize), (gst_rtspsrc_create_stream),
+	(gst_rtspsrc_parse_rtpmap), (gst_rtspsrc_media_to_caps),
+	(gst_rtspsrc_flush), (gst_rtspsrc_do_seek),
+	(gst_rtspsrc_sink_chain), (gst_rtspsrc_stream_configure_manager),
+	(gst_rtspsrc_stream_configure_tcp),
+	(gst_rtspsrc_stream_configure_mcast),
+	(gst_rtspsrc_stream_configure_udp),
+	(gst_rtspsrc_stream_configure_udp_sink),
+	(gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_handle_request), (gst_rtspsrc_send_keep_alive),
+	(gst_rtspsrc_loop_interleaved), (gst_rtspsrc_loop_udp),
+	(gst_rtspsrc_loop_send_cmd), (gst_rtsp_auth_method_to_string),
+	(gst_rtspsrc_parse_auth_hdr), (gst_rtspsrc_setup_auth),
+	(gst_rtspsrc_try_send), (gst_rtspsrc_send),
+	(gst_rtspsrc_parse_methods),
+	(gst_rtspsrc_create_transports_string),
+	(gst_rtspsrc_prepare_transports), (gst_rtspsrc_setup_streams),
+	(gst_rtspsrc_parse_range), (gst_rtspsrc_open), (gst_rtspsrc_close),
+	(gst_rtspsrc_play), (gst_rtspsrc_pause),
+	(gst_rtspsrc_change_state), (gst_rtspsrc_uri_set_uri):
+	* gst/rtsp/gstrtspsrc.h:
+	* gst/rtsp/rtsp.h:
+	* gst/rtsp/rtspconnection.c:
+	* gst/rtsp/rtspconnection.h:
+	* gst/rtsp/rtspdefs.c:
+	* gst/rtsp/rtspdefs.h:
+	* gst/rtsp/rtspext.h:
+	* gst/rtsp/rtspextwms.c:
+	* gst/rtsp/rtspextwms.h:
+	* gst/rtsp/rtspmessage.c:
+	* gst/rtsp/rtspmessage.h:
+	* gst/rtsp/rtsprange.c:
+	* gst/rtsp/rtsprange.h:
+	* gst/rtsp/rtsptransport.c:
+	* gst/rtsp/rtsptransport.h:
+	* gst/rtsp/rtspurl.c:
+	* gst/rtsp/rtspurl.h:
+	* gst/rtsp/sdp.h:
+	* gst/rtsp/sdpmessage.c:
+	* gst/rtsp/sdpmessage.h:
+	* gst/rtsp/test.c:
+	Use shiny new RTSP and SDP library.
+	Implement RTSP extensions using the new interface.
+	Remove a lot of old code.
+
 2007-07-24  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):

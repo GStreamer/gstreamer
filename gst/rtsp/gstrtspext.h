@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005,2006> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2006> Wim Taymans <wim@fluendo.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -40,9 +40,38 @@
  * SOFTWARE.
  */
 
-#ifndef __SDP_H__
-#define __SDP_H__
+#ifndef __GST_RTSP_EXT_H__
+#define __GST_RTSP_EXT_H__
 
-#include <sdpmessage.h>
+#include <gst/gst.h>
+#include <gst/interfaces/rtspextension.h>
 
-#endif /* __SDP_H__ */
+G_BEGIN_DECLS
+
+typedef struct _GstRTSPExtensionList GstRTSPExtensionList;
+
+struct _GstRTSPExtensionList
+{
+  GList *extensions;
+};
+
+void                    gst_rtsp_ext_list_init    (void);
+
+GstRTSPExtensionList *  gst_rtsp_ext_list_get     (void);
+
+gboolean      gst_rtsp_ext_list_detect_server     (GstRTSPExtensionList *ext, GstRTSPMessage *resp);
+  
+GstRTSPResult gst_rtsp_ext_list_before_send       (GstRTSPExtensionList *ext, GstRTSPMessage *req);
+GstRTSPResult gst_rtsp_ext_list_after_send        (GstRTSPExtensionList *ext, GstRTSPMessage *req,
+                                                   GstRTSPMessage *resp);
+GstRTSPResult gst_rtsp_ext_list_parse_sdp         (GstRTSPExtensionList *ext, GstSDPMessage *sdp,
+                                                   GstStructure *s);
+GstRTSPResult gst_rtsp_ext_list_setup_media       (GstRTSPExtensionList *ext, GstSDPMedia *media);
+gboolean      gst_rtsp_ext_list_configure_stream  (GstRTSPExtensionList *ext, GstCaps *caps);
+GstRTSPResult gst_rtsp_ext_list_get_transports    (GstRTSPExtensionList *ext, GstRTSPLowerTrans protocols,
+                                                   gchar **transport);
+GstRTSPResult gst_rtsp_ext_list_stream_select     (GstRTSPExtensionList *ext);
+
+G_END_DECLS
+
+#endif /* __GST_RTSP_EXT_H__ */

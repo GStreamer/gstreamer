@@ -92,16 +92,19 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <gst/sdp/gstsdpmessage.h>
+#include <gst/rtsp/gstrtsprange.h>
+
 #include "gstrtspsrc.h"
-#include "sdp.h"
-#include "rtsprange.h"
 
 /* define for experimental real support */
 #undef WITH_EXT_REAL
 
+#if 0
 #include "rtspextwms.h"
 #ifdef WITH_EXT_REAL
 #include "rtspextreal.h"
+#endif
 #endif
 
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
@@ -141,7 +144,7 @@ enum
 };
 
 #define DEFAULT_LOCATION        NULL
-#define DEFAULT_PROTOCOLS       RTSP_LOWER_TRANS_UDP | RTSP_LOWER_TRANS_UDP_MCAST | RTSP_LOWER_TRANS_TCP
+#define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_DEBUG           FALSE
 #define DEFAULT_RETRY           20
 #define DEFAULT_TIMEOUT         5000000
@@ -166,9 +169,9 @@ gst_rtsp_lower_trans_get_type (void)
 {
   static GType rtsp_lower_trans_type = 0;
   static const GFlagsValue rtsp_lower_trans[] = {
-    {RTSP_LOWER_TRANS_UDP, "UDP Unicast Mode", "udp-unicast"},
-    {RTSP_LOWER_TRANS_UDP_MCAST, "UDP Multicast Mode", "udp-multicast"},
-    {RTSP_LOWER_TRANS_TCP, "TCP interleaved mode", "tcp"},
+    {GST_RTSP_LOWER_TRANS_UDP, "UDP Unicast Mode", "udp-unicast"},
+    {GST_RTSP_LOWER_TRANS_UDP_MCAST, "UDP Multicast Mode", "udp-multicast"},
+    {GST_RTSP_LOWER_TRANS_TCP, "TCP interleaved mode", "tcp"},
     {0, NULL, NULL},
   };
 
@@ -189,7 +192,7 @@ static void gst_rtspsrc_get_property (GObject * object, guint prop_id,
 
 static void gst_rtspsrc_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
-static GstCaps *gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media);
+static GstCaps *gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media);
 
 static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
     GstStateChange transition);
@@ -299,6 +302,8 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
+
+  gst_rtsp_ext_list_init ();
 }
 
 static void
@@ -310,6 +315,10 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
   src->location = g_strdup (DEFAULT_LOCATION);
   src->url = NULL;
 
+  /* get a list of all extensions */
+  src->extensions = gst_rtsp_ext_list_get ();
+
+#if 0
 #ifdef WITH_EXT_REAL
   src->extension = rtsp_ext_real_get_context ();
 #else
@@ -317,10 +326,11 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
   src->extension = rtsp_ext_wms_get_context ();
 #endif
   src->extension->src = (gpointer) src;
+#endif
 
   src->state_rec_lock = g_new (GStaticRecMutex, 1);
   g_static_rec_mutex_init (src->state_rec_lock);
-  src->state = RTSP_STATE_INVALID;
+  src->state = GST_RTSP_STATE_INVALID;
 }
 
 static void
@@ -335,10 +345,11 @@ gst_rtspsrc_finalize (GObject * object)
   g_free (rtspsrc->location);
   g_free (rtspsrc->req_location);
   g_free (rtspsrc->content_base);
-  rtsp_url_free (rtspsrc->url);
+  gst_rtsp_url_free (rtspsrc->url);
   g_static_rec_mutex_free (rtspsrc->state_rec_lock);
   g_free (rtspsrc->state_rec_lock);
 
+#if 0
   if (rtspsrc->extension) {
 #ifdef WITH_EXT_REAL
     rtsp_ext_real_free_context (rtspsrc->extension);
@@ -346,6 +357,7 @@ gst_rtspsrc_finalize (GObject * object)
     rtsp_ext_wms_free_context (rtspsrc->extension);
 #endif
   }
+#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -498,15 +510,15 @@ find_stream_by_setup (GstRTSPStream * stream, gconstpointer a)
 }
 
 static GstRTSPStream *
-gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
+gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
 {
   GstRTSPStream *stream;
-  gchar *control_url;
-  gchar *payload;
-  SDPMedia *media;
+  const gchar *control_url;
+  const gchar *payload;
+  const GstSDPMedia *media;
 
   /* get media, should not return NULL */
-  media = sdp_message_get_media (sdp, idx);
+  media = gst_sdp_message_get_media (sdp, idx);
   if (media == NULL)
     return NULL;
 
@@ -521,7 +533,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
 
   /* we must have a payload. No payload means we cannot create caps */
   /* FIXME, handle multiple formats. */
-  if ((payload = sdp_media_get_format (media, 0))) {
+  if ((payload = gst_sdp_media_get_format (media, 0))) {
     stream->pt = atoi (payload);
     /* convert caps */
     stream->caps = gst_rtspsrc_media_to_caps (stream->pt, media);
@@ -540,7 +552,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, SDPMessage * sdp, gint idx)
   /* get control url to construct the setup url. The setup url is used to
    * configure the transport of the stream and is used to identity the stream in
    * the RTP-Info header field returned from PLAY. */
-  control_url = sdp_media_get_attribute_val (media, "control");
+  control_url = gst_sdp_media_get_attribute_val (media, "control");
 
   GST_DEBUG_OBJECT (src, "stream %d", stream->id);
   GST_DEBUG_OBJECT (src, " pt: %d", stream->pt);
@@ -729,12 +741,12 @@ G_STMT_START {                          \
  *  <payload> <encoding_name>/<clock_rate>[/<encoding_params>]
  */
 static gboolean
-gst_rtspsrc_parse_rtpmap (gchar * rtpmap, gint * payload, gchar ** name,
+gst_rtspsrc_parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
     gint * rate, gchar ** params)
 {
   gchar *p, *t;
 
-  t = p = rtpmap;
+  t = p = (gchar *) rtpmap;
 
   PARSE_INT (p, " ", *payload);
   if (*payload == -1)
@@ -778,11 +790,11 @@ gst_rtspsrc_parse_rtpmap (gchar * rtpmap, gint * payload, gchar ** name,
  *   a=fmtp:<payload> <param>[=<value>];...
  */
 static GstCaps *
-gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
+gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media)
 {
   GstCaps *caps;
-  gchar *rtpmap;
-  gchar *fmtp;
+  const gchar *rtpmap;
+  const gchar *fmtp;
   gchar *name = NULL;
   gint rate = -1;
   gchar *params = NULL;
@@ -792,7 +804,7 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
   gboolean ret;
 
   /* get and parse rtpmap */
-  if ((rtpmap = sdp_media_get_attribute_val (media, "rtpmap"))) {
+  if ((rtpmap = gst_sdp_media_get_attribute_val (media, "rtpmap"))) {
     ret = gst_rtspsrc_parse_rtpmap (rtpmap, &payload, &name, &rate, &params);
     if (ret) {
       if (payload != pt) {
@@ -848,11 +860,11 @@ gst_rtspsrc_media_to_caps (gint pt, SDPMedia * media)
   }
 
   /* parse optional fmtp: field */
-  if ((fmtp = sdp_media_get_attribute_val (media, "fmtp"))) {
+  if ((fmtp = gst_sdp_media_get_attribute_val (media, "fmtp"))) {
     gchar *p;
     gint payload = 0;
 
-    p = fmtp;
+    p = (gchar *) fmtp;
 
     /* p is now of the format <payload> <param>[=<value>];... */
     PARSE_INT (p, " ", payload);
@@ -1056,7 +1068,7 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
     event = gst_event_new_flush_stop ();
   }
 
-  rtsp_connection_flush (src->connection, flush);
+  gst_rtsp_connection_flush (src->connection, flush);
 
   gst_rtspsrc_push_event (src, event);
 }
@@ -1069,7 +1081,7 @@ gst_rtspsrc_do_seek (GstRTSPSrc * src, GstSegment * segment)
   /* PLAY from new position, we are flushing now */
   src->position = ((gdouble) segment->last_stop) / GST_SECOND;
 
-  src->state = RTSP_STATE_SEEKING;
+  src->state = GST_RTSP_STATE_SEEKING;
 
   res = gst_rtspsrc_play (src);
 
@@ -1308,8 +1320,8 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn res = GST_FLOW_OK;
   guint8 *data;
   guint size;
-  RTSPResult ret;
-  RTSPMessage message = { 0 };
+  GstRTSPResult ret;
+  GstRTSPMessage message = { 0 };
 
   stream = (GstRTSPStream *) gst_pad_get_element_private (pad);
   src = stream->parent;
@@ -1317,15 +1329,15 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
   data = GST_BUFFER_DATA (buffer);
   size = GST_BUFFER_SIZE (buffer);
 
-  rtsp_message_init_data (&message, stream->channel[1]);
+  gst_rtsp_message_init_data (&message, stream->channel[1]);
 
-  rtsp_message_take_body (&message, data, size);
+  gst_rtsp_message_take_body (&message, data, size);
 
   GST_DEBUG_OBJECT (src, "sending %u bytes RTCP", size);
-  ret = rtsp_connection_send (src->connection, &message, NULL);
+  ret = gst_rtsp_connection_send (src->connection, &message, NULL);
   GST_DEBUG_OBJECT (src, "sent RTCP, %d", ret);
 
-  rtsp_message_steal_body (&message, &data, &size);
+  gst_rtsp_message_steal_body (&message, &data, &size);
 
   gst_buffer_unref (buffer);
 
@@ -1467,15 +1479,16 @@ unknown_stream:
 /* try to get and configure a manager */
 static gboolean
 gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
-    RTSPTransport * transport)
+    GstRTSPTransport * transport)
 {
   const gchar *manager;
   gchar *name;
-  RTSPResult res;
+  GstRTSPResult res;
   GstStateChangeReturn ret;
 
   /* find a manager */
-  if ((res = rtsp_transport_get_manager (transport->trans, &manager, 0)) < 0)
+  if ((res =
+          gst_rtsp_transport_get_manager (transport->trans, &manager, 0)) < 0)
     goto no_manager;
 
   if (manager) {
@@ -1486,7 +1499,8 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       if (!(src->session = gst_element_factory_make (manager, NULL))) {
         /* fallback */
         if ((res =
-                rtsp_transport_get_manager (transport->trans, &manager, 1)) < 0)
+                gst_rtsp_transport_get_manager (transport->trans, &manager,
+                    1)) < 0)
           goto no_manager;
 
         if (!manager)
@@ -1568,7 +1582,7 @@ gst_rtspsrc_stream_free_udp (GstRTSPStream * stream)
  */
 static gboolean
 gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
-    RTSPTransport * transport, GstPad ** outpad)
+    GstRTSPTransport * transport, GstPad ** outpad)
 {
   gchar *name;
   GstPadTemplate *template;
@@ -1650,7 +1664,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
 /* For multicast create UDP sources and join the multicast group. */
 static gboolean
 gst_rtspsrc_stream_configure_mcast (GstRTSPSrc * src, GstRTSPStream * stream,
-    RTSPTransport * transport, GstPad ** outpad)
+    GstRTSPTransport * transport, GstPad ** outpad)
 {
   gchar *uri;
 
@@ -1704,7 +1718,7 @@ no_element:
 /* configure the remainder of the UDP ports */
 static gboolean
 gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
-    RTSPTransport * transport, GstPad ** outpad)
+    GstRTSPTransport * transport, GstPad ** outpad)
 {
   /* we manage the UDP elements now. For unicast, the UDP sources where
    * allocated in the stream when we suggested a transport. */
@@ -1766,7 +1780,7 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
 /* configure the UDP sink back to the server for status reports */
 static gboolean
 gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
-    RTSPTransport * transport)
+    GstRTSPTransport * transport)
 {
   GstPad *pad;
   gint port;
@@ -1777,7 +1791,7 @@ gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
     return TRUE;
 
   /* get host and port */
-  if (transport->lower_transport == RTSP_LOWER_TRANS_UDP_MCAST)
+  if (transport->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST)
     port = transport->port.max;
   else
     port = transport->server_port.max;
@@ -1833,7 +1847,7 @@ no_sink_element:
  */
 static gboolean
 gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
-    RTSPTransport * transport)
+    GstRTSPTransport * transport)
 {
   GstRTSPSrc *src;
   GstPad *outpad = NULL;
@@ -1841,7 +1855,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
   gchar *name;
   GstStructure *s;
   const gchar *mime;
-  RTSPResult res;
+  GstRTSPResult res;
 
   src = stream->parent;
 
@@ -1850,7 +1864,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
   s = gst_caps_get_structure (stream->caps, 0);
 
   /* get the proper mime type for this stream now */
-  if ((res = rtsp_transport_get_mime (transport->trans, &mime)) < 0)
+  if ((res = gst_rtsp_transport_get_mime (transport->trans, &mime)) < 0)
     goto unknown_transport;
   if (!mime)
     goto unknown_transport;
@@ -1865,15 +1879,15 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     goto no_manager;
 
   switch (transport->lower_transport) {
-    case RTSP_LOWER_TRANS_TCP:
+    case GST_RTSP_LOWER_TRANS_TCP:
       if (!gst_rtspsrc_stream_configure_tcp (src, stream, transport, &outpad))
         goto transport_failed;
       break;
-    case RTSP_LOWER_TRANS_UDP_MCAST:
+    case GST_RTSP_LOWER_TRANS_UDP_MCAST:
       if (!gst_rtspsrc_stream_configure_mcast (src, stream, transport, &outpad))
         goto transport_failed;
       /* fallthrough, the rest is the same for UDP and MCAST */
-    case RTSP_LOWER_TRANS_UDP:
+    case GST_RTSP_LOWER_TRANS_UDP:
       if (!gst_rtspsrc_stream_configure_udp (src, stream, transport, &outpad))
         goto transport_failed;
       /* configure udpsink back to the server for RTCP messages. */
@@ -2076,30 +2090,32 @@ gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event)
 }
 
 /* FIXME, handle server request, reply with OK, for now */
-static RTSPResult
-gst_rtspsrc_handle_request (GstRTSPSrc * src, RTSPMessage * request)
+static GstRTSPResult
+gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPMessage * request)
 {
-  RTSPMessage response = { 0 };
-  RTSPResult res;
+  GstRTSPMessage response = { 0 };
+  GstRTSPResult res;
 
   GST_DEBUG_OBJECT (src, "got server request message");
 
   if (src->debug)
-    rtsp_message_dump (request);
+    gst_rtsp_message_dump (request);
 
-  res = rtsp_message_init_response (&response, RTSP_STS_OK, "OK", request);
+  res =
+      gst_rtsp_message_init_response (&response, GST_RTSP_STS_OK, "OK",
+      request);
   if (res < 0)
     goto send_error;
 
   GST_DEBUG_OBJECT (src, "replying with OK");
 
   if (src->debug)
-    rtsp_message_dump (&response);
+    gst_rtsp_message_dump (&response);
 
-  if ((res = rtsp_connection_send (src->connection, &response, NULL)) < 0)
+  if ((res = gst_rtsp_connection_send (src->connection, &response, NULL)) < 0)
     goto send_error;
 
-  return RTSP_OK;
+  return GST_RTSP_OK;
 
   /* ERRORS */
 send_error:
@@ -2109,39 +2125,39 @@ send_error:
 }
 
 /* send server keep-alive */
-static RTSPResult
+static GstRTSPResult
 gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
 {
-  RTSPMessage request = { 0 };
-  RTSPResult res;
-  RTSPMethod method;
+  GstRTSPMessage request = { 0 };
+  GstRTSPResult res;
+  GstRTSPMethod method;
 
   GST_DEBUG_OBJECT (src, "creating server keep-alive");
 
   /* find a method to use for keep-alive */
-  if (src->methods & RTSP_GET_PARAMETER)
-    method = RTSP_GET_PARAMETER;
+  if (src->methods & GST_RTSP_GET_PARAMETER)
+    method = GST_RTSP_GET_PARAMETER;
   else
-    method = RTSP_OPTIONS;
+    method = GST_RTSP_OPTIONS;
 
-  res = rtsp_message_init_request (&request, method, src->req_location);
+  res = gst_rtsp_message_init_request (&request, method, src->req_location);
   if (res < 0)
     goto send_error;
 
-  if ((res = rtsp_connection_send (src->connection, &request, NULL)) < 0)
+  if ((res = gst_rtsp_connection_send (src->connection, &request, NULL)) < 0)
     goto send_error;
 
-  rtsp_connection_reset_timeout (src->connection);
-  rtsp_message_unset (&request);
+  gst_rtsp_connection_reset_timeout (src->connection);
+  gst_rtsp_message_unset (&request);
 
-  return RTSP_OK;
+  return GST_RTSP_OK;
 
   /* ERRORS */
 send_error:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
-    rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&request);
     GST_ELEMENT_WARNING (src, RESOURCE, WRITE, (NULL),
         ("Could not send keep-alive. (%s)", str));
     g_free (str);
@@ -2152,8 +2168,8 @@ send_error:
 static void
 gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 {
-  RTSPMessage message = { 0 };
-  RTSPResult res;
+  GstRTSPMessage message = { 0 };
+  GstRTSPResult res;
   gint channel;
   GList *lstream;
   GstRTSPStream *stream;
@@ -2169,7 +2185,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     GTimeVal tv_timeout, *tv;
 
     /* get the next timeout interval */
-    rtsp_connection_next_timeout (src->connection, &tv_timeout);
+    gst_rtsp_connection_next_timeout (src->connection, &tv_timeout);
 
     /* see if the timeout period expired */
     if ((tv_timeout.tv_usec | tv_timeout.tv_usec) == 0) {
@@ -2185,33 +2201,33 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 
     GST_DEBUG_OBJECT (src, "doing receive");
 
-    res = rtsp_connection_receive (src->connection, &message, tv);
+    res = gst_rtsp_connection_receive (src->connection, &message, tv);
 
     switch (res) {
-      case RTSP_OK:
+      case GST_RTSP_OK:
         GST_DEBUG_OBJECT (src, "we received a server message");
         break;
-      case RTSP_EINTR:
+      case GST_RTSP_EINTR:
         /* we got interrupted, see what we have to do */
         GST_DEBUG_OBJECT (src, "we got interrupted, unset flushing");
         /* unset flushing so we can do something else */
-        rtsp_connection_flush (src->connection, FALSE);
+        gst_rtsp_connection_flush (src->connection, FALSE);
         goto interrupt;
       default:
         goto receive_error;
     }
 
     switch (message.type) {
-      case RTSP_MESSAGE_REQUEST:
+      case GST_RTSP_MESSAGE_REQUEST:
         /* server sends us a request message, handle it */
         if ((res = gst_rtspsrc_handle_request (src, &message)) < 0)
           goto handle_request_failed;
         break;
-      case RTSP_MESSAGE_RESPONSE:
+      case GST_RTSP_MESSAGE_RESPONSE:
         /* we ignore response messages */
         GST_DEBUG_OBJECT (src, "ignoring response message");
         break;
-      case RTSP_MESSAGE_DATA:
+      case GST_RTSP_MESSAGE_DATA:
         GST_DEBUG_OBJECT (src, "got data message");
         have_data = TRUE;
         break;
@@ -2242,7 +2258,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   }
 
   /* take a look at the body to figure out what we have */
-  rtsp_message_get_body (&message, &data, &size);
+  gst_rtsp_message_get_body (&message, &data, &size);
   if (size < 2)
     goto invalid_length;
 
@@ -2258,7 +2274,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     goto unknown_stream;
 
   /* take the message body for further processing */
-  rtsp_message_steal_body (&message, &data, &size);
+  gst_rtsp_message_steal_body (&message, &data, &size);
 
   /* strip the trailing \0 */
   size -= 1;
@@ -2269,7 +2285,7 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   GST_BUFFER_SIZE (buf) = size;
 
   /* don't need message anymore */
-  rtsp_message_unset (&message);
+  gst_rtsp_message_unset (&message);
 
   GST_DEBUG_OBJECT (src, "pushing data of size %d on channel %d", size,
       channel);
@@ -2297,36 +2313,36 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 unknown_stream:
   {
     GST_DEBUG_OBJECT (src, "unknown stream on channel %d, ignored", channel);
-    rtsp_message_unset (&message);
+    gst_rtsp_message_unset (&message);
     return;
   }
 interrupt:
   {
     GST_DEBUG_OBJECT (src, "we got interrupted");
-    rtsp_message_unset (&message);
+    gst_rtsp_message_unset (&message);
     ret = GST_FLOW_WRONG_STATE;
     goto need_pause;
   }
 receive_error:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not receive message. (%s)", str));
     g_free (str);
 
-    rtsp_message_unset (&message);
+    gst_rtsp_message_unset (&message);
     ret = GST_FLOW_UNEXPECTED;
     goto need_pause;
   }
 handle_request_failed:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message. (%s)", str));
     g_free (str);
-    rtsp_message_unset (&message);
+    gst_rtsp_message_unset (&message);
     ret = GST_FLOW_UNEXPECTED;
     goto need_pause;
   }
@@ -2334,7 +2350,7 @@ invalid_length:
   {
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("Short message received."));
-    rtsp_message_unset (&message);
+    gst_rtsp_message_unset (&message);
     return;
   }
 need_pause:
@@ -2371,7 +2387,7 @@ static void
 gst_rtspsrc_loop_udp (GstRTSPSrc * src)
 {
   gboolean restart = FALSE;
-  RTSPResult res;
+  GstRTSPResult res;
 
   GST_OBJECT_LOCK (src);
   if (src->loop_cmd == CMD_STOP)
@@ -2381,11 +2397,11 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
     GST_OBJECT_UNLOCK (src);
 
     while (TRUE) {
-      RTSPMessage message = { 0 };
+      GstRTSPMessage message = { 0 };
       GTimeVal tv_timeout;
 
       /* get the next timeout interval */
-      rtsp_connection_next_timeout (src->connection, &tv_timeout);
+      gst_rtsp_connection_next_timeout (src->connection, &tv_timeout);
 
       GST_DEBUG_OBJECT (src, "doing receive with timeout %d seconds",
           (gint) tv_timeout.tv_sec);
@@ -2393,19 +2409,20 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
       /* we should continue reading the TCP socket because the server might
        * send us requests. When the session timeout expires, we need to send a
        * keep-alive request to keep the session open. */
-      res = rtsp_connection_receive (src->connection, &message, &tv_timeout);
+      res =
+          gst_rtsp_connection_receive (src->connection, &message, &tv_timeout);
 
       switch (res) {
-        case RTSP_OK:
+        case GST_RTSP_OK:
           GST_DEBUG_OBJECT (src, "we received a server message");
           break;
-        case RTSP_EINTR:
+        case GST_RTSP_EINTR:
           /* we got interrupted, see what we have to do */
           GST_DEBUG_OBJECT (src, "we got interrupted, unset flushing");
           /* unset flushing so we can do something else */
-          rtsp_connection_flush (src->connection, FALSE);
+          gst_rtsp_connection_flush (src->connection, FALSE);
           goto interrupt;
-        case RTSP_ETIMEOUT:
+        case GST_RTSP_ETIMEOUT:
           /* send keep-alive, ignore the result, a warning will be posted. */
           GST_DEBUG_OBJECT (src, "timout, sending keep-alive");
           res = gst_rtspsrc_send_keep_alive (src);
@@ -2415,16 +2432,16 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
       }
 
       switch (message.type) {
-        case RTSP_MESSAGE_REQUEST:
+        case GST_RTSP_MESSAGE_REQUEST:
           /* server sends us a request message, handle it */
           if ((res = gst_rtspsrc_handle_request (src, &message)) < 0)
             goto handle_request_failed;
           break;
-        case RTSP_MESSAGE_RESPONSE:
+        case GST_RTSP_MESSAGE_RESPONSE:
           /* we ignore response and data messages */
           GST_DEBUG_OBJECT (src, "ignoring response message");
           break;
-        case RTSP_MESSAGE_DATA:
+        case GST_RTSP_MESSAGE_DATA:
           /* we ignore response and data messages */
           GST_DEBUG_OBJECT (src, "ignoring data message");
           break;
@@ -2461,7 +2478,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
           "firewall is blocking it. Retrying using a TCP connection.",
           gst_guint64_to_gdouble (src->udp_timeout / 1000000)));
   /* we can try only TCP now */
-  src->cur_protocols = RTSP_LOWER_TRANS_TCP;
+  src->cur_protocols = GST_RTSP_LOWER_TRANS_TCP;
 
   /* pause to prepare for a restart */
   gst_rtspsrc_pause (src);
@@ -2477,7 +2494,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   gst_rtspsrc_close (src);
 
   /* see if we have TCP left to try */
-  if (!(src->protocols & RTSP_LOWER_TRANS_TCP))
+  if (!(src->protocols & GST_RTSP_LOWER_TRANS_TCP))
     goto no_protocols;
 
   /* open new connection using tcp */
@@ -2507,13 +2524,13 @@ stopping:
   }
 receive_error:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("Could not receive message. (%s)", str));
     g_free (str);
     /* don't bother continueing if we the connection was closed */
-    if (res == RTSP_EEOF) {
+    if (res == GST_RTSP_EEOF) {
       src->running = FALSE;
       gst_task_pause (src->task);
     }
@@ -2521,7 +2538,7 @@ receive_error:
   }
 handle_request_failed:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("Could not handle server message. (%s)", str));
@@ -2555,7 +2572,7 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gboolean flush)
   src->loop_cmd = cmd;
   if (flush) {
     GST_DEBUG_OBJECT (src, "start flush");
-    rtsp_connection_flush (src->connection, TRUE);
+    gst_rtsp_connection_flush (src->connection, TRUE);
   }
   GST_OBJECT_UNLOCK (src);
 }
@@ -2571,7 +2588,7 @@ gst_rtspsrc_loop (GstRTSPSrc * src)
 
 #ifndef GST_DISABLE_GST_DEBUG
 const gchar *
-rtsp_auth_method_to_string (RTSPAuthMethod method)
+gst_rtsp_auth_method_to_string (GstRTSPAuthMethod method)
 {
   gint index = 0;
 
@@ -2604,7 +2621,7 @@ rtsp_auth_method_to_string (RTSPAuthMethod method)
  * At the moment, we just do a minimal check for Basic auth and don't
  * even parse out the realm */
 static void
-gst_rtspsrc_parse_auth_hdr (gchar * hdr, RTSPAuthMethod * methods)
+gst_rtspsrc_parse_auth_hdr (gchar * hdr, GstRTSPAuthMethod * methods)
 {
   gchar *start;
 
@@ -2615,7 +2632,7 @@ gst_rtspsrc_parse_auth_hdr (gchar * hdr, RTSPAuthMethod * methods)
   for (start = hdr; start[0] != '\0' && g_ascii_isspace (start[0]); start++);
 
   if (g_ascii_strncasecmp (start, "basic", 5) == 0)
-    *methods |= RTSP_AUTH_BASIC;
+    *methods |= GST_RTSP_AUTH_BASIC;
 }
 
 /**
@@ -2633,22 +2650,22 @@ gst_rtspsrc_parse_auth_hdr (gchar * hdr, RTSPAuthMethod * methods)
  * Returns: TRUE if authentication information could be set up correctly.
  */
 static gboolean
-gst_rtspsrc_setup_auth (GstRTSPSrc * src, RTSPMessage * response)
+gst_rtspsrc_setup_auth (GstRTSPSrc * src, GstRTSPMessage * response)
 {
   gchar *user = NULL;
   gchar *pass = NULL;
-  RTSPAuthMethod avail_methods = RTSP_AUTH_NONE;
-  RTSPAuthMethod method;
-  RTSPResult auth_result;
+  GstRTSPAuthMethod avail_methods = GST_RTSP_AUTH_NONE;
+  GstRTSPAuthMethod method;
+  GstRTSPResult auth_result;
   gchar *hdr;
 
   /* Identify the available auth methods and see if any are supported */
-  if (rtsp_message_get_header (response, RTSP_HDR_WWW_AUTHENTICATE, &hdr, 0) ==
-      RTSP_OK) {
+  if (gst_rtsp_message_get_header (response, GST_RTSP_HDR_WWW_AUTHENTICATE,
+          &hdr, 0) == GST_RTSP_OK) {
     gst_rtspsrc_parse_auth_hdr (hdr, &avail_methods);
   }
 
-  if (avail_methods == RTSP_AUTH_NONE)
+  if (avail_methods == GST_RTSP_AUTH_NONE)
     goto no_auth_available;
 
   /* FIXME: For digest auth, if the response indicates that the session
@@ -2674,24 +2691,24 @@ gst_rtspsrc_setup_auth (GstRTSPSrc * src, RTSPMessage * response)
 
   /* Try to configure for each available authentication method, strongest to
    * weakest */
-  for (method = RTSP_AUTH_MAX; method != RTSP_AUTH_NONE; method >>= 1) {
+  for (method = GST_RTSP_AUTH_MAX; method != GST_RTSP_AUTH_NONE; method >>= 1) {
     /* Check if this method is available on the server */
     if ((method & avail_methods) == 0)
       continue;
 
     /* Pass the credentials to the connection to try on the next request */
     auth_result =
-        rtsp_connection_set_auth (src->connection, method, user, pass);
+        gst_rtsp_connection_set_auth (src->connection, method, user, pass);
     /* INVAL indicates an invalid username/passwd were supplied, so we'll just
      * ignore it and end up retrying later */
-    if (auth_result == RTSP_OK || auth_result == RTSP_EINVAL) {
+    if (auth_result == GST_RTSP_OK || auth_result == GST_RTSP_EINVAL) {
       GST_DEBUG_OBJECT (src, "Attempting %s authentication",
-          rtsp_auth_method_to_string (method));
+          gst_rtsp_auth_method_to_string (method));
       break;
     }
   }
 
-  if (method == RTSP_AUTH_NONE)
+  if (method == GST_RTSP_AUTH_NONE)
     goto no_auth_available;
 
   return TRUE;
@@ -2712,51 +2729,50 @@ no_user_pass:
   }
 }
 
-static RTSPResult
-gst_rtspsrc_try_send (GstRTSPSrc * src, RTSPMessage * request,
-    RTSPMessage * response, RTSPStatusCode * code)
+static GstRTSPResult
+gst_rtspsrc_try_send (GstRTSPSrc * src, GstRTSPMessage * request,
+    GstRTSPMessage * response, GstRTSPStatusCode * code)
 {
-  RTSPResult res;
-  RTSPStatusCode thecode;
+  GstRTSPResult res;
+  GstRTSPStatusCode thecode;
   gchar *content_base = NULL;
   GTimeVal *tv;
 
-  if (src->extension && src->extension->before_send)
-    src->extension->before_send (src->extension, request);
+  gst_rtsp_ext_list_before_send (src->extensions, request);
 
   GST_DEBUG_OBJECT (src, "sending message");
 
   if (src->debug)
-    rtsp_message_dump (request);
+    gst_rtsp_message_dump (request);
 
   if ((src->tcp_timeout.tv_sec | src->tcp_timeout.tv_usec))
     tv = &src->tcp_timeout;
   else
     tv = NULL;
 
-  if ((res = rtsp_connection_send (src->connection, request, tv)) < 0)
+  if ((res = gst_rtsp_connection_send (src->connection, request, tv)) < 0)
     goto send_error;
 
-  rtsp_connection_reset_timeout (src->connection);
+  gst_rtsp_connection_reset_timeout (src->connection);
 
 next:
-  if ((res = rtsp_connection_receive (src->connection, response, tv)) < 0)
+  if ((res = gst_rtsp_connection_receive (src->connection, response, tv)) < 0)
     goto receive_error;
 
   if (src->debug)
-    rtsp_message_dump (response);
+    gst_rtsp_message_dump (response);
 
   switch (response->type) {
-    case RTSP_MESSAGE_REQUEST:
+    case GST_RTSP_MESSAGE_REQUEST:
       if ((res = gst_rtspsrc_handle_request (src, response)) < 0)
         goto handle_request_failed;
       goto next;
-    case RTSP_MESSAGE_RESPONSE:
+    case GST_RTSP_MESSAGE_RESPONSE:
       /* ok, a response is good */
       GST_DEBUG_OBJECT (src, "received response message");
       break;
     default:
-    case RTSP_MESSAGE_DATA:
+    case GST_RTSP_MESSAGE_DATA:
       /* get next response */
       GST_DEBUG_OBJECT (src, "ignoring data response message");
       goto next;
@@ -2771,23 +2787,23 @@ next:
     *code = thecode;
 
   /* If the request didn't succeed, bail out before doing any more */
-  if (thecode != RTSP_STS_OK)
-    return RTSP_OK;
+  if (thecode != GST_RTSP_STS_OK)
+    return GST_RTSP_OK;
 
   /* store new content base if any */
-  rtsp_message_get_header (response, RTSP_HDR_CONTENT_BASE, &content_base, 0);
+  gst_rtsp_message_get_header (response, GST_RTSP_HDR_CONTENT_BASE,
+      &content_base, 0);
   g_free (src->content_base);
   src->content_base = g_strdup (content_base);
 
-  if (src->extension && src->extension->after_send)
-    src->extension->after_send (src->extension, request, response);
+  gst_rtsp_ext_list_after_send (src->extensions, request, response);
 
-  return RTSP_OK;
+  return GST_RTSP_OK;
 
   /* ERRORS */
 send_error:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message. (%s)", str));
@@ -2796,7 +2812,7 @@ send_error:
   }
 receive_error:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not receive message. (%s)", str));
@@ -2814,13 +2830,13 @@ handle_request_failed:
  * gst_rtspsrc_send:
  * @src: the rtsp source
  * @request: must point to a valid request
- * @response: must point to an empty #RTSPMessage
+ * @response: must point to an empty #GstRTSPMessage
  *
  * send @request and retrieve the response in @response. optionally @code can be
  * non-NULL in which case it will contain the status code of the response.
  *
  * If This function returns TRUE, @response will contain a valid response
- * message that should be cleaned with rtsp_message_unset() after usage. 
+ * message that should be cleaned with gst_rtsp_message_unset() after usage. 
  *
  * If @code is NULL, this function will return FALSE (with an invalid @response
  * message) if the response code was not 200 (OK).
@@ -2829,16 +2845,16 @@ handle_request_failed:
  * to retrieve authentication credentials via gst_rtspsrc_setup_auth and retry
  * the request.
  *
- * Returns: RTSP_OK if the processing was successful.
+ * Returns: GST_RTSP_OK if the processing was successful.
  */
-RTSPResult
-gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
-    RTSPMessage * response, RTSPStatusCode * code)
+static GstRTSPResult
+gst_rtspsrc_send (GstRTSPSrc * src, GstRTSPMessage * request,
+    GstRTSPMessage * response, GstRTSPStatusCode * code)
 {
-  RTSPStatusCode int_code = RTSP_STS_OK;
-  RTSPResult res;
+  GstRTSPStatusCode int_code = GST_RTSP_STS_OK;
+  GstRTSPResult res;
   gboolean retry;
-  RTSPMethod method;
+  GstRTSPMethod method;
 
   do {
     retry = FALSE;
@@ -2849,7 +2865,7 @@ gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
     if ((res = gst_rtspsrc_try_send (src, request, response, &int_code)) < 0)
       goto error;
 
-    if (int_code == RTSP_STS_UNAUTHORIZED) {
+    if (int_code == GST_RTSP_STS_UNAUTHORIZED) {
       if (gst_rtspsrc_setup_auth (src, response)) {
         /* Try the request/response again after configuring the auth info
          * and loop again */
@@ -2862,7 +2878,7 @@ gst_rtspsrc_send (GstRTSPSrc * src, RTSPMessage * request,
    * post an error below */
   if (code != NULL)
     *code = int_code;
-  else if (int_code != RTSP_STS_OK)
+  else if (int_code != GST_RTSP_STS_OK)
     goto error_response;
 
   return res;
@@ -2875,19 +2891,19 @@ error:
   }
 error_response:
   {
-    res = RTSP_ERROR;
+    res = GST_RTSP_ERROR;
 
     switch (response->type_data.response.code) {
-      case RTSP_STS_NOT_FOUND:
+      case GST_RTSP_STS_NOT_FOUND:
         GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, (NULL), ("%s",
                 response->type_data.response.reason));
         break;
-      case RTSP_STS_NOT_ACCEPTABLE:
-      case RTSP_STS_NOT_IMPLEMENTED:
+      case GST_RTSP_STS_NOT_ACCEPTABLE:
+      case GST_RTSP_STS_NOT_IMPLEMENTED:
         GST_WARNING_OBJECT (src, "got NOT IMPLEMENTED, disable method %s",
-            rtsp_method_as_text (method));
+            gst_rtsp_method_as_text (method));
         src->methods &= ~method;
-        res = RTSP_OK;
+        res = GST_RTSP_OK;
         break;
       default:
         GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
@@ -2896,7 +2912,7 @@ error_response:
         break;
     }
     /* we return FALSE so we should unset the response ourselves */
-    rtsp_message_unset (response);
+    gst_rtsp_message_unset (response);
     return res;
   }
 }
@@ -2906,9 +2922,9 @@ error_response:
  * server.
  */
 static gboolean
-gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
+gst_rtspsrc_parse_methods (GstRTSPSrc * src, GstRTSPMessage * response)
 {
-  RTSPHeaderField field;
+  GstRTSPHeaderField field;
   gchar *respoptions;
   gchar **options;
   gint indx = 0;
@@ -2917,15 +2933,15 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
   /* clear supported methods */
   src->methods = 0;
 
-  /* try the Allow header first */
-  field = RTSP_HDR_ALLOW;
+  /* Try Allow Header first */
+  field = GST_RTSP_HDR_ALLOW;
   while (TRUE) {
     respoptions = NULL;
-    rtsp_message_get_header (response, field, &respoptions, indx);
+    gst_rtsp_message_get_header (response, field, &respoptions, indx);
     if (indx == 0 && !respoptions) {
       /* if no Allow header was found then try the Public header... */
-      field = RTSP_HDR_PUBLIC;
-      rtsp_message_get_header (response, field, &respoptions, indx);
+      field = GST_RTSP_HDR_PUBLIC;
+      gst_rtsp_message_get_header (response, field, &respoptions, indx);
     }
     if (!respoptions)
       break;
@@ -2942,10 +2958,10 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
       gint method;
 
       stripped = g_strstrip (options[i]);
-      method = rtsp_find_method (stripped);
+      method = gst_rtsp_find_method (stripped);
 
       /* keep bitfield of supported methods */
-      if (method != RTSP_INVALID)
+      if (method != GST_RTSP_INVALID)
         src->methods |= method;
     }
     g_strfreev (options);
@@ -2957,13 +2973,14 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, RTSPMessage * response)
     /* neither Allow nor Public are required, assume the server supports
      * DESCRIBE, SETUP, PLAY and PAUSE */
     GST_DEBUG_OBJECT (src, "could not get OPTIONS");
-    src->methods = RTSP_DESCRIBE | RTSP_SETUP | RTSP_PLAY | RTSP_PAUSE;
+    src->methods =
+        GST_RTSP_DESCRIBE | GST_RTSP_SETUP | GST_RTSP_PLAY | GST_RTSP_PAUSE;
   }
 
   /* we need describe and setup */
-  if (!(src->methods & RTSP_DESCRIBE))
+  if (!(src->methods & GST_RTSP_DESCRIBE))
     goto no_describe;
-  if (!(src->methods & RTSP_SETUP))
+  if (!(src->methods & GST_RTSP_SETUP))
     goto no_setup;
 
   return TRUE;
@@ -2983,27 +3000,28 @@ no_setup:
   }
 }
 
-static RTSPResult
+static GstRTSPResult
 gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
-    RTSPLowerTrans protocols, gchar ** transports)
+    GstRTSPLowerTrans protocols, gchar ** transports)
 {
   gchar *result;
-  RTSPResult res;
+  GstRTSPResult res;
 
   *transports = NULL;
-  if (src->extension && src->extension->get_transports)
-    if ((res =
-            src->extension->get_transports (src->extension, protocols,
-                transports)) < 0)
-      goto failed;
+
+  res =
+      gst_rtsp_ext_list_get_transports (src->extensions, protocols, transports);
+
+  if (res < 0)
+    goto failed;
 
   /* extension listed transports, use those */
   if (*transports != NULL)
-    return RTSP_OK;
+    return GST_RTSP_OK;
 
   /* the default RTSP transports */
   result = g_strdup ("");
-  if (protocols & RTSP_LOWER_TRANS_UDP) {
+  if (protocols & GST_RTSP_LOWER_TRANS_UDP) {
     gchar *new;
 
     GST_DEBUG_OBJECT (src, "adding UDP unicast");
@@ -3013,7 +3031,7 @@ gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
     g_free (result);
     result = new;
   }
-  if (protocols & RTSP_LOWER_TRANS_UDP_MCAST) {
+  if (protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST) {
     gchar *new;
 
     GST_DEBUG_OBJECT (src, "adding UDP multicast");
@@ -3026,7 +3044,7 @@ gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
     g_free (result);
     result = new;
   }
-  if (protocols & RTSP_LOWER_TRANS_TCP) {
+  if (protocols & GST_RTSP_LOWER_TRANS_TCP) {
     gchar *new;
 
     GST_DEBUG_OBJECT (src, "adding TCP");
@@ -3038,7 +3056,7 @@ gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
   }
   *transports = result;
 
-  return RTSP_OK;
+  return GST_RTSP_OK;
 
   /* ERRORS */
 failed:
@@ -3047,7 +3065,7 @@ failed:
   }
 }
 
-static RTSPResult
+static GstRTSPResult
 gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports)
 {
   GstRTSPSrc *src;
@@ -3105,12 +3123,12 @@ gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports)
   *transports = g_string_free (str, FALSE);
 
 done:
-  return RTSP_OK;
+  return GST_RTSP_OK;
 
   /* ERRORS */
 failed:
   {
-    return RTSP_ERROR;
+    return GST_RTSP_ERROR;
   }
 }
 
@@ -3130,11 +3148,11 @@ static gboolean
 gst_rtspsrc_setup_streams (GstRTSPSrc * src)
 {
   GList *walk;
-  RTSPResult res;
-  RTSPMessage request = { 0 };
-  RTSPMessage response = { 0 };
+  GstRTSPResult res;
+  GstRTSPMessage request = { 0 };
+  GstRTSPMessage response = { 0 };
   GstRTSPStream *stream = NULL;
-  RTSPLowerTrans protocols;
+  GstRTSPLowerTrans protocols;
 
   /* we initially allow all configured lower transports. based on the URL
    * transports and the replies from the server we narrow them down. */
@@ -3149,18 +3167,16 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     gchar *transports;
-    RTSPStatusCode code;
+    GstRTSPStatusCode code;
 
     stream = (GstRTSPStream *) walk->data;
 
     /* see if we need to configure this stream */
-    if (src->extension && src->extension->configure_stream) {
-      if (!src->extension->configure_stream (src->extension, stream)) {
-        GST_DEBUG_OBJECT (src, "skipping stream %p, disabled by extension",
-            stream);
-        stream->disabled = TRUE;
-        continue;
-      }
+    if (!gst_rtsp_ext_list_configure_stream (src->extensions, stream->caps)) {
+      GST_DEBUG_OBJECT (src, "skipping stream %p, disabled by extension",
+          stream);
+      stream->disabled = TRUE;
+      continue;
     }
 
     /* merge/overwrite global caps */
@@ -3204,12 +3220,14 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
       goto setup_transport_failed;
 
     /* create SETUP request */
-    res = rtsp_message_init_request (&request, RTSP_SETUP, stream->setup_url);
+    res =
+        gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
+        stream->setup_url);
     if (res < 0)
       goto create_request_failed;
 
     /* select transport, copy is made when adding to header so we can free it. */
-    rtsp_message_add_header (&request, RTSP_HDR_TRANSPORT, transports);
+    gst_rtsp_message_add_header (&request, GST_RTSP_HDR_TRANSPORT, transports);
     g_free (transports);
 
     /* handle the code ourselves */
@@ -3217,11 +3235,11 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
       goto send_error;
 
     switch (code) {
-      case RTSP_STS_OK:
+      case GST_RTSP_STS_OK:
         break;
-      case RTSP_STS_UNSUPPORTED_TRANSPORT:
-        rtsp_message_unset (&request);
-        rtsp_message_unset (&response);
+      case GST_RTSP_STS_UNSUPPORTED_TRANSPORT:
+        gst_rtsp_message_unset (&request);
+        gst_rtsp_message_unset (&response);
         /* cleanup of leftover transport and move to the next stream */
         gst_rtspsrc_stream_free_udp (stream);
         continue;
@@ -3232,23 +3250,24 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     /* parse response transport */
     {
       gchar *resptrans = NULL;
-      RTSPTransport transport = { 0 };
+      GstRTSPTransport transport = { 0 };
 
-      rtsp_message_get_header (&response, RTSP_HDR_TRANSPORT, &resptrans, 0);
+      gst_rtsp_message_get_header (&response, GST_RTSP_HDR_TRANSPORT,
+          &resptrans, 0);
       if (!resptrans)
         goto no_transport;
 
       /* parse transport, go to next stream on parse error */
-      if (rtsp_transport_parse (resptrans, &transport) != RTSP_OK)
+      if (gst_rtsp_transport_parse (resptrans, &transport) != GST_RTSP_OK)
         continue;
 
       /* update allowed transports for other streams. once the transport of
        * one stream has been determined, we make sure that all other streams
        * are configured in the same way */
       switch (transport.lower_transport) {
-        case RTSP_LOWER_TRANS_TCP:
+        case GST_RTSP_LOWER_TRANS_TCP:
           GST_DEBUG_OBJECT (src, "stream %p as TCP interleaved", stream);
-          protocols = RTSP_LOWER_TRANS_TCP;
+          protocols = GST_RTSP_LOWER_TRANS_TCP;
           src->interleaved = TRUE;
           /* update free channels */
           src->free_channel =
@@ -3257,15 +3276,15 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
               MAX (transport.interleaved.max, src->free_channel);
           src->free_channel++;
           break;
-        case RTSP_LOWER_TRANS_UDP_MCAST:
+        case GST_RTSP_LOWER_TRANS_UDP_MCAST:
           /* only allow multicast for other streams */
           GST_DEBUG_OBJECT (src, "stream %p as UDP multicast", stream);
-          protocols = RTSP_LOWER_TRANS_UDP_MCAST;
+          protocols = GST_RTSP_LOWER_TRANS_UDP_MCAST;
           break;
-        case RTSP_LOWER_TRANS_UDP:
+        case GST_RTSP_LOWER_TRANS_UDP:
           /* only allow unicast for other streams */
           GST_DEBUG_OBJECT (src, "stream %p as UDP unicast", stream);
-          protocols = RTSP_LOWER_TRANS_UDP;
+          protocols = GST_RTSP_LOWER_TRANS_UDP;
           break;
         default:
           GST_DEBUG_OBJECT (src, "stream %p unknown transport %d", stream,
@@ -3282,11 +3301,11 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
         }
       }
       /* clean up our transport struct */
-      rtsp_transport_init (&transport);
+      gst_rtsp_transport_init (&transport);
     }
   }
-  if (src->extension && src->extension->stream_select)
-    src->extension->stream_select (src->extension);
+
+  gst_rtsp_ext_list_stream_select (src->extensions);
 
   /* we need to activate the streams when we detect activity */
   src->need_activate = TRUE;
@@ -3303,7 +3322,7 @@ no_protocols:
   }
 create_request_failed:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
         ("Could not create request. (%s)", str));
@@ -3318,7 +3337,7 @@ setup_transport_failed:
   }
 send_error:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message. (%s)", str));
@@ -3333,8 +3352,8 @@ no_transport:
   }
 cleanup_error:
   {
-    rtsp_message_unset (&request);
-    rtsp_message_unset (&response);
+    gst_rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&response);
     return FALSE;
   }
 }
@@ -3342,26 +3361,26 @@ cleanup_error:
 static void
 gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range)
 {
-  RTSPTimeRange *therange;
+  GstRTSPTimeRange *therange;
 
-  if (rtsp_range_parse (range, &therange) == RTSP_OK) {
+  if (gst_rtsp_range_parse (range, &therange) == GST_RTSP_OK) {
     gint64 seconds;
 
     GST_DEBUG_OBJECT (src, "range: '%s', min %f - max %f ",
         GST_STR_NULL (range), therange->min.seconds, therange->max.seconds);
 
-    if (therange->min.type == RTSP_TIME_NOW)
+    if (therange->min.type == GST_RTSP_TIME_NOW)
       seconds = 0;
-    else if (therange->min.type == RTSP_TIME_END)
+    else if (therange->min.type == GST_RTSP_TIME_END)
       seconds = 0;
     else
       seconds = therange->min.seconds * GST_SECOND;
 
     gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME, seconds);
 
-    if (therange->max.type == RTSP_TIME_NOW)
+    if (therange->max.type == GST_RTSP_TIME_NOW)
       seconds = -1;
-    else if (therange->max.type == RTSP_TIME_END)
+    else if (therange->max.type == GST_RTSP_TIME_END)
       seconds = -1;
     else
       seconds = therange->max.seconds * GST_SECOND;
@@ -3373,13 +3392,13 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range)
 static gboolean
 gst_rtspsrc_open (GstRTSPSrc * src)
 {
-  RTSPResult res;
-  RTSPMessage request = { 0 };
-  RTSPMessage response = { 0 };
+  GstRTSPResult res;
+  GstRTSPMessage request = { 0 };
+  GstRTSPMessage response = { 0 };
   guint8 *data;
   guint size;
   gint i, n_streams;
-  SDPMessage sdp = { 0 };
+  GstSDPMessage sdp = { 0 };
   GstRTSPStream *stream = NULL;
   gchar *respcont = NULL;
 
@@ -3396,17 +3415,20 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   /* create connection */
   GST_DEBUG_OBJECT (src, "creating connection (%s)...", src->req_location);
-  if ((res = rtsp_connection_create (src->url, &src->connection)) < 0)
+  if ((res = gst_rtsp_connection_create (src->url, &src->connection)) < 0)
     goto could_not_create;
 
   /* connect */
   GST_DEBUG_OBJECT (src, "connecting (%s)...", src->req_location);
-  if ((res = rtsp_connection_connect (src->connection, &src->tcp_timeout)) < 0)
+  if ((res =
+          gst_rtsp_connection_connect (src->connection, &src->tcp_timeout)) < 0)
     goto could_not_connect;
 
   /* create OPTIONS */
   GST_DEBUG_OBJECT (src, "create options...");
-  res = rtsp_message_init_request (&request, RTSP_OPTIONS, src->req_location);
+  res =
+      gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
+      src->req_location);
   if (res < 0)
     goto create_request_failed;
 
@@ -3421,12 +3443,15 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   /* create DESCRIBE */
   GST_DEBUG_OBJECT (src, "create describe...");
-  res = rtsp_message_init_request (&request, RTSP_DESCRIBE, src->req_location);
+  res =
+      gst_rtsp_message_init_request (&request, GST_RTSP_DESCRIBE,
+      src->req_location);
   if (res < 0)
     goto create_request_failed;
 
   /* we only accept SDP for now */
-  rtsp_message_add_header (&request, RTSP_HDR_ACCEPT, "application/sdp");
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_ACCEPT,
+      "application/sdp");
 
   /* prepare global stream caps properties */
   if (src->props)
@@ -3440,7 +3465,8 @@ gst_rtspsrc_open (GstRTSPSrc * src)
     goto send_error;
 
   /* check if reply is SDP */
-  rtsp_message_get_header (&response, RTSP_HDR_CONTENT_TYPE, &respcont, 0);
+  gst_rtsp_message_get_header (&response, GST_RTSP_HDR_CONTENT_TYPE, &respcont,
+      0);
   /* could not be set but since the request returned OK, we assume it
    * was SDP, else check it. */
   if (respcont) {
@@ -3449,45 +3475,44 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   }
 
   /* get message body and parse as SDP */
-  rtsp_message_get_body (&response, &data, &size);
+  gst_rtsp_message_get_body (&response, &data, &size);
 
   GST_DEBUG_OBJECT (src, "parse SDP...");
-  sdp_message_init (&sdp);
-  sdp_message_parse_buffer (data, size, &sdp);
+  gst_sdp_message_init (&sdp);
+  gst_sdp_message_parse_buffer (data, size, &sdp);
 
   if (src->debug)
-    sdp_message_dump (&sdp);
+    gst_sdp_message_dump (&sdp);
 
-  if (src->extension && src->extension->parse_sdp)
-    src->extension->parse_sdp (src->extension, &sdp);
+  gst_rtsp_ext_list_parse_sdp (src->extensions, &sdp, src->props);
 
   /* parse range for duration reporting. */
   {
-    gchar *range;
+    const gchar *range;
 
-    range = sdp_message_get_attribute_val (&sdp, "range");
+    range = gst_sdp_message_get_attribute_val (&sdp, "range");
     if (range)
       gst_rtspsrc_parse_range (src, range);
   }
 
   /* create streams */
-  n_streams = sdp_message_medias_len (&sdp);
+  n_streams = gst_sdp_message_medias_len (&sdp);
   for (i = 0; i < n_streams; i++) {
     stream = gst_rtspsrc_create_stream (src, &sdp, i);
   }
 
-  src->state = RTSP_STATE_INIT;
+  src->state = GST_RTSP_STATE_INIT;
 
   /* setup streams */
   if (!gst_rtspsrc_setup_streams (src))
     goto setup_failed;
 
-  src->state = RTSP_STATE_READY;
+  src->state = GST_RTSP_STATE_READY;
   GST_RTSP_STATE_UNLOCK (src);
 
   /* clean up any messages */
-  rtsp_message_unset (&request);
-  rtsp_message_unset (&response);
+  gst_rtsp_message_unset (&request);
+  gst_rtsp_message_unset (&response);
 
   return TRUE;
 
@@ -3500,7 +3525,7 @@ no_url:
   }
 could_not_create:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
         ("Could not create connection. (%s)", str));
@@ -3509,7 +3534,7 @@ could_not_create:
   }
 could_not_connect:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ_WRITE, (NULL),
         ("Could not connect to server. (%s)", str));
@@ -3518,7 +3543,7 @@ could_not_connect:
   }
 create_request_failed:
   {
-    gchar *str = rtsp_strresult (res);
+    gchar *str = gst_rtsp_strresult (res);
 
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL),
         ("Could not create request. (%s)", str));
@@ -3550,8 +3575,8 @@ setup_failed:
 cleanup_error:
   {
     GST_RTSP_STATE_UNLOCK (src);
-    rtsp_message_unset (&request);
-    rtsp_message_unset (&response);
+    gst_rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&response);
     return FALSE;
   }
 }
@@ -3576,9 +3601,9 @@ gst_rtspsrc_async_open (GstRTSPSrc * src)
 static gboolean
 gst_rtspsrc_close (GstRTSPSrc * src)
 {
-  RTSPMessage request = { 0 };
-  RTSPMessage response = { 0 };
-  RTSPResult res;
+  GstRTSPMessage request = { 0 };
+  GstRTSPMessage response = { 0 };
+  GstRTSPResult res;
 
   GST_DEBUG_OBJECT (src, "TEARDOWN...");
 
@@ -3603,12 +3628,13 @@ gst_rtspsrc_close (GstRTSPSrc * src)
   }
 
   GST_DEBUG_OBJECT (src, "stop flush");
-  rtsp_connection_flush (src->connection, FALSE);
+  gst_rtsp_connection_flush (src->connection, FALSE);
 
-  if (src->methods & RTSP_PLAY) {
+  if (src->methods & GST_RTSP_PLAY) {
     /* do TEARDOWN */
     res =
-        rtsp_message_init_request (&request, RTSP_TEARDOWN, src->req_location);
+        gst_rtsp_message_init_request (&request, GST_RTSP_TEARDOWN,
+        src->req_location);
     if (res < 0)
       goto create_request_failed;
 
@@ -3616,23 +3642,23 @@ gst_rtspsrc_close (GstRTSPSrc * src)
       goto send_error;
 
     /* FIXME, parse result? */
-    rtsp_message_unset (&request);
-    rtsp_message_unset (&response);
+    gst_rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&response);
   }
 
   /* close connection */
   GST_DEBUG_OBJECT (src, "closing connection...");
-  if ((res = rtsp_connection_close (src->connection)) < 0)
+  if ((res = gst_rtsp_connection_close (src->connection)) < 0)
     goto close_failed;
 
   /* free connection */
-  rtsp_connection_free (src->connection);
+  gst_rtsp_connection_free (src->connection);
   src->connection = NULL;
 
   /* cleanup */
   gst_rtspsrc_cleanup (src);
 
-  src->state = RTSP_STATE_INVALID;
+  src->state = GST_RTSP_STATE_INVALID;
   GST_RTSP_STATE_UNLOCK (src);
 
   return TRUE;
@@ -3648,7 +3674,7 @@ create_request_failed:
 send_error:
   {
     GST_RTSP_STATE_UNLOCK (src);
-    rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message."));
     return FALSE;
@@ -3736,23 +3762,25 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
 static gboolean
 gst_rtspsrc_play (GstRTSPSrc * src)
 {
-  RTSPMessage request = { 0 };
-  RTSPMessage response = { 0 };
-  RTSPResult res;
+  GstRTSPMessage request = { 0 };
+  GstRTSPMessage response = { 0 };
+  GstRTSPResult res;
   gchar *rtpinfo, *range;
 
   GST_RTSP_STATE_LOCK (src);
 
   GST_DEBUG_OBJECT (src, "PLAY...");
 
-  if (!(src->methods & RTSP_PLAY))
+  if (!(src->methods & GST_RTSP_PLAY))
     goto not_supported;
 
-  if (src->state == RTSP_STATE_PLAYING)
+  if (src->state == GST_RTSP_STATE_PLAYING)
     goto was_playing;
 
   /* do play */
-  res = rtsp_message_init_request (&request, RTSP_PLAY, src->req_location);
+  res =
+      gst_rtsp_message_init_request (&request, GST_RTSP_PLAY,
+      src->req_location);
   if (res < 0)
     goto create_request_failed;
 
@@ -3761,27 +3789,28 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   else
     range = g_strdup_printf ("npt=%f-", src->position);
 
-  rtsp_message_add_header (&request, RTSP_HDR_RANGE, range);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, range);
   g_free (range);
 
   if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
     goto send_error;
 
-  rtsp_message_unset (&request);
+  gst_rtsp_message_unset (&request);
 
   /* parse RTP npt field. This is the current position in the stream (Normal
    * Play Time) and should be put in the NEWSEGMENT position field. */
-  if (rtsp_message_get_header (&response, RTSP_HDR_RANGE, &range, 0) == RTSP_OK)
+  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &range,
+          0) == GST_RTSP_OK)
     gst_rtspsrc_parse_range (src, range);
 
   /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
    * for the RTP packets. If this is not present, we assume all starts from 0... 
    * This is info for the RTP session manager that we pass to it in caps. */
-  if (rtsp_message_get_header (&response, RTSP_HDR_RTP_INFO,
-          &rtpinfo, 0) == RTSP_OK)
+  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RTP_INFO,
+          &rtpinfo, 0) == GST_RTSP_OK)
     gst_rtspsrc_parse_rtpinfo (src, rtpinfo);
 
-  rtsp_message_unset (&response);
+  gst_rtsp_message_unset (&response);
 
   /* configure the caps of the streams after we parsed all headers. */
   gst_rtspsrc_configure_caps (src);
@@ -3794,7 +3823,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
     gst_task_set_lock (src->task, GST_RTSP_STREAM_GET_LOCK (src));
   }
   src->running = TRUE;
-  src->state = RTSP_STATE_PLAYING;
+  src->state = GST_RTSP_STATE_PLAYING;
   gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, FALSE);
   gst_task_start (src->task);
 
@@ -3824,7 +3853,7 @@ create_request_failed:
 send_error:
   {
     GST_RTSP_STATE_UNLOCK (src);
-    rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message."));
     return FALSE;
@@ -3834,38 +3863,40 @@ send_error:
 static gboolean
 gst_rtspsrc_pause (GstRTSPSrc * src)
 {
-  RTSPMessage request = { 0 };
-  RTSPMessage response = { 0 };
-  RTSPResult res;
+  GstRTSPMessage request = { 0 };
+  GstRTSPMessage response = { 0 };
+  GstRTSPResult res;
 
   GST_RTSP_STATE_LOCK (src);
 
   GST_DEBUG_OBJECT (src, "PAUSE...");
 
-  if (!(src->methods & RTSP_PAUSE))
+  if (!(src->methods & GST_RTSP_PAUSE))
     goto not_supported;
 
-  if (src->state == RTSP_STATE_READY)
+  if (src->state == GST_RTSP_STATE_READY)
     goto was_paused;
 
   /* wait for streaming to finish */
   GST_RTSP_STREAM_LOCK (src);
   GST_RTSP_STREAM_UNLOCK (src);
 
-  rtsp_connection_flush (src->connection, FALSE);
+  gst_rtsp_connection_flush (src->connection, FALSE);
 
   /* do pause */
-  res = rtsp_message_init_request (&request, RTSP_PAUSE, src->req_location);
+  res =
+      gst_rtsp_message_init_request (&request, GST_RTSP_PAUSE,
+      src->req_location);
   if (res < 0)
     goto create_request_failed;
 
   if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
     goto send_error;
 
-  rtsp_message_unset (&request);
-  rtsp_message_unset (&response);
+  gst_rtsp_message_unset (&request);
+  gst_rtsp_message_unset (&response);
 
-  src->state = RTSP_STATE_READY;
+  src->state = GST_RTSP_STATE_READY;
 
 done:
   GST_RTSP_STATE_UNLOCK (src);
@@ -3893,7 +3924,7 @@ create_request_failed:
 send_error:
   {
     GST_RTSP_STATE_UNLOCK (src);
-    rtsp_message_unset (&request);
+    gst_rtsp_message_unset (&request);
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not send message."));
     return FALSE;
@@ -4006,7 +4037,7 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_DEBUG_OBJECT (rtspsrc, "stop flush");
-      rtsp_connection_flush (rtspsrc->connection, FALSE);
+      gst_rtsp_connection_flush (rtspsrc->connection, FALSE);
       /* FIXME, the server might send UDP packets before we activate the UDP
        * ports */
       gst_rtspsrc_play (rtspsrc);
@@ -4078,8 +4109,8 @@ static gboolean
 gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
 {
   GstRTSPSrc *src;
-  RTSPResult res;
-  RTSPUrl *newurl;
+  GstRTSPResult res;
+  GstRTSPUrl *newurl;
 
   src = GST_RTSPSRC (handler);
 
@@ -4088,17 +4119,17 @@ gst_rtspsrc_uri_set_uri (GstURIHandler * handler, const gchar * uri)
     goto was_ok;
 
   /* try to parse */
-  if ((res = rtsp_url_parse (uri, &newurl)) < 0)
+  if ((res = gst_rtsp_url_parse (uri, &newurl)) < 0)
     goto parse_error;
 
   /* if worked, free previous and store new url object along with the original
    * location. */
-  rtsp_url_free (src->url);
+  gst_rtsp_url_free (src->url);
   src->url = newurl;
   g_free (src->location);
   g_free (src->req_location);
   src->location = g_strdup (uri);
-  src->req_location = rtsp_url_get_request_uri (src->url);
+  src->req_location = gst_rtsp_url_get_request_uri (src->url);
 
   GST_DEBUG_OBJECT (src, "set uri: %s", GST_STR_NULL (uri));
   GST_DEBUG_OBJECT (src, "request uri is: %s",
