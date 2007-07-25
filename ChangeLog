@@ -1,3 +1,16 @@
+2007-07-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* docs/gst/gstreamer.types.in:
+	  Another conditional doc check.
+
+	* gst/gstmessage.c:
+	* gst/gstparamspecs.h:
+	* gst/gstregistrybinary.c: (gst_registry_binary_read_cache):
+	* gst/gstvalue.c:
+	* gst/gstxml.h:
+	  API-doc fixes.
+
 2007-07-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_check_magic),

@@ -43,17 +43,21 @@ typedef struct _GstXMLClass GstXMLClass;
 
 /**
  * GstXML:
+ * @object: parent object
+ * @topelements: list of element nodes
+ * @ns: name space
  *
  * XML parser object
  */
 struct _GstXML {
   GstObject object;
 
+  /*< public >*/
   GList      *topelements;
 
   xmlNsPtr ns;
 
-	/*< private >*/
+  /*< private >*/
   gpointer _gst_reserved[GST_PADDING];
 };
 

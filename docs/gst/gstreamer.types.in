@@ -15,8 +15,8 @@ gst_element_factory_get_type
 gst_element_get_type
 gst_ghost_pad_get_type
 gst_implements_interface_get_type
-gst_index_factory_get_type
-gst_index_get_type
+@GST_INDEX_DOC_TYPES@gst_index_factory_get_type
+@GST_INDEX_DOC_TYPES@gst_index_get_type
 gst_registry_get_type
 
 % these are not GObject derived types !

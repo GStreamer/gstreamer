@@ -40,6 +40,19 @@ GType  gst_param_spec_fraction_get_type (void);
 
 typedef struct _GstParamSpecFraction GstParamSpecFraction;
 
+/**
+ * GstParamSpecFraction:
+ * @parent_instance: super class
+ * @min_num: minimal numerator
+ * @min_den: minimal denominator
+ * @max_num: maximal numerator
+ * @max_den: maximal denominator
+ * @def_num: default numerator
+ * @def_den: default denominator
+ *
+ * A GParamSpec derived structure that contains the meta data for fractional
+ * properties.
+ */
 struct _GstParamSpecFraction {
   GParamSpec    parent_instance;
   

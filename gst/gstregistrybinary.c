@@ -441,8 +441,12 @@ fail:
 
 /**
  * gst_registry_binary_write_cache:
+ * @registry: a #GstRegistry
+ * @location: a filename
  *
- * Write the cache to file. Part of the code was taken from gstregistryxml.c
+ * Write the @registry to a cache to file at given @location.
+ * 
+ * Returns: %TRUE on success.
  */
 gboolean
 gst_registry_binary_write_cache (GstRegistry * registry, const char *location)

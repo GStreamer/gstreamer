@@ -757,6 +757,8 @@ gst_message_new_async_start (GstObject * src, gboolean new_base_time)
  * gst_message_new_async_done:
  * @src: The object originating the message.
  *
+ * The message is posted when elements completed an ASYNC state change.
+ *
  * Returns: The new async_done message.
  *
  * MT safe.
