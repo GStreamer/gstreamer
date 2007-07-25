@@ -326,43 +326,43 @@ GstSDPResult            gst_sdp_media_init                  (GstSDPMedia *media)
 GstSDPResult            gst_sdp_media_uninit                (GstSDPMedia *media);
 GstSDPResult            gst_sdp_media_free                  (GstSDPMedia *media);
 
-const gchar*            gst_sdp_media_get_media             (GstSDPMedia *media);
+const gchar*            gst_sdp_media_get_media             (const GstSDPMedia *media);
 GstSDPResult            gst_sdp_media_set_media             (GstSDPMedia *media, const gchar *med);
 
-gint                    gst_sdp_media_get_port              (GstSDPMedia *media);
-gint                    gst_sdp_media_get_num_ports         (GstSDPMedia *media);
+gint                    gst_sdp_media_get_port              (const GstSDPMedia *media);
+gint                    gst_sdp_media_get_num_ports         (const GstSDPMedia *media);
 GstSDPResult            gst_sdp_media_set_port_info         (GstSDPMedia *media, gint port,
                                                              gint num_ports);
 
-const gchar*            gst_sdp_media_get_proto             (GstSDPMedia *media);
+const gchar*            gst_sdp_media_get_proto             (const GstSDPMedia *media);
 GstSDPResult            gst_sdp_media_set_proto             (GstSDPMedia *media, const gchar *proto);
 
-gint                    gst_sdp_media_formats_len           (GstSDPMedia *media);
-const gchar*            gst_sdp_media_get_format            (GstSDPMedia *media, guint idx);
+gint                    gst_sdp_media_formats_len           (const GstSDPMedia *media);
+const gchar*            gst_sdp_media_get_format            (const GstSDPMedia *media, guint idx);
 GstSDPResult            gst_sdp_media_add_format            (GstSDPMedia *media, const gchar *format);
 
-const gchar*            gst_sdp_media_get_information       (GstSDPMedia *media);
+const gchar*            gst_sdp_media_get_information       (const GstSDPMedia *media);
 GstSDPResult            gst_sdp_media_set_information       (GstSDPMedia *media, const gchar *information);
 
-gint                    gst_sdp_media_connections_len       (GstSDPMedia *media);
-const GstSDPConnection* gst_sdp_media_get_connection        (GstSDPMedia *media, guint idx);
+gint                    gst_sdp_media_connections_len       (const GstSDPMedia *media);
+const GstSDPConnection* gst_sdp_media_get_connection        (const GstSDPMedia *media, guint idx);
 GstSDPResult            gst_sdp_media_add_connection        (GstSDPMedia *media, const gchar *nettype,
                                                              const gchar *addrtype, const gchar *address,
                                                              gint ttl, gint addr_number);
 
-gint                    gst_sdp_media_bandwidths_len        (GstSDPMedia *media);
-const GstSDPBandwidth*  gst_sdp_media_get_bandwidth         (GstSDPMedia *media, guint idx);
+gint                    gst_sdp_media_bandwidths_len        (const GstSDPMedia *media);
+const GstSDPBandwidth*  gst_sdp_media_get_bandwidth         (const GstSDPMedia *media, guint idx);
 GstSDPResult            gst_sdp_media_add_bandwidth         (GstSDPMedia *media, const gchar *bwtype,
 		                                             gint bandwidth);
 
-const GstSDPKey*        gst_sdp_media_get_key               (GstSDPMedia *media);
+const GstSDPKey*        gst_sdp_media_get_key               (const GstSDPMedia *media);
 GstSDPResult            gst_sdp_media_set_key               (GstSDPMedia *media, const gchar *type,
 		                                             const gchar *data);
 
-gint                    gst_sdp_media_attributes_len        (GstSDPMedia *media);
-const GstSDPAttribute * gst_sdp_media_get_attribute         (GstSDPMedia *media, guint idx);
-const gchar*            gst_sdp_media_get_attribute_val     (GstSDPMedia *media, const gchar *key);
-const gchar*            gst_sdp_media_get_attribute_val_n   (GstSDPMedia *media, const gchar *key, guint nth);
+gint                    gst_sdp_media_attributes_len        (const GstSDPMedia *media);
+const GstSDPAttribute * gst_sdp_media_get_attribute         (const GstSDPMedia *media, guint idx);
+const gchar*            gst_sdp_media_get_attribute_val     (const GstSDPMedia *media, const gchar *key);
+const gchar*            gst_sdp_media_get_attribute_val_n   (const GstSDPMedia *media, const gchar *key, guint nth);
 GstSDPResult            gst_sdp_media_add_attribute         (GstSDPMedia *media, const gchar *key,
                                                              const gchar *value);
 

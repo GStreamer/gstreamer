@@ -905,7 +905,7 @@ gst_sdp_media_free (GstSDPMedia * media)
  * Returns: the media description.
  */
 const gchar *
-gst_sdp_media_get_media (GstSDPMedia * media)
+gst_sdp_media_get_media (const GstSDPMedia * media)
 {
   return media->media;
 }
@@ -937,7 +937,7 @@ gst_sdp_media_set_media (GstSDPMedia * media, const gchar * med)
  * Returns: the port number of @media.
  */
 gint
-gst_sdp_media_get_port (GstSDPMedia * media)
+gst_sdp_media_get_port (const GstSDPMedia * media)
 {
   return media->port;
 }
@@ -951,7 +951,7 @@ gst_sdp_media_get_port (GstSDPMedia * media)
  * Returns: the number of ports for @media.
  */
 gint
-gst_sdp_media_get_num_ports (GstSDPMedia * media)
+gst_sdp_media_get_num_ports (const GstSDPMedia * media)
 {
   return media->num_ports;
 }
@@ -984,7 +984,7 @@ gst_sdp_media_set_port_info (GstSDPMedia * media, gint port, gint num_ports)
  * Returns: the transport protocol of @media.
  */
 const gchar *
-gst_sdp_media_get_proto (GstSDPMedia * media)
+gst_sdp_media_get_proto (const GstSDPMedia * media)
 {
   return media->proto;
 }
@@ -1016,7 +1016,7 @@ gst_sdp_media_set_proto (GstSDPMedia * media, const gchar * proto)
  * Returns: the number of formats in @media.
  */
 gint
-gst_sdp_media_formats_len (GstSDPMedia * media)
+gst_sdp_media_formats_len (const GstSDPMedia * media)
 {
   return media->fmts->len;
 }
@@ -1031,7 +1031,7 @@ gst_sdp_media_formats_len (GstSDPMedia * media)
  * Returns: the format at position @idx.
  */
 const gchar *
-gst_sdp_media_get_format (GstSDPMedia * media, guint idx)
+gst_sdp_media_get_format (const GstSDPMedia * media, guint idx)
 {
   if (idx >= media->fmts->len)
     return NULL;
@@ -1068,7 +1068,7 @@ gst_sdp_media_add_format (GstSDPMedia * media, const gchar * format)
  * Returns: the information of @media.
  */
 const gchar *
-gst_sdp_media_get_information (GstSDPMedia * media)
+gst_sdp_media_get_information (const GstSDPMedia * media)
 {
   return media->information;
 }
@@ -1100,7 +1100,7 @@ gst_sdp_media_set_information (GstSDPMedia * media, const gchar * information)
  * Returns: the number of connections in @media.
  */
 gint
-gst_sdp_media_connections_len (GstSDPMedia * media)
+gst_sdp_media_connections_len (const GstSDPMedia * media)
 {
   return (media->connections->len);
 }
@@ -1115,7 +1115,7 @@ gst_sdp_media_connections_len (GstSDPMedia * media)
  * Returns: the #GstSDPConnection at position @idx.
  */
 const GstSDPConnection *
-gst_sdp_media_get_connection (GstSDPMedia * media, guint idx)
+gst_sdp_media_get_connection (const GstSDPMedia * media, guint idx)
 {
   return &g_array_index (media->connections, GstSDPConnection, idx);
 }
@@ -1160,7 +1160,7 @@ gst_sdp_media_add_connection (GstSDPMedia * media, const gchar * nettype,
  * Returns: the number of bandwidths in @media.
  */
 gint
-gst_sdp_media_bandwidths_len (GstSDPMedia * media)
+gst_sdp_media_bandwidths_len (const GstSDPMedia * media)
 {
   return (media->bandwidths->len);
 }
@@ -1175,7 +1175,7 @@ gst_sdp_media_bandwidths_len (GstSDPMedia * media)
  * Returns: the #GstSDPBandwidth at position @idx.
  */
 const GstSDPBandwidth *
-gst_sdp_media_get_badwidth (GstSDPMedia * media, guint idx)
+gst_sdp_media_get_badwidth (const GstSDPMedia * media, guint idx)
 {
   return &g_array_index (media->bandwidths, GstSDPBandwidth, idx);
 }
@@ -1235,7 +1235,7 @@ gst_sdp_media_set_key (GstSDPMedia * media, const gchar * type,
  * Returns: a #GstSDPKey.
  */
 const GstSDPKey *
-gst_sdp_media_get_key (GstSDPMedia * media)
+gst_sdp_media_get_key (const GstSDPMedia * media)
 {
   return &media->key;
 }
@@ -1249,7 +1249,7 @@ gst_sdp_media_get_key (GstSDPMedia * media)
  * Returns: the number of attributes in @media.
  */
 gint
-gst_sdp_media_attributes_len (GstSDPMedia * media)
+gst_sdp_media_attributes_len (const GstSDPMedia * media)
 {
   return (media->attributes->len);
 }
@@ -1288,7 +1288,7 @@ gst_sdp_media_add_attribute (GstSDPMedia * media, const gchar * key,
  * Returns: the #GstSDPAttribute at position @idx.
  */
 const GstSDPAttribute *
-gst_sdp_media_get_attribute (GstSDPMedia * media, guint idx)
+gst_sdp_media_get_attribute (const GstSDPMedia * media, guint idx)
 {
   return &g_array_index (media->attributes, GstSDPAttribute, idx);
 }
@@ -1304,7 +1304,7 @@ gst_sdp_media_get_attribute (GstSDPMedia * media, guint idx)
  * Returns: the @nth attribute value.
  */
 const gchar *
-gst_sdp_media_get_attribute_val_n (GstSDPMedia * media, const gchar * key,
+gst_sdp_media_get_attribute_val_n (const GstSDPMedia * media, const gchar * key,
     guint nth)
 {
   guint i;
@@ -1333,7 +1333,7 @@ gst_sdp_media_get_attribute_val_n (GstSDPMedia * media, const gchar * key,
  * Returns: the first attribute value for @key.
  */
 const gchar *
-gst_sdp_media_get_attribute_val (GstSDPMedia * media, const gchar * key)
+gst_sdp_media_get_attribute_val (const GstSDPMedia * media, const gchar * key)
 {
   return gst_sdp_media_get_attribute_val_n (media, key, 0);
 }

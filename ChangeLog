@@ -1,5 +1,19 @@
 2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst-libs/gst/sdp/gstsdpmessage.c: (gst_sdp_media_get_media),
+	(gst_sdp_media_get_port), (gst_sdp_media_get_num_ports),
+	(gst_sdp_media_get_proto), (gst_sdp_media_formats_len),
+	(gst_sdp_media_get_format), (gst_sdp_media_get_information),
+	(gst_sdp_media_connections_len), (gst_sdp_media_get_connection),
+	(gst_sdp_media_bandwidths_len), (gst_sdp_media_get_badwidth),
+	(gst_sdp_media_get_key), (gst_sdp_media_attributes_len),
+	(gst_sdp_media_get_attribute), (gst_sdp_media_get_attribute_val_n),
+	(gst_sdp_media_get_attribute_val):
+	* gst-libs/gst/sdp/gstsdpmessage.h:
+	Constify args where we can.
+
+2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst-libs/gst/interfaces/Makefile.am:
 	* gst-libs/gst/interfaces/rtspextension.c:
 	(gst_rtsp_extension_get_type), (gst_rtsp_extension_iface_init),
