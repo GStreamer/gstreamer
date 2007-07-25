@@ -24,7 +24,6 @@
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
-  
 #define GST_TYPE_FLV_DEMUX \
   (gst_flv_demux_get_type())
 #define GST_FLV_DEMUX(obj) \
@@ -35,11 +34,11 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_FLV_DEMUX))
 #define GST_IS_FLV_DEMUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FLV_DEMUX))
-
 typedef struct _GstFLVDemux GstFLVDemux;
 typedef struct _GstFLVDemuxClass GstFLVDemuxClass;
 
-typedef enum {
+typedef enum
+{
   FLV_STATE_HEADER,
   FLV_STATE_TAG_TYPE,
   FLV_STATE_TAG_VIDEO,
@@ -49,29 +48,30 @@ typedef enum {
   FLV_STATE_NONE
 } GstFLVDemuxState;
 
-struct _GstFLVDemux {
+struct _GstFLVDemux
+{
   GstElement element;
 
-  GstPad * sinkpad;
-  
-  GstPad * audio_pad;
-  GstPad * video_pad;
-  
-  GstAdapter * adapter;
-  
-  GstSegment * segment;
-  
-  GstEvent * new_seg_event;
-  
-  GstTagList * taglist;
-  
+  GstPad *sinkpad;
+
+  GstPad *audio_pad;
+  GstPad *video_pad;
+
+  GstAdapter *adapter;
+
+  GstSegment *segment;
+
+  GstEvent *new_seg_event;
+
+  GstTagList *taglist;
+
   GstFLVDemuxState state;
-  
+
   guint64 offset;
   GstClockTime duration;
   guint64 tag_size;
   guint64 tag_data_size;
-  
+
   /* Audio infos */
   guint16 rate;
   guint16 channels;
@@ -80,7 +80,8 @@ struct _GstFLVDemux {
   guint64 audio_offset;
   gboolean audio_need_discont;
   gboolean audio_need_segment;
-  
+  gboolean audio_linked;
+
   /* Video infos */
   guint32 w;
   guint32 h;
@@ -88,7 +89,8 @@ struct _GstFLVDemux {
   guint64 video_offset;
   gboolean video_need_discont;
   gboolean video_need_segment;
-  
+  gboolean video_linked;
+
   gboolean random_access;
   gboolean need_header;
   gboolean has_audio;
@@ -97,12 +99,12 @@ struct _GstFLVDemux {
   gboolean strict;
 };
 
-struct _GstFLVDemuxClass {
+struct _GstFLVDemuxClass
+{
   GstElementClass parent_class;
 };
 
 GType gst_flv_demux_get_type (void);
 
 G_END_DECLS
-
 #endif /* __FLV_DEMUX_H__ */
