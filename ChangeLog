@@ -1,5 +1,10 @@
 2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
 
+	* docs/gst/gstreamer-sections.txt:
+	Add docs for new api function.
+
+2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/gstelementfactory.c: (gst_element_factory_has_interface):
 	* gst/gstelementfactory.h:
 	API: gst_element_factory_has_interface()
