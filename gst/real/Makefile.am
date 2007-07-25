@@ -15,5 +15,6 @@ libgstreal_la_LIBADD = \
 libgstreal_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = 	\
+	gstreal.h         \
 	gstrealvideodec.h \
 	gstrealaudiodec.h

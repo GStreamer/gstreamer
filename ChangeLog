@@ -1,5 +1,10 @@
 2007-07-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/real/Makefile.am:
+	  And dist the new header file too.
+
+2007-07-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/real/gstreal.h:
 	Add missing header file.
 
