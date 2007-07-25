@@ -146,6 +146,8 @@ guint			gst_element_factory_get_num_pad_templates (GstElementFactory *factory);
 G_CONST_RETURN GList *	gst_element_factory_get_static_pad_templates (GstElementFactory *factory);
 gint			gst_element_factory_get_uri_type	(GstElementFactory *factory);
 gchar **		gst_element_factory_get_uri_protocols	(GstElementFactory *factory);
+gboolean 		gst_element_factory_has_interface	(GstElementFactory *factory,
+                                                                 const gchar *interfacename);
 
 GstElement*		gst_element_factory_create		(GstElementFactory *factory,
 								 const gchar *name);

@@ -649,3 +649,31 @@ gst_element_factory_get_uri_protocols (GstElementFactory * factory)
 
   return factory->uri_protocols;
 }
+
+/**
+ * gst_element_factory_has_interface:
+ * @factory: a #GstElementFactory
+ * @interfacename: an interface name
+ *
+ * Check if @factory implements the interface with name @interfacename.
+ *
+ * Returns: #TRUE when @factory implement the interface.
+ *
+ * Since: 0.10.14
+ */
+gboolean
+gst_element_factory_has_interface (GstElementFactory * factory,
+    const gchar * interfacename)
+{
+  GList *walk;
+
+  g_return_val_if_fail (GST_IS_ELEMENT_FACTORY (factory), FALSE);
+
+  for (walk = factory->interfaces; walk; walk = g_list_next (walk)) {
+    gchar *iname = (gchar *) walk->data;
+
+    if (!strcmp (iname, interfacename))
+      return TRUE;
+  }
+  return FALSE;
+}
