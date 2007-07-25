@@ -1,3 +1,8 @@
+2007-07-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/real/gstreal.h:
+	Add missing header file.
+
 2007-07-25  Julien MOUTTE  <julien@moutte.net>
 
 	(gst_flv_demux_chain), (gst_flv_demux_pull_tag),
