@@ -1,3 +1,10 @@
+2007-07-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/timidity/gsttimidity.c: (gst_timidity_init),
+	(gst_timidity_change_state), (plugin_init):
+	* ext/timidity/gsttimidity.h:
+	  Don't initialize timidity in plugin_init for similar reason as below.
+
 2007-07-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/timidity/gstwildmidi.c: (wildmidi_open_config),
@@ -2922,7 +2929,6 @@
 
 	* ext/faad/gstfaad.c:
 	  Make our hacks dependent on the fadd lib in use.
-
 
 2007-02-11  Stefan Kost  <ensonic@users.sf.net>
 

@@ -48,6 +48,10 @@
 
 #include "gsttimidity.h"
 
+#ifndef TIMIDITY_CFG
+#define TIMIDITY_CFG "/etc/timidity.cfg"
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_timidity_debug);
 #define GST_CAT_DEFAULT gst_timidity_debug
 
@@ -133,6 +137,13 @@ static void
 gst_timidity_init (GstTimidity * filter, GstTimidityClass * g_class)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
+
+  /* initialise timidity library */
+  if (mid_init (TIMIDITY_CFG) == 0) {
+    filter->initialized = TRUE;
+  } else {
+    GST_WARNING ("can't initialize timidity with config: " TIMIDITY_CFG);
+  }
 
   filter->sinkpad =
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
@@ -743,6 +754,11 @@ gst_timidity_change_state (GstElement * element, GstStateChange transition)
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
   GstTimidity *timidity = GST_TIMIDITY (element);
 
+  if (!timidity->initialized) {
+    GST_WARNING ("Timidity renderer is not initialized");
+    return GST_STATE_CHANGE_FAILURE;
+  }
+
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       timidity->out_caps =
@@ -806,19 +822,6 @@ plugin_init (GstPlugin * plugin)
    * plugin name and description */
   GST_DEBUG_CATEGORY_INIT (gst_timidity_debug, "timidity",
       0, "Timidity plugin");
-
-  /* initialise timidity library, fail loading the plugin if this fails */
-#ifdef TIMIDITY_CFG
-  if (mid_init (TIMIDITY_CFG) != 0) {
-    GST_WARNING ("can't initialize timidity with config: " TIMIDITY_CFG);
-    return FALSE;
-  }
-#else
-  if (mid_init ("/etc/timidity.cfg") != 0) {
-    GST_WARNING ("can't initialize timidity with config: /etc/timidity.cfg");
-    return FALSE;
-  }
-#endif
 
   if (!gst_type_find_register (plugin, "audio/midi", GST_RANK_PRIMARY,
           gst_timidity_typefind, exts,

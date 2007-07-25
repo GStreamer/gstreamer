@@ -51,6 +51,8 @@ struct _GstTimidity
 
     GstPad *sinkpad, *srcpad;
 
+    gboolean initialized;
+
     /* input stream properties */
     gint64 mididata_size, mididata_offset;
     gchar *mididata;
