@@ -74,6 +74,46 @@ static void
 gst_flv_demux_cleanup (GstFLVDemux * demux)
 {
   GST_DEBUG_OBJECT (demux, "cleaning up FLV demuxer");
+
+  demux->state = FLV_STATE_HEADER;
+
+  demux->need_header = TRUE;
+  demux->audio_need_segment = TRUE;
+  demux->video_need_segment = TRUE;
+  demux->audio_need_discont = TRUE;
+  demux->video_need_discont = TRUE;
+
+  /* By default we consider them as linked */
+  demux->audio_linked = TRUE;
+  demux->video_linked = TRUE;
+
+  demux->has_audio = FALSE;
+  demux->has_video = FALSE;
+  demux->push_tags = FALSE;
+
+  demux->video_offset = 0;
+  demux->audio_offset = 0;
+  demux->offset = demux->tag_size = demux->tag_data_size = 0;
+  demux->duration = GST_CLOCK_TIME_NONE;
+
+  if (demux->new_seg_event) {
+    gst_event_unref (demux->new_seg_event);
+    demux->new_seg_event = NULL;
+  }
+
+  gst_adapter_clear (demux->adapter);
+
+  if (demux->audio_pad) {
+    gst_element_remove_pad (GST_ELEMENT (demux), demux->audio_pad);
+    gst_object_unref (demux->audio_pad);
+    demux->audio_pad = NULL;
+  }
+
+  if (demux->video_pad) {
+    gst_element_remove_pad (GST_ELEMENT (demux), demux->video_pad);
+    gst_object_unref (demux->video_pad);
+    demux->video_pad = NULL;
+  }
 }
 
 static GstFlowReturn
@@ -177,6 +217,13 @@ parse:
   }
 
 beach:
+  if (G_UNLIKELY (ret == GST_FLOW_NOT_LINKED)) {
+    /* If either audio or video is linked we return GST_FLOW_OK */
+    if (demux->audio_linked || demux->video_linked) {
+      ret = GST_FLOW_OK;
+    }
+  }
+
   gst_object_unref (demux);
 
   return ret;
@@ -255,6 +302,13 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
 
   /* Ready for the next tag */
   demux->state = FLV_STATE_TAG_TYPE;
+
+  if (G_UNLIKELY (ret == GST_FLOW_NOT_LINKED)) {
+    /* If either audio or video is linked we return GST_FLOW_OK */
+    if (demux->audio_linked || demux->video_linked) {
+      ret = GST_FLOW_OK;
+    }
+  }
 
 beach:
   return ret;
@@ -547,10 +601,7 @@ gst_flv_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      demux->state = FLV_STATE_HEADER;
-      demux->need_header = TRUE;
-      demux->audio_need_discont = TRUE;
-      demux->video_need_discont = TRUE;
+      gst_flv_demux_cleanup (demux);
       break;
     default:
       break;
@@ -597,6 +648,16 @@ gst_flv_demux_dispose (GObject * object)
   if (demux->new_seg_event) {
     gst_event_unref (demux->new_seg_event);
     demux->new_seg_event = NULL;
+  }
+
+  if (demux->audio_pad) {
+    gst_object_unref (demux->audio_pad);
+    demux->audio_pad = NULL;
+  }
+
+  if (demux->video_pad) {
+    gst_object_unref (demux->video_pad);
+    demux->video_pad = NULL;
   }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
@@ -652,10 +713,7 @@ gst_flv_demux_init (GstFLVDemux * demux, GstFLVDemuxClass * g_class)
   demux->taglist = gst_tag_list_new ();
   gst_segment_init (demux->segment, GST_FORMAT_TIME);
 
-  demux->offset = 0;
-
-  demux->strict = FALSE;
-  demux->push_tags = FALSE;
+  gst_flv_demux_cleanup (demux);
 }
 
 static gboolean

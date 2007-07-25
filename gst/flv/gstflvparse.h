@@ -16,15 +16,14 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
- 
+
 #ifndef __FLV_PARSE_H__
 #define __FLV_PARSE_H__
 
 #include "gstflvdemux.h"
 
 G_BEGIN_DECLS
-
-GstFlowReturn gst_flv_parse_tag_script (GstFLVDemux * demux,
+    GstFlowReturn gst_flv_parse_tag_script (GstFLVDemux * demux,
     const guint8 * data, size_t data_size);
 
 GstFlowReturn gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
@@ -32,7 +31,7 @@ GstFlowReturn gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
 
 GstFlowReturn gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
     size_t data_size);
-    
+
 GstFlowReturn gst_flv_parse_tag_type (GstFLVDemux * demux, const guint8 * data,
     size_t data_size);
 
@@ -40,5 +39,4 @@ GstFlowReturn gst_flv_parse_header (GstFLVDemux * demux, const guint8 * data,
     size_t data_size);
 
 G_END_DECLS
-
 #endif /* __FLV_PARSE_H__ */

@@ -1,3 +1,16 @@
+2007-07-25  Julien MOUTTE  <julien@moutte.net>
+
+	(gst_flv_demux_chain), (gst_flv_demux_pull_tag),
+	(gst_flv_demux_change_state), (gst_flv_demux_dispose),
+	(gst_flv_demux_init):
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvparse.c: (FLV_GET_STRING),
+	(gst_flv_parse_metadata_item), (gst_flv_parse_tag_script),
+	(gst_flv_parse_tag_audio), (gst_flv_parse_tag_video),
+	(gst_flv_parse_header):
+	* gst/flv/gstflvparse.h: Handle not linked pads, try to make it
+	reusable, more safety checks.
+
 2007-07-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/timidity/gsttimidity.c: (gst_timidity_init),
