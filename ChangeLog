@@ -1,3 +1,11 @@
+2007-07-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Steve Fink  <sphink gmail com>
+
+	* tools/gst-inspect.1.in:
+	  Document --print-all and --print-plugin-auto-install-info command
+	  line options in man page.
+
 2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
 
 	* docs/gst/gstreamer-sections.txt:

@@ -30,6 +30,13 @@ Print help synopsis and available FLAGS
 .B  \-\-gst\-info\-mask=FLAGS
 \fIGStreamer\fP info flags to set (list with \-\-help)
 .TP 8
+.B  \-a, \-\-print\-all
+Print all plugins and elements
+.TP 8
+.B  \-\-print\-plugin\-auto\-install\-info
+Print a machine-parsable list of features the specified plugin provides.
+Useful in connection with external automatic plugin installation mechanisms.
+.TP 8
 .B  \-\-gst\-debug\-mask=FLAGS
 \fIGStreamer\fP debugging flags to set (list with \-\-help)
 .TP 8
