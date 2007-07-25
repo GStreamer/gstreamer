@@ -41,6 +41,20 @@
  * SOFTWARE.
  */
 
+/**
+ * SECTION:gstrtspmessage
+ * @short_description: RTSP messages
+ * @see_also: gstrtspconnection
+ *  
+ * <refsect2>
+ * <para>
+ * Provides methods for creating and parsing request, response and data messages.
+ * </para>
+ * </refsect2>
+ *  
+ * Last reviewed on 2007-07-25 (0.10.14)
+ */
+
 #include <string.h>
 
 #include "gstrtspmessage.h"
@@ -63,6 +77,14 @@ key_value_foreach (GArray * array, GFunc func, gpointer user_data)
   }
 }
 
+/**
+ * gst_rtsp_message_new:
+ * @msg: a location for the new #GstRTSPMessage
+ *
+ * Create a new initialized #GstRTSPMessage.
+ *
+ * Returns: a #GstRTSPResult. Free with gst_rtsp_message_free().
+ */
 GstRTSPResult
 gst_rtsp_message_new (GstRTSPMessage ** msg)
 {
@@ -77,6 +99,15 @@ gst_rtsp_message_new (GstRTSPMessage ** msg)
   return gst_rtsp_message_init (newmsg);
 }
 
+/**
+ * gst_rtsp_message_init:
+ * @msg: a #GstRTSPMessage
+ *
+ * Initialize @msg. This function is mostly used when @msg is allocated on the
+ * stack. The reverse operation of this is gst_rtsp_message_unset().
+ *
+ * Returns: a #GstRTSPResult.
+ */
 GstRTSPResult
 gst_rtsp_message_init (GstRTSPMessage * msg)
 {
@@ -90,6 +121,33 @@ gst_rtsp_message_init (GstRTSPMessage * msg)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_message_get_type:
+ * @msg: a #GstRTSPMessage
+ *
+ * Get the message type of @msg.
+ *
+ * Returns: the message type.
+ */
+GstRTSPMsgType
+gst_rtsp_message_get_type (GstRTSPMessage * msg)
+{
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+
+  return msg->type;
+}
+
+/**
+ * gst_rtsp_message_new_request:
+ * @msg: a location for the new #GstRTSPMessage
+ * @method: the request method to use
+ * @uri: the uri of the request
+ *
+ * Create a new #GstRTSPMessage with @method and @uri and store the result
+ * request message in @msg. 
+ *
+ * Returns: a #GstRTSPResult. Free with gst_rtsp_message_free().
+ */
 GstRTSPResult
 gst_rtsp_message_new_request (GstRTSPMessage ** msg, GstRTSPMethod method,
     const gchar * uri)
@@ -106,6 +164,17 @@ gst_rtsp_message_new_request (GstRTSPMessage ** msg, GstRTSPMethod method,
   return gst_rtsp_message_init_request (newmsg, method, uri);
 }
 
+/**
+ * gst_rtsp_message_init_request:
+ * @msg: a #GstRTSPMessage
+ * @method: the request method to use
+ * @uri: the uri of the request
+ *
+ * Initialize @msg as a request message with @method and @uri. To clear @msg
+ * again, use gst_rtsp_message_unset().
+ *
+ * Returns: a #GstRTSPResult.
+ */
 GstRTSPResult
 gst_rtsp_message_init_request (GstRTSPMessage * msg, GstRTSPMethod method,
     const gchar * uri)
@@ -124,6 +193,55 @@ gst_rtsp_message_init_request (GstRTSPMessage * msg, GstRTSPMethod method,
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_message_parse_request:
+ * @msg: a #GstRTSPMessage
+ * @method: location to hold the method
+ * @uri: location to hold the uri
+ * @version: location to hold the version
+ *
+ * Parse the request message @msg and store the values @method, @uri and
+ * @version. The result locations can be #NULL if one is not interested in its
+ * value.
+ *
+ * @uri remains valid for as long as @msg is valid and unchanged.
+ *
+ * Returns: a #GstRTSPResult.
+ */
+GstRTSPResult
+gst_rtsp_message_parse_request (GstRTSPMessage * msg,
+    GstRTSPMethod * method, const gchar ** uri, GstRTSPVersion * version)
+{
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (msg->type != GST_RTSP_MESSAGE_REQUEST, GST_RTSP_EINVAL);
+
+  if (method)
+    *method = msg->type_data.request.method;
+  if (uri)
+    *uri = msg->type_data.request.uri;
+  if (version)
+    *version = msg->type_data.request.version;
+
+  return GST_RTSP_OK;
+}
+
+/**
+ * gst_rtsp_message_new_response:
+ * @msg: a location for the new #GstRTSPMessage
+ * @code: the status code
+ * @reason: the status reason or #NULL
+ * @request: the request that triggered the response or #NULL
+ *
+ * Create a new response #GstRTSPMessage with @code and @reason and store the
+ * result message in @msg. 
+ *
+ * When @reason is #NULL, the default reason for @code will be used.
+ *
+ * When @request is not #NULL, the relevant headers will be copied to the new
+ * response message.
+ *
+ * Returns: a #GstRTSPResult. Free with gst_rtsp_message_free().
+ */
 GstRTSPResult
 gst_rtsp_message_new_response (GstRTSPMessage ** msg, GstRTSPStatusCode code,
     const gchar * reason, const GstRTSPMessage * request)
@@ -139,6 +257,22 @@ gst_rtsp_message_new_response (GstRTSPMessage ** msg, GstRTSPStatusCode code,
   return gst_rtsp_message_init_response (newmsg, code, reason, request);
 }
 
+/**
+ * gst_rtsp_message_init_response:
+ * @msg: a #GstRTSPMessage
+ * @code: the status code
+ * @reason: the status reason or #NULL
+ * @request: the request that triggered the response or #NULL
+ *
+ * Initialize @msg with @code and @reason.
+ *
+ * When @reason is #NULL, the default reason for @code will be used.
+ *
+ * When @request is not #NULL, the relevant headers will be copied to the new
+ * response message.
+ *
+ * Returns: a #GstRTSPResult.
+ */
 GstRTSPResult
 gst_rtsp_message_init_response (GstRTSPMessage * msg, GstRTSPStatusCode code,
     const gchar * reason, const GstRTSPMessage * request)
@@ -185,6 +319,73 @@ gst_rtsp_message_init_response (GstRTSPMessage * msg, GstRTSPStatusCode code,
   return GST_RTSP_OK;
 }
 
+
+/**
+ * gst_rtsp_message_parse_response:
+ * @msg: a #GstRTSPMessage
+ * @code: location to hold the status code
+ * @reason: location to hold the status reason
+ * @version: location to hold the version
+ *
+ * Parse the response message @msg and store the values @code, @reason and
+ * @version. The result locations can be #NULL if one is not interested in its
+ * value.
+ *
+ * @reason remains valid for as long as @msg is valid and unchanged.
+ *
+ * Returns: a #GstRTSPResult.
+ */
+GstRTSPResult
+gst_rtsp_message_parse_response (GstRTSPMessage * msg,
+    GstRTSPStatusCode * code, const gchar ** reason, GstRTSPVersion * version)
+{
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (msg->type != GST_RTSP_MESSAGE_RESPONSE,
+      GST_RTSP_EINVAL);
+
+  if (code)
+    *code = msg->type_data.response.code;
+  if (reason)
+    *reason = msg->type_data.response.reason;
+  if (version)
+    *version = msg->type_data.response.version;
+
+  return GST_RTSP_OK;
+}
+
+/**
+ * gst_rtsp_message_new_data:
+ * @msg: a location for the new #GstRTSPMessage
+ * @channel: the channel
+ *
+ * Create a new data #GstRTSPMessage with @channel and store the
+ * result message in @msg. 
+ *
+ * Returns: a #GstRTSPResult. Free with gst_rtsp_message_free().
+ */
+GstRTSPResult
+gst_rtsp_message_new_data (GstRTSPMessage ** msg, guint8 channel)
+{
+  GstRTSPMessage *newmsg;
+
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+
+  newmsg = g_new0 (GstRTSPMessage, 1);
+
+  *msg = newmsg;
+
+  return gst_rtsp_message_init_data (newmsg, channel);
+}
+
+/**
+ * gst_rtsp_message_init_data:
+ * @msg: a #GstRTSPMessage
+ * @channel: a channel
+ *
+ * Initialize a new data #GstRTSPMessage for @channel.
+ *
+ * Returns: a #GstRTSPResult.
+ */
 GstRTSPResult
 gst_rtsp_message_init_data (GstRTSPMessage * msg, guint8 channel)
 {
@@ -198,6 +399,38 @@ gst_rtsp_message_init_data (GstRTSPMessage * msg, guint8 channel)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_message_parse_data:
+ * @msg: a #GstRTSPMessage
+ * @channel: location to hold the channel
+ *
+ * Parse the data message @msg and store the channel in @channel.
+ *
+ * Returns: a #GstRTSPResult.
+ */
+GstRTSPResult
+gst_rtsp_message_parse_data (GstRTSPMessage * msg, guint8 * channel)
+{
+  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (msg->type != GST_RTSP_MESSAGE_DATA, GST_RTSP_EINVAL);
+
+  if (channel)
+    *channel = msg->type_data.data.channel;
+
+  return GST_RTSP_OK;
+}
+
+/**
+ * gst_rtsp_message_unset:
+ * @msg: a #GstRTSPMessage
+ *
+ * Unset the concents of @msg so that it becomes an uninitialized
+ * #GstRTSPMessage again. This function is mostly used in combination with 
+ * gst_rtsp_message_init_request(), gst_rtsp_message_init_response() and
+ * gst_rtsp_message_init_data() on stack allocated #GstRTSPMessage structures.
+ *
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_message_unset (GstRTSPMessage * msg)
 {
@@ -229,6 +462,14 @@ gst_rtsp_message_unset (GstRTSPMessage * msg)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_message_free:
+ * @msg: a #GstRTSPMessage
+ *
+ * Free the memory used by @msg.
+ *
+ * Returns: a #GstRTSPResult.
+ */
 GstRTSPResult
 gst_rtsp_message_free (GstRTSPMessage * msg)
 {
@@ -243,6 +484,16 @@ gst_rtsp_message_free (GstRTSPMessage * msg)
   return res;
 }
 
+/**
+ * gst_rtsp_message_add_header:
+ * @msg: a #GstRTSPMessage
+ * @field: a #GstRTSPHeaderField
+ * @value: the value of the header
+ *
+ * Add a header with key @field and @value to @msg.
+ *
+ * Returns: a #GstRTSPResult.
+ */
 GstRTSPResult
 gst_rtsp_message_add_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
     const gchar * value)
@@ -257,10 +508,20 @@ gst_rtsp_message_add_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
 
   g_array_append_val (msg->hdr_fields, key_value);
 
-
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_message_remove_header:
+ * @msg: a #GstRTSPMessage
+ * @field: a #GstRTSPHeaderField
+ * @indx: the index of the header
+ *
+ * Remove the @indx header with key @field from @msg. If @indx equals -1, all
+ * headers will be removed.
+ *
+ * Returns: a #GstRTSPResult.
+ */
 GstRTSPResult
 gst_rtsp_message_remove_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
     gint indx)
@@ -283,10 +544,21 @@ gst_rtsp_message_remove_header (GstRTSPMessage * msg, GstRTSPHeaderField field,
       i++;
     }
   }
-
   return res;
 }
 
+/**
+ * gst_rtsp_message_get_header:
+ * @msg: a #GstRTSPMessage
+ * @field: a #GstRTSPHeaderField
+ * @value: pointer to hold the result
+ * @indx: the index of the header
+ *
+ * Get the @indx header value with key @field from @msg.
+ *
+ * Returns: #GST_RTSP_OK when @field was found, #GST_RTSP_ENOTIMPL if the key
+ * was not found.
+ */
 GstRTSPResult
 gst_rtsp_message_get_header (const GstRTSPMessage * msg,
     GstRTSPHeaderField field, gchar ** value, gint indx)
@@ -309,6 +581,16 @@ gst_rtsp_message_get_header (const GstRTSPMessage * msg,
   return GST_RTSP_ENOTIMPL;
 }
 
+/**
+ * gst_rtsp_message_append_headers:
+ * @msg: a #GstRTSPMessage
+ * @str: a string
+ *
+ * Append the currently configured headers in @msg to the #GString @str suitable
+ * for transmission.
+ *
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_message_append_headers (const GstRTSPMessage * msg, GString * str)
 {
@@ -326,6 +608,16 @@ gst_rtsp_message_append_headers (const GstRTSPMessage * msg, GString * str)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_message_set_body:
+ * @msg: a #GstRTSPMessage
+ * @data: the data
+ * @size: the size of @data
+ *
+ * Set the body of @msg to a copy of @data.
+ *
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_message_set_body (GstRTSPMessage * msg, const guint8 * data,
     guint size)
@@ -335,6 +627,17 @@ gst_rtsp_message_set_body (GstRTSPMessage * msg, const guint8 * data,
   return gst_rtsp_message_take_body (msg, g_memdup (data, size), size);
 }
 
+/**
+ * gst_rtsp_message_take_body:
+ * @msg: a #GstRTSPMessage
+ * @data: the data
+ * @size: the size of @data
+ *
+ * Set the body of @msg to @data and @size. This method takes ownership of
+ * @data.
+ *
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_message_take_body (GstRTSPMessage * msg, guint8 * data, guint size)
 {
@@ -350,6 +653,17 @@ gst_rtsp_message_take_body (GstRTSPMessage * msg, guint8 * data, guint size)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_message_get_body:
+ * @msg: a #GstRTSPMessage
+ * @data: location for the data
+ * @size: location for the size of @data
+ *
+ * Get the body of @msg. @data remains valid for as long as @msg is valid and
+ * unchanged.
+ *
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_message_get_body (const GstRTSPMessage * msg, guint8 ** data,
     guint * size)
@@ -364,6 +678,17 @@ gst_rtsp_message_get_body (const GstRTSPMessage * msg, guint8 ** data,
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_message_steal_body:
+ * @msg: a #GstRTSPMessage
+ * @data: location for the data
+ * @size: location for the size of @data
+ *
+ * Take the body of @msg and store it in @data and @size. After this method,
+ * the body and size of @msg will be set to #NULL and 0 respectively.
+ *
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_message_steal_body (GstRTSPMessage * msg, guint8 ** data, guint * size)
 {
@@ -420,6 +745,14 @@ dump_key_value (gpointer data, gpointer user_data)
       gst_rtsp_header_as_text (key_value->field), key_value->value);
 }
 
+/**
+ * gst_rtsp_message_dump:
+ * @msg: a #GstRTSPMessage
+ *
+ * Dump the contents of @msg to stdout.
+ *
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_message_dump (GstRTSPMessage * msg)
 {

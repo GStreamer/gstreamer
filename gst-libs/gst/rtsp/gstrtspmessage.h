@@ -66,13 +66,16 @@ typedef enum
   GST_RTSP_MESSAGE_DATA,
 } GstRTSPMsgType;
 
+typedef struct _GstRTSPMessage GstRTSPMessage;
+
 /**
  * GstRTSPMessage:
  * @type: the message type
  *
- * An RTSP message containing request, response or data messages.
+ * An RTSP message containing request, response or data messages. Depending on
+ * the @type, the appropriate structure may be accessed.
  */
-typedef struct _GstRTSPMessage
+struct _GstRTSPMessage
 {
   GstRTSPMsgType    type;
 
@@ -97,19 +100,29 @@ typedef struct _GstRTSPMessage
 
   guint8        *body;
   guint          body_size;
+};
 
-} GstRTSPMessage;
-
+/* memory management */
 GstRTSPResult      gst_rtsp_message_new             (GstRTSPMessage **msg);
 GstRTSPResult      gst_rtsp_message_init            (GstRTSPMessage *msg);
+GstRTSPResult      gst_rtsp_message_unset           (GstRTSPMessage *msg);
+GstRTSPResult      gst_rtsp_message_free            (GstRTSPMessage *msg);
 
+GstRTSPMsgType     gst_rtsp_message_get_type        (GstRTSPMessage *msg);
+
+/* request */
 GstRTSPResult      gst_rtsp_message_new_request     (GstRTSPMessage **msg,
                                                      GstRTSPMethod method,
                                                      const gchar *uri);
 GstRTSPResult      gst_rtsp_message_init_request    (GstRTSPMessage *msg,
                                                      GstRTSPMethod method,
                                                      const gchar *uri);
+GstRTSPResult      gst_rtsp_message_parse_request   (GstRTSPMessage *msg,
+                                                     GstRTSPMethod *method,
+                                                     const gchar **uri,
+						     GstRTSPVersion *version);
 
+/* response */
 GstRTSPResult      gst_rtsp_message_new_response    (GstRTSPMessage **msg,
                                                      GstRTSPStatusCode code,
                                                      const gchar *reason,
@@ -118,14 +131,19 @@ GstRTSPResult      gst_rtsp_message_init_response   (GstRTSPMessage *msg,
                                                      GstRTSPStatusCode code,
                                                      const gchar *reason,
                                                      const GstRTSPMessage *request);
-
+GstRTSPResult      gst_rtsp_message_parse_response  (GstRTSPMessage *msg,
+                                                     GstRTSPStatusCode *code,
+                                                     const gchar **reason,
+                                                     GstRTSPVersion *version);
+/* data */
+GstRTSPResult      gst_rtsp_message_new_data        (GstRTSPMessage **msg,
+                                                     guint8 channel);
 GstRTSPResult      gst_rtsp_message_init_data       (GstRTSPMessage *msg,
                                                      guint8 channel);
+GstRTSPResult      gst_rtsp_message_parse_data      (GstRTSPMessage *msg,
+                                                     guint8 *channel);
 
-GstRTSPResult      gst_rtsp_message_unset           (GstRTSPMessage *msg);
-GstRTSPResult      gst_rtsp_message_free            (GstRTSPMessage *msg);
-
-
+/* headers */
 GstRTSPResult      gst_rtsp_message_add_header      (GstRTSPMessage *msg,
                                                      GstRTSPHeaderField field,
                                                      const gchar *value);
@@ -136,10 +154,10 @@ GstRTSPResult      gst_rtsp_message_get_header      (const GstRTSPMessage *msg,
                                                      GstRTSPHeaderField field,
                                                      gchar **value,
                                                      gint indx);
-
 GstRTSPResult      gst_rtsp_message_append_headers  (const GstRTSPMessage *msg,
                                                      GString *str);
 
+/* handling the body */
 GstRTSPResult      gst_rtsp_message_set_body        (GstRTSPMessage *msg,
                                                      const guint8 *data,
                                                      guint size);
@@ -153,6 +171,7 @@ GstRTSPResult      gst_rtsp_message_steal_body      (GstRTSPMessage *msg,
                                                      guint8 **data,
                                                      guint *size);
 
+/* debug */
 GstRTSPResult      gst_rtsp_message_dump            (GstRTSPMessage *msg);
 
 G_END_DECLS

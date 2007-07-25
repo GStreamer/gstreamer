@@ -51,11 +51,11 @@ G_BEGIN_DECLS
 
 /**
  * GstRTSPRangeUnit:
- * @GST_RTSP_RANGE_SMPTE:
- * @GST_RTSP_RANGE_SMPTE_30_DROP:
- * @GST_RTSP_RANGE_SMPTE_25:
- * @GST_RTSP_RANGE_NPT:
- * @GST_RTSP_RANGE_CLOCK:
+ * @GST_RTSP_RANGE_SMPTE: SMPTE timecode
+ * @GST_RTSP_RANGE_SMPTE_30_DROP: 29.97 frames per second
+ * @GST_RTSP_RANGE_SMPTE_25: 25 frames per second
+ * @GST_RTSP_RANGE_NPT: Normal play time 
+ * @GST_RTSP_RANGE_CLOCK: Absolute time expressed as ISO 8601 timestamps
  *
  * Different possible time range units.
  */
@@ -71,17 +71,40 @@ typedef enum
 typedef struct _GstRTSPTimeRange GstRTSPTimeRange;
 typedef struct _GstRTSPTime GstRTSPTime;
 
+/**
+ * GstRTSPTimeType:
+ * @GST_RTSP_TIME_SECONDS: seconds
+ * @GST_RTSP_TIME_NOW: now
+ * @GST_RTSP_TIME_END: end
+ *
+ * Possible time types.
+ */
 typedef enum {
   GST_RTSP_TIME_SECONDS,
   GST_RTSP_TIME_NOW,
   GST_RTSP_TIME_END
 } GstRTSPTimeType;
 
+/**
+ * GstRTSPTime:
+ * @type: the time of the time
+ * @seconds: seconds when @type is GST_RTSP_TIME_SECONDS 
+ *
+ * A time indication.
+ */
 struct _GstRTSPTime {
   GstRTSPTimeType type;
   gdouble         seconds;
 };
 
+/**
+ * GstRTSPTimeRange:
+ * @unit: the time units used
+ * @min: the minimum interval
+ * @max: the maximum interval
+ *
+ * A time range.
+ */
 struct _GstRTSPTimeRange {
   GstRTSPRangeUnit unit;
 

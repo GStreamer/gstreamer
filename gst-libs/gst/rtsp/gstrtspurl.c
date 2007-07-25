@@ -40,6 +40,19 @@
  * SOFTWARE.
  */
 
+/**
+ * SECTION:gstrtspurl
+ * @short_description: handling RTSP urls
+ *  
+ * <refsect2>
+ * <para>
+ * Provides helper functions to handle RTSP urls.
+ * </para>
+ * </refsect2>
+ *  
+ * Last reviewed on 2007-07-25 (0.10.14)
+ */
+
 #include <stdlib.h>
 #include <string.h>
 
@@ -54,6 +67,16 @@
 
 /* format is rtsp[u]://[user:passwd@]host[:port]/abspath[?query] */
 
+/**
+ * gst_rtsp_url_parse:
+ * @urlstr: the url string to parse
+ * @url: location to hold the result.
+ *
+ * Parse the RTSP @urlstr into a newly allocated #GstRTSPUrl. Free after usage
+ * with gst_rtsp_url_free().
+ *
+ * Returns: a #GstRTSPResult.
+ */
 GstRTSPResult
 gst_rtsp_url_parse (const gchar * urlstr, GstRTSPUrl ** url)
 {
@@ -153,6 +176,12 @@ invalid:
   }
 }
 
+/**
+ * gst_rtsp_url_free:
+ * @url: a #GstRTSPUrl
+ *
+ * Free the memory used by @url.
+ */
 void
 gst_rtsp_url_free (GstRTSPUrl * url)
 {
@@ -167,6 +196,15 @@ gst_rtsp_url_free (GstRTSPUrl * url)
   g_free (url);
 }
 
+/**
+ * gst_rtsp_url_set_port:
+ * @url: a #GstRTSPUrl
+ * @port: the port
+ *
+ * Set the port number in @url to @port.
+ *
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_url_set_port (GstRTSPUrl * url, guint16 port)
 {
@@ -177,6 +215,15 @@ gst_rtsp_url_set_port (GstRTSPUrl * url, guint16 port)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_url_get_port:
+ * @url: a #GstRTSPUrl
+ * @port: location to hold the port
+ *
+ * Get the port number of @url.
+ *
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_url_get_port (GstRTSPUrl * url, guint16 * port)
 {
@@ -192,6 +239,14 @@ gst_rtsp_url_get_port (GstRTSPUrl * url, guint16 * port)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_url_get_request_uri:
+ * @url: a #GstRTSPUrl
+ *
+ * Get a newly allocated string describing the request URI for @url. 
+ *
+ * Returns: a string with the request URI. g_free() after usage.
+ */
 gchar *
 gst_rtsp_url_get_request_uri (GstRTSPUrl * url)
 {

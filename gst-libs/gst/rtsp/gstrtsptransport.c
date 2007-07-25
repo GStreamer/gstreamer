@@ -41,6 +41,19 @@
  * SOFTWARE.
  */
 
+/**
+ * SECTION:gstrtsptransport
+ * @short_description: dealing with RTSP transports
+ *  
+ * <refsect2>
+ * <para>
+ * Provides helper functions to deal with RTSP transport strings.
+ * </para>
+ * </refsect2>
+ *  
+ * Last reviewed on 2007-07-25 (0.10.14)
+ */
+
 #include <string.h>
 #include <stdlib.h>
 
@@ -111,6 +124,15 @@ G_STMT_START {                                    \
   transport_params |= (param);                    \
 } G_STMT_END
 
+/**
+ * gst_rtsp_transport_new:
+ * @transport: location to hold the new #GstRTSPTransport
+ *
+ * Allocate a new initialized #GstRTSPTransport. Use gst_rtsp_transport_free()
+ * after usage.
+ *
+ * Returns: a #GstRTSPResult. 
+ */
 GstRTSPResult
 gst_rtsp_transport_new (GstRTSPTransport ** transport)
 {
@@ -125,6 +147,14 @@ gst_rtsp_transport_new (GstRTSPTransport ** transport)
   return gst_rtsp_transport_init (trans);
 }
 
+/**
+ * gst_rtsp_transport_init:
+ * @transport: a #GstRTSPTransport
+ *
+ * Initialize @transport so that it can be used.
+ *
+ * Returns: #GST_RTSP_OK. 
+ */
 GstRTSPResult
 gst_rtsp_transport_init (GstRTSPTransport * transport)
 {
@@ -152,6 +182,16 @@ gst_rtsp_transport_init (GstRTSPTransport * transport)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_transport_get_mime:
+ * @trans: a #GstRTSPTransMode
+ * @mime: location to hold the result
+ *
+ * Get the mime type of the transport mode @trans. This mime type is typically
+ * used to generate #GstCaps on buffers.
+ *
+ * Returns: #GST_RTSP_OK. 
+ */
 GstRTSPResult
 gst_rtsp_transport_get_mime (GstRTSPTransMode trans, const gchar ** mime)
 {
@@ -167,6 +207,23 @@ gst_rtsp_transport_get_mime (GstRTSPTransMode trans, const gchar ** mime)
   return GST_RTSP_OK;
 }
 
+/**
+ * gst_rtsp_transport_get_manager:
+ * @trans: a #GstRTSPTransMode
+ * @manager: location to hold the result
+ * @option: option index.
+ *
+ * Get the #GStreamer element that can handle the buffers transported over
+ * @trans.
+ *
+ * It is possible that there are several managers available, use @option to
+ * selected one.
+ *
+ * @manager will contain an element name or #NULL when no manager is
+ * needed/available for @trans.
+ *
+ * Returns: #GST_RTSP_OK. 
+ */
 GstRTSPResult
 gst_rtsp_transport_get_manager (GstRTSPTransMode trans, const gchar ** manager,
     guint option)
@@ -287,6 +344,15 @@ rtsp_transport_ltrans_as_text (const GstRTSPTransport * transport)
   return NULL;
 }
 
+/**
+ * gst_rtsp_transport_parse:
+ * @str: a transport string
+ * @transport: a #GstRTSPTransport
+ *
+ * Parse the RTSP transport string @str into @transport.
+ *
+ * Returns: a #GstRTSPResult.
+ */
 GstRTSPResult
 gst_rtsp_transport_parse (const gchar * str, GstRTSPTransport * transport)
 {
@@ -432,6 +498,16 @@ invalid_transport:
   }
 }
 
+/**
+ * gst_rtsp_transport_as_text:
+ * @transport: a #GstRTSPTransport
+ *
+ * Convert @transport into a string that can be used to signal the transport in
+ * an RTSP SETUP response.
+ *
+ * Returns: a string describing the RTSP transport or #NULL when the transport
+ * is invalid.
+ */
 gchar *
 gst_rtsp_transport_as_text (GstRTSPTransport * transport)
 {
@@ -577,6 +653,14 @@ invalid_transport:
   }
 }
 
+/**
+ * gst_rtsp_transport_free:
+ * @transport: a #GstRTSPTransport
+ *
+ * Free the memory used by @transport.
+ *
+ * Returns: #GST_RTSP_OK.
+ */
 GstRTSPResult
 gst_rtsp_transport_free (GstRTSPTransport * transport)
 {

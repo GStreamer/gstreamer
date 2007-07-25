@@ -40,6 +40,20 @@
  * SOFTWARE.
  */
 
+/**
+ * SECTION:gstrtsprange
+ * @short_description: dealing with time ranges
+ *  
+ * <refsect2>
+ * <para>
+ * Provides helper functions to deal with time ranges.
+ * </para>
+ * </refsect2>
+ *  
+ * Last reviewed on 2007-07-25 (0.10.14)
+ */
+
+
 #include <stdio.h>
 #include <string.h>
 

@@ -61,6 +61,27 @@ G_STMT_START { \
     goto label; \
 } G_STMT_END
 
+/**
+ * GstRTSPResult:
+ * @GST_RTSP_OK: no error
+ * @GST_RTSP_ERROR: some unspecified error occured
+ * @GST_RTSP_EINVAL: invalid arguments were provided to a function
+ * @GST_RTSP_EINTR: an operation was canceled
+ * @GST_RTSP_ENOMEM: no memory was available for the operation
+ * @GST_RTSP_ERESOLV: a host resolve error occured
+ * @GST_RTSP_ENOTIMPL: function not implemented
+ * @GST_RTSP_ESYS: a system error occured, errno contains more details
+ * @GST_RTSP_EPARSE: a persing error occured
+ * @GST_RTSP_EWSASTART: windows networking could not start
+ * @GST_RTSP_EWSAVERSION: windows networking stack has wrong version
+ * @GST_RTSP_EEOF: end-of-file was reached
+ * @GST_RTSP_ENET: a network problem occured, h_errno contains more details
+ * @GST_RTSP_ENOTIP: the host is not an IP host
+ * @GST_RTSP_ETIMEOUT: a timeout occured
+ * @GST_RTSP_ELAST: last error
+ *
+ * Result codes from the RTSP functions.
+ */
 typedef enum {
   GST_RTSP_OK          =  0,
   /* errors */
@@ -82,12 +103,31 @@ typedef enum {
   GST_RTSP_ELAST       = -15,
 } GstRTSPResult;
 
+/**
+ * GstRTSPFamily:
+ * @GST_RTSP_FAM_NONE: unknown network family
+ * @GST_RTSP_FAM_INET: internet
+ * @GST_RTSP_FAM_INET6: internet V6
+ *
+ * The possible network families.
+ */
 typedef enum {
   GST_RTSP_FAM_NONE,
   GST_RTSP_FAM_INET,
   GST_RTSP_FAM_INET6,
 } GstRTSPFamily;
 
+/**
+ * GstRTSPState:
+ * @GST_RTSP_STATE_INVALID: invalid state
+ * @GST_RTSP_STATE_INIT: initializing
+ * @GST_RTSP_STATE_READY: ready for operation
+ * @GST_RTSP_STATE_SEEKING: seeking in progress
+ * @GST_RTSP_STATE_PLAYING: playing
+ * @GST_RTSP_STATE_RECORDING: recording
+ *
+ * The different RTSP states.
+ */
 typedef enum {
   GST_RTSP_STATE_INVALID,
   GST_RTSP_STATE_INIT,
@@ -97,11 +137,35 @@ typedef enum {
   GST_RTSP_STATE_RECORDING,
 } GstRTSPState;
 
+/**
+ * GstRTSPVersion:
+ * @GST_RTSP_VERSION_INVALID: unknown/invalid version
+ * @GST_RTSP_VERSION_1_0: version 1.0
+ *
+ * The supported RTSP versions.
+ */
 typedef enum {
   GST_RTSP_VERSION_INVALID = 0x00,
   GST_RTSP_VERSION_1_0     = 0x10,
 } GstRTSPVersion;
 
+/**
+ * GstRTSPMethod:
+ * @GST_RTSP_INVALID: invalid method
+ * @GST_RTSP_DESCRIBE: the DESCRIBE method
+ * @GST_RTSP_ANNOUNCE: the ANNOUNCE method
+ * @GST_RTSP_GET_PARAMETER: the GET_PARAMETER method
+ * @GST_RTSP_OPTIONS: the OPTIONS method
+ * @GST_RTSP_PAUSE: the PAUSE method
+ * @GST_RTSP_PLAY: the PLAY method
+ * @GST_RTSP_RECORD: the RECORD method
+ * @GST_RTSP_REDIRECT: the REDIRECT method
+ * @GST_RTSP_SETUP: the SETUP method
+ * @GST_RTSP_SET_PARAMETER: the SET_PARAMETER method
+ * @GST_RTSP_TEARDOWN: the TEARDOWN method
+ *
+ * The different supported RTSP methods. 
+ */
 typedef enum {
   GST_RTSP_INVALID          = 0,
   GST_RTSP_DESCRIBE         = (1 <<  0),
@@ -117,14 +181,25 @@ typedef enum {
   GST_RTSP_TEARDOWN         = (1 << 10),
 } GstRTSPMethod;
 
-/* Authentication methods, ordered by strength */
+/**
+ * GstRTSPAuthMethod:
+ * @GST_RTSP_AUTH_NONE: no authentication
+ * @GST_RTSP_AUTH_BASIC: basic authentication
+ * @GST_RTSP_AUTH_DIGEST: digest authentication
+ *
+ * Authentication methods, ordered by strength
+ */
 typedef enum {
   GST_RTSP_AUTH_NONE    = 0x00,
   GST_RTSP_AUTH_BASIC   = 0x01,
   GST_RTSP_AUTH_DIGEST  = 0x02
 } GstRTSPAuthMethod;
 
-/* Strongest available authentication method */
+/**
+ * GST_RTSP_AUTH_MAX:
+ *
+ * Strongest available authentication method 
+ */
 #define GST_RTSP_AUTH_MAX GST_RTSP_AUTH_DIGEST
 
 typedef enum {
@@ -190,8 +265,6 @@ typedef enum {
   GST_RTSP_HDR_MAX_ASM_WIDTH,       /* SupportsMaximumASMBandwidth */
   GST_RTSP_HDR_LANGUAGE,            /* Language */
   GST_RTSP_HDR_PLAYER_START_TIME,   /* PlayerStarttime */
-
-
 } GstRTSPHeaderField;
 
 typedef enum {
