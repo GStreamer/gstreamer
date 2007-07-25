@@ -1397,7 +1397,9 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
    */
   if (!GST_CLOCK_TIME_IS_VALID (in_duration)) {
     /* if we have an input framerate, use that */
-    if (ffmpegdec->format.video.fps_n != -1) {
+    if (ffmpegdec->format.video.fps_n != -1 &&
+        (ffmpegdec->format.video.fps_n != 1000 &&
+         ffmpegdec->format.video.fps_d != 1)) {
       GST_LOG_OBJECT (ffmpegdec, "using input framerate for duration");
       in_duration = gst_util_uint64_scale_int (GST_SECOND,
           ffmpegdec->format.video.fps_d, ffmpegdec->format.video.fps_n);

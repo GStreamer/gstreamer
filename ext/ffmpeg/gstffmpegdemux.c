@@ -1194,6 +1194,11 @@ gst_ffmpegdemux_loop (GstPad * pad)
     stream->last_ts = timestamp;
   }
   duration = gst_ffmpeg_time_ff_to_gst (pkt.duration, avstream->time_base);
+  if (G_UNLIKELY (!duration)) {
+    GST_WARNING_OBJECT (demux, "invalid buffer duration, setting to NONE");
+    duration = GST_CLOCK_TIME_NONE;
+  }
+
 
   GST_DEBUG_OBJECT (demux,
       "pkt pts:%" GST_TIME_FORMAT

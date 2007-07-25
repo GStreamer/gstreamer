@@ -1,3 +1,11 @@
+2007-07-25  Julien MOUTTE  <julien@moutte.net>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_video_frame):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop): Handle
+	buffers with invalid duration correctly even in the case where
+	we have a demuxer AND a decoder from ffmpeg linked.
+	Fixes: #460274.
+
 2007-07-13  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:
