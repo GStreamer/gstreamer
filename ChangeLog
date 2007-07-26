@@ -1,5 +1,10 @@
 2007-07-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/audiofx/audioamplify.h:
+	Also remove a now unecessary variable here.
+
+2007-07-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/audiofx/audioamplify.c: (gst_audio_amplify_init),
 	(gst_audio_amplify_setup), (gst_audio_amplify_transform_ip):
 	* gst/audiofx/audiodynamic.c:
