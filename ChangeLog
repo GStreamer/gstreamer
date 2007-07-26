@@ -1,3 +1,10 @@
+2007-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/libs/Makefile.am:
+	Include our build-prefix libs and includes before the generic ones to
+	avoid linking against the installed libs when we want the build-tree
+	ones.
+
 2007-07-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Steve Fink  <sphink gmail com>
