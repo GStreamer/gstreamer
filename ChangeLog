@@ -1,3 +1,19 @@
+2007-07-26  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/realmedia/Makefile.am:
+	* gst/realmedia/rmdemux.c: (plugin_init):
+	* gst/realmedia/rtspreal.c: (rtsp_ext_real_get_transports),
+	(rtsp_ext_real_before_send), (rtsp_ext_real_after_send), (hash),
+	(call_hash), (rtsp_ext_real_calc_response_and_checksum),
+	(rtsp_ext_real_parse_sdp), (rtsp_ext_real_stream_select),
+	(_do_init), (gst_rtsp_real_base_init), (gst_rtsp_real_class_init),
+	(gst_rtsp_real_init), (gst_rtsp_real_finalize),
+	(gst_rtsp_real_change_state), (gst_rtsp_real_extension_init),
+	(gst_rtsp_real_plugin_init):
+	* gst/realmedia/rtspreal.h:
+	Add RealMedia RTSP extension module. It has rank NONE until it is fully
+	functional.
+
 2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/asfdemux/Makefile.am:
