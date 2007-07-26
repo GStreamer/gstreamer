@@ -1,3 +1,10 @@
+2007-07-26  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_setcaps):
+	Use the proper context variable when setting the password !
+	LOG => WARNING for errors.
+	Give proper path when opening the codec (needs a '/' at the end).
+
 2007-07-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/real/Makefile.am:

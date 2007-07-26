@@ -195,7 +195,7 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
   gchar *path, *names;
   gchar **split_names, **split_path;
   gint version, flavor, channels, rate, leaf_size, packet_size, width, height;
-  guint16 res;
+  guint16 res = 0;
   RAInit data;
   gboolean bres;
   const GValue *v;
@@ -205,6 +205,7 @@ gst_real_audio_dec_setcaps (GstPad * pad, GstCaps * caps)
   gpointer context = NULL;
   RealFunctions funcs = { NULL, };
   int i, j;
+  gchar *tmppath = NULL;
 
   if (!strcmp (name, "audio/x-sipro"))
     version = GST_REAL_AUDIO_DEC_VERSION_SIPR;
@@ -293,13 +294,15 @@ codec_search_done:
   if (funcs.SetDLLAccessPath)
     funcs.SetDLLAccessPath (split_path[i]);
 
-  /* now we are done with the split paths, so free them */
-  g_strfreev (split_path);
-
-  if ((res = funcs.RAOpenCodec2 (&context, NULL))) {
-    GST_DEBUG_OBJECT (dec, "RAOpenCodec2() failed");
+  tmppath = g_strdup_printf ("%s/", split_path[i]);
+  if ((res = funcs.RAOpenCodec2 (&context, tmppath))) {
+    g_free (tmppath);
     goto could_not_initialize;
   }
+  g_free (tmppath);
+
+  /* now we are done with the split paths, so free them */
+  g_strfreev (split_path);
 
   data.samplerate = rate;
   data.width = width;
@@ -311,16 +314,16 @@ codec_search_done:
   data.data = buf ? GST_BUFFER_DATA (buf) : NULL;
 
   if ((res = funcs.RAInitDecoder (context, &data))) {
-    GST_DEBUG_OBJECT (dec, "RAInitDecoder() failed");
+    GST_WARNING_OBJECT (dec, "RAInitDecoder() failed");
     goto could_not_initialize;
   }
 
   if (funcs.RASetPwd) {
-    funcs.RASetPwd (dec->context, dec->pwd ? dec->pwd : DEFAULT_PWD);
+    funcs.RASetPwd (context, dec->pwd ? dec->pwd : DEFAULT_PWD);
   }
 
   if ((res = funcs.RASetFlavor (context, flavor))) {
-    GST_DEBUG_OBJECT (dec, "RASetFlavor(%d) failed", flavor);
+    GST_WARNING_OBJECT (dec, "RASetFlavor(%d) failed", flavor);
     goto could_not_initialize;
   }
 
@@ -371,7 +374,7 @@ could_not_initialize:
     funcs.RAFreeDecoder (context);
   }
   g_module_close (module);
-  GST_DEBUG_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
+  GST_WARNING_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
   return FALSE;
 could_not_set_caps:
   if (context) {
