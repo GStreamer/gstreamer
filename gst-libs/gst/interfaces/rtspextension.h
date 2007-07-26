@@ -27,6 +27,7 @@
 #include <gst/sdp/gstsdpmessage.h>
 #include <gst/rtsp/gstrtsptransport.h>
 #include <gst/rtsp/gstrtspmessage.h>
+#include <gst/rtsp/gstrtspurl.h>
 
 G_BEGIN_DECLS
 
@@ -58,7 +59,7 @@ struct _GstRTSPExtensionInterface {
 
   GstRTSPResult (*get_transports)   (GstRTSPExtension *ext, GstRTSPLowerTrans protocols, gchar **transport);
 
-  GstRTSPResult (*stream_select)    (GstRTSPExtension *ext);
+  GstRTSPResult (*stream_select)    (GstRTSPExtension *ext, GstRTSPUrl *url);
 
   /* signals */
   GstRTSPResult (*send)             (GstRTSPExtension *ext, GstRTSPMessage *req, GstRTSPMessage *resp);
@@ -81,7 +82,7 @@ GstRTSPResult   gst_rtsp_extension_setup_media       (GstRTSPExtension *ext, Gst
 gboolean        gst_rtsp_extension_configure_stream  (GstRTSPExtension *ext, GstCaps *caps);
 GstRTSPResult   gst_rtsp_extension_get_transports    (GstRTSPExtension *ext, GstRTSPLowerTrans protocols,
                                                       gchar **transport);
-GstRTSPResult   gst_rtsp_extension_stream_select     (GstRTSPExtension *ext);
+GstRTSPResult   gst_rtsp_extension_stream_select     (GstRTSPExtension *ext, GstRTSPUrl *url);
 
 /* signal emision */
 GstRTSPResult   gst_rtsp_extension_send              (GstRTSPExtension *ext, GstRTSPMessage *req,

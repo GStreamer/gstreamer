@@ -35,6 +35,7 @@
 #include "config.h"
 #endif
 
+#include "interfaces-marshal.h"
 #include "rtspextension.h"
 
 static void gst_rtsp_extension_iface_init (GstRTSPExtension * iface);
@@ -80,8 +81,8 @@ gst_rtsp_extension_iface_init (GstRTSPExtension * iface)
     gst_rtsp_extension_signals[SIGNAL_SEND] =
         g_signal_new ("send", G_TYPE_FROM_CLASS (iface),
         G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPExtensionInterface,
-            send), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
-        G_TYPE_NONE, 1, G_TYPE_POINTER);
+            send), NULL, NULL, gst_interfaces_marshal_ENUM__POINTER_POINTER,
+        G_TYPE_ENUM, 2, G_TYPE_POINTER, G_TYPE_POINTER);
     initialized = TRUE;
   }
 }
@@ -181,14 +182,14 @@ gst_rtsp_extension_get_transports (GstRTSPExtension * ext,
 }
 
 GstRTSPResult
-gst_rtsp_extension_stream_select (GstRTSPExtension * ext)
+gst_rtsp_extension_stream_select (GstRTSPExtension * ext, GstRTSPUrl * url)
 {
   GstRTSPExtensionInterface *iface;
   GstRTSPResult res = GST_RTSP_OK;
 
   iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
   if (iface->stream_select)
-    res = iface->stream_select (ext);
+    res = iface->stream_select (ext, url);
 
   return res;
 }

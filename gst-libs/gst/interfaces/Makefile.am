@@ -58,7 +58,7 @@ nodist_libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = 	\
 	interfaces-marshal.h
 
 libgstinterfaces_@GST_MAJORMINOR@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
-libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS)
+libgstinterfaces_@GST_MAJORMINOR@_la_LIBADD = $(GST_LIBS) 
 libgstinterfaces_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 BUILT_SOURCES = \

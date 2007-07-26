@@ -1,3 +1,14 @@
+2007-07-26  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/interfaces/Makefile.am:
+	* gst-libs/gst/interfaces/interfaces-marshal.list:
+	* gst-libs/gst/interfaces/rtspextension.c:
+	(gst_rtsp_extension_iface_init),
+	(gst_rtsp_extension_stream_select), (gst_rtsp_extension_send):
+	* gst-libs/gst/interfaces/rtspextension.h:
+	Fix marshaller for the send signal.
+	Add URL to stream selection interface method.
+
 2007-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst-libs/gst/riff/Makefile.am:
