@@ -1,3 +1,10 @@
+2007-07-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	  API: add GST_TAG_LICENSE_URI and GST_TAG_COPYRIGHT_URI (#451939).
+
 2007-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* docs/libs/Makefile.am:

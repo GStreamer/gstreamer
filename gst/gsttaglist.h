@@ -453,6 +453,14 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  */
 #define GST_TAG_COPYRIGHT              "copyright"
 /**
+ * GST_TAG_COPYRIGHT_URI:
+ *
+ * URI to location where copyright details can be found (string)
+ *
+ * Since: 0.10.14
+ */
+#define GST_TAG_COPYRIGHT_URI          "copyright-uri"
+/**
  * GST_TAG_CONTACT:
  *
  * contact information (string)
@@ -464,6 +472,14 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  * license of data (string)
  */
 #define GST_TAG_LICENSE                "license"
+/**
+ * GST_TAG_LICENSE_URI:
+ *
+ * URI to location where license details can be found (string)
+ *
+ * Since: 0.10.14
+ */
+#define GST_TAG_LICENSE_URI            "license-uri"
 /**
  * GST_TAG_PERFORMER:
  *

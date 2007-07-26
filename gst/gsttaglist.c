@@ -159,11 +159,17 @@ _gst_tag_initialize (void)
       gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_COPYRIGHT, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("copyright"), _("copyright notice of the data"), NULL);
+  gst_tag_register (GST_TAG_COPYRIGHT_URI, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("copyright uri"),
+      _("URI to the copyright notice of the data"), NULL);
   gst_tag_register (GST_TAG_CONTACT, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("contact"), _("contact information"), gst_tag_merge_strings_with_comma);
   gst_tag_register (GST_TAG_LICENSE, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("license"), _("license of data"), NULL);
+  gst_tag_register (GST_TAG_LICENSE_URI, GST_TAG_FLAG_META,
+      G_TYPE_STRING, _("license uri"),
+      _("URI to the license of the data"), NULL);
   gst_tag_register (GST_TAG_PERFORMER, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("performer"),
