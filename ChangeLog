@@ -1,3 +1,29 @@
+2007-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/gst/interfaces/Makefile.am:
+	* gst-libs/gst/interfaces/interfaces-marshal.list:
+	* gst-libs/gst/interfaces/rtspextension.c:
+	* gst-libs/gst/interfaces/rtspextension.h:
+	* gst-libs/gst/rtsp/Makefile.am:
+	* gst-libs/gst/rtsp/gstrtsp.h:
+	* gst-libs/gst/rtsp/gstrtspextension.c:
+	(gst_rtsp_extension_get_type), (gst_rtsp_extension_iface_init),
+	(gst_rtsp_extension_detect_server),
+	(gst_rtsp_extension_before_send), (gst_rtsp_extension_after_send),
+	(gst_rtsp_extension_parse_sdp), (gst_rtsp_extension_setup_media),
+	(gst_rtsp_extension_configure_stream),
+	(gst_rtsp_extension_get_transports),
+	(gst_rtsp_extension_stream_select), (gst_rtsp_extension_send):
+	* gst-libs/gst/rtsp/gstrtspextension.h:
+	* gst-libs/gst/rtsp/rtsp-marshal.list:
+	Move the rtspextension.h interface into gstrtspextension.h
+	as part of libgstrtsp instead of libgstinterfaces, because it's
+	only for use within plugins, not applications. 
+	Add stuff to do the enum & marshal generation needed in libgstrtsp now.
+	Use the GST_TYPE_RTSP_RESULT enum type for the return value of the 
+	signal that the GstRTSPExtension interface emits, since G_TYPE_ENUM
+	is abstract.
+
 2007-07-26  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/interfaces/Makefile.am:

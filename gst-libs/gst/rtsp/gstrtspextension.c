@@ -1,7 +1,7 @@
 /* GStreamer RTSP extension
  * Copyright (C) 2007 Wim Taymans <wim.taymans@gmail.com>
  *
- * rtspextension.c: RTSP extension mechanism
+ * gstrtspextension.c: RTSP extension mechanism
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -35,8 +35,9 @@
 #include "config.h"
 #endif
 
-#include "interfaces-marshal.h"
-#include "rtspextension.h"
+#include "rtsp-marshal.h"
+#include "gstrtsp-enumtypes.h"
+#include "gstrtspextension.h"
 
 static void gst_rtsp_extension_iface_init (GstRTSPExtension * iface);
 
@@ -81,8 +82,8 @@ gst_rtsp_extension_iface_init (GstRTSPExtension * iface)
     gst_rtsp_extension_signals[SIGNAL_SEND] =
         g_signal_new ("send", G_TYPE_FROM_CLASS (iface),
         G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPExtensionInterface,
-            send), NULL, NULL, gst_interfaces_marshal_ENUM__POINTER_POINTER,
-        G_TYPE_ENUM, 2, G_TYPE_POINTER, G_TYPE_POINTER);
+            send), NULL, NULL, gst_rtsp_marshal_ENUM__POINTER_POINTER,
+        GST_TYPE_RTSP_RESULT, 2, G_TYPE_POINTER, G_TYPE_POINTER);
     initialized = TRUE;
   }
 }

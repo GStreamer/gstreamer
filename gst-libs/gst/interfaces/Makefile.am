@@ -10,7 +10,6 @@ headers_interfaces = 		\
 	mixertrack.h		\
 	navigation.h		\
 	propertyprobe.h		\
-	rtspextension.h		\
 	tuner.h			\
 	tunernorm.h		\
 	tunerchannel.h		\
@@ -46,7 +45,6 @@ libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = \
 	mixertrack.c		\
 	navigation.c		\
 	propertyprobe.c		\
-	rtspextension.c		\
 	tuner.c			\
 	tunernorm.c		\
 	tunerchannel.c		\
