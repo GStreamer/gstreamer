@@ -5,7 +5,16 @@
   <para>
     Often, you will want to test your newly written plugin in an as small
     setting as possible. Usually, <filename>gst-launch</filename> is a
-    good first step at testing a plugin. However, you will often need more
+    good first step at testing a plugin. If you have not installed your
+    plugin in a directory that GStreamer searches, then you will need to
+    set the plugin path. Either set GST_PLUGIN_PATH to the directory
+    containing your plugin, or use the command-line option --gst-plugin-path.
+    If you based your plugin off of the gst-plugin template, then this
+    will look something like
+    <command>
+    gst-launch --gst-plugin-path=$HOME/gst-template/gst-plugin/src/.libs TESTPIPELINE
+    </command>
+    However, you will often need more
     testing features than gst-launch can provide, such as seeking, events,
     interactivity and more. Writing your own small testing program is the
     easiest way to accomplish this. This section explains - in a few words
