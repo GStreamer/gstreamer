@@ -47,7 +47,6 @@ struct _GstAudioInvert
 
   /* < private > */
   GstAudioInvertProcessFunc process;
-  gint width;
 };
 
 struct _GstAudioInvertClass

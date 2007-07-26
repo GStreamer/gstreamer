@@ -216,7 +216,6 @@ gst_audio_amplify_init (GstAudioAmplify * filter, GstAudioAmplifyClass * klass)
 {
   filter->amplification = 1.0;
   filter->clipping_method = METHOD_CLIP;
-  filter->width = 0;
   filter->format_index = 0;
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
 }
@@ -283,8 +282,6 @@ gst_audio_amplify_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
   GstAudioAmplify *filter = GST_AUDIO_AMPLIFY (base);
   gboolean ret;
-
-  filter->width = format->width / 8;
 
   if (format->type == GST_BUFTYPE_LINEAR && format->width == 16)
     filter->format_index = 0;
@@ -414,7 +411,8 @@ static GstFlowReturn
 gst_audio_amplify_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
   GstAudioAmplify *filter = GST_AUDIO_AMPLIFY (base);
-  guint num_samples = GST_BUFFER_SIZE (buf) / filter->width;
+  guint num_samples =
+      GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
 
   if (!gst_buffer_is_writable (buf))
     return GST_FLOW_OK;

@@ -207,7 +207,8 @@ gst_audio_dynamic_set_process_function (GstAudioDynamic * filter)
 
   func_index = (filter->mode == MODE_COMPRESSOR) ? 0 : 4;
   func_index += (filter->characteristics == CHARACTERISTICS_HARD_KNEE) ? 0 : 2;
-  func_index += (!filter->is_float) ? 0 : 1;
+  func_index +=
+      (GST_AUDIO_FILTER (filter)->format.type == GST_BUFTYPE_FLOAT) ? 1 : 0;
 
   if (func_index >= 0 && func_index < 8) {
     filter->process = process_functions[func_index];
@@ -278,8 +279,6 @@ gst_audio_dynamic_init (GstAudioDynamic * filter, GstAudioDynamicClass * klass)
   filter->threshold = 0.0;
   filter->characteristics = CHARACTERISTICS_HARD_KNEE;
   filter->mode = MODE_COMPRESSOR;
-  filter->width = 0;
-  filter->is_float = FALSE;
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
 }
 
@@ -342,9 +341,6 @@ gst_audio_dynamic_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
   GstAudioDynamic *filter = GST_AUDIO_DYNAMIC (base);
   gboolean ret = TRUE;
-
-  filter->width = format->width / 8;
-  filter->is_float = (format->type == GST_BUFTYPE_FLOAT) ? TRUE : FALSE;
 
   ret = gst_audio_dynamic_set_process_function (filter);
 
@@ -700,7 +696,8 @@ static GstFlowReturn
 gst_audio_dynamic_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
   GstAudioDynamic *filter = GST_AUDIO_DYNAMIC (base);
-  guint num_samples = GST_BUFFER_SIZE (buf) / filter->width;
+  guint num_samples =
+      GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
 
   if (!gst_buffer_is_writable (buf))
     return GST_FLOW_OK;

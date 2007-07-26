@@ -1,3 +1,17 @@
+2007-07-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audiofx/audioamplify.c: (gst_audio_amplify_init),
+	(gst_audio_amplify_setup), (gst_audio_amplify_transform_ip):
+	* gst/audiofx/audiodynamic.c:
+	(gst_audio_dynamic_set_process_function), (gst_audio_dynamic_init),
+	(gst_audio_dynamic_setup), (gst_audio_dynamic_transform_ip):
+	* gst/audiofx/audiodynamic.h:
+	* gst/audiofx/audioinvert.c: (gst_audio_invert_init),
+	(gst_audio_invert_setup), (gst_audio_invert_transform_ip):
+	* gst/audiofx/audioinvert.h:
+	Don't save format information ourselves, this is already saved in
+	GstAudioFilter.
+
 2007-07-26  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspext.c: (gst_rtsp_ext_list_filter),

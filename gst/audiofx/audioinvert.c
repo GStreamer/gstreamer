@@ -147,7 +147,6 @@ static void
 gst_audio_invert_init (GstAudioInvert * filter, GstAudioInvertClass * klass)
 {
   filter->degree = 0.0;
-  filter->width = 0;
   gst_base_transform_set_in_place (GST_BASE_TRANSFORM (filter), TRUE);
 }
 
@@ -202,8 +201,6 @@ gst_audio_invert_setup (GstAudioFilter * base, GstRingBufferSpec * format)
   else
     ret = FALSE;
 
-  filter->width = format->width / 8;
-
   return ret;
 }
 
@@ -240,7 +237,8 @@ static GstFlowReturn
 gst_audio_invert_transform_ip (GstBaseTransform * base, GstBuffer * buf)
 {
   GstAudioInvert *filter = GST_AUDIO_INVERT (base);
-  guint num_samples = GST_BUFFER_SIZE (buf) / filter->width;
+  guint num_samples =
+      GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
 
   if (!gst_buffer_is_writable (buf))
     return GST_FLOW_OK;

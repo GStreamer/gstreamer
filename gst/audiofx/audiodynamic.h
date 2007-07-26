@@ -47,8 +47,6 @@ struct _GstAudioDynamic
 
   /* < private > */
   GstAudioDynamicProcessFunc process;
-  gint width;
-  gboolean is_float;
   gint characteristics;
   gint mode;
   gfloat threshold;
