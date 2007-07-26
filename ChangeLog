@@ -1,3 +1,8 @@
+2007-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/gst/riff/Makefile.am:
+	Pull in our dependencies from -base before those from outside.
+
 2007-07-26  Wim Taymans  <wim.taymans@gmail.com>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:
