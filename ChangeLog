@@ -1,3 +1,11 @@
+2007-07-26  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/rtsp/gstrtspbase64.c: (gst_rtsp_base64_decode_ip):
+	* gst-libs/gst/rtsp/gstrtspbase64.h:
+	API: gst_rtsp_base64_decode_ip()
+	Added function to decode Base64 in-place.
+
 2007-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* tests/check/libs/.cvsignore:

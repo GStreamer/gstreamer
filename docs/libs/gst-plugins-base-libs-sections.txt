@@ -1007,6 +1007,7 @@ gst_rtsp_transport_free
 <FILE>gstrtspbase64</FILE>
 <INCLUDE>gst/rtsp/gstrtspbase64.h</INCLUDE>
 gst_rtsp_base64_encode
+gst_rtsp_base64_decode_ip
 </SECTION>
 
 <SECTION>

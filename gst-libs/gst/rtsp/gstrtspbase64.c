@@ -19,7 +19,7 @@
 
 /**
  * SECTION:gstrtspbase64
- * @short_description: Helper function to encode into Base64
+ * @short_description: Helper functions to handle Base64
  *
  * Last reviewed on 2007-07-24 (0.10.14)
  */
@@ -27,6 +27,8 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
+#include <string.h>
 
 #include "gstrtspbase64.h"
 
@@ -84,4 +86,61 @@ gst_rtsp_base64_encode (const gchar * data, gsize len)
   *out = 0;
 
   return result;
+}
+
+/**
+ * gst_rtsp_base64_decode_ip:
+ * @data: the base64 encoded data
+ * @len: location for output length or NULL
+ *
+ * Decode the base64 string pointed to by @data in-place. When @len is not #NULL
+ * it will contain the length of the decoded data.
+ */
+void
+gst_rtsp_base64_decode_ip (gchar * data, gsize * len)
+{
+  char dtable[256];
+  int i, j, k = 0, n = strlen (data);
+
+  for (i = 0; i < 255; i++)
+    dtable[i] = 0x80;
+  for (i = 'A'; i <= 'Z'; i++)
+    dtable[i] = 0 + (i - 'A');
+  for (i = 'a'; i <= 'z'; i++)
+    dtable[i] = 26 + (i - 'a');
+  for (i = '0'; i <= '9'; i++)
+    dtable[i] = 52 + (i - '0');
+  dtable['+'] = 62;
+  dtable['/'] = 63;
+  dtable['='] = 0;
+
+  for (j = 0; j < n; j += 4) {
+    char a[4], b[4];
+
+    for (i = 0; i < 4; i++) {
+      int c = data[i + j];
+
+      if (dtable[c] & 0x80) {
+        if (len)
+          *len = 0;
+        return;
+      }
+      a[i] = (char) c;
+      b[i] = (char) dtable[c];
+    }
+    data[k++] = (b[0] << 2) | (b[1] >> 4);
+    data[k++] = (b[1] << 4) | (b[2] >> 2);
+    data[k++] = (b[2] << 6) | b[3];
+    i = a[2] == '=' ? 1 : (a[3] == '=' ? 2 : 3);
+    if (i < 3) {
+      data[k] = 0;
+      if (len)
+        *len = k;
+      return;
+    }
+  }
+  data[k] = 0;
+  if (len)
+    *len = k;
+  return;
 }
