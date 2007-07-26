@@ -847,8 +847,8 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
       for (walk = dec->queued; walk; walk = g_list_next (walk)) {
         GstBuffer *buffer = GST_BUFFER (walk->data);
 
-        /* clips or returns NULL with buffer unreffed when completely
-         * clipped */
+        /* clips to the configured segment, or returns NULL with buffer
+         * unreffed when the input buffer is completely outside the segment */
         if (!(buffer = gst_audio_buffer_clip (buffer, &dec->segment,
                     dec->vi.rate, dec->vi.channels * sizeof (float))))
           continue;
