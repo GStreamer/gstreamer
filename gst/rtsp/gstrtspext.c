@@ -51,6 +51,7 @@ static gboolean
 gst_rtsp_ext_list_filter (GstPluginFeature * feature, gpointer user_data)
 {
   GstElementFactory *factory;
+  guint rank;
 
   /* we only care about element factories */
   if (!GST_IS_ELEMENT_FACTORY (feature))
@@ -59,6 +60,11 @@ gst_rtsp_ext_list_filter (GstPluginFeature * feature, gpointer user_data)
   factory = GST_ELEMENT_FACTORY (feature);
 
   if (!gst_element_factory_has_interface (factory, "GstRTSPExtension"))
+    return FALSE;
+
+  /* only select elements with autoplugging rank */
+  rank = gst_plugin_feature_get_rank (feature);
+  if (rank < GST_RANK_MARGINAL)
     return FALSE;
 
   return TRUE;
@@ -202,7 +208,7 @@ gst_rtsp_ext_list_get_transports (GstRTSPExtensionList * ext,
 }
 
 GstRTSPResult
-gst_rtsp_ext_list_stream_select (GstRTSPExtensionList * ext)
+gst_rtsp_ext_list_stream_select (GstRTSPExtensionList * ext, GstRTSPUrl * url)
 {
   GList *walk;
   GstRTSPResult res = GST_RTSP_OK;
@@ -210,7 +216,7 @@ gst_rtsp_ext_list_stream_select (GstRTSPExtensionList * ext)
   for (walk = ext->extensions; walk; walk = g_list_next (walk)) {
     GstRTSPExtension *elem = (GstRTSPExtension *) walk->data;
 
-    res = gst_rtsp_extension_stream_select (elem);
+    res = gst_rtsp_extension_stream_select (elem, url);
   }
   return res;
 }

@@ -1,3 +1,12 @@
+2007-07-26  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtspext.c: (gst_rtsp_ext_list_filter),
+	(gst_rtsp_ext_list_stream_select):
+	* gst/rtsp/gstrtspext.h:
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_setup_streams):
+	Use rank to filter out extensions.
+	Add url to stream_select interface call.
+
 2007-07-25  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/Makefile.am:

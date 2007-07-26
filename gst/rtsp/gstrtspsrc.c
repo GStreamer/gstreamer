@@ -3305,7 +3305,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     }
   }
 
-  gst_rtsp_ext_list_stream_select (src->extensions);
+  gst_rtsp_ext_list_stream_select (src->extensions, src->url);
 
   /* we need to activate the streams when we detect activity */
   src->need_activate = TRUE;

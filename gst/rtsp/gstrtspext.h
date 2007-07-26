@@ -70,7 +70,7 @@ GstRTSPResult gst_rtsp_ext_list_setup_media       (GstRTSPExtensionList *ext, Gs
 gboolean      gst_rtsp_ext_list_configure_stream  (GstRTSPExtensionList *ext, GstCaps *caps);
 GstRTSPResult gst_rtsp_ext_list_get_transports    (GstRTSPExtensionList *ext, GstRTSPLowerTrans protocols,
                                                    gchar **transport);
-GstRTSPResult gst_rtsp_ext_list_stream_select     (GstRTSPExtensionList *ext);
+GstRTSPResult gst_rtsp_ext_list_stream_select     (GstRTSPExtensionList *ext, GstRTSPUrl *url);
 
 G_END_DECLS
 
