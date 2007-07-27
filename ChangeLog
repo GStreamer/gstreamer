@@ -1,3 +1,11 @@
+2007-07-27  Rene Stadler <mail@renestadler.de>
+
+	reviewed by: Edward Hervey  <bilboed@bilboed.com>
+	* gst/gst.defs:
+	Make .get_uri_type() methods return a GstURIType enum instead of an
+	integer.
+	Fixes #436620
+
 2007-07-27  Sebastien Merle  <sylane@gmail.com>
 
 	reviewed by: Edward Hervey  <bilboed@bilboed.com>

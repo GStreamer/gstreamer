@@ -1529,7 +1529,7 @@
 (define-method get_uri_type
   (of-object "GstElementFactory")
   (c-name "gst_element_factory_get_uri_type")
-  (return-type "gint")
+  (return-type "GstURIType")
 )
 
 (define-method get_uri_protocols
@@ -6519,7 +6519,7 @@
 (define-method get_uri_type
   (of-object "GstURIHandler")
   (c-name "gst_uri_handler_get_uri_type")
-  (return-type "guint")
+  (return-type "GstURIType")
 )
 
 (define-method get_protocols
