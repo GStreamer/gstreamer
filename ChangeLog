@@ -1,6 +1,11 @@
 2007-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst-libs/gst/rtsp/.cvsignore:
+	Ber. Don't include the full path, idiot.
+
+2007-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/gst/rtsp/.cvsignore:
 	Ignore generated files.
 
 2007-07-26  Jan Schmidt  <thaytan@mad.scientist.com>
