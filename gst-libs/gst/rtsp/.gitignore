@@ -1,0 +1,4 @@
+gst-libs/gst/rtsp/gstrtsp-enumtypes.c
+gst-libs/gst/rtsp/gstrtsp-enumtypes.h
+gst-libs/gst/rtsp/rtsp-marshal.c
+gst-libs/gst/rtsp/rtsp-marshal.h
