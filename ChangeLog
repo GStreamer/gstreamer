@@ -1,3 +1,16 @@
+2007-07-27  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtspext.c: (gst_rtsp_ext_list_free),
+	(gst_rtsp_ext_list_connect):
+	* gst/rtsp/gstrtspext.h:
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
+	(gst_rtspsrc_finalize), (gst_rtspsrc_send_cb):
+	Clean up the interface list.
+	Allow connecting to interface signals for the extensions.
+	Remove old extension code.
+	Free list on cleanup.
+	Allow extensions to send additional RTSP messages.
+
 2007-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* ext/gconf/gconf.c: (gst_gconf_render_bin_with_default):

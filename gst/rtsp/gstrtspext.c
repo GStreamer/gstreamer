@@ -105,6 +105,20 @@ gst_rtsp_ext_list_get (void)
   return result;
 }
 
+void
+gst_rtsp_ext_list_free (GstRTSPExtensionList * ext)
+{
+  GList *walk;
+
+  for (walk = ext->extensions; walk; walk = g_list_next (walk)) {
+    GstRTSPExtension *elem = (GstRTSPExtension *) walk->data;
+
+    gst_object_unref (GST_OBJECT_CAST (elem));
+  }
+  g_list_free (ext->extensions);
+  g_free (ext);
+}
+
 gboolean
 gst_rtsp_ext_list_detect_server (GstRTSPExtensionList * ext,
     GstRTSPMessage * resp)
@@ -219,4 +233,17 @@ gst_rtsp_ext_list_stream_select (GstRTSPExtensionList * ext, GstRTSPUrl * url)
     res = gst_rtsp_extension_stream_select (elem, url);
   }
   return res;
+}
+
+void
+gst_rtsp_ext_list_connect (GstRTSPExtensionList * ext,
+    const gchar * detailed_signal, GCallback c_handler, gpointer data)
+{
+  GList *walk;
+
+  for (walk = ext->extensions; walk; walk = g_list_next (walk)) {
+    GstRTSPExtension *elem = (GstRTSPExtension *) walk->data;
+
+    g_signal_connect (elem, detailed_signal, c_handler, data);
+  }
 }

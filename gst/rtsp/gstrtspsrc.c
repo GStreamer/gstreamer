@@ -97,16 +97,6 @@
 
 #include "gstrtspsrc.h"
 
-/* define for experimental real support */
-#undef WITH_EXT_REAL
-
-#if 0
-#include "rtspextwms.h"
-#ifdef WITH_EXT_REAL
-#include "rtspextreal.h"
-#endif
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (rtspsrc_debug);
 #define GST_CAT_DEFAULT (rtspsrc_debug)
 
@@ -197,6 +187,9 @@ static GstCaps *gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media);
 static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message);
+
+static GstRTSPResult gst_rtspsrc_send_cb (GstRTSPExtension * ext,
+    GstRTSPMessage * request, GstRTSPMessage * response, GstRTSPSrc * src);
 
 static gboolean gst_rtspsrc_open (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_play (GstRTSPSrc * src);
@@ -318,15 +311,9 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
 
-#if 0
-#ifdef WITH_EXT_REAL
-  src->extension = rtsp_ext_real_get_context ();
-#else
-  /* install WMS extension by default */
-  src->extension = rtsp_ext_wms_get_context ();
-#endif
-  src->extension->src = (gpointer) src;
-#endif
+  /* connect to send signal */
+  gst_rtsp_ext_list_connect (src->extensions, "send",
+      (GCallback) gst_rtspsrc_send_cb, src);
 
   src->state_rec_lock = g_new (GStaticRecMutex, 1);
   g_static_rec_mutex_init (src->state_rec_lock);
@@ -340,6 +327,7 @@ gst_rtspsrc_finalize (GObject * object)
 
   rtspsrc = GST_RTSPSRC (object);
 
+  gst_rtsp_ext_list_free (rtspsrc->extensions);
   g_static_rec_mutex_free (rtspsrc->stream_rec_lock);
   g_free (rtspsrc->stream_rec_lock);
   g_free (rtspsrc->location);
@@ -348,16 +336,6 @@ gst_rtspsrc_finalize (GObject * object)
   gst_rtsp_url_free (rtspsrc->url);
   g_static_rec_mutex_free (rtspsrc->state_rec_lock);
   g_free (rtspsrc->state_rec_lock);
-
-#if 0
-  if (rtspsrc->extension) {
-#ifdef WITH_EXT_REAL
-    rtsp_ext_real_free_context (rtspsrc->extension);
-#else
-    rtsp_ext_wms_free_context (rtspsrc->extension);
-#endif
-  }
-#endif
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2916,6 +2894,14 @@ error_response:
     return res;
   }
 }
+
+static GstRTSPResult
+gst_rtspsrc_send_cb (GstRTSPExtension * ext, GstRTSPMessage * request,
+    GstRTSPMessage * response, GstRTSPSrc * src)
+{
+  return gst_rtspsrc_send (src, request, response, NULL);
+}
+
 
 /* parse the response and collect all the supported methods. We need this
  * information so that we don't try to send an unsupported request to the

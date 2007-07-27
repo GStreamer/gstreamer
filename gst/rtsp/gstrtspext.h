@@ -58,6 +58,7 @@ struct _GstRTSPExtensionList
 void                    gst_rtsp_ext_list_init    (void);
 
 GstRTSPExtensionList *  gst_rtsp_ext_list_get     (void);
+void                    gst_rtsp_ext_list_free    (GstRTSPExtensionList *ext);
 
 gboolean      gst_rtsp_ext_list_detect_server     (GstRTSPExtensionList *ext, GstRTSPMessage *resp);
   
@@ -71,6 +72,10 @@ gboolean      gst_rtsp_ext_list_configure_stream  (GstRTSPExtensionList *ext, Gs
 GstRTSPResult gst_rtsp_ext_list_get_transports    (GstRTSPExtensionList *ext, GstRTSPLowerTrans protocols,
                                                    gchar **transport);
 GstRTSPResult gst_rtsp_ext_list_stream_select     (GstRTSPExtensionList *ext, GstRTSPUrl *url);
+
+void          gst_rtsp_ext_list_connect           (GstRTSPExtensionList *ext,
+			                           const gchar *detailed_signal, GCallback c_handler,
+                                                   gpointer data);
 
 G_END_DECLS
 
