@@ -44,7 +44,7 @@
 #define __GST_RTSP_EXT_H__
 
 #include <gst/gst.h>
-#include <gst/interfaces/rtspextension.h>
+#include <gst/rtsp/gstrtspextension.h>
 
 G_BEGIN_DECLS
 
