@@ -1,3 +1,11 @@
+2007-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst-libs/gst/audio/audio.c:
+	When clipping a buffer with no timestamp, assume it is
+	within the segment without warnings.
+
+	Fixes: #460978
+
 2007-07-27  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtsp/gstrtspextension.c: (gst_rtsp_extension_send):

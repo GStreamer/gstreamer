@@ -266,6 +266,9 @@ gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag)
  * Returns: %NULL if the buffer is completely outside the configured segment,
  * otherwise the clipped buffer is returned.
  *
+ * If the buffer has no timestamp, it is assumed to be inside the segment and
+ * is not clipped 
+ *
  * Since: 0.10.14
  */
 GstBuffer *
@@ -284,7 +287,10 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
   g_return_val_if_fail (segment->format == GST_FORMAT_TIME ||
       segment->format == GST_FORMAT_DEFAULT, buffer);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
-  g_return_val_if_fail (GST_BUFFER_TIMESTAMP_IS_VALID (buffer), buffer);
+
+  if (!GST_BUFFER_TIMESTAMP_IS_VALID (buffer))
+    /* No timestamp - assume the buffer is completely in the segment */
+    return buffer;
 
   /* Get copies of the buffer metadata to change later. 
    * Calculate the missing values for the calculations,
