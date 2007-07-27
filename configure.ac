@@ -327,5 +327,6 @@ AC_OUTPUT([
   pkgconfig/gst-python.pc
   pkgconfig/gst-python-uninstalled.pc
   testsuite/Makefile
+  win32/common/config.h
   gst-python.spec
 ])

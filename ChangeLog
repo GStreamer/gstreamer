@@ -1,3 +1,13 @@
+2007-07-27  Edward Hervey  <bilboed@bilboed.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* win32/MANIFEST:
+	* win32/common/.cvsignore:
+	* win32/common/config.h.in:
+	Add win32 requirements.
+	Fixes #433375
+
 2007-07-27  Rene Stadler <mail@renestadler.de>
 
 	reviewed by: Edward Hervey  <bilboed@bilboed.com>

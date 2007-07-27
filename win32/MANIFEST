@@ -1,0 +1,3 @@
+win32/MANIFEST
+win32/common/config.h
+win32/common/config.h.in

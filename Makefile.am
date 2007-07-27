@@ -1,5 +1,10 @@
 SUBDIRS = codegen gst examples testsuite pkgconfig
 
+win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
+
+debug:
+	echo $(win32)	
+
 ACLOCAL_AMFLAGS = -I common/m4
 
 EXTRA_DIST = \
@@ -7,7 +12,8 @@ EXTRA_DIST = \
 	pygst.py.in \
 	gst-python.spec.in \
 	gst-python.spec \
-	RELEASE gst-python.doap
+	RELEASE gst-python.doap \
+	$(win32)
 
 BUILT_SOURCES = pygst.py
 CLEANFILES = pygst.py pygst.pyc
