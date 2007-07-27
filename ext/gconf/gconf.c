@@ -173,12 +173,13 @@ GstElement *
 gst_gconf_render_bin_with_default (const gchar * bin,
     const gchar * default_sink)
 {
-  GstElement *ret;
+  GstElement *ret = NULL;
   GError *err = NULL;
 
-  ret = gst_parse_bin_from_description (bin, TRUE, &err);
+  if (bin != NULL)
+    ret = gst_parse_bin_from_description (bin, TRUE, &err);
 
-  if (err) {
+  if (ret == NULL || err != NULL) {
     ret = gst_element_factory_make (default_sink, NULL);
 
     if (!ret)

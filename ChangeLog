@@ -1,3 +1,8 @@
+2007-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/gconf/gconf.c: (gst_gconf_render_bin_with_default):
+	Handle a NULL gconf key gracefully by rendering the default element.
+
 2007-07-27  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspext.h:
