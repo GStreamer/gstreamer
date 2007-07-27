@@ -1,5 +1,17 @@
 2007-07-27  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_activate_streams),
+	(gst_rtspsrc_loop_interleaved), (gst_rtspsrc_parse_methods),
+	(gst_rtspsrc_create_transports_string),
+	(gst_rtspsrc_prepare_transports):
+	If we don't hav a session manager, set the caps on outgoing buffers
+	ourselves.
+	Force PAUSE/PLAY methods for now until the extensions can overwrite.
+	Append final bit of the transport string even when it does not contain a
+	placeholder.
+
+2007-07-27  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtsp/gstrtspext.c: (gst_rtsp_ext_list_free),
 	(gst_rtsp_ext_list_connect):
 	* gst/rtsp/gstrtspext.h:

@@ -1936,9 +1936,18 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
       g_object_set (G_OBJECT (stream->udpsrc[0]), "timeout", (guint64) 0, NULL);
     }
     if (stream->srcpad) {
+      /* if we don't have a session manager, set the caps now. If we have a
+       * session, we will get a notification of the pad and the caps. */
+      if (!src->session) {
+        GST_DEBUG_OBJECT (src, "setting pad caps for stream %p", stream);
+        gst_pad_set_caps (stream->srcpad, stream->caps);
+      }
+
+      GST_DEBUG_OBJECT (src, "activating stream pad %p", stream);
       gst_pad_set_active (stream->srcpad, TRUE);
       /* add the pad */
       if (!stream->added) {
+        GST_DEBUG_OBJECT (src, "adding stream pad %p", stream);
         gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
         stream->added = TRUE;
       }
@@ -1950,6 +1959,7 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
 
     if (stream->blockedpad) {
+      GST_DEBUG_OBJECT (src, "unblocking stream pad %p", stream);
       gst_pad_set_blocked_async (stream->blockedpad, FALSE,
           (GstPadBlockCallback) pad_unblocked, src);
       stream->blockedpad = NULL;
@@ -2271,6 +2281,12 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   if (src->need_activate) {
     gst_rtspsrc_activate_streams (src);
     src->need_activate = FALSE;
+  }
+
+  if (!src->session) {
+    /* set stream caps on buffer when we don't have a session manager to do it
+     * for us */
+    gst_buffer_set_caps (buf, stream->caps);
   }
 
   /* chain to the peer pad */
@@ -2916,8 +2932,9 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, GstRTSPMessage * response)
   gint indx = 0;
   gint i;
 
-  /* clear supported methods */
-  src->methods = 0;
+  /* clear supported methods, FIXME, extensions should be able to configure
+   * this. */
+  src->methods = GST_RTSP_PLAY | GST_RTSP_PAUSE;
 
   /* Try Allow Header first */
   field = GST_RTSP_HDR_ALLOW;
@@ -3000,6 +3017,8 @@ gst_rtspsrc_create_transports_string (GstRTSPSrc * src,
 
   if (res < 0)
     goto failed;
+
+  GST_DEBUG_OBJECT (src, "got transports %s", GST_STR_NULL (*transports));
 
   /* extension listed transports, use those */
   if (*transports != NULL)
@@ -3104,6 +3123,8 @@ gst_rtspsrc_prepare_transports (GstRTSPStream * stream, gchar ** transports)
 
     p = next + 4;
   }
+  /* append final part */
+  g_string_append (str, p);
 
   g_free (*transports);
   *transports = g_string_free (str, FALSE);
