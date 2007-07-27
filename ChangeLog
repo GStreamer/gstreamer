@@ -1,3 +1,11 @@
+2007-07-27  Sebastien Merle  <sylane@gmail.com>
+
+	reviewed by: Edward Hervey  <bilboed@bilboed.com>
+	* gst/extend/discoverer.py:
+	New parameter to the discoverer to change the default maximum frame
+	interleave.
+	Fixes #418222
+
 2007-07-27  Aidan Delaney  <a.j.delaney@brighton.ac.uk>
 
 	reviewed by: Edward Hervey  <bilboed@bilboed.com>

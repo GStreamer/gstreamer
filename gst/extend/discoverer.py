@@ -74,7 +74,15 @@ class Discoverer(gst.Pipeline):
     tags = {}
 
 
-    def __init__(self, filename):
+    def __init__(self, filename, max_interleave=1.0):
+        """
+        filename: str; absolute path of the file to be discovered.
+        max_interleave: int or float; the maximum frame interleave in seconds.
+            The value must be greater than the input file frame interleave
+            or the discoverer may not find out all input file's streams.
+            The default value is 1 second and you shouldn't have to change it,
+            changing it mean larger discovering time and bigger memory usage.
+        """
         gobject.GObject.__init__(self)
 
         self.mimetype = None
@@ -106,6 +114,7 @@ class Discoverer(gst.Pipeline):
         self._nomorepads = False
 
         self._timeoutid = 0
+        self._max_interleave = max_interleave
 
         if not os.path.isfile(filename):
             self.debug("File '%s' does not exist, finished" % filename)
@@ -307,20 +316,22 @@ class Discoverer(gst.Pipeline):
             (self.sinknumber, "audio" in caps.to_string() and "audio" or "video"))
         self.sinknumber += 1
         queue = gst.element_factory_make("queue")
-        # we want the queue to buffer up to 2 seconds of data before outputting
-        # This enables us to cope with formats that don't create their source
-        # pads straight away, but instead wait for the first buffer of that
-        # stream.
-        queue.props.min_threshold_time = 1 * gst.SECOND
-        queue.props.max_size_time = 2 * gst.SECOND
+        # we want the queue to buffer up to the specified amount of data 
+        # before outputting. This enables us to cope with formats 
+        # that don't create their source pads straight away, 
+        # but instead wait for the first buffer of that stream.
+        # The specified time must be greater than the input file
+        # frame interleave for the discoverer to work properly.
+        queue.props.min_threshold_time = int(self._max_interleave * gst.SECOND)
+        queue.props.max_size_time = int(2 * self._max_interleave * gst.SECOND)
         queue.props.max_size_bytes = 0
 
         # If durations are bad on the buffers (common for video decoders), we'll
-        # never reach the min_threshold_time or max_size_time. So, set a large 
+        # never reach the min_threshold_time or max_size_time. So, set a
         # max size in buffers, and if reached, disable the min_threshold_time.
         # This ensures we don't fail to discover with various ffmpeg 
         # demuxers/decoders that provide bogus (or no) duration.
-        queue.props.max_size_buffers = 100
+        queue.props.max_size_buffers = int(100 * self._max_interleave)
         def _disable_min_threshold_cb(queue):
             queue.props.min_threshold_time = 0
             queue.disconnect(signal_id)
