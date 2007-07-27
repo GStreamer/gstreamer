@@ -1,5 +1,10 @@
 2007-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* tests/check/libs/audio.c: (GST_START_TEST):
+	Fix the test to reflect the behaviour of gst_audio_clip_buffer.
+
+2007-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst-libs/gst/audio/audio.c:
 	When clipping a buffer with no timestamp, assume it is
 	within the segment without warnings.

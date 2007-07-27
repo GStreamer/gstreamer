@@ -269,7 +269,8 @@ GST_START_TEST (test_buffer_clipping_time)
   GST_BUFFER_OFFSET (buf) = GST_BUFFER_OFFSET_NONE;
   GST_BUFFER_OFFSET_END (buf) = GST_BUFFER_OFFSET_NONE;
 
-  ASSERT_CRITICAL (ret = gst_audio_buffer_clip (buf, &s, 100, 1));
+  ret = gst_audio_buffer_clip (buf, &s, 100, 1);
+  fail_unless (ret == buf);
 
   gst_buffer_unref (buf);
 
