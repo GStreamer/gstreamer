@@ -1,3 +1,11 @@
+2007-07-27  Aidan Delaney  <a.j.delaney@brighton.ac.uk>
+
+	reviewed by: Edward Hervey  <bilboed@bilboed.com>
+	* examples/gst-discover:
+	Show duration of audio/video streams.
+	Specify units for values.
+	Fixes #432521
+
 2007-07-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gst-disable-loadsave.ignore:
