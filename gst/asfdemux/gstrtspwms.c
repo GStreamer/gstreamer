@@ -32,7 +32,7 @@
 
 #include <string.h>
 
-#include <gst/interfaces/rtspextension.h>
+#include <gst/rtsp/gstrtspextension.h>
 
 #include "gstrtspwms.h"
 

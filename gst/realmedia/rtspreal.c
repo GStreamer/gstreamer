@@ -37,7 +37,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <gst/interfaces/rtspextension.h>
+#include <gst/rtsp/gstrtspextension.h>
 #include <gst/rtsp/gstrtspbase64.h>
 
 #include "rtspreal.h"

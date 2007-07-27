@@ -1,3 +1,15 @@
+2007-07-27  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/asfdemux/Makefile.am:
+	* gst/asfdemux/gstrtspwms.c: (gst_rtsp_wms_parse_sdp), (_do_init),
+	(gst_rtsp_wms_class_init):
+	* gst/realmedia/Makefile.am:
+	* gst/realmedia/rtspreal.c: (rtsp_ext_real_get_transports),
+	(rtsp_ext_real_before_send), (rtsp_ext_real_after_send),
+	(rtsp_ext_real_parse_sdp), (rtsp_ext_real_stream_select),
+	(_do_init), (gst_rtsp_real_class_init):
+	Fix include paths and link dependecies for rtsp extension.
+
 2007-07-26  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/realmedia/Makefile.am:
