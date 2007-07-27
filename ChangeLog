@@ -1,3 +1,8 @@
+2007-07-27  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtsp/gstrtspextension.c: (gst_rtsp_extension_send):
+	Fire the signal on the object, not the interface.
+
 2007-07-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst-libs/gst/rtsp/.cvsignore:

@@ -199,13 +199,10 @@ GstRTSPResult
 gst_rtsp_extension_send (GstRTSPExtension * ext, GstRTSPMessage * req,
     GstRTSPMessage * resp)
 {
-  GstRTSPExtensionInterface *iface;
   GstRTSPResult res = GST_RTSP_OK;
 
-  iface = GST_RTSP_EXTENSION_GET_IFACE (ext);
-
-  g_signal_emit (G_OBJECT (iface), gst_rtsp_extension_signals[SIGNAL_SEND], 0,
-      req, resp);
+  g_signal_emit (ext, gst_rtsp_extension_signals[SIGNAL_SEND], 0,
+      req, resp, &res);
 
   return res;
 }
