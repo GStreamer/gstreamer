@@ -1,5 +1,14 @@
 2007-07-28  Edward Hervey  <bilboed@bilboed.com>
 
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-0.10.14.ignore:
+	* gst/gst-pb-0.10.14.ignore:
+	* gst/gstversion.override.in:
+	Adding version overrides for new core/base releases.
+
+2007-07-28  Edward Hervey  <bilboed@bilboed.com>
+
 	* gst/interfaces.override:
 	Add more threadsafety in the overrides.
 
