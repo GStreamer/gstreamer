@@ -46,6 +46,7 @@ headers
 #include <gst/base/gstbasetransform.h>
 #include <gst/base/gstcollectpads.h>
 #include <gst/base/gsttypefindhelper.h>
+#include <gst/base/gstdataqueue.h>
 
 #include <gst/net/gstnet.h>
 

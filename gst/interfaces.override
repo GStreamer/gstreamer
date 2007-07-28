@@ -344,3 +344,139 @@ _wrap_gst_property_probe_get_values_name (PyGObject *self, PyObject *args)
     
     return py_list;
 }
+%%
+override gst_mixer_message_parse_mute_toggled noargs
+static PyObject *
+_wrap_gst_mixer_message_parse_mute_toggled (PyGstMiniObject * self)
+{
+    GstMixerTrack *track;
+    gboolean mute;
+
+    if (GST_MESSAGE(self->obj)->type != GST_MIXER_MESSAGE_MUTE_TOGGLED) {
+	PyErr_SetString(PyExc_TypeError, "Message is not a mute-toggled message");
+	return NULL;
+    }
+    gst_mixer_message_parse_mute_toggled (GST_MESSAGE(self->obj), &track, &mute);
+
+    return Py_BuildValue("(OO)",
+			 pygobject_new(G_OBJECT (track)),
+			 PyBool_FromLong(mute));
+}
+%%
+override gst_mixer_message_parse_record_toggled noargs
+static PyObject *
+_wrap_gst_mixer_message_parse_record_toggled (PyGstMiniObject * self)
+{
+    GstMixerTrack *track;
+    gboolean record;
+
+    if (GST_MESSAGE(self->obj)->type != GST_MIXER_MESSAGE_RECORD_TOGGLED) {
+	PyErr_SetString(PyExc_TypeError, "Message is not a record-toggled message");
+	return NULL;
+    }
+    gst_mixer_message_parse_record_toggled (GST_MESSAGE(self->obj), &track, &record);
+
+    return Py_BuildValue("(OO)",
+			 pygobject_new(G_OBJECT (track)),
+			 PyBool_FromLong(record));
+}
+%%
+override gst_mixer_message_parse_volume_changed noargs
+static PyObject *
+_wrap_gst_mixer_message_parse_volume_changed (PyGstMiniObject * self)
+{
+    GstMixerTrack *track;
+    gint *volumes;
+    gint num_channels;
+    PyObject *pvolumes;
+    int i;
+
+    if (GST_MESSAGE(self->obj)->type != GST_MIXER_MESSAGE_VOLUME_CHANGED) {
+	PyErr_SetString(PyExc_TypeError, "Message is not a volume-changed message");
+	return NULL;
+    }
+    gst_mixer_message_parse_volume_changed (GST_MESSAGE(self->obj), &track, &volumes, &num_channels);
+
+    pvolumes = PyList_New (num_channels);
+
+    for (i = 0; i < num_channels; ++i) {
+	PyList_SET_ITEM (pvolumes, i, PyInt_FromLong (volumes[i]));
+    }
+    g_free (volumes);
+
+    return Py_BuildValue("(OOi)",
+			 pygobject_new(G_OBJECT (track)),
+			 pvolumes, num_channels);
+}
+%%
+override gst_mixer_message_parse_option_changed noargs
+static PyObject *
+_wrap_gst_mixer_message_parse_option_changed (PyGstMiniObject * self)
+{
+    GstMixerOptions *options;
+    const gchar *value = NULL;
+
+    if (GST_MESSAGE(self->obj)->type != GST_MIXER_MESSAGE_OPTION_CHANGED) {
+	PyErr_SetString(PyExc_TypeError, "Message is not a option-changed message");
+	return NULL;
+    }
+    gst_mixer_message_parse_option_changed (GST_MESSAGE(self->obj), &options, &value);
+
+    return Py_BuildValue("(Os)",
+			 pygobject_new(G_OBJECT (options)),
+			 value);
+}
+%%
+override gst_video_orientation_get_hflip noargs
+static PyObject *
+_wrap_gst_video_orientation_get_hflip (PyGObject * self)
+{
+    gboolean flip, res;
+
+    res = gst_video_orientation_get_hflip (GST_VIDEO_ORIENTATION (self->obj), &flip);
+
+    return Py_BuildValue("(OO)",
+			 PyBool_FromLong(res),
+			 PyBool_FromLong(flip));
+}
+%%
+override gst_video_orientation_get_vflip noargs
+static PyObject *
+_wrap_gst_video_orientation_get_vflip (PyGObject * self)
+{
+    gboolean flip, res;
+
+    res = gst_video_orientation_get_vflip (GST_VIDEO_ORIENTATION (self->obj), &flip);
+
+    return Py_BuildValue("(OO)",
+			 PyBool_FromLong(res),
+			 PyBool_FromLong(flip));
+}
+%%
+override gst_video_orientation_get_hcenter noargs
+static PyObject *
+_wrap_gst_video_orientation_get_hcenter (PyGObject * self)
+{
+    gboolean res;
+    gint center;
+
+    res = gst_video_orientation_get_hcenter (GST_VIDEO_ORIENTATION (self->obj), &center);
+
+    return Py_BuildValue("(Oi)",
+			 PyBool_FromLong(res),
+			 center);
+}
+%%
+override gst_video_orientation_get_vcenter noargs
+static PyObject *
+_wrap_gst_video_orientation_get_vcenter (PyGObject * self)
+{
+    gboolean res;
+    gint center;
+
+    res = gst_video_orientation_get_vcenter (GST_VIDEO_ORIENTATION (self->obj), &center);
+
+    return Py_BuildValue("(Oi)",
+			 PyBool_FromLong(res),
+			 center);
+}

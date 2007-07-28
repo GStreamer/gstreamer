@@ -301,3 +301,19 @@ _wrap_gst_message_parse_async_start (PyGstMiniObject *self)
 
 	return PyBool_FromLong (res);
 }
+%%
+override gst_message_parse_buffering noargs
+static PyObject *
+_wrap_gst_message_parse_buffering (PyGstMiniObject *self)
+{
+	gint percent;
+
+	if (GST_MESSAGE(self->obj)->type != GST_MESSAGE_BUFFERING) {
+		PyErr_SetString(PyExc_TypeError, "Message is not a 'buffering' message");
+		return NULL;
+	}
+
+	gst_message_parse_buffering (GST_MESSAGE(self->obj), &percent);
+
+	return Py_BuildValue("i", percent);
+}

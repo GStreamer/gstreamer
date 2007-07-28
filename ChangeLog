@@ -1,5 +1,20 @@
 2007-07-28  Edward Hervey  <bilboed@bilboed.com>
 
+	* gst/base.defs:
+	* gst/gst.defs:
+	* gst/interfaces.defs:
+	* gst/libs.defs:
+	* gst/gst.override:
+	* gst/gstmodule.c: (init_gst):
+	Adding new API additions
+	* gst/gstmessage.override:
+	wrap GstMessage.parse_buffering.
+	* gst/interfaces.override:
+	wrap gst_mixer_message_parse_*() functions.
+	wrap GstVideoOrientation::get_*() methods.
+
+2007-07-28  Edward Hervey  <bilboed@bilboed.com>
+
 	* configure.ac:
 	* gst/Makefile.am:
 	* gst/gst-0.10.14.ignore:

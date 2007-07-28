@@ -126,6 +126,29 @@
   )
 )
 
+(define-enum MixerMessageType
+  (in-module "Gst")
+  (c-name "GstMixerMessageType")
+  (gtype-id "GST_TYPE_MIXER_MESSAGE_TYPE")
+  (values
+    '("invalid" "GST_MIXER_MESSAGE_INVALID")
+    '("mute-toggled" "GST_MIXER_MESSAGE_MUTE_TOGGLED")
+    '("record-toggled" "GST_MIXER_MESSAGE_RECORD_TOGGLED")
+    '("volume-changed" "GST_MIXER_MESSAGE_VOLUME_CHANGED")
+    '("option-changed" "GST_MIXER_MESSAGE_OPTION_CHANGED")
+  )
+)
+
+(define-flags MixerFlags
+  (in-module "Gst")
+  (c-name "GstMixerFlags")
+  (gtype-id "GST_TYPE_MIXER_FLAGS")
+  (values
+    '("none" "GST_MIXER_FLAG_NONE")
+    '("auto-notifications" "GST_MIXER_FLAG_AUTO_NOTIFICATIONS")
+  )
+)
+
 (define-flags MixerTrackFlags
   (in-module "Gst")
   (c-name "GstMixerTrackFlags")
@@ -326,6 +349,61 @@
   (parameters
     '("GstMixerOptions*" "opts")
     '("gchar*" "value")
+  )
+)
+
+(define-method get_mixer_flags
+  (of-object "GstMixer")
+  (c-name "gst_mixer_get_mixer_flags")
+  (return-type "GstMixerFlags")
+)
+
+(define-function mixer_message_get_type
+  (c-name "gst_mixer_message_get_type")
+  (return-type "GstMixerMessageType")
+  (parameters
+    '("GstMessage*" "message")
+  )
+)
+
+(define-function mixer_message_parse_mute_toggled
+  (c-name "gst_mixer_message_parse_mute_toggled")
+  (return-type "none")
+  (parameters
+    '("GstMessage*" "message")
+    '("GstMixerTrack**" "track")
+    '("gboolean*" "mute")
+  )
+)
+
+(define-function mixer_message_parse_record_toggled
+  (c-name "gst_mixer_message_parse_record_toggled")
+  (return-type "none")
+  (parameters
+    '("GstMessage*" "message")
+    '("GstMixerTrack**" "track")
+    '("gboolean*" "record")
+  )
+)
+
+(define-function mixer_message_parse_volume_changed
+  (c-name "gst_mixer_message_parse_volume_changed")
+  (return-type "none")
+  (parameters
+    '("GstMessage*" "message")
+    '("GstMixerTrack**" "track")
+    '("gint**" "volumes")
+    '("gint*" "num_channels")
+  )
+)
+
+(define-function mixer_message_parse_option_changed
+  (c-name "gst_mixer_message_parse_option_changed")
+  (return-type "none")
+  (parameters
+    '("GstMessage*" "message")
+    '("GstMixerOptions**" "options")
+    '("const-gchar**" "value")
   )
 )
 

@@ -35,6 +35,13 @@
   (gtype-id "GST_TYPE_COLLECT_PADS")
 )
 
+(define-object DataQueue
+  (in-module "Gst")
+  (parent "GObject")
+  (c-name "GstDataQueue")
+  (gtype-id "GST_TYPE_DATA_QUEUE")
+)
+
 ; PushSrc doesn't work due to limitations in the code generator, so disable
 ;(define-object PushSrc
 ;  (in-module "Gst")
@@ -846,3 +853,91 @@
     '("GstTypeFindProbability*" "prob")
   )
 )
+
+;; From gstdataqueue.h
+
+(define-function gst_data_queue_get_type
+  (c-name "gst_data_queue_get_type")
+  (return-type "GType")
+)
+
+(define-function gst_data_queue_new
+  (c-name "gst_data_queue_new")
+  (is-constructor-of "GstDataQueue")
+  (return-type "GstDataQueue*")
+  (parameters
+    '("GstDataQueueCheckFullFunction" "checkfull")
+    '("gpointer" "checkdata")
+  )
+)
+
+(define-method push
+  (of-object "GstDataQueue")
+  (c-name "gst_data_queue_push")
+  (return-type "gboolean")
+  (parameters
+    '("GstDataQueueItem*" "item")
+  )
+)
+
+(define-method pop
+  (of-object "GstDataQueue")
+  (c-name "gst_data_queue_pop")
+  (return-type "gboolean")
+  (parameters
+    '("GstDataQueueItem**" "item")
+  )
+)
+
+(define-method flush
+  (of-object "GstDataQueue")
+  (c-name "gst_data_queue_flush")
+  (return-type "none")
+)
+
+(define-method set_flushing
+  (of-object "GstDataQueue")
+  (c-name "gst_data_queue_set_flushing")
+  (return-type "none")
+  (parameters
+    '("gboolean" "flushing")
+  )
+)
+
+(define-method drop_head
+  (of-object "GstDataQueue")
+  (c-name "gst_data_queue_drop_head")
+  (return-type "gboolean")
+  (parameters
+    '("GType" "type")
+  )
+)
+
+(define-method is_full
+  (of-object "GstDataQueue")
+  (c-name "gst_data_queue_is_full")
+  (return-type "gboolean")
+)
+
+(define-method is_empty
+  (of-object "GstDataQueue")
+  (c-name "gst_data_queue_is_empty")
+  (return-type "gboolean")
+)
+
+(define-method get_level
+  (of-object "GstDataQueue")
+  (c-name "gst_data_queue_get_level")
+  (return-type "none")
+  (parameters
+    '("GstDataQueueSize*" "level")
+  )
+)
+
+(define-method limits_changed
+  (of-object "GstDataQueue")
+  (c-name "gst_data_queue_limits_changed")
+  (return-type "none")
+)
+
+

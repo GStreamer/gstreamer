@@ -1064,6 +1064,18 @@
   )
 )
 
+(define-method set_details_simple
+  (of-object "GstElementClass")
+  (c-name "gst_element_class_set_details_simple")
+  (return-type "none")
+  (parameters
+    '("gchar*" "longname")
+    '("gchar*" "classification")
+    '("gchar*" "description")
+    '("gchar*" "author")
+  )
+)
+
 (define-function element_get_type
   (c-name "gst_element_get_type")
   (return-type "GType")
@@ -1536,6 +1548,15 @@
   (of-object "GstElementFactory")
   (c-name "gst_element_factory_get_uri_protocols")
   (return-type "GStrv")
+)
+
+(define-method has_interface
+  (of-object "GstElementFactory")
+  (c-name "gst_element_factory_has_interface")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "interfacename")
+  )
 )
 
 (define-method create
