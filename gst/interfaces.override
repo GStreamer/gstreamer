@@ -64,7 +64,9 @@ _wrap_gst_tuner_list_channels(PyGObject *self)
 	
     g_return_val_if_fail (GST_IS_TUNER (self->obj), PyList_New(0));
 
+    pyg_begin_allow_threads;
     list = gst_tuner_list_channels(GST_TUNER(self->obj));
+    pyg_end_allow_threads;
     
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
@@ -86,7 +88,9 @@ _wrap_gst_tuner_list_norms(PyGObject *self)
 	
     g_return_val_if_fail (GST_IS_TUNER (self->obj), PyList_New(0));
 
+    pyg_begin_allow_threads;
     list = gst_tuner_list_norms(GST_TUNER(self->obj));
+    pyg_end_allow_threads;
     
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
@@ -108,7 +112,9 @@ _wrap_gst_mixer_list_tracks(PyGObject *self)
 	
     g_return_val_if_fail (GST_IS_MIXER (self->obj), PyList_New(0));
 
+    pyg_begin_allow_threads;
     list = gst_mixer_list_tracks(GST_MIXER(self->obj));
+    pyg_end_allow_threads;
     
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
@@ -130,7 +136,9 @@ _wrap_gst_color_balance_list_channels(PyGObject *self)
 
     g_return_val_if_fail (GST_IS_COLOR_BALANCE (self->obj), PyList_New(0));
 
+    pyg_begin_allow_threads;
     list = gst_color_balance_list_channels(GST_COLOR_BALANCE(self->obj));
+    pyg_end_allow_threads;
 
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
@@ -152,7 +160,9 @@ _wrap_gst_mixer_options_get_values (PyGObject *self)
 
     g_return_val_if_fail (GST_IS_MIXER_OPTIONS (self->obj), PyList_New(0));
 
+    pyg_begin_allow_threads;
     list = gst_mixer_options_get_values (GST_MIXER_OPTIONS (self->obj));
+    pyg_end_allow_threads;
 
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
@@ -202,8 +212,11 @@ _wrap_gst_mixer_set_volume (PyGObject *self, PyObject *args, PyObject *kwargs)
     for (i = 0; i < channels; ++i) {
       volumes[i] = PyInt_AsLong (PyTuple_GET_ITEM (py_tuple, i));
     }
+    
+    pyg_begin_allow_threads;
     gst_mixer_set_volume (GST_MIXER (self->obj), GST_MIXER_TRACK (track->obj),
           volumes);
+    pyg_end_allow_threads;
 
     g_free (volumes);
 
@@ -232,9 +245,12 @@ _wrap_gst_mixer_get_volume (PyGObject *self, PyObject *args, PyObject *kwargs)
     volumes = g_malloc (channels * sizeof (gint));
     /* 0 channels will cause volume to be a NULL pointer, but we still want
      * our (empty) tuple */
-    if (channels)
-      gst_mixer_get_volume (GST_MIXER (self->obj), GST_MIXER_TRACK (track->obj),
-          volumes);
+    if (channels) {
+	pyg_begin_allow_threads;
+	gst_mixer_get_volume (GST_MIXER (self->obj), GST_MIXER_TRACK (track->obj),
+			      volumes);
+	pyg_end_allow_threads;
+    }
 
     py_tuple = PyTuple_New (channels);
 
@@ -257,8 +273,11 @@ _wrap_gst_property_probe_get_property (PyGObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "s:ProbeProperty.get_property", &name))
 	return NULL;
     
+    pyg_begin_allow_threads;
     spec = gst_property_probe_get_property (GST_PROPERTY_PROBE (self->obj),
 					    name);
+    pyg_end_allow_threads;
+
     if (!spec) {
 	PyErr_Format(PyExc_ValueError, "unknown property: %s", name);
 	return NULL;
@@ -276,7 +295,9 @@ _wrap_gst_property_probe_get_properties (PyGObject *self)
 
     g_return_val_if_fail (GST_IS_PROPERTY_PROBE (self->obj), PyList_New(0));
 
+    pyg_begin_allow_threads;
     list = gst_property_probe_get_properties (GST_PROPERTY_PROBE (self->obj));
+    pyg_end_allow_threads;
 
     py_list = PyList_New(0);
     for (l = list; l; l = l->next) {
@@ -303,8 +324,11 @@ _wrap_gst_property_probe_get_values_name (PyGObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "s:ProbeProperty.get_values_name", &name))
 	return NULL;
 
+    pyg_begin_allow_threads;
     array = gst_property_probe_get_values_name (GST_PROPERTY_PROBE (self->obj),
 						name);
+    pyg_end_allow_threads;
+
     py_list = PyList_New(0);
 
     if (array) {
