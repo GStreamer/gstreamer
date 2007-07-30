@@ -1,5 +1,10 @@
 2007-07-30  Edward Hervey  <bilboed@bilboed.com>
 
+	* configure.ac:
+	0.10.7.2 pre-release
+
+2007-07-30  Edward Hervey  <bilboed@bilboed.com>
+
 	* gst/gst.override:
 	And the dataqueue header only landed in 0.10.11 too.
 
