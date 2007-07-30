@@ -8,6 +8,8 @@ ignore
   gst_controller_get_control_source
   gst_object_set_control_source
   gst_object_get_control_source
+  gst_data_queue_get_level
+  gst_data_queue_limits_changed
 %%
 ignore-type
   GstControlSource

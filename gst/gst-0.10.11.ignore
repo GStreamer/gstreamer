@@ -7,3 +7,6 @@ ignore
    gst_tag_list_is_empty
    gst_element_state_change_return_get_name
 %%
+ignore-type
+   GstDataQueue
+%%
