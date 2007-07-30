@@ -1,5 +1,13 @@
 2007-07-30  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* po/POTFILES.skip:
+	  Add POTFILES.skip with list of source files that aren't disted at the
+	  moment but contain translatable strings. Should hopefully pacify
+	  broken tools and make it clearer that these files are left out
+	  intentionally (#461601 and others).
+
+2007-07-30  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Ian Munro  <imunro at netspace net au>
 
 	* gst/bayer/gstbayer2rgb.c:
