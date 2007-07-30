@@ -1,3 +1,8 @@
+2007-07-30  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_loop_state_movie):
+	If the buffer was entirely clipped ... don't try sending it :)
+
 2007-07-27  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_activate_streams),

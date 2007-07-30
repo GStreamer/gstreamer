@@ -1470,6 +1470,9 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
     if (stream->need_clip)
       buf = gst_qtdemux_clip_buffer (qtdemux, stream, buf);
 
+    if (buf == NULL)
+      goto next;
+
     if (stream->discont) {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       stream->discont = FALSE;
