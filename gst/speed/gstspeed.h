@@ -39,12 +39,13 @@ G_BEGIN_DECLS
 
 typedef struct _GstSpeed GstSpeed;
 typedef struct _GstSpeedClass GstSpeedClass;
-typedef enum _GstSpeedFormat GstSpeedFormat;
 
 enum _GstSpeedFormat {
   GST_SPEED_FORMAT_INT,
   GST_SPEED_FORMAT_FLOAT
 };
+
+typedef enum _GstSpeedFormat GstSpeedFormat;
 
 struct _GstSpeed {
   GstElement     element;

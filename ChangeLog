@@ -1,3 +1,18 @@
+2007-07-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Ian Munro  <imunro at netspace net au>
+
+	* gst/bayer/gstbayer2rgb.c:
+	  Include our own "_stdint.h" instead of <stdint.h> (which may not
+	  be available).
+
+	* gst/speed/gstspeed.h:
+	  Native HP-UX compiler dosn't seem to like enum typedefs before the
+	  actual enum was defined.
+
+	* gst/vmnc/vmncdec.c:
+	  Fix wrong usage of GST_ELEMENT_ERROR macro (#461373).
+
 2007-07-26  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_setcaps):

@@ -993,7 +993,7 @@ vmnc_dec_chain_frame (GstVMncDec * dec, GstBuffer * inbuf,
 
   if (res < 0) {
     ret = GST_FLOW_ERROR;
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, NULL, ("Couldn't decode packet"));
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), ("Couldn't decode packet"));
   } else {
     GST_DEBUG_OBJECT (dec, "read %d bytes of %d", res, len);
     /* inbuf may be NULL; that's ok */

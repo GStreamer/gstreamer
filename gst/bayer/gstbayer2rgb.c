@@ -32,7 +32,7 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 #include <string.h>
-#include <stdint.h>
+#include "_stdint.h"
 
 #define GST_CAT_DEFAULT gst_bayer2rgb_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
