@@ -445,15 +445,20 @@ gst_registry_add_feature (GstRegistry * registry, GstPluginFeature * feature)
   if (G_UNLIKELY (existing_feature)) {
     GST_DEBUG_OBJECT (registry, "replacing existing feature %p (%s)",
         existing_feature, feature->name);
+    /* Remove the existing feature from the list now, before we insert the new
+     * one, but don't unref yet because the hash is still storing a reference to     * it. */
     registry->features = g_list_remove (registry->features, existing_feature);
-    /* no need to remove from feature_hash, as insert will replace the value */
-    gst_object_unref (existing_feature);
   }
 
   GST_DEBUG_OBJECT (registry, "adding feature %p (%s)", feature, feature->name);
 
   registry->features = g_list_prepend (registry->features, feature);
-  g_hash_table_insert (registry->feature_hash, feature->name, feature);
+  g_hash_table_replace (registry->feature_hash, feature->name, feature);
+
+  if (G_UNLIKELY (existing_feature)) {
+    /* We unref now. No need to remove the feature name from the hash table, it      * got replaced by the new feature */
+    gst_object_unref (existing_feature);
+  }
 
   gst_object_ref (feature);
   gst_object_sink (feature);

@@ -1,5 +1,15 @@
 2007-07-31  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/gstregistry.c: (gst_registry_add_feature):
+	When replacing an existing feature in the registry, make sure to
+	continue holding a reference until we've replaced the name string
+	within our feature hash table. Make sure to use g_hash_table_replace
+	instead of g_hash_table_insert to ensure the new name string is used
+	as a key instead of the old one that we're about to free.
+	Fixes: #462085
+
+2007-07-31  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* gst/gstpluginfeature.c: (gst_plugin_feature_finalize),
 	(gst_plugin_feature_set_name):
 	Revert patch from #459466 until after the release and we can work
