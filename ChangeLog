@@ -1,3 +1,8 @@
+2007-07-31  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/realmedia/rtspreal.c:
+	  Include stdlib.
+
 2007-07-27  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/realmedia/Makefile.am:
@@ -901,7 +906,7 @@
 
 	* configure.ac:
 	  Add --enable-experimental support. Activate synaesthesia when building
-	  with --enable-experimental. Fix --enable external configure switch
+	  with --enable-experimental. Fix --enable-external configure switch
 	  description.
 
 2007-02-09  Tim-Philipp Müller  <tim at centricular dot net>
