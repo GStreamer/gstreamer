@@ -1,3 +1,9 @@
+2007-08-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* ext/ffmpeg/Makefile.am:
+	  Check for libm and link against it (ffmpeg is using sqrt).
+
 2007-07-25  Julien MOUTTE  <julien@moutte.net>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_video_frame):
