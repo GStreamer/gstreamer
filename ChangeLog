@@ -1,5 +1,19 @@
 2007-08-01  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_cfg_install_property),
+	(gst_ffmpeg_cfg_finalize):
+	* ext/ffmpeg/gstffmpegcfg.h:
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_finalize),
+	(ffmpegenc_setup_working_buf), (gst_ffmpegenc_chain_video),
+	(gst_ffmpegenc_flush_buffers):
+	  Free strings atleast when finalizing elements.
+	
+	* tests/check/generic/libavcodec-locking.c: (GST_START_TEST),
+	(simple_launch_lines_suite):
+	  Fix some leaks.
+
+2007-08-01  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* ext/ffmpeg/Makefile.am:
 	  Check for libm and link against it (ffmpeg is using sqrt).

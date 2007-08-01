@@ -259,6 +259,8 @@ gst_ffmpegenc_finalize (GObject * object)
 {
   GstFFMpegEnc *ffmpegenc = (GstFFMpegEnc *) object;
 
+  gst_ffmpeg_cfg_finalize (ffmpegenc);
+
   /* close old session */
   if (ffmpegenc->opened) {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
@@ -570,7 +572,7 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
 static void
 ffmpegenc_setup_working_buf (GstFFMpegEnc *ffmpegenc)
 {
-   if (ffmpegenc->working_buf == NULL || 
+   if (ffmpegenc->working_buf == NULL ||
       ffmpegenc->working_buf_size != ffmpegenc->buffer_size) {
     if (ffmpegenc->working_buf)
       g_free (ffmpegenc->working_buf);
@@ -603,7 +605,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
   ffmpegenc_setup_working_buf (ffmpegenc);
 
   ret_size = avcodec_encode_video (ffmpegenc->context,
-                 ffmpegenc->working_buf, ffmpegenc->working_buf_size, 
+                 ffmpegenc->working_buf, ffmpegenc->working_buf_size,
                  ffmpegenc->picture);
 
   if (ret_size < 0) {
@@ -754,7 +756,7 @@ gst_ffmpegenc_flush_buffers (GstFFMpegEnc * ffmpegenc, gboolean send)
   while (!g_queue_is_empty (ffmpegenc->delay)) {
 
     ffmpegenc_setup_working_buf (ffmpegenc);
-    
+
     ret_size = avcodec_encode_video (ffmpegenc->context,
                    ffmpegenc->working_buf, ffmpegenc->working_buf_size, NULL);
 

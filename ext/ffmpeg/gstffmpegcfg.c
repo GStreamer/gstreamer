@@ -760,7 +760,7 @@ gst_ffmpeg_cfg_install_property (GstFFMpegEncClass * klass, guint base)
           GParamSpecString* pstring = G_PARAM_SPEC_STRING (pspec);
           pspec = g_param_spec_string (name, nick, blurb,
               lavc_default ? G_STRUCT_MEMBER (gchar*, ctx, ctx_offset)
-                : pstring->default_value, 
+                : pstring->default_value,
               pspec->flags);
           break;
         }
@@ -813,13 +813,13 @@ gst_ffmpeg_cfg_install_property (GstFFMpegEncClass * klass, guint base)
             GParamSpecEnum* penum = G_PARAM_SPEC_ENUM (pspec);
             pspec = g_param_spec_enum (name, nick, blurb,
                 pspec->value_type,
-                lavc_default ? G_STRUCT_MEMBER (gint, ctx, ctx_offset) 
+                lavc_default ? G_STRUCT_MEMBER (gint, ctx, ctx_offset)
                   : penum->default_value, pspec->flags);
           } else if (G_IS_PARAM_SPEC_FLAGS (pspec)) {
             GParamSpecFlags* pflags = G_PARAM_SPEC_FLAGS (pspec);
             pspec = g_param_spec_flags (name, nick, blurb,
                 pspec->value_type,
-                lavc_default ? G_STRUCT_MEMBER (guint, ctx, ctx_offset) 
+                lavc_default ? G_STRUCT_MEMBER (guint, ctx, ctx_offset)
                   : pflags->default_value, pspec->flags);
           } else {
             g_critical ("%s does not yet support type %s", GST_FUNCTION,
@@ -1025,4 +1025,37 @@ gst_ffmpeg_cfg_fill_context (GstFFMpegEnc * ffmpegenc, AVCodecContext * context)
     }
     list = list->next;
   }
+}
+
+void
+gst_ffmpeg_cfg_finalize (GstFFMpegEnc * ffmpegenc)
+{
+  GParamSpec **pspecs;
+  guint num_props, i;
+
+  pspecs = g_object_class_list_properties (G_OBJECT_GET_CLASS (ffmpegenc),
+      &num_props);
+
+  for (i = 0; i < num_props; ++i) {
+    GParamSpec *pspec = pspecs[i];
+    GParamSpecData *qdata;
+
+    qdata = g_param_spec_get_qdata (pspec, quark);
+
+    /* our param specs should have such qdata */
+    if (!qdata)
+      continue;
+
+    switch (G_PARAM_SPEC_VALUE_TYPE (pspec)) {
+      case G_TYPE_STRING:
+        if(qdata->size == sizeof (gchar*)) {
+          g_free (G_STRUCT_MEMBER (gchar*, ffmpegenc, qdata->offset));
+          G_STRUCT_MEMBER (gchar*, ffmpegenc, qdata->offset) = NULL;
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  g_free (pspecs);
 }

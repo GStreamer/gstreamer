@@ -35,6 +35,7 @@ gboolean gst_ffmpeg_cfg_get_property (GObject * object,
 
 void gst_ffmpeg_cfg_fill_context (GstFFMpegEnc * ffmpegenc, AVCodecContext * context);
 void gst_ffmpeg_cfg_set_defaults (GstFFMpegEnc * ffmpegenc);
+void gst_ffmpeg_cfg_finalize (GstFFMpegEnc * ffmpegenc);
 
 G_END_DECLS
 
