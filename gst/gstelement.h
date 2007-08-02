@@ -533,7 +533,11 @@ void			gst_element_class_add_pad_template	(GstElementClass *klass, GstPadTemplat
 GstPadTemplate*		gst_element_class_get_pad_template	(GstElementClass *element_class, const gchar *name);
 GList*                  gst_element_class_get_pad_template_list	(GstElementClass *element_class);
 void			gst_element_class_set_details		(GstElementClass *klass, const GstElementDetails *details);
-void			gst_element_class_set_details_simple	(GstElementClass *klass, gchar *longname, gchar *classification, gchar *description, gchar *author);
+void			gst_element_class_set_details_simple	(GstElementClass *klass,
+			                                    	 const gchar     *longname,
+			                                    	 const gchar     *classification,
+			                                    	 const gchar     *description,
+			                                         const gchar     *author);
 
 /* element instance */
 GType			gst_element_get_type		(void);

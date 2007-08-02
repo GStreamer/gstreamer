@@ -1,3 +1,10 @@
+2007-08-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstelement.c: (gst_element_class_set_details_simple):
+	* gst/gstelement.h:
+	  Make strings passed to gst_element_class_set_details_simple()
+	  constant, as they should be (#462752).
+
 2007-08-02  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gstbin.c: (gst_bin_change_state_func),

@@ -1159,11 +1159,13 @@ gst_element_class_set_details (GstElementClass * klass,
  * Since: 0.10.14
  */
 void
-gst_element_class_set_details_simple (GstElementClass * klass, gchar * longname,
-    gchar * classification, gchar * description, gchar * author)
+gst_element_class_set_details_simple (GstElementClass * klass,
+    const gchar * longname, const gchar * classification,
+    const gchar * description, const gchar * author)
 {
   const GstElementDetails details =
-      GST_ELEMENT_DETAILS (longname, classification, description, author);
+      GST_ELEMENT_DETAILS ((gchar *) longname, (gchar *) classification,
+      (gchar *) description, (gchar *) author);
 
   g_return_if_fail (GST_IS_ELEMENT_CLASS (klass));
 
