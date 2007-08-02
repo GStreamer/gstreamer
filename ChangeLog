@@ -1,3 +1,11 @@
+2007-08-02  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/gstbin.c: (gst_bin_change_state_func),
+	(bin_handle_async_done), (gst_bin_handle_message_func):
+	Don't forget about the fact that some element went ASYNC even after a
+	resync. This makes us post the ASYNC_DONE message correctly.
+	Fixes #462558.
+
 2007-07-31  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/gstregistry.c: (gst_registry_add_feature):

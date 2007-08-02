@@ -191,6 +191,10 @@ GST_ELEMENT_DETAILS ("Generic bin",
     "Simple container object",
     "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");
 
+/* a bin is toplevel if it has no parent or when it is configured to behave like
+ * a toplevel bin */
+#define BIN_IS_TOPLEVEL(bin) ((GST_OBJECT_PARENT (bin) == NULL) || bin->priv->asynchandling)
+
 struct _GstBinPrivate
 {
   gboolean asynchandling;
@@ -2020,11 +2024,16 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
   /* iterate in state change order */
   it = gst_bin_iterate_sorted (bin);
 
+  /* mark if we've seen an ASYNC element in the bin when we did a state change.
+   * Note how we don't reset this value when a resync happens, the reason being
+   * that the async element posted ASYNC_START and we want to post ASYNC_DONE
+   * even after a resync when the async element is gone */
+  have_async = FALSE;
+
 restart:
   /* take base_time */
   base_time = gst_element_get_base_time (element);
 
-  have_async = FALSE;
   have_no_preroll = FALSE;
 
   done = FALSE;
@@ -2105,10 +2114,13 @@ done:
   GST_OBJECT_LOCK (bin);
   bin->polling = FALSE;
   if (ret != GST_STATE_CHANGE_ASYNC) {
+    /* no element returned ASYNC, we can just complete. */
     GST_DEBUG_OBJECT (bin, "no async elements");
     goto state_end;
   }
+  /* when we get here an ASYNC element was found */
   if (GST_STATE_TARGET (bin) <= GST_STATE_READY) {
+    /* we ignore ASYNC state changes when we go to READY or NULL */
     GST_DEBUG_OBJECT (bin, "target state %s <= READY",
         gst_element_state_get_name (GST_STATE_TARGET (bin)));
     goto state_end;
@@ -2117,7 +2129,10 @@ done:
   GST_DEBUG_OBJECT (bin, "check async elements");
   /* check if all elements managed to commit their state already */
   if (!find_message (bin, NULL, GST_MESSAGE_ASYNC_START)) {
-    /* nothing found, remove all old ASYNC_DONE messages */
+    /* nothing found, remove all old ASYNC_DONE messages. This can happen when
+     * all the elements commited their state while we were doing the state
+     * change. We will still return ASYNC for consistency but we commit the
+     * state already so that a _get_state() will return immediatly. */
     bin_remove_messages (bin, NULL, GST_MESSAGE_ASYNC_DONE);
 
     GST_DEBUG_OBJECT (bin, "async elements commited");
@@ -2395,7 +2410,7 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret)
   }
 
   /* get our toplevel state */
-  toplevel = ((GST_OBJECT_PARENT (bin) == NULL) || bin->priv->asynchandling);
+  toplevel = BIN_IS_TOPLEVEL (bin);
 
   /* see if we reached the final state. If we are not toplevel, we also have to
    * stop here, the parent will continue our state. */
@@ -2687,8 +2702,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       bin_handle_async_start (bin);
 
       /* get our toplevel state */
-      toplevel = ((GST_OBJECT_PARENT (bin) == NULL)
-          || bin->priv->asynchandling);
+      toplevel = BIN_IS_TOPLEVEL (bin);
 
       /* prepare an ASYNC_START message */
       if (!toplevel) {
