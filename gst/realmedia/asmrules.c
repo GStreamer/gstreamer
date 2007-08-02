@@ -426,7 +426,7 @@ gst_asm_rule_new (void)
 static void
 gst_asm_rule_free (GstASMRule * rule)
 {
-  g_hash_table_unref (rule->props);
+  g_hash_table_destroy (rule->props);
   if (rule->root)
     gst_asm_node_free (rule->root);
   g_free (rule);
@@ -690,7 +690,7 @@ main (gint argc, gchar * argv[])
   n = gst_asm_rule_book_match (book, vars, rulematch);
   gst_asm_rule_book_free (book);
 
-  g_hash_table_unref (vars);
+  g_hash_table_destroy (vars);
 
   g_print ("%d rules matched\n", n);
   for (i = 0; i < n; i++) {

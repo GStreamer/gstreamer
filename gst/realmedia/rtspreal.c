@@ -594,7 +594,7 @@ rtsp_ext_real_stream_select (GstRTSPExtension * ext, GstRTSPUrl * url)
     }
   }
 
-  g_hash_table_unref (vars);
+  g_hash_table_destroy (vars);
 
   /* strip final , if we added some stream rules */
   if (rules->len > 0) {
@@ -733,5 +733,5 @@ gboolean
 gst_rtsp_real_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtspreal",
-      GST_RANK_NONE, GST_TYPE_RTSP_REAL);
+      GST_RANK_MARGINAL, GST_TYPE_RTSP_REAL);
 }
