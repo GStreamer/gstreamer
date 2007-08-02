@@ -1,3 +1,30 @@
+2007-08-02  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/realmedia/.cvsignore:
+	Add test to ignore.
+
+	* gst/realmedia/Makefile.am:
+	* gst/realmedia/asmrules.c: (gst_asm_node_new),
+	(gst_asm_node_free), (gst_asm_operator_eval),
+	(gst_asm_node_evaluate), (gst_asm_scan_new), (gst_asm_scan_free),
+	(gst_asm_scan_string), (gst_asm_scan_number),
+	(gst_asm_scan_identifier), (gst_asm_scan_print_token),
+	(gst_asm_scan_next_token), (gst_asm_rule_new), (gst_asm_rule_free),
+	(gst_asm_rule_add_property), (gst_asm_scan_parse_operand),
+	(gst_asm_scan_parse_expression), (gst_asm_scan_parse_condition),
+	(gst_asm_scan_parse_property), (gst_asm_scan_parse_rule),
+	(gst_asm_rule_evaluate), (gst_asm_rule_book_new),
+	(gst_asm_rule_book_n_rules), (gst_asm_rule_book_free),
+	(gst_asm_rule_book_match), (main):
+	* gst/realmedia/asmrules.h:
+	Added asembler rule book parser and evaluator.
+
+	* gst/realmedia/rtspreal.c: (rtsp_ext_real_parse_sdp),
+	(rtsp_ext_real_stream_select), (gst_rtsp_real_plugin_init):
+	* gst/realmedia/rtspreal.h:
+	Keep per stream config info.
+	Parse and evaluate asm rule books for stream selection.
+
 2007-07-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/realmedia/rtspreal.c:

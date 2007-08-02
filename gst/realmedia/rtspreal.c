@@ -43,6 +43,7 @@
 
 #include "realhash.h"
 #include "rtspreal.h"
+#include "asmrules.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtspreal_debug);
 #define GST_CAT_DEFAULT (rtspreal_debug)
@@ -256,18 +257,15 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     GstStructure * props)
 {
   GstRTSPReal *ctx = (GstRTSPReal *) ext;
-  guint size, n_streams;
+  guint size;
   gint i;
-  guint32 max_bit_rate = 0, avg_bit_rate = 0;
-  guint32 max_packet_size = 0, avg_packet_size = 0;
-  guint32 start_time, preroll, duration = 0;
   gchar *title, *author, *copyright, *comment;
   gsize title_len, author_len, copyright_len, comment_len;
   guint8 *data = NULL, *datap;
   guint data_len = 0, offset;
   GstBuffer *buf;
   gchar *opaque_data;
-  gsize opaque_data_len;
+  gsize opaque_data_len, asm_rule_book_len;
 
   /* don't bother for non-real formats */
   READ_INT (sdp, "IsRealDataType", ctx->isreal);
@@ -277,25 +275,33 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   /* Force PAUSE | PLAY */
   //src->methods |= GST_RTSP_PLAY | GST_RTSP_PAUSE;
 
-  n_streams = gst_sdp_message_medias_len (sdp);
+  ctx->n_streams = gst_sdp_message_medias_len (sdp);
 
-  /* PROP */
-  for (i = 0; i < n_streams; i++) {
-    const GstSDPMedia *media = gst_sdp_message_get_media (sdp, i);
+  ctx->max_bit_rate = 0;
+  ctx->avg_bit_rate = 0;
+  ctx->max_packet_size = 0;
+  ctx->avg_packet_size = 0;
+  ctx->duration = 0;
+
+  for (i = 0; i < ctx->n_streams; i++) {
+    const GstSDPMedia *media;
     gint intval;
 
+    media = gst_sdp_message_get_media (sdp, i);
+
     READ_INT_M (media, "MaxBitRate", intval);
-    max_bit_rate += intval;
+    ctx->max_bit_rate += intval;
     READ_INT_M (media, "AvgBitRate", intval);
-    avg_bit_rate += intval;
+    ctx->avg_bit_rate += intval;
     READ_INT_M (media, "MaxPacketSize", intval);
-    max_packet_size = MAX (max_packet_size, intval);
+    ctx->max_packet_size = MAX (ctx->max_packet_size, intval);
     READ_INT_M (media, "AvgPacketSize", intval);
-    avg_packet_size = (avg_packet_size * i + intval) / (i + 1);
+    ctx->avg_packet_size = (ctx->avg_packet_size * i + intval) / (i + 1);
     READ_INT_M (media, "Duration", intval);
-    duration = MAX (duration, intval);
+    ctx->duration = MAX (ctx->duration, intval);
   }
 
+  /* PROP */
   offset = 0;
   size = 50;
   ENSURE_SIZE (size);
@@ -304,16 +310,16 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   memcpy (datap + 0, "PROP", 4);
   GST_WRITE_UINT32_BE (datap + 4, size);
   GST_WRITE_UINT16_BE (datap + 8, 0);
-  GST_WRITE_UINT32_BE (datap + 10, max_bit_rate);
-  GST_WRITE_UINT32_BE (datap + 14, avg_bit_rate);
-  GST_WRITE_UINT32_BE (datap + 18, max_packet_size);
-  GST_WRITE_UINT32_BE (datap + 22, avg_packet_size);
+  GST_WRITE_UINT32_BE (datap + 10, ctx->max_bit_rate);
+  GST_WRITE_UINT32_BE (datap + 14, ctx->avg_bit_rate);
+  GST_WRITE_UINT32_BE (datap + 18, ctx->max_packet_size);
+  GST_WRITE_UINT32_BE (datap + 22, ctx->avg_packet_size);
   GST_WRITE_UINT32_BE (datap + 26, 0);
-  GST_WRITE_UINT32_BE (datap + 30, duration);
+  GST_WRITE_UINT32_BE (datap + 30, ctx->duration);
   GST_WRITE_UINT32_BE (datap + 34, 0);
   GST_WRITE_UINT32_BE (datap + 38, 0);
   GST_WRITE_UINT32_BE (datap + 42, 0);
-  GST_WRITE_UINT16_BE (datap + 46, n_streams);
+  GST_WRITE_UINT16_BE (datap + 46, ctx->n_streams);
   GST_WRITE_UINT16_BE (datap + 48, 0);
   offset += size;
 
@@ -337,24 +343,29 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   offset += size;
 
   /* MDPR */
-  for (i = 0; i < n_streams; i++) {
-    const GstSDPMedia *media = gst_sdp_message_get_media (sdp, i);
-    gchar *asm_rule_book, *type_specific_data;
-    guint asm_rule_book_len;
-    gchar *stream_name, *mime_type;
-    guint stream_name_len, mime_type_len;
-    guint16 num_rules, j, sel, codec;
-    guint32 type_specific_data_len, len;
+  for (i = 0; i < ctx->n_streams; i++) {
+    const GstSDPMedia *media;
+    guint16 j, sel;
+    guint32 len;
+    GstRTSPRealStream *stream;
+    gchar *str;
 
-    READ_INT_M (media, "MaxBitRate", max_bit_rate);
-    READ_INT_M (media, "AvgBitRate", avg_bit_rate);
-    READ_INT_M (media, "MaxPacketSize", max_packet_size);
-    READ_INT_M (media, "AvgPacketSize", avg_packet_size);
-    READ_INT_M (media, "StartTime", start_time);
-    READ_INT_M (media, "Preroll", preroll);
-    READ_INT_M (media, "Duration", duration);
-    READ_STRING (media, "StreamName", stream_name, stream_name_len);
-    READ_STRING (media, "mimetype", mime_type, mime_type_len);
+    media = gst_sdp_message_get_media (sdp, i);
+
+    stream = g_new0 (GstRTSPRealStream, 1);
+    ctx->streams = g_list_append (ctx->streams, stream);
+
+    READ_INT_M (media, "MaxBitRate", stream->max_bit_rate);
+    READ_INT_M (media, "AvgBitRate", stream->avg_bit_rate);
+    READ_INT_M (media, "MaxPacketSize", stream->max_packet_size);
+    READ_INT_M (media, "AvgPacketSize", stream->avg_packet_size);
+    READ_INT_M (media, "StartTime", stream->start_time);
+    READ_INT_M (media, "Preroll", stream->preroll);
+    READ_INT_M (media, "Duration", stream->duration);
+    READ_STRING (media, "StreamName", str, stream->stream_name_len);
+    stream->stream_name = g_strndup (str, stream->stream_name_len);
+    READ_STRING (media, "mimetype", str, stream->mime_type_len);
+    stream->mime_type = g_strndup (str, stream->mime_type_len);
 
     /* FIXME: Depending on the current bandwidth, we need to select one
      * bandwith out of a list offered by the server. Someone needs to write
@@ -375,7 +386,8 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
      * But to give you a starting point, I offer you above string
      * in the variable 'asm_rule_book'.
      */
-    READ_STRING (media, "ASMRuleBook", asm_rule_book, asm_rule_book_len);
+    READ_STRING (media, "ASMRuleBook", str, asm_rule_book_len);
+    stream->rulebook = gst_asm_rule_book_new (str);
     sel = 0;
 
     READ_BUFFER_M (media, "OpaqueData", opaque_data, opaque_data_len);
@@ -386,8 +398,8 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     }
     if (strncmp (opaque_data, "MLTI", 4)) {
       GST_DEBUG_OBJECT (ctx, "no MLTI found, appending all");
-      type_specific_data_len = opaque_data_len;
-      type_specific_data = opaque_data;
+      stream->type_specific_data_len = opaque_data_len;
+      stream->type_specific_data = g_memdup (opaque_data, opaque_data_len);
       goto no_type_specific;
     }
     opaque_data += 4;
@@ -397,12 +409,12 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
       GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 2", opaque_data_len);
       goto strange_opaque_data;
     }
-    num_rules = GST_READ_UINT16_BE (opaque_data);
+    stream->num_rules = GST_READ_UINT16_BE (opaque_data);
     opaque_data += 2;
     opaque_data_len -= 2;
 
-    if (sel >= num_rules) {
-      GST_DEBUG_OBJECT (ctx, "sel %d >= num_rules %d", sel, num_rules);
+    if (sel >= stream->num_rules) {
+      GST_DEBUG_OBJECT (ctx, "sel %d >= num_rules %d", sel, stream->num_rules);
       goto strange_opaque_data;
     }
 
@@ -418,32 +430,33 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
       GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 2", opaque_data_len);
       goto strange_opaque_data;
     }
-    codec = GST_READ_UINT16_BE (opaque_data);
+    stream->codec = GST_READ_UINT16_BE (opaque_data);
     opaque_data += 2;
     opaque_data_len -= 2;
 
-    if (opaque_data_len < 2 * (num_rules - sel - 1)) {
+    if (opaque_data_len < 2 * (stream->num_rules - sel - 1)) {
       GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < %d", opaque_data_len,
-          2 * (num_rules - sel - 1));
+          2 * (stream->num_rules - sel - 1));
       goto strange_opaque_data;
     }
-    opaque_data += 2 * (num_rules - sel - 1);
-    opaque_data_len -= 2 * (num_rules - sel - 1);
+    opaque_data += 2 * (stream->num_rules - sel - 1);
+    opaque_data_len -= 2 * (stream->num_rules - sel - 1);
 
     if (opaque_data_len < 2) {
       GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 2", opaque_data_len);
       goto strange_opaque_data;
     }
-    num_rules = GST_READ_UINT16_BE (opaque_data);
+    stream->num_rules = GST_READ_UINT16_BE (opaque_data);
     opaque_data += 2;
     opaque_data_len -= 2;
 
-    if (codec > num_rules) {
-      GST_DEBUG_OBJECT (ctx, "codec %d > num_rules %d", codec, num_rules);
+    if (stream->codec > stream->num_rules) {
+      GST_DEBUG_OBJECT (ctx, "codec %d > num_rules %d", stream->codec,
+          stream->num_rules);
       goto strange_opaque_data;
     }
 
-    for (j = 0; j < codec; j++) {
+    for (j = 0; j < stream->codec; j++) {
       if (opaque_data_len < 4) {
         GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 4", opaque_data_len);
         goto strange_opaque_data;
@@ -465,19 +478,22 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
       GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 4", opaque_data_len);
       goto strange_opaque_data;
     }
-    type_specific_data_len = GST_READ_UINT32_BE (opaque_data);
+    stream->type_specific_data_len = GST_READ_UINT32_BE (opaque_data);
     opaque_data += 4;
     opaque_data_len -= 4;
 
-    if (opaque_data_len < type_specific_data_len) {
+    if (opaque_data_len < stream->type_specific_data_len) {
       GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < %d", opaque_data_len,
-          type_specific_data_len);
+          stream->type_specific_data_len);
       goto strange_opaque_data;
     }
-    type_specific_data = opaque_data;
+    stream->type_specific_data =
+        g_memdup (opaque_data, stream->type_specific_data_len);
 
   no_type_specific:
-    size = 46 + stream_name_len + mime_type_len + type_specific_data_len;
+    size =
+        46 + stream->stream_name_len + stream->mime_type_len +
+        stream->type_specific_data_len;
     ENSURE_SIZE (offset + size);
     datap = data + offset;
 
@@ -485,19 +501,20 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     GST_WRITE_UINT32_BE (datap + 4, size);
     GST_WRITE_UINT16_BE (datap + 8, 0);
     GST_WRITE_UINT16_BE (datap + 10, i);
-    GST_WRITE_UINT32_BE (datap + 12, max_bit_rate);
-    GST_WRITE_UINT32_BE (datap + 16, avg_bit_rate);
-    GST_WRITE_UINT32_BE (datap + 20, max_packet_size);
-    GST_WRITE_UINT32_BE (datap + 24, avg_packet_size);
-    GST_WRITE_UINT32_BE (datap + 28, start_time);
-    GST_WRITE_UINT32_BE (datap + 32, preroll);
-    GST_WRITE_UINT32_BE (datap + 36, duration);
+    GST_WRITE_UINT32_BE (datap + 12, stream->max_bit_rate);
+    GST_WRITE_UINT32_BE (datap + 16, stream->avg_bit_rate);
+    GST_WRITE_UINT32_BE (datap + 20, stream->max_packet_size);
+    GST_WRITE_UINT32_BE (datap + 24, stream->avg_packet_size);
+    GST_WRITE_UINT32_BE (datap + 28, stream->start_time);
+    GST_WRITE_UINT32_BE (datap + 32, stream->preroll);
+    GST_WRITE_UINT32_BE (datap + 36, stream->duration);
     datap += 40;
-    WRITE_STRING1 (datap, stream_name, stream_name_len);
-    WRITE_STRING1 (datap, mime_type, mime_type_len);
-    GST_WRITE_UINT32_BE (datap, type_specific_data_len);
-    if (type_specific_data_len)
-      memcpy (datap + 4, type_specific_data, type_specific_data_len);
+    WRITE_STRING1 (datap, stream->stream_name, stream->stream_name_len);
+    WRITE_STRING1 (datap, stream->mime_type, stream->mime_type_len);
+    GST_WRITE_UINT32_BE (datap, stream->type_specific_data_len);
+    if (stream->type_specific_data_len)
+      memcpy (datap + 4, stream->type_specific_data,
+          stream->type_specific_data_len);
     offset += size;
   }
 
@@ -522,7 +539,7 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
   gst_structure_set (props, "config", GST_TYPE_BUFFER, buf, NULL);
 
   /* Overwrite encoding and media fields */
-  gst_structure_set (props, "encoding-name", G_TYPE_STRING, "x-real-rdt", NULL);
+  gst_structure_set (props, "encoding-name", G_TYPE_STRING, "X-REAL-RDT", NULL);
   gst_structure_set (props, "media", G_TYPE_STRING, "application", NULL);
 
   return TRUE;
@@ -543,6 +560,10 @@ rtsp_ext_real_stream_select (GstRTSPExtension * ext, GstRTSPUrl * url)
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
   gchar *req_url;
+  GString *rules;
+  GList *walk;
+  gint i;
+  GHashTable *vars;
 
   if (!ctx->isreal)
     return GST_RTSP_OK;
@@ -556,13 +577,34 @@ rtsp_ext_real_stream_select (GstRTSPExtension * ext, GstRTSPUrl * url)
 
   g_free (req_url);
 
-  /* FIXME, do selection instead of hardcoded values */
-  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SUBSCRIBE,
-      //"stream=0;rule=5,stream=0;rule=6,stream=1;rule=0,stream=1;rule=1");
-      //"stream=0;rule=0,stream=0;rule=1,stream=1;rule=0,stream=1;rule=1");
-      //"stream=0;rule=5,stream=0;rule=6,stream=1;rule=2,stream=1;rule=3");
-      "stream=0;rule=5,stream=0;rule=6,stream=1;rule=0,stream=1;rule=1");
-  //"stream=0;rule=0,stream=0;rule=1");
+  rules = g_string_new ("");
+  vars = g_hash_table_new (g_str_hash, g_str_equal);
+  g_hash_table_insert (vars, "Bandwidth", "300000");
+
+  for (walk = ctx->streams, i = 0; walk; walk = g_list_next (walk), i++) {
+    GstRTSPRealStream *stream;
+    gint rulematches[MAX_RULEMATCHES];
+    gint j, n;
+
+    stream = (GstRTSPRealStream *) walk->data;
+
+    n = gst_asm_rule_book_match (stream->rulebook, vars, rulematches);
+    for (j = 0; j < n; j++) {
+      g_string_append_printf (rules, "stream=%u;rule=%u,", i, rulematches[j]);
+    }
+  }
+
+  g_hash_table_unref (vars);
+
+  /* strip final , if we added some stream rules */
+  if (rules->len > 0) {
+    rules = g_string_truncate (rules, rules->len - 1);
+  }
+
+  /* do selection */
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SUBSCRIBE, rules->str);
+
+  g_string_free (rules, TRUE);
 
   /* send SET_PARAMETER */
   if ((res = gst_rtsp_extension_send (ext, &request, &response)) < 0)

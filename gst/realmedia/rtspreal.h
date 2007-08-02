@@ -22,6 +22,8 @@
 
 #include <gst/gst.h>
 
+#include "asmrules.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_RTSP_REAL  		(gst_rtsp_real_get_type())
@@ -33,12 +35,45 @@ G_BEGIN_DECLS
 typedef struct _GstRTSPReal GstRTSPReal;
 typedef struct _GstRTSPRealClass GstRTSPRealClass;
 
+typedef struct _GstRTSPRealStream GstRTSPRealStream;
+
+struct _GstRTSPRealStream {
+  guint  id;
+  guint  max_bit_rate;
+  guint  avg_bit_rate;
+  guint  max_packet_size;
+  guint  avg_packet_size;
+  guint  start_time;
+  guint  preroll;
+  guint  duration;
+  gchar *stream_name;
+  guint  stream_name_len;
+  gchar *mime_type;
+  guint  mime_type_len;
+
+  GstASMRuleBook *rulebook;
+
+  gchar *type_specific_data;
+  guint  type_specific_data_len;
+
+  guint16 num_rules, j, sel, codec;
+};
+
 struct _GstRTSPReal {
   GstElement  element;
 
   gchar checksum[34];
   gchar challenge2[64];
   gboolean isreal;
+
+  guint   n_streams;
+  GList  *streams;
+
+  guint  max_bit_rate;
+  guint  avg_bit_rate;
+  guint  max_packet_size;
+  guint  avg_packet_size;
+  guint  duration;
 };
 
 struct _GstRTSPRealClass {
