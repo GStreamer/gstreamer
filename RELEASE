@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.13 "What's Going on?"
+Release notes for GStreamer Base Plug-ins 0.10.14 "Light Years Ahead"
         
 
 
@@ -54,53 +54,59 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Many fixes and improvements
-      * RTP and RTCP support improved
+      * Audio dither and noise-shaping when reducing bit-depth
+      * RTSP and SDP helper libraries added
+      * Experimental buffering element "queue2" now supports pull-mode
+    and file-based buffering.
+      * Support for more 32-bit video pixel layouts
+      * Various fixes and improvements
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
 
 Bugs fixed in this release
      
-      * 339838 : [audioconvert] support floats with non-native endianness
-      * 393975 : closing x/xvimagesink window crashes gst-launch
-      * 405072 : [API] add gst_tag_freeform_string_to_utf8()
-      * 413799 : [subparse] add support for MPL2 format
-      * 414645 : GstMixerTrack should make untranslated label available
-      * 420079 : [audioconvert] Uses biased rounding which results in dist...
-      * 420578 : [subparse] add more colour map in sami parser
-      * 421834 : videorate breaks on dimension changes
-      * 423051 : Vorbis tags of type double use locale-dependent formatting
-      * 423055 : Verify ReplayGain vorbistag processing in libs/tag testsuite
-      * 425455 : Decodebin2 leaks pads
-      * 426250 : GstPlayBaseBin leaks streaminfo objects
-      * 428187 : Rtp base depayloader class doesn't send new_segment after...
-      * 431672 : gst_base_rtp_audio_payload_push() should take object of i...
-      * 432362 : [ximagesink] doesn't build if XShm is not available
-      * 432755 : [videorate] leaks buffer if flow != OK
-      * 432984 : [baseaudiosrc] misleading warning message when dropping s...
-      * 433888 : [theoradec] does not generate a perfect stream
-      * 436562 : Theoradec doesn't work well with gnonlin
-      * 438840 : [theoradec] does not compile with old version of libtheora
-      * 440997 : [gstriff] Doesn't handle width!=depth files with audio/x-...
-      * 441295 : audioconvert doesn't build on VS6
-      * 442024 : regression in playbin buffering
-      * 350299 : [playbin] " Internal data flow error " opening movie with s...
-      * 410039 : totem crashed with SIGSEGV in new_decoded_pad_full()
-      * 340842 : do latency calculation for live sources
-      * 341078 : RB does not play beyond initially downloaded podcast file
-      * 414496 : [id3demux, id3v2mux] Add support for GST_TAG_MUSICBRAINZ_...
+      * 380625 : [x*imagesink] add 'handle-expose' property
+      * 385527 : oggmux sometimes gets DELTA flag on output wrong near start
+      * 402076 : videoscale 4-tap method broken for downscaling
+      * 437169 : [xvimagesink] add property to disable Xv double-buffering
+      * 441264 : queue2 support to do buffering on a file
+      * 442553 : [v4lsrc] doesn't output segments in GST_FORMAT_TIME
+      * 442557 : [videorate] doesn't handle latency queries
+      * 442944 : Audiotestsrc can overflow on seeks
+      * 444523 : [queue2] Pull mode support
+      * 444630 : Compilation error with fsseko (from gstqueue2.c) -- unabl...
+      * 445505 : [queue2] It does not work in pull mode with oggdemux
+      * 446551 : [queue2] Buffering is not working properly if it is set t...
+      * 446572 : [queue2] Division by zero
+      * 446972 : warning when compiling  gstoggdemux.c
+      * 449156 : Regression in CVS for decodebin2
+      * 450875 : Missing files in po/POTFILES.in
+      * 451707 : [tag] UTF-8 in ID3v1 tag not correctly decoded
+      * 451908 : [ffmpegcolorspace] regression: doesn't accept GST_VIDEO_C...
+      * 454264 : Playbin fails to " play " image url after a movie url
+      * 456656 : [API] Addition of audio buffer clipping function to gstaudio
+      * 460978 : gst_audio_buffer_clip outputs warnings
+      * 152864 : [PATCH] GstAlsaMixer doesn't support signals
+      * 360246 : [audioconvert] Optionally apply dithering
+      * 394061 : Add support for Subviewer subtitles
+      * 420326 : Base payloader class has wrong property types and ranges
+      * 451145 : [vorbisdec] errors out on 0-sized packets
+      * 459204 : [PATCH] [playbin] gst_play_base_bin_get_streaminfo_value_...
 
 API changed in this release
      
 - API additions:
     
-* add gst_tag_freeform_string_to_utf8()
-* GstRTPBuffer::gst_rtp_buffer_default_clock_rate()
-* GstBaseAudioSink::slave-method property
-* add "min-ptime" property to RTP base audio payloader
-* gst_base_rtp_audio_payload_push()
-* gst_base_rtp_audio_payload_get_adapter()
-* GstMixerTrack::untranslated-label property
+* RTSP and SDP libraries added
+* gst_rtsp_base64_decode_ip
+* Add buffer clipping function gst_audio_buffer_clip for raw audio buffers. Fixes #456656.
+* gst_mixer_get_mixer_flags
+* gst_mixer_message_parse_mute_toggled
+* gst_mixer_message_parse_record_toggled
+* gst_mixer_message_parse_volume_changed
+* gst_mixer_message_parse_option_changed
+* GstMixerMessageType
+* GstMixerFlags
 
 Download
 
@@ -130,29 +136,19 @@ Applications
   
 Contributors to this release
     
-      * Alex Lancaster
       * Andy Wingo
-      * Christian Kirbach
+      * Bastien Nocera
       * Dan Williams
       * David Schleef
       * Edward Hervey
       * Jan Schmidt
-      * Julien MOUTTE
-      * Kamil Pawlowski
-      * Marc-Andre Lureau
-      * Mark Nauwelaerts
+      * Jorn Baayen
       * Michael Smith
-      * Olivier Crete
-      * René Stadler
       * Sebastian Dröge
       * Sebastien Moutte
       * Stefan Kost
+      * Thiago Sousa Santos
       * Thomas Vander Stichele
       * Tim-Philipp Müller
-      * Tommi Myöhänen
-      * Vincent Torri
       * Wim Taymans
-      * Young-Ho Cha
-      * Zaheer Abbas Merali
-      * Zeeshan Ali
  
