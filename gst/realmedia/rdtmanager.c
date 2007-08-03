@@ -87,7 +87,7 @@ static GstStaticPadTemplate gst_rdt_manager_recv_rtp_sink_template =
 GST_STATIC_PAD_TEMPLATE ("recv_rtp_sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS ("application/x-rtp")
+    GST_STATIC_CAPS ("application/x-rdt")
     );
 
 static GstStaticPadTemplate gst_rdt_manager_recv_rtcp_sink_template =
@@ -101,7 +101,7 @@ static GstStaticPadTemplate gst_rdt_manager_recv_rtp_src_template =
 GST_STATIC_PAD_TEMPLATE ("recv_rtp_src_%d_%d_%d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
-    GST_STATIC_CAPS ("application/x-rtp")
+    GST_STATIC_CAPS ("application/x-rdt")
     );
 
 static GstStaticPadTemplate gst_rdt_manager_rtcp_src_template =
