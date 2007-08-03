@@ -713,7 +713,7 @@ scan_and_update_registry (GstRegistry * default_registry,
     g_free (home_plugins);
 
     /* add the main (installed) library path */
-    GST_DEBUG ("scanning home plugins %s", PLUGINDIR);
+    GST_DEBUG ("scanning main plugins %s", PLUGINDIR);
     changed |= gst_registry_scan_path (default_registry, PLUGINDIR);
   } else {
     gchar **list;
