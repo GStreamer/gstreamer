@@ -1,5 +1,16 @@
 2007-08-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_init),
+	(gst_audio_test_src_src_fixate), (gst_audio_test_src_setcaps),
+	(gst_audio_test_src_init_sine_table),
+	(gst_audio_test_src_change_wave), (gst_audio_test_src_create):
+	* gst/audiotestsrc/gstaudiotestsrc.h:
+	Add float/double and int32 support to audiotestsrc. Fixes #460422.
+	Also set the default volume to the default value specified in the
+	GParamSpec.
+
+2007-08-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Jens Granseuer <jensgr at gmx dot net>
 
 	* gst/audioconvert/gstaudioquantize.c:

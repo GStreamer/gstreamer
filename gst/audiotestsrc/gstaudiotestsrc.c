@@ -87,14 +87,27 @@ enum
 
 
 static GstStaticPadTemplate gst_audio_test_src_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "endianness = (int) BYTE_ORDER, "
         "signed = (boolean) true, "
         "width = (int) 16, "
-        "depth = (int) 16, " "rate = (int) [ 1, MAX ], " "channels = (int) 1")
+        "depth = (int) 16, "
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) 1; "
+        "audio/x-raw-int, "
+        "endianness = (int) BYTE_ORDER, "
+        "signed = (boolean) true, "
+        "width = (int) 32, "
+        "depth = (int) 32,"
+        "rate = (int) [ 1, MAX ], "
+        "channels = (int) 1; "
+        "audio/x-raw-float, "
+        "endianness = (int) BYTE_ORDER, "
+        "width = (int) { 32, 64 }, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) 1")
     );
 
 
@@ -210,8 +223,10 @@ gst_audio_test_src_init (GstAudioTestSrc * src, GstAudioTestSrcClass * g_class)
   gst_pad_set_fixatecaps_function (pad, gst_audio_test_src_src_fixate);
 
   src->samplerate = 44100;
-  src->volume = 1.0;
+  src->format = GST_AUDIO_TEST_SRC_FORMAT_NONE;
+  src->volume = 0.8;
   src->freq = 440.0;
+
   /* we operate in time */
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), FALSE);
@@ -221,18 +236,24 @@ gst_audio_test_src_init (GstAudioTestSrc * src, GstAudioTestSrcClass * g_class)
   src->timestamp_offset = G_GINT64_CONSTANT (0);
 
   src->wave = GST_AUDIO_TEST_SRC_WAVE_SINE;
-  gst_audio_test_src_change_wave (src);
 }
 
 static void
 gst_audio_test_src_src_fixate (GstPad * pad, GstCaps * caps)
 {
   GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (GST_PAD_PARENT (pad));
+  const gchar *name;
   GstStructure *structure;
 
   structure = gst_caps_get_structure (caps, 0);
 
   gst_structure_fixate_field_nearest_int (structure, "rate", src->samplerate);
+
+  name = gst_structure_get_name (structure);
+  if (strcmp (name, "audio/x-raw-int") == 0)
+    gst_structure_fixate_field_nearest_int (structure, "width", 32);
+  else if (strcmp (name, "audio/x-raw-float") == 0)
+    gst_structure_fixate_field_nearest_int (structure, "width", 64);
 }
 
 static gboolean
@@ -240,10 +261,25 @@ gst_audio_test_src_setcaps (GstBaseSrc * basesrc, GstCaps * caps)
 {
   GstAudioTestSrc *src = GST_AUDIO_TEST_SRC (basesrc);
   const GstStructure *structure;
+  const gchar *name;
+  gint width;
   gboolean ret;
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "rate", &src->samplerate);
+
+  name = gst_structure_get_name (structure);
+  if (strcmp (name, "audio/x-raw-int") == 0) {
+    ret &= gst_structure_get_int (structure, "width", &width);
+    src->format = (width == 32) ? GST_AUDIO_TEST_SRC_FORMAT_S32 :
+        GST_AUDIO_TEST_SRC_FORMAT_S16;
+  } else {
+    ret &= gst_structure_get_int (structure, "width", &width);
+    src->format = (width == 32) ? GST_AUDIO_TEST_SRC_FORMAT_F32 :
+        GST_AUDIO_TEST_SRC_FORMAT_F64;
+  }
+
+  gst_audio_test_src_change_wave (src);
 
   return ret;
 }
@@ -309,106 +345,182 @@ error:
   }
 }
 
-static void
-gst_audio_test_src_create_sine (GstAudioTestSrc * src, gint16 * samples)
-{
-  gint i;
-  gdouble step, amp;
-
-  step = M_PI_M2 * src->freq / src->samplerate;
-  amp = src->volume * 32767.0;
-
-  for (i = 0; i < src->generate_samples_per_buffer; i++) {
-    src->accumulator += step;
-    if (src->accumulator >= M_PI_M2)
-      src->accumulator -= M_PI_M2;
-
-    samples[i] = (gint16) (sin (src->accumulator) * amp);
-  }
+#define DEFINE_SINE(type,scale) \
+static void \
+gst_audio_test_src_create_sine_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i; \
+  gdouble step, amp; \
+  \
+  step = M_PI_M2 * src->freq / src->samplerate; \
+  amp = src->volume * scale; \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    src->accumulator += step; \
+    if (src->accumulator >= M_PI_M2) \
+      src->accumulator -= M_PI_M2; \
+    \
+    samples[i] = (g##type) (sin (src->accumulator) * amp); \
+  } \
 }
 
-static void
-gst_audio_test_src_create_square (GstAudioTestSrc * src, gint16 * samples)
-{
-  gint i;
-  gdouble step, amp;
+DEFINE_SINE (int16, 32767.0);
+DEFINE_SINE (int32, 2147483647.0);
+DEFINE_SINE (float, 1.0);
+DEFINE_SINE (double, 1.0);
 
-  step = M_PI_M2 * src->freq / src->samplerate;
-  amp = src->volume * 32767.0;
+static ProcessFunc sine_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_sine_int16,
+  (ProcessFunc) gst_audio_test_src_create_sine_int32,
+  (ProcessFunc) gst_audio_test_src_create_sine_float,
+  (ProcessFunc) gst_audio_test_src_create_sine_double
+};
 
-  for (i = 0; i < src->generate_samples_per_buffer; i++) {
-    src->accumulator += step;
-    if (src->accumulator >= M_PI_M2)
-      src->accumulator -= M_PI_M2;
-
-    samples[i] = (gint16) ((src->accumulator < M_PI) ? amp : -amp);
-  }
+#define DEFINE_SQUARE(type,scale) \
+static void \
+gst_audio_test_src_create_square_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i; \
+  gdouble step, amp; \
+  \
+  step = M_PI_M2 * src->freq / src->samplerate; \
+  amp = src->volume * scale; \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    src->accumulator += step; \
+    if (src->accumulator >= M_PI_M2) \
+      src->accumulator -= M_PI_M2; \
+    \
+    samples[i] = (g##type) ((src->accumulator < M_PI) ? amp : -amp); \
+  } \
 }
 
-static void
-gst_audio_test_src_create_saw (GstAudioTestSrc * src, gint16 * samples)
-{
-  gint i;
-  gdouble step, amp;
+DEFINE_SQUARE (int16, 32767.0);
+DEFINE_SQUARE (int32, 2147483647.0);
+DEFINE_SQUARE (float, 1.0);
+DEFINE_SQUARE (double, 1.0);
 
-  step = M_PI_M2 * src->freq / src->samplerate;
-  amp = (src->volume * 32767.0) / M_PI;
+static ProcessFunc square_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_square_int16,
+  (ProcessFunc) gst_audio_test_src_create_square_int32,
+  (ProcessFunc) gst_audio_test_src_create_square_float,
+  (ProcessFunc) gst_audio_test_src_create_square_double
+};
 
-  for (i = 0; i < src->generate_samples_per_buffer; i++) {
-    src->accumulator += step;
-    if (src->accumulator >= M_PI_M2)
-      src->accumulator -= M_PI_M2;
-
-    if (src->accumulator < M_PI) {
-      samples[i] = (gint16) (src->accumulator * amp);
-    } else {
-      samples[i] = (gint16) ((M_PI_M2 - src->accumulator) * -amp);
-    }
-  }
+#define DEFINE_SAW(type,scale) \
+static void \
+gst_audio_test_src_create_saw_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i; \
+  gdouble step, amp; \
+  \
+  step = M_PI_M2 * src->freq / src->samplerate; \
+  amp = (src->volume * scale) / M_PI; \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    src->accumulator += step; \
+    if (src->accumulator >= M_PI_M2) \
+      src->accumulator -= M_PI_M2; \
+    \
+    if (src->accumulator < M_PI) { \
+      samples[i] = (g##type) (src->accumulator * amp); \
+    } else { \
+      samples[i] = (g##type) ((M_PI_M2 - src->accumulator) * -amp); \
+    } \
+  } \
 }
 
-static void
-gst_audio_test_src_create_triangle (GstAudioTestSrc * src, gint16 * samples)
-{
-  gint i;
-  gdouble step, amp;
+DEFINE_SAW (int16, 32767.0);
+DEFINE_SAW (int32, 2147483647.0);
+DEFINE_SAW (float, 1.0);
+DEFINE_SAW (double, 1.0);
 
-  step = M_PI_M2 * src->freq / src->samplerate;
-  amp = (src->volume * 32767.0) / M_PI_2;
+static ProcessFunc saw_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_saw_int16,
+  (ProcessFunc) gst_audio_test_src_create_saw_int32,
+  (ProcessFunc) gst_audio_test_src_create_saw_float,
+  (ProcessFunc) gst_audio_test_src_create_saw_double
+};
 
-  for (i = 0; i < src->generate_samples_per_buffer; i++) {
-    src->accumulator += step;
-    if (src->accumulator >= M_PI_M2)
-      src->accumulator -= M_PI_M2;
-
-    if (src->accumulator < (M_PI * 0.5)) {
-      samples[i] = (gint16) (src->accumulator * amp);
-    } else if (src->accumulator < (M_PI * 1.5)) {
-      samples[i] = (gint16) ((src->accumulator - M_PI) * -amp);
-    } else {
-      samples[i] = (gint16) ((M_PI_M2 - src->accumulator) * -amp);
-    }
-  }
+#define DEFINE_TRIANGLE(type,scale) \
+static void \
+gst_audio_test_src_create_triangle_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i; \
+  gdouble step, amp; \
+  \
+  step = M_PI_M2 * src->freq / src->samplerate; \
+  amp = (src->volume * scale) / M_PI_2; \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    src->accumulator += step; \
+    if (src->accumulator >= M_PI_M2) \
+      src->accumulator -= M_PI_M2; \
+    \
+    if (src->accumulator < (M_PI * 0.5)) { \
+      samples[i] = (g##type) (src->accumulator * amp); \
+    } else if (src->accumulator < (M_PI * 1.5)) { \
+      samples[i] = (g##type) ((src->accumulator - M_PI) * -amp); \
+    } else { \
+      samples[i] = (g##type) ((M_PI_M2 - src->accumulator) * -amp); \
+    } \
+  } \
 }
 
-static void
-gst_audio_test_src_create_silence (GstAudioTestSrc * src, gint16 * samples)
-{
-  memset (samples, 0, src->generate_samples_per_buffer * sizeof (gint16));
+DEFINE_TRIANGLE (int16, 32767.0);
+DEFINE_TRIANGLE (int32, 2147483647.0);
+DEFINE_TRIANGLE (float, 1.0);
+DEFINE_TRIANGLE (double, 1.0);
+
+static ProcessFunc triangle_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_triangle_int16,
+  (ProcessFunc) gst_audio_test_src_create_triangle_int32,
+  (ProcessFunc) gst_audio_test_src_create_triangle_float,
+  (ProcessFunc) gst_audio_test_src_create_triangle_double
+};
+
+#define DEFINE_SILENCE(type) \
+static void \
+gst_audio_test_src_create_silence_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  memset (samples, 0, src->generate_samples_per_buffer * sizeof (g##type)); \
 }
 
-static void
-gst_audio_test_src_create_white_noise (GstAudioTestSrc * src, gint16 * samples)
-{
-  gint i;
-  gdouble amp;
+DEFINE_SILENCE (int16);
+DEFINE_SILENCE (int32);
+DEFINE_SILENCE (float);
+DEFINE_SILENCE (double);
 
-  amp = src->volume * 65535.0;
+static ProcessFunc silence_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_silence_int16,
+  (ProcessFunc) gst_audio_test_src_create_silence_int32,
+  (ProcessFunc) gst_audio_test_src_create_silence_float,
+  (ProcessFunc) gst_audio_test_src_create_silence_double
+};
 
-  for (i = 0; i < src->generate_samples_per_buffer; i++) {
-    samples[i] = (gint16) (32768 - (amp * rand () / (RAND_MAX + 1.0)));
-  }
+#define DEFINE_WHITE_NOISE(type,scale) \
+static void \
+gst_audio_test_src_create_white_noise_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i; \
+  gdouble amp = (src->volume * scale); \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    samples[i] = (g##type) (amp * g_random_double_range (-1.0, 1.0)); \
+  } \
 }
+
+DEFINE_WHITE_NOISE (int16, 32767.0);
+DEFINE_WHITE_NOISE (int32, 2147483647.0);
+DEFINE_WHITE_NOISE (float, 1.0);
+DEFINE_WHITE_NOISE (double, 1.0);
+
+static ProcessFunc white_noise_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_white_noise_int16,
+  (ProcessFunc) gst_audio_test_src_create_white_noise_int32,
+  (ProcessFunc) gst_audio_test_src_create_white_noise_float,
+  (ProcessFunc) gst_audio_test_src_create_white_noise_double
+};
 
 /* pink noise calculation is based on
  * http://www.firstpr.com.au/dsp/pink-noise/phil_burk_19990905_patest_pink.c
@@ -435,7 +547,7 @@ gst_audio_test_src_init_pink_noise (GstAudioTestSrc * src)
 }
 
 /* Generate Pink noise values between -1.0 and +1.0 */
-static gfloat
+static gdouble
 gst_audio_test_src_generate_pink_noise_value (GstPinkNoise * pink)
 {
   glong new_random;
@@ -475,20 +587,33 @@ gst_audio_test_src_generate_pink_noise_value (GstPinkNoise * pink)
   return (pink->scalar * sum);
 }
 
-static void
-gst_audio_test_src_create_pink_noise (GstAudioTestSrc * src, gint16 * samples)
-{
-  gint i;
-  gdouble amp;
-
-  amp = src->volume * 32767.0;
-
-  for (i = 0; i < src->generate_samples_per_buffer; i++) {
-    samples[i] =
-        (gint16) (gst_audio_test_src_generate_pink_noise_value (&src->pink) *
-        amp);
-  }
+#define DEFINE_PINK(type, scale) \
+static void \
+gst_audio_test_src_create_pink_noise_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i; \
+  gdouble amp; \
+  \
+  amp = src->volume * scale; \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    samples[i] = \
+        (g##type) (gst_audio_test_src_generate_pink_noise_value (&src->pink) * \
+        amp); \
+  } \
 }
+
+DEFINE_PINK (int16, 32767.0);
+DEFINE_PINK (int32, 2147483647.0);
+DEFINE_PINK (float, 1.0);
+DEFINE_PINK (double, 1.0);
+
+static ProcessFunc pink_noise_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_pink_noise_int16,
+  (ProcessFunc) gst_audio_test_src_create_pink_noise_int32,
+  (ProcessFunc) gst_audio_test_src_create_pink_noise_float,
+  (ProcessFunc) gst_audio_test_src_create_pink_noise_double
+};
 
 static void
 gst_audio_test_src_init_sine_table (GstAudioTestSrc * src)
@@ -496,31 +621,44 @@ gst_audio_test_src_init_sine_table (GstAudioTestSrc * src)
   gint i;
   gdouble ang = 0.0;
   gdouble step = M_PI_M2 / 1024.0;
-  gdouble amp = src->volume * 32767.0;
+  gdouble amp = src->volume;
 
   for (i = 0; i < 1024; i++) {
-    src->wave_table[i] = (gint16) (sin (ang) * amp);
+    src->wave_table[i] = sin (ang) * amp;
     ang += step;
   }
 }
 
-static void
-gst_audio_test_src_create_sine_table (GstAudioTestSrc * src, gint16 * samples)
-{
-  gint i;
-  gdouble step, scl;
-
-  step = M_PI_M2 * src->freq / src->samplerate;
-  scl = 1024.0 / M_PI_M2;
-
-  for (i = 0; i < src->generate_samples_per_buffer; i++) {
-    src->accumulator += step;
-    if (src->accumulator >= M_PI_M2)
-      src->accumulator -= M_PI_M2;
-
-    samples[i] = src->wave_table[(gint) (src->accumulator * scl)];
-  }
+#define DEFINE_SINE_TABLE(type,scale) \
+static void \
+gst_audio_test_src_create_sine_table_##type (GstAudioTestSrc * src, g##type * samples) \
+{ \
+  gint i; \
+  gdouble step, scl; \
+  \
+  step = M_PI_M2 * src->freq / src->samplerate; \
+  scl = 1024.0 / M_PI_M2; \
+  \
+  for (i = 0; i < src->generate_samples_per_buffer; i++) { \
+    src->accumulator += step; \
+    if (src->accumulator >= M_PI_M2) \
+      src->accumulator -= M_PI_M2; \
+    \
+    samples[i] = (g##type) scale * src->wave_table[(gint) (src->accumulator * scl)]; \
+  } \
 }
+
+DEFINE_SINE_TABLE (int16, 32767.0);
+DEFINE_SINE_TABLE (int32, 2147483647.0);
+DEFINE_SINE_TABLE (float, 1.0);
+DEFINE_SINE_TABLE (double, 1.0);
+
+static ProcessFunc sine_table_funcs[] = {
+  (ProcessFunc) gst_audio_test_src_create_sine_table_int16,
+  (ProcessFunc) gst_audio_test_src_create_sine_table_int32,
+  (ProcessFunc) gst_audio_test_src_create_sine_table_float,
+  (ProcessFunc) gst_audio_test_src_create_sine_table_double
+};
 
 /*
  * gst_audio_test_src_change_wave:
@@ -529,32 +667,37 @@ gst_audio_test_src_create_sine_table (GstAudioTestSrc * src, gint16 * samples)
 static void
 gst_audio_test_src_change_wave (GstAudioTestSrc * src)
 {
+  if (src->format == -1) {
+    src->process = NULL;
+    return;
+  }
+
   switch (src->wave) {
     case GST_AUDIO_TEST_SRC_WAVE_SINE:
-      src->process = gst_audio_test_src_create_sine;
+      src->process = sine_funcs[src->format];
       break;
     case GST_AUDIO_TEST_SRC_WAVE_SQUARE:
-      src->process = gst_audio_test_src_create_square;
+      src->process = square_funcs[src->format];
       break;
     case GST_AUDIO_TEST_SRC_WAVE_SAW:
-      src->process = gst_audio_test_src_create_saw;
+      src->process = saw_funcs[src->format];
       break;
     case GST_AUDIO_TEST_SRC_WAVE_TRIANGLE:
-      src->process = gst_audio_test_src_create_triangle;
+      src->process = triangle_funcs[src->format];
       break;
     case GST_AUDIO_TEST_SRC_WAVE_SILENCE:
-      src->process = gst_audio_test_src_create_silence;
+      src->process = silence_funcs[src->format];
       break;
     case GST_AUDIO_TEST_SRC_WAVE_WHITE_NOISE:
-      src->process = gst_audio_test_src_create_white_noise;
+      src->process = white_noise_funcs[src->format];
       break;
     case GST_AUDIO_TEST_SRC_WAVE_PINK_NOISE:
       gst_audio_test_src_init_pink_noise (src);
-      src->process = gst_audio_test_src_create_pink_noise;
+      src->process = pink_noise_funcs[src->format];
       break;
     case GST_AUDIO_TEST_SRC_WAVE_SINE_TAB:
       gst_audio_test_src_init_sine_table (src);
-      src->process = gst_audio_test_src_create_sine_table;
+      src->process = sine_table_funcs[src->format];
       break;
     default:
       GST_ERROR ("invalid wave-form");
@@ -647,6 +790,7 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   GstBuffer *buf;
   GstClockTime next_time;
   gint64 n_samples;
+  gint sample_size;
 
   src = GST_AUDIO_TEST_SRC (basesrc);
 
@@ -686,8 +830,29 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
       (guint64) src->samplerate);
 
   /* allocate a new buffer suitable for this pad */
+  switch (src->format) {
+    case GST_AUDIO_TEST_SRC_FORMAT_S16:
+      sample_size = sizeof (gint16);
+      break;
+    case GST_AUDIO_TEST_SRC_FORMAT_S32:
+      sample_size = sizeof (gint32);
+      break;
+    case GST_AUDIO_TEST_SRC_FORMAT_F32:
+      sample_size = sizeof (gfloat);
+      break;
+    case GST_AUDIO_TEST_SRC_FORMAT_F64:
+      sample_size = sizeof (gdouble);
+      break;
+    default:
+      sample_size = -1;
+      GST_ELEMENT_ERROR (src, CORE, NEGOTIATION, (NULL),
+          ("format wasn't negotiated before get function"));
+      return GST_FLOW_NOT_NEGOTIATED;
+      break;
+  }
+
   if ((res = gst_pad_alloc_buffer (basesrc->srcpad, src->n_samples,
-              src->generate_samples_per_buffer * sizeof (gint16),
+              src->generate_samples_per_buffer * sample_size,
               GST_PAD_CAPS (basesrc->srcpad), &buf)) != GST_FLOW_OK) {
     return res;
   }
@@ -701,7 +866,7 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   src->running_time = next_time;
   src->n_samples = n_samples;
 
-  src->process (src, (gint16 *) GST_BUFFER_DATA (buf));
+  src->process (src, GST_BUFFER_DATA (buf));
 
   *buffer = buf;
 

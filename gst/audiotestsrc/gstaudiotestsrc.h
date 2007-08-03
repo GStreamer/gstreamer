@@ -71,11 +71,21 @@ typedef struct {
   glong      running_sum;   /* Used to optimize summing of generators. */
   gint       index;         /* Incremented each sample. */
   gint       index_mask;    /* Index wrapped by ANDing with this mask. */
-  gfloat     scalar;        /* Used to scale within range of -1.0 to +1.0 */
+  gdouble    scalar;        /* Used to scale within range of -1.0 to +1.0 */
 } GstPinkNoise;
+
+typedef enum {
+  GST_AUDIO_TEST_SRC_FORMAT_NONE = -1,
+  GST_AUDIO_TEST_SRC_FORMAT_S16 = 0,
+  GST_AUDIO_TEST_SRC_FORMAT_S32,
+  GST_AUDIO_TEST_SRC_FORMAT_F32,
+  GST_AUDIO_TEST_SRC_FORMAT_F64
+} GstAudioTestSrcFormat;
 
 typedef struct _GstAudioTestSrc GstAudioTestSrc;
 typedef struct _GstAudioTestSrcClass GstAudioTestSrcClass;
+
+typedef void (*ProcessFunc) (GstAudioTestSrc*, guint8 *);
 
 /**
  * GstAudioTestSrc:
@@ -85,7 +95,7 @@ typedef struct _GstAudioTestSrcClass GstAudioTestSrcClass;
 struct _GstAudioTestSrc {
   GstBaseSrc parent;
 
-  void (*process)(GstAudioTestSrc*, gint16 *);
+  ProcessFunc process;
 
   /* parameters */
   GstAudioTestSrcWave wave;
@@ -95,6 +105,7 @@ struct _GstAudioTestSrc {
   /* audio parameters */
   gint samplerate;
   gint samples_per_buffer;
+  GstAudioTestSrcFormat format;
   
   /*< private >*/
   gboolean tags_pushed;			/* send tags just once ? */
@@ -109,7 +120,7 @@ struct _GstAudioTestSrc {
   /* waveform specific context data */
   gdouble accumulator;			/* phase angle */
   GstPinkNoise pink;
-  gint16 wave_table[1024];
+  gdouble wave_table[1024];
 };
 
 struct _GstAudioTestSrcClass {
