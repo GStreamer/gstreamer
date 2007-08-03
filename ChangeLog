@@ -1,3 +1,9 @@
+2007-08-03  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtsp/gstrtsptransport.c: (gst_rtsp_transport_parse):
+	Add rdt manager for rdt transport.
+	Fix parsing of RDT transport.
+
 2007-08-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

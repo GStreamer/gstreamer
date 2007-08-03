@@ -87,8 +87,8 @@ typedef struct
 
 static const GstRTSPTransMap transports[] = {
   {"rtp", GST_RTSP_TRANS_RTP, "application/x-rtp", {"gstrtpbin", "rtpdec"}},
-  {"x-real-rdt", GST_RTSP_TRANS_RDT, "application/x-rdt", {NULL, NULL}},
-  {"x-pn-tng", GST_RTSP_TRANS_RDT, "application/x-rdt", {NULL, NULL}},
+  {"x-real-rdt", GST_RTSP_TRANS_RDT, "application/x-rdt", {"rdtmanager", NULL}},
+  {"x-pn-tng", GST_RTSP_TRANS_RDT, "application/x-rdt", {"rdtmanager", NULL}},
   {NULL, GST_RTSP_TRANS_UNKNOWN, NULL, {NULL, NULL}}
 };
 
@@ -358,7 +358,7 @@ gst_rtsp_transport_parse (const gchar * str, GstRTSPTransport * transport)
 {
   gchar **split, *down, **transp = NULL;
   guint transport_params = 0;
-  gint i;
+  gint i, count;
 
   g_return_val_if_fail (transport != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (str != NULL, GST_RTSP_EINVAL);
@@ -385,14 +385,21 @@ gst_rtsp_transport_parse (const gchar * str, GstRTSPTransport * transport)
       break;
   transport->trans = transports[i].mode;
 
-  for (i = 0; profiles[i].name; i++)
-    if (strcmp (transp[1], profiles[i].name) == 0)
-      break;
-  transport->profile = profiles[i].profile;
+  if (transport->trans != GST_RTSP_TRANS_RDT) {
+    for (i = 0; profiles[i].name; i++)
+      if (strcmp (transp[1], profiles[i].name) == 0)
+        break;
+    transport->profile = profiles[i].profile;
+    count = 2;
+  } else {
+    /* RDT has transport/lower_transport */
+    transport->profile = GST_RTSP_PROFILE_AVP;
+    count = 1;
+  }
 
-  if (transp[2] != NULL) {
+  if (transp[count] != NULL) {
     for (i = 0; ltrans[i].name; i++)
-      if (strcmp (transp[2], ltrans[i].name) == 0)
+      if (strcmp (transp[count], ltrans[i].name) == 0)
         break;
     transport->lower_transport = ltrans[i].ltrans;
   } else {
