@@ -56,13 +56,13 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gint32 *src,      \
     gint32 tmp;                                                         \
     guint32 mask = 0xffffffff & (0xffffffff << scale);                  \
     guint32 bias = 1U << (scale - 1);                                   \
-    DITHER_INIT_FUNC();                                                 \
+    DITHER_INIT_FUNC()                                                  \
                                                                         \
     for (;count;count--) {                                              \
       for (chan_pos = 0; chan_pos < channels; chan_pos++) {             \
         tmp = *src++;                                                   \
-        ADD_DITHER_FUNC();                                              \
-        ROUND_FUNC();                                                   \
+        ADD_DITHER_FUNC()                                               \
+        ROUND_FUNC()                                                    \
         *dst = tmp & mask;                                              \
         dst++;                                                          \
       }                                                                 \
@@ -95,17 +95,17 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
                                                                         \
   if (scale > 0) {                                                      \
     gdouble tmp;                                                        \
-    DITHER_INIT_FUNC();                                                 \
-    NS_INIT_FUNC();                                                     \
+    DITHER_INIT_FUNC()                                                  \
+    NS_INIT_FUNC()                                                      \
                                                                         \
     for (;count;count--) {                                              \
       for (chan_pos = 0; chan_pos < channels; chan_pos++) {             \
         tmp = *src++;                                                   \
-        ADD_NS_FUNC();                                                  \
-        ADD_DITHER_FUNC();                                              \
+        ADD_NS_FUNC()                                                   \
+        ADD_DITHER_FUNC()                                               \
         tmp = floor(tmp * factor + 0.5);                                \
         *dst = CLAMP (tmp, -factor - 1, factor);                        \
-        UPDATE_ERROR_FUNC();                                            \
+        UPDATE_ERROR_FUNC()                                             \
         dst++;                                                          \
       }                                                                 \
     }                                                                   \
@@ -220,7 +220,7 @@ MAKE_QUANTIZE_FUNC_NAME (name) (AudioConvertCtx *ctx, gdouble *src,     \
         tmp += rand;
 
 /* Noise shaping definitions.
- * See http://en.wikipedia.org/wiki/Noise_shaping for explainations. */
+ * See http://en.wikipedia.org/wiki/Noise_shaping for explanations. */
 
 
 /* Simple error feedback: Just accumulate the dithering and quantization
@@ -388,7 +388,7 @@ static AudioConvertQuantize quantize_funcs[] = {
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_error_feedback),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_simple),
   (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_medium),
-  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_high),
+  (AudioConvertQuantize) MAKE_QUANTIZE_FUNC_NAME (float_tpdf_hf_high)
 };
 
 static void
