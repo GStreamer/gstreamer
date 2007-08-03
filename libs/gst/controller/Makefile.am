@@ -4,7 +4,8 @@ libgstcontroller_@GST_MAJORMINOR@_includedir = $(includedir)/gstreamer-@GST_MAJO
 libgstcontroller_@GST_MAJORMINOR@_include_HEADERS = \
 	gstcontroller.h \
 	gstcontrolsource.h \
-	gstinterpolationcontrolsource.h
+	gstinterpolationcontrolsource.h \
+	gstlfocontrolsource.h
 
 noinst_HEADERS = \
 	gstcontrollerprivate.h \
@@ -16,10 +17,11 @@ libgstcontroller_@GST_MAJORMINOR@_la_SOURCES = \
 	gstinterpolation.c \
 	gsthelper.c \
 	gstcontrolsource.c \
-	gstinterpolationcontrolsource.c
+	gstinterpolationcontrolsource.c \
+	gstlfocontrolsource.c
 
 libgstcontroller_@GST_MAJORMINOR@_la_CFLAGS = $(GST_OBJ_CFLAGS)
-libgstcontroller_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS)
+libgstcontroller_@GST_MAJORMINOR@_la_LIBADD = $(GST_OBJ_LIBS) $(LIBM)
 libgstcontroller_@GST_MAJORMINOR@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) $(GST_LT_LDFLAGS)
 
 CLEANFILES = *.gcno *.gcda *.gcov

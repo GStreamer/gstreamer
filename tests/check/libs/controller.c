@@ -3,7 +3,7 @@
  * unit test for the controller library
  *
  * Copyright (C) <2005> Stefan Kost <ensonic at users dot sf dot net>
- * Copyright (C) <2006> Sebastian Dröge <slomo@circular-chaos.org>
+ * Copyright (C) <2006-2007> Sebastian Dröge <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -29,6 +29,7 @@
 #include <gst/controller/gstcontroller.h>
 #include <gst/controller/gstcontrolsource.h>
 #include <gst/controller/gstinterpolationcontrolsource.h>
+#include <gst/controller/gstlfocontrolsource.h>
 
 /* LOCAL TEST ELEMENT */
 
@@ -1419,6 +1420,490 @@ GST_START_TEST (controller_interpolation_set_from_list)
 
 GST_END_TEST;
 
+/* test lfo control source with sine waveform */
+GST_START_TEST (controller_lfo_sine)
+{
+  GstController *ctrl;
+  GstLFOControlSource *csource;
+  GstElement *elem;
+  GValue amp = { 0, }
+  , off = {
+  0,};
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* Get interpolation control source */
+  csource = gst_lfo_control_source_new ();
+
+  fail_unless (csource != NULL);
+  fail_unless (gst_controller_set_control_source (ctrl, "ulong",
+          GST_CONTROL_SOURCE (csource)));
+
+  /* set amplitude and offset values */
+  g_value_init (&amp, G_TYPE_ULONG);
+  g_value_init (&off, G_TYPE_ULONG);
+  g_value_set_ulong (&amp, 100);
+  g_value_set_ulong (&off, 100);
+
+  /* set waveform mode */
+  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_SINE,
+      "frequency", 1.0, "timeshift", (GstClockTime) 0,
+      "amplitude", &amp, "offset", &off, NULL);
+
+  g_object_unref (G_OBJECT (csource));
+
+  /* now pull in values for some timestamps */
+  gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* test lfo control source with sine waveform and timeshift */
+GST_START_TEST (controller_lfo_sine_timeshift)
+{
+  GstController *ctrl;
+  GstLFOControlSource *csource;
+  GstElement *elem;
+  GValue amp = { 0, }
+  , off = {
+  0,};
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* Get interpolation control source */
+  csource = gst_lfo_control_source_new ();
+
+  fail_unless (csource != NULL);
+  fail_unless (gst_controller_set_control_source (ctrl, "ulong",
+          GST_CONTROL_SOURCE (csource)));
+
+  /* set amplitude and offset values */
+  g_value_init (&amp, G_TYPE_ULONG);
+  g_value_init (&off, G_TYPE_ULONG);
+  g_value_set_ulong (&amp, 100);
+  g_value_set_ulong (&off, 100);
+
+  /* set waveform mode */
+  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_SINE,
+      "frequency", 1.0, "timeshift", 250 * GST_MSECOND,
+      "amplitude", &amp, "offset", &off, NULL);
+
+  g_object_unref (G_OBJECT (csource));
+
+/* now pull in values for some timestamps */
+  gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+
+/* test lfo control source with square waveform */
+GST_START_TEST (controller_lfo_square)
+{
+  GstController *ctrl;
+  GstLFOControlSource *csource;
+  GstElement *elem;
+  GValue amp = { 0, }
+  , off = {
+  0,};
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* Get interpolation control source */
+  csource = gst_lfo_control_source_new ();
+
+  fail_unless (csource != NULL);
+  fail_unless (gst_controller_set_control_source (ctrl, "ulong",
+          GST_CONTROL_SOURCE (csource)));
+
+  /* set amplitude and offset values */
+  g_value_init (&amp, G_TYPE_ULONG);
+  g_value_init (&off, G_TYPE_ULONG);
+  g_value_set_ulong (&amp, 100);
+  g_value_set_ulong (&off, 100);
+
+  /* set waveform mode */
+  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_SQUARE,
+      "frequency", 1.0, "timeshift", (GstClockTime) 0,
+      "amplitude", &amp, "offset", &off, NULL);
+
+  g_object_unref (G_OBJECT (csource));
+
+  /* now pull in values for some timestamps */
+  gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* test lfo control source with saw waveform */
+GST_START_TEST (controller_lfo_saw)
+{
+  GstController *ctrl;
+  GstLFOControlSource *csource;
+  GstElement *elem;
+  GValue amp = { 0, }
+  , off = {
+  0,};
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* Get interpolation control source */
+  csource = gst_lfo_control_source_new ();
+
+  fail_unless (csource != NULL);
+  fail_unless (gst_controller_set_control_source (ctrl, "ulong",
+          GST_CONTROL_SOURCE (csource)));
+
+  /* set amplitude and offset values */
+  g_value_init (&amp, G_TYPE_ULONG);
+  g_value_init (&off, G_TYPE_ULONG);
+  g_value_set_ulong (&amp, 100);
+  g_value_set_ulong (&off, 100);
+
+  /* set waveform mode */
+  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_SAW,
+      "frequency", 1.0, "timeshift", (GstClockTime) 0,
+      "amplitude", &amp, "offset", &off, NULL);
+
+  g_object_unref (G_OBJECT (csource));
+
+  /* now pull in values for some timestamps */
+  gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* test lfo control source with reverse saw waveform */
+GST_START_TEST (controller_lfo_rsaw)
+{
+  GstController *ctrl;
+  GstLFOControlSource *csource;
+  GstElement *elem;
+  GValue amp = { 0, }
+  , off = {
+  0,};
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* Get interpolation control source */
+  csource = gst_lfo_control_source_new ();
+
+  fail_unless (csource != NULL);
+  fail_unless (gst_controller_set_control_source (ctrl, "ulong",
+          GST_CONTROL_SOURCE (csource)));
+
+  /* set amplitude and offset values */
+  g_value_init (&amp, G_TYPE_ULONG);
+  g_value_init (&off, G_TYPE_ULONG);
+  g_value_set_ulong (&amp, 100);
+  g_value_set_ulong (&off, 100);
+
+  /* set waveform mode */
+  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_REVERSE_SAW,
+      "frequency", 1.0, "timeshift", (GstClockTime) 0,
+      "amplitude", &amp, "offset", &off, NULL);
+
+  g_object_unref (G_OBJECT (csource));
+
+  /* now pull in values for some timestamps */
+  gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* test lfo control source with saw waveform */
+GST_START_TEST (controller_lfo_triangle)
+{
+  GstController *ctrl;
+  GstLFOControlSource *csource;
+  GstElement *elem;
+  GValue amp = { 0, }
+  , off = {
+  0,};
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* Get interpolation control source */
+  csource = gst_lfo_control_source_new ();
+
+  fail_unless (csource != NULL);
+  fail_unless (gst_controller_set_control_source (ctrl, "ulong",
+          GST_CONTROL_SOURCE (csource)));
+
+  /* set amplitude and offset values */
+  g_value_init (&amp, G_TYPE_ULONG);
+  g_value_init (&off, G_TYPE_ULONG);
+  g_value_set_ulong (&amp, 100);
+  g_value_set_ulong (&off, 100);
+
+  /* set waveform mode */
+  g_object_set (csource, "waveform", GST_LFO_WAVEFORM_TRIANGLE,
+      "frequency", 1.0, "timeshift", (GstClockTime) 0,
+      "amplitude", &amp, "offset", &off, NULL);
+
+  g_object_unref (G_OBJECT (csource));
+
+  /* now pull in values for some timestamps */
+  gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
+/* test lfo control source with nothing set */
+GST_START_TEST (controller_lfo_none)
+{
+  GstController *ctrl;
+  GstLFOControlSource *csource;
+  GstElement *elem;
+
+  gst_controller_init (NULL, NULL);
+
+  elem = gst_element_factory_make ("testmonosource", "test_source");
+
+  /* that property should exist and should be controllable */
+  ctrl = gst_controller_new (G_OBJECT (elem), "ulong", NULL);
+  fail_unless (ctrl != NULL, NULL);
+
+  /* Get interpolation control source */
+  csource = gst_lfo_control_source_new ();
+
+  fail_unless (csource != NULL);
+  fail_unless (gst_controller_set_control_source (ctrl, "ulong",
+          GST_CONTROL_SOURCE (csource)));
+
+  g_object_unref (G_OBJECT (csource));
+
+  /* now pull in values for some timestamps */
+  gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
+  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+
+  GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
+  g_object_unref (ctrl);
+  gst_object_unref (elem);
+}
+
+GST_END_TEST;
+
 /* tests if we can run helper methods against any GObject */
 GST_START_TEST (controller_helper_any_gobject)
 {
@@ -1548,6 +2033,13 @@ gst_controller_suite (void)
   tcase_add_test (tc, controller_interpolation_linear_default_values);
   tcase_add_test (tc, controller_interpolate_linear_disabled);
   tcase_add_test (tc, controller_interpolation_set_from_list);
+  tcase_add_test (tc, controller_lfo_sine);
+  tcase_add_test (tc, controller_lfo_sine_timeshift);
+  tcase_add_test (tc, controller_lfo_square);
+  tcase_add_test (tc, controller_lfo_saw);
+  tcase_add_test (tc, controller_lfo_rsaw);
+  tcase_add_test (tc, controller_lfo_triangle);
+  tcase_add_test (tc, controller_lfo_none);
   tcase_add_test (tc, controller_helper_any_gobject);
 
   return s;

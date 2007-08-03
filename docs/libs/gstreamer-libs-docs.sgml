@@ -19,6 +19,7 @@
 <!ENTITY GstController SYSTEM "xml/gstcontroller.xml">
 <!ENTITY GstControlSource SYSTEM "xml/gstcontrolsource.xml">
 <!ENTITY GstInterpolationControlSource SYSTEM "xml/gstinterpolationcontrolsource.xml">
+<!ENTITY GstLFOControlSource SYSTEM "xml/gstlfocontrolsource.xml">
 <!ENTITY GstControllerGObject SYSTEM "xml/gstcontrollergobject.xml">
 <!ENTITY GstDataProtocol SYSTEM "xml/gstdataprotocol.xml">
 
@@ -70,6 +71,7 @@
       &GstController;
       &GstControlSource;
       &GstInterpolationControlSource;
+      &GstLFOControlSource;
       &GstControllerGObject;
     </chapter>
 

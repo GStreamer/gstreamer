@@ -1,3 +1,31 @@
+2007-08-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	reviewed by: Stefan Kost <ensonic@users.sf.net>
+
+	* libs/gst/controller/Makefile.am:
+	* libs/gst/controller/gstlfocontrolsource.c: (_calculate_pos),
+	(gst_lfo_waveform_get_type), (gst_lfo_control_source_reset),
+	(gst_lfo_control_source_new),
+	(gst_lfo_control_source_set_waveform),
+	(gst_lfo_control_source_bind), (gst_lfo_control_source_init),
+	(gst_lfo_control_source_finalize),
+	(gst_lfo_control_source_dispose),
+	(gst_lfo_control_source_set_property),
+	(gst_lfo_control_source_get_property),
+	(gst_lfo_control_source_class_init):
+	* libs/gst/controller/gstlfocontrolsource.h:
+	* libs/gst/controller/gstlfocontrolsourceprivate.h:
+	API: Add GstLFOControlSource, a control source that gives values
+	for specific timestamps based on several periodic waveforms.
+	Fixes #459717.
+
+	* tests/check/libs/controller.c: (GST_START_TEST),
+	(gst_controller_suite):
+	* docs/libs/gstreamer-libs-docs.sgml:
+	* docs/libs/gstreamer-libs-sections.txt:
+	* docs/libs/gstreamer-libs.types:
+	Add documentation and unit tests for GstLFOControlSource.
+
 2007-08-03  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* configure.ac:

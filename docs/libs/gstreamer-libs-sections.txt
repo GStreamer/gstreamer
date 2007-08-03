@@ -149,6 +149,28 @@ gst_interpolation_control_source_get_type
 </SECTION>
 
 <SECTION>
+<FILE>gstlfocontrolsource</FILE>
+<TITLE>GstLFOControlSource</TITLE>
+<INCLUDE>libs/controller/gstlfocontrolsource.h</INCLUDE>
+GstLFOControlSource
+GstLFOWaveform
+gst_lfo_control_source_new
+<SUBSECTION Standard>
+GstLFOControlSourceClass
+GstLFOControlSourcePrivate
+GST_IS_LFO_CONTROL_SOURCE
+GST_IS_LFO_CONTROL_SOURCE_CLASS
+GST_LFO_CONTROL_SOURCE
+GST_LFO_CONTROL_SOURCE_CLASS
+GST_LFO_CONTROL_SOURCE_GET_CLASS
+GST_TYPE_LFO_CONTROL_SOURCE
+GST_TYPE_LFO_WAVEFORM
+<SUBSECTION Private>
+gst_lfo_control_source_get_type
+gst_lfo_waveform_get_type
+</SECTION>
+
+<SECTION>
 <FILE>gstcontrollergobject</FILE>
 <TITLE>GstControllerGObject</TITLE>
 <INCLUDE>libs/controller/gstcontroller.h</INCLUDE>
