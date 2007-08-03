@@ -71,13 +71,15 @@ rtsp_ext_real_get_transports (GstRTSPExtension * ext,
 
   str = g_string_new ("");
 
-  if (protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    g_string_append (str, "x-real-rdt/mcast;client_port=%%u1;mode=play,");
-  }
-  if (protocols & GST_RTSP_LOWER_TRANS_UDP) {
-    g_string_append (str, "x-real-rdt/udp;client_port=%%u1;mode=play,");
-    g_string_append (str, "x-pn-tng/udp;client_port=%%u1;mode=play,");
-  }
+  /*
+     if (protocols & GST_RTSP_LOWER_TRANS_UDP_MCAST) {
+     g_string_append (str, "x-real-rdt/mcast;client_port=%%u1;mode=play,");
+     }
+     if (protocols & GST_RTSP_LOWER_TRANS_UDP) {
+     g_string_append (str, "x-real-rdt/udp;client_port=%%u1;mode=play,");
+     g_string_append (str, "x-pn-tng/udp;client_port=%%u1;mode=play,");
+     }
+   */
   if (protocols & GST_RTSP_LOWER_TRANS_TCP) {
     g_string_append (str, "x-real-rdt/tcp;mode=play,");
     g_string_append (str, "x-pn-tng/tcp;mode=play,");

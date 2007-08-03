@@ -1,5 +1,11 @@
 2007-08-03  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/realmedia/rtspreal.c: (rtsp_ext_real_get_transports),
+	(rtsp_ext_real_parse_sdp), (rtsp_ext_real_stream_select):
+	Disable UDP transport for now.
+
+2007-08-03  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/realmedia/Makefile.am:
 	* gst/realmedia/rdtmanager.c: (find_session_by_id),
 	(create_session), (free_session), (gst_rdt_manager_base_init),
