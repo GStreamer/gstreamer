@@ -1,4 +1,50 @@
-This is GStreamer 0.10.13 "With or without you"
+This is GStreamer 0.10.14 "Breathing Vacuum"
+
+Changes since 0.10.13:
+
+      * State change handling improvements
+      * New improved GstController API
+      * Multi-queue fixes and enhancements
+      * Fewer dynamic library relocations
+      * Various other fixes and improvements
+      * Parallel installability with 0.8.x series
+      * Threadsafe design and API
+
+Bugs fixed since 0.10.13:
+
+      * 457322 : registry is read twice on startup
+      * 406632 : pkgconfigify the check for Check in configure.ac
+      * 423700 : [multiqueue] leaks memory when flushing
+      * 437457 : saving relocations for GstElementDetails
+      * 444648 : [API] add GstParamSpecFraction
+      * 444820 : build error with grammar.tab.c
+      * 448794 : state changes are racy with decodebin after rewrite for 0...
+      * 449197 : [capsfilter] Should set src pad caps on buffer
+      * 449226 : Incomplete ghostpads in xml session save
+      * 449493 : minor quoting fix in gst-feature.m4 macro
+      * 450711 : [GstController] Improve extensibility by providing a GstC...
+      * 451939 : [API] add GST_TAG_LICENSE_URI and GST_TAG_COPYRIGHT_URI
+      * 459501 : gst_registry_lookup_feature_locked is slow
+      * 462558 : Regression in async state change handling
+      * 462752 : make gst_element_class_set_details_simple args const
+      * 430682 : multiqueue doesn't output data on unlinked pads properly
+      * 462085 : registry feature hash can access invalid memory
+      * 357959 : buffer_alloc is not proxied through tee
+      * 374639 : GstTee doesn't handle pad list resyncs properly
+      * 449414 : [capsfilter] Copy of passed GstCaps taken instead of refe...
+      * 453732 : [PATCH] multiqueue returns wrong internally linked pads
+
+API added since 0.10.13:
+
+      * Add GstParamSpecFraction, so elements can have fraction
+        properties without lots of painful string parsing (#444648).
+      * Add fail_unless_equals_float() and assert_equals_float()
+      * Add gst_type_register_static_full
+      * Add gst_element_class_set_details_simple
+      * Refactor GstController into the core controller which can take
+        a GstControlSource for providing actual values for timestamps.
+      * add GST_TAG_LICENSE_URI and GST_TAG_COPYRIGHT_URI (#451939)
+      * gst_element_factory_has_interface()
 
 Changes since 0.10.12:
 

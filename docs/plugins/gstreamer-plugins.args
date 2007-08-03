@@ -24,7 +24,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Filter caps</NICK>
-<BLURB>Restrict the possible allowed capabilities (NULL means ANY).</BLURB>
+<BLURB>Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -261,7 +261,7 @@
 <ARG>
 <NAME>GstFakeSink::num-buffers</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= -1</RANGE>
+<RANGE>>= G_MAXULONG</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>num-buffers</NICK>
 <BLURB>Number of buffers to accept going EOS.</BLURB>
@@ -633,8 +633,8 @@
 <TYPE>GstCaps</TYPE>
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
-<NICK>Fähigkeiten</NICK>
-<BLURB>Erkannte Fähigkeiten im Datenstrom.</BLURB>
+<NICK>caps</NICK>
+<BLURB>detected capabilities in stream.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -643,7 +643,7 @@
 <TYPE>guint</TYPE>
 <RANGE>[1,100]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Maximum</NICK>
+<NICK>maximum</NICK>
 <BLURB>probability to stop typefinding (deprecated; non-functional).</BLURB>
 <DEFAULT>100</DEFAULT>
 </ARG>
@@ -653,7 +653,7 @@
 <TYPE>guint</TYPE>
 <RANGE>[1,100]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Minimum</NICK>
+<NICK>minimum</NICK>
 <BLURB>minimum probability required to accept caps.</BLURB>
 <DEFAULT>1</DEFAULT>
 </ARG>

@@ -100,7 +100,7 @@ RELEASE PROCEDURE:
     gstreamer-devel@lists.sourceforge.net gstreamer-announce@lists.sourceforge.net kde-multimedia@kde.org gnome-multimedia@gnome.org
   - Update freshmeat with new releases (get Uraeus to do it)
 
-Old release notes - superceded by the www/bin/new-release script.
+Old release notes - superseded by the www/bin/new-release script.
 ----------------------------------------------------------------
 
 TODO :

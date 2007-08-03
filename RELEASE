@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 0.10.13 "With or without you"
+Release notes for GStreamer 0.10.14 "Breathing Vacuum"
         
 
 
@@ -37,63 +37,51 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Latency handling infrastructure for live playback scenarios
-      * State change handling changes
-      * GstController property handling improved
-      * Various bug fixes and improvements
+      * State change handling improvements
+      * New improved GstController API
+      * Multi-queue fixes and enhancements
+      * Fewer dynamic library relocations
+      * Various other fixes and improvements
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
 
 Bugs fixed in this release
      
-      * 440682 : gst/gstsystemclock unit test occasionally fails
-      * 342564 : Configure options causing compilation to fail
-      * 378255 : Swedish translation updated
-      * 392804 : [API] add GST_CORE_ERROR_DISABLED
-      * 412648 : [filesink] reports wrong (byte) position after seeking
-      * 413123 : No XML dependency patch
-      * 415394 : [identity] post message for imperfect streams if check-pe...
-      * 417992 : Quickly playing/pausing messes up synchronization
-      * 420106 : [basetransform] race on shutdown: setcaps func called aft...
-      * 420206 : Collectpads causes a segv. when stopping after a pad remove
-      * 421480 : Make it possible to build without libxml2 with --disable-...
-      * 421543 : [GstPad] Doesn't check if pad accepts caps after caps change
-      * 422295 : GstController crashes with quadratic and cubic interpolat...
-      * 425400 : Multiqueue leaks memory when releasing sink pads
-      * 431150 : compilation fails with flex 2.5.4
-      * 431940 : [API] add gst_buffer_try_new_and_alloc()
-      * 432876 : current time level in queue
-      * 434926 : Multilib conflicts with gst-launch-0.10 man page
-      * 435880 : [GstBin] Property to allow bins to handle child async cha...
-      * 437563 : URIs with upper-case protocol don't play
-      * 440463 : gstbin unit test sometimes hangs waiting for ASYNC_DONE m...
-      * 441159 : Regression in state change handling
-      * 349180 : gst_parse_launch is not reentrant (or recursively callable)
-      * 414986 : Don't start the async thread for the system clock until n...
-      * 393099 : GstBuffer copy vfunc broken?
-      * 419851 : pad-added and pad-removed signals parameter type incorrect
-      * 420133 : gst_element_sync_state_with_parent should look at pending...
-      * 421177 : Possible deadlock if pad eventfunc is not specified
+      * 457322 : registry is read twice on startup
+      * 406632 : pkgconfigify the check for Check in configure.ac
+      * 423700 : [multiqueue] leaks memory when flushing
+      * 437457 : saving relocations for GstElementDetails
+      * 444648 : [API] add GstParamSpecFraction
+      * 444820 : build error with grammar.tab.c
+      * 448794 : state changes are racy with decodebin after rewrite for 0...
+      * 449197 : [capsfilter] Should set src pad caps on buffer
+      * 449226 : Incomplete ghostpads in xml session save
+      * 449493 : minor quoting fix in gst-feature.m4 macro
+      * 450711 : [GstController] Improve extensibility by providing a GstC...
+      * 451939 : [API] add GST_TAG_LICENSE_URI and GST_TAG_COPYRIGHT_URI
+      * 459501 : gst_registry_lookup_feature_locked is slow
+      * 462558 : Regression in async state change handling
+      * 462752 : make gst_element_class_set_details_simple args const
+      * 430682 : multiqueue doesn't output data on unlinked pads properly
+      * 462085 : registry feature hash can access invalid memory
+      * 357959 : buffer_alloc is not proxied through tee
+      * 374639 : GstTee doesn't handle pad list resyncs properly
+      * 449414 : [capsfilter] Copy of passed GstCaps taken instead of refe...
+      * 453732 : [PATCH] multiqueue returns wrong internally linked pads
 
 API changed in this release
      
 - API additions:
     
-* gst_element_change_state()
-* GST_STATE_TARGET
-* GST_BASE_TRANSFORM_LOCK/UNLOCK
-* GstClock::gst_clock_unadjust_unlocked()
-* fakesink::num-buffers property
-* GST_CORE_ERROR_DISABLED
-* basesrc::prepare_seek_segment vmethod
-* gst_buffer_try_new_and_alloc()
-* gst_uri_protocol_is_supported()
-* gst_base_src_query_latency()
-* GstQueue::pushing
-* gst_controller_suggest_next_sync()
-* gst_object_suggest_next_sync()
-* basesrc::unlock_stop
-* basesink::unlock_stop
+* Add GstParamSpecFraction, so elements can have fraction
+    properties without lots of painful string parsing (#444648).
+* Add fail_unless_equals_float() and assert_equals_float()
+* Add gst_type_register_static_full
+* Add gst_element_class_set_details_simple
+* Refactor GstController into the core controller which can take
+    a GstControlSource for providing actual values for timestamps.
+* add GST_TAG_LICENSE_URI and GST_TAG_COPYRIGHT_URI (#451939)
+* gst_element_factory_has_interface()
 
 Download
 
@@ -128,24 +116,18 @@ Let us know if you want to be added to this list.
   
 Contributors to this release
     
-      * Ville Syrjala
-      * David Schleef
+      * Andy Wingo
       * Edward Hervey
-      * Evan Nemerson
       * Jan Schmidt
-      * Jeroen Wouters
-      * Marc-Andre Lureau
       * Mark Nauwelaerts
-      * Michael Smith
-      * Mogens Jaeger
-      * Olivier Crete
-      * Peter Kjellerstedt
       * Sebastian Dröge
       * Sebastien Moutte
       * Stefan Kost
+      * Steve Fink
       * Thomas Vander Stichele
+      * Tim Angus
       * Tim-Philipp Müller
-      * Tommi Myöhänen
+      * Tommi Vainikainen
       * Wim Taymans
-      * Zaheer Abbas Merali
+      * Étienne Noreau-Hébert
  

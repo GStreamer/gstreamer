@@ -1,3 +1,10 @@
+=== release 0.10.14 ===
+
+2007-08-03  Jan Schmidt <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	  releasing 0.10.14, "Breathing Vacuum"
+
 2007-08-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstelement.c: (gst_element_class_set_details_simple):
