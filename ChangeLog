@@ -1,5 +1,23 @@
 2007-08-03  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/realmedia/Makefile.am:
+	* gst/realmedia/rdtmanager.c: (find_session_by_id),
+	(create_session), (free_session), (gst_rdt_manager_base_init),
+	(gst_rdt_manager_marshal_BOXED__UINT_UINT),
+	(gst_rdt_manager_class_init), (gst_rdt_manager_init),
+	(gst_rdt_manager_finalize), (gst_rdt_manager_query_src),
+	(gst_rdt_manager_chain_rtp), (gst_rdt_manager_chain_rtcp),
+	(gst_rdt_manager_set_property), (gst_rdt_manager_get_property),
+	(gst_rdt_manager_provide_clock), (gst_rdt_manager_change_state),
+	(create_recv_rtp), (create_recv_rtcp), (create_rtcp),
+	(gst_rdt_manager_request_new_pad), (gst_rdt_manager_release_pad),
+	(gst_rdt_manager_plugin_init):
+	* gst/realmedia/rdtmanager.h:
+	* gst/realmedia/rmdemux.c: (plugin_init):
+	Add simple rdt manager.
+
+2007-08-03  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/realmedia/rdtdepay.c:
 	Fix the encoding-name so that it matches what the rtsp extension sets.
 

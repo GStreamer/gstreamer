@@ -29,6 +29,7 @@
 
 #include "rmdemux.h"
 #include "rdtdepay.h"
+#include "rdtmanager.h"
 #include "rtspreal.h"
 #include "rmutils.h"
 #include "rademux.h"
@@ -2081,6 +2082,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rdt_depay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rdt_manager_plugin_init (plugin))
     return FALSE;
 
   if (!gst_rtsp_real_plugin_init (plugin))
