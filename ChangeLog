@@ -1,3 +1,8 @@
+2007-08-03  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/realmedia/rdtdepay.c:
+	Fix the encoding-name so that it matches what the rtsp extension sets.
+
 2007-08-02  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/realmedia/asmrules.c: (gst_asm_node_free),

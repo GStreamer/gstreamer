@@ -61,7 +61,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rdt, "
         "media = (string) \"application\", "
         "clock-rate = (int) [1, MAX ], "
-        "encoding-name = (string) \"x-real-rdt\""
+        "encoding-name = (string) \"X-REAL-RDT\""
         /* All optional parameters
          *
          * "config=" 
