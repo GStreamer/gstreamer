@@ -1,3 +1,13 @@
+2007-08-03  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtspsrc.c: (get_default_rate_for_pt),
+	(gst_rtspsrc_parse_rtpmap), (gst_rtspsrc_media_to_caps),
+	(gst_rtspsrc_stream_configure_tcp),
+	(gst_rtspsrc_stream_configure_udp_sink):
+	Fix default clock-rate for realmedia.
+	Fix parsing of transport.
+	Don't try to link NULL pads.
+
 2007-07-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* po/POTFILES.skip:

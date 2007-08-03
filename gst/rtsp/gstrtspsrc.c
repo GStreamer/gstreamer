@@ -646,7 +646,7 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
 /* FIXME, this should go somewhere else, ideally 
  */
 static guint
-get_default_rate_for_pt (gint pt)
+get_default_rate_for_pt (gint pt, gchar * name, gchar * params)
 {
   switch (pt) {
     case 0:
@@ -680,7 +680,11 @@ get_default_rate_for_pt (gint pt)
     case 34:
       return 90000;
     default:
+    {
+      if (g_str_has_prefix (name, "x-pn-real"))
+        return 1000;
       return -1;
+    }
   }
 }
 
@@ -701,8 +705,10 @@ G_STMT_START {                          \
 G_STMT_START {                          \
   gchar *t = p;                         \
   p = strstr (p, del);                  \
-  if (p == NULL)                        \
+  if (p == NULL) {                      \
     res = NULL;                         \
+    p = t;                              \
+  }                                     \
   else {                                \
     *p = '\0';                          \
     p++;                                \
@@ -736,6 +742,7 @@ gst_rtspsrc_parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
 
   PARSE_STRING (p, "/", *name);
   if (*name == NULL) {
+    GST_DEBUG ("no rate, name %s", p);
     /* no rate, assume -1 then */
     *name = p;
     *rate = -1;
@@ -808,7 +815,7 @@ gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media)
   /* check if we have a rate, if not, we need to look up the rate from the
    * default rates based on the payload types. */
   if (rate == -1) {
-    rate = get_default_rate_for_pt (pt);
+    rate = get_default_rate_for_pt (pt, name, params);
     /* we fail if we cannot find one */
     if (rate == -1)
       goto no_rate;
@@ -1634,7 +1641,8 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     g_free (name);
 
     /* and link */
-    gst_pad_link (pad, stream->rtcppad);
+    if (pad)
+      gst_pad_link (pad, stream->rtcppad);
   }
   return TRUE;
 }
@@ -1806,7 +1814,8 @@ gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
   g_free (name);
 
   /* and link */
-  gst_pad_link (pad, stream->rtcppad);
+  if (pad)
+    gst_pad_link (pad, stream->rtcppad);
 
   return TRUE;
 
