@@ -1,3 +1,8 @@
+2007-08-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/realmedia/asmrules.c:
+	  Include stdlib.h.
+
 2007-08-03  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/realmedia/rdtmanager.c:
