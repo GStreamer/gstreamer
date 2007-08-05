@@ -6,6 +6,7 @@ gst/gstelement.c
 gst/gsterror.c
 gst/gstpipeline.c
 gst/gsttaglist.c
+gst/gsttrace.c
 gst/gstutils.c
 gst/parse/grammar.y
 libs/gst/base/gstbasesrc.c
