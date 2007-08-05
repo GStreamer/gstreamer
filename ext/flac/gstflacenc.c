@@ -21,6 +21,9 @@
  *  - we assume timestamps start from 0 and that we get a perfect stream; we
  *    don't handle non-zero starts and mid-stream discontinuities, esp. not if
  *    we're muxing into ogg
+ *  - need to support wider caps, flac can do 1-8 channels and 4-32 bit pcm
+ *    http://flac.sourceforge.net/faq.html#general__channels
+ *    it also support sampling rate from 1Hz - 655350Hz
  */
 
 #ifdef HAVE_CONFIG_H
@@ -47,7 +50,7 @@ GST_ELEMENT_DETAILS ("FLAC audio encoder",
   "signed = (boolean) TRUE, "       \
   "width = (int) 16, "              \
   "depth = (int) 16, "              \
-  "rate = (int) [ 8000, 48000 ], " \
+  "rate = (int) [ 8000, 96000 ], " \
   "channels = (int) [ 1, 2 ]"
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",

@@ -1,5 +1,10 @@
 2007-08-05  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/flac/gstflacenc.c:
+	  Widen caps to match decoder a bit and add more FIXMEs.
+
+2007-08-05  Stefan Kost  <ensonic@users.sf.net>
+
 	patch by: Mark Nauwelaerts <manauw@skynet.be>
 
 	* gst/avi/gstavimux.c:
