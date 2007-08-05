@@ -1,3 +1,10 @@
+2007-08-05  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Mark Nauwelaerts <manauw@skynet.be>
+
+	* gst/avi/gstavimux.c:
+	  Fix ODML index tag numbering. Fixes #463624.
+
 2007-08-03  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (get_default_rate_for_pt),
