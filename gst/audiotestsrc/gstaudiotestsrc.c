@@ -307,7 +307,9 @@ gst_audio_test_src_query (GstBaseSrc * basesrc, GstQuery * query)
           switch (dest_fmt) {
             case GST_FORMAT_TIME:
               /* samples to time */
-              dest_val = src_val / src->samplerate;
+              dest_val =
+                  gst_util_uint64_scale_int (src_val, GST_SECOND,
+                  src->samplerate);
               break;
             default:
               goto error;
@@ -317,7 +319,9 @@ gst_audio_test_src_query (GstBaseSrc * basesrc, GstQuery * query)
           switch (dest_fmt) {
             case GST_FORMAT_DEFAULT:
               /* time to samples */
-              dest_val = src_val * src->samplerate;
+              dest_val =
+                  gst_util_uint64_scale_int (src_val, src->samplerate,
+                  GST_SECOND);
               break;
             default:
               goto error;

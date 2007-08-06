@@ -1,3 +1,8 @@
+2007-08-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_query):
+	Properly respond to conversion queries. Fixes #464079.
+
 2007-08-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_init),
