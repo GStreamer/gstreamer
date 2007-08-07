@@ -83,6 +83,10 @@ struct _GstRMDemuxStream
   guint subpackets_needed;      /* subpackets needed for descrambling    */
   GPtrArray *subpackets;        /* array containing subpacket GstBuffers */
 
+  /* Variables needed for fixing timestamps. */
+  GstClockTime next_ts, last_ts;
+  guint16 next_seq, last_seq;
+
   gint frag_seqnum;
   gint frag_subseq;
   guint frag_length;
@@ -1973,35 +1977,38 @@ gst_rmdemux_handle_scrambled_packet (GstRMDemux * rmdemux,
   return ret;
 }
 
-#if 0
 static GstClockTime
-gst_rmdemux_fix_timestamp (GstRMDemux * rmdemux, GstClockTime timestamp)
+gst_rmdemux_fix_timestamp (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
+    guint8 * data, GstClockTime timestamp)
 {
-  GstFlowReturn ret;
-  const guint8 *b;
   guint8 frame_type;
   guint16 seq;
   GstClockTime ts = timestamp;
 
-  GST_LOG_OBJECT (rmdemux, "timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
+  if (timestamp == GST_CLOCK_TIME_NONE)
+    goto done;
+
+  /* only adjust when we have a stream with B frames */
+  if (stream->format < 0x20200002)
+    goto done;
 
   /* Fix timestamp. */
-  b = gst_adapter_peek (dec->adapter, 4);
-  switch (dec->version) {
-    case GST_REAL_VIDEO_DEC_VERSION_2:
+  switch (stream->fourcc) {
+    case GST_RM_VDO_RV10:
+      goto done;
+    case GST_RM_VDO_RV20:
     {
-
       /*
        * Bit  1- 2: frame type
        * Bit  3- 9: ?
        * Bit 10-22: sequence number
        * Bit 23-32: ?
        */
-      frame_type = (b[0] >> 6) & 0x03;
-      seq = ((b[1] & 0x7f) << 6) + ((b[2] & 0xfc) >> 2);
+      frame_type = (data[0] >> 6) & 0x03;
+      seq = ((data[1] & 0x7f) << 6) + ((data[2] & 0xfc) >> 2);
       break;
     }
-    case GST_REAL_VIDEO_DEC_VERSION_3:
+    case GST_RM_VDO_RV30:
     {
       /*
        * Bit  1- 2: ?
@@ -2011,11 +2018,11 @@ gst_rmdemux_fix_timestamp (GstRMDemux * rmdemux, GstClockTime timestamp)
        * Bit 13-25: sequence number
        * Bit 26-32: ?
        */
-      frame_type = (b[0] >> 3) & 0x03;
-      seq = ((b[1] & 0x0f) << 9) + (b[2] << 1) + ((b[3] & 0x80) >> 7);
+      frame_type = (data[0] >> 3) & 0x03;
+      seq = ((data[1] & 0x0f) << 9) + (data[2] << 1) + ((data[3] & 0x80) >> 7);
       break;
     }
-    case GST_REAL_VIDEO_DEC_VERSION_4:
+    case GST_RM_VDO_RV40:
     {
       /*
        * Bit     1: skip packet if 1
@@ -2024,70 +2031,78 @@ gst_rmdemux_fix_timestamp (GstRMDemux * rmdemux, GstClockTime timestamp)
        * Bit 14-26: sequence number
        * Bit 27-32: ?
        */
-      frame_type = (b[0] >> 5) & 0x03;
-      seq = ((b[1] & 0x07) << 10) + (b[2] << 2) + ((b[3] & 0xc0) >> 6);
+      frame_type = (data[0] >> 5) & 0x03;
+      seq = ((data[1] & 0x07) << 10) + (data[2] << 2) + ((data[3] & 0xc0) >> 6);
       break;
     }
     default:
       goto unknown_version;
   }
 
-  GST_LOG_OBJECT (dec, "frame_type:%d", frame_type);
-
   switch (frame_type) {
     case 0:
     case 1:
     {
+      GST_LOG_OBJECT (rmdemux, "I frame %d", frame_type);
       /* I frame */
-      timestamp = dec->next_ts;
-      dec->last_ts = dec->next_ts;
-      dec->next_ts = ts;
-      dec->last_seq = dec->next_seq;
-      dec->next_seq = seq;
-
+      timestamp = stream->next_ts;
+      stream->last_ts = stream->next_ts;
+      stream->next_ts = ts;
+      stream->last_seq = stream->next_seq;
+      stream->next_seq = seq;
       break;
     }
     case 2:
     {
+      GST_LOG_OBJECT (rmdemux, "P frame");
       /* P frame */
-      timestamp = dec->last_ts = dec->next_ts;
-      if (seq < dec->next_seq)
-        dec->next_ts += (seq + 0x2000 - dec->next_seq) * GST_MSECOND;
+      timestamp = stream->last_ts = stream->next_ts;
+      if (seq < stream->next_seq)
+        stream->next_ts += (seq + 0x2000 - stream->next_seq) * GST_MSECOND;
       else
-        dec->next_ts += (seq - dec->next_seq) * GST_MSECOND;
-      dec->last_seq = dec->next_seq;
-      dec->next_seq = seq;
+        stream->next_ts += (seq - stream->next_seq) * GST_MSECOND;
+      stream->last_seq = stream->next_seq;
+      stream->next_seq = seq;
       break;
     }
     case 3:
     {
+      GST_LOG_OBJECT (rmdemux, "B frame");
       /* B frame */
-      if (seq < dec->last_seq) {
-        timestamp = (seq + 0x2000 - dec->last_seq) * GST_MSECOND + dec->last_ts;
+      if (seq < stream->last_seq) {
+        timestamp =
+            (seq + 0x2000 - stream->last_seq) * GST_MSECOND + stream->last_ts;
       } else {
-        timestamp = (seq - dec->last_seq) * GST_MSECOND + dec->last_ts;
+        timestamp = (seq - stream->last_seq) * GST_MSECOND + stream->last_ts;
       }
-
       break;
     }
     default:
       goto unknown_frame_type;
   }
+
+done:
+  GST_LOG_OBJECT (rmdemux,
+      "timestamp %" GST_TIME_FORMAT " -> %" GST_TIME_FORMAT, GST_TIME_ARGS (ts),
+      GST_TIME_ARGS (timestamp));
+
+  return timestamp;
+
   /* Errors */
 unknown_version:
   {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        ("Unknown version: %i.", dec->version), (NULL));
+    GST_ELEMENT_ERROR (rmdemux, STREAM, DECODE,
+        ("Unknown version: %i.", stream->version), (NULL));
     return GST_FLOW_ERROR;
   }
 
 unknown_frame_type:
   {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Unknown frame type."), (NULL));
+    GST_ELEMENT_ERROR (rmdemux, STREAM, DECODE, ("Unknown frame type %d.",
+            frame_type), (NULL));
     return GST_FLOW_ERROR;
   }
 }
-#endif
 
 #define PARSE_NUMBER(data, size, number, label) \
 G_STMT_START {                                  \
@@ -2246,9 +2261,12 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
       gst_adapter_flush (stream->adapter, stream->frag_length);
 
       gst_buffer_set_caps (out, GST_PAD_CAPS (stream->pad));
-      GST_BUFFER_TIMESTAMP (out) = timestamp;
+      GST_BUFFER_TIMESTAMP (out) =
+          gst_rmdemux_fix_timestamp (rmdemux, stream, outdata, timestamp);
 
       ret = gst_pad_push (stream->pad, out);
+
+      timestamp = GST_CLOCK_TIME_NONE;
     }
     data += fragment_size;
     size -= fragment_size;

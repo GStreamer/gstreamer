@@ -1,5 +1,11 @@
 2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_fix_timestamp),
+	(gst_rmdemux_parse_video_packet):
+	Activate timestamp fixing code.
+
+2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/realmedia/rmdemux.c: (gst_rmdemux_reset),
 	(gst_rmdemux_chain), (gst_rmdemux_parse_mdpr),
 	(gst_rmdemux_fix_timestamp), (gst_rmdemux_parse_video_packet),
