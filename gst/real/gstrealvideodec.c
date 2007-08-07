@@ -202,10 +202,6 @@ could_not_push:
 static gboolean
 gst_real_video_dec_activate_push (GstPad * pad, gboolean active)
 {
-  GstRealVideoDec *dec = GST_REAL_VIDEO_DEC (GST_PAD_PARENT (pad));
-
-  gst_adapter_clear (dec->adapter);
-
   return TRUE;
 }
 
@@ -468,8 +464,6 @@ gst_real_video_dec_init (GstRealVideoDec * dec, GstRealVideoDecClass * klass)
   dec->src = gst_pad_new_from_static_template (&src_t, "src");
   gst_pad_use_fixed_caps (dec->src);
   gst_element_add_pad (GST_ELEMENT (dec), dec->src);
-
-  dec->adapter = gst_adapter_new ();
 }
 
 static void
@@ -486,11 +480,6 @@ static void
 gst_real_video_dec_finalize (GObject * object)
 {
   GstRealVideoDec *dec = GST_REAL_VIDEO_DEC (object);
-
-  if (dec->adapter) {
-    g_object_unref (G_OBJECT (dec->adapter));
-    dec->adapter = NULL;
-  }
 
   close_library (dec->hooks);
   memset (&dec->hooks, 0, sizeof (dec->hooks));

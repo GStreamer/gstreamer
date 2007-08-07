@@ -1,5 +1,13 @@
 2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/real/gstrealvideodec.c: (gst_real_video_dec_chain),
+	(gst_real_video_dec_activate_push), (open_library),
+	(gst_real_video_dec_init), (gst_real_video_dec_finalize):
+	* gst/real/gstrealvideodec.h:
+	Remove some old unused vars.
+
+2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_setcaps):
 	Small cleanups.
 

@@ -65,19 +65,8 @@ struct _GstRealVideoDec
   gint format, subformat;
   gint framerate_num, framerate_denom;
 
-  /* Variables needed for fixing timestamps. */
-  GstClockTime next_ts, last_ts;
-  guint16 next_seq, last_seq;
-
   /* Hooks */
   GstRealVideoDecHooks hooks;
-
-  /* State */
-  GstAdapter *adapter;
-  guint8 seqnum, subseq;
-  guint16 length;
-  guint32 fragment_count;
-  guint32 fragments[256];
 
   /* Properties */
   gchar *real_codecs_path, *rv20_names, *rv30_names, *rv40_names;
