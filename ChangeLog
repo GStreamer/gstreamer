@@ -1,5 +1,15 @@
 2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: Damien Lespiau <damien dot lespiau at gmail dot com>
+
+	* configure.ac:
+	* gst-libs/gst/rtsp/Makefile.am:
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_connect):
+	Fix compilation on windows. Fixes #464320.
+
+2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
+
 	Patch by: Josep Torre Valles <josep@fluendo.com>
 
 	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),

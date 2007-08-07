@@ -212,9 +212,7 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
   gint fd;
   struct sockaddr_in sa_in;
   struct hostent *hostinfo;
-  char **addrs;
   const gchar *ip;
-  gchar ipbuf[INET_ADDRSTRLEN];
   struct in_addr addr;
   gint ret;
   guint16 port;
@@ -226,6 +224,10 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 
 #ifdef G_OS_WIN32
   unsigned long flags;
+  struct in_addr *addrp;
+#else
+  char **addrs;
+  gchar ipbuf[INET_ADDRSTRLEN];
 #endif /* G_OS_WIN32 */
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
@@ -244,10 +246,15 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
 
     if (hostinfo->h_addrtype != AF_INET)
       goto not_ip;              /* host not an IP host */
-
+#ifdef G_OS_WIN32
+    addrp = (struct in_addr *) hostinfo->h_addr_list[0];
+    /* this is not threadsafe */
+    ip = inet_ntoa (*addrp);
+#else
     addrs = hostinfo->h_addr_list;
     ip = inet_ntop (AF_INET, (struct in_addr *) addrs[0], ipbuf,
         sizeof (ipbuf));
+#endif /* G_OS_WIN32 */
   }
 
   /* get the port from the url */
