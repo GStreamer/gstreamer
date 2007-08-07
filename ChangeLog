@@ -1,3 +1,9 @@
+2007-08-07  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* docs/libs/gstreamer-libs.types:
+	Don't register the enum type gst_lfo_waveform_get_type() in the
+	.types file - only GObject derived types belong.
+
 2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: <arenevier at fdn dot fr>
