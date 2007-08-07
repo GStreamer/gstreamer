@@ -1523,12 +1523,14 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
         av_mallocz (GST_ROUND_UP_16 (size + FF_INPUT_BUFFER_PADDING_SIZE));
     memcpy (context->extradata, GST_BUFFER_DATA (buf), size);
     context->extradata_size = size;
+    GST_DEBUG ("have codec data of size %d", size);
   } else if (context->extradata == NULL) {
     /* no extradata, alloc dummy with 0 sized, some codecs insist on reading
      * extradata anyway which makes then segfault. */
     context->extradata =
         av_mallocz (GST_ROUND_UP_16 (FF_INPUT_BUFFER_PADDING_SIZE));
     context->extradata_size = 0;
+    GST_DEBUG ("no codec data");
   }
 
   switch (codec_id) {
@@ -1600,11 +1602,15 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
     case CODEC_ID_RV40:
     {
       guint32 fourcc;
+      gint format;
 
       if (gst_structure_get_fourcc (str, "rmsubid", &fourcc))
         context->sub_id = fourcc;
-    }
+      if (gst_structure_get_int (str, "format", &format))
+        context->sub_id = format;
+
       break;
+    }
     case CODEC_ID_COOK:
     case CODEC_ID_RA_288:
     case CODEC_ID_RA_144:

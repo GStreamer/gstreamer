@@ -1,3 +1,16 @@
+2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
+	Improve debugging of codec data.
+	realvideo caps are underspecified, use fields of alternative variant
+	before we settle this.
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(gst_ffmpegdec_video_frame):
+	Add more debugging of used parsers.
+	Setup the realvideo slices correctly before calling the decoder, fixed
+	realvideo in matroska.
+
 2007-08-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_cfg_install_property),

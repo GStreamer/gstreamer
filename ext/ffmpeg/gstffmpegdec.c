@@ -93,6 +93,8 @@ struct _GstFFMpegDec
   gboolean outoforder;
   GstClockTime tstamp1, tstamp2;
   GstClockTime dur1, dur2;
+
+  gboolean is_realvideo;
 };
 
 typedef struct _GstFFMpegDecClass GstFFMpegDecClass;
@@ -485,6 +487,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
     goto could_not_open;
 
   ffmpegdec->opened = TRUE;
+  ffmpegdec->is_realvideo = FALSE;
 
   GST_LOG_OBJECT (ffmpegdec, "Opened ffmpeg codec %s, id %d",
       oclass->in_plugin->name, oclass->in_plugin->id);
@@ -509,9 +512,16 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
         ffmpegdec->pctx = NULL;
       }
       break;
+    case CODEC_ID_RV10:
+    case CODEC_ID_RV20:
+      ffmpegdec->is_realvideo = TRUE;
+      break;
     default:
-      GST_LOG_OBJECT (ffmpegdec, "Using parser");
       ffmpegdec->pctx = av_parser_init (oclass->in_plugin->id);
+      if (ffmpegdec->pctx)
+        GST_LOG_OBJECT (ffmpegdec, "Using parser %p", ffmpegdec->pctx);
+      else
+        GST_LOG_OBJECT (ffmpegdec, "No parser for codec");
       break;
   }
 
@@ -1314,6 +1324,24 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
 
   /* in case we skip frames */
   ffmpegdec->picture->pict_type = -1;
+
+  if (ffmpegdec->is_realvideo && data != NULL) {
+    gint slice_count;
+    gint i;
+
+    /* setup the slice table for realvideo */
+    if (ffmpegdec->context->slice_offset == NULL)
+      ffmpegdec->context->slice_offset = g_malloc (sizeof (guint32) * 1000);
+
+    slice_count = (*data++) + 1;
+    ffmpegdec->context->slice_count = slice_count;
+
+    for (i = 0; i < slice_count; i++) {
+      data += 4;
+      ffmpegdec->context->slice_offset[i] = GST_READ_UINT32_LE (data);
+      data += 4;
+    }
+  }
 
   /* now decode the frame */
   len = avcodec_decode_video (ffmpegdec->context,
