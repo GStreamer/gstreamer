@@ -354,36 +354,48 @@ codec_search_done:
   return TRUE;
 
 missing_keys:
-  GST_DEBUG_OBJECT (dec, "Could not find all necessary keys in structure.");
-  return FALSE;
+  {
+    GST_DEBUG_OBJECT (dec, "Could not find all necessary keys in structure.");
+    return FALSE;
+  }
 unknown_version:
-  GST_DEBUG_OBJECT (dec, "Cannot handle version %i.", version);
-  return FALSE;
+  {
+    GST_DEBUG_OBJECT (dec, "Cannot handle version %i.", version);
+    return FALSE;
+  }
 could_not_open:
-  g_strfreev (split_path);
-  GST_DEBUG_OBJECT (dec, "Could not find library '%s' in '%s'", names, path);
-  return FALSE;
+  {
+    g_strfreev (split_path);
+    GST_DEBUG_OBJECT (dec, "Could not find library '%s' in '%s'", names, path);
+    return FALSE;
+  }
 could_not_load:
-  g_module_close (module);
-  g_strfreev (split_path);
-  GST_DEBUG_OBJECT (dec, "Could not load all symbols: %s", g_module_error ());
-  return FALSE;
+  {
+    g_module_close (module);
+    g_strfreev (split_path);
+    GST_DEBUG_OBJECT (dec, "Could not load all symbols: %s", g_module_error ());
+    return FALSE;
+  }
 could_not_initialize:
-  if (context) {
-    funcs.RACloseCodec (context);
-    funcs.RAFreeDecoder (context);
+  {
+    if (context) {
+      funcs.RACloseCodec (context);
+      funcs.RAFreeDecoder (context);
+    }
+    g_module_close (module);
+    GST_WARNING_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
+    return FALSE;
   }
-  g_module_close (module);
-  GST_WARNING_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
-  return FALSE;
 could_not_set_caps:
-  if (context) {
-    funcs.RACloseCodec (context);
-    funcs.RAFreeDecoder (context);
+  {
+    if (context) {
+      funcs.RACloseCodec (context);
+      funcs.RAFreeDecoder (context);
+    }
+    g_module_close (module);
+    GST_DEBUG_OBJECT (dec, "Could not convince peer to accept caps.");
+    return FALSE;
   }
-  g_module_close (module);
-  GST_DEBUG_OBJECT (dec, "Could not convince peer to accept caps.");
-  return FALSE;
 }
 
 static void

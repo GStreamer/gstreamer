@@ -1,3 +1,13 @@
+2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_setcaps):
+	Small cleanups.
+
+	* gst/real/gstrealvideodec.c: (gst_real_video_dec_chain),
+	(open_library):
+	Remove fragment and timestamp correction code from the decoder to make
+	the caps and buffer contents compatible with matroska/ffdec_rvx0/...
+
 2007-07-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* po/POTFILES.skip:

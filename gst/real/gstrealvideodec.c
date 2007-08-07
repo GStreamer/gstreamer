@@ -87,396 +87,115 @@ typedef struct
 } RVOutData;
 
 static GstFlowReturn
-gst_real_video_dec_alloc_buffer (GstRealVideoDec * dec, GstClockTime timestamp,
-    GstBuffer ** buf)
-{
-  GstFlowReturn ret;
-  const guint8 *b;
-  guint8 frame_type;
-  guint16 seq;
-  GstClockTime ts = timestamp;
-
-  GST_LOG_OBJECT (dec, "timestamp %" GST_TIME_FORMAT, GST_TIME_ARGS (ts));
-
-  /* Fix timestamp. */
-  b = gst_adapter_peek (dec->adapter, 4);
-  switch (dec->version) {
-    case GST_REAL_VIDEO_DEC_VERSION_2:
-    {
-
-      /*
-       * Bit  1- 2: frame type
-       * Bit  3- 9: ?
-       * Bit 10-22: sequence number
-       * Bit 23-32: ?
-       */
-      frame_type = (b[0] >> 6) & 0x03;
-      seq = ((b[1] & 0x7f) << 6) + ((b[2] & 0xfc) >> 2);
-      break;
-    }
-    case GST_REAL_VIDEO_DEC_VERSION_3:
-    {
-      /*
-       * Bit  1- 2: ?
-       * Bit     3: skip packet if 1
-       * Bit  4- 5: frame type
-       * Bit  6-12: ?
-       * Bit 13-25: sequence number
-       * Bit 26-32: ?
-       */
-      frame_type = (b[0] >> 3) & 0x03;
-      seq = ((b[1] & 0x0f) << 9) + (b[2] << 1) + ((b[3] & 0x80) >> 7);
-      break;
-    }
-    case GST_REAL_VIDEO_DEC_VERSION_4:
-    {
-      /*
-       * Bit     1: skip packet if 1
-       * Bit  2- 3: frame type
-       * Bit  4-13: ?
-       * Bit 14-26: sequence number
-       * Bit 27-32: ?
-       */
-      frame_type = (b[0] >> 5) & 0x03;
-      seq = ((b[1] & 0x07) << 10) + (b[2] << 2) + ((b[3] & 0xc0) >> 6);
-      break;
-    }
-    default:
-      goto unknown_version;
-  }
-
-  GST_LOG_OBJECT (dec, "frame_type:%d", frame_type);
-
-  switch (frame_type) {
-    case 0:
-    case 1:
-    {
-      /* I frame */
-      timestamp = dec->next_ts;
-      dec->last_ts = dec->next_ts;
-      dec->next_ts = ts;
-      dec->last_seq = dec->next_seq;
-      dec->next_seq = seq;
-
-      break;
-    }
-    case 2:
-    {
-      /* P frame */
-      timestamp = dec->last_ts = dec->next_ts;
-      if (seq < dec->next_seq)
-        dec->next_ts += (seq + 0x2000 - dec->next_seq) * GST_MSECOND;
-      else
-        dec->next_ts += (seq - dec->next_seq) * GST_MSECOND;
-      dec->last_seq = dec->next_seq;
-      dec->next_seq = seq;
-      break;
-    }
-    case 3:
-    {
-      /* B frame */
-      if (seq < dec->last_seq) {
-        timestamp = (seq + 0x2000 - dec->last_seq) * GST_MSECOND + dec->last_ts;
-      } else {
-        timestamp = (seq - dec->last_seq) * GST_MSECOND + dec->last_ts;
-      }
-
-      break;
-    }
-    default:
-      goto unknown_frame_type;
-  }
-
-  ret = gst_pad_alloc_buffer (dec->src, GST_BUFFER_OFFSET_NONE,
-      dec->width * dec->height * 3 / 2, GST_PAD_CAPS (dec->src), buf);
-
-  if (ret == GST_FLOW_OK)
-    GST_BUFFER_TIMESTAMP (*buf) = timestamp;
-
-  return ret;
-
-  /* Errors */
-unknown_version:
-  {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        ("Unknown version: %i.", dec->version), (NULL));
-    return GST_FLOW_ERROR;
-  }
-
-unknown_frame_type:
-  {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Unknown frame type."), (NULL));
-    return GST_FLOW_ERROR;
-  }
-}
-
-static GstFlowReturn
-gst_real_video_dec_decode (GstRealVideoDec * dec, GstBuffer * in, guint offset)
-{
-  guint32 result;
-  GstBuffer *out = NULL;
-  GstFlowReturn ret;
-  guint8 *data, hdr_subseq, hdr_seqnum;
-  guint32 hdr_offset, hdr_length;
-  guint16 n;
-  gboolean bres;
-  guint8 *buf = GST_BUFFER_DATA (in) + offset;
-  guint len = GST_BUFFER_SIZE (in) - offset;
-  GstClockTime timestamp = GST_BUFFER_TIMESTAMP (in);
-
-  GST_LOG_OBJECT (dec,
-      "Got buffer %p with timestamp %" GST_TIME_FORMAT " offset %d", in,
-      GST_TIME_ARGS (timestamp), offset);
-
-  /* Subsequence */
-  if (len < 1)
-    goto not_enough_data;
-  if (*buf != 0x40 && *buf != 0x41 && *buf != 0x42 &&
-      *buf != 0x43 && *buf != 0x44 && *buf != 0x45) {
-    hdr_subseq = *buf & 0x7f;
-    buf++;
-    len--;
-    if (hdr_subseq == 64)
-      hdr_subseq = 1;
-  } else {
-    hdr_subseq = 1;
-  }
-
-  /* Length */
-  if (len < 2)
-    goto not_enough_data;
-  hdr_length = GST_READ_UINT16_BE (buf);
-  if (!(hdr_length & 0xc000)) {
-    if (len < 4)
-      goto not_enough_data;
-    hdr_length = GST_READ_UINT32_BE (buf);
-    buf += 4;
-    len -= 4;
-  } else {
-    hdr_length &= 0x3fff;
-    buf += 2;
-    len -= 2;
-  }
-
-  /* Offset */
-  if (len < 2)
-    goto not_enough_data;
-  hdr_offset = GST_READ_UINT16_BE (buf);
-  if (!(hdr_offset & 0xc000)) {
-    if (len < 4)
-      goto not_enough_data;
-    hdr_offset = GST_READ_UINT32_BE (buf);
-    buf += 4;
-    len -= 4;
-  } else {
-    hdr_offset &= 0x3fff;
-    buf += 2;
-    len -= 2;
-  }
-
-  /* Sequence number */
-  if (len < 1)
-    goto not_enough_data;
-  hdr_seqnum = *buf;
-  buf++;
-  len--;
-  if (len < 1)
-    goto not_enough_data;
-
-  /* Verify the sequence numbers. */
-  if (hdr_subseq == 1) {
-    n = gst_adapter_available_fast (dec->adapter);
-    if (n > 0) {
-      GST_DEBUG_OBJECT (dec, "Dropping data for sequence %i "
-          "because we are already receiving data for sequence %i.",
-          dec->seqnum, hdr_seqnum);
-      gst_adapter_clear (dec->adapter);
-    }
-    dec->seqnum = hdr_seqnum;
-    dec->length = hdr_length;
-    dec->fragment_count = 1;
-  } else {
-    if (dec->seqnum != hdr_seqnum) {
-      GST_DEBUG_OBJECT (dec, "Expected sequence %i, got sequence %i "
-          "(subseq=%i). Dropping packet.", dec->seqnum, hdr_seqnum, hdr_subseq);
-      return GST_FLOW_OK;
-    } else if (dec->subseq + 1 != hdr_subseq) {
-      GST_DEBUG_OBJECT (dec, "Expected subsequence %i, got subseqence %i. "
-          "Dropping packet.", dec->subseq + 1, hdr_subseq);
-      return GST_FLOW_OK;
-    }
-    dec->fragment_count++;
-  }
-  dec->subseq = hdr_subseq;
-
-  /* Remember the offset */
-  if (sizeof (dec->fragments) < 2 * (dec->fragment_count - 1) + 1)
-    goto too_many_fragments;
-  dec->fragments[2 * (dec->fragment_count - 1)] = 1;
-  dec->fragments[2 * (dec->fragment_count - 1) + 1] =
-      gst_adapter_available (dec->adapter);
-
-  /* Some buffers need to be skipped. */
-  if (((dec->version == GST_REAL_VIDEO_DEC_VERSION_3) && (*buf & 0x20)) ||
-      ((dec->version == GST_REAL_VIDEO_DEC_VERSION_4) && (*buf & 0x80))) {
-    dec->fragment_count--;
-    dec->length -= len;
-  } else {
-    gst_adapter_push (dec->adapter,
-        gst_buffer_create_sub (in, GST_BUFFER_SIZE (in) - len, len));
-  }
-
-  /* All bytes received? */
-  n = gst_adapter_available (dec->adapter);
-  GST_LOG_OBJECT (dec, "We know have %d bytes, and we need %d", n, dec->length);
-  if (dec->length <= n) {
-    RVInData tin;
-    RVOutData tout;
-
-    if ((ret =
-            gst_real_video_dec_alloc_buffer (dec, timestamp,
-                &out)) != GST_FLOW_OK)
-      return ret;
-
-    /* Decode */
-    tin.datalen = dec->length;
-    tin.interpolate = 0;
-    tin.nfragments = dec->fragment_count - 1;
-    tin.fragments = dec->fragments;
-    tin.flags = 0;
-    tin.timestamp = GST_BUFFER_TIMESTAMP (out);
-    data = gst_adapter_take (dec->adapter, dec->length);
-
-    result = dec->hooks.transform (
-        (gchar *) data,
-        (gchar *) GST_BUFFER_DATA (out), &tin, &tout, dec->hooks.context);
-
-    g_free (data);
-    if (result)
-      goto could_not_transform;
-
-    /* Check for new dimensions */
-    if (tout.frames && ((dec->width != tout.width)
-            || (dec->height != tout.height))) {
-      GstCaps *caps = gst_caps_copy (GST_PAD_CAPS (dec->src));
-      GstStructure *s = gst_caps_get_structure (caps, 0);
-
-      GST_DEBUG_OBJECT (dec, "New dimensions: %"
-          G_GUINT32_FORMAT " x %" G_GUINT32_FORMAT, tout.width, tout.height);
-      gst_structure_set (s, "width", G_TYPE_LONG, tout.width,
-          "height", G_TYPE_LONG, tout.height, NULL);
-      bres = gst_pad_set_caps (dec->src, caps);
-      gst_caps_unref (caps);
-      if (!bres)
-        goto new_dimensions_failed;
-      dec->width = tout.width;
-      dec->height = tout.height;
-    }
-
-    GST_DEBUG_OBJECT (dec,
-        "Pushing out buffer with timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out)));
-
-    if ((ret = gst_pad_push (dec->src, out)) != GST_FLOW_OK)
-      goto could_not_push;
-
-    n = gst_adapter_available (dec->adapter);
-    if (n > 0) {
-      GST_LOG_OBJECT (dec, "Data left in the adapter: %d", n);
-      in = gst_adapter_take_buffer (dec->adapter, n);
-      ret = gst_real_video_dec_decode (dec, in, 0);
-      gst_buffer_unref (in);
-      if (ret != GST_FLOW_OK)
-        return ret;
-    }
-  }
-
-  return GST_FLOW_OK;
-
-  /* Errors */
-not_enough_data:
-  {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Not enough data."), (NULL));
-    return GST_FLOW_ERROR;
-  }
-
-too_many_fragments:
-  {
-    gst_buffer_unref (in);
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        ("Got more fragments (%u) than can be handled (%u)",
-            dec->fragment_count, (guint) G_N_ELEMENTS (dec->fragments)),
-        (NULL));
-    return GST_FLOW_ERROR;
-  }
-
-could_not_transform:
-  {
-    gst_buffer_unref (out);
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        ("Could not decode buffer: %" G_GUINT32_FORMAT, result), (NULL));
-    return GST_FLOW_ERROR;
-  }
-
-new_dimensions_failed:
-  {
-    gst_buffer_unref (out);
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        ("Could not set new dimensions."), (NULL));
-    return GST_FLOW_ERROR;
-  }
-
-could_not_push:
-  {
-    GST_DEBUG_OBJECT (dec, "Could not push buffer: %s",
-        gst_flow_get_name (ret));
-    return ret;
-  }
-}
-
-static GstFlowReturn
 gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
 {
-  GstRealVideoDec *dec = GST_REAL_VIDEO_DEC (GST_PAD_PARENT (pad));
-  guint8 flags, *buf = GST_BUFFER_DATA (in);
-  guint len = GST_BUFFER_SIZE (in);
+  GstRealVideoDec *dec;
+  guint8 *data;
+  guint size;
   GstFlowReturn ret;
+  RVInData tin;
+  RVOutData tout;
+  GstClockTime timestamp, duration;
+  GstBuffer *out;
+  guint32 result;
+  guint frag_count;
+
+  dec = GST_REAL_VIDEO_DEC (GST_PAD_PARENT (pad));
 
   if (G_UNLIKELY (dec->hooks.transform == NULL || dec->hooks.module == NULL))
     goto not_negotiated;
 
-  /* Flags */
-  if (len < 1)
-    goto not_enough_data;
-  flags = *buf;
-  buf++;
-  len--;
+  data = GST_BUFFER_DATA (in);
+  size = GST_BUFFER_SIZE (in);
+  timestamp = GST_BUFFER_TIMESTAMP (in);
+  duration = GST_BUFFER_DURATION (in);
 
-  if (flags == 0x40) {
-    GST_DEBUG_OBJECT (dec, "Don't know how to handle buffer of type 0x40 "
-        "(size=%i).", len);
-    return GST_FLOW_OK;
+  /* alloc output buffer */
+  ret = gst_pad_alloc_buffer (dec->src, GST_BUFFER_OFFSET_NONE,
+      dec->width * dec->height * 3 / 2, GST_PAD_CAPS (dec->src), &out);
+  if (ret != GST_FLOW_OK)
+    goto alloc_failed;
+
+  GST_BUFFER_TIMESTAMP (out) = timestamp;
+  GST_BUFFER_DURATION (out) = duration;
+
+  frag_count = *data++;
+
+  /* Decode */
+  tin.datalen = size;
+  tin.interpolate = 0;
+  tin.nfragments = frag_count;
+  tin.fragments = data;
+  tin.flags = 0;
+  tin.timestamp = timestamp;
+
+  /* jump over the frag table to the fragments */
+  data += (frag_count + 1) * 8;
+
+  result = dec->hooks.transform (
+      (gchar *) data,
+      (gchar *) GST_BUFFER_DATA (out), &tin, &tout, dec->hooks.context);
+  if (result)
+    goto could_not_transform;
+
+  gst_buffer_unref (in);
+
+  /* Check for new dimensions */
+  if (tout.frames && ((dec->width != tout.width)
+          || (dec->height != tout.height))) {
+    GstCaps *caps = gst_caps_copy (GST_PAD_CAPS (dec->src));
+    GstStructure *s = gst_caps_get_structure (caps, 0);
+
+    GST_DEBUG_OBJECT (dec, "New dimensions: %"
+        G_GUINT32_FORMAT " x %" G_GUINT32_FORMAT, tout.width, tout.height);
+
+    gst_structure_set (s, "width", G_TYPE_LONG, tout.width,
+        "height", G_TYPE_LONG, tout.height, NULL);
+
+    gst_pad_set_caps (dec->src, caps);
+    gst_buffer_set_caps (out, caps);
+    gst_caps_unref (caps);
+
+    dec->width = tout.width;
+    dec->height = tout.height;
   }
 
-  ret = gst_real_video_dec_decode (dec, in, 1);
-  gst_buffer_unref (in);
-  if (ret != GST_FLOW_OK)
-    return ret;
-  return GST_FLOW_OK;
+  GST_DEBUG_OBJECT (dec,
+      "Pushing out buffer with timestamp %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (out)));
+
+  if ((ret = gst_pad_push (dec->src, out)) != GST_FLOW_OK)
+    goto could_not_push;
+
+  return ret;
 
   /* Errors */
-not_enough_data:
-  {
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, ("Not enough data."), (NULL));
-    gst_buffer_unref (in);
-    return GST_FLOW_ERROR;
-  }
 not_negotiated:
   {
     GST_WARNING_OBJECT (dec, "decoder not open, probably no input caps set "
         "yet, caps on input buffer: %" GST_PTR_FORMAT, GST_BUFFER_CAPS (in));
     gst_buffer_unref (in);
     return GST_FLOW_NOT_NEGOTIATED;
+  }
+alloc_failed:
+  {
+    GST_DEBUG_OBJECT (dec, "buffer alloc failed: %s", gst_flow_get_name (ret));
+    gst_buffer_unref (in);
+    return ret;
+  }
+could_not_transform:
+  {
+    gst_buffer_unref (out);
+    gst_buffer_unref (in);
+    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
+        ("Could not decode buffer: %" G_GUINT32_FORMAT, result), (NULL));
+    return GST_FLOW_ERROR;
+  }
+could_not_push:
+  {
+    GST_DEBUG_OBJECT (dec, "Could not push buffer: %s",
+        gst_flow_get_name (ret));
+    return ret;
   }
 }
 
@@ -709,7 +428,8 @@ unknown_version:
 
 could_not_open:
   {
-    GST_ERROR_OBJECT (dec, "Could not find library '%s' in '%s'", names, path);
+    GST_ERROR_OBJECT (dec, "Could not open library '%s' in '%s': %s", names,
+        path, g_module_error ());
     return FALSE;
   }
 
