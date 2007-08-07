@@ -35,6 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_base_bin_debug);
 #define DEFAULT_QUEUE_SIZE          (3 * GST_SECOND)
 #define DEFAULT_QUEUE_MIN_THRESHOLD ((DEFAULT_QUEUE_SIZE * 30) / 100)
 #define DEFAULT_QUEUE_THRESHOLD     ((DEFAULT_QUEUE_SIZE * 95) / 100)
+#define DEFAULT_CONNECTION_SPEED    0
 
 #define GROUP_LOCK(pbb) g_mutex_lock (pbb->group_lock)
 #define GROUP_UNLOCK(pbb) g_mutex_unlock (pbb->group_lock)
@@ -57,7 +58,8 @@ enum
   ARG_VIDEO,
   ARG_AUDIO,
   ARG_TEXT,
-  ARG_SUBTITLE_ENCODING
+  ARG_SUBTITLE_ENCODING,
+  ARG_CONNECTION_SPEED
 };
 
 static void gst_play_base_bin_class_init (GstPlayBaseBinClass * klass);
@@ -191,6 +193,17 @@ gst_play_base_bin_class_init (GstPlayBaseBinClass * klass)
           "If not set, the GST_SUBTITLE_ENCODING environment variable will "
           "be checked for an encoding to use. If that is not set either, "
           "ISO-8859-15 will be assumed.", NULL, G_PARAM_READWRITE));
+  /**
+   * GstPlayBin::connection-speed
+   *
+   * Network connection speed in kbps (0 = unknown)
+   *
+   * Since: 0.10.10 at gstplaybin.c, 0.10.15 moved to gstplaybasebin
+   **/
+  g_object_class_install_property (gobject_klass, ARG_CONNECTION_SPEED,
+      g_param_spec_uint ("connection-speed", "Connection Speed",
+          "Network connection speed in kbps (0 = unknown)",
+          0, G_MAXUINT, DEFAULT_CONNECTION_SPEED, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (gst_play_base_bin_debug, "playbasebin", 0,
       "playbasebin");
@@ -228,6 +241,7 @@ gst_play_base_bin_init (GstPlayBaseBin * play_base_bin)
   play_base_bin->queue_size = DEFAULT_QUEUE_SIZE;
   play_base_bin->queue_threshold = DEFAULT_QUEUE_THRESHOLD;
   play_base_bin->queue_min_threshold = DEFAULT_QUEUE_MIN_THRESHOLD;
+  play_base_bin->connection_speed = DEFAULT_CONNECTION_SPEED;
 }
 
 static void
@@ -604,6 +618,7 @@ static void
 queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
 {
   gpointer data;
+  GstPad *sinkpad;
 
   GST_DEBUG_OBJECT (play_base_bin, "running signal received from queue %s",
       GST_ELEMENT_NAME (queue));
@@ -626,22 +641,24 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
         play_base_bin->queue_min_threshold, NULL);
   }
 
+  sinkpad = gst_element_get_pad (queue, "sink");
+
   /* we remove the probe now because we don't need it anymore to give progress
    * about the buffering. */
   data = g_object_get_data (G_OBJECT (queue), "probe");
   if (data) {
-    GstPad *sinkpad;
-
-    sinkpad = gst_element_get_pad (queue, "sink");
     GST_DEBUG_OBJECT (play_base_bin,
         "Removing buffer probe from pad %s:%s (%p)",
         GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
 
     g_object_set_data (G_OBJECT (queue), "probe", NULL);
     gst_pad_remove_buffer_probe (sinkpad, GPOINTER_TO_INT (data));
-
-    gst_object_unref (sinkpad);
+  } else {
+    GST_DEBUG_OBJECT (play_base_bin,
+        "No buffer probe to remove from %s:%s (%p)",
+        GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
   }
+  gst_object_unref (sinkpad);
 
   /* we post a 100% buffering message to notify the app that buffering is
    * completed and playback can start/continue */
@@ -1564,6 +1581,16 @@ gen_source_element (GstPlayBaseBin * play_base_bin, GstElement ** subbin)
           "iradio-mode")) {
     g_object_set (source, "iradio-mode", TRUE, NULL);
   }
+
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (source),
+          "connection-speed")) {
+    GST_DEBUG_OBJECT (play_base_bin,
+        "setting connection-speed=%d to source element",
+        play_base_bin->connection_speed / 1000);
+    g_object_set (source, "connection-speed",
+        play_base_bin->connection_speed / 1000, NULL);
+  }
+
   return source;
 
   /* ERRORS */
@@ -1668,6 +1695,8 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
   gint n;
   const GList *item;
 
+  GST_DEBUG_OBJECT (play_base_bin, "setting up substreams");
+
   /* Remove the eat probes */
   group = get_active_group (play_base_bin);
   for (item = group->streaminfo; item; item = item->next) {
@@ -1699,6 +1728,7 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
    * we have output. Always keep it enabled. */
   for (n = 0; n < NUM_TYPES; n++) {
     if (play_base_bin->current[n] >= group->type[n].npads) {
+      GST_DEBUG_OBJECT (play_base_bin, "reset type %d to current 0", n);
       play_base_bin->current[n] = 0;
     }
   }
@@ -1706,6 +1736,8 @@ setup_substreams (GstPlayBaseBin * play_base_bin)
   /* now activate the right sources. Don't forget that during preroll,
    * we set the first source to forwarding and ignored the rest. */
   for (n = 0; n < NUM_TYPES; n++) {
+    GST_DEBUG_OBJECT (play_base_bin, "setting type %d to current %d", n,
+        play_base_bin->current[n]);
     set_active_source (play_base_bin, n + 1, play_base_bin->current[n]);
   }
 }
@@ -2436,6 +2468,9 @@ gst_play_base_bin_set_property (GObject * object, guint prop_id,
     case ARG_QUEUE_MIN_THRESHOLD:
       play_base_bin->queue_min_threshold = g_value_get_uint64 (value);
       break;
+    case ARG_CONNECTION_SPEED:
+      play_base_bin->connection_speed = g_value_get_uint (value) * 1000;
+      break;
     case ARG_VIDEO:
       GROUP_LOCK (play_base_bin);
       set_active_source (play_base_bin,
@@ -2527,6 +2562,9 @@ gst_play_base_bin_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_QUEUE_MIN_THRESHOLD:
       g_value_set_uint64 (value, play_base_bin->queue_min_threshold);
+      break;
+    case ARG_CONNECTION_SPEED:
+      g_value_set_uint (value, play_base_bin->connection_speed / 1000);
       break;
     case ARG_STREAMINFO:
       /* FIXME: hold some kind of lock here, use iterator */

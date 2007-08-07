@@ -260,7 +260,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_play_bin_debug);
 #define GST_IS_PLAY_BIN_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_PLAY_BIN))
 
 #define VOLUME_MAX_DOUBLE 10.0
-#define CONNECTION_SPEED_DEFAULT 0
 
 typedef struct _GstPlayBin GstPlayBin;
 typedef struct _GstPlayBinClass GstPlayBinClass;
@@ -291,9 +290,6 @@ struct _GstPlayBin
   /* font description */
   gchar *font_desc;
 
-  /* connection speed in bits/sec (0 = unknown) */
-  guint connection_speed;
-
   /* indication if the pipeline is live */
   gboolean is_live;
 };
@@ -312,8 +308,7 @@ enum
   ARG_VIS_PLUGIN,
   ARG_VOLUME,
   ARG_FRAME,
-  ARG_FONT_DESC,
-  ARG_CONNECTION_SPEED
+  ARG_FONT_DESC
 };
 
 /* signals */
@@ -420,17 +415,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
           "Subtitle font description",
           "Pango font description of font "
           "to be used for subtitle rendering", NULL, G_PARAM_WRITABLE));
-  /**
-   * GstPlayBin::connection-speed
-   *
-   * Network connection speed in kbps (0 = unknown)
-   *
-   * Since: 0.10.10
-   **/
-  g_object_class_install_property (gobject_klass, ARG_CONNECTION_SPEED,
-      g_param_spec_uint ("connection-speed", "Connection Speed",
-          "Network connection speed in kbps (0 = unknown)",
-          0, G_MAXUINT, CONNECTION_SPEED_DEFAULT, G_PARAM_READWRITE));
 
   gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_bin_dispose);
 
@@ -737,9 +721,6 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
             "font-desc", g_value_get_string (value), NULL);
       }
       break;
-    case ARG_CONNECTION_SPEED:
-      play_bin->connection_speed = g_value_get_uint (value) * 1000;
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -774,9 +755,6 @@ gst_play_bin_get_property (GObject * object, guint prop_id, GValue * value,
       gst_value_take_buffer (value, cur_frame);
       break;
     }
-    case ARG_CONNECTION_SPEED:
-      g_value_set_uint (value, play_bin->connection_speed / 1000);
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1729,11 +1707,13 @@ gst_play_bin_handle_redirect_message (GstPlayBin * playbin, GstMessage * msg)
   GList *l_good = NULL, *l_neutral = NULL, *l_bad = NULL;
   GValue new_list = { 0, };
   guint size, i;
+  GstPlayBaseBin *playbasebin = GST_PLAY_BASE_BIN (playbin);
+  guint connection_speed = playbasebin->connection_speed;
 
   GST_DEBUG_OBJECT (playbin, "redirect message: %" GST_PTR_FORMAT, msg);
-  GST_DEBUG_OBJECT (playbin, "connection speed: %u", playbin->connection_speed);
+  GST_DEBUG_OBJECT (playbin, "connection speed: %u", connection_speed);
 
-  if (playbin->connection_speed == 0 || msg->structure == NULL)
+  if (connection_speed == 0 || msg->structure == NULL)
     return msg;
 
   locations_list = gst_structure_get_value (msg->structure, "locations");
@@ -1758,10 +1738,10 @@ gst_play_bin_handle_redirect_message (GstPlayBin * playbin, GstMessage * msg)
     if (!gst_structure_get_int (s, "minimum-bitrate", &bitrate) || bitrate <= 0) {
       GST_DEBUG_OBJECT (playbin, "no bitrate: %" GST_PTR_FORMAT, s);
       l_neutral = g_list_append (l_neutral, (gpointer) s);
-    } else if (bitrate > playbin->connection_speed) {
+    } else if (bitrate > connection_speed) {
       GST_DEBUG_OBJECT (playbin, "bitrate too high: %" GST_PTR_FORMAT, s);
       l_bad = g_list_append (l_bad, (gpointer) s);
-    } else if (bitrate <= playbin->connection_speed) {
+    } else if (bitrate <= connection_speed) {
       GST_DEBUG_OBJECT (playbin, "bitrate OK: %" GST_PTR_FORMAT, s);
       l_good = g_list_append (l_good, (gpointer) s);
     }

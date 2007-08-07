@@ -73,6 +73,9 @@ struct _GstPlayBaseBin {
   guint64        queue_size;
   guint64        queue_threshold;
   guint64        queue_min_threshold;
+  /* connection speed in bits/sec (0 = unknown) */
+  guint          connection_speed;
+  
 
   /* currently loaded media */
   gint           current[NUM_TYPES];

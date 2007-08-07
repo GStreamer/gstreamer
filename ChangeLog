@@ -1,3 +1,21 @@
+2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Josep Torre Valles <josep@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c: (gst_play_base_bin_class_init),
+	(gst_play_base_bin_init), (queue_threshold_reached),
+	(gen_source_element), (setup_substreams),
+	(gst_play_base_bin_set_property), (gst_play_base_bin_get_property),
+	(gst_play_base_bin_get_streaminfo_value_array):
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gst_play_bin_class_init),
+	(gst_play_bin_set_property), (gst_play_bin_get_property),
+	(gst_play_bin_handle_redirect_message):
+	Move connection-speed property from playbin to playbasebin so that we
+	can also configure it in source elements that have the connection-speed
+	property. Fixes #464028.
+	Add some debug info here and there.
+
 2007-08-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c: (gst_audio_test_src_query):
