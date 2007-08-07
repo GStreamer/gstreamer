@@ -9,7 +9,8 @@ libgstcontroller_@GST_MAJORMINOR@_include_HEADERS = \
 
 noinst_HEADERS = \
 	gstcontrollerprivate.h \
-	gstinterpolationcontrolsourceprivate.h
+	gstinterpolationcontrolsourceprivate.h \
+	gstlfocontrolsourceprivate.h
 
 libgstcontroller_@GST_MAJORMINOR@_la_SOURCES = \
 	lib.c \
