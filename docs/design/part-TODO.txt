@@ -7,6 +7,9 @@ API/ABI
   keyframe, after the seek you want to get the new stream time that will
   actually be used to update the slider bar.
 
+- make gst_pad_push_event() return a GstFlowReturn so that we can resend
+  NEWSEGMENT and other events.
+
 - GstEvent, GstMessage register like GstFormat or GstQuery.
 
 - query POSITION/DURATION return accuracy. Just a flag or accuracy percentage.
@@ -21,6 +24,25 @@ API/ABI
 
 - use | instead of + as divider in serialization of Flags
   (gstvalue/gststructure)
+
+- rethink how we handle dynamic replugging wrt segments and other events that
+  already got pushed and need to be pushed again.
+
+- keep track of seeks with a counter so that we can match seek events received
+  in the demuxer srcpads. This is needed because a normal seek on a pipeline
+  will send the seek event on all sinks, which results in the demuxer receiving
+  the seek twice. If there is no way to see that the seek is the same, it will
+  perform the seek twice.
+  It would also be nice to have this same sequence number in the segment event
+  that resulted from the seek so that everything seek related can be tracked
+  properly.
+
+- When an element goes to PAUSED there is no way to figure out the running time
+  when this happened. One could think that we can store this time in the
+  base_time field of the element but that causes problems when the element is
+  still using the base_time before really PAUSING. We seem to need a new element
+  field for this. The running time when an element is paused can be usefull to
+  clip late buffers instead of prerolling on them.
 
 
 IMPLEMENTATION

@@ -731,6 +731,14 @@ find_message (GstBin * bin, GstObject * src, GstMessageType types)
   result = g_list_find_custom (bin->messages, &find,
       (GCompareFunc) message_check);
 
+  if (result) {
+    GST_DEBUG_OBJECT (bin, "we found a message %p from %s mathing types %08x",
+        result->data, GST_OBJECT_NAME (GST_MESSAGE_CAST (result->data)->src),
+        types);
+  } else {
+    GST_DEBUG_OBJECT (bin, "no message found matching types %08x", types);
+  }
+
   return result;
 }
 

@@ -2344,7 +2344,7 @@ gst_element_set_state_func (GstElement * element, GstState state)
       (next != state ? "intermediate" : "final"),
       gst_element_state_get_name (current), gst_element_state_get_name (next));
 
-  /* now signal any waiters, they will error since the cookie was increased */
+  /* now signal any waiters, they will error since the cookie was incremented */
   GST_STATE_BROADCAST (element);
 
   GST_OBJECT_UNLOCK (element);

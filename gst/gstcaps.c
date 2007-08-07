@@ -1214,9 +1214,15 @@ gst_caps_intersect (const GstCaps * caps1, const GstCaps * caps2)
   g_return_val_if_fail (GST_IS_CAPS (caps1), NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps2), NULL);
 
-  if (gst_caps_is_empty (caps1) || gst_caps_is_empty (caps2)) {
+  /* caps are exactly the same pointers, just copy one caps */
+  if (caps1 == caps2)
+    return gst_caps_copy (caps1);
+
+  /* empty caps on either side, return empty */
+  if (gst_caps_is_empty (caps1) || gst_caps_is_empty (caps2))
     return gst_caps_new_empty ();
-  }
+
+  /* one of the caps is any, just copy the other caps */
   if (gst_caps_is_any (caps1))
     return gst_caps_copy (caps2);
   if (gst_caps_is_any (caps2))

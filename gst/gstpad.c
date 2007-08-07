@@ -4327,8 +4327,9 @@ gst_pad_start_task (GstPad * pad, GstTaskFunction func, gpointer data)
  * gst_pad_pause_task:
  * @pad: the #GstPad to pause the task of
  *
- * Pause the task of @pad. This function will also make sure that the
- * function executed by the task will effectively stop.
+ * Pause the task of @pad. This function will also wait until the
+ * function executed by the task is finished if this function is not
+ * called from the task function.
  *
  * Returns: a TRUE if the task could be paused or FALSE when the pad
  * has no task.

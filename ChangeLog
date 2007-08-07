@@ -1,3 +1,19 @@
+2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/design/part-TODO.txt:
+	Add some more TODO items
+
+	* gst/gstbin.c: (find_message), (gst_bin_change_state_func):
+	Improve debugging.
+
+	* gst/gstcaps.c: (gst_caps_intersect):
+	Optimize trivial intersection case between identical caps pointers.
+
+	* gst/gstelement.c: (gst_element_continue_state),
+	(gst_element_set_state_func):
+	* gst/gstpad.c:
+	Fix spelling and grammar mistakes.
+
 2007-08-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* po/POTFILES.in:
