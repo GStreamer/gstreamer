@@ -356,7 +356,7 @@ gst_buffer_ref (GstBuffer * buf)
 typedef enum {
   GST_BUFFER_COPY_FLAGS      = (1 << 0),
   GST_BUFFER_COPY_TIMESTAMPS = (1 << 1),
-  GST_BUFFER_COPY_CAPS       = (1 << 2),
+  GST_BUFFER_COPY_CAPS       = (1 << 2)
 } GstBufferCopyFlags;
 
 /**

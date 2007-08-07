@@ -1,5 +1,13 @@
 2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: <arenevier at fdn dot fr>
+
+	* gst/gstbuffer.h:
+	Remove comma from last element in enum to avoid compile errors when
+	using -pendantic. Fixes #464366.
+
+2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
+
 	* docs/design/part-TODO.txt:
 	Add some more TODO items
 
