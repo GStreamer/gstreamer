@@ -27,7 +27,6 @@
  *
  * FIXME:
  * - this filter is totally unoptimized !
- * - we do not destroy the allocated memory for filters and residue
  * - this might be improved upon with bytestream
  */
 
@@ -38,7 +37,7 @@
 #include <string.h>
 #include <math.h>
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
+#include <gst/audio/gstaudiofilter.h>
 #include <gst/controller/gstcontroller.h>
 
 #include "gstbpwsinc.h"
@@ -69,31 +68,18 @@ enum
   PROP_UPPER_FREQUENCY
 };
 
-static GstStaticPadTemplate bpwsinc_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 32")
-    );
-
-static GstStaticPadTemplate bpwsinc_src_template = GST_STATIC_PAD_TEMPLATE
-    ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 32")
-    );
+#define ALLOWED_CAPS \
+    "audio/x-raw-float,"                                              \
+    " width = (int) 32, "                                             \
+    " endianness = (int) BYTE_ORDER,"                                 \
+    " rate = (int) [ 1, MAX ],"                                       \
+    " channels = (int) [ 1, MAX ]"
 
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_bpwsinc_debug, "bpwsinc", 0, "Band-pass Windowed sinc filter plugin");
 
-GST_BOILERPLATE_FULL (GstBPWSinc, gst_bpwsinc, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstBPWSinc, gst_bpwsinc, GstAudioFilter,
+    GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
 
 static void bpwsinc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -102,14 +88,26 @@ static void bpwsinc_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn bpwsinc_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
-static gboolean bpwsinc_set_caps (GstBaseTransform * base, GstCaps * incaps,
-    GstCaps * outcaps);
+static gboolean bpwsinc_setup (GstAudioFilter * base,
+    GstRingBufferSpec * format);
 
 /* Element class */
 
 static void
 gst_bpwsinc_dispose (GObject * object)
 {
+  GstBPWSinc *this = GST_BPWSINC (object);
+
+  if (this->residue) {
+    g_free (this->residue);
+    this->residue = NULL;
+  }
+
+  if (this->kernel) {
+    g_free (this->kernel);
+    this->kernel = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -117,12 +115,14 @@ static void
 gst_bpwsinc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *caps;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&bpwsinc_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&bpwsinc_sink_template));
   gst_element_class_set_details (element_class, &bpwsinc_details);
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
+      caps);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -152,7 +152,7 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
           1, G_MAXINT, 1, G_PARAM_READWRITE));
 
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (bpwsinc_transform_ip);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (bpwsinc_set_caps);
+  GST_AUDIO_FILTER_CLASS (klass)->setup = GST_DEBUG_FUNCPTR (bpwsinc_setup);
 }
 
 static void
@@ -162,23 +162,21 @@ gst_bpwsinc_init (GstBPWSinc * this, GstBPWSincClass * g_class)
   this->lower_frequency = 0.25;
   this->upper_frequency = 0.3;
   this->kernel = NULL;
+  this->residue = NULL;
 }
 
 
-/* GstBaseTransform vmethod implementations */
+/* GstAudioFilter vmethod implementations */
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-bpwsinc_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
+bpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
   int i = 0;
   double sum = 0.0;
   int len = 0;
   double *kernel_lp, *kernel_hp;
   GstBPWSinc *this = GST_BPWSINC (base);
-
-  GST_DEBUG_OBJECT (this,
-      "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
 
   len = this->wing_size;
   /* fill the lp kernel
@@ -230,6 +228,8 @@ bpwsinc_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
     kernel_hp[i] /= sum;
 
   /* combine the two thiss */
+  if (this->kernel)
+    g_free (this->kernel);
   this->kernel = (double *) g_malloc (sizeof (double) * (2 * len + 1));
 
   for (i = 0; i <= len * 2; ++i)
@@ -245,12 +245,17 @@ bpwsinc_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
   g_free (kernel_hp);
 
   /* set up the residue memory space */
+  if (this->residue)
+    g_free (this->residue);
+
   this->residue = (gfloat *) g_malloc (sizeof (gfloat) * (len * 2 + 1));
   for (i = 0; i <= len * 2; ++i)
     this->residue[i] = 0.0;
 
   return TRUE;
 }
+
+/* GstBaseTransform vmethod implementations */
 
 static GstFlowReturn
 bpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
