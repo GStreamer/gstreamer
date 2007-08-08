@@ -1,3 +1,8 @@
+2007-08-08  Michael Smith <msmith@fluendo.com>
+
+	* gst/videobox/gstvideobox.c: (gst_video_box_ayuv_i420):
+	  Render right border in the correct location.
+
 2007-08-08  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Olivier Crete <tester at tester dot ca>

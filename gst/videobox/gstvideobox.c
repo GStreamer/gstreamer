@@ -823,7 +823,6 @@ gst_video_box_ayuv_i420 (GstVideoBox * video_box, guint8 * src, guint8 * dest)
 
         /* right border */
         if (br < 0) {
-          a = 0;
           oil_splat_u8_ns (Ydest, (guint8 *) & empty_px_values[0], -br);
           for (j = 0; j < -br; j++) {
             Utemp[UVfloor (a + crop_w + j)] =
