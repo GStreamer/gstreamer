@@ -27,7 +27,6 @@
  *
  * FIXME:
  * - this filter is totally unoptimized !
- * - we do not destroy the allocated memory for filters and residue
  * - this might be improved upon with bytestream
  */
 
@@ -38,7 +37,7 @@
 #include <string.h>
 #include <math.h>
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
+#include <gst/audio/gstaudiofilter.h>
 #include <gst/controller/gstcontroller.h>
 
 #include "gstlpwsinc.h"
@@ -68,31 +67,18 @@ enum
   PROP_FREQUENCY
 };
 
-static GstStaticPadTemplate lpwsinc_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 32")
-    );
-
-static GstStaticPadTemplate lpwsinc_src_template = GST_STATIC_PAD_TEMPLATE
-    ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-float, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, MAX ], "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 32")
-    );
+#define ALLOWED_CAPS \
+    "audio/x-raw-float,"                                              \
+    " width = (int) 32, "                                             \
+    " endianness = (int) BYTE_ORDER,"                                 \
+    " rate = (int) [ 1, MAX ],"                                       \
+    " channels = (int) [ 1, MAX ]"
 
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_lpwsinc_debug, "lpwsinc", 0, "Low-pass Windowed sinc filter plugin");
 
-GST_BOILERPLATE_FULL (GstLPWSinc, gst_lpwsinc, GstBaseTransform,
-    GST_TYPE_BASE_TRANSFORM, DEBUG_INIT);
+GST_BOILERPLATE_FULL (GstLPWSinc, gst_lpwsinc, GstAudioFilter,
+    GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
 
 static void lpwsinc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -101,14 +87,26 @@ static void lpwsinc_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn lpwsinc_transform_ip (GstBaseTransform * base,
     GstBuffer * outbuf);
-static gboolean lpwsinc_set_caps (GstBaseTransform * base, GstCaps * incaps,
-    GstCaps * outcaps);
+static gboolean lpwsinc_setup (GstAudioFilter * base,
+    GstRingBufferSpec * format);
 
 /* Element class */
 
 static void
 gst_lpwsinc_dispose (GObject * object)
 {
+  GstLPWSinc *this = GST_LPWSINC (object);
+
+  if (this->residue) {
+    g_free (this->residue);
+    this->residue = NULL;
+  }
+
+  if (this->kernel) {
+    g_free (this->kernel);
+    this->kernel = NULL;
+  }
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -116,12 +114,14 @@ static void
 gst_lpwsinc_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *caps;
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&lpwsinc_src_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&lpwsinc_sink_template));
   gst_element_class_set_details (element_class, &lpwsinc_details);
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
+      caps);
+  gst_caps_unref (caps);
 }
 
 static void
@@ -148,7 +148,7 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
           1, G_MAXINT, 1, G_PARAM_READWRITE));
 
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (lpwsinc_transform_ip);
-  trans_class->set_caps = GST_DEBUG_FUNCPTR (lpwsinc_set_caps);
+  GST_AUDIO_FILTER_CLASS (klass)->setup = GST_DEBUG_FUNCPTR (lpwsinc_setup);
 }
 
 static void
@@ -157,28 +157,29 @@ gst_lpwsinc_init (GstLPWSinc * this, GstLPWSincClass * g_class)
   this->wing_size = 50;
   this->frequency = 0.25;
   this->kernel = NULL;
+  this->residue = NULL;
 }
 
 
-/* GstBaseTransform vmethod implementations */
+/* GstAudioFilter vmethod implementations */
 
 /* get notified of caps and plug in the correct process function */
 static gboolean
-lpwsinc_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
+lpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
   int i = 0;
   double sum = 0.0;
   int len = 0;
   GstLPWSinc *this = GST_LPWSINC (base);
 
-  GST_DEBUG_OBJECT (this,
-      "set_caps: in %" GST_PTR_FORMAT " out %" GST_PTR_FORMAT, incaps, outcaps);
-
   /* FIXME: remember to free it */
   /* fill the kernel */
   g_print ("DEBUG: initing filter kernel\n");
   len = this->wing_size;
   GST_DEBUG ("lpwsinc: initializing filter kernel of length %d", len * 2 + 1);
+
+  if (this->kernel)
+    g_free (this->kernel);
   this->kernel = (double *) g_malloc (sizeof (double) * (2 * len + 1));
 
   for (i = 0; i <= len * 2; ++i) {
@@ -199,12 +200,16 @@ lpwsinc_set_caps (GstBaseTransform * base, GstCaps * incaps, GstCaps * outcaps)
     this->kernel[i] /= sum;
 
   /* set up the residue memory space */
+  if (this->residue)
+    g_free (this->residue);
   this->residue = (gfloat *) g_malloc (sizeof (gfloat) * (len * 2 + 1));
   for (i = 0; i <= len * 2; ++i)
     this->residue[i] = 0.0;
 
   return TRUE;
 }
+
+/* GstBaseTransform vmethod implementations */
 
 static GstFlowReturn
 lpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)

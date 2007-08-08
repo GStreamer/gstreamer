@@ -7,6 +7,8 @@ libgstfilter_la_LIBADD = \
 	$(GST_BASE_LIBS) \
 	$(GST_LIBS) \
 	$(GST_CONTROLLER_LIBS) \
+	$(GST_PLUGINS_BASE_LIBS) \
+	-lgstaudio-$(GST_MAJORMINOR) \
 	$(LIBM)
 
 libgstfilter_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)

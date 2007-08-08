@@ -36,7 +36,7 @@
 
 #include "gstfilter.h"
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
+#include <gst/audio/gstaudiofilter.h>
 
 G_BEGIN_DECLS
 
@@ -60,7 +60,7 @@ typedef struct _GstBPWSincClass GstBPWSincClass;
  * Opaque data structure.
  */
 struct _GstBPWSinc {
-  GstBaseTransform element;
+  GstAudioFilter element;
 
   double frequency;
   double lower_frequency, upper_frequency;
@@ -72,7 +72,7 @@ struct _GstBPWSinc {
 };
 
 struct _GstBPWSincClass {
-  GstBaseTransformClass parent_class;
+  GstAudioFilterClass parent_class;
 };
 
 G_END_DECLS
