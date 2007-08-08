@@ -1039,6 +1039,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstMMS::connection-speed</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection Speed</NICK>
+<BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstFaac::bitrate</NAME>
 <TYPE>gint</TYPE>
 <RANGE>[8192,327680]</RANGE>

@@ -1,3 +1,13 @@
+2007-08-08  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Josep Torre Valles <josep@fluendo.com>
+
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* ext/libmms/gstmms.c: (gst_mms_class_init), (gst_mms_init),
+	(gst_mms_start), (gst_mms_set_property), (gst_mms_get_property):
+	* ext/libmms/gstmms.h:
+	Add connection speed property to libmms. Fixes #464678.
+
 2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/real/gstrealvideodec.c: (gst_real_video_dec_chain),

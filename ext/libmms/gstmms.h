@@ -32,6 +32,8 @@ struct _GstMMS
   GstPushSrc parent;
 
   gchar  *uri_name;
+  guint  connection_speed;
+  
   mms_t  *connection;
   mmsh_t *connection_h;
 };

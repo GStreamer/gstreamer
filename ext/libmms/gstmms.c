@@ -27,10 +27,13 @@
 #include <string.h>
 #include "gstmms.h"
 
+#define DEFAULT_CONNECTION_SPEED    0
+
 enum
 {
   ARG_0,
-  ARG_LOCATION
+  ARG_LOCATION,
+  ARG_CONNECTION_SPEED
 };
 
 
@@ -113,6 +116,12 @@ gst_mms_class_init (GstMMSClass * klass)
           "Host URL to connect to. Accepted are mms://, mmsu://, mmst:// URL types",
           NULL, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, ARG_CONNECTION_SPEED,
+      g_param_spec_uint ("connection-speed", "Connection Speed",
+          "Network connection speed in kbps (0 = unknown)",
+          0, G_MAXINT / 1000, DEFAULT_CONNECTION_SPEED, G_PARAM_READWRITE));
+  /* Note: connection-speed is intentionaly limited to G_MAXINT as libmms use int for it */
+
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_mms_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_mms_stop);
 
@@ -136,6 +145,7 @@ gst_mms_init (GstMMS * mmssrc, GstMMSClass * g_class)
   mmssrc->uri_name = NULL;
   mmssrc->connection = NULL;
   mmssrc->connection_h = NULL;
+  mmssrc->connection_speed = DEFAULT_CONNECTION_SPEED;
   GST_BASE_SRC (mmssrc)->blocksize = 2048;
 }
 
@@ -279,20 +289,30 @@ static gboolean
 gst_mms_start (GstBaseSrc * bsrc)
 {
   GstMMS *mms;
+  guint bandwidth_avail;
 
   mms = GST_MMS (bsrc);
 
   if (!mms->uri_name || *mms->uri_name == '\0')
     goto no_uri;
 
+  if (mms->connection_speed)
+    bandwidth_avail = mms->connection_speed;
+  else
+    bandwidth_avail = G_MAXINT;
+
   /* FIXME: pass some sane arguments here */
-  GST_DEBUG_OBJECT (mms, "Trying mms_connect (%s)", mms->uri_name);
-  mms->connection = mms_connect (NULL, NULL, mms->uri_name, 128 * 1024);
+  GST_DEBUG_OBJECT (mms,
+      "Trying mms_connect (%s) with bandwidth constraint of %d bps",
+      mms->uri_name, bandwidth_avail);
+  mms->connection = mms_connect (NULL, NULL, mms->uri_name, bandwidth_avail);
   if (mms->connection)
     goto success;
 
-  GST_DEBUG_OBJECT (mms, "Trying mmsh_connect (%s)", mms->uri_name);
-  mms->connection_h = mmsh_connect (NULL, NULL, mms->uri_name, 128 * 1024);
+  GST_DEBUG_OBJECT (mms,
+      "Trying mmsh_connect (%s) with bandwidth constraint of %d bps",
+      mms->uri_name, bandwidth_avail);
+  mms->connection_h = mmsh_connect (NULL, NULL, mms->uri_name, bandwidth_avail);
   if (!mms->connection_h)
     goto no_connect;
 
@@ -353,6 +373,9 @@ gst_mms_set_property (GObject * object, guint prop_id,
       }
       mmssrc->uri_name = g_value_dup_string (value);
       break;
+    case ARG_CONNECTION_SPEED:
+      mmssrc->connection_speed = g_value_get_uint (value) * 1000;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -373,6 +396,9 @@ gst_mms_get_property (GObject * object, guint prop_id,
     case ARG_LOCATION:
       if (mmssrc->uri_name)
         g_value_set_string (value, mmssrc->uri_name);
+      break;
+    case ARG_CONNECTION_SPEED:
+      g_value_set_uint (value, mmssrc->connection_speed / 1000);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
