@@ -50,7 +50,8 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 8000, "
-        "encoding-name = (string) \"ILBC\", " "mode = (int) {20, 30}")
+        "encoding-name = (string) \"ILBC\", "
+        "mode = (string) { \"20\", \"30\" }")
     );
 
 static gboolean gst_rtpilbcpay_setcaps (GstBaseRTPPayload * payload,
@@ -116,6 +117,7 @@ gst_rtpilbcpay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
   GstBaseRTPAudioPayload *basertpaudiopayload;
   gboolean ret;
   gint mode;
+  gchar *mode_str;
   GstStructure *structure;
   const char *payload_name;
 
@@ -137,9 +139,13 @@ gst_rtpilbcpay_setcaps (GstBaseRTPPayload * basertppayload, GstCaps * caps)
   gst_base_rtp_audio_payload_set_frame_options (basertpaudiopayload,
       mode, mode == 30 ? 50 : 38);
 
+
+  mode_str = g_strdup_printf ("%d", mode);
   ret =
-      gst_basertppayload_set_outcaps (basertppayload, "mode", G_TYPE_INT, mode,
-      NULL);
+      gst_basertppayload_set_outcaps (basertppayload, "mode", G_TYPE_STRING,
+      mode_str, NULL);
+  g_free (mode_str);
+
   if (mode != rtpilbcpay->mode && rtpilbcpay->mode != -1)
     goto mode_changed;
 

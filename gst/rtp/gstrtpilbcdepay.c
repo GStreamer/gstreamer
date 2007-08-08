@@ -56,7 +56,8 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "media = (string) \"audio\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) 8000, "
-        "encoding-name = (string) \"ILBC\", " "mode = (int) { 20, 30 }")
+        "encoding-name = (string) \"ILBC\", "
+        "mode = (string) { \"20\", \"30\" }")
     );
 
 static GstStaticPadTemplate gst_rtp_ilbc_depay_src_template =
@@ -149,14 +150,22 @@ gst_rtp_ilbc_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
   GstRTPiLBCDepay *rtpilbcdepay = GST_RTP_ILBC_DEPAY (depayload);
   GstCaps *srccaps;
   GstStructure *structure;
+  const gchar *mode_str = NULL;
   gint mode;
   gboolean ret;
 
   structure = gst_caps_get_structure (caps, 0);
 
-  /* parse mode, if we can */
   mode = rtpilbcdepay->mode;
-  gst_structure_get_int (structure, "mode", &mode);
+
+  /* parse mode, if we can */
+  mode_str = gst_structure_get_string (structure, "mode");
+  if (mode_str) {
+    mode = strtol (mode_str, NULL, 10);
+    if (mode != 20 && mode != 30)
+      mode = rtpilbcdepay->mode;
+  }
+
   rtpilbcdepay->mode = mode;
 
   srccaps = gst_caps_new_simple ("audio/x-iLBC",
