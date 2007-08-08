@@ -114,6 +114,7 @@ GST_ELEMENT_DETAILS ("Text overlay",
 #define DEFAULT_PROP_DELTAY	0
 #define DEFAULT_PROP_WRAP_MODE  GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR
 #define DEFAULT_PROP_FONT_DESC	""
+#define DEFAULT_PROP_SILENT	FALSE
 
 /* make a property of me */
 #define DEFAULT_SHADING_VALUE    -80
@@ -132,7 +133,8 @@ enum
   PROP_DELTAX,
   PROP_DELTAY,
   PROP_WRAP_MODE,
-  PROP_FONT_DESC
+  PROP_FONT_DESC,
+  PROP_SILENT
 };
 
 
@@ -356,6 +358,10 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
           "Pango font description of font to be used for rendering. "
           "See documentation of pango_font_description_from_string "
           "for syntax.", DEFAULT_PROP_FONT_DESC, G_PARAM_WRITABLE));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
+      g_param_spec_boolean ("silent", "silent",
+          "Whether to render the text string",
+          DEFAULT_PROP_SILENT, G_PARAM_READWRITE));
 }
 
 static void
@@ -452,6 +458,7 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
 
   overlay->want_shading = DEFAULT_PROP_SHADING;
   overlay->shading_value = DEFAULT_SHADING_VALUE;
+  overlay->silent = DEFAULT_PROP_SILENT;
 
   overlay->default_text = g_strdup (DEFAULT_PROP_TEXT);
   overlay->need_render = TRUE;
@@ -630,6 +637,9 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case PROP_SILENT:
+      overlay->silent = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -673,6 +683,9 @@ gst_text_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_WRAP_MODE:
       g_value_set_enum (value, overlay->wrap_mode);
+      break;
+    case PROP_SILENT:
+      g_value_set_boolean (value, overlay->silent);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1384,6 +1397,16 @@ wait_for_text_buf:
 
   if (overlay->video_flushing)
     goto flushing;
+
+  if (overlay->silent) {
+    GST_OBJECT_UNLOCK (overlay);
+    ret = gst_pad_push (overlay->srcpad, buffer);
+
+    /* Update last_stop */
+    gst_segment_set_last_stop (overlay->segment, GST_FORMAT_TIME, clip_start);
+
+    return ret;
+  }
 
   /* Text pad not linked, rendering internal text */
   if (!overlay->text_linked) {

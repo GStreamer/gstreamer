@@ -1,3 +1,11 @@
+2007-08-08  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Yang Hong <hongyang@redflag-linux.com>
+
+	* ext/pango/gsttextoverlay.c:
+	* ext/pango/gsttextoverlay.h:
+	  Add 'silent' property to GstTimeOverlay. Fixes #462979
+
 2007-08-08  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Josep Torre Valles <josep@fluendo.com>

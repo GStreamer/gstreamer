@@ -105,6 +105,7 @@ struct _GstTextOverlay {
     gint                     deltay;
     gchar                   *default_text;
     gboolean                 want_shading;
+    gboolean                 silent;
 
     PangoLayout             *layout;
     FT_Bitmap                bitmap;
