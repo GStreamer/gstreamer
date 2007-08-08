@@ -52,6 +52,7 @@ struct _GstURIDecodeBin
   GstBin parent_instance;
 
   gchar *uri;
+  guint connection_speed;
 
   gboolean is_stream;
   GstElement *source;
@@ -85,11 +86,13 @@ GST_ELEMENT_DETAILS ("URI Decoder",
     "Autoplug and decode an URI to raw media",
     "Wim Taymans <wim@fluendo.com>");
 
-#define DEFAULT_PROP_URI	NULL
+#define DEFAULT_PROP_URI	        NULL
+#define DEFAULT_CONNECTION_SPEED    0
 enum
 {
   PROP_0,
   PROP_URI,
+  PROP_CONNECTION_SPEED,
   PROP_LAST
 };
 
@@ -135,6 +138,11 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       g_param_spec_string ("uri", "URI", "URI to decode",
           DEFAULT_PROP_URI, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
+      g_param_spec_uint ("connection-speed", "Connection Speed",
+          "Network connection speed in kbps (0 = unknown)",
+          0, G_MAXUINT, DEFAULT_CONNECTION_SPEED, G_PARAM_READWRITE));
+
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_query);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_change_state);
@@ -144,6 +152,7 @@ static void
 gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
 {
   dec->uri = g_strdup (DEFAULT_PROP_URI);
+  dec->uri = DEFAULT_CONNECTION_SPEED;
 }
 
 static void
@@ -168,6 +177,9 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
       g_free (dec->uri);
       dec->uri = g_value_dup_string (value);
       break;
+    case PROP_CONNECTION_SPEED:
+      dec->connection_speed = g_value_get_uint (value) * 1000;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -183,6 +195,9 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_URI:
       g_value_set_string (value, dec->uri);
+      break;
+    case PROP_CONNECTION_SPEED:
+      g_value_set_uint (value, dec->connection_speed / 1000);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -369,6 +384,16 @@ gen_source_element (GstURIDecodeBin * decoder)
           "iradio-mode")) {
     g_object_set (source, "iradio-mode", TRUE, NULL);
   }
+
+  if (g_object_class_find_property (G_OBJECT_GET_CLASS (source),
+          "connection-speed")) {
+    GST_DEBUG_OBJECT (decoder,
+        "setting connection-speed=%d to source element",
+        decoder->connection_speed / 1000);
+    g_object_set (source, "connection-speed",
+        decoder->connection_speed / 1000, NULL);
+  }
+
   return source;
 
   /* ERRORS */

@@ -1709,6 +1709,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstURIDecodeBin::connection-speed</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Connection Speed</NICK>
+<BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstQueue2::current-level-buffers</NAME>
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
