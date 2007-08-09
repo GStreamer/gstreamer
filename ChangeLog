@@ -1,5 +1,13 @@
 2007-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	submitted by: Raphael Higino <phhigino@gmail.com>
+
+	* po/LINGUAS:
+	* po/pt_BR.po:
+	  Added Portuguese (Brazilian) translation.
+
+2007-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/uk.po:
 	* po/vi.po:
 	  Updated translations.
