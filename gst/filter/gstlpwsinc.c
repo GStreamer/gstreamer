@@ -3,6 +3,7 @@
  * GStreamer
  * Copyright (C) 1999-2001 Erik Walthinsen <omega@cse.ogi.edu>
  *               2006 Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>
+ *               2007 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,9 +26,9 @@
  * chapter 16
  * available at http://www.dspguide.com/
  *
- * FIXME:
- * - this filter is totally unoptimized !
- * - this might be improved upon with bytestream
+ * TODO: - Implement the convolution in place
+ *       - Implement a highpass mode (spectral inversion)
+ *       - Allow choosing between different windows (blackman, hanning, ...)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -51,7 +52,8 @@ GST_ELEMENT_DETAILS ("Low-pass Windowed sinc filter",
     "Low-pass Windowed sinc filter",
     "Thomas <thomas@apestaart.org>, "
     "Steven W. Smith, "
-    "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>");
+    "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
+    "Sebastian Dröge <slomo@circular-chaos.org>");
 
 /* Filter signals and args */
 enum
@@ -69,7 +71,7 @@ enum
 
 #define ALLOWED_CAPS \
     "audio/x-raw-float,"                                              \
-    " width = (int) 32, "                                             \
+    " width = (int) { 32, 64 }, "                                     \
     " endianness = (int) BYTE_ORDER,"                                 \
     " rate = (int) [ 1, MAX ],"                                       \
     " channels = (int) [ 1, MAX ]"
@@ -85,8 +87,10 @@ static void lpwsinc_set_property (GObject * object, guint prop_id,
 static void lpwsinc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn lpwsinc_transform_ip (GstBaseTransform * base,
-    GstBuffer * outbuf);
+static GstFlowReturn lpwsinc_transform (GstBaseTransform * base,
+    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean lpwsinc_get_unit_size (GstBaseTransform * base, GstCaps * caps,
+    guint * size);
 static gboolean lpwsinc_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
 
@@ -95,16 +99,16 @@ static gboolean lpwsinc_setup (GstAudioFilter * base,
 static void
 gst_lpwsinc_dispose (GObject * object)
 {
-  GstLPWSinc *this = GST_LPWSINC (object);
+  GstLPWSinc *self = GST_LPWSINC (object);
 
-  if (this->residue) {
-    g_free (this->residue);
-    this->residue = NULL;
+  if (self->residue) {
+    g_free (self->residue);
+    self->residue = NULL;
   }
 
-  if (this->kernel) {
-    g_free (this->kernel);
-    this->kernel = NULL;
+  if (self->kernel) {
+    g_free (self->kernel);
+    self->kernel = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -139,27 +143,121 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FREQUENCY,
       g_param_spec_double ("frequency", "Frequency",
-          "Cut-off Frequency relative to sample rate",
-          0.0, 0.5, 0, G_PARAM_READWRITE));
+          "Cut-off Frequency", 0.0, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_LENGTH,
       g_param_spec_int ("length", "Length",
           "N such that the filter length = 2N + 1",
           1, G_MAXINT, 1, G_PARAM_READWRITE));
 
-  trans_class->transform_ip = GST_DEBUG_FUNCPTR (lpwsinc_transform_ip);
+  trans_class->transform = GST_DEBUG_FUNCPTR (lpwsinc_transform);
+  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (lpwsinc_get_unit_size);
   GST_AUDIO_FILTER_CLASS (klass)->setup = GST_DEBUG_FUNCPTR (lpwsinc_setup);
 }
 
 static void
-gst_lpwsinc_init (GstLPWSinc * this, GstLPWSincClass * g_class)
+gst_lpwsinc_init (GstLPWSinc * self, GstLPWSincClass * g_class)
 {
-  this->wing_size = 50;
-  this->frequency = 0.25;
-  this->kernel = NULL;
-  this->residue = NULL;
+  self->wing_size = 50;
+  self->frequency = 0.0;
+  self->kernel = NULL;
+  self->residue = NULL;
+
+  self->have_kernel = FALSE;
 }
 
+static void
+process_32 (GstLPWSinc * self, gfloat * src, gfloat * dst, guint input_samples)
+{
+  gint kernel_length = self->wing_size * 2 + 1;;
+  gint i, j;
+
+  /* convolution */
+  for (i = 0; i < input_samples; ++i) {
+    dst[i] = 0.0;
+    for (j = 0; j < kernel_length; ++j)
+      if (i < j)
+        dst[i] += self->residue[kernel_length + i - j] * self->kernel[j];
+      else
+        dst[i] += src[i - j] * self->kernel[j];
+  }
+
+  /* copy the tail of the current input buffer to the residue */
+  for (i = 0; i < kernel_length; i++)
+    self->residue[i] = src[input_samples - kernel_length + i];
+}
+
+static void
+process_64 (GstLPWSinc * self, gdouble * src, gdouble * dst,
+    guint input_samples)
+{
+  gint kernel_length = self->wing_size * 2 + 1;;
+  gint i, j;
+
+  /* convolution */
+  for (i = 0; i < input_samples; ++i) {
+    dst[i] = 0.0;
+    for (j = 0; j < kernel_length; ++j)
+      if (i < j)
+        dst[i] += self->residue[kernel_length + i - j] * self->kernel[j];
+      else
+        dst[i] += src[i - j] * self->kernel[j];
+  }
+
+  /* copy the tail of the current input buffer to the residue */
+  for (i = 0; i < kernel_length; i++)
+    self->residue[i] = src[input_samples - kernel_length + i];
+}
+
+static void
+lpwsinc_build_kernel (GstLPWSinc * self)
+{
+  gint i = 0;
+  gdouble sum = 0.0;
+  gint len = 0;
+  gdouble w;
+
+  /* fill the kernel */
+  len = self->wing_size;
+  GST_DEBUG ("lpwsinc: initializing filter kernel of length %d", len * 2 + 1);
+
+  if (GST_AUDIO_FILTER (self)->format.rate == 0) {
+    GST_DEBUG ("rate not set yet");
+    return;
+  }
+
+  /* Clamp cutoff frequency between 0 and the nyquist frequency */
+  self->frequency =
+      CLAMP (self->frequency, 0.0, GST_AUDIO_FILTER (self)->format.rate / 2);
+
+  w = 2 * M_PI * (self->frequency / GST_AUDIO_FILTER (self)->format.rate);
+
+  if (self->kernel)
+    g_free (self->kernel);
+  self->kernel = g_new (gdouble, 2 * len + 1);
+
+  for (i = 0; i <= len * 2; ++i) {
+    if (i == len)
+      self->kernel[i] = w;
+    else
+      self->kernel[i] = sin (w * (i - len)) / (i - len);
+    /* windowing */
+    self->kernel[i] *= (0.54 - 0.46 * cos (M_PI * i / len));
+  }
+
+  /* normalize for unity gain at DC */
+  for (i = 0; i <= len * 2; ++i)
+    sum += self->kernel[i];
+  for (i = 0; i <= len * 2; ++i)
+    self->kernel[i] /= sum;
+
+  /* set up the residue memory space */
+  if (self->residue)
+    g_free (self->residue);
+  self->residue = g_new0 (gdouble, len * 2 + 1);
+
+  self->have_kernel = TRUE;
+}
 
 /* GstAudioFilter vmethod implementations */
 
@@ -167,62 +265,50 @@ gst_lpwsinc_init (GstLPWSinc * this, GstLPWSincClass * g_class)
 static gboolean
 lpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
-  int i = 0;
-  double sum = 0.0;
-  int len = 0;
-  GstLPWSinc *this = GST_LPWSINC (base);
+  GstLPWSinc *self = GST_LPWSINC (base);
 
-  /* FIXME: remember to free it */
-  /* fill the kernel */
-  g_print ("DEBUG: initing filter kernel\n");
-  len = this->wing_size;
-  GST_DEBUG ("lpwsinc: initializing filter kernel of length %d", len * 2 + 1);
+  gboolean ret = TRUE;
 
-  if (this->kernel)
-    g_free (this->kernel);
-  this->kernel = (double *) g_malloc (sizeof (double) * (2 * len + 1));
+  if (format->width == 32)
+    self->process = (GstLPWSincProcessFunc) process_32;
+  else if (format->width == 64)
+    self->process = (GstLPWSincProcessFunc) process_64;
+  else
+    ret = FALSE;
 
-  for (i = 0; i <= len * 2; ++i) {
-    if (i == len)
-      this->kernel[i] = 2 * M_PI * this->frequency;
-    else
-      this->kernel[i] =
-          sin (2 * M_PI * this->frequency * (i - len)) / (i - len);
-    /* windowing */
-    this->kernel[i] *= (0.54 - 0.46 * cos (M_PI * i / len));
-  }
-
-  /* normalize for unity gain at DC
-   * FIXME: sure this is not supposed to be quadratic ? */
-  for (i = 0; i <= len * 2; ++i)
-    sum += this->kernel[i];
-  for (i = 0; i <= len * 2; ++i)
-    this->kernel[i] /= sum;
-
-  /* set up the residue memory space */
-  if (this->residue)
-    g_free (this->residue);
-  this->residue = (gfloat *) g_malloc (sizeof (gfloat) * (len * 2 + 1));
-  for (i = 0; i <= len * 2; ++i)
-    this->residue[i] = 0.0;
+  self->have_kernel = FALSE;
 
   return TRUE;
 }
 
 /* GstBaseTransform vmethod implementations */
 
-static GstFlowReturn
-lpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
+static gboolean
+lpwsinc_get_unit_size (GstBaseTransform * base, GstCaps * caps, guint * size)
 {
-  GstLPWSinc *this = GST_LPWSINC (base);
-  GstClockTime timestamp;
+  gint width, channels;
+  GstStructure *structure;
+  gboolean ret;
 
-  gfloat *src;
-  gfloat *input;
-  int residue_samples;
-  gint input_samples;
-  gint total_samples;
-  int i, j;
+  g_assert (size);
+
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "width", &width);
+  ret &= gst_structure_get_int (structure, "channels", &channels);
+
+  *size = width * channels / 8;
+
+  return ret;
+}
+
+static GstFlowReturn
+lpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
+    GstBuffer * outbuf)
+{
+  GstLPWSinc *self = GST_LPWSINC (base);
+  GstClockTime timestamp;
+  gint input_samples =
+      GST_BUFFER_SIZE (outbuf) / (GST_AUDIO_FILTER (self)->format.width / 8);
 
   /* don't process data in passthrough-mode */
   if (gst_base_transform_is_passthrough (base))
@@ -230,42 +316,14 @@ lpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   /* FIXME: subdivide GST_BUFFER_SIZE into small chunks for smooth fades */
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
-
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (this), timestamp);
+    gst_object_sync_values (G_OBJECT (self), timestamp);
 
-  /* FIXME: out of laziness, we copy the left-over bit from last buffer
-   * together with the incoming buffer to a new buffer to make the loop
-   * easy; this could be a lot more optimized though
-   * to make amends we keep the incoming buffer around and write our
-   * output samples there */
+  if (!self->have_kernel)
+    lpwsinc_build_kernel (self);
 
-  src = (gfloat *) GST_BUFFER_DATA (outbuf);
-  residue_samples = this->wing_size * 2 + 1;
-  input_samples = GST_BUFFER_SIZE (outbuf) / sizeof (gfloat);
-  total_samples = residue_samples + input_samples;
-
-  input = (gfloat *) g_malloc (sizeof (gfloat) * total_samples);
-
-  /* copy the left-over bit */
-  memcpy (input, this->residue, sizeof (gfloat) * residue_samples);
-
-  /* copy the new buffer */
-  memcpy (&input[residue_samples], src, sizeof (gfloat) * input_samples);
-  /* copy the tail of the current input buffer to the residue */
-  memcpy (this->residue, &src[input_samples - residue_samples],
-      sizeof (gfloat) * residue_samples);
-
-  /* convolution */
-  /* since we copied the previous set of samples we needed before the actual
-   * input data, we need to add the filter length to our indices for input */
-  for (i = 0; i < input_samples; ++i) {
-    src[i] = 0.0;
-    for (j = 0; j < residue_samples; ++j)
-      src[i] += input[i - j + residue_samples] * this->kernel[j];
-  }
-
-  g_free (input);
+  self->process (self, GST_BUFFER_DATA (inbuf), GST_BUFFER_DATA (outbuf),
+      input_samples);
 
   return GST_FLOW_OK;
 }
@@ -274,16 +332,22 @@ static void
 lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstLPWSinc *this = GST_LPWSINC (object);
+  GstLPWSinc *self = GST_LPWSINC (object);
 
-  g_return_if_fail (GST_IS_LPWSINC (this));
+  g_return_if_fail (GST_IS_LPWSINC (self));
 
   switch (prop_id) {
     case PROP_LENGTH:
-      this->wing_size = g_value_get_int (value);
+      GST_BASE_TRANSFORM_LOCK (self);
+      self->wing_size = g_value_get_int (value);
+      lpwsinc_build_kernel (self);
+      GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     case PROP_FREQUENCY:
-      this->frequency = g_value_get_double (value);
+      GST_BASE_TRANSFORM_LOCK (self);
+      self->frequency = g_value_get_double (value);
+      lpwsinc_build_kernel (self);
+      GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -295,14 +359,14 @@ static void
 lpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstLPWSinc *this = GST_LPWSINC (object);
+  GstLPWSinc *self = GST_LPWSINC (object);
 
   switch (prop_id) {
     case PROP_LENGTH:
-      g_value_set_int (value, this->wing_size);
+      g_value_set_int (value, self->wing_size);
       break;
     case PROP_FREQUENCY:
-      g_value_set_double (value, this->frequency);
+      g_value_set_double (value, self->frequency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

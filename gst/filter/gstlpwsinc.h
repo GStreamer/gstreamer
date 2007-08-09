@@ -54,6 +54,8 @@ G_BEGIN_DECLS
 typedef struct _GstLPWSinc GstLPWSinc;
 typedef struct _GstLPWSincClass GstLPWSincClass;
 
+typedef void (*GstLPWSincProcessFunc) (GstLPWSinc *, guint8 *, guint8 *, guint);
+
 /**
  * GstLPWSinc:
  *
@@ -62,14 +64,15 @@ typedef struct _GstLPWSincClass GstLPWSincClass;
 struct _GstLPWSinc {
   GstAudioFilter element;
 
-  void (*process)(GstLPWSinc*, gpointer, gint);
+  GstLPWSincProcessFunc process;
 
-  double frequency;
-  int wing_size;                /* length of a "wing" of the filter; 
+  gdouble frequency;
+  gint wing_size;               /* length of a "wing" of the filter; 
                                    actual length is 2 * wing_size + 1 */
 
-  gfloat *residue;              /* buffer for left-over samples from previous buffer */
-  double *kernel;
+  gdouble *residue;             /* buffer for left-over samples from previous buffer */
+  gdouble *kernel;              /* filter kernel */
+  gboolean have_kernel;
 };
 
 struct _GstLPWSincClass {
