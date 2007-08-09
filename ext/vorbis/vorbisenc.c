@@ -151,7 +151,7 @@ vorbis_caps_factory (void)
 static GstCaps *
 raw_caps_factory (void)
 {
-  /* lowest, highest sample rates come from vorbis/lib/modes/setup_X.h: 
+  /* lowest, highest sample rates come from vorbis/lib/modes/setup_X.h:
    * 1-200000 Hz */
   return
       gst_caps_new_simple ("audio/x-raw-float",
@@ -1118,7 +1118,10 @@ gst_vorbis_enc_chain (GstPad * pad, GstBuffer * buffer)
   if (vorbisenc->expected_ts != GST_CLOCK_TIME_NONE &&
       GST_BUFFER_TIMESTAMP (buffer) < vorbisenc->expected_ts) {
     GST_WARNING_OBJECT (vorbisenc, "Buffer is older than previous "
-        "timestamp + duration, cannot handle. Dropping buffer.");
+        "timestamp + duration (%" GST_TIME_FORMAT "< %" GST_TIME_FORMAT
+        "), cannot handle. Dropping buffer.",
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+        GST_TIME_ARGS (vorbisenc->expected_ts));
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }

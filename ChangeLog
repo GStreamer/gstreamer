@@ -1,3 +1,11 @@
+2007-08-09  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/ogg/gstoggmux.c:
+	  Do not leak oggmux instance.
+	
+	* ext/vorbis/vorbisenc.c:
+	  Also log values.
+
 2007-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/hu.po:
