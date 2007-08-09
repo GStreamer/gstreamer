@@ -1,3 +1,12 @@
+2007-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* po/hu.po:
+	* po/it.po:
+	* po/nl.po:
+	* po/uk.po:
+	* po/vi.po:
+	  Updated translations.
+
 2007-08-08  Stefan Kost  <ensonic@users.sf.net>
 
 	patch by: Yang Hong <hongyang@redflag-linux.com>
