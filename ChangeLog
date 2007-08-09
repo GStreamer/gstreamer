@@ -1,3 +1,9 @@
+2007-08-09  Philippe Kalaf <philippe.kalaf@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+		Don't send an async_start message during downwards state change if target
+		state is less than READY
+
 2007-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	translated by: Gabor Kelemen <kelemeng@gnome.hu>

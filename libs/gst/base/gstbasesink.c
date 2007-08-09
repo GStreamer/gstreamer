@@ -2923,12 +2923,16 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, we are prerolled");
         basesink->playing_async = FALSE;
       } else {
-        GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, need preroll");
-        basesink->playing_async = TRUE;
-        basesink->priv->commited = FALSE;
-        ret = GST_STATE_CHANGE_ASYNC;
-        gst_element_post_message (GST_ELEMENT_CAST (basesink),
-            gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+        if (GST_STATE_TARGET (GST_ELEMENT (basesink)) <= GST_STATE_READY) {
+          ret = GST_STATE_CHANGE_SUCCESS;
+        } else {
+          GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, need preroll");
+          basesink->playing_async = TRUE;
+          basesink->priv->commited = FALSE;
+          ret = GST_STATE_CHANGE_ASYNC;
+          gst_element_post_message (GST_ELEMENT_CAST (basesink),
+              gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+        }
       }
       GST_DEBUG_OBJECT (basesink, "rendered: %" G_GUINT64_FORMAT
           ", dropped: %" G_GUINT64_FORMAT, basesink->priv->rendered,
