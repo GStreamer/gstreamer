@@ -1,5 +1,13 @@
 2007-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	translated by: Gabor Kelemen <kelemeng@gnome.hu>
+
+	* po/LINGUAS:
+	* po/hu.po:
+	  Added Hungarian translation.
+
+2007-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	* po/fi.po:
 	* po/it.po:
 	* po/nl.po:
