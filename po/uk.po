@@ -1,19 +1,20 @@
-# Ukrainian translation to gst-plugins.
+# Ukrainian translation to gst-plugins-bad
 # Copyright (C) 2004 Free Software Foundation, Inc.
-# This file is distributed under the same license as the gst-plugins package.
-# Maxim V. Dziumanenko <mvd@mylinux.com.ua>, 2004.
+# This file is distributed under the same license as the gst-plugins-bad package.
+# Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins 0.8.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2007-06-13 12:47+0200\n"
-"PO-Revision-Date: 2004-08-03 15:40+0200\n"
-"Last-Translator: Maxim V. Dziumanenko <mvd@mylinux.com.ua>\n"
+"PO-Revision-Date: 2007-07-04 12:19+0200\n"
+"Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
 #: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
 #, c-format
@@ -21,196 +22,16 @@ msgid "Device \"%s\" does not exist."
 msgstr "Пристрій \"%s\" не існує."
 
 #: sys/dvb/gstdvbsrc.c:662
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Не вдається закрити пристрій керування \"%s\"."
+msgstr "Не вдається відкрити пристрій відтворення \"%s\"."
 
 #: sys/dvb/gstdvbsrc.c:674
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Не вдається отримати достатньо буферів від пристрою \"%s\"."
+msgstr "Не вдається отримати параметри пристрою відтворення \"%s\"."
 
 #: sys/dvb/gstdvbsrc.c:717
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не вдається відкрити файл \"%s\" для читання."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Не вдається відкрити пристрій \"%s\" для читання чи запису."
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Пристрій \"%s\" не є пристроєм захоплення."
-
-#~ msgid "Could not write to device \"%s\"."
-#~ msgstr "Не вдається записати у пристрій \"%s\"."
-
-#~ msgid "Could not get buffers from device \"%s\"."
-#~ msgstr "Не вдається отримати буфери від пристрою \"%s\"."
-
-#~ msgid "No filename specified."
-#~ msgstr "Не вказаний файл."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Не вдається відкрити файл \"%s\" для запису."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Не вдається записати у файл \"%s\"."
-
-#~ msgid "Could not open audio device \"%s\" for writing."
-#~ msgstr "Не вдається відкрити звуковий пристрій \"%s\" для запису."
-
-#~ msgid "Could not open control device \"%s\" for writing."
-#~ msgstr "Не вдається відкрити пристрій керування \"%s\" для запису."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "Не вдається настроїти звуковий пристрій \"%s\"."
-
-#~ msgid "Could not set audio device \"%s\" to %d Hz."
-#~ msgstr "Не вдається встановити частоту \"%s\" у %d Гц."
-
-#~ msgid "Could not close audio device \"%s\"."
-#~ msgstr "Не вдається закрити звуковий пристрій \"%s\"."
-
-#~ msgid "Could not open video device \"%s\" for writing."
-#~ msgstr "Не вдається відкрити відео пристрій \"%s\" для запису."
-
-#~ msgid "Could not close video device \"%s\"."
-#~ msgstr "Не вдається закрити відео пристрій \"%s\"."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Помилка закривання файлу \"%s\"."
-
-#~ msgid "No or invalid input audio, AVI stream will be corrupt."
-#~ msgstr "Відсутній або неправильний вхід звуку, AVI потік буде пошкоджений."
-
-#~ msgid "OSS device \"%s\" is already in use by another program."
-#~ msgstr "OSS пристрій \"%s\" вже використовується іншою програмою."
-
-#~ msgid "Could not access device \"%s\", check its permissions."
-#~ msgstr ""
-#~ "Не вдається отримати доступ до пристрою \"%s\", перевірте права доступу "
-#~ "до нього."
-
-#~ msgid "Could not open device \"%s\" for writing."
-#~ msgstr "Не вдається відкрити пристрій \"%s\" для запису."
-
-#~ msgid "Could not open device \"%s\" for reading."
-#~ msgstr "Не вдається відкрити пристрій \"%s\" для читання."
-
-#, fuzzy
-#~ msgid "Your OSS device could not be probed correctly"
-#~ msgstr "Ваш OSS пристрій неможливо коректно перевірити"
-
-#~ msgid "Volume"
-#~ msgstr "Гучність"
-
-#~ msgid "Bass"
-#~ msgstr "Низькі"
-
-#~ msgid "Treble"
-#~ msgstr "Високі"
-
-#~ msgid "Synth"
-#~ msgstr "Синтезатор"
-
-#~ msgid "PCM"
-#~ msgstr "КІМ"
-
-#~ msgid "Speaker"
-#~ msgstr "Гучномовець"
-
-#~ msgid "Line-in"
-#~ msgstr "Лінійний вхід"
-
-#~ msgid "Microphone"
-#~ msgstr "Мікрофон"
-
-#~ msgid "CD"
-#~ msgstr "Компакт-диск"
-
-#~ msgid "Mixer"
-#~ msgstr "Мікшер"
-
-#~ msgid "PCM-2"
-#~ msgstr "КІМ-2"
-
-#~ msgid "Record"
-#~ msgstr "Запис"
-
-#~ msgid "In-gain"
-#~ msgstr "Вх. підсилення"
-
-#~ msgid "Out-gain"
-#~ msgstr "Вих. підсилення"
-
-#~ msgid "Line-1"
-#~ msgstr "Лінія-1"
-
-#~ msgid "Line-2"
-#~ msgstr "Лінія-2"
-
-#~ msgid "Line-3"
-#~ msgstr "Лінія-3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Цифровий-1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Цифровий-2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Цифровий-3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Вх. телефону"
-
-#~ msgid "Phone-out"
-#~ msgstr "Вих. телефону"
-
-#~ msgid "Video"
-#~ msgstr "Відео"
-
-#~ msgid "Radio"
-#~ msgstr "Радіо"
-
-#~ msgid "Monitor"
-#~ msgstr "Монітор"
-
-#, fuzzy
-#~ msgid "PC Speaker"
-#~ msgstr "Гучномовець"
-
-#~ msgid "Could not open CD device for reading."
-#~ msgstr "Не вдається відкрити пристрій компакт-дисків для читання."
-
-#~ msgid "Could not open vfs file \"%s\" for reading."
-#~ msgstr ""
-#~ "Не вдається відкрити файл віртуальної файлової системи \"%s\" для читання."
-
-#, fuzzy
-#~ msgid "No filename given."
-#~ msgstr "Не вказано файл"
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr ""
-#~ "Не вдається відкрити файл віртуальної файлової системи \"%s\" для запису: "
-#~ "%s."
-
-#~ msgid "No filename given"
-#~ msgstr "Не вказано файл"
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Не вдається закрити файл віртуальної файлової системи \"%s\"."
-
-#, fuzzy
-#~ msgid "Your OSS device doesn't support mono or stereo."
-#~ msgstr "Ваш OSS пристрій неможливо коректно перевірити"
-
-#~ msgid "No device specified."
-#~ msgstr "Пристрій не вказано."
-
-#~ msgid "Device is not open."
-#~ msgstr "Пристрій не відкритий."
-
-#~ msgid "Device is open."
-#~ msgstr "Пристрій відкритий."

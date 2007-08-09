@@ -1,229 +1,37 @@
-# Vietnamese Translation for gst-plugins-0.8.3.
-# This file is put in the public domain.
-# Copyright (C) 2005 Free Software Foundation, Inc.
-# This file is distributed under the same license as the gst-plugins-0.8.3 package.
-# Clytie Siddall <clytie@riverland.net.au>, 2005.
+# Vietnamese translation for GST Plugins Bad.
+# Copyright © 2007 Free Software Foundation, Inc.
+# Clytie Siddall <clytie@riverland.net.au>, 2007
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-0.8.3\n"
+"Project-Id-Version: gst-plugins-bad 0.10.5\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2007-06-13 12:47+0200\n"
-"PO-Revision-Date: 2005-01-22 17:17+0930\n"
+"PO-Revision-Date: 2007-07-13 21:28+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
-"Language-Team: Vietnamese <gnomevi-list@lists.sourceforge.net> \n"
+"Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: LocFactoryEditor 1.6.4a5\n"
 
 #: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Không có thiết bị \"%s\" ."
+msgstr "Thiết bị « %s » không tồn tại."
 
 #: sys/dvb/gstdvbsrc.c:662
-#, fuzzy, c-format
+#, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Đã không đóng được thiết bị điều khiển \"%s\"."
+msgstr "Không thể mở thiết bị giao diện « %s »."
 
 #: sys/dvb/gstdvbsrc.c:674
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Đã không gọi được đủ bộ đệm từ thiết bị \"%s\"."
+msgstr "Không thể lấy thiết lập từ thiết bị giao diện « %s »."
 
 #: sys/dvb/gstdvbsrc.c:717
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Đã không mở được tập tin \"%s\" để đọc."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Đã không mở được thiết bị \"%s\" để đọc và ghi."
-
-#~ msgid "Device \"%s\" is not a capture device."
-#~ msgstr "Thiết bị \"%s\" không bắt gì được."
-
-#~ msgid "Could not write to device \"%s\"."
-#~ msgstr "Đã không ghi được vào thiết bị \"%s\"."
-
-#~ msgid "Could not get buffers from device \"%s\"."
-#~ msgstr "Đã không gọi được bộ đệm nào từ thiết bị \"%s\"."
-
-#~ msgid "No filename specified."
-#~ msgstr "Chưa ghi rõ tên tập tin."
-
-#~ msgid "Could not open file \"%s\" for writing."
-#~ msgstr "Đã không mở được tập tin \"%s\" để ghi."
-
-#~ msgid "Could not write to file \"%s\"."
-#~ msgstr "Đã không ghi được vào tập tin \"%s\"."
-
-#~ msgid "Could not open audio device \"%s\" for writing."
-#~ msgstr "Đã không mở được thiết bị âm thanh \"%s\" để ghi."
-
-#~ msgid "Could not open control device \"%s\" for writing."
-#~ msgstr "Đã không mở được thiết bị điều khiển \"%s\" để ghi."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "Đã không định cầu hình được thiết bị âm thanh \"%s\"."
-
-#~ msgid "Could not set audio device \"%s\" to %d Hz."
-#~ msgstr "Đã không đặt được thiết bị âm thanh \"%s\" thành %d Hz."
-
-#~ msgid "Could not close audio device \"%s\"."
-#~ msgstr "Đã không đóng được thiết bị âm thanh \"%s\"."
-
-#~ msgid "Could not open video device \"%s\" for writing."
-#~ msgstr "Đã không mở được thiết bị ảnh động \"%s\" để ghi."
-
-#~ msgid "Could not close video device \"%s\"."
-#~ msgstr "Đã không đóng được thiết bị ảnh động \"%s\"."
-
-#~ msgid "Error closing file \"%s\"."
-#~ msgstr "Lỗi khi đóng tập tin \"%s\"."
-
-#~ msgid "No or invalid input audio, AVI stream will be corrupt."
-#~ msgstr ""
-#~ "Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. "
-#~ "Sẽ có dòng AVI hư."
-
-#~ msgid "OSS device \"%s\" is already in use by another program."
-#~ msgstr "Một chương trình khác đang sử dụng thiết bị OSS \"%s\"."
-
-#~ msgid "Could not access device \"%s\", check its permissions."
-#~ msgstr "Đã không truy cập được thiết bị \"%s\", nên hãy kiểm tra quyền nó."
-
-#~ msgid "Could not open device \"%s\" for writing."
-#~ msgstr "Đã không mở được thiết bị \"%s\" để ghi."
-
-#~ msgid "Could not open device \"%s\" for reading."
-#~ msgstr "Đã không mở được thiết bị \"%s\" để đọc."
-
-#~ msgid "Your OSS device could not be probed correctly"
-#~ msgstr "Đã không dò được cho đúng thiết bị OSS của bạn"
-
-#~ msgid "Volume"
-#~ msgstr "Âm lượng"
-
-#~ msgid "Bass"
-#~ msgstr "Trầm"
-
-#~ msgid "Treble"
-#~ msgstr "Cao"
-
-#~ msgid "Synth"
-#~ msgstr "Tổng hợp"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Speaker"
-#~ msgstr "Loa"
-
-#~ msgid "Line-in"
-#~ msgstr "Dây-vào"
-
-#~ msgid "Microphone"
-#~ msgstr "Micrô"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Mixer"
-#~ msgstr "Trộn"
-
-#~ msgid "PCM-2"
-#~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Ghi"
-
-#~ msgid "In-gain"
-#~ msgstr "Vào-gia lượng"
-
-#~ msgid "Out-gain"
-#~ msgstr "Ra-gia lượng"
-
-#~ msgid "Line-1"
-#~ msgstr "Dây-1"
-
-#~ msgid "Line-2"
-#~ msgstr "Dây-2"
-
-#~ msgid "Line-3"
-#~ msgstr "Dây-3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Đoạn biến-1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Đoạn biến-2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Đoạn biến-3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Điện thoại-vào"
-
-#~ msgid "Phone-out"
-#~ msgstr "Điạn thoại-ra"
-
-#~ msgid "Video"
-#~ msgstr "Ảnh động"
-
-#~ msgid "Radio"
-#~ msgstr "Thu thanh"
-
-#~ msgid "Monitor"
-#~ msgstr "Màn hình"
-
-#, fuzzy
-#~ msgid "PC Speaker"
-#~ msgstr "Loa"
-
-#~ msgid "Could not open CD device for reading."
-#~ msgstr "Đã không mở được thiết bị CD để đọc"
-
-#~ msgid "Could not open vfs file \"%s\" for reading."
-#~ msgstr "Đã không mở được tập tin vfs \"%s\" để đọc."
-
-#, fuzzy
-#~ msgid "No filename given."
-#~ msgstr "Chưa nhập tên tập tin "
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Đã không mở được tập tin vfs \"%s\" để ghi: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Chưa nhập tên tập tin "
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Đã không đóng được tập tin vfs \"%s\"."
-
-#, fuzzy
-#~ msgid "Your OSS device doesn't support mono or stereo."
-#~ msgstr "Đã không dò được cho đúng thiết bị OSS của bạn"
-
-#~ msgid "No device specified."
-#~ msgstr "Chưa ghi rõ thiết bị nào"
-
-#~ msgid "Device is not open."
-#~ msgstr "Thiết bị chưa mở"
-
-#~ msgid "Device is open."
-#~ msgstr "Thiết bị mở rồi"
-
-#~ msgid ""
-#~ "The %s element could not be found. This element is essential for "
-#~ "playback. Please install the right plug-in and verify that it works by "
-#~ "running 'gst-inspect %s'"
-#~ msgstr ""
-#~ "Chưa tìm được yếu tố %s. Phải có yếu tố này để phát lại được.Hãy cài đặt "
-#~ "trình cầm phít đúng và kiểm chứng nó hoạt động được bằng cách chạy lệnh "
-#~ "'gst-inspect %s'"
-
-#~ msgid ""
-#~ "No usable colorspace element could be found.\n"
-#~ "Please install one and restart."
-#~ msgstr ""
-#~ "Chưa tìm được yếu tố colorspace (khoảng cách màu) có thể sử dụng.\n"
-#~ "Hãy cài đặt nó rồi khởi động lại."
+msgstr "Không thể mở tập tin « %s » để đọc."
