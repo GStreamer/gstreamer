@@ -1,3 +1,14 @@
+2007-08-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* gst/stereo/Makefile.am:
+	* gst/stereo/gststereo.c: (gst_stereo_base_init),
+	(gst_stereo_class_init), (gst_stereo_init),
+	(gst_stereo_transform_ip), (gst_stereo_set_property),
+	(gst_stereo_get_property):
+	* gst/stereo/gststereo.h:
+	Port the stereo element to GStreamer 0.10.
+
 2007-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	submitted by: Raphael Higino <phhigino@gmail.com>

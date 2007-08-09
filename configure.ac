@@ -101,6 +101,7 @@ GST_PLUGINS_ALL="\
   rtpmanager \
   spectrum \
   speed \
+  stereo \
   switch \
   tta \
   videoparse \
@@ -997,6 +998,7 @@ gst/replaygain/Makefile
 gst/rtpmanager/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
+gst/stereo/Makefile
 gst/switch/Makefile
 gst/tta/Makefile
 gst/videoparse/Makefile
