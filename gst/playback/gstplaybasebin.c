@@ -82,6 +82,9 @@ static GValueArray *gst_play_base_bin_get_streaminfo_value_array (GstPlayBaseBin
     * play_base_bin);
 static void preroll_remove_overrun (GstElement * element,
     GstPlayBaseBin * play_base_bin);
+static void queue_remove_probe (GstElement * queue, GstPlayBaseBin
+    * play_base_bin);
+
 static GstElement *make_decoder (GstPlayBaseBin * play_base_bin);
 static gboolean has_all_raw_caps (GstPad * pad, gboolean * all_raw);
 
@@ -452,6 +455,8 @@ group_commit (GstPlayBaseBin * play_base_bin, gboolean fatal, gboolean subtitle)
           continue;
 
         preroll_remove_overrun (element, play_base_bin);
+        /* if overrun is removed, probe alse has to be removed */
+        queue_remove_probe (element, play_base_bin);
       }
     } else {
       /* this is a special subtitle bin, we don't commit the group but
@@ -611,14 +616,39 @@ queue_deadlock_check (GstElement * queue, GstPlayBaseBin * play_base_bin)
   }
 }
 
+static void
+queue_remove_probe (GstElement * queue, GstPlayBaseBin * play_base_bin)
+{
+  gpointer data;
+  GstPad *sinkpad;
+
+  data = g_object_get_data (G_OBJECT (queue), "probe");
+  sinkpad = gst_element_get_pad (queue, "sink");
+
+  if (data) {
+    GST_DEBUG_OBJECT (play_base_bin,
+        "Removing buffer probe from pad %s:%s (%p)",
+        GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
+
+    g_object_set_data (G_OBJECT (queue), "probe", NULL);
+    gst_pad_remove_buffer_probe (sinkpad, GPOINTER_TO_INT (data));
+  } else {
+    GST_DEBUG_OBJECT (play_base_bin,
+        "No buffer probe to remove from %s:%s (%p)",
+        GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
+  }
+  gst_object_unref (sinkpad);
+}
+
 /* Used for time-based buffering in streaming mode and is called when a queue
  * emits the running signal. This means that the high watermark threshold is
  * reached and the buffering is completed. */
 static void
 queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
 {
+  GstPlayBaseGroup *group;
   gpointer data;
-  GstPad *sinkpad;
+  gint n;
 
   GST_DEBUG_OBJECT (play_base_bin, "running signal received from queue %s",
       GST_ELEMENT_NAME (queue));
@@ -641,24 +671,17 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
         play_base_bin->queue_min_threshold, NULL);
   }
 
-  sinkpad = gst_element_get_pad (queue, "sink");
-
   /* we remove the probe now because we don't need it anymore to give progress
    * about the buffering. */
-  data = g_object_get_data (G_OBJECT (queue), "probe");
-  if (data) {
-    GST_DEBUG_OBJECT (play_base_bin,
-        "Removing buffer probe from pad %s:%s (%p)",
-        GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
+  group = get_active_group (play_base_bin);
+  for (n = 0; n < NUM_TYPES; n++) {
+    GstElement *element = group->type[n].preroll;
 
-    g_object_set_data (G_OBJECT (queue), "probe", NULL);
-    gst_pad_remove_buffer_probe (sinkpad, GPOINTER_TO_INT (data));
-  } else {
-    GST_DEBUG_OBJECT (play_base_bin,
-        "No buffer probe to remove from %s:%s (%p)",
-        GST_DEBUG_PAD_NAME (sinkpad), sinkpad);
+    if (!element)
+      continue;
+
+    queue_remove_probe (element, play_base_bin);
   }
-  gst_object_unref (sinkpad);
 
   /* we post a 100% buffering message to notify the app that buffering is
    * completed and playback can start/continue */
