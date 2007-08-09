@@ -25,9 +25,14 @@
  * chapter 16
  * available at http://www.dspguide.com/
  *
- * FIXME:
- * - this filter is totally unoptimized !
- * - this might be improved upon with bytestream
+ * TODO:  - Implement the convolution in place, probably only makes sense
+ *          when using FFT convolution as currently the convolution itself
+ *          is probably the bottleneck
+ *        - Implement a band reject mode (spectral inversion)
+ *        - Allow choosing between different windows (blackman, hanning, ...)
+ *        - Specify filter length instead of 2*N+1
+ * FIXME: - Doesn't work at all with >1 channels
+ *        - Is bandreject, not bandpass
  */
 
 #ifdef HAVE_CONFIG_H
@@ -96,16 +101,16 @@ static gboolean bpwsinc_setup (GstAudioFilter * base,
 static void
 gst_bpwsinc_dispose (GObject * object)
 {
-  GstBPWSinc *this = GST_BPWSINC (object);
+  GstBPWSinc *self = GST_BPWSINC (object);
 
-  if (this->residue) {
-    g_free (this->residue);
-    this->residue = NULL;
+  if (self->residue) {
+    g_free (self->residue);
+    self->residue = NULL;
   }
 
-  if (this->kernel) {
-    g_free (this->kernel);
-    this->kernel = NULL;
+  if (self->kernel) {
+    g_free (self->kernel);
+    self->kernel = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -156,13 +161,13 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
 }
 
 static void
-gst_bpwsinc_init (GstBPWSinc * this, GstBPWSincClass * g_class)
+gst_bpwsinc_init (GstBPWSinc * self, GstBPWSincClass * g_class)
 {
-  this->wing_size = 50;
-  this->lower_frequency = 0.25;
-  this->upper_frequency = 0.3;
-  this->kernel = NULL;
-  this->residue = NULL;
+  self->wing_size = 50;
+  self->lower_frequency = 0.25;
+  self->upper_frequency = 0.3;
+  self->kernel = NULL;
+  self->residue = NULL;
 }
 
 
@@ -176,28 +181,27 @@ bpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
   double sum = 0.0;
   int len = 0;
   double *kernel_lp, *kernel_hp;
-  GstBPWSinc *this = GST_BPWSINC (base);
+  GstBPWSinc *self = GST_BPWSINC (base);
 
-  len = this->wing_size;
+  len = self->wing_size;
   /* fill the lp kernel
    * FIXME: refactor to own function, this is not caps related
    */
   GST_DEBUG ("bpwsinc: initializing LP kernel of length %d with cut-off %f",
-      len * 2 + 1, this->lower_frequency);
+      len * 2 + 1, self->lower_frequency);
   kernel_lp = (double *) g_malloc (sizeof (double) * (2 * len + 1));
   for (i = 0; i <= len * 2; ++i) {
     if (i == len)
-      kernel_lp[i] = 2 * M_PI * this->lower_frequency;
+      kernel_lp[i] = 2 * M_PI * self->lower_frequency;
     else
-      kernel_lp[i] = sin (2 * M_PI * this->lower_frequency * (i - len))
+      kernel_lp[i] = sin (2 * M_PI * self->lower_frequency * (i - len))
           / (i - len);
     /* Blackman windowing */
     kernel_lp[i] *= (0.42 - 0.5 * cos (M_PI * i / len)
         + 0.08 * cos (2 * M_PI * i / len));
   }
 
-  /* normalize for unity gain at DC
-   * FIXME: sure this is not supposed to be quadratic ? */
+  /* normalize for unity gain at DC */
   sum = 0.0;
   for (i = 0; i <= len * 2; ++i)
     sum += kernel_lp[i];
@@ -206,51 +210,50 @@ bpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 
   /* fill the hp kernel */
   GST_DEBUG ("bpwsinc: initializing HP kernel of length %d with cut-off %f",
-      len * 2 + 1, this->upper_frequency);
+      len * 2 + 1, self->upper_frequency);
   kernel_hp = (double *) g_malloc (sizeof (double) * (2 * len + 1));
   for (i = 0; i <= len * 2; ++i) {
     if (i == len)
-      kernel_hp[i] = 2 * M_PI * this->upper_frequency;
+      kernel_hp[i] = 2 * M_PI * self->upper_frequency;
     else
-      kernel_hp[i] = sin (2 * M_PI * this->upper_frequency * (i - len))
+      kernel_hp[i] = sin (2 * M_PI * self->upper_frequency * (i - len))
           / (i - len);
     /* Blackman windowing */
     kernel_hp[i] *= (0.42 - 0.5 * cos (M_PI * i / len)
         + 0.08 * cos (2 * M_PI * i / len));
   }
 
-  /* normalize for unity gain at DC
-   * FIXME: sure this is not supposed to be quadratic ? */
+  /* normalize for unity gain at DC */
   sum = 0.0;
   for (i = 0; i <= len * 2; ++i)
     sum += kernel_hp[i];
   for (i = 0; i <= len * 2; ++i)
     kernel_hp[i] /= sum;
 
-  /* combine the two thiss */
-  if (this->kernel)
-    g_free (this->kernel);
-  this->kernel = (double *) g_malloc (sizeof (double) * (2 * len + 1));
+  /* combine the two kernels */
+  if (self->kernel)
+    g_free (self->kernel);
+  self->kernel = (double *) g_malloc (sizeof (double) * (2 * len + 1));
 
   for (i = 0; i <= len * 2; ++i)
-    this->kernel[i] = kernel_lp[i] + kernel_hp[i];
+    self->kernel[i] = kernel_lp[i] + kernel_hp[i];
 
   /* do spectral inversion to go from band reject to bandpass */
   for (i = 0; i <= len * 2; ++i)
-    this->kernel[i] = -this->kernel[i];
-  this->kernel[len] += 1;
+    self->kernel[i] = -self->kernel[i];
+  self->kernel[len] += 1;
 
   /* free the helper kernels */
   g_free (kernel_lp);
   g_free (kernel_hp);
 
   /* set up the residue memory space */
-  if (this->residue)
-    g_free (this->residue);
+  if (self->residue)
+    g_free (self->residue);
 
-  this->residue = (gfloat *) g_malloc (sizeof (gfloat) * (len * 2 + 1));
+  self->residue = (gfloat *) g_malloc (sizeof (gfloat) * (len * 2 + 1));
   for (i = 0; i <= len * 2; ++i)
-    this->residue[i] = 0.0;
+    self->residue[i] = 0.0;
 
   return TRUE;
 }
@@ -260,7 +263,7 @@ bpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 static GstFlowReturn
 bpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
-  GstBPWSinc *this = GST_BPWSINC (base);
+  GstBPWSinc *self = GST_BPWSINC (base);
   GstClockTime timestamp;
 
   gfloat *src;
@@ -278,28 +281,28 @@ bpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   timestamp = GST_BUFFER_TIMESTAMP (outbuf);
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
-    gst_object_sync_values (G_OBJECT (this), timestamp);
+    gst_object_sync_values (G_OBJECT (self), timestamp);
 
   /* FIXME: out of laziness, we copy the left-over bit from last buffer
    * together with the incoming buffer to a new buffer to make the loop
-   * easy; this could be a lot more optimized though
+   * easy; self could be a lot more optimized though
    * to make amends we keep the incoming buffer around and write our
    * output samples there */
 
   src = (gfloat *) GST_BUFFER_DATA (outbuf);
-  residue_samples = this->wing_size * 2 + 1;
+  residue_samples = self->wing_size * 2 + 1;
   input_samples = GST_BUFFER_SIZE (outbuf) / sizeof (gfloat);
   total_samples = residue_samples + input_samples;
 
   input = (gfloat *) g_malloc (sizeof (gfloat) * total_samples);
 
   /* copy the left-over bit */
-  memcpy (input, this->residue, sizeof (gfloat) * residue_samples);
+  memcpy (input, self->residue, sizeof (gfloat) * residue_samples);
 
   /* copy the new buffer */
   memcpy (&input[residue_samples], src, sizeof (gfloat) * input_samples);
   /* copy the tail of the current input buffer to the residue */
-  memcpy (this->residue, &src[input_samples - residue_samples],
+  memcpy (self->residue, &src[input_samples - residue_samples],
       sizeof (gfloat) * residue_samples);
 
   /* convolution */
@@ -308,7 +311,7 @@ bpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   for (i = 0; i < input_samples; ++i) {
     src[i] = 0.0;
     for (j = 0; j < residue_samples; ++j)
-      src[i] += input[i - j + residue_samples] * this->kernel[j];
+      src[i] += input[i - j + residue_samples] * self->kernel[j];
   }
 
   g_free (input);
@@ -320,19 +323,19 @@ static void
 bpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
     GParamSpec * pspec)
 {
-  GstBPWSinc *this = GST_BPWSINC (object);
+  GstBPWSinc *self = GST_BPWSINC (object);
 
-  g_return_if_fail (GST_IS_BPWSINC (this));
+  g_return_if_fail (GST_IS_BPWSINC (self));
 
   switch (prop_id) {
     case PROP_LENGTH:
-      this->wing_size = g_value_get_int (value);
+      self->wing_size = g_value_get_int (value);
       break;
     case PROP_LOWER_FREQUENCY:
-      this->lower_frequency = g_value_get_double (value);
+      self->lower_frequency = g_value_get_double (value);
       break;
     case PROP_UPPER_FREQUENCY:
-      this->upper_frequency = g_value_get_double (value);
+      self->upper_frequency = g_value_get_double (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -344,17 +347,17 @@ static void
 bpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
     GParamSpec * pspec)
 {
-  GstBPWSinc *this = GST_BPWSINC (object);
+  GstBPWSinc *self = GST_BPWSINC (object);
 
   switch (prop_id) {
     case PROP_LENGTH:
-      g_value_set_int (value, this->wing_size);
+      g_value_set_int (value, self->wing_size);
       break;
     case PROP_LOWER_FREQUENCY:
-      g_value_set_double (value, this->lower_frequency);
+      g_value_set_double (value, self->lower_frequency);
       break;
     case PROP_UPPER_FREQUENCY:
-      g_value_set_double (value, this->upper_frequency);
+      g_value_set_double (value, self->upper_frequency);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

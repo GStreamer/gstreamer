@@ -26,9 +26,12 @@
  * chapter 16
  * available at http://www.dspguide.com/
  *
- * TODO: - Implement the convolution in place
- *       - Implement a highpass mode (spectral inversion)
- *       - Allow choosing between different windows (blackman, hanning, ...)
+ * TODO:  - Implement the convolution in place, probably only makes sense
+ *          when using FFT convolution as currently the convolution itself
+ *          is probably the bottleneck.
+ *        - Implement a highpass mode (spectral inversion)
+ *        - Allow choosing between different windows (blackman, hanning, ...)
+ * FIXME: - Doesn't work at all with >1 channels
  */
 
 #ifdef HAVE_CONFIG_H
