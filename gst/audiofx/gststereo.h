@@ -23,12 +23,7 @@
 
 
 #include <gst/gst.h>
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
-
+#include <gst/audio/gstaudiofilter.h>
 
 #define GST_TYPE_STEREO \
   (gst_stereo_get_type())
@@ -45,23 +40,16 @@ typedef struct _GstStereo GstStereo;
 typedef struct _GstStereoClass GstStereoClass;
 
 struct _GstStereo {
-  GstElement element;
+  GstAudioFilter element;
 
-  GstPad *sinkpad,*srcpad;
-
-  gint8 active;
+  gboolean active;
   gfloat stereo;
 };
 
 struct _GstStereoClass {
-  GstElementClass parent_class;
+  GstAudioFilterClass parent_class;
 };
 
 GType gst_stereo_get_type(void);
-
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
-
 
 #endif /* __GST_STEREO_H__ */

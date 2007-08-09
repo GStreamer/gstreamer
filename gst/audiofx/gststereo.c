@@ -27,6 +27,13 @@
 #endif
 #include "gststereo.h"
 
+#include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
+#include <gst/audio/audio.h>
+#include <gst/audio/gstaudiofilter.h>
+#include <gst/controller/gstcontroller.h>
+
+
 /* elementfactory information */
 static const GstElementDetails stereo_details =
 GST_ELEMENT_DETAILS ("Stereo effect",
@@ -34,6 +41,15 @@ GST_ELEMENT_DETAILS ("Stereo effect",
     "Muck with the stereo signal to enhance its 'stereo-ness'",
     "Erik Walthinsen <omega@cse.ogi.edu>");
 
+
+#define ALLOWED_CAPS \
+    "audio/x-raw-int,"                                                \
+    " depth = (int) 16, "                                             \
+    " width = (int) 16, "                                             \
+    " endianness = (int) BYTE_ORDER,"                                 \
+    " rate = (int) [ 1, MAX ],"                                       \
+    " channels = (int) 2, "                                           \
+    " signed = (boolean) TRUE"
 
 /* Stereo signals and args */
 enum
@@ -49,112 +65,83 @@ enum
   ARG_STEREO
 };
 
-
-static void gst_stereo_base_init (gpointer g_class);
-static void gst_stereo_class_init (GstStereoClass * klass);
-static void gst_stereo_init (GstStereo * stereo);
-
 static void gst_stereo_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_stereo_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_stereo_chain (GstPad * pad, GstData * _data);
-
-static GstElementClass *parent_class = NULL;
+static GstFlowReturn gst_stereo_transform_ip (GstBaseTransform * base,
+    GstBuffer * outbuf);
 
 /*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
 
-GType
-gst_stereo_get_type (void)
-{
-  static GType stereo_type = 0;
-
-  if (!stereo_type) {
-    static const GTypeInfo stereo_info = {
-      sizeof (GstStereoClass),
-      gst_stereo_base_init,
-      NULL,
-      (GClassInitFunc) gst_stereo_class_init,
-      NULL,
-      NULL,
-      sizeof (GstStereo),
-      0,
-      (GInstanceInitFunc) gst_stereo_init,
-    };
-
-    stereo_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstStereo", &stereo_info, 0);
-  }
-  return stereo_type;
-}
+GST_BOILERPLATE (GstStereo, gst_stereo, GstAudioFilter, GST_TYPE_AUDIO_FILTER);
 
 static void
 gst_stereo_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+  GstCaps *caps;
 
   gst_element_class_set_details (element_class, &stereo_details);
+
+  caps = gst_caps_from_string (ALLOWED_CAPS);
+  gst_audio_filter_class_add_pad_templates (GST_AUDIO_FILTER_CLASS (g_class),
+      caps);
+  gst_caps_unref (caps);
 }
+
 static void
 gst_stereo_class_init (GstStereoClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBaseTransformClass *trans_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  trans_class = (GstBaseTransformClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_ACTIVE, g_param_spec_int ("active", "active", "active", G_MININT, G_MAXINT, 0, G_PARAM_READWRITE));      /* CHECKME */
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_STEREO, g_param_spec_float ("stereo", "stereo", "stereo", 0.0, 1.0, 0.0, G_PARAM_READWRITE));    /* CHECKME */
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_stereo_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_stereo_get_property);
 
-  gobject_class->set_property = gst_stereo_set_property;
-  gobject_class->get_property = gst_stereo_get_property;
+  g_object_class_install_property (gobject_class, ARG_ACTIVE,
+      g_param_spec_boolean ("active", "active", "active",
+          TRUE, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, ARG_STEREO,
+      g_param_spec_float ("stereo", "stereo", "stereo",
+          0.0, 1.0, 0.1, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_stereo_transform_ip);
 }
 
 static void
-gst_stereo_init (GstStereo * stereo)
+gst_stereo_init (GstStereo * stereo, GstStereoClass * klass)
 {
-  stereo->sinkpad = gst_pad_new ("sink", GST_PAD_SINK);
-  gst_element_add_pad (GST_ELEMENT (stereo), stereo->sinkpad);
-  gst_pad_set_chain_function (stereo->sinkpad, gst_stereo_chain);
-  stereo->srcpad = gst_pad_new ("src", GST_PAD_SRC);
-  gst_element_add_pad (GST_ELEMENT (stereo), stereo->srcpad);
-
-  stereo->active = FALSE;
-  stereo->stereo = 2.5;
+  stereo->active = TRUE;
+  stereo->stereo = 0.1;
 }
 
-static void
-gst_stereo_chain (GstPad * pad, GstData * _data)
+static GstFlowReturn
+gst_stereo_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  GstStereo *stereo;
-  gint16 *data;
-  gint samples;
+  GstStereo *stereo = GST_STEREO (base);
+  gint16 *data = (gint16 *) GST_BUFFER_DATA (outbuf);
+  gint samples = GST_BUFFER_SIZE (outbuf) / 2;
   gint i;
-  gdouble avg, ldiff, rdiff, tmp, mul;
+  gdouble avg, ldiff, rdiff, tmp;
+  gdouble mul = stereo->stereo;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
+  if (!gst_buffer_is_writable (outbuf))
+    return GST_FLOW_OK;
 
-  stereo = GST_STEREO (GST_OBJECT_PARENT (pad));
-  g_return_if_fail (stereo != NULL);
-  g_return_if_fail (GST_IS_STEREO (stereo));
-
-/*  FIXME */
-/*  if (buf->meta) */
-/*    memcpy(&stereo->meta,buf->meta,sizeof(stereo->meta)); */
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (outbuf)))
+    gst_object_sync_values (G_OBJECT (stereo), GST_BUFFER_TIMESTAMP (outbuf));
 
   if (stereo->active) {
-
-    /*if (stereo->meta.channels == 2 && stereo->meta.format == AFMT_S16_LE) { */
-    data = (gint16 *) GST_BUFFER_DATA (buf);
-    samples = GST_BUFFER_SIZE (buf) / 2;
-    mul = stereo->stereo;
     for (i = 0; i < samples / 2; i += 2) {
       avg = (data[i] + data[i + 1]) / 2;
       ldiff = data[i] - avg;
@@ -174,10 +161,9 @@ gst_stereo_chain (GstPad * pad, GstData * _data)
         tmp = 32767;
       data[i + 1] = tmp;
     }
-    /*} */
   }
 
-  gst_pad_push (stereo->srcpad, GST_DATA (buf));
+  return GST_FLOW_OK;
 }
 
 static void
@@ -191,12 +177,13 @@ gst_stereo_set_property (GObject * object, guint prop_id, const GValue * value,
 
   switch (prop_id) {
     case ARG_ACTIVE:
-      stereo->active = g_value_get_int (value);
+      stereo->active = g_value_get_boolean (value);
       break;
     case ARG_STEREO:
       stereo->stereo = g_value_get_float (value) * 10.0;
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -212,7 +199,7 @@ gst_stereo_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case ARG_ACTIVE:
-      g_value_set_int (value, stereo->active);
+      g_value_set_boolean (value, stereo->active);
       break;
     case ARG_STEREO:
       g_value_set_float (value, stereo->stereo / 10.0);
