@@ -543,45 +543,60 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     gint fillsize;
     guint64 fillsamples;
 
+    /* We don't want to allocate a single unreasonably huge buffer - it might
+       be hundreds of megabytes. So, limit each output buffer to one second of
+       audio */
     fillsamples = in_offset - audiorate->next_offset;
-    fillsize = fillsamples * audiorate->bytes_per_sample;
 
-    fill = gst_buffer_new_and_alloc (fillsize);
-    /* FIXME, 0 might not be the silence byte for the negotiated format. */
-    memset (GST_BUFFER_DATA (fill), 0, fillsize);
+    while (fillsamples > 0) {
+      guint64 cursamples = MIN (fillsamples, audiorate->rate);
 
-    GST_DEBUG_OBJECT (audiorate, "inserting %lld samples", fillsamples);
+      GST_DEBUG_OBJECT (audiorate,
+          "inserting %lld samples of total %lld at ts %lld", cursamples,
+          fillsamples, audiorate->next_ts);
 
-    GST_BUFFER_OFFSET (fill) = audiorate->next_offset;
-    audiorate->next_offset += fillsamples;
-    GST_BUFFER_OFFSET_END (fill) = audiorate->next_offset;
+      fillsamples -= cursamples;
+      fillsize = cursamples * audiorate->bytes_per_sample;
 
-    /* Use next timestamp, then calculate following timestamp based on in_offset
-     * to get duration. Neccesary complexity to get 'perfect' streams */
-    GST_BUFFER_TIMESTAMP (fill) = audiorate->next_ts;
-    audiorate->next_ts = gst_util_uint64_scale_int (in_offset,
-        GST_SECOND, audiorate->rate);
-    GST_BUFFER_DURATION (fill) = audiorate->next_ts -
-        GST_BUFFER_TIMESTAMP (fill);
+      fill = gst_buffer_new_and_alloc (fillsize);
+      /* FIXME, 0 might not be the silence byte for the negotiated format. */
+      memset (GST_BUFFER_DATA (fill), 0, fillsize);
 
-    /* we created this buffer to fill a gap */
-    GST_BUFFER_FLAG_SET (fill, GST_BUFFER_FLAG_GAP);
-    /* set discont if it's pending, this is mostly done for the first buffer and
-     * after a flushing seek */
-    if (audiorate->discont) {
-      GST_BUFFER_FLAG_SET (fill, GST_BUFFER_FLAG_DISCONT);
-      audiorate->discont = FALSE;
+      GST_DEBUG_OBJECT (audiorate, "inserting %lld samples", cursamples);
+
+      GST_BUFFER_OFFSET (fill) = audiorate->next_offset;
+      audiorate->next_offset += cursamples;
+      GST_BUFFER_OFFSET_END (fill) = audiorate->next_offset;
+
+      /* Use next timestamp, then calculate following timestamp based on 
+       * offset to get duration. Neccesary complexity to get 'perfect' 
+       * streams */
+      GST_BUFFER_TIMESTAMP (fill) = audiorate->next_ts;
+      audiorate->next_ts = gst_util_uint64_scale_int (audiorate->next_offset,
+          GST_SECOND, audiorate->rate);
+      GST_BUFFER_DURATION (fill) = audiorate->next_ts -
+          GST_BUFFER_TIMESTAMP (fill);
+
+      /* we created this buffer to fill a gap */
+      GST_BUFFER_FLAG_SET (fill, GST_BUFFER_FLAG_GAP);
+      /* set discont if it's pending, this is mostly done for the first buffer 
+       * and after a flushing seek */
+      if (audiorate->discont) {
+        GST_BUFFER_FLAG_SET (fill, GST_BUFFER_FLAG_DISCONT);
+        audiorate->discont = FALSE;
+      }
+      gst_buffer_set_caps (fill, GST_PAD_CAPS (audiorate->srcpad));
+
+      ret = gst_pad_push (audiorate->srcpad, fill);
+      if (ret != GST_FLOW_OK)
+        goto beach;
+      audiorate->out++;
+      audiorate->add += cursamples;
+
+      if (!audiorate->silent)
+        g_object_notify (G_OBJECT (audiorate), "add");
     }
-    gst_buffer_set_caps (fill, GST_PAD_CAPS (audiorate->srcpad));
 
-    ret = gst_pad_push (audiorate->srcpad, fill);
-    if (ret != GST_FLOW_OK)
-      goto beach;
-    audiorate->out++;
-    audiorate->add += fillsamples;
-
-    if (!audiorate->silent)
-      g_object_notify (G_OBJECT (audiorate), "add");
   } else if (in_offset < audiorate->next_offset) {
     /* need to remove samples */
     if (in_offset_end <= audiorate->next_offset) {

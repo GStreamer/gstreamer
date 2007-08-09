@@ -25,7 +25,6 @@
 #include <gst/check/gstcheck.h>
 
 /* helper element to insert additional buffers overlapping with previous ones */
-
 static gdouble injector_inject_probability = 0.0;
 
 typedef GstElement TestInjector;
@@ -386,6 +385,67 @@ GST_END_TEST;
 
 /* TODO: also do all tests with channels=1 and channels=2 */
 
+static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
+    GST_PAD_SRC,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-float,channels=1,rate=44100,width=32")
+    );
+
+static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-raw-float,channels=1,rate=44100,width=32")
+    );
+
+GST_START_TEST (test_large_discont)
+{
+  GstElement *audiorate;
+  GstCaps *caps;
+  GstPad *srcpad, *sinkpad;
+  GstBuffer *buf;
+
+  audiorate = gst_check_setup_element ("audiorate");
+  caps = gst_caps_new_simple ("audio/x-raw-float",
+      "channels", G_TYPE_INT, 1,
+      "rate", G_TYPE_INT, 44100, "width", G_TYPE_INT, 32, NULL);
+
+  srcpad = gst_check_setup_src_pad (audiorate, &srctemplate, caps);
+  sinkpad = gst_check_setup_sink_pad (audiorate, &sinktemplate, caps);
+
+  gst_pad_set_active (srcpad, TRUE);
+  gst_pad_set_active (sinkpad, TRUE);
+
+  fail_unless (gst_element_set_state (audiorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "failed to set audiorate playing");
+
+  buf = gst_buffer_new_and_alloc (4);
+  gst_buffer_set_caps (buf, caps);
+  GST_BUFFER_TIMESTAMP (buf) = 0;
+  gst_pad_push (srcpad, buf);
+
+  fail_unless_equals_int (g_list_length (buffers), 1);
+
+  buf = gst_buffer_new_and_alloc (4);
+  gst_buffer_set_caps (buf, caps);
+  GST_BUFFER_TIMESTAMP (buf) = 2 * GST_SECOND;
+  gst_pad_push (srcpad, buf);
+  /* Now we should have 3 more buffers: the one we injected, plus _two_ filler
+   * buffers, because the gap is > 1 second (but less than 2 seconds) */
+  fail_unless_equals_int (g_list_length (buffers), 4);
+
+  gst_element_set_state (audiorate, GST_STATE_NULL);
+  gst_caps_unref (caps);
+
+  gst_check_teardown_sink_pad (audiorate);
+  gst_check_teardown_src_pad (audiorate);
+
+  gst_object_unref (audiorate);
+}
+
+GST_END_TEST;
+
+
 static Suite *
 audiorate_suite (void)
 {
@@ -401,6 +461,7 @@ audiorate_suite (void)
   tcase_add_test (tc_chain, test_perfect_stream_inject10);
   tcase_add_test (tc_chain, test_perfect_stream_inject90);
   tcase_add_test (tc_chain, test_perfect_stream_drop45_inject25);
+  tcase_add_test (tc_chain, test_large_discont);
 
   return s;
 }

@@ -1,3 +1,14 @@
+2007-08-09  Michael Smith <msmith@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):
+	  If we have a large (> 1 second) discontinuity, push a series of
+	  smaller buffers rather than a single very large buffer. Avoids
+	  unreasonably large single buffer allocations when encountering a
+	  large gap.
+	* tests/check/elements/audiorate.c: (GST_START_TEST),
+	(audiorate_suite):
+	  Add a test for this.
+
 2007-08-09  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstplaybasebin.c: (group_commit),
