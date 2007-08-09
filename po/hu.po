@@ -4,10 +4,10 @@
 # Gabor Kelemen <kelemeng@gnome.hu>, 2007.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.5\n"
+"Project-Id-Version: gst-plugins-ugly 0.10.6\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2007-06-13 12:52+0200\n"
-"PO-Revision-Date: 2007-03-10 01:22+0100\n"
+"PO-Revision-Date: 2007-07-27 21:18+0200\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
@@ -33,28 +33,21 @@ msgstr "A(z) $%2d. DVD cím $%1d. fejezetére ugrás meghiúsult"
 
 #: ext/dvdread/dvdreadsrc.c:608
 #, c-format
-msgid ""
-"Could not open DVD title %d. Interactive titles are not supported by this "
-"element"
-msgstr ""
-"Nem nyitható meg a(z) %d. DVD cím. Ez az elem nem támogatja az interaktív "
-"címeket."
+msgid "Could not open DVD title %d. Interactive titles are not supported by this element"
+msgstr "Nem nyitható meg a(z) %d. DVD cím. Ez az elem nem támogatja az interaktív címeket."
 
 #: ext/lame/gstlame.c:560
 msgid "Failed to configure LAME encoder. Check your encoding parameters."
-msgstr ""
-"A LAME kódoló beállítása meghiúsult. Ellenőrizze a kódolás beállításait."
+msgstr "A LAME kódoló beállítása meghiúsult. Ellenőrizze a kódolás beállításait."
 
 #: ext/lame/gstlame.c:691
 #, c-format
-msgid ""
-"The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-"bitrate was changed to %d kbit/s."
-msgstr ""
+msgid "The requested bitrate %d kbit/s for property '%s' is not allowed. The bitrate was changed to %d kbit/s."
+msgstr "A kért %d kbit/mp bitsebesség nem engedélyezett a(z) \"%s\" tulajdonsághoz. A bitsebesség módosítva %d kbit/mp-re."
 
 #: gst/asfdemux/gstasfdemux.c:322
 msgid "This stream contains no data."
-msgstr ""
+msgstr "Ez az adatfolyam nem tartalmaz adatokat."
 
 #: gst/asfdemux/gstasfdemux.c:2936
 msgid "This file is encrypted and cannot be played."
