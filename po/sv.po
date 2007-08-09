@@ -3,14 +3,12 @@
 # Daniel Nylander <po@danielnylander.se>, 2007.
 # Christian Rose <menthos@menthos.com>, 2004, 2005.
 #
-# $Id: sv.po,v 1.68 2004/02/29 23:00:29 menthos Exp $
-#
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.13\n"
+"Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2007-07-26 22:01+0200\n"
-"PO-Revision-Date: 2007-06-24 15:46+0200\n"
+"PO-Revision-Date: 2007-08-07 09:35+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
 "MIME-Version: 1.0\n"
@@ -31,23 +29,16 @@ msgid "Print available debug categories and exit"
 msgstr "Skriv ut tillgängliga felsökningskategorier och avsluta"
 
 #: gst/gst.c:311
-msgid ""
-"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr ""
-"Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för "
-"ingen utmatning"
+msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr "Standardfelsökningsnivå från 1 (endast fel) till 5 (allting) eller 0 för ingen utmatning"
 
 #: gst/gst.c:313
 msgid "LEVEL"
 msgstr "NIVÅ"
 
 #: gst/gst.c:315
-msgid ""
-"Comma-separated list of category_name:level pairs to set specific levels for "
-"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr ""
-"Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika "
-"nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr "Kommaseparerad lista med kategorinamn:nivå-par för att ställa in specifika nivåer för de enskilda kategorierna. Exempel: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:318
 msgid "LIST"
@@ -74,12 +65,8 @@ msgid "PATHS"
 msgstr "SÖKVÄGAR"
 
 #: gst/gst.c:334
-msgid ""
-"Comma-separated list of plugins to preload in addition to the list stored in "
-"environment variable GST_PLUGIN_PATH"
-msgstr ""
-"Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan "
-"som lagras i miljövariabeln GST_PLUGIN_PATH"
+msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
+msgstr "Kommaseparerad lista med insticksmoduler att förhandsinläsa utöver listan som lagras i miljövariabeln GST_PLUGIN_PATH"
 
 #: gst/gst.c:336
 msgid "PLUGINS"
@@ -87,8 +74,7 @@ msgstr "INSTICKSMODULER"
 
 #: gst/gst.c:339
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr ""
-"Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
+msgstr "Inaktivera fångst av segmenteringsfel under inläsning av insticksmoduler"
 
 #: gst/gst.c:344
 msgid "Disable the use of fork() while scanning the registry"
@@ -140,11 +126,8 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer stötte på ett allmänt fel i kärnbibliotek."
 
 #: gst/gsterror.c:141 gst/gsterror.c:181 gst/gsterror.c:201 gst/gsterror.c:232
-msgid ""
-"GStreamer developers were too lazy to assign an error code to this error."
-msgstr ""
-"Utvecklarna av GStreamer var för lata för att tilldela detta fel ett "
-"felnummer."
+msgid "GStreamer developers were too lazy to assign an error code to this error."
+msgstr "Utvecklarna av GStreamer var för lata för att tilldela detta fel ett felnummer."
 
 #: gst/gsterror.c:144
 msgid "Internal GStreamer error: code not implemented."
@@ -194,12 +177,8 @@ msgid "Internal GStreamer error: clock problem."
 msgstr "Internt GStreamer-fel: klockproblem."
 
 #: gst/gsterror.c:164
-msgid ""
-"This application is trying to use GStreamer functionality that has been "
-"disabled."
-msgstr ""
-"Det här programmet försöker använda GStreamer-funktionalitet som har "
-"inaktiverats."
+msgid "This application is trying to use GStreamer functionality that has been disabled."
+msgstr "Det här programmet försöker använda GStreamer-funktionalitet som har inaktiverats."
 
 #: gst/gsterror.c:179
 msgid "GStreamer encountered a general supporting library error."
@@ -275,9 +254,7 @@ msgstr "GStreamer stötte på ett allmänt strömfel."
 
 #: gst/gsterror.c:235
 msgid "Element doesn't implement handling of this stream. Please file a bug."
-msgstr ""
-"Elementet stöder inte hantering av denna ström. Skicka gärna in en "
-"felrapport."
+msgstr "Elementet stöder inte hantering av denna ström. Skicka gärna in en felrapport."
 
 #: gst/gsterror.c:237
 msgid "Could not determine type of stream."
@@ -379,9 +356,7 @@ msgstr "utökad kommentar"
 
 #: gst/gsttaglist.c:120
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr ""
-"fri text som kommenterar dessa data i formatet key=värde eller key[sv]"
-"=kommentar"
+msgstr "fri text som kommenterar dessa data i formatet key=värde eller key[sv]=kommentar"
 
 #: gst/gsttaglist.c:124
 msgid "track number"
@@ -460,14 +435,12 @@ msgid "copyright notice of the data"
 msgstr "copyrightnotis för dessa data"
 
 #: gst/gsttaglist.c:163
-#, fuzzy
 msgid "copyright uri"
-msgstr "copyright"
+msgstr "Uri till copyrightnotis"
 
 #: gst/gsttaglist.c:164
-#, fuzzy
 msgid "URI to the copyright notice of the data"
-msgstr "copyrightnotis för dessa data"
+msgstr "Uri till copyrightnotis för datat"
 
 #: gst/gsttaglist.c:167
 msgid "contact"
@@ -486,14 +459,12 @@ msgid "license of data"
 msgstr "licens för data"
 
 #: gst/gsttaglist.c:171
-#, fuzzy
 msgid "license uri"
-msgstr "licens"
+msgstr "Uri för licensinformation"
 
 #: gst/gsttaglist.c:172
-#, fuzzy
 msgid "URI to the license of the data"
-msgstr "licens för data"
+msgstr "Uri till licens för datat"
 
 #: gst/gsttaglist.c:175
 msgid "performer"
@@ -763,11 +734,8 @@ msgid "Filter caps"
 msgstr "Filtrera förmågor"
 
 #: plugins/elements/gstcapsfilter.c:110
-#, fuzzy
-msgid ""
-"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
-"property takes a reference to the supplied GstCaps object."
-msgstr "Begränsa de möjliga tillåtna förmågorna (NULL betyder ANY)"
+msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
+msgstr "Begränsa de möjliga tillåtna förmågorna (NULL betyder ANY). Inställning av egenskapen tar en referens till det angivna GstCaps-objektet."
 
 #: plugins/elements/gstfdsink.c:329
 #, c-format
@@ -889,13 +857,10 @@ msgstr "Skriv ut alla element"
 #: tools/gst-inspect.c:1242
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
-"                                       Useful in connection with external "
-"automatic plugin installation mechanisms"
+"                                       Useful in connection with external automatic plugin installation mechanisms"
 msgstr ""
-"Skriv ut en maskintolkningsbar lista över funktioner som den angivna "
-"insticksmodulen tillhandahåller.\n"
-"                                       Användbart tillsammans med externa "
-"mekanismer för automatisk installation av insticksmodul"
+"Skriv ut en maskintolkningsbar lista över funktioner som den angivna insticksmodulen tillhandahåller.\n"
+"                                       Användbart tillsammans med externa mekanismer för automatisk installation av insticksmodul"
 
 #: tools/gst-inspect.c:1322
 #, c-format

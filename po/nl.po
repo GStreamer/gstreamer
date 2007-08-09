@@ -1,4 +1,4 @@
-# translation of gstreamer-0.10.13.po to Dutch
+# translation of gstreamer-0.10.14.po to Dutch
 # Dutch translation of gstreamer
 # Copyright (C) 2003-2006, 2007 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
@@ -8,10 +8,10 @@
 # Freek de Kruijf <f.de.kruijf@hetnet.nl>, 2007.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.13\n"
+"Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2007-07-26 22:01+0200\n"
-"PO-Revision-Date: 2007-06-27 15:59+0200\n"
+"PO-Revision-Date: 2007-08-03 23:25+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@hetnet.nl>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "MIME-Version: 1.0\n"
@@ -33,24 +33,16 @@ msgid "Print available debug categories and exit"
 msgstr "Beschikbare debug-categorieën weergeven en afsluiten"
 
 #: gst/gst.c:311
-msgid ""
-"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr ""
-"Standaard debug-niveau van 1 (enkel fouten) tot 5 (alles) of 0 voor geen "
-"uitvoer"
+msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr "Standaard debug-niveau van 1 (enkel fouten) tot 5 (alles) of 0 voor geen uitvoer"
 
 #: gst/gst.c:313
 msgid "LEVEL"
 msgstr "NIVEAU"
 
 #: gst/gst.c:315
-msgid ""
-"Comma-separated list of category_name:level pairs to set specific levels for "
-"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr ""
-"Komma-gescheiden lijst van categorie_naam:niveau paren om specifieke "
-"niveau's in te stellen voor de individuele categorieën. Voorbeeld: "
-"GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr "Komma-gescheiden lijst van categorie_naam:niveau paren om specifieke niveau's in te stellen voor de individuele categorieën. Voorbeeld: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 #: gst/gst.c:318
 msgid "LIST"
@@ -77,12 +69,8 @@ msgid "PATHS"
 msgstr "PADEN"
 
 #: gst/gst.c:334
-msgid ""
-"Comma-separated list of plugins to preload in addition to the list stored in "
-"environment variable GST_PLUGIN_PATH"
-msgstr ""
-"Komma-gescheiden lijst van plugins om voor te laden naast de lijst "
-"opgeslagen in omgevingsvariable GST_PLUGIN_PATH"
+msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
+msgstr "Komma-gescheiden lijst van plugins om voor te laden naast de lijst opgeslagen in omgevingsvariable GST_PLUGIN_PATH"
 
 #: gst/gst.c:336
 msgid "PLUGINS"
@@ -90,8 +78,7 @@ msgstr "PLUGINS"
 
 #: gst/gst.c:339
 msgid "Disable trapping of segmentation faults during plugin loading"
-msgstr ""
-"Het opvangen van segmentatiefouten uit zetten tijdens laden van plugins"
+msgstr "Het opvangen van segmentatiefouten uit zetten tijdens laden van plugins"
 
 #: gst/gst.c:344
 msgid "Disable the use of fork() while scanning the registry"
@@ -143,11 +130,8 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer kreeg een algemene fout van de kernbibliotheek."
 
 #: gst/gsterror.c:141 gst/gsterror.c:181 gst/gsterror.c:201 gst/gsterror.c:232
-msgid ""
-"GStreamer developers were too lazy to assign an error code to this error."
-msgstr ""
-"GStreamer ontwikkelaars waren te lui om een foutcode toe te wijzen aan deze "
-"fout."
+msgid "GStreamer developers were too lazy to assign an error code to this error."
+msgstr "GStreamer ontwikkelaars waren te lui om een foutcode toe te wijzen aan deze fout."
 
 #: gst/gsterror.c:144
 msgid "Internal GStreamer error: code not implemented."
@@ -194,12 +178,8 @@ msgid "Internal GStreamer error: clock problem."
 msgstr "Interne GStreamer-fout: klokprobleem."
 
 #: gst/gsterror.c:164
-msgid ""
-"This application is trying to use GStreamer functionality that has been "
-"disabled."
-msgstr ""
-"Deze apllicatie probeert een functie van GStreamer te gebruiken die is "
-"uitgezet."
+msgid "This application is trying to use GStreamer functionality that has been disabled."
+msgstr "Deze apllicatie probeert een functie van GStreamer te gebruiken die is uitgezet."
 
 #: gst/gsterror.c:179
 msgid "GStreamer encountered a general supporting library error."
@@ -377,9 +357,7 @@ msgstr "uitgebreid commentaar"
 
 #: gst/gsttaglist.c:120
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr ""
-"vrij te kiezen commentaartekst bij gegevens in de vorm key=waarde of key[en]"
-"=commentaar "
+msgstr "vrij te kiezen commentaartekst bij gegevens in de vorm key=waarde of key[en]=commentaar "
 
 #: gst/gsttaglist.c:124
 msgid "track number"
@@ -458,14 +436,12 @@ msgid "copyright notice of the data"
 msgstr "auteursrechtvermelding van het stuk"
 
 #: gst/gsttaglist.c:163
-#, fuzzy
 msgid "copyright uri"
-msgstr "auteursrecht"
+msgstr "auteursrecht-uri"
 
 #: gst/gsttaglist.c:164
-#, fuzzy
 msgid "URI to the copyright notice of the data"
-msgstr "auteursrechtvermelding van het stuk"
+msgstr "URI naar de auteursrechtvermelding van de gegevens"
 
 #: gst/gsttaglist.c:167
 msgid "contact"
@@ -484,14 +460,12 @@ msgid "license of data"
 msgstr "licentie van het stuk"
 
 #: gst/gsttaglist.c:171
-#, fuzzy
 msgid "license uri"
-msgstr "licentie"
+msgstr "licentie-uri"
 
 #: gst/gsttaglist.c:172
-#, fuzzy
 msgid "URI to the license of the data"
-msgstr "licentie van het stuk"
+msgstr "URI naar de licentie van de gegevens"
 
 #: gst/gsttaglist.c:175
 msgid "performer"
@@ -754,11 +728,8 @@ msgid "Filter caps"
 msgstr "Filteropzetstukken"
 
 #: plugins/elements/gstcapsfilter.c:110
-#, fuzzy
-msgid ""
-"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
-"property takes a reference to the supplied GstCaps object."
-msgstr "Beperk het aantal toegestane mogelijkheden (NUL betekent alle)"
+msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
+msgstr "Beperk het aantal toegestane mogelijkheden (NUL betekent alle). Het instellen  van deze eigenschap vereist een referentie naar het gegeven GstCaps-object."
 
 #: plugins/elements/gstfdsink.c:329
 #, c-format
@@ -879,13 +850,10 @@ msgstr "Alle elementen weergeven"
 #: tools/gst-inspect.c:1242
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
-"                                       Useful in connection with external "
-"automatic plugin installation mechanisms"
+"                                       Useful in connection with external automatic plugin installation mechanisms"
 msgstr ""
-"Toon een door een machine te ontleden lijst van mogelijkheden die de "
-"gespecificeerde plugin aanbiedt.\n"
-"                                       Bruikbaar in verband met externe "
-"automatische plugin-installatiemechanismen"
+"Toon een door een machine te ontleden lijst van mogelijkheden die de gespecificeerde plugin aanbiedt.\n"
+"                                       Bruikbaar in verband met externe automatische plugin-installatiemechanismen"
 
 #: tools/gst-inspect.c:1322
 #, c-format
@@ -899,8 +867,7 @@ msgstr "Geen element of plugin '%s'\n"
 
 #: tools/gst-launch.c:79
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr ""
-"Gebruik: gst-xmllaunch <bestand.xml> [ element.eigenschap=waarde ... ]\n"
+msgstr "Gebruik: gst-xmllaunch <bestand.xml> [ element.eigenschap=waarde ... ]\n"
 
 #: tools/gst-launch.c:88
 #, c-format
@@ -915,9 +882,7 @@ msgstr "FOUT: geen bovenste pijplijn-element gevonden in file '%s'.\n"
 #: tools/gst-launch.c:101
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
-msgstr ""
-"WAARSCHUWING: slechts één element op het hoogste niveau ondersteund op dit "
-"moment."
+msgstr "WAARSCHUWING: slechts één element op het hoogste niveau ondersteund op dit moment."
 
 #: tools/gst-launch.c:112
 #, c-format
