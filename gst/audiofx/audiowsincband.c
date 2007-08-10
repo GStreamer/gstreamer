@@ -313,6 +313,8 @@ bpwsinc_build_kernel (GstBPWSinc * self)
     return;
   }
 
+  self->have_kernel = TRUE;
+
   /* Clamp frequencies */
   self->lower_frequency =
       CLAMP (self->lower_frequency, 0.0,
@@ -412,7 +414,8 @@ bpwsinc_build_kernel (GstBPWSinc * self)
   if (self->residue)
     g_free (self->residue);
 
-  self->residue = g_new0 (gdouble, len);
+  self->residue =
+      g_new0 (gdouble, len * GST_AUDIO_FILTER (self)->format.channels);
 }
 
 /* GstAudioFilter vmethod implementations */
