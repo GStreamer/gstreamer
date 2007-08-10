@@ -48,11 +48,14 @@ enum
   ARG_0,
 };
 
+/* FIXME, we set the mpeg version to 2, we should ideally be looking at contents
+ * of the stream to figure out the version */
 static GstStaticPadTemplate gst_rtp_mpv_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/mpeg, systemstream = (boolean) FALSE")
+    GST_STATIC_CAPS
+    ("video/mpeg, mpegversion = (int) 2, systemstream = (boolean) FALSE")
     );
 
 static GstStaticPadTemplate gst_rtp_mpv_depay_sink_template =

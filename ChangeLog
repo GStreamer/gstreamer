@@ -1,3 +1,9 @@
+2007-08-10  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtp/gstrtpmpvdepay.c:
+	Set the mpegversion in the caps so that autoplugging does not get
+	confused.
+
 2007-08-09  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/hu.po:
