@@ -204,8 +204,8 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LENGTH,
       g_param_spec_int ("length", "Length",
-          "N such that the filter length = 2N + 1",
-          1, G_MAXINT, 1, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          "Filter kernel length, will be rounded to the next odd number",
+          3, G_MAXINT, 101, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
@@ -227,7 +227,7 @@ gst_lpwsinc_init (GstLPWSinc * self, GstLPWSincClass * g_class)
 {
   self->mode = MODE_LOW_PASS;
   self->window = WINDOW_HAMMING;
-  self->wing_size = 50;
+  self->kernel_length = 101;
   self->frequency = 0.0;
   self->kernel = NULL;
   self->residue = NULL;
@@ -238,7 +238,7 @@ gst_lpwsinc_init (GstLPWSinc * self, GstLPWSincClass * g_class)
 static void
 process_32 (GstLPWSinc * self, gfloat * src, gfloat * dst, guint input_samples)
 {
-  gint kernel_length = self->wing_size * 2 + 1;
+  gint kernel_length = self->kernel_length;
   gint i, j, k, l;
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
 
@@ -265,7 +265,7 @@ static void
 process_64 (GstLPWSinc * self, gdouble * src, gdouble * dst,
     guint input_samples)
 {
-  gint kernel_length = self->wing_size * 2 + 1;
+  gint kernel_length = self->kernel_length;
   gint i, j, k, l;
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
 
@@ -297,8 +297,8 @@ lpwsinc_build_kernel (GstLPWSinc * self)
   gdouble w;
 
   /* fill the kernel */
-  len = self->wing_size;
-  GST_DEBUG ("lpwsinc: initializing filter kernel of length %d", len * 2 + 1);
+  len = self->kernel_length;
+  GST_DEBUG ("lpwsinc: initializing filter kernel of length %d", len);
 
   if (GST_AUDIO_FILTER (self)->format.rate == 0) {
     GST_DEBUG ("rate not set yet");
@@ -318,40 +318,40 @@ lpwsinc_build_kernel (GstLPWSinc * self)
 
   if (self->kernel)
     g_free (self->kernel);
-  self->kernel = g_new (gdouble, 2 * len + 1);
+  self->kernel = g_new (gdouble, len);
 
-  for (i = 0; i <= len * 2; ++i) {
-    if (i == len)
+  for (i = 0; i < len; ++i) {
+    if (i == len / 2)
       self->kernel[i] = w;
     else
-      self->kernel[i] = sin (w * (i - len)) / (i - len);
+      self->kernel[i] = sin (w * (i - len / 2)) / (i - len / 2);
     /* windowing */
     if (self->window == WINDOW_HAMMING)
-      self->kernel[i] *= (0.54 - 0.46 * cos (M_PI * i / len));
+      self->kernel[i] *= (0.54 - 0.46 * cos (2 * M_PI * i / len));
     else
       self->kernel[i] *=
-          (0.42 - 0.5 * cos (M_PI * i / len) + 0.08 * cos (2 * M_PI * i / len));
+          (0.42 - 0.5 * cos (2 * M_PI * i / len) +
+          0.08 * cos (4 * M_PI * i / len));
   }
 
   /* normalize for unity gain at DC */
-  for (i = 0; i <= len * 2; ++i)
+  for (i = 0; i < len; ++i)
     sum += self->kernel[i];
-  for (i = 0; i <= len * 2; ++i)
+  for (i = 0; i < len; ++i)
     self->kernel[i] /= sum;
 
   /* convert to highpass if specified */
   if (self->mode == MODE_HIGH_PASS) {
-    for (i = 0; i <= len * 2; ++i)
+    for (i = 0; i < len; ++i)
       self->kernel[i] = -self->kernel[i];
-    self->kernel[len] += 1.0;
+    self->kernel[len / 2] += 1.0;
   }
 
   /* set up the residue memory space */
   if (self->residue)
     g_free (self->residue);
   self->residue =
-      g_new0 (gdouble,
-      (len * 2 + 1) * GST_AUDIO_FILTER (self)->format.channels);
+      g_new0 (gdouble, len * GST_AUDIO_FILTER (self)->format.channels);
 
   self->have_kernel = TRUE;
 }
@@ -434,12 +434,18 @@ lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
   g_return_if_fail (GST_IS_LPWSINC (self));
 
   switch (prop_id) {
-    case PROP_LENGTH:
+    case PROP_LENGTH:{
+      gint val;
+
       GST_BASE_TRANSFORM_LOCK (self);
-      self->wing_size = g_value_get_int (value);
+      val = g_value_get_int (value);
+      if (val % 2 == 0)
+        val++;
+      self->kernel_length = val;
       lpwsinc_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
+    }
     case PROP_FREQUENCY:
       GST_BASE_TRANSFORM_LOCK (self);
       self->frequency = g_value_get_double (value);
@@ -472,7 +478,7 @@ lpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_LENGTH:
-      g_value_set_int (value, self->wing_size);
+      g_value_set_int (value, self->kernel_length);
       break;
     case PROP_FREQUENCY:
       g_value_set_double (value, self->frequency);
