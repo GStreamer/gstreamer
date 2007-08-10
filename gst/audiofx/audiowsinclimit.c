@@ -29,7 +29,6 @@
  * TODO:  - Implement the convolution in place, probably only makes sense
  *          when using FFT convolution as currently the convolution itself
  *          is probably the bottleneck.
- *        - Implement a highpass mode (spectral inversion)
  *        - Allow choosing between different windows (blackman, hanning, ...)
  *        - Maybe allow cascading the filter to get a better stopband attenuation.
  *          Can be done by convolving a filter kernel with itself.
@@ -50,10 +49,9 @@
 #define GST_CAT_DEFAULT gst_lpwsinc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
-static const GstElementDetails lpwsinc_details =
-GST_ELEMENT_DETAILS ("Low-pass Windowed sinc filter",
+static const GstElementDetails lpwsinc_details = GST_ELEMENT_DETAILS ("LPWSinc",
     "Filter/Effect/Audio",
-    "Low-pass Windowed sinc filter",
+    "Low-pass and High-pass Windowed sinc filter",
     "Thomas <thomas@apestaart.org>, "
     "Steven W. Smith, "
     "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
@@ -70,8 +68,35 @@ enum
 {
   PROP_0,
   PROP_LENGTH,
-  PROP_FREQUENCY
+  PROP_FREQUENCY,
+  PROP_MODE
 };
+
+enum
+{
+  MODE_LOW_PASS = 0,
+  MODE_HIGH_PASS
+};
+
+#define GST_TYPE_LPWSINC_MODE (gst_lpwsinc_mode_get_type ())
+static GType
+gst_lpwsinc_mode_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {MODE_LOW_PASS, "Low pass (default)",
+          "low-pass"},
+      {MODE_HIGH_PASS, "High pass",
+          "high-pass"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstLPWSincMode", values);
+  }
+  return gtype;
+}
 
 #define ALLOWED_CAPS \
     "audio/x-raw-float,"                                              \
@@ -81,7 +106,7 @@ enum
     " channels = (int) [ 1, MAX ]"
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_lpwsinc_debug, "lpwsinc", 0, "Low-pass Windowed sinc filter plugin");
+  GST_DEBUG_CATEGORY_INIT (gst_lpwsinc_debug, "lpwsinc", 0, "Low-pass and High-pass Windowed sinc filter plugin");
 
 GST_BOILERPLATE_FULL (GstLPWSinc, gst_lpwsinc, GstAudioFilter,
     GST_TYPE_AUDIO_FILTER, DEBUG_INIT);
@@ -147,12 +172,18 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FREQUENCY,
       g_param_spec_double ("frequency", "Frequency",
-          "Cut-off Frequency", 0.0, G_MAXDOUBLE, 0.0, G_PARAM_READWRITE));
+          "Cut-off Frequency", 0.0, G_MAXDOUBLE, 0.0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_LENGTH,
       g_param_spec_int ("length", "Length",
           "N such that the filter length = 2N + 1",
-          1, G_MAXINT, 1, G_PARAM_READWRITE));
+          1, G_MAXINT, 1, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode",
+          "Low pass or high pass mode", GST_TYPE_LPWSINC_MODE,
+          MODE_LOW_PASS, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   trans_class->transform = GST_DEBUG_FUNCPTR (lpwsinc_transform);
   trans_class->get_unit_size = GST_DEBUG_FUNCPTR (lpwsinc_get_unit_size);
@@ -173,7 +204,7 @@ gst_lpwsinc_init (GstLPWSinc * self, GstLPWSincClass * g_class)
 static void
 process_32 (GstLPWSinc * self, gfloat * src, gfloat * dst, guint input_samples)
 {
-  gint kernel_length = self->wing_size * 2 + 1;;
+  gint kernel_length = self->wing_size * 2 + 1;
   gint i, j, k, l;
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
 
@@ -200,7 +231,7 @@ static void
 process_64 (GstLPWSinc * self, gdouble * src, gdouble * dst,
     guint input_samples)
 {
-  gint kernel_length = self->wing_size * 2 + 1;;
+  gint kernel_length = self->wing_size * 2 + 1;
   gint i, j, k, l;
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
 
@@ -269,6 +300,13 @@ lpwsinc_build_kernel (GstLPWSinc * self)
     sum += self->kernel[i];
   for (i = 0; i <= len * 2; ++i)
     self->kernel[i] /= sum;
+
+  /* convert to highpass if specified */
+  if (self->mode == MODE_HIGH_PASS) {
+    for (i = 0; i <= len * 2; ++i)
+      self->kernel[i] = -self->kernel[i];
+    self->kernel[len] += 1.0;
+  }
 
   /* set up the residue memory space */
   if (self->residue)
@@ -370,6 +408,12 @@ lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
       lpwsinc_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
+    case PROP_MODE:
+      GST_BASE_TRANSFORM_LOCK (self);
+      self->mode = g_value_get_enum (value);
+      lpwsinc_build_kernel (self);
+      GST_BASE_TRANSFORM_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -388,6 +432,9 @@ lpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_FREQUENCY:
       g_value_set_double (value, self->frequency);
+      break;
+    case PROP_MODE:
+      g_value_set_enum (value, self->mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

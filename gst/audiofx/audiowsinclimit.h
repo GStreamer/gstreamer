@@ -66,6 +66,7 @@ struct _GstLPWSinc {
 
   GstLPWSincProcessFunc process;
 
+  gint mode;
   gdouble frequency;
   gint wing_size;               /* length of a "wing" of the filter; 
                                    actual length is 2 * wing_size + 1 */
