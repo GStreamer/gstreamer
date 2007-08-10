@@ -1,3 +1,9 @@
+2007-08-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/filter/gstlpwsinc.c: (process_32), (process_64),
+	(lpwsinc_build_kernel):
+	Fix processing if the input has more than one channel.
+
 2007-08-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_dispose),
