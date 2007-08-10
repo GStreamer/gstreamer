@@ -1,5 +1,28 @@
 2007-08-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init),
+	(gst_bpwsinc_init), (process_32), (process_64),
+	(bpwsinc_build_kernel), (bpwsinc_setup), (bpwsinc_get_unit_size),
+	(bpwsinc_transform), (bpwsinc_set_property),
+	(bpwsinc_get_property):
+	* gst/filter/gstbpwsinc.h:
+	Apply the same changes to the bandpass filter:
+	 - Support double input
+	 - Fix processing for input with >1 channels
+	 - Specify frequency in Hz
+	 - Specify actual filter kernel length
+	 - Use transform instead of transform_ip as we're working
+	   out of place anyway
+	 - Factor out filter kernel generation and update the filter
+	   kernel when the properties are set
+	Fix bandpass filter kernel generation to actually generate
+	a bandpass filter by creating a highpass instead of a second
+	lowpass.
+	* gst/filter/gstlpwsinc.c: (gst_lpwsinc_class_init):
+	Small formatting fix.
+
+2007-08-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/filter/gstlpwsinc.c: (gst_lpwsinc_class_init),
 	(gst_lpwsinc_init), (process_32), (process_64),
 	(lpwsinc_build_kernel), (lpwsinc_set_property),

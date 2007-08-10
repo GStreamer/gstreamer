@@ -3,6 +3,7 @@
  * GStreamer
  * Copyright (C) 1999-2001 Erik Walthinsen <omega@cse.ogi.edu>
  *               2006 Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>
+ *               2007 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,9 +31,6 @@
  *          is probably the bottleneck
  *        - Implement a band reject mode (spectral inversion)
  *        - Allow choosing between different windows (blackman, hanning, ...)
- *        - Specify filter length instead of 2*N+1
- * FIXME: - Doesn't work at all with >1 channels
- *        - Is bandreject, not bandpass
  */
 
 #ifdef HAVE_CONFIG_H
@@ -56,7 +54,8 @@ GST_ELEMENT_DETAILS ("Band-pass Windowed sinc filter",
     "Band-pass Windowed sinc filter",
     "Thomas <thomas@apestaart.org>, "
     "Steven W. Smith, "
-    "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>");
+    "Dreamlab Technologies Ltd. <mathis.hofer@dreamlab.net>, "
+    "Sebastian Dröge <slomo@circular-chaos.org>");
 
 /* Filter signals and args */
 enum
@@ -74,11 +73,11 @@ enum
 };
 
 #define ALLOWED_CAPS \
-    "audio/x-raw-float,"                                              \
-    " width = (int) 32, "                                             \
-    " endianness = (int) BYTE_ORDER,"                                 \
-    " rate = (int) [ 1, MAX ],"                                       \
-    " channels = (int) [ 1, MAX ]"
+    "audio/x-raw-float, "                                             \
+    " width = (int) { 32, 64 }, "                                     \
+    " endianness = (int) BYTE_ORDER, "                                \
+    " rate = (int) [ 1, MAX ], "                                      \
+    " channels = (int) [ 1, MAX ] "
 
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (gst_bpwsinc_debug, "bpwsinc", 0, "Band-pass Windowed sinc filter plugin");
@@ -91,8 +90,10 @@ static void bpwsinc_set_property (GObject * object, guint prop_id,
 static void bpwsinc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstFlowReturn bpwsinc_transform_ip (GstBaseTransform * base,
-    GstBuffer * outbuf);
+static GstFlowReturn bpwsinc_transform (GstBaseTransform * base,
+    GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean bpwsinc_get_unit_size (GstBaseTransform * base, GstCaps * caps,
+    guint * size);
 static gboolean bpwsinc_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
 
@@ -145,31 +146,197 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LOWER_FREQUENCY,
       g_param_spec_double ("lower-frequency", "Lower Frequency",
-          "Cut-off lower frequency (relative to sample rate)",
-          0.0, 0.5, 0, G_PARAM_READWRITE));
+          "Cut-off lower frequency (Hz)",
+          0.0, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_UPPER_FREQUENCY,
       g_param_spec_double ("upper-frequency", "Upper Frequency",
-          "Cut-off upper frequency (relative to sample rate)",
-          0.0, 0.5, 0, G_PARAM_READWRITE));
+          "Cut-off upper frequency (Hz)",
+          0.0, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_LENGTH,
       g_param_spec_int ("length", "Length",
-          "N such that the filter length = 2N + 1",
-          1, G_MAXINT, 1, G_PARAM_READWRITE));
+          "Filter kernel length, will be rounded to the next odd number",
+          3, G_MAXINT, 101, G_PARAM_READWRITE));
 
-  trans_class->transform_ip = GST_DEBUG_FUNCPTR (bpwsinc_transform_ip);
+  trans_class->transform = GST_DEBUG_FUNCPTR (bpwsinc_transform);
+  trans_class->get_unit_size = GST_DEBUG_FUNCPTR (bpwsinc_get_unit_size);
   GST_AUDIO_FILTER_CLASS (klass)->setup = GST_DEBUG_FUNCPTR (bpwsinc_setup);
 }
 
 static void
 gst_bpwsinc_init (GstBPWSinc * self, GstBPWSincClass * g_class)
 {
-  self->wing_size = 50;
-  self->lower_frequency = 0.25;
-  self->upper_frequency = 0.3;
+  self->kernel_length = 101;
+  self->lower_frequency = 0.0;
+  self->upper_frequency = 0.0;
   self->kernel = NULL;
+  self->have_kernel = FALSE;
   self->residue = NULL;
 }
 
+static void
+process_32 (GstBPWSinc * self, gfloat * src, gfloat * dst, guint input_samples)
+{
+  gint kernel_length = self->kernel_length;
+  gint i, j, k, l;
+  gint channels = GST_AUDIO_FILTER (self)->format.channels;
+
+  /* convolution */
+  for (i = 0; i < input_samples; i++) {
+    dst[i] = 0.0;
+    k = i % channels;
+    l = i / channels;
+    for (j = 0; j < kernel_length; j++)
+      if (l < j)
+        dst[i] +=
+            self->residue[(kernel_length + l - j) * channels +
+            k] * self->kernel[j];
+      else
+        dst[i] += src[(l - j) * channels + k] * self->kernel[j];
+  }
+
+  /* copy the tail of the current input buffer to the residue */
+  for (i = 0; i < kernel_length * channels; i++)
+    self->residue[i] = src[input_samples - kernel_length * channels + i];
+}
+
+static void
+process_64 (GstBPWSinc * self, gdouble * src, gdouble * dst,
+    guint input_samples)
+{
+  gint kernel_length = self->kernel_length;
+  gint i, j, k, l;
+  gint channels = GST_AUDIO_FILTER (self)->format.channels;
+
+  /* convolution */
+  for (i = 0; i < input_samples; i++) {
+    dst[i] = 0.0;
+    k = i % channels;
+    l = i / channels;
+    for (j = 0; j < kernel_length; j++)
+      if (l < j)
+        dst[i] +=
+            self->residue[(kernel_length + l - j) * channels +
+            k] * self->kernel[j];
+      else
+        dst[i] += src[(l - j) * channels + k] * self->kernel[j];
+  }
+
+  /* copy the tail of the current input buffer to the residue */
+  for (i = 0; i < kernel_length * channels; i++)
+    self->residue[i] = src[input_samples - kernel_length * channels + i];
+}
+
+static void
+bpwsinc_build_kernel (GstBPWSinc * self)
+{
+  gint i = 0;
+  gdouble sum = 0.0;
+  gint len = 0;
+  gdouble *kernel_lp, *kernel_hp;
+  gdouble w;
+
+  len = self->kernel_length;
+
+  if (GST_AUDIO_FILTER (self)->format.rate == 0) {
+    GST_DEBUG ("rate not set yet");
+    return;
+  }
+
+  if (GST_AUDIO_FILTER (self)->format.channels == 0) {
+    GST_DEBUG ("channels not set yet");
+    return;
+  }
+
+  /* Clamp frequencies */
+  self->lower_frequency =
+      CLAMP (self->lower_frequency, 0.0,
+      GST_AUDIO_FILTER (self)->format.rate / 2);
+  self->upper_frequency =
+      CLAMP (self->upper_frequency, 0.0,
+      GST_AUDIO_FILTER (self)->format.rate / 2);
+  if (self->lower_frequency > self->upper_frequency) {
+    gint tmp = self->lower_frequency;
+
+    self->lower_frequency = self->upper_frequency;
+    self->upper_frequency = tmp;
+  }
+
+  /* fill the lp kernel */
+  GST_DEBUG ("bpwsinc: initializing LP kernel of length %d with cut-off %f",
+      len, self->lower_frequency);
+
+  w = 2 * M_PI * (self->lower_frequency / GST_AUDIO_FILTER (self)->format.rate);
+  kernel_lp = g_new (gdouble, len);
+  for (i = 0; i < len; ++i) {
+    if (i == len / 2)
+      kernel_lp[i] = w;
+    else
+      kernel_lp[i] = sin (w * (i - len / 2))
+          / (i - len / 2);
+    /* Blackman windowing */
+    kernel_lp[i] *= (0.42 - 0.5 * cos (2 * M_PI * i / len)
+        + 0.08 * cos (4 * M_PI * i / len));
+  }
+
+  /* normalize for unity gain at DC */
+  sum = 0.0;
+  for (i = 0; i < len; ++i)
+    sum += kernel_lp[i];
+  for (i = 0; i < len; ++i)
+    kernel_lp[i] /= sum;
+
+  /* fill the hp kernel */
+  GST_DEBUG ("bpwsinc: initializing HP kernel of length %d with cut-off %f",
+      len, self->upper_frequency);
+
+  w = 2 * M_PI * (self->upper_frequency / GST_AUDIO_FILTER (self)->format.rate);
+  kernel_hp = g_new (gdouble, len);
+  for (i = 0; i < len; ++i) {
+    if (i == len / 2)
+      kernel_hp[i] = w;
+    else
+      kernel_hp[i] = sin (w * (i - len / 2))
+          / (i - len / 2);
+    /* Blackman windowing */
+    kernel_hp[i] *= (0.42 - 0.5 * cos (2 * M_PI * i / len)
+        + 0.08 * cos (4 * M_PI * i / len));
+  }
+
+  /* normalize for unity gain at DC */
+  sum = 0.0;
+  for (i = 0; i < len; ++i)
+    sum += kernel_hp[i];
+  for (i = 0; i < len; ++i)
+    kernel_hp[i] /= sum;
+
+  /* do spectral inversion to go from lowpass to highpass */
+  for (i = 0; i < len; ++i)
+    kernel_hp[i] = -kernel_hp[i];
+  kernel_hp[len / 2] += 1;
+
+  /* combine the two kernels */
+  if (self->kernel)
+    g_free (self->kernel);
+  self->kernel = g_new (gdouble, len);
+
+  for (i = 0; i < len; ++i)
+    self->kernel[i] = kernel_lp[i] + kernel_hp[i];
+
+  /* free the helper kernels */
+  g_free (kernel_lp);
+  g_free (kernel_hp);
+
+  /* do spectral inversion to go from bandreject to bandpass */
+  for (i = 0; i < len; ++i)
+    self->kernel[i] = -self->kernel[i];
+  self->kernel[len / 2] += 1;
+
+  /* set up the residue memory space */
+  if (self->residue)
+    g_free (self->residue);
+
+  self->residue = g_new0 (gdouble, len);
+}
 
 /* GstAudioFilter vmethod implementations */
 
@@ -177,101 +344,50 @@ gst_bpwsinc_init (GstBPWSinc * self, GstBPWSincClass * g_class)
 static gboolean
 bpwsinc_setup (GstAudioFilter * base, GstRingBufferSpec * format)
 {
-  int i = 0;
-  double sum = 0.0;
-  int len = 0;
-  double *kernel_lp, *kernel_hp;
   GstBPWSinc *self = GST_BPWSINC (base);
 
-  len = self->wing_size;
-  /* fill the lp kernel
-   * FIXME: refactor to own function, this is not caps related
-   */
-  GST_DEBUG ("bpwsinc: initializing LP kernel of length %d with cut-off %f",
-      len * 2 + 1, self->lower_frequency);
-  kernel_lp = (double *) g_malloc (sizeof (double) * (2 * len + 1));
-  for (i = 0; i <= len * 2; ++i) {
-    if (i == len)
-      kernel_lp[i] = 2 * M_PI * self->lower_frequency;
-    else
-      kernel_lp[i] = sin (2 * M_PI * self->lower_frequency * (i - len))
-          / (i - len);
-    /* Blackman windowing */
-    kernel_lp[i] *= (0.42 - 0.5 * cos (M_PI * i / len)
-        + 0.08 * cos (2 * M_PI * i / len));
-  }
+  gboolean ret = TRUE;
 
-  /* normalize for unity gain at DC */
-  sum = 0.0;
-  for (i = 0; i <= len * 2; ++i)
-    sum += kernel_lp[i];
-  for (i = 0; i <= len * 2; ++i)
-    kernel_lp[i] /= sum;
+  if (format->width == 32)
+    self->process = (GstBPWSincProcessFunc) process_32;
+  else if (format->width == 64)
+    self->process = (GstBPWSincProcessFunc) process_64;
+  else
+    ret = FALSE;
 
-  /* fill the hp kernel */
-  GST_DEBUG ("bpwsinc: initializing HP kernel of length %d with cut-off %f",
-      len * 2 + 1, self->upper_frequency);
-  kernel_hp = (double *) g_malloc (sizeof (double) * (2 * len + 1));
-  for (i = 0; i <= len * 2; ++i) {
-    if (i == len)
-      kernel_hp[i] = 2 * M_PI * self->upper_frequency;
-    else
-      kernel_hp[i] = sin (2 * M_PI * self->upper_frequency * (i - len))
-          / (i - len);
-    /* Blackman windowing */
-    kernel_hp[i] *= (0.42 - 0.5 * cos (M_PI * i / len)
-        + 0.08 * cos (2 * M_PI * i / len));
-  }
-
-  /* normalize for unity gain at DC */
-  sum = 0.0;
-  for (i = 0; i <= len * 2; ++i)
-    sum += kernel_hp[i];
-  for (i = 0; i <= len * 2; ++i)
-    kernel_hp[i] /= sum;
-
-  /* combine the two kernels */
-  if (self->kernel)
-    g_free (self->kernel);
-  self->kernel = (double *) g_malloc (sizeof (double) * (2 * len + 1));
-
-  for (i = 0; i <= len * 2; ++i)
-    self->kernel[i] = kernel_lp[i] + kernel_hp[i];
-
-  /* do spectral inversion to go from band reject to bandpass */
-  for (i = 0; i <= len * 2; ++i)
-    self->kernel[i] = -self->kernel[i];
-  self->kernel[len] += 1;
-
-  /* free the helper kernels */
-  g_free (kernel_lp);
-  g_free (kernel_hp);
-
-  /* set up the residue memory space */
-  if (self->residue)
-    g_free (self->residue);
-
-  self->residue = (gfloat *) g_malloc (sizeof (gfloat) * (len * 2 + 1));
-  for (i = 0; i <= len * 2; ++i)
-    self->residue[i] = 0.0;
+  self->have_kernel = FALSE;
 
   return TRUE;
 }
 
 /* GstBaseTransform vmethod implementations */
 
+static gboolean
+bpwsinc_get_unit_size (GstBaseTransform * base, GstCaps * caps, guint * size)
+{
+  gint width, channels;
+  GstStructure *structure;
+  gboolean ret;
+
+  g_assert (size);
+
+  structure = gst_caps_get_structure (caps, 0);
+  ret = gst_structure_get_int (structure, "width", &width);
+  ret &= gst_structure_get_int (structure, "channels", &channels);
+
+  *size = width * channels / 8;
+
+  return ret;
+}
+
 static GstFlowReturn
-bpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
+bpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
+    GstBuffer * outbuf)
 {
   GstBPWSinc *self = GST_BPWSINC (base);
   GstClockTime timestamp;
-
-  gfloat *src;
-  gfloat *input;
-  int residue_samples;
-  gint input_samples;
-  gint total_samples;
-  int i, j;
+  gint input_samples =
+      GST_BUFFER_SIZE (outbuf) / (GST_AUDIO_FILTER (self)->format.width / 8);
 
   /* don't process data in passthrough-mode */
   if (gst_base_transform_is_passthrough (base))
@@ -283,38 +399,11 @@ bpwsinc_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     gst_object_sync_values (G_OBJECT (self), timestamp);
 
-  /* FIXME: out of laziness, we copy the left-over bit from last buffer
-   * together with the incoming buffer to a new buffer to make the loop
-   * easy; self could be a lot more optimized though
-   * to make amends we keep the incoming buffer around and write our
-   * output samples there */
+  if (!self->have_kernel)
+    bpwsinc_build_kernel (self);
 
-  src = (gfloat *) GST_BUFFER_DATA (outbuf);
-  residue_samples = self->wing_size * 2 + 1;
-  input_samples = GST_BUFFER_SIZE (outbuf) / sizeof (gfloat);
-  total_samples = residue_samples + input_samples;
-
-  input = (gfloat *) g_malloc (sizeof (gfloat) * total_samples);
-
-  /* copy the left-over bit */
-  memcpy (input, self->residue, sizeof (gfloat) * residue_samples);
-
-  /* copy the new buffer */
-  memcpy (&input[residue_samples], src, sizeof (gfloat) * input_samples);
-  /* copy the tail of the current input buffer to the residue */
-  memcpy (self->residue, &src[input_samples - residue_samples],
-      sizeof (gfloat) * residue_samples);
-
-  /* convolution */
-  /* since we copied the previous set of samples we needed before the actual
-   * input data, we need to add the filter length to our indices for input */
-  for (i = 0; i < input_samples; ++i) {
-    src[i] = 0.0;
-    for (j = 0; j < residue_samples; ++j)
-      src[i] += input[i - j + residue_samples] * self->kernel[j];
-  }
-
-  g_free (input);
+  self->process (self, GST_BUFFER_DATA (inbuf), GST_BUFFER_DATA (outbuf),
+      input_samples);
 
   return GST_FLOW_OK;
 }
@@ -328,14 +417,29 @@ bpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
   g_return_if_fail (GST_IS_BPWSINC (self));
 
   switch (prop_id) {
-    case PROP_LENGTH:
-      self->wing_size = g_value_get_int (value);
+    case PROP_LENGTH:{
+      gint val;
+
+      GST_BASE_TRANSFORM_LOCK (self);
+      val = g_value_get_int (value);
+      if (val % 2 == 0)
+        val++;
+      self->kernel_length = val;
+      bpwsinc_build_kernel (self);
+      GST_BASE_TRANSFORM_UNLOCK (self);
       break;
+    }
     case PROP_LOWER_FREQUENCY:
+      GST_BASE_TRANSFORM_LOCK (self);
       self->lower_frequency = g_value_get_double (value);
+      bpwsinc_build_kernel (self);
+      GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     case PROP_UPPER_FREQUENCY:
+      GST_BASE_TRANSFORM_LOCK (self);
       self->upper_frequency = g_value_get_double (value);
+      bpwsinc_build_kernel (self);
+      GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -351,7 +455,7 @@ bpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
 
   switch (prop_id) {
     case PROP_LENGTH:
-      g_value_set_int (value, self->wing_size);
+      g_value_set_int (value, self->kernel_length);
       break;
     case PROP_LOWER_FREQUENCY:
       g_value_set_double (value, self->lower_frequency);
