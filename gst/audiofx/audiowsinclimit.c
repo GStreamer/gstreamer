@@ -31,7 +31,8 @@
  *          is probably the bottleneck.
  *        - Implement a highpass mode (spectral inversion)
  *        - Allow choosing between different windows (blackman, hanning, ...)
- * FIXME: - Doesn't work at all with >1 channels
+ *        - Maybe allow cascading the filter to get a better stopband attenuation.
+ *          Can be done by convolving a filter kernel with itself.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -173,21 +174,26 @@ static void
 process_32 (GstLPWSinc * self, gfloat * src, gfloat * dst, guint input_samples)
 {
   gint kernel_length = self->wing_size * 2 + 1;;
-  gint i, j;
+  gint i, j, k, l;
+  gint channels = GST_AUDIO_FILTER (self)->format.channels;
 
   /* convolution */
-  for (i = 0; i < input_samples; ++i) {
+  for (i = 0; i < input_samples; i++) {
     dst[i] = 0.0;
-    for (j = 0; j < kernel_length; ++j)
-      if (i < j)
-        dst[i] += self->residue[kernel_length + i - j] * self->kernel[j];
+    k = i % channels;
+    l = i / channels;
+    for (j = 0; j < kernel_length; j++)
+      if (l < j)
+        dst[i] +=
+            self->residue[(kernel_length + l - j) * channels +
+            k] * self->kernel[j];
       else
-        dst[i] += src[i - j] * self->kernel[j];
+        dst[i] += src[(l - j) * channels + k] * self->kernel[j];
   }
 
   /* copy the tail of the current input buffer to the residue */
-  for (i = 0; i < kernel_length; i++)
-    self->residue[i] = src[input_samples - kernel_length + i];
+  for (i = 0; i < kernel_length * channels; i++)
+    self->residue[i] = src[input_samples - kernel_length * channels + i];
 }
 
 static void
@@ -195,21 +201,26 @@ process_64 (GstLPWSinc * self, gdouble * src, gdouble * dst,
     guint input_samples)
 {
   gint kernel_length = self->wing_size * 2 + 1;;
-  gint i, j;
+  gint i, j, k, l;
+  gint channels = GST_AUDIO_FILTER (self)->format.channels;
 
   /* convolution */
-  for (i = 0; i < input_samples; ++i) {
+  for (i = 0; i < input_samples; i++) {
     dst[i] = 0.0;
-    for (j = 0; j < kernel_length; ++j)
-      if (i < j)
-        dst[i] += self->residue[kernel_length + i - j] * self->kernel[j];
+    k = i % channels;
+    l = i / channels;
+    for (j = 0; j < kernel_length; j++)
+      if (l < j)
+        dst[i] +=
+            self->residue[(kernel_length + l - j) * channels +
+            k] * self->kernel[j];
       else
-        dst[i] += src[i - j] * self->kernel[j];
+        dst[i] += src[(l - j) * channels + k] * self->kernel[j];
   }
 
   /* copy the tail of the current input buffer to the residue */
-  for (i = 0; i < kernel_length; i++)
-    self->residue[i] = src[input_samples - kernel_length + i];
+  for (i = 0; i < kernel_length * channels; i++)
+    self->residue[i] = src[input_samples - kernel_length * channels + i];
 }
 
 static void
@@ -226,6 +237,11 @@ lpwsinc_build_kernel (GstLPWSinc * self)
 
   if (GST_AUDIO_FILTER (self)->format.rate == 0) {
     GST_DEBUG ("rate not set yet");
+    return;
+  }
+
+  if (GST_AUDIO_FILTER (self)->format.channels == 0) {
+    GST_DEBUG ("channels not set yet");
     return;
   }
 
@@ -257,7 +273,9 @@ lpwsinc_build_kernel (GstLPWSinc * self)
   /* set up the residue memory space */
   if (self->residue)
     g_free (self->residue);
-  self->residue = g_new0 (gdouble, len * 2 + 1);
+  self->residue =
+      g_new0 (gdouble,
+      (len * 2 + 1) * GST_AUDIO_FILTER (self)->format.channels);
 
   self->have_kernel = TRUE;
 }
