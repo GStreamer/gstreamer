@@ -1,3 +1,8 @@
+2007-08-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/controller/gstlfocontrolsource.c:
+	  Printf format fix.
+
 2007-08-09  Philippe Kalaf <philippe.kalaf@collabora.co.uk>
 
 	* libs/gst/base/gstbasesink.c:

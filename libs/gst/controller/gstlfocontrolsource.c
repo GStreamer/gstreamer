@@ -632,7 +632,8 @@ gst_lfo_control_source_set_waveform (GstLFOControlSource * self,
   if (ret)
     self->priv->waveform = waveform;
   else
-    GST_WARNING ("incomplete implementation for type '%d'", self->priv->type);
+    GST_WARNING ("incomplete implementation for type '%s'",
+        GST_STR_NULL (g_type_name (self->priv->type)));
 
   return ret;
 }
