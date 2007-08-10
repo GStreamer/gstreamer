@@ -1,3 +1,41 @@
+2007-08-10  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/Makefile.am:
+	* gst/rtpmanager/async_jitter_queue.c:
+	* gst/rtpmanager/async_jitter_queue.h:
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_class_init),
+	(rtp_jitter_buffer_init), (rtp_jitter_buffer_finalize),
+	(rtp_jitter_buffer_new), (compare_seqnum),
+	(rtp_jitter_buffer_insert), (rtp_jitter_buffer_pop),
+	(rtp_jitter_buffer_flush), (rtp_jitter_buffer_num_packets),
+	(rtp_jitter_buffer_get_ts_diff):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Remove complicated async queue and replace with more simple jitterbuffer
+	code while also fixing some bugs.
+
+	* gst/rtpmanager/gstrtpbin-marshal.list:
+	* gst/rtpmanager/gstrtpbin.c: (on_new_ssrc), (on_ssrc_collision),
+	(on_ssrc_validated), (on_bye_ssrc), (on_bye_timeout), (on_timeout),
+	(create_session), (gst_rtp_bin_class_init), (create_recv_rtp),
+	(create_send_rtp):
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_init), (gst_rtp_jitter_buffer_dispose),
+	(gst_jitter_buffer_sink_parse_caps),
+	(gst_rtp_jitter_buffer_flush_start),
+	(gst_rtp_jitter_buffer_flush_stop),
+	(gst_rtp_jitter_buffer_change_state),
+	(gst_rtp_jitter_buffer_sink_event), (gst_rtp_jitter_buffer_chain),
+	(gst_rtp_jitter_buffer_loop), (gst_rtp_jitter_buffer_set_property):
+	* gst/rtpmanager/gstrtpsession.c: (on_new_ssrc),
+	(on_ssrc_collision), (on_ssrc_validated), (on_bye_ssrc),
+	(on_bye_timeout), (on_timeout), (gst_rtp_session_class_init),
+	(gst_rtp_session_init):
+	* gst/rtpmanager/gstrtpsession.h:
+	* gst/rtpmanager/rtpsession.c: (on_bye_ssrc), (session_cleanup):
+	Use new jitterbuffer code.
+	Expose some new signals in preparation for handling EOS.
+
 2007-08-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/filter/gstbpwsinc.c: (bpwsinc_build_kernel):

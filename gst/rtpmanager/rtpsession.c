@@ -271,7 +271,6 @@ on_ssrc_validated (RTPSession * sess, RTPSource * source)
 static void
 on_bye_ssrc (RTPSession * sess, RTPSource * source)
 {
-  /* notify app that reconsideration should be performed */
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_BYE_SSRC], 0, source);
 }
 
@@ -1724,7 +1723,6 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
       on_bye_timeout (sess, source);
     else
       on_timeout (sess, source);
-
   }
   return remove;
 }
