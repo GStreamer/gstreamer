@@ -29,7 +29,6 @@
  * TODO:  - Implement the convolution in place, probably only makes sense
  *          when using FFT convolution as currently the convolution itself
  *          is probably the bottleneck.
- *        - Allow choosing between different windows (blackman, hanning, ...)
  *        - Maybe allow cascading the filter to get a better stopband attenuation.
  *          Can be done by convolving a filter kernel with itself.
  */
@@ -69,7 +68,8 @@ enum
   PROP_0,
   PROP_LENGTH,
   PROP_FREQUENCY,
-  PROP_MODE
+  PROP_MODE,
+  PROP_WINDOW
 };
 
 enum
@@ -97,6 +97,33 @@ gst_lpwsinc_mode_get_type (void)
   }
   return gtype;
 }
+
+enum
+{
+  WINDOW_HAMMING = 0,
+  WINDOW_BLACKMAN
+};
+
+#define GST_TYPE_LPWSINC_WINDOW (gst_lpwsinc_window_get_type ())
+static GType
+gst_lpwsinc_window_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {WINDOW_HAMMING, "Hamming window (default)",
+          "hamming"},
+      {WINDOW_BLACKMAN, "Blackman window",
+          "blackman"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstLPWSincWindow", values);
+  }
+  return gtype;
+}
+
 
 #define ALLOWED_CAPS \
     "audio/x-raw-float,"                                              \
@@ -185,6 +212,11 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
           "Low pass or high pass mode", GST_TYPE_LPWSINC_MODE,
           MODE_LOW_PASS, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
+  g_object_class_install_property (gobject_class, PROP_WINDOW,
+      g_param_spec_enum ("window", "Window",
+          "Window function to use", GST_TYPE_LPWSINC_WINDOW,
+          WINDOW_HAMMING, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
   trans_class->transform = GST_DEBUG_FUNCPTR (lpwsinc_transform);
   trans_class->get_unit_size = GST_DEBUG_FUNCPTR (lpwsinc_get_unit_size);
   GST_AUDIO_FILTER_CLASS (klass)->setup = GST_DEBUG_FUNCPTR (lpwsinc_setup);
@@ -193,6 +225,8 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
 static void
 gst_lpwsinc_init (GstLPWSinc * self, GstLPWSincClass * g_class)
 {
+  self->mode = MODE_LOW_PASS;
+  self->window = WINDOW_HAMMING;
   self->wing_size = 50;
   self->frequency = 0.0;
   self->kernel = NULL;
@@ -292,7 +326,11 @@ lpwsinc_build_kernel (GstLPWSinc * self)
     else
       self->kernel[i] = sin (w * (i - len)) / (i - len);
     /* windowing */
-    self->kernel[i] *= (0.54 - 0.46 * cos (M_PI * i / len));
+    if (self->window == WINDOW_HAMMING)
+      self->kernel[i] *= (0.54 - 0.46 * cos (M_PI * i / len));
+    else
+      self->kernel[i] *=
+          (0.42 - 0.5 * cos (M_PI * i / len) + 0.08 * cos (2 * M_PI * i / len));
   }
 
   /* normalize for unity gain at DC */
@@ -414,6 +452,12 @@ lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
       lpwsinc_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
+    case PROP_WINDOW:
+      GST_BASE_TRANSFORM_LOCK (self);
+      self->window = g_value_get_enum (value);
+      lpwsinc_build_kernel (self);
+      GST_BASE_TRANSFORM_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -435,6 +479,9 @@ lpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_MODE:
       g_value_set_enum (value, self->mode);
+      break;
+    case PROP_WINDOW:
+      g_value_set_enum (value, self->window);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
