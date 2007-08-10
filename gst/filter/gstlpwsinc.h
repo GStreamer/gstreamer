@@ -25,10 +25,6 @@
  * chapter 16
  * available at http://www.dspguide.com/
  *
- * FIXME:
- * - this filter is totally unoptimized !
- * - we do not destroy the allocated memory for filters and residue
- * - this might be improved upon with bytestream
  */
 
 #ifndef __GST_LPWSINC_H__
@@ -69,8 +65,7 @@ struct _GstLPWSinc {
   gint mode;
   gint window;
   gdouble frequency;
-  gint wing_size;               /* length of a "wing" of the filter; 
-                                   actual length is 2 * wing_size + 1 */
+  gint kernel_length;           /* length of the filter kernel */
 
   gdouble *residue;             /* buffer for left-over samples from previous buffer */
   gdouble *kernel;              /* filter kernel */
