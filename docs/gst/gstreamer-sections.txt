@@ -1677,6 +1677,7 @@ gst_registry_feature_filter
 gst_registry_find_plugin
 gst_registry_find_feature
 gst_registry_lookup_feature
+gst_registry_add_path
 gst_registry_scan_path
 gst_registry_binary_read_cache
 gst_registry_binary_write_cache
