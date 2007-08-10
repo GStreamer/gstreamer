@@ -209,7 +209,7 @@ do_perfect_stream_test (guint rate, guint width, gdouble drop_probability,
   src = gst_element_factory_make ("audiotestsrc", "audiotestsrc");
   fail_unless (src != NULL);
 
-  g_object_set (src, "num-buffers", 500, NULL);
+  g_object_set (src, "num-buffers", 100, NULL);
 
   conv = gst_element_factory_make ("audioconvert", "audioconvert");
   fail_unless (conv != NULL);
@@ -444,7 +444,6 @@ GST_START_TEST (test_large_discont)
 }
 
 GST_END_TEST;
-
 
 static Suite *
 audiorate_suite (void)

@@ -1,3 +1,12 @@
+2007-08-10  Michael Smith <msmith@fluendo.com>
+
+	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):
+	  Debug output fixes.
+	* tests/check/elements/audiorate.c: (do_perfect_stream_test),
+	(GST_START_TEST):
+	  Change the number of buffers used; 500 is too many and leads to
+	  timeouts.
+
 2007-08-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstqueue2.c:

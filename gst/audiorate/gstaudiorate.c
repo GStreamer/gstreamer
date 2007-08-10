@@ -551,10 +551,6 @@ gst_audio_rate_chain (GstPad * pad, GstBuffer * buf)
     while (fillsamples > 0) {
       guint64 cursamples = MIN (fillsamples, audiorate->rate);
 
-      GST_DEBUG_OBJECT (audiorate,
-          "inserting %lld samples of total %lld at ts %lld", cursamples,
-          fillsamples, audiorate->next_ts);
-
       fillsamples -= cursamples;
       fillsize = cursamples * audiorate->bytes_per_sample;
 
