@@ -1,3 +1,8 @@
+2007-08-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/rtp/gstrtpilbcdepay.c:
+	  Include stdlib.
+
 2007-08-10  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtp/gstrtpmpvdepay.c:

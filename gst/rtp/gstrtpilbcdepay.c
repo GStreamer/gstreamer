@@ -22,6 +22,7 @@
 #endif
 
 #include <string.h>
+#include <stdlib.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtpilbcdepay.h"
 
