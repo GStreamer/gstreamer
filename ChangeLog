@@ -1,5 +1,11 @@
 2007-08-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/filter/gstbpwsinc.c: (bpwsinc_build_kernel):
+	Fix a segfault with more than one channel and don't rebuild
+	the kernel & residue with every buffer.
+
+2007-08-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_mode_get_type),
 	(gst_bpwsinc_window_get_type), (gst_bpwsinc_class_init),
 	(gst_bpwsinc_init), (bpwsinc_build_kernel), (bpwsinc_set_property),
