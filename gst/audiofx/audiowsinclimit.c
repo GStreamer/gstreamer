@@ -28,7 +28,7 @@
  *
  * TODO:  - Implement the convolution in place, probably only makes sense
  *          when using FFT convolution as currently the convolution itself
- *          is probably the bottleneck.
+ *          is probably the bottleneck
  *        - Maybe allow cascading the filter to get a better stopband attenuation.
  *          Can be done by convolving a filter kernel with itself.
  */
@@ -123,7 +123,6 @@ gst_lpwsinc_window_get_type (void)
   }
   return gtype;
 }
-
 
 #define ALLOWED_CAPS \
     "audio/x-raw-float, "                                             \

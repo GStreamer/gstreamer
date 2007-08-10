@@ -62,7 +62,8 @@ struct _GstBPWSinc {
 
   GstBPWSincProcessFunc process;
 
-  gdouble frequency;
+  gint mode;
+  gint window;
   gdouble lower_frequency, upper_frequency;
   gint kernel_length;           /* length of the filter kernel */
 
