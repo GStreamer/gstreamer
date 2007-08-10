@@ -51,7 +51,7 @@ SCAN_OPTIONS=
 #EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode --ignore-files=trio
+MKDB_OPTIONS=--sgml-mode  --output-format=xml
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \
@@ -76,7 +76,7 @@ SCANOBJ_DEPS = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = 
+IGNORE_HFILES =
 
 # Images to copy into HTML directory.
 HTML_IMAGES =

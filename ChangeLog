@@ -1,3 +1,11 @@
+2007-08-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/libs/Makefile.am:
+	  Remove cruft and do some cleanups.
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	  Prepare for comming gtkdoc features (rebase against online docs).
+
 2007-08-10  Michael Smith <msmith@fluendo.com>
 
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):
