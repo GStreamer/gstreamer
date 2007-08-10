@@ -59,8 +59,14 @@ struct _GstRTPSessionClass {
 
   /* signals */
   GstCaps* (*request_pt_map) (GstRTPSession *sess, guint pt);
-
   void     (*clear_pt_map)   (GstRTPSession *sess);
+
+  void     (*on_new_ssrc)       (GstRTPSession *sess, guint32 ssrc);
+  void     (*on_ssrc_collision) (GstRTPSession *sess, guint32 ssrc);
+  void     (*on_ssrc_validated) (GstRTPSession *sess, guint32 ssrc);
+  void     (*on_bye_ssrc)       (GstRTPSession *sess, guint32 ssrc);
+  void     (*on_bye_timeout)    (GstRTPSession *sess, guint32 ssrc);
+  void     (*on_timeout)        (GstRTPSession *sess, guint32 ssrc);
 };
 
 GType gst_rtp_session_get_type (void);

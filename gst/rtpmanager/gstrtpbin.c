@@ -158,6 +158,13 @@ enum
 {
   SIGNAL_REQUEST_PT_MAP,
   SIGNAL_CLEAR_PT_MAP,
+
+  SIGNAL_ON_NEW_SSRC,
+  SIGNAL_ON_SSRC_COLLISION,
+  SIGNAL_ON_SSRC_VALIDATED,
+  SIGNAL_ON_BYE_SSRC,
+  SIGNAL_ON_BYE_TIMEOUT,
+  SIGNAL_ON_TIMEOUT,
   LAST_SIGNAL
 };
 
@@ -258,6 +265,48 @@ find_session_by_id (GstRTPBin * rtpbin, gint id)
   return NULL;
 }
 
+static void
+on_new_ssrc (GstElement * session, guint32 ssrc, GstRTPBinSession * sess)
+{
+  g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_NEW_SSRC], 0,
+      sess->id, ssrc);
+}
+
+static void
+on_ssrc_collision (GstElement * session, guint32 ssrc, GstRTPBinSession * sess)
+{
+  g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_SSRC_COLLISION], 0,
+      sess->id, ssrc);
+}
+
+static void
+on_ssrc_validated (GstElement * session, guint32 ssrc, GstRTPBinSession * sess)
+{
+  g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_SSRC_VALIDATED], 0,
+      sess->id, ssrc);
+}
+
+static void
+on_bye_ssrc (GstElement * session, guint32 ssrc, GstRTPBinSession * sess)
+{
+  g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_BYE_SSRC], 0,
+      sess->id, ssrc);
+}
+
+static void
+on_bye_timeout (GstElement * session, guint32 ssrc, GstRTPBinSession * sess)
+{
+  g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_BYE_TIMEOUT], 0,
+      sess->id, ssrc);
+}
+
+static void
+on_timeout (GstElement * session, guint32 ssrc, GstRTPBinSession * sess)
+{
+  g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_TIMEOUT], 0,
+      sess->id, ssrc);
+}
+
 /* create a session with the given id.  Must be called with RTP_BIN_LOCK */
 static GstRTPBinSession *
 create_session (GstRTPBin * rtpbin, gint id)
@@ -283,6 +332,18 @@ create_session (GstRTPBin * rtpbin, gint id)
   /* provide clock_rate to the session manager when needed */
   g_signal_connect (session, "request-pt-map",
       (GCallback) pt_map_requested, sess);
+
+  g_signal_connect (sess->session, "on-new-ssrc",
+      (GCallback) on_new_ssrc, sess);
+  g_signal_connect (sess->session, "on-ssrc-collision",
+      (GCallback) on_ssrc_collision, sess);
+  g_signal_connect (sess->session, "on-ssrc-validated",
+      (GCallback) on_ssrc_validated, sess);
+  g_signal_connect (sess->session, "on-bye-ssrc",
+      (GCallback) on_bye_ssrc, sess);
+  g_signal_connect (sess->session, "on-bye-timeout",
+      (GCallback) on_bye_timeout, sess);
+  g_signal_connect (sess->session, "on-timeout", (GCallback) on_timeout, sess);
 
   gst_bin_add (GST_BIN_CAST (rtpbin), session);
   gst_element_set_state (session, GST_STATE_PLAYING);
@@ -556,6 +617,86 @@ gst_rtp_bin_class_init (GstRTPBinClass * klass)
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRTPBinClass, clear_pt_map),
       NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
+  /**
+   * GstRTPBin::on-new-ssrc:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC 
+   *
+   * Notify of a new SSRC that entered @session.
+   */
+  gst_rtp_bin_signals[SIGNAL_ON_NEW_SSRC] =
+      g_signal_new ("on-new-ssrc", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, on_new_ssrc),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+  /**
+   * GstRTPBin::on-ssrc_collision:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC 
+   *
+   * Notify when we have an SSRC collision
+   */
+  gst_rtp_bin_signals[SIGNAL_ON_SSRC_COLLISION] =
+      g_signal_new ("on-ssrc-collision", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, on_ssrc_collision),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+  /**
+   * GstRTPBin::on-ssrc_validated:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC 
+   *
+   * Notify of a new SSRC that became validated.
+   */
+  gst_rtp_bin_signals[SIGNAL_ON_SSRC_VALIDATED] =
+      g_signal_new ("on-ssrc-validated", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, on_ssrc_validated),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+
+  /**
+   * GstRTPBin::on-bye-ssrc:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC 
+   *
+   * Notify of an SSRC that became inactive because of a BYE packet.
+   */
+  gst_rtp_bin_signals[SIGNAL_ON_BYE_SSRC] =
+      g_signal_new ("on-bye-ssrc", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, on_bye_ssrc),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+  /**
+   * GstRTPBin::on-bye-timeout:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC 
+   *
+   * Notify of an SSRC that has timed out because of BYE
+   */
+  gst_rtp_bin_signals[SIGNAL_ON_BYE_TIMEOUT] =
+      g_signal_new ("on-bye-timeout", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, on_bye_timeout),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+  /**
+   * GstRTPBin::on-timeout:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC 
+   *
+   * Notify of an SSRC that has timed out
+   */
+  gst_rtp_bin_signals[SIGNAL_ON_TIMEOUT] =
+      g_signal_new ("on-timeout", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPBinClass, on_timeout),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
 
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_provide_clock);

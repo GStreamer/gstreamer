@@ -13,10 +13,10 @@ BUILT_SOURCES = $(built_sources) $(built_headers)
 libgstrtpmanager_la_SOURCES = gstrtpmanager.c \
 			      gstrtpbin.c \
 			      gstrtpclient.c \
-			      async_jitter_queue.c \
 			      gstrtpjitterbuffer.c \
 			      gstrtpptdemux.c \
 			      gstrtpssrcdemux.c \
+			      rtpjitterbuffer.c      \
 			      rtpsession.c      \
 			      rtpsource.c      \
 			      rtpstats.c      \
@@ -27,10 +27,10 @@ nodist_libgstrtpmanager_la_SOURCES = \
 
 noinst_HEADERS = gstrtpbin.h \
 		 gstrtpclient.h \
-                 async_jitter_queue.h \
 		 gstrtpjitterbuffer.h \
                  gstrtpptdemux.h \
                  gstrtpssrcdemux.h \
+                 rtpjitterbuffer.h \
 		 rtpsession.h  \
 		 rtpsource.h  \
 		 rtpstats.h  \

@@ -57,8 +57,14 @@ struct _GstRTPBinClass {
 
   /* get the caps for pt */
   GstCaps* (*request_pt_map)  (GstRTPBin *rtpbin, guint session, guint pt);
-
   void     (*clear_pt_map)    (GstRTPBin *rtpbin);
+
+  void     (*on_new_ssrc)       (GstRTPBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_ssrc_collision) (GstRTPBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_ssrc_validated) (GstRTPBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_bye_ssrc)       (GstRTPBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_bye_timeout)    (GstRTPBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_timeout)        (GstRTPBin *rtpbin, guint session, guint32 ssrc);
 };
 
 GType gst_rtp_bin_get_type (void);
