@@ -29,8 +29,8 @@
  * TODO:  - Implement the convolution in place, probably only makes sense
  *          when using FFT convolution as currently the convolution itself
  *          is probably the bottleneck
- *        - Implement a band reject mode (spectral inversion)
- *        - Allow choosing between different windows (blackman, hanning, ...)
+ *        - Maybe allow cascading the filter to get a better stopband attenuation.
+ *          Can be done by convolving a filter kernel with itself
  */
 
 #ifdef HAVE_CONFIG_H
@@ -69,8 +69,62 @@ enum
   PROP_0,
   PROP_LENGTH,
   PROP_LOWER_FREQUENCY,
-  PROP_UPPER_FREQUENCY
+  PROP_UPPER_FREQUENCY,
+  PROP_MODE,
+  PROP_WINDOW
 };
+
+enum
+{
+  MODE_BAND_PASS = 0,
+  MODE_BAND_REJECT
+};
+
+#define GST_TYPE_BPWSINC_MODE (gst_bpwsinc_mode_get_type ())
+static GType
+gst_bpwsinc_mode_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {MODE_BAND_PASS, "Band pass (default)",
+          "band-pass"},
+      {MODE_BAND_REJECT, "Band reject",
+          "band-reject"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstBPWSincMode", values);
+  }
+  return gtype;
+}
+
+enum
+{
+  WINDOW_HAMMING = 0,
+  WINDOW_BLACKMAN
+};
+
+#define GST_TYPE_BPWSINC_WINDOW (gst_bpwsinc_window_get_type ())
+static GType
+gst_bpwsinc_window_get_type (void)
+{
+  static GType gtype = 0;
+
+  if (gtype == 0) {
+    static const GEnumValue values[] = {
+      {WINDOW_HAMMING, "Hamming window (default)",
+          "hamming"},
+      {WINDOW_BLACKMAN, "Blackman window",
+          "blackman"},
+      {0, NULL, NULL}
+    };
+
+    gtype = g_enum_register_static ("GstBPWSincWindow", values);
+  }
+  return gtype;
+}
 
 #define ALLOWED_CAPS \
     "audio/x-raw-float, "                                             \
@@ -157,6 +211,16 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
           "Filter kernel length, will be rounded to the next odd number",
           3, G_MAXINT, 101, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode",
+          "Band pass or band reject mode", GST_TYPE_BPWSINC_MODE,
+          MODE_BAND_PASS, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  g_object_class_install_property (gobject_class, PROP_WINDOW,
+      g_param_spec_enum ("window", "Window",
+          "Window function to use", GST_TYPE_BPWSINC_WINDOW,
+          WINDOW_HAMMING, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
   trans_class->transform = GST_DEBUG_FUNCPTR (bpwsinc_transform);
   trans_class->get_unit_size = GST_DEBUG_FUNCPTR (bpwsinc_get_unit_size);
   GST_AUDIO_FILTER_CLASS (klass)->setup = GST_DEBUG_FUNCPTR (bpwsinc_setup);
@@ -168,6 +232,8 @@ gst_bpwsinc_init (GstBPWSinc * self, GstBPWSincClass * g_class)
   self->kernel_length = 101;
   self->lower_frequency = 0.0;
   self->upper_frequency = 0.0;
+  self->mode = MODE_BAND_PASS;
+  self->window = WINDOW_HAMMING;
   self->kernel = NULL;
   self->have_kernel = FALSE;
   self->residue = NULL;
@@ -273,9 +339,13 @@ bpwsinc_build_kernel (GstBPWSinc * self)
     else
       kernel_lp[i] = sin (w * (i - len / 2))
           / (i - len / 2);
-    /* Blackman windowing */
-    kernel_lp[i] *= (0.42 - 0.5 * cos (2 * M_PI * i / len)
-        + 0.08 * cos (4 * M_PI * i / len));
+    /* Windowing */
+    if (self->window == WINDOW_HAMMING)
+      kernel_lp[i] *= (0.54 - 0.46 * cos (2 * M_PI * i / len));
+    else
+      kernel_lp[i] *=
+          (0.42 - 0.5 * cos (2 * M_PI * i / len) +
+          0.08 * cos (4 * M_PI * i / len));
   }
 
   /* normalize for unity gain at DC */
@@ -297,9 +367,13 @@ bpwsinc_build_kernel (GstBPWSinc * self)
     else
       kernel_hp[i] = sin (w * (i - len / 2))
           / (i - len / 2);
-    /* Blackman windowing */
-    kernel_hp[i] *= (0.42 - 0.5 * cos (2 * M_PI * i / len)
-        + 0.08 * cos (4 * M_PI * i / len));
+    /* Windowing */
+    if (self->window == WINDOW_HAMMING)
+      kernel_hp[i] *= (0.54 - 0.46 * cos (2 * M_PI * i / len));
+    else
+      kernel_hp[i] *=
+          (0.42 - 0.5 * cos (2 * M_PI * i / len) +
+          0.08 * cos (4 * M_PI * i / len));
   }
 
   /* normalize for unity gain at DC */
@@ -326,10 +400,13 @@ bpwsinc_build_kernel (GstBPWSinc * self)
   g_free (kernel_lp);
   g_free (kernel_hp);
 
-  /* do spectral inversion to go from bandreject to bandpass */
-  for (i = 0; i < len; ++i)
-    self->kernel[i] = -self->kernel[i];
-  self->kernel[len / 2] += 1;
+  /* do spectral inversion to go from bandreject to bandpass
+   * if specified */
+  if (self->mode == MODE_BAND_PASS) {
+    for (i = 0; i < len; ++i)
+      self->kernel[i] = -self->kernel[i];
+    self->kernel[len / 2] += 1;
+  }
 
   /* set up the residue memory space */
   if (self->residue)
@@ -441,6 +518,18 @@ bpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
       bpwsinc_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
+    case PROP_MODE:
+      GST_BASE_TRANSFORM_LOCK (self);
+      self->mode = g_value_get_enum (value);
+      bpwsinc_build_kernel (self);
+      GST_BASE_TRANSFORM_UNLOCK (self);
+      break;
+    case PROP_WINDOW:
+      GST_BASE_TRANSFORM_LOCK (self);
+      self->window = g_value_get_enum (value);
+      bpwsinc_build_kernel (self);
+      GST_BASE_TRANSFORM_UNLOCK (self);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -462,6 +551,12 @@ bpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_UPPER_FREQUENCY:
       g_value_set_double (value, self->upper_frequency);
+      break;
+    case PROP_MODE:
+      g_value_set_enum (value, self->mode);
+      break;
+    case PROP_WINDOW:
+      g_value_set_enum (value, self->window);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

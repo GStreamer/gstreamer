@@ -1,5 +1,17 @@
 2007-08-10  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_mode_get_type),
+	(gst_bpwsinc_window_get_type), (gst_bpwsinc_class_init),
+	(gst_bpwsinc_init), (bpwsinc_build_kernel), (bpwsinc_set_property),
+	(bpwsinc_get_property):
+	* gst/filter/gstbpwsinc.h:
+	Add support for a bandreject mode and allow specifying the window
+	function that should be used.
+	* gst/filter/gstlpwsinc.c:
+	And another small formatting fix.
+
+2007-08-10  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init),
 	(gst_bpwsinc_init), (process_32), (process_64),
 	(bpwsinc_build_kernel), (bpwsinc_setup), (bpwsinc_get_unit_size),
