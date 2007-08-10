@@ -592,8 +592,7 @@ apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment)
       "received NEWSEGMENT update %d, rate %lf, applied rate %lf, "
       "format %d, "
       "%" G_GINT64_FORMAT " -- %" G_GINT64_FORMAT ", time %"
-      G_GINT64_FORMAT ", accum %" G_GINT64_FORMAT, update, rate, arate,
-      format, start, stop, time);
+      G_GINT64_FORMAT, update, rate, arate, format, start, stop, time);
 
   if (format == GST_FORMAT_BYTES) {
   }
