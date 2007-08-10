@@ -48,7 +48,7 @@ SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
 #EXTRA_DIST = gstreamer.types.in gstreamer.hierarchy $(DOC_MODULE)-sections.txt gstreamer-sections.txt $(DOC_MAIN_SGML_FILE)
 
 # Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS= --output-format=xml --sgml-mode --ignore-files=trio
+MKDB_OPTIONS=--sgml-mode --output-format=xml
 
 # Extra options to supply to gtkdoc-fixref.
 FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html \

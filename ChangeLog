@@ -1,3 +1,13 @@
+2007-08-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/Makefile.am:
+	* docs/libs/Makefile.am:
+	  Remove cruft and do some cleanups.
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/libs/gstreamer-libs-docs.sgml:
+	  Prepare for comming gtkdoc features (rebase against online docs).
+
 2007-08-10  Michael Smith <msmith@fluendo.com>
 
 	* docs/gst/gstreamer-sections.txt:

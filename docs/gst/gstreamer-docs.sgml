@@ -73,7 +73,11 @@
 <book id="index">
   <bookinfo>
     <title>GStreamer &GST_MAJORMINOR; Core Reference Manual</title>
-    <releaseinfo>for GStreamer Core &GST_MAJORMINOR; (&GST_VERSION;)</releaseinfo>
+    <releaseinfo>
+      for GStreamer Core &GST_MAJORMINOR; (&GST_VERSION;)
+      The latest version of this documentation can be found on-line at
+      <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer/html/</ulink>.
+    </releaseinfo>
   </bookinfo>
 
   <chapter id="gstreamer">

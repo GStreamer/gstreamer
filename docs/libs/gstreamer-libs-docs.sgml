@@ -35,7 +35,10 @@
 <book id="index">
   <bookinfo>
     <title>GStreamer &GST_MAJORMINOR; Library Reference Manual</title>
-    <releaseinfo>for GStreamer Library &GST_MAJORMINOR; (&GST_VERSION;)</releaseinfo>
+    <releaseinfo>
+      for GStreamer Library &GST_MAJORMINOR; (&GST_VERSION;)
+      <ulink role="online-location" url="http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer-libs/html/">http://gstreamer.freedesktop.org/data/doc/gstreamer/head/gstreamer-libs/html/</ulink>.
+    </releaseinfo>
   </bookinfo>
   <part id="gstreamer-libs">
     <title>GStreamer Libraries</title>
@@ -54,12 +57,12 @@
         libgstbase-&GST_MAJORMINOR;.so provides some base classes to be extended
         by elements and utillity classes that are most useful for plugin developers.
       </para>
-  
+
       &GstBaseSrc;
       &GstBaseSink;
       &GstBaseTransform;
       &GstPushSrc;
-  
+
       &GstAdapter;
       &GstCollectPads;
       &GstTypeFindHelper;
@@ -85,19 +88,19 @@
       <para>
         libgstnet-&GST_MAJORMINOR;.so provides network elements and objects.
       </para>
-  
+
       &GstNetClientClock;
       &GstNetTimePacket;
       &GstNetTimeProvider;
     </chapter>
-  
+
     <chapter id="gstreamer-check">
       <title>GStreamer Check Unit Testing</title>
       <para>
         libgstcheck-&GST_MAJORMINOR;.so provides functionality for writing
         unit tests that use the check framework.
       </para>
-  
+
       &GstCheck;
       &GstCheckBufferStraw;
     </chapter>

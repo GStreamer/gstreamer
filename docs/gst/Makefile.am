@@ -35,23 +35,24 @@ include $(top_srcdir)/common/upload.mak
 # The top-level SGML file. Change it if you want.
 DOC_MAIN_SGML_FILE=$(DOC_MODULE)-docs.sgml
 
-# Extra options to supply to gtkdoc-scan.
-SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
-
-# Extra options to supply to gtkdoc-mkdb.
-MKDB_OPTIONS=--sgml-mode --ignore-files=parse
-
-# Extra options to supply to gtkdoc-fixref.
-FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html
-
 # The files containing the source code. Relative to $(top_srcdir).
 # gtk-doc will search all .c & .h files beneath here for inline comments
 # documenting functions and macros.
 DOC_SOURCE_DIR = $(top_srcdir)/gst
 DOC_BUILD_DIR = $(top_builddir)/gst
 
-HFILE_GLOB=$(top_srcdir)/gst/*.h $(top_srcdir)/libs/gst/*/*.h
-CFILE_GLOB=$(top_srcdir)/gst/*.c $(top_srcdir)/libs/gst/*/*.c
+# Extra options to supply to gtkdoc-scan.
+SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
+
+# Extra options to supply to gtkdoc-mkdb.
+MKDB_OPTIONS=--sgml-mode --output-format=xml --ignore-files=parse
+
+# Extra options to supply to gtkdoc-fixref.
+FIXXREF_OPTIONS=--extra-dir=$(GLIB_PREFIX)/share/gtk-doc/html
+
+# Used for dependencies.
+HFILE_GLOB=$(DOC_SOURCE_DIR)/*.h
+CFILE_GLOB=$(DOC_SOURCE_DIR)/*.c
 
 SCANOBJ_DEPS = \
 	$(top_builddir)/libs/gst/base/libgstbase-@GST_MAJORMINOR@.la \
@@ -60,40 +61,17 @@ SCANOBJ_DEPS = \
 # Header files to ignore when scanning. Use base file name, no paths
 IGNORE_HFILES= \
 	gettext.h \
-	gst-i18n-lib.h \
-	gst-i18n-app.h \
-	gst_private.h \
-	gstdata_private.h \
-	gstarch.h \
-	cothreads.h \
-	cothreads_compat.h \
-	gthread-cothreads.h \
-	faircothreads.h \
-	types.h \
+	glib-compat-private.h \
 	glib-compat.h \
+	gst-i18n-app.h \
+	gst-i18n-lib.h \
+	gst_private.h \
+	gstmarshal.h \
+	gstmacros.h \
+	\
 	grammar.tab.h \
 	grammar.tab.pre.h \
-	gstmarshal.h \
-	gstaggregator.h \
-	gstbufferstore.h \
-	gstfdsink.h \
-	gstfdsrc.h \
-	gstidentity.h \
-	gstmacros.h \
-	gstmd5sink.h \
-	gstmultifilesrc.h \
-	gstmultifdsink.h \
-	gstpipefilter.h \
-	gstshaper.h \
-	gststatistics.h \
-	gsttee.h \
-	gsttrashstack.h \
-	gsttypefindelement.h \
-	gstspider.h \
-	gstspideridentity.h \
-	gstsearchfuncs.h \
-	gsttrashstack.h \
-	gstxmlregistry.h
+	types.h
 
 # Images to copy into HTML directory.
 HTML_IMAGES =
