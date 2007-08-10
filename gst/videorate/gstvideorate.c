@@ -557,7 +557,7 @@ gst_video_rate_query (GstPad * pad, GstQuery * query)
               videorate->from_rate_denominator, videorate->from_rate_numerator);
 
           GST_DEBUG_OBJECT (videorate, "Our latency: %"
-              GST_TIME_FORMAT, latency);
+              GST_TIME_FORMAT, GST_TIME_ARGS (latency));
 
           min += latency;
           if (max != -1)

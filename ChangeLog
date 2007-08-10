@@ -1,3 +1,9 @@
+2007-08-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstqueue2.c:
+	* gst/videorate/gstvideorate.c:
+	  Printf format fixes (#465028).
+
 2007-08-09  Michael Smith <msmith@fluendo.com>
 
 	* gst/audiorate/gstaudiorate.c: (gst_audio_rate_chain):
