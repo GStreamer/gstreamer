@@ -25,10 +25,6 @@
  * chapter 16
  * available at http://www.dspguide.com/
  *
- * FIXME:
- * - this filter is totally unoptimized !
- * - we do not destroy the allocated memory for filters and residue
- * - this might be improved upon with bytestream
  */
 
 #ifndef __GST_BPWSINC_H__
@@ -54,6 +50,8 @@ G_BEGIN_DECLS
 typedef struct _GstBPWSinc GstBPWSinc;
 typedef struct _GstBPWSincClass GstBPWSincClass;
 
+typedef void (*GstBPWSincProcessFunc) (GstBPWSinc *, guint8 *, guint8 *, guint);
+
 /**
  * GstBPWSinc:
  *
@@ -62,13 +60,15 @@ typedef struct _GstBPWSincClass GstBPWSincClass;
 struct _GstBPWSinc {
   GstAudioFilter element;
 
-  double frequency;
-  double lower_frequency, upper_frequency;
-  int wing_size;                /* length of a "wing" of the filter; 
-                                   actual length is 2 * wing_size + 1 */
+  GstBPWSincProcessFunc process;
 
-  gfloat *residue;              /* buffer for left-over samples from previous buffer */
-  double *kernel;
+  gdouble frequency;
+  gdouble lower_frequency, upper_frequency;
+  gint kernel_length;           /* length of the filter kernel */
+
+  gdouble *residue;             /* buffer for left-over samples from previous buffer */
+  gdouble *kernel;
+  gboolean have_kernel;
 };
 
 struct _GstBPWSincClass {

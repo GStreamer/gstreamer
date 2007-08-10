@@ -126,10 +126,10 @@ gst_lpwsinc_window_get_type (void)
 
 
 #define ALLOWED_CAPS \
-    "audio/x-raw-float,"                                              \
+    "audio/x-raw-float, "                                             \
     " width = (int) { 32, 64 }, "                                     \
-    " endianness = (int) BYTE_ORDER,"                                 \
-    " rate = (int) [ 1, MAX ],"                                       \
+    " endianness = (int) BYTE_ORDER, "                                \
+    " rate = (int) [ 1, MAX ], "                                      \
     " channels = (int) [ 1, MAX ]"
 
 #define DEBUG_INIT(bla) \
@@ -199,7 +199,7 @@ gst_lpwsinc_class_init (GstLPWSincClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_FREQUENCY,
       g_param_spec_double ("frequency", "Frequency",
-          "Cut-off Frequency", 0.0, G_MAXDOUBLE, 0.0,
+          "Cut-off Frequency (Hz)", 0.0, G_MAXDOUBLE, 0.0,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   g_object_class_install_property (gobject_class, PROP_LENGTH,
