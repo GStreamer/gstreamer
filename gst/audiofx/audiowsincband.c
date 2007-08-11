@@ -245,6 +245,7 @@ process_32 (GstBPWSinc * self, gfloat * src, gfloat * dst, guint input_samples)
   gint kernel_length = self->kernel_length;
   gint i, j, k, l;
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
+  gint res_start;
 
   /* convolution */
   for (i = 0; i < input_samples; i++) {
@@ -260,8 +261,17 @@ process_32 (GstBPWSinc * self, gfloat * src, gfloat * dst, guint input_samples)
         dst[i] += src[(l - j) * channels + k] * self->kernel[j];
   }
 
-  /* copy the tail of the current input buffer to the residue */
-  for (i = 0; i < kernel_length * channels; i++)
+  /* copy the tail of the current input buffer to the residue, while
+   * keeping parts of the residue if the input buffer is smaller than
+   * the kernel length */
+  if (input_samples < kernel_length * channels)
+    res_start = kernel_length * channels - input_samples;
+  else
+    res_start = 0;
+
+  for (i = 0; i < res_start; i++)
+    self->residue[i] = self->residue[i + input_samples];
+  for (i = res_start; i < kernel_length * channels; i++)
     self->residue[i] = src[input_samples - kernel_length * channels + i];
 }
 
@@ -272,6 +282,7 @@ process_64 (GstBPWSinc * self, gdouble * src, gdouble * dst,
   gint kernel_length = self->kernel_length;
   gint i, j, k, l;
   gint channels = GST_AUDIO_FILTER (self)->format.channels;
+  gint res_start;
 
   /* convolution */
   for (i = 0; i < input_samples; i++) {
@@ -287,8 +298,17 @@ process_64 (GstBPWSinc * self, gdouble * src, gdouble * dst,
         dst[i] += src[(l - j) * channels + k] * self->kernel[j];
   }
 
-  /* copy the tail of the current input buffer to the residue */
-  for (i = 0; i < kernel_length * channels; i++)
+  /* copy the tail of the current input buffer to the residue, while
+   * keeping parts of the residue if the input buffer is smaller than
+   * the kernel length */
+  if (input_samples < kernel_length * channels)
+    res_start = kernel_length * channels - input_samples;
+  else
+    res_start = 0;
+
+  for (i = 0; i < res_start; i++)
+    self->residue[i] = self->residue[i + input_samples];
+  for (i = res_start; i < kernel_length * channels; i++)
     self->residue[i] = src[input_samples - kernel_length * channels + i];
 }
 
