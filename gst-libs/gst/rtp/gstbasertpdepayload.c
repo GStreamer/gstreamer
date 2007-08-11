@@ -31,6 +31,15 @@
 
 #include "gstbasertpdepayload.h"
 
+#ifdef GST_DISABLE_DEPRECATED
+#define QUEUE_LOCK_INIT(base)   (g_static_rec_mutex_init(&base->queuelock))
+#define QUEUE_LOCK_FREE(base)   (g_static_rec_mutex_free(&base->queuelock))
+#define QUEUE_LOCK(base)        (g_static_rec_mutex_lock(&base->queuelock))
+#define QUEUE_UNLOCK(base)      (g_static_rec_mutex_unlock(&base->queuelock))
+#else
+/* otherwise it's already been defined in the header (FIXME 0.11)*/
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (basertpdepayload_debug);
 #define GST_CAT_DEFAULT (basertpdepayload_debug)
 
@@ -62,7 +71,7 @@ enum
 enum
 {
   PROP_0,
-  PROP_QUEUE_DELAY,
+  PROP_QUEUE_DELAY
 };
 
 static void gst_base_rtp_depayload_finalize (GObject * object);
@@ -617,6 +626,7 @@ gst_base_rtp_depayload_start_thread (GstBaseRTPDepayload * filter)
   /* only launch the thread if processing is needed */
   if (filter->queue_delay) {
     GST_DEBUG_OBJECT (filter, "Starting queue release thread");
+    QUEUE_LOCK_INIT (filter);
     filter->thread_running = TRUE;
     filter->thread =
         g_thread_create ((GThreadFunc) gst_base_rtp_depayload_thread, filter,

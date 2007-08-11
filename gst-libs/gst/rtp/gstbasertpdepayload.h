@@ -25,7 +25,6 @@
 
 G_BEGIN_DECLS
 
-/* #define's don't like whitespacey bits */
 #define GST_TYPE_BASE_RTP_DEPAYLOAD (gst_base_rtp_depayload_get_type())
 #define GST_BASE_RTP_DEPAYLOAD(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_BASE_RTP_DEPAYLOAD,GstBaseRTPDepayload))
@@ -41,10 +40,14 @@ G_BEGIN_DECLS
 #define GST_BASE_RTP_DEPAYLOAD_SINKPAD(depayload) (GST_BASE_RTP_DEPAYLOAD (depayload)->sinkpad)
 #define GST_BASE_RTP_DEPAYLOAD_SRCPAD(depayload)  (GST_BASE_RTP_DEPAYLOAD (depayload)->srcpad)
 
+#ifndef GST_DISABLE_DEPRECATED
+/* this was presumably never meant to be public API, or should at least
+ * have been prefixed if it was. Don't use. (FIXME: remove in 0.11) */
 #define QUEUE_LOCK_INIT(base)   (g_static_rec_mutex_init(&base->queuelock))
 #define QUEUE_LOCK_FREE(base)   (g_static_rec_mutex_free(&base->queuelock))
-#define QUEUE_LOCK(base)                (g_static_rec_mutex_lock(&base->queuelock))
-#define QUEUE_UNLOCK(base)              (g_static_rec_mutex_unlock(&base->queuelock))
+#define QUEUE_LOCK(base)        (g_static_rec_mutex_lock(&base->queuelock))
+#define QUEUE_UNLOCK(base)      (g_static_rec_mutex_unlock(&base->queuelock))
+#endif
 
 typedef struct _GstBaseRTPDepayload      GstBaseRTPDepayload;
 typedef struct _GstBaseRTPDepayloadClass GstBaseRTPDepayloadClass;
