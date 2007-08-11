@@ -2,7 +2,7 @@
 
 	* gst/filter/gstbpwsinc.c: (process_32), (process_64):
 	* gst/filter/gstlpwsinc.c: (process_32), (process_64):
-	Fix processing with buffer sizes that are larger than the filter
+	Fix processing with buffer sizes that are smaller than the filter
 	kernel size.
 
 2007-08-10  Wim Taymans  <wim.taymans@gmail.com>
