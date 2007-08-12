@@ -2144,6 +2144,8 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
         /* parse any esds descriptors */
         switch (version) {
           case 0x00000000:
+            offset = 0x24;
+            break;
           case 0x00010000:
             offset = 0x34;
             break;

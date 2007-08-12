@@ -1,3 +1,8 @@
+2007-08-12  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_parse_node):
+	Fix parsing of mp4a version 0 atoms. Fixes #465774.
+
 2007-08-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/rtp/gstrtpilbcdepay.c:
