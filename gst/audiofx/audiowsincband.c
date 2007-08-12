@@ -338,8 +338,6 @@ bpwsinc_build_kernel (GstBPWSinc * self)
     return;
   }
 
-  self->have_kernel = TRUE;
-
   /* Clamp frequencies */
   self->lower_frequency =
       CLAMP (self->lower_frequency, 0.0,
@@ -354,10 +352,13 @@ bpwsinc_build_kernel (GstBPWSinc * self)
     self->upper_frequency = tmp;
   }
 
-  /* fill the lp kernel */
-  GST_DEBUG ("bpwsinc: initializing LP kernel of length %d with cut-off %f",
-      len, self->lower_frequency);
+  GST_DEBUG ("bpwsinc: initializing filter kernel of length %d "
+      "with lower frequency %.2lf Hz "
+      ", upper frequency %.2lf Hz for mode %s",
+      len, self->lower_frequency, self->upper_frequency,
+      (self->mode == MODE_BAND_PASS) ? "band-pass" : "band-reject");
 
+  /* fill the lp kernel */
   w = 2 * M_PI * (self->lower_frequency / GST_AUDIO_FILTER (self)->format.rate);
   kernel_lp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
@@ -383,9 +384,6 @@ bpwsinc_build_kernel (GstBPWSinc * self)
     kernel_lp[i] /= sum;
 
   /* fill the hp kernel */
-  GST_DEBUG ("bpwsinc: initializing HP kernel of length %d with cut-off %f",
-      len, self->upper_frequency);
-
   w = 2 * M_PI * (self->upper_frequency / GST_AUDIO_FILTER (self)->format.rate);
   kernel_hp = g_new (gdouble, len);
   for (i = 0; i < len; ++i) {
@@ -438,9 +436,10 @@ bpwsinc_build_kernel (GstBPWSinc * self)
   /* set up the residue memory space */
   if (self->residue)
     g_free (self->residue);
-
   self->residue =
       g_new0 (gdouble, len * GST_AUDIO_FILTER (self)->format.channels);
+
+  self->have_kernel = TRUE;
 }
 
 /* GstAudioFilter vmethod implementations */
