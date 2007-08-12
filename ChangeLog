@@ -1,5 +1,10 @@
 2007-08-12  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/gststructure.c:
+	Add Since tag to docs.
+
+2007-08-12  Wim Taymans  <wim.taymans@gmail.com>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gststructure.c: (gst_structure_get_uint):
 	* gst/gststructure.h:

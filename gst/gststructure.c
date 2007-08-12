@@ -1055,6 +1055,8 @@ gst_structure_get_int (const GstStructure * structure,
  * Returns: %TRUE if the value could be set correctly. If there was no field
  * with @fieldname or the existing field did not contain a uint, this function
  * returns %FALSE.
+ *
+ * Since: 0.10.15
  */
 gboolean
 gst_structure_get_uint (const GstStructure * structure,
