@@ -375,6 +375,18 @@ no_function:
   }
 }
 
+/**
+ * gst_basertppayload_set_options:
+ * @payload: a #GstBaseRTPPayload
+ * @media: the media type (typically "audio" or "video")
+ * @dynamic: if the payload type is dynamic
+ * @encoding_name: the encoding name 
+ * @clock_rate: the clock rate of the media
+ *
+ * Set the rtp options of the payloader. These options will be set in the caps
+ * of the payloader. Subclasses must call this method before calling
+ * gst_basertppayload_push() or gst_basertppayload_set_outcaps().
+ */
 void
 gst_basertppayload_set_options (GstBaseRTPPayload * payload,
     gchar * media, gboolean dynamic, gchar * encoding_name, guint32 clock_rate)
@@ -390,29 +402,104 @@ gst_basertppayload_set_options (GstBaseRTPPayload * payload,
   payload->clock_rate = clock_rate;
 }
 
+/**
+ * gst_basertppayload_set_outcaps:
+ * @payload: a #GstBaseRTPPayload
+ * @fieldname: the first field name or %NULL
+ * @...: field values
+ *
+ * Configure the output caps with the optional parameters.
+ *
+ * Variable arguments should be in the form field name, field type
+ * (as a GType), value(s).  The last variable argument should be NULL.
+ *
+ * Returns: %TRUE if the caps could be set.
+ */
 gboolean
 gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
     ...)
 {
-  GstCaps *srccaps;
-  GstStructure *s;
+  GstCaps *srccaps, *peercaps;
 
+  /* fill in the defaults, there properties cannot be negotiated. */
   srccaps = gst_caps_new_simple ("application/x-rtp",
       "media", G_TYPE_STRING, payload->media,
-      "payload", G_TYPE_INT, GST_BASE_RTP_PAYLOAD_PT (payload),
       "clock-rate", G_TYPE_INT, payload->clock_rate,
-      "encoding-name", G_TYPE_STRING, payload->encoding_name,
-      "ssrc", G_TYPE_UINT, payload->current_ssrc,
-      "clock-base", G_TYPE_UINT, payload->ts_base,
-      "seqnum-base", G_TYPE_UINT, payload->seqnum_base, NULL);
-  s = gst_caps_get_structure (srccaps, 0);
+      "encoding-name", G_TYPE_STRING, payload->encoding_name, NULL);
 
   if (fieldname) {
     va_list varargs;
 
     va_start (varargs, fieldname);
-    gst_structure_set_valist (s, fieldname, varargs);
+    gst_caps_set_simple_valist (srccaps, fieldname, varargs);
     va_end (varargs);
+  }
+
+
+  /* the peer caps can override some of the defaults */
+  peercaps = gst_pad_peer_get_caps (payload->srcpad);
+  if (peercaps == NULL) {
+    /* no peer caps, just add the other properties */
+    gst_caps_set_simple (srccaps,
+        "payload", G_TYPE_INT, GST_BASE_RTP_PAYLOAD_PT (payload),
+        "ssrc", G_TYPE_UINT, payload->current_ssrc,
+        "clock-base", G_TYPE_UINT, payload->ts_base,
+        "seqnum-base", G_TYPE_UINT, payload->seqnum_base, NULL);
+  } else {
+    GstCaps *temp;
+    GstStructure *s;
+    const GValue *value;
+    gint pt;
+
+    /* peer provides caps we can use to fixate, intersect. This always returns a
+     * writable caps. */
+    temp = gst_caps_intersect (srccaps, peercaps);
+    gst_caps_unref (srccaps);
+    gst_caps_unref (peercaps);
+
+    /* now fixate, start by taking the first caps */
+    gst_caps_truncate (temp);
+    srccaps = temp;
+
+    /* get first structure */
+    s = gst_caps_get_structure (srccaps, 0);
+
+    if (gst_structure_get_int (s, "payload", &pt))
+      GST_BASE_RTP_PAYLOAD_PT (payload) = pt;
+    else {
+      if (gst_structure_has_field (s, "payload")) {
+        /* can only fixate if there is a field */
+        gst_structure_fixate_field_nearest_int (s, "payload",
+            GST_BASE_RTP_PAYLOAD_PT (payload));
+      } else {
+        gst_structure_set (s, "payload", G_TYPE_INT,
+            GST_BASE_RTP_PAYLOAD_PT (payload), NULL);
+      }
+    }
+
+    if (gst_structure_has_field_typed (s, "ssrc", G_TYPE_UINT)) {
+      value = gst_structure_get_value (s, "ssrc");
+      payload->current_ssrc = g_value_get_uint (value);
+    } else {
+      /* FIXME, fixate_nearest_uint would be even better */
+      gst_structure_set (s, "ssrc", G_TYPE_UINT, payload->current_ssrc, NULL);
+    }
+
+    if (gst_structure_has_field_typed (s, "clock-base", G_TYPE_UINT)) {
+      value = gst_structure_get_value (s, "clock-base");
+      payload->ts_base = g_value_get_uint (value);
+    } else {
+      /* FIXME, fixate_nearest_uint would be even better */
+      gst_structure_set (s, "clock-base", G_TYPE_UINT, payload->ts_base, NULL);
+    }
+    if (gst_structure_has_field_typed (s, "seqnum-base", G_TYPE_UINT)) {
+      value = gst_structure_get_value (s, "seqnum-base");
+      payload->seqnum_base = g_value_get_uint (value);
+    } else {
+      /* FIXME, fixate_nearest_uint would be even better */
+      gst_structure_set (s, "seqnum-base", G_TYPE_UINT, payload->seqnum_base,
+          NULL);
+    }
   }
 
   gst_pad_set_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload), srccaps);
@@ -421,6 +508,18 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
   return TRUE;
 }
 
+/**
+ * gst_basertppayload_is_filled:
+ * @payload: a #GstBaseRTPPayload
+ * @size: the size of the packet
+ * @duration: the duration of the packet
+ *
+ * Check if the packet with @size and @duration would exceed the configure
+ * maximum size.
+ *
+ * Returns: %TRUE if the packet of @size and @duration would exceed the
+ * configured MTU or max_ptime.
+ */
 gboolean
 gst_basertppayload_is_filled (GstBaseRTPPayload * payload,
     guint size, GstClockTime duration)
@@ -434,6 +533,18 @@ gst_basertppayload_is_filled (GstBaseRTPPayload * payload,
   return FALSE;
 }
 
+/**
+ * gst_basertppayload_push:
+ * @payload: a #GstBaseRTPPayload
+ * @buffer: a #GstBuffer
+ *
+ * Push @buffer to the peer element of the payloader. The SSRC, payload type,
+ * seqnum and timestamp of the RTP buffer will be updated first.
+ * 
+ * This function takes ownership of @buffer.
+ *
+ * Returns: a #GstFlowReturn.
+ */
 GstFlowReturn
 gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 {

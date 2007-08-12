@@ -41,10 +41,34 @@ typedef struct _GstBaseRTPPayload GstBaseRTPPayload;
 typedef struct _GstBaseRTPPayloadPrivate GstBaseRTPPayloadPrivate;
 typedef struct _GstBaseRTPPayloadClass GstBaseRTPPayloadClass;
 
+/**
+ * GST_BASE_RTP_PAYLOAD_SINKPAD:
+ * @payload: a #GstBaseRTPPayload
+ *
+ * Get access to the sinkpad of @payload.
+ */
 #define GST_BASE_RTP_PAYLOAD_SINKPAD(payload) (GST_BASE_RTP_PAYLOAD (payload)->sinkpad)
+/**
+ * GST_BASE_RTP_PAYLOAD_SRCPAD:
+ * @payload: a #GstBaseRTPPayload
+ *
+ * Get access to the srcpad of @payload.
+ */
 #define GST_BASE_RTP_PAYLOAD_SRCPAD(payload)  (GST_BASE_RTP_PAYLOAD (payload)->srcpad)
 
+/**
+ * GST_BASE_RTP_PAYLOAD_PT:
+ * @payload: a #GstBaseRTPPayload
+ *
+ * Get access to the configured payload type of @payload.
+ */
 #define GST_BASE_RTP_PAYLOAD_PT(payload)  (GST_BASE_RTP_PAYLOAD (payload)->pt)
+/**
+ * GST_BASE_RTP_PAYLOAD_MTU:
+ * @payload: a #GstBaseRTPPayload
+ *
+ * Get access to the configured MTU of @payload.
+ */
 #define GST_BASE_RTP_PAYLOAD_MTU(payload) (GST_BASE_RTP_PAYLOAD (payload)->mtu)
 
 struct _GstBaseRTPPayload

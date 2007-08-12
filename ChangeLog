@@ -1,3 +1,12 @@
+2007-08-12  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_set_outcaps):
+	* gst-libs/gst/rtp/gstbasertppayload.h:
+	Improve caps negotiation so that downstream elements can confiure
+	certain RTP properties by fixing them on the caps. See #465146.
+	Add docs.
+
 2007-08-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:
