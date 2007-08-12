@@ -1,3 +1,12 @@
+2007-08-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init),
+	(bpwsinc_start):
+	* gst/filter/gstlpwsinc.c: (gst_lpwsinc_class_init),
+	(lpwsinc_start):
+	Reset the residue in BaseTransform::start to get a clean residue
+	on stream changes.
+
 2007-08-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/filter/gstbpwsinc.c: (process_32), (process_64):

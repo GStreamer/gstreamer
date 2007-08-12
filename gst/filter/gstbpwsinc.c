@@ -148,6 +148,8 @@ static GstFlowReturn bpwsinc_transform (GstBaseTransform * base,
     GstBuffer * inbuf, GstBuffer * outbuf);
 static gboolean bpwsinc_get_unit_size (GstBaseTransform * base, GstCaps * caps,
     guint * size);
+static gboolean bpwsinc_start (GstBaseTransform * base);
+
 static gboolean bpwsinc_setup (GstAudioFilter * base,
     GstRingBufferSpec * format);
 
@@ -190,9 +192,11 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
 {
   GObjectClass *gobject_class;
   GstBaseTransformClass *trans_class;
+  GstAudioFilterClass *filter_class;
 
   gobject_class = (GObjectClass *) klass;
   trans_class = (GstBaseTransformClass *) klass;
+  filter_class = (GstAudioFilterClass *) klass;
 
   gobject_class->set_property = bpwsinc_set_property;
   gobject_class->get_property = bpwsinc_get_property;
@@ -223,7 +227,8 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
 
   trans_class->transform = GST_DEBUG_FUNCPTR (bpwsinc_transform);
   trans_class->get_unit_size = GST_DEBUG_FUNCPTR (bpwsinc_get_unit_size);
-  GST_AUDIO_FILTER_CLASS (klass)->setup = GST_DEBUG_FUNCPTR (bpwsinc_setup);
+  trans_class->start = GST_DEBUG_FUNCPTR (bpwsinc_start);
+  filter_class->setup = GST_DEBUG_FUNCPTR (bpwsinc_setup);
 }
 
 static void
@@ -506,6 +511,20 @@ bpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
       input_samples);
 
   return GST_FLOW_OK;
+}
+
+static gboolean
+bpwsinc_start (GstBaseTransform * base)
+{
+  GstBPWSinc *self = GST_BPWSINC (base);
+  gint channels = GST_AUDIO_FILTER (self)->format.channels;
+
+  /* Reset the residue if already existing */
+  if (channels && self->residue)
+    memset (self->residue, 0, channels *
+        self->kernel_length * sizeof (gdouble));
+
+  return TRUE;
 }
 
 static void
