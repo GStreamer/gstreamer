@@ -1,3 +1,9 @@
+2007-08-12  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/gstcaps.c: (gst_caps_set_simple_valist),
+	(gst_caps_intersect):
+	Fix proper check for simple caps.
+
 2007-08-10  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/Makefile.am:

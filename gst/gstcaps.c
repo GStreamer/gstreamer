@@ -895,7 +895,7 @@ gst_caps_set_simple_valist (GstCaps * caps, char *field, va_list varargs)
   GstStructure *structure;
 
   g_return_if_fail (GST_IS_CAPS (caps));
-  g_return_if_fail (caps->structs->len != 1);
+  g_return_if_fail (caps->structs->len == 1);
   g_return_if_fail (IS_WRITABLE (caps));
 
   structure = gst_caps_get_structure (caps, 0);
