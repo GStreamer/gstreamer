@@ -1,5 +1,11 @@
 2007-08-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/filter/gstbpwsinc.c: (bpwsinc_build_kernel):
+	* gst/filter/gstlpwsinc.c: (lpwsinc_build_kernel):
+	Improve debugging a bit.
+
+2007-08-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init),
 	(bpwsinc_start):
 	* gst/filter/gstlpwsinc.c: (gst_lpwsinc_class_init),

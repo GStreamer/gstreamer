@@ -319,9 +319,7 @@ lpwsinc_build_kernel (GstLPWSinc * self)
   gint len = 0;
   gdouble w;
 
-  /* fill the kernel */
   len = self->kernel_length;
-  GST_DEBUG ("lpwsinc: initializing filter kernel of length %d", len);
 
   if (GST_AUDIO_FILTER (self)->format.rate == 0) {
     GST_DEBUG ("rate not set yet");
@@ -337,6 +335,13 @@ lpwsinc_build_kernel (GstLPWSinc * self)
   self->frequency =
       CLAMP (self->frequency, 0.0, GST_AUDIO_FILTER (self)->format.rate / 2);
 
+  GST_DEBUG ("lpwsinc: initializing filter kernel of length %d "
+      "with cutoff %.2lf Hz "
+      "for mode %s",
+      len, self->frequency,
+      (self->mode == MODE_LOW_PASS) ? "low-pass" : "high-pass");
+
+  /* fill the kernel */
   w = 2 * M_PI * (self->frequency / GST_AUDIO_FILTER (self)->format.rate);
 
   if (self->kernel)
