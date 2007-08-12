@@ -254,7 +254,7 @@ GST_START_TEST (test_bp_22050hz)
   for (i = 0; i < 1024; i++)
     rms += res[i] * res[i];
   rms = sqrt (rms / 1024.0);
-  fail_unless (rms <= 0.3);
+  fail_unless (rms <= 0.1);
 
   /* cleanup */
   cleanup_bpwsinc (bpwsinc);
