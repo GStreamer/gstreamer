@@ -2,6 +2,14 @@
 
 	* tests/check/Makefile.am:
 	* tests/check/elements/.cvsignore:
+	* tests/check/elements/bpwsinc.c: (setup_bpwsinc),
+	(cleanup_bpwsinc), (GST_START_TEST), (bpwsinc_suite), (main):
+	Add unit tests for bpwsinc, testing fundamental functionality again.
+
+2007-08-12  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
 	* tests/check/elements/lpwsinc.c: (setup_lpwsinc),
 	(cleanup_lpwsinc), (GST_START_TEST), (lpwsinc_suite), (main):
 	Add unit tests for lpwsinc, testing fundamental functionality.

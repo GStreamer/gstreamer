@@ -56,6 +56,7 @@ check_PROGRAMS = \
 	$(check_mpeg2enc)  \
 	$(check_neon)      \
 	$(check_timidity)  \
+	elements/bpwsinc  \
 	elements/lpwsinc  \
 	elements/rganalysis \
 	elements/rglimiter \
