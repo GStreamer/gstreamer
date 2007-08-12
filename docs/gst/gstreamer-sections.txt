@@ -1768,6 +1768,7 @@ gst_structure_has_field
 gst_structure_has_field_typed
 gst_structure_get_boolean
 gst_structure_get_int
+gst_structure_get_uint
 gst_structure_get_fourcc
 gst_structure_get_double
 gst_structure_get_string

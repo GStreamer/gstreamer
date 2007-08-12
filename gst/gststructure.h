@@ -167,6 +167,9 @@ gboolean                gst_structure_get_boolean          (const GstStructure  
 gboolean                gst_structure_get_int              (const GstStructure      *structure,
 							    const gchar             *fieldname,
 							    gint                    *value);
+gboolean                gst_structure_get_uint             (const GstStructure      *structure,
+							    const gchar             *fieldname,
+							    guint                   *value);
 gboolean                gst_structure_get_fourcc           (const GstStructure      *structure,
 							    const gchar             *fieldname,
 							    guint32                 *value);
