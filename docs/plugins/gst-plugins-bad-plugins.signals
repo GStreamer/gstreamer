@@ -92,3 +92,11 @@ guint  arg1
 guint  arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstCDAudio::track-change</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstCDAudio *gstcdaudio
+gint  arg1
+</SIGNAL>
+

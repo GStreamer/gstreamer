@@ -100,6 +100,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer3bands.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizer10bands.h \
 	$(top_srcdir)/gst/equalizer/gstiirequalizernbands.h \
+	$(top_srcdir)/gst/filter/gstlpwsinc.h \
+	$(top_srcdir)/gst/filter/gstbpwsinc.h \
 	$(top_srcdir)/gst/modplug/gstmodplug.h \
 	$(top_srcdir)/gst/multifile/gstmultifilesink.h \
 	$(top_srcdir)/gst/multifile/gstmultifilesrc.h \

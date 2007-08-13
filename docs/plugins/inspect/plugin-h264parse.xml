@@ -17,14 +17,14 @@
       <author>Michal Benes &lt;michal.benes@itonis.tv&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>video/x-h264</details>
         </caps>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>video/x-h264</details>
         </caps>

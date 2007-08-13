@@ -103,6 +103,34 @@ gst_iir_equalizer_nbands_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-bpwsinc</FILE>
+<TITLE>bpwsinc</TITLE>
+GstBPWSinc
+<SUBSECTION Standard>
+GstBPWSincClass
+GST_BPWSINC
+GST_BPWSINC_CLASS
+GST_IS_BPWSINC
+GST_IS_BPWSINC_CLASS
+GST_TYPE_BPWSINC
+gst_bpwsinc_get_type
+</SECTION>
+
+<SECTION>
+<FILE>element-lpwsinc</FILE>
+<TITLE>lpwsinc</TITLE>
+GstLPWSinc
+<SUBSECTION Standard>
+GstLPWSincClass
+GST_LPWSINC
+GST_LPWSINC_CLASS
+GST_IS_LPWSINC
+GST_IS_LPWSINC_CLASS
+GST_TYPE_LPWSINC
+gst_lpwsinc_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-jackaudiosink</FILE>
 <TITLE>jackaudiosink</TITLE>
 GstJackAudioSink

@@ -31,6 +31,30 @@
  *          is probably the bottleneck
  *        - Maybe allow cascading the filter to get a better stopband attenuation.
  *          Can be done by convolving a filter kernel with itself
+ *        - Drop the first kernel_length/2 samples and append the same number of
+ *          samples on EOS as the first few samples are essentialy zero.
+ */
+
+/**
+ * SECTION:element-bpwsinc
+ * @short_description: Windowed Sinc band pass and band reject filter
+ *
+ * <refsect2>
+ * <para>
+ * Attenuates all frequencies outside (bandpass) or inside (bandreject) of a frequency
+ * band. The length parameter controls the rolloff, the window parameter
+ * controls rolloff and stopband attenuation. The Hamming window provides a faster rolloff but a bit
+ * worse stopband attenuation, the other way around for the Blackman window.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch audiotestsrc freq=1500 ! audioconvert ! bpwsinc mode=band-pass lower-frequency=3000 upper-frequency=10000 length=501 window=blackman ! audioconvert ! alsasink
+ * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! bpwsinc mode=band-reject lower-frequency=59 upper-frequency=61 length=10001 window=hamming ! audioconvert ! alsasink
+ * gst-launch audiotestsrc wave=white-noise ! audioconvert ! bpwsinc mode=band-pass lower-frequency=1000 upper-frequency=2000 length=31 ! audioconvert ! alsasink
+ * </programlisting>
+ * </para>
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -49,7 +73,7 @@
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 static const GstElementDetails bpwsinc_details =
-GST_ELEMENT_DETAILS ("Band-pass Windowed sinc filter",
+GST_ELEMENT_DETAILS ("Band-pass and Band-reject Windowed sinc filter",
     "Filter/Effect/Audio",
     "Band-pass Windowed sinc filter",
     "Thomas <thomas@apestaart.org>, "
@@ -134,7 +158,7 @@ gst_bpwsinc_window_get_type (void)
     " channels = (int) [ 1, MAX ] "
 
 #define DEBUG_INIT(bla) \
-  GST_DEBUG_CATEGORY_INIT (gst_bpwsinc_debug, "bpwsinc", 0, "Band-pass Windowed sinc filter plugin");
+  GST_DEBUG_CATEGORY_INIT (gst_bpwsinc_debug, "bpwsinc", 0, "Band-pass and Band-reject Windowed sinc filter plugin");
 
 GST_BOILERPLATE_FULL (GstBPWSinc, gst_bpwsinc, GstAudioFilter,
     GST_TYPE_AUDIO_FILTER, DEBUG_INIT);

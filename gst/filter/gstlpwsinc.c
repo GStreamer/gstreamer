@@ -30,7 +30,31 @@
  *          when using FFT convolution as currently the convolution itself
  *          is probably the bottleneck
  *        - Maybe allow cascading the filter to get a better stopband attenuation.
- *          Can be done by convolving a filter kernel with itself.
+ *          Can be done by convolving a filter kernel with itself
+ *        - Drop the first kernel_length/2 samples and append the same number of
+ *          samples on EOS as the first few samples are essentialy zero.
+ */
+
+/**
+ * SECTION:element-lpwsinc
+ * @short_description: Windows Sinc low pass and high pass filter
+ *
+ * <refsect2>
+ * <para>
+ * Attenuates all frequencies above the cutoff frequency (low-pass) or all frequencies below the
+ * cutoff frequency (high-pass). The length parameter controls the rolloff, the window parameter
+ * controls rolloff and stopband attenuation. The Hamming window provides a faster rolloff but a bit
+ * worse stopband attenuation, the other way around for the Blackman window.
+ * </para>
+ * <title>Example launch line</title>
+ * <para>
+ * <programlisting>
+ * gst-launch audiotestsrc freq=1500 ! audioconvert ! lpwsinc mode=low-pass frequency=1000 length=501 ! audioconvert ! alsasink
+ * gst-launch filesrc location="melo1.ogg" ! oggdemux ! vorbisdec ! audioconvert ! lpwsinc mode=high-pass frequency=15000 length=501 ! audioconvert ! alsasink
+ * gst-launch audiotestsrc wave=white-noise ! audioconvert ! lpwsinc mode=low-pass frequency=1000 length=10001 window=blackman ! audioconvert ! alsasink
+ * </programlisting>
+ * </para>
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H

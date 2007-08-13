@@ -811,7 +811,7 @@
 <ARG>
 <NAME>GstMpeg2enc::max-gop-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250]</RANGE>
+<RANGE>[-1,250]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Max. GOP size</NICK>
 <BLURB>Maximal size per Group-of-Pictures (-1=default).</BLURB>
@@ -821,7 +821,7 @@
 <ARG>
 <NAME>GstMpeg2enc::min-gop-size</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250]</RANGE>
+<RANGE>[-1,250]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Min. GOP size</NICK>
 <BLURB>Minimal size per Group-of-Pictures (-1=default).</BLURB>
@@ -1041,7 +1041,7 @@
 <ARG>
 <NAME>GstMMS::connection-speed</NAME>
 <TYPE>guint</TYPE>
-<RANGE></RANGE>
+<RANGE><= 2147483</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Connection Speed</NICK>
 <BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
@@ -1331,7 +1331,7 @@
 <ARG>
 <NAME>GstSpeed::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,1,40]</RANGE>
+<RANGE>[0.1,40]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>speed</NICK>
 <BLURB>speed.</BLURB>
@@ -1501,51 +1501,91 @@
 <ARG>
 <NAME>GstBPWSinc::length</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 1</RANGE>
+<RANGE>>= 3</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Length</NICK>
-<BLURB>N such that the filter length = 2N + 1.</BLURB>
-<DEFAULT>1</DEFAULT>
+<BLURB>Filter kernel length, will be rounded to the next odd number.</BLURB>
+<DEFAULT>101</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstBPWSinc::lower-frequency</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,0,5]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Lower Frequency</NICK>
-<BLURB>Cut-off lower frequency (relative to sample rate).</BLURB>
+<BLURB>Cut-off lower frequency (Hz).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstBPWSinc::upper-frequency</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,0,5]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Upper Frequency</NICK>
-<BLURB>Cut-off upper frequency (relative to sample rate).</BLURB>
+<BLURB>Cut-off upper frequency (Hz).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBPWSinc::mode</NAME>
+<TYPE>GstBPWSincMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Band pass or band reject mode.</BLURB>
+<DEFAULT>Band pass (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstBPWSinc::window</NAME>
+<TYPE>GstBPWSincWindow</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Window</NICK>
+<BLURB>Window function to use.</BLURB>
+<DEFAULT>Hamming window (default)</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstLPWSinc::frequency</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,0,5]</RANGE>
+<RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Frequency</NICK>
-<BLURB>Cut-off Frequency relative to sample rate.</BLURB>
+<BLURB>Cut-off Frequency (Hz).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstLPWSinc::length</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 1</RANGE>
+<RANGE>>= 3</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Length</NICK>
-<BLURB>N such that the filter length = 2N + 1.</BLURB>
-<DEFAULT>1</DEFAULT>
+<BLURB>Filter kernel length, will be rounded to the next odd number.</BLURB>
+<DEFAULT>101</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLPWSinc::mode</NAME>
+<TYPE>GstLPWSincMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Low pass or high pass mode.</BLURB>
+<DEFAULT>Low pass (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLPWSinc::window</NAME>
+<TYPE>GstLPWSincWindow</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Window</NICK>
+<BLURB>Window function to use.</BLURB>
+<DEFAULT>Hamming window (default)</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1756,6 +1796,66 @@
 <NICK>tune</NICK>
 <BLURB>Atomically tune to channel. (For Apps).</BLURB>
 <DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::adapter</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The adapter device number</NICK>
+<BLURB>The adapter device number (eg. 0 for adapter0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::diseqc-source</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,7]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>diseqc source</NICK>
+<BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::frequency</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>frequency</NICK>
+<BLURB>Frequency.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::frontend</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The frontend device number</NICK>
+<BLURB>The frontend device number (eg. 0 for frontend0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::polarity</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>polarity</NICK>
+<BLURB>Polarity [vhHV] (DVB-S).</BLURB>
+<DEFAULT>"h"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDvbSrc::symbol-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>symbol rate</NICK>
+<BLURB>Symbol Rate (DVB-S, DVB-C).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -16795,7 +16895,7 @@
 <FLAGS>rwx</FLAGS>
 <NICK>Dry-Wet-Balance</NICK>
 <BLURB>Dry-Wet-Balance.</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17193,8 +17293,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>20 Hz</NICK>
-<BLURB>gain for the frequency band 20 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>29 Hz</NICK>
+<BLURB>gain for the frequency band 29 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17203,8 +17303,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>43 Hz</NICK>
-<BLURB>gain for the frequency band 43 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>59 Hz</NICK>
+<BLURB>gain for the frequency band 59 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17213,8 +17313,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>93 Hz</NICK>
-<BLURB>gain for the frequency band 93 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>119 Hz</NICK>
+<BLURB>gain for the frequency band 119 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17223,8 +17323,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>200 Hz</NICK>
-<BLURB>gain for the frequency band 200 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>227 Hz</NICK>
+<BLURB>gain for the frequency band 227 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17233,8 +17333,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>430 Hz</NICK>
-<BLURB>gain for the frequency band 430 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>474 Hz</NICK>
+<BLURB>gain for the frequency band 474 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17243,8 +17343,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>928 Hz</NICK>
-<BLURB>gain for the frequency band 928 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>947 Hz</NICK>
+<BLURB>gain for the frequency band 947 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17253,8 +17353,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>2000 Hz</NICK>
-<BLURB>gain for the frequency band 2000 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>1889 Hz</NICK>
+<BLURB>gain for the frequency band 1889 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17263,8 +17363,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>4308 Hz</NICK>
-<BLURB>gain for the frequency band 4308 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>3770 Hz</NICK>
+<BLURB>gain for the frequency band 3770 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17273,8 +17373,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>9283 Hz</NICK>
-<BLURB>gain for the frequency band 9283 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>7523 Hz</NICK>
+<BLURB>gain for the frequency band 7523 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17283,8 +17383,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>20 kHz</NICK>
-<BLURB>gain for the frequency band 20 kHz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>15011 Hz</NICK>
+<BLURB>gain for the frequency band 15011 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17293,8 +17393,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>20 Hz</NICK>
-<BLURB>gain for the frequency band 20 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>110 Hz</NICK>
+<BLURB>gain for the frequency band 110 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17303,8 +17403,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>632 Hz</NICK>
-<BLURB>gain for the frequency band 632 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>1110 Hz</NICK>
+<BLURB>gain for the frequency band 1110 Hz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17313,8 +17413,8 @@
 <TYPE>gdouble</TYPE>
 <RANGE>[-1,1]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>20 kHz</NICK>
-<BLURB>gain for the frequency band 20 kHz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>11 kHz</NICK>
+<BLURB>gain for the frequency band 11 kHz, ranging from -1.0 to +1.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -17389,6 +17489,66 @@
 </ARG>
 
 <ARG>
+<NAME>GstRealAudioDec::ra14-4-names</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Names of 14_4 driver</NICK>
+<BLURB>Names of 14_4 driver.</BLURB>
+<DEFAULT>"14_4.so.6.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRealAudioDec::ra28-8-names</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Names of 28_8 driver</NICK>
+<BLURB>Names of 28_8 driver.</BLURB>
+<DEFAULT>"28_8.so.6.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRealAudioDec::raatrk-names</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Names of atrk driver</NICK>
+<BLURB>Names of atrk driver.</BLURB>
+<DEFAULT>"atrc.so:atrc.so.6.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRealAudioDec::racook-names</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Names of cook driver</NICK>
+<BLURB>Names of cook driver.</BLURB>
+<DEFAULT>"cook.so:cook.so.6.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRealAudioDec::rasipr-names</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Names of sipr driver</NICK>
+<BLURB>Names of sipr driver.</BLURB>
+<DEFAULT>"sipr.so:sipr.so.6.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRealAudioDec::real-codecs-path</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Path where to search for RealPlayer codecs</NICK>
+<BLURB>Path where to search for RealPlayer codecs.</BLURB>
+<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRealVideoDec::path-rv20</NAME>
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>
@@ -17416,6 +17576,46 @@
 <NICK>Path to rv40 driver</NICK>
 <BLURB>Path to rv40 driver.</BLURB>
 <DEFAULT>"/usr/lib/win32/drv4.so.6.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRealVideoDec::real-codecs-path</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Path where to search for RealPlayer codecs</NICK>
+<BLURB>Path where to search for RealPlayer codecs.</BLURB>
+<DEFAULT>"/usr/lib/win32:/usr/lib/codecs:/usr/local/RealPlayer/codecs:/usr/local/lib/win32:/usr/local/lib/codecs"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRealVideoDec::rv20-names</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Names of rv20 driver</NICK>
+<BLURB>Names of rv20 driver.</BLURB>
+<DEFAULT>"drv2.so:drv2.so.6.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRealVideoDec::rv30-names</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Names of rv30 driver</NICK>
+<BLURB>Names of rv30 driver.</BLURB>
+<DEFAULT>"drvc.so:drv3.so.6.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRealVideoDec::rv40-names</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Names of rv40 driver</NICK>
+<BLURB>Names of rv40 driver.</BLURB>
+<DEFAULT>"drvc.so:drv4.so.6.0"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17704,8 +17904,8 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern sensitivity</NICK>
-<BLURB>The sensitivity for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
-<DEFAULT>0,3</DEFAULT>
+<BLURB>The sensitivity around the center for detecting the markers (0.0 = lowest, 1.0 highest).</BLURB>
+<DEFAULT>0.3</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17744,8 +17944,8 @@
 <RANGE>[0,1]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Pattern center</NICK>
-<BLURB>The center of the black/white region (0.0 = highest, 0.5 lowest).</BLURB>
-<DEFAULT>0,5</DEFAULT>
+<BLURB>The center of the black/white separation (0.0 = lowest, 1.0 highest).</BLURB>
+<DEFAULT>0.5</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17876,5 +18076,25 @@
 <NICK>Track</NICK>
 <BLURB>Track number to play.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstStereo::active</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>active</NICK>
+<BLURB>active.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstStereo::stereo</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,1]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>stereo</NICK>
+<BLURB>stereo.</BLURB>
+<DEFAULT>0.1</DEFAULT>
 </ARG>
 
