@@ -2254,7 +2254,7 @@
 
 2007-03-14 Philippe Kalaf <philippe.kalaf@collabora.co.uk> 	 
 
-	Patch by Olivier Crete <olivier.crete@collabora.co.uk>
+	Patch by: Olivier Crete <olivier.crete@collabora.co.uk>
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.h:
@@ -3695,6 +3695,8 @@
 
 2007-01-07  Julien MOUTTE  <julien@moutte.net>
 
+	Patch by: Young-Ho Cha <ganadist at chollian dot net>
+
 	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_destroy),
 	(gst_xvimage_buffer_finalize), (gst_xvimagesink_xvimage_new),
 	(gst_xvimagesink_xvimage_put), (gst_lookup_xv_port_from_adaptor),
@@ -3703,8 +3705,7 @@
 	(gst_xvimagesink_set_event_handling),
 	(gst_xvimagesink_set_property), (gst_xvimagesink_get_property),
 	(gst_xvimagesink_init), (gst_xvimagesink_class_init):
-	Patch by : Young-Ho Cha <ganadist at chollian dot net>
-	Fixes : #390076.
+	Fixes: #390076.
 	Add an adaptor property to select a specific XV adaptor.
 	* sys/xvimage/xvimagesink.h:
 
@@ -10661,10 +10662,10 @@
 
 2006-02-01  Philippe Kalaf <burger at speedy dot org>
 
+	Patch by: Kai Vehmanen
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
-	  Patch by Kai Vehmanen : Adds ability to enable newsegment bypass by
-	  setting queue_delay to zero. Also avoid thread being started if
-	  queue_delay is zero.
+	  Adds ability to enable newsegment bypass by setting queue_delay to
+	  zero. Also avoid thread being started if queue_delay is zero.
 
 2006-02-01  Tim-Philipp Müller  <tim at centricular dot net>
 
