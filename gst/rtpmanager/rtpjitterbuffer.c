@@ -17,6 +17,7 @@
  * Boston, MA 02111-1307, USA.
  */
 #include <string.h>
+#include <stdlib.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtcpbuffer.h>

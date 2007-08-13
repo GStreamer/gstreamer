@@ -1,3 +1,8 @@
+2007-08-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  Include stdlib.
+
 2007-08-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/elements/bpwsinc.c: (GST_START_TEST):
