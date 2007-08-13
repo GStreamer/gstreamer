@@ -66,6 +66,20 @@ typedef enum {
 } GstTextOverlayWrapMode;
 
 /**
+ * GstTextOverlayLineAlign:
+ * @GST_TEXT_OVERLAY_LINE_ALIGN_LEFT: lines are left-aligned
+ * @GST_TEXT_OVERLAY_LINE_ALIGN_CENTER: lines are center-aligned
+ * @GST_TEXT_OVERLAY_LINE_ALIGN_RIGHT: lines are right-aligned
+ *
+ * Alignment of text lines relative to each other
+ */
+typedef enum {
+    GST_TEXT_OVERLAY_LINE_ALIGN_LEFT = PANGO_ALIGN_LEFT,
+    GST_TEXT_OVERLAY_LINE_ALIGN_CENTER = PANGO_ALIGN_CENTER,
+    GST_TEXT_OVERLAY_LINE_ALIGN_RIGHT = PANGO_ALIGN_RIGHT
+} GstTextOverlayLineAlign;
+
+/**
  * GstTextOverlay:
  *
  * Opaque textoverlay object structure
@@ -98,6 +112,7 @@ struct _GstTextOverlay {
     GstTextOverlayVAlign     valign;
     GstTextOverlayHAlign     halign;
     GstTextOverlayWrapMode   wrap_mode;
+    GstTextOverlayLineAlign  line_align;
 
     gint                     xpad;
     gint                     ypad;

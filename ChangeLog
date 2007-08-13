@@ -1,3 +1,12 @@
+2007-08-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Dan Williams  <dcbw redhat com>
+
+	* ext/pango/gsttextoverlay.c:
+	* ext/pango/gsttextoverlay.h:
+	  API: add "line-alignment" property (#459334). Add gtk-doc blurb for
+	  "silent" property so there's a Since tag in the API reference.
+
 2007-08-12  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertppayload.c:

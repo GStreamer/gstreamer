@@ -115,6 +115,7 @@ GST_ELEMENT_DETAILS ("Text overlay",
 #define DEFAULT_PROP_WRAP_MODE  GST_TEXT_OVERLAY_WRAP_MODE_WORD_CHAR
 #define DEFAULT_PROP_FONT_DESC	""
 #define DEFAULT_PROP_SILENT	FALSE
+#define DEFAULT_PROP_LINE_ALIGNMENT GST_TEXT_OVERLAY_LINE_ALIGN_CENTER
 
 /* make a property of me */
 #define DEFAULT_SHADING_VALUE    -80
@@ -134,7 +135,8 @@ enum
   PROP_DELTAY,
   PROP_WRAP_MODE,
   PROP_FONT_DESC,
-  PROP_SILENT
+  PROP_SILENT,
+  PROP_LINE_ALIGNMENT
 };
 
 
@@ -218,6 +220,26 @@ gst_text_overlay_wrap_mode_get_type (void)
         text_overlay_wrap_mode);
   }
   return text_overlay_wrap_mode_type;
+}
+
+#define GST_TYPE_TEXT_OVERLAY_LINE_ALIGN (gst_text_overlay_line_align_get_type())
+static GType
+gst_text_overlay_line_align_get_type (void)
+{
+  static GType text_overlay_line_align_type = 0;
+  static const GEnumValue text_overlay_line_align[] = {
+    {GST_TEXT_OVERLAY_LINE_ALIGN_LEFT, "left", "left"},
+    {GST_TEXT_OVERLAY_LINE_ALIGN_CENTER, "center", "center"},
+    {GST_TEXT_OVERLAY_LINE_ALIGN_RIGHT, "right", "right"},
+    {0, NULL, NULL}
+  };
+
+  if (!text_overlay_line_align_type) {
+    text_overlay_line_align_type =
+        g_enum_register_static ("GstTextOverlayLineAlign",
+        text_overlay_line_align);
+  }
+  return text_overlay_line_align_type;
 }
 
 /* These macros are adapted from videotestsrc.c */
@@ -358,6 +380,26 @@ gst_text_overlay_class_init (GstTextOverlayClass * klass)
           "Pango font description of font to be used for rendering. "
           "See documentation of pango_font_description_from_string "
           "for syntax.", DEFAULT_PROP_FONT_DESC, G_PARAM_WRITABLE));
+  /**
+   * GstTextOverlay:line-alignment
+   *
+   * Alignment of text lines relative to each other (for multi-line text)
+   *
+   * Since: 0.10.15
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LINE_ALIGNMENT,
+      g_param_spec_enum ("line-alignment", "line alignment",
+          "Alignment of text lines relative to each other.",
+          GST_TYPE_TEXT_OVERLAY_LINE_ALIGN, DEFAULT_PROP_LINE_ALIGNMENT,
+          G_PARAM_READWRITE));
+  /**
+   * GstTextOverlay:silent
+   *
+   * If set, no text is rendered. Useful to switch off text rendering
+   * temporarily without removing the textoverlay element from the pipeline.
+   *
+   * Since: 0.10.15
+   **/
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
       g_param_spec_boolean ("silent", "silent",
           "Whether to render the text string",
@@ -442,9 +484,10 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
       GST_DEBUG_FUNCPTR (gst_text_overlay_src_event));
   gst_element_add_pad (GST_ELEMENT (overlay), overlay->srcpad);
 
+  overlay->line_align = DEFAULT_PROP_LINE_ALIGNMENT;
   overlay->layout =
       pango_layout_new (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_context);
-  pango_layout_set_alignment (overlay->layout, PANGO_ALIGN_CENTER);
+  pango_layout_set_alignment (overlay->layout, overlay->line_align);
   memset (&overlay->bitmap, 0, sizeof (overlay->bitmap));
 
   overlay->halign = DEFAULT_PROP_HALIGNMENT;
@@ -640,6 +683,10 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
     case PROP_SILENT:
       overlay->silent = g_value_get_boolean (value);
       break;
+    case PROP_LINE_ALIGNMENT:
+      overlay->line_align = g_value_get_enum (value);
+      pango_layout_set_alignment (overlay->layout, overlay->line_align);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -686,6 +733,9 @@ gst_text_overlay_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SILENT:
       g_value_set_boolean (value, overlay->silent);
+      break;
+    case PROP_LINE_ALIGNMENT:
+      g_value_set_enum (value, overlay->line_align);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
