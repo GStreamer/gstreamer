@@ -10,5 +10,15 @@ else
 X_TESTS =
 endif
 
-noinst_PROGRAMS = $(X_TESTS)
+if USE_PANGO
+PANGO_TESTS = test-textoverlay
 
+test_textoverlay_SOURCES = test-textoverlay.c
+test_textoverlay_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+test_textoverlay_LDFLAGS = $(GST_LIBS) $(LIBM)
+
+else
+PANGO_TESTS = 
+endif
+
+noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS)

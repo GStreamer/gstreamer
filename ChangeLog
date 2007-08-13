@@ -1,5 +1,12 @@
 2007-08-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/icles/.cvsignore:
+	* tests/icles/Makefile.am:
+	* tests/icles/test-textoverlay.c:
+	  Add a dumb little test for textoverlay alignments.
+
+2007-08-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Dan Williams  <dcbw redhat com>
 
 	* ext/pango/gsttextoverlay.c:
