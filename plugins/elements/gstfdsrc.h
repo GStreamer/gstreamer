@@ -49,7 +49,7 @@ typedef struct _GstFdSrcClass GstFdSrcClass;
 /**
  * GstFdSrc:
  *
- * Opaque #GstFdSrc data structure
+ * Opaque #GstFdSrc data structure.
  */
 struct _GstFdSrc {
   GstPushSrc element;

@@ -51,7 +51,7 @@ typedef struct _GstLFOControlSourceClass GstLFOControlSourceClass;
 typedef struct _GstLFOControlSourcePrivate GstLFOControlSourcePrivate;
 
 /**
- * GstLFOWaveForm:
+ * GstLFOWaveform:
  * @GST_LFO_WAVEFORM_SINE: sine waveform
  * @GST_LFO_WAVEFORM_SQUARE: square waveform
  * @GST_LFO_WAVEFORM_SAW: saw waveform

@@ -106,6 +106,8 @@ gst_buffer_straw_start_pipeline (GstElement * bin, GstPad * pad)
  *
  * You must have previously called gst_buffer_straw_start_pipeline() on
  * @pipeline and @pad.
+ *
+ * Returns: the captured #GstBuffer.
  */
 GstBuffer *
 gst_buffer_straw_get_buffer (GstElement * bin, GstPad * pad)

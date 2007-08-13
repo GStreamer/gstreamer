@@ -44,15 +44,18 @@ G_BEGIN_DECLS
 typedef struct _GstCapsFilter GstCapsFilter;
 typedef struct _GstCapsFilterClass GstCapsFilterClass;
 
-struct _GstCapsFilter
-{
+/**
+ * GstCapsFilter:
+ *
+ * The opaque #GstCapsFilter data structure.
+ */
+struct _GstCapsFilter {
   GstBaseTransform trans;
 
   GstCaps *filter_caps;
 };
 
-struct _GstCapsFilterClass
-{
+struct _GstCapsFilterClass {
   GstBaseTransformClass trans_class;
 };
 

@@ -993,6 +993,7 @@ gst_controlled_property_set_interpolation_mode (GstControlledProperty * self,
  *
  * Returns: FALSE if the values couldn't be set (ex : properties not handled by controller), TRUE otherwise
  */
+#ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_controller_set (GstController * self, gchar * property_name,
     GstClockTime timestamp, GValue * value)
@@ -1021,6 +1022,7 @@ out:
 
   return res;
 }
+#endif
 
 /**
  * gst_controller_set_from_list:
@@ -1035,7 +1037,7 @@ out:
  *
  * Returns: %FALSE if the values couldn't be set (ex : properties not handled by controller), %TRUE otherwise
  */
-
+#ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_controller_set_from_list (GstController * self, gchar * property_name,
     GSList * timedvalues)
@@ -1065,6 +1067,7 @@ out:
 
   return res;
 }
+#endif
 
 /**
  * gst_controller_unset:
@@ -1080,6 +1083,7 @@ out:
  *
  * Returns: %FALSE if the values couldn't be unset (ex : properties not handled by controller), %TRUE otherwise
  */
+#ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_controller_unset (GstController * self, gchar * property_name,
     GstClockTime timestamp)
@@ -1106,6 +1110,7 @@ out:
 
   return res;
 }
+#endif
 
 /**
  * gst_controller_unset_all:
@@ -1121,6 +1126,7 @@ out:
  * by controller), %TRUE otherwise
  * Since: 0.10.5
  */
+#ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_controller_unset_all (GstController * self, gchar * property_name)
 {
@@ -1143,6 +1149,7 @@ out:
 
   return TRUE;
 }
+#endif
 
 /**
  * gst_controller_get_all:
@@ -1159,6 +1166,7 @@ out:
  *
  * Returns: a copy of the list, or %NULL if the property isn't handled by the controller
  */
+#ifndef GST_REMOVE_DEPRECATED
 const GList *
 gst_controller_get_all (GstController * self, gchar * property_name)
 {
@@ -1183,6 +1191,7 @@ out:
 
   return res;
 }
+#endif
 
 /**
  * gst_controller_set_interpolation_mode:
@@ -1200,6 +1209,7 @@ out:
  *
  * Returns: %TRUE if the property is handled by the controller, %FALSE otherwise
  */
+#ifndef GST_REMOVE_DEPRECATED
 gboolean
 gst_controller_set_interpolation_mode (GstController * self,
     gchar * property_name, GstInterpolateMode mode)
@@ -1218,3 +1228,4 @@ gst_controller_set_interpolation_mode (GstController * self,
 
   return res;
 }
+#endif

@@ -48,13 +48,15 @@ typedef struct _GstValueArray GstValueArray;
 
 /**
  * GstTimedValue:
+ * @timestamp: timestamp of the value change
+ * @value: the corresponding value
  *
  * Structure for saving a timestamp and a value.
  */
 struct _GstTimedValue
 {
-  GstClockTime timestamp;       /* timestamp of the value change */
-  GValue value;                 /* the corresponding value */
+  GstClockTime timestamp;
+  GValue value;
 };
 
 /**

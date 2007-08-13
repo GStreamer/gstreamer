@@ -83,8 +83,16 @@ gst_check_message_error (msg, GST_MESSAGE_ERROR,		\
   GST_ ## domain ## _ERROR, GST_ ## domain ## _ERROR_ ## code)
 #define assert_message_error(m, d, c) fail_unless_message_error(m, d, c)
 
-/***
- * wrappers for START_TEST and END_TEST
+/**
+ * GST_START_TEST:
+ * @__testname: test function name
+ *
+ * wrapper for checks START_TEST
+ */
+/**
+ * GST_END_TEST:
+ *
+ * wrapper for checks END_TEST
  */
 #if CHECK_MAJOR_VERSION >= 0 && CHECK_MINOR_VERSION >= 9 && CHECK_MICRO_VERSION >= 4
 #define GST_START_TEST(__testname) \

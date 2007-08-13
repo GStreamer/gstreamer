@@ -44,6 +44,11 @@ G_BEGIN_DECLS
 typedef struct _GstFdSink GstFdSink;
 typedef struct _GstFdSinkClass GstFdSinkClass;
 
+/**
+ * GstFdSink:
+ *
+ * The opaque #GstFdSink data structure.
+ */
 struct _GstFdSink {
   GstBaseSink parent;
 
