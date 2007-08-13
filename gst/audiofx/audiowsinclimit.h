@@ -60,6 +60,7 @@ typedef void (*GstLPWSincProcessFunc) (GstLPWSinc *, guint8 *, guint8 *, guint);
 struct _GstLPWSinc {
   GstAudioFilter element;
 
+  /* < private > */
   GstLPWSincProcessFunc process;
 
   gint mode;
@@ -75,6 +76,8 @@ struct _GstLPWSinc {
 struct _GstLPWSincClass {
   GstAudioFilterClass parent_class;
 };
+
+GType gst_lpwsinc_get_type (void);
 
 G_END_DECLS
 
