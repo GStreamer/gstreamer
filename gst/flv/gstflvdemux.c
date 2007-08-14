@@ -911,7 +911,11 @@ gst_flv_demux_set_index (GstElement * element, GstIndex * index)
 {
   GstFLVDemux *demux = GST_FLV_DEMUX (element);
 
+  GST_OBJECT_LOCK (demux);
+  if (demux->index)
+    gst_object_unref (demux->index);
   demux->index = gst_object_ref (index);
+  GST_OBJECT_UNLOCK (demux);
 
   gst_index_get_writer_id (index, GST_OBJECT (element), &demux->index_id);
 }
@@ -919,9 +923,16 @@ gst_flv_demux_set_index (GstElement * element, GstIndex * index)
 static GstIndex *
 gst_flv_demux_get_index (GstElement * element)
 {
+  GstIndex *result = NULL;
+
   GstFLVDemux *demux = GST_FLV_DEMUX (element);
 
-  return demux->index;
+  GST_OBJECT_LOCK (demux);
+  if (demux->index)
+    result = gst_object_ref (demux->index);
+  GST_OBJECT_UNLOCK (demux);
+
+  return result;
 }
 
 static void
