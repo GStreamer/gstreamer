@@ -16,6 +16,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/**
+ * SECTION:element-breakmydata
+ *
+ * This element modifies the contents of the buffer it is passed randomly
+ * according to the parameters set.
+ * It otherwise acts as an identity.
+ */
 
 #ifdef HAVE_CONFIG_H
 #  include "config.h"
@@ -26,11 +33,6 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_break_my_data_debug);
 #define GST_CAT_DEFAULT gst_break_my_data_debug
-
-/* This plugin modifies the contents of the buffer it is passed randomly
- * according to the parameters set.
- * It otherwise acts as an identity.
- */
 
 #define GST_TYPE_BREAK_MY_DATA \
   (gst_break_my_data_get_type())
@@ -131,11 +133,11 @@ gst_break_my_data_class_init (GstBreakMyDataClass * klass)
   g_object_class_install_property (gobject_class, ARG_SEED,
       g_param_spec_uint ("seed", "seed",
           "seed for randomness (initialized when going from READY to PAUSED)",
-          0, 0xFFFFFFFF, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          0, G_MAXUINT32, 0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, ARG_SET_TO,
       g_param_spec_int ("set-to", "set-to",
           "set changed bytes to this value (-1 means random value",
-          -1, 255, -1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+          -1, G_MAXUINT8, -1, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
   g_object_class_install_property (gobject_class, ARG_SKIP,
       g_param_spec_uint ("skip", "skip",
           "amount of bytes skipped at the beginning of stream",
@@ -289,7 +291,7 @@ gst_break_my_data_stop (GstBaseTransform * trans)
 }
 
 gboolean
-gst_break_my_data_plugin_init (GstPlugin * plugin, GstPluginClass * g_class)
+gst_break_my_data_plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "breakmydata", GST_RANK_NONE,
           GST_TYPE_BREAK_MY_DATA))

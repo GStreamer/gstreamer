@@ -1,3 +1,14 @@
+2007-08-14  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/debug/Makefile.am:
+	* gst/debug/breakmydata.c:
+	* gst/debug/gstdebug.c:
+	* gst/debug/negotiation.c:
+	* gst/debug/progressreport.c:
+	* gst/debug/rndbuffersize.c:
+	* gst/debug/testplugin.c:
+	  Add new test element and clean-up the others a little.
+
 2007-08-12  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_parse_node):

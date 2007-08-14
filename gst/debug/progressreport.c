@@ -490,7 +490,7 @@ gst_progress_report_get_property (GObject * object, guint prop_id,
 
 
 gboolean
-gst_progress_report_plugin_init (GstPlugin * plugin, GstPluginClass * g_class)
+gst_progress_report_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "progressreport", GST_RANK_NONE,
       GST_TYPE_PROGRESS_REPORT);

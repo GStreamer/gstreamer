@@ -110,14 +110,6 @@ static void gst_negotiation_chain (GstPad * pad, GstData * _data);
 
 static GstElementClass *parent_class = NULL;
 
-typedef struct _GstFencedBuffer GstFencedBuffer;
-struct _GstFencedBuffer
-{
-  GstBuffer buffer;
-  void *region;
-  unsigned int length;
-};
-
 GType
 gst_gst_negotiation_get_type (void)
 {

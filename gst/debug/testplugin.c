@@ -312,7 +312,7 @@ gst_test_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 gboolean
-gst_test_plugin_init (GstPlugin * plugin, GstPluginClass * g_class)
+gst_test_plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "testsink", GST_RANK_NONE, GST_TYPE_TEST))
     return FALSE;

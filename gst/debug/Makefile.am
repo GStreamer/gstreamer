@@ -29,13 +29,15 @@ libgstnavigationtest_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstdebug_la_SOURCES = \
 	gstdebug.c \
 	breakmydata.c \
-	progressreport.c \
-	progressreport.h \
 	gstnavseek.c \
 	gstpushfilesrc.c \
 	gstpushfilesrc.h \
+	rndbuffersize.c \
+	progressreport.c \
+	progressreport.h \
 	tests.c \
 	testplugin.c
+
 # 	negotiation.c
 
 libgstdebug_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS)
