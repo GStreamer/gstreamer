@@ -219,7 +219,7 @@ static GstStateChangeReturn gst_bin_change_state_func (GstElement * element,
 static GstStateChangeReturn gst_bin_get_state_func (GstElement * element,
     GstState * state, GstState * pending, GstClockTime timeout);
 static void bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret);
-static void bin_handle_async_start (GstBin * bin);
+static void bin_handle_async_start (GstBin * bin, gboolean new_base_time);
 static void bin_push_state_continue (BinContinueData * data);
 
 static gboolean gst_bin_add_func (GstBin * bin, GstElement * element);
@@ -925,7 +925,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
 
   switch (ret) {
     case GST_STATE_CHANGE_ASYNC:
-      bin_handle_async_start (bin);
+      bin_handle_async_start (bin, FALSE);
       break;
     case GST_STATE_CHANGE_NO_PREROLL:
       bin_handle_async_done (bin, ret);
@@ -1895,7 +1895,7 @@ locked:
   }
 was_busy:
   {
-    GST_DEBUG_OBJECT (element, "element is was busy delaying state change");
+    GST_DEBUG_OBJECT (element, "element was busy, delaying state change");
     GST_OBJECT_UNLOCK (bin);
     return GST_STATE_CHANGE_ASYNC;
   }
@@ -2317,12 +2317,24 @@ bin_push_state_continue (BinContinueData * data)
  * change, we perform a lost state.
  */
 static void
-bin_handle_async_start (GstBin * bin)
+bin_handle_async_start (GstBin * bin, gboolean new_base_time)
 {
   GstState old_state, new_state;
+  gboolean toplevel;
+  GstMessage *amessage = NULL;
 
   if (GST_STATE_RETURN (bin) == GST_STATE_CHANGE_FAILURE)
     goto had_error;
+
+  /* get our toplevel state */
+  toplevel = BIN_IS_TOPLEVEL (bin);
+
+  /* prepare an ASYNC_START message, we always post the start message even if we
+   * are busy with a state change or when we are NO_PREROLL. */
+  if (!toplevel)
+    /* non toplevel bin, prepare async-start for the parent */
+    amessage =
+        gst_message_new_async_start (GST_OBJECT_CAST (bin), new_base_time);
 
   if (bin->polling || GST_STATE_PENDING (bin) != GST_STATE_VOID_PENDING)
     goto was_busy;
@@ -2355,6 +2367,12 @@ bin_handle_async_start (GstBin * bin)
       gst_message_new_state_changed (GST_OBJECT_CAST (bin),
           new_state, new_state, new_state));
 
+post_start:
+  if (amessage) {
+    /* post our ASYNC_START. */
+    GST_DEBUG_OBJECT (bin, "posting ASYNC_START to parent");
+    gst_element_post_message (GST_ELEMENT_CAST (bin), amessage);
+  }
   GST_OBJECT_LOCK (bin);
 
   return;
@@ -2367,12 +2385,14 @@ had_error:
 was_busy:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin, "state change busy");
-    return;
+    GST_OBJECT_UNLOCK (bin);
+    goto post_start;
   }
 was_no_preroll:
   {
     GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, bin, "ignoring, we are NO_PREROLL");
-    return;
+    GST_OBJECT_UNLOCK (bin);
+    goto post_start;
   }
 }
 
@@ -2699,7 +2719,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
     }
     case GST_MESSAGE_ASYNC_START:
     {
-      gboolean toplevel, new_base_time;
+      gboolean new_base_time;
       GstState target;
 
       GST_DEBUG_OBJECT (bin, "ASYNC_START message %p, %s", message,
@@ -2716,27 +2736,9 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       /* takes ownership of the message */
       bin_replace_message (bin, message, GST_MESSAGE_ASYNC_START);
 
-      bin_handle_async_start (bin);
-
-      /* get our toplevel state */
-      toplevel = BIN_IS_TOPLEVEL (bin);
-
-      /* prepare an ASYNC_START message */
-      if (!toplevel) {
-        /* non toplevel bin, prepare async-start for the parent */
-        message =
-            gst_message_new_async_start (GST_OBJECT_CAST (bin), new_base_time);
-      } else {
-        /* toplevel bin, we don't post async start */
-        message = NULL;
-      }
+      bin_handle_async_start (bin, new_base_time);
       GST_OBJECT_UNLOCK (bin);
-
-      if (!toplevel)
-        /* not toplevel, forward async-start to parent */
-        goto forward;
-      else
-        break;
+      break;
 
     ignore_start_message:
       {
