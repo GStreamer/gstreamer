@@ -56,6 +56,12 @@ struct _GstFLVDemux
 
   GstPad *audio_pad;
   GstPad *video_pad;
+  
+  GstIndex *index;
+  gint index_id;
+  
+  GArray * times;
+  GArray * filepositions;
 
   GstAdapter *adapter;
 
@@ -68,6 +74,7 @@ struct _GstFLVDemux
   GstFLVDemuxState state;
 
   guint64 offset;
+  guint64 cur_tag_offset;
   GstClockTime duration;
   guint64 tag_size;
   guint64 tag_data_size;
@@ -105,6 +112,9 @@ struct _GstFLVDemuxClass
 };
 
 GType gst_flv_demux_get_type (void);
+
+gboolean gst_flv_demux_query (GstPad * pad, GstQuery * query);
+gboolean gst_flv_demux_src_event (GstPad * pad, GstEvent * event);
 
 G_END_DECLS
 #endif /* __FLV_DEMUX_H__ */
