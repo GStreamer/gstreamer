@@ -1,3 +1,20 @@
+2007-08-14  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
+	(gst_flv_demux_adapter_flush), (gst_flv_demux_chain),
+	(gst_flv_demux_pull_tag), (gst_flv_demux_do_seek),
+	(gst_flv_demux_handle_seek), (gst_flv_demux_sink_event),
+	(gst_flv_demux_src_event), (gst_flv_demux_query),
+	(gst_flv_demux_change_state), (gst_flv_demux_set_index),
+	(gst_flv_demux_get_index), (gst_flv_demux_dispose),
+	(gst_flv_demux_class_init): First method for seeking in pull
+	mode using the index built step by step or coming from metadata.
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvparse.c: (FLV_GET_STRING),
+	(gst_flv_parse_metadata_item), (gst_flv_parse_tag_script),
+	(gst_flv_parse_tag_audio), (gst_flv_parse_tag_video): Parse
+	more metadata types and keyframes index.
+
 2007-08-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/plugins/Makefile.am:

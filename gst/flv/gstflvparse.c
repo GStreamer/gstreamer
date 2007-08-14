@@ -44,8 +44,8 @@ FLV_GET_STRING (const guint8 * data, size_t data_size)
   guint32 string_size = 0;
   gchar *string = NULL;
 
-  g_return_val_if_fail (data != NULL, 0);
-  g_return_val_if_fail (data_size >= 3, 0);
+  g_return_val_if_fail (data != NULL, NULL);
+  g_return_val_if_fail (data_size >= 2, NULL);
 
   string_size = GST_READ_UINT16_BE (data);
   if (G_UNLIKELY (string_size > data_size)) {
@@ -73,68 +73,16 @@ gst_flv_demux_query_types (GstPad * pad)
   return query_types;
 }
 
-static gboolean
-gst_flv_demux_query (GstPad * pad, GstQuery * query)
-{
-  gboolean res = TRUE;
-  GstFLVDemux *demux;
-
-  demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_DURATION:
-    {
-      GstFormat format;
-
-      gst_query_parse_duration (query, &format, NULL);
-
-      /* duration is time only */
-      if (format != GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (demux, "duration query only supported for time "
-            "format");
-        res = FALSE;
-        goto beach;
-      }
-
-      GST_DEBUG_OBJECT (pad, "duration query, replying %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->duration));
-
-      gst_query_set_duration (query, GST_FORMAT_TIME, demux->duration);
-
-      break;
-    }
-    case GST_QUERY_LATENCY:
-    {
-      GstPad *peer;
-
-      if ((peer = gst_pad_get_peer (demux->sinkpad))) {
-        /* query latency on peer pad */
-        res = gst_pad_query (peer, query);
-        gst_object_unref (peer);
-      } else {
-        /* no peer, we don't know */
-        res = FALSE;
-      }
-      break;
-    }
-    default:
-      res = FALSE;
-      break;
-  }
-
-beach:
-  gst_object_unref (demux);
-
-  return res;
-}
-
 static size_t
 gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
-    size_t data_size)
+    size_t data_size, gboolean * end_marker)
 {
   gchar *tag_name = NULL;
   guint8 tag_type = 0;
   size_t offset = 0;
+
+  /* Initialize the end_marker flag to FALSE */
+  *end_marker = FALSE;
 
   /* Name of the tag */
   tag_name = FLV_GET_STRING (data, data_size);
@@ -246,6 +194,114 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
 
       break;
     }
+    case 3:                    // Object
+    {
+      gboolean end_of_object_marker = FALSE;
+
+      while (!end_of_object_marker && offset < data_size) {
+        size_t read = gst_flv_parse_metadata_item (demux, data + offset,
+            data_size - offset, &end_of_object_marker);
+
+        if (G_UNLIKELY (!read)) {
+          GST_WARNING_OBJECT (demux, "failed reading a tag, skipping");
+          break;
+        }
+
+        offset += read;
+      }
+
+      break;
+    }
+    case 9:                    // End marker
+    {
+      GST_DEBUG_OBJECT (demux, "end marker ?");
+      if (tag_name[0] == '\0') {
+
+        GST_DEBUG_OBJECT (demux, "end marker detected");
+
+        *end_marker = TRUE;
+      }
+
+      break;
+    }
+    case 10:                   // Array
+    {
+      guint32 nb_elems = GST_READ_UINT32_BE (data + offset);
+
+      offset += 4;
+
+      GST_DEBUG_OBJECT (demux, "array has %d elements", nb_elems);
+
+      if (!strcmp (tag_name, "times")) {
+        if (demux->times) {
+          g_array_free (demux->times, TRUE);
+        }
+        demux->times = g_array_new (FALSE, TRUE, sizeof (gdouble));
+      } else if (!strcmp (tag_name, "filepositions")) {
+        if (demux->filepositions) {
+          g_array_free (demux->filepositions, TRUE);
+        }
+        demux->filepositions = g_array_new (FALSE, TRUE, sizeof (gdouble));
+      }
+
+      while (nb_elems--) {
+        guint8 elem_type = GST_READ_UINT8 (data + offset);
+
+        offset++;
+
+        switch (elem_type) {
+          case 0:
+          {
+            union
+            {
+              guint64 value_uint64;
+              gdouble value_double;
+            } value_union;
+
+            value_union.value_uint64 = GST_READ_UINT64_BE (data + offset);
+
+            offset += 8;
+
+            GST_DEBUG_OBJECT (demux, "element is a double %f",
+                value_union.value_double);
+
+            if (!strcmp (tag_name, "times") && demux->times) {
+              g_array_append_val (demux->times, value_union.value_double);
+            } else if (!strcmp (tag_name, "filepositions") &&
+                demux->filepositions) {
+              g_array_append_val (demux->filepositions,
+                  value_union.value_double);
+            }
+            break;
+          }
+          default:
+            GST_WARNING_OBJECT (demux, "unsupported array element type %d",
+                elem_type);
+        }
+      }
+
+      break;
+    }
+    case 11:                   // Date
+    {
+      union
+      {
+        guint64 value_uint64;
+        gdouble value_double;
+      } value_union;
+
+      value_union.value_uint64 = GST_READ_UINT64_BE (data + offset);
+
+      offset += 8;
+
+      /* There are 2 additional bytes */
+      offset += 2;
+
+      GST_DEBUG_OBJECT (demux, "%s => (date as a double) %f", tag_name,
+          value_union.value_double);
+
+      break;
+    }
     default:
       GST_WARNING_OBJECT (demux, "unsupported tag type %d", tag_type);
   }
@@ -266,12 +322,14 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, const guint8 * data,
   GST_LOG_OBJECT (demux, "parsing a script tag");
 
   if (GST_READ_UINT8 (data + offset++) == 2) {
+    guint i;
     gchar *function_name = FLV_GET_STRING (data + offset, data_size - offset);
 
     GST_LOG_OBJECT (demux, "function name is %s", function_name);
 
     if (!strcmp (function_name, "onMetaData")) {
       guint32 nb_elems = 0;
+      gboolean end_marker = FALSE;
 
       GST_DEBUG_OBJECT (demux, "we have a metadata script object");
 
@@ -285,9 +343,9 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, const guint8 * data,
 
       GST_DEBUG_OBJECT (demux, "there are %d elements in the array", nb_elems);
 
-      while (nb_elems--) {
+      while (nb_elems-- && !end_marker) {
         size_t read = gst_flv_parse_metadata_item (demux, data + offset,
-            data_size - offset);
+            data_size - offset, &end_marker);
 
         if (G_UNLIKELY (!read)) {
           GST_WARNING_OBJECT (demux, "failed reading a tag, skipping");
@@ -300,6 +358,21 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, const guint8 * data,
     }
 
     g_free (function_name);
+
+    if (demux->index) {
+      /* If an index was found, insert associations */
+      for (i = 0; i < MIN (demux->times->len, demux->filepositions->len); i++) {
+        guint64 time, fileposition;
+
+        time = g_array_index (demux->times, gdouble, i) * GST_SECOND;
+        fileposition = g_array_index (demux->filepositions, gdouble, i);
+        GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
+            G_GUINT64_FORMAT, GST_TIME_ARGS (time), fileposition);
+        gst_index_add_association (demux->index, demux->index_id,
+            GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME, time,
+            GST_FORMAT_BYTES, fileposition, NULL);
+      }
+    }
   }
 
 
@@ -427,6 +500,8 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
         GST_DEBUG_FUNCPTR (gst_flv_demux_query_types));
     gst_pad_set_query_function (demux->audio_pad,
         GST_DEBUG_FUNCPTR (gst_flv_demux_query));
+    gst_pad_set_event_function (demux->audio_pad,
+        GST_DEBUG_FUNCPTR (gst_flv_demux_src_event));
 
     /* We need to set caps before adding */
     gst_element_add_pad (GST_ELEMENT (demux),
@@ -528,6 +603,8 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
       demux->new_seg_event = gst_event_new_new_segment (FALSE,
           demux->segment->rate, demux->segment->format,
           demux->segment->last_stop, -1, demux->segment->last_stop);
+    } else {
+      GST_DEBUG_OBJECT (demux, "pushing pre-generated newsegment event");
     }
 
     gst_pad_push_event (demux->audio_pad, gst_event_ref (demux->new_seg_event));
@@ -556,14 +633,19 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buffer = NULL;
-  guint32 pts = 0, codec_tag = 0, codec_data = 0;
+  guint32 pts = 0, codec_tag = 0, codec_data = 0, pts_ext = 0;
   gboolean keyframe = FALSE;
   guint8 flags = 0;
 
   GST_LOG_OBJECT (demux, "parsing a video tag");
 
-  /* Grab information about audio tag */
+  /* Grab information about video tag */
   pts = FLV_GET_BEUI24 (data, data_size);
+  /* read the pts extension to 32 bits integer */
+  pts_ext = GST_READ_UINT8 (data + 3);
+  /* Combine them */
+  pts |= pts_ext << 24;
+  /* Skip the stream id and go directly to the flags */
   flags = GST_READ_UINT8 (data + 7);
 
   /* Keyframe */
@@ -644,6 +726,8 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
         GST_DEBUG_FUNCPTR (gst_flv_demux_query_types));
     gst_pad_set_query_function (demux->video_pad,
         GST_DEBUG_FUNCPTR (gst_flv_demux_query));
+    gst_pad_set_event_function (demux->video_pad,
+        GST_DEBUG_FUNCPTR (gst_flv_demux_src_event));
 
     /* We need to set caps before adding */
     gst_element_add_pad (GST_ELEMENT (demux),
@@ -727,6 +811,16 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
 
   if (!keyframe) {
     GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  } else {
+    if (demux->index) {
+      GST_LOG_OBJECT (demux, "adding association %" GST_TIME_FORMAT "-> %"
+          G_GUINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+          demux->cur_tag_offset);
+      gst_index_add_association (demux->index, demux->index_id,
+          GST_ASSOCIATION_FLAG_KEY_UNIT,
+          GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buffer),
+          GST_FORMAT_BYTES, demux->cur_tag_offset, NULL);
+    }
   }
 
   if (G_UNLIKELY (demux->video_need_discont)) {
@@ -746,6 +840,8 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
       demux->new_seg_event = gst_event_new_new_segment (FALSE,
           demux->segment->rate, demux->segment->format,
           demux->segment->last_stop, -1, demux->segment->last_stop);
+    } else {
+      GST_DEBUG_OBJECT (demux, "pushing pre-generated newsegment event");
     }
 
     gst_pad_push_event (demux->video_pad, gst_event_ref (demux->new_seg_event));
