@@ -167,11 +167,13 @@ gst_app_sink_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 gst_app_sink_flush_unlocked (GstAppSink * appsink)
 {
+  GstBuffer *buffer;
+
   GST_DEBUG_OBJECT (appsink, "flushing appsink");
   appsink->end_of_stream = FALSE;
   gst_buffer_replace (&appsink->preroll, NULL);
-  g_queue_foreach (appsink->queue, (GFunc) gst_mini_object_unref, NULL);
-  g_queue_clear (appsink->queue);
+  while ((buffer = g_queue_pop_head (appsink->queue)))
+    gst_buffer_unref (buffer);
   g_cond_signal (appsink->cond);
 }
 

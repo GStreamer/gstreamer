@@ -1,5 +1,10 @@
 2007-08-14  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_flush_unlocked):
+	Don't use new API.
+
+2007-08-14  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_base_init),
 	(gst_app_sink_class_init), (gst_app_sink_dispose),
 	(gst_app_sink_flush_unlocked), (gst_app_sink_start),
