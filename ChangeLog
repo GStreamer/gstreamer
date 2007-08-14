@@ -1,5 +1,23 @@
 2007-08-14  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_base_init),
+	(gst_app_sink_class_init), (gst_app_sink_dispose),
+	(gst_app_sink_flush_unlocked), (gst_app_sink_start),
+	(gst_app_sink_stop), (gst_app_sink_event), (gst_app_sink_preroll),
+	(gst_app_sink_render), (gst_app_sink_get_caps),
+	(gst_app_sink_set_caps), (gst_app_sink_end_of_stream),
+	(gst_app_sink_pull_preroll), (gst_app_sink_pull_buffer):
+	* gst-libs/gst/app/gstappsink.h:
+	Make love to appsink.
+	Make it support pulling of the preroll buffer.
+	Add docs and debug statements.
+	Fix some races wrt to EOS handling and stopping.
+	Implement getcaps.
+	Implement FLUSHING.
+	API: gst_app_sink_pull_preroll()
+
+2007-08-14  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_set_index),
 	(gst_flv_demux_get_index):
 	Fix locking and refcounting on the index.

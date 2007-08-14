@@ -49,6 +49,8 @@ struct _GstAppSink
   GCond *cond;
   GMutex *mutex;
   GQueue *queue;
+  GstBuffer *preroll;
+  gboolean started;
   gboolean end_of_stream;
 };
 
@@ -61,9 +63,12 @@ GType gst_app_sink_get_type(void);
 
 GST_DEBUG_CATEGORY_EXTERN (app_sink_debug);
 
-void gst_app_sink_set_caps (GstAppSink *appsink, GstCaps *caps);
-gboolean gst_app_sink_end_of_stream (GstAppSink *appsink);
-GstBuffer *gst_app_sink_pull_buffer (GstAppSink *appsink);
+void            gst_app_sink_set_caps       (GstAppSink *appsink, GstCaps *caps);
+
+gboolean        gst_app_sink_end_of_stream  (GstAppSink *appsink);
+
+GstBuffer *     gst_app_sink_pull_preroll   (GstAppSink *appsink);
+GstBuffer *     gst_app_sink_pull_buffer    (GstAppSink *appsink);
 
 G_END_DECLS
 
