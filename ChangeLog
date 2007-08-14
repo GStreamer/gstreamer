@@ -1,3 +1,8 @@
+2007-08-14  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/gstindex.c: (gst_index_add_association): Fix index entry
+	generation from vargs. Fixes #466595.
+
 2007-08-14  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gstbin.c: (gst_bin_element_set_state):

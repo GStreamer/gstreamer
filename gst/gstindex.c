@@ -736,22 +736,26 @@ gst_index_add_association (GstIndex * index, gint id, GstAssocFlags flags,
 
   array = g_array_new (FALSE, FALSE, sizeof (GstIndexAssociation));
 
-  va_start (args, value);
-
-  cur_format = format;
-  n_assocs = 0;
-  while (cur_format) {
+  {
     GstIndexAssociation a;
 
-    n_assocs++;
-    cur_format = va_arg (args, GstFormat);
-    if (cur_format) {
-      a.format = cur_format;
-      a.value = va_arg (args, gint64);
-
-      g_array_append_val (array, a);
-    }
+    a.format = format;
+    a.value = value;
+    n_assocs = 1;
+    g_array_append_val (array, a);
   }
+
+  va_start (args, value);
+
+  while ((cur_format = va_arg (args, GstFormat))) {
+    GstIndexAssociation a;
+
+    a.format = cur_format;
+    a.value = va_arg (args, gint64);
+    n_assocs++;
+    g_array_append_val (array, a);
+  }
+
   va_end (args);
 
   list = (GstIndexAssociation *) g_array_free (array, FALSE);
