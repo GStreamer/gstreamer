@@ -1,3 +1,11 @@
+2007-08-14  Edward Hervey  <edward@fluendo.com>
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
+	Don't set rank of sp5x video decoder to NONE.
+	Fixes #466221
+	Re-order the cases of the switch statement so that the default case
+	is last.
+
 2007-08-07  Wim Taymans  <wim.taymans@gmail.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):

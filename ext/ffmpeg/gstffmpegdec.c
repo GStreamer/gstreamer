@@ -2294,6 +2294,7 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       case CODEC_ID_MPEG4:
       case CODEC_ID_MSMPEG4V3:
       case CODEC_ID_H264:
+      case CODEC_ID_COOK:
         rank = GST_RANK_PRIMARY;
         break;
       case CODEC_ID_DVVIDEO:
@@ -2302,17 +2303,15 @@ gst_ffmpegdec_register (GstPlugin * plugin)
            note: if you change this, see the code in gstdv.c in good/ext/dv. */
         rank = GST_RANK_SECONDARY;
         break;
-      default:
-        rank = GST_RANK_MARGINAL;
-        break;
-        /* what's that? */
-      case CODEC_ID_SP5X:
         /* MP3 and MPEG2 have better alternatives and
            the ffmpeg versions don't work properly feel
            free to assign rank if you fix them */
       case CODEC_ID_MP3:
       case CODEC_ID_MPEG2VIDEO:
         rank = GST_RANK_NONE;
+        break;
+      default:
+        rank = GST_RANK_MARGINAL;
         break;
     }
     if (!gst_element_register (plugin, type_name, rank, type)) {
