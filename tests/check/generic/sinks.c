@@ -846,9 +846,59 @@ GST_START_TEST (test_add_live2)
 
 GST_END_TEST;
 
+GST_START_TEST (test_bin_live)
+{
+  GstElement *sink, *src, *pipeline, *bin;
+  GstStateChangeReturn ret;
+  GstState current, pending;
+  GstPad *srcpad, *sinkpad;
+
+  pipeline = gst_pipeline_new ("pipeline");
+  bin = gst_bin_new ("bin");
+  src = gst_element_factory_make ("fakesrc", "src");
+  g_object_set (G_OBJECT (src), "is-live", TRUE, NULL);
+  sink = gst_element_factory_make ("fakesink", "sink");
+
+  gst_bin_add (GST_BIN (bin), src);
+  gst_bin_add (GST_BIN (bin), sink);
+  gst_bin_add (GST_BIN (pipeline), bin);
+
+  srcpad = gst_element_get_pad (src, "src");
+  sinkpad = gst_element_get_pad (sink, "sink");
+  gst_pad_link (srcpad, sinkpad);
+  gst_object_unref (srcpad);
+  gst_object_unref (sinkpad);
+
+  /* PAUSED returns NO_PREROLL because of the live source */
+  ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL,
+      "no NO_PREROLL state return");
+  ret =
+      gst_element_get_state (pipeline, &current, &pending, GST_CLOCK_TIME_NONE);
+  fail_unless (ret == GST_STATE_CHANGE_NO_PREROLL, "not NO_PREROLL");
+  fail_unless (current == GST_STATE_PAUSED, "not paused");
+  fail_unless (pending == GST_STATE_VOID_PENDING, "not void pending");
+
+  /* when going to PLAYING, the sink should go to PLAYING ASYNC */
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC, "not ASYNC");
+
+  /* now wait for PLAYING to complete */
+  ret =
+      gst_element_get_state (pipeline, &current, &pending, GST_CLOCK_TIME_NONE);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "not playing");
+  fail_unless (current == GST_STATE_PLAYING, "not playing");
+  fail_unless (pending == GST_STATE_VOID_PENDING, "not void pending");
+
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "cannot null pipeline");
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST
 /* test: try changing state of sinks */
-Suite *
-gst_sinks_suite (void)
+    Suite * gst_sinks_suite (void)
 {
   Suite *s = suite_create ("Sinks");
   TCase *tc_chain = tcase_create ("general");
@@ -868,6 +918,7 @@ gst_sinks_suite (void)
   tcase_add_test (tc_chain, test_added_async2);
   tcase_add_test (tc_chain, test_add_live);
   tcase_add_test (tc_chain, test_add_live2);
+  tcase_add_test (tc_chain, test_bin_live);
 
   return s;
 }

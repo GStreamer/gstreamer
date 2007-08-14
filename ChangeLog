@@ -1,3 +1,12 @@
+2007-08-14  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/gstbin.c: (gst_bin_element_set_state):
+	Always change the state of a NO_PREROLL element even if it has ASYNC
+	elements inside (in case of a bin).
+
+	* tests/check/generic/sinks.c: (GST_START_TEST), (gst_sinks_suite):
+	Unit test for this case.
+
 2007-08-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/check/gstbufferstraw.c:

@@ -1834,6 +1834,14 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
   if (G_UNLIKELY (locked))
     goto locked;
 
+  /* if the element was no preroll, just start changing the state regardless
+   * if it had async elements (in the case of a bin) because they won't preroll
+   * anyway. */
+  if (G_UNLIKELY (ret == GST_STATE_CHANGE_NO_PREROLL)) {
+    GST_DEBUG_OBJECT (element, "element is NO_PREROLL, ignore async elements");
+    goto no_preroll;
+  }
+
   GST_OBJECT_LOCK (bin);
   /* the element was busy with an upwards async state change, we must wait for
    * an ASYNC_DONE message before we attemp to change the state. */
@@ -1864,6 +1872,7 @@ gst_bin_element_set_state (GstBin * bin, GstElement * element,
 no_latency:
   GST_OBJECT_UNLOCK (bin);
 
+no_preroll:
   GST_DEBUG_OBJECT (bin,
       "setting element %s to %s, base_time %" GST_TIME_FORMAT,
       GST_ELEMENT_NAME (element), gst_element_state_get_name (next),
