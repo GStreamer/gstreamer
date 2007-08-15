@@ -1,10 +1,9 @@
 2007-08-15  Stefan Kost  <ensonic@users.sf.net>
 
-	reviewed by: <delete if not using a buddy>
-	patch by: <delete if not someone else's patch>
-
 	* ext/timidity/gstwildmidi.c:
 	* ext/timidity/gstwildmidi.h:
+	  Look harder for a config. Based on patch by Hans de Goede.
+	  Fixes #456912
 
 2007-08-14  Wim Taymans  <wim.taymans@gmail.com>
 
