@@ -383,11 +383,11 @@ missing_structure_get_caps_detail (const GstStructure * s, GstCaps ** p_caps)
  * @msg: a missing-plugin #GstMessage of type #GST_MESSAGE_ELEMENT
  *
  * Returns an opaque string containing all the details about the missing
- * element to be passed to an external installer or installer library
- * such as libgimme-codec.
+ * element to be passed to an external installer called via
+ * gst_install_plugins_async() or gst_install_plugins_sync().
  * 
- * This function is mainly for applications that use libgimme-codec or
- * other libraries that call external plugin installation mechanisms.
+ * This function is mainly for applications that call external plugin
+ * installation mechanisms using one of the two above-mentioned functions.
  *
  * Returns: a newly-allocated detail string, or NULL on error. Free string
  *          with g_free() when not needed any longer.

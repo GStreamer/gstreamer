@@ -1,3 +1,9 @@
+2007-08-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/pbutils/install-plugins.c:
+	* gst-libs/gst/pbutils/missing-plugins.c:
+	  Small docs fix and addition.
+
 2007-08-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/icles/.cvsignore:

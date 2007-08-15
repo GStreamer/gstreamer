@@ -584,6 +584,10 @@ gst_install_plugins_installer_exited (GPid pid, gint status, gpointer data)
  * messages that have been caught on a pipeline's bus or created by the
  * application via the provided API, such as gst_missing_element_message_new().
  *
+ * It is possible to request the installation of multiple missing plugins in
+ * one go (as might be required if there is a demuxer for a certain format
+ * installed but no suitable video decoder and no suitable audio decoder).
+ *
  * Returns: result code whether an external installer could be started
  *
  * Since: 0.10.12
