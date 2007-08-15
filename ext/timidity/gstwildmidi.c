@@ -159,6 +159,24 @@ wildmidi_open_config ()
   }
 
   if (path == NULL) {
+    path = g_strdup (TIMIDITY_CFG);
+    GST_DEBUG ("trying %s", path);
+    if (path && (g_access (path, R_OK) == -1)) {
+      g_free (path);
+      path = NULL;
+    }
+  }
+
+  if (path == NULL) {
+    path = g_build_path (G_DIR_SEPARATOR_S, "/etc", "timidity.cfg", NULL);
+    GST_DEBUG ("trying %s", path);
+    if (path && (g_access (path, R_OK) == -1)) {
+      g_free (path);
+      path = NULL;
+    }
+  }
+
+  if (path == NULL) {
     /* I've created a symlink to get it playing
      * ln -s /usr/share/timidity/timidity.cfg /etc/wildmidi.cfg
      * we could make it use : TIMIDITY_CFG
