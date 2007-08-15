@@ -188,8 +188,12 @@ gst_rtp_dtmf_mux_lock_stream (GstRTPDTMFMux *mux, GstPad * pad)
             "Stream lock already acquired by pad %s",
             GST_ELEMENT_NAME (mux->special_pad));
 
-  else
+  else {
+    GST_DEBUG_OBJECT (mux,
+            "Stream lock acquired by pad %s",
+            GST_ELEMENT_NAME (pad));
     mux->special_pad = gst_object_ref (pad);
+  }
 }
 
 static void
@@ -205,6 +209,9 @@ gst_rtp_dtmf_mux_unlock_stream (GstRTPDTMFMux *mux, GstPad * pad)
             " which was acquired by pad %s", GST_ELEMENT_NAME (pad),
             GST_ELEMENT_NAME (mux->special_pad));
   else {
+    GST_DEBUG_OBJECT (mux,
+            "Stream lock released by pad %s",
+            GST_ELEMENT_NAME (mux->special_pad));
     gst_object_unref (mux->special_pad);
     mux->special_pad = NULL;
   }
