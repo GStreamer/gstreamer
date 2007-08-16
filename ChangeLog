@@ -1,3 +1,9 @@
+2007-08-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* ChangeLog:
+	* gst/pygstminiobject.c:
+	  Make ro memory to share.
+
 2007-08-01  Edward Hervey  <bilboed@bilboed.com>
 
 	* configure.ac:
@@ -93,7 +99,7 @@
 2007-07-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gst-disable-loadsave.ignore:
-	  Override more when having now xml.
+	  Override more when having no xml.
 
 2007-07-09  Edward Hervey  <bilboed@bilboed.com>
 

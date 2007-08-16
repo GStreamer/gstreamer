@@ -23,10 +23,10 @@
 #include "pygstminiobject.h"
 #include <gst/gst.h>
 
-static const gchar *pygstminiobject_class_id     = "PyGstMiniObject::class";
-static GQuark       pygstminiobject_class_key    = 0;
-/* static const gchar *pygstminiobject_wrapper_id   = "PyGstMiniObject::wrapper"; */
-/* static GQuark       pygstminiobject_wrapper_key  = 0; */
+static const gchar pygstminiobject_class_id[]     = "PyGstMiniObject::class";
+static GQuark      pygstminiobject_class_key    = 0;
+/* static const gchar pygstminiobject_wrapper_id[]   = "PyGstMiniObject::wrapper"; */
+/* static GQuark      pygstminiobject_wrapper_key  = 0; */
 
 static void pygstminiobject_dealloc(PyGstMiniObject *self);
 /* static int  pygstminiobject_traverse(PyGstMiniObject *self, visitproc visit, void *arg); */
