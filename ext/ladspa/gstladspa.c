@@ -105,6 +105,8 @@ gst_ladspa_base_init (gpointer g_class)
       else
         gst_signal_processor_class_add_pad_template (gsp_class, name,
             GST_PAD_SRC, gsp_class->num_audio_out++);
+
+      g_free (name);
     } else if (LADSPA_IS_PORT_CONTROL (p)) {
       if (LADSPA_IS_PORT_INPUT (p))
         gsp_class->num_control_in++;
@@ -133,6 +135,10 @@ gst_ladspa_base_init (gpointer g_class)
   } else
     details->klass = "Filter/Effect/Audio/LADSPA";
   gst_element_class_set_details (element_class, details);
+  g_free (details->longname);
+  g_free (details->author);
+  g_free (details);
+
 
   klass->audio_in_portnums = g_new0 (gint, gsp_class->num_audio_in);
   klass->audio_out_portnums = g_new0 (gint, gsp_class->num_audio_out);
@@ -197,6 +203,7 @@ gst_ladspa_class_get_param_name (GstLADSPAClass * klass, gint portnum)
     gint n = 1;
     gchar *nret = g_strdup_printf ("%s-%d", ret, n++);
 
+    g_free (ret);
     while (g_object_class_find_property (G_OBJECT_CLASS (klass), nret)) {
       g_free (nret);
       nret = g_strdup_printf ("%s-%d", ret, n++);
@@ -584,10 +591,8 @@ ladspa_describe_plugin (const char *pcFullFilename,
     type_name = g_strdup_printf ("ladspa-%s", desc->Label);
     g_strcanon (type_name, G_CSET_A_2_Z G_CSET_a_2_z G_CSET_DIGITS "-+", '-');
     /* if it's already registered, drop it */
-    if (g_type_from_name (type_name)) {
-      g_free (type_name);
-      continue;
-    }
+    if (g_type_from_name (type_name))
+      goto next;
 
     /* base-init temp alloc */
     g_hash_table_insert (ladspa_descriptors,
@@ -598,11 +603,14 @@ ladspa_describe_plugin (const char *pcFullFilename,
         g_type_register_static (GST_TYPE_SIGNAL_PROCESSOR, type_name, &typeinfo,
         0);
     if (!gst_element_register (ladspa_plugin, type_name, GST_RANK_NONE, type))
-      continue;
+      goto next;
 
     /* add this plugin to the hash */
     g_hash_table_insert (ladspa_descriptors,
         GINT_TO_POINTER (type), (gpointer) desc);
+
+  next:
+    g_free (type_name);
   }
 
   g_hash_table_remove (ladspa_descriptors, GINT_TO_POINTER (0));

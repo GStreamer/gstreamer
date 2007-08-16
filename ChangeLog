@@ -1,5 +1,10 @@
 2007-08-16  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/ladspa/gstladspa.c:
+	  Don't leak like hell.
+
+2007-08-16  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/Makefile.am:
 	* tests/check/generic/.cvsignore:
 	* tests/check/generic/states.c:
