@@ -834,6 +834,56 @@ GST_START_TEST (test_children_state_change_order_two_sink)
 
 GST_END_TEST;
 
+GST_START_TEST (test_iterate_sorted)
+{
+  GstElement *src, *tee, *identity, *sink1, *sink2, *pipeline, *bin;
+  GstIterator *it;
+  gpointer elem;
+
+  pipeline = gst_pipeline_new (NULL);
+  fail_unless (pipeline != NULL, "Could not create pipeline");
+
+  bin = gst_bin_new (NULL);
+  fail_unless (bin != NULL, "Could not create bin");
+
+  src = gst_element_factory_make ("fakesrc", NULL);
+  fail_if (src == NULL, "Could not create fakesrc");
+
+  tee = gst_element_factory_make ("tee", NULL);
+  fail_if (tee == NULL, "Could not create tee");
+
+  sink1 = gst_element_factory_make ("fakesink", NULL);
+  fail_if (sink1 == NULL, "Could not create fakesink1");
+
+  gst_bin_add_many (GST_BIN (bin), src, tee, sink1, NULL);
+
+  fail_unless (gst_element_link (src, tee) == TRUE);
+  fail_unless (gst_element_link (tee, sink1) == TRUE);
+
+  identity = gst_element_factory_make ("identity", NULL);
+  fail_if (identity == NULL, "Could not create identity");
+
+  sink2 = gst_element_factory_make ("fakesink", NULL);
+  fail_if (sink2 == NULL, "Could not create fakesink2");
+
+  gst_bin_add_many (GST_BIN (pipeline), bin, identity, sink2, NULL);
+
+  fail_unless (gst_element_link (tee, identity) == TRUE);
+  fail_unless (gst_element_link (identity, sink2) == TRUE);
+
+  it = gst_bin_iterate_sorted (GST_BIN (pipeline));
+  fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
+  fail_unless (elem == sink2);
+  fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
+  fail_unless (elem == identity);
+  fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
+  fail_unless (elem == bin);
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_bin_suite (void)
 {
@@ -853,6 +903,7 @@ gst_bin_suite (void)
   tcase_add_test (tc_chain, test_watch_for_state_change);
   tcase_add_test (tc_chain, test_add_linked);
   tcase_add_test (tc_chain, test_add_self);
+  tcase_add_test (tc_chain, test_iterate_sorted);
 
   return s;
 }

@@ -1566,10 +1566,20 @@ typedef struct _GstBinSortIterator
 static void
 add_to_queue (GstBinSortIterator * bit, GstElement * element)
 {
-  GST_DEBUG_OBJECT (bit->bin, "%s add to queue", GST_ELEMENT_NAME (element));
+  GST_DEBUG_OBJECT (bit->bin, "adding '%s' to queue",
+      GST_ELEMENT_NAME (element));
   gst_object_ref (element);
   g_queue_push_tail (bit->queue, element);
   HASH_SET_DEGREE (bit, element, -1);
+}
+
+static void
+remove_from_queue (GstBinSortIterator * bit, GstElement * element)
+{
+  GST_DEBUG_OBJECT (bit->bin, "removing '%s' from queue",
+      GST_ELEMENT_NAME (element));
+  g_queue_remove (bit->queue, element);
+  gst_object_unref (element);
 }
 
 /* clear the queue, unref all objects as we took a ref when
@@ -1581,10 +1591,14 @@ clear_queue (GQueue * queue)
 
   while ((p = g_queue_pop_head (queue)))
     gst_object_unref (p);
+
 }
 
 /* set all degrees to 0. Elements marked as a sink are
- * added to the queue immediatly. */
+ * added to the queue immediatly. Since we only look at the SINK flag of the
+ * element, it is possible that we add non-sinks to the queue. These will be
+ * removed from the queue again when we can prove that it provides data for some
+ * other element. */
 static void
 reset_degree (GstElement * element, GstBinSortIterator * bit)
 {
@@ -1636,6 +1650,13 @@ update_degree (GstElement * element, GstBinSortIterator * bit)
             gint old_deg, new_deg;
 
             old_deg = HASH_GET_DEGREE (bit, peer_element);
+
+            /* check to see if we added an element as sink that was not really a
+             * sink because it was connected to some other element. */
+            if (old_deg == -1) {
+              remove_from_queue (bit, peer_element);
+              old_deg = 0;
+            }
             new_deg = old_deg + bit->mode;
 
             GST_DEBUG_OBJECT (bit->bin,
@@ -1701,7 +1722,9 @@ gst_bin_sort_iterator_next (GstBinSortIterator * bit, gpointer * result)
     if ((best = bit->best)) {
       if (bit->best_deg != 0) {
         /* we don't fail on this one yet */
-        g_warning ("loop detected in the graph !!");
+        GST_WARNING_OBJECT (bin, "loop dected in graph");
+        g_warning ("loop detected in the graph of bin %s!!",
+            GST_ELEMENT_NAME (bin));
       }
       /* best unhandled element, schedule as next element */
       GST_DEBUG_OBJECT (bin, "queue empty, next best: %s",

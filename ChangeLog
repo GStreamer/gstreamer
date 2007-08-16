@@ -1,5 +1,15 @@
 2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/gstbin.c: (add_to_queue), (remove_from_queue), (clear_queue),
+	(update_degree), (gst_bin_sort_iterator_next):
+	Fix annoying bug in the sorted iterator where a sink that is not really
+	a sink (when it has downstream links) screwed up the iterator.
+
+	* tests/check/gst/gstbin.c: (GST_START_TEST), (gst_bin_suite):
+	Unit test to verify the fix.
+
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/gstmessage.h:
 	Add some more docs for the messages.
 
