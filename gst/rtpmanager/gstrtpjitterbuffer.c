@@ -696,16 +696,18 @@ gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstEvent * event)
       /* check for flushing, we need to discard the event and return FALSE when
        * we are flushing */
       ret = priv->srcresult == GST_FLOW_OK;
-      if (ret) {
+      if (ret && !priv->eos) {
         GST_DEBUG_OBJECT (jitterbuffer, "queuing EOS");
         priv->eos = TRUE;
         JBUF_SIGNAL (priv);
+      } else if (priv->eos) {
+        GST_DEBUG_OBJECT (jitterbuffer, "dropping EOS, we are already EOS");
       } else {
         GST_DEBUG_OBJECT (jitterbuffer, "dropping EOS, reason %s",
             gst_flow_get_name (priv->srcresult));
-        gst_event_unref (event);
       }
       JBUF_UNLOCK (priv);
+      gst_event_unref (event);
       break;
     }
     default:
@@ -863,7 +865,7 @@ invalid_buffer:
   }
 not_negotiated:
   {
-    GST_DEBUG_OBJECT (jitterbuffer, "No clock-rate in caps!");
+    GST_WARNING_OBJECT (jitterbuffer, "No clock-rate in caps!");
     gst_buffer_unref (buffer);
     gst_object_unref (jitterbuffer);
     return GST_FLOW_NOT_NEGOTIATED;
@@ -878,13 +880,13 @@ out_flushing:
 have_eos:
   {
     ret = GST_FLOW_UNEXPECTED;
-    GST_DEBUG_OBJECT (jitterbuffer, "we are EOS, refusing buffer");
+    GST_WARNING_OBJECT (jitterbuffer, "we are EOS, refusing buffer");
     gst_buffer_unref (buffer);
     goto finished;
   }
 too_late:
   {
-    GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d too late as #%d was already"
+    GST_WARNING_OBJECT (jitterbuffer, "Packet #%d too late as #%d was already"
         " popped, dropping", seqnum, priv->last_popped_seqnum);
     priv->num_late++;
     gst_buffer_unref (buffer);
@@ -892,7 +894,7 @@ too_late:
   }
 duplicate:
   {
-    GST_DEBUG_OBJECT (jitterbuffer, "Duplicate packet #%d detected, dropping",
+    GST_WARNING_OBJECT (jitterbuffer, "Duplicate packet #%d detected, dropping",
         seqnum);
     priv->num_duplicates++;
     gst_buffer_unref (buffer);
@@ -923,13 +925,19 @@ gst_rtp_jitter_buffer_loop (GstRTPJitterBuffer * jitterbuffer)
   JBUF_LOCK_CHECK (priv, flushing);
 again:
   GST_DEBUG_OBJECT (jitterbuffer, "Popping item");
-  /* wait if we are blocked or don't have a packet and eos */
-  while (priv->blocked || !(rtp_jitter_buffer_num_packets (priv->jbuf)
-          || priv->eos)) {
+  while (TRUE) {
+
+    /* always wait if we are blocked */
+    if (!priv->blocked) {
+      /* if we have a packet, we can grab it */
+      if (rtp_jitter_buffer_num_packets (priv->jbuf) > 0)
+        break;
+      /* no packets but we are EOS, do eos logic */
+      if (priv->eos)
+        goto do_eos;
+    }
     JBUF_WAIT_CHECK (priv, flushing);
   }
-  if (priv->eos)
-    goto do_eos;
 
   /* pop a buffer, we must have a buffer now */
   outbuf = rtp_jitter_buffer_pop (priv->jbuf);
@@ -955,7 +963,7 @@ again:
 
     if (priv->next_seqnum != -1) {
       /* we expected next_seqnum but received something else, that's a gap */
-      GST_DEBUG_OBJECT (jitterbuffer,
+      GST_WARNING_OBJECT (jitterbuffer,
           "Sequence number GAP detected -> %d instead of %d", priv->next_seqnum,
           seqnum);
     } else {
@@ -1092,6 +1100,7 @@ do_eos:
 flushing:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "we are flushing");
+    gst_pad_pause_task (priv->srcpad);
     if (outbuf)
       gst_buffer_unref (outbuf);
     JBUF_UNLOCK (priv);
