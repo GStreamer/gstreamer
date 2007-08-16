@@ -368,6 +368,14 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   udpsrc = GST_UDPSRC (psrc);
 
+  /* quick check, avoid going in select when we already have data */
+  readsize = 0;
+  if ((ret = IOCTL_SOCKET (udpsrc->sock, FIONREAD, &readsize)) < 0)
+    goto ioctl_failed;
+
+  if (readsize > 0)
+    goto no_select;
+
   do {
     gboolean stop;
     struct timeval timeval, *timeout;
@@ -433,10 +441,11 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   if ((ret = IOCTL_SOCKET (udpsrc->sock, FIONREAD, &readsize)) < 0)
     goto ioctl_failed;
 
-  GST_LOG_OBJECT (udpsrc, "ioctl says %d bytes available", (int) readsize);
-
   if (!readsize)
     goto nothing_to_read;
+
+no_select:
+  GST_LOG_OBJECT (udpsrc, "ioctl says %d bytes available", (int) readsize);
 
   pktdata = g_malloc (readsize);
   pktsize = readsize;

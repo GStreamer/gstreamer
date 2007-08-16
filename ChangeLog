@@ -1,5 +1,11 @@
 2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):
+	Improve UDP performance by avoiding a select() when we have data
+	available immediatly.
+
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtsp/gstrtpdec.c: (gst_rtp_dec_marshal_VOID__UINT_UINT),
 	(gst_rtp_dec_class_init):
 	* gst/rtsp/gstrtpdec.h:
