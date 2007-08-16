@@ -537,9 +537,10 @@ rtcp_thread (GstRTPSession * rtpsession)
   GstClockTime current_time;
   GstClockTime next_timeout;
 
-  clock = gst_element_get_clock (GST_ELEMENT_CAST (rtpsession));
+  /* RTCP timeouts we use the system clock */
+  clock = gst_system_clock_obtain ();
   if (clock == NULL)
-    return;
+    goto no_clock;
 
   current_time = gst_clock_get_time (clock);
 
@@ -590,6 +591,15 @@ rtcp_thread (GstRTPSession * rtpsession)
   gst_object_unref (clock);
 
   GST_DEBUG_OBJECT (rtpsession, "leaving RTCP thread");
+  return;
+
+  /* ERRORS */
+no_clock:
+  {
+    GST_ELEMENT_ERROR (rtpsession, CORE, CLOCK, (NULL),
+        ("Could not get system clock"));
+    return;
+  }
 }
 
 static gboolean
@@ -900,6 +910,10 @@ gst_rtp_session_event_recv_rtcp_sink (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     default:
+      if (rtpsession->send_rtcp_src) {
+        gst_event_ref (event);
+        ret = gst_pad_push_event (rtpsession->send_rtcp_src, event);
+      }
       ret = gst_pad_push_event (rtpsession->sync_src, event);
       break;
   }

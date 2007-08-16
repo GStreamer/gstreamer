@@ -1,5 +1,22 @@
 2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_sink_event), (gst_rtp_jitter_buffer_chain),
+	(gst_rtp_jitter_buffer_loop):
+	Fix EOS handling.
+	Convert some DEBUG into WARNINGs.
+	Pause task when flushing.
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_class_init),
+	(rtcp_thread), (gst_rtp_session_event_recv_rtcp_sink):
+	Use system clock for RTCP session management timeouts.
+
+	* gst/rtpmanager/rtpsession.c: (on_new_ssrc), (on_ssrc_collision),
+	(on_ssrc_validated), (on_bye_ssrc), (on_bye_timeout), (on_timeout):
+	Release the session lock when emiting signals.
+
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	* ext/faad/gstfaad.c: (gst_faad_setcaps),
 	(gst_faad_chanpos_to_gst):
 	Add some debug info.
