@@ -1,3 +1,12 @@
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_sink_event), (gst_mp3parse_emit_frame):
+	* gst/mpegaudioparse/gstmpegaudioparse.h:
+	Queue segment event and push it after we know the caps on the pad or
+	else an autoplugger might not have plugged the element yet and the
+	segment is lost.
+
 2007-08-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/iec958/ac3iec.c:

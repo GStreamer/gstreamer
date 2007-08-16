@@ -324,6 +324,7 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean res;
   GstMPEGAudioParse *mp3parse;
+  GstEvent **eventp;
 
   mp3parse = GST_MP3PARSE (gst_pad_get_parent (pad));
 
@@ -437,12 +438,18 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_set_newsegment_full (&mp3parse->segment, update, rate,
           applied_rate, format, start, stop, pos);
 
-      res = gst_pad_push_event (mp3parse->srcpad, event);
+      /* save the segment for later, right before we push a new buffer so that
+       * the caps are fixed and the next linked element can receive the segment. */
+      eventp = &mp3parse->pending_segment;
+      gst_event_replace (eventp, event);
+      res = TRUE;
       break;
     }
     case GST_EVENT_FLUSH_STOP:
       /* Clear our adapter and set up for a new position */
       gst_adapter_clear (mp3parse->adapter);
+      eventp = &mp3parse->pending_segment;
+      gst_event_replace (eventp, NULL);
       res = gst_pad_push_event (mp3parse->srcpad, event);
       break;
     default:
@@ -607,6 +614,10 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         GST_BUFFER_OFFSET (outbuf));
     mp3parse->segment.last_stop = GST_BUFFER_TIMESTAMP (outbuf);
+    /* push any pending segment now */
+    if (mp3parse->pending_segment)
+      gst_pad_push_event (mp3parse->srcpad, mp3parse->pending_segment);
+    mp3parse->pending_segment = NULL;
     ret = gst_pad_push (mp3parse->srcpad, outbuf);
   }
   if (ret == GST_FLOW_UNEXPECTED

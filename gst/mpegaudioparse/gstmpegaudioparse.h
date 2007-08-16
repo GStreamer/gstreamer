@@ -108,6 +108,9 @@ struct _GstMPEGAudioParse {
   GMutex *pending_accurate_seeks_lock;
   GSList *pending_accurate_seeks;
   gboolean exact_position;
+
+  /* pending segment */
+  GstEvent *pending_segment;
 };
 
 struct _GstMPEGAudioParseClass {
