@@ -30,6 +30,7 @@ MPEG2DEC =
 endif
 
 check_PROGRAMS = \
+	generic/states \
 	$(AMRNB) \
 	$(MPEG2DEC)
 
