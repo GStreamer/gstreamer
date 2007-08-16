@@ -1,3 +1,22 @@
+2007-08-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init),
+	(gst_bpwsinc_init), (process_32), (process_64),
+	(bpwsinc_build_kernel), (bpwsinc_push_residue),
+	(bpwsinc_transform), (bpwsinc_start), (bpwsinc_query),
+	(bpwsinc_query_type), (bpwsinc_event), (bpwsinc_set_property):
+	* gst/filter/gstbpwsinc.h:
+	Implement latency query and only forward those samples downstream
+	that actually contain the data we want, i.e. drop kernel_length/2
+	in the beginning and append kernel_length/2 (created by convolving
+	the filter kernel with zeroes) to the end.
+
+	* tests/check/elements/bpwsinc.c: (GST_START_TEST):
+	Adjust the unit test for this slightly changed behaviour.
+
+	* gst/filter/gstlpwsinc.c: (lpwsinc_build_kernel):
+	Reset residue length only when actually creating a residue.
+
 2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_class_init):

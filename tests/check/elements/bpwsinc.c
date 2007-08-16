@@ -96,6 +96,7 @@ GST_START_TEST (test_bp_0hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GList *node;
 
   bpwsinc = setup_bpwsinc ();
   /* Set to bandpass */
@@ -122,21 +123,23 @@ GST_START_TEST (test_bp_0hz)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (g_list_length (buffers) >= 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-  for (i = 31; i < 1024; i++) {
-    fail_unless (res[i] <= 0.01
-        && res[i] >= -0.01, "res[%d] = %lf\n", i, res[i]);
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms <= 0.1);
   }
-
-  rms = 0.0;
-  for (i = 0; i < 1024; i++)
-    rms += res[i] * res[i];
-  rms = sqrt (rms / 1024.0);
-  fail_unless (rms <= 0.1);
 
   /* cleanup */
   cleanup_bpwsinc (bpwsinc);
@@ -154,6 +157,7 @@ GST_START_TEST (test_bp_11025hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GList *node;
 
   bpwsinc = setup_bpwsinc ();
   /* Set to bandpass */
@@ -184,17 +188,23 @@ GST_START_TEST (test_bp_11025hz)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (g_list_length (buffers) >= 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
 
-  rms = 0.0;
-  for (i = 0; i < 1024; i++)
-    rms += res[i] * res[i];
-  rms = sqrt (rms / 1024.0);
-  fail_unless (rms >= 0.4);
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms >= 0.4);
+  }
 
   /* cleanup */
   cleanup_bpwsinc (bpwsinc);
@@ -213,6 +223,7 @@ GST_START_TEST (test_bp_22050hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GList *node;
 
   bpwsinc = setup_bpwsinc ();
   /* Set to bandpass */
@@ -241,20 +252,23 @@ GST_START_TEST (test_bp_22050hz)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (g_list_length (buffers) >= 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-  for (i = 31; i < 1024; i++) {
-    fail_unless (abs (res[i]) <= 0.01, "res[%d] = %lf\n", i, res[i]);
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms <= 0.3);
   }
-
-  rms = 0.0;
-  for (i = 0; i < 1024; i++)
-    rms += res[i] * res[i];
-  rms = sqrt (rms / 1024.0);
-  fail_unless (rms <= 0.1);
 
   /* cleanup */
   cleanup_bpwsinc (bpwsinc);
@@ -272,6 +286,7 @@ GST_START_TEST (test_br_0hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GList *node;
 
   bpwsinc = setup_bpwsinc ();
   /* Set to bandreject */
@@ -298,21 +313,23 @@ GST_START_TEST (test_br_0hz)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (g_list_length (buffers) >= 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-  for (i = 31; i < 1024; i++) {
-    fail_unless (res[i] <= 1.01
-        && res[i] >= 0.99, "res[%d] = %lf\n", i, res[i]);
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms >= 0.9);
   }
-
-  rms = 0.0;
-  for (i = 0; i < 1024; i++)
-    rms += res[i] * res[i];
-  rms = sqrt (rms / 1024.0);
-  fail_unless (rms >= 0.9);
 
   /* cleanup */
   cleanup_bpwsinc (bpwsinc);
@@ -330,6 +347,7 @@ GST_START_TEST (test_br_11025hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GList *node;
 
   bpwsinc = setup_bpwsinc ();
   /* Set to bandreject */
@@ -361,20 +379,23 @@ GST_START_TEST (test_br_11025hz)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (g_list_length (buffers) >= 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-  for (i = 31; i < 1024; i++) {
-    fail_unless (abs (res[i]) <= 0.01, "res[%d] = %lf\n", i, res[i]);
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms <= 0.35);
   }
-
-  rms = 0.0;
-  for (i = 0; i < 1024; i++)
-    rms += res[i] * res[i];
-  rms = sqrt (rms / 1024.0);
-  fail_unless (rms <= 0.3);
 
   /* cleanup */
   cleanup_bpwsinc (bpwsinc);
@@ -393,6 +414,7 @@ GST_START_TEST (test_br_22050hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GList *node;
 
   bpwsinc = setup_bpwsinc ();
   /* Set to bandreject */
@@ -421,21 +443,23 @@ GST_START_TEST (test_br_22050hz)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (g_list_length (buffers) >= 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-  for (i = 31; i < 1024; i++) {
-    fail_unless (abs (res[i]) <= 1.01
-        && abs (res[i]) >= 0.99, "res[%d] = %lf\n", i, res[i]);
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms >= 0.9);
   }
-
-  rms = 0.0;
-  for (i = 0; i < 1024; i++)
-    rms += res[i] * res[i];
-  rms = sqrt (rms / 1024.0);
-  fail_unless (rms >= 0.9);
 
   /* cleanup */
   cleanup_bpwsinc (bpwsinc);
@@ -479,9 +503,9 @@ GST_START_TEST (test_small_buffer)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (g_list_length (buffers) >= 1);
 
   /* cleanup */
   cleanup_bpwsinc (bpwsinc);

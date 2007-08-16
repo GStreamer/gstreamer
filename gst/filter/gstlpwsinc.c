@@ -421,12 +421,13 @@ lpwsinc_build_kernel (GstLPWSinc * self)
   }
 
   /* set up the residue memory space */
-  if (!self->residue)
+  if (!self->residue) {
     self->residue =
         g_new0 (gdouble, len * GST_AUDIO_FILTER (self)->format.channels);
+    self->residue_length = 0;
+  }
 
   self->have_kernel = TRUE;
-  self->residue_length = 0;
 }
 
 static void
