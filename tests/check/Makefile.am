@@ -53,6 +53,7 @@ VALGRIND_TESTS_DISABLE = \
 	$(VALGRIND_TO_FIX)
 
 check_PROGRAMS = \
+	generic/states \
 	$(check_mpeg2enc)  \
 	$(check_neon)      \
 	$(check_timidity)  \

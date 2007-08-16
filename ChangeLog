@@ -1,3 +1,10 @@
+2007-08-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/Makefile.am:
+	* tests/check/generic/.cvsignore:
+	* tests/check/generic/states.c:
+	  Add generic state-change test suite to help to fi leaks.
+
 2007-08-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/timidity/gstwildmidi.c:
