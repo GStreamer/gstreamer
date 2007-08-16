@@ -72,6 +72,13 @@ struct _GstRTPDecClass {
   GstCaps* (*request_pt_map)  (GstRTPDec *rtpdec, guint session, guint pt);
 
   void     (*clear_pt_map)    (GstRTPDec *rtpdec);
+
+  void     (*on_new_ssrc)       (GstRTPDec *rtpdec, guint session, guint32 ssrc);
+  void     (*on_ssrc_collision) (GstRTPDec *rtpdec, guint session, guint32 ssrc);
+  void     (*on_ssrc_validated) (GstRTPDec *rtpdec, guint session, guint32 ssrc);
+  void     (*on_bye_ssrc)       (GstRTPDec *rtpdec, guint session, guint32 ssrc);
+  void     (*on_bye_timeout)    (GstRTPDec *rtpdec, guint session, guint32 ssrc);
+  void     (*on_timeout)        (GstRTPDec *rtpdec, guint session, guint32 ssrc);
 };
 
 GType gst_rtp_dec_get_type(void);

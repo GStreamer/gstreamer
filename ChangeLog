@@ -1,3 +1,25 @@
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtpdec.c: (gst_rtp_dec_marshal_VOID__UINT_UINT),
+	(gst_rtp_dec_class_init):
+	* gst/rtsp/gstrtpdec.h:
+	Add (dummy) SSRC management signals.
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_class_init),
+	(gst_rtspsrc_set_property), (gst_rtspsrc_get_property),
+	(find_stream), (gst_rtspsrc_create_stream), (new_session_pad),
+	(request_pt_map), (gst_rtspsrc_do_stream_eos), (on_bye_ssrc),
+	(on_timeout), (gst_rtspsrc_stream_configure_manager),
+	(gst_rtspsrc_stream_push_event), (gst_rtspsrc_push_event),
+	(gst_rtspsrc_loop_interleaved), (gst_rtspsrc_parse_rtpinfo),
+	(gst_rtspsrc_handle_message), (gst_rtspsrc_change_state):
+	* gst/rtsp/gstrtspsrc.h:
+	Add connection-speed property.
+	Add find_stream helper functions.
+	Handle stream EOS based on BYE messages or SSRC timeout.
+	Returns SUCCESS from the state change function as we hide our async
+	elements from the parent.
+
 2007-08-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/debug/rndbuffersize.c:

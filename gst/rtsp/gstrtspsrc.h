@@ -90,6 +90,7 @@ struct _GstRTSPStream {
   GstFlowReturn last_ret;
   gboolean      added;
   gboolean      disabled;
+  gboolean      eos;
 
   /* for interleaved mode */
   guint8        channel[2];
@@ -152,6 +153,7 @@ struct _GstRTSPSrc {
   guint64           udp_timeout;
   GTimeVal          tcp_timeout;
   guint             latency;
+  guint             connection_speed;
 
   /* state */
   GstRTSPState       state;

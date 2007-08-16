@@ -133,13 +133,14 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_LOCATION        NULL
-#define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP
-#define DEFAULT_DEBUG           FALSE
-#define DEFAULT_RETRY           20
-#define DEFAULT_TIMEOUT         5000000
-#define DEFAULT_TCP_TIMEOUT     20000000
-#define DEFAULT_LATENCY_MS      3000
+#define DEFAULT_LOCATION         NULL
+#define DEFAULT_PROTOCOLS        GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP
+#define DEFAULT_DEBUG            FALSE
+#define DEFAULT_RETRY            20
+#define DEFAULT_TIMEOUT          5000000
+#define DEFAULT_TCP_TIMEOUT      20000000
+#define DEFAULT_LATENCY_MS       3000
+#define DEFAULT_CONNECTION_SPEED 0
 
 enum
 {
@@ -151,6 +152,7 @@ enum
   PROP_TIMEOUT,
   PROP_TCP_TIMEOUT,
   PROP_LATENCY,
+  PROP_CONNECTION_SPEED
 };
 
 #define GST_TYPE_RTSP_LOWER_TRANS (gst_rtsp_lower_trans_get_type())
@@ -201,6 +203,8 @@ static gboolean gst_rtspsrc_uri_set_uri (GstURIHandler * handler,
 
 static gboolean gst_rtspsrc_activate_streams (GstRTSPSrc * src);
 static void gst_rtspsrc_loop (GstRTSPSrc * src);
+static void gst_rtspsrc_stream_push_event (GstRTSPSrc * src,
+    GstRTSPStream * stream, GstEvent * event);
 static void gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event);
 
 /* commands we send to out loop to notify it of events */
@@ -292,6 +296,12 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
+  g_object_class_install_property (gobject_class, PROP_CONNECTION_SPEED,
+      g_param_spec_uint ("connection-speed", "Connection Speed",
+          "Network connection speed in kbps (0 = unknown)",
+          0, G_MAXINT / 1000, DEFAULT_CONNECTION_SPEED,
+          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+
   gstelement_class->change_state = gst_rtspsrc_change_state;
 
   gstbin_class->handle_message = gst_rtspsrc_handle_message;
@@ -376,6 +386,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_LATENCY:
       rtspsrc->latency = g_value_get_uint (value);
       break;
+    case PROP_CONNECTION_SPEED:
+      rtspsrc->connection_speed = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -417,6 +430,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
     }
     case PROP_LATENCY:
       g_value_set_uint (value, rtspsrc->latency);
+      break;
+    case PROP_CONNECTION_SPEED:
+      g_value_set_uint (value, rtspsrc->connection_speed);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -487,6 +503,18 @@ find_stream_by_setup (GstRTSPStream * stream, gconstpointer a)
   return -1;
 }
 
+GstRTSPStream *
+find_stream (GstRTSPSrc * src, gconstpointer data, gconstpointer func)
+{
+  GList *lstream;
+
+  /* find and get stream */
+  if ((lstream = g_list_find_custom (src->streams, data, (GCompareFunc) func)))
+    return (GstRTSPStream *) lstream->data;
+
+  return NULL;
+}
+
 static GstRTSPStream *
 gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
 {
@@ -520,8 +548,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
       /* If we have a dynamic payload type, see if we have a stream with the
        * same payload number. If there is one, they are part of the same
        * container and we only need to add one pad. */
-      if (g_list_find_custom (src->streams, GINT_TO_POINTER (stream->pt),
-              (GCompareFunc) find_stream_by_pt)) {
+      if (find_stream (src, GINT_TO_POINTER (stream->pt), find_stream_by_pt)) {
         stream->container = TRUE;
       }
     }
@@ -532,7 +559,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
    * the RTP-Info header field returned from PLAY. */
   control_url = gst_sdp_media_get_attribute_val (media, "control");
 
-  GST_DEBUG_OBJECT (src, "stream %d", stream->id);
+  GST_DEBUG_OBJECT (src, "stream %d, (%p)", stream->id, stream);
   GST_DEBUG_OBJECT (src, " pt: %d", stream->pt);
   GST_DEBUG_OBJECT (src, " container: %d", stream->container);
   GST_DEBUG_OBJECT (src, " caps: %" GST_PTR_FORMAT, stream->caps);
@@ -1382,13 +1409,9 @@ new_session_pad (GstElement * session, GstPad * pad, GstRTSPSrc * src)
 
   GST_DEBUG_OBJECT (src, "stream: %u, SSRC %d, PT %d", id, ssrc, pt);
 
-  lstream = g_list_find_custom (src->streams, GINT_TO_POINTER (id),
-      (GCompareFunc) find_stream_by_id);
-  if (lstream == NULL)
+  stream = find_stream (src, GINT_TO_POINTER (id), find_stream_by_id);
+  if (stream == NULL)
     goto unknown_stream;
-
-  /* get stream */
-  stream = (GstRTSPStream *) lstream->data;
 
   /* create a new pad we will use to stream to */
   template = gst_static_pad_template_get (&rtptemplate);
@@ -1436,18 +1459,15 @@ static GstCaps *
 request_pt_map (GstElement * sess, guint session, guint pt, GstRTSPSrc * src)
 {
   GstRTSPStream *stream;
-  GList *lstream;
   GstCaps *caps;
 
   GST_DEBUG_OBJECT (src, "getting pt map for pt %d in session %d", pt, session);
 
   GST_RTSP_STATE_LOCK (src);
-  lstream = g_list_find_custom (src->streams, GINT_TO_POINTER (session),
-      (GCompareFunc) find_stream_by_id);
-  if (!lstream)
+  stream = find_stream (src, GINT_TO_POINTER (session), find_stream_by_id);
+  if (!stream)
     goto unknown_stream;
 
-  stream = (GstRTSPStream *) lstream->data;
   caps = stream->caps;
   GST_RTSP_STATE_UNLOCK (src);
 
@@ -1459,6 +1479,55 @@ unknown_stream:
     GST_RTSP_STATE_UNLOCK (src);
     return NULL;
   }
+}
+
+static void
+gst_rtspsrc_do_stream_eos (GstRTSPSrc * src, guint session)
+{
+  GstRTSPStream *stream;
+
+  GST_DEBUG_OBJECT (src, "setting stream for session %u to EOS", session);
+
+  /* get stream for session */
+  stream = find_stream (src, GINT_TO_POINTER (session), find_stream_by_id);
+  if (!stream)
+    goto unknown_stream;
+
+  if (stream->eos)
+    goto was_eos;
+
+  stream->eos = TRUE;
+  gst_rtspsrc_stream_push_event (src, stream, gst_event_new_eos ());
+  return;
+
+  /* ERRORS */
+unknown_stream:
+  {
+    GST_DEBUG_OBJECT (src, "unknown stream for session %u", session);
+    return;
+  }
+was_eos:
+  {
+    GST_DEBUG_OBJECT (src, "stream for session %u was EOS already %u", session);
+    return;
+  }
+}
+
+static void
+on_bye_ssrc (GstElement * manager, guint session, guint32 ssrc,
+    GstRTSPSrc * src)
+{
+  GST_DEBUG_OBJECT (src, "SSRC %08x in session %u received BYE", ssrc, session);
+
+  gst_rtspsrc_do_stream_eos (src, session);
+}
+
+static void
+on_timeout (GstElement * manager, guint session, guint32 ssrc, GstRTSPSrc * src)
+{
+  GST_DEBUG_OBJECT (src, "SSRC %08x in session %u timed out", ssrc, session);
+
+  gst_rtspsrc_do_stream_eos (src, session);
 }
 
 /* try to get and configure a manager */
@@ -1505,13 +1574,20 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       g_object_set (src->session, "latency", src->latency, NULL);
 
       /* connect to signals if we did not already do so */
-      GST_DEBUG_OBJECT (src, "connect to signals on session manager");
+      GST_DEBUG_OBJECT (src, "connect to signals on session manager, stream %p",
+          stream);
       src->session_sig_id =
           g_signal_connect (src->session, "pad-added",
           (GCallback) new_session_pad, src);
       src->session_ptmap_id =
           g_signal_connect (src->session, "request-pt-map",
           (GCallback) request_pt_map, src);
+      g_signal_connect (src->session, "on-bye-ssrc", (GCallback) on_bye_ssrc,
+          src);
+      g_signal_connect (src->session, "on-bye-timeout", (GCallback) on_timeout,
+          src);
+      g_signal_connect (src->session, "on-timeout", (GCallback) on_timeout,
+          src);
     }
 
     /* we stream directly to the manager, get some pads. Each RTSP stream goes
@@ -2056,6 +2132,34 @@ done:
 }
 
 static void
+gst_rtspsrc_stream_push_event (GstRTSPSrc * src, GstRTSPStream * stream,
+    GstEvent * event)
+{
+  /* only streams that have a connection to the outside world */
+  if (stream->srcpad == NULL)
+    goto done;
+
+  if (stream->channelpad[0]) {
+    gst_event_ref (event);
+    if (GST_PAD_IS_SRC (stream->channelpad[0]))
+      gst_pad_push_event (stream->channelpad[0], event);
+    else
+      gst_pad_send_event (stream->channelpad[0], event);
+  }
+
+  if (stream->channelpad[1]) {
+    gst_event_ref (event);
+    if (GST_PAD_IS_SRC (stream->channelpad[1]))
+      gst_pad_push_event (stream->channelpad[1], event);
+    else
+      gst_pad_send_event (stream->channelpad[1], event);
+  }
+
+done:
+  gst_event_unref (event);
+}
+
+static void
 gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event)
 {
   GList *streams;
@@ -2063,25 +2167,8 @@ gst_rtspsrc_push_event (GstRTSPSrc * src, GstEvent * event)
   for (streams = src->streams; streams; streams = g_list_next (streams)) {
     GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
 
-    /* only streams that have a connection to the outside world */
-    if (ostream->srcpad == NULL)
-      continue;
-
-    if (ostream->channelpad[0]) {
-      gst_event_ref (event);
-      if (GST_PAD_IS_SRC (ostream->channelpad[0]))
-        gst_pad_push_event (ostream->channelpad[0], event);
-      else
-        gst_pad_send_event (ostream->channelpad[0], event);
-    }
-
-    if (ostream->channelpad[1]) {
-      gst_event_ref (event);
-      if (GST_PAD_IS_SRC (ostream->channelpad[1]))
-        gst_pad_push_event (ostream->channelpad[1], event);
-      else
-        gst_pad_send_event (ostream->channelpad[1], event);
-    }
+    gst_event_ref (event);
+    gst_rtspsrc_stream_push_event (src, ostream, event);
   }
   gst_event_unref (event);
 }
@@ -2168,7 +2255,6 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   GstRTSPMessage message = { 0 };
   GstRTSPResult res;
   gint channel;
-  GList *lstream;
   GstRTSPStream *stream;
   GstPad *outpad = NULL;
   guint8 *data;
@@ -2210,6 +2296,8 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
         /* unset flushing so we can do something else */
         gst_rtsp_connection_flush (src->connection, FALSE);
         goto interrupt;
+      case GST_RTSP_ETIMEOUT:
+        goto timeout;
       default:
         goto receive_error;
     }
@@ -2238,12 +2326,10 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 
   channel = message.type_data.data.channel;
 
-  lstream = g_list_find_custom (src->streams, GINT_TO_POINTER (channel),
-      (GCompareFunc) find_stream_by_channel);
-  if (!lstream)
+  stream = find_stream (src, GINT_TO_POINTER (channel), find_stream_by_channel);
+  if (!stream)
     goto unknown_stream;
 
-  stream = (GstRTSPStream *) lstream->data;
   if (channel == stream->channel[0]) {
     outpad = stream->channelpad[0];
     is_rtcp = FALSE;
@@ -2318,6 +2404,13 @@ unknown_stream:
     GST_DEBUG_OBJECT (src, "unknown stream on channel %d, ignored", channel);
     gst_rtsp_message_unset (&message);
     return;
+  }
+timeout:
+  {
+    GST_DEBUG_OBJECT (src, "we got a timeout");
+    gst_rtsp_message_unset (&message);
+    ret = GST_FLOW_UNEXPECTED;
+    goto need_pause;
   }
 interrupt:
   {
@@ -3745,13 +3838,8 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
       /* remove leading whitespace */
       fields[j] = g_strchug (fields[j]);
       if (g_str_has_prefix (fields[j], "url=")) {
-        GList *lstream;
-
         /* get the url and the stream */
-        lstream = g_list_find_custom (src->streams, (fields[j] + 4),
-            (GCompareFunc) find_stream_by_setup);
-        if (lstream)
-          stream = (GstRTSPStream *) lstream->data;
+        stream = find_stream (src, (fields[j] + 4), find_stream_by_setup);
       } else if (g_str_has_prefix (fields[j], "seq=")) {
         seqbase = atoi (fields[j] + 4);
       } else if (g_str_has_prefix (fields[j], "rtptime=")) {
@@ -3983,7 +4071,6 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
     case GST_MESSAGE_ERROR:
     {
       GstObject *udpsrc;
-      GList *lstream;
       GstRTSPStream *stream;
       GstFlowReturn ret;
 
@@ -3992,12 +4079,9 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
       GST_DEBUG_OBJECT (rtspsrc, "got error from %s",
           GST_ELEMENT_NAME (udpsrc));
 
-      lstream = g_list_find_custom (rtspsrc->streams, udpsrc,
-          (GCompareFunc) find_stream_by_udpsrc);
-      if (!lstream)
+      stream = find_stream (rtspsrc, udpsrc, find_stream_by_udpsrc);
+      if (!stream)
         goto forward;
-
-      stream = (GstRTSPStream *) lstream->data;
 
       /* we ignore the RTCP udpsrc */
       if (stream->udpsrc[1] == GST_ELEMENT_CAST (udpsrc))
@@ -4072,6 +4156,9 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
     goto done;
 
   switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      ret = GST_STATE_CHANGE_SUCCESS;
+      break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       ret = GST_STATE_CHANGE_NO_PREROLL;
       break;
