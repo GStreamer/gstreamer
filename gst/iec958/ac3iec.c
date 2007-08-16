@@ -434,8 +434,10 @@ ac3iec_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       ac3p_clear (ac3iec->padder);
-      gst_caps_unref (ac3iec->caps);
-      ac3iec->caps = NULL;
+      if (ac3iec->caps) {
+        gst_caps_unref (ac3iec->caps);
+        ac3iec->caps = NULL;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
