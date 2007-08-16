@@ -530,8 +530,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         if (gst_structure_has_name (s, "GstLaunchInterrupt")) {
           /* this application message is posted when we caught an interrupt and
            * we need to stop the pipeline. */
-          fprintf (stderr, _("Interrupt: Setting pipeline to PAUSED ...\n"));
-          gst_element_set_state (pipeline, GST_STATE_PAUSED);
+          fprintf (stderr, _("Interrupt: Stopping pipeline ...\n"));
           /* return TRUE when we caught an interrupt */
           res = TRUE;
           goto exit;

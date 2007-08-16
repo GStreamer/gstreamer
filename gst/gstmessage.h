@@ -33,7 +33,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_EOS: end-of-stream reached in a pipeline. The application will
  * only receive this message in the PLAYING state and every time it sets a
  * pipeline to PLAYING that is in the EOS state. The application can perform a
- * seek in the pipeline to a new position.
+ * flushing seek in the pipeline, which will undo the EOS state again. 
  * @GST_MESSAGE_ERROR: an error occured. Whe the application receives an error
  * message it should stop playback of the pipeline and not assume that more
  * data will be played.
@@ -44,7 +44,7 @@ typedef struct _GstMessageClass GstMessageClass;
  * receives a buffering message in the PLAYING state for a non-live pipeline it
  * must PAUSE the pipeline until the buffering completes, when the percentage
  * field in the message is 100%. For live pipelines, no action must be
- * performed and the buffering percentage can be used to infor the user about
+ * performed and the buffering percentage can be used to inform the user about
  * the progress.
  * @GST_MESSAGE_STATE_CHANGED: a state change happened
  * @GST_MESSAGE_STATE_DIRTY: an element changed state in a streaming thread.
@@ -52,25 +52,33 @@ typedef struct _GstMessageClass GstMessageClass;
  * @GST_MESSAGE_STEP_DONE: a framestep finished. This message is not yet
  * implemented.
  * @GST_MESSAGE_CLOCK_PROVIDE: an element notifies its capability of providing
- *                             a clock.
+ *                             a clock. This message is used internally and
+ *                             never forwarded to the application.
  * @GST_MESSAGE_CLOCK_LOST: The current clock as selected by the pipeline became
  *                          unusable. The pipeline will select a new clock on
  *                          the next PLAYING state change.
  * @GST_MESSAGE_NEW_CLOCK: a new clock was selected in the pipeline.
- * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed.
+ * @GST_MESSAGE_STRUCTURE_CHANGE: the structure of the pipeline changed. Not
+ * implemented yet.
  * @GST_MESSAGE_STREAM_STATUS: status about a stream, emitted when it starts,
- *                             stops, errors, etc..
+ *                             stops, errors, etc.. Not implemented yet.
  * @GST_MESSAGE_APPLICATION: message posted by the application, possibly
  *                           via an application-specific element.
  * @GST_MESSAGE_ELEMENT: element-specific message, see the specific element's
  *                       documentation
- * @GST_MESSAGE_SEGMENT_START: pipeline started playback of a segment.
- * @GST_MESSAGE_SEGMENT_DONE: pipeline completed playback of a segment.
- * @GST_MESSAGE_DURATION: The duration of a pipeline changed.
+ * @GST_MESSAGE_SEGMENT_START: pipeline started playback of a segment. This
+ * message is used internally and never forwarded to the application.
+ * @GST_MESSAGE_SEGMENT_DONE: pipeline completed playback of a segment. This
+ * message is forwarded to the application after all elements that posted
+ * @GST_MESSAGE_SEGMENT_START posted a GST_MESSAGE_SEGMENT_DONE message.
+ * @GST_MESSAGE_DURATION: The duration of a pipeline changed. The application
+ * can get the new duration with a duration query.
  * @GST_MESSAGE_ASYNC_START: Posted by elements when they start an ASYNC state
- * change. Since: 0.10.13
+ * change. This message is not forwarded to the application but is used
+ * internally. Since: 0.10.13. 
  * @GST_MESSAGE_ASYNC_DONE: Posted by elements when they complete an ASYNC state
- * change. Since: 0.10.13
+ * change. The application will only receive this message from the toplevel
+ * pipeline. Since: 0.10.13
  * @GST_MESSAGE_LATENCY: Posted by elements when their latency changes. The
  * pipeline will calculate and distribute a new latency. Since: 0.10.12
  * @GST_MESSAGE_ANY: mask for all of the above messages.

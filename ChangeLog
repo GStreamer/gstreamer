@@ -1,3 +1,15 @@
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/gstmessage.h:
+	Add some more docs for the messages.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_commit_state),
+	(gst_base_sink_query):
+	Add some more debugging.
+
+	* tools/gst-launch.c: (event_loop):
+	When interrupting, don't try to set pipeline to PAUSED twice.
+
 2007-08-14  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_element_set_state),

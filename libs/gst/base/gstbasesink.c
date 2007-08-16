@@ -953,15 +953,18 @@ gst_base_sink_commit_state (GstBaseSink * basesink)
   GST_OBJECT_UNLOCK (basesink);
 
   if (post_paused) {
+    GST_DEBUG_OBJECT (basesink, "posting PAUSED state change message");
     gst_element_post_message (GST_ELEMENT_CAST (basesink),
         gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
             current, next, post_pending));
   }
   if (post_async_done) {
+    GST_DEBUG_OBJECT (basesink, "posting async-done message");
     gst_element_post_message (GST_ELEMENT_CAST (basesink),
         gst_message_new_async_done (GST_OBJECT_CAST (basesink)));
   }
   if (post_playing) {
+    GST_DEBUG_OBJECT (basesink, "posting PLAYING state change message");
     gst_element_post_message (GST_ELEMENT_CAST (basesink),
         gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
             next, pending, GST_STATE_VOID_PENDING));
@@ -2784,7 +2787,7 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
     case GST_QUERY_JITTER:
       break;
     case GST_QUERY_RATE:
-      //gst_query_set_rate (query, basesink->segment_rate);
+      /* gst_query_set_rate (query, basesink->segment_rate); */
       res = TRUE;
       break;
     case GST_QUERY_SEGMENT:
