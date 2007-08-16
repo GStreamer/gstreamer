@@ -122,9 +122,10 @@ struct _GstBaseRTPPayloadClass
   GstFlowReturn (*handle_buffer)        (GstBaseRTPPayload *payload, 
                                          GstBuffer *buffer);
   gboolean      (*handle_event)         (GstPad * pad, GstEvent * event);
+  GstCaps *     (*get_caps)             (GstBaseRTPPayload *payload, GstPad * pad);
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING-2];
 };
 
 GType           gst_basertppayload_get_type             (void);

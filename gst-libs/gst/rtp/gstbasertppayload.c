@@ -89,6 +89,7 @@ static void gst_basertppayload_init (GstBaseRTPPayload * basertppayload,
 static void gst_basertppayload_finalize (GObject * object);
 
 static gboolean gst_basertppayload_setcaps (GstPad * pad, GstCaps * caps);
+static GstCaps *gst_basertppayload_getcaps (GstPad * pad);
 static gboolean gst_basertppayload_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_basertppayload_chain (GstPad * pad,
     GstBuffer * buffer);
@@ -228,6 +229,8 @@ gst_basertppayload_init (GstBaseRTPPayload * basertppayload, gpointer g_class)
   basertppayload->sinkpad = gst_pad_new_from_template (templ, "sink");
   gst_pad_set_setcaps_function (basertppayload->sinkpad,
       gst_basertppayload_setcaps);
+  gst_pad_set_getcaps_function (basertppayload->sinkpad,
+      gst_basertppayload_getcaps);
   gst_pad_set_event_function (basertppayload->sinkpad,
       gst_basertppayload_event);
   gst_pad_set_chain_function (basertppayload->sinkpad,
@@ -295,6 +298,35 @@ gst_basertppayload_setcaps (GstPad * pad, GstCaps * caps)
   gst_object_unref (basertppayload);
 
   return ret;
+}
+
+static GstCaps *
+gst_basertppayload_getcaps (GstPad * pad)
+{
+  GstBaseRTPPayload *basertppayload;
+  GstBaseRTPPayloadClass *basertppayload_class;
+  GstCaps *caps = NULL;
+
+  GST_DEBUG_OBJECT (pad, "getting caps");
+
+  basertppayload = GST_BASE_RTP_PAYLOAD (gst_pad_get_parent (pad));
+  basertppayload_class = GST_BASE_RTP_PAYLOAD_GET_CLASS (basertppayload);
+
+  if (basertppayload_class->get_caps)
+    caps = basertppayload_class->get_caps (basertppayload, pad);
+
+  if (!caps) {
+    caps = GST_PAD_TEMPLATE_CAPS (GST_PAD_PAD_TEMPLATE (pad));
+    GST_DEBUG_OBJECT (pad,
+        "using pad template %p with caps %p %" GST_PTR_FORMAT,
+        GST_PAD_PAD_TEMPLATE (pad), caps, caps);
+
+    caps = gst_caps_ref (caps);
+  }
+
+  gst_object_unref (basertppayload);
+
+  return caps;
 }
 
 static gboolean

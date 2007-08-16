@@ -1,5 +1,14 @@
 2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: Olivier Crete  <tester at tester ca>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_init),
+	(gst_basertppayload_getcaps):
+	* gst-libs/gst/rtp/gstbasertppayload.h:
+	Add getcaps vfunc to basertppayload. See #465146.
+
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/playback/gstplaybasebin.c: (queue_threshold_reached):
 	Only post buffering messages when we are a stream.
 
