@@ -212,7 +212,7 @@ static gchar *
 encode_base64 (const guint8 * in, guint size, guint * len)
 {
   gchar *ret, *d;
-  static const gchar *v =
+  static const gchar v[] =
       "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
   *len = ((size + 2) / 3) * 4;

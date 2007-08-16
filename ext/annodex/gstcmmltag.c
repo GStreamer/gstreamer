@@ -83,7 +83,7 @@ static void gst_cmml_tag_clip_value_from_string_value (const GValue * src,
 
 static void set_object_on_value (GObject * object, GValue * dest);
 
-static const gchar *default_preamble =
+static const gchar default_preamble[] =
     "<?xml version=\"1.0\" standalone=\"yes\"?>";
 
 /* Stream tag */
