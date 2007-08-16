@@ -662,7 +662,7 @@ main (gint argc, gchar * argv[])
   GHashTable *vars;
   gint i, n;
 
-  static const gchar *rules1 =
+  static const gchar rules1[] =
       "#($Bandwidth < 67959),TimestampDelivery=T,DropByN=T,"
       "priority=9;#($Bandwidth >= 67959) && ($Bandwidth < 167959),"
       "AverageBandwidth=67959,Priority=9;#($Bandwidth >= 67959) && ($Bandwidth"
@@ -671,7 +671,7 @@ main (gint argc, gchar * argv[])
       " && ($Bandwidth < 267959),AverageBandwidth=0,Priority=5,OnDepend=\\\"3\\\";"
       "#($Bandwidth >= 267959),AverageBandwidth=267959,Priority=9;#($Bandwidth >= 267959)"
       ",AverageBandwidth=0,Priority=5,OnDepend=\\\"5\\\";";
-  static const gchar *rules2 =
+  static const gchar rules2[] =
       "AverageBandwidth=32041,Priority=5;AverageBandwidth=0,"
       "Priority=5,OnDepend=\\\"0\\\", OffDepend=\\\"0\\\";";
 
