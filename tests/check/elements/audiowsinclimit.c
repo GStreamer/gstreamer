@@ -96,6 +96,7 @@ GST_START_TEST (test_lp_0hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GList *node;
 
   lpwsinc = setup_lpwsinc ();
   /* Set to lowpass */
@@ -120,21 +121,23 @@ GST_START_TEST (test_lp_0hz)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (g_list_length (buffers) >= 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-  for (i = 21; i < 128; i++) {
-    fail_unless (res[i] <= 1.01
-        && res[i] >= 0.99, "res[%d] = %lf\n", i, res[i]);
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms >= 0.9);
   }
-
-  rms = 0.0;
-  for (i = 0; i < 128; i++)
-    rms += res[i] * res[i];
-  rms = sqrt (rms / 128.0);
-  fail_unless (rms >= 0.9);
 
   /* cleanup */
   cleanup_lpwsinc (lpwsinc);
@@ -152,6 +155,7 @@ GST_START_TEST (test_lp_22050hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GList *node;
 
   lpwsinc = setup_lpwsinc ();
   /* Set to lowpass */
@@ -177,21 +181,23 @@ GST_START_TEST (test_lp_22050hz)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (g_list_length (buffers) >= 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-  for (i = 21; i < 128; i++) {
-    fail_unless (res[i] <= 0.01
-        && res[i] >= -0.01, "res[%d] = %lf\n", i, res[i]);
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms <= 0.1);
   }
-
-  rms = 0.0;
-  for (i = 0; i < 128; i++)
-    rms += res[i] * res[i];
-  rms = sqrt (rms / 128.0);
-  fail_unless (rms <= 0.05);
 
   /* cleanup */
   cleanup_lpwsinc (lpwsinc);
@@ -209,6 +215,7 @@ GST_START_TEST (test_hp_0hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GList *node;
 
   lpwsinc = setup_lpwsinc ();
   /* Set to highpass */
@@ -232,21 +239,23 @@ GST_START_TEST (test_hp_0hz)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
-  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+  fail_unless (g_list_length (buffers) >= 1);
 
-  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-  for (i = 21; i < 128; i++) {
-    fail_unless (res[i] <= 0.01
-        && res[i] >= -0.01, "res[%d] = %lf\n", i, res[i]);
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms <= 0.1);
   }
-
-  rms = 0.0;
-  for (i = 0; i < 128; i++)
-    rms += res[i] * res[i];
-  rms = sqrt (rms / 128.0);
-  fail_unless (rms <= 0.05);
 
   /* cleanup */
   cleanup_lpwsinc (lpwsinc);
@@ -264,6 +273,7 @@ GST_START_TEST (test_hp_22050hz)
   GstCaps *caps;
   gdouble *in, *res, rms;
   gint i;
+  GList *node;
 
   lpwsinc = setup_lpwsinc ();
   /* Set to highpass */
@@ -289,21 +299,24 @@ GST_START_TEST (test_hp_22050hz)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_unless (g_list_length (buffers) >= 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
-  res = (gdouble *) GST_BUFFER_DATA (outbuffer);
-  for (i = 21; i < 128; i++) {
-    fail_unless (abs (res[i]) <= 1.01
-        && abs (res[i]) >= 0.99, "res[%d] = %lf\n", i, res[i]);
-  }
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
 
-  rms = 0.0;
-  for (i = 0; i < 128; i++)
-    rms += res[i] * res[i];
-  rms = sqrt (rms / 128.0);
-  fail_unless (rms >= 0.9);
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gdouble *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gdouble);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms >= 0.9);
+  }
 
   /* cleanup */
   cleanup_lpwsinc (lpwsinc);
@@ -344,8 +357,9 @@ GST_START_TEST (test_small_buffer)
 
   /* pushing gives away my reference ... */
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
   /* ... and puts a new buffer on the global list */
-  fail_unless_equals_int (g_list_length (buffers), 1);
+  fail_unless (g_list_length (buffers) >= 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
 
   /* cleanup */
