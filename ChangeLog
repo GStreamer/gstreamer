@@ -1,3 +1,66 @@
+2007-08-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	reviewed by: Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiofx/Makefile.am:
+	* gst/audiofx/audiochebyshevfreqband.c:
+	(gst_audio_chebyshev_freq_band_mode_get_type),
+	(gst_audio_chebyshev_freq_band_base_init),
+	(gst_audio_chebyshev_freq_band_dispose),
+	(gst_audio_chebyshev_freq_band_class_init),
+	(gst_audio_chebyshev_freq_band_init),
+	(generate_biquad_coefficients), (calculate_gain),
+	(generate_coefficients),
+	(gst_audio_chebyshev_freq_band_set_property),
+	(gst_audio_chebyshev_freq_band_get_property),
+	(gst_audio_chebyshev_freq_band_setup), (process), (process_64),
+	(process_32), (gst_audio_chebyshev_freq_band_transform_ip),
+	(gst_audio_chebyshev_freq_band_start):
+	* gst/audiofx/audiochebyshevfreqband.h:
+	* gst/audiofx/audiochebyshevfreqlimit.c:
+	(gst_audio_chebyshev_freq_limit_mode_get_type),
+	(gst_audio_chebyshev_freq_limit_base_init),
+	(gst_audio_chebyshev_freq_limit_dispose),
+	(gst_audio_chebyshev_freq_limit_class_init),
+	(gst_audio_chebyshev_freq_limit_init),
+	(generate_biquad_coefficients), (calculate_gain),
+	(generate_coefficients),
+	(gst_audio_chebyshev_freq_limit_set_property),
+	(gst_audio_chebyshev_freq_limit_get_property),
+	(gst_audio_chebyshev_freq_limit_setup), (process), (process_64),
+	(process_32), (gst_audio_chebyshev_freq_limit_transform_ip),
+	(gst_audio_chebyshev_freq_limit_start):
+	* gst/audiofx/audiochebyshevfreqlimit.h:
+	* gst/audiofx/audiofx.c: (plugin_init):
+	Add Chebyshev lowpass/highpass and bandpass/bandreject elements.
+	Fixes #464800.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/audiochebyshevfreqband.c:
+	(setup_audiochebyshevfreqband), (cleanup_audiochebyshevfreqband),
+	(GST_START_TEST), (audiochebyshevfreqband_suite), (main):
+	* tests/check/elements/audiochebyshevfreqlimit.c:
+	(setup_audiochebyshevfreqlimit), (cleanup_audiochebyshevfreqlimit),
+	(GST_START_TEST), (audiochebyshevfreqlimit_suite), (main):
+	Add unit tests for the chebyshev filters.
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-good-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-good-plugins-sections.txt:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	And add docs for the chebyshev filters. While doing
+	that also run make update in docs/plugins.
+
 2007-08-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/annodex/gstcmmltag.c:

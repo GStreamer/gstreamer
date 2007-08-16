@@ -7,7 +7,9 @@ libgstaudiofx_la_SOURCES = audiofx.c\
 	audiopanorama.c \
 	audioinvert.c \
 	audioamplify.c \
-	audiodynamic.c
+	audiodynamic.c \
+	audiochebyshevfreqlimit.c \
+	audiochebyshevfreqband.c
 
 # flags used to compile this plugin
 libgstaudiofx_la_CFLAGS = $(GST_CFLAGS) \
@@ -18,12 +20,15 @@ libgstaudiofx_la_LIBADD = $(GST_LIBS) \
 	$(GST_BASE_LIBS) \
 	$(GST_CONTROLLER_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) \
-	-lgstaudio-$(GST_MAJORMINOR)
+	-lgstaudio-$(GST_MAJORMINOR) \
+	$(LIBM)
 libgstaudiofx_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 # headers we need but don't want installed
 noinst_HEADERS = audiopanorama.h \
 	audioinvert.h \
 	audioamplify.h \
-	audiodynamic.h
+	audiodynamic.h \
+	audiochebyshevfreqlimit.h \
+	audiochebyshevfreqband.c
 

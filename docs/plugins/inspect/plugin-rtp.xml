@@ -137,7 +137,7 @@
     </element>
     <element>
       <name>rtpdepay</name>
-      <longname>RTP payloader</longname>
+      <longname>RTP depayloader</longname>
       <class>Codec/Depayloader/Network</class>
       <description>Accepts raw RTP and RTCP packets and sends them forward</description>
       <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
@@ -332,7 +332,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)ILBC, mode=(int){ 20, 30 }</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)ILBC, mode=(string){ 20, 30 }</details>
         </caps>
       </pads>
     </element>
@@ -353,7 +353,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)ILBC, mode=(int){ 20, 30 }</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)ILBC, mode=(string){ 20, 30 }</details>
         </caps>
       </pads>
     </element>
@@ -558,7 +558,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/mpeg, systemstream=(boolean)false</details>
+          <details>video/mpeg, mpegversion=(int)2, systemstream=(boolean)false</details>
         </caps>
         <caps>
           <name>sink</name>

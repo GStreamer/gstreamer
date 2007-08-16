@@ -82,6 +82,26 @@ GST_AUDIO_DYNAMIC_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-audiochebyshevfreqlimit</FILE>
+<TITLE>audiochebyshevfreqlimit</TITLE>
+GstAudioChebyshevFreqLimit
+<SUBSECTION Standard>
+GstAudioChebyshevFreqLimitClass
+GST_AUDIO_CHEBYSHEV_FREQ_LIMIT
+GST_AUDIO_CHEBYSHEV_FREQ_LIMIT_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-audiochebyshevfreqband</FILE>
+<TITLE>audiochebyshevfreqband</TITLE>
+GstAudioChebyshevFreqBand
+<SUBSECTION Standard>
+GstAudioChebyshevFreqBandClass
+GST_AUDIO_CHEBYSHEV_FREQ_BAND
+GST_AUDIO_CHEBYSHEV_FREQ_BAND_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-autoaudiosink</FILE>
 <TITLE>autoaudiosink</TITLE>
 GstAutoAudioSink

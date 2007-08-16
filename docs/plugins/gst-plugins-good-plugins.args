@@ -401,21 +401,21 @@
 <ARG>
 <NAME>GstVertigoTV::speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[0,01,100]</RANGE>
+<RANGE>[0.01,100]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Speed</NICK>
 <BLURB>Control the speed of movement.</BLURB>
-<DEFAULT>0,02</DEFAULT>
+<DEFAULT>0.02</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstVertigoTV::zoom-speed</NAME>
 <TYPE>gfloat</TYPE>
-<RANGE>[1,01,1,1]</RANGE>
+<RANGE>[1.01,1.1]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Zoom Speed</NICK>
 <BLURB>Control the rate of zooming.</BLURB>
-<DEFAULT>1,01</DEFAULT>
+<DEFAULT>1.01</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1141,7 +1141,7 @@
 <ARG>
 <NAME>GstDV1394Src::port</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,16]</RANGE>
+<RANGE>[-1,16]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Port</NICK>
 <BLURB>Port number (-1 automatic).</BLURB>
@@ -17241,7 +17241,7 @@
 <ARG>
 <NAME>GstGamma::gamma</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,01,10]</RANGE>
+<RANGE>[0.01,10]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Gamma</NICK>
 <BLURB>gamma.</BLURB>
@@ -17326,5 +17326,115 @@
 <NICK>Queue size</NICK>
 <BLURB>Number of buffers to be enqueud in the driver.</BLURB>
 <DEFAULT>2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqBand::lower-frequency</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Lower frequency</NICK>
+<BLURB>Start frequency of the band (Hz).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqBand::mode</NAME>
+<TYPE>GstAudioChebyshevFreqBandMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Low pass or high pass mode.</BLURB>
+<DEFAULT>Band pass (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqBand::poles</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[4,32]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Poles</NICK>
+<BLURB>Number of poles to use, will be rounded up to the next multiply of four.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqBand::ripple</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ripple</NICK>
+<BLURB>Amount of ripple (dB).</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqBand::type</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,2]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Type of the chebychev filter.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqBand::upper-frequency</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Upper frequency</NICK>
+<BLURB>Stop frequency of the band (Hz).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqLimit::cutoff</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Cutoff</NICK>
+<BLURB>Cut off frequency (Hz).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqLimit::mode</NAME>
+<TYPE>GstAudioChebyshevFreqLimitMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Mode</NICK>
+<BLURB>Low pass or high pass mode.</BLURB>
+<DEFAULT>Low pass (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqLimit::poles</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[2,32]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Poles</NICK>
+<BLURB>Number of poles to use, will be rounded up to the next even number.</BLURB>
+<DEFAULT>4</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqLimit::ripple</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Ripple</NICK>
+<BLURB>Amount of ripple (dB).</BLURB>
+<DEFAULT>0.25</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioChebyshevFreqLimit::type</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,2]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Type</NICK>
+<BLURB>Type of the chebychev filter.</BLURB>
+<DEFAULT>1</DEFAULT>
 </ARG>
 

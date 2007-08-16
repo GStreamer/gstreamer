@@ -3,10 +3,10 @@
   <description>Source for DV data via IEEE1394 interface</description>
   <filename>../../ext/raw1394/.libs/libgst1394.so</filename>
   <basename>libgst1394.so</basename>
-  <version>0.10.6</version>
+  <version>0.10.6.1</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
-  <package>GStreamer Good Plug-ins source release</package>
+  <package>GStreamer Good Plug-ins CVS/prerelease</package>
   <origin>Unknown package origin</origin>
   <elements>
     <element>
@@ -18,6 +18,14 @@
     Daniel Fischer &lt;dan@f3c.com&gt;
     Wim Taymans &lt;wim@fluendo.com&gt;
     Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-dv, format=(string){ NTSC, PAL }, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
     </element>
   </elements>
 </plugin>

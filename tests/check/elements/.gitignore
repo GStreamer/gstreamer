@@ -3,6 +3,8 @@ alphacolor
 audioamplify
 audiodynamic
 audioinvert
+audiochebyshevfreqband
+audiochebyshevfreqlimit
 level
 matroskamux
 cmmldec

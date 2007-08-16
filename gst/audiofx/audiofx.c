@@ -29,6 +29,8 @@
 #include "audioinvert.h"
 #include "audioamplify.h"
 #include "audiodynamic.h"
+#include "audiochebyshevfreqlimit.h"
+#include "audiochebyshevfreqband.h"
 
 /* entry point to initialize the plug-in
  * initialize the plug-in itself
@@ -48,7 +50,11 @@ plugin_init (GstPlugin * plugin)
       gst_element_register (plugin, "audioamplify", GST_RANK_NONE,
           GST_TYPE_AUDIO_AMPLIFY) &&
       gst_element_register (plugin, "audiodynamic", GST_RANK_NONE,
-          GST_TYPE_AUDIO_DYNAMIC));
+          GST_TYPE_AUDIO_DYNAMIC) &&
+      gst_element_register (plugin, "audiochebyshevfreqlimit", GST_RANK_NONE,
+          GST_TYPE_AUDIO_CHEBYSHEV_FREQ_LIMIT) &&
+      gst_element_register (plugin, "audiochebyshevfreqband", GST_RANK_NONE,
+          GST_TYPE_AUDIO_CHEBYSHEV_FREQ_BAND));
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
