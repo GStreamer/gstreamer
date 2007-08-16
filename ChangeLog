@@ -1,5 +1,21 @@
 2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/gstbin.c: (is_eos), (gst_bin_add_func),
+	(bin_handle_async_start), (gst_bin_handle_message_func):
+	Improve debugging.
+	When adding elements, insert messages into the bus of the newly added
+	element and make sure the element is the source of the message. This
+	allows the parent bin to intercept the message and do the
+	right thing. It also avoids us posting ASYNC_START and CLOCK_PROVIDE
+	messages to the app (which is not allowed).
+	Update some docs.
+
+	* tests/check/gst/gstghostpad.c: (GST_START_TEST):
+	Fix testsuite so that is does not work around messages that should not
+	have been posted in the first place.
+
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/gstbin.c: (add_to_queue), (remove_from_queue), (clear_queue),
 	(update_degree), (gst_bin_sort_iterator_next):
 	Fix annoying bug in the sorted iterator where a sink that is not really
@@ -22,6 +38,7 @@
 
 2007-08-14  Wim Taymans  <wim.taymans@gmail.com>
 
+	
 	* gst/gstbin.c: (gst_bin_add_func), (gst_bin_element_set_state),
 	(bin_handle_async_start), (gst_bin_handle_message_func):
 	Move ASYNC_START message posting to where it belongs, similar to

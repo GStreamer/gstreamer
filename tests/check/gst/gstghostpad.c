@@ -41,8 +41,7 @@ GST_START_TEST (test_remove1)
   ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 1);
   ASSERT_OBJECT_REFCOUNT (b2, "bin", 1);
   fail_unless (gst_bin_add (GST_BIN (b1), b2));
-  /* adding the bin creates a clock provide message with a ref to pipeline */
-  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 2);
+  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 1);
   ASSERT_OBJECT_REFCOUNT (b2, "bin", 1);
 
   sinkpad = gst_element_get_pad (sink, "sink");
@@ -59,7 +58,7 @@ GST_START_TEST (test_remove1)
   gst_object_unref (sinkpad);
 
   /* now remove the bin with the ghostpad, b2 is disposed now. */
-  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 2);
+  ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 1);
   ASSERT_OBJECT_REFCOUNT (b2, "bin", 1);
   gst_bin_remove (GST_BIN (b1), b2);
 
@@ -68,9 +67,6 @@ GST_START_TEST (test_remove1)
   fail_if (gst_pad_is_linked (srcpad));
   gst_object_unref (srcpad);
 
-  /* flush the message, dropping the b1 refcount to 1 */
-  gst_element_set_state (b1, GST_STATE_READY);
-  gst_element_set_state (b1, GST_STATE_NULL);
   ASSERT_OBJECT_REFCOUNT (b1, "pipeline", 1);
   gst_object_unref (b1);
 }
@@ -389,11 +385,11 @@ GST_START_TEST (test_ghost_pads_bin)
 
   srcbin = GST_BIN (gst_bin_new ("srcbin"));
   gst_bin_add (pipeline, GST_ELEMENT (srcbin));
-  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 2);     /* provide-clock msg */
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   sinkbin = GST_BIN (gst_bin_new ("sinkbin"));
   gst_bin_add (pipeline, GST_ELEMENT (sinkbin));
-  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 3);     /* provide-clock msg */
+  ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   src = gst_element_factory_make ("fakesrc", "src");
   gst_bin_add (srcbin, src);
@@ -420,9 +416,6 @@ GST_START_TEST (test_ghost_pads_bin)
   fail_unless (GST_PAD_PEER (target) != NULL);
   gst_object_unref (target);
 
-  /* flush the message, dropping the b1 refcount to 1 */
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   gst_object_unref (pipeline);

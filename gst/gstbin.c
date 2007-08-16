@@ -829,9 +829,10 @@ is_eos (GstBin * bin)
     if (bin_element_is_sink (element, bin) == 0) {
       /* check if element posted EOS */
       if (find_message (bin, GST_OBJECT_CAST (element), GST_MESSAGE_EOS)) {
-        GST_DEBUG ("element posted EOS");
+        GST_DEBUG ("sink '%s' posted EOS", GST_ELEMENT_NAME (element));
       } else {
-        GST_DEBUG ("element did not post EOS yet");
+        GST_DEBUG ("sink '%s' did not post EOS yet",
+            GST_ELEMENT_NAME (element));
         result = FALSE;
         break;
       }
@@ -865,7 +866,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gchar *elem_name;
   GstIterator *it;
   gboolean is_sink;
-  GstMessage *clock_message = NULL;
+  GstMessage *clock_message = NULL, *async_message = NULL;
   GstStateChangeReturn ret;
 
   GST_DEBUG_OBJECT (bin, "element :%s", GST_ELEMENT_NAME (element));
@@ -902,9 +903,8 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   }
   if (gst_element_provides_clock (element)) {
     GST_DEBUG_OBJECT (bin, "element \"%s\" can provide a clock", elem_name);
-    bin->clock_dirty = TRUE;
     clock_message =
-        gst_message_new_clock_provide (GST_OBJECT_CAST (bin), NULL, TRUE);
+        gst_message_new_clock_provide (GST_OBJECT_CAST (element), NULL, TRUE);
   }
 
   bin->children = g_list_prepend (bin->children, element);
@@ -917,26 +917,6 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   if (ret == GST_STATE_CHANGE_FAILURE)
     goto no_state_recalc;
 
-  /* update the bin state, the new element could have been an ASYNC or
-   * NO_PREROLL element */
-  ret = GST_STATE_RETURN (element);
-  GST_DEBUG_OBJECT (bin, "added %s element",
-      gst_element_state_change_return_get_name (ret));
-
-  switch (ret) {
-    case GST_STATE_CHANGE_ASYNC:
-      bin_handle_async_start (bin, FALSE);
-      break;
-    case GST_STATE_CHANGE_NO_PREROLL:
-      bin_handle_async_done (bin, ret);
-      break;
-    case GST_STATE_CHANGE_FAILURE:
-      break;
-    default:
-      break;
-  }
-
-no_state_recalc:
   /* distribute the bus */
   gst_element_set_bus (element, bin->child_bus);
 
@@ -946,10 +926,42 @@ no_state_recalc:
    * that is not important right now. When the pipeline goes to PLAYING,
    * a new clock will be selected */
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
+
+  /* update the bin state, the new element could have been an ASYNC or
+   * NO_PREROLL element */
+  ret = GST_STATE_RETURN (element);
+  GST_DEBUG_OBJECT (bin, "added %s element",
+      gst_element_state_change_return_get_name (ret));
+
+  switch (ret) {
+    case GST_STATE_CHANGE_ASYNC:
+    {
+      /* create message to track this aync element when it posts an async-done
+       * message */
+      async_message =
+          gst_message_new_async_start (GST_OBJECT_CAST (element), FALSE);
+      break;
+    }
+    case GST_STATE_CHANGE_NO_PREROLL:
+      /* ignore all async elements we might have and commit our state */
+      bin_handle_async_done (bin, ret);
+      break;
+    case GST_STATE_CHANGE_FAILURE:
+      break;
+    default:
+      break;
+  }
+
+no_state_recalc:
   GST_OBJECT_UNLOCK (bin);
 
+  /* post the messages on the bus of the element so that the bin can handle
+   * them */
   if (clock_message)
-    gst_element_post_message (GST_ELEMENT_CAST (bin), clock_message);
+    gst_element_post_message (GST_ELEMENT_CAST (element), clock_message);
+
+  if (async_message)
+    gst_element_post_message (GST_ELEMENT_CAST (element), async_message);
 
   /* unlink all linked pads */
   it = gst_element_iterate_pads (element);
@@ -2366,6 +2378,7 @@ bin_handle_async_start (GstBin * bin, gboolean new_base_time)
   if (GST_STATE_RETURN (bin) == GST_STATE_CHANGE_NO_PREROLL)
     goto was_no_preroll;
 
+
   old_state = GST_STATE (bin);
 
   /* when we PLAYING we go back to PAUSED, when preroll happens, we go back to
@@ -2554,10 +2567,7 @@ nothing_pending:
  *     in the PLAYING state. If all sinks posted the EOS message, post
  *     one upwards.
  *
- * GST_MESSAGE_STATE_DIRTY: if we are the toplevel bin we do a state
- *     recalc. If we are not toplevel (we have a parent) we just post
- *     the message upwards. This makes sure only the toplevel bin will
- *     run over all its children to check if a state change happened.
+ * GST_MESSAGE_STATE_DIRTY: Deprecated
  *
  * GST_MESSAGE_SEGMENT_START: just collect, never forward upwards. If an
  *     element posts segment_start twice, only the last message is kept.
@@ -2594,7 +2604,7 @@ nothing_pending:
  *
  * GST_MESSAGE_ASYNC_START: Create an internal ELEMENT message that stores
  *     the state of the element and the fact that the element will need a
- *     new base_time.
+ *     new base_time. This message is not forwarded to the application.
  *
  * GST_MESSAGE_ASYNC_DONE: Find the internal ELEMENT message we kept for the
  *     element when it posted ASYNC_START. If all elements are done, post a
@@ -2793,6 +2803,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
         /* nothing found, remove all old ASYNC_DONE messages */
         bin_remove_messages (bin, NULL, GST_MESSAGE_ASYNC_DONE);
 
+        GST_DEBUG_OBJECT (bin, "async elements commited");
         bin_handle_async_done (bin, GST_STATE_CHANGE_SUCCESS);
       }
       GST_OBJECT_UNLOCK (bin);
