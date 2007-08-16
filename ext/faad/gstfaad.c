@@ -323,7 +323,8 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
             &channels) < 0)
       goto init_failed;
 
-    GST_DEBUG_OBJECT (faad, "channels=%u, rate=%u", channels, samplerate);
+    GST_DEBUG_OBJECT (faad, "codec_data init: channels=%u, rate=%u", channels,
+        samplerate);
 
     /* not updating these here, so they are updated in the
      * chain function, and new caps are created etc. */
@@ -339,6 +340,7 @@ gst_faad_setcaps (GstPad * pad, GstCaps * caps)
   } else if ((value = gst_structure_get_value (str, "framed")) &&
       g_value_get_boolean (value) == TRUE) {
     faad->packetised = TRUE;
+    GST_DEBUG_OBJECT (faad, "we have packetized audio");
   } else {
     faad->init = FALSE;
   }
@@ -445,6 +447,7 @@ gst_faad_chanpos_to_gst (guchar * fpos, guint num)
   gboolean unknown_channel = FALSE;
 
   for (n = 0; n < num; n++) {
+    GST_DEBUG ("faad channel %d as %d", n, fpos[n]);
     switch (fpos[n]) {
       case FRONT_CHANNEL_LEFT:
         pos[n] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
@@ -478,6 +481,7 @@ gst_faad_chanpos_to_gst (guchar * fpos, guint num)
         pos[n] = GST_AUDIO_CHANNEL_POSITION_LFE;
         break;
       default:
+        GST_DEBUG ("unknown channel %d at %d", fpos[n], n);
         unknown_channel = TRUE;
         break;
     }

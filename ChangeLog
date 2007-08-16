@@ -1,3 +1,9 @@
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_setcaps),
+	(gst_faad_chanpos_to_gst):
+	Add some debug info.
+
 2007-08-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/filter/gstlpwsinc.c: (gst_lpwsinc_class_init),
