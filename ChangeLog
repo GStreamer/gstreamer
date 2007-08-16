@@ -1,5 +1,11 @@
 2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst-libs/gst/app/gstappsink.c: (gst_app_sink_class_init):
+	Override the preroll vmethod instead of overriding the render method
+	twice.
+
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_rtp_jitter_buffer_sink_event), (gst_rtp_jitter_buffer_chain),
 	(gst_rtp_jitter_buffer_loop):

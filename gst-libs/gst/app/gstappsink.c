@@ -91,7 +91,7 @@ gst_app_sink_class_init (GstAppSinkClass * klass)
   basesink_class->start = gst_app_sink_start;
   basesink_class->stop = gst_app_sink_stop;
   basesink_class->event = gst_app_sink_event;
-  basesink_class->render = gst_app_sink_preroll;
+  basesink_class->preroll = gst_app_sink_preroll;
   basesink_class->render = gst_app_sink_render;
   basesink_class->get_caps = gst_app_sink_get_caps;
 }
