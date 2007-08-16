@@ -685,7 +685,8 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
 
   /* we post a 100% buffering message to notify the app that buffering is
    * completed and playback can start/continue */
-  fill_buffer (play_base_bin, 100);
+  if (play_base_bin->is_stream)
+    fill_buffer (play_base_bin, 100);
 }
 
 /* this signal will be fired when one of the queues with raw
