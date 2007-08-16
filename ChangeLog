@@ -1,3 +1,15 @@
+2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Daniel Charles <dcharles at ti dot com>
+
+	* ext/amrnb/amrnbenc.c: (gst_amrnbenc_bandmode_get_type),
+	(gst_amrnbenc_set_property), (gst_amrnbenc_get_property),
+	(gst_amrnbenc_base_init), (gst_amrnbenc_class_init),
+	(gst_amrnbenc_chain), (gst_amrnbenc_state_change):
+	* ext/amrnb/amrnbenc.h:
+	Add property to select the BandMode of the AMR encoder.
+	See #466442.
+
 2007-08-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/realmedia/asmrules.c:

@@ -43,6 +43,38 @@
 
 #include "amrnbenc.h"
 
+static GType
+gst_amrnbenc_bandmode_get_type ()
+{
+  static GType gst_amrnbenc_bandmode_type = 0;
+  static const GEnumValue gst_amrnbenc_bandmode[] = {
+    {MR475, "MR475", "MR475"},
+    {MR515, "MR515", "MR515"},
+    {MR59, "MR59", "MR59"},
+    {MR67, "MR67", "MR67"},
+    {MR74, "MR74", "MR74"},
+    {MR795, "MR795", "MR795"},
+    {MR102, "MR102", "MR102"},
+    {MR122, "MR122", "MR122"},
+    {MRDTX, "MRDTX", "MRDTX"},
+    {0, NULL, NULL},
+  };
+  if (!gst_amrnbenc_bandmode_type) {
+    gst_amrnbenc_bandmode_type =
+        g_enum_register_static ("GstAmrnbEncBandMode", gst_amrnbenc_bandmode);
+  }
+  return gst_amrnbenc_bandmode_type;
+}
+
+#define GST_AMRNBENC_BANDMODE_TYPE (gst_amrnbenc_bandmode_get_type())
+
+#define BANDMODE_DEFAULT MR122
+enum
+{
+  PROP_0,
+  PROP_BANDMODE
+};
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -77,6 +109,40 @@ GST_BOILERPLATE_FULL (GstAmrnbEnc, gst_amrnbenc, GstElement, GST_TYPE_ELEMENT,
     _do_init);
 
 static void
+gst_amrnbenc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAmrnbEnc *self = GST_AMRNBENC (object);
+
+  switch (prop_id) {
+    case PROP_BANDMODE:
+      self->bandmode = g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  return;
+}
+
+static void
+gst_amrnbenc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAmrnbEnc *self = GST_AMRNBENC (object);
+
+  switch (prop_id) {
+    case PROP_BANDMODE:
+      g_value_set_enum (value, self->bandmode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+  return;
+}
+
+static void
 gst_amrnbenc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
@@ -84,7 +150,7 @@ gst_amrnbenc_base_init (gpointer klass)
       "Codec/Encoder/Audio",
       "Adaptive Multi-Rate Narrow-Band audio encoder",
       "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
-      "Wim Taymans <wim@fluendo.com>");
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -100,7 +166,14 @@ gst_amrnbenc_class_init (GstAmrnbEncClass * klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
+  object_class->set_property = gst_amrnbenc_set_property;
+  object_class->get_property = gst_amrnbenc_get_property;
   object_class->finalize = gst_amrnbenc_finalize;
+
+  g_object_class_install_property (object_class, PROP_BANDMODE,
+      g_param_spec_enum ("band-mode", "Band Mode",
+          "Encoding Band Mode (Kbps)", GST_AMRNBENC_BANDMODE_TYPE,
+          BANDMODE_DEFAULT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrnbenc_state_change);
 }
@@ -222,8 +295,9 @@ gst_amrnbenc_chain (GstPad * pad, GstBuffer * buffer)
     data = gst_adapter_take (amrnbenc->adapter, 320);
 
     /* encode */
-    outsize = Encoder_Interface_Encode (amrnbenc->handle, MR122, (short *) data,
-        (guint8 *) GST_BUFFER_DATA (out), 0);
+    outsize =
+        Encoder_Interface_Encode (amrnbenc->handle, amrnbenc->bandmode,
+        (short *) data, (guint8 *) GST_BUFFER_DATA (out), 0);
 
     g_free (data);
 
@@ -276,6 +350,5 @@ gst_amrnbenc_state_change (GstElement * element, GstStateChange transition)
     default:
       break;
   }
-
   return ret;
 }

@@ -53,6 +53,7 @@ struct _GstAmrnbEnc {
   void *handle;
 
   /* input settings */
+  enum Mode bandmode;
   gint channels, rate;
   gint duration;
 };
