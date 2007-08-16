@@ -71,6 +71,10 @@ struct _GstLPWSinc {
   gdouble *residue;             /* buffer for left-over samples from previous buffer */
   gdouble *kernel;              /* filter kernel */
   gboolean have_kernel;
+  gint residue_length;
+  guint64 latency;
+  GstClockTime next_ts;
+  guint64 next_off;
 };
 
 struct _GstLPWSincClass {

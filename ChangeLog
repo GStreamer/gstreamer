@@ -1,3 +1,18 @@
+2007-08-16  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/filter/gstlpwsinc.c: (gst_lpwsinc_class_init),
+	(gst_lpwsinc_init), (process_32), (process_64),
+	(lpwsinc_build_kernel), (lpwsinc_push_residue),
+	(lpwsinc_transform), (lpwsinc_start), (lpwsinc_query),
+	(lpwsinc_query_type), (lpwsinc_event), (lpwsinc_set_property):
+	* gst/filter/gstlpwsinc.h:
+	Implement latency query and only forward those samples downstream
+	that actually contain the data we want, i.e. drop kernel_length/2
+	in the beginning and append kernel_length/2 (created by convolving
+	the filter kernel with zeroes) to the end.
+	* tests/check/elements/lpwsinc.c: (GST_START_TEST):
+	Adjust the unit test for this slightly changed behaviour.
+
 2007-08-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/ladspa/gstladspa.c:
