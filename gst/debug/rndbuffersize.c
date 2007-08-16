@@ -77,6 +77,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS_ANY);
 
+static void gst_rnd_buffer_size_finalize (GObject * object);
 static void gst_rnd_buffer_size_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rnd_buffer_size_get_property (GObject * object, guint prop_id,
@@ -122,6 +123,7 @@ gst_rnd_buffer_size_class_init (GstRndBufferSizeClass * klass)
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_set_property);
   gobject_class->get_property =
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_get_property);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_finalize);
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_change_state);
@@ -158,6 +160,20 @@ gst_rnd_buffer_size_init (GstRndBufferSize * self,
       "src");
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
+}
+
+
+static void
+gst_rnd_buffer_size_finalize (GObject * object)
+{
+  GstRndBufferSize *self = GST_RND_BUFFER_SIZE (object);
+
+  if (self->rand) {
+    g_rand_free (self->rand);
+    self->rand = NULL;
+  }
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 
@@ -278,7 +294,9 @@ gst_rnd_buffer_size_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       self->offset = 0;
-      self->rand = g_rand_new_with_seed (self->seed);
+      if (!self->rand) {
+        self->rand = g_rand_new_with_seed (self->seed);
+      }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -292,8 +310,10 @@ gst_rnd_buffer_size_change_state (GstElement * element,
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_rand_free (self->rand);
-      self->rand = NULL;
+      if (self->rand) {
+        g_rand_free (self->rand);
+        self->rand = NULL;
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;

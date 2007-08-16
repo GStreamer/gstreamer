@@ -1,3 +1,8 @@
+2007-08-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/debug/rndbuffersize.c:
+	  Fix da leak.
+
 2007-08-14  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/debug/Makefile.am:
