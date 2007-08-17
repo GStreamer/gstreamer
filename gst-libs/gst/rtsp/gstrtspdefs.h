@@ -100,8 +100,20 @@ typedef enum {
   GST_RTSP_ENOTIP      = -13,
   GST_RTSP_ETIMEOUT    = -14,
 
-  GST_RTSP_ELAST       = -15,
+  GST_RTSP_ELAST       = -15
 } GstRTSPResult;
+
+/**
+ * GstRTSPEvent:
+ * @GST_RTSP_EV_READ: connection is readable
+ * @GST_RTSP_EV_WRITE: connection is writable
+ *
+ * The possible events for the connection.
+ */
+typedef enum {
+  GST_RTSP_EV_READ  = (1 << 0),
+  GST_RTSP_EV_WRITE = (1 << 1)
+} GstRTSPEvent;
 
 /**
  * GstRTSPFamily:
@@ -114,7 +126,7 @@ typedef enum {
 typedef enum {
   GST_RTSP_FAM_NONE,
   GST_RTSP_FAM_INET,
-  GST_RTSP_FAM_INET6,
+  GST_RTSP_FAM_INET6
 } GstRTSPFamily;
 
 /**
@@ -134,7 +146,7 @@ typedef enum {
   GST_RTSP_STATE_READY,
   GST_RTSP_STATE_SEEKING,
   GST_RTSP_STATE_PLAYING,
-  GST_RTSP_STATE_RECORDING,
+  GST_RTSP_STATE_RECORDING
 } GstRTSPState;
 
 /**
@@ -146,7 +158,7 @@ typedef enum {
  */
 typedef enum {
   GST_RTSP_VERSION_INVALID = 0x00,
-  GST_RTSP_VERSION_1_0     = 0x10,
+  GST_RTSP_VERSION_1_0     = 0x10
 } GstRTSPVersion;
 
 /**
@@ -178,7 +190,7 @@ typedef enum {
   GST_RTSP_REDIRECT         = (1 <<  7),
   GST_RTSP_SETUP            = (1 <<  8),
   GST_RTSP_SET_PARAMETER    = (1 <<  9),
-  GST_RTSP_TEARDOWN         = (1 << 10),
+  GST_RTSP_TEARDOWN         = (1 << 10)
 } GstRTSPMethod;
 
 /**
@@ -312,7 +324,7 @@ typedef enum {
   GST_RTSP_STS_SERVICE_UNAVAILABLE                  = 503, 
   GST_RTSP_STS_GATEWAY_TIMEOUT                      = 504, 
   GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED           = 505, 
-  GST_RTSP_STS_OPTION_NOT_SUPPORTED                 = 551, 
+  GST_RTSP_STS_OPTION_NOT_SUPPORTED                 = 551
 } GstRTSPStatusCode;
 
 gchar*             gst_rtsp_strresult          (GstRTSPResult result);

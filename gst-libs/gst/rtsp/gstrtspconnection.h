@@ -99,6 +99,10 @@ GstRTSPResult      gst_rtsp_connection_send          (GstRTSPConnection *conn, G
 GstRTSPResult      gst_rtsp_connection_receive       (GstRTSPConnection *conn, GstRTSPMessage *message,
                                                       GTimeVal *timeout);
 
+/* status management */
+GstRTSPResult      gst_rtsp_connection_poll          (GstRTSPConnection *conn, GstRTSPEvent events,
+                                                      GstRTSPEvent *revents, GTimeVal *timeout);
+
 /* reset the timeout */
 GstRTSPResult      gst_rtsp_connection_next_timeout  (GstRTSPConnection *conn, GTimeVal *timeout);
 GstRTSPResult      gst_rtsp_connection_reset_timeout (GstRTSPConnection *conn);

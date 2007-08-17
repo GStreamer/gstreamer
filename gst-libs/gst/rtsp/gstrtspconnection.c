@@ -70,6 +70,7 @@
 
 /* we include this here to get the G_OS_* defines */
 #include <glib.h>
+#include <gst/gst.h>
 
 #ifdef G_OS_WIN32
 #include <winsock2.h>
@@ -109,9 +110,11 @@ G_STMT_START {                                  \
 } G_STMT_END
 
 #ifdef G_OS_WIN32
+#define FIONREAD_TYPE gulong
 #define IOCTL_SOCKET ioctlsocket
 #define CLOSE_SOCKET(sock) closesocket(sock);
 #else
+#define FIONREAD_TYPE gint
 #define IOCTL_SOCKET ioctl
 #define CLOSE_SOCKET(sock) close(sock);
 #endif
@@ -290,7 +293,7 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
   FD_ZERO (&readfds);
   FD_SET (READ_SOCKET (conn), &readfds);
 
-  if (timeout->tv_sec != 0 || timeout->tv_usec != 0) {
+  if (timeout) {
     tv.tv_sec = timeout->tv_sec;
     tv.tv_usec = timeout->tv_usec;
     tvp = &tv;
@@ -405,7 +408,6 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
   FD_ZERO (&writefds);
   FD_SET (conn->fd, &writefds);
   FD_ZERO (&readfds);
-  FD_SET (READ_SOCKET (conn), &readfds);
 
   max_fd = MAX (conn->fd, READ_SOCKET (conn));
 
@@ -422,6 +424,9 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
   while (towrite > 0) {
     gint written;
 
+    /* set bit inside the loop for when we loop to read the rest of the data */
+    FD_SET (READ_SOCKET (conn), &readfds);
+
     do {
       retval = select (max_fd + 1, &readfds, &writefds, NULL, tvp);
     } while ((retval == -1 && errno == EINTR));
@@ -432,20 +437,8 @@ gst_rtsp_connection_write (GstRTSPConnection * conn, const guint8 * data,
     if (retval == -1)
       goto select_error;
 
-    if (FD_ISSET (READ_SOCKET (conn), &readfds)) {
-      /* read all stop commands */
-      while (TRUE) {
-        gchar command;
-        int res;
-
-        READ_COMMAND (conn, command, res);
-        if (res <= 0) {
-          /* no more commands */
-          break;
-        }
-      }
+    if (FD_ISSET (READ_SOCKET (conn), &readfds))
       goto stopped;
-    }
 
     /* now we can write */
     written = write (conn->fd, data, towrite);
@@ -815,13 +808,8 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
   fd_set readfds;
   guint toread;
   gint retval;
-  struct timeval tv_timeout, *ptv_timeout = NULL;
-
-#ifndef G_OS_WIN32
-  gint avail;
-#else
-  gulong avail;
-#endif
+  struct timeval tv_timeout, *ptv_timeout;
+  FIONREAD_TYPE avail;
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
   g_return_val_if_fail (data != NULL, GST_RTSP_EINVAL);
@@ -831,6 +819,14 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
 
   toread = size;
 
+  /* configure timeout if any */
+  if (timeout != NULL) {
+    tv_timeout.tv_sec = timeout->tv_sec;
+    tv_timeout.tv_usec = timeout->tv_usec;
+    ptv_timeout = &tv_timeout;
+  } else
+    ptv_timeout = NULL;
+
   /* if the call fails, just go in the select.. it should not fail. Else if
    * there is enough data to read, skip the select call al together.*/
   if (IOCTL_SOCKET (conn->fd, FIONREAD, &avail) < 0)
@@ -838,19 +834,15 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
   else if (avail >= toread)
     goto do_read;
 
-  /* configure timeout if any */
-  if (timeout != NULL) {
-    tv_timeout.tv_sec = timeout->tv_sec;
-    tv_timeout.tv_usec = timeout->tv_usec;
-    ptv_timeout = &tv_timeout;
-  }
-
   FD_ZERO (&readfds);
   FD_SET (conn->fd, &readfds);
-  FD_SET (READ_SOCKET (conn), &readfds);
 
   while (toread > 0) {
     gint bytes;
+
+    /* set inside the loop so that when we did not read enough and we have to
+     * continue, we still have the cancel socket bit set */
+    FD_SET (READ_SOCKET (conn), &readfds);
 
     do {
       retval = select (FD_SETSIZE, &readfds, NULL, NULL, ptv_timeout);
@@ -863,20 +855,8 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
     if (retval == 0)
       goto select_timeout;
 
-    if (FD_ISSET (READ_SOCKET (conn), &readfds)) {
-      /* read all stop commands */
-      while (TRUE) {
-        gchar command;
-        int res;
-
-        READ_COMMAND (conn, command, res);
-        if (res <= 0) {
-          /* no more commands */
-          break;
-        }
-      }
+    if (FD_ISSET (READ_SOCKET (conn), &readfds))
       goto stopped;
-    }
 
   do_read:
     /* if we get here there is activity on the real fd since the select
@@ -1166,6 +1146,103 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
   g_free (conn);
 
   return res;
+}
+
+/**
+ * gst_rtsp_connection_poll:
+ * @conn: a #GstRTSPConnection
+ * @events: a bitmask of #GstRTSPEvent flags to check
+ * @revents: location for result flags 
+ * @timeout: a timeout
+ *
+ * Wait up to the specified @timeout for the connection to become available for
+ * at least one of the operations specified in @events. When the function returns
+ * with #GST_RTSP_OK, @revents will contain a bitmask of available operations on
+ * @conn.
+ *
+ * @timeout can be #NULL, in which case this function might block forever.
+ *
+ * This function can be canceled with gst_rtsp_connection_flush().
+ * 
+ * Returns: #GST_RTSP_OK on success.
+ *
+ * Since: 0.10.15
+ */
+GstRTSPResult
+gst_rtsp_connection_poll (GstRTSPConnection * conn, GstRTSPEvent events,
+    GstRTSPEvent * revents, GTimeVal * timeout)
+{
+  fd_set writefds, *pwritefds;
+  fd_set readfds;
+  int max_fd;
+  gint retval;
+  struct timeval tv, *tvp;
+
+  g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (events != 0, GST_RTSP_EINVAL);
+  g_return_val_if_fail (revents != NULL, GST_RTSP_EINVAL);
+
+  if (events & GST_RTSP_EV_WRITE) {
+    /* add fd to writer set when asked to */
+    FD_ZERO (&writefds);
+    FD_SET (conn->fd, &writefds);
+    pwritefds = &writefds;
+  } else
+    pwritefds = NULL;
+
+  /* always add cancel socket to readfds */
+  FD_ZERO (&readfds);
+  FD_SET (READ_SOCKET (conn), &readfds);
+  if (events & GST_RTSP_EV_READ) {
+    /* add fd to reader set when asked to */
+    FD_SET (conn->fd, &readfds);
+  }
+  max_fd = MAX (conn->fd, READ_SOCKET (conn));
+
+  if (timeout) {
+    tv.tv_sec = timeout->tv_sec;
+    tv.tv_usec = timeout->tv_usec;
+    tvp = &tv;
+  } else
+    tvp = NULL;
+
+  do {
+    retval = select (max_fd + 1, &readfds, pwritefds, NULL, tvp);
+  } while ((retval == -1 && errno == EINTR));
+
+  if (retval == 0)
+    goto select_timeout;
+
+  if (retval == -1)
+    goto select_error;
+
+  if (FD_ISSET (READ_SOCKET (conn), &readfds))
+    goto stopped;
+
+  *revents = 0;
+  if (events & GST_RTSP_EV_READ) {
+    if (FD_ISSET (conn->fd, &readfds))
+      *revents |= GST_RTSP_EV_READ;
+  }
+  if (events & GST_RTSP_EV_WRITE) {
+    if (FD_ISSET (conn->fd, &writefds))
+      *revents |= GST_RTSP_EV_WRITE;
+  }
+  return GST_RTSP_OK;
+
+  /* ERRORS */
+select_timeout:
+  {
+    return GST_RTSP_ETIMEOUT;
+  }
+select_error:
+  {
+    return GST_RTSP_ESYS;
+  }
+stopped:
+  {
+    return GST_RTSP_EINTR;
+  }
 }
 
 /**

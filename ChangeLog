@@ -1,3 +1,19 @@
+2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_connect), (gst_rtsp_connection_write),
+	(gst_rtsp_connection_read), (gst_rtsp_connection_poll):
+	* gst-libs/gst/rtsp/gstrtspconnection.h:
+	Small cleanups.
+	On shutdown, don't read the control socket yet.
+	Set timeout value correctly in all cases.
+	Add function to check if the server accepts reads or writes.
+	API: gst_rtsp_connection_poll()
+
+	* gst-libs/gst/rtsp/gstrtspdefs.h:
+	Fix compilation with -pedantic.
+	Add enum for _poll.
+
 2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Olivier Crete  <tester at tester ca>
