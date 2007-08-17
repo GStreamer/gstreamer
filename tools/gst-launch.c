@@ -60,6 +60,7 @@ static GstElement *pipeline;
 static gboolean caught_error = FALSE;
 static gboolean tags = FALSE;
 static gboolean messages = FALSE;
+static gboolean is_live = FALSE;
 
 
 #ifndef GST_DISABLE_LOADSAVE
@@ -499,7 +500,11 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         gint percent;
 
         gst_message_parse_buffering (message, &percent);
-        fprintf (stderr, "buffering... %d  \r", percent);
+        fprintf (stderr, _("buffering... %d  \r"), percent);
+
+        /* no state management needed for live pipelines */
+        if (is_live)
+          break;
 
         if (percent == 100) {
           /* a 100% message means buffering is done */
@@ -699,6 +704,7 @@ main (int argc, char *argv[])
         goto end;
       case GST_STATE_CHANGE_NO_PREROLL:
         fprintf (stderr, _("Pipeline is live and does not need PREROLL ...\n"));
+        is_live = TRUE;
         break;
       case GST_STATE_CHANGE_ASYNC:
         fprintf (stderr, _("Pipeline is PREROLLING ...\n"));

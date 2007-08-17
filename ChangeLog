@@ -1,3 +1,10 @@
+2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
+
+	* tools/gst-launch.c: (event_loop), (main):
+	Don´t try to do any state management when a live pipeline posts
+	buffering messages.
+	Also make the buffering string translatable.
+
 2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gstbin.c: (is_eos), (gst_bin_add_func),
