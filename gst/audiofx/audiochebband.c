@@ -53,6 +53,10 @@
  * <para>
  * As a special case, a Chebyshev type 1 filter with no ripple is a Butterworth filter.
  * </para>
+ * <para><note>
+ * Be warned that a too large number of poles can produce noise. The most poles are possible with
+ * a cutoff frequency at a quarter of the sampling rate.
+ * </note></para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
@@ -233,18 +237,24 @@ gst_audio_chebyshev_freq_band_class_init (GstAudioChebyshevFreqBandClass *
       g_param_spec_int ("type", "Type",
           "Type of the chebychev filter", 1, 2,
           1, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
+  /* FIXME: Don't use the complete possible range but restrict the upper boundary
+   * so automatically generated UIs can use a slider without */
   g_object_class_install_property (gobject_class, PROP_LOWER_FREQUENCY,
       g_param_spec_float ("lower-frequency", "Lower frequency",
-          "Start frequency of the band (Hz)", 0.0, G_MAXFLOAT,
+          "Start frequency of the band (Hz)", 0.0, 100000.0,
           0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, PROP_UPPER_FREQUENCY,
       g_param_spec_float ("upper-frequency", "Upper frequency",
-          "Stop frequency of the band (Hz)", 0.0, G_MAXFLOAT,
+          "Stop frequency of the band (Hz)", 0.0, 100000.0,
           0.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
   g_object_class_install_property (gobject_class, PROP_RIPPLE,
       g_param_spec_float ("ripple", "Ripple",
-          "Amount of ripple (dB)", 0.0, G_MAXFLOAT,
+          "Amount of ripple (dB)", 0.0, 200.0,
           0.25, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+  /* FIXME: What to do about this upper boundary? With a frequencies near
+   * rate/4 32 poles are completely possible, with frequencies very low
+   * or very high 16 poles already produces only noise */
   g_object_class_install_property (gobject_class, PROP_POLES,
       g_param_spec_int ("poles", "Poles",
           "Number of poles to use, will be rounded up to the next multiply of four",
@@ -840,35 +850,26 @@ process (GstAudioChebyshevFreqBand * filter,
   return val;
 }
 
-static void
-process_64 (GstAudioChebyshevFreqBand * filter,
-    gdouble * data, guint num_samples)
-{
-  gint i, j, channels = GST_AUDIO_FILTER (filter)->format.channels;
-  gdouble val;
-
-  for (i = 0; i < num_samples / channels; i++) {
-    for (j = 0; j < channels; j++) {
-      val = process (filter, &filter->channels[j], *data);
-      *data++ = val;
-    }
-  }
+#define DEFINE_PROCESS_FUNC(width,ctype) \
+static void \
+process_##width (GstAudioChebyshevFreqBand * filter, \
+    g##ctype * data, guint num_samples) \
+{ \
+  gint i, j, channels = GST_AUDIO_FILTER (filter)->format.channels; \
+  gdouble val; \
+  \
+  for (i = 0; i < num_samples / channels; i++) { \
+    for (j = 0; j < channels; j++) { \
+      val = process (filter, &filter->channels[j], *data); \
+      *data++ = val; \
+    } \
+  } \
 }
 
-static void
-process_32 (GstAudioChebyshevFreqBand * filter,
-    gfloat * data, guint num_samples)
-{
-  gint i, j, channels = GST_AUDIO_FILTER (filter)->format.channels;
-  gdouble val;
+DEFINE_PROCESS_FUNC (32, float);
+DEFINE_PROCESS_FUNC (64, double);
 
-  for (i = 0; i < num_samples / channels; i++) {
-    for (j = 0; j < channels; j++) {
-      val = process (filter, &filter->channels[j], *data);
-      *data++ = val;
-    }
-  }
-}
+#undef DEFINE_PROCESS_FUNC
 
 /* GstBaseTransform vmethod implementations */
 static GstFlowReturn
