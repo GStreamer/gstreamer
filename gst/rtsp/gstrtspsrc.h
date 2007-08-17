@@ -152,6 +152,7 @@ struct _GstRTSPSrc {
   guint   	    retry;
   guint64           udp_timeout;
   GTimeVal          tcp_timeout;
+  GTimeVal         *ptcp_timeout;
   guint             latency;
   guint             connection_speed;
 

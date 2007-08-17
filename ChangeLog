@@ -1,5 +1,26 @@
 2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_set_property),
+	(gst_rtspsrc_flush), (gst_rtspsrc_sink_chain),
+	(gst_rtspsrc_stream_configure_udp_sink),
+	(gst_rtspsrc_send_keep_alive), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_loop_udp), (gst_rtspsrc_loop_send_cmd),
+	(gst_rtspsrc_try_send), (gst_rtspsrc_send),
+	(gst_rtspsrc_parse_methods), (gst_rtspsrc_parse_range),
+	(gst_rtspsrc_open), (gst_rtspsrc_close), (gst_rtspsrc_pause),
+	(gst_rtspsrc_handle_message), (gst_rtspsrc_change_state):
+	* gst/rtsp/gstrtspsrc.h:
+	Improve timeout handling.
+	Use the same socket for sending and receiving RTCP packets so that some
+	servers can track clients better.
+	Improve connection closed handling. Try to reconnect.
+	Don't overwrite our content base with NULL.
+	Improve debugging.
+	Improve range parsing and handling.
+	Remove flushing hack now that core does the right thing.
+
+2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init),
 	(gst_multiudpsink_init), (gst_multiudpsink_set_property),
 	(gst_multiudpsink_get_property), (gst_multiudpsink_init_send),
