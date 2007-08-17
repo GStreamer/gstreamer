@@ -1518,7 +1518,7 @@ unknown_stream:
   }
 was_eos:
   {
-    GST_DEBUG_OBJECT (src, "stream for session %u was EOS already %u", session);
+    GST_DEBUG_OBJECT (src, "stream for session %u was already EOS", session);
     return;
   }
 }
