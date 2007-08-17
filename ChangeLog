@@ -1,3 +1,8 @@
+2007-08-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/amrwb/gstamrwbparse.c:
+	  Don't leak the adapter.
+
 2007-08-16  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init),

@@ -75,6 +75,8 @@ static gboolean gst_amrwbparse_sink_activate_pull (GstPad * sinkpad,
 static GstStateChangeReturn gst_amrwbparse_state_change (GstElement * element,
     GstStateChange transition);
 
+static void gst_amrwbparse_finalize (GObject * object);
+
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_amrwbparse_debug, "amrwbparse", 0, "AMR-WB audio stream parser");
 
@@ -102,7 +104,10 @@ gst_amrwbparse_base_init (gpointer klass)
 static void
 gst_amrwbparse_class_init (GstAmrwbParseClass * klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  object_class->finalize = gst_amrwbparse_finalize;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrwbparse_state_change);
 }
@@ -136,6 +141,20 @@ gst_amrwbparse_init (GstAmrwbParse * amrwbparse, GstAmrwbParseClass * klass)
   /* init rest */
   amrwbparse->ts = 0;
 }
+
+static void
+gst_amrwbparse_finalize (GObject * object)
+{
+  GstAmrwbParse *amrwbparse;
+
+  amrwbparse = GST_AMRWBPARSE (object);
+
+  gst_adapter_clear (amrwbparse->adapter);
+  g_object_unref (amrwbparse->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 
 static const GstQueryType *
 gst_amrwbparse_querytypes (GstPad * pad)
