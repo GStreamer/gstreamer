@@ -254,17 +254,13 @@ gst_siddec_class_init (GstSidDec * klass)
 static void
 gst_siddec_init (GstSidDec * siddec)
 {
-  siddec->sinkpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&sink_templ),
-      "sink");
+  siddec->sinkpad = gst_pad_new_from_static_template (&sink_templ, "sink");
   gst_pad_set_query_function (siddec->sinkpad, NULL);
   gst_pad_set_event_function (siddec->sinkpad, gst_siddec_sink_event);
   gst_pad_set_chain_function (siddec->sinkpad, gst_siddec_chain);
   gst_element_add_pad (GST_ELEMENT (siddec), siddec->sinkpad);
 
-  siddec->srcpad =
-      gst_pad_new_from_template (gst_static_pad_template_get (&src_templ),
-      "src");
+  siddec->srcpad = gst_pad_new_from_static_template (&src_templ, "src");
   gst_pad_set_event_function (siddec->srcpad, gst_siddec_src_event);
   gst_pad_set_query_function (siddec->srcpad, gst_siddec_src_query);
   gst_pad_use_fixed_caps (siddec->srcpad);

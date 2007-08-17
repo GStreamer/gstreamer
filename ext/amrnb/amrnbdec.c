@@ -222,7 +222,6 @@ gst_amrnbdec_event (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (amrnbdec->srcpad, event);
     }
       break;
-      break;
     default:
       ret = gst_pad_push_event (amrnbdec->srcpad, event);
       break;

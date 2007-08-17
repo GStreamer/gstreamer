@@ -73,6 +73,8 @@ static gboolean gst_amrnbparse_sink_activate_pull (GstPad * sinkpad,
 static GstStateChangeReturn gst_amrnbparse_state_change (GstElement * element,
     GstStateChange transition);
 
+static void gst_amrnbparse_finalize (GObject * object);
+
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (gst_amrnbparse_debug, "amrnbparse", 0, "AMR-NB audio stream parser");
 
@@ -99,7 +101,10 @@ gst_amrnbparse_base_init (gpointer klass)
 static void
 gst_amrnbparse_class_init (GstAmrnbParseClass * klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
+
+  object_class->finalize = gst_amrnbparse_finalize;
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrnbparse_state_change);
 }
@@ -134,6 +139,20 @@ gst_amrnbparse_init (GstAmrnbParse * amrnbparse, GstAmrnbParseClass * klass)
   /* init rest */
   amrnbparse->ts = 0;
 }
+
+static void
+gst_amrnbparse_finalize (GObject * object)
+{
+  GstAmrnbParse *amrnbparse;
+
+  amrnbparse = GST_AMRNBPARSE (object);
+
+  gst_adapter_clear (amrnbparse->adapter);
+  g_object_unref (amrnbparse->adapter);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
+}
+
 
 /*
  * Position querying.

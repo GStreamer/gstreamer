@@ -1,3 +1,11 @@
+2007-08-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/amrnb/amrnbdec.c:
+	* ext/amrnb/amrnbenc.c:
+	* ext/amrnb/amrnbparse.c:
+	* ext/sidplay/gstsiddec.cc:
+	  Fix more leaks.
+
 2007-08-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Daniel Charles <dcharles at ti dot com>
