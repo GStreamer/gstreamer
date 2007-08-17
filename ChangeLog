@@ -1,3 +1,11 @@
+2007-08-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/audio/audio.h:
+	Use gst_util_uint64_scale() instead of doing the math
+	with double for GST_FRAMES_TO_CLOCK_TIME() and
+	GST_CLOCK_TIME_TO_FRAMES(). For large timestamps this
+	prevents rounding errors. Fixes #467667.
+
 2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtsp/gstrtspconnection.c:
