@@ -86,7 +86,7 @@
       <longname>RTP packet jitter-buffer</longname>
       <class>Filter/Network/RTP</class>
       <description>A buffer that deals with network jitter and other transmission faults</description>
-      <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;, Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Philippe Kalaf &lt;philippe.kalaf@collabora.co.uk&gt;, Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>src</name>

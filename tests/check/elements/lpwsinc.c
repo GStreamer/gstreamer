@@ -108,7 +108,7 @@ GST_START_TEST (test_lp_0hz)
       "could not set to playing");
 
   /* cutoff = sampling rate / 4, data = 0 */
-  g_object_set (G_OBJECT (lpwsinc), "frequency", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i++)
@@ -166,7 +166,7 @@ GST_START_TEST (test_lp_22050hz)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "frequency", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i += 2) {
@@ -226,7 +226,7 @@ GST_START_TEST (test_hp_0hz)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "frequency", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i++)
@@ -284,7 +284,7 @@ GST_START_TEST (test_hp_22050hz)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "frequency", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 128; i += 2) {
@@ -344,7 +344,7 @@ GST_START_TEST (test_small_buffer)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
-  g_object_set (G_OBJECT (lpwsinc), "frequency", 44100 / 4.0, NULL);
+  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
   inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gdouble));
   in = (gdouble *) GST_BUFFER_DATA (inbuffer);
   for (i = 0; i < 20; i++)

@@ -230,18 +230,18 @@ gst_bpwsinc_class_init (GstBPWSincClass * klass)
   gobject_class->get_property = bpwsinc_get_property;
   gobject_class->dispose = gst_bpwsinc_dispose;
 
+  /* FIXME: Don't use the complete possible range but restrict the upper boundary
+   * so automatically generated UIs can use a slider */
   g_object_class_install_property (gobject_class, PROP_LOWER_FREQUENCY,
-      g_param_spec_double ("lower-frequency", "Lower Frequency",
-          "Cut-off lower frequency (Hz)",
-          0.0, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
+      g_param_spec_float ("lower-frequency", "Lower Frequency",
+          "Cut-off lower frequency (Hz)", 0.0, 100000.0, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_UPPER_FREQUENCY,
-      g_param_spec_double ("upper-frequency", "Upper Frequency",
-          "Cut-off upper frequency (Hz)",
-          0.0, G_MAXDOUBLE, 0, G_PARAM_READWRITE));
+      g_param_spec_float ("upper-frequency", "Upper Frequency",
+          "Cut-off upper frequency (Hz)", 0.0, 100000.0, 0, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, PROP_LENGTH,
       g_param_spec_int ("length", "Length",
           "Filter kernel length, will be rounded to the next odd number",
-          3, G_MAXINT, 101, G_PARAM_READWRITE));
+          3, 50000, 101, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode", "Mode",
@@ -282,86 +282,51 @@ gst_bpwsinc_init (GstBPWSinc * self, GstBPWSincClass * g_class)
       bpwsinc_query_type);
 }
 
-static void
-process_32 (GstBPWSinc * self, gfloat * src, gfloat * dst, guint input_samples)
-{
-  gint kernel_length = self->kernel_length;
-  gint i, j, k, l;
-  gint channels = GST_AUDIO_FILTER (self)->format.channels;
-  gint res_start;
-
-  /* convolution */
-  for (i = 0; i < input_samples; i++) {
-    dst[i] = 0.0;
-    k = i % channels;
-    l = i / channels;
-    for (j = 0; j < kernel_length; j++)
-      if (l < j)
-        dst[i] +=
-            self->residue[(kernel_length + l - j) * channels +
-            k] * self->kernel[j];
-      else
-        dst[i] += src[(l - j) * channels + k] * self->kernel[j];
-  }
-
-  /* copy the tail of the current input buffer to the residue, while
-   * keeping parts of the residue if the input buffer is smaller than
-   * the kernel length */
-  if (input_samples < kernel_length * channels)
-    res_start = kernel_length * channels - input_samples;
-  else
-    res_start = 0;
-
-  for (i = 0; i < res_start; i++)
-    self->residue[i] = self->residue[i + input_samples];
-  for (i = res_start; i < kernel_length * channels; i++)
-    self->residue[i] = src[input_samples - kernel_length * channels + i];
-
-  self->residue_length += kernel_length * channels - res_start;
-  if (self->residue_length > kernel_length * channels)
-    self->residue_length = kernel_length * channels;
+#define DEFINE_PROCESS_FUNC(width,ctype) \
+static void \
+process_##width (GstBPWSinc * self, g##ctype * src, g##ctype * dst, guint input_samples) \
+{ \
+  gint kernel_length = self->kernel_length; \
+  gint i, j, k, l; \
+  gint channels = GST_AUDIO_FILTER (self)->format.channels; \
+  gint res_start; \
+  \
+  /* convolution */ \
+  for (i = 0; i < input_samples; i++) { \
+    dst[i] = 0.0; \
+    k = i % channels; \
+    l = i / channels; \
+    for (j = 0; j < kernel_length; j++) \
+      if (l < j) \
+        dst[i] += \
+            self->residue[(kernel_length + l - j) * channels + \
+            k] * self->kernel[j]; \
+      else \
+        dst[i] += src[(l - j) * channels + k] * self->kernel[j]; \
+  } \
+  \
+  /* copy the tail of the current input buffer to the residue, while \
+   * keeping parts of the residue if the input buffer is smaller than \
+   * the kernel length */ \
+  if (input_samples < kernel_length * channels) \
+    res_start = kernel_length * channels - input_samples; \
+  else \
+    res_start = 0; \
+  \
+  for (i = 0; i < res_start; i++) \
+    self->residue[i] = self->residue[i + input_samples]; \
+  for (i = res_start; i < kernel_length * channels; i++) \
+    self->residue[i] = src[input_samples - kernel_length * channels + i]; \
+  \
+  self->residue_length += kernel_length * channels - res_start; \
+  if (self->residue_length > kernel_length * channels) \
+    self->residue_length = kernel_length * channels; \
 }
 
-static void
-process_64 (GstBPWSinc * self, gdouble * src, gdouble * dst,
-    guint input_samples)
-{
-  gint kernel_length = self->kernel_length;
-  gint i, j, k, l;
-  gint channels = GST_AUDIO_FILTER (self)->format.channels;
-  gint res_start;
+DEFINE_PROCESS_FUNC (32, float);
+DEFINE_PROCESS_FUNC (64, double);
 
-  /* convolution */
-  for (i = 0; i < input_samples; i++) {
-    dst[i] = 0.0;
-    k = i % channels;
-    l = i / channels;
-    for (j = 0; j < kernel_length; j++)
-      if (l < j)
-        dst[i] +=
-            self->residue[(kernel_length + l - j) * channels +
-            k] * self->kernel[j];
-      else
-        dst[i] += src[(l - j) * channels + k] * self->kernel[j];
-  }
-
-  /* copy the tail of the current input buffer to the residue, while
-   * keeping parts of the residue if the input buffer is smaller than
-   * the kernel length */
-  if (input_samples < kernel_length * channels)
-    res_start = kernel_length * channels - input_samples;
-  else
-    res_start = 0;
-
-  for (i = 0; i < res_start; i++)
-    self->residue[i] = self->residue[i + input_samples];
-  for (i = res_start; i < kernel_length * channels; i++)
-    self->residue[i] = src[input_samples - kernel_length * channels + i];
-
-  self->residue_length += kernel_length * channels - res_start;
-  if (self->residue_length > kernel_length * channels)
-    self->residue_length = kernel_length * channels;
-}
+#undef DEFINE_PROCESS_FUNC
 
 static void
 bpwsinc_build_kernel (GstBPWSinc * self)
@@ -860,13 +825,13 @@ bpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
     }
     case PROP_LOWER_FREQUENCY:
       GST_BASE_TRANSFORM_LOCK (self);
-      self->lower_frequency = g_value_get_double (value);
+      self->lower_frequency = g_value_get_float (value);
       bpwsinc_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
     case PROP_UPPER_FREQUENCY:
       GST_BASE_TRANSFORM_LOCK (self);
-      self->upper_frequency = g_value_get_double (value);
+      self->upper_frequency = g_value_get_float (value);
       bpwsinc_build_kernel (self);
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
@@ -899,10 +864,10 @@ bpwsinc_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, self->kernel_length);
       break;
     case PROP_LOWER_FREQUENCY:
-      g_value_set_double (value, self->lower_frequency);
+      g_value_set_float (value, self->lower_frequency);
       break;
     case PROP_UPPER_FREQUENCY:
-      g_value_set_double (value, self->upper_frequency);
+      g_value_set_float (value, self->upper_frequency);
       break;
     case PROP_MODE:
       g_value_set_enum (value, self->mode);

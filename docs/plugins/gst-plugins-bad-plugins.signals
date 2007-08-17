@@ -30,6 +30,54 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRTPSession::on-bye-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPSession::on-bye-timeout</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPSession::on-new-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPSession::on-ssrc-collision</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPSession::on-ssrc-validated</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPSession::on-timeout</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRTPPtDemux::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
@@ -86,6 +134,60 @@ GstRTPBin *gstrtpbin
 <SIGNAL>
 <NAME>GstRTPBin::request-pt-map</NAME>
 <RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPBin::on-bye-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPBin::on-bye-timeout</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPBin::on-new-ssrc</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPBin::on-ssrc-collision</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPBin::on-ssrc-validated</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRTPBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTPBin::on-timeout</NAME>
+<RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
 GstRTPBin *gstrtpbin
 guint  arg1

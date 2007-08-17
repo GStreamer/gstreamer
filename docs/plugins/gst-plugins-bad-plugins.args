@@ -1501,7 +1501,7 @@
 <ARG>
 <NAME>GstBPWSinc::length</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 3</RANGE>
+<RANGE>[3,50000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Length</NICK>
 <BLURB>Filter kernel length, will be rounded to the next odd number.</BLURB>
@@ -1510,8 +1510,8 @@
 
 <ARG>
 <NAME>GstBPWSinc::lower-frequency</NAME>
-<TYPE>gdouble</TYPE>
-<RANGE>>= 0</RANGE>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Lower Frequency</NICK>
 <BLURB>Cut-off lower frequency (Hz).</BLURB>
@@ -1520,8 +1520,8 @@
 
 <ARG>
 <NAME>GstBPWSinc::upper-frequency</NAME>
-<TYPE>gdouble</TYPE>
-<RANGE>>= 0</RANGE>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Upper Frequency</NICK>
 <BLURB>Cut-off upper frequency (Hz).</BLURB>
@@ -1561,7 +1561,7 @@
 <ARG>
 <NAME>GstLPWSinc::length</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= 3</RANGE>
+<RANGE>[3,50000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Length</NICK>
 <BLURB>Filter kernel length, will be rounded to the next odd number.</BLURB>
@@ -1586,6 +1586,16 @@
 <NICK>Window</NICK>
 <BLURB>Window function to use.</BLURB>
 <DEFAULT>Hamming window (default)</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstLPWSinc::cutoff</NAME>
+<TYPE>gfloat</TYPE>
+<RANGE>[0,100000]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Cutoff</NICK>
+<BLURB>Cut-off Frequency (Hz).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>

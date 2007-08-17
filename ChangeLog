@@ -1,3 +1,24 @@
+2007-08-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init),
+	(bpwsinc_set_property), (bpwsinc_get_property):
+	* gst/filter/gstbpwsinc.h:
+	* gst/filter/gstlpwsinc.c: (gst_lpwsinc_class_init),
+	(gst_lpwsinc_init), (lpwsinc_build_kernel), (lpwsinc_set_property),
+	(lpwsinc_get_property):
+	* gst/filter/gstlpwsinc.h:
+	* tests/check/elements/lpwsinc.c: (GST_START_TEST):
+	Use generator macros for the process functions for the different
+	sample types, add lower upper boundaries for the GObject properties
+	so automatically generated UIs can use sliders and change frequency
+	properties to floats to save a bit of memory, even ints would in
+	theory be enough. Also rename frequency to cutoff for consistency
+	reasons.
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/inspect/plugin-gstrtpmanager.xml:
+	Regenerated for the above changes.
+
 2007-08-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrwb/gstamrwbparse.c:
