@@ -1,5 +1,10 @@
 2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/debug/rndbuffersize.c: (gst_rnd_buffer_size_loop):
+	Fix debug statement.
+
+2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_do_stream_eos):
 	Fix stray %u in debug line as spotted by Saur on IRC.
 

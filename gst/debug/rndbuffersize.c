@@ -265,7 +265,7 @@ gst_rnd_buffer_size_loop (GstRndBufferSize * self)
   if (ret == GST_FLOW_OK) {
     if (GST_BUFFER_SIZE (buf) < num_bytes) {
       self->offset += GST_BUFFER_SIZE (buf);
-      GST_WARNING_OBJECT (self, "short buffer : %lu < %lu",
+      GST_WARNING_OBJECT (self, "short buffer : %u < %lu",
           GST_BUFFER_SIZE (buf), num_bytes);
     } else {
       self->offset += num_bytes;
