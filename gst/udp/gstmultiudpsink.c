@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -49,7 +49,7 @@ static const GstElementDetails gst_multiudpsink_details =
 GST_ELEMENT_DETAILS ("UDP packet sender",
     "Sink/Network",
     "Send data over the network via UDP",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 /* MultiUDPSink signals and args */
 enum
@@ -68,14 +68,25 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SOCKFD             -1
+#define DEFAULT_CLOSEFD            TRUE
+#define DEFAULT_SOCK               -1
+
 enum
 {
   PROP_0,
   PROP_BYTES_TO_SERVE,
   PROP_BYTES_SERVED,
-
-  /* FILL ME */
+  PROP_SOCKFD,
+  PROP_CLOSEFD,
+  PROP_SOCK
+      /* FILL ME */
 };
+
+#define CLOSE_IF_REQUESTED(udpctx)                                        \
+  if ((!udpctx->externalfd) || (udpctx->externalfd && udpctx->closefd))   \
+    CLOSE_SOCKET(udpctx->sock);                                           \
+  udpctx->sock = -1;
 
 static void gst_multiudpsink_base_init (gpointer g_class);
 static void gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass);
@@ -243,6 +254,18 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
       g_param_spec_uint64 ("bytes-served", "Bytes served",
           "Total number of bytes send to all clients", 0, G_MAXUINT64, 0,
           G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, PROP_SOCKFD,
+      g_param_spec_int ("sockfd", "Socket Handle",
+          "Socket to use for UDP sending. (-1 == allocate)",
+          -1, G_MAXINT, DEFAULT_SOCKFD, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_CLOSEFD,
+      g_param_spec_boolean ("closefd", "Close sockfd",
+          "Close sockfd if passed as property on state change",
+          DEFAULT_CLOSEFD, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_SOCK,
+      g_param_spec_int ("sock", "Socket Handle",
+          "Socket currently in use for UDP sending. (-1 == no socket)",
+          -1, G_MAXINT, DEFAULT_SOCK, G_PARAM_READABLE));
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
@@ -262,6 +285,10 @@ gst_multiudpsink_init (GstMultiUDPSink * sink)
   WSA_STARTUP (sink);
 
   sink->client_lock = g_mutex_new ();
+  sink->sock = -1;
+  sink->sockfd = DEFAULT_SOCKFD;
+  sink->closefd = DEFAULT_CLOSEFD;
+  sink->externalfd = (sink->sockfd != -1);
 }
 
 static void
@@ -351,6 +378,13 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
   udpsink = GST_MULTIUDPSINK (object);
 
   switch (prop_id) {
+    case PROP_SOCKFD:
+      udpsink->sockfd = g_value_get_int (value);
+      GST_DEBUG_OBJECT (udpsink, "setting SOCKFD to %d", udpsink->sockfd);
+      break;
+    case PROP_CLOSEFD:
+      udpsink->closefd = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -372,7 +406,15 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_BYTES_SERVED:
       g_value_set_uint64 (value, udpsink->bytes_served);
       break;
-
+    case PROP_SOCKFD:
+      g_value_set_int (value, udpsink->sockfd);
+      break;
+    case PROP_CLOSEFD:
+      g_value_set_boolean (value, udpsink->closefd);
+      break;
+    case PROP_SOCK:
+      g_value_set_int (value, udpsink->sock);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -417,9 +459,17 @@ gst_multiudpsink_init_send (GstMultiUDPSink * sink)
   GList *clients;
   GstUDPClient *client;
 
-  /* create sender socket */
-  if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
-    goto no_socket;
+  if (sink->sockfd == -1) {
+    /* create sender socket */
+    if ((sink->sock = socket (AF_INET, SOCK_DGRAM, 0)) == -1)
+      goto no_socket;
+
+    sink->externalfd = FALSE;
+  } else {
+    /* we use the configured socket */
+    sink->sock = sink->sockfd;
+    sink->externalfd = TRUE;
+  }
 
   bc_val = 1;
   if ((ret =
@@ -448,6 +498,7 @@ no_socket:
   }
 no_broadcast:
   {
+    CLOSE_IF_REQUESTED (sink);
     GST_ELEMENT_ERROR (sink, RESOURCE, SETTINGS, (NULL),
         ("Could not set broadcast socket option (%d): %s", errno,
             g_strerror (errno)));
@@ -458,7 +509,7 @@ no_broadcast:
 static void
 gst_multiudpsink_close (GstMultiUDPSink * sink)
 {
-  CLOSE_SOCKET (sink->sock);
+  CLOSE_IF_REQUESTED (sink);
 }
 
 void

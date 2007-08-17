@@ -69,8 +69,13 @@ struct _GstMultiUDPSink {
   GMutex        *client_lock;
   GList         *clients;
 
+  /* properties */
   guint64        bytes_to_serve;
   guint64        bytes_served;
+  int            sockfd;
+  gboolean       closefd;
+
+  gboolean       externalfd;
 };
 
 struct _GstMultiUDPSinkClass {

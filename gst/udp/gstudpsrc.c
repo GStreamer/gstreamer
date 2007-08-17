@@ -179,6 +179,7 @@ GST_ELEMENT_DETAILS ("UDP packet receiver",
 #define UDP_DEFAULT_TIMEOUT             0
 #define UDP_DEFAULT_SKIP_FIRST_BYTES	0
 #define UDP_DEFAULT_CLOSEFD            TRUE
+#define UDP_DEFAULT_SOCK                -1
 
 enum
 {
@@ -191,7 +192,8 @@ enum
   PROP_BUFFER_SIZE,
   PROP_TIMEOUT,
   PROP_SKIP_FIRST_BYTES,
-  PROP_CLOSEFD
+  PROP_CLOSEFD,
+  PROP_SOCK
 };
 
 static void gst_udpsrc_uri_handler_init (gpointer g_iface, gpointer iface_data);
@@ -287,6 +289,10 @@ gst_udpsrc_class_init (GstUDPSrcClass * klass)
       g_param_spec_boolean ("closefd", "Close sockfd",
           "Close sockfd if passed as property on state change",
           UDP_DEFAULT_CLOSEFD, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_SOCK,
+      g_param_spec_int ("sock", "Socket Handle",
+          "Socket currently in use for UDP reception. (-1 = no socket)",
+          -1, G_MAXINT, UDP_DEFAULT_SOCK, G_PARAM_READABLE));
 
   gstbasesrc_class->start = gst_udpsrc_start;
   gstbasesrc_class->stop = gst_udpsrc_stop;
@@ -313,7 +319,7 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
   udpsrc->closefd = UDP_DEFAULT_CLOSEFD;
   udpsrc->externalfd = (udpsrc->sockfd != -1);
 
-  udpsrc->sock = -1;
+  udpsrc->sock = UDP_DEFAULT_SOCK;
   udpsrc->control_sock[0] = -1;
   udpsrc->control_sock[1] = -1;
 }
@@ -675,6 +681,9 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CLOSEFD:
       g_value_set_boolean (value, udpsrc->closefd);
+      break;
+    case PROP_SOCK:
+      g_value_set_int (value, udpsrc->sock);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
