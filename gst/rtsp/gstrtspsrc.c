@@ -312,9 +312,6 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
 static void
 gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
 {
-  src->stream_rec_lock = g_new (GStaticRecMutex, 1);
-  g_static_rec_mutex_init (src->stream_rec_lock);
-
   src->location = g_strdup (DEFAULT_LOCATION);
   src->url = NULL;
 
@@ -325,8 +322,19 @@ gst_rtspsrc_init (GstRTSPSrc * src, GstRTSPSrcClass * g_class)
   gst_rtsp_ext_list_connect (src->extensions, "send",
       (GCallback) gst_rtspsrc_send_cb, src);
 
+  /* protects the streaming thread in interleaved mode or the polling
+   * thread in UDP mode. */
+  src->stream_rec_lock = g_new (GStaticRecMutex, 1);
+  g_static_rec_mutex_init (src->stream_rec_lock);
+
+  /* protects our state changes from multiple invocations */
   src->state_rec_lock = g_new (GStaticRecMutex, 1);
   g_static_rec_mutex_init (src->state_rec_lock);
+
+  /* protects access to the server connection */
+  src->conn_rec_lock = g_new (GStaticRecMutex, 1);
+  g_static_rec_mutex_init (src->conn_rec_lock);
+
   src->state = GST_RTSP_STATE_INVALID;
 }
 
@@ -338,14 +346,18 @@ gst_rtspsrc_finalize (GObject * object)
   rtspsrc = GST_RTSPSRC (object);
 
   gst_rtsp_ext_list_free (rtspsrc->extensions);
-  g_static_rec_mutex_free (rtspsrc->stream_rec_lock);
-  g_free (rtspsrc->stream_rec_lock);
   g_free (rtspsrc->location);
   g_free (rtspsrc->req_location);
   g_free (rtspsrc->content_base);
   gst_rtsp_url_free (rtspsrc->url);
+
+  /* free locks */
+  g_static_rec_mutex_free (rtspsrc->stream_rec_lock);
+  g_free (rtspsrc->stream_rec_lock);
   g_static_rec_mutex_free (rtspsrc->state_rec_lock);
   g_free (rtspsrc->state_rec_lock);
+  g_static_rec_mutex_free (rtspsrc->conn_rec_lock);
+  g_free (rtspsrc->conn_rec_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1091,6 +1103,32 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   gst_rtspsrc_push_event (src, event);
 }
 
+static GstRTSPResult
+gst_rtspsrc_connection_send (GstRTSPSrc * src, GstRTSPMessage * message,
+    GTimeVal * timeout)
+{
+  GstRTSPResult ret;
+
+  GST_RTSP_CONN_LOCK (src);
+  ret = gst_rtsp_connection_send (src->connection, message, timeout);
+  GST_RTSP_CONN_UNLOCK (src);
+
+  return ret;
+}
+
+static GstRTSPResult
+gst_rtspsrc_connection_receive (GstRTSPSrc * src, GstRTSPMessage * message,
+    GTimeVal * timeout)
+{
+  GstRTSPResult ret;
+
+  GST_RTSP_CONN_LOCK (src);
+  ret = gst_rtsp_connection_receive (src->connection, message, timeout);
+  GST_RTSP_CONN_UNLOCK (src);
+
+  return ret;
+}
+
 static gboolean
 gst_rtspsrc_do_seek (GstRTSPSrc * src, GstSegment * segment)
 {
@@ -1353,7 +1391,7 @@ gst_rtspsrc_sink_chain (GstPad * pad, GstBuffer * buffer)
   gst_rtsp_message_take_body (&message, data, size);
 
   GST_DEBUG_OBJECT (src, "sending %u bytes RTCP", size);
-  ret = gst_rtsp_connection_send (src->connection, &message, NULL);
+  ret = gst_rtspsrc_connection_send (src, &message, NULL);
   GST_DEBUG_OBJECT (src, "sent RTCP, %d", ret);
 
   /* and steal it away again because we will free it when unreffing the
@@ -2218,7 +2256,8 @@ gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPMessage * request)
   if (src->debug)
     gst_rtsp_message_dump (&response);
 
-  if ((res = gst_rtsp_connection_send (src->connection, &response, NULL)) < 0)
+  res = gst_rtspsrc_connection_send (src, &response, NULL);
+  if (res < 0)
     goto send_error;
 
   return GST_RTSP_OK;
@@ -2253,7 +2292,8 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   if (src->debug)
     gst_rtsp_message_dump (&request);
 
-  if ((res = gst_rtsp_connection_send (src->connection, &request, NULL)) < 0)
+  res = gst_rtspsrc_connection_send (src, &request, NULL);
+  if (res < 0)
     goto send_error;
 
   gst_rtsp_connection_reset_timeout (src->connection);
@@ -2305,9 +2345,9 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 
     GST_DEBUG_OBJECT (src, "doing receive");
 
-    res =
-        gst_rtsp_connection_receive (src->connection, &message,
-        src->ptcp_timeout);
+    /* protect the connection with the connection lock so that we can see when
+     * we are finished doing server communication */
+    res = gst_rtspsrc_connection_receive (src, &message, src->ptcp_timeout);
 
     switch (res) {
       case GST_RTSP_OK:
@@ -2544,8 +2584,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
       /* we should continue reading the TCP socket because the server might
        * send us requests. When the session timeout expires, we need to send a
        * keep-alive request to keep the session open. */
-      res =
-          gst_rtsp_connection_receive (src->connection, &message, &tv_timeout);
+      res = gst_rtspsrc_connection_receive (src, &message, &tv_timeout);
 
       switch (res) {
         case GST_RTSP_OK:
@@ -2923,17 +2962,15 @@ again:
   if (src->debug)
     gst_rtsp_message_dump (request);
 
-  if ((res =
-          gst_rtsp_connection_send (src->connection, request,
-              src->ptcp_timeout)) < 0)
+  res = gst_rtspsrc_connection_send (src, request, src->ptcp_timeout);
+  if (res < 0)
     goto send_error;
 
   gst_rtsp_connection_reset_timeout (src->connection);
 
 next:
-  if ((res =
-          gst_rtsp_connection_receive (src->connection, response,
-              src->ptcp_timeout)) < 0)
+  res = gst_rtspsrc_connection_receive (src, response, src->ptcp_timeout);
+  if (res < 0)
     goto receive_error;
 
   if (src->debug)
@@ -4099,11 +4136,12 @@ gst_rtspsrc_pause (GstRTSPSrc * src)
   if (src->state == GST_RTSP_STATE_READY)
     goto was_paused;
 
-  /* wait for streaming to finish */
-  GST_DEBUG_OBJECT (src, "waiting for streaming to finish");
-  GST_RTSP_STREAM_LOCK (src);
-  GST_DEBUG_OBJECT (src, "streaming finished");
-  GST_RTSP_STREAM_UNLOCK (src);
+  /* waiting for connection idle, we were flushing so any attempt at doing data
+   * transfer will result in pausing the tasks. */
+  GST_DEBUG_OBJECT (src, "wait for connection idle");
+  GST_RTSP_CONN_LOCK (src);
+  GST_DEBUG_OBJECT (src, "connection is idle now");
+  GST_RTSP_CONN_UNLOCK (src);
 
   GST_DEBUG_OBJECT (src, "stop connection flush");
   gst_rtsp_connection_flush (src->connection, FALSE);

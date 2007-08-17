@@ -1,5 +1,17 @@
 2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),
+	(gst_rtspsrc_finalize), (gst_rtspsrc_connection_send),
+	(gst_rtspsrc_connection_receive), (gst_rtspsrc_sink_chain),
+	(gst_rtspsrc_handle_request), (gst_rtspsrc_send_keep_alive),
+	(gst_rtspsrc_loop_interleaved), (gst_rtspsrc_loop_udp),
+	(gst_rtspsrc_try_send), (gst_rtspsrc_pause):
+	* gst/rtsp/gstrtspsrc.h:
+	Protect connection activity with a new lock, avoids deadlocks when going
+	to PAUSED. Fixes #455808.
+
+2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/debug/rndbuffersize.c: (gst_rnd_buffer_size_loop):
 	Fix debug statement.
 
