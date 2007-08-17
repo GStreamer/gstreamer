@@ -65,7 +65,7 @@ struct _GstBPWSinc {
 
   gint mode;
   gint window;
-  gdouble lower_frequency, upper_frequency;
+  gfloat lower_frequency, upper_frequency;
   gint kernel_length;           /* length of the filter kernel */
 
   gdouble *residue;             /* buffer for left-over samples from previous buffer */

@@ -65,7 +65,7 @@ struct _GstLPWSinc {
 
   gint mode;
   gint window;
-  gdouble frequency;
+  gfloat cutoff;
   gint kernel_length;           /* length of the filter kernel */
 
   gdouble *residue;             /* buffer for left-over samples from previous buffer */
