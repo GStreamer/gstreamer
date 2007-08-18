@@ -1,3 +1,10 @@
+2007-08-18  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_loop_udp), (gst_rtspsrc_loop_send_cmd),
+	(gst_rtspsrc_loop):
+	Refactor the udp and interleaved loop function a bit.
+
 2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_init),

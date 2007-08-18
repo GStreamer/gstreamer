@@ -2314,7 +2314,7 @@ send_error:
   }
 }
 
-static void
+static GstFlowReturn
 gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 {
   GstRTSPMessage message = { 0 };
@@ -2459,17 +2459,15 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   if (!is_rtcp) {
     /* combine all stream flows for the data transport */
     ret = gst_rtspsrc_combine_flows (src, stream, ret);
-    if (ret != GST_FLOW_OK)
-      goto need_pause;
   }
-  return;
+  return ret;
 
   /* ERRORS */
 unknown_stream:
   {
     GST_DEBUG_OBJECT (src, "unknown stream on channel %d, ignored", channel);
     gst_rtsp_message_unset (&message);
-    return;
+    return GST_FLOW_OK;
   }
 timeout:
   {
@@ -2477,16 +2475,14 @@ timeout:
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("Timeout while waiting for server message."));
     gst_rtsp_message_unset (&message);
-    ret = GST_FLOW_UNEXPECTED;
-    goto need_pause;
+    return GST_FLOW_UNEXPECTED;
   }
 server_eof:
   {
     GST_DEBUG_OBJECT (src, "we got an eof from the server");
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("The server closed the connection."));
-    ret = GST_FLOW_UNEXPECTED;
-    goto need_pause;
+    return GST_FLOW_UNEXPECTED;
   }
 interrupt:
   {
@@ -2494,8 +2490,7 @@ interrupt:
     GST_DEBUG_OBJECT (src, "got interrupted: stop connection flush");
     /* unset flushing so we can do something else */
     gst_rtsp_connection_flush (src->connection, FALSE);
-    ret = GST_FLOW_WRONG_STATE;
-    goto need_pause;
+    return GST_FLOW_WRONG_STATE;
   }
 receive_error:
   {
@@ -2506,8 +2501,7 @@ receive_error:
     g_free (str);
 
     gst_rtsp_message_unset (&message);
-    ret = GST_FLOW_ERROR;
-    goto need_pause;
+    return GST_FLOW_ERROR;
   }
 handle_request_failed:
   {
@@ -2517,52 +2511,22 @@ handle_request_failed:
         ("Could not handle server message. (%s)", str));
     g_free (str);
     gst_rtsp_message_unset (&message);
-    ret = GST_FLOW_ERROR;
-    goto need_pause;
+    return GST_FLOW_ERROR;
   }
 invalid_length:
   {
     GST_ELEMENT_WARNING (src, RESOURCE, READ, (NULL),
         ("Short message received, ignoring."));
     gst_rtsp_message_unset (&message);
-    return;
-  }
-need_pause:
-  {
-    const gchar *reason = gst_flow_get_name (ret);
-
-    GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
-    src->running = FALSE;
-    gst_task_pause (src->task);
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* perform EOS logic */
-        if (src->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          gst_element_post_message (GST_ELEMENT_CAST (src),
-              gst_message_new_segment_done (GST_OBJECT_CAST (src),
-                  src->segment.format, src->segment.last_stop));
-        } else {
-          gst_rtspsrc_push_event (src, gst_event_new_eos ());
-        }
-      } else {
-        /* for fatal errors we post an error message, post the error before the
-         * EOS so the app knows about the error first. */
-        GST_ELEMENT_ERROR (src, STREAM, FAILED,
-            ("Internal data flow error."),
-            ("streaming task paused, reason %s (%d)", reason, ret));
-        gst_rtspsrc_push_event (src, gst_event_new_eos ());
-      }
-    }
-    return;
+    return GST_FLOW_OK;
   }
 }
 
-static void
+static GstFlowReturn
 gst_rtspsrc_loop_udp (GstRTSPSrc * src)
 {
   gboolean restart = FALSE;
   GstRTSPResult res;
-  GstFlowReturn ret = GST_FLOW_OK;
 
   GST_OBJECT_LOCK (src);
   if (src->loop_cmd == CMD_STOP)
@@ -2697,20 +2661,14 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
     goto play_failed;
 
 done:
-  return;
+  return GST_FLOW_OK;
 
   /* ERRORS */
 stopping:
   {
     GST_DEBUG_OBJECT (src, "we are stopping");
     GST_OBJECT_UNLOCK (src);
-    ret = GST_FLOW_WRONG_STATE;
-    goto need_pause;
-  }
-  {
-    GST_DEBUG_OBJECT (src, "we got an eof from the server");
-    ret = GST_FLOW_UNEXPECTED;
-    goto need_pause;
+    return GST_FLOW_WRONG_STATE;
   }
 receive_error:
   {
@@ -2719,8 +2677,7 @@ receive_error:
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not receive message. (%s)", str));
     g_free (str);
-    ret = GST_FLOW_ERROR;
-    goto need_pause;
+    return GST_FLOW_ERROR;
   }
 handle_request_failed:
   {
@@ -2729,8 +2686,7 @@ handle_request_failed:
     GST_ELEMENT_ERROR (src, RESOURCE, WRITE, (NULL),
         ("Could not handle server message. (%s)", str));
     g_free (str);
-    ret = GST_FLOW_ERROR;
-    goto need_pause;
+    return GST_FLOW_ERROR;
   }
 no_protocols:
   {
@@ -2738,20 +2694,49 @@ no_protocols:
     /* no transport possible, post an error and stop */
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL),
         ("Could not connect to server, no protocols left"));
-    ret = GST_FLOW_ERROR;
-    goto need_pause;
+    return GST_FLOW_ERROR;
   }
 open_failed:
   {
     GST_DEBUG_OBJECT (src, "open failed");
-    return;
+    return GST_FLOW_OK;
   }
 play_failed:
   {
     GST_DEBUG_OBJECT (src, "play failed");
-    return;
+    return GST_FLOW_OK;
   }
-need_pause:
+}
+
+static void
+gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gboolean flush)
+{
+  GST_OBJECT_LOCK (src);
+  src->loop_cmd = cmd;
+  if (flush) {
+    GST_DEBUG_OBJECT (src, "start connection flush");
+    gst_rtsp_connection_flush (src->connection, TRUE);
+  }
+  GST_OBJECT_UNLOCK (src);
+}
+
+static void
+gst_rtspsrc_loop (GstRTSPSrc * src)
+{
+  GstFlowReturn ret;
+
+  if (src->interleaved)
+    ret = gst_rtspsrc_loop_interleaved (src);
+  else
+    ret = gst_rtspsrc_loop_udp (src);
+
+  if (ret != GST_FLOW_OK)
+    goto pause;
+
+  return;
+
+  /* ERRORS */
+pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
 
@@ -2779,27 +2764,6 @@ need_pause:
     }
     return;
   }
-}
-
-static void
-gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gboolean flush)
-{
-  GST_OBJECT_LOCK (src);
-  src->loop_cmd = cmd;
-  if (flush) {
-    GST_DEBUG_OBJECT (src, "start connection flush");
-    gst_rtsp_connection_flush (src->connection, TRUE);
-  }
-  GST_OBJECT_UNLOCK (src);
-}
-
-static void
-gst_rtspsrc_loop (GstRTSPSrc * src)
-{
-  if (src->interleaved)
-    gst_rtspsrc_loop_interleaved (src);
-  else
-    gst_rtspsrc_loop_udp (src);
 }
 
 #ifndef GST_DISABLE_GST_DEBUG
