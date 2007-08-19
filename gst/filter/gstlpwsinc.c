@@ -31,8 +31,6 @@
  *          is probably the bottleneck
  *        - Maybe allow cascading the filter to get a better stopband attenuation.
  *          Can be done by convolving a filter kernel with itself
- *        - Drop the first kernel_length/2 samples and append the same number of
- *          samples on EOS as the first few samples are essentialy zero.
  */
 
 /**
@@ -45,6 +43,11 @@
  * cutoff frequency (high-pass). The length parameter controls the rolloff, the window parameter
  * controls rolloff and stopband attenuation. The Hamming window provides a faster rolloff but a bit
  * worse stopband attenuation, the other way around for the Blackman window.
+ * </para>
+ * <para>
+ * This element has the advantage over the Chebyshev lowpass and highpass filter that it has
+ * a much better rolloff when using a larger kernel size and almost linear phase. The only
+ * disadvantage is the much slower execution time with larger kernels.
  * </para>
  * <title>Example launch line</title>
  * <para>

@@ -46,6 +46,11 @@
  * controls rolloff and stopband attenuation. The Hamming window provides a faster rolloff but a bit
  * worse stopband attenuation, the other way around for the Blackman window.
  * </para>
+ * <para>
+ * This element has the advantage over the Chebyshev bandpass and bandreject filter that it has
+ * a much better rolloff when using a larger kernel size and almost linear phase. The only
+ * disadvantage is the much slower execution time with larger kernels.
+ * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
