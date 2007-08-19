@@ -31,7 +31,14 @@
  * get_peer, and then remove references in every test function */
 GstPad *mysrcpad, *mysinkpad;
 
-#define LPWSINC_CAPS_STRING             \
+#define LPWSINC_CAPS_STRING_32           \
+    "audio/x-raw-float, "               \
+    "channels = (int) 1, "              \
+    "rate = (int) 44100, "              \
+    "endianness = (int) BYTE_ORDER, "   \
+    "width = (int) 32"                  \
+
+#define LPWSINC_CAPS_STRING_64           \
     "audio/x-raw-float, "               \
     "channels = (int) 1, "              \
     "rate = (int) 44100, "              \
@@ -44,7 +51,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "channels = (int) 1, "
         "rate = (int) 44100, "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 64")
+        "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 } ")
     );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -52,7 +59,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "channels = (int) 1, "
         "rate = (int) 44100, "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 64")
+        "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 } ")
     );
 
 GstElement *
@@ -89,7 +96,289 @@ cleanup_lpwsinc (GstElement * lpwsinc)
 /* Test if data containing only one frequency component
  * at 0 is preserved with lowpass mode and a cutoff
  * at rate/4 */
-GST_START_TEST (test_lp_0hz)
+GST_START_TEST (test_32_lp_0hz)
+{
+  GstElement *lpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in, *res, rms;
+  gint i;
+  GList *node;
+
+  lpwsinc = setup_lpwsinc ();
+  /* Set to lowpass */
+  g_object_set (G_OBJECT (lpwsinc), "mode", 0, NULL);
+  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+
+  fail_unless (gst_element_set_state (lpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  /* cutoff = sampling rate / 4, data = 0 */
+  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 128; i++)
+    in[i] = 1.0;
+
+  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms >= 0.9);
+  }
+
+  /* cleanup */
+  cleanup_lpwsinc (lpwsinc);
+}
+
+GST_END_TEST;
+
+/* Test if data containing only one frequency component
+ * at rate/2 is erased with lowpass mode and a cutoff
+ * at rate/4 */
+GST_START_TEST (test_32_lp_22050hz)
+{
+  GstElement *lpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in, *res, rms;
+  gint i;
+  GList *node;
+
+  lpwsinc = setup_lpwsinc ();
+  /* Set to lowpass */
+  g_object_set (G_OBJECT (lpwsinc), "mode", 0, NULL);
+  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+
+  fail_unless (gst_element_set_state (lpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 128; i += 2) {
+    in[i] = 1.0;
+    in[i + 1] = -1.0;
+  }
+
+  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms <= 0.1);
+  }
+
+  /* cleanup */
+  cleanup_lpwsinc (lpwsinc);
+}
+
+GST_END_TEST;
+
+/* Test if data containing only one frequency component
+ * at 0 is erased with highpass mode and a cutoff
+ * at rate/4 */
+GST_START_TEST (test_32_hp_0hz)
+{
+  GstElement *lpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in, *res, rms;
+  gint i;
+  GList *node;
+
+  lpwsinc = setup_lpwsinc ();
+  /* Set to highpass */
+  g_object_set (G_OBJECT (lpwsinc), "mode", 1, NULL);
+  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+
+  fail_unless (gst_element_set_state (lpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 128; i++)
+    in[i] = 1.0;
+
+  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms <= 0.1);
+  }
+
+  /* cleanup */
+  cleanup_lpwsinc (lpwsinc);
+}
+
+GST_END_TEST;
+
+/* Test if data containing only one frequency component
+ * at rate/2 is preserved with highpass mode and a cutoff
+ * at rate/4 */
+GST_START_TEST (test_32_hp_22050hz)
+{
+  GstElement *lpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in, *res, rms;
+  gint i;
+  GList *node;
+
+  lpwsinc = setup_lpwsinc ();
+  /* Set to highpass */
+  g_object_set (G_OBJECT (lpwsinc), "mode", 1, NULL);
+  g_object_set (G_OBJECT (lpwsinc), "length", 21, NULL);
+
+  fail_unless (gst_element_set_state (lpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  inbuffer = gst_buffer_new_and_alloc (128 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 128; i += 2) {
+    in[i] = 1.0;
+    in[i + 1] = -1.0;
+  }
+
+  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms >= 0.9);
+  }
+
+  /* cleanup */
+  cleanup_lpwsinc (lpwsinc);
+}
+
+GST_END_TEST;
+
+/* Test if buffers smaller than the kernel size are handled
+ * correctly without accessing wrong memory areas */
+GST_START_TEST (test_32_small_buffer)
+{
+  GstElement *lpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in;
+  gfloat *res;
+  gint i;
+
+  lpwsinc = setup_lpwsinc ();
+  /* Set to lowpass */
+  g_object_set (G_OBJECT (lpwsinc), "mode", 0, NULL);
+  g_object_set (G_OBJECT (lpwsinc), "length", 101, NULL);
+
+  fail_unless (gst_element_set_state (lpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (lpwsinc), "cutoff", 44100 / 4.0, NULL);
+  inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 20; i++)
+    in[i] = 1.0;
+
+  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+  fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
+
+  /* cleanup */
+  cleanup_lpwsinc (lpwsinc);
+}
+
+GST_END_TEST;
+
+/* Test if data containing only one frequency component
+ * at 0 is preserved with lowpass mode and a cutoff
+ * at rate/4 */
+GST_START_TEST (test_64_lp_0hz)
 {
   GstElement *lpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -114,7 +403,7 @@ GST_START_TEST (test_lp_0hz)
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -148,7 +437,7 @@ GST_END_TEST;
 /* Test if data containing only one frequency component
  * at rate/2 is erased with lowpass mode and a cutoff
  * at rate/4 */
-GST_START_TEST (test_lp_22050hz)
+GST_START_TEST (test_64_lp_22050hz)
 {
   GstElement *lpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -174,7 +463,7 @@ GST_START_TEST (test_lp_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -208,7 +497,7 @@ GST_END_TEST;
 /* Test if data containing only one frequency component
  * at 0 is erased with highpass mode and a cutoff
  * at rate/4 */
-GST_START_TEST (test_hp_0hz)
+GST_START_TEST (test_64_hp_0hz)
 {
   GstElement *lpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -232,7 +521,7 @@ GST_START_TEST (test_hp_0hz)
   for (i = 0; i < 128; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -266,7 +555,7 @@ GST_END_TEST;
 /* Test if data containing only one frequency component
  * at rate/2 is preserved with highpass mode and a cutoff
  * at rate/4 */
-GST_START_TEST (test_hp_22050hz)
+GST_START_TEST (test_64_hp_22050hz)
 {
   GstElement *lpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -292,7 +581,7 @@ GST_START_TEST (test_hp_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -326,7 +615,7 @@ GST_END_TEST;
 
 /* Test if buffers smaller than the kernel size are handled
  * correctly without accessing wrong memory areas */
-GST_START_TEST (test_small_buffer)
+GST_START_TEST (test_64_small_buffer)
 {
   GstElement *lpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -350,7 +639,7 @@ GST_START_TEST (test_small_buffer)
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (LPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (LPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -375,11 +664,16 @@ lpwsinc_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_lp_0hz);
-  tcase_add_test (tc_chain, test_lp_22050hz);
-  tcase_add_test (tc_chain, test_hp_0hz);
-  tcase_add_test (tc_chain, test_hp_22050hz);
-  tcase_add_test (tc_chain, test_small_buffer);
+  tcase_add_test (tc_chain, test_32_lp_0hz);
+  tcase_add_test (tc_chain, test_32_lp_22050hz);
+  tcase_add_test (tc_chain, test_32_hp_0hz);
+  tcase_add_test (tc_chain, test_32_hp_22050hz);
+  tcase_add_test (tc_chain, test_32_small_buffer);
+  tcase_add_test (tc_chain, test_64_lp_0hz);
+  tcase_add_test (tc_chain, test_64_lp_22050hz);
+  tcase_add_test (tc_chain, test_64_hp_0hz);
+  tcase_add_test (tc_chain, test_64_hp_22050hz);
+  tcase_add_test (tc_chain, test_64_small_buffer);
 
   return s;
 }

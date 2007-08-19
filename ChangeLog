@@ -1,3 +1,11 @@
+2007-08-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/elements/bpwsinc.c: (GST_START_TEST),
+	(bpwsinc_suite):
+	* tests/check/elements/lpwsinc.c: (GST_START_TEST),
+	(lpwsinc_suite):
+	Also test everything in 32 bit float mode.
+
 2007-08-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/filter/gstbpwsinc.c: (gst_bpwsinc_class_init),

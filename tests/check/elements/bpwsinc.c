@@ -31,7 +31,14 @@
  * get_peer, and then remove references in every test function */
 GstPad *mysrcpad, *mysinkpad;
 
-#define BPWSINC_CAPS_STRING             \
+#define BPWSINC_CAPS_STRING_32          \
+    "audio/x-raw-float, "               \
+    "channels = (int) 1, "              \
+    "rate = (int) 44100, "              \
+    "endianness = (int) BYTE_ORDER, "   \
+    "width = (int) 32"                  \
+
+#define BPWSINC_CAPS_STRING_64          \
     "audio/x-raw-float, "               \
     "channels = (int) 1, "              \
     "rate = (int) 44100, "              \
@@ -44,7 +51,7 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "channels = (int) 1, "
         "rate = (int) 44100, "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 64")
+        "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 } ")
     );
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -52,7 +59,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw-float, "
         "channels = (int) 1, "
         "rate = (int) 44100, "
-        "endianness = (int) BYTE_ORDER, " "width = (int) 64")
+        "endianness = (int) BYTE_ORDER, " "width = (int) { 32, 64 } ")
     );
 
 GstElement *
@@ -89,7 +96,442 @@ cleanup_bpwsinc (GstElement * bpwsinc)
 /* Test if data containing only one frequency component
  * at rate/2 is erased with bandpass mode and a 
  * 2000Hz frequency band around rate/4 */
-GST_START_TEST (test_bp_0hz)
+GST_START_TEST (test_32_bp_0hz)
+{
+  GstElement *bpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in, *res, rms;
+  gint i;
+  GList *node;
+
+  bpwsinc = setup_bpwsinc ();
+  /* Set to bandpass */
+  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
+  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+
+  fail_unless (gst_element_set_state (bpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
+      NULL);
+  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
+      NULL);
+  inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 1024; i++)
+    in[i] = 1.0;
+
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms <= 0.1);
+  }
+
+  /* cleanup */
+  cleanup_bpwsinc (bpwsinc);
+}
+
+GST_END_TEST;
+
+/* Test if data containing only one frequency component
+ * at the band center is preserved with bandreject mode
+ * and a 2000Hz frequency band around rate/4 */
+GST_START_TEST (test_32_bp_11025hz)
+{
+  GstElement *bpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in, *res, rms;
+  gint i;
+  GList *node;
+
+  bpwsinc = setup_bpwsinc ();
+  /* Set to bandpass */
+  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
+  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+
+  fail_unless (gst_element_set_state (bpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
+      NULL);
+  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
+      NULL);
+  inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 1024; i += 4) {
+    in[i] = 0.0;
+    in[i + 1] = 1.0;
+    in[i + 2] = 0.0;
+    in[i + 3] = -1.0;
+  }
+
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms >= 0.4);
+  }
+
+  /* cleanup */
+  cleanup_bpwsinc (bpwsinc);
+}
+
+GST_END_TEST;
+
+
+/* Test if data containing only one frequency component
+ * at rate/2 is erased with bandreject mode and a 
+ * 2000Hz frequency band around rate/4 */
+GST_START_TEST (test_32_bp_22050hz)
+{
+  GstElement *bpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in, *res, rms;
+  gint i;
+  GList *node;
+
+  bpwsinc = setup_bpwsinc ();
+  /* Set to bandpass */
+  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
+  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+
+  fail_unless (gst_element_set_state (bpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
+      NULL);
+  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
+      NULL);
+  inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 1024; i += 2) {
+    in[i] = 1.0;
+    in[i + 1] = -1.0;
+  }
+
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms <= 0.3);
+  }
+
+  /* cleanup */
+  cleanup_bpwsinc (bpwsinc);
+}
+
+GST_END_TEST;
+
+/* Test if data containing only one frequency component
+ * at rate/2 is preserved with bandreject mode and a 
+ * 2000Hz frequency band around rate/4 */
+GST_START_TEST (test_32_br_0hz)
+{
+  GstElement *bpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in, *res, rms;
+  gint i;
+  GList *node;
+
+  bpwsinc = setup_bpwsinc ();
+  /* Set to bandreject */
+  g_object_set (G_OBJECT (bpwsinc), "mode", 1, NULL);
+  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+
+  fail_unless (gst_element_set_state (bpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
+      NULL);
+  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
+      NULL);
+  inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 1024; i++)
+    in[i] = 1.0;
+
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms >= 0.9);
+  }
+
+  /* cleanup */
+  cleanup_bpwsinc (bpwsinc);
+}
+
+GST_END_TEST;
+
+/* Test if data containing only one frequency component
+ * at the band center is erased with bandreject mode
+ * and a 2000Hz frequency band around rate/4 */
+GST_START_TEST (test_32_br_11025hz)
+{
+  GstElement *bpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in, *res, rms;
+  gint i;
+  GList *node;
+
+  bpwsinc = setup_bpwsinc ();
+  /* Set to bandreject */
+  g_object_set (G_OBJECT (bpwsinc), "mode", 1, NULL);
+  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+
+  fail_unless (gst_element_set_state (bpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
+      NULL);
+  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
+      NULL);
+  inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+
+  for (i = 0; i < 1024; i += 4) {
+    in[i] = 0.0;
+    in[i + 1] = 1.0;
+    in[i + 2] = 0.0;
+    in[i + 3] = -1.0;
+  }
+
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms <= 0.35);
+  }
+
+  /* cleanup */
+  cleanup_bpwsinc (bpwsinc);
+}
+
+GST_END_TEST;
+
+
+/* Test if data containing only one frequency component
+ * at rate/2 is preserved with bandreject mode and a 
+ * 2000Hz frequency band around rate/4 */
+GST_START_TEST (test_32_br_22050hz)
+{
+  GstElement *bpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in, *res, rms;
+  gint i;
+  GList *node;
+
+  bpwsinc = setup_bpwsinc ();
+  /* Set to bandreject */
+  g_object_set (G_OBJECT (bpwsinc), "mode", 1, NULL);
+  g_object_set (G_OBJECT (bpwsinc), "length", 31, NULL);
+
+  fail_unless (gst_element_set_state (bpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (bpwsinc), "lower-frequency", 44100 / 4.0 - 1000,
+      NULL);
+  g_object_set (G_OBJECT (bpwsinc), "upper-frequency", 44100 / 4.0 + 1000,
+      NULL);
+  inbuffer = gst_buffer_new_and_alloc (1024 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 1024; i += 2) {
+    in[i] = 1.0;
+    in[i + 1] = -1.0;
+  }
+
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+
+  for (node = buffers; node; node = node->next) {
+    gint buffer_length;
+
+    fail_if ((outbuffer = (GstBuffer *) node->data) == NULL);
+
+    res = (gfloat *) GST_BUFFER_DATA (outbuffer);
+    buffer_length = GST_BUFFER_SIZE (outbuffer) / sizeof (gfloat);
+    rms = 0.0;
+    for (i = 0; i < buffer_length; i++)
+      rms += res[i] * res[i];
+    rms = sqrt (rms / buffer_length);
+    fail_unless (rms >= 0.9);
+  }
+
+  /* cleanup */
+  cleanup_bpwsinc (bpwsinc);
+}
+
+GST_END_TEST;
+
+/* Test if buffers smaller than the kernel size are handled
+ * correctly without accessing wrong memory areas */
+GST_START_TEST (test_32_small_buffer)
+{
+  GstElement *bpwsinc;
+  GstBuffer *inbuffer, *outbuffer;
+  GstCaps *caps;
+  gfloat *in;
+  gfloat *res;
+  gint i;
+
+  bpwsinc = setup_bpwsinc ();
+  /* Set to bandpass */
+  g_object_set (G_OBJECT (bpwsinc), "mode", 0, NULL);
+  g_object_set (G_OBJECT (bpwsinc), "length", 101, NULL);
+
+  fail_unless (gst_element_set_state (bpwsinc,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  g_object_set (G_OBJECT (bpwsinc), "lower-frequency",
+      44100 / 4.0 - 44100 / 16.0, NULL);
+  g_object_set (G_OBJECT (bpwsinc), "upper-frequency",
+      44100 / 4.0 + 44100 / 16.0, NULL);
+  inbuffer = gst_buffer_new_and_alloc (20 * sizeof (gfloat));
+  in = (gfloat *) GST_BUFFER_DATA (inbuffer);
+  for (i = 0; i < 20; i++)
+    in[i] = 1.0;
+
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_32);
+  gst_buffer_set_caps (inbuffer, caps);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
+
+  /* pushing gives away my reference ... */
+  fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+  /* ... and puts a new buffer on the global list */
+  fail_unless (g_list_length (buffers) >= 1);
+
+  /* cleanup */
+  cleanup_bpwsinc (bpwsinc);
+}
+
+GST_END_TEST;
+
+
+
+
+
+
+
+
+
+/* Test if data containing only one frequency component
+ * at rate/2 is erased with bandpass mode and a 
+ * 2000Hz frequency band around rate/4 */
+GST_START_TEST (test_64_bp_0hz)
 {
   GstElement *bpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -116,7 +558,7 @@ GST_START_TEST (test_bp_0hz)
   for (i = 0; i < 1024; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -150,7 +592,7 @@ GST_END_TEST;
 /* Test if data containing only one frequency component
  * at the band center is preserved with bandreject mode
  * and a 2000Hz frequency band around rate/4 */
-GST_START_TEST (test_bp_11025hz)
+GST_START_TEST (test_64_bp_11025hz)
 {
   GstElement *bpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -181,7 +623,7 @@ GST_START_TEST (test_bp_11025hz)
     in[i + 3] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -216,7 +658,7 @@ GST_END_TEST;
 /* Test if data containing only one frequency component
  * at rate/2 is erased with bandreject mode and a 
  * 2000Hz frequency band around rate/4 */
-GST_START_TEST (test_bp_22050hz)
+GST_START_TEST (test_64_bp_22050hz)
 {
   GstElement *bpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -245,7 +687,7 @@ GST_START_TEST (test_bp_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -279,7 +721,7 @@ GST_END_TEST;
 /* Test if data containing only one frequency component
  * at rate/2 is preserved with bandreject mode and a 
  * 2000Hz frequency band around rate/4 */
-GST_START_TEST (test_br_0hz)
+GST_START_TEST (test_64_br_0hz)
 {
   GstElement *bpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -306,7 +748,7 @@ GST_START_TEST (test_br_0hz)
   for (i = 0; i < 1024; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -340,7 +782,7 @@ GST_END_TEST;
 /* Test if data containing only one frequency component
  * at the band center is erased with bandreject mode
  * and a 2000Hz frequency band around rate/4 */
-GST_START_TEST (test_br_11025hz)
+GST_START_TEST (test_64_br_11025hz)
 {
   GstElement *bpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -372,7 +814,7 @@ GST_START_TEST (test_br_11025hz)
     in[i + 3] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -407,7 +849,7 @@ GST_END_TEST;
 /* Test if data containing only one frequency component
  * at rate/2 is preserved with bandreject mode and a 
  * 2000Hz frequency band around rate/4 */
-GST_START_TEST (test_br_22050hz)
+GST_START_TEST (test_64_br_22050hz)
 {
   GstElement *bpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -436,7 +878,7 @@ GST_START_TEST (test_br_22050hz)
     in[i + 1] = -1.0;
   }
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -469,7 +911,7 @@ GST_END_TEST;
 
 /* Test if buffers smaller than the kernel size are handled
  * correctly without accessing wrong memory areas */
-GST_START_TEST (test_small_buffer)
+GST_START_TEST (test_64_small_buffer)
 {
   GstElement *bpwsinc;
   GstBuffer *inbuffer, *outbuffer;
@@ -496,7 +938,7 @@ GST_START_TEST (test_small_buffer)
   for (i = 0; i < 20; i++)
     in[i] = 1.0;
 
-  caps = gst_caps_from_string (BPWSINC_CAPS_STRING);
+  caps = gst_caps_from_string (BPWSINC_CAPS_STRING_64);
   gst_buffer_set_caps (inbuffer, caps);
   gst_caps_unref (caps);
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
@@ -520,13 +962,20 @@ bpwsinc_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_bp_0hz);
-  tcase_add_test (tc_chain, test_bp_11025hz);
-  tcase_add_test (tc_chain, test_bp_22050hz);
-  tcase_add_test (tc_chain, test_br_0hz);
-  tcase_add_test (tc_chain, test_br_11025hz);
-  tcase_add_test (tc_chain, test_br_22050hz);
-  tcase_add_test (tc_chain, test_small_buffer);
+  tcase_add_test (tc_chain, test_32_bp_0hz);
+  tcase_add_test (tc_chain, test_32_bp_11025hz);
+  tcase_add_test (tc_chain, test_32_bp_22050hz);
+  tcase_add_test (tc_chain, test_32_br_0hz);
+  tcase_add_test (tc_chain, test_32_br_11025hz);
+  tcase_add_test (tc_chain, test_32_br_22050hz);
+  tcase_add_test (tc_chain, test_32_small_buffer);
+  tcase_add_test (tc_chain, test_64_bp_0hz);
+  tcase_add_test (tc_chain, test_64_bp_11025hz);
+  tcase_add_test (tc_chain, test_64_bp_22050hz);
+  tcase_add_test (tc_chain, test_64_br_0hz);
+  tcase_add_test (tc_chain, test_64_br_11025hz);
+  tcase_add_test (tc_chain, test_64_br_22050hz);
+  tcase_add_test (tc_chain, test_64_small_buffer);
 
   return s;
 }
