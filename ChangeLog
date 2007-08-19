@@ -1,5 +1,11 @@
 2007-08-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/audiofx/audiochebyshevfreqband.c:
+	* gst/audiofx/audiochebyshevfreqlimit.c:
+	Add small comparision with the windowed sinc filters in the docs.
+
+2007-08-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/elements/audiochebyshevfreqband.c: (GST_START_TEST),
 	(audiochebyshevfreqband_suite):
 	* tests/check/elements/audiochebyshevfreqlimit.c: (GST_START_TEST),

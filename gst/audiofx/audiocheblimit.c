@@ -38,6 +38,11 @@
  * cutoff frequency (high-pass). The number of poles and the ripple parameter control the rolloff.
  * </para>
  * <para>
+ * This element has the advantage over the windowed sinc lowpass and highpass filter that it is
+ * much faster and produces almost as good results. It's only disadvantages are the highly
+ * non-linear phase and the slower rolloff compared to a windowed sinc filter with a large kernel.
+ * </para>
+ * <para>
  * For type 1 the ripple parameter specifies how much ripple in dB is allowed in the passband, i.e.
  * some frequencies in the passband will be amplified by that value. A higher ripple value will allow
  * a faster rolloff.
