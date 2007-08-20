@@ -1,3 +1,11 @@
+2007-08-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Bastien Nocera  <hadess at hadess net>
+
+	* ext/mythtv/gstmythtvsrc.c:
+	  Add examples for live mythtv:// URIs to docs (#468039).
+	  Also convert some tabs into spaces.
+
 2007-08-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/filter/gstbpwsinc.c:

@@ -20,7 +20,7 @@
  * When using the LiveTV content, put the location URI in the following
  * format:
  * 
- * 	myth://mythtv:mythtv@xxx.xxx.xxx.xxx:6543/?mythconverg
+ *     myth://mythtv:mythtv@xxx.xxx.xxx.xxx:6543/?mythconverg
  * 
  * Where the first field is the protocol (myth), the second and third are user 
  * name (mythtv) and password (mythtv), then backend host name and port number, 
@@ -44,25 +44,25 @@
 GST_DEBUG_CATEGORY_STATIC (mythtvsrc_debug);
 #define GST_CAT_DEFAULT mythtvsrc_debug
 
-#define GST_GMYTHTV_ID_NUM			            1
+#define GST_GMYTHTV_ID_NUM                     1
 
-#define GST_GMYTHTV_CHANNEL_DEFAULT_NUM		(-1)
+#define GST_GMYTHTV_CHANNEL_DEFAULT_NUM        (-1)
 
-#define GMYTHTV_VERSION_DEFAULT			        30
+#define GMYTHTV_VERSION_DEFAULT                30
 
-#define GMYTHTV_TRANSFER_MAX_WAITS		     100
+#define GMYTHTV_TRANSFER_MAX_WAITS             100
 
-#define GMYTHTV_TRANSFER_MAX_RESENDS	       2
+#define GMYTHTV_TRANSFER_MAX_RESENDS           2
 
-#define GMYTHTV_TRANSFER_MAX_BUFFER		(128*1024)
+#define GMYTHTV_TRANSFER_MAX_BUFFER            (128*1024)
 
-#define MAX_READ_SIZE              		(4*1024)
+#define MAX_READ_SIZE                          (4*1024)
 
-#define GST_FLOW_ERROR_NO_DATA  			(-101)
+#define GST_FLOW_ERROR_NO_DATA                 (-101)
 
-#define REQUEST_MAX_SIZE							(64*1024)
+#define REQUEST_MAX_SIZE                       (64*1024)
 
-#define INTERNAL_BUFFER_SIZE					(90*1024)
+#define INTERNAL_BUFFER_SIZE                   (90*1024)
 
 static const GstElementDetails gst_mythtv_src_details =
 GST_ELEMENT_DETAILS ("MythTV client source",
@@ -139,9 +139,10 @@ _urihandler_init (GType type)
 }
 
 GST_BOILERPLATE_FULL (GstMythtvSrc, gst_mythtv_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, _urihandler_init)
+    GST_TYPE_PUSH_SRC, _urihandler_init);
 
-     static void gst_mythtv_src_base_init (gpointer g_class)
+static void
+gst_mythtv_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -174,7 +175,9 @@ gst_mythtv_src_class_init (GstMythtvSrcClass * klass)
       g_param_spec_string ("location", "Location",
           "The location. In the form:"
           "\n\t\t\tmyth://a.com/file.nuv"
-          "\n\t\t\tmyth://a.com:23223/file.nuv "
+          "\n\t\t\tmyth://a.com:23223/file.nuv"
+          "\n\t\t\tmyth://a.com/?channel=123"
+          "\n\t\t\tmyth://a.com/?channel=Channel%203"
           "\n\t\t\ta.com/file.nuv - default scheme 'myth'",
           "", G_PARAM_READWRITE));
 
