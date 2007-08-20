@@ -314,7 +314,7 @@ Play an AVI movie
 Stream video using RTP and network elements.
 
 .B
-        gst\-launch v4l2src ! video/x-raw-yuv,width=128,height=96,format='(fourcc)'UYVY ! ffenc_h263 ! video/x-h263 ! rtph263ppay pt=96 ! udpsink host=192.168.1.1 port=5000 sync=false
+        gst\-launch v4l2src ! video/x-raw-yuv,width=128,height=96,format='(fourcc)'UYVY ! ffmpegcolorspace ! ffenc_h263 ! video/x-h263 ! rtph263ppay pt=96 ! udpsink host=192.168.1.1 port=5000 sync=false
 .br
 Use this command on the receiver
 
