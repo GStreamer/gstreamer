@@ -49,17 +49,35 @@ typedef struct _GstDTMFSrcClass GstDTMFSrcClass;
  *
  * The opaque #GstDTMFSrc data structure.
  */
+
+enum _GstDTMFEventType {
+  DTMF_EVENT_TYPE_START,
+  DTMF_EVENT_TYPE_STOP
+};
+
+typedef enum _GstDTMFEventType GstDTMFEventType;
+
+struct _GstDTMFSrcEvent {
+  GstClockTime      timestamp;
+  GstDTMFEventType  event_type;
+  double            sample;
+  guint16	    event_number;
+  guint16	    volume;
+  guint32           packet_count;
+};
+
+typedef struct _GstDTMFSrcEvent GstDTMFSrcEvent;
+
 struct _GstDTMFSrc {
   GstElement        element;
   GstPad	    *srcpad;
-  GstClockTime      timestamp;
   GstSegment        segment;
-  double            sample;
+  GAsyncQueue*	    event_queue;
+  GstDTMFSrcEvent*  last_event;
 
-  guint16	    event;
-  guint16	    volume;
   guint16	    interval;
 };
+
 
 struct _GstDTMFSrcClass {
   GstElementClass parent_class;

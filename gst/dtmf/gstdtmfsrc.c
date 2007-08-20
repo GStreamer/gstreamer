@@ -130,6 +130,8 @@
 #include <string.h>
 #include <math.h>
 
+#include <glib.h>
+
 #ifndef M_PI
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
@@ -148,7 +150,9 @@
 #define MAX_EVENT                16
 #define MIN_VOLUME               0
 #define MAX_VOLUME               36
-
+#define MIN_INTER_DIGIT_INTERVAL 50
+#define MIN_PULSE_DURATION       70
+#define MIN_DUTY_CYCLE           (MIN_INTER_DIGIT_INTERVAL + MIN_PULSE_DURATION)
 
 
 typedef struct st_dtmf_key {
@@ -265,12 +269,14 @@ static void gst_dtmf_src_get_property (GObject * object, guint prop_id,
 static gboolean gst_dtmf_src_handle_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_dtmf_src_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_dtmf_src_generate_tone(GstDTMFSrc *dtmfsrc, DTMF_KEY key, float duration,
+static void gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
     GstBuffer * buffer);
 static void gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc);
-static void gst_dtmf_src_start (GstDTMFSrc *dtmfsrc, gint event_number,
-    gint event_volume);
+static void gst_dtmf_src_start (GstDTMFSrc *dtmfsrc);
 static void gst_dtmf_src_stop (GstDTMFSrc *dtmfsrc);
+static void gst_dtmf_src_add_start_event (GstDTMFSrc *dtmfsrc, gint event_number,
+    gint event_volume);
+static void gst_dtmf_src_add_stop_event (GstDTMFSrc *dtmfsrc);
 
 static void
 gst_dtmf_src_base_init (gpointer g_class)
@@ -324,7 +330,8 @@ gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, gpointer g_class)
 
   dtmfsrc->interval = DEFAULT_PACKET_INTERVAL;
 
-  dtmfsrc->sample = 0;
+  dtmfsrc->event_queue = g_async_queue_new ();
+  dtmfsrc->last_event = NULL;
 
   GST_DEBUG_OBJECT (dtmfsrc, "init done");
 }
@@ -335,6 +342,14 @@ gst_dtmf_src_finalize (GObject * object)
   GstDTMFSrc *dtmfsrc;
 
   dtmfsrc = GST_DTMF_SRC (object);
+
+
+  gst_dtmf_src_stop (dtmfsrc);
+
+  if (dtmfsrc->event_queue) {
+    g_async_queue_unref (dtmfsrc->event_queue);
+    dtmfsrc->event_queue = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -368,12 +383,12 @@ gst_dtmf_src_handle_dtmf_event (GstDTMFSrc *dtmfsrc,
 
     GST_DEBUG_OBJECT (dtmfsrc, "Received start event %d with volume %d",
             event_number, event_volume);
-    gst_dtmf_src_start (dtmfsrc, event_number, event_volume);
+    gst_dtmf_src_add_start_event (dtmfsrc, event_number, event_volume);
   }
 
   else {
     GST_DEBUG_OBJECT (dtmfsrc, "Received stop event");
-    gst_dtmf_src_stop (dtmfsrc);
+    gst_dtmf_src_add_stop_event (dtmfsrc);
   }
 
   return TRUE;
@@ -498,34 +513,25 @@ gst_dtmf_src_set_stream_lock (GstDTMFSrc *dtmfsrc, gboolean lock)
 }
 
 static void
-gst_dtmf_prepare_timestamps (GstDTMFSrc *dtmfsrc)
+gst_dtmf_prepare_timestamps (GstDTMFSrc *dtmfsrc, GstDTMFSrcEvent *event)
 {
   GstClock *clock;
 
   clock = GST_ELEMENT_CLOCK (dtmfsrc);
   if (clock != NULL)
-    dtmfsrc->timestamp = gst_clock_get_time (GST_ELEMENT_CLOCK (dtmfsrc));
+    event->timestamp = gst_clock_get_time (GST_ELEMENT_CLOCK (dtmfsrc));
 
   else {
     GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s",
         GST_ELEMENT_NAME (dtmfsrc));
-    dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
+    event->timestamp = GST_CLOCK_TIME_NONE;
   }
 }
 
 static void
-gst_dtmf_src_start (GstDTMFSrc *dtmfsrc,
-        gint event_number, gint event_volume)
+gst_dtmf_src_start (GstDTMFSrc *dtmfsrc)
 {
   GstCaps * caps = gst_pad_get_pad_template_caps (dtmfsrc->srcpad);
-
-  dtmfsrc->event = CLAMP (event_number, MIN_EVENT, MAX_EVENT);
-  dtmfsrc->volume = CLAMP (event_volume, MIN_VOLUME, MAX_VOLUME);
-
-  gst_dtmf_prepare_timestamps (dtmfsrc);
-
-  /* Don't forget to get exclusive access to the stream */
-  gst_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
 
   if (!gst_pad_set_caps (dtmfsrc->srcpad, caps))
     GST_ERROR_OBJECT (dtmfsrc,
@@ -547,6 +553,20 @@ gst_dtmf_src_stop (GstDTMFSrc *dtmfsrc)
   /* Don't forget to release the stream lock */
   gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
 
+
+  /* Flushing the event queue */
+  GstDTMFSrcEvent *event = g_async_queue_try_pop (dtmfsrc->event_queue);
+
+  while (event != NULL) {
+    g_free (event);
+    event = g_async_queue_try_pop (dtmfsrc->event_queue);
+  }
+
+  if (dtmfsrc->last_event) {
+    g_free (dtmfsrc->last_event);
+    dtmfsrc->last_event = NULL;
+  }
+
   if (!gst_pad_pause_task (dtmfsrc->srcpad)) {
     GST_ERROR_OBJECT (dtmfsrc, "Failed to pause task on src pad");
     return;
@@ -555,7 +575,47 @@ gst_dtmf_src_stop (GstDTMFSrc *dtmfsrc)
 }
 
 static void
-gst_dtmf_src_generate_tone(GstDTMFSrc *dtmfsrc, DTMF_KEY key, float duration, GstBuffer * buffer)
+gst_dtmf_src_add_start_event (GstDTMFSrc *dtmfsrc, gint event_number,
+    gint event_volume)
+{
+
+  GstDTMFSrcEvent * event = g_malloc (sizeof(GstDTMFSrcEvent));
+  event->event_type = DTMF_EVENT_TYPE_START;
+  event->sample = 0;
+  event->event_number = CLAMP (event_number, MIN_EVENT, MAX_EVENT);
+  event->volume = CLAMP (event_volume, MIN_VOLUME, MAX_VOLUME);
+
+  g_async_queue_push (dtmfsrc->event_queue, event);
+}
+
+static void
+gst_dtmf_src_add_stop_event (GstDTMFSrc *dtmfsrc)
+{
+
+  GstDTMFSrcEvent * event = g_malloc (sizeof(GstDTMFSrcEvent));
+  event->event_type = DTMF_EVENT_TYPE_STOP;
+  event->sample = 0;
+  event->event_number = 0;
+  event->volume = 0;
+
+  g_async_queue_push (dtmfsrc->event_queue, event);
+}
+
+static void
+gst_dtmf_src_generate_silence(GstBuffer * buffer, float duration)
+{
+  gint buf_size;
+
+  /* Create a buffer with data set to 0 */
+  buf_size = ((duration/1000)*SAMPLE_RATE*SAMPLE_SIZE*CHANNELS)/8;
+  GST_BUFFER_SIZE (buffer) = buf_size;
+  GST_BUFFER_MALLOCDATA (buffer) = g_malloc0(buf_size);
+  GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
+
+}
+
+static void
+gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration, GstBuffer * buffer)
 {
   gint16 *p;
   gint tone_size;
@@ -578,8 +638,8 @@ gst_dtmf_src_generate_tone(GstDTMFSrc *dtmfsrc, DTMF_KEY key, float duration, Gs
     /*
      * We add the fundamental frequencies together.
      */
-    f1 = sin(2 * M_PI * key.low_frequency * (dtmfsrc->sample / SAMPLE_RATE));
-    f2 = sin(2 * M_PI * key.high_frequency * (dtmfsrc->sample / SAMPLE_RATE));
+    f1 = sin(2 * M_PI * key.low_frequency * (event->sample / SAMPLE_RATE));
+    f2 = sin(2 * M_PI * key.high_frequency * (event->sample / SAMPLE_RATE));
 
     amplitude = (f1 + f2) / 2;
 
@@ -589,7 +649,7 @@ gst_dtmf_src_generate_tone(GstDTMFSrc *dtmfsrc, DTMF_KEY key, float duration, Gs
     /* Store it in the data buffer */
     *(p++) = (gint16) amplitude;
 
-    (dtmfsrc->sample)++;
+    (event->sample)++;
   }
 }
 
@@ -620,9 +680,10 @@ gst_dtmf_src_wait_for_buffer_ts (GstDTMFSrc *dtmfsrc, GstBuffer * buf)
 
 
 static GstBuffer *
-gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc)
+gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc, GstDTMFSrcEvent *event)
 {
   GstBuffer *buf = NULL;
+  guint32 duration;
 
 
   GST_DEBUG_OBJECT (dtmfsrc,
@@ -631,14 +692,32 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc)
   /* create buffer to hold the tone */
   buf = gst_buffer_new ();
 
-  /* Generate the tone */
-  gst_dtmf_src_generate_tone(dtmfsrc, DTMF_KEYS[dtmfsrc->event], dtmfsrc->interval, buf);
+  /* The first packet must be inter digit silence, then the second and third must be the
+   * minimal pulse duration divided into two packets to make it small
+   */
+  switch(event->packet_count) {
+    case 0:
+      duration = MIN_INTER_DIGIT_INTERVAL;
+      gst_dtmf_src_generate_silence (buf, duration);
+      break;
+    case 1:
+    case 2:
+      /* Generate the tone */
+      duration = MIN_PULSE_DURATION / 2;
+      gst_dtmf_src_generate_tone(event, DTMF_KEYS[event->event_number], duration, buf);
+      break;
+    default:
+      duration = dtmfsrc->interval;
+      gst_dtmf_src_generate_tone(event, DTMF_KEYS[event->event_number], duration, buf);
+      break;
+  }
+  event->packet_count++;
 
 
   /* timestamp and duration of GstBuffer */
-  GST_BUFFER_DURATION (buf) = dtmfsrc->interval * GST_MSECOND;
-  GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
-  dtmfsrc->timestamp += GST_BUFFER_DURATION (buf) /2;
+  GST_BUFFER_DURATION (buf) = duration * GST_MSECOND;
+  GST_BUFFER_TIMESTAMP (buf) = event->timestamp;
+  event->timestamp += GST_BUFFER_DURATION (buf);
 
   /* FIXME: Should we sync to clock ourselves or leave it to sink */
   gst_dtmf_src_wait_for_buffer_ts (dtmfsrc, buf);
@@ -654,20 +733,54 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
 {
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
+  GstDTMFSrcEvent *event;
 
-  buf = gst_dtmf_src_create_next_tone_packet (dtmfsrc);
+  g_async_queue_ref (dtmfsrc->event_queue);
 
-  gst_buffer_ref(buf);
+  if (dtmfsrc->last_event == NULL) {
+    event = g_async_queue_pop (dtmfsrc->event_queue);
 
-  GST_DEBUG_OBJECT (dtmfsrc,
-      "pushing buffer on src pad of size %d", GST_BUFFER_SIZE (buf));
-  ret = gst_pad_push (dtmfsrc->srcpad, buf);
-  if (ret != GST_FLOW_OK) {
-    GST_ERROR_OBJECT (dtmfsrc, "Failed to push buffer on src pad", GST_BUFFER_SIZE (buf));
+    if (event->event_type == DTMF_EVENT_TYPE_STOP) {
+      GST_WARNING_OBJECT (dtmfsrc, "Received a DTMF stop event when already stopped", GST_BUFFER_SIZE (buf));
+    } else if (event->event_type == DTMF_EVENT_TYPE_START) {
+      gst_dtmf_prepare_timestamps (dtmfsrc, event);
+
+      /* Don't forget to get exclusive access to the stream */
+      gst_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
+
+      event->packet_count = 0;
+      dtmfsrc->last_event = event;
+    }
+  } else if (dtmfsrc->last_event->packet_count >= 3) {
+    event = g_async_queue_try_pop (dtmfsrc->event_queue);
+
+    if (event != NULL) {
+      if (event->event_type == DTMF_EVENT_TYPE_START) {
+	GST_WARNING_OBJECT (dtmfsrc, "Received two consecutive DTMF start events", GST_BUFFER_SIZE (buf));
+      } else if (event->event_type == DTMF_EVENT_TYPE_STOP) {
+	gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+	g_free (dtmfsrc->last_event);
+	dtmfsrc->last_event = NULL;
+      }
+    }
   }
+  g_async_queue_unref (dtmfsrc->event_queue);
 
-  gst_buffer_unref(buf);
-  GST_DEBUG_OBJECT (dtmfsrc, "pushed DTMF tone on src pad");
+  if (dtmfsrc->last_event) {
+    buf = gst_dtmf_src_create_next_tone_packet (dtmfsrc, dtmfsrc->last_event);
+
+    gst_buffer_ref(buf);
+
+    GST_DEBUG_OBJECT (dtmfsrc,
+	"pushing buffer on src pad of size %d", GST_BUFFER_SIZE (buf));
+    ret = gst_pad_push (dtmfsrc->srcpad, buf);
+    if (ret != GST_FLOW_OK) {
+      GST_ERROR_OBJECT (dtmfsrc, "Failed to push buffer on src pad", GST_BUFFER_SIZE (buf));
+    }
+
+    gst_buffer_unref(buf);
+    GST_DEBUG_OBJECT (dtmfsrc, "pushed DTMF tone on src pad");
+  }
 
 }
 
@@ -687,7 +800,7 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
       no_preroll = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      /* gst_dtmf_src_start (dtmfsrc, 6, 30); */
+      gst_dtmf_src_start (dtmfsrc);
       break;
     default:
       break;
@@ -701,7 +814,7 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* Indicate that we don't do PRE_ROLL */
-      /* gst_dtmf_src_stop (dtmfsrc); */
+      gst_dtmf_src_stop (dtmfsrc);
       no_preroll = TRUE;
       break;
     default:
@@ -727,3 +840,4 @@ gst_dtmf_src_plugin_init (GstPlugin * plugin)
   return gst_element_register (plugin, "dtmfsrc",
       GST_RANK_NONE, GST_TYPE_DTMF_SRC);
 }
+
