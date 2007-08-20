@@ -1,3 +1,15 @@
+2007-08-20  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/random/release:
+	  The release manager should run 'make download-po' before making a
+	  release to make sure translations are up-to-date.
+
+	* po/LINGUAS:
+	* po/be.po:
+	* po/pl.po:
+	* po/rw.po:
+	  Add some new translations.
+
 2007-08-17  Wim Taymans  <wim.taymans@gmail.com>
 
 	* tools/gst-launch.c: (event_loop), (main):
