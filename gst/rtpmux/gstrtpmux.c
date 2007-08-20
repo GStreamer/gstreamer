@@ -284,6 +284,7 @@ gst_rtp_mux_setup_sinkpad (GstRTPMux * rtp_mux, GstPad * sinkpad)
   if (klass->sink_event_func)
     gst_pad_set_event_function (sinkpad, klass->sink_event_func);
 
+  /* This could break with gstreamer 0.10.9 */
   gst_pad_set_active (sinkpad, TRUE);
 
   /* dd the pad to the element */
