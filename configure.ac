@@ -91,6 +91,7 @@ GST_PLUGINS_ALL="\
   interleave \
   librfb \
   modplug \
+  mpegtsparse \
   mpegvideoparse \
   multifile \
   mve \
@@ -989,6 +990,7 @@ gst/interleave/Makefile
 gst/librfb/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
+gst/mpegtsparse/Makefile
 gst/mpegvideoparse/Makefile
 gst/multifile/Makefile
 gst/mve/Makefile

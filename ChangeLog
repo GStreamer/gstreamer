@@ -1,3 +1,23 @@
+2007-08-20  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* configure.ac:
+	* gst/mpegtsparse/Makefile.am:
+	* gst/mpegtsparse/flutspatinfo.c:
+	* gst/mpegtsparse/flutspatinfo.h:
+	* gst/mpegtsparse/flutspmtinfo.c:
+	* gst/mpegtsparse/flutspmtinfo.h:
+	* gst/mpegtsparse/flutspmtstreaminfo.c:
+	* gst/mpegtsparse/flutspmtstreaminfo.h:
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	* gst/mpegtsparse/mpegtspacketizer.h:
+	* gst/mpegtsparse/mpegtsparse.c:
+	* gst/mpegtsparse/mpegtsparse.h:
+	* gst/mpegtsparse/mpegtsparsemarshal.list:
+	Add mpeg transport stream parser written by:
+	Alessandro Decina. Includes a couple of files from the
+	Fluendo transport stream demuxer that Fluendo have 
+	kindly allowed to be licenced under LGPL also.
+
 2007-08-20  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Bastien Nocera  <hadess at hadess net>
