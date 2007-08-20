@@ -244,7 +244,7 @@ gst_rtp_dtmf_src_base_init (gpointer g_class)
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
   
   GST_DEBUG_CATEGORY_INIT (gst_rtp_dtmf_src_debug,
-          "dtmfsrc", 0, "dtmfsrc element");
+          "rtpdtmfsrc", 0, "rtpdtmfsrc element");
   
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_dtmf_src_template));
@@ -849,24 +849,9 @@ failure:
   }
 }
 
-static gboolean
+gboolean
 gst_rtp_dtmf_src_plugin_init (GstPlugin * plugin)
 {
   return gst_element_register (plugin, "rtpdtmfsrc",
       GST_RANK_NONE, GST_TYPE_RTP_DTMF_SRC);
 }
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_rtp_dtmf_src_plugin_init (plugin))
-    return FALSE;
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "dtmf",
-    "DTMF plugins",
-    plugin_init, "0.1" , "LGPL", "DTMF", "");
