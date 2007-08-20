@@ -61,25 +61,28 @@ GST_DEBUG_CATEGORY_STATIC (rtph263ppay_debug);
 static const GstElementDetails gst_rtp_h263ppay_details =
 GST_ELEMENT_DETAILS ("RTP packet payloader",
     "Codec/Payloader/Network",
-    "Payload-encodes H263+ video in RTP packets (RFC 2429)",
+    "Payload-encodes H263/+/++ video in RTP packets (RFC 4629)",
     "Wim Taymans <wim@fluendo.com>");
 
 static GstStaticPadTemplate gst_rtp_h263p_pay_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h263, "
-        "variant = (string) \"itu\", " "h263version = (string) \"h263p\"")
+    GST_STATIC_CAPS ("video/x-h263, " "variant = (string) \"itu\" ")
     );
 
 static GstStaticPadTemplate gst_rtp_h263p_pay_src_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"")
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"; "
+        "application/x-rtp, "
+        "media = (string) \"video\", "
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-2000\"")
     );
 
 static void gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass);
@@ -165,7 +168,7 @@ gst_rtp_h263p_pay_class_init (GstRtpH263PPayClass * klass)
           DEFAULT_FRAGMENTATION_MODE, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (rtph263ppay_debug, "rtph263ppay",
-      0, "rtph263ppay (RFC 2429)");
+      0, "rtph263ppay (RFC 4629)");
 
 }
 
@@ -250,16 +253,16 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
     return GST_FLOW_OK;
 
   fragmented = FALSE;
-  /* This algorithm assumes the H263+ encoder sends complete frames in each
+  /* This algorithm assumes the H263/+/++ encoder sends complete frames in each
    * buffer */
   /* With Fragmentation Mode at GST_FRAGMENTATION_MODE_NORMAL:
    *  This algorithm implements the Follow-on packets method for packetization.
    *  This assumes low packet loss network. 
    * With Fragmentation Mode at GST_FRAGMENTATION_MODE_SYNC:
    *  This algorithm separates large frames at synchronisation points (Segments)
-   *  (See RFC 2429 section 6). It would be interesting to have a property such as network
+   *  (See RFC 4629 section 6). It would be interesting to have a property such as network
    *  quality to select between both packetization methods */
-  /* TODO Add VRC supprt (See RFC 2429 section 4.2) */
+  /* TODO Add VRC supprt (See RFC 4629 section 5.2) */
 
   while (avail > 0) {
     guint towrite;
@@ -278,12 +281,15 @@ gst_rtp_h263p_pay_flush (GstRtpH263PPay * rtph263ppay)
       parse_data = gst_adapter_peek (rtph263ppay->adapter, avail);
 
       /* Check if we have a gob or eos , eossbs */
+      /* FIXME EOS and EOSSBS packets should never contain any gobs and vice-versa */
       if (avail >= 3 && *parse_data == 0 && *(parse_data + 1) == 0
           && *(parse_data + 2) >= 0x80) {
         GST_DEBUG_OBJECT (rtph263ppay, " Found GOB header");
         found_gob = TRUE;
       }
       /* Find next and cut the packet accordingly */
+      /* TODO we should get as many gobs as possible until MTU is reached, this
+       * code seems to just get one GOB per packet */
       while (parsed_len + 2 < avail) {
         if (parse_data[parsed_len] == 0 && parse_data[parsed_len + 1] == 0
             && parse_data[parsed_len + 2] >= 0x80) {

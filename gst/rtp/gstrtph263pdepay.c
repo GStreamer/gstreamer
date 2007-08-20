@@ -30,7 +30,7 @@
 static const GstElementDetails gst_rtp_h263pdepay_details =
 GST_ELEMENT_DETAILS ("RTP packet depayloader",
     "Codec/Depayloader/Network",
-    "Extracts H263+ video from RTP packets (RFC 2429)",
+    "Extracts H263/+/++ video from RTP packets (RFC 4629)",
     "Wim Taymans <wim@fluendo.com>");
 
 /* RtpH263PDepay signals and args */
@@ -50,18 +50,50 @@ static GstStaticPadTemplate gst_rtp_h263p_depay_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-h263, "
-        "variant = (string) \"itu\", " "h263version = (string) \"h263p\"")
+    GST_STATIC_CAPS ("video/x-h263, " "variant = (string) \"itu\" ")
     );
 
 static GstStaticPadTemplate gst_rtp_h263p_depay_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"video\", "
         "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
-        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"")
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-1998\"; "
+        /* optional params */
+        /* NOTE all optional SDP params must be strings in the caps */
+        /*
+           "sqcif = (string) [1, 32], "
+           "qcif = (string) [1, 32], "
+           "cif = (string) [1, 32], "
+           "cif4 = (string) [1, 32], "
+           "cif16 = (string) [1, 32], "
+           "custom = (string) ANY, "
+           "f = (string) {0, 1},"
+           "i = (string) {0, 1},"
+           "j = (string) {0, 1},"
+           "t = (string) {0, 1},"
+           "k = (string) {1, 2, 3, 4},"
+           "n = (string) {1, 2, 3, 4},"
+           "p = (string) ANY,"
+           "par = (string) ANY, "
+           "cpcf = (string) ANY, "
+           "bpp = (string) [0, 65536], "
+           "hrd = (string) {0, 1}; "
+         */
+        "application/x-rtp, "
+        "media = (string) \"video\", "
+        "payload = (int) " GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) 90000, " "encoding-name = (string) \"H263-2000\" "
+        /* optional params */
+        /* NOTE all optional SDP params must be strings in the caps */
+        /*
+           "profile = (string) [0, 10], "
+           "level = (string) {10, 20, 30, 40, 45, 50, 60, 70}, "
+           "interlace = (string) {0, 1};"
+         */
+    )
     );
 
 GST_BOILERPLATE (GstRtpH263PDepay, gst_rtp_h263p_depay, GstBaseRTPDepayload,
@@ -142,20 +174,84 @@ gst_rtp_h263p_depay_finalize (GObject * object)
 gboolean
 gst_rtp_h263p_depay_setcaps (GstBaseRTPDepayload * filter, GstCaps * caps)
 {
-  GstCaps *srccaps;
+  GstCaps *srccaps = NULL;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
   gint clock_rate = 90000;      /* default */
+  const gchar *encoding_name = NULL;
 
   gst_structure_get_int (structure, "clock-rate", &clock_rate);
   filter->clock_rate = clock_rate;
 
-  srccaps = gst_caps_new_simple ("video/x-h263",
-      "variant", G_TYPE_STRING, "itu",
-      "h263version", G_TYPE_STRING, "h263p", NULL);
+  encoding_name = gst_structure_get_string (structure, "encoding-name");
+  if (encoding_name == NULL)
+    goto no_encoding_name;
+
+  if (g_ascii_strcasecmp (encoding_name, "H263-2000") == 0) {
+    /* always h263++ */
+    srccaps = gst_caps_new_simple ("video/x-h263",
+        "variant", G_TYPE_STRING, "itu",
+        "h263version", G_TYPE_STRING, "h263pp", NULL);
+  } else if (g_ascii_strcasecmp (encoding_name, "H263-1998") == 0) {
+    /* this can be H263 or H263+ depending on defined appendixes in the optional
+     * SDP params */
+    const gchar *F, *I, *J, *T, *K, *N, *P;
+    gboolean is_h263p = FALSE;
+
+    F = gst_structure_get_string (structure, "f");
+    if (F)
+      if (g_strcasecmp (F, "1") == 0)
+        is_h263p = TRUE;
+    I = gst_structure_get_string (structure, "i");
+    if (I)
+      if (g_strcasecmp (I, "1") == 0)
+        is_h263p = TRUE;
+    J = gst_structure_get_string (structure, "j");
+    if (J)
+      if (g_strcasecmp (J, "1") == 0)
+        is_h263p = TRUE;
+    T = gst_structure_get_string (structure, "t");
+    if (T)
+      if (g_strcasecmp (T, "1") == 0)
+        is_h263p = TRUE;
+    K = gst_structure_get_string (structure, "k");
+    if (K)
+      is_h263p = TRUE;
+    N = gst_structure_get_string (structure, "n");
+    if (N)
+      is_h263p = TRUE;
+    P = gst_structure_get_string (structure, "p");
+    if (P)
+      is_h263p = TRUE;
+
+    if (is_h263p) {
+      srccaps = gst_caps_new_simple ("video/x-h263",
+          "variant", G_TYPE_STRING, "itu",
+          "h263version", G_TYPE_STRING, "h263p", NULL);
+    } else {
+      srccaps = gst_caps_new_simple ("video/x-h263",
+          "variant", G_TYPE_STRING, "itu",
+          "h263version", G_TYPE_STRING, "h263", NULL);
+    }
+  }
+  if (!srccaps)
+    goto no_caps;
+
   gst_pad_set_caps (GST_BASE_RTP_DEPAYLOAD_SRCPAD (filter), srccaps);
   gst_caps_unref (srccaps);
 
   return TRUE;
+
+  /* ERRORS */
+no_encoding_name:
+  {
+    GST_ERROR_OBJECT (filter, "no encoding-name");
+    return FALSE;
+  }
+no_caps:
+  {
+    GST_ERROR_OBJECT (filter, "invalid encoding-name");
+    return FALSE;
+  }
 }
 
 static GstBuffer *
@@ -220,7 +316,8 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       goto waiting_start;
 
     /* FIXME do not ignore the VRC header (See RFC 2429 section 4.2) */
-    /* strip off header */
+    /* FIXME actually use the RTP picture header when it is lost in the network */
+    /* for now strip off header */
     payload += header_len;
     payload_len -= header_len;
 
@@ -246,12 +343,6 @@ gst_rtp_h263p_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         gst_adapter_flush (rtph263pdepay->adapter, avail);
       }
       memcpy (GST_BUFFER_DATA (outbuf) + avail, payload, payload_len);
-
-      GST_BUFFER_TIMESTAMP (outbuf) =
-          timestamp * GST_SECOND / depayload->clock_rate;
-
-      gst_buffer_set_caps (outbuf,
-          (GstCaps *) gst_pad_get_pad_template_caps (depayload->srcpad));
 
       return outbuf;
 

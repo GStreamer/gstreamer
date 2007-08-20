@@ -1,3 +1,25 @@
+2007-08-20  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtp/Makefile.am:
+	* gst/rtp/gstrtp.c: (plugin_init):
+	* gst/rtp/gstrtph263depay.c: (gst_rtp_h263_depay_base_init),
+	(gst_rtp_h263_depay_class_init), (gst_rtp_h263_depay_init),
+	(gst_rtp_h263_depay_finalize), (gst_rtp_h263_depay_setcaps),
+	(gst_rtp_h263_depay_process), (gst_rtp_h263_depay_set_property),
+	(gst_rtp_h263_depay_get_property),
+	(gst_rtp_h263_depay_change_state),
+	(gst_rtp_h263_depay_plugin_init):
+	* gst/rtp/gstrtph263depay.h:
+	Added an H263 depayloader. Fixes #369392.
+
+	* gst/rtp/gstrtph263pdepay.c: (gst_rtp_h263p_depay_setcaps),
+	(gst_rtp_h263p_depay_process):
+	* gst/rtp/gstrtph263ppay.c: (gst_fragmentation_mode_get_type),
+	(gst_rtp_h263p_pay_class_init), (gst_rtp_h263p_pay_flush):
+	Make the H263+ pay/depayloader support H263-1998 and H263-2000
+	payloads.
+	Also alow plain H263 on the h263p payloaders. Fixes #465040.
+
 2007-08-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audiofx/audiochebyshevfreqband.c:
