@@ -807,8 +807,10 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   }
 
   /* let's drop oldest packet if the queue is already full and drop-on-latency
-   * is set. */
-  if (priv->drop_on_latency) {
+   * is set. We can only do this when there actually is a latency. When no
+   * latency is set, we just pump it in the queue and let the other end push it
+   * out as fast as possible. */
+  if (priv->latency_ms && priv->drop_on_latency) {
     guint64 latency_ts;
 
     latency_ts =
@@ -1187,8 +1189,8 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
 
       jitterbuffer->priv->latency_ms = new_latency;
 
-      /* post message if latency changed, this will infor the parent pipeline
-       * that a latency reconfiguration is possible. */
+      /* post message if latency changed, this will inform the parent pipeline
+       * that a latency reconfiguration is possible/needed. */
       if (new_latency != old_latency) {
         gst_element_post_message (GST_ELEMENT_CAST (jitterbuffer),
             gst_message_new_latency (GST_OBJECT_CAST (jitterbuffer)));
