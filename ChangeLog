@@ -1,3 +1,8 @@
+2007-08-21  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/modplug/gstmodplug.cc:
+	Fix compiler warning.
+
 2007-08-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/modplug/gstmodplug.cc:

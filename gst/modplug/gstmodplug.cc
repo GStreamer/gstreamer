@@ -459,7 +459,7 @@ gst_modplug_load_song (GstModPlug * modplug)
   GST_DEBUG_OBJECT (modplug, "Setting caps");
 
   /* negotiate srcpad caps */
-  if (othercaps = gst_pad_get_allowed_caps (modplug->srcpad)) {
+  if ((othercaps = gst_pad_get_allowed_caps (modplug->srcpad))) {
     newcaps = gst_caps_copy_nth (othercaps, 0);
     gst_caps_unref (othercaps);
   } else {
