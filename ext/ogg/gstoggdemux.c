@@ -2396,6 +2396,10 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
       if (pad->serialno == serial) {
         known_serial = TRUE;
 
+        /* submit the page now, this will fill in the start_time when the
+         * internal decoder finds it */
+        gst_ogg_pad_submit_page (pad, &op);
+
         if (!pad->is_skeleton && pad->start_time == -1 && ogg_page_eos (&op)) {
           /* got EOS on a pad before we could find its start_time.
            * We have no chance of finding a start_time for every pad so
@@ -2404,11 +2408,11 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
           done = TRUE;
           break;
         }
-        gst_ogg_pad_submit_page (pad, &op);
       }
       /* the timestamp will be filled in when we submit the pages */
       if (!pad->is_skeleton)
         done &= (pad->start_time != GST_CLOCK_TIME_NONE);
+
       GST_LOG_OBJECT (ogg, "done %08x now %d", pad->serialno, done);
     }
 
@@ -2577,7 +2581,7 @@ gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
   gboolean res = TRUE;
 
   chain->total_time = GST_CLOCK_TIME_NONE;
-  chain->segment_start = G_MAXINT64;
+  chain->segment_start = G_MAXUINT64;
 
   GST_DEBUG_OBJECT (ogg, "trying to collect chain info");
 
@@ -2595,7 +2599,7 @@ gst_ogg_demux_collect_chain_info (GstOggDemux * ogg, GstOggChain * chain)
   }
 
   if (chain->segment_stop != GST_CLOCK_TIME_NONE
-      && chain->segment_start != G_MAXINT64)
+      && chain->segment_start != G_MAXUINT64)
     chain->total_time = chain->segment_stop - chain->segment_start;
 
   GST_DEBUG_OBJECT (ogg, "return %d", res);

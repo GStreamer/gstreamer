@@ -1,3 +1,10 @@
+2007-08-21  Wim Taymans  <wim.taymans@gmail.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_read_chain),
+	(gst_ogg_demux_collect_chain_info):
+	Also submit the eos page when trying to find the first timestamp.
+	See #466717.
+
 2007-08-17  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/audio/audio.h:
