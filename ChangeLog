@@ -1,5 +1,12 @@
 2007-08-21  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	(rtp_jitter_buffer_get_ts_diff):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Fix undefined overflow prone ts_diff handling.
+
+2007-08-21  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/modplug/gstmodplug.cc:
 	Fix compiler warning.
 
