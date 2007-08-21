@@ -215,8 +215,9 @@ rtp_jitter_buffer_num_packets (RTPJitterBuffer * jbuf)
 guint32
 rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
 {
-  guint32 high_ts, low_ts;
+  guint64 high_ts, low_ts;
   GstBuffer *high_buf, *low_buf;
+  guint32 result;
 
   g_return_val_if_fail (jbuf != NULL, 0);
 
@@ -231,8 +232,9 @@ rtp_jitter_buffer_get_ts_diff (RTPJitterBuffer * jbuf)
 
   /* it needs to work if ts wraps */
   if (high_ts >= low_ts) {
-    return high_ts - low_ts;
+    result = (guint32) (high_ts - low_ts);
   } else {
-    return high_ts + G_MAXUINT32 + 1 - low_ts;
+    result = (guint32) (high_ts + G_MAXUINT32 + 1 - low_ts);
   }
+  return result;
 }
