@@ -1,5 +1,12 @@
 2007-08-21  Wim Taymans  <wim.taymans@gmail.com>
 
+	* ext/vorbis/vorbisdec.c: (vorbis_dec_push_forward):
+	When calculating the first timestamp of the buffers, don't go below 0
+	and clip the samples because the offset was on the eos page.
+	Fixes #466717.
+
+2007-08-21  Wim Taymans  <wim.taymans@gmail.com>
+
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_read_chain),
 	(gst_ogg_demux_collect_chain_info):
 	Also submit the eos page when trying to find the first timestamp.

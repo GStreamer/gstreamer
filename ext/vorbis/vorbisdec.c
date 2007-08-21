@@ -806,7 +806,12 @@ static GstFlowReturn
 vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
 {
   GstFlowReturn result;
-  gint64 outoffset = GST_BUFFER_OFFSET (buf);
+  gint64 outoffset, origoffset;
+
+  origoffset = GST_BUFFER_OFFSET (buf);
+
+again:
+  outoffset = origoffset;
 
   if (outoffset == -1) {
     dec->queued = g_list_append (dec->queued, buf);
@@ -814,7 +819,7 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
     result = GST_FLOW_OK;
   } else {
     if (G_UNLIKELY (dec->queued)) {
-      gint64 size;
+      guint size;
       GstClockTime ts;
       GList *walk;
 
@@ -827,9 +832,20 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
       for (walk = g_list_last (dec->queued); walk;
           walk = g_list_previous (walk)) {
         GstBuffer *buffer = GST_BUFFER (walk->data);
+        guint offset;
 
-        outoffset -=
-            GST_BUFFER_SIZE (buffer) / (sizeof (float) * dec->vi.channels);
+        offset = GST_BUFFER_SIZE (buffer) / (sizeof (float) * dec->vi.channels);
+
+        if (outoffset >= offset)
+          outoffset -= offset;
+        else {
+          /* we can't go below 0, this means this first offset was at the eos
+           * page and we need to clip to it instead */
+          GST_DEBUG_OBJECT (dec, "clipping %" G_GINT64_FORMAT,
+              offset - outoffset);
+          origoffset += (offset - outoffset);
+          goto again;
+        }
 
         GST_BUFFER_OFFSET (buffer) = outoffset;
         GST_BUFFER_TIMESTAMP (buffer) =
@@ -837,9 +853,9 @@ vorbis_dec_push_forward (GstVorbisDec * dec, GstBuffer * buf)
         GST_BUFFER_DURATION (buffer) = GST_CLOCK_DIFF (GST_BUFFER_TIMESTAMP
             (buffer), ts);
         ts = GST_BUFFER_TIMESTAMP (buffer);
-        GST_DEBUG_OBJECT (dec, "patch buffer %" G_GUINT64_FORMAT
-            ", offset %" G_GUINT64_FORMAT ", timestamp %" GST_TIME_FORMAT
-            ", duration %" GST_TIME_FORMAT, size, outoffset,
+        GST_DEBUG_OBJECT (dec, "patch buffer %u, offset %" G_GUINT64_FORMAT
+            ", timestamp %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
+            size, outoffset,
             GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
             GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
         size--;
