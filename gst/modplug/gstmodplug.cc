@@ -93,27 +93,24 @@ enum
 #define DEFAULT_OVERSAMP         TRUE
 #define DEFAULT_NOISE_REDUCTION  TRUE
 
-#define SRC_CAPS \
-  "audio/x-raw-int,"                              \
-  " endianness = (int) BYTE_ORDER,"               \
-  " signed = (boolean) true,"                     \
-  " width = (int) 16,"                            \
-  " depth = (int) 16,"                            \
-  " rate = (int) { 8000, 11025, 22050, 44100 },"  \
-  " channels = (int) 2; "                         \
-  "audio/x-raw-int,"                              \
-  " endianness = (int) BYTE_ORDER,"               \
-  " signed = (boolean) false,"                    \
-  " width = (int) 8,"                             \
-  " depth = (int) 8,"                             \
-  " rate = (int) { 8000, 11025, 22050, 44100 }, " \
-  " channels = (int) [ 1, 2 ]"
-
 static GstStaticPadTemplate modplug_src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (SRC_CAPS));
+    GST_STATIC_CAPS ("audio/x-raw-int,"
+        " endianness = (int) BYTE_ORDER,"
+        " signed = (boolean) true,"
+        " width = (int) 16,"
+        " depth = (int) 16,"
+        " rate = (int) { 8000, 11025, 22050, 44100 },"
+        " channels = (int) 2; "
+        "audio/x-raw-int,"
+        " endianness = (int) BYTE_ORDER,"
+        " signed = (boolean) false,"
+        " width = (int) 8,"
+        " depth = (int) 8,"
+        " rate = (int) { 8000, 11025, 22050, 44100 }, "
+        " channels = (int) [ 1, 2 ]"));
 
 static GstStaticPadTemplate modplug_sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -459,14 +456,18 @@ gst_modplug_load_song (GstModPlug * modplug)
   GstStructure *structure;
   gint depth;
 
-  GST_DEBUG_OBJECT (modplug, "Loading song");
-
-  modplug->mSoundFile = new CSoundFile;
+  GST_DEBUG_OBJECT (modplug, "Setting caps");
 
   /* negotiate srcpad caps */
-  othercaps = gst_pad_get_allowed_caps (modplug->srcpad);
-  newcaps = gst_caps_copy_nth (othercaps, 0);
-  gst_caps_unref (othercaps);
+  if (othercaps = gst_pad_get_allowed_caps (modplug->srcpad)) {
+    newcaps = gst_caps_copy_nth (othercaps, 0);
+    gst_caps_unref (othercaps);
+  } else {
+    GST_WARNING ("no allowed caps on srcpad, no peer linked");
+    /* FIXME: this can be done in a better way */
+    newcaps =
+        gst_caps_copy_nth (gst_pad_get_pad_template_caps (modplug->srcpad), 0);
+  }
   gst_pad_fixate_caps (modplug->srcpad, newcaps);
   gst_pad_set_caps (modplug->srcpad, newcaps);
 
@@ -479,6 +480,10 @@ gst_modplug_load_song (GstModPlug * modplug)
 
   modplug->read_samples = 1152;
   modplug->read_bytes = modplug->read_samples * modplug->channel * depth / 8;
+
+  GST_DEBUG_OBJECT (modplug, "Loading song");
+
+  modplug->mSoundFile = new CSoundFile;
 
   if (modplug->_16bit)
     modplug->mSoundFile->SetWaveConfig (modplug->frequency, 16,

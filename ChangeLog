@@ -1,3 +1,8 @@
+2007-08-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/modplug/gstmodplug.cc:
+	  Don't use NULL caps for srcpad is not yet connected.
+
 2007-08-20  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* configure.ac:
