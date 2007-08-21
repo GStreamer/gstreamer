@@ -1,5 +1,10 @@
 2007-08-21  Wim Taymans  <wim.taymans@gmail.com>
 
+	* sys/v4l/gstv4lsrc.c: (gst_v4lsrc_palette_to_caps):
+	Fix RGB24 masks as spotted by _ke (Daniel G. Siegel) on IRC.
+
+2007-08-21  Wim Taymans  <wim.taymans@gmail.com>
+
 	* ext/vorbis/vorbisdec.c: (vorbis_dec_push_forward):
 	When calculating the first timestamp of the buffers, don't go below 0
 	and clip the samples because the offset was on the eos page.

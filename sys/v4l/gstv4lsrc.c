@@ -325,8 +325,8 @@ gst_v4lsrc_palette_to_caps (int palette)
             "bpp = (int) 24, "
             "depth = (int) 24, "
             "endianness = (int) BIG_ENDIAN, "
-            "red_mask = 0x0000FF, "
-            "green_mask = 0x00FF00, " "blue_mask = 0xFF0000");
+            "red_mask = 0xFF0000, "
+            "green_mask = 0x00FF00, " "blue_mask = 0x0000FF");
         break;
       case VIDEO_PALETTE_RGB32:
         caps = gst_caps_from_string ("video/x-raw-rgb, "
