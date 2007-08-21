@@ -1,5 +1,14 @@
 2007-08-21  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_chain),
+	(gst_rtp_jitter_buffer_set_property):
+	When drop-on-latency is set but we have no latency configured, just push
+	the buffer as fast as possible.
+	Fix typo in comment.
+
+2007-08-21  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtpmanager/rtpjitterbuffer.c:
 	(rtp_jitter_buffer_get_ts_diff):
 	* gst/rtpmanager/rtpjitterbuffer.h:
