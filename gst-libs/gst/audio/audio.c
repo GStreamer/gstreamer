@@ -261,7 +261,8 @@ gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag)
  *
  * Clip the the buffer to the given %GstSegment.
  *
- * After calling this function do not reference @buffer anymore.
+ * After calling this function the caller does not own a reference to 
+ * @buffer anymore.
  *
  * Returns: %NULL if the buffer is completely outside the configured segment,
  * otherwise the clipped buffer is returned.
