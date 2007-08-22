@@ -332,6 +332,9 @@ gst_flv_demux_pull_tag (GstPad * pad, GstFLVDemux * demux)
     /* If either audio or video is linked we return GST_FLOW_OK */
     if (demux->audio_linked || demux->video_linked) {
       ret = GST_FLOW_OK;
+    } else {
+      GST_WARNING_OBJECT (demux, "parsing this tag returned not-linked and "
+          "neither video nor audio are linked");
     }
   }
 
