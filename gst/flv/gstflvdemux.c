@@ -90,7 +90,10 @@ gst_flv_demux_cleanup (GstFLVDemux * demux)
   demux->has_audio = FALSE;
   demux->has_video = FALSE;
   demux->push_tags = FALSE;
+  demux->got_par = FALSE;
 
+  demux->w = demux->h = 0;
+  demux->par_x = demux->par_y = 1;
   demux->video_offset = 0;
   demux->audio_offset = 0;
   demux->offset = demux->cur_tag_offset = 0;

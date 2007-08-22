@@ -1,5 +1,16 @@
 2007-08-22  Julien MOUTTE  <julien@moutte.net>
 
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_cleanup),
+	(gst_flv_demux_pull_tag):
+	* gst/flv/gstflvdemux.h:
+	* gst/flv/gstflvparse.c: (gst_flv_parse_metadata_item),
+	(gst_flv_parse_tag_script), (gst_flv_parse_tag_audio),
+	(gst_flv_parse_tag_video): Handle pixel aspect ratio through
+	metadata tags like ASF does. Fluendo muxer supports this and 
+	Flash players can support it as well this way.
+
+2007-08-22  Julien MOUTTE  <julien@moutte.net>
+
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_pull_tag):
 	* gst/flv/gstflvparse.c: (gst_flv_parse_metadata_item),
 	(gst_flv_parse_tag_script), (gst_flv_parse_tag_audio),

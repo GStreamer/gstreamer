@@ -123,6 +123,13 @@ gst_flv_parse_metadata_item (GstFLVDemux * demux, const guint8 * data,
             GST_TAG_DURATION, demux->duration, NULL);
       } else {
         if (tag_name) {
+          if (!strcmp (tag_name, "AspectRatioX")) {
+            demux->par_x = value_union.value_double;
+            demux->got_par = TRUE;
+          } else if (!strcmp (tag_name, "AspectRatioY")) {
+            demux->par_y = value_union.value_double;
+            demux->got_par = TRUE;
+          }
           if (!gst_tag_exists (tag_name)) {
             gst_tag_register (tag_name, GST_TAG_FLAG_META, G_TYPE_DOUBLE,
                 tag_name, tag_name, gst_tag_merge_use_first);
@@ -718,6 +725,13 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
       goto beach;
     }
 
+    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        demux->par_x, demux->par_y, NULL);
+
+    /* When we ve set pixel-aspect-ratio we use that boolean to detect a 
+     * metadata tag that would come later and trigger a caps change */
+    demux->got_par = FALSE;
+
     gst_pad_set_caps (demux->video_pad, caps);
 
     GST_DEBUG_OBJECT (demux, "created video pad with caps %" GST_PTR_FORMAT,
@@ -751,7 +765,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   }
 
   /* Check if caps have changed */
-  if (G_UNLIKELY (codec_tag != demux->video_codec_tag)) {
+  if (G_UNLIKELY (codec_tag != demux->video_codec_tag || demux->got_par)) {
     GstCaps *caps = NULL;
 
     GST_DEBUG_OBJECT (demux, "video settings have changed, changing caps");
@@ -779,6 +793,13 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
       ret = GST_FLOW_ERROR;
       goto beach;
     }
+
+    gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+        demux->par_x, demux->par_y, NULL);
+
+    /* When we ve set pixel-aspect-ratio we use that boolean to detect a 
+     * metadata tag that would come later and trigger a caps change */
+    demux->got_par = FALSE;
 
     gst_pad_set_caps (demux->video_pad, caps);
 
