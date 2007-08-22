@@ -621,6 +621,7 @@ gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
   gint tone_size;
   double i = 0;
   double amplitude, f1, f2;
+  double volume_factor;
 
   /* Create a buffer for the tone */
   tone_size = ((duration/1000)*SAMPLE_RATE*SAMPLE_SIZE*CHANNELS)/8;
@@ -629,6 +630,8 @@ gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
   GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
 
   p = (gint16 *) GST_BUFFER_MALLOCDATA (buffer);
+
+  volume_factor = pow (10, (-event->volume) / 20);
 
   /*
    * For each sample point we calculate 'x' as the
@@ -642,6 +645,9 @@ gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
     f2 = sin(2 * M_PI * key.high_frequency * (event->sample / SAMPLE_RATE));
 
     amplitude = (f1 + f2) / 2;
+
+    /* Adjust the volume */
+    amplitude *= volume_factor;
 
     /* Make the [-1:1] interval into a [-32767:32767] interval */
     amplitude *= 32767;
