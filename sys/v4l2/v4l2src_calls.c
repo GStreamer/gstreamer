@@ -892,21 +892,28 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
 
   memset (&stream, 0x00, sizeof (struct v4l2_streamparm));
   stream.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  if (ioctl (fd, VIDIOC_G_PARM, &stream) < 0)
-    goto get_parm_failed;
+  if (ioctl (fd, VIDIOC_G_PARM, &stream) < 0) {
+    GST_ELEMENT_WARNING (v4l2src, RESOURCE, SETTINGS,
+        (_("Could not get parameters on device '%s'"),
+            v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
+  } else {                      /* seems no point in SET, if can't get GET */
+    /* Note: V4L2 gives us the frame interval, we need the frame rate */
+    stream.parm.capture.timeperframe.numerator = fps_d;
+    stream.parm.capture.timeperframe.denominator = fps_n;
 
-  /* Note: V4L2 gives us the frame interval, we need the frame rate */
-  stream.parm.capture.timeperframe.numerator = fps_d;
-  stream.parm.capture.timeperframe.denominator = fps_n;
+    if (ioctl (fd, VIDIOC_S_PARM, &stream) < 0) {
+      GST_ELEMENT_WARNING (v4l2src, RESOURCE, SETTINGS,
+          (_("Could not set parameters on device '%s'"),
+              v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
 
-  if (ioctl (fd, VIDIOC_S_PARM, &stream) < 0)
-    goto set_parm_failed;
+      /* FIXME: better test for fraction equality */
+      if (stream.parm.capture.timeperframe.numerator != fps_d
+          || stream.parm.capture.timeperframe.denominator != fps_n)
+        goto invalid_framerate;
 
+    }
+  }
 
-  /* FIXME: better test for fraction equality */
-  if (stream.parm.capture.timeperframe.numerator != fps_d
-      || stream.parm.capture.timeperframe.denominator != fps_n)
-    goto invalid_framerate;
 
   return TRUE;
 
@@ -946,20 +953,6 @@ invalid_pixelformat:
             ", but device returned format" " %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (pixelformat),
             GST_FOURCC_ARGS (format.fmt.pix.pixelformat)));
-    return FALSE;
-  }
-get_parm_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("Could not get parameters on device '%s'"),
-            v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
-    return FALSE;
-  }
-set_parm_failed:
-  {
-    GST_ELEMENT_ERROR (v4l2src, RESOURCE, SETTINGS,
-        (_("Could not set parameters on device '%s'"),
-            v4l2src->v4l2object->videodev), GST_ERROR_SYSTEM);
     return FALSE;
   }
 invalid_framerate:

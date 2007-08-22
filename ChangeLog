@@ -1,3 +1,10 @@
+2007-08-22  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: Mark Nauwelaerts <manauw@skynet.be>
+
+	* sys/v4l2/v4l2src_calls.c:
+	  Handle optional v4l2 ioctls gracefully.
+
 2007-08-20  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtp/Makefile.am:
