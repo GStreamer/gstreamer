@@ -741,7 +741,7 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
     event = g_async_queue_pop (dtmfsrc->event_queue);
 
     if (event->event_type == DTMF_EVENT_TYPE_STOP) {
-      GST_WARNING_OBJECT (dtmfsrc, "Received a DTMF stop event when already stopped", GST_BUFFER_SIZE (buf));
+      GST_WARNING_OBJECT (dtmfsrc, "Received a DTMF stop event when already stopped");
     } else if (event->event_type == DTMF_EVENT_TYPE_START) {
       gst_dtmf_prepare_timestamps (dtmfsrc);
 
@@ -756,7 +756,7 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
 
     if (event != NULL) {
       if (event->event_type == DTMF_EVENT_TYPE_START) {
-	GST_WARNING_OBJECT (dtmfsrc, "Received two consecutive DTMF start events", GST_BUFFER_SIZE (buf));
+	GST_WARNING_OBJECT (dtmfsrc, "Received two consecutive DTMF start events");
       } else if (event->event_type == DTMF_EVENT_TYPE_STOP) {
 	gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
 	g_free (dtmfsrc->last_event);
@@ -775,7 +775,7 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
 	"pushing buffer on src pad of size %d", GST_BUFFER_SIZE (buf));
     ret = gst_pad_push (dtmfsrc->srcpad, buf);
     if (ret != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (dtmfsrc, "Failed to push buffer on src pad", GST_BUFFER_SIZE (buf));
+      GST_ERROR_OBJECT (dtmfsrc, "Failed to push buffer on src pad");
     }
 
     gst_buffer_unref(buf);
