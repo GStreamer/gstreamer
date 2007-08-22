@@ -1,3 +1,14 @@
+2007-08-22  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_do_seek),
+	(gst_rtspsrc_parse_methods), (gst_rtspsrc_open),
+	(gst_rtspsrc_play):
+	* gst/rtsp/gstrtspsrc.h:
+	Fix method detection again.
+	Keep track of when we must send a Range header.
+	Use segment values for Range, Speed and Scale headers.
+	Parse Speed and Scale headers to update the segment values.
+
 2007-08-22  Stefan Kost  <ensonic@users.sf.net>
 
 	patch by: Mark Nauwelaerts <manauw@skynet.be>

@@ -1134,10 +1134,9 @@ gst_rtspsrc_do_seek (GstRTSPSrc * src, GstSegment * segment)
 {
   gboolean res;
 
-  /* PLAY from new position, we are flushing now */
-  src->position = ((gdouble) segment->last_stop) / GST_SECOND;
-
+  /* PLAY will add the range header now. */
   src->state = GST_RTSP_STATE_SEEKING;
+  src->need_range = TRUE;
 
   res = gst_rtspsrc_play (src);
 
@@ -3139,9 +3138,8 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, GstRTSPMessage * response)
   gint indx = 0;
   gint i;
 
-  /* reset supported methods, FIXME, extensions should be able to configure
-   * this. */
-  src->methods = GST_RTSP_PLAY | GST_RTSP_PAUSE;
+  /* reset supported methods */
+  src->methods = 0;
 
   /* Try Allow Header first */
   field = GST_RTSP_HDR_ALLOW;
@@ -3181,11 +3179,14 @@ gst_rtspsrc_parse_methods (GstRTSPSrc * src, GstRTSPMessage * response)
 
   if (src->methods == 0) {
     /* neither Allow nor Public are required, assume the server supports
-     * DESCRIBE, SETUP, PLAY and PAUSE */
+     * at least DESCRIBE, SETUP, we always assume it supports PLAY and PAUSE as
+     * well. */
     GST_DEBUG_OBJECT (src, "could not get OPTIONS");
-    src->methods =
-        GST_RTSP_DESCRIBE | GST_RTSP_SETUP | GST_RTSP_PLAY | GST_RTSP_PAUSE;
+    src->methods = GST_RTSP_DESCRIBE | GST_RTSP_SETUP;
   }
+  /* always assume PLAY and PAUSED, FIXME, extensions should be able to override
+   * this */
+  src->methods |= GST_RTSP_PLAY | GST_RTSP_PAUSE;
 
   /* we need describe and setup */
   if (!(src->methods & GST_RTSP_DESCRIBE))
@@ -3631,7 +3632,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
   /* reset our state */
   gst_segment_init (&src->segment, GST_FORMAT_TIME);
-  src->position = 0.0;
+  src->need_range = TRUE;
 
   /* can't continue without a valid url */
   if (G_UNLIKELY (src->url == NULL))
@@ -3988,7 +3989,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
   GstRTSPResult res;
-  gchar *rtpinfo, *range;
+  gchar *hval;
 
   GST_RTSP_STATE_LOCK (src);
 
@@ -4007,13 +4008,30 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   if (res < 0)
     goto create_request_failed;
 
-  if (src->position == 0.0)
-    range = g_strdup_printf ("npt=0-");
-  else
-    range = g_strdup_printf ("npt=%f-", src->position);
+  if (src->need_range) {
+    if (src->segment.last_stop == 0)
+      hval = g_strdup_printf ("npt=0-");
+    else
+      hval =
+          g_strdup_printf ("npt=%f-",
+          ((gdouble) src->segment.last_stop) / GST_SECOND);
 
-  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, range);
-  g_free (range);
+    gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, hval);
+    g_free (hval);
+    src->need_range = FALSE;
+  }
+
+  if (src->segment.rate != 1.0) {
+    hval = g_strdup_printf ("%f", src->segment.rate);
+    gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, hval);
+    g_free (hval);
+  }
+
+  if (src->segment.applied_rate != 1.0) {
+    hval = g_strdup_printf ("%f", src->segment.applied_rate);
+    gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, hval);
+    g_free (hval);
+  }
 
   if ((res = gst_rtspsrc_send (src, &request, &response, NULL)) < 0)
     goto send_error;
@@ -4022,16 +4040,40 @@ gst_rtspsrc_play (GstRTSPSrc * src)
 
   /* parse RTP npt field. This is the current position in the stream (Normal
    * Play Time) and should be put in the NEWSEGMENT position field. */
-  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &range,
+  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &hval,
           0) == GST_RTSP_OK)
-    gst_rtspsrc_parse_range (src, range);
+    gst_rtspsrc_parse_range (src, hval);
+
+  /* parse Speed header. This is the intended playback rate of the stream
+   * and should be put in the NEWSEGMENT rate field. */
+  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SPEED, &hval,
+          0) == GST_RTSP_OK) {
+    gfloat fval;
+
+    if (sscanf (hval, "%f", &fval) > 0)
+      src->segment.rate = fval;
+  } else {
+    src->segment.rate = 1.0;
+  }
+
+  /* parse Scale header. This is the playback rate as sent by the server
+   * and should be put in the NEWSEGMENT applied_rate field. */
+  if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_SCALE, &hval,
+          0) == GST_RTSP_OK) {
+    gfloat fval;
+
+    if (sscanf (hval, "%f", &fval) > 0)
+      src->segment.applied_rate = fval;
+  } else {
+    src->segment.applied_rate = 1.0;
+  }
 
   /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
    * for the RTP packets. If this is not present, we assume all starts from 0... 
    * This is info for the RTP session manager that we pass to it in caps. */
   if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RTP_INFO,
-          &rtpinfo, 0) == GST_RTSP_OK)
-    gst_rtspsrc_parse_rtpinfo (src, rtpinfo);
+          &hval, 0) == GST_RTSP_OK)
+    gst_rtspsrc_parse_rtpinfo (src, hval);
 
   gst_rtsp_message_unset (&response);
 

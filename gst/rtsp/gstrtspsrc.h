@@ -130,7 +130,7 @@ struct _GstRTSPSrc {
   GStaticRecMutex *stream_rec_lock;
   GstSegment       segment;
   gboolean         running;
-  gdouble          position;
+  gboolean         need_range;
   gint             free_channel;
   GstEvent        *close_segment;
   GstEvent        *start_segment;
