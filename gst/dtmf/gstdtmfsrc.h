@@ -50,7 +50,7 @@ typedef struct _GstDTMFSrcClass GstDTMFSrcClass;
  * The opaque #GstDTMFSrc data structure.
  */
 
-enum _GstDTMFEventType {
+static enum _GstDTMFEventType {
   DTMF_EVENT_TYPE_START,
   DTMF_EVENT_TYPE_STOP
 };
