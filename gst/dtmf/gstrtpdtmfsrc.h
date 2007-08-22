@@ -57,6 +57,23 @@ typedef struct {
 typedef struct _GstRTPDTMFSrc GstRTPDTMFSrc;
 typedef struct _GstRTPDTMFSrcClass GstRTPDTMFSrcClass;
 
+
+
+static enum _GstRTPDTMFEventType {
+  RTP_DTMF_EVENT_TYPE_START,
+  RTP_DTMF_EVENT_TYPE_STOP
+};
+
+typedef enum _GstRTPDTMFEventType GstRTPDTMFEventType;
+
+struct _GstRTPDTMFSrcEvent {
+  GstRTPDTMFEventType  event_type;
+  GstRTPDTMFPayload*   payload;
+  guint32              sent_packets;
+};
+
+typedef struct _GstRTPDTMFSrcEvent GstRTPDTMFSrcEvent;
+
 /**
  * GstRTPDTMFSrc:
  * @element: the parent element.
@@ -64,30 +81,28 @@ typedef struct _GstRTPDTMFSrcClass GstRTPDTMFSrcClass;
  * The opaque #GstRTPDTMFSrc data structure.
  */
 struct _GstRTPDTMFSrc {
-  GstElement        element;
+  GstElement           element;
 
-  GstPad	    *srcpad;
-  GstRTPDTMFPayload *payload;
+  GstPad*	       srcpad;
+  GstSegment           segment;
+  GAsyncQueue*	       event_queue;
+  GstRTPDTMFSrcEvent*  last_event;
 
+  GstClockTime      timestamp;
+  gboolean          first_packet;
+  gboolean          last_packet;
   guint32           ts_base;
   guint16           seqnum_base;
-
   gint16            seqnum_offset;
   guint16           seqnum;
   gint32            ts_offset;
   guint32           rtp_timestamp;
-  guint32           clock_rate;
   guint             pt;
   guint             ssrc;
   guint             current_ssrc;
-  gboolean          first_packet;
-  gboolean          last_packet;
-  
-  GstClockTime      timestamp;
-  GstSegment        segment;
-
   guint16	    interval;
   guint16	    packet_redundancy;
+  guint32           clock_rate;
 };
 
 struct _GstRTPDTMFSrcClass {
