@@ -359,7 +359,7 @@ gst_flv_parse_tag_script (GstFLVDemux * demux, const guint8 * data,
 
     g_free (function_name);
 
-    if (demux->index) {
+    if (demux->index && demux->times && demux->filepositions) {
       /* If an index was found, insert associations */
       for (i = 0; i < MIN (demux->times->len, demux->filepositions->len); i++) {
         guint64 time, fileposition;
@@ -507,8 +507,11 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
     gst_element_add_pad (GST_ELEMENT (demux),
         gst_object_ref (demux->audio_pad));
 
-    if ((demux->has_audio & (demux->audio_pad != NULL)) &&
-        (demux->has_video & (demux->video_pad != NULL))) {
+    if ((demux->has_audio && !demux->audio_pad) ||
+        (demux->has_video && !demux->video_pad)) {
+      GST_DEBUG_OBJECT (demux, "we are still waiting for a stream to come up "
+          "before we can emit no more pads");
+    } else {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
       gst_element_no_more_pads (GST_ELEMENT (demux));
     }
@@ -556,13 +559,17 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   }
 
   /* Push taglist if present */
-  if ((demux->has_audio & (demux->audio_pad != NULL)) &&
-      (demux->has_video & (demux->video_pad != NULL)) &&
-      demux->taglist && demux->push_tags) {
-    GST_DEBUG_OBJECT (demux, "pushing tags out");
-    gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
-    demux->taglist = gst_tag_list_new ();
-    demux->push_tags = FALSE;
+  if ((demux->has_audio && !demux->audio_pad) ||
+      (demux->has_video && !demux->video_pad)) {
+    GST_DEBUG_OBJECT (demux, "we are still waiting for a stream to come up "
+        "before we can push tags");
+  } else {
+    if (demux->taglist && demux->push_tags) {
+      GST_DEBUG_OBJECT (demux, "pushing tags out");
+      gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
+      demux->taglist = gst_tag_list_new ();
+      demux->push_tags = FALSE;
+    }
   }
 
   /* Create buffer from pad */
@@ -570,8 +577,8 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
       demux->tag_data_size - codec_data, GST_PAD_CAPS (demux->audio_pad),
       &buffer);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (demux, "failed allocating a %d bytes buffer",
-        demux->tag_data_size);
+    GST_WARNING_OBJECT (demux, "failed allocating a %" G_GUINT64_FORMAT
+        " bytes buffer: %s", demux->tag_data_size, gst_flow_get_name (ret));
     if (ret == GST_FLOW_NOT_LINKED) {
       demux->audio_linked = FALSE;
     }
@@ -733,8 +740,11 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
     gst_element_add_pad (GST_ELEMENT (demux),
         gst_object_ref (demux->video_pad));
 
-    if ((demux->has_audio & (demux->audio_pad != NULL)) &&
-        (demux->has_video & (demux->video_pad != NULL))) {
+    if ((demux->has_audio && !demux->audio_pad) ||
+        (demux->has_video && !demux->video_pad)) {
+      GST_DEBUG_OBJECT (demux, "we are still waiting for a stream to come up "
+          "before we can emit no more pads");
+    } else {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
       gst_element_no_more_pads (GST_ELEMENT (demux));
     }
@@ -779,13 +789,17 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   }
 
   /* Push taglist if present */
-  if ((demux->has_audio & (demux->audio_pad != NULL)) &&
-      (demux->has_video & (demux->video_pad != NULL)) &&
-      demux->taglist && demux->push_tags) {
-    GST_DEBUG_OBJECT (demux, "pushing tags out");
-    gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
-    demux->taglist = gst_tag_list_new ();
-    demux->push_tags = FALSE;
+  if ((demux->has_audio && !demux->audio_pad) ||
+      (demux->has_video && !demux->video_pad)) {
+    GST_DEBUG_OBJECT (demux, "we are still waiting for a stream to come up "
+        "before we can push tags");
+  } else {
+    if (demux->taglist && demux->push_tags) {
+      GST_DEBUG_OBJECT (demux, "pushing tags out");
+      gst_element_found_tags (GST_ELEMENT (demux), demux->taglist);
+      demux->taglist = gst_tag_list_new ();
+      demux->push_tags = FALSE;
+    }
   }
 
   /* Create buffer from pad */
@@ -793,8 +807,8 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
       demux->tag_data_size - codec_data, GST_PAD_CAPS (demux->video_pad),
       &buffer);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-    GST_WARNING_OBJECT (demux, "failed allocating a %d bytes buffer",
-        demux->tag_data_size);
+    GST_WARNING_OBJECT (demux, "failed allocating a %" G_GUINT64_FORMAT
+        " bytes buffer: %s", demux->tag_data_size, gst_flow_get_name (ret));
     if (ret == GST_FLOW_NOT_LINKED) {
       demux->video_linked = FALSE;
     }
