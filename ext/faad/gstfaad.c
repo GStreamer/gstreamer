@@ -1352,8 +1352,7 @@ gst_faad_chain (GstPad * pad, GstBuffer * buffer)
           ret = gst_pad_push (faad->srcpad, outbuf);
           if (ret != GST_FLOW_OK)
             goto out;
-        } else
-          gst_buffer_unref (outbuf);
+        }
       }
     }
   }
