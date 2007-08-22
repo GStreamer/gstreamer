@@ -396,37 +396,47 @@ static void
 volume_process_float (GstVolume * this, gpointer bytes, guint n_bytes)
 {
   gfloat *data = (gfloat *) bytes;
-  guint i, num_samples;
+  guint num_samples = n_bytes / sizeof (gfloat);
 
-  num_samples = n_bytes / sizeof (gfloat);
-
-  for (i = 0; i < num_samples; i++) {
-    *data++ *= this->real_vol_f;
-  }
-  /* FIXME: seems to be slower than above!
-     oil_scalarmultiply_f32_ns (data, data, &this->real_vol_f, num_samples);
+  /*
+     guint i;
+     for (i = 0; i < num_samples; i++) {
+     *data++ *= this->real_vol_f;
+     }
    */
+  /* time gst-launch 2>/dev/null audiotestsrc wave=7 num-buffers=10000 ! audio/x-raw-float ! volume volume=1.5 ! fakesink
+   * goes from 0m0.850s -> 0m0.717s with liboil
+   */
+  oil_scalarmultiply_f32_ns (data, data, &this->real_vol_f, num_samples);
 }
 
 static void
 volume_process_int16 (GstVolume * this, gpointer bytes, guint n_bytes)
 {
   gint16 *data = (gint16 *) bytes;
-  guint i, num_samples;
+  guint num_samples = n_bytes / sizeof (gint16);
+
+#if 1
+  guint i;
   gint val;
 
-  num_samples = n_bytes / sizeof (gint16);
-
-  /* FIXME: need... liboil...
-   * oil_scalarmultiply_s16_ns ?
-   * https://bugs.freedesktop.org/show_bug.cgi?id=7060
-   */
   for (i = 0; i < num_samples; i++) {
     /* we use bitshifting instead of dividing by UNITY_INT for speed */
     val = (gint) * data;
     *data++ =
         (gint16) ((this->real_vol_i * val) >> VOLUME_UNITY_INT16_BIT_SHIFT);
   }
+#else
+  /* FIXME: need oil_scalarmultiply_s16_ns ?
+   * https://bugs.freedesktop.org/show_bug.cgi?id=7060
+   * code below
+   * - crashes for volume<1.0
+   * - is not faster
+   * time gst-launch 2>/dev/null audiotestsrc wave=7 num-buffers=100 ! volume volume=1.5 ! fakesink
+   */
+  oil_scalarmult_s16 (data, 0, data, 0,
+      ((gint16 *) (void *) (&this->real_vol_i)), num_samples);
+#endif
 }
 
 static void
