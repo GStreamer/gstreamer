@@ -92,11 +92,14 @@ struct _GstFLVDemux
   /* Video infos */
   guint32 w;
   guint32 h;
+  guint32 par_x;
+  guint32 par_y;
   guint16 video_codec_tag;
   guint64 video_offset;
   gboolean video_need_discont;
   gboolean video_need_segment;
   gboolean video_linked;
+  gboolean got_par;
 
   gboolean random_access;
   gboolean need_header;
