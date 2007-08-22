@@ -58,7 +58,6 @@ enum _GstDTMFEventType {
 typedef enum _GstDTMFEventType GstDTMFEventType;
 
 struct _GstDTMFSrcEvent {
-  GstClockTime      timestamp;
   GstDTMFEventType  event_type;
   double            sample;
   guint16	    event_number;
@@ -76,6 +75,7 @@ struct _GstDTMFSrc {
   GstDTMFSrcEvent*  last_event;
 
   guint16	    interval;
+  GstClockTime      timestamp;
 };
 
 

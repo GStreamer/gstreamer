@@ -513,18 +513,18 @@ gst_dtmf_src_set_stream_lock (GstDTMFSrc *dtmfsrc, gboolean lock)
 }
 
 static void
-gst_dtmf_prepare_timestamps (GstDTMFSrc *dtmfsrc, GstDTMFSrcEvent *event)
+gst_dtmf_prepare_timestamps (GstDTMFSrc *dtmfsrc)
 {
   GstClock *clock;
 
   clock = GST_ELEMENT_CLOCK (dtmfsrc);
   if (clock != NULL)
-    event->timestamp = gst_clock_get_time (GST_ELEMENT_CLOCK (dtmfsrc));
+    dtmfsrc->timestamp = gst_clock_get_time (GST_ELEMENT_CLOCK (dtmfsrc));
 
   else {
     GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s",
         GST_ELEMENT_NAME (dtmfsrc));
-    event->timestamp = GST_CLOCK_TIME_NONE;
+    dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
   }
 }
 
@@ -716,8 +716,8 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc, GstDTMFSrcEvent *even
 
   /* timestamp and duration of GstBuffer */
   GST_BUFFER_DURATION (buf) = duration * GST_MSECOND;
-  GST_BUFFER_TIMESTAMP (buf) = event->timestamp;
-  event->timestamp += GST_BUFFER_DURATION (buf);
+  GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
+  dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
 
   /* FIXME: Should we sync to clock ourselves or leave it to sink */
   gst_dtmf_src_wait_for_buffer_ts (dtmfsrc, buf);
@@ -743,7 +743,7 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
     if (event->event_type == DTMF_EVENT_TYPE_STOP) {
       GST_WARNING_OBJECT (dtmfsrc, "Received a DTMF stop event when already stopped", GST_BUFFER_SIZE (buf));
     } else if (event->event_type == DTMF_EVENT_TYPE_START) {
-      gst_dtmf_prepare_timestamps (dtmfsrc, event);
+      gst_dtmf_prepare_timestamps (dtmfsrc);
 
       /* Don't forget to get exclusive access to the stream */
       gst_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
