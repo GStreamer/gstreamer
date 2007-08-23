@@ -1,3 +1,18 @@
+2007-08-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Based on a patch by: Davyd <davyd at madeley dot id dot au>
+
+	* gst/volume/gstvolume.c: (volume_choose_func),
+	(volume_update_real_volume), (gst_volume_set_volume),
+	(gst_volume_init), (volume_process_int32),
+	(volume_process_int32_clamp), (volume_process_int24),
+	(volume_process_int24_clamp), (volume_process_int16),
+	(volume_process_int16_clamp), (volume_process_int8),
+	(volume_process_int8_clamp), (volume_update_volume), (plugin_init):
+	* gst/volume/gstvolume.h:
+	Add support for int32, int24 and int8 to the volume element.
+	Fixes #445529.
+
 2007-08-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/examples/Makefile.am:
