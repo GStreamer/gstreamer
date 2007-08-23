@@ -410,12 +410,12 @@ gst_rtp_mux_setcaps (GstPad *pad, GstCaps *caps)
   gint clock_rate;
 
   rtp_mux = GST_RTP_MUX (gst_pad_get_parent (pad));
-    
+
   structure = gst_caps_get_structure (caps, 0);
   if (gst_structure_get_int (structure, "clock-rate", &clock_rate)) {
     ret = gst_rtp_mux_set_clock_rate (rtp_mux, clock_rate);
   }
-    
+
   if (ret) {
     GST_DEBUG_OBJECT (rtp_mux,
             "seting caps %" GST_PTR_FORMAT " on src pad..", caps);
