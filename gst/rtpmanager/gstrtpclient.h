@@ -25,29 +25,29 @@
 #define GST_TYPE_RTP_CLIENT \
   (gst_rtp_client_get_type())
 #define GST_RTP_CLIENT(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_CLIENT,GstRTPClient))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_CLIENT,GstRtpClient))
 #define GST_RTP_CLIENT_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_CLIENT,GstRTPClientClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_CLIENT,GstRtpClientClass))
 #define GST_IS_RTP_CLIENT(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_CLIENT))
 #define GST_IS_RTP_CLIENT_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_CLIENT))
 
-typedef struct _GstRTPClient GstRTPClient;
-typedef struct _GstRTPClientClass GstRTPClientClass;
-typedef struct _GstRTPClientPrivate GstRTPClientPrivate;
+typedef struct _GstRtpClient GstRtpClient;
+typedef struct _GstRtpClientClass GstRtpClientClass;
+typedef struct _GstRtpClientPrivate GstRtpClientPrivate;
 
-struct _GstRTPClient {
+struct _GstRtpClient {
   GstBin         parent_bin;
 
   /* a list of streams from a client */
   GList         *streams;
 
   /*< private >*/
-  GstRTPClientPrivate *priv;
+  GstRtpClientPrivate *priv;
 };
 
-struct _GstRTPClientClass {
+struct _GstRtpClientClass {
   GstBinClass   parent_class;
 };
 

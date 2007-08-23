@@ -88,7 +88,7 @@ enum
   LAST_SIGNAL
 };
 
-GST_BOILERPLATE (GstRTPSsrcDemux, gst_rtp_ssrc_demux, GstElement,
+GST_BOILERPLATE (GstRtpSsrcDemux, gst_rtp_ssrc_demux, GstElement,
     GST_TYPE_ELEMENT);
 
 
@@ -111,7 +111,7 @@ static guint gst_rtp_ssrc_demux_signals[LAST_SIGNAL] = { 0 };
 /**
  * Item for storing GstPad <-> SSRC pairs.
  */
-struct _GstRTPSsrcDemuxPad
+struct _GstRtpSsrcDemuxPad
 {
   GstPad *pad;
   guint32 ssrc;
@@ -121,12 +121,12 @@ struct _GstRTPSsrcDemuxPad
 /* find a src pad for a given SSRC, returns NULL if the SSRC was not found
  */
 static GstPad *
-find_rtp_pad_for_ssrc (GstRTPSsrcDemux * demux, guint32 ssrc)
+find_rtp_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
 {
   GSList *walk;
 
   for (walk = demux->rtp_srcpads; walk; walk = g_slist_next (walk)) {
-    GstRTPSsrcDemuxPad *pad = (GstRTPSsrcDemuxPad *) walk->data;
+    GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
 
     if (pad->ssrc == ssrc)
       return pad->pad;
@@ -135,13 +135,13 @@ find_rtp_pad_for_ssrc (GstRTPSsrcDemux * demux, guint32 ssrc)
 }
 
 static GstPad *
-create_rtp_pad_for_ssrc (GstRTPSsrcDemux * demux, guint32 ssrc)
+create_rtp_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
 {
   GstPad *result;
   GstElementClass *klass;
   GstPadTemplate *templ;
   gchar *padname;
-  GstRTPSsrcDemuxPad *demuxpad;
+  GstRtpSsrcDemuxPad *demuxpad;
 
   klass = GST_ELEMENT_GET_CLASS (demux);
   templ = gst_element_class_get_pad_template (klass, "src_%d");
@@ -150,7 +150,7 @@ create_rtp_pad_for_ssrc (GstRTPSsrcDemux * demux, guint32 ssrc)
   g_free (padname);
 
   /* wrap in structure and add to list */
-  demuxpad = g_new0 (GstRTPSsrcDemuxPad, 1);
+  demuxpad = g_new0 (GstRtpSsrcDemuxPad, 1);
   demuxpad->ssrc = ssrc;
   demuxpad->pad = result;
   demux->rtp_srcpads = g_slist_prepend (demux->rtp_srcpads, demuxpad);
@@ -182,7 +182,7 @@ gst_rtp_ssrc_demux_base_init (gpointer g_class)
 }
 
 static void
-gst_rtp_ssrc_demux_class_init (GstRTPSsrcDemuxClass * klass)
+gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
 {
   GObjectClass *gobject_klass;
   GstElementClass *gstelement_klass;
@@ -193,7 +193,7 @@ gst_rtp_ssrc_demux_class_init (GstRTPSsrcDemuxClass * klass)
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_rtp_ssrc_demux_finalize);
 
   /**
-   * GstRTPSsrcDemux::new-ssrc-pad:
+   * GstRtpSsrcDemux::new-ssrc-pad:
    * @demux: the object which received the signal
    * @ssrc: the SSRC of the pad
    * @pad: the new pad.
@@ -203,7 +203,7 @@ gst_rtp_ssrc_demux_class_init (GstRTPSsrcDemuxClass * klass)
   gst_rtp_ssrc_demux_signals[SIGNAL_NEW_SSRC_PAD] =
       g_signal_new ("new-ssrc-pad",
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstRTPSsrcDemuxClass, new_ssrc_pad),
+      G_STRUCT_OFFSET (GstRtpSsrcDemuxClass, new_ssrc_pad),
       NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_OBJECT,
       G_TYPE_NONE, 2, G_TYPE_UINT, GST_TYPE_PAD);
 
@@ -215,8 +215,8 @@ gst_rtp_ssrc_demux_class_init (GstRTPSsrcDemuxClass * klass)
 }
 
 static void
-gst_rtp_ssrc_demux_init (GstRTPSsrcDemux * demux,
-    GstRTPSsrcDemuxClass * g_class)
+gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux,
+    GstRtpSsrcDemuxClass * g_class)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (demux);
 
@@ -231,7 +231,7 @@ gst_rtp_ssrc_demux_init (GstRTPSsrcDemux * demux,
 static void
 gst_rtp_ssrc_demux_finalize (GObject * object)
 {
-  GstRTPSsrcDemux *demux;
+  GstRtpSsrcDemux *demux;
 
   demux = GST_RTP_SSRC_DEMUX (object);
 
@@ -241,7 +241,7 @@ gst_rtp_ssrc_demux_finalize (GObject * object)
 static gboolean
 gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstRTPSsrcDemux *demux;
+  GstRtpSsrcDemux *demux;
   gboolean res = FALSE;
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
@@ -261,7 +261,7 @@ static GstFlowReturn
 gst_rtp_ssrc_demux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn ret;
-  GstRTPSsrcDemux *demux;
+  GstRtpSsrcDemux *demux;
   guint32 ssrc;
   GstPad *srcpad;
 
@@ -309,7 +309,7 @@ create_failed:
 static gboolean
 gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event)
 {
-  GstRTPSsrcDemux *demux;
+  GstRtpSsrcDemux *demux;
   gboolean res = FALSE;
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
@@ -329,7 +329,7 @@ gst_rtp_ssrc_demux_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstRTPSsrcDemux *demux;
+  GstRtpSsrcDemux *demux;
 
   demux = GST_RTP_SSRC_DEMUX (element);
 

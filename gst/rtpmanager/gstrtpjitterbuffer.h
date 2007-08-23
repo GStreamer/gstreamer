@@ -36,42 +36,42 @@ G_BEGIN_DECLS
   (gst_rtp_jitter_buffer_get_type())
 #define GST_RTP_JITTER_BUFFER(obj) \
   (G_TYPE_CHECK_INSTANCE_CAST((obj), \
-  GST_TYPE_RTP_JITTER_BUFFER,GstRTPJitterBuffer))
+  GST_TYPE_RTP_JITTER_BUFFER,GstRtpJitterBuffer))
 #define GST_RTP_JITTER_BUFFER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass), \
-  GST_TYPE_RTP_JITTER_BUFFER,GstRTPJitterBufferClass))
+  GST_TYPE_RTP_JITTER_BUFFER,GstRtpJitterBufferClass))
 #define GST_IS_RTP_JITTER_BUFFER(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_JITTER_BUFFER))
 #define GST_IS_RTP_JITTER_BUFFER_CLASS(obj) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_JITTER_BUFFER))
 
-typedef struct _GstRTPJitterBuffer GstRTPJitterBuffer;
-typedef struct _GstRTPJitterBufferClass GstRTPJitterBufferClass;
-typedef struct _GstRTPJitterBufferPrivate GstRTPJitterBufferPrivate;
+typedef struct _GstRtpJitterBuffer GstRtpJitterBuffer;
+typedef struct _GstRtpJitterBufferClass GstRtpJitterBufferClass;
+typedef struct _GstRtpJitterBufferPrivate GstRtpJitterBufferPrivate;
 
 /**
- * GstRTPJitterBuffer:
+ * GstRtpJitterBuffer:
  *
  * Opaque jitterbuffer structure.
  */
-struct _GstRTPJitterBuffer
+struct _GstRtpJitterBuffer
 {
   GstElement parent;
 
   /*< private >*/
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBufferPrivate *priv;
 
   gpointer _gst_reserved[GST_PADDING];
 };
 
-struct _GstRTPJitterBufferClass
+struct _GstRtpJitterBufferClass
 {
   GstElementClass parent_class;
 
   /* signals */
-  GstCaps* (*request_pt_map) (GstRTPJitterBuffer *buffer, guint pt);
+  GstCaps* (*request_pt_map) (GstRtpJitterBuffer *buffer, guint pt);
 
-  void     (*clear_pt_map)   (GstRTPJitterBuffer *buffer);
+  void     (*clear_pt_map)   (GstRtpJitterBuffer *buffer);
 
   /*< private > */
   gpointer _gst_reserved[GST_PADDING];

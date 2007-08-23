@@ -23,38 +23,38 @@
 #include <gst/gst.h>
 
 #define GST_TYPE_RTP_PT_DEMUX            (gst_rtp_pt_demux_get_type())
-#define GST_RTP_PT_DEMUX(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_PT_DEMUX,GstRTPPtDemux))
-#define GST_RTP_PT_DEMUX_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_PT_DEMUX,GstRTPPtDemuxClass))
+#define GST_RTP_PT_DEMUX(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_PT_DEMUX,GstRtpPtDemux))
+#define GST_RTP_PT_DEMUX_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_PT_DEMUX,GstRtpPtDemuxClass))
 #define GST_IS_RTP_PT_DEMUX(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_PT_DEMUX))
 #define GST_IS_RTP_PT_DEMUX_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_PT_DEMUX))
 
-typedef struct _GstRTPPtDemux GstRTPPtDemux;
-typedef struct _GstRTPPtDemuxClass GstRTPPtDemuxClass;
-typedef struct _GstRTPPtDemuxPad GstRTPPtDemuxPad;
+typedef struct _GstRtpPtDemux GstRtpPtDemux;
+typedef struct _GstRtpPtDemuxClass GstRtpPtDemuxClass;
+typedef struct _GstRtpPtDemuxPad GstRtpPtDemuxPad;
 
-struct _GstRTPPtDemux
+struct _GstRtpPtDemux
 {
   GstElement parent;  /**< parent class */
 
   GstPad *sink;       /**< the sink pad */
   guint16 last_pt;    /**< pt of the last packet 0xFFFF if none */
-  GSList *srcpads;    /**< a linked list of GstRTPPtDemuxPad objects */
+  GSList *srcpads;    /**< a linked list of GstRtpPtDemuxPad objects */
 };
 
-struct _GstRTPPtDemuxClass
+struct _GstRtpPtDemuxClass
 {
   GstElementClass parent_class;
 
   /* get the caps for pt */
-  GstCaps* (*request_pt_map)      (GstRTPPtDemux *demux, guint pt);
+  GstCaps* (*request_pt_map)      (GstRtpPtDemux *demux, guint pt);
 
   /* signal emmited when a new PT is found from the incoming stream */
-  void     (*new_payload_type)    (GstRTPPtDemux *demux, guint pt, GstPad * pad);
+  void     (*new_payload_type)    (GstRtpPtDemux *demux, guint pt, GstPad * pad);
 
   /* signal emitted when the payload type changes */
-  void     (*payload_type_change) (GstRTPPtDemux *demux, guint pt);
+  void     (*payload_type_change) (GstRtpPtDemux *demux, guint pt);
 
-  void     (*clear_pt_map)        (GstRTPPtDemux *demux);
+  void     (*clear_pt_map)        (GstRtpPtDemux *demux);
 };
 
 GType gst_rtp_pt_demux_get_type (void);
