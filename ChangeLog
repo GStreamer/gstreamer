@@ -1,3 +1,20 @@
+2007-08-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c:
+	  Don't use GST_INFO before the debug system is actually initialised
+	  (shouldn't do any harm, but won't print anything either, so we can
+	  just as well remove it).
+
+	* gst/gstinfo.h:
+	  GST_CAT_LEVEL_LOG_valist(), which is our inline helper function for
+	  compilers that don't support variadic macros (such as MSVC), should
+	  check for debug_level <= __gst_debug_min as well, since that's the
+	  function called from all the level-specific GST_CAT_*_LOG_OBJECT()
+	  inline helper functions. Should improve performance a bit, but also
+	  makes sure uses of GST_INFO et.al are ignored if the debugging
+	  system isn't initialised yet (instead of printing an assertion
+	  failure).
+
 2007-08-23  Stefan Kost  <ensonic@users.sf.net>
 
 	patch by: David Nečas <yeti@physics.muni.cz>

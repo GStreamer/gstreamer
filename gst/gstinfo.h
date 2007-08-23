@@ -441,21 +441,21 @@ static inline void
 GST_CAT_LEVEL_LOG_valist (GstDebugCategory * cat,
     GstDebugLevel level, gpointer object, const char *format, va_list varargs)
 {
-  gst_debug_log_valist (cat, level, "", "", 0, (GObject *) object, format,
-      varargs);
+  if (G_UNLIKELY (level <= __gst_debug_min)) {
+    gst_debug_log_valist (cat, level, "", "", 0, (GObject *) object, format,
+        varargs);
+  }
 }
 
 static inline void
 GST_CAT_LEVEL_LOG (GstDebugCategory * cat, GstDebugLevel level,
     gpointer object, const char *format, ...)
 {
-  if (G_UNLIKELY (level <= __gst_debug_min)) {
-    va_list varargs;
+  va_list varargs;
 
-    va_start (varargs, format);
-    GST_CAT_LEVEL_LOG_valist (cat, level, object, format, varargs);
-    va_end (varargs);
-  }
+  va_start (varargs, format);
+  GST_CAT_LEVEL_LOG_valist (cat, level, object, format, varargs);
+  va_end (varargs);
 }
 #endif
 #endif /* G_HAVE_ISO_VARARGS */

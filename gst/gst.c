@@ -407,8 +407,6 @@ gst_init_check (int *argc, char **argv[], GError ** err)
   if (!g_thread_supported ())
     g_thread_init (NULL);
 
-  GST_INFO ("initializing GStreamer");
-
   if (gst_initialized) {
     GST_DEBUG ("already initialized gst");
     return TRUE;
