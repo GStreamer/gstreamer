@@ -60,9 +60,26 @@
 /*                                                                       */
 /*=======================================================================*/
 
+/**
+ * SECTION:element-festival
+ * 
+ * <refsect2>
+ * <para>
+ * This element connects to a
+ * <ulink url="http://www.festvox.org/festival/index.html">festival</ulink> server 
+ * process and uses it to synthesize speech.
+ * </para>
+ * <title>Example pipeline</title>
+ * <programlisting>
+ * echo "hi" | gst-launch fdsrc fd=0 ! festival ! wavparse ! audioconvert ! alsasink
+ * </programlisting>
+ * </refsect2>
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -77,11 +94,14 @@
 #include "gstfestival.h"
 #include <gst/audio/audio.h>
 
+GST_DEBUG_CATEGORY_STATIC (festival_debug);
+#define GST_CAT_DEFAULT festival_debug
+
 static void gst_festival_base_init (gpointer g_class);
 static void gst_festival_class_init (GstFestivalClass * klass);
 static void gst_festival_init (GstFestival * festival);
 
-static void gst_festival_chain (GstPad * pad, GstData * _data);
+static GstFlowReturn gst_festival_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_festival_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -97,21 +117,17 @@ GST_ELEMENT_DETAILS ("Festival Text-to-Speech synthesizer",
     "Wim Taymans <wim.taymans@chello.be>");
 
 static GstStaticPadTemplate sink_template_factory =
-GST_STATIC_PAD_TEMPLATE ("festival_sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("text/plain")
     );
 
 static GstStaticPadTemplate src_template_factory =
-GST_STATIC_PAD_TEMPLATE ("festival_src",
+GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw-int, "
-        "endianness = (int) BYTE_ORDER, "
-        "signed = (boolean) TRUE, "
-        "width = (int) 16, "
-        "depth = (int) 16, " "rate = (int) 16000, " "channels = (int) 1")
+    GST_STATIC_CAPS ("audio/x-wav")
     );
 
 /* Festival signals and args */
@@ -161,7 +177,7 @@ gst_festival_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  /* register src pads */
+  /* register pads */
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template_factory));
   gst_element_class_add_pad_template (element_class,
@@ -197,73 +213,106 @@ gst_festival_init (GstFestival * festival)
   festival->info = festival_default_info ();
 }
 
-static void
-gst_festival_chain (GstPad * pad, GstData * _data)
+static gboolean
+read_response (GstFestival * festival)
 {
-  GstBuffer *buf = GST_BUFFER (_data);
-  gchar *wavefile;
-  int filesize;
-  FILE *fd;
-  char *p;
   char ack[4];
+  char *data;
+  int filesize;
+  int fd;
   int n;
+  gboolean ret = TRUE;
+
+  fd = festival->info->server_fd;
+  do {
+    for (n = 0; n < 3;)
+      n += read (fd, ack + n, 3 - n);
+    ack[3] = '\0';
+    GST_DEBUG_OBJECT (festival, "got response %s", ack);
+
+    if (strcmp (ack, "WV\n") == 0) {
+      GstBuffer *buffer;
+
+      /* receive a waveform */
+      data = socket_receive_file_to_buff (fd, &filesize);
+      GST_DEBUG_OBJECT (festival, "received %d bytes of waveform data",
+          filesize);
+
+      /* push contents as a buffer */
+      buffer = gst_buffer_new ();
+      GST_BUFFER_SIZE (buffer) = (filesize);
+      GST_BUFFER_DATA (buffer) = (guint8 *) data;
+      GST_BUFFER_MALLOCDATA (buffer) = (guint8 *) data;
+      GST_BUFFER_TIMESTAMP (buffer) = GST_CLOCK_TIME_NONE;
+
+      gst_pad_push (festival->srcpad, buffer);
+
+    } else if (strcmp (ack, "LP\n") == 0) {
+      /* receive an s-expr */
+      data = client_accept_s_expr (fd);
+      GST_DEBUG_OBJECT (festival, "received s-expression: %s", data);
+      g_free (data);
+    } else if (strcmp (ack, "ER\n") == 0) {
+      /* server got an error */
+      GST_ELEMENT_ERROR (festival,
+          LIBRARY,
+          FAILED,
+          ("Festival speech server returned an error"),
+          ("Make sure you have voices/languages installed"));
+      ret = FALSE;
+      break;
+    }
+
+  } while (strcmp (ack, "OK\n") != 0);
+
+  return ret;
+}
+
+static GstFlowReturn
+gst_festival_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
   GstFestival *festival;
-  GstBuffer *outbuf;
-  glong size;
+  guint8 *p, *ep;
+  FILE *fd;
 
-  g_return_if_fail (pad != NULL);
-  g_return_if_fail (GST_IS_PAD (pad));
-  g_return_if_fail (buf != NULL);
-  g_return_if_fail (GST_BUFFER_DATA (buf) != NULL);
+  festival = GST_FESTIVAL (GST_PAD_PARENT (pad));
 
-  festival = GST_FESTIVAL (gst_pad_get_parent (pad));
-  GST_DEBUG ("gst_festival_chain: got buffer in '%s'",
-      gst_object_get_name (GST_OBJECT (festival)));
+  GST_LOG_OBJECT (festival, "Got text buffer, %u bytes", GST_BUFFER_SIZE (buf));
 
   fd = fdopen (dup (festival->info->server_fd), "wb");
 
-  size = GST_BUFFER_SIZE (buf);
-
   /* Copy text over to server, escaping any quotes */
   fprintf (fd, "(Parameter.set 'Audio_Required_Rate 16000)\n");
-  fprintf (fd, "(tts_textall \"\n");
-  for (p = GST_BUFFER_DATA (buf); p && (*p != '\0') && size; p++, size--) {
-    if ((*p == '"') || (*p == '\\'))
+  fflush (fd);
+  GST_DEBUG_OBJECT (festival, "issued Parameter.set command");
+  if (read_response (festival) == FALSE) {
+    ret = GST_FLOW_ERROR;
+    goto out;
+  }
+
+  fprintf (fd, "(tts_textall \"");
+  p = GST_BUFFER_DATA (buf);
+  ep = p + GST_BUFFER_SIZE (buf);
+  for (; p < ep && (*p != '\0'); p++) {
+    if ((*p == '"') || (*p == '\\')) {
       putc ('\\', fd);
+    }
+
     putc (*p, fd);
   }
   fprintf (fd, "\" \"%s\")\n", festival->info->text_mode);
   fclose (fd);
 
+  GST_DEBUG_OBJECT (festival, "issued tts_textall command");
+
   /* Read back info from server */
-  /* This assumes only one waveform will come back, also LP is unlikely */
-  wavefile = NULL;
-  do {
-    for (n = 0; n < 3;)
-      n += read (festival->info->server_fd, ack + n, 3 - n);
-    ack[3] = '\0';
-    if (strcmp (ack, "WV\n") == 0)      /* receive a waveform */
-      wavefile =
-          socket_receive_file_to_buff (festival->info->server_fd, &filesize);
-    else if (strcmp (ack, "LP\n") == 0) /* receive an s-expr */
-      client_accept_s_expr (festival->info->server_fd);
-    else if (strcmp (ack, "ER\n") == 0) {       /* server got an error */
-      fprintf (stderr, "festival_client: server returned error\n");
-      break;
-    }
+  if (read_response (festival) == FALSE)
+    ret = GST_FLOW_ERROR;
 
-    if (wavefile) {
-      outbuf = gst_buffer_new ();
-      GST_BUFFER_DATA (outbuf) = wavefile;
-      GST_BUFFER_SIZE (outbuf) = filesize;
-
-      gst_pad_push (festival->srcpad, GST_DATA (outbuf));
-
-      wavefile = NULL;
-    }
-  } while (strcmp (ack, "OK\n") != 0);
-
+out:
   gst_buffer_unref (buf);
+  return ret;
 }
 
 static FT_Info *
@@ -317,7 +366,6 @@ festival_socket_open (const char *host, int port)
   return fd;
 }
 
-
 static char *
 client_accept_s_expr (int fd)
 {
@@ -345,17 +393,18 @@ socket_receive_file_to_buff (int fd, int *size)
   char c;
 
   bufflen = 1024;
-  buff = (char *) malloc (bufflen);
+  buff = (char *) g_malloc (bufflen);
   *size = 0;
 
   for (k = 0; file_stuff_key[k] != '\0';) {
     n = read (fd, &c, 1);
     if (n == 0)
       break;                    /* hit stream eof before end of file */
+
     if ((*size) + k + 1 >= bufflen) {
       /* +1 so you can add a NULL if you want */
       bufflen += bufflen / 4;
-      buff = (char *) realloc (buff, bufflen);
+      buff = (char *) g_realloc (buff, bufflen);
     }
     if (file_stuff_key[k] == c)
       k++;
@@ -433,6 +482,9 @@ gst_festival_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (festival_debug, "festival",
+      0, "Festival text-to-speech synthesizer");
+
   if (!gst_element_register (plugin, "festival", GST_RANK_NONE,
           GST_TYPE_FESTIVAL))
     return FALSE;

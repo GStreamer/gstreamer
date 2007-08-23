@@ -84,6 +84,7 @@ GST_PLUGINS_ALL="\
   cdxaparse \
   deinterlace \
   equalizer \
+  festival \
   filter \
   flv \
   freeze \
@@ -159,6 +160,13 @@ AC_CHECK_LIBM
 AC_SUBST(LIBM)
 
 dnl *** checks for header files ***
+
+AC_CHECK_HEADERS([unistd.h], HAVE_UNISTD_H=yes)
+AM_CONDITIONAL(HAVE_UNISTD_H, test "x$HAVE_UNISTD_H" = "xyes")
+
+if test "x$HAVE_UNISTD_H" != "xyes"; then
+  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/festival//`
+fi
 
 dnl used by ext/dts
 AX_CREATE_STDINT_H
@@ -982,6 +990,7 @@ gst/bayer/Makefile
 gst/cdxaparse/Makefile
 gst/deinterlace/Makefile
 gst/equalizer/Makefile
+gst/festival/Makefile
 gst/filter/Makefile
 gst/flv/Makefile
 gst/freeze/Makefile

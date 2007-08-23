@@ -1,3 +1,12 @@
+2007-08-22  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Jonathan Matthew  <jonathan at kaolin wh9 net>
+
+	* configure.ac:
+	* gst/festival/Makefile.am:
+	* gst/festival/gstfestival.c:
+	  Port festival plugin to GStreamer-0.10 (#461377).
+
 2007-08-22  Wim Taymans  <wim.taymans@gmail.com>
 
 	* ext/faad/gstfaad.c: (gst_faad_chain):
