@@ -91,6 +91,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <locale.h>
+#include <stdio.h>
+#include <stdarg.h>
 
 #include <gst/sdp/gstsdpmessage.h>
 #include <gst/rtsp/gstrtsprange.h>
@@ -3983,6 +3986,36 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
   return TRUE;
 }
 
+#define USE_POSIX_LOCALE {                              \
+  gchar *__old_locale = g_strdup (setlocale (LC_NUMERIC, NULL)); \
+  setlocale (LC_NUMERIC, "POSIX");
+
+#define RESTORE_LOCALE                                \
+  setlocale (LC_NUMERIC, __old_locale);               \
+  g_free (__old_locale);}
+
+static gchar *
+gst_rtspsrc_dup_printf (const gchar * format, ...)
+{
+  gchar *result;
+  va_list varargs;
+
+  USE_POSIX_LOCALE va_start (varargs, format);
+
+  result = g_strdup_vprintf (format, varargs);
+  va_end (varargs);
+  RESTORE_LOCALE return result;
+}
+
+static gint
+gst_rtspsrc_get_float (const char *str, gfloat * val)
+{
+  gint result;
+
+  USE_POSIX_LOCALE result = sscanf (str, "%f", val);
+  RESTORE_LOCALE return result;
+}
+
 static gboolean
 gst_rtspsrc_play (GstRTSPSrc * src)
 {
@@ -4013,7 +4046,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
       hval = g_strdup_printf ("npt=0-");
     else
       hval =
-          g_strdup_printf ("npt=%f-",
+          gst_rtspsrc_dup_printf ("npt=%f-",
           ((gdouble) src->segment.last_stop) / GST_SECOND);
 
     gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, hval);
@@ -4022,13 +4055,13 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   }
 
   if (src->segment.rate != 1.0) {
-    hval = g_strdup_printf ("%f", src->segment.rate);
+    hval = gst_rtspsrc_dup_printf ("%f", src->segment.rate);
     gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, hval);
     g_free (hval);
   }
 
   if (src->segment.applied_rate != 1.0) {
-    hval = g_strdup_printf ("%f", src->segment.applied_rate);
+    hval = gst_rtspsrc_dup_printf ("%f", src->segment.applied_rate);
     gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, hval);
     g_free (hval);
   }
@@ -4050,7 +4083,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
           0) == GST_RTSP_OK) {
     gfloat fval;
 
-    if (sscanf (hval, "%f", &fval) > 0)
+    if (gst_rtspsrc_get_float (hval, &fval) > 0)
       src->segment.rate = fval;
   } else {
     src->segment.rate = 1.0;
@@ -4062,7 +4095,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
           0) == GST_RTSP_OK) {
     gfloat fval;
 
-    if (sscanf (hval, "%f", &fval) > 0)
+    if (gst_rtspsrc_get_float (hval, &fval) > 0)
       src->segment.applied_rate = fval;
   } else {
     src->segment.applied_rate = 1.0;

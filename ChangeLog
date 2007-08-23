@@ -1,3 +1,10 @@
+2007-08-23  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_dup_printf),
+	(gst_rtspsrc_get_float), (gst_rtspsrc_play):
+	Make sure we generate and parse floating point values in the POSIX
+	locale instead of the current locale. 
+
 2007-08-22  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_do_seek),
