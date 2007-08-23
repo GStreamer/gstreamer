@@ -7,7 +7,6 @@ SUBDIRS = \
 	tag \
 	audio \
 	cdda \
-	fft \
 	floatcast \
 	netbuffer \
 	pbutils \

@@ -4,7 +4,7 @@ else
 FT2_SUBDIRS =
 endif
 
-SUBDIRS = $(FT2_SUBDIRS) volume xerror
+SUBDIRS = $(FT2_SUBDIRS) volume
 
 DIST_SUBDIRS = seek volume xerror
 

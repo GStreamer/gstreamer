@@ -1,5 +1,22 @@
 2007-08-23  Stefan Kost  <ensonic@users.sf.net>
 
+	* configure.ac:
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	* ext/gnomevfs/gstgnomevfssrc.h:
+	* gst-libs/gst/Makefile.am:
+	* pkgconfig/gstreamer-plugins-base-uninstalled.pc.in:
+	* pkgconfig/gstreamer-plugins-base.pc.in:
+	* sys/v4l/v4lsrc_calls.c:
+	* tests/examples/Makefile.am:
+	* win32/common/config.h:
+	  Revert unwanted commit. many thanks to moap. I want a fix for 
+	  https://thomas.apestaart.org/moap/trac/ticket/239
+
+2007-08-23  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/volume/gstvolume.c:
 	  Move passthrough below gst_object_sync_values(). Fixes #442654.
 
