@@ -1070,6 +1070,7 @@ m4/Makefile
 tests/Makefile
 tests/check/Makefile
 tests/icles/Makefile
+win32/common/config.h
 )
 AC_OUTPUT
 

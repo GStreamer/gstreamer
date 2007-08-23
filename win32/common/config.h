@@ -26,14 +26,11 @@
 /* GStreamer license */
 #define GST_LICENSE "LGPL"
 
+/* package name in plugins */
+#define GST_PACKAGE_NAME "GStreamer Bad Plug-ins CVS/prerelease"
+
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
-
-/* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Bad Plug-ins source release"
-
-/* Define the version */
-#define GST_VERSION "0.10.3"
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
@@ -187,7 +184,7 @@
 #undef PACKAGE_NAME
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING "GStreamer Bad Plug-ins 0.10.3"
+#undef PACKAGE_STRING
 
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
@@ -195,7 +192,7 @@
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
-/* Define the plugin directory */
+/* directory where plugins are located */
 #define PLUGINDIR PREFIX "\\lib\\gstreamer-0.10"
 
 /* Define to 1 if you have the ANSI C header files. */
@@ -205,7 +202,7 @@
 #undef USE_POISONING
 
 /* Version number of package */
-#define VERSION "0.10.3"
+#define VERSION "0.10.5.1"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */

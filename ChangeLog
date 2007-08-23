@@ -1,3 +1,12 @@
+2007-08-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	* win32/common/config.h:
+	* win32/common/config.h.in:
+	  Automatically generate win32/common/config.h via configure (this
+	  ensures the win32 version of config.h is up-to-date when a release
+	  is made, #433373). config.h.in file might need some more work.
+
 2007-08-22  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Jonathan Matthew  <jonathan at kaolin wh9 net>

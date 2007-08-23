@@ -8,14 +8,20 @@
 /* gettext package name */
 #define GETTEXT_PACKAGE "@GETTEXT_PACKAGE@"
 
+/* PREFIX - specifically added for Windows for easier moving */
+#define PREFIX "C:\\gstreamer"
+
+/* Location of registry */
+#define GST_CACHE_DIR PREFIX "\\var\\cache"
+
 /* macro to use to show function name */
-#define GST_FUNCTION "(function)"
+#undef GST_FUNCTION
 
 /* Defined if gcov is enabled to force a rebuild due to config.h changing */
 #undef GST_GCOV_ENABLED
 
 /* Default errorlevel to use */
-#undef GST_LEVEL_DEFAULT
+#define GST_LEVEL_DEFAULT GST_LEVEL_ERROR
 
 /* GStreamer license */
 #define GST_LICENSE "@GST_LICENSE@"
@@ -25,12 +31,6 @@
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "@GST_PACKAGE_ORIGIN@"
-
-/* support for features: gstalsa */
-#undef HAVE_ALSA
-
-/* support for features: cdparanoia */
-#undef HAVE_CDPARANOIA
 
 /* Define if the host CPU is an Alpha */
 #undef HAVE_CPU_ALPHA
@@ -69,17 +69,23 @@
    */
 #undef HAVE_DCGETTEXT
 
+/* Defined if we have dladdr () */
+#undef HAVE_DLADDR
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 
-/* support for features: */
-#undef HAVE_EXTERNAL
+/* Define to 1 if you have the `fgetpos' function. */
+#define HAVE_FGETPOS 1
 
-/* FIONREAD ioctl found in sys/filio.h */
-#undef HAVE_FIONREAD_IN_SYS_FILIO
+/* Define to 1 if fseeko (and presumably ftello) exists and is declared. */
+#undef HAVE_FSEEKO
 
-/* FIONREAD ioctl found in sys/ioclt.h */
-#undef HAVE_FIONREAD_IN_SYS_IOCTL
+/* Define to 1 if you have the `fsetpos' function. */
+#define HAVE_FSETPOS 1
+
+/* Define to 1 if you have the `ftello' function. */
+#undef HAVE_FTELLO
 
 /* defined if the compiler implements __func__ */
 #undef HAVE_FUNC
@@ -87,14 +93,11 @@
 /* defined if the compiler implements __FUNCTION__ */
 #undef HAVE_FUNCTION
 
+/* Define to 1 if you have the `getpagesize' function. */
+#undef HAVE_GETPAGESIZE
+
 /* Define if the GNU gettext() function is already present or preinstalled. */
 #undef HAVE_GETTEXT
-
-/* support for features: gnomevfssrc */
-#undef HAVE_GNOME_VFS
-
-/* support for features: v4lsrc v4lmjpegsrc v4lmjpegsink */
-#undef HAVE_GST_V4L
 
 /* Define if you have the iconv() function. */
 #undef HAVE_ICONV
@@ -102,38 +105,32 @@
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `asound' library (-lasound). */
-#undef HAVE_LIBASOUND
+/* Define if libxml2 is available */
+#define HAVE_LIBXML2 1
 
-/* support for features: libvisual */
-#undef HAVE_LIBVISUAL
-
-/* Define if you have C99's lrint function. */
-#undef HAVE_LRINT
-
-/* Define if you have C99's lrintf function. */
-#undef HAVE_LRINTF
-
-/* Define to 1 if you have the <malloc.h> header file. */
-#undef HAVE_MALLOC_H
+/* defined if we have makecontext () */
+#undef HAVE_MAKECONTEXT
 
 /* Define to 1 if you have the <memory.h> header file. */
 #undef HAVE_MEMORY_H
 
-/* support for features: oggdemux oggmux */
-#undef HAVE_OGG
-
-/* support for features: pango */
-#undef HAVE_PANGO
+/* Define to 1 if you have a working `mmap' system call. */
+#undef HAVE_MMAP
 
 /* defined if the compiler implements __PRETTY_FUNCTION__ */
 #undef HAVE_PRETTY_FUNCTION
 
+/* Defined if we have register_printf_function () */
+#undef HAVE_PRINTF_EXTENSION
+
+/* Define to 1 if you have the <process.h> header file. */
+#define HAVE_PROCESS_H 1
+
 /* Define if RDTSC is available */
 #undef HAVE_RDTSC
 
-/* Define to 1 if you have the <regex.h> header file. */
-#undef HAVE_REGEX_H
+/* Define to 1 if you have the `sigaction' function. */
+#undef HAVE_SIGACTION
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
@@ -151,13 +148,16 @@
 #undef HAVE_SYS_SOCKET_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#undef HAVE_SYS_STAT_H 1
+#define HAVE_SYS_STAT_H 1
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H 1
+#define HAVE_SYS_TYPES_H 1
 
-/* support for features: theoradec theoraenc */
-#undef HAVE_THEORA
+/* Define to 1 if you have the <ucontext.h> header file. */
+#undef HAVE_UCONTEXT_H
+
+/* defined if unaligned memory access works correctly */
+#undef HAVE_UNALIGNED_ACCESS
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
@@ -165,20 +165,11 @@
 /* Define if valgrind should be used */
 #undef HAVE_VALGRIND
 
-/* support for features: vorbisenc vorbisdec */
-#undef HAVE_VORBIS
+/* Defined if compiling for Windows */
+#define HAVE_WIN32 1
 
-/* defined if vorbis_synthesis_restart is present */
-#undef HAVE_VORBIS_SYNTHESIS_RESTART
-
-/* support for features: ximagesink */
-#undef HAVE_X
-
-/* support for features: xshm */
-#undef HAVE_XSHM
-
-/* support for features: xvimagesink */
-#undef HAVE_XVIDEO
+/* library dir */
+#define LIBDIR PREFIX "\\lib"
 
 /* gettext locale dir */
 #define LOCALEDIR PREFIX "\\share\\locale"
@@ -187,40 +178,28 @@
 #define PACKAGE "@PACKAGE@"
 
 /* Define to the address where bug reports for this package should be sent. */
-#define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
+#undef PACKAGE_BUGREPORT
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME "@PACKAGE_NAME@"
+#undef PACKAGE_NAME
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING "@PACKAGE_STRING@"
+#undef PACKAGE_STRING
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME "@PACKAGE_TARNAME@"
+#undef PACKAGE_TARNAME
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION "@PACKAGE_VERSION@"
+#undef PACKAGE_VERSION
 
 /* directory where plugins are located */
-#undef PLUGINDIR
-
-/* The size of a `char', as computed by sizeof. */
-#undef SIZEOF_CHAR
-
-/* The size of a `int', as computed by sizeof. */
-#undef SIZEOF_INT
-
-/* The size of a `long', as computed by sizeof. */
-#undef SIZEOF_LONG
-
-/* The size of a `short', as computed by sizeof. */
-#undef SIZEOF_SHORT
-
-/* The size of a `void*', as computed by sizeof. */
-#undef SIZEOF_VOIDP
+#define PLUGINDIR PREFIX "\\lib\\gstreamer-0.10"
 
 /* Define to 1 if you have the ANSI C header files. */
 #undef STDC_HEADERS
+
+/* Define if we should poison deallocated memory */
+#undef USE_POISONING
 
 /* Version number of package */
 #define VERSION "@VERSION@"
@@ -229,11 +208,19 @@
    first (like Motorola and SPARC, unlike Intel and VAX). */
 #undef WORDS_BIGENDIAN
 
-/* Define to 1 if the X Window System is missing or not being used. */
-#undef X_DISPLAY_MISSING
+/* Number of bits in a file offset, on hosts where this is settable. */
+#undef _FILE_OFFSET_BITS
+
+/* Define to 1 to make fseeko visible on some hosts (e.g. glibc 2.2). */
+#undef _LARGEFILE_SOURCE
+
+/* Define for large files, on AIX-style hosts. */
+#undef _LARGE_FILES
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
-#ifndef __cplusplus
-#undef inline
-#endif
+/* #undef inline */
+
+#define GST_PACKAGE "Gst-plugins-bad"
+#define PACKAGE "gst-plugins-bad"
+#define GST_ORIGIN "gstreamer.freedesktop.org"
