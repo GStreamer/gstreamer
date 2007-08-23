@@ -81,9 +81,9 @@ GST_STATIC_PAD_TEMPLATE ("rtp_src_%d_%d",
     );
 
 #define GST_RTP_CLIENT_GET_PRIVATE(obj)  \
-   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_CLIENT, GstRTPClientPrivate))
+   (G_TYPE_INSTANCE_GET_PRIVATE ((obj), GST_TYPE_RTP_CLIENT, GstRtpClientPrivate))
 
-struct _GstRTPClientPrivate
+struct _GstRtpClientPrivate
 {
   gint foo;
 };
@@ -91,7 +91,7 @@ struct _GstRTPClientPrivate
 /* all the info needed to handle the stream with SSRC */
 typedef struct
 {
-  GstRTPClient *client;
+  GstRtpClient *client;
 
   /* the SSRC of this stream */
   guint32 ssrc;
@@ -106,11 +106,11 @@ typedef struct
   GstElement *ptdemux;
   /* the new-pad signal */
   gulong new_pad_sig;
-} GstRTPClientStream;
+} GstRtpClientStream;
 
 /* the PT demuxer found a new payload type */
 static void
-new_pad (GstElement * element, GstPad * pad, GstRTPClientStream * stream)
+new_pad (GstElement * element, GstPad * pad, GstRtpClientStream * stream)
 {
 }
 
@@ -126,15 +126,15 @@ new_pad (GstElement * element, GstPad * pad, GstRTPClientStream * stream)
  *  /    +-----------------+     +---------------+
  *
  */
-static GstRTPClientStream *
-create_stream (GstRTPClient * rtpclient, guint32 ssrc)
+static GstRtpClientStream *
+create_stream (GstRtpClient * rtpclient, guint32 ssrc)
 {
-  GstRTPClientStream *stream;
+  GstRtpClientStream *stream;
   gchar *name;
   GstPad *srcpad, *sinkpad;
   GstPadLinkReturn res;
 
-  stream = g_new0 (GstRTPClientStream, 1);
+  stream = g_new0 (GstRtpClientStream, 1);
   stream->ssrc = ssrc;
   stream->client = rtpclient;
 
@@ -204,7 +204,7 @@ could_not_link:
 
 #if 0
 static void
-free_stream (GstRTPClientStream * stream)
+free_stream (GstRtpClientStream * stream)
 {
   gst_object_unref (stream->jitterbuffer);
   g_free (stream);
@@ -213,14 +213,14 @@ free_stream (GstRTPClientStream * stream)
 
 /* find the stream for the given SSRC, return NULL if the stream did not exist
  */
-static GstRTPClientStream *
-find_stream_by_ssrc (GstRTPClient * client, guint32 ssrc)
+static GstRtpClientStream *
+find_stream_by_ssrc (GstRtpClient * client, guint32 ssrc)
 {
-  GstRTPClientStream *stream;
+  GstRtpClientStream *stream;
   GList *walk;
 
   for (walk = client->streams; walk; walk = g_list_next (walk)) {
-    stream = (GstRTPClientStream *) walk->data;
+    stream = (GstRtpClientStream *) walk->data;
     if (stream->ssrc == ssrc)
       return stream;
   }
@@ -255,7 +255,7 @@ static void gst_rtp_client_release_pad (GstElement * element, GstPad * pad);
 
 /*static guint gst_rtp_client_signals[LAST_SIGNAL] = { 0 }; */
 
-GST_BOILERPLATE (GstRTPClient, gst_rtp_client, GstBin, GST_TYPE_BIN);
+GST_BOILERPLATE (GstRtpClient, gst_rtp_client, GstBin, GST_TYPE_BIN);
 
 static void
 gst_rtp_client_base_init (gpointer klass)
@@ -276,7 +276,7 @@ gst_rtp_client_base_init (gpointer klass)
 }
 
 static void
-gst_rtp_client_class_init (GstRTPClientClass * klass)
+gst_rtp_client_class_init (GstRtpClientClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -284,7 +284,7 @@ gst_rtp_client_class_init (GstRTPClientClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstRTPClientPrivate));
+  g_type_class_add_private (klass, sizeof (GstRtpClientPrivate));
 
   gobject_class->finalize = gst_rtp_client_finalize;
   gobject_class->set_property = gst_rtp_client_set_property;
@@ -299,7 +299,7 @@ gst_rtp_client_class_init (GstRTPClientClass * klass)
 }
 
 static void
-gst_rtp_client_init (GstRTPClient * rtpclient, GstRTPClientClass * klass)
+gst_rtp_client_init (GstRtpClient * rtpclient, GstRtpClientClass * klass)
 {
   rtpclient->priv = GST_RTP_CLIENT_GET_PRIVATE (rtpclient);
 }
@@ -307,7 +307,7 @@ gst_rtp_client_init (GstRTPClient * rtpclient, GstRTPClientClass * klass)
 static void
 gst_rtp_client_finalize (GObject * object)
 {
-  GstRTPClient *rtpclient;
+  GstRtpClient *rtpclient;
 
   rtpclient = GST_RTP_CLIENT (object);
 
@@ -318,7 +318,7 @@ static void
 gst_rtp_client_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstRTPClient *rtpclient;
+  GstRtpClient *rtpclient;
 
   rtpclient = GST_RTP_CLIENT (object);
 
@@ -333,7 +333,7 @@ static void
 gst_rtp_client_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstRTPClient *rtpclient;
+  GstRtpClient *rtpclient;
 
   rtpclient = GST_RTP_CLIENT (object);
 
@@ -348,7 +348,7 @@ static GstStateChangeReturn
 gst_rtp_client_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn res;
-  GstRTPClient *rtpclient;
+  GstRtpClient *rtpclient;
 
   rtpclient = GST_RTP_CLIENT (element);
 
@@ -389,11 +389,11 @@ static GstPad *
 gst_rtp_client_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name)
 {
-  GstRTPClient *rtpclient;
+  GstRtpClient *rtpclient;
   GstElementClass *klass;
   GstPadTemplate *rtp_sink_templ, *sync_sink_templ;
   guint32 ssrc;
-  GstRTPClientStream *stream;
+  GstRtpClientStream *stream;
   GstPad *result;
 
   g_return_val_if_fail (templ != NULL, NULL);

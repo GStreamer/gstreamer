@@ -25,19 +25,19 @@
 #define GST_TYPE_RTP_BIN \
   (gst_rtp_bin_get_type())
 #define GST_RTP_BIN(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_BIN,GstRTPBin))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_BIN,GstRtpBin))
 #define GST_RTP_BIN_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_BIN,GstRTPBinClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_BIN,GstRtpBinClass))
 #define GST_IS_RTP_BIN(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_BIN))
 #define GST_IS_RTP_BIN_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_BIN))
 
-typedef struct _GstRTPBin GstRTPBin;
-typedef struct _GstRTPBinClass GstRTPBinClass;
-typedef struct _GstRTPBinPrivate GstRTPBinPrivate;
+typedef struct _GstRtpBin GstRtpBin;
+typedef struct _GstRtpBinClass GstRtpBinClass;
+typedef struct _GstRtpBinPrivate GstRtpBinPrivate;
 
-struct _GstRTPBin {
+struct _GstRtpBin {
   GstBin         bin;
 
   /*< private >*/
@@ -49,22 +49,22 @@ struct _GstRTPBin {
   GstClock       *provided_clock;
 
   /*< private >*/
-  GstRTPBinPrivate *priv;
+  GstRtpBinPrivate *priv;
 };
 
-struct _GstRTPBinClass {
+struct _GstRtpBinClass {
   GstBinClass  parent_class;
 
   /* get the caps for pt */
-  GstCaps* (*request_pt_map)  (GstRTPBin *rtpbin, guint session, guint pt);
-  void     (*clear_pt_map)    (GstRTPBin *rtpbin);
+  GstCaps* (*request_pt_map)  (GstRtpBin *rtpbin, guint session, guint pt);
+  void     (*clear_pt_map)    (GstRtpBin *rtpbin);
 
-  void     (*on_new_ssrc)       (GstRTPBin *rtpbin, guint session, guint32 ssrc);
-  void     (*on_ssrc_collision) (GstRTPBin *rtpbin, guint session, guint32 ssrc);
-  void     (*on_ssrc_validated) (GstRTPBin *rtpbin, guint session, guint32 ssrc);
-  void     (*on_bye_ssrc)       (GstRTPBin *rtpbin, guint session, guint32 ssrc);
-  void     (*on_bye_timeout)    (GstRTPBin *rtpbin, guint session, guint32 ssrc);
-  void     (*on_timeout)        (GstRTPBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_new_ssrc)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_ssrc_collision) (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_ssrc_validated) (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_bye_ssrc)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_bye_timeout)    (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_timeout)        (GstRtpBin *rtpbin, guint session, guint32 ssrc);
 };
 
 GType gst_rtp_bin_get_type (void);

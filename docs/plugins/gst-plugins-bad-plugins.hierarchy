@@ -8,8 +8,8 @@ GObject
     GstElement
       GstBin
         GstPipeline
-        GstRTPBin
-        GstRTPClient
+        GstRtpBin
+        GstRtpClient
         GstRgVolume
       GstX264Enc
       GstXvidEnc
@@ -60,10 +60,10 @@ GObject
       GstDtsDec
       GstBz2enc
       GstBz2dec
-      GstRTPJitterBuffer
-      GstRTPPtDemux
-      GstRTPSession
-      GstRTPSsrcDemux
+      GstRtpJitterBuffer
+      GstRtpPtDemux
+      GstRtpSession
+      GstRtpSsrcDemux
       GstVMncDec
       MpegVideoParse
       GstRealVideoDec

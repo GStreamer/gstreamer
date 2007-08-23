@@ -126,7 +126,7 @@ enum
 
 #define JBUF_SIGNAL(priv) (g_cond_signal ((priv)->jbuf_cond))
 
-struct _GstRTPJitterBufferPrivate
+struct _GstRtpJitterBufferPrivate
 {
   GstPad *sinkpad, *srcpad;
 
@@ -166,7 +166,7 @@ struct _GstRTPJitterBufferPrivate
 
 #define GST_RTP_JITTER_BUFFER_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_RTP_JITTER_BUFFER, \
-                                GstRTPJitterBufferPrivate))
+                                GstRtpJitterBufferPrivate))
 
 static GstStaticPadTemplate gst_rtp_jitter_buffer_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -192,7 +192,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 static guint gst_rtp_jitter_buffer_signals[LAST_SIGNAL] = { 0 };
 
-GST_BOILERPLATE (GstRTPJitterBuffer, gst_rtp_jitter_buffer, GstElement,
+GST_BOILERPLATE (GstRtpJitterBuffer, gst_rtp_jitter_buffer, GstElement,
     GST_TYPE_ELEMENT);
 
 /* object overrides */
@@ -219,11 +219,11 @@ static GstFlowReturn gst_rtp_jitter_buffer_chain (GstPad * pad,
 /* srcpad overrides */
 static gboolean
 gst_rtp_jitter_buffer_src_activate_push (GstPad * pad, gboolean active);
-static void gst_rtp_jitter_buffer_loop (GstRTPJitterBuffer * jitterbuffer);
+static void gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer);
 static gboolean gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query);
 
 static void
-gst_rtp_jitter_buffer_clear_pt_map (GstRTPJitterBuffer * jitterbuffer);
+gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer);
 
 static void
 gst_rtp_jitter_buffer_base_init (gpointer klass)
@@ -238,7 +238,7 @@ gst_rtp_jitter_buffer_base_init (gpointer klass)
 }
 
 static void
-gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
+gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -246,7 +246,7 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
-  g_type_class_add_private (klass, sizeof (GstRTPJitterBufferPrivate));
+  g_type_class_add_private (klass, sizeof (GstRtpJitterBufferPrivate));
 
   gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_dispose);
 
@@ -254,7 +254,7 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
   gobject_class->get_property = gst_rtp_jitter_buffer_get_property;
 
   /**
-   * GstRTPJitterBuffer::latency:
+   * GstRtpJitterBuffer::latency:
    * 
    * The maximum latency of the jitterbuffer. Packets will be kept in the buffer
    * for at most this time.
@@ -264,7 +264,7 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
           "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
           G_PARAM_READWRITE));
   /**
-   * GstRTPJitterBuffer::drop-on-latency:
+   * GstRtpJitterBuffer::drop-on-latency:
    * 
    * Drop oldest buffers when the queue is completely filled. 
    */
@@ -274,7 +274,7 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
           "Tells the jitterbuffer to never exceed the given latency in size",
           DEFAULT_DROP_ON_LATENCY, G_PARAM_READWRITE));
   /**
-   * GstRTPJitterBuffer::request-pt-map:
+   * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
    * @pt: the pt
    *
@@ -282,18 +282,18 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
    */
   gst_rtp_jitter_buffer_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPJitterBufferClass,
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpJitterBufferClass,
           request_pt_map), NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT,
       GST_TYPE_CAPS, 1, G_TYPE_UINT);
   /**
-   * GstRTPJitterBuffer::clear-pt-map:
+   * GstRtpJitterBuffer::clear-pt-map:
    * @buffer: the object which received the signal
    *
    * Invalidate the clock-rate as obtained with the ::request-pt-map signal.
    */
   gst_rtp_jitter_buffer_signals[SIGNAL_CLEAR_PT_MAP] =
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPJitterBufferClass,
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpJitterBufferClass,
           clear_pt_map), NULL, NULL, g_cclosure_marshal_VOID__VOID,
       G_TYPE_NONE, 0, G_TYPE_NONE);
 
@@ -306,10 +306,10 @@ gst_rtp_jitter_buffer_class_init (GstRTPJitterBufferClass * klass)
 }
 
 static void
-gst_rtp_jitter_buffer_init (GstRTPJitterBuffer * jitterbuffer,
-    GstRTPJitterBufferClass * klass)
+gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer,
+    GstRtpJitterBufferClass * klass)
 {
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBufferPrivate *priv;
 
   priv = GST_RTP_JITTER_BUFFER_GET_PRIVATE (jitterbuffer);
   jitterbuffer->priv = priv;
@@ -354,7 +354,7 @@ gst_rtp_jitter_buffer_init (GstRTPJitterBuffer * jitterbuffer,
 static void
 gst_rtp_jitter_buffer_dispose (GObject * object)
 {
-  GstRTPJitterBuffer *jitterbuffer;
+  GstRtpJitterBuffer *jitterbuffer;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (object);
   if (jitterbuffer->priv->jbuf) {
@@ -366,9 +366,9 @@ gst_rtp_jitter_buffer_dispose (GObject * object)
 }
 
 static void
-gst_rtp_jitter_buffer_clear_pt_map (GstRTPJitterBuffer * jitterbuffer)
+gst_rtp_jitter_buffer_clear_pt_map (GstRtpJitterBuffer * jitterbuffer)
 {
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBufferPrivate *priv;
 
   priv = jitterbuffer->priv;
 
@@ -379,8 +379,8 @@ gst_rtp_jitter_buffer_clear_pt_map (GstRTPJitterBuffer * jitterbuffer)
 static GstCaps *
 gst_rtp_jitter_buffer_getcaps (GstPad * pad)
 {
-  GstRTPJitterBuffer *jitterbuffer;
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
   GstPad *other;
   GstCaps *caps;
   const GstCaps *templ;
@@ -412,10 +412,10 @@ gst_rtp_jitter_buffer_getcaps (GstPad * pad)
 }
 
 static gboolean
-gst_jitter_buffer_sink_parse_caps (GstRTPJitterBuffer * jitterbuffer,
+gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
     GstCaps * caps)
 {
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBufferPrivate *priv;
   GstStructure *caps_struct;
   const GValue *value;
 
@@ -473,8 +473,8 @@ wrong_rate:
 static gboolean
 gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GstRTPJitterBuffer *jitterbuffer;
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
   gboolean res;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
@@ -492,9 +492,9 @@ gst_jitter_buffer_sink_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static void
-gst_rtp_jitter_buffer_flush_start (GstRTPJitterBuffer * jitterbuffer)
+gst_rtp_jitter_buffer_flush_start (GstRtpJitterBuffer * jitterbuffer)
 {
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBufferPrivate *priv;
 
   priv = jitterbuffer->priv;
 
@@ -513,9 +513,9 @@ gst_rtp_jitter_buffer_flush_start (GstRTPJitterBuffer * jitterbuffer)
 }
 
 static void
-gst_rtp_jitter_buffer_flush_stop (GstRTPJitterBuffer * jitterbuffer)
+gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
 {
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBufferPrivate *priv;
 
   priv = jitterbuffer->priv;
 
@@ -535,7 +535,7 @@ static gboolean
 gst_rtp_jitter_buffer_src_activate_push (GstPad * pad, gboolean active)
 {
   gboolean result = TRUE;
-  GstRTPJitterBuffer *jitterbuffer = NULL;
+  GstRtpJitterBuffer *jitterbuffer = NULL;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
 
@@ -566,8 +566,8 @@ static GstStateChangeReturn
 gst_rtp_jitter_buffer_change_state (GstElement * element,
     GstStateChange transition)
 {
-  GstRTPJitterBuffer *jitterbuffer;
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (element);
@@ -643,8 +643,8 @@ static gboolean
 gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstEvent * event)
 {
   gboolean ret = TRUE;
-  GstRTPJitterBuffer *jitterbuffer;
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
   priv = jitterbuffer->priv;
@@ -730,7 +730,7 @@ newseg_wrong_format:
 }
 
 static gboolean
-gst_rtp_jitter_buffer_get_clock_rate (GstRTPJitterBuffer * jitterbuffer,
+gst_rtp_jitter_buffer_get_clock_rate (GstRtpJitterBuffer * jitterbuffer,
     guint8 pt)
 {
   GValue ret = { 0 };
@@ -768,8 +768,8 @@ no_caps:
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
 {
-  GstRTPJitterBuffer *jitterbuffer;
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
   guint16 seqnum;
   GstFlowReturn ret = GST_FLOW_OK;
 
@@ -912,9 +912,9 @@ duplicate:
  * missing packet to arrive up to the rtp timestamp of buffer B.
  */
 static void
-gst_rtp_jitter_buffer_loop (GstRTPJitterBuffer * jitterbuffer)
+gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
 {
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBufferPrivate *priv;
   GstBuffer *outbuf = NULL;
   GstFlowReturn result;
   guint16 seqnum;
@@ -1128,8 +1128,8 @@ pause:
 static gboolean
 gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
 {
-  GstRTPJitterBuffer *jitterbuffer;
-  GstRTPJitterBufferPrivate *priv;
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
   gboolean res = FALSE;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
@@ -1176,7 +1176,7 @@ static void
 gst_rtp_jitter_buffer_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstRTPJitterBuffer *jitterbuffer = GST_RTP_JITTER_BUFFER (object);
+  GstRtpJitterBuffer *jitterbuffer = GST_RTP_JITTER_BUFFER (object);
 
   switch (prop_id) {
     case PROP_LATENCY:
@@ -1212,7 +1212,7 @@ static void
 gst_rtp_jitter_buffer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstRTPJitterBuffer *jitterbuffer = GST_RTP_JITTER_BUFFER (object);
+  GstRtpJitterBuffer *jitterbuffer = GST_RTP_JITTER_BUFFER (object);
 
   switch (prop_id) {
     case PROP_LATENCY:

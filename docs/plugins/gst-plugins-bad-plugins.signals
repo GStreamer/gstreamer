@@ -6,190 +6,190 @@ GstXvidEnc *gstxvidenc
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPSsrcDemux::new-ssrc-pad</NAME>
+<NAME>GstRtpSsrcDemux::new-ssrc-pad</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPSsrcDemux *gstrtpssrcdemux
+GstRtpSsrcDemux *gstrtpssrcdemux
 guint  arg1
 GstPad *arg2
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPSession::clear-pt-map</NAME>
+<NAME>GstRtpSession::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>a</FLAGS>
-GstRTPSession *gstrtpsession
+GstRtpSession *gstrtpsession
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPSession::request-pt-map</NAME>
+<NAME>GstRtpSession::request-pt-map</NAME>
 <RETURNS>GstCaps*</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPSession *gstrtpsession
+GstRtpSession *gstrtpsession
 guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPSession::on-bye-ssrc</NAME>
+<NAME>GstRtpSession::on-bye-ssrc</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPSession *gstrtpsession
+GstRtpSession *gstrtpsession
 guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPSession::on-bye-timeout</NAME>
+<NAME>GstRtpSession::on-bye-timeout</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPSession *gstrtpsession
+GstRtpSession *gstrtpsession
 guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPSession::on-new-ssrc</NAME>
+<NAME>GstRtpSession::on-new-ssrc</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPSession *gstrtpsession
+GstRtpSession *gstrtpsession
 guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPSession::on-ssrc-collision</NAME>
+<NAME>GstRtpSession::on-ssrc-collision</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPSession *gstrtpsession
+GstRtpSession *gstrtpsession
 guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPSession::on-ssrc-validated</NAME>
+<NAME>GstRtpSession::on-ssrc-validated</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPSession *gstrtpsession
+GstRtpSession *gstrtpsession
 guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPSession::on-timeout</NAME>
+<NAME>GstRtpSession::on-timeout</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPSession *gstrtpsession
+GstRtpSession *gstrtpsession
 guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPPtDemux::clear-pt-map</NAME>
+<NAME>GstRtpPtDemux::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
-GstRTPPtDemux *gstrtpptdemux
+GstRtpPtDemux *gstrtpptdemux
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPPtDemux::new-payload-type</NAME>
+<NAME>GstRtpPtDemux::new-payload-type</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPPtDemux *gstrtpptdemux
+GstRtpPtDemux *gstrtpptdemux
 guint  arg1
 GstPad *arg2
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPPtDemux::payload-type-change</NAME>
+<NAME>GstRtpPtDemux::payload-type-change</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPPtDemux *gstrtpptdemux
+GstRtpPtDemux *gstrtpptdemux
 guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPPtDemux::request-pt-map</NAME>
+<NAME>GstRtpPtDemux::request-pt-map</NAME>
 <RETURNS>GstCaps*</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPPtDemux *gstrtpptdemux
+GstRtpPtDemux *gstrtpptdemux
 guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPJitterBuffer::clear-pt-map</NAME>
+<NAME>GstRtpJitterBuffer::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPJitterBuffer *gstrtpjitterbuffer
+GstRtpJitterBuffer *gstrtpjitterbuffer
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPJitterBuffer::request-pt-map</NAME>
+<NAME>GstRtpJitterBuffer::request-pt-map</NAME>
 <RETURNS>GstCaps*</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPJitterBuffer *gstrtpjitterbuffer
+GstRtpJitterBuffer *gstrtpjitterbuffer
 guint  arg1
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPBin::clear-pt-map</NAME>
+<NAME>GstRtpBin::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>a</FLAGS>
-GstRTPBin *gstrtpbin
+GstRtpBin *gstrtpbin
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPBin::request-pt-map</NAME>
+<NAME>GstRtpBin::request-pt-map</NAME>
 <RETURNS>GstCaps*</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPBin *gstrtpbin
+GstRtpBin *gstrtpbin
 guint  arg1
 guint  arg2
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPBin::on-bye-ssrc</NAME>
+<NAME>GstRtpBin::on-bye-ssrc</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPBin *gstrtpbin
+GstRtpBin *gstrtpbin
 guint  arg1
 guint  arg2
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPBin::on-bye-timeout</NAME>
+<NAME>GstRtpBin::on-bye-timeout</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPBin *gstrtpbin
+GstRtpBin *gstrtpbin
 guint  arg1
 guint  arg2
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPBin::on-new-ssrc</NAME>
+<NAME>GstRtpBin::on-new-ssrc</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPBin *gstrtpbin
+GstRtpBin *gstrtpbin
 guint  arg1
 guint  arg2
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPBin::on-ssrc-collision</NAME>
+<NAME>GstRtpBin::on-ssrc-collision</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPBin *gstrtpbin
+GstRtpBin *gstrtpbin
 guint  arg1
 guint  arg2
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPBin::on-ssrc-validated</NAME>
+<NAME>GstRtpBin::on-ssrc-validated</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPBin *gstrtpbin
+GstRtpBin *gstrtpbin
 guint  arg1
 guint  arg2
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstRTPBin::on-timeout</NAME>
+<NAME>GstRtpBin::on-timeout</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
-GstRTPBin *gstrtpbin
+GstRtpBin *gstrtpbin
 guint  arg1
 guint  arg2
 </SIGNAL>
@@ -200,5 +200,14 @@ guint  arg2
 <FLAGS>l</FLAGS>
 GstCDAudio *gstcdaudio
 gint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>MpegTSParse::pmt-info</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+MpegTSParse *mpegtsparse
+gint  arg1
+MpegTSPmtInfo *arg2
 </SIGNAL>
 

@@ -25,20 +25,20 @@
 #define GST_TYPE_RTP_SESSION \
   (gst_rtp_session_get_type())
 #define GST_RTP_SESSION(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_SESSION,GstRTPSession))
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_SESSION,GstRtpSession))
 #define GST_RTP_SESSION_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_SESSION,GstRTPSessionClass))
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_SESSION,GstRtpSessionClass))
 #define GST_IS_RTP_SESSION(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_SESSION))
 #define GST_IS_RTP_SESSION_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_SESSION))
-#define GST_RTP_SESSION_CAST(obj) ((GstRTPSession *)(obj))
+#define GST_RTP_SESSION_CAST(obj) ((GstRtpSession *)(obj))
 
-typedef struct _GstRTPSession GstRTPSession;
-typedef struct _GstRTPSessionClass GstRTPSessionClass;
-typedef struct _GstRTPSessionPrivate GstRTPSessionPrivate;
+typedef struct _GstRtpSession GstRtpSession;
+typedef struct _GstRtpSessionClass GstRtpSessionClass;
+typedef struct _GstRtpSessionPrivate GstRtpSessionPrivate;
 
-struct _GstRTPSession {
+struct _GstRtpSession {
   GstElement     element;
 
   /*< private >*/
@@ -51,22 +51,22 @@ struct _GstRTPSession {
   GstPad        *send_rtp_src;
   GstPad        *send_rtcp_src;
 
-  GstRTPSessionPrivate *priv;
+  GstRtpSessionPrivate *priv;
 };
 
-struct _GstRTPSessionClass {
+struct _GstRtpSessionClass {
   GstElementClass parent_class;
 
   /* signals */
-  GstCaps* (*request_pt_map) (GstRTPSession *sess, guint pt);
-  void     (*clear_pt_map)   (GstRTPSession *sess);
+  GstCaps* (*request_pt_map) (GstRtpSession *sess, guint pt);
+  void     (*clear_pt_map)   (GstRtpSession *sess);
 
-  void     (*on_new_ssrc)       (GstRTPSession *sess, guint32 ssrc);
-  void     (*on_ssrc_collision) (GstRTPSession *sess, guint32 ssrc);
-  void     (*on_ssrc_validated) (GstRTPSession *sess, guint32 ssrc);
-  void     (*on_bye_ssrc)       (GstRTPSession *sess, guint32 ssrc);
-  void     (*on_bye_timeout)    (GstRTPSession *sess, guint32 ssrc);
-  void     (*on_timeout)        (GstRTPSession *sess, guint32 ssrc);
+  void     (*on_new_ssrc)       (GstRtpSession *sess, guint32 ssrc);
+  void     (*on_ssrc_collision) (GstRtpSession *sess, guint32 ssrc);
+  void     (*on_ssrc_validated) (GstRtpSession *sess, guint32 ssrc);
+  void     (*on_bye_ssrc)       (GstRtpSession *sess, guint32 ssrc);
+  void     (*on_bye_timeout)    (GstRtpSession *sess, guint32 ssrc);
+  void     (*on_timeout)        (GstRtpSession *sess, guint32 ssrc);
 };
 
 GType gst_rtp_session_get_type (void);

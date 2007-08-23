@@ -23,16 +23,16 @@
 #include <gst/gst.h>
 
 #define GST_TYPE_RTP_SSRC_DEMUX            (gst_rtp_ssrc_demux_get_type())
-#define GST_RTP_SSRC_DEMUX(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_SSRC_DEMUX,GstRTPSsrcDemux))
-#define GST_RTP_SSRC_DEMUX_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_SSRC_DEMUX,GstRTPSsrcDemuxClass))
+#define GST_RTP_SSRC_DEMUX(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RTP_SSRC_DEMUX,GstRtpSsrcDemux))
+#define GST_RTP_SSRC_DEMUX_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RTP_SSRC_DEMUX,GstRtpSsrcDemuxClass))
 #define GST_IS_RTP_SSRC_DEMUX(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RTP_SSRC_DEMUX))
 #define GST_IS_RTP_SSRC_DEMUX_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RTP_SSRC_DEMUX))
 
-typedef struct _GstRTPSsrcDemux GstRTPSsrcDemux;
-typedef struct _GstRTPSsrcDemuxClass GstRTPSsrcDemuxClass;
-typedef struct _GstRTPSsrcDemuxPad GstRTPSsrcDemuxPad;
+typedef struct _GstRtpSsrcDemux GstRtpSsrcDemux;
+typedef struct _GstRtpSsrcDemuxClass GstRtpSsrcDemuxClass;
+typedef struct _GstRtpSsrcDemuxPad GstRtpSsrcDemuxPad;
 
-struct _GstRTPSsrcDemux
+struct _GstRtpSsrcDemux
 {
   GstElement parent;
 
@@ -40,7 +40,7 @@ struct _GstRTPSsrcDemux
   GSList *rtp_srcpads;
 };
 
-struct _GstRTPSsrcDemuxClass
+struct _GstRtpSsrcDemuxClass
 {
   GstElementClass parent_class;
 

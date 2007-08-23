@@ -105,7 +105,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_pt_demux_debug);
 /**
  * Item for storing GstPad<->pt pairs.
  */
-struct _GstRTPPtDemuxPad
+struct _GstRtpPtDemuxPad
 {
   GstPad *pad;        /**< pointer to the actual pad */
   gint pt;             /**< RTP payload-type attached to pad */
@@ -121,7 +121,7 @@ enum
   LAST_SIGNAL
 };
 
-GST_BOILERPLATE (GstRTPPtDemux, gst_rtp_pt_demux, GstElement, GST_TYPE_ELEMENT);
+GST_BOILERPLATE (GstRtpPtDemux, gst_rtp_pt_demux, GstElement, GST_TYPE_ELEMENT);
 
 static void gst_rtp_pt_demux_finalize (GObject * object);
 
@@ -131,9 +131,9 @@ static gboolean gst_rtp_pt_demux_setup (GstElement * element);
 static GstFlowReturn gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_rtp_pt_demux_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_rtp_pt_demux_clear_pt_map (GstRTPPtDemux * rtpdemux);
+static void gst_rtp_pt_demux_clear_pt_map (GstRtpPtDemux * rtpdemux);
 
-static GstPad *find_pad_for_pt (GstRTPPtDemux * rtpdemux, guint8 pt);
+static GstPad *find_pad_for_pt (GstRtpPtDemux * rtpdemux, guint8 pt);
 
 static guint gst_rtp_pt_demux_signals[LAST_SIGNAL] = { 0 };
 
@@ -158,7 +158,7 @@ gst_rtp_pt_demux_base_init (gpointer g_class)
 }
 
 static void
-gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
+gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
 {
   GObjectClass *gobject_klass;
   GstElementClass *gstelement_klass;
@@ -167,7 +167,7 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
   gstelement_klass = (GstElementClass *) klass;
 
   /**
-   * GstRTPPtDemux::request-pt-map:
+   * GstRtpPtDemux::request-pt-map:
    * @demux: the object which received the signal
    * @pt: the payload type
    *
@@ -175,12 +175,12 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
    */
   gst_rtp_pt_demux_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPPtDemuxClass, request_pt_map),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpPtDemuxClass, request_pt_map),
       NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT, GST_TYPE_CAPS, 1,
       G_TYPE_UINT);
 
   /**
-   * GstRTPPtDemux::new-payload-type:
+   * GstRtpPtDemux::new-payload-type:
    * @demux: the object which received the signal
    * @pt: the payload type
    * @pad: the pad with the new payload
@@ -189,12 +189,12 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
    */
   gst_rtp_pt_demux_signals[SIGNAL_NEW_PAYLOAD_TYPE] =
       g_signal_new ("new-payload-type", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPPtDemuxClass, new_payload_type),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpPtDemuxClass, new_payload_type),
       NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_OBJECT, G_TYPE_NONE, 2,
       G_TYPE_UINT, GST_TYPE_PAD);
 
   /**
-   * GstRTPPtDemux::payload-type-change:
+   * GstRtpPtDemux::payload-type-change:
    * @demux: the object which received the signal
    * @pt: the new payload type
    *
@@ -202,12 +202,12 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
    */
   gst_rtp_pt_demux_signals[SIGNAL_PAYLOAD_TYPE_CHANGE] =
       g_signal_new ("payload-type-change", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPPtDemuxClass,
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpPtDemuxClass,
           payload_type_change), NULL, NULL, g_cclosure_marshal_VOID__UINT,
       G_TYPE_NONE, 1, G_TYPE_UINT);
 
   /**
-   * GstRTPPtDemux::clear-pt-map:
+   * GstRtpPtDemux::clear-pt-map:
    * @demux: the object which received the signal
    *
    * The application can call this signal to instruct the element to discard the
@@ -215,7 +215,7 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
    */
   gst_rtp_pt_demux_signals[SIGNAL_CLEAR_PT_MAP] =
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_ACTION | G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPPtDemuxClass,
+      G_SIGNAL_ACTION | G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpPtDemuxClass,
           clear_pt_map), NULL, NULL, g_cclosure_marshal_VOID__VOID,
       G_TYPE_NONE, 0, G_TYPE_NONE);
 
@@ -231,7 +231,7 @@ gst_rtp_pt_demux_class_init (GstRTPPtDemuxClass * klass)
 }
 
 static void
-gst_rtp_pt_demux_init (GstRTPPtDemux * ptdemux, GstRTPPtDemuxClass * g_class)
+gst_rtp_pt_demux_init (GstRtpPtDemux * ptdemux, GstRtpPtDemuxClass * g_class)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (ptdemux);
 
@@ -254,7 +254,7 @@ gst_rtp_pt_demux_finalize (GObject * object)
 }
 
 static void
-gst_rtp_pt_demux_clear_pt_map (GstRTPPtDemux * rtpdemux)
+gst_rtp_pt_demux_clear_pt_map (GstRtpPtDemux * rtpdemux)
 {
   /* FIXME, do something */
 }
@@ -263,7 +263,7 @@ static GstFlowReturn
 gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GstRTPPtDemux *rtpdemux;
+  GstRtpPtDemux *rtpdemux;
   GstElement *element = GST_ELEMENT (GST_OBJECT_PARENT (pad));
   guint8 pt;
   GstPad *srcpad;
@@ -284,7 +284,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     GstPadTemplate *templ;
     gchar *padname;
     GstCaps *caps;
-    GstRTPPtDemuxPad *rtpdemuxpad;
+    GstRtpPtDemuxPad *rtpdemuxpad;
     GValue ret = { 0 };
     GValue args[2] = { {0}
     , {0}
@@ -321,7 +321,7 @@ gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf)
     gst_pad_set_caps (srcpad, caps);
 
     GST_DEBUG ("Adding pt=%d to the list.", pt);
-    rtpdemuxpad = g_new0 (GstRTPPtDemuxPad, 1);
+    rtpdemuxpad = g_new0 (GstRtpPtDemuxPad, 1);
     rtpdemuxpad->pt = pt;
     rtpdemuxpad->pad = srcpad;
     rtpdemux->srcpads = g_slist_append (rtpdemux->srcpads, rtpdemuxpad);
@@ -371,13 +371,13 @@ no_caps:
 }
 
 static GstPad *
-find_pad_for_pt (GstRTPPtDemux * rtpdemux, guint8 pt)
+find_pad_for_pt (GstRtpPtDemux * rtpdemux, guint8 pt)
 {
   GstPad *respad = NULL;
   GSList *item = rtpdemux->srcpads;
 
   for (; item; item = g_slist_next (item)) {
-    GstRTPPtDemuxPad *pad = item->data;
+    GstRtpPtDemuxPad *pad = item->data;
 
     if (pad->pt == pt) {
       respad = pad->pad;
@@ -394,7 +394,7 @@ find_pad_for_pt (GstRTPPtDemux * rtpdemux, guint8 pt)
 static gboolean
 gst_rtp_pt_demux_setup (GstElement * element)
 {
-  GstRTPPtDemux *ptdemux = GST_RTP_PT_DEMUX (element);
+  GstRtpPtDemux *ptdemux = GST_RTP_PT_DEMUX (element);
   gboolean res = TRUE;
 
   if (ptdemux) {
@@ -411,7 +411,7 @@ gst_rtp_pt_demux_setup (GstElement * element)
 static void
 gst_rtp_pt_demux_release (GstElement * element)
 {
-  GstRTPPtDemux *ptdemux = GST_RTP_PT_DEMUX (element);
+  GstRtpPtDemux *ptdemux = GST_RTP_PT_DEMUX (element);
 
   if (ptdemux) {
     /* note: GstElement's dispose() will handle the pads */
@@ -424,7 +424,7 @@ static GstStateChangeReturn
 gst_rtp_pt_demux_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstRTPPtDemux *ptdemux;
+  GstRtpPtDemux *ptdemux;
 
   ptdemux = GST_RTP_PT_DEMUX (element);
 

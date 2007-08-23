@@ -1,5 +1,28 @@
 2007-08-23  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtpmanager/gstrtpclient.c:
+	* gst/rtpmanager/gstrtpclient.h:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	* gst/rtpmanager/gstrtpptdemux.c:
+	* gst/rtpmanager/gstrtpptdemux.h:
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/gstrtpsession.h:
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	* gst/rtpmanager/gstrtpssrcdemux.h:
+	  Rename all GstRTPFoo structs to GstRtpFoo so that GST_BOILERPLATE
+	  registers a GType that's different than the GstRTPFoo types that
+	  farsight registers (luckily GType names are case sensitive). Should
+	  finally fix #430664.
+
+2007-08-23  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	* win32/common/config.h:
 	* win32/common/config.h.in:
