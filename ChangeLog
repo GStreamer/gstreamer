@@ -1,3 +1,10 @@
+2007-08-23  Stefan Kost  <ensonic@users.sf.net>
+
+	patch by: David Nečas <yeti@physics.muni.cz>
+
+	* gst/Makefile.am:
+	  Replace some non portable makefile constructs.
+
 2007-08-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* common/gtk-doc-plugins.mak:
