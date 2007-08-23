@@ -6,5 +6,4 @@ endif
 
 SUBDIRS = $(FT2_SUBDIRS) volume
 
-DIST_SUBDIRS = seek volume xerror
-
+DIST_SUBDIRS = seek volume
