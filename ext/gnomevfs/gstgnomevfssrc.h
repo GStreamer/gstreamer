@@ -73,6 +73,9 @@ struct _GstGnomeVFSSrc
   gchar *iradio_genre;
   gchar *iradio_url;
   gchar *iradio_title;
+  
+  /* random acces read mode */
+  gboolean random_access;
 };
 
 struct _GstGnomeVFSSrcClass

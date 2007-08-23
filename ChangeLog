@@ -1,3 +1,8 @@
+2007-08-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/volume/gstvolume.c:
+	  Move passthrough below gst_object_sync_values(). Fixes #442654.
+
 2007-08-22  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/audio/audio.c:

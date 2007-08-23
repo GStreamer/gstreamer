@@ -73,7 +73,7 @@ struct _GstAudioFilter {
 struct _GstAudioFilterClass {
   GstBaseTransformClass basetransformclass;
 
-  /* virtual function, called whenever the format changes */ 
+  /* virtual function, called whenever the format changes */
   gboolean  (*setup) (GstAudioFilter * filter, GstRingBufferSpec * format);
 
   /*< private >*/

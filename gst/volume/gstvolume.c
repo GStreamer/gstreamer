@@ -430,8 +430,8 @@ volume_process_int16 (GstVolume * this, gpointer bytes, guint n_bytes)
   /* FIXME: need oil_scalarmultiply_s16_ns ?
    * https://bugs.freedesktop.org/show_bug.cgi?id=7060
    * code below
-   * - crashes for volume<1.0
-   * - is not faster
+   * - crashes :/
+   * - real_vol_i is scaled by VOLUME_UNITY_INT16 and needs the bitshift
    * time gst-launch 2>/dev/null audiotestsrc wave=7 num-buffers=100 ! volume volume=1.5 ! fakesink
    */
   oil_scalarmult_s16 (data, 0, data, 0,
@@ -448,8 +448,7 @@ volume_process_int16_clamp (GstVolume * this, gpointer bytes, guint n_bytes)
 
   num_samples = n_bytes / sizeof (gint16);
 
-  /* FIXME: need... liboil...
-   * oil_scalarmultiply_s16_ns ?
+  /* FIXME: oil_scalarmultiply_s16_ns ?
    * https://bugs.freedesktop.org/show_bug.cgi?id=7060
    */
   for (i = 0; i < num_samples; i++) {
@@ -513,10 +512,6 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
   GstVolume *this = GST_VOLUME (base);
   GstClockTime timestamp;
 
-  /* don't process data in passthrough-mode */
-  if (gst_base_transform_is_passthrough (base))
-    return GST_FLOW_OK;
-
   /* FIXME: if controllers are bound, subdivide GST_BUFFER_SIZE into small
    * chunks for smooth fades, what is small? 1/10th sec.
    */
@@ -529,6 +524,10 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
 
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     gst_object_sync_values (G_OBJECT (this), timestamp);
+
+  /* don't process data in passthrough-mode */
+  if (gst_base_transform_is_passthrough (base))
+    return GST_FLOW_OK;
 
   this->process (this, GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
 

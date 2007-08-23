@@ -2738,7 +2738,6 @@ G_BEGIN_DECLS{                                                          \
 }G_END_DECLS
 
 
-
 /*** plugin initialization ***/
 
 #define TYPE_FIND_REGISTER(plugin,name,rank,func,ext,caps,priv,notify) \
@@ -2746,6 +2745,8 @@ G_BEGIN_DECLS{\
   if (!gst_type_find_register (plugin, name, rank, func, ext, caps, priv, notify))\
     return FALSE; \
 }G_END_DECLS
+
+
 static gboolean
 plugin_init (GstPlugin * plugin)
 {

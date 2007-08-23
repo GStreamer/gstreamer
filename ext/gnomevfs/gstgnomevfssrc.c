@@ -132,7 +132,8 @@ enum
   ARG_IRADIO_NAME,
   ARG_IRADIO_GENRE,
   ARG_IRADIO_URL,
-  ARG_IRADIO_TITLE
+  ARG_IRADIO_TITLE,
+  ARG_RANDOM_ACCESS
 };
 
 static void gst_gnome_vfs_src_base_init (gpointer g_class);
@@ -253,6 +254,12 @@ gst_gnome_vfs_src_class_init (GstGnomeVFSSrcClass * klass)
       g_param_spec_string ("iradio-title",
           "iradio-title",
           "Name of currently playing song", NULL, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class,
+      ARG_RANDOM_ACCESS,
+      g_param_spec_boolean ("random-access",
+          "random-mode",
+          "Enable random file access", FALSE, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_gnome_vfs_src_stop);
@@ -439,6 +446,9 @@ gst_gnome_vfs_src_set_property (GObject * object, guint prop_id,
     case ARG_IRADIO_MODE:
       src->iradio_mode = g_value_get_boolean (value);
       break;
+    case ARG_RANDOM_ACCESS:
+      src->random_access = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -474,6 +484,9 @@ gst_gnome_vfs_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case ARG_IRADIO_TITLE:
       g_value_set_string (value, src->iradio_title);
+      break;
+    case ARG_RANDOM_ACCESS:
+      g_value_set_boolean (value, src->random_access);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -662,7 +675,6 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
     gst_buffer_set_caps (buf, src->icy_caps);
 
   data = GST_BUFFER_DATA (buf);
-  GST_BUFFER_OFFSET (buf) = src->curoffset;
 
   res = gnome_vfs_read (src->handle, data, size, &readbytes);
 
@@ -670,11 +682,11 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
               && readbytes == 0)))
     goto eos;
 
-  GST_BUFFER_SIZE (buf) = readbytes;
-
   if (G_UNLIKELY (res != GNOME_VFS_OK))
     goto read_failed;
 
+  GST_BUFFER_OFFSET (buf) = src->curoffset;
+  GST_BUFFER_SIZE (buf) = readbytes;
   src->curoffset += readbytes;
 
   /* we're done, return the buffer */
@@ -734,7 +746,7 @@ gst_gnome_vfs_src_check_get_range (GstBaseSrc * basesrc)
     return FALSE;
   }
 
-  if (gnome_vfs_uri_is_local (src->uri)) {
+  if (gnome_vfs_uri_is_local (src->uri) || src->random_access) {
     GST_LOG_OBJECT (src, "local URI (%s), assuming random access is possible",
         GST_STR_NULL (src->uri_name));
     return TRUE;
@@ -822,11 +834,16 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
   if (src->uri != NULL) {
     GnomeVFSOpenMode mode;
 
+    if (src->random_access)
+      mode = GNOME_VFS_OPEN_READ | GNOME_VFS_OPEN_RANDOM;
+    else
+      mode = GNOME_VFS_OPEN_READ;
+
     /* this can block... */
-    mode = GNOME_VFS_OPEN_READ;
     res = gnome_vfs_open_uri (&src->handle, src->uri, mode);
-    if (res != GNOME_VFS_OK)
+    if (res != GNOME_VFS_OK) {
       goto open_failed;
+    }
     src->own_handle = TRUE;
   } else if (!src->handle) {
     goto no_filename;
@@ -882,7 +899,13 @@ gst_gnome_vfs_src_stop (GstBaseSrc * basesrc)
   gst_gnome_vfs_src_pop_callbacks (src);
 
   if (src->own_handle) {
-    gnome_vfs_close (src->handle);
+    GnomeVFSResult res;
+
+    res = gnome_vfs_close (src->handle);
+    if (res != GNOME_VFS_OK) {
+      GST_ELEMENT_ERROR (src, RESOURCE, CLOSE, (NULL),
+          ("Could not close vfs handle: %s", gnome_vfs_result_to_string (res)));
+    }
     src->handle = NULL;
   }
   src->curoffset = 0;

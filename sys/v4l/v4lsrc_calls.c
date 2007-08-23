@@ -721,7 +721,7 @@ gst_v4lsrc_buffer_new (GstV4lSrc * v4lsrc, gint num)
   if (timestamp > latency)
     timestamp -= latency;
   else
-    timestamp = 0;
+    timestamp = GST_CLOCK_TIME_NONE;
 
   GST_BUFFER_TIMESTAMP (buf) = timestamp;
   GST_BUFFER_DURATION (buf) = duration;
