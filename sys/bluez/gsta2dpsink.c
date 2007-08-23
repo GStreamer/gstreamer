@@ -30,12 +30,12 @@
 
 #include "gsta2dpsink.h"
 
-GST_DEBUG_CATEGORY_EXTERN (bluetooth_debug);
-#define GST_CAT_DEFAULT bluetooth_debug
+GST_DEBUG_CATEGORY_STATIC (a2dp_sink_debug);
+#define GST_CAT_DEFAULT a2dp_sink_debug
 
-GST_BOILERPLATE (GstA2dpSink, gst_a2dpsink, GstAudioSink, GST_TYPE_AUDIO_SINK);
+GST_BOILERPLATE (GstA2dpSink, gst_a2dp_sink, GstAudioSink, GST_TYPE_AUDIO_SINK);
 
-static const GstElementDetails a2dpsink_details =
+static const GstElementDetails a2dp_sink_details =
 GST_ELEMENT_DETAILS ("Bluetooth A2DP sink",
     "Sink/Audio",
     "Plays audio to an A2DP device",
@@ -46,7 +46,7 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("ANY"));
 
 static void
-gst_a2dpsink_base_init (gpointer g_class)
+gst_a2dp_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -55,23 +55,23 @@ gst_a2dpsink_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_factory));
 
-  gst_element_class_set_details (element_class, &a2dpsink_details);
+  gst_element_class_set_details (element_class, &a2dp_sink_details);
 }
 
 static void
-gst_a2dpsink_dispose (GObject * object)
+gst_a2dp_sink_dispose (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
-gst_a2dpsink_finalize (GObject * object)
+gst_a2dp_sink_finalize (GObject * object)
 {
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
-gst_a2dpsink_get_property (GObject * object, guint prop_id,
+gst_a2dp_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {
@@ -82,7 +82,7 @@ gst_a2dpsink_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_a2dpsink_set_property (GObject * object, guint prop_id,
+gst_a2dp_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   switch (prop_id) {
@@ -93,7 +93,7 @@ gst_a2dpsink_set_property (GObject * object, guint prop_id,
 }
 
 static GstCaps *
-gst_a2dpsink_getcaps (GstBaseSink * basesink)
+gst_a2dp_sink_getcaps (GstBaseSink * basesink)
 {
   GST_DEBUG_OBJECT (basesink, "");
 
@@ -101,7 +101,7 @@ gst_a2dpsink_getcaps (GstBaseSink * basesink)
 }
 
 static gboolean
-gst_a2dpsink_open (GstAudioSink * audiosink)
+gst_a2dp_sink_open (GstAudioSink * audiosink)
 {
   GST_DEBUG_OBJECT (audiosink, "");
 
@@ -109,7 +109,7 @@ gst_a2dpsink_open (GstAudioSink * audiosink)
 }
 
 static gboolean
-gst_a2dpsink_prepare (GstAudioSink * audiosink, GstRingBufferSpec * spec)
+gst_a2dp_sink_prepare (GstAudioSink * audiosink, GstRingBufferSpec * spec)
 {
   GST_DEBUG_OBJECT (audiosink, "spec %p", spec);
 
@@ -117,7 +117,7 @@ gst_a2dpsink_prepare (GstAudioSink * audiosink, GstRingBufferSpec * spec)
 }
 
 static gboolean
-gst_a2dpsink_unprepare (GstAudioSink * audiosink)
+gst_a2dp_sink_unprepare (GstAudioSink * audiosink)
 {
   GST_DEBUG_OBJECT (audiosink, "");
 
@@ -125,7 +125,7 @@ gst_a2dpsink_unprepare (GstAudioSink * audiosink)
 }
 
 static gboolean
-gst_a2dpsink_close (GstAudioSink * audiosink)
+gst_a2dp_sink_close (GstAudioSink * audiosink)
 {
   GST_DEBUG_OBJECT (audiosink, "");
 
@@ -133,7 +133,7 @@ gst_a2dpsink_close (GstAudioSink * audiosink)
 }
 
 static guint
-gst_a2dpsink_write (GstAudioSink * audiosink, gpointer data, guint length)
+gst_a2dp_sink_write (GstAudioSink * audiosink, gpointer data, guint length)
 {
   GST_DEBUG_OBJECT (audiosink, "data %p length %d", data, length);
 
@@ -141,7 +141,7 @@ gst_a2dpsink_write (GstAudioSink * audiosink, gpointer data, guint length)
 }
 
 static guint
-gst_a2dpsink_delay (GstAudioSink * audiosink)
+gst_a2dp_sink_delay (GstAudioSink * audiosink)
 {
   GST_DEBUG_OBJECT (audiosink, "");
 
@@ -149,12 +149,13 @@ gst_a2dpsink_delay (GstAudioSink * audiosink)
 }
 
 static void
-gst_a2dpsink_reset (GstAudioSink * audiosink)
+gst_a2dp_sink_reset (GstAudioSink * audiosink)
 {
+  GST_DEBUG_OBJECT (audiosink, "");
 }
 
 static void
-gst_a2dpsink_class_init (GstA2dpSinkClass * klass)
+gst_a2dp_sink_class_init (GstA2dpSinkClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
@@ -164,24 +165,26 @@ gst_a2dpsink_class_init (GstA2dpSinkClass * klass)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_a2dpsink_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_a2dpsink_finalize);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_a2dpsink_get_property);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_a2dpsink_set_property);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_a2dp_sink_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_a2dp_sink_finalize);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_a2dp_sink_get_property);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_a2dp_sink_set_property);
 
-  gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_a2dpsink_getcaps);
+  gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_a2dp_sink_getcaps);
 
-  gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_a2dpsink_open);
-  gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_a2dpsink_prepare);
-  gstaudiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_a2dpsink_unprepare);
-  gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_a2dpsink_close);
-  gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_a2dpsink_write);
-  gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_a2dpsink_delay);
-  gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_a2dpsink_reset);
+  gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_a2dp_sink_open);
+  gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_a2dp_sink_prepare);
+  gstaudiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_a2dp_sink_unprepare);
+  gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_a2dp_sink_close);
+  gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_a2dp_sink_write);
+  gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_a2dp_sink_delay);
+  gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_a2dp_sink_reset);
+
+  GST_DEBUG_CATEGORY_INIT (a2dp_sink_debug, "a2dpsink", 0, "A2DP sink element");
 }
 
 static void
-gst_a2dpsink_init (GstA2dpSink * a2dpsink, GstA2dpSinkClass * klass)
+gst_a2dp_sink_init (GstA2dpSink * a2dpsink, GstA2dpSinkClass * klass)
 {
   GST_DEBUG_OBJECT (a2dpsink, "");
 }

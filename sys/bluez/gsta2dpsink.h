@@ -27,7 +27,7 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_A2DP_SINK \
-	(gst_a2dpsink_get_type())
+	(gst_a2dp_sink_get_type())
 #define GST_A2DP_SINK(obj) \
 	(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_A2DP_SINK,GstA2dpSink))
 #define GST_A2DP_SINK_CLASS(klass) \
@@ -48,6 +48,6 @@ struct _GstA2dpSinkClass {
 	GstAudioSinkClass parent_class;
 };
 
-GType gst_a2dpsink_get_type(void);
+GType gst_a2dp_sink_get_type(void);
 
 G_END_DECLS
