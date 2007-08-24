@@ -874,10 +874,17 @@ GST_START_TEST (test_iterate_sorted)
   it = gst_bin_iterate_sorted (GST_BIN (pipeline));
   fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
   fail_unless (elem == sink2);
+  gst_object_unref (elem);
+
   fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
   fail_unless (elem == identity);
+  gst_object_unref (elem);
+
   fail_unless (gst_iterator_next (it, &elem) == GST_ITERATOR_OK);
   fail_unless (elem == bin);
+  gst_object_unref (elem);
+
+  gst_iterator_free (it);
 
   gst_object_unref (pipeline);
 }

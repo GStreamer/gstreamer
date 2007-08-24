@@ -1,3 +1,8 @@
+2007-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* tests/check/gst/gstbin.c: (GST_START_TEST):
+	  Fix leaks in the new unit test.
+
 2007-08-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c:
