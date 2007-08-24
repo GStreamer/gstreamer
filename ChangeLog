@@ -1,3 +1,11 @@
+2007-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
+	Add other allowed rates to the pad templates.
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (gst_mp3parse_dispose):
+	Reset the parser to release memory in dispose.
+
 2007-08-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/amrnb/amrnbdec.c:

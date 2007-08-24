@@ -309,6 +309,8 @@ gst_mp3parse_dispose (GObject * object)
 {
   GstMPEGAudioParse *mp3parse = GST_MP3PARSE (object);
 
+  gst_mp3parse_reset (mp3parse);
+
   if (mp3parse->adapter) {
     g_object_unref (mp3parse->adapter);
     mp3parse->adapter = NULL;

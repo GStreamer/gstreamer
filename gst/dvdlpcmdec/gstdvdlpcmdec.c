@@ -44,7 +44,7 @@ static GstStaticPadTemplate gst_dvdlpcmdec_sink_template =
     GST_STATIC_CAPS ("audio/x-private1-lpcm; "
         "audio/x-lpcm, "
         "width = (int) { 16, 20, 24 }, "
-        "rate = (int) { 48000, 96000 }, "
+        "rate = (int) { 32000, 44100, 48000, 96000 }, "
         "channels = (int) [ 1, 8 ], "
         "dynamic_range = (int) [ 0, 255 ], "
         "emphasis = (boolean) { TRUE, FALSE }, "
@@ -57,7 +57,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "width = (int) { 16, 24 }, "
-        "rate = (int) { 48000, 96000 }, "
+        "rate = (int) { 32000, 44100, 48000, 96000 }, "
         "channels = (int) [ 1, 8 ], "
         "endianness = (int) { BIG_ENDIAN }, "
         "depth = (int) { 16, 24 }, " "signed = (boolean) { true }")
