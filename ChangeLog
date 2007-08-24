@@ -1,3 +1,11 @@
+2007-08-24  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_flush),
+	(gst_flv_demux_chain), (gst_flv_demux_pull_tag),
+	(gst_flv_demux_find_offset), (gst_flv_demux_handle_seek_push),
+	(gst_flv_demux_handle_seek_pull), (gst_flv_demux_sink_event),
+	(gst_flv_demux_src_event): Remove some useless ifdef.
+
 2007-08-24  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* examples/switch/switcher.c (main):
