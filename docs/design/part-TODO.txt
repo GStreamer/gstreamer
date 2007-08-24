@@ -44,6 +44,12 @@ API/ABI
   field for this. The running time when an element is paused can be usefull to
   clip late buffers instead of prerolling on them.
 
+- Elements in a bin have no clue about the final state of the parent element
+  since the bin sets the target state on its children in small steps. This
+  causes problems for elements that like to know the final state (rtspsrc going
+  to PAUSED or READY is different in that we can avoid sending the useless
+  PAUSED request).
+
 
 IMPLEMENTATION
 --------------

@@ -133,8 +133,10 @@ Use cases:
      4b) send EOS to element2, this makes sure that element2 flushes
          out the last bits of data it holds.
      4c) wait for EOS to appear in the probe, drop the EOS.
+     4d) remove the EOS pad event probe.
   5) unlink element2 and element3
-     5a) optionally element2 can now be set to NULL.
+     5a) optionally element2 can now be set to NULL and/or removed from the
+         pipeline.
   6) link element4 and element3
   7) link element1 and element4 (FIXME, how about letting element4 know
      about the currently running segment?, see issues.)

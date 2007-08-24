@@ -1,3 +1,9 @@
+2007-08-24  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/design/part-TODO.txt:
+	* docs/design/part-block.txt:
+	Update some docs.
+
 2007-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/Makefile.am:
