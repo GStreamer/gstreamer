@@ -118,11 +118,12 @@ main (int argc, char *argv[])
       gst_caps_from_string ("video/x-raw-rgb,width=640,height=480"), NULL);
   video_switch = gst_element_factory_make ("switch", "video_switch");
   segment = gst_element_factory_make ("identity", "identity-segment");
+  g_object_set (G_OBJECT (segment), "silent", TRUE, NULL);
   g_signal_connect (G_OBJECT (segment), "notify::last-message",
       G_CALLBACK (last_message_received), segment);
   g_object_set (G_OBJECT (segment), "single-segment", TRUE, NULL);
   scaler = gst_element_factory_make ("videoscale", "videoscale0");
-  video_sink = gst_element_factory_make ("ximagesink", "video_sink");
+  video_sink = gst_element_factory_make ("fakesink", "video_sink");
   //g_object_set (G_OBJECT (video_sink), "sync", FALSE, NULL);
   sink1_sync = gst_element_factory_make ("identity", "sink0_sync");
   g_object_set (G_OBJECT (sink1_sync), "sync", TRUE, NULL);
@@ -130,21 +131,21 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (sink2_sync), "sync", TRUE, NULL);
   gst_bin_add_many (GST_BIN (pipeline), src1, src2, segment, video_switch,
       video_sink, sink1_sync, sink2_sync, scaler, capsfilter, NULL);
-  gst_element_link (src1, sink1_sync);
-  gst_element_link (sink1_sync, video_switch);
+  gst_element_link (src1,       /*sink1_sync);
+                                   gst_element_link (sink1_sync, */ video_switch);
   gst_element_link (src2, capsfilter);
-  gst_element_link (capsfilter, sink2_sync);
-  gst_element_link (sink2_sync, video_switch);
+  gst_element_link (capsfilter, /*sink2_sync);
+                                   gst_element_link (sink2_sync, */ video_switch);
   gst_element_link (video_switch, segment);
-  gst_element_link (segment, scaler);
-  gst_element_link (scaler, video_sink);
+  gst_element_link (segment,    /*scaler);
+                                   gst_element_link (scaler, */ video_sink);
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_add_watch (bus, my_bus_callback, NULL);
   gst_object_unref (bus);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
 
-  g_timeout_add (2000, (GSourceFunc) switch_timer, video_switch);
+  g_timeout_add (200, (GSourceFunc) switch_timer, video_switch);
 
   g_main_loop_run (loop);
 
