@@ -893,10 +893,8 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
         gst_segment_set_newsegment (demux->segment, update, rate, format, start,
             stop, time);
 
-#ifdef POST_10_10
         GST_DEBUG_OBJECT (demux, "NEWSEGMENT: %" GST_SEGMENT_FORMAT,
             demux->segment);
-#endif
 
         /* and forward */
         ret = gst_pad_event_default (demux->sinkpad, event);
