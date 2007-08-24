@@ -1,3 +1,11 @@
+2007-08-24  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/flutspatinfo.c:
+	* gst/mpegtsparse/flutspatinfo.h:
+	* gst/mpegtsparse/flutspmtinfo.c:
+	* gst/mpegtsparse/flutspmtinfo.h:
+	Update licences to reflect LGPL-ness of these files also.
+
 2007-08-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
