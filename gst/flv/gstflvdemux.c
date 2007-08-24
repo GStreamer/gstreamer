@@ -68,6 +68,16 @@ gst_flv_demux_flush (GstFLVDemux * demux, gboolean discont)
 
   demux->audio_need_discont = TRUE;
   demux->video_need_discont = TRUE;
+
+  demux->flushing = FALSE;
+
+  /* Only in push mode */
+  if (!demux->random_access) {
+    /* After a flush we expect a tag_type */
+    demux->state = FLV_STATE_TAG_TYPE;
+    /* We reset the offset and will get one from first push */
+    demux->offset = 0;
+  }
 }
 
 static void
@@ -77,6 +87,7 @@ gst_flv_demux_cleanup (GstFLVDemux * demux)
 
   demux->state = FLV_STATE_HEADER;
 
+  demux->flushing = FALSE;
   demux->need_header = TRUE;
   demux->audio_need_segment = TRUE;
   demux->video_need_segment = TRUE;
@@ -146,9 +157,28 @@ gst_flv_demux_chain (GstPad * pad, GstBuffer * buffer)
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
 
+  GST_LOG_OBJECT (demux, "received buffer of %d bytes at offset %"
+      G_GUINT64_FORMAT, GST_BUFFER_SIZE (buffer), GST_BUFFER_OFFSET (buffer));
+
+  if (G_UNLIKELY (GST_BUFFER_OFFSET (buffer) == 0)) {
+    GST_DEBUG_OBJECT (demux, "beginning of file, expect header");
+    demux->state = FLV_STATE_HEADER;
+    demux->offset = 0;
+  }
+
+  if (G_UNLIKELY (demux->offset == 0)) {
+    GST_DEBUG_OBJECT (demux, "offset was zero, synchronizing with buffer's");
+    demux->offset = GST_BUFFER_OFFSET (buffer);
+  }
+
   gst_adapter_push (demux->adapter, buffer);
 
 parse:
+  if (G_UNLIKELY (demux->flushing)) {
+    GST_DEBUG_OBJECT (demux, "we are now flushing, exiting parser loop");
+    ret = GST_FLOW_WRONG_STATE;
+    goto beach;
+  }
   switch (demux->state) {
     case FLV_STATE_HEADER:
     {
@@ -502,52 +532,134 @@ pause:
   }
 }
 
-static gboolean
-gst_flv_demux_do_seek (GstFLVDemux * demux, GstSegment * segment)
+static guint64
+gst_flv_demux_find_offset (GstFLVDemux * demux, GstSegment * segment)
 {
-  gboolean ret = FALSE;
+  gint64 bytes = 0;
+  gint64 time = 0;
   GstIndexEntry *entry;
 
-  /* Let's check if we have an index entry for that seek time */
-  entry = gst_index_get_assoc_entry (demux->index, demux->index_id,
-      GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME,
-      segment->start);
+  g_return_val_if_fail (segment != NULL, 0);
 
-  if (entry) {
-    gint64 bytes = 0;
-    gint64 time = 0;
+  time = segment->start;
 
-    gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &bytes);
-    gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
+  if (demux->index) {
+    /* Let's check if we have an index entry for that seek time */
+    entry = gst_index_get_assoc_entry (demux->index, demux->index_id,
+        GST_INDEX_LOOKUP_BEFORE, GST_ASSOCIATION_FLAG_KEY_UNIT, GST_FORMAT_TIME,
+        time);
 
-    demux->offset = bytes;
-    demux->state = FLV_STATE_TAG_TYPE;
+    if (entry) {
+      gst_index_entry_assoc_map (entry, GST_FORMAT_BYTES, &bytes);
+      gst_index_entry_assoc_map (entry, GST_FORMAT_TIME, &time);
 
-    GST_DEBUG_OBJECT (demux, "found index entry for %" GST_TIME_FORMAT
-        " at %" GST_TIME_FORMAT ", seeking to %" G_GINT64_FORMAT,
-        GST_TIME_ARGS (segment->start), GST_TIME_ARGS (time), bytes);
+      GST_DEBUG_OBJECT (demux, "found index entry for %" GST_TIME_FORMAT
+          " at %" GST_TIME_FORMAT ", seeking to %" G_GINT64_FORMAT,
+          GST_TIME_ARGS (segment->start), GST_TIME_ARGS (time), bytes);
 
-    /* Key frame seeking */
-    if (demux->segment->flags & GST_SEEK_FLAG_KEY_UNIT) {
-      /* Adjust the segment so that the keyframe fits in */
-      if (time < segment->start) {
-        segment->start = segment->time = time;
+      /* Key frame seeking */
+      if (segment->flags & GST_SEEK_FLAG_KEY_UNIT) {
+        /* Adjust the segment so that the keyframe fits in */
+        if (time < segment->start) {
+          segment->start = segment->time = time;
+        }
+        segment->last_stop = time;
       }
-      segment->last_stop = time;
+    } else {
+      GST_DEBUG_OBJECT (demux, "no index entry found for %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (segment->start));
     }
-
-    ret = TRUE;
-  } else {
-    GST_DEBUG_OBJECT (demux, "no index entry found for %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (segment->start));
-    ret = FALSE;
   }
 
-  return ret;
+  return bytes;
 }
 
 static gboolean
-gst_flv_demux_handle_seek (GstFLVDemux * demux, GstEvent * event)
+gst_flv_demux_handle_seek_push (GstFLVDemux * demux, GstEvent * event)
+{
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType start_type, stop_type;
+  gint64 start, stop;
+  gdouble rate;
+  gboolean update, flush, keyframe, ret;
+  GstSegment seeksegment;
+
+  gst_event_parse_seek (event, &rate, &format, &flags,
+      &start_type, &start, &stop_type, &stop);
+
+  if (format != GST_FORMAT_TIME)
+    goto wrong_format;
+
+  flush = flags & GST_SEEK_FLAG_FLUSH;
+  keyframe = flags & GST_SEEK_FLAG_KEY_UNIT;
+
+  /* Work on a copy until we are sure the seek succeeded. */
+  memcpy (&seeksegment, demux->segment, sizeof (GstSegment));
+
+  GST_DEBUG_OBJECT (demux, "segment before configure %" GST_SEGMENT_FORMAT,
+      demux->segment);
+
+  /* Apply the seek to our segment */
+  gst_segment_set_seek (&seeksegment, rate, format, flags,
+      start_type, start, stop_type, stop, &update);
+
+  GST_DEBUG_OBJECT (demux, "segment configured %" GST_SEGMENT_FORMAT,
+      &seeksegment);
+
+  if (flush || seeksegment.last_stop != demux->segment->last_stop) {
+    /* Do the actual seeking */
+    guint64 offset = gst_flv_demux_find_offset (demux, &seeksegment);
+
+    GST_DEBUG_OBJECT (demux, "generating an upstream seek at position %"
+        G_GUINT64_FORMAT, offset);
+    ret = gst_pad_push_event (demux->sinkpad,
+        gst_event_new_seek (seeksegment.rate, GST_FORMAT_BYTES,
+            GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET,
+            offset, GST_SEEK_TYPE_NONE, 0));
+    if (G_UNLIKELY (!ret)) {
+      GST_WARNING_OBJECT (demux, "upstream seek failed");
+    }
+  } else {
+    ret = TRUE;
+  }
+
+  if (ret) {
+    /* Ok seek succeeded, take the newly configured segment */
+    memcpy (demux->segment, &seeksegment, sizeof (GstSegment));
+
+    /* Notify about the start of a new segment */
+    if (demux->segment->flags & GST_SEEK_FLAG_SEGMENT) {
+      gst_element_post_message (GST_ELEMENT (demux),
+          gst_message_new_segment_start (GST_OBJECT (demux),
+              demux->segment->format, demux->segment->last_stop));
+    }
+
+    /* Tell all the stream a new segment is needed */
+    {
+      demux->audio_need_segment = TRUE;
+      demux->video_need_segment = TRUE;
+      /* Clean any potential newsegment event kept for the streams. The first
+       * stream needing a new segment will create a new one. */
+      if (G_UNLIKELY (demux->new_seg_event)) {
+        gst_event_unref (demux->new_seg_event);
+        demux->new_seg_event = NULL;
+      }
+    }
+  }
+
+  return ret;
+
+/* ERRORS */
+wrong_format:
+  {
+    GST_WARNING_OBJECT (demux, "we only support seeking in TIME format");
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
 {
   GstFormat format;
   GstSeekFlags flags;
@@ -599,7 +711,14 @@ gst_flv_demux_handle_seek (GstFLVDemux * demux, GstEvent * event)
 
   if (flush || seeksegment.last_stop != demux->segment->last_stop) {
     /* Do the actual seeking */
-    ret = gst_flv_demux_do_seek (demux, &seeksegment);
+    demux->offset = gst_flv_demux_find_offset (demux, &seeksegment);
+
+    /* If we seeked at the beginning of the file parse the header again */
+    if (G_UNLIKELY (!demux->offset)) {
+      demux->state = FLV_STATE_HEADER;
+    } else {                    /* or parse a tag */
+      demux->state = FLV_STATE_TAG_TYPE;
+    }
   } else {
     ret = TRUE;
   }
@@ -728,12 +847,17 @@ gst_flv_demux_sink_event (GstPad * pad, GstEvent * event)
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
 
+  GST_DEBUG_OBJECT (demux, "handling event %s", GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+      GST_DEBUG_OBJECT (demux, "trying to force chain function to exit");
+      demux->flushing = TRUE;
+      ret = gst_pad_event_default (demux->sinkpad, event);
+      break;
     case GST_EVENT_FLUSH_STOP:
       GST_DEBUG_OBJECT (demux, "flushing FLV demuxer");
       gst_flv_demux_flush (demux, TRUE);
-      gst_adapter_clear (demux->adapter);
-      gst_segment_init (demux->segment, GST_FORMAT_TIME);
       ret = gst_pad_event_default (demux->sinkpad, event);
       break;
     case GST_EVENT_EOS:
@@ -803,9 +927,15 @@ gst_flv_demux_src_event (GstPad * pad, GstEvent * event)
 
   demux = GST_FLV_DEMUX (gst_pad_get_parent (pad));
 
+  GST_DEBUG_OBJECT (demux, "handling event %s", GST_EVENT_TYPE_NAME (event));
+
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      ret = gst_flv_demux_handle_seek (demux, event);
+      if (demux->random_access) {
+        ret = gst_flv_demux_handle_seek_pull (demux, event);
+      } else {
+        ret = gst_flv_demux_handle_seek_push (demux, event);
+      }
       break;
     default:
       ret = gst_pad_push_event (demux->sinkpad, event);
