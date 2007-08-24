@@ -17,7 +17,6 @@ libgstalsa_la_CFLAGS = \
 	$(GST_CFLAGS) \
 	$(ALSA_CFLAGS)
 libgstalsa_la_LIBADD = \
-	$(GST_PLUGINS_BASE_LIBS) \
 	$(top_builddir)/gst-libs/gst/interfaces/libgstinterfaces-$(GST_MAJORMINOR).la 	\
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-$(GST_MAJORMINOR).la \
 	$(GST_BASE_LIBS) \

@@ -1,6 +1,22 @@
+2007-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* ext/alsa/Makefile.am:
+	There is no GST_PLUGINS_BASE_LIBS defined.
+	
+	* ext/alsa/gstalsa.c:
+	* ext/alsa/gstalsasink.c: (gst_alsasink_delay):
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_delay):
+	Add support for ALSA 24-bit formats.
+	snd_pcm_delay can return an error code, especially
+	during XRUNS. In that case, the best we can do is assume
+	delay = 0.
+
+	* gst/audioconvert/Makefile.am:
+	Add flags from -base before any more-remote dependencies.
+
 2007-08-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
-	Based on a patch by: Davyd <davyd at madeley dot id dot au>
+	Based on a patch by: Davyd Madeley <davyd at madeley dot id dot au>
 
 	* gst/volume/gstvolume.c: (volume_choose_func),
 	(volume_update_real_volume), (gst_volume_set_volume),

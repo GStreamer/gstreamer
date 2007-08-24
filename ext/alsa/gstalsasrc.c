@@ -122,6 +122,18 @@ static GstStaticPadTemplate alsasrc_src_factory =
         "audio/x-raw-int, "
         "endianness = (int) { " ALSA_SRC_FACTORY_ENDIANNESS " }, "
         "signed = (boolean) { TRUE, FALSE }, "
+        "width = (int) 32, "
+        "depth = (int) 24, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
+        "audio/x-raw-int, "
+        "endianness = (int) { " ALSA_SRC_FACTORY_ENDIANNESS " }, "
+        "signed = (boolean) { TRUE, FALSE }, "
+        "width = (int) 24, "
+        "depth = (int) 24, "
+        "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
+        "audio/x-raw-int, "
+        "endianness = (int) { " ALSA_SRC_FACTORY_ENDIANNESS " }, "
+        "signed = (boolean) { TRUE, FALSE }, "
         "width = (int) 16, "
         "depth = (int) 16, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, MAX ]; "
@@ -792,10 +804,15 @@ gst_alsasrc_delay (GstAudioSrc * asrc)
 {
   GstAlsaSrc *alsa;
   snd_pcm_sframes_t delay;
+  int res;
 
   alsa = GST_ALSA_SRC (asrc);
 
-  snd_pcm_delay (alsa->handle, &delay);
+  res = snd_pcm_delay (alsa->handle, &delay);
+  if (G_UNLIKELY (res < 0)) {
+    GST_DEBUG_OBJECT (alsa, "snd_pcm_delay returned %d", res);
+    delay = 0;
+  }
 
   return CLAMP (delay, 0, alsa->buffer_size);
 }

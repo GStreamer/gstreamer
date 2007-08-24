@@ -84,14 +84,21 @@ max_rate_err:
 
 static const struct
 {
+  const int width;
+  const int depth;
   const int sformat;
   const int uformat;
-} pcmformats[4] = {
+} pcmformats[] = {
   {
-  SND_PCM_FORMAT_S8, SND_PCM_FORMAT_U8}, {
-  SND_PCM_FORMAT_S16, SND_PCM_FORMAT_U16}, {
-  SND_PCM_FORMAT_UNKNOWN, SND_PCM_FORMAT_UNKNOWN}, {
-  SND_PCM_FORMAT_S32, SND_PCM_FORMAT_U32}
+  8, 8, SND_PCM_FORMAT_S8, SND_PCM_FORMAT_U8}, {
+  16, 16, SND_PCM_FORMAT_S16, SND_PCM_FORMAT_U16}, {
+  32, 24, SND_PCM_FORMAT_S24, SND_PCM_FORMAT_U24}, {
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)   /* no endian-unspecific enum available */
+  24, 24, SND_PCM_FORMAT_S24_3LE, SND_PCM_FORMAT_U24_3LE}, {
+#else
+24, 24, SND_PCM_FORMAT_S24_3BE, SND_PCM_FORMAT_U24_3BE},}
+#endif
+32, 32, SND_PCM_FORMAT_S32, SND_PCM_FORMAT_U32}
 };
 
 static GstCaps *
@@ -110,16 +117,24 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
 
   for (i = 0; i < gst_caps_get_size (in_caps); ++i) {
     GstStructure *scopy;
-    gint w, width = 0;
+    gint w, width = 0, depth = 0;
 
     s = gst_caps_get_structure (in_caps, i);
     if (!gst_structure_has_name (s, "audio/x-raw-int")) {
       GST_WARNING_OBJECT (obj, "skipping non-int format");
       continue;
     }
-    gst_structure_get_int (s, "width", &width);
-    g_assert (width != 0 && (width % 8) == 0);
-    w = (width / 8) - 1;
+    if (!gst_structure_get_int (s, "width", &width) ||
+        !gst_structure_get_int (s, "depth", &depth))
+      continue;
+    if (width == 0 || (width % 8) != 0)
+      continue;                 /* Only full byte widths are valid */
+    for (w = 0; w < G_N_ELEMENTS (pcmformats); w++)
+      if (pcmformats[w].width == width && pcmformats[w].depth == depth)
+        break;
+    if (w == G_N_ELEMENTS (pcmformats))
+      continue;                 /* Unknown format */
+
     if (snd_pcm_format_mask_test (mask, pcmformats[w].sformat) &&
         snd_pcm_format_mask_test (mask, pcmformats[w].uformat)) {
       /* template contains { true, false } or just one, leave it as it is */
