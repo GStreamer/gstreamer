@@ -1,5 +1,11 @@
 2007-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/Makefile.am:
+	  Revert patch which uses $(gst_headers) instead of $^ because it
+	  breaks make dist.
+
+2007-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* tests/check/gst/gstbin.c: (GST_START_TEST):
 	  Fix leaks in the new unit test.
 

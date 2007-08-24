@@ -230,7 +230,7 @@ gstenumtypes.h: $(gst_headers)
 	--fprod "\n/* enumerations from \"@filename@\" */\n" \
 	--vhead "GType @enum_name@_get_type (void);\n#define GST_TYPE_@ENUMSHORT@ (@enum_name@_get_type())\n"         \
 	--ftail "G_END_DECLS\n\n#endif /* __GST_ENUM_TYPES_H__ */" \
-	$(gst_headers) > gstenumtypes.h
+	$^ > gstenumtypes.h
 
 gstenumtypes.c: $(gst_headers)
 	glib-mkenums \
@@ -239,7 +239,7 @@ gstenumtypes.c: $(gst_headers)
 	--vhead "static void\nregister_@enum_name@ (GType* id)\n{\n  static const G@Type@Value values[] = {"     \
 	--vprod "    { C_@TYPE@(@VALUENAME@), \"@VALUENAME@\", \"@valuenick@\" }," \
 	--vtail "    { 0, NULL, NULL }\n  };\n  *id = g_@type@_register_static (\"@EnumName@\", values);\n}\nGType\n@enum_name@_get_type (void)\n{\n  static GType id;\n  static GOnce once = G_ONCE_INIT;\n\n  g_once (&once, (GThreadFunc)register_@enum_name@, &id);\n  return id;\n}\n" \
-	$(gst_headers) > gstenumtypes.c
+	$^ > gstenumtypes.c
 
 %.c.gcov: .libs/libgstreamer_@GST_MAJORMINOR@_la-%.gcda %.c
 	$(GCOV) -b -f -o $^ > $@.out
