@@ -107,6 +107,7 @@ struct _GstFLVDemux
   gboolean has_video;
   gboolean push_tags;
   gboolean strict;
+  gboolean flushing;
 };
 
 struct _GstFLVDemuxClass
