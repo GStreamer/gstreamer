@@ -23,6 +23,8 @@
 
 #include <gst/gst.h>
 
+#include "sbc.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_SBC_DEC \
@@ -44,6 +46,10 @@ struct _GstSbcDec {
 
 	GstPad *sinkpad;
 	GstPad *srcpad;
+
+	GstBuffer *buffer;
+
+	sbc_t sbc;
 };
 
 struct _GstSbcDecClass {
