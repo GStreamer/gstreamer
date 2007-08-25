@@ -23,6 +23,8 @@
 
 #include <gst/gst.h>
 
+#include "sbc.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_SBC_ENC \
@@ -44,6 +46,8 @@ struct _GstSbcEnc {
 
 	GstPad *sinkpad;
 	GstPad *srcpad;
+
+	sbc_t sbc;
 };
 
 struct _GstSbcEncClass {
