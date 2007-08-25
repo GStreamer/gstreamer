@@ -170,11 +170,11 @@ gst_sbc_dec_base_init (gpointer g_class)
 static void
 gst_sbc_dec_class_init (GstSbcDecClass * klass)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gstelement_class->change_state = GST_DEBUG_FUNCPTR (sbc_dec_change_state);
+  element_class->change_state = GST_DEBUG_FUNCPTR (sbc_dec_change_state);
 
   GST_DEBUG_CATEGORY_INIT (sbc_dec_debug, "sbcdec", 0, "SBC decoding element");
 }
