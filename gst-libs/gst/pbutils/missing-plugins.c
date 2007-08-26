@@ -422,7 +422,7 @@ gst_missing_plugin_message_get_installer_detail (GstMessage * msg)
   if (progname) {
     g_string_append_printf (str, "%s|", progname);
   } else {
-    g_string_append_printf (str, "pid/%lu", (gulong) getpid ());
+    g_string_append_printf (str, "pid/%lu|", (gulong) getpid ());
   }
 
   desc = gst_missing_plugin_message_get_description (msg);
