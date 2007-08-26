@@ -25,13 +25,24 @@
 #include <config.h>
 #endif
 
+#include <unistd.h>
+#include <sys/un.h>
+#include <sys/socket.h>
+
 #include "ipc.h"
-#include "sbc.h"
 
 #include "gsta2dpsink.h"
 
 GST_DEBUG_CATEGORY_STATIC (a2dp_sink_debug);
 #define GST_CAT_DEFAULT a2dp_sink_debug
+
+#define DEFAULT_DEVICE "default"
+
+enum
+{
+  PROP_0,
+  PROP_DEVICE,
+};
 
 GST_BOILERPLATE (GstA2dpSink, gst_a2dp_sink, GstAudioSink, GST_TYPE_AUDIO_SINK);
 
@@ -41,109 +52,129 @@ GST_ELEMENT_DETAILS ("Bluetooth A2DP sink",
     "Plays audio to an A2DP device",
     "Marcel Holtmann <marcel@holtmann.org>");
 
-static GstStaticPadTemplate sink_factory =
-GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("ANY"));
+static GstStaticPadTemplate a2dp_sink_factory =
+    GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("audio/x-sbc, "
+        "rate = (int) { 16000, 32000, 44100, 48000 }, "
+        "channels = (int) [ 1, 2 ], "
+        "mode = (string) { mono, dual, stereo, joint }, "
+        "blocks = (int) { 4, 8, 12, 16 }, "
+        "subbands = (int) { 4, 8 }, "
+        "allocation = (string) { snr, loudness }; "
+        "audio/mpeg, "
+        "mpegversion = (int) 1, "
+        "layer = (int) [ 1, 3 ], "
+        "rate = (int) { 16000, 22050, 24000, 32000, 44100, 48000 }, "
+        "channels = (int) [ 1, 2 ]"));
 
 static void
 gst_a2dp_sink_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  GST_DEBUG ("");
-
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
+      gst_static_pad_template_get (&a2dp_sink_factory));
 
   gst_element_class_set_details (element_class, &a2dp_sink_details);
 }
 
 static void
-gst_a2dp_sink_dispose (GObject * object)
-{
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-}
-
-static void
 gst_a2dp_sink_finalize (GObject * object)
 {
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
+  GstA2dpSink *sink = GST_A2DP_SINK (object);
 
-static void
-gst_a2dp_sink_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+  g_io_channel_close (sink->server);
+
+  g_free (sink->device);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
 gst_a2dp_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
+  GstA2dpSink *sink = GST_A2DP_SINK (object);
+
   switch (prop_id) {
+    case PROP_DEVICE:
+      g_free (sink->device);
+      sink->device = g_value_dup_string (value);
+
+      if (sink->device == NULL)
+        sink->device = g_strdup (DEFAULT_DEVICE);
+      break;
+
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
 
-static GstCaps *
-gst_a2dp_sink_getcaps (GstBaseSink * basesink)
+static void
+gst_a2dp_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
 {
-  GST_DEBUG_OBJECT (basesink, "");
+  GstA2dpSink *sink = GST_A2DP_SINK (object);
 
-  return NULL;
+  switch (prop_id) {
+    case PROP_DEVICE:
+      g_value_set_string (value, sink->device);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static gboolean
-gst_a2dp_sink_open (GstAudioSink * audiosink)
+gst_a2dp_sink_open (GstAudioSink * self)
 {
-  GST_DEBUG_OBJECT (audiosink, "");
+  GstA2dpSink *sink = GST_A2DP_SINK (self);
+
+  printf ("device %s\n", sink->device);
+  printf ("open\n");
 
   return TRUE;
 }
 
 static gboolean
-gst_a2dp_sink_prepare (GstAudioSink * audiosink, GstRingBufferSpec * spec)
+gst_a2dp_sink_prepare (GstAudioSink * self, GstRingBufferSpec * spec)
 {
-  GST_DEBUG_OBJECT (audiosink, "spec %p", spec);
+  printf ("perpare\n");
+  printf ("rate %d\n", spec->rate);
+  printf ("channels %d\n", spec->channels);
 
   return TRUE;
 }
 
 static gboolean
-gst_a2dp_sink_unprepare (GstAudioSink * audiosink)
+gst_a2dp_sink_unprepare (GstAudioSink * self)
 {
-  GST_DEBUG_OBJECT (audiosink, "");
+  printf ("unprepare\n");
 
   return TRUE;
 }
 
 static gboolean
-gst_a2dp_sink_close (GstAudioSink * audiosink)
+gst_a2dp_sink_close (GstAudioSink * self)
 {
-  GST_DEBUG_OBJECT (audiosink, "");
+  printf ("close\n");
 
   return TRUE;
 }
 
 static guint
-gst_a2dp_sink_write (GstAudioSink * audiosink, gpointer data, guint length)
+gst_a2dp_sink_write (GstAudioSink * self, gpointer data, guint length)
 {
-  GST_DEBUG_OBJECT (audiosink, "data %p length %d", data, length);
-
-  return length;
+  return 0;
 }
 
 static guint
 gst_a2dp_sink_delay (GstAudioSink * audiosink)
 {
-  GST_DEBUG_OBJECT (audiosink, "");
+  printf ("delay\n");
 
   return 0;
 }
@@ -151,40 +182,65 @@ gst_a2dp_sink_delay (GstAudioSink * audiosink)
 static void
 gst_a2dp_sink_reset (GstAudioSink * audiosink)
 {
-  GST_DEBUG_OBJECT (audiosink, "");
+  printf ("reset\n");
+}
+
+static gboolean
+server_callback (GIOChannel * chan, GIOCondition cond, gpointer data)
+{
+  printf ("callback\n");
+
+  return TRUE;
 }
 
 static void
 gst_a2dp_sink_class_init (GstA2dpSinkClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstBaseSinkClass *gstbasesink_class = GST_BASE_SINK_CLASS (klass);
-  GstAudioSinkClass *gstaudiosink_class = GST_AUDIO_SINK_CLASS (klass);
-
-  GST_DEBUG ("");
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
+  GstAudioSinkClass *audiosink_class = GST_AUDIO_SINK_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_a2dp_sink_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_a2dp_sink_finalize);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_a2dp_sink_get_property);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_a2dp_sink_set_property);
+  object_class->finalize = GST_DEBUG_FUNCPTR (gst_a2dp_sink_finalize);
+  object_class->set_property = GST_DEBUG_FUNCPTR (gst_a2dp_sink_set_property);
+  object_class->get_property = GST_DEBUG_FUNCPTR (gst_a2dp_sink_get_property);
 
-  gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_a2dp_sink_getcaps);
+  audiosink_class->open = GST_DEBUG_FUNCPTR (gst_a2dp_sink_open);
+  audiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_a2dp_sink_prepare);
+  audiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_a2dp_sink_unprepare);
+  audiosink_class->close = GST_DEBUG_FUNCPTR (gst_a2dp_sink_close);
+  audiosink_class->write = GST_DEBUG_FUNCPTR (gst_a2dp_sink_write);
+  audiosink_class->delay = GST_DEBUG_FUNCPTR (gst_a2dp_sink_delay);
+  audiosink_class->reset = GST_DEBUG_FUNCPTR (gst_a2dp_sink_reset);
 
-  gstaudiosink_class->open = GST_DEBUG_FUNCPTR (gst_a2dp_sink_open);
-  gstaudiosink_class->prepare = GST_DEBUG_FUNCPTR (gst_a2dp_sink_prepare);
-  gstaudiosink_class->unprepare = GST_DEBUG_FUNCPTR (gst_a2dp_sink_unprepare);
-  gstaudiosink_class->close = GST_DEBUG_FUNCPTR (gst_a2dp_sink_close);
-  gstaudiosink_class->write = GST_DEBUG_FUNCPTR (gst_a2dp_sink_write);
-  gstaudiosink_class->delay = GST_DEBUG_FUNCPTR (gst_a2dp_sink_delay);
-  gstaudiosink_class->reset = GST_DEBUG_FUNCPTR (gst_a2dp_sink_reset);
+  g_object_class_install_property (object_class, PROP_DEVICE,
+      g_param_spec_string ("device", "Device",
+          "Bluetooth remote device", DEFAULT_DEVICE, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (a2dp_sink_debug, "a2dpsink", 0, "A2DP sink element");
 }
 
 static void
-gst_a2dp_sink_init (GstA2dpSink * a2dpsink, GstA2dpSinkClass * klass)
+gst_a2dp_sink_init (GstA2dpSink * self, GstA2dpSinkClass * klass)
 {
-  GST_DEBUG_OBJECT (a2dpsink, "");
+  struct sockaddr_un addr = { AF_UNIX, IPC_SOCKET_NAME };
+  int sk;
+
+  self->device = g_strdup (DEFAULT_DEVICE);
+
+  sk = socket (PF_LOCAL, SOCK_STREAM, 0);
+  if (sk < 0)
+    return;
+
+  if (connect (sk, (struct sockaddr *) &addr, sizeof (addr)) < 0) {
+    close (sk);
+    return;
+  }
+
+  self->server = g_io_channel_unix_new (sk);
+
+  g_io_add_watch (self->server, G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL,
+      server_callback, self);
+
+  g_io_channel_unref (self->server);
 }

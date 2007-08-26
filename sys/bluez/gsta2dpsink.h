@@ -42,6 +42,10 @@ typedef struct _GstA2dpSinkClass GstA2dpSinkClass;
 
 struct _GstA2dpSink {
 	GstAudioSink sink;
+
+	gchar *device;
+
+	GIOChannel *server;
 };
 
 struct _GstA2dpSinkClass {
