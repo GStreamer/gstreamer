@@ -32,6 +32,33 @@
 GST_DEBUG_CATEGORY_STATIC (sbc_enc_debug);
 #define GST_CAT_DEFAULT sbc_enc_debug
 
+#define GST_TYPE_SBC_MODE (gst_sbc_mode_get_type())
+
+static GType
+gst_sbc_mode_get_type (void)
+{
+  static GType sbc_mode_type = 0;
+  static GEnumValue sbc_modes[] = {
+    {0, "Auto", "auto"},
+    {1, "Mono", "mono"},
+    {2, "Dual Channel", "dual"},
+    {3, "Stereo", "stereo"},
+    {4, "Joint Stereo", "joint"},
+    {-1, NULL, NULL}
+  };
+
+  if (!sbc_mode_type)
+    sbc_mode_type = g_enum_register_static ("GstSbcMode", sbc_modes);
+
+  return sbc_mode_type;
+}
+
+enum
+{
+  PROP_0,
+  PROP_MODE,
+};
+
 GST_BOILERPLATE (GstSbcEnc, gst_sbc_enc, GstElement, GST_TYPE_ELEMENT);
 
 static const GstElementDetails sbc_enc_details =
@@ -50,7 +77,13 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
 
 static GstStaticPadTemplate sbc_enc_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-sbc"));
+    GST_STATIC_CAPS ("audio/x-sbc, "
+        "rate = (int) { 16000, 32000, 44100, 48000 }, "
+        "channels = (int) [ 1, 2 ], "
+        "mode = (string) { mono, dual, stereo, joint }, "
+        "blocks = (int) { 4, 8, 12, 16 }, "
+        "subbands = (int) { 4, 8 }, "
+        "allocation = (string) { snr, loudness }"));
 
 static GstFlowReturn
 sbc_enc_chain (GstPad * pad, GstBuffer * buffer)
@@ -148,13 +181,55 @@ gst_sbc_enc_base_init (gpointer g_class)
 }
 
 static void
+gst_sbc_enc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstSbcEnc *enc = GST_SBC_ENC (object);
+
+  switch (prop_id) {
+    case PROP_MODE:
+      enc->mode = g_value_get_enum (value);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_sbc_enc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstSbcEnc *enc = GST_SBC_ENC (object);
+
+  switch (prop_id) {
+    case PROP_MODE:
+      g_value_set_enum (value, enc->mode);
+      break;
+
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
 gst_sbc_enc_class_init (GstSbcEncClass * klass)
 {
+  GObjectClass *object_class = G_OBJECT_CLASS (klass);
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
+  object_class->set_property = GST_DEBUG_FUNCPTR (gst_sbc_enc_set_property);
+  object_class->get_property = GST_DEBUG_FUNCPTR (gst_sbc_enc_get_property);
+
   element_class->change_state = GST_DEBUG_FUNCPTR (sbc_enc_change_state);
+
+  g_object_class_install_property (object_class, PROP_MODE,
+      g_param_spec_enum ("mode", "Mode", "Encoding mode",
+          GST_TYPE_SBC_MODE, 0, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (sbc_enc_debug, "sbcenc", 0, "SBC encoding element");
 }

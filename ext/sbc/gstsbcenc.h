@@ -47,6 +47,8 @@ struct _GstSbcEnc {
 	GstPad *sinkpad;
 	GstPad *srcpad;
 
+	gint mode;
+
 	sbc_t sbc;
 };
 
