@@ -792,7 +792,10 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_TIME);
+      gst_pad_push_event (dtmfsrc->srcpad, gst_event_new_new_segment (FALSE,
+			      dtmfsrc->segment.rate, dtmfsrc->segment.format,
+			      dtmfsrc->segment.start, dtmfsrc->segment.stop, dtmfsrc->segment.time));
       /* Indicate that we don't do PRE_ROLL */
       no_preroll = TRUE;
       break;
