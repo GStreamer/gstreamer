@@ -32,13 +32,13 @@
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_DTMF_SRC		(gst_dtmf_src_get_type())
-#define GST_DTMF_SRC(obj)		(G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DTMF_SRC,GstDTMFSrc))
-#define GST_DTMF_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DTMF_SRC,GstDTMFSrcClass))
+#define GST_TYPE_DTMF_SRC               (gst_dtmf_src_get_type())
+#define GST_DTMF_SRC(obj)               (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DTMF_SRC,GstDTMFSrc))
+#define GST_DTMF_SRC_CLASS(klass)       (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DTMF_SRC,GstDTMFSrcClass))
 #define GST_DTMF_SRC_GET_CLASS(obj)     (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_DTMF_SRC, GstDTMFSrcClass))
-#define GST_IS_DTMF_SRC(obj)		(G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DTMF_SRC))
-#define GST_IS_DTMF_SRC_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DTMF_SRC))
-#define GST_DTMF_SRC_CAST(obj)		((GstDTMFSrc *)(obj))
+#define GST_IS_DTMF_SRC(obj)            (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DTMF_SRC))
+#define GST_IS_DTMF_SRC_CLASS(klass)    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DTMF_SRC))
+#define GST_DTMF_SRC_CAST(obj)          ((GstDTMFSrc *)(obj))
 
 typedef struct _GstDTMFSrc GstDTMFSrc;
 typedef struct _GstDTMFSrcClass GstDTMFSrcClass;
@@ -60,8 +60,8 @@ typedef enum _GstDTMFEventType GstDTMFEventType;
 struct _GstDTMFSrcEvent {
   GstDTMFEventType  event_type;
   double            sample;
-  guint16	    event_number;
-  guint16	    volume;
+  guint16           event_number;
+  guint16           volume;
   guint32           packet_count;
 };
 
@@ -69,12 +69,12 @@ typedef struct _GstDTMFSrcEvent GstDTMFSrcEvent;
 
 struct _GstDTMFSrc {
   GstElement        element;
-  GstPad	    *srcpad;
+  GstPad            *srcpad;
   GstSegment        segment;
-  GAsyncQueue*	    event_queue;
+  GAsyncQueue*      event_queue;
   GstDTMFSrcEvent*  last_event;
 
-  guint16	    interval;
+  guint16           interval;
   GstClockTime      timestamp;
 };
 
