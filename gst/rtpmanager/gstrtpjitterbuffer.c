@@ -158,6 +158,9 @@ struct _GstRtpJitterBufferPrivate
   GstSegment segment;
   GstClockID clock_id;
   guint32 waiting_seqnum;
+  /* the latency of the upstream peer, we have to take this into account when
+   * synchronizing the buffers. */
+  GstClockTime peer_latency;
 
   /* some accounting */
   guint64 num_late;
@@ -581,6 +584,7 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       /* reset negotiated values */
       priv->clock_rate = -1;
       priv->clock_base = -1;
+      priv->peer_latency = 0;
       /* block until we go to PLAYING */
       priv->blocked = TRUE;
       JBUF_UNLOCK (priv);
@@ -1011,6 +1015,7 @@ again:
 
     /* add latency */
     running_time += (priv->latency_ms * GST_MSECOND);
+    running_time += priv->peer_latency;
 
     GST_DEBUG_OBJECT (jitterbuffer, "sync to running_time %" GST_TIME_FORMAT,
         GST_TIME_ARGS (running_time));
@@ -1152,8 +1157,16 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
               GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
 
+          /* store this so that we can safely sync on the peer buffers. */
+          JBUF_LOCK (priv);
+          priv->peer_latency = min_latency;
+          JBUF_UNLOCK (priv);
+
           min_latency += priv->latency_ms * GST_MSECOND;
-          max_latency += priv->latency_ms * GST_MSECOND;
+          /* max_latency can be -1, meaning there is no upper limit for the
+           * latency. */
+          if (max_latency != -1)
+            max_latency += priv->latency_ms * GST_MSECOND;
 
           GST_DEBUG_OBJECT (jitterbuffer, "Calculated total latency : min %"
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,

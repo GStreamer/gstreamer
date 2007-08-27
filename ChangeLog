@@ -1,3 +1,11 @@
+2007-08-27  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_change_state), (gst_rtp_jitter_buffer_loop),
+	(gst_rtp_jitter_buffer_query):
+	When synchronizing buffers, take peer latency into account.
+	Don't try to add our latency to invalid peer max latency values.
+
 2007-08-27  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_handle_seek_pull):
