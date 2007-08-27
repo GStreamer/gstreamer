@@ -1,3 +1,40 @@
+2007-08-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* configure.ac:
+	* gst/dvdspu/.cvsignore:
+	* gst/dvdspu/Notes.txt:
+	* gst/dvdspu/gstdvdspu-render.c: (dvdspu_recalc_palette),
+	(dvdspu_update_palettes), (dvdspu_clear_comp_buffers),
+	(dvdspu_get_nibble), (dvdspu_get_rle_code), (dvdspu_draw_rle_run),
+	(rle_end_x), (dvdspu_render_line), (dvdspu_update_chgcol),
+	(dvdspu_render_line_with_chgcol), (dvdspu_blend_comp_buffers),
+	(gstdvdspu_render_spu):
+	* gst/dvdspu/gstdvdspu.c: (dvdspu_base_init), (dvdspu_class_init),
+	(dvdspu_init), (dvdspu_clear), (dvdspu_dispose), (dvdspu_finalize),
+	(dvdspu_flush_spu_info), (dvdspu_buffer_alloc), (dvdspu_src_event),
+	(dvdspu_video_set_caps), (dvdspu_video_proxy_getcaps),
+	(dvdspu_video_event), (dvdspu_video_chain),
+	(dvspu_handle_vid_buffer), (dvdspu_redraw_still),
+	(gstdvdspu_parse_chg_colcon), (dvdspu_exec_cmd_blk),
+	(dvdspu_finish_spu_buf), (dvdspu_setup_cmd_blk),
+	(dvdspu_handle_new_spu_buf), (dvdspu_handle_dvd_event),
+	(dvdspu_dump_dcsq), (dvdspu_advance_spu),
+	(dvdspu_check_still_updates), (dvdspu_subpic_chain),
+	(dvdspu_subpic_event), (dvdspu_change_state),
+	(gstdvdspu_plugin_init):
+	* gst/dvdspu/gstdvdspu.h:
+
+	dvdspu element donated by Fluendo. It implements a DVD Sub-Picture 
+	Unit, decoding and overlaying DVD subtitles and menu graphics.
+
+	* gst/mpeg2sub/.cvsignore:
+	* gst/mpeg2sub/Makefile.am:
+	* gst/mpeg2sub/Notes.txt:
+	* gst/mpeg2sub/gstmpeg2subt.c:
+	* gst/mpeg2sub/gstmpeg2subt.h:
+	* gst/mpeg2sub/mpeg2subt.vcproj:
+	Delete old and broken mpeg2subt element that was never ported from 0.8
+
 2007-08-24  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/flv/gstflvdemux.c: (gst_flv_demux_flush),

@@ -83,6 +83,7 @@ GST_PLUGINS_ALL="\
   bayer \
   cdxaparse \
   deinterlace \
+  dvdspu \
   equalizer \
   festival \
   filter \
@@ -989,6 +990,7 @@ gst/app/Makefile
 gst/bayer/Makefile
 gst/cdxaparse/Makefile
 gst/deinterlace/Makefile
+gst/dvdspu/Makefile
 gst/equalizer/Makefile
 gst/festival/Makefile
 gst/filter/Makefile
