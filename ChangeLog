@@ -1,3 +1,10 @@
+2007-08-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/playback/gstdecodebin.c: (close_pad_link):
+	We need to set up delayed-linking whenever the caps are non-fixed,
+	not just when there are multiple types - use gst_pad_is_fixed()
+	to test.
+
 2007-08-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/pbutils/missing-plugins.c:

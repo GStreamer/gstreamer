@@ -749,7 +749,7 @@ close_pad_link (GstElement * element, GstPad * pad, GstCaps * caps,
     GList *to_try;
 
     /* if the caps has many types, we need to delay */
-    if (gst_caps_get_size (caps) != 1)
+    if (!gst_caps_is_fixed (caps))
       goto many_types;
 
     /* continue plugging, first find all compatible elements */
