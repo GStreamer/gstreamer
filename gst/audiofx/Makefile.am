@@ -30,5 +30,5 @@ noinst_HEADERS = audiopanorama.h \
 	audioamplify.h \
 	audiodynamic.h \
 	audiochebyshevfreqlimit.h \
-	audiochebyshevfreqband.c
+	audiochebyshevfreqband.h
 

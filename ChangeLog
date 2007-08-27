@@ -1,3 +1,8 @@
+2007-08-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
+	* gst/audiofx/Makefile.am:
+	Dist the right file.
+
 2007-08-23  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_dup_printf),
