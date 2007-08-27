@@ -719,6 +719,7 @@ gst_flv_demux_handle_seek_pull (GstFLVDemux * demux, GstEvent * event)
     } else {                    /* or parse a tag */
       demux->state = FLV_STATE_TAG_TYPE;
     }
+    ret = TRUE;
   } else {
     ret = TRUE;
   }
