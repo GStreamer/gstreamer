@@ -225,10 +225,10 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "width = (int) 16, "
         "depth = (int) 16, "
-	"endianness = (int) 1234, "
-	"signed = (bool) true, "
+        "endianness = (int) 1234, "
+        "signed = (bool) true, "
         "rate = (int) 8000, "
-	"channels = (int) 1")
+        "channels = (int) 1")
     );
 
 static GstElementClass *parent_class = NULL;
@@ -706,7 +706,7 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc, GstDTMFSrcEvent *even
   } else {
     GST_DEBUG_OBJECT (dtmfsrc,  "Generating tone");
     gst_dtmf_src_generate_tone(event, DTMF_KEYS[event->event_number],
-	dtmfsrc->interval, buf);
+        dtmfsrc->interval, buf);
   }
   event->packet_count++;
 
@@ -753,11 +753,11 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
 
     if (event != NULL) {
       if (event->event_type == DTMF_EVENT_TYPE_START) {
-	GST_WARNING_OBJECT (dtmfsrc, "Received two consecutive DTMF start events");
+        GST_WARNING_OBJECT (dtmfsrc, "Received two consecutive DTMF start events");
       } else if (event->event_type == DTMF_EVENT_TYPE_STOP) {
-	gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
-	g_free (dtmfsrc->last_event);
-	dtmfsrc->last_event = NULL;
+        gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+        g_free (dtmfsrc->last_event);
+        dtmfsrc->last_event = NULL;
       }
     }
   }
@@ -769,7 +769,7 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
     gst_buffer_ref(buf);
 
     GST_DEBUG_OBJECT (dtmfsrc,
-	"pushing buffer on src pad of size %d", GST_BUFFER_SIZE (buf));
+        "pushing buffer on src pad of size %d", GST_BUFFER_SIZE (buf));
     ret = gst_pad_push (dtmfsrc->srcpad, buf);
     if (ret != GST_FLOW_OK) {
       GST_ERROR_OBJECT (dtmfsrc, "Failed to push buffer on src pad");
@@ -794,8 +794,8 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_segment_init (&dtmfsrc->segment, GST_FORMAT_TIME);
       gst_pad_push_event (dtmfsrc->srcpad, gst_event_new_new_segment (FALSE,
-			      dtmfsrc->segment.rate, dtmfsrc->segment.format,
-			      dtmfsrc->segment.start, dtmfsrc->segment.stop, dtmfsrc->segment.time));
+                              dtmfsrc->segment.rate, dtmfsrc->segment.format,
+                              dtmfsrc->segment.start, dtmfsrc->segment.stop, dtmfsrc->segment.time));
       /* Indicate that we don't do PRE_ROLL */
       no_preroll = TRUE;
       break;
