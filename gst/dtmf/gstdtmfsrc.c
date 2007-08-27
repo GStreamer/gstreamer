@@ -269,13 +269,13 @@ static void gst_dtmf_src_get_property (GObject * object, guint prop_id,
 static gboolean gst_dtmf_src_handle_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn gst_dtmf_src_change_state (GstElement * element,
     GstStateChange transition);
-static void gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
-    GstBuffer * buffer);
+static void gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key,
+    float duration, GstBuffer * buffer);
 static void gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc);
 static void gst_dtmf_src_start (GstDTMFSrc *dtmfsrc);
 static void gst_dtmf_src_stop (GstDTMFSrc *dtmfsrc);
-static void gst_dtmf_src_add_start_event (GstDTMFSrc *dtmfsrc, gint event_number,
-    gint event_volume);
+static void gst_dtmf_src_add_start_event (GstDTMFSrc *dtmfsrc,
+    gint event_number, gint event_volume);
 static void gst_dtmf_src_add_stop_event (GstDTMFSrc *dtmfsrc);
 
 static void
@@ -615,7 +615,8 @@ gst_dtmf_src_generate_silence(GstBuffer * buffer, float duration)
 }
 
 static void
-gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration, GstBuffer * buffer)
+gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
+    GstBuffer * buffer)
 {
   gint16 *p;
   gint tone_size;
@@ -686,12 +687,14 @@ gst_dtmf_src_wait_for_buffer_ts (GstDTMFSrc *dtmfsrc, GstBuffer * buf)
 
 
 static GstBuffer *
-gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc, GstDTMFSrcEvent *event)
+gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc,
+    GstDTMFSrcEvent *event)
 {
   GstBuffer *buf = NULL;
   gboolean send_silence = FALSE;
 
-  GST_DEBUG_OBJECT (dtmfsrc, "Creating buffer for tone %s", DTMF_KEYS[event->event_number].event_name);
+  GST_DEBUG_OBJECT (dtmfsrc, "Creating buffer for tone %s",
+      DTMF_KEYS[event->event_number].event_name);
 
   /* create buffer to hold the tone */
   buf = gst_buffer_new ();
@@ -738,7 +741,8 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
     event = g_async_queue_pop (dtmfsrc->event_queue);
 
     if (event->event_type == DTMF_EVENT_TYPE_STOP) {
-      GST_WARNING_OBJECT (dtmfsrc, "Received a DTMF stop event when already stopped");
+      GST_WARNING_OBJECT (dtmfsrc,
+          "Received a DTMF stop event when already stopped");
     } else if (event->event_type == DTMF_EVENT_TYPE_START) {
       gst_dtmf_prepare_timestamps (dtmfsrc);
 
@@ -748,12 +752,14 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
       event->packet_count = 0;
       dtmfsrc->last_event = event;
     }
-  } else if (dtmfsrc->last_event->packet_count  * dtmfsrc->interval >= MIN_DUTY_CYCLE) {
+  } else if (dtmfsrc->last_event->packet_count  * dtmfsrc->interval >=
+      MIN_DUTY_CYCLE) {
     event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
     if (event != NULL) {
       if (event->event_type == DTMF_EVENT_TYPE_START) {
-        GST_WARNING_OBJECT (dtmfsrc, "Received two consecutive DTMF start events");
+        GST_WARNING_OBJECT (dtmfsrc,
+            "Received two consecutive DTMF start events");
       } else if (event->event_type == DTMF_EVENT_TYPE_STOP) {
         gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
         g_free (dtmfsrc->last_event);
@@ -794,8 +800,9 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_segment_init (&dtmfsrc->segment, GST_FORMAT_TIME);
       gst_pad_push_event (dtmfsrc->srcpad, gst_event_new_new_segment (FALSE,
-                              dtmfsrc->segment.rate, dtmfsrc->segment.format,
-                              dtmfsrc->segment.start, dtmfsrc->segment.stop, dtmfsrc->segment.time));
+              dtmfsrc->segment.rate, dtmfsrc->segment.format,
+              dtmfsrc->segment.start, dtmfsrc->segment.stop,
+              dtmfsrc->segment.time));
       /* Indicate that we don't do PRE_ROLL */
       no_preroll = TRUE;
       break;
