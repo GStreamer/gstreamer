@@ -150,8 +150,8 @@
 #define MAX_EVENT                16
 #define MIN_VOLUME               0
 #define MAX_VOLUME               36
-#define MIN_INTER_DIGIT_INTERVAL 50
-#define MIN_PULSE_DURATION       70
+#define MIN_INTER_DIGIT_INTERVAL 100
+#define MIN_PULSE_DURATION       250
 #define MIN_DUTY_CYCLE           (MIN_INTER_DIGIT_INTERVAL + MIN_PULSE_DURATION)
 
 
