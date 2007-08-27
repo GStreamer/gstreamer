@@ -1,5 +1,10 @@
 2007-08-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
+	* gst/dvdspu/Makefile.am:
+	Commit the makefile too.
+
+2007-08-27  Jan Schmidt  <thaytan@mad.scientist.com>
+
 	* configure.ac:
 	* gst/dvdspu/.cvsignore:
 	* gst/dvdspu/Notes.txt:
