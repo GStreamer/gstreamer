@@ -149,7 +149,9 @@ gst_capsfilter_set_property (GObject * object, guint prop_id,
 
       GST_DEBUG_OBJECT (capsfilter, "set new caps %" GST_PTR_FORMAT, new_caps);
 
-      /* FIXME: Need to activate these caps on the pads */
+      /* FIXME: Need to activate these caps on the pads
+       * http://bugzilla.gnome.org/show_bug.cgi?id=361718
+       */
       break;
     }
     default:

@@ -1,3 +1,11 @@
+2007-08-27  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/random/ensonic/dynlink.txt:
+	  More thoughs on this.
+
+	* plugins/elements/gstcapsfilter.c:
+	  Add bugzilla ticket number to FIXME comment.
+
 2007-08-24  Wim Taymans  <wim.taymans@gmail.com>
 
 	* docs/design/part-TODO.txt:
