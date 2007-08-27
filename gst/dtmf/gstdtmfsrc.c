@@ -689,39 +689,30 @@ static GstBuffer *
 gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc, GstDTMFSrcEvent *event)
 {
   GstBuffer *buf = NULL;
-  guint32 duration;
+  gboolean send_silence = FALSE;
 
-
-  GST_DEBUG_OBJECT (dtmfsrc,
-      "Creating buffer for tone");
+  GST_DEBUG_OBJECT (dtmfsrc, "Creating buffer for tone %s", DTMF_KEYS[event->event_number].event_name);
 
   /* create buffer to hold the tone */
   buf = gst_buffer_new ();
 
-  /* The first packet must be inter digit silence, then the second and third must be the
-   * minimal pulse duration divided into two packets to make it small
-   */
-  switch(event->packet_count) {
-    case 0:
-      duration = MIN_INTER_DIGIT_INTERVAL;
-      gst_dtmf_src_generate_silence (buf, duration);
-      break;
-    case 1:
-    case 2:
-      /* Generate the tone */
-      duration = MIN_PULSE_DURATION / 2;
-      gst_dtmf_src_generate_tone(event, DTMF_KEYS[event->event_number], duration, buf);
-      break;
-    default:
-      duration = dtmfsrc->interval;
-      gst_dtmf_src_generate_tone(event, DTMF_KEYS[event->event_number], duration, buf);
-      break;
+  if (event->packet_count * dtmfsrc->interval < MIN_INTER_DIGIT_INTERVAL) {
+    send_silence = TRUE;
+  }
+
+  if (send_silence) {
+    GST_DEBUG_OBJECT (dtmfsrc,  "Generating silence");
+    gst_dtmf_src_generate_silence (buf, dtmfsrc->interval);
+  } else {
+    GST_DEBUG_OBJECT (dtmfsrc,  "Generating tone");
+    gst_dtmf_src_generate_tone(event, DTMF_KEYS[event->event_number],
+	dtmfsrc->interval, buf);
   }
   event->packet_count++;
 
 
   /* timestamp and duration of GstBuffer */
-  GST_BUFFER_DURATION (buf) = duration * GST_MSECOND;
+  GST_BUFFER_DURATION (buf) = dtmfsrc->interval * GST_MSECOND;
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
   dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
 
@@ -757,7 +748,7 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
       event->packet_count = 0;
       dtmfsrc->last_event = event;
     }
-  } else if (dtmfsrc->last_event->packet_count >= 3) {
+  } else if (dtmfsrc->last_event->packet_count  * dtmfsrc->interval >= MIN_DUTY_CYCLE) {
     event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
     if (event != NULL) {
