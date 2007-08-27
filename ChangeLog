@@ -1,3 +1,8 @@
+2007-08-27  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/flv/gstflvdemux.c: (gst_flv_demux_handle_seek_pull):
+	Make sure we initialize the seek result.
+
 2007-08-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/dvdspu/Makefile.am:
