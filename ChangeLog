@@ -1,3 +1,8 @@
+2007-08-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/dvdspu/gstdvdspu.c:
+	  Don't need this include (fixes compilation in uninstalled setup).
+
 2007-08-27  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:

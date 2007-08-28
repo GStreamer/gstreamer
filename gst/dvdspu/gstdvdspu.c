@@ -23,7 +23,6 @@
 #include <string.h>
 
 #include <gst/gst.h>
-#include <gst/video/video.h>
 
 #include "gstdvdspu.h"
 
