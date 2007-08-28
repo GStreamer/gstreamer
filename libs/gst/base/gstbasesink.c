@@ -2220,6 +2220,9 @@ gst_base_sink_loop (GstPad * pad)
 
   g_assert (basesink->pad_mode == GST_ACTIVATE_PULL);
 
+  GST_DEBUG_OBJECT (basesink, "pulling %" G_GUINT64_FORMAT ", %u",
+      basesink->offset, (guint) DEFAULT_SIZE);
+
   result = gst_pad_pull_range (pad, basesink->offset, DEFAULT_SIZE, &buf);
   if (G_UNLIKELY (result != GST_FLOW_OK))
     goto paused;

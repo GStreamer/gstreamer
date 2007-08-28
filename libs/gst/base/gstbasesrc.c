@@ -100,7 +100,7 @@
  * distributed and running.
  * </para>
  * <para>
- * Live sources that synchronize and block on the clock (and audio source, for
+ * Live sources that synchronize and block on the clock (an audio source, for
  * example) can since 0.10.12 use gst_base_src_wait_playing() when the ::create
  * function was interrupted by a state change to PAUSED.
  * </para>
@@ -110,6 +110,12 @@
  * #GstBaseSrc::get_times before pushing out the buffer. 
  * It only makes sense to implement the ::get_times function if the source is 
  * a live source.
+ * </para>
+ * <para>
+ * For live sources, the base class will by default measure the time it takes to
+ * create the first buffer in the PLAYING state and will report this value as
+ * the latency. Subclasses should override the query function when this
+ * behaviour is not acceptable.
  * </para>
  * <para>
  * There is only support in #GstBaseSrc for exactly one source pad, which 
@@ -234,6 +240,11 @@ struct _GstBaseSrcPrivate
   /* two segments to be sent in the streaming thread with STREAM_LOCK */
   GstEvent *close_segment;
   GstEvent *start_segment;
+
+  /* startup latency is the time it takes between going to PLAYING and producing
+   * the first BUFFER with running_time 0. This value is included in the latency
+   * reporting. */
+  GstClockTime startup_latency;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -554,8 +565,8 @@ gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
  * @max_latency: the max latency of the source
  *
  * Query the source for the latency parameters. @live will be TRUE when @src is
- * configured as a live source. @min_latency will be set as the latency between
- * calling the create function and the timestamp on the resulting buffer.
+ * configured as a live source. @min_latency will be set to the difference
+ * between the running time and the timestamp of the first buffer.
  * @max_latency is always the undefined value of -1.
  *
  * This function is mostly used by subclasses. 
@@ -568,13 +579,28 @@ gboolean
 gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
     GstClockTime * min_latency, GstClockTime * max_latency)
 {
+  GstClockTime min;
+
   GST_LIVE_LOCK (src);
   if (live)
     *live = src->is_live;
+
+  /* if we have a startup latency, report this one, else report 0. Subclasses
+   * are supposed to override the query function if they want something
+   * else. */
+  if (src->priv->startup_latency != -1)
+    min = src->priv->startup_latency;
+  else
+    min = 0;
+
   if (min_latency)
-    *min_latency = 0;
+    *min_latency = min;
   if (max_latency)
     *max_latency = -1;
+
+  GST_LOG_OBJECT (src, "latency: live %d, min %" GST_TIME_FORMAT
+      ", max %" GST_TIME_FORMAT, src->is_live, GST_TIME_ARGS (min),
+      GST_TIME_ARGS (-1));
   GST_LIVE_UNLOCK (src);
 
   return TRUE;
@@ -783,6 +809,10 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
 
       /* Subclasses should override and implement something usefull */
       res = gst_base_src_query_latency (src, &live, &min, &max);
+
+      GST_LOG_OBJECT (src, "report latency: live %d, min %" GST_TIME_FORMAT
+          ", max %" GST_TIME_FORMAT, live, GST_TIME_ARGS (min),
+          GST_TIME_ARGS (max));
 
       gst_query_set_latency (query, live, min, max);
       break;
@@ -1364,15 +1394,10 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
 
 /* with STREAM_LOCK and LOCK */
 static GstClockReturn
-gst_base_src_wait (GstBaseSrc * basesrc, GstClockTime time)
+gst_base_src_wait (GstBaseSrc * basesrc, GstClock * clock, GstClockTime time)
 {
   GstClockReturn ret;
   GstClockID id;
-  GstClock *clock;
-
-  /* get clock, if no clock, we don't sync */
-  if ((clock = GST_ELEMENT_CLOCK (basesrc)) == NULL)
-    return GST_CLOCK_OK;
 
   id = gst_clock_new_single_shot_id (clock, time);
 
@@ -1399,6 +1424,7 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   GstClockTime start, end;
   GstBaseSrcClass *bclass;
   GstClockTime base_time;
+  GstClock *clock;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
@@ -1406,20 +1432,47 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   if (bclass->get_times)
     bclass->get_times (basesrc, buffer, &start, &end);
 
-  /* if we don't have a timestamp, we don't sync */
+  /* grab the lock to prepare for clocking and calculate the startup 
+   * latency. */
+  GST_OBJECT_LOCK (basesrc);
+
+  base_time = GST_ELEMENT_CAST (basesrc)->base_time;
+
+  /* get clock, if no clock, we can't sync or get the latency */
+  if ((clock = GST_ELEMENT_CLOCK (basesrc)) == NULL)
+    goto no_clock;
+
+  if (basesrc->priv->startup_latency == -1) {
+    GstClockTime now = gst_clock_get_time (clock);
+
+    /* startup latency is the diff between when we went to PLAYING (base_time)
+     * and the current clock time */
+    if (now > base_time)
+      basesrc->priv->startup_latency = now - base_time;
+    else
+      basesrc->priv->startup_latency = 0;
+
+    GST_LOG_OBJECT (basesrc, "startup latency: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (basesrc->priv->startup_latency));
+  }
+
+  /* if we don't have a buffer timestamp, we don't sync */
   if (!GST_CLOCK_TIME_IS_VALID (start))
     goto invalid_start;
 
-  /* now do clocking */
-  GST_OBJECT_LOCK (basesrc);
-  base_time = GST_ELEMENT_CAST (basesrc)->base_time;
+  /* we have a timestamp, we can subtract it from the startup_latency when it is
+   * smaller. If the timestamp is bigger, there is no startup latency. */
+  if (start < basesrc->priv->startup_latency)
+    basesrc->priv->startup_latency -= start;
+  else
+    basesrc->priv->startup_latency = 0;
 
   GST_LOG_OBJECT (basesrc,
       "waiting for clock, base time %" GST_TIME_FORMAT
       ", stream_start %" GST_TIME_FORMAT,
       GST_TIME_ARGS (base_time), GST_TIME_ARGS (start));
 
-  result = gst_base_src_wait (basesrc, start + base_time);
+  result = gst_base_src_wait (basesrc, clock, start + base_time);
   GST_OBJECT_UNLOCK (basesrc);
 
   GST_LOG_OBJECT (basesrc, "clock entry done: %d", result);
@@ -1427,9 +1480,16 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   return result;
 
   /* special cases */
+no_clock:
+  {
+    GST_DEBUG_OBJECT (basesrc, "we have no clock");
+    GST_OBJECT_UNLOCK (basesrc);
+    return GST_CLOCK_OK;
+  }
 invalid_start:
   {
     GST_DEBUG_OBJECT (basesrc, "get_times returned invalid start");
+    GST_OBJECT_UNLOCK (basesrc);
     return GST_CLOCK_OK;
   }
 }
@@ -2260,6 +2320,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       }
       basesrc->priv->last_sent_eos = FALSE;
       basesrc->priv->discont = TRUE;
+      basesrc->priv->startup_latency = -1;
       GST_LIVE_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:

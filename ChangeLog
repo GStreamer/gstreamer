@@ -1,3 +1,14 @@
+2007-08-28  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_loop):
+	Improve debugging.
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_query_latency),
+	(gst_base_src_default_query), (gst_base_src_wait),
+	(gst_base_src_do_sync), (gst_base_src_change_state):
+	Rearrange some code so that we can add support for measuring the 
+	startup latency.
+
 2007-08-27  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/random/ensonic/dynlink.txt:
