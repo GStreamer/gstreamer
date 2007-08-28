@@ -1,3 +1,20 @@
+2007-08-28  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_clear_pt_map):
+	Add some more advanced example pipelines.
+
+	* gst/rtpmanager/gstrtpsession.c: (rtcp_thread),
+	(stop_rtcp_thread), (gst_rtp_session_send_rtcp):
+	Add some debug and FIXME.
+	Release LOCK when performing session cleanup.
+
+	* gst/rtpmanager/rtpsession.c: (session_report_blocks):
+	Add some debug.
+
+	* gst/rtpmanager/rtpsource.c: (calculate_jitter),
+	(rtp_source_send_rtp):
+	Make sure we always send RTP packets with the session SSRC.
+
 2007-08-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/dvdspu/gstdvdspu.c:

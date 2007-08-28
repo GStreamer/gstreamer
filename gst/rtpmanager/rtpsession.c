@@ -1659,6 +1659,7 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
         DLSR = gst_util_uint64_scale_int (diff, 65536, GST_SECOND);
       } else {
         /* No valid SR received, LSR/DLSR are set to 0 then */
+        GST_DEBUG ("no valid SR received");
         LSR = 0;
         DLSR = 0;
       }

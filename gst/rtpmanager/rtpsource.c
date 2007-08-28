@@ -266,8 +266,8 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
   src->stats.prev_rtptime = src->stats.last_rtptime;
   src->stats.last_rtptime = rtparrival;
 
-  GST_DEBUG ("rtparrival %u, rtptime %u, clock-rate %d, diff %d, jitter: %u",
-      rtparrival, rtptime, clock_rate, diff, src->stats.jitter);
+  GST_DEBUG ("rtparrival %u, rtptime %u, clock-rate %d, diff %d, jitter: %f",
+      rtparrival, rtptime, clock_rate, diff, (src->stats.jitter) / 16.0);
 
   return;
 
@@ -446,6 +446,8 @@ rtp_source_process_bye (RTPSource * src, const gchar * reason)
  * @buffer: an RTP buffer
  *
  * Send an RTP @buffer originating from @src. This will make @src a sender.
+ * This function takes ownership of @buffer and modifies the SSRC in the RTP
+ * packet to that of @src.
  *
  * Returns: a #GstFlowReturn.
  */
@@ -467,9 +469,18 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer)
   src->stats.packets_sent++;
   src->stats.octets_sent += len;
 
-
   /* push packet */
   if (src->callbacks.push_rtp) {
+    guint32 ssrc;
+
+    ssrc = gst_rtp_buffer_get_ssrc (buffer);
+    if (ssrc != src->ssrc) {
+      GST_DEBUG ("updating SSRC from %u to %u", ssrc, src->ssrc);
+      buffer = gst_buffer_make_writable (buffer);
+
+      gst_rtp_buffer_set_ssrc (buffer, src->ssrc);
+    }
+
     GST_DEBUG ("pushing RTP packet %" G_GUINT64_FORMAT,
         src->stats.packets_sent);
     result = src->callbacks.push_rtp (src, buffer, src->user_data);
