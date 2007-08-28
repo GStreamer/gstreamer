@@ -402,8 +402,11 @@ gst_dtmf_src_handle_custom_upstream (GstDTMFSrc *dtmfsrc,
 {
   gboolean result = FALSE;
   const GstStructure *structure;
+  GstState state;
+  GstStateChangeReturn ret;
 
-  if (GST_STATE (dtmfsrc) != GST_STATE_PLAYING) {
+  ret = gst_element_get_state (dtmfsrc, &state, NULL, 0);
+  if (ret != GST_STATE_CHANGE_SUCCESS || state != GST_STATE_PLAYING) {
     GST_DEBUG_OBJECT (dtmfsrc, "Received event while not in PLAYING state");
     goto ret;
   }
@@ -422,8 +425,8 @@ gst_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
 {
   GstDTMFSrc *dtmfsrc;
   gboolean result = FALSE;
-
-  dtmfsrc = GST_DTMF_SRC (GST_PAD_PARENT (pad));
+  GstElement *parent = gst_pad_get_parent_element (pad);
+  dtmfsrc = GST_DTMF_SRC (parent);
 
   GST_DEBUG_OBJECT (dtmfsrc, "Received an event on the src pad");
   switch (GST_EVENT_TYPE (event)) {
@@ -439,7 +442,7 @@ gst_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
       result = TRUE;
       break;
     case GST_EVENT_FLUSH_STOP:
-      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
+      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_TIME);
       break;
     case GST_EVENT_NEWSEGMENT:
       {
@@ -459,6 +462,7 @@ gst_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+  gst_object_unref (parent);
   gst_event_unref (event);
   return result;
 }
@@ -509,7 +513,9 @@ gst_dtmf_src_set_stream_lock (GstDTMFSrc *dtmfsrc, gboolean lock)
                       "lock", G_TYPE_BOOLEAN, lock, NULL);
 
    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
-   gst_pad_push_event (dtmfsrc->srcpad, event);
+   if (!gst_pad_push_event (dtmfsrc->srcpad, event)) {
+     GST_WARNING_OBJECT (dtmfsrc, "stream-lock event not handled");
+   }
 }
 
 static void
@@ -517,14 +523,15 @@ gst_dtmf_prepare_timestamps (GstDTMFSrc *dtmfsrc)
 {
   GstClock *clock;
 
-  clock = GST_ELEMENT_CLOCK (dtmfsrc);
-  if (clock != NULL)
-    dtmfsrc->timestamp = gst_clock_get_time (GST_ELEMENT_CLOCK (dtmfsrc));
-
-  else {
-    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s",
-        GST_ELEMENT_NAME (dtmfsrc));
+  clock = gst_element_get_clock (dtmfsrc);
+  if (clock != NULL) {
+    dtmfsrc->timestamp = gst_clock_get_time (clock);
+    gst_object_unref (clock);
+  } else {
+    gchar *dtmf_name = gst_element_get_name (dtmfsrc);
+    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", dtmf_name);
     dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
+    g_free (dtmf_name);
   }
 }
 
@@ -665,7 +672,7 @@ gst_dtmf_src_wait_for_buffer_ts (GstDTMFSrc *dtmfsrc, GstBuffer * buf)
 {
   GstClock *clock;
 
-  clock = GST_ELEMENT_CLOCK (dtmfsrc);
+  clock = gst_element_get_clock (dtmfsrc);
   if (clock != NULL) {
     GstClockID clock_id;
     GstClockReturn clock_ret;
@@ -673,15 +680,18 @@ gst_dtmf_src_wait_for_buffer_ts (GstDTMFSrc *dtmfsrc, GstBuffer * buf)
     clock_id = gst_clock_new_single_shot_id (clock, GST_BUFFER_TIMESTAMP (buf));
     clock_ret = gst_clock_id_wait (clock_id, NULL);
     if (clock_ret != GST_CLOCK_OK && clock_ret != GST_CLOCK_EARLY) {
-      GST_ERROR_OBJECT (dtmfsrc, "Failed to wait on clock %s",
-              GST_ELEMENT_NAME (clock));
+      gchar *clock_name = gst_element_get_name (clock);
+      GST_ERROR_OBJECT (dtmfsrc, "Failed to wait on clock %s", clock_name);
+      g_free (clock_name);
     }
     gst_clock_id_unref (clock_id);
+    gst_object_unref (clock);
   }
 
   else {
-    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s",
-        GST_ELEMENT_NAME (dtmfsrc));
+    gchar *dtmf_name = gst_element_get_name (dtmfsrc);
+    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", dtmf_name);
+    g_free (dtmf_name);
   }
 }
 
