@@ -75,9 +75,54 @@
  * </programlisting>
  * Receive RTP data from port 5000 and send to the session 0 in gstrtpbin.
  * </para>
+ * <para>
+ * <programlisting>
+ * gst-launch gstrtpbin name=rtpbin \
+ *         v4l2src ! ffmpegcolorspace ! ffenc_h263 ! rtph263ppay ! rtpbin.send_rtp_sink_0 \
+ *                   rtpbin.send_rtp_src_0 ! udpsink port=5000             \
+ *                   rtpbin.send_rtcp_src_0 ! udpsink port=5001 sync=false \
+ *                   udpsrc port=5005 ! rtpbin.recv_rtcp_sink_0            \
+ *         audiotestsrc ! amrnbenc ! rtpamrpay ! rtpbin.send_rtp_sink_1    \
+ *                   rtpbin.send_rtp_src_1 ! udpsink port=5002             \
+ *                   rtpbin.send_rtcp_src_1 ! udpsink port=5003 sync=false \
+ *                   udpsrc port=5007 ! rtpbin.recv_rtcp_sink_1
+ * </programlisting>
+ * Encode and payload H263 video captured from a v4l2src. Encode and payload AMR
+ * audio generated from audiotestsrc. The video is sent to session 0 in rtpbin
+ * and the audio is sent to session 1. Video packets are sent on UDP port 5000
+ * and audio packets on port 5002. The video RTCP packets for session 0 are sent
+ * on port 5001 and the audio RTCP packets for session 0 are sent on port 5003.
+ * RTCP packets for session 0 are received on port 5005 and RTCP for session 1
+ * is received on port 5007. Since RTCP packets from the sender should be sent
+ * as soon as possible, sync=false is configured on udpsink.
+ * </para>
+ * <para>
+ * <programlisting>
+ *  gst-launch -v gstrtpbin name=rtpbin                                                \
+ *     udpsrc caps="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H263-1998" \
+ *             port=5000 ! rtpbin.recv_rtp_sink_0                            \
+ *         rtpbin. ! rtph263pdepay ! ffdec_h263 ! xvimagesink                \
+ *      udpsrc port=5001 ! rtpbin.recv_rtcp_sink_0                            \
+ *      rtpbin.send_rtcp_src_0 ! udpsink port=5005 sync=false             \
+ *     udpsrc caps="application/x-rtp,media=(string)audio,clock-rate=(int)8000,encoding-name=(string)AMR,encoding-params=(string)1,octet-align=(string)1"                                             \
+ *             port=5002 ! rtpbin.recv_rtp_sink_1                            \
+ *         rtpbin. ! rtpamrdepay ! amrnbdec ! alsasink                       \
+ *      udpsrc port=5003 ! rtpbin.recv_rtcp_sink_1                            \
+ *      rtpbin.send_rtcp_src_1 ! udpsink port=5007 sync=false
+ * </programlisting>
+ * Receive H263 on port 5000, send it through rtpbin in session 0, depayload,
+ * decode and display the video.
+ * Receive AMR on port 5002, send it through rtpbin in session 1, depayload,
+ * decode and play the audio.
+ * Receive server RTCP packets for session 0 on port 5001 and RTCP packets for
+ * session 1 on port 5003. These packets will be used for session management and
+ * synchronisation.
+ * Send RTCP reports for session 0 on port 5005 and RTCP reports for session 1
+ * on port 5007.
+ * </para>
  * </refsect2>
  *
- * Last reviewed on 2007-05-28 (0.10.5)
+ * Last reviewed on 2007-08-28 (0.10.6)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -452,6 +497,7 @@ gst_rtp_bin_clear_pt_map (GstRtpBin * bin)
   GSList *walk;
 
   GST_RTP_BIN_LOCK (bin);
+  GST_DEBUG_OBJECT (bin, "clearing pt map");
   for (walk = bin->sessions; walk; walk = g_slist_next (walk)) {
     GstRtpBinSession *session = (GstRtpBinSession *) walk->data;
 

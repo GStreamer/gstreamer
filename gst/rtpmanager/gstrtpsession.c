@@ -583,8 +583,10 @@ rtcp_thread (GstRtpSession * rtpsession)
     GST_DEBUG_OBJECT (rtpsession, "unlocked %d, current %" GST_TIME_FORMAT,
         res, GST_TIME_ARGS (current_time));
 
-    /* perform actions, we ignore result. */
+    /* perform actions, we ignore result. Release lock because it might push. */
+    GST_RTP_SESSION_UNLOCK (rtpsession);
     rtp_session_on_timeout (rtpsession->priv->session, current_time);
+    GST_RTP_SESSION_LOCK (rtpsession);
   }
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
@@ -637,6 +639,7 @@ stop_rtcp_thread (GstRtpSession * rtpsession)
     gst_clock_id_unschedule (rtpsession->priv->id);
   GST_RTP_SESSION_UNLOCK (rtpsession);
 
+  /* FIXME, can deadlock because the thread might be blocked in a push */
   g_thread_join (rtpsession->priv->thread);
 }
 
@@ -753,11 +756,11 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
   rtpsession = GST_RTP_SESSION (user_data);
   priv = rtpsession->priv;
 
-  GST_DEBUG_OBJECT (rtpsession, "sending RTCP");
-
   if (rtpsession->send_rtcp_src) {
+    GST_DEBUG_OBJECT (rtpsession, "sending RTCP");
     result = gst_pad_push (rtpsession->send_rtcp_src, buffer);
   } else {
+    GST_DEBUG_OBJECT (rtpsession, "not sending RTCP, no output pad");
     gst_buffer_unref (buffer);
     result = GST_FLOW_OK;
   }
