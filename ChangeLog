@@ -1,3 +1,15 @@
+2007-08-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/pbutils/missing-plugins.c:
+	* gst-libs/gst/pbutils/missing-plugins.h:
+	* tests/check/libs/pbutils.c:
+	  API: add gst_missing_*_installer_detail_new() convenience API so
+	  that applications that know exactly what they're missing can request
+	  installer detail strings for those items directly instead of having
+	  to first create a dummy missing-plugin message and then get the
+	  installer detail string from that.  Fixes #470456.
+
 2007-08-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/playback/gstdecodebin.c: (close_pad_link):

@@ -1258,6 +1258,12 @@ gst_missing_encoder_message_new
 gst_missing_uri_source_message_new
 gst_missing_uri_sink_message_new
 gst_missing_element_message_new
+<SUBSECTION>
+gst_missing_uri_source_installer_detail_new
+gst_missing_uri_sink_installer_detail_new
+gst_missing_element_installer_detail_new
+gst_missing_decoder_installer_detail_new
+gst_missing_encoder_installer_detail_new
 </SECTION>
 
 <SECTION>

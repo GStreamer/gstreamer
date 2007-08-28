@@ -45,7 +45,7 @@ GstMessage * gst_missing_encoder_message_new    (GstElement    * element,
                                                  const GstCaps * encode_caps);
 
 /*
- * functions for use by the application when dealing with missing-plugin messages
+ * functions for use by applications when dealing with missing-plugin messages
  */
 
 gchar       * gst_missing_plugin_message_get_installer_detail (GstMessage * msg);
@@ -53,7 +53,24 @@ gchar       * gst_missing_plugin_message_get_installer_detail (GstMessage * msg)
 gchar       * gst_missing_plugin_message_get_description (GstMessage * msg);
 
 gboolean      gst_is_missing_plugin_message (GstMessage * msg);
-   
+
+
+/*
+ * functions for use by applications that know exactly what plugins they are
+ * missing and want to request them directly rather than just react to
+ * missing-plugin messages posted by elements such as playbin or decodebin
+ */
+
+gchar * gst_missing_uri_source_installer_detail_new (const gchar * protocol);
+
+gchar * gst_missing_uri_sink_installer_detail_new (const gchar * protocol);
+
+gchar * gst_missing_element_installer_detail_new (const gchar * factory_name);
+
+gchar * gst_missing_decoder_installer_detail_new (const GstCaps * decode_caps);
+
+gchar * gst_missing_encoder_installer_detail_new (const GstCaps * encode_caps);
+
 G_END_DECLS
 
 #endif /* __GST_PB_UTILS_MISSING_PLUGINS_H__ */

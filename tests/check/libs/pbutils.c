@@ -72,7 +72,8 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   bus = gst_element_get_bus (pipeline);
 
   /* first, test common assertion failure cases */
-  ASSERT_CRITICAL (msg = gst_missing_uri_source_message_new (NULL, "http"););
+  ASSERT_CRITICAL (msg = gst_missing_uri_source_message_new (NULL, "http");
+      );
   ASSERT_CRITICAL (gst_missing_uri_source_message_new (pipeline, NULL));
 
   ASSERT_CRITICAL (gst_missing_uri_sink_message_new (NULL, "http"));
@@ -540,14 +541,11 @@ GST_START_TEST (test_pb_utils_install_plugins)
 
   ctx = gst_install_plugins_context_new ();
 
-  ASSERT_CRITICAL (ret = gst_install_plugins_sync (NULL, ctx);
-      );
+  ASSERT_CRITICAL (ret = gst_install_plugins_sync (NULL, ctx););
   ASSERT_CRITICAL (ret =
-      gst_install_plugins_async (NULL, ctx, result_cb, (gpointer) & marker);
-      );
+      gst_install_plugins_async (NULL, ctx, result_cb, (gpointer) & marker););
   ASSERT_CRITICAL (ret =
-      gst_install_plugins_async (details, ctx, NULL, (gpointer) & marker);
-      );
+      gst_install_plugins_async (details, ctx, NULL, (gpointer) & marker););
 
   /* make sure the functions return the right error code if the helper does
    * not exist */
@@ -591,6 +589,98 @@ GST_START_TEST (test_pb_utils_install_plugins)
 
 GST_END_TEST;
 
+GST_START_TEST (test_pb_utils_installer_details)
+{
+  GstMessage *msg;
+  GstElement *el;
+  GstCaps *caps;
+  gchar *detail1, *detail2;
+
+  el = gst_pipeline_new ("dummy-element");
+
+  /* uri source */
+  detail1 = gst_missing_uri_source_installer_detail_new ("http");
+  fail_unless (detail1 != NULL);
+  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.10|"));
+  fail_unless (g_str_has_suffix (detail1, "|urisource-http"));
+  msg = gst_missing_uri_source_message_new (el, "http");
+  fail_unless (msg != NULL);
+  detail2 = gst_missing_plugin_message_get_installer_detail (msg);
+  fail_unless (detail2 != NULL);
+  gst_message_unref (msg);
+  fail_unless_equals_string (detail1, detail2);
+  g_free (detail1);
+  g_free (detail2);
+
+  /* uri sink */
+  detail1 = gst_missing_uri_sink_installer_detail_new ("http");
+  fail_unless (detail1 != NULL);
+  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.10|"));
+  fail_unless (g_str_has_suffix (detail1, "|urisink-http"));
+  msg = gst_missing_uri_sink_message_new (el, "http");
+  fail_unless (msg != NULL);
+  detail2 = gst_missing_plugin_message_get_installer_detail (msg);
+  fail_unless (detail2 != NULL);
+  gst_message_unref (msg);
+  fail_unless_equals_string (detail1, detail2);
+  g_free (detail1);
+  g_free (detail2);
+
+  /* element */
+  detail1 = gst_missing_element_installer_detail_new ("deinterlace");
+  fail_unless (detail1 != NULL);
+  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.10|"));
+  fail_unless (g_str_has_suffix (detail1, "|element-deinterlace"));
+  msg = gst_missing_element_message_new (el, "deinterlace");
+  fail_unless (msg != NULL);
+  detail2 = gst_missing_plugin_message_get_installer_detail (msg);
+  fail_unless (detail2 != NULL);
+  gst_message_unref (msg);
+  fail_unless_equals_string (detail1, detail2);
+  g_free (detail1);
+  g_free (detail2);
+
+  /* decoder */
+  caps = gst_caps_new_simple ("audio/x-spiffy", "spiffyversion", G_TYPE_INT,
+      2, "channels", G_TYPE_INT, 6, NULL);
+  detail1 = gst_missing_decoder_installer_detail_new (caps);
+  fail_unless (detail1 != NULL);
+  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.10|"));
+  fail_unless (g_str_has_suffix (detail1,
+          "|decoder-audio/x-spiffy, spiffyversion=(int)2"));
+  msg = gst_missing_decoder_message_new (el, caps);
+  fail_unless (msg != NULL);
+  detail2 = gst_missing_plugin_message_get_installer_detail (msg);
+  fail_unless (detail2 != NULL);
+  gst_message_unref (msg);
+  gst_caps_unref (caps);
+  fail_unless_equals_string (detail1, detail2);
+  g_free (detail1);
+  g_free (detail2);
+
+  /* encoder */
+  caps = gst_caps_new_simple ("audio/x-spiffy", "spiffyversion", G_TYPE_INT,
+      2, "channels", G_TYPE_INT, 6, NULL);
+  detail1 = gst_missing_encoder_installer_detail_new (caps);
+  fail_unless (g_str_has_prefix (detail1, "gstreamer|0.10|"));
+  fail_unless (g_str_has_suffix (detail1,
+          "|encoder-audio/x-spiffy, spiffyversion=(int)2"));
+  fail_unless (detail1 != NULL);
+  msg = gst_missing_encoder_message_new (el, caps);
+  fail_unless (msg != NULL);
+  detail2 = gst_missing_plugin_message_get_installer_detail (msg);
+  fail_unless (detail2 != NULL);
+  gst_message_unref (msg);
+  gst_caps_unref (caps);
+  fail_unless_equals_string (detail1, detail2);
+  g_free (detail1);
+  g_free (detail2);
+
+  gst_object_unref (el);
+}
+
+GST_END_TEST;
+
 static Suite *
 libgstpbutils_suite (void)
 {
@@ -603,6 +693,7 @@ libgstpbutils_suite (void)
   tcase_add_test (tc_chain, test_pb_utils_taglist_add_codec_info);
   tcase_add_test (tc_chain, test_pb_utils_get_codec_description);
   tcase_add_test (tc_chain, test_pb_utils_install_plugins);
+  tcase_add_test (tc_chain, test_pb_utils_installer_details);
   return s;
 }
 

@@ -415,6 +415,7 @@ gst_missing_plugin_message_get_installer_detail (GstMessage * msg)
   type = gst_structure_get_string (msg->structure, "type");
   g_assert (type != NULL);      /* validity already checked above */
 
+  /* FIXME: use gst_installer_detail_new() here too */
   str = g_string_new (GST_DETAIL_STRING_MARKER "|");
   g_string_append_printf (str, "%u.%u|", GST_VERSION_MAJOR, GST_VERSION_MINOR);
 
@@ -593,4 +594,205 @@ gst_is_missing_plugin_message (GstMessage * msg)
     return FALSE;
 
   return gst_structure_has_name (msg->structure, "missing-plugin");
+}
+
+/* takes ownership of the description */
+static gchar *
+gst_installer_detail_new (gchar * description, const gchar * type,
+    const gchar * detail)
+{
+  const gchar *progname;
+  GString *s;
+
+  s = g_string_new (GST_DETAIL_STRING_MARKER "|");
+  g_string_append_printf (s, "%u.%u|", GST_VERSION_MAJOR, GST_VERSION_MINOR);
+
+  progname = (const gchar *) g_get_prgname ();
+  if (progname) {
+    g_string_append_printf (s, "%s|", progname);
+  } else {
+    g_string_append_printf (s, "pid/%lu|", (gulong) getpid ());
+  }
+
+  if (description) {
+    g_strdelimit (description, "|", '#');
+    g_string_append_printf (s, "%s|", description);
+    g_free (description);
+  } else {
+    g_string_append (s, "|");
+  }
+
+  g_string_append_printf (s, "%s-%s", type, detail);
+
+  return g_string_free (s, FALSE);
+}
+
+/**
+ * gst_missing_uri_source_installer_detail_new:
+ * @protocol: the URI protocol the missing source needs to implement,
+ *            e.g. "http" or "mms"
+ *
+ * Returns an opaque string containing all the details about the missing
+ * element to be passed to an external installer called via
+ * gst_install_plugins_async() or gst_install_plugins_sync().
+ * 
+ * This function is mainly for applications that call external plugin
+ * installation mechanisms using one of the two above-mentioned functions in
+ * the case where the application knows exactly what kind of plugin it is
+ * missing.
+ *
+ * Returns: a newly-allocated detail string, or NULL on error. Free string
+ *          with g_free() when not needed any longer.
+ *
+ * Since: 0.10.15
+ */
+gchar *
+gst_missing_uri_source_installer_detail_new (const gchar * protocol)
+{
+  gchar *desc;
+
+  g_return_val_if_fail (protocol != NULL, NULL);
+
+  desc = gst_pb_utils_get_source_description (protocol);
+  return gst_installer_detail_new (desc, "urisource", protocol);
+}
+
+/**
+ * gst_missing_uri_sink_installer_detail_new:
+ * @protocol: the URI protocol the missing source needs to implement,
+ *            e.g. "http" or "mms"
+ *
+ * Returns an opaque string containing all the details about the missing
+ * element to be passed to an external installer called via
+ * gst_install_plugins_async() or gst_install_plugins_sync().
+ * 
+ * This function is mainly for applications that call external plugin
+ * installation mechanisms using one of the two above-mentioned functions in
+ * the case where the application knows exactly what kind of plugin it is
+ * missing.
+ *
+ * Returns: a newly-allocated detail string, or NULL on error. Free string
+ *          with g_free() when not needed any longer.
+ *
+ * Since: 0.10.15
+ */
+gchar *
+gst_missing_uri_sink_installer_detail_new (const gchar * protocol)
+{
+  gchar *desc;
+
+  g_return_val_if_fail (protocol != NULL, NULL);
+
+  desc = gst_pb_utils_get_sink_description (protocol);
+  return gst_installer_detail_new (desc, "urisink", protocol);
+}
+
+/**
+ * gst_missing_element_installer_detail_new:
+ * @factory_name: the name of the missing element (element factory),
+ *            e.g. "videoscale" or "cdparanoiasrc"
+ *
+ * Returns an opaque string containing all the details about the missing
+ * element to be passed to an external installer called via
+ * gst_install_plugins_async() or gst_install_plugins_sync().
+ * 
+ * This function is mainly for applications that call external plugin
+ * installation mechanisms using one of the two above-mentioned functions in
+ * the case where the application knows exactly what kind of plugin it is
+ * missing.
+ *
+ * Returns: a newly-allocated detail string, or NULL on error. Free string
+ *          with g_free() when not needed any longer.
+ *
+ * Since: 0.10.15
+ */
+gchar *
+gst_missing_element_installer_detail_new (const gchar * factory_name)
+{
+  gchar *desc;
+
+  g_return_val_if_fail (factory_name != NULL, NULL);
+
+  desc = gst_pb_utils_get_element_description (factory_name);
+  return gst_installer_detail_new (desc, "element", factory_name);
+}
+
+/**
+ * gst_missing_decoder_installer_detail_new:
+ * @decode_caps: the (fixed) caps for which a decoder element is needed
+ *
+ * Returns an opaque string containing all the details about the missing
+ * element to be passed to an external installer called via
+ * gst_install_plugins_async() or gst_install_plugins_sync().
+ * 
+ * This function is mainly for applications that call external plugin
+ * installation mechanisms using one of the two above-mentioned functions in
+ * the case where the application knows exactly what kind of plugin it is
+ * missing.
+ *
+ * Returns: a newly-allocated detail string, or NULL on error. Free string
+ *          with g_free() when not needed any longer.
+ *
+ * Since: 0.10.15
+ */
+gchar *
+gst_missing_decoder_installer_detail_new (const GstCaps * decode_caps)
+{
+  GstCaps *caps;
+  gchar *detail_str, *caps_str, *desc;
+
+  g_return_val_if_fail (decode_caps != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (decode_caps), NULL);
+  g_return_val_if_fail (!gst_caps_is_any (decode_caps), NULL);
+  g_return_val_if_fail (!gst_caps_is_empty (decode_caps), NULL);
+  g_return_val_if_fail (gst_caps_is_fixed (decode_caps), NULL);
+
+  desc = gst_pb_utils_get_decoder_description (decode_caps);
+  caps = copy_and_clean_caps (decode_caps);
+  caps_str = gst_caps_to_string (caps);
+  detail_str = gst_installer_detail_new (desc, "decoder", caps_str);
+  g_free (caps_str);
+  gst_caps_unref (caps);
+
+  return detail_str;
+}
+
+/**
+ * gst_missing_encoder_installer_detail_new:
+ * @encode_caps: the (fixed) caps for which an encoder element is needed
+ *
+ * Returns an opaque string containing all the details about the missing
+ * element to be passed to an external installer called via
+ * gst_install_plugins_async() or gst_install_plugins_sync().
+ * 
+ * This function is mainly for applications that call external plugin
+ * installation mechanisms using one of the two above-mentioned functions in
+ * the case where the application knows exactly what kind of plugin it is
+ * missing.
+ *
+ * Returns: a newly-allocated detail string, or NULL on error. Free string
+ *          with g_free() when not needed any longer.
+ *
+ * Since: 0.10.15
+ */
+gchar *
+gst_missing_encoder_installer_detail_new (const GstCaps * encode_caps)
+{
+  GstCaps *caps;
+  gchar *detail_str, *caps_str, *desc;
+
+  g_return_val_if_fail (encode_caps != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CAPS (encode_caps), NULL);
+  g_return_val_if_fail (!gst_caps_is_any (encode_caps), NULL);
+  g_return_val_if_fail (!gst_caps_is_empty (encode_caps), NULL);
+  g_return_val_if_fail (gst_caps_is_fixed (encode_caps), NULL);
+
+  desc = gst_pb_utils_get_encoder_description (encode_caps);
+  caps = copy_and_clean_caps (encode_caps);
+  caps_str = gst_caps_to_string (caps);
+  detail_str = gst_installer_detail_new (desc, "encoder", caps_str);
+  g_free (caps_str);
+  gst_caps_unref (caps);
+
+  return detail_str;
 }
