@@ -333,6 +333,8 @@ gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, gpointer g_class)
   dtmfsrc->event_queue = g_async_queue_new ();
   dtmfsrc->last_event = NULL;
 
+  dtmfsrc->clock_id = NULL;
+
   GST_DEBUG_OBJECT (dtmfsrc, "init done");
 }
 
@@ -405,7 +407,7 @@ gst_dtmf_src_handle_custom_upstream (GstDTMFSrc *dtmfsrc,
   GstState state;
   GstStateChangeReturn ret;
 
-  ret = gst_element_get_state (dtmfsrc, &state, NULL, 0);
+  ret = gst_element_get_state (GST_ELEMENT (dtmfsrc), &state, NULL, 0);
   if (ret != GST_STATE_CHANGE_SUCCESS || state != GST_STATE_PLAYING) {
     GST_DEBUG_OBJECT (dtmfsrc, "Received event while not in PLAYING state");
     goto ret;
@@ -444,19 +446,6 @@ gst_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&dtmfsrc->segment, GST_FORMAT_TIME);
       break;
-    case GST_EVENT_NEWSEGMENT:
-      {
-        gboolean update;
-        gdouble rate;
-        GstFormat fmt;
-        gint64 start, stop, position;
-
-        gst_event_parse_new_segment (event, &update, &rate, &fmt, &start,
-            &stop, &position);
-        gst_segment_set_newsegment (&dtmfsrc->segment, update, rate, fmt,
-            start, stop, position);
-      }
-      /* fallthrough */
     default:
       result = gst_pad_event_default (pad, event);
       break;
@@ -523,7 +512,7 @@ gst_dtmf_prepare_timestamps (GstDTMFSrc *dtmfsrc)
 {
   GstClock *clock;
 
-  clock = gst_element_get_clock (dtmfsrc);
+  clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
   if (clock != NULL) {
     dtmfsrc->timestamp = gst_clock_get_time (clock);
     gst_object_unref (clock);
@@ -538,9 +527,9 @@ gst_dtmf_prepare_timestamps (GstDTMFSrc *dtmfsrc)
 static void
 gst_dtmf_src_start (GstDTMFSrc *dtmfsrc)
 {
-  GstCaps * caps = gst_pad_get_pad_template_caps (dtmfsrc->srcpad);
+  const GstCaps * caps = gst_pad_get_pad_template_caps (dtmfsrc->srcpad);
 
-  if (!gst_pad_set_caps (dtmfsrc->srcpad, caps))
+  if (!gst_pad_set_caps (dtmfsrc->srcpad, (GstCaps *)caps))
     GST_ERROR_OBJECT (dtmfsrc,
             "Failed to set caps %" GST_PTR_FORMAT " on src pad", caps);
   else
@@ -557,26 +546,32 @@ gst_dtmf_src_start (GstDTMFSrc *dtmfsrc)
 static void
 gst_dtmf_src_stop (GstDTMFSrc *dtmfsrc)
 {
-  /* Don't forget to release the stream lock */
-  gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+  GstDTMFSrcEvent *event = NULL;
 
-
-  /* Flushing the event queue */
-  GstDTMFSrcEvent *event = g_async_queue_try_pop (dtmfsrc->event_queue);
-
-  while (event != NULL) {
-    g_free (event);
-    event = g_async_queue_try_pop (dtmfsrc->event_queue);
-  }
-
-  if (dtmfsrc->last_event) {
-    g_free (dtmfsrc->last_event);
-    dtmfsrc->last_event = NULL;
+  if (dtmfsrc->clock_id != NULL) {
+    gst_clock_id_unschedule(dtmfsrc->clock_id);
+    gst_clock_id_unref (dtmfsrc->clock_id);
+    dtmfsrc->clock_id = NULL;
   }
 
   if (!gst_pad_pause_task (dtmfsrc->srcpad)) {
     GST_ERROR_OBJECT (dtmfsrc, "Failed to pause task on src pad");
     return;
+  }
+
+  if (dtmfsrc->last_event) {
+    /* Don't forget to release the stream lock */
+    gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+    g_free (dtmfsrc->last_event);
+    dtmfsrc->last_event = NULL;
+  }
+
+  /* Flushing the event queue */
+  event = g_async_queue_try_pop (dtmfsrc->event_queue);
+
+  while (event != NULL) {
+    g_free (event);
+    event = g_async_queue_try_pop (dtmfsrc->event_queue);
   }
 
 }
@@ -672,23 +667,35 @@ gst_dtmf_src_wait_for_buffer_ts (GstDTMFSrc *dtmfsrc, GstBuffer * buf)
 {
   GstClock *clock;
 
-  clock = gst_element_get_clock (dtmfsrc);
+  clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
   if (clock != NULL) {
-    GstClockID clock_id;
     GstClockReturn clock_ret;
 
-    clock_id = gst_clock_new_single_shot_id (clock, GST_BUFFER_TIMESTAMP (buf));
-    clock_ret = gst_clock_id_wait (clock_id, NULL);
-    if (clock_ret != GST_CLOCK_OK && clock_ret != GST_CLOCK_EARLY) {
-      gchar *clock_name = gst_element_get_name (clock);
-      GST_ERROR_OBJECT (dtmfsrc, "Failed to wait on clock %s", clock_name);
-      g_free (clock_name);
-    }
-    gst_clock_id_unref (clock_id);
+    dtmfsrc->clock_id = gst_clock_new_single_shot_id (clock, GST_BUFFER_TIMESTAMP (buf));
     gst_object_unref (clock);
-  }
 
-  else {
+    clock_ret = gst_clock_id_wait (dtmfsrc->clock_id, NULL);
+    if (clock_ret == GST_CLOCK_UNSCHEDULED) {
+      GST_DEBUG_OBJECT (dtmfsrc, "Clock wait unscheduled");
+      /* we don't free anything in case of an unscheduled, because it would be unscheduled
+       * by the stop function which will do the free itself. We can't handle it here
+       * in case we stop the task before the unref is done
+       */
+    } else {
+      if (clock_ret != GST_CLOCK_OK && clock_ret != GST_CLOCK_EARLY) {
+        gchar *clock_name = NULL;
+
+        clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
+        clock_name = gst_element_get_name (clock);
+        gst_object_unref (clock);
+
+        GST_ERROR_OBJECT (dtmfsrc, "Failed to wait on clock %s", clock_name);
+        g_free (clock_name);
+      }
+      gst_clock_id_unref (dtmfsrc->clock_id);
+      dtmfsrc->clock_id = NULL;
+    }
+  } else {
     gchar *dtmf_name = gst_element_get_name (dtmfsrc);
     GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", dtmf_name);
     g_free (dtmf_name);

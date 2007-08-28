@@ -342,6 +342,7 @@ gst_rtp_dtmf_src_init (GstRTPDTMFSrc * dtmfsrc, gpointer g_class)
 
   dtmfsrc->event_queue = g_async_queue_new ();
   dtmfsrc->last_event = NULL;
+  dtmfsrc->clock_id = NULL;
 
   GST_DEBUG_OBJECT (dtmfsrc, "init done");
 }
@@ -351,13 +352,13 @@ gst_rtp_dtmf_src_finalize (GObject * object)
 {
   GstRTPDTMFSrc *dtmfsrc;
 
+  dtmfsrc = GST_RTP_DTMF_SRC (object);
 
   if (dtmfsrc->event_queue) {
     g_async_queue_unref (dtmfsrc->event_queue);
     dtmfsrc->event_queue = NULL;
   }
 
-  dtmfsrc = GST_RTP_DTMF_SRC (object);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -415,7 +416,7 @@ gst_rtp_dtmf_src_handle_custom_upstream (GstRTPDTMFSrc *dtmfsrc,
   GstState state;
   GstStateChangeReturn ret;
 
-  ret = gst_element_get_state (dtmfsrc, &state, NULL, 0);
+  ret = gst_element_get_state (GST_ELEMENT (dtmfsrc), &state, NULL, 0);
   if (ret != GST_STATE_CHANGE_SUCCESS || state != GST_STATE_PLAYING) {
     GST_DEBUG_OBJECT (dtmfsrc, "Received event while not in PLAYING state");
     goto ret;
@@ -439,7 +440,7 @@ gst_rtp_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
   GstRTPDTMFSrc *dtmfsrc;
   gboolean result = FALSE;
   GstElement *parent = gst_pad_get_parent_element (pad);
-  dtmfsrc = GST_DTMF_SRC (parent);
+  dtmfsrc = GST_RTP_DTMF_SRC (parent);
 
 
   GST_DEBUG_OBJECT (dtmfsrc, "Received an event on the src pad");
@@ -458,19 +459,6 @@ gst_rtp_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
       break;
-    case GST_EVENT_NEWSEGMENT:
-      {
-        gboolean update;
-        gdouble rate;
-        GstFormat fmt;
-        gint64 start, stop, position;
-
-        gst_event_parse_new_segment (event, &update, &rate, &fmt, &start,
-            &stop, &position);
-        gst_segment_set_newsegment (&dtmfsrc->segment, update, rate, fmt,
-            start, stop, position);
-      }
-      /* fallthrough */
     default:
       result = gst_pad_event_default (pad, event);
       break;
@@ -582,7 +570,7 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc *dtmfsrc)
 {
   GstClock *clock;
 
-  clock = gst_element_get_clock (dtmfsrc);
+  clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
   if (clock != NULL) {
     dtmfsrc->timestamp = gst_clock_get_time (clock)
         + (MIN_INTER_DIGIT_INTERVAL * GST_MSECOND);
@@ -615,12 +603,29 @@ gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc)
 static void
 gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
 {
-  /* Don't forget to release the stream lock */
-  gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
 
+  GstRTPDTMFSrcEvent *event = NULL;
+
+  if (dtmfsrc->clock_id != NULL) {
+    gst_clock_id_unschedule(dtmfsrc->clock_id);
+    gst_clock_id_unref (dtmfsrc->clock_id);
+    dtmfsrc->clock_id = NULL;
+  }
+
+  if (!gst_pad_pause_task (dtmfsrc->srcpad)) {
+    GST_ERROR_OBJECT (dtmfsrc, "Failed to pause task on src pad");
+    return;
+  }
+
+  if (dtmfsrc->last_event) {
+    /* Don't forget to release the stream lock */
+    gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+    g_free (dtmfsrc->last_event);
+    dtmfsrc->last_event = NULL;
+  }
 
   /* Flushing the event queue */
-  GstRTPDTMFSrcEvent *event = g_async_queue_try_pop (dtmfsrc->event_queue);
+  event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
   while (event != NULL) {
     g_free (event);
@@ -632,10 +637,6 @@ gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
     dtmfsrc->last_event = NULL;
   }
 
-  if (!gst_pad_pause_task (dtmfsrc->srcpad)) {
-    GST_ERROR_OBJECT (dtmfsrc, "Failed to pause task on src pad");
-    return;
-  }
 }
 
 
@@ -674,20 +675,33 @@ gst_rtp_dtmf_src_wait_for_buffer_ts (GstRTPDTMFSrc *dtmfsrc, GstBuffer * buf)
 {
   GstClock *clock;
 
-  clock = gst_element_get_clock (dtmfsrc);
+  clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
   if (clock != NULL) {
-    GstClockID clock_id;
     GstClockReturn clock_ret;
 
-    clock_id = gst_clock_new_single_shot_id (clock, GST_BUFFER_TIMESTAMP (buf));
-    clock_ret = gst_clock_id_wait (clock_id, NULL);
-    if (clock_ret != GST_CLOCK_OK && clock_ret != GST_CLOCK_EARLY) {
-      gchar *clock_name = gst_element_get_name (clock);
-      GST_ERROR_OBJECT (dtmfsrc, "Failed to wait on clock %s", clock_name);
-      g_free (clock_name);
-    }
-    gst_clock_id_unref (clock_id);
+    dtmfsrc->clock_id = gst_clock_new_single_shot_id (clock, GST_BUFFER_TIMESTAMP (buf));
     gst_object_unref (clock);
+
+    clock_ret = gst_clock_id_wait (dtmfsrc->clock_id, NULL);
+    if (clock_ret == GST_CLOCK_UNSCHEDULED) {
+      GST_DEBUG_OBJECT (dtmfsrc, "Clock wait unscheduled");
+      /* we don't free anything in case of an unscheduled, because it would be unscheduled
+       * by the stop function which will do the free itself. We can't handle it here
+       * in case we stop the task before the unref is done
+       */
+    } else {
+      if (clock_ret != GST_CLOCK_OK && clock_ret != GST_CLOCK_EARLY) {
+        gchar *clock_name = NULL;
+
+        clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
+        clock_name = gst_element_get_name (clock);
+        gst_object_unref (clock);
+
+        GST_ERROR_OBJECT (dtmfsrc, "Failed to wait on clock %s", clock_name);
+        g_free (clock_name);
+      }
+      gst_clock_id_unref (dtmfsrc->clock_id);
+    }
   }
 
   else {
@@ -854,14 +868,14 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
 
     gst_buffer_unref(buf);
     GST_DEBUG_OBJECT (dtmfsrc,
-        "pushed DTMF event '%d' on src pad", event->payload->event);
+        "pushed DTMF event '%d' on src pad", dtmfsrc->last_event->payload->event);
 
     if (dtmfsrc->last_event->payload->e) {
       /* Don't forget to release the stream lock */
       gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
 
       g_free (dtmfsrc->last_event->payload);
-      event->payload = NULL;
+      dtmfsrc->last_event->payload = NULL;
 
       g_free (dtmfsrc->last_event);
       dtmfsrc->last_event = NULL;
