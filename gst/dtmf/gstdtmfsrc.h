@@ -50,7 +50,7 @@ typedef struct _GstDTMFSrcClass GstDTMFSrcClass;
  * The opaque #GstDTMFSrc data structure.
  */
 
-static enum _GstDTMFEventType {
+enum _GstDTMFEventType {
   DTMF_EVENT_TYPE_START,
   DTMF_EVENT_TYPE_STOP
 };
@@ -73,6 +73,7 @@ struct _GstDTMFSrc {
   GstSegment        segment;
   GAsyncQueue*      event_queue;
   GstDTMFSrcEvent*  last_event;
+  GstClockID        clock_id;
 
   guint16           interval;
   GstClockTime      timestamp;

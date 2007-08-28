@@ -59,7 +59,7 @@ typedef struct _GstRTPDTMFSrcClass GstRTPDTMFSrcClass;
 
 
 
-static enum _GstRTPDTMFEventType {
+enum _GstRTPDTMFEventType {
   RTP_DTMF_EVENT_TYPE_START,
   RTP_DTMF_EVENT_TYPE_STOP
 };
@@ -87,6 +87,7 @@ struct _GstRTPDTMFSrc {
   GstSegment           segment;
   GAsyncQueue*	       event_queue;
   GstRTPDTMFSrcEvent*  last_event;
+  GstClockID           clock_id;
 
   GstClockTime      timestamp;
   gboolean          first_packet;
