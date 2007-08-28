@@ -1276,6 +1276,7 @@ gst_install_plugins_async
 gst_install_plugins_sync
 gst_install_plugins_return_get_name
 gst_install_plugins_installation_in_progress
+gst_install_plugins_supported
 <SUBSECTION>
 GstInstallPluginsContext
 gst_install_plugins_context_new

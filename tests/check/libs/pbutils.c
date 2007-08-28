@@ -72,8 +72,7 @@ GST_START_TEST (test_pb_utils_post_missing_messages)
   bus = gst_element_get_bus (pipeline);
 
   /* first, test common assertion failure cases */
-  ASSERT_CRITICAL (msg = gst_missing_uri_source_message_new (NULL, "http");
-      );
+  ASSERT_CRITICAL (msg = gst_missing_uri_source_message_new (NULL, "http"););
   ASSERT_CRITICAL (gst_missing_uri_source_message_new (pipeline, NULL));
 
   ASSERT_CRITICAL (gst_missing_uri_sink_message_new (NULL, "http"));
@@ -500,8 +499,15 @@ test_pb_utils_install_plugins_do_callout (gchar ** details,
     goto done;
   }
 
+  /* test gst_install_plugins_supported() I */
+  g_setenv ("GST_INSTALL_PLUGINS_HELPER", "/i/do/not/ex.ist!", 1);
+  fail_if (gst_install_plugins_supported ());
+
   GST_LOG ("setting GST_INSTALL_PLUGINS_HELPER to '%s'", path);
   g_setenv ("GST_INSTALL_PLUGINS_HELPER", path, 1);
+
+  /* test gst_install_plugins_supported() II */
+  fail_unless (gst_install_plugins_supported ());
 
   /* test sync callout */
   ret = gst_install_plugins_sync (details, ctx);
@@ -541,11 +547,14 @@ GST_START_TEST (test_pb_utils_install_plugins)
 
   ctx = gst_install_plugins_context_new ();
 
-  ASSERT_CRITICAL (ret = gst_install_plugins_sync (NULL, ctx););
+  ASSERT_CRITICAL (ret = gst_install_plugins_sync (NULL, ctx);
+      );
   ASSERT_CRITICAL (ret =
-      gst_install_plugins_async (NULL, ctx, result_cb, (gpointer) & marker););
+      gst_install_plugins_async (NULL, ctx, result_cb, (gpointer) & marker);
+      );
   ASSERT_CRITICAL (ret =
-      gst_install_plugins_async (details, ctx, NULL, (gpointer) & marker););
+      gst_install_plugins_async (details, ctx, NULL, (gpointer) & marker);
+      );
 
   /* make sure the functions return the right error code if the helper does
    * not exist */

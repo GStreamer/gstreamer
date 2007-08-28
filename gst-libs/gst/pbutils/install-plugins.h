@@ -131,6 +131,8 @@ const gchar * gst_install_plugins_return_get_name (GstInstallPluginsReturn ret);
 
 gboolean      gst_install_plugins_installation_in_progress (void);
 
+gboolean      gst_install_plugins_supported (void);
+
 G_END_DECLS
 
 #endif /* __GST_PB_UTILS_INSTALL_PLUGINS_H__ */

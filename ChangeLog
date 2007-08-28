@@ -1,6 +1,15 @@
 2007-08-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/pbutils/install-plugins.c:
+	* gst-libs/gst/pbutils/install-plugins.h:
+	* tests/check/libs/pbutils.c:
+	  API: also add gst_install_plugins_supported() while we're at it
+	  (see #470456).
+
+2007-08-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/pbutils/missing-plugins.c:
 	* gst-libs/gst/pbutils/missing-plugins.h:
 	* tests/check/libs/pbutils.c:

@@ -722,3 +722,22 @@ gst_install_plugins_installation_in_progress (void)
 {
   return install_in_progress;
 }
+
+/**
+ * gst_install_plugins_supported:
+ * 
+ * Checks whether plugin installation is likely to be supported by the
+ * current environment. This currently only checks whether the helper script
+ * that is to be provided by the distribution or operating system vendor
+ * exists.
+ *
+ * Returns: TRUE if plugin installation is likely to be supported.
+ *
+ * Since: 0.10.15
+ */
+gboolean
+gst_install_plugins_supported (void)
+{
+  return g_file_test (gst_install_plugins_get_helper (),
+      G_FILE_TEST_IS_EXECUTABLE);
+}
