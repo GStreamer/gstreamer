@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) 2005,2006 Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2005-2007 Wim Taymans <wim.taymans@gmail.com>
  *
  * gstbasesink.c: Base class for sink elements
  *
@@ -130,7 +130,11 @@
  * information can then be used by upstream elements to reduce their processing
  * rate, for example.
  *
- * Last reviewed on 2006-09-27 (0.10.11)
+ * Since 0.10.15 the async property can be used to instruct the sink to never
+ * perform an ASYNC state change. This feature is mostly usable when dealing
+ * with non-synchronized streams or sparse streams.
+ *
+ * Last reviewed on 2007-08-29 (0.10.15)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -154,6 +158,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_base_sink_debug);
 struct _GstBaseSinkPrivate
 {
   gint qos_enabled;             /* ATOMIC */
+  gboolean async_enabled;
 
   /* start, stop of current buffer, stream time, used to report position */
   GstClockTime current_sstart;
@@ -221,6 +226,7 @@ struct _GstBaseSinkPrivate
 #define DEFAULT_SYNC			TRUE
 #define DEFAULT_MAX_LATENESS		-1
 #define DEFAULT_QOS			FALSE
+#define DEFAULT_ASYNC			TRUE
 
 enum
 {
@@ -228,7 +234,8 @@ enum
   PROP_PREROLL_QUEUE_LEN,
   PROP_SYNC,
   PROP_MAX_LATENESS,
-  PROP_QOS
+  PROP_QOS,
+  PROP_ASYNC
 };
 
 static GstElementClass *parent_class = NULL;
@@ -343,6 +350,19 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
       g_param_spec_boolean ("qos", "Qos",
           "Generate Quality-of-Service events upstream", DEFAULT_QOS,
           G_PARAM_READWRITE));
+  /**
+   * GstBaseSink:async
+   *
+   * If set to #TRUE, the basesink will perform asynchronous state changes.
+   * When set to #FALSE, the sink will not signal the parent when it prerolls.
+   * Use this option when dealing with sparse streams or when synchronisation is
+   * not required.
+   *
+   * Since: 0.10.15
+   */
+  g_object_class_install_property (gobject_class, PROP_ASYNC,
+      g_param_spec_boolean ("async", "Async",
+          "Go asynchronously to PAUSED", DEFAULT_ASYNC, G_PARAM_READWRITE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
@@ -493,6 +513,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->sync = DEFAULT_SYNC;
   basesink->abidata.ABI.max_lateness = DEFAULT_MAX_LATENESS;
   gst_atomic_int_set (&priv->qos_enabled, DEFAULT_QOS);
+  priv->async_enabled = DEFAULT_ASYNC;
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }
@@ -526,6 +547,8 @@ gst_base_sink_finalize (GObject * object)
 void
 gst_base_sink_set_sync (GstBaseSink * sink, gboolean sync)
 {
+  g_return_if_fail (GST_IS_BASE_SINK (sink));
+
   GST_OBJECT_LOCK (sink);
   sink->sync = sync;
   GST_OBJECT_UNLOCK (sink);
@@ -546,6 +569,8 @@ gboolean
 gst_base_sink_get_sync (GstBaseSink * sink)
 {
   gboolean res;
+
+  g_return_val_if_fail (GST_IS_BASE_SINK (sink), FALSE);
 
   GST_OBJECT_LOCK (sink);
   res = sink->sync;
@@ -569,6 +594,8 @@ gst_base_sink_get_sync (GstBaseSink * sink)
 void
 gst_base_sink_set_max_lateness (GstBaseSink * sink, gint64 max_lateness)
 {
+  g_return_if_fail (GST_IS_BASE_SINK (sink));
+
   GST_OBJECT_LOCK (sink);
   sink->abidata.ABI.max_lateness = max_lateness;
   GST_OBJECT_UNLOCK (sink);
@@ -592,6 +619,8 @@ gst_base_sink_get_max_lateness (GstBaseSink * sink)
 {
   gint64 res;
 
+  g_return_val_if_fail (GST_IS_BASE_SINK (sink), -1);
+
   GST_OBJECT_LOCK (sink);
   res = sink->abidata.ABI.max_lateness;
   GST_OBJECT_UNLOCK (sink);
@@ -611,6 +640,8 @@ gst_base_sink_get_max_lateness (GstBaseSink * sink)
 void
 gst_base_sink_set_qos_enabled (GstBaseSink * sink, gboolean enabled)
 {
+  g_return_if_fail (GST_IS_BASE_SINK (sink));
+
   gst_atomic_int_set (&sink->priv->qos_enabled, enabled);
 }
 
@@ -630,7 +661,57 @@ gst_base_sink_is_qos_enabled (GstBaseSink * sink)
 {
   gboolean res;
 
+  g_return_val_if_fail (GST_IS_BASE_SINK (sink), FALSE);
+
   res = g_atomic_int_get (&sink->priv->qos_enabled);
+
+  return res;
+}
+
+/**
+ * gst_base_sink_set_async_enabled:
+ * @sink: the sink
+ * @enabled: the new async value.
+ *
+ * Configures @sink to perform all state changes asynchronusly. When async is
+ * disabled, the sink will immediatly go to PAUSED instead of waiting for a
+ * preroll buffer. This feature is usefull if the sink does not synchronize
+ * against the clock or when it is dealing with sparse streams.
+ *
+ * Since: 0.10.15
+ */
+void
+gst_base_sink_set_async_enabled (GstBaseSink * sink, gboolean enabled)
+{
+  g_return_if_fail (GST_IS_BASE_SINK (sink));
+
+  GST_PAD_PREROLL_LOCK (sink->sinkpad);
+  sink->priv->async_enabled = enabled;
+  GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
+}
+
+/**
+ * gst_base_sink_is_async_enabled:
+ * @sink: the sink
+ *
+ * Checks if @sink is currently configured to perform asynchronous state
+ * changes to PAUSED.
+ *
+ * Returns: TRUE if the sink is configured to perform asynchronous state
+ * changes.
+ *
+ * Since: 0.10.15
+ */
+gboolean
+gst_base_sink_is_async_enabled (GstBaseSink * sink)
+{
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_BASE_SINK (sink), FALSE);
+
+  GST_PAD_PREROLL_LOCK (sink->sinkpad);
+  res = sink->priv->async_enabled;
+  GST_PAD_PREROLL_UNLOCK (sink->sinkpad);
 
   return res;
 }
@@ -761,6 +842,9 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
     case PROP_QOS:
       gst_base_sink_set_qos_enabled (sink, g_value_get_boolean (value));
       break;
+    case PROP_ASYNC:
+      gst_base_sink_set_async_enabled (sink, g_value_get_boolean (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -787,6 +871,9 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_QOS:
       g_value_set_boolean (value, gst_base_sink_is_qos_enabled (sink));
+      break;
+    case PROP_ASYNC:
+      g_value_set_boolean (value, gst_base_sink_is_async_enabled (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2829,7 +2916,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       /* need to complete preroll before this state change completes, there
        * is no data flow in READY so we can safely assume we need to preroll. */
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
-      GST_DEBUG_OBJECT (basesink, "READY to PAUSED, need preroll");
+      GST_DEBUG_OBJECT (basesink, "READY to PAUSED");
       gst_segment_init (&basesink->segment, GST_FORMAT_UNDEFINED);
       gst_segment_init (basesink->abidata.ABI.clip_segment,
           GST_FORMAT_UNDEFINED);
@@ -2846,16 +2933,21 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       basesink->priv->received_eos = FALSE;
       gst_base_sink_reset_qos (basesink);
       basesink->priv->commited = FALSE;
-      ret = GST_STATE_CHANGE_ASYNC;
-      gst_element_post_message (GST_ELEMENT_CAST (basesink),
-          gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+      if (basesink->priv->async_enabled) {
+        GST_DEBUG_OBJECT (basesink, "doing async state change");
+        /* when async enabled, post async-start message and return ASYNC from
+         * the state change function */
+        ret = GST_STATE_CHANGE_ASYNC;
+        gst_element_post_message (GST_ELEMENT_CAST (basesink),
+            gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+      }
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
       if (!gst_base_sink_needs_preroll (basesink)) {
-        /* no preroll needed anymore now. */
         GST_DEBUG_OBJECT (basesink, "PAUSED to PLAYING, don't need preroll");
+        /* no preroll needed anymore now. */
         basesink->playing_async = FALSE;
         basesink->need_preroll = FALSE;
         if (basesink->eos) {
@@ -2868,13 +2960,16 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
           GST_PAD_PREROLL_SIGNAL (basesink->sinkpad);
         }
       } else {
-        GST_DEBUG_OBJECT (basesink, "PAUSED to PLAYING, need preroll");
+        GST_DEBUG_OBJECT (basesink, "PAUSED to PLAYING, we are not prerolled");
         basesink->need_preroll = TRUE;
         basesink->playing_async = TRUE;
         basesink->priv->commited = FALSE;
-        ret = GST_STATE_CHANGE_ASYNC;
-        gst_element_post_message (GST_ELEMENT_CAST (basesink),
-            gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+        if (basesink->priv->async_enabled) {
+          GST_DEBUG_OBJECT (basesink, "doing async state change");
+          ret = GST_STATE_CHANGE_ASYNC;
+          gst_element_post_message (GST_ELEMENT_CAST (basesink),
+              gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+        }
       }
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
@@ -2932,12 +3027,17 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         if (GST_STATE_TARGET (GST_ELEMENT (basesink)) <= GST_STATE_READY) {
           ret = GST_STATE_CHANGE_SUCCESS;
         } else {
-          GST_DEBUG_OBJECT (basesink, "PLAYING to PAUSED, need preroll");
+          GST_DEBUG_OBJECT (basesink,
+              "PLAYING to PAUSED, we are not prerolled");
           basesink->playing_async = TRUE;
           basesink->priv->commited = FALSE;
-          ret = GST_STATE_CHANGE_ASYNC;
-          gst_element_post_message (GST_ELEMENT_CAST (basesink),
-              gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+          if (basesink->priv->async_enabled) {
+            GST_DEBUG_OBJECT (basesink, "doing async state change");
+            ret = GST_STATE_CHANGE_ASYNC;
+            gst_element_post_message (GST_ELEMENT_CAST (basesink),
+                gst_message_new_async_start (GST_OBJECT_CAST (basesink),
+                    FALSE));
+          }
         }
       }
       GST_DEBUG_OBJECT (basesink, "rendered: %" G_GUINT64_FORMAT
@@ -2950,15 +3050,16 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_PAD_PREROLL_LOCK (basesink->sinkpad);
       if (!basesink->priv->commited) {
-        GST_DEBUG_OBJECT (basesink, "PAUSED to READY, posting async-done");
+        if (basesink->priv->async_enabled) {
+          GST_DEBUG_OBJECT (basesink, "PAUSED to READY, posting async-done");
 
-        gst_element_post_message (GST_ELEMENT_CAST (basesink),
-            gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
-                GST_STATE_PLAYING, GST_STATE_PAUSED, GST_STATE_READY));
+          gst_element_post_message (GST_ELEMENT_CAST (basesink),
+              gst_message_new_state_changed (GST_OBJECT_CAST (basesink),
+                  GST_STATE_PLAYING, GST_STATE_PAUSED, GST_STATE_READY));
 
-        gst_element_post_message (GST_ELEMENT_CAST (basesink),
-            gst_message_new_async_done (GST_OBJECT_CAST (basesink)));
-
+          gst_element_post_message (GST_ELEMENT_CAST (basesink),
+              gst_message_new_async_done (GST_OBJECT_CAST (basesink)));
+        }
         basesink->priv->commited = TRUE;
       } else {
         GST_DEBUG_OBJECT (basesink, "PAUSED to READY, don't need_preroll");

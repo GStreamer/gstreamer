@@ -189,15 +189,23 @@ GType gst_base_sink_get_type(void);
 
 GstFlowReturn	gst_base_sink_wait_preroll 	(GstBaseSink *sink);
 
+/* synchronizing against the clock */
 void		gst_base_sink_set_sync 		(GstBaseSink *sink, gboolean sync);
 gboolean	gst_base_sink_get_sync 		(GstBaseSink *sink);
 
+/* dropping late buffers */
 void		gst_base_sink_set_max_lateness 	(GstBaseSink *sink, gint64 max_lateness);
 gint64		gst_base_sink_get_max_lateness 	(GstBaseSink *sink);
 
+/* performing QoS */
 void		gst_base_sink_set_qos_enabled 	(GstBaseSink *sink, gboolean enabled);
 gboolean	gst_base_sink_is_qos_enabled 	(GstBaseSink *sink);
 
+/* doing async state changes */
+void		gst_base_sink_set_async_enabled	(GstBaseSink *sink, gboolean enabled);
+gboolean	gst_base_sink_is_async_enabled 	(GstBaseSink *sink);
+
+/* latency */
 gboolean	gst_base_sink_query_latency 	(GstBaseSink *sink, gboolean *live, gboolean *upstream_live,
 						 GstClockTime *min_latency, GstClockTime *max_latency);
 GstClockTime	gst_base_sink_get_latency 	(GstBaseSink *sink);

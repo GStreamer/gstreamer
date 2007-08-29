@@ -1,3 +1,20 @@
+2007-08-29  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init),
+	(gst_base_sink_init), (gst_base_sink_set_sync),
+	(gst_base_sink_get_sync), (gst_base_sink_set_max_lateness),
+	(gst_base_sink_get_max_lateness), (gst_base_sink_set_qos_enabled),
+	(gst_base_sink_is_qos_enabled), (gst_base_sink_set_async_enabled),
+	(gst_base_sink_is_async_enabled), (gst_base_sink_set_property),
+	(gst_base_sink_get_property), (gst_base_sink_change_state):
+	* libs/gst/base/gstbasesink.h:
+	Add async property to instruct the sink never to inform the parent about
+	ASYNC state changes, update docs.
+	Check argument with g_return_* for the public functions.
+	API: GstBaseSink::async property
+	API: gst_base_sink_set_async_enabled()
+	API: gst_base_sink_is_async_enabled()
+
 2007-08-28  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_loop):
