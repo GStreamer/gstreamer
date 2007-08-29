@@ -1924,6 +1924,8 @@ gst_rtspsrc_stream_configure_udp_sink (GstRTSPSrc * src, GstRTSPStream * stream,
 
   /* no sync needed */
   g_object_set (G_OBJECT (stream->udpsink), "sync", FALSE, NULL);
+  /* no async state changes needed */
+  g_object_set (G_OBJECT (stream->udpsink), "async", FALSE, NULL);
 
   if (stream->udpsrc[1]) {
     /* configure socket, we give it the same UDP socket as the udpsrc for RTCP

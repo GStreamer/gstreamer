@@ -1,3 +1,10 @@
+2007-08-29  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_stream_configure_udp_sink),
+	(gst_rtspsrc_dup_printf):
+	Use new basesink async property to make sparse RTCP packet not wait for
+	preroll.
+
 2007-08-27  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/audiofx/Makefile.am:
