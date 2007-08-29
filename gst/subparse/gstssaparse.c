@@ -204,6 +204,21 @@ gst_ssa_parse_remove_override_codes (GstSsaParse * parse, gchar * txt)
     removed_any = TRUE;
   }
 
+  /* these may occur outside of curly brackets. We don't handle the different
+   * wrapping modes yet, so just remove these markers from the text for now */
+  while ((t = strstr (txt, "\\n"))) {
+    t[0] = ' ';
+    t[1] = '\n';
+  }
+  while ((t = strstr (txt, "\\N"))) {
+    t[0] = ' ';
+    t[1] = '\n';
+  }
+  while ((t = strstr (txt, "\\h"))) {
+    t[0] = ' ';
+    t[1] = ' ';
+  }
+
   return removed_any;
 }
 
@@ -273,6 +288,9 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
   GstClockTime ts;
   gchar *txt;
 
+  if (G_UNLIKELY (!parse->framed))
+    goto not_framed;
+
   /* make double-sure it's 0-terminated and all */
   txt = g_strndup ((gchar *) GST_BUFFER_DATA (buf), GST_BUFFER_SIZE (buf));
 
@@ -295,6 +313,14 @@ gst_ssa_parse_chain (GstPad * sinkpad, GstBuffer * buf)
   g_free (txt);
 
   return ret;
+
+/* ERRORS */
+not_framed:
+  {
+    GST_ELEMENT_ERROR (parse, STREAM, FORMAT, (NULL),
+        ("Only SSA subtitles embedded in containers are supported"));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
 }
 
 static GstStateChangeReturn

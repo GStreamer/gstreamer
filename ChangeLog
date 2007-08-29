@@ -1,3 +1,8 @@
+2007-08-29  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/subparse/gstssaparse.c:
+	  Convert SSA newline codes into actual newline characters (#470766).
+
 2007-08-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:
