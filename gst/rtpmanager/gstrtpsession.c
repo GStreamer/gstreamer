@@ -648,8 +648,10 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn res;
   GstRtpSession *rtpsession;
+  GstRtpSessionPrivate *priv;
 
   rtpsession = GST_RTP_SESSION (element);
+  priv = rtpsession->priv;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
@@ -660,6 +662,7 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       stop_rtcp_thread (rtpsession);
+      break;
     default:
       break;
   }
@@ -668,9 +671,17 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+    {
+      GstClockTime base_time;
+
+      base_time = GST_ELEMENT_CAST (rtpsession)->base_time;
+
+      rtp_session_set_base_time (priv->session, base_time);
+
       if (!start_rtcp_thread (rtpsession))
         goto failed_thread;
       break;
+    }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
@@ -960,6 +971,40 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
   GST_DEBUG_OBJECT (rtpsession, "received event");
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+    {
+      gboolean update;
+      gdouble rate, arate;
+      GstFormat format;
+      gint64 start, stop, time;
+      GstSegment *segment;
+
+      segment = &rtpsession->send_rtp_seg;
+
+      /* the newsegment event is needed to convert the RTP timestamp to
+       * running_time, which is needed to generate a mapping from RTP to NTP
+       * timestamps in SR reports */
+      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
+          &start, &stop, &time);
+
+      GST_DEBUG_OBJECT (rtpsession,
+          "configured NEWSEGMENT update %d, rate %lf, applied rate %lf, "
+          "format GST_FORMAT_TIME, "
+          "%" GST_TIME_FORMAT " -- %" GST_TIME_FORMAT
+          ", time %" GST_TIME_FORMAT ", accum %" GST_TIME_FORMAT,
+          update, rate, arate, GST_TIME_ARGS (segment->start),
+          GST_TIME_ARGS (segment->stop), GST_TIME_ARGS (segment->time),
+          GST_TIME_ARGS (segment->accum));
+
+      gst_segment_set_newsegment_full (segment, update, rate,
+          arate, format, start, stop, time);
+
+      rtp_session_set_timestamp_sync (priv->session, start);
+
+      /* push event forward */
+      ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
+      break;
+    }
     default:
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
       break;
@@ -990,7 +1035,6 @@ gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
 
   return ret;
 }
-
 
 /* Create sinkpad to receive RTP packets from senders. This will also create a
  * srcpad for the RTP packets.

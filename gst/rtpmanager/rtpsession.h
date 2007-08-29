@@ -189,6 +189,10 @@ struct _RTPSession {
   gpointer            user_data;
 
   RTPSessionStats stats;
+
+  /* for mapping RTP time to NTP time */
+  GstClockTime  start_timestamp;
+  GstClockTime  base_time;
 };
 
 /**
@@ -251,7 +255,8 @@ GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer 
 
 /* processing packets for sending */
 GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, GstBuffer *buffer);
-
+void            rtp_session_set_base_time          (RTPSession *sess, GstClockTime base_time);
+void            rtp_session_set_timestamp_sync     (RTPSession *sess, GstClockTime start_timestamp);
 /* stopping the session */
 GstFlowReturn   rtp_session_send_bye               (RTPSession *sess, const gchar *reason);
 
