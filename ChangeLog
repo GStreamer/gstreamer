@@ -1,5 +1,10 @@
 2007-08-29  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/alsa/gstalsa.c:
+	  Fix typo and compilation on big endian systems.
+
+2007-08-29  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/subparse/gstssaparse.c:
 	  Convert SSA newline codes into actual newline characters (#470766).
 

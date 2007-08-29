@@ -96,9 +96,9 @@ static const struct
 #if (G_BYTE_ORDER == G_LITTLE_ENDIAN)   /* no endian-unspecific enum available */
   24, 24, SND_PCM_FORMAT_S24_3LE, SND_PCM_FORMAT_U24_3LE}, {
 #else
-24, 24, SND_PCM_FORMAT_S24_3BE, SND_PCM_FORMAT_U24_3BE},}
+  24, 24, SND_PCM_FORMAT_S24_3BE, SND_PCM_FORMAT_U24_3BE}, {
 #endif
-32, 32, SND_PCM_FORMAT_S32, SND_PCM_FORMAT_U32}
+  32, 32, SND_PCM_FORMAT_S32, SND_PCM_FORMAT_U32}
 };
 
 static GstCaps *
