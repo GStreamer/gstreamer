@@ -942,6 +942,7 @@ again:
       if (priv->eos)
         goto do_eos;
     }
+    /* wait for packets or flushing now */
     JBUF_WAIT_CHECK (priv, flushing);
   }
 
@@ -1004,7 +1005,6 @@ again:
     running_time = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME,
         timestamp);
 
-    /* correct for sync against the gstreamer clock, add latency */
     GST_OBJECT_LOCK (jitterbuffer);
     clock = GST_ELEMENT_CLOCK (jitterbuffer);
     if (!clock) {
@@ -1013,7 +1013,7 @@ again:
       goto push_buffer;
     }
 
-    /* add latency */
+    /* add latency, this includes our own latency and the peer latency. */
     running_time += (priv->latency_ms * GST_MSECOND);
     running_time += priv->peer_latency;
 
@@ -1050,7 +1050,7 @@ again:
     if (ret == GST_CLOCK_UNSCHEDULED) {
       GST_DEBUG_OBJECT (jitterbuffer,
           "Wait got unscheduled, will retry to push with new buffer");
-      /* reinserting popped buffer into queue */
+      /* reinsert popped buffer into queue */
       if (!rtp_jitter_buffer_insert (priv->jbuf, outbuf)) {
         GST_DEBUG_OBJECT (jitterbuffer,
             "Duplicate packet #%d detected, dropping", seqnum);

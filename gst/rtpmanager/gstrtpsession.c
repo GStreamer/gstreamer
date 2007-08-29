@@ -227,10 +227,15 @@ struct _GstRtpSessionPrivate
 {
   GMutex *lock;
   RTPSession *session;
+
   /* thread for sending out RTCP */
   GstClockID id;
   gboolean stop_thread;
   GThread *thread;
+
+  /* caps mapping */
+  guint8 pt;
+  gint clock_rate;
 };
 
 /* callbacks to handle actions from the session manager */
@@ -657,6 +662,7 @@ gst_rtp_session_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      priv->clock_rate = -1;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
@@ -778,6 +784,31 @@ gst_rtp_session_send_rtcp (RTPSession * sess, RTPSource * src,
   return result;
 }
 
+static gboolean
+gst_rtp_session_parse_caps (GstRtpSession * rtpsession, GstCaps * caps)
+{
+  GstRtpSessionPrivate *priv;
+  const GstStructure *caps_struct;
+
+  priv = rtpsession->priv;
+
+  GST_DEBUG_OBJECT (rtpsession, "parsing caps");
+
+  caps_struct = gst_caps_get_structure (caps, 0);
+  if (!gst_structure_get_int (caps_struct, "clock-rate", &priv->clock_rate))
+    goto no_clock_rate;
+
+  GST_DEBUG_OBJECT (rtpsession, "parsed clock-rate %d", priv->clock_rate);
+
+  return TRUE;
+
+  /* ERRORS */
+no_clock_rate:
+  {
+    GST_DEBUG_OBJECT (rtpsession, "No clock-rate in caps!");
+    return FALSE;
+  }
+}
 
 /* called when the session manager needs the clock rate */
 static gint
@@ -786,12 +817,17 @@ gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
 {
   gint result = -1;
   GstRtpSession *rtpsession;
+  GstRtpSessionPrivate *priv;
   GValue ret = { 0 };
   GValue args[2] = { {0}, {0} };
   GstCaps *caps;
-  const GstStructure *caps_struct;
 
   rtpsession = GST_RTP_SESSION_CAST (user_data);
+  priv = rtpsession->priv;
+
+  /* if we have it, return it */
+  if (priv->clock_rate != -1)
+    return priv->clock_rate;
 
   g_value_init (&args[0], GST_TYPE_ELEMENT);
   g_value_set_object (&args[0], rtpsession);
@@ -808,11 +844,10 @@ gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
   if (!caps)
     goto no_caps;
 
-  caps_struct = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (caps_struct, "clock-rate", &result))
-    goto no_clock_rate;
+  if (!gst_rtp_session_parse_caps (rtpsession, caps))
+    goto parse_failed;
 
-  GST_DEBUG_OBJECT (rtpsession, "parsed clock-rate %d", result);
+  result = priv->clock_rate;
 
   return result;
 
@@ -822,9 +857,9 @@ no_caps:
     GST_DEBUG_OBJECT (rtpsession, "could not get caps");
     return -1;
   }
-no_clock_rate:
+parse_failed:
   {
-    GST_DEBUG_OBJECT (rtpsession, "could not clock-rate from caps");
+    GST_DEBUG_OBJECT (rtpsession, "failed to parse caps");
     return -1;
   }
 }
@@ -885,6 +920,23 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
   gst_object_unref (rtpsession);
 
   return ret;
+}
+
+static gboolean
+gst_rtp_session_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  gboolean res;
+  GstRtpSession *rtpsession;
+  GstRtpSessionPrivate *priv;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  priv = rtpsession->priv;
+
+  res = gst_rtp_session_parse_caps (rtpsession, caps);
+
+  gst_object_unref (rtpsession);
+
+  return res;
 }
 
 /* receive a packet from a sender, send it to the RTP session manager and
@@ -1051,6 +1103,8 @@ create_recv_rtp_sink (GstRtpSession * rtpsession)
       gst_rtp_session_chain_recv_rtp);
   gst_pad_set_event_function (rtpsession->recv_rtp_sink,
       gst_rtp_session_event_recv_rtp_sink);
+  gst_pad_set_setcaps_function (rtpsession->recv_rtp_sink,
+      gst_rtp_session_sink_setcaps);
   gst_pad_set_active (rtpsession->recv_rtp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->recv_rtp_sink);
@@ -1109,6 +1163,8 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
       gst_rtp_session_chain_send_rtp);
   gst_pad_set_event_function (rtpsession->send_rtp_sink,
       gst_rtp_session_event_send_rtp_sink);
+  gst_pad_set_setcaps_function (rtpsession->send_rtp_sink,
+      gst_rtp_session_sink_setcaps);
   gst_pad_set_active (rtpsession->send_rtp_sink, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpsession),
       rtpsession->send_rtp_sink);
