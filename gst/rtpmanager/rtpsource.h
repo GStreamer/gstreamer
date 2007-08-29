@@ -139,6 +139,8 @@ struct _RTPSource {
   GstClockTime  bye_time;
   GstClockTime  last_activity;
   GstClockTime  last_rtp_activity;
+  GstClockTime  last_timestamp;
+  GstClockTime  last_rtptime;
 
   GQueue       *packets;
 

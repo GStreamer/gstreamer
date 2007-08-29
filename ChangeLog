@@ -1,5 +1,25 @@
 2007-08-28  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtpmanager/gstrtpsession.c: (stop_rtcp_thread),
+	(gst_rtp_session_change_state),
+	(gst_rtp_session_event_send_rtp_sink):
+	* gst/rtpmanager/gstrtpsession.h:
+	Distribute synchronisation parameters to the session manager so that it
+	can generate correct SR packets for lip-sync.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_set_base_time),
+	(rtp_session_set_timestamp_sync), (session_start_rtcp):
+	* gst/rtpmanager/rtpsession.h:
+	Add methods for setting sync parameters.
+	Set correct RTP time in SR packets using the sync params.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_send_rtp):
+	* gst/rtpmanager/rtpsource.h:
+	Record last RTP <-> GST timestamp so that we can use them to convert NTP
+	to RTP timestamps in SR packets.
+
+2007-08-28  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_clear_pt_map):
 	Add some more advanced example pipelines.
 

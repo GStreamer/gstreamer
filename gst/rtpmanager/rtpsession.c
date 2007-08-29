@@ -1048,8 +1048,8 @@ ignore:
 }
 
 /* A Sender report contains statistics about how the sender is doing. This
- * includes timing informataion about the relation between RTP and NTP
- * timestamps is it using and the number of packets/bytes it sent to us.
+ * includes timing informataion such as the relation between RTP and NTP
+ * timestamps and the number of packets/bytes it sent to us.
  *
  * In this report is also included a set of report blocks related to how this
  * sender is receiving data (in case we (or somebody else) is also sending stuff
@@ -1429,6 +1429,36 @@ invalid_packet:
   }
 }
 
+/**
+ * rtp_session_set_send_sync
+ * @sess: an #RTPSession
+ * @base_time: the clock base time
+ * @start_time: the timestamp start time
+ *
+ * Establish a relation between the times returned by the get_time callback and
+ * the buffer timestamps. This information is used to convert the NTP times to
+ * RTP timestamps.
+ */
+void
+rtp_session_set_base_time (RTPSession * sess, GstClockTime base_time)
+{
+  g_return_if_fail (RTP_IS_SESSION (sess));
+
+  RTP_SESSION_LOCK (sess);
+  sess->base_time = base_time;
+  RTP_SESSION_UNLOCK (sess);
+}
+
+void
+rtp_session_set_timestamp_sync (RTPSession * sess, GstClockTime start_timestamp)
+{
+  g_return_if_fail (RTP_IS_SESSION (sess));
+
+  RTP_SESSION_LOCK (sess);
+  sess->start_timestamp = start_timestamp;
+  RTP_SESSION_UNLOCK (sess);
+}
+
 static GstClockTime
 calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
     gboolean first)
@@ -1575,16 +1605,56 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
   if (RTP_SOURCE_IS_SENDER (own)) {
     guint64 ntptime;
     guint32 rtptime;
+    GstClockTime running_time;
+    GstClockTimeDiff diff;
 
     /* we are a sender, create SR */
     GST_DEBUG ("create SR for SSRC %08x", own->ssrc);
     gst_rtcp_buffer_add_packet (data->rtcp, GST_RTCP_TYPE_SR, packet);
 
-    /* convert clock time to NTP time */
+    /* use the sync params to interpollate the date->time member to rtptime. We
+     * use the last sent timestamp and rtptime as reference points. We assume
+     * that the slope of the rtptime vs timestamp curve is 1, which is certainly
+     * sufficient for the frequency at which we report SR and the rate we send
+     * out RTP packets. */
+    rtptime = own->last_rtptime;
+    GST_DEBUG ("last_timestamp %" GST_TIME_FORMAT ", last_rtptime %"
+        G_GUINT32_FORMAT, GST_TIME_ARGS (own->last_timestamp), rtptime);
+
+    if (own->clock_rate != -1) {
+      /* Start by calculating the running_time of the timestamp, this is a result
+       * in nanoseconds. */
+      running_time =
+          (own->last_timestamp - sess->start_timestamp) + sess->base_time;
+
+      /* get the diff with the SR time */
+      diff = GST_CLOCK_DIFF (running_time, data->time);
+
+      /* now translate the diff to RTP time, handle positive and negative cases.
+       * If there is no diff, we already set rtptime correctly above. */
+      if (diff > 0) {
+        GST_DEBUG ("running_time %" GST_TIME_FORMAT ", diff %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (running_time), GST_TIME_ARGS (diff));
+        rtptime += gst_util_uint64_scale (diff, own->clock_rate, GST_SECOND);
+      } else {
+        diff = -diff;
+        GST_DEBUG ("running_time %" GST_TIME_FORMAT ", diff -%" GST_TIME_FORMAT,
+            GST_TIME_ARGS (running_time), GST_TIME_ARGS (diff));
+        rtptime -= gst_util_uint64_scale (diff, own->clock_rate, GST_SECOND);
+      }
+    } else {
+      GST_WARNING ("no clock-rate, cannot interpollate rtp time");
+    }
+
+    /* convert clock time to NTP time. upper 32 bits should contain the seconds
+     * and the lower 32 bits, the fractions of a second. */
     ntptime = gst_util_uint64_scale (data->time, (1LL << 32), GST_SECOND);
+    /* conversion from unix timestamp (seconds since 1970) to NTP (seconds
+     * since 1900). FIXME nothing says that the time is in unix timestamps. */
     ntptime += (2208988800LL << 32);
 
-    rtptime = 0;
+    GST_DEBUG ("NTP %08x:%08x, RTP %" G_GUINT32_FORMAT,
+        (guint32) (ntptime >> 32), (guint32) (ntptime & 0xffffffff), rtptime);
 
     /* fill in sender report info, FIXME RTP timestamps missing */
     gst_rtcp_packet_sr_set_sender_info (packet, own->ssrc,

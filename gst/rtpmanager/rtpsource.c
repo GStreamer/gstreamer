@@ -456,6 +456,7 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer)
 {
   GstFlowReturn result = GST_FLOW_OK;
   guint len;
+  GstClockTime timestamp;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
@@ -469,18 +470,32 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer)
   src->stats.packets_sent++;
   src->stats.octets_sent += len;
 
+  /* we keep track of the last received RTP timestamp and the corresponding
+   * GStreamer timestamp so that we can convert NTP time to RTP time when
+   * sending SR reports */
+  src->last_rtptime = gst_rtp_buffer_get_timestamp (buffer);
+
+  /* the timestamp can be undefined, in that case we use any previously
+   * received timestamp */
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  if (timestamp != -1)
+    src->last_timestamp = timestamp;
+
   /* push packet */
   if (src->callbacks.push_rtp) {
     guint32 ssrc;
 
     ssrc = gst_rtp_buffer_get_ssrc (buffer);
     if (ssrc != src->ssrc) {
-      GST_DEBUG ("updating SSRC from %u to %u", ssrc, src->ssrc);
+      /* the SSRC of the packet is not correct, make a writable buffer and
+       * update the SSRC. This could involve a complete copy of the packet when
+       * it is not writable. Usually the payloader will use caps negotiation to
+       * get the correct SSRC. */
       buffer = gst_buffer_make_writable (buffer);
 
+      GST_DEBUG ("updating SSRC from %u to %u", ssrc, src->ssrc);
       gst_rtp_buffer_set_ssrc (buffer, src->ssrc);
     }
-
     GST_DEBUG ("pushing RTP packet %" G_GUINT64_FORMAT,
         src->stats.packets_sent);
     result = src->callbacks.push_rtp (src, buffer, src->user_data);
