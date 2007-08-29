@@ -1,3 +1,9 @@
+2007-08-29  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/switch/gstswitch.c (gst_switch_chain, gst_switch_set_property):
+	If all information is known at time of setting start-time
+	property, send new segments then.
+
 2007-08-28  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtpmanager/gstrtpsession.c: (stop_rtcp_thread),

@@ -252,7 +252,12 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
           GST_SWITCH_UNLOCK (gstswitch);
           gst_pad_push_event (gstswitch->srcpad, newsegment_event);
           GST_SWITCH_LOCK (gstswitch);
+        } else {
+          GST_WARNING_OBJECT (gstswitch,
+              "Sinkpad %s:%s had no previous new segment!",
+              GST_DEBUG_PAD_NAME (gstswitch->previous_sinkpad));
         }
+
       }
       gst_object_unref (GST_OBJECT (gstswitch->previous_sinkpad));
       gstswitch->previous_sinkpad = NULL;
@@ -271,20 +276,15 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
 
       gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
           &format, &start, &stop, &position);
-      if (gstswitch->start_value != GST_CLOCK_TIME_NONE &&
-          gstswitch->start_value <= GST_BUFFER_TIMESTAMP (buf)) {
+      if (gstswitch->start_value <= GST_BUFFER_TIMESTAMP (buf)
+          && gstswitch->start_value != GST_CLOCK_TIME_NONE) {
         start = gstswitch->start_value;
       } else {
         start = GST_BUFFER_TIMESTAMP (buf);
       }
       if (start == GST_CLOCK_TIME_NONE) {
-
-        /*GST_ELEMENT_ERROR (gstswitch, STREAM, FAILED, (NULL), ( */
-            g_critical ("Cannot send "
-            "new segment event because start value is GST_CLOCK_TIME_NONE");    /*); */
         GST_WARNING_OBJECT (gstswitch,
             "new segment event requested to be sent but start value is NONE");
-
       }
       newsegment_event = gst_event_new_new_segment_full (FALSE, rate,
           applied_rate, format, start, stop, position);
@@ -296,14 +296,17 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
       GST_DEBUG_OBJECT (gstswitch,
           "Sending new segment with start of %" G_GUINT64_FORMAT, start);
     } else {
-      GST_WARNING_OBJECT (pad,
-          "Couldn't find new segment for pad in hashtable");
+      GST_WARNING_OBJECT (gstswitch,
+          "Couldn't find new segment for pad %s:%s in hashtable",
+          GST_PAD_NAME (pad));
     }
     /* reset stop and start value */
     gstswitch->start_value = GST_CLOCK_TIME_NONE;
     gstswitch->stop_value = GST_CLOCK_TIME_NONE;
     /* send all the stored buffers if any */
-    buffers = g_hash_table_lookup (gstswitch->stored_buffers, active_sinkpad);
+    buffers =
+        g_hash_table_lookup (gstswitch->stored_buffers,
+        gstswitch->active_sinkpad);
     while (buffers != NULL) {
       gst_buffer_ref (GST_BUFFER (buffers->data));
       GST_SWITCH_UNLOCK (gstswitch);
@@ -311,8 +314,9 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
       GST_SWITCH_LOCK (gstswitch);
       buffers = buffers->next;
     }
-    g_hash_table_remove (gstswitch->stored_buffers, active_sinkpad);
+    g_hash_table_remove (gstswitch->stored_buffers, gstswitch->active_sinkpad);
   }
+
   gstswitch->last_ts = GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
   if (!gstswitch->queue_buffers) {
     /* forward */
@@ -417,6 +421,88 @@ gst_switch_set_property (GObject * object, guint prop_id,
     case ARG_START_VALUE:
       GST_SWITCH_LOCK (gstswitch);
       gstswitch->start_value = g_value_get_uint64 (value);
+      /* let's send new segment here instead of waiting for the next buffer
+       * as we know the start value for the new segment */
+      /* check if we need to send a new segment event */
+      if (gstswitch->start_value != GST_CLOCK_TIME_NONE &&
+          gstswitch->need_to_send_newsegment) {
+        GstEvent *event;
+
+        /* check to see if we need to send a new segment update for stop */
+        if (gstswitch->previous_sinkpad != NULL) {
+          if (gstswitch->stop_value != GST_CLOCK_TIME_NONE) {
+            GstEvent *prev_newsegment =
+                (GstEvent *) g_hash_table_lookup (gstswitch->newsegment_events,
+                gstswitch->previous_sinkpad);
+
+            if (prev_newsegment) {
+              /* need to send a new segment update changing stop */
+              gboolean update;
+              gdouble rate, applied_rate;
+              GstFormat format;
+              gint64 start, stop, position;
+              GstEvent *newsegment_event;
+
+              gst_event_parse_new_segment_full (prev_newsegment, &update, &rate,
+                  &applied_rate, &format, &start, &stop, &position);
+              GST_DEBUG_OBJECT (gstswitch,
+                  "Sending new segment update with stop of %" G_GUINT64_FORMAT
+                  "and start of %" G_GUINT64_FORMAT, gstswitch->stop_value,
+                  gstswitch->current_start);
+              newsegment_event = gst_event_new_new_segment_full (TRUE, rate,
+                  applied_rate, format, gstswitch->current_start,
+                  gstswitch->stop_value, position);
+              GST_SWITCH_UNLOCK (gstswitch);
+              gst_pad_push_event (gstswitch->srcpad, newsegment_event);
+              GST_SWITCH_LOCK (gstswitch);
+            } else {
+              GST_WARNING_OBJECT (gstswitch,
+                  "Sinkpad %s:%s had no previous new segment!",
+                  GST_DEBUG_PAD_NAME (gstswitch->previous_sinkpad));
+            }
+
+          }
+          gst_object_unref (GST_OBJECT (gstswitch->previous_sinkpad));
+          gstswitch->previous_sinkpad = NULL;
+        }
+        /* retrieve event from hash table */
+        event =
+            (GstEvent *) g_hash_table_lookup (gstswitch->newsegment_events,
+            gstswitch->active_sinkpad);
+        if (event) {
+          /* create a copy of this event so we can change start to match
+           * the start time of this buffer */
+          gboolean update;
+          gdouble rate, applied_rate;
+          GstFormat format;
+          gint64 start, stop, position;
+          GstEvent *newsegment_event;
+
+          gst_event_parse_new_segment_full (event, &update, &rate,
+              &applied_rate, &format, &start, &stop, &position);
+          start = gstswitch->start_value;
+          if (start == GST_CLOCK_TIME_NONE) {
+            GST_WARNING_OBJECT (gstswitch,
+                "new segment event requested to be sent but start value is NONE");
+          }
+          newsegment_event = gst_event_new_new_segment_full (FALSE, rate,
+              applied_rate, format, start, stop, position);
+          GST_SWITCH_UNLOCK (gstswitch);
+          gst_pad_push_event (gstswitch->srcpad, newsegment_event);
+          GST_SWITCH_LOCK (gstswitch);
+          gstswitch->need_to_send_newsegment = FALSE;
+          gstswitch->current_start = start;
+          GST_DEBUG_OBJECT (gstswitch,
+              "Sending new segment with start of %" G_GUINT64_FORMAT, start);
+        } else {
+          GST_WARNING_OBJECT (gstswitch,
+              "Couldn't find new segment for pad %s:%s in hashtable",
+              GST_PAD_NAME (gstswitch->active_sinkpad));
+        }
+        /* reset stop and start value */
+        gstswitch->start_value = GST_CLOCK_TIME_NONE;
+        gstswitch->stop_value = GST_CLOCK_TIME_NONE;
+      }
       GST_SWITCH_UNLOCK (gstswitch);
       break;
     case ARG_STOP_VALUE:
@@ -427,6 +513,23 @@ gst_switch_set_property (GObject * object, guint prop_id,
     case ARG_QUEUE_BUFFERS:
       GST_SWITCH_LOCK (gstswitch);
       gstswitch->queue_buffers = g_value_get_boolean (value);
+      if (!gstswitch->queue_buffers && !gstswitch->need_to_send_newsegment) {
+        GList *buffers;
+
+        /* send all the stored buffers if any */
+        buffers =
+            g_hash_table_lookup (gstswitch->stored_buffers,
+            gstswitch->active_sinkpad);
+        while (buffers != NULL) {
+          gst_buffer_ref (GST_BUFFER (buffers->data));
+          GST_SWITCH_UNLOCK (gstswitch);
+          gst_pad_push (gstswitch->srcpad, GST_BUFFER (buffers->data));
+          GST_SWITCH_LOCK (gstswitch);
+          buffers = buffers->next;
+        }
+        g_hash_table_remove (gstswitch->stored_buffers,
+            gstswitch->active_sinkpad);
+      }
       GST_SWITCH_UNLOCK (gstswitch);
       break;
     default:
