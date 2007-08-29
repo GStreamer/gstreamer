@@ -1,3 +1,21 @@
+2007-08-29  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_loop):
+	Improve Comments.
+
+	* gst/rtpmanager/gstrtpsession.c: (stop_rtcp_thread),
+	(gst_rtp_session_change_state), (gst_rtp_session_parse_caps),
+	(gst_rtp_session_clock_rate), (gst_rtp_session_sink_setcaps),
+	(gst_rtp_session_event_send_rtp_sink), (create_recv_rtp_sink),
+	(create_send_rtp_sink):
+	Also parse the sink caps for clock-rate instead of only relying on the
+	result of the signal.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_send_rtp):
+	Make sure we fetch the clock rate for payloads we are sending out so
+	that we can use it for SR reports.
+
 2007-08-29  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/switch/gstswitch.c (gst_switch_chain, gst_switch_set_property):

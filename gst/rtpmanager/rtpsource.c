@@ -481,6 +481,9 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer)
   if (timestamp != -1)
     src->last_timestamp = timestamp;
 
+  if (src->clock_rate == -1)
+    get_clock_rate (src, gst_rtp_buffer_get_payload_type (buffer));
+
   /* push packet */
   if (src->callbacks.push_rtp) {
     guint32 ssrc;
