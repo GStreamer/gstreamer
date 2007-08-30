@@ -1,19 +1,3 @@
-if HAVE_REGEX_H
-if HAVE_LIBXML_HTML
-SUBPARSE = subparse
-else
-SUBPARSE =
-endif
-else
-SUBPARSE =
-endif
-
-if HAVE_SYS_SOCKET_H
-TCP = tcp
-else
-TCP =
-endif
-
-SUBDIRS = $(GST_PLUGINS_SELECTED) $(SUBPARSE) $(TCP)
+SUBDIRS = $(GST_PLUGINS_SELECTED)
 DIST_SUBDIRS = $(GST_PLUGINS_ALL) subparse tcp
 

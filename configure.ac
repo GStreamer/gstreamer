@@ -213,12 +213,25 @@ if test "x$HAVE_REGEX_H" = "xyes"; then
                      ]), HAVE_LIBXML_HTML=yes, HAVE_LIBXML_HTML=no)
   AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
   CPPFLAGS="$ac_cppflags_save"
+  
+  if test "x$HAVE_LIBXML_HTML" = "xyes"; then
+    GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED subparse"
+  else
+    GST_PLUGINS_NO="\t[subparse]\n$GST_PLUGINS_NO"
+  fi
+else
+  GST_PLUGINS_NO="\t[subparse]\n$GST_PLUGINS_NO"
 fi
 
 dnl used in gst/tcp
 AC_CHECK_HEADERS([sys/socket.h], 
   HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")
 AM_CONDITIONAL(HAVE_SYS_SOCKET_H, test "x$HAVE_SYS_SOCKET_H" = "xyes")
+if test "x$HAVE_SYS_SOCKET_H" = "xyes"; then
+  GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED tcp"
+else
+  GST_PLUGINS_NO="\t[tcp]\n$GST_PLUGINS_NO"
+fi
 
 dnl used in gst-libs/gst/rtsp
 AC_CHECK_HEADERS([winsock2.h], HAVE_WINSOCK2_H=yes)

@@ -1,5 +1,14 @@
 2007-08-30  Stefan Kost  <ensonic@users.sf.net>
 
+	* configure.ac:
+	* gst/Makefile.am:
+	  The tcp and subparse plugins are under gst, but not totaly free of
+	  dependencies. Handle selection inconfigure.ac, so that they show up
+	  on the final list of what is build and what is not. Maybe they should
+	  better be moved to ext.
+
+2007-08-30  Stefan Kost  <ensonic@users.sf.net>
+
 	Patch by: Daniel Díaz  <yosoy@danieldiaz.org>
 
 	* configure.ac:
