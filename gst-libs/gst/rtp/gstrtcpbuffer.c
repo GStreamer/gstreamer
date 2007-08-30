@@ -1107,7 +1107,13 @@ gst_rtcp_packet_sdes_next_entry (GstRTCPPacket * packet)
  * @len: result length of the entry data
  * @data: result entry data
  *
- * Get the data of the current SDES item entry.
+ * Get the data of the current SDES item entry. @type (when not NULL) will
+ * contain the type of the entry. @data (when not NULL) will point to @len
+ * bytes.
+ *
+ * When @type refers to a text item, @data will point to a UTF8 string. Note
+ * that this UTF8 string is NOT null-terminated. Use
+ * gst_rtcp_packet_sdes_copy_entry() to get a null-termined copy of the entry.
  *
  * Returns: %TRUE if there was valid data.
  */
@@ -1138,7 +1144,45 @@ gst_rtcp_packet_sdes_get_entry (GstRTCPPacket * packet,
   if (len)
     *len = bdata[offset + 1];
   if (data)
-    *data = g_memdup (&bdata[offset + 2], bdata[offset + 1]);
+    *data = &bdata[offset + 2];
+
+  return TRUE;
+}
+
+/**
+ * gst_rtcp_packet_sdes_copy_entry:
+ * @packet: a valid SDES #GstRTCPPacket
+ * @type: result of the entry type
+ * @len: result length of the entry data
+ * @data: result entry data
+ *
+ * This function is like gst_rtcp_packet_sdes_get_entry() but it returns a
+ * null-terminated copy of the data instead. use g_free() after usage.
+ *
+ * Returns: %TRUE if there was valid data.
+ */
+gboolean
+gst_rtcp_packet_sdes_copy_entry (GstRTCPPacket * packet,
+    GstRTCPSDESType * type, guint8 * len, guint8 ** data)
+{
+  guint8 *tdata;
+  guint8 tlen;
+
+  g_return_val_if_fail (packet != NULL, FALSE);
+  g_return_val_if_fail (packet->type == GST_RTCP_TYPE_SDES, FALSE);
+  g_return_val_if_fail (GST_IS_BUFFER (packet->buffer), FALSE);
+
+  if (!gst_rtcp_packet_sdes_get_entry (packet, type, &tlen, &tdata))
+    return FALSE;
+
+  if (len)
+    *len = tlen;
+  if (data) {
+    /* alloc string with room for null-byte */
+    *data = g_malloc (tlen + 1);
+    memcpy (*data, tdata, tlen);
+    (*data)[tlen] = '\0';
+  }
 
   return TRUE;
 }

@@ -1,3 +1,13 @@
+2007-08-30  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c:
+	(gst_rtcp_packet_sdes_get_entry),
+	(gst_rtcp_packet_sdes_copy_entry):
+	* gst-libs/gst/rtp/gstrtcpbuffer.h:
+	Fix and document SDES item data function.
+	Add new function that makes a proper copy of SDES item data.
+	API: gst_rtcp_packet_sdes_copy_entry()
+
 2007-08-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

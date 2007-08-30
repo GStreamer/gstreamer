@@ -215,6 +215,9 @@ gboolean        gst_rtcp_packet_sdes_next_entry       (GstRTCPPacket *packet);
 gboolean        gst_rtcp_packet_sdes_get_entry        (GstRTCPPacket *packet, 
                                                        GstRTCPSDESType *type, guint8 *len,
 						       guint8 **data);
+gboolean        gst_rtcp_packet_sdes_copy_entry       (GstRTCPPacket *packet, 
+                                                       GstRTCPSDESType *type, guint8 *len,
+						       guint8 **data);
 
 gboolean        gst_rtcp_packet_sdes_add_item         (GstRTCPPacket *packet, guint32 ssrc);
 gboolean        gst_rtcp_packet_sdes_add_entry        (GstRTCPPacket *packet, GstRTCPSDESType type, 
