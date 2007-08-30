@@ -200,6 +200,21 @@ dnl used in gst/subparse/gstsubparse.c
 AC_CHECK_HEADERS([regex.h], HAVE_REGEX_H="yes", HAVE_REGEX_H="no")
 AM_CONDITIONAL(HAVE_REGEX_H, test "x$HAVE_REGEX_H" = "xyes")
 
+if test "x$HAVE_REGEX_H" = "xyes"; then
+  ac_cppflags_save="$CPPFLAGS"
+  CPPFLAGS="-Wall -Werror `$PKG_CONFIG --cflags libxml-2.0`"
+  AC_COMPILE_IFELSE(
+    AC_LANG_PROGRAM([
+#include <libxml/HTMLparser.h>
+                     ],[
+#ifndef LIBXML_HTML_ENABLED
+#error libxml2 has no HTML support
+#endif /* LIBXML_HTML_ENABLED */
+                     ]), HAVE_LIBXML_HTML=yes, HAVE_LIBXML_HTML=no)
+  AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
+  CPPFLAGS="$ac_cppflags_save"
+fi
+
 dnl used in gst/tcp
 AC_CHECK_HEADERS([sys/socket.h], 
   HAVE_SYS_SOCKET_H="yes", HAVE_SYS_SOCKET_H="no")

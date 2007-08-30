@@ -1,5 +1,9 @@
 if HAVE_REGEX_H
+if HAVE_LIBXML_HTML
 SUBPARSE = subparse
+else
+SUBPARSE =
+endif
 else
 SUBPARSE =
 endif
@@ -12,3 +16,4 @@ endif
 
 SUBDIRS = $(GST_PLUGINS_SELECTED) $(SUBPARSE) $(TCP)
 DIST_SUBDIRS = $(GST_PLUGINS_ALL) subparse tcp
+
