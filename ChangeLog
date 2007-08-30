@@ -1,3 +1,18 @@
+2007-08-30  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	Add new methods to docs.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init),
+	(gst_base_sink_init), (gst_base_sink_set_ts_offset),
+	(gst_base_sink_get_ts_offset), (gst_base_sink_set_property),
+	(gst_base_sink_get_property), (gst_base_sink_wait_clock):
+	* libs/gst/base/gstbasesink.h:
+	Add ts-offset property to fine-tune the synchronisation.
+	API: GstBaseSink::ts-offset property
+	API: gst_base_sink_set_ts_offset()
+	API: gst_base_sink_get_ts_offset()
+
 2007-08-29  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init),

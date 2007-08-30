@@ -159,6 +159,7 @@ struct _GstBaseSinkPrivate
 {
   gint qos_enabled;             /* ATOMIC */
   gboolean async_enabled;
+  GstClockTimeDiff ts_offset;
 
   /* start, stop of current buffer, stream time, used to report position */
   GstClockTime current_sstart;
@@ -227,6 +228,7 @@ struct _GstBaseSinkPrivate
 #define DEFAULT_MAX_LATENESS		-1
 #define DEFAULT_QOS			FALSE
 #define DEFAULT_ASYNC			TRUE
+#define DEFAULT_TS_OFFSET		0
 
 enum
 {
@@ -235,7 +237,8 @@ enum
   PROP_SYNC,
   PROP_MAX_LATENESS,
   PROP_QOS,
-  PROP_ASYNC
+  PROP_ASYNC,
+  PROP_TS_OFFSET
 };
 
 static GstElementClass *parent_class = NULL;
@@ -363,6 +366,19 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_ASYNC,
       g_param_spec_boolean ("async", "Async",
           "Go asynchronously to PAUSED", DEFAULT_ASYNC, G_PARAM_READWRITE));
+  /**
+   * GstBaseSink:ts-offset
+   *
+   * Controls the final synchronisation, a negative value will render the buffer
+   * earlier while a positive value delays playback. This property can be 
+   * used to fix synchronisation in bad files.
+   *
+   * Since: 0.10.15
+   */
+  g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
+      g_param_spec_int64 ("ts-offset", "TS Offset",
+          "Timestamp offset in nanoseconds", G_MININT64, G_MAXINT64,
+          DEFAULT_TS_OFFSET, G_PARAM_READWRITE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_sink_change_state);
@@ -514,6 +530,7 @@ gst_base_sink_init (GstBaseSink * basesink, gpointer g_class)
   basesink->abidata.ABI.max_lateness = DEFAULT_MAX_LATENESS;
   gst_atomic_int_set (&priv->qos_enabled, DEFAULT_QOS);
   priv->async_enabled = DEFAULT_ASYNC;
+  priv->ts_offset = DEFAULT_TS_OFFSET;
 
   GST_OBJECT_FLAG_SET (basesink, GST_ELEMENT_IS_SINK);
 }
@@ -717,6 +734,52 @@ gst_base_sink_is_async_enabled (GstBaseSink * sink)
 }
 
 /**
+ * gst_base_sink_set_ts_offset:
+ * @sink: the sink
+ * @offset: the new offset
+ *
+ * Adjust the synchronisation of @sink with @offset. A negative value will
+ * render buffers earlier than their timestamp. A positive value will delay
+ * rendering. This function can be used to fix playback of badly timestamped
+ * buffers.
+ *
+ * Since: 0.10.15
+ */
+void
+gst_base_sink_set_ts_offset (GstBaseSink * sink, GstClockTimeDiff offset)
+{
+  g_return_if_fail (GST_IS_BASE_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  sink->priv->ts_offset = offset;
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_sink_get_ts_offset:
+ * @sink: the sink
+ *
+ * Get the synchronisation offset of @sink.
+ *
+ * Returns: The synchronisation offset.
+ *
+ * Since: 0.10.15
+ */
+GstClockTimeDiff
+gst_base_sink_get_ts_offset (GstBaseSink * sink)
+{
+  GstClockTimeDiff res;
+
+  g_return_val_if_fail (GST_IS_BASE_SINK (sink), 0);
+
+  GST_OBJECT_LOCK (sink);
+  res = sink->priv->ts_offset;
+  GST_OBJECT_UNLOCK (sink);
+
+  return res;
+}
+
+/**
  * gst_base_sink_get_latency:
  * @sink: the sink
  *
@@ -845,6 +908,9 @@ gst_base_sink_set_property (GObject * object, guint prop_id,
     case PROP_ASYNC:
       gst_base_sink_set_async_enabled (sink, g_value_get_boolean (value));
       break;
+    case PROP_TS_OFFSET:
+      gst_base_sink_set_ts_offset (sink, g_value_get_int64 (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -874,6 +940,9 @@ gst_base_sink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_ASYNC:
       g_value_set_boolean (value, gst_base_sink_is_async_enabled (sink));
+      break;
+    case PROP_TS_OFFSET:
+      g_value_set_int64 (value, gst_base_sink_get_ts_offset (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1247,6 +1316,7 @@ gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
   GstClockID id;
   GstClockReturn ret;
   GstClock *clock;
+  GstClockTimeDiff ts_offset;
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time)))
     goto invalid_time;
@@ -1261,6 +1331,17 @@ gst_base_sink_wait_clock (GstBaseSink * basesink, GstClockTime time,
   /* add base time and latency */
   time += GST_ELEMENT_CAST (basesink)->base_time;
   time += basesink->priv->latency;
+
+  /* apply offset, be carefull for underflows */
+  ts_offset = basesink->priv->ts_offset;
+  if (ts_offset < 0) {
+    ts_offset = -ts_offset;
+    if (ts_offset < time)
+      time -= ts_offset;
+    else
+      time = 0;
+  } else
+    time += ts_offset;
 
   id = gst_clock_new_single_shot_id (clock, time);
   GST_OBJECT_UNLOCK (basesink);
