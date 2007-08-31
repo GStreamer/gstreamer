@@ -182,6 +182,7 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
   gboolean res;
   GstStructure *caps_struct;
   const GValue *value;
+  guint val;
 
   filter = GST_BASE_RTP_DEPAYLOAD (gst_pad_get_parent (pad));
   priv = filter->priv;
@@ -193,9 +194,8 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
   caps_struct = gst_caps_get_structure (caps, 0);
 
   /* get clock base if any, we need this for the newsegment */
-  value = gst_structure_get_value (caps_struct, "clock-base");
-  if (value && G_VALUE_HOLDS_UINT (value))
-    priv->clock_base = g_value_get_uint (value);
+  if (gst_structure_get_uint (caps_struct, "clock-base", &val))
+    priv->clock_base = val;
   else
     priv->clock_base = -1;
 
@@ -391,7 +391,7 @@ static void
 gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     guint32 timestamp, GstBuffer * buf)
 {
-  GstClockTime ts, adjusted, exttimestamp;
+  GstClockTime ts, exttimestamp;
   GstBaseRTPDepayloadPrivate *priv;
 
   priv = filter->priv;
@@ -403,6 +403,13 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
   /* get extended timestamp */
   exttimestamp = gst_rtp_buffer_ext_timestamp (&priv->exttimestamp, timestamp);
 
+  /* subtract clock-base to get a 0 based timestamp. Make sure we don't go
+   * negative. */
+  if (exttimestamp > priv->clock_base)
+    exttimestamp -= priv->clock_base;
+  else
+    exttimestamp = 0;
+
   /* rtp timestamps are based on the clock_rate
    * gst timesamps are in nanoseconds */
   ts = gst_util_uint64_scale_int (exttimestamp, GST_SECOND, filter->clock_rate);
@@ -411,24 +418,18 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
       "timestamp: %u, exttimestamp %" G_GUINT64_FORMAT ", clockrate : %u",
       timestamp, exttimestamp, filter->clock_rate);
 
-  /* add delay to timestamp */
-  adjusted = ts + (filter->queue_delay * GST_MSECOND);
+  GST_DEBUG_OBJECT (filter, "RTP: %u, GST: %" GST_TIME_FORMAT ", ts %"
+      GST_TIME_FORMAT, timestamp, GST_TIME_ARGS (ts), GST_TIME_ARGS (ts));
 
-  GST_DEBUG_OBJECT (filter, "RTP: %u, GST: %" GST_TIME_FORMAT ", adjusted %"
-      GST_TIME_FORMAT, timestamp, GST_TIME_ARGS (ts), GST_TIME_ARGS (adjusted));
-
-  GST_BUFFER_TIMESTAMP (buf) = adjusted;
+  GST_BUFFER_TIMESTAMP (buf) = ts;
 
   /* if this is the first buf send a NEWSEGMENT */
   if (filter->need_newsegment) {
     GstEvent *event;
-    GstClockTime start, stop, position;
-
-    start = gst_util_uint64_scale_int (priv->clock_base, GST_SECOND,
-        filter->clock_rate);
+    GstClockTime stop, position;
 
     if (priv->npt_stop != -1)
-      stop = priv->npt_stop - priv->npt_start + start;
+      stop = priv->npt_stop - priv->npt_start;
     else
       stop = -1;
 
@@ -436,7 +437,7 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
 
     event =
         gst_event_new_new_segment_full (FALSE, priv->play_speed,
-        priv->play_scale, GST_FORMAT_TIME, start, stop, position);
+        priv->play_scale, GST_FORMAT_TIME, 0, stop, position);
 
     gst_pad_push_event (filter->srcpad, event);
 
