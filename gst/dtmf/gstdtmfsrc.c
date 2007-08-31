@@ -557,8 +557,8 @@ gst_dtmf_src_stop (GstDTMFSrc *dtmfsrc)
 
 
   g_async_queue_lock (dtmfsrc->event_queue);
-  event = g_malloc (sizeof(GstRTPDTMFSrcEvent));
-  event->event_type = RTP_DTMF_EVENT_TYPE_PAUSE_TASK;
+  event = g_malloc (sizeof(GstDTMFSrcEvent));
+  event->event_type = DTMF_EVENT_TYPE_PAUSE_TASK;
   g_async_queue_push_unlocked (dtmfsrc->event_queue, event);
   g_async_queue_unlock (dtmfsrc->event_queue);
 
