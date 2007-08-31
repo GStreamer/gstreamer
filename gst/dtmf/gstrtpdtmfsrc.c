@@ -612,10 +612,19 @@ gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
     dtmfsrc->clock_id = NULL;
   }
 
+  g_async_queue_lock (dtmfsrc->event_queue);
+  event = g_malloc (sizeof(GstRTPDTMFSrcEvent));
+  event->event_type = RTP_DTMF_EVENT_TYPE_PAUSE_TASK;
+  g_async_queue_push_unlocked (dtmfsrc->event_queue, event);
+  g_async_queue_unlock (dtmfsrc->event_queue);
+
+  event = NULL;
+
   if (!gst_pad_pause_task (dtmfsrc->srcpad)) {
     GST_ERROR_OBJECT (dtmfsrc, "Failed to pause task on src pad");
     return;
   }
+
 
   if (dtmfsrc->last_event) {
     /* Don't forget to release the stream lock */
@@ -632,10 +641,6 @@ gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
     event = g_async_queue_try_pop (dtmfsrc->event_queue);
   }
 
-  if (dtmfsrc->last_event) {
-    g_free (dtmfsrc->last_event);
-    dtmfsrc->last_event = NULL;
-  }
 
 }
 
@@ -813,6 +818,10 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
       event->sent_packets = 0;
 
       dtmfsrc->last_event = event;
+    } else if (event->event_type == RTP_DTMF_EVENT_TYPE_PAUSE_TASK) {
+      g_free (event);
+      g_async_queue_unref (dtmfsrc->event_queue);
+      return;
     }
   } else if (dtmfsrc->last_event->sent_packets * dtmfsrc->interval >=
       MIN_PULSE_DURATION){

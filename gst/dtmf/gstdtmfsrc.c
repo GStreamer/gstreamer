@@ -554,6 +554,16 @@ gst_dtmf_src_stop (GstDTMFSrc *dtmfsrc)
     dtmfsrc->clock_id = NULL;
   }
 
+
+
+  g_async_queue_lock (dtmfsrc->event_queue);
+  event = g_malloc (sizeof(GstRTPDTMFSrcEvent));
+  event->event_type = RTP_DTMF_EVENT_TYPE_PAUSE_TASK;
+  g_async_queue_push_unlocked (dtmfsrc->event_queue, event);
+  g_async_queue_unlock (dtmfsrc->event_queue);
+
+  event = NULL;
+
   if (!gst_pad_pause_task (dtmfsrc->srcpad)) {
     GST_ERROR_OBJECT (dtmfsrc, "Failed to pause task on src pad");
     return;
@@ -768,6 +778,10 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
 
       event->packet_count = 0;
       dtmfsrc->last_event = event;
+    } else if (event->event_type == RTP_DTMF_EVENT_TYPE_PAUSE_TASK) {
+      g_free (event);
+      g_async_queue_unref (dtmfsrc->event_queue);
+      return;
     }
   } else if (dtmfsrc->last_event->packet_count  * dtmfsrc->interval >=
       MIN_DUTY_CYCLE) {
