@@ -59,23 +59,24 @@ struct _GstBaseRTPDepayload
 
   GstPad *sinkpad, *srcpad;
 
-  /* lock to protect the queue */
+  /* lock to protect the queue, deprecated */
   GStaticRecMutex queuelock;
 
+  /* deprecated */
   gboolean thread_running;
-  /* the releaser thread */
+  /* the releaser thread, deprecated */
   GThread *thread;
 
   /* this attribute must be set by the child */
   guint clock_rate;
 
-  /* this value can be modified by the child if needed */
+  /* this value can be modified by the child if needed, deprecated */
   guint queue_delay;
 
   /* we will queue up to RTP_QUEUEDELAY ms of packets,
    * reordering them if necessary
    * dropping any packets that are more than
-   * RTP_QUEUEDELAY ms late */
+   * RTP_QUEUEDELAY ms late, deprecated */
   GQueue *queue;
 
   GstSegment segment;
@@ -95,7 +96,7 @@ struct _GstBaseRTPDepayloadClass
   gboolean (*set_caps) (GstBaseRTPDepayload *filter, GstCaps *caps);
 
   /* non-pure function, default implementation in base class
-   * this does buffering, reordering and dropping */
+   * this does buffering, reordering and dropping, deprecated */
   GstFlowReturn (*add_to_queue) (GstBaseRTPDepayload *filter, GstBuffer *in);
 
   /* pure virtual function, child must use this to process incoming
