@@ -1,3 +1,11 @@
+2007-08-31  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_flush_stop),
+	(gst_rtp_jitter_buffer_change_state), (gst_rtp_jitter_buffer_loop):
+	Use extended timestamp to release buffers from the jitterbuffer so that
+	we can handle the rtp wraparound correctly.
+
 2007-08-29  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
