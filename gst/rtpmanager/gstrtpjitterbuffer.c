@@ -149,6 +149,7 @@ struct _GstRtpJitterBufferPrivate
   /* clock rate and rtp timestamp offset */
   gint32 clock_rate;
   gint64 clock_base;
+  guint64 exttimestamp;
 
   /* when we are shutting down */
   GstFlowReturn srcresult;
@@ -531,6 +532,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->next_seqnum = -1;
   priv->clock_rate = -1;
   priv->eos = FALSE;
+  priv->exttimestamp = -1;
   JBUF_UNLOCK (priv);
 }
 
@@ -587,6 +589,7 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       priv->peer_latency = 0;
       /* block until we go to PLAYING */
       priv->blocked = TRUE;
+      priv->exttimestamp = -1;
       JBUF_UNLOCK (priv);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -925,6 +928,7 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
   guint32 rtp_time;
   GstClockTime timestamp;
   gint64 running_time;
+  guint64 exttimestamp;
 
   priv = jitterbuffer->priv;
 
@@ -951,8 +955,15 @@ again:
 
   seqnum = gst_rtp_buffer_get_seq (outbuf);
 
-  GST_DEBUG_OBJECT (jitterbuffer, "Popped buffer #%d, now %d left",
-      seqnum, rtp_jitter_buffer_num_packets (priv->jbuf));
+  /* get the max deadline to wait for the missing packets, this is the time
+   * of the currently popped packet */
+  rtp_time = gst_rtp_buffer_get_timestamp (outbuf);
+  exttimestamp = gst_rtp_buffer_ext_timestamp (&priv->exttimestamp, rtp_time);
+
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "Popped buffer #%d, rtptime %u, exttime %" G_GUINT64_FORMAT
+      ",now %d left", seqnum, rtp_time, exttimestamp,
+      rtp_jitter_buffer_num_packets (priv->jbuf));
 
   /* If we don't know what the next seqnum should be (== -1) we have to wait
    * because it might be possible that we are not receiving this buffer in-order,
@@ -980,26 +991,25 @@ again:
       GST_DEBUG_OBJECT (jitterbuffer, "First buffer %d, do sync", seqnum);
     }
 
-    /* get the max deadline to wait for the missing packets, this is the time
-     * of the currently popped packet */
-    rtp_time = gst_rtp_buffer_get_timestamp (outbuf);
-
-    GST_DEBUG_OBJECT (jitterbuffer, "rtp_time %u, base %" G_GINT64_FORMAT,
-        rtp_time, priv->clock_base);
+    GST_DEBUG_OBJECT (jitterbuffer,
+        "exttimestamp %" G_GUINT64_FORMAT ", base %" G_GINT64_FORMAT,
+        exttimestamp, priv->clock_base);
 
     /* if no clock_base was given, take first ts as base */
     if (priv->clock_base == -1)
-      priv->clock_base = rtp_time;
+      priv->clock_base = exttimestamp;
 
     /* take rtp timestamp offset into account, this can wrap around */
-    rtp_time -= priv->clock_base;
+    exttimestamp -= priv->clock_base;
 
     /* bring timestamp to gst time */
-    timestamp = gst_util_uint64_scale (GST_SECOND, rtp_time, priv->clock_rate);
+    timestamp =
+        gst_util_uint64_scale_int (exttimestamp, GST_SECOND, priv->clock_rate);
 
     GST_DEBUG_OBJECT (jitterbuffer,
-        "rtptime %u, clock-rate %u, timestamp %" GST_TIME_FORMAT, rtp_time,
-        priv->clock_rate, GST_TIME_ARGS (timestamp));
+        "exttimestamp %" G_GUINT64_FORMAT ", clock-rate %u, timestamp %"
+        GST_TIME_FORMAT, exttimestamp, priv->clock_rate,
+        GST_TIME_ARGS (timestamp));
 
     /* bring to running time */
     running_time = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME,
