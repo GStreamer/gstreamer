@@ -1177,12 +1177,8 @@ gst_rtcp_packet_sdes_copy_entry (GstRTCPPacket * packet,
 
   if (len)
     *len = tlen;
-  if (data) {
-    /* alloc string with room for null-byte */
-    *data = g_malloc (tlen + 1);
-    memcpy (*data, tdata, tlen);
-    (*data)[tlen] = '\0';
-  }
+  if (data)
+    *data = (guint8 *) g_strndup ((gchar *) tdata, tlen);
 
   return TRUE;
 }

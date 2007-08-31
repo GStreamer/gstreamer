@@ -215,6 +215,8 @@ gpointer        gst_rtp_buffer_get_payload      (GstBuffer *buffer);
 
 /* some helpers */
 guint32         gst_rtp_buffer_default_clock_rate (guint8 payload_type);
+gint            gst_rtp_buffer_compare_seqnum     (guint16 seqnum1, guint16 seqnum2);
+guint64         gst_rtp_buffer_ext_timestamp      (guint64 *exttimestamp, guint32 timestamp);
 
 G_END_DECLS
 

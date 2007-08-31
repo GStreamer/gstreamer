@@ -1,3 +1,17 @@
+2007-08-31  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c:
+	(gst_rtcp_packet_sdes_copy_entry):
+	Use g_strndup which does exactly what we want.
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtp_buffer_compare_seqnum),
+	(gst_rtp_buffer_ext_timestamp):
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	Add helper function to compare seqnums.
+	Add helper function to calculate extended timestamps.
+	API: gst_rtp_buffer_compare_seqnum()
+	API: gst_rtp_buffer_ext_timestamp()
+
 2007-08-30  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstrtcpbuffer.c:

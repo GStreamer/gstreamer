@@ -901,3 +901,74 @@ gst_rtp_buffer_default_clock_rate (guint8 payload_type)
       return -1;
   }
 }
+
+/**
+ * gst_rtp_buffer_compare_seqnum:
+ * @seqnum1: a sequence number
+ * @seqnum2: a sequence number
+ *
+ * Compare two sequence numbers, taking care of wraparounds.
+ *
+ * Returns: -1 if @seqnum1 is before @seqnum2, 0 if they are equal or 1 if
+ * @seqnum1 is bigger than @segnum2.
+ *
+ * Since: 0.10.15
+ */
+gint
+gst_rtp_buffer_compare_seqnum (guint16 seqnum1, guint16 seqnum2)
+{
+  /* check if diff more than half of the 16bit range */
+  if (abs (seqnum2 - seqnum1) > (1 << 15)) {
+    /* one of a/b has wrapped */
+    return seqnum1 - seqnum2;
+  } else {
+    return seqnum2 - seqnum1;
+  }
+}
+
+/**
+ * gst_rtp_buffer_ext_timestamp:
+ * @exttimestamp: a previous extended timestamp
+ * @timestamp: a new timestamp
+ *
+ * Update the @exttimestamp field with @timestamp. For the first call of the
+ * method, @exttimestamp should point to a location with a value of -1.
+ *
+ * This function makes sure that the returned value is a constantly increasing
+ * value even in the case where there is a timestamp wraparound.
+ *
+ * Returns: The extended timestamp of @timestamp.
+ *
+ * Since: 0.10.15
+ */
+guint64
+gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
+{
+  guint64 result, diff, ext;
+
+  g_return_val_if_fail (exttimestamp != NULL, -1);
+
+  ext = *exttimestamp;
+
+  if (ext == -1) {
+    result = timestamp;
+  } else {
+    /* pick wraparound counter from previous timestamp and add to new timestamp */
+    result = timestamp + (ext & ~(G_GINT64_CONSTANT (0xffffffff)));
+
+    /* check for timestamp wraparound */
+    if (result < ext)
+      diff = ext - result;
+    else
+      diff = result - ext;
+
+    if (diff > G_MAXINT32) {
+      /* timestamp went backwards more than allowed, we wrap around and get
+       * updated extended timestamp. */
+      result += (G_GINT64_CONSTANT (1) << 32);
+    }
+  }
+  *exttimestamp = result;
+
+  return result;
+}
