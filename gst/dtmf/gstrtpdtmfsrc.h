@@ -61,7 +61,8 @@ typedef struct _GstRTPDTMFSrcClass GstRTPDTMFSrcClass;
 
 enum _GstRTPDTMFEventType {
   RTP_DTMF_EVENT_TYPE_START,
-  RTP_DTMF_EVENT_TYPE_STOP
+  RTP_DTMF_EVENT_TYPE_STOP,
+  RTP_DTMF_EVENT_TYPE_PAUSE_TASK
 };
 
 typedef enum _GstRTPDTMFEventType GstRTPDTMFEventType;

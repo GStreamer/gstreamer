@@ -52,7 +52,8 @@ typedef struct _GstDTMFSrcClass GstDTMFSrcClass;
 
 enum _GstDTMFEventType {
   DTMF_EVENT_TYPE_START,
-  DTMF_EVENT_TYPE_STOP
+  DTMF_EVENT_TYPE_STOP,
+  DTMF_EVENT_TYPE_PAUSE_TASK
 };
 
 typedef enum _GstDTMFEventType GstDTMFEventType;
