@@ -778,7 +778,7 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
 
       event->packet_count = 0;
       dtmfsrc->last_event = event;
-    } else if (event->event_type == RTP_DTMF_EVENT_TYPE_PAUSE_TASK) {
+    } else if (event->event_type == DTMF_EVENT_TYPE_PAUSE_TASK) {
       g_free (event);
       g_async_queue_unref (dtmfsrc->event_queue);
       return;
