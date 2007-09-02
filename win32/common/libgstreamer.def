@@ -42,7 +42,8 @@ EXPORTS
 	gst_buffer_new_and_alloc
 	gst_buffer_set_caps
 	gst_buffer_span
-	gst_buffer_stamp  
+	gst_buffer_stamp
+	gst_bus_add_signal_watch
 	gst_bus_add_signal_watch_full
 	gst_bus_add_watch
 	gst_bus_add_watch_full

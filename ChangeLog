@@ -1,3 +1,8 @@
+2007-09-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* win32/common/libgstreamer.def:
+	  Export gst_bus_add_signal_watch too.
+
 2007-08-30  Wim Taymans  <wim.taymans@gmail.com>
 
 	* docs/libs/gstreamer-libs-sections.txt:
