@@ -1,30 +1,71 @@
-/* GStreamer MythTV Plug-in
- * Copyright (C) <2006> Rosfran Borges <rosfran.borges@indt.org.br>
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
- * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
- * Boston, MA 02111-1307, USA.
- */
 /*
- * When using the LiveTV content, put the location URI in the following
- * format:
+ * GStreamer MythTV Plug-in 
+ * Copyright (C) <2006> Rosfran Borges <rosfran.borges@indt.org.br>
+ * Copyright (C) <2007> Renato Filho <renato.filho@indt.org.br>  
+ * This library is free software; you can
+ * redistribute it and/or modify it under the terms of the GNU Library
+ * General Public License as published by the Free Software Foundation;
+ * either version 2 of the License, or (at your option) any later version.
+ * This library is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Library 
+ * General Public License for more details. You should have received a copy 
+ * of the GNU Library General Public License along with this library; if
+ * not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 
+ * 330, Boston, MA 02111-1307, USA. 
+ */
+
+/**
+ * SECTION:element-mythtvsrc
+ *
+ * <refsect2>
+ * <para>
+ * MythTVSrc allows to access a remote MythTV backend streaming Video/Audio server,
+ * and to render audio and video content through a TCP/IP connection to a specific
+ * port on this server, and based on a known MythTV protocol that is based on 
+ * some message passing, such as REQUEST_BLOCK on a specified number of bytes, to get
+ * some chunk of remote file data.
+ * You should pass the information aboute the remote MythTV backend server 
+ * through the <link linkend="GstMythTVSrc--location">location</link> property.
+ * </para>
+ * <title>Examples</title>
+ * <para>
+ * If you want to get the LiveTV content (set channel, TV tuner, RemoteEncoder, 
+ * Recorder),
+ * put the following URI:
  * 
- *     myth://mythtv:mythtv@xxx.xxx.xxx.xxx:6543/?mythconverg
+ * <programlisting> 
+ *  myth://xxx.xxx.xxx.xxx:6543/livetv?channel=BBC
+ * </programlisting>
+ *
+ * This URI will say to the gmyth library to configure the Recorder instance (used to
+ * change the channel, start the TV multimedia content transmition, etc.), using
+ * the IP address (xxx.xxx.xxx.xxx) and port number (6543) of the MythTV backend 
+ * server, and setting the channel name to "BBC". 
+ * 
+ * To get a already recorded the MythTV NUV file, put the following URI:
+ * 
+ * <programlisting>
+ *  myth://xxx.xxx.xxx.xxx:6543/filename.nuv
+ * </programlisting>
+ *
+ * This URI will say to the gmyth library to configure the Recorder instance (used to
+ * change the channel, start the TV multimedia content transmition, etc.), using
+ * the IP address (xxx.xxx.xxx.xxx) and port number (6543) of the MythTV backend 
+ * server, and setting the channel name to "BBC".
+ * 
+ * Another possible way to use the LiveTV content, and just in the case you want to 
+ * use the mysql database, put the location URI in the following format:
+ * 
+ * <programlisting> 
+ *  myth://mythtv:mythtv@xxx.xxx.xxx.xxx:6543/?mythconverg&channel=9
+ * </programlisting>
  * 
  * Where the first field is the protocol (myth), the second and third are user 
  * name (mythtv) and password (mythtv), then backend host name and port number, 
  * and the last field is the database name (mythconverg).
+ * </para>
+ * </refsect2>
  */
 
 #ifdef HAVE_CONFIG_H
@@ -32,7 +73,9 @@
 #endif
 
 #include "gstmythtvsrc.h"
+#include <gmyth/gmyth_file.h>
 #include <gmyth/gmyth_file_transfer.h>
+#include <gmyth/gmyth_file_local.h>
 #include <gmyth/gmyth_livetv.h>
 
 #include <gmyth/gmyth_socket.h>
@@ -42,47 +85,32 @@
 #include <unistd.h>
 
 GST_DEBUG_CATEGORY_STATIC (mythtvsrc_debug);
-#define GST_CAT_DEFAULT mythtvsrc_debug
-
-#define GST_GMYTHTV_ID_NUM                     1
-
-#define GST_GMYTHTV_CHANNEL_DEFAULT_NUM        (-1)
-
-#define GMYTHTV_VERSION_DEFAULT                30
-
-#define GMYTHTV_TRANSFER_MAX_WAITS             100
-
-#define GMYTHTV_TRANSFER_MAX_RESENDS           2
-
-#define GMYTHTV_TRANSFER_MAX_BUFFER            (128*1024)
-
-#define MAX_READ_SIZE                          (4*1024)
-
-#define GST_FLOW_ERROR_NO_DATA                 (-101)
-
-#define REQUEST_MAX_SIZE                       (64*1024)
-
-#define INTERNAL_BUFFER_SIZE                   (90*1024)
+#define GST_GMYTHTV_ID_NUM                  1
+#define GST_GMYTHTV_CHANNEL_DEFAULT_NUM     (-1)
+#define GMYTHTV_VERSION_DEFAULT		    30
+#define GMYTHTV_TRANSFER_MAX_WAITS          100
+#define GMYTHTV_TRANSFER_MAX_RESENDS        2
+#define GMYTHTV_TRANSFER_MAX_BUFFER         (128*1024)
+#define READ_SIZE                           (14*1024)
+#define READ_SIZE_LIVETV                    (80*1024)
+#define GST_FLOW_ERROR_NO_DATA              (-101)
 
 static const GstElementDetails gst_mythtv_src_details =
 GST_ELEMENT_DETAILS ("MythTV client source",
     "Source/Network",
     "Control and receive data as a client over the network "
     "via raw socket connections using the MythTV protocol",
-    "Rosfran Borges <rosfran.borges@indt.org.br>");
+    "Rosfran Borges <rosfran.borges@indt.org.br>,"
+    "Renato Filho <renato.filho@indt.org.br>");
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-nuv"));
-
+    GST_STATIC_CAPS_ANY);
 enum
 {
   PROP_0,
   PROP_LOCATION,
-#ifndef GST_DISABLE_GST_DEBUG
-  PROP_GMYTHTV_DBG,
-#endif
   PROP_GMYTHTV_VERSION,
   PROP_GMYTHTV_LIVE,
   PROP_GMYTHTV_LIVEID,
@@ -90,6 +118,8 @@ enum
   PROP_GMYTHTV_ENABLE_TIMING_POSITION,
   PROP_GMYTHTV_CHANNEL_NUM
 };
+
+static void gst_mythtv_src_clear (GstMythtvSrc * mythtv_src);
 
 static void gst_mythtv_src_finalize (GObject * gobject);
 
@@ -104,15 +134,13 @@ static gboolean gst_mythtv_src_is_seekable (GstBaseSrc * push_src);
 static gboolean gst_mythtv_src_do_seek (GstBaseSrc * base,
     GstSegment * segment);
 
-static gboolean gst_mythtv_src_next_program_chain (GstMythtvSrc * src);
-
 static GstStateChangeReturn
 gst_mythtv_src_change_state (GstElement * element, GstStateChange transition);
 
-static void gst_mythtv_src_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-static void gst_mythtv_src_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
+static void gst_mythtv_src_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec);
+static void gst_mythtv_src_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static void gst_mythtv_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -121,8 +149,8 @@ static gboolean gst_mythtv_src_handle_query (GstPad * pad, GstQuery * query);
 
 static gboolean gst_mythtv_src_handle_event (GstPad * pad, GstEvent * event);
 
-static gint do_read_request_response (GstMythtvSrc * src, guint size,
-    GByteArray * data_ptr);
+static GMythFileReadResult do_read_request_response (GstMythtvSrc * src,
+    guint size, GByteArray * data_ptr);
 
 static void
 _urihandler_init (GType type)
@@ -139,10 +167,8 @@ _urihandler_init (GType type)
 }
 
 GST_BOILERPLATE_FULL (GstMythtvSrc, gst_mythtv_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC, _urihandler_init);
-
-static void
-gst_mythtv_src_base_init (gpointer g_class)
+    GST_TYPE_PUSH_SRC, _urihandler_init)
+     static void gst_mythtv_src_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
@@ -175,9 +201,7 @@ gst_mythtv_src_class_init (GstMythtvSrcClass * klass)
       g_param_spec_string ("location", "Location",
           "The location. In the form:"
           "\n\t\t\tmyth://a.com/file.nuv"
-          "\n\t\t\tmyth://a.com:23223/file.nuv"
-          "\n\t\t\tmyth://a.com/?channel=123"
-          "\n\t\t\tmyth://a.com/?channel=Channel%203"
+          "\n\t\t\tmyth://a.com:23223/file.nuv "
           "\n\t\t\ta.com/file.nuv - default scheme 'myth'",
           "", G_PARAM_READWRITE));
 
@@ -206,27 +230,18 @@ gst_mythtv_src_class_init (GstMythtvSrcClass * klass)
       (gobject_class, PROP_GMYTHTV_ENABLE_TIMING_POSITION,
       g_param_spec_boolean ("mythtv-enable-timing-position",
           "mythtv-enable-timing-position",
-          "Enable MythTV Live TV content size continuous updating", FALSE,
-          G_PARAM_READWRITE));
+          "Enable MythTV Live TV content size continuous updating",
+          FALSE, G_PARAM_READWRITE));
 
   g_object_class_install_property
       (gobject_class, PROP_GMYTHTV_CHANNEL_NUM,
-      g_param_spec_int ("mythtv-channel", "mythtv-channel",
-          "Change MythTV channel number",
-          -1, 99999, GST_GMYTHTV_CHANNEL_DEFAULT_NUM, G_PARAM_READWRITE));
-
-#ifndef GST_DISABLE_GST_DEBUG
-  g_object_class_install_property
-      (gobject_class, PROP_GMYTHTV_DBG,
-      g_param_spec_boolean ("mythtv-debug", "mythtv-debug",
-          "Enable MythTV debug messages", FALSE, G_PARAM_READWRITE));
-#endif
+      g_param_spec_string ("mythtv-channel", "mythtv-channel",
+          "Change MythTV channel number", "", G_PARAM_READWRITE));
 
   gstbasesrc_class->start = gst_mythtv_src_start;
   gstbasesrc_class->stop = gst_mythtv_src_stop;
   gstbasesrc_class->get_size = gst_mythtv_src_get_size;
   gstbasesrc_class->is_seekable = gst_mythtv_src_is_seekable;
-
   gstbasesrc_class->do_seek = gst_mythtv_src_do_seek;
   gstpushsrc_class->create = gst_mythtv_src_create;
 
@@ -237,42 +252,25 @@ gst_mythtv_src_class_init (GstMythtvSrcClass * klass)
 static void
 gst_mythtv_src_init (GstMythtvSrc * this, GstMythtvSrcClass * g_class)
 {
-  this->file_transfer = NULL;
-
+  this->file = NULL;
   this->unique_setup = FALSE;
-
   this->mythtv_version = GMYTHTV_VERSION_DEFAULT;
-
   this->state = GST_MYTHTV_SRC_FILE_TRANSFER;
-
   this->bytes_read = 0;
-
   this->prev_content_size = 0;
-
   this->content_size = 0;
   this->read_offset = 0;
-
   this->content_size_last = 0;
-
   this->live_tv = FALSE;
-
   this->enable_timing_position = FALSE;
   this->update_prog_chain = FALSE;
-
   this->user_agent = g_strdup ("mythtvsrc");
-  this->mythtv_caps = NULL;
   this->update_prog_chain = FALSE;
-
-  this->channel_num = GST_GMYTHTV_CHANNEL_DEFAULT_NUM;
-
+  this->channel_name = NULL;
   this->eos = FALSE;
-
-  this->bytes_queue = NULL;
-
   this->wait_to_transfer = 0;
-
+  this->spawn_livetv = NULL;
   gst_base_src_set_format (GST_BASE_SRC (this), GST_FORMAT_BYTES);
-
   gst_pad_set_event_function (GST_BASE_SRC_PAD (GST_BASE_SRC (this)),
       gst_mythtv_src_handle_event);
   gst_pad_set_query_function (GST_BASE_SRC_PAD (GST_BASE_SRC (this)),
@@ -281,101 +279,105 @@ gst_mythtv_src_init (GstMythtvSrc * this, GstMythtvSrcClass * g_class)
 }
 
 static void
+gst_mythtv_src_clear (GstMythtvSrc * mythtv_src)
+{
+  mythtv_src->unique_setup = FALSE;
+
+  if (mythtv_src->spawn_livetv) {
+    g_object_unref (mythtv_src->spawn_livetv);
+    mythtv_src->spawn_livetv = NULL;
+  }
+
+  if (mythtv_src->file) {
+    g_object_unref (mythtv_src->file);
+    mythtv_src->file = NULL;
+  }
+
+  if (mythtv_src->backend_info) {
+    g_object_unref (mythtv_src->backend_info);
+    mythtv_src->backend_info = NULL;
+  }
+}
+
+static void
 gst_mythtv_src_finalize (GObject * gobject)
 {
   GstMythtvSrc *this = GST_MYTHTV_SRC (gobject);
 
-  if (this->mythtv_caps) {
-    gst_caps_unref (this->mythtv_caps);
-    this->mythtv_caps = NULL;
-  }
-
-  if (this->file_transfer) {
-    g_object_unref (this->file_transfer);
-    this->file_transfer = NULL;
-  }
-
-  if (this->spawn_livetv) {
-    g_object_unref (this->spawn_livetv);
-    this->spawn_livetv = NULL;
-  }
-
-  if (this->backend_info) {
-    g_object_unref (this->backend_info);
-    this->backend_info = NULL;
-  }
+  gst_mythtv_src_clear (this);
 
   if (this->uri_name) {
     g_free (this->uri_name);
+    this->uri_name = NULL;
   }
 
   if (this->user_agent) {
     g_free (this->user_agent);
-  }
-
-  if (this->bytes_queue) {
-    g_byte_array_free (this->bytes_queue, TRUE);
-    this->bytes_queue = NULL;
+    this->user_agent = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->finalize (gobject);
 }
 
-static gint
+static GMythFileReadResult
 do_read_request_response (GstMythtvSrc * src, guint size, GByteArray * data_ptr)
 {
   gint read = 0;
   guint sizetoread = size;
   gint max_iters = GMYTHTV_TRANSFER_MAX_RESENDS;
+  GMythFileReadResult result;
 
   GST_LOG_OBJECT (src, "Starting: Reading %d bytes...", sizetoread);
 
-  /* Loop sending the Myth File Transfer request:
-   * Retry whilst authentication fails and we supply it. */
-  gint len = 0;
+  result = GMYTH_FILE_READ_OK;
+  /*
+   * Loop sending the Myth File Transfer request: Retry whilst
+   * authentication fails and we supply it. 
+   */
 
   while (sizetoread == size && --max_iters > 0) {
+    /*
+     * if ( gmyth_backend_info_is_local_file(src->backend_info) ) 
+     */
+    if (IS_GMYTH_FILE_LOCAL (src->file))
+      result = gmyth_file_local_read (GMYTH_FILE_LOCAL (src->file),
+          data_ptr, sizetoread, src->live_tv);
+    else if (IS_GMYTH_FILE_TRANSFER (src->file))
+      result = gmyth_file_transfer_read (GMYTH_FILE_TRANSFER (src->file),
+          data_ptr, sizetoread, src->live_tv);
 
-    len = gmyth_file_transfer_read (src->file_transfer,
-        data_ptr, sizetoread, TRUE);
-
-    if (len > 0) {
-      read += len;
-      sizetoread -= len;
-    } else if (len < 0) {
-
+    if (data_ptr->len > 0) {
+      read += data_ptr->len;
+      sizetoread -= data_ptr->len;
+    } else if (data_ptr->len <= 0) {
       if (src->live_tv == FALSE) {
-        read = -1;
+        result = GMYTH_FILE_READ_EOF;
         goto eos;
       } else {
-        if (len == GMYTHTV_FILE_TRANSFER_READ_ERROR) {  /* -314 */
+        if (result == GMYTH_FILE_READ_ERROR) {  /* -314 */
           GST_INFO_OBJECT (src, "[LiveTV] FileTransfer READ_ERROR!");
-          goto done;
-        } else if (len == GMYTHTV_FILE_TRANSFER_NEXT_PROG_CHAIN) {      /* -315 */
-          GST_INFO_OBJECT (src,
-              "[LiveTV] FileTransfer - Go to the next program chain!");
-          continue;
         }
         goto done;
       }
-
-    } else if (len == 0)
-      goto done;
-
+    }
+    /*
+     * else if (data_ptr->len == 0) goto done; 
+     */
     if (read == sizetoread)
       goto done;
   }
 
-  if ((read < 0 && !src->live_tv) || max_iters == 0)
+  if ((read < 0 && !src->live_tv) || max_iters == 0) {
+    result = GMYTH_FILE_READ_EOF;
     goto eos;
-
+  }
   goto done;
 
 eos:
   src->eos = TRUE;
 
 done:
-  return read;
+  return result;
 }
 
 static GstFlowReturn
@@ -383,162 +385,65 @@ gst_mythtv_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 {
   GstMythtvSrc *src;
   GstFlowReturn ret = GST_FLOW_OK;
-  gint read = -1;
+  GByteArray *buffer;
+  GMythFileReadResult result = GMYTH_FILE_READ_OK;
 
   src = GST_MYTHTV_SRC (psrc);
 
-  /* The caller should know the number of bytes and not read beyond EOS. */
-  if (G_UNLIKELY (src->eos))
-    goto eos;
-  if (G_UNLIKELY (src->update_prog_chain))
-    goto change_progchain;
+  buffer = g_byte_array_new ();
+  if (src->live_tv)
+    result = do_read_request_response (src, READ_SIZE_LIVETV, buffer);
+  else
+    result = do_read_request_response (src, READ_SIZE, buffer);
 
-  GST_DEBUG_OBJECT (src, "offset = %" G_GUINT64_FORMAT ", size = %d...",
-      src->read_offset, MAX_READ_SIZE);
+  if (result == GMYTH_FILE_READ_ERROR)
+    goto read_error;
 
-  GST_DEBUG_OBJECT (src, "Create: buffer_remain: %d, buffer_size = %d.",
-      (gint) src->buffer_remain, src->bytes_queue->len);
-
-  /* just get from the byte array, no network effort... */
-  if ((src->buffer_remain = src->bytes_queue->len) < MAX_READ_SIZE) {
-    GByteArray *buffer = NULL;
-    guint buffer_size_inter = (INTERNAL_BUFFER_SIZE - src->buffer_remain);
-
-    if (buffer_size_inter > REQUEST_MAX_SIZE)
-      buffer_size_inter = REQUEST_MAX_SIZE;
-
-    buffer = g_byte_array_new ();
-
-    read = do_read_request_response (src, buffer_size_inter, buffer);
-
-    if (G_UNLIKELY (read < 0)) {
-      if (src->live_tv)
-        goto change_progchain;
-      else
-        goto read_error;
-    } else if (G_UNLIKELY (read == 0)) {
-      if (!src->live_tv)
-        goto eos;
-      else
-        goto done;
-    }
-
-    if (G_UNLIKELY (src->update_prog_chain))
-      goto change_progchain;
-
-    src->bytes_queue =
-        g_byte_array_append (src->bytes_queue, buffer->data, read);
-    if (read > buffer_size_inter)
-      GST_WARNING_OBJECT (src,
-          "INCREASED buffer size! Backend sent more than we ask him... (%d)",
-          abs (read - buffer_size_inter));
-
-    src->buffer_remain += read;
-
-    if (buffer != NULL) {
-      g_byte_array_free (buffer, TRUE);
-      buffer = NULL;
-    }
-
-    GST_DEBUG_OBJECT (src,
-        "BYTES READ (actual) = %d, BYTES READ (cumulative) = %llu, "
-        "OFFSET = %llu, CONTENT SIZE = %llu.", read,
-        src->bytes_read, src->read_offset, src->content_size);
-
-  }
-
-  guint buffer_size =
-      (src->buffer_remain < MAX_READ_SIZE) ? src->buffer_remain : MAX_READ_SIZE;
 
   *outbuf = gst_buffer_new ();
-
-  /* gets the first buffer_size bytes from the byte array buffer variable */
-  /* guint8 *buf = g_memdup( src->bytes_queue->data, buffer_size ); */
-
-  GST_DEBUG_OBJECT (src, "read from network? %s!, buffer_remain = %d",
-      (read ==
-          -1) ? "NO, got from buffer" : "YES, go see the backend's log file",
-      src->buffer_remain);
-
-  GST_BUFFER_SIZE (*outbuf) = buffer_size;
+  GST_BUFFER_SIZE (*outbuf) = buffer->len;
   GST_BUFFER_MALLOCDATA (*outbuf) = g_malloc0 (GST_BUFFER_SIZE (*outbuf));
   GST_BUFFER_DATA (*outbuf) = GST_BUFFER_MALLOCDATA (*outbuf);
-  g_memmove (GST_BUFFER_DATA ((*outbuf)), src->bytes_queue->data,
+  g_memmove (GST_BUFFER_DATA ((*outbuf)), buffer->data,
       GST_BUFFER_SIZE (*outbuf));
   GST_BUFFER_OFFSET (*outbuf) = src->read_offset;
   GST_BUFFER_OFFSET_END (*outbuf) =
       src->read_offset + GST_BUFFER_SIZE (*outbuf);
 
-  src->buffer_remain -= GST_BUFFER_SIZE (*outbuf);
-
   src->read_offset += GST_BUFFER_SIZE (*outbuf);
   src->bytes_read += GST_BUFFER_SIZE (*outbuf);
-  GST_DEBUG_OBJECT (src, "Buffer output with size: %d",
-      GST_BUFFER_SIZE (*outbuf));
 
-  /* flushs the newly buffer got from byte array */
-  src->bytes_queue =
-      g_byte_array_remove_range (src->bytes_queue, 0, buffer_size);
+  g_byte_array_free (buffer, TRUE);
 
-  GST_DEBUG_OBJECT (src, "Got buffer: BUFFER --->SIZE = %d, OFFSET = %llu, "
-      "OFFSET_END = %llu.", GST_BUFFER_SIZE (*outbuf),
-      GST_BUFFER_OFFSET (*outbuf), GST_BUFFER_OFFSET_END (*outbuf));
+  if (result == GMYTH_FILE_READ_NEXT_PROG_CHAIN) {
+    GstPad *peer;
 
-  GST_DEBUG_OBJECT (src, "CONTENT_SIZE = %llu, BYTES_READ = %llu.",
-      src->content_size, src->bytes_read);
+    peer = gst_pad_get_peer (GST_BASE_SRC_PAD (GST_BASE_SRC (psrc)));
+    gst_pad_send_event (peer,
+        gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES, 0, -1, 0));
 
-  if (G_UNLIKELY (src->eos) || (!src->live_tv
-          && (src->bytes_read >= src->content_size)))
-    goto eos;
-
-done:
-  {
-    const gchar *reason = gst_flow_get_name (ret);
-
-    GST_DEBUG_OBJECT (src, "DONE task, reason %s", reason);
-    return ret;
+    gst_object_unref (peer);
   }
-eos:
-  {
-    const gchar *reason = gst_flow_get_name (ret);
 
-    GST_DEBUG_OBJECT (src, "pausing task, reason %s", reason);
-    return GST_FLOW_UNEXPECTED;
-  }
-  /* ERRORS */
+  if (src->eos || (!src->live_tv && (src->bytes_read >= src->content_size)))
+    ret = GST_FLOW_UNEXPECTED;
+
+  return ret;
+
 read_error:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ,
-        (NULL), ("Could not read any bytes (%i, %s)", read, src->uri_name));
-    return GST_FLOW_ERROR;
-  }
-change_progchain:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ,
-        (NULL), ("Seek failed, go to the next program info... (%i, %s)", read,
-            src->uri_name));
-
-    gst_pad_push_event (GST_BASE_SRC_PAD (GST_BASE_SRC (psrc)),
-        gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
-    /* go to the next program chain */
-    src->unique_setup = FALSE;
-    src->update_prog_chain = TRUE;
-
-    gst_mythtv_src_next_program_chain (src);
-
-    return GST_FLOW_ERROR_NO_DATA;
-  }
-
+  GST_ELEMENT_ERROR (src, RESOURCE, READ,
+      (NULL), ("Could not read any bytes (%i, %s)", read, src->uri_name));
+  return GST_FLOW_ERROR;
 }
 
 gint64
 gst_mythtv_src_get_position (GstMythtvSrc * src)
 {
-
   gint64 size_tmp = 0;
   guint max_tries = 2;
 
-  if (src->live_tv == TRUE && (abs (src->content_size - src->bytes_read) <
+  if (src->live_tv == TRUE &&
+      (abs (src->content_size - src->bytes_read) <
           GMYTHTV_TRANSFER_MAX_BUFFER)) {
 
   get_file_pos:
@@ -549,12 +454,12 @@ gst_mythtv_src_get_position (GstMythtvSrc * src)
     else if (size_tmp > 0 && --max_tries > 0)
       goto get_file_pos;
     GST_LOG_OBJECT (src, "GET_POSITION: file_position = %lld", size_tmp);
-    /* sets the last content size amount before it can be updated */
+    /*
+     * sets the last content size amount before it can be updated 
+     */
     src->prev_content_size = src->content_size;
   }
-
   return src->content_size;
-
 }
 
 static gboolean
@@ -573,20 +478,19 @@ gst_mythtv_src_do_seek (GstBaseSrc * base, GstSegment * segment)
   GST_LOG_OBJECT (src,
       "Trying to seek at the value (actual_seek = %lld, read_offset = %lld)",
       actual_seek, src->read_offset);
-  /* verify if it needs to seek */
+  /*
+   * verify if it needs to seek 
+   */
   if (src->read_offset != actual_seek) {
-
-    new_offset =
-        gmyth_file_transfer_seek (src->file_transfer, segment->start, SEEK_SET);
-
-    GST_LOG_OBJECT (src,
-        "Segment offset start = %lld, SRC Offset = %lld, NEW actual backend SEEK Offset = %lld.",
-        segment->start, src->read_offset, new_offset);
+    if (IS_GMYTH_FILE_LOCAL (src->file))
+      new_offset = gmyth_file_local_seek (GMYTH_FILE_LOCAL (src->file),
+          segment->start, G_SEEK_SET);
+    else if (IS_GMYTH_FILE_TRANSFER (src->file))
+      new_offset = gmyth_file_transfer_seek (GMYTH_FILE_TRANSFER (src->file),
+          segment->start, SEEK_SET);
     if (G_UNLIKELY (new_offset < 0)) {
       ret = FALSE;
-      if (src->live_tv)
-        goto change_progchain;
-      else
+      if (!src->live_tv)
         goto eos;
     }
 
@@ -595,38 +499,19 @@ gst_mythtv_src_do_seek (GstBaseSrc * base, GstSegment * segment)
     if (ret == FALSE) {
       GST_INFO_OBJECT (src, "Failed to set the SEEK on segment!");
     }
-
   }
 
 done:
   return ret;
 
 eos:
-  {
-
-    GST_DEBUG_OBJECT (src, "EOS found on seeking!!!");
-    return FALSE;
-  }
-change_progchain:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ,
-        (NULL), ("Seek failed, go to the next program info... (%i, %s)", read,
-            src->uri_name));
-
-    gst_pad_push_event (GST_BASE_SRC_PAD (base),
-        gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
-    /* go to the next program chain */
-    src->unique_setup = FALSE;
-    src->update_prog_chain = TRUE;
-
-    gst_mythtv_src_next_program_chain (src);
-
-    return TRUE;
-  }
-
+  GST_DEBUG_OBJECT (src, "EOS found on seeking!!!");
+  return FALSE;
 }
 
-/* create a socket for connecting to remote server */
+/*
+ * create a socket for connecting to remote server 
+ */
 static gboolean
 gst_mythtv_src_start (GstBaseSrc * bsrc)
 {
@@ -635,9 +520,7 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
   GString *chain_id_local = NULL;
   GMythURI *gmyth_uri = NULL;
   gboolean ret = TRUE;
-
-  if (G_UNLIKELY (src->update_prog_chain))
-    goto change_progchain;
+  GstMessage *msg;
 
   if (src->unique_setup == FALSE) {
     src->unique_setup = TRUE;
@@ -646,86 +529,112 @@ gst_mythtv_src_start (GstBaseSrc * bsrc)
   }
 
   gmyth_uri = gmyth_uri_new_with_value (src->uri_name);
-
   src->backend_info = gmyth_backend_info_new_with_uri (src->uri_name);
-  /* testing UPnP... */
-  /* gmyth_backend_info_set_hostname( src->backend_info, NULL ); */
-  if (src->live_tv || gmyth_uri_is_livetv (gmyth_uri)) {
-    gint ch;
+  src->live_tv = gmyth_uri_is_livetv (gmyth_uri);
 
-    src->spawn_livetv = gmyth_livetv_new ();
+  if (src->live_tv) {
+    src->spawn_livetv = gmyth_livetv_new (src->backend_info);
+    gchar *ch = gmyth_uri_get_channel_name (gmyth_uri);
 
-    ch = gmyth_uri_get_channel_num (gmyth_uri);
-    if (ch != -1)
-      src->channel_num = ch;
+    if (ch != NULL)
+      src->channel_name = ch;
 
-    if (src->channel_num != GST_GMYTHTV_CHANNEL_DEFAULT_NUM) {
-      if (gmyth_livetv_channel_setup (src->spawn_livetv, src->channel_num,
-              src->backend_info) == FALSE) {
+    if (src->channel_name != NULL) {
+      gboolean result;
+
+      result = gmyth_livetv_channel_name_setup (src->spawn_livetv,
+          src->channel_name);
+      if (result == FALSE) {
         GST_INFO_OBJECT (src, "LiveTV setup felt down on error");
         ret = FALSE;
         goto init_failed;
       }
     } else {
-      if (gmyth_livetv_setup (src->spawn_livetv, src->backend_info) == FALSE) {
+      if (gmyth_livetv_setup (src->spawn_livetv) == FALSE) {
         GST_INFO_OBJECT (src, "LiveTV setup felt down on error");
         ret = FALSE;
         goto init_failed;
       }
     }
 
-    src->file_transfer = gmyth_livetv_create_file_transfer (src->spawn_livetv);
-
-    if (NULL == src->file_transfer) {
+    src->file =
+        GMYTH_FILE (gmyth_livetv_create_file_transfer (src->spawn_livetv));
+    if (NULL == src->file) {
       GST_INFO_OBJECT (src, "[LiveTV] FileTransfer equals to NULL");
       ret = FALSE;
       goto init_failed;
     }
-  } else {
 
-    src->file_transfer = gmyth_file_transfer_new (src->backend_info);
+    /*
+     * Check if the file is local to this specific client renderer 
+     */
+    if (gmyth_uri_is_local_file (gmyth_uri))
+      ret = gmyth_file_local_open (GMYTH_FILE_LOCAL (src->file));
+    else
+      ret = gmyth_file_transfer_open (GMYTH_FILE_TRANSFER (src->file),
+          (src->spawn_livetv->uri != NULL ?
+              gmyth_uri_get_path (src->spawn_livetv->uri) :
+              src->spawn_livetv->proginfo->pathname->str));
+    /*
+     * sets the mythtvsrc "location" property 
+     */
+    g_object_set (src, "location", gmyth_file_get_uri (src->file), NULL);
 
-    ret = gmyth_file_transfer_open (src->file_transfer, src->uri_name);
-
+    if (!ret) {
+      GST_INFO_OBJECT (src,
+          "Error: couldn't open the FileTransfer from LiveTV source!");
+      g_object_unref (src->file);
+      src->file = NULL;
+      goto init_failed;
+    }
+  } /* If live-tv */
+  else {
+    /*
+     * Check if the file is local to this specific client renderer,
+     * and tries to open a local connection 
+     */
+    if (gmyth_uri_is_local_file (gmyth_uri)) {
+      src->file = GMYTH_FILE (gmyth_file_local_new (src->backend_info));
+      ret = gmyth_file_local_open (GMYTH_FILE_LOCAL (src->file));
+    } else {
+      src->file = GMYTH_FILE (gmyth_file_transfer_new (src->backend_info));
+      ret =
+          gmyth_file_transfer_open (GMYTH_FILE_TRANSFER (src->file),
+          src->uri_name);
+    }
   }
 
-  if (NULL == src->file_transfer) {
+  if (NULL == src->file) {
     GST_INFO_OBJECT (src, "FileTransfer is NULL");
     goto init_failed;
   }
-  /*GST_INFO_OBJECT( src, "uri = %s", src->spawn_livetv->file_transfer); */
 
   if (ret == FALSE) {
-#ifndef GST_DISABLE_GST_DEBUG
-    if (src->mythtv_msgs_dbg)
-      GST_INFO_OBJECT (src,
-          "MythTV FileTransfer request failed when setting up socket connection!");
-#endif
+    GST_INFO_OBJECT (src,
+        "MythTV FileTransfer request failed when setting up socket connection!");
     goto begin_req_failed;
   }
 
   GST_INFO_OBJECT (src,
       "MythTV FileTransfer filesize = %lld, content_size = %lld!",
-      src->file_transfer->filesize, src->content_size);
+      gmyth_file_get_filesize (src->file), src->content_size);
 
-  src->content_size = src->file_transfer->filesize;
+  src->content_size = gmyth_file_get_filesize (src->file);
+
+  msg = gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_BYTES,
+      src->content_size);
+  gst_element_post_message (GST_ELEMENT (src), msg);
 
   src->do_start = FALSE;
 
-  /* this is used for the buffer cache */
-  src->bytes_queue = g_byte_array_sized_new (INTERNAL_BUFFER_SIZE);
-  src->buffer_remain = 0;
-
   gst_pad_push_event (GST_BASE_SRC_PAD (GST_BASE_SRC (src)),
-      gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, 0,
-          src->content_size, 0));
-
+      gst_event_new_new_segment (TRUE, 1.0,
+          GST_FORMAT_TIME, 0, src->content_size, 0));
 done:
-  /*if ( gmyth_uri != NULL )
-     {
-     g_object_unref( gmyth_uri );
-     gmyth_uri = NULL;
-     } */
+  if (gmyth_uri != NULL) {
+    g_object_unref (gmyth_uri);
+    gmyth_uri = NULL;
+  }
 
   if (chain_id_local != NULL) {
     g_string_free (chain_id_local, TRUE);
@@ -734,156 +643,39 @@ done:
 
   return TRUE;
 
-  /* ERRORS */
+  /*
+   * ERRORS
+   */
 init_failed:
-  {
-    if (src->spawn_livetv != NULL)
-      g_object_unref (src->spawn_livetv);
-
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-        (NULL), ("Could not initialize MythTV library (%i, %s)", ret,
-            src->uri_name));
-    return FALSE;
+  if (gmyth_uri != NULL) {
+    g_object_unref (gmyth_uri);
+    gmyth_uri = NULL;
   }
+
+  if (src->spawn_livetv != NULL) {
+    g_object_unref (src->spawn_livetv);
+    src->spawn_livetv = NULL;
+  }
+
+  GST_ELEMENT_ERROR (src, LIBRARY, INIT,
+      (NULL),
+      ("Could not initialize MythTV library (%i, %s)", ret, src->uri_name));
+
+
+  gst_mythtv_src_clear (src);
+
+  return FALSE;
 begin_req_failed:
-  {
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-        (NULL), ("Could not begin request sent to MythTV server (%i, %s)", ret,
-            src->uri_name));
-    return FALSE;
-  }
-change_progchain:
-  {
-    GST_ELEMENT_ERROR (src, RESOURCE, READ,
-        (NULL), ("Seek failed, go to the next program info... (%s)",
-            src->uri_name));
-
-    gst_pad_push_event (GST_BASE_SRC_PAD (GST_BASE_SRC (src)),
-        gst_event_new_new_segment (TRUE, 1.0, GST_FORMAT_TIME, 0, -1, 0));
-
-    /* go to the next program chain */
-    src->unique_setup = FALSE;
-    src->update_prog_chain = TRUE;
-
-    gst_mythtv_src_next_program_chain (src);
-
-    return TRUE;
-  }
-}
-
-/* create a new socket for connecting to the next program chain */
-static gboolean
-gst_mythtv_src_next_program_chain (GstMythtvSrc * src)
-{
-  GString *chain_id_local = NULL;
-
-  gboolean ret = TRUE;
-
-  if (!src->live_tv)
-    goto init_failed;
-
-  if (src->unique_setup == FALSE) {
-    src->unique_setup = TRUE;
-  } else {
-    goto done;
+  if (gmyth_uri != NULL) {
+    g_object_unref (gmyth_uri);
+    gmyth_uri = NULL;
   }
 
-  GST_PAD_STREAM_LOCK (GST_BASE_SRC_PAD (GST_BASE_SRC (src)));
-
-  if (src->file_transfer) {
-    g_object_unref (src->file_transfer);
-    src->file_transfer = NULL;
-  }
-
-  if (src->uri_name) {
-    g_free (src->uri_name);
-  }
-
-  if (src->backend_info == NULL)
-    src->backend_info = gmyth_backend_info_new_with_uri (src->uri_name);
-
-  if (src->live_tv) {
-    if (gmyth_livetv_next_program_chain (src->spawn_livetv) == FALSE) {
-      GST_INFO_OBJECT (src, "Failed to go to the next program chain!");
-      ret = FALSE;
-      goto init_failed;
-    }
-    /* set up the uri variable */
-    src->uri_name = g_strdup (src->spawn_livetv->proginfo->pathname->str);
-    chain_id_local = gmyth_tvchain_get_id (src->spawn_livetv->tvchain);
-    if (chain_id_local != NULL) {
-      src->live_chain_id = g_strdup (chain_id_local->str);
-      GST_DEBUG_OBJECT (src, "Local chain ID = %s", src->live_chain_id);
-    }
-    src->live_tv_id = src->spawn_livetv->recorder->recorder_num;
-    GST_LOG_OBJECT (src, "LiveTV id = %d, URI path = %s",
-        src->live_tv_id, src->uri_name);
-  }
-
-  src->file_transfer = gmyth_file_transfer_new (src->backend_info);
-
-  if (src->file_transfer == NULL) {
-    goto init_failed;
-  }
-
-  ret = gmyth_file_transfer_open (src->file_transfer, src->uri_name);
-
-  /* sets the Playback monitor connection */
-
-  /* sets the FileTransfer instance connection (video/audio download) */
-
-  if (ret == FALSE) {
-#ifndef GST_DISABLE_GST_DEBUG
-    if (src->mythtv_msgs_dbg)
-      GST_ERROR_OBJECT (src,
-          "MythTV FileTransfer request failed when setting up socket connection!");
-#endif
-    goto begin_req_failed;
-  }
-  src->content_size_last = src->content_size;
-
-  src->content_size = src->file_transfer->filesize;
-  if (src->live_tv) {
-    src->wait_to_transfer = 0;
-    while (src->wait_to_transfer++ < GMYTHTV_TRANSFER_MAX_WAITS &&
-        src->content_size < GMYTHTV_TRANSFER_MAX_BUFFER)
-      src->content_size = gst_mythtv_src_get_position (src);
-  }
-
-  src->read_offset = 0;
-
-  if (src->bytes_queue != NULL) {
-    g_byte_array_free (src->bytes_queue, TRUE);
-  }
-
-  src->bytes_queue = g_byte_array_sized_new (INTERNAL_BUFFER_SIZE);
-
-done:
-  src->update_prog_chain = FALSE;
-
-  GST_PAD_STREAM_UNLOCK (GST_BASE_SRC_PAD (GST_BASE_SRC (src)));
-
-  return TRUE;
-
-  /* ERRORS */
-init_failed:
-  {
-    if (src->spawn_livetv != NULL)
-      g_object_unref (src->spawn_livetv);
-
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-        (NULL), ("Could not initialize MythTV library (%i, %s)", ret,
-            src->uri_name));
-    return FALSE;
-  }
-begin_req_failed:
-  {
-    GST_ELEMENT_ERROR (src, LIBRARY, INIT,
-        (NULL), ("Could not begin request sent to MythTV server (%i, %s)", ret,
-            src->uri_name));
-    return FALSE;
-  }
-
+  GST_ELEMENT_ERROR (src, LIBRARY, INIT,
+      (NULL),
+      ("Could not begin request sent to MythTV server (%i, %s)",
+          ret, src->uri_name));
+  return FALSE;
 }
 
 static gboolean
@@ -892,7 +684,8 @@ gst_mythtv_src_get_size (GstBaseSrc * bsrc, guint64 * size)
   GstMythtvSrc *src = GST_MYTHTV_SRC (bsrc);
   gboolean ret = TRUE;
 
-  GST_LOG_OBJECT (src, "Differs from previous content size: %d (max.: %d)",
+  GST_LOG_OBJECT (src,
+      "Differs from previous content size: %d (max.: %d)",
       abs (src->content_size - src->prev_content_size),
       GMYTHTV_TRANSFER_MAX_BUFFER);
 
@@ -901,45 +694,31 @@ gst_mythtv_src_get_size (GstBaseSrc * bsrc, guint64 * size)
   } else if (src->live_tv && src->enable_timing_position
       && (abs (src->content_size - src->bytes_read) <
           GMYTHTV_TRANSFER_MAX_BUFFER)) {
+    gint64 new_offset;
 
-    gint64 new_offset =
-        gmyth_recorder_get_file_position (src->spawn_livetv->recorder);
+    new_offset = gmyth_recorder_get_file_position (src->spawn_livetv->recorder);
     if (new_offset > 0 && new_offset > src->content_size) {
       src->content_size = new_offset;
     } else if (new_offset < src->content_size) {
       src->update_prog_chain = TRUE;
     }
-
   }
 
   *size = src->content_size;
   GST_LOG_OBJECT (src, "Content size = %lld", src->content_size);
-
   return ret;
-
 }
 
-/* close the socket and associated resources
- * used both to recover from errors and go to NULL state */
+/*
+ * close the socket and associated resources used both to recover from
+ * errors and go to NULL state 
+ */
 static gboolean
 gst_mythtv_src_stop (GstBaseSrc * bsrc)
 {
-  GstMythtvSrc *src;
+  GstMythtvSrc *src = GST_MYTHTV_SRC (bsrc);
 
-  src = GST_MYTHTV_SRC (bsrc);
-
-  if (src->uri_name) {
-    g_free (src->uri_name);
-    src->uri_name = NULL;
-  }
-
-  if (src->mythtv_caps) {
-    gst_caps_unref (src->mythtv_caps);
-    src->mythtv_caps = NULL;
-  }
-
-  src->eos = FALSE;
-
+  gst_mythtv_src_clear (src);
   return TRUE;
 }
 
@@ -948,12 +727,10 @@ gst_mythtv_src_handle_event (GstPad * pad, GstEvent * event)
 {
   GstMythtvSrc *src = GST_MYTHTV_SRC (GST_PAD_PARENT (pad));
   gint64 cont_size = 0;
-  gboolean ret = FALSE;
+  gboolean ret = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      GST_WARNING_OBJECT (src, "Got EOS event");
-
       if (src->live_tv) {
         cont_size = gst_mythtv_src_get_position (src);
         if (cont_size > src->content_size) {
@@ -969,7 +746,7 @@ gst_mythtv_src_handle_event (GstPad * pad, GstEvent * event)
     default:
       ret = gst_pad_event_default (pad, event);
   }
-
+  GST_DEBUG_OBJECT (src, "HANDLE EVENT %d", ret);
   return ret;
 }
 
@@ -986,9 +763,9 @@ gst_mythtv_src_handle_query (GstPad * pad, GstQuery * query)
   GstMythtvSrc *myth = GST_MYTHTV_SRC (gst_pad_get_parent (pad));
   GstFormat formt;
 
+
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
-    {
       gst_query_parse_position (query, &formt, NULL);
       if (formt == GST_FORMAT_BYTES) {
         gst_query_set_position (query, formt, myth->read_offset);
@@ -998,35 +775,21 @@ gst_mythtv_src_handle_query (GstPad * pad, GstQuery * query)
         res = gst_pad_query_default (pad, query);
       }
       break;
-    }
     case GST_QUERY_DURATION:
-    {
-#if 0
-      if (myth->duration != 0) {
-        gint64 total;
-        gint64 fps;
-
-        fps = nuv->h->i_fpsn / nuv->h->i_fpsd;
-        total =
-            gst_util_uint64_scale_int (GST_SECOND, nuv->h->i_video_blocks, fps);
-      }
-#endif
-
       gst_query_parse_duration (query, &formt, NULL);
       if (formt == GST_FORMAT_BYTES) {
-        gst_query_set_duration (query, formt, myth->content_size);
-        GST_DEBUG_OBJECT (myth, "SIZE %" G_GINT64_FORMAT, myth->content_size);
+        gint64 size = myth->content_size;
+
+        gst_query_set_duration (query, GST_FORMAT_BYTES, 10);
+        GST_DEBUG_OBJECT (myth, "SIZE %" G_GINT64_FORMAT, size);
         res = TRUE;
       } else if (formt == GST_FORMAT_TIME) {
         res = gst_pad_query_default (pad, query);
       }
       break;
-    }
     default:
-    {
       res = gst_pad_query_default (pad, query);
       break;
-    }
   }
 
   gst_object_unref (myth);
@@ -1044,11 +807,15 @@ gst_mythtv_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      if (!src->uri_name) {
+        GST_WARNING_OBJECT (src, "Invalid location");
+        return ret;
+      }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       if (src->live_tv) {
-        if (!gmyth_recorder_send_frontend_ready_command (src->spawn_livetv->
-                recorder))
+        if (!gmyth_recorder_send_frontend_ready_command
+            (src->spawn_livetv->recorder))
           GST_WARNING_OBJECT (src,
               "Couldn't send the FRONTEND_READY message to the backend!");
         else
@@ -1060,22 +827,16 @@ gst_mythtv_src_change_state (GstElement * element, GstStateChange transition)
   }
 
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-  if (ret == GST_STATE_CHANGE_FAILURE)
+  if (ret == GST_STATE_CHANGE_FAILURE) {
     return ret;
+  }
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
+      gst_mythtv_src_clear (src);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (src->live_tv) {
-        if (!gmyth_recorder_send_frontend_ready_command (src->spawn_livetv->
-                recorder))
-          GST_WARNING_OBJECT (src,
-              "Couldn't send the FRONTEND_READY message to the backend!");
-        else
-          GST_DEBUG_OBJECT (src, "FRONTEND_READY was sent to the backend");
-      }
       break;
     default:
       break;
@@ -1093,7 +854,6 @@ gst_mythtv_src_set_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (mythtvsrc);
   switch (prop_id) {
     case PROP_LOCATION:
-    {
       if (!g_value_get_string (value)) {
         GST_WARNING ("location property cannot be NULL");
         break;
@@ -1104,40 +864,23 @@ gst_mythtv_src_set_property (GObject * object, guint prop_id,
         mythtvsrc->uri_name = NULL;
       }
       mythtvsrc->uri_name = g_value_dup_string (value);
-
       break;
-    }
-#ifndef GST_DISABLE_GST_DEBUG
-    case PROP_GMYTHTV_DBG:
-    {
-      mythtvsrc->mythtv_msgs_dbg = g_value_get_boolean (value);
-      break;
-    }
-#endif
     case PROP_GMYTHTV_VERSION:
-    {
       mythtvsrc->mythtv_version = g_value_get_int (value);
       break;
-    }
     case PROP_GMYTHTV_LIVEID:
-    {
       mythtvsrc->live_tv_id = g_value_get_int (value);
       break;
-    }
     case PROP_GMYTHTV_LIVE:
-    {
       mythtvsrc->live_tv = g_value_get_boolean (value);
       break;
-    }
     case PROP_GMYTHTV_ENABLE_TIMING_POSITION:
-    {
       mythtvsrc->enable_timing_position = g_value_get_boolean (value);
       break;
-    }
     case PROP_GMYTHTV_LIVE_CHAINID:
-    {
       if (!g_value_get_string (value)) {
-        GST_WARNING ("MythTV Live chainid property cannot be NULL");
+        GST_WARNING_OBJECT (object,
+            "MythTV Live chainid property cannot be NULL");
         break;
       }
 
@@ -1147,12 +890,9 @@ gst_mythtv_src_set_property (GObject * object, guint prop_id,
       }
       mythtvsrc->live_chain_id = g_value_dup_string (value);
       break;
-    }
     case PROP_GMYTHTV_CHANNEL_NUM:
-    {
-      mythtvsrc->channel_num = g_value_get_int (value);
+      mythtvsrc->channel_name = g_value_dup_string (value);
       break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1170,33 +910,14 @@ gst_mythtv_src_get_property (GObject * object, guint prop_id,
   GST_OBJECT_LOCK (mythtvsrc);
   switch (prop_id) {
     case PROP_LOCATION:
-    {
-      gchar *str = g_strdup ("");
-
-      if (mythtvsrc->uri_name == NULL) {
-        g_free (mythtvsrc->uri_name);
-        mythtvsrc->uri_name = NULL;
-      } else {
-        str = g_strdup (mythtvsrc->uri_name);
-      }
-      g_value_set_string (value, str);
+      g_value_set_string (value, mythtvsrc->uri_name);
       break;
-    }
-#ifndef GST_DISABLE_GST_DEBUG
-    case PROP_GMYTHTV_DBG:
-      g_value_set_boolean (value, mythtvsrc->mythtv_msgs_dbg);
-      break;
-#endif
     case PROP_GMYTHTV_VERSION:
-    {
       g_value_set_int (value, mythtvsrc->mythtv_version);
       break;
-    }
     case PROP_GMYTHTV_LIVEID:
-    {
       g_value_set_int (value, mythtvsrc->live_tv_id);
       break;
-    }
     case PROP_GMYTHTV_LIVE:
       g_value_set_boolean (value, mythtvsrc->live_tv);
       break;
@@ -1204,23 +925,11 @@ gst_mythtv_src_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, mythtvsrc->enable_timing_position);
       break;
     case PROP_GMYTHTV_LIVE_CHAINID:
-    {
-      gchar *str = g_strdup ("");
-
-      if (mythtvsrc->live_chain_id == NULL) {
-        g_free (mythtvsrc->live_chain_id);
-        mythtvsrc->live_chain_id = NULL;
-      } else {
-        str = g_strdup (mythtvsrc->live_chain_id);
-      }
-      g_value_set_string (value, str);
+      g_value_set_string (value, mythtvsrc->live_chain_id);
       break;
-    }
     case PROP_GMYTHTV_CHANNEL_NUM:
-    {
-      g_value_set_int (value, mythtvsrc->channel_num);
+      g_value_set_string (value, mythtvsrc->channel_name);
       break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1273,7 +982,8 @@ gst_mythtv_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   gchar *protocol;
 
   protocol = gst_uri_get_protocol (uri);
-  if ((strcmp (protocol, "myth") != 0) && (strcmp (protocol, "myths") != 0)) {
+  if ((strcmp (protocol, "myth") != 0)
+      && (strcmp (protocol, "myths") != 0)) {
     g_free (protocol);
     return FALSE;
   }
