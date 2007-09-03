@@ -1,3 +1,79 @@
+2007-09-03  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpbin-marshal.list:
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_get_client),
+	(gst_rtp_bin_associate), (gst_rtp_bin_sync_chain), (create_stream),
+	(gst_rtp_bin_init), (caps_changed), (new_ssrc_pad_found),
+	(create_recv_rtp), (create_recv_rtcp), (create_send_rtp):
+	* gst/rtpmanager/gstrtpbin.h:
+	Updated example pipelines in docs.
+	Handle sync_rtcp buffers from the SSRC demuxer to perform lip-sync.
+	Set the default latency correctly.
+	Add some more points where we can get caps.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_class_init),
+	(gst_jitter_buffer_sink_parse_caps), (gst_rtp_jitter_buffer_loop),
+	(gst_rtp_jitter_buffer_query),
+	(gst_rtp_jitter_buffer_set_property),
+	(gst_rtp_jitter_buffer_get_property):
+	Add ts-offset property to control timestamping.
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_class_init),
+	(gst_rtp_session_init), (gst_rtp_session_set_property),
+	(gst_rtp_session_get_property), (get_current_ntp_ns_time),
+	(rtcp_thread), (stop_rtcp_thread), (gst_rtp_session_change_state),
+	(gst_rtp_session_send_rtcp), (gst_rtp_session_sync_rtcp),
+	(gst_rtp_session_cache_caps), (gst_rtp_session_clock_rate),
+	(gst_rtp_session_sink_setcaps), (gst_rtp_session_chain_recv_rtp),
+	(gst_rtp_session_event_send_rtp_sink),
+	(gst_rtp_session_chain_send_rtp), (create_recv_rtp_sink),
+	(create_recv_rtcp_sink), (create_send_rtp_sink),
+	(create_send_rtcp_src):
+	Various cleanups.
+	Feed rtpsession manager with NTP time based on pipeline clock when
+	handling RTP packets and RTCP timeouts.
+	Perform all RTCP with the system clock.
+	Set caps on RTCP outgoing buffers.
+
+	* gst/rtpmanager/gstrtpssrcdemux.c: (find_demux_pad_for_ssrc),
+	(create_demux_pad_for_ssrc), (gst_rtp_ssrc_demux_base_init),
+	(gst_rtp_ssrc_demux_init), (gst_rtp_ssrc_demux_sink_event),
+	(gst_rtp_ssrc_demux_rtcp_sink_event), (gst_rtp_ssrc_demux_chain),
+	(gst_rtp_ssrc_demux_rtcp_chain):
+	* gst/rtpmanager/gstrtpssrcdemux.h:
+	Also demux RTCP messages.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_set_callbacks),
+	(update_arrival_stats), (rtp_session_process_rtp),
+	(rtp_session_process_rb), (rtp_session_process_sr),
+	(rtp_session_process_rr), (rtp_session_process_rtcp),
+	(rtp_session_send_rtp), (rtp_session_send_bye),
+	(session_start_rtcp), (session_report_blocks), (session_cleanup),
+	(rtp_session_on_timeout):
+	* gst/rtpmanager/rtpsession.h:
+	Remove the get_time callback, the GStreamer part will feed us with
+	enough timing information.
+	Split sync timing and RTCP timing information.
+	Factor out common RB handling for SR and RR.
+	Send out SR RTCP packets for lip-sync.
+	Move SR and RR packet info generation to the source.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_init),
+	(rtp_source_update_caps), (get_clock_rate), (calculate_jitter),
+	(rtp_source_process_rtp), (rtp_source_send_rtp),
+	(rtp_source_process_sr), (rtp_source_process_rb),
+	(rtp_source_get_new_sr), (rtp_source_get_new_rb),
+	(rtp_source_get_last_sr):
+	* gst/rtpmanager/rtpsource.h:
+	* gst/rtpmanager/rtpstats.h:
+	Use caps on incomming buffers to get timing information when they are
+	there.
+	Calculate clock scew of the receiver compared to the sender and adjust
+	the rtp timestamps.
+	Calculate the round trip in sources.
+	Do SR and RR calculations in the source.
+
 2007-09-03  Renato Filho  <renato.filho@indt.org.br>
 
 	* configure.ac:

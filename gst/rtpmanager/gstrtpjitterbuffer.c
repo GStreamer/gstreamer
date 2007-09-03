@@ -99,12 +99,14 @@ enum
 
 #define DEFAULT_LATENCY_MS      200
 #define DEFAULT_DROP_ON_LATENCY FALSE
+#define DEFAULT_TS_OFFSET       0
 
 enum
 {
   PROP_0,
   PROP_LATENCY,
-  PROP_DROP_ON_LATENCY
+  PROP_DROP_ON_LATENCY,
+  PROP_TS_OFFSET
 };
 
 #define JBUF_LOCK(priv)   (g_mutex_lock ((priv)->jbuf_lock))
@@ -137,6 +139,7 @@ struct _GstRtpJitterBufferPrivate
   /* properties */
   guint latency_ms;
   gboolean drop_on_latency;
+  gint64 ts_offset;
 
   /* the last seqnum we pushed out */
   guint32 last_popped_seqnum;
@@ -150,6 +153,7 @@ struct _GstRtpJitterBufferPrivate
   gint32 clock_rate;
   gint64 clock_base;
   guint64 exttimestamp;
+  gint64 prev_ts_offset;
 
   /* when we are shutting down */
   GstFlowReturn srcresult;
@@ -277,6 +281,16 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "Drop buffers when maximum latency is reached",
           "Tells the jitterbuffer to never exceed the given latency in size",
           DEFAULT_DROP_ON_LATENCY, G_PARAM_READWRITE));
+  /**
+   * GstRtpJitterBuffer::ts-offset:
+   * 
+   * Adjust RTP timestamps in the jitterbuffer with offset.
+   */
+  g_object_class_install_property (gobject_class, PROP_TS_OFFSET,
+      g_param_spec_int64 ("ts-offset",
+          "Timestamp Offset",
+          "Adjust buffer RTP timestamps with offset in nanoseconds", G_MININT64,
+          G_MAXINT64, DEFAULT_TS_OFFSET, G_PARAM_READWRITE));
   /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
@@ -421,7 +435,7 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
 {
   GstRtpJitterBufferPrivate *priv;
   GstStructure *caps_struct;
-  const GValue *value;
+  guint val;
 
   priv = jitterbuffer->priv;
 
@@ -443,21 +457,21 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
   /* gah, clock-base is uint. If we don't have a base, we will use the first
    * buffer timestamp as the base time. This will screw up sync but it's better
    * than nothing. */
-  value = gst_structure_get_value (caps_struct, "clock-base");
-  if (value && G_VALUE_HOLDS_UINT (value)) {
-    priv->clock_base = g_value_get_uint (value);
-    GST_DEBUG_OBJECT (jitterbuffer, "got clock-base %" G_GINT64_FORMAT,
-        priv->clock_base);
-  } else
+  if (gst_structure_get_uint (caps_struct, "clock-base", &val))
+    priv->clock_base = val;
+  else
     priv->clock_base = -1;
 
+  GST_DEBUG_OBJECT (jitterbuffer, "got clock-base %" G_GINT64_FORMAT,
+      priv->clock_base);
+
   /* first expected seqnum */
-  value = gst_structure_get_value (caps_struct, "seqnum-base");
-  if (value && G_VALUE_HOLDS_UINT (value)) {
-    priv->next_seqnum = g_value_get_uint (value);
-    GST_DEBUG_OBJECT (jitterbuffer, "got seqnum-base %d", priv->next_seqnum);
-  } else
+  if (gst_structure_get_uint (caps_struct, "seqnum-base", &val))
+    priv->next_seqnum = val;
+  else
     priv->next_seqnum = -1;
+
+  GST_DEBUG_OBJECT (jitterbuffer, "got seqnum-base %d", priv->next_seqnum);
 
   return TRUE;
 
@@ -929,6 +943,7 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
   GstClockTime timestamp;
   gint64 running_time;
   guint64 exttimestamp;
+  gint ts_offset_rtp;
 
   priv = jitterbuffer->priv;
 
@@ -996,8 +1011,11 @@ again:
         exttimestamp, priv->clock_base);
 
     /* if no clock_base was given, take first ts as base */
-    if (priv->clock_base == -1)
+    if (priv->clock_base == -1) {
+      GST_DEBUG_OBJECT (jitterbuffer,
+          "no clock base, using exttimestamp %" G_GUINT64_FORMAT, exttimestamp);
       priv->clock_base = exttimestamp;
+    }
 
     /* take rtp timestamp offset into account, this can wrap around */
     exttimestamp -= priv->clock_base;
@@ -1089,6 +1107,34 @@ push_buffer:
     outbuf = gst_buffer_make_metadata_writable (outbuf);
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   }
+
+  /* apply the timestamp offset */
+  if (priv->ts_offset > 0)
+    ts_offset_rtp =
+        gst_util_uint64_scale_int (priv->ts_offset, priv->clock_rate,
+        GST_SECOND);
+  else if (priv->ts_offset < 0)
+    ts_offset_rtp =
+        -gst_util_uint64_scale_int (-priv->ts_offset, priv->clock_rate,
+        GST_SECOND);
+  else
+    ts_offset_rtp = 0;
+
+  if (ts_offset_rtp != 0) {
+    guint32 timestamp;
+
+    /* if the offset changed, mark with discont */
+    if (priv->ts_offset != priv->prev_ts_offset) {
+      GST_DEBUG_OBJECT (jitterbuffer, "changing offset to %d", ts_offset_rtp);
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      priv->prev_ts_offset = priv->ts_offset;
+    }
+
+    timestamp = gst_rtp_buffer_get_timestamp (outbuf);
+    timestamp += ts_offset_rtp;
+    gst_rtp_buffer_set_timestamp (outbuf, timestamp);
+  }
+
   /* now we are ready to push the buffer. Save the seqnum and release the lock
    * so the other end can push stuff in the queue again. */
   priv->last_popped_seqnum = seqnum;
@@ -1158,6 +1204,7 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
       GstClockTime min_latency, max_latency;
       gboolean us_live;
       GstPad *peer;
+      GstClockTime our_latency;
 
       if ((peer = gst_pad_get_peer (priv->sinkpad))) {
         if ((res = gst_pad_query (peer, query))) {
@@ -1172,11 +1219,16 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
           priv->peer_latency = min_latency;
           JBUF_UNLOCK (priv);
 
-          min_latency += priv->latency_ms * GST_MSECOND;
+          our_latency = ((guint64) priv->latency_ms) * GST_MSECOND;
+
+          GST_DEBUG_OBJECT (jitterbuffer, "Our latency: %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (our_latency));
+
+          min_latency += our_latency;
           /* max_latency can be -1, meaning there is no upper limit for the
            * latency. */
           if (max_latency != -1)
-            max_latency += priv->latency_ms * GST_MSECOND;
+            max_latency += our_latency * GST_MSECOND;
 
           GST_DEBUG_OBJECT (jitterbuffer, "Calculated total latency : min %"
               GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
@@ -1199,7 +1251,11 @@ static void
 gst_rtp_jitter_buffer_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstRtpJitterBuffer *jitterbuffer = GST_RTP_JITTER_BUFFER (object);
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
+
+  jitterbuffer = GST_RTP_JITTER_BUFFER (object);
+  priv = jitterbuffer->priv;
 
   switch (prop_id) {
     case PROP_LATENCY:
@@ -1208,23 +1264,29 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
 
       /* FIXME, not threadsafe */
       new_latency = g_value_get_uint (value);
-      old_latency = jitterbuffer->priv->latency_ms;
+      old_latency = priv->latency_ms;
 
-      jitterbuffer->priv->latency_ms = new_latency;
+      priv->latency_ms = new_latency;
 
       /* post message if latency changed, this will inform the parent pipeline
        * that a latency reconfiguration is possible/needed. */
       if (new_latency != old_latency) {
+        GST_DEBUG_OBJECT (jitterbuffer, "latency changed to: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (new_latency * GST_MSECOND));
+
         gst_element_post_message (GST_ELEMENT_CAST (jitterbuffer),
             gst_message_new_latency (GST_OBJECT_CAST (jitterbuffer)));
       }
       break;
     }
     case PROP_DROP_ON_LATENCY:
-    {
-      jitterbuffer->priv->drop_on_latency = g_value_get_boolean (value);
+      priv->drop_on_latency = g_value_get_boolean (value);
       break;
-    }
+    case PROP_TS_OFFSET:
+      JBUF_LOCK (priv);
+      priv->ts_offset = g_value_get_int64 (value);
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1235,14 +1297,23 @@ static void
 gst_rtp_jitter_buffer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstRtpJitterBuffer *jitterbuffer = GST_RTP_JITTER_BUFFER (object);
+  GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
+
+  jitterbuffer = GST_RTP_JITTER_BUFFER (object);
+  priv = jitterbuffer->priv;
 
   switch (prop_id) {
     case PROP_LATENCY:
-      g_value_set_uint (value, jitterbuffer->priv->latency_ms);
+      g_value_set_uint (value, priv->latency_ms);
       break;
     case PROP_DROP_ON_LATENCY:
-      g_value_set_boolean (value, jitterbuffer->priv->drop_on_latency);
+      g_value_set_boolean (value, priv->drop_on_latency);
+      break;
+    case PROP_TS_OFFSET:
+      JBUF_LOCK (priv);
+      g_value_set_int64 (value, priv->ts_offset);
+      JBUF_UNLOCK (priv);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

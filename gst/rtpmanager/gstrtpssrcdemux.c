@@ -52,6 +52,7 @@
 
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
+#include <gst/rtp/gstrtcpbuffer.h>
 
 #include "gstrtpbin-marshal.h"
 #include "gstrtpssrcdemux.h"
@@ -67,11 +68,25 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("application/x-rtp")
     );
 
+static GstStaticPadTemplate rtp_ssrc_demux_rtcp_sink_template =
+GST_STATIC_PAD_TEMPLATE ("rtcp_sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("application/x-rtcp")
+    );
+
 static GstStaticPadTemplate rtp_ssrc_demux_src_template =
 GST_STATIC_PAD_TEMPLATE ("src_%d",
     GST_PAD_SRC,
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("application/x-rtp")
+    );
+
+static GstStaticPadTemplate rtp_ssrc_demux_rtcp_src_template =
+GST_STATIC_PAD_TEMPLATE ("rtcp_src_%d",
+    GST_PAD_SRC,
+    GST_PAD_SOMETIMES,
+    GST_STATIC_CAPS ("application/x-rtcp")
     );
 
 static GstElementDetails gst_rtp_ssrc_demux_details = {
@@ -103,6 +118,11 @@ static GstStateChangeReturn gst_rtp_ssrc_demux_change_state (GstElement *
 static GstFlowReturn gst_rtp_ssrc_demux_chain (GstPad * pad, GstBuffer * buf);
 static gboolean gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event);
 
+static GstFlowReturn gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad,
+    GstBuffer * buf);
+static gboolean gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad,
+    GstEvent * event);
+
 /* srcpad stuff */
 static gboolean gst_rtp_ssrc_demux_src_event (GstPad * pad, GstEvent * event);
 
@@ -113,59 +133,78 @@ static guint gst_rtp_ssrc_demux_signals[LAST_SIGNAL] = { 0 };
  */
 struct _GstRtpSsrcDemuxPad
 {
-  GstPad *pad;
   guint32 ssrc;
+  GstPad *rtp_pad;
   GstCaps *caps;
+  GstPad *rtcp_pad;
 };
 
 /* find a src pad for a given SSRC, returns NULL if the SSRC was not found
  */
-static GstPad *
-find_rtp_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
+static GstRtpSsrcDemuxPad *
+find_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
 {
   GSList *walk;
 
-  for (walk = demux->rtp_srcpads; walk; walk = g_slist_next (walk)) {
+  for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
     GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
 
     if (pad->ssrc == ssrc)
-      return pad->pad;
+      return pad;
   }
   return NULL;
 }
 
-static GstPad *
-create_rtp_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
+static GstRtpSsrcDemuxPad *
+create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
 {
-  GstPad *result;
+  GstPad *rtp_pad, *rtcp_pad;
   GstElementClass *klass;
   GstPadTemplate *templ;
   gchar *padname;
   GstRtpSsrcDemuxPad *demuxpad;
 
+  GST_DEBUG_OBJECT (demux, "creating pad for SSRC %08x", ssrc);
+
   klass = GST_ELEMENT_GET_CLASS (demux);
   templ = gst_element_class_get_pad_template (klass, "src_%d");
   padname = g_strdup_printf ("src_%d", ssrc);
-  result = gst_pad_new_from_template (templ, padname);
+  rtp_pad = gst_pad_new_from_template (templ, padname);
+  g_free (padname);
+
+  templ = gst_element_class_get_pad_template (klass, "rtcp_src_%d");
+  padname = g_strdup_printf ("rtcp_src_%d", ssrc);
+  rtcp_pad = gst_pad_new_from_template (templ, padname);
   g_free (padname);
 
   /* wrap in structure and add to list */
   demuxpad = g_new0 (GstRtpSsrcDemuxPad, 1);
   demuxpad->ssrc = ssrc;
-  demuxpad->pad = result;
-  demux->rtp_srcpads = g_slist_prepend (demux->rtp_srcpads, demuxpad);
+  demuxpad->rtp_pad = rtp_pad;
+  demuxpad->rtcp_pad = rtcp_pad;
+
+  demux->srcpads = g_slist_prepend (demux->srcpads, demuxpad);
+  GST_OBJECT_UNLOCK (demux);
 
   /* copy caps from input */
-  gst_pad_set_caps (result, GST_PAD_CAPS (demux->rtp_sink));
+  gst_pad_set_caps (rtp_pad, GST_PAD_CAPS (demux->rtp_sink));
+  gst_pad_use_fixed_caps (rtp_pad);
+  gst_pad_set_caps (rtcp_pad, GST_PAD_CAPS (demux->rtcp_sink));
+  gst_pad_use_fixed_caps (rtcp_pad);
 
-  gst_pad_set_event_function (result, gst_rtp_ssrc_demux_src_event);
-  gst_pad_set_active (result, TRUE);
-  gst_element_add_pad (GST_ELEMENT_CAST (demux), result);
+  gst_pad_set_event_function (rtp_pad, gst_rtp_ssrc_demux_src_event);
+  gst_pad_set_active (rtp_pad, TRUE);
+  gst_pad_set_active (rtcp_pad, TRUE);
+
+  gst_element_add_pad (GST_ELEMENT_CAST (demux), rtp_pad);
+  gst_element_add_pad (GST_ELEMENT_CAST (demux), rtcp_pad);
 
   g_signal_emit (G_OBJECT (demux),
-      gst_rtp_ssrc_demux_signals[SIGNAL_NEW_SSRC_PAD], 0, ssrc, result);
+      gst_rtp_ssrc_demux_signals[SIGNAL_NEW_SSRC_PAD], 0, ssrc, rtp_pad);
 
-  return result;
+  GST_OBJECT_LOCK (demux);
+
+  return demuxpad;
 }
 
 static void
@@ -176,7 +215,11 @@ gst_rtp_ssrc_demux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&rtp_ssrc_demux_sink_template));
   gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&rtp_ssrc_demux_rtcp_sink_template));
+  gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&rtp_ssrc_demux_src_template));
+  gst_element_class_add_pad_template (gstelement_klass,
+      gst_static_pad_template_get (&rtp_ssrc_demux_rtcp_src_template));
 
   gst_element_class_set_details (gstelement_klass, &gst_rtp_ssrc_demux_details);
 }
@@ -226,6 +269,14 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux,
   gst_pad_set_chain_function (demux->rtp_sink, gst_rtp_ssrc_demux_chain);
   gst_pad_set_event_function (demux->rtp_sink, gst_rtp_ssrc_demux_sink_event);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtp_sink);
+
+  demux->rtcp_sink =
+      gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
+          "rtcp_sink"), "rtcp_sink");
+  gst_pad_set_chain_function (demux->rtcp_sink, gst_rtp_ssrc_demux_rtcp_chain);
+  gst_pad_set_event_function (demux->rtcp_sink,
+      gst_rtp_ssrc_demux_rtcp_sink_event);
+  gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtcp_sink);
 }
 
 static void
@@ -249,10 +300,52 @@ gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
     default:
-      res = gst_pad_event_default (pad, event);
+    {
+      GSList *walk;
+
+      res = TRUE;
+      GST_OBJECT_LOCK (demux);
+      for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
+        GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
+
+        gst_event_ref (event);
+        res &= gst_pad_push_event (pad->rtp_pad, event);
+      }
+      GST_OBJECT_UNLOCK (demux);
+      gst_event_unref (event);
       break;
+    }
   }
 
+  gst_object_unref (demux);
+  return res;
+}
+
+static gboolean
+gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad, GstEvent * event)
+{
+  GstRtpSsrcDemux *demux;
+  gboolean res = FALSE;
+
+  demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+    default:
+    {
+      GSList *walk;
+
+      res = TRUE;
+      GST_OBJECT_LOCK (demux);
+      for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
+        GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
+
+        res &= gst_pad_push_event (pad->rtcp_pad, event);
+      }
+      GST_OBJECT_UNLOCK (demux);
+      break;
+    }
+  }
   gst_object_unref (demux);
   return res;
 }
@@ -263,7 +356,7 @@ gst_rtp_ssrc_demux_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret;
   GstRtpSsrcDemux *demux;
   guint32 ssrc;
-  GstPad *srcpad;
+  GstRtpSsrcDemuxPad *dpad;
 
   demux = GST_RTP_SSRC_DEMUX (GST_OBJECT_PARENT (pad));
 
@@ -274,16 +367,16 @@ gst_rtp_ssrc_demux_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (demux, "received buffer of SSRC %08x", ssrc);
 
-  srcpad = find_rtp_pad_for_ssrc (demux, ssrc);
-  if (srcpad == NULL) {
-    GST_DEBUG_OBJECT (demux, "creating pad for SSRC %08x", ssrc);
-    srcpad = create_rtp_pad_for_ssrc (demux, ssrc);
-    if (!srcpad)
+  GST_OBJECT_LOCK (demux);
+  dpad = find_demux_pad_for_ssrc (demux, ssrc);
+  if (dpad == NULL) {
+    if (!(dpad = create_demux_pad_for_ssrc (demux, ssrc)))
       goto create_failed;
   }
+  GST_OBJECT_UNLOCK (demux);
 
   /* push to srcpad */
-  ret = gst_pad_push (srcpad, buf);
+  ret = gst_pad_push (dpad->rtp_pad, buf);
 
   return ret;
 
@@ -298,9 +391,74 @@ invalid_payload:
   }
 create_failed:
   {
-    /* this is not fatal yet */
     GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
         ("Could not create new pad"));
+    GST_OBJECT_UNLOCK (demux);
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
+}
+
+static GstFlowReturn
+gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstFlowReturn ret;
+  GstRtpSsrcDemux *demux;
+  guint32 ssrc;
+  GstRtpSsrcDemuxPad *dpad;
+  GstRTCPPacket packet;
+
+  demux = GST_RTP_SSRC_DEMUX (GST_OBJECT_PARENT (pad));
+
+  if (!gst_rtcp_buffer_validate (buf))
+    goto invalid_rtcp;
+
+  if (!gst_rtcp_buffer_get_first_packet (buf, &packet))
+    goto invalid_rtcp;
+
+  /* first packet must be SR or RR or else the validate would have failed */
+  switch (gst_rtcp_packet_get_type (&packet)) {
+    case GST_RTCP_TYPE_SR:
+      gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc, NULL, NULL, NULL,
+          NULL);
+      break;
+    case GST_RTCP_TYPE_RR:
+      ssrc = gst_rtcp_packet_rr_get_ssrc (&packet);
+      break;
+    default:
+      goto invalid_rtcp;
+  }
+
+  GST_DEBUG_OBJECT (demux, "received RTCP of SSRC %08x", ssrc);
+
+  GST_OBJECT_LOCK (demux);
+  dpad = find_demux_pad_for_ssrc (demux, ssrc);
+  if (dpad == NULL) {
+    GST_DEBUG_OBJECT (demux, "creating pad for SSRC %08x", ssrc);
+    if (!(dpad = create_demux_pad_for_ssrc (demux, ssrc)))
+      goto create_failed;
+  }
+  GST_OBJECT_UNLOCK (demux);
+
+  /* push to srcpad */
+  ret = gst_pad_push (dpad->rtcp_pad, buf);
+
+  return ret;
+
+  /* ERRORS */
+invalid_rtcp:
+  {
+    /* this is fatal and should be filtered earlier */
+    GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
+        ("Dropping invalid RTCP packet"));
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
+create_failed:
+  {
+    GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
+        ("Could not create new pad"));
+    GST_OBJECT_UNLOCK (demux);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }

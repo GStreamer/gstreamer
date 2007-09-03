@@ -48,6 +48,9 @@ struct _GstRtpBin {
   /* clock we provide */
   GstClock       *provided_clock;
 
+  /* a list of clients, these are streams with the same CNAME */
+  GSList         *clients;
+
   /*< private >*/
   GstRtpBinPrivate *priv;
 };
