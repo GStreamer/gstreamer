@@ -21,7 +21,7 @@
 /**
  * SECTION:gstrtpbuffer
  * @short_description: Helper methods for dealing with RTP buffers
- * @see_also: gstbasertppayload, gstbasertpdepayload
+ * @see_also: #GstBaseRTPPayload, #GstBaseRTPDepayload, gstrtcpbuffer
  *
  * <refsect2>
  * <para>
@@ -308,8 +308,29 @@ gst_rtp_buffer_validate_data (guint8 * data, guint len)
   csrc_count = (data[0] & 0x0f);
   header_len += csrc_count * sizeof (guint32);
 
+  /* calc extension length when present. */
+  if (data[0] & 0x10) {
+    guint8 *extpos;
+    guint16 extlen;
+
+    /* this points to the extenstion bits and header length */
+    extpos = &data[header_len];
+
+    /* skip the header and check that we have enough space */
+    header_len += 4;
+    if (G_UNLIKELY (len < header_len))
+      goto wrong_length;
+
+    /* skip id */
+    extpos += 2;
+    /* read length as the number of 32 bits words */
+    extlen = GST_READ_UINT16_BE (extpos);
+
+    header_len += extlen * sizeof (guint32);
+  }
+
   /* check for padding */
-  if (data[0] & 0x40)
+  if (data[0] & 0x20)
     padding = data[len - 1];
   else
     padding = 0;
@@ -409,6 +430,29 @@ gst_rtp_buffer_get_packet_len (GstBuffer * buffer)
 }
 
 /**
+ * gst_rtp_buffer_get_header_len:
+ * @buffer: the buffer
+ *
+ * Return the total length of the header in @buffer. This include the length of
+ * the fixed header, the CSRC list and the extension header.
+ *
+ * Returns: The total length of the header in @buffer.
+ */
+guint
+gst_rtp_buffer_get_header_len (GstBuffer * buffer)
+{
+  guint len;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
+
+  len = GST_RTP_HEADER_LEN + GST_RTP_HEADER_CSRC_SIZE (buffer);
+  if (GST_RTP_HEADER_EXTENSION (buffer))
+    len += GST_READ_UINT16_BE (GST_BUFFER_DATA (buffer) + len + 2) * 4 + 4;
+
+  return len;
+}
+
+/**
  * gst_rtp_buffer_get_version:
  * @buffer: the buffer
  *
@@ -480,7 +524,7 @@ gst_rtp_buffer_set_padding (GstBuffer * buffer, gboolean padding)
  * @buffer: the buffer
  * @len: the new amount of padding
  *
- * Set the amount of padding in the RTP packing in @buffer to
+ * Set the amount of padding in the RTP packet in @buffer to
  * @len. If @len is 0, the padding is removed.
  *
  * NOTE: This function does not work correctly.
@@ -530,6 +574,51 @@ gst_rtp_buffer_set_extension (GstBuffer * buffer, gboolean extension)
   g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
 
   GST_RTP_HEADER_EXTENSION (buffer) = extension;
+}
+
+/**
+ * gst_rtp_buffer_get_extension_data:
+ * @buffer: the buffer
+ * @bits: location for result bits
+ * @data: location for data
+ * @wordlen: location for length of @data in 32 bits words
+ *
+ * Get the extension data. @bits will contain the extrnsion 16 bits of custom
+ * data. @data will point to the data in the extension and @wordlen will contain
+ * the length of @data in 32 bits words.
+ *
+ * If @buffer did not contain an extenstion, this function will return %FALSE
+ * with @bits, @data and @wordlen unchanged.
+ * 
+ * Returns: TRUE if @buffer had the extension bit set.
+ *
+ * Since: 0.10.15
+ */
+gboolean
+gst_rtp_buffer_get_extension_data (GstBuffer * buffer, guint16 * bits,
+    gpointer * data, guint * wordlen)
+{
+  guint len;
+  guint8 *pdata;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), FALSE);
+  g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, FALSE);
+
+  if (GST_RTP_HEADER_EXTENSION (buffer))
+    return FALSE;
+
+  /* move to the extension */
+  len = GST_RTP_HEADER_LEN + GST_RTP_HEADER_CSRC_SIZE (buffer);
+  pdata = GST_BUFFER_DATA (buffer) + len;
+
+  if (bits)
+    *bits = GST_READ_UINT16_BE (pdata);
+  if (wordlen)
+    *wordlen = GST_READ_UINT16_BE (pdata + 2);
+  if (data)
+    *data = pdata + 4;
+
+  return TRUE;
 }
 
 /**
@@ -780,10 +869,10 @@ gst_rtp_buffer_get_payload_subbuffer (GstBuffer * buffer, guint offset,
   g_return_val_if_fail (offset < plen, NULL);
 
   /* apply offset */
-  poffset = GST_RTP_HEADER_LEN + GST_RTP_HEADER_CSRC_SIZE (buffer) + offset;
+  poffset = gst_rtp_buffer_get_header_len (buffer) + offset;
   plen -= offset;
 
-  /* see if we need to shrink the buffer even based on @len */
+  /* see if we need to shrink the buffer based on @len */
   if (len != -1 && len < plen)
     plen = len;
 
@@ -817,16 +906,17 @@ gst_rtp_buffer_get_payload_buffer (GstBuffer * buffer)
 guint
 gst_rtp_buffer_get_payload_len (GstBuffer * buffer)
 {
-  guint len;
+  guint len, size;
 
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
   g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
 
-  len = GST_BUFFER_SIZE (buffer)
-      - GST_RTP_HEADER_LEN - GST_RTP_HEADER_CSRC_SIZE (buffer);
+  size = GST_BUFFER_SIZE (buffer);
+
+  len = size - gst_rtp_buffer_get_header_len (buffer);
 
   if (GST_RTP_HEADER_PADDING (buffer))
-    len -= ((guint8 *) GST_BUFFER_DATA (buffer))[GST_BUFFER_SIZE (buffer) - 1];
+    len -= GST_BUFFER_DATA (buffer)[size - 1];
 
   return len;
 }
@@ -846,8 +936,7 @@ gst_rtp_buffer_get_payload (GstBuffer * buffer)
   g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
   g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, NULL);
 
-  return GST_BUFFER_DATA (buffer) + GST_RTP_HEADER_LEN
-      + GST_RTP_HEADER_CSRC_SIZE (buffer);
+  return GST_BUFFER_DATA (buffer) + gst_rtp_buffer_get_header_len (buffer);
 }
 
 /**

@@ -23,7 +23,7 @@
 /**
  * SECTION:gstrtcpbuffer
  * @short_description: Helper methods for dealing with RTCP buffers
- * @see_also: gstbasertppayload, gstbasertpdepayload
+ * @see_also: #GstBaseRTPPayload, #GstBaseRTPDepayload, #gstrtpbuffer
  *
  * Note: The API in this module is not yet declared stable.
  *
@@ -246,6 +246,9 @@ gst_rtcp_buffer_new (guint mtu)
  *
  * Finish @buffer after being constructured. This function is usually called
  * after gst_rtcp_buffer_new() and after adding the RTCP items to the new buffer. 
+ *
+ * The function adjusts the size of @buffer with the total length of all the
+ * added packets.
  */
 void
 gst_rtcp_buffer_end (GstBuffer * buffer)
@@ -758,7 +761,6 @@ gst_rtcp_packet_get_rb (GstRTCPPacket * packet, guint nth, guint32 * ssrc,
     *ssrc = GST_READ_UINT32_BE (data);
   data += 4;
   tmp = GST_READ_UINT32_BE (data);
-  data += 4;
   if (fractionlost)
     *fractionlost = (tmp >> 24);
   if (packetslost) {
@@ -1563,8 +1565,6 @@ gst_rtcp_packet_bye_get_reason (GstRTCPPacket * packet)
  * Set the reason string to @reason in @packet.
  *
  * Returns: TRUE if the string could be set.
- *
- * Note: Not implemented.
  */
 gboolean
 gst_rtcp_packet_bye_set_reason (GstRTCPPacket * packet, const gchar * reason)
@@ -1617,4 +1617,56 @@ no_space:
     packet->length--;
     return FALSE;
   }
+}
+
+/**
+ * gst_rtcp_ntp_to_unix:
+ * @ntptime: an NTP timestamp
+ *
+ * Converts an NTP time to UNIX nanoseconds. @ntptime can typically be
+ * the NTP time of an SR RTCP message and contains, in the upper 32 bits, the
+ * number of seconds since 1900 and, in the lower 32 bits, the fractional
+ * seconds. The resulting value will be the number of nanoseconds since 1970.
+ *
+ * Returns: the UNIX time for @ntptime in nanoseconds.
+ */
+guint64
+gst_rtcp_ntp_to_unix (guint64 ntptime)
+{
+  guint64 unixtime;
+
+  /* conversion from NTP timestamp (seconds since 1900) to seconds since
+   * 1970. */
+  unixtime = ntptime - (2208988800LL << 32);
+  /* conversion to nanoseconds */
+  unixtime = gst_util_uint64_scale (unixtime, GST_SECOND, (1LL << 32));
+
+  return unixtime;
+}
+
+/**
+ * gst_rtcp_unix_to_ntp:
+ * @unixtime: an UNIX timestamp in nanoseconds
+ *
+ * Converts a UNIX timestamp in nanoseconds to an NTP time. The caller should
+ * pass a value with nanoseconds since 1970. The NTP time will, in the upper
+ * 32 bits, contain the number of seconds since 1900 and, in the lower 32
+ * bits, the fractional seconds. The resulting value can be used as an ntptime
+ * for constructing SR RTCP packets.
+ *
+ * Returns: the NTP time for @gsttime.
+ */
+guint64
+gst_rtcp_unix_to_ntp (guint64 unixtime)
+{
+  guint64 ntptime;
+
+  /* convert clock time to NTP time. upper 32 bits should contain the seconds
+   * and the lower 32 bits, the fractions of a second. */
+  ntptime = gst_util_uint64_scale (unixtime, (1LL << 32), GST_SECOND);
+  /* conversion from UNIX timestamp (seconds since 1970) to NTP (seconds
+   * since 1900). */
+  ntptime += (2208988800LL << 32);
+
+  return ntptime;
 }

@@ -179,15 +179,15 @@ guint16         gst_rtcp_packet_get_length        (GstRTCPPacket *packet);
 
 
 /* sender reports */ 
-void            gst_rtcp_packet_sr_get_sender_info     (GstRTCPPacket *packet, guint32 *ssrc, 
-                                                        guint64 *ntptime, guint32 *rtptime, 
-						        guint32 *packet_count, guint32 *octet_count);
-void            gst_rtcp_packet_sr_set_sender_info     (GstRTCPPacket *packet, guint32 ssrc, 
-                                                        guint64 ntptime, guint32 rtptime, 
-						        guint32 packet_count, guint32 octet_count);
+void            gst_rtcp_packet_sr_get_sender_info    (GstRTCPPacket *packet, guint32 *ssrc, 
+                                                       guint64 *ntptime, guint32 *rtptime, 
+						       guint32 *packet_count, guint32 *octet_count);
+void            gst_rtcp_packet_sr_set_sender_info    (GstRTCPPacket *packet, guint32 ssrc, 
+                                                       guint64 ntptime, guint32 rtptime, 
+						       guint32 packet_count, guint32 octet_count);
 /* receiver reports */ 
-guint32         gst_rtcp_packet_rr_get_ssrc            (GstRTCPPacket *packet);
-void            gst_rtcp_packet_rr_set_ssrc            (GstRTCPPacket *packet, guint32 ssrc);
+guint32         gst_rtcp_packet_rr_get_ssrc           (GstRTCPPacket *packet);
+void            gst_rtcp_packet_rr_set_ssrc           (GstRTCPPacket *packet, guint32 ssrc);
 
 
 /* report blocks for SR and RR */
@@ -224,13 +224,17 @@ gboolean        gst_rtcp_packet_sdes_add_entry        (GstRTCPPacket *packet, Gs
                                                        guint8 len, const guint8 *data);
 
 /* bye packet */
-guint           gst_rtcp_packet_bye_get_ssrc_count     (GstRTCPPacket *packet);
-guint32         gst_rtcp_packet_bye_get_nth_ssrc       (GstRTCPPacket *packet, guint nth);
-gboolean        gst_rtcp_packet_bye_add_ssrc           (GstRTCPPacket *packet, guint32 ssrc);
-gboolean        gst_rtcp_packet_bye_add_ssrcs          (GstRTCPPacket *packet, guint32 *ssrc, guint len);
-guint8          gst_rtcp_packet_bye_get_reason_len     (GstRTCPPacket *packet);
-gchar*          gst_rtcp_packet_bye_get_reason         (GstRTCPPacket *packet);
-gboolean        gst_rtcp_packet_bye_set_reason         (GstRTCPPacket *packet, const gchar *reason);
+guint           gst_rtcp_packet_bye_get_ssrc_count    (GstRTCPPacket *packet);
+guint32         gst_rtcp_packet_bye_get_nth_ssrc      (GstRTCPPacket *packet, guint nth);
+gboolean        gst_rtcp_packet_bye_add_ssrc          (GstRTCPPacket *packet, guint32 ssrc);
+gboolean        gst_rtcp_packet_bye_add_ssrcs         (GstRTCPPacket *packet, guint32 *ssrc, guint len);
+guint8          gst_rtcp_packet_bye_get_reason_len    (GstRTCPPacket *packet);
+gchar*          gst_rtcp_packet_bye_get_reason        (GstRTCPPacket *packet);
+gboolean        gst_rtcp_packet_bye_set_reason        (GstRTCPPacket *packet, const gchar *reason);
+
+/* helper functions */
+guint64         gst_rtcp_ntp_to_unix                  (guint64 ntptime);
+guint64         gst_rtcp_unix_to_ntp                  (guint64 unixtime);
 
 G_END_DECLS
 

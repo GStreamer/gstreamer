@@ -1,5 +1,32 @@
 2007-09-03  Wim Taymans  <wim.taymans@gmail.com>
 
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/rtp/gstrtcpbuffer.c: (gst_rtcp_packet_get_rb),
+	(gst_rtcp_packet_sdes_copy_entry), (gst_rtcp_ntp_to_unix),
+	(gst_rtcp_unix_to_ntp):
+	* gst-libs/gst/rtp/gstrtcpbuffer.h:
+	Fix parsing of RB blocks.
+	Fix docs.
+	Added helper functions to convert to/from UNIX and NTP time.
+	API: gst_rtcp_ntp_to_unix()
+	API: gst_rtcp_unix_to_ntp()
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtp_buffer_validate_data),
+	(gst_rtp_buffer_get_header_len),
+	(gst_rtp_buffer_get_extension_data),
+	(gst_rtp_buffer_get_payload_subbuffer),
+	(gst_rtp_buffer_get_payload_len), (gst_rtp_buffer_get_payload),
+	(gst_rtp_buffer_ext_timestamp):
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	Fix some more docs.
+	Implement handling of packets with extensions.
+	Fix padding check in _validate().
+	Added function to get extension data.
+	API: gst_rtp_buffer_get_header_len()
+	API: gst_rtp_buffer_get_extension_data()
+
+2007-09-03  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
 	(gst_base_rtp_depayload_class_init),
 	(gst_base_rtp_depayload_set_gst_timestamp):
