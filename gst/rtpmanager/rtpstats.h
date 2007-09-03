@@ -51,6 +51,7 @@ typedef struct {
   guint32 jitter;
   guint32 lsr;
   guint32 dlsr;
+  guint32 round_trip;
 } RTPReceiverReport;
 
 /**
@@ -64,6 +65,7 @@ typedef struct {
  */
 typedef struct {
   GstClockTime  time;
+  guint64       ntpnstime;
   gboolean      have_address;
   GstNetAddress address;
   guint         bytes;

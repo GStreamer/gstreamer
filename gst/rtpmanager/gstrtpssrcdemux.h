@@ -37,7 +37,8 @@ struct _GstRtpSsrcDemux
   GstElement parent;
 
   GstPad *rtp_sink;
-  GSList *rtp_srcpads;
+  GstPad *rtcp_sink;
+  GSList *srcpads;
 };
 
 struct _GstRtpSsrcDemuxClass

@@ -134,13 +134,25 @@ struct _RTPSource {
   GstNetAddress rtcp_from;
 
   guint8        payload;
+  GstCaps      *caps;
   gint          clock_rate;
+  gint32        seqnum_base;
+
+  gint64        clock_base;
+
+  /* to calculate the clock skew */
+  guint64       skew_base_ntpnstime;
+  guint64       skew_base_rtptime;
+  gint64        avg_skew;
+  guint64       ext_rtptime;
+  guint64       prev_ext_rtptime;
 
   GstClockTime  bye_time;
   GstClockTime  last_activity;
   GstClockTime  last_rtp_activity;
-  GstClockTime  last_timestamp;
+
   GstClockTime  last_rtptime;
+  GstClockTime  last_ntpnstime;
 
   GQueue       *packets;
 
@@ -158,6 +170,7 @@ GType rtp_source_get_type (void);
 
 /* managing lifetime of sources */
 RTPSource*      rtp_source_new            (guint32 ssrc);
+void            rtp_source_update_caps    (RTPSource *src, GstCaps *caps);
 
 void            rtp_source_set_callbacks  (RTPSource *src, RTPSourceCallbacks *cb, gpointer data);
 void            rtp_source_set_as_csrc    (RTPSource *src);
@@ -168,18 +181,24 @@ void            rtp_source_set_rtcp_from  (RTPSource *src, GstNetAddress *addres
 /* handling RTP */
 GstFlowReturn   rtp_source_process_rtp    (RTPSource *src, GstBuffer *buffer, RTPArrivalStats *arrival);
 
-GstFlowReturn   rtp_source_send_rtp       (RTPSource *src, GstBuffer *buffer);
+GstFlowReturn   rtp_source_send_rtp       (RTPSource *src, GstBuffer *buffer, guint64 ntpnstime);
 
 /* RTCP messages */
 void            rtp_source_process_bye    (RTPSource *src, const gchar *reason);
-void            rtp_source_process_sr     (RTPSource *src, guint64 ntptime, guint32 rtptime,
-                                           guint32 packet_count, guint32 octet_count, GstClockTime time);
-void            rtp_source_process_rb     (RTPSource *src, guint8 fractionlost, gint32 packetslost,
-                                           guint32 exthighestseq, guint32 jitter,
+void            rtp_source_process_sr     (RTPSource *src, GstClockTime time, guint64 ntptime,
+                                           guint32 rtptime, guint32 packet_count, guint32 octet_count);
+void            rtp_source_process_rb     (RTPSource *src, GstClockTime time, guint8 fractionlost,
+                                           gint32 packetslost, guint32 exthighestseq, guint32 jitter,
                                            guint32 lsr, guint32 dlsr);
 
-gboolean        rtp_source_get_last_sr    (RTPSource *src, guint64 *ntptime, guint32 *rtptime,
-                                           guint32 *packet_count, guint32 *octet_count, GstClockTime *time);
+gboolean        rtp_source_get_new_sr     (RTPSource *src, GstClockTime time, guint64 *ntptime,
+		                           guint32 *rtptime, guint32 *packet_count, guint32 *octet_count);
+gboolean        rtp_source_get_new_rb     (RTPSource *src, GstClockTime time, guint8 *fractionlost,
+                                           gint32 *packetslost, guint32 *exthighestseq, guint32 *jitter,
+                                           guint32 *lsr, guint32 *dlsr);
+
+gboolean        rtp_source_get_last_sr    (RTPSource *src, GstClockTime *time, guint64 *ntptime,
+                                           guint32 *rtptime, guint32 *packet_count, guint32 *octet_count);
 gboolean        rtp_source_get_last_rb    (RTPSource *src, guint8 *fractionlost, gint32 *packetslost,
                                            guint32 *exthighestseq, guint32 *jitter,
                                            guint32 *lsr, guint32 *dlsr);

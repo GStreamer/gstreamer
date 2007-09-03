@@ -82,6 +82,20 @@ typedef GstFlowReturn (*RTPSessionSendRTP) (RTPSession *sess, RTPSource *src, Gs
 typedef GstFlowReturn (*RTPSessionSendRTCP) (RTPSession *sess, RTPSource *src, GstBuffer *buffer, gpointer user_data);
 
 /**
+ * RTPSessionSyncRTCP:
+ * @sess: an #RTPSession
+ * @src: the #RTPSource
+ * @buffer: the RTCP buffer ready for sending
+ * @user_data: user data specified when registering
+ *
+ * This callback will be called when @sess has and SR @buffer ready for doing
+ * synchronisation between streams.
+ *
+ * Returns: a #GstFlowReturn.
+ */
+typedef GstFlowReturn (*RTPSessionSyncRTCP) (RTPSession *sess, RTPSource *src, GstBuffer *buffer, gpointer user_data);
+
+/**
  * RTPSessionClockRate:
  * @sess: an #RTPSession
  * @payload: the payload
@@ -92,18 +106,6 @@ typedef GstFlowReturn (*RTPSessionSendRTCP) (RTPSession *sess, RTPSource *src, G
  * Returns: the clock-rate of @pt.
  */
 typedef gint (*RTPSessionClockRate) (RTPSession *sess, guint8 payload, gpointer user_data);
-
-/**
- * RTPSessionGetTime:
- * @sess: an #RTPSession
- * @user_data: user data specified when registering
- *
- * This callback will be called when @sess needs the current time in
- * nanoseconds.
- *
- * Returns: a #GstClockTime with the current time in nanoseconds.
- */
-typedef GstClockTime (*RTPSessionGetTime) (RTPSession *sess, gpointer user_data);
 
 /**
  * RTPSessionReconsider:
@@ -121,7 +123,7 @@ typedef void (*RTPSessionReconsider) (RTPSession *sess, gpointer user_data);
  * @RTPSessionProcessRTP: callback to process RTP packets
  * @RTPSessionSendRTP: callback for sending RTP packets
  * @RTPSessionSendRTCP: callback for sending RTCP packets
- * @RTPSessionGetTime: callback for returning the current time
+ * @RTPSessionSyncRTCP: callback for handling SR packets
  * @RTPSessionReconsider: callback for reconsidering the timeout
  *
  * These callbacks can be installed on the session manager to get notification
@@ -132,8 +134,8 @@ typedef struct {
   RTPSessionProcessRTP  process_rtp;
   RTPSessionSendRTP     send_rtp;
   RTPSessionSendRTCP    send_rtcp;
+  RTPSessionSyncRTCP    sync_rtcp;
   RTPSessionClockRate   clock_rate;
-  RTPSessionGetTime     get_time;
   RTPSessionReconsider  reconsider;
 } RTPSessionCallbacks;
 
@@ -190,8 +192,7 @@ struct _RTPSession {
 
   RTPSessionStats stats;
 
-  /* for mapping RTP time to NTP time */
-  GstClockTime  start_timestamp;
+  /* for mapping clock time to NTP time */
   GstClockTime  base_time;
 };
 
@@ -250,18 +251,17 @@ RTPSource*      rtp_session_get_source_by_cname    (RTPSession *sess, const gcha
 RTPSource*      rtp_session_create_source          (RTPSession *sess);
 
 /* processing packets from receivers */
-GstFlowReturn   rtp_session_process_rtp            (RTPSession *sess, GstBuffer *buffer);
+GstFlowReturn   rtp_session_process_rtp            (RTPSession *sess, GstBuffer *buffer, guint64 ntpnstime);
 GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer *buffer);
 
 /* processing packets for sending */
-GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, GstBuffer *buffer);
-void            rtp_session_set_base_time          (RTPSession *sess, GstClockTime base_time);
-void            rtp_session_set_timestamp_sync     (RTPSession *sess, GstClockTime start_timestamp);
+GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, GstBuffer *buffer, guint64 ntptime);
+
 /* stopping the session */
 GstFlowReturn   rtp_session_send_bye               (RTPSession *sess, const gchar *reason);
 
 /* get interval for next RTCP interval */
 GstClockTime    rtp_session_next_timeout          (RTPSession *sess, GstClockTime time);
-GstFlowReturn   rtp_session_on_timeout            (RTPSession *sess, GstClockTime time);
+GstFlowReturn   rtp_session_on_timeout            (RTPSession *sess, GstClockTime time, guint64 ntpnstime);
 
 #endif /* __RTP_SESSION_H__ */
