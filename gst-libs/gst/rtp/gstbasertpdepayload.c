@@ -116,8 +116,16 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
   gobject_class->set_property = gst_base_rtp_depayload_set_property;
   gobject_class->get_property = gst_base_rtp_depayload_get_property;
 
+  /**
+   * GstBaseRTPDepayload::queue-delay
+   *
+   * Control the amount of packets to buffer.
+   *
+   * Deprecated: Use a jitterbuffer or RTP session manager to delay packet
+   * playback. This property has no effect anymore since 0.10.15.
+   */
   g_object_class_install_property (gobject_class, PROP_QUEUE_DELAY,
-      g_param_spec_uint ("queue_delay", "Queue Delay",
+      g_param_spec_uint ("queue-delay", "Queue Delay",
           "Amount of ms to queue/buffer, deprecated", 0, G_MAXUINT,
           DEFAULT_QUEUE_DELAY, G_PARAM_READWRITE));
 
@@ -423,7 +431,7 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
 
   GST_BUFFER_TIMESTAMP (buf) = ts;
 
-  /* if this is the first buf send a NEWSEGMENT */
+  /* if this is the first buffer send a NEWSEGMENT */
   if (filter->need_newsegment) {
     GstEvent *event;
     GstClockTime stop, position;

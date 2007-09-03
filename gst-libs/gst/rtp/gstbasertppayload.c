@@ -636,7 +636,7 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 no_rate:
   {
     GST_ELEMENT_ERROR (payload, STREAM, NOT_IMPLEMENTED, (NULL),
-        ("subclass did not specify clock_rate"));
+        ("subclass did not specify clock-rate"));
     gst_buffer_unref (buffer);
     return GST_FLOW_ERROR;
   }
