@@ -453,6 +453,7 @@ gst_avi_demux_get_src_query_types (GstPad * pad)
   static const GstQueryType src_types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
+    GST_QUERY_SEEKING,
     0
   };
 
@@ -535,6 +536,31 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
         break;
       }
       gst_query_set_duration (query, GST_FORMAT_TIME, stream->duration);
+      break;
+    }
+    case GST_QUERY_SEEKING:{
+      GstFormat fmt;
+
+      gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
+      if (fmt == GST_FORMAT_TIME) {
+        gboolean seekable = TRUE;
+
+        if (avi->streaming) {
+          seekable = FALSE;
+        } else {
+          if (avi->index_entries == NULL) {
+            seekable = FALSE;
+            /* FIXME: when building index_entried, count keyframes
+               if (!(avi->key_frame_ct > 1))
+               seekable = FALSE;
+             */
+          }
+        }
+
+        gst_query_set_seeking (query, GST_FORMAT_TIME, seekable,
+            0, stream->duration);
+        res = TRUE;
+      }
       break;
     }
     default:
