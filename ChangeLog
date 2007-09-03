@@ -1,3 +1,7 @@
+2007-09-03  Renato Filho  <renato.filho@indt.org.br>
+	* gst/playback/gstplaybasebin.c:
+	Included "myth://" on stream_uris list for enable buffering to mythtv files
+
 2007-09-03  Wim Taymans  <wim.taymans@gmail.com>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

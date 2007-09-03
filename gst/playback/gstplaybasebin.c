@@ -1542,7 +1542,7 @@ array_has_value (const gchar * values[], const gchar * value)
 /* list of URIs that we consider to be streams and that need buffering.
  * We have no mechanism yet to figure this out with a query. */
 static const gchar *stream_uris[] = { "http://", "mms://", "mmsh://",
-  "mmsu://", "mmst://", NULL
+  "mmsu://", "mmst://", "myth://", NULL
 };
 
 /* blacklisted URIs, we know they will always fail. */
