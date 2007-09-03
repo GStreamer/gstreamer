@@ -50,6 +50,8 @@ struct _GstBaseAudioSinkPrivate
   GstBaseAudioSinkSlaveMethod slave_method;
   /* running average of clock skew */
   GstClockTimeDiff avg_skew;
+  /* the number of samples we aligned last time */
+  gint64 last_align;
 };
 
 /* BaseAudioSink signals and args */
@@ -754,7 +756,9 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
 {
   GstClockTime cinternal, cexternal, crate_num, crate_denom;
   GstClockTime etime, itime;
-  GstClockTimeDiff skew, segtime;
+  GstClockTimeDiff skew, segtime, segtime2;
+  gint segsamples;
+  gint64 last_align;
 
   /* get calibration parameters to compensate for offsets */
   gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
@@ -782,26 +786,55 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
 
   /* the max drift we allow is the length of a segment */
   segtime = sink->ringbuffer->spec.latency_time * 1000;
+  segtime2 = segtime / 2;
 
   /* adjust playout pointer based on skew */
-  if (sink->priv->avg_skew > segtime) {
+  if (sink->priv->avg_skew > segtime2) {
     /* master is running slower, move internal time forward */
     GST_WARNING_OBJECT (sink,
         "correct clock skew %" G_GINT64_FORMAT " > %" G_GINT64_FORMAT,
-        sink->priv->avg_skew, segtime);
+        sink->priv->avg_skew, segtime2);
     cinternal += segtime;
     sink->priv->avg_skew -= segtime;
-    sink->next_sample = -1;
+
+    segsamples =
+        sink->ringbuffer->spec.segsize /
+        sink->ringbuffer->spec.bytes_per_sample;
+    last_align = sink->priv->last_align;
+
+    /* if we were aligning in the wrong direction or we aligned more than what we
+     * will correct, resync */
+    if (last_align < 0 || last_align > segsamples)
+      sink->next_sample = -1;
+
+    GST_DEBUG_OBJECT (sink,
+        "last_align %" G_GINT64_FORMAT " segsamples %u, next %"
+        G_GUINT64_FORMAT, last_align, segsamples, sink->next_sample);
+
     gst_clock_set_calibration (sink->provided_clock, cinternal, cexternal,
         crate_num, crate_denom);
-  } else if (sink->priv->avg_skew < -segtime) {
+  } else if (sink->priv->avg_skew < -segtime2) {
     /* master is running faster, move external time forwards */
     GST_WARNING_OBJECT (sink,
         "correct clock skew %" G_GINT64_FORMAT " < %" G_GINT64_FORMAT,
-        sink->priv->avg_skew, -segtime);
+        sink->priv->avg_skew, -segtime2);
     cexternal += segtime;
     sink->priv->avg_skew += segtime;
-    sink->next_sample = -1;
+
+    segsamples =
+        sink->ringbuffer->spec.segsize /
+        sink->ringbuffer->spec.bytes_per_sample;
+    last_align = sink->priv->last_align;
+
+    /* if we were aligning in the wrong direction or we aligned more than what we
+     * will correct, resync */
+    if (last_align > 0 || -last_align > segsamples)
+      sink->next_sample = -1;
+
+    GST_DEBUG_OBJECT (sink,
+        "last_align %" G_GINT64_FORMAT " segsamples %u, next %"
+        G_GUINT64_FORMAT, last_align, segsamples, sink->next_sample);
+
     gst_clock_set_calibration (sink->provided_clock, cinternal, cexternal,
         crate_num, crate_denom);
   }
@@ -973,8 +1006,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       "after latency: start %" GST_TIME_FORMAT " - stop %" GST_TIME_FORMAT,
       GST_TIME_ARGS (render_start), GST_TIME_ARGS (render_stop));
 
-  slaved = clock != sink->provided_clock;
-  if (slaved) {
+  if ((slaved = clock != sink->provided_clock)) {
     /* handle clock slaving */
     gst_base_audio_sink_handle_slaving (sink, render_start, render_stop,
         &render_start, &render_stop);
@@ -1016,11 +1048,11 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
    * and sample offset position. We always resync if we got a discont anyway and
    * non-discont should be aligned by definition. */
   if (G_LIKELY (diff < ringbuf->spec.rate / DIFF_TOLERANCE)) {
-    GST_DEBUG_OBJECT (sink,
-        "align with prev sample, %" G_GINT64_FORMAT " < %d", diff,
-        ringbuf->spec.rate / DIFF_TOLERANCE);
     /* calc align with previous sample */
     align = sink->next_sample - sample_offset;
+    GST_DEBUG_OBJECT (sink,
+        "align with prev sample, ABS (%" G_GINT64_FORMAT ") < %d", align,
+        ringbuf->spec.rate / DIFF_TOLERANCE);
   } else {
     /* bring sample diff to seconds for error message */
     diff = gst_util_uint64_scale_int (diff, GST_SECOND, ringbuf->spec.rate);
@@ -1033,6 +1065,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
             GST_TIME_ARGS (diff)));
     align = 0;
   }
+  sink->priv->last_align = align;
 
   /* apply alignment */
   render_start += align;
@@ -1314,6 +1347,7 @@ gst_base_audio_sink_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       sink->next_sample = -1;
+      sink->priv->last_align = -1;
       gst_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       gst_ring_buffer_may_start (sink->ringbuffer, FALSE);
       break;

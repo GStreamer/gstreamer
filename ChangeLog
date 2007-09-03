@@ -1,3 +1,13 @@
+2007-09-03  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_skew_slaving), (gst_base_audio_sink_render),
+	(gst_base_audio_sink_change_state):
+	When skew slaving, try to hover around the middle of a segment so that
+	we at most drift by half a segment.
+	If we are aligning in the oposite direction of the clock skew, we don't
+	have to resync.
+
 2007-08-31  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
