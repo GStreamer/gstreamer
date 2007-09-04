@@ -606,17 +606,15 @@ gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
 
   GstRTPDTMFSrcEvent *event = NULL;
 
+  GST_OBJECT_LOCK (dtmfsrc);
   if (dtmfsrc->clock_id != NULL) {
     gst_clock_id_unschedule(dtmfsrc->clock_id);
-    gst_clock_id_unref (dtmfsrc->clock_id);
-    dtmfsrc->clock_id = NULL;
   }
+  GST_OBJECT_UNLOCK (dtmfsrc);
 
-  g_async_queue_lock (dtmfsrc->event_queue);
   event = g_malloc (sizeof(GstRTPDTMFSrcEvent));
   event->event_type = RTP_DTMF_EVENT_TYPE_PAUSE_TASK;
-  g_async_queue_push_unlocked (dtmfsrc->event_queue, event);
-  g_async_queue_unlock (dtmfsrc->event_queue);
+  g_async_queue_push (dtmfsrc->event_queue, event);
 
   event = NULL;
 
@@ -683,17 +681,24 @@ gst_rtp_dtmf_src_wait_for_buffer_ts (GstRTPDTMFSrc *dtmfsrc, GstBuffer * buf)
   clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
   if (clock != NULL) {
     GstClockReturn clock_ret;
+    GstClockID clock_id;
 
-    dtmfsrc->clock_id = gst_clock_new_single_shot_id (clock, GST_BUFFER_TIMESTAMP (buf));
+    clock_id = gst_clock_new_single_shot_id (clock, GST_BUFFER_TIMESTAMP (buf));
     gst_object_unref (clock);
 
+    GST_OBJECT_LOCK (dtmfsrc);
+    dtmfsrc->clock_id = clock_id;
+    GST_OBJECT_UNLOCK (dtmfsrc);
+
     clock_ret = gst_clock_id_wait (dtmfsrc->clock_id, NULL);
+
+    GST_OBJECT_LOCK (dtmfsrc);
+    dtmfsrc->clock_id = NULL;
+    gst_clock_id_unref (clock_id);
+    GST_OBJECT_UNLOCK (dtmfsrc);
+
     if (clock_ret == GST_CLOCK_UNSCHEDULED) {
       GST_DEBUG_OBJECT (dtmfsrc, "Clock wait unscheduled");
-      /* we don't free anything in case of an unscheduled, because it would be unscheduled
-       * by the stop function which will do the free itself. We can't handle it here
-       * in case we stop the task before the unref is done
-       */
     } else {
       if (clock_ret != GST_CLOCK_OK && clock_ret != GST_CLOCK_EARLY) {
         gchar *clock_name = NULL;
@@ -705,7 +710,6 @@ gst_rtp_dtmf_src_wait_for_buffer_ts (GstRTPDTMFSrc *dtmfsrc, GstBuffer * buf)
         GST_ERROR_OBJECT (dtmfsrc, "Failed to wait on clock %s", clock_name);
         g_free (clock_name);
       }
-      gst_clock_id_unref (dtmfsrc->clock_id);
     }
   }
 
@@ -819,7 +823,11 @@ gst_rtp_dtmf_src_push_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
 
       dtmfsrc->last_event = event;
     } else if (event->event_type == RTP_DTMF_EVENT_TYPE_PAUSE_TASK) {
-      g_free (event);
+      /*
+       * We're pushing it back because it has to stay in there until
+       * the task is really paused (and the queue will then be flushed
+       */
+      g_async_queue_push (dtmfsrc->event_queue, event);
       g_async_queue_unref (dtmfsrc->event_queue);
       return;
     }
