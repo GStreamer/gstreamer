@@ -621,7 +621,7 @@ static gboolean
 gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event)
 {
   GstBaseRTPAudioPayload *basertpaudiopayload;
-  gboolean res = TRUE;
+  gboolean res = FALSE;
 
   basertpaudiopayload = GST_BASE_RTP_AUDIO_PAYLOAD (gst_pad_get_parent (pad));
 
@@ -642,6 +642,7 @@ gst_base_rtp_payload_audio_handle_event (GstPad * pad, GstEvent * event)
 
   gst_object_unref (basertpaudiopayload);
 
+  /* return FALSE to let parent handle the remainder of the event */
   return res;
 }
 

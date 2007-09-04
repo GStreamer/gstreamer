@@ -1,3 +1,17 @@
+2007-09-04  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
+	(gst_base_rtp_payload_audio_handle_event):
+	Return FALSE from the event handler to let the parent class handle the
+	event.
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_chain), (gst_base_rtp_depayload_push_full):
+	Mark outgoing buffers as DISCONT if the incomming buffer was DISCONT.
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	Bump the MTU to 1400.
+
 2007-09-03  Johan Dahlin  <jdahlin@async.com.br>
 
 	* gst/typefind/gsttypefindfunctions.c (plugin_init): 

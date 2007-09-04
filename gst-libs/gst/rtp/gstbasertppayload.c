@@ -60,7 +60,7 @@ enum
  * 1432 bytes or so.  And that should be adjusted downward further for other
  * encapsulations like PPPoE, so 1400 at most.
  */
-#define DEFAULT_MTU                     1024
+#define DEFAULT_MTU                     1400
 #define DEFAULT_PT                      96
 #define DEFAULT_SSRC                    -1
 #define DEFAULT_TIMESTAMP_OFFSET        -1

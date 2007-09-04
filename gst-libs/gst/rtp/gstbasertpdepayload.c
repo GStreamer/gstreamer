@@ -56,6 +56,8 @@ struct _GstBaseRTPDepayloadPrivate
   gdouble play_scale;
 
   GstClockTime exttimestamp;
+
+  gboolean discont;
 };
 
 /* Filter signals and args */
@@ -248,6 +250,7 @@ static GstFlowReturn
 gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
 {
   GstBaseRTPDepayload *filter;
+  GstBaseRTPDepayloadPrivate *priv;
   GstBaseRTPDepayloadClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
@@ -256,6 +259,9 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
 
   if (filter->clock_rate == 0)
     goto not_configured;
+
+  priv = filter->priv;
+  priv->discont = GST_BUFFER_IS_DISCONT (in);
 
   bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
@@ -332,6 +338,9 @@ gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
   GstFlowReturn ret;
   GstCaps *srccaps;
   GstBaseRTPDepayloadClass *bclass;
+  GstBaseRTPDepayloadPrivate *priv;
+
+  priv = filter->priv;
 
   /* set the caps if any */
   srccaps = GST_PAD_CAPS (filter->srcpad);
@@ -343,6 +352,11 @@ gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
   /* set the timestamp if we must and can */
   if (bclass->set_gst_timestamp && do_ts)
     bclass->set_gst_timestamp (filter, timestamp, out_buf);
+
+  if (priv->discont) {
+    GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DISCONT);
+    priv->discont = FALSE;
+  }
 
   /* push it */
   GST_LOG_OBJECT (filter, "Pushing buffer size %d, timestamp %" GST_TIME_FORMAT,
