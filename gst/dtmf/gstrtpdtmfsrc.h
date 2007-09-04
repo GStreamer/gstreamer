@@ -89,6 +89,7 @@ struct _GstRTPDTMFSrc {
   GAsyncQueue*	       event_queue;
   GstRTPDTMFSrcEvent*  last_event;
   GstClockID           clock_id;
+  gboolean             task_paused;
 
   GstClockTime      timestamp;
   gboolean          first_packet;
