@@ -779,6 +779,10 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
       event->packet_count = 0;
       dtmfsrc->last_event = event;
     } else if (event->event_type == DTMF_EVENT_TYPE_PAUSE_TASK) {
+      /*
+       * We're pushing it back because it has to stay in there until
+       * the task is really paused (and the queue will then be flushed
+       */
       g_async_queue_push (dtmfsrc->event_queue, event);
       g_async_queue_unref (dtmfsrc->event_queue);
       return;
