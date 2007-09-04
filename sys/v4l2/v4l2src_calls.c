@@ -138,12 +138,16 @@ static GstV4l2Buffer *
 gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
 {
   GstV4l2Buffer *ret;
+  guint8 *data;
 
   ret = (GstV4l2Buffer *) gst_mini_object_new (GST_TYPE_V4L2_BUFFER);
+
+  GST_LOG ("creating buffer %u, %p in pool %p", index, ret, pool);
 
   ret->pool = pool;
   gst_mini_object_ref (GST_MINI_OBJECT (pool));
   memset (&ret->vbuffer, 0x00, sizeof (ret->vbuffer));
+
   ret->vbuffer.index = index;
   ret->vbuffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   ret->vbuffer.memory = V4L2_MEMORY_MMAP;
@@ -151,18 +155,34 @@ gst_v4l2_buffer_new (GstV4l2BufferPool * pool, guint index, GstCaps * caps)
   if (ioctl (pool->video_fd, VIDIOC_QUERYBUF, &ret->vbuffer) < 0)
     goto querybuf_failed;
 
-  GST_BUFFER_DATA (ret) = mmap (0, ret->vbuffer.length,
+  GST_LOG ("  index:     %u", ret->vbuffer.index);
+  GST_LOG ("  type:      %d", ret->vbuffer.type);
+  GST_LOG ("  bytesused: %u", ret->vbuffer.bytesused);
+  GST_LOG ("  flags:     %08x", ret->vbuffer.flags);
+  GST_LOG ("  field:     %d", ret->vbuffer.field);
+  GST_LOG ("  memory:    %d", ret->vbuffer.memory);
+  if (ret->vbuffer.memory == V4L2_MEMORY_MMAP)
+    GST_LOG ("  MMAP offset:  %u", ret->vbuffer.m.offset);
+  GST_LOG ("  length:    %u", ret->vbuffer.length);
+  GST_LOG ("  input:     %u", ret->vbuffer.input);
+
+  data = mmap (0, ret->vbuffer.length,
       PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
       ret->vbuffer.m.offset);
 
-  if (GST_BUFFER_DATA (ret) == MAP_FAILED)
+  if (data == MAP_FAILED)
     goto mmap_failed;
 
+  GST_BUFFER_DATA (ret) = data;
+  GST_BUFFER_SIZE (ret) = ret->vbuffer.length;
+
   GST_BUFFER_FLAG_SET (ret, GST_BUFFER_FLAG_READONLY);
+
   gst_buffer_set_caps (GST_BUFFER (ret), caps);
 
   return ret;
 
+  /* ERRORS */
 querybuf_failed:
   {
     gint errnosave = errno;
@@ -266,6 +286,7 @@ gst_v4l2_buffer_pool_new (GstV4l2Src * v4l2src, gint fd, gint num_buffers,
 
   return pool;
 
+  /* ERRORS */
 dup_failed:
   {
     gint errnosave = errno;
@@ -296,18 +317,22 @@ gst_v4l2_buffer_pool_activate (GstV4l2BufferPool * pool, GstV4l2Src * v4l2src)
   g_mutex_lock (pool->lock);
 
   for (n = 0; n < pool->buffer_count; n++) {
-    struct v4l2_buffer *buf = &pool->buffers[n]->vbuffer;
+    struct v4l2_buffer *buf;
+
+    buf = &pool->buffers[n]->vbuffer;
+
+    GST_LOG ("enqueue pool buffer %d", n);
 
     if (ioctl (pool->video_fd, VIDIOC_QBUF, buf) < 0)
       goto queue_failed;
   }
-
   pool->running = TRUE;
 
   g_mutex_unlock (pool->lock);
 
   return TRUE;
 
+  /* ERRORS */
 queue_failed:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, READ,
@@ -367,19 +392,27 @@ gst_v4l2src_fill_format_list (GstV4l2Src * v4l2src)
 
     format->index = n;
     format->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+
     if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_ENUM_FMT, format) < 0) {
-      if (errno == EINVAL) {
+      if (errno == EINVAL)
         break;                  /* end of enumeration */
-      } else
+      else
         goto failed;
     }
-    GST_DEBUG_OBJECT (v4l2src, "got format %" GST_FOURCC_FORMAT,
+
+    GST_LOG_OBJECT (v4l2src, "index:       %u", format->index);
+    GST_LOG_OBJECT (v4l2src, "type:        %d", format->type);
+    GST_LOG_OBJECT (v4l2src, "flags:       %08x", format->flags);
+    GST_LOG_OBJECT (v4l2src, "description: '%s'", format->description);
+    GST_LOG_OBJECT (v4l2src, "pixelformat: %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (format->pixelformat));
 
     v4l2src->formats = g_slist_prepend (v4l2src->formats, format);
   }
   v4l2src->formats = g_slist_reverse (v4l2src->formats);
+
   GST_DEBUG_OBJECT (v4l2src, "got %d format(s)", n);
+
   return TRUE;
 
   /* ERRORS */
@@ -803,8 +836,9 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
     *buf = pool_buffer;
   }
 
-  GST_LOG_OBJECT (v4l2src, "grabbed frame %d (ix=%d), pool-ct=%d",
-      buffer.sequence, buffer.index, v4l2src->pool->num_live_buffers);
+  GST_LOG_OBJECT (v4l2src, "grabbed frame %d (ix=%d), flags %08x, pool-ct=%d",
+      buffer.sequence, buffer.index, buffer.flags,
+      v4l2src->pool->num_live_buffers);
 
   return GST_FLOW_OK;
 
@@ -910,10 +944,8 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
       if (stream.parm.capture.timeperframe.numerator != fps_d
           || stream.parm.capture.timeperframe.denominator != fps_n)
         goto invalid_framerate;
-
     }
   }
-
 
   return TRUE;
 
@@ -986,23 +1018,29 @@ gst_v4l2src_capture_init (GstV4l2Src * v4l2src, GstCaps * caps)
   GST_V4L2_CHECK_NOT_ACTIVE (v4l2src->v4l2object);
 
   if (v4l2src->v4l2object->vcap.capabilities & V4L2_CAP_STREAMING) {
-    breq.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    breq.count = v4l2src->num_buffers;
 
+    GST_DEBUG_OBJECT (v4l2src, "STREAMING, requesting %d MMAP CAPTURE buffers",
+        v4l2src->num_buffers);
+
+    breq.count = v4l2src->num_buffers;
+    breq.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     breq.memory = V4L2_MEMORY_MMAP;
+
     if (ioctl (fd, VIDIOC_REQBUFS, &breq) < 0)
       goto reqbufs_failed;
+
+    GST_LOG_OBJECT (v4l2src, " count:  %u", breq.count);
+    GST_LOG_OBJECT (v4l2src, " type:   %d", breq.type);
+    GST_LOG_OBJECT (v4l2src, " memory: %d", breq.memory);
 
     if (breq.count < GST_V4L2_MIN_BUFFERS)
       goto no_buffers;
 
     if (v4l2src->num_buffers != breq.count) {
+      GST_WARNING_OBJECT (v4l2src, "using %u buffers instead", breq.count);
       v4l2src->num_buffers = breq.count;
       g_object_notify (G_OBJECT (v4l2src), "queue-size");
     }
-
-    GST_INFO_OBJECT (v4l2src, "Got %d buffers of size %d kB",
-        breq.count, v4l2src->frame_byte_size / 1024);
 
     /* Map the buffers */
     GST_LOG_OBJECT (v4l2src, "initiating buffer pool");

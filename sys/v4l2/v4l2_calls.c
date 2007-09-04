@@ -51,13 +51,23 @@ GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 gboolean
 gst_v4l2_get_capabilities (GstV4l2Object * v4l2object)
 {
-  GST_DEBUG_OBJECT (v4l2object->element, "getting capabilities");
+  GstElement *e;
+
+  e = v4l2object->element;
+
+  GST_DEBUG_OBJECT (e, "getting capabilities");
 
   if (!GST_V4L2_IS_OPEN (v4l2object))
     return FALSE;
 
   if (ioctl (v4l2object->video_fd, VIDIOC_QUERYCAP, &v4l2object->vcap) < 0)
     goto cap_failed;
+
+  GST_LOG_OBJECT (e, "driver:      '%s'", v4l2object->vcap.driver);
+  GST_LOG_OBJECT (e, "card:        '%s'", v4l2object->vcap.card);
+  GST_LOG_OBJECT (e, "bus_info:    '%s'", v4l2object->vcap.bus_info);
+  GST_LOG_OBJECT (e, "version:     %08x", v4l2object->vcap.version);
+  GST_LOG_OBJECT (e, "capabilites: %08x", v4l2object->vcap.capabilities);
 
   return TRUE;
 
@@ -82,11 +92,14 @@ static gboolean
 gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
 {
   gint n;
+  GstElement *e;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "getting enumerations");
+  e = v4l2object->element;
+
+  GST_DEBUG_OBJECT (e, "getting enumerations");
   GST_V4L2_CHECK_OPEN (v4l2object);
 
-  GST_DEBUG_OBJECT (v4l2object->element, "  channels");
+  GST_DEBUG_OBJECT (e, "  channels");
   /* and now, the channels */
   for (n = 0;; n++) {
     struct v4l2_input input;
@@ -98,7 +111,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       if (errno == EINVAL)
         break;                  /* end of enumeration */
       else {
-        GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+        GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
             (_("Failed to query attributes of input %d in device %s"),
                 n, v4l2object->videodev),
             ("Failed to get %d in input enumeration for %s. (%d - %s)",
@@ -107,13 +120,19 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       }
     }
 
-    GST_DEBUG_OBJECT (v4l2object->element, "    '%s'", input.name);
+    GST_LOG_OBJECT (e, "   index:     %d", input.index);
+    GST_LOG_OBJECT (e, "   name:      '%s'", input.name);
+    GST_LOG_OBJECT (e, "   type:      %08x", input.type);
+    GST_LOG_OBJECT (e, "   audioset:  %08x", input.audioset);
+    GST_LOG_OBJECT (e, "   std:       %016x", input.std);
+    GST_LOG_OBJECT (e, "   status:    %08x", input.status);
 
     v4l2channel = g_object_new (GST_TYPE_V4L2_TUNER_CHANNEL, NULL);
     channel = GST_TUNER_CHANNEL (v4l2channel);
     channel->label = g_strdup ((const gchar *) input.name);
     channel->flags = GST_TUNER_CHANNEL_INPUT;
     v4l2channel->index = n;
+
     if (input.type == V4L2_INPUT_TYPE_TUNER) {
       struct v4l2_tuner vtun;
 
@@ -122,12 +141,13 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
 
       vtun.index = input.tuner;
       if (ioctl (v4l2object->video_fd, VIDIOC_G_TUNER, &vtun) < 0) {
-        GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+        GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
             (_("Failed to get setting of tuner %d on device '%s'."),
                 input.tuner, v4l2object->videodev), GST_ERROR_SYSTEM);
         g_object_unref (G_OBJECT (channel));
         return FALSE;
       }
+
       channel->freq_multiplicator =
           62.5 * ((vtun.capability & V4L2_TUNER_CAP_LOW) ? 1 : 1000);
       channel->min_frequency = vtun.rangelow * channel->freq_multiplicator;
@@ -147,7 +167,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         g_list_append (v4l2object->channels, (gpointer) channel);
   }
 
-  GST_DEBUG_OBJECT (v4l2object->element, "  norms");
+  GST_DEBUG_OBJECT (e, "  norms");
   /* norms... */
   for (n = 0;; n++) {
     struct v4l2_standard standard;
@@ -158,11 +178,12 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     standard.frameperiod.numerator = 1;
     standard.frameperiod.denominator = 0;
     standard.index = n;
+
     if (ioctl (v4l2object->video_fd, VIDIOC_ENUMSTD, &standard) < 0) {
       if (errno == EINVAL)
         break;                  /* end of enumeration */
       else {
-        GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+        GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
             (_("Failed to query norm on device '%s'."),
                 v4l2object->videodev),
             ("Failed to get attributes for norm %d on devide '%s'. (%d - %s)",
@@ -171,7 +192,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
       }
     }
 
-    GST_DEBUG_OBJECT (v4l2object->element, "    '%s', fps: %d / %d",
+    GST_DEBUG_OBJECT (e, "    '%s', fps: %d / %d",
         standard.name, standard.frameperiod.denominator,
         standard.frameperiod.numerator);
 
@@ -185,7 +206,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     v4l2object->norms = g_list_append (v4l2object->norms, (gpointer) norm);
   }
 
-  GST_DEBUG_OBJECT (v4l2object->element, "  controls+menus");
+  GST_DEBUG_OBJECT (e, "  controls+menus");
   /* and lastly, controls+menus (if appropriate) */
   for (n = V4L2_CID_BASE;; n++) {
     struct v4l2_queryctrl control;
@@ -194,7 +215,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
 
     /* when we reached the last official CID, continue with private CIDs */
     if (n == V4L2_CID_LASTP1) {
-      GST_DEBUG_OBJECT (v4l2object->element, "checking private CIDs");
+      GST_DEBUG_OBJECT (e, "checking private CIDs");
       n = V4L2_CID_PRIVATE_BASE;
       /* FIXME: We are still not handling private controls. We need a new GstInterface
          to export those controls */
@@ -210,7 +231,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         else
           break;
       } else {
-        GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+        GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
             (_("Failed getting controls attributes on device '%s.'"),
                 v4l2object->videodev),
             ("Failed querying control %d on device '%s'. (%d - %s)",
@@ -253,7 +274,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         /* FIXME: We should implement GstMixer interface */
         /* fall through */
       default:
-        GST_DEBUG_OBJECT (v4l2object->element,
+        GST_DEBUG_OBJECT (e,
             "ControlID %s (%x) unhandled, FIXME", control.name, n);
         control.id++;
         break;
@@ -261,8 +282,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     if (n != control.id)
       continue;
 
-    GST_DEBUG_OBJECT (v4l2object->element,
-        "Adding ControlID %s (%x)", control.name, n);
+    GST_DEBUG_OBJECT (e, "Adding ControlID %s (%x)", control.name, n);
     v4l2channel = g_object_new (GST_TYPE_V4L2_COLOR_BALANCE_CHANNEL, NULL);
     channel = GST_COLOR_BALANCE_CHANNEL (v4l2channel);
     channel->label = g_strdup ((const gchar *) control.name);
@@ -281,7 +301,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
           if (errno == EINVAL)
             break;              /* end of enumeration */
           else {
-            GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+            GST_ELEMENT_ERROR (e, RESOURCE, SETTINGS,
                 (_("Failed getting controls attributes on device '%s'."),
                     v4l2object->videodev),
                 ("Failed to get %d in menu enumeration for %s. (%d - %s)",
@@ -310,7 +330,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
         /* FIXME we should find out how to handle V4L2_CTRL_TYPE_BUTTON.
            BUTTON controls like V4L2_CID_DO_WHITE_BALANCE can just be set (1) or
            unset (0), but can't be queried */
-        GST_DEBUG_OBJECT (v4l2object->element,
+        GST_DEBUG_OBJECT (e,
             "Control with non supported type %s (%x), type=%d",
             control.name, n, control.type);
         channel->min_value = channel->max_value = 0;
@@ -320,7 +340,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
     v4l2object->colors = g_list_append (v4l2object->colors, (gpointer) channel);
   }
 
-  GST_DEBUG_OBJECT (v4l2object->element, "done");
+  GST_DEBUG_OBJECT (e, "done");
   return TRUE;
 }
 
@@ -719,6 +739,8 @@ gst_v4l2_get_input (GstV4l2Object * v4l2object, gint * input)
     goto input_failed;
 
   *input = n;
+
+  GST_DEBUG_OBJECT (v4l2object->element, "input: %d", n);
 
   return TRUE;
 
