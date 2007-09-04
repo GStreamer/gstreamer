@@ -1,5 +1,17 @@
 2007-09-04  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/udp/gstmultiudpsink.c: (gst_multiudpsink_class_init),
+	(gst_multiudpsink_set_clients_string),
+	(gst_multiudpsink_get_clients_string),
+	(gst_multiudpsink_set_property), (gst_multiudpsink_get_property),
+	(gst_multiudpsink_init_send), (gst_multiudpsink_add_internal),
+	(gst_multiudpsink_add), (gst_multiudpsink_clear_internal),
+	(gst_multiudpsink_clear):
+	Add property do configure destination address/port pairs
+	API:GstMultiUDPSink::clients
+
+2007-09-04  Wim Taymans  <wim.taymans@gmail.com>
+
 	* tests/examples/Makefile.am:
 	* tests/examples/rtp/Makefile.am:
 	* tests/examples/rtp/client-H263p-AMR.sh:

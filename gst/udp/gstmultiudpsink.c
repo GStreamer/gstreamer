@@ -71,6 +71,7 @@ enum
 #define DEFAULT_SOCKFD             -1
 #define DEFAULT_CLOSEFD            TRUE
 #define DEFAULT_SOCK               -1
+#define DEFAULT_CLIENTS            NULL
 
 enum
 {
@@ -79,7 +80,8 @@ enum
   PROP_BYTES_SERVED,
   PROP_SOCKFD,
   PROP_CLOSEFD,
-  PROP_SOCK
+  PROP_SOCK,
+  PROP_CLIENTS
       /* FILL ME */
 };
 
@@ -102,6 +104,11 @@ static void gst_multiudpsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_multiudpsink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
+
+static void gst_multiudpsink_add_internal (GstMultiUDPSink * sink,
+    const gchar * host, gint port, gboolean lock);
+static void gst_multiudpsink_clear_internal (GstMultiUDPSink * sink,
+    gboolean lock);
 
 static void free_client (GstUDPClient * client);
 
@@ -266,6 +273,10 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
       g_param_spec_int ("sock", "Socket Handle",
           "Socket currently in use for UDP sending. (-1 == no socket)",
           -1, G_MAXINT, DEFAULT_SOCK, G_PARAM_READABLE));
+  g_object_class_install_property (gobject_class, PROP_CLIENTS,
+      g_param_spec_string ("clients", "Clients",
+          "A comma separated list of host:port pairs with destinations",
+          DEFAULT_CLIENTS, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_multiudpsink_change_state;
 
@@ -370,6 +381,61 @@ send_error:
 }
 
 static void
+gst_multiudpsink_set_clients_string (GstMultiUDPSink * sink,
+    const gchar * string)
+{
+  gchar **clients;
+  gint i;
+
+  clients = g_strsplit (string, ",", 0);
+
+  g_mutex_lock (sink->client_lock);
+  /* clear all existing clients */
+  gst_multiudpsink_clear_internal (sink, FALSE);
+  for (i = 0; clients[i]; i++) {
+    gchar *host, *p;
+    gint port = 0;
+
+    host = clients[i];
+    p = strstr (clients[i], ":");
+    if (p != NULL) {
+      *p = '\0';
+      port = atoi (p + 1);
+    }
+    if (port != 0)
+      gst_multiudpsink_add_internal (sink, host, port, FALSE);
+  }
+  g_mutex_unlock (sink->client_lock);
+
+  g_strfreev (clients);
+}
+
+static gchar *
+gst_multiudpsink_get_clients_string (GstMultiUDPSink * sink)
+{
+  GString *str;
+  GList *clients;
+
+  str = g_string_new ("");
+
+  g_mutex_lock (sink->client_lock);
+  clients = sink->clients;
+  while (clients) {
+    GstUDPClient *client;
+
+    client = (GstUDPClient *) clients->data;
+
+    clients = g_list_next (clients);
+
+    g_string_append_printf (str, "%s:%d%s", client->host, client->port,
+        (clients ? "," : ""));
+  }
+  g_mutex_unlock (sink->client_lock);
+
+  return g_string_free (str, FALSE);
+}
+
+static void
 gst_multiudpsink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
@@ -384,6 +450,9 @@ gst_multiudpsink_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CLOSEFD:
       udpsink->closefd = g_value_get_boolean (value);
+      break;
+    case PROP_CLIENTS:
+      gst_multiudpsink_set_clients_string (udpsink, g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -414,6 +483,10 @@ gst_multiudpsink_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SOCK:
       g_value_set_int (value, udpsink->sock);
+      break;
+    case PROP_CLIENTS:
+      g_value_take_string (value,
+          gst_multiudpsink_get_clients_string (udpsink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -512,8 +585,9 @@ gst_multiudpsink_close (GstMultiUDPSink * sink)
   CLOSE_IF_REQUESTED (sink);
 }
 
-void
-gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
+static void
+gst_multiudpsink_add_internal (GstMultiUDPSink * sink, const gchar * host,
+    gint port, gboolean lock)
 {
   struct hostent *he;
   struct in_addr addr;
@@ -563,9 +637,11 @@ gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
     goto host_error;
   }
 
-  g_mutex_lock (sink->client_lock);
+  if (lock)
+    g_mutex_lock (sink->client_lock);
   sink->clients = g_list_prepend (sink->clients, client);
-  g_mutex_unlock (sink->client_lock);
+  if (lock)
+    g_mutex_unlock (sink->client_lock);
 
   g_signal_emit (G_OBJECT (sink),
       gst_multiudpsink_signals[SIGNAL_CLIENT_ADDED], 0, host, port);
@@ -580,6 +656,12 @@ host_error:
     g_free (client);
     return;
   }
+}
+
+void
+gst_multiudpsink_add (GstMultiUDPSink * sink, const gchar * host, gint port)
+{
+  gst_multiudpsink_add_internal (sink, host, port, TRUE);
 }
 
 static gint
@@ -648,17 +730,25 @@ not_found:
   }
 }
 
-void
-gst_multiudpsink_clear (GstMultiUDPSink * sink)
+static void
+gst_multiudpsink_clear_internal (GstMultiUDPSink * sink, gboolean lock)
 {
   GST_DEBUG_OBJECT (sink, "clearing");
   /* we only need to remove the client structure, there is no additional
    * socket or anything to free for UDP */
-  g_mutex_lock (sink->client_lock);
+  if (lock)
+    g_mutex_lock (sink->client_lock);
   g_list_foreach (sink->clients, (GFunc) free_client, sink);
   g_list_free (sink->clients);
   sink->clients = NULL;
-  g_mutex_unlock (sink->client_lock);
+  if (lock)
+    g_mutex_unlock (sink->client_lock);
+}
+
+void
+gst_multiudpsink_clear (GstMultiUDPSink * sink)
+{
+  gst_multiudpsink_clear_internal (sink, TRUE);
 }
 
 GValueArray *
