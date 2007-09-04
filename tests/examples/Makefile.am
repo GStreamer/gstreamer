@@ -1,3 +1,3 @@
-SUBDIRS = level
+SUBDIRS = level rtp
 
-DIST_SUBDIRS = level
+DIST_SUBDIRS = level rtp
