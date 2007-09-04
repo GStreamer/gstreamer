@@ -97,6 +97,8 @@ struct _GstWavParse {
   /* offset/length of data part */
   guint64 	datastart;
   guint64 	datasize;
+  /* duration in time */
+  guint64 	duration;
 
   /* pending seek */
   GstEvent *seek_event;

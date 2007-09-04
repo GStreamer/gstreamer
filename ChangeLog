@@ -1,3 +1,11 @@
+2007-09-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c:
+	* gst/wavparse/gstwavparse.h:
+	  Implement seek-query. Refactor duration calculations. Appropriate use
+	  of uint64_scale_int and uint64_scale. Move repeadedly calculated stuff
+	  out of loops.
+
 2007-09-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavidemux.c:
