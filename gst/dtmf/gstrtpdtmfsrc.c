@@ -338,7 +338,7 @@ gst_rtp_dtmf_src_init (GstRTPDTMFSrc * dtmfsrc, gpointer g_class)
   dtmfsrc->clock_rate = DEFAULT_CLOCK_RATE;
   dtmfsrc->interval = DEFAULT_PACKET_INTERVAL;
   dtmfsrc->packet_redundancy = DEFAULT_PACKET_REDUNDANCY;
-
+  dtmfsrc->task_paused = TRUE;
 
   dtmfsrc->event_queue = g_async_queue_new ();
   dtmfsrc->last_event = NULL;
@@ -594,6 +594,7 @@ gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc)
 {
   gst_rtp_dtmf_src_set_caps (dtmfsrc);
 
+  dtmfsrc->task_paused = FALSE;
   if (!gst_pad_start_task (dtmfsrc->srcpad,
       (GstTaskFunction) gst_rtp_dtmf_src_push_next_rtp_packet, dtmfsrc)) {
     GST_ERROR_OBJECT (dtmfsrc, "Failed to start task on src pad");
@@ -606,6 +607,7 @@ gst_rtp_dtmf_src_stop (GstRTPDTMFSrc *dtmfsrc)
 
   GstRTPDTMFSrcEvent *event = NULL;
 
+  dtmfsrc->task_paused = TRUE;
   GST_OBJECT_LOCK (dtmfsrc);
   if (dtmfsrc->clock_id != NULL) {
     gst_clock_id_unschedule(dtmfsrc->clock_id);
@@ -690,7 +692,11 @@ gst_rtp_dtmf_src_wait_for_buffer_ts (GstRTPDTMFSrc *dtmfsrc, GstBuffer * buf)
     dtmfsrc->clock_id = clock_id;
     GST_OBJECT_UNLOCK (dtmfsrc);
 
-    clock_ret = gst_clock_id_wait (dtmfsrc->clock_id, NULL);
+    if (dtmfsrc->task_paused) {
+      clock_ret = GST_CLOCK_UNSCHEDULED;
+    } else {
+      clock_ret = gst_clock_id_wait (dtmfsrc->clock_id, NULL);
+    }
 
     GST_OBJECT_LOCK (dtmfsrc);
     dtmfsrc->clock_id = NULL;

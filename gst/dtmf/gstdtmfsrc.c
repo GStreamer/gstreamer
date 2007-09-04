@@ -334,6 +334,7 @@ gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, gpointer g_class)
   dtmfsrc->last_event = NULL;
 
   dtmfsrc->clock_id = NULL;
+  dtmfsrc->task_paused = TRUE;
 
   GST_DEBUG_OBJECT (dtmfsrc, "init done");
 }
@@ -536,7 +537,7 @@ gst_dtmf_src_start (GstDTMFSrc *dtmfsrc)
     GST_DEBUG_OBJECT (dtmfsrc,
             "caps %" GST_PTR_FORMAT " set on src pad", caps);
 
-
+  dtmfsrc->task_paused = FALSE;
   if (!gst_pad_start_task (dtmfsrc->srcpad,
       (GstTaskFunction) gst_dtmf_src_push_next_tone_packet, dtmfsrc)) {
     GST_ERROR_OBJECT (dtmfsrc, "Failed to start task on src pad");
@@ -548,6 +549,7 @@ gst_dtmf_src_stop (GstDTMFSrc *dtmfsrc)
 {
   GstDTMFSrcEvent *event = NULL;
 
+  dtmfsrc->task_paused = TRUE;
   GST_OBJECT_LOCK (dtmfsrc);
   if (dtmfsrc->clock_id != NULL) {
     gst_clock_id_unschedule(dtmfsrc->clock_id);
@@ -684,7 +686,12 @@ gst_dtmf_src_wait_for_buffer_ts (GstDTMFSrc *dtmfsrc, GstBuffer * buf)
     GST_OBJECT_LOCK (dtmfsrc);
     dtmfsrc->clock_id = clock_id;
     GST_OBJECT_UNLOCK (dtmfsrc);
-    clock_ret = gst_clock_id_wait (dtmfsrc->clock_id, NULL);
+
+    if (dtmfsrc->task_paused) {
+      clock_ret = GST_CLOCK_UNSCHEDULED;
+    } else {
+      clock_ret = gst_clock_id_wait (dtmfsrc->clock_id, NULL);
+    }
 
     GST_OBJECT_LOCK (dtmfsrc);
     dtmfsrc->clock_id = NULL;

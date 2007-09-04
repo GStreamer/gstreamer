@@ -75,6 +75,7 @@ struct _GstDTMFSrc {
   GAsyncQueue*      event_queue;
   GstDTMFSrcEvent*  last_event;
   GstClockID        clock_id;
+  gboolean          task_paused;
 
   guint16           interval;
   GstClockTime      timestamp;
