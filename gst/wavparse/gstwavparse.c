@@ -268,6 +268,7 @@ uint64_ceiling_scale (guint64 val, guint64 num, guint64 denom)
     return result + 1;
 }
 
+
 #if 0
 static void
 gst_wavparse_parse_adtl (GstWavParse * wavparse, int len)
@@ -689,6 +690,7 @@ gst_wavparse_other (GstWavParse * wav)
 }
 #endif
 
+
 static gboolean
 gst_wavparse_parse_file_header (GstElement * element, GstBuffer * buf)
 {
@@ -752,8 +754,6 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
   gint64 last_stop;
 
   if (event) {
-    GstFormat fmt;
-
     GST_DEBUG_OBJECT (wav, "doing seek with event");
 
     gst_event_parse_seek (event, &rate, &format, &flags,
@@ -763,20 +763,23 @@ gst_wavparse_perform_seek (GstWavParse * wav, GstEvent * event)
     if (rate < 0.0)
       goto negative_rate;
 
-    fmt = wav->segment.format;
-
-    /* we have to have a format as the segment format. Try to convert
-     * if not. */
     if (format != wav->segment.format) {
+      GST_INFO_OBJECT (wav, "converting seek-event from %s to %s",
+          gst_format_get_name (format),
+          gst_format_get_name (wav->segment.format));
       res = TRUE;
       if (cur_type != GST_SEEK_TYPE_NONE)
-        res = gst_pad_query_convert (wav->srcpad, format, cur, &fmt, &cur);
+        res =
+            gst_pad_query_convert (wav->srcpad, format, cur,
+            &wav->segment.format, &cur);
       if (res && stop_type != GST_SEEK_TYPE_NONE)
-        res = gst_pad_query_convert (wav->srcpad, format, stop, &fmt, &stop);
+        res =
+            gst_pad_query_convert (wav->srcpad, format, stop,
+            &wav->segment.format, &stop);
       if (!res)
         goto no_format;
 
-      format = fmt;
+      format = wav->segment.format;
     }
   } else {
     GST_DEBUG_OBJECT (wav, "doing seek without event");
@@ -1220,8 +1223,9 @@ gst_wavparse_stream_headers (GstWavParse * wav)
       size = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf) + 4);
     }
 
-    GST_DEBUG_OBJECT (wav, "Got TAG: %" GST_FOURCC_FORMAT,
-        GST_FOURCC_ARGS (tag));
+    GST_INFO_OBJECT (wav,
+        "Got TAG: %" GST_FOURCC_FORMAT ", offset %" G_GUINT64_FORMAT,
+        GST_FOURCC_ARGS (tag), wav->offset);
 
     /* wav is a st00pid format, we don't know for sure where data starts.
      * So we have to go bit by bit until we find the 'data' header
@@ -1655,11 +1659,12 @@ iterate_adapter:
     goto push_error;
 
   if (obtained < wav->dataleft) {
+    wav->offset += obtained;
     wav->dataleft -= obtained;
   } else {
+    wav->offset += wav->dataleft;
     wav->dataleft = 0;
   }
-  wav->offset += obtained;
 
   /* Iterate until need more data, so adapter size won't grow */
   if (wav->streaming) {
@@ -1707,7 +1712,7 @@ gst_wavparse_loop (GstPad * pad)
 
   switch (wav->state) {
     case GST_WAVPARSE_START:
-      GST_DEBUG_OBJECT (wav, "GST_WAVPARSE_START");
+      GST_INFO_OBJECT (wav, "GST_WAVPARSE_START");
       if ((ret = gst_wavparse_stream_init (wav)) != GST_FLOW_OK)
         goto pause;
 
@@ -1715,11 +1720,12 @@ gst_wavparse_loop (GstPad * pad)
       /* fall-through */
 
     case GST_WAVPARSE_HEADER:
-      GST_DEBUG_OBJECT (wav, "GST_WAVPARSE_HEADER");
+      GST_INFO_OBJECT (wav, "GST_WAVPARSE_HEADER");
       if ((ret = gst_wavparse_stream_headers (wav)) != GST_FLOW_OK)
         goto pause;
 
       wav->state = GST_WAVPARSE_DATA;
+      GST_INFO_OBJECT (wav, "GST_WAVPARSE_DATA");
       /* fall-through */
 
     case GST_WAVPARSE_DATA:
@@ -1787,7 +1793,7 @@ gst_wavparse_chain (GstPad * pad, GstBuffer * buf)
 
   switch (wav->state) {
     case GST_WAVPARSE_START:
-      GST_DEBUG_OBJECT (wav, "GST_WAVPARSE_START");
+      GST_INFO_OBJECT (wav, "GST_WAVPARSE_START");
       if ((ret = gst_wavparse_parse_stream_init (wav)) != GST_FLOW_OK)
         goto done;
 
@@ -1796,7 +1802,7 @@ gst_wavparse_chain (GstPad * pad, GstBuffer * buf)
 
       /* otherwise fall-through */
     case GST_WAVPARSE_HEADER:
-      GST_DEBUG_OBJECT (wav, "GST_WAVPARSE_HEADER");
+      GST_INFO_OBJECT (wav, "GST_WAVPARSE_HEADER");
       if ((ret = gst_wavparse_stream_headers (wav)) != GST_FLOW_OK)
         goto done;
 
@@ -1804,6 +1810,7 @@ gst_wavparse_chain (GstPad * pad, GstBuffer * buf)
         break;
 
       wav->state = GST_WAVPARSE_DATA;
+      GST_INFO_OBJECT (wav, "GST_WAVPARSE_DATA");
 
       /* fall-through */
     case GST_WAVPARSE_DATA:
@@ -1851,6 +1858,9 @@ gst_wavparse_pad_convert (GstPad * pad,
   if ((wavparse->bps == 0) && !wavparse->fact)
     goto no_bps_fact;
 
+  GST_INFO_OBJECT (wavparse, "converting value from %s to %s",
+      gst_format_get_name (src_format), gst_format_get_name (*dest_format));
+
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dest_format) {
@@ -1860,6 +1870,10 @@ gst_wavparse_pad_convert (GstPad * pad,
           *dest_value -= *dest_value % wavparse->bytes_per_sample;
           break;
         case GST_FORMAT_TIME:
+          /* src_value + datastart = offset */
+          GST_INFO_OBJECT (wavparse,
+              "src=%" G_GINT64_FORMAT ", offset=%" G_GINT64_FORMAT, src_value,
+              wavparse->offset);
           if (wavparse->bps > 0)
             *dest_value = gst_util_uint64_scale (src_value, GST_SECOND,
                 (guint64) wavparse->bps);
@@ -1968,8 +1982,10 @@ gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
       gint64 cur;
       GstFormat format;
 
+      /* this is not very precise, as we have pushed severla buffer upstream for prerolling */
       curb = wav->offset - wav->datastart;
       gst_query_parse_position (query, &format, NULL);
+      GST_INFO_OBJECT (wav, "pos query at %" G_GINT64_FORMAT, curb);
 
       switch (format) {
         case GST_FORMAT_TIME:
@@ -2017,8 +2033,7 @@ gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
 
       gst_query_parse_convert (query, &srcformat, &srcvalue,
           &dstformat, &dstvalue);
-      res &=
-          gst_wavparse_pad_convert (pad, srcformat, srcvalue,
+      res = gst_wavparse_pad_convert (pad, srcformat, srcvalue,
           &dstformat, &dstvalue);
       if (res)
         gst_query_set_convert (query, srcformat, srcvalue, dstformat, dstvalue);
