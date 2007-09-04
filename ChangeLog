@@ -1,3 +1,9 @@
+2007-09-03  Johan Dahlin  <johan@gnome.org>
+
+	* gst/nsf/gstnsf.c: (gst_nsfdec_finalize), (start_play_tune):
+	* gst/nsf/gstnsf.h:
+	Add support for (very) basic tagging.
+	
 2007-09-03  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtpmanager/gstrtpbin-marshal.list:

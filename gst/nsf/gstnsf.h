@@ -73,6 +73,8 @@ struct _GstNsfDec {
   gboolean       stereo;
   int            channels;
   int            bps;
+
+  GstTagList    *taglist;
 };
 
 struct _GstNsfDecClass {

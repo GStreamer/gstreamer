@@ -214,6 +214,9 @@ gst_nsfdec_finalize (GObject * object)
   if (nsfdec->tune_buffer)
     gst_buffer_unref (nsfdec->tune_buffer);
 
+  if (nsfdec->taglist)
+    gst_tag_list_free (nsfdec->taglist);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -369,6 +372,22 @@ start_play_tune (GstNsfDec * nsfdec)
 
   if (!nsfdec_negotiate (nsfdec))
     goto could_not_negotiate;
+
+  nsfdec->taglist = gst_tag_list_new ();
+  gst_tag_list_add (nsfdec->taglist, GST_TAG_MERGE_REPLACE,
+      GST_TAG_AUDIO_CODEC, "Nosefart", NULL);
+
+  if (nsfdec->nsf->artist_name)
+    gst_tag_list_add (nsfdec->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_ARTIST, nsfdec->nsf->artist_name, NULL);
+
+  if (nsfdec->nsf->song_name)
+    gst_tag_list_add (nsfdec->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_TITLE, nsfdec->nsf->song_name, NULL);
+
+  gst_element_post_message (GST_ELEMENT_CAST (nsfdec),
+      gst_message_new_tag (GST_OBJECT (nsfdec),
+          gst_tag_list_copy (nsfdec->taglist)));
 
   nsf_playtrack (nsfdec->nsf,
       nsfdec->tune_number, nsfdec->frequency, nsfdec->bits, nsfdec->stereo);
