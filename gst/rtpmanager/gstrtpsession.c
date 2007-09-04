@@ -882,7 +882,7 @@ static gint
 gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
     gpointer user_data)
 {
-  gint result = -1;
+  gint ipayload, result = -1;
   GstRtpSession *rtpsession;
   GstRtpSessionPrivate *priv;
   GValue ret = { 0 };
@@ -894,7 +894,8 @@ gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
   priv = rtpsession->priv;
 
   GST_RTP_SESSION_LOCK (rtpsession);
-  caps = g_hash_table_lookup (priv->ptmap, GINT_TO_POINTER (payload));
+  ipayload = payload;           /* make compiler happy */
+  caps = g_hash_table_lookup (priv->ptmap, GINT_TO_POINTER (ipayload));
   if (caps)
     goto done;
 

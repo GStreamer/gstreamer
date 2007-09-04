@@ -1,3 +1,9 @@
+2007-09-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  Make compiler happy: fix compilation with -Wall -Werror
+	  (#473562).
+
 2007-09-03  Johan Dahlin  <johan@gnome.org>
 
 	* gst/nsf/gstnsf.c: (gst_nsfdec_finalize), (start_play_tune):
