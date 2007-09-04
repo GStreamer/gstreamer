@@ -375,7 +375,7 @@ start_play_tune (GstNsfDec * nsfdec)
 
   nsfdec->taglist = gst_tag_list_new ();
   gst_tag_list_add (nsfdec->taglist, GST_TAG_MERGE_REPLACE,
-      GST_TAG_AUDIO_CODEC, "Nosefart", NULL);
+      GST_TAG_AUDIO_CODEC, "NES Sound Format", NULL);
 
   if (nsfdec->nsf->artist_name)
     gst_tag_list_add (nsfdec->taglist, GST_TAG_MERGE_REPLACE,
