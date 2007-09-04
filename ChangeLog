@@ -1,3 +1,8 @@
+2007-09-03  Johan Dahlin  <jdahlin@async.com.br>
+
+	* gst/typefind/gsttypefindfunctions.c (plugin_init): 
+	Add an audio/x-nsf typefind function for the nsfdec element.
+
 2007-09-03  Renato Filho  <renato.filho@indt.org.br>
 	* gst/playback/gstplaybasebin.c:
 	Included "myth://" on stream_uris list for enable buffering to mythtv files

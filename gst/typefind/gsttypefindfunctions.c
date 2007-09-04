@@ -2834,6 +2834,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *m4v_exts[] = { "m4v", NULL };
   static gchar *nuv_exts[] = { "nuv", NULL };
   static gchar *vivo_exts[] = { "viv", NULL };
+  static gchar *nsf_exts[] = { "nsf", NULL };
 
   GST_DEBUG_CATEGORY_INIT (type_find_debug, "typefindfunctions",
       GST_DEBUG_FG_GREEN | GST_DEBUG_BG_RED, "generic type find functions");
@@ -3029,6 +3030,8 @@ plugin_init (GstPlugin * plugin)
       mmsh_type_find, NULL, MMSH_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/vivo", GST_RANK_SECONDARY,
       vivo_type_find, vivo_exts, VIVO_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-nsf",
+      GST_RANK_SECONDARY, nsf_exts, "NESM\x1a", 5, GST_TYPE_FIND_MAXIMUM);
   return TRUE;
 }
 
