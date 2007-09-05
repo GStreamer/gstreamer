@@ -1,11 +1,8 @@
 <chapter id="chapter-xml">
   <title>XML in <application>GStreamer</application></title>
   <para> 
-    <application>GStreamer</application> uses XML to store and load
-    its pipeline definitions. XML is also used internally to manage the
-    plugin registry. The plugin registry is a file that contains the definition
-    of all the plugins <application>GStreamer</application> knows about to have 
-    quick access to the specifics of the plugins.
+    <application>GStreamer</application> can use XML to store and load
+    its pipeline definitions.
   </para>
 
   <para>
@@ -19,7 +16,7 @@
     <para>
       We create a simple pipeline and write it to stdout with
       gst_xml_write_file (). The following code constructs an MP3 player
-      pipeline with two threads and then writes out the XML both to stdout
+      pipeline and then writes out the XML both to stdout
       and to a file. Use this program with one argument: the MP3 file on disk.
     </para>
 
@@ -33,9 +30,8 @@ gboolean playing;
 int 
 main (int argc, char *argv[]) 
 {
-  GstElement *filesrc, *osssink, *queue, *queue2, *decode;
-  GstElement *bin;
-  GstElement *thread, *thread2;
+  GstElement *filesrc, *osssink, *decode;
+  GstElement *pipeline;
 
   gst_init (&amp;argc,&amp;argv);
 
@@ -44,23 +40,14 @@ main (int argc, char *argv[])
     exit (-1);
   }
 
-  /* create a new thread to hold the elements */
-  thread = gst_element_factory_make ("thread", "thread");
-  g_assert (thread != NULL);
-  thread2 = gst_element_factory_make ("thread", "thread2");
-  g_assert (thread2 != NULL);
-
-  /* create a new bin to hold the elements */
-  bin = gst_bin_new ("bin");
-  g_assert (bin != NULL);
+  /* create a new pipeline to hold the elements */
+  pipeline = gst_element_factory_make ("pipeline", "pipeline");
+  g_assert (pipeline != NULL);
 
   /* create a disk reader */
   filesrc = gst_element_factory_make ("filesrc", "disk_source");
   g_assert (filesrc != NULL);
   g_object_set (G_OBJECT (filesrc), "location", argv[1], NULL);
-
-  queue = gst_element_factory_make ("queue", "queue");
-  queue2 = gst_element_factory_make ("queue", "queue2");
 
   /* and an audio sink */
   osssink = gst_element_factory_make ("osssink", "play_audio");
@@ -69,22 +56,16 @@ main (int argc, char *argv[])
   decode = gst_element_factory_make ("mad", "decode");
   g_assert (decode != NULL);
 
-  /* add objects to the main bin */
-  gst_bin_add_many (GST_BIN (bin), filesrc, queue, NULL);
+  /* add objects to the main pipeline */
+  gst_bin_add_many (GST_BIN (pipeline), filesrc, decode, osssink, NULL);
 
-  gst_bin_add_many (GST_BIN (thread), decode, queue2, NULL);
+  gst_element_link_many (filesrc, decode, osssink, NULL);
 
-  gst_bin_add (GST_BIN (thread2), osssink);
-  
-  gst_element_link_many (filesrc, queue, decode, queue2, osssink, NULL);
-
-  gst_bin_add_many (GST_BIN (bin), thread, thread2, NULL);
-
-  /* write the bin to stdout */
-  gst_xml_write_file (GST_ELEMENT (bin), stdout);
+  /* write the pipeline to stdout */
+  gst_xml_write_file (GST_ELEMENT (pipeline), stdout);
 
   /* write the bin to a file */
-  gst_xml_write_file (GST_ELEMENT (bin), fopen ("xmlTest.gst", "w"));
+  gst_xml_write_file (GST_ELEMENT (pipeline), fopen ("xmlTest.gst", "w"));
 
   exit (0);
 }
@@ -94,7 +75,7 @@ main (int argc, char *argv[])
       The most important line is:
     </para>
     <programlisting>
-  gst_xml_write_file (GST_ELEMENT (bin), stdout);
+  gst_xml_write_file (GST_ELEMENT (pipeline), stdout);
     </programlisting>
     <para>
       gst_xml_write_file () will turn the given element into an xmlDocPtr that 
@@ -125,7 +106,7 @@ int
 main(int argc, char *argv[]) 
 {
   GstXML *xml;
-  GstElement *bin;
+  GstElement *pipeline;
   gboolean ret;
 
   gst_init (&amp;argc, &amp;argv);
@@ -135,14 +116,14 @@ main(int argc, char *argv[])
   ret = gst_xml_parse_file(xml, "xmlTest.gst", NULL);
   g_assert (ret == TRUE);
 
-  bin = gst_xml_get_element (xml, "bin");
-  g_assert (bin != NULL);
+  pipeline = gst_xml_get_element (xml, "pipeline");
+  g_assert (pipeline != NULL);
   
-  gst_element_set_state (bin, GST_STATE_PLAYING);
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
-  while (gst_bin_iterate(GST_BIN(bin)));
+  g_sleep (4);
 
-  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_element_set_state (pipeline, GST_STATE_NULL);
 
   exit (0);
 }
@@ -186,9 +167,9 @@ xmlNsPtr ns;
   ...
   ns = xmlNewNs (NULL, "http://gstreamer.net/gst-test/1.0/", "test");
     ...
-  thread = gst_element_factory_make ("thread", "thread");
-  g_signal_connect (G_OBJECT (thread), "object_saved", 
-  		     G_CALLBACK (object_saved), g_strdup ("decoder thread"));
+  pipeline = gst_element_factory_make ("pipeline", "pipeline");
+  g_signal_connect (G_OBJECT (pipeline), "object_saved", 
+  		     G_CALLBACK (object_saved), g_strdup ("decoder pipeline"));
     ...
     </programlisting>
     <para>
@@ -212,13 +193,13 @@ object_saved (GstObject *object, xmlNodePtr parent, gpointer data)
     <programlisting>
           ...
         &lt;gst:element&gt;
-          &lt;gst:name&gt;thread&lt;/gst:name&gt;
-          &lt;gst:type&gt;thread&lt;/gst:type&gt;
+          &lt;gst:name&gt;pipeline&lt;/gst:name&gt;
+          &lt;gst:type&gt;pipeline&lt;/gst:type&gt;
           &lt;gst:version&gt;0.1.0&lt;/gst:version&gt;
 	  ...
         &lt;/gst:children&gt;
         &lt;test:comment&gt;
-          &lt;test:text&gt;decoder thread&lt;/test:text&gt;
+          &lt;test:text&gt;decoder pipeline&lt;/test:text&gt;
         &lt;/test:comment&gt;
       &lt;/gst:element&gt;
           ...
