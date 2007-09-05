@@ -1062,6 +1062,7 @@ tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
 tests/examples/level/Makefile
+tests/examples/rtp/Makefile
 tests/files/Makefile
 tests/icles/Makefile
 gconf/Makefile
