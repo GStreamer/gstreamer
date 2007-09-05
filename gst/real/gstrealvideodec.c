@@ -98,7 +98,7 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
   GstClockTime timestamp, duration;
   GstBuffer *out;
   guint32 result;
-  guint frag_count;
+  guint frag_count, frag_size;
 
   dec = GST_REAL_VIDEO_DEC (GST_PAD_PARENT (pad));
 
@@ -110,6 +110,9 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
   timestamp = GST_BUFFER_TIMESTAMP (in);
   duration = GST_BUFFER_DURATION (in);
 
+  GST_DEBUG_OBJECT (dec, "got buffer of size %u, timestamp %" GST_TIME_FORMAT,
+      size, GST_TIME_ARGS (timestamp));
+
   /* alloc output buffer */
   ret = gst_pad_alloc_buffer (dec->src, GST_BUFFER_OFFSET_NONE,
       dec->width * dec->height * 3 / 2, GST_PAD_CAPS (dec->src), &out);
@@ -120,6 +123,11 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
   GST_BUFFER_DURATION (out) = duration;
 
   frag_count = *data++;
+  frag_size = (frag_count + 1) * 8;
+  size -= (frag_size + 1);
+
+  GST_DEBUG_OBJECT (dec, "frag_count %u, frag_size %u, data size %u",
+      frag_count, frag_size, size);
 
   /* Decode */
   tin.datalen = size;
@@ -130,7 +138,7 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
   tin.timestamp = timestamp;
 
   /* jump over the frag table to the fragments */
-  data += (frag_count + 1) * 8;
+  data += frag_size;
 
   result = dec->hooks.transform (
       (gchar *) data,
@@ -149,8 +157,8 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
     GST_DEBUG_OBJECT (dec, "New dimensions: %"
         G_GUINT32_FORMAT " x %" G_GUINT32_FORMAT, tout.width, tout.height);
 
-    gst_structure_set (s, "width", G_TYPE_LONG, tout.width,
-        "height", G_TYPE_LONG, tout.height, NULL);
+    gst_structure_set (s, "width", G_TYPE_INT, (gint) tout.width,
+        "height", G_TYPE_INT, (gint) tout.height, NULL);
 
     gst_pad_set_caps (dec->src, caps);
     gst_buffer_set_caps (out, caps);
@@ -158,6 +166,7 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
 
     dec->width = tout.width;
     dec->height = tout.height;
+    GST_BUFFER_SIZE (out) = dec->width * dec->height * 3 / 2;
   }
 
   GST_DEBUG_OBJECT (dec,
@@ -238,8 +247,9 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
   GST_WRITE_UINT16_LE (data + 6, 0);
   GST_WRITE_UINT32_LE (data + 8, 0);
   GST_WRITE_UINT32_LE (data + 12, subformat);
-  GST_WRITE_UINT32_LE (data + 16, 0);
+  GST_WRITE_UINT32_LE (data + 16, 1);
   GST_WRITE_UINT32_LE (data + 20, format);
+
   res = hooks.init (&data, &hooks.context);
   if (res)
     goto could_not_initialize;
@@ -248,6 +258,8 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
     GstBuffer *buf;
     guint32 *msgdata;
     guint i;
+    guint8 *bufdata;
+    guint bufsize;
     struct
     {
       guint32 type;
@@ -258,10 +270,16 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
 
     buf = g_value_peek_pointer (v);
 
-    GST_LOG_OBJECT (dec, "Creating custom message of length %d",
-        GST_BUFFER_SIZE (buf));
+    bufdata = GST_BUFFER_DATA (buf);
+    bufsize = GST_BUFFER_SIZE (buf);
 
-    msgdata = g_new0 (guint32, GST_BUFFER_SIZE (buf) + 2);
+    /* skip format and subformat */
+    bufdata += 8;
+    bufsize -= 8;
+
+    GST_LOG_OBJECT (dec, "Creating custom message of length %d", bufsize);
+
+    msgdata = g_new0 (guint32, bufsize + 2);
     if (!msgdata)
       goto could_not_allocate;
 
@@ -272,8 +290,8 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
       msg.extra[i] = 0;
     msgdata[0] = width;
     msgdata[1] = height;
-    for (i = 0; i < GST_BUFFER_SIZE (buf); i++)
-      msgdata[i + 2] = 4 * GST_BUFFER_DATA (buf)[i];
+    for (i = 0; i < bufsize; i++)
+      msgdata[i + 2] = 4 * (guint32) bufdata[i];
 
     res = hooks.custom_message (&msg, hooks.context);
 
@@ -305,28 +323,28 @@ gst_real_video_dec_setcaps (GstPad * pad, GstCaps * caps)
 
 missing_keys:
   {
-    GST_DEBUG_OBJECT (dec, "Could not find all necessary keys in structure.");
+    GST_ERROR_OBJECT (dec, "Could not find all necessary keys in structure.");
     return FALSE;
   }
 
 could_not_initialize:
   {
     close_library (hooks);
-    GST_DEBUG_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
+    GST_ERROR_OBJECT (dec, "Initialization of REAL driver failed (%i).", res);
     return FALSE;
   }
 
 could_not_allocate:
   {
     close_library (hooks);
-    GST_DEBUG_OBJECT (dec, "Could not allocate memory.");
+    GST_ERROR_OBJECT (dec, "Could not allocate memory.");
     return FALSE;
   }
 
 could_not_send_message:
   {
     close_library (hooks);
-    GST_DEBUG_OBJECT (dec, "Failed to send custom message needed for "
+    GST_ERROR_OBJECT (dec, "Failed to send custom message needed for "
         "initialization (%i).", res);
     return FALSE;
   }
@@ -334,7 +352,7 @@ could_not_send_message:
 could_not_set_caps:
   {
     close_library (hooks);
-    GST_DEBUG_OBJECT (dec, "Could not convince peer to accept dimensions "
+    GST_ERROR_OBJECT (dec, "Could not convince peer to accept dimensions "
         "%i x %i.", dec->width, dec->height);
     return FALSE;
   }
