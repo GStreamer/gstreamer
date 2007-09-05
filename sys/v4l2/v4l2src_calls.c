@@ -462,9 +462,11 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
   ival.width = width;
   ival.height = height;
 
+  GST_LOG_OBJECT (v4l2src, "get frame interval for %ux%u, %" GST_FOURCC_FORMAT,
+      width, height, GST_FOURCC_ARGS (pixelformat));
+
   /* keep in mind that v4l2 gives us frame intervals (durations); we invert the
    * fraction to get framerate */
-
   if (ioctl (fd, VIDIOC_ENUM_FRAMEINTERVALS, &ival) < 0)
     goto enum_frameintervals_failed;
 
@@ -472,7 +474,6 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
     GValue frac = { 0, };
 
     g_value_init (&rate, GST_TYPE_LIST);
-
     g_value_init (&frac, GST_TYPE_FRACTION);
 
     do {
@@ -485,6 +486,8 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
         denom >>= 1;
       }
 
+      GST_LOG_OBJECT (v4l2src, "adding discrete framerate: %d/%d", denom, num);
+
       gst_value_set_fraction (&frac, denom, num);
       gst_value_list_append_value (&rate, &frac);
 
@@ -494,6 +497,7 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
     GValue frac = { 0, };
     GValue step = { 0, };
     GValue max = { 0, };
+    gboolean added = FALSE;
 
     g_value_init (&rate, GST_TYPE_LIST);
 
@@ -507,6 +511,7 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
       num >>= 1;
       denom >>= 1;
     }
+    GST_LOG_OBJECT (v4l2src, "stepwise min frame interval: %d/%d", num, denom);
     gst_value_set_fraction (&frac, num, denom);
 
     num = ival.stepwise.step.numerator;
@@ -517,6 +522,7 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
     }
     /* since we only have gst_value_fraction_subtract and not add, negate the
        numerator */
+    GST_LOG_OBJECT (v4l2src, "stepwise step frame interval: %d/%d", num, denom);
     gst_value_set_fraction (&step, -num, denom);
 
     num = ival.stepwise.max.numerator;
@@ -525,21 +531,34 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
       num >>= 1;
       denom >>= 1;
     }
+    GST_LOG_OBJECT (v4l2src, "stepwise max frame interval: %d/%d", num, denom);
     gst_value_set_fraction (&max, num, denom);
 
-    while (gst_value_compare (&frac, &max) == GST_VALUE_LESS_THAN) {
+    while (gst_value_compare (&frac, &max) <= 0) {
       GValue frac = { 0, };
       g_value_init (&frac, GST_TYPE_FRACTION);
-      /* invert */
-      gst_value_set_fraction (&frac,
-          gst_value_get_fraction_denominator (&frac),
-          gst_value_get_fraction_numerator (&frac));
-      gst_value_list_append_value (&rate, &frac);
 
+      num = gst_value_get_fraction_numerator (&frac);
+      denom = gst_value_get_fraction_denominator (&frac);
+      GST_LOG_OBJECT (v4l2src, "adding stepwise framerate: %d/%d", denom, num);
+
+      /* invert to get the framerate */
+      gst_value_set_fraction (&frac, denom, num);
+      gst_value_list_append_value (&rate, &frac);
+      added = TRUE;
+
+      /* we're actually adding because step was negated above. This is because
+       * there is no _add function... */
       if (!gst_value_fraction_subtract (&frac, &frac, &step)) {
-        GST_INFO_OBJECT (v4l2src, "could not step fraction!");
+        GST_WARNING_OBJECT (v4l2src, "could not step fraction!");
         break;
       }
+    }
+    if (!added) {
+      /* no range was added, make a default range */
+      GST_WARNING_OBJECT (v4l2src, "no range added, setting 0/1 to 100/1");
+      g_value_init (&rate, GST_TYPE_FRACTION_RANGE);
+      gst_value_set_fraction_range_full (&rate, 0, 1, 100, 1);
     }
   } else if (ival.type == V4L2_FRMIVAL_TYPE_CONTINUOUS) {
     guint32 maxnum, maxdenom;
@@ -553,12 +572,16 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
       denom >>= 1;
     }
 
+    /* FIXME? doesn't it make more sense to have min and max as the range? */
     maxnum = ival.stepwise.step.numerator;
     maxdenom = ival.stepwise.step.denominator;
     if (maxnum > G_MAXINT || maxdenom > G_MAXINT) {
       maxnum >>= 1;
       maxdenom >>= 1;
     }
+
+    GST_LOG_OBJECT (v4l2src, "continuous frame interval %d/%d to %d/%d",
+        maxdenom, maxnum, denom, num);
 
     gst_value_set_fraction_range_full (&rate, maxdenom, maxnum, denom, num);
   } else {
