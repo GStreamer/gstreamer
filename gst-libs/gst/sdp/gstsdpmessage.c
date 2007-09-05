@@ -47,7 +47,7 @@
  * <refsect2>
  * <para>
  * The GstSDPMessage helper functions makes it easy to parse and create SDP
- * messages. 
+ * messages.
  * </para>
  * </refsect2>
  *
@@ -57,61 +57,81 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #include "gstsdpmessage.h"
 
 /* FIXME, is currently allocated on the stack */
-#define MAX_LINE_LEN	1024 * 16
+#define MAX_LINE_LEN    1024 * 16
 
-#define FREE_STRING(field)      g_free ((field)); (field) = NULL;
-#define FREE_ARRAY(field)       \
-G_STMT_START {                  \
-  if (field)                    \
-    g_array_free (field, TRUE); \
-  field = NULL;                 \
-} G_STMT_END
-#define REPLACE_STRING(field,val)       FREE_STRING(field);field=g_strdup (val);
+#define FREE_STRING(field)              g_free (field); (field) = NULL
+#define REPLACE_STRING(field, val)      FREE_STRING(field); (field) = g_strdup (val)
 
-#define INIT_ARRAY(field,type,init_func)  		\
-G_STMT_START {                   			\
-  if (field) {                   			\
-    guint i;			 			\
-    for(i=0; i<field->len; i++)				\
-      init_func (&g_array_index(field, type, i));	\
-    g_array_set_size (field,0); 			\
-  }				 			\
-  else                          			\
-    field = g_array_new (FALSE, TRUE, sizeof(type));    \
+#define INIT_ARRAY(field, type, init_func)              \
+G_STMT_START {                                          \
+  if (field) {                                          \
+    guint i;                                            \
+    for(i = 0; i < (field)->len; i++)                   \
+      init_func (&g_array_index ((field), type, i));    \
+    g_array_set_size ((field), 0);                      \
+  }                                                     \
+  else                                                  \
+    (field) = g_array_new (FALSE, TRUE, sizeof (type)); \
 } G_STMT_END
+
+#define FREE_ARRAY(field)         \
+G_STMT_START {                    \
+  if (field)                      \
+    g_array_free ((field), TRUE); \
+  (field) = NULL;                 \
+} G_STMT_END
+
+#define INIT_PTR_ARRAY(field, type, init_func)          \
+G_STMT_START {                                          \
+  if (field) {                                          \
+    guint i;                                            \
+    for(i = 0; i < (field)->len; i++)                   \
+      init_func (g_array_index ((field), type, i));     \
+    g_array_set_size ((field), 0);                      \
+  }                                                     \
+  else                                                  \
+    (field) = g_array_new (FALSE, TRUE, sizeof (type)); \
+} G_STMT_END
+
+#define FREE_PTR_ARRAY(field) FREE_ARRAY(field)
 
 #define DEFINE_STRING_SETTER(field)                                     \
-GstSDPResult gst_sdp_message_set_##field (GstSDPMessage *msg, const gchar *val) {      \
+GstSDPResult gst_sdp_message_set_##field (GstSDPMessage *msg, const gchar *val) { \
   g_free (msg->field);                                                  \
   msg->field = g_strdup (val);                                          \
-  return GST_SDP_OK;                                                       \
+  return GST_SDP_OK;                                                    \
 }
 #define DEFINE_STRING_GETTER(field)                                     \
-const gchar* gst_sdp_message_get_##field (GstSDPMessage *msg) {                       \
+const gchar* gst_sdp_message_get_##field (const GstSDPMessage *msg) {   \
   return msg->field;                                                    \
 }
 
 #define DEFINE_ARRAY_LEN(field)                                         \
-gint gst_sdp_message_##field##_len (GstSDPMessage *msg) {                      \
-  return ((msg)->field->len);                                           \
+guint gst_sdp_message_##field##_len (const GstSDPMessage *msg) {        \
+  return msg->field->len;                                               \
 }
-#define DEFINE_ARRAY_GETTER(method,field,type)                          \
-type gst_sdp_message_get_##method (GstSDPMessage *msg, guint idx) {            \
-  return g_array_index ((msg)->field, type, idx);                       \
+#define DEFINE_ARRAY_GETTER(method, field, type)                        \
+type * gst_sdp_message_get_##method (const GstSDPMessage *msg, guint idx) {  \
+  return &g_array_index (msg->field, type, idx);                        \
 }
-#define DEFINE_ARRAY_P_GETTER(method,field,type)                        \
-type * gst_sdp_message_get_##method (GstSDPMessage *msg, guint idx) {          \
-  return &g_array_index ((msg)->field, type, idx);                      \
+
+#define DEFINE_PTR_ARRAY_LEN(field) DEFINE_ARRAY_LEN(field)
+#define DEFINE_PTR_ARRAY_GETTER(method, field, type)                    \
+type gst_sdp_message_get_##method (const GstSDPMessage *msg, guint idx) {    \
+  return g_array_index (msg->field, type, idx);                         \
 }
-#define DEFINE_ARRAY_ADDER(method,field,type,dup_method)                \
-GstSDPResult gst_sdp_message_add_##method (GstSDPMessage *msg, type val) {       \
-  type v = dup_method(val);                                             \
-  g_array_append_val((msg)->field, v);                                  \
-  return GST_SDP_OK;                                                       \
+#define DEFINE_PTR_ARRAY_ADDER(method, field, type, dup_method)         \
+GstSDPResult gst_sdp_message_add_##method (GstSDPMessage *msg, type val) {   \
+  type v = dup_method (val);                                            \
+  g_array_append_val (msg->field, v);                                   \
+  return GST_SDP_OK;                                                    \
 }
 
 static void
@@ -143,11 +163,12 @@ gst_sdp_bandwidth_init (GstSDPBandwidth * bandwidth)
 }
 
 static void
-gst_sdp_time_init (GstSDPTime * time)
+gst_sdp_time_init (GstSDPTime * t)
 {
-  FREE_STRING (time->start);
-  FREE_STRING (time->stop);
-  time->n_repeat = 0;
+  FREE_STRING (t->start);
+  FREE_STRING (t->stop);
+  INIT_PTR_ARRAY (t->repeat, gchar *, g_free);
+  FREE_PTR_ARRAY (t->repeat);
 }
 
 static void
@@ -216,8 +237,8 @@ gst_sdp_message_init (GstSDPMessage * msg)
   FREE_STRING (msg->session_name);
   FREE_STRING (msg->information);
   FREE_STRING (msg->uri);
-  INIT_ARRAY (msg->emails, gchar *, g_free);
-  INIT_ARRAY (msg->phones, gchar *, g_free);
+  INIT_PTR_ARRAY (msg->emails, gchar *, g_free);
+  INIT_PTR_ARRAY (msg->phones, gchar *, g_free);
   gst_sdp_connection_init (&msg->connection);
   INIT_ARRAY (msg->bandwidths, GstSDPBandwidth, gst_sdp_bandwidth_init);
   INIT_ARRAY (msg->times, GstSDPTime, gst_sdp_time_init);
@@ -246,8 +267,8 @@ gst_sdp_message_uninit (GstSDPMessage * msg)
 
   gst_sdp_message_init (msg);
 
-  FREE_ARRAY (msg->emails);
-  FREE_ARRAY (msg->phones);
+  FREE_PTR_ARRAY (msg->emails);
+  FREE_PTR_ARRAY (msg->phones);
   FREE_ARRAY (msg->bandwidths);
   FREE_ARRAY (msg->times);
   FREE_ARRAY (msg->zones);
@@ -276,6 +297,170 @@ gst_sdp_message_free (GstSDPMessage * msg)
   g_free (msg);
 
   return GST_SDP_OK;
+}
+
+static gboolean
+is_multicast_address (const gchar * host_name, guint * family)
+{
+  struct addrinfo hints = {
+    .ai_socktype = SOCK_DGRAM
+  };
+  struct addrinfo *ai;
+  struct addrinfo *res;
+  gboolean ret = FALSE;
+  int err;
+
+  g_return_val_if_fail (host_name, FALSE);
+
+  if ((err = getaddrinfo (host_name, NULL, &hints, &res)) < 0)
+    return FALSE;
+
+  for (ai = res; !ret && ai; ai = ai->ai_next) {
+    if (ai->ai_family == AF_INET)
+      ret =
+          IN_MULTICAST (ntohl (((struct sockaddr_in *) ai->ai_addr)->sin_addr.
+              s_addr));
+    else
+      ret =
+          IN6_IS_ADDR_MULTICAST (&((struct sockaddr_in6 *) ai->ai_addr)->
+          sin6_addr);
+    if (ret && family)
+      *family = ai->ai_family;
+  }
+
+  freeaddrinfo (res);
+
+  return ret;
+}
+
+/**
+ * gst_sdp_message_as_text:
+ * @msg: a #GstSDPMessage
+ *
+ * Convert the contents of @msg to a text string.
+ *
+ * Returns: A dynamically allocated string representing the SDP description.
+ */
+gchar *
+gst_sdp_message_as_text (const GstSDPMessage * msg)
+{
+  /* change all vars so they match rfc? */
+  GString *lines;
+  guint i;
+
+  g_return_val_if_fail (msg != NULL, NULL);
+
+  lines = g_string_new ("");
+
+  if (msg->version)
+    g_string_append_printf (lines, "v=%s\r\n", msg->version);
+
+  if (msg->origin.sess_id && msg->origin.sess_version && msg->origin.nettype &&
+      msg->origin.addrtype && msg->origin.addr)
+    g_string_append_printf (lines, "o=%s %s %s %s %s %s\r\n",
+        msg->origin.username ? msg->origin.username : "-", msg->origin.sess_id,
+        msg->origin.sess_version, msg->origin.nettype, msg->origin.addrtype,
+        msg->origin.addr);
+
+  if (msg->session_name)
+    g_string_append_printf (lines, "s=%s\r\n", msg->session_name);
+
+  if (msg->information)
+    g_string_append_printf (lines, "i=%s\r\n", msg->information);
+
+  if (msg->uri)
+    g_string_append_printf (lines, "u=%s\r\n", msg->uri);
+
+  for (i = 0; i < gst_sdp_message_emails_len (msg); i++)
+    g_string_append_printf (lines, "e=%s\r\n",
+        gst_sdp_message_get_email (msg, i));
+
+  for (i = 0; i < gst_sdp_message_phones_len (msg); i++)
+    g_string_append_printf (lines, "p=%s\r\n",
+        gst_sdp_message_get_phone (msg, i));
+
+  if (gst_sdp_message_emails_len (msg) == 0 &&
+      gst_sdp_message_phones_len (msg) == 0)
+    g_string_append_printf (lines, "e=NONE\r\n");
+
+  if (msg->connection.nettype && msg->connection.addrtype &&
+      msg->connection.address) {
+    guint family;
+
+    g_string_append_printf (lines, "c=%s %s %s", msg->connection.nettype,
+        msg->connection.addrtype, msg->connection.address);
+    if (is_multicast_address (msg->connection.address, &family)) {
+      if (family == AF_INET)
+        g_string_append_printf (lines, "/%u", msg->connection.ttl);
+      if (msg->connection.addr_number > 1)
+        g_string_append_printf (lines, "/%u", msg->connection.addr_number);
+    }
+    g_string_append_printf (lines, "\r\n");
+  }
+
+  for (i = 0; i < gst_sdp_message_bandwidths_len (msg); i++) {
+    const GstSDPBandwidth *bandwidth = gst_sdp_message_get_bandwidth (msg, i);
+
+    g_string_append_printf (lines, "b=%s:%u\r\n", bandwidth->bwtype,
+        bandwidth->bandwidth);
+  }
+
+  for (i = 0; i < gst_sdp_message_times_len (msg); i++) {
+    const GstSDPTime *times = gst_sdp_message_get_time (msg, i);
+
+    g_string_append_printf (lines, "t=%s %s\r\n", times->start, times->stop);
+
+    if (times->repeat != NULL) {
+      guint j;
+
+      g_string_append_printf (lines, "r=%s",
+          g_array_index (times->repeat, gchar *, 0));
+      for (j = 1; j < times->repeat->len; j++)
+        g_string_append_printf (lines, " %s",
+            g_array_index (times->repeat, gchar *, j));
+      g_string_append_printf (lines, "\r\n");
+    }
+  }
+
+  if (gst_sdp_message_zones_len (msg) > 0) {
+    const GstSDPZone *zone = gst_sdp_message_get_zone (msg, 0);
+
+    g_string_append_printf (lines, "z=%s %s", zone->time, zone->typed_time);
+    for (i = 1; i < gst_sdp_message_zones_len (msg); i++) {
+      zone = gst_sdp_message_get_zone (msg, i);
+      g_string_append_printf (lines, " %s %s", zone->time, zone->typed_time);
+    }
+    g_string_append_printf (lines, "\r\n");
+  }
+
+  if (msg->key.type) {
+    g_string_append_printf (lines, "k=%s", msg->key.type);
+    if (msg->key.data)
+      g_string_append_printf (lines, ":%s", msg->key.data);
+    g_string_append_printf (lines, "\r\n");
+  }
+
+  for (i = 0; i < gst_sdp_message_attributes_len (msg); i++) {
+    const GstSDPAttribute *attr = gst_sdp_message_get_attribute (msg, i);
+
+    if (attr->key) {
+      g_string_append_printf (lines, "a=%s", attr->key);
+      if (attr->value)
+        g_string_append_printf (lines, ":%s", attr->value);
+      g_string_append_printf (lines, "\r\n");
+    }
+  }
+
+  for (i = 0; i < gst_sdp_message_medias_len (msg); i++) {
+    const GstSDPMedia *media = gst_sdp_message_get_media (msg, i);
+    gchar *sdp_media_str;
+
+    sdp_media_str = gst_sdp_media_as_text (media);
+    g_string_append_printf (lines, "%s", sdp_media_str);
+    g_free (sdp_media_str);
+  }
+
+  return g_string_free (lines, FALSE);
 }
 
 /**
@@ -336,7 +521,7 @@ gst_sdp_message_set_origin (GstSDPMessage * msg, const gchar * username,
  * Returns: a #GstSDPOrigin. The result remains valid as long as @msg is valid.
  */
 const GstSDPOrigin *
-gst_sdp_message_get_origin (GstSDPMessage * msg)
+gst_sdp_message_get_origin (const GstSDPMessage * msg)
 {
   return &msg->origin;
 }
@@ -415,9 +600,9 @@ DEFINE_ARRAY_LEN (emails);
  *
  * Get the email with number @idx from @msg.
  *
- * Returns: the email at position @idx. 
+ * Returns: the email at position @idx.
  */
-DEFINE_ARRAY_GETTER (email, emails, const gchar *);
+DEFINE_PTR_ARRAY_GETTER (email, emails, const gchar *);
 
 /**
  * gst_sdp_message_add_email:
@@ -428,7 +613,7 @@ DEFINE_ARRAY_GETTER (email, emails, const gchar *);
  *
  * Returns: a #GstSDPResult.
  */
-DEFINE_ARRAY_ADDER (email, emails, const gchar *, g_strdup);
+DEFINE_PTR_ARRAY_ADDER (email, emails, const gchar *, g_strdup);
 
 /**
  * gst_sdp_message_phones_len:
@@ -446,9 +631,9 @@ DEFINE_ARRAY_LEN (phones);
  *
  * Get the phone with number @idx from @msg.
  *
- * Returns: the phone at position @idx. 
+ * Returns: the phone at position @idx.
  */
-DEFINE_ARRAY_GETTER (phone, phones, const gchar *);
+DEFINE_PTR_ARRAY_GETTER (phone, phones, const gchar *);
 
 /**
  * gst_sdp_message_add_phone:
@@ -459,7 +644,7 @@ DEFINE_ARRAY_GETTER (phone, phones, const gchar *);
  *
  * Returns: a #GstSDPResult.
  */
-DEFINE_ARRAY_ADDER (phone, phones, const gchar *, g_strdup);
+DEFINE_PTR_ARRAY_ADDER (phone, phones, const gchar *, g_strdup);
 
 /**
  * gst_sdp_message_set_connection:
@@ -477,7 +662,7 @@ DEFINE_ARRAY_ADDER (phone, phones, const gchar *, g_strdup);
  */
 GstSDPResult
 gst_sdp_message_set_connection (GstSDPMessage * msg, const gchar * nettype,
-    const gchar * addrtype, const gchar * address, gint ttl, gint addr_number)
+    const gchar * addrtype, const gchar * address, guint ttl, guint addr_number)
 {
   REPLACE_STRING (msg->connection.nettype, nettype);
   REPLACE_STRING (msg->connection.addrtype, addrtype);
@@ -497,7 +682,7 @@ gst_sdp_message_set_connection (GstSDPMessage * msg, const gchar * nettype,
  * Returns: a #GstSDPConnection. The result remains valid as long as @msg is valid.
  */
 const GstSDPConnection *
-gst_sdp_message_get_connection (GstSDPMessage * msg)
+gst_sdp_message_get_connection (const GstSDPMessage * msg)
 {
   return &msg->connection;
 }
@@ -520,21 +705,22 @@ DEFINE_ARRAY_LEN (bandwidths);
  *
  * Returns: a #GstSDPBandwidth.
  */
-DEFINE_ARRAY_P_GETTER (bandwidth, bandwidths, const GstSDPBandwidth);
+DEFINE_ARRAY_GETTER (bandwidth, bandwidths, const GstSDPBandwidth);
 
 /**
  * gst_sdp_message_add_bandwidth:
  * @msg: a #GstSDPMessage
- * @bwtype: the bandwidth modifier type 
+ * @bwtype: the bandwidth modifier type
  * @bandwidth: the bandwidth in kilobits per second
  *
  * Add the specified bandwidth information to @msg.
  *
  * Returns: a #GstSDPResult.
  */
+
 GstSDPResult
 gst_sdp_message_add_bandwidth (GstSDPMessage * msg, const gchar * bwtype,
-    gint bandwidth)
+    guint bandwidth)
 {
   GstSDPBandwidth bw;
 
@@ -565,20 +751,38 @@ DEFINE_ARRAY_LEN (times);
  *
  * Returns: a #GstSDPTime.
  */
-DEFINE_ARRAY_P_GETTER (time, times, const GstSDPTime);
+DEFINE_ARRAY_GETTER (time, times, const GstSDPTime);
 
 /**
  * gst_sdp_message_add_time:
  * @msg: a #GstSDPMessage
- * @time: a time information
+ * @start: the start time
+ * @stop: the stop time
+ * @repeat: the repeat times
  *
- * Add time information @time to @msg.
+ * Add time information @start and @stop to @msg.
  *
  * Returns: a #GstSDPResult.
  */
 GstSDPResult
-gst_sdp_message_add_time (GstSDPMessage * msg, const gchar * time)
+gst_sdp_message_add_time (GstSDPMessage * msg, const gchar * start,
+    const gchar * stop, const gchar ** repeat)
 {
+  GstSDPTime times;
+
+  times.start = g_strdup (start);
+  times.stop = g_strdup (stop);
+  if (repeat) {
+    times.repeat = g_array_new (FALSE, TRUE, sizeof (gchar *));
+    for (; *repeat; repeat++) {
+      gchar *r = g_strdup (*repeat);
+
+      g_array_append_val (times.repeat, r);
+    }
+  } else
+    times.repeat = NULL;
+  g_array_append_val (msg->times, times);
+
   return GST_SDP_OK;
 }
 
@@ -600,25 +804,25 @@ DEFINE_ARRAY_LEN (zones);
  *
  * Returns: a #GstSDPZone.
  */
-DEFINE_ARRAY_P_GETTER (zone, zones, const GstSDPZone);
+DEFINE_ARRAY_GETTER (zone, zones, const GstSDPZone);
 
 /**
  * gst_sdp_message_add_zone:
  * @msg: a #GstSDPMessage
  * @time: the NTP time that a time zone adjustment happens
- * @typed_time: the offset from the time when the session was first scheduled 
+ * @typed_time: the offset from the time when the session was first scheduled
  *
  * Add time zone information to @msg.
  *
  * Returns: a #GstSDPResult.
  */
 GstSDPResult
-gst_sdp_message_add_zone (GstSDPMessage * msg, const gchar * time,
+gst_sdp_message_add_zone (GstSDPMessage * msg, const gchar * adj_time,
     const gchar * typed_time)
 {
   GstSDPZone zone;
 
-  zone.time = g_strdup (time);
+  zone.time = g_strdup (adj_time);
   zone.typed_time = g_strdup (typed_time);
 
   g_array_append_val (msg->zones, zone);
@@ -655,7 +859,7 @@ gst_sdp_message_set_key (GstSDPMessage * msg, const gchar * type,
  * Returns: a #GstSDPKey.
  */
 const GstSDPKey *
-gst_sdp_message_get_key (GstSDPMessage * msg)
+gst_sdp_message_get_key (const GstSDPMessage * msg)
 {
   return &msg->key;
 }
@@ -669,6 +873,7 @@ gst_sdp_message_get_key (GstSDPMessage * msg)
  * Returns: the number of attributes in @msg.
  */
 DEFINE_ARRAY_LEN (attributes);
+
 /**
  * gst_sdp_message_get_attribute:
  * @msg: a #GstSDPMessage
@@ -678,7 +883,8 @@ DEFINE_ARRAY_LEN (attributes);
  *
  * Returns: the #GstSDPAttribute at position @idx.
  */
-DEFINE_ARRAY_P_GETTER (attribute, attributes, const GstSDPAttribute);
+DEFINE_ARRAY_GETTER (attribute, attributes, const GstSDPAttribute);
+
 /**
  * gst_sdp_message_get_attribute_val_n:
  * @msg: a #GstSDPMessage
@@ -690,8 +896,8 @@ DEFINE_ARRAY_P_GETTER (attribute, attributes, const GstSDPAttribute);
  * Returns: the attribute value of the @nth attribute with @key.
  */
 const gchar *
-gst_sdp_message_get_attribute_val_n (GstSDPMessage * msg, const gchar * key,
-    guint nth)
+gst_sdp_message_get_attribute_val_n (const GstSDPMessage * msg,
+    const gchar * key, guint nth)
 {
   guint i;
 
@@ -719,7 +925,7 @@ gst_sdp_message_get_attribute_val_n (GstSDPMessage * msg, const gchar * key,
  * Returns: the attribute value of the first attribute with @key.
  */
 const gchar *
-gst_sdp_message_get_attribute_val (GstSDPMessage * msg, const gchar * key)
+gst_sdp_message_get_attribute_val (const GstSDPMessage * msg, const gchar * key)
 {
   return gst_sdp_message_get_attribute_val_n (msg, key, 0);
 }
@@ -766,7 +972,7 @@ DEFINE_ARRAY_LEN (medias);
  *
  * Returns: a #GstSDPMedia.
  */
-DEFINE_ARRAY_P_GETTER (media, medias, const GstSDPMedia);
+DEFINE_ARRAY_GETTER (media, medias, const GstSDPMedia);
 
 /**
  * gst_sdp_message_add_media:
@@ -782,7 +988,7 @@ DEFINE_ARRAY_P_GETTER (media, medias, const GstSDPMedia);
 GstSDPResult
 gst_sdp_message_add_media (GstSDPMessage * msg, GstSDPMedia * media)
 {
-  gint len;
+  guint len;
   GstSDPMedia *nmedia;
 
   len = msg->medias->len;
@@ -841,7 +1047,7 @@ gst_sdp_media_init (GstSDPMedia * media)
   media->port = 0;
   media->num_ports = 0;
   FREE_STRING (media->proto);
-  INIT_ARRAY (media->fmts, gchar *, g_free);
+  INIT_PTR_ARRAY (media->fmts, gchar *, g_free);
   FREE_STRING (media->information);
   INIT_ARRAY (media->connections, GstSDPConnection, gst_sdp_connection_init);
   INIT_ARRAY (media->bandwidths, GstSDPBandwidth, gst_sdp_bandwidth_init);
@@ -867,7 +1073,7 @@ gst_sdp_media_uninit (GstSDPMedia * media)
   g_return_val_if_fail (media != NULL, GST_SDP_EINVAL);
 
   gst_sdp_media_init (media);
-  FREE_ARRAY (media->fmts);
+  FREE_PTR_ARRAY (media->fmts);
   FREE_ARRAY (media->connections);
   FREE_ARRAY (media->bandwidths);
   FREE_ARRAY (media->attributes);
@@ -894,6 +1100,87 @@ gst_sdp_media_free (GstSDPMedia * media)
   g_free (media);
 
   return GST_SDP_OK;
+}
+
+/**
+ * gst_sdp_media_as_text:
+ * @media: a #GstSDPMedia
+ *
+ * Convert the contents of @media to a text string.
+ *
+ * Returns: A dynamically allocated string representing the media.
+ */
+gchar *
+gst_sdp_media_as_text (const GstSDPMedia * media)
+{
+  GString *lines;
+  guint i;
+
+  g_return_val_if_fail (media != NULL, NULL);
+
+  lines = g_string_new ("");
+
+  if (media->media)
+    g_string_append_printf (lines, "m=%s", media->media);
+
+  g_string_append_printf (lines, " %u", media->port);
+
+  if (media->num_ports > 1)
+    g_string_append_printf (lines, "/%u", media->num_ports);
+
+  g_string_append_printf (lines, " %s", media->proto);
+
+  for (i = 0; i < gst_sdp_media_formats_len (media); i++)
+    g_string_append_printf (lines, " %s", gst_sdp_media_get_format (media, i));
+  g_string_append_printf (lines, "\r\n");
+
+  if (media->information)
+    g_string_append_printf (lines, "i=%s", media->information);
+
+  for (i = 0; i < gst_sdp_media_connections_len (media); i++) {
+    const GstSDPConnection *conn = gst_sdp_media_get_connection (media, i);
+
+    if (conn->nettype && conn->addrtype && conn->address) {
+      guint family;
+
+      g_string_append_printf (lines, "c=%s %s %s", conn->nettype,
+          conn->addrtype, conn->address);
+      if (is_multicast_address (conn->address, &family)) {
+        if (family == AF_INET)
+          g_string_append_printf (lines, "/%u", conn->ttl);
+        if (conn->addr_number > 1)
+          g_string_append_printf (lines, "/%u", conn->addr_number);
+      }
+      g_string_append_printf (lines, "\r\n");
+    }
+  }
+
+  for (i = 0; i < gst_sdp_media_bandwidths_len (media); i++) {
+    const GstSDPBandwidth *bandwidth = gst_sdp_media_get_bandwidth (media, i);
+
+    g_string_append_printf (lines, "b=%s:%u\r\n", bandwidth->bwtype,
+        bandwidth->bandwidth);
+  }
+
+  if (media->key.type) {
+    g_string_append_printf (lines, "k=%s", media->key.type);
+    if (media->key.data)
+      g_string_append_printf (lines, ":%s", media->key.data);
+    g_string_append_printf (lines, "\r\n");
+  }
+
+  for (i = 0; i < gst_sdp_media_attributes_len (media); i++) {
+    const GstSDPAttribute *attr = gst_sdp_media_get_attribute (media, i);
+
+    if (attr->key) {
+      g_string_append_printf (lines, "a=%s", attr->key);
+      if (attr->value)
+        g_string_append_printf (lines, ":%s", attr->value);
+      g_string_append_printf (lines, "\r\n");
+    }
+  }
+
+  return g_string_free (lines, FALSE);
 }
 
 /**
@@ -936,7 +1223,7 @@ gst_sdp_media_set_media (GstSDPMedia * media, const gchar * med)
  *
  * Returns: the port number of @media.
  */
-gint
+guint
 gst_sdp_media_get_port (const GstSDPMedia * media)
 {
   return media->port;
@@ -950,7 +1237,7 @@ gst_sdp_media_get_port (const GstSDPMedia * media)
  *
  * Returns: the number of ports for @media.
  */
-gint
+guint
 gst_sdp_media_get_num_ports (const GstSDPMedia * media)
 {
   return media->num_ports;
@@ -967,7 +1254,7 @@ gst_sdp_media_get_num_ports (const GstSDPMedia * media)
  * Returns: #GST_SDP_OK.
  */
 GstSDPResult
-gst_sdp_media_set_port_info (GstSDPMedia * media, gint port, gint num_ports)
+gst_sdp_media_set_port_info (GstSDPMedia * media, guint port, guint num_ports)
 {
   media->port = port;
   media->num_ports = num_ports;
@@ -1015,7 +1302,7 @@ gst_sdp_media_set_proto (GstSDPMedia * media, const gchar * proto)
  *
  * Returns: the number of formats in @media.
  */
-gint
+guint
 gst_sdp_media_formats_len (const GstSDPMedia * media)
 {
   return media->fmts->len;
@@ -1099,10 +1386,10 @@ gst_sdp_media_set_information (GstSDPMedia * media, const gchar * information)
  *
  * Returns: the number of connections in @media.
  */
-gint
+guint
 gst_sdp_media_connections_len (const GstSDPMedia * media)
 {
-  return (media->connections->len);
+  return media->connections->len;
 }
 
 /**
@@ -1136,7 +1423,7 @@ gst_sdp_media_get_connection (const GstSDPMedia * media, guint idx)
  */
 GstSDPResult
 gst_sdp_media_add_connection (GstSDPMedia * media, const gchar * nettype,
-    const gchar * addrtype, const gchar * address, gint ttl, gint addr_number)
+    const gchar * addrtype, const gchar * address, guint ttl, guint addr_number)
 {
   GstSDPConnection conn;
 
@@ -1159,10 +1446,10 @@ gst_sdp_media_add_connection (GstSDPMedia * media, const gchar * nettype,
  *
  * Returns: the number of bandwidths in @media.
  */
-gint
+guint
 gst_sdp_media_bandwidths_len (const GstSDPMedia * media)
 {
-  return (media->bandwidths->len);
+  return media->bandwidths->len;
 }
 
 /**
@@ -1175,7 +1462,7 @@ gst_sdp_media_bandwidths_len (const GstSDPMedia * media)
  * Returns: the #GstSDPBandwidth at position @idx.
  */
 const GstSDPBandwidth *
-gst_sdp_media_get_badwidth (const GstSDPMedia * media, guint idx)
+gst_sdp_media_get_bandwidth (const GstSDPMedia * media, guint idx)
 {
   return &g_array_index (media->bandwidths, GstSDPBandwidth, idx);
 }
@@ -1192,7 +1479,7 @@ gst_sdp_media_get_badwidth (const GstSDPMedia * media, guint idx)
  */
 GstSDPResult
 gst_sdp_media_add_bandwidth (GstSDPMedia * media, const gchar * bwtype,
-    gint bandwidth)
+    guint bandwidth)
 {
   GstSDPBandwidth bw;
 
@@ -1248,10 +1535,10 @@ gst_sdp_media_get_key (const GstSDPMedia * media)
  *
  * Returns: the number of attributes in @media.
  */
-gint
+guint
 gst_sdp_media_attributes_len (const GstSDPMedia * media)
 {
-  return (media->attributes->len);
+  return media->attributes->len;
 }
 
 /**
@@ -1384,7 +1671,7 @@ enum
 
 typedef struct
 {
-  gint state;
+  guint state;
   GstSDPMessage *msg;
   GstSDPMedia *media;
 } SDPContext;
@@ -1395,8 +1682,8 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
   gchar str[8192];
   gchar *p = buffer;
 
-#define READ_STRING(field) read_string (str, sizeof(str), &p);REPLACE_STRING (field, str);
-#define READ_INT(field) read_string (str, sizeof(str), &p);field = atoi(str);
+#define READ_STRING(field) read_string (str, sizeof (str), &p); REPLACE_STRING (field, str)
+#define READ_UINT(field) read_string (str, sizeof (str), &p); field = strtoul (str, NULL, 10)
 
   switch (type) {
     case 'v':
@@ -1435,8 +1722,8 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
       READ_STRING (c->msg->connection.nettype);
       READ_STRING (c->msg->connection.addrtype);
       READ_STRING (c->msg->connection.address);
-      READ_INT (c->msg->connection.ttl);
-      READ_INT (c->msg->connection.addr_number);
+      READ_UINT (c->msg->connection.ttl);
+      READ_UINT (c->msg->connection.addr_number);
       break;
     case 'b':
     {
@@ -1453,7 +1740,6 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
     case 't':
       break;
     case 'k':
-
       break;
     case 'a':
       read_string_del (str, sizeof (str), ':', &p);
@@ -1566,8 +1852,8 @@ static void
 print_media (GstSDPMedia * media)
 {
   g_print ("   media:       '%s'\n", media->media);
-  g_print ("   port:        '%d'\n", media->port);
-  g_print ("   num_ports:   '%d'\n", media->num_ports);
+  g_print ("   port:        '%u'\n", media->port);
+  g_print ("   num_ports:   '%u'\n", media->num_ports);
   g_print ("   proto:       '%s'\n", media->proto);
   if (media->fmts->len > 0) {
     guint i;
@@ -1603,7 +1889,7 @@ print_media (GstSDPMedia * media)
  * Returns: a #GstSDPResult.
  */
 GstSDPResult
-gst_sdp_message_dump (GstSDPMessage * msg)
+gst_sdp_message_dump (const GstSDPMessage * msg)
 {
   g_return_val_if_fail (msg != NULL, GST_SDP_EINVAL);
 
@@ -1640,8 +1926,8 @@ gst_sdp_message_dump (GstSDPMessage * msg)
   g_print ("  nettype:      '%s'\n", msg->connection.nettype);
   g_print ("  addrtype:     '%s'\n", msg->connection.addrtype);
   g_print ("  address:      '%s'\n", msg->connection.address);
-  g_print ("  ttl:          '%d'\n", msg->connection.ttl);
-  g_print ("  addr_number:  '%d'\n", msg->connection.addr_number);
+  g_print ("  ttl:          '%u'\n", msg->connection.ttl);
+  g_print ("  addr_number:  '%u'\n", msg->connection.addr_number);
   g_print (" key:\n");
   g_print ("  type:         '%s'\n", msg->key.type);
   g_print ("  data:         '%s'\n", msg->key.data);
@@ -1661,7 +1947,7 @@ gst_sdp_message_dump (GstSDPMessage * msg)
 
     g_print (" medias:\n");
     for (i = 0; i < msg->medias->len; i++) {
-      g_print ("  media %d:\n", i);
+      g_print ("  media %u:\n", i);
       print_media (&g_array_index (msg->medias, GstSDPMedia, i));
     }
   }
