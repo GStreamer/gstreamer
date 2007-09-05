@@ -484,8 +484,8 @@ gst_element_set_base_time (GstElement * element, GstClockTime time)
   element->base_time = time;
   GST_OBJECT_UNLOCK (element);
 
-  GST_DEBUG_OBJECT (element, "set base_time=%" GST_TIME_FORMAT,
-      GST_TIME_ARGS (time));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, element,
+      "set base_time=%" GST_TIME_FORMAT, GST_TIME_ARGS (time));
 }
 
 /**
@@ -1552,7 +1552,8 @@ gst_element_post_message (GstElement * element, GstMessage * message)
   /* ERRORS */
 no_bus:
   {
-    GST_DEBUG_OBJECT (element, "not posting message %p: no bus", message);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_MESSAGE, element,
+        "not posting message %p: no bus", message);
     GST_OBJECT_UNLOCK (element);
     gst_message_unref (message);
     return FALSE;
@@ -2547,7 +2548,8 @@ gst_element_pads_activate (GstElement * element, gboolean active)
   GstIterator *iter;
   gboolean res;
 
-  GST_DEBUG_OBJECT (element, "pads_activate with active %d", active);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
+      "pads_activate with active %d", active);
 
   iter = gst_element_iterate_src_pads (element);
   res =
@@ -2576,7 +2578,8 @@ gst_element_pads_activate (GstElement * element, gboolean active)
       goto caps_failed;
   }
 
-  GST_DEBUG_OBJECT (element, "pads_activate successful");
+  GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
+      "pads_activate successful");
 
   return TRUE;
 

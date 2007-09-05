@@ -1,3 +1,8 @@
+2007-09-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstelement.c:
+	  Give some log-messages a category.
+
 2007-09-04  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gststructure.c:
