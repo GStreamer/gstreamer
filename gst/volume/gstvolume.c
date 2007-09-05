@@ -214,7 +214,11 @@ static gboolean volume_set_caps (GstBaseTransform * base, GstCaps * incaps,
 
 static void volume_process_double (GstVolume * this, gpointer bytes,
     guint n_bytes);
+static void volume_process_double_clamp (GstVolume * this, gpointer bytes,
+    guint n_bytes);
 static void volume_process_float (GstVolume * this, gpointer bytes,
+    guint n_bytes);
+static void volume_process_float_clamp (GstVolume * this, gpointer bytes,
     guint n_bytes);
 static void volume_process_int32 (GstVolume * this, gpointer bytes,
     guint n_bytes);
@@ -284,10 +288,22 @@ volume_choose_func (GstVolume * this)
     case GST_VOLUME_FORMAT_FLOAT:
       switch (this->width) {
         case 32:
-          this->process = volume_process_float;
+          /* only clamp if the gain is greater than 1.0
+           * FIXME: real_vol_f can change while processing the buffer!
+           */
+          if (this->real_vol_f > 1.0)
+            this->process = volume_process_float_clamp;
+          else
+            this->process = volume_process_float;
           break;
         case 64:
-          this->process = volume_process_double;
+          /* only clamp if the gain is greater than 1.0
+           * FIXME: real_vol_f can change while processing the buffer!
+           */
+          if (this->real_vol_f > 1.0)
+            this->process = volume_process_double_clamp;
+          else
+            this->process = volume_process_double;
           break;
       }
       break;
@@ -481,20 +497,32 @@ gst_volume_init (GstVolume * this, GstVolumeClass * g_class)
 
 /* NOTE: although it might be tempting to have volume_process_mute() which uses
  *       memset(bytes, 0, nbytes) for the vol=0 case, this has the downside that
- *       unmuting would unly take place after processing a buffer.
+ *       unmuting would only take place after processing a buffer.
  */
 
 static void
 volume_process_double (GstVolume * this, gpointer bytes, guint n_bytes)
 {
   gdouble *data = (gdouble *) bytes;
-  guint i, num_samples;
-
-  num_samples = n_bytes / sizeof (gdouble);
+  guint i, num_samples = n_bytes / sizeof (gdouble);
 
   for (i = 0; i < num_samples; i++) {
     *data++ *= this->real_vol_f;
   }
+}
+
+static void
+volume_process_double_clamp (GstVolume * this, gpointer bytes, guint n_bytes)
+{
+  gdouble *data = (gdouble *) bytes;
+  guint i, num_samples = n_bytes / sizeof (gdouble);
+  gdouble tmp;
+
+  for (i = 0; i < num_samples; i++) {
+    tmp = *data * this->real_vol_f;
+    *data++ = CLAMP (tmp, -1.0, 1.0);
+  }
+
 }
 
 static void
@@ -513,6 +541,19 @@ volume_process_float (GstVolume * this, gpointer bytes, guint n_bytes)
    * goes from 0m0.850s -> 0m0.717s with liboil
    */
   oil_scalarmultiply_f32_ns (data, data, &this->real_vol_f, num_samples);
+}
+
+static void
+volume_process_float_clamp (GstVolume * this, gpointer bytes, guint n_bytes)
+{
+  gfloat *data = (gfloat *) bytes;
+  guint i, num_samples = n_bytes / sizeof (gfloat);
+  gfloat tmp;
+
+  for (i = 0; i < num_samples; i++) {
+    tmp = *data * this->real_vol_f;
+    *data++ = CLAMP (tmp, -1.0, 1.0);
+  }
 }
 
 static void

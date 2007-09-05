@@ -1,3 +1,13 @@
+2007-09-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/volume/gstvolume.c: (volume_choose_func),
+	(volume_process_double), (volume_process_double_clamp),
+	(volume_process_float_clamp):
+	Correctly clamp float/double samples in the [-1.0,1.0] range to
+	prevent weird effects.
+	* tests/check/elements/volume.c: (GST_START_TEST), (volume_suite):
+	Add unit tests for all samples types that had none before.
+
 2007-09-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/rtp/gstrtpbuffer.c:
