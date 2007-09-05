@@ -1,3 +1,14 @@
+2007-09-04  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/gststructure.c:
+	(gst_structure_fixate_field_nearest_fraction):
+	Fix fraction list fixation code. Take the fraction with the smallest
+	difference with the target instead of the first one in the list.
+
+	* tests/check/gst/gststructure.c: (GST_START_TEST),
+	(gst_structure_suite):
+	Added test to verify correct fraction list fixation behaviour.
+
 2007-09-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* win32/common/libgstreamer.def:

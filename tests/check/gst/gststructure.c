@@ -204,6 +204,44 @@ GST_START_TEST (test_fixate)
 
 GST_END_TEST;
 
+GST_START_TEST (test_fixate_frac_list)
+{
+  GstStructure *s;
+  GValue list = { 0 };
+  GValue frac = { 0 };
+  gchar *str;
+  gint num, denom;
+
+  g_value_init (&list, GST_TYPE_LIST);
+  g_value_init (&frac, GST_TYPE_FRACTION);
+
+  gst_value_set_fraction (&frac, 30, 1);
+  gst_value_list_append_value (&list, &frac);
+  gst_value_set_fraction (&frac, 15, 1);
+  gst_value_list_append_value (&list, &frac);
+  gst_value_set_fraction (&frac, 10, 1);
+  gst_value_list_append_value (&list, &frac);
+
+  s = gst_structure_new ("name", NULL);
+  gst_structure_set_value (s, "frac", &list);
+  g_value_unset (&frac);
+  g_value_unset (&list);
+
+  str = gst_structure_to_string (s);
+  GST_DEBUG ("list %s", str);
+  g_free (str);
+
+  /* fixate to the nearest fraction, this should give 15/1 */
+  fail_unless (gst_structure_fixate_field_nearest_fraction (s, "frac", 14, 1));
+
+  fail_unless (gst_structure_get_fraction (s, "frac", &num, &denom));
+  fail_unless (num == 15);
+  fail_unless (denom == 1);
+
+  gst_structure_free (s);
+}
+
+GST_END_TEST;
 
 Suite *
 gst_structure_suite (void)
@@ -217,6 +255,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_complete_structure);
   tcase_add_test (tc_chain, test_structure_new);
   tcase_add_test (tc_chain, test_fixate);
+  tcase_add_test (tc_chain, test_fixate_frac_list);
   return s;
 }
 

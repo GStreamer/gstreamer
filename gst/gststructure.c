@@ -2167,23 +2167,23 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
 
     gst_value_set_fraction (&target, target_numerator, target_denominator);
 
+    best = NULL;
+
     n = gst_value_list_get_size (value);
     for (i = 0; i < n; i++) {
       list_value = gst_value_list_get_value (value, i);
       if (G_VALUE_TYPE (list_value) == GST_TYPE_FRACTION) {
-        if (best == NULL) {
-          best = list_value;
-          gst_value_set_fraction (&best_diff, 0, 1);
-        } else {
-          if (gst_value_compare (list_value, &target) == GST_VALUE_LESS_THAN)
-            gst_value_fraction_subtract (&cur_diff, &target, list_value);
-          else
-            gst_value_fraction_subtract (&cur_diff, list_value, &target);
 
-          if (gst_value_compare (&cur_diff, &best_diff) == GST_VALUE_LESS_THAN) {
-            best = list_value;
-            g_value_copy (&cur_diff, &best_diff);
-          }
+        if (gst_value_compare (list_value, &target) == GST_VALUE_LESS_THAN)
+          gst_value_fraction_subtract (&cur_diff, &target, list_value);
+        else
+          gst_value_fraction_subtract (&cur_diff, list_value, &target);
+
+        if (!best
+            || gst_value_compare (&cur_diff,
+                &best_diff) == GST_VALUE_LESS_THAN) {
+          best = list_value;
+          g_value_copy (&cur_diff, &best_diff);
         }
       }
     }
@@ -2196,6 +2196,5 @@ gst_structure_fixate_field_nearest_fraction (GstStructure * structure,
     g_value_unset (&target);
     return res;
   }
-
   return FALSE;
 }
