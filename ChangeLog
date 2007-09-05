@@ -1,3 +1,8 @@
+2007-09-05  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gststreaminfo.c:
+	  Fix build.
+
 2007-09-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/playback/gststreaminfo.c:

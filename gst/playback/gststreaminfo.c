@@ -327,8 +327,8 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
         }
         gst_object_unref (element);
       }
-#endif
     }
+#endif
   }
   return TRUE;
 }
