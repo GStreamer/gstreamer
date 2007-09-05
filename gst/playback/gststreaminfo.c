@@ -302,24 +302,32 @@ gst_stream_info_set_mute (GstStreamInfo * stream_info, gboolean mute)
   }
 
   if (mute != stream_info->mute) {
-    GstElement *element;
+    /* nothing really happens here. it looks like gstplaybasebin installs a
+     * buffer probe hat drops buffers when muting. but the this removes it self
+     * after first call.
+     */
 
     stream_info->mute = mute;
-    // gst_pad_set_active ((GstPad *) GST_PAD_CAST (stream_info->object), !mute);
-
-    element = gst_pad_get_parent_element ((GstPad *)
-        GST_PAD_CAST (stream_info->object));
-    if (element) {
 #if 0
-      if (mute) {
-        g_signal_connect (element, "state-changed",
-            G_CALLBACK (stream_info_change_state), stream_info);
-      } else {
-        g_signal_handlers_disconnect_by_func (element,
-            G_CALLBACK (stream_info_change_state), stream_info);
+    gst_pad_set_active ((GstPad *) GST_PAD_CAST (stream_info->object), !mute);
+#endif
+#if 0
+    {
+      GstElement *element;
+
+      element = gst_pad_get_parent_element ((GstPad *)
+          GST_PAD_CAST (stream_info->object));
+      if (element) {
+        if (mute) {
+          g_signal_connect (element, "state-changed",
+              G_CALLBACK (stream_info_change_state), stream_info);
+        } else {
+          g_signal_handlers_disconnect_by_func (element,
+              G_CALLBACK (stream_info_change_state), stream_info);
+        }
+        gst_object_unref (element);
       }
 #endif
-      gst_object_unref (element);
     }
   }
   return TRUE;

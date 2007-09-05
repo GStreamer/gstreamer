@@ -1,3 +1,8 @@
+2007-09-05  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/playback/gststreaminfo.c:
+	  Clean up some half-disabled code and comment.
+
 2007-09-04  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpaudiopayload.c:
