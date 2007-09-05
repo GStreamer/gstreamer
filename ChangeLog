@@ -1,3 +1,11 @@
+2007-09-05  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_flush),
+	(gst_base_sink_wait_preroll), (gst_base_sink_needs_preroll),
+	(gst_base_sink_query):
+	Protect eos and have_preroll with the OBJECT lock so we don't need to
+	take the PREROLL lock when querying the latency. Fixes #473846.
+
 2007-09-05  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstelement.c:

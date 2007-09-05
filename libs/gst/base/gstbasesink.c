@@ -983,12 +983,14 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
     gst_mini_object_unref (obj);
   }
   /* we can't have EOS anymore now */
+  GST_OBJECT_LOCK (basesink);
   basesink->eos = FALSE;
+  basesink->have_preroll = FALSE;
+  GST_OBJECT_UNLOCK (basesink);
   basesink->eos_queued = FALSE;
   basesink->preroll_queued = 0;
   basesink->buffers_queued = 0;
   basesink->events_queued = 0;
-  basesink->have_preroll = FALSE;
   /* and signal any waiters now */
   GST_PAD_PREROLL_SIGNAL (pad);
 }
@@ -1399,12 +1401,22 @@ no_clock:
 GstFlowReturn
 gst_base_sink_wait_preroll (GstBaseSink * sink)
 {
-  /* block until the state changes, or we get a flush, or something */
-  GST_DEBUG_OBJECT (sink, "wait for preroll...");
+  /* have_preroll is also protected with the OBJECT lock */
+  GST_OBJECT_LOCK (sink);
   sink->have_preroll = TRUE;
+  GST_OBJECT_UNLOCK (sink);
+
+  GST_DEBUG_OBJECT (sink, "wait for preroll...");
+
+  /* block until the state changes, or we get a flush, or something */
   GST_PAD_PREROLL_WAIT (sink->sinkpad);
-  sink->have_preroll = FALSE;
+
   GST_DEBUG_OBJECT (sink, "preroll done");
+
+  GST_OBJECT_LOCK (sink);
+  sink->have_preroll = FALSE;
+  GST_OBJECT_UNLOCK (sink);
+
   if (G_UNLIKELY (sink->flushing))
     goto stopping;
   GST_DEBUG_OBJECT (sink, "continue after preroll");
@@ -2246,16 +2258,19 @@ gst_base_sink_get_times (GstBaseSink * basesink, GstBuffer * buffer,
   }
 }
 
-/* must be called with PREROLL_LOCK */
+/* no lock is needed */
 static gboolean
 gst_base_sink_needs_preroll (GstBaseSink * basesink)
 {
   gboolean is_prerolled, res;
 
+  GST_OBJECT_LOCK (basesink);
   is_prerolled = basesink->have_preroll || basesink->eos;
   res = !is_prerolled && basesink->pad_mode != GST_ACTIVATE_PULL;
   GST_DEBUG_OBJECT (basesink, "have_preroll: %d, EOS: %d => needs preroll: %d",
       basesink->have_preroll, basesink->eos, res);
+  GST_OBJECT_UNLOCK (basesink);
+
   return res;
 }
 
@@ -2931,28 +2946,23 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       gboolean live, us_live;
       GstClockTime min, max;
 
-      GST_PAD_PREROLL_LOCK (basesink->sinkpad);
       if (gst_base_sink_needs_preroll (basesink)) {
         GST_DEBUG_OBJECT (basesink, "not prerolled yet, can't report latency");
         res = FALSE;
-        goto done;
-      }
-
-      if ((res =
-              gst_base_sink_query_latency (basesink, &live, &us_live, &min,
-                  &max))) {
-        /* if we or the upstream elements are not live, we don't need latency
-         * compensation */
-        if (!live || !us_live) {
-          GST_DEBUG_OBJECT (basesink,
-              "no latency compensation, we or upstream are not live");
-          min = 0;
-          max = -1;
+      } else {
+        if ((res = gst_base_sink_query_latency (basesink, &live, &us_live, &min,
+                    &max))) {
+          /* if we or the upstream elements are not live, we don't need latency
+           * compensation */
+          if (!live || !us_live) {
+            GST_DEBUG_OBJECT (basesink,
+                "no latency compensation, we or upstream are not live");
+            min = 0;
+            max = -1;
+          }
+          gst_query_set_latency (query, live, min, max);
         }
-        gst_query_set_latency (query, live, min, max);
       }
-    done:
-      GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     }
     case GST_QUERY_JITTER:
