@@ -968,6 +968,9 @@ gst_v4l2src_set_capture (GstV4l2Src * v4l2src, guint32 pixelformat,
           || stream.parm.capture.timeperframe.denominator != fps_n)
         goto invalid_framerate;
     }
+
+    v4l2src->fps_d = fps_d;
+    v4l2src->fps_n = fps_n;
   }
 
   return TRUE;

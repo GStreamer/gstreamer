@@ -106,6 +106,8 @@ struct _GstV4l2Src
   gboolean is_capturing;
 
   guint64 offset;
+
+  gint     fps_d, fps_n;       /* framerate if device is open */
 };
 
 struct _GstV4l2SrcClass

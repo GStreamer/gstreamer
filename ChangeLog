@@ -1,5 +1,13 @@
 2007-09-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/gstv4l2src.h:
+	* sys/v4l2/v4l2src_calls.c:
+	  Implement LATENCY queries in the crudest way possible so I don't
+	  have to use sync=false any longer when testing with videosinks.
+
+2007-09-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Fix build.
 

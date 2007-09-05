@@ -237,6 +237,7 @@ static gboolean gst_v4l2src_start (GstBaseSrc * src);
 static gboolean gst_v4l2src_stop (GstBaseSrc * src);
 static gboolean gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps);
 static GstCaps *gst_v4l2src_get_caps (GstBaseSrc * src);
+static gboolean gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query);
 static GstFlowReturn gst_v4l2src_create (GstPushSrc * src, GstBuffer ** out);
 
 static void gst_v4l2src_fixate (GstPad * pad, GstCaps * caps);
@@ -289,12 +290,13 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
           GST_V4L2_MIN_BUFFERS, GST_V4L2_MAX_BUFFERS, GST_V4L2_MIN_BUFFERS,
           G_PARAM_READWRITE));
 
-  basesrc_class->get_caps = gst_v4l2src_get_caps;
-  basesrc_class->set_caps = gst_v4l2src_set_caps;
-  basesrc_class->start = gst_v4l2src_start;
-  basesrc_class->stop = gst_v4l2src_stop;
+  basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_get_caps);
+  basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_set_caps);
+  basesrc_class->start = GST_DEBUG_FUNCPTR (gst_v4l2src_start);
+  basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_v4l2src_stop);
+  basesrc_class->query = GST_DEBUG_FUNCPTR (gst_v4l2src_query);
 
-  pushsrc_class->create = gst_v4l2src_create;
+  pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_v4l2src_create);
 }
 
 static void
@@ -316,6 +318,9 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
 
   gst_base_src_set_format (GST_BASE_SRC (v4l2src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (v4l2src), TRUE);
+
+  v4l2src->fps_d = 0;
+  v4l2src->fps_n = 0;
 }
 
 
@@ -865,6 +870,55 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
   return TRUE;
 }
 
+static gboolean
+gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query)
+{
+  GstV4l2Src *src;
+  gboolean res = FALSE;
+
+  src = GST_V4L2SRC (bsrc);
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:{
+      GstClockTime min_latency, max_latency;
+
+      /* device must be open */
+      if (!GST_V4L2_IS_OPEN (src->v4l2object))
+        goto done;
+
+      /* we must have a framerate */
+      if (src->fps_n <= 0 || src->fps_d <= 0)
+        goto done;
+
+      /* min latency is the time to capture one frame */
+      min_latency =
+          gst_util_uint64_scale_int (GST_SECOND, src->fps_d, src->fps_n);
+
+      /* max latency is total duration of the frame buffer */
+      /* FIXME: what to use here? */
+      max_latency = 1 * min_latency;
+
+      GST_DEBUG_OBJECT (bsrc,
+          "report latency min %" GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+
+      /* we are always live, the min latency is 1 frame and the max latency is
+       * the complete buffer of frames. */
+      gst_query_set_latency (query, TRUE, min_latency, max_latency);
+
+      res = TRUE;
+      break;
+    }
+    default:
+      res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
+      break;
+  }
+
+done:
+
+  return res;
+}
+
 /* start and stop are not symmetric -- start will open the device, but not start
  * capture. it's setcaps that will start capture, which is called via basesrc's
  * negotiate method. stop will both stop capture and close the device.
@@ -900,6 +954,9 @@ gst_v4l2src_stop (GstBaseSrc * src)
   /* close the device */
   if (!gst_v4l2_object_stop (v4l2src->v4l2object))
     return FALSE;
+
+  v4l2src->fps_d = 0;
+  v4l2src->fps_n = 0;
 
   return TRUE;
 }
@@ -950,9 +1007,20 @@ gst_v4l2src_get_read (GstV4l2Src * v4l2src, GstBuffer ** buf)
     GST_OBJECT_UNLOCK (v4l2src);
 
     if (clock) {
+      GstClockTime latency;
+
       /* the time now is the time of the clock minus the base time */
       timestamp = gst_clock_get_time (clock) - timestamp;
       gst_object_unref (clock);
+
+      latency =
+          gst_util_uint64_scale_int (GST_SECOND, v4l2src->fps_d,
+          v4l2src->fps_n);
+
+      if (timestamp > latency)
+        timestamp -= latency;
+      else
+        timestamp = 0;
     }
 
     /* FIXME: use the timestamp from the buffer itself! */
