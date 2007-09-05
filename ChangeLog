@@ -1,5 +1,10 @@
 2007-09-05  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	  Need to include stdlib.h for abs() here too.
+
+2007-09-05  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/playback/gststreaminfo.c:
 	  Fix build.
 

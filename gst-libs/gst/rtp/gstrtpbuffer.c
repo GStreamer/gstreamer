@@ -36,6 +36,8 @@
 
 #include "gstrtpbuffer.h"
 
+#include <stdlib.h>
+
 #define GST_RTP_HEADER_LEN 12
 
 typedef struct _GstRTPHeader
