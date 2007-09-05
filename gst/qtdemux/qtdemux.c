@@ -51,6 +51,8 @@
 
 #include "gst/gst-i18n-plugin.h"
 
+#include <gst/tag/tag.h>
+
 #include "qtdemux_types.h"
 #include "qtdemux_dump.h"
 #include "qtdemux_fourcc.h"
@@ -3268,6 +3270,7 @@ unknown_stream:
 static void
 qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, GNode * node)
 {
+  const gchar *env_vars[] = { "GST_QT_TAG_ENCODING", "GST_TAG_ENCODING", NULL };
   GNode *data;
   char *s;
   int len;
@@ -3278,10 +3281,16 @@ qtdemux_tag_add_str (GstQTDemux * qtdemux, const char *tag, GNode * node)
     len = QT_UINT32 (data->data);
     type = QT_UINT32 ((guint8 *) data->data + 8);
     if (type == 0x00000001) {
-      s = g_strndup ((char *) data->data + 16, len - 16);
-      GST_DEBUG_OBJECT (qtdemux, "adding tag %s", s);
-      gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag, s, NULL);
-      g_free (s);
+      s = gst_tag_freeform_string_to_utf8 ((char *) data->data + 16, len - 16,
+          env_vars);
+      if (s) {
+        GST_DEBUG_OBJECT (qtdemux, "adding tag %s", GST_STR_NULL (s));
+        gst_tag_list_add (qtdemux->tag_list, GST_TAG_MERGE_REPLACE, tag, s,
+            NULL);
+        g_free (s);
+      } else {
+        GST_DEBUG_OBJECT (qtdemux, "failed to convert %s tag to UTF-8", tag);
+      }
     }
   }
 }
