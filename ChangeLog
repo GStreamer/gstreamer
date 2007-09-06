@@ -1,5 +1,11 @@
 2007-09-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	  No tabs in this file please, or gtk-doc will end up documenting
+	  rather absurd class hierarchies.
+
+2007-09-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/gconf/gstswitchsink.c:
 	  If the new kid element fails to change state for some reason
 	  (e.g. esdsink not being able to connect to the sound server),

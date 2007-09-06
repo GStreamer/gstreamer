@@ -23,7 +23,7 @@ GObject
           GstAudioSink
             GstEsdSink
             GstOssSink
-			GstOsxAudioSink
+            GstOsxAudioSink
         GstAASink
         GstMultiUDPSink
           GstUDPSink
