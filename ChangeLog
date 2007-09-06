@@ -1,3 +1,12 @@
+2007-09-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gconf/gstswitchsink.c:
+	  If the new kid element fails to change state for some reason
+	  (e.g. esdsink not being able to connect to the sound server),
+	  forward the error message it posted on the bus instead of just
+	  posting a generic 'Internal state change error: please file a
+	  bug' error message. Fixes #471364.
+
 2007-09-05  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/qtdemux/Makefile.am:

@@ -116,13 +116,14 @@ gst_switch_sink_dispose (GObject * object)
   GST_CALL_PARENT (G_OBJECT_CLASS, dispose, (object));
 }
 
-gboolean
+static gboolean
 gst_switch_commit_new_kid (GstSwitchSink * sink)
 {
   GstPad *targetpad;
   GstState kid_state;
   GstElement *new_kid, *old_kid;
   gboolean is_fakesink = FALSE;
+  GstBus *bus;
 
   /* need locking around member accesses */
   GST_OBJECT_LOCK (sink);
@@ -150,12 +151,37 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
     GST_DEBUG_OBJECT (sink, "Setting new kid");
   }
 
+  /* set temporary bus of our own to catch error messages from the child
+   * (could we just set our own bus on it, or would the state change messages
+   * from the not-yet-added element confuse the state change algorithm? Let's
+   * play it safe for now) */
+  bus = gst_bus_new ();
+  gst_element_set_bus (new_kid, bus);
+  gst_object_unref (bus);
+
   if (gst_element_set_state (new_kid, kid_state) == GST_STATE_CHANGE_FAILURE) {
+    GstMessage *msg;
+
+    /* check if child posted an error message and if so re-post it on our bus
+     * so that the application gets to see a decent error and not our generic
+     * fallback error message which is completely indecipherable to the user */
+    while ((msg = gst_bus_pop (GST_ELEMENT_BUS (new_kid)))) {
+      if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+        GST_INFO_OBJECT (sink, "Forwarding kid error: %" GST_PTR_FORMAT, msg);
+        gst_element_post_message (GST_ELEMENT (sink), msg);
+        break;
+      }
+      gst_message_unref (msg);
+    }
+    /* FIXME: need a translated error message that tells the user to check
+     * her GConf audio/video settings */
     GST_ELEMENT_ERROR (sink, CORE, STATE_CHANGE, (NULL),
         ("Failed to set state on new child."));
+    gst_element_set_bus (new_kid, NULL);
     gst_object_unref (new_kid);
     return FALSE;
   }
+  gst_element_set_bus (new_kid, NULL);
   gst_bin_add (GST_BIN (sink), new_kid);
 
   /* Now, replace the existing child */
