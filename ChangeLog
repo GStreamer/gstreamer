@@ -1,3 +1,8 @@
+2007-09-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/libs/.cvsignore:
+	  Ignore more, in case the build bots work again one day.
+
 2007-09-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Reviewed by:  Stefan Kost  <ensonic@users.sf.net>

@@ -1,6 +1,7 @@
 .dirstamp
 audio
 cddabasesrc
+fft
 netbuffer
 tag
 utils
