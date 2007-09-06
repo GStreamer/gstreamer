@@ -210,8 +210,7 @@ if test "x$HAVE_REGEX_H" = "xyes"; then
 #ifndef LIBXML_HTML_ENABLED
 #error libxml2 has no HTML support
 #endif /* LIBXML_HTML_ENABLED */
-                     ]), HAVE_LIBXML_HTML=yes, HAVE_LIBXML_HTML=no)
-  AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
+                     ]), HAVE_LIBXML_HTML="yes", HAVE_LIBXML_HTML="no")
   CPPFLAGS="$ac_cppflags_save"
   
   if test "x$HAVE_LIBXML_HTML" = "xyes"; then
@@ -221,7 +220,9 @@ if test "x$HAVE_REGEX_H" = "xyes"; then
   fi
 else
   GST_PLUGINS_NO="\t[subparse]\n$GST_PLUGINS_NO"
+  HAVE_LIBXML_HTML="no"
 fi
+AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
 
 dnl used in gst/tcp
 AC_CHECK_HEADERS([sys/socket.h], 

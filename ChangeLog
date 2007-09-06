@@ -1,3 +1,8 @@
+2007-09-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Fix configure check for HAVE_LIBXML_HTML.
+
 2007-09-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/libs/.cvsignore:
