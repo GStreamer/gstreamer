@@ -89,6 +89,7 @@ check_PROGRAMS = \
 	gst/typefindfunctions \
 	libs/audio \
 	libs/cddabasesrc \
+	libs/fft \
 	libs/mixer \
 	libs/netbuffer \
 	libs/pbutils \
@@ -136,6 +137,16 @@ libs_cddabasesrc_CFLAGS = \
 libs_cddabasesrc_LDADD = \
 	$(top_builddir)/gst-libs/gst/cdda/libgstcdda-@GST_MAJORMINOR@.la \
 	$(top_builddir)/gst-libs/gst/tag/libgsttag-@GST_MAJORMINOR@.la \
+	$(GST_BASE_LIBS) \
+	$(LDADD)
+
+libs_fft_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(GST_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+
+libs_fft_LDADD = \
+	$(top_builddir)/gst-libs/gst/fft/libgstfft-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
 
@@ -248,6 +259,10 @@ libs_video_LDADD = \
 	$(top_builddir)/gst-libs/gst/video/libgstvideo-@GST_MAJORMINOR@.la \
 	$(GST_BASE_LIBS) \
 	$(LDADD)
+
+pipelines_vorbisenc_CFLAGS = \
+        $(GST_PLUGINS_BASE_CFLAGS) \
+        $(AM_CFLAGS)
 
 # this seemingly useless CFLAGS line is here only to avoid
 # vorbisdec.$(OBJEXT) by triggering creation of pipelines_vorbisdec.$(OBJEXT)

@@ -1,3 +1,84 @@
+2007-09-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Reviewed by:  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/fft/Makefile.am:
+	* gst-libs/gst/fft/_kiss_fft_guts_f32.h:
+	* gst-libs/gst/fft/_kiss_fft_guts_f64.h:
+	* gst-libs/gst/fft/_kiss_fft_guts_s16.h:
+	* gst-libs/gst/fft/_kiss_fft_guts_s32.h:
+	* gst-libs/gst/fft/gstfft.c: (gst_fft_next_fast_length):
+	* gst-libs/gst/fft/gstfft.h:
+	* gst-libs/gst/fft/gstfftf32.c: (gst_fft_f32_new),
+	(gst_fft_f32_fft), (gst_fft_f32_inverse_fft), (gst_fft_f32_free),
+	(gst_fft_f32_window), (gst_fft_f32_magnitude), (gst_fft_f32_phase):
+	* gst-libs/gst/fft/gstfftf32.h:
+	* gst-libs/gst/fft/gstfftf64.c: (gst_fft_f64_new),
+	(gst_fft_f64_fft), (gst_fft_f64_inverse_fft), (gst_fft_f64_free),
+	(gst_fft_f64_window), (gst_fft_f64_magnitude), (gst_fft_f64_phase):
+	* gst-libs/gst/fft/gstfftf64.h:
+	* gst-libs/gst/fft/gstffts16.c: (gst_fft_s16_new),
+	(gst_fft_s16_fft), (gst_fft_s16_inverse_fft), (gst_fft_s16_free),
+	(gst_fft_s16_window), (gst_fft_s16_magnitude), (gst_fft_s16_phase):
+	* gst-libs/gst/fft/gstffts16.h:
+	* gst-libs/gst/fft/gstffts32.c: (gst_fft_s32_new),
+	(gst_fft_s32_fft), (gst_fft_s32_inverse_fft), (gst_fft_s32_free),
+	(gst_fft_s32_window), (gst_fft_s32_magnitude), (gst_fft_s32_phase):
+	* gst-libs/gst/fft/gstffts32.h:
+	* gst-libs/gst/fft/kiss_fft_f32.c: (kf_bfly2), (kf_bfly4),
+	(kf_bfly3), (kf_bfly5), (kf_bfly_generic), (kf_work), (kf_factor),
+	(kiss_fft_f32_alloc), (kiss_fft_f32_stride), (kiss_fft_f32),
+	(kiss_fft_f32_cleanup), (kiss_fft_f32_next_fast_size):
+	* gst-libs/gst/fft/kiss_fft_f32.h:
+	* gst-libs/gst/fft/kiss_fft_f64.c: (kf_bfly2), (kf_bfly4),
+	(kf_bfly3), (kf_bfly5), (kf_bfly_generic), (kf_work), (kf_factor),
+	(kiss_fft_f64_alloc), (kiss_fft_f64_stride), (kiss_fft_f64),
+	(kiss_fft_f64_cleanup), (kiss_fft_f64_next_fast_size):
+	* gst-libs/gst/fft/kiss_fft_f64.h:
+	* gst-libs/gst/fft/kiss_fft_s16.c: (kf_bfly2), (kf_bfly4),
+	(kf_bfly3), (kf_bfly5), (kf_bfly_generic), (kf_work), (kf_factor),
+	(kiss_fft_s16_alloc), (kiss_fft_s16_stride), (kiss_fft_s16),
+	(kiss_fft_s16_cleanup), (kiss_fft_s16_next_fast_size):
+	* gst-libs/gst/fft/kiss_fft_s16.h:
+	* gst-libs/gst/fft/kiss_fft_s32.c: (kf_bfly2), (kf_bfly4),
+	(kf_bfly3), (kf_bfly5), (kf_bfly_generic), (kf_work), (kf_factor),
+	(kiss_fft_s32_alloc), (kiss_fft_s32_stride), (kiss_fft_s32),
+	(kiss_fft_s32_cleanup), (kiss_fft_s32_next_fast_size):
+	* gst-libs/gst/fft/kiss_fft_s32.h:
+	* gst-libs/gst/fft/kiss_fftr_f32.c: (kiss_fftr_f32_alloc),
+	(kiss_fftr_f32), (kiss_fftri_f32):
+	* gst-libs/gst/fft/kiss_fftr_f32.h:
+	* gst-libs/gst/fft/kiss_fftr_f64.c: (kiss_fftr_f64_alloc),
+	(kiss_fftr_f64), (kiss_fftri_f64):
+	* gst-libs/gst/fft/kiss_fftr_f64.h:
+	* gst-libs/gst/fft/kiss_fftr_s16.c: (kiss_fftr_s16_alloc),
+	(kiss_fftr_s16), (kiss_fftri_s16):
+	* gst-libs/gst/fft/kiss_fftr_s16.h:
+	* gst-libs/gst/fft/kiss_fftr_s32.c: (kiss_fftr_s32_alloc),
+	(kiss_fftr_s32), (kiss_fftri_s32):
+	* gst-libs/gst/fft/kiss_fftr_s32.h:
+	* gst-libs/gst/fft/kiss_version:
+	* pkgconfig/gstreamer-plugins-base-uninstalled.pc.in:
+	* pkgconfig/gstreamer-plugins-base.pc.in:
+	Add libgstfft, a FFT library based on Kiss FFT which is
+	BSD licensed. Supported sample formats are int16, int32,
+	float and double. For those formats a real FFT and IFFT
+	can be done, different windowing functions can be applied
+	and functions for extracting the magnitude and phase exist.
+	Fixes #468619.
+
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	Integrate libgstfft into the docs.
+
+	* tests/check/Makefile.am:
+	* tests/check/libs/fft.c: (GST_START_TEST), (fft_suite), (main):
+	Add unit tests for libgstfft, currently only testing the FFT.
+	Unit tests for IFFT will follow soon.
+
 2007-09-05  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Peter Kjellerstedt  <pkj at axis com>
