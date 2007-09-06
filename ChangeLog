@@ -1,3 +1,8 @@
+2007-09-06  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/mpegtsparse/mpegtsparse.c:
+	  Fix the build (missing stdlib.h).
+
 2007-09-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/spectrum/fix_fft.c:
