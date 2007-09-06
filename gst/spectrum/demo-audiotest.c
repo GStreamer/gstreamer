@@ -51,7 +51,7 @@ on_frequency_changed (GtkRange * range, gpointer user_data)
 
 /* draw frequency spectrum as a bunch of bars */
 static void
-draw_spectrum (guchar * data)
+draw_spectrum (gfloat * data)
 {
   gint i;
   GdkRectangle rect = { 0, 0, SPECT_BANDS, 50 };
@@ -78,15 +78,15 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
     const gchar *name = gst_structure_get_name (s);
 
     if (strcmp (name, "spectrum") == 0) {
-      guchar spect[SPECT_BANDS];
+      gfloat spect[SPECT_BANDS];
       const GValue *list;
       const GValue *value;
       guint i;
 
-      list = gst_structure_get_value (s, "spectrum");
+      list = gst_structure_get_value (s, "magnitude");
       for (i = 0; i < SPECT_BANDS; ++i) {
         value = gst_value_list_get_value (list, i);
-        spect[i] = g_value_get_uchar (value);
+        spect[i] = g_value_get_float (value);
       }
       draw_spectrum (spect);
     }
@@ -98,7 +98,7 @@ int
 main (int argc, char *argv[])
 {
   GstElement *bin;
-  GstElement *src, *spectrum, *sink;
+  GstElement *src, *spectrum, *audioconvert, *sink;
   GstBus *bus;
   GtkWidget *appwindow, *vbox, *widget;
 
@@ -116,10 +116,12 @@ main (int argc, char *argv[])
   g_object_set (G_OBJECT (spectrum), "bands", SPECT_BANDS, "threshold", -80,
       "message", TRUE, NULL);
 
+  audioconvert = gst_element_factory_make ("audioconvert", "audioconvert");
+
   sink = gst_element_factory_make (DEFAULT_AUDIOSINK, "sink");
 
-  gst_bin_add_many (GST_BIN (bin), src, spectrum, sink, NULL);
-  if (!gst_element_link_many (src, spectrum, sink, NULL)) {
+  gst_bin_add_many (GST_BIN (bin), src, spectrum, audioconvert, sink, NULL);
+  if (!gst_element_link_many (src, spectrum, audioconvert, sink, NULL)) {
     fprintf (stderr, "cant link elements\n");
     exit (1);
   }

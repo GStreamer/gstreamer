@@ -43,7 +43,7 @@ on_window_destroy (GtkObject * object, gpointer user_data)
 
 /* draw frequency spectrum as a bunch of bars */
 static void
-draw_spectrum (guchar * data)
+draw_spectrum (gfloat * data)
 {
   gint i;
   GdkRectangle rect = { 0, 0, SPECT_WIDTH, SPECT_HEIGHT };
@@ -70,15 +70,15 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
     const gchar *name = gst_structure_get_name (s);
 
     if (strcmp (name, "spectrum") == 0) {
-      guchar spect[SPECT_BANDS];
+      gfloat spect[SPECT_BANDS];
       const GValue *list;
       const GValue *value;
       guint i;
 
-      list = gst_structure_get_value (s, "spectrum");
+      list = gst_structure_get_value (s, "magnitude");
       for (i = 0; i < SPECT_BANDS; ++i) {
         value = gst_value_list_get_value (list, i);
-        spect[i] = g_value_get_uchar (value);
+        spect[i] = g_value_get_float (value);
       }
       draw_spectrum (spect);
     }

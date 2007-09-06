@@ -25,6 +25,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstbasetransform.h>
+#include <gst/audio/gstaudiofilter.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -39,9 +40,11 @@ extern "C" {
 
 typedef struct _GstSpectrum GstSpectrum;
 typedef struct _GstSpectrumClass GstSpectrumClass;
+typedef void (*GstSpectrumProcessFunc) (GstSpectrum *, const guint8 *);
+typedef void (*GstSpectrumFFTFreeFunc) (void *);
 
 struct _GstSpectrum {
-  GstBaseTransform element;
+  GstAudioFilter element;
 
   GstPad *sinkpad,*srcpad;
   GstAdapter *adapter;
@@ -49,24 +52,28 @@ struct _GstSpectrum {
 
   /* properties */
   gboolean message;             /* whether or not to post messages */
+  gboolean message_magnitude;
+  gboolean message_phase;
   guint64 interval;             /* how many seconds between emits */
   guint bands;                  /* number of spectrum bands */
   gint threshold;               /* energy level treshold */
 
   gint num_frames;              /* frame count (1 sample per channel)
                                  * since last emit */
+  gint num_fft;                 /* number of FFTs since last emit */
                                  
-  gint rate;                    /* caps variables */
-  gint channels;
-
   /* <private> */
-  gint base, len;
-  gint16 *re, *im, *loud;
-  guchar *spect;
+  gfloat *spect_magnitude;
+  gfloat *spect_phase;
+  GstSpectrumProcessFunc process;
+  void *fft_ctx;
+  GstSpectrumFFTFreeFunc fft_free_func;
+  void *in;
+  void *freqdata;
 };
 
 struct _GstSpectrumClass {
-  GstBaseTransformClass parent_class;
+  GstAudioFilterClass parent_class;
 };
 
 GType gst_spectrum_get_type (void);
