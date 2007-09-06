@@ -1,5 +1,10 @@
 2007-09-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/spectrum/fix_fft.c:
+	Remove fixed point FFT as it's not used anymore.
+
+2007-09-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	* gst/spectrum/Makefile.am:
 	* gst/spectrum/demo-audiotest.c: (draw_spectrum),
