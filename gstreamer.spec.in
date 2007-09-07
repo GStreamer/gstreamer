@@ -175,6 +175,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
 %{_includedir}/gstreamer-%{majorminor}/gst/check/gstcheck.h
 %{_includedir}/gstreamer-%{majorminor}/gst/check/gstbufferstraw.h
+%{_includedir}/gstreamer-%{majorminor}/gst/controller/gstcontrolsource.h
+%{_includedir}/gstreamer-%{majorminor}/gst/controller/gstinterpolationcontrolsource.h
+%{_includedir}/gstreamer-%{majorminor}/gst/controller/gstlfocontrolsource.h
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstdataprotocol-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
