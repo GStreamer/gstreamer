@@ -66,7 +66,7 @@ typedef struct _GstRFC2190AHeader
 #else
 #error "G_BYTE_ORDER should be big or little endian."
 #endif
-  guint8 tr;                    /* Temporal ref for P frame */
+  unsigned int tr:8;            /* Temporal ref for P frame */
 } GstRFC2190AHeader;
 
 
