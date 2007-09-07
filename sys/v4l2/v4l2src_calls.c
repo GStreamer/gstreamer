@@ -535,9 +535,6 @@ gst_v4l2src_probe_caps_for_format_and_size (GstV4l2Src * v4l2src,
     gst_value_set_fraction (&max, num, denom);
 
     while (gst_value_compare (&frac, &max) <= 0) {
-      GValue frac = { 0, };
-      g_value_init (&frac, GST_TYPE_FRACTION);
-
       num = gst_value_get_fraction_numerator (&frac);
       denom = gst_value_get_fraction_denominator (&frac);
       GST_LOG_OBJECT (v4l2src, "adding stepwise framerate: %d/%d", denom, num);
