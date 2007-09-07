@@ -1,5 +1,11 @@
 2007-09-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	* tests/check/libs/rtp.c:
+	  Fix gst_rtp_buffer_set_csrc() and enable csrc-related unit test checks.
+
+2007-09-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Based on patch by: Haakon Sporsheim  <haakon.sporsheim at tandberg com>
 
 	* gst-libs/gst/rtp/gstrtpbuffer.c:

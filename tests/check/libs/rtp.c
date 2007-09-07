@@ -35,10 +35,9 @@ GST_START_TEST (test_rtp_buffer)
   guint8 *data;
 
   /* check GstRTPHeader structure alignment and packing */
-  buf = gst_rtp_buffer_new_allocate (16, 4, 3);
+  buf = gst_rtp_buffer_new_allocate (16, 4, 0);
   fail_unless (buf != NULL);
-  fail_unless_equals_int (GST_BUFFER_SIZE (buf),
-      RTP_HEADER_LEN + 16 + 4 + 4 * 3);
+  fail_unless_equals_int (GST_BUFFER_SIZE (buf), RTP_HEADER_LEN + 16 + 4);
   data = GST_BUFFER_DATA (buf);
 
   /* check version in bitfield */
@@ -72,41 +71,37 @@ GST_START_TEST (test_rtp_buffer)
   gst_rtp_buffer_set_ssrc (buf, 0);
   fail_unless_equals_int (gst_rtp_buffer_get_ssrc (buf), 0);
   fail_unless_equals_int (GST_READ_UINT32_BE (data + 4 + 4), 0);
+
+  /* check csrc bits */
+  fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (buf), 0);
+  ASSERT_CRITICAL (gst_rtp_buffer_get_csrc (buf, 0));
+  fail_unless_equals_int (data[0] & 0xf, 0);
   gst_buffer_unref (buf);
 
-  /* FIXME: this is broken, the _set_csrc doesn't work because the csrc count
-   * is initialised to 0 and _set_csrc() then has an assertion to make sure
-   * index is < the value in the struct ... */
-#if 0
   /* and again, this time with CSRCs */
-  {
-    volatile guint32 ret;
+  buf = gst_rtp_buffer_new_allocate (16, 4, 3);
+  fail_unless (buf != NULL);
+  fail_unless_equals_int (GST_BUFFER_SIZE (buf),
+      RTP_HEADER_LEN + 16 + 4 + 4 * 3);
 
-    buf = gst_rtp_buffer_new_allocate (16, 4, 3);
-    fail_unless (buf != NULL);
-    fail_unless_equals_int (GST_BUFFER_SIZE (buf),
-        RTP_HEADER_LEN + 16 + 4 + 4 * 3);
+  data = GST_BUFFER_DATA (buf);
 
-    data = GST_BUFFER_DATA (buf);
+  fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (buf), 3);
+  ASSERT_CRITICAL (gst_rtp_buffer_get_csrc (buf, 3));
+  fail_unless_equals_int (data[0] & 0xf, 3);
+  fail_unless_equals_int (gst_rtp_buffer_get_csrc (buf, 0), 0);
+  fail_unless_equals_int (gst_rtp_buffer_get_csrc (buf, 1), 0);
+  fail_unless_equals_int (gst_rtp_buffer_get_csrc (buf, 2), 0);
 
-    /* the default value is 0, because we haven't set any yet (FIXME?) */
-    fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (buf), 0);
-    ASSERT_CRITICAL (ret = gst_rtp_buffer_get_csrc (buf, 0));
-
-    data += RTP_HEADER_LEN;     /* skip the other header stuff */
-    gst_rtp_buffer_set_csrc (buf, 0, 0xf7c0);
-    fail_unless_equals_int (GST_READ_UINT32_BE (data + 0 * 4), 0xf7c0);
-    fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (buf), 1);    /* FIXME? */
-    gst_rtp_buffer_set_csrc (buf, 1, 0xf7c1);
-    fail_unless_equals_int (GST_READ_UINT32_BE (data + 1 * 4), 0xf7c1);
-    fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (buf), 2);    /* FIXME? */
-    gst_rtp_buffer_set_csrc (buf, 2, 0xf7c2);
-    fail_unless_equals_int (GST_READ_UINT32_BE (data + 2 * 4), 0xf7c2);
-    fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (buf), 3);    /* FIXME? */
-    ASSERT_CRITICAL (gst_rtp_buffer_set_csrc (buf, 3, 0xf123));
-    gst_buffer_unref (buf);
-  }
-#endif
+  data += RTP_HEADER_LEN;       /* skip the other header stuff */
+  gst_rtp_buffer_set_csrc (buf, 0, 0xf7c0);
+  fail_unless_equals_int (GST_READ_UINT32_BE (data + 0 * 4), 0xf7c0);
+  gst_rtp_buffer_set_csrc (buf, 1, 0xf7c1);
+  fail_unless_equals_int (GST_READ_UINT32_BE (data + 1 * 4), 0xf7c1);
+  gst_rtp_buffer_set_csrc (buf, 2, 0xf7c2);
+  fail_unless_equals_int (GST_READ_UINT32_BE (data + 2 * 4), 0xf7c2);
+  ASSERT_CRITICAL (gst_rtp_buffer_set_csrc (buf, 3, 0xf123));
+  gst_buffer_unref (buf);
 }
 
 GST_END_TEST;

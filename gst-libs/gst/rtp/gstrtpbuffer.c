@@ -37,6 +37,7 @@
 #include "gstrtpbuffer.h"
 
 #include <stdlib.h>
+#include <string.h>
 
 #define GST_RTP_HEADER_LEN 12
 
@@ -115,7 +116,9 @@ gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
   GST_RTP_HEADER_VERSION (buffer) = GST_RTP_VERSION;
   GST_RTP_HEADER_PADDING (buffer) = FALSE;
   GST_RTP_HEADER_EXTENSION (buffer) = FALSE;
-  GST_RTP_HEADER_CSRC_COUNT (buffer) = 0;       /* FIXME: not csrc_count? */
+  GST_RTP_HEADER_CSRC_COUNT (buffer) = csrc_count;
+  memset (GST_RTP_HEADER_CSRC_LIST_OFFSET (buffer, 0), 0,
+      csrc_count * sizeof (guint32));
   GST_RTP_HEADER_MARKER (buffer) = FALSE;
   GST_RTP_HEADER_PAYLOAD_TYPE (buffer) = 0;
   GST_RTP_HEADER_SEQ (buffer) = 0;
