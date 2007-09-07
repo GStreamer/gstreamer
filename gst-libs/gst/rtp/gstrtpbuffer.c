@@ -40,6 +40,9 @@
 
 #define GST_RTP_HEADER_LEN 12
 
+/* Note: we use bitfields here to make sure the compiler doesn't add padding
+ * between fields on certain architectures; can't assume aligned access either
+ */
 typedef struct _GstRTPHeader
 {
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -59,10 +62,10 @@ typedef struct _GstRTPHeader
 #else
 #error "G_BYTE_ORDER should be big or little endian."
 #endif
-  guint16 seq;                  /* sequence number */
-  guint32 timestamp;            /* timestamp */
-  guint32 ssrc;                 /* synchronization source */
-  guint32 csrc[1];              /* optional CSRC list */
+  unsigned int seq:16;          /* sequence number */
+  unsigned int timestamp:32;    /* timestamp */
+  unsigned int ssrc:32;         /* synchronization source */
+  guint8 csrclist[4];           /* optional CSRC list, 32 bits each */
 } GstRTPHeader;
 
 #define GST_RTP_HEADER_VERSION(buf)     (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->version)
@@ -74,8 +77,10 @@ typedef struct _GstRTPHeader
 #define GST_RTP_HEADER_SEQ(buf)         (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->seq)
 #define GST_RTP_HEADER_TIMESTAMP(buf)   (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->timestamp)
 #define GST_RTP_HEADER_SSRC(buf)        (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->ssrc)
-#define GST_RTP_HEADER_CSRC(buf,i)      (((GstRTPHeader *)(GST_BUFFER_DATA (buf)))->csrc[i])
-
+#define GST_RTP_HEADER_CSRC_LIST_OFFSET(buf,i)  \
+    GST_BUFFER_DATA (buf) +                     \
+    G_STRUCT_OFFSET(GstRTPHeader, csrclist) +   \
+    ((i) * sizeof(guint32))
 #define GST_RTP_HEADER_CSRC_SIZE(buf)   (GST_RTP_HEADER_CSRC_COUNT(buf) * sizeof (guint32))
 
 /**
@@ -110,7 +115,7 @@ gst_rtp_buffer_allocate_data (GstBuffer * buffer, guint payload_len,
   GST_RTP_HEADER_VERSION (buffer) = GST_RTP_VERSION;
   GST_RTP_HEADER_PADDING (buffer) = FALSE;
   GST_RTP_HEADER_EXTENSION (buffer) = FALSE;
-  GST_RTP_HEADER_CSRC_COUNT (buffer) = 0;
+  GST_RTP_HEADER_CSRC_COUNT (buffer) = 0;       /* FIXME: not csrc_count? */
   GST_RTP_HEADER_MARKER (buffer) = FALSE;
   GST_RTP_HEADER_PAYLOAD_TYPE (buffer) = 0;
   GST_RTP_HEADER_SEQ (buffer) = 0;
@@ -687,9 +692,9 @@ gst_rtp_buffer_get_csrc (GstBuffer * buffer, guint8 idx)
 {
   g_return_val_if_fail (GST_IS_BUFFER (buffer), 0);
   g_return_val_if_fail (GST_BUFFER_DATA (buffer) != NULL, 0);
-  g_return_val_if_fail (GST_RTP_HEADER_CSRC_COUNT (buffer) < idx, 0);
+  g_return_val_if_fail (idx < GST_RTP_HEADER_CSRC_COUNT (buffer), 0);
 
-  return g_ntohl (GST_RTP_HEADER_CSRC (buffer, idx));
+  return GST_READ_UINT32_BE (GST_RTP_HEADER_CSRC_LIST_OFFSET (buffer, idx));
 }
 
 /**
@@ -705,9 +710,9 @@ gst_rtp_buffer_set_csrc (GstBuffer * buffer, guint8 idx, guint32 csrc)
 {
   g_return_if_fail (GST_IS_BUFFER (buffer));
   g_return_if_fail (GST_BUFFER_DATA (buffer) != NULL);
-  g_return_if_fail (GST_RTP_HEADER_CSRC_COUNT (buffer) < idx);
+  g_return_if_fail (idx < GST_RTP_HEADER_CSRC_COUNT (buffer));
 
-  GST_RTP_HEADER_CSRC (buffer, idx) = g_htonl (csrc);
+  GST_WRITE_UINT32_BE (GST_RTP_HEADER_CSRC_LIST_OFFSET (buffer, idx), csrc);
 }
 
 /**

@@ -93,6 +93,7 @@ check_PROGRAMS = \
 	libs/mixer \
 	libs/netbuffer \
 	libs/pbutils \
+	libs/rtp \
 	libs/tag \
 	libs/video \
 	pipelines/simple-launch-lines \
@@ -166,6 +167,12 @@ libs_netbuffer_CFLAGS = \
 libs_netbuffer_LDADD = \
 	$(top_builddir)/gst-libs/gst/netbuffer/libgstnetbuffer-@GST_MAJORMINOR@.la \
 	$(LDADD)
+
+libs_rtp_CFLAGS = \
+	$(GST_PLUGINS_BASE_CFLAGS) \
+	$(AM_CFLAGS)
+libs_rtp_LDADD = \
+	$(top_builddir)/gst-libs/gst/rtp/libgstrtp-@GST_MAJORMINOR@.la $(LDADD)
 
 libs_tag_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \

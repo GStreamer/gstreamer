@@ -1,5 +1,22 @@
 2007-09-07  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Based on patch by: Haakon Sporsheim  <haakon.sporsheim at tandberg com>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	  Fix up GstRTPHeader helper struct so that compilers will not under
+	  any circumstances add padding in between our fields, as currently
+          happens with MSVC on win32, because that would lead to us sending
+	  out RTP payloads with broken RTP headers (#471194).
+	  Fix assertion guards for gst_rtp_buffer_get_csrc() and _set_csrc().
+	  
+	* tests/check/Makefile.am:
+	* tests/check/libs/.cvsignore:
+	* tests/check/libs/rtp.c:
+	  Add some simple unit tests for GstRTPBuffer. Some are disabled
+	  because the code tested still needs fixing (set_csrc() does not work).
+
+2007-09-07  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* win32/MANIFEST:
 	* win32/common/gstrtsp-enumtypes.c:
 	* win32/common/gstrtsp-enumtypes.h:
