@@ -887,6 +887,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
     g_file_get_contents (location, &contents, &size, &err);
     if (err != NULL) {
       GST_INFO ("Unable to read file %s : %s", location, err->message);
+      g_timer_destroy (timer);
       g_error_free (err);
       return FALSE;
     }
@@ -935,7 +936,6 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
 
   g_timer_stop (timer);
   seconds = g_timer_elapsed (timer, NULL);
-  g_timer_destroy (timer);
 
   GST_INFO ("loaded %s in %lf seconds", location, seconds);
 
@@ -943,6 +943,7 @@ gst_registry_binary_read_cache (GstRegistry * registry, const char *location)
   /* TODO: once we re-use the pointers to registry contents return here */
 
 Error:
+  g_timer_destroy (timer);
   if (mapped) {
     g_mapped_file_free (mapped);
   } else {
