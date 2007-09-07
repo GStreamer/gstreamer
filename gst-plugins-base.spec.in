@@ -79,6 +79,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/libgstrtp-%{majorminor}.so*
 %{_libdir}/libgsttag-%{majorminor}.so.*
 %{_libdir}/libgstvideo-%{majorminor}.so.*
+%{_libdir}/libgstfft-%{majorminor}.so.*
+%{_libdir}/libgstrtsp-%{majorminor}.so.*
+%{_libdir}/libgstsdp-%{majorminor}.so.*
 
 # base plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadder.so
@@ -172,6 +175,25 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/pbutils/missing-plugins.h
 %{_includedir}/gstreamer-%{majorminor}/gst/pbutils/pbutils.h
 %{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtcpbuffer.h
+%{_includedir}/gstreamer-%{majorminor}/gst/fft/gstfft.h
+%{_includedir}/gstreamer-%{majorminor}/gst/fft/gstfftf32.h
+%{_includedir}/gstreamer-%{majorminor}/gst/fft/gstfftf64.h
+%{_includedir}/gstreamer-%{majorminor}/gst/fft/gstffts16.h
+%{_includedir}/gstreamer-%{majorminor}/gst/fft/gstffts32.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtsp-enumtypes.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspbase64.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspconnection.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspdefs.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspextension.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspmessage.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtsprange.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtsptransport.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspurl.h
+%{_includedir}/gstreamer-%{majorminor}/gst/sdp/gstsdp.h
+%{_includedir}/gstreamer-%{majorminor}/gst/sdp/gstsdpmessage.h
+%{_libdir}/libgstfft-%{majorminor}.so
+%{_libdir}/libgstrtsp-%{majorminor}.so
+%{_libdir}/libgstsdp-%{majorminor}.so
 %{_libdir}/libgstaudio-%{majorminor}.so
 %{_libdir}/libgstriff-%{majorminor}.so
 %{_libdir}/libgsttag-%{majorminor}.so
