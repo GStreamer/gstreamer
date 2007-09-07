@@ -1,7 +1,7 @@
 
 /* Generated data (by glib-mkenums) */
 
-#include "interfaces.h"
+#include <interfaces.h>
 
 /* enumerations from "colorbalance.h" */
 GType
@@ -33,6 +33,46 @@ gst_mixer_type_get_type (void)
       {0, NULL, NULL}
     };
     etype = g_enum_register_static ("GstMixerType", values);
+  }
+  return etype;
+}
+
+GType
+gst_mixer_message_type_get_type (void)
+{
+  static GType etype = 0;
+
+  if (etype == 0) {
+    static const GEnumValue values[] = {
+      {GST_MIXER_MESSAGE_INVALID, "GST_MIXER_MESSAGE_INVALID", "invalid"},
+      {GST_MIXER_MESSAGE_MUTE_TOGGLED, "GST_MIXER_MESSAGE_MUTE_TOGGLED",
+            "mute-toggled"},
+      {GST_MIXER_MESSAGE_RECORD_TOGGLED, "GST_MIXER_MESSAGE_RECORD_TOGGLED",
+            "record-toggled"},
+      {GST_MIXER_MESSAGE_VOLUME_CHANGED, "GST_MIXER_MESSAGE_VOLUME_CHANGED",
+            "volume-changed"},
+      {GST_MIXER_MESSAGE_OPTION_CHANGED, "GST_MIXER_MESSAGE_OPTION_CHANGED",
+            "option-changed"},
+      {0, NULL, NULL}
+    };
+    etype = g_enum_register_static ("GstMixerMessageType", values);
+  }
+  return etype;
+}
+
+GType
+gst_mixer_flags_get_type (void)
+{
+  static GType etype = 0;
+
+  if (etype == 0) {
+    static const GFlagsValue values[] = {
+      {GST_MIXER_FLAG_NONE, "GST_MIXER_FLAG_NONE", "none"},
+      {GST_MIXER_FLAG_AUTO_NOTIFICATIONS, "GST_MIXER_FLAG_AUTO_NOTIFICATIONS",
+            "auto-notifications"},
+      {0, NULL, NULL}
+    };
+    etype = g_flags_register_static ("GstMixerFlags", values);
   }
   return etype;
 }

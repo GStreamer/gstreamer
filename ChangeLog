@@ -1,3 +1,13 @@
+2007-09-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* win32/MANIFEST:
+	* win32/common/gstrtsp-enumtypes.c:
+	* win32/common/gstrtsp-enumtypes.h:
+	* win32/common/interfaces-enumtypes.c:
+	* win32/common/interfaces-enumtypes.h:
+	* win32/common/multichannel-enumtypes.c:
+	  Add rtsp enumtypes (#474384) and update others.
+
 2007-09-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

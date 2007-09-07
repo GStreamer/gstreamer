@@ -15,6 +15,10 @@ GType gst_color_balance_type_get_type (void);
 /* enumerations from "mixer.h" */
 GType gst_mixer_type_get_type (void);
 #define GST_TYPE_MIXER_TYPE (gst_mixer_type_get_type())
+GType gst_mixer_message_type_get_type (void);
+#define GST_TYPE_MIXER_MESSAGE_TYPE (gst_mixer_message_type_get_type())
+GType gst_mixer_flags_get_type (void);
+#define GST_TYPE_MIXER_FLAGS (gst_mixer_flags_get_type())
 
 /* enumerations from "mixertrack.h" */
 GType gst_mixer_track_flags_get_type (void);

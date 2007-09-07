@@ -38,6 +38,8 @@ gst_audio_channel_position_get_type (void)
             "GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT", "side-left"},
       {GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
             "GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT", "side-right"},
+      {GST_AUDIO_CHANNEL_POSITION_NONE, "GST_AUDIO_CHANNEL_POSITION_NONE",
+            "none"},
       {GST_AUDIO_CHANNEL_POSITION_NUM, "GST_AUDIO_CHANNEL_POSITION_NUM", "num"},
       {0, NULL, NULL}
     };
