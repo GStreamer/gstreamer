@@ -1,3 +1,10 @@
+2007-09-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_start),
+	(gst_spectrum_transform_ip):
+	Use the correct parameter order for the memset calls.
+	Thanks to Christian Schaller for noticing.
+
 2007-09-06  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/mpegtsparse/mpegtsparse.c:

@@ -355,9 +355,9 @@ gst_spectrum_start (GstBaseTransform * trans)
   filter->num_frames = 0;
   filter->num_fft = 0;
   if (filter->spect_magnitude)
-    memset (filter->spect_magnitude, filter->bands * sizeof (gfloat), 0);
+    memset (filter->spect_magnitude, 0, filter->bands * sizeof (gfloat));
   if (filter->spect_phase)
-    memset (filter->spect_phase, filter->bands * sizeof (gfloat), 0);
+    memset (filter->spect_phase, 0, filter->bands * sizeof (gfloat));
   gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
 
   return TRUE;
@@ -669,8 +669,8 @@ gst_spectrum_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
         gst_element_post_message (GST_ELEMENT (spectrum), m);
       }
-      memset (spect_magnitude, spectrum->bands * sizeof (gfloat), 0);
-      memset (spect_phase, spectrum->bands * sizeof (gfloat), 0);
+      memset (spect_magnitude, 0, spectrum->bands * sizeof (gfloat));
+      memset (spect_phase, 0, spectrum->bands * sizeof (gfloat));
       spectrum->num_frames = 0;
       spectrum->num_fft = 0;
     }
