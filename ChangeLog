@@ -1,3 +1,9 @@
+2007-09-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/random/release:
+	  Really make sure translations are up-to-date before
+	  a release (#465010).
+
 2007-09-07  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_read_cache):
