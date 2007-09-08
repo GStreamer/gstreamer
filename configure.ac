@@ -308,14 +308,7 @@ AG_GST_CHECK_FEATURE(LAME, [lame mp3 encoder library], lame, [
     LAME_LIBS="-lmp3lame -lm"
     dnl is lame presets available
     LAME_CFLAGS=""
-    AC_TRY_RUN([
-#include <lame/lame.h>
-int main (int argc, char *argv[])
-{
-  printf("%d\n", MEDIUM);
-  return 0;
-}
-      ],
+    AC_TRY_COMPILE([#include <lame/lame.h>], [ int preset = MEDIUM ],
       [LAME_CFLAGS="-DGSTLAME_PRESET"],
       [LAME_CFLAGS=""]
     )

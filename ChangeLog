@@ -1,3 +1,10 @@
+2007-09-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Use AC_TRY_COMPILE instead of AC_TRY_RUN to check for a
+	  define in the lame headers.  This has the advantage that
+	  it should still work when we're cross-compiling (#452025).
+
 2007-08-24  Jan Schmidt  <thaytan@mad.scientist.com>
 
 	* gst/dvdlpcmdec/gstdvdlpcmdec.c:
