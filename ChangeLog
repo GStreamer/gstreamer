@@ -1,5 +1,18 @@
 2007-09-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Thomas Green  <tom78999 gmail com>
+
+	* ext/neon/gstneonhttpsrc.c:
+	  With libneon 2.6, we need to set the NE_SESSFLAG_ICYPROTO
+	  flag if we want ICY streams to be handled too, otherwise
+	  libneon will error out with a 'can't parse reponse' error.
+	  Fixes #474696.
+
+	* tests/check/elements/neonhttpsrc.c:
+	  Unit test for the above by Yours Truly.
+
+2007-09-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  Use AC_TRY_COMPILE instead of AC_TRY_RUN for the faad and the
 	  xvid configure checks, so they still work when cross-compiling.

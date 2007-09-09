@@ -800,6 +800,10 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
           ne_session_create (src->uri.scheme, src->uri.host, src->uri.port);
     }
 
+#ifdef NEON_026_OR_LATER
+    ne_set_session_flag (session, NE_SESSFLAG_ICYPROTO, 1);
+#endif
+
     request = ne_request_create (session, "GET", src->uri.path);
 
     if (src->user_agent) {
