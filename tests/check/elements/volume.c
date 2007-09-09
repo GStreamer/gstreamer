@@ -1006,7 +1006,7 @@ GST_START_TEST (test_double_f32)
   GstBuffer *outbuffer;
   GstCaps *caps;
   gfloat in[2] = { 0.75, -0.25 };
-  gfloat out[2] = { 1.0, -0.5 };        /* notice the clamped sample */
+  gfloat out[2] = { 1.5, -0.5 };        /* nothing is clamped */
   gfloat *res;
 
   volume = setup_volume ();
@@ -1190,7 +1190,7 @@ GST_START_TEST (test_double_f64)
   GstBuffer *outbuffer;
   GstCaps *caps;
   gdouble in[2] = { 0.75, -0.25 };
-  gdouble out[2] = { 1.0, -0.5 };       /* notice the clamped sample */
+  gdouble out[2] = { 1.5, -0.5 };       /* nothing is clamped */
   gdouble *res;
 
   volume = setup_volume ();

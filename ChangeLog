@@ -1,3 +1,13 @@
+2007-09-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/volume/gstvolume.c: (volume_choose_func):
+	* tests/check/elements/volume.c: (GST_START_TEST):
+	Revert the latest change: floating point samples are allowed to
+	have any value, not only values in the range [-1,1]. Thanks to Andy
+	Wingo for noticing.
+	Also fix processing of int32 samples with volumes > 4 by making the
+	unity value smaller which prevents overflows.
+
 2007-09-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/rtp/gstrtpbuffer.c:
