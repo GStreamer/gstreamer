@@ -1,3 +1,9 @@
+2007-09-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Use AC_TRY_COMPILE instead of AC_TRY_RUN to check for old
+	  flac versions, 's good for cross-compilation karma.
+
 2007-09-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Haakon Sporsheim  <haakon.sporsheim at tandberg com>

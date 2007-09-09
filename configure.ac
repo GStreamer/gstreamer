@@ -667,10 +667,11 @@ AG_GST_CHECK_FEATURE(ESD, [ESounD sound daemon], esdsink, [
 
 dnl *** FLAC ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_FLAC, true)
-AC_TRY_RUN([
-#include <FLAC/export.h>
-int main () { return FLAC_API_VERSION_CURRENT<8; }
-],legacy_flac=no,legacy_flac=yes,legacy_flac=no)
+AC_TRY_COMPILE([#include <FLAC/export.h>], [
+  #if FLAC_API_VERSION_CURRENT < 8
+  #error "legacy flac API"
+  #endif
+  ], [ legacy_flac=no ], [ legacy_flac=yes ], [ legacy_flac=no ])
 
 if test "x$legacy_flac" = "xyes"; then
 AG_GST_CHECK_FEATURE(FLAC, [FLAC lossless audio], flac, [
