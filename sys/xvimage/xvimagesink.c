@@ -151,6 +151,7 @@ MotifWmHints, MwmHints;
 
 static void gst_xvimagesink_reset (GstXvImageSink * xvimagesink);
 
+static GstBufferClass *xvimage_buffer_parent_class = NULL;
 static void gst_xvimage_buffer_finalize (GstXvImageBuffer * xvimage);
 
 static void gst_xvimagesink_xwindow_update_geometry (GstXvImageSink *
@@ -281,6 +282,9 @@ beach:
   xvimage->xvimagesink = NULL;
   gst_object_unref (xvimagesink);
 
+  GST_MINI_OBJECT_CLASS (xvimage_buffer_parent_class)->
+      finalize (GST_MINI_OBJECT (xvimage));
+
   return;
 
 no_sink:
@@ -358,6 +362,8 @@ static void
 gst_xvimage_buffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  xvimage_buffer_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
       gst_xvimage_buffer_finalize;

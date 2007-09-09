@@ -180,6 +180,8 @@ static GstVideoSinkClass *parent_class = NULL;
 
 /* ximage buffers */
 
+static GstBufferClass *ximage_buffer_parent_class = NULL;
+
 #define GST_TYPE_XIMAGE_BUFFER (gst_ximage_buffer_get_type())
 
 #define GST_IS_XIMAGE_BUFFER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_XIMAGE_BUFFER))
@@ -236,6 +238,10 @@ gst_ximage_buffer_finalize (GstXImageBuffer * ximage)
     recycled = TRUE;
   }
 
+  if (!recycled)
+    GST_MINI_OBJECT_CLASS (ximage_buffer_parent_class)->
+        finalize (GST_MINI_OBJECT (ximage));
+
 beach:
   return;
 }
@@ -262,6 +268,8 @@ static void
 gst_ximage_buffer_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  ximage_buffer_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
       gst_ximage_buffer_finalize;

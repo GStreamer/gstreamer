@@ -1,5 +1,16 @@
 2007-09-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: René Stadler <mail at renestadler dot de>
+
+	* sys/ximage/ximagesink.c: (gst_ximage_buffer_finalize),
+	(gst_ximage_buffer_class_init):
+	* sys/xvimage/xvimagesink.c: (gst_xvimage_buffer_destroy),
+	(gst_xvimage_buffer_class_init):
+	Correctly chain up finalize with the parent class to prevent
+	memory leaks. Fixes #474880.
+
+2007-09-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/volume/gstvolume.c: (volume_choose_func):
 	* tests/check/elements/volume.c: (GST_START_TEST):
 	Revert the latest change: floating point samples are allowed to
