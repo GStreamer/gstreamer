@@ -509,25 +509,15 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
 	  HAVE_FAAD="no",)
   fi
   if test $HAVE_FAAD = "yes"; then
-    AC_MSG_CHECKING([Checking for FAAD >= 2])
-    AC_TRY_RUN([
-
-#include <faad.h>
-#if !defined(FAAD2_VERSION) || !defined(FAAD_FMT_DOUBLE)
-#error Not faad2
-#else
-#include <string.h>
-
-int main()
-{
-char version[9] = FAAD2_VERSION;
-// a release candidate of 2.0 is not enought for us
-if ( strstr( version, "2.0 RC" ) ) { return 1; }
-
-return 0;
-}
-
-#endif
+    AC_MSG_CHECKING([Checking for FAAD >= 2.0])
+    AC_TRY_COMPILE([#include <faad.h>], [
+        #if !defined(FAAD2_VERSION) || !defined(FAAD_FMT_DOUBLE)
+        #error Not faad2
+        #else
+        /* Release candidate of 2.0 is not good enough for us. This field
+         * was added only in 2.0 final and does not exist in 2.0-RC3 */
+        faacDecConfiguration conf; conf.dontUpSampleImplicitSBR = 1;
+        #endif
     ], [
       HAVE_FAAD="yes"
       AC_MSG_RESULT(yes)
@@ -869,12 +859,10 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
       AC_CHECK_LIB(xvidcore, xvid_decore, [
         AC_CHECK_LIB(xvidcore, xvid_global, [
           AC_MSG_CHECKING([for uptodate XviD API version])
-          AC_TRY_RUN([
-#include <xvid.h>
-#if XVID_API_MAJOR(XVID_API) != 4
-#error "Incompatible XviD API version"
-#endif
-int main () { return 0; }
+          AC_TRY_COMPILE([#include <xvid.h>], [
+              #if XVID_API_MAJOR(XVID_API) != 4
+              #error "Incompatible XviD API version"
+              #endif
           ],[ AC_MSG_RESULT(yes)
             XVID_LIBS="-lxvidcore -lm"
             AC_SUBST(XVID_LIBS)

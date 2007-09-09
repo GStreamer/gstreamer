@@ -1,3 +1,10 @@
+2007-09-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Use AC_TRY_COMPILE instead of AC_TRY_RUN for the faad and the
+	  xvid configure checks, so they still work when cross-compiling.
+	  Fixes #452009.
+
 2007-09-07  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/spectrum/gstspectrum.c: (gst_spectrum_start),
