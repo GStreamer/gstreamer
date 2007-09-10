@@ -57,6 +57,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstBaseAudioSrc GstBaseAudioSrc;
 typedef struct _GstBaseAudioSrcClass GstBaseAudioSrcClass;
+typedef struct _GstBaseAudioSrcPrivate GstBaseAudioSrcPrivate;
 
 /**
  * GstBaseAudioSrc:
@@ -81,7 +82,9 @@ struct _GstBaseAudioSrc {
   GstClock      *clock;
 
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING];
+  GstBaseAudioSrcPrivate *priv;
+
+  gpointer _gst_reserved[GST_PADDING - 1];
 };
 
 /**
