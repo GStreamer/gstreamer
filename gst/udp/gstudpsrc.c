@@ -322,6 +322,8 @@ gst_udpsrc_init (GstUDPSrc * udpsrc, GstUDPSrcClass * g_class)
   udpsrc->sock = UDP_DEFAULT_SOCK;
   udpsrc->control_sock[0] = -1;
   udpsrc->control_sock[1] = -1;
+  gst_base_src_set_format (GST_BASE_SRC (udpsrc), GST_FORMAT_TIME);
+  gst_base_src_set_do_timestamp (GST_BASE_SRC (udpsrc), TRUE);
 }
 
 static void
