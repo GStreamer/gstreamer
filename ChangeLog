@@ -1,3 +1,8 @@
+2007-09-10  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/playback/gstdecodebin2.c:
+	  Don't leak request pads. Fixes #475395.
+
 2007-09-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: René Stadler <mail at renestadler dot de>

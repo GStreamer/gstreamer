@@ -206,6 +206,8 @@ struct _GstDecodeGroup
 
   GList *endpads;               /* List of GstDecodePad of source pads to be exposed */
   GList *ghosts;                /* List of GstGhostPad for the endpads */
+
+  GList *reqpads;               /* List of RequestPads */
 };
 
 #define GROUP_MUTEX_LOCK(group) G_STMT_START {				\
@@ -451,10 +453,11 @@ gst_decode_bin_factory_filter (GstPluginFeature * feature,
     return FALSE;
 
   klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
-  /* only demuxers, decoders and parsers can play */
+  /* only demuxers, decoders, depayloaders and parsers can play */
   if (strstr (klass, "Demux") == NULL &&
-      strstr (klass, "Decoder") == NULL && strstr (klass, "Parse") == NULL &&
-      strstr (klass, "Depayloader") == NULL) {
+      strstr (klass, "Decoder") == NULL &&
+      strstr (klass, "Depayloader") == NULL &&
+      strstr (klass, "Parse") == NULL) {
     return FALSE;
   }
 
@@ -1140,7 +1143,7 @@ type_found (GstElement * typefind, guint probability,
 
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
-  pad = gst_element_get_pad (typefind, "src");
+  pad = gst_element_get_static_pad (typefind, "src");
 
   analyze_new_pad (decode_bin, typefind, pad, caps, NULL);
 
@@ -1156,7 +1159,7 @@ pad_added_group_cb (GstElement * element, GstPad * pad, GstDecodeGroup * group)
   GstCaps *caps;
   gboolean expose = FALSE;
 
-  GST_LOG_OBJECT (pad, "pad added, group:%p", group);
+  GST_DEBUG_OBJECT (pad, "pad added, group:%p", group);
 
   caps = gst_pad_get_caps (pad);
   analyze_new_pad (group->dbin, element, pad, caps, group);
@@ -1455,9 +1458,10 @@ gst_decode_group_new (GstDecodeBin * dbin, gboolean use_queue)
   group->blocked = FALSE;
   group->complete = FALSE;
   group->endpads = NULL;
+  group->reqpads = NULL;
 
   if (mq) {
-    /* we first configure the mulitqueue to buffer an unlimited number of
+    /* we first configure the multiqueue to buffer an unlimited number of
      * buffers up to 5 seconds or, when no timestamps are present, up to 2 MB of
      * memory. When this queue overruns, we assume the group is complete and can
      * be exposed. */
@@ -1542,7 +1546,7 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
 
   srcpad = NULL;
 
-  if (!(sinkpad = gst_element_get_pad (group->multiqueue, "sink%d"))) {
+  if (!(sinkpad = gst_element_get_request_pad (group->multiqueue, "sink%d"))) {
     GST_ERROR ("Couldn't get sinkpad from multiqueue");
     return NULL;
   }
@@ -1551,6 +1555,8 @@ gst_decode_group_control_demuxer_pad (GstDecodeGroup * group, GstPad * pad)
     GST_ERROR ("Couldn't link demuxer and multiqueue");
     goto beach;
   }
+
+  group->reqpads = g_list_append (group->reqpads, sinkpad);
 
   sinkname = gst_pad_get_name (sinkpad);
   nb = sinkname + 4;
@@ -1956,6 +1962,13 @@ gst_decode_group_free (GstDecodeGroup * group)
   }
   g_list_free (group->endpads);
   group->endpads = NULL;
+
+  /* release request pads */
+  for (tmp = group->reqpads; tmp; tmp = g_list_next (tmp)) {
+    gst_element_release_request_pad (group->multiqueue, GST_PAD (tmp->data));
+  }
+  g_list_free (group->reqpads);
+  group->reqpads = NULL;
 
   /* disconnect signal handlers on multiqueue */
   if (group->multiqueue) {
