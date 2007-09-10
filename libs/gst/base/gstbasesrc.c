@@ -219,6 +219,7 @@ enum
 #define DEFAULT_BLOCKSIZE       4096
 #define DEFAULT_NUM_BUFFERS     -1
 #define DEFAULT_TYPEFIND	FALSE
+#define DEFAULT_DO_TIMESTAMP	FALSE
 
 enum
 {
@@ -226,6 +227,7 @@ enum
   PROP_BLOCKSIZE,
   PROP_NUM_BUFFERS,
   PROP_TYPEFIND,
+  PROP_DO_TIMESTAMP
 };
 
 #define GST_BASE_SRC_GET_PRIVATE(obj)  \
@@ -245,6 +247,8 @@ struct _GstBaseSrcPrivate
    * the first BUFFER with running_time 0. This value is included in the latency
    * reporting. */
   GstClockTime startup_latency;
+
+  gboolean do_timestamp;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -353,6 +357,10 @@ gst_base_src_class_init (GstBaseSrcClass * klass)
       g_param_spec_boolean ("typefind", "Typefind",
           "Run typefind before negotiating", DEFAULT_TYPEFIND,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_DO_TIMESTAMP,
+      g_param_spec_boolean ("do-timestamp", "Do timestamp",
+          "Apply current stream time to buffers", DEFAULT_DO_TIMESTAMP,
+          G_PARAM_READWRITE));
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_base_src_change_state);
@@ -421,6 +429,7 @@ gst_base_src_init (GstBaseSrc * basesrc, gpointer g_class)
   /* we operate in BYTES by default */
   gst_base_src_set_format (basesrc, GST_FORMAT_BYTES);
   basesrc->data.ABI.typefind = DEFAULT_TYPEFIND;
+  basesrc->priv->do_timestamp = DEFAULT_DO_TIMESTAMP;
 
   GST_OBJECT_FLAG_UNSET (basesrc, GST_BASE_SRC_STARTED);
 
@@ -604,6 +613,47 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
   GST_LIVE_UNLOCK (src);
 
   return TRUE;
+}
+
+/**
+ * gst_base_src_set_do_timestamp:
+ * @src: the source
+ * @timestamp: enable or disable timestamping
+ *
+ * Configure @src to automatically timestamp outgoing buffers based on the
+ * current running_time of the pipeline. This property is mostly useful for live
+ * sources.
+ *
+ * Since: 0.10.15
+ */
+void
+gst_base_src_set_do_timestamp (GstBaseSrc * src, gboolean timestamp)
+{
+  GST_OBJECT_LOCK (src);
+  src->priv->do_timestamp = timestamp;
+  GST_OBJECT_UNLOCK (src);
+}
+
+/**
+ * gst_base_src_get_do_timestamp:
+ * @src: the source
+ *
+ * Query if @src timestamps outgoing buffers based on the current running_time.
+ *
+ * Returns: %TRUE if the base class will automatically timestamp outgoing buffers.
+ *
+ * Since: 0.10.15
+ */
+gboolean
+gst_base_src_get_do_timestamp (GstBaseSrc * src)
+{
+  gboolean res;
+
+  GST_OBJECT_LOCK (src);
+  res = src->priv->do_timestamp;
+  GST_OBJECT_UNLOCK (src);
+
+  return res;
 }
 
 static gboolean
@@ -1362,6 +1412,9 @@ gst_base_src_set_property (GObject * object, guint prop_id,
     case PROP_TYPEFIND:
       src->data.ABI.typefind = g_value_get_boolean (value);
       break;
+    case PROP_DO_TIMESTAMP:
+      src->priv->do_timestamp = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1385,6 +1438,9 @@ gst_base_src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_TYPEFIND:
       g_value_set_boolean (value, src->data.ABI.typefind);
+      break;
+    case PROP_DO_TIMESTAMP:
+      g_value_set_boolean (value, src->priv->do_timestamp);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1425,6 +1481,8 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   GstBaseSrcClass *bclass;
   GstClockTime base_time;
   GstClock *clock;
+  GstClockTime now = -1, timestamp;
+  gboolean do_timestamp;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
@@ -1436,14 +1494,18 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
    * latency. */
   GST_OBJECT_LOCK (basesrc);
 
-  base_time = GST_ELEMENT_CAST (basesrc)->base_time;
-
   /* get clock, if no clock, we can't sync or get the latency */
   if ((clock = GST_ELEMENT_CLOCK (basesrc)) == NULL)
     goto no_clock;
 
+  base_time = GST_ELEMENT_CAST (basesrc)->base_time;
+
+  do_timestamp = basesrc->priv->do_timestamp;
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
+  /* first buffer, calculate the startup latency */
   if (basesrc->priv->startup_latency == -1) {
-    GstClockTime now = gst_clock_get_time (clock);
+    now = gst_clock_get_time (clock);
 
     /* startup latency is the diff between when we went to PLAYING (base_time)
      * and the current clock time */
@@ -1454,18 +1516,37 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
 
     GST_LOG_OBJECT (basesrc, "startup latency: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (basesrc->priv->startup_latency));
+
+    if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      if (do_timestamp)
+        timestamp = now - base_time;
+      else
+        timestamp = 0;
+
+      GST_BUFFER_TIMESTAMP (buffer) = timestamp;
+    }
+
+    /* we have a timestamp, we can subtract it from the startup_latency when it is
+     * smaller. If the timestamp is bigger, there is no startup latency. */
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      if (timestamp < basesrc->priv->startup_latency)
+        basesrc->priv->startup_latency -= timestamp;
+      else
+        basesrc->priv->startup_latency = 0;
+    }
+  } else {
+    /* not the first buffer, the timestamp is the diff between the clock and
+     * base_time */
+    if (do_timestamp && !GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      now = gst_clock_get_time (clock);
+
+      GST_BUFFER_TIMESTAMP (buffer) = now - base_time;
+    }
   }
 
   /* if we don't have a buffer timestamp, we don't sync */
   if (!GST_CLOCK_TIME_IS_VALID (start))
     goto invalid_start;
-
-  /* we have a timestamp, we can subtract it from the startup_latency when it is
-   * smaller. If the timestamp is bigger, there is no startup latency. */
-  if (start < basesrc->priv->startup_latency)
-    basesrc->priv->startup_latency -= start;
-  else
-    basesrc->priv->startup_latency = 0;
 
   GST_LOG_OBJECT (basesrc,
       "waiting for clock, base time %" GST_TIME_FORMAT

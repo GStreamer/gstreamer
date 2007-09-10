@@ -241,6 +241,9 @@ gboolean        gst_base_src_query_latency (GstBaseSrc *src, gboolean * live,
                                             GstClockTime * min_latency, 
 					    GstClockTime * max_latency);
 
+void		gst_base_src_set_do_timestamp (GstBaseSrc *src, gboolean live);
+gboolean	gst_base_src_get_do_timestamp (GstBaseSrc *src);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_SRC_H__ */

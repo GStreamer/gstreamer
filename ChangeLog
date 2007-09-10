@@ -1,3 +1,16 @@
+2007-09-10  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_class_init),
+	(gst_base_src_init), (gst_base_src_set_do_timestamp),
+	(gst_base_src_get_do_timestamp), (gst_base_src_set_property),
+	(gst_base_src_get_property), (gst_base_src_do_sync):
+	* libs/gst/base/gstbasesrc.h:
+	Add property to make the basesrc timestamp buffers based on the current
+	running time.
+	API: GstBaseSrc::do-timestamp
+	API: gst_base_src_set_do_timestamp()
+	API: gst_base_src_get_do_timestamp()
+
 2007-09-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/random/release:
