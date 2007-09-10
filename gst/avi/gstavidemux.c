@@ -191,8 +191,8 @@ gst_avi_demux_init (GstAviDemux * avi)
   gst_pad_set_activatepull_function (avi->sinkpad,
       gst_avi_demux_sink_activate_pull);
   gst_pad_set_activatepush_function (avi->sinkpad, gst_avi_demux_activate_push);
-  gst_element_add_pad (GST_ELEMENT (avi), avi->sinkpad);
   gst_pad_set_chain_function (avi->sinkpad, gst_avi_demux_chain);
+  gst_element_add_pad (GST_ELEMENT (avi), avi->sinkpad);
 
   avi->adapter = gst_adapter_new ();
 
@@ -215,6 +215,8 @@ static void
 gst_avi_demux_reset (GstAviDemux * avi)
 {
   gint i;
+
+  GST_DEBUG ("AVI: reset");
 
   for (i = 0; i < avi->num_streams; i++) {
     g_free (avi->stream[i].strh);
@@ -252,9 +254,10 @@ gst_avi_demux_reset (GstAviDemux * avi)
   g_free (avi->avih);
   avi->avih = NULL;
 
-  if (avi->seek_event)
+  if (avi->seek_event) {
     gst_event_unref (avi->seek_event);
-  avi->seek_event = NULL;
+    avi->seek_event = NULL;
+  }
 
   if (avi->globaltags)
     gst_tag_list_free (avi->globaltags);
@@ -1733,6 +1736,7 @@ gst_avi_demux_stream_index (GstAviDemux * avi,
     GST_WARNING_OBJECT (avi, "skip LIST chunk, size %d",
         (8 + ((size + 1) & ~1)));
     offset += 8 + ((size + 1) & ~1);
+    gst_buffer_unref (buf);
     res = gst_pad_pull_range (avi->sinkpad, offset, 8, &buf);
     if (res != GST_FLOW_OK)
       goto pull_failed;
@@ -2507,8 +2511,7 @@ gst_avi_demux_push_event (GstAviDemux * avi, GstEvent * event)
       avi_stream_context *stream = &avi->stream[i];
 
       if (stream->pad) {
-        gst_event_ref (event);
-        if (gst_pad_push_event (stream->pad, event))
+        if (gst_pad_push_event (stream->pad, gst_event_ref (event)))
           result = TRUE;
       }
     }
