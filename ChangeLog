@@ -1,3 +1,14 @@
+2007-09-11  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/design/part-live-source.txt:
+	Add docs on how live sources should timestamp.
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_do_sync):
+	Add some more debug info.
+	For subclasses that are live and like to sync, add aditional startup
+	latency to sync time and timestamps so that we timstamp according to the
+	design doc.
+
 2007-09-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbuffer.c:

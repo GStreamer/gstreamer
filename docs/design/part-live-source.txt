@@ -46,3 +46,15 @@ The latency is the time it takes to construct one buffer of data. This latency
 is exposed with a LATENCY query.
 
 See part-latency.txt.
+
+
+Timestamps
+----------
+
+Live sources always timestamp their buffers with the running_time of the
+pipeline. This is needed to be able to match the timestamps of different live
+sources in order to synchronize them.
+
+This is in contrast to non-live sources, which timestamp their buffers starting
+from running_time 0.
+

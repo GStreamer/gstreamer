@@ -1507,6 +1507,9 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   if (basesrc->priv->startup_latency == -1) {
     now = gst_clock_get_time (clock);
 
+    GST_LOG_OBJECT (basesrc, "startup timestamp: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
+
     /* startup latency is the diff between when we went to PLAYING (base_time)
      * and the current clock time */
     if (now > base_time)
@@ -1514,7 +1517,7 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
     else
       basesrc->priv->startup_latency = 0;
 
-    GST_LOG_OBJECT (basesrc, "startup latency: %" GST_TIME_FORMAT,
+    GST_LOG_OBJECT (basesrc, "startup running_time: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (basesrc->priv->startup_latency));
 
     if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
@@ -1524,6 +1527,9 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
         timestamp = 0;
 
       GST_BUFFER_TIMESTAMP (buffer) = timestamp;
+
+      GST_LOG_OBJECT (basesrc, "created timestamp: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (timestamp));
     }
 
     /* we have a timestamp, we can subtract it from the startup_latency when it is
@@ -1534,6 +1540,9 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
       else
         basesrc->priv->startup_latency = 0;
     }
+
+    GST_LOG_OBJECT (basesrc, "startup latency: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (basesrc->priv->startup_latency));
   } else {
     /* not the first buffer, the timestamp is the diff between the clock and
      * base_time */
@@ -1547,6 +1556,16 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   /* if we don't have a buffer timestamp, we don't sync */
   if (!GST_CLOCK_TIME_IS_VALID (start))
     goto invalid_start;
+
+  if (basesrc->is_live) {
+    /* live source and we need to sync, add startup latency to timestamp to
+     * get the real running_time */
+    if (timestamp != -1) {
+      start += basesrc->priv->startup_latency;
+      GST_BUFFER_TIMESTAMP (buffer) =
+          timestamp + basesrc->priv->startup_latency;
+    }
+  }
 
   GST_LOG_OBJECT (basesrc,
       "waiting for clock, base time %" GST_TIME_FORMAT
