@@ -1,3 +1,12 @@
+2007-09-11  Andy Wingo  <wingo@pobox.com>
+
+	* gst/gstmodule.c (DL_EXPORT): Remove the atexit(gst_deinit).
+	Atexit handlers are run after python has finalized (see Py_Exit in
+	pythonrun.c), but gst_deinit can potentially call back into python
+	e.g. for python-defined plugins. Not sure how other people are
+	avoiding this segfault, but I see it all the time on Gusty x86-64
+	with Flumotion.
+
 2007-08-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* ChangeLog:

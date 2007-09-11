@@ -266,8 +266,6 @@ init_gst (void)
 
      g_timeout_add_full (0, 100, python_do_pending_calls, NULL, NULL);
 
-     atexit(gst_deinit);
-     
      if (PyErr_Occurred ()) {
 	  Py_FatalError ("can't initialize module gst");
      }
