@@ -787,23 +787,25 @@ no_column:
 }
 
 /**
- * gst_rtsp_connection_read:
+ * gst_rtsp_connection_read_internal:
  * @conn: a #GstRTSPConnection
  * @data: the data to read
  * @size: the size of @data
  * @timeout: a timeout value or #NULL
+ * @allow_interrupt: can the pending read be interrupted
  *
  * Attempt to read @size bytes into @data from the connected @conn, blocking up to
  * the specified @timeout. @timeout can be #NULL, in which case this function
  * might block forever.
  * 
- * This function can be canceled with gst_rtsp_connection_flush().
+ * This function can be canceled with gst_rtsp_connection_flush() only if the
+ * @allow_interrupt is set.
  *
  * Returns: #GST_RTSP_OK on success.
  */
-GstRTSPResult
-gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
-    GTimeVal * timeout)
+static GstRTSPResult
+gst_rtsp_connection_read_internal (GstRTSPConnection * conn, guint8 * data,
+    guint size, GTimeVal * timeout, gboolean allow_interrupt)
 {
   fd_set readfds;
   guint toread;
@@ -842,7 +844,8 @@ gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
 
     /* set inside the loop so that when we did not read enough and we have to
      * continue, we still have the cancel socket bit set */
-    FD_SET (READ_SOCKET (conn), &readfds);
+    if (allow_interrupt)
+      FD_SET (READ_SOCKET (conn), &readfds);
 
     do {
       retval = select (FD_SETSIZE, &readfds, NULL, NULL, ptv_timeout);
@@ -898,6 +901,29 @@ read_error:
   }
 }
 
+/**
+ * gst_rtsp_connection_read:
+ * @conn: a #GstRTSPConnection
+ * @data: the data to read
+ * @size: the size of @data
+ * @timeout: a timeout value or #NULL
+ *
+ * Attempt to read @size bytes into @data from the connected @conn, blocking up to
+ * the specified @timeout. @timeout can be #NULL, in which case this function
+ * might block forever.
+ *
+ * This function can be canceled with gst_rtsp_connection_flush().
+ *
+ * Returns: #GST_RTSP_OK on success.
+ */
+GstRTSPResult
+gst_rtsp_connection_read (GstRTSPConnection * conn, guint8 * data, guint size,
+    GTimeVal * timeout)
+{
+  return gst_rtsp_connection_read_internal (conn, data, size, timeout, TRUE);
+}
+
+
 static GstRTSPResult
 read_body (GstRTSPConnection * conn, glong content_length, GstRTSPMessage * msg,
     GTimeVal * timeout)
@@ -914,8 +940,8 @@ read_body (GstRTSPConnection * conn, glong content_length, GstRTSPMessage * msg,
   body = g_malloc (content_length + 1);
   body[content_length] = '\0';
 
-  GST_RTSP_CHECK (gst_rtsp_connection_read (conn, body, content_length,
-          timeout), read_error);
+  GST_RTSP_CHECK (gst_rtsp_connection_read_internal (conn, body, content_length,
+          timeout, FALSE), read_error);
 
   content_length += 1;
 
@@ -969,8 +995,9 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
     guint8 c;
 
     /* read first character, this identifies data messages */
-    GST_RTSP_CHECK (gst_rtsp_connection_read (conn, &c, 1, timeout),
-        read_error);
+    /* This is the only read() that we allow to be interrupted */
+    GST_RTSP_CHECK (gst_rtsp_connection_read_internal (conn, &c, 1, timeout,
+            TRUE), read_error);
 
     /* check for data packet, first character is $ */
     if (c == '$') {
@@ -979,15 +1006,15 @@ gst_rtsp_connection_receive (GstRTSPConnection * conn, GstRTSPMessage * message,
       /* data packets are $<1 byte channel><2 bytes length,BE><data bytes> */
 
       /* read channel, which is the next char */
-      GST_RTSP_CHECK (gst_rtsp_connection_read (conn, &c, 1, timeout),
-          read_error);
+      GST_RTSP_CHECK (gst_rtsp_connection_read_internal (conn, &c, 1, timeout,
+              FALSE), read_error);
 
       /* now we create a data message */
       gst_rtsp_message_init_data (message, c);
 
       /* next two bytes are the length of the data */
-      GST_RTSP_CHECK (gst_rtsp_connection_read (conn, (guint8 *) & size, 2,
-              timeout), read_error);
+      GST_RTSP_CHECK (gst_rtsp_connection_read_internal (conn,
+              (guint8 *) & size, 2, timeout, FALSE), read_error);
 
       size = GUINT16_FROM_BE (size);
 

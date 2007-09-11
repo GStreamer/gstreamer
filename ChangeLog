@@ -1,3 +1,13 @@
+2007-09-11  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_read_internal), (gst_rtsp_connection_read),
+	(read_body), (gst_rtsp_connection_receive):
+	Make sure we can not cancel in the middle of receiving a message.
+	Fixes #475731.
+
 2007-09-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Josep Torra Valles <josep@fluendo.com>
