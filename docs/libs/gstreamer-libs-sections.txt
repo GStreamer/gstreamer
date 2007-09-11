@@ -233,6 +233,8 @@ gst_base_src_is_live
 gst_base_src_set_live
 gst_base_src_set_format
 gst_base_src_query_latency
+gst_base_src_get_do_timestamp
+gst_base_src_set_do_timestamp
 
 GST_BASE_SRC_PAD
 <SUBSECTION Standard>
