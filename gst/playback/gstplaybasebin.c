@@ -809,7 +809,7 @@ gen_preroll_element (GstPlayBaseBin * play_base_bin,
    */
   g_object_set (G_OBJECT (preroll),
       "max-size-buffers", 0, "max-size-bytes",
-      ((type == GST_STREAM_TYPE_VIDEO) ? 25 : 1) * 1024 * 1024,
+      ((type == GST_STREAM_TYPE_VIDEO) ? 25 : 2) * 1024 * 1024,
       "max-size-time", play_base_bin->queue_size, NULL);
 
   /* the overrun signal is always attached and serves two purposes:

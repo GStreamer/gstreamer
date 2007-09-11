@@ -1,3 +1,12 @@
+2007-09-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Josep Torra Valles <josep@fluendo.com>
+
+	* gst/playback/gstplaybasebin.c:
+	  Increase upper limit for audio queue a bit; fixes preroll problem
+	  with playbin and decodebin2 when playing a quicktime trailer with
+	  multichannel audio via http (#464666).
+
 2007-09-10  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:
