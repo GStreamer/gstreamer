@@ -1,3 +1,11 @@
+2007-09-11  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstpad.c: (gst_pad_peer_query):
+	* gst/gstpad.h:
+	Add function to perform a query on the peer of a pad.
+	API: gst_pad_peer_query()
+
 2007-09-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/gst/gstsystemclock.c:

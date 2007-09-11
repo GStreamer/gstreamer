@@ -1284,6 +1284,7 @@ gst_pad_send_event
 gst_pad_event_default
 
 gst_pad_query
+gst_pad_peer_query
 gst_pad_query_default
 gst_pad_query_position
 gst_pad_query_duration

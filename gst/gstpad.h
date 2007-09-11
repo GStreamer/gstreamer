@@ -864,6 +864,7 @@ G_CONST_RETURN GstQueryType*
 			gst_pad_get_query_types_default		(GstPad *pad);
 
 gboolean		gst_pad_query				(GstPad *pad, GstQuery *query);
+gboolean		gst_pad_peer_query			(GstPad *pad, GstQuery *query);
 void			gst_pad_set_query_function		(GstPad *pad, GstPadQueryFunction query);
 gboolean		gst_pad_query_default			(GstPad *pad, GstQuery *query);
 

@@ -3065,6 +3065,56 @@ no_func:
 }
 
 /**
+ * gst_pad_peer_query:
+ * @pad: a #GstPad to invoke the peer query on.
+ * @query: the #GstQuery to perform.
+ *
+ * Performs gst_pad_query() on the peer of @pad.
+ *
+ * The caller is responsible for both the allocation and deallocation of
+ * the query structure.
+ *
+ * Returns: TRUE if the query could be performed. This function returns %FALSE
+ * if @pad has no peer.
+ *
+ * Since: 0.10.15
+ */
+gboolean
+gst_pad_peer_query (GstPad * pad, GstQuery * query)
+{
+  GstPad *peerpad;
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
+  g_return_val_if_fail (GST_IS_QUERY (query), FALSE);
+
+  GST_OBJECT_LOCK (pad);
+
+  GST_DEBUG_OBJECT (pad, "peer query");
+
+  peerpad = GST_PAD_PEER (pad);
+  if (G_UNLIKELY (peerpad == NULL))
+    goto no_peer;
+
+  gst_object_ref (peerpad);
+  GST_OBJECT_UNLOCK (pad);
+
+  result = gst_pad_query (peerpad, query);
+
+  gst_object_unref (peerpad);
+
+  return result;
+
+  /* ERRORS */
+no_peer:
+  {
+    GST_WARNING_OBJECT (pad, "pad has no peer");
+    GST_OBJECT_UNLOCK (pad);
+    return FALSE;
+  }
+}
+
+/**
  * gst_pad_query_default:
  * @pad: a #GstPad to call the default query handler on.
  * @query: the #GstQuery to handle.
