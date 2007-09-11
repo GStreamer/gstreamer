@@ -142,6 +142,8 @@ _gst_buffer_initialize (void)
    * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
   ptr = g_type_class_ref (GST_TYPE_BUFFER);
   g_type_class_unref (ptr);
+  ptr = g_type_class_ref (_gst_subbuffer_type);
+  g_type_class_unref (ptr);
 }
 
 GType
