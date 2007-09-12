@@ -404,28 +404,43 @@ gst_uri_has_protocol (const gchar * uri, const gchar * protocol)
  * gst_uri_get_location:
  * @uri: A URI string
  *
- * Extracts the location out of a given valid URI. So the protocol and "://"
- * are stripped from the URI. The returned string must be freed using
+ * Extracts the location out of a given valid URI, ie. the protocol and "://"
+ * are stripped from the URI, which means that the location returned includes
+ * the hostname if one is specified. The returned string must be freed using
  * g_free().
  *
- * Returns: The location for this URI. Returns NULL if the URI isn't valid.
+ * Returns: The location for this URI. Returns NULL if the URI isn't valid. If
+ * the URI does not contain a location, an empty string is returned.
  */
 gchar *
 gst_uri_get_location (const gchar * uri)
 {
-  gchar *colon;
-  gchar *location, *unescaped;
+  const gchar *colon;
+  gchar *unescaped = NULL;
 
   g_return_val_if_fail (uri != NULL, NULL);
   g_return_val_if_fail (gst_uri_is_valid (uri), NULL);
 
   colon = strstr (uri, "://");
 
-  location = g_strdup (colon + 3);
+  unescaped = unescape_string (colon + 3, "/");
 
-  unescaped = unescape_string (location, "/");
-  g_free (location);
+  /* On Windows an URI might look like file:///c:/foo/bar.txt or
+   * file:///c|/foo/bar.txt (some Netscape versions) and we want to
+   * return c:/foo/bar.txt as location rather than /c:/foo/bar.txt.
+   * Can't use g_filename_from_uri() here because it will only handle the
+   * file:// protocol */
+#ifdef G_OS_WIN32
+  if (unescaped != NULL && unescaped[0] == '/' &&
+      g_ascii_isalpha (unescaped[1]) &&
+      (unescaped[2] == ':' || unescaped[2] == '|')) {
+    unescaped[2] = ':';
+    g_memmove (unescaped, unescaped + 1, strlen (unescaped + 1) + 1);
+  }
+#endif
 
+  GST_LOG ("extracted location '%s' from URI '%s'", GST_STR_NULL (unescaped),
+      uri);;
   return unescaped;
 }
 

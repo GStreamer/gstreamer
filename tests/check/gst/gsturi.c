@@ -39,6 +39,60 @@ GST_START_TEST (test_protocol_case)
 
 GST_END_TEST;
 
+GST_START_TEST (test_uri_get_location)
+{
+  gchar *l;
+
+  /* URI with no location should return empty string */
+  l = gst_uri_get_location ("dvd://");
+  fail_unless (l != NULL);
+  fail_unless_equals_string (l, "");
+  g_free (l);
+
+  /* URI with hostname */
+  l = gst_uri_get_location ("smb://supercomputer/path/to/file");
+  fail_unless (l != NULL);
+  fail_unless_equals_string (l, "supercomputer/path/to/file");
+  g_free (l);
+
+  /* URI */
+  l = gst_uri_get_location ("file:///path/to/file");
+  fail_unless (l != NULL);
+  fail_unless_equals_string (l, "/path/to/file");
+  g_free (l);
+
+  /* unescaping */
+  l = gst_uri_get_location ("file:///path/to/some%20file");
+  fail_unless (l != NULL);
+  fail_unless_equals_string (l, "/path/to/some file");
+  g_free (l);
+}
+
+GST_END_TEST;
+
+#ifdef G_OS_WIN32
+
+GST_START_TEST (test_win32_uri)
+{
+  gchar *uri, *l;
+
+  uri = g_strdup ("file:///c:/my%20music/foo.ogg");
+  l = gst_uri_get_location (uri);
+  fail_unless (l != NULL);
+  /* fail_unless_equals_string will screw up here in the failure case
+   * because the string constant will be appended to the printf format
+   * message string and contains a '%', that's why we use fail_unless here */
+  fail_unless (g_str_equal (l, "c:/my music/foo.ogg"),
+      "wrong location '%s' returned for URI '%s'", l, uri);
+  g_free (l);
+  g_free (uri);
+
+}
+
+GST_END_TEST;
+
+#endif /* G_OS_WIN32 */
+
 static Suite *
 gst_uri_suite (void)
 {
@@ -49,6 +103,11 @@ gst_uri_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_protocol_case);
+  tcase_add_test (tc_chain, test_uri_get_location);
+#ifdef G_OS_WIN32
+  tcase_add_test (tc_chain, test_win32_uri);
+#endif
+
   return s;
 }
 
