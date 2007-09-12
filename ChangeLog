@@ -1,5 +1,10 @@
 2007-09-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/gst/gsturi.c:
+	  Also check for the other file URI variant on win32.
+
+2007-09-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gsturi.c: (gst_uri_get_location):
 	  If there's no hostname, we want to return 'c:/foo/bar.txt'
 	  and not '/c:/foo/bar.txt' on Windows. Fixes #469402.

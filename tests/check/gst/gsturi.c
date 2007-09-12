@@ -87,6 +87,18 @@ GST_START_TEST (test_win32_uri)
   g_free (l);
   g_free (uri);
 
+  /* make sure the other variant with two slashes before the C: (which was
+   * needed before because of a bug in _get_location()) still works */
+  uri = g_strdup ("file://c:/my%20music/foo.ogg");
+  l = gst_uri_get_location (uri);
+  fail_unless (l != NULL);
+  /* fail_unless_equals_string will screw up here in the failure case
+   * because the string constant will be appended to the printf format
+   * message string and contains a '%', that's why we use fail_unless here */
+  fail_unless (g_str_equal (l, "c:/my music/foo.ogg"),
+      "wrong location '%s' returned for URI '%s'", l, uri);
+  g_free (l);
+  g_free (uri);
 }
 
 GST_END_TEST;
