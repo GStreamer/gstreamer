@@ -1,5 +1,24 @@
 2007-09-12  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtpmanager/gstrtpbin.c: (create_session), (free_session),
+	(get_client), (free_client), (gst_rtp_bin_associate),
+	(free_stream), (gst_rtp_bin_class_init), (gst_rtp_bin_dispose),
+	(gst_rtp_bin_finalize):
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_class_init),
+	(gst_rtp_jitter_buffer_finalize):
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_release):
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_finalize),
+	(gst_rtp_session_set_property), (gst_rtp_session_chain_recv_rtp),
+	(gst_rtp_session_chain_send_rtp):
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	(gst_rtp_ssrc_demux_class_init), (gst_rtp_ssrc_demux_dispose):
+	* gst/rtpmanager/rtpsession.c: (rtp_session_finalize):
+	* gst/rtpmanager/rtpsession.h:
+	Various leak fixes.
+
+2007-09-12  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtpmanager/gstrtpbin.c: (calc_ntp_ns_base),
 	(gst_rtp_bin_change_state), (new_payload_found), (create_send_rtp):
 	Calculate and configure the NTP base time so that we can generate better

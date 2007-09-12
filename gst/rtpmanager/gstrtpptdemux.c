@@ -415,6 +415,7 @@ gst_rtp_pt_demux_release (GstElement * element)
 
   if (ptdemux) {
     /* note: GstElement's dispose() will handle the pads */
+    g_slist_foreach (ptdemux->srcpads, (GFunc) g_free, NULL);
     g_slist_free (ptdemux->srcpads);
     ptdemux->srcpads = NULL;
   }

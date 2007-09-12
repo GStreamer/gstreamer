@@ -245,6 +245,8 @@ static guint gst_rtp_bin_signals[LAST_SIGNAL] = { 0 };
 static GstCaps *pt_map_requested (GstElement * element, guint pt,
     GstRtpBinSession * session);
 
+static void free_stream (GstRtpBinStream * stream);
+
 /* Manages the RTP stream for one SSRC.
  *
  * We pipe the stream (comming from the SSRC demuxer) into a jitterbuffer.
@@ -462,6 +464,30 @@ no_demux:
   }
 }
 
+static void
+free_session (GstRtpBinSession * sess)
+{
+  GstRtpBin *bin;
+
+  bin = sess->bin;
+
+  gst_element_set_state (sess->session, GST_STATE_NULL);
+  gst_element_set_state (sess->demux, GST_STATE_NULL);
+
+  gst_bin_remove (GST_BIN_CAST (bin), sess->session);
+  gst_bin_remove (GST_BIN_CAST (bin), sess->demux);
+
+  g_slist_foreach (sess->streams, (GFunc) free_stream, NULL);
+  g_slist_free (sess->streams);
+
+  g_mutex_free (sess->lock);
+  g_hash_table_destroy (sess->ptmap);
+
+  bin->sessions = g_slist_remove (bin->sessions, sess);
+
+  g_free (sess);
+}
+
 #if 0
 static GstRtpBinStream *
 find_stream_by_ssrc (GstRtpBinSession * session, guint32 ssrc)
@@ -565,8 +591,7 @@ gst_rtp_bin_clear_pt_map (GstRtpBin * bin)
 }
 
 static GstRtpBinClient *
-gst_rtp_bin_get_client (GstRtpBin * bin, guint8 len, guint8 * data,
-    gboolean * created)
+get_client (GstRtpBin * bin, guint8 len, guint8 * data, gboolean * created)
 {
   GstRtpBinClient *result = NULL;
   GSList *walk;
@@ -598,6 +623,14 @@ gst_rtp_bin_get_client (GstRtpBin * bin, guint8 len, guint8 * data,
   return result;
 }
 
+static void
+free_client (GstRtpBinClient * client, GstRtpBin * bin)
+{
+  bin->clients = g_slist_remove (bin->clients, client);
+  g_free (client->cname);
+  g_free (client);
+}
+
 /* associate a stream to the given CNAME. This will make sure all streams for
  * that CNAME are synchronized together. */
 static void
@@ -609,7 +642,7 @@ gst_rtp_bin_associate (GstRtpBin * bin, GstRtpBinStream * stream, guint8 len,
   GSList *walk;
 
   /* first find or create the CNAME */
-  client = gst_rtp_bin_get_client (bin, len, data, &created);
+  client = get_client (bin, len, data, &created);
 
   /* find stream in the client */
   for (walk = client->streams; walk; walk = g_slist_next (walk)) {
@@ -898,7 +931,28 @@ no_demux:
   }
 }
 
+static void
+free_stream (GstRtpBinStream * stream)
+{
+  GstRtpBinSession *session;
+
+  session = stream->session;
+
+  gst_element_set_state (stream->buffer, GST_STATE_NULL);
+  gst_element_set_state (stream->demux, GST_STATE_NULL);
+
+  gst_bin_remove (GST_BIN_CAST (session->bin), stream->buffer);
+  gst_bin_remove (GST_BIN_CAST (session->bin), stream->demux);
+
+  gst_object_unref (stream->sync_pad);
+
+  session->streams = g_slist_remove (session->streams, stream);
+
+  g_free (stream);
+}
+
 /* GObject vmethods */
+static void gst_rtp_bin_dispose (GObject * object);
 static void gst_rtp_bin_finalize (GObject * object);
 static void gst_rtp_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -951,6 +1005,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstRtpBinPrivate));
 
+  gobject_class->dispose = gst_rtp_bin_dispose;
   gobject_class->finalize = gst_rtp_bin_finalize;
   gobject_class->set_property = gst_rtp_bin_set_property;
   gobject_class->get_property = gst_rtp_bin_get_property;
@@ -1087,6 +1142,21 @@ gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
 }
 
 static void
+gst_rtp_bin_dispose (GObject * object)
+{
+  GstRtpBin *rtpbin;
+
+  rtpbin = GST_RTP_BIN (object);
+
+  g_slist_foreach (rtpbin->sessions, (GFunc) free_session, NULL);
+  g_slist_foreach (rtpbin->clients, (GFunc) free_client, NULL);
+  g_slist_free (rtpbin->sessions);
+  rtpbin->sessions = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
 gst_rtp_bin_finalize (GObject * object)
 {
   GstRtpBin *rtpbin;
@@ -1094,6 +1164,8 @@ gst_rtp_bin_finalize (GObject * object)
   rtpbin = GST_RTP_BIN (object);
 
   g_mutex_free (rtpbin->priv->bin_lock);
+  gst_object_unref (rtpbin->provided_clock);
+  g_slist_free (rtpbin->sessions);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

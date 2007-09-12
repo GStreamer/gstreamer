@@ -183,7 +183,6 @@ struct _RTPSession {
   GstClockTime  last_rtcp_send_time;
   gboolean      first_rtcp;
 
-  GstBuffer    *bye_packet;
   gchar        *bye_reason;
   gboolean      sent_bye;
 

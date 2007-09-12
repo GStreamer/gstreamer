@@ -214,7 +214,12 @@ rtp_session_finalize (GObject * object)
   g_object_unref (sess->source);
 
   g_free (sess->cname);
+  g_free (sess->name);
+  g_free (sess->email);
+  g_free (sess->phone);
+  g_free (sess->location);
   g_free (sess->tool);
+  g_free (sess->note);
   g_free (sess->bye_reason);
 
   G_OBJECT_CLASS (rtp_session_parent_class)->finalize (object);
