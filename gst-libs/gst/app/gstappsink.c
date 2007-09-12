@@ -270,7 +270,7 @@ gst_app_sink_get_caps (GstBaseSink * psink)
   GST_OBJECT_LOCK (appsink);
   if ((caps = appsink->caps))
     gst_caps_ref (caps);
-  GST_DEBUG_OBJECT (appsink, "got caps " GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (appsink, "got caps %" GST_PTR_FORMAT, caps);
   GST_OBJECT_UNLOCK (appsink);
 
   return caps;
@@ -295,7 +295,7 @@ gst_app_sink_set_caps (GstAppSink * appsink, GstCaps * caps)
   g_return_if_fail (GST_IS_APP_SINK (appsink));
 
   GST_OBJECT_LOCK (appsink);
-  GST_DEBUG_OBJECT (appsink, "setting caps to " GST_PTR_FORMAT, caps);
+  GST_DEBUG_OBJECT (appsink, "setting caps to %" GST_PTR_FORMAT, caps);
   gst_caps_replace (&appsink->caps, caps);
   GST_OBJECT_UNLOCK (appsink);
 }

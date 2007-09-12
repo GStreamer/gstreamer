@@ -297,7 +297,7 @@ gst_switch_chain (GstPad * pad, GstBuffer * buf)
           "Sending new segment with start of %" G_GUINT64_FORMAT, start);
     } else {
       GST_WARNING_OBJECT (gstswitch,
-          "Couldn't find new segment for pad %s:%s in hashtable",
+          "Couldn't find new segment for pad %s in hashtable",
           GST_PAD_NAME (pad));
     }
     /* reset stop and start value */
@@ -496,7 +496,7 @@ gst_switch_set_property (GObject * object, guint prop_id,
               "Sending new segment with start of %" G_GUINT64_FORMAT, start);
         } else {
           GST_WARNING_OBJECT (gstswitch,
-              "Couldn't find new segment for pad %s:%s in hashtable",
+              "Couldn't find new segment for pad %s in hashtable",
               GST_PAD_NAME (gstswitch->active_sinkpad));
         }
         /* reset stop and start value */

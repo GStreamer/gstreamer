@@ -474,7 +474,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
         caps = gst_caps_new_simple ("audio/x-raw-int", NULL);
         break;
       default:
-        GST_WARNING_OBJECT (demux, "unsupported audio codec tag", codec_tag);
+        GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
     }
 
     if (G_UNLIKELY (!caps)) {
@@ -541,7 +541,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
         caps = gst_caps_new_simple ("audio/x-raw-int", NULL);
         break;
       default:
-        GST_WARNING_OBJECT (demux, "unsupported audio codec tag", codec_tag);
+        GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
     }
 
     if (G_UNLIKELY (!caps)) {
@@ -930,7 +930,8 @@ gst_flv_parse_tag_type (GstFLVDemux * demux, const guint8 * data,
   demux->tag_data_size = FLV_GET_BEUI24 (data + 1, data_size - 1);
   demux->tag_size = demux->tag_data_size + 11;
 
-  GST_LOG_OBJECT (demux, "tag data size is %d", demux->tag_data_size);
+  GST_LOG_OBJECT (demux, "tag data size is %" G_GUINT64_FORMAT,
+      demux->tag_data_size);
 
   return ret;
 }

@@ -1,3 +1,14 @@
+2007-09-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst-libs/gst/app/gstappsink.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvparse.c:
+	* gst/interleave/deinterleave.c:
+	* gst/switch/gstswitch.c:
+	  Printf format fixes (#476128).
+
 2007-09-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Thomas Green  <tom78999 gmail com>

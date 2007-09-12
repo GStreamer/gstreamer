@@ -223,7 +223,7 @@ no_channels:
 static GstFlowReturn
 gst_deinterleave_process (GstDeinterleave * self, GstBuffer * buf)
 {
-  GstFlowReturn ret;
+  GstFlowReturn ret = GST_FLOW_OK;      /* initialized to silence a warning */
   GList *srcs;
   guint bufsize, i, j, channels, pads_pushed, nframes;
   GstBuffer **buffers_out;
