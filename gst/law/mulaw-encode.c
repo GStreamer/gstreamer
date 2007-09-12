@@ -199,7 +199,6 @@ gst_mulawenc_init (GstMuLawEnc * mulawenc)
   /* init rest */
   mulawenc->channels = 0;
   mulawenc->rate = 0;
-  mulawenc->ts = 0;
 }
 
 static GstFlowReturn
@@ -207,10 +206,12 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstMuLawEnc *mulawenc;
   gint16 *linear_data;
+  guint linear_size;
   guint8 *mulaw_data;
   guint mulaw_size;
   GstBuffer *outbuf;
   GstFlowReturn ret;
+  GstClockTime timestamp, duration;
 
   mulawenc = GST_MULAWENC (gst_pad_get_parent (pad));
 
@@ -218,7 +219,16 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
     goto not_negotiated;
 
   linear_data = (gint16 *) GST_BUFFER_DATA (buffer);
-  mulaw_size = GST_BUFFER_SIZE (buffer) / 2;
+  linear_size = GST_BUFFER_SIZE (buffer);
+
+  mulaw_size = linear_size / 2;
+
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+  if (duration == -1) {
+    duration = gst_util_uint64_scale_int (mulaw_size,
+        GST_SECOND, mulawenc->rate * mulawenc->channels);
+  }
 
   outbuf = gst_buffer_new_and_alloc (mulaw_size);
   mulaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
@@ -227,8 +237,9 @@ gst_mulawenc_chain (GstPad * pad, GstBuffer * buffer)
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
 
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
-  GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_DURATION (outbuf) = duration;
+
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (mulawenc->srcpad));
 
   mulaw_encode (linear_data, mulaw_data, mulaw_size);

@@ -44,8 +44,6 @@ struct _GstMuLawEnc {
 
   GstPad *sinkpad,*srcpad;
 
-  guint64 ts;
-
   gint channels;
   gint rate;
 };

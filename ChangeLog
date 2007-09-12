@@ -1,3 +1,12 @@
+2007-09-12  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/law/alaw-encode.c: (gst_alawenc_init), (gst_alawenc_chain):
+	* gst/law/alaw-encode.h:
+	* gst/law/mulaw-encode.c: (gst_mulawenc_init),
+	(gst_mulawenc_chain):
+	* gst/law/mulaw-encode.h:
+	Fix law encoder timestamps.
+
 2007-09-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/gconf/gstgconfaudiosink.c:

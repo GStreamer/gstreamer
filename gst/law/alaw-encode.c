@@ -264,7 +264,6 @@ gst_alawenc_init (GstALawEnc * alawenc)
   /* init rest */
   alawenc->channels = 0;
   alawenc->rate = 0;
-  alawenc->ts = 0;
 }
 
 static GstFlowReturn
@@ -278,6 +277,7 @@ gst_alawenc_chain (GstPad * pad, GstBuffer * buffer)
   GstBuffer *outbuf;
   gint i;
   GstFlowReturn ret;
+  GstClockTime timestamp, duration;
 
   alawenc = GST_ALAWENC (gst_pad_get_parent (pad));
 
@@ -289,14 +289,22 @@ gst_alawenc_chain (GstPad * pad, GstBuffer * buffer)
 
   alaw_size = linear_size / 2;
 
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
+  if (duration == -1) {
+    duration = gst_util_uint64_scale_int (alaw_size,
+        GST_SECOND, alawenc->rate * alawenc->channels);
+  }
+
   outbuf = gst_buffer_new_and_alloc (alaw_size);
   alaw_data = (guint8 *) GST_BUFFER_DATA (outbuf);
 
-  /* FIXME, just copy (and interpolate) timestamp */
-  GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (alaw_size,
-      GST_SECOND, alawenc->rate * alawenc->channels);
-  GST_BUFFER_TIMESTAMP (outbuf) = alawenc->ts;
-  alawenc->ts += GST_BUFFER_DURATION (outbuf);
+  /* copy discont flag */
+  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_DURATION (outbuf) = duration;
 
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (alawenc->srcpad));
 
