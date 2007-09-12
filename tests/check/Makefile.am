@@ -37,6 +37,12 @@ else
 check_gnomevfs = 
 endif
 
+if USE_LIBVISUAL
+check_libvisual = elements/libvisual
+else
+check_libvisual =
+endif
+
 if USE_OGG
 check_ogg = pipelines/oggmux
 else
@@ -109,7 +115,7 @@ VALGRIND_TO_FIX = \
 	libs/video
 
 # these tests don't even pass
-noinst_PROGRAMS =
+noinst_PROGRAMS = $(check_libvisual)
 
 AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS)
 LDADD = $(GST_LIBS) $(GST_CHECK_LIBS)
@@ -207,6 +213,9 @@ elements_audioconvert_LDADD = \
 
 elements_audiorate_LDADD =  $(LDADD)
 elements_audiorate_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+
+elements_libvisual_LDADD =  $(LDADD)
+elements_libvisual_CFLAGS = $(CFLAGS) $(AM_CFLAGS)
 
 elements_gdpdepay_LDADD = $(GST_GDP_LIBS) $(LDADD)
 elements_gdppay_LDADD = $(GST_GDP_LIBS) $(LDADD)

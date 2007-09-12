@@ -1,3 +1,13 @@
+2007-09-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/libvisual.c:
+	  Add basic libvisual test case in an attempt to reproduce bug #450336.
+	  Doesn't reproduce that bug, but some other crasher instead (invalid
+	  free), at least with make elements/libvisual.forever and the bumscope
+	  plugin on x86-64/gutsy. Leaving test disabled for now.
+
 2007-09-11  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>

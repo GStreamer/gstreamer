@@ -9,6 +9,7 @@ decodebin
 gdpdepay
 gdppay
 gnomevfssink
+libvisual
 multifdsink
 videorate
 videotestsrc
