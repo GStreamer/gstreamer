@@ -1,3 +1,51 @@
+2007-09-12  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (calc_ntp_ns_base),
+	(gst_rtp_bin_change_state), (new_payload_found), (create_send_rtp):
+	Calculate and configure the NTP base time so that we can generate better
+	NTP times in SR packets.
+	Set caps on new ghostpad.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_loop):
+	Clean debug statement.
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_class_init),
+	(gst_rtp_session_init), (gst_rtp_session_set_property),
+	(gst_rtp_session_get_property), (get_current_ntp_ns_time),
+	(rtcp_thread), (gst_rtp_session_event_recv_rtp_sink),
+	(gst_rtp_session_internal_links), (gst_rtp_session_chain_recv_rtp),
+	(gst_rtp_session_event_send_rtp_sink),
+	(gst_rtp_session_chain_send_rtp), (create_recv_rtp_sink),
+	(create_send_rtp_sink):
+	* gst/rtpmanager/gstrtpsession.h:
+	Add ntp-ns-base property to convert running_time to NTP time.
+	Handle NEWSEGMENT events on send and recv RTP pads so that we can
+	calculate the running time and thus NTP time of the packets.
+	Simplify getting the current NTP time using the pipeline clock.
+	Implement internal links functions.
+	Use the buffer timestamp to calculate the NTP time instead of the clock.
+
+	* gst/rtpmanager/gstrtpssrcdemux.c: (create_demux_pad_for_ssrc),
+	(gst_rtp_ssrc_demux_init), (gst_rtp_ssrc_demux_sink_event),
+	(gst_rtp_ssrc_demux_chain), (gst_rtp_ssrc_demux_rtcp_chain),
+	(gst_rtp_ssrc_demux_internal_links),
+	(gst_rtp_ssrc_demux_src_query):
+	* gst/rtpmanager/gstrtpssrcdemux.h:
+	Implement internal links function.
+	Calculate the diff between different streams, this might be used later
+	to get the inter stream latency.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_send_rtp):
+	Simple cleanup.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_init),
+	(calculate_jitter), (rtp_source_send_rtp), (rtp_source_get_new_sr):
+	Make the clock skew window a little bigger.
+	Apply the clock skew to all buffers, not just one with a new timestamp.
+	Calculate and debug sender clock drift.
+	Use extended last timestamp to interpollate for SR reports.
+
 2007-09-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Peter Kjellerstedt  <pkj at axis com>
