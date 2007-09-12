@@ -1423,7 +1423,7 @@ rtp_session_send_rtp (RTPSession * sess, GstBuffer * buffer, guint64 ntptime)
   prevsender = RTP_SOURCE_IS_SENDER (source);
 
   /* we use our own source to send */
-  result = rtp_source_send_rtp (sess->source, buffer, ntptime);
+  result = rtp_source_send_rtp (source, buffer, ntptime);
 
   if (RTP_SOURCE_IS_SENDER (source) && !prevsender)
     sess->stats.sender_sources++;

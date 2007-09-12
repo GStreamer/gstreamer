@@ -208,6 +208,8 @@ GST_STATIC_PAD_TEMPLATE ("sink_%d",
 struct _GstRtpBinPrivate
 {
   GMutex *bin_lock;
+
+  GstClockTime ntp_ns_base;
 };
 
 /* signals and args */
@@ -1142,6 +1144,30 @@ gst_rtp_bin_provide_clock (GstElement * element)
   return GST_CLOCK_CAST (gst_object_ref (rtpbin->provided_clock));
 }
 
+static void
+calc_ntp_ns_base (GstRtpBin * bin)
+{
+  GstClockTime now;
+  GTimeVal current;
+  GSList *walk;
+
+  /* get the current time and convert it to NTP time in nanoseconds */
+  g_get_current_time (&current);
+  now = GST_TIMEVAL_TO_TIME (current);
+  now += (2208988800LL * GST_SECOND);
+
+  GST_RTP_BIN_LOCK (bin);
+  bin->priv->ntp_ns_base = now;
+  for (walk = bin->sessions; walk; walk = g_slist_next (walk)) {
+    GstRtpBinSession *session = (GstRtpBinSession *) walk->data;
+
+    g_object_set (session->session, "ntp-ns-base", now, NULL);
+  }
+  GST_RTP_BIN_UNLOCK (bin);
+
+  return;
+}
+
 static GstStateChangeReturn
 gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
 {
@@ -1156,6 +1182,7 @@ gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      calc_ntp_ns_base (rtpbin);
       break;
     default:
       break;
@@ -1199,6 +1226,7 @@ new_payload_found (GstElement * element, guint pt, GstPad * pad,
   gpad = gst_ghost_pad_new_from_template (padname, pad, templ);
   g_free (padname);
 
+  gst_pad_set_caps (gpad, GST_PAD_CAPS (pad));
   gst_pad_set_active (gpad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (rtpbin), gpad);
 }
@@ -1552,9 +1580,6 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
       gst_element_get_request_pad (session->session, "send_rtp_sink");
   if (session->send_rtp_sink == NULL)
     goto pad_failed;
-
-  g_signal_connect (session->send_rtp_sink, "notify::caps",
-      (GCallback) caps_changed, session);
 
   result =
       gst_ghost_pad_new_from_template (name, session->send_rtp_sink, templ);

@@ -977,7 +977,7 @@ again:
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "Popped buffer #%d, rtptime %u, exttime %" G_GUINT64_FORMAT
-      ",now %d left", seqnum, rtp_time, exttimestamp,
+      ", now %d left", seqnum, rtp_time, exttimestamp,
       rtp_jitter_buffer_num_packets (priv->jbuf));
 
   /* If we don't know what the next seqnum should be (== -1) we have to wait
