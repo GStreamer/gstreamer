@@ -1,5 +1,12 @@
 2007-09-12  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/elements/libvisual.c:
+	  Test all libvisual plugins, not just the first one; this reproduces
+	  bug #450336 quite easily.  Looks like a problem with the 'jess'
+	  visualisation.
+
+2007-09-12  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/Makefile.am:
 	* tests/check/elements/.cvsignore:
 	* tests/check/elements/libvisual.c:

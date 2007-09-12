@@ -26,11 +26,11 @@ filter_func (GstPluginFeature * feature, gpointer user_data)
   return (g_str_has_prefix (GST_PLUGIN_FEATURE_NAME (feature), "libvisual_"));
 }
 
-GST_START_TEST (test_shutdown)
+static void
+test_shutdown_for_factory (const gchar * factory_name)
 {
   GstElement *pipeline, *src, *q, *ac, *vis, *cf, *q2, *sink;
   GstCaps *caps;
-  GList *l;
   guint i;
 
   pipeline = gst_pipeline_new (NULL);
@@ -39,15 +39,8 @@ GST_START_TEST (test_shutdown)
   q = gst_check_setup_element ("queue");
   ac = gst_check_setup_element ("audioconvert");
 
-  l = gst_default_registry_feature_filter (filter_func, TRUE, NULL);
-  if (l == NULL) {
-    g_print ("No libvisual plugins installed.\n");
-    return;
-  }
-  fail_unless (l->data != NULL);
-  GST_INFO ("Using %s", GST_PLUGIN_FEATURE_NAME (l->data));
-  vis = gst_check_setup_element (GST_PLUGIN_FEATURE_NAME (l->data));
-  gst_plugin_feature_list_free (l);
+  GST_INFO ("Using %s", factory_name);
+  vis = gst_check_setup_element (factory_name);
 
   cf = gst_check_setup_element ("capsfilter");
   caps = gst_caps_new_simple ("video/x-raw-rgb", "width", G_TYPE_INT, 320,
@@ -69,7 +62,7 @@ GST_START_TEST (test_shutdown)
   /* now, wait until pipeline is running and then shut it down again; repeat;
    * this makes sure we can shut down cleanly while stuff is going on in the
    * chain function */
-  for (i = 0; i < 200; ++i) {
+  for (i = 0; i < 50; ++i) {
     gst_element_set_state (pipeline, GST_STATE_PAUSED);
     gst_element_get_state (pipeline, NULL, NULL, -1);
     gst_element_set_state (pipeline, GST_STATE_PLAYING);
@@ -78,6 +71,29 @@ GST_START_TEST (test_shutdown)
   }
 
   gst_object_unref (pipeline);
+}
+
+GST_START_TEST (test_shutdown)
+{
+  const gchar *factory_to_test;
+
+  factory_to_test = g_getenv ("LIBVISUAL_UNIT_TEST_FACTORY");
+
+  if (factory_to_test == NULL) {
+    GList *list, *l;
+
+    list = gst_default_registry_feature_filter (filter_func, FALSE, NULL);
+    if (list == NULL) {
+      g_print ("No libvisual plugins installed.\n");
+      return;
+    }
+    for (l = list; l != NULL; l = l->next) {
+      test_shutdown_for_factory (GST_PLUGIN_FEATURE_NAME (l->data));
+    }
+    gst_plugin_feature_list_free (list);
+  } else {
+    test_shutdown_for_factory (factory_to_test);
+  }
 }
 
 GST_END_TEST;
