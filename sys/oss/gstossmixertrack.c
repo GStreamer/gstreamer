@@ -84,9 +84,10 @@ fill_labels (void)
 {
   gint i, pos;
   gchar *origs[SOUND_MIXER_NRDEVICES] = SOUND_DEVICE_LABELS;
-  struct
+  const struct
   {
-    gchar *given, *wanted;
+    const gchar *given;
+    const gchar *wanted;
   }
   cases[] = {
     /* Note: this list is simply ripped from soundcard.h. For
@@ -94,56 +95,31 @@ fill_labels (void)
      * etc.) - feel free to add them. That's the reason why
      * I'm doing this in such a horribly complicated way. */
     {
-    "Vol  ", _("Volume")}
-    , {
-    "Bass ", _("Bass")}
-    , {
-    "Trebl", _("Treble")}
-    , {
-    "Synth", _("Synth")}
-    , {
-    "Pcm  ", _("PCM")}
-    , {
-    "Spkr ", _("Speaker")}
-    , {
-    "Line ", _("Line-in")}
-    , {
-    "Mic  ", _("Microphone")}
-    , {
-    "CD   ", _("CD")}
-    , {
-    "Mix  ", _("Mixer")}
-    , {
-    "Pcm2 ", _("PCM-2")}
-    , {
-    "Rec  ", _("Record")}
-    , {
-    "IGain", _("In-gain")}
-    , {
-    "OGain", _("Out-gain")}
-    , {
-    "Line1", _("Line-1")}
-    , {
-    "Line2", _("Line-2")}
-    , {
-    "Line3", _("Line-3")}
-    , {
-    "Digital1", _("Digital-1")}
-    , {
-    "Digital2", _("Digital-2")}
-    , {
-    "Digital3", _("Digital-3")}
-    , {
-    "PhoneIn", _("Phone-in")}
-    , {
-    "PhoneOut", _("Phone-out")}
-    , {
-    "Video", _("Video")}
-    , {
-    "Radio", _("Radio")}
-    , {
-    "Monitor", _("Monitor")}
-    , {
+    "Vol  ", _("Volume")}, {
+    "Bass ", _("Bass")}, {
+    "Trebl", _("Treble")}, {
+    "Synth", _("Synth")}, {
+    "Pcm  ", _("PCM")}, {
+    "Spkr ", _("Speaker")}, {
+    "Line ", _("Line-in")}, {
+    "Mic  ", _("Microphone")}, {
+    "CD   ", _("CD")}, {
+    "Mix  ", _("Mixer")}, {
+    "Pcm2 ", _("PCM-2")}, {
+    "Rec  ", _("Record")}, {
+    "IGain", _("In-gain")}, {
+    "OGain", _("Out-gain")}, {
+    "Line1", _("Line-1")}, {
+    "Line2", _("Line-2")}, {
+    "Line3", _("Line-3")}, {
+    "Digital1", _("Digital-1")}, {
+    "Digital2", _("Digital-2")}, {
+    "Digital3", _("Digital-3")}, {
+    "PhoneIn", _("Phone-in")}, {
+    "PhoneOut", _("Phone-out")}, {
+    "Video", _("Video")}, {
+    "Radio", _("Radio")}, {
+    "Monitor", _("Monitor")}, {
     NULL, NULL}
   };
 

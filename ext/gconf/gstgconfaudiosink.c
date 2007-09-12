@@ -206,10 +206,8 @@ gst_gconf_switch_profile (GstGConfAudioSink * sink, GstGConfProfile profile)
     return;
 
   if (sink->connection) {
-    const gchar *key = gst_gconf_get_key_for_sink_profile (sink->profile);
-
     GST_DEBUG_OBJECT (sink, "Unsubscribing old key %s for profile %d",
-        key, sink->profile);
+        gst_gconf_get_key_for_sink_profile (sink->profile), sink->profile);
     gconf_client_notify_remove (sink->client, sink->connection);
     sink->connection = 0;
   }
