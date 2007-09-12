@@ -515,6 +515,8 @@ gst_rtp_session_finalize (GObject * object)
   GstRtpSession *rtpsession;
 
   rtpsession = GST_RTP_SESSION (object);
+
+  g_hash_table_destroy (rtpsession->priv->ptmap);
   g_mutex_free (rtpsession->priv->lock);
   g_object_unref (rtpsession->priv->session);
 

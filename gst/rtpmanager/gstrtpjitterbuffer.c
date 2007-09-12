@@ -208,7 +208,7 @@ static void gst_rtp_jitter_buffer_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_rtp_jitter_buffer_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
-static void gst_rtp_jitter_buffer_dispose (GObject * object);
+static void gst_rtp_jitter_buffer_finalize (GObject * object);
 
 /* element overrides */
 static GstStateChangeReturn gst_rtp_jitter_buffer_change_state (GstElement
@@ -256,7 +256,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstRtpJitterBufferPrivate));
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_finalize);
 
   gobject_class->set_property = gst_rtp_jitter_buffer_set_property;
   gobject_class->get_property = gst_rtp_jitter_buffer_get_property;
@@ -370,17 +370,18 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer,
 }
 
 static void
-gst_rtp_jitter_buffer_dispose (GObject * object)
+gst_rtp_jitter_buffer_finalize (GObject * object)
 {
   GstRtpJitterBuffer *jitterbuffer;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (object);
-  if (jitterbuffer->priv->jbuf) {
-    g_object_unref (jitterbuffer->priv->jbuf);
-    jitterbuffer->priv->jbuf = NULL;
-  }
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  g_mutex_free (jitterbuffer->priv->jbuf_lock);
+  g_cond_free (jitterbuffer->priv->jbuf_cond);
+
+  g_object_unref (jitterbuffer->priv->jbuf);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

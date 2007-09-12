@@ -108,6 +108,7 @@ GST_BOILERPLATE (GstRtpSsrcDemux, gst_rtp_ssrc_demux, GstElement,
 
 
 /* GObject vmethods */
+static void gst_rtp_ssrc_demux_dispose (GObject * object);
 static void gst_rtp_ssrc_demux_finalize (GObject * object);
 
 /* GstElement vmethods */
@@ -257,6 +258,7 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
   gobject_klass = (GObjectClass *) klass;
   gstelement_klass = (GstElementClass *) klass;
 
+  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_rtp_ssrc_demux_dispose);
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_rtp_ssrc_demux_finalize);
 
   /**
@@ -303,6 +305,20 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux,
   gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtcp_sink);
 
   gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
+}
+
+static void
+gst_rtp_ssrc_demux_dispose (GObject * object)
+{
+  GstRtpSsrcDemux *demux;
+
+  demux = GST_RTP_SSRC_DEMUX (object);
+
+  g_slist_foreach (demux->srcpads, (GFunc) g_free, NULL);
+  g_slist_free (demux->srcpads);
+  demux->srcpads = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
