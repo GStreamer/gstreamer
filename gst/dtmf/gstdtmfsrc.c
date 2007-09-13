@@ -231,52 +231,29 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "channels = (int) 1")
     );
 
-static GstElementClass *parent_class = NULL;
+GST_BOILERPLATE (GstDTMFSrc, gst_dtmf_src, GstBaseSrc, GST_TYPE_BASE_SRC);
 
-static void gst_dtmf_src_base_init (gpointer g_class);
-static void gst_dtmf_src_class_init (GstDTMFSrcClass * klass);
-static void gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, gpointer g_class);
 static void gst_dtmf_src_finalize (GObject * object);
-
-GType
-gst_dtmf_src_get_type (void)
-{
-  static GType base_src_type = 0;
-
-  if (G_UNLIKELY (base_src_type == 0)) {
-    static const GTypeInfo base_src_info = {
-      sizeof (GstDTMFSrcClass),
-      (GBaseInitFunc) gst_dtmf_src_base_init,
-      NULL,
-      (GClassInitFunc) gst_dtmf_src_class_init,
-      NULL,
-      NULL,
-      sizeof (GstDTMFSrc),
-      0,
-      (GInstanceInitFunc) gst_dtmf_src_init,
-    };
-
-    base_src_type = g_type_register_static (GST_TYPE_ELEMENT,
-        "GstDTMFSrc", &base_src_info, 0);
-  }
-  return base_src_type;
-}
 
 static void gst_dtmf_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_dtmf_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static gboolean gst_dtmf_src_handle_event (GstPad * pad, GstEvent * event);
+static gboolean gst_dtmf_src_handle_event (GstBaseSrc *src, GstEvent * event);
 static GstStateChangeReturn gst_dtmf_src_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key,
     float duration, GstBuffer * buffer);
-static void gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc);
-static void gst_dtmf_src_start (GstDTMFSrc *dtmfsrc);
-static void gst_dtmf_src_stop (GstDTMFSrc *dtmfsrc);
+static GstFlowReturn gst_dtmf_src_create (GstBaseSrc * basesrc,
+    guint64 offset, guint length, GstBuffer ** buffer);
 static void gst_dtmf_src_add_start_event (GstDTMFSrc *dtmfsrc,
     gint event_number, gint event_volume);
 static void gst_dtmf_src_add_stop_event (GstDTMFSrc *dtmfsrc);
+
+static void gst_dtmf_src_get_times (GstBaseSrc * basesrc,
+    GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
+
+
 
 static void
 gst_dtmf_src_base_init (gpointer g_class)
@@ -296,12 +273,13 @@ static void
 gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
 {
   GObjectClass *gobject_class;
+  GstBaseSrcClass *gstbasesrc_class;
   GstElementClass *gstelement_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
   gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  parent_class = g_type_class_peek_parent (klass);
 
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_dtmf_src_finalize);
   gobject_class->set_property =
@@ -316,17 +294,22 @@ gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_dtmf_src_change_state);
+
+  gstbasesrc_class->event =
+      GST_DEBUG_FUNCPTR (gst_dtmf_src_handle_event);
+  gstbasesrc_class->get_times =
+      GST_DEBUG_FUNCPTR (gst_dtmf_src_get_times);
+  gstbasesrc_class->create =
+      GST_DEBUG_FUNCPTR (gst_dtmf_src_create);
 }
 
-static void
-gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, gpointer g_class)
-{
-  dtmfsrc->srcpad =
-      gst_pad_new_from_static_template (&gst_dtmf_src_template, "src");
-  GST_DEBUG_OBJECT (dtmfsrc, "adding src pad");
-  gst_element_add_pad (GST_ELEMENT (dtmfsrc), dtmfsrc->srcpad);
 
-  gst_pad_set_event_function (dtmfsrc->srcpad, gst_dtmf_src_handle_event);
+static void
+gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, GstDTMFSrcClass *g_class)
+{
+  /* we operate in time */
+  gst_base_src_set_format (GST_BASE_SRC (dtmfsrc), GST_FORMAT_TIME);
+  gst_base_src_set_live (GST_BASE_SRC (dtmfsrc), TRUE);
 
   dtmfsrc->interval = DEFAULT_PACKET_INTERVAL;
 
@@ -334,7 +317,6 @@ gst_dtmf_src_init (GstDTMFSrc * dtmfsrc, gpointer g_class)
   dtmfsrc->last_event = NULL;
 
   dtmfsrc->clock_id = NULL;
-  dtmfsrc->task_paused = TRUE;
 
   GST_DEBUG_OBJECT (dtmfsrc, "init done");
 }
@@ -345,9 +327,6 @@ gst_dtmf_src_finalize (GObject * object)
   GstDTMFSrc *dtmfsrc;
 
   dtmfsrc = GST_DTMF_SRC (object);
-
-
-  gst_dtmf_src_stop (dtmfsrc);
 
   if (dtmfsrc->event_queue) {
     g_async_queue_unref (dtmfsrc->event_queue);
@@ -424,36 +403,18 @@ ret:
 }
 
 static gboolean
-gst_dtmf_src_handle_event (GstPad * pad, GstEvent * event)
+gst_dtmf_src_handle_event (GstBaseSrc * src, GstEvent * event)
 {
   GstDTMFSrc *dtmfsrc;
   gboolean result = FALSE;
-  GstElement *parent = gst_pad_get_parent_element (pad);
-  dtmfsrc = GST_DTMF_SRC (parent);
+
+  dtmfsrc = GST_DTMF_SRC (src);
 
   GST_DEBUG_OBJECT (dtmfsrc, "Received an event on the src pad");
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CUSTOM_UPSTREAM:
-    {
-      result = gst_dtmf_src_handle_custom_upstream (dtmfsrc, event);
-      break;
-    }
-    /* Ideally this element should not be flushed but let's handle the event
-     * just in case it is */
-    case GST_EVENT_FLUSH_START:
-      gst_dtmf_src_stop (dtmfsrc);
-      result = TRUE;
-      break;
-    case GST_EVENT_FLUSH_STOP:
-      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_TIME);
-      break;
-    default:
-      result = gst_pad_event_default (pad, event);
-      break;
+  if (GST_EVENT_TYPE (event) == GST_EVENT_CUSTOM_UPSTREAM) {
+    result = gst_dtmf_src_handle_custom_upstream (dtmfsrc, event);
   }
 
-  gst_object_unref (parent);
-  gst_event_unref (event);
   return result;
 }
 
@@ -496,6 +457,7 @@ gst_dtmf_src_get_property (GObject * object, guint prop_id, GValue * value,
 static void
 gst_dtmf_src_set_stream_lock (GstDTMFSrc *dtmfsrc, gboolean lock)
 {
+   GstPad *srcpad = GST_BASE_SRC_PAD (dtmfsrc);
    GstEvent *event;
    GstStructure *structure;
 
@@ -503,7 +465,7 @@ gst_dtmf_src_set_stream_lock (GstDTMFSrc *dtmfsrc, gboolean lock)
                       "lock", G_TYPE_BOOLEAN, lock, NULL);
 
    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
-   if (!gst_pad_push_event (dtmfsrc->srcpad, event)) {
+   if (!gst_pad_push_event (srcpad, event)) {
      GST_WARNING_OBJECT (dtmfsrc, "stream-lock event not handled");
    }
 }
@@ -512,10 +474,13 @@ static void
 gst_dtmf_prepare_timestamps (GstDTMFSrc *dtmfsrc)
 {
   GstClock *clock;
+  GstClockTime base_time;
+
+  base_time = GST_ELEMENT_CAST (dtmfsrc)->base_time;
 
   clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
   if (clock != NULL) {
-    dtmfsrc->timestamp = gst_clock_get_time (clock);
+    dtmfsrc->timestamp = gst_clock_get_time (clock) - base_time;
     gst_object_unref (clock);
   } else {
     gchar *dtmf_name = gst_element_get_name (dtmfsrc);
@@ -523,65 +488,6 @@ gst_dtmf_prepare_timestamps (GstDTMFSrc *dtmfsrc)
     dtmfsrc->timestamp = GST_CLOCK_TIME_NONE;
     g_free (dtmf_name);
   }
-}
-
-static void
-gst_dtmf_src_start (GstDTMFSrc *dtmfsrc)
-{
-  const GstCaps * caps = gst_pad_get_pad_template_caps (dtmfsrc->srcpad);
-
-  if (!gst_pad_set_caps (dtmfsrc->srcpad, (GstCaps *)caps))
-    GST_ERROR_OBJECT (dtmfsrc,
-            "Failed to set caps %" GST_PTR_FORMAT " on src pad", caps);
-  else
-    GST_DEBUG_OBJECT (dtmfsrc,
-            "caps %" GST_PTR_FORMAT " set on src pad", caps);
-
-  dtmfsrc->task_paused = FALSE;
-  if (!gst_pad_start_task (dtmfsrc->srcpad,
-      (GstTaskFunction) gst_dtmf_src_push_next_tone_packet, dtmfsrc)) {
-    GST_ERROR_OBJECT (dtmfsrc, "Failed to start task on src pad");
-  }
-}
-
-static void
-gst_dtmf_src_stop (GstDTMFSrc *dtmfsrc)
-{
-  GstDTMFSrcEvent *event = NULL;
-
-  dtmfsrc->task_paused = TRUE;
-  GST_OBJECT_LOCK (dtmfsrc);
-  if (dtmfsrc->clock_id != NULL) {
-    gst_clock_id_unschedule(dtmfsrc->clock_id);
-  }
-  GST_OBJECT_UNLOCK (dtmfsrc);
-
-  event = g_malloc (sizeof(GstDTMFSrcEvent));
-  event->event_type = DTMF_EVENT_TYPE_PAUSE_TASK;
-  g_async_queue_push (dtmfsrc->event_queue, event);
-
-  event = NULL;
-
-  if (!gst_pad_pause_task (dtmfsrc->srcpad)) {
-    GST_ERROR_OBJECT (dtmfsrc, "Failed to pause task on src pad");
-    return;
-  }
-
-  if (dtmfsrc->last_event) {
-    /* Don't forget to release the stream lock */
-    gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
-    g_free (dtmfsrc->last_event);
-    dtmfsrc->last_event = NULL;
-  }
-
-  /* Flushing the event queue */
-  event = g_async_queue_try_pop (dtmfsrc->event_queue);
-
-  while (event != NULL) {
-    g_free (event);
-    event = g_async_queue_try_pop (dtmfsrc->event_queue);
-  }
-
 }
 
 static void
@@ -671,51 +577,25 @@ gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
 }
 
 static void
-gst_dtmf_src_wait_for_buffer_ts (GstDTMFSrc *dtmfsrc, GstBuffer * buf)
+gst_dtmf_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
+    GstClockTime * start, GstClockTime * end)
 {
-  GstClock *clock;
+  /* for live sources, sync on the timestamp of the buffer */
+  if (gst_base_src_is_live (basesrc)) {
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
-  if (clock != NULL) {
-    GstClockReturn clock_ret;
-    GstClockID clock_id;
+    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      /* get duration to calculate end time */
+      GstClockTime duration = GST_BUFFER_DURATION (buffer);
 
-    clock_id = gst_clock_new_single_shot_id (clock, GST_BUFFER_TIMESTAMP (buf));
-    gst_object_unref (clock);
-
-    GST_OBJECT_LOCK (dtmfsrc);
-    dtmfsrc->clock_id = clock_id;
-    GST_OBJECT_UNLOCK (dtmfsrc);
-
-    if (dtmfsrc->task_paused) {
-      clock_ret = GST_CLOCK_UNSCHEDULED;
-    } else {
-      clock_ret = gst_clock_id_wait (dtmfsrc->clock_id, NULL);
-    }
-
-    GST_OBJECT_LOCK (dtmfsrc);
-    dtmfsrc->clock_id = NULL;
-    gst_clock_id_unref (clock_id);
-    GST_OBJECT_UNLOCK (dtmfsrc);
-
-    if (clock_ret == GST_CLOCK_UNSCHEDULED) {
-      GST_DEBUG_OBJECT (dtmfsrc, "Clock wait unscheduled");
-    } else {
-      if (clock_ret != GST_CLOCK_OK && clock_ret != GST_CLOCK_EARLY) {
-        gchar *clock_name = NULL;
-
-        clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
-        clock_name = gst_element_get_name (clock);
-        gst_object_unref (clock);
-
-        GST_ERROR_OBJECT (dtmfsrc, "Failed to wait on clock %s", clock_name);
-        g_free (clock_name);
+      *start = timestamp;
+      if (GST_CLOCK_TIME_IS_VALID (duration)) {
+        *end = *start + duration;
       }
     }
   } else {
-    gchar *dtmf_name = gst_element_get_name (dtmfsrc);
-    GST_ERROR_OBJECT (dtmfsrc, "No clock set for element %s", dtmf_name);
-    g_free (dtmf_name);
+    *start = -1;
+    *end = -1;
   }
 }
 
@@ -726,6 +606,7 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc,
 {
   GstBuffer *buf = NULL;
   gboolean send_silence = FALSE;
+  GstPad *srcpad = GST_BASE_SRC_PAD (dtmfsrc);
 
   GST_DEBUG_OBJECT (dtmfsrc, "Creating buffer for tone %s",
       DTMF_KEYS[event->event_number].event_name);
@@ -753,24 +634,26 @@ gst_dtmf_src_create_next_tone_packet (GstDTMFSrc *dtmfsrc,
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
   dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
 
-  /* FIXME: Should we sync to clock ourselves or leave it to sink */
-  gst_dtmf_src_wait_for_buffer_ts (dtmfsrc, buf);
-
   /* Set caps on the buffer before pushing it */
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (dtmfsrc->srcpad));
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (srcpad));
 
   return buf;
 }
 
-static void
-gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
+static GstFlowReturn
+gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
+    guint length, GstBuffer ** buffer)
 {
   GstBuffer *buf = NULL;
   GstFlowReturn ret;
   GstDTMFSrcEvent *event;
+  GstDTMFSrc * dtmfsrc;
+
+  dtmfsrc = GST_DTMF_SRC (basesrc);
 
   g_async_queue_ref (dtmfsrc->event_queue);
 
+ start:
   if (dtmfsrc->last_event == NULL) {
     event = g_async_queue_pop (dtmfsrc->event_queue);
 
@@ -788,11 +671,10 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
     } else if (event->event_type == DTMF_EVENT_TYPE_PAUSE_TASK) {
       /*
        * We're pushing it back because it has to stay in there until
-       * the task is really paused (and the queue will then be flushed
+       * the task is really paused (and the queue will then be flushed)
        */
       g_async_queue_push (dtmfsrc->event_queue, event);
       g_async_queue_unref (dtmfsrc->event_queue);
-      return;
     }
   } else if (dtmfsrc->last_event->packet_count  * dtmfsrc->interval >=
       MIN_DUTY_CYCLE) {
@@ -806,6 +688,7 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
         gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
         g_free (dtmfsrc->last_event);
         dtmfsrc->last_event = NULL;
+        goto start;
       }
     }
   }
@@ -814,18 +697,15 @@ gst_dtmf_src_push_next_tone_packet (GstDTMFSrc *dtmfsrc)
   if (dtmfsrc->last_event) {
     buf = gst_dtmf_src_create_next_tone_packet (dtmfsrc, dtmfsrc->last_event);
 
-    gst_buffer_ref(buf);
-
-    GST_DEBUG_OBJECT (dtmfsrc,
-        "pushing buffer on src pad of size %d", GST_BUFFER_SIZE (buf));
-    ret = gst_pad_push (dtmfsrc->srcpad, buf);
-    if (ret != GST_FLOW_OK) {
-      GST_ERROR_OBJECT (dtmfsrc, "Failed to push buffer on src pad");
-    }
-
-    gst_buffer_unref(buf);
-    GST_DEBUG_OBJECT (dtmfsrc, "pushed DTMF tone on src pad");
+    GST_DEBUG_OBJECT (dtmfsrc, "Created buffer of size %d", GST_BUFFER_SIZE (buf));
+    *buffer = buf;
+    ret = GST_FLOW_OK;
+  } else {
+    *buffer = NULL;
+    ret = GST_FLOW_WRONG_STATE;
   }
+
+  return ret;
 
 }
 
@@ -838,23 +718,6 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
 
   dtmfsrc = GST_DTMF_SRC (element);
 
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_segment_init (&dtmfsrc->segment, GST_FORMAT_TIME);
-      gst_pad_push_event (dtmfsrc->srcpad, gst_event_new_new_segment (FALSE,
-              dtmfsrc->segment.rate, dtmfsrc->segment.format,
-              dtmfsrc->segment.start, dtmfsrc->segment.stop,
-              dtmfsrc->segment.time));
-      /* Indicate that we don't do PRE_ROLL */
-      no_preroll = TRUE;
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      gst_dtmf_src_start (dtmfsrc);
-      break;
-    default:
-      break;
-  }
-
   if ((result =
           GST_ELEMENT_CLASS (parent_class)->change_state (element,
               transition)) == GST_STATE_CHANGE_FAILURE)
@@ -862,10 +725,30 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      /* Indicate that we don't do PRE_ROLL */
-      gst_dtmf_src_stop (dtmfsrc);
-      no_preroll = TRUE;
-      break;
+      {
+        GstDTMFSrcEvent *event = NULL;
+
+        /* TODO lock the element */
+
+        if (dtmfsrc->last_event) {
+          /* Don't forget to release the stream lock */
+          gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+          g_free (dtmfsrc->last_event);
+          dtmfsrc->last_event = NULL;
+        }
+
+        /* Flushing the event queue */
+        event = g_async_queue_try_pop (dtmfsrc->event_queue);
+
+        while (event != NULL) {
+          g_free (event);
+          event = g_async_queue_try_pop (dtmfsrc->event_queue);
+        }
+
+        /* Indicate that we don't do PRE_ROLL */
+        no_preroll = TRUE;
+        break;
+      }
     default:
       break;
   }

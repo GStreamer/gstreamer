@@ -29,6 +29,7 @@
 
 #include <gst/gst.h>
 #include <gst/gstbuffer.h>
+#include <gst/base/gstbasesrc.h>
 
 G_BEGIN_DECLS
 
@@ -69,9 +70,7 @@ struct _GstDTMFSrcEvent {
 typedef struct _GstDTMFSrcEvent GstDTMFSrcEvent;
 
 struct _GstDTMFSrc {
-  GstElement        element;
-  GstPad            *srcpad;
-  GstSegment        segment;
+  GstBaseSrc        parent;
   GAsyncQueue*      event_queue;
   GstDTMFSrcEvent*  last_event;
   GstClockID        clock_id;
@@ -83,7 +82,7 @@ struct _GstDTMFSrc {
 
 
 struct _GstDTMFSrcClass {
-  GstElementClass parent_class;
+  GstBaseSrcClass parent_class;
 };
 
 GType gst_dtmf_src_get_type (void);
