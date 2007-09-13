@@ -1,7 +1,7 @@
 /* GStreamer taglib-based APEv2 muxer
  * Copyright (C) 2006 Christophe Fergeau <teuf@gnome.org>
  * Copyright (C) 2006 Tim-Philipp Müller <tim centricular net>
- * Copyright (C) 2006 Sebastian Dröge <mail@slomosnail.de>
+ * Copyright (C) 2006 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -68,7 +68,7 @@ static const GstElementDetails gst_apev2_mux_details =
 GST_ELEMENT_DETAILS ("TagLib-based APEv2 Muxer",
     "Formatter/Metadata",
     "Adds an APEv2 header to the beginning of files using taglib",
-    "Sebastian Dröge <mail@slomosnail.de>");
+    "Sebastian Dröge <slomo@circular-chaos.org>");
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,

@@ -1,5 +1,13 @@
 2007-09-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/taglib/gstapev2mux.cc:
+	* ext/taglib/gstapev2mux.h:
+	* ext/taglib/gsttaglibmux.c:
+	* tests/check/elements/apev2mux.c:
+	Update my mail address.
+
+2007-09-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_perform_eos),
 	(gst_wavparse_loop), (gst_wavparse_chain):
 	Add EOS logic for the push-based mode too. Fixes #476514.

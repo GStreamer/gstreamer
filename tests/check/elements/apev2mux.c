@@ -3,7 +3,7 @@
  * unit test for the taglib-based apev2mux element
  *
  * Copyright (C) 2006 Tim-Philipp Müller  <tim centricular net>
- * Copyright (C) 2006 Sebastian Dröge <mail@slomosnail.de>
+ * Copyright (C) 2006 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
