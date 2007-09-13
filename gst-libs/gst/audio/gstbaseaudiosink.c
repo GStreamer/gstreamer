@@ -225,9 +225,9 @@ gst_base_audio_sink_init (GstBaseAudioSink * baseaudiosink,
       (GstAudioClockGetTimeFunc) gst_base_audio_sink_get_time, baseaudiosink);
 
   GST_BASE_SINK (baseaudiosink)->can_activate_push = TRUE;
-  /* FIXME: fix state changes so that both READY_TO_PAUSED and
-     PAUSED_TO_PLAYING return SUCCESS */
-  GST_BASE_SINK (baseaudiosink)->can_activate_pull = TRUE;
+  /* FIXME, enable pull mode when segments, latency, state changes, negotiation
+   * and clock slaving are figured out */
+  GST_BASE_SINK (baseaudiosink)->can_activate_pull = FALSE;
 }
 
 static void

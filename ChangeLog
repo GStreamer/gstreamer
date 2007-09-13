@@ -1,3 +1,10 @@
+2007-09-13  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_init):
+	Disable pull mode scheduling, we're not ready for it yet and it subtly
+	breaks a lot of things.
+
 2007-09-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/elements/libvisual.c:
