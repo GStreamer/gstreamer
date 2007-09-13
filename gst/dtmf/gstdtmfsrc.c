@@ -775,6 +775,7 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
       no_preroll = TRUE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_DEBUG_OBJECT (dtmfsrc, "Pushing the PAUSE_TASK even on PAUSED_TO_READY change");
       event = g_malloc (sizeof(GstDTMFSrcEvent));
       event->event_type = DTMF_EVENT_TYPE_PAUSE_TASK;
       g_async_queue_push (dtmfsrc->event_queue, event);
