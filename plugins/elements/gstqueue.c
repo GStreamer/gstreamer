@@ -1068,6 +1068,25 @@ gst_queue_handle_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_position (query, format, peer_pos);
       break;
     }
+    case GST_QUERY_LATENCY:
+    {
+      gboolean live;
+      GstClockTime min, max;
+
+      gst_query_parse_latency (query, &live, &min, &max);
+
+      /* we can delay up to the limit of the queue in time. If we have no time
+       * limit, the best thing we can do is to return an infinite delay. In
+       * reality a better estimate would be the byte/buffer rate but that is not
+       * possible right now. */
+      if (queue->max_size.time > 0 && max != -1)
+        max += queue->max_size.time;
+      else
+        max = -1;
+
+      gst_query_set_latency (query, live, min, max);
+      break;
+    }
     default:
       /* peer handled other queries */
       break;
