@@ -1703,6 +1703,43 @@ push_error:
 }
 
 static void
+gst_wavparse_perform_eos (GstWavParse * wav, GstFlowReturn ret)
+{
+  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
+    if (ret == GST_FLOW_UNEXPECTED) {
+      /* add pad before we perform EOS */
+      if (G_UNLIKELY (wav->first)) {
+        wav->first = FALSE;
+        gst_wavparse_add_src_pad (wav, NULL);
+      }
+      /* perform EOS logic */
+      if (wav->segment.flags & GST_SEEK_FLAG_SEGMENT) {
+        GstClockTime stop;
+
+        if ((stop = wav->segment.stop) == -1)
+          stop = wav->segment.duration;
+
+        gst_element_post_message (GST_ELEMENT_CAST (wav),
+            gst_message_new_segment_done (GST_OBJECT_CAST (wav),
+                wav->segment.format, stop));
+      } else {
+        if (wav->srcpad != NULL)
+          gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
+      }
+    } else {
+      /* for fatal errors we post an error message, post the error
+       * first so the app knows about the error first. */
+      GST_ELEMENT_ERROR (wav, STREAM, FAILED,
+          (_("Internal data flow error.")),
+          ("streaming task paused, reason %s (%d)", gst_flow_get_name (ret),
+              ret));
+      if (wav->srcpad != NULL)
+        gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
+    }
+  }
+}
+
+static void
 gst_wavparse_loop (GstPad * pad)
 {
   GstFlowReturn ret;
@@ -1746,37 +1783,7 @@ pause:
     wav->segment_running = FALSE;
     gst_pad_pause_task (pad);
 
-    if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED) {
-      if (ret == GST_FLOW_UNEXPECTED) {
-        /* add pad before we perform EOS */
-        if (G_UNLIKELY (wav->first)) {
-          wav->first = FALSE;
-          gst_wavparse_add_src_pad (wav, NULL);
-        }
-        /* perform EOS logic */
-        if (wav->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-          GstClockTime stop;
-
-          if ((stop = wav->segment.stop) == -1)
-            stop = wav->segment.duration;
-
-          gst_element_post_message (GST_ELEMENT_CAST (wav),
-              gst_message_new_segment_done (GST_OBJECT_CAST (wav),
-                  wav->segment.format, stop));
-        } else {
-          if (wav->srcpad != NULL)
-            gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
-        }
-      } else {
-        /* for fatal errors we post an error message, post the error
-         * first so the app knows about the error first. */
-        GST_ELEMENT_ERROR (wav, STREAM, FAILED,
-            (_("Internal data flow error.")),
-            ("streaming task paused, reason %s (%d)", reason, ret));
-        if (wav->srcpad != NULL)
-          gst_pad_push_event (wav->srcpad, gst_event_new_eos ());
-      }
-    }
+    gst_wavparse_perform_eos (wav, ret);
     return;
   }
 }
@@ -1815,11 +1822,14 @@ gst_wavparse_chain (GstPad * pad, GstBuffer * buf)
       /* fall-through */
     case GST_WAVPARSE_DATA:
       if ((ret = gst_wavparse_stream_data (wav)) != GST_FLOW_OK)
-        goto done;
+        goto eos;
       break;
     default:
       g_assert_not_reached ();
   }
+eos:
+  gst_wavparse_perform_eos (wav, ret);
+  /* fallthrough */
 done:
   return ret;
 }
