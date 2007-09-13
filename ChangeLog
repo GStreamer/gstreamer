@@ -1,3 +1,10 @@
+2007-09-13  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_query_latency),
+	(gst_base_src_do_sync), (gst_base_src_change_state):
+	Update docs.
+	Clean up the timestamping and syncing code for pseudo live sources.
+
 2007-09-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Steve Fink  <sphink gmail com>

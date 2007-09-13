@@ -81,10 +81,10 @@
  * to the #GstBaseSrc::create function.
  * </para>
  * <para>
- * #GstBaseSrc has support for live sources. Live sources are sources that 
- * produce data at a fixed rate, such as audio or video capture devices. A 
- * typical live source also provides a clock to publish the rate at which 
- * they produce data.
+ * #GstBaseSrc has support for live sources. Live sources are sources that when
+ * paused discard data, such as audio or video capture devices. A typical live
+ * source also produces data at a fixed rate and thus provides a clock to publish
+ * this rate.
  * Use gst_base_src_set_live() to activate the live source mode.
  * </para>
  * <para>
@@ -95,9 +95,9 @@
  * </para>
  * <para>
  * A typical live source will timestamp the buffers it creates with the 
- * current stream time of the pipeline. This is one reason why a live source
+ * current running time of the pipeline. This is one reason why a live source
  * can only produce data in the PLAYING state, when the clock is actually 
- * distributed and running.
+ * distributed and running. 
  * </para>
  * <para>
  * Live sources that synchronize and block on the clock (an audio source, for
@@ -106,16 +106,21 @@
  * </para>
  * <para>
  * The #GstBaseSrc::get_times method can be used to implement pseudo-live 
- * sources. The base source will wait for the specified stream time returned in 
- * #GstBaseSrc::get_times before pushing out the buffer. 
+ * sources.
  * It only makes sense to implement the ::get_times function if the source is 
- * a live source.
+ * a live source. The ::get_times function should return timestamps starting
+ * from 0, as if it were a non-live source. The base class will make sure that
+ * the timestamps are transformed into the current running_time.
+ * The base source will then wait for the calculated running_time before pushing
+ * out the buffer.
  * </para>
  * <para>
- * For live sources, the base class will by default measure the time it takes to
- * create the first buffer in the PLAYING state and will report this value as
- * the latency. Subclasses should override the query function when this
- * behaviour is not acceptable.
+ * For live sources, the base class will by default report a latency of 0.
+ * For pseudo live sources, the base class will by default measure the difference
+ * between the first buffer timestamp and the start time of get_times and will
+ * report this value as the latency. 
+ * Subclasses should override the query function when this behaviour is not
+ * acceptable.
  * </para>
  * <para>
  * There is only support in #GstBaseSrc for exactly one source pad, which 
@@ -178,7 +183,7 @@
  * thread might be blocked in PREROLL.
  * </para>
  * <para>
- * Last reviewed on 2006-09-27 (0.10.11)
+ * Last reviewed on 2007-09-13 (0.10.15)
  * </para>
  * </refsect2>
  */
@@ -246,7 +251,10 @@ struct _GstBaseSrcPrivate
   /* startup latency is the time it takes between going to PLAYING and producing
    * the first BUFFER with running_time 0. This value is included in the latency
    * reporting. */
-  GstClockTime startup_latency;
+  GstClockTime latency;
+  /* timestamp offset, this is the offset add to the values of gst_times for
+   * pseudo live sources */
+  GstClockTimeDiff ts_offset;
 
   gboolean do_timestamp;
 };
@@ -597,8 +605,8 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
   /* if we have a startup latency, report this one, else report 0. Subclasses
    * are supposed to override the query function if they want something
    * else. */
-  if (src->priv->startup_latency != -1)
-    min = src->priv->startup_latency;
+  if (src->priv->latency != -1)
+    min = src->priv->latency;
   else
     min = 0;
 
@@ -1482,7 +1490,7 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   GstClockTime base_time;
   GstClock *clock;
   GstClockTime now = -1, timestamp;
-  gboolean do_timestamp;
+  gboolean do_timestamp, first, pseudo_live;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
@@ -1490,39 +1498,82 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   if (bclass->get_times)
     bclass->get_times (basesrc, buffer, &start, &end);
 
+  /* get buffer timestamp */
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+
   /* grab the lock to prepare for clocking and calculate the startup 
    * latency. */
   GST_OBJECT_LOCK (basesrc);
 
-  /* get clock, if no clock, we can't sync or get the latency */
+  /* if we are asked to sync against the clock we are a pseudo live element */
+  pseudo_live = (start != -1 && basesrc->is_live);
+  /* check for the first buffer */
+  first = (basesrc->priv->latency == -1);
+
+  if (timestamp != -1 && pseudo_live) {
+    GstClockTime latency;
+
+    /* we have a timestamp and a sync time, latency is the diff */
+    if (timestamp <= start)
+      latency = start - timestamp;
+    else
+      latency = 0;
+
+    if (first) {
+      GST_DEBUG_OBJECT (basesrc, "pseudo_live with latency %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (latency));
+      /* first time we calculate latency, just configure */
+      basesrc->priv->latency = latency;
+    } else {
+      if (basesrc->priv->latency != latency) {
+        /* we have a new latency, FIXME post latency message */
+        basesrc->priv->latency = latency;
+        GST_DEBUG_OBJECT (basesrc, "latency changed to %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (latency));
+      }
+    }
+  } else if (first) {
+    GST_DEBUG_OBJECT (basesrc, "no latency needed, live %d, sync %d",
+        basesrc->is_live, start != -1);
+    basesrc->priv->latency = 0;
+  }
+
+  /* get clock, if no clock, we can't sync or do timestamps */
   if ((clock = GST_ELEMENT_CLOCK (basesrc)) == NULL)
     goto no_clock;
 
   base_time = GST_ELEMENT_CAST (basesrc)->base_time;
 
   do_timestamp = basesrc->priv->do_timestamp;
-  timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
-  /* first buffer, calculate the startup latency */
-  if (basesrc->priv->startup_latency == -1) {
+  /* first buffer, calculate the timestamp offset */
+  if (first) {
+    GstClockTime running_time;
+
     now = gst_clock_get_time (clock);
+    running_time = now - base_time;
 
-    GST_LOG_OBJECT (basesrc, "startup timestamp: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timestamp));
+    GST_LOG_OBJECT (basesrc,
+        "startup timestamp: %" GST_TIME_FORMAT ", running_time %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (timestamp),
+        GST_TIME_ARGS (running_time));
 
-    /* startup latency is the diff between when we went to PLAYING (base_time)
-     * and the current clock time */
-    if (now > base_time)
-      basesrc->priv->startup_latency = now - base_time;
-    else
-      basesrc->priv->startup_latency = 0;
+    if (pseudo_live && timestamp != -1) {
+      /* live source and we need to sync, add startup latency to all timestamps
+       * to get the real running_time. Live sources should always timestamp
+       * according to the current running time. */
+      basesrc->priv->ts_offset = GST_CLOCK_DIFF (timestamp, running_time);
 
-    GST_LOG_OBJECT (basesrc, "startup running_time: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (basesrc->priv->startup_latency));
+      GST_LOG_OBJECT (basesrc, "live with sync, ts_offset %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (basesrc->priv->ts_offset));
+    } else {
+      basesrc->priv->ts_offset = 0;
+      GST_LOG_OBJECT (basesrc, "no timestamp offset needed");
+    }
 
     if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
       if (do_timestamp)
-        timestamp = now - base_time;
+        timestamp = running_time;
       else
         timestamp = 0;
 
@@ -1532,17 +1583,8 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
           GST_TIME_ARGS (timestamp));
     }
 
-    /* we have a timestamp, we can subtract it from the startup_latency when it is
-     * smaller. If the timestamp is bigger, there is no startup latency. */
-    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-      if (timestamp < basesrc->priv->startup_latency)
-        basesrc->priv->startup_latency -= timestamp;
-      else
-        basesrc->priv->startup_latency = 0;
-    }
-
-    GST_LOG_OBJECT (basesrc, "startup latency: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (basesrc->priv->startup_latency));
+    /* add the timestamp offset we need for sync */
+    timestamp += basesrc->priv->ts_offset;
   } else {
     /* not the first buffer, the timestamp is the diff between the clock and
      * base_time */
@@ -1555,16 +1597,12 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
 
   /* if we don't have a buffer timestamp, we don't sync */
   if (!GST_CLOCK_TIME_IS_VALID (start))
-    goto invalid_start;
+    goto no_sync;
 
-  if (basesrc->is_live) {
-    /* live source and we need to sync, add startup latency to timestamp to
-     * get the real running_time */
-    if (timestamp != -1) {
-      start += basesrc->priv->startup_latency;
-      GST_BUFFER_TIMESTAMP (buffer) =
-          timestamp + basesrc->priv->startup_latency;
-    }
+  if (basesrc->is_live && GST_CLOCK_TIME_IS_VALID (timestamp)) {
+    /* for pseudo live sources, add our ts_offset to the timestamp */
+    GST_BUFFER_TIMESTAMP (buffer) += basesrc->priv->ts_offset;
+    start += basesrc->priv->ts_offset;
   }
 
   GST_LOG_OBJECT (basesrc,
@@ -1586,9 +1624,9 @@ no_clock:
     GST_OBJECT_UNLOCK (basesrc);
     return GST_CLOCK_OK;
   }
-invalid_start:
+no_sync:
   {
-    GST_DEBUG_OBJECT (basesrc, "get_times returned invalid start");
+    GST_DEBUG_OBJECT (basesrc, "no sync needed");
     GST_OBJECT_UNLOCK (basesrc);
     return GST_CLOCK_OK;
   }
@@ -2420,11 +2458,11 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       }
       basesrc->priv->last_sent_eos = FALSE;
       basesrc->priv->discont = TRUE;
-      basesrc->priv->startup_latency = -1;
       GST_LIVE_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_LIVE_LOCK (element);
+      basesrc->priv->latency = -1;
       if (basesrc->is_live) {
         basesrc->live_running = TRUE;
         GST_LIVE_SIGNAL (element);
