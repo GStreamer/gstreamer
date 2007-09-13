@@ -78,8 +78,6 @@ struct _GstLevel {
   gdouble *RMS_dB;              /* RMS in dB to emit */
   GstClockTime *decay_peak_age; /* age of last peak */
   
-  GstSegment segment;
-  
   void (*process)(gpointer, guint, guint, gdouble*, gdouble*);
 };
 

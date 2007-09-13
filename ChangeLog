@@ -1,3 +1,13 @@
+2007-09-13  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/level/gstlevel.c: (gst_level_class_init), (gst_level_start),
+	(gst_level_transform_ip):
+	* gst/level/gstlevel.h:
+	Use basetransform segment so that it is correctly managed on flushes and
+	start/stop.
+	Report message timestamp as stream time, which is what an application
+	can understand.
+
 2007-09-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/taglib/gstapev2mux.cc:

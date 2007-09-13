@@ -147,7 +147,6 @@ static void gst_level_dispose (GObject * obj);
 static gboolean gst_level_set_caps (GstBaseTransform * trans, GstCaps * in,
     GstCaps * out);
 static gboolean gst_level_start (GstBaseTransform * trans);
-static gboolean gst_level_event (GstBaseTransform * trans, GstEvent * event);
 static GstFlowReturn gst_level_transform_ip (GstBaseTransform * trans,
     GstBuffer * in);
 
@@ -198,7 +197,6 @@ gst_level_class_init (GstLevelClass * klass)
 
   trans_class->set_caps = GST_DEBUG_FUNCPTR (gst_level_set_caps);
   trans_class->start = GST_DEBUG_FUNCPTR (gst_level_start);
-  trans_class->event = GST_DEBUG_FUNCPTR (gst_level_event);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_level_transform_ip);
   trans_class->passthrough_on_same_caps = TRUE;
 }
@@ -449,36 +447,6 @@ gst_level_start (GstBaseTransform * trans)
   GstLevel *filter = GST_LEVEL (trans);
 
   filter->num_frames = 0;
-  gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
-
-  return TRUE;
-}
-
-static gboolean
-gst_level_event (GstBaseTransform * trans, GstEvent * event)
-{
-  GstLevel *filter = GST_LEVEL (trans);
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:{
-      GstFormat format;
-      gdouble rate, arate;
-      gint64 start, stop, time;
-      gboolean update;
-
-      /* the newsegment values are used to clip the input samples
-       * and to convert the incomming timestamps to running time */
-      gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
-          &start, &stop, &time);
-
-      /* now configure the values */
-      gst_segment_set_newsegment_full (&filter->segment, update,
-          rate, arate, format, start, stop, time);
-      break;
-    }
-    default:
-      break;
-  }
 
   return TRUE;
 }
@@ -621,7 +589,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
     if (filter->message) {
       GstMessage *m;
       GstClockTime endtime =
-          gst_segment_to_running_time (&filter->segment, GST_FORMAT_TIME,
+          gst_segment_to_stream_time (&trans->segment, GST_FORMAT_TIME,
           GST_BUFFER_TIMESTAMP (in))
           + GST_FRAMES_TO_CLOCK_TIME (num_frames, filter->rate);
 
