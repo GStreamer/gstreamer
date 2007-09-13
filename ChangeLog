@@ -1,5 +1,12 @@
 2007-09-13  Wim Taymans  <wim.taymans@gmail.com>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_send_event):
+	Push OOB events downstream when we get them in send_event. This allows
+	the application to insert events in the pipeline.
+	Add some more comments.
+
+2007-09-13  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/gstbin.c: (gst_bin_class_init), (clear_queue),
 	(do_bin_latency), (gst_bin_change_state_func):
 	* gst/gstpipeline.c: (gst_pipeline_change_state):

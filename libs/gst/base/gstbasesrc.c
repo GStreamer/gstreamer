@@ -1262,7 +1262,8 @@ gst_base_src_get_query_types (GstElement * element)
   return query_types;
 }
 
-/* all events send to this element directly
+/* all events send to this element directly. This is mainly done from the
+ * application.
  */
 static gboolean
 gst_base_src_send_event (GstElement * element, GstEvent * event)
@@ -1273,11 +1274,14 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
   src = GST_BASE_SRC (element);
 
   switch (GST_EVENT_TYPE (event)) {
+      /* bidirectional events */
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
       /* sending random flushes downstream can break stuff,
        * especially sync since all segment info will get flushed */
       break;
+
+      /* downstream serialized events */
     case GST_EVENT_EOS:
       /* FIXME, queue EOS and make sure the task or pull function 
        * perform the EOS actions. */
@@ -1286,9 +1290,15 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       /* sending random NEWSEGMENT downstream can break sync. */
       break;
     case GST_EVENT_TAG:
-    case GST_EVENT_BUFFERSIZE:
+      /* sending tags could be useful, FIXME insert in dataflow */
       break;
+    case GST_EVENT_BUFFERSIZE:
+      /* does not seem to make much sense currently */
+      break;
+
+      /* upstream events */
     case GST_EVENT_QOS:
+      /* elements should override send_event and do something */
       break;
     case GST_EVENT_SEEK:
     {
@@ -1319,6 +1329,26 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       break;
     }
     case GST_EVENT_NAVIGATION:
+      /* could make sense for elements that do something with navigation events
+       * but then they would need to override the send_event function */
+      break;
+    case GST_EVENT_LATENCY:
+      /* does not seem to make sense currently */
+      break;
+
+      /* custom events */
+    case GST_EVENT_CUSTOM_UPSTREAM:
+      /* override send_event if you want this */
+      break;
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    case GST_EVENT_CUSTOM_BOTH:
+      /* FIXME, insert event in the dataflow */
+      break;
+    case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
+    case GST_EVENT_CUSTOM_BOTH_OOB:
+      /* insert a random custom event into the pipeline */
+      GST_DEBUG_OBJECT (src, "pushing custom OOB event downstream");
+      result = gst_pad_push_event (src->srcpad, event);
       break;
     default:
       break;
