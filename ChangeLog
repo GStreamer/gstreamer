@@ -1,3 +1,10 @@
+2007-09-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Steve Fink  <sphink gmail com>
+
+	* docs/manual/appendix-checklist.xml:
+	  Mention less -R switch in the section about debug output (#474055).
+
 2007-09-13  Wim Taymans  <wim.taymans@gmail.com>
 
 	* plugins/elements/gstqueue.c: (gst_queue_handle_src_query):
