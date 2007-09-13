@@ -31,6 +31,8 @@
 #define GST_CAT_DEFAULT gst_controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 
+#define EMPTY(x) (x)
+
 /* common helper */
 
 /*
@@ -533,7 +535,7 @@ static GstInterpolateMethod interpolate_trigger = {
 /*  linear interpolation */
 /*  smoothes inbetween values */
 
-#define DEFINE_LINEAR_GET(type,round) \
+#define DEFINE_LINEAR_GET(type,round,convert) \
 static inline gboolean \
 _interpolate_linear_get_##type (GstInterpolationControlSource *self, GstClockTime timestamp, g##type *ret) \
 { \
@@ -551,12 +553,12 @@ _interpolate_linear_get_##type (GstInterpolationControlSource *self, GstClockTim
       \
       value1 = g_value_get_##type (&cp1->value); \
       value2 = g_value_get_##type (&cp2->value); \
-      slope = (gdouble) (value2 - value1) / gst_guint64_to_gdouble (cp2->timestamp - cp1->timestamp); \
+      slope = (gdouble) convert (value2 - value1) / gst_guint64_to_gdouble (cp2->timestamp - cp1->timestamp); \
       \
       if (round) \
-        *ret = (g##type) (value1 + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope + 0.5); \
+        *ret = (g##type) (convert (value1) + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope + 0.5); \
       else \
-        *ret = (g##type) (value1 + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope); \
+        *ret = (g##type) (convert (value1) + gst_guint64_to_gdouble (timestamp - cp1->timestamp) * slope); \
     } \
     else { \
       *ret = g_value_get_##type (&cp1->value); \
@@ -606,16 +608,16 @@ interpolate_linear_get_##type##_value_array (GstInterpolationControlSource *self
   return TRUE; \
 }
 
-DEFINE_LINEAR_GET (int, TRUE);
+DEFINE_LINEAR_GET (int, TRUE, EMPTY);
 
-DEFINE_LINEAR_GET (uint, TRUE);
-DEFINE_LINEAR_GET (long, TRUE);
+DEFINE_LINEAR_GET (uint, TRUE, EMPTY);
+DEFINE_LINEAR_GET (long, TRUE, EMPTY);
 
-DEFINE_LINEAR_GET (ulong, TRUE);
-DEFINE_LINEAR_GET (int64, TRUE);
-DEFINE_LINEAR_GET (uint64, TRUE);
-DEFINE_LINEAR_GET (float, FALSE);
-DEFINE_LINEAR_GET (double, FALSE);
+DEFINE_LINEAR_GET (ulong, TRUE, EMPTY);
+DEFINE_LINEAR_GET (int64, TRUE, EMPTY);
+DEFINE_LINEAR_GET (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_LINEAR_GET (float, FALSE, EMPTY);
+DEFINE_LINEAR_GET (double, FALSE, EMPTY);
 
 static GstInterpolateMethod interpolate_linear = {
   (GstControlSourceGetValue) interpolate_linear_get_int,
@@ -659,7 +661,7 @@ static GstInterpolateMethod interpolate_linear = {
  *    .    .    .    .    .
  */
 
-#define DEFINE_CUBIC_GET(type,round) \
+#define DEFINE_CUBIC_GET(type,round, convert) \
 static void \
 _interpolate_cubic_update_cache_##type (GstInterpolationControlSource *self) \
 { \
@@ -706,7 +708,7 @@ _interpolate_cubic_update_cache_##type (GstInterpolationControlSource *self) \
     o[i] = h[i-1]; \
     p[i] = 2.0 * (h[i-1] + h[i]); \
     q[i] = h[i]; \
-    b[i] = (y_next - y) / h[i] - (y - y_prev) / h[i-1]; \
+    b[i] = convert (y_next - y) / h[i] - convert (y - y_prev) / h[i-1]; \
   } \
   p[n-1] = 1.0; \
   \
@@ -772,8 +774,8 @@ _interpolate_cubic_get_##type (GstInterpolationControlSource *self, GstClockTime
       diff2 = gst_guint64_to_gdouble (cp2->timestamp - timestamp); \
       \
       out = (cp2->cache.cubic.z * diff1 * diff1 * diff1 + cp1->cache.cubic.z * diff2 * diff2 * diff2) / cp1->cache.cubic.h; \
-      out += (value2 / cp1->cache.cubic.h - cp1->cache.cubic.h * cp2->cache.cubic.z) * diff1; \
-      out += (value1 / cp1->cache.cubic.h - cp1->cache.cubic.h * cp1->cache.cubic.z) * diff2; \
+      out += (convert (value2) / cp1->cache.cubic.h - cp1->cache.cubic.h * cp2->cache.cubic.z) * diff1; \
+      out += (convert (value1) / cp1->cache.cubic.h - cp1->cache.cubic.h * cp1->cache.cubic.z) * diff2; \
       \
       if (round) \
         *ret = (g##type) (out + 0.5); \
@@ -828,16 +830,16 @@ interpolate_cubic_get_##type##_value_array (GstInterpolationControlSource *self,
   return TRUE; \
 }
 
-DEFINE_CUBIC_GET (int, TRUE);
+DEFINE_CUBIC_GET (int, TRUE, EMPTY);
 
-DEFINE_CUBIC_GET (uint, TRUE);
-DEFINE_CUBIC_GET (long, TRUE);
+DEFINE_CUBIC_GET (uint, TRUE, EMPTY);
+DEFINE_CUBIC_GET (long, TRUE, EMPTY);
 
-DEFINE_CUBIC_GET (ulong, TRUE);
-DEFINE_CUBIC_GET (int64, TRUE);
-DEFINE_CUBIC_GET (uint64, TRUE);
-DEFINE_CUBIC_GET (float, FALSE);
-DEFINE_CUBIC_GET (double, FALSE);
+DEFINE_CUBIC_GET (ulong, TRUE, EMPTY);
+DEFINE_CUBIC_GET (int64, TRUE, EMPTY);
+DEFINE_CUBIC_GET (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_CUBIC_GET (float, FALSE, EMPTY);
+DEFINE_CUBIC_GET (double, FALSE, EMPTY);
 
 static GstInterpolateMethod interpolate_cubic = {
   (GstControlSourceGetValue) interpolate_cubic_get_int,

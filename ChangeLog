@@ -1,5 +1,14 @@
 2007-09-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Sebastien Moutte <sebastien at moutte dot net>
+
+	* libs/gst/controller/gstinterpolation.c:
+	* libs/gst/controller/gstlfocontrolsource.c:
+	Use gst_guint64_to_gdouble() when converting from a uint64 or
+	GstClockTime to double to fix the build on win32. Fixes #474371.
+
+2007-09-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/gstbuffer.c: (gst_buffer_finalize):
 	Implement poisoning for GstBuffer if --enable-poisoning is specified.
 	When finalizing a buffer the complete struct is filled with 0xff,

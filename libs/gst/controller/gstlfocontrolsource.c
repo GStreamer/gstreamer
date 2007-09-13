@@ -45,6 +45,8 @@
 
 #include "math.h"
 
+#define EMPTY(x) (x)
+
 /* FIXME: as % in C is not the modulo operator we need here for
  * negative numbers implement our own. Are there better ways? */
 static inline GstClockTime
@@ -59,7 +61,7 @@ _calculate_pos (GstClockTime timestamp, GstClockTime timeshift,
   return timestamp % period;
 }
 
-#define DEFINE_SINE(type,round) \
+#define DEFINE_SINE(type,round,convert) \
 \
 static inline g##type \
 _sine_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
@@ -67,18 +69,18 @@ _sine_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
   gdouble ret; \
   g##type max = g_value_get_##type (&self->priv->maximum_value); \
   g##type min = g_value_get_##type (&self->priv->minimum_value); \
-  gdouble amp = g_value_get_##type (&self->priv->amplitude); \
-  gdouble off = g_value_get_##type (&self->priv->offset); \
+  gdouble amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
   GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, self->priv->period); \
   \
-  ret = sin (2.0 * M_PI * (self->priv->frequency / GST_SECOND) * pos); \
+  ret = sin (2.0 * M_PI * (self->priv->frequency / GST_SECOND) * gst_util_guint64_to_gdouble (pos)); \
   ret *= amp; \
   ret += off; \
   \
   if (round) \
     ret += 0.5; \
   \
-  return (g##type) CLAMP (ret, min, max); \
+  return (g##type) CLAMP (ret, convert (min), convert (max)); \
 } \
 \
 static gboolean \
@@ -111,15 +113,15 @@ waveform_sine_get_##type##_value_array (GstLFOControlSource *self, \
   return TRUE; \
 }
 
-DEFINE_SINE (int, TRUE);
-DEFINE_SINE (uint, TRUE);
-DEFINE_SINE (long, TRUE);
+DEFINE_SINE (int, TRUE, EMPTY);
+DEFINE_SINE (uint, TRUE, EMPTY);
+DEFINE_SINE (long, TRUE, EMPTY);
 
-DEFINE_SINE (ulong, TRUE);
-DEFINE_SINE (int64, TRUE);
-DEFINE_SINE (uint64, TRUE);
-DEFINE_SINE (float, FALSE);
-DEFINE_SINE (double, FALSE);
+DEFINE_SINE (ulong, TRUE, EMPTY);
+DEFINE_SINE (int64, TRUE, EMPTY);
+DEFINE_SINE (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_SINE (float, FALSE, EMPTY);
+DEFINE_SINE (double, FALSE, EMPTY);
 
 static GstWaveformImplementation waveform_sine = {
   (GstControlSourceGetValue) waveform_sine_get_int,
@@ -140,15 +142,15 @@ static GstWaveformImplementation waveform_sine = {
   (GstControlSourceGetValueArray) waveform_sine_get_double_value_array
 };
 
-#define DEFINE_SQUARE(type,round) \
+#define DEFINE_SQUARE(type,round, convert) \
 \
 static inline g##type \
 _square_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
 { \
   g##type max = g_value_get_##type (&self->priv->maximum_value); \
   g##type min = g_value_get_##type (&self->priv->minimum_value); \
-  gdouble amp = g_value_get_##type (&self->priv->amplitude); \
-  gdouble off = g_value_get_##type (&self->priv->offset); \
+  gdouble amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
   GstClockTime period = self->priv->period; \
   GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
   gdouble ret; \
@@ -163,7 +165,7 @@ _square_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
   if (round) \
     ret += 0.5; \
   \
-  return (g##type) CLAMP (ret, min, max); \
+  return (g##type) CLAMP (ret, convert (min), convert (max)); \
 } \
 \
 static gboolean \
@@ -196,16 +198,16 @@ waveform_square_get_##type##_value_array (GstLFOControlSource *self, \
   return TRUE; \
 }
 
-DEFINE_SQUARE (int, TRUE);
+DEFINE_SQUARE (int, TRUE, EMPTY);
 
-DEFINE_SQUARE (uint, TRUE);
-DEFINE_SQUARE (long, TRUE);
+DEFINE_SQUARE (uint, TRUE, EMPTY);
+DEFINE_SQUARE (long, TRUE, EMPTY);
 
-DEFINE_SQUARE (ulong, TRUE);
-DEFINE_SQUARE (int64, TRUE);
-DEFINE_SQUARE (uint64, TRUE);
-DEFINE_SQUARE (float, FALSE);
-DEFINE_SQUARE (double, FALSE);
+DEFINE_SQUARE (ulong, TRUE, EMPTY);
+DEFINE_SQUARE (int64, TRUE, EMPTY);
+DEFINE_SQUARE (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_SQUARE (float, FALSE, EMPTY);
+DEFINE_SQUARE (double, FALSE, EMPTY);
 
 static GstWaveformImplementation waveform_square = {
   (GstControlSourceGetValue) waveform_square_get_int,
@@ -226,27 +228,27 @@ static GstWaveformImplementation waveform_square = {
   (GstControlSourceGetValueArray) waveform_square_get_double_value_array
 };
 
-#define DEFINE_SAW(type,round) \
+#define DEFINE_SAW(type,round,convert) \
 \
 static inline g##type \
 _saw_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
 { \
   g##type max = g_value_get_##type (&self->priv->maximum_value); \
   g##type min = g_value_get_##type (&self->priv->minimum_value); \
-  gdouble amp = g_value_get_##type (&self->priv->amplitude); \
-  gdouble off = g_value_get_##type (&self->priv->offset); \
+  gdouble amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
   GstClockTime period = self->priv->period; \
   GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
   gdouble ret; \
   \
-  ret = - ((pos - period / 2.0) * ((2.0 * amp) / period));\
+  ret = - ((gst_util_guint64_to_gdouble (pos) - gst_util_guint64_to_gdouble (period) / 2.0) * ((2.0 * amp) / gst_util_guint64_to_gdouble (period)));\
   \
   ret += off; \
   \
   if (round) \
     ret += 0.5; \
   \
-  return (g##type) CLAMP (ret, min, max); \
+  return (g##type) CLAMP (ret, convert (min), convert (max)); \
 } \
 \
 static gboolean \
@@ -279,16 +281,16 @@ waveform_saw_get_##type##_value_array (GstLFOControlSource *self, \
   return TRUE; \
 }
 
-DEFINE_SAW (int, TRUE);
+DEFINE_SAW (int, TRUE, EMPTY);
 
-DEFINE_SAW (uint, TRUE);
-DEFINE_SAW (long, TRUE);
+DEFINE_SAW (uint, TRUE, EMPTY);
+DEFINE_SAW (long, TRUE, EMPTY);
 
-DEFINE_SAW (ulong, TRUE);
-DEFINE_SAW (int64, TRUE);
-DEFINE_SAW (uint64, TRUE);
-DEFINE_SAW (float, FALSE);
-DEFINE_SAW (double, FALSE);
+DEFINE_SAW (ulong, TRUE, EMPTY);
+DEFINE_SAW (int64, TRUE, EMPTY);
+DEFINE_SAW (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_SAW (float, FALSE, EMPTY);
+DEFINE_SAW (double, FALSE, EMPTY);
 
 static GstWaveformImplementation waveform_saw = {
   (GstControlSourceGetValue) waveform_saw_get_int,
@@ -309,27 +311,27 @@ static GstWaveformImplementation waveform_saw = {
   (GstControlSourceGetValueArray) waveform_saw_get_double_value_array
 };
 
-#define DEFINE_RSAW(type,round) \
+#define DEFINE_RSAW(type,round,convert) \
 \
 static inline g##type \
 _rsaw_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
 { \
   g##type max = g_value_get_##type (&self->priv->maximum_value); \
   g##type min = g_value_get_##type (&self->priv->minimum_value); \
-  gdouble amp = g_value_get_##type (&self->priv->amplitude); \
-  gdouble off = g_value_get_##type (&self->priv->offset); \
+  gdouble amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
   GstClockTime period = self->priv->period; \
   GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
   gdouble ret; \
   \
-  ret = ((pos - period / 2.0) * ((2.0 * amp) / period));\
+  ret = ((gst_util_guint64_to_gdouble (pos) - gst_util_guint64_to_gdouble (period) / 2.0) * ((2.0 * amp) / gst_util_guint64_to_gdouble (period)));\
   \
   ret += off; \
   \
   if (round) \
     ret += 0.5; \
   \
-  return (g##type) CLAMP (ret, min, max); \
+  return (g##type) CLAMP (ret, convert (min), convert (max)); \
 } \
 \
 static gboolean \
@@ -362,16 +364,16 @@ waveform_rsaw_get_##type##_value_array (GstLFOControlSource *self, \
   return TRUE; \
 }
 
-DEFINE_RSAW (int, TRUE);
+DEFINE_RSAW (int, TRUE, EMPTY);
 
-DEFINE_RSAW (uint, TRUE);
-DEFINE_RSAW (long, TRUE);
+DEFINE_RSAW (uint, TRUE, EMPTY);
+DEFINE_RSAW (long, TRUE, EMPTY);
 
-DEFINE_RSAW (ulong, TRUE);
-DEFINE_RSAW (int64, TRUE);
-DEFINE_RSAW (uint64, TRUE);
-DEFINE_RSAW (float, FALSE);
-DEFINE_RSAW (double, FALSE);
+DEFINE_RSAW (ulong, TRUE, EMPTY);
+DEFINE_RSAW (int64, TRUE, EMPTY);
+DEFINE_RSAW (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_RSAW (float, FALSE, EMPTY);
+DEFINE_RSAW (double, FALSE, EMPTY);
 
 static GstWaveformImplementation waveform_rsaw = {
   (GstControlSourceGetValue) waveform_rsaw_get_int,
@@ -392,32 +394,32 @@ static GstWaveformImplementation waveform_rsaw = {
   (GstControlSourceGetValueArray) waveform_rsaw_get_double_value_array
 };
 
-#define DEFINE_TRIANGLE(type,round) \
+#define DEFINE_TRIANGLE(type,round,convert) \
 \
 static inline g##type \
 _triangle_get_##type (GstLFOControlSource *self, GstClockTime timestamp) \
 { \
   g##type max = g_value_get_##type (&self->priv->maximum_value); \
   g##type min = g_value_get_##type (&self->priv->minimum_value); \
-  gdouble amp = g_value_get_##type (&self->priv->amplitude); \
-  gdouble off = g_value_get_##type (&self->priv->offset); \
+  gdouble amp = convert (g_value_get_##type (&self->priv->amplitude)); \
+  gdouble off = convert (g_value_get_##type (&self->priv->offset)); \
   GstClockTime period = self->priv->period; \
   GstClockTime pos = _calculate_pos (timestamp, self->priv->timeshift, period); \
   gdouble ret; \
   \
-  if (pos <= period / 4.0) \
-    ret = pos * ((4.0 * amp) / period); \
-  else if (pos <= (3.0 * period) / 4.0) \
-    ret = -(pos - period / 2.0) * ((4.0 * amp) / period); \
+  if (gst_util_guint64_to_gdouble (pos) <= gst_util_guint64_to_gdouble (period) / 4.0) \
+    ret = gst_util_guint64_to_gdouble (pos) * ((4.0 * amp) / gst_util_guint64_to_gdouble (period)); \
+  else if (gst_util_guint64_to_gdouble (pos) <= (3.0 * gst_util_guint64_to_gdouble (period)) / 4.0) \
+    ret = -(gst_util_guint64_to_gdouble (pos) - gst_util_guint64_to_gdouble (period) / 2.0) * ((4.0 * amp) / gst_util_guint64_to_gdouble (period)); \
   else \
-    ret = (period - pos) * ((4.0 * amp) / period); \
+    ret = gst_util_guint64_to_gdouble (period) - gst_util_guint64_to_gdouble (pos) * ((4.0 * amp) / gst_util_guint64_to_gdouble (period)); \
   \
   ret += off; \
   \
   if (round) \
     ret += 0.5; \
   \
-  return (g##type) CLAMP (ret, min, max); \
+  return (g##type) CLAMP (ret, convert (min), convert (max)); \
 } \
 \
 static gboolean \
@@ -450,16 +452,16 @@ waveform_triangle_get_##type##_value_array (GstLFOControlSource *self, \
   return TRUE; \
 }
 
-DEFINE_TRIANGLE (int, TRUE);
+DEFINE_TRIANGLE (int, TRUE, EMPTY);
 
-DEFINE_TRIANGLE (uint, TRUE);
-DEFINE_TRIANGLE (long, TRUE);
+DEFINE_TRIANGLE (uint, TRUE, EMPTY);
+DEFINE_TRIANGLE (long, TRUE, EMPTY);
 
-DEFINE_TRIANGLE (ulong, TRUE);
-DEFINE_TRIANGLE (int64, TRUE);
-DEFINE_TRIANGLE (uint64, TRUE);
-DEFINE_TRIANGLE (float, FALSE);
-DEFINE_TRIANGLE (double, FALSE);
+DEFINE_TRIANGLE (ulong, TRUE, EMPTY);
+DEFINE_TRIANGLE (int64, TRUE, EMPTY);
+DEFINE_TRIANGLE (uint64, TRUE, gst_util_guint64_to_gdouble);
+DEFINE_TRIANGLE (float, FALSE, EMPTY);
+DEFINE_TRIANGLE (double, FALSE, EMPTY);
 
 static GstWaveformImplementation waveform_triangle = {
   (GstControlSourceGetValue) waveform_triangle_get_int,
