@@ -1,5 +1,12 @@
 2007-09-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/gstbuffer.c: (gst_buffer_finalize):
+	Implement poisoning for GstBuffer if --enable-poisoning is specified.
+	When finalizing a buffer the complete struct is filled with 0xff,
+	thus making a use of the buffer after the final unref impossible.
+
+2007-09-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/check/libs/controller.c: (GST_START_TEST):
 	Use fail_unless_equals_int(a, b) instead of
 	fail_unless_equals (a == b) to get better output on failures.
