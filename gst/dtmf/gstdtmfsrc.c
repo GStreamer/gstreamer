@@ -655,7 +655,10 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
  start:
   if (dtmfsrc->last_event == NULL) {
+    GST_DEBUG_OBJECT (dtmfsrc, "popping");
     event = g_async_queue_pop (dtmfsrc->event_queue);
+
+    GST_DEBUG_OBJECT (dtmfsrc, "popped %d", event->event_type);
 
     if (event->event_type == DTMF_EVENT_TYPE_STOP) {
       GST_WARNING_OBJECT (dtmfsrc,
@@ -673,6 +676,7 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
        * We're pushing it back because it has to stay in there until
        * the task is really paused (and the queue will then be flushed)
        */
+      GST_DEBUG_OBJECT (dtmfsrc, "pushing pause_task...");
       g_async_queue_push (dtmfsrc->event_queue, event);
       g_async_queue_unref (dtmfsrc->event_queue);
     }
@@ -689,10 +693,20 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
         g_free (dtmfsrc->last_event);
         dtmfsrc->last_event = NULL;
         goto start;
+      } else if (event->event_type == DTMF_EVENT_TYPE_PAUSE_TASK) {
+        /*
+         * We're pushing it back because it has to stay in there until
+         * the task is really paused (and the queue will then be flushed)
+         */
+        GST_DEBUG_OBJECT (dtmfsrc, "pushing pause_task...");
+        g_async_queue_push (dtmfsrc->event_queue, event);
+        g_async_queue_unref (dtmfsrc->event_queue);
       }
     }
   }
   g_async_queue_unref (dtmfsrc->event_queue);
+
+  GST_DEBUG_OBJECT (dtmfsrc, "end event check");
 
   if (dtmfsrc->last_event) {
     buf = gst_dtmf_src_create_next_tone_packet (dtmfsrc, dtmfsrc->last_event);
@@ -705,6 +719,7 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
     ret = GST_FLOW_WRONG_STATE;
   }
 
+  GST_DEBUG_OBJECT (dtmfsrc, "returning");
   return ret;
 
 }
