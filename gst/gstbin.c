@@ -395,7 +395,7 @@ gst_bin_class_init (GstBinClass * klass)
    *
    * If set to #TRUE, the bin will handle asynchronous state changes.
    * This should be used only if the bin subclass is modifying the state
-   * of its childs on its own.
+   * of its children on its own.
    *
    * Since: 0.10.13
    */
@@ -1603,7 +1603,6 @@ clear_queue (GQueue * queue)
 
   while ((p = g_queue_pop_head (queue)))
     gst_object_unref (p);
-
 }
 
 /* set all degrees to 0. Elements marked as a sink are
@@ -2017,6 +2016,58 @@ failed:
     return FALSE;
   }
 }
+
+static gboolean
+do_bin_latency (GstElement * element)
+{
+  GstQuery *query;
+  GstClockTime min_latency, max_latency;
+  gboolean res;
+
+  GST_DEBUG_OBJECT (element, "querying latency");
+
+  query = gst_query_new_latency ();
+  if ((res = gst_element_query (element, query))) {
+    gboolean live;
+
+    gst_query_parse_latency (query, &live, &min_latency, &max_latency);
+
+    GST_DEBUG_OBJECT (element,
+        "got min latency %" GST_TIME_FORMAT ", max latency %"
+        GST_TIME_FORMAT ", live %d", GST_TIME_ARGS (min_latency),
+        GST_TIME_ARGS (max_latency), live);
+
+    if (max_latency < min_latency) {
+      /* this is an impossible situation, some parts of the pipeline might not
+       * work correctly. We post a warning for now. */
+      GST_ELEMENT_WARNING (element, CORE, CLOCK, (NULL),
+          ("Impossible to configure latency: max %" GST_TIME_FORMAT " < min %"
+              GST_TIME_FORMAT ". Add queues or other buffering elements.",
+              GST_TIME_ARGS (max_latency), GST_TIME_ARGS (min_latency)));
+    }
+
+    /* configure latency on elements */
+    res = gst_element_send_event (element, gst_event_new_latency (min_latency));
+    if (res) {
+      GST_INFO_OBJECT (element, "configured latency of %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min_latency));
+    } else {
+      GST_WARNING_OBJECT (element,
+          "failed to configure latency of %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (min_latency));
+      GST_ELEMENT_WARNING (element, CORE, CLOCK, (NULL),
+          ("Failed to configure latency of %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min_latency)));
+    }
+  } else {
+    /* this is not a real problem, we just don't configure any latency. */
+    GST_WARNING_OBJECT (element, "failed to query latency");
+  }
+  gst_query_unref (query);
+
+  return res;
+}
+
 static GstStateChangeReturn
 gst_bin_change_state_func (GstElement * element, GstStateChange transition)
 {
@@ -2040,6 +2091,18 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
   bin = GST_BIN_CAST (element);
 
   switch (next) {
+    case GST_STATE_PLAYING:
+    {
+      gboolean toplevel;
+
+      GST_OBJECT_LOCK (bin);
+      toplevel = BIN_IS_TOPLEVEL (bin);
+      GST_OBJECT_UNLOCK (bin);
+
+      if (toplevel)
+        do_bin_latency (element);
+      break;
+    }
     case GST_STATE_PAUSED:
       /* Clear EOS list on next PAUSED */
       GST_OBJECT_LOCK (bin);
@@ -2350,6 +2413,7 @@ bin_push_state_continue (BinContinueData * data)
 
 /* an element started an async state change, if we were not busy with a state
  * change, we perform a lost state.
+ * This function is called with the OBJECT lock.
  */
 static void
 bin_handle_async_start (GstBin * bin, gboolean new_base_time)
@@ -2433,7 +2497,9 @@ was_no_preroll:
 }
 
 /* this function is called when there are no more async elements in the bin. We
- * post a state changed message and an ASYNC_DONE message. */
+ * post a state changed message and an ASYNC_DONE message.
+ * This function is called with the OBJECT lock.
+ */
 static void
 bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret)
 {

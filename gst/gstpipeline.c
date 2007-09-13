@@ -371,11 +371,8 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     {
       GstClockTime new_base_time;
-      GstQuery *query;
-      GstClockTime min_latency, max_latency;
       GstClockTime start_time, stream_time, delay;
       gboolean new_clock, update_stream_time, update_clock;
-      gboolean res;
       GstClock *cur_clock;
 
       GST_DEBUG_OBJECT (element, "selecting clock and base_time");
@@ -457,40 +454,6 @@ gst_pipeline_change_state (GstElement * element, GstStateChange transition)
 
       if (cur_clock)
         gst_object_unref (cur_clock);
-
-      /* determine latency in this pipeline */
-      GST_DEBUG_OBJECT (element, "querying pipeline latency");
-      query = gst_query_new_latency ();
-      if (gst_element_query (element, query)) {
-        gboolean live;
-
-        gst_query_parse_latency (query, &live, &min_latency, &max_latency);
-
-        GST_DEBUG_OBJECT (element,
-            "configuring min latency %" GST_TIME_FORMAT ", max latency %"
-            GST_TIME_FORMAT ", live %d", GST_TIME_ARGS (min_latency),
-            GST_TIME_ARGS (max_latency), live);
-
-        /* configure latency on elements */
-        res =
-            gst_element_send_event (element,
-            gst_event_new_latency (min_latency));
-        if (res) {
-          GST_INFO_OBJECT (element, "configured latency of %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (min_latency));
-        } else {
-          GST_WARNING_OBJECT (element,
-              "failed to configure latency of %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (min_latency));
-          GST_ELEMENT_WARNING (element, CORE, CLOCK, (NULL),
-              ("Failed to configure latency of %" GST_TIME_FORMAT,
-                  GST_TIME_ARGS (min_latency)));
-        }
-      } else {
-        /* this is not a real problem, we just don't configure any latency. */
-        GST_WARNING_OBJECT (element, "failed to query pipeline latency");
-      }
-      gst_query_unref (query);
       break;
     }
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
