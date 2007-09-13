@@ -602,11 +602,11 @@ GST_START_TEST (controller_interpolate_none)
 
   /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -664,15 +664,15 @@ GST_START_TEST (controller_interpolate_trigger)
   fail_unless (gst_control_source_get_value (GST_CONTROL_SOURCE (csource),
           0 * GST_SECOND, &val_ulong));
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   fail_unless (gst_control_source_get_value (GST_CONTROL_SOURCE (csource),
           1 * GST_SECOND, &val_ulong));
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (gst_control_source_get_value (GST_CONTROL_SOURCE (csource),
           2 * GST_SECOND, &val_ulong));
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (G_OBJECT (csource));
@@ -727,11 +727,11 @@ GST_START_TEST (controller_interpolate_linear)
 
   /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -898,11 +898,11 @@ GST_START_TEST (controller_interpolation_unset)
 
   /* verify values */
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
 
   /* unset second */
   res = gst_interpolation_control_source_unset (csource, 1 * GST_SECOND);
@@ -912,9 +912,9 @@ GST_START_TEST (controller_interpolation_unset)
 
   /* verify value again */
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -966,9 +966,9 @@ GST_START_TEST (controller_interpolation_unset_all)
 
   /* verify values */
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
 
   /* unset second */
   gst_interpolation_control_source_unset_all (csource);
@@ -977,7 +977,7 @@ GST_START_TEST (controller_interpolation_unset_all)
 
   /* verify value again */
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -1167,13 +1167,13 @@ GST_START_TEST (controller_interpolation_linear_default_values)
   /* now pull in values for some timestamps */
   /* should give the value of the first control point for timestamps before it */
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   gst_controller_sync_values (ctrl, 3 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
 
   /* set control values */
   g_value_set_ulong (&val_ulong, 0);
@@ -1196,11 +1196,11 @@ GST_START_TEST (controller_interpolation_linear_default_values)
   /* now pull in values for some timestamps */
   /* should now give our value for timestamp 0 */
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
 
   g_object_unref (G_OBJECT (csource));
 
@@ -1279,13 +1279,13 @@ GST_START_TEST (controller_interpolate_linear_disabled)
 
   /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 2.0, NULL);
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 3.0, NULL);
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 4.0, NULL);
 
   /* now pull in values for some timestamps, prop double disabled */
@@ -1293,13 +1293,13 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   GST_TEST_MONO_SOURCE (elem)->val_double = 0.0;
   gst_controller_set_property_disabled (ctrl, "double", TRUE);
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 0.0, NULL);
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 0.0, NULL);
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 0.0, NULL);
 
   /* now pull in values for some timestamps, after enabling double again */
@@ -1307,13 +1307,13 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   GST_TEST_MONO_SOURCE (elem)->val_double = 0.0;
   gst_controller_set_property_disabled (ctrl, "double", FALSE);
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 2.0, NULL);
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 3.0, NULL);
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 4.0, NULL);
 
   /* now pull in values for some timestamps, after disabling all props */
@@ -1321,13 +1321,13 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   GST_TEST_MONO_SOURCE (elem)->val_double = 0.0;
   gst_controller_set_disabled (ctrl, TRUE);
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 0.0, NULL);
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 0.0, NULL);
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 0.0, NULL);
 
   /* now pull in values for some timestamps, enabling double again */
@@ -1335,13 +1335,13 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   GST_TEST_MONO_SOURCE (elem)->val_double = 0.0;
   gst_controller_set_property_disabled (ctrl, "double", FALSE);
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 2.0, NULL);
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 3.0, NULL);
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 4.0, NULL);
 
   /* now pull in values for some timestamps, enabling all */
@@ -1349,13 +1349,13 @@ GST_START_TEST (controller_interpolate_linear_disabled)
   GST_TEST_MONO_SOURCE (elem)->val_double = 0.0;
   gst_controller_set_disabled (ctrl, FALSE);
   gst_controller_sync_values (ctrl, 0 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 2.0, NULL);
   gst_controller_sync_values (ctrl, 1 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 3.0, NULL);
   gst_controller_sync_values (ctrl, 2 * GST_SECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   fail_unless (GST_TEST_MONO_SOURCE (elem)->val_double == 4.0, NULL);
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
@@ -1460,29 +1460,29 @@ GST_START_TEST (controller_lfo_sine)
 
   /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -1531,29 +1531,29 @@ GST_START_TEST (controller_lfo_sine_timeshift)
 
 /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -1603,29 +1603,29 @@ GST_START_TEST (controller_lfo_square)
 
   /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -1674,29 +1674,29 @@ GST_START_TEST (controller_lfo_saw)
 
   /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 150);;
   gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 150);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 150);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -1745,29 +1745,29 @@ GST_START_TEST (controller_lfo_rsaw)
 
   /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 150);;
   gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 150);;
   gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 50, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 50);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 150, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 150);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -1816,29 +1816,29 @@ GST_START_TEST (controller_lfo_triangle)
 
   /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 200, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 200);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 100, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 100);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
@@ -1873,29 +1873,29 @@ GST_START_TEST (controller_lfo_none)
 
   /* now pull in values for some timestamps */
   gst_controller_sync_values (ctrl, 0 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 2000 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1250 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1500 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
   gst_controller_sync_values (ctrl, 1750 * GST_MSECOND);
-  fail_unless (GST_TEST_MONO_SOURCE (elem)->val_ulong == 0, NULL);
+  fail_unless_equals_int (GST_TEST_MONO_SOURCE (elem)->val_ulong, 0);;
 
   GST_INFO ("controller->ref_count=%d", G_OBJECT (ctrl)->ref_count);
   g_object_unref (ctrl);
