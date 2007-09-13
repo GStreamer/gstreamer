@@ -715,8 +715,24 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
   GstDTMFSrc *dtmfsrc;
   GstStateChangeReturn result;
   gboolean no_preroll = FALSE;
+  GstDTMFSrcEvent *event = NULL;
 
   dtmfsrc = GST_DTMF_SRC (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      /* Flushing the event queue */
+      event = g_async_queue_try_pop (dtmfsrc->event_queue);
+
+      while (event != NULL) {
+        g_free (event);
+        event = g_async_queue_try_pop (dtmfsrc->event_queue);
+      }
+      break;
+    default:
+      break;
+  }
 
   if ((result =
           GST_ELEMENT_CLASS (parent_class)->change_state (element,
@@ -725,30 +741,30 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      {
-        GstDTMFSrcEvent *event = NULL;
-
-        /* TODO lock the element */
-
-        if (dtmfsrc->last_event) {
-          /* Don't forget to release the stream lock */
-          gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
-          g_free (dtmfsrc->last_event);
-          dtmfsrc->last_event = NULL;
-        }
-
-        /* Flushing the event queue */
-        event = g_async_queue_try_pop (dtmfsrc->event_queue);
-
-        while (event != NULL) {
-          g_free (event);
-          event = g_async_queue_try_pop (dtmfsrc->event_queue);
-        }
-
-        /* Indicate that we don't do PRE_ROLL */
-        no_preroll = TRUE;
-        break;
+      if (dtmfsrc->last_event) {
+        /* Don't forget to release the stream lock */
+        gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+        g_free (dtmfsrc->last_event);
+        dtmfsrc->last_event = NULL;
       }
+
+      /* Flushing the event queue */
+      event = g_async_queue_try_pop (dtmfsrc->event_queue);
+
+      while (event != NULL) {
+        g_free (event);
+        event = g_async_queue_try_pop (dtmfsrc->event_queue);
+      }
+
+      /* Indicate that we don't do PRE_ROLL */
+      no_preroll = TRUE;
+      break;
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      event = g_malloc (sizeof(GstDTMFSrcEvent));
+      event->event_type = DTMF_EVENT_TYPE_PAUSE_TASK;
+      g_async_queue_push (dtmfsrc->event_queue, event);
+
+      event = NULL;
     default:
       break;
   }
