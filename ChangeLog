@@ -1,3 +1,13 @@
+2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),
+	(gst_base_sink_preroll_queue_flush), (gst_base_sink_commit_state),
+	(gst_base_sink_wait_preroll), (gst_base_sink_needs_preroll),
+	(gst_base_sink_set_flushing), (gst_base_sink_query),
+	(gst_base_sink_change_state):
+	Latency query is allowed after we are prerolled. Introduce a new flag
+	for this and stop abusing other variables.
+
 2007-09-13  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_send_event):
