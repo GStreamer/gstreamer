@@ -87,6 +87,8 @@ struct _GstQueue {
 
   /* flowreturn when srcpad is paused */
   GstFlowReturn srcresult;
+  gboolean      unexpected;
+  gboolean      eos;
 
   /* the queue of data we're keeping our grubby hands on */
   GQueue *queue;

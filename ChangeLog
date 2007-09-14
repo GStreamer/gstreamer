@@ -1,5 +1,16 @@
 2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
 
+	* plugins/elements/gstqueue.c: (gst_queue_locked_enqueue),
+	(gst_queue_handle_sink_event), (gst_queue_chain),
+	(gst_queue_push_one), (gst_queue_handle_src_query),
+	(gst_queue_sink_activate_push), (gst_queue_src_activate_push):
+	* plugins/elements/gstqueue.h:
+	When downstream returns UNEXPECTED from pushing a buffer, don't try to
+	push more buffers but allow pushing of EOS and NEWSEGMENT.
+	Add some more debug info here and there. Fixes #476514.
+
+2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_init),
 	(gst_base_sink_preroll_queue_flush), (gst_base_sink_commit_state),
 	(gst_base_sink_wait_preroll), (gst_base_sink_needs_preroll),
