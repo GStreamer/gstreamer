@@ -73,11 +73,12 @@ struct _GstDTMFSrc {
   GstBaseSrc        parent;
   GAsyncQueue*      event_queue;
   GstDTMFSrcEvent*  last_event;
-  GstClockID        clock_id;
-  gboolean          task_paused;
 
   guint16           interval;
   GstClockTime      timestamp;
+
+  gboolean          paused;
+  GstClockID        clockid;
 };
 
 
