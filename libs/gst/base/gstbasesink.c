@@ -994,9 +994,11 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   basesink->buffers_queued = 0;
   basesink->events_queued = 0;
   /* can't report latency anymore until we preroll again */
-  GST_OBJECT_LOCK (basesink);
-  basesink->priv->have_latency = FALSE;
-  GST_OBJECT_UNLOCK (basesink);
+  if (basesink->priv->async_enabled) {
+    GST_OBJECT_LOCK (basesink);
+    basesink->priv->have_latency = FALSE;
+    GST_OBJECT_UNLOCK (basesink);
+  }
   /* and signal any waiters now */
   GST_PAD_PREROLL_SIGNAL (pad);
 }
@@ -2192,10 +2194,14 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
        * anymore */
       GST_PAD_STREAM_LOCK (pad);
       gst_base_sink_reset_qos (basesink);
-      /* and we need to commit our state again on the next
-       * prerolled buffer */
-      basesink->playing_async = TRUE;
-      gst_element_lost_state (GST_ELEMENT_CAST (basesink));
+      if (basesink->priv->async_enabled) {
+        /* and we need to commit our state again on the next
+         * prerolled buffer */
+        basesink->playing_async = TRUE;
+        gst_element_lost_state (GST_ELEMENT_CAST (basesink));
+      } else {
+        basesink->priv->have_latency = TRUE;
+      }
       GST_PAD_STREAM_UNLOCK (pad);
 
       gst_event_unref (event);
@@ -3037,6 +3043,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
         ret = GST_STATE_CHANGE_ASYNC;
         gst_element_post_message (GST_ELEMENT_CAST (basesink),
             gst_message_new_async_start (GST_OBJECT_CAST (basesink), FALSE));
+      } else {
+        basesink->priv->have_latency = TRUE;
       }
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
@@ -3167,6 +3175,7 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       }
       basesink->priv->current_sstart = 0;
       basesink->priv->current_sstop = 0;
+      basesink->priv->have_latency = FALSE;
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:

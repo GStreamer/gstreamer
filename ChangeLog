@@ -1,5 +1,12 @@
 2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_flush),
+	(gst_base_sink_event), (gst_base_sink_change_state):
+	Sinks that don't preroll can always be queried for the latency.
+	Don't post ASYNC start when we are not async.
+
+2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
+
 	* plugins/elements/gstqueue.c: (gst_queue_locked_enqueue),
 	(gst_queue_handle_sink_event), (gst_queue_chain),
 	(gst_queue_push_one), (gst_queue_handle_src_query),
