@@ -1,3 +1,12 @@
+2007-09-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_loop),
+	(gst_wavparse_chain):
+	Don't push EOS from the chain function, the element
+	driving the pipeline is responsible for this. The bug
+	this was meant to fix seems to be queue not forwarding
+	EOS in all cases (see #476514).
+
 2007-09-13  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/level/gstlevel.c: (gst_level_class_init), (gst_level_start),
