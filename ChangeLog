@@ -1,5 +1,13 @@
 2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_event),
+	(gst_basertppayload_set_outcaps), (gst_basertppayload_push),
+	(gst_basertppayload_change_state):
+	Make sure we start our RTP timestamp from the random base RTP
+	timestamp even if the buffer timestamp starts from some random value.
+
+2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
+
 	* configure.ac:
 	* tests/examples/Makefile.am:
 	* tests/examples/dynamic/.cvsignore:
