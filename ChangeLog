@@ -1,3 +1,8 @@
+2007-09-14  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/typefind/gsttypefindfunctions.c: (plugin_init): Add some
+	typefind for QCP files (RFC #3625)
+
 2007-09-13  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

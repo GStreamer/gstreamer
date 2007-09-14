@@ -2760,6 +2760,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *asf_exts[] = { "asf", "wm", "wma", "wmv", NULL };
   static gchar *au_exts[] = { "au", "snd", NULL };
   static gchar *avi_exts[] = { "avi", NULL };
+  static gchar *qcp_exts[] = { "qcp", NULL };
   static gchar *cdxa_exts[] = { "dat", NULL };
   static gchar *flac_exts[] = { "flac", NULL };
   static gchar *flx_exts[] = { "flc", "fli", NULL };
@@ -2850,6 +2851,8 @@ plugin_init (GstPlugin * plugin)
       au_type_find, au_exts, AU_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-msvideo", GST_RANK_PRIMARY,
       avi_exts, "AVI ");
+  TYPE_FIND_REGISTER_RIFF (plugin, "audio/qcelp", GST_RANK_PRIMARY,
+      qcp_exts, "QLCM");
   TYPE_FIND_REGISTER_RIFF (plugin, "video/x-cdxa", GST_RANK_PRIMARY,
       cdxa_exts, "CDXA");
   TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-vcd", GST_RANK_PRIMARY,
