@@ -696,6 +696,7 @@ pkgconfig/gstreamer-plugins-base-uninstalled.pc
 tests/Makefile
 tests/check/Makefile
 tests/examples/Makefile
+tests/examples/dynamic/Makefile
 tests/examples/seek/Makefile
 tests/examples/volume/Makefile
 tests/icles/Makefile
