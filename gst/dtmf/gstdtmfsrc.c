@@ -250,9 +250,6 @@ static void gst_dtmf_src_add_start_event (GstDTMFSrc *dtmfsrc,
     gint event_number, gint event_volume);
 static void gst_dtmf_src_add_stop_event (GstDTMFSrc *dtmfsrc);
 
-static void gst_dtmf_src_get_times (GstBaseSrc * basesrc,
-    GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
-
 static gboolean gst_dtmf_src_unlock (GstBaseSrc *src);
 
 
@@ -300,8 +297,6 @@ gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
 
   gstbasesrc_class->event =
       GST_DEBUG_FUNCPTR (gst_dtmf_src_handle_event);
-  gstbasesrc_class->get_times =
-      GST_DEBUG_FUNCPTR (gst_dtmf_src_get_times);
   gstbasesrc_class->create =
       GST_DEBUG_FUNCPTR (gst_dtmf_src_create);
 
@@ -580,28 +575,6 @@ gst_dtmf_src_generate_tone(GstDTMFSrcEvent *event, DTMF_KEY key, float duration,
   }
 }
 
-static void
-gst_dtmf_src_get_times (GstBaseSrc * basesrc, GstBuffer * buffer,
-    GstClockTime * start, GstClockTime * end)
-{
-  /* for live sources, sync on the timestamp of the buffer */
-  if (gst_base_src_is_live (basesrc)) {
-    GstClockTime timestamp = GST_BUFFER_TIMESTAMP (buffer);
-
-    if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-      /* get duration to calculate end time */
-      GstClockTime duration = GST_BUFFER_DURATION (buffer);
-
-      *start = timestamp;
-      if (GST_CLOCK_TIME_IS_VALID (duration)) {
-        *end = *start + duration;
-      }
-    }
-  } else {
-    *start = -1;
-    *end = -1;
-  }
-}
 
 
 static GstBuffer *
