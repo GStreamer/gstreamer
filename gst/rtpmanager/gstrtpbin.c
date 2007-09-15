@@ -427,6 +427,9 @@ create_session (GstRtpBin * rtpbin, gint id)
   sess->ptmap = g_hash_table_new (NULL, NULL);
   rtpbin->sessions = g_slist_prepend (rtpbin->sessions, sess);
 
+  /* set NTP base or new session */
+  g_object_set (session, "ntp-ns-base", rtpbin->priv->ntp_ns_base, NULL);
+
   /* provide clock_rate to the session manager when needed */
   g_signal_connect (session, "request-pt-map",
       (GCallback) pt_map_requested, sess);

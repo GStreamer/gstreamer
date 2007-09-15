@@ -1,3 +1,21 @@
+2007-09-15  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (create_session):
+	Also set NTP base time on new sessions.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_loop), (gst_rtp_jitter_buffer_query),
+	(gst_rtp_jitter_buffer_set_property),
+	(gst_rtp_jitter_buffer_get_property):
+	Use the right lock to protect our variables.
+	Fix some comment.
+
+	* gst/rtpmanager/gstrtpsession.c:
+	(gst_rtp_session_getcaps_send_rtp),
+	(gst_rtp_session_chain_send_rtp), (create_send_rtp_sink):
+	Implement getcaps on the sender sinkpad so that payloaders can negotiate
+	the right SSRC.
+
 2007-09-12  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtpmanager/gstrtpbin.c: (create_session), (free_session),

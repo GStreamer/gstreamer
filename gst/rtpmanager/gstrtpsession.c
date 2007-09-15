@@ -1226,6 +1226,33 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static GstCaps *
+gst_rtp_session_getcaps_send_rtp (GstPad * pad)
+{
+  GstRtpSession *rtpsession;
+  GstRtpSessionPrivate *priv;
+  GstCaps *result;
+  GstStructure *s1, *s2;
+
+  rtpsession = GST_RTP_SESSION (gst_pad_get_parent (pad));
+  priv = rtpsession->priv;
+
+  /* we can basically accept anything but we prefer to receive packets with our
+   * internal SSRC so that we don't have to patch it. Create a structure with
+   * the SSRC and another one without. */
+  s1 = gst_structure_new ("application/x-rtp",
+      "ssrc", G_TYPE_UINT, priv->session->source->ssrc, NULL);
+  s2 = gst_structure_new ("application/x-rtp", NULL);
+
+  result = gst_caps_new_full (s1, s2, NULL);
+
+  GST_DEBUG_OBJECT (rtpsession, "getting caps %" GST_PTR_FORMAT, result);
+
+  gst_object_unref (rtpsession);
+
+  return result;
+}
+
 /* Recieve an RTP packet to be send to the receivers, send to RTP session
  * manager and forward to send_rtp_src.
  */
@@ -1252,8 +1279,11 @@ gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
         timestamp);
     /* convert to NTP time by adding the NTP base */
     ntpnstime += priv->ntpnsbase;
-  } else
+  } else {
+    /* no timestamp, we could take the current running_time and convert it to
+     * NTP time. */
     ntpnstime = -1;
+  }
 
   ret = rtp_session_send_rtp (priv->session, buffer, ntpnstime);
 
@@ -1341,6 +1371,8 @@ create_send_rtp_sink (GstRtpSession * rtpsession)
       "send_rtp_sink");
   gst_pad_set_chain_function (rtpsession->send_rtp_sink,
       gst_rtp_session_chain_send_rtp);
+  gst_pad_set_getcaps_function (rtpsession->send_rtp_sink,
+      gst_rtp_session_getcaps_send_rtp);
   gst_pad_set_event_function (rtpsession->send_rtp_sink,
       gst_rtp_session_event_send_rtp_sink);
   gst_pad_set_internal_link_function (rtpsession->send_rtp_sink,
