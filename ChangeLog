@@ -1,5 +1,10 @@
 2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtp_buffer_validate_data):
+	A buffer with an empty payload is also a valid buffer.
+
+2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_event),
 	(gst_basertppayload_set_outcaps), (gst_basertppayload_push),
 	(gst_basertppayload_change_state):

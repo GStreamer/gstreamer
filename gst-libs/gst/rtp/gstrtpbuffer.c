@@ -346,7 +346,7 @@ gst_rtp_buffer_validate_data (guint8 * data, guint len)
     padding = 0;
 
   /* check if padding not bigger than packet and header */
-  if (G_UNLIKELY (len - header_len <= padding))
+  if (G_UNLIKELY (len - header_len < padding))
     goto wrong_padding;
 
   return TRUE;
@@ -364,8 +364,7 @@ wrong_version:
   }
 wrong_padding:
   {
-    GST_DEBUG ("padding check failed (%d - %d <= %d)",
-        len, header_len, padding);
+    GST_DEBUG ("padding check failed (%d - %d < %d)", len, header_len, padding);
     return FALSE;
   }
 }
