@@ -1,3 +1,9 @@
+2007-09-15  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c:
+	(gst_basertppayload_set_outcaps), (gst_basertppayload_push):
+	Add some debug info when negotiating caps.
+
 2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtp_buffer_validate_data):

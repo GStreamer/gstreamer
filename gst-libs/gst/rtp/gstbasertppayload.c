@@ -462,12 +462,17 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
       "clock-rate", G_TYPE_INT, payload->clock_rate,
       "encoding-name", G_TYPE_STRING, payload->encoding_name, NULL);
 
+  GST_DEBUG_OBJECT (payload, "defaults: %" GST_PTR_FORMAT, srccaps);
+
   if (fieldname) {
     va_list varargs;
 
+    /* override with custom properties */
     va_start (varargs, fieldname);
     gst_caps_set_simple_valist (srccaps, fieldname, varargs);
     va_end (varargs);
+
+    GST_DEBUG_OBJECT (payload, "custom added: %" GST_PTR_FORMAT, srccaps);
   }
 
   /* the peer caps can override some of the defaults */
@@ -479,6 +484,8 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
         "ssrc", G_TYPE_UINT, payload->current_ssrc,
         "clock-base", G_TYPE_UINT, payload->ts_base,
         "seqnum-base", G_TYPE_UINT, payload->seqnum_base, NULL);
+
+    GST_DEBUG_OBJECT (payload, "no peer caps: %" GST_PTR_FORMAT, srccaps);
   } else {
     GstCaps *temp;
     GstStructure *s;
@@ -498,42 +505,59 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
     /* get first structure */
     s = gst_caps_get_structure (srccaps, 0);
 
-    if (gst_structure_get_int (s, "payload", &pt))
+    if (gst_structure_get_int (s, "payload", &pt)) {
+      /* use peer pt */
       GST_BASE_RTP_PAYLOAD_PT (payload) = pt;
-    else {
+      GST_LOG_OBJECT (payload, "using peer pt %d", pt);
+    } else {
       if (gst_structure_has_field (s, "payload")) {
         /* can only fixate if there is a field */
         gst_structure_fixate_field_nearest_int (s, "payload",
             GST_BASE_RTP_PAYLOAD_PT (payload));
+        gst_structure_get_int (s, "payload", &pt);
+        GST_LOG_OBJECT (payload, "using peer pt %d", pt);
       } else {
-        gst_structure_set (s, "payload", G_TYPE_INT,
-            GST_BASE_RTP_PAYLOAD_PT (payload), NULL);
+        /* no pt field, use the internal pt */
+        pt = GST_BASE_RTP_PAYLOAD_PT (payload);
+        gst_structure_set (s, "payload", G_TYPE_INT, pt, NULL);
+        GST_LOG_OBJECT (payload, "using internal pt", pt);
       }
     }
 
     if (gst_structure_has_field_typed (s, "ssrc", G_TYPE_UINT)) {
       value = gst_structure_get_value (s, "ssrc");
       payload->current_ssrc = g_value_get_uint (value);
+      GST_LOG_OBJECT (payload, "using peer ssrc %08x", payload->current_ssrc);
     } else {
       /* FIXME, fixate_nearest_uint would be even better */
       gst_structure_set (s, "ssrc", G_TYPE_UINT, payload->current_ssrc, NULL);
+      GST_LOG_OBJECT (payload, "using internal ssrc %08x",
+          payload->current_ssrc);
     }
 
     if (gst_structure_has_field_typed (s, "clock-base", G_TYPE_UINT)) {
       value = gst_structure_get_value (s, "clock-base");
       payload->ts_base = g_value_get_uint (value);
+      GST_LOG_OBJECT (payload, "using peer clock-base %u", payload->ts_base);
     } else {
       /* FIXME, fixate_nearest_uint would be even better */
       gst_structure_set (s, "clock-base", G_TYPE_UINT, payload->ts_base, NULL);
+      GST_LOG_OBJECT (payload, "using internal clock-base %u",
+          payload->ts_base);
     }
     if (gst_structure_has_field_typed (s, "seqnum-base", G_TYPE_UINT)) {
       value = gst_structure_get_value (s, "seqnum-base");
       payload->seqnum_base = g_value_get_uint (value);
+      GST_LOG_OBJECT (payload, "using peer seqnum-base %u",
+          payload->seqnum_base);
     } else {
       /* FIXME, fixate_nearest_uint would be even better */
       gst_structure_set (s, "seqnum-base", G_TYPE_UINT, payload->seqnum_base,
           NULL);
+      GST_LOG_OBJECT (payload, "using internal seqnum-base %u",
+          payload->seqnum_base);
     }
+    GST_DEBUG_OBJECT (payload, "with peer caps: %" GST_PTR_FORMAT, srccaps);
   }
 
   gst_pad_set_caps (GST_BASE_RTP_PAYLOAD_SRCPAD (payload), srccaps);
@@ -584,7 +608,7 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 {
   GstFlowReturn res;
   GstClockTime timestamp;
-  guint32 ts;
+  guint32 rtptime;
   GstBaseRTPPayloadPrivate *priv;
 
   if (payload->clock_rate == 0)
@@ -599,14 +623,13 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
   /* update first, so that the property is set to the last
    * seqnum pushed */
   payload->seqnum = priv->next_seqnum;
-  GST_LOG_OBJECT (payload, "setting RTP seqnum %d", payload->seqnum);
   gst_rtp_buffer_set_seq (buffer, payload->seqnum);
 
   /* can wrap around, which is perfectly fine */
   priv->next_seqnum++;
 
   /* add our random offset to the timestamp */
-  ts = payload->ts_base;
+  rtptime = payload->ts_base;
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
@@ -626,18 +649,19 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
     rtime = gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
 
-    ts += rtime;
+    rtptime += rtime;
   }
-  GST_LOG_OBJECT (payload, "setting RTP timestamp %u", (guint) ts);
-  gst_rtp_buffer_set_timestamp (buffer, ts);
+  gst_rtp_buffer_set_timestamp (buffer, rtptime);
 
-  payload->timestamp = ts;
+  payload->timestamp = rtptime;
 
   /* set caps */
   gst_buffer_set_caps (buffer, GST_PAD_CAPS (payload->srcpad));
 
-  GST_DEBUG_OBJECT (payload, "Pushing packet size %d, seq=%d, ts=%u",
-      GST_BUFFER_SIZE (buffer), payload->seqnum - 1, ts);
+  GST_LOG_OBJECT (payload,
+      "Pushing packet size %d, seq=%d, rtptime=%u, timestamp %" GST_TIME_FORMAT,
+      GST_BUFFER_SIZE (buffer), payload->seqnum, rtptime,
+      GST_TIME_ARGS (timestamp));
 
   res = gst_pad_push (payload->srcpad, buffer);
 
