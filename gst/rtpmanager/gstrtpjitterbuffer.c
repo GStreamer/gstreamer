@@ -1018,7 +1018,8 @@ again:
       priv->clock_base = exttimestamp;
     }
 
-    /* take rtp timestamp offset into account, this can wrap around */
+    /* take rtp timestamp offset into account, this should not wrap around since
+     * we are dealing with the extended timestamp here. */
     exttimestamp -= priv->clock_base;
 
     /* bring timestamp to gst time */
@@ -1218,9 +1219,8 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
           /* store this so that we can safely sync on the peer buffers. */
           JBUF_LOCK (priv);
           priv->peer_latency = min_latency;
-          JBUF_UNLOCK (priv);
-
           our_latency = ((guint64) priv->latency_ms) * GST_MSECOND;
+          JBUF_UNLOCK (priv);
 
           GST_DEBUG_OBJECT (jitterbuffer, "Our latency: %" GST_TIME_FORMAT,
               GST_TIME_ARGS (our_latency));
@@ -1263,11 +1263,12 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
     {
       guint new_latency, old_latency;
 
-      /* FIXME, not threadsafe */
       new_latency = g_value_get_uint (value);
-      old_latency = priv->latency_ms;
 
+      JBUF_LOCK (priv);
+      old_latency = priv->latency_ms;
       priv->latency_ms = new_latency;
+      JBUF_UNLOCK (priv);
 
       /* post message if latency changed, this will inform the parent pipeline
        * that a latency reconfiguration is possible/needed. */
@@ -1306,7 +1307,9 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
 
   switch (prop_id) {
     case PROP_LATENCY:
+      JBUF_LOCK (priv);
       g_value_set_uint (value, priv->latency_ms);
+      JBUF_UNLOCK (priv);
       break;
     case PROP_DROP_ON_LATENCY:
       g_value_set_boolean (value, priv->drop_on_latency);
