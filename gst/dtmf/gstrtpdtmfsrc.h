@@ -26,6 +26,7 @@
 #define __GST_RTP_DTMF_SRC_H__
 
 #include <gst/gst.h>
+#include <gst/base/gstbasesrc.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
 G_BEGIN_DECLS
@@ -70,7 +71,6 @@ typedef enum _GstRTPDTMFEventType GstRTPDTMFEventType;
 struct _GstRTPDTMFSrcEvent {
   GstRTPDTMFEventType  event_type;
   GstRTPDTMFPayload*   payload;
-  guint32              sent_packets;
 };
 
 typedef struct _GstRTPDTMFSrcEvent GstRTPDTMFSrcEvent;
@@ -82,16 +82,17 @@ typedef struct _GstRTPDTMFSrcEvent GstRTPDTMFSrcEvent;
  * The opaque #GstRTPDTMFSrc data structure.
  */
 struct _GstRTPDTMFSrc {
-  GstElement           element;
+  GstBaseSrc           basesrc;
 
   GstPad*	       srcpad;
   GstSegment           segment;
   GAsyncQueue*	       event_queue;
   GstRTPDTMFSrcEvent*  last_event;
-  GstClockID           clock_id;
-  gboolean             task_paused;
+  GstClockID           clockid;
+  gboolean             paused;
 
   GstClockTime      timestamp;
+  GstClockTime      start_timestamp;
   gboolean          first_packet;
   gboolean          last_packet;
   guint32           ts_base;
@@ -106,10 +107,12 @@ struct _GstRTPDTMFSrc {
   guint16	    interval;
   guint16	    packet_redundancy;
   guint32           clock_rate;
+
+  guint16           redundancy_count;
 };
 
 struct _GstRTPDTMFSrcClass {
-  GstElementClass parent_class;
+  GstBaseSrcClass parent_class;
 };
 
 GType gst_rtp_dtmf_src_get_type (void);
