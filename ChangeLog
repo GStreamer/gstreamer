@@ -1,3 +1,20 @@
+2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_init), (gst_base_rtp_depayload_setcaps),
+	(gst_base_rtp_depayload_chain),
+	(gst_base_rtp_depayload_handle_sink_event),
+	(gst_base_rtp_depayload_push_full),
+	(gst_base_rtp_depayload_set_gst_timestamp),
+	(gst_base_rtp_depayload_change_state):
+	Remove code to deal with RTP to GST time conversion, we now just copy
+	the GST timestamp we receive to the outgoing buffers.
+	Handle segment and flushes correctly.
+
+	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_push):
+	When we have no valid input timestamp, use the previous rtp timestamp on
+	the outgoing RTP packet instead of the RTP base time.
+
 2007-09-15  David Schleef  <ds@schleef.org>
 
 	* ext/alsa/gstalsa.c:

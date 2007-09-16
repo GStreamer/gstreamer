@@ -649,7 +649,11 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
 
     rtime = gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
 
+    /* add running_time in clock-rate units to the base timestamp */
     rtptime += rtime;
+  } else {
+    /* no timestamp to convert, take previous timestamp */
+    rtptime = payload->timestamp;
   }
   gst_rtp_buffer_set_timestamp (buffer, rtptime);
 

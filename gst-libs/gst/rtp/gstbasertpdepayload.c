@@ -48,16 +48,13 @@ GST_DEBUG_CATEGORY_STATIC (basertpdepayload_debug);
 
 struct _GstBaseRTPDepayloadPrivate
 {
-  guint64 clock_base;
-
   GstClockTime npt_start;
   GstClockTime npt_stop;
   gdouble play_speed;
   gdouble play_scale;
 
-  GstClockTime exttimestamp;
-
   gboolean discont;
+  GstClockTime timestamp;
 };
 
 /* Filter signals and args */
@@ -91,7 +88,7 @@ static GstStateChangeReturn gst_base_rtp_depayload_change_state (GstElement *
     element, GstStateChange transition);
 
 static void gst_base_rtp_depayload_set_gst_timestamp
-    (GstBaseRTPDepayload * filter, guint32 timestamp, GstBuffer * buf);
+    (GstBaseRTPDepayload * filter, guint32 rtptime, GstBuffer * buf);
 
 GST_BOILERPLATE (GstBaseRTPDepayload, gst_base_rtp_depayload, GstElement,
     GST_TYPE_ELEMENT);
@@ -171,6 +168,8 @@ gst_base_rtp_depayload_init (GstBaseRTPDepayload * filter,
 
   filter->queue = g_queue_new ();
   filter->queue_delay = DEFAULT_QUEUE_DELAY;
+
+  gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
 }
 
 static void
@@ -192,7 +191,6 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
   gboolean res;
   GstStructure *caps_struct;
   const GValue *value;
-  guint val;
 
   filter = GST_BASE_RTP_DEPAYLOAD (gst_pad_get_parent (pad));
   priv = filter->priv;
@@ -203,24 +201,21 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
 
   caps_struct = gst_caps_get_structure (caps, 0);
 
-  /* get clock base if any, we need this for the newsegment */
-  if (gst_structure_get_uint (caps_struct, "clock-base", &val))
-    priv->clock_base = val;
-  else
-    priv->clock_base = -1;
-
   /* get other values for newsegment */
   value = gst_structure_get_value (caps_struct, "npt-start");
   if (value && G_VALUE_HOLDS_UINT64 (value))
     priv->npt_start = g_value_get_uint64 (value);
   else
     priv->npt_start = 0;
+  GST_DEBUG_OBJECT (filter, "NTP start %" G_GUINT64_FORMAT, priv->npt_start);
 
   value = gst_structure_get_value (caps_struct, "npt-stop");
   if (value && G_VALUE_HOLDS_UINT64 (value))
     priv->npt_stop = g_value_get_uint64 (value);
   else
     priv->npt_stop = -1;
+
+  GST_DEBUG_OBJECT (filter, "NTP stop %" G_GUINT64_FORMAT, priv->npt_start);
 
   value = gst_structure_get_value (caps_struct, "play-speed");
   if (value && G_VALUE_HOLDS_DOUBLE (value))
@@ -233,8 +228,6 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
     priv->play_scale = g_value_get_double (value);
   else
     priv->play_scale = 1.0;
-
-  priv->exttimestamp = -1;
 
   if (bclass->set_caps)
     res = bclass->set_caps (filter, caps);
@@ -254,65 +247,70 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   GstBaseRTPDepayloadClass *bclass;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *out_buf;
+  GstClockTime timestamp;
 
   filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
 
-  if (filter->clock_rate == 0)
-    goto not_configured;
-
   priv = filter->priv;
   priv->discont = GST_BUFFER_IS_DISCONT (in);
+
+  /* convert to running_time and save the timestamp, this is the timestamp
+   * we put on outgoing buffers. */
+  timestamp = GST_BUFFER_TIMESTAMP (in);
+  timestamp = gst_segment_to_running_time (&filter->segment, GST_FORMAT_TIME,
+      timestamp);
+  priv->timestamp = timestamp;
 
   bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
   /* let's send it out to processing */
   out_buf = bclass->process (filter, in);
   if (out_buf) {
-    guint32 timestamp;
+    guint32 rtptime;
 
-    timestamp = gst_rtp_buffer_get_timestamp (in);
+    rtptime = gst_rtp_buffer_get_timestamp (in);
 
-    /* push buffer with timestamp 
-     * We are assuming here that the timestamp of the last RTP buffer
-     * is the same as the timestamp wanted on the collector. If this is not a
-     * desired result, the process function should push itself with another
-     * timestamp and return NULL.
-     */
-    ret = gst_base_rtp_depayload_push_ts (filter, timestamp, out_buf);
+    /* we pass rtptime as backward compatibility, in reality, the incomming
+     * buffer timestamp is always applied to the outgoing packet. */
+    ret = gst_base_rtp_depayload_push_ts (filter, rtptime, out_buf);
   }
   gst_buffer_unref (in);
 
   return ret;
-
-  /* ERRORS */
-not_configured:
-  {
-    GST_ELEMENT_ERROR (filter, STREAM, FORMAT,
-        (NULL), ("no clock rate was specified, likely incomplete input caps"));
-    gst_buffer_unref (in);
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
 }
 
 static gboolean
 gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstBaseRTPDepayload *filter =
-      GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
+  GstBaseRTPDepayload *filter;
   gboolean res = TRUE;
 
+  filter = GST_BASE_RTP_DEPAYLOAD (GST_OBJECT_PARENT (pad));
+
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      res = gst_pad_push_event (filter->srcpad, event);
+
+      gst_segment_init (&filter->segment, GST_FORMAT_UNDEFINED);
+      filter->need_newsegment = TRUE;
+      break;
     case GST_EVENT_NEWSEGMENT:
     {
-      GstFormat format;
+      gboolean update;
+      gdouble rate;
+      GstFormat fmt;
+      gint64 start, stop, position;
 
-      gst_event_parse_new_segment (event, NULL, NULL, &format, NULL, NULL,
-          NULL);
-      if (format != GST_FORMAT_TIME)
-        goto wrong_format;
+      gst_event_parse_new_segment (event, &update, &rate, &fmt, &start, &stop,
+          &position);
 
-      GST_DEBUG_OBJECT (filter, "Upstream sent a NEWSEGMENT, passing through.");
-      /* fallthrough */
+      gst_segment_set_newsegment (&filter->segment, update, rate, fmt,
+          start, stop, position);
+
+      /* don't pass the event downstream, we generate our own segment including
+       * the NTP time and other things we receive in caps */
+      gst_event_unref (event);
+      break;
     }
     default:
       /* pass other events forward */
@@ -320,20 +318,11 @@ gst_base_rtp_depayload_handle_sink_event (GstPad * pad, GstEvent * event)
       break;
   }
   return res;
-
-  /* ERRORS */
-wrong_format:
-  {
-    GST_DEBUG_OBJECT (filter,
-        "Upstream sent a NEWSEGMENT in wrong format, dropping.");
-    gst_event_unref (event);
-    return TRUE;
-  }
 }
 
 static GstFlowReturn
 gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
-    gboolean do_ts, guint32 timestamp, GstBuffer * out_buf)
+    gboolean do_ts, guint32 rtptime, GstBuffer * out_buf)
 {
   GstFlowReturn ret;
   GstCaps *srccaps;
@@ -351,7 +340,7 @@ gst_base_rtp_depayload_push_full (GstBaseRTPDepayload * filter,
 
   /* set the timestamp if we must and can */
   if (bclass->set_gst_timestamp && do_ts)
-    bclass->set_gst_timestamp (filter, timestamp, out_buf);
+    bclass->set_gst_timestamp (filter, rtptime, out_buf);
 
   if (priv->discont) {
     GST_BUFFER_FLAG_SET (out_buf, GST_BUFFER_FLAG_DISCONT);
@@ -411,39 +400,14 @@ gst_base_rtp_depayload_push (GstBaseRTPDepayload * filter, GstBuffer * out_buf)
 
 static void
 gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
-    guint32 timestamp, GstBuffer * buf)
+    guint32 rtptime, GstBuffer * buf)
 {
-  GstClockTime ts, exttimestamp;
   GstBaseRTPDepayloadPrivate *priv;
 
   priv = filter->priv;
 
-  /* no clock-base set, take first timestamp as base */
-  if (priv->clock_base == -1)
-    priv->clock_base = timestamp;
-
-  /* get extended timestamp */
-  exttimestamp = gst_rtp_buffer_ext_timestamp (&priv->exttimestamp, timestamp);
-
-  /* subtract clock-base to get a 0 based timestamp. Make sure we don't go
-   * negative. */
-  if (exttimestamp > priv->clock_base)
-    exttimestamp -= priv->clock_base;
-  else
-    exttimestamp = 0;
-
-  /* rtp timestamps are based on the clock_rate
-   * gst timesamps are in nanoseconds */
-  ts = gst_util_uint64_scale_int (exttimestamp, GST_SECOND, filter->clock_rate);
-
-  GST_DEBUG_OBJECT (filter,
-      "timestamp: %u, exttimestamp %" G_GUINT64_FORMAT ", clockrate : %u",
-      timestamp, exttimestamp, filter->clock_rate);
-
-  GST_DEBUG_OBJECT (filter, "RTP: %u, GST: %" GST_TIME_FORMAT ", ts %"
-      GST_TIME_FORMAT, timestamp, GST_TIME_ARGS (ts), GST_TIME_ARGS (ts));
-
-  GST_BUFFER_TIMESTAMP (buf) = ts;
+  /* apply incomming timestamp to outgoing buffer */
+  GST_BUFFER_TIMESTAMP (buf) = priv->timestamp;
 
   /* if this is the first buffer send a NEWSEGMENT */
   if (filter->need_newsegment) {
@@ -473,19 +437,21 @@ gst_base_rtp_depayload_change_state (GstElement * element,
     GstStateChange transition)
 {
   GstBaseRTPDepayload *filter;
+  GstBaseRTPDepayloadPrivate *priv;
   GstStateChangeReturn ret;
 
   filter = GST_BASE_RTP_DEPAYLOAD (element);
+  priv = filter->priv;
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      /* clock_rate needs to be overwritten by child */
-      filter->clock_rate = 0;
-      filter->priv->clock_base = -1;
-      filter->priv->exttimestamp = -1;
       filter->need_newsegment = TRUE;
+      priv->npt_start = 0;
+      priv->npt_stop = -1;
+      priv->play_speed = 1.0;
+      priv->play_scale = 1.0;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;
