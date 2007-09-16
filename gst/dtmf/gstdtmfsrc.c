@@ -633,61 +633,72 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   do {
 
-    if (dtmfsrc->paused)
-      goto paused;
-
     if (dtmfsrc->last_event == NULL) {
       GST_DEBUG_OBJECT (dtmfsrc, "popping");
       event = g_async_queue_pop (dtmfsrc->event_queue);
 
       GST_DEBUG_OBJECT (dtmfsrc, "popped %d", event->event_type);
 
-      if (event->event_type == DTMF_EVENT_TYPE_STOP) {
-        GST_WARNING_OBJECT (dtmfsrc,
-            "Received a DTMF stop event when already stopped");
-      } else if (event->event_type == DTMF_EVENT_TYPE_START) {
-        gst_dtmf_prepare_timestamps (dtmfsrc);
+      switch (event->event_type) {
+        case DTMF_EVENT_TYPE_STOP:
+          GST_WARNING_OBJECT (dtmfsrc,
+              "Received a DTMF stop event when already stopped");
+          break;
+        case DTMF_EVENT_TYPE_START:
+          gst_dtmf_prepare_timestamps (dtmfsrc);
 
-        /* Don't forget to get exclusive access to the stream */
-        gst_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
+          /* Don't forget to get exclusive access to the stream */
+          gst_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
 
-        event->packet_count = 0;
-        dtmfsrc->last_event = event;
-      } else if (event->event_type == DTMF_EVENT_TYPE_PAUSE_TASK) {
-        /*
-         * We're pushing it back because it has to stay in there until
-         * the task is really paused (and the queue will then be flushed)
-         */
-        GST_DEBUG_OBJECT (dtmfsrc, "pushing pause_task...");
-        if (dtmfsrc->paused) {
-
-          g_async_queue_push (dtmfsrc->event_queue, event);
-          goto paused;
-        }
+          event->packet_count = 0;
+          dtmfsrc->last_event = event;
+          break;
+        case DTMF_EVENT_TYPE_PAUSE_TASK:
+          /*
+           * We're pushing it back because it has to stay in there until
+           * the task is really paused (and the queue will then be flushed)
+           */
+          GST_DEBUG_OBJECT (dtmfsrc, "pushing pause_task...");
+          GST_OBJECT_LOCK (dtmfsrc);
+          if (dtmfsrc->paused) {
+            g_async_queue_push (dtmfsrc->event_queue, event);
+            goto paused_locked;
+          }
+          GST_OBJECT_UNLOCK (dtmfsrc);
+          break;
       }
     } else if (dtmfsrc->last_event->packet_count  * dtmfsrc->interval >=
         MIN_DUTY_CYCLE) {
       event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
       if (event != NULL) {
-        if (event->event_type == DTMF_EVENT_TYPE_START) {
-          GST_WARNING_OBJECT (dtmfsrc,
-              "Received two consecutive DTMF start events");
-        } else if (event->event_type == DTMF_EVENT_TYPE_STOP) {
-          gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
 
-          g_free (dtmfsrc->last_event);
-          dtmfsrc->last_event = NULL;
-        } else if (event->event_type == DTMF_EVENT_TYPE_PAUSE_TASK) {
-          /*
-           * We're pushing it back because it has to stay in there until
-           * the task is really paused (and the queue will then be flushed)
-           */
-          GST_DEBUG_OBJECT (dtmfsrc, "pushing pause_task...");
-          if (dtmfsrc->paused) {
-            g_async_queue_push (dtmfsrc->event_queue, event);
-            goto paused;
-          }
+        switch (event->event_type) {
+          case DTMF_EVENT_TYPE_START:
+            GST_WARNING_OBJECT (dtmfsrc,
+                "Received two consecutive DTMF start events");
+            break;
+          case DTMF_EVENT_TYPE_STOP:
+            gst_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+
+            g_free (dtmfsrc->last_event);
+            dtmfsrc->last_event = NULL;
+            break;
+          case DTMF_EVENT_TYPE_PAUSE_TASK:
+            /*
+             * We're pushing it back because it has to stay in there until
+             * the task is really paused (and the queue will then be flushed)
+             */
+            GST_DEBUG_OBJECT (dtmfsrc, "pushing pause_task...");
+
+            GST_OBJECT_LOCK (dtmfsrc);
+            if (dtmfsrc->paused) {
+              g_async_queue_push (dtmfsrc->event_queue, event);
+              goto paused_locked;
+            }
+            GST_OBJECT_UNLOCK (dtmfsrc);
+
+            break;
         }
       }
     }
@@ -729,6 +740,9 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   GST_DEBUG_OBJECT (dtmfsrc, "returning a buffer");
   return GST_FLOW_OK;
+
+ paused_locked:
+  GST_OBJECT_UNLOCK (dtmfsrc);
 
  paused:
 
@@ -811,12 +825,6 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
     goto failure;
 
   switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-
-      GST_DEBUG_OBJECT (dtmfsrc, "PLAYING TO PAUSED");
-
-      no_preroll = TRUE;
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (dtmfsrc, "Flushing event queue");
       /* Flushing the event queue */
@@ -827,8 +835,6 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
         event = g_async_queue_try_pop (dtmfsrc->event_queue);
       }
 
-      /* Indicate that we don't do PRE_ROLL */
-      no_preroll = TRUE;
       break;
     default:
       break;
