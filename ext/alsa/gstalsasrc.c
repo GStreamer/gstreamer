@@ -348,7 +348,7 @@ set_hwparams (GstAlsaSrc * alsa)
   gint err, dir;
   snd_pcm_hw_params_t *params;
 
-  snd_pcm_hw_params_alloca (&params);
+  snd_pcm_hw_params_malloc (&params);
 
   /* choose all parameters */
   CHECK (snd_pcm_hw_params_any (alsa->handle, params), no_config);
@@ -388,6 +388,7 @@ set_hwparams (GstAlsaSrc * alsa)
   CHECK (snd_pcm_hw_params_get_period_size (params, &alsa->period_size, &dir),
       period_size);
 
+  snd_pcm_hw_params_free (params);
   return 0;
 
   /* ERRORS */
@@ -396,18 +397,21 @@ no_config:
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Broken configuration for recording: no configurations available: %s",
             snd_strerror (err)));
+    snd_pcm_hw_params_free (params);
     return err;
   }
 wrong_access:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Access type not available for recording: %s", snd_strerror (err)));
+    snd_pcm_hw_params_free (params);
     return err;
   }
 no_sample_format:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Sample format not available for recording: %s", snd_strerror (err)));
+    snd_pcm_hw_params_free (params);
     return err;
   }
 no_channels:
@@ -425,6 +429,7 @@ no_channels:
           alsa->channels);
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (msg), (snd_strerror (err)));
     g_free (msg);
+    snd_pcm_hw_params_free (params);
     return err;
   }
 no_rate:
@@ -432,12 +437,14 @@ no_rate:
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Rate %iHz not available for recording: %s",
             alsa->rate, snd_strerror (err)));
+    snd_pcm_hw_params_free (params);
     return err;
   }
 rate_match:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Rate doesn't match (requested %iHz, get %iHz)", alsa->rate, err));
+    snd_pcm_hw_params_free (params);
     return -EINVAL;
   }
 buffer_time:
@@ -445,12 +452,14 @@ buffer_time:
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set buffer time %i for recording: %s",
             alsa->buffer_time, snd_strerror (err)));
+    snd_pcm_hw_params_free (params);
     return err;
   }
 buffer_size:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to get buffer size for recording: %s", snd_strerror (err)));
+    snd_pcm_hw_params_free (params);
     return err;
   }
 period_time:
@@ -458,18 +467,21 @@ period_time:
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set period time %i for recording: %s", alsa->period_time,
             snd_strerror (err)));
+    snd_pcm_hw_params_free (params);
     return err;
   }
 period_size:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to get period size for recording: %s", snd_strerror (err)));
+    snd_pcm_hw_params_free (params);
     return err;
   }
 set_hw_params:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set hw params for recording: %s", snd_strerror (err)));
+    snd_pcm_hw_params_free (params);
     return err;
   }
 }
@@ -480,7 +492,7 @@ set_swparams (GstAlsaSrc * alsa)
   int err;
   snd_pcm_sw_params_t *params;
 
-  snd_pcm_sw_params_alloca (&params);
+  snd_pcm_sw_params_malloc (&params);
 
   /* get the current swparams */
   CHECK (snd_pcm_sw_params_current (alsa->handle, params), no_config);
@@ -496,6 +508,7 @@ set_swparams (GstAlsaSrc * alsa)
   /* write the parameters to the recording device */
   CHECK (snd_pcm_sw_params (alsa->handle, params), set_sw_params);
 
+  snd_pcm_sw_params_free (params);
   return 0;
 
   /* ERRORS */
@@ -504,6 +517,7 @@ no_config:
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to determine current swparams for playback: %s",
             snd_strerror (err)));
+    snd_pcm_sw_params_free (params);
     return err;
   }
 start_threshold:
@@ -511,24 +525,28 @@ start_threshold:
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set start threshold mode for playback: %s",
             snd_strerror (err)));
+    snd_pcm_sw_params_free (params);
     return err;
   }
 set_avail:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set avail min for playback: %s", snd_strerror (err)));
+    snd_pcm_sw_params_free (params);
     return err;
   }
 set_align:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set transfer align for playback: %s", snd_strerror (err)));
+    snd_pcm_sw_params_free (params);
     return err;
   }
 set_sw_params:
   {
     GST_ELEMENT_ERROR (alsa, RESOURCE, SETTINGS, (NULL),
         ("Unable to set sw params for playback: %s", snd_strerror (err)));
+    snd_pcm_sw_params_free (params);
     return err;
   }
 }

@@ -90,7 +90,7 @@ gst_alsa_mixer_open (GstAlsaMixer * mixer)
     goto no_card_name;
   }
 
-  snd_ctl_card_info_alloca (&card_info);
+  snd_ctl_card_info_malloc (&card_info);
   if ((err = snd_ctl_card_info (ctl, card_info)) < 0) {
     GST_WARNING ("Cannot get card info: %s", snd_strerror (err));
     snd_ctl_close (ctl);
@@ -99,6 +99,7 @@ gst_alsa_mixer_open (GstAlsaMixer * mixer)
 
   mixer->cardname = g_strdup (snd_ctl_card_info_get_name (card_info));
   GST_DEBUG ("Card name = %s", GST_STR_NULL (mixer->cardname));
+  snd_ctl_card_info_free (card_info);
   snd_ctl_close (ctl);
 
 no_card_name:

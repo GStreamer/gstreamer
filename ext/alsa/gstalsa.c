@@ -110,7 +110,7 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
   GstCaps *caps;
   gint i;
 
-  snd_pcm_format_mask_alloca (&mask);
+  snd_pcm_format_mask_malloc (&mask);
   snd_pcm_hw_params_get_format_mask (hw_params, mask);
 
   caps = gst_caps_new_empty ();
@@ -157,6 +157,7 @@ gst_alsa_detect_formats (GstObject * obj, snd_pcm_hw_params_t * hw_params,
     }
   }
 
+  snd_pcm_format_mask_free (mask);
   gst_caps_unref (in_caps);
   return caps;
 }
@@ -375,7 +376,7 @@ gst_alsa_probe_supported_formats (GstObject * obj, snd_pcm_t * handle,
   GstCaps *caps;
   gint err;
 
-  snd_pcm_hw_params_alloca (&hw_params);
+  snd_pcm_hw_params_malloc (&hw_params);
   if ((err = snd_pcm_hw_params_any (handle, hw_params)) < 0)
     goto error;
 
@@ -390,17 +391,20 @@ gst_alsa_probe_supported_formats (GstObject * obj, snd_pcm_t * handle,
   if (!(caps = gst_alsa_detect_channels (obj, hw_params, caps)))
     goto subroutine_error;
 
+  snd_pcm_hw_params_free (hw_params);
   return caps;
 
   /* ERRORS */
 error:
   {
     GST_ERROR_OBJECT (obj, "failed to query formats: %s", snd_strerror (err));
+    snd_pcm_hw_params_free (hw_params);
     return NULL;
   }
 subroutine_error:
   {
     GST_ERROR_OBJECT (obj, "failed to query formats");
+    snd_pcm_hw_params_free (hw_params);
     return NULL;
   }
 }

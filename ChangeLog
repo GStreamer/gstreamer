@@ -1,3 +1,12 @@
+2007-09-15  David Schleef  <ds@schleef.org>
+
+	* ext/alsa/gstalsa.c:
+	* ext/alsa/gstalsadeviceprobe.c:
+	* ext/alsa/gstalsamixer.c:
+	* ext/alsa/gstalsasink.c:
+	* ext/alsa/gstalsasrc.c:
+	  Change alsa alloca's to malloc to fix warnings on gcc-4.2.
+
 2007-09-15  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertppayload.c:

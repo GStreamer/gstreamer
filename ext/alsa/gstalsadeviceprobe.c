@@ -61,8 +61,8 @@ gst_alsa_get_device_list (snd_pcm_stream_t stream)
   if (stream == -1)
     stream = 0;
 
-  snd_ctl_card_info_alloca (&info);
-  snd_pcm_info_alloca (&pcminfo);
+  snd_ctl_card_info_malloc (&info);
+  snd_pcm_info_malloc (&pcminfo);
   card = -1;
 
   if (snd_card_next (&card) < 0 || card < 0) {
@@ -110,6 +110,9 @@ gst_alsa_get_device_list (snd_pcm_stream_t stream)
       break;
     }
   }
+
+  snd_ctl_card_info_free (info);
+  snd_pcm_info_free (pcminfo);
 
   return list;
 }
