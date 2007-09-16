@@ -25,7 +25,6 @@
 #include <amrwb/enc_if.h>
 #include <amrwb/typedef.h>
 
-
 G_BEGIN_DECLS
 
 #define GST_TYPE_AMRWBENC			\
@@ -55,6 +54,7 @@ struct _GstAmrwbEnc {
   void *handle;
 
   /* input settings */
+  gint bandmode;
   gint channels, rate;
 };
 

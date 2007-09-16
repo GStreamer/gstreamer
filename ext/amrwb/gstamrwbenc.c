@@ -43,6 +43,54 @@
 
 #include "gstamrwbenc.h"
 
+/* these defines are not in all .h files */
+#ifndef MR660
+#define MR660  0
+#define MR885  1
+#define MR1265 2
+#define MR1425 2
+#define MR1585 3
+#define MR1825 4
+#define MR1985 5
+#define MR2305 6
+#define MR2385 7
+#define MRDTX  8
+#endif
+
+static GType
+gst_amrwbenc_bandmode_get_type ()
+{
+  static GType gst_amrwbenc_bandmode_type = 0;
+  static GEnumValue gst_amrwbenc_bandmode[] = {
+    {MR660, "MR660", "MR660"},
+    {MR885, "MR885", "MR885"},
+    {MR1265, "MR1265", "MR1265"},
+    {MR1425, "MR1425", "MR1425"},
+    {MR1585, "MR1585", "MR1585"},
+    {MR1825, "MR1825", "MR1825"},
+    {MR1985, "MR1985", "MR1985"},
+    {MR2305, "MR2305", "MR2305"},
+    {MR2385, "MR2385", "MR2385"},
+    {MRDTX, "MRDTX", "MRDTX"},
+    {0, NULL, NULL},
+  };
+  if (!gst_amrwbenc_bandmode_type) {
+    gst_amrwbenc_bandmode_type =
+        g_enum_register_static ("GstAmrwbEncBandMode", gst_amrwbenc_bandmode);
+  }
+  return gst_amrwbenc_bandmode_type;
+}
+
+#define GST_AMRWBENC_BANDMODE_TYPE (gst_amrwbenc_bandmode_get_type())
+
+#define BANDMODE_DEFAULT MR660
+
+enum
+{
+  PROP_0,
+  PROP_BANDMODE
+};
+
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
@@ -78,6 +126,42 @@ GST_BOILERPLATE_FULL (GstAmrwbEnc, gst_amrwbenc, GstElement, GST_TYPE_ELEMENT,
     _do_init);
 
 static void
+gst_amrwbenc_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAmrwbEnc *self = GST_AMRWBENC (object);
+
+  switch (prop_id) {
+    case PROP_BANDMODE:
+      self->bandmode = g_value_get_enum (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  return;
+}
+
+static void
+gst_amrwbenc_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAmrwbEnc *self = GST_AMRWBENC (object);
+
+  switch (prop_id) {
+    case PROP_BANDMODE:
+      g_value_set_enum (value, self->bandmode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+
+  return;
+}
+
+static void
 gst_amrwbenc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
@@ -101,6 +185,13 @@ gst_amrwbenc_class_init (GstAmrwbEncClass * klass)
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
   object_class->finalize = gst_amrwbenc_finalize;
+  object_class->set_property = gst_amrwbenc_set_property;
+  object_class->get_property = gst_amrwbenc_get_property;
+
+  g_object_class_install_property (object_class, PROP_BANDMODE,
+      g_param_spec_enum ("band-mode", "Band Mode",
+          "Encoding Band Mode (Kbps)", GST_AMRWBENC_BANDMODE_TYPE,
+          BANDMODE_DEFAULT, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_amrwbenc_state_change);
 }
@@ -213,7 +304,8 @@ gst_amrwbenc_chain (GstPad * pad, GstBuffer * buffer)
     data = (guint8 *) gst_adapter_peek (amrwbenc->adapter, buffer_size);
 
     /* encode */
-    outsize = E_IF_encode (amrwbenc->handle, 0, (Word16 *) data,
+    outsize =
+        E_IF_encode (amrwbenc->handle, amrwbenc->bandmode, (Word16 *) data,
         (UWord8 *) GST_BUFFER_DATA (out), 0);
 
     gst_adapter_flush (amrwbenc->adapter, buffer_size);

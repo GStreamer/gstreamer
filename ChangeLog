@@ -1,3 +1,13 @@
+2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Daniel Charles <dcharles at ti dot com>
+
+	* ext/amrwb/gstamrwbenc.c: (gst_amrwbenc_bandmode_get_type),
+	(gst_amrwbenc_set_property), (gst_amrwbenc_get_property),
+	(gst_amrwbenc_class_init), (gst_amrwbenc_chain):
+	* ext/amrwb/gstamrwbenc.h:
+	Add property to control bandmode. Fixes #477306.
+
 2007-09-15  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtpmanager/gstrtpbin.c: (create_session):
