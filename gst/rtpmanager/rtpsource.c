@@ -69,9 +69,6 @@ rtp_source_init (RTPSource * src)
   src->payload = 0;
   src->clock_rate = -1;
   src->clock_base = -1;
-  src->skew_base_ntpnstime = -1;
-  src->ext_rtptime = -1;
-  src->prev_ext_rtptime = -1;
   src->packets = g_queue_new ();
   src->seqnum_base = -1;
   src->last_rtptime = -1;
@@ -266,18 +263,20 @@ get_clock_rate (RTPSource * src, guint8 payload)
   return src->clock_rate;
 }
 
+/* Jitter is the variation in the delay of received packets in a flow. It is
+ * measured by comparing the interval when RTP packets were sent to the interval
+ * at which they were received. For instance, if packet #1 and packet #2 leave
+ * 50 milliseconds apart and arrive 60 milliseconds apart, then the jitter is 10
+ * milliseconds. */
 static void
 calculate_jitter (RTPSource * src, GstBuffer * buffer,
     RTPArrivalStats * arrival)
 {
   guint64 ntpnstime;
   guint32 rtparrival, transit, rtptime;
-  guint64 ext_rtptime;
   gint32 diff;
   gint clock_rate;
   guint8 pt;
-  guint64 rtpdiff, ntpdiff;
-  gint64 skew;
 
   /* get arrival time */
   if ((ntpnstime = arrival->ntpnstime) == GST_CLOCK_TIME_NONE)
@@ -291,48 +290,10 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
 
   rtptime = gst_rtp_buffer_get_timestamp (buffer);
 
-  /* convert to extended timestamp right away */
-  ext_rtptime = gst_rtp_buffer_ext_timestamp (&src->ext_rtptime, rtptime);
-
   /* no clock-base, take first rtptime as base */
   if (src->clock_base == -1) {
     GST_DEBUG ("using clock-base of %" G_GUINT32_FORMAT, rtptime);
     src->clock_base = rtptime;
-  }
-
-  if (src->skew_base_ntpnstime == -1) {
-    /* lock on first observed NTP and RTP time, they should increment in-sync or
-     * we have a clock skew. */
-    GST_DEBUG ("using base_ntpnstime of %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (ntpnstime));
-    src->skew_base_ntpnstime = ntpnstime;
-    src->skew_base_rtptime = rtptime;
-    src->prev_ext_rtptime = ext_rtptime;
-    src->avg_skew = 0;
-  } else if (src->prev_ext_rtptime < ext_rtptime) {
-    /* get elapsed rtptime but only when the previous rtptime was stricly smaller
-     * than the new one. */
-    rtpdiff = ext_rtptime - src->skew_base_rtptime;
-    /* get NTP diff and convert to RTP time, this is always positive */
-    ntpdiff = ntpnstime - src->skew_base_ntpnstime;
-    ntpdiff = gst_util_uint64_scale_int (ntpdiff, clock_rate, GST_SECOND);
-
-    /* see how the NTP and RTP relate any deviation from 0 means that they drift
-     * out of sync and we must compensate. */
-    skew = ntpdiff - rtpdiff;
-    /* average out the skew to get a smooth value. */
-    src->avg_skew = (63 * src->avg_skew + skew) / 64;
-
-    GST_DEBUG ("new skew %" G_GINT64_FORMAT ", avg %" G_GINT64_FORMAT, skew,
-        src->avg_skew);
-    /* store previous extended timestamp */
-    src->prev_ext_rtptime = ext_rtptime;
-  }
-  if (src->avg_skew != 0) {
-    /* patch the buffer RTP timestamp with the skew */
-    GST_DEBUG ("skew timestamp RTP %" G_GUINT32_FORMAT " -> %" G_GINT64_FORMAT,
-        rtptime, rtptime + src->avg_skew);
-    gst_rtp_buffer_set_timestamp (buffer, rtptime + src->avg_skew);
   }
 
   /* convert arrival time to RTP timestamp units, truncate to 32 bits, we don't
@@ -603,7 +564,7 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer, guint64 ntpnstime)
       /* the SSRC of the packet is not correct, make a writable buffer and
        * update the SSRC. This could involve a complete copy of the packet when
        * it is not writable. Usually the payloader will use caps negotiation to
-       * get the correct SSRC. */
+       * get the correct SSRC from the session manager before pushing anything. */
       buffer = gst_buffer_make_writable (buffer);
 
       GST_WARNING ("updating SSRC from %08x to %08x, fix the payloader", ssrc,
@@ -614,7 +575,7 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer, guint64 ntpnstime)
         src->stats.packets_sent);
     result = src->callbacks.push_rtp (src, buffer, src->user_data);
   } else {
-    GST_DEBUG ("no callback installed");
+    GST_WARNING ("no callback installed, dropping packet");
     gst_buffer_unref (buffer);
   }
 

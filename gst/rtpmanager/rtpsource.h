@@ -137,15 +137,7 @@ struct _RTPSource {
   GstCaps      *caps;
   gint          clock_rate;
   gint32        seqnum_base;
-
   gint64        clock_base;
-
-  /* to calculate the clock skew */
-  guint64       skew_base_ntpnstime;
-  guint64       skew_base_rtptime;
-  gint64        avg_skew;
-  guint64       ext_rtptime;
-  guint64       prev_ext_rtptime;
 
   GstClockTime  bye_time;
   GstClockTime  last_activity;
