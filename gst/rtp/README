@@ -24,9 +24,27 @@ The following fields can or must (*) be specified in the structure:
  * clock-rate: (int) [0 - MAXINT]
     The RTP clock rate. 
 
+   encoding-name: (String) ANY
+     typically second part of the mime type. ex. MP4V-ES. only required if
+     payload type >= 96. Converted to upper case.
+
+   encoding-params: (String) ANY
+     extra encoding parameters (as in the SDP a=rtpmap: field). only required
+     if different from the default of the encoding-name.
+     Converted to lower-case.
+     
    ssrc: (uint) [0 - MAXINT]
     The ssrc value currently in use. (default = the SSRC of the first RTP
     packet)
+
+   clock-base: (uint) [0 - MAXINT]
+    The RTP time representing time npt-start. (default = rtptime of first RTP
+    packet).
+
+   seqnum-base: (uint) [0 - MAXINT]
+    The RTP sequence number representing the first rtp packet. When this
+    parameter is given, all sequence numbers below this seqnum should be
+    ignored. (default = seqnum of first RTP packet).
 
    npt-start: (uint64) [0 - MAXINT]
     The Normal Play Time for clock-base. This is the position in the stream and
@@ -36,10 +54,6 @@ The following fields can or must (*) be specified in the structure:
    npt-stop: (uint64) [0 - MAXINT] 
     The last position in the stream. This value is expressed in nanoseconds
     GstClockTime. (default = -1, stop unknown)
-
-   clock-base: (uint) [0 - MAXINT]
-    The RTP time representing time npt-start. (default = rtptime of first RTP
-    packet).
 
    play-speed: (gdouble) [-MIN - MAX]
     The intended playback speed of the stream. The client is delivered data at
@@ -53,20 +67,6 @@ The following fields can or must (*) be specified in the structure:
     reporting and corresponds to the GStream applied-rate field in the
     NEWSEGMENT event. (default = 1.0)
 
-   seqnum-base: (uint) [0 - MAXINT]
-    The RTP sequence number representing the first rtp packet. When this
-    parameter is given, all sequence numbers below this seqnum should be
-    ignored. (default = seqnum of first RTP packet).
-
-   encoding-name: (String) ANY
-     typically second part of the mime type. ex. MP4V-ES. only required if
-     payload type >= 96. Converted to upper case.
-
-   encoding-params: (String) ANY
-     extra encoding parameters (as in the SDP a=rtpmap: field). only required
-     if different from the default of the encoding-name.
-     Converted to lower-case.
-     
    Optional parameters as key/value pairs, media type specific. The value type
    should be of type G_TYPE_STRING. The key is converted to lower-case. The
    value is left in its original case.
@@ -117,6 +117,127 @@ The following fields can or must (*) be specified in the structure:
   time:         <npt-start>
 
 
+Timestamping
+------------
+
+RTP in GStreamer uses a combination of the RTP timestamps and GStreamer buffer
+timestamps to ensure proper synchronisation at the sender and the receiver end.
+
+In RTP applications, the synchronisation is most complex at the receiver side.
+
+At the sender side, the RTP timestamps are generated in the payloaders based on
+GStreamer timestamps. At the receiver, GStreamer timestamps are reconstructed
+from the RTP timestamps and the GStreamer timestamps in the jitterbuffer. This
+process is explained in more detail below.
+
+= synchronisation at the sender
+
+Individual streams at the sender are synchronised using GStreamer timestamps.
+The payloader at the sender will convert the GStreamer timestamp into an RTP
+timestamp using the following formula:
+
+   RTP = ((RT - RT-base) * clock-rate / GST_SECOND) + RTP-offset
+
+  RTP:        the RTP timestamp for the stream. This value is truncated to
+              32 bits.
+  RT:         the GStreamer running time corresponding to the timestamp of the
+              packet to payload
+  RT-base:    the GStreamer running time of the first packet encoded
+  clock-rate: the clock-rate of the stream
+  RTP-offset: a random RTP offset
+
+The RTP timestamp corresponding to RT-base is the clock-base (see caps above). 
+
+In addition to setting an RTP timestamp in the RTP packet, the payloader is also
+responsible for putting the GStreamer timestamp on the resulting output buffer.
+This timestamp is used for further synchronisation at the sender pipeline, such
+as for sending out the packet on the network.
+
+Notice that the absolute timing information is lost; if the sender is sending
+multiple streams, the RTP timestamps in the packets do not contain enough
+information to synchronize them in the receiver. The receiver can however use
+the RTP timestamps to reconstruct the timing of the stream as it was created by
+the sender according to the sender's clock.
+
+Because the payloaded packet contains both an RTP timestamp and a GStreamer
+timestamp, it is possible for an RTP session manager to derive the relation
+between the RTP and GST timestamps. This information is used by a session
+manager to create SR reports. The NTP time in the report will contain the
+running time converted to NTP time and the corresponding RTP timestamp.
+
+Not that at the sender side, the RTP and GStreamer timestamp both increment at
+the same rate, the sender rate. This rate depends on the global pipeline clock
+of the sender. 
+
+Some pipelines to illustrate the process:
+
+    gst-launch v4l2src ! ffenc_h263p ! rtph263ppay ! udpsink
+
+  v4l2src puts a GStreamer timestamp on the video frames base on the current
+  running_time. The encoder encodes and passed the timestamp on. The payloader
+  generates an RTP timestamp using the above formula and puts it in the RTP
+  packet. It also copies the incomming GStreamer timestamp on the output RTP
+  packet. udpsink synchronizes on the gstreamer timestamp before pushing out the
+  packet. 
+
+
+= synchronisation at the receiver
+
+The receiver is responsible for timestamping the received RTP packet with the
+running_time of the clock at the time the packet was received. This GStreamer
+timestamp reflects the receiver rate and depends on the global pipeline clock of
+the receiver. The gstreamer timestamp of the received RTP packet contains a
+certain amount of jitter introduced by the network.
+
+The most simple option for the receiver is to depayload the RTP packet and play
+it back as soon as possible, this is with the timestamp when it was received
+from the network. For the above sender pipeline this would be done with the
+following pipeline:
+
+    gst-launch udpsrc caps="application/x-rtp, media=(string)video,
+      clock-rate=(int)90000, encoding-name=(string)H263-1998" ! rtph263pdepay !
+      ffdec_h263 ! xvimagesink
+
+It is important that the depayloader copies the incomming GStreamer timestamp
+directly to the depayloaded output buffer. It should never attempt to perform
+any logic with the RTP timestamp, this task is for the jitterbuffer as we will
+see next.
+
+The above pipeline does not attempt to deal with reordered packets or network
+jitter, which could result in jerky playback in the case of high jitter or
+corrupted video in the case of packet loss or reordering. This functionality is
+performed by the gstrtpjitterbuffer in GStreamer.
+
+The task of the gstrtpjitterbuffer element is to:
+
+ - deal with reordered packets based on the seqnum
+ - calculate the drift between the sender and receiver clocks using the
+   GStreamer timestamps (receiver clock rate) and RTP timestamps (sender clock
+   rate).
+
+To deal with reordered packet, the jitterbuffer holds on to the received RTP
+packets in a queue for a configurable amount of time, called the latency.
+
+The jitterbuffer also eliminates network jitter and then tracks the drift
+between the local clock (as expressed in the GStreamer timestamps) and the
+remote clock (as expressed in the RTP timestamps). It will remove the jitter
+and will apply the drift correction to the GStreamer timestamp before pushing
+the buffer downstream. The result is that the depayloader receives a smoothed
+GStreamer timestamp on the RTP packet, which is copied to the depayloaded data.
+
+The following pipeline illustrates the sender with a jitterbuffer.
+
+    gst-launch udpsrc caps="application/x-rtp, media=(string)video,
+      clock-rate=(int)90000, encoding-name=(string)H263-1998" !
+      gstrtpjitterbuffer latency=100 ! rtph263pdepay !  ffdec_h263 ! xvimagesink
+
+The latency property on the jitterbuffer controls the amount of delay (in
+milliseconds) to apply to the outgoing packets. A higher latency will produce
+smoother playback in networks with high jitter but cause a higher latency.
+Choosing a good value for the latency is a tradeoff between the quality and
+latency. The better the network, the lower the latency can be set.
+
+
 usage with UDP
 --------------
 
@@ -161,11 +282,12 @@ Some gst-launch lines:
   gst-launch-0.10 -v udpsrc caps="application/x-rtp, media=(string)video,
   payload=(int)96, clock-rate=(int)90000, encoding-name=(string)H263-1998,
   ssrc=(guint)527842345, clock-base=(guint)1150776941, seqnum-base=(guint)30982"
-  ! rtph263pdepay ! ffdec_h263 ! xvimagesink sync=false
+  ! rtph263pdepay ! ffdec_h263 ! xvimagesink 
 
- The receiver now displays an h263 image. Note that the sync parameter on
- xvimagesink needs to be FALSE because we do not have an RTP session manager
- that controls the synchronisation in this pipeline.
+ The receiver now displays an h263 image. Since there is no jitterbuffer in the
+ pipeline, frames will be displayed at the time when they are received. This can
+ result in jerky playback in the case of high network jitter or currupted video
+ when packets are dropped or reordered.
 
  Stream a quicktime file with mpeg4 video and AAC audio on port 5000 and port
  5002.
