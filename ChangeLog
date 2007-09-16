@@ -1,5 +1,32 @@
 2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_set_property),
+	(gst_rtp_bin_get_property):
+	Use lock to protect variable.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_class_init),
+	(gst_jitter_buffer_sink_parse_caps), (gst_rtp_jitter_buffer_chain),
+	(convert_rtptime_to_gsttime), (gst_rtp_jitter_buffer_loop):
+	Reconstruct GST timestamp from RTP timestamps based on measured clock
+	skew and sync offset.
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_init),
+	(rtp_jitter_buffer_set_tail_changed),
+	(rtp_jitter_buffer_set_clock_rate),
+	(rtp_jitter_buffer_get_clock_rate), (calculate_skew),
+	(rtp_jitter_buffer_insert), (rtp_jitter_buffer_peek):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Measure clock skew.
+	Add callback to be notfied when a new packet was inserted at the tail.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_init),
+	(calculate_jitter), (rtp_source_send_rtp):
+	* gst/rtpmanager/rtpsource.h:
+	Remove clock skew detection, it's move to the jitterbuffer now.
+
+2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	Patch by: Daniel Charles <dcharles at ti dot com>
 
 	* ext/amrwb/gstamrwbenc.c: (gst_amrwbenc_bandmode_get_type),

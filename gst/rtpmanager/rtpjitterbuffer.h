@@ -35,14 +35,38 @@ typedef struct _RTPJitterBufferClass RTPJitterBufferClass;
 #define RTP_JITTER_BUFFER_CAST(src)        ((RTPJitterBuffer *)(src))
 
 /**
+ * RTPTailChanged:
+ * @jbuf: an #RTPJitterBuffer
+ * @user_data: user data specified when registering
+ *
+ * This callback will be called when the tail buffer of @jbuf changed.
+ */
+typedef void (*RTPTailChanged) (RTPJitterBuffer *jbuf, gpointer user_data);
+
+/**
  * RTPJitterBuffer:
  *
  * A JitterBuffer in the #RTPSession
  */
 struct _RTPJitterBuffer {
-  GObject       object;
+  GObject        object;
 
-  GQueue       *packets;
+  GQueue        *packets;
+
+  gint           clock_rate;
+
+  /* for calculating skew */
+  GstClockTime   base_time;
+  GstClockTime   base_rtptime;
+  guint64        ext_rtptime;
+  gint64         window[100];
+  guint          window_pos;
+  gboolean       window_filling;
+  gint64         window_min;
+  gint64         skew;
+
+  RTPTailChanged tail_changed;
+  gpointer       user_data;
 };
 
 struct _RTPJitterBufferClass {
@@ -52,14 +76,20 @@ struct _RTPJitterBufferClass {
 GType rtp_jitter_buffer_get_type (void);
 
 /* managing lifetime */
-RTPJitterBuffer*      rtp_jitter_buffer_new            (void);
+RTPJitterBuffer*      rtp_jitter_buffer_new              (void);
 
-gboolean              rtp_jitter_buffer_insert         (RTPJitterBuffer *jbuf, GstBuffer *buf);
-GstBuffer *           rtp_jitter_buffer_pop            (RTPJitterBuffer *jbuf);
+void                  rtp_jitter_buffer_set_tail_changed (RTPJitterBuffer *jbuf, RTPTailChanged func, 
+                                                          gpointer user_data);
 
-void                  rtp_jitter_buffer_flush          (RTPJitterBuffer *jbuf);
+void                  rtp_jitter_buffer_set_clock_rate   (RTPJitterBuffer *jbuf, gint clock_rate);
+gint                  rtp_jitter_buffer_get_clock_rate   (RTPJitterBuffer *jbuf);
 
-guint                 rtp_jitter_buffer_num_packets    (RTPJitterBuffer *jbuf);
-guint32               rtp_jitter_buffer_get_ts_diff    (RTPJitterBuffer *jbuf);
+gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf, GstBuffer *buf, GstClockTime time);
+GstBuffer *           rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf);
+
+void                  rtp_jitter_buffer_flush            (RTPJitterBuffer *jbuf);
+
+guint                 rtp_jitter_buffer_num_packets      (RTPJitterBuffer *jbuf);
+guint32               rtp_jitter_buffer_get_ts_diff      (RTPJitterBuffer *jbuf);
 
 #endif /* __RTP_JITTER_BUFFER_H__ */

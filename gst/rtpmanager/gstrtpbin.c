@@ -1183,7 +1183,9 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LATENCY:
+      GST_RTP_BIN_LOCK (rtpbin);
       rtpbin->latency = g_value_get_uint (value);
+      GST_RTP_BIN_UNLOCK (rtpbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1201,7 +1203,9 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_LATENCY:
+      GST_RTP_BIN_LOCK (rtpbin);
       g_value_set_uint (value, rtpbin->latency);
+      GST_RTP_BIN_UNLOCK (rtpbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

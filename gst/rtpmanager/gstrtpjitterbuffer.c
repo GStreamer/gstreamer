@@ -320,7 +320,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_clear_pt_map);
 
   GST_DEBUG_CATEGORY_INIT
-      (rtpjitterbuffer_debug, "rtpjitterbuffer", 0, "RTP Jitter Buffer");
+      (rtpjitterbuffer_debug, "gstrtpjitterbuffer", 0, "RTP Jitter Buffer");
 }
 
 static void
@@ -452,6 +452,8 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
 
   if (priv->clock_rate <= 0)
     goto wrong_rate;
+
+  rtp_jitter_buffer_set_clock_rate (priv->jbuf, priv->clock_rate);
 
   GST_DEBUG_OBJECT (jitterbuffer, "got clock-rate %d", priv->clock_rate);
 
@@ -794,6 +796,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   GstRtpJitterBufferPrivate *priv;
   guint16 seqnum;
   GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime timestamp;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
 
@@ -811,10 +814,23 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
     gst_rtp_jitter_buffer_get_clock_rate (jitterbuffer, pt);
     if (priv->clock_rate == -1)
       goto not_negotiated;
+
+    rtp_jitter_buffer_set_clock_rate (priv->jbuf, priv->clock_rate);
   }
 
+  /* take the timestamp of the buffer. This is the time when the packet was
+   * received and is used to calculate jitter and clock skew. We will adjust
+   * this timestamp with the smoothed value after processing it in the
+   * jitterbuffer. */
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  /* bring to running time */
+  timestamp = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME,
+      timestamp);
+
   seqnum = gst_rtp_buffer_get_seq (buffer);
-  GST_DEBUG_OBJECT (jitterbuffer, "Received packet #%d", seqnum);
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "Received packet #%d at time %" GST_TIME_FORMAT, seqnum,
+      GST_TIME_ARGS (timestamp));
 
   JBUF_LOCK_CHECK (priv, out_flushing);
   /* don't accept more data on EOS */
@@ -852,7 +868,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   /* now insert the packet into the queue in sorted order. This function returns
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
    * have a duplicate. */
-  if (!rtp_jitter_buffer_insert (priv->jbuf, buffer))
+  if (!rtp_jitter_buffer_insert (priv->jbuf, buffer, timestamp))
     goto duplicate;
 
   /* signal addition of new buffer */
@@ -926,6 +942,37 @@ duplicate:
   }
 }
 
+static GstClockTime
+convert_rtptime_to_gsttime (GstRtpJitterBuffer * jitterbuffer,
+    guint64 exttimestamp)
+{
+  GstClockTime timestamp;
+  GstRtpJitterBufferPrivate *priv;
+
+  priv = jitterbuffer->priv;
+
+  /* construct a timestamp from the RTP timestamp now. We don't apply this
+   * timestamp to the outgoing buffer yet as the popped buffer might not be the
+   * one we need to push out right now. */
+  timestamp =
+      gst_util_uint64_scale_int (exttimestamp, GST_SECOND, priv->clock_rate);
+
+  /* apply first observed timestamp */
+  timestamp += priv->jbuf->base_time;
+
+  /* apply the current clock skew */
+  timestamp += priv->jbuf->skew;
+
+  /* apply the timestamp offset */
+  timestamp += priv->ts_offset;
+
+  /* add latency, this includes our own latency and the peer latency. */
+  timestamp += (priv->latency_ms * GST_MSECOND);
+  timestamp += priv->peer_latency;
+
+  return timestamp;
+}
+
 /**
  * This funcion will push out buffers on the source pad.
  *
@@ -942,9 +989,7 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
   guint16 seqnum;
   guint32 rtp_time;
   GstClockTime timestamp;
-  gint64 running_time;
   guint64 exttimestamp;
-  gint ts_offset_rtp;
 
   priv = jitterbuffer->priv;
 
@@ -968,18 +1013,28 @@ again:
 
   /* pop a buffer, we must have a buffer now */
   outbuf = rtp_jitter_buffer_pop (priv->jbuf);
-
   seqnum = gst_rtp_buffer_get_seq (outbuf);
 
-  /* get the max deadline to wait for the missing packets, this is the time
-   * of the currently popped packet */
+  /* construct extended RTP timestamp from packet */
   rtp_time = gst_rtp_buffer_get_timestamp (outbuf);
   exttimestamp = gst_rtp_buffer_ext_timestamp (&priv->exttimestamp, rtp_time);
+
+  /* if no clock_base was given, take first ts as base */
+  if (priv->clock_base == -1) {
+    GST_DEBUG_OBJECT (jitterbuffer,
+        "no clock base, using exttimestamp %" G_GUINT64_FORMAT, exttimestamp);
+    priv->clock_base = exttimestamp;
+  }
+  /* subtract the base clock time so that we start counting from 0 */
+  exttimestamp -= priv->clock_base;
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "Popped buffer #%d, rtptime %u, exttime %" G_GUINT64_FORMAT
       ", now %d left", seqnum, rtp_time, exttimestamp,
       rtp_jitter_buffer_num_packets (priv->jbuf));
+
+  /* convert the RTP timestamp to a gstreamer timestamp. */
+  timestamp = convert_rtptime_to_gsttime (jitterbuffer, exttimestamp);
 
   /* If we don't know what the next seqnum should be (== -1) we have to wait
    * because it might be possible that we are not receiving this buffer in-order,
@@ -991,7 +1046,7 @@ again:
    * packet expires. */
   if (priv->next_seqnum == -1 || priv->next_seqnum != seqnum) {
     GstClockID id;
-    GstClockTimeDiff jitter;
+    GstClockTime sync_time;
     GstClockReturn ret;
     GstClock *clock;
 
@@ -1007,34 +1062,6 @@ again:
       GST_DEBUG_OBJECT (jitterbuffer, "First buffer %d, do sync", seqnum);
     }
 
-    GST_DEBUG_OBJECT (jitterbuffer,
-        "exttimestamp %" G_GUINT64_FORMAT ", base %" G_GINT64_FORMAT,
-        exttimestamp, priv->clock_base);
-
-    /* if no clock_base was given, take first ts as base */
-    if (priv->clock_base == -1) {
-      GST_DEBUG_OBJECT (jitterbuffer,
-          "no clock base, using exttimestamp %" G_GUINT64_FORMAT, exttimestamp);
-      priv->clock_base = exttimestamp;
-    }
-
-    /* take rtp timestamp offset into account, this should not wrap around since
-     * we are dealing with the extended timestamp here. */
-    exttimestamp -= priv->clock_base;
-
-    /* bring timestamp to gst time */
-    timestamp =
-        gst_util_uint64_scale_int (exttimestamp, GST_SECOND, priv->clock_rate);
-
-    GST_DEBUG_OBJECT (jitterbuffer,
-        "exttimestamp %" G_GUINT64_FORMAT ", clock-rate %u, timestamp %"
-        GST_TIME_FORMAT, exttimestamp, priv->clock_rate,
-        GST_TIME_ARGS (timestamp));
-
-    /* bring to running time */
-    running_time = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME,
-        timestamp);
-
     GST_OBJECT_LOCK (jitterbuffer);
     clock = GST_ELEMENT_CLOCK (jitterbuffer);
     if (!clock) {
@@ -1043,25 +1070,21 @@ again:
       goto push_buffer;
     }
 
-    /* add latency, this includes our own latency and the peer latency. */
-    running_time += (priv->latency_ms * GST_MSECOND);
-    running_time += priv->peer_latency;
-
-    GST_DEBUG_OBJECT (jitterbuffer, "sync to running_time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (running_time));
+    GST_DEBUG_OBJECT (jitterbuffer, "sync to timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp));
 
     /* prepare for sync against clock */
-    running_time += GST_ELEMENT_CAST (jitterbuffer)->base_time;
+    sync_time = timestamp + GST_ELEMENT_CAST (jitterbuffer)->base_time;
 
     /* create an entry for the clock */
-    id = priv->clock_id = gst_clock_new_single_shot_id (clock, running_time);
+    id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
     priv->waiting_seqnum = seqnum;
     GST_OBJECT_UNLOCK (jitterbuffer);
 
     /* release the lock so that the other end can push stuff or unlock */
     JBUF_UNLOCK (priv);
 
-    ret = gst_clock_id_wait (id, &jitter);
+    ret = gst_clock_id_wait (id, NULL);
 
     JBUF_LOCK (priv);
     /* and free the entry */
@@ -1080,8 +1103,9 @@ again:
     if (ret == GST_CLOCK_UNSCHEDULED) {
       GST_DEBUG_OBJECT (jitterbuffer,
           "Wait got unscheduled, will retry to push with new buffer");
-      /* reinsert popped buffer into queue */
-      if (!rtp_jitter_buffer_insert (priv->jbuf, outbuf)) {
+      /* reinsert popped buffer into queue, no need to recalculate skew, we do
+       * that when inserting the buffer in the chain function */
+      if (!rtp_jitter_buffer_insert (priv->jbuf, outbuf, -1)) {
         GST_DEBUG_OBJECT (jitterbuffer,
             "Duplicate packet #%d detected, dropping", seqnum);
         priv->num_duplicates++;
@@ -1089,6 +1113,9 @@ again:
       }
       goto again;
     }
+    /* After waiting, we might have a better estimate of skew, generate a new
+     * timestamp before pushing out the buffer */
+    timestamp = convert_rtptime_to_gsttime (jitterbuffer, exttimestamp);
   }
 push_buffer:
   /* check if we are pushing something unexpected */
@@ -1105,37 +1132,13 @@ push_buffer:
     /* update stats */
     priv->num_late += dropped;
 
-    /* set DISCONT flag */
+    /* set DISCONT flag when we missed a packet. */
     outbuf = gst_buffer_make_metadata_writable (outbuf);
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   }
 
-  /* apply the timestamp offset */
-  if (priv->ts_offset > 0)
-    ts_offset_rtp =
-        gst_util_uint64_scale_int (priv->ts_offset, priv->clock_rate,
-        GST_SECOND);
-  else if (priv->ts_offset < 0)
-    ts_offset_rtp =
-        -gst_util_uint64_scale_int (-priv->ts_offset, priv->clock_rate,
-        GST_SECOND);
-  else
-    ts_offset_rtp = 0;
-
-  if (ts_offset_rtp != 0) {
-    guint32 timestamp;
-
-    /* if the offset changed, mark with discont */
-    if (priv->ts_offset != priv->prev_ts_offset) {
-      GST_DEBUG_OBJECT (jitterbuffer, "changing offset to %d", ts_offset_rtp);
-      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-      priv->prev_ts_offset = priv->ts_offset;
-    }
-
-    timestamp = gst_rtp_buffer_get_timestamp (outbuf);
-    timestamp += ts_offset_rtp;
-    gst_rtp_buffer_set_timestamp (outbuf, timestamp);
-  }
+  /* apply timestamp to buffer now */
+  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
   /* now we are ready to push the buffer. Save the seqnum and release the lock
    * so the other end can push stuff in the queue again. */
