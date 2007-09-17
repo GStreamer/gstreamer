@@ -487,7 +487,8 @@ gst_text_overlay_init (GstTextOverlay * overlay, GstTextOverlayClass * klass)
   overlay->line_align = DEFAULT_PROP_LINE_ALIGNMENT;
   overlay->layout =
       pango_layout_new (GST_TEXT_OVERLAY_GET_CLASS (overlay)->pango_context);
-  pango_layout_set_alignment (overlay->layout, overlay->line_align);
+  pango_layout_set_alignment (overlay->layout,
+      (PangoAlignment) overlay->line_align);
   memset (&overlay->bitmap, 0, sizeof (overlay->bitmap));
 
   overlay->halign = DEFAULT_PROP_HALIGNMENT;
@@ -685,7 +686,8 @@ gst_text_overlay_set_property (GObject * object, guint prop_id,
       break;
     case PROP_LINE_ALIGNMENT:
       overlay->line_align = g_value_get_enum (value);
-      pango_layout_set_alignment (overlay->layout, overlay->line_align);
+      pango_layout_set_alignment (overlay->layout,
+          (PangoAlignment) overlay->line_align);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

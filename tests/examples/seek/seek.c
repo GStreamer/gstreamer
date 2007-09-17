@@ -1032,11 +1032,15 @@ static gboolean stop_seek (GtkWidget * widget, GdkEventButton * event,
 static void
 set_scale (gdouble value)
 {
-  g_signal_handlers_block_by_func (hscale, start_seek, pipeline);
-  g_signal_handlers_block_by_func (hscale, stop_seek, pipeline);
+  g_signal_handlers_block_by_func (hscale, (void *) start_seek,
+      (void *) pipeline);
+  g_signal_handlers_block_by_func (hscale, (void *) stop_seek,
+      (void *) pipeline);
   gtk_adjustment_set_value (adjustment, value);
-  g_signal_handlers_unblock_by_func (hscale, start_seek, pipeline);
-  g_signal_handlers_unblock_by_func (hscale, stop_seek, pipeline);
+  g_signal_handlers_unblock_by_func (hscale, (void *) start_seek,
+      (void *) pipeline);
+  g_signal_handlers_unblock_by_func (hscale, (void *) stop_seek,
+      (void *) pipeline);
   gtk_widget_queue_draw (hscale);
 }
 

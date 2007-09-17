@@ -884,7 +884,7 @@ gst_base_audio_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   gint bps;
   gint accum;
   gint out_samples;
-  GstClockTime base_time = -1, latency;
+  GstClockTime base_time = GST_CLOCK_TIME_NONE, latency;
   GstClock *clock;
   gboolean sync, slaved, align_next;
 

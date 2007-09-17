@@ -132,7 +132,7 @@ gst_rtsp_message_init (GstRTSPMessage * msg)
 GstRTSPMsgType
 gst_rtsp_message_get_type (GstRTSPMessage * msg)
 {
-  g_return_val_if_fail (msg != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (msg != NULL, GST_RTSP_MESSAGE_INVALID);
 
   return msg->type;
 }

@@ -913,7 +913,7 @@ vorbis_handle_data_packet (GstVorbisDec * vd, ogg_packet * packet)
   guint sample_count;
   GstBuffer *out;
   GstFlowReturn result;
-  GstClockTime timestamp = -1, nextts;
+  GstClockTime timestamp = GST_CLOCK_TIME_NONE, nextts;
   gint size;
 
   if (!vd->initialized)

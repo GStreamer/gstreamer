@@ -17,12 +17,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include <stdlib.h>
-
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include <string.h>
+#include <stdlib.h>
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>

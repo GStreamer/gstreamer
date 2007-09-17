@@ -1,3 +1,20 @@
+2007-09-17  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* ext/pango/gsttextoverlay.c: (gst_text_overlay_init),
+	(gst_text_overlay_set_property):
+	* ext/vorbis/vorbisdec.c: (vorbis_handle_data_packet):
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_render):
+	* gst-libs/gst/rtp/gstrtcpbuffer.c: (gst_rtcp_ntp_to_unix),
+	(gst_rtcp_unix_to_ntp):
+	* gst-libs/gst/rtsp/gstrtspmessage.c: (gst_rtsp_message_get_type):
+	* gst/playback/gstqueue2.c:
+	* tests/examples/seek/seek.c: (set_scale):
+	Fix a bunch of compile warnings shown with Forte.
+
+	* gst/audiorate/gstaudiorate.c:
+	Always pull in config.h before including any system headers.
+
 2007-09-17  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/playback/gstqueue2.c: (update_buffering),
