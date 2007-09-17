@@ -781,11 +781,11 @@ gst_rtp_session_process_rtp (RTPSession * sess, RTPSource * src,
   rtpsession = GST_RTP_SESSION (user_data);
   priv = rtpsession->priv;
 
-  GST_DEBUG_OBJECT (rtpsession, "reading receiving RTP packet");
-
   if (rtpsession->recv_rtp_src) {
+    GST_DEBUG_OBJECT (rtpsession, "pushing received RTP packet");
     result = gst_pad_push (rtpsession->recv_rtp_src, buffer);
   } else {
+    GST_DEBUG_OBJECT (rtpsession, "dropping received RTP packet");
     gst_buffer_unref (buffer);
     result = GST_FLOW_OK;
   }
@@ -1114,10 +1114,22 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstBuffer * buffer)
   }
 
   ret = rtp_session_process_rtp (priv->session, buffer, ntpnstime);
+  if (ret != GST_FLOW_OK)
+    goto push_error;
 
+
+done:
   gst_object_unref (rtpsession);
 
   return ret;
+
+  /* ERRORS */
+push_error:
+  {
+    GST_DEBUG_OBJECT (rtpsession, "process returned %s",
+        gst_flow_get_name (ret));
+    goto done;
+  }
 }
 
 static GstFlowReturn
@@ -1286,10 +1298,21 @@ gst_rtp_session_chain_send_rtp (GstPad * pad, GstBuffer * buffer)
   }
 
   ret = rtp_session_send_rtp (priv->session, buffer, ntpnstime);
+  if (ret != GST_FLOW_OK)
+    goto push_error;
 
+done:
   gst_object_unref (rtpsession);
 
   return ret;
+
+  /* ERRORS */
+push_error:
+  {
+    GST_DEBUG_OBJECT (rtpsession, "process returned %s",
+        gst_flow_get_name (ret));
+    goto done;
+  }
 }
 
 /* Create sinkpad to receive RTP packets from senders. This will also create a

@@ -96,6 +96,9 @@ static GstElementDetails gst_rtp_ssrc_demux_details = {
   "Wim Taymans <wim@fluendo.com>"
 };
 
+#define GST_PAD_LOCK(obj)   (g_mutex_lock ((obj)->padlock))
+#define GST_PAD_UNLOCK(obj) (g_mutex_unlock ((obj)->padlock))
+
 /* signals */
 enum
 {
@@ -159,6 +162,7 @@ find_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc)
   return NULL;
 }
 
+/* with PAD_LOCK */
 static GstRtpSsrcDemuxPad *
 create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
     GstClockTime timestamp)
@@ -202,9 +206,6 @@ create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
 
   demux->srcpads = g_slist_prepend (demux->srcpads, demuxpad);
 
-  /* unlock to perform the remainder and to fire our signal */
-  GST_OBJECT_UNLOCK (demux);
-
   /* copy caps from input */
   gst_pad_set_caps (rtp_pad, GST_PAD_CAPS (demux->rtp_sink));
   gst_pad_use_fixed_caps (rtp_pad);
@@ -226,8 +227,6 @@ create_demux_pad_for_ssrc (GstRtpSsrcDemux * demux, guint32 ssrc,
 
   g_signal_emit (G_OBJECT (demux),
       gst_rtp_ssrc_demux_signals[SIGNAL_NEW_SSRC_PAD], 0, ssrc, rtp_pad);
-
-  GST_OBJECT_LOCK (demux);
 
   return demuxpad;
 }
@@ -304,6 +303,8 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux,
       gst_rtp_ssrc_demux_rtcp_sink_event);
   gst_element_add_pad (GST_ELEMENT_CAST (demux), demux->rtcp_sink);
 
+  demux->padlock = g_mutex_new ();
+
   gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
 }
 
@@ -327,6 +328,7 @@ gst_rtp_ssrc_demux_finalize (GObject * object)
   GstRtpSsrcDemux *demux;
 
   demux = GST_RTP_SSRC_DEMUX (object);
+  g_mutex_free (demux->padlock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -349,14 +351,14 @@ gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event)
       GSList *walk;
 
       res = TRUE;
-      GST_OBJECT_LOCK (demux);
+      GST_PAD_LOCK (demux);
       for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
         GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
 
         gst_event_ref (event);
         res &= gst_pad_push_event (pad->rtp_pad, event);
       }
-      GST_OBJECT_UNLOCK (demux);
+      GST_PAD_UNLOCK (demux);
       gst_event_unref (event);
       break;
     }
@@ -381,13 +383,13 @@ gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad, GstEvent * event)
       GSList *walk;
 
       res = TRUE;
-      GST_OBJECT_LOCK (demux);
+      GST_PAD_LOCK (demux);
       for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
         GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
 
         res &= gst_pad_push_event (pad->rtcp_pad, event);
       }
-      GST_OBJECT_UNLOCK (demux);
+      GST_PAD_UNLOCK (demux);
       break;
     }
   }
@@ -412,7 +414,7 @@ gst_rtp_ssrc_demux_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (demux, "received buffer of SSRC %08x", ssrc);
 
-  GST_OBJECT_LOCK (demux);
+  GST_PAD_LOCK (demux);
   dpad = find_demux_pad_for_ssrc (demux, ssrc);
   if (dpad == NULL) {
     if (!(dpad =
@@ -420,7 +422,7 @@ gst_rtp_ssrc_demux_chain (GstPad * pad, GstBuffer * buf)
                 GST_BUFFER_TIMESTAMP (buf))))
       goto create_failed;
   }
-  GST_OBJECT_UNLOCK (demux);
+  GST_PAD_UNLOCK (demux);
 
   /* push to srcpad */
   ret = gst_pad_push (dpad->rtp_pad, buf);
@@ -440,7 +442,7 @@ create_failed:
   {
     GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
         ("Could not create new pad"));
-    GST_OBJECT_UNLOCK (demux);
+    GST_PAD_UNLOCK (demux);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
@@ -479,14 +481,14 @@ gst_rtp_ssrc_demux_rtcp_chain (GstPad * pad, GstBuffer * buf)
 
   GST_DEBUG_OBJECT (demux, "received RTCP of SSRC %08x", ssrc);
 
-  GST_OBJECT_LOCK (demux);
+  GST_PAD_LOCK (demux);
   dpad = find_demux_pad_for_ssrc (demux, ssrc);
   if (dpad == NULL) {
     GST_DEBUG_OBJECT (demux, "creating pad for SSRC %08x", ssrc);
     if (!(dpad = create_demux_pad_for_ssrc (demux, ssrc, -1)))
       goto create_failed;
   }
-  GST_OBJECT_UNLOCK (demux);
+  GST_PAD_UNLOCK (demux);
 
   /* push to srcpad */
   ret = gst_pad_push (dpad->rtcp_pad, buf);
@@ -506,7 +508,7 @@ create_failed:
   {
     GST_ELEMENT_ERROR (demux, STREAM, DECODE, (NULL),
         ("Could not create new pad"));
-    GST_OBJECT_UNLOCK (demux);
+    GST_PAD_UNLOCK (demux);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
@@ -539,7 +541,7 @@ gst_rtp_ssrc_demux_internal_links (GstPad * pad)
 
   demux = GST_RTP_SSRC_DEMUX (gst_pad_get_parent (pad));
 
-  GST_OBJECT_LOCK (demux);
+  GST_PAD_LOCK (demux);
   for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
     GstRtpSsrcDemuxPad *dpad = (GstRtpSsrcDemuxPad *) walk->data;
 
@@ -555,7 +557,7 @@ gst_rtp_ssrc_demux_internal_links (GstPad * pad)
       break;
     }
   }
-  GST_OBJECT_UNLOCK (demux);
+  GST_PAD_UNLOCK (demux);
 
   gst_object_unref (demux);
   return res;
