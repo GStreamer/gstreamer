@@ -1,3 +1,10 @@
+2007-09-17  Wim Taymans  <wim.taymans@gmail.com>
+
+	* plugins/elements/gstqueue.c: (apply_buffer),
+	(gst_queue_locked_enqueue), (gst_queue_locked_dequeue):
+	Measure queue level based on the diff between head and tail timestamps
+	even when pushing the first buffer.
+
 2007-09-14  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_flush),

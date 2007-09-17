@@ -570,7 +570,8 @@ apply_segment (GstQueue * queue, GstEvent * event, GstSegment * segment)
 
 /* take a buffer and update segment, updating the time level of the queue. */
 static void
-apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment)
+apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment,
+    gboolean with_duration)
 {
   GstClockTime duration, timestamp;
 
@@ -583,7 +584,7 @@ apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment)
     timestamp = segment->last_stop;
 
   /* add duration */
-  if (duration != GST_CLOCK_TIME_NONE)
+  if (with_duration && duration != GST_CLOCK_TIME_NONE)
     timestamp += duration;
 
   GST_DEBUG_OBJECT (queue, "last_stop updated to %" GST_TIME_FORMAT,
@@ -626,8 +627,12 @@ gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
     /* add buffer to the statistics */
     queue->cur_level.buffers++;
     queue->cur_level.bytes += GST_BUFFER_SIZE (buffer);
-    apply_buffer (queue, buffer, &queue->sink_segment);
+    apply_buffer (queue, buffer, &queue->sink_segment, TRUE);
 
+    /* if this is the first buffer update the end side as well, but without the
+     * duration. */
+    if (queue->cur_level.buffers == 1)
+      apply_buffer (queue, buffer, &queue->src_segment, FALSE);
   } else if (GST_IS_EVENT (item)) {
     GstEvent *event = GST_EVENT_CAST (item);
 
@@ -661,7 +666,7 @@ gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
-/* dequeue an item from the queue and update level stats */
+/* dequeue an item from the queue and update level stats, with QUEUE_LOCK */
 static GstMiniObject *
 gst_queue_locked_dequeue (GstQueue * queue)
 {
@@ -679,8 +684,11 @@ gst_queue_locked_dequeue (GstQueue * queue)
 
     queue->cur_level.buffers--;
     queue->cur_level.bytes -= GST_BUFFER_SIZE (buffer);
-    apply_buffer (queue, buffer, &queue->src_segment);
+    apply_buffer (queue, buffer, &queue->src_segment, TRUE);
 
+    /* if the queue is empty now, update the other side */
+    if (queue->cur_level.buffers == 0)
+      queue->cur_level.time = 0;
   } else if (GST_IS_EVENT (item)) {
     GstEvent *event = GST_EVENT_CAST (item);
 
