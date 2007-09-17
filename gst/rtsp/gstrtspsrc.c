@@ -568,7 +568,8 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
       /* If we have a dynamic payload type, see if we have a stream with the
        * same payload number. If there is one, they are part of the same
        * container and we only need to add one pad. */
-      if (find_stream (src, GINT_TO_POINTER (stream->pt), find_stream_by_pt)) {
+      if (find_stream (src, GINT_TO_POINTER (stream->pt),
+              (gpointer) find_stream_by_pt)) {
         stream->container = TRUE;
       }
     }
@@ -1459,7 +1460,8 @@ new_session_pad (GstElement * session, GstPad * pad, GstRTSPSrc * src)
 
   GST_DEBUG_OBJECT (src, "stream: %u, SSRC %d, PT %d", id, ssrc, pt);
 
-  stream = find_stream (src, GINT_TO_POINTER (id), find_stream_by_id);
+  stream =
+      find_stream (src, GINT_TO_POINTER (id), (gpointer) find_stream_by_id);
   if (stream == NULL)
     goto unknown_stream;
 
@@ -1514,7 +1516,9 @@ request_pt_map (GstElement * sess, guint session, guint pt, GstRTSPSrc * src)
   GST_DEBUG_OBJECT (src, "getting pt map for pt %d in session %d", pt, session);
 
   GST_RTSP_STATE_LOCK (src);
-  stream = find_stream (src, GINT_TO_POINTER (session), find_stream_by_id);
+  stream =
+      find_stream (src, GINT_TO_POINTER (session),
+      (gpointer) find_stream_by_id);
   if (!stream)
     goto unknown_stream;
 
@@ -1539,7 +1543,9 @@ gst_rtspsrc_do_stream_eos (GstRTSPSrc * src, guint session)
   GST_DEBUG_OBJECT (src, "setting stream for session %u to EOS", session);
 
   /* get stream for session */
-  stream = find_stream (src, GINT_TO_POINTER (session), find_stream_by_id);
+  stream =
+      find_stream (src, GINT_TO_POINTER (session),
+      (gpointer) find_stream_by_id);
   if (!stream)
     goto unknown_stream;
 
@@ -2396,7 +2402,9 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 
   channel = message.type_data.data.channel;
 
-  stream = find_stream (src, GINT_TO_POINTER (channel), find_stream_by_channel);
+  stream =
+      find_stream (src, GINT_TO_POINTER (channel),
+      (gpointer) find_stream_by_channel);
   if (!stream)
     goto unknown_stream;
 
@@ -3978,7 +3986,8 @@ gst_rtspsrc_parse_rtpinfo (GstRTSPSrc * src, gchar * rtpinfo)
       fields[j] = g_strchug (fields[j]);
       if (g_str_has_prefix (fields[j], "url=")) {
         /* get the url and the stream */
-        stream = find_stream (src, (fields[j] + 4), find_stream_by_setup);
+        stream =
+            find_stream (src, (fields[j] + 4), (gpointer) find_stream_by_setup);
       } else if (g_str_has_prefix (fields[j], "seq=")) {
         seqbase = atoi (fields[j] + 4);
       } else if (g_str_has_prefix (fields[j], "rtptime=")) {
@@ -4293,7 +4302,7 @@ gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message)
       GST_DEBUG_OBJECT (rtspsrc, "got error from %s",
           GST_ELEMENT_NAME (udpsrc));
 
-      stream = find_stream (rtspsrc, udpsrc, find_stream_by_udpsrc);
+      stream = find_stream (rtspsrc, udpsrc, (gpointer) find_stream_by_udpsrc);
       if (!stream)
         goto forward;
 

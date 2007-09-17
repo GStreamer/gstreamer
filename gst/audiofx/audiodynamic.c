@@ -263,7 +263,7 @@ gst_audio_dynamic_class_init (GstAudioDynamicClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_RATIO,
       g_param_spec_float ("ratio", "Ratio",
-          "Ratio that should be applied", 0.0, G_MAXDOUBLE,
+          "Ratio that should be applied", 0.0, G_MAXFLOAT,
           1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   GST_AUDIO_FILTER_CLASS (klass)->setup =

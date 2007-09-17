@@ -1,3 +1,12 @@
+2007-09-17  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/audiofx/audiodynamic.c: (gst_audio_dynamic_class_init):
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_stream),
+	(new_session_pad), (request_pt_map), (gst_rtspsrc_do_stream_eos),
+	(gst_rtspsrc_loop_interleaved), (gst_rtspsrc_parse_rtpinfo),
+	(gst_rtspsrc_handle_message):
+	Fix compiler warnings shown with Forte.
+
 2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_setup_streams),
