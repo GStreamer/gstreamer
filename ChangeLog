@@ -1,5 +1,12 @@
 2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_setup_streams),
+	(gst_rtspsrc_dup_printf):
+	Give meaningfull error when all streams failed to configure for some
+	reason.
+
+2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtp/README:
 	Update README with the design for synchronisation rules of RTP on
 	sender and receiver.

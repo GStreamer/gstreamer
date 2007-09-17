@@ -3384,6 +3384,7 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
   /* reset some state */
   src->free_channel = 0;
   src->interleaved = FALSE;
+  src->need_activate = FALSE;
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     gchar *transports;
@@ -3478,8 +3479,10 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
         goto no_transport;
 
       /* parse transport, go to next stream on parse error */
-      if (gst_rtsp_transport_parse (resptrans, &transport) != GST_RTSP_OK)
-        continue;
+      if (gst_rtsp_transport_parse (resptrans, &transport) != GST_RTSP_OK) {
+        GST_WARNING_OBJECT (src, "failed to parse transport %s", resptrans);
+        goto next;
+      }
 
       /* update allowed transports for other streams. once the transport of
        * one stream has been determined, we make sure that all other streams
@@ -3518,8 +3521,12 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
           GST_DEBUG_OBJECT (src,
               "could not configure stream %p transport, skipping stream",
               stream);
+          goto next;
         }
       }
+      /* we need to activate at least one streams when we detect activity */
+      src->need_activate = TRUE;
+    next:
       /* clean up our transport struct */
       gst_rtsp_transport_init (&transport);
     }
@@ -3527,8 +3534,9 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
 
   gst_rtsp_ext_list_stream_select (src->extensions, src->url);
 
-  /* we need to activate the streams when we detect activity */
-  src->need_activate = TRUE;
+  /* if there is nothing to activate, error out */
+  if (!src->need_activate)
+    goto nothing_to_activate;
 
   return TRUE;
 
@@ -3569,6 +3577,12 @@ no_transport:
     GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
         ("Server did not select transport."));
     goto cleanup_error;
+  }
+nothing_to_activate:
+  {
+    GST_ELEMENT_ERROR (src, STREAM, FORMAT, (NULL),
+        ("No supported stream was found."));
+    return FALSE;
   }
 cleanup_error:
   {
