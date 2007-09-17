@@ -2998,8 +2998,6 @@ bin_query_latency_fold (GstElement * item, GValue * ret, QueryFold * fold)
     GstClockTime min, max;
     gboolean live;
 
-    g_value_set_boolean (ret, TRUE);
-
     gst_query_parse_latency (fold->query, &live, &min, &max);
 
     GST_DEBUG_OBJECT (item,
@@ -3016,6 +3014,9 @@ bin_query_latency_fold (GstElement * item, GValue * ret, QueryFold * fold)
       fold->max = max;
     if (fold->live == FALSE)
       fold->live = live;
+  } else {
+    g_value_set_boolean (ret, FALSE);
+    GST_DEBUG_OBJECT (item, "failed query");
   }
 
   gst_object_unref (item);
@@ -3116,6 +3117,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
       fold_func = (GstIteratorFoldFunction) bin_query_latency_fold;
       fold_init = bin_query_min_max_init;
       fold_done = bin_query_latency_done;
+      res = TRUE;
       break;
     }
     default:
@@ -3126,7 +3128,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
   fold_data.query = query;
 
   g_value_init (&ret, G_TYPE_BOOLEAN);
-  g_value_set_boolean (&ret, FALSE);
+  g_value_set_boolean (&ret, res);
 
   iter = gst_bin_iterate_sinks (bin);
   GST_DEBUG_OBJECT (bin, "Sending query %p (type %s) to sink children",
@@ -3145,7 +3147,7 @@ gst_bin_query (GstElement * element, GstQuery * query)
         gst_iterator_resync (iter);
         if (fold_init)
           fold_init (bin, &fold_data);
-        g_value_set_boolean (&ret, FALSE);
+        g_value_set_boolean (&ret, res);
         break;
       case GST_ITERATOR_OK:
       case GST_ITERATOR_DONE:

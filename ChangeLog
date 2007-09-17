@@ -1,3 +1,11 @@
+2007-09-17  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/gstbin.c: (bin_query_latency_fold), (gst_bin_query):
+	A latency query fails when one of the sinks fail.
+
+	* gst/gstelement.c: (gst_element_set_base_time):
+	Improve debugging.
+
 2007-09-17  Jan Schmidt - Sun Microsystems <jan.schmidt@sun.com>
 
 	* gst/gstbin.c: (gst_bin_continue_func):
