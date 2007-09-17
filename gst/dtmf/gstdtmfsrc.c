@@ -829,6 +829,9 @@ gst_dtmf_src_change_state (GstElement * element, GstStateChange transition)
     goto failure;
 
   switch (transition) {
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      no_preroll = TRUE;
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG_OBJECT (dtmfsrc, "Flushing event queue");
       /* Flushing the event queue */
