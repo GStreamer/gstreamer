@@ -540,7 +540,11 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc *dtmfsrc)
   GstClock *clock;
   GstClockTime base_time;
 
+#ifdef MAEMO_BROKEN
+  base_time = 0;
+#else
   base_time = gst_element_get_base_time (GST_ELEMENT (dtmfsrc));
+#endif
 
   clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
   if (clock != NULL) {
@@ -765,8 +769,12 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   clock = gst_element_get_clock (GST_ELEMENT (basesrc));
 
+#ifdef MAEMO_BROKEN
+  clockid = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp);
+#else
   clockid = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp +
       gst_element_get_base_time (GST_ELEMENT (dtmfsrc)));
+#endif
   gst_object_unref (clock);
 
   GST_OBJECT_LOCK (dtmfsrc);
