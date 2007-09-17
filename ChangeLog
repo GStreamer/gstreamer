@@ -1,3 +1,12 @@
+2007-09-17  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/playback/gstqueue2.c: (update_buffering),
+	(gst_queue_locked_flush), (gst_queue_locked_enqueue),
+	(gst_queue_handle_sink_event), (gst_queue_chain),
+	(gst_queue_push_one), (gst_queue_sink_activate_push),
+	(gst_queue_src_activate_push), (gst_queue_src_activate_pull):
+	Also fix #476514 for queue2.
+
 2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
