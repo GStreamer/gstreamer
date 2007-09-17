@@ -147,8 +147,8 @@
 #define MIN_VOLUME               0
 #define MAX_VOLUME               36
 
-#define MIN_INTER_DIGIT_INTERVAL (50 * GST_MSECOND)
-#define MIN_PULSE_DURATION       (70 * GST_MSECOND)
+#define MIN_INTER_DIGIT_INTERVAL 50 /* ms */
+#define MIN_PULSE_DURATION       70 /* ms */
 
 #define DEFAULT_PACKET_REDUNDANCY 1
 #define MIN_PACKET_REDUNDANCY 1
@@ -330,7 +330,7 @@ gst_rtp_dtmf_src_init (GstRTPDTMFSrc * object, GstRTPDTMFSrcClass * g_class)
   object->packet_redundancy = DEFAULT_PACKET_REDUNDANCY;
 
   object->event_queue = g_async_queue_new ();
-  object->last_event = NULL;
+  object->payload = NULL;
 
   GST_DEBUG_OBJECT (object, "init done");
 }
@@ -528,7 +528,7 @@ gst_rtp_dtmf_src_set_stream_lock (GstRTPDTMFSrc *dtmfsrc, gboolean lock)
                       "lock", G_TYPE_BOOLEAN, lock, NULL);
 
    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_OOB, structure);
-   if (!gst_pad_push_event (dtmfsrc->srcpad, event)) {
+   if (!gst_pad_push_event (GST_BASE_SRC_PAD (dtmfsrc), event)) {
      GST_WARNING_OBJECT (dtmfsrc, "stream-lock event not handled");
    }
 
@@ -545,7 +545,7 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc *dtmfsrc)
   clock = gst_element_get_clock (GST_ELEMENT (dtmfsrc));
   if (clock != NULL) {
     dtmfsrc->timestamp = gst_clock_get_time (clock)
-        + MIN_INTER_DIGIT_INTERVAL - base_time;
+        + (MIN_INTER_DIGIT_INTERVAL * GST_MSECOND) - base_time;
     dtmfsrc->start_timestamp = dtmfsrc->timestamp;
     gst_object_unref (clock);
   } else {
@@ -557,8 +557,8 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc *dtmfsrc)
 
   dtmfsrc->rtp_timestamp = dtmfsrc->ts_base +
       gst_util_uint64_scale_int (
-          gst_segment_to_running_time (&dtmfsrc->segment, GST_FORMAT_TIME,
-              dtmfsrc->timestamp),
+          gst_segment_to_running_time (&GST_BASE_SRC (dtmfsrc)->segment,
+              GST_FORMAT_TIME, dtmfsrc->timestamp),
           dtmfsrc->clock_rate, GST_SECOND);
 }
 
@@ -574,6 +574,7 @@ gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc *dtmfsrc, gint event_number,
   event->payload = g_new0 (GstRTPDTMFPayload, 1);
   event->payload->event = CLAMP (event_number, MIN_EVENT, MAX_EVENT);
   event->payload->volume = CLAMP (event_volume, MIN_VOLUME, MAX_VOLUME);
+  event->payload->duration = dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
 
   g_async_queue_push (dtmfsrc->event_queue, event);
 }
@@ -584,26 +585,21 @@ gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc *dtmfsrc)
 
   GstRTPDTMFSrcEvent * event = g_malloc (sizeof(GstRTPDTMFSrcEvent));
   event->event_type = RTP_DTMF_EVENT_TYPE_STOP;
-  event->payload = g_new0 (GstRTPDTMFPayload, 1);
-  event->payload->event = 0;
-  event->payload->volume = 0;
 
   g_async_queue_push (dtmfsrc->event_queue, event);
 }
 
 
 static void
-gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc *dtmfsrc,
-    GstRTPDTMFSrcEvent *event, GstBuffer *buf)
+gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
 {
   gst_rtp_buffer_set_ssrc (buf, dtmfsrc->current_ssrc);
   gst_rtp_buffer_set_payload_type (buf, dtmfsrc->pt);
+  /* Only the very first packet gets a marker */
   if (dtmfsrc->first_packet) {
     gst_rtp_buffer_set_marker (buf, TRUE);
-    dtmfsrc->first_packet = FALSE;
   } else if (dtmfsrc->last_packet) {
-    event->payload->e = 1;
-    dtmfsrc->last_packet = FALSE;
+    dtmfsrc->payload->e = 1;
   }
 
   dtmfsrc->seqnum++;
@@ -614,53 +610,59 @@ gst_rtp_dtmf_prepare_rtp_headers (GstRTPDTMFSrc *dtmfsrc,
 }
 
 static void
-gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc *dtmfsrc,
-    GstRTPDTMFSrcEvent *event,GstBuffer *buf)
+gst_rtp_dtmf_prepare_buffer_data (GstRTPDTMFSrc *dtmfsrc, GstBuffer *buf)
 {
   GstRTPDTMFPayload *payload;
 
-  gst_rtp_dtmf_prepare_rtp_headers (dtmfsrc,event,  buf);
-
-  /* duration of DTMF payload */
-  event->payload->duration +=
-      dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
+  gst_rtp_dtmf_prepare_rtp_headers (dtmfsrc, buf);
 
   /* timestamp and duration of GstBuffer */
-  GST_BUFFER_DURATION (buf) = dtmfsrc->interval * GST_MSECOND;
+  /* Redundant buffer have no duration ... */
+  if (dtmfsrc->redundancy_count > 1)
+    GST_BUFFER_DURATION (buf) = 0;
+  else
+    GST_BUFFER_DURATION (buf) = dtmfsrc->interval * GST_MSECOND;
   GST_BUFFER_TIMESTAMP (buf) = dtmfsrc->timestamp;
+
   dtmfsrc->timestamp += GST_BUFFER_DURATION (buf);
 
   payload = (GstRTPDTMFPayload *) gst_rtp_buffer_get_payload (buf);
 
   /* copy payload and convert to network-byte order */
-  g_memmove (payload, event->payload, sizeof (GstRTPDTMFPayload));
+  g_memmove (payload, dtmfsrc->payload, sizeof (GstRTPDTMFPayload));
   /* Force the packet duration to a certain minumum
    * if its the end of the event
    */
   if (payload->e &&
-      payload->duration < MIN_PULSE_DURATION * dtmfsrc->clock_rate / GST_MSECOND)
-    payload->duration = MIN_PULSE_DURATION * dtmfsrc->clock_rate / GST_MSECOND;
+      payload->duration < MIN_PULSE_DURATION * dtmfsrc->clock_rate / 1000 )
+    payload->duration = MIN_PULSE_DURATION * dtmfsrc->clock_rate / 1000;
 
   payload->duration = g_htons (payload->duration);
+
+
+  /* duration of DTMF payloadfor the NEXT packet */
+  /* not updated for redundant packets */
+  if (dtmfsrc->redundancy_count == 0)
+    dtmfsrc->payload->duration +=
+        dtmfsrc->interval * dtmfsrc->clock_rate / 1000;
+
 }
 
 static GstBuffer *
-gst_rtp_dtmf_src_create_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc,
-    GstRTPDTMFSrcEvent *event)
+gst_rtp_dtmf_src_create_next_rtp_packet (GstRTPDTMFSrc *dtmfsrc)
 {
   GstBuffer *buf = NULL;
 
   /* create buffer to hold the payload */
   buf = gst_rtp_buffer_new_allocate (sizeof (GstRTPDTMFPayload), 0, 0);
 
-  gst_rtp_dtmf_prepare_buffer_data (dtmfsrc, event, buf);
+  gst_rtp_dtmf_prepare_buffer_data (dtmfsrc, buf);
 
   /* Set caps on the buffer before pushing it */
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (dtmfsrc->srcpad));
+  gst_buffer_set_caps (buf, GST_PAD_CAPS (GST_BASE_SRC_PAD (dtmfsrc)));
 
   return buf;
 }
-
 
 static GstFlowReturn
 gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
@@ -676,8 +678,11 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
   do {
 
-    if (dtmfsrc->last_event == NULL) {
+    if (dtmfsrc->payload == NULL) {
+      GST_DEBUG_OBJECT (dtmfsrc, "popping");
       event = g_async_queue_pop (dtmfsrc->event_queue);
+
+      GST_DEBUG_OBJECT (dtmfsrc, "popped %d", event->event_type);
 
       switch (event->event_type) {
         case RTP_DTMF_EVENT_TYPE_STOP:
@@ -688,12 +693,14 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
         case RTP_DTMF_EVENT_TYPE_START:
           dtmfsrc->first_packet = TRUE;
           dtmfsrc->last_packet = FALSE;
+          /* Set the redundanc on the first packet */
+          dtmfsrc->redundancy_count = dtmfsrc->packet_redundancy;
           gst_rtp_dtmf_prepare_timestamps (dtmfsrc);
 
           /* Don't forget to get exclusive access to the stream */
           gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, TRUE);
 
-          dtmfsrc->last_event = event;
+          dtmfsrc->payload = event->payload;
           break;
 
         case RTP_DTMF_EVENT_TYPE_PAUSE_TASK:
@@ -709,11 +716,18 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           GST_OBJECT_UNLOCK (dtmfsrc);
           break;
       }
-    } else if (dtmfsrc->timestamp - dtmfsrc->start_timestamp >=
+
+      g_free (event);
+    } else if (!dtmfsrc->first_packet && !dtmfsrc->last_packet &&
+        (dtmfsrc->timestamp - dtmfsrc->start_timestamp)/GST_MSECOND >=
         MIN_PULSE_DURATION) {
+      GST_DEBUG_OBJECT (dtmfsrc, "try popping");
       event = g_async_queue_try_pop (dtmfsrc->event_queue);
 
+
       if (event != NULL) {
+        GST_DEBUG_OBJECT (dtmfsrc, "try popped %d", event->event_type);
+
         switch (event->event_type) {
           case RTP_DTMF_EVENT_TYPE_START:
             GST_WARNING_OBJECT (dtmfsrc,
@@ -723,6 +737,8 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           case RTP_DTMF_EVENT_TYPE_STOP:
             dtmfsrc->first_packet = FALSE;
             dtmfsrc->last_packet = TRUE;
+            /* Set the redundanc on the last packet */
+            dtmfsrc->redundancy_count = dtmfsrc->packet_redundancy;
             break;
 
           case RTP_DTMF_EVENT_TYPE_PAUSE_TASK:
@@ -739,16 +755,17 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
             GST_OBJECT_UNLOCK (dtmfsrc);
             break;
         }
+        g_free (event);
       }
     }
-  } while (dtmfsrc->last_event == NULL);
+  } while (dtmfsrc->payload == NULL);
 
 
   GST_DEBUG_OBJECT (dtmfsrc, "Processed events, now lets wait on the clock");
 
   clock = gst_element_get_clock (GST_ELEMENT (basesrc));
 
-  clockid = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp -
+  clockid = gst_clock_new_single_shot_id (clock, dtmfsrc->timestamp +
       gst_element_get_base_time (GST_ELEMENT (dtmfsrc)));
   gst_object_unref (clock);
 
@@ -775,40 +792,30 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
  send_last:
 
-  if (dtmfsrc->last_event) {
+  if (dtmfsrc->dirty)
+    if (!gst_rtp_dtmf_src_negotiate (basesrc))
+      return GST_FLOW_NOT_NEGOTIATED;
 
-    if (dtmfsrc->first_packet == TRUE || dtmfsrc->last_packet == TRUE) {
-      dtmfsrc->redundancy_count = dtmfsrc->packet_redundancy;
+  /* create buffer to hold the payload */
+  *buffer = gst_rtp_dtmf_src_create_next_rtp_packet (dtmfsrc);
 
-      if(dtmfsrc->first_packet == TRUE) {
-        GST_DEBUG_OBJECT (dtmfsrc,
-            "redundancy count set to %d due to dtmf start",
-            dtmfsrc->redundancy_count);
-      } else if(dtmfsrc->last_packet == TRUE) {
-        GST_DEBUG_OBJECT (dtmfsrc,
-            "redundancy count set to %d due to dtmf stop",
-            dtmfsrc->redundancy_count);
-      }
-    }
+  if (dtmfsrc->redundancy_count)
+    dtmfsrc->redundancy_count--;
 
+  /* Only the very first one has a marker */
+  dtmfsrc->first_packet = FALSE;
 
-    /* create buffer to hold the payload */
-    *buffer = gst_rtp_dtmf_src_create_next_rtp_packet (dtmfsrc,
-        dtmfsrc->last_event);
+  /* This is the end of the event */
+  if (dtmfsrc->last_packet == TRUE && dtmfsrc->redundancy_count == 0) {
 
-    if (dtmfsrc->last_event->payload->e) {
-      /* Don't forget to release the stream lock */
-      gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
+    /* Don't forget to release the stream lock */
+    gst_rtp_dtmf_src_set_stream_lock (dtmfsrc, FALSE);
 
-      g_free (dtmfsrc->last_event->payload);
-      dtmfsrc->last_event->payload = NULL;
+    g_free (dtmfsrc->payload);
+    dtmfsrc->payload = NULL;
 
-      g_free (dtmfsrc->last_event);
-      dtmfsrc->last_event = NULL;
-
-    }
+    dtmfsrc->last_packet = FALSE;
   }
-
 
   return GST_FLOW_OK;
 
@@ -818,13 +825,15 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
  paused:
 
-  if (dtmfsrc->last_event) {
+  if (dtmfsrc->payload) {
     dtmfsrc->first_packet = FALSE;
     dtmfsrc->last_packet = TRUE;
+    /* Set the redundanc on the last packet */
+    dtmfsrc->redundancy_count = dtmfsrc->packet_redundancy;
     goto send_last;
+  } else {
+    return GST_FLOW_WRONG_STATE;
   }
-
-  return GST_FLOW_WRONG_STATE;
 }
 
 
@@ -950,8 +959,6 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
 static void
 gst_rtp_dtmf_src_ready_to_paused (GstRTPDTMFSrc *dtmfsrc)
 {
-  gst_segment_init (&dtmfsrc->segment, GST_FORMAT_UNDEFINED);
-
   if (dtmfsrc->ssrc == -1)
     dtmfsrc->current_ssrc = g_random_int ();
   else

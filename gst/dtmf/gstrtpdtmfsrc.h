@@ -84,12 +84,10 @@ typedef struct _GstRTPDTMFSrcEvent GstRTPDTMFSrcEvent;
 struct _GstRTPDTMFSrc {
   GstBaseSrc           basesrc;
 
-  GstPad*	       srcpad;
-  GstSegment           segment;
   GAsyncQueue*	       event_queue;
-  GstRTPDTMFSrcEvent*  last_event;
   GstClockID           clockid;
   gboolean             paused;
+  GstRTPDTMFPayload*   payload;
 
   GstClockTime      timestamp;
   GstClockTime      start_timestamp;
