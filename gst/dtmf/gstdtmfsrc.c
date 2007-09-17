@@ -287,7 +287,7 @@ gst_dtmf_src_class_init (GstDTMFSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_dtmf_src_get_property);
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_INTERVAL,
-      g_param_spec_int ("interval", "Interval between tone packets",
+      g_param_spec_uint ("interval", "Interval between tone packets",
           "Interval in ms between two tone packets", MIN_PACKET_INTERVAL,
           MAX_PACKET_INTERVAL, DEFAULT_PACKET_INTERVAL, G_PARAM_READWRITE));
 
@@ -428,7 +428,7 @@ gst_dtmf_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_INTERVAL:
-      dtmfsrc->interval = g_value_get_int (value);
+      dtmfsrc->interval = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
