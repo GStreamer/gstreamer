@@ -1,3 +1,12 @@
+2007-09-17  Jan Schmidt - Sun Microsystems <jan.schmidt@sun.com>
+
+	* gst/gstbin.c: (gst_bin_continue_func):
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_do_sync):
+	* libs/gst/base/gstcollectpads.c: (gst_collect_pads_add_pad_full):
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_loop):
+
+	Fix minor compilation warnings shown with Forte.
+
 2007-09-17  Wim Taymans  <wim.taymans@gmail.com>
 
 	* plugins/elements/gstqueue.c: (apply_buffer),

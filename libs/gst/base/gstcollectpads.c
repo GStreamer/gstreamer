@@ -313,7 +313,7 @@ gst_collect_pads_add_pad_full (GstCollectPads * pads, GstPad * pad, guint size,
 
   /* FIXME: Ugly hack as we can't add more fields to GstCollectData */
   g_object_set_data (G_OBJECT (pad), "gst-collect-data-destroy-notify",
-      destroy_notify);
+      (void *) destroy_notify);
 
   GST_COLLECT_PADS_PAD_LOCK (pads);
   GST_OBJECT_LOCK (pad);

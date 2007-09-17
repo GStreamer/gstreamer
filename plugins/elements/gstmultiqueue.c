@@ -705,7 +705,7 @@ gst_multi_queue_loop (GstPad * pad)
   GstMultiQueue *mq;
   GstMiniObject *object;
   guint32 newid;
-  guint32 oldid = -1;
+  guint32 oldid = G_MAXUINT32;
   GstFlowReturn result;
 
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);

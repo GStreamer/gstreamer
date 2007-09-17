@@ -1519,7 +1519,7 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
   GstBaseSrcClass *bclass;
   GstClockTime base_time;
   GstClock *clock;
-  GstClockTime now = -1, timestamp;
+  GstClockTime now = GST_CLOCK_TIME_NONE, timestamp;
   gboolean do_timestamp, first, pseudo_live;
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);

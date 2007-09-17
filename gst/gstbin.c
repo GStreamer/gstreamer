@@ -2338,7 +2338,8 @@ static void
 gst_bin_continue_func (BinContinueData * data)
 {
   GstBin *bin;
-  GstState current, next, pending, transition;
+  GstState current, next, pending;
+  GstStateChange transition;
   GstStateChangeReturn ret;
 
   bin = data->bin;
