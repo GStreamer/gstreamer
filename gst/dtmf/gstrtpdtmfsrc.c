@@ -900,7 +900,7 @@ gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
     /* get first structure */
     s = gst_caps_get_structure (srccaps, 0);
 
-    if (gst_structure_get_int (s, "dtmfsrc", &pt)) {
+    if (gst_structure_get_int (s, "payload", &pt)) {
       /* use peer pt */
       dtmfsrc->pt = pt;
       GST_LOG_OBJECT (dtmfsrc, "using peer pt %d", pt);
