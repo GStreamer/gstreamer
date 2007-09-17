@@ -291,11 +291,11 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
           "The payload type of the packets",
           0, 0x80, DEFAULT_PT, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_INTERVAL,
-      g_param_spec_int ("interval", "Interval between rtp packets",
+      g_param_spec_uint ("interval", "Interval between rtp packets",
           "Interval in ms between two rtp packets", MIN_PACKET_INTERVAL,
           MAX_PACKET_INTERVAL, DEFAULT_PACKET_INTERVAL, G_PARAM_READWRITE));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_REDUNDANCY,
-      g_param_spec_int ("packet-redundancy", "Packet Redundancy",
+      g_param_spec_uint ("packet-redundancy", "Packet Redundancy",
           "Number of packets to send to indicate start and stop dtmf events",
           MIN_PACKET_REDUNDANCY, MAX_PACKET_REDUNDANCY,
           DEFAULT_PACKET_REDUNDANCY, G_PARAM_READWRITE));
@@ -465,10 +465,10 @@ gst_rtp_dtmf_src_set_property (GObject * object, guint prop_id,
       gst_rtp_dtmf_src_set_caps (dtmfsrc);
       break;
     case PROP_INTERVAL:
-      dtmfsrc->interval = g_value_get_int (value);
+      dtmfsrc->interval = g_value_get_uint (value);
       break;
     case PROP_REDUNDANCY:
-      dtmfsrc->packet_redundancy = g_value_get_int (value);
+      dtmfsrc->packet_redundancy = g_value_get_uint (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
