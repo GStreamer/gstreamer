@@ -652,6 +652,7 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
           event->packet_count = 0;
           dtmfsrc->last_event = event;
+          event = NULL;
           break;
         case DTMF_EVENT_TYPE_PAUSE_TASK:
           /*
@@ -667,6 +668,8 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
           GST_OBJECT_UNLOCK (dtmfsrc);
           break;
       }
+      if (event)
+        g_free (event);
     } else if (dtmfsrc->last_event->packet_count  * dtmfsrc->interval >=
         MIN_DUTY_CYCLE) {
       event = g_async_queue_try_pop (dtmfsrc->event_queue);
@@ -700,6 +703,7 @@ gst_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 
             break;
         }
+        g_free (event);
       }
     }
   } while (dtmfsrc->last_event == NULL);
