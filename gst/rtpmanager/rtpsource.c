@@ -284,6 +284,8 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
 
   pt = gst_rtp_buffer_get_payload_type (buffer);
 
+  GST_DEBUG ("SSRC %08x got payload %d", src->ssrc, pt);
+
   /* get clockrate */
   if ((clock_rate = get_clock_rate (src, pt)) == -1)
     goto no_clock_rate;

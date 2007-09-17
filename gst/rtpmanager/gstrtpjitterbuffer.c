@@ -797,6 +797,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
   guint16 seqnum;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime timestamp;
+  guint64 latency_ts;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (gst_pad_get_parent (pad));
 
@@ -849,7 +850,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstBuffer * buffer)
    * latency is set, we just pump it in the queue and let the other end push it
    * out as fast as possible. */
   if (priv->latency_ms && priv->drop_on_latency) {
-    guint64 latency_ts;
 
     latency_ts =
         gst_util_uint64_scale_int (priv->latency_ms, priv->clock_rate, 1000);
@@ -1053,8 +1053,8 @@ again:
     if (priv->next_seqnum != -1) {
       /* we expected next_seqnum but received something else, that's a gap */
       GST_WARNING_OBJECT (jitterbuffer,
-          "Sequence number GAP detected -> %d instead of %d", priv->next_seqnum,
-          seqnum);
+          "Sequence number GAP detected: expected %d instead of %d",
+          priv->next_seqnum, seqnum);
     } else {
       /* we don't know what the next_seqnum should be, wait for the last
        * possible moment to push this buffer, maybe we get an earlier seqnum

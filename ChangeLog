@@ -1,5 +1,27 @@
 2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtpmanager/gstrtpbin.c: (new_ssrc_pad_found):
+	Link to the right pads regardless of which one was created first in the
+	ssrc demuxer.
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_chain), (gst_rtp_jitter_buffer_loop):
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_process_rtp),
+	(gst_rtp_session_chain_recv_rtp), (gst_rtp_session_chain_send_rtp):
+	* gst/rtpmanager/rtpsource.c: (calculate_jitter):
+	Improve debugging.
+
+	* gst/rtpmanager/gstrtpssrcdemux.c: (create_demux_pad_for_ssrc),
+	(gst_rtp_ssrc_demux_init), (gst_rtp_ssrc_demux_finalize),
+	(gst_rtp_ssrc_demux_sink_event),
+	(gst_rtp_ssrc_demux_rtcp_sink_event), (gst_rtp_ssrc_demux_chain),
+	(gst_rtp_ssrc_demux_rtcp_chain),
+	(gst_rtp_ssrc_demux_internal_links):
+	* gst/rtpmanager/gstrtpssrcdemux.h:
+	Fix race in creating the RTP and RTCP pads when a new SSRC is detected.
+
+2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_set_property),
 	(gst_rtp_bin_get_property):
 	Use lock to protect variable.

@@ -1404,8 +1404,11 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
 
   /* get pad and link */
   GST_DEBUG_OBJECT (session->bin, "linking jitterbuffer");
+  padname = g_strdup_printf ("src_%d", ssrc);
+  srcpad = gst_element_get_pad (element, padname);
+  g_free (padname);
   sinkpad = gst_element_get_static_pad (stream->buffer, "sink");
-  gst_pad_link (pad, sinkpad);
+  gst_pad_link (srcpad, sinkpad);
   gst_object_unref (sinkpad);
 
   /* get the RTCP sync pad */
@@ -1434,7 +1437,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
 no_stream:
   {
     GST_RTP_SESSION_UNLOCK (session);
-    GST_DEBUG ("could not create stream");
+    GST_DEBUG_OBJECT (session->bin, "could not create stream");
     return;
   }
 }
