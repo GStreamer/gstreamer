@@ -31,8 +31,8 @@ struct _RfbDecoder
   /* readable properties */
   gboolean inited;
 
-  gint protocol_major;
-  gint protocol_minor;
+  guint protocol_major;
+  guint protocol_minor;
   guint security_type;
 
   guint width;

@@ -35,6 +35,7 @@ enum
   ARG_0,
   ARG_HOST,
   ARG_PORT,
+  ARG_VERSION,
 };
 
 #define RGB332_R(x)  ((((x)&0x07) * 0x124)>>3)
@@ -116,6 +117,9 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_PORT,
       g_param_spec_int ("port", "Port", "Port",
           1, 65535, 5900, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_VERSION,
+      g_param_spec_string ("version", "RFB protocol version",
+          "RFB protocol version", "3.3", G_PARAM_READWRITE));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
@@ -136,6 +140,8 @@ gst_rfb_src_init (GstRfbSrc * src, GstRfbSrcClass * klass)
 
   src->host = g_strdup ("127.0.0.1");
   src->port = 5900;
+  src->version_major = 3;
+  src->version_minor = 3;
 }
 
 static void
@@ -146,6 +152,49 @@ gst_rfb_src_dispose (GObject * object)
   g_free (src->host);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_rfb_property_set_version (GstRfbSrc * src, gchar * value)
+{
+  g_return_if_fail (src != NULL);
+  g_return_if_fail (value != NULL);
+
+  gchar *major = g_strdup (value);
+  gchar *minor = g_strrstr (value, ".");
+
+  g_return_if_fail (minor != NULL);
+
+  *minor++ = 0;
+
+  g_return_if_fail (g_ascii_isdigit (*major) == TRUE);
+  g_return_if_fail (g_ascii_isdigit (*minor) == TRUE);
+
+  src->version_major = g_ascii_digit_value (*major);
+  src->version_minor = g_ascii_digit_value (*minor);
+
+  GST_DEBUG ("Version major : %d", src->version_major);
+  GST_DEBUG ("Version minor : %d", src->version_minor);
+
+  g_free (major);
+  g_free (value);
+}
+
+static gchar *
+gst_rfb_property_get_version (GstRfbSrc * src)
+{
+  gchar *version = g_malloc (8);
+  gchar *major = g_strdup_printf ("%d", src->version_major);
+  gchar *minor = g_strdup_printf ("%d", src->version_minor);
+
+  g_stpcpy (version, major);
+  g_strlcat (version, ".", 8);
+  g_strlcat (version, minor, 8);
+
+  g_free (major);
+  g_free (minor);
+
+  return version;
 }
 
 static void
@@ -161,6 +210,9 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
     case ARG_PORT:
       src->port = g_value_get_int (value);
       break;
+    case ARG_VERSION:
+      gst_rfb_property_set_version (src, g_strdup (g_value_get_string (value)));
+      break;
     default:
       break;
   }
@@ -171,6 +223,7 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstRfbSrc *src = GST_RFB_SRC (object);
+  gchar *version;
 
   switch (prop_id) {
     case ARG_HOST:
@@ -178,6 +231,11 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
       break;
     case ARG_PORT:
       g_value_set_int (value, src->port);
+      break;
+    case ARG_VERSION:
+      version = gst_rfb_property_get_version (src);
+      g_value_set_string (value, version);
+      g_free (version);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -60,6 +60,11 @@ struct _GstRfbSrc
   gboolean inter;
 
   guint button_mask;
+
+  /* protocol version */
+  guint version_major;
+  guint version_minor;
+
 };
 
 GType gst_rfb_src_get_type (void);

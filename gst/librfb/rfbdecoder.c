@@ -2,7 +2,7 @@
 #include "config.h"
 #endif
 
-#include "rfbdecoder.h"
+#include "gst/gst.h"
 
 #include <rfb.h>
 #include <unistd.h>
@@ -19,6 +19,9 @@
 #define RFB_SET_UINT32(ptr, val) (*(guint32 *)(ptr) = GUINT32_TO_BE (val))
 #define RFB_SET_UINT16(ptr, val) (*(guint16 *)(ptr) = GUINT16_TO_BE (val))
 #define RFB_SET_UINT8(ptr, val) (*(guint8 *)(ptr) = val)
+
+GST_DEBUG_CATEGORY_STATIC (rfbdecoder_debug);
+#define GST_CAT_DEFAULT rfbdecoder_debug
 
 #if 0
 struct _RfbSocketPrivate
@@ -109,17 +112,28 @@ rfb_decoder_connect_tcp (RfbDecoder * decoder, gchar * addr, guint port)
   return TRUE;
 }
 
+/**
+ * rfb_decoder_iterate:
+ * @decoder: The rfb context
+ *
+ * Initializes the connection with the rfb server
+ *
+ * Returns: TRUE if initialization was succesfull, FALSE on fail.
+ */
 gboolean
 rfb_decoder_iterate (RfbDecoder * decoder)
 {
+  GST_DEBUG_CATEGORY_INIT (rfbdecoder_debug, "rfbdecoder", 0, "Rfb source");
+
   g_return_val_if_fail (decoder != NULL, FALSE);
   g_return_val_if_fail (decoder->fd != -1, FALSE);
 
   if (decoder->state == NULL) {
+    GST_DEBUG ("First iteration: set state to -> wait for protocol version");
     decoder->state = rfb_decoder_state_wait_for_protocol_version;
   }
-  // g_print ("iterating...\n");
 
+  GST_DEBUG ("Executing next state in initialization");
   return decoder->state (decoder);
 }
 
@@ -185,6 +199,13 @@ rfb_decoder_send_pointer_event (RfbDecoder * decoder,
   rfb_decoder_send (decoder, data, 6);
 }
 
+/**
+ * rfb_decoder_state_wait_for_protocol_version:
+ *
+ * Negotiate the rfb version used
+ *
+ * \TODO Support for versions 3.7 and 3.8
+ */
 static gboolean
 rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
 {
@@ -198,10 +219,32 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
 
   data = buffer->data;
 
-  g_assert (memcmp (buffer->data, "RFB 003.00", 10) == 0);
-  // g_print ("\"%.11s\"\n", buffer->data);
+  g_return_val_if_fail (memcmp (buffer->data, "RFB 003.00", 10) == 0, FALSE);
+  g_return_val_if_fail (*(buffer->data + 11) == 0x0a, FALSE);
+
+  GST_DEBUG ("\"%.11s\"", buffer->data);
+  *(buffer->data + 7) = 0x00;
+  *(buffer->data + 11) = 0x00;
+  decoder->protocol_major = atoi ((char *) (buffer->data + 4));
+  decoder->protocol_minor = atoi ((char *) (buffer->data + 8));
+  GST_DEBUG ("Major version : %d", decoder->protocol_major);
+  GST_DEBUG ("Minor version : %d", decoder->protocol_minor);
   rfb_buffer_free (buffer);
 
+  if (decoder->protocol_major != 3) {
+    GST_INFO
+        ("A major protocol version of %d is not supported, falling back to 3",
+        decoder->protocol_major);
+    decoder->protocol_major = 3;
+  }
+  switch (decoder->protocol_minor) {
+    case 3:
+      break;
+    default:
+      GST_INFO ("Minor version %d is not supported, using 3",
+          decoder->protocol_minor);
+      decoder->protocol_minor = 3;
+  }
   rfb_decoder_send (decoder, (guint8 *) "RFB 003.003\n", 12);
 
   decoder->state = rfb_decoder_state_wait_for_security;
