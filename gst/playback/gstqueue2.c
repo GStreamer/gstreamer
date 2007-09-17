@@ -320,7 +320,7 @@ static GstFlowReturn gst_queue_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_queue_bufferalloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
 static gboolean gst_queue_acceptcaps (GstPad * pad, GstCaps * caps);
-static gboolean gst_queue_push_one (GstQueue * queue);
+static GstFlowReturn gst_queue_push_one (GstQueue * queue);
 static void gst_queue_loop (GstPad * pad);
 
 static gboolean gst_queue_handle_sink_event (GstPad * pad, GstEvent * event);
