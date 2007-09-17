@@ -219,13 +219,12 @@ static GstStateChangeReturn gst_rtp_dtmf_src_change_state (GstElement * element,
 static void gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc *dtmfsrc,
     gint event_number, gint event_volume);
 static void gst_rtp_dtmf_src_add_stop_event (GstRTPDTMFSrc *dtmfsrc);
-static void gst_rtp_dtmf_src_set_caps (GstRTPDTMFSrc *dtmfsrc);
 
 static gboolean gst_rtp_dtmf_src_unlock (GstBaseSrc *src);
 static gboolean gst_rtp_dtmf_src_unlock_stop (GstBaseSrc *src);
 static GstFlowReturn gst_rtp_dtmf_src_create (GstBaseSrc * basesrc,
     guint64 offset, guint length, GstBuffer ** buffer);
-
+static gboolean gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc);
 
 
 static void
@@ -312,7 +311,8 @@ gst_rtp_dtmf_src_class_init (GstRTPDTMFSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_handle_event);
   gstbasesrc_class->create =
       GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_create);
-
+  gstbasesrc_class->negotiate =
+      GST_DEBUG_FUNCPTR (gst_rtp_dtmf_src_negotiate);
 }
 
 static void
@@ -455,14 +455,14 @@ gst_rtp_dtmf_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_CLOCK_RATE:
       dtmfsrc->clock_rate = g_value_get_uint (value);
-      gst_rtp_dtmf_src_set_caps (dtmfsrc);
+      dtmfsrc->dirty = TRUE;
       break;
     case PROP_SSRC:
       dtmfsrc->ssrc = g_value_get_uint (value);
       break;
     case PROP_PT:
       dtmfsrc->pt = g_value_get_uint (value);
-      gst_rtp_dtmf_src_set_caps (dtmfsrc);
+      dtmfsrc->dirty = TRUE;
       break;
     case PROP_INTERVAL:
       dtmfsrc->interval = g_value_get_uint (value);
@@ -562,21 +562,6 @@ gst_rtp_dtmf_prepare_timestamps (GstRTPDTMFSrc *dtmfsrc)
           dtmfsrc->clock_rate, GST_SECOND);
 }
 
-#if 0
-
-static void
-gst_rtp_dtmf_src_start (GstRTPDTMFSrc *dtmfsrc)
-{
-  gst_rtp_dtmf_src_set_caps (dtmfsrc);
-
-  dtmfsrc->task_paused = FALSE;
-  if (!gst_pad_start_task (dtmfsrc->srcpad,
-      (GstTaskFunction) gst_rtp_dtmf_src_push_next_rtp_packet, dtmfsrc)) {
-    GST_ERROR_OBJECT (dtmfsrc, "Failed to start task on src pad");
-  }
-}
-
-#endif
 
 static void
 gst_rtp_dtmf_src_add_start_event (GstRTPDTMFSrc *dtmfsrc, gint event_number,
@@ -843,30 +828,124 @@ gst_rtp_dtmf_src_create (GstBaseSrc * basesrc, guint64 offset,
 }
 
 
-
-static void
-gst_rtp_dtmf_src_set_caps (GstRTPDTMFSrc *dtmfsrc)
+static gboolean
+gst_rtp_dtmf_src_negotiate (GstBaseSrc * basesrc)
 {
-  GstCaps *caps;
+  GstCaps *srccaps, *peercaps;
+  GstRTPDTMFSrc *dtmfsrc = GST_RTP_DTMF_SRC (basesrc);
+  gboolean ret;
 
-  caps = gst_caps_new_simple ("application/x-rtp",
+  /* fill in the defaults, there properties cannot be negotiated. */
+  srccaps = gst_caps_new_simple ("application/x-rtp",
       "media", G_TYPE_STRING, "audio",
-      "payload", G_TYPE_INT, dtmfsrc->pt,
       "clock-rate", G_TYPE_INT, dtmfsrc->clock_rate,
-      "encoding-name", G_TYPE_STRING, "telephone-event",
-      "ssrc", G_TYPE_UINT, dtmfsrc->current_ssrc,
-      "clock-base", G_TYPE_UINT, dtmfsrc->ts_base,
-      "seqnum-base", G_TYPE_UINT, dtmfsrc->seqnum_base, NULL);
+      "encoding-name", G_TYPE_STRING, "telephone-event", NULL);
 
-  if (!gst_pad_set_caps (dtmfsrc->srcpad, caps))
-    GST_ERROR_OBJECT (dtmfsrc,
-            "Failed to set caps %" GST_PTR_FORMAT " on src pad", caps);
-  else
-    GST_DEBUG_OBJECT (dtmfsrc,
-            "caps %" GST_PTR_FORMAT " set on src pad", caps);
+  /* the peer caps can override some of the defaults */
+  peercaps = gst_pad_peer_get_caps (GST_BASE_SRC_PAD (basesrc));
+  if (peercaps == NULL) {
+    /* no peer caps, just add the other properties */
+    gst_caps_set_simple (srccaps,
+        "payload", G_TYPE_INT, dtmfsrc->pt,
+        "ssrc", G_TYPE_UINT, dtmfsrc->current_ssrc,
+        "clock-base", G_TYPE_UINT, dtmfsrc->ts_base,
+        "seqnum-base", G_TYPE_UINT, dtmfsrc->seqnum_base, NULL);
 
-  gst_caps_unref (caps);
+    GST_DEBUG_OBJECT (dtmfsrc, "no peer caps: %" GST_PTR_FORMAT, srccaps);
+  } else {
+    GstCaps *temp;
+    GstStructure *s;
+    const GValue *value;
+    gint pt;
+
+    /* peer provides caps we can use to fixate, intersect. This always returns a
+     * writable caps. */
+    temp = gst_caps_intersect (srccaps, peercaps);
+    gst_caps_unref (srccaps);
+    gst_caps_unref (peercaps);
+
+    if (!temp) {
+      GST_DEBUG_OBJECT (dtmfsrc, "Could not get intersection with peer caps");
+      return FALSE;
+    }
+
+    if (gst_caps_is_empty (temp)) {
+      GST_DEBUG_OBJECT (dtmfsrc, "Intersection with peer caps is empty");
+      gst_caps_unref (temp);
+      return FALSE;
+    }
+
+    /* now fixate, start by taking the first caps */
+    gst_caps_truncate (temp);
+    srccaps = temp;
+
+    /* get first structure */
+    s = gst_caps_get_structure (srccaps, 0);
+
+    if (gst_structure_get_int (s, "dtmfsrc", &pt)) {
+      /* use peer pt */
+      dtmfsrc->pt = pt;
+      GST_LOG_OBJECT (dtmfsrc, "using peer pt %d", pt);
+    } else {
+      if (gst_structure_has_field (s, "payload")) {
+        /* can only fixate if there is a field */
+        gst_structure_fixate_field_nearest_int (s, "payload",
+            dtmfsrc->pt);
+        gst_structure_get_int (s, "payload", &pt);
+        GST_LOG_OBJECT (dtmfsrc, "using peer pt %d", pt);
+      } else {
+        /* no pt field, use the internal pt */
+        pt = dtmfsrc->pt;
+        gst_structure_set (s, "payload", G_TYPE_INT, pt, NULL);
+        GST_LOG_OBJECT (dtmfsrc, "using internal pt", pt);
+      }
+    }
+
+    if (gst_structure_has_field_typed (s, "ssrc", G_TYPE_UINT)) {
+      value = gst_structure_get_value (s, "ssrc");
+      dtmfsrc->current_ssrc = g_value_get_uint (value);
+      GST_LOG_OBJECT (dtmfsrc, "using peer ssrc %08x", dtmfsrc->current_ssrc);
+    } else {
+      /* FIXME, fixate_nearest_uint would be even better */
+      gst_structure_set (s, "ssrc", G_TYPE_UINT, dtmfsrc->current_ssrc, NULL);
+      GST_LOG_OBJECT (dtmfsrc, "using internal ssrc %08x",
+          dtmfsrc->current_ssrc);
+    }
+
+    if (gst_structure_has_field_typed (s, "clock-base", G_TYPE_UINT)) {
+      value = gst_structure_get_value (s, "clock-base");
+      dtmfsrc->ts_base = g_value_get_uint (value);
+      GST_LOG_OBJECT (dtmfsrc, "using peer clock-base %u", dtmfsrc->ts_base);
+    } else {
+      /* FIXME, fixate_nearest_uint would be even better */
+      gst_structure_set (s, "clock-base", G_TYPE_UINT, dtmfsrc->ts_base, NULL);
+      GST_LOG_OBJECT (dtmfsrc, "using internal clock-base %u",
+          dtmfsrc->ts_base);
+    }
+    if (gst_structure_has_field_typed (s, "seqnum-base", G_TYPE_UINT)) {
+      value = gst_structure_get_value (s, "seqnum-base");
+      dtmfsrc->seqnum_base = g_value_get_uint (value);
+      GST_LOG_OBJECT (dtmfsrc, "using peer seqnum-base %u",
+          dtmfsrc->seqnum_base);
+    } else {
+      /* FIXME, fixate_nearest_uint would be even better */
+      gst_structure_set (s, "seqnum-base", G_TYPE_UINT, dtmfsrc->seqnum_base,
+          NULL);
+      GST_LOG_OBJECT (dtmfsrc, "using internal seqnum-base %u",
+          dtmfsrc->seqnum_base);
+    }
+    GST_DEBUG_OBJECT (dtmfsrc, "with peer caps: %" GST_PTR_FORMAT, srccaps);
+  }
+
+  ret = gst_pad_set_caps (GST_BASE_SRC_PAD (basesrc), srccaps);
+  gst_caps_unref (srccaps);
+
+  dtmfsrc->dirty = FALSE;
+
+  return ret;
+
 }
+
 
 static void
 gst_rtp_dtmf_src_ready_to_paused (GstRTPDTMFSrc *dtmfsrc)
