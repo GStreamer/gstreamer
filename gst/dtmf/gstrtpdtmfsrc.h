@@ -108,6 +108,7 @@ struct _GstRTPDTMFSrc {
   guint16	    packet_redundancy;
   guint32           clock_rate;
 
+  gboolean          dirty;
   guint16           redundancy_count;
 };
 
