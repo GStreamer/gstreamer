@@ -194,8 +194,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "payload = (int) [ 96, 127 ], "
         "clock-rate = (int) [ 0, MAX ], "
         "ssrc = (int) [ 0, MAX ], "
-        "events = (int) [ " MIN_EVENT_STRING ", " MAX_EVENT_STRING " ], "
         "encoding-name = (string) \"telephone-event\"")
+    /*  "events = (string) \"1-16\" */
+
     );
 
 
