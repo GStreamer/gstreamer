@@ -48,7 +48,6 @@ struct _GstSpectrum {
 
   GstPad *sinkpad,*srcpad;
   GstAdapter *adapter;
-  GstSegment segment;
 
   /* properties */
   gboolean message;             /* whether or not to post messages */

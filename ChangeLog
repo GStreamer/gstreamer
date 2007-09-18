@@ -1,3 +1,18 @@
+2007-09-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* ChangeLog:
+	  Add missing newline.
+
+	* gst/librfb/rfbdecoder.c:
+	  Fix the build (missing stdlib.h).
+
+	* gst/spectrum/gstspectrum.c:
+	* gst/spectrum/gstspectrum.h:
+	  Use basetransform segment so that it is correctly managed on flushes
+	  and start/stop. Report message timestamp as stream time, which is what
+	  an application can understand. (Yes these are adapted from wim recent
+	  level element changes)
+
 2007-09-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtpmanager/gstrtpbin.c: (new_ssrc_pad_found):
@@ -525,6 +540,11 @@
 	* gst/festival/Makefile.am:
 	* gst/festival/gstfestival.c:
 	  Port festival plugin to GStreamer-0.10 (#461377).
+
+2007-08-22  Wim Taymans  <wim.taymans@gmail.com>
+
+	* ext/faad/gstfaad.c: (gst_faad_chain):
+	Don't unref the buffer when it was clipped.
 
 2007-08-22  Wim Taymans  <wim.taymans@gmail.com>
 
