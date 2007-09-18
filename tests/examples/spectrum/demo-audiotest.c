@@ -16,6 +16,7 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/* TODO: add wave selection */
 
 #ifdef HAVE_CONFIG_H
 #include "config.h"
@@ -28,9 +29,11 @@
 #include <gtk/gtk.h>
 
 #define DEFAULT_AUDIOSINK "alsasink"
-#define SPECT_BANDS 256
 
 static GtkWidget *drawingarea = NULL;
+static guint spect_height = 64;
+static guint spect_bands = 256;
+static gfloat height_scale = 1.0;
 
 static void
 on_window_destroy (GtkObject * object, gpointer user_data)
@@ -49,22 +52,37 @@ on_frequency_changed (GtkRange * range, gpointer user_data)
   g_object_set (machine, "freq", value, NULL);
 }
 
+gboolean
+on_configure_event (GtkWidget * widget, GdkEventConfigure * event,
+    gpointer user_data)
+{
+  GstElement *spectrum = GST_ELEMENT (user_data);
+
+  /*GST_INFO ("%d x %d", event->width, event->height); */
+  spect_height = event->height;
+  height_scale = event->height / 64.0;
+  spect_bands = event->width;
+
+  g_object_set (G_OBJECT (spectrum), "bands", spect_bands, NULL);
+  return FALSE;
+}
+
 /* draw frequency spectrum as a bunch of bars */
 static void
 draw_spectrum (gfloat * data)
 {
   gint i;
-  GdkRectangle rect = { 0, 0, SPECT_BANDS, 50 };
+  GdkRectangle rect = { 0, 0, spect_bands, spect_height };
 
   if (!drawingarea)
     return;
 
   gdk_window_begin_paint_rect (drawingarea->window, &rect);
   gdk_draw_rectangle (drawingarea->window, drawingarea->style->black_gc,
-      TRUE, 0, 0, SPECT_BANDS, 50);
-  for (i = 0; i < SPECT_BANDS; i++) {
+      TRUE, 0, 0, spect_bands, spect_height);
+  for (i = 0; i < spect_bands; i++) {
     gdk_draw_rectangle (drawingarea->window, drawingarea->style->white_gc,
-        TRUE, i, 64 - data[i], 1, data[i]);
+        TRUE, i, spect_height - data[i], 1, data[i]);
   }
   gdk_window_end_paint (drawingarea->window);
 }
@@ -78,15 +96,15 @@ message_handler (GstBus * bus, GstMessage * message, gpointer data)
     const gchar *name = gst_structure_get_name (s);
 
     if (strcmp (name, "spectrum") == 0) {
-      gfloat spect[SPECT_BANDS];
+      gfloat spect[spect_bands];
       const GValue *list;
       const GValue *value;
       guint i;
 
       list = gst_structure_get_value (s, "magnitude");
-      for (i = 0; i < SPECT_BANDS; ++i) {
+      for (i = 0; i < spect_bands; ++i) {
         value = gst_value_list_get_value (list, i);
-        spect[i] = g_value_get_float (value);
+        spect[i] = height_scale * g_value_get_float (value);
       }
       draw_spectrum (spect);
     }
@@ -108,12 +126,10 @@ main (int argc, char *argv[])
   bin = gst_pipeline_new ("bin");
 
   src = gst_element_factory_make ("audiotestsrc", "src");
-  /*
-     g_object_set (G_OBJECT (src), "wave", 0, NULL);
-   */
+  g_object_set (G_OBJECT (src), "wave", 1, NULL);
 
   spectrum = gst_element_factory_make ("spectrum", "spectrum");
-  g_object_set (G_OBJECT (spectrum), "bands", SPECT_BANDS, "threshold", -80,
+  g_object_set (G_OBJECT (spectrum), "bands", spect_bands, "threshold", -80,
       "message", TRUE, NULL);
 
   audioconvert = gst_element_factory_make ("audioconvert", "audioconvert");
@@ -122,7 +138,7 @@ main (int argc, char *argv[])
 
   gst_bin_add_many (GST_BIN (bin), src, spectrum, audioconvert, sink, NULL);
   if (!gst_element_link_many (src, spectrum, audioconvert, sink, NULL)) {
-    fprintf (stderr, "cant link elements\n");
+    fprintf (stderr, "can't link elements\n");
     exit (1);
   }
 
@@ -141,11 +157,13 @@ main (int argc, char *argv[])
   gtk_range_set_value (GTK_RANGE (widget), 440.0);
   g_signal_connect (G_OBJECT (widget), "value-changed",
       G_CALLBACK (on_frequency_changed), (gpointer) src);
-  gtk_container_add (GTK_CONTAINER (vbox), widget);
+  gtk_box_pack_start (GTK_BOX (vbox), widget, FALSE, FALSE, 0);
 
   drawingarea = gtk_drawing_area_new ();
-  gtk_widget_set_size_request (drawingarea, SPECT_BANDS, 64);
-  gtk_container_add (GTK_CONTAINER (vbox), drawingarea);
+  gtk_widget_set_size_request (drawingarea, spect_bands, spect_height);
+  g_signal_connect (G_OBJECT (drawingarea), "configure-event",
+      G_CALLBACK (on_configure_event), (gpointer) spectrum);
+  gtk_box_pack_start (GTK_BOX (vbox), drawingarea, TRUE, TRUE, 0);
 
   gtk_container_add (GTK_CONTAINER (appwindow), vbox);
   gtk_widget_show_all (appwindow);
