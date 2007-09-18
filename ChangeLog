@@ -1,3 +1,11 @@
+2007-09-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	  Make some internal API take const gchar * instead of just
+	  gchar * to avoid compiler warnings with g++-4.2.2 when
+	  passing string constants (partially fixes #478092).
+
 2007-09-17  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gstbin.c: (bin_query_latency_fold), (gst_bin_query):

@@ -1031,7 +1031,8 @@ gst_debug_unset_threshold_for_name (const gchar * name)
 }
 
 GstDebugCategory *
-_gst_debug_category_new (gchar * name, guint color, gchar * description)
+_gst_debug_category_new (const gchar * name, guint color,
+    const gchar * description)
 {
   GstDebugCategory *cat;
 

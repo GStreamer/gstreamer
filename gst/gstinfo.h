@@ -337,9 +337,9 @@ void            gst_debug_unset_threshold_for_name  (const gchar * name);
  */
 #define GST_DEBUG_CATEGORY_STATIC(cat) static GstDebugCategory *cat = NULL
 /* do not use this function, use the macros below */
-GstDebugCategory *_gst_debug_category_new	(gchar *	name,
-						 guint		color,
-						 gchar *	description);
+GstDebugCategory *_gst_debug_category_new (const gchar * name,
+                                           guint         color,
+                                           const gchar * description);
 /**
  * GST_DEBUG_CATEGORY_INIT:
  * @cat: the category to initialize.
