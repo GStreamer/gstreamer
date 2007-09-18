@@ -1,3 +1,10 @@
+2007-09-18  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+	Added some documentation about security handling
+	start implementing security handling for rfb 3.3
+
 2007-09-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/spectrum/demo-audiotest.c:

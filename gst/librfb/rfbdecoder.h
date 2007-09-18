@@ -6,6 +6,12 @@
 
 G_BEGIN_DECLS
 
+enum {
+    SECURITY_FAIL = 0,
+    SECURITY_NONE,
+    SECURITY_VNC,
+};
+
 typedef struct _RfbDecoder RfbDecoder;
 
 struct _RfbDecoder

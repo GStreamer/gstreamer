@@ -253,21 +253,55 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
   return TRUE;
 }
 
+/**
+ * a string describing the reason (where a string is specified as a length followed
+ * by that many ASCII characters)
+ **/
+static gboolean
+rfb_decoder_state_reason (RfbDecoder * decoder)
+{
+  /* \TODO Read the reason from the server why he quits */
+  return TRUE;
+}
+
 static gboolean
 rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
 {
   RfbBuffer *buffer;
   gint ret;
 
-  ret = rfb_bytestream_read (decoder->bytestream, &buffer, 4);
-  if (ret < 4)
-    return FALSE;
+  /**
+   * Version 3.3 The server decides the security type and sends a single word
+   *
+   * The security-type may only take the value 0, 1 or 2. A value of 0 means that the
+   * connection has failed and is followed by a string giving the reason, as described
+   * above.
+   */
+  if (decoder->protocol_major == 3 && decoder->protocol_minor == 3) {
+    ret = rfb_bytestream_read (decoder->bytestream, &buffer, 4);
+    if (ret < 4)
+      return FALSE;
 
-  decoder->security_type = RFB_GET_UINT32 (buffer->data);
-  // g_print ("security = %d\n", decoder->security_type);
+    decoder->security_type = RFB_GET_UINT32 (buffer->data);
+    GST_DEBUG ("security = %d", decoder->security_type);
 
-  rfb_buffer_free (buffer);
+    g_return_val_if_fail (decoder->security_type < 3, FALSE);
+    g_return_val_if_fail (decoder->security_type != SECURITY_FAIL,
+        rfb_decoder_state_reason (decoder));
+    rfb_buffer_free (buffer);
+  }
 
+  switch (decoder->security_type) {
+    case SECURITY_NONE:
+      GST_DEBUG ("Security type is None");
+      break;
+    case SECURITY_VNC:
+      GST_DEBUG ("Security type is VNC Authentication");
+      /* \TODO Check if for the correct password */
+      break;
+    default:
+      break;
+  }
   decoder->state = rfb_decoder_state_send_client_initialisation;
   return TRUE;
 }
