@@ -1,3 +1,8 @@
+2007-09-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  We require core CVS now for gst_base_src_set_do_timestamp().
+
 2007-09-17  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/audiofx/audiodynamic.c: (gst_audio_dynamic_class_init):
