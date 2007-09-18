@@ -1,5 +1,11 @@
 2007-09-18  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/spectrum/demo-audiotest.c:
+	* gst/spectrum/demo-osssrc.c:
+	  Handling window resize.
+
+2007-09-18  Stefan Kost  <ensonic@users.sf.net>
+
 	* ChangeLog:
 	  Add missing newline.
 
