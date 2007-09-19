@@ -89,9 +89,6 @@ gboolean    rfb_decoder_connect_tcp         (RfbDecoder * decoder,
                                              gchar * addr,
                                              guint port);
 gboolean    rfb_decoder_iterate             (RfbDecoder * decoder);
-gint        rfb_decoder_send                (RfbDecoder * decoder,
-                                             guint8 *data,
-                                             gint len);
 void        rfb_decoder_send_update_request (RfbDecoder * decoder,
                                              gboolean incremental,
                                              gint x,

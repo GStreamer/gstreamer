@@ -1,3 +1,12 @@
+2007-09-19  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+		It is now possible to connect to a vncserver.
+		there are still some issues with the ouput of 
+		the screen. Looks like some lines are confused
+
 2007-09-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/.cvsignore:

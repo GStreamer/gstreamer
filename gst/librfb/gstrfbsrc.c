@@ -410,20 +410,20 @@ gst_rfb_src_paint_rect (RfbDecoder * decoder, gint x, gint y, gint w, gint h,
   gint width;
   gint offset;
 
-  // GST_DEBUG ("painting %d,%d (%dx%d)\n", x, y, w, h);
+  GST_DEBUG ("painting %d,%d (%dx%d)\n", x, y, w, h);
   src = GST_RFB_SRC (decoder->decoder_private);
 
   frame = src->frame;
   width = decoder->width;
   for (j = 0; j < h; j++) {
     for (i = 0; i < w; i++) {
-      color = data[j * w + i];
+      color = data[(j * w + i) * decoder->bpp / 8];
 
-      offset = ((j + x) * width + (i + x)) * 4;
-      frame[offset + 0] = RGB332_B (color);
-      frame[offset + 1] = RGB332_G (color);
-      frame[offset + 2] = RGB332_R (color);
-      frame[offset + 3] = 0;
+      offset = ((j + y) * width + (i + x)) * decoder->bpp / 8;
+      frame[offset] = data[((j * w + i) * decoder->bpp / 8)];
+      frame[offset + 1] = data[((j * w + i) * decoder->bpp / 8) + 1];
+      frame[offset + 2] = data[((j * w + i) * decoder->bpp / 8) + 2];
+      frame[offset + 3] = data[((j * w + i) * decoder->bpp / 8) + 3];
     }
   }
 
