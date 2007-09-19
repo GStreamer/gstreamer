@@ -238,14 +238,13 @@ gst_rtp_L16_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   GstRtpL16Pay *rtpL16pay;
   GstFlowReturn ret = GST_FLOW_OK;
   guint payload_len;
-  GstClockTime timestamp, duration;
+  GstClockTime timestamp;
   guint mtu, avail;
 
   rtpL16pay = GST_RTP_L16_PAY (basepayload);
   mtu = GST_BASE_RTP_PAYLOAD_MTU (rtpL16pay);
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
-  duration = GST_BUFFER_DURATION (buffer);
 
   if (GST_BUFFER_IS_DISCONT (buffer))
     gst_adapter_clear (rtpL16pay->adapter);

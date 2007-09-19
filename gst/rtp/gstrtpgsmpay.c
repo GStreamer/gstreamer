@@ -129,13 +129,14 @@ gst_rtp_gsm_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint size, payload_len;
   GstBuffer *outbuf;
   guint8 *payload, *data;
-  GstClockTime timestamp;
+  GstClockTime timestamp, duration;
   GstFlowReturn ret;
 
   rtpgsmpay = GST_RTP_GSM_PAY (basepayload);
 
   size = GST_BUFFER_SIZE (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
 
   /* FIXME, only one GSM frame per RTP packet for now */
   payload_len = size;
@@ -144,8 +145,9 @@ gst_rtp_gsm_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* FIXME, assert for now */
   g_assert (payload_len <= GST_BASE_RTP_PAYLOAD_MTU (rtpgsmpay));
 
-  /* copy timestamp */
+  /* copy timestamp and duration */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_DURATION (outbuf) = duration;
 
   /* get payload */
   payload = gst_rtp_buffer_get_payload (outbuf);

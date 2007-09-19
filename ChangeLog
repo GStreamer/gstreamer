@@ -1,3 +1,18 @@
+2007-09-19  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtp/gstrtpL16pay.c: (gst_rtp_L16_pay_handle_buffer):
+	Removed some unused code.
+
+	* gst/rtp/gstrtpamrpay.c: (gst_rtp_amr_pay_handle_buffer):
+	* gst/rtp/gstrtpgsmpay.c: (gst_rtp_gsm_pay_handle_buffer):
+	* gst/rtp/gstrtpmp2tpay.c: (gst_rtp_mp2t_pay_handle_buffer):
+	* gst/rtp/gstrtpspeexpay.c: (gst_rtp_speex_pay_handle_buffer):
+	* gst/rtp/gstrtptheorapay.c: (gst_rtp_theora_pay_init_packet),
+	(gst_rtp_theora_pay_flush_packet):
+	* gst/rtp/gstrtpvorbispay.c: (gst_rtp_vorbis_pay_flush_packet):
+	Try to preserve the incomming buffer duration on the outgoing
+	packets. Fixes #478244.
+
 2007-09-18  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/taglib/gstapev2mux.cc:

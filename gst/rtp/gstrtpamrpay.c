@@ -205,7 +205,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint size, payload_len;
   GstBuffer *outbuf;
   guint8 *payload, *data, *payload_amr;
-  GstClockTime timestamp;
+  GstClockTime timestamp, duration;
   guint packet_len, mtu;
   gint i, num_packets, num_nonempty_packets;
   gint amr_len;
@@ -217,6 +217,7 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
 
   /* setup frame size pointer */
   if (rtpamrpay->mode == GST_RTP_AMR_P_MODE_NB)
@@ -274,6 +275,12 @@ gst_rtp_amr_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     gint count = basepayload->seqnum - basepayload->seqnum_base;
 
     GST_BUFFER_TIMESTAMP (outbuf) = count * 20 * GST_MSECOND;
+  }
+
+  if (duration != GST_CLOCK_TIME_NONE)
+    GST_BUFFER_DURATION (outbuf) = duration;
+  else {
+    GST_BUFFER_DURATION (outbuf) = 20 * GST_MSECOND;
   }
 
   /* get payload, this is now writable */

@@ -199,6 +199,8 @@ gst_rtp_vorbis_pay_flush_packet (GstRtpVorbisPay * rtpvorbispay)
   hlen = gst_rtp_buffer_calc_header_len (0);
   GST_BUFFER_SIZE (rtpvorbispay->packet) = hlen + rtpvorbispay->payload_pos;
 
+  GST_BUFFER_DURATION (rtpvorbispay->packet) = rtpvorbispay->payload_duration;
+
   /* push, this gives away our ref to the packet, so clear it. */
   ret =
       gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpvorbispay),

@@ -118,7 +118,7 @@ gst_rtp_mp2t_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint size, payload_len;
   GstBuffer *outbuf;
   guint8 *payload, *data;
-  GstClockTime timestamp;
+  GstClockTime timestamp, duration;
   GstFlowReturn ret;
 
   rtpmp2tpay = GST_RTP_MP2T_PAY (basepayload);
@@ -126,6 +126,7 @@ gst_rtp_mp2t_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  duration = GST_BUFFER_DURATION (buffer);
 
   /* FIXME, only one MP2T frame per RTP packet for now */
   payload_len = size;
@@ -134,6 +135,7 @@ gst_rtp_mp2t_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* copy timestamp */
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_DURATION (outbuf) = duration;
 
   /* get payload */
   payload = gst_rtp_buffer_get_payload (outbuf);

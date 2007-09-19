@@ -163,6 +163,7 @@ gst_rtp_theora_pay_init_packet (GstRtpTheoraPay * rtptheorapay, guint8 TDT,
       gst_rtp_buffer_new_allocate_len (GST_BASE_RTP_PAYLOAD_MTU
       (rtptheorapay), 0, 0);
   gst_rtp_theora_pay_reset_packet (rtptheorapay, TDT);
+
   GST_BUFFER_TIMESTAMP (rtptheorapay->packet) = timestamp;
 }
 
@@ -202,6 +203,8 @@ gst_rtp_theora_pay_flush_packet (GstRtpTheoraPay * rtptheorapay)
   /* shrink the buffer size to the last written byte */
   hlen = gst_rtp_buffer_calc_header_len (0);
   GST_BUFFER_SIZE (rtptheorapay->packet) = hlen + rtptheorapay->payload_pos;
+
+  GST_BUFFER_DURATION (rtptheorapay->packet) = rtptheorapay->payload_duration;
 
   /* push, this gives away our ref to the packet, so clear it. */
   ret =
