@@ -1,3 +1,9 @@
+2007-09-19  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/plugins/.cvsignore:
+	* tests/check/.cvsignore:
+	  Ignore registries in any format.
+
 2007-09-19  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:

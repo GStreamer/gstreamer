@@ -12,7 +12,7 @@ html
 
 gst-plugins-base-plugins-scan
 gst-plugins-base-plugins-scan.c
-inspect-registry.xml
+inspect-registry.*
 
 html-build.stamp
 html.stamp
