@@ -144,6 +144,7 @@ static void gst_dfbvideosink_surface_destroy (GstDfbVideoSink * dfbvideosink,
     GstDfbSurface * surface);
 
 static GstVideoSinkClass *parent_class = NULL;
+static GstBufferClass *surface_parent_class = NULL;
 
 static const char *
 gst_dfbvideosink_get_format_name (DFBSurfacePixelFormat format)
@@ -328,18 +329,14 @@ gst_dfbvideosink_surface_destroy (GstDfbVideoSink * dfbvideosink,
     surface->surface = NULL;
   }
 
-  if (GST_BUFFER (surface)->malloc_data) {
-    g_free (GST_BUFFER (surface)->malloc_data);
-    GST_BUFFER (surface)->malloc_data = NULL;
-  }
-
   if (surface->dfbvideosink) {
     /* Release the ref to our sink */
     surface->dfbvideosink = NULL;
     gst_object_unref (dfbvideosink);
   }
 
-  return;
+  GST_MINI_OBJECT_CLASS (surface_parent_class)->
+      finalize (GST_MINI_OBJECT (surface));
 }
 
 static gpointer
@@ -1890,6 +1887,8 @@ static void
 gst_dfbsurface_class_init (gpointer g_class, gpointer class_data)
 {
   GstMiniObjectClass *mini_object_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  surface_parent_class = g_type_class_peek_parent (g_class);
 
   mini_object_class->finalize = (GstMiniObjectFinalizeFunction)
       gst_dfbsurface_finalize;
