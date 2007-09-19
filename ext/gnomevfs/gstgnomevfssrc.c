@@ -639,7 +639,7 @@ gst_gnome_vfs_src_create (GstBaseSrc * basesrc, guint64 offset, guint size,
 
   src = GST_GNOME_VFS_SRC (basesrc);
 
-  GST_DEBUG ("now at %llu, reading %lld, size %u", src->curoffset, offset,
+  GST_DEBUG ("now at %llu, reading from %lld, size %u", src->curoffset, offset,
       size);
 
   /* seek if required */
@@ -693,7 +693,7 @@ cannot_seek:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, SEEK, (NULL),
         ("Requested seek from %" G_GINT64_FORMAT " to %" G_GINT64_FORMAT
-            "on non-seekable stream", src->curoffset, offset));
+            " on non-seekable stream", src->curoffset, offset));
     return GST_FLOW_ERROR;
   }
 read_failed:
@@ -800,10 +800,10 @@ gst_gnome_vfs_src_get_size (GstBaseSrc * basesrc, guint64 * size)
   }
   gnome_vfs_file_info_unref (info);
 
-  GST_DEBUG_OBJECT (src, "return size %" G_GUINT64_FORMAT, *size);
-
   if (*size == (GnomeVFSFileSize) - 1)
     return FALSE;
+
+  GST_DEBUG_OBJECT (src, "return size %" G_GUINT64_FORMAT, *size);
 
   return TRUE;
 }
@@ -820,10 +820,9 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
   gst_gnome_vfs_src_push_callbacks (src);
 
   if (src->uri != NULL) {
-    GnomeVFSOpenMode mode;
+    GnomeVFSOpenMode mode = GNOME_VFS_OPEN_READ;
 
     /* this can block... */
-    mode = GNOME_VFS_OPEN_READ;
     res = gnome_vfs_open_uri (&src->handle, src->uri, mode);
     if (res != GNOME_VFS_OK)
       goto open_failed;
@@ -834,8 +833,7 @@ gst_gnome_vfs_src_start (GstBaseSrc * basesrc)
     src->own_handle = FALSE;
   }
 
-  if (gnome_vfs_seek (src->handle, GNOME_VFS_SEEK_CURRENT, 0)
-      == GNOME_VFS_OK) {
+  if (gnome_vfs_seek (src->handle, GNOME_VFS_SEEK_CURRENT, 0) == GNOME_VFS_OK) {
     src->seekable = TRUE;
   } else {
     src->seekable = FALSE;
@@ -882,7 +880,13 @@ gst_gnome_vfs_src_stop (GstBaseSrc * basesrc)
   gst_gnome_vfs_src_pop_callbacks (src);
 
   if (src->own_handle) {
-    gnome_vfs_close (src->handle);
+    GnomeVFSResult res;
+
+    res = gnome_vfs_close (src->handle);
+    if (res != GNOME_VFS_OK) {
+      GST_ELEMENT_ERROR (src, RESOURCE, CLOSE, (NULL),
+          ("Could not close vfs handle: %s", gnome_vfs_result_to_string (res)));
+    }
     src->handle = NULL;
   }
   src->curoffset = 0;

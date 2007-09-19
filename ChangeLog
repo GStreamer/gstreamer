@@ -1,3 +1,8 @@
+2007-09-19  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/gnomevfs/gstgnomevfssrc.c:
+	  Improve debug logs a bit and be more verbose if things go wrong.
+
 2007-09-17  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* ext/pango/gsttextoverlay.c: (gst_text_overlay_init),
