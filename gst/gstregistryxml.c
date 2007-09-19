@@ -208,7 +208,7 @@ load_pad_template (xmlTextReaderPtr reader)
       GstStaticPadTemplate *template;
 
       template = g_new0 (GstStaticPadTemplate, 1);
-      template->name_template = name;
+      template->name_template = g_intern_string (name);
       template->presence = presence;
       template->direction = direction;
       template->static_caps.string = caps_str;
@@ -585,8 +585,8 @@ gst_registry_xml_read_cache (GstRegistry * registry, const char *location)
  * Save
  */
 static gboolean
-gst_registry_save_escaped (GstRegistry * registry, char *prefix, char *tag,
-    char *value)
+gst_registry_save_escaped (GstRegistry * registry, const char *prefix,
+    const char *tag, const char *value)
 {
   gboolean ret = TRUE;
 

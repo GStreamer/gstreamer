@@ -65,6 +65,8 @@
 
 #include <glib/gstdio.h>        /* for g_stat(), g_mapped_file(), ... */
 
+#include "glib-compat-private.h"
+
 
 #define GST_CAT_DEFAULT GST_CAT_REGISTRY
 
@@ -73,6 +75,10 @@
 #define unpack_element(_inptr, _outptr, _element)  \
   _outptr = (_element *)_inptr; \
   _inptr += sizeof (_element)
+
+#define unpack_const_string(_inptr, _outptr) \
+  _outptr = g_intern_string ((const gchar *)_inptr); \
+  _inptr += strlen(_outptr) + 1
 
 #define unpack_string(_inptr, _outptr)  \
   _outptr = g_strdup ((gchar *)_inptr); \
@@ -151,12 +157,12 @@ gst_registry_binary_initialize_magic (GstBinaryRegistryMagic * m)
  * Returns: %TRUE for success
  */
 inline static gboolean
-gst_registry_binary_save_const_string (GList ** list, gchar * str)
+gst_registry_binary_save_const_string (GList ** list, const gchar * str)
 {
   GstBinaryChunk *chunk;
 
   chunk = g_malloc (sizeof (GstBinaryChunk));
-  chunk->data = str;
+  chunk->data = (gpointer) str;
   chunk->size = strlen ((gchar *) chunk->data) + 1;
   chunk->flags = GST_BINARY_REGISTRY_FLAG_CONST;
   chunk->align = FALSE;
@@ -624,7 +630,7 @@ gst_registry_binary_load_pad_template (GstElementFactory * factory, gchar ** in)
   template->direction = pt->direction;
 
   /* unpack pad template strings */
-  unpack_string (*in, template->name_template);
+  unpack_const_string (*in, template->name_template);
   unpack_string (*in, template->static_caps.string);
 
   __gst_element_factory_add_static_pad_template (factory, template);

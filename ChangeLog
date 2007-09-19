@@ -1,3 +1,24 @@
+2007-09-19  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/glib-compat-private.h:
+	  Add compatibility macro for g_intern_string() for
+	  GLib-2.8 (any reason we can't just bump the
+	  requirement to at least 2.10?)
+
+	* gst/gstpadtemplate.h:
+	* gst/gstelementfactory.c:
+	* gst/gstregistryxml.c:
+	* gst/gstregistrybinary.c:
+	  Make GstStaticPadTemplate's templ_name field a const gchar * and fix
+	  up the internal code accordingly.  This shouldn't be a problem, since
+	  there is no reason external code could ever assume the string in such
+	  a structure is dynamically allocated unless it did that itself;  the
+	  use of g_strdup() is private to element factories.  The new code also
+	  saves some memory by putting pad template name strings into the GLib
+	  quark table instead of allocating them dynamically.
+	  Declaring this field constant fixes warnings with g++-4.2 when using
+	  the GST_STATIC_PAD_TEMPLATE macro in c++ code (#478092).
+
 2007-09-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstelementfactory.c:

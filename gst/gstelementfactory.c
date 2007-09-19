@@ -61,6 +61,8 @@
 #include "gsturi.h"
 #include "gstregistry.h"
 
+#include "glib-compat-private.h"
+
 GST_DEBUG_CATEGORY_STATIC (element_factory_debug);
 #define GST_CAT_DEFAULT element_factory_debug
 
@@ -219,7 +221,6 @@ gst_element_factory_cleanup (GstElementFactory * factory)
     GstStaticPadTemplate *templ = item->data;
     GstCaps *caps = (GstCaps *) & (templ->static_caps);
 
-    g_free (templ->name_template);
     g_free ((gchar *) templ->static_caps.string);
 
     /* FIXME: this is not threadsafe */
@@ -293,7 +294,7 @@ gst_element_register (GstPlugin * plugin, const gchar * name, guint rank,
     GstStaticPadTemplate *newt;
 
     newt = g_new0 (GstStaticPadTemplate, 1);
-    newt->name_template = g_strdup (templ->name_template);
+    newt->name_template = g_intern_string (templ->name_template);
     newt->direction = templ->direction;
     newt->presence = templ->presence;
     newt->static_caps.string = gst_caps_to_string (templ->caps);

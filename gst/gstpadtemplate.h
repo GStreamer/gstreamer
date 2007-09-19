@@ -151,15 +151,15 @@ struct _GstPadTemplateClass {
  * Structure describing the #GstStaticPadTemplate.
  */
 struct _GstStaticPadTemplate {
-  gchar           *name_template;
+  const gchar     *name_template;
   GstPadDirection  direction;
   GstPadPresence   presence;
-  GstStaticCaps   static_caps;
+  GstStaticCaps    static_caps;
 };
 
 /**
  * GST_STATIC_PAD_TEMPLATE:
- * @padname: the name template of pad
+ * @padname: the name template of the pad
  * @dir: the GstPadDirection of the pad
  * @pres: the GstPadPresence of the pad
  * @caps: the GstStaticCaps of the pad
