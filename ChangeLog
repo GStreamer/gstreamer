@@ -1,3 +1,14 @@
+2007-09-19  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/Makefile.am:
+	* gst/librfb/d3des.c:
+	* gst/librfb/d3des.h:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/vncauth.c:
+	* gst/librfb/vncauth.h:
+	VNC Authentication should be working now
+	temperaly with fake password 'testtest'
+
 2007-09-18  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/rfbdecoder.c:

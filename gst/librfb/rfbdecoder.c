@@ -13,6 +13,8 @@
 #include <arpa/inet.h>
 #include <errno.h>
 
+#include "vncauth.h"
+
 #define RFB_GET_UINT32(ptr) GUINT32_FROM_BE (*(guint32 *)(ptr))
 #define RFB_GET_UINT16(ptr) GUINT16_FROM_BE (*(guint16 *)(ptr))
 #define RFB_GET_UINT8(ptr) (*(guint8 *)(ptr))
@@ -39,6 +41,7 @@ static gboolean rfb_decoder_state_send_client_initialisation (RfbDecoder *
     decoder);
 static gboolean rfb_decoder_state_wait_for_server_initialisation (RfbDecoder *
     decoder);
+static gboolean rfb_decoder_state_security_result (RfbDecoder * decoder);
 static gboolean rfb_decoder_state_normal (RfbDecoder * decoder);
 static gboolean rfb_decoder_state_framebuffer_update (RfbDecoder * decoder);
 static gboolean rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder *
@@ -279,8 +282,7 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
    */
   if (decoder->protocol_major == 3 && decoder->protocol_minor == 3) {
     ret = rfb_bytestream_read (decoder->bytestream, &buffer, 4);
-    if (ret < 4)
-      return FALSE;
+    g_return_val_if_fail (ret == 4, FALSE);
 
     decoder->security_type = RFB_GET_UINT32 (buffer->data);
     GST_DEBUG ("security = %d", decoder->security_type);
@@ -294,15 +296,54 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
   switch (decoder->security_type) {
     case SECURITY_NONE:
       GST_DEBUG ("Security type is None");
+      /* \TODO version 3.8 goes to the security result */
+      decoder->state = rfb_decoder_state_send_client_initialisation;
       break;
     case SECURITY_VNC:
+        /**
+         * VNC authentication is to be used and protocol data is to be sent unencrypted. The
+         * server sends a random 16-byte challenge
+         */
       GST_DEBUG ("Security type is VNC Authentication");
-      /* \TODO Check if for the correct password */
+
+      ret = rfb_bytestream_read (decoder->bytestream, &buffer, 16);
+      g_return_val_if_fail (ret == 16, FALSE);
+      vncEncryptBytes ((unsigned char *) buffer->data, "testtest");
+      rfb_decoder_send (decoder, buffer->data, 16);
+
+      GST_DEBUG ("Encrypted challenge send to server");
+
+      decoder->state = rfb_decoder_state_security_result;
       break;
     default:
+      GST_INFO ("Security type is not known");
+      return FALSE;
       break;
   }
+  return TRUE;
+}
+
+/**
+ * The server sends a word to inform the client whether the security handshaking was
+ * successful.
+ */
+static gboolean
+rfb_decoder_state_security_result (RfbDecoder * decoder)
+{
+  RfbBuffer *buffer;
+  gint ret;
+
+  ret = rfb_bytestream_read (decoder->bytestream, &buffer, 4);
+  g_return_val_if_fail (ret == 4, FALSE);
+  if (RFB_GET_UINT32 (buffer->data) != 0) {
+    GST_INFO ("Security handshaking failed");
+    /* \TODO version 3.8 gives a reason why it failed */
+    return FALSE;
+  }
+
+  GST_DEBUG ("Security handshaking succesfull");
   decoder->state = rfb_decoder_state_send_client_initialisation;
+
   return TRUE;
 }
 
