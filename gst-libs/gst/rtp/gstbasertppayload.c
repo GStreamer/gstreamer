@@ -437,6 +437,15 @@ gst_basertppayload_set_options (GstBaseRTPPayload * payload,
   payload->clock_rate = clock_rate;
 }
 
+gboolean
+copy_fixed (GQuark field_id, const GValue * value, GstStructure * dest)
+{
+  if (gst_value_is_fixed (value)) {
+    gst_structure_id_set_value (dest, field_id, value);
+  }
+  return TRUE;
+}
+
 /**
  * gst_basertppayload_set_outcaps:
  * @payload: a #GstBaseRTPPayload
@@ -488,7 +497,7 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
     GST_DEBUG_OBJECT (payload, "no peer caps: %" GST_PTR_FORMAT, srccaps);
   } else {
     GstCaps *temp;
-    GstStructure *s;
+    GstStructure *s, *d;
     const GValue *value;
     gint pt;
 
@@ -500,10 +509,9 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
 
     /* now fixate, start by taking the first caps */
     gst_caps_truncate (temp);
-    srccaps = temp;
 
     /* get first structure */
-    s = gst_caps_get_structure (srccaps, 0);
+    s = gst_caps_get_structure (temp, 0);
 
     if (gst_structure_get_int (s, "payload", &pt)) {
       /* use peer pt */
@@ -520,7 +528,7 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
         /* no pt field, use the internal pt */
         pt = GST_BASE_RTP_PAYLOAD_PT (payload);
         gst_structure_set (s, "payload", G_TYPE_INT, pt, NULL);
-        GST_LOG_OBJECT (payload, "using internal pt", pt);
+        GST_LOG_OBJECT (payload, "using internal pt %d", pt);
       }
     }
 
@@ -557,6 +565,14 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
       GST_LOG_OBJECT (payload, "using internal seqnum-base %u",
           payload->seqnum_base);
     }
+
+    /* make the target caps by copying over all the fixed caps, removing the
+     * unfixed caps. */
+    srccaps = gst_caps_new_simple (gst_structure_get_name (s), NULL);
+    d = gst_caps_get_structure (srccaps, 0);
+
+    gst_structure_foreach (s, (GstStructureForeachFunc) copy_fixed, d);
+
     GST_DEBUG_OBJECT (payload, "with peer caps: %" GST_PTR_FORMAT, srccaps);
   }
 

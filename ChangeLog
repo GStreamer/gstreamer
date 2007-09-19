@@ -1,3 +1,11 @@
+2007-09-19  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c: (copy_fixed),
+	(gst_basertppayload_set_outcaps):
+	Fix compilation because of missing %d in printf.
+	When fixating caps, fixate what we can and throw away all remaining
+	unfixed caps, subclasses should do something smart if they need to.
+
 2007-09-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/gnomevfs/gstgnomevfssrc.c:
