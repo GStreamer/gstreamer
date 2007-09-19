@@ -1,3 +1,10 @@
+2007-09-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_surface_destroy),
+	(gst_dfbsurface_class_init):
+	When finalizing GstDfbSurface, a subclass of GstBuffer, correctly
+	chain up to the parent class to free everything, including caps.
+
 2007-09-19  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/Makefile.am:
