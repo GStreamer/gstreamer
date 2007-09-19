@@ -217,10 +217,24 @@ gst_element_factory_cleanup (GstElementFactory * factory)
 
   for (item = factory->staticpadtemplates; item; item = item->next) {
     GstStaticPadTemplate *templ = item->data;
+    GstCaps *caps = (GstCaps *) & (templ->static_caps);
 
     g_free (templ->name_template);
     g_free ((gchar *) templ->static_caps.string);
-    memset (&(templ->static_caps), 0, sizeof (GstStaticCaps));
+
+    /* FIXME: this is not threadsafe */
+    if (caps->refcount == 1) {
+      GstStructure *structure;
+      guint i;
+
+      for (i = 0; i < caps->structs->len; i++) {
+        structure = (GstStructure *) gst_caps_get_structure (caps, i);
+        gst_structure_set_parent_refcount (structure, NULL);
+        gst_structure_free (structure);
+      }
+      g_ptr_array_free (caps->structs, TRUE);
+      caps->refcount = 0;
+    }
     g_free (templ);
   }
   g_list_free (factory->staticpadtemplates);
