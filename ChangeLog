@@ -1,3 +1,12 @@
+2007-09-19  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Jonathan Matthew  <jonathan at kaolin wh9 net>
+
+	* ext/faad/gstfaad.c: (gst_faad_chanpos_to_gst),
+	(gst_faad_srcgetcaps), (gst_faad_update_caps):
+	Don't set channel positions on regular mono and stereo cases.
+	Fixes #476370.
+
 2007-09-19  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c:
