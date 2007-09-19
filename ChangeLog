@@ -1,3 +1,8 @@
+2007-09-19  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_send_event):
+	Don't unref the event after pushing it. Fixes #478401.
+
 2007-09-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* .cvsignore:

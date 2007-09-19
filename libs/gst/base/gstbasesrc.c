@@ -1349,12 +1349,16 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       /* insert a random custom event into the pipeline */
       GST_DEBUG_OBJECT (src, "pushing custom OOB event downstream");
       result = gst_pad_push_event (src->srcpad, event);
+      /* we gave away the ref to the event in the push */
+      event = NULL;
       break;
     default:
       break;
   }
 done:
-  gst_event_unref (event);
+  /* if we still have a ref to the event, unref it now */
+  if (event)
+    gst_event_unref (event);
 
   return result;
 
