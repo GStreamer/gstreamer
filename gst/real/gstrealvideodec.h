@@ -65,11 +65,17 @@ struct _GstRealVideoDec
   gint format, subformat;
   gint framerate_num, framerate_denom;
 
+  gint error_count;
+
   /* Hooks */
   GstRealVideoDecHooks hooks;
 
   /* Properties */
-  gchar *real_codecs_path, *rv20_names, *rv30_names, *rv40_names;
+  gchar *real_codecs_path;
+  gchar *rv20_names;
+  gchar *rv30_names;
+  gchar *rv40_names;
+  gint max_errors;
 };
 
 struct _GstRealVideoDecClass

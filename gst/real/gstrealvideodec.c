@@ -49,6 +49,7 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
 #define DEFAULT_RV20_NAMES "drv2.so:drv2.so.6.0"
 #define DEFAULT_RV30_NAMES "drvc.so:drv3.so.6.0"
 #define DEFAULT_RV40_NAMES "drvc.so:drv4.so.6.0"
+#define DEFAULT_MAX_ERRORS 25
 
 enum
 {
@@ -56,9 +57,9 @@ enum
   PROP_REAL_CODECS_PATH,
   PROP_RV20_NAMES,
   PROP_RV30_NAMES,
-  PROP_RV40_NAMES
+  PROP_RV40_NAMES,
+  PROP_MAX_ERRORS
 };
-
 
 GST_BOILERPLATE (GstRealVideoDec, gst_real_video_dec, GstElement,
     GST_TYPE_ELEMENT);
@@ -129,7 +130,28 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
   GST_DEBUG_OBJECT (dec, "frag_count %u, frag_size %u, data size %u",
       frag_count, frag_size, size);
 
-  /* Decode */
+  /* Decode.
+   *
+   * The Buffers contain
+   *
+   *  0                   1                   2                   3
+   *  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |  nfragments   |   fragment1 ...                               |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |  ....                                                         |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |  ...          |   fragment2 ...                               |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   *    ....                                                          
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   * |  ...          |   fragment data                               |
+   * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   *
+   * nfragments: number of fragments 
+   * fragmentN: 8 bytes of fragment data (nfragements + 1) of them
+   * fragment data: the data of the fragments.
+   */
   tin.datalen = size;
   tin.interpolate = 0;
   tin.nfragments = frag_count;
@@ -145,6 +167,10 @@ gst_real_video_dec_chain (GstPad * pad, GstBuffer * in)
       (gchar *) GST_BUFFER_DATA (out), &tin, &tout, dec->hooks.context);
   if (result)
     goto could_not_transform;
+
+  /* When we decoded a frame, reset the error counter. We only fail after N
+   * consecutive decoding errors. */
+  dec->error_count = 0;
 
   gst_buffer_unref (in);
 
@@ -196,9 +222,18 @@ could_not_transform:
   {
     gst_buffer_unref (out);
     gst_buffer_unref (in);
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE,
-        ("Could not decode buffer: %" G_GUINT32_FORMAT, result), (NULL));
-    return GST_FLOW_ERROR;
+
+    dec->error_count++;
+
+    if (dec->max_errors && dec->error_count >= dec->max_errors) {
+      GST_ELEMENT_ERROR (dec, STREAM, DECODE,
+          ("Could not decode buffer: %" G_GUINT32_FORMAT, result), (NULL));
+      return GST_FLOW_ERROR;
+    } else {
+      GST_ELEMENT_WARNING (dec, STREAM, DECODE,
+          ("Could not decode buffer: %" G_GUINT32_FORMAT, result), (NULL));
+      return GST_FLOW_OK;
+    }
   }
 could_not_push:
   {
@@ -432,6 +467,8 @@ codec_search_done:
   hooks->custom_message = rv_custom_msg;
   hooks->module = module;
 
+  dec->error_count = 0;
+
   return TRUE;
 
 unknown_version:
@@ -482,6 +519,9 @@ gst_real_video_dec_init (GstRealVideoDec * dec, GstRealVideoDecClass * klass)
   dec->src = gst_pad_new_from_static_template (&src_t, "src");
   gst_pad_use_fixed_caps (dec->src);
   gst_element_add_pad (GST_ELEMENT (dec), dec->src);
+
+  dec->max_errors = DEFAULT_MAX_ERRORS;
+  dec->error_count = 0;
 }
 
 static void
@@ -553,6 +593,9 @@ gst_real_video_dec_set_property (GObject * object, guint prop_id,
         g_free (dec->rv40_names);
       dec->rv40_names = g_value_dup_string (value);
       break;
+    case PROP_MAX_ERRORS:
+      dec->max_errors = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -582,6 +625,9 @@ gst_real_video_dec_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, dec->rv40_names ? dec->rv40_names :
           DEFAULT_RV40_NAMES);
       break;
+    case PROP_MAX_ERRORS:
+      g_value_set_int (value, dec->max_errors);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -598,19 +644,23 @@ gst_real_video_dec_class_init (GstRealVideoDecClass * klass)
   object_class->finalize = gst_real_video_dec_finalize;
 
   g_object_class_install_property (object_class, PROP_REAL_CODECS_PATH,
-      g_param_spec_string ("real_codecs_path",
+      g_param_spec_string ("real-codecs-path",
           "Path where to search for RealPlayer codecs",
           "Path where to search for RealPlayer codecs",
           DEFAULT_REAL_CODECS_PATH, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_RV20_NAMES,
-      g_param_spec_string ("rv20_names", "Names of rv20 driver",
+      g_param_spec_string ("rv20-names", "Names of rv20 driver",
           "Names of rv20 driver", DEFAULT_RV20_NAMES, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_RV30_NAMES,
-      g_param_spec_string ("rv30_names", "Names of rv30 driver",
+      g_param_spec_string ("rv30-names", "Names of rv30 driver",
           "Names of rv30 driver", DEFAULT_RV30_NAMES, G_PARAM_READWRITE));
   g_object_class_install_property (object_class, PROP_RV40_NAMES,
-      g_param_spec_string ("rv40_names", "Names of rv40 driver",
+      g_param_spec_string ("rv40-names", "Names of rv40 driver",
           "Names of rv40 driver", DEFAULT_RV40_NAMES, G_PARAM_READWRITE));
+  g_object_class_install_property (object_class, PROP_MAX_ERRORS,
+      g_param_spec_int ("max-errors", "Max errors",
+          "Maximum number of consecutive errors (0 = unlimited)",
+          0, G_MAXINT, DEFAULT_MAX_ERRORS, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (realvideode_debug, "realvideodec", 0,
       "RealVideo decoder");

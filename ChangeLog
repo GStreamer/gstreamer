@@ -1,3 +1,14 @@
+2007-09-19  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/real/gstrealvideodec.c: (gst_real_video_dec_chain),
+	(open_library), (gst_real_video_dec_init),
+	(gst_real_video_dec_set_property),
+	(gst_real_video_dec_get_property), (gst_real_video_dec_class_init):
+	* gst/real/gstrealvideodec.h:
+	Don't generate an error for occasional decoding errors.
+	Add max-errors property.
+	Error out when we receive max-errors in a row. Fixes #478159.
+
 2007-09-19  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c: 
