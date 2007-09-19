@@ -38,4 +38,4 @@ README
 *.bbg
 *.da
 
-test-registry.xml
+test-registry.*

@@ -33,6 +33,6 @@ depcomp
 install-sh
 mkinstalldirs
 py-compile
-registry.xml
+registry.*
 coverage-report.txt
 gst-element-check.m4
