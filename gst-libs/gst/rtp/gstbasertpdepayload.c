@@ -55,6 +55,7 @@ struct _GstBaseRTPDepayloadPrivate
 
   gboolean discont;
   GstClockTime timestamp;
+  GstClockTime duration;
 };
 
 /* Filter signals and args */
@@ -260,6 +261,7 @@ gst_base_rtp_depayload_chain (GstPad * pad, GstBuffer * in)
   timestamp = gst_segment_to_running_time (&filter->segment, GST_FORMAT_TIME,
       timestamp);
   priv->timestamp = timestamp;
+  priv->duration = GST_BUFFER_DURATION (in);
 
   bclass = GST_BASE_RTP_DEPAYLOAD_GET_CLASS (filter);
 
@@ -403,11 +405,19 @@ gst_base_rtp_depayload_set_gst_timestamp (GstBaseRTPDepayload * filter,
     guint32 rtptime, GstBuffer * buf)
 {
   GstBaseRTPDepayloadPrivate *priv;
+  GstClockTime timestamp, duration;
 
   priv = filter->priv;
 
-  /* apply incomming timestamp to outgoing buffer */
-  GST_BUFFER_TIMESTAMP (buf) = priv->timestamp;
+  timestamp = GST_BUFFER_TIMESTAMP (buf);
+  duration = GST_BUFFER_DURATION (buf);
+
+  /* apply last incomming timestamp and duration to outgoing buffer if
+   * not otherwise set. */
+  if (!GST_CLOCK_TIME_IS_VALID (timestamp))
+    GST_BUFFER_TIMESTAMP (buf) = priv->timestamp;
+  if (!GST_CLOCK_TIME_IS_VALID (duration))
+    GST_BUFFER_DURATION (buf) = priv->duration;
 
   /* if this is the first buffer send a NEWSEGMENT */
   if (filter->need_newsegment) {
