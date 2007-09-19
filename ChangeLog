@@ -1,5 +1,12 @@
 2007-09-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/taglib/gstapev2mux.cc:
+	* ext/taglib/gstid3v2mux.cc:
+	  Work around compiler warnings with g++-4.2 when assigning a
+	  string constant to a gchar * (partially fixes #478092).
+
+2007-09-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* configure.ac:
 	  We require core CVS now for gst_base_src_set_do_timestamp().
 

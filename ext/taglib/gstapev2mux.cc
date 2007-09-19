@@ -64,17 +64,10 @@ using namespace TagLib;
 GST_DEBUG_CATEGORY_STATIC (gst_apev2_mux_debug);
 #define GST_CAT_DEFAULT gst_apev2_mux_debug
 
-static const GstElementDetails gst_apev2_mux_details =
-GST_ELEMENT_DETAILS ("TagLib-based APEv2 Muxer",
-    "Formatter/Metadata",
-    "Adds an APEv2 header to the beginning of files using taglib",
-    "Sebastian Dröge <slomo@circular-chaos.org>");
-
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-apetag"));
-
 
 GST_BOILERPLATE (GstApev2Mux, gst_apev2_mux, GstTagLibMux,
     GST_TYPE_TAG_LIB_MUX);
@@ -90,7 +83,10 @@ gst_apev2_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_apev2_mux_details);
+  gst_element_class_set_details_simple (element_class,
+      "TagLib-based APEv2 Muxer", "Formatter/Metadata",
+      "Adds an APEv2 header to the beginning of files using taglib",
+      "Sebastian Dröge <slomo@circular-chaos.org>");
 
   GST_DEBUG_CATEGORY_INIT (gst_apev2_mux_debug, "apev2mux", 0,
       "taglib-based APEv2 tag muxer");

@@ -69,12 +69,6 @@ using namespace TagLib;
 GST_DEBUG_CATEGORY_STATIC (gst_id3v2_mux_debug);
 #define GST_CAT_DEFAULT gst_id3v2_mux_debug
 
-static const GstElementDetails gst_id3v2_mux_details =
-GST_ELEMENT_DETAILS ("TagLib-based ID3v2 Muxer",
-    "Formatter/Metadata",
-    "Adds an ID3v2 header to the beginning of MP3 files using taglib",
-    "Christophe Fergeau <teuf@gnome.org>");
-
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -95,7 +89,10 @@ gst_id3v2_mux_base_init (gpointer g_class)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));
 
-  gst_element_class_set_details (element_class, &gst_id3v2_mux_details);
+  gst_element_class_set_details_simple (element_class,
+      "TagLib-based ID3v2 Muxer", "Formatter/Metadata",
+      "Adds an ID3v2 header to the beginning of MP3 files using taglib",
+      "Christophe Fergeau <teuf@gnome.org>");
 
   GST_DEBUG_CATEGORY_INIT (gst_id3v2_mux_debug, "id3v2mux", 0,
       "taglib-based ID3v2 tag muxer");
