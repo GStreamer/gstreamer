@@ -60,6 +60,8 @@ rfb_decoder_new (void)
   decoder->fd = -1;
   decoder->bytestream = rfb_bytestream_new ();
 
+  decoder->password = NULL;
+
   return decoder;
 }
 
@@ -263,8 +265,17 @@ rfb_decoder_state_wait_for_protocol_version (RfbDecoder * decoder)
 static gboolean
 rfb_decoder_state_reason (RfbDecoder * decoder)
 {
-  /* \TODO Read the reason from the server why he quits */
-  return TRUE;
+  RfbBuffer *buffer;
+  gint reason_length;
+
+  rfb_bytestream_read (decoder->bytestream, &buffer, 4);
+  reason_length = RFB_GET_UINT32 (buffer->data);
+  rfb_buffer_free (buffer);
+  rfb_bytestream_read (decoder->bytestream, &buffer, reason_length);
+  GST_WARNING ("Reason by server: %s", buffer->data);
+  rfb_buffer_free (buffer);
+
+  return FALSE;
 }
 
 static gboolean
@@ -280,7 +291,7 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
    * connection has failed and is followed by a string giving the reason, as described
    * above.
    */
-  if (decoder->protocol_major == 3 && decoder->protocol_minor == 3) {
+  if (IS_VERSION_3_3 (decoder)) {
     ret = rfb_bytestream_read (decoder->bytestream, &buffer, 4);
     g_return_val_if_fail (ret == 4, FALSE);
 
@@ -296,8 +307,11 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
   switch (decoder->security_type) {
     case SECURITY_NONE:
       GST_DEBUG ("Security type is None");
-      /* \TODO version 3.8 goes to the security result */
-      decoder->state = rfb_decoder_state_send_client_initialisation;
+      if (IS_VERSION_3_8 (decoder)) {
+        decoder->state = rfb_decoder_state_security_result;
+      } else {
+        decoder->state = rfb_decoder_state_send_client_initialisation;
+      }
       break;
     case SECURITY_VNC:
         /**
@@ -305,18 +319,25 @@ rfb_decoder_state_wait_for_security (RfbDecoder * decoder)
          * server sends a random 16-byte challenge
          */
       GST_DEBUG ("Security type is VNC Authentication");
+      /* VNC Authentication can't be used if the password is not set */
+      if (!decoder->password) {
+        GST_WARNING
+            ("VNC Authentication can't be used if the password is not set");
+        return FALSE;
+      }
 
       ret = rfb_bytestream_read (decoder->bytestream, &buffer, 16);
       g_return_val_if_fail (ret == 16, FALSE);
-      vncEncryptBytes ((unsigned char *) buffer->data, "testtest");
+      vncEncryptBytes ((unsigned char *) buffer->data, decoder->password);
       rfb_decoder_send (decoder, buffer->data, 16);
+      rfb_buffer_free (buffer);
 
       GST_DEBUG ("Encrypted challenge send to server");
 
       decoder->state = rfb_decoder_state_security_result;
       break;
     default:
-      GST_INFO ("Security type is not known");
+      GST_WARNING ("Security type is not known");
       return FALSE;
       break;
   }
@@ -336,8 +357,11 @@ rfb_decoder_state_security_result (RfbDecoder * decoder)
   ret = rfb_bytestream_read (decoder->bytestream, &buffer, 4);
   g_return_val_if_fail (ret == 4, FALSE);
   if (RFB_GET_UINT32 (buffer->data) != 0) {
-    GST_INFO ("Security handshaking failed");
-    /* \TODO version 3.8 gives a reason why it failed */
+    GST_WARNING ("Security handshaking failed");
+    if (IS_VERSION_3_8 (decoder)) {
+      decoder->state = rfb_decoder_state_reason;
+      return TRUE;
+    }
     return FALSE;
   }
 

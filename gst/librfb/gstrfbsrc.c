@@ -1,4 +1,5 @@
 /* GStreamer
+ * Copyright (C) <2007> Thijs Vermeir <thijsvermeir@gmail.com>
  * Copyright (C) <2006> Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>
  * Copyright (C) <2004> David A. Schleef <ds@schleef.org>
  * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
@@ -36,6 +37,7 @@ enum
   ARG_HOST,
   ARG_PORT,
   ARG_VERSION,
+  ARG_PASSWORD,
 };
 
 #define RGB332_R(x)  ((((x)&0x07) * 0x124)>>3)
@@ -50,7 +52,8 @@ GST_ELEMENT_DETAILS ("Rfb source",
     "Source/Video",
     "Creates a rfb video stream",
     "David A. Schleef <ds@schleef.org>, "
-    "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br");
+    "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>, "
+    "Thijs Vermeir <thijsvermeir@gmail.com>");
 
 static GstStaticPadTemplate gst_rfb_src_template =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -120,6 +123,9 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_VERSION,
       g_param_spec_string ("version", "RFB protocol version",
           "RFB protocol version", "3.3", G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_PASSWORD,
+      g_param_spec_string ("password", "Password for authentication",
+          "Password for authentication", "", G_PARAM_WRITABLE));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
@@ -142,6 +148,9 @@ gst_rfb_src_init (GstRfbSrc * src, GstRfbSrcClass * klass)
   src->port = 5900;
   src->version_major = 3;
   src->version_minor = 3;
+
+  src->decoder = rfb_decoder_new ();
+
 }
 
 static void
@@ -213,6 +222,10 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
     case ARG_VERSION:
       gst_rfb_property_set_version (src, g_strdup (g_value_get_string (value)));
       break;
+    case ARG_PASSWORD:
+      g_free (src->decoder->password);
+      src->decoder->password = g_strdup (g_value_get_string (value));
+      break;
     default:
       break;
   }
@@ -250,7 +263,7 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   RfbDecoder *decoder;
   GstCaps *caps;
 
-  decoder = rfb_decoder_new ();
+  decoder = src->decoder;
 
   GST_DEBUG_OBJECT (src, "connecting to host %s on port %d",
       src->host, src->port);

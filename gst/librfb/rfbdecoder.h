@@ -12,6 +12,11 @@ enum {
     SECURITY_VNC,
 };
 
+#define IS_VERSION(x, ma, mi)   ((x->protocol_major == ma) && (x->protocol_minor == mi))
+#define IS_VERSION_3_3(x)       IS_VERSION(x, 3, 3)
+#define IS_VERSION_3_7(x)       IS_VERSION(x, 3, 7)
+#define IS_VERSION_3_8(x)       IS_VERSION(x, 3, 8)
+
 typedef struct _RfbDecoder RfbDecoder;
 
 struct _RfbDecoder
@@ -40,6 +45,8 @@ struct _RfbDecoder
   guint protocol_major;
   guint protocol_minor;
   guint security_type;
+
+  gchar *password;
 
   guint width;
   guint height;

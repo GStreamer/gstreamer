@@ -1,3 +1,13 @@
+2007-09-19  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/gstrfbsrc.c: 
+		Add password property (write only)
+	* gst/librfb/rfbdecoder.c: 
+		Read the reason on failure
+		Use the password property for authentication
+	* gst/librfb/rfbdecoder.h:
+		Add defines for version checking
+
 2007-09-19  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/directfb/dfbvideosink.c: (gst_dfbvideosink_surface_destroy),
