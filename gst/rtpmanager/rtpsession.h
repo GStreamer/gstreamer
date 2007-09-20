@@ -209,6 +209,7 @@ struct _RTPSessionClass {
   void (*on_new_ssrc)       (RTPSession *sess, RTPSource *source);
   void (*on_ssrc_collision) (RTPSession *sess, RTPSource *source);
   void (*on_ssrc_validated) (RTPSession *sess, RTPSource *source);
+  void (*on_ssrc_active)    (RTPSession *sess, RTPSource *source);
   void (*on_bye_ssrc)       (RTPSession *sess, RTPSource *source);
   void (*on_bye_timeout)    (RTPSession *sess, RTPSource *source);
   void (*on_timeout)        (RTPSession *sess, RTPSource *source);
