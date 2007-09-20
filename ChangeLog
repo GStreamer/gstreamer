@@ -1,5 +1,10 @@
 2007-09-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/generic/states.c:
+	  Improved state change unit test.
+
+2007-09-20  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstbin.h:
 	  Move priv to the right place.
 
