@@ -589,6 +589,7 @@ alsaspdifsink_find_pcm_device (AlsaSPDIFSink * sink)
 beach:
   if (pcm)
     snd_pcm_close (pcm);
+  snd_ctl_elem_list_clear (clist);
   snd_ctl_close (ctl);
   return err;
 }

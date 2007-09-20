@@ -912,17 +912,19 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   static gchar *exts[] = { "mid", "midi", NULL };
-  /* exchange the strings 'plugin' and 'Template plugin' with your
-   * plugin name and description */
+  GstCaps *caps;
+
   GST_DEBUG_CATEGORY_INIT (gst_wildmidi_debug, "wildmidi",
       0, "Wildmidi plugin");
 
+  caps = gst_caps_new_simple ("audio/midi", NULL);
   if (!gst_type_find_register (plugin, "audio/midi", GST_RANK_SECONDARY,
-          gst_wildmidi_typefind, exts,
-          gst_caps_new_simple ("audio/midi", NULL), NULL, NULL)) {
+          gst_wildmidi_typefind, exts, caps, NULL, NULL)) {
     GST_WARNING ("can't register typefind");
+    gst_caps_unref (caps);
     return FALSE;
   }
+  gst_caps_unref (caps);
 
   return gst_element_register (plugin, "wildmidi",
       GST_RANK_SECONDARY, GST_TYPE_WILDMIDI);

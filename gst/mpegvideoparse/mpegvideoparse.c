@@ -89,7 +89,7 @@ enum
 static void gst_mpegvideoparse_class_init (MpegVideoParseClass * klass);
 static void gst_mpegvideoparse_base_init (MpegVideoParseClass * klass);
 static void gst_mpegvideoparse_init (MpegVideoParse * mpegvideoparse);
-static void gst_mpegvideoparse_dispose (MpegVideoParse * mpegvideoparse);
+static void gst_mpegvideoparse_dispose (GObject * object);
 
 static GstFlowReturn gst_mpegvideoparse_chain (GstPad * pad, GstBuffer * buf);
 static gboolean mpv_parse_sink_event (GstPad * pad, GstEvent * event);
@@ -185,10 +185,14 @@ gst_mpegvideoparse_init (MpegVideoParse * mpegvideoparse)
 }
 
 void
-gst_mpegvideoparse_dispose (MpegVideoParse * mpegvideoparse)
+gst_mpegvideoparse_dispose (GObject * object)
 {
+  MpegVideoParse *mpegvideoparse = GST_MPEGVIDEOPARSE (object);
+
   mpeg_packetiser_free (&mpegvideoparse->packer);
   gst_buffer_replace (&mpegvideoparse->seq_hdr_buf, NULL);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean

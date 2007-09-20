@@ -1,6 +1,6 @@
 include $(top_srcdir)/common/check.mak
 
-CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.xml
+CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.reg
 
 GST_TOOLS_DIR = $(top_builddir)/tools
 
@@ -12,7 +12,8 @@ REGISTRY_ENVIRONMENT = \
 TESTS_ENVIRONMENT = \
         $(REGISTRY_ENVIRONMENT)                                 \
         GST_PLUGIN_SYSTEM_PATH=					\
-        GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)
+        GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/sys:$(top_builddir)/ext:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR) \
+        STATE_IGNORE_ELEMENTS="glimagesink"
 
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
@@ -20,7 +21,7 @@ plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 install-pluginLTLIBRARIES:
 
 # the core dumps of some machines have PIDs appended
-CLEANFILES = core.* test-registry.xml
+CLEANFILES = core.* test-registry.*
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-bad.supp
 
