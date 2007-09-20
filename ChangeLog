@@ -1,3 +1,15 @@
+2007-09-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstbin.h:
+	  Move priv to the right place.
+
+	* gst/gstsystemclock.c:
+	  Add FIXME: and improve log.
+
+	* tests/check/Makefile.am:
+	* tests/examples/manual/Makefile.am:
+	  Work with all types of registries.
+
 2007-09-19  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_send_event):

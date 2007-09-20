@@ -114,9 +114,9 @@ struct _GstBin {
   GstClock	*provided_clock;
   GstElement    *clock_provider;
 
+  /*< private >*/
   GstBinPrivate *priv;
 
-  /*< private >*/
   gpointer _gst_reserved[GST_PADDING - 1];
 };
 

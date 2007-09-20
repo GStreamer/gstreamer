@@ -372,6 +372,11 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
     *jitter = GST_CLOCK_DIFF (entryt, now);
   }
   diff = entryt - now;
+  /* FIXME: should that be not just:
+   * target = GST_CLOCK_GET_CLASS (clock)->get_internal_time (clock) + diff;
+   * or even
+   * target = real + diff;
+   */
   target = gst_system_clock_get_internal_time (clock) + diff;
 
   GST_CAT_DEBUG (GST_CAT_CLOCK, "entry %p"
@@ -379,7 +384,7 @@ gst_system_clock_id_wait_jitter_unlocked (GstClock * clock,
       " entry %" GST_TIME_FORMAT
       " now %" GST_TIME_FORMAT
       " real %" GST_TIME_FORMAT
-      " diff %" G_GINT64_FORMAT,
+      " diff (entry-now) %" G_GINT64_FORMAT,
       entry,
       GST_TIME_ARGS (target),
       GST_TIME_ARGS (entryt), GST_TIME_ARGS (now), GST_TIME_ARGS (real), diff);

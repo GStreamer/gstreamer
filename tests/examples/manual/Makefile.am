@@ -15,7 +15,7 @@ INCLUDES = $(GST_OBJ_CFLAGS)
 # gnome_LDADD = $(GST_OBJ_LIBS) $(LIBGNOMEUI_LIBS)
 # gnome_CFLAGS = $(GST_OBJ_CFLAGS) $(LIBGNOMEUI_CFLAGS)
 
-CHECK_REGISTRY = $(top_builddir)/tests/examples/manual/test-registry.xml
+CHECK_REGISTRY = $(top_builddir)/tests/examples/manual/test-registry.reg
 
 REGISTRY_ENVIRONMENT = \
         GST_REGISTRY=$(CHECK_REGISTRY)
@@ -25,7 +25,7 @@ TESTS_ENVIRONMENT = \
         GST_PLUGIN_SYSTEM_PATH=                                 \
         GST_PLUGIN_PATH=$(top_builddir)/plugins
 
-CLEANFILES = core core.* test-registry.xml *.gcno *.gcda
+CLEANFILES = core core.* test-registry.* *.gcno *.gcda
 
 EXTRA_DIST = extract.pl
 

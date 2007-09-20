@@ -20,7 +20,7 @@ install-pluginLTLIBRARIES:
 
 # the core dumps of some machines have PIDs appended, test registry and
 # profiling data
-CLEANFILES = core core.* test-registry.reg *.gcno *.gcda
+CLEANFILES = core core.* test-registry.* *.gcno *.gcda
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp
 
