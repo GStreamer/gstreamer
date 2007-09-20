@@ -1,6 +1,12 @@
 2007-09-20  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c:
+		raw encoding is working, but it looks like the 
+		ffmpegcolorspace plugin can't handle high resolutions
+
+2007-09-20  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/gstrfbsrc.c:
 		bpp, depth and endianness are now set from the
 		stream.
 

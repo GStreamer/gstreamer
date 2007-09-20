@@ -282,7 +282,7 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   }
 
   g_object_set (bsrc, "blocksize",
-      src->decoder->width * src->decoder->height * 4, NULL);
+      src->decoder->width * src->decoder->height * (decoder->bpp / 8), NULL);
 
   src->frame = g_malloc (bsrc->blocksize);
   decoder->paint_rect = gst_rfb_src_paint_rect;
@@ -402,31 +402,26 @@ gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event)
 }
 
 static void
-gst_rfb_src_paint_rect (RfbDecoder * decoder, gint x, gint y, gint w, gint h,
-    guint8 * data)
+gst_rfb_src_paint_rect (RfbDecoder * decoder, gint start_x, gint start_y,
+    gint rect_w, gint rect_h, guint8 * data)
 {
-  gint i, j;
+  gint pos_y;
   guint8 *frame;
-  guint8 color;
   GstRfbSrc *src;
   gint width;
-  gint offset;
+  guint32 src_offset;
+  guint32 dst_offset;
 
-  GST_DEBUG ("painting %d,%d (%dx%d)\n", x, y, w, h);
+  //printf ("painting %d,%d (%dx%d)\n", start_x, start_y, rect_w, rect_h);
   src = GST_RFB_SRC (decoder->decoder_private);
 
   frame = src->frame;
   width = decoder->width;
-  for (j = 0; j < h; j++) {
-    for (i = 0; i < w; i++) {
-      color = data[(j * w + i) * decoder->bpp / 8];
 
-      offset = ((j + y) * width + (i + x)) * decoder->bpp / 8;
-      frame[offset] = data[((j * w + i) * decoder->bpp / 8)];
-      frame[offset + 1] = data[((j * w + i) * decoder->bpp / 8) + 1];
-      frame[offset + 2] = data[((j * w + i) * decoder->bpp / 8) + 2];
-      frame[offset + 3] = data[((j * w + i) * decoder->bpp / 8) + 3];
-    }
+  for (pos_y = start_y; pos_y < (start_y + rect_h); pos_y++) {
+    src_offset = (pos_y - start_y) * rect_w * decoder->bpp / 8;
+    dst_offset = ((pos_y * width) + start_x) * decoder->bpp / 8;
+    memcpy (frame + dst_offset, data + src_offset, rect_w * decoder->bpp / 8);
   }
 
   src->go = FALSE;
