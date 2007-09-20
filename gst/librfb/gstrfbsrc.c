@@ -60,9 +60,9 @@ GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw-rgb, "
-        "bpp = (int) 32, "
-        "depth = (int) 24, "
-        "endianness = (int) 4321, "
+        "bpp = (int) [1, 255], "
+        "depth = (int) [1, 255], "
+        "endianness = (int) [1234, 4321], "
         "red_mask = (int) 0x0000ff00, "
         "green_mask = (int) 0x00ff0000, "
         "blue_mask = (int) 0xff000000, "
@@ -294,7 +294,9 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   caps =
       gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc)));
   gst_caps_set_simple (caps, "width", G_TYPE_INT, decoder->width, "height",
-      G_TYPE_INT, decoder->height, NULL);
+      G_TYPE_INT, decoder->height, "bpp", G_TYPE_INT, decoder->bpp, "depth",
+      G_TYPE_INT, decoder->depth, "endianness", G_TYPE_INT,
+      (decoder->big_endian ? 1234 : 4321), NULL);
   gst_pad_set_caps (GST_BASE_SRC_PAD (bsrc), caps);
   gst_caps_unref (caps);
 
