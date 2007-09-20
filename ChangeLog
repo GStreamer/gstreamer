@@ -1,3 +1,19 @@
+2007-09-20  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/app/gstappsink.c: (gst_app_marshal_OBJECT__VOID),
+	(gst_app_sink_class_init), (gst_app_sink_init),
+	(gst_app_sink_dispose), (gst_app_sink_finalize),
+	(gst_app_sink_set_property), (gst_app_sink_get_property),
+	(gst_app_sink_flush_unlocked), (gst_app_sink_start),
+	(gst_app_sink_event), (gst_app_sink_getcaps),
+	(gst_app_sink_set_caps), (gst_app_sink_get_caps),
+	(gst_app_sink_is_eos), (gst_app_sink_pull_preroll),
+	(gst_app_sink_pull_buffer):
+	* gst-libs/gst/app/gstappsink.h:
+	Add properties, signals and actions to access the element even without
+	linking to the library.
+	Fix some method names and signatures.
+
 2007-09-19  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Jonathan Matthew  <jonathan at kaolin wh9 net>
