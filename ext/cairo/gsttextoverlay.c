@@ -281,6 +281,9 @@ gst_text_overlay_font_init (GstCairoTextOverlay * overlay)
   cairo_select_font_face (cr, overlay->font, overlay->slant, overlay->weight);
   cairo_set_font_size (cr, overlay->scale);
 
+  /* this has a static leak:
+   * http://lists.freedesktop.org/archives/cairo/2007-May/010623.html
+   */
   cairo_font_extents (cr, &font_extents);
   overlay->font_height = GST_ROUND_UP_2 ((guint) font_extents.height);
   overlay->need_render = TRUE;

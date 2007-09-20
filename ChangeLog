@@ -1,3 +1,12 @@
+2007-09-20  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/cairo/gsttextoverlay.c:
+	  Add info about static leak.
+	
+	* tests/check/Makefile.am:
+	* tests/check/generic/states.c:
+	  Improved state change unit test.
+
 2007-09-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/plugins/.cvsignore:

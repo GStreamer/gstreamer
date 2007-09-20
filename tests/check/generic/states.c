@@ -28,15 +28,17 @@
 
 #include <gst/check/gstcheck.h>
 
-GST_START_TEST (test_state_changes)
+static GList *elements = NULL;
+
+static void
+setup ()
 {
-  GstElement *element;
   GList *features, *f;
   GList *plugins, *p;
   gchar **ignorelist = NULL;
   const gchar *STATE_IGNORE_ELEMENTS = NULL;
 
-  GST_DEBUG ("testing elements from source %s", PACKAGE);
+  GST_DEBUG ("getting elements for package %s", PACKAGE);
   STATE_IGNORE_ELEMENTS = g_getenv ("STATE_IGNORE_ELEMENTS");
   if (STATE_IGNORE_ELEMENTS) {
     GST_DEBUG ("Will ignore element factories: '%s'", STATE_IGNORE_ELEMENTS);
@@ -76,26 +78,8 @@ GST_START_TEST (test_state_changes)
           continue;
       }
 
-      GST_DEBUG ("testing element %s", name);
-      element = gst_element_factory_make (name, name);
-      fail_if (element == NULL, "Could not make element from factory %s", name);
-
-      if (GST_IS_PIPELINE (element)) {
-        GST_DEBUG ("element %s is a pipeline", name);
-      }
-
-      gst_element_set_state (element, GST_STATE_READY);
-      gst_element_set_state (element, GST_STATE_PAUSED);
-      gst_element_set_state (element, GST_STATE_PLAYING);
-      gst_element_set_state (element, GST_STATE_PAUSED);
-      gst_element_set_state (element, GST_STATE_READY);
-      gst_element_set_state (element, GST_STATE_NULL);
-      gst_element_set_state (element, GST_STATE_PAUSED);
-      gst_element_set_state (element, GST_STATE_READY);
-      gst_element_set_state (element, GST_STATE_PLAYING);
-      gst_element_set_state (element, GST_STATE_PAUSED);
-      gst_element_set_state (element, GST_STATE_NULL);
-      gst_object_unref (GST_OBJECT (element));
+      GST_DEBUG ("adding element %s", name);
+      elements = g_list_prepend (elements, (gpointer) g_strdup (name));
     }
     gst_plugin_feature_list_free (features);
   }
@@ -103,7 +87,122 @@ GST_START_TEST (test_state_changes)
   g_strfreev (ignorelist);
 }
 
+static void
+teardown ()
+{
+  GList *e;
+
+  for (e = elements; e; e = e->next) {
+    g_free (e->data);
+  }
+  g_list_free (elements);
+  elements = NULL;
+}
+
+
+GST_START_TEST (test_state_changes_up_and_down_seq)
+{
+  GstElement *element;
+  GList *e;
+
+  for (e = elements; e; e = e->next) {
+    const gchar *name = e->data;
+
+    GST_INFO ("testing element %s", name);
+    element = gst_element_factory_make (name, name);
+    fail_if (element == NULL, "Could not make element from factory %s", name);
+
+    if (GST_IS_PIPELINE (element)) {
+      GST_DEBUG ("element %s is a pipeline", name);
+    }
+
+    gst_element_set_state (element, GST_STATE_READY);
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_PLAYING);
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_READY);
+    gst_element_set_state (element, GST_STATE_NULL);
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_READY);
+    gst_element_set_state (element, GST_STATE_PLAYING);
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_NULL);
+    gst_object_unref (GST_OBJECT (element));
+  }
+}
+
 GST_END_TEST;
+
+GST_START_TEST (test_state_changes_up_seq)
+{
+  GstElement *element;
+  GList *e;
+
+  for (e = elements; e; e = e->next) {
+    const gchar *name = e->data;
+
+    GST_INFO ("testing element %s", name);
+    element = gst_element_factory_make (name, name);
+    fail_if (element == NULL, "Could not make element from factory %s", name);
+
+    if (GST_IS_PIPELINE (element)) {
+      GST_DEBUG ("element %s is a pipeline", name);
+    }
+
+    gst_element_set_state (element, GST_STATE_READY);
+
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_READY);
+
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_PLAYING);
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_READY);
+
+    gst_element_set_state (element, GST_STATE_NULL);
+    gst_object_unref (GST_OBJECT (element));
+  }
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_state_changes_down_seq)
+{
+  GstElement *element;
+  GList *e;
+
+  for (e = elements; e; e = e->next) {
+    const gchar *name = e->data;
+
+    GST_INFO ("testing element %s", name);
+    element = gst_element_factory_make (name, name);
+    fail_if (element == NULL, "Could not make element from factory %s", name);
+
+    if (GST_IS_PIPELINE (element)) {
+      GST_DEBUG ("element %s is a pipeline", name);
+    }
+
+    gst_element_set_state (element, GST_STATE_READY);
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_PLAYING);
+
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_PLAYING);
+
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_READY);
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_PLAYING);
+
+    gst_element_set_state (element, GST_STATE_PAUSED);
+    gst_element_set_state (element, GST_STATE_READY);
+    gst_element_set_state (element, GST_STATE_NULL);
+    gst_object_unref (GST_OBJECT (element));
+  }
+}
+
+GST_END_TEST;
+
 
 Suite *
 states_suite (void)
@@ -112,7 +211,10 @@ states_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_state_changes);
+  tcase_add_checked_fixture (tc_chain, setup, teardown);
+  tcase_add_test (tc_chain, test_state_changes_up_and_down_seq);
+  tcase_add_test (tc_chain, test_state_changes_up_seq);
+  tcase_add_test (tc_chain, test_state_changes_down_seq);
 
   return s;
 }

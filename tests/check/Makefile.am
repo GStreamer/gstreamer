@@ -1,6 +1,6 @@
 include $(top_srcdir)/common/check.mak
 
-CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.xml
+CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.reg
 TEST_FILES_DIRECTORY = $(top_srcdir)/tests/files
 
 REGISTRY_ENVIRONMENT = \
@@ -11,10 +11,10 @@ TESTS_ENVIRONMENT = \
 	GST_PLUGIN_SYSTEM_PATH=					\
 	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)			\
 	GST_TEST_FILES_PATH=$(TEST_FILES_DIRECTORY) \
-	STATE_IGNORE_ELEMENTS="aasink cacasink autovideosink gconfvideosink"
+	STATE_IGNORE_ELEMENTS="aasink autovideosink cacasink cairotextoverlay"
 
 # ths core dumps of some machines have PIDs appended
-CLEANFILES = core.* test-registry.xml
+CLEANFILES = core.* test-registry.*
 
 clean-local: clean-local-check
 
@@ -69,8 +69,8 @@ check_PROGRAMS = \
 	$(check_sunaudio) \
 	$(check_taglib) \
 	$(check_wavpack)
-    
-VALGRIND_TO_FIX =
+
+VALGRIND_TO_FIX = 
 
 TESTS = $(check_PROGRAMS)
 
