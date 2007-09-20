@@ -66,6 +66,7 @@ struct _GstRtpSessionClass {
   void     (*on_new_ssrc)       (GstRtpSession *sess, guint32 ssrc);
   void     (*on_ssrc_collision) (GstRtpSession *sess, guint32 ssrc);
   void     (*on_ssrc_validated) (GstRtpSession *sess, guint32 ssrc);
+  void     (*on_ssrc_active)    (GstRtpSession *sess, guint32 ssrc);
   void     (*on_bye_ssrc)       (GstRtpSession *sess, guint32 ssrc);
   void     (*on_bye_timeout)    (GstRtpSession *sess, guint32 ssrc);
   void     (*on_timeout)        (GstRtpSession *sess, guint32 ssrc);

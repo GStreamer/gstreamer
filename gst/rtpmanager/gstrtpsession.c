@@ -208,6 +208,7 @@ enum
   SIGNAL_ON_NEW_SSRC,
   SIGNAL_ON_SSRC_COLLISION,
   SIGNAL_ON_SSRC_VALIDATED,
+  SIGNAL_ON_SSRC_ACTIVE,
   SIGNAL_ON_BYE_SSRC,
   SIGNAL_ON_BYE_TIMEOUT,
   SIGNAL_ON_TIMEOUT,
@@ -303,6 +304,13 @@ static void
 on_ssrc_validated (RTPSession * session, RTPSource * src, GstRtpSession * sess)
 {
   g_signal_emit (sess, gst_rtp_session_signals[SIGNAL_ON_SSRC_VALIDATED], 0,
+      src->ssrc);
+}
+
+static void
+on_ssrc_active (RTPSession * session, RTPSource * src, GstRtpSession * sess)
+{
+  g_signal_emit (sess, gst_rtp_session_signals[SIGNAL_ON_SSRC_ACTIVE], 0,
       src->ssrc);
 }
 
@@ -429,6 +437,18 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpSessionClass,
           on_ssrc_validated), NULL, NULL, g_cclosure_marshal_VOID__UINT,
       G_TYPE_NONE, 1, G_TYPE_UINT);
+  /**
+   * GstRtpSession::on-ssrc_active:
+   * @sess: the object which received the signal
+   * @ssrc: the SSRC
+   *
+   * Notify of a SSRC that is active, i.e., sending RTCP.
+   */
+  gst_rtp_session_signals[SIGNAL_ON_SSRC_ACTIVE] =
+      g_signal_new ("on-ssrc-active", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpSessionClass,
+          on_ssrc_active), NULL, NULL, g_cclosure_marshal_VOID__UINT,
+      G_TYPE_NONE, 1, G_TYPE_UINT);
 
   /**
    * GstRtpSession::on-bye-ssrc:
@@ -497,6 +517,8 @@ gst_rtp_session_init (GstRtpSession * rtpsession, GstRtpSessionClass * klass)
       (GCallback) on_ssrc_collision, rtpsession);
   g_signal_connect (rtpsession->priv->session, "on-ssrc-validated",
       (GCallback) on_ssrc_validated, rtpsession);
+  g_signal_connect (rtpsession->priv->session, "on-ssrc-active",
+      (GCallback) on_ssrc_active, rtpsession);
   g_signal_connect (rtpsession->priv->session, "on-bye-ssrc",
       (GCallback) on_bye_ssrc, rtpsession);
   g_signal_connect (rtpsession->priv->session, "on-bye-timeout",
@@ -1229,6 +1251,9 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
       break;
     }
+    case GST_EVENT_EOS:
+      ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
+      break;
     default:
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
       break;

@@ -36,6 +36,7 @@ enum
   SIGNAL_ON_NEW_SSRC,
   SIGNAL_ON_SSRC_COLLISION,
   SIGNAL_ON_SSRC_VALIDATED,
+  SIGNAL_ON_SSRC_ACTIVE,
   SIGNAL_ON_BYE_SSRC,
   SIGNAL_ON_BYE_TIMEOUT,
   SIGNAL_ON_TIMEOUT,
@@ -117,6 +118,18 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SSRC_VALIDATED] =
       g_signal_new ("on-ssrc-validated", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_validated),
+      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+      G_TYPE_OBJECT);
+  /**
+   * RTPSession::on-ssrc_active:
+   * @session: the object which received the signal
+   * @src: the active RTPSource
+   *
+   * Notify of a SSRC that is active, i.e., sending RTCP.
+   */
+  rtp_session_signals[SIGNAL_ON_SSRC_ACTIVE] =
+      g_signal_new ("on-ssrc-active", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_active),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
       G_TYPE_OBJECT);
   /**
@@ -278,6 +291,14 @@ on_ssrc_validated (RTPSession * sess, RTPSource * source)
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SSRC_VALIDATED], 0,
       source);
+  RTP_SESSION_LOCK (sess);
+}
+
+static void
+on_ssrc_active (RTPSession * sess, RTPSource * source)
+{
+  RTP_SESSION_UNLOCK (sess);
+  g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SSRC_ACTIVE], 0, source);
   RTP_SESSION_LOCK (sess);
 }
 
@@ -1080,6 +1101,8 @@ rtp_session_process_rb (RTPSession * sess, RTPSource * source,
        * the other sender to see if we are better or worse. */
       rtp_source_process_rb (source, arrival->time, fractionlost, packetslost,
           exthighestseq, jitter, lsr, dlsr);
+
+      on_ssrc_active (sess, source);
     }
   }
 }

@@ -65,6 +65,7 @@ struct _GstRtpBinClass {
   void     (*on_new_ssrc)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_ssrc_collision) (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_ssrc_validated) (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_ssrc_active)    (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_bye_ssrc)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_bye_timeout)    (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_timeout)        (GstRtpBin *rtpbin, guint session, guint32 ssrc);
