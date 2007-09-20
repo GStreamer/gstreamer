@@ -198,6 +198,8 @@ ac3iec_finalize (GObject * object)
   AC3IEC *ac3iec = AC3IEC (object);
 
   g_free (ac3iec->padder);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

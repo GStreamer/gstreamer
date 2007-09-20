@@ -1,6 +1,6 @@
 include $(top_srcdir)/common/check.mak
 
-CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.xml
+CHECK_REGISTRY = $(top_builddir)/tests/check/test-registry.reg
 
 REGISTRY_ENVIRONMENT = \
 	GST_REGISTRY=$(CHECK_REGISTRY)
@@ -8,10 +8,11 @@ REGISTRY_ENVIRONMENT = \
 TESTS_ENVIRONMENT = \
 	$(REGISTRY_ENVIRONMENT)					\
 	GST_PLUGIN_SYSTEM_PATH=					\
-	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(GST_PLUGINS_DIR)
+	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(GST_PLUGINS_DIR)  \
+	STATE_IGNORE_ELEMENTS="siddec"
 
 # ths core dumps of some machines have PIDs appended
-CLEANFILES = core.* test-registry.xml
+CLEANFILES = core.* test-registry.*
 
 clean-local: clean-local-check
 
