@@ -69,7 +69,7 @@ main (int argc, char *argv[])
 
   gst_app_src_end_of_stream (GST_APP_SRC (app->src));
 
-  while (!gst_app_sink_end_of_stream (GST_APP_SINK (app->sink))) {
+  while (!gst_app_sink_is_eos (GST_APP_SINK (app->sink))) {
     GstBuffer *buf;
 
     buf = gst_app_sink_pull_buffer (GST_APP_SINK (app->sink));
