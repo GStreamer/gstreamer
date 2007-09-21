@@ -8,111 +8,128 @@ GObject
     GstElement
       GstBin
         GstPipeline
+        GstRgVolume
         GstRtpBin
         GstRtpClient
-        GstRgVolume
-      GstX264Enc
-      GstXvidEnc
-      GstXvidDec
-      GstSwfdec
-      GstSpcDec
-      GstPitch
-      GstBaseSink
-        GstSFSink
-        GstVideoSink
-          GstSDLVideoSink
-          GstDfbVideoSink
-          GstGLImageSink
-        GstBaseAudioSink
-          GstAudioSink
-            GstSDLAudioSink
-            GstNasSink
-          GstJackAudioSink
-        AlsaSPDIFSink
-        GstMultiFileSink
-        GstAppSink
+      GstMusepackDec
       GstBaseSrc
-        GstSFSrc
         GstPushSrc
           GstNeonhttpSrc
           GstMMS
           GstDvbSrc
-          GstMultiFileSrc
+          GstVCDSrc
           GstRfbSrc
           GstAppSrc
-      GstTRM
-      GstMusepackDec
+          GstMultiFileSrc
+        GstSFSrc
+        GstGioSrc
+      GstBaseSink
+        GstBaseAudioSink
+          GstJackAudioSink
+          GstAudioSink
+            GstSDLAudioSink
+            GstNasSink
+        GstVideoSink
+          GstDfbVideoSink
+          GstSDLVideoSink
+          GstGLImageSink
+        GstSFSink
+        AlsaSPDIFSink
+        GstGioSink
+        GstAppSink
+        GstMultiFileSink
+      GstPitch
+      GstFaad
       GstSignalProcessor
         ladspa-delay-5s
-        ladspa-amp-mono
-        ladspa-amp-stereo
-        ladspa-lpf
-        ladspa-hpf
-        ladspa-noise-white
         ladspa-sine-faaa
         ladspa-sine-faac
         ladspa-sine-fcaa
         ladspa-sine-fcac
+        ladspa-amp-mono
+        ladspa-amp-stereo
+        ladspa-noise-white
+        ladspa-lpf
+        ladspa-hpf
+      GstDtsDec
       GstGSMEnc
       GstGSMDec
-      GstFaad
       GstFaac
-      GstDtsDec
+      GstX264Enc
+      GstCDAudio
+      GstMpeg2enc
+      GstSpcDec
+      GstXvidEnc
+      GstXvidDec
       GstBz2enc
       GstBz2dec
-      GstRtpJitterBuffer
-      GstRtpPtDemux
-      GstRtpSession
-      GstRtpSsrcDemux
-      GstVMncDec
-      MpegVideoParse
-      GstRealVideoDec
-      GstRealAudioDec
-      GstInterleave
-      GstDeinterleave
-      GstY4mEncode
-      GstXingMux
-      GstVideoParse
+      GstTRM
+      GstDVDSpu
       GstBaseTransform
         GstVideoCrop
-        GstSpectrum
-        GstRgAnalysis
-        GstRgLimiter
-        GstBayer2RGB
-        GstIIR
-        GstLPWSinc
-        GstBPWSinc
         GstAudioFilter
+          GstSpectrum
           GstIirEqualizer
             GstIirEqualizerNBands
             GstIirEqualizer3Bands
             GstIirEqualizer10Bands
+          GstStereo
+          GstLPWSinc
+          GstBPWSinc
+        GstVideoFilter
+          GstVideoAnalyse
+          GstVideoDetect
+          GstVideoMark
+        GstRgAnalysis
+        GstRgLimiter
         GstDeinterlace
+        GstBayer2RGB
+        GstIIR
+      MpegTSParse
       GstTtaParse
       GstTtaDec
-      GstSwitch
+      MpegVideoParse
+      GstH264Parse
+      GstVMncDec
       GstSpeed
+      GstFLVDemux
+      GstSwitch
+      GstCDXAParse
+      GstModPlug
+      GstY4mEncode
+      GstFestival
+      GstVideoParse
+      GstNsfDec
+      GstInterleave
+      GstDeinterleave
+      GstXingMux
+      GstMveDemux
+      GstMveMux
+      GstRtpJitterBuffer
+      GstRtpPtDemux
+      GstRtpSession
+      GstRtpSsrcDemux
+      GstNuvDemux
+      GstFreeze
+      GstRealVideoDec
+      GstRealAudioDec
       GstQTDemux
       GstBaseRTPDepayload
         GstRtpXQTDepay
-      GstNuvDemux
-      GstNsfDec
-      GstModPlug
-      GstH264Parse
-      GstFreeze
-      GstMveDemux
-      GstMveMux
-      GstCDXAParse
     GstPlugin
     GstRegistry
     GstPadTemplate
       GstSignalProcessorPadTemplate
   GstSignalObject
   GstColorBalanceChannel
+  GVfs
+    GLocalVfs
+  MpegTSPatInfo
+  MpegTSPmtInfo
 GInterface
   GstChildProxy
   GstURIHandler
   GstImplementsInterface
-  GstXOverlay
   GstNavigation
   GstColorBalance
+  GstXOverlay

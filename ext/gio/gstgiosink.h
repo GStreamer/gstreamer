@@ -42,10 +42,16 @@ G_BEGIN_DECLS
 typedef struct _GstGioSink      GstGioSink;
 typedef struct _GstGioSinkClass GstGioSinkClass;
 
+/**
+ * GstGioSink:
+ *
+ * Opaque data structure.
+ */
 struct _GstGioSink
 {
   GstBaseSink sink;
 
+  /*< private >*/
   GCancellable *cancel;
   GFile *file;
   gchar *location;

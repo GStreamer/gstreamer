@@ -1,5 +1,13 @@
 2007-09-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	Update hierarchy.
+	* ext/gio/gstgiosink.h:
+	* ext/gio/gstgiosrc.h:
+	Mark private fields of the instance structs private.
+
+2007-09-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* docs/plugins/Makefile.am:
 	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
 	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
