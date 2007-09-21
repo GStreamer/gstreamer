@@ -1,3 +1,8 @@
+2007-09-21  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/playback/gstqueue2.c: (gst_queue_push_one):
+	Fix compilation wrt printf arguments.
+
 2007-09-20  Wim Taymans  <wim.taymans@gmail.com>
 
 	* configure.ac:
