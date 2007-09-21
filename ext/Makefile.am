@@ -88,6 +88,12 @@ else
  FAAD_DIR=
 endif
 
+if USE_GIO
+GIO_DIR=gio
+else
+GIO_DIR=
+endif
+
 if USE_GSM
 GSM_DIR=gsm
 else
@@ -278,6 +284,7 @@ SUBDIRS=\
 	$(DTS_DIR) \
 	$(FAAC_DIR) \
 	$(FAAD_DIR) \
+	$(GIO_DIR) \
 	$(GSM_DIR) \
 	$(HERMES_DIR) \
 	$(IVORBIS_DIR) \
@@ -317,6 +324,7 @@ DIST_SUBDIRS = \
 	directfb \
 	faac \
 	faad \
+	gio \
 	gsm \
 	ivorbis \
 	ladspa \

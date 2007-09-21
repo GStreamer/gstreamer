@@ -1,3 +1,39 @@
+2007-09-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: René Stadler <mail at renestadler dot de>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/gio/Makefile.am:
+	* ext/gio/gstgio.c: (gst_gio_error), (gst_gio_seek),
+	(gst_gio_get_supported_protocols),
+	(gst_gio_uri_handler_get_type_sink),
+	(gst_gio_uri_handler_get_type_src),
+	(gst_gio_uri_handler_get_protocols), (gst_gio_uri_handler_get_uri),
+	(gst_gio_uri_handler_set_uri), (gst_gio_uri_handler_init),
+	(gst_gio_uri_handler_do_init), (plugin_init):
+	* ext/gio/gstgio.h:
+	* ext/gio/gstgiosink.c: (gst_gio_sink_base_init),
+	(gst_gio_sink_class_init), (gst_gio_sink_init),
+	(gst_gio_sink_finalize), (gst_gio_sink_set_property),
+	(gst_gio_sink_get_property), (gst_gio_sink_start),
+	(gst_gio_sink_stop), (gst_gio_sink_unlock),
+	(gst_gio_sink_unlock_stop), (gst_gio_sink_event),
+	(gst_gio_sink_render), (gst_gio_sink_query):
+	* ext/gio/gstgiosink.h:
+	* ext/gio/gstgiosrc.c: (gst_gio_src_base_init),
+	(gst_gio_src_class_init), (gst_gio_src_init),
+	(gst_gio_src_finalize), (gst_gio_src_set_property),
+	(gst_gio_src_get_property), (gst_gio_src_start),
+	(gst_gio_src_stop), (gst_gio_src_get_size),
+	(gst_gio_src_is_seekable), (gst_gio_src_unlock),
+	(gst_gio_src_unlock_stop), (gst_gio_src_check_get_range),
+	(gst_gio_src_create):
+	* ext/gio/gstgiosrc.h:
+	Add a GIO/GVFS plugin with source and sink elements. This will
+	only be enabled when --enable-experimental is given to configure
+	for now as the GIO API is not stable yet. Fixes #476916.
+
 2007-09-21  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c:

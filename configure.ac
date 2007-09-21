@@ -122,7 +122,7 @@ AG_GST_ARG_ENABLE_EXTERNAL
 
 AG_GST_ARG_ENABLE_EXPERIMENTAL
 
-USE_TARKIN=$BUILD_EXPERIMENTAL
+USE_GIO=$BUILD_EXPERIMENTAL
 
 dnl *** checks for platform ***
 
@@ -278,7 +278,6 @@ fi
 
 AC_SUBST(GST_PLUGINS_SELECTED)
 
-
 dnl *** sys plug-ins ***
 
 dnl OpenGL
@@ -330,7 +329,6 @@ AG_GST_CHECK_FEATURE(X, [X libraries and plugins],
   CFLAGS="$ac_cflags_save"
   CPPFLAGS="$ac_cppflags_save"
 ])
-
 
 dnl *** ext plug-ins ***
 dnl keep this list sorted alphabetically !
@@ -529,6 +527,17 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
   AS_SCRUB_INCLUDE(FAAD_CFLAGS)
   AC_SUBST(FAAD_LIBS)
   AC_SUBST(FAAD_IS_NEAAC)
+])
+
+dnl *** libgio ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
+AG_GST_CHECK_FEATURE(GIO, [GIO standalone library], gio, [
+  PKG_CHECK_MODULES(GIO, gio-standalone >= 0.0.1, HAVE_GIO="yes", [
+    HAVE_GIO="no"
+    AC_MSG_RESULT(no)
+  ])
+  AC_SUBST(GIO_CFLAGS)
+  AC_SUBST(GIO_LIBS)
 ])
 
 dnl *** gsm ***
@@ -899,6 +908,7 @@ AM_CONDITIONAL(USE_DTS, false)
 AM_CONDITIONAL(USE_DIVX, false)
 AM_CONDITIONAL(USE_FAAC, false)
 AM_CONDITIONAL(USE_FAAD, false)
+AM_CONDITIONAL(USE_GIO, false)
 AM_CONDITIONAL(USE_GSM, false)
 AM_CONDITIONAL(USE_IVORBIS, false)
 AM_CONDITIONAL(USE_JACK, false)
@@ -1029,6 +1039,7 @@ ext/divx/Makefile
 ext/dts/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
+ext/gio/Makefile
 ext/gsm/Makefile
 ext/ivorbis/Makefile
 ext/jack/Makefile
