@@ -62,6 +62,11 @@ rfb_decoder_new (void)
 
   decoder->password = NULL;
 
+  decoder->offset_x = 0;
+  decoder->offset_y = 0;
+  decoder->rect_width = 0;
+  decoder->rect_height = 0;
+
   return decoder;
 }
 
@@ -453,6 +458,37 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
   decoder->state = rfb_decoder_state_normal;
   decoder->inited = TRUE;
 
+  /* check if we need cropping */
+
+  if (decoder->offset_x > 0) {
+    if (decoder->offset_x > decoder->width) {
+      GST_WARNING ("Trying to crop more than the width of the server");
+    } else {
+      decoder->width -= decoder->offset_x;
+    }
+  }
+  if (decoder->offset_y > 0) {
+    if (decoder->offset_y > decoder->height) {
+      GST_WARNING ("Trying to crop more than the height of the server");
+    } else {
+      decoder->height -= decoder->offset_y;
+    }
+  }
+  if (decoder->rect_width > 0) {
+    if (decoder->rect_width > decoder->width) {
+      GST_WARNING ("Trying to crop more than the width of the server");
+    } else {
+      decoder->width = decoder->rect_width;
+    }
+  }
+  if (decoder->rect_height > 0) {
+    if (decoder->rect_height > decoder->height) {
+      GST_WARNING ("Trying to crop more than the height of the server");
+    } else {
+      decoder->height = decoder->rect_height;
+    }
+  }
+
   return TRUE;
 }
 
@@ -547,8 +583,8 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
 
   buffer = rfb_decoder_read (decoder, 12);
 
-  x = RFB_GET_UINT16 (buffer + 0);
-  y = RFB_GET_UINT16 (buffer + 2);
+  x = RFB_GET_UINT16 (buffer + 0) - decoder->offset_x;
+  y = RFB_GET_UINT16 (buffer + 2) - decoder->offset_y;
   w = RFB_GET_UINT16 (buffer + 4);
   h = RFB_GET_UINT16 (buffer + 6);
   encoding = RFB_GET_UINT32 (buffer + 8);

@@ -38,6 +38,10 @@ enum
   ARG_PORT,
   ARG_VERSION,
   ARG_PASSWORD,
+  ARG_OFFSET_X,
+  ARG_OFFSET_Y,
+  ARG_WIDTH,
+  ARG_HEIGHT,
 };
 
 GST_DEBUG_CATEGORY_STATIC (rfbsrc_debug);
@@ -122,6 +126,18 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_PASSWORD,
       g_param_spec_string ("password", "Password for authentication",
           "Password for authentication", "", G_PARAM_WRITABLE));
+  g_object_class_install_property (gobject_class, ARG_OFFSET_X,
+      g_param_spec_int ("offset-x", "x offset for screen scrapping",
+          "x offset for screen scrapping", 0, 65535, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_OFFSET_Y,
+      g_param_spec_int ("offset-y", "y offset for screen scrapping",
+          "y offset for screen scrapping", 0, 65535, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_WIDTH,
+      g_param_spec_int ("width", "width of screen", "width of screen", 0, 65535,
+          0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_HEIGHT,
+      g_param_spec_int ("height", "height of screen", "height of screen", 0,
+          65535, 0, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
@@ -222,6 +238,18 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
       g_free (src->decoder->password);
       src->decoder->password = g_strdup (g_value_get_string (value));
       break;
+    case ARG_OFFSET_X:
+      src->decoder->offset_x = g_value_get_int (value);
+      break;
+    case ARG_OFFSET_Y:
+      src->decoder->offset_y = g_value_get_int (value);
+      break;
+    case ARG_WIDTH:
+      src->decoder->rect_width = g_value_get_int (value);
+      break;
+    case ARG_HEIGHT:
+      src->decoder->rect_height = g_value_get_int (value);
+      break;
     default:
       break;
   }
@@ -245,6 +273,18 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
       version = gst_rfb_property_get_version (src);
       g_value_set_string (value, version);
       g_free (version);
+      break;
+    case ARG_OFFSET_X:
+      g_value_set_int (value, src->decoder->offset_x);
+      break;
+    case ARG_OFFSET_Y:
+      g_value_set_int (value, src->decoder->offset_y);
+      break;
+    case ARG_WIDTH:
+      g_value_set_int (value, src->decoder->rect_width);
+      break;
+    case ARG_HEIGHT:
+      g_value_set_int (value, src->decoder->rect_height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -270,7 +310,6 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
     return FALSE;
   }
 
-  src->decoder = decoder;
   src->inter = FALSE;
 
   while (!decoder->inited) {
@@ -322,8 +361,10 @@ gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   gulong newsize;
   GstFlowReturn ret;
 
-  rfb_decoder_send_update_request (decoder, src->inter, 0, 0,
-      decoder->width, decoder->height);
+  rfb_decoder_send_update_request (decoder, src->inter, decoder->offset_x,
+      decoder->offset_y,
+      (decoder->rect_width ? decoder->rect_width : decoder->width),
+      (decoder->rect_height ? decoder->rect_height : decoder->height));
   // src->inter = TRUE;
 
   src->go = TRUE;

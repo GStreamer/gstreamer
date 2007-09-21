@@ -63,6 +63,12 @@ struct _RfbDecoder
 
   gchar *name;
 
+  /* information if we don't want to update the whole screen */
+  guint offset_x;
+  guint offset_y;
+  guint rect_width;
+  guint rect_height;
+
   gint n_rects;
 };
 

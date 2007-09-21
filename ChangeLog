@@ -1,6 +1,14 @@
 2007-09-21  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+		Added offset-x, offset-y, width and height property
+		for selecting a region from the screen
+
+2007-09-21  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/gstrfbsrc.c:
 		Minimum raw encoding is working now
 	* gst/librfb/rfbdecoder.c:
 		fix address while reading from stream
