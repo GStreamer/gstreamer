@@ -40,10 +40,6 @@ enum
   ARG_PASSWORD,
 };
 
-#define RGB332_R(x)  ((((x)&0x07) * 0x124)>>3)
-#define RGB332_G(x)  ((((x)&0x38) * 0x124)>>6)
-#define RGB332_B(x)  ((((x)&0xc0) * 0x149)>>8)
-
 GST_DEBUG_CATEGORY_STATIC (rfbsrc_debug);
 #define GST_CAT_DEFAULT rfbsrc_debug
 
@@ -67,7 +63,7 @@ GST_STATIC_PAD_TEMPLATE ("src",
         "green_mask = (int) 0x00ff0000, "
         "blue_mask = (int) 0xff000000, "
         "width = (int) [ 16, 4096 ], "
-        "height = (int) [ 16, 4096 ], " "framerate = (fraction) 30/1")
+        "height = (int) [ 16, 4096 ], " "framerate = (fraction) 0/1")
     );
 
 static void gst_rfb_src_base_init (gpointer g_class);

@@ -148,10 +148,10 @@ rfb_decoder_iterate (RfbDecoder * decoder)
 }
 
 guint8 *
-rfb_decoder_read (RfbDecoder * decoder, gint len)
+rfb_decoder_read (RfbDecoder * decoder, guint32 len)
 {
-  gint total = 0;
-  gint now = 0;
+  guint32 total = 0;
+  guint32 now = 0;
   guint8 *address = NULL;
 
   g_return_val_if_fail (decoder->fd > 0, NULL);
@@ -160,9 +160,8 @@ rfb_decoder_read (RfbDecoder * decoder, gint len)
   address = g_malloc (len);
   g_return_val_if_fail (address, NULL);
 
-  address += total;
   while (total < len) {
-    now = recv (decoder->fd, address, len - total, 0);
+    now = recv (decoder->fd, address + total, len - total, 0);
     if (now <= 0) {
       GST_WARNING ("rfb read error on socket");
       return NULL;
