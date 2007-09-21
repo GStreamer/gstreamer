@@ -1,3 +1,8 @@
+2007-09-21  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtp/gstrtpamrdepay.c: (gst_rtp_amr_depay_process):
+	Set outgoing packet duration because we can. Fixes #478244 some more.
+
 2007-09-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/cairo/gsttextoverlay.c:

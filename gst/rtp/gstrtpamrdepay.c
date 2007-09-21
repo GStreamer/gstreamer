@@ -409,6 +409,9 @@ gst_rtp_amr_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         dp += fr_size;
       }
     }
+    /* we can set the duration because each packet is 20 milliseconds */
+    GST_BUFFER_DURATION (outbuf) = num_packets * 20 * GST_MSECOND;
+
     gst_buffer_set_caps (outbuf,
         GST_PAD_CAPS (GST_BASE_RTP_DEPAYLOAD_SRCPAD (depayload)));
 
