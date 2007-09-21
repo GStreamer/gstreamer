@@ -1,0 +1,43 @@
+<plugin>
+  <name>gio</name>
+  <description>GIO elements</description>
+  <filename>../../ext/gio/.libs/libgstgio.so</filename>
+  <basename>libgstgio.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>giosink</name>
+      <longname>GIO sink</longname>
+      <class>Sink/File</class>
+      <description>Write to any GVFS-supported location</description>
+      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>giosrc</name>
+      <longname>GIO source</longname>
+      <class>Source/File</class>
+      <description>Read from any GVFS-supported location</description>
+      <author>René Stadler &lt;mail@renestadler.de&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

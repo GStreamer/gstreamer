@@ -211,8 +211,10 @@ gst_gio_src_start (GstBaseSrc * base_src)
 
     return FALSE;
 
-  } else if (src->stream == NULL)
+  } else if (src->stream == NULL) {
+    g_object_unref (src->file);
     return FALSE;
+  }
 
   src->position = 0;
 

@@ -78,6 +78,14 @@ guint  arg1
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpSession::on-ssrc-active</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpSession *gstrtpsession
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstRtpPtDemux::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>la</FLAGS>
@@ -195,6 +203,15 @@ guint  arg2
 </SIGNAL>
 
 <SIGNAL>
+<NAME>GstRtpBin::on-ssrc-active</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstRtpBin *gstrtpbin
+guint  arg1
+guint  arg2
+</SIGNAL>
+
+<SIGNAL>
 <NAME>GstCDAudio::track-change</NAME>
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
@@ -209,5 +226,40 @@ gint  arg1
 MpegTSParse *mpegtsparse
 gint  arg1
 MpegTSPmtInfo *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAppSink::eos</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstAppSink *gstappsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAppSink::new-buffer</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstAppSink *gstappsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAppSink::new-preroll</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstAppSink *gstappsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAppSink::pull-buffer</NAME>
+<RETURNS>GstBuffer*</RETURNS>
+<FLAGS>l</FLAGS>
+GstAppSink *gstappsink
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstAppSink::pull-preroll</NAME>
+<RETURNS>GstBuffer*</RETURNS>
+<FLAGS>l</FLAGS>
+GstAppSink *gstappsink
 </SIGNAL>
 

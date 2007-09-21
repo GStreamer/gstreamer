@@ -91,6 +91,8 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/amrwb/gstamrwbenc.h \
 	$(top_srcdir)/ext/amrwb/gstamrwbparse.h \
 	$(top_srcdir)/ext/directfb/dfbvideosink.h \
+	$(top_srcdir)/ext/gio/gstgiosink.h \
+	$(top_srcdir)/ext/gio/gstgiosrc.h \
 	$(top_srcdir)/ext/jack/gstjackaudiosink.h \
 	$(top_srcdir)/ext/musicbrainz/gsttrm.h \
 	$(top_srcdir)/ext/sdl/sdlaudiosink.h \
