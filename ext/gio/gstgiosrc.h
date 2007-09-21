@@ -42,10 +42,16 @@ G_BEGIN_DECLS
 typedef struct _GstGioSrc      GstGioSrc;
 typedef struct _GstGioSrcClass GstGioSrcClass;
 
+/**
+ * GstGioSrc:
+ *
+ * Opaque data structure.
+ */
 struct _GstGioSrc
 {
   GstBaseSrc src;
-
+  
+  /*< private >*/
   GCancellable *cancel;
   GFile *file;
   gchar *location;
