@@ -1387,7 +1387,7 @@ next:
           if (type == GST_EVENT_EOS || type == GST_EVENT_NEWSEGMENT) {
             /* we found a pushable item in the queue, push it out */
             GST_CAT_LOG_OBJECT (queue_dataflow, queue,
-                "pushing pushable event %s after UNEXPECTED %p",
+                "pushing pushable event %s after UNEXPECTED",
                 GST_EVENT_TYPE_NAME (event));
             goto next;
           }
