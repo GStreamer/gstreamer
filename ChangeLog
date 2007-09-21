@@ -1,3 +1,8 @@
+2007-09-21  Wim Taymans  <wim.taymans@gmail.com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_push_one):
+	Fix printf arguments.
+
 2007-09-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/generic/states.c:
