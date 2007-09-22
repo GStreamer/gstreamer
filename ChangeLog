@@ -1,5 +1,13 @@
 2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	translated by: Abel Cheung <abelcheung@gmail.com>
+
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Added Chinese (traditional and Hong Kong) translation.
+
+2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	translated by: Jakub Bogusz <qboosh@pld-linux.org>
 
 	* po/pl.po:
