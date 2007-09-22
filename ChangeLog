@@ -1,5 +1,12 @@
 2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
+	translated by: Mogens Jaeger <mogens@jaeger.tf>
+
+	* po/da.po:
+	  Added Danish translation.
+
+2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
 	translated by: Funda Wang <fundawang@linux.net.cn>
 
 	* po/zh_CN.po:
