@@ -1,8 +1,6 @@
 /* GStreamer
- * Copyright (C)  2005 Sebastien Moutte <sebastien@moutte.net>
+ * Copyright (C) 2005 Sebastien Moutte <sebastien@moutte.net>
  * Copyright (C) 2007 Pioneers of the Inevitable <songbird@songbirdnest.com>
- *
- * gstdirectdrawsink.h: 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,7 +22,6 @@
  *
  */
 
-
 #ifndef __GST_DIRECTDRAWSINK_H__
 #define __GST_DIRECTDRAWSINK_H__
 
@@ -38,6 +35,7 @@
 #include <ddraw.h>
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_DIRECTDRAW_SINK            (gst_directdraw_sink_get_type())
 #define GST_DIRECTDRAW_SINK(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DIRECTDRAW_SINK,GstDirectDrawSink))
 #define GST_DIRECTDRAW_SINK_CLASS(klass)    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DIRECTDRAW_SINK,GstDirectDrawSinkClass))
@@ -118,14 +116,14 @@ struct _GstDirectDrawSink
   /* thread processing our default window messages */
   GThread *window_thread;
 
-  /* TRUE when directdraw objects are setup */
+  /* TRUE when directdraw object is set up */
   gboolean setup;
 
-  /* TRUE if the hardware support blitting from one colorspace to another */
+  /* TRUE if the hardware supports blitting from one colorspace to another */
   gboolean can_blit_between_colorspace;
 
-  /* this flag is used to force re-creation of our offscreen surface 
-   * it's need when hardware doesn't support fourcc blit and the bit deph
+  /* This flag is used to force re-creation of our offscreen surface.
+   * It's needed when hardware doesn't support fourcc blit and the bit depth
    * of the current display mode changes.
    */
   gboolean must_recreate_offscreen;
@@ -139,4 +137,5 @@ struct _GstDirectDrawSinkClass
 GType gst_directdraw_sink_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_DIRECTDRAWSINK_H__ */
