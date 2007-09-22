@@ -1,0 +1,35 @@
+# Polish translation for gst-plugins-bad.
+# This file is distributed under the same license as the gst-plugins-bad package.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-bad 0.10.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2007-06-13 12:47+0200\n"
+"PO-Revision-Date: 2007-08-11 22:50+0200\n"
+"Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
+"Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Urządzenei \"%s\" nie istnieje."
+
+#: sys/dvb/gstdvbsrc.c:662
+#, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "Nie udało się otworzyć urządzenia frontendu \"%s\"."
+
+#: sys/dvb/gstdvbsrc.c:674
+#, c-format
+msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Nie udało się pobrać ustawień z urządzenia frontendu \"%s\"."
+
+#: sys/dvb/gstdvbsrc.c:717
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
