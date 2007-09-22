@@ -5,58 +5,58 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.13\n"
+"Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-05-31 19:16+0200\n"
-"PO-Revision-Date: 2007-07-04 15:40+0200\n"
+"POT-Creation-Date: 2007-07-26 21:49+0200\n"
+"PO-Revision-Date: 2007-09-07 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: ext/alsa/gstalsamixertrack.c:130
+#: ext/alsa/gstalsamixertrack.c:131
 msgid "Master"
 msgstr "Головний"
 
-#: ext/alsa/gstalsamixertrack.c:131
+#: ext/alsa/gstalsamixertrack.c:132
 msgid "Bass"
 msgstr "Низькі"
 
-#: ext/alsa/gstalsamixertrack.c:132
+#: ext/alsa/gstalsamixertrack.c:133
 msgid "Treble"
 msgstr "Високі"
 
-#: ext/alsa/gstalsamixertrack.c:133
+#: ext/alsa/gstalsamixertrack.c:134
 msgid "PCM"
 msgstr "КІМ"
 
-#: ext/alsa/gstalsamixertrack.c:134
+#: ext/alsa/gstalsamixertrack.c:135
 msgid "Synth"
 msgstr "Синтезатор"
 
-#: ext/alsa/gstalsamixertrack.c:135
+#: ext/alsa/gstalsamixertrack.c:136
 msgid "Line-in"
 msgstr "Лінійний вхід"
 
-#: ext/alsa/gstalsamixertrack.c:136
+#: ext/alsa/gstalsamixertrack.c:137
 msgid "CD"
 msgstr "Компакт-диск"
 
-#: ext/alsa/gstalsamixertrack.c:137
+#: ext/alsa/gstalsamixertrack.c:138
 msgid "Microphone"
 msgstr "Мікрофон"
 
-#: ext/alsa/gstalsamixertrack.c:138
+#: ext/alsa/gstalsamixertrack.c:139
 msgid "PC Speaker"
 msgstr "Гучномовець"
 
-#: ext/alsa/gstalsamixertrack.c:139
+#: ext/alsa/gstalsamixertrack.c:140
 msgid "Playback"
 msgstr "Відтворення"
 
-#: ext/alsa/gstalsamixertrack.c:140 ext/alsa/gstalsamixertrack.c:203
-#: ext/alsa/gstalsamixertrack.c:206
+#: ext/alsa/gstalsamixertrack.c:141 ext/alsa/gstalsamixertrack.c:204
+#: ext/alsa/gstalsamixertrack.c:207
 msgid "Capture"
 msgstr "Запис"
 
@@ -117,54 +117,58 @@ msgstr "Не вдається закрити файл віртуальної ф�
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка при записі у файл \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:3084
+#: ext/ogg/gstoggdemux.c:3095
 msgid "Internal data stream error."
 msgstr "Помилка внутрішнього потоку даних."
 
-#: gst/playback/gstplaybasebin.c:1458
+#: gst/playback/gstdecodebin.c:1552
+msgid "This appears to be a text file"
+msgstr "Файл схожий на текстовий файл"
+
+#: gst/playback/gstplaybasebin.c:1460
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Неправильний URI субтитру \"%s\", субтитри вимкнено."
 
-#: gst/playback/gstplaybasebin.c:1475 gst/playback/gstplaybasebin.c:1601
+#: gst/playback/gstplaybasebin.c:1477 gst/playback/gstplaybasebin.c:1603
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Для відтворення потоку потрібен модуль %s, але він не встановлений."
 
-#: gst/playback/gstplaybasebin.c:1571
+#: gst/playback/gstplaybasebin.c:1573 gst/playback/gsturidecodebin.c:378
 msgid "No URI specified to play from."
 msgstr "Не вказано URI для відтворення."
 
-#: gst/playback/gstplaybasebin.c:1577
+#: gst/playback/gstplaybasebin.c:1579 gst/playback/gsturidecodebin.c:384
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Неправильний URI \"%s\"."
 
-#: gst/playback/gstplaybasebin.c:1583
+#: gst/playback/gstplaybasebin.c:1585
 msgid "RTSP streams cannot be played yet."
 msgstr "Відтворення потоків RTSP поки-що не підтримується."
 
-#: gst/playback/gstplaybasebin.c:1910
+#: gst/playback/gstplaybasebin.c:1915
 msgid "Could not create \"decodebin\" element."
 msgstr "Не вдається створити елемент \"decodebin\"."
 
-#: gst/playback/gstplaybasebin.c:2121
+#: gst/playback/gstplaybasebin.c:2133 gst/playback/gsturidecodebin.c:798
 msgid "Source element is invalid."
 msgstr "Неправильний вхідний елемент."
 
-#: gst/playback/gstplaybasebin.c:2197
+#: gst/playback/gstplaybasebin.c:2209
 msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
 msgstr "Виявлено лише потік субтитрів. Або ви завантажили файл субтитрів чи інший текстовий файл, або носій не розпізнано."
 
-#: gst/playback/gstplaybasebin.c:2202
+#: gst/playback/gstplaybasebin.c:2214
 msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
 msgstr "Не встановлено декодер для обробки цього файлу. Можливо потрібно встановити додаткові модулі."
 
-#: gst/playback/gstplaybasebin.c:2206
+#: gst/playback/gstplaybasebin.c:2218
 msgid "This is not a media file"
 msgstr "Файл не є мультимедійним"
 
-#: gst/playback/gstplaybasebin.c:2211
+#: gst/playback/gstplaybasebin.c:2223
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Виявлено потік субтитрів, с не відео-потік."
 
@@ -183,6 +187,37 @@ msgstr "Відсутній елемент '%s' - перевірте встано
 #: gst/playback/gstplaybin.c:1102
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Відсутні елементи autoaudiosink та alsasink."
+
+#: gst/playback/gstqueue2.c:944
+msgid "No file name specified."
+msgstr "Не вказано назву файлу."
+
+#: gst/playback/gstqueue2.c:950
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Не вдається відкрити файл \"%s\" для читання."
+
+#: gst/playback/gsturidecodebin.c:205
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr "Для типу '%s' немає доступних декодерів."
+
+#: gst/playback/gsturidecodebin.c:390
+msgid "This stream type cannot be played yet."
+msgstr "Цей потік поки-що не може бути відтворений."
+
+#: gst/playback/gsturidecodebin.c:401
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr "Не реалізовано обробник URI для \"%s\"."
+
+#: gst/playback/gsturidecodebin.c:639
+msgid "Could not create \"decodebin2\" element."
+msgstr "Не вдається створити елемент \"decodebin2\"."
+
+#: gst/playback/gsturidecodebin.c:645
+msgid "Could not create \"queue2\" element."
+msgstr "Не вдається створити елемент \"queue2\"."
 
 #: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:270
 #, c-format
@@ -379,103 +414,103 @@ msgstr "Необроблений %d-біт звук з плаваючою ком
 msgid "Raw floating-point audio"
 msgstr "Необроблений звук з плаваючою комою"
 
-#: gst-libs/gst/pbutils/descriptions.c:636
+#: gst-libs/gst/pbutils/descriptions.c:644
 msgid "Audio CD source"
 msgstr "Джерело аудіо-CD"
 
-#: gst-libs/gst/pbutils/descriptions.c:639
+#: gst-libs/gst/pbutils/descriptions.c:647
 msgid "DVD source"
 msgstr "Джерело DVD"
 
-#: gst-libs/gst/pbutils/descriptions.c:642
+#: gst-libs/gst/pbutils/descriptions.c:650
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Джерело потокового протоколу реального часу (RTSP)"
 
-#: gst-libs/gst/pbutils/descriptions.c:646
+#: gst-libs/gst/pbutils/descriptions.c:654
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Джерело протоколу Microsoft Media Server (MMS)"
 
-#: gst-libs/gst/pbutils/descriptions.c:654
+#: gst-libs/gst/pbutils/descriptions.c:662
 #, c-format
 msgid "%s protocol source"
 msgstr "Джерело протоколу %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:722
+#: gst-libs/gst/pbutils/descriptions.c:730
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "RTP модуль розпаковування відеоданих %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:724
+#: gst-libs/gst/pbutils/descriptions.c:732
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "RTP модуль розпаковування аудіоданих %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:726
+#: gst-libs/gst/pbutils/descriptions.c:734
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "RTP модуль розпаковування даних %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:733
+#: gst-libs/gst/pbutils/descriptions.c:741
 #, c-format
 msgid "%s demuxer"
 msgstr "демультиплексор %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:735
+#: gst-libs/gst/pbutils/descriptions.c:743
 #, c-format
 msgid "%s decoder"
 msgstr "декодер %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:770
+#: gst-libs/gst/pbutils/descriptions.c:778
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "RTP модуль запаковування відеоданих %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:772
+#: gst-libs/gst/pbutils/descriptions.c:780
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "RTP модуль запаковування аудіоданих %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:774
+#: gst-libs/gst/pbutils/descriptions.c:782
 #, c-format
 msgid "%s RTP payloader"
 msgstr "RTP модуль запаковування даних %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:781
+#: gst-libs/gst/pbutils/descriptions.c:789
 #, c-format
 msgid "%s muxer"
 msgstr "мультиплексор %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:783
+#: gst-libs/gst/pbutils/descriptions.c:791
 #, c-format
 msgid "%s encoder"
 msgstr "кодер %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:814
+#: gst-libs/gst/pbutils/descriptions.c:822
 #, c-format
 msgid "GStreamer element %s"
 msgstr "Елемент GStreamer %s"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:540
+#: gst-libs/gst/pbutils/missing-plugins.c:550
 msgid "Unknown source element"
 msgstr "Невідомий елемент джерела"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:543
+#: gst-libs/gst/pbutils/missing-plugins.c:553
 msgid "Unknown sink element"
 msgstr "Невідомий елемент споживання"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:546
+#: gst-libs/gst/pbutils/missing-plugins.c:556
 msgid "Unknown element"
 msgstr "Невідомий елемент"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:549
+#: gst-libs/gst/pbutils/missing-plugins.c:559
 msgid "Unknown decoder element"
 msgstr "Невідомий елемент декодеру"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:552
+#: gst-libs/gst/pbutils/missing-plugins.c:562
 msgid "Unknown encoder element"
 msgstr "Невідомий елемент кодеру"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:557
+#: gst-libs/gst/pbutils/missing-plugins.c:567
 msgid "Plugin or element of unknown type"
 msgstr "Модуль або елемент невідомого типу"
 
