@@ -1,0 +1,189 @@
+# SOME DESCRIPTIVE TITLE.
+# This file is put in the public domain.
+# Funda Wang <fundawang@linux.net.cn>, 2005.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-base 0.10.5\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-03-13 17:54+0100\n"
+"PO-Revision-Date: 2006-04-16 18:16+0800\n"
+"Last-Translator: Funda Wang <fundawang@linux.net.cn>\n"
+"Language-Team: Chinese (simplified) <i18n-translation@lists.linux.net.cn>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: ext/alsa/gstalsamixertrack.c:83
+msgid "Master"
+msgstr "主音量"
+
+#: ext/alsa/gstalsamixertrack.c:84
+msgid "Bass"
+msgstr "低音"
+
+#: ext/alsa/gstalsamixertrack.c:85
+msgid "Treble"
+msgstr "高音"
+
+#: ext/alsa/gstalsamixertrack.c:86
+msgid "PCM"
+msgstr "波形"
+
+#: ext/alsa/gstalsamixertrack.c:87
+msgid "Synth"
+msgstr "合成器"
+
+#: ext/alsa/gstalsamixertrack.c:88
+msgid "Line-in"
+msgstr "线路输入"
+
+#: ext/alsa/gstalsamixertrack.c:89
+msgid "CD"
+msgstr "CD"
+
+#: ext/alsa/gstalsamixertrack.c:90
+msgid "Microphone"
+msgstr "话筒"
+
+#: ext/alsa/gstalsamixertrack.c:91
+msgid "PC Speaker"
+msgstr "PC 扬声器"
+
+#: ext/alsa/gstalsamixertrack.c:92
+msgid "Playback"
+msgstr "回放"
+
+#: ext/alsa/gstalsamixertrack.c:93
+msgid "Capture"
+msgstr "录音"
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:241 ext/cdparanoia/gstcdparanoiasrc.c:247
+msgid "Could not open CD device for reading."
+msgstr "无法打开 CD 设备读取。"
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:334
+msgid "Could not seek CD."
+msgstr "无法搜索 CD。"
+
+#: ext/cdparanoia/gstcdparanoiasrc.c:364
+msgid "Could not read CD."
+msgstr "无法读取 CD。"
+
+#: ext/gnomevfs/gstgnomevfssink.c:382
+#, c-format
+msgid "Could not open vfs file \"%s\" for writing: %s."
+msgstr "无法打开 vfs 文件“%s”写入：%s。"
+
+#: ext/gnomevfs/gstgnomevfssink.c:389
+msgid "No filename given"
+msgstr "没有给定文件名"
+
+#: ext/gnomevfs/gstgnomevfssink.c:415
+#, c-format
+msgid "Could not close vfs file \"%s\"."
+msgstr "无法关闭 vfs 文件“%s”。"
+
+#: ext/gnomevfs/gstgnomevfssink.c:566
+#, c-format
+msgid "Error while writing to file \"%s\"."
+msgstr "写入文件“%s”时出错。"
+
+#: ext/ogg/gstoggdemux.c:2610
+msgid "Internal data stream error."
+msgstr "内部数据流错误。"
+
+#: gst/playback/gstplaybasebin.c:1361
+msgid "No URI specified to play from."
+msgstr "未指定要播放的 URI。"
+
+#: gst/playback/gstplaybasebin.c:1367
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr "“%s”未实现 URI 处理器。"
+
+#: gst/playback/gstplaybasebin.c:1371
+#, c-format
+msgid "Invalid URI \"%s\"."
+msgstr "无效的 URI“%s”。"
+
+#: gst/playback/gstplaybasebin.c:1378
+msgid "Could not create \"decodebin\" element."
+msgstr "无法创建“decodebin”元素。"
+
+#: gst/playback/gstplaybasebin.c:1451
+msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
+msgstr "仅检测到字幕流。您可能装入的是字幕文件或者其它类型文本文件，又或者是媒体文件无法识别。"
+
+#: gst/playback/gstplaybasebin.c:1456
+msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
+msgstr "您没有安装可处理此文件的解码器。您可能需要安装必要的插件。"
+
+#: gst/playback/gstplaybasebin.c:1460
+msgid "This is not a media file"
+msgstr "此文件不是媒体文件"
+
+#: gst/playback/gstplaybasebin.c:1465
+msgid "A subtitle stream was detected, but no video stream."
+msgstr "检测到了字幕流，但无视频流。"
+
+#: gst/playback/gstplaybin.c:609
+msgid "Both autovideosink and xvimagesink elements are missing."
+msgstr "autovideosink 和 xvimagesink 元素都缺少。"
+
+#: gst/playback/gstplaybin.c:757
+msgid "Both autoaudiosink and alsasink elements are missing."
+msgstr "autovideosink 和 alsasink 元素都缺少。"
+
+#: gst-libs/gst/tag/tags.c:55
+msgid "track ID"
+msgstr "音轨 ID"
+
+#: gst-libs/gst/tag/tags.c:55
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz 音轨 ID"
+
+#: gst-libs/gst/tag/tags.c:57
+msgid "artist ID"
+msgstr "艺人 ID"
+
+#: gst-libs/gst/tag/tags.c:57
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz 艺人 ID"
+
+#: gst-libs/gst/tag/tags.c:59
+msgid "album ID"
+msgstr "专辑 ID"
+
+#: gst-libs/gst/tag/tags.c:59
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz 专辑 ID"
+
+#: gst-libs/gst/tag/tags.c:62
+msgid "album artist ID"
+msgstr "音轨艺人 ID"
+
+#: gst-libs/gst/tag/tags.c:62
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz 专辑艺人 ID"
+
+#: gst-libs/gst/tag/tags.c:64
+msgid "track TRM ID"
+msgstr "音轨 TRM ID"
+
+#: gst-libs/gst/tag/tags.c:64
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz TRM ID"
+
+#: gst-libs/gst/tag/tags.c:67
+msgid "artist sortname"
+msgstr "艺人排序名"
+
+#: gst-libs/gst/tag/tags.c:67
+msgid "MusicBrainz artist sortname"
+msgstr "MusicBrainz 艺人排序名"
+
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1388
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1421
+msgid "This CD has no audio tracks"
+msgstr "此 CD 无音轨"
