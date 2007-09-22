@@ -1,3 +1,11 @@
+2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	translated by: Jorge González González <aloriel@gmail.com>
+
+	* po/LINGUAS:
+	* po/es.po:
+	  Added Spanish translation.
+
 2007-09-21  Wim Taymans  <wim.taymans@gmail.com>
 
 	* plugins/elements/gstqueue.c: (gst_queue_push_one):
