@@ -1,3 +1,10 @@
+2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	translated by: Alexander Shopov <ash@contact.bg>
+
+	* po/bg.po:
+	  Added Bulgarian translation.
+
 2007-09-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/plugins/gst-plugins-bad-plugins.hierarchy:

@@ -1,0 +1,57 @@
+# Bulgarian translation of gst-plugins-bad.
+# Copyright (C) 2007 Free Software Fondation, Inc.
+# This file is distributed under the same license as the gst-plugins-bad package.
+# Alexander Shopov <ash@contact.bg>, 2007.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: gst-plugins-bad 0.10.4\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2006-12-19 16:56+0100\n"
+"PO-Revision-Date: 2007-03-10 12:19+0200\n"
+"Last-Translator: Alexander Shopov <ash@contact.bg>\n"
+"Language-Team: Bulgarian <dict@fsa-bg.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+
+#: gst/qtdemux/qtdemux.c:3977
+msgid "This file is corrupt and cannot be played."
+msgstr "Файлът е повреден и не може да бъде пуснат."
+
+#: gst/qtdemux/qtdemux.c:3983
+msgid "This file is encrypted and cannot be played."
+msgstr "Файлът е шифриран и не може да бъде пуснат."
+
+#: sys/dvb/gstdvbsrc.c:658 sys/dvb/gstdvbsrc.c:713
+#, c-format
+msgid "Device \"%s\" does not exist."
+msgstr "Устройството „%s“ не съществува."
+
+#: sys/dvb/gstdvbsrc.c:662
+#, c-format
+msgid "Could not open frontend device \"%s\"."
+msgstr "Устройството „%s“ не може да бъде отворено."
+
+#: sys/dvb/gstdvbsrc.c:674
+#, c-format
+msgid "Could not get settings from frontend device \"%s\"."
+msgstr "Не могат да бъдат получени настройките от устройството „%s“."
+
+#: sys/dvb/gstdvbsrc.c:717
+#, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr "Файлът „%s“ не може да бъде отворен за четене."
+
+#~ msgid "This file is incomplete and cannot be played."
+#~ msgstr "Файлът не е цял и не може да бъде пуснат."
+
+#~ msgid "This file contains no playable streams."
+#~ msgstr "Този файл не съдържа потоци, които могат да бъдат пуснати."
+
+#~ msgid "The video in this file might not play correctly."
+#~ msgstr "Видеото в този файл може да не се пусне правилно."
+
+#~ msgid "This file contains too many streams. Only playing first %d"
+#~ msgstr "Този файл съдържа прекалено много потоци. Пускат се само първите %d"
