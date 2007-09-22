@@ -1,3 +1,10 @@
+2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	translated by: Alexander Shopov <ash@contact.bg>
+
+	* po/bg.po:
+	  Added Bulgarian translation.
+
 2007-09-21  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/playback/gstqueue2.c: (gst_queue_push_one):
@@ -4755,8 +4762,6 @@
 	Fix #382223, add more dynamic caps handling.
 
 2006-12-04  Wim Taymans  <wim@fluendo.com>
-
-	reviewed by: <delete if not using a buddy>
 
 	* gst-libs/gst/audio/gstringbuffer.h:
 	* gst-libs/gst/netbuffer/gstnetbuffer.c: (gst_netbuffer_init),
