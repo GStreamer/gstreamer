@@ -154,9 +154,10 @@ gst_oss_helper_probe_caps (gint fd)
     }
   }
 
-  if (gst_caps_is_empty (caps))
+  if (gst_caps_is_empty (caps)) {
     /* fixme: make user-visible */
-    g_critical ("Your OSS device could not be probed correctly");
+    GST_WARNING ("Your OSS device could not be probed correctly");
+  }
 
   GST_DEBUG ("probed caps: %" GST_PTR_FORMAT, caps);
 

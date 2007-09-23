@@ -1,3 +1,9 @@
+2007-09-23  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/oss/gstosshelper.c:
+	  Use GST_WARNING instead of a g_critical. This situation is not caused
+	  by the application.
+
 2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:
