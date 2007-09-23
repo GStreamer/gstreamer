@@ -490,6 +490,7 @@ gst_fake_sink_change_state (GstElement * element, GstStateChange transition)
 
   /* ERROR */
 error:
-  GST_ELEMENT_ERROR (element, CORE, STATE_CHANGE, (NULL), (NULL));
+  GST_ELEMENT_ERROR (element, CORE, STATE_CHANGE, (NULL),
+      ("Erroring out on state change as requested"));
   return GST_STATE_CHANGE_FAILURE;
 }

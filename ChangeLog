@@ -1,3 +1,13 @@
+2007-09-23  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* plugins/elements/gstfakesink.c:
+	  Add some debug text to error message to indicate that
+	  we errored out on request.
+
+	* tools/gst-launch.c:
+	  When the state change to PLAYING fails, check for an
+	  error message on the bus and print it.
+
 2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	translated by: Jorge González González <aloriel@gmail.com>

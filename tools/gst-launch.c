@@ -731,7 +731,22 @@ main (int argc, char *argv[])
       fprintf (stderr, _("Setting pipeline to PLAYING ...\n"));
       if (gst_element_set_state (pipeline,
               GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+        GstMessage *err_msg;
+        GstBus *bus;
+
         fprintf (stderr, _("ERROR: pipeline doesn't want to play.\n"));
+        bus = gst_element_get_bus (pipeline);
+        if ((err_msg = gst_bus_poll (bus, GST_MESSAGE_ERROR, 0))) {
+          GError *gerror;
+          gchar *debug;
+
+          gst_message_parse_error (err_msg, &gerror, &debug);
+          gst_object_default_error (GST_MESSAGE_SRC (err_msg), gerror, debug);
+          gst_message_unref (err_msg);
+          g_error_free (gerror);
+          g_free (debug);
+        }
+        gst_object_unref (bus);
         res = -1;
         goto end;
       }
