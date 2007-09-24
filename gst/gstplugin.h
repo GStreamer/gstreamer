@@ -105,7 +105,7 @@ typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
  * loader will use the data provided there to initialize the plugin.
  *
  * The @licence parameter must be one of: LGPL, GPL, QPL, GPL/QPL, MPL,
- * Proprietary, unknown.
+ * BSD, MIT/X11, Proprietary, unknown.
  */
 struct _GstPluginDesc {
   gint major_version;

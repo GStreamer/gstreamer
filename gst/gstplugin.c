@@ -94,6 +94,8 @@ static gboolean _gst_plugin_fault_handler_is_setup = FALSE;
  * LGPL: http://www.gnu.org/copyleft/lesser.html
  * QPL: http://www.trolltech.com/licenses/qpl.html
  * MPL: http://www.opensource.org/licenses/mozilla1.1.php
+ * MIT/X11: http://www.opensource.org/licenses/mit-license.php
+ * 3-clause BSD: http://www.opensource.org/licenses/bsd-license.php
  */
 static const gchar *valid_licenses[] = {
   "LGPL",                       /* GNU Lesser General Public License */
@@ -101,6 +103,8 @@ static const gchar *valid_licenses[] = {
   "QPL",                        /* Trolltech Qt Public License */
   "GPL/QPL",                    /* Combi-license of GPL + QPL */
   "MPL",                        /* MPL 1.1 license */
+  "BSD",                        /* 3-clause BSD license */
+  "MIT/X11",                    /* MIT/X11 license */
   "Proprietary",                /* Proprietary license */
   GST_LICENSE_UNKNOWN,          /* some other license */
   NULL

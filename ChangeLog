@@ -1,3 +1,10 @@
+2007-09-24  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	Add the 3-clause BSD license and the MIT/X11 license to the license
+	list. Fixes #479784.
+
 2007-09-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/faq/getting.xml:
