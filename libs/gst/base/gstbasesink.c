@@ -833,37 +833,47 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
     gboolean * upstream_live, GstClockTime * min_latency,
     GstClockTime * max_latency)
 {
-  gboolean l, us_live, res;
+  gboolean l, us_live, res, have_latency;
   GstClockTime min, max;
   GstQuery *query;
   GstClockTime us_min, us_max;
 
   /* we are live when we sync to the clock */
-  l = gst_base_sink_get_sync (sink);
+  GST_OBJECT_LOCK (sink);
+  l = sink->sync;
+  have_latency = sink->priv->have_latency;
+  GST_OBJECT_UNLOCK (sink);
 
   /* assume no latency */
   min = 0;
   max = -1;
   us_live = FALSE;
+  res = TRUE;
 
-  query = gst_query_new_latency ();
+  /* we are live and we are prerolled, do upstream query to get the total
+   * picture */
+  if (l && have_latency) {
+    query = gst_query_new_latency ();
 
-  /* ask the peer for the latency */
-  if (!(res = gst_base_sink_peer_query (sink, query)))
-    goto query_failed;
+    /* ask the peer for the latency */
+    if (!(res = gst_base_sink_peer_query (sink, query)))
+      goto query_failed;
 
-  /* get upstream min and max latency */
-  gst_query_parse_latency (query, &us_live, &us_min, &us_max);
-  if (us_live) {
-    /* upstream live, use its latency, subclasses should use these
-     * values to create the complete latency. */
-    min = us_min;
-    max = us_max;
+    /* get upstream min and max latency */
+    gst_query_parse_latency (query, &us_live, &us_min, &us_max);
+    gst_query_unref (query);
+
+    if (us_live) {
+      /* upstream live, use its latency, subclasses should use these
+       * values to create the complete latency. */
+      min = us_min;
+      max = us_max;
+    }
   }
 
-  GST_DEBUG_OBJECT (sink, "latency query: live: %d, upstream: %d, min %"
-      GST_TIME_FORMAT ", max %" GST_TIME_FORMAT, l, us_live,
-      GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+  GST_DEBUG_OBJECT (sink, "latency query: live: %d, have_latency %d,"
+      " upstream: %d, min %" GST_TIME_FORMAT ", max %" GST_TIME_FORMAT, l,
+      have_latency, us_live, GST_TIME_ARGS (min), GST_TIME_ARGS (max));
 
   if (live)
     *live = l;
@@ -874,16 +884,14 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
   if (max_latency)
     *max_latency = max;
 
-done:
-  gst_query_unref (query);
-
   return res;
 
   /* ERRORS */
 query_failed:
   {
     GST_DEBUG_OBJECT (sink, "latency query failed");
-    goto done;
+    gst_query_unref (query);
+    return FALSE;
   }
 }
 
@@ -2950,30 +2958,12 @@ gst_base_sink_query (GstElement * element, GstQuery * query)
       break;
     case GST_QUERY_LATENCY:
     {
-      gboolean live, us_live, have_latency;
+      gboolean live, us_live;
       GstClockTime min, max;
 
-      /* we need to be negotiated before we can report caps */
-      GST_OBJECT_LOCK (basesink);
-      have_latency = basesink->priv->have_latency;
-      GST_OBJECT_UNLOCK (basesink);
-
-      if (!have_latency) {
-        GST_DEBUG_OBJECT (basesink, "not prerolled yet, can't report latency");
-        res = FALSE;
-      } else {
-        if ((res = gst_base_sink_query_latency (basesink, &live, &us_live, &min,
-                    &max))) {
-          /* if we or the upstream elements are not live, we don't need latency
-           * compensation */
-          if (!live || !us_live) {
-            GST_DEBUG_OBJECT (basesink,
-                "no latency compensation, we %d, upstream %d", live, us_live);
-            min = 0;
-            max = -1;
-          }
-          gst_query_set_latency (query, live, min, max);
-        }
+      if ((res = gst_base_sink_query_latency (basesink, &live, &us_live, &min,
+                  &max))) {
+        gst_query_set_latency (query, live, min, max);
       }
       break;
     }
