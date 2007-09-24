@@ -49,7 +49,7 @@ G_BEGIN_DECLS
 
 /**
  * GstObjectFlags:
- * @GST_OBJECT_DISPOSING: the object is been destroyed, do use it anymore
+ * @GST_OBJECT_DISPOSING: the object is been destroyed, don't use it anymore
  * @GST_OBJECT_FLOATING:  the object has a floating reference count (e.g. its
  *  not assigned to a bin)
  * @GST_OBJECT_FLAG_LAST: subclasses can add additional flags starting from this flag

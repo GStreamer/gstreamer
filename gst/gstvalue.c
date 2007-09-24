@@ -1240,7 +1240,7 @@ gst_value_deserialize_fraction_range (GValue * dest, const gchar * s)
  * @value: a GValue initialized to GST_TYPE_CAPS
  * @caps: the caps to set the value to
  *
- * Sets the contents of @value to coorespond to @caps.  The actual
+ * Sets the contents of @value to @caps.  The actual
  * #GstCaps structure is copied before it is used.
  */
 void

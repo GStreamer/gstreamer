@@ -1,5 +1,11 @@
 2007-09-24  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/gstobject.h:
+	* gst/gstvalue.c:
+	Fix small typos in the docs.
+
+2007-09-24  Wim Taymans  <wim.taymans@gmail.com>
+
 	* docs/design/draft-latency.txt:
 	* docs/design/draft-push-pull.txt:
 	* docs/design/draft-tagreading.txt:
