@@ -1,6 +1,12 @@
 2007-09-24  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_query_latency),
+	(gst_base_sink_event), (gst_base_sink_change_state):
+	Return correct gboolean from query function.
+
+2007-09-24  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_query_latency),
 	(gst_base_sink_event), (gst_base_sink_query),
 	(gst_base_sink_change_state):
 	Simplify latency query.

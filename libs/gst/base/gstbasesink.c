@@ -848,27 +848,34 @@ gst_base_sink_query_latency (GstBaseSink * sink, gboolean * live,
   min = 0;
   max = -1;
   us_live = FALSE;
-  res = TRUE;
 
-  /* we are live and we are prerolled, do upstream query to get the total
-   * picture */
-  if (l && have_latency) {
-    query = gst_query_new_latency ();
+  /* we are live */
+  if (l) {
+    if (have_latency) {
+      /* we are live and ready for a latency query */
+      query = gst_query_new_latency ();
 
-    /* ask the peer for the latency */
-    if (!(res = gst_base_sink_peer_query (sink, query)))
-      goto query_failed;
+      /* ask the peer for the latency */
+      if (!(res = gst_base_sink_peer_query (sink, query)))
+        goto query_failed;
 
-    /* get upstream min and max latency */
-    gst_query_parse_latency (query, &us_live, &us_min, &us_max);
-    gst_query_unref (query);
+      /* get upstream min and max latency */
+      gst_query_parse_latency (query, &us_live, &us_min, &us_max);
+      gst_query_unref (query);
 
-    if (us_live) {
-      /* upstream live, use its latency, subclasses should use these
-       * values to create the complete latency. */
-      min = us_min;
-      max = us_max;
+      if (us_live) {
+        /* upstream live, use its latency, subclasses should use these
+         * values to create the complete latency. */
+        min = us_min;
+        max = us_max;
+      }
+    } else {
+      /* we are live but are not yet ready for a latency query */
+      res = FALSE;
     }
+  } else {
+    /* not live, result is always TRUE */
+    res = TRUE;
   }
 
   GST_DEBUG_OBJECT (sink, "latency query: live: %d, have_latency %d,"
