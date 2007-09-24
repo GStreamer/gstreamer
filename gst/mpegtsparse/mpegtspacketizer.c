@@ -103,8 +103,7 @@ mpegts_packetizer_dispose (GObject * object)
     packetizer->disposed = TRUE;
   }
 
-  if (G_OBJECT_CLASS (mpegts_packetizer_parent_class)->dispose)
-    G_OBJECT_CLASS (mpegts_packetizer_parent_class)->dispose (object);
+  G_OBJECT_CLASS (mpegts_packetizer_parent_class)->dispose (object);
 }
 
 static gboolean
@@ -127,8 +126,7 @@ mpegts_packetizer_finalize (GObject * object)
       stream_foreach_remove, packetizer);
   g_hash_table_destroy (packetizer->streams);
 
-  if (G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize)
-    G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize (object);
+  G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize (object);
 }
 
 static gboolean

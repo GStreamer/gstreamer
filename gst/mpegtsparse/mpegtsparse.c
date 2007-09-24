@@ -241,8 +241,7 @@ mpegts_parse_dispose (GObject * object)
     parse->disposed = TRUE;
   }
 
-  if (G_OBJECT_CLASS (parent_class)->dispose)
-    G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -256,8 +255,7 @@ mpegts_parse_finalize (GObject * object)
   g_hash_table_destroy (parse->programs);
   g_hash_table_destroy (parse->psi_pids);
 
-  if (G_OBJECT_CLASS (parent_class)->finalize)
-    G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void

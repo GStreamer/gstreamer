@@ -61,15 +61,16 @@ enum
       "endianness = (int) BYTE_ORDER, " \
       "width = (int) 16, " \
       "depth = (int) 16, " \
-      "signed = (boolean) true")
-
+      "signed = (boolean) true"
 #if 0
-  /* disabled because it segfaults */
+    /* disabled because it segfaults */
 "audio/x-raw-float, "
     "rate = (int) [ 1, MAX ], "
     "channels = (int) [ 1, MAX ], "
-    "endianness = (int) BYTE_ORDER, " "width = (int) 32")
+    "endianness = (int) BYTE_ORDER, " "width = (int) 32"
 #endif
+    )
+
      static GstStaticPadTemplate gst_audioresample_sink_template =
          GST_STATIC_PAD_TEMPLATE ("sink",
          GST_PAD_SINK, GST_PAD_ALWAYS, SUPPORTED_CAPS);

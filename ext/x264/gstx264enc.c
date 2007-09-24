@@ -664,10 +664,9 @@ gst_x264_enc_dispose (GObject * object)
   encoder->buffer = NULL;
 
   gst_x264_enc_timestamp_queue_free (encoder);
+  gst_x264_enc_close_encoder (encoder);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
-
-  gst_x264_enc_close_encoder (encoder);
 }
 
 static gboolean

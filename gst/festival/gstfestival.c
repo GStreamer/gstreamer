@@ -97,6 +97,8 @@
 GST_DEBUG_CATEGORY_STATIC (festival_debug);
 #define GST_CAT_DEFAULT festival_debug
 
+static void gst_festival_finalize (GObject * object);
+
 static void gst_festival_base_init (gpointer g_class);
 static void gst_festival_class_init (GstFestivalClass * klass);
 static void gst_festival_init (GstFestival * festival);
@@ -189,13 +191,17 @@ gst_festival_base_init (gpointer g_class)
 static void
 gst_festival_class_init (GstFestivalClass * klass)
 {
+  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gstelement_class = (GstElementClass *) klass;
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
 
   parent_class = g_type_class_peek_parent (klass);
 
-  gstelement_class->change_state = gst_festival_change_state;
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_festival_finalize);
+  gstelement_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_festival_change_state);
 }
 
 static void
@@ -211,6 +217,16 @@ gst_festival_init (GstFestival * festival)
   gst_element_add_pad (GST_ELEMENT (festival), festival->srcpad);
 
   festival->info = festival_default_info ();
+}
+
+static void
+gst_festival_finalize (GObject * object)
+{
+  GstFestival *festival = GST_FESTIVAL (object);
+
+  g_free (festival->info);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static gboolean

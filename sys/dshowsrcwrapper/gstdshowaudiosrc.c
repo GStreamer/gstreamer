@@ -239,6 +239,8 @@ gst_dshowaudiosrc_dispose (GObject * gobject)
   }
 
   CoUninitialize ();
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 

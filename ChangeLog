@@ -1,3 +1,21 @@
+2007-09-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/audioresample/gstaudioresample.c:
+	* ext/x264/gstx264enc.c:
+	* gst/dvdspu/gstdvdspu.c:
+	* gst/dvdspu/gstdvdspu.h:
+	* gst/festival/gstfestival.c:
+	* gst/h264parse/gsth264parse.c:
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	* gst/mpegtsparse/mpegtsparse.c:
+	* gst/multifile/gstmultifilesink.c:
+	* gst/multifile/gstmultifilesrc.c:
+	* gst/nuvdemux/gstnuvdemux.c:
+	* sys/dshowsrcwrapper/gstdshowaudiosrc.c:
+	* sys/dshowsrcwrapper/gstdshowvideosrc.c:
+	* sys/vcd/vcdsrc.c:
+	  Massive leak fixing, plus code cleanups.
+
 2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:

@@ -75,6 +75,8 @@ gst_h264_parse_finalize (GObject * object)
 
   h264parse = GST_H264PARSE (object);
 
+  g_object_unref (h264parse->adapter);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 

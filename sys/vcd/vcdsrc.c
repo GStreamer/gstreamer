@@ -83,6 +83,8 @@ gst_vcdsrc_setup_interfaces (GType type)
 GST_BOILERPLATE_FULL (GstVCDSrc, gst_vcdsrc, GstPushSrc, GST_TYPE_PUSH_SRC,
     gst_vcdsrc_setup_interfaces);
 
+static void gst_vcdsrc_finalize (GObject * object);
+
 static void gst_vcdsrc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_vcdsrc_get_property (GObject * object, guint prop_id,
@@ -116,6 +118,7 @@ gst_vcdsrc_class_init (GstVCDSrcClass * klass)
 
   gobject_class->set_property = gst_vcdsrc_set_property;
   gobject_class->get_property = gst_vcdsrc_get_property;
+  gobject_class->finalize = gst_vcdsrc_finalize;
 
   g_object_class_install_property (gobject_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
@@ -147,6 +150,16 @@ gst_vcdsrc_init (GstVCDSrc * vcdsrc, GstVCDSrcClass * klass)
   vcdsrc->curoffset = 0;
   vcdsrc->bytes_per_read = VCD_BYTES_PER_SECTOR;
   vcdsrc->max_errors = 16;
+}
+
+static void
+gst_vcdsrc_finalize (GObject * object)
+{
+  GstVCDSrc *vcdsrc = GST_VCDSRC (object);
+
+  g_free (vcdsrc->device);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 

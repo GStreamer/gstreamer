@@ -147,12 +147,12 @@ gst_multi_file_src_dispose (GObject * object)
 {
   GstMultiFileSrc *src = GST_MULTI_FILE_SRC (object);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-
   g_free (src->filename);
   src->filename = NULL;
   if (src->caps)
     gst_caps_unref (src->caps);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static GstCaps *

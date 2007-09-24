@@ -802,11 +802,16 @@ gst_nuv_demux_sink_activate (GstPad * sinkpad)
 
   if (gst_pad_check_pull_range (sinkpad)) {
     nuv->mode = 0;
-    nuv->adapter = NULL;
+    if (nuv->adapter != NULL) {
+      gst_object_unref (nuv->adapter);
+      nuv->adapter = NULL;
+    }
     res = gst_pad_activate_pull (sinkpad, TRUE);
   } else {
     nuv->mode = 1;
-    nuv->adapter = gst_adapter_new ();
+    if (!nuv->adapter) {
+      nuv->adapter = gst_adapter_new ();
+    }
     res = gst_pad_activate_push (sinkpad, TRUE);
   }
 

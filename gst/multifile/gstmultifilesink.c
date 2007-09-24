@@ -142,10 +142,10 @@ gst_multi_file_sink_dispose (GObject * object)
 {
   GstMultiFileSink *sink = GST_MULTI_FILE_SINK (object);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
-
   g_free (sink->filename);
   sink->filename = NULL;
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static gboolean

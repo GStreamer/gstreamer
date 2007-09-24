@@ -16,26 +16,26 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
-#ifndef __GSTDVDSPU_H__
-#define __GSTDVDSPU_H__
+#ifndef __DVD_SPU_H__
+#define __DVD_SPU_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GSTDVDSPU \
+#define GST_TYPE_DVD_SPU \
   (dvdspu_get_type())
-#define GSTDVDSPU(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GSTDVDSPU,GstDVDSpu))
-#define GSTDVDSPU_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GSTDVDSPU,GstDVDSpuClass))
-#define GST_IS_PLUGIN_TEMPLATE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GSTDVDSPU))
-#define GST_IS_PLUGIN_TEMPLATE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GSTDVDSPU))
+#define DVD_SPU(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_DVD_SPU,GstDVDSpu))
+#define DVD_SPU_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_DVD_SPU,GstDVDSpuClass))
+#define GST_IS_DVD_SPU(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_DVD_SPU))
+#define GST_IS_DVD_SPU_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_DVD_SPU))
 
-#define GSTDVDSPU_LOCK(s) g_mutex_lock ((s)->spu_lock);
-#define GSTDVDSPU_UNLOCK(s) g_mutex_unlock ((s)->spu_lock);
+#define DVD_SPU_LOCK(s) g_mutex_lock ((s)->spu_lock);
+#define DVD_SPU_UNLOCK(s) g_mutex_unlock ((s)->spu_lock);
 
 typedef struct GstDVDSpu      GstDVDSpu;
 typedef struct GstDVDSpuClass GstDVDSpuClass;
@@ -223,4 +223,4 @@ void gstdvdspu_render_spu (GstDVDSpu *dvdspu, GstBuffer *buf);
 
 G_END_DECLS
 
-#endif /* __GSTDVDSPU_H__ */
+#endif /* __DVD_SPU_H__ */
