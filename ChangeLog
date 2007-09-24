@@ -1,3 +1,13 @@
+2007-09-24  Thomas Vander Stichele  <thomas at apestaart dot org>
+
+	* ext/lame/gstlame.c:
+	  Allow fixing the sample rate lame converts to by negotiating fixed
+	  sample rate on the src pad caps.
+	  Add docs for it.
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/lame.c:
+	  Add a check for it.
+
 2007-09-22  Thomas Vander Stichele  <thomas at apestaart dot org>
 
 	* po/LINGUAS:

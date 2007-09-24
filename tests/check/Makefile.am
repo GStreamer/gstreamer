@@ -8,7 +8,7 @@ REGISTRY_ENVIRONMENT = \
 TESTS_ENVIRONMENT = \
 	$(REGISTRY_ENVIRONMENT)					\
 	GST_PLUGIN_SYSTEM_PATH=					\
-	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(GST_PLUGINS_DIR)  \
+	GST_PLUGIN_PATH=$(top_builddir)/gst:$(top_builddir)/ext:$(top_builddir)/sys:$(GSTPB_PLUGINS_DIR):$(GST_PLUGINS_DIR)  \
 	STATE_IGNORE_ELEMENTS="siddec"
 
 # ths core dumps of some machines have PIDs appended
@@ -24,6 +24,12 @@ else
 AMRNB =
 endif
 
+if USE_LAME
+LAME = pipelines/lame
+else
+LAME =
+endif
+
 if USE_MPEG2DEC
 MPEG2DEC = elements/mpeg2dec
 else
@@ -33,6 +39,7 @@ endif
 check_PROGRAMS = \
 	generic/states \
 	$(AMRNB) \
+	$(LAME) \
 	$(MPEG2DEC)
 
 # these tests don't even pass

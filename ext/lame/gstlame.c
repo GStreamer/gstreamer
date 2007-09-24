@@ -32,6 +32,14 @@
  * consideration. See <ulink url="http://www.vorbis.com/">Ogg/Vorbis</ulink>
  * for a royalty free (and often higher quality) alternative.
  * </para>
+ * <title>Output sample rate</title>
+ * <para>
+ * If no fixed output sample rate is negotiated on the element's src pad,
+ * the element will choose an optimal sample rate to resample to internally.
+ * For example, a 16-bit 44.1 KHz mono audio stream encoded at 48 kbit will
+ * get resampled to 32 KHz.  Use filter caps on the src pad to force a
+ * particular sample rate.
+ * </para>
  * <title>Writing metadata (tags)</title>
  * <para>
  * Whilst the lame encoder element does claim to implement the GstTagSetter
@@ -65,9 +73,15 @@
  * <programlisting>
  * gst-launch -v cdda://5 ! audioconvert ! lame bitrate=192 ! filesink location=track5.mp3
  * </programlisting>
+ * <para>
+ * Encode to a fixed sample rate:
+ * </para>
+ * <programlisting>
+ * gst-launch -v audiotestsrc num-buffers=10 ! audio/x-raw-int,rate=44100,channels=1 ! lame bitrate=48 mode=3 ! filesink location=test.mp3
+ * </programlisting>
  * </refsect2>
  *
- * Last reviewed on 2006-10-13 (0.10.4)
+ * Last reviewed on 2007-07-24 (0.10.7)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -496,6 +510,13 @@ gst_lame_class_init (GstLameClass * klass)
 }
 
 static gboolean
+gst_lame_src_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GST_DEBUG_OBJECT (pad, "src_setcaps %s", gst_caps_to_string (caps));
+  return TRUE;
+}
+
+static gboolean
 gst_lame_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstLame *lame;
@@ -579,6 +600,8 @@ gst_lame_init (GstLame * lame)
 
   lame->srcpad =
       gst_pad_new_from_static_template (&gst_lame_src_template, "src");
+  gst_pad_set_setcaps_function (lame->srcpad,
+      GST_DEBUG_FUNCPTR (gst_lame_src_setcaps));
   gst_element_add_pad (GST_ELEMENT (lame), lame->srcpad);
 
   /* create an encoder state so we can ask about defaults */
@@ -1130,13 +1153,18 @@ init_error:
 static gboolean
 gst_lame_setup (GstLame * lame)
 {
+
 #define CHECK_ERROR(command) G_STMT_START {\
   if ((command) < 0) { \
     GST_ERROR_OBJECT (lame, "setup failed: " G_STRINGIFY (command)); \
     return FALSE; \
   } \
 }G_STMT_END
+
   int retval;
+  GstCaps *src_caps;
+  GstStructure *structure;
+  gint samplerate;
 
   GST_DEBUG_OBJECT (lame, "starting setup");
 
@@ -1153,11 +1181,21 @@ gst_lame_setup (GstLame * lame)
   if (lame->lgf == NULL)
     return FALSE;
 
-  /* let lame choose a default samplerate */
-  lame_set_out_samplerate (lame->lgf, 0);
-
   /* copy the parameters over */
   lame_set_in_samplerate (lame->lgf, lame->samplerate);
+
+  /* let lame choose default samplerate unless outgoing sample rate is fixed */
+  src_caps = gst_pad_get_allowed_caps (lame->srcpad);
+  structure = gst_caps_get_structure (src_caps, 0);
+
+  if (gst_structure_get_int (structure, "rate", &samplerate)) {
+    GST_DEBUG_OBJECT (lame, "Setting sample rate to %d as fixed in src caps",
+        samplerate);
+    lame_set_out_samplerate (lame->lgf, samplerate);
+  } else {
+    GST_DEBUG_OBJECT (lame, "Letting lame choose sample rate");
+    lame_set_out_samplerate (lame->lgf, 0);
+  }
 
   /* force mono encoding if we only have one channel */
   if (lame->num_channels == 1)
