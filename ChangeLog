@@ -1,3 +1,8 @@
+2007-09-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/faq/getting.xml:
+	  Add Q+A about different GStreamer versions (#364056).
+
 2007-09-24  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_query_latency),

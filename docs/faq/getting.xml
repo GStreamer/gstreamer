@@ -22,7 +22,67 @@ CVS</link></para></listitem>
       </answer>
     </qandaentry>
 
- <qandaentry>
+   <qandaentry>
+      <question id="gstreamer-versions-explained">
+        <para>There seem to be different GStreamer versions, like 0.8 and 0.10?
+              What's up with that?</para>
+      </question>
+
+      <answer>
+         <para>
+           GStreamer-0.8 and GStreamer-0.10 are the main version
+           &apos;series&apos; currently in use.  For all practical purposes
+           you should think of them as two completely different libraries
+           which just happen to have a similar name.  They can be installed
+           in parallel and are completely independent.
+         </para>
+         <para>
+           For the 0.8 version you will need the 0.8 plugins and bindings
+           (gst-plugins 0.8.x, gst-ffmpeg 0.8.x, gst-python 0.8.x etc.), while
+           for the 0.10 version you will need the 0.10 plugins and bindings
+           (ie. gst-plugins-base 0.10.x, gst-plugins-good 0.10.x,
+           gst-plugins-ugly 0.10.x, gst-plugins-bad 0.10.x, gst-ffmpeg 0.10.x,
+           gst-python 0.10.x).  The micro version for each main version does
+           not have to match exactly, only the major versions needs to be the
+           same (ie. it may be that the current gst-plugins-good version is
+           0.10.6 and the current GStreamer core version is 0.10.13).
+           GStreamer-0.10 will not see or use any of the GStreamer-0.8 plugins
+           and vice versa.
+         </para>
+         <para>
+           All GStreamer command line tools are suffixed with their main
+           version, e.g. gst-launch-0.8 and gst-launch-0.10, or gst-inspect-0.8
+           and gst-inspect-0.10.  There corresponding GStreamer command line
+           tools without a suffix (e.g. gst-launch) will default to the highest
+           major version.
+         </para>
+         <para>
+           Applications will use either GStreamer-0.8 or GStreamer-0.10, since
+           the 0.8 and 0.10 API/ABI are not compatible.
+         </para>
+         <para>
+           Odd-numbered versions such as 0.9.x, 0.11.x, etc. are unstable
+           developer releases that should generally not be used.
+         </para>
+      </answer>
+    </qandaentry>
+
+   <qandaentry>
+      <question id="gstreamer-versions-which-one-to-get">
+        <para>So which GStreamer version should I get?</para>
+      </question>
+
+      <answer>
+         <para>
+           You should download GStreamer-0.10.  GStreamer-0.8 is not developed
+           any longer and has not been maintained for almost two years (you
+           may still find it packaged for your disto though, but that's most
+           likely for legacy applications).           
+         </para>
+      </answer>
+    </qandaentry>
+
+    <qandaentry>
       <question id="getting-gstreamer-source">
         <para>How can I install GStreamer from source ?</para>
       </question>
