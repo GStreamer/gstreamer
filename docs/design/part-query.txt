@@ -43,7 +43,7 @@ Requirements
 
 Proposition
 
-  - define GstQuery extending GstData and containing a GstStructure (see GstMessage)
+  - define GstQuery extending GstMiniObject and containing a GstStructure (see GstMessage)
   - define standard query types (see proposed types)
   - define methods to create a parse the results in the GstQuery.
   - define pad method:

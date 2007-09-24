@@ -1,3 +1,28 @@
+2007-09-24  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/design/draft-latency.txt:
+	* docs/design/draft-push-pull.txt:
+	* docs/design/draft-tagreading.txt:
+	* docs/design/part-MT-refcounting.txt:
+	* docs/design/part-activation.txt:
+	* docs/design/part-block.txt:
+	* docs/design/part-element-source.txt:
+	* docs/design/part-events.txt:
+	* docs/design/part-gstbin.txt:
+	* docs/design/part-gstelement.txt:
+	* docs/design/part-gstobject.txt:
+	* docs/design/part-gstpipeline.txt:
+	* docs/design/part-messages.txt:
+	* docs/design/part-preroll.txt:
+	* docs/design/part-push-pull.txt:
+	* docs/design/part-qos.txt:
+	* docs/design/part-query.txt:
+	* docs/design/part-scheduling.txt:
+	* docs/design/part-seeking.txt:
+	* docs/design/part-segments.txt:
+	* docs/design/part-states.txt:
+	Documentation updates and typo fixes.
+
 2007-09-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* plugins/elements/gstfakesink.c:

@@ -79,8 +79,9 @@ Use case: FLUSHING seek
     followed by the previously decoded P frame. If the P frame is outside of the
     segment, the decoder knows it should not send the P frame.
 
-    Avidemux stops sending data after pushing a frame with timestamp 5 and pushes
-    an EOS event downstream to finish playback.
+    Avidemux stops sending data after pushing a frame with timestamp 5 and
+    returns GST_FLOW_UNEXPECTED from the chain function to make the upstream
+    elements perform the EOS logic.
 
 
 Use case: live stream

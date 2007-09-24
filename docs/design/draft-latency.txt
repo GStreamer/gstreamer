@@ -74,10 +74,14 @@ capture pipelines.
   never change.
 
  PAUSED->PLAYING:
-  asrc clock selected because it is the most upstream clock provider.
-  asink: PAUSED:->PLAYING, returns ASYNC because it is not prerolled 
-  asrc: PAUSED->PLAYING: sets pending state to PLAYING, returns ASYNC. The sink
-                         will commit state to PLAYING when it prerolls.
+  asrc clock selected because it is the most upstream clock provider. asink can
+  only provide a clock when it received the first buffer and configured the
+  device with the samplerate in the caps.
+
+  asink: PAUSED:->PLAYING, sets pending state to PLAYING, returns ASYNC becaus
+                         it is not prerolled. The sink will commit state to
+			 PLAYING when it prerolls.
+  asrc: PAUSED->PLAYING: starts pushing buffers.
 
   * since the sink is still performing a state change from READY -> PAUSED, it
     remains ASYNC. The pending state will be set to PLAYING.
@@ -236,7 +240,9 @@ latency as follows:
   - perform a latency query on all sinks.
   - latency = MAX (all min latencies) 
   - if MIN (all max latencies) < latency we have an impossible situation and we
-    must generate an error indicating that this pipeline cannot be played.
+    must generate an error indicating that this pipeline cannot be played. This
+    usually means that there is not enough buffering in some chain of the
+    pipeline. A queue can be added to those chains.
 
 The sinks gather this information with a LATENCY query upstream. Intermediate
 elements pass the query upstream and add the amount of latency they add to the

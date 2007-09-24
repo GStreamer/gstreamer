@@ -16,8 +16,8 @@ State definitions
  - READY:   The element should be prepared to go to PAUSED.
  - PAUSED:  The element should be ready to accept and process data. Sink
             elements however only accept one buffer and then block.
- - PLAYING: The same as PAUSED except for sinks, who are now accepting
-            and rendering data.
+ - PLAYING: The same as PAUSED except for live sources and sinks. Sinks accept
+            and rendering data. Live sources produce data.
 
 We call the sequence NULL->PLAYING an upwards state change and PLAYING->NULL
 a downwards state change.

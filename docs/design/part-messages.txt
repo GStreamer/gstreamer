@@ -59,6 +59,7 @@ Message types
     
     An internal message used to instruct a pipeline hierarchy that a state
     recalculation must be performed because of an ASYNC state change completed.
+    This message is not used anymore.
 
   GST_MESSAGE_STEP_DONE:
 
@@ -92,7 +93,8 @@ Message types
     
   GST_MESSAGE_APPLICATION:
 
-    The application posted a message.
+    The application posted a message. This message must be used when the
+    application posts a message on the bus.
 
   GST_MESSAGE_ELEMENT:
 

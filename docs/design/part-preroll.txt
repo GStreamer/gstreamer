@@ -11,9 +11,9 @@ and ensuring that no buffers are dropped in the sinks.
 
 After receiving a buffer (or EOS) on a pad the chain/event function should
 wait to render the buffers or in the EOS case, wait to post the EOS
-message.
+message. While waiting, the sink will wait for the preroll cond to be signalled.
 
-Several things can happen that require the preroll lock to be unlocked. This
+Several things can happen that require the preroll cond to be signalled. This
 include state changes or flush events. The prerolling is implemented in
 sinks (see part-element-sink.txt)
 

@@ -7,7 +7,7 @@ Parentage
 ---------
 
 A pointer is available to store the current parent of the object.  This is one
-of the two fundamental requires for a hierarchical system such as GStreamer
+of the two fundamental requirements for a hierarchical system such as GStreamer
 (for the other, read up on GstBin).  Three functions are provided:
 _set_parent(), _get_parent(), and _unparent().  The third is required because
 there is an explicit check in _set_parent(): an object must not already have a
@@ -17,14 +17,6 @@ allows for new additions later.
 - GstObject's that can be parented:
   GstElement (inside a bin)
   GstPad (inside an element)
-
-
-Refcounting
------------
-- GObject refcount is not threadsafe. This will be changed in the future.
-  GStreamer for now sets it to a constant value on each _ref/_unref()
-  and uses an atomic int "refcount" instead for threadsafe refcounting
-  This implies you should always use gst_object_ref() and gst_object_unref() !
 
 
 Naming
@@ -96,7 +88,7 @@ Flags
 
 Each object in the GStreamer object hierarchy can have flags associated with it,
 which are used to describe a state or a feature of the object.
-GstObject has flags to mark its lifecycle: FLOATING, DISPOSING and DESTROYED.
+GstObject has flags to mark its lifecycle: FLOATING and DISPOSING.
 
 
 Class signals

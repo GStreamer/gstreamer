@@ -6,7 +6,7 @@ can be called from multiple threads at the same time. GStreamer internally uses
 threads to perform the data passing and various asynchronous services such as
 the clock can also use threads.
 
-This design decision has implication for the usage of the API and the objects
+This design decision has implications for the usage of the API and the objects
 which this document explains.
 
 MT safety techniques
@@ -119,7 +119,7 @@ Atomic operations
   on CPU features and instructions.
 
   The advantages are mostly speed related since there are no heavyweight locks
-  involved. Most of this instructions also do not cause a context switch in case
+  involved. Most of these instructions also do not cause a context switch in case
   of concurrent access but use a retry mechanism or spinlocking.
 
   Disadvantages are that each of these instructions usually cause a cache flush
@@ -245,7 +245,7 @@ Objects
   All properties requiring a lock can change after releasing the associated
   lock. This means that as long as you hold the lock, the state of the
   object regarding the locked properties is consistent with the information
-  obtained. As soon as the lock is released, any values required from the
+  obtained. As soon as the lock is released, any values acquired from the
   properties might not be valid anymore and can as best be described as a
   snapshot of the state when the lock was held.
 
@@ -280,7 +280,7 @@ Objects
     The following code is equivalent to the above but with using the functions
     to access object properties.
 
-      peer = gst_pad_get_parent (pad);
+      peer = gst_pad_get_peer (pad);
       if (peer) {
         ... use peer ...
 
@@ -293,7 +293,7 @@ Objects
     function should g_free() the name after usage.
 
       GST_OBJECT_LOCK (object)
-      name = g_strdup (object->name);
+      name = g_strdup (GST_OBJECT_NAME (object));
       GST_OBJECT_UNLOCK (object)
       ... use name ...
 

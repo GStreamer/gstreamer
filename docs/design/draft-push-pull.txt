@@ -58,7 +58,7 @@ Current scheduling decision:
 
 Problems:
 
-  - core makes a touch desicion without knowing anything about the 
+  - core makes a tough desicion without knowing anything about the 
     element. Some elements are able to deal with a pull_range()
     without offset while others need full random  access.
     
@@ -69,7 +69,7 @@ Requirements:
     how it can use the peer element pull_range. This includes if the
     peer can operate with or without offset/size. This also means that
     the core does not need to select the scheduling method anymore and
-    allows for more afficient scheduling methods adjusted for the 
+    allows for more efficient scheduling methods adjusted for the 
     particular element.
 
 

@@ -7,7 +7,7 @@ their pads are activated so as to prepare for data flow. Some pads will
 start tasks to drive the data flow.
 
 An element activates its pads from sourcepads to sinkpads. This to make
-sure that when the sinkpads are activated an ready to accept data, the
+sure that when the sinkpads are activated and ready to accept data, the
 sourcepads are already active to pass the data downstream.
 
 Pads can be activated in one of two modes, PUSH and PULL. PUSH pads are

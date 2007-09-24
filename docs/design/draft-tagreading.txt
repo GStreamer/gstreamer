@@ -3,7 +3,7 @@ Tagreading
 
 The tagreading (metadata reading) use case for mediacenter applications is not
 to well supported by the current GStreamer architecture. It uses demuxers on the
-files, which generelly said takes too long. what we wan't is secialized elements
+files, which generelly said takes too long. what we want is secialized elements
 that just do the tag-reading.
 
 The idea is to have one plugin 'tagread' simmilar to 'typefind' that provides

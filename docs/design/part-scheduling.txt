@@ -33,11 +33,12 @@ push function to push the result to the peer sinkpad.
 Deciding the scheduling mode
 ----------------------------
 
-When the core performs the pad activate function, it will select a scheduling mode
-for the pads. Sinkpads that expose a loop function are prefered over source pads 
-with a loop function so that the pull mode is selected when possible. Selecting the
-pull mode is more efficient because it allows for arbitrary seeking and random access
-to the data.
+When tha pad is activated, the _activate() function is called. The pad can then
+choose to activate itself in push or pull mode depending on upstream
+capabilities.
+
+The GStreamer core will by default activate pads in push mode when there is no
+activate function for the pad.
 
 The chain function
 ------------------

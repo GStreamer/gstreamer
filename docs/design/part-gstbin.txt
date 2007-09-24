@@ -52,8 +52,8 @@ Messages received from children are forwarded intact onto the bin's
 external message bus, except for EOS and SEGMENT_START/DONE which are 
 handled specially.
 
-STATE_CHANGED messages received from the children are used to trigger a
-recalculation of the current state of the bin, as described in 
+ASYNC_START/ASYNC_STOP messages received from the children are used to
+trigger a recalculation of the current state of the bin, as described in 
 part-states.txt.
 
 The application can retrieve the external GstBus and integrate it in the

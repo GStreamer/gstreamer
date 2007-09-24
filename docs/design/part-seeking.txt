@@ -16,7 +16,7 @@ Seeking can be performed in different formats such as time, frames
 or samples.
 
 Seeking can be performed to an absolute position or relative to the
-current configured segment.
+currently configured segment.
 
 For seeking to work reliably, all plugins in the pipeline need to follow
 the well-defined rules in this document.

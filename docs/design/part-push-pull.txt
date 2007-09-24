@@ -28,10 +28,10 @@ state changes
 The GstBin sets the state of all the sink elements. These are the elements
 without source pads.
 
-Setting the state on an element will first activate all the sinkpads. For
-each of the sinkpads, gst_pad_check_pull_range() is performed. If the 
-sinkpad supports a loopfunction and the peer pad returns TRUE from the
-GstPadCheckPullRange function, then the peer pad is activated first as
+Setting the state on an element will first activate all the srcpads and then
+the sinkpads. For each of the sinkpads, gst_pad_check_pull_range() is
+performed. If the sinkpad supports a loopfunction and the peer pad returns TRUE
+from the GstPadCheckPullRange function, then the peer pad is activated first as
 it must be in the right state to handle a _pull_range(). Note that the
 state change of the element is not yet performed, just the activate function
 is called on the source pad. This means that elements that implement a

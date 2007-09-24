@@ -47,7 +47,7 @@ Flushing
  the FLUSH_START event further downstream.
 
  The FLUSH_STOP will set the srcpad to non-flushing again and is dropped 
- fr the same reason. From then on, the new data after the flushing seek 
+ for the same reason. From then on, the new data after the flushing seek 
  will be queued when the pad block is taken again.
 
 * Case where the stream is blocking downstream
