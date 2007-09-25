@@ -124,33 +124,10 @@ GST_PLUGINS_ALL="\
 AC_SUBST(GST_PLUGINS_ALL)
 
 GST_PLUGINS_SELECTED=""
-
-AC_ARG_WITH(plugins,
-    AC_HELP_STRING([--with-plugins],
-      [comma-separated list of plug-ins to compile]),
-    [for i in `echo $withval | tr , ' '`; do
-        if echo $GST_PLUGINS_ALL | grep $i > /dev/null
-        then
-            GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED $i"
-        else
-            echo "plug-in $i not recognized, ignoring..."
-        fi
-    done],
-    [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
-
+AG_GST_ARG_WITH_PLUGINS
 AC_SUBST(GST_PLUGINS_SELECTED)
 
-dnl ext plug-ins; plug-ins that have external dependencies
-AG_GST_CHECK_FEATURE(EXTERNAL, [enable building of plug-ins with external deps],,
-  [HAVE_EXTERNAL=yes], enabled,
-  [
-    AC_MSG_NOTICE(building external plug-ins)
-    BUILD_EXTERNAL="yes"
-  ],[
-    AC_MSG_NOTICE(all plug-ins with external dependencies will not be built)
-    BUILD_EXTERNAL="no"
-  ])
-AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
+AG_GST_ARG_ENABLE_EXTERNAL
 
 dnl *** checks for platform ***
 
