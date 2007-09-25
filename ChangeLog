@@ -1,5 +1,12 @@
 2007-09-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* configure.ac:
+	Use AG_GST_ARG_WITH_PLUGINS, AG_GST_ARG_ENABLE_EXTERNAL and
+	AG_GST_ARG_ENABLE_EXPERIMENTAL instead of duplicating those macros
+	in configure.ac.
+
+2007-09-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: <j at bootlab dot org>
 
 	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):

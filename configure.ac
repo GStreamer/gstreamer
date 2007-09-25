@@ -112,19 +112,7 @@ GST_PLUGINS_ALL="\
 AC_SUBST(GST_PLUGINS_ALL)
 
 GST_PLUGINS_SELECTED=""
-
-AC_ARG_WITH(plugins,
-    AC_HELP_STRING([--with-plugins],
-      [comma-separated list of plug-ins to compile]),
-    [for i in `echo $withval | tr , ' '`; do
-        if echo $GST_PLUGINS_ALL | grep $i > /dev/null
-        then
-            GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED $i"
-        else
-            echo "plug-in $i not recognized, ignoring..."
-        fi
-    done],
-    [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
+AG_GST_ARG_WITH_PLUGINS
 
 dnl disable gst plugins we might not be able to build on this
 dnl platform: udp and rtsp (ugly but minimally invasive)
@@ -142,29 +130,13 @@ if test "x$HAVE_WINSOCK2_H" = "xyes"; then
   AC_SUBST(WIN32_LIBS)
 fi
 
-dnl ext plug-ins; plug-ins that have external dependencies
-AG_GST_CHECK_FEATURE(EXTERNAL, [building of plug-ins with external deps],,
-  [HAVE_EXTERNAL=yes], enabled,
-  [
-    AC_MSG_NOTICE(building external plug-ins)
-    BUILD_EXTERNAL="yes"
-  ],[
-    AC_MSG_NOTICE(all plug-ins with external dependencies will not be built)
-    BUILD_EXTERNAL="no"
-  ])
-AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
+AG_GST_ARG_ENABLE_EXTERNAL
 
-dnl experimental plug-ins; stuff that hasn't had the dust settle yet
-AG_GST_CHECK_FEATURE(EXPERIMENTAL, [enable building of experimental plug-ins],,
-[HAVE_EXPERIMENTAL=yes],disabled,
-[
-  AC_MSG_WARN(building experimental plug-ins)
-  USE_GST_V4L2="yes"
-],[
-  AC_MSG_NOTICE(not building experimental plug-ins)
-  USE_GST_V4L2="no"
-  GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/monoscope//`
-])
+AG_GST_ARG_ENABLE_EXPERIMENTAL
+USE_GST_V4L2=$BUILD_EXPERIMENTAL
+if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
+	GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/monoscope//`
+fi
 
 AC_SUBST(GST_PLUGINS_SELECTED)
 
