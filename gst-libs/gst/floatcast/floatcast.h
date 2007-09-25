@@ -21,14 +21,23 @@
 /**
  * SECTION:gstfloatcast
  * @short_description: Floating point platform independence macros
+ *
+ * The floatcast.h header file contains a couple of convenience macros for
+ * floating point numbers.
+ *
+ * If you include this header, your application or library must link against
+ * libm (for maths.h support).
+ *
+ * For optimal results, your application&apos;s or library&apos;s build
+ * system should check whether the C99 functions lrint and lrintf are supported
+ * and define the preprocessor symbols HAVE_LRINT and HAVE_LRINTF if so.  If
+ * you are using autoconf, you can do this by using the AC_C99_FUNC_LRINT and
+ * AC_C99_FUNC_LRINTF checks in your configure.ac or configure.in file and
+ * including your application's config.h header before you include floatcast.h.
  */
 
 #ifndef __FLOATCAST_H__
 #define __FLOATCAST_H__
-
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
 
 #include <string.h>
 #include <glib/gtypes.h>
@@ -40,7 +49,26 @@
 
 G_BEGIN_DECLS
 
-#if (HAVE_LRINT && HAVE_LRINTF)
+/* FIXME 0.11: these gst_cast_*() functions are not used anywhere, so we could
+ * just as well get rid of them and move the float/double swap macros into
+ * gstutils.h in core */
+
+/**
+ * gst_cast_float:
+ * @x: input value
+ *
+ * Casts a 32-bit floating point value (float) to an integer without bias.
+ */
+/**
+ * gst_cast_double:
+ * @x: input value
+ *
+ * Casts a 64-bit floating point value (double) to an integer without bias.
+ */
+
+/* FIXME: HAVE_LRINT && HAVE_LRINTF are defined by config.h - they should
+ * not be used in an installed header. */
+#if defined(HAVE_LRINT) && defined(HAVE_LRINTF)
 
         /*      These defines enable functionality introduced with the 1999 ISO C
         **      standard. They must be defined before the inclusion of math.h to
@@ -61,12 +89,23 @@ G_BEGIN_DECLS
         #define gst_cast_double(x)      ((gint)lrint(x))
 
 #else
+        #include <math.h>
+
         /* use a standard c cast, but do rounding correctly */
         #define gst_cast_float(x)       ((gint)floor((x)+0.5))
         #define gst_cast_double(x)      ((gint)floor((x)+0.5))
 
 #endif
 
+/* FIXME 0.11: don't use GLib namespace (GDOUBLE_SWAP_LE_BE, GFLOAT_TO_LE,
+ * GFLOAT_TO_BE, GDOUBLE_TO_LE, GDOUBLE_TO_BE) */
+
+/**
+ * GFLOAT_SWAP_LE_BE:
+ * @in: input value
+ *
+ * Swap byte order of a 32-bit floating point value (float).
+ */
 inline static gfloat
 GFLOAT_SWAP_LE_BE(gfloat in)
 {
@@ -81,6 +120,12 @@ GFLOAT_SWAP_LE_BE(gfloat in)
   return u.f;
 }
 
+/**
+ * GDOUBLE_SWAP_LE_BE:
+ * @in: input value
+ *
+ * Swap byte order of a 64-bit floating point value (double).
+ */
 inline static gdouble
 GDOUBLE_SWAP_LE_BE(gdouble in)
 {
@@ -94,6 +139,64 @@ GDOUBLE_SWAP_LE_BE(gdouble in)
   u.i = GUINT64_SWAP_LE_BE (u.i);
   return u.d;
 }
+
+/**
+ * GDOUBLE_TO_LE:
+ * @val: value
+ *
+ * Convert 64-bit floating point value (double) from native byte order into
+ * little endian byte order.
+ */
+/**
+ * GDOUBLE_TO_BE:
+ * @val: value
+ *
+ * Convert 64-bit floating point value (double) from native byte order into
+ * big endian byte order.
+ */
+/**
+ * GDOUBLE_FROM_LE:
+ * @val: value
+ *
+ * Convert 64-bit floating point value (double) from little endian byte order
+ * into native byte order.
+ */
+/**
+ * GDOUBLE_FROM_BE:
+ * @val: value
+ *
+ * Convert 64-bit floating point value (double) from big endian byte order
+ * into native byte order.
+ */
+
+/**
+ * GFLOAT_TO_LE:
+ * @val: value
+ *
+ * Convert 32-bit floating point value (float) from native byte order into
+ * little endian byte order.
+ */
+/**
+ * GFLOAT_TO_BE:
+ * @val: value
+ *
+ * Convert 32-bit floating point value (float) from native byte order into
+ * big endian byte order.
+ */
+/**
+ * GFLOAT_FROM_LE:
+ * @val: value
+ *
+ * Convert 32-bit floating point value (float) from little endian byte order
+ * into native byte order.
+ */
+/**
+ * GFLOAT_FROM_BE:
+ * @val: value
+ *
+ * Convert 32-bit floating point value (float) from big endian byte order
+ * into native byte order.
+ */
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define GFLOAT_TO_LE(val)    ((gfloat) (val))

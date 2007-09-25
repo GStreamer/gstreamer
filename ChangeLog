@@ -1,3 +1,15 @@
+2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/floatcast/floatcast.h:
+	  Don't include config.h in an installed public header, this
+	  might break compilation of applications that don't have such
+	  a header and doesn't necessarily do what it's supposed to do
+	  anyway (ie. check for the lrint/lrintf defines) (#442065).
+	  Add docs for the various macros and document how this header
+	  has to be used (link against libm, etc.); add a few FIXMEs;
+	  include math.h for non-c99 code path.  Based on patch by
+	  Jan Schmidt.
+	  
 2007-09-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
