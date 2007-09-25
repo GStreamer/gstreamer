@@ -1,3 +1,10 @@
+2007-09-25  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: <j at bootlab dot org>
+
+	* gst/qtdemux/qtdemux.c: (qtdemux_video_caps):
+	Add fourccs for MPEG2 HDV streams. Fixes #479960.
+
 2007-09-23  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/oss/gstosshelper.c:

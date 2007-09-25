@@ -3949,6 +3949,13 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_from_string ("video/mpeg, "
           "systemstream = (boolean) false, " "mpegversion = (int) 1");
       break;
+    case GST_MAKE_FOURCC ('h', 'd', 'v', '2'): // HDV 1080i60
+    case GST_MAKE_FOURCC ('h', 'd', 'v', '3'): // HDV 1080i50
+    case GST_MAKE_FOURCC ('m', 'x', '5', 'p'): // MPEG IMX 625/50 (50Mb/s)
+      _codec ("MPEG-2 video");
+      caps = gst_caps_from_string ("video/mpeg, "
+          "systemstream = (boolean) false, " "mpegversion = (int) 2");
+      break;
     case GST_MAKE_FOURCC ('g', 'i', 'f', ' '):
       _codec ("GIF still images");
       caps = gst_caps_from_string ("image/gif");
