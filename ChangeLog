@@ -1,3 +1,8 @@
+2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/lame/gstlame.c:
+	  Use GST_PTR_FORMAT to print caps in debug statement.
+
 2007-09-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
