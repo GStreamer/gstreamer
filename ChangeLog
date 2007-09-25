@@ -1,3 +1,14 @@
+2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Based on patch by: Laurent Glayal  <spglegle yahoo fr>
+
+	* gst/law/alaw-decode.c:
+	* gst/law/alaw-encode.c:
+	  Use static tables for A-Law decoding and encoding; this makes
+	  A-Law decoding and encoding less CPU-intensive, but increases
+	  the binary size a bit. Leaving old code around for now,
+	  selectable by a define in the code. Fixes #435435.
+
 2007-09-25  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
