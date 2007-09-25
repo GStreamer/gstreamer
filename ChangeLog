@@ -1,3 +1,10 @@
+2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	API: add GST_TAG_COMPOSER, fixes #459809.
+
 2007-09-24  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstplugin.c:

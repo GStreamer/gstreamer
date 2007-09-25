@@ -360,6 +360,14 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  */
 #define GST_TAG_ALBUM                  "album"
 /**
+ * GST_TAG_COMPOSER:
+ *
+ * person(s) who composed the recording (string)
+ *
+ * Since: 0.10.15
+ */
+#define GST_TAG_COMPOSER               "composer"
+/**
  * GST_TAG_DATE:
  *
  * date the data was created (#GDate structure)
