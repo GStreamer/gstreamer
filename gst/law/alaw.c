@@ -1,6 +1,25 @@
+/* GStreamer PCM/A-Law conversions
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
+
 #include "alaw-encode.h"
 #include "alaw-decode.h"
 
@@ -46,14 +65,15 @@ plugin_init (GstPlugin * plugin)
       gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS, alaw_caps);
 
   if (!gst_element_register (plugin, "alawenc",
-          GST_RANK_NONE, GST_TYPE_ALAWENC) ||
+          GST_RANK_NONE, GST_TYPE_ALAW_ENC) ||
       !gst_element_register (plugin, "alawdec",
-          GST_RANK_PRIMARY, GST_TYPE_ALAWDEC))
+          GST_RANK_PRIMARY, GST_TYPE_ALAW_DEC))
     return FALSE;
 
   return TRUE;
 }
 
+/* FIXME 0.11: merge alaw and mulaw into one plugin? */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "alaw",

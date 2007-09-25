@@ -1,5 +1,5 @@
-/* GStreamer
- * Copyright (C) <1999> Erik Walthinsen <omega@cse.ogi.edu>
+/* GStreamer PCM to A-Law conversion
+ * Copyright (C) 2000 by Abramo Bagnara <abramo@alsa-project.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,23 +18,23 @@
  */
 
 
-#ifndef __GST_ALAWENCODE_H__
-#define __GST_ALAWENCODE_H__
+#ifndef __GST_ALAW_ENCODE_H__
+#define __GST_ALAW_ENCODE_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_ALAWENC \
-  (gst_alawenc_get_type())
-#define GST_ALAWENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALAWENC,GstALawEnc))
-#define GST_ALAWENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALAWENC,GstALawEncClass))
-#define GST_IS_ALAWENC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALAWENC))
-#define GST_IS_ALAWENC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALAWENC))
+#define GST_TYPE_ALAW_ENC \
+  (gst_alaw_enc_get_type())
+#define GST_ALAW_ENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_ALAW_ENC,GstALawEnc))
+#define GST_ALAW_ENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_ALAW_ENC,GstALawEncClass))
+#define GST_IS_ALAW_ENC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_ALAW_ENC))
+#define GST_IS_ALAW_ENC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_ALAW_ENC))
 
 typedef struct _GstALawEnc GstALawEnc;
 typedef struct _GstALawEncClass GstALawEncClass;
@@ -52,8 +52,8 @@ struct _GstALawEncClass {
   GstElementClass parent_class;
 };
 
-GType gst_alawenc_get_type(void);
+GType gst_alaw_enc_get_type(void);
 
 G_END_DECLS
 
-#endif /* __GST_STEREO_H__ */
+#endif /* __GST_ALAW_ENCODE_H__ */

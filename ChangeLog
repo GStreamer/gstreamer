@@ -1,5 +1,17 @@
 2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/law/alaw-decode.c:
+	* gst/law/alaw-decode.h:
+	* gst/law/alaw-encode.c:
+	* gst/law/alaw-encode.h:
+	* gst/law/alaw.c:
+	* gst/law/mulaw-conversion.h:
+	  Compulsive clean-ups: use boilerplate macros, add debug
+	  categories, fix up things to conform to symbol nomenklatura,
+	  etc.
+
+2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Based on patch by: Laurent Glayal  <spglegle yahoo fr>
 
 	* gst/law/alaw-decode.c:

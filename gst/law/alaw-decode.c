@@ -1,7 +1,5 @@
-/* GStreamer
- * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
- * PCM - A-Law conversion
- *   Copyright (C) 2000 by Abramo Bagnara <abramo@alsa-project.org>
+/* GStreamer A-Law to PCM conversion
+ * Copyright (C) 2000 by Abramo Bagnara <abramo@alsa-project.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,34 +20,20 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gst/gst.h>
+
 #include "alaw-decode.h"
 
-extern GstPadTemplate *alawdec_src_template, *alawdec_sink_template;
+extern GstPadTemplate *alawdec_src_template;
+extern GstPadTemplate *alawdec_sink_template;
 
-/* Stereo signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
+GST_DEBUG_CATEGORY_STATIC (alaw_dec_debug);
+#define GST_CAT_DEFAULT alaw_dec_debug
 
-enum
-{
-  ARG_0
-};
-
-static void gst_alawdec_class_init (GstALawDecClass * klass);
-static void gst_alawdec_base_init (GstALawDecClass * klass);
-static void gst_alawdec_init (GstALawDec * alawdec);
 static GstStateChangeReturn
-gst_alawdec_change_state (GstElement * element, GstStateChange transition);
+gst_alaw_dec_change_state (GstElement * element, GstStateChange transition);
+static GstFlowReturn gst_alaw_dec_chain (GstPad * pad, GstBuffer * buffer);
 
-static GstFlowReturn gst_alawdec_chain (GstPad * pad, GstBuffer * buffer);
-
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
+GST_BOILERPLATE (GstALawDec, gst_alaw_dec, GstElement, GST_TYPE_ELEMENT);
 
 /* some day we might have defines in gstconfig.h that tell us about the
  * desired cpu/memory/binary size trade-offs */
@@ -121,14 +105,14 @@ alaw_to_s16 (guint8 a_val)
 #endif /* GST_ALAW_DEC_USE_TABLE */
 
 static gboolean
-alawdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+gst_alaw_dec_sink_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstALawDec *alawdec;
   GstStructure *structure;
   int rate, channels;
   gboolean ret;
 
-  alawdec = GST_ALAWDEC (GST_PAD_PARENT (pad));
+  alawdec = GST_ALAW_DEC (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
   ret = gst_structure_get_int (structure, "rate", &rate);
@@ -145,65 +129,42 @@ alawdec_sink_setcaps (GstPad * pad, GstCaps * caps)
       "signed", G_TYPE_BOOLEAN, TRUE,
       "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
 
+  GST_DEBUG_OBJECT (alawdec, "rate=%d, channels=%d", rate, channels);
+
   return TRUE;
 }
 
-GType
-gst_alawdec_get_type (void)
-{
-  static GType alawdec_type = 0;
-
-  if (!alawdec_type) {
-    static const GTypeInfo alawdec_info = {
-      sizeof (GstALawDecClass),
-      (GBaseInitFunc) gst_alawdec_base_init,
-      NULL,
-      (GClassInitFunc) gst_alawdec_class_init,
-      NULL,
-      NULL,
-      sizeof (GstALawDec),
-      0,
-      (GInstanceInitFunc) gst_alawdec_init,
-    };
-
-    alawdec_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstALawDec", &alawdec_info,
-        0);
-  }
-  return alawdec_type;
-}
-
 static void
-gst_alawdec_base_init (GstALawDecClass * klass)
+gst_alaw_dec_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  const GstElementDetails alawdec_details =
-      GST_ELEMENT_DETAILS ("A Law audio decoder",
-      "Codec/Decoder/Audio",
-      "Convert 8bit A law to 16bit PCM",
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
   gst_element_class_add_pad_template (element_class, alawdec_src_template);
   gst_element_class_add_pad_template (element_class, alawdec_sink_template);
-  gst_element_class_set_details (element_class, &alawdec_details);
+
+  gst_element_class_set_details_simple (element_class, "A Law audio decoder",
+      "Codec/Decoder/Audio", "Convert 8bit A law to 16bit PCM",
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
+
+  GST_DEBUG_CATEGORY_INIT (alaw_dec_debug, "alawdec", 0, "A Law audio decoder");
 }
 
 static void
-gst_alawdec_class_init (GstALawDecClass * klass)
+gst_alaw_dec_class_init (GstALawDecClass * klass)
 {
   GstElementClass *element_class = (GstElementClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
-  element_class->change_state = GST_DEBUG_FUNCPTR (gst_alawdec_change_state);
+  element_class->change_state = GST_DEBUG_FUNCPTR (gst_alaw_dec_change_state);
 }
 
 static void
-gst_alawdec_init (GstALawDec * alawdec)
+gst_alaw_dec_init (GstALawDec * alawdec, GstALawDecClass * klass)
 {
   alawdec->sinkpad = gst_pad_new_from_template (alawdec_sink_template, "sink");
-  gst_pad_set_setcaps_function (alawdec->sinkpad, alawdec_sink_setcaps);
-  gst_pad_set_chain_function (alawdec->sinkpad, gst_alawdec_chain);
+  gst_pad_set_setcaps_function (alawdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_dec_sink_setcaps));
+  gst_pad_set_chain_function (alawdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_dec_chain));
   gst_element_add_pad (GST_ELEMENT (alawdec), alawdec->sinkpad);
 
   alawdec->srcpad = gst_pad_new_from_template (alawdec_src_template, "src");
@@ -212,7 +173,7 @@ gst_alawdec_init (GstALawDec * alawdec)
 }
 
 static GstFlowReturn
-gst_alawdec_chain (GstPad * pad, GstBuffer * buffer)
+gst_alaw_dec_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstALawDec *alawdec;
   gint16 *linear_data;
@@ -222,7 +183,13 @@ gst_alawdec_chain (GstPad * pad, GstBuffer * buffer)
   gint i;
   GstFlowReturn ret;
 
-  alawdec = GST_ALAWDEC (gst_pad_get_parent (pad));
+  alawdec = GST_ALAW_DEC (GST_PAD_PARENT (pad));
+
+  if (G_UNLIKELY (alawdec->srccaps == NULL))
+    goto not_negotiated;
+
+  GST_LOG_OBJECT (alawdec, "buffer with ts=%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
 
   alaw_data = GST_BUFFER_DATA (buffer);
   alaw_size = GST_BUFFER_SIZE (buffer);
@@ -241,20 +208,27 @@ gst_alawdec_chain (GstPad * pad, GstBuffer * buffer)
   for (i = 0; i < alaw_size; i++) {
     linear_data[i] = alaw_to_s16 (alaw_data[i]);
   }
-  gst_buffer_unref (buffer);
 
   ret = gst_pad_push (alawdec->srcpad, outbuf);
 
-  gst_object_unref (alawdec);
+done:
+
+  gst_buffer_unref (buffer);
 
   return ret;
+
+not_negotiated:
+  {
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto done;
+  }
 }
 
 static GstStateChangeReturn
-gst_alawdec_change_state (GstElement * element, GstStateChange transition)
+gst_alaw_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
-  GstALawDec *dec = GST_ALAWDEC (element);
+  GstALawDec *dec = GST_ALAW_DEC (element);
 
   switch (transition) {
     default:

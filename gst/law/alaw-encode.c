@@ -1,7 +1,5 @@
-/* GStreamer
- * Copyright (C) 1999 Erik Walthinsen <omega@cse.ogi.edu>
- * PCM - A-Law conversion
- *   Copyright (C) 2000 by Abramo Bagnara <abramo@alsa-project.org>
+/* GStreamer PCM to A-Law conversion
+ * Copyright (C) 2000 by Abramo Bagnara <abramo@alsa-project.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -22,28 +20,18 @@
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
-#include <gst/gst.h>
+
 #include "alaw-encode.h"
 
-extern GstPadTemplate *alawenc_src_template, *alawenc_sink_template;
+GST_DEBUG_CATEGORY_STATIC (alaw_enc_debug);
+#define GST_CAT_DEFAULT alaw_enc_debug
 
-/* Stereo signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
+extern GstPadTemplate *alawenc_src_template;
+extern GstPadTemplate *alawenc_sink_template;
 
-enum
-{
-  ARG_0
-};
+static GstFlowReturn gst_alaw_enc_chain (GstPad * pad, GstBuffer * buffer);
 
-static void gst_alawenc_class_init (GstALawEncClass * klass);
-static void gst_alawenc_base_init (GstALawEncClass * klass);
-static void gst_alawenc_init (GstALawEnc * alawenc);
-
-static GstFlowReturn gst_alawenc_chain (GstPad * pad, GstBuffer * buffer);
+GST_BOILERPLATE (GstALawEnc, gst_alaw_enc, GstElement, GST_TYPE_ELEMENT);
 
 /* some day we might have defines in gstconfig.h that tell us about the
  * desired cpu/memory/binary size trade-offs */
@@ -303,18 +291,14 @@ s16_to_alaw (gint pcm_val)
 
 #endif /* GST_ALAW_ENC_USE_TABLE */
 
-static GstElementClass *parent_class = NULL;
-
-/*static guint gst_stereo_signals[LAST_SIGNAL] = { 0 }; */
-
 static GstCaps *
-alawenc_getcaps (GstPad * pad)
+gst_alaw_enc_getcaps (GstPad * pad)
 {
   GstALawEnc *alawenc;
   GstPad *otherpad;
   GstCaps *base_caps, *othercaps;
 
-  alawenc = GST_ALAWENC (GST_PAD_PARENT (pad));
+  alawenc = GST_ALAW_ENC (GST_PAD_PARENT (pad));
 
   /* we can do what our template says */
   base_caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
@@ -362,14 +346,15 @@ alawenc_getcaps (GstPad * pad)
 }
 
 static gboolean
-alawenc_setcaps (GstPad * pad, GstCaps * caps)
+gst_alaw_enc_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstALawEnc *alawenc;
   GstPad *otherpad;
   GstStructure *structure;
+  gboolean ret;
   GstCaps *base_caps;
 
-  alawenc = GST_ALAWENC (GST_PAD_PARENT (pad));
+  alawenc = GST_ALAW_ENC (GST_PAD_PARENT (pad));
 
   structure = gst_caps_get_structure (caps, 0);
   gst_structure_get_int (structure, "channels", &alawenc->channels);
@@ -387,71 +372,55 @@ alawenc_setcaps (GstPad * pad, GstCaps * caps)
   gst_structure_set (structure, "channels", G_TYPE_INT, alawenc->channels,
       NULL);
 
-  gst_pad_set_caps (otherpad, base_caps);
+  GST_DEBUG_OBJECT (alawenc, "rate=%d, channels=%d", alawenc->rate,
+      alawenc->channels);
+
+  ret = gst_pad_set_caps (otherpad, base_caps);
 
   gst_caps_unref (base_caps);
 
-  return TRUE;
-}
-
-GType
-gst_alawenc_get_type (void)
-{
-  static GType alawenc_type = 0;
-
-  if (!alawenc_type) {
-    static const GTypeInfo alawenc_info = {
-      sizeof (GstALawEncClass),
-      (GBaseInitFunc) gst_alawenc_base_init,
-      NULL,
-      (GClassInitFunc) gst_alawenc_class_init,
-      NULL,
-      NULL,
-      sizeof (GstALawEnc),
-      0,
-      (GInstanceInitFunc) gst_alawenc_init,
-    };
-
-    alawenc_type =
-        g_type_register_static (GST_TYPE_ELEMENT, "GstALawEnc", &alawenc_info,
-        0);
-  }
-  return alawenc_type;
+  return ret;
 }
 
 static void
-gst_alawenc_base_init (GstALawEncClass * klass)
+gst_alaw_enc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  const GstElementDetails alawenc_details =
-      GST_ELEMENT_DETAILS ("A Law audio encoder",
-      "Codec/Encoder/Audio",
-      "Convert 16bit PCM to 8bit A law",
-      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
 
   gst_element_class_add_pad_template (element_class, alawenc_src_template);
   gst_element_class_add_pad_template (element_class, alawenc_sink_template);
-  gst_element_class_set_details (element_class, &alawenc_details);
+
+  gst_element_class_set_details_simple (element_class,
+      "A Law audio encoder", "Codec/Encoder/Audio",
+      "Convert 16bit PCM to 8bit A law",
+      "Zaheer Abbas Merali <zaheerabbas at merali dot org>");
+
+  GST_DEBUG_CATEGORY_INIT (alaw_enc_debug, "alawenc", 0, "A Law audio encoder");
 }
 
 static void
-gst_alawenc_class_init (GstALawEncClass * klass)
+gst_alaw_enc_class_init (GstALawEncClass * klass)
 {
-  parent_class = g_type_class_peek_parent (klass);
+  /* nothing to do here for now */
 }
 
 static void
-gst_alawenc_init (GstALawEnc * alawenc)
+gst_alaw_enc_init (GstALawEnc * alawenc, GstALawEncClass * klass)
 {
   alawenc->sinkpad = gst_pad_new_from_template (alawenc_sink_template, "sink");
-  gst_pad_set_setcaps_function (alawenc->sinkpad, alawenc_setcaps);
-  gst_pad_set_getcaps_function (alawenc->sinkpad, alawenc_getcaps);
-  gst_pad_set_chain_function (alawenc->sinkpad, gst_alawenc_chain);
+  gst_pad_set_setcaps_function (alawenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_enc_setcaps));
+  gst_pad_set_getcaps_function (alawenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_enc_getcaps));
+  gst_pad_set_chain_function (alawenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_enc_chain));
   gst_element_add_pad (GST_ELEMENT (alawenc), alawenc->sinkpad);
 
   alawenc->srcpad = gst_pad_new_from_template (alawenc_src_template, "src");
-  gst_pad_set_setcaps_function (alawenc->srcpad, alawenc_setcaps);
-  gst_pad_set_getcaps_function (alawenc->srcpad, alawenc_getcaps);
+  gst_pad_set_setcaps_function (alawenc->srcpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_enc_setcaps));
+  gst_pad_set_getcaps_function (alawenc->srcpad,
+      GST_DEBUG_FUNCPTR (gst_alaw_enc_getcaps));
   gst_element_add_pad (GST_ELEMENT (alawenc), alawenc->srcpad);
 
   /* init rest */
@@ -460,7 +429,7 @@ gst_alawenc_init (GstALawEnc * alawenc)
 }
 
 static GstFlowReturn
-gst_alawenc_chain (GstPad * pad, GstBuffer * buffer)
+gst_alaw_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstALawEnc *alawenc;
   gint16 *linear_data;
@@ -472,9 +441,9 @@ gst_alawenc_chain (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn ret;
   GstClockTime timestamp, duration;
 
-  alawenc = GST_ALAWENC (gst_pad_get_parent (pad));
+  alawenc = GST_ALAW_ENC (GST_PAD_PARENT (pad));
 
-  if (!alawenc->rate || !alawenc->channels)
+  if (G_UNLIKELY (alawenc->rate == 0 || alawenc->channels == 0))
     goto not_negotiated;
 
   linear_data = (gint16 *) GST_BUFFER_DATA (buffer);
@@ -484,7 +453,11 @@ gst_alawenc_chain (GstPad * pad, GstBuffer * buffer)
 
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
-  if (duration == -1) {
+
+  GST_LOG_OBJECT (alawenc, "buffer with ts=%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (timestamp));
+
+  if (duration == GST_CLOCK_TIME_NONE) {
     duration = gst_util_uint64_scale_int (alaw_size,
         GST_SECOND, alawenc->rate * alawenc->channels);
   }
@@ -505,12 +478,11 @@ gst_alawenc_chain (GstPad * pad, GstBuffer * buffer)
     alaw_data[i] = s16_to_alaw (linear_data[i]);
   }
 
-  gst_buffer_unref (buffer);
-
   ret = gst_pad_push (alawenc->srcpad, outbuf);
 
 done:
-  gst_object_unref (alawenc);
+
+  gst_buffer_unref (buffer);
 
   return ret;
 
