@@ -91,42 +91,15 @@ GST_PLUGINS_ALL="\
 AC_SUBST(GST_PLUGINS_ALL)
 
 GST_PLUGINS_SELECTED=""
+AG_GST_ARG_WITH_PLUGINS
 
-AC_ARG_WITH(plugins,
-    AC_HELP_STRING([--with-plugins],
-      [comma-separated list of plug-ins to compile]),
-    [for i in `echo $withval | tr , ' '`; do
-        if echo $GST_PLUGINS_ALL | grep $i > /dev/null
-        then
-            GST_PLUGINS_SELECTED="$GST_PLUGINS_SELECTED $i"
-        else
-            echo "plug-in $i not recognized, ignoring..."
-        fi
-    done],
-    [GST_PLUGINS_SELECTED=$GST_PLUGINS_ALL])
+AG_GST_ARG_ENABLE_EXTERNAL
 
+AG_GST_ARG_ENABLE_EXPERIMENTAL
 
-dnl ext plug-ins; plug-ins that have external dependencies
-AG_GST_CHECK_FEATURE(EXTERNAL, [building of plug-ins with external deps],,
-  [HAVE_EXTERNAL=yes], enabled,
-  [
-    AC_MSG_NOTICE(building external plug-ins)
-    BUILD_EXTERNAL="yes"
-  ],[
-    AC_MSG_NOTICE(all plug-ins with external dependencies will not be built)
-    BUILD_EXTERNAL="no"
-  ])
-AM_CONDITIONAL(BUILD_EXTERNAL, test "x$BUILD_EXTERNAL" = "xyes")
-
-dnl experimental plug-ins; stuff that hasn't had the dust settle yet
-AG_GST_CHECK_FEATURE(EXPERIMENTAL, [building of experimental plug-ins],,
-[HAVE_EXPERIMENTAL=yes],disabled,
-[
-  AC_MSG_WARN(building experimental plug-ins)
-],[
-  AC_MSG_NOTICE(not building experimental plug-ins)
+if test "x$BUILD_EXPERIMENTAL" != "xyes"; then
   GST_PLUGINS_SELECTED=`echo $GST_PLUGINS_SELECTED | $SED -e s/synaesthesia//`
-])
+fi
 
 AC_SUBST(GST_PLUGINS_SELECTED)
 
