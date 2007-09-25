@@ -512,7 +512,7 @@ gst_lame_class_init (GstLameClass * klass)
 static gboolean
 gst_lame_src_setcaps (GstPad * pad, GstCaps * caps)
 {
-  GST_DEBUG_OBJECT (pad, "src_setcaps %s", gst_caps_to_string (caps));
+  GST_DEBUG_OBJECT (pad, "caps: %" GST_PTR_FORMAT, caps);
   return TRUE;
 }
 
