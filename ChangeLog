@@ -1,5 +1,12 @@
 2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/taglib/gstapev2mux.cc:
+	* ext/taglib/gstid3v2mux.cc:
+	* gst/apetag/gstapedemux.c:
+	  Add support for the new GST_TAG_COMPOSER (#459809).
+
+2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/law/alaw-decode.c:
 	* gst/law/alaw-decode.h:
 	* gst/law/alaw-encode.c:

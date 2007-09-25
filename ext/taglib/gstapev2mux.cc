@@ -141,6 +141,16 @@ add_one_tag (const GstTagList * list, const gchar * tag, gpointer user_data)
       apev2tag->setArtist (String::String (artist, String::UTF8));
     }
     g_free (artist);
+  } else if (strcmp (tag, GST_TAG_COMPOSER) == 0) {
+    char *composer;
+
+    result = gst_tag_list_get_string_index (list, tag, 0, &composer);
+    if (result != FALSE) {
+      GST_DEBUG ("Setting composer to %s", composer);
+      apev2tag->addValue (String::String ("COMPOSER", String::UTF8),
+          String::String (composer, String::UTF8));
+    }
+    g_free (composer);
   } else if (strcmp (tag, GST_TAG_GENRE) == 0) {
     char *genre;
 

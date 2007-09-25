@@ -135,6 +135,7 @@ static const struct _GstApeDemuxTagTableEntry
   "title", GST_TAG_TITLE}, {
   "artist", GST_TAG_ARTIST}, {
   "album", GST_TAG_ALBUM}, {
+  "composer", GST_TAG_COMPOSER}, {
   "comment", GST_TAG_COMMENT}, {
   "comments", GST_TAG_COMMENT}, {
   "copyright", GST_TAG_COPYRIGHT}, {
