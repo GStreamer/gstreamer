@@ -1175,9 +1175,11 @@ gst_rtp_bin_dispose (GObject * object)
   rtpbin = GST_RTP_BIN (object);
 
   g_slist_foreach (rtpbin->sessions, (GFunc) free_session, NULL);
-  g_slist_foreach (rtpbin->clients, (GFunc) free_client, NULL);
   g_slist_free (rtpbin->sessions);
   rtpbin->sessions = NULL;
+  g_slist_foreach (rtpbin->clients, (GFunc) free_client, NULL);
+  g_slist_free (rtpbin->clients);
+  rtpbin->clients = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1191,7 +1193,6 @@ gst_rtp_bin_finalize (GObject * object)
 
   g_mutex_free (rtpbin->priv->bin_lock);
   gst_object_unref (rtpbin->provided_clock);
-  g_slist_free (rtpbin->sessions);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
