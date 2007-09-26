@@ -392,11 +392,14 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buffer = NULL;
-  guint32 pts = 0, codec_tag = 0, rate = 0, width = 0, channels = 0;
+  guint32 pts = 0, codec_tag = 0, rate = 5512, width = 8, channels = 1;
   guint32 codec_data = 0, pts_ext = 0;
   guint8 flags = 0;
 
   GST_LOG_OBJECT (demux, "parsing an audio tag");
+
+  GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X", data[0], data[1],
+      data[2], data[3]);
 
   /* Grab information about audio tag */
   pts = FLV_GET_BEUI24 (data, data_size);
@@ -410,45 +413,26 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   /* Channels */
   if (flags & 0x01) {
     channels = 2;
-  } else {
-    channels = 1;
   }
   /* Width */
   if (flags & 0x02) {
     width = 16;
-  } else {
-    width = 8;
   }
   /* Sampling rate */
-  if (flags & 0x0C) {
+  if ((flags >> 2) == 3) {
     rate = 44100;
-  } else if (flags & 0x08) {
+  } else if ((flags >> 2) == 2) {
     rate = 22050;
-  } else if (flags & 0x04) {
+  } else if ((flags >> 2) == 1) {
     rate = 11025;
-  } else {
-    rate = 5512;
   }
   /* Codec tag */
-  if (flags & 0x10) {
-    codec_tag = 1;
-    codec_data = 1;
-  } else if (flags & 0x20) {
-    codec_tag = 2;
-    codec_data = 1;
-  } else if (flags & 0x30) {
-    codec_tag = 3;
-    codec_data = 1;
-  } else if (flags & 0x40) {
-    codec_tag = 4;
-    codec_data = 1;
-  } else if (flags & 0x50) {
-    codec_tag = 5;
-    codec_data = 1;
-  }
+  codec_tag = flags >> 4;
+  codec_data = 1;
 
   GST_LOG_OBJECT (demux, "audio tag with %d channels, %dHz sampling rate, "
-      "%d bits width, codec tag %d", channels, rate, width, codec_tag);
+      "%d bits width, codec tag %u (flags %02X)", channels, rate, width,
+      codec_tag, flags);
 
   /* If we don't have our audio pad created, then create it. */
   if (G_UNLIKELY (!demux->audio_pad)) {
@@ -471,7 +455,9 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
         break;
       case 0:
       case 3:
-        caps = gst_caps_new_simple ("audio/x-raw-int", NULL);
+        caps = gst_caps_new_simple ("audio/x-raw-int",
+            "endianness", G_TYPE_INT, G_BYTE_ORDER,
+            "signed", G_TYPE_BOOLEAN, TRUE, NULL);
         break;
       default:
         GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
@@ -487,7 +473,8 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
 
     gst_caps_set_simple (caps,
         "rate", G_TYPE_INT, rate,
-        "channels", G_TYPE_INT, channels, "width", G_TYPE_INT, width, NULL);
+        "channels", G_TYPE_INT, channels,
+        "width", G_TYPE_INT, width, "depth", G_TYPE_INT, width, NULL);
 
     gst_pad_set_caps (demux->audio_pad, caps);
 
@@ -647,11 +634,14 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
 {
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *buffer = NULL;
-  guint32 pts = 0, codec_tag = 0, codec_data = 0, pts_ext = 0;
+  guint32 pts = 0, codec_data = 1, pts_ext = 0;
   gboolean keyframe = FALSE;
-  guint8 flags = 0;
+  guint8 flags = 0, codec_tag = 0;
 
   GST_LOG_OBJECT (demux, "parsing a video tag");
+
+  GST_LOG_OBJECT (demux, "pts bytes %02X %02X %02X %02X", data[0], data[1],
+      data[2], data[3]);
 
   /* Grab information about video tag */
   pts = FLV_GET_BEUI24 (data, data_size);
@@ -663,28 +653,14 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   flags = GST_READ_UINT8 (data + 7);
 
   /* Keyframe */
-  if (flags & 0x10) {
+  if ((flags >> 4) == 1) {
     keyframe = TRUE;
-  } else if (flags & 0x20) {
-    keyframe = FALSE;
   }
   /* Codec tag */
-  if (flags & 0x02) {           // H263
-    codec_tag = 2;
-    codec_data = 1;
-  } else if (flags & 0x03) {    // Sorenson Spark
-    codec_tag = 3;
-    codec_data = 1;
-  } else if (flags & 0x04) {    // VP6
-    codec_tag = 4;
-    codec_data = 2;
-  } else if (flags & 0x05) {    // VP6 Alpha
-    codec_tag = 5;
-    codec_data = 2;
-  }
+  codec_tag = flags & 0x0F;
 
-  GST_LOG_OBJECT (demux, "video tag with codec tag %d, keyframe (%d)",
-      codec_tag, keyframe);
+  GST_LOG_OBJECT (demux, "video tag with codec tag %u, keyframe (%d) "
+      "(flags %02X)", codec_tag, keyframe, flags);
 
   /* If we don't have our video pad created, then create it. */
   if (G_UNLIKELY (!demux->video_pad)) {
@@ -709,9 +685,11 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
         break;
       case 4:
         caps = gst_caps_new_simple ("video/x-vp6-flash", NULL);
+        codec_data = 2;
         break;
       case 5:
         caps = gst_caps_new_simple ("video/x-vp6-flash", NULL);
+        codec_data = 2;
         break;
       default:
         GST_WARNING_OBJECT (demux, "unsupported video codec tag %d", codec_tag);
