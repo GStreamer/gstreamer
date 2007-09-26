@@ -1162,9 +1162,7 @@ gst_lame_setup (GstLame * lame)
 }G_STMT_END
 
   int retval;
-  GstCaps *src_caps;
-  GstStructure *structure;
-  gint samplerate;
+  GstCaps *allowed_caps;
 
   GST_DEBUG_OBJECT (lame, "starting setup");
 
@@ -1185,15 +1183,24 @@ gst_lame_setup (GstLame * lame)
   lame_set_in_samplerate (lame->lgf, lame->samplerate);
 
   /* let lame choose default samplerate unless outgoing sample rate is fixed */
-  src_caps = gst_pad_get_allowed_caps (lame->srcpad);
-  structure = gst_caps_get_structure (src_caps, 0);
+  allowed_caps = gst_pad_get_allowed_caps (lame->srcpad);
 
-  if (gst_structure_get_int (structure, "rate", &samplerate)) {
-    GST_DEBUG_OBJECT (lame, "Setting sample rate to %d as fixed in src caps",
-        samplerate);
-    lame_set_out_samplerate (lame->lgf, samplerate);
+  if (allowed_caps != NULL) {
+    GstStructure *structure;
+    gint samplerate;
+
+    structure = gst_caps_get_structure (allowed_caps, 0);
+
+    if (gst_structure_get_int (structure, "rate", &samplerate)) {
+      GST_DEBUG_OBJECT (lame, "Setting sample rate to %d as fixed in src caps",
+          samplerate);
+      lame_set_out_samplerate (lame->lgf, samplerate);
+    } else {
+      GST_DEBUG_OBJECT (lame, "Letting lame choose sample rate");
+      lame_set_out_samplerate (lame->lgf, 0);
+    }
   } else {
-    GST_DEBUG_OBJECT (lame, "Letting lame choose sample rate");
+    GST_DEBUG_OBJECT (lame, "No peer yet, letting lame choose sample rate");
     lame_set_out_samplerate (lame->lgf, 0);
   }
 
