@@ -171,6 +171,7 @@ gst_rfb_src_dispose (GObject * object)
   GstRfbSrc *src = GST_RFB_SRC (object);
 
   g_free (src->host);
+  rfb_decoder_free (src->decoder);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -343,7 +344,7 @@ gst_rfb_src_stop (GstBaseSrc * bsrc)
 {
   GstRfbSrc *src = GST_RFB_SRC (bsrc);
 
-  rfb_decoder_free (src->decoder);
+  src->decoder->fd = -1;
 
   if (src->frame) {
     g_free (src->frame);
