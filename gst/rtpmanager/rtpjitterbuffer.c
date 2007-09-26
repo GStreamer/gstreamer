@@ -72,6 +72,7 @@ rtp_jitter_buffer_init (RTPJitterBuffer * jbuf)
     jbuf->window[i] = 0;
   }
   jbuf->window_pos = 0;
+  jbuf->window_size = 100;
   jbuf->window_filling = TRUE;
   jbuf->window_min = 0;
   jbuf->skew = 0;
@@ -217,21 +218,26 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
 
   if (jbuf->window_filling) {
     /* we are filling the window */
-    GST_DEBUG ("filling %d %" G_GINT64_FORMAT, pos, delta);
+    GST_DEBUG ("filling %d %" G_GINT64_FORMAT ", diff %" G_GUINT64_FORMAT, pos,
+        delta, send_diff);
     jbuf->window[pos++] = delta;
     /* calc the min delta we observed */
     if (pos == 1 || delta < jbuf->window_min)
       jbuf->window_min = delta;
 
-    if (pos >= 100) {
+    if (send_diff >= 2 * GST_SECOND || pos >= 100) {
+      jbuf->window_size = pos;
+
       /* window filled, fill window with min */
       GST_DEBUG ("min %" G_GINT64_FORMAT, jbuf->window_min);
-      for (i = 0; i < 100; i++)
+      for (i = 0; i < jbuf->window_size; i++)
         jbuf->window[i] = jbuf->window_min;
 
       /* the skew is initially the min */
       jbuf->skew = jbuf->window_min;
       jbuf->window_filling = FALSE;
+    } else {
+      jbuf->window_size = pos + 1;
     }
   } else {
     /* pick old value and store new value. We keep the previous value in order
@@ -247,7 +253,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
       gint64 min = G_MAXINT64;
 
       /* if we removed the old min, we have to find a new min */
-      for (i = 0; i < 100; i++) {
+      for (i = 0; i < jbuf->window_size; i++) {
         /* we found another value equal to the old min, we can stop searching now */
         if (jbuf->window[i] == old) {
           min = old;
@@ -264,7 +270,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
         jbuf->window_min, jbuf->skew);
   }
   /* wrap around in the window */
-  if (pos >= 100)
+  if (pos >= jbuf->window_size)
     pos = 0;
   jbuf->window_pos = pos;
 }

@@ -1,3 +1,15 @@
+2007-09-26  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_dispose),
+	(gst_rtp_bin_finalize):
+	Fix cleanup crasher.
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_init),
+	(calculate_skew):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Dynamically adjust the skew calculation window so that we calculate it
+	over a period of around 2 seconds.
+
 2007-09-26  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c:

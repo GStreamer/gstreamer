@@ -61,6 +61,7 @@ struct _RTPJitterBuffer {
   guint64        ext_rtptime;
   gint64         window[100];
   guint          window_pos;
+  guint          window_size;
   gboolean       window_filling;
   gint64         window_min;
   gint64         skew;
