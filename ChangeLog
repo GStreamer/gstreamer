@@ -1,6 +1,13 @@
 2007-09-26  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	(gst_flv_parse_tag_video): codec_data is needed for every tag
+	not just the first one. (Fix a stupid bug i introduced without
+	testing)
+
+2007-09-26  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
 	(gst_flv_parse_tag_video): Fix bit masks operations to be
 	sure we detect the codec_tags and sample rates correctly.
 	Fix raw audio caps generation.
