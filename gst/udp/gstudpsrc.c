@@ -78,7 +78,8 @@
  * <para>
  * The udpsrc is always a live source. It does however not provide a GstClock, this
  * is left for upstream elements such as an RTP session manager or demuxer (such
- * as an MPEG demuxer).
+ * as an MPEG demuxer). As with all live sources, the captured buffers will have
+ * their timestamp set to the current running time of the pipeline.
  * </para>
  * <para>
  * udpsrc implements a GstURIHandler interface that handles udp://host:port type
@@ -87,7 +88,7 @@
  * <para>
  * If the <link linkend="GstUDPSrc--timeout">timeout property</link> is set to a
  * value bigger than 0, udpsrc will generate an element message named
- * <classname>&quot;GstUDPSrcTimeout&quot;</classname>:
+ * <classname>&quot;GstUDPSrcTimeout&quot;</classname>
  * if no data was recieved in the given timeout.
  * The message's structure contains one field:
  * <itemizedlist>
@@ -110,7 +111,7 @@
  * in which case the application is responsible for closing the file descriptor.
  * </para>
  * <para>
- * Last reviewed on 2007-03-29 (0.10.6)
+ * Last reviewed on 2007-09-20 (0.10.7)
  * </para>
  * </refsect2>
  */

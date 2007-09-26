@@ -1,5 +1,10 @@
 2007-09-26  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):
+	Update documentation.
+
+2007-09-26  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/qtdemux/gstrtpxqtdepay.c: (gst_rtp_xqt_depay_process),
 	(gst_rtp_xqt_depay_change_state):
 	* gst/qtdemux/gstrtpxqtdepay.h:
