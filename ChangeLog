@@ -1,3 +1,8 @@
+2007-09-26  Wim Taymans  <wim.taymans@gmail.com>
+
+	* tests/examples/snapshot/snapshot.c: (main):
+	Print error when pipeline failed to construct.
+
 2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

@@ -49,7 +49,12 @@ main (int argc, char *argv[])
       g_strdup_printf ("uridecodebin uri=%s ! ffmpegcolorspace ! videoscale ! "
       " appsink name=sink caps=\"" CAPS "\"", argv[1]);
   pipeline = gst_parse_launch (descr, &error);
-  g_assert (error == NULL);
+
+  if (error != NULL) {
+    g_print ("could not construct pipeline: %s", error->message);
+    g_error_free (error);
+    exit (-1);
+  }
 
   /* get sink */
   sink = gst_bin_get_by_name (GST_BIN (pipeline), "sink");
