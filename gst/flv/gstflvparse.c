@@ -658,6 +658,9 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   }
   /* Codec tag */
   codec_tag = flags & 0x0F;
+  if (codec_tag == 4 || codec_tag == 5) {
+    codec_data = 2;
+  }
 
   GST_LOG_OBJECT (demux, "video tag with codec tag %u, keyframe (%d) "
       "(flags %02X)", codec_tag, keyframe, flags);
@@ -685,11 +688,9 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
         break;
       case 4:
         caps = gst_caps_new_simple ("video/x-vp6-flash", NULL);
-        codec_data = 2;
         break;
       case 5:
         caps = gst_caps_new_simple ("video/x-vp6-flash", NULL);
-        codec_data = 2;
         break;
       default:
         GST_WARNING_OBJECT (demux, "unsupported video codec tag %d", codec_tag);
