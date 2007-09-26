@@ -282,6 +282,7 @@ gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     /* discont, clear adapter and try to find a new packet start */
     gst_adapter_clear (rtpxqtdepay->adapter);
     rtpxqtdepay->need_resync = TRUE;
+    GST_DEBUG_OBJECT (rtpxqtdepay, "we need resync");
   }
 
   m = gst_rtp_buffer_get_marker (buf);
@@ -435,7 +436,9 @@ gst_rtp_xqt_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         switch (tlv_type) {
           case TLV_sd:
             /* Session description */
-            gst_rtp_quicktime_parse_sd (rtpxqtdepay, payload, tlv_len);
+            if (!gst_rtp_quicktime_parse_sd (rtpxqtdepay, payload, tlv_len))
+              goto unknown_format;
+            rtpxqtdepay->have_sd = TRUE;
             break;
           case TLV_qt:
           case TLV_ti:
@@ -665,6 +668,12 @@ wrong_length:
         ("Wrong payload length."), (NULL));
     return NULL;
   }
+unknown_format:
+  {
+    GST_ELEMENT_WARNING (rtpxqtdepay, STREAM, DECODE,
+        ("Unknown payload format."), (NULL));
+    return NULL;
+  }
 }
 
 static void
@@ -710,7 +719,8 @@ gst_rtp_xqt_depay_change_state (GstElement * element, GstStateChange transition)
       gst_adapter_clear (rtpxqtdepay->adapter);
       rtpxqtdepay->previous_id = -1;
       rtpxqtdepay->current_id = -1;
-      rtpxqtdepay->need_resync = FALSE;
+      rtpxqtdepay->need_resync = TRUE;
+      rtpxqtdepay->have_sd = FALSE;
       break;
     default:
       break;

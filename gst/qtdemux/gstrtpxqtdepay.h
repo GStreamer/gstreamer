@@ -49,6 +49,7 @@ struct _GstRtpXQTDepay
   gboolean need_resync;
   guint16 previous_id;
   guint16 current_id;
+  gboolean have_sd;
 };
 
 struct _GstRtpXQTDepayClass

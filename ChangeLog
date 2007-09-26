@@ -1,3 +1,10 @@
+2007-09-26  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/qtdemux/gstrtpxqtdepay.c: (gst_rtp_xqt_depay_process),
+	(gst_rtp_xqt_depay_change_state):
+	* gst/qtdemux/gstrtpxqtdepay.h:
+	Fail if we don't know the quicktime format.
+
 2007-09-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/flac/gstflacenc.c:
