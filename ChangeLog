@@ -1,3 +1,12 @@
+2007-09-26  Michael Smith <msmith@fluendo.com>
+
+	* gst/gstbuffer.c: (gst_buffer_finalize):
+	  Make it once again possible to free GstBuffers in the default
+	  build.
+	  The poisoning scribbles on parts of the miniobject we need in
+	  order to free it.
+	  Fixes #480341
+
 2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:

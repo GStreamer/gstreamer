@@ -192,10 +192,6 @@ gst_buffer_finalize (GstBuffer * buffer)
   g_free (buffer->malloc_data);
 
   gst_caps_replace (&GST_BUFFER_CAPS (buffer), NULL);
-
-#ifdef USE_POISONING
-  memset (buffer, 0xff, sizeof (GstBuffer));
-#endif
 }
 
 /**
