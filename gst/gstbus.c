@@ -834,17 +834,23 @@ typedef struct
 static void
 poll_func (GstBus * bus, GstMessage * message, GstBusPollData * poll_data)
 {
+  GstMessageType type;
+
   if (!g_main_loop_is_running (poll_data->loop)) {
     GST_DEBUG ("mainloop %p not running", poll_data->loop);
     return;
   }
 
-  if (GST_MESSAGE_TYPE (message) & poll_data->events) {
+  type = GST_MESSAGE_TYPE (message);
+
+  if (type & poll_data->events) {
     g_return_if_fail (poll_data->message == NULL);
     /* keep ref to message */
     poll_data->message = gst_message_ref (message);
     GST_DEBUG ("mainloop %p quit", poll_data->loop);
     g_main_loop_quit (poll_data->loop);
+  } else {
+    GST_DEBUG ("type %08x does not match %08x", type, poll_data->events);
   }
 }
 
