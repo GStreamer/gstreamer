@@ -133,6 +133,20 @@ read_string (xmlTextReaderPtr reader, gchar ** write_to, gboolean allow_blank)
 }
 
 static gboolean
+read_const_interned_string (xmlTextReaderPtr reader, const gchar ** write_to,
+    gboolean allow_blank)
+{
+  gchar *s = NULL;
+
+  if (!read_string (reader, &s, allow_blank))
+    return FALSE;
+
+  *write_to = g_intern_string (s);
+  g_free (s);
+  return TRUE;
+}
+
+static gboolean
 read_uint (xmlTextReaderPtr reader, guint * write_to)
 {
   int depth = xmlTextReaderDepth (reader);
@@ -200,7 +214,8 @@ load_pad_template (xmlTextReaderPtr reader)
 {
   int ret;
   int depth = xmlTextReaderDepth (reader);
-  gchar *name = NULL, *caps_str = NULL;
+  const gchar *name = NULL;
+  gchar *caps_str = NULL;
   guint direction = 0, presence = 0;
 
   while ((ret = xmlTextReaderRead (reader)) == 1) {
@@ -208,7 +223,7 @@ load_pad_template (xmlTextReaderPtr reader)
       GstStaticPadTemplate *template;
 
       template = g_new0 (GstStaticPadTemplate, 1);
-      template->name_template = g_intern_string (name);
+      template->name_template = name;   /* must be an interned string! */
       template->presence = presence;
       template->direction = direction;
       template->static_caps.string = caps_str;
@@ -220,7 +235,7 @@ load_pad_template (xmlTextReaderPtr reader)
       const gchar *tag = (gchar *) xmlTextReaderConstName (reader);
 
       if (g_str_equal (tag, "nametemplate")) {
-        read_string (reader, &name, FALSE);
+        read_const_interned_string (reader, &name, FALSE);
       } else if (g_str_equal (tag, "direction")) {
         read_enum (reader, GST_TYPE_PAD_DIRECTION, &direction);
       } else if (g_str_equal (tag, "presence")) {
@@ -230,7 +245,6 @@ load_pad_template (xmlTextReaderPtr reader)
       }
     }
   }
-  g_free (name);
   g_free (caps_str);
 
   return NULL;

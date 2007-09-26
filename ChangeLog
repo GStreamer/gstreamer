@@ -1,3 +1,8 @@
+2007-09-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstregistryxml.c:
+	  Fix memory leak I introduced a few days ago.
+
 2007-09-26  Michael Smith <msmith@fluendo.com>
 
 	* gst/gstbuffer.c: (gst_buffer_finalize):
