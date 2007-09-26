@@ -1,3 +1,11 @@
+2007-09-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/flac/gstflacenc.c:
+	* ext/flac/gstflacenc.h:
+	  Save the flow return from the last gst_pad_push() and
+	  make sure we pass the right flow return value upstream
+	  in the case of failure; minor clean-ups.
+
 2007-09-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/taglib/gstapev2mux.cc:

@@ -307,19 +307,16 @@ gst_flac_enc_class_init (GstFlacEncClass * klass)
 static void
 gst_flac_enc_init (GstFlacEnc * flacenc, GstFlacEncClass * klass)
 {
-  GstElementClass *eclass = GST_ELEMENT_CLASS (klass);
-
-  flacenc->sinkpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (eclass,
-          "sink"), "sink");
+  flacenc->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
+  gst_pad_set_chain_function (flacenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_flac_enc_chain));
+  gst_pad_set_event_function (flacenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_flac_enc_sink_event));
+  gst_pad_set_setcaps_function (flacenc->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_flac_enc_sink_setcaps));
   gst_element_add_pad (GST_ELEMENT (flacenc), flacenc->sinkpad);
-  gst_pad_set_chain_function (flacenc->sinkpad, gst_flac_enc_chain);
-  gst_pad_set_event_function (flacenc->sinkpad, gst_flac_enc_sink_event);
-  gst_pad_set_setcaps_function (flacenc->sinkpad, gst_flac_enc_sink_setcaps);
 
-  flacenc->srcpad =
-      gst_pad_new_from_template (gst_element_class_get_pad_template (eclass,
-          "src"), "src");
+  flacenc->srcpad = gst_pad_new_from_static_template (&src_factory, "src");
   gst_pad_use_fixed_caps (flacenc->srcpad);
   gst_element_add_pad (GST_ELEMENT (flacenc), flacenc->srcpad);
 
@@ -335,6 +332,7 @@ gst_flac_enc_init (GstFlacEnc * flacenc, GstFlacEncClass * klass)
   flacenc->tags = gst_tag_list_new ();
   flacenc->got_headers = FALSE;
   flacenc->headers = NULL;
+  flacenc->last_flow = GST_FLOW_OK;
 }
 
 static void
@@ -809,12 +807,17 @@ gst_flac_enc_write_callback (const FLAC__StreamEncoder * encoder,
   gst_buffer_set_caps (outbuf, GST_PAD_CAPS (flacenc->srcpad));
   ret = gst_pad_push (flacenc->srcpad, outbuf);
 
+  if (ret != GST_FLOW_OK)
+    GST_DEBUG_OBJECT (flacenc, "flow: %s", gst_flow_get_name (ret));
+
+  flacenc->last_flow = ret;
+
 out:
 
   flacenc->offset += bytes;
   flacenc->samples_written += samples;
 
-  if (GST_FLOW_IS_FATAL (ret))
+  if (GST_FLOW_IS_FATAL (ret) || ret == GST_FLOW_NOT_LINKED)
     return FLAC__STREAM_ENCODER_WRITE_STATUS_FATAL_ERROR;
 
   return FLAC__STREAM_ENCODER_WRITE_STATUS_OK;
@@ -957,10 +960,14 @@ gst_flac_enc_chain (GstPad * pad, GstBuffer * buffer)
 
   g_free (data);
 
-  if (res)
-    return GST_FLOW_OK;
-  else
-    return GST_FLOW_ERROR;
+  if (!res) {
+    if (flacenc->last_flow == GST_FLOW_OK)
+      return GST_FLOW_ERROR;
+    else
+      return flacenc->last_flow;
+  }
+
+  return GST_FLOW_OK;
 }
 
 static void
@@ -1277,6 +1284,7 @@ gst_flac_enc_change_state (GstElement * element, GstStateChange transition)
       g_list_free (flacenc->headers);
       flacenc->headers = NULL;
       flacenc->got_headers = FALSE;
+      flacenc->last_flow = GST_FLOW_OK;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
     default:

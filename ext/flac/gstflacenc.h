@@ -48,6 +48,10 @@ struct _GstFlacEnc {
   GstPad        *sinkpad;
   GstPad        *srcpad;
 
+  GstFlowReturn  last_flow; /* save flow from last push so we can pass the
+                             * correct flow return upstream in case the push
+                             * fails for some reason */
+
   gboolean       first;
   GstBuffer     *first_buf;
   guint64        offset;
