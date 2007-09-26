@@ -1,5 +1,15 @@
 2007-09-26  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_stream),
+	(gst_rtspsrc_handle_src_query), (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_loop_udp), (gst_rtspsrc_close):
+	* gst/rtsp/gstrtspsrc.h:
+	Set timestamps on RTP buffers in interleaved mode.
+	Mark first buffers with a DISCONT.
+	Remove flush hack now that sync for live sources has been figured out.
+
+2007-09-26  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):
 	Update documentation.
 

@@ -95,6 +95,7 @@ struct _GstRTSPStream {
   gboolean      added;
   gboolean      disabled;
   gboolean      eos;
+  gboolean      discont;
 
   /* for interleaved mode */
   guint8        channel[2];

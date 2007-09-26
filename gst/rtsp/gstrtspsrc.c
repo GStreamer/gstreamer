@@ -556,6 +556,8 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
   stream->added = FALSE;
   stream->disabled = FALSE;
   stream->id = src->numstreams++;
+  stream->eos = FALSE;
+  stream->discont = TRUE;
 
   /* we must have a payload. No payload means we cannot create caps */
   /* FIXME, handle multiple formats. */
@@ -1358,7 +1360,7 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_LATENCY:
     {
-      /* we are live with a min latency of 0 and unlimted max latency */
+      /* we are live with a min latency of 0 and unlimited max latency */
       gst_query_set_latency (query, TRUE, 0, -1);
       break;
     }
@@ -2448,6 +2450,15 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   /* don't need message anymore */
   gst_rtsp_message_unset (&message);
 
+  /* set reception timestamp */
+  GST_OBJECT_LOCK (src);
+  if (GST_ELEMENT_CLOCK (src)) {
+    GstClockTime now = gst_clock_get_time (GST_ELEMENT_CLOCK (src));
+
+    GST_BUFFER_TIMESTAMP (buf) = now - GST_ELEMENT_CAST (src)->base_time;
+  }
+  GST_OBJECT_UNLOCK (src);
+
   GST_DEBUG_OBJECT (src, "pushing data of size %d on channel %d", size,
       channel);
 
@@ -2460,6 +2471,12 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     /* set stream caps on buffer when we don't have a session manager to do it
      * for us */
     gst_buffer_set_caps (buf, stream->caps);
+  }
+
+  if (stream->discont && !is_rtcp) {
+    /* mark first RTP buffer as discont */
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
+    stream->discont = FALSE;
   }
 
   /* chain to the peer pad */
@@ -2661,12 +2678,6 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
   /* open new connection using tcp */
   if (!gst_rtspsrc_open (src))
     goto open_failed;
-
-  /* flush previous state */
-  gst_element_post_message (GST_ELEMENT_CAST (src),
-      gst_message_new_async_start (GST_OBJECT_CAST (src), TRUE));
-  gst_element_post_message (GST_ELEMENT_CAST (src),
-      gst_message_new_async_done (GST_OBJECT_CAST (src)));
 
   /* start playback */
   if (!gst_rtspsrc_play (src))
@@ -3872,7 +3883,7 @@ gst_rtspsrc_close (GstRTSPSrc * src)
     GST_RTSP_STREAM_LOCK (src);
     GST_RTSP_STREAM_UNLOCK (src);
 
-    /* no wait for the task to finish */
+    /* now wait for the task to finish */
     gst_task_join (src->task);
 
     /* and free the task */
