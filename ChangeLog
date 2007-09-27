@@ -1,3 +1,14 @@
+2007-09-27  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
+
+	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_init),
+	(gst_rtp_mp4v_pay_finalize), (gst_rtp_mp4v_pay_flush),
+	(gst_rtp_mp4v_pay_handle_buffer):
+	* gst/rtp/gstrtpmp4vpay.h:
+	Free the config string. Fixes #480707.
+	Clean up the timestamp code a little.
+
 2007-09-26  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_create_stream),

@@ -167,6 +167,8 @@ gst_rtp_mp4v_pay_init (GstRtpMP4VPay * rtpmp4vpay)
   rtpmp4vpay->profile = 1;
   rtpmp4vpay->send_config = DEFAULT_SEND_CONFIG;
 
+  rtpmp4vpay->config = NULL;
+
   sinkpad = GST_BASE_RTP_PAYLOAD_SINKPAD (rtpmp4vpay);
 
   rtpmp4vpay->old_event_func = sinkpad->eventfunc;
@@ -180,6 +182,10 @@ gst_rtp_mp4v_pay_finalize (GObject * object)
 
   rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
+  if (rtpmp4vpay->config) {
+    g_object_unref (rtpmp4vpay->config);
+    rtpmp4vpay->config = NULL;
+  }
   g_object_unref (rtpmp4vpay->adapter);
   rtpmp4vpay->adapter = NULL;
 
@@ -301,7 +307,7 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
 
     gst_rtp_buffer_set_marker (outbuf, avail == 0);
 
-    GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4vpay->first_ts;
+    GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4vpay->first_timestamp;
 
     ret = gst_basertppayload_push (GST_BASE_RTP_PAYLOAD (rtpmp4vpay), outbuf);
   }
@@ -405,7 +411,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   guint8 *data;
   gboolean flush;
   gint strip;
-  GstClockTime duration;
+  GstClockTime timestamp, duration;
 
   ret = GST_FLOW_OK;
 
@@ -413,12 +419,16 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   size = GST_BUFFER_SIZE (buffer);
   data = GST_BUFFER_DATA (buffer);
+  timestamp = GST_BUFFER_TIMESTAMP (buffer);
   duration = GST_BUFFER_DURATION (buffer);
   avail = gst_adapter_available (rtpmp4vpay->adapter);
 
+  if (duration == -1)
+    duration = 0;
+
   /* empty buffer, take timestamp */
   if (avail == 0) {
-    rtpmp4vpay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    rtpmp4vpay->first_timestamp = timestamp;
     rtpmp4vpay->duration = 0;
   }
 
@@ -432,7 +442,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
       /* strip off header */
       subbuf = gst_buffer_create_sub (buffer, strip, size - strip);
-      GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buffer);
+      GST_BUFFER_TIMESTAMP (subbuf) = timestamp;
       gst_buffer_unref (buffer);
       buffer = subbuf;
 
@@ -444,7 +454,7 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   /* if we need to flush, do so now */
   if (flush) {
     ret = gst_rtp_mp4v_pay_flush (rtpmp4vpay);
-    rtpmp4vpay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    rtpmp4vpay->first_timestamp = timestamp;
     rtpmp4vpay->duration = 0;
     avail = 0;
   }
@@ -455,12 +465,13 @@ gst_rtp_mp4v_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   if (gst_basertppayload_is_filled (basepayload,
           packet_len, rtpmp4vpay->duration + duration)) {
     ret = gst_rtp_mp4v_pay_flush (rtpmp4vpay);
-    rtpmp4vpay->first_ts = GST_BUFFER_TIMESTAMP (buffer);
+    rtpmp4vpay->first_timestamp = timestamp;
     rtpmp4vpay->duration = 0;
   }
 
   /* push new data */
   gst_adapter_push (rtpmp4vpay->adapter, buffer);
+
   rtpmp4vpay->duration += duration;
 
   return ret;
