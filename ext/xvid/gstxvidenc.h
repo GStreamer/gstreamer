@@ -127,9 +127,6 @@ struct _GstXvidEnc {
 
 struct _GstXvidEncClass {
   GstElementClass parent_class;
-
-  /* signals */
-  void (*frame_encoded) (GstElement *element);
 };
 
 GType gst_xvidenc_get_type(void);

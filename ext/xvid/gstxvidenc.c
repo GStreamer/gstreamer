@@ -64,12 +64,7 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 
-/* XvidEnc signals and properties */
-enum
-{
-  FRAME_ENCODED,
-  LAST_SIGNAL
-};
+/* XvidEnc properties */
 
 /* maximum property-id */
 static int xvidenc_prop_count;
@@ -98,7 +93,6 @@ static GstStateChangeReturn gst_xvidenc_change_state (GstElement * element,
     GstStateChange transition);
 
 static GstElementClass *parent_class = NULL;
-static guint gst_xvidenc_signals[LAST_SIGNAL] = { 0 };
 
 #define GST_TYPE_XVIDENC_PROFILE (gst_xvidenc_profile_get_type ())
 static GType
@@ -456,13 +450,6 @@ gst_xvidenc_class_init (GstXvidEncClass * klass)
       "[PASS2] Average container overhead per frame", -1, 100, -1,
       G_PARAM_READWRITE);
   gst_xvidenc_add_pspec (gobject_class, pspec, container_frame_overhead);
-
-  /* signals */
-  gst_xvidenc_signals[FRAME_ENCODED] =
-      g_signal_new ("frame-encoded", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (GstXvidEncClass, frame_encoded),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_xvidenc_change_state);
 }
@@ -961,9 +948,6 @@ gst_xvidenc_chain (GstPad * pad, GstBuffer * buf)
 
   if (!outbuf)                  /* error or no data yet */
     return GST_FLOW_OK;
-
-  /* proclaim destiny */
-  g_signal_emit (G_OBJECT (xvidenc), gst_xvidenc_signals[FRAME_ENCODED], 0);
 
   /* go out, multiply! */
   return gst_pad_push (xvidenc->srcpad, outbuf);

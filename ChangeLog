@@ -1,3 +1,11 @@
+2007-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/xvid/gstxvidenc.c:
+	* ext/xvid/gstxvidenc.h:
+	  Remove superfluous 'frame-encoded' signal (people can
+	  use an upstream identity's 'handoff' signal or a pad
+	  probe for this if they must know).
+
 2007-09-27  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
