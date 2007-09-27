@@ -1,3 +1,9 @@
+2007-09-27  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/gstrfbsrc.h:
+		Added a property for incremental screen updates
+
 2007-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/xvid/gstxvidenc.c:

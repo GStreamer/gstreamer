@@ -42,6 +42,7 @@ enum
   ARG_OFFSET_Y,
   ARG_WIDTH,
   ARG_HEIGHT,
+  ARG_INCREMENTAL,
 };
 
 GST_DEBUG_CATEGORY_STATIC (rfbsrc_debug);
@@ -138,6 +139,9 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_HEIGHT,
       g_param_spec_int ("height", "height of screen", "height of screen", 0,
           65535, 0, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_INCREMENTAL,
+      g_param_spec_boolean ("incremental", "Incremental updates",
+          "Incremental updates", TRUE, G_PARAM_READWRITE));
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
@@ -160,6 +164,8 @@ gst_rfb_src_init (GstRfbSrc * src, GstRfbSrcClass * klass)
   src->port = 5900;
   src->version_major = 3;
   src->version_minor = 3;
+
+  src->incremental_update = TRUE;
 
   src->decoder = rfb_decoder_new ();
 
@@ -251,6 +257,9 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
     case ARG_HEIGHT:
       src->decoder->rect_height = g_value_get_int (value);
       break;
+    case ARG_INCREMENTAL:
+      src->incremental_update = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -287,6 +296,9 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
     case ARG_HEIGHT:
       g_value_set_int (value, src->decoder->rect_height);
       break;
+    case ARG_INCREMENTAL:
+      g_value_set_boolean (value, src->incremental_update);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -310,8 +322,6 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
     rfb_decoder_free (decoder);
     return FALSE;
   }
-
-  src->inter = FALSE;
 
   while (!decoder->inited) {
     rfb_decoder_iterate (decoder);
@@ -362,8 +372,8 @@ gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   gulong newsize;
   GstFlowReturn ret;
 
-  rfb_decoder_send_update_request (decoder, src->inter, decoder->offset_x,
-      decoder->offset_y,
+  rfb_decoder_send_update_request (decoder, src->incremental_update,
+      decoder->offset_x, decoder->offset_y,
       (decoder->rect_width ? decoder->rect_width : decoder->width),
       (decoder->rect_height ? decoder->rect_height : decoder->height));
   // src->inter = TRUE;

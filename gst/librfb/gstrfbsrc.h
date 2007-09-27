@@ -57,7 +57,7 @@ struct _GstRfbSrc
   RfbDecoder *decoder;
   guint8 *frame;
   gboolean go;
-  gboolean inter;
+  gboolean incremental_update;
 
   guint button_mask;
 
