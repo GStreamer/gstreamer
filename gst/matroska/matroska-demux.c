@@ -2274,6 +2274,12 @@ gst_matroska_demux_push_hdr_buf (GstMatroskaDemux * demux,
 
   if (flow == GST_FLOW_OK) {
     memcpy (GST_BUFFER_DATA (header_buf), data, len);
+
+    if (stream->set_discont) {
+      GST_BUFFER_FLAG_SET (header_buf, GST_BUFFER_FLAG_DISCONT);
+      stream->set_discont = FALSE;
+    }
+
     flow = gst_pad_push (stream->pad, header_buf);
   }
 

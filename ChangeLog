@@ -1,3 +1,11 @@
+2007-09-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/matroska/matroska-demux.c:
+	  Fix setting the discont flag on the first buffer
+	  pushed downstream for formats with private codec
+	  data that needs to be deserialised into buffers
+	  (such as vorbis and FLAC when in a matroska container).
+
 2007-09-27  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Antoine Tremblay <hexa00 at gmail dot com>
