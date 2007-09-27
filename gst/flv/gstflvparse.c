@@ -419,11 +419,11 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
     width = 16;
   }
   /* Sampling rate */
-  if ((flags >> 2) == 3) {
+  if ((flags & 0x0C) == 0x0C) {
     rate = 44100;
-  } else if ((flags >> 2) == 2) {
+  } else if ((flags & 0x0C) == 0x08) {
     rate = 22050;
-  } else if ((flags >> 2) == 1) {
+  } else if ((flags & 0x0C) == 0x04) {
     rate = 11025;
   }
   /* Codec tag */
@@ -457,7 +457,8 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
       case 3:
         caps = gst_caps_new_simple ("audio/x-raw-int",
             "endianness", G_TYPE_INT, G_BYTE_ORDER,
-            "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+            "signed", G_TYPE_BOOLEAN, TRUE,
+            "width", G_TYPE_INT, width, "depth", G_TYPE_INT, width, NULL);
         break;
       default:
         GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
@@ -472,9 +473,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
     }
 
     gst_caps_set_simple (caps,
-        "rate", G_TYPE_INT, rate,
-        "channels", G_TYPE_INT, channels,
-        "width", G_TYPE_INT, width, "depth", G_TYPE_INT, width, NULL);
+        "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
 
     gst_pad_set_caps (demux->audio_pad, caps);
 
