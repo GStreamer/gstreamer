@@ -525,7 +525,7 @@ update_time_level (GstQueue * queue)
   src_time = gst_segment_to_running_time (&queue->src_segment, GST_FORMAT_TIME,
       queue->src_segment.last_stop);
 
-  GST_DEBUG_OBJECT (queue, "sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (queue, "sink %" GST_TIME_FORMAT ", src %" GST_TIME_FORMAT,
       GST_TIME_ARGS (sink_time), GST_TIME_ARGS (src_time));
 
   if (sink_time >= src_time)
@@ -587,7 +587,7 @@ apply_buffer (GstQueue * queue, GstBuffer * buffer, GstSegment * segment,
   if (with_duration && duration != GST_CLOCK_TIME_NONE)
     timestamp += duration;
 
-  GST_DEBUG_OBJECT (queue, "last_stop updated to %" GST_TIME_FORMAT,
+  GST_LOG_OBJECT (queue, "last_stop updated to %" GST_TIME_FORMAT,
       GST_TIME_ARGS (timestamp));
 
   gst_segment_set_last_stop (segment, GST_FORMAT_TIME, timestamp);
@@ -719,7 +719,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
   /* ERRORS */
 no_item:
   {
-    GST_CAT_LOG_OBJECT (queue_dataflow, queue, "the queue is empty");
+    GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "the queue is empty");
     return NULL;
   }
 }
@@ -767,7 +767,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
         gst_pad_start_task (queue->srcpad, (GstTaskFunction) gst_queue_loop,
             queue->srcpad);
       } else {
-        GST_DEBUG_OBJECT (queue, "not re-starting task as pad is not linked");
+        GST_INFO_OBJECT (queue, "not re-starting task as pad is not linked");
       }
       GST_QUEUE_MUTEX_UNLOCK (queue);
 
@@ -908,6 +908,8 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
           /* for as long as the queue is filled, wait till an item was deleted. */
           GST_QUEUE_WAIT_DEL_CHECK (queue, out_flushing);
         } while (gst_queue_is_filled (queue));
+
+        GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is not full");
 
         GST_QUEUE_MUTEX_UNLOCK (queue);
         g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_RUNNING], 0);
@@ -1068,6 +1070,7 @@ gst_queue_loop (GstPad * pad)
   while (gst_queue_is_empty (queue)) {
     GST_QUEUE_MUTEX_UNLOCK (queue);
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_UNDERRUN], 0);
+    GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is empty");
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
 
     /* we recheck, the signal could have changed the thresholds */
@@ -1078,6 +1081,7 @@ gst_queue_loop (GstPad * pad)
 
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_RUNNING], 0);
     g_signal_emit (G_OBJECT (queue), gst_queue_signals[SIGNAL_PUSHING], 0);
+    GST_CAT_DEBUG_OBJECT (queue_dataflow, queue, "queue is not empty");
 
     GST_QUEUE_MUTEX_LOCK_CHECK (queue, out_flushing);
   }
@@ -1231,7 +1235,7 @@ gst_queue_src_activate_push (GstPad * pad, gboolean active)
     if (gst_pad_is_linked (pad))
       result = gst_pad_start_task (pad, (GstTaskFunction) gst_queue_loop, pad);
     else {
-      GST_DEBUG_OBJECT (queue, "not starting task as pad is not linked");
+      GST_INFO_OBJECT (queue, "not starting task as pad is not linked");
       result = TRUE;
     }
     GST_QUEUE_MUTEX_UNLOCK (queue);

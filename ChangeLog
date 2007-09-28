@@ -2,6 +2,15 @@
 
 	Patch by: Felipe Contreras <felipe dot contreras at gmail dot com>
 
+	* plugins/elements/gstqueue.c: (update_time_level), (apply_buffer),
+	(gst_queue_locked_dequeue), (gst_queue_handle_sink_event),
+	(gst_queue_chain), (gst_queue_loop), (gst_queue_src_activate_push):
+	Improve debugging. Fixes #480858.
+
+2007-09-28  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Felipe Contreras <felipe dot contreras at gmail dot com>
+
 	* plugins/elements/gstqueue.c: (gst_queue_handle_sink_event):
 	First patch of code cleanups, use the macros and right arguments in the
 	macros to signal and lock the queue. See #480858.
