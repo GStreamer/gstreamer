@@ -1,3 +1,10 @@
+2007-09-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_set_proxy),
+	(gst_neonhttp_src_send_request_and_redirect):
+	Now that we require libneon >= 0.26 remove the neon 0.25 backward
+	compatibility stuff. Also fix the default location.
+
 2007-09-28  Wim Taymans  <wim.taymans@gmail.com>
 
 	* configure.ac:

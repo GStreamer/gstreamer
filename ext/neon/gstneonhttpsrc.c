@@ -25,10 +25,6 @@
 
 #include <ne_redirect.h>
 
-#ifndef NE_FREE
-#define NEON_026_OR_LATER  1
-#endif
-
 GST_DEBUG_CATEGORY_STATIC (neonhttpsrc_debug);
 #define GST_CAT_DEFAULT neonhttpsrc_debug
 
@@ -57,7 +53,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
 #define HTTP_DEFAULT_HOST        "localhost"
 
 /* default properties */
-#define DEFAULT_LOCATION             "http://"HTTP_DEFAULT_HOST"/"G_STRINGIFY(HTTP_DEFAULT_PORT)
+#define DEFAULT_LOCATION             "http://"HTTP_DEFAULT_HOST":"G_STRINGIFY(HTTP_DEFAULT_PORT)
 #define DEFAULT_PROXY                ""
 #define DEFAULT_USER_AGENT           "GStreamer neonhttpsrc"
 #define DEFAULT_IRADIO_MODE          FALSE
@@ -773,13 +769,8 @@ gst_neonhttp_src_set_proxy (GstNeonhttpSrc * src, const char *uri)
   if (src->proxy.host && !src->proxy.port)
     goto error;
 
-#ifdef NEON_026_OR_LATER
   if (!src->proxy.path || src->proxy.userinfo)
     goto error;
-#else
-  if (!src->proxy.path || src->proxy.authinfo)
-    goto error;
-#endif
   return TRUE;
 
   /* ERRORS */
@@ -816,9 +807,7 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
           ne_session_create (src->uri.scheme, src->uri.host, src->uri.port);
     }
 
-#ifdef NEON_026_OR_LATER
     ne_set_session_flag (session, NE_SESSFLAG_ICYPROTO, 1);
-#endif
 
     request = ne_request_create (session, "GET", src->query_string);
 
