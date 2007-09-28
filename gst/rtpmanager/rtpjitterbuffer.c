@@ -199,11 +199,6 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
   gint pos, i;
   GstClockTime gstrtptime, out_time;
 
-  /* we don't have an arrival timestamp so we can't do skew detection. FIXME, we
-   * should still apply a timestamp based on RTP timestamp and base_time */
-  if (time == -1)
-    return -1;
-
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&jbuf->ext_rtptime, rtptime);
 
   gstrtptime =
@@ -217,6 +212,12 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
 
   /* elapsed time at sender */
   send_diff = gstrtptime - jbuf->base_rtptime;
+
+  /* we don't have an arrival timestamp so we can't do skew detection. we
+   * should still apply a timestamp based on RTP timestamp and base_time */
+  if (time == -1)
+    goto no_skew;
+
   /* elapsed time at receiver, includes the jitter */
   recv_diff = time - jbuf->base_time;
 
@@ -297,6 +298,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
     pos = 0;
   jbuf->window_pos = pos;
 
+no_skew:
   /* the output time is defined as the base timestamp plus the RTP time
    * adjusted for the clock skew .*/
   out_time = jbuf->base_time + send_diff + jbuf->skew;

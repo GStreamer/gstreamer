@@ -637,9 +637,8 @@ get_client (GstRtpBin * bin, guint8 len, guint8 * data, gboolean * created)
 }
 
 static void
-free_client (GstRtpBinClient * client, GstRtpBin * bin)
+free_client (GstRtpBinClient * client)
 {
-  bin->clients = g_slist_remove (bin->clients, client);
   g_free (client->cname);
   g_free (client);
 }
