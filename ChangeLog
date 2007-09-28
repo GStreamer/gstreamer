@@ -1,3 +1,14 @@
+2007-09-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Wouter Cloetens <wouter@mind.be>
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_dispose),
+	(gst_neonhttp_src_set_location),
+	(gst_neonhttp_src_send_request_and_redirect):
+	* ext/neon/gstneonhttpsrc.h:
+	Don't discard GET parameters from URL if existing.
+	Fixes #481200.
+
 2007-09-27  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c:

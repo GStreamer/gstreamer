@@ -49,6 +49,7 @@ struct _GstNeonhttpSrc {
   ne_request *request;
   ne_uri uri;
   gchar *location;
+  gchar *query_string;
   ne_uri proxy;
   gchar *user_agent;
 

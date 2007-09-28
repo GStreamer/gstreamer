@@ -287,6 +287,9 @@ gst_neonhttp_src_dispose (GObject * gobject)
   if (src->location) {
     ne_free (src->location);
   }
+  if (src->query_string) {
+    ne_free (src->query_string);
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (gobject);
 }
@@ -706,6 +709,10 @@ gst_neonhttp_src_set_location (GstNeonhttpSrc * src, const gchar * uri)
     ne_free (src->location);
     src->location = NULL;
   }
+  if (src->query_string) {
+    ne_free (src->query_string);
+    src->query_string = NULL;
+  }
 
   if (ne_uri_parse (uri, &src->uri) != 0)
     goto parse_error;
@@ -726,6 +733,11 @@ gst_neonhttp_src_set_location (GstNeonhttpSrc * src, const gchar * uri)
   if (!src->uri.path)
     src->uri.path = g_strdup ("");
 
+  if (src->uri.query)
+    src->query_string = g_strjoin ("?", src->uri.path, src->uri.query, NULL);
+  else
+    src->query_string = g_strdup (src->uri.path);
+
   src->location = ne_uri_unparse (&src->uri);
 
   return TRUE;
@@ -736,6 +748,10 @@ parse_error:
     if (src->location) {
       ne_free (src->location);
       src->location = NULL;
+    }
+    if (src->query_string) {
+      ne_free (src->query_string);
+      src->query_string = NULL;
     }
     ne_uri_free (&src->uri);
     return FALSE;
@@ -804,7 +820,7 @@ gst_neonhttp_src_send_request_and_redirect (GstNeonhttpSrc * src,
     ne_set_session_flag (session, NE_SESSFLAG_ICYPROTO, 1);
 #endif
 
-    request = ne_request_create (session, "GET", src->uri.path);
+    request = ne_request_create (session, "GET", src->query_string);
 
     if (src->user_agent) {
       ne_add_request_header (request, "User-Agent", src->user_agent);
