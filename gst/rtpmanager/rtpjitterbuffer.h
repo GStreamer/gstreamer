@@ -43,6 +43,7 @@ typedef struct _RTPJitterBufferClass RTPJitterBufferClass;
  */
 typedef void (*RTPTailChanged) (RTPJitterBuffer *jbuf, gpointer user_data);
 
+#define RTP_JITTER_BUFFER_MAX_WINDOW 512
 /**
  * RTPJitterBuffer:
  *
@@ -59,7 +60,7 @@ struct _RTPJitterBuffer {
   GstClockTime   base_time;
   GstClockTime   base_rtptime;
   guint64        ext_rtptime;
-  gint64         window[100];
+  gint64         window[RTP_JITTER_BUFFER_MAX_WINDOW];
   guint          window_pos;
   guint          window_size;
   gboolean       window_filling;
