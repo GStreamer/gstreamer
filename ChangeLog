@@ -1,3 +1,12 @@
+2007-09-28  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_loop_interleaved),
+	(gst_rtspsrc_play):
+	* gst/rtsp/gstrtspsrc.h:
+	In TCP mode, only timestamp the first buffer. TCP is not real time and
+	it does not make sense to try to skew compensate, also some servers send
+	the first batch of data in a burst.
+
 2007-09-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/matroska/matroska-demux.c:

@@ -135,6 +135,7 @@ struct _GstRTSPSrc {
   gint             free_channel;
   GstEvent        *close_segment;
   GstEvent        *start_segment;
+  GstClockTime     base_time;
 
   /* UDP mode loop */
   gint             loop_cmd;

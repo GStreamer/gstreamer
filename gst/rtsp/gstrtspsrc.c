@@ -2450,15 +2450,6 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
   /* don't need message anymore */
   gst_rtsp_message_unset (&message);
 
-  /* set reception timestamp */
-  GST_OBJECT_LOCK (src);
-  if (GST_ELEMENT_CLOCK (src)) {
-    GstClockTime now = gst_clock_get_time (GST_ELEMENT_CLOCK (src));
-
-    GST_BUFFER_TIMESTAMP (buf) = now - GST_ELEMENT_CAST (src)->base_time;
-  }
-  GST_OBJECT_UNLOCK (src);
-
   GST_DEBUG_OBJECT (src, "pushing data of size %d on channel %d", size,
       channel);
 
@@ -2473,10 +2464,30 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
     gst_buffer_set_caps (buf, stream->caps);
   }
 
+  if (src->base_time == -1) {
+    /* Take current running_time. This timestamp will be put on
+     * the first buffer of each stream because we are a live source and so we
+     * timestamp with the running_time. When we are dealing with TCP, we also
+     * only timestamp the first buffer (using the DISCONT flag) because a server
+     * typically bursts data, for which we don't want to compensate by speeding
+     * up the media. The other timestamps will be interpollated from this one
+     * using the RTP timestamps. */
+    GST_OBJECT_LOCK (src);
+    if (GST_ELEMENT_CLOCK (src)) {
+      GstClockTime now = gst_clock_get_time (GST_ELEMENT_CLOCK (src));
+
+      src->base_time = now - GST_ELEMENT_CAST (src)->base_time;
+    }
+    GST_OBJECT_UNLOCK (src);
+  }
+
   if (stream->discont && !is_rtcp) {
     /* mark first RTP buffer as discont */
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     stream->discont = FALSE;
+    /* first buffer gets the timestamp, other buffers are not timestamped and
+     * their presentation time will be interpollated from the rtp timestamps. */
+    GST_BUFFER_TIMESTAMP (buf) = src->base_time;
   }
 
   /* chain to the peer pad */
@@ -4157,6 +4168,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
     gst_task_set_lock (src->task, GST_RTSP_STREAM_GET_LOCK (src));
   }
   src->running = TRUE;
+  src->base_time = -1;
   src->state = GST_RTSP_STATE_PLAYING;
   gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, FALSE);
   gst_task_start (src->task);
