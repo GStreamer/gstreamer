@@ -142,23 +142,23 @@ enum
 } G_STMT_END
 
 #define GST_QUEUE_WAIT_DEL_CHECK(q, label) G_STMT_START {               \
-  STATUS (queue, q->sinkpad, "wait for DEL");                           \
-  g_cond_wait (q->item_del, queue->qlock);                              \
+  STATUS (q, q->sinkpad, "wait for DEL");                               \
+  g_cond_wait (q->item_del, q->qlock);                                  \
   if (q->srcresult != GST_FLOW_OK) {                                    \
-    STATUS (queue, q->srcpad, "received DEL wakeup");                   \
+    STATUS (q, q->srcpad, "received DEL wakeup");                       \
     goto label;                                                         \
   }                                                                     \
-  STATUS (queue, q->sinkpad, "received DEL");                           \
+  STATUS (q, q->sinkpad, "received DEL");                               \
 } G_STMT_END
 
 #define GST_QUEUE_WAIT_ADD_CHECK(q, label) G_STMT_START {               \
-  STATUS (queue, q->srcpad, "wait for ADD");                            \
+  STATUS (q, q->srcpad, "wait for ADD");                                \
   g_cond_wait (q->item_add, q->qlock);                                  \
   if (q->srcresult != GST_FLOW_OK) {                                    \
-    STATUS (queue, q->srcpad, "received ADD wakeup");                   \
+    STATUS (q, q->srcpad, "received ADD wakeup");                       \
     goto label;                                                         \
   }                                                                     \
-  STATUS (queue, q->srcpad, "received ADD");                            \
+  STATUS (q, q->srcpad, "received ADD");                                \
 } G_STMT_END
 
 #define GST_QUEUE_SIGNAL_DEL(q) G_STMT_START {                          \
@@ -742,8 +742,8 @@ gst_queue_handle_sink_event (GstPad * pad, GstEvent * event)
       GST_QUEUE_MUTEX_LOCK (queue);
       queue->srcresult = GST_FLOW_WRONG_STATE;
       /* unblock the loop and chain functions */
-      g_cond_signal (queue->item_add);
-      g_cond_signal (queue->item_del);
+      GST_QUEUE_SIGNAL_ADD (queue);
+      GST_QUEUE_SIGNAL_DEL (queue);
       GST_QUEUE_MUTEX_UNLOCK (queue);
 
       /* make sure it pauses, this should happen since we sent
@@ -1291,14 +1291,14 @@ gst_queue_change_state (GstElement * element, GstStateChange transition)
  * the _chain function, it might have more room now
  * to store the buffer/event in the queue */
 #define QUEUE_CAPACITY_CHANGE(q)\
-  g_cond_signal (queue->item_del);
+  GST_QUEUE_SIGNAL_DEL (q);
 
 /* Changing the minimum required fill level must
  * wake up the _loop function as it might now
  * be able to preceed.
  */
 #define QUEUE_THRESHOLD_CHANGE(q)\
-  g_cond_signal (queue->item_add);
+  GST_QUEUE_SIGNAL_ADD (q);
 
 static void
 gst_queue_set_property (GObject * object,
