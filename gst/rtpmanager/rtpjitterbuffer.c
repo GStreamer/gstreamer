@@ -27,6 +27,9 @@
 GST_DEBUG_CATEGORY_STATIC (rtp_jitter_buffer_debug);
 #define GST_CAT_DEFAULT rtp_jitter_buffer_debug
 
+#define MAX_WINDOW	RTP_JITTER_BUFFER_MAX_WINDOW
+#define MAX_TIME	(2 * GST_SECOND)
+
 /* signals and args */
 enum
 {
@@ -61,18 +64,11 @@ rtp_jitter_buffer_class_init (RTPJitterBufferClass * klass)
 static void
 rtp_jitter_buffer_init (RTPJitterBuffer * jbuf)
 {
-  gint i;
-
   jbuf->packets = g_queue_new ();
   jbuf->base_time = -1;
   jbuf->base_rtptime = -1;
   jbuf->ext_rtptime = -1;
-
-  for (i = 0; i < 100; i++) {
-    jbuf->window[i] = 0;
-  }
   jbuf->window_pos = 0;
-  jbuf->window_size = 100;
   jbuf->window_filling = TRUE;
   jbuf->window_min = 0;
   jbuf->skew = 0;
@@ -183,9 +179,17 @@ rtp_jitter_buffer_get_clock_rate (RTPJitterBuffer * jbuf)
  *
  * Both the window and the weighting used for averaging influence the accuracy
  * of the drift estimation. Finding the correct parameters turns out to be a
- * compromise between accuracy and inertia.
+ * compromise between accuracy and inertia. 
+ *
+ * We use a 2 second window or up to 512 data points, which is statistically big
+ * enough to catch spikes (FIXME, detect spikes).
+ * We also use a rather large weighting factor (125) to smoothly adapt. During
+ * startup, when filling the window) we use a parabolic weighting factor, the
+ * more the window is filled, the faster we move to the detected possible skew.
+ *
+ * Returns: @time adjusted with the clock skew.
  */
-static void
+static GstClockTime
 calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
 {
   guint64 ext_rtptime;
@@ -193,7 +197,12 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
   gint64 delta;
   gint64 old;
   gint pos, i;
-  GstClockTime gstrtptime;
+  GstClockTime gstrtptime, out_time;
+
+  /* we don't have an arrival timestamp so we can't do skew detection. FIXME, we
+   * should still apply a timestamp based on RTP timestamp and base_time */
+  if (time == -1)
+    return -1;
 
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&jbuf->ext_rtptime, rtptime);
 
@@ -218,25 +227,39 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
 
   if (jbuf->window_filling) {
     /* we are filling the window */
-    GST_DEBUG ("filling %d %" G_GINT64_FORMAT ", diff %" G_GUINT64_FORMAT, pos,
-        delta, send_diff);
+    GST_DEBUG ("filling %d %" G_GINT64_FORMAT ", send_diff %" G_GUINT64_FORMAT,
+        pos, delta, send_diff);
     jbuf->window[pos++] = delta;
     /* calc the min delta we observed */
     if (pos == 1 || delta < jbuf->window_min)
       jbuf->window_min = delta;
 
-    if (send_diff >= 2 * GST_SECOND || pos >= 100) {
+    if (send_diff >= MAX_TIME || pos >= MAX_WINDOW) {
       jbuf->window_size = pos;
 
-      /* window filled, fill window with min */
+      /* window filled */
       GST_DEBUG ("min %" G_GINT64_FORMAT, jbuf->window_min);
-      for (i = 0; i < jbuf->window_size; i++)
-        jbuf->window[i] = jbuf->window_min;
 
-      /* the skew is initially the min */
+      /* the skew is now the min */
       jbuf->skew = jbuf->window_min;
       jbuf->window_filling = FALSE;
     } else {
+      gint perc_time, perc_window, perc;
+
+      /* figure out how much we filled the window, this depends on the amount of
+       * time we have or the max number of points we keep. */
+      perc_time = send_diff * 100 / MAX_TIME;
+      perc_window = pos * 100 / MAX_WINDOW;
+      perc = MAX (perc_time, perc_window);
+
+      /* make a parabolic function, the closer we get to the MAX, the more value
+       * we give to the scaling factor of the new value */
+      perc = perc * perc;
+
+      /* quickly go to the min value when we are filling up, slowly when we are
+       * just starting because we're not sure it's a good value yet. */
+      jbuf->skew =
+          (perc * jbuf->window_min + ((10000 - perc) * jbuf->skew)) / 10000;
       jbuf->window_size = pos + 1;
     }
   } else {
@@ -265,7 +288,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
       jbuf->window_min = min;
     }
     /* average the min values */
-    jbuf->skew = (jbuf->window_min + (15 * jbuf->skew)) / 16;
+    jbuf->skew = (jbuf->window_min + (124 * jbuf->skew)) / 125;
     GST_DEBUG ("new min: %" G_GINT64_FORMAT ", skew %" G_GINT64_FORMAT,
         jbuf->window_min, jbuf->skew);
   }
@@ -273,6 +296,17 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
   if (pos >= jbuf->window_size)
     pos = 0;
   jbuf->window_pos = pos;
+
+  /* the output time is defined as the base timestamp plus the RTP time
+   * adjusted for the clock skew .*/
+  out_time = jbuf->base_time + send_diff + jbuf->skew;
+
+  GST_DEBUG ("base %" GST_TIME_FORMAT ", diff %" GST_TIME_FORMAT ", skew %"
+      G_GINT64_FORMAT ", out %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (jbuf->base_time), GST_TIME_ARGS (send_diff),
+      jbuf->skew, GST_TIME_ARGS (out_time));
+
+  return out_time;
 }
 
 static gint
@@ -296,7 +330,7 @@ compare_seqnum (GstBuffer * a, GstBuffer * b, RTPJitterBuffer * jbuf)
  * rtp_jitter_buffer_insert:
  * @jbuf: an #RTPJitterBuffer
  * @buf: a buffer
- * @time: a timestamp when this buffer was received in nanoseconds
+ * @time: a running_time when this buffer was received in nanoseconds
  *
  * Inserts @buf into the packet queue of @jbuf. The sequence number of the
  * packet will be used to sort the packets. This function takes ownerhip of
@@ -327,11 +361,11 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
     return FALSE;
 
   /* do skew calculation by measuring the difference between rtptime and the
-   * receive time */
-  if (time != -1) {
-    rtptime = gst_rtp_buffer_get_timestamp (buf);
-    calculate_skew (jbuf, rtptime, time);
-  }
+   * receive time, this function will retimestamp @buf with the skew corrected
+   * running time. */
+  rtptime = gst_rtp_buffer_get_timestamp (buf);
+  time = calculate_skew (jbuf, rtptime, time);
+  GST_BUFFER_TIMESTAMP (buf) = time;
 
   if (list)
     g_queue_insert_before (jbuf->packets, list, buf);
@@ -350,7 +384,9 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
  * rtp_jitter_buffer_pop:
  * @jbuf: an #RTPJitterBuffer
  *
- * Pops the oldest buffer from the packet queue of @jbuf.
+ * Pops the oldest buffer from the packet queue of @jbuf. The popped buffer will
+ * have its timestamp adjusted with the incomming running_time and the detected
+ * clock skew.
  *
  * Returns: a #GstBuffer or %NULL when there was no packet in the queue.
  */

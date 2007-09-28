@@ -1,3 +1,21 @@
+2007-09-28  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c: (apply_latency),
+	(gst_rtp_jitter_buffer_loop), (gst_rtp_jitter_buffer_query):
+	Remove jitter correction code, it's now in the lower level object.
+	Use new -core method for doing a peer query.
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_init),
+	(calculate_skew), (rtp_jitter_buffer_insert):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Move jitter correction to the lowlevel jitterbuffer.
+	Increase the max window size.
+	When filling the window, already start estimating the skew using a
+	parabolic weighting factor so that we have a much better startup
+	behaviour that gets more accurate with the more samples we have.
+	Increase the default weighting factor for the steady state to get
+	smoother timestamps.
+
 2007-09-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_set_proxy),

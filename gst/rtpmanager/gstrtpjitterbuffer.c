@@ -943,25 +943,14 @@ duplicate:
 }
 
 static GstClockTime
-convert_rtptime_to_gsttime (GstRtpJitterBuffer * jitterbuffer,
-    guint64 exttimestamp)
+apply_latency (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
 {
-  GstClockTime timestamp;
   GstRtpJitterBufferPrivate *priv;
 
   priv = jitterbuffer->priv;
 
-  /* construct a timestamp from the RTP timestamp now. We don't apply this
-   * timestamp to the outgoing buffer yet as the popped buffer might not be the
-   * one we need to push out right now. */
-  timestamp =
-      gst_util_uint64_scale_int (exttimestamp, GST_SECOND, priv->clock_rate);
-
-  /* apply first observed timestamp */
-  timestamp += priv->jbuf->base_time;
-
-  /* apply the current clock skew */
-  timestamp += priv->jbuf->skew;
+  if (timestamp == -1)
+    return -1;
 
   /* apply the timestamp offset */
   timestamp += priv->ts_offset;
@@ -987,9 +976,7 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
   GstBuffer *outbuf = NULL;
   GstFlowReturn result;
   guint16 seqnum;
-  guint32 rtp_time;
-  GstClockTime timestamp;
-  guint64 exttimestamp;
+  GstClockTime timestamp, out_time;
 
   priv = jitterbuffer->priv;
 
@@ -1015,26 +1002,17 @@ again:
   outbuf = rtp_jitter_buffer_pop (priv->jbuf);
   seqnum = gst_rtp_buffer_get_seq (outbuf);
 
-  /* construct extended RTP timestamp from packet */
-  rtp_time = gst_rtp_buffer_get_timestamp (outbuf);
-  exttimestamp = gst_rtp_buffer_ext_timestamp (&priv->exttimestamp, rtp_time);
-
-  /* if no clock_base was given, take first ts as base */
-  if (priv->clock_base == -1) {
-    GST_DEBUG_OBJECT (jitterbuffer,
-        "no clock base, using exttimestamp %" G_GUINT64_FORMAT, exttimestamp);
-    priv->clock_base = exttimestamp;
-  }
-  /* subtract the base clock time so that we start counting from 0 */
-  exttimestamp -= priv->clock_base;
+  /* get the timestamp, this is already corrected for clock skew by the
+   * jitterbuffer */
+  timestamp = GST_BUFFER_TIMESTAMP (outbuf);
 
   GST_DEBUG_OBJECT (jitterbuffer,
-      "Popped buffer #%d, rtptime %u, exttime %" G_GUINT64_FORMAT
-      ", now %d left", seqnum, rtp_time, exttimestamp,
+      "Popped buffer #%d, timestamp %" GST_TIME_FORMAT ", now %d left",
+      seqnum, GST_TIME_ARGS (timestamp),
       rtp_jitter_buffer_num_packets (priv->jbuf));
 
-  /* convert the RTP timestamp to a gstreamer timestamp. */
-  timestamp = convert_rtptime_to_gsttime (jitterbuffer, exttimestamp);
+  /* apply our latency to the incomming buffer before syncing. */
+  out_time = apply_latency (jitterbuffer, timestamp);
 
   /* If we don't know what the next seqnum should be (== -1) we have to wait
    * because it might be possible that we are not receiving this buffer in-order,
@@ -1044,7 +1022,8 @@ again:
    * determine if we have missing a packet. If we have a missing packet (which
    * must be before this packet) we can wait for it until the deadline for this
    * packet expires. */
-  if (priv->next_seqnum == -1 || priv->next_seqnum != seqnum) {
+  if ((priv->next_seqnum == -1 || priv->next_seqnum != seqnum)
+      && out_time != -1) {
     GstClockID id;
     GstClockTime sync_time;
     GstClockReturn ret;
@@ -1071,10 +1050,10 @@ again:
     }
 
     GST_DEBUG_OBJECT (jitterbuffer, "sync to timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timestamp));
+        GST_TIME_ARGS (out_time));
 
     /* prepare for sync against clock */
-    sync_time = timestamp + GST_ELEMENT_CAST (jitterbuffer)->base_time;
+    sync_time = out_time + GST_ELEMENT_CAST (jitterbuffer)->base_time;
 
     /* create an entry for the clock */
     id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
@@ -1113,9 +1092,8 @@ again:
       }
       goto again;
     }
-    /* After waiting, we might have a better estimate of skew, generate a new
-     * timestamp before pushing out the buffer */
-    timestamp = convert_rtptime_to_gsttime (jitterbuffer, exttimestamp);
+    /* Get new timestamp, latency might have changed */
+    out_time = apply_latency (jitterbuffer, timestamp);
   }
 push_buffer:
   /* check if we are pushing something unexpected */
@@ -1138,7 +1116,7 @@ push_buffer:
   }
 
   /* apply timestamp to buffer now */
-  GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
+  GST_BUFFER_TIMESTAMP (outbuf) = out_time;
 
   /* now we are ready to push the buffer. Save the seqnum and release the lock
    * so the other end can push stuff in the queue again. */
@@ -1147,7 +1125,9 @@ push_buffer:
   JBUF_UNLOCK (priv);
 
   /* push buffer */
-  GST_DEBUG_OBJECT (jitterbuffer, "Pushing buffer %d", seqnum);
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "Pushing buffer %d, timestamp %" GST_TIME_FORMAT, seqnum,
+      GST_TIME_ARGS (out_time));
   result = gst_pad_push (priv->srcpad, outbuf);
   if (result != GST_FLOW_OK)
     goto pause;
@@ -1208,39 +1188,35 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
        * own */
       GstClockTime min_latency, max_latency;
       gboolean us_live;
-      GstPad *peer;
       GstClockTime our_latency;
 
-      if ((peer = gst_pad_get_peer (priv->sinkpad))) {
-        if ((res = gst_pad_query (peer, query))) {
-          gst_query_parse_latency (query, &us_live, &min_latency, &max_latency);
+      if ((res = gst_pad_peer_query (priv->sinkpad, query))) {
+        gst_query_parse_latency (query, &us_live, &min_latency, &max_latency);
 
-          GST_DEBUG_OBJECT (jitterbuffer, "Peer latency: min %"
-              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+        GST_DEBUG_OBJECT (jitterbuffer, "Peer latency: min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
 
-          /* store this so that we can safely sync on the peer buffers. */
-          JBUF_LOCK (priv);
-          priv->peer_latency = min_latency;
-          our_latency = ((guint64) priv->latency_ms) * GST_MSECOND;
-          JBUF_UNLOCK (priv);
+        /* store this so that we can safely sync on the peer buffers. */
+        JBUF_LOCK (priv);
+        priv->peer_latency = min_latency;
+        our_latency = ((guint64) priv->latency_ms) * GST_MSECOND;
+        JBUF_UNLOCK (priv);
 
-          GST_DEBUG_OBJECT (jitterbuffer, "Our latency: %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (our_latency));
+        GST_DEBUG_OBJECT (jitterbuffer, "Our latency: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (our_latency));
 
-          min_latency += our_latency;
-          /* max_latency can be -1, meaning there is no upper limit for the
-           * latency. */
-          if (max_latency != -1)
-            max_latency += our_latency * GST_MSECOND;
+        min_latency += our_latency;
+        /* max_latency can be -1, meaning there is no upper limit for the
+         * latency. */
+        if (max_latency != -1)
+          max_latency += our_latency;
 
-          GST_DEBUG_OBJECT (jitterbuffer, "Calculated total latency : min %"
-              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
+        GST_DEBUG_OBJECT (jitterbuffer, "Calculated total latency : min %"
+            GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (min_latency), GST_TIME_ARGS (max_latency));
 
-          gst_query_set_latency (query, TRUE, min_latency, max_latency);
-        }
-        gst_object_unref (peer);
+        gst_query_set_latency (query, TRUE, min_latency, max_latency);
       }
       break;
     }
