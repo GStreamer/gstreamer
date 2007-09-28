@@ -1,3 +1,8 @@
+2007-09-28  Wim Taymans  <wim.taymans@gmail.com>
+
+	* configure.ac:
+	We require libneon >= 26 now for the query field in ne_uri.
+
 2007-09-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Wouter Cloetens <wouter@mind.be>
