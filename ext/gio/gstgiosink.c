@@ -55,8 +55,7 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("ANY")
-    );
+    GST_STATIC_CAPS_ANY);
 
 GST_BOILERPLATE_FULL (GstGioSink, gst_gio_sink, GstBaseSink, GST_TYPE_BASE_SINK,
     gst_gio_uri_handler_do_init);
@@ -81,7 +80,7 @@ gst_gio_sink_base_init (gpointer gclass)
   static GstElementDetails element_details = {
     "GIO sink",
     "Sink/File",
-    "Write to any GVFS-supported location",
+    "Write to any GIO-supported location",
     "Ren\xc3\xa9 Stadler <mail@renestadler.de>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
@@ -154,6 +153,10 @@ gst_gio_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_LOCATION:
+      if (GST_STATE (sink) == GST_STATE_PLAYING ||
+          GST_STATE (sink) == GST_STATE_PAUSED)
+        break;
+
       g_free (sink->location);
       sink->location = g_strdup (g_value_get_string (value));
       break;
@@ -370,7 +373,9 @@ gst_gio_sink_render (GstBaseSink * base_sink, GstBuffer * buffer)
     /* FIXME: Can this happen?  Should we handle it gracefully?  gnomevfssink
      * doesn't... */
     GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
-        ("Could not write to location %s: (short write)", sink->location));
+        ("Could not write to location %s: (short write, only %"
+            G_GUINT64_FORMAT " bytes of %d bytes written)",
+            sink->location, written, GST_BUFFER_SIZE (buffer)));
     return GST_FLOW_ERROR;
   }
 

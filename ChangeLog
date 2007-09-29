@@ -1,5 +1,14 @@
 2007-09-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/gio/gstgiosink.c: (gst_gio_sink_base_init),
+	(gst_gio_sink_set_property), (gst_gio_sink_render):
+	* ext/gio/gstgiosrc.c: (gst_gio_src_base_init),
+	(gst_gio_src_set_property):
+	Some minor cleanup and allow setting the location only when the
+	element is not playing or paused.
+
+2007-09-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	Update gio's pkg-config file name as currently in SVN.
 
