@@ -1,3 +1,13 @@
+2007-09-29  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/MANIFEST:
+	Add files to win32 manifest.
+	* win32/vs6/libgstaudiofx.dsp:
+	* win32/vs6/libgstqtdemux.dsp:
+	* win32/vs6/libgstrtp.dsp:
+	* win32/vs6/libgstrtsp.dsp:
+	Update project files.
+
 2007-09-28  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_loop_interleaved),

@@ -140,6 +140,10 @@ SOURCE=..\..\gst\rtp\gstrtpgsmpay.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\rtp\gstrtph263depay.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\rtp\gstrtph263pay.c
 # End Source File
 # Begin Source File

@@ -108,6 +108,14 @@ SOURCE=..\..\gst\audiofx\audioamplify.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\audiofx\audiochebyshevfreqband.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\gst\audiofx\audiochebyshevfreqlimit.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\audiofx\audiodynamic.c
 # End Source File
 # Begin Source File
