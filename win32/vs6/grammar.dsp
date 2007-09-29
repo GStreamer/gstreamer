@@ -289,5 +289,95 @@ BuildCmds= \
 !ENDIF 
 
 # End Source File
+# Begin Source File
+
+SOURCE="..\..\gst-libs\gst\rtsp\rtsp-marshal.list"
+
+!IF  "$(CFG)" == "grammar - Win32 Release"
+
+# Begin Custom Build
+InputPath="..\..\gst-libs\gst\rtsp\rtsp-marshal.list"
+
+BuildCmds= \
+	echo #include "rtsp-marshal.h" > rtsp-marshal.c.tmp \
+	glib-genmarshal --body --prefix=gst_rtsp_marshal ..\..\gst-libs\gst\rtsp\rtsp-marshal.list >> rtsp-marshal.c.tmp \
+	move rtsp-marshal.c.tmp ..\..\gst-libs\gst\rtsp\rtsp-marshal.c \
+	echo #include "gst/gstconfig.h" > rtsp-marshal.h.tmp \
+	glib-genmarshal --header --prefix=gst_rtsp_marshal ..\..\gst-libs\gst\rtsp\rtsp-marshal.list >> rtsp-marshal.h.tmp \
+	move rtsp-marshal.h.tmp ..\..\gst-libs\gst\rtsp\rtsp-marshal.h
+	
+
+"..\..\gst-libs\gst\rtsp\rtsp-marshal.list.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst-libs\gst\rtsp\rtsp-marshal.list.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
+
+# Begin Custom Build
+InputPath="..\..\gst-libs\gst\rtsp\rtsp-marshal.list"
+
+BuildCmds= \
+	echo #include "rtsp-marshal.h" > rtsp-marshal.c.tmp \
+	glib-genmarshal --body --prefix=gst_rtsp_marshal ..\..\gst-libs\gst\rtsp\rtsp-marshal.list >> rtsp-marshal.c.tmp \
+	move rtsp-marshal.c.tmp ..\..\gst-libs\gst\rtsp\rtsp-marshal.c \
+	echo #include "gst/gstconfig.h" > rtsp-marshal.h.tmp \
+	glib-genmarshal --header --prefix=gst_rtsp_marshal ..\..\gst-libs\gst\rtsp\rtsp-marshal.list >> rtsp-marshal.h.tmp \
+	move rtsp-marshal.h.tmp ..\..\gst-libs\gst\rtsp\rtsp-marshal.h
+	
+
+"..\..\gst-libs\gst\rtsp\rtsp-marshal.list.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+..\..\gst-libs\gst\rtsp\rtsp-marshal.list.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\gstrtsp-enumtypes.c"
+
+!IF  "$(CFG)" == "grammar - Win32 Release"
+
+# Begin Custom Build
+InputPath="..\common\gstrtsp-enumtypes.c"
+
+BuildCmds= \
+	copy ..\common\gstrtsp-enumtypes.h ..\..\gst-libs\gst\rtsp \
+	copy ..\common\gstrtsp-enumtypes.c ..\..\gst-libs\gst\rtsp
+	
+
+"..\..\gst-libs\gst\rtsp\gstrtsp-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst-libs\gst\rtsp\gstrtsp-enumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ELSEIF  "$(CFG)" == "grammar - Win32 Debug"
+
+# Begin Custom Build
+InputPath="..\common\gstrtsp-enumtypes.c"
+
+BuildCmds= \
+	copy ..\common\gstrtsp-enumtypes.h ..\..\gst-libs\gst\rtsp \
+	copy ..\common\gstrtsp-enumtypes.c ..\..\gst-libs\gst\rtsp
+	
+
+"..\..\gst-libs\gst\rtsp\gstrtsp-enumtypes.c" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+
+"..\..\gst-libs\gst\rtsp\gstrtsp-enumtypes.h" : $(SOURCE) "$(INTDIR)" "$(OUTDIR)"
+   $(BuildCmds)
+# End Custom Build
+
+!ENDIF 
+
+# End Source File
 # End Target
 # End Project

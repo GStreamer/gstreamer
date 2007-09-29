@@ -156,6 +156,10 @@ SOURCE="..\..\gst-libs\gst\interfaces\tunernorm.c"
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\gst-libs\gst\interfaces\videoorientation.c"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\gst-libs\gst\interfaces\xoverlay.c"
 # End Source File
 # End Group

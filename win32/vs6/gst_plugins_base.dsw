@@ -252,6 +252,33 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libgstrtsp"=".\libgstrtsp.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+    Begin Project Dependency
+    Project_Dep_Name grammar
+    End Project Dependency
+}}}
+
+###############################################################################
+
+Project: "libgstsdp"=".\libgstsdp.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "libgstsubparse"=".\libgstsubparse.dsp" - Package Owner=<4>
 
 Package=<5>

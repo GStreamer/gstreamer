@@ -1,3 +1,23 @@
+2007-09-29  Sebastien Moutte <sebastien@moutte.net>
+
+	* win32/common/libgstaudio.def:
+	Add new exported functions.
+	* win32/vs6/grammar.dsp:
+	Add autogeneration and copy of some autegenerated files from win32/common
+	for rtsp library.
+	* win32/vs6/libgstaudioconvert.dsp:
+	Add gstaudioquantize.c to the build.
+	* win32/vs6/libgstinterfaces.dsp:
+	Add videoorientation.c to the build.
+	* win32/vs6/libgstriff.dsp:
+	Add libgsttag to the link libraries list.
+	* win32/vs6/libgstvolume.dsp:
+	Add liboil to the link.
+	* win32/vs6/gst_plugins_base.dsw:
+	* win32/vs6/libgstrtsp.dsp:
+	* win32/common/libgstrtsp.def:
+	Add files to build libgstrtsp library.
+	
 2007-09-26  Wim Taymans  <wim.taymans@gmail.com>
 
 	* tests/examples/snapshot/snapshot.c: (main):

@@ -112,6 +112,10 @@ SOURCE=..\..\gst\audioconvert\gstaudioconvert.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\audioconvert\gstaudioquantize.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\audioconvert\gstchannelmix.c
 # End Source File
 # Begin Source File
