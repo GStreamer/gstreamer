@@ -729,10 +729,7 @@ gst_neonhttp_src_set_location (GstNeonhttpSrc * src, const gchar * uri)
   if (!src->uri.path)
     src->uri.path = g_strdup ("");
 
-  if (src->uri.query)
-    src->query_string = g_strjoin ("?", src->uri.path, src->uri.query, NULL);
-  else
-    src->query_string = g_strdup (src->uri.path);
+  src->query_string = g_strjoin ("?", src->uri.path, src->uri.query, NULL);
 
   src->location = ne_uri_unparse (&src->uri);
 

@@ -1,3 +1,12 @@
+2007-09-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	Update gio's pkg-config file name as currently in SVN.
+
+	* ext/neon/gstneonhttpsrc.c: (gst_neonhttp_src_set_location):
+	Remove special casing for a NULL query string. g_strjoin won't add
+	the separator if there's only one string.
+
 2007-09-28  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtpmanager/gstrtpbin.c: (free_client):

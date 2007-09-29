@@ -531,8 +531,8 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
 
 dnl *** libgio ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_GIO, true)
-AG_GST_CHECK_FEATURE(GIO, [GIO standalone library], gio, [
-  PKG_CHECK_MODULES(GIO, gio-standalone >= 0.0.1, HAVE_GIO="yes", [
+AG_GST_CHECK_FEATURE(GIO, [GIO library], gio, [
+  PKG_CHECK_MODULES(GIO, gio-2.0 >= 0.1, HAVE_GIO="yes", [
     HAVE_GIO="no"
     AC_MSG_RESULT(no)
   ])
