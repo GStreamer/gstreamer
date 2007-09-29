@@ -17,6 +17,9 @@ EXPORTS
 	gst_controller_sync_values
 	gst_controller_unset
 	gst_controller_unset_all
+	gst_lfo_control_source_get_type
+	gst_lfo_control_source_new
+	gst_lfo_waveform_get_type
 	gst_object_control_properties
 	gst_object_get_controller
 	gst_object_get_control_rate

@@ -22,6 +22,7 @@ EXPORTS
 	gst_base_sink_wait_preroll
 	gst_base_src_get_type
 	gst_base_src_is_live
+	gst_base_src_set_do_timestamp
 	gst_base_src_set_format
 	gst_base_src_set_live
 	gst_base_src_wait_playing
@@ -34,7 +35,10 @@ EXPORTS
 	gst_base_transform_set_qos_enabled
 	gst_base_transform_update_qos
 	gst_data_queue_flush
+	gst_data_queue_get_level
 	gst_data_queue_is_empty
+	gst_data_queue_is_full
+	gst_data_queue_limits_changed
 	gst_data_queue_new
 	gst_data_queue_pop
 	gst_data_queue_push

@@ -112,11 +112,23 @@ SOURCE=..\..\libs\gst\controller\gstcontroller.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\libs\gst\controller\gstcontrolsource.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\libs\gst\controller\gsthelper.c
 # End Source File
 # Begin Source File
 
 SOURCE=..\..\libs\gst\controller\gstinterpolation.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\libs\gst\controller\gstinterpolationcontrolsource.c
+# End Source File
+# Begin Source File
+
+SOURCE=..\..\libs\gst\controller\gstlfocontrolsource.c
 # End Source File
 # Begin Source File
 

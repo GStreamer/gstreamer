@@ -216,6 +216,10 @@ SOURCE=..\..\gst\gstpadtemplate.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\gstparamspecs.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\gstparse.c
 # End Source File
 # Begin Source File

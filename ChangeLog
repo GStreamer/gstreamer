@@ -1,3 +1,17 @@
+2007-09-29  Sebastien Moutte  <sebastien@moutte.net>
+	
+	* gst/gstinfo.h:
+	Add an explicit variable importation needed on VS6 (only for MSC_VER)
+	Define M_PI which is used in files which are including gstinfo.h. 
+	VS6 includes doesn't define it.
+	* win32/common/libgstbase.def:
+	* win32/common/libgstcontroller.def:
+	* win32/common/libgstreamer.def:
+	Add new exported functions and variables.
+	* win32/vs6/libgstcontroller.dsp:
+	* win32/vs6/libgstreamer.dsp:
+	Update the list of files to build.
+	
 2007-09-28  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Felipe Contreras <felipe dot contreras at gmail dot com>

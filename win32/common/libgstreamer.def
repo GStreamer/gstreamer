@@ -1,4 +1,5 @@
 EXPORTS
+	__gst_debug_min DATA
 	_gst_debug_category_new
 	_gst_debug_nameof_funcptr
 	_gst_debug_register_funcptr
@@ -89,6 +90,7 @@ EXPORTS
 	gst_caps_ref
 	gst_caps_replace
 	gst_caps_set_simple
+	gst_caps_set_simple_valist
 	gst_caps_subtract
 	gst_caps_to_string
 	gst_caps_truncate
@@ -166,6 +168,7 @@ EXPORTS
 	gst_element_class_get_pad_template
 	gst_element_class_get_pad_template_list
 	gst_element_class_set_details
+	gst_element_class_set_details_simple
 	gst_element_continue_state
 	gst_element_create_all_pads
 	gst_element_default_error
@@ -183,6 +186,7 @@ EXPORTS
 	gst_element_factory_get_type
 	gst_element_factory_get_uri_protocols
 	gst_element_factory_get_uri_type
+	gst_element_factory_has_interface
 	gst_element_factory_make
 	gst_element_flags_get_type
 	gst_element_found_tags
@@ -629,6 +633,7 @@ EXPORTS
 	gst_structure_get_name
 	gst_structure_get_string
 	gst_structure_get_type
+	gst_structure_get_uint
 	gst_structure_get_value
 	gst_structure_has_field
 	gst_structure_has_field_typed
@@ -707,6 +712,7 @@ EXPORTS
 	gst_type_find_probability_get_type
 	gst_type_find_register
 	gst_type_find_suggest
+	gst_type_register_static_full
 	gst_update_registry
 	gst_uri_construct
 	gst_uri_get_location
