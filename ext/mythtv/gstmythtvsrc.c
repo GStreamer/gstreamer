@@ -87,7 +87,7 @@
 GST_DEBUG_CATEGORY_STATIC (mythtvsrc_debug);
 #define GST_GMYTHTV_ID_NUM                  1
 #define GST_GMYTHTV_CHANNEL_DEFAULT_NUM     (-1)
-#define GMYTHTV_VERSION_DEFAULT		    30
+#define GMYTHTV_VERSION_DEFAULT             30
 #define GMYTHTV_TRANSFER_MAX_WAITS          100
 #define GMYTHTV_TRANSFER_MAX_RESENDS        2
 #define GMYTHTV_TRANSFER_MAX_BUFFER         (128*1024)
@@ -201,7 +201,9 @@ gst_mythtv_src_class_init (GstMythtvSrcClass * klass)
       g_param_spec_string ("location", "Location",
           "The location. In the form:"
           "\n\t\t\tmyth://a.com/file.nuv"
-          "\n\t\t\tmyth://a.com:23223/file.nuv "
+          "\n\t\t\tmyth://a.com:23223/file.nuv"
+          "\n\t\t\tmyth://a.com/?channel=123"
+          "\n\t\t\tmyth://a.com/?channel=Channel%203"
           "\n\t\t\ta.com/file.nuv - default scheme 'myth'",
           "", G_PARAM_READWRITE));
 
