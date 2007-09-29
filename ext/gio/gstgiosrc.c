@@ -49,8 +49,7 @@ enum
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("ANY")
-    );
+    GST_STATIC_CAPS_ANY);
 
 GST_BOILERPLATE_FULL (GstGioSrc, gst_gio_src, GstBaseSrc, GST_TYPE_BASE_SRC,
     gst_gio_uri_handler_do_init);
@@ -76,7 +75,7 @@ gst_gio_src_base_init (gpointer gclass)
   static GstElementDetails element_details = {
     "GIO source",
     "Source/File",
-    "Read from any GVFS-supported location",
+    "Read from any GIO-supported location",
     "Ren\xc3\xa9 Stadler <mail@renestadler.de>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
@@ -147,6 +146,10 @@ gst_gio_src_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_LOCATION:
+      if (GST_STATE (src) == GST_STATE_PLAYING ||
+          GST_STATE (src) == GST_STATE_PAUSED)
+        break;
+
       g_free (src->location);
       src->location = g_strdup (g_value_get_string (value));
       break;
