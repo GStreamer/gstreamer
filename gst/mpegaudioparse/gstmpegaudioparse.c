@@ -29,6 +29,7 @@
 GST_DEBUG_CATEGORY_STATIC (mp3parse_debug);
 #define GST_CAT_DEFAULT mp3parse_debug
 
+
 /* elementfactory information */
 static GstElementDetails mp3parse_details = {
   "MPEG1 Audio Parser",
@@ -1176,7 +1177,9 @@ mp3parse_time_to_bytepos (GstMPEGAudioParse * mp3parse, GstClockTime ts,
       mp3parse_total_bytes (mp3parse, &total_bytes) &&
       mp3parse_total_time (mp3parse, &total_time)) {
     gdouble fa, fb, fx;
-    gdouble percent = CLAMP ((100.0 * ts) / total_time, 0.0, 100.0);
+    gdouble percent =
+        CLAMP ((100.0 * gst_util_guint64_to_gdouble (ts)) /
+        gst_util_guint64_to_gdouble (total_time), 0.0, 100.0);
     gint index = CLAMP (percent, 0, 99);
 
     fa = mp3parse->xing_seek_table[index];
@@ -1236,7 +1239,7 @@ mp3parse_bytepos_to_time (GstMPEGAudioParse * mp3parse,
 
     fx = fa + (fb - fa) * (pos - index);
 
-    *ts = (1.0 / 10000.0) * fx * total_time;
+    *ts = (1.0 / 10000.0) * fx * gst_util_guint64_to_gdouble (total_time);
 
     return TRUE;
   }

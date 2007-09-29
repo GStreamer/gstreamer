@@ -1,3 +1,11 @@
+2007-09-29  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c: (mp3parse_time_to_bytepos),
+	(mp3parse_bytepos_to_time):
+	Use gst_util_guint64_to_gdouble for conversions.
+	* win32/vs6/libgstmad.dsp:
+	Add a link to libgstaudio.
+
 2007-09-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/lame/gstlame.c:
