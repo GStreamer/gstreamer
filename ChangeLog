@@ -1,3 +1,9 @@
+2007-09-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* docs/gst/gstreamer-sections.txt:
+	Add M_PI and IMPORT_SYMBOL to the private part of the GstInfo section
+	as they shouldn't show up. Fixes the docs build.
+
 2007-09-29  Sebastien Moutte  <sebastien@moutte.net>
 	
 	* gst/gstinfo.h:
