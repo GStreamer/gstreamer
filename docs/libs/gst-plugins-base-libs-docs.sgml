@@ -48,6 +48,7 @@
 <!ENTITY GstBaseRtpPayload SYSTEM "xml/gstbasertppayload.xml">
 <!ENTITY GstRtpBuffer SYSTEM "xml/gstrtpbuffer.xml">
 <!ENTITY GstRtcpBuffer SYSTEM "xml/gstrtcpbuffer.xml">
+<!ENTITY GstRtpPayloads SYSTEM "xml/gstrtppayloads.xml">
 <!-- rtsp -->
 <!ENTITY GstRTSPBase64 SYSTEM "xml/gstrtspbase64.xml">
 <!ENTITY GstRTSPConnection SYSTEM "xml/gstrtspconnection.xml">
@@ -198,6 +199,7 @@
       &GstBaseRtpAudioPayload;
       &GstBaseRtpDepayload;
       &GstBaseRtpPayload;
+      &GstRtpPayloads;
       &GstRtpBuffer;
       &GstRtcpBuffer;
     </chapter>

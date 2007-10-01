@@ -1,5 +1,12 @@
 2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
 
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/rtp/gstrtppayloads.c:
+	Update documentation.
+
+2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst-libs/gst/rtp/Makefile.am:
 	* gst-libs/gst/rtp/gstrtppayloads.c: (gst_rtp_payload_info_for_pt),
 	(gst_rtp_payload_info_for_name):
