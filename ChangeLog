@@ -1,5 +1,14 @@
 2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_get_bandwidth),
+	(gst_rtspsrc_collect_bandwidth), (gst_rtspsrc_create_stream),
+	(gst_rtspsrc_media_to_caps), (gst_rtspsrc_loop_interleaved):
+	* gst/rtsp/gstrtspsrc.h:
+	Parse bandwidth modifiers, they are not yet configured in the session
+	manager because we don't have an API for that yet.
+
+2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_rtpmap),
 	(gst_rtspsrc_media_to_caps), (gst_rtspsrc_loop_interleaved):
 	Use shiny new function in -base to get the default clock-rate.

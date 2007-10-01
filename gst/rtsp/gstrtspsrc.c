@@ -537,6 +537,53 @@ find_stream (GstRTSPSrc * src, gconstpointer data, gconstpointer func)
   return NULL;
 }
 
+static const GstSDPBandwidth *
+gst_rtspsrc_get_bandwidth (GstRTSPSrc * src, const GstSDPMessage * sdp,
+    const GstSDPMedia * media, const gchar * type)
+{
+  guint i, len;
+
+  /* first look in the media specific section */
+  len = gst_sdp_media_bandwidths_len (media);
+  for (i = 0; i < len; i++) {
+    const GstSDPBandwidth *bw = gst_sdp_media_get_bandwidth (media, i);
+
+    if (strcmp (bw->bwtype, type) == 0)
+      return bw;
+  }
+  /* then look in the message specific section */
+  len = gst_sdp_message_bandwidths_len (sdp);
+  for (i = 0; i < len; i++) {
+    const GstSDPBandwidth *bw = gst_sdp_message_get_bandwidth (sdp, i);
+
+    if (strcmp (bw->bwtype, type) == 0)
+      return bw;
+  }
+  return NULL;
+}
+
+static void
+gst_rtspsrc_collect_bandwidth (GstRTSPSrc * src, const GstSDPMessage * sdp,
+    const GstSDPMedia * media, GstRTSPStream * stream)
+{
+  const GstSDPBandwidth *bw;
+
+  if ((bw = gst_rtspsrc_get_bandwidth (src, sdp, media, GST_SDP_BWTYPE_AS)))
+    stream->as_bandwidth = bw->bandwidth;
+  else
+    stream->as_bandwidth = -1;
+
+  if ((bw = gst_rtspsrc_get_bandwidth (src, sdp, media, GST_SDP_BWTYPE_RR)))
+    stream->rr_bandwidth = bw->bandwidth;
+  else
+    stream->rr_bandwidth = -1;
+
+  if ((bw = gst_rtspsrc_get_bandwidth (src, sdp, media, GST_SDP_BWTYPE_RS)))
+    stream->rs_bandwidth = bw->bandwidth;
+  else
+    stream->rs_bandwidth = -1;
+}
+
 static GstRTSPStream *
 gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
 {
@@ -561,6 +608,9 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
   stream->eos = FALSE;
   stream->discont = TRUE;
 
+  /* collect bandwidth information for this steam */
+  gst_rtspsrc_collect_bandwidth (src, sdp, media, stream);
+
   /* we must have a payload. No payload means we cannot create caps */
   /* FIXME, handle multiple formats. */
   if ((payload = gst_sdp_media_get_format (media, 0))) {
@@ -583,6 +633,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
    * configure the transport of the stream and is used to identity the stream in
    * the RTP-Info header field returned from PLAY. */
   control_url = gst_sdp_media_get_attribute_val (media, "control");
+
 
   GST_DEBUG_OBJECT (src, "stream %d, (%p)", stream->id, stream);
   GST_DEBUG_OBJECT (src, " pt: %d", stream->pt);

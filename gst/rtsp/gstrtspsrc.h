@@ -120,6 +120,11 @@ struct _GstRTSPStream {
   guint32       ssrc; 
   guint32       seqbase;
   guint64       timebase;
+
+  /* bandwidth */
+  guint         as_bandwidth;
+  guint         rs_bandwidth;
+  guint         rr_bandwidth;
 };
 
 struct _GstRTSPSrc {
