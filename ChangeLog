@@ -1,3 +1,9 @@
+2007-10-01  Edward Hervey  <bilboed@bilboed.com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_locked_dequeue):
+	Disable code that's breaking the current-time-level reporting.
+	See #482147
+
 2007-09-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/gst/gstreamer-sections.txt:

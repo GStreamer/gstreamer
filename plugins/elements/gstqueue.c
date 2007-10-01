@@ -687,8 +687,12 @@ gst_queue_locked_dequeue (GstQueue * queue)
     apply_buffer (queue, buffer, &queue->src_segment, TRUE);
 
     /* if the queue is empty now, update the other side */
-    if (queue->cur_level.buffers == 0)
-      queue->cur_level.time = 0;
+    /* FIXME : This will only be useful for current time level if the
+     * source task is running, which is not the case for ex in 
+     * gstplaybasebin when pre-rolling.
+     * See #482147 */
+    /*     if (queue->cur_level.buffers == 0) */
+    /*       queue->cur_level.time = 0; */
   } else if (GST_IS_EVENT (item)) {
     GstEvent *event = GST_EVENT_CAST (item);
 
