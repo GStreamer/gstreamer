@@ -115,6 +115,23 @@ typedef struct {
 #define GST_SDP_BWTYPE_EXT_PREFIX 	"X-"
 
 /**
+ * GST_SDP_BWTYPE_RS:
+ *
+ * RTCP bandwidth allocated to active data senders (RFC 3556).
+ *
+ * Since: 0.10.15
+ */
+#define GST_SDP_BWTYPE_RS 		"RS"
+/**
+ * GST_SDP_BWTYPE_RR:
+ *
+ * RTCP bandwidth allocated to data receivers (RFC 3556).
+ *
+ * Since: 0.10.15
+ */
+#define GST_SDP_BWTYPE_RR 		"RR"
+
+/**
  * GstSDPBandwidth:
  * @bwtype: the bandwidth modifier type
  * @bandwidth: the bandwidth in kilobits per second
