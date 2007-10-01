@@ -1,3 +1,10 @@
+2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/typefind/gsttypefindfunctions.c: (utf8_type_find),
+	(sdp_check_header), (sdp_type_find), (plugin_init):
+	Add typefind function for application/sdp.
+	Remove some old dirac typefind code that was ifdeffed out.
+
 2007-09-29  Sebastien Moutte <sebastien@moutte.net>
 
 	* win32/common/libgstaudio.def:

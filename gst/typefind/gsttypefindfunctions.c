@@ -40,7 +40,7 @@ GST_DEBUG_CATEGORY_STATIC (type_find_debug);
 /*** text/plain ***/
 static gboolean xml_check_first_element (GstTypeFind * tf,
     const gchar * element, guint elen, gboolean strict);
-
+static gboolean sdp_check_header (GstTypeFind * tf);
 
 static GstStaticCaps utf8_caps = GST_STATIC_CAPS ("text/plain");
 
@@ -87,6 +87,10 @@ utf8_type_find (GstTypeFind * tf, gpointer unused)
 
   /* leave xml to the xml typefinders */
   if (xml_check_first_element (tf, "", 0, TRUE))
+    return;
+
+  /* leave sdp to the sdp typefinders */
+  if (sdp_check_header (tf))
     return;
 
   /* check beginning of stream */
@@ -257,6 +261,39 @@ xml_type_find (GstTypeFind * tf, gpointer unused)
   if (xml_check_first_element (tf, "", 0, TRUE)) {
     gst_type_find_suggest (tf, GST_TYPE_FIND_MINIMUM, GENERIC_XML_CAPS);
   }
+}
+
+/*** application/sdp *********************************************************/
+
+static GstStaticCaps sdp_caps = GST_STATIC_CAPS ("application/sdp");
+
+#define SDP_CAPS (gst_static_caps_get(&sdp_caps))
+static gboolean
+sdp_check_header (GstTypeFind * tf)
+{
+  guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 5);
+  if (!data)
+    return FALSE;
+
+  /* sdp must start with v=0[\r]\n */
+  if (memcmp (data, "v=0", 3))
+    return FALSE;
+
+  if (data[3] == '\r' && data[4] != '\n')
+    return FALSE;
+  if (data[3] != '\n')
+    return FALSE;
+
+  return TRUE;
+}
+
+static void
+sdp_type_find (GstTypeFind * tf, gpointer unused)
+{
+  if (sdp_check_header (tf))
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, SDP_CAPS);
 }
 
 /*** application/smil *********************************************************/
@@ -2796,6 +2833,7 @@ plugin_init (GstPlugin * plugin)
   static gchar *shn_exts[] = { "shn", NULL };
   static gchar *ape_exts[] = { "ape", NULL };
   static gchar *uri_exts[] = { "ram", NULL };
+  static gchar *sdp_exts[] = { "sdp", NULL };
   static gchar *smil_exts[] = { "smil", NULL };
   static gchar *html_exts[] = { "htm", "html", NULL };
   static gchar *xml_exts[] = { "xml", NULL };
@@ -2914,6 +2952,8 @@ plugin_init (GstPlugin * plugin)
       utf8_exts, UTF8_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "text/uri-list", GST_RANK_MARGINAL, uri_type_find,
       uri_exts, URI_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER (plugin, "application/sdp", GST_RANK_SECONDARY,
+      sdp_type_find, sdp_exts, SDP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/smil", GST_RANK_SECONDARY,
       smil_type_find, smil_exts, SMIL_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/xml", GST_RANK_MARGINAL,
@@ -3023,10 +3063,6 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_SECONDARY, msdos_type_find, msdos_exts, MSDOS_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-dirac", GST_RANK_PRIMARY,
       dirac_type_find, NULL, DIRAC_CAPS, NULL, NULL);
-#if 0
-  TYPE_FIND_REGISTER_START_WITH (plugin, "video/x-dirac",
-      GST_RANK_PRIMARY, NULL, "BBCD", 4, GST_TYPE_FIND_MAXIMUM);
-#endif
   TYPE_FIND_REGISTER (plugin, "multipart/x-mixed-replace", GST_RANK_SECONDARY,
       multipart_type_find, NULL, MULTIPART_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "application/x-mmsh", GST_RANK_SECONDARY,
