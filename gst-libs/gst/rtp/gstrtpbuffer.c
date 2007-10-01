@@ -962,42 +962,19 @@ gst_rtp_buffer_get_payload (GstBuffer * buffer)
 guint32
 gst_rtp_buffer_default_clock_rate (guint8 payload_type)
 {
-  switch (payload_type) {
-    case GST_RTP_PAYLOAD_PCMU:
-    case GST_RTP_PAYLOAD_GSM:
-    case GST_RTP_PAYLOAD_G723:
-    case GST_RTP_PAYLOAD_DVI4_8000:
-    case GST_RTP_PAYLOAD_LPC:
-    case GST_RTP_PAYLOAD_PCMA:
-    case GST_RTP_PAYLOAD_G722:
-    case GST_RTP_PAYLOAD_G729:
-    case GST_RTP_PAYLOAD_QCELP:
-    case GST_RTP_PAYLOAD_CN:
-    case GST_RTP_PAYLOAD_G728:
-      return 8000;
-    case GST_RTP_PAYLOAD_DVI4_11025:
-      return 11025;
-    case GST_RTP_PAYLOAD_DVI4_16000:
-      return 16000;
-    case GST_RTP_PAYLOAD_DVI4_22050:
-      return 22050;
-    case GST_RTP_PAYLOAD_L16_STEREO:
-    case GST_RTP_PAYLOAD_L16_MONO:
-      return 44100;
-    case GST_RTP_PAYLOAD_MPA:
-    case GST_RTP_PAYLOAD_CELLB:
-    case GST_RTP_PAYLOAD_JPEG:
-    case GST_RTP_PAYLOAD_NV:
-    case GST_RTP_PAYLOAD_H261:
-    case GST_RTP_PAYLOAD_MPV:
-    case GST_RTP_PAYLOAD_MP2T:
-    case GST_RTP_PAYLOAD_H263:
-      return 90000;
-    case GST_RTP_PAYLOAD_1016:
-    case GST_RTP_PAYLOAD_G721:
-    default:
-      return -1;
-  }
+  const GstRTPPayloadInfo *info;
+  guint32 res;
+
+  info = gst_rtp_payload_info_for_pt (payload_type);
+  if (!info)
+    return -1;
+
+  res = info->clock_rate;
+  /* 0 means unknown so we have to return -1 from this function */
+  if (res == 0)
+    res = -1;
+
+  return res;
 }
 
 /**

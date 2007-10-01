@@ -1,5 +1,24 @@
 2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst-libs/gst/rtp/Makefile.am:
+	* gst-libs/gst/rtp/gstrtppayloads.c: (gst_rtp_payload_info_for_pt),
+	(gst_rtp_payload_info_for_name):
+	* gst-libs/gst/rtp/gstrtppayloads.h:
+	Added new file and header to deal with payload info.
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c: (gst_rtp_buffer_validate_data),
+	(gst_rtp_buffer_default_clock_rate):
+	* gst-libs/gst/rtp/gstrtpbuffer.h:
+	Payload specific stuff is move to new headers.
+	Implement _default_clock rate using the new payload function.
+
+	* gst-libs/gst/sdp/gstsdpmessage.c: (is_multicast_address),
+	(gst_sdp_parse_line):
+	* gst-libs/gst/sdp/gstsdpmessage.h:
+	Add some more comments.
+
+2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/typefind/gsttypefindfunctions.c: (utf8_type_find),
 	(sdp_check_header), (sdp_type_find), (plugin_init):
 	Add typefind function for application/sdp.

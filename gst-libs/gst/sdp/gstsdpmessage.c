@@ -1759,6 +1759,7 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
       memset (&nmedia, 0, sizeof (nmedia));
       gst_sdp_media_init (&nmedia);
 
+      /* m=<media> <port>/<number of ports> <proto> <fmt> ... */
       READ_STRING (nmedia.media);
       read_string (str, sizeof (str), &p);
       slash = g_strrstr (str, "/");
