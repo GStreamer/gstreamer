@@ -1,3 +1,10 @@
+2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_parse_rtpmap),
+	(gst_rtspsrc_media_to_caps), (gst_rtspsrc_loop_interleaved):
+	Use shiny new function in -base to get the default clock-rate.
+	Update some docs.
+
 2007-09-29  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/MANIFEST:

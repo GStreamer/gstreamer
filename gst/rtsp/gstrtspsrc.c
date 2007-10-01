@@ -66,7 +66,8 @@
  * rtspsrc will internally instantiate an RTP session manager element
  * that will handle the RTCP messages to and from the server, jitter removal,
  * packet reordering along with providing a clock for the pipeline. 
- * This feature is however currently not yet implemented.
+ * This feature is currently fully implemented with the gstrtpbin in the
+ * gst-plugins-bad module.
  * </para>
  * <para>
  * rtspsrc acts like a live source and will therefore only generate data in the 
@@ -96,6 +97,7 @@
 #include <stdarg.h>
 
 #include <gst/sdp/gstsdpmessage.h>
+#include <gst/rtp/gstrtppayloads.h>
 #include <gst/rtsp/gstrtsprange.h>
 
 #include "gstrtspsrc.h"
@@ -693,51 +695,6 @@ gst_rtspsrc_cleanup (GstRTSPSrc * src)
   src->props = NULL;
 }
 
-/* FIXME, this should go somewhere else, ideally 
- */
-static guint
-get_default_rate_for_pt (gint pt, gchar * name, gchar * params)
-{
-  switch (pt) {
-    case 0:
-    case 3:
-    case 4:
-    case 5:
-    case 7:
-    case 8:
-    case 9:
-    case 12:
-    case 13:
-    case 15:
-    case 18:
-      return 8000;
-    case 16:
-      return 11025;
-    case 17:
-      return 22050;
-    case 6:
-      return 16000;
-    case 10:
-    case 11:
-      return 44100;
-    case 14:
-    case 25:
-    case 26:
-    case 28:
-    case 31:
-    case 32:
-    case 33:
-    case 34:
-      return 90000;
-    default:
-    {
-      if (g_str_has_prefix (name, "x-pn-real"))
-        return 1000;
-      return -1;
-    }
-  }
-}
-
 #define PARSE_INT(p, del, res)          \
 G_STMT_START {                          \
   gchar *t = p;                         \
@@ -793,7 +750,8 @@ gst_rtspsrc_parse_rtpmap (const gchar * rtpmap, gint * payload, gchar ** name,
   PARSE_STRING (p, "/", *name);
   if (*name == NULL) {
     GST_DEBUG ("no rate, name %s", p);
-    /* no rate, assume -1 then */
+    /* no rate, assume -1 then, this is not supposed to happen but RealMedia
+     * streams seem to omit the rate. */
     *name = p;
     *rate = -1;
     return TRUE;
@@ -865,7 +823,22 @@ gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media)
   /* check if we have a rate, if not, we need to look up the rate from the
    * default rates based on the payload types. */
   if (rate == -1) {
-    rate = get_default_rate_for_pt (pt, name, params);
+    const GstRTPPayloadInfo *info;
+
+    if (GST_RTP_PAYLOAD_IS_DYNAMIC (pt)) {
+      /* dynamic types, use media and encoding_name */
+      tmp = g_ascii_strdown (media->media, -1);
+      info = gst_rtp_payload_info_for_name (tmp, name);
+      g_free (tmp);
+    } else {
+      /* static types, use payload type */
+      info = gst_rtp_payload_info_for_pt (pt);
+    }
+
+    if (info) {
+      if ((rate = info->clock_rate) == 0)
+        rate = -1;
+    }
     /* we fail if we cannot find one */
     if (rate == -1)
       goto no_rate;
@@ -877,8 +850,7 @@ gst_rtspsrc_media_to_caps (gint pt, const GstSDPMedia * media)
   g_free (tmp);
   s = gst_caps_get_structure (caps, 0);
 
-  if (rate != -1)
-    gst_structure_set (s, "clock-rate", G_TYPE_INT, rate, NULL);
+  gst_structure_set (s, "clock-rate", G_TYPE_INT, rate, NULL);
 
   /* encoding name must be upper case */
   if (name != NULL) {
