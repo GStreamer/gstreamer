@@ -1,3 +1,9 @@
+2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_change_state):
+	Also initialize the counter that calculates the first timestamp on a
+	buffer correctly for non-live sources.
+
 2007-10-01  Edward Hervey  <bilboed@bilboed.com>
 
 	* plugins/elements/gstqueue.c: (gst_queue_locked_dequeue):

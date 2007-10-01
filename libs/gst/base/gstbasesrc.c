@@ -2486,6 +2486,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_LIVE_LOCK (element);
+      basesrc->priv->latency = -1;
       if (basesrc->is_live) {
         no_preroll = TRUE;
         basesrc->live_running = FALSE;
@@ -2496,8 +2497,9 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_LIVE_LOCK (element);
-      basesrc->priv->latency = -1;
       if (basesrc->is_live) {
+        /* for live sources we restart the timestamp correction */
+        basesrc->priv->latency = -1;
         basesrc->live_running = TRUE;
         GST_LIVE_SIGNAL (element);
       }
