@@ -1,5 +1,10 @@
 2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/sdp/gstsdpdemux.c: (gst_sdp_demux_media_to_caps):
+	Use new function in -base to get the default clock-rate.
+
+2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
+
 	* configure.ac:
 	* gst/sdp/gstsdpdemux.c: (_do_init), (gst_sdp_demux_base_init),
 	(gst_sdp_demux_class_init), (gst_sdp_demux_init),

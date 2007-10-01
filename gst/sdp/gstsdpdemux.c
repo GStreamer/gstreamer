@@ -60,6 +60,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
+#include <gst/rtp/gstrtppayloads.h>
 #include <gst/sdp/gstsdpmessage.h>
 
 #include "gstsdpdemux.h"
@@ -450,51 +451,6 @@ gst_sdp_demux_cleanup (GstSDPDemux * demux)
   demux->numstreams = 0;
 }
 
-/* FIXME, this should go somewhere else, ideally 
- */
-static guint
-get_default_rate_for_pt (gint pt, gchar * name, gchar * params)
-{
-  switch (pt) {
-    case 0:
-    case 3:
-    case 4:
-    case 5:
-    case 7:
-    case 8:
-    case 9:
-    case 12:
-    case 13:
-    case 15:
-    case 18:
-      return 8000;
-    case 16:
-      return 11025;
-    case 17:
-      return 22050;
-    case 6:
-      return 16000;
-    case 10:
-    case 11:
-      return 44100;
-    case 14:
-    case 25:
-    case 26:
-    case 28:
-    case 31:
-    case 32:
-    case 33:
-    case 34:
-      return 90000;
-    default:
-    {
-      if (g_str_has_prefix (name, "x-pn-real"))
-        return 1000;
-      return -1;
-    }
-  }
-}
-
 #define PARSE_INT(p, del, res)          \
 G_STMT_START {                          \
   gchar *t = p;                         \
@@ -622,7 +578,22 @@ gst_sdp_demux_media_to_caps (gint pt, const GstSDPMedia * media)
   /* check if we have a rate, if not, we need to look up the rate from the
    * default rates based on the payload types. */
   if (rate == -1) {
-    rate = get_default_rate_for_pt (pt, name, params);
+    const GstRTPPayloadInfo *info;
+
+    if (GST_RTP_PAYLOAD_IS_DYNAMIC (pt)) {
+      /* dynamic types, use media and encoding_name */
+      tmp = g_ascii_strdown (media->media, -1);
+      info = gst_rtp_payload_info_for_name (tmp, name);
+      g_free (tmp);
+    } else {
+      /* static types, use payload type */
+      info = gst_rtp_payload_info_for_pt (pt);
+    }
+
+    if (info) {
+      if ((rate = info->clock_rate) == 0)
+        rate = -1;
+    }
     /* we fail if we cannot find one */
     if (rate == -1)
       goto no_rate;
