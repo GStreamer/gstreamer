@@ -1,3 +1,26 @@
+2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
+
+	* configure.ac:
+	* gst/sdp/gstsdpdemux.c: (_do_init), (gst_sdp_demux_base_init),
+	(gst_sdp_demux_class_init), (gst_sdp_demux_init),
+	(gst_sdp_demux_finalize), (gst_sdp_demux_set_property),
+	(gst_sdp_demux_get_property), (find_stream_by_id),
+	(find_stream_by_pt), (find_stream_by_udpsrc), (find_stream),
+	(gst_sdp_demux_stream_free), (gst_sdp_demux_create_stream),
+	(gst_sdp_demux_cleanup), (get_default_rate_for_pt),
+	(gst_sdp_demux_parse_rtpmap), (gst_sdp_demux_media_to_caps),
+	(new_session_pad), (request_pt_map), (gst_sdp_demux_do_stream_eos),
+	(on_bye_ssrc), (on_timeout), (gst_sdp_demux_configure_manager),
+	(gst_sdp_demux_stream_configure_udp),
+	(gst_sdp_demux_stream_configure_udp_sink),
+	(gst_sdp_demux_combine_flows), (gst_sdp_demux_stream_push_event),
+	(gst_sdp_demux_handle_message), (gst_sdp_demux_start),
+	(gst_sdp_demux_sink_event), (gst_sdp_demux_sink_chain),
+	(gst_sdp_demux_change_state):
+	* gst/sdp/gstsdpdemux.h:
+	* gst/sdp/gstsdpelem.c: (plugin_init):
+	Added SDP demuxer element. Fixes #426657.
+
 2007-10-01  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: mutex at runbox dot com

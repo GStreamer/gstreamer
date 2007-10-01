@@ -102,6 +102,7 @@ GST_PLUGINS_ALL="\
   real \
   replaygain \
   rtpmanager \
+  sdp \
   spectrum \
   speed \
   stereo \
@@ -1007,6 +1008,7 @@ gst/nsf/Makefile
 gst/nuvdemux/Makefile
 gst/replaygain/Makefile
 gst/rtpmanager/Makefile
+gst/sdp/Makefile
 gst/spectrum/Makefile
 gst/speed/Makefile
 gst/stereo/Makefile
