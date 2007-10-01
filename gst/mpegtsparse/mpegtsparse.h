@@ -48,7 +48,6 @@ struct _MpegTSParse {
   GstElement element;
 
   GstPad *sinkpad;
-  GstPad *srcpad;
 
   /* the following vars must be protected with the OBJECT_LOCK as they can be
    * accessed from the application thread and the streaming thread */

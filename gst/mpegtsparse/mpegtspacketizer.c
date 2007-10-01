@@ -34,7 +34,7 @@ static void mpegts_packetizer_dispose (GObject * object);
 static void mpegts_packetizer_finalize (GObject * object);
 
 #define CONTINUITY_UNSET 255
-#define MAX_CONTINUITY 16
+#define MAX_CONTINUITY 15
 
 typedef struct
 {
@@ -154,7 +154,7 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer * packetizer,
         packet->pid, length);
     return FALSE;
   }
-  *packet->data += length;
+  packet->data += length;
 
   return TRUE;
 }

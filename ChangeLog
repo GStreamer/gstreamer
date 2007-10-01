@@ -1,3 +1,17 @@
+2007-10-01  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: mutex at runbox dot com
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	(mpegts_packetizer_parse_adaptation_field_control):
+	* gst/mpegtsparse/mpegtsparse.c: (mpegts_parse_base_init),
+	(mpegts_parse_init), (mpegts_parse_push):
+	* gst/mpegtsparse/mpegtsparse.h:
+	Remove useless src pad that only results in not linked errors,
+	fix a broken pointer dereference and make MAX_CONTINUITY constant
+	conform to the standard to stop outputting corrupted data.
+	Fixes #481276, #481279.
+
 2007-09-29  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/mythtv/gstmythtvsrc.c:

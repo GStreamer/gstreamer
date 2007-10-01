@@ -83,12 +83,6 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
     );
 
-static GstStaticPadTemplate src_template =
-GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
-    );
-
 static GstStaticPadTemplate program_template =
 GST_STATIC_PAD_TEMPLATE ("program_%d", GST_PAD_SRC,
     GST_PAD_SOMETIMES,
@@ -145,8 +139,6 @@ mpegts_parse_base_init (gpointer klass)
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&program_template));
 
@@ -217,9 +209,6 @@ mpegts_parse_init (MpegTSParse * parse, MpegTSParseClass * klass)
   gst_pad_set_chain_function (parse->sinkpad, mpegts_parse_chain);
   gst_pad_set_event_function (parse->sinkpad, mpegts_parse_sink_event);
   gst_element_add_pad (GST_ELEMENT (parse), parse->sinkpad);
-
-  parse->srcpad = mpegts_parse_create_tspad (parse, "src")->pad;
-  gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
 
   parse->disposed = FALSE;
   parse->packetizer = mpegts_packetizer_new ();
@@ -597,14 +586,10 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
   MpegTSParsePad *tspad;
   guint16 pid;
   GstBuffer *buffer;
-  GstFlowReturn ret = GST_FLOW_NOT_LINKED;
-  GstCaps *caps;
+  GstFlowReturn ret = GST_FLOW_OK;
 
   pid = packet->pid;
-  caps = gst_pad_get_caps (parse->srcpad);
   buffer = packet->buffer;
-  gst_buffer_set_caps (buffer, caps);
-  gst_caps_unref (caps);
 
   GST_OBJECT_LOCK (parse);
   /* clear tspad->pushed on pads */
