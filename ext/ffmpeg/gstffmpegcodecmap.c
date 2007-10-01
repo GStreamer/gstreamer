@@ -252,6 +252,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_RV10:
     case CODEC_ID_RV20:
+    case CODEC_ID_RV30:
     case CODEC_ID_RV40:
     {
       gint version;
@@ -259,6 +260,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       switch (codec_id) {
         case CODEC_ID_RV40:
           version = 4;
+          break;
+        case CODEC_ID_RV30:
+          version = 3;
           break;
         case CODEC_ID_RV20:
           version = 2;
@@ -274,7 +278,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "rmversion", G_TYPE_INT, version, NULL);
       if (context) {
         gst_caps_set_simple (caps,
-            "rmsubid", GST_TYPE_FOURCC, context->sub_id, NULL);
+            "format", G_TYPE_INT, context->sub_id, NULL);
+        if (context->extradata_size >= 8) {
+          gst_caps_set_simple (caps,
+              "subformat", G_TYPE_INT, GST_READ_UINT32_BE (context->extradata), NULL);
+	}
       }
     }
       break;
@@ -1599,13 +1607,11 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
     case CODEC_ID_RV10:
     case CODEC_ID_RV20:
+    case CODEC_ID_RV30:
     case CODEC_ID_RV40:
     {
-      guint32 fourcc;
       gint format;
 
-      if (gst_structure_get_fourcc (str, "rmsubid", &fourcc))
-        context->sub_id = fourcc;
       if (gst_structure_get_int (str, "format", &format))
         context->sub_id = format;
 
@@ -2437,6 +2443,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_RV20:
       name = "Realvideo 2.0";
+      break;
+    case CODEC_ID_RV30:
+      name = "Realvideo 3.0";
       break;
     case CODEC_ID_RV40:
       name = "Realvideo 4.0";

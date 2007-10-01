@@ -513,7 +513,9 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
       }
       break;
     case CODEC_ID_RV10:
+    case CODEC_ID_RV30:
     case CODEC_ID_RV20:
+    case CODEC_ID_RV40:
       ffmpegdec->is_realvideo = TRUE;
       break;
     default:
@@ -1479,6 +1481,10 @@ beach:
 drop_qos:
   {
     GST_WARNING_OBJECT (ffmpegdec, "Dropping frame because of QoS");
+    /* drop a frame, set discont on next buffer, pretend we decoded the complete
+     * buffer */
+    ffmpegdec->discont = TRUE;
+    len = size;
     goto beach;
   }
 drop_non_keyframe:

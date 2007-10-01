@@ -1,3 +1,14 @@
+2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_get_codecid_longname):
+	Add Real Video 3.0 and remove some bogus caps.
+
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(gst_ffmpegdec_video_frame):
+	When skipping because of QoS, pretend we consumed all bytes for the
+	frame so that the pcache's timestamp is updated correctly.
+
 2007-08-14  Edward Hervey  <edward@fluendo.com>
 
 	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_register):
