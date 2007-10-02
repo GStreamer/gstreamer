@@ -1,3 +1,10 @@
+2007-10-02  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_do_sync),
+	(gst_base_src_get_range), (gst_base_src_change_state):
+	Call unlock for live sources so that they can't get stuck in _create and
+	produce a buffer before they are set back to PLAYING.
+
 2007-10-02  Edward Hervey  <bilboed@bilboed.com>
 
 	* plugins/elements/gstqueue.c: (gst_queue_locked_enqueue),

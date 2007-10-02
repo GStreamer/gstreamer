@@ -1626,6 +1626,9 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
       now = gst_clock_get_time (clock);
 
       GST_BUFFER_TIMESTAMP (buffer) = now - base_time;
+
+      GST_LOG_OBJECT (basesrc, "created timestamp: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (now - base_time));
     }
   }
 
@@ -1773,7 +1776,7 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
 
   ret = bclass->create (src, offset, length, buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
-    goto done;
+    goto not_ok;
 
   /* no timestamp set and we are at offset 0, we can timestamp with 0 */
   if (offset == 0 && src->segment.time == 0
@@ -1812,13 +1815,19 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
       ret = GST_FLOW_ERROR;
       break;
   }
-done:
   return ret;
 
   /* ERROR */
 stopped:
   {
-    GST_DEBUG_OBJECT (src, "wait_playing returned %d", ret);
+    GST_DEBUG_OBJECT (src, "wait_playing returned %d (%s)", ret,
+        gst_flow_get_name (ret));
+    return ret;
+  }
+not_ok:
+  {
+    GST_DEBUG_OBJECT (src, "create returned %d (%s)", ret,
+        gst_flow_get_name (ret));
     return ret;
   }
 not_started:
@@ -2498,10 +2507,21 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       GST_LIVE_LOCK (element);
       if (basesrc->is_live) {
+        gboolean start;
+
+        gst_base_src_unlock_stop (basesrc);
         /* for live sources we restart the timestamp correction */
         basesrc->priv->latency = -1;
         basesrc->live_running = TRUE;
         GST_LIVE_SIGNAL (element);
+        /* have to restart the task in case it stopped because of the unlock when
+         * we went to PAUSED. Only do this if we operating in push mode. */
+        GST_OBJECT_LOCK (basesrc->srcpad);
+        start = (GST_PAD_ACTIVATE_MODE (basesrc->srcpad) == GST_ACTIVATE_PUSH);
+        GST_OBJECT_UNLOCK (basesrc->srcpad);
+        if (start)
+          gst_pad_start_task (basesrc->srcpad,
+              (GstTaskFunction) gst_base_src_loop, basesrc->srcpad);
       }
       GST_LIVE_UNLOCK (element);
       break;
@@ -2518,6 +2538,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       GST_LIVE_LOCK (element);
       if (basesrc->is_live) {
+        gst_base_src_unlock (basesrc);
         no_preroll = TRUE;
         basesrc->live_running = FALSE;
       }
