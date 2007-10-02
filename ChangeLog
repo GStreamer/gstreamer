@@ -1,3 +1,10 @@
+2007-10-02  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_async_play):
+	When slaved to the clock, don't try to align a sample with the previous
+	one when going to PLAYING again.
+
 2007-10-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/examples/snapshot/snapshot.c:

@@ -1291,6 +1291,7 @@ gst_base_audio_sink_async_play (GstBaseSink * basesink)
   itime = gst_clock_get_internal_time (sink->provided_clock);
 
   sink->priv->avg_skew = -1;
+  sink->next_sample = -1;
 
   GST_DEBUG_OBJECT (sink,
       "internal time: %" GST_TIME_FORMAT " external time: %" GST_TIME_FORMAT,
