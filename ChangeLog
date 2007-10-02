@@ -1,3 +1,8 @@
+2007-10-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/gio/gstgiosink.c: (gst_gio_sink_start):
+	Update to API changes in GIO.
+
 2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/sdp/gstsdpdemux.c: (gst_sdp_demux_media_to_caps):
