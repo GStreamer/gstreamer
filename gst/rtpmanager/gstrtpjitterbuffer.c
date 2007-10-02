@@ -152,7 +152,6 @@ struct _GstRtpJitterBufferPrivate
   /* clock rate and rtp timestamp offset */
   gint32 clock_rate;
   gint64 clock_base;
-  guint64 exttimestamp;
   gint64 prev_ts_offset;
 
   /* when we are shutting down */
@@ -525,7 +524,6 @@ gst_rtp_jitter_buffer_flush_start (GstRtpJitterBuffer * jitterbuffer)
   GST_DEBUG_OBJECT (jitterbuffer, "Disabling pop on queue");
   /* this unblocks any waiting pops on the src pad task */
   JBUF_SIGNAL (priv);
-  rtp_jitter_buffer_flush (priv->jbuf);
   /* unlock clock, we just unschedule, the entry will be released by the 
    * locking streaming thread. */
   if (priv->clock_id)
@@ -549,7 +547,8 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->next_seqnum = -1;
   priv->clock_rate = -1;
   priv->eos = FALSE;
-  priv->exttimestamp = -1;
+  rtp_jitter_buffer_flush (priv->jbuf);
+  rtp_jitter_buffer_reset_skew (priv->jbuf);
   JBUF_UNLOCK (priv);
 }
 
@@ -606,7 +605,8 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       priv->peer_latency = 0;
       /* block until we go to PLAYING */
       priv->blocked = TRUE;
-      priv->exttimestamp = -1;
+      /* reset skew detection initialy */
+      rtp_jitter_buffer_reset_skew (priv->jbuf);
       JBUF_UNLOCK (priv);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -943,7 +943,7 @@ duplicate:
 }
 
 static GstClockTime
-apply_latency (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
+apply_offset (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
 {
   GstRtpJitterBufferPrivate *priv;
 
@@ -954,10 +954,6 @@ apply_latency (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
 
   /* apply the timestamp offset */
   timestamp += priv->ts_offset;
-
-  /* add latency, this includes our own latency and the peer latency. */
-  timestamp += (priv->latency_ms * GST_MSECOND);
-  timestamp += priv->peer_latency;
 
   return timestamp;
 }
@@ -1011,8 +1007,9 @@ again:
       seqnum, GST_TIME_ARGS (timestamp),
       rtp_jitter_buffer_num_packets (priv->jbuf));
 
-  /* apply our latency to the incomming buffer before syncing. */
-  out_time = apply_latency (jitterbuffer, timestamp);
+  /* apply our timestamp offset to the incomming buffer, this will be our output
+   * timestamp. */
+  out_time = apply_offset (jitterbuffer, timestamp);
 
   /* If we don't know what the next seqnum should be (== -1) we have to wait
    * because it might be possible that we are not receiving this buffer in-order,
@@ -1054,6 +1051,9 @@ again:
 
     /* prepare for sync against clock */
     sync_time = out_time + GST_ELEMENT_CAST (jitterbuffer)->base_time;
+    /* add latency, this includes our own latency and the peer latency. */
+    sync_time += (priv->latency_ms * GST_MSECOND);
+    sync_time += priv->peer_latency;
 
     /* create an entry for the clock */
     id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
@@ -1093,7 +1093,7 @@ again:
       goto again;
     }
     /* Get new timestamp, latency might have changed */
-    out_time = apply_latency (jitterbuffer, timestamp);
+    out_time = apply_offset (jitterbuffer, timestamp);
   }
 push_buffer:
   /* check if we are pushing something unexpected */
@@ -1115,7 +1115,7 @@ push_buffer:
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
   }
 
-  /* apply timestamp to buffer now */
+  /* apply timestamp with offset to buffer now */
   GST_BUFFER_TIMESTAMP (outbuf) = out_time;
 
   /* now we are ready to push the buffer. Save the seqnum and release the lock

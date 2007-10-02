@@ -1,5 +1,24 @@
 2007-10-02  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_flush_start),
+	(gst_rtp_jitter_buffer_flush_stop),
+	(gst_rtp_jitter_buffer_change_state), (apply_offset),
+	(gst_rtp_jitter_buffer_loop):
+	Remove some old unused variables.
+	Don't add the latency to the skew corrected timestamp, latency is only
+	used to sync against the clock.
+	Improve debugging.
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_init),
+	(rtp_jitter_buffer_reset_skew), (calculate_skew):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Handle case where server timestamp goes backwards or wildly jumps by
+	temporarily pausing the skew correction.
+	Improve debugging.
+
+2007-10-02  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/sdp/Makefile.am:
 	Forgot to commit makefile.
 

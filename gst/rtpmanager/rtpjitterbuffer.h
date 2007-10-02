@@ -66,6 +66,7 @@ struct _RTPJitterBuffer {
   gboolean       window_filling;
   gint64         window_min;
   gint64         skew;
+  gint64         prev_send_diff;
 
   RTPTailChanged tail_changed;
   gpointer       user_data;
@@ -85,6 +86,8 @@ void                  rtp_jitter_buffer_set_tail_changed (RTPJitterBuffer *jbuf,
 
 void                  rtp_jitter_buffer_set_clock_rate   (RTPJitterBuffer *jbuf, gint clock_rate);
 gint                  rtp_jitter_buffer_get_clock_rate   (RTPJitterBuffer *jbuf);
+
+void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf);
 
 gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf, GstBuffer *buf, GstClockTime time);
 GstBuffer *           rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf);
