@@ -1,5 +1,10 @@
 2007-10-02  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/sdp/gstsdpdemux.h:
+	Change signature of pt to fix compilation on some platforms.
+
+2007-10-02  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_rtp_jitter_buffer_flush_start),
 	(gst_rtp_jitter_buffer_flush_stop),

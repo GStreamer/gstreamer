@@ -74,7 +74,7 @@ struct _GstSDPStream {
   GstPad       *rtcppad;
 
   /* state */
-  guint8        pt;
+  gint          pt;
   gboolean      container;
 };
 
