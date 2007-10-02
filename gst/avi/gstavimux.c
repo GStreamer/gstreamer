@@ -171,6 +171,9 @@ static GstStaticPadTemplate audio_sink_factory =
         "mpegversion = (int) 1, "
         "layer = (int) [ 1, 3 ], "
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
+        "audio/mpeg, "
+        "mpegversion = (int) 4, "
+        "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
 /*#if 0 VC6 doesn't support #if here ...
         "audio/x-vorbis, "
         "rate = (int) [ 1000, 96000 ], " "channels = (int) [ 1, 2 ]; "
@@ -627,16 +630,27 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
     avipad->auds.format = 0;
 
     if (!strcmp (mimetype, "audio/mpeg")) {
-      gint layer = 3;
+      gint mpegversion;
 
-      gst_structure_get_int (structure, "layer", &layer);
-      switch (layer) {
-        case 3:
-          avipad->auds.format = GST_RIFF_WAVE_FORMAT_MPEGL3;
+      gst_structure_get_int (structure, "mpegversion", &mpegversion);
+      switch (mpegversion) {
+        case 1:{
+          gint layer = 3;
+
+          gst_structure_get_int (structure, "layer", &layer);
+          switch (layer) {
+            case 3:
+              avipad->auds.format = GST_RIFF_WAVE_FORMAT_MPEGL3;
+              break;
+            case 1:
+            case 2:
+              avipad->auds.format = GST_RIFF_WAVE_FORMAT_MPEGL12;
+              break;
+          }
           break;
-        case 1:
-        case 2:
-          avipad->auds.format = GST_RIFF_WAVE_FORMAT_MPEGL12;
+        }
+        case 4:
+          avipad->auds.format = GST_RIFF_WAVE_FORMAT_AAC;
           break;
       }
     } else if (!strcmp (mimetype, "audio/x-vorbis")) {
@@ -1354,8 +1368,8 @@ gst_avi_mux_start_file (GstAviMux * avimux)
     node = node->next;
 
     if (!avipad->is_video) {
-      avipad->tag = g_strdup_printf ("%02uwb", ++avimux->audio_pads);
-      avipad->idx_tag = g_strdup_printf ("ix%02u", avimux->audio_pads);
+      avipad->tag = g_strdup_printf ("%02uwb", avimux->audio_pads);
+      avipad->idx_tag = g_strdup_printf ("ix%02u", avimux->audio_pads++);
     } else {
       avipad->tag = g_strdup_printf ("%02udb", avimux->video_pads);
       avipad->idx_tag = g_strdup_printf ("ix%02u", avimux->video_pads++);

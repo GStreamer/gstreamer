@@ -1,3 +1,9 @@
+2007-10-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavimux.c:
+	  Fix "Index entry has invalid stream nr 1".
+	  Add support for muxing aac - work in progress (see #482495).
+
 2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_get_bandwidth),
