@@ -20,6 +20,8 @@
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 
+#include <stdlib.h>
+
 #define CAPS "video/x-raw-rgb,width=160,pixel-aspect-ratio=1/1,bpp=(int)24,depth=(int)24,endianness=(int)4321,red_mask=(int)0xff0000, green_mask=(int)0x00ff00, blue_mask=(int)0x0000ff"
 
 int

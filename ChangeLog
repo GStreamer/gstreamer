@@ -1,3 +1,8 @@
+2007-10-02  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/examples/snapshot/snapshot.c:
+	  Fix the build.
+
 2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/sdp/gstsdpmessage.h:
