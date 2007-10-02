@@ -203,7 +203,8 @@ gst_gio_sink_start (GstBaseSink * base_sink)
     return FALSE;
   }
 
-  sink->stream = g_file_create (sink->file, sink->cancel, &err);
+  sink->stream =
+      g_file_create (sink->file, G_FILE_CREATE_FLAGS_NONE, sink->cancel, &err);
   success = (sink->stream != NULL);
 
   if (!success && !gst_gio_error (sink, "g_file_create", &err, NULL)) {
