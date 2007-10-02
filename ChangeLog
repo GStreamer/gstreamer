@@ -1,3 +1,10 @@
+2007-10-02  Edward Hervey  <bilboed@bilboed.com>
+
+	* plugins/elements/gstqueue.c: (gst_queue_locked_enqueue),
+	(gst_queue_locked_dequeue):
+	Comment the segment-related code... in the PROPER function.
+	See #482147 and my commit from yesterday.
+
 2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_change_state):

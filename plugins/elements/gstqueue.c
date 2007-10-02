@@ -631,8 +631,12 @@ gst_queue_locked_enqueue (GstQueue * queue, gpointer item)
 
     /* if this is the first buffer update the end side as well, but without the
      * duration. */
-    if (queue->cur_level.buffers == 1)
-      apply_buffer (queue, buffer, &queue->src_segment, FALSE);
+    /* FIXME : This will only be useful for current time level if the
+     * source task is running, which is not the case for ex in 
+     * gstplaybasebin when pre-rolling.
+     * See #482147 */
+    /*     if (queue->cur_level.buffers == 1) */
+    /*       apply_buffer (queue, buffer, &queue->src_segment, FALSE); */
   } else if (GST_IS_EVENT (item)) {
     GstEvent *event = GST_EVENT_CAST (item);
 
@@ -687,12 +691,8 @@ gst_queue_locked_dequeue (GstQueue * queue)
     apply_buffer (queue, buffer, &queue->src_segment, TRUE);
 
     /* if the queue is empty now, update the other side */
-    /* FIXME : This will only be useful for current time level if the
-     * source task is running, which is not the case for ex in 
-     * gstplaybasebin when pre-rolling.
-     * See #482147 */
-    /*     if (queue->cur_level.buffers == 0) */
-    /*       queue->cur_level.time = 0; */
+    if (queue->cur_level.buffers == 0)
+      queue->cur_level.time = 0;
   } else if (GST_IS_EVENT (item)) {
     GstEvent *event = GST_EVENT_CAST (item);
 
