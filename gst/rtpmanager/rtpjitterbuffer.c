@@ -65,13 +65,8 @@ static void
 rtp_jitter_buffer_init (RTPJitterBuffer * jbuf)
 {
   jbuf->packets = g_queue_new ();
-  jbuf->base_time = -1;
-  jbuf->base_rtptime = -1;
-  jbuf->ext_rtptime = -1;
-  jbuf->window_pos = 0;
-  jbuf->window_filling = TRUE;
-  jbuf->window_min = 0;
-  jbuf->skew = 0;
+
+  rtp_jitter_buffer_reset_skew (jbuf);
 }
 
 static void
@@ -130,6 +125,18 @@ rtp_jitter_buffer_get_clock_rate (RTPJitterBuffer * jbuf)
   return jbuf->clock_rate;
 }
 
+void
+rtp_jitter_buffer_reset_skew (RTPJitterBuffer * jbuf)
+{
+  jbuf->base_time = -1;
+  jbuf->base_rtptime = -1;
+  jbuf->ext_rtptime = -1;
+  jbuf->window_pos = 0;
+  jbuf->window_filling = TRUE;
+  jbuf->window_min = 0;
+  jbuf->skew = 0;
+  jbuf->prev_send_diff = -1;
+}
 
 /* For the clock skew we use a windowed low point averaging algorithm as can be
  * found in http://www.grame.fr/pub/TR-050601.pdf. The idea is that the jitter is
@@ -204,14 +211,47 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
   gstrtptime =
       gst_util_uint64_scale_int (ext_rtptime, GST_SECOND, jbuf->clock_rate);
 
+again:
   /* first time, lock on to time and gstrtptime */
   if (jbuf->base_time == -1)
     jbuf->base_time = time;
   if (jbuf->base_rtptime == -1)
     jbuf->base_rtptime = gstrtptime;
 
-  /* elapsed time at sender */
-  send_diff = gstrtptime - jbuf->base_rtptime;
+  if (gstrtptime >= jbuf->base_rtptime)
+    send_diff = gstrtptime - jbuf->base_rtptime;
+  else {
+    /* elapsed time at sender, timestamps can go backwards and thus be smaller
+     * than our base time, take a new base time in that case. */
+    GST_DEBUG ("backward timestamps at server, taking new base time");
+    jbuf->base_rtptime = gstrtptime;
+    jbuf->base_time = time;
+    send_diff = 0;
+  }
+
+  GST_DEBUG ("extrtp %" G_GUINT64_FORMAT ", gstrtp %" GST_TIME_FORMAT ", base %"
+      GST_TIME_FORMAT ", send_diff %" GST_TIME_FORMAT, ext_rtptime,
+      GST_TIME_ARGS (gstrtptime), GST_TIME_ARGS (jbuf->base_rtptime),
+      GST_TIME_ARGS (send_diff));
+
+  if (jbuf->prev_send_diff != -1) {
+    gint64 delta_diff;
+
+    if (send_diff > jbuf->prev_send_diff)
+      delta_diff = send_diff - jbuf->prev_send_diff;
+    else
+      delta_diff = jbuf->prev_send_diff - send_diff;
+
+    /* server changed rtp timestamps too quickly, reset skew detection and start
+     * again. */
+    if (delta_diff > GST_SECOND / 4) {
+      GST_DEBUG ("delta changed too quickly %" GST_TIME_FORMAT " reset skew",
+          GST_TIME_ARGS (delta_diff));
+      rtp_jitter_buffer_reset_skew (jbuf);
+      goto again;
+    }
+  }
+  jbuf->prev_send_diff = send_diff;
 
   /* we don't have an arrival timestamp so we can't do skew detection. we
    * should still apply a timestamp based on RTP timestamp and base_time */
@@ -221,6 +261,10 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
   /* elapsed time at receiver, includes the jitter */
   recv_diff = time - jbuf->base_time;
 
+  GST_DEBUG ("time %" GST_TIME_FORMAT ", base %" GST_TIME_FORMAT ", recv_diff %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (time), GST_TIME_ARGS (jbuf->base_time),
+      GST_TIME_ARGS (recv_diff));
+
   /* measure the diff */
   delta = ((gint64) recv_diff) - ((gint64) send_diff);
 
@@ -228,8 +272,7 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
 
   if (jbuf->window_filling) {
     /* we are filling the window */
-    GST_DEBUG ("filling %d %" G_GINT64_FORMAT ", send_diff %" G_GUINT64_FORMAT,
-        pos, delta, send_diff);
+    GST_DEBUG ("filling %d, delta %" G_GINT64_FORMAT, pos, delta);
     jbuf->window[pos++] = delta;
     /* calc the min delta we observed */
     if (pos == 1 || delta < jbuf->window_min)
@@ -290,8 +333,8 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
     }
     /* average the min values */
     jbuf->skew = (jbuf->window_min + (124 * jbuf->skew)) / 125;
-    GST_DEBUG ("new min: %" G_GINT64_FORMAT ", skew %" G_GINT64_FORMAT,
-        jbuf->window_min, jbuf->skew);
+    GST_DEBUG ("delta %" G_GINT64_FORMAT ", new min: %" G_GINT64_FORMAT,
+        delta, jbuf->window_min);
   }
   /* wrap around in the window */
   if (pos >= jbuf->window_size)
@@ -303,9 +346,7 @@ no_skew:
    * adjusted for the clock skew .*/
   out_time = jbuf->base_time + send_diff + jbuf->skew;
 
-  GST_DEBUG ("base %" GST_TIME_FORMAT ", diff %" GST_TIME_FORMAT ", skew %"
-      G_GINT64_FORMAT ", out %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (jbuf->base_time), GST_TIME_ARGS (send_diff),
+  GST_DEBUG ("skew %" G_GINT64_FORMAT ", out %" GST_TIME_FORMAT,
       jbuf->skew, GST_TIME_ARGS (out_time));
 
   return out_time;
