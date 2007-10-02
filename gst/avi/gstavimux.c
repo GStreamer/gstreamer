@@ -335,6 +335,11 @@ gst_avi_mux_pad_reset (GstAviPad * avipad, gboolean free)
   } else {
     GstAviAudioPad *audpad = (GstAviAudioPad *) avipad;
 
+    if (audpad->auds_codec_data) {
+      gst_buffer_unref (audpad->auds_codec_data);
+      audpad->auds_codec_data = NULL;
+    }
+
     memset (&(audpad->auds), 0, sizeof (gst_riff_strf_auds));
   }
 }
@@ -580,6 +585,7 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
   GstAviCollectData *collect_pad;
   GstStructure *structure;
   const gchar *mimetype;
+  const GValue *codec_data;
   gint channels, rate;
 
   avimux = GST_AVI_MUX (gst_pad_get_parent (pad));
@@ -606,6 +612,15 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
 
   avipad->auds.channels = channels;
   avipad->auds.rate = rate;
+
+  /* codec initialization data, if any */
+  codec_data = gst_structure_get_value (structure, "codec_data");
+  if (codec_data) {
+    avipad->auds_codec_data = gst_value_get_buffer (codec_data);
+    gst_buffer_ref (avipad->auds_codec_data);
+    /* keep global track of size */
+    avimux->codec_data_size += GST_BUFFER_SIZE (avipad->auds_codec_data);
+  }
 
   if (!strcmp (mimetype, "audio/x-raw-int")) {
     gint width, depth;
@@ -650,6 +665,7 @@ gst_avi_mux_audsink_set_caps (GstPad * pad, GstCaps * vscaps)
           break;
         }
         case 4:
+          GST_WARNING ("AAC");
           avipad->auds.format = GST_RIFF_WAVE_FORMAT_AAC;
           break;
       }
@@ -895,8 +911,9 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
 
   /* allocate the buffer, starting with some wild/safe upper bound */
   size += avimux->codec_data_size + 100 + sizeof (gst_riff_avih)
-      + (g_slist_length (avimux->sinkpads) *
-      (100 + sizeof (gst_riff_strh) + sizeof (gst_riff_strf_vids)
+      + (g_slist_length (avimux->sinkpads) * (100 + sizeof (gst_riff_strh)
+          + sizeof (gst_riff_strf_vids)
+          + sizeof (gst_riff_strf_auds)
           + ODML_SUPERINDEX_SIZE));
   buffer = gst_buffer_new_and_alloc (size);
   buffdata = GST_BUFFER_DATA (buffer);
@@ -949,9 +966,12 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
         codec_size = GST_BUFFER_SIZE (vidpad->vids_codec_data);
       strl_size = sizeof (gst_riff_strh) + sizeof (gst_riff_strf_vids)
           + codec_size + 4 * 5 + ODML_SUPERINDEX_SIZE;
-    } else
+    } else {
+      if (audpad->auds_codec_data)
+        codec_size = GST_BUFFER_SIZE (audpad->auds_codec_data);
       strl_size = sizeof (gst_riff_strh) + sizeof (gst_riff_strf_auds)
-          + 4 * 5 + ODML_SUPERINDEX_SIZE;
+          + codec_size + 4 * 5 + ODML_SUPERINDEX_SIZE;
+    }
 
     /* stream list metadata */
     memcpy (buffdata + 0, "LIST", 4);
@@ -1005,7 +1025,8 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
     } else {
       /* the audio header */
       memcpy (buffdata + 68, "strf", 4);
-      GST_WRITE_UINT32_LE (buffdata + 72, sizeof (gst_riff_strf_auds));
+      GST_WRITE_UINT32_LE (buffdata + 72,
+          sizeof (gst_riff_strf_auds) + codec_size);
       /* the actual header */
       GST_WRITE_UINT16_LE (buffdata + 76, audpad->auds.format);
       GST_WRITE_UINT16_LE (buffdata + 78, audpad->auds.channels);
@@ -1015,6 +1036,15 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
       GST_WRITE_UINT16_LE (buffdata + 90, audpad->auds.size);
       buffdata += 92;
       highmark += 92;
+
+      /* include codec data, if any */
+      if (codec_size) {
+        memcpy (buffdata, GST_BUFFER_DATA (audpad->auds_codec_data),
+            codec_size);
+
+        buffdata += codec_size;
+        highmark += codec_size;
+      }
     }
 
     /* odml superindex chunk */

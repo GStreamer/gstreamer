@@ -91,7 +91,8 @@ typedef struct _GstAviAudioPad {
   /* audio info for bps calculation */
   guint32 audio_size;
   guint64 audio_time;
-
+  /* extra data */
+  GstBuffer *auds_codec_data;
 } GstAviAudioPad;
 
 typedef struct _GstAviCollectData {
