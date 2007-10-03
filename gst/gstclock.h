@@ -338,7 +338,7 @@ typedef enum {
  *
  * Gets the #GstClockFlags clock flags.
  */
-#define GST_CLOCK_FLAGS(clock)  (GST_CLOCK(clock)->flags)
+#define GST_CLOCK_FLAGS(clock)  GST_OBJECT_FLAGS(clock)
 
 /**
  * GST_CLOCK_COND:
@@ -374,7 +374,6 @@ typedef enum {
 
 /**
  * GstClock:
- * @flags: The flags specifying the capabilities of the clock.
  *
  * GstClock base structure. The values of this structure are
  * protected for subclasses, use the methods to use the #GstClock.

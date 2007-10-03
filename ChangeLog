@@ -1,3 +1,9 @@
+2007-10-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstclock.h:
+	  Fix up broken GST_CLOCK_FLAGS macro and GstClock docs. The flags
+	  field has moved to GstObject.
+
 2007-10-02  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_do_sync),
