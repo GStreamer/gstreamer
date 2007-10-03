@@ -425,7 +425,7 @@ gst_element_set_clock (GstElement * element, GstClock * clock)
 
   oclass = GST_ELEMENT_GET_CLASS (element);
 
-  GST_DEBUG_OBJECT (element, "setting clock %p", clock);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CLOCK, element, "setting clock %p", clock);
 
   if (oclass->set_clock)
     res = oclass->set_clock (element, clock);
@@ -2703,7 +2703,8 @@ gst_element_dispose (GObject * object)
   if (GST_STATE (element) != GST_STATE_NULL)
     goto not_null;
 
-  GST_DEBUG_OBJECT (element, "removing %d pads", g_list_length (element->pads));
+  GST_CAT_DEBUG_OBJECT (GST_CAT_ELEMENT_PADS, element,
+      "removing %d pads", g_list_length (element->pads));
   /* first we break all our links with the outside */
   while (element->pads && element->pads->data) {
     /* don't call _remove_pad with NULL */
@@ -2957,7 +2958,8 @@ gst_element_get_bus (GstElement * element)
     gst_object_ref (result);
   GST_OBJECT_UNLOCK (element);
 
-  GST_DEBUG_OBJECT (element, "got bus %" GST_PTR_FORMAT, result);
+  GST_CAT_DEBUG_OBJECT (GST_CAT_BUS, element, "got bus %" GST_PTR_FORMAT,
+      result);
 
   return result;
 }

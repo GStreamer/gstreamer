@@ -1,5 +1,10 @@
 2007-10-03  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstelement.c:
+	  Use meaningful categories for the logs to clean the default one.
+
+2007-10-03  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/check/pipelines/cleanup.c:
 	  Print message name and not just number.
 
