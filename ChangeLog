@@ -1,3 +1,8 @@
+2007-10-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/pipelines/simple-launch-lines.c:
+	  Print message name and not just number.
+
 2007-10-02  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:
