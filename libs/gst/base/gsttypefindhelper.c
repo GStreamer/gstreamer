@@ -58,6 +58,7 @@ typedef struct
 {
   GSList *buffers;              /* buffer cache */
   guint64 size;
+  guint64 last_offset;
   GstTypeFindHelperGetRangeFunction func;
   guint best_probability;
   GstCaps *caps;
@@ -71,7 +72,9 @@ typedef struct
  * @off: stream offset
  * @size: block size
  *
- * Get data pointer within a stream. Keeps a cache of read buffers.
+ * Get data pointer within a stream. Keeps a cache of read buffers (partly
+ * for performance reasons, but mostly because pointers returned by us need
+ * to stay valid until typefinding has finished)
  *
  * Returns: address of the data or %NULL if buffer does not cover the
  * requested range.
@@ -82,6 +85,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   GstTypeFindHelper *helper;
   GstBuffer *buffer;
   GstFlowReturn ret;
+  GSList *insert_pos = NULL;
 
   helper = (GstTypeFindHelper *) data;
 
@@ -99,7 +103,7 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
   }
 
   /* see if we have a matching buffer already in our list */
-  if (size > 0) {
+  if (size > 0 && offset <= helper->last_offset) {
     GSList *walk;
 
     for (walk = helper->buffers; walk; walk = walk->next) {
@@ -107,13 +111,30 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
       guint64 buf_offset = GST_BUFFER_OFFSET (buf);
       guint buf_size = GST_BUFFER_SIZE (buf);
 
-      if (buf_offset <= offset && (offset + size) < (buf_offset + buf_size))
-        return GST_BUFFER_DATA (buf) + (offset - buf_offset);
+      if (buf_offset <= offset) {
+        if ((offset + size) < (buf_offset + buf_size)) {
+          return GST_BUFFER_DATA (buf) + (offset - buf_offset);
+        }
+        /* buffers are kept sorted by offset (highest first) in the list, so
+         * at this point we know we don't need to check the remaining buffers
+         * (is that correct or just a guess that we're unlikely to find a
+         * match further down and it's most of the time not worth going through
+         * the entire list? How do we know the next buffer isn't offset-N with
+         * a big enough size to cover the requested offset+size?) */
+        insert_pos = walk;
+        break;
+      }
     }
   }
 
   buffer = NULL;
-  ret = helper->func (helper->obj, offset, size, &buffer);
+  /* some typefinders go in 1 byte steps over 1k of data and request
+   * small buffers. It is really inefficient to pull each time, and pulling
+   * a larger chunk is almost free. Trying to pull a larger chunk at the end
+   * of the file is also not a problem here, we'll just get a truncated buffer
+   * in that case (and we'll have to double-check the size we actually get
+   * anyway, see below) */
+  ret = helper->func (helper->obj, offset, MAX (size, 512), &buffer);
 
   if (ret != GST_FLOW_OK)
     goto error;
@@ -129,7 +150,17 @@ helper_find_peek (gpointer data, gint64 offset, guint size)
     return NULL;
   }
 
-  helper->buffers = g_slist_prepend (helper->buffers, buffer);
+  if (insert_pos) {
+    helper->buffers =
+        g_slist_insert_before (helper->buffers, insert_pos, buffer);
+  } else {
+    /* if insert_pos is not set, our offset is bigger than the largest offset
+     * we have so far; since we keep the list sorted with highest offsets
+     * first, we need to prepend the buffer to the list */
+    /* FIXME: why not last_offset = buffer_offset + buffer_size here? */
+    helper->last_offset = GST_BUFFER_OFFSET (buffer);
+    helper->buffers = g_slist_prepend (helper->buffers, buffer);
+  }
   return GST_BUFFER_DATA (buffer);
 
 error:
@@ -214,6 +245,7 @@ gst_type_find_helper_get_range (GstObject * obj,
 
   helper.buffers = NULL;
   helper.size = size;
+  helper.last_offset = 0;
   helper.func = func;
   helper.best_probability = 0;
   helper.caps = NULL;

@@ -1,5 +1,10 @@
 2007-10-03  Stefan Kost  <ensonic@users.sf.net>
 
+	* libs/gst/base/gsttypefindhelper.c:
+	  Speedup typefinding. This is work in progress (see #459862).
+
+2007-10-03  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstplugin.c:
 	  Fix docs that mention 'plugin_desc' instead of 'gst_plugin_desc'.
 	  Spotted by Josep Torra Valles <josep@fluendo.com>.
