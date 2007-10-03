@@ -1,5 +1,10 @@
 2007-10-03  Stefan Kost  <ensonic@users.sf.net>
 
+	* tests/check/pipelines/simple-launch-lines.c:
+	  Print message name and not just number.
+
+2007-10-03  Stefan Kost  <ensonic@users.sf.net>
+
 	* libs/gst/base/gsttypefindhelper.c:
 	  Speedup typefinding. This is work in progress (see #459862).
 
