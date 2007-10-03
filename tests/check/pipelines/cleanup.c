@@ -66,8 +66,9 @@ run_pipeline (GstElement * pipeline, gchar * descr,
     } else if (revent & events) {
       continue;
     }
-    g_critical ("Unexpected message received of type %d, looking for %d: %s",
-        revent, tevent, descr);
+    g_critical
+        ("Unexpected message received of type %d, '%s', looking for %d: %s",
+        revent, gst_message_type_get_name (revent), tevent, descr);
   }
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
