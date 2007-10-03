@@ -3,7 +3,7 @@ Tagreading
 
 The tagreading (metadata reading) use case for mediacenter applications is not
 to well supported by the current GStreamer architecture. It uses demuxers on the
-files, which generelly said takes too long. what we want is secialized elements
+files, which generelly said takes too long. what we want is specialized elements
 that just do the tag-reading.
 
 The idea is to have one plugin 'tagread' simmilar to 'typefind' that provides
@@ -12,6 +12,9 @@ would be that when building a metadatabase one only loads this plugin.
 
 Then there would be a tagbin, that similar to decodebin does a typefind and then
 plugs the right tagread element. It might plug a demuxer as a fallback solution.
+
+For optimal performance typefind and tagread could share the list of already
+peeked buffers.
 
 Still it would be nice to reuse code from demuxers/tag-filters.
 
@@ -38,15 +41,16 @@ The plan is that applications can do the following:
 
 Open Issues
 -----------
-* would it make sense to have 2-phase tag-reading
+* would it make sense to have 2-phase tag-reading (property on tagbin and/or
+  tagread elements)
   * 1st phase: get tag-data that are directly embedded in the data
-  * 2nd phase: get tag-data that has to be generated fetched
+  * 2nd phase: get tag-data that has to be generated
     * e.g. album-art via web, video-thumbnails
 * what about caching backends
   * it would be good to allow applications to supply tagbin with a tagcache-
-    object instance. whenever tagbin gets a uri to tagread, it consults the
-    cache first. whenever there is a cache-miss it will tag-read and then store
-    in the cache
+    object instance. Whenever tagbin gets a 'location' to tagread, it consults
+    the cache first. whenever there is a cache-miss it will tag-read and then
+    store in the cache
 
     GstTagList *gst_tag_cache_load_tag_data (GstTagCache *self, const gchar *uri);
     gst_tag_cache_store_tag_data (GstTagCache *self, const gchar *uri, GstTagList *tags);
