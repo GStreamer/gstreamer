@@ -1,3 +1,8 @@
+2007-10-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/generic/libavcodec-locking.c:
+	  Print message name and not just number.
+
 2007-10-01  Wim Taymans  <wim.taymans@gmail.com>
 
 	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
