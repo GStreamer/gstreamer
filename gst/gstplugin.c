@@ -29,11 +29,12 @@
  * A plugin system can provide one or more of the basic
  * <application>GStreamer</application> #GstPluginFeature subclasses.
  *
- * A plugin should export a symbol <symbol>plugin_desc</symbol> that is a
+ * A plugin should export a symbol <symbol>gst_plugin_desc</symbol> that is a
  * struct of type #GstPluginDesc.
  * the plugin loader will check the version of the core library the plugin was
  * linked against and will create a new #GstPlugin. It will then call the
- * #GstPluginInitFunc function that was provided in the plugin_desc.
+ * #GstPluginInitFunc function that was provided in the
+ * <symbol>gst_plugin_desc</symbol>.
  *
  * Once you have a handle to a #GstPlugin (e.g. from the #GstRegistryPool), you
  * can add any object that subclasses #GstPluginFeature.

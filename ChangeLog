@@ -1,3 +1,9 @@
+2007-10-03  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstplugin.c:
+	  Fix docs that mention 'plugin_desc' instead of 'gst_plugin_desc'.
+	  Spotted by Josep Torra Valles <josep@fluendo.com>.
+
 2007-10-03  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstclock.h:
