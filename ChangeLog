@@ -1,3 +1,11 @@
+2007-10-04  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: Timo Hotti <Timo.Hotti@sysopendigia.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/simple-launch-lines.c:
+	  Add unit tests for payloaders/depayloaders.
+
 2007-10-02  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavimux.c:

@@ -66,6 +66,7 @@ check_PROGRAMS = \
 	elements/icydemux \
 	elements/videocrop \
 	elements/videofilter \
+	pipelines/simple-launch-lines \
 	$(check_sunaudio) \
 	$(check_taglib) \
 	$(check_wavpack)
