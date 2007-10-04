@@ -1,5 +1,11 @@
 2007-10-04  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/rtp/gstrtpgsmdepay.c:
+	* gst/rtp/gstrtpgsmpay.c:
+	  Add log category.
+
+2007-10-04  Stefan Kost  <ensonic@users.sf.net>
+
 	Patch by: Timo Hotti <Timo.Hotti@sysopendigia.com>
 
 	* tests/check/Makefile.am:

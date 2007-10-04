@@ -26,6 +26,9 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtpgsmdepay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtpgsmdepay_debug);
+#define GST_CAT_DEFAULT (rtpgsmdepay_debug)
+
 /* elementfactory information */
 static GstElementDetails gst_rtp_gsmdepay_details = {
   "RTP packet depayloader",
@@ -97,6 +100,9 @@ gst_rtp_gsm_depay_class_init (GstRTPGSMDepayClass * klass)
 
   gstbasertp_depayload_class->process = gst_rtp_gsm_depay_process;
   gstbasertp_depayload_class->set_caps = gst_rtp_gsm_depay_setcaps;
+
+  GST_DEBUG_CATEGORY_INIT (rtpgsmdepay_debug, "rtpgsmdepay", 0,
+      "GSM Audio RTP Depayloader");
 }
 
 static void

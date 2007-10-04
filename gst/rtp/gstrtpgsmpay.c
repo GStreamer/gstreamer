@@ -28,6 +28,9 @@
 
 #include "gstrtpgsmpay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtpgsmpay_debug);
+#define GST_CAT_DEFAULT (rtpgsmpay_debug)
+
 /* elementfactory information */
 static const GstElementDetails gst_rtp_gsm_pay_details =
 GST_ELEMENT_DETAILS ("RTP GSM audio payloader",
@@ -91,6 +94,9 @@ gst_rtp_gsm_pay_class_init (GstRTPGSMPayClass * klass)
 
   gstbasertppayload_class->set_caps = gst_rtp_gsm_pay_setcaps;
   gstbasertppayload_class->handle_buffer = gst_rtp_gsm_pay_handle_buffer;
+
+  GST_DEBUG_CATEGORY_INIT (rtpgsmpay_debug, "rtpgsmpay", 0,
+      "GSM Audio RTP Payloader");
 }
 
 static void
