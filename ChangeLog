@@ -1,3 +1,9 @@
+2007-10-04  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	  Replace g_return_if_val (as it could be disabled), with regular return
+	  and warning.
+
 2007-10-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/pipelines/simple-launch-lines.c:
