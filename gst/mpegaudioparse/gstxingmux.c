@@ -33,7 +33,7 @@ GST_BOILERPLATE (GstXingMux, gst_xing_mux, GstElement, GST_TYPE_ELEMENT);
 /* Xing Header stuff */
 struct _GstXingMuxPriv
 {
-  guint64 duration;
+  GstClockTime duration;
   guint64 byte_count;
   GList *seek_table;
   gboolean flush;
@@ -44,7 +44,7 @@ struct _GstXingMuxPriv
 #define GST_XING_TOC_FIELD     (1 << 2)
 #define GST_XING_QUALITY_FIELD (1 << 3)
 
-static const int XING_FRAME_SIZE = 418;
+static const int XING_FRAME_SIZE = 417;
 
 static GstStateChangeReturn
 gst_xing_mux_change_state (GstElement * element, GstStateChange transition);
@@ -186,7 +186,8 @@ xing_generate_header (GstXingMux * xing)
    *                      (00b == no emphasis)
    *
    * Such a frame (MPEG1 Layer III) contains 1152 samples, its size is thus:
-   * (1152*(128000/8))/44100 = 417.96
+   * (1152*(128000/8))/44100 = 417.96 rounded to the next smaller integer, i.e.
+   * 417.
    * 
    * There are also 32 bytes (ie 8 32 bits values) to skip after the header 
    * for such frames
@@ -203,14 +204,19 @@ xing_generate_header (GstXingMux * xing)
 
   xing_flags = 0;
   if (xing->priv->duration != GST_CLOCK_TIME_NONE) {
-    guint number_of_frames;
+    guint32 number_of_frames;
 
     /* The Xing Header contains a NumberOfFrames field, which verifies to:
      * Duration = NumberOfFrames *SamplesPerFrame/SamplingRate
      * SamplesPerFrame and SamplingRate are values for the current frame, 
      * ie 1152 and 44100 in our case.
      */
-    number_of_frames = (44100 * xing->priv->duration / GST_SECOND) / 1152;
+
+    /* FIXME: Better count the actual number of frames as the calculation
+     * below introduces rounding errors
+     */
+    number_of_frames = gst_util_uint64_scale (xing->priv->duration, 44100,
+        GST_SECOND) / 1152;
     data[SIDE_INFO_SIZE + 3] = GUINT32_TO_BE (number_of_frames);
 
     xing_flags |= GST_XING_FRAME_FIELD;
@@ -221,7 +227,7 @@ xing_generate_header (GstXingMux * xing)
     data[SIDE_INFO_SIZE + 4] = GUINT32_TO_BE (xing->priv->byte_count);
   }
 
-  /* Un-#ifdef when it's implemented :) xing code in VbrTag.c looks like
+  /* TODO: Un-#ifdef when it's implemented :) xing code in VbrTag.c looks like
    * it could be stolen
    */
 #if 0
@@ -256,10 +262,16 @@ xing_push_header (GstXingMux * xing)
   GstBuffer *header;
   GstEvent *event;
 
+  /* FIXME: should actually be after any ID3v2/APE tags and before the real
+   * MP3 frames.
+   */
   event = gst_event_new_new_segment (FALSE, 1.0, GST_FORMAT_BYTES,
       0, GST_CLOCK_TIME_NONE, 0);
 
-  gst_pad_push_event (xing->srcpad, event);
+  if (G_UNLIKELY (!gst_pad_push_event (xing->srcpad, event))) {
+    GST_WARNING ("Failed to seek to position 0 for pushing the Xing header");
+    return;
+  }
 
   header = xing_generate_header (xing);
   xing_set_flush (xing, FALSE);
