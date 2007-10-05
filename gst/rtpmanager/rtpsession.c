@@ -1569,19 +1569,35 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime time)
 
   result = sess->next_rtcp_check_time;
 
+  GST_DEBUG ("current time: %" GST_TIME_FORMAT ", next :%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time), GST_TIME_ARGS (result));
+
+  if (result < time) {
+    GST_DEBUG ("take current time as base");
+    /* our previous check time expired, start counting from the current time
+     * again. */
+    result = time;
+  }
+
   if (sess->source->received_bye) {
-    if (sess->sent_bye)
+    if (sess->sent_bye) {
+      GST_DEBUG ("we sent BYE already");
       result = GST_CLOCK_TIME_NONE;
-    else if (sess->stats.active_sources >= 50)
+    } else if (sess->stats.active_sources >= 50) {
+      GST_DEBUG ("reconsider BYE, more than 50 sources");
       /* reconsider BYE if members >= 50 */
-      result = time + calculate_rtcp_interval (sess, FALSE, TRUE);
+      result += calculate_rtcp_interval (sess, FALSE, TRUE);
+    }
   } else {
-    if (sess->first_rtcp)
+    if (sess->first_rtcp) {
+      GST_DEBUG ("first RTCP packet");
       /* we are called for the first time */
-      result = time + calculate_rtcp_interval (sess, FALSE, TRUE);
-    else if (sess->next_rtcp_check_time < time)
+      result += calculate_rtcp_interval (sess, FALSE, TRUE);
+    } else if (sess->next_rtcp_check_time < time) {
+      GST_DEBUG ("old check time expired, getting new timeout");
       /* get a new timeout when we need to */
-      result = time + calculate_rtcp_interval (sess, FALSE, FALSE);
+      result += calculate_rtcp_interval (sess, FALSE, FALSE);
+    }
   }
   sess->next_rtcp_check_time = result;
 
@@ -1784,20 +1800,25 @@ session_bye (RTPSession * sess, ReportData * data)
 static gboolean
 is_rtcp_time (RTPSession * sess, GstClockTime time, ReportData * data)
 {
-  GstClockTime new_send_time;
+  GstClockTime new_send_time, elapsed;
   gboolean result;
 
   /* no need to check yet */
   if (sess->next_rtcp_check_time > time) {
-    GST_DEBUG ("no check time yet");
+    GST_DEBUG ("no check time yet, next %" GST_TIME_FORMAT " > now %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (sess->next_rtcp_check_time),
+        GST_TIME_ARGS (time));
     return FALSE;
   }
+
+  /* get elapsed time since we last reported */
+  elapsed = time - sess->last_rtcp_send_time;
 
   /* perform forward reconsideration */
   new_send_time = rtp_stats_add_rtcp_jitter (&sess->stats, data->interval);
 
-  GST_DEBUG ("forward reconsideration %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (new_send_time));
+  GST_DEBUG ("forward reconsideration %" GST_TIME_FORMAT ", elapsed %"
+      GST_TIME_FORMAT, GST_TIME_ARGS (new_send_time), GST_TIME_ARGS (elapsed));
 
   new_send_time += sess->last_rtcp_send_time;
 
