@@ -1,3 +1,15 @@
+2007-10-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Patch by: Wai-Ming Ho <webregbox at yahoo dot co dot uk>
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	(mpegts_packetizer_stream_new):
+	Don't skip PAT with version number 0. Fixes #483400.
+	* gst/mpegtsparse/mpegtsparse.c: (mpegts_parse_apply_pat):
+	Make all values above 0 mark a referenced program as they can be
+	incremented and only 1 had marked a referenced program before, causing
+	actually referenced programs to be unreferenced.
+
 2007-10-02  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/sdp/gstsdpdemux.h:

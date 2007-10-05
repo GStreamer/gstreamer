@@ -717,7 +717,7 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GValueArray * pat_info)
           "program-number", &program_number, "pid", &pid, NULL);
 
       program = mpegts_parse_get_program (parse, program_number);
-      if (program->patcount-- == 1)
+      if (--program->patcount > 0)
         /* the program has been referenced by the new pat, keep it */
         continue;
 

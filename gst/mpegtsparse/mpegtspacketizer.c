@@ -35,6 +35,7 @@ static void mpegts_packetizer_finalize (GObject * object);
 
 #define CONTINUITY_UNSET 255
 #define MAX_CONTINUITY 15
+#define SECTION_VERSION_NUMBER_NOTSET 255
 
 typedef struct
 {
@@ -54,6 +55,7 @@ mpegts_packetizer_stream_new (guint16 pid)
   stream->section_adapter = gst_adapter_new ();
   stream->pid = pid;
   stream->continuity_counter = CONTINUITY_UNSET;
+  stream->section_version_number = SECTION_VERSION_NUMBER_NOTSET;
   return stream;
 }
 
