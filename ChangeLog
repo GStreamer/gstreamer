@@ -1,3 +1,8 @@
+2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
+
+	* tests/check/pipelines/simple-launch-lines.c: (run_pipeline):
+	Fix compilation again.
+
 2007-10-03  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstelement.c:

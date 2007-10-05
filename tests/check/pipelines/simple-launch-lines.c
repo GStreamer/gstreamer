@@ -83,7 +83,7 @@ run_pipeline (GstElement * pipeline, gchar * descr,
     }
     g_critical
         ("Unexpected message received of type %d, '%s', looking for %d: %s",
-        revent, gst_message_type_get_name (revent), tevent, descr);
+        rmessage, gst_message_type_get_name (rmessage), tmessage, descr);
   }
 
 done:
