@@ -1,3 +1,16 @@
+2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_flush),
+	(gst_rtspsrc_perform_seek), (gst_rtspsrc_handle_src_event),
+	(gst_rtspsrc_handle_internal_src_query),
+	(gst_rtspsrc_handle_src_query), (new_session_pad),
+	(gst_rtspsrc_stream_configure_tcp),
+	(gst_rtspsrc_stream_configure_transport),
+	(gst_rtspsrc_loop_send_cmd):
+	Improve flushing behaviour.
+	Set state of the udp sources to PAUSE/PLAYING correctly.
+	Handle events and queries for UDP and TCP transport now.
+
 2007-10-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/rtp/gstrtpgsmdepay.c:

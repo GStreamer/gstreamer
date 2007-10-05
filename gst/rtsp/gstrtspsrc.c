@@ -195,6 +195,8 @@ static GstStateChangeReturn gst_rtspsrc_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message);
 
+static void gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd,
+    gboolean flush);
 static GstRTSPResult gst_rtspsrc_send_cb (GstRTSPExtension * ext,
     GstRTSPMessage * request, GstRTSPMessage * response, GstRTSPSrc * src);
 
@@ -1119,17 +1121,34 @@ static void
 gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
 {
   GstEvent *event;
+  gint cmd, i;
+  GstState state;
+  GList *walk;
 
   if (flush) {
     event = gst_event_new_flush_start ();
     GST_DEBUG_OBJECT (src, "start flush");
+    cmd = CMD_STOP;
+    state = GST_STATE_PAUSED;
   } else {
     event = gst_event_new_flush_stop ();
     GST_DEBUG_OBJECT (src, "stop flush");
+    cmd = CMD_WAIT;
+    state = GST_STATE_PLAYING;
   }
-  gst_rtsp_connection_flush (src->connection, flush);
-
   gst_rtspsrc_push_event (src, event);
+  gst_rtspsrc_loop_send_cmd (src, cmd, flush);
+
+  /* */
+  for (walk = src->streams; walk; walk = g_list_next (walk)) {
+    GstRTSPStream *stream = (GstRTSPStream *) walk->data;
+
+    for (i = 0; i < 2; i++) {
+      if (stream->udpsrc[i]) {
+        gst_element_set_state (stream->udpsrc[i], state);
+      }
+    }
+  }
 }
 
 static GstRTSPResult
@@ -1219,12 +1238,17 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     GST_DEBUG_OBJECT (src, "starting flush");
     gst_rtspsrc_flush (src, TRUE);
   } else {
-    //gst_pad_pause_task (src->sinkpad);
+    if (src->task) {
+      gst_task_pause (src->task);
+    }
   }
 
   /* we should now be able to grab the streaming thread because we stopped it
    * with the above flush/pause code */
-  //GST_PAD_STREAM_LOCK (src->sinkpad);
+  GST_RTSP_STREAM_LOCK (src);
+
+  /* stop flushing state */
+  gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, FALSE);
 
   /* save current position */
   last_stop = src->segment.last_stop;
@@ -1299,13 +1323,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
     GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
     //src->discont = TRUE;
   }
-
-  /* and start the streaming task again */
-  src->running = TRUE;
-  //gst_pad_start_task (src->sinkpad, (GstTaskFunction) gst_srcparse_loop,
-  //    src->sinkpad);
-
-  //GST_PAD_STREAM_UNLOCK (src->sinkpad);
+  GST_RTSP_STREAM_UNLOCK (src);
 
   return TRUE;
 
@@ -1328,7 +1346,7 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
   GstRTSPSrc *src;
   gboolean res = FALSE;
 
-  src = GST_RTSPSRC_CAST (gst_pad_get_element_private (pad));
+  src = GST_RTSPSRC_CAST (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (src, "pad %s:%s received event %s",
       GST_DEBUG_PAD_NAME (pad), GST_EVENT_TYPE_NAME (event));
@@ -1346,11 +1364,15 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
+  gst_object_unref (src);
+
   return res;
 }
 
+/* this is the final query function we receive on the internal source pad when
+ * we deal with TCP connections */
 static gboolean
-gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
+gst_rtspsrc_handle_internal_src_query (GstPad * pad, GstQuery * query)
 {
   GstRTSPSrc *src;
   gboolean res = TRUE;
@@ -1363,6 +1385,7 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
     {
+      /* no idea */
       break;
     }
     case GST_QUERY_DURATION:
@@ -1383,13 +1406,60 @@ gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_LATENCY:
     {
-      /* we are live with a min latency of 0 and unlimited max latency */
+      /* we are live with a min latency of 0 and unlimited max latency, this
+       * result will be updated by the session manager if there is any. */
       gst_query_set_latency (query, TRUE, 0, -1);
       break;
     }
     default:
       break;
   }
+
+  return res;
+}
+
+/* this query is executed on the ghost source pad exposed on rtspsrc. */
+static gboolean
+gst_rtspsrc_handle_src_query (GstPad * pad, GstQuery * query)
+{
+  GstRTSPSrc *src;
+  gboolean res = FALSE;
+
+  src = GST_RTSPSRC_CAST (gst_pad_get_parent (pad));
+
+  GST_DEBUG_OBJECT (src, "pad %s:%s received query %s",
+      GST_DEBUG_PAD_NAME (pad), GST_QUERY_TYPE_NAME (query));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+
+      gst_query_parse_duration (query, &format, NULL);
+
+      switch (format) {
+        case GST_FORMAT_TIME:
+          gst_query_set_duration (query, format, src->segment.duration);
+          res = TRUE;
+          break;
+        default:
+          break;
+      }
+      break;
+    }
+    default:
+    {
+      GstPad *target = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (pad));
+
+      /* forward the query to the proxy target pad */
+      if (target) {
+        res = gst_pad_query (target, query);
+        gst_object_unref (target);
+      }
+      break;
+    }
+  }
+  gst_object_unref (src);
 
   return res;
 }
@@ -1497,6 +1567,8 @@ new_session_pad (GstElement * session, GstPad * pad, GstRTSPSrc * src)
   g_free (name);
 
   stream->added = TRUE;
+  gst_pad_set_event_function (stream->srcpad, gst_rtspsrc_handle_src_event);
+  gst_pad_set_query_function (stream->srcpad, gst_rtspsrc_handle_src_query);
   gst_pad_set_active (stream->srcpad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (src), stream->srcpad);
 
@@ -1764,12 +1836,11 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
 
     /* allocate pads for sending the channel data into the manager */
     pad0 = gst_pad_new_from_template (template, "internalsrc0");
-    gst_pad_set_event_function (pad0, gst_rtspsrc_handle_src_event);
-    gst_pad_set_query_function (pad0, gst_rtspsrc_handle_src_query);
     gst_pad_link (pad0, stream->channelpad[0]);
     stream->channelpad[0] = pad0;
-    gst_pad_set_active (pad0, TRUE);
+    gst_pad_set_query_function (pad0, gst_rtspsrc_handle_internal_src_query);
     gst_pad_set_element_private (pad0, src);
+    gst_pad_set_active (pad0, TRUE);
 
     if (stream->channelpad[1]) {
       /* if we have a sinkpad for the other channel, create a pad and link to the
@@ -2066,6 +2137,8 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
     name = g_strdup_printf ("stream%d", stream->id);
     template = gst_static_pad_template_get (&rtptemplate);
     stream->srcpad = gst_ghost_pad_new_from_template (name, outpad, template);
+    gst_pad_set_event_function (stream->srcpad, gst_rtspsrc_handle_src_event);
+    gst_pad_set_query_function (stream->srcpad, gst_rtspsrc_handle_src_query);
     gst_object_unref (template);
     g_free (name);
 
@@ -2773,6 +2846,9 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gboolean flush)
   if (flush) {
     GST_DEBUG_OBJECT (src, "start connection flush");
     gst_rtsp_connection_flush (src->connection, TRUE);
+  } else {
+    GST_DEBUG_OBJECT (src, "stop connection flush");
+    gst_rtsp_connection_flush (src->connection, FALSE);
   }
   GST_OBJECT_UNLOCK (src);
 }
