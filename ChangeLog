@@ -1,3 +1,11 @@
+2007-10-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	(gst_rtp_buffer_get_payload_subbuffer):
+	Fix bug introduced with last commit which inverted the logic and
+	caused all buffers to be dropped. Fixes #483620.
+	Thanks to Laurent Glayal <spglegle at yahoo dot fr> for noticing.
+
 2007-10-04  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/rtp/gstrtpbuffer.c:

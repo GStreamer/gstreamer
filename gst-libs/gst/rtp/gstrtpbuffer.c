@@ -875,7 +875,7 @@ gst_rtp_buffer_get_payload_subbuffer (GstBuffer * buffer, guint offset,
 
   plen = gst_rtp_buffer_get_payload_len (buffer);
   /* we can't go past the length */
-  if (G_UNLIKELY (offset < plen)) {
+  if (G_UNLIKELY (offset >= plen)) {
     GST_WARNING ("offset=%u should be less then plen=%u", offset, plen);
     return (NULL);
   }
