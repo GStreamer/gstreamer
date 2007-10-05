@@ -1,5 +1,18 @@
 2007-10-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Patch by: Gautier Portet <kassoulet at gmail dot com>
+
+	* gst/xingheader/gstxingmux.c:
+	The size of the Xing header is actually 417 as it's rounded to the
+	next smaller integer. Fixes #397759.
+
+	* gst/xingheader/gstxingmux.c: (xing_generate_header),
+	(xing_push_header):
+	Some random cleanup, add FIXMEs and TODOs and check if the newsegment
+	event to the beginning was successful before pushing the header again.
+
+2007-10-05  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	Patch by: Wai-Ming Ho <webregbox at yahoo dot co dot uk>
 
 	* gst/mpegtsparse/mpegtspacketizer.c:
