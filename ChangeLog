@@ -1,5 +1,23 @@
 2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
 
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_wait_playing),
+	(gst_base_src_set_live), (gst_base_src_is_live),
+	(gst_base_src_query_latency), (gst_base_src_perform_seek),
+	(gst_base_src_default_event), (gst_base_src_wait),
+	(gst_base_src_do_sync), (gst_base_src_get_range),
+	(gst_base_src_pad_get_range), (gst_base_src_loop),
+	(gst_base_src_unlock), (gst_base_src_unlock_stop),
+	(gst_base_src_set_flushing), (gst_base_src_set_playing),
+	(gst_base_src_activate_push), (gst_base_src_activate_pull),
+	(gst_base_src_change_state):
+	Rework the locking of basesrc in a similar fashion to basesink. We
+	basically have one lock (LIVE_LOCK) protecting the dataflow. This allows
+	us to handle live sources and semi live ones much better.
+	Simplify flushing.
+	Fix unlocking when seeking, shutting down and pausing in live sources.
+
+2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
+
 	* tests/check/pipelines/simple-launch-lines.c: (run_pipeline):
 	Fix compilation again.
 

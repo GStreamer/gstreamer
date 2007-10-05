@@ -243,6 +243,7 @@ struct _GstBaseSrcPrivate
   gboolean last_sent_eos;       /* last thing we did was send an EOS (we set this
                                  * to avoid the sending of two EOS in some cases) */
   gboolean discont;
+  gboolean flushing;
 
   /* two segments to be sent in the streaming thread with STREAM_LOCK */
   GstEvent *close_segment;
@@ -314,8 +315,11 @@ static gboolean gst_base_src_default_query (GstBaseSrc * src, GstQuery * query);
 static gboolean gst_base_src_default_prepare_seek_segment (GstBaseSrc * src,
     GstEvent * event, GstSegment * segment);
 
-static gboolean gst_base_src_unlock (GstBaseSrc * basesrc);
-static gboolean gst_base_src_unlock_stop (GstBaseSrc * basesrc);
+static gboolean gst_base_src_set_flushing (GstBaseSrc * basesrc,
+    gboolean flushing, gboolean live_play, gboolean unlock);
+static gboolean gst_base_src_unlock (GstBaseSrc * basesrc, gboolean unlock);
+static gboolean gst_base_src_unlock_stop (GstBaseSrc * basesrc,
+    gboolean unlock);
 static gboolean gst_base_src_start (GstBaseSrc * basesrc);
 static gboolean gst_base_src_stop (GstBaseSrc * basesrc);
 
@@ -483,7 +487,6 @@ GstFlowReturn
 gst_base_src_wait_playing (GstBaseSrc * src)
 {
   /* block until the state changes, or we get a flush, or something */
-  GST_LIVE_LOCK (src);
   if (src->is_live) {
     while (G_UNLIKELY (!src->live_running)) {
       GST_DEBUG ("live source signal waiting");
@@ -492,23 +495,16 @@ gst_base_src_wait_playing (GstBaseSrc * src)
       GST_LIVE_WAIT (src);
       GST_DEBUG ("live source unlocked");
     }
-    /* FIXME, use another variable to signal stopping so that we don't
-     * have to grab another lock. */
-    GST_OBJECT_LOCK (src->srcpad);
-    if (G_UNLIKELY (GST_PAD_IS_FLUSHING (src->srcpad)))
+    if (src->priv->flushing)
       goto flushing;
-    GST_OBJECT_UNLOCK (src->srcpad);
   }
-  GST_LIVE_UNLOCK (src);
 
   return GST_FLOW_OK;
 
   /* ERRORS */
 flushing:
   {
-    GST_DEBUG_OBJECT (src, "pad is flushing");
-    GST_OBJECT_UNLOCK (src->srcpad);
-    GST_LIVE_UNLOCK (src);
+    GST_DEBUG_OBJECT (src, "we are flushing");
     return GST_FLOW_WRONG_STATE;
   }
 }
@@ -530,9 +526,9 @@ flushing:
 void
 gst_base_src_set_live (GstBaseSrc * src, gboolean live)
 {
-  GST_LIVE_LOCK (src);
+  GST_OBJECT_LOCK (src);
   src->is_live = live;
-  GST_LIVE_UNLOCK (src);
+  GST_OBJECT_UNLOCK (src);
 }
 
 /**
@@ -548,9 +544,9 @@ gst_base_src_is_live (GstBaseSrc * src)
 {
   gboolean result;
 
-  GST_LIVE_LOCK (src);
+  GST_OBJECT_LOCK (src);
   result = src->is_live;
-  GST_LIVE_UNLOCK (src);
+  GST_OBJECT_UNLOCK (src);
 
   return result;
 }
@@ -598,7 +594,7 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
 {
   GstClockTime min;
 
-  GST_LIVE_LOCK (src);
+  GST_OBJECT_LOCK (src);
   if (live)
     *live = src->is_live;
 
@@ -618,7 +614,7 @@ gst_base_src_query_latency (GstBaseSrc * src, gboolean * live,
   GST_LOG_OBJECT (src, "latency: live %d, min %" GST_TIME_FORMAT
       ", max %" GST_TIME_FORMAT, src->is_live, GST_TIME_ARGS (min),
       GST_TIME_ARGS (-1));
-  GST_LIVE_UNLOCK (src);
+  GST_OBJECT_UNLOCK (src);
 
   return TRUE;
 }
@@ -1032,7 +1028,10 @@ gst_base_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
  * acquire the STREAM_LOCK which is taken when we are in the
  * _loop() function or when a getrange() is called. Normally
  * we will not receive a seek if we are operating in pull mode
- * though.
+ * though. When we operate as a live source we might block on the live
+ * cond, which does not release the STREAM_LOCK. Therefore we will try
+ * to grab the LIVE_LOCK instead of the STREAM_LOCK to make sure it is
+ * safe to perform the seek.
  *
  * When we are in the loop() function, we might be in the middle
  * of pushing a buffer, which might block in a sink. To make sure
@@ -1045,10 +1044,11 @@ gst_base_src_prepare_seek_segment (GstBaseSrc * src, GstEvent * event,
  * blocks on the sample we might wait a very long time until the sink
  * unblocks the sample. In any case we acquire the STREAM_LOCK and
  * can continue the seek. A non-flushing seek is normally done in a 
- * running pipeline to perform seamless playback.
+ * running pipeline to perform seamless playback, this means that the sink is
+ * PLAYING and will return from its chain function.
  * In the case of a non-flushing seek we need to make sure that the
  * data we output after the seek is continuous with the previous data,
- * this is because a non-flushing seek does not reset the stream-time
+ * this is because a non-flushing seek does not reset the running-time
  * to 0. We do this by closing the currently running segment, ie. sending
  * a new_segment event with the stop position set to the last processed 
  * position.
@@ -1119,16 +1119,15 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
     gst_pad_pause_task (src->srcpad);
 
   /* unblock streaming thread */
-  if (unlock)
-    gst_base_src_unlock (src);
+  gst_base_src_unlock (src, unlock);
 
-  /* grab streaming lock, this should eventually be possible, either
-   * because the task is paused or our streaming thread stopped 
-   * because our peer is flushing. */
-  GST_PAD_STREAM_LOCK (src->srcpad);
+  /* grab live lock, this should eventually be possible, either
+   * because the task is paused, our streaming thread stopped 
+   * because our peer is flushing or because we are blocked in the live
+   * cond. */
+  GST_LIVE_LOCK (src);
 
-  if (unlock)
-    gst_base_src_unlock_stop (src);
+  gst_base_src_unlock_stop (src, unlock);
 
   /* If we configured the seeksegment above, don't overwrite it now. Otherwise
    * copy the current segment info into the temp segment that we can actually
@@ -1232,7 +1231,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
       src->srcpad);
 
   /* and release the lock again so we can continue streaming */
-  GST_PAD_STREAM_UNLOCK (src->srcpad);
+  GST_LIVE_UNLOCK (src);
 
   return res;
 
@@ -1388,10 +1387,10 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
     case GST_EVENT_FLUSH_START:
       /* cancel any blocking getrange, is normally called
        * when in pull mode. */
-      result = gst_base_src_unlock (src);
+      result = gst_base_src_set_flushing (src, TRUE, FALSE, TRUE);
       break;
     case GST_EVENT_FLUSH_STOP:
-      result = gst_base_src_unlock_stop (src);
+      result = gst_base_src_set_flushing (src, FALSE, TRUE, TRUE);
       break;
     default:
       result = TRUE;
@@ -1500,12 +1499,12 @@ gst_base_src_wait (GstBaseSrc * basesrc, GstClock * clock, GstClockTime time)
   id = gst_clock_new_single_shot_id (clock, time);
 
   basesrc->clock_id = id;
-  /* release the object lock while waiting */
-  GST_OBJECT_UNLOCK (basesrc);
+  /* release the live lock while waiting */
+  GST_LIVE_UNLOCK (basesrc);
 
   ret = gst_clock_id_wait (id, NULL);
 
-  GST_OBJECT_LOCK (basesrc);
+  GST_LIVE_LOCK (basesrc);
   gst_clock_id_unref (id);
   basesrc->clock_id = NULL;
 
@@ -1646,9 +1645,9 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
       "waiting for clock, base time %" GST_TIME_FORMAT
       ", stream_start %" GST_TIME_FORMAT,
       GST_TIME_ARGS (base_time), GST_TIME_ARGS (start));
+  GST_OBJECT_UNLOCK (basesrc);
 
   result = gst_base_src_wait (basesrc, clock, start + base_time);
-  GST_OBJECT_UNLOCK (basesrc);
 
   GST_LOG_OBJECT (basesrc, "clock entry done: %d", result);
 
@@ -1739,6 +1738,7 @@ unexpected_length:
   }
 }
 
+/* must be called with LIVE_LOCK */
 static GstFlowReturn
 gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
     GstBuffer ** buf)
@@ -1785,6 +1785,11 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
 
   /* now sync before pushing the buffer */
   status = gst_base_src_do_sync (src, *buf);
+
+  /* waiting for the clock could have made us flushing */
+  if (src->priv->flushing)
+    goto flushing;
+
   switch (status) {
     case GST_CLOCK_EARLY:
       /* the buffer is too late. We currently don't drop the buffer. */
@@ -1851,6 +1856,13 @@ reached_num_buffers:
     GST_DEBUG_OBJECT (src, "sent all buffers");
     return GST_FLOW_UNEXPECTED;
   }
+flushing:
+  {
+    GST_DEBUG_OBJECT (src, "we are flushing");
+    gst_buffer_unref (*buf);
+    *buf = NULL;
+    return GST_FLOW_WRONG_STATE;
+  }
 }
 
 static GstFlowReturn
@@ -1862,11 +1874,26 @@ gst_base_src_pad_get_range (GstPad * pad, guint64 offset, guint length,
 
   src = GST_BASE_SRC (gst_pad_get_parent (pad));
 
+  GST_LIVE_LOCK (src);
+  if (src->priv->flushing)
+    goto flushing;
+
   res = gst_base_src_get_range (src, offset, length, buf);
+
+done:
+  GST_LIVE_UNLOCK (src);
 
   gst_object_unref (src);
 
   return res;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG_OBJECT (src, "we are flushing");
+    res = GST_FLOW_WRONG_STATE;
+    goto done;
+  }
 }
 
 static gboolean
@@ -1941,6 +1968,10 @@ gst_base_src_loop (GstPad * pad)
 
   src = GST_BASE_SRC (gst_pad_get_parent (pad));
 
+  GST_LIVE_LOCK (src);
+  if (src->priv->flushing)
+    goto flushing;
+
   src->priv->last_sent_eos = FALSE;
 
   /* if we operate in bytes, we can calculate an offset */
@@ -1953,6 +1984,7 @@ gst_base_src_loop (GstPad * pad)
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     GST_INFO_OBJECT (src, "pausing after gst_base_src_get_range() = %s",
         gst_flow_get_name (ret));
+    GST_LIVE_UNLOCK (src);
     goto pause;
   }
   /* this should not happen */
@@ -2012,6 +2044,7 @@ gst_base_src_loop (GstPad * pad)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
     src->priv->discont = FALSE;
   }
+  GST_LIVE_UNLOCK (src);
 
   ret = gst_pad_push (pad, buf);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
@@ -2031,6 +2064,13 @@ done:
   return;
 
   /* special cases */
+flushing:
+  {
+    GST_DEBUG_OBJECT (src, "we are flushing");
+    GST_LIVE_UNLOCK (src);
+    ret = GST_FLOW_WRONG_STATE;
+    goto pause;
+  }
 pause:
   {
     const gchar *reason = gst_flow_get_name (ret);
@@ -2065,11 +2105,9 @@ null_buffer:
   {
     GST_ELEMENT_ERROR (src, STREAM, FAILED,
         (_("Internal data flow error.")), ("element returned NULL buffer"));
+    GST_LIVE_UNLOCK (src);
     /* we finished the segment on error */
-    src->data.ABI.running = FALSE;
-    gst_pad_pause_task (pad);
-    gst_pad_push_event (pad, gst_event_new_eos ());
-    src->priv->last_sent_eos = TRUE;
+    ret = GST_FLOW_ERROR;
     goto done;
   }
 }
@@ -2078,26 +2116,33 @@ null_buffer:
  * resources allocated by start() and freed from stop(). This needs to be added
  * to the docs at some point. */
 static gboolean
-gst_base_src_unlock (GstBaseSrc * basesrc)
+gst_base_src_unlock (GstBaseSrc * basesrc, gboolean unlock)
 {
   GstBaseSrcClass *bclass;
   gboolean result = TRUE;
 
   GST_DEBUG ("unlock");
-  /* unblock whatever the subclass is doing */
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
-  if (bclass->unlock)
-    result = bclass->unlock (basesrc);
+  /* unblock whatever the subclass is doing if we were asked to */
+  if (unlock) {
+    if (bclass->unlock)
+      result = bclass->unlock (basesrc);
+  }
 
+  GST_LIVE_LOCK (basesrc);
   GST_DEBUG ("unschedule clock");
   /* and unblock the clock as well, if any */
-  GST_OBJECT_LOCK (basesrc);
   if (basesrc->clock_id) {
     gst_clock_id_unschedule (basesrc->clock_id);
   }
-  GST_OBJECT_UNLOCK (basesrc);
+
+  if (unlock) {
+    if (bclass->unlock_stop)
+      result = bclass->unlock_stop (basesrc);
+  }
 
   GST_DEBUG ("unlock done");
+  GST_LIVE_UNLOCK (basesrc);
 
   return result;
 }
@@ -2106,7 +2151,7 @@ gst_base_src_unlock (GstBaseSrc * basesrc)
  * resources allocated by start() and freed from stop(). This needs to be added
  * to the docs at some point. */
 static gboolean
-gst_base_src_unlock_stop (GstBaseSrc * basesrc)
+gst_base_src_unlock_stop (GstBaseSrc * basesrc, gboolean unlock)
 {
   GstBaseSrcClass *bclass;
   gboolean result = TRUE;
@@ -2115,9 +2160,11 @@ gst_base_src_unlock_stop (GstBaseSrc * basesrc)
 
   /* Finish a previous unblock request, allowing subclasses to flush command
    * queues or whatever they need to do */
-  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
-  if (bclass->unlock_stop)
-    result = bclass->unlock_stop (basesrc);
+  if (unlock) {
+    bclass = GST_BASE_SRC_GET_CLASS (basesrc);
+    if (bclass->unlock_stop)
+      result = bclass->unlock_stop (basesrc);
+  }
 
   GST_DEBUG_OBJECT (basesrc, "unlock stop done");
 
@@ -2329,25 +2376,97 @@ gst_base_src_stop (GstBaseSrc * basesrc)
 }
 
 static gboolean
-gst_base_src_deactivate (GstBaseSrc * basesrc, GstPad * pad)
+gst_base_src_set_flushing (GstBaseSrc * basesrc,
+    gboolean flushing, gboolean live_play, gboolean unlock)
 {
-  gboolean result;
+  GstBaseSrcClass *bclass;
 
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
+
+  if (flushing && unlock) {
+    /* unlock any subclasses, we need to do this before grabbing the
+     * LIVE_LOCK since we hold this lock before going into ::create. We pass an
+     * unlock to the params because of backwards compat (see seek handler)*/
+    if (bclass->unlock)
+      bclass->unlock (basesrc);
+  }
+
+  /* the live lock is released when we are blocked, waiting for playing or
+   * when we sync to the clock. */
   GST_LIVE_LOCK (basesrc);
-  basesrc->live_running = TRUE;
+  basesrc->priv->flushing = flushing;
+  if (flushing) {
+    /* if we are locked in the live lock, signal it to make it flush */
+    basesrc->live_running = TRUE;
+
+    /* step 1, now that we have the LIVE lock, clear our unlock request */
+    if (bclass->unlock_stop)
+      bclass->unlock_stop (basesrc);
+
+    /* step 2, unblock clock sync (if any) or any other blocking thing */
+    if (basesrc->clock_id)
+      gst_clock_id_unschedule (basesrc->clock_id);
+  } else {
+    /* signal the live source that it can start playing */
+    basesrc->live_running = live_play;
+  }
   GST_LIVE_SIGNAL (basesrc);
   GST_LIVE_UNLOCK (basesrc);
 
-  /* step 1, unblock clock sync (if any) */
-  result = gst_base_src_unlock (basesrc);
+  return TRUE;
+}
 
-  /* step 2, make sure streaming finishes */
-  result &= gst_pad_stop_task (pad);
+/* the purpose of this function is to make sure that a live source blocks in the
+ * LIVE lock or leaves the LIVE lock and continues playing. */
+static gboolean
+gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
+{
+  GstBaseSrcClass *bclass;
 
-  /* step 3, clear the unblock condition */
-  result &= gst_base_src_unlock_stop (basesrc);
+  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
 
-  return result;
+  /* unlock subclasses locked in ::create, we only do this when we stop playing. */
+  if (!live_play) {
+    GST_DEBUG_OBJECT (basesrc, "unlock");
+    if (bclass->unlock)
+      bclass->unlock (basesrc);
+  }
+
+  /* we are now able to grab the LIVE lock, when we get it, we can be
+   * waiting for PLAYING while blocked in the LIVE cond or we can be waiting
+   * for the clock. */
+  GST_LIVE_LOCK (basesrc);
+
+  /* unblock clock sync (if any) */
+  if (basesrc->clock_id)
+    gst_clock_id_unschedule (basesrc->clock_id);
+
+  /* configure what to do when we get to the LIVE lock. */
+  basesrc->live_running = live_play;
+
+  if (live_play) {
+    gboolean start;
+
+    /* clear our unlock request when going to PLAYING */
+    GST_DEBUG_OBJECT (basesrc, "unlock stop");
+    if (bclass->unlock_stop)
+      bclass->unlock_stop (basesrc);
+
+    /* for live sources we restart the timestamp correction */
+    basesrc->priv->latency = -1;
+    /* have to restart the task in case it stopped because of the unlock when
+     * we went to PAUSED. Only do this if we operating in push mode. */
+    GST_OBJECT_LOCK (basesrc->srcpad);
+    start = (GST_PAD_ACTIVATE_MODE (basesrc->srcpad) == GST_ACTIVATE_PUSH);
+    GST_OBJECT_UNLOCK (basesrc->srcpad);
+    if (start)
+      gst_pad_start_task (basesrc->srcpad, (GstTaskFunction) gst_base_src_loop,
+          basesrc->srcpad);
+  }
+  GST_LIVE_SIGNAL (basesrc);
+  GST_LIVE_UNLOCK (basesrc);
+
+  return TRUE;
 }
 
 static gboolean
@@ -2369,6 +2488,8 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
       goto error_start;
 
     basesrc->priv->last_sent_eos = FALSE;
+    basesrc->priv->discont = TRUE;
+    gst_base_src_set_flushing (basesrc, FALSE, FALSE, FALSE);
 
     /* do initial seek, which will start the task */
     GST_OBJECT_LOCK (basesrc);
@@ -2386,10 +2507,10 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
       gst_event_unref (event);
   } else {
     GST_DEBUG_OBJECT (basesrc, "Deactivating in push mode");
-    /* call the unlock function and stop the task */
-    if (G_UNLIKELY (!gst_base_src_deactivate (basesrc, pad)))
-      goto deactivate_failed;
-
+    /* flush all */
+    gst_base_src_set_flushing (basesrc, TRUE, FALSE, TRUE);
+    /* stop the task */
+    gst_pad_stop_task (pad);
     /* now we can stop the source */
     if (G_UNLIKELY (!gst_base_src_stop (basesrc)))
       goto error_stop;
@@ -2415,11 +2536,6 @@ seek_failed:
       gst_event_unref (event);
     return FALSE;
   }
-deactivate_failed:
-  {
-    GST_ERROR_OBJECT (basesrc, "Failed to deactivate in push mode");
-    return FALSE;
-  }
 error_stop:
   {
     GST_DEBUG_OBJECT (basesrc, "Failed to stop in push mode");
@@ -2443,11 +2559,14 @@ gst_base_src_activate_pull (GstPad * pad, gboolean active)
     /* if not random_access, we cannot operate in pull mode for now */
     if (G_UNLIKELY (!gst_base_src_check_get_range (basesrc)))
       goto no_get_range;
+
+    /* stop flushing now but for live sources, still block in the LIVE lock when
+     * we are not yet PLAYING */
+    gst_base_src_set_flushing (basesrc, FALSE, FALSE, FALSE);
   } else {
     GST_DEBUG_OBJECT (basesrc, "Deactivating in pull mode");
-    /* call the unlock function. We have no task to stop. */
-    if (G_UNLIKELY (!gst_base_src_deactivate (basesrc, pad)))
-      goto deactivate_failed;
+    /* flush all, there is no task to stop */
+    gst_base_src_set_flushing (basesrc, TRUE, FALSE, TRUE);
 
     /* don't send EOS when going from PAUSED => READY when in pull mode */
     basesrc->priv->last_sent_eos = TRUE;
@@ -2467,11 +2586,6 @@ no_get_range:
   {
     GST_ERROR_OBJECT (basesrc, "Cannot operate in pull mode, stopping");
     gst_base_src_stop (basesrc);
-    return FALSE;
-  }
-deactivate_failed:
-  {
-    GST_ERROR_OBJECT (basesrc, "Failed to deactivate in pull mode");
     return FALSE;
   }
 error_stop:
@@ -2494,36 +2608,13 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_LIVE_LOCK (element);
-      basesrc->priv->latency = -1;
-      if (basesrc->is_live) {
-        no_preroll = TRUE;
-        basesrc->live_running = FALSE;
-      }
-      basesrc->priv->last_sent_eos = FALSE;
-      basesrc->priv->discont = TRUE;
-      GST_LIVE_UNLOCK (element);
+      no_preroll = gst_base_src_is_live (basesrc);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      GST_LIVE_LOCK (element);
-      if (basesrc->is_live) {
-        gboolean start;
-
-        gst_base_src_unlock_stop (basesrc);
-        /* for live sources we restart the timestamp correction */
-        basesrc->priv->latency = -1;
-        basesrc->live_running = TRUE;
-        GST_LIVE_SIGNAL (element);
-        /* have to restart the task in case it stopped because of the unlock when
-         * we went to PAUSED. Only do this if we operating in push mode. */
-        GST_OBJECT_LOCK (basesrc->srcpad);
-        start = (GST_PAD_ACTIVATE_MODE (basesrc->srcpad) == GST_ACTIVATE_PUSH);
-        GST_OBJECT_UNLOCK (basesrc->srcpad);
-        if (start)
-          gst_pad_start_task (basesrc->srcpad,
-              (GstTaskFunction) gst_base_src_loop, basesrc->srcpad);
+      if (gst_base_src_is_live (basesrc)) {
+        /* now we can start playback */
+        gst_base_src_set_playing (basesrc, TRUE);
       }
-      GST_LIVE_UNLOCK (element);
       break;
     default:
       break;
@@ -2536,17 +2627,18 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      GST_LIVE_LOCK (element);
-      if (basesrc->is_live) {
-        gst_base_src_unlock (basesrc);
+      if (gst_base_src_is_live (basesrc)) {
+        /* make sure we block in the live lock in PAUSED */
+        gst_base_src_set_playing (basesrc, FALSE);
         no_preroll = TRUE;
-        basesrc->live_running = FALSE;
       }
-      GST_LIVE_UNLOCK (element);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
       GstEvent **event_p;
+
+      /* we don't need to unblock anything here, the pad deactivation code
+       * already did this */
 
       /* FIXME, deprecate this behaviour, it is very dangerous.
        * the prefered way of sending EOS downstream is by sending
