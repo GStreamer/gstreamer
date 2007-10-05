@@ -1,3 +1,23 @@
+2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	(gst_rtp_jitter_buffer_chain), (gst_rtp_jitter_buffer_loop):
+	Only peek at the tail element instead of popping it off, which allows
+	us to greatly simplify things when the tail element changes.
+
+	* gst/rtpmanager/gstrtpsession.c:
+	(gst_rtp_session_event_recv_rtp_sink):
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	(gst_rtp_ssrc_demux_sink_event):
+	Forward FLUSH events instead of leaking them.
+
+	* gst/rtpmanager/rtpjitterbuffer.c: (rtp_jitter_buffer_reset_skew),
+	(calculate_skew), (rtp_jitter_buffer_insert):
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	Remove the tail-changed callback in favour of a simple boolean when we
+	insert a buffer in the queue.
+	Add method to peek the tail of the buffer.
+
 2007-10-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: Gautier Portet <kassoulet at gmail dot com>

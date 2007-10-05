@@ -100,16 +100,6 @@ rtp_jitter_buffer_new (void)
 }
 
 void
-rtp_jitter_buffer_set_tail_changed (RTPJitterBuffer * jbuf, RTPTailChanged func,
-    gpointer user_data)
-{
-  g_return_if_fail (jbuf != NULL);
-
-  jbuf->tail_changed = func;
-  jbuf->user_data = user_data;
-}
-
-void
 rtp_jitter_buffer_set_clock_rate (RTPJitterBuffer * jbuf, gint clock_rate)
 {
   g_return_if_fail (jbuf != NULL);
@@ -374,6 +364,7 @@ compare_seqnum (GstBuffer * a, GstBuffer * b, RTPJitterBuffer * jbuf)
  * @jbuf: an #RTPJitterBuffer
  * @buf: a buffer
  * @time: a running_time when this buffer was received in nanoseconds
+ * @tail: TRUE when the tail element changed.
  *
  * Inserts @buf into the packet queue of @jbuf. The sequence number of the
  * packet will be used to sort the packets. This function takes ownerhip of
@@ -383,7 +374,7 @@ compare_seqnum (GstBuffer * a, GstBuffer * b, RTPJitterBuffer * jbuf)
  */
 gboolean
 rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
-    GstClockTime time)
+    GstClockTime time, gboolean * tail)
 {
   GList *list;
   gint func_ret = 1;
@@ -412,13 +403,12 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
 
   if (list)
     g_queue_insert_before (jbuf->packets, list, buf);
-  else {
+  else
     g_queue_push_tail (jbuf->packets, buf);
 
-    /* tail buffer changed, signal callback */
-    if (jbuf->tail_changed)
-      jbuf->tail_changed (jbuf, jbuf->user_data);
-  }
+  /* tail was changed when we did not find a previous packet */
+  if (tail)
+    *tail = (list == NULL);
 
   return TRUE;
 }

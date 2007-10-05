@@ -344,7 +344,6 @@ gst_rtp_ssrc_demux_sink_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
-      break;
     case GST_EVENT_NEWSEGMENT:
     default:
     {
