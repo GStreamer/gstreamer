@@ -1,5 +1,12 @@
 2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtpmanager/rtpsession.c: (rtp_session_next_timeout),
+	When reconsidering RTCP timeouts, set the next timeout against the last
+	report time instead of the current clock time so that we don't end up
+	reconsidering forever.
+
+2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtpmanager/gstrtpjitterbuffer.c:
 	(gst_rtp_jitter_buffer_chain), (gst_rtp_jitter_buffer_loop):
 	Only peek at the tail element instead of popping it off, which allows
