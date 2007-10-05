@@ -591,14 +591,20 @@ gst_ffmpegdemux_src_event (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       res = gst_ffmpegdemux_perform_seek (demux, event);
+      gst_event_unref (event);
       break;
+    case GST_EVENT_LATENCY:
+      res = gst_pad_push_event (demux->sinkpad, event);
+      break;
+    case GST_EVENT_NAVIGATION:
+    case GST_EVENT_QOS:
     default:
       res = FALSE;
+      gst_event_unref (event);
       break;
   }
 
   gst_object_unref (demux);
-  gst_event_unref (event);
 
   return res;
 }
