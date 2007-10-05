@@ -4400,6 +4400,8 @@ gst_pad_pause_task (GstPad * pad)
   gst_task_pause (task);
   GST_OBJECT_UNLOCK (pad);
 
+  /* wait for task function to finish, this lock is recursive so it does nothing
+   * when the pause is called from the task itself */
   GST_PAD_STREAM_LOCK (pad);
   GST_PAD_STREAM_UNLOCK (pad);
 

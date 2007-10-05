@@ -2190,7 +2190,8 @@ gst_object_default_error (GstObject * source, GError * error, gchar * debug)
  * @...: additional elements to add to the bin
  *
  * Adds a NULL-terminated list of elements to a bin.  This function is
- * equivalent to calling gst_bin_add() for each member of the list.
+ * equivalent to calling gst_bin_add() for each member of the list. The return
+ * value of each gst_bin_add() is ignored.
  */
 void
 gst_bin_add_many (GstBin * bin, GstElement * element_1, ...)

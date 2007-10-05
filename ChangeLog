@@ -1,5 +1,11 @@
 2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/gstpad.c: (gst_pad_pause_task):
+	* gst/gstutils.c:
+	Small comment and documentation update.
+
+2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
+
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_wait_playing),
 	(gst_base_src_set_live), (gst_base_src_is_live),
 	(gst_base_src_query_latency), (gst_base_src_perform_seek),
