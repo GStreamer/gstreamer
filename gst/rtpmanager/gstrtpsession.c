@@ -1020,6 +1020,7 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&rtpsession->recv_rtp_seg, GST_FORMAT_UNDEFINED);
+      ret = gst_pad_push_event (rtpsession->recv_rtp_src, event);
       break;
     case GST_EVENT_NEWSEGMENT:
     {
