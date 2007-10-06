@@ -109,17 +109,19 @@ gst_ape_demux_class_init (GstApeDemuxClass * klass)
 
   tagdemux_class->identify_tag = GST_DEBUG_FUNCPTR (gst_ape_demux_identify_tag);
   tagdemux_class->parse_tag = GST_DEBUG_FUNCPTR (gst_ape_demux_parse_tag);
+
+  /* no need for a merge function, the default behaviour to prefer start
+   * tags (APEv2) over end tags (usually APEv1, but could theoretically also
+   * be APEv2) is fine */
+
+  tagdemux_class->min_start_size = 32;
+  tagdemux_class->min_end_size = 32;
 }
 
 static void
 gst_ape_demux_init (GstApeDemux * apedemux, GstApeDemuxClass * gclass)
 {
-  GstTagDemux *tagdemux = GST_TAG_DEMUX (apedemux);
-
-  tagdemux->min_start_size = 32;
-  tagdemux->min_end_size = 32;
-
-  tagdemux->prefer_start_tag = TRUE;
+  /* nothing to do here */
 }
 
 static const struct _GstApeDemuxTagTableEntry

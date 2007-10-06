@@ -1,3 +1,12 @@
+2007-10-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/apetag/Makefile.am:
+	* gst/apetag/gstapedemux.c:
+	* gst/apetag/gstapedemux.h:
+	* gst/apetag/gsttagdemux.c:
+	* gst/apetag/gsttagdemux.h:
+	  Port APE tag demuxer over to the new GstTagDemux in -base.
+
 2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_flush),
