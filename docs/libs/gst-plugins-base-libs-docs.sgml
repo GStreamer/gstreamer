@@ -64,6 +64,7 @@
 <!ENTITY GstTag SYSTEM "xml/gsttag.xml">
 <!ENTITY GstTagVorbis SYSTEM "xml/gsttagvorbis.xml">
 <!ENTITY GstTagID3 SYSTEM "xml/gsttagid3.xml">
+<!ENTITY GstTagDemux SYSTEM "xml/gsttagdemux.xml">
 <!-- utils -->
 <!ENTITY GstPBUtils SYSTEM "xml/gstpbutils.xml">
 <!ENTITY GstPBUtilsDescriptions SYSTEM "xml/gstpbutilsdescriptions.xml">
@@ -240,6 +241,7 @@
       &GstTag;
       &GstTagVorbis;
       &GstTagID3;
+      &GstTagDemux;
     </chapter>
 
     <chapter id="gstreamer-base-utils">

@@ -1,3 +1,14 @@
+2007-10-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/Makefile.am:
+	* gst-libs/gst/tag/gsttagdemux.c:
+	* gst-libs/gst/tag/gsttagdemux.h:
+	  API: add GstTagDemux base class for simple tag demuxers.
+
+	* docs/libs/gst-plugins-base-libs-docs.sgml:
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	  Add GstTagDemux to docs.
+
 2007-10-05  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/rtp/gstrtpbuffer.c:
