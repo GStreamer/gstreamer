@@ -31,18 +31,17 @@ G_BEGIN_DECLS
 #define ID3V2_HDR_SIZE 10
 
 typedef enum {
-  ID3TAGS_V1_BAD_SIZE,
   ID3TAGS_MORE_DATA,
   ID3TAGS_READ_TAG,
   ID3TAGS_BROKEN_TAG
 } ID3TagsResult;
 
 /* From id3tags.c */
-ID3TagsResult id3demux_read_id3v1_tag (GstBuffer *buffer, guint *id3v1_size,
-  GstTagList **tags);
+guint id3demux_calc_id3v2_tag_size (GstBuffer * buf);
 ID3TagsResult id3demux_read_id3v2_tag (GstBuffer *buffer, guint *id3v2_size,
   GstTagList **tags);
-G_END_DECLS
+
+guint read_synch_uint (const guint8 * data, guint size);
 
 /* Things shared by id3tags.c and id3v2frames.c */
 #define ID3V2_VERSION 0x0400
@@ -118,5 +117,7 @@ enum {
 
 /* From id3v2frames.c */
 gboolean id3demux_id3v2_parse_frame (ID3TagsWorking *work);
+
+G_END_DECLS
 
 #endif

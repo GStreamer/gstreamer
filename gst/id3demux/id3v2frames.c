@@ -61,8 +61,6 @@ static gboolean parse_picture_frame (ID3TagsWorking * work);
 #define ID3V2_ENCODING_UTF16BE 0x02
 #define ID3V2_ENCODING_UTF8    0x03
 
-extern guint read_synch_uint (guint8 * data, guint size);
-
 gboolean
 id3demux_id3v2_parse_frame (ID3TagsWorking * work)
 {

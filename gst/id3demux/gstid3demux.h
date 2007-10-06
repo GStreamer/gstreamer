@@ -1,4 +1,5 @@
-/* Copyright 2005 Jan Schmidt <thaytan@mad.scientist.com>
+/* GStreamer ID3 tag demuxer
+ * Copyright (C) 2005 Jan Schmidt <thaytan@mad.scientist.com>
  * Copyright (C) 2003-2004 Benjamin Otte <otte@gnome.org>
  *
  * This library is free software; you can redistribute it and/or
@@ -20,7 +21,7 @@
 #ifndef __GST_ID3DEMUX_H__
 #define __GST_ID3DEMUX_H__
 
-#include <gst/gst.h>
+#include <gst/tag/gsttagdemux.h>
 
 G_BEGIN_DECLS
 
@@ -38,42 +39,16 @@ G_BEGIN_DECLS
 typedef struct _GstID3Demux      GstID3Demux;
 typedef struct _GstID3DemuxClass GstID3DemuxClass;
 
-typedef enum {
-  GST_ID3DEMUX_READID3V2,
-  GST_ID3DEMUX_TYPEFINDING,
-  GST_ID3DEMUX_STREAMING
-} GstID3DemuxState;
-
 struct _GstID3Demux
 {
-  GstElement element;
+  GstTagDemux tagdemux;
 
-  GstPad *sinkpad, *srcpad;
-
-  /* Number of bytes to remove from the start of file (ID3v2) */
-  guint strip_start;
-  /* Number of bytes to remove from the end of file (ID3v1) */
-  guint strip_end;
-  
-  gint64 upstream_size;
-
-  GstID3DemuxState state;
-  GstBuffer *collect;
-  GstCaps *src_caps;
-  
-  gboolean prefer_v1;
-  GstTagList *event_tags;
-  GstTagList *parsed_tags;
-  gboolean send_tag_event;
-
-  GstSegment segment;
-  gboolean need_newseg;
-  gboolean newseg_update;
+  gboolean prefer_v1;     /* prefer ID3v1 tags over ID3v2 tags? */
 };
 
 struct _GstID3DemuxClass 
 {
-  GstElementClass parent_class;
+  GstTagDemuxClass parent_class;
 };
 
 GType gst_id3demux_get_type (void);
@@ -81,3 +56,4 @@ GType gst_id3demux_get_type (void);
 G_END_DECLS
 
 #endif /* __GST_ID3DEMUX_H__ */
+

@@ -1,5 +1,16 @@
 2007-10-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/id3demux/gstid3demux.c:
+	* gst/id3demux/gstid3demux.h:
+	* gst/id3demux/id3tags.c:
+	* gst/id3demux/id3tags.h:
+	* gst/id3demux/id3v2frames.c:
+	  Port ID3 tag demuxer over to the new GstTagDemux in -base
+	  (now would be a good time to test re-importing your music
+	  collection).
+
+2007-10-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/apetag/Makefile.am:
 	* gst/apetag/gstapedemux.c:
 	* gst/apetag/gstapedemux.h:
