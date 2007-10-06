@@ -35,7 +35,7 @@ static ID3TagsResult
 id3demux_id3v2_frames_to_tag_list (ID3TagsWorking * work, guint size);
 
 guint
-read_synch_uint (guint8 * data, guint size)
+read_synch_uint (const guint8 * data, guint size)
 {
   gint i;
   guint result = 0;
@@ -62,50 +62,42 @@ read_synch_uint (guint8 * data, guint size)
   return result;
 }
 
-ID3TagsResult
-id3demux_read_id3v1_tag (GstBuffer * buffer, guint * id3v1_size,
-    GstTagList ** tags)
+guint
+id3demux_calc_id3v2_tag_size (GstBuffer * buf)
 {
-  GstTagList *new_tags;
+  guint8 *data, flags;
+  guint size;
 
-  guint8 *data;
+  g_assert (buf != NULL);
+  g_assert (GST_BUFFER_SIZE (buf) >= ID3V2_HDR_SIZE);
 
-  g_return_val_if_fail (buffer != NULL, ID3TAGS_V1_BAD_SIZE);
+  data = GST_BUFFER_DATA (buf);
 
-  data = GST_BUFFER_DATA (buffer);
-
-  if (GST_BUFFER_SIZE (buffer) != ID3V1_TAG_SIZE)
-    return ID3TAGS_V1_BAD_SIZE;
-
-  /* Check that buffer starts with 'TAG' */
-  if (data[0] != 'T' || data[1] != 'A' || data[2] != 'G') {
-    if (id3v1_size)
-      *id3v1_size = 0;
-    GST_DEBUG ("No ID3v1 tag in data");
-    return ID3TAGS_READ_TAG;
+  /* Check for 'ID3' string at start of buffer */
+  if (data[0] != 'I' || data[1] != 'D' || data[2] != '3') {
+    GST_DEBUG ("No ID3v2 tag in data");
+    return 0;
   }
 
-  g_return_val_if_fail (tags != NULL, ID3TAGS_READ_TAG);
+  /* Read the flags */
+  flags = data[5];
 
-  new_tags = gst_tag_list_new_from_id3v1 (GST_BUFFER_DATA (buffer));
-  if (new_tags == NULL)
-    return ID3TAGS_BROKEN_TAG;
+  /* Read the size from the header */
+  size = read_synch_uint (data + 6, 4);
+  if (size == 0)
+    return ID3V2_HDR_SIZE;
 
-  if (*tags) {
-    GstTagList *merged;
+  size += ID3V2_HDR_SIZE;
 
-    merged = gst_tag_list_merge (*tags, new_tags, GST_TAG_MERGE_REPLACE);
-    gst_tag_list_free (*tags);
-    gst_tag_list_free (new_tags);
-    *tags = merged;
-  } else
-    *tags = new_tags;
+  /* Expand the read size to include a footer if there is one */
+  if ((flags & ID3V2_HDR_FLAG_FOOTER))
+    size += 10;
 
-  if (id3v1_size)
-    *id3v1_size = ID3V1_TAG_SIZE;
-  return ID3TAGS_READ_TAG;
+  GST_DEBUG ("ID3v2 tag, size: %u bytes", size);
+  return size;
 }
 
+/* caller must pass buffer with full ID3 tag */
 ID3TagsResult
 id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
     GstTagList ** tags)
@@ -117,48 +109,22 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
   ID3TagsResult result;
   guint16 version;
 
-  g_return_val_if_fail (buffer != NULL, ID3TAGS_MORE_DATA);
+  read_size = id3demux_calc_id3v2_tag_size (buffer);
 
-  if (GST_BUFFER_SIZE (buffer) < ID3V2_MARK_SIZE)
-    return ID3TAGS_MORE_DATA;   /* Need more data to decide with */
+  if (id3v2_size)
+    *id3v2_size = read_size;
+
+  /* Ignore tag if it has no frames attached, but skip the header then */
+  if (read_size <= ID3V2_HDR_SIZE)
+    return ID3TAGS_BROKEN_TAG;
 
   data = GST_BUFFER_DATA (buffer);
-
-  /* Check for 'ID3' string at start of buffer */
-  if (data[0] != 'I' || data[1] != 'D' || data[2] != '3') {
-    if (id3v2_size)
-      *id3v2_size = 0;
-    GST_DEBUG ("No ID3v2 tag in data");
-    return ID3TAGS_READ_TAG;
-  }
-
-  /* OK, get enough data to read the entire header */
-  if (GST_BUFFER_SIZE (buffer) < ID3V2_HDR_SIZE)
-    return ID3TAGS_MORE_DATA;   /* Need more data to decide with */
 
   /* Read the version */
   version = GST_READ_UINT16_BE (data + 3);
 
   /* Read the flags */
   flags = data[5];
-
-  /* Read the size from the header */
-  read_size = read_synch_uint (data + 6, 4);
-  if (read_size == 0) {
-    /* Tag has no frames attached. Ignore it, but skip the header */
-    if (id3v2_size)
-      *id3v2_size = ID3V2_HDR_SIZE;
-    return ID3TAGS_BROKEN_TAG;
-  }
-  read_size += ID3V2_HDR_SIZE;
-
-  /* Expand the read size to include a footer if there is one */
-  if (flags & ID3V2_HDR_FLAG_FOOTER) {
-    read_size += 10;
-  }
-
-  if (id3v2_size)
-    *id3v2_size = read_size;
 
   /* Validate the version. At the moment, we only support up to 2.4.0 */
   if (ID3V2_VER_MAJOR (version) > 4 || ID3V2_VER_MINOR (version) > 0) {
@@ -168,6 +134,7 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
     return ID3TAGS_READ_TAG;
   }
 
+  /* This shouldn't really happen! Caller should have checked first */
   if (GST_BUFFER_SIZE (buffer) < read_size) {
     GST_DEBUG
         ("Found ID3v2 tag with revision 2.%d.%d - need %u more bytes to read",
@@ -194,18 +161,7 @@ id3demux_read_id3v2_tag (GstBuffer * buffer, guint * id3v2_size,
 
   result = id3demux_id3v2_frames_to_tag_list (&work, read_size);
 
-  /* Actually read the tags */
-  if (work.tags != NULL) {
-    if (*tags) {
-      GstTagList *merged;
-
-      merged = gst_tag_list_merge (*tags, work.tags, GST_TAG_MERGE_REPLACE);
-      gst_tag_list_free (*tags);
-      gst_tag_list_free (work.tags);
-      *tags = merged;
-    } else
-      *tags = work.tags;
-  }
+  *tags = work.tags;
 
   if (work.prev_genre)
     g_free (work.prev_genre);
