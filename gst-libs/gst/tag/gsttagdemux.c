@@ -296,6 +296,7 @@ gst_tag_demux_add_srcpad (GstTagDemux * tagdemux, GstCaps * new_caps)
       !gst_caps_is_equal (new_caps, tagdemux->priv->src_caps)) {
 
     gst_caps_replace (&tagdemux->priv->src_caps, new_caps);
+
     if (tagdemux->priv->srcpad != NULL) {
       GST_DEBUG_OBJECT (tagdemux, "Changing src pad caps to %" GST_PTR_FORMAT,
           tagdemux->priv->src_caps);
@@ -304,7 +305,6 @@ gst_tag_demux_add_srcpad (GstTagDemux * tagdemux, GstCaps * new_caps)
     }
   } else {
     /* Caps never changed */
-    gst_caps_unref (new_caps);
   }
 
   if (tagdemux->priv->srcpad == NULL) {
@@ -1174,7 +1174,6 @@ gst_tag_demux_sink_activate (GstPad * sinkpad)
   demux->priv->state = GST_TAG_DEMUX_STREAMING;
 
   /* 6 Add the srcpad for output now we know caps. */
-  /* add_srcpad takes ownership of the caps */
   if (!gst_tag_demux_add_srcpad (demux, caps)) {
     GST_DEBUG_OBJECT (demux, "Could not add source pad");
     goto done_activate;
@@ -1189,6 +1188,9 @@ gst_tag_demux_sink_activate (GstPad * sinkpad)
   }
 
 done_activate:
+
+  if (caps)
+    gst_caps_unref (caps);
 
   return ret;
 }
