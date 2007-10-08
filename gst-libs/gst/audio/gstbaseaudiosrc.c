@@ -620,18 +620,18 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
-  /* FIXME, we timestamp against our own clock, also handle the case
-   * where we are slaved to another clock. We currently refuse to accept
-   * any other clock than the one we provide, so this code is fine for
-   * now. */
   GST_OBJECT_LOCK (src);
   clock = GST_ELEMENT_CLOCK (src);
-  if (clock == src->clock) {
+  if (clock == NULL || clock == src->clock) {
+    /* timestamp against our own clock. We do this also when no external clock
+     * was provided to us. */
     timestamp = gst_util_uint64_scale_int (sample, GST_SECOND, spec->rate);
   } else {
     GstClockTime base_time, latency;
 
-    /* take running time of the clock */
+    /* We are slaved to another clock, take running time of the clock and just
+     * timestamp against it. Somebody else in the pipeline should figure out the
+     * clock drift, for now. */
     timestamp = gst_clock_get_time (clock);
     base_time = GST_ELEMENT_CAST (src)->base_time;
 
