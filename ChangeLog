@@ -1,5 +1,19 @@
 2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_preroll_queue_flush),
+	(gst_base_sink_queue_object_unlocked),
+	(gst_base_sink_queue_object), (gst_base_sink_event),
+	(gst_base_sink_needs_preroll), (gst_base_sink_chain_unlocked):
+	When we received EOS and are waiting for when to post the EOS message,
+	our state is prerolled and we should not return ASYNC.
+	Reorganize some code paths to implement this behavior.
+
+	* tests/check/generic/sinks.c: (send_eos), (GST_START_TEST),
+	(gst_sinks_suite):
+	Add unit test to verify above EOS fix.
+
+2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
+
 	* plugins/elements/gsttypefindelement.c:
 	(gst_type_find_element_have_type), (gst_type_find_element_init),
 	(gst_type_find_element_setcaps), (gst_type_find_element_chain):

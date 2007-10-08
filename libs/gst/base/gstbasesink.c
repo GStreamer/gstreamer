@@ -1003,6 +1003,7 @@ gst_base_sink_preroll_queue_flush (GstBaseSink * basesink, GstPad * pad)
   }
   /* we can't have EOS anymore now */
   basesink->eos = FALSE;
+  basesink->priv->received_eos = FALSE;
   basesink->have_preroll = FALSE;
   basesink->eos_queued = FALSE;
   basesink->preroll_queued = 0;
@@ -2025,9 +2026,6 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
   gint length;
   GQueue *q;
 
-  if (G_UNLIKELY (basesink->priv->received_eos))
-    goto was_eos;
-
   if (G_UNLIKELY (basesink->need_preroll)) {
     if (G_LIKELY (prerollable))
       basesink->preroll_queued++;
@@ -2073,13 +2071,6 @@ gst_base_sink_queue_object_unlocked (GstBaseSink * basesink, GstPad * pad,
   return ret;
 
   /* special cases */
-was_eos:
-  {
-    GST_DEBUG_OBJECT (basesink,
-        "we are EOS, dropping object, return UNEXPECTED");
-    gst_mini_object_unref (obj);
-    return GST_FLOW_UNEXPECTED;
-  }
 preroll_failed:
   {
     GST_DEBUG_OBJECT (basesink, "preroll failed, reason %s",
@@ -2121,6 +2112,9 @@ gst_base_sink_queue_object (GstBaseSink * basesink, GstPad * pad,
   if (G_UNLIKELY (basesink->flushing))
     goto flushing;
 
+  if (G_UNLIKELY (basesink->priv->received_eos))
+    goto was_eos;
+
   ret = gst_base_sink_queue_object_unlocked (basesink, pad, obj, prerollable);
   GST_PAD_PREROLL_UNLOCK (pad);
 
@@ -2133,6 +2127,14 @@ flushing:
     GST_PAD_PREROLL_UNLOCK (pad);
     gst_mini_object_unref (obj);
     return GST_FLOW_WRONG_STATE;
+  }
+was_eos:
+  {
+    GST_DEBUG_OBJECT (basesink,
+        "we are EOS, dropping object, return UNEXPECTED");
+    GST_PAD_PREROLL_UNLOCK (pad);
+    gst_mini_object_unref (obj);
+    return GST_FLOW_UNEXPECTED;
   }
 }
 
@@ -2155,16 +2157,27 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
     {
       GstFlowReturn ret;
 
-      /* EOS is a prerollable object */
-      ret =
-          gst_base_sink_queue_object (basesink, pad,
-          GST_MINI_OBJECT_CAST (event), TRUE);
+      GST_PAD_PREROLL_LOCK (pad);
+      if (G_UNLIKELY (basesink->flushing))
+        goto flushing;
 
-      if (G_UNLIKELY (ret != GST_FLOW_OK))
+      if (G_UNLIKELY (basesink->priv->received_eos)) {
+        /* we can't accept anything when we are EOS */
         result = FALSE;
-      else
-        /* we are now EOS, and refuse more buffers */
+        gst_event_unref (event);
+      } else {
+        /* we set the received EOS flag here so that we can use it when testing if
+         * we are prerolled and to refure more buffers. */
         basesink->priv->received_eos = TRUE;
+
+        /* EOS is a prerollable object, we call the unlocked version because it
+         * does not check the received_eos flag. */
+        ret = gst_base_sink_queue_object_unlocked (basesink, pad,
+            GST_MINI_OBJECT_CAST (event), TRUE);
+        if (G_UNLIKELY (ret != GST_FLOW_OK))
+          result = FALSE;
+      }
+      GST_PAD_PREROLL_UNLOCK (pad);
       break;
     }
     case GST_EVENT_NEWSEGMENT:
@@ -2172,6 +2185,10 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       GstFlowReturn ret;
 
       GST_DEBUG_OBJECT (basesink, "newsegment %p", event);
+
+      GST_PAD_PREROLL_LOCK (pad);
+      if (G_UNLIKELY (basesink->flushing))
+        goto flushing;
 
       if (G_UNLIKELY (basesink->priv->received_eos)) {
         /* we can't accept anything when we are EOS */
@@ -2185,13 +2202,14 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
             basesink->abidata.ABI.clip_segment);
 
         ret =
-            gst_base_sink_queue_object (basesink, pad,
+            gst_base_sink_queue_object_unlocked (basesink, pad,
             GST_MINI_OBJECT_CAST (event), FALSE);
         if (G_UNLIKELY (ret != GST_FLOW_OK))
           result = FALSE;
         else
           basesink->have_newsegment = TRUE;
       }
+      GST_PAD_PREROLL_UNLOCK (pad);
       break;
     }
     case GST_EVENT_FLUSH_START:
@@ -2228,7 +2246,8 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
 
       GST_DEBUG_OBJECT (basesink, "flush-stop %p", event);
 
-      /* unset flushing so we can accept new data */
+      /* unset flushing so we can accept new data, this also flushes out any EOS
+       * event. */
       gst_base_sink_set_flushing (basesink, pad, FALSE);
 
       /* we need new segment info after the flush. */
@@ -2236,8 +2255,6 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_init (basesink->abidata.ABI.clip_segment,
           GST_FORMAT_UNDEFINED);
       basesink->have_newsegment = FALSE;
-      /* we flush out the EOS event as well now */
-      basesink->priv->received_eos = FALSE;
 
       gst_event_unref (event);
       break;
@@ -2254,9 +2271,20 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       }
       break;
   }
+done:
   gst_object_unref (basesink);
 
   return result;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG_OBJECT (basesink, "we are flushing");
+    GST_PAD_PREROLL_UNLOCK (pad);
+    result = FALSE;
+    gst_event_unref (event);
+    goto done;
+  }
 }
 
 /* default implementation to calculate the start and end
@@ -2286,10 +2314,14 @@ gst_base_sink_needs_preroll (GstBaseSink * basesink)
 {
   gboolean is_prerolled, res;
 
-  is_prerolled = basesink->have_preroll || basesink->eos;
+  /* we have 2 cases where the PREROLL_LOCK is released:
+   *  1) we are blocking in the PREROLL_LOCK and thus are prerolled.
+   *  2) we are syncing on the clock
+   */
+  is_prerolled = basesink->have_preroll || basesink->priv->received_eos;
   res = !is_prerolled && basesink->pad_mode != GST_ACTIVATE_PULL;
   GST_DEBUG_OBJECT (basesink, "have_preroll: %d, EOS: %d => needs preroll: %d",
-      basesink->have_preroll, basesink->eos, res);
+      basesink->have_preroll, basesink->priv->received_eos, res);
 
   return res;
 }
@@ -2312,6 +2344,9 @@ gst_base_sink_chain_unlocked (GstBaseSink * basesink, GstPad * pad,
 
   if (G_UNLIKELY (basesink->flushing))
     goto flushing;
+
+  if (G_UNLIKELY (basesink->priv->received_eos))
+    goto was_eos;
 
   /* for code clarity */
   clip_segment = basesink->abidata.ABI.clip_segment;
@@ -2363,6 +2398,13 @@ flushing:
     GST_DEBUG_OBJECT (basesink, "sink is flushing");
     gst_buffer_unref (buf);
     return GST_FLOW_WRONG_STATE;
+  }
+was_eos:
+  {
+    GST_DEBUG_OBJECT (basesink,
+        "we are EOS, dropping object, return UNEXPECTED");
+    gst_buffer_unref (buf);
+    return GST_FLOW_UNEXPECTED;
   }
 out_of_segment:
   {

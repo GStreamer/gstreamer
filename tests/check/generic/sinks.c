@@ -896,12 +896,94 @@ GST_START_TEST (test_bin_live)
   gst_object_unref (pipeline);
 }
 
-GST_END_TEST
+GST_END_TEST static void
+send_eos (GstPad * sinkpad)
+{
+  gst_pad_send_event (sinkpad, gst_event_new_eos ());
+}
+
+/* push a buffer with a very long duration in a fakesink, then push an EOS
+ * event. fakesink should emit EOS after the duration of the buffer expired.
+ * Going to PAUSED, however should not return ASYNC while processing the
+ * buffer. */
+GST_START_TEST (test_fake_eos)
+{
+  GstElement *sink, *pipeline;
+  GstBuffer *buffer;
+  GstStateChangeReturn ret;
+  GstPad *sinkpad;
+  GstFlowReturn res;
+  GThread *thread;
+
+  pipeline = gst_pipeline_new ("pipeline");
+
+  sink = gst_element_factory_make ("fakesink", "sink");
+  g_object_set (G_OBJECT (sink), "sync", TRUE, NULL);
+
+  sinkpad = gst_element_get_pad (sink, "sink");
+
+  gst_bin_add (GST_BIN_CAST (pipeline), sink);
+
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_ASYNC, "no ASYNC state return");
+
+  /* push buffer of 100 seconds, since it has a timestamp of 0, it should be
+   * rendered immediatly and the chain function should return immediatly */
+  buffer = gst_buffer_new_and_alloc (10);
+  GST_BUFFER_TIMESTAMP (buffer) = 0;
+  GST_BUFFER_DURATION (buffer) = 100 * GST_SECOND;
+  res = gst_pad_chain (sinkpad, buffer);
+  fail_unless (res == GST_FLOW_OK, "no OK flow return");
+
+  /* wait for preroll, this should happen really soon. */
+  ret = gst_element_get_state (pipeline, NULL, NULL, -1);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "no SUCCESS state return");
+
+  /* push EOS, this will block for up to 100 seconds, until the previous
+   * buffer has finished. We therefore push it in another thread so we can do
+   * something else while it blocks. */
+  thread = g_thread_create ((GThreadFunc) send_eos, sinkpad, TRUE, NULL);
+  fail_if (thread == NULL, "no thread");
+
+  /* wait a while so that the thread manages to start and push the EOS */
+  g_usleep (G_USEC_PER_SEC);
+
+  /* this should cancel rendering of the EOS event and should return SUCCESS
+   * because the sink is now prerolled on the EOS. */
+  ret = gst_element_set_state (pipeline, GST_STATE_PAUSED);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "no SUCCESS state return");
+
+  /* we can unref the sinkpad now, we're done with it */
+  gst_object_unref (sinkpad);
+
+  /* wait for a second, use the debug log to see that basesink does not discard
+   * the EOS */
+  g_usleep (G_USEC_PER_SEC);
+
+  /* go back to PLAYING, which means waiting some more in EOS, check debug log
+   * to see this happen. */
+  ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "no SUCCESS state return");
+  g_usleep (G_USEC_PER_SEC);
+
+  /* teardown and cleanup */
+  ret = gst_element_set_state (pipeline, GST_STATE_NULL);
+  fail_unless (ret == GST_STATE_CHANGE_SUCCESS, "no SUCCESS state return");
+
+  gst_object_unref (pipeline);
+}
+
+GST_END_TEST;
+
 /* test: try changing state of sinks */
-    Suite * gst_sinks_suite (void)
+Suite *
+gst_sinks_suite (void)
 {
   Suite *s = suite_create ("Sinks");
   TCase *tc_chain = tcase_create ("general");
+
+  /* time out after 10s, not the default 3, we need this for the last test. */
+  tcase_set_timeout (tc_chain, 10);
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_sink);
@@ -919,6 +1001,7 @@ GST_END_TEST
   tcase_add_test (tc_chain, test_add_live);
   tcase_add_test (tc_chain, test_add_live2);
   tcase_add_test (tc_chain, test_bin_live);
+  tcase_add_test (tc_chain, test_fake_eos);
 
   return s;
 }
