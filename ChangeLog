@@ -1,5 +1,10 @@
 2007-10-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/manual/advanced-autoplugging.xml:
+	  Prefix section with broken code with a warning (see #342432).
+
+2007-10-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/manual/appendix-integration.xml:
 	* docs/manual/basics-init.xml:
 	  Call g_thread_init() before g_option_context_new() to

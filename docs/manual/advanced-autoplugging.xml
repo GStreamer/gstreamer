@@ -232,6 +232,11 @@ main (gint   argc,
 
   <sect1 id="section-dynamic">
     <title>Plugging together dynamic pipelines</title>
+    <warning><para>
+      The code in this section is broken, outdated and overly complicated.
+      Also, you should use decodebin, playbin or uridecodebin to get
+      decoders plugged automatically.
+    </para></warning>
     <para> 
       In this chapter we will see how you can create a dynamic pipeline. A
       dynamic pipeline is a pipeline that is updated or created while data
