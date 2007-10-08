@@ -1,5 +1,14 @@
 2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
 
+	* plugins/elements/gsttypefindelement.c:
+	(gst_type_find_element_have_type), (gst_type_find_element_init),
+	(gst_type_find_element_setcaps), (gst_type_find_element_chain):
+	Move detecting the input caps of the sinkpad to the setcaps function.
+	This allows us to update the output caps when we receive new input caps
+	instead of always using the first detected caps.
+
+2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
+
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_event),
 	(gst_base_sink_get_position):
 	Don't try to preroll non-async elements after a flush.
