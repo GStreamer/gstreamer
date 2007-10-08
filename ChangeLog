@@ -1,3 +1,24 @@
+2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (get_pt_map),
+	(gst_rtp_bin_clear_pt_map), (gst_rtp_bin_class_init):
+	Fix caps refcounting for payload maps.
+	When clearing payload maps, also clear sessions and streams payload
+	maps.
+
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_get_caps),
+	(gst_rtp_pt_demux_clear_pt_map), (gst_rtp_pt_demux_chain),
+	(find_pad_for_pt):
+	Implement clearing the payload map.
+
+	* gst/rtpmanager/gstrtpsession.c:
+	(gst_rtp_session_event_send_rtp_sink):
+	Forward flush events instead of leaking them.
+
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	(gst_rtp_ssrc_demux_rtcp_sink_event):
+	Correctly refcount events before pushing them.
+
 2007-10-08  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/gio/gstgio.c: (gst_gio_get_supported_protocols):
