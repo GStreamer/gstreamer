@@ -201,7 +201,7 @@ static GstRTSPResult gst_rtspsrc_send_cb (GstRTSPExtension * ext,
     GstRTSPMessage * request, GstRTSPMessage * response, GstRTSPSrc * src);
 
 static gboolean gst_rtspsrc_open (GstRTSPSrc * src);
-static gboolean gst_rtspsrc_play (GstRTSPSrc * src);
+static gboolean gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment);
 static gboolean gst_rtspsrc_pause (GstRTSPSrc * src);
 static gboolean gst_rtspsrc_close (GstRTSPSrc * src);
 
@@ -1124,6 +1124,8 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   gint cmd, i;
   GstState state;
   GList *walk;
+  GstClock *clock;
+  GstClockTime base_time = -1;
 
   if (flush) {
     event = gst_event_new_flush_start ();
@@ -1135,6 +1137,11 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
     GST_DEBUG_OBJECT (src, "stop flush");
     cmd = CMD_WAIT;
     state = GST_STATE_PLAYING;
+    clock = gst_element_get_clock (GST_ELEMENT_CAST (src));
+    if (clock) {
+      base_time = gst_clock_get_time (clock);
+      gst_object_unref (clock);
+    }
   }
   gst_rtspsrc_push_event (src, event);
   gst_rtspsrc_loop_send_cmd (src, cmd, flush);
@@ -1145,6 +1152,8 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
 
     for (i = 0; i < 2; i++) {
       if (stream->udpsrc[i]) {
+        if (base_time != -1)
+          gst_element_set_base_time (stream->udpsrc[i], base_time);
         gst_element_set_state (stream->udpsrc[i], state);
       }
     }
@@ -1182,11 +1191,11 @@ gst_rtspsrc_do_seek (GstRTSPSrc * src, GstSegment * segment)
 {
   gboolean res;
 
-  /* PLAY will add the range header now. */
   src->state = GST_RTSP_STATE_SEEKING;
+  /* PLAY will add the range header now. */
   src->need_range = TRUE;
 
-  res = gst_rtspsrc_play (src);
+  res = gst_rtspsrc_play (src, segment);
 
   return res;
 }
@@ -1203,7 +1212,6 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   gboolean flush;
   gboolean update;
   GstSegment seeksegment = { 0, };
-  gint64 last_stop;
 
   if (event) {
     GST_DEBUG_OBJECT (src, "doing seek with event");
@@ -1250,10 +1258,7 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
   /* stop flushing state */
   gst_rtspsrc_loop_send_cmd (src, CMD_WAIT, FALSE);
 
-  /* save current position */
-  last_stop = src->segment.last_stop;
-
-  GST_DEBUG_OBJECT (src, "stopped streaming at %" G_GINT64_FORMAT, last_stop);
+  GST_DEBUG_OBJECT (src, "stopped streaming");
 
   /* copy segment, we need this because we still need the old
    * segment when we close the current segment. */
@@ -1318,11 +1323,9 @@ gst_rtspsrc_perform_seek (GstRTSPSrc * src, GstEvent * event)
       src->segment.format, src->segment.last_stop, stop,
       src->segment.last_stop);
 
-  /* mark discont if we are going to stream from another position. */
-  if (last_stop != src->segment.last_stop) {
-    GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
-    //src->discont = TRUE;
-  }
+  /* mark discont */
+  GST_DEBUG_OBJECT (src, "mark DISCONT, we did a seek to another position");
+
   GST_RTSP_STREAM_UNLOCK (src);
 
   return TRUE;
@@ -2223,7 +2226,7 @@ gst_rtspsrc_activate_streams (GstRTSPSrc * src)
 }
 
 static void
-gst_rtspsrc_configure_caps (GstRTSPSrc * src)
+gst_rtspsrc_configure_caps (GstRTSPSrc * src, GstSegment * segment)
 {
   GList *walk;
   guint64 start, stop;
@@ -2231,10 +2234,10 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src)
 
   GST_DEBUG_OBJECT (src, "configuring stream caps");
 
-  start = src->segment.last_stop;
-  stop = src->segment.duration;
-  play_speed = src->segment.rate;
-  play_scale = src->segment.applied_rate;
+  start = segment->last_stop;
+  stop = segment->duration;
+  play_speed = segment->rate;
+  play_scale = segment->applied_rate;
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
@@ -2260,9 +2263,12 @@ gst_rtspsrc_configure_caps (GstRTSPSrc * src)
         stream->caps = caps;
       }
     }
+    GST_DEBUG_OBJECT (src, "stream %p, caps %" GST_PTR_FORMAT, stream, caps);
   }
-  if (src->session)
+  if (src->session) {
+    GST_DEBUG_OBJECT (src, "clear session");
     g_signal_emit_by_name (src->session, "clear-pt-map", NULL);
+  }
 }
 
 static GstFlowReturn
@@ -2787,7 +2793,7 @@ gst_rtspsrc_loop_udp (GstRTSPSrc * src)
     goto open_failed;
 
   /* start playback */
-  if (!gst_rtspsrc_play (src))
+  if (!gst_rtspsrc_play (src, &src->segment))
     goto play_failed;
 
 done:
@@ -3722,7 +3728,8 @@ cleanup_error:
 }
 
 static void
-gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range)
+gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
+    GstSegment * segment)
 {
   GstRTSPTimeRange *therange;
 
@@ -3742,7 +3749,7 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range)
     GST_DEBUG_OBJECT (src, "range: min %" GST_TIME_FORMAT,
         GST_TIME_ARGS (seconds));
 
-    gst_segment_set_last_stop (&src->segment, GST_FORMAT_TIME, seconds);
+    gst_segment_set_last_stop (segment, GST_FORMAT_TIME, seconds);
 
     if (therange->max.type == GST_RTSP_TIME_NOW)
       seconds = -1;
@@ -3757,7 +3764,7 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range)
     /* don't change duration with unknown value, we might have a valid value
      * there that we want to keep. */
     if (seconds != -1)
-      gst_segment_set_duration (&src->segment, GST_FORMAT_TIME, seconds);
+      gst_segment_set_duration (segment, GST_FORMAT_TIME, seconds);
   } else {
     GST_WARNING_OBJECT (src, "could not parse range: '%s'", range);
   }
@@ -3866,7 +3873,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
 
     range = gst_sdp_message_get_attribute_val (&sdp, "range");
     if (range)
-      gst_rtspsrc_parse_range (src, range);
+      gst_rtspsrc_parse_range (src, range, &src->segment);
   }
 
   /* create streams */
@@ -4163,7 +4170,7 @@ gst_rtspsrc_get_float (const char *str, gfloat * val)
 }
 
 static gboolean
-gst_rtspsrc_play (GstRTSPSrc * src)
+gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment)
 {
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
@@ -4188,26 +4195,26 @@ gst_rtspsrc_play (GstRTSPSrc * src)
     goto create_request_failed;
 
   if (src->need_range) {
-    if (src->segment.last_stop == 0)
+    if (segment->last_stop == 0)
       hval = g_strdup_printf ("npt=0-");
     else
       hval =
           gst_rtspsrc_dup_printf ("npt=%f-",
-          ((gdouble) src->segment.last_stop) / GST_SECOND);
+          ((gdouble) segment->last_stop) / GST_SECOND);
 
     gst_rtsp_message_add_header (&request, GST_RTSP_HDR_RANGE, hval);
     g_free (hval);
     src->need_range = FALSE;
   }
 
-  if (src->segment.rate != 1.0) {
-    hval = gst_rtspsrc_dup_printf ("%f", src->segment.rate);
+  if (segment->rate != 1.0) {
+    hval = gst_rtspsrc_dup_printf ("%f", segment->rate);
     gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SPEED, hval);
     g_free (hval);
   }
 
-  if (src->segment.applied_rate != 1.0) {
-    hval = gst_rtspsrc_dup_printf ("%f", src->segment.applied_rate);
+  if (segment->applied_rate != 1.0) {
+    hval = gst_rtspsrc_dup_printf ("%f", segment->applied_rate);
     gst_rtsp_message_add_header (&request, GST_RTSP_HDR_SCALE, hval);
     g_free (hval);
   }
@@ -4221,7 +4228,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
    * Play Time) and should be put in the NEWSEGMENT position field. */
   if (gst_rtsp_message_get_header (&response, GST_RTSP_HDR_RANGE, &hval,
           0) == GST_RTSP_OK)
-    gst_rtspsrc_parse_range (src, hval);
+    gst_rtspsrc_parse_range (src, hval, segment);
 
   /* parse Speed header. This is the intended playback rate of the stream
    * and should be put in the NEWSEGMENT rate field. */
@@ -4230,9 +4237,9 @@ gst_rtspsrc_play (GstRTSPSrc * src)
     gfloat fval;
 
     if (gst_rtspsrc_get_float (hval, &fval) > 0)
-      src->segment.rate = fval;
+      segment->rate = fval;
   } else {
-    src->segment.rate = 1.0;
+    segment->rate = 1.0;
   }
 
   /* parse Scale header. This is the playback rate as sent by the server
@@ -4242,9 +4249,9 @@ gst_rtspsrc_play (GstRTSPSrc * src)
     gfloat fval;
 
     if (gst_rtspsrc_get_float (hval, &fval) > 0)
-      src->segment.applied_rate = fval;
+      segment->applied_rate = fval;
   } else {
-    src->segment.applied_rate = 1.0;
+    segment->applied_rate = 1.0;
   }
 
   /* parse the RTP-Info header field (if ANY) to get the base seqnum and timestamp
@@ -4257,7 +4264,7 @@ gst_rtspsrc_play (GstRTSPSrc * src)
   gst_rtsp_message_unset (&response);
 
   /* configure the caps of the streams after we parsed all headers. */
-  gst_rtspsrc_configure_caps (src);
+  gst_rtspsrc_configure_caps (src, segment);
 
   /* for interleaved transport, we receive the data on the RTSP connection
    * instead of UDP. We start a task to select and read from that connection.
@@ -4480,7 +4487,7 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       gst_rtsp_connection_flush (rtspsrc->connection, FALSE);
       /* FIXME, the server might send UDP packets before we activate the UDP
        * ports */
-      gst_rtspsrc_play (rtspsrc);
+      gst_rtspsrc_play (rtspsrc, &rtspsrc->segment);
       break;
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
     case GST_STATE_CHANGE_PAUSED_TO_READY:

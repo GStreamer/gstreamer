@@ -1,5 +1,17 @@
 2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_flush),
+	(gst_rtspsrc_do_seek), (gst_rtspsrc_perform_seek),
+	(gst_rtspsrc_configure_caps), (gst_rtspsrc_loop_udp),
+	(gst_rtspsrc_parse_range), (gst_rtspsrc_open), (gst_rtspsrc_play),
+	(gst_rtspsrc_change_state):
+	More seeking fixes, mostly passing around the new playback segment in
+	order to configure it properly.
+	Also reset base_time of udp sources when setting them back to PLAYING as
+	a temporary hack until core supports seek in live sources properly.
+
+2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtp/gstrtpmp4adepay.c:
 	Fix caps as to not confuse autopluggers.
 
