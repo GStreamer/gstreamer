@@ -93,11 +93,8 @@ gst_gio_seek (gpointer element, GSeekable * stream, guint64 offset,
 static gchar **
 gst_gio_get_supported_protocols (void)
 {
-  /* FIXME: Figure out supported schemes enumeration method for GIO. */
-
-  const gchar *protocols[] = { "file", "ftp", "sftp", "smb", NULL };
-
-  return g_strdupv ((gchar **) protocols);
+  return g_strdupv ((gchar **)
+      g_vfs_get_supported_uri_schemes (g_vfs_get_default ()));
 }
 
 static GstURIType
