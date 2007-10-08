@@ -583,6 +583,7 @@ add_fakesink (GstDecodeBin * decode_bin)
   /* hacky, remove sink flag, we don't want our decodebin to become a sink
    * just because we add a fakesink element to make us ASYNC */
   GST_OBJECT_FLAG_UNSET (decode_bin->fakesink, GST_ELEMENT_IS_SINK);
+
   /* takes ownership */
   if (!gst_bin_add (GST_BIN (decode_bin), decode_bin->fakesink)) {
     g_warning ("Could not add fakesink element, decodebin will not work");
@@ -1538,6 +1539,12 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
   GST_STATE_LOCK (decode_bin);
   if (decode_bin->shutting_down)
     goto shutting_down;
+
+  /* don't need the typefind anymore, we're not going to dynamically change
+   * elements anyway */
+  if (decode_bin->have_type_id)
+    g_signal_handler_disconnect (G_OBJECT (typefind), decode_bin->have_type_id);
+  decode_bin->have_type_id = 0;
 
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
