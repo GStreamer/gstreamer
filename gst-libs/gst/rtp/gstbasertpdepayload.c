@@ -208,7 +208,7 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
     priv->npt_start = g_value_get_uint64 (value);
   else
     priv->npt_start = 0;
-  GST_DEBUG_OBJECT (filter, "NTP start %" G_GUINT64_FORMAT, priv->npt_start);
+  GST_DEBUG_OBJECT (filter, "NPT start %" G_GUINT64_FORMAT, priv->npt_start);
 
   value = gst_structure_get_value (caps_struct, "npt-stop");
   if (value && G_VALUE_HOLDS_UINT64 (value))
@@ -216,7 +216,7 @@ gst_base_rtp_depayload_setcaps (GstPad * pad, GstCaps * caps)
   else
     priv->npt_stop = -1;
 
-  GST_DEBUG_OBJECT (filter, "NTP stop %" G_GUINT64_FORMAT, priv->npt_start);
+  GST_DEBUG_OBJECT (filter, "NPT stop %" G_GUINT64_FORMAT, priv->npt_stop);
 
   value = gst_structure_get_value (caps_struct, "play-speed");
   if (value && G_VALUE_HOLDS_DOUBLE (value))

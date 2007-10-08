@@ -1,5 +1,11 @@
 2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	(gst_base_rtp_depayload_setcaps), (gst_base_rtp_depayload_chain):
+	Fix debug output.
+
+2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst-libs/gst/audio/gstbaseaudiosrc.c:
 	(gst_base_audio_src_create):
 	Also handle the case where there is no clock set on the audio source,
