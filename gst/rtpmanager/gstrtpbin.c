@@ -140,7 +140,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_bin_debug);
 #define GST_CAT_DEFAULT gst_rtp_bin_debug
 
-
 /* elementfactory information */
 static const GstElementDetails rtpbin_details = GST_ELEMENT_DETAILS ("RTP Bin",
     "Filter/Network/RTP",
@@ -562,6 +561,7 @@ get_pt_map (GstRtpBinSession * session, guint pt)
   g_hash_table_insert (session->ptmap, GINT_TO_POINTER (pt), caps);
 
 done:
+  gst_caps_ref (caps);
   GST_RTP_SESSION_UNLOCK (session);
 
   return caps;
@@ -584,20 +584,26 @@ return_true (gpointer key, gpointer value, gpointer user_data)
 static void
 gst_rtp_bin_clear_pt_map (GstRtpBin * bin)
 {
-  GSList *walk;
+  GSList *sessions, *streams;
 
   GST_RTP_BIN_LOCK (bin);
   GST_DEBUG_OBJECT (bin, "clearing pt map");
-  for (walk = bin->sessions; walk; walk = g_slist_next (walk)) {
-    GstRtpBinSession *session = (GstRtpBinSession *) walk->data;
+  for (sessions = bin->sessions; sessions; sessions = g_slist_next (sessions)) {
+    GstRtpBinSession *session = (GstRtpBinSession *) sessions->data;
+
+    GST_DEBUG_OBJECT (bin, "clearing session %p", session);
+    g_signal_emit_by_name (session->session, "clear-pt-map", NULL);
 
     GST_RTP_SESSION_LOCK (session);
-#if 0
-    /* This requires GLib 2.12 */
-    g_hash_table_remove_all (session->ptmap);
-#else
     g_hash_table_foreach_remove (session->ptmap, return_true, NULL);
-#endif
+
+    for (streams = session->streams; streams; streams = g_slist_next (streams)) {
+      GstRtpBinStream *stream = (GstRtpBinStream *) streams->data;
+
+      GST_DEBUG_OBJECT (bin, "clearing stream %p", stream);
+      g_signal_emit_by_name (stream->buffer, "clear-pt-map", NULL);
+      g_signal_emit_by_name (stream->demux, "clear-pt-map", NULL);
+    }
     GST_RTP_SESSION_UNLOCK (session);
   }
   GST_RTP_BIN_UNLOCK (bin);
@@ -1049,8 +1055,9 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    */
   gst_rtp_bin_signals[SIGNAL_CLEAR_PT_MAP] =
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass, clear_pt_map),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
+          clear_pt_map), NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE,
+      0, G_TYPE_NONE);
 
   /**
    * GstRtpBin::on-new-ssrc:

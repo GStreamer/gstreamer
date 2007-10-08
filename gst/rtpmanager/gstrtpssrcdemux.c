@@ -386,9 +386,11 @@ gst_rtp_ssrc_demux_rtcp_sink_event (GstPad * pad, GstEvent * event)
       for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
         GstRtpSsrcDemuxPad *pad = (GstRtpSsrcDemuxPad *) walk->data;
 
+        gst_event_ref (event);
         res &= gst_pad_push_event (pad->rtcp_pad, event);
       }
       GST_PAD_UNLOCK (demux);
+      gst_event_unref (event);
       break;
     }
   }
