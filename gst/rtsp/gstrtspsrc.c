@@ -1125,7 +1125,7 @@ gst_rtspsrc_flush (GstRTSPSrc * src, gboolean flush)
   GstState state;
   GList *walk;
   GstClock *clock;
-  GstClockTime base_time = -1;
+  GstClockTime base_time = GST_CLOCK_TIME_NONE;
 
   if (flush) {
     event = gst_event_new_flush_start ();

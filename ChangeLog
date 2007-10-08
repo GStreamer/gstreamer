@@ -1,3 +1,9 @@
+2007-10-08  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_flush):
+	Fix compiler warning by using GST_CLOCK_TIME_NONE to initialise
+	a GstClockTime.
+
 2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_flush),
