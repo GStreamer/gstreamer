@@ -175,9 +175,9 @@ pygstminiobject_new (GstMiniObject *obj)
 static void
 pygstminiobject_dealloc(PyGstMiniObject *self)
 {
-    g_return_if_fail (self != NULL);
-
     PyGILState_STATE state;
+
+    g_return_if_fail (self != NULL);
 
     GST_DEBUG ("At the beginning %p", self);
     state = pyg_gil_state_ensure();

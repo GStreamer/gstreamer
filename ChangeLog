@@ -1,3 +1,13 @@
+2007-10-08  Sebastien Moutte  <sebastien@moutte.net>
+
+	* gst/pygstminiobject.c: (pygstminiobject_dealloc):
+	Move up variable declaration to the top of the function.
+	* win32/vs6/gst_python.dsw:
+	* win32/vs6/libgstpython.dsp:
+	* win32/vs6/pygenfiles.dsp:
+	* win32/MANIFEST
+	Add new project files to build with VS6.
+
 2007-09-11  Andy Wingo  <wingo@pobox.com>
 
 	* gst/gstmodule.c (DL_EXPORT): Remove the atexit(gst_deinit).
