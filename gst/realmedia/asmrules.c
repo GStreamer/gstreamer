@@ -495,7 +495,7 @@ gst_asm_scan_parse_expression (GstASMScan * scan)
 
     node = gst_asm_node_new ();
     node->type = GST_ASM_NODE_OPERATOR;
-    node->data.optype = scan->token;
+    node->data.optype = (GstASMOp) scan->token;
 
     gst_asm_scan_next_token (scan);
 
@@ -517,7 +517,7 @@ gst_asm_scan_parse_condition (GstASMScan * scan)
 
     node = gst_asm_node_new ();
     node->type = GST_ASM_NODE_OPERATOR;
-    node->data.optype = scan->token;
+    node->data.optype = (GstASMOp) scan->token;
 
     gst_asm_scan_next_token (scan);
 

@@ -2139,7 +2139,7 @@ gst_rmdemux_parse_video_packet (GstRMDemux * rmdemux, GstRMDemuxStream * stream,
     guint8 pkg_header;
     guint pkg_offset;
     guint pkg_length;
-    guint pkg_subseq = 0, pkg_seqnum = -1;
+    guint pkg_subseq = 0, pkg_seqnum = G_MAXUINT;
     guint fragment_size;
     GstBuffer *fragment;
 

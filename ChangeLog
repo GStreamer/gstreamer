@@ -1,3 +1,10 @@
+2007-10-08  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/realmedia/asmrules.c: (gst_asm_scan_parse_expression),
+	(gst_asm_scan_parse_condition):
+	* gst/realmedia/rmdemux.c: (gst_rmdemux_parse_video_packet):
+	Fix some compiler warnings shown on Forte.
+
 2007-09-29  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c: (mp3parse_time_to_bytepos),
