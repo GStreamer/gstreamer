@@ -1,5 +1,12 @@
 2007-10-08  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstenumtypes.h:
+	* win32/common/gstversion.h:
+	  Update generated files.
+
+2007-10-08  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/manual/advanced-autoplugging.xml:
 	  Prefix section with broken code with a warning (see #342432).
 
