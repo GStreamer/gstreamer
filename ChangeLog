@@ -1,3 +1,9 @@
+2007-10-08  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst-libs/gst/rtp/gstrtppayloads.c:
+	Use unsigned G_MAXUINT8 instead of -1 to initialise a guint8
+	to avoid compiler warnings
+
 2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/playback/gstdecodebin.c: (type_found),

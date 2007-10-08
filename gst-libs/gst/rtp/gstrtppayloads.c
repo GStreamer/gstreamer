@@ -86,92 +86,92 @@ static const GstRTPPayloadInfo info[] = {
   /* { 96-127, "dynamic", 0, 0, NULL, 0 }, */
 
   /* dynamic stuff */
-  {-1, "application", "parityfec", 0, NULL, 0}, /* [RFC3009] */
-  {-1, "application", "rtx", 0, NULL, 0},       /* [RFC4588] */
-  {-1, "audio", "AMR", 8000, NULL, 0},  /* [RFC4867][RFC3267] */
-  {-1, "audio", "AMR-WB", 16000, NULL, 0},      /* [RFC4867][RFC3267] */
-  {-1, "audio", "DAT12", 0, NULL, 0},   /* [RFC3190] */
-  {-1, "audio", "dsr-es201108", 0, NULL, 0},    /* [RFC3557] */
-  {-1, "audio", "EVRC", 8000, "1", 0},  /* [RFC4788]  */
-  {-1, "audio", "EVRC0", 8000, "1", 0}, /* [RFC4788]  */
-  {-1, "audio", "EVRC1", 8000, "1", 0}, /* [RFC4788]  */
-  {-1, "audio", "EVRCB", 8000, "1", 0}, /* [RFC4788]  */
-  {-1, "audio", "EVRCB0", 8000, "1", 0},        /* [RFC4788]  */
-  {-1, "audio", "EVRCB1", 8000, "1", 0},        /* [RFC4788]  */
-  {-1, "audio", "G7221", 16000, "1", 0},        /* [RFC3047] */
-  {-1, "audio", "G726-16", 8000, "1", 0},       /* [RFC3551][RFC4856] */
-  {-1, "audio", "G726-24", 8000, "1", 0},       /* [RFC3551][RFC4856] */
-  {-1, "audio", "G726-32", 8000, "1", 0},       /* [RFC3551][RFC4856] */
-  {-1, "audio", "G726-40", 8000, "1", 0},       /* [RFC3551][RFC4856] */
-  {-1, "audio", "G729D", 8000, "1", 0}, /* [RFC3551][RFC4856] */
-  {-1, "audio", "G729E", 8000, "1", 0}, /* [RFC3551][RFC4856] */
-  {-1, "audio", "GSM-EFR", 8000, "1", 0},       /* [RFC3551][RFC4856] */
-  {-1, "audio", "L8", 0, NULL, 0},      /* [RFC3551][RFC4856] */
-  {-1, "audio", "RED", 0, NULL, 0},     /* [RFC2198][RFC3555] */
-  {-1, "audio", "rtx", 0, NULL, 0},     /* [RFC4588] */
-  {-1, "audio", "VDVI", 0, "1", 0},     /* [RFC3551][RFC4856] */
-  {-1, "audio", "L20", 0, NULL, 0},     /* [RFC3190] */
-  {-1, "audio", "L24", 0, NULL, 0},     /* [RFC3190] */
-  {-1, "audio", "MP4A-LATM", 0, NULL, 0},       /* [RFC3016] */
-  {-1, "audio", "mpa-robust", 90000, NULL, 0},  /* [RFC3119] */
-  {-1, "audio", "parityfec", 0, NULL, 0},       /* [RFC3009] */
-  {-1, "audio", "SMV", 8000, "1", 0},   /* [RFC3558] */
-  {-1, "audio", "SMV0", 8000, "1", 0},  /* [RFC3558] */
-  {-1, "audio", "t140c", 0, NULL, 0},   /* [RFC4351] */
-  {-1, "audio", "t38", 0, NULL, 0},     /* [RFC4612] */
-  {-1, "audio", "telephone-event", 0, NULL, 0}, /* [RFC4733] */
-  {-1, "audio", "tone", 0, NULL, 0},    /* [RFC4733] */
-  {-1, "audio", "DVI4", 0, NULL, 0},    /* [RFC4856] */
-  {-1, "audio", "G722", 0, NULL, 0},    /* [RFC4856] */
-  {-1, "audio", "G723", 0, NULL, 0},    /* [RFC4856] */
-  {-1, "audio", "G728", 0, NULL, 0},    /* [RFC4856] */
-  {-1, "audio", "G729", 0, NULL, 0},    /* [RFC4856] */
-  {-1, "audio", "GSM", 0, NULL, 0},     /* [RFC4856] */
-  {-1, "audio", "L16", 0, NULL, 0},     /* [RFC4856] */
-  {-1, "audio", "LPC", 0, NULL, 0},     /* [RFC4856] */
-  {-1, "audio", "PCMA", 0, NULL, 0},    /* [RFC4856] */
-  {-1, "audio", "PCMU", 0, NULL, 0},    /* [RFC4856] */
-  {-1, "text", "parityfec", 0, NULL, 0},        /* [RFC3009] */
-  {-1, "text", "red", 1000, NULL, 0},   /* [RFC4102] */
-  {-1, "text", "rtx", 0, NULL, 0},      /* [RFC4588] */
-  {-1, "text", "t140", 1000, NULL, 0},  /* [RFC4103] */
-  {-1, "video", "BMPEG", 90000, NULL, 0},       /* [RFC2343][RFC3555] */
-  {-1, "video", "BT656", 90000, NULL, 0},       /* [RFC2431][RFC3555] */
-  {-1, "video", "DV", 90000, NULL, 0},  /* [RFC3189] */
-  {-1, "video", "H263-1998", 90000, NULL, 0},   /* [RFC2429][RFC3555] */
-  {-1, "video", "H263-2000", 90000, NULL, 0},   /* [RFC2429][RFC3555] */
-  {-1, "video", "MP1S", 90000, NULL, 0},        /* [RFC2250][RFC3555] */
-  {-1, "video", "MP2P", 90000, NULL, 0},        /* [RFC2250][RFC3555] */
-  {-1, "video", "MP4V-ES", 90000, NULL, 0},     /* [RFC3016] */
-  {-1, "video", "parityfec", 0, NULL, 0},       /* [RFC3009] */
-  {-1, "video", "pointer", 90000, NULL, 0},     /* [RFC2862] */
-  {-1, "video", "raw", 90000, NULL, 0}, /* [RFC4175] */
-  {-1, "video", "rtx", 0, NULL, 0},     /* [RFC4588] */
-  {-1, "video", "SMPTE292M", 0, NULL, 0},       /* [RFC3497] */
-  {-1, "video", "vc1", 90000, NULL, 0}, /* [RFC4425] */
+  {G_MAXUINT8, "application", "parityfec", 0, NULL, 0}, /* [RFC3009] */
+  {G_MAXUINT8, "application", "rtx", 0, NULL, 0},       /* [RFC4588] */
+  {G_MAXUINT8, "audio", "AMR", 8000, NULL, 0},  /* [RFC4867][RFC3267] */
+  {G_MAXUINT8, "audio", "AMR-WB", 16000, NULL, 0},      /* [RFC4867][RFC3267] */
+  {G_MAXUINT8, "audio", "DAT12", 0, NULL, 0},   /* [RFC3190] */
+  {G_MAXUINT8, "audio", "dsr-es201108", 0, NULL, 0},    /* [RFC3557] */
+  {G_MAXUINT8, "audio", "EVRC", 8000, "1", 0},  /* [RFC4788]  */
+  {G_MAXUINT8, "audio", "EVRC0", 8000, "1", 0}, /* [RFC4788]  */
+  {G_MAXUINT8, "audio", "EVRC1", 8000, "1", 0}, /* [RFC4788]  */
+  {G_MAXUINT8, "audio", "EVRCB", 8000, "1", 0}, /* [RFC4788]  */
+  {G_MAXUINT8, "audio", "EVRCB0", 8000, "1", 0},        /* [RFC4788]  */
+  {G_MAXUINT8, "audio", "EVRCB1", 8000, "1", 0},        /* [RFC4788]  */
+  {G_MAXUINT8, "audio", "G7221", 16000, "1", 0},        /* [RFC3047] */
+  {G_MAXUINT8, "audio", "G726G_MAXUINT86", 8000, "1", 0},       /* [RFC3551][RFC4856] */
+  {G_MAXUINT8, "audio", "G726-24", 8000, "1", 0},       /* [RFC3551][RFC4856] */
+  {G_MAXUINT8, "audio", "G726-32", 8000, "1", 0},       /* [RFC3551][RFC4856] */
+  {G_MAXUINT8, "audio", "G726-40", 8000, "1", 0},       /* [RFC3551][RFC4856] */
+  {G_MAXUINT8, "audio", "G729D", 8000, "1", 0}, /* [RFC3551][RFC4856] */
+  {G_MAXUINT8, "audio", "G729E", 8000, "1", 0}, /* [RFC3551][RFC4856] */
+  {G_MAXUINT8, "audio", "GSM-EFR", 8000, "1", 0},       /* [RFC3551][RFC4856] */
+  {G_MAXUINT8, "audio", "L8", 0, NULL, 0},      /* [RFC3551][RFC4856] */
+  {G_MAXUINT8, "audio", "RED", 0, NULL, 0},     /* [RFC2198][RFC3555] */
+  {G_MAXUINT8, "audio", "rtx", 0, NULL, 0},     /* [RFC4588] */
+  {G_MAXUINT8, "audio", "VDVI", 0, "1", 0},     /* [RFC3551][RFC4856] */
+  {G_MAXUINT8, "audio", "L20", 0, NULL, 0},     /* [RFC3190] */
+  {G_MAXUINT8, "audio", "L24", 0, NULL, 0},     /* [RFC3190] */
+  {G_MAXUINT8, "audio", "MP4A-LATM", 0, NULL, 0},       /* [RFC3016] */
+  {G_MAXUINT8, "audio", "mpa-robust", 90000, NULL, 0},  /* [RFC3119] */
+  {G_MAXUINT8, "audio", "parityfec", 0, NULL, 0},       /* [RFC3009] */
+  {G_MAXUINT8, "audio", "SMV", 8000, "1", 0},   /* [RFC3558] */
+  {G_MAXUINT8, "audio", "SMV0", 8000, "1", 0},  /* [RFC3558] */
+  {G_MAXUINT8, "audio", "t140c", 0, NULL, 0},   /* [RFC4351] */
+  {G_MAXUINT8, "audio", "t38", 0, NULL, 0},     /* [RFC4612] */
+  {G_MAXUINT8, "audio", "telephone-event", 0, NULL, 0}, /* [RFC4733] */
+  {G_MAXUINT8, "audio", "tone", 0, NULL, 0},    /* [RFC4733] */
+  {G_MAXUINT8, "audio", "DVI4", 0, NULL, 0},    /* [RFC4856] */
+  {G_MAXUINT8, "audio", "G722", 0, NULL, 0},    /* [RFC4856] */
+  {G_MAXUINT8, "audio", "G723", 0, NULL, 0},    /* [RFC4856] */
+  {G_MAXUINT8, "audio", "G728", 0, NULL, 0},    /* [RFC4856] */
+  {G_MAXUINT8, "audio", "G729", 0, NULL, 0},    /* [RFC4856] */
+  {G_MAXUINT8, "audio", "GSM", 0, NULL, 0},     /* [RFC4856] */
+  {G_MAXUINT8, "audio", "L16", 0, NULL, 0},     /* [RFC4856] */
+  {G_MAXUINT8, "audio", "LPC", 0, NULL, 0},     /* [RFC4856] */
+  {G_MAXUINT8, "audio", "PCMA", 0, NULL, 0},    /* [RFC4856] */
+  {G_MAXUINT8, "audio", "PCMU", 0, NULL, 0},    /* [RFC4856] */
+  {G_MAXUINT8, "text", "parityfec", 0, NULL, 0},        /* [RFC3009] */
+  {G_MAXUINT8, "text", "red", 1000, NULL, 0},   /* [RFC4102] */
+  {G_MAXUINT8, "text", "rtx", 0, NULL, 0},      /* [RFC4588] */
+  {G_MAXUINT8, "text", "t140", 1000, NULL, 0},  /* [RFC4103] */
+  {G_MAXUINT8, "video", "BMPEG", 90000, NULL, 0},       /* [RFC2343][RFC3555] */
+  {G_MAXUINT8, "video", "BT656", 90000, NULL, 0},       /* [RFC2431][RFC3555] */
+  {G_MAXUINT8, "video", "DV", 90000, NULL, 0},  /* [RFC3189] */
+  {G_MAXUINT8, "video", "H263-1998", 90000, NULL, 0},   /* [RFC2429][RFC3555] */
+  {G_MAXUINT8, "video", "H263-2000", 90000, NULL, 0},   /* [RFC2429][RFC3555] */
+  {G_MAXUINT8, "video", "MP1S", 90000, NULL, 0},        /* [RFC2250][RFC3555] */
+  {G_MAXUINT8, "video", "MP2P", 90000, NULL, 0},        /* [RFC2250][RFC3555] */
+  {G_MAXUINT8, "video", "MP4V-ES", 90000, NULL, 0},     /* [RFC3016] */
+  {G_MAXUINT8, "video", "parityfec", 0, NULL, 0},       /* [RFC3009] */
+  {G_MAXUINT8, "video", "pointer", 90000, NULL, 0},     /* [RFC2862] */
+  {G_MAXUINT8, "video", "raw", 90000, NULL, 0}, /* [RFC4175] */
+  {G_MAXUINT8, "video", "rtx", 0, NULL, 0},     /* [RFC4588] */
+  {G_MAXUINT8, "video", "SMPTE292M", 0, NULL, 0},       /* [RFC3497] */
+  {G_MAXUINT8, "video", "vc1", 90000, NULL, 0}, /* [RFC4425] */
 
   /* not in http://www.iana.org/assignments/rtp-parameters */
-  {-1, "audio", "AC3", 0, NULL, 0},
-  {-1, "audio", "ILBC", 8000, NULL, 0},
-  {-1, "audio", "MPEG4-GENERIC", 0, NULL, 0},
-  {-1, "audio", "SPEEX", 0, NULL, 0},
+  {G_MAXUINT8, "audio", "AC3", 0, NULL, 0},
+  {G_MAXUINT8, "audio", "ILBC", 8000, NULL, 0},
+  {G_MAXUINT8, "audio", "MPEG4-GENERIC", 0, NULL, 0},
+  {G_MAXUINT8, "audio", "SPEEX", 0, NULL, 0},
 
-  {-1, "application", "MPEG4-GENERIC", 0, NULL, 0},
+  {G_MAXUINT8, "application", "MPEG4-GENERIC", 0, NULL, 0},
 
-  {-1, "video", "H264", 90000, NULL, 0},
-  {-1, "video", "MPEG4-GENERIC", 90000, NULL, 0},
-  {-1, "video", "THEORA", 0, NULL, 0},
-  {-1, "video", "VORBIS", 0, NULL, 0},
-  {-1, "video", "X-SV3V-ES", 90000, NULL, 0},
-  {-1, "video", "X-SORENSON-VIDEO", 90000, NULL, 0},
+  {G_MAXUINT8, "video", "H264", 90000, NULL, 0},
+  {G_MAXUINT8, "video", "MPEG4-GENERIC", 90000, NULL, 0},
+  {G_MAXUINT8, "video", "THEORA", 0, NULL, 0},
+  {G_MAXUINT8, "video", "VORBIS", 0, NULL, 0},
+  {G_MAXUINT8, "video", "X-SV3V-ES", 90000, NULL, 0},
+  {G_MAXUINT8, "video", "X-SORENSON-VIDEO", 90000, NULL, 0},
 
   /* real stuff */
-  {-1, "video", "x-pn-realvideo", 1000, NULL, 0},
-  {-1, "audio", "x-pn-realaudio", 1000, NULL, 0},
-  {-1, "application", "x-pn-realmedia", 1000, NULL, 0},
+  {G_MAXUINT8, "video", "x-pn-realvideo", 1000, NULL, 0},
+  {G_MAXUINT8, "audio", "x-pn-realaudio", 1000, NULL, 0},
+  {G_MAXUINT8, "application", "x-pn-realmedia", 1000, NULL, 0},
 
   /* terminator */
-  {-1, NULL, NULL, 0, NULL, 0}
+  {G_MAXUINT8, NULL, NULL, 0, NULL, 0}
 };
 
 /**
