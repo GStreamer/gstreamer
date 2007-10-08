@@ -461,10 +461,10 @@ codec_search_done:
     goto could_not_load;
   }
 
-  hooks->init = rv_init;
-  hooks->free = rv_free;
-  hooks->transform = rv_transform;
-  hooks->custom_message = rv_custom_msg;
+  hooks->init = (GstRealVideoDecInitFunc) rv_init;
+  hooks->free = (GstRealVideoDecFreeFunc) rv_free;
+  hooks->transform = (GstRealVideoDecTransformFunc) rv_transform;
+  hooks->custom_message = (GstRealVideoDecMessageFunc) rv_custom_msg;
   hooks->module = module;
 
   dec->error_count = 0;

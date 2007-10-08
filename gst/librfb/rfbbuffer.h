@@ -6,10 +6,11 @@
 G_BEGIN_DECLS
 
 typedef struct _RfbBuffer RfbBuffer;
+typedef void(*RfbBufferFreeFunc)(guint8 *data, gpointer priv);
 
 struct _RfbBuffer
 {
-  void (*free_data) (guint8 *data, gpointer priv);
+  RfbBufferFreeFunc free_data;
   gpointer buffer_private;
 
   guint8 *data;

@@ -642,7 +642,7 @@ rfb_socket_get_buffer (gint length, gpointer user_data)
   buffer = rfb_buffer_new ();
 
   buffer->data = g_malloc (length);
-  buffer->free_data = (void *) g_free;
+  buffer->free_data = (RfbBufferFreeFunc) g_free;
 
   // g_print ("calling read(%d, %p, %d)\n", fd, buffer->data, length);
   ret = read (fd, buffer->data, length);

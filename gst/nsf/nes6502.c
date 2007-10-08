@@ -944,7 +944,7 @@
    ADD_CYCLES(cycles); \
 }
 
-#define SEC() \
+#define NSF_SEC() \
 { \
    SET_FLAG(C_FLAG); \
    ADD_CYCLES(2); \
@@ -1641,7 +1641,7 @@ nes6502_execute (int remaining_cycles)
         break;
 
       case 0x38:               /* SEC */
-        SEC ();
+        NSF_SEC ();
         break;
 
       case 0x39:               /* AND $nnnn,Y */
@@ -2394,7 +2394,20 @@ nes6502_setdma (int cycles)
 
 /*
 ** $Log$
-** Revision 1.1  2006/07/13 15:07:28  wtay
+** Revision 1.2  2007/10/08 17:46:44  thaytan
+** * gst/librfb/rfbbuffer.c: (rfb_buffer_new_and_alloc):
+** * gst/librfb/rfbbuffer.h:
+** * gst/librfb/rfbdecoder.c: (rfb_socket_get_buffer):
+** * gst/mpegvideoparse/mpegvideoparse.c: (gst_mpegvideoparse_chain):
+** * gst/nsf/nes6502.c: (nes6502_execute):
+** * gst/real/gstrealaudiodec.c: (gst_real_audio_dec_setcaps):
+** * gst/real/gstrealvideodec.c: (open_library):
+** * gst/real/gstrealvideodec.h:
+** * gst/rtpmanager/gstrtpsession.c: (create_recv_rtp_sink),
+** (create_recv_rtcp_sink), (create_send_rtp_sink):
+** Fix compiler warnings shown by Forte.
+**
+** Revision 1.1  2006-07-13 15:07:28  wtay
 ** Based on patches by: Johan Dahlin <johan at gnome dot org>
 ** Ronald Bultje <rbultje at ronald dot bitfreak dot net>
 ** * configure.ac:

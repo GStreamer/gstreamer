@@ -282,14 +282,16 @@ codec_search_done:
   g_module_symbol (module, "RASetPwd", &ra_set_pwd);
   g_module_symbol (module, "SetDLLAccessPath", &set_dll_access_path);
 
-  funcs.RACloseCodec = ra_close_codec;
-  funcs.RADecode = ra_decode;
-  funcs.RAFreeDecoder = ra_free_decoder;
-  funcs.RAOpenCodec2 = ra_open_codec2;
-  funcs.RAInitDecoder = ra_init_decoder;
-  funcs.RASetFlavor = ra_set_flavor;
-  funcs.RASetPwd = ra_set_pwd;
-  funcs.SetDLLAccessPath = set_dll_access_path;
+  funcs.RACloseCodec = (guint16 (*)(gpointer)) ra_close_codec;
+  funcs.RADecode =
+      (guint16 (*)(gpointer, guint8 *, guint32, guint8 *, guint32 *, guint32))
+      ra_decode;
+  funcs.RAFreeDecoder = (guint16 (*)(gpointer)) ra_free_decoder;
+  funcs.RAOpenCodec2 = (guint16 (*)(gpointer, const gchar *)) ra_open_codec2;
+  funcs.RAInitDecoder = (guint16 (*)(gpointer, gpointer)) ra_init_decoder;
+  funcs.RASetFlavor = (guint16 (*)(gpointer, guint16)) ra_set_flavor;
+  funcs.RASetPwd = (void (*)(gpointer, gchar *)) ra_set_pwd;
+  funcs.SetDLLAccessPath = (void (*)(gchar *)) set_dll_access_path;
 
   if (funcs.SetDLLAccessPath)
     funcs.SetDLLAccessPath (split_path[i]);

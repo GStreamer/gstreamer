@@ -16,7 +16,7 @@ rfb_buffer_new_and_alloc (int len)
   RfbBuffer *buffer = g_new0 (RfbBuffer, 1);
 
   buffer->data = g_malloc (len);
-  buffer->free_data = (void *) g_free;
+  buffer->free_data = (RfbBufferFreeFunc) g_free;
 
   return buffer;
 }

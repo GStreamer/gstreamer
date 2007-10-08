@@ -1,3 +1,17 @@
+2007-10-08  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/librfb/rfbbuffer.c: (rfb_buffer_new_and_alloc):
+	* gst/librfb/rfbbuffer.h:
+	* gst/librfb/rfbdecoder.c: (rfb_socket_get_buffer):
+	* gst/mpegvideoparse/mpegvideoparse.c: (gst_mpegvideoparse_chain):
+	* gst/nsf/nes6502.c: (nes6502_execute):
+	* gst/real/gstrealaudiodec.c: (gst_real_audio_dec_setcaps):
+	* gst/real/gstrealvideodec.c: (open_library):
+	* gst/real/gstrealvideodec.h:
+	* gst/rtpmanager/gstrtpsession.c: (create_recv_rtp_sink),
+	(create_recv_rtcp_sink), (create_send_rtp_sink):
+	Fix compiler warnings shown by Forte.
+
 2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtpmanager/gstrtpbin.c: (get_pt_map),

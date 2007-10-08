@@ -380,7 +380,7 @@ gst_mpegvideoparse_chain (GstPad * pad, GstBuffer * buf)
   MpegVideoParse *mpegvideoparse;
   GstFlowReturn res;
   gboolean have_discont;
-  gint64 next_offset = GST_BUFFER_OFFSET_NONE;
+  guint64 next_offset = GST_BUFFER_OFFSET_NONE;
 
   g_return_val_if_fail (pad != NULL, GST_FLOW_ERROR);
   g_return_val_if_fail (buf != NULL, GST_FLOW_ERROR);

@@ -35,6 +35,11 @@ typedef struct _GstRealVideoDec GstRealVideoDec;
 typedef struct _GstRealVideoDecClass GstRealVideoDecClass;
 typedef enum _GstRealVideoDecVersion GstRealVideoDecVersion;
 
+typedef guint32 (*GstRealVideoDecMessageFunc) (gpointer, gpointer);
+typedef guint32 (*GstRealVideoDecFreeFunc) (gpointer);
+typedef guint32 (*GstRealVideoDecInitFunc) (gpointer, gpointer);
+typedef guint32 (*GstRealVideoDecTransformFunc) (gchar *, gchar *, gpointer, gpointer, gpointer);
+
 enum _GstRealVideoDecVersion
 {
   GST_REAL_VIDEO_DEC_VERSION_2 = 2,
@@ -45,10 +50,10 @@ enum _GstRealVideoDecVersion
 typedef struct {
   GModule *module;
 
-  guint32 (*custom_message) (gpointer, gpointer);
-  guint32 (*free) (gpointer);
-  guint32 (*init) (gpointer, gpointer);
-  guint32 (*transform) (gchar *, gchar *, gpointer, gpointer, gpointer);
+  GstRealVideoDecMessageFunc custom_message;
+  GstRealVideoDecFreeFunc free;
+  GstRealVideoDecInitFunc init;
+  GstRealVideoDecTransformFunc transform;
 
   gpointer context;
 } GstRealVideoDecHooks;
