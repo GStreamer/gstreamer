@@ -1,5 +1,14 @@
 2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/playback/gstdecodebin.c: (type_found),
+	(gst_decode_bin_change_state):
+	* gst/playback/gstdecodebin2.c: (type_found),
+	(gst_decode_bin_change_state):
+	Don't disconnect the have_type signal because we never reconnect it
+	later on. Instead keep a variable to see if we already detected a type.
+
+2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/playback/gstdecodebin.c: (add_fakesink), (type_found):
 	* gst/playback/gstdecodebin2.c: (gst_decode_bin_init),
 	(type_found):

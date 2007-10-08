@@ -71,6 +71,7 @@ struct _GstDecodeBin
   gint numpads;
   gint numwaiting;
 
+  gboolean have_type;
   guint have_type_id;           /* signal id for the typefind element */
 
   gboolean shutting_down;       /* stop pluggin if we're shutting down */
@@ -1538,13 +1539,14 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
 
   GST_STATE_LOCK (decode_bin);
   if (decode_bin->shutting_down)
-    goto shutting_down;
+    goto exit;
 
-  /* don't need the typefind anymore, we're not going to dynamically change
-   * elements anyway */
-  if (decode_bin->have_type_id)
-    g_signal_handler_disconnect (G_OBJECT (typefind), decode_bin->have_type_id);
-  decode_bin->have_type_id = 0;
+  /* don't need the typefind anymore if we already found a type, we're not going
+   * to be able to do anything with it anyway except for generating errors */
+  if (decode_bin->have_type)
+    goto exit;
+
+  decode_bin->have_type = TRUE;
 
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
@@ -1558,7 +1560,7 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
     GST_ELEMENT_ERROR (decode_bin, STREAM, WRONG_TYPE,
         (_("This appears to be a text file")),
         ("decodebin cannot decode plain text files"));
-    goto shutting_down;
+    goto exit;
   }
 
   /* autoplug the new pad with the caps that the signal gave us. */
@@ -1577,7 +1579,7 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
     GST_DEBUG_OBJECT (decode_bin, "we have more dynamic elements");
   }
 
-shutting_down:
+exit:
   GST_STATE_UNLOCK (decode_bin);
   return;
 }
@@ -1710,6 +1712,7 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_OBJECT_LOCK (decode_bin);
       decode_bin->shutting_down = FALSE;
+      decode_bin->have_type = FALSE;
       GST_OBJECT_UNLOCK (decode_bin);
 
       if (!add_fakesink (decode_bin))

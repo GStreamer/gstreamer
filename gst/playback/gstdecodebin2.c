@@ -96,6 +96,7 @@ struct _GstDecodeBin
 
   GList *factories;             /* factories we can use for selecting elements */
 
+  gboolean have_type;           /* if we received the have_type signal */
   guint have_type_id;           /* signal id for have-type from typefind */
 };
 
@@ -1146,9 +1147,12 @@ type_found (GstElement * typefind, guint probability,
 
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
-  if (decode_bin->have_type_id)
-    g_signal_handler_disconnect (typefind, decode_bin->have_type_id);
-  decode_bin->have_type_id = 0;
+  /* we can only deal with one type, we don't yet support dynamically changing
+   * caps from the typefind element */
+  if (decode_bin->have_type)
+    goto exit;
+
+  decode_bin->have_type = TRUE;
 
   pad = gst_element_get_static_pad (typefind, "src");
 
@@ -1156,6 +1160,7 @@ type_found (GstElement * typefind, guint probability,
 
   gst_object_unref (pad);
 
+exit:
   GST_STATE_UNLOCK (decode_bin);
   return;
 }
@@ -2190,6 +2195,7 @@ gst_decode_bin_change_state (GstElement * element, GstStateChange transition)
         goto missing_typefind;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:{
+      dbin->have_type = FALSE;
       if (!add_fakesink (dbin))
         goto missing_fakesink;
       break;
