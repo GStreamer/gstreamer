@@ -2216,6 +2216,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
         gst_element_lost_state (GST_ELEMENT_CAST (basesink));
       } else {
         basesink->priv->have_latency = TRUE;
+        basesink->need_preroll = FALSE;
       }
       GST_PAD_STREAM_UNLOCK (pad);
 
@@ -2809,7 +2810,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       /* we can answer time format */
     case GST_FORMAT_TIME:
     {
-      GstClockTime now, base;
+      GstClockTime now, base, latency;
       gint64 time, accum, duration;
       gdouble rate;
       gint64 last;
@@ -2854,6 +2855,7 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       accum = basesink->segment.accum;
       rate = basesink->segment.rate * basesink->segment.applied_rate;
       gst_base_sink_get_position_last (basesink, &last);
+      latency = basesink->priv->latency;
 
       gst_object_ref (clock);
       /* need to release the object lock before we can get the time, 
@@ -2862,11 +2864,13 @@ gst_base_sink_get_position (GstBaseSink * basesink, GstFormat format,
       GST_OBJECT_UNLOCK (basesink);
 
       now = gst_clock_get_time (clock);
+
       /* subtract base time and accumulated time from the clock time. 
        * Make sure we don't go negative. This is the current time in
        * the segment which we need to scale with the combined 
        * rate and applied rate. */
       base += accum;
+      base += latency;
       base = MIN (now, base);
 
       /* for negative rates we need to count back from from the segment

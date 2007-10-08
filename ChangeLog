@@ -1,3 +1,10 @@
+2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_event),
+	(gst_base_sink_get_position):
+	Don't try to preroll non-async elements after a flush.
+	Subtract latency form clock times when reporting position.
+
 2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gstpad.c: (gst_pad_pause_task):
