@@ -1,3 +1,11 @@
+2007-10-09  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
+
+	* gst/rtpmanager/gstrtpbin.c: (create_stream),
+	(gst_rtp_bin_class_init):
+	Fix memleak. Fixes #484990.
+
 2007-10-08  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/librfb/rfbbuffer.c: (rfb_buffer_new_and_alloc):
