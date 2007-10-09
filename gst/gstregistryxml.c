@@ -404,7 +404,7 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
       if (g_str_equal (tag, "name")) {
         int ret;
 
-        ret = read_string (reader, &plugin->desc.name, FALSE);
+        ret = read_const_interned_string (reader, &plugin->desc.name, FALSE);
         GST_LOG ("name ret=%d, name=%s", ret, plugin->desc.name);
         if (!ret)
           break;
@@ -422,31 +422,31 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
         GST_LOG ("filename %s", plugin->filename);
         plugin->basename = g_path_get_basename (plugin->filename);
       } else if (g_str_equal (tag, "version")) {
-        if (!read_string (reader, &plugin->desc.version, TRUE)) {
+        if (!read_const_interned_string (reader, &plugin->desc.version, TRUE)) {
           GST_WARNING ("version field was invalid in registry");
           break;
         }
         GST_LOG ("version %s", plugin->desc.version);
       } else if (g_str_equal (tag, "license")) {
-        if (!read_string (reader, &plugin->desc.license, TRUE)) {
+        if (!read_const_interned_string (reader, &plugin->desc.license, TRUE)) {
           GST_WARNING ("license field was invalid in registry");
           break;
         }
         GST_LOG ("license %s", plugin->desc.license);
       } else if (g_str_equal (tag, "source")) {
-        if (!read_string (reader, &plugin->desc.source, TRUE)) {
+        if (!read_const_interned_string (reader, &plugin->desc.source, TRUE)) {
           GST_WARNING ("source field was invalid in registry");
           break;
         }
         GST_LOG ("source %s", plugin->desc.source);
       } else if (g_str_equal (tag, "package")) {
-        if (!read_string (reader, &plugin->desc.package, TRUE)) {
+        if (!read_const_interned_string (reader, &plugin->desc.package, TRUE)) {
           GST_WARNING ("package field was invalid in registry");
           break;
         }
         GST_LOG ("package %s", plugin->desc.package);
       } else if (g_str_equal (tag, "origin")) {
-        if (!read_string (reader, &plugin->desc.origin, TRUE)) {
+        if (!read_const_interned_string (reader, &plugin->desc.origin, TRUE)) {
           GST_WARNING ("failed to read origin");
           break;
         }

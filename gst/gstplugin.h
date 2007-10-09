@@ -110,14 +110,14 @@ typedef gboolean (*GstPluginInitFunc) (GstPlugin *plugin);
 struct _GstPluginDesc {
   gint major_version;
   gint minor_version;
-  gchar *name;
+  const gchar *name;
   gchar *description;
   GstPluginInitFunc plugin_init;
-  gchar *version;
-  gchar *license;
-  gchar *source;
-  gchar *package;
-  gchar *origin;
+  const gchar *version;
+  const gchar *license;
+  const gchar *source;
+  const gchar *package;
+  const gchar *origin;
 
   gpointer _gst_reserved[GST_PADDING];
 };

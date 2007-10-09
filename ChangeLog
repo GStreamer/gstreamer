@@ -1,5 +1,16 @@
 2007-10-09  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstplugin.c:
+	* gst/gstplugin.h:
+	* gst/gstregistrybinary.c:
+	* gst/gstregistryxml.c:
+	  Put more strings into the GLib quark table. No need to keep
+	  a hundred-something copies of identical version strings,
+	  license strings, package name strings and package origin
+	  strings around. 
+
+2007-10-09  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/manual/advanced-dataaccess.xml:
 	  Don't imply that it's okay to unconditionally change
 	  buffer data or buffer metadata in a pad probe callback,

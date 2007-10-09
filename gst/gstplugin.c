@@ -495,28 +495,22 @@ gst_plugin_desc_copy (GstPluginDesc * dest, const GstPluginDesc * src)
 {
   dest->major_version = src->major_version;
   dest->minor_version = src->minor_version;
-  dest->name = g_strdup (src->name);
+  dest->name = g_intern_string (src->name);
+  /* maybe intern the description too, just for convenience? */
   dest->description = g_strdup (src->description);
   dest->plugin_init = src->plugin_init;
-  dest->version = g_strdup (src->version);
-  dest->license = g_strdup (src->license);
-  dest->source = g_strdup (src->source);
-  dest->package = g_strdup (src->package);
-  dest->origin = g_strdup (src->origin);
+  dest->version = g_intern_string (src->version);
+  dest->license = g_intern_string (src->license);
+  dest->source = g_intern_string (src->source);
+  dest->package = g_intern_string (src->package);
+  dest->origin = g_intern_string (src->origin);
 }
 
 /* unused */
 static void
 gst_plugin_desc_free (GstPluginDesc * desc)
 {
-  g_free (desc->name);
   g_free (desc->description);
-  g_free (desc->version);
-  g_free (desc->license);
-  g_free (desc->source);
-  g_free (desc->package);
-  g_free (desc->origin);
-
   memset (desc, 0, sizeof (GstPluginDesc));
 }
 

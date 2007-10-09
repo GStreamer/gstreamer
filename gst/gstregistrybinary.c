@@ -823,14 +823,14 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
   plugin->file_size = pe->file_size;
 
   /* unpack plugin element strings */
-  unpack_string (*in, plugin->desc.name);
+  unpack_const_string (*in, plugin->desc.name);
   unpack_string (*in, plugin->desc.description);
   unpack_string (*in, plugin->filename);
-  unpack_string (*in, plugin->desc.version);
-  unpack_string (*in, plugin->desc.license);
-  unpack_string (*in, plugin->desc.source);
-  unpack_string (*in, plugin->desc.package);
-  unpack_string (*in, plugin->desc.origin);
+  unpack_const_string (*in, plugin->desc.version);
+  unpack_const_string (*in, plugin->desc.license);
+  unpack_const_string (*in, plugin->desc.source);
+  unpack_const_string (*in, plugin->desc.package);
+  unpack_const_string (*in, plugin->desc.origin);
   GST_LOG ("read strings for '%s'", plugin->desc.name);
 
   plugin->basename = g_path_get_basename (plugin->filename);
