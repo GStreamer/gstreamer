@@ -1588,10 +1588,18 @@ add_to_queue (GstBinSortIterator * bit, GstElement * element)
 static void
 remove_from_queue (GstBinSortIterator * bit, GstElement * element)
 {
-  GST_DEBUG_OBJECT (bit->bin, "removing '%s' from queue",
-      GST_ELEMENT_NAME (element));
-  g_queue_remove (bit->queue, element);
-  gst_object_unref (element);
+  GList *find;
+
+  if ((find = g_queue_find (bit->queue, element))) {
+    GST_DEBUG_OBJECT (bit->bin, "removing '%s' from queue",
+        GST_ELEMENT_NAME (element));
+
+    g_queue_delete_link (bit->queue, find);
+    gst_object_unref (element);
+  } else {
+    GST_DEBUG_OBJECT (bit->bin, "unable to remove '%s' from queue",
+        GST_ELEMENT_NAME (element));
+  }
 }
 
 /* clear the queue, unref all objects as we took a ref when
