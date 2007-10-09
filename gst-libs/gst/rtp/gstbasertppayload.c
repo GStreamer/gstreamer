@@ -573,6 +573,8 @@ gst_basertppayload_set_outcaps (GstBaseRTPPayload * payload, gchar * fieldname,
 
     gst_structure_foreach (s, (GstStructureForeachFunc) copy_fixed, d);
 
+    gst_caps_unref (temp);
+
     GST_DEBUG_OBJECT (payload, "with peer caps: %" GST_PTR_FORMAT, srccaps);
   }
 

@@ -1,3 +1,12 @@
+2007-10-09  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c: (copy_fixed),
+	(gst_basertppayload_set_outcaps):
+	Fix caps memleak. Fixes #484989.
+
+
 2007-10-08  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertpdepayload.c:
