@@ -20,21 +20,32 @@
       nothing more than a signal callback that can be attached to a pad.
       Those signals are by default not fired at all (since that may have a
       negative impact on performance), but can be enabled by attaching a
-      probe using <function>gst_pad_add_data_probe ()</function> or one of
-      the similar functions. Those functions attach the signal handler and
+      probe using <function>gst_pad_add_buffer_probe ()</function>,
+      <function>gst_pad_add_event_probe ()</function>, or
+      <function>gst_pad_add_data_probe ()</function>.
+      Those functions attach the signal handler and
       enable the actual signal emission. Similarly, one can use the
-      <function>gst_pad_remove_data_probe ()</function> or related functions
-      to remove the signal handlers again. It is also possible to only listen
-      to events or only to buffers (and ignore the other).
+      <function>gst_pad_remove_buffer_probe ()</function>,
+      <function>gst_pad_remove_event_probe ()</function>, or
+      <function>gst_pad_remove_data_probe ()</function>
+      to remove the signal handlers again.
     </para>
     <para>
       Probes run in pipeline threading context, so callbacks should try to
       not block and generally not do any weird stuff, since this could
       have a negative impact on pipeline performance or, in case of bugs,
-      cause deadlocks or crashes. However, most common buffer operations
+      cause deadlocks or crashes. More precisely, one should usually not
+      call any GUI-related functions from within a probe callback, nor try
+      to change the state of the pipeline.  An application may post custom
+      messages on the pipeline's bus though to communicate with the main
+      application thread and have it do things like stop the pipeline.
+    </para>
+    <para>
+      In any case, most common buffer operations
       that elements can do in <function>_chain ()</function> functions, can
       be done in probe callbacks as well. The example below gives a short
-      impression on how to use them.
+      impression on how to use them (even if this usage is not entirely
+      correct, but more on that below):
     </para>
     <programlisting><!-- example-begin probe.c -->
 #include &lt;gst/gst.h&gt;
@@ -133,6 +144,35 @@ main (gint   argc,
       videotestsrc ! xvimagesink</quote>, just so you know what you're
       looking for.
     </para>
+    <para>
+      The above example is not really correct though.  Strictly speaking, a
+      pad probe callback is only allowed to modify the buffer content if the
+      buffer is writable, and it is only allowed to modify buffer metadata like
+      timestamps, caps, etc. if the buffer metadata is writable.  Whether this
+      is the case or not depends a lot on the pipeline and the elements
+      involved.  Often enough, this is the case, but sometimes it is not,
+      and if it is not then unexpected modification of the data or metadata
+      can introduce bugs that are very hard to debug and track down. You can
+      check if a buffer and its metadata are writable with
+      <function>gst_buffer_is_writable ()</function> and
+      <function>gst_buffer_is_metadata_writable ()</function>.  Since you
+      can't pass back a different buffer than the one passed in, there is no
+      point of making a buffer writable in the callback function.
+    </para>
+    <para>
+      Pad probes are suited best for looking at data as it passes through
+      the pipeline. If you need to modify data, you should write your own
+      GStreamer element. Base classes like GstAudioFilter, GstVideoFilter or
+      GstBaseTransform make this fairly easy.
+    </para>
+    <para>
+      If you just want to inspect buffers as they pass through the pipeline,
+      you don't even need to set up pad probes. You could also just insert
+      an identity element into the pipeline and connect to its "handoff"
+      signal. The identity element also provides a few useful debugging tools
+      like the "dump" property or the "last-message" property (the latter is
+      enabled by passing the '-v' switch to gst-launch).
+    </para>
   </sect1>
 
   <sect1 id="section-data-spoof">
@@ -146,12 +186,19 @@ main (gint   argc,
       there is no support for those methods.</emphasis> If it doesn't work,
       you're on your own. Also, synchronization, thread-safety and other
       things that you've been able to take for granted so far are no longer
-      guanranteed if you use any of those methods. It's always better to
+      guaranteed if you use any of those methods. It's always better to
       simply write a plugin and have the pipeline schedule and manage it.
       See the Plugin Writer's Guide for more information on this topic. Also
       see the next section, which will explain how to embed plugins statically
       in your application.
     </para>
+    <note><para>
+      New API is being developed at the moment to make data insertion and
+      extraction less painful for applications. It can be found as GstAppSrc
+      and GstAppSink in the gst-plugins-bad module. At the time of writing
+      (October 2007), this API is not quite stable and ready yet, even though
+      it may work fine for your purposes.
+    </para></note>
     <para>
       After all those disclaimers, let's start. There's three possible
       elements that you can use for the above-mentioned purposes. Those are

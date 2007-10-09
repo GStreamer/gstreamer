@@ -1,3 +1,10 @@
+2007-10-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/manual/advanced-dataaccess.xml:
+	  Don't imply that it's okay to unconditionally change
+	  buffer data or buffer metadata in a pad probe callback,
+	  and a bunch of other comments. Fixes #430031.
+
 2007-10-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* win32/common/gstenumtypes.c:
