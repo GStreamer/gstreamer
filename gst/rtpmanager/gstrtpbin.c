@@ -912,6 +912,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   templ = gst_static_pad_template_get (&rtpbin_sync_sink_template);
   stream->sync_pad = gst_pad_new_from_template (templ, padname);
   gst_object_unref (templ);
+  g_free (padname);
   gst_object_ref (stream->sync_pad);
   gst_object_sink (stream->sync_pad);
   gst_pad_set_element_private (stream->sync_pad, stream);
