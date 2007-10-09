@@ -215,7 +215,7 @@ struct _GstDebugCategory {
  */
 #ifndef GST_FUNCTION
 #if defined (__GNUC__)
-#  define GST_FUNCTION     ((const char*) (__PRETTY_FUNCTION__))
+#  define GST_FUNCTION     ((const char*) (__FUNCTION__))
 #elif defined (G_HAVE_ISO_VARARGS)
 #  define GST_FUNCTION     ((const char*) (__func__))
 #else

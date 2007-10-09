@@ -1,3 +1,11 @@
+2007-10-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstinfo.h:
+	  Use __FUNCTION__ instead of __PRETTY_FUNCTION__, it's silly
+	  to print the entire class/function signature into the log
+	  file for C++ code.  This only affects C++ code, for C code
+	  everything remains the same.
+
 2007-10-09  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gstbin.c: (remove_from_queue):
