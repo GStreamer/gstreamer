@@ -1,0 +1,6 @@
+%%
+ignore
+   gst_pad_peer_query
+   gst_registry_add_path
+   gst_structure_get_uint
+%%

@@ -22,6 +22,14 @@
   (gtype-id "GST_TYPE_INTERPOLATION_CONTROL_SOURCE")
 )
 
+(define-object LFOControlSource
+  (in-module "Gst")
+  (parent "GstControlSource")
+  (c-name "GstLFOControlSource")
+  (gtype-id "GST_TYPE_LFO_CONTROL_SOURCE")
+)
+
+
 ;; Enumerations and flags ...
 
 (define-flags ParamFlags
@@ -42,6 +50,19 @@
     '("quadratic" "GST_INTERPOLATE_QUADRATIC")
     '("cubic" "GST_INTERPOLATE_CUBIC")
     '("user" "GST_INTERPOLATE_USER")
+  )
+)
+
+(define-enum LFOWaveform
+  (in-module "Gst")
+  (c-name "GstLFOWaveform")
+  (gtype-id "GST_TYPE_LFO_WAVEFORM")
+  (values
+    '("sine" "GST_LFO_WAVEFORM_SINE")
+    '("square" "GST_LFO_WAVEFORM_SQUARE")
+    '("saw" "GST_LFO_WAVEFORM_SAW")
+    '("reverse-saw" "GST_LFO_WAVEFORM_REVERSE_SAW")
+    '("triangle" "GST_LFO_WAVEFORM_TRIANGLE")
   )
 )
 
@@ -511,6 +532,30 @@
 )
 
 
+
+;; From gstlfocontrolsource.h
+
+(define-function gst_lfo_control_source_get_type
+  (c-name "gst_lfo_control_source_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gst_lfo_waveform_get_type
+  (c-name "gst_lfo_waveform_get_type")
+  (return-type "GType")
+  (parameters
+  )
+)
+
+(define-function gst_lfo_control_source_new
+  (c-name "gst_lfo_control_source_new")
+  (is-constructor-of "GstLfoControlSource")
+  (return-type "GstLFOControlSource*")
+  (parameters
+  )
+)
 
 ;; From ../gstreamer/libs/gst/dataprotocol/dataprotocol.h
 

@@ -38,6 +38,7 @@ headers
 #include <gst/gsttagsetter.h>
 
 #include <gst/controller/gstcontroller.h>
+#include <gst/controller/gstlfocontrolsource.h>
 #include <gst/dataprotocol/dataprotocol.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstbasesrc.h>

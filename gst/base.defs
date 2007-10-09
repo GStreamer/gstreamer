@@ -210,6 +210,36 @@
   (return-type "gboolean")
 )
 
+(define-method set_async_enabled
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_set_async_enabled")
+  (return-type "none")
+  (parameters
+    '("gboolean" "enabled")
+  )
+)
+
+(define-method is_async_enabled
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_is_async_enabled")
+  (return-type "gboolean")
+)
+
+(define-method set_ts_offset
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_set_ts_offset")
+  (return-type "none")
+  (parameters
+    '("GstClockTimeDiff" "offset")
+  )
+)
+
+(define-method get_ts_offset
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_get_ts_offset")
+  (return-type "GstClockTimeDiff")
+)
+
 (define-method query_latency
   (of-object "GstBaseSink")
   (c-name "gst_base_sink_query_latency")
@@ -368,6 +398,21 @@
     '("GstClockTime*" "min_latency")
     '("GstClockTime*" "max_latency")
   )
+)
+
+(define-method set_do_timestamp
+  (of-object "GstBaseSrc")
+  (c-name "gst_base_src_set_do_timestamp")
+  (return-type "none")
+  (parameters
+    '("gboolean" "live")
+  )
+)
+
+(define-method get_do_timestamp
+  (of-object "GstBaseSrc")
+  (c-name "gst_base_src_get_do_timestamp")
+  (return-type "gboolean")
 )
 
 (define-virtual get_caps

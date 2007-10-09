@@ -1069,10 +1069,10 @@
   (c-name "gst_element_class_set_details_simple")
   (return-type "none")
   (parameters
-    '("gchar*" "longname")
-    '("gchar*" "classification")
-    '("gchar*" "description")
-    '("gchar*" "author")
+    '("const-gchar*" "longname")
+    '("const-gchar*" "classification")
+    '("const-gchar*" "description")
+    '("const-gchar*" "author")
   )
 )
 
@@ -4092,6 +4092,15 @@
   )
 )
 
+(define-method peer_query
+  (of-object "GstPad")
+  (c-name "gst_pad_peer_query")
+  (return-type "gboolean")
+  (parameters
+    '("GstQuery*" "query")
+  )
+)
+
 (define-method set_query_function
   (of-object "GstPad")
   (c-name "gst_pad_set_query_function")
@@ -4906,6 +4915,15 @@
   )
 )
 
+(define-method add_path
+  (of-object "GstRegistry")
+  (c-name "gst_registry_add_path")
+  (return-type "none")
+  (parameters
+    '("const-gchar*" "path")
+  )
+)
+
 (define-method get_path_list
   (of-object "GstRegistry")
   (c-name "gst_registry_get_path_list")
@@ -5472,6 +5490,16 @@
   (parameters
     '("const-gchar*" "fieldname")
     '("gint*" "value")
+  )
+)
+
+(define-method get_uint
+  (of-object "GstStructure")
+  (c-name "gst_structure_get_uint")
+  (return-type "gboolean")
+  (parameters
+    '("const-gchar*" "fieldname")
+    '("guint*" "value")
   )
 )
 
