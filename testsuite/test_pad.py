@@ -20,7 +20,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
-from common import gst, unittest, TestCase
+from common import gst, unittest, TestCase, pygobject_2_13
 
 import sys
 import time
@@ -30,7 +30,7 @@ class PadTemplateTest(TestCase):
         template = gst.PadTemplate("template", gst.PAD_SINK,
             gst.PAD_ALWAYS, gst.caps_from_string("audio/x-raw-int"))
         self.failUnless(template)
-        self.assertEquals(sys.getrefcount(template), 3)
+        self.assertEquals(sys.getrefcount(template), pygobject_2_13 and 2 or 3)
         #self.assertEquals(template.__gstrefcount__, 1)
 
 class PadPushUnlinkedTest(TestCase):
@@ -40,10 +40,10 @@ class PadPushUnlinkedTest(TestCase):
         self.sink = gst.Pad("sink", gst.PAD_SINK)
 
     def tearDown(self):
-        self.assertEquals(sys.getrefcount(self.src), 3)
+        self.assertEquals(sys.getrefcount(self.src), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.src.__gstrefcount__, 1)
         del self.src
-        self.assertEquals(sys.getrefcount(self.sink), 3)
+        self.assertEquals(sys.getrefcount(self.sink), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
         del self.sink
         TestCase.tearDown(self)
@@ -90,11 +90,11 @@ class PadPushLinkedTest(TestCase):
         self.buffers = []
 
     def tearDown(self):
-        self.assertEquals(sys.getrefcount(self.src), 3)
+        self.assertEquals(sys.getrefcount(self.src), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.src.__gstrefcount__, 1)
         self.src.set_caps(None)
         del self.src
-        self.assertEquals(sys.getrefcount(self.sink), 3)
+        self.assertEquals(sys.getrefcount(self.sink), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
         self.sink.set_caps(None)
         del self.sink
@@ -171,11 +171,11 @@ class PadPushEventLinkedTest(TestCase):
         self.events = []
 
     def tearDown(self):
-        self.assertEquals(sys.getrefcount(self.src), 3)
+        self.assertEquals(sys.getrefcount(self.src), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.src.__gstrefcount__, 1)
         self.src.set_caps(None)
         del self.src
-        self.assertEquals(sys.getrefcount(self.sink), 3)
+        self.assertEquals(sys.getrefcount(self.sink), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
         self.sink.set_caps(None)
         del self.sink
@@ -269,11 +269,11 @@ class PadPushProbeLinkTest(TestCase):
         self.buffers = []
 
     def tearDown(self):
-        self.assertEquals(sys.getrefcount(self.src), 3)
+        self.assertEquals(sys.getrefcount(self.src), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.src.__gstrefcount__, 1)
         self.src.set_caps(None)
         del self.src
-        self.assertEquals(sys.getrefcount(self.sink), 3)
+        self.assertEquals(sys.getrefcount(self.sink), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
         self.sink.set_caps(None)
         del self.sink
@@ -310,7 +310,7 @@ class PadTest(TestCase):
         gst.debug('creating pad with name src')
         pad = gst.Pad("src", gst.PAD_SRC)
         self.failUnless(pad)
-        self.assertEquals(sys.getrefcount(pad), 3)
+        self.assertEquals(sys.getrefcount(pad), pygobject_2_13 and 2 or 3)
         self.assertEquals(pad.__gstrefcount__, 1)
 
         gst.debug('creating pad with no name')
@@ -347,44 +347,44 @@ class PadProbePipeTest(TestCase):
         TestCase.setUp(self)
         self.pipeline = gst.Pipeline()
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
-        self.assertEquals(sys.getrefcount(self.pipeline), 3)
+        self.assertEquals(sys.getrefcount(self.pipeline), pygobject_2_13 and 2 or 3)
 
         self.fakesrc = gst.element_factory_make('fakesrc')
         self.fakesink = gst.element_factory_make('fakesink')
         self.assertEquals(self.fakesrc.__gstrefcount__, 1)
-        self.assertEquals(sys.getrefcount(self.fakesrc), 3)
+        self.assertEquals(sys.getrefcount(self.fakesrc), pygobject_2_13 and 2 or 3)
 
         self.pipeline.add(self.fakesrc, self.fakesink)
         self.assertEquals(self.fakesrc.__gstrefcount__, 2) # added
-        self.assertEquals(sys.getrefcount(self.fakesrc), 3)
+        self.assertEquals(sys.getrefcount(self.fakesrc), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.fakesink.__gstrefcount__, 2) # added
-        self.assertEquals(sys.getrefcount(self.fakesink), 3)
+        self.assertEquals(sys.getrefcount(self.fakesink), pygobject_2_13 and 2 or 3)
 
         self.fakesrc.link(self.fakesink)
 
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
-        self.assertEquals(sys.getrefcount(self.pipeline), 3)
+        self.assertEquals(sys.getrefcount(self.pipeline), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.fakesrc.__gstrefcount__, 2)
-        self.assertEquals(sys.getrefcount(self.fakesrc), 3)
+        self.assertEquals(sys.getrefcount(self.fakesrc), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.fakesink.__gstrefcount__, 2)
-        self.assertEquals(sys.getrefcount(self.fakesink), 3)
+        self.assertEquals(sys.getrefcount(self.fakesink), pygobject_2_13 and 2 or 3)
 
     def tearDown(self):
         # Refcount must be either 1 or 2, to allow for a possibly still running
         # state-recalculation thread
         self.assertTrue (self.pipeline.__gstrefcount__ >= 1 and self.pipeline.__gstrefcount__ <= 2)
 
-        self.assertEquals(sys.getrefcount(self.pipeline), 3)
+        self.assertEquals(sys.getrefcount(self.pipeline), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.fakesrc.__gstrefcount__, 2)
-        self.assertEquals(sys.getrefcount(self.fakesrc), 3)
+        self.assertEquals(sys.getrefcount(self.fakesrc), pygobject_2_13 and 2 or 3)
         gst.debug('deleting pipeline')
         del self.pipeline
         self.gccollect()
 
         self.assertEquals(self.fakesrc.__gstrefcount__, 1) # parent gone
         self.assertEquals(self.fakesink.__gstrefcount__, 1) # parent gone
-        self.assertEquals(sys.getrefcount(self.fakesrc), 3)
-        self.assertEquals(sys.getrefcount(self.fakesink), 3)
+        self.assertEquals(sys.getrefcount(self.fakesrc), pygobject_2_13 and 2 or 3)
+        self.assertEquals(sys.getrefcount(self.fakesink), pygobject_2_13 and 2 or 3)
         gst.debug('deleting fakesrc')
         del self.fakesrc
         self.gccollect()
@@ -479,32 +479,38 @@ class PadRefCountTest(TestCase):
     def testAddPad(self):
         # add a pad to an element
         e = gst.element_factory_make('fakesrc')
-        self.assertEquals(sys.getrefcount(e), 3)
+        self.assertEquals(sys.getrefcount(e), pygobject_2_13 and 2 or 3)
         self.assertEquals(e.__gstrefcount__, 1)
 
         gst.debug('creating pad with name mypad')
         pad = gst.Pad("mypad", gst.PAD_SRC)
         self.failUnless(pad)
-        self.assertEquals(sys.getrefcount(pad), 3)
+        self.assertEquals(sys.getrefcount(pad), pygobject_2_13 and 2 or 3)
         self.assertEquals(pad.__gstrefcount__, 1)
 
         gst.debug('adding pad to element')
         e.add_pad(pad)
-        self.assertEquals(sys.getrefcount(e), 3)
+        self.assertEquals(sys.getrefcount(e), pygobject_2_13 and 2 or 3)
         self.assertEquals(e.__gstrefcount__, 1)
-        self.assertEquals(sys.getrefcount(pad), 3)
+        self.assertEquals(sys.getrefcount(pad), pygobject_2_13 and 2 or 3)
         self.assertEquals(pad.__gstrefcount__, 2) # added to element
 
         gst.debug('deleting element and collecting')
         self.gccollect()
         del e
-        self.assertEquals(self.gccollect(), 1) # collected the element
-        self.assertEquals(sys.getrefcount(pad), 3)
+        if not pygobject_2_13:
+            # the element will be collected at 'del e' if we're using
+            # pygobject >= 2.13.0
+            self.assertEquals(self.gccollect(), 1) # collected the element
+        self.assertEquals(sys.getrefcount(pad), pygobject_2_13 and 2 or 3)
         self.assertEquals(pad.__gstrefcount__, 1) # removed from element
 
         gst.debug('deleting pad and collecting')
         del pad
-        self.assertEquals(self.gccollect(), 1) # collected the pad
+        if not pygobject_2_13:
+            # the pad will be collected at 'del pad' if we're using
+            # pygobject >= 2.13.0
+            self.assertEquals(self.gccollect(), 1) # collected the pad
         gst.debug('going into teardown')
 
 if __name__ == "__main__":

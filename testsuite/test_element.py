@@ -20,7 +20,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
-from common import gst, unittest, TestCase
+from common import gst, unittest, TestCase, pygobject_2_13
 
 import sys
 
@@ -181,7 +181,7 @@ class QueryTest(TestCase):
         self.element = self.pipeline.get_by_name('source')
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
         self.assertEquals(self.element.__gstrefcount__, 2)
-        self.assertEquals(sys.getrefcount(self.element), 3)
+        self.assertEquals(sys.getrefcount(self.element), pygobject_2_13 and 2 or 3)
 
     def tearDown(self):
         del self.pipeline
@@ -192,9 +192,9 @@ class QueryTest(TestCase):
         gst.debug('querying fakesrc in FORMAT_BYTES')
         res = self.element.query_position(gst.FORMAT_BYTES)
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
-        self.assertEquals(sys.getrefcount(self.pipeline), 3)
+        self.assertEquals(sys.getrefcount(self.pipeline), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.element.__gstrefcount__, 2)
-        self.assertEquals(sys.getrefcount(self.element), 3)
+        self.assertEquals(sys.getrefcount(self.element), pygobject_2_13 and 2 or 3)
         assert res
         assert res[0] == 0
         self.assertRaises(gst.QueryError, self.element.query_position,

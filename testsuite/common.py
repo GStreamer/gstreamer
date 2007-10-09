@@ -42,6 +42,14 @@ try:
 except:
     print "WARNING: gobject doesn't have threads_init, no threadsafety"
 
+# Detect the version of pygobject
+# In pygobject >= 2.13.0 the refcounting of objects has changed.
+pgmaj,pgmin,pgmac = gobject.pygobject_version
+if pgmaj >= 2 and pgmin >= 13:
+    pygobject_2_13 = True
+else:
+    pygobject_2_13 = False
+
 # Don't insert before .
 # sys.path.insert(1, os.path.join('..'))
 

@@ -1,3 +1,14 @@
+2007-10-09  Edward Hervey  <bilboed@bilboed.com>
+
+	* testsuite/common.py:
+	* testsuite/test_bin.py:
+	* testsuite/test_element.py:
+	* testsuite/test_ghostpad.py:
+	* testsuite/test_pad.py:
+	* testsuite/test_pipeline.py:
+	Fix unit tests for pygobject >= 2.13.0
+	See the pygobject bug #320428 for more information about the changes.
+
 2007-10-08  Sebastien Moutte  <sebastien@moutte.net>
 
 	* gst/pygstminiobject.c: (pygstminiobject_dealloc):

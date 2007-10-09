@@ -22,7 +22,7 @@
 
 import time
 
-from common import gst, unittest, TestCase
+from common import gst, unittest, TestCase, pygobject_2_13
 
 import gobject
 
@@ -83,7 +83,8 @@ class Bus(TestCase):
         self.assertEquals(bus.__gstrefcount__, 2)
 
         del pipeline
-        self.failUnless(self.gccollect())
+		if not pygobject_2_13:
+            self.failUnless(self.gccollect())
         self.assertEquals(bus.__gstrefcount__, 1)
         
 class PipelineAndBus(TestCase):

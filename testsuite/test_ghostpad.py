@@ -20,7 +20,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
-from common import gst, unittest, TestCase
+from common import gst, unittest, TestCase, pygobject_2_13
 
 import sys
 import gc
@@ -57,24 +57,24 @@ class PipeTest(TestCase):
         TestCase.setUp(self)
         self.pipeline = gst.Pipeline()
         self.assertEquals(self.pipeline.__gstrefcount__, 1)
-        self.assertEquals(sys.getrefcount(self.pipeline), 3)
+        self.assertEquals(sys.getrefcount(self.pipeline), pygobject_2_13 and 2 or 3)
 
         self.src = SrcBin()
         self.src.prepare()
         self.sink = SinkBin()
         self.sink.prepare()
         self.assertEquals(self.src.__gstrefcount__, 1)
-        self.assertEquals(sys.getrefcount(self.src), 3)
+        self.assertEquals(sys.getrefcount(self.src), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.sink.__gstrefcount__, 1)
-        self.assertEquals(sys.getrefcount(self.sink), 3)
+        self.assertEquals(sys.getrefcount(self.sink), pygobject_2_13 and 2 or 3)
         gst.info("end of SetUp")
 
     def tearDown(self):
         gst.info("tearDown")
         self.assertTrue (self.pipeline.__gstrefcount__ >= 1 and self.pipeline.__gstrefcount__ <= 2)
-        self.assertEquals(sys.getrefcount(self.pipeline), 3)
+        self.assertEquals(sys.getrefcount(self.pipeline), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.src.__gstrefcount__, 2)
-        self.assertEquals(sys.getrefcount(self.src), 3)
+        self.assertEquals(sys.getrefcount(self.src), pygobject_2_13 and 2 or 3)
         self.assertEquals(self.sink.__gstrefcount__, 2)
         self.assertEquals(sys.getrefcount(self.sink), 3)
         gst.debug('deleting pipeline')
@@ -83,8 +83,8 @@ class PipeTest(TestCase):
 
         self.assertEquals(self.src.__gstrefcount__, 1) # parent gone
         self.assertEquals(self.sink.__gstrefcount__, 1) # parent gone
-        self.assertEquals(sys.getrefcount(self.src), 3)
-        self.assertEquals(sys.getrefcount(self.sink), 3)
+        self.assertEquals(sys.getrefcount(self.src), pygobject_2_13 and 2 or 3)
+        self.assertEquals(sys.getrefcount(self.sink), pygobject_2_13 and 2 or 3)
         gst.debug('deleting src')
         del self.src
         self.gccollect()

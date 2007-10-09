@@ -21,7 +21,7 @@
 # License along with this library; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307  USA
 
-from common import gobject, gst, unittest, TestCase
+from common import gobject, gst, unittest, TestCase, pygobject_2_13
 
 import sys
 import time
@@ -62,7 +62,7 @@ class BinSubclassTest(TestCase):
     def testStateChange(self):
         bin = MyBin("mybin")
         self.assertEquals(bin.__gstrefcount__, 1)
-        self.assertEquals(sys.getrefcount(bin), 3)
+        self.assertEquals(sys.getrefcount(bin), pygobject_2_13 and 2 or 3)
 
         self.assertEquals(bin.get_name(), "mybin")
         self.assertEquals(bin.__gstrefcount__, 1)
