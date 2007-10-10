@@ -1,3 +1,10 @@
+2007-10-10  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Tuomas Kulve <tuomas dot kulve at movial dot fi>
+
+	* ext/ffmpeg/gstffmpegdec.c:
+	Fix the return type of the setcaps function. Fixes #485033.
+
 2007-10-05  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Yann Gilquin <yann dot gilquin at purplelabs dot com>

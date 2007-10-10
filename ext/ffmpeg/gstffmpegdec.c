@@ -565,7 +565,7 @@ could_not_open:
   }
 }
 
-static GstPadLinkReturn
+static gboolean
 gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
 {
   GstFFMpegDec *ffmpegdec;
