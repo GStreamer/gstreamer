@@ -1,3 +1,8 @@
+2007-10-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	  Add new API to docs; fixes the build.
+
 2007-10-10  Wim Taymans  <wim.taymans@gmail.com>
 	
 	Patch inspired by: Benoit Fouet <benoit dot fouet at purplelabs dot com>
