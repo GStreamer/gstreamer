@@ -56,14 +56,6 @@
 GST_DEBUG_CATEGORY_STATIC (modplug_debug);
 #define GST_CAT_DEFAULT modplug_debug
 
-/* elementfactory information */
-GstElementDetails modplug_details = {
-  "ModPlug",
-  "Codec/Decoder/Audio",
-  "Module decoder based on modplug engine",
-  "Jeremy SIMON <jsimon13@yahoo.fr>"
-};
-
 enum
 {
   ARG_0,
@@ -148,7 +140,10 @@ gst_modplug_base_init (gpointer g_class)
       gst_static_pad_template_get (&modplug_sink_template_factory));
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&modplug_src_template_factory));
-  gst_element_class_set_details (element_class, &modplug_details);
+
+  gst_element_class_set_details_simple (element_class, "ModPlug",
+      "Codec/Decoder/Audio", "Module decoder based on modplug engine",
+      "Jeremy SIMON <jsimon13@yahoo.fr>");
 
   GST_DEBUG_CATEGORY_INIT (modplug_debug, "modplug", 0, "ModPlug element");
 }

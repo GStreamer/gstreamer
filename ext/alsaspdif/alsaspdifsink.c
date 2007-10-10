@@ -122,6 +122,7 @@ static GstClock *alsaspdifsink_provide_clock (GstElement * elem);
 static GstClockTime alsaspdifsink_get_time (GstClock * clock,
     gpointer user_data);
 static void alsaspdifsink_dispose (GObject * object);
+static void alsaspdifsink_finalize (GObject * object);
 
 static GstStateChangeReturn alsaspdifsink_change_state (GstElement * element,
     GstStateChange transition);
@@ -155,6 +156,7 @@ alsaspdifsink_class_init (AlsaSPDIFSinkClass * klass)
   gobject_class->set_property = alsaspdifsink_set_property;
   gobject_class->get_property = alsaspdifsink_get_property;
   gobject_class->dispose = alsaspdifsink_dispose;
+  gobject_class->finalize = alsaspdifsink_finalize;
 
   gstelement_class->change_state = alsaspdifsink_change_state;
   gstelement_class->provide_clock = alsaspdifsink_provide_clock;
@@ -202,6 +204,17 @@ alsaspdifsink_dispose (GObject * object)
   sink->clock = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+alsaspdifsink_finalize (GObject * object)
+{
+  AlsaSPDIFSink *sink = ALSASPDIFSINK (object);
+
+  g_free (sink->device);
+  sink->device = NULL;
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -293,9 +306,6 @@ alsaspdifsink_open (AlsaSPDIFSink * sink)
   char devstr[256];             /* Storage for local 'default' device string */
   GstClockTime time;
 
-  snd_pcm_hw_params_alloca (&params);
-  snd_pcm_sw_params_alloca (&sw_params);
-
   /*
    * Try and open our default iec958 device. Fall back to searching on card x
    * if this fails, which should only happen on older alsa setups
@@ -335,6 +345,9 @@ alsaspdifsink_open (AlsaSPDIFSink * sink)
         ("snd_pcm_open: %s", snd_strerror (err)), GST_ERROR_SYSTEM);
     return FALSE;
   }
+
+  snd_pcm_hw_params_malloc (&params);
+  snd_pcm_sw_params_malloc (&sw_params);
 
   err = snd_pcm_hw_params_any (sink->pcm, params);
   if (err < 0) {
@@ -447,9 +460,13 @@ alsaspdifsink_open (AlsaSPDIFSink * sink)
   snd_pcm_sw_params_get_avail_min (sw_params, &avail_min);
   GST_DEBUG_OBJECT (sink, "Avail min set to:%lu frames", avail_min);
 
+  snd_pcm_hw_params_free (params);
+  snd_pcm_sw_params_free (sw_params);
   return TRUE;
 
 __close:
+  snd_pcm_hw_params_free (params);
+  snd_pcm_sw_params_free (sw_params);
   snd_pcm_close (sink->pcm);
   sink->pcm = NULL;
   return FALSE;
@@ -488,14 +505,14 @@ alsaspdifsink_find_pcm_device (AlsaSPDIFSink * sink)
 
   GST_WARNING ("Opening IEC958 named device failed. Trying to autodetect");
 
-  snd_ctl_card_info_alloca (&info);
-  snd_pcm_info_alloca (&pinfo);
-
   if ((err = snd_ctl_open (&ctl, ctl_name, card)) < 0)
     return err;
 
+  snd_ctl_card_info_malloc (&info);
+  snd_pcm_info_malloc (&pinfo);
+
   /* Find a mixer for IEC958 settings */
-  snd_ctl_elem_list_alloca (&clist);
+  snd_ctl_elem_list_malloc (&clist);
   if ((err = snd_ctl_elem_list (ctl, clist)) < 0)
     goto beach;
 
@@ -516,7 +533,7 @@ alsaspdifsink_find_pcm_device (AlsaSPDIFSink * sink)
     err = 0;
     goto beach;
   }
-  snd_ctl_elem_id_alloca (&cid);
+  snd_ctl_elem_id_malloc (&cid);
   snd_ctl_elem_list_get_id (clist, idx, cid);
 
   /* Now find a PCM device for IEC 958 */
@@ -572,7 +589,7 @@ alsaspdifsink_find_pcm_device (AlsaSPDIFSink * sink)
     snd_aes_iec958_t iec958;
 
     /* Have a PCM device and a mixer, set things up */
-    snd_ctl_elem_value_alloca (&cval);
+    snd_ctl_elem_value_malloc (&cval);
     snd_ctl_elem_value_set_id (cval, cid);
     snd_ctl_elem_value_get_iec958 (cval, &iec958);
     iec958.status[0] = IEC958_AES0_NONAUDIO;
@@ -580,6 +597,7 @@ alsaspdifsink_find_pcm_device (AlsaSPDIFSink * sink)
     iec958.status[2] = 0;
     iec958.status[3] = IEC958_AES3_CON_FS_48000;
     snd_ctl_elem_value_set_iec958 (cval, &iec958);
+    snd_ctl_elem_value_free (cval);
 
     sink->pcm = pcm;
     pcm = NULL;
@@ -591,6 +609,10 @@ beach:
     snd_pcm_close (pcm);
   snd_ctl_elem_list_clear (clist);
   snd_ctl_close (ctl);
+  snd_ctl_elem_list_free (clist);
+  snd_ctl_elem_id_free (cid);
+  snd_ctl_card_info_free (info);
+  snd_pcm_info_free (pinfo);
   return err;
 }
 

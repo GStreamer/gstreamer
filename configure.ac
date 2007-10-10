@@ -45,7 +45,7 @@ AM_PROG_LIBTOOL
 
 dnl *** required versions of GStreamer stuff ***
 dnl *** remove rtpmanager/equalizer stuff below when this is updated
-GST_REQ=0.10.13
+GST_REQ=0.10.14.1
 GSTPB_REQ=0.10.14.1
 
 dnl *** autotools stuff ****
@@ -701,7 +701,7 @@ AG_GST_CHECK_FEATURE(MUSICBRAINZ, [musicbrainz tag generation], musicbrainz, [
 dnl *** MythTV ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_MYTHTV, true)
 AG_GST_CHECK_FEATURE(MYTHTV, [MythTV client plugins], mythtvsrc, [
-  PKG_CHECK_MODULES(GMYTH, gmyth >= 0.4, HAVE_MYTHTV="yes", [
+  PKG_CHECK_MODULES(GMYTH, gmyth >= 0.4 gmyth <= 0.4.99, HAVE_MYTHTV="yes", [
     HAVE_MYTHTV="no"
     AC_MSG_RESULT(no)
   ])

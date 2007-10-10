@@ -69,13 +69,6 @@
 
 GST_DEBUG_CATEGORY (mpeg2enc_debug);
 
-static GstElementDetails gst_mpeg2enc_details =
-GST_ELEMENT_DETAILS ("mpeg2enc video encoder",
-    "Codec/Encoder/Video",
-    "High-quality MPEG-1/2 video encoder",
-    "Andrew Stevens <andrew.stevens@nexgo.de>\n"
-    "Ronald Bultje <rbultje@ronald.bitfreak.net>");
-
 #define COMMON_VIDEO_CAPS \
   "width = (int) [ 16, 4096 ], " \
   "height = (int) [ 16, 4096 ], " \
@@ -121,7 +114,11 @@ gst_mpeg2enc_base_init (gpointer klass)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
-  gst_element_class_set_details (element_class, &gst_mpeg2enc_details);
+  gst_element_class_set_details_simple (element_class,
+      "mpeg2enc video encoder", "Codec/Encoder/Video",
+      "High-quality MPEG-1/2 video encoder",
+      "Andrew Stevens <andrew.stevens@nexgo.de>\n"
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_template));

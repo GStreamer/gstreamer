@@ -47,23 +47,12 @@ struct _GstPitchPrivate
     soundtouch::SoundTouch * st;
 };
 
-static GstElementDetails gst_pitch_details =
-GST_ELEMENT_DETAILS ("Pitch controller",
-    "Filter/Converter/Audio",
-    "Control the pitch of an audio stream",
-    "Wouter Paesen <wouter@kangaroot.net>");
-
-enum
-{
-  LAST_SIGNAL
-};
-
 enum
 {
   ARG_0,
   ARG_RATE,
   ARG_TEMPO,
-  ARG_PITCH,
+  ARG_PITCH
 };
 
 #define SUPPORTED_CAPS \
@@ -117,7 +106,9 @@ gst_pitch_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_pitch_sink_template));
 
-  gst_element_class_set_details (gstelement_class, &gst_pitch_details);
+  gst_element_class_set_details_simple (gstelement_class, "Pitch controller",
+      "Filter/Converter/Audio", "Control the pitch of an audio stream",
+      "Wouter Paesen <wouter@kangaroot.net>");
 }
 
 static void

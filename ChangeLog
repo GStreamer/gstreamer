@@ -1,3 +1,24 @@
+2007-10-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Require core CVS.  This is implicit in the -base CVS
+	  requirement already, so we might just well spell it
+	  out.  Also, we do need at least 0.10.14 for
+	  gst_element_class_set_details_simple().  Make check
+	  for gmyth a bit more restrictive so things don't break
+	  if the next version changes API.
+
+	* ext/alsaspdif/alsaspdifsink.c:
+	  Work around alsa alloca macros triggering 'always evaluates to
+	  true' warnings with gcc-4.2 and fix compilation with gcc-4.2.
+	  Also don't leak the device string.
+
+	* ext/mpeg2enc/gstmpeg2enc.cc:
+	* ext/soundtouch/gstpitch.cc:
+	* gst/modplug/gstmodplug.cc:
+	  Fix compilation with g++4.2 and -Wall -Werror (also needs plugin
+	  define fix from core CVS). Fixes #462737.
+
 2007-10-09  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
