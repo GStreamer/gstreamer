@@ -1,3 +1,9 @@
+2007-10-10  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_drain):
+	Use new basesink method to make our EOS drain interruptable.
+
 2007-10-10  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst-libs/gst/rtp/gstrtppayloads.c:

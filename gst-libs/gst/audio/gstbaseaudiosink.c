@@ -547,9 +547,7 @@ gst_base_audio_sink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
   *end = GST_CLOCK_TIME_NONE;
 }
 
-/* FIXME, this waits for the drain to happen but it cannot be
- * canceled.
- */
+/* This waits for the drain to happen and can be canceled */
 static gboolean
 gst_base_audio_sink_drain (GstBaseAudioSink * sink)
 {
@@ -559,33 +557,28 @@ gst_base_audio_sink_drain (GstBaseAudioSink * sink)
     return TRUE;
 
   /* need to start playback before we can drain, but only when
-   * we have successfully negotiated a format and thus aqcuired the
+   * we have successfully negotiated a format and thus acquired the
    * ringbuffer. */
   if (gst_ring_buffer_is_acquired (sink->ringbuffer))
     gst_ring_buffer_start (sink->ringbuffer);
 
   if (sink->next_sample != -1) {
     GstClockTime time;
-    GstClock *clock;
 
+    /* convert next expected sample to time */
     time =
         gst_util_uint64_scale_int (sink->next_sample, GST_SECOND,
         sink->ringbuffer->spec.rate);
 
-    GST_OBJECT_LOCK (sink);
-    if ((clock = GST_ELEMENT_CLOCK (sink)) != NULL) {
-      GstClockID id = gst_clock_new_single_shot_id (clock, time);
+    GST_DEBUG_OBJECT (sink,
+        "last sample %" G_GUINT64_FORMAT ", time %" GST_TIME_FORMAT,
+        sink->next_sample, GST_TIME_ARGS (time));
 
-      GST_OBJECT_UNLOCK (sink);
+    /* wait for the EOS time to be reached, this is the time when the last
+     * sample is played. */
+    gst_base_sink_wait_eos (GST_BASE_SINK (sink), time, NULL);
 
-      GST_DEBUG_OBJECT (sink, "waiting for last sample to play");
-      gst_clock_id_wait (id, NULL);
-
-      gst_clock_id_unref (id);
-      sink->next_sample = -1;
-    } else {
-      GST_OBJECT_UNLOCK (sink);
-    }
+    sink->next_sample = -1;
   }
   return TRUE;
 }
