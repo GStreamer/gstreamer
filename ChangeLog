@@ -1,3 +1,11 @@
+2007-10-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gsttagdemux.c:
+	  Don't error out when a buggy downstream element doesn't
+	  handle the newsegment event we send properly (especially
+	  not without posting a meaningful error message on the
+	  bus). See bug #471370 and launchpad bug #136264.
+
 2007-10-10  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

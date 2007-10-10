@@ -669,8 +669,8 @@ gst_tag_demux_chain (GstPad * pad, GstBuffer * buf)
         /* Might need a new segment before the buffer */
         if (demux->priv->need_newseg) {
           if (!gst_tag_demux_send_new_segment (demux)) {
-            GST_DEBUG_OBJECT (demux, "Failed to send new segment event");
-            goto error;
+            GST_WARNING_OBJECT (demux, "Downstream did not handle newsegment "
+                "event as it should");
           }
           demux->priv->need_newseg = FALSE;
         }
