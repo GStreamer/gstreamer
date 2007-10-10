@@ -54,19 +54,6 @@
 #include <string.h>
 #include "gstsiddec.h"
 
-static const GstElementDetails gst_siddec_details =
-GST_ELEMENT_DETAILS ("Sid decoder",
-    "Codec/Decoder/Audio",
-    "Use libsidplay to decode SID audio tunes",
-    "Wim Taymans <wim@fluendo.com> ");
-
-/* Sidec signals and args */
-enum
-{
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
 #define DEFAULT_TUNE		0
 #define DEFAULT_CLOCK		SIDTUNE_CLOCK_PAL
 #define DEFAULT_MEMORY		MPU_BANK_SWITCHING
@@ -163,8 +150,6 @@ static void gst_siddec_set_property (GObject * object, guint prop_id,
 
 static GstElementClass *parent_class = NULL;
 
-//static guint gst_siddec_signals[LAST_SIGNAL] = { 0 };
-
 GType
 gst_siddec_get_type (void)
 {
@@ -197,7 +182,9 @@ gst_siddec_base_init (gpointer g_class)
 {
   GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
 
-  gst_element_class_set_details (element_class, &gst_siddec_details);
+  gst_element_class_set_details_simple (element_class, "Sid decoder",
+      "Codec/Decoder/Audio", "Use libsidplay to decode SID audio tunes",
+      "Wim Taymans <wim.taymans@gmail.com>");
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&src_templ));
@@ -789,8 +776,9 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_SIDDEC);
 }
 
+/* FIXME: remove cast to gchar once we depend on core >= 0.10.14.1 */
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "siddec",
-    "Uses libsidplay to decode .sid files",
+    (gchar *) "Uses libsidplay to decode .sid files",
     plugin_init, VERSION, "GPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

@@ -1,3 +1,12 @@
+2007-10-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Update requirements from past CVS versions to released
+	  versions (0.10.14 in this case).
+
+	* ext/sidplay/gstsiddec.cc:
+	  Fix compilation with g++-4.2.
+
 2007-10-08  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/realmedia/asmrules.c: (gst_asm_scan_parse_expression),
