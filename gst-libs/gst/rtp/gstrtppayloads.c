@@ -99,7 +99,7 @@ static const GstRTPPayloadInfo info[] = {
   {G_MAXUINT8, "audio", "EVRCB0", 8000, "1", 0},        /* [RFC4788]  */
   {G_MAXUINT8, "audio", "EVRCB1", 8000, "1", 0},        /* [RFC4788]  */
   {G_MAXUINT8, "audio", "G7221", 16000, "1", 0},        /* [RFC3047] */
-  {G_MAXUINT8, "audio", "G726G_MAXUINT86", 8000, "1", 0},       /* [RFC3551][RFC4856] */
+  {G_MAXUINT8, "audio", "G726-16", 8000, "1", 0},       /* [RFC3551][RFC4856] */
   {G_MAXUINT8, "audio", "G726-24", 8000, "1", 0},       /* [RFC3551][RFC4856] */
   {G_MAXUINT8, "audio", "G726-32", 8000, "1", 0},       /* [RFC3551][RFC4856] */
   {G_MAXUINT8, "audio", "G726-40", 8000, "1", 0},       /* [RFC3551][RFC4856] */
