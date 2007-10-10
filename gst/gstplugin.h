@@ -187,7 +187,7 @@ GST_PLUGIN_EXPORT GstPluginDesc gst_plugin_desc = {	\
   major,						\
   minor,						\
   name,							\
-  description,						\
+  (gchar *) description,				\
   init,							\
   version,						\
   license,						\
@@ -221,7 +221,7 @@ _gst_plugin_static_init__ ##init (void)			\
     major,						\
     minor,						\
     name,						\
-    description,					\
+    (gchar *) description,				\
     init,						\
     version,						\
     license,						\

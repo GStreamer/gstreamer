@@ -1,3 +1,14 @@
+2007-10-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstplugin.h:
+	  Cast description string constants in GST_PLUGIN_DEFINE macros
+	  to a (gchar*) to make C++ code using these macros compile
+	  without warning with g++-4.2 (see #462737).  Even if slightly
+	  ugly, this seems preferable to putting the description strings
+	  into the GLib quark table or making the structure member a
+	  const gchar * and doing casts in core code that allocs and
+	  frees these strings, or requiring a cast in the C++ code.
+
 2007-10-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstinfo.h:
