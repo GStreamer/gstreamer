@@ -214,6 +214,9 @@ gboolean	gst_base_sink_query_latency 	(GstBaseSink *sink, gboolean *live, gboole
 						 GstClockTime *min_latency, GstClockTime *max_latency);
 GstClockTime	gst_base_sink_get_latency 	(GstBaseSink *sink);
 
+GstFlowReturn   gst_base_sink_wait_eos          (GstBaseSink *sink, GstClockTime time,
+                                                 GstClockTimeDiff *jitter);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_SINK_H__ */

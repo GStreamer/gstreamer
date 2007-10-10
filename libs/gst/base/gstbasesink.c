@@ -1449,6 +1449,74 @@ stopping:
   }
 }
 
+/**
+ * gst_base_sink_wait_eos:
+ * @sink: the sink
+ * @time: the running_time to be reached
+ * @jitter: the jitter to be filled with time diff (can be NULL)
+ *
+ * This function will block until @time is reached. It is usually called by
+ * subclasses that use their own internal synchronisation but want to let the
+ * EOS be handled by the base class.
+ *
+ * This function should only be called with the PREROLL_LOCK held, like when
+ * receiving an EOS event in the ::event vmethod.
+ *
+ * Since 0.10.15
+ *
+ * Returns: #GstFlowReturn
+ */
+GstFlowReturn
+gst_base_sink_wait_eos (GstBaseSink * sink, GstClockTime time,
+    GstClockTimeDiff * jitter)
+{
+  GstClockReturn status;
+  GstFlowReturn ret;
+
+  do {
+    GST_DEBUG_OBJECT (sink, "checking preroll");
+
+    /* first wait for the playing state before we can continue */
+    if (G_UNLIKELY (sink->need_preroll)) {
+      ret = gst_base_sink_wait_preroll (sink);
+      if (ret != GST_FLOW_OK)
+        goto flushing;
+    }
+
+    /* preroll done, we can sync since we are in PLAYING now. */
+    GST_DEBUG_OBJECT (sink, "possibly waiting for clock to reach %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (time));
+
+    /* wait for the clock, this can be interrupted because we got shut down or 
+     * we PAUSED. */
+    status = gst_base_sink_wait_clock (sink, time, jitter);
+
+    GST_DEBUG_OBJECT (sink, "clock returned %d", status);
+
+    /* invalid time, no clock or sync disabled, just continue then */
+    if (status == GST_CLOCK_BADTIME)
+      break;
+
+    /* waiting could have been interrupted and we can be flushing now */
+    if (G_UNLIKELY (sink->flushing))
+      goto flushing;
+
+    /* retry if we got unscheduled, which means we did not reach the timeout
+     * yet. if some other error occures, we continue. */
+  } while (status == GST_CLOCK_UNSCHEDULED);
+
+  GST_DEBUG_OBJECT (sink, "end of stream");
+
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG_OBJECT (sink, "we are flushing");
+    return GST_FLOW_WRONG_STATE;
+  }
+}
+
 /* with STREAM_LOCK, PREROLL_LOCK
  *
  * Make sure we are in PLAYING and synchronize an object to the clock.
