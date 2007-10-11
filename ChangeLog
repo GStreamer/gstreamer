@@ -1,3 +1,9 @@
+2007-10-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/taglib/gstid3v2mux.cc:
+	  Add support for license/copyright URI tags (ID3v2 WCOP frame).
+	  Prerequisite for #447000.
+
 2007-10-08  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_flush):

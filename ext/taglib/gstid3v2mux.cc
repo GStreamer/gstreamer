@@ -61,6 +61,8 @@
 #include <uniquefileidentifierframe.h>
 #include <attachedpictureframe.h>
 #include <commentsframe.h>
+#include <unknownframe.h>
+#include <id3v2synchdata.h>
 #include <id3v2tag.h>
 #include <gst/tag/tag.h>
 
@@ -515,6 +517,47 @@ add_text_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
   }
 }
 
+static void
+add_uri_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
+    const gchar * tag, guint num_tags, const gchar * frame_id)
+{
+  gchar *url = NULL;
+
+  g_assert (frame_id != NULL);
+
+  /* URI tags are limited to one of each per taglist */
+  if (gst_tag_list_get_string_index (list, tag, 0, &url) && url != NULL) {
+    guint url_len;
+
+    url_len = strlen (url);
+    if (url_len > 0 && gst_uri_is_valid (url)) {
+      ID3v2::FrameFactory * factory = ID3v2::FrameFactory::instance ();
+      ID3v2::Frame * frame;
+      char *data;
+
+      data = g_new0 (char, 10 + url_len);
+
+      memcpy (data, frame_id, 4);
+      memcpy (data + 4, ID3v2::SynchData::fromUInt (url_len).data (), 4);
+      memcpy (data + 10, url, url_len);
+      ByteVector bytes (data, 10 + url_len);
+
+      g_free (data);
+
+      frame = factory->createFrame (bytes, (TagLib::uint) 4);
+      if (frame) {
+        id3v2tag->addFrame (frame);
+
+        GST_LOG ("%s: %s = '%s'", frame_id, tag, url);
+      }
+    } else {
+      GST_WARNING ("Tag %s does not contain a valid URI (%s)", tag, url);
+    }
+
+    g_free (url);
+  }
+}
+
 /* id3demux produces these for frames it cannot parse */
 #define GST_ID3_DEMUX_TAG_ID3V2_FRAME "private-id3v2-frame"
 
@@ -548,7 +591,9 @@ static const struct
   GST_TAG_ALBUM_VOLUME_NUMBER, add_count_or_num_tag, "TPOS"}, {
   GST_TAG_ALBUM_VOLUME_COUNT, add_count_or_num_tag, "TPOS"}, {
   GST_TAG_ENCODER, add_encoder_tag, ""}, {
-  GST_TAG_ENCODER_VERSION, add_encoder_tag, ""}
+  GST_TAG_ENCODER_VERSION, add_encoder_tag, ""}, {
+  GST_TAG_COPYRIGHT_URI, add_uri_tag, "WCOP"}, {
+  GST_TAG_LICENSE_URI, add_uri_tag, "WCOP"}
 };
 
 
