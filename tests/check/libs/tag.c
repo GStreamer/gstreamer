@@ -258,6 +258,8 @@ GST_START_TEST (test_vorbis_tags)
   gst_vorbis_tag_add (list, "COPYRIGHT", "Copyfoo");
   gst_vorbis_tag_add (list, "DESCRIPTION", "Descoo");
   gst_vorbis_tag_add (list, "LICENSE", "Licoo");
+  gst_vorbis_tag_add (list, "LICENSE",
+      "http://creativecommons.org/licenses/by/3.0/");
   gst_vorbis_tag_add (list, "LOCATION", "Bristol, UK");
   gst_vorbis_tag_add (list, "ORGANIZATION", "Orgoo");
   gst_vorbis_tag_add (list, "GENRE", "Goo");
@@ -278,6 +280,8 @@ GST_START_TEST (test_vorbis_tags)
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_COPYRIGHT, "Copyfoo");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_DESCRIPTION, "Descoo");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LICENSE, "Licoo");
+  ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LICENSE_URI,
+      "http://creativecommons.org/licenses/by/3.0/");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_LOCATION, "Bristol, UK");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ORGANIZATION, "Orgoo");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_GENRE, "Goo");
@@ -322,6 +326,7 @@ GST_START_TEST (test_vorbis_tags)
    * (',' or '.') regardless of the current locale */
   gst_vorbis_tag_add (list, "REPLAYGAIN_ALBUM_PEAK", "0,98107");
   ASSERT_TAG_LIST_HAS_DOUBLE (list, GST_TAG_ALBUM_PEAK, 0.98107);
+  gst_vorbis_tag_add (list, "LICENSE", "http://foo.com/license-1.html");
 
   /* make sure we can convert back and forth without loss */
   {

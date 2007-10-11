@@ -1,5 +1,11 @@
 2007-10-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/tag/gstvorbistag.c:
+	* tests/check/libs/tag.c:
+	  Extract vorbis comment LICENSE tags correctly.
+
+2007-10-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Jason Kivlighn  <jkivlighn gmail com>
 
 	* gst-libs/gst/tag/gstid3tag.c:

@@ -57,6 +57,7 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_COMPOSER, "COMPOSER"},
   {GST_TAG_COPYRIGHT, "COPYRIGHT"},
   {GST_TAG_LICENSE, "LICENSE"},
+  {GST_TAG_LICENSE_URI, "LICENSE"},
   {GST_TAG_LOCATION, "LOCATION"},
   {GST_TAG_ORGANIZATION, "ORGANIZATION"},
   {GST_TAG_DESCRIPTION, "DESCRIPTION"},
@@ -226,6 +227,12 @@ gst_vorbis_tag_add (GstTagList * list, const gchar * tag, const gchar * value)
         } else if (strlen (value) != 2 && strlen (value) != 3) {
           GST_WARNING ("doesn't contain an ISO-639 language code: %s", value);
         }
+      } else if (strcmp (tag, "LICENSE") == 0) {
+        /* license tags in vorbis comments must contain an URI representing
+         * the license and nothing more, at least according to:
+         * http://wiki.xiph.org/index.php/LICENSE_and_COPYRIGHT_tags_on_Vorbis_Comments */
+        if (value && gst_uri_is_valid (value))
+          gst_tag = GST_TAG_LICENSE_URI;
       }
 
       if (!valid) {
