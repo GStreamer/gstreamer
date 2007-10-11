@@ -175,6 +175,32 @@ GST_START_TEST (test_tdat_tyer)
 
 GST_END_TEST;
 
+static void
+check_wcop (const GstTagList * tags, const gchar * file)
+{
+  gchar *copyright = NULL;
+  gchar *uri = NULL;
+
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_LICENSE_URI, &uri));
+  fail_unless (uri != NULL);
+  fail_unless_equals_string (uri,
+      "http://creativecommons.org/licenses/by/3.0/");
+  g_free (uri);
+
+  fail_unless (gst_tag_list_get_string (tags, GST_TAG_COPYRIGHT, &copyright));
+  fail_unless (copyright != NULL);
+  fail_unless_equals_string (copyright,
+      " Steadman. Licensed to the public under http://creativecommons.org/licenses/by/3.0/ verify at http://test.com");
+  g_free (copyright);
+}
+
+GST_START_TEST (test_wcop)
+{
+  run_check_for_file ("id3-447000-wcop.tag", check_wcop);
+}
+
+GST_END_TEST;
+
 static Suite *
 id3demux_suite (void)
 {
@@ -183,6 +209,7 @@ id3demux_suite (void)
 
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_tdat_tyer);
+  tcase_add_test (tc_chain, test_wcop);
 
   return s;
 }

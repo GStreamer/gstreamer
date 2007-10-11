@@ -1,5 +1,18 @@
 2007-10-11  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Based on patch by: Jason Kivlighn  <jkivlighn gmail com>
+
+	* gst/id3demux/id3v2frames.c:
+	  Extract license/copyright URIs from ID3v2 WCOP frames
+	  (Fixes #447000).
+
+	* tests/check/elements/id3demux.c:
+	* tests/files/Makefile.am:
+	* tests/files/id3-447000-wcop.tag:
+	  Add simple unit test.
+
+2007-10-11  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/taglib/gstid3v2mux.cc:
 	  Add support for license/copyright URI tags (ID3v2 WCOP frame).
 	  Prerequisite for #447000.
