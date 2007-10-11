@@ -582,6 +582,8 @@ GST_START_TEST (test_id3_tags)
   fail_unless (gst_tag_from_id3_tag ("TALB") != NULL);
   ASSERT_CRITICAL (gst_tag_from_id3_tag (NULL));
   fail_unless (gst_tag_from_id3_tag ("R2D2") == NULL);
+  fail_unless_equals_string (gst_tag_from_id3_tag ("WCOP"),
+      GST_TAG_COPYRIGHT_URI);
 
   /* gst_tag_from_id3_user_tag */
   ASSERT_CRITICAL (gst_tag_from_id3_user_tag (NULL, "foo"));
@@ -592,7 +594,8 @@ GST_START_TEST (test_id3_tags)
   ASSERT_CRITICAL (gst_tag_to_id3_tag (NULL));
   fail_unless (gst_tag_to_id3_tag ("R2D2") == NULL);
   fail_unless (gst_tag_to_id3_tag (GST_TAG_ARTIST) != NULL);
-
+  fail_unless_equals_string (gst_tag_to_id3_tag (GST_TAG_COPYRIGHT_URI),
+      "WCOP");
 
   fail_unless (GST_TYPE_TAG_IMAGE_TYPE != 0);
   fail_unless (g_type_name (GST_TYPE_TAG_IMAGE_TYPE) != NULL);

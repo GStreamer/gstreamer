@@ -199,6 +199,7 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_ARTIST, "TPE1"},
   {GST_TAG_COMPOSER, "TCOM"},
   {GST_TAG_COPYRIGHT, "TCOP"},
+  {GST_TAG_COPYRIGHT_URI, "WCOP"},
   {GST_TAG_GENRE, "TCON"},
   {GST_TAG_DATE, "TDRC"},
   {GST_TAG_COMMENT, "COMM"},

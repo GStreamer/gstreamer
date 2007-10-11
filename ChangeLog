@@ -1,3 +1,11 @@
+2007-10-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Jason Kivlighn  <jkivlighn gmail com>
+
+	* gst-libs/gst/tag/gstid3tag.c:
+	* tests/check/libs/tag.c:
+	  Map ID3v2 WCOP frame to GST_TAG_COPYRIGHT_URI (#447000).
+
 2007-10-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gsttagdemux.c:
