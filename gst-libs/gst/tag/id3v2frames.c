@@ -38,6 +38,8 @@ GST_DEBUG_CATEGORY_EXTERN (id3demux_debug);
 #define GST_CAT_DEFAULT (id3demux_debug)
 
 static gboolean parse_comment_frame (ID3TagsWorking * work);
+static gchar *parse_url_link_frame (ID3TagsWorking * work,
+    const gchar ** tag_name);
 static GArray *parse_text_identification_frame (ID3TagsWorking * work);
 static gchar *parse_user_text_identification_frame (ID3TagsWorking * work,
     const gchar ** tag_name);
@@ -162,6 +164,9 @@ id3demux_id3v2_parse_frame (ID3TagsWorking * work)
       /* Text identification frame */
       tag_fields = parse_text_identification_frame (work);
     }
+  } else if (work->frame_id[0] == 'W' && strcmp (work->frame_id, "WXXX") != 0) {
+    /* URL link frame: ISO-8859-1 encoded, one frame per tag */
+    tag_str = parse_url_link_frame (work, &tag_name);
   } else if (!strcmp (work->frame_id, "COMM")) {
     /* Comment */
     result = parse_comment_frame (work);
@@ -296,6 +301,58 @@ parse_text_identification_frame (ID3TagsWorking * work)
 
   return fields;
 }
+
+static gboolean
+link_is_known_license (const gchar * url)
+{
+  return g_str_has_prefix (url, "http://creativecommons.org/licenses/");
+}
+
+static gchar *
+parse_url_link_frame (ID3TagsWorking * work, const gchar ** tag_name)
+{
+  gsize len;
+  gchar *nul, *data, *link;
+
+  *tag_name = NULL;
+
+  if (work->parse_size == 0)
+    return NULL;
+
+  data = (gchar *) work->parse_data;
+  /* if there's more data then the string is long, we only want to parse the
+   * data up to the terminating zero to g_convert and ignore the rest, as
+   * per spec */
+  nul = memchr (data, '\0', work->parse_size);
+  if (nul != NULL) {
+    len = (gsize) (nul - data);
+  } else {
+    len = work->parse_size;
+  }
+
+  link = g_convert (data, len, "UTF-8", "ISO-8859-1", NULL, NULL, NULL);
+
+  if (link == NULL || !gst_uri_is_valid (link)) {
+    GST_DEBUG ("Invalid URI in %s frame: %s", work->frame_id,
+        GST_STR_NULL (link));
+    g_free (link);
+    return NULL;
+  }
+
+  /* we don't know if it's a link to a page that explains the copyright
+   * situation, or a link that points to/represents a license, the ID3 spec
+   * does not separate those two things; for now only put known license URIs
+   * into GST_TAG_LICENSE_URI and everything else into GST_TAG_COPYRIGHT_URI */
+  if (strcmp (work->frame_id, "WCOP") == 0) {
+    if (link_is_known_license (link))
+      *tag_name = GST_TAG_LICENSE_URI;
+    else
+      *tag_name = GST_TAG_COPYRIGHT_URI;
+  }
+
+  return link;
+}
+
 
 static gchar *
 parse_user_text_identification_frame (ID3TagsWorking * work,
