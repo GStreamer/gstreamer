@@ -1,3 +1,15 @@
+2007-10-12  Jan Schmidt  <Jan.Schmidt@sun.com>
+B
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xwindow_decorate),
+	(gst_xvimagesink_xwindow_new),
+	(gst_xvimagesink_update_colorbalance),
+	(gst_xvimagesink_handle_xevents), (gst_xvimagesink_xcontext_get):
+
+	Fix handling of some of the X atoms. If the last parameter is True,
+	XInternAtom won't create the atom if it doesn't exist, and therefore
+	might return None. This causes X errors on Xv implementations that
+	don't provide the colour balance attributes.
+
 2007-10-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gstvorbistag.c:
