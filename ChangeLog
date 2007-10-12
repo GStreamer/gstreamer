@@ -1,5 +1,5 @@
 2007-10-12  Jan Schmidt  <Jan.Schmidt@sun.com>
-B
+
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xwindow_decorate),
 	(gst_xvimagesink_xwindow_new),
 	(gst_xvimagesink_update_colorbalance),
