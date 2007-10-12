@@ -846,7 +846,8 @@ gst_xvimagesink_xwindow_decorate (GstXvImageSink * xvimagesink,
 
   g_mutex_lock (xvimagesink->x_lock);
 
-  hints_atom = XInternAtom (xvimagesink->xcontext->disp, "_MOTIF_WM_HINTS", 1);
+  hints_atom = XInternAtom (xvimagesink->xcontext->disp, "_MOTIF_WM_HINTS",
+      True);
   if (hints_atom == None) {
     g_mutex_unlock (xvimagesink->x_lock);
     return FALSE;
@@ -908,9 +909,11 @@ gst_xvimagesink_xwindow_new (GstXvImageSink * xvimagesink,
     /* Tell the window manager we'd like delete client messages instead of
      * being killed */
     wm_delete = XInternAtom (xvimagesink->xcontext->disp,
-        "WM_DELETE_WINDOW", False);
-    (void) XSetWMProtocols (xvimagesink->xcontext->disp, xwindow->win,
-        &wm_delete, 1);
+        "WM_DELETE_WINDOW", True);
+    if (wm_delete != None) {
+      (void) XSetWMProtocols (xvimagesink->xcontext->disp, xwindow->win,
+          &wm_delete, 1);
+    }
   }
 
   xwindow->gc = XCreateGC (xvimagesink->xcontext->disp,
@@ -1019,6 +1022,7 @@ gst_xvimagesink_update_colorbalance (GstXvImageSink * xvimagesink)
   while (channels) {
     if (channels->data && GST_IS_COLOR_BALANCE_CHANNEL (channels->data)) {
       GstColorBalanceChannel *channel = NULL;
+      Atom prop_atom;
       gint value = 0;
       gdouble convert_coef;
 
@@ -1047,9 +1051,12 @@ gst_xvimagesink_update_colorbalance (GstXvImageSink * xvimagesink)
 
       /* Committing to Xv port */
       g_mutex_lock (xvimagesink->x_lock);
-      XvSetPortAttribute (xvimagesink->xcontext->disp,
-          xvimagesink->xcontext->xv_port_id,
-          XInternAtom (xvimagesink->xcontext->disp, channel->label, 1), value);
+      prop_atom =
+          XInternAtom (xvimagesink->xcontext->disp, channel->label, True);
+      if (prop_atom != None) {
+        XvSetPortAttribute (xvimagesink->xcontext->disp,
+            xvimagesink->xcontext->xv_port_id, prop_atom, value);
+      }
       g_mutex_unlock (xvimagesink->x_lock);
 
       g_object_unref (channel);
@@ -1198,8 +1205,8 @@ gst_xvimagesink_handle_xevents (GstXvImageSink * xvimagesink)
         Atom wm_delete;
 
         wm_delete = XInternAtom (xvimagesink->xcontext->disp,
-            "WM_DELETE_WINDOW", False);
-        if (wm_delete == (Atom) e.xclient.data.l[0]) {
+            "WM_DELETE_WINDOW", True);
+        if (wm_delete != None && wm_delete == (Atom) e.xclient.data.l[0]) {
           /* Handle window deletion by posting an error on the bus */
           GST_ELEMENT_ERROR (xvimagesink, RESOURCE, NOT_FOUND,
               ("Output window was closed"), (NULL));
@@ -1594,6 +1601,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   XPixmapFormatValues *px_formats = NULL;
   gint nb_formats = 0, i, j, N_attr;
   XvAttribute *xv_attr;
+  Atom prop_atom;
   char *channels[4] = { "XV_HUE", "XV_SATURATION",
     "XV_BRIGHTNESS", "XV_CONTRAST"
   };
@@ -1701,6 +1709,12 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   for (i = 0; i < (sizeof (channels) / sizeof (char *)); i++) {
     XvAttribute *matching_attr = NULL;
 
+    /* Retrieve the property atom if it exists. If it doesn't exist, 
+     * the attribute itself must not either, so we can skip */
+    prop_atom = XInternAtom (xcontext->disp, channels[i], True);
+    if (prop_atom == None)
+      continue;
+
     if (xv_attr != NULL) {
       for (j = 0; j < N_attr && matching_attr == NULL; ++j)
         if (!g_ascii_strcasecmp (channels[i], xv_attr[j].name))
@@ -1724,7 +1738,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
         gint val;
 
         XvGetPortAttribute (xcontext->disp, xcontext->xv_port_id,
-            XInternAtom (xcontext->disp, channel->label, 1), &val);
+            prop_atom, &val);
         /* Normalize val to [-1000, 1000] */
         val = -1000 + 2000 * (val - channel->min_value) /
             (channel->max_value - channel->min_value);
