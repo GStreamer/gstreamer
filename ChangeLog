@@ -1,3 +1,9 @@
+2007-10-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Add big fat warning message with explanation when building
+	  against an external copy of ffmpeg. Fixes #407779.
+
 2007-10-10  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Tuomas Kulve <tuomas dot kulve at movial dot fi>

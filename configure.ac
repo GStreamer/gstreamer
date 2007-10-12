@@ -203,6 +203,37 @@ if test "x$with_system_ffmpeg" = "xyes"; then
   AC_DEFINE([FFMPEG_SOURCE], ["system install"], [Describes where the FFmpeg libraries come from.])
   HAVE_FFMPEG_UNINSTALLED=0
   AC_MSG_NOTICE([Using system-installed FFMpeg code])
+  AC_MSG_WARN([
+  ======================================================================
+   WARNING: you have chosen to build gst-ffmpeg against a random
+   external version of ffmpeg instead of building it against the tested
+   internal ffmpeg snapshot that is included with gst-ffmpeg.
+   
+   This is a very bad idea.  So bad in fact that words cannot express
+   just how bad it is.  Suffice to say that it is BAD.
+   
+   The GStreamer developers cannot and will not support a gst-ffmpeg
+   built this way.  Any bug reports that indicate there is an external
+   version of ffmpeg involved will be closed immediately without further
+   investigation.
+   
+   The reason such a setup can't be supported is that the ffmpeg API
+   and ABI is in constant flux, yet there aren't any official releases
+   of the ffmpeg library to develop against.  This makes it impossible
+   to guarantee that gst-ffmpeg will work reliably, or even compile,
+   with a randomly picked version ffmpeg.  Even if gst-ffmpeg compiles
+   and superficially appears to work fine against your chosen external
+   ffmpeg version, that might just not be the case on other systems, or
+   even the same system at a later time, or when using decoders,
+   encoders, demuxers or muxers that have not been tested.
+   
+   Please do not create or distribute binary packages of gst-ffmpeg
+   that link against an external ffmpeg. Thank you!
+  ======================================================================
+  ])
+
+  dnl No, this is not too extreme, we want people to see and read the above
+  sleep 15
 else
   FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
@@ -245,3 +276,4 @@ tests/Makefile
 tests/check/Makefile
 )
 AC_OUTPUT
+
