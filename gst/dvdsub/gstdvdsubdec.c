@@ -25,6 +25,7 @@
 #endif
 
 #include "gstdvdsubdec.h"
+#include "gstdvdsubparse.h"
 #include <string.h>
 
 GST_BOILERPLATE (GstDvdSubDec, gst_dvd_sub_dec, GstElement, GST_TYPE_ELEMENT);
@@ -42,13 +43,6 @@ static gboolean gst_dvd_sub_dec_sink_event (GstPad * pad, GstEvent * event);
 
 static GstFlowReturn gst_send_subtitle_frame (GstDvdSubDec * dec,
     GstClockTime end_ts);
-
-static const GstElementDetails gst_dvd_sub_dec_details =
-GST_ELEMENT_DETAILS ("DVD subtitle Decoder",
-    "Codec/Decoder/Video",
-    "Decodes DVD subtitles into AYUV video frames",
-    "Wim Taymans <wim.taymans@chello.be>, "
-    "Jan Schmidt <thaytan@mad.scientist.com>");
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -110,7 +104,10 @@ gst_dvd_sub_dec_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&subtitle_template));
 
-  gst_element_class_set_details (element_class, &gst_dvd_sub_dec_details);
+  gst_element_class_set_details_simple (element_class, "DVD subtitle decoder",
+      "Codec/Decoder/Video", "Decodes DVD subtitles into AYUV video frames",
+      "Wim Taymans <wim.taymans@gmail.com>, "
+      "Jan Schmidt <thaytan@mad.scientist.com>");
 }
 
 static void
@@ -989,12 +986,14 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "dvdsubdec", GST_RANK_NONE,
-          GST_TYPE_DVD_SUB_DEC)) {
+          GST_TYPE_DVD_SUB_DEC) ||
+      !gst_element_register (plugin, "dvdsubparse", GST_RANK_NONE,
+          GST_TYPE_DVD_SUB_PARSE)) {
     return FALSE;
   }
 
   GST_DEBUG_CATEGORY_INIT (gst_dvd_sub_dec_debug, "dvdsubdec", 0,
-      "DVD subtitle decoder element");
+      "DVD subtitle decoder");
 
   return TRUE;
 }
@@ -1002,5 +1001,5 @@ plugin_init (GstPlugin * plugin)
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
     "dvdsub",
-    "Decode DVD subtitles to AYUV video frames", plugin_init,
-    VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);
+    "DVD subtitle parser and decoder", plugin_init,
+    VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN);

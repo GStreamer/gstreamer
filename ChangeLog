@@ -1,3 +1,16 @@
+2007-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Mark Nauwelaerts <mnauw at users.sourceforge.net>
+
+	* gst/dvdsub/Makefile.am:
+	* gst/dvdsub/gstdvdsubdec.c:
+	* gst/dvdsub/gstdvdsubparse.c:
+	* gst/dvdsub/gstdvdsubparse.h:
+	  Add dvd subtitle parser, which just packetizes the input
+	  stream. This is needed to mux dvd subtitles into matroska
+	  files, since the muxer expects unfragmented and properly
+	  timestamped input (#415754).
+
 2007-10-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
