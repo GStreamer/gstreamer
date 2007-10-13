@@ -1,3 +1,9 @@
+2007-10-13  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gstobject.override:
+	Release the GIL when calling gst_object_get_path_string() since it can
+	cause deadlocks with new pygobject behaviour.
+
 2007-10-11  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/gstmodule.c: (init_gst):

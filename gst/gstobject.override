@@ -63,7 +63,10 @@ _wrap_gst_object_tp_str (PyObject * self)
   PyObject *ret;
   GstObject *object = GST_OBJECT (pygobject_get (self));
 
+  pyg_begin_allow_threads;
   path = gst_object_get_path_string (object);
+  pyg_end_allow_threads;
+
   repr = g_strdup_printf ("%s (%s)", path, self->ob_type->tp_name);
   ret = PyString_FromString (repr);
   g_free (repr);
