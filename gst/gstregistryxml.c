@@ -473,7 +473,7 @@ load_plugin (xmlTextReaderPtr reader, GList ** feature_list)
         GstPluginFeature *feature = load_feature (reader);
 
         if (feature) {
-          feature->plugin_name = g_strdup (plugin->desc.name);
+          feature->plugin_name = plugin->desc.name;     /* interned string */
           *feature_list = g_list_prepend (*feature_list, feature);
         }
       } else {

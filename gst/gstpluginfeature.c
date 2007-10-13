@@ -69,7 +69,6 @@ gst_plugin_feature_finalize (GObject * object)
   GST_DEBUG ("finalizing feature %p: '%s'", feature,
       GST_PLUGIN_FEATURE_NAME (feature));
   g_free (feature->name);
-  g_free (feature->plugin_name);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }

@@ -76,14 +76,14 @@ typedef enum {
  * Opaque #GstPluginFeature structure.
  */
 struct _GstPluginFeature {
-  GstObject 	 object;
+  GstObject      object;
 
   /*< private >*/
   gboolean       loaded;
-  gchar 	*name;
-  guint   	 rank;
+  gchar         *name;
+  guint          rank;
 
-  gchar *plugin_name;
+  const gchar   *plugin_name;
 
   /*< private >*/
   gpointer _gst_reserved[GST_PADDING];

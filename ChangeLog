@@ -1,3 +1,14 @@
+2007-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstelementfactory.c:
+	* gst/gstpluginfeature.c:
+	* gst/gstpluginfeature.h:
+	* gst/gstregistrybinary.c:
+	* gst/gstregistryxml.c:
+	* gst/gsttypefind.c:
+	  Use already-interned string for the private GstPluginFeature
+	  plugin_name field.
+
 2007-10-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/libs/gstreamer-libs-sections.txt:

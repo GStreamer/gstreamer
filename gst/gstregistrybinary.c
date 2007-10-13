@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2006 Josep Torra <josep@fluendo.com>
  *               2006 Mathieu Garcia <matthieu@fluendo.com>
- *		         2006,2007 Stefan Kost <ensonic@users.sf.net>
+ *               2006,2007 Stefan Kost <ensonic@users.sf.net>
  *
  * gstregistrybinary.c: GstRegistryBinary object, support routines
  *
@@ -649,7 +649,7 @@ gst_registry_binary_load_pad_template (GstElementFactory * factory, gchar ** in)
  */
 static gboolean
 gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
-    gchar * plugin_name)
+    const gchar * plugin_name)
 {
   GstBinaryPluginFeature *pf = NULL;
   GstPluginFeature *feature;
@@ -768,7 +768,9 @@ gst_registry_binary_load_feature (GstRegistry * registry, gchar ** in,
 #endif
 
   feature->rank = pf->rank;
-  feature->plugin_name = plugin_name;
+
+  /* should already be the interned string, but better make sure */
+  feature->plugin_name = g_intern_string (plugin_name);
 
   gst_registry_add_feature (registry, feature);
   GST_DEBUG ("Added feature %s", feature->name);
@@ -838,8 +840,7 @@ gst_registry_binary_load_plugin (GstRegistry * registry, gchar ** in)
   GST_INFO ("Added plugin '%s' plugin with %d features from binary registry",
       plugin->desc.name, pe->nfeatures);
   for (i = 0; i < pe->nfeatures; i++) {
-    if (!gst_registry_binary_load_feature (registry, in,
-            g_strdup (plugin->desc.name))) {
+    if (!gst_registry_binary_load_feature (registry, in, plugin->desc.name)) {
       GST_ERROR ("Error while loading binary feature");
       goto fail;
     }
