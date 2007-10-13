@@ -1,3 +1,8 @@
+2007-10-11  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gstmodule.c: (init_gst):
+	Added new gst.TAG_COMPOSER constant that appeared in core 0.10.15.
+
 2007-10-09  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/base.defs:

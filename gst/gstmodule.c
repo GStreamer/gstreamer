@@ -253,7 +253,9 @@ init_gst (void)
      PyModule_AddStringConstant (m, "TAG_EXTENDED_COMMENT", GST_TAG_EXTENDED_COMMENT);
 #if ((GST_VERSION_MICRO >= 14) || (GST_VERSION_MICRO == 13 && GST_VERSION_NANO > 0))
      PyModule_AddStringConstant (m, "TAG_LICENSE_URI", GST_TAG_LICENSE_URI);
-     PyModule_AddStringConstant (m, "TAG_COPYRIGHT_URI", GST_TAG_COPYRIGHT_URI);
+#if ((GST_VERSION_MICRO >= 15) || (GST_VERSION_MICRO == 14 && GST_VERSION_NANO > 0))
+     PyModule_AddStringConstant (m, "TAG_COMPOSER", GST_TAG_COMPOSER);
+#endif
 #endif
 #endif
 #endif
