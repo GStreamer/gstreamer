@@ -373,6 +373,97 @@ gst_v4l2_buffer_pool_destroy (GstV4l2BufferPool * pool)
   gst_mini_object_unref (GST_MINI_OBJECT (pool));
 }
 
+/* complete made up ranking, the values themselves are meaningless */
+#define YUV_BASE_RANK     1000
+#define JPEG_BASE_RANK     500
+#define DV_BASE_RANK       200
+#define RGB_BASE_RANK      100
+#define YUV_ODD_BASE_RANK   50
+#define RGB_ODD_BASE_RANK   25
+#define BAYER_BASE_RANK     15
+#define GREY_BASE_RANK       5
+
+static gint
+gst_v4l2src_format_get_rank (guint32 fourcc)
+{
+  switch (fourcc) {
+    case V4L2_PIX_FMT_MJPEG:
+      return JPEG_BASE_RANK;
+    case V4L2_PIX_FMT_JPEG:
+      return JPEG_BASE_RANK + 1;
+
+    case V4L2_PIX_FMT_RGB332:
+    case V4L2_PIX_FMT_RGB555:
+    case V4L2_PIX_FMT_RGB555X:
+    case V4L2_PIX_FMT_RGB565:
+    case V4L2_PIX_FMT_RGB565X:
+      return RGB_ODD_BASE_RANK;
+
+    case V4L2_PIX_FMT_RGB24:
+    case V4L2_PIX_FMT_BGR24:
+      return RGB_BASE_RANK - 1;
+
+    case V4L2_PIX_FMT_RGB32:
+    case V4L2_PIX_FMT_BGR32:
+      return RGB_BASE_RANK;
+
+    case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
+      return GREY_BASE_RANK;
+
+    case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
+    case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
+    case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
+    case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
+      return YUV_ODD_BASE_RANK;
+
+    case V4L2_PIX_FMT_YVU410:  /* YVU9,  9 bits per pixel */
+      return YUV_BASE_RANK + 3;
+    case V4L2_PIX_FMT_YUV410:  /* YUV9,  9 bits per pixel */
+      return YUV_BASE_RANK + 2;
+    case V4L2_PIX_FMT_YUV420:  /* I420, 12 bits per pixel */
+      return YUV_BASE_RANK + 7;
+    case V4L2_PIX_FMT_YUYV:    /* YUY2, 16 bits per pixel */
+      return YUV_BASE_RANK + 10;
+    case V4L2_PIX_FMT_YVU420:  /* YV12, 12 bits per pixel */
+      return YUV_BASE_RANK + 6;
+    case V4L2_PIX_FMT_UYVY:    /* UYVY, 16 bits per pixel */
+      return YUV_BASE_RANK + 9;
+    case V4L2_PIX_FMT_Y41P:    /* Y41P, 12 bits per pixel */
+      return YUV_BASE_RANK + 5;
+    case V4L2_PIX_FMT_YUV411P: /* Y41B, 12 bits per pixel */
+      return YUV_BASE_RANK + 4;
+    case V4L2_PIX_FMT_YUV422P: /* Y42B, 16 bits per pixel */
+      return YUV_BASE_RANK + 8;
+
+    case V4L2_PIX_FMT_DV:
+      return DV_BASE_RANK;
+
+    case V4L2_PIX_FMT_MPEG:    /* MPEG          */
+    case V4L2_PIX_FMT_WNVA:    /* Winnov hw compres */
+      return 0;
+
+    case V4L2_PIX_FMT_SBGGR8:
+      return BAYER_BASE_RANK;
+
+    default:
+      break;
+  }
+
+  return 0;
+}
+
+static gint
+gst_v4l2src_format_cmp_func (gconstpointer a, gconstpointer b)
+{
+  guint32 pf1 = ((struct v4l2_fmtdesc *) a)->pixelformat;
+  guint32 pf2 = ((struct v4l2_fmtdesc *) b)->pixelformat;
+
+  if (pf1 == pf2)
+    return 0;
+
+  return gst_v4l2src_format_get_rank (pf2) - gst_v4l2src_format_get_rank (pf1);
+}
+
 /******************************************************
  * gst_v4l2src_fill_format_list():
  *   create list of supported capture formats
@@ -407,9 +498,12 @@ gst_v4l2src_fill_format_list (GstV4l2Src * v4l2src)
     GST_LOG_OBJECT (v4l2src, "pixelformat: %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (format->pixelformat));
 
-    v4l2src->formats = g_slist_prepend (v4l2src->formats, format);
+    /* sort formats according to our preference;  we do this, because caps
+     * are probed in the order the formats are in the list, and the order of
+     * formats in the final probed caps matters for things like fixation */
+    v4l2src->formats = g_slist_insert_sorted (v4l2src->formats, format,
+        (GCompareFunc) gst_v4l2src_format_cmp_func);
   }
-  v4l2src->formats = g_slist_reverse (v4l2src->formats);
 
   GST_DEBUG_OBJECT (v4l2src, "got %d format(s)", n);
 
@@ -638,6 +732,7 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
 {
   GstCaps *ret;
   GstStructure *tmp;
+  GList *results = NULL;
 
 #ifdef VIDIOC_ENUM_FRAMESIZES
   gint fd = v4l2src->v4l2object->video_fd;
@@ -661,7 +756,7 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
       tmp = gst_v4l2src_probe_caps_for_format_and_size (v4l2src, pixelformat,
           w, h, template);
       if (tmp)
-        gst_caps_append_structure (ret, tmp);
+        results = g_list_prepend (results, tmp);
 
       size.index++;
     } while (ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) >= 0);
@@ -695,6 +790,17 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
     }
   } else {
     goto unknown_type;
+  }
+
+  /* we use an intermediary list to store the results of the probing because
+   * we probe from lowest resolution to highest resolution, but want the caps
+   * to contain the results in reverse order starting with the highest
+   * resolution, as order in caps matters for things like fixation.  However,
+   * there's no gst_caps_prepend_structure(), so we use the list as helper to
+   * reverse the order */
+  while (results != NULL) {
+    gst_caps_append_structure (ret, GST_STRUCTURE (results->data));
+    results = g_list_delete_link (results, results);
   }
 
   return ret;

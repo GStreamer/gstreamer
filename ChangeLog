@@ -1,3 +1,21 @@
+2007-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/v4l2/gstv4l2src.c:
+	* sys/v4l2/v4l2src_calls.c:
+	  When probing the formats and sizes a camera supports, make
+	  sure the best ones (highest resolution, prefered format)
+	  end up at the beginning of the probed caps and the less
+	  desirable ones at the end.  This is important because the
+	  order within the caps matters for things like fixation and
+	  negotiation, ie. what format is chosen in the end.
+	  With recent kernels, the current probing code will end up
+	  querying the supported sizes from lowest resolution to
+	  highest resolution, adding them to the probed caps in that
+	  order, resulting to v4l2src fixating to the lowest possible
+	  resolution if downstream does not express a size preference.
+	  Also make up a somewhat random ranking of prefered output
+	  formats for the same reason. Fixes #485828.
+	
 2007-10-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Based on patch by: Jason Kivlighn  <jkivlighn gmail com>

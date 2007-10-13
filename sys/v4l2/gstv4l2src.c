@@ -240,7 +240,7 @@ static GstCaps *gst_v4l2src_get_caps (GstBaseSrc * src);
 static gboolean gst_v4l2src_query (GstBaseSrc * bsrc, GstQuery * query);
 static GstFlowReturn gst_v4l2src_create (GstPushSrc * src, GstBuffer ** out);
 
-static void gst_v4l2src_fixate (GstPad * pad, GstCaps * caps);
+static void gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 
 static void gst_v4l2src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -295,6 +295,7 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_v4l2src_start);
   basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_v4l2src_stop);
   basesrc_class->query = GST_DEBUG_FUNCPTR (gst_v4l2src_query);
+  basesrc_class->fixate = GST_DEBUG_FUNCPTR (gst_v4l2src_fixate);
 
   pushsrc_class->create = GST_DEBUG_FUNCPTR (gst_v4l2src_create);
 }
@@ -312,9 +313,6 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
   v4l2src->formats = NULL;
 
   v4l2src->is_capturing = FALSE;
-
-  gst_pad_set_fixatecaps_function (GST_BASE_SRC_PAD (v4l2src),
-      gst_v4l2src_fixate);
 
   gst_base_src_set_format (GST_BASE_SRC (v4l2src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (v4l2src), TRUE);
@@ -388,15 +386,12 @@ gst_v4l2src_get_property (GObject * object,
 
 /* this function is a bit of a last resort */
 static void
-gst_v4l2src_fixate (GstPad * pad, GstCaps * caps)
+gst_v4l2src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
 {
   GstStructure *structure;
   gint i;
-  G_GNUC_UNUSED gchar *caps_str;
 
-  caps_str = gst_caps_to_string (caps);
-  GST_DEBUG_OBJECT (GST_PAD_PARENT (pad), "fixating caps %s", caps_str);
-  g_free (caps_str);
+  GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
 
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     structure = gst_caps_get_structure (caps, i);
@@ -405,7 +400,7 @@ gst_v4l2src_fixate (GstPad * pad, GstCaps * caps)
     /* FIXME such sizes? we usually fixate to something in the 320x200
      * range... */
     /* We are fixating to greater possble size (limited to GST_V4L2_MAX_SIZE)
-       and framarate closer to 15/2 that is common in web-cams */
+       and framerate closer to 15/2 that is common in web-cams */
     gst_structure_fixate_field_nearest_int (structure, "width",
         GST_V4L2_MAX_SIZE);
     gst_structure_fixate_field_nearest_int (structure, "height",
@@ -696,6 +691,8 @@ gst_v4l2src_get_caps (GstBaseSrc * src)
   }
 
   v4l2src->probed_caps = gst_caps_ref (ret);
+
+  GST_INFO_OBJECT (v4l2src, "probed caps: %" GST_PTR_FORMAT, ret);
 
   return ret;
 }
