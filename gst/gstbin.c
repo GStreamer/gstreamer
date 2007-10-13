@@ -1174,8 +1174,6 @@ gst_bin_remove_func (GstBin * bin, GstElement * element)
     goto no_state_recalc;
 
   if (!other_async && this_async) {
-    GstStateChangeReturn ret;
-
     /* all other elements were not async and we removed the async one,
      * handle the async-done case because we are not async anymore now. */
     GST_DEBUG_OBJECT (bin,

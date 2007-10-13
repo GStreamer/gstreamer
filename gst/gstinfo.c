@@ -1216,7 +1216,7 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
   gchar *ptrname;
 
 #ifdef HAVE_DLADDR
-  Dl_info dlinfo;
+  Dl_info dl_info;
 #endif
 
   if (G_UNLIKELY (func == NULL))
@@ -1234,8 +1234,8 @@ _gst_debug_nameof_funcptr (GstDebugFuncPtr ptr)
   /* we need to create an entry in the hash table for this one so we don't leak
    * the name */
 #ifdef HAVE_DLADDR
-  if (dladdr ((gpointer) func, &dlinfo) && dlinfo.dli_sname) {
-    gchar *name = g_strdup (dlinfo.dli_sname);
+  if (dladdr ((gpointer) func, &dl_info) && dl_info.dli_sname) {
+    gchar *name = g_strdup (dl_info.dli_sname);
 
     _gst_debug_register_funcptr (func, name);
     return name;

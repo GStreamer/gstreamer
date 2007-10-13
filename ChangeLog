@@ -1,5 +1,13 @@
 2007-10-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstbin.c:
+	  Don't shadow local variable.
+
+	* gst/gstinfo.c:
+	  Don't shadow global function name.
+
+2007-10-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstelementfactory.c:
 	* gst/gstpluginfeature.c:
 	* gst/gstpluginfeature.h:
