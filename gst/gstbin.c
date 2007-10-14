@@ -2583,6 +2583,7 @@ bin_handle_async_done (GstBin * bin, GstStateChangeReturn ret)
     cont->pending = pending;
     /* mark busy */
     GST_STATE_RETURN (bin) = GST_STATE_CHANGE_ASYNC;
+    GST_STATE_NEXT (bin) = pending;
   }
 
   if (old_next != GST_STATE_PLAYING) {
