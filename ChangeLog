@@ -1,3 +1,9 @@
+2007-10-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Update the highest allowed neon version from 0.26.99 to 0.27.99.
+	  No code changes are required to work with the newest neon version.
+
 2007-10-10  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:
