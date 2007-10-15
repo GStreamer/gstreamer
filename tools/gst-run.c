@@ -220,10 +220,14 @@ get_candidates (const gchar * dir, const gchar * base)
   g_free (pattern);
 
   /* get all dirs from the path and prepend with given dir */
-  path = g_strdup_printf ("%s%c%s",
-      dir, G_SEARCHPATH_SEPARATOR, g_getenv ("PATH"));
+  if (dir)
+    path = g_strdup_printf ("%s%c%s",
+        dir, G_SEARCHPATH_SEPARATOR, g_getenv ("PATH"));
+  else
+    path = (gchar *) g_getenv ("PATH");
   dirs = g_strsplit (path, G_SEARCHPATH_SEPARATOR_S, 0);
-  g_free (path);
+  if (dir)
+    g_free (path);
 
   /* check all of these in reverse order by winding to bottom and going up  */
   cur = &dirs[0];

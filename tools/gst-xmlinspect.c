@@ -634,7 +634,8 @@ print_element_list (void)
 
         factory = GST_ELEMENT_FACTORY (feature);
         g_print ("%s:  %s: %s\n", plugin->desc.name,
-            GST_PLUGIN_FEATURE_NAME (factory), factory->details.longname);
+            GST_PLUGIN_FEATURE_NAME (factory),
+            gst_element_factory_get_longname (factory));
       }
 #ifndef GST_DISABLE_INDEX
       else if (GST_IS_INDEX_FACTORY (feature)) {
@@ -705,7 +706,7 @@ print_plugin_info (GstPlugin * plugin)
 
       factory = GST_ELEMENT_FACTORY (feature);
       g_print ("  %s: %s\n", GST_OBJECT_NAME (factory),
-          factory->details.longname);
+          gst_element_factory_get_longname (factory));
       num_elements++;
     }
 #ifndef GST_DISABLE_INDEX

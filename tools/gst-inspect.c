@@ -33,7 +33,7 @@
 #include <locale.h>
 #include <glib/gprintf.h>
 
-static char *_name;
+static char *_name = NULL;
 
 static int print_element_info (GstElementFactory * factory,
     gboolean print_names);
@@ -246,14 +246,19 @@ print_interfaces (GType type)
 
   if (ifaces) {
     if (n_ifaces) {
-      g_print ("%s", _name);
+      if (_name)
+        g_print (_name);
       g_print (_("Implemented Interfaces:\n"));
       iface = ifaces;
       while (*iface) {
-        g_print ("%s  %s\n", _name, g_type_name (*iface));
+        if (_name)
+          g_print (_name);
+        g_print ("  %s\n", g_type_name (*iface));
         iface++;
       }
-      g_print ("%s\n", _name);
+      if (_name)
+        g_print (_name);
+      g_print ("\n");
       g_free (ifaces);
     }
   }
@@ -288,19 +293,25 @@ print_element_properties_info (GstElement * element)
     if (param->flags & G_PARAM_READABLE) {
       g_object_get_property (G_OBJECT (element), param->name, &value);
       readable = TRUE;
-      g_print ((first_flag ? "" : ", "));
+      if (!first_flag)
+        g_print (", ");
+      else
+        first_flag = FALSE;
       g_print (_("readable"));
-      first_flag = FALSE;
     }
     if (param->flags & G_PARAM_WRITABLE) {
-      g_print ((first_flag ? "" : ", "));
+      if (!first_flag)
+        g_print (", ");
+      else
+        first_flag = FALSE;
       g_print (_("writable"));
-      first_flag = FALSE;
     }
     if (param->flags & GST_PARAM_CONTROLLABLE) {
-      g_print ((first_flag ? "" : ", "));
+      if (!first_flag)
+        g_print (", ");
+      else
+        first_flag = FALSE;
       g_print (_("controllable"));
-      first_flag = FALSE;
     }
     n_print ("\n");
 
@@ -456,9 +467,11 @@ print_element_properties_info (GstElement * element)
 
           j = 0;
           while (values[j].value_name) {
-            g_print ("\n%s%-23.23s    (%d): %-16s - %s", "",
-                _name, values[j].value, values[j].value_nick,
-                values[j].value_name);
+            g_print ("\n");
+            if (_name)
+              g_print (_name);
+            g_print ("%-23.23s    (%d): %-16s - %s", "",
+                values[j].value, values[j].value_nick, values[j].value_name);
             j++;
           }
           /* g_type_class_unref (ec); */
@@ -488,9 +501,11 @@ print_element_properties_info (GstElement * element)
 
           j = 0;
           while (values[j].value_name) {
-            g_print ("\n%s%-23.23s    (0x%08x): %-16s - %s", "",
-                _name, values[j].value, values[j].value_nick,
-                values[j].value_name);
+            g_print ("\n");
+            if (_name)
+              g_print (_name);
+            g_print ("%-23.23s    (0x%08x): %-16s - %s", "",
+                values[j].value, values[j].value_nick, values[j].value_name);
             j++;
           }
 
@@ -795,21 +810,25 @@ print_signal_info (GstElement * element)
           g_type_name (query->return_type), g_type_name (type));
 
       for (j = 0; j < query->n_params; j++) {
+        if (_name)
+          g_print (_name);
         if (G_TYPE_IS_FUNDAMENTAL (query->param_types[j])) {
-          g_print (",\n%s%s%s arg%d", _name, indent,
+          g_print (",\n%s%s arg%d", indent,
               g_type_name (query->param_types[j]), j);
         } else if (G_TYPE_IS_ENUM (query->param_types[j])) {
-          g_print (",\n%s%s%s arg%d", _name, indent,
+          g_print (",\n%s%s arg%d", indent,
               g_type_name (query->param_types[j]), j);
         } else {
-          g_print (",\n%s%s%s* arg%d", _name, indent,
+          g_print (",\n%s%s* arg%d", indent,
               g_type_name (query->param_types[j]), j);
         }
       }
 
-      if (k == 0)
-        g_print (",\n%s%sgpointer user_data);\n", _name, indent);
-      else
+      if (k == 0) {
+        if (_name)
+          g_print (_name);
+        g_print (",\n%sgpointer user_data);\n", indent);
+      } else
         g_print (");\n");
 
       g_free (indent);
@@ -874,7 +893,8 @@ print_element_list (gboolean print_all)
           print_element_info (factory, TRUE);
         else
           g_print ("%s:  %s: %s\n", plugin->desc.name,
-              GST_PLUGIN_FEATURE_NAME (factory), factory->details.longname);
+              GST_PLUGIN_FEATURE_NAME (factory),
+              gst_element_factory_get_longname (factory));
       }
 #ifndef GST_DISABLE_INDEX
       else if (GST_IS_INDEX_FACTORY (feature)) {
@@ -970,7 +990,7 @@ print_plugin_features (GstPlugin * plugin)
 
       factory = GST_ELEMENT_FACTORY (feature);
       n_print ("  %s: %s\n", GST_PLUGIN_FEATURE_NAME (factory),
-          factory->details.longname);
+          gst_element_factory_get_longname (factory));
       num_elements++;
     }
 #ifndef GST_DISABLE_INDEX
@@ -1071,7 +1091,7 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   if (print_names)
     _name = g_strdup_printf ("%s: ", GST_PLUGIN_FEATURE (factory)->name);
   else
-    _name = "";
+    _name = NULL;
 
   print_factory_details_info (factory);
   if (GST_PLUGIN_FEATURE (factory)->plugin_name) {
