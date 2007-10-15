@@ -319,7 +319,6 @@ static void gst_queue_get_property (GObject * object,
 static GstFlowReturn gst_queue_chain (GstPad * pad, GstBuffer * buffer);
 static GstFlowReturn gst_queue_bufferalloc (GstPad * pad, guint64 offset,
     guint size, GstCaps * caps, GstBuffer ** buf);
-static gboolean gst_queue_acceptcaps (GstPad * pad, GstCaps * caps);
 static GstFlowReturn gst_queue_push_one (GstQueue * queue);
 static void gst_queue_loop (GstPad * pad);
 
@@ -445,8 +444,6 @@ gst_queue_init (GstQueue * queue, GstQueueClass * g_class)
       GST_DEBUG_FUNCPTR (gst_queue_get_range));
   gst_pad_set_checkgetrange_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_src_checkgetrange_function));
-  gst_pad_set_acceptcaps_function (queue->srcpad,
-      GST_DEBUG_FUNCPTR (gst_queue_acceptcaps));
   gst_pad_set_getcaps_function (queue->srcpad,
       GST_DEBUG_FUNCPTR (gst_queue_getcaps));
   gst_pad_set_event_function (queue->srcpad,
@@ -545,14 +542,6 @@ gst_queue_bufferalloc (GstPad * pad, guint64 offset, guint size, GstCaps * caps,
   result = gst_pad_alloc_buffer (queue->srcpad, offset, size, caps, buf);
 
   return result;
-}
-
-static gboolean
-gst_queue_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  /* The only time our acceptcaps method should be called is on the srcpad
-   * when we push a buffer, in which case we always accepted those caps */
-  return TRUE;
 }
 
 /* calculate the diff between running time on the sink and src of the queue.
@@ -1359,9 +1348,18 @@ gst_queue_push_one (GstQueue * queue)
 
 next:
   if (GST_IS_BUFFER (data)) {
-    GstBuffer *buffer = GST_BUFFER_CAST (data);
+    GstBuffer *buffer;
+    GstCaps *caps;
+
+    buffer = GST_BUFFER_CAST (data);
+    caps = GST_BUFFER_CAPS (buffer);
 
     GST_QUEUE_MUTEX_UNLOCK (queue);
+
+    /* set caps before pushing the buffer so that core does not try to do
+     * something fancy to check if this is possible. */
+    if (caps && caps != GST_PAD_CAPS (queue->srcpad))
+      gst_pad_set_caps (queue->srcpad, caps);
 
     result = gst_pad_push (queue->srcpad, buffer);
 

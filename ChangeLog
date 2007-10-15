@@ -1,3 +1,8 @@
+2007-10-15  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/playback/gstqueue2.c: (gst_queue_init), (gst_queue_push_one):
+	Fix queue negotiation. See #486758.
+
 2007-10-12  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xwindow_decorate),
