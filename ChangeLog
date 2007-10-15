@@ -1,5 +1,11 @@
 2007-10-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstbuffer.h:
+	  Define GST_BUFFER_FLAG_GAP more strictly to enable optimizations based
+	  on it. Fix docs for GST_BUFFER_MALLOCDATA and GstBuffer.malloc_data.
+
+2007-10-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* tools/gst-inspect.c:
 	  Save approx. 400 1 byte allocs when printing. Use API to acces element
 	  details.

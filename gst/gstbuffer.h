@@ -136,7 +136,7 @@ typedef struct _GstBufferClass GstBufferClass;
  * GST_BUFFER_MALLOCDATA:
  * @buf: a #GstBuffer.
  *
- * A pointer to any data allocated for this buffer using malloc(). If this is 
+ * A pointer to any data allocated for this buffer using g_malloc(). If this is 
  * non-NULL, this memory will be freed at the end of the buffer's lifecycle 
  * (i.e. when its refcount becomes zero).
  */
@@ -198,7 +198,8 @@ typedef struct _GstBufferClass GstBufferClass;
  * network source.
  * @GST_BUFFER_FLAG_IN_CAPS: the buffer has been added as a field in a #GstCaps.
  * @GST_BUFFER_FLAG_GAP: the buffer has been created to fill a gap in the
- * stream.
+ * stream and contains media neutral data (elements can switch to optimized code
+ * path that ignores the buffer content).
  * @GST_BUFFER_FLAG_DELTA_UNIT: this unit cannot be decoded independently.
  * @GST_BUFFER_FLAG_LAST: additional flags can be added starting from this flag.
  *
@@ -233,7 +234,7 @@ typedef enum {
  * @offset_end: the last offset contained in this buffer. It has the same 
  *     format as @offset.
  * @malloc_data: a pointer to the allocated memory associated with this buffer.
- *     When the buffer is freed, this data will freed with free().
+ *     When the buffer is freed, this data will freed with g_free().
  *
  * The structure of a #GstBuffer. Use the associated macros to access the public
  * variables.
