@@ -1464,6 +1464,7 @@ gst_structure_value_get_generic_type (GValue * val)
   return G_VALUE_TYPE (val);
 }
 
+/* keep in sync with gstvalue.c */
 #define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
       ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
       ((c) == '.'))
@@ -1494,7 +1495,7 @@ gst_structure_to_string (const GstStructure * structure)
 
   s = g_string_new ("");
   /* FIXME this string may need to be escaped */
-  g_string_append_printf (s, "%s", g_quark_to_string (structure->name));
+  g_string_append_printf (s, "\"%s\"", g_quark_to_string (structure->name));
   for (i = 0; i < structure->fields->len; i++) {
     char *t;
     GType type;
@@ -1565,7 +1566,6 @@ gst_structure_parse_range (gchar * s, gchar ** after, GValue * value,
   GValue value2 = { 0 };
   GType range_type;
   gboolean ret;
-
 
   if (*s != '[')
     return FALSE;
@@ -1861,13 +1861,18 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   r = copy;
 
   name = r;
-  if (!gst_structure_parse_string (r, &w, &r))
+  if (!gst_structure_parse_string (r, &w, &r)) {
+    GST_WARNING ("Failed to parse structure string");
     goto error;
+  }
 
+  /* skip spaces */
   while (g_ascii_isspace (*r) || (r[0] == '\\' && g_ascii_isspace (r[1])))
     r++;
-  if (*r != 0 && *r != ';' && *r != ',')
+  if (*r != 0 && *r != ';' && *r != ',') {
+    GST_WARNING ("Failed to find delimiter, r=%s", r);
     goto error;
+  }
 
   save = *w;
   *w = 0;
@@ -1875,8 +1880,10 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   *w = save;
 
   while (*r && (*r != ';')) {
-    if (*r != ',')
+    if (*r != ',') {
+      GST_WARNING ("Failed to find delimiter, r=%s", r);
       goto error;
+    }
     r++;
     while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
                 && g_ascii_isspace (r[1]))))

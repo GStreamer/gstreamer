@@ -1711,6 +1711,7 @@ gst_value_compare_string (const GValue * value1, const GValue * value2)
   return GST_VALUE_EQUAL;
 }
 
+/* keep in sync with gststructure.c */
 #define GST_ASCII_IS_STRING(c) (g_ascii_isalnum((c)) || ((c) == '_') || \
     ((c) == '-') || ((c) == '+') || ((c) == '/') || ((c) == ':') || \
     ((c) == '.'))

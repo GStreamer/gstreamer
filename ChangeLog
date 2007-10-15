@@ -1,5 +1,12 @@
 2007-10-15  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gststructure.c:
+	* gst/gstvalue.c:
+	  Add some more comments and debug output. Quote structure name to fix
+	  deserialisation of some strings.
+
+2007-10-15  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstbuffer.h:
 	  Define GST_BUFFER_FLAG_GAP more strictly to enable optimizations based
 	  on it. Fix docs for GST_BUFFER_MALLOCDATA and GstBuffer.malloc_data.
