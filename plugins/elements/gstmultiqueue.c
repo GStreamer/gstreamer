@@ -601,10 +601,12 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
   if (GST_IS_BUFFER (object)) {
     GstBuffer *buffer;
     GstClockTime timestamp, duration;
+    GstCaps *caps;
 
     buffer = GST_BUFFER_CAST (object);
     timestamp = GST_BUFFER_TIMESTAMP (buffer);
     duration = GST_BUFFER_DURATION (buffer);
+    caps = GST_BUFFER_CAPS (buffer);
 
     apply_buffer (mq, sq, timestamp, duration, &sq->src_segment);
 
@@ -614,6 +616,12 @@ gst_single_queue_push_one (GstMultiQueue * mq, GstSingleQueue * sq,
     GST_DEBUG_OBJECT (mq,
         "SingleQueue %d : Pushing buffer %p with ts %" GST_TIME_FORMAT,
         sq->id, buffer, GST_TIME_ARGS (timestamp));
+
+    /* Set caps on pad before pushing, this avoids core calling the accpetcaps
+     * function on the srcpad, which will call acceptcaps upstream, which might
+     * not accept these caps (anymore). */
+    if (caps && caps != GST_PAD_CAPS (sq->srcpad))
+      gst_pad_set_caps (sq->srcpad, caps);
 
     result = gst_pad_push (sq->srcpad, buffer);
   } else if (GST_IS_EVENT (object)) {
@@ -1031,12 +1039,6 @@ gst_multi_queue_src_activate_push (GstPad * pad, gboolean active)
 }
 
 static gboolean
-gst_multi_queue_acceptcaps (GstPad * pad, GstCaps * caps)
-{
-  return TRUE;
-}
-
-static gboolean
 gst_multi_queue_src_event (GstPad * pad, GstEvent * event)
 {
   GstSingleQueue *sq = gst_pad_get_element_private (pad);
@@ -1345,8 +1347,6 @@ gst_single_queue_new (GstMultiQueue * mqueue)
 
   gst_pad_set_activatepush_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_src_activate_push));
-  gst_pad_set_acceptcaps_function (sq->srcpad,
-      GST_DEBUG_FUNCPTR (gst_multi_queue_acceptcaps));
   gst_pad_set_getcaps_function (sq->srcpad,
       GST_DEBUG_FUNCPTR (gst_multi_queue_getcaps));
   gst_pad_set_event_function (sq->srcpad,

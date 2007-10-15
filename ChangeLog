@@ -1,3 +1,16 @@
+2007-10-15  Wim Taymans  <wim.taymans@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c: (gst_single_queue_push_one),
+	(gst_single_queue_new):
+	* plugins/elements/gstqueue.c: (gst_queue_init),
+	(gst_queue_push_one):
+	Fix queue negotiation. If acceptcaps unconditionally returns TRUE,
+	upstream is tricked into thinking it can suggest a format downstream
+	while downstream does not support that format. The real problem is that
+	core calls acceptcaps when pushing a buffer with new caps, for which we
+	do a little workaround by setting the caps on the srcpad ourselves
+	before pushing the buffer (until this is figured out). Fixes #486758.
+
 2007-10-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gststructure.c:
