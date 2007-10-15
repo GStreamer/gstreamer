@@ -1,3 +1,8 @@
+2007-10-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstinfo.c:
+	  Fix some spelling errors.
+
 2007-10-14  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gstbin.c: (bin_handle_async_done):

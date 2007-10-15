@@ -23,7 +23,7 @@
 
 /**
  * SECTION:gstinfo
- * @short_description: Debugging and logging facillities
+ * @short_description: Debugging and logging facilities
  * @see_also: #GstConfig, #Gst for command line parameters
  * and environment variables that affect the debugging output.
  *
@@ -77,7 +77,7 @@
  * subsystem was compiled out, #GST_DISABLE_GST_DEBUG is defined in
  * &lt;gst/gst.h&gt;,
  * so you can check that before doing your trick.
- * Disabling the debugging subsystem will give you a slight (read: unnoticable)
+ * Disabling the debugging subsystem will give you a slight (read: unnoticeable)
  * speed increase and will reduce the size of your compiled code. The GStreamer
  * library itself becomes around 10% smaller.
  *
@@ -104,6 +104,7 @@
 #  include <process.h>          /* getpid on win32 */
 #endif
 #include <string.h>             /* G_VA_COPY */
+
 #include "gst_private.h"
 #include "gstutils.h"
 #include "gstsegment.h"
@@ -692,7 +693,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
  * gst_debug_level_get_name:
  * @level: the level to get the name for
  *
- * Get the string trepresentation of a debugging level
+ * Get the string representation of a debugging level
  *
  * Returns: the name
  */
@@ -797,7 +798,7 @@ gst_debug_remove_with_compare_func (GCompareFunc func, gpointer data)
  * gst_debug_remove_log_function:
  * @func: the log function to remove
  *
- * Removes all registrered instances of the given logging functions.
+ * Removes all registered instances of the given logging functions.
  *
  * Returns: How many instances of the function were removed
  */
@@ -821,7 +822,7 @@ gst_debug_remove_log_function (GstLogFunction func)
  * gst_debug_remove_log_function_by_data:
  * @data: user data of the log function to remove
  *
- * Removes all registrered instances of log functions with the given user data.
+ * Removes all registered instances of log functions with the given user data.
  *
  * Returns: How many instances of the function were removed
  */
@@ -1127,7 +1128,7 @@ gst_debug_category_reset_threshold (GstDebugCategory * category)
  * gst_debug_category_get_threshold:
  * @category: a #GstDebugCategory to get threshold of.
  *
- * Returns the threshold of a #GstCategory.
+ * Returns the threshold of a #GstDebugCategory.
  *
  * Returns: the #GstDebugLevel that is used as threshold.
  */
@@ -1264,6 +1265,8 @@ _gst_debug_register_funcptr (GstDebugFuncPtr func, const gchar * ptrname)
   g_static_mutex_unlock (&__dbg_functions_mutex);
 }
 
+/*** PRINTF EXTENSIONS ********************************************************/
+
 #ifdef HAVE_PRINTF_EXTENSION
 static int
 _gst_info_printf_extension_ptr (FILE * stream, const struct printf_info *info,
@@ -1374,7 +1377,7 @@ __cyg_profile_func_exit (void *this_fn, void *call_site)
 /**
  * gst_debug_print_stack_trace:
  *
- * If GST_ENABLE_FUNC_INSTRUMENTATION is defined a stacktracke is available for
+ * If GST_ENABLE_FUNC_INSTRUMENTATION is defined a stacktrace is available for
  * gstreamer code, which can be printed with this function.
  */
 void
@@ -1401,4 +1404,4 @@ gst_debug_print_stack_trace (void)
   /* nothing because it's compiled out */
 }
 
-#endif /* GST_ENABLE_FUNC_INTSTRUMENTATION */
+#endif /* GST_ENABLE_FUNC_INSTRUMENTATION */
