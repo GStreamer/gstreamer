@@ -1,3 +1,9 @@
+2007-10-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/gst/gststructure.c:
+	  Add unit test for escaping of structure name when serialising
+	  and deserialising to/from strings.
+
 2007-10-15  Wim Taymans  <wim.taymans@gmail.com>
 
 	* plugins/elements/gstmultiqueue.c: (gst_single_queue_push_one),
