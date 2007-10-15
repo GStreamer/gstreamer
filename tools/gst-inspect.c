@@ -1118,8 +1118,7 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   print_children_info (element);
 
   gst_object_unref (factory);
-  if (_name[0] != '\0')
-    g_free (_name);
+  g_free (_name);
 
   return 0;
 }

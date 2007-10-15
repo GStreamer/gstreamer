@@ -1,3 +1,8 @@
+2007-10-15  Wim Taymans  <wim.taymans@gmail.com>
+
+	* tools/gst-inspect.c: (print_element_info):
+	Don't crash when inspecting an element.
+
 2007-10-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/gst/gststructure.c:
