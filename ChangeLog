@@ -1,5 +1,10 @@
 2007-10-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/libs/gstreamer-libs-sections.txt:
+	  Make gtk-doc ignore stuff it should ignore.
+
+2007-10-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* libs/gst/check/gstcheck.c:
 	* libs/gst/check/gstcheck.h:
 	  Allow runtime selection of unit tests to run via the GST_CHECKS

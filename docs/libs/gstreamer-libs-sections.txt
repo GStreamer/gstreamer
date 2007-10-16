@@ -540,6 +540,8 @@ GST_CHECK_MAIN
 
 gst_check_chain_func
 gst_check_abi_list
+
+tcase_add_test
 </SECTION>
 
 <SECTION>
