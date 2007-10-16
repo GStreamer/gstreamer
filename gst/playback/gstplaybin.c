@@ -1812,6 +1812,7 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
       /* FIXME Release audio device when we implement that */
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+    case GST_STATE_CHANGE_READY_TO_NULL:
       /* remove sinks we added */
       remove_sinks (play_bin);
       /* and there might be a fakesink we need to clean up now */

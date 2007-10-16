@@ -1143,8 +1143,6 @@ type_found (GstElement * typefind, guint probability,
 {
   GstPad *pad;
 
-  GST_STATE_LOCK (decode_bin);
-
   GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
   /* we can only deal with one type, we don't yet support dynamically changing
@@ -1161,7 +1159,6 @@ type_found (GstElement * typefind, guint probability,
   gst_object_unref (pad);
 
 exit:
-  GST_STATE_UNLOCK (decode_bin);
   return;
 }
 
@@ -1184,6 +1181,7 @@ pad_added_group_cb (GstElement * element, GstPad * pad, GstDecodeGroup * group)
   if (group->nbdynamic == 0)
     expose = TRUE;
   GROUP_MUTEX_UNLOCK (group);
+
   if (expose) {
     GST_LOG
         ("That was the last dynamic object, now attempting to expose the group");

@@ -1261,11 +1261,13 @@ new_pad (GstElement * element, GstPad * pad, GstDynamic * dynamic)
 
 shutting_down1:
   {
+    GST_DEBUG_OBJECT (decode_bin, "we are shutting down");
     GST_OBJECT_UNLOCK (decode_bin);
     return;
   }
 shutting_down2:
   {
+    GST_DEBUG_OBJECT (decode_bin, "we are shutting down");
     GST_STATE_UNLOCK (decode_bin);
     return;
   }
@@ -1537,6 +1539,13 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
   gboolean dynamic;
   GstPad *pad;
 
+  GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
+
+  GST_OBJECT_LOCK (decode_bin);
+  if (decode_bin->shutting_down)
+    goto shutting_down;
+  GST_OBJECT_UNLOCK (decode_bin);
+
   GST_STATE_LOCK (decode_bin);
   if (decode_bin->shutting_down)
     goto exit;
@@ -1547,8 +1556,6 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
     goto exit;
 
   decode_bin->have_type = TRUE;
-
-  GST_DEBUG_OBJECT (decode_bin, "typefind found caps %" GST_PTR_FORMAT, caps);
 
   /* special-case text/plain: we only want to accept it as a raw type if it
    * comes from a subtitel parser element or a demuxer, but not if it is the
@@ -1582,6 +1589,13 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
 exit:
   GST_STATE_UNLOCK (decode_bin);
   return;
+
+shutting_down:
+  {
+    GST_DEBUG_OBJECT (decode_bin, "we are shutting down");
+    GST_OBJECT_UNLOCK (decode_bin);
+    return;
+  }
 }
 
 static void
