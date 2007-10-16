@@ -377,6 +377,33 @@ rfb_decoder_state_security_result (RfbDecoder * decoder)
   return TRUE;
 }
 
+/**
+ * rfb_decoder_state_set_encodings:
+ * @decoder: The rfb context
+ *
+ * Sends the encoding types that the client can decode to the server
+ *
+ * Returns: TRUE if initialization was succesfull, FALSE on fail.
+ */
+static gboolean
+rfb_decoder_state_set_encodings (RfbDecoder * decoder)
+{
+  guint8 *buffer = g_malloc0 (8);       // 4 + 4 * nr_of_encodings
+
+  buffer[0] = 2;                // message-type
+  buffer[3] = 1;                //  number of encodings
+
+  /* RAW encoding (0) */
+
+  rfb_decoder_send (decoder, buffer, 8);
+
+  g_free (buffer);
+
+  decoder->state = rfb_decoder_state_normal;
+
+  return TRUE;
+}
+
 static gboolean
 rfb_decoder_state_send_client_initialisation (RfbDecoder * decoder)
 {
@@ -433,9 +460,6 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
   g_free (buffer);
   GST_DEBUG ("name       = %s", decoder->name);
 
-  decoder->state = rfb_decoder_state_normal;
-  decoder->inited = TRUE;
-
   /* check if we need cropping */
 
   if (decoder->offset_x > 0) {
@@ -466,6 +490,9 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
       decoder->height = decoder->rect_height;
     }
   }
+
+  decoder->state = rfb_decoder_state_set_encodings;
+  decoder->inited = TRUE;
 
   return TRUE;
 }

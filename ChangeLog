@@ -1,5 +1,10 @@
 2007-10-16  Thijs Vermeir  <thijsvermeir@gmail.com>
 
+	* gst/librfb/rfbdecoder.c:
+		Add the set encodings client message
+
+2007-10-16  Thijs Vermeir  <thijsvermeir@gmail.com>
+
 	* gst/librfb/Makefile.am:
 	* gst/librfb/rfb.h:
 	* gst/librfb/rfbbytestream.c:
