@@ -1484,6 +1484,8 @@ gst_structure_to_string (const GstStructure * structure)
   GstStructureField *field;
   GString *s;
   guint i;
+  const gchar *name;
+  gchar *name_esc;
 
   /* NOTE:  This function is potentially called by the debug system,
    * so any calls to gst_log() (and GST_DEBUG(), GST_LOG(), etc.)
@@ -1494,8 +1496,15 @@ gst_structure_to_string (const GstStructure * structure)
   g_return_val_if_fail (structure != NULL, NULL);
 
   s = g_string_new ("");
-  /* FIXME this string may need to be escaped */
-  g_string_append_printf (s, "\"%s\"", g_quark_to_string (structure->name));
+  /* this string may need to be escaped */
+  name = g_quark_to_string (structure->name);
+  name_esc = g_strescape (name, NULL);
+  if ((strlen (name) < strlen (name_esc)) || strchr (name, ' ')) {
+    g_string_append_printf (s, "\"%s\"", name);
+  } else {
+    g_string_append_printf (s, "%s", name);
+  }
+  g_free (name_esc);
   for (i = 0; i < structure->fields->len; i++) {
     char *t;
     GType type;
@@ -1505,6 +1514,7 @@ gst_structure_to_string (const GstStructure * structure)
     t = gst_value_serialize (&field->value);
     type = gst_structure_value_get_generic_type (&field->value);
 
+    /* FIXME: do we need to escape fieldnames? */
     g_string_append_printf (s, ", %s=(%s)%s", g_quark_to_string (field->name),
         gst_structure_to_abbr (type), GST_STR_NULL (t));
     g_free (t);

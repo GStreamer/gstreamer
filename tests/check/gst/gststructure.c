@@ -119,11 +119,34 @@ GST_START_TEST (test_from_string)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_to_string)
+{
+  GstStructure *st1, *st2;
+  gchar *str;
+
+  /* use structure name and string with spaces, to test escaping/unescaping */
+  st1 = gst_structure_new ("Foo Bar\nwith newline", "num", G_TYPE_INT, 9173,
+      "string", G_TYPE_STRING, "Something Like Face/Off", NULL);
+  str = gst_structure_to_string (st1);
+  st2 = gst_structure_from_string (str, NULL);
+  g_free (str);
+
+  fail_unless (st2 != NULL);
+  fail_unless (!strcmp ("Foo Bar\nwith newline", gst_structure_get_name (st2)));
+
+  gst_structure_free (st2);
+  gst_structure_free (st1);
+}
+
+GST_END_TEST;
+
+
 GST_START_TEST (test_to_from_string)
 {
   GstCaps *caps1, *caps2;
   GstStructure *st1, *st2;
-  gchar *str, *res1, *res2;;
+  gchar *str, *res1, *res2;
 
   /* use structure name and string with spaces, to test escaping/unescaping */
   st1 = gst_structure_new ("Foo Bar", "num", G_TYPE_INT, 9173,
@@ -131,6 +154,8 @@ GST_START_TEST (test_to_from_string)
   str = gst_structure_to_string (st1);
   st2 = gst_structure_from_string (str, NULL);
   g_free (str);
+
+  fail_unless (st2 != NULL);
 
   /* need to put stuctures into caps to compare */
   caps1 = gst_caps_new_empty ();
@@ -283,6 +308,7 @@ gst_structure_suite (void)
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_from_string_int);
   tcase_add_test (tc_chain, test_from_string);
+  tcase_add_test (tc_chain, test_to_string);
   tcase_add_test (tc_chain, test_to_from_string);
   tcase_add_test (tc_chain, test_complete_structure);
   tcase_add_test (tc_chain, test_structure_new);

@@ -1,3 +1,12 @@
+2007-10-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gststructure.c:
+	  Improve serialization and fix tests.
+
+	* tests/check/gst/gststructure.c:
+	  Add another test that covers why I actually did the previous structure
+	  change.
+
 2007-10-15  Wim Taymans  <wim.taymans@gmail.com>
 
 	* tools/gst-inspect.c: (print_element_info):
