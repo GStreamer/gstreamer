@@ -153,7 +153,7 @@ gst_structure_validate_name (const gchar * name)
 
   /* FIXME: test name string more */
   s = &name[1];
-  while (*s && (g_ascii_isalnum (*s) || strchr ("/-_.:", *s) != NULL))
+  while (*s && (g_ascii_isalnum (*s) || strchr ("/-_.:+", *s) != NULL))
     s++;
   if (*s != '\0') {
     GST_WARNING ("Invalid character '%c' at offset %lu in structure name: %s",

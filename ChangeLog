@@ -1,5 +1,11 @@
 2007-10-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gststructure.c:
+	  Allow '+' as well, it can be part of media or mime types
+	  such as image/svg+xml.
+
+2007-10-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstbus.c:
 	* gst/gstbus.h:
