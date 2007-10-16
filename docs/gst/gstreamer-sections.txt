@@ -97,7 +97,9 @@ gst_bus_post
 gst_bus_have_pending
 gst_bus_peek
 gst_bus_pop
+gst_bus_pop_filtered
 gst_bus_timed_pop
+gst_bus_timed_pop_filtered
 gst_bus_set_flushing
 gst_bus_set_sync_handler
 gst_bus_sync_signal_handler

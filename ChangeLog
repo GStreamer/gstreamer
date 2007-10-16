@@ -1,5 +1,19 @@
 2007-10-16  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbus.c:
+	* gst/gstbus.h:
+	  API: add gst_bus_pop_filtered
+	  API: add gst_bus_timed_pop_filtered
+	  Two new functions for waiting for specific message types on the
+	  bus for a specified amount of time without iterating any main
+	  loops or main contexts.
+
+	* tests/check/gst/gstbus.c:
+	  Some tests for the new functions.
+
+2007-10-16  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/libs/gstreamer-libs-sections.txt:
 	  Make gtk-doc ignore stuff it should ignore.
 

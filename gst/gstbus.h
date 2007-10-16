@@ -150,7 +150,9 @@ gboolean 		gst_bus_post 			(GstBus * bus, GstMessage * message);
 gboolean 		gst_bus_have_pending 		(GstBus * bus);
 GstMessage *		gst_bus_peek 			(GstBus * bus);
 GstMessage *		gst_bus_pop 			(GstBus * bus);
+GstMessage *		gst_bus_pop_filtered		(GstBus * bus, GstMessageType types);
 GstMessage *		gst_bus_timed_pop 		(GstBus * bus, GstClockTime timeout);
+GstMessage *		gst_bus_timed_pop_filtered 	(GstBus * bus, GstClockTime timeout, GstMessageType types);
 void			gst_bus_set_flushing		(GstBus * bus, gboolean flushing);
 
 /* synchronous dispatching */

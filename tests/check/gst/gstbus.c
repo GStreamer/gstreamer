@@ -1,7 +1,6 @@
-/* GStreamer
+/* GStreamer message bus unit tests
  * Copyright (C) 2005 Andy Wingo <wingo@pobox.com>
- *
- * gstbus.c: Unit test for the message bus
+ * Copyright (C) 2007 Tim-Philipp Müller <tim centricular net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -194,6 +193,42 @@ message_func (GstBus * bus, GstMessage * message, gpointer data)
 }
 
 static void
+send_5app_1el_1err_2app_messages (guint interval_usecs)
+{
+  GstMessage *m;
+  GstStructure *s;
+  gint i;
+
+  for (i = 0; i < 5; i++) {
+    s = gst_structure_new ("test_message", "msg_id", G_TYPE_INT, i, NULL);
+    m = gst_message_new_application (NULL, s);
+    GST_LOG ("posting application message");
+    gst_bus_post (test_bus, m);
+    g_usleep (interval_usecs);
+  }
+  for (i = 0; i < 1; i++) {
+    s = gst_structure_new ("test_message", "msg_id", G_TYPE_INT, i, NULL);
+    m = gst_message_new_element (NULL, s);
+    GST_LOG ("posting element message");
+    gst_bus_post (test_bus, m);
+    g_usleep (interval_usecs);
+  }
+  for (i = 0; i < 1; i++) {
+    m = gst_message_new_error (NULL, NULL, "debug string");
+    GST_LOG ("posting error message");
+    gst_bus_post (test_bus, m);
+    g_usleep (interval_usecs);
+  }
+  for (i = 0; i < 2; i++) {
+    s = gst_structure_new ("test_message", "msg_id", G_TYPE_INT, i, NULL);
+    m = gst_message_new_application (NULL, s);
+    GST_LOG ("posting application message");
+    gst_bus_post (test_bus, m);
+    g_usleep (interval_usecs);
+  }
+}
+
+static void
 send_10_app_messages (void)
 {
   GstMessage *m;
@@ -247,6 +282,106 @@ GST_START_TEST (test_timed_pop)
     gst_message_unref (gst_bus_timed_pop (test_bus, GST_CLOCK_TIME_NONE));
 
   fail_if (gst_bus_have_pending (test_bus), "unexpected messages on bus");
+
+  gst_object_unref (test_bus);
+}
+
+GST_END_TEST;
+
+/* test that you get the messages with pop_filtered */
+GST_START_TEST (test_timed_pop_filtered)
+{
+  GstMessage *msg;
+  guint i;
+
+  test_bus = gst_bus_new ();
+
+  send_10_app_messages ();
+  for (i = 0; i < 10; i++) {
+    msg = gst_bus_timed_pop_filtered (test_bus, GST_CLOCK_TIME_NONE,
+        GST_MESSAGE_ANY);
+    fail_unless (msg != NULL);
+    gst_message_unref (msg);
+  }
+
+  /* should flush all messages on the bus with types not matching */
+  send_10_app_messages ();
+  msg = gst_bus_timed_pop_filtered (test_bus, 0,
+      GST_MESSAGE_ANY ^ GST_MESSAGE_APPLICATION);
+  fail_unless (msg == NULL);
+  msg = gst_bus_timed_pop_filtered (test_bus, GST_SECOND / 2,
+      GST_MESSAGE_ANY ^ GST_MESSAGE_APPLICATION);
+  fail_unless (msg == NULL);
+  /* there should be nothing on the bus now */
+  fail_if (gst_bus_have_pending (test_bus), "unexpected messages on bus");
+  msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_ANY);
+  fail_unless (msg == NULL);
+
+  send_5app_1el_1err_2app_messages (0);
+  msg = gst_bus_timed_pop_filtered (test_bus, 0,
+      GST_MESSAGE_ANY ^ GST_MESSAGE_APPLICATION);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  gst_message_unref (msg);
+  fail_unless (gst_bus_have_pending (test_bus), "expected messages on bus");
+  msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_APPLICATION);
+  fail_unless (msg != NULL);
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_APPLICATION);
+  gst_message_unref (msg);
+  msg = gst_bus_timed_pop_filtered (test_bus, 0, GST_MESSAGE_ERROR);
+  fail_unless (msg == NULL);
+
+  gst_object_unref (test_bus);
+}
+
+GST_END_TEST;
+
+static gpointer
+post_delayed_thread (gpointer data)
+{
+  THREAD_START ();
+  send_5app_1el_1err_2app_messages (1 * G_USEC_PER_SEC);
+  return NULL;
+}
+
+/* test that you get the messages with pop_filtered if there's a timeout*/
+GST_START_TEST (test_timed_pop_filtered_with_timeout)
+{
+  GstMessage *msg;
+
+  MAIN_INIT ();
+
+  test_bus = gst_bus_new ();
+
+  MAIN_START_THREAD_FUNCTIONS (1, post_delayed_thread, NULL);
+
+  MAIN_SYNCHRONIZE ();
+
+  msg = gst_bus_timed_pop_filtered (test_bus, 2 * GST_SECOND,
+      GST_MESSAGE_ERROR);
+  fail_unless (msg == NULL, "Got unexpected %s message",
+      (msg) ? GST_MESSAGE_TYPE_NAME (msg) : "");
+  msg = gst_bus_timed_pop_filtered (test_bus, (3 + 1 + 1 + 1) * GST_SECOND,
+      GST_MESSAGE_ERROR | GST_MESSAGE_ELEMENT);
+  fail_unless (msg != NULL, "expected element message, but got nothing");
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_ELEMENT);
+  gst_message_unref (msg);
+  msg = gst_bus_timed_pop_filtered (test_bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_APPLICATION);
+  fail_unless (msg != NULL, "expected application message, but got nothing");
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_APPLICATION);
+  gst_message_unref (msg);
+  msg = gst_bus_timed_pop_filtered (test_bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_APPLICATION);
+  fail_unless (msg != NULL, "expected application message, but got nothing");
+  fail_unless_equals_int (GST_MESSAGE_TYPE (msg), GST_MESSAGE_APPLICATION);
+  gst_message_unref (msg);
+  msg = gst_bus_timed_pop_filtered (test_bus, GST_SECOND / 4,
+      GST_MESSAGE_TAG | GST_MESSAGE_ERROR);
+  fail_unless (msg == NULL, "Got unexpected %s message",
+      (msg) ? GST_MESSAGE_TYPE_NAME (msg) : "");
+
+  MAIN_STOP_THREADS ();
 
   gst_object_unref (test_bus);
 }
@@ -307,6 +442,8 @@ gst_bus_suite (void)
   tcase_add_test (tc_chain, test_watch_with_poll);
   tcase_add_test (tc_chain, test_timed_pop);
   tcase_add_test (tc_chain, test_timed_pop_thread);
+  tcase_add_test (tc_chain, test_timed_pop_filtered);
+  tcase_add_test (tc_chain, test_timed_pop_filtered_with_timeout);
   return s;
 }
 

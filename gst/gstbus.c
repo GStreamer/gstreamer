@@ -331,8 +331,10 @@ gst_bus_post (GstBus * bus, GstMessage * message)
   g_return_val_if_fail (GST_IS_BUS (bus), FALSE);
   g_return_val_if_fail (GST_IS_MESSAGE (message), FALSE);
 
-  GST_DEBUG_OBJECT (bus, "[msg %p] posting on bus, type %s, %" GST_PTR_FORMAT,
-      message, GST_MESSAGE_TYPE_NAME (message), message->structure);
+  GST_DEBUG_OBJECT (bus, "[msg %p] posting on bus, type %s, %" GST_PTR_FORMAT
+      " from source %" GST_PTR_FORMAT,
+      message, GST_MESSAGE_TYPE_NAME (message), message->structure,
+      message->src);
 
   GST_OBJECT_LOCK (bus);
   /* check if the bus is flushing */
@@ -484,6 +486,98 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
   GST_OBJECT_UNLOCK (bus);
 }
 
+/**
+ * gst_bus_timed_pop_filtered:
+ * @bus: a #GstBus to pop from
+ * @timeout: a timeout in nanoseconds, or GST_CLOCK_TIME_NONE to wait forever
+ * @types: message types to take into account, GST_MESSAGE_ANY for any type
+ *
+ * Get a message from the bus whose type matches the message type mask @types,
+ * waiting up to the specified timeout (and discarding any messages that do not
+ * match the mask provided).
+ *
+ * If @timeout is 0, this function behaves like gst_bus_pop_filtered(). If
+ * @timeout is #GST_CLOCK_TIME_NONE, this function will block forever until a
+ * matching message was posted on the bus.
+ *
+ * Returns: a #GstMessage matching the filter in @types, or NULL if no matching
+ * message was found on the bus until the timeout expired.
+ * The message is taken from the bus and needs to be unreffed with
+ * gst_message_unref() after usage.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.15
+ */
+GstMessage *
+gst_bus_timed_pop_filtered (GstBus * bus, GstClockTime timeout,
+    GstMessageType types)
+{
+  GstMessage *message;
+  GTimeVal *timeval, abstimeout;
+  gboolean first_round = TRUE;
+
+  g_return_val_if_fail (GST_IS_BUS (bus), NULL);
+  g_return_val_if_fail (types != 0, NULL);
+
+  g_mutex_lock (bus->queue_lock);
+
+  while (TRUE) {
+    GST_LOG_OBJECT (bus, "have %d messages", g_queue_get_length (bus->queue));
+
+    while ((message = g_queue_pop_head (bus->queue))) {
+      GST_DEBUG_OBJECT (bus, "got message %p, %s, type mask is %u",
+          message, GST_MESSAGE_TYPE_NAME (message), (guint) types);
+      if ((GST_MESSAGE_TYPE (message) & types) != 0) {
+        /* exit the loop, we have a message */
+        goto beach;
+      } else {
+        GST_DEBUG_OBJECT (bus, "discarding message, does not match mask");
+        gst_message_unref (message);
+        message = NULL;
+      }
+    }
+
+    /* no need to wait, exit loop */
+    if (timeout == 0)
+      break;
+
+    if (timeout == GST_CLOCK_TIME_NONE) {
+      /* wait forever */
+      timeval = NULL;
+    } else if (first_round) {
+      glong add = timeout / 1000;
+
+      if (add == 0)
+        /* no need to wait */
+        break;
+
+      /* make timeout absolute */
+      g_get_current_time (&abstimeout);
+      g_time_val_add (&abstimeout, add);
+      timeval = &abstimeout;
+      first_round = FALSE;
+      GST_DEBUG_OBJECT (bus, "blocking for message, timeout %ld", add);
+    } else {
+      /* calculated the absolute end time already, no need to do it again */
+      GST_DEBUG_OBJECT (bus, "blocking for message, again");
+      timeval = &abstimeout;    /* fool compiler */
+    }
+    if (!g_cond_timed_wait (bus->priv->queue_cond, bus->queue_lock, timeval)) {
+      GST_INFO_OBJECT (bus, "timed out, breaking loop");
+      break;
+    } else {
+      GST_INFO_OBJECT (bus, "we got woken up, recheck for message");
+    }
+  }
+
+beach:
+
+  g_mutex_unlock (bus->queue_lock);
+
+  return message;
+}
+
 
 /**
  * gst_bus_timed_pop:
@@ -508,53 +602,37 @@ gst_bus_set_flushing (GstBus * bus, gboolean flushing)
 GstMessage *
 gst_bus_timed_pop (GstBus * bus, GstClockTime timeout)
 {
-  GstMessage *message;
-  GTimeVal *timeval, abstimeout;
-
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
-  g_mutex_lock (bus->queue_lock);
-  while (TRUE) {
-    message = g_queue_pop_head (bus->queue);
-    if (message) {
-      GST_DEBUG_OBJECT (bus,
-          "pop from bus, have %d messages, got message %p, %s",
-          g_queue_get_length (bus->queue) + 1, message,
-          GST_MESSAGE_TYPE_NAME (message));
-      /* exit the loop, we have a message */
-      break;
-    } else {
-      GST_DEBUG_OBJECT (bus, "pop from bus, no messages");
-      /* no need to wait, exit loop */
-      if (timeout == 0)
-        break;
-      if (timeout == GST_CLOCK_TIME_NONE) {
-        /* wait forever */
-        timeval = NULL;
-      } else {
-        glong add = timeout / 1000;
+  return gst_bus_timed_pop_filtered (bus, timeout, GST_MESSAGE_ANY);
+}
 
-        if (add == 0)
-          /* no need to wait */
-          break;
+/**
+ * gst_bus_pop_filtered:
+ * @bus: a #GstBus to pop
+ * @types: message types to take into account
+ *
+ * Get a message matching @type from the bus.  Will discard all messages on
+ * the bus that do not match @type and that have been posted before the first
+ * message that does match @type.  If there is no message matching @type on
+ * the bus, all messages will be discarded.
+ *
+ * Returns: The next #GstMessage matching @type that is on the bus, or NULL if
+ *     the bus is empty or there is no message matching @type.
+ * The message is taken from the bus and needs to be unreffed with
+ * gst_message_unref() after usage.
+ *
+ * MT safe.
+ *
+ * Since: 0.10.15
+ */
+GstMessage *
+gst_bus_pop_filtered (GstBus * bus, GstMessageType types)
+{
+  g_return_val_if_fail (GST_IS_BUS (bus), NULL);
+  g_return_val_if_fail (types != 0, NULL);
 
-        /* make timeout absolute */
-        g_get_current_time (&abstimeout);
-        g_time_val_add (&abstimeout, add);
-        timeval = &abstimeout;
-        GST_DEBUG_OBJECT (bus, "blocking for message, timeout %ld", add);
-      }
-      if (!g_cond_timed_wait (bus->priv->queue_cond, bus->queue_lock, timeval)) {
-        GST_INFO_OBJECT (bus, "timed out, breaking loop");
-        break;
-      } else {
-        GST_INFO_OBJECT (bus, "we got woken up, recheck for message");
-      }
-    }
-  }
-  g_mutex_unlock (bus->queue_lock);
-
-  return message;
+  return gst_bus_timed_pop_filtered (bus, 0, types);
 }
 
 /**
@@ -574,7 +652,7 @@ gst_bus_pop (GstBus * bus)
 {
   g_return_val_if_fail (GST_IS_BUS (bus), NULL);
 
-  return gst_bus_timed_pop (bus, 0);
+  return gst_bus_timed_pop_filtered (bus, 0, GST_MESSAGE_ANY);
 }
 
 /**
