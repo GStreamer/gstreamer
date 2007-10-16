@@ -1,3 +1,13 @@
+2007-10-16  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/Makefile.am:
+	* gst/librfb/rfb.h:
+	* gst/librfb/rfbbytestream.c:
+	* gst/librfb/rfbbytestream.h:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+		remove the rfbbytestream dead code
+
 2007-10-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	patch by: Alessandro Decina

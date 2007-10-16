@@ -48,9 +48,6 @@ static gboolean rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder *
     decoder);
 static gboolean rfb_decoder_state_set_colour_map_entries (RfbDecoder * decoder);
 static gboolean rfb_decoder_state_server_cut_text (RfbDecoder * decoder);
-static RfbBuffer *rfb_socket_get_buffer (gint length, gpointer user_data);
-static gint rfb_socket_send_buffer (guint8 * buffer, gint length,
-    gpointer user_data);
 
 RfbDecoder *
 rfb_decoder_new (void)
@@ -58,7 +55,6 @@ rfb_decoder_new (void)
   RfbDecoder *decoder = g_new0 (RfbDecoder, 1);
 
   decoder->fd = -1;
-  decoder->bytestream = rfb_bytestream_new ();
 
   decoder->password = NULL;
 
@@ -75,26 +71,8 @@ rfb_decoder_free (RfbDecoder * decoder)
 {
   g_return_if_fail (decoder != NULL);
 
-  rfb_bytestream_free (decoder->bytestream);
   if (decoder->fd >= 0)
     close (decoder->fd);
-}
-
-void
-rfb_decoder_use_file_descriptor (RfbDecoder * decoder, gint fd)
-{
-  g_return_if_fail (decoder != NULL);
-  g_return_if_fail (decoder->fd == -1);
-  g_return_if_fail (!decoder->inited);
-  g_return_if_fail (fd >= 0);
-
-  decoder->fd = fd;
-
-  decoder->bytestream->get_buffer = rfb_socket_get_buffer;
-  decoder->bytestream->user_data = GINT_TO_POINTER (fd);
-
-  decoder->send_data = rfb_socket_send_buffer;
-  decoder->buffer_handler_data = GINT_TO_POINTER (fd);
 }
 
 gboolean
@@ -630,47 +608,4 @@ rfb_decoder_state_server_cut_text (RfbDecoder * decoder)
   g_critical ("not implemented");
 
   return FALSE;
-}
-
-static RfbBuffer *
-rfb_socket_get_buffer (gint length, gpointer user_data)
-{
-  RfbBuffer *buffer;
-  gint fd = GPOINTER_TO_INT (user_data);
-  gint ret;
-
-  buffer = rfb_buffer_new ();
-
-  buffer->data = g_malloc (length);
-  buffer->free_data = (RfbBufferFreeFunc) g_free;
-
-  // g_print ("calling read(%d, %p, %d)\n", fd, buffer->data, length);
-  ret = read (fd, buffer->data, length);
-  if (ret <= 0) {
-    g_critical ("read: %s", strerror (errno));
-    rfb_buffer_free (buffer);
-    return NULL;
-  }
-
-  buffer->length = ret;
-
-  return buffer;
-}
-
-static gint
-rfb_socket_send_buffer (guint8 * buffer, gint length, gpointer user_data)
-{
-  gint fd = GPOINTER_TO_INT (user_data);
-  gint ret;
-
-  // g_print ("calling write(%d, %p, %d)\n", fd, buffer, length);
-  ret = write (fd, buffer, length);
-  if (ret < 0) {
-    g_critical ("write: %s", strerror (errno));
-    return 0;
-  }
-
-  g_assert (ret == length);
-
-  return ret;
 }

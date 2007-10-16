@@ -11,7 +11,6 @@ libgstrfbsrc_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 librfb_la_SOURCES = \
 	rfbbuffer.c \
 	rfbdecoder.c \
-	rfbbytestream.c \
 	d3des.c \
 	vncauth.c
 librfb_la_CFLAGS = $(GST_CFLAGS) -I$(srcdir)/..
@@ -21,7 +20,6 @@ noinst_HEADERS = \
 	rfb.h \
 	rfbdecoder.h \
 	rfbbuffer.h \
-	rfbbytestream.h \
 	rfbcontext.h \
 	rfbutil.h \
 	gstrfbsrc.h \

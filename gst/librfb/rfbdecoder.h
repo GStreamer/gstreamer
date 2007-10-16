@@ -2,7 +2,6 @@
 #define _LIBRFB_DECODER_H_
 
 #include <glib.h>
-#include <librfb/rfbbytestream.h>
 
 G_BEGIN_DECLS
 
@@ -32,7 +31,6 @@ struct _RfbDecoder
   gpointer buffer_handler_data;
 
   gint fd;
-  RfbBytestream *bytestream;
 
   gpointer decoder_private;
 
