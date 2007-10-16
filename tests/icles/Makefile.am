@@ -21,4 +21,8 @@ else
 PANGO_TESTS = 
 endif
 
-noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS)
+stress_playbin_SOURCES = stress-playbin.c
+stress_playbin_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+stress_playbin_LDFLAGS = $(GST_LIBS) $(LIBM)
+
+noinst_PROGRAMS = $(X_TESTS) $(PANGO_TESTS) stress-playbin

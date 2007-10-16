@@ -1,3 +1,10 @@
+2007-10-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/icles/.cvsignore:
+	* tests/icles/Makefile.am:
+	* tests/icles/stress-playbin.c:
+	  Does what it says on the tin.
+
 2007-10-15  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/playback/gstqueue2.c: (gst_queue_init), (gst_queue_push_one):
