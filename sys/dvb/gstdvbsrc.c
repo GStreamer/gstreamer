@@ -105,7 +105,8 @@ enum
   ARG_DVBSRC_TRANSMISSION_MODE,
   ARG_DVBSRC_HIERARCHY_INF,
   ARG_DVBSRC_TUNE,
-  ARG_DVBSRC_INVERSION
+  ARG_DVBSRC_INVERSION,
+  ARG_DVBSRC_STATS_REPORTING_INTERVAL
 };
 
 static void gst_dvbsrc_output_frontend_stats (GstDvbSrc * src);
@@ -246,9 +247,9 @@ gst_dvbsrc_inversion_get_type (void)
 {
   static GType dvbsrc_inversion_type = 0;
   static GEnumValue inversion_types[] = {
-    {INVERSION_AUTO, "AUTO", "AUTO"},
+    {INVERSION_OFF, "OFF", "OFF"},
     {INVERSION_ON, "ON", "ON"},
-    {INVERSION_AUTO, "OFF", "OFF"},
+    {INVERSION_AUTO, "AUTO", "AUTO"},
     {0, NULL, NULL},
   };
 
@@ -384,50 +385,57 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DVBSRC_BANDWIDTH,
       g_param_spec_enum ("bandwidth",
           "bandwidth",
-          "Bandwidth (DVB-T)", GST_TYPE_DVBSRC_BANDWIDTH, 1, G_PARAM_WRITABLE));
+          "Bandwidth (DVB-T)", GST_TYPE_DVBSRC_BANDWIDTH, 1,
+          G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_HP,
       g_param_spec_enum ("code-rate-hp",
           "code-rate-hp",
           "High Priority Code Rate (DVB-T)",
-          GST_TYPE_DVBSRC_CODE_RATE, 1, G_PARAM_WRITABLE));
+          GST_TYPE_DVBSRC_CODE_RATE, 1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_LP,
       g_param_spec_enum ("code-rate-lp",
           "code-rate-lp",
           "Low Priority Code Rate (DVB-T)",
-          GST_TYPE_DVBSRC_CODE_RATE, 1, G_PARAM_WRITABLE));
+          GST_TYPE_DVBSRC_CODE_RATE, 1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_GUARD,
       g_param_spec_enum ("guard",
           "guard",
           "Guard Interval (DVB-T)",
-          GST_TYPE_DVBSRC_GUARD, 1, G_PARAM_WRITABLE));
+          GST_TYPE_DVBSRC_GUARD, 1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_MODULATION,
       g_param_spec_enum ("modulation",
           "modulation",
           "Modulation (DVB-T)",
-          GST_TYPE_DVBSRC_MODULATION, 1, G_PARAM_WRITABLE));
+          GST_TYPE_DVBSRC_MODULATION, 1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class,
       ARG_DVBSRC_TRANSMISSION_MODE,
       g_param_spec_enum ("trans-mode",
           "trans-mode",
           "Transmission Mode (DVB-T)",
-          GST_TYPE_DVBSRC_TRANSMISSION_MODE, 1, G_PARAM_WRITABLE));
+          GST_TYPE_DVBSRC_TRANSMISSION_MODE, 1, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_HIERARCHY_INF,
       g_param_spec_enum ("hierarchy",
           "hierarchy",
           "Hierarchy Information (DVB-T)",
-          GST_TYPE_DVBSRC_HIERARCHY, 1, G_PARAM_WRITABLE));
+          GST_TYPE_DVBSRC_HIERARCHY, 1, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_DVBSRC_INVERSION,
       g_param_spec_enum ("inversion",
           "inversion",
           "Inversion Information (DVB-T)",
-          GST_TYPE_DVBSRC_INVERSION, 1, G_PARAM_WRITABLE));
+          GST_TYPE_DVBSRC_INVERSION, 1, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class,
+      ARG_DVBSRC_STATS_REPORTING_INTERVAL,
+      g_param_spec_uint ("stats-reporting-interval",
+          "stats-reporting-interval",
+          "The number of reads before reporting frontend stats",
+          0, G_MAXUINT, 100, G_PARAM_READWRITE));
 }
 
 /* initialize the new element
@@ -449,7 +457,7 @@ gst_dvbsrc_init (GstDvbSrc * object, GstDvbSrcClass * klass)
   object->fd_dvr = -1;
 
   for (i = 0; i < MAX_FILTERS; i++) {
-    object->pids[i] = 0;
+    object->pids[i] = G_MAXUINT16;
     object->fd_filters[i] = -1;
   }
   /* Pid 8192 on DVB gets the whole transport stream */
@@ -504,32 +512,44 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
       break;
     case ARG_DVBSRC_PIDS:
     {
-      int pid = 0;
-      int pid_count = 0;
       gchar *pid_string;
-      gchar **pids;
-      char **tmp;
 
       GST_INFO_OBJECT (object, "Set Property: ARG_DVBSRC_PIDS");
       pid_string = g_value_dup_string (value);
-      tmp = pids = g_strsplit (pid_string, ":", MAX_FILTERS);
-      while (*pids != NULL && pid_count < MAX_FILTERS) {
-        pid = strtol (*pids, NULL, 0);
-        if (pid > 0 && pid <= 8192) {
-          GST_INFO_OBJECT (object, "Parsed Pid: %d\n", pid);
-          object->pids[pid_count] = pid;
-          pid_count++;
+      if (!strcmp (pid_string, "8192")) {
+        /* get the whole ts */
+        object->pids[0] = 8192;
+      } else {
+        int pid = 0;
+        int pid_count;
+        gchar **pids;
+        char **tmp;
+
+        tmp = pids = g_strsplit (pid_string, ":", MAX_FILTERS);
+
+        /* always add the PAT and CAT pids */
+        object->pids[0] = 0;
+        object->pids[1] = 1;
+
+        pid_count = 2;
+        while (*pids != NULL && pid_count < MAX_FILTERS) {
+          pid = strtol (*pids, NULL, 0);
+          if (pid > 1 && pid <= 8192) {
+            GST_INFO_OBJECT (object, "Parsed Pid: %d\n", pid);
+            object->pids[pid_count] = pid;
+            pid_count++;
+          }
+          pids++;
         }
-        pids++;
+
+        g_strfreev (tmp);
       }
-      g_strfreev (tmp);
       /* if we are in playing, then set filters now */
       GST_INFO_OBJECT (object, "checking if playing for setting pes filters");
       if (GST_ELEMENT (object)->current_state == GST_STATE_PLAYING) {
         GST_INFO_OBJECT (object, "Setting pes filters now");
         gst_dvbsrc_set_pes_filters (object);
       }
-
     }
       break;
     case ARG_DVBSRC_SYM_RATE:
@@ -573,6 +593,10 @@ gst_dvbsrc_set_property (GObject * _object, guint prop_id,
         g_mutex_unlock (object->tune_mutex);
       }
       break;
+    case ARG_DVBSRC_STATS_REPORTING_INTERVAL:
+      object->stats_interval = g_value_get_uint (value);
+      object->stats_counter = 0;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
   }
@@ -609,6 +633,33 @@ gst_dvbsrc_get_property (GObject * _object, guint prop_id,
       break;
     case ARG_DVBSRC_DISEQC_SRC:
       g_value_set_int (value, object->diseqc_src);
+      break;
+    case ARG_DVBSRC_BANDWIDTH:
+      g_value_set_enum (value, object->bandwidth);
+      break;
+    case ARG_DVBSRC_CODE_RATE_HP:
+      g_value_set_enum (value, object->code_rate_hp);
+      break;
+    case ARG_DVBSRC_CODE_RATE_LP:
+      g_value_set_enum (value, object->code_rate_lp);
+      break;
+    case ARG_DVBSRC_GUARD:
+      g_value_set_enum (value, object->guard_interval);
+      break;
+    case ARG_DVBSRC_MODULATION:
+      g_value_set_enum (value, object->modulation);
+      break;
+    case ARG_DVBSRC_TRANSMISSION_MODE:
+      g_value_set_enum (value, object->transmission_mode);
+      break;
+    case ARG_DVBSRC_HIERARCHY_INF:
+      g_value_set_enum (value, object->hierarchy_information);
+      break;
+    case ARG_DVBSRC_INVERSION:
+      g_value_set_enum (value, object->inversion);
+      break;
+    case ARG_DVBSRC_STATS_REPORTING_INTERVAL:
+      g_value_set_uint (value, object->stats_interval);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -737,6 +788,9 @@ gst_dvbsrc_finalize (GObject * _object)
 
   /* freeing the mutex segfaults somehow */
   g_mutex_free (object->tune_mutex);
+
+  if (G_OBJECT_CLASS (parent_class)->finalize)
+    G_OBJECT_CLASS (parent_class)->finalize (_object);
 }
 
 
@@ -755,8 +809,8 @@ gst_dvbsrc_finalize (GObject * _object)
  * register the element factories and pad templates
  * register the features
  */
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+gst_dvbsrc_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gstdvbsrc_debug, "dvbsrc", 0, "DVB Source Element");
 
@@ -769,12 +823,6 @@ plugin_init (GstPlugin * plugin)
   return gst_element_register (plugin, "dvbsrc", GST_RANK_NONE,
       GST_TYPE_DVBSRC);
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "dvbsrc",
-    "DVB Source", plugin_init, VERSION, "LGPL", "", "University of Paderborn");
-
 
 static GstBuffer *
 read_device (int fd, int adapter_number, int frontend_number, int size)
@@ -843,7 +891,6 @@ read_device (int fd, int adapter_number, int frontend_number, int size)
 static GstFlowReturn
 gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
 {
-  static int quality_signal_rate = 0;   /* FIXME: move into object struct? */
   gint buffer_size;
   GstFlowReturn retval = GST_FLOW_ERROR;
   GstDvbSrc *object;
@@ -871,16 +918,14 @@ gst_dvbsrc_create (GstPushSrc * element, GstBuffer ** buf)
       caps = gst_pad_get_caps (GST_BASE_SRC_PAD (object));
       gst_buffer_set_caps (*buf, caps);
       gst_caps_unref (caps);
-
-      /* Every now and then signal signal quality */
-      if (quality_signal_rate == 100) {
-        gst_dvbsrc_output_frontend_stats (object);
-        quality_signal_rate = 0;
-      } else {
-        quality_signal_rate++;
-      }
     } else {
       GST_DEBUG_OBJECT (object, "Failed to read from device");
+    }
+
+    if (object->stats_interval != 0 &&
+        ++object->stats_counter == object->stats_interval) {
+      gst_dvbsrc_output_frontend_stats (object);
+      object->stats_counter = 0;
     }
   }
 
@@ -1188,7 +1233,7 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
   GST_INFO_OBJECT (object, "Setting PES filter");
 
   for (i = 0; i < MAX_FILTERS; i++) {
-    if (object->pids[i] == 0)
+    if (object->pids[i] == G_MAXUINT16)
       break;
 
     fd = &object->fd_filters[i];
@@ -1214,29 +1259,6 @@ gst_dvbsrc_set_pes_filters (GstDvbSrc * object)
       GST_WARNING_OBJECT (object, "Error setting PES filter on %s: %s",
           demux_dev, strerror (errno));
   }
-  /* always have PAT in the filter if we haven't used all our filter slots */
-  if (object->pids[0] != 8192 && i < MAX_FILTERS) {
-    /* pid 8192 means get whole ts */
-    pes_filter.pid = 0;
-    pes_filter.input = DMX_IN_FRONTEND;
-    pes_filter.output = DMX_OUT_TS_TAP;
-    pes_filter.pes_type = DMX_PES_OTHER;
-    pes_filter.flags = DMX_IMMEDIATE_START;
 
-    fd = &object->fd_filters[i];
-    close (*fd);
-    if ((*fd = open (demux_dev, O_RDWR)) < 0) {
-      GST_WARNING_OBJECT ("Error opening demuxer: %s (%s)",
-          strerror (errno), demux_dev);
-    } else {
-      GST_INFO_OBJECT (object, "Setting pes-filter, pid = %d, type = %d",
-          pes_filter.pid, pes_filter.pes_type);
-
-      if (ioctl (*fd, DMX_SET_PES_FILTER, &pes_filter) < 0)
-        GST_WARNING_OBJECT (object, "Error setting PES filter on %s: %s",
-            demux_dev, strerror (errno));
-    }
-  }
   g_free (demux_dev);
-
 }

@@ -2,6 +2,43 @@
 
 	patch by: Alessandro Decina
 
+	* sys/dvb/Makefile.am:
+	* sys/dvb/cam.c:
+	* sys/dvb/cam.h:
+	* sys/dvb/camapplication.c:
+	* sys/dvb/camapplication.h:
+	* sys/dvb/camapplicationinfo.c:
+	* sys/dvb/camapplicationinfo.h:
+	* sys/dvb/camconditionalaccess.c:
+	* sys/dvb/camconditionalaccess.h:
+	* sys/dvb/camdevice.c:
+	* sys/dvb/camdevice.h:
+	* sys/dvb/camresourcemanager.c:
+	* sys/dvb/camresourcemanager.h:
+	* sys/dvb/camsession.c:
+	* sys/dvb/camsession.h:
+	* sys/dvb/camswclient.c:
+	* sys/dvb/camswclient.h:
+	* sys/dvb/camtransport.c:
+	* sys/dvb/camtransport.h:
+	* sys/dvb/camutils.c:
+	* sys/dvb/camutils.h:
+	* sys/dvb/dvbbasebin.c:
+	* sys/dvb/dvbbasebin.h:
+	* sys/dvb/gstdvb.c:
+	* sys/dvb/gstdvbsrc.c:
+	* sys/dvb/gstdvbsrc.h:
+	Integrate SoC work done by Alessandro for the Freevo project.
+	Adds cam support to the dvb stack in GStreamer and a new
+	element (actually a bin) called dvbbasebin that integrates
+	dvbsrc and mpegtsparse to a) handle decryption and b) allow 
+	acquiring multiple channels on same transponder without 
+	knowing pid numbers.
+
+2007-10-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	patch by: Alessandro Decina
+
 	* gst/mpegtsparse/mpegtspacketizer.c:
 	* gst/mpegtsparse/mpegtsparse.c:
 	* gst/mpegtsparse/mpegtsparse.h:

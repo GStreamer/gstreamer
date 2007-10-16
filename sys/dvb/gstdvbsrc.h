@@ -24,7 +24,7 @@ G_BEGIN_DECLS
 #define DEFAULT_BUFFER_SIZE  8192
 #define DEFAULT_DISEQC_SRC -1   /* disabled */
 
-#define MAX_FILTERS 8
+#define MAX_FILTERS 32
 
 /* #define's don't like whitespacey bits */
 #define GST_TYPE_DVBSRC \
@@ -76,6 +76,8 @@ G_BEGIN_DECLS
     int inversion;
 
     GstDvbSrcPol pol;
+    guint stats_interval;
+    guint stats_counter;
   };
 
   struct _GstDvbSrcClass
@@ -88,6 +90,7 @@ G_BEGIN_DECLS
 
 
   GType gst_dvbsrc_get_type (void);
+  gboolean gst_dvbsrc_plugin_init (GstPlugin *plugin);
 
 G_END_DECLS
 
