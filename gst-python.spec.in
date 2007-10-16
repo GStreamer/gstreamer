@@ -63,6 +63,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/extend
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/_gst.so
 %{_libdir}/python?.?/site-packages/gst-%{majorminor}/gst/interfaces.so
+%{_libdir}/python?.?/site-packages/pygst.pyc
+%{_libdir}/python?.?/site-packages/pygst.pyo
+
 %{_datadir}/gst-python
 %{_libdir}/pkgconfig/gst-python-%{majorminor}.pc
 
