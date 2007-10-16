@@ -105,7 +105,8 @@ mpegts_packetizer_dispose (GObject * object)
     packetizer->disposed = TRUE;
   }
 
-  G_OBJECT_CLASS (mpegts_packetizer_parent_class)->dispose (object);
+  if (G_OBJECT_CLASS (mpegts_packetizer_parent_class)->dispose)
+    G_OBJECT_CLASS (mpegts_packetizer_parent_class)->dispose (object);
 }
 
 static gboolean
@@ -128,7 +129,8 @@ mpegts_packetizer_finalize (GObject * object)
       stream_foreach_remove, packetizer);
   g_hash_table_destroy (packetizer->streams);
 
-  G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize (object);
+  if (G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize)
+    G_OBJECT_CLASS (mpegts_packetizer_parent_class)->finalize (object);
 }
 
 static gboolean
@@ -142,20 +144,21 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer * packetizer,
   if (packet->adaptation_field_control == 0x02) {
     /* no payload, adaptation field of 183 bytes */
     if (length != 183) {
-      GST_WARNING ("PID %d afc == 0x%x and length %d != 183",
+      GST_DEBUG ("PID %d afc == 0x%x and length %d != 183",
           packet->pid, packet->adaptation_field_control, length);
     }
   } else if (length > 182) {
-    GST_WARNING ("PID %d afc == 0x%01x and length %d > 182",
+    GST_DEBUG ("PID %d afc == 0x%01x and length %d > 182",
         packet->pid, packet->adaptation_field_control, length);
   }
 
   /* skip the adaptation field body for now */
   if (packet->data + length > packet->data_end) {
-    GST_ERROR ("PID %d afc length overflows the buffer %d",
+    GST_DEBUG ("PID %d afc length overflows the buffer %d",
         packet->pid, length);
     return FALSE;
   }
+
   packet->data += length;
 
   return TRUE;
@@ -280,7 +283,13 @@ mpegts_packetizer_parse_pat (MpegTSPacketizer * packetizer,
     g_value_unset (&value);
   }
 
-  g_assert (data == end - 4);
+  if (data != end - 4) {
+    /* FIXME: check the CRC before parsing the packet */
+    GST_ERROR ("at the end of PAT data != end - 4");
+    g_value_array_free (pat);
+
+    return NULL;
+  }
 
   return pat;
 }

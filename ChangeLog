@@ -1,3 +1,12 @@
+2007-10-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	patch by: Alessandro Decina
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	* gst/mpegtsparse/mpegtsparse.c:
+	* gst/mpegtsparse/mpegtsparse.h:
+	Add request pad for getting the full transport stream coming in.
+
 2007-10-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

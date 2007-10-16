@@ -55,6 +55,7 @@ struct _MpegTSParse {
   GList *pads_to_add;
   GList *pads_to_remove;
   GHashTable *programs;
+  guint req_pads;
 
   GValueArray *pat_info;
   MpegTSPacketizer *packetizer;

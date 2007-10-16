@@ -48,6 +48,7 @@ typedef struct
 {
   gint program_number;
   guint16 pmt_pid;
+  guint16 pcr_pid;
   GObject *pmt_info;
   GHashTable *streams;
   gint patcount;
@@ -80,6 +81,12 @@ GST_ELEMENT_DETAILS ("MPEG transport stream parser",
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
+    );
+
+static GstStaticPadTemplate src_template =
+GST_STATIC_PAD_TEMPLATE ("src%d", GST_PAD_SRC,
+    GST_PAD_REQUEST,
     GST_STATIC_CAPS ("video/mpegts, " "systemstream = (boolean) true ")
     );
 
@@ -123,6 +130,9 @@ static void mpegts_parse_reset_selected_programs (MpegTSParse * parse,
     gchar * programs);
 
 static void mpegts_parse_pad_removed (GstElement * element, GstPad * pad);
+static GstPad *mpegts_parse_request_new_pad (GstElement * element,
+    GstPadTemplate * templ, const gchar * name);
+static void mpegts_parse_release_pad (GstElement * element, GstPad * pad);
 static GstFlowReturn mpegts_parse_chain (GstPad * pad, GstBuffer * buf);
 static gboolean mpegts_parse_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn mpegts_parse_change_state (GstElement * element,
@@ -140,6 +150,8 @@ mpegts_parse_base_init (gpointer klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
   gst_element_class_add_pad_template (element_class,
+      gst_static_pad_template_get (&src_template));
+  gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&program_template));
 
   gst_element_class_set_details (element_class, &mpegts_parse_details);
@@ -153,6 +165,8 @@ mpegts_parse_class_init (MpegTSParseClass * klass)
 
   element_class = GST_ELEMENT_CLASS (klass);
   element_class->pad_removed = mpegts_parse_pad_removed;
+  element_class->request_new_pad = mpegts_parse_request_new_pad;
+  element_class->release_pad = mpegts_parse_release_pad;
   element_class->change_state = mpegts_parse_change_state;
 
   gobject_class = G_OBJECT_CLASS (klass);
@@ -230,7 +244,8 @@ mpegts_parse_dispose (GObject * object)
     parse->disposed = TRUE;
   }
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  if (G_OBJECT_CLASS (parent_class)->dispose)
+    G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static void
@@ -244,7 +259,8 @@ mpegts_parse_finalize (GObject * object)
   g_hash_table_destroy (parse->programs);
   g_hash_table_destroy (parse->psi_pids);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  if (G_OBJECT_CLASS (parent_class)->finalize)
+    G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -289,6 +305,7 @@ mpegts_parse_add_program (MpegTSParse * parse,
   program = g_new0 (MpegTSParseProgram, 1);
   program->program_number = program_number;
   program->pmt_pid = pmt_pid;
+  program->pcr_pid = G_MAXUINT16;
   program->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) mpegts_parse_free_stream);
   program->patcount = 1;
@@ -529,6 +546,43 @@ mpegts_parse_pad_removed (GstElement * element, GstPad * pad)
 
   tspad = (MpegTSParsePad *) gst_pad_get_element_private (pad);
   mpegts_parse_destroy_tspad (parse, tspad);
+
+  if (GST_ELEMENT_CLASS (parent_class)->pad_removed)
+    GST_ELEMENT_CLASS (parent_class)->pad_removed (element, pad);
+}
+
+static GstPad *
+mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
+    const gchar * unused)
+{
+  MpegTSParse *parse;
+  gchar *name;
+  GstPad *pad;
+
+  g_return_val_if_fail (template != NULL, NULL);
+  g_return_val_if_fail (GST_IS_MPEGTS_PARSE (element), NULL);
+
+  parse = GST_MPEGTS_PARSE (element);
+
+  GST_OBJECT_LOCK (element);
+  name = g_strdup_printf ("src%d", parse->req_pads++);
+  GST_OBJECT_UNLOCK (element);
+
+  pad = mpegts_parse_create_tspad (parse, name)->pad;
+  gst_pad_set_active (pad, TRUE);
+  gst_element_add_pad (element, pad);
+
+  return pad;
+}
+
+static void
+mpegts_parse_release_pad (GstElement * element, GstPad * pad)
+{
+  g_return_if_fail (GST_IS_MPEGTS_PARSE (element));
+
+  gst_pad_set_active (pad, FALSE);
+  /* we do the cleanup in GstElement::pad-removed */
+  gst_element_remove_pad (element, pad);
 }
 
 static GstFlowReturn
@@ -538,11 +592,13 @@ mpegts_parse_tspad_push (MpegTSParse * parse, MpegTSParsePad * tspad,
   GstFlowReturn ret = GST_FLOW_NOT_LINKED;
   GHashTable *pad_pids = NULL;
   guint16 pmt_pid = G_MAXUINT16;
+  guint16 pcr_pid = G_MAXUINT16;
 
   if (tspad->program_number != -1) {
     if (tspad->program) {
       pad_pids = tspad->program->streams;
       pmt_pid = tspad->program->pmt_pid;
+      pcr_pid = tspad->program->pcr_pid;
     } else {
       /* there's a program filter on the pad but the PMT for the program has not
        * been parsed yet, ignore the pad until we get a PMT */
@@ -553,13 +609,12 @@ mpegts_parse_tspad_push (MpegTSParse * parse, MpegTSParsePad * tspad,
   }
 
   /* FIXME: send all the SI pids not only PAT and PMT */
-  if (pad_pids == NULL || pid == 0 || pid == pmt_pid ||
+  if (pad_pids == NULL || pid == pcr_pid || pid == pmt_pid || pid == 0 ||
       g_hash_table_lookup (pad_pids, GINT_TO_POINTER ((gint) pid)) != NULL) {
     /* push if there's no filter or if the pid is in the filter */
     ret = gst_pad_push (tspad->pad, buffer);
   } else {
     gst_buffer_unref (buffer);
-    /* caps don't include this pid */
     if (gst_pad_is_linked (tspad->pad))
       ret = GST_FLOW_OK;
   }
@@ -586,15 +641,22 @@ mpegts_parse_push (MpegTSParse * parse, MpegTSPacketizerPacket * packet)
   MpegTSParsePad *tspad;
   guint16 pid;
   GstBuffer *buffer;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstFlowReturn ret;
 
   pid = packet->pid;
   buffer = packet->buffer;
+  /* we have the same caps on all the src pads */
+  gst_buffer_set_caps (buffer,
+      gst_static_pad_template_get_caps (&src_template));
 
   GST_OBJECT_LOCK (parse);
   /* clear tspad->pushed on pads */
   g_list_foreach (GST_ELEMENT_CAST (parse)->srcpads,
       (GFunc) pad_clear_for_push, parse);
+  if (GST_ELEMENT_CAST (parse)->srcpads)
+    ret = GST_FLOW_NOT_LINKED;
+  else
+    ret = GST_FLOW_OK;
   GST_OBJECT_UNLOCK (parse);
 
   iterator = gst_element_iterate_src_pads (GST_ELEMENT_CAST (parse));
@@ -717,6 +779,12 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GValueArray * pat_info)
           "program-number", &program_number, "pid", &pid, NULL);
 
       program = mpegts_parse_get_program (parse, program_number);
+      if (program == NULL) {
+        GST_DEBUG_OBJECT (parse, "broken PAT, duplicated entry for program %d",
+            program_number);
+        continue;
+      }
+
       if (--program->patcount > 0)
         /* the program has been referenced by the new pat, keep it */
         continue;
@@ -790,6 +858,8 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   /* activate new pmt */
   program->pmt_info = pmt_info;
   program->pmt_pid = pmt_pid;
+  /* FIXME: check if the pcr pid is changed */
+  program->pcr_pid = pcr_pid;
   mpegts_parse_program_add_stream (parse, program, (guint16) pcr_pid, -1);
 
   for (i = 0; i < new_streams->n_values; ++i) {
@@ -797,6 +867,7 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
     stream = g_value_get_object (value);
 
     g_object_get (stream, "pid", &pid, "stream-type", &stream_type, NULL);
+    GST_DEBUG_OBJECT (parse, "PMT program %d pid %d", program_number, pid);
     mpegts_parse_program_add_stream (parse, program, (guint16) pid,
         (guint8) stream_type);
   }
