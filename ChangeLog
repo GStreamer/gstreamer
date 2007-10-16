@@ -1,3 +1,10 @@
+2007-10-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* libs/gst/check/gstcheck.c:
+	* libs/gst/check/gstcheck.h:
+	  Allow runtime selection of unit tests to run via the GST_CHECKS
+	  environment variable (test case function names, comma-separated).
+
 2007-10-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gststructure.c:

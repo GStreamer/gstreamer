@@ -329,3 +329,28 @@ gst_check_run_suite (Suite * suite, const gchar * name, const gchar * fname)
   srunner_free (sr);
   return nf;
 }
+
+gboolean
+_gst_check_run_test_func (const gchar * func_name)
+{
+  const gchar *gst_checks;
+  gboolean res = FALSE;
+  gchar **funcs, **f;
+
+  gst_checks = g_getenv ("GST_CHECKS");
+
+  /* no filter specified => run all checks */
+  if (gst_checks == NULL || *gst_checks == '\0')
+    return TRUE;
+
+  /* only run specified functions */
+  funcs = g_strsplit (gst_checks, ",", -1);
+  for (f = funcs; f != NULL && *f != NULL; ++f) {
+    if (strcmp (*f, func_name) == 0) {
+      res = TRUE;
+      break;
+    }
+  }
+  g_strfreev (funcs);
+  return res;
+}

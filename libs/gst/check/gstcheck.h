@@ -396,6 +396,22 @@ int main (int argc, char **argv)				\
   return gst_check_run_suite (s, # name, __FILE__);		\
 }
 
+/* Hack to allow run-time selection of unit tests to run via the
+ * GST_CHECKS environment variable (test function names, comma-separated) */
+
+gboolean _gst_check_run_test_func (const gchar * func_name);
+
+static inline void
+__gst_tcase_add_test (TCase * tc, TFun tf, const gchar * func_name)
+{
+  if (_gst_check_run_test_func (func_name)) {
+    tcase_add_test (tc, tf);
+  }
+}
+
+#undef tcase_add_test
+#define tcase_add_test(tc,tf) __gst_tcase_add_test(tc,tf,G_STRINGIFY(tf))
+
 G_END_DECLS
 
 #endif /* __GST_CHECK_H__ */
