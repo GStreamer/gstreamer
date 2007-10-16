@@ -1,6 +1,13 @@
 2007-10-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gststructure.c:
+	* tests/check/gst/gststructure.c:
+	  Revert serialisation change and constrain structure-names after
+	  consensus on irc. Update api documentation to reflect the change.
+
+2007-10-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gststructure.c:
 	  Improve serialization and fix tests.
 
 	* tests/check/gst/gststructure.c:

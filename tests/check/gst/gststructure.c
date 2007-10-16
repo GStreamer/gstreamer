@@ -122,21 +122,16 @@ GST_END_TEST;
 
 GST_START_TEST (test_to_string)
 {
-  GstStructure *st1, *st2;
-  gchar *str;
+  GstStructure *st1;
 
-  /* use structure name and string with spaces, to test escaping/unescaping */
-  st1 = gst_structure_new ("Foo Bar\nwith newline", "num", G_TYPE_INT, 9173,
-      "string", G_TYPE_STRING, "Something Like Face/Off", NULL);
-  str = gst_structure_to_string (st1);
-  st2 = gst_structure_from_string (str, NULL);
-  g_free (str);
+  ASSERT_CRITICAL (st1 = gst_structure_new ("Foo\nwith-newline", NULL));
+  fail_unless (st1 == NULL);
 
-  fail_unless (st2 != NULL);
-  fail_unless (!strcmp ("Foo Bar\nwith newline", gst_structure_get_name (st2)));
+  ASSERT_CRITICAL (st1 = gst_structure_new ("Foo with whitespace", NULL));
+  fail_unless (st1 == NULL);
 
-  gst_structure_free (st2);
-  gst_structure_free (st1);
+  ASSERT_CRITICAL (st1 = gst_structure_new ("1st", NULL));
+  fail_unless (st1 == NULL);
 }
 
 GST_END_TEST;
@@ -148,8 +143,8 @@ GST_START_TEST (test_to_from_string)
   GstStructure *st1, *st2;
   gchar *str, *res1, *res2;
 
-  /* use structure name and string with spaces, to test escaping/unescaping */
-  st1 = gst_structure_new ("Foo Bar", "num", G_TYPE_INT, 9173,
+  /* test escaping/unescaping */
+  st1 = gst_structure_new ("FooBar-123/0_1", "num", G_TYPE_INT, 9173,
       "string", G_TYPE_STRING, "Something Like Face/Off", NULL);
   str = gst_structure_to_string (st1);
   st2 = gst_structure_from_string (str, NULL);

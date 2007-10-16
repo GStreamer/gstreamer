@@ -27,7 +27,8 @@
  * A #GstStructure is a collection of key/value pairs. The keys are expressed
  * as GQuarks and the values can be of any GType.
  *
- * In addition to the key/value pairs, a #GstStructure also has a name.
+ * In addition to the key/value pairs, a #GstStructure also has a name. The name
+ * starts with a letter and can be folled by letters, numbers and any of "/-_.:".
  * 
  * #GstStructure is used by various GStreamer subsystems to store information
  * in a flexible and extensible way. A #GstStructure does not have a refcount
@@ -48,7 +49,7 @@
  * Fields can be removed with gst_structure_remove_field() or
  * gst_structure_remove_fields().
  *
- * Last reviewed on 2005-11-09 (0.9.4)
+ * Last reviewed on 2007-10-16 (0.10.15)
  */
 
 #ifdef HAVE_CONFIG_H
@@ -137,18 +138,46 @@ gst_structure_id_empty_new (GQuark quark)
   return gst_structure_id_empty_new_with_size (quark, 0);
 }
 
+static gboolean
+gst_structure_validate_name (const gchar * name)
+{
+  const gchar *s;
+
+  g_return_val_if_fail (name != NULL, FALSE);
+
+  if (!g_ascii_isalpha (*name)) {
+    GST_WARNING ("Invalid character '%c' at offset 0 in structure name: %s",
+        *name, name);
+    return FALSE;
+  }
+
+  /* FIXME: test name string more */
+  s = &name[1];
+  while (*s && (g_ascii_isalnum (*s) || strchr ("/-_.:", *s) != NULL))
+    s++;
+  if (*s != '\0') {
+    GST_WARNING ("Invalid character '%c' at offset %lu in structure name: %s",
+        *s, ((gulong) s - (gulong) name), name);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 /**
  * gst_structure_empty_new:
  * @name: name of new structure
  *
- * Creates a new, empty #GstStructure with the given name.
+ * Creates a new, empty #GstStructure with the given @name.
+ *
+ * See gst_structure_set_name() for constraints on the @name parameter.
  *
  * Returns: a new, empty #GstStructure
  */
 GstStructure *
 gst_structure_empty_new (const gchar * name)
 {
-  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (gst_structure_validate_name (name), NULL);
 
   return gst_structure_id_empty_new_with_size (g_quark_from_string (name), 0);
 }
@@ -189,9 +218,11 @@ gst_structure_new (const gchar * name, const gchar * firstfield, ...)
  * @firstfield: name of first field to set
  * @varargs: variable argument list
  *
- * Creates a new #GstStructure with the given name.  Structure fields
+ * Creates a new #GstStructure with the given @name.  Structure fields
  * are set according to the varargs in a manner similar to
- * @gst_structure_new.
+ * gst_structure_new().
+ *
+ * See gst_structure_set_name() for constraints on the @name parameter.
  *
  * Returns: a new #GstStructure
  */
@@ -331,6 +362,9 @@ gst_structure_has_name (const GstStructure * structure, const gchar * name)
   g_return_val_if_fail (structure != NULL, FALSE);
   g_return_val_if_fail (name != NULL, FALSE);
 
+  /* getting the string is cheap and comparing short strings is too
+   * should be faster than getting the quark for name and comparing the quarks
+   */
   structure_name = g_quark_to_string (structure->name);
 
   return (structure_name && strcmp (structure_name, name) == 0);
@@ -357,15 +391,16 @@ gst_structure_get_name_id (const GstStructure * structure)
  * @structure: a #GstStructure
  * @name: the new name of the structure
  *
- * Sets the name of the structure to the given name.  The string
- * provided is copied before being used.
+ * Sets the name of the structure to the given @name.  The string
+ * provided is copied before being used. It must be not empty, start with a
+ * letter and can be folled by letters, numbers and any of "/-_.:".
  */
 void
 gst_structure_set_name (GstStructure * structure, const gchar * name)
 {
   g_return_if_fail (structure != NULL);
-  g_return_if_fail (name != NULL);
   g_return_if_fail (IS_MUTABLE (structure));
+  g_return_if_fail (gst_structure_validate_name (name));
 
   structure->name = g_quark_from_string (name);
 }
@@ -1484,8 +1519,6 @@ gst_structure_to_string (const GstStructure * structure)
   GstStructureField *field;
   GString *s;
   guint i;
-  const gchar *name;
-  gchar *name_esc;
 
   /* NOTE:  This function is potentially called by the debug system,
    * so any calls to gst_log() (and GST_DEBUG(), GST_LOG(), etc.)
@@ -1496,15 +1529,7 @@ gst_structure_to_string (const GstStructure * structure)
   g_return_val_if_fail (structure != NULL, NULL);
 
   s = g_string_new ("");
-  /* this string may need to be escaped */
-  name = g_quark_to_string (structure->name);
-  name_esc = g_strescape (name, NULL);
-  if ((strlen (name) < strlen (name_esc)) || strchr (name, ' ')) {
-    g_string_append_printf (s, "\"%s\"", name);
-  } else {
-    g_string_append_printf (s, "%s", name);
-  }
-  g_free (name_esc);
+  g_string_append_printf (s, "%s", g_quark_to_string (structure->name));
   for (i = 0; i < structure->fields->len; i++) {
     char *t;
     GType type;
