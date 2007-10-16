@@ -1377,6 +1377,11 @@ gst_base_audio_sink_change_state (GstElement * element,
       gst_ring_buffer_release (sink->ringbuffer);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      /* we release again here because the aqcuire happens when setting the
+       * caps, which happens before we commit the state to PAUSED and thus the
+       * PAUSED->READY state change (see above, where we release the ringbuffer)
+       * might not be called when we get here. */
+      gst_ring_buffer_release (sink->ringbuffer);
       gst_ring_buffer_close_device (sink->ringbuffer);
       break;
     default:
