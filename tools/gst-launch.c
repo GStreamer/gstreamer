@@ -450,6 +450,11 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         gchar *debug;
         gchar *name = gst_object_get_path_string (GST_MESSAGE_SRC (message));
 
+        /* dump graph on warning */
+        GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+            GST_DEBUG_GRAPH_SHOW_ALL,
+            "/tmp/gst-launch.warning.%" GST_TIME_FORMAT ".dot");
+
         gst_message_parse_warning (message, &gerror, &debug);
         g_print (_("WARNING: from element %s: %s\n"), name, gerror->message);
         if (debug) {
@@ -464,6 +469,11 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         GError *gerror;
         gchar *debug;
 
+        /* dump graph on error */
+        GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+            GST_DEBUG_GRAPH_SHOW_ALL,
+            "/tmp/gst-launch.error.%" GST_TIME_FORMAT ".dot");
+
         gst_message_parse_error (message, &gerror, &debug);
         gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
         g_error_free (gerror);
@@ -477,9 +487,18 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         gst_message_parse_state_changed (message, &old, &new, &pending);
 
+        /* debug each state change
+           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(GST_BIN(pipeline),GST_DEBUG_GRAPH_SHOW_ALL,"/tmp/gst-launch.%" GST_TIME_FORMAT ".dot");
+         */
+
         /* we only care about pipeline state change messages */
         if (GST_MESSAGE_SRC (message) != GST_OBJECT_CAST (pipeline))
           break;
+
+        /* debug only overall state changes
+           FIXME: add statename to name template: gst_element_state_get_name(new);
+           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(GST_BIN(pipeline),GST_DEBUG_GRAPH_SHOW_ALL,"/tmp/gst-launch.%" GST_TIME_FORMAT ".dot");
+         */
 
         /* ignore when we are buffering since then we mess with the states
          * ourselves. */

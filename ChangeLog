@@ -1,3 +1,16 @@
+2007-10-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/Makefile.am:
+	* gst/gst.c:
+	* gst/gst.h:
+	* gst/gstdebugutils.c:
+	* gst/gstdebugutils.h:
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	* tools/gst-launch.c:
+	  Allow dumping pipelines as dot graphs. Fixes #456573.
+
 2007-10-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gststructure.c:

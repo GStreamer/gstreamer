@@ -134,6 +134,7 @@ static GList *plugin_paths = NULL;      /* for delayed processing in post_init *
 #endif
 
 extern gint _gst_trace_on;
+extern gboolean _gst_debug_dump_dot_files_on;
 
 /* defaults */
 #ifdef HAVE_FORK
@@ -585,6 +586,9 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     if (debug_list) {
       parse_debug_list (debug_list);
     }
+
+    if (g_getenv ("GST_DEBUG_DUMP_DOT_FILES") != NULL)
+      _gst_debug_dump_dot_files_on = TRUE;
   }
 #endif
   /* This is the earliest we can make stuff show up in the logs.

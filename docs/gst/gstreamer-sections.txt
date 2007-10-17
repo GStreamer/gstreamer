@@ -855,6 +855,7 @@ GstDebugLevel
 GST_LEVEL_DEFAULT
 GstDebugColorFlags
 GstDebugCategory
+GstDebugGraphDetails
 GST_STR_NULL
 GST_DEBUG_PAD_NAME
 GST_FUNCTION
@@ -911,12 +912,15 @@ GST_DEBUG
 GST_LOG
 GST_DEBUG_FUNCPTR
 GST_DEBUG_FUNCPTR_NAME
+GST_DEBUG_BIN_TO_DOT_FILE
+GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS
 gst_debug_print_stack_trace
 GST_TIME_FORMAT
 GST_TIME_ARGS
 <SUBSECTION Standard>
 GST_TYPE_DEBUG_COLOR_FLAGS
 GST_TYPE_DEBUG_LEVEL
+GST_TYPE_DEBUG_GRAPH_DETAILS
 <SUBSECTION Private>
 GST_DEBUG_FG_MASK
 GST_DEBUG_BG_MASK
@@ -925,6 +929,7 @@ GstDebugFuncPtr
 GstDebugMessage
 gst_debug_color_flags_get_type
 gst_debug_level_get_type
+gst_debug_graph_details_get_type
 IMPORT_SYMBOL
 M_PI
 </SECTION>

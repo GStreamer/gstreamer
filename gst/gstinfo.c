@@ -115,8 +115,12 @@
 
 /* underscore is to prevent conflict with GST_CAT_DEBUG define */
 GST_DEBUG_CATEGORY_STATIC (_GST_CAT_DEBUG);
-/* time of initialization, so we get useful debugging output times */
-static GstClockTime start_time;
+
+/* time of initialization, so we get useful debugging output times
+ * FIXME: we use this in gstdebugutils.c, what about a function + macro to
+ * get the running time: GST_DEBUG_RUNNING_TIME
+ */
+GstClockTime _gst_info_start_time;
 
 #if 0
 #if defined __sgi__
@@ -280,7 +284,7 @@ _gst_debug_init (void)
 
   /* get time we started for debugging messages */
   g_get_current_time (&current);
-  start_time = GST_TIMEVAL_TO_TIME (current);
+  _gst_info_start_time = GST_TIMEVAL_TO_TIME (current);
 
 #ifdef HAVE_PRINTF_EXTENSION
   register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension_ptr,
@@ -666,7 +670,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   }
 
   g_get_current_time (&now);
-  elapsed = GST_TIMEVAL_TO_TIME (now) - start_time;
+  elapsed = GST_TIMEVAL_TO_TIME (now) - _gst_info_start_time;
 
   /*
      g_printerr ("%s (%p - %" GST_TIME_FORMAT ") %s%20s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",

@@ -28,6 +28,7 @@
 #include <glib-object.h>
 #include <gst/gstconfig.h>
 
+
 #ifndef _MSC_VER
 #define IMPORT_SYMBOL
 #else /* _MSC_VER */
@@ -928,7 +929,9 @@ G_CONST_RETURN gchar *
 #define GST_DEBUG_FUNCPTR_NAME(ptr) \
   _gst_debug_nameof_funcptr((GstDebugFuncPtr)ptr)
 
+
 #else /* GST_DISABLE_GST_DEBUG */
+
 
 #if defined(__GNUC__) && __GNUC__ >= 3
 #  pragma GCC poison gst_debug_log
@@ -1148,6 +1151,7 @@ GST_LOG (const char *format, ...)
 #define GST_DEBUG_FUNCPTR_NAME(ptr) (g_strdup_printf ("%p", ptr))
 
 #endif /* GST_DISABLE_GST_DEBUG */
+
 
 void gst_debug_print_stack_trace (void);
 
