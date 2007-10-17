@@ -1,7 +1,13 @@
+2007-10-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/dvb/camapplication.c:
+	* sys/dvb/camresourcemanager.c:
+	  Fix some warnings.
+
 2007-10-16  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/rfbdecoder.c:
-		Add the set encodings client message
+	  Add the set encodings client message
 
 2007-10-16  Thijs Vermeir  <thijsvermeir@gmail.com>
 
@@ -11,7 +17,7 @@
 	* gst/librfb/rfbbytestream.h:
 	* gst/librfb/rfbdecoder.c:
 	* gst/librfb/rfbdecoder.h:
-		remove the rfbbytestream dead code
+	  Remove the rfbbytestream dead code
 
 2007-10-16  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 

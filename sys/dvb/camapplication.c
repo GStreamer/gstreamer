@@ -35,7 +35,7 @@ static CamReturn session_data_cb (CamSL * sl,
 static guint
 resource_id_hash (gconstpointer key)
 {
-  guint resource_id = (guint) key;
+  guint resource_id = GPOINTER_TO_UINT (key);
 
   if (!CAM_AL_RESOURCE_ID_IS_PUBLIC (resource_id)) {
     /* private identifier, leave it as is */

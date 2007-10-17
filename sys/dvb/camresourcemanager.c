@@ -127,7 +127,7 @@ send_profile_reply (CamResourceManager * mgr, CamSLSession * session)
   apdu_body = buffer + offset;
 
   for (walk = resource_ids; walk != NULL; walk = walk->next) {
-    GST_WRITE_UINT32_BE (apdu_body, walk->data);
+    GST_WRITE_UINT32_BE (apdu_body, GPOINTER_TO_UINT (walk->data));
 
     apdu_body += 4;
   }
