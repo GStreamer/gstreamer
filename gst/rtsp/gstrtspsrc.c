@@ -3838,7 +3838,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   if (src->props)
     gst_structure_remove_all_fields (src->props);
   else
-    src->props = gst_structure_empty_new ("RTSP Properties");
+    src->props = gst_structure_empty_new ("RTSPProperties");
 
   /* send DESCRIBE */
   GST_DEBUG_OBJECT (src, "send describe...");
