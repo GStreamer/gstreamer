@@ -1,5 +1,12 @@
 2007-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Richard Hult <richard imendio com>
+
+	* gst/dvdspu/Makefile.am:
+	  Fix LIBS - we need to link against libgstreamer.
+
+2007-10-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* sys/dvb/camapplication.c:
 	* sys/dvb/camresourcemanager.c:
 	  Fix some warnings.
