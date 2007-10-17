@@ -235,13 +235,9 @@ gst_auto_audio_sink_find_best (GstAutoAudioSink * sink)
       }
 
       /* collect all error messages */
-      while ((message = gst_bus_pop (bus))) {
-        if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
-          GST_DEBUG_OBJECT (sink, "error message %" GST_PTR_FORMAT, message);
-          errors = g_slist_append (errors, message);
-        } else {
-          gst_message_unref (message);
-        }
+      while ((message = gst_bus_pop_filtered (bus, GST_MESSAGE_ERROR))) {
+        GST_DEBUG_OBJECT (sink, "error message %" GST_PTR_FORMAT, message);
+        errors = g_slist_append (errors, message);
       }
 
       gst_element_set_state (el, GST_STATE_NULL);

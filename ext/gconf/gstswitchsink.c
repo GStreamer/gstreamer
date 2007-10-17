@@ -165,13 +165,10 @@ gst_switch_commit_new_kid (GstSwitchSink * sink)
     /* check if child posted an error message and if so re-post it on our bus
      * so that the application gets to see a decent error and not our generic
      * fallback error message which is completely indecipherable to the user */
-    while ((msg = gst_bus_pop (GST_ELEMENT_BUS (new_kid)))) {
-      if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
-        GST_INFO_OBJECT (sink, "Forwarding kid error: %" GST_PTR_FORMAT, msg);
-        gst_element_post_message (GST_ELEMENT (sink), msg);
-        break;
-      }
-      gst_message_unref (msg);
+    msg = gst_bus_pop_filtered (GST_ELEMENT_BUS (new_kid), GST_MESSAGE_ERROR);
+    if (msg) {
+      GST_INFO_OBJECT (sink, "Forwarding kid error: %" GST_PTR_FORMAT, msg);
+      gst_element_post_message (GST_ELEMENT (sink), msg);
     }
     /* FIXME: need a translated error message that tells the user to check
      * her GConf audio/video settings */
