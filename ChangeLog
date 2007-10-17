@@ -1,5 +1,10 @@
 2007-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/cdaudio/Makefile.am:
+	  Add another missing GST_LIBS.
+
+2007-10-17  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Richard Hult <richard imendio com>
 
 	* gst/dvdspu/Makefile.am:
