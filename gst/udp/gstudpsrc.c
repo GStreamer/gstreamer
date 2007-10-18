@@ -377,6 +377,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 
   udpsrc = GST_UDPSRC (psrc);
 
+retry:
   /* quick check, avoid going in select when we already have data */
   readsize = 0;
   if ((ret = IOCTL_SOCKET (udpsrc->sock, FIONREAD, &readsize)) < 0)
@@ -450,8 +451,12 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
   if ((ret = IOCTL_SOCKET (udpsrc->sock, FIONREAD, &readsize)) < 0)
     goto ioctl_failed;
 
+  /* if we get here and there is nothing to read from the socket, the select got
+   * woken up by activity on the socket but it was not a read. We how someone
+   * will also do something with the socket so that we don't go into an infinite
+   * loop in the select(). */
   if (!readsize)
-    goto nothing_to_read;
+    goto retry;
 
 no_select:
   GST_LOG_OBJECT (udpsrc, "ioctl says %d bytes available", (int) readsize);
@@ -512,13 +517,6 @@ ioctl_failed:
   {
     GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
         ("ioctl failed %d: %s (%d)", ret, g_strerror (errno), errno));
-    return GST_FLOW_ERROR;
-  }
-nothing_to_read:
-  {
-    GST_ELEMENT_ERROR (udpsrc, RESOURCE, READ, (NULL),
-        ("ioctl returned readsize 0 %d: %s (%d)", ret, g_strerror (errno),
-            errno));
     return GST_FLOW_ERROR;
   }
 receive_error:

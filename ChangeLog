@@ -1,5 +1,14 @@
 2007-10-18  Wim Taymans  <wim.taymans@gmail.com>
 
+	Based on patch by: Laurent Glayal  <spglegle yahoo fr>
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_create):
+	When the socket is used by the app for other purposes, don't generate an
+	error if there is activaty on the socket that is not data related.
+	Fixes #487488.
+
+2007-10-18  Wim Taymans  <wim.taymans@gmail.com>
+
 	* sys/v4l2/v4l2src_calls.c: (gst_v4l2_buffer_finalize),
 	(gst_v4l2src_grab_frame):
 	Add some more debug info. Generate an error when we run out of buffers
