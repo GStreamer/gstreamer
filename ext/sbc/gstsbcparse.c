@@ -294,6 +294,7 @@ sbc_parse_change_state (GstElement * element, GstStateChange transition)
       }
       sbc_init (&parse->sbc, 0);
       break;
+
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_DEBUG ("Finish subband codec");
       if (parse->buffer) {
@@ -302,6 +303,7 @@ sbc_parse_change_state (GstElement * element, GstStateChange transition)
       }
       sbc_finish (&parse->sbc);
       break;
+
     default:
       break;
   }

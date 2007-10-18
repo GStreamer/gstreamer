@@ -30,7 +30,6 @@
 #include "gstsbcenc.h"
 #include "gstsbcutil.h"
 
-
 #define SBC_ENC_DEFAULT_MODE CFG_MODE_AUTO
 #define SBC_ENC_DEFAULT_BLOCKS 16
 #define SBC_ENC_DEFAULT_SUB_BANDS 8
@@ -86,7 +85,7 @@ enum
   PROP_MODE,
   PROP_ALLOCATION,
   PROP_BLOCKS,
-  PROP_SUB_BANDS
+  PROP_SUBBANDS
 };
 
 GST_BOILERPLATE (GstSbcEnc, gst_sbc_enc, GstElement, GST_TYPE_ELEMENT);
@@ -123,6 +122,8 @@ sbc_enc_generate_srcpad_caps (GstSbcEnc * enc, GstCaps * caps)
   gint channels;
   GstCaps *src_caps;
   GstStructure *structure;
+  const gchar *mode;
+  const gchar *allocation;
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -146,13 +147,16 @@ sbc_enc_generate_srcpad_caps (GstSbcEnc * enc, GstCaps * caps)
   else
     enc->sbc.allocation = enc->allocation;
 
-  src_caps = gst_caps_new_simple ("audio/x-sbc", "rate", G_TYPE_INT,
-      enc->sbc.rate, "channels", G_TYPE_INT,
-      enc->sbc.channels, "mode", G_TYPE_STRING,
-      gst_sbc_get_mode_string (enc->sbc.joint), "subbands",
-      G_TYPE_INT, enc->sbc.subbands, "blocks", G_TYPE_INT,
-      enc->sbc.blocks, "allocation", G_TYPE_STRING,
-      gst_sbc_get_allocation_string (enc->sbc.allocation), NULL);
+  mode = gst_sbc_get_mode_string (enc->sbc.joint);
+  allocation = gst_sbc_get_allocation_string (enc->sbc.allocation);
+
+  src_caps = gst_caps_new_simple ("audio/x-sbc",
+      "rate", G_TYPE_INT, enc->sbc.rate,
+      "channels", G_TYPE_INT, enc->sbc.channels,
+      "mode", G_TYPE_STRING, mode,
+      "subbands", G_TYPE_INT, enc->sbc.subbands,
+      "blocks", G_TYPE_INT, enc->sbc.blocks,
+      "allocation", G_TYPE_STRING, allocation, NULL);
 
   return src_caps;
 }
@@ -284,7 +288,7 @@ gst_sbc_enc_set_property (GObject * object, guint prop_id,
       /* TODO - verify consistency */
       enc->blocks = g_value_get_int (value);
       break;
-    case PROP_SUB_BANDS:
+    case PROP_SUBBANDS:
       /* TODO - verify consistency */
       enc->subbands = g_value_get_int (value);
       break;
@@ -310,7 +314,7 @@ gst_sbc_enc_get_property (GObject * object, guint prop_id,
     case PROP_BLOCKS:
       g_value_set_int (value, enc->blocks);
       break;
-    case PROP_SUB_BANDS:
+    case PROP_SUBBANDS:
       g_value_set_int (value, enc->subbands);
       break;
     default:
@@ -346,7 +350,7 @@ gst_sbc_enc_class_init (GstSbcEncClass * klass)
       g_param_spec_int ("blocks", "Blocks",
           "Blocks", 0, G_MAXINT, SBC_ENC_DEFAULT_BLOCKS, G_PARAM_READWRITE));
 
-  g_object_class_install_property (object_class, PROP_SUB_BANDS,
+  g_object_class_install_property (object_class, PROP_SUBBANDS,
       g_param_spec_int ("subbands", "Sub Bands",
           "Sub Bands", 0, G_MAXINT,
           SBC_ENC_DEFAULT_SUB_BANDS, G_PARAM_READWRITE));
