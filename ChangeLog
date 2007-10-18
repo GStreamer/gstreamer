@@ -1,3 +1,14 @@
+2007-10-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/equalizer/gstiirequalizer.c:
+	(gst_iir_equalizer_band_set_property),
+	(gst_iir_equalizer_band_get_property),
+	(gst_iir_equalizer_band_class_init), (gst_iir_equalizer_band_init),
+	(gst_iir_equalizer_band_get_type), (gst_iir_equalizer_class_init),
+	(setup_filter), (gst_iir_equalizer_setup):
+	* gst/equalizer/gstiirequalizer.h:
+	Move bandwidth property to the separate bands and add float64 support.
+
 2007-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/cdaudio/Makefile.am:

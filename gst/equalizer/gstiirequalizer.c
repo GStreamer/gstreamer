@@ -34,19 +34,10 @@ GST_DEBUG_CATEGORY (equalizer_debug);
 #define GST_CAT_DEFAULT equalizer_debug
 
 
-enum
-{
-  ARG_BAND_WIDTH = 1
-};
-
 static void gst_iir_equalizer_child_proxy_interface_init (gpointer g_iface,
     gpointer iface_data);
 
 static void gst_iir_equalizer_finalize (GObject * object);
-static void gst_iir_equalizer_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_iir_equalizer_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_iir_equalizer_setup (GstAudioFilter * filter,
     GstRingBufferSpec * fmt);
@@ -65,7 +56,7 @@ GST_DEBUG_CATEGORY_EXTERN (equalizer_debug);
     " rate=(int)[1000,MAX],"                                          \
     " channels=(int)[1,MAX]; "                                        \
     "audio/x-raw-float,"                                              \
-    " width=(int)32,"                                                 \
+    " width=(int) { 32, 64 } ,"                                       \
     " endianness=(int)BYTE_ORDER,"                                    \
     " rate=(int)[1000,MAX],"                                          \
     " channels=(int)[1,MAX]"
@@ -91,7 +82,8 @@ GST_BOILERPLATE_FULL (GstIirEqualizer, gst_iir_equalizer,
 enum
 {
   ARG_GAIN = 1,
-  ARG_FREQ
+  ARG_FREQ,
+  ARG_BAND_WIDTH
 };
 
 typedef struct _GstIirEqualizerBandClass GstIirEqualizerBandClass;
@@ -115,6 +107,7 @@ struct _GstIirEqualizerBand
   /* center frequency and gain */
   gdouble freq;
   gdouble gain;
+  gdouble width;
 
   /* second order iir filter */
   gdouble alpha;                /* IIR coefficients for outputs */
@@ -155,6 +148,23 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
       }
       break;
     }
+    case ARG_BAND_WIDTH:{
+      gdouble width;
+
+      width = g_value_get_double (value);
+      GST_DEBUG_OBJECT (band, "width = %lf -> %lf", band->width, width);
+      if (width != band->width) {
+        GstIirEqualizer *equ =
+            GST_IIR_EQUALIZER (gst_object_get_parent (GST_OBJECT (band)));
+
+        band->width = width;
+        if (GST_AUDIO_FILTER (equ)->format.rate) {
+          setup_filter (equ, band);
+        }
+        gst_object_unref (equ);
+        GST_DEBUG_OBJECT (band, "changed width = %lf ", band->width);
+      }
+    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -173,6 +183,9 @@ gst_iir_equalizer_band_get_property (GObject * object, guint prop_id,
       break;
     case ARG_FREQ:
       g_value_set_double (value, band->freq);
+      break;
+    case ARG_BAND_WIDTH:
+      g_value_set_double (value, band->width);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -197,6 +210,20 @@ gst_iir_equalizer_band_class_init (GstIirEqualizerBandClass * klass)
       g_param_spec_double ("freq", "freq",
           "center frequency of the band",
           0.0, 100000.0, 0.0, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class, ARG_BAND_WIDTH,
+      g_param_spec_double ("band-width", "band-width",
+          "band width calculated as distance between bands * this value", 0.1,
+          10.0, 1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+}
+
+static void
+gst_iir_equalizer_band_init (GstIirEqualizerBand * band,
+    GstIirEqualizerBandClass * klass)
+{
+  band->freq = 0.0;
+  band->gain = 0.0;
+  band->width = 1.0;
 }
 
 static GType
@@ -214,7 +241,7 @@ gst_iir_equalizer_band_get_type (void)
       NULL,
       sizeof (GstIirEqualizerBand),
       0,
-      NULL,
+      (GInstanceInitFunc) gst_iir_equalizer_band_init,
     };
     type =
         g_type_register_static (GST_TYPE_OBJECT, "GstIirEqualizerBand",
@@ -279,15 +306,7 @@ gst_iir_equalizer_class_init (GstIirEqualizerClass * klass)
   GstBaseTransformClass *btrans_class = (GstBaseTransformClass *) klass;
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
-  gobject_class->set_property = gst_iir_equalizer_set_property;
-  gobject_class->get_property = gst_iir_equalizer_get_property;
   gobject_class->finalize = gst_iir_equalizer_finalize;
-
-  /* FIXME: move to GstIirEqualizerBand to make a full parametric eq */
-  g_object_class_install_property (gobject_class, ARG_BAND_WIDTH,
-      g_param_spec_double ("band-width", "band-width",
-          "band width calculated as distance between bands * this value", 0.1,
-          10.0, 1.0, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   audio_filter_class->setup = gst_iir_equalizer_setup;
   btrans_class->transform_ip = gst_iir_equalizer_transform_ip;
@@ -342,7 +361,8 @@ setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
     gdouble gain = arg_to_scale (band->gain);
     gdouble frequency = band->freq / GST_AUDIO_FILTER (equ)->format.rate;
     gdouble q = pow (HIGHEST_FREQ / LOWEST_FREQ,
-        1.0 / (equ->freq_band_count - 1)) * equ->band_width;
+        1.0 / (equ->freq_band_count - 1)) * band->width;
+
     gdouble theta = frequency * 2 * M_PI;
 
     band->beta = (q - theta / 2) / (2 * q + theta);
@@ -428,56 +448,6 @@ gst_iir_equalizer_compute_frequencies (GstIirEqualizer * equ, guint new_count)
   }
 }
 
-static void
-gst_iir_equalizer_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
-
-  g_mutex_lock (((GstBaseTransform *) (equ))->transform_lock);
-  //GST_BASE_TRANSFORM_LOCK (equ);
-  GST_OBJECT_LOCK (equ);
-  switch (prop_id) {
-    case ARG_BAND_WIDTH:
-      if (g_value_get_double (value) != equ->band_width) {
-        equ->band_width = g_value_get_double (value);
-        if (GST_AUDIO_FILTER (equ)->format.rate) {
-          guint i;
-
-          for (i = 0; i < equ->freq_band_count; i++) {
-            setup_filter (equ, equ->bands[i]);
-          }
-        }
-      }
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-  GST_OBJECT_UNLOCK (equ);
-  GST_BASE_TRANSFORM_UNLOCK (equ);
-}
-
-static void
-gst_iir_equalizer_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstIirEqualizer *equ = GST_IIR_EQUALIZER (object);
-
-  GST_BASE_TRANSFORM_LOCK (equ);
-  GST_OBJECT_LOCK (equ);
-  switch (prop_id) {
-    case ARG_BAND_WIDTH:
-      g_value_set_double (value, equ->band_width);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-  GST_OBJECT_UNLOCK (equ);
-  GST_BASE_TRANSFORM_UNLOCK (equ);
-}
-
 /* start of code that is type specific */
 
 #define CREATE_OPTIMIZED_FUNCTIONS(TYPE,BIG_TYPE,MIN_VAL,MAX_VAL)       \
@@ -535,6 +505,7 @@ guint size, guint channels)                                             \
 
 CREATE_OPTIMIZED_FUNCTIONS (gint16, gint, -32768, 32767);
 CREATE_OPTIMIZED_FUNCTIONS (gfloat, gfloat, -1.0, 1.0);
+CREATE_OPTIMIZED_FUNCTIONS (gdouble, gdouble, -1.0, 1.0);
 
 static GstFlowReturn
 gst_iir_equalizer_transform_ip (GstBaseTransform * btrans, GstBuffer * buf)
@@ -564,18 +535,35 @@ gst_iir_equalizer_setup (GstAudioFilter * audio, GstRingBufferSpec * fmt)
 {
   GstIirEqualizer *equ = GST_IIR_EQUALIZER (audio);
 
-  switch (fmt->width) {
-    case 16:
-      equ->history_size = history_size_gint16;
-      equ->process = gst_iir_equ_process_gint16;
+  switch (fmt->type) {
+    case GST_BUFTYPE_LINEAR:
+      switch (fmt->width) {
+        case 16:
+          equ->history_size = history_size_gint16;
+          equ->process = gst_iir_equ_process_gint16;
+          break;
+        default:
+          return FALSE;
+      }
       break;
-    case 32:
-      equ->history_size = history_size_gfloat;
-      equ->process = gst_iir_equ_process_gfloat;
+    case GST_BUFTYPE_FLOAT:
+      switch (fmt->width) {
+        case 32:
+          equ->history_size = history_size_gfloat;
+          equ->process = gst_iir_equ_process_gfloat;
+          break;
+        case 64:
+          equ->history_size = history_size_gdouble;
+          equ->process = gst_iir_equ_process_gdouble;
+          break;
+        default:
+          return FALSE;
+      }
       break;
     default:
       return FALSE;
   }
+
   gst_iir_equalizer_compute_frequencies (equ, equ->freq_band_count);
   return TRUE;
 }
