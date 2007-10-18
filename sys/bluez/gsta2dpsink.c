@@ -147,8 +147,8 @@ struct rtp_payload
 #error "Unknown byte order"
 #endif
 
-#define IS_SBC(n) (strcmp(n, "audio/x-sbc") == 0)
-#define IS_MPEG(n) (strcmp(n, "audio/mpeg") == 0)
+#define IS_SBC(n) (strcmp((n), "audio/x-sbc") == 0)
+#define IS_MPEG(n) (strcmp((n), "audio/mpeg") == 0)
 
 enum
 {
@@ -414,21 +414,6 @@ gst_a2dp_sink_init_pkt_conf (GstA2dpSink * sink,
 
   value = gst_structure_get_value (structure, "blocks");
   sbc->blocks = g_value_get_int (value);
-/* FIXME how can I obtain the bitpool ?
-		if (strcmp(id, "bitpool") == 0) {
-			if (snd_config_get_string(n, &bitpool) < 0) {
-				SNDERR("Invalid type for %s", id);
-				return -EINVAL;
-			}
-
-			sbc->bitpool = atoi(bitpool);
-			continue;
-		}
-
-		SNDERR("Unknown field %s", id);
-		return -EINVAL;
-	}
-*/
   sbc->bitpool = 32;
 
   pkt->length = sizeof (*cfg) + sizeof (*sbc);
@@ -504,8 +489,8 @@ gst_a2dp_sink_conf_recv_dev_conf (GstA2dpSink * sink)
   GST_DEBUG_OBJECT (sink, "OK - %d bytes received", sink->total);
 
   if (pkt->length != (sink->total - sizeof (struct ipc_packet))) {
-    GST_ERROR_OBJECT (sink, "Error while configuring device: \
-				packet size doesn't match");
+    GST_ERROR_OBJECT (sink, "Error while configuring device: "
+        "packet size doesn't match");
     return FALSE;
   }
 
@@ -535,14 +520,14 @@ gst_a2dp_sink_conf_recv_stream_fd (GstA2dpSink * sink)
     return FALSE;
 
   if (!sink->stream) {
-    GST_ERROR_OBJECT (sink, "Error while configuring device: \
-				could not acquire audio socket");
+    GST_ERROR_OBJECT (sink, "Error while configuring device: "
+        "could not acquire audio socket");
     return FALSE;
   }
 
   /* It is possible there is some outstanding
      data in the pipe - we have to empty it */
-  while (TRUE) {
+  while (1) {
     err = g_io_channel_read (sink->stream,
         (gchar *) sink->data->buffer, (gsize) sink->data->cfg.pkt_len, &read);
     if (err != G_IO_ERROR_NONE || read <= 0)
@@ -746,7 +731,7 @@ gst_a2dp_sink_avdtp_write (GstA2dpSink * sink)
   header->timestamp = htonl (a2dp->nsamples);
   header->ssrc = htonl (1);
 
-  while (TRUE) {
+  while (1) {
     err = g_io_channel_write (sink->stream, (const char *) a2dp->buffer,
         (gsize) a2dp->count, (gsize *) & ret);
 
