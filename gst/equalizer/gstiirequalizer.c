@@ -164,6 +164,7 @@ gst_iir_equalizer_band_set_property (GObject * object, guint prop_id,
         gst_object_unref (equ);
         GST_DEBUG_OBJECT (band, "changed width = %lf ", band->width);
       }
+      break;
     }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
