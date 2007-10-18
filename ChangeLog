@@ -1,6 +1,12 @@
 2007-10-18  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/equalizer/gstiirequalizer.c:
+	(gst_iir_equalizer_band_set_property):
+	Add a missing break.
+
+2007-10-18  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/equalizer/gstiirequalizer.c:
 	(gst_iir_equalizer_band_set_property),
 	(gst_iir_equalizer_band_get_property),
 	(gst_iir_equalizer_band_class_init), (gst_iir_equalizer_band_init),
