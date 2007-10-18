@@ -270,6 +270,11 @@ def main(args):
         sys.stderr.write("usage: %s URI-OF-MEDIA-FILE\n" % args[0])
         sys.exit(1)
 
+    # Need to register our derived widget types for implicit event
+    # handlers to get called.
+    gobject.type_register(PlayerWindow)
+    gobject.type_register(VideoWidget)
+
     w = PlayerWindow()
 
     if len(args) != 2:

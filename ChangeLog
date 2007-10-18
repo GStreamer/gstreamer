@@ -1,3 +1,9 @@
+2007-10-18  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* examples/play.py:
+	Fix the sample player slightly so that the expose method
+	actually gets called by pyGTK.
+
 2007-10-18  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/gst.defs:
