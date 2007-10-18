@@ -210,7 +210,6 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     /* Fragmentation Units FU-A */
     guint8 nalHeader;
     guint limitedSize;
-
     int ii = 0, start = 1, end = 0, first = 0;
 
     GST_DEBUG_OBJECT (basepayload,
@@ -235,7 +234,6 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
       outbuf = gst_rtp_buffer_new_allocate (limitedSize + 2, 0, 0);
       GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
-      gst_rtp_buffer_set_marker (outbuf, end);
       payload = gst_rtp_buffer_get_payload (outbuf);
 
       if (limitedSize == idxdata) {
@@ -243,6 +241,7 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
             ii);
         end = 1;
       }
+      gst_rtp_buffer_set_marker (outbuf, end);
 
       /* FU indicator */
       payload[0] = (nalHeader & 0x60) | 28;

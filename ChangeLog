@@ -1,3 +1,10 @@
+2007-10-18  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Anders Skargren <anders dot skargren at axis dot com>
+
+	* gst/rtp/gstrtph264pay.c: (gst_rtp_h264_pay_handle_buffer):
+	Set marker bit correctly.
+
 2007-10-17  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_open):
