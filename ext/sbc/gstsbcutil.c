@@ -32,154 +32,168 @@
  * Selects one rate from a list of possible rates
  * TODO - use a better approach to this (it is selecting the last element)
  */
-gint gst_sbc_select_rate_from_list(const GValue *value)
+gint
+gst_sbc_select_rate_from_list (const GValue * value)
 {
-	guint size = gst_value_list_get_size(value);
-	return g_value_get_int(gst_value_list_get_value(value, size-1));
+  guint size = gst_value_list_get_size (value);
+  return g_value_get_int (gst_value_list_get_value (value, size - 1));
 }
 
 /*
  * Selects one rate from a range of possible rates
  * TODO - use a better approach to this (it is selecting the maximum value)
  */
-gint gst_sbc_select_rate_from_range(const GValue *value)
+gint
+gst_sbc_select_rate_from_range (const GValue * value)
 {
-	return gst_value_get_int_range_max(value);
+  return gst_value_get_int_range_max (value);
 }
 
 /*
  * Selects one number of channels from a list of possible numbers
  * TODO - use a better approach to this (it is selecting the last element)
  */
-gint gst_sbc_select_channels_from_list(const GValue *value)
+gint
+gst_sbc_select_channels_from_list (const GValue * value)
 {
-	guint size = gst_value_list_get_size(value);
-	return g_value_get_int(gst_value_list_get_value(value, size-1));
+  guint size = gst_value_list_get_size (value);
+  return g_value_get_int (gst_value_list_get_value (value, size - 1));
 }
 
 /*
  * Selects one number of channels option from a range of possible numbers
  * TODO - use a better approach to this (it is selecting the maximum value)
  */
-gint gst_sbc_select_channels_from_range(const GValue *value)
+gint
+gst_sbc_select_channels_from_range (const GValue * value)
 {
-	return gst_value_get_int_range_max(value);
+  return gst_value_get_int_range_max (value);
 }
 
 /*
  * Selects one number of blocks from a list of possible blocks
  * TODO - use a better approach to this (it is selecting the last element)
  */
-gint gst_sbc_select_blocks_from_list(const GValue *value)
+gint
+gst_sbc_select_blocks_from_list (const GValue * value)
 {
-	guint size = gst_value_list_get_size(value);
-	return g_value_get_int(gst_value_list_get_value(value, size-1));
+  guint size = gst_value_list_get_size (value);
+  return g_value_get_int (gst_value_list_get_value (value, size - 1));
 }
 
 /*
  * Selects one blocks option from a range of possible blocks
  * TODO - use a better approach to this (it is selecting the maximum value)
  */
-gint gst_sbc_select_blocks_from_range(const GValue *value)
+gint
+gst_sbc_select_blocks_from_range (const GValue * value)
 {
-	return gst_value_get_int_range_max(value);
+  return gst_value_get_int_range_max (value);
 }
 
 /*
  * Selects one number of subbands from a list
  * TODO - use a better approach to this (it is selecting the last element)
  */
-gint gst_sbc_select_subbands_from_list(const GValue *value)
+gint
+gst_sbc_select_subbands_from_list (const GValue * value)
 {
-	guint size = gst_value_list_get_size(value);
-	return g_value_get_int(gst_value_list_get_value(value, size-1));
+  guint size = gst_value_list_get_size (value);
+  return g_value_get_int (gst_value_list_get_value (value, size - 1));
 }
 
 /*
  * Selects one subbands option from a range
  * TODO - use a better approach to this (it is selecting the maximum value)
  */
-gint gst_sbc_select_subbands_from_range(const GValue *value)
+gint
+gst_sbc_select_subbands_from_range (const GValue * value)
 {
-	return gst_value_get_int_range_max(value);
+  return gst_value_get_int_range_max (value);
 }
 
 /*
  * Selects one allocation mode from the ones on the list
  * TODO - use a better approach
  */
-const gchar* gst_sbc_get_allocation_from_list(const GValue *value)
+const gchar *
+gst_sbc_get_allocation_from_list (const GValue * value)
 {
-	guint size = gst_value_list_get_size(value);
-	return g_value_get_string(gst_value_list_get_value(value, size-1));
+  guint size = gst_value_list_get_size (value);
+  return g_value_get_string (gst_value_list_get_value (value, size - 1));
 }
 
 /*
  * Selects one mode from the ones on the list
  * TODO - use a better aproach
  */
-const gchar* gst_sbc_get_mode_from_list(const GValue *value)
+const gchar *
+gst_sbc_get_mode_from_list (const GValue * value)
 {
-	guint size = gst_value_list_get_size(value);
-	return g_value_get_string(gst_value_list_get_value(value, size-1));
+  guint size = gst_value_list_get_size (value);
+  return g_value_get_string (gst_value_list_get_value (value, size - 1));
 }
 
-gint gst_sbc_get_allocation_mode_int(const gchar* allocation)
+gint
+gst_sbc_get_allocation_mode_int (const gchar * allocation)
 {
-	if (g_ascii_strcasecmp(allocation, "loudness") == 0)
-		return CFG_ALLOCATION_LOUDNESS;
-	else if (g_ascii_strcasecmp(allocation, "snr") == 0)
-		return CFG_ALLOCATION_SNR;
-	else if (g_ascii_strcasecmp(allocation, "auto") == 0)
-		return CFG_ALLOCATION_AUTO;
-	else
-		return -1;
+  if (g_ascii_strcasecmp (allocation, "loudness") == 0)
+    return CFG_ALLOCATION_LOUDNESS;
+  else if (g_ascii_strcasecmp (allocation, "snr") == 0)
+    return CFG_ALLOCATION_SNR;
+  else if (g_ascii_strcasecmp (allocation, "auto") == 0)
+    return CFG_ALLOCATION_AUTO;
+  else
+    return -1;
 }
 
-gint gst_sbc_get_mode_int(const gchar* mode)
+gint
+gst_sbc_get_mode_int (const gchar * mode)
 {
-	if (g_ascii_strcasecmp(mode, "joint") == 0)
-		return CFG_MODE_JOINT_STEREO;
-	else if (g_ascii_strcasecmp(mode, "stereo") == 0)
-		return CFG_MODE_STEREO;
-	else if (g_ascii_strcasecmp(mode, "dual") == 0)
-		return CFG_MODE_DUAL_CHANNEL;
-	else if (g_ascii_strcasecmp(mode, "mono") == 0)
-		return CFG_MODE_MONO;
-	else if (g_ascii_strcasecmp(mode, "auto") == 0)
-		return CFG_MODE_AUTO;
-	else
-		return -1;
+  if (g_ascii_strcasecmp (mode, "joint") == 0)
+    return CFG_MODE_JOINT_STEREO;
+  else if (g_ascii_strcasecmp (mode, "stereo") == 0)
+    return CFG_MODE_STEREO;
+  else if (g_ascii_strcasecmp (mode, "dual") == 0)
+    return CFG_MODE_DUAL_CHANNEL;
+  else if (g_ascii_strcasecmp (mode, "mono") == 0)
+    return CFG_MODE_MONO;
+  else if (g_ascii_strcasecmp (mode, "auto") == 0)
+    return CFG_MODE_AUTO;
+  else
+    return -1;
 }
 
-const gchar* gst_sbc_get_mode_string(int joint)
+const gchar *
+gst_sbc_get_mode_string (int joint)
 {
-	switch (joint) {
-	case CFG_MODE_MONO:
-		return "mono";
-	case CFG_MODE_DUAL_CHANNEL:
-		return "dual";
-	case CFG_MODE_STEREO:
-		return "stereo";
-	case CFG_MODE_JOINT_STEREO:
-		return "joint";
-	case CFG_MODE_AUTO:
-		return NULL; /* TODO what should be selected here? */
-	default:
-		return NULL;
-	}
+  switch (joint) {
+    case CFG_MODE_MONO:
+      return "mono";
+    case CFG_MODE_DUAL_CHANNEL:
+      return "dual";
+    case CFG_MODE_STEREO:
+      return "stereo";
+    case CFG_MODE_JOINT_STEREO:
+      return "joint";
+    case CFG_MODE_AUTO:
+      return NULL;              /* TODO what should be selected here? */
+    default:
+      return NULL;
+  }
 }
 
-const gchar* gst_sbc_get_allocation_string(int alloc)
+const gchar *
+gst_sbc_get_allocation_string (int alloc)
 {
-	switch (alloc) {
-	case CFG_ALLOCATION_LOUDNESS:
-		return "loudness";
-	case CFG_ALLOCATION_SNR:
-		return "snr";
-	case CFG_ALLOCATION_AUTO:
-		return NULL; /* TODO what should be selected here? */
-	default:
-		return NULL;
-	}
+  switch (alloc) {
+    case CFG_ALLOCATION_LOUDNESS:
+      return "loudness";
+    case CFG_ALLOCATION_SNR:
+      return "snr";
+    case CFG_ALLOCATION_AUTO:
+      return NULL;              /* TODO what should be selected here? */
+    default:
+      return NULL;
+  }
 }

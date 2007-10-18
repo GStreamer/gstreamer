@@ -24,6 +24,8 @@
 #include <gst/gst.h>
 
 #include "sbc.h"
+#include "ipc.h"
+
 
 G_BEGIN_DECLS
 
@@ -48,6 +50,9 @@ struct _GstSbcEnc {
 	GstPad *srcpad;
 
 	gint mode;
+	gint blocks;
+	gint allocation;
+	gint subbands;
 
 	sbc_t sbc;
 };
