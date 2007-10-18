@@ -22,7 +22,7 @@
  */
 
 #include <gst/gst.h>
-#include <gst/audio/gstaudiosink.h>
+#include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
 
@@ -37,19 +37,41 @@ G_BEGIN_DECLS
 #define GST_IS_A2DP_SINK_CLASS(obj) \
 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_A2DP_SINK))
 
+enum {
+	NOT_CONFIGURED,
+	CONFIGURING_INIT,
+	CONFIGURING_SENT_CONF,
+	CONFIGURING_RCVD_CONF_RSP,
+	CONFIGURING_RCVD_DEV_CONF,
+	CONFIGURED
+};
+
 typedef struct _GstA2dpSink GstA2dpSink;
 typedef struct _GstA2dpSinkClass GstA2dpSinkClass;
 
+struct bluetooth_data;
+
 struct _GstA2dpSink {
-	GstAudioSink sink;
+	GstBaseSink sink;
 
 	gchar *device;
+	GIOChannel *stream;
 
+	struct bluetooth_data *data;
 	GIOChannel *server;
+
+	gint con_state;
+
+	GCond *con_conf_end;
+	gboolean waiting_con_conf;
+	GMutex *sink_lock;
+
+	gint total;
+
 };
 
 struct _GstA2dpSinkClass {
-	GstAudioSinkClass parent_class;
+	GstBaseSinkClass parent_class;
 };
 
 GType gst_a2dp_sink_get_type(void);
