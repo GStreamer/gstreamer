@@ -511,7 +511,9 @@ _wrap_gst_registry_get_feature_list (PyGObject *self, PyObject *args, PyObject *
 
     registry = GST_REGISTRY (self->obj);
 
+    pyg_begin_allow_threads;
     features = gst_registry_get_feature_list (registry, type);
+    pyg_end_allow_threads;
 
     list = PyList_New (g_list_length(features));
     for (l = features, i = 0; l; l = l->next, ++i) {
@@ -543,7 +545,9 @@ _wrap_gst_registry_get_feature_list_by_plugin (PyGObject *self, PyObject *args, 
 
     registry = GST_REGISTRY (self->obj);
 
+    pyg_begin_allow_threads;
     features = gst_registry_get_feature_list_by_plugin (registry, name);
+    pyg_end_allow_threads;
 
     list = PyList_New (g_list_length(features));
     for (l = features, i = 0; l; l = l->next, ++i) {
@@ -1203,4 +1207,30 @@ _wrap_gst_segment_clip (PyObject * self, PyObject * args, PyObject * kwargs)
     PyList_SetItem(py_ret, 2, PyLong_FromLongLong(cstop));
 
     return py_ret;
+}
+%%
+override g_error_new kwargs
+static int
+_wrap_g_error_new(PyGBoxed *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "domain", "code", "message", NULL };
+    int code;
+    gchar *message;
+    gchar *domain;
+    GQuark domainq;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"sis:GError.__init__", kwlist, &domain, &code, &message))
+        return -1;
+    domainq = g_quark_from_string(domain);
+
+    self->gtype = GST_TYPE_G_ERROR;
+    self->free_on_dealloc = FALSE;
+    self->boxed = g_error_new(domainq, code, message);
+
+    if (!self->boxed) {
+        PyErr_SetString(PyExc_RuntimeError, "could not create GError object");
+        return -1;
+    }
+    self->free_on_dealloc = TRUE;
+    return 0;
 }

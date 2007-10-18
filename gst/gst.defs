@@ -1885,7 +1885,16 @@
   (return-type "GQuark")
 )
 
-
+(define-function new
+  (c-name "g_error_new")
+  (is-constructor-of "GError")
+  (return-type "GError*")
+  (parameters
+   '("gchar*" "domain")
+   '("gint" "code")
+   '("gchar*" "message")
+   )
+)
 
 ;; From ../gstreamer/gst/gstevent.h
 

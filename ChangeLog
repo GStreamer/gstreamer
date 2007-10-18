@@ -1,3 +1,12 @@
+2007-10-18  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/gst.defs:
+	* gst/gst.override:
+	Thanks to Sebastien Merle for resurrecting a patch I'd forgotten about
+	that adds a constructor method for gst.GError, so you can create
+	error gst.Message.
+	Added a few GIL releases for overrides.
+
 2007-10-13  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/gstobject.override:
