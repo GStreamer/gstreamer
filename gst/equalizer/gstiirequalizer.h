@@ -56,7 +56,6 @@ struct _GstIirEqualizer
 
   /* properties */
   guint freq_band_count;
-  gdouble band_width;
   /* for each band and channel */
   gpointer history;
   guint history_size;
