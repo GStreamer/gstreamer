@@ -66,10 +66,13 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
 {
   GstV4l2BufferPool *pool;
   gboolean resuscitated = FALSE;
+  gint index;
 
   pool = buffer->pool;
 
-  GST_LOG ("finalizing buffer %d", buffer->vbuffer.index);
+  index = buffer->vbuffer.index;
+
+  GST_LOG ("finalizing buffer %p %d", buffer, index);
 
   g_mutex_lock (pool->lock);
   if (GST_BUFFER_SIZE (buffer) != 0)
@@ -78,18 +81,22 @@ gst_v4l2_buffer_finalize (GstV4l2Buffer * buffer)
 
   if (pool->running) {
     if (ioctl (pool->video_fd, VIDIOC_QBUF, &buffer->vbuffer) < 0) {
-      GST_WARNING ("could not requeue buffer %d", buffer->vbuffer.index);
+      GST_WARNING ("could not requeue buffer %p %d", buffer, index);
     } else {
       /* FIXME: check that the caps didn't change */
+      GST_LOG ("reviving buffer %p, %d", buffer, index);
       gst_buffer_ref (GST_BUFFER (buffer));
       GST_BUFFER_SIZE (buffer) = 0;
-      pool->buffers[buffer->vbuffer.index] = buffer;
+      pool->buffers[index] = buffer;
       resuscitated = TRUE;
     }
+  } else {
+    GST_LOG ("the pool is shutting down");
   }
   g_mutex_unlock (pool->lock);
 
   if (!resuscitated) {
+    GST_LOG ("buffer %p not recovered, unmapping", buffer);
     gst_mini_object_unref (GST_MINI_OBJECT (pool));
     munmap (GST_BUFFER_DATA (buffer), buffer->vbuffer.length);
   }
@@ -857,6 +864,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
   gint32 trials = NUM_TRIALS;
   GstBuffer *pool_buffer;
   gboolean need_copy;
+  gint index;
 
   memset (&buffer, 0x00, sizeof (buffer));
   buffer.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
@@ -936,10 +944,21 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
 
   g_mutex_lock (v4l2src->pool->lock);
 
-  pool_buffer = GST_BUFFER (v4l2src->pool->buffers[buffer.index]);
+  index = buffer.index;
 
-  v4l2src->pool->buffers[buffer.index] = NULL;
+  /* get our GstBuffer with that index from the pool, if the buffer was
+   * outstanding we have a serious problem. */
+  pool_buffer = GST_BUFFER (v4l2src->pool->buffers[index]);
+  if (pool_buffer == NULL)
+    goto no_buffer;
+
+  GST_LOG_OBJECT (v4l2src, "grabbed buffer %p at index %d", pool_buffer, index);
+
+  /* we have the  buffer now, mark the spot in the pool empty */
+  v4l2src->pool->buffers[index] = NULL;
   v4l2src->pool->num_live_buffers++;
+  /* if we are handing out the last buffer in the pool, we need to make a
+   * copy and bring the buffer back in the pool. */
   need_copy = v4l2src->pool->num_live_buffers == v4l2src->pool->buffer_count;
 
   g_mutex_unlock (v4l2src->pool->lock);
@@ -1015,6 +1034,15 @@ too_many_trials:
             v4l2src->v4l2object->videodev),
         (_("Failed after %d tries. device %s. system error: %s"),
             NUM_TRIALS, v4l2src->v4l2object->videodev, g_strerror (errno)));
+    return GST_FLOW_ERROR;
+  }
+no_buffer:
+  {
+    GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
+        (_("Failed trying to get video frames from device '%s'."),
+            v4l2src->v4l2object->videodev),
+        (_("No free buffers found in the pool at index %d."), index));
+    g_mutex_unlock (v4l2src->pool->lock);
     return GST_FLOW_ERROR;
   }
 /*
