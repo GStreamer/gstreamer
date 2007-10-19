@@ -1631,6 +1631,8 @@ gst_avi_mux_do_buffer (GstAviMux * avimux, GstAviPad * avipad)
   data = gst_buffer_make_metadata_writable (data);
   gst_buffer_set_caps (data, GST_PAD_CAPS (avimux->srcpad));
 
+  GST_DEBUG ("pushing buffers: head, data");
+
   if ((res = gst_pad_push (avimux->srcpad, header)) != GST_FLOW_OK)
     return res;
   if ((res = gst_pad_push (avimux->srcpad, data)) != GST_FLOW_OK)

@@ -1,3 +1,9 @@
+2007-10-19  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavimux.c:
+	* tests/check/elements/avimux.c:
+	  Add some debug and sync tests with the fix.	  
+
 2007-10-18  Wim Taymans  <wim.taymans@gmail.com>
 
 	Based on patch by: Laurent Glayal  <spglegle yahoo fr>

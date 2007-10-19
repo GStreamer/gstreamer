@@ -236,7 +236,7 @@ GST_END_TEST;
 
 GST_START_TEST (test_audio_pad)
 {
-  check_avimux_pad (&srcaudiotemplate, AUDIO_CAPS_STRING, "01wb", "audio_%d");
+  check_avimux_pad (&srcaudiotemplate, AUDIO_CAPS_STRING, "00wb", "audio_%d");
 }
 
 GST_END_TEST;
