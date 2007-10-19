@@ -786,7 +786,7 @@ gst_bus_source_dispatch (GSource * source, GSourceFunc callback,
 no_handler:
   {
     g_warning ("GstBus watch dispatched without callback\n"
-        "You must call g_source_connect().");
+        "You must call g_source_set_callback().");
     gst_message_unref (message);
     return FALSE;
   }
