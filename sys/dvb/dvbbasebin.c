@@ -59,6 +59,7 @@ enum
   ARG_0,
   PROP_ADAPTER,
   PROP_FRONTEND,
+  PROP_DISEQC_SRC,
   PROP_FREQUENCY,
   PROP_POLARITY,
   PROP_SYMBOL_RATE,
@@ -204,6 +205,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
   ProxyedProperty proxyed_properties[] = {
     {PROP_ADAPTER, "adapter"},
     {PROP_FRONTEND, "frontend"},
+    {PROP_DISEQC_SRC, "diseqc-source"},
     {PROP_FREQUENCY, "frequency"},
     {PROP_POLARITY, "polarity"},
     {PROP_SYMBOL_RATE, "symbol-rate"},
@@ -369,6 +371,7 @@ dvb_base_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_ADAPTER:
+    case PROP_DISEQC_SRC:
     case PROP_FRONTEND:
     case PROP_FREQUENCY:
     case PROP_POLARITY:
@@ -403,6 +406,7 @@ dvb_base_bin_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_ADAPTER:
     case PROP_FRONTEND:
+    case PROP_DISEQC_SRC:
     case PROP_FREQUENCY:
     case PROP_POLARITY:
     case PROP_SYMBOL_RATE:
