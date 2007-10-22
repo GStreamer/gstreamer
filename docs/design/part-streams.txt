@@ -51,8 +51,8 @@ Typical stream
          else
            running_time = (NS.stop - B.timestamp) / NS.abs_rate + NS.accum
 
-        * used to synchronize against the clock (See also
-	  part-synchronisation.txt).
+        * a monotonically increasing value that can be used to synchronize 
+	  against the clock (See also part-synchronisation.txt).
 
      - stream_time:
 
@@ -61,6 +61,8 @@ Typical stream
         * current position in stream between 0 and duration.
 
   3) EOS
-     - marks the end of data, nothing is to be expected after EOS
+     - marks the end of data, nothing is to be expected after EOS, elements
+       should refuse more data and return GST_FLOW_UNEXPECTED. A FLUSH_STOP
+       event clears the EOS state of an element.
 
 

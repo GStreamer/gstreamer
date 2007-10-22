@@ -1,3 +1,10 @@
+2007-10-22  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/design/part-TODO.txt:
+	* docs/design/part-segments.txt:
+	* docs/design/part-streams.txt:
+	Small updates.
+
 2007-10-22  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* docs/gst/gstreamer-sections.txt:

@@ -93,7 +93,6 @@ Use case: live stream
 Use case: segment looping
 -------------------------
 
-
   Consider the case of a wav file with raw audio.
 
     filesrc ! wavparse ! alsasink
