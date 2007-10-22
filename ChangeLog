@@ -1,3 +1,8 @@
+2007-10-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstdebugutils.c:
+	  Reflow code to fix uninitialized variable warning.
+
 2007-10-22  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* gst/gstcaps.c: (gst_caps_to_string),
@@ -20,7 +25,6 @@
 	 end delimiter. Fixes: #487969.
 	 API: add gst_value_set_structure()
 	 API: add gst_value_get_structure()
-
 
 2007-10-19  Tim-Philipp Müller  <tim at centricular dot net>
 

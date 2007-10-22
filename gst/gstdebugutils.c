@@ -250,11 +250,10 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
                       if ((caps = gst_pad_get_negotiated_caps (pad))) {
                         free_caps = TRUE;
                       } else {
-                        if ((caps =
+                        free_caps = FALSE;
+                        if (!(caps =
                                 (GstCaps *)
                                 gst_pad_get_pad_template_caps (pad))) {
-                          free_caps = FALSE;
-                        } else {
                           /* this should not happen */
                           media = "?";
                         }
