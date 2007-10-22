@@ -183,7 +183,7 @@ gst_rtp_mp4v_pay_finalize (GObject * object)
   rtpmp4vpay = GST_RTP_MP4V_PAY (object);
 
   if (rtpmp4vpay->config) {
-    g_object_unref (rtpmp4vpay->config);
+    gst_buffer_unref (rtpmp4vpay->config);
     rtpmp4vpay->config = NULL;
   }
   g_object_unref (rtpmp4vpay->adapter);
