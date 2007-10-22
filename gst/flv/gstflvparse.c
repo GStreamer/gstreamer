@@ -500,11 +500,10 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
     gst_element_add_pad (GST_ELEMENT (demux),
         gst_object_ref (demux->audio_pad));
 
-    if ((demux->has_audio && !demux->audio_pad) ||
-        (demux->has_video && !demux->video_pad)) {
-      GST_DEBUG_OBJECT (demux, "we are still waiting for a stream to come up "
-          "before we can emit no more pads");
-    } else {
+    /* We only emit no more pads when we have audio and video. Indeed we can
+     * not trust the FLV header to tell us if there will be only audio or 
+     * only video and we would just break discovery of some files */
+    if (demux->audio_pad && demux->video_pad) {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
       gst_element_no_more_pads (GST_ELEMENT (demux));
     }
@@ -732,11 +731,10 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
     gst_element_add_pad (GST_ELEMENT (demux),
         gst_object_ref (demux->video_pad));
 
-    if ((demux->has_audio && !demux->audio_pad) ||
-        (demux->has_video && !demux->video_pad)) {
-      GST_DEBUG_OBJECT (demux, "we are still waiting for a stream to come up "
-          "before we can emit no more pads");
-    } else {
+    /* We only emit no more pads when we have audio and video. Indeed we can
+     * not trust the FLV header to tell us if there will be only audio or 
+     * only video and we would just break discovery of some files */
+    if (demux->audio_pad && demux->video_pad) {
       GST_DEBUG_OBJECT (demux, "emitting no more pads");
       gst_element_no_more_pads (GST_ELEMENT (demux));
     }
@@ -892,9 +890,11 @@ gst_flv_parse_tag_type (GstFLVDemux * demux, const guint8 * data,
   switch (tag_type) {
     case 9:
       demux->state = FLV_STATE_TAG_VIDEO;
+      demux->has_video = TRUE;
       break;
     case 8:
       demux->state = FLV_STATE_TAG_AUDIO;
+      demux->has_audio = TRUE;
       break;
     case 18:
       demux->state = FLV_STATE_TAG_SCRIPT;

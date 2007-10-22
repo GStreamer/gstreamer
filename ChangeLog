@@ -1,3 +1,11 @@
+2007-10-22  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	(gst_flv_parse_tag_video), (gst_flv_parse_tag_type): Don't
+	emit no-more-pads for single pad scenarios as the header
+	is definitely not reliable. We emit them for 2 pads scenarios
+	though to speed up media discovery.
+
 2007-10-19  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/dvbbasebin.c:
