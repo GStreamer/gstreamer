@@ -942,15 +942,26 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
     }
   }
 
-  g_mutex_lock (v4l2src->pool->lock);
+  do {
 
-  index = buffer.index;
+    g_mutex_lock (v4l2src->pool->lock);
 
-  /* get our GstBuffer with that index from the pool, if the buffer was
-   * outstanding we have a serious problem. */
-  pool_buffer = GST_BUFFER (v4l2src->pool->buffers[index]);
-  if (pool_buffer == NULL)
-    goto no_buffer;
+    index = buffer.index;
+
+    /* get our GstBuffer with that index from the pool, if the buffer was
+     * outstanding we have a serious problem. */
+    pool_buffer = GST_BUFFER (v4l2src->pool->buffers[index]);
+
+    if (pool_buffer == NULL) {
+      g_mutex_unlock (v4l2src->pool->lock);
+      g_usleep (20000);         /* wait 20 miliseconds */
+      /* FIXME: we need a exit condition here */
+    } else {
+      break;
+    }
+
+  } while (TRUE);
+
 
   GST_LOG_OBJECT (v4l2src, "grabbed buffer %p at index %d", pool_buffer, index);
 
@@ -1036,7 +1047,7 @@ too_many_trials:
             NUM_TRIALS, v4l2src->v4l2object->videodev, g_strerror (errno)));
     return GST_FLOW_ERROR;
   }
-no_buffer:
+#if 0
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
         (_("Failed trying to get video frames from device '%s'."),
@@ -1045,6 +1056,7 @@ no_buffer:
     g_mutex_unlock (v4l2src->pool->lock);
     return GST_FLOW_ERROR;
   }
+#endif
 /*
 qbuf_failed:
   {
