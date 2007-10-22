@@ -1,3 +1,10 @@
+2007-10-22  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* docs/gst/gstreamer-sections.txt:
+	 Fixed documentation from my previous commit (added new API add
+	 gst_value_set_structure(), add gst_value_get_structure() and
+	 GST_VALUE_HOLDS_STRUCTURE).
+
 2007-10-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstdebugutils.c:
@@ -25,6 +32,7 @@
 	 end delimiter. Fixes: #487969.
 	 API: add gst_value_set_structure()
 	 API: add gst_value_get_structure()
+	 API: add GST_VALUE_HOLDS_STRUCTURE
 
 2007-10-19  Tim-Philipp Müller  <tim at centricular dot net>
 

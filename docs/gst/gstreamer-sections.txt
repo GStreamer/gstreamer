@@ -2239,6 +2239,11 @@ GST_VALUE_HOLDS_CAPS
 gst_value_set_caps
 gst_value_get_caps
 
+<SUBSECTION structure>
+GST_VALUE_HOLDS_STRUCTURE
+gst_value_set_structure
+gst_value_get_structure
+
 <SUBSECTION miniobject>
 GST_VALUE_HOLDS_MINI_OBJECT
 
