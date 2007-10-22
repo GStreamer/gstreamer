@@ -1089,12 +1089,18 @@ gst_ximagesink_event_thread (GstXImageSink * ximagesink)
 {
   g_return_val_if_fail (GST_IS_XIMAGESINK (ximagesink), NULL);
 
+  GST_OBJECT_LOCK (ximagesink);
   while (ximagesink->running) {
+    GST_OBJECT_UNLOCK (ximagesink);
+
     if (ximagesink->xwindow) {
       gst_ximagesink_handle_xevents (ximagesink);
     }
     g_usleep (100000);
+
+    GST_OBJECT_LOCK (ximagesink);
   }
+  GST_OBJECT_UNLOCK (ximagesink);
 
   return NULL;
 }
@@ -1279,8 +1285,11 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
   g_mutex_unlock (ximagesink->x_lock);
 
   /* Setup our event listening thread */
+  GST_OBJECT_LOCK (ximagesink);
+  ximagesink->running = TRUE;
   ximagesink->event_thread = g_thread_create (
       (GThreadFunc) gst_ximagesink_event_thread, ximagesink, TRUE, NULL);
+  GST_OBJECT_UNLOCK (ximagesink);
 
   return xcontext;
 }
@@ -1307,12 +1316,6 @@ gst_ximagesink_xcontext_clear (GstXImageSink * ximagesink)
   ximagesink->xcontext = NULL;
 
   GST_OBJECT_UNLOCK (ximagesink);
-
-  /* Wait for our event thread */
-  if (ximagesink->event_thread) {
-    g_thread_join (ximagesink->event_thread);
-    ximagesink->event_thread = NULL;
-  }
 
   gst_caps_unref (xcontext->caps);
   g_free (xcontext->par);
@@ -1497,19 +1500,18 @@ gst_ximagesink_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
 
       /* Initializing the XContext */
-      if (!ximagesink->xcontext)
+      if (ximagesink->xcontext == NULL) {
         xcontext = gst_ximagesink_xcontext_get (ximagesink);
-
-      GST_OBJECT_LOCK (ximagesink);
-      ximagesink->running = TRUE;
-      if (xcontext)
-        ximagesink->xcontext = xcontext;
-      GST_OBJECT_UNLOCK (ximagesink);
-
-      if (!ximagesink->xcontext) {
-        ret = GST_STATE_CHANGE_FAILURE;
-        goto beach;
+        if (xcontext == NULL) {
+          ret = GST_STATE_CHANGE_FAILURE;
+          goto beach;
+        }
+        GST_OBJECT_LOCK (ximagesink);
+        if (xcontext)
+          ximagesink->xcontext = xcontext;
+        GST_OBJECT_UNLOCK (ximagesink);
       }
+
       /* call XSynchronize with the current value of synchronous */
       GST_DEBUG_OBJECT (ximagesink, "XSynchronize called with %s",
           ximagesink->synchronous ? "TRUE" : "FALSE");
@@ -2097,9 +2099,18 @@ gst_ximagesink_get_property (GObject * object, guint prop_id,
 static void
 gst_ximagesink_reset (GstXImageSink * ximagesink)
 {
+  GThread *thread;
+
   GST_OBJECT_LOCK (ximagesink);
   ximagesink->running = FALSE;
+  /* grab thread and mark it as NULL */
+  thread = ximagesink->event_thread;
+  ximagesink->event_thread = NULL;
   GST_OBJECT_UNLOCK (ximagesink);
+
+  /* Wait for our event thread to finish before we clean up our stuff. */
+  if (thread)
+    g_thread_join (thread);
 
   if (ximagesink->ximage) {
     gst_buffer_unref (ximagesink->ximage);

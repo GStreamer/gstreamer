@@ -1523,12 +1523,18 @@ gst_xvimagesink_event_thread (GstXvImageSink * xvimagesink)
 {
   g_return_val_if_fail (GST_IS_XVIMAGESINK (xvimagesink), NULL);
 
+  GST_OBJECT_LOCK (xvimagesink);
   while (xvimagesink->running) {
+    GST_OBJECT_UNLOCK (xvimagesink);
+
     if (xvimagesink->xwindow) {
       gst_xvimagesink_handle_xevents (xvimagesink);
     }
     g_usleep (50000);
+
+    GST_OBJECT_LOCK (xvimagesink);
   }
+  GST_OBJECT_UNLOCK (xvimagesink);
 
   return NULL;
 }
@@ -1761,8 +1767,11 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   g_mutex_unlock (xvimagesink->x_lock);
 
   /* Setup our event listening thread */
+  GST_OBJECT_LOCK (xvimagesink);
+  xvimagesink->running = TRUE;
   xvimagesink->event_thread = g_thread_create (
       (GThreadFunc) gst_xvimagesink_event_thread, xvimagesink, TRUE, NULL);
+  GST_OBJECT_UNLOCK (xvimagesink);
 
   return xcontext;
 }
@@ -1790,11 +1799,6 @@ gst_xvimagesink_xcontext_clear (GstXvImageSink * xvimagesink)
 
   GST_OBJECT_UNLOCK (xvimagesink);
 
-  /* Wait for our event thread */
-  if (xvimagesink->event_thread) {
-    g_thread_join (xvimagesink->event_thread);
-    xvimagesink->event_thread = NULL;
-  }
 
   formats_list = xcontext->formats_list;
 
@@ -2088,13 +2092,11 @@ gst_xvimagesink_change_state (GstElement * element, GstStateChange transition)
         xcontext = gst_xvimagesink_xcontext_get (xvimagesink);
         if (xcontext == NULL)
           return GST_STATE_CHANGE_FAILURE;
+        GST_OBJECT_LOCK (xvimagesink);
+        if (xcontext)
+          xvimagesink->xcontext = xcontext;
+        GST_OBJECT_UNLOCK (xvimagesink);
       }
-
-      GST_OBJECT_LOCK (xvimagesink);
-      xvimagesink->running = TRUE;
-      if (xcontext)
-        xvimagesink->xcontext = xcontext;
-      GST_OBJECT_UNLOCK (xvimagesink);
 
       /* update object's par with calculated one if not set yet */
       if (!xvimagesink->par) {
@@ -2952,9 +2954,19 @@ gst_xvimagesink_get_property (GObject * object, guint prop_id,
 static void
 gst_xvimagesink_reset (GstXvImageSink * xvimagesink)
 {
+  GThread *thread;
+
   GST_OBJECT_LOCK (xvimagesink);
   xvimagesink->running = FALSE;
+  /* grab thread and mark it as NULL */
+  thread = xvimagesink->event_thread;
+  xvimagesink->event_thread = NULL;
   GST_OBJECT_UNLOCK (xvimagesink);
+
+  /* Wait for our event thread to finish before we clean up our stuff. */
+  if (thread)
+    g_thread_join (thread);
+
   if (xvimagesink->cur_image) {
     gst_buffer_unref (xvimagesink->cur_image);
     xvimagesink->cur_image = NULL;

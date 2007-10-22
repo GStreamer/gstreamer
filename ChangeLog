@@ -1,3 +1,17 @@
+2007-10-22  Wim Taymans  <wim.taymans@gmail.com>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_event_thread),
+	(gst_ximagesink_xcontext_get), (gst_ximagesink_xcontext_clear),
+	(gst_ximagesink_change_state), (gst_ximagesink_reset):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_event_thread),
+	(gst_xvimagesink_xcontext_get), (gst_xvimagesink_xcontext_clear),
+	(gst_xvimagesink_change_state), (gst_xvimagesink_reset):
+	Make sure that before we clean up the X resources, we shutdown and join
+	the event thread.
+	Also make sure the event thread does not shut down immediatly after
+	startup because the running variable is not yet correctly set.
+	Fixes #378770. 
+
 2007-10-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/playback/gstdecodebin.c: (new_pad), (type_found):
