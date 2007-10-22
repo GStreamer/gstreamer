@@ -2459,9 +2459,21 @@ gst_rtspsrc_loop_interleaved (GstRTSPSrc * src)
 
     GST_DEBUG_OBJECT (src, "doing receive");
 
+    /* We need to check if playback has been paused while we have been
+     * doing something else in our own GstTask (e.g. pushing buffer). There
+     * is a slight chance that we have just received data buffer when PAUSE
+     * state change happens (in another thread). In this case we well be
+     * totally ignorant of that unless we explicitly check it here. */
+    GST_RTSP_STATE_LOCK (src);
+    if (src->state == GST_RTSP_STATE_READY) {
+      /* We are looping in a paused mode */
+      GST_RTSP_STATE_UNLOCK (src);
+      goto already_paused;
+    }
     /* protect the connection with the connection lock so that we can see when
      * we are finished doing server communication */
     res = gst_rtspsrc_connection_receive (src, &message, src->ptcp_timeout);
+    GST_RTSP_STATE_UNLOCK (src);
 
     switch (res) {
       case GST_RTSP_OK:
@@ -2632,6 +2644,11 @@ interrupt:
     GST_DEBUG_OBJECT (src, "got interrupted: stop connection flush");
     /* unset flushing so we can do something else */
     gst_rtsp_connection_flush (src->connection, FALSE);
+    return GST_FLOW_WRONG_STATE;
+  }
+already_paused:
+  {
+    GST_DEBUG_OBJECT (src, "got interrupted: playback already paused");
     return GST_FLOW_WRONG_STATE;
   }
 receive_error:

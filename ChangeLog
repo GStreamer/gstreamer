@@ -1,5 +1,13 @@
 2007-10-22  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
+
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_loop_interleaved):
+	Fix race when pausing a RTSP stream in interleaved.
+	Fixes #475784.
+
+2007-10-22  Wim Taymans  <wim.taymans@gmail.com>
+
 	Patch by: Peter Kjellerstedt <pkj at axis com>
 
 	* gst/rtp/gstrtpmp4vpay.c: (gst_rtp_mp4v_pay_finalize):
