@@ -1289,6 +1289,62 @@ gst_value_deserialize_caps (GValue * dest, const gchar * s)
   return FALSE;
 }
 
+/****************
+ * GstStructure *
+ ****************/
+
+/**
+ * gst_value_set_structure:
+ * @value: a GValue initialized to GST_TYPE_STRUCTURE
+ * @structure: the structure to set the value to
+ *
+ * Sets the contents of @value to @structure.  The actual
+ */
+void
+gst_value_set_structure (GValue * value, const GstStructure * structure)
+{
+  g_return_if_fail (G_VALUE_TYPE (value) == GST_TYPE_STRUCTURE);
+
+  g_value_set_boxed (value, structure);
+}
+
+/**
+ * gst_value_get_structure:
+ * @value: a GValue initialized to GST_TYPE_STRUCTURE
+ *
+ * Gets the contents of @value.
+ *
+ * Returns: the contents of @value
+ */
+const GstStructure *
+gst_value_get_structure (const GValue * value)
+{
+  g_return_val_if_fail (G_VALUE_TYPE (value) == GST_TYPE_STRUCTURE, NULL);
+
+  return (GstStructure *) g_value_get_boxed (value);
+}
+
+static char *
+gst_value_serialize_structure (const GValue * value)
+{
+  GstStructure *structure = g_value_get_boxed (value);
+
+  return gst_structure_to_string (structure);
+}
+
+static gboolean
+gst_value_deserialize_structure (GValue * dest, const gchar * s)
+{
+  GstStructure *structure;
+
+  structure = gst_structure_from_string (s, NULL);
+
+  if (structure) {
+    g_value_set_boxed (dest, structure);
+    return TRUE;
+  }
+  return FALSE;
+}
 
 /*************
  * GstBuffer *
@@ -4105,6 +4161,17 @@ _gst_value_initialize (void)
     };
 
     gst_value.type = GST_TYPE_CAPS;
+    gst_value_register (&gst_value);
+  }
+  {
+    static GstValueTable gst_value = {
+      0,
+      NULL,
+      gst_value_serialize_structure,
+      gst_value_deserialize_structure,
+    };
+
+    gst_value.type = GST_TYPE_STRUCTURE;
     gst_value_register (&gst_value);
   }
   {

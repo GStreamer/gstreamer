@@ -1,3 +1,27 @@
+2007-10-22  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* gst/gstcaps.c: (gst_caps_to_string),
+	(gst_caps_from_string_inplace):
+	* gst/gststructure.c: (gst_structure_get_abbrs),
+	(gst_structure_to_string), (gst_structure_from_string):
+	* gst/gstvalue.c: (gst_value_set_structure),
+	(gst_value_get_structure), (gst_value_serialize_structure),
+	(gst_value_deserialize_structure), (_gst_value_initialize):
+	* gst/gstvalue.h:
+	* tests/check/gst/gststructure.c: (GST_START_TEST),
+	(gst_structure_suite):
+	* tests/check/gst/gstvalue.c: (GST_START_TEST):
+	 Added GstStructure to gst_value_table and its related functions.
+	 Changed gst_structure_to_string to print ';' in the end.
+	 Changed gst_caps_to_string to not print ';' beteween its
+	 fields (structures) anymore and remove the lastes ';' from latest
+	 structure. Now it is possible to have nested structures.
+	 In addition, backward compatibilty is assured by accepting '\0' as
+	 end delimiter. Fixes: #487969.
+	 API: add gst_value_set_structure()
+	 API: add gst_value_get_structure()
+
+
 2007-10-19  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstbus.c:

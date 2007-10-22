@@ -294,6 +294,47 @@ GST_START_TEST (test_fixate_frac_list)
 
 GST_END_TEST;
 
+GST_START_TEST (test_structure_nested)
+{
+  GstStructure *sp, *sc1, *sc2;
+  gchar *str;
+
+  sc1 =
+      gst_structure_new ("Camera", "XResolution", G_TYPE_INT, 72, "YResolution",
+      G_TYPE_INT, 73, NULL);
+  fail_unless (sc1 != NULL);
+
+  sc2 =
+      gst_structure_new ("Image-Data", "Orientation", G_TYPE_STRING, "top-left",
+      NULL);
+  fail_unless (sc2 != NULL);
+
+  sp = gst_structure_new ("Exif", "Camera", GST_TYPE_STRUCTURE, sc1,
+      "Image Data", GST_TYPE_STRUCTURE, sc2, NULL);
+  fail_unless (sp != NULL);
+
+  fail_unless (gst_structure_has_field_typed (sp, "Camera",
+          GST_TYPE_STRUCTURE));
+
+  str = gst_structure_to_string (sp);
+  fail_unless (str != NULL);
+
+  fail_unless (g_str_equal (str,
+          "Exif"
+          ", Camera=(structure)Camera, XResolution=(int)72, YResolution=(int)73;"
+          ", Image Data=(structure)Image-Data, Orientation=(string)top-left;;"));
+
+  g_free (str);
+  str = NULL;
+
+  gst_structure_free (sc1);
+  gst_structure_free (sc2);
+  gst_structure_free (sp);
+
+}
+
+GST_END_TEST;
+
 Suite *
 gst_structure_suite (void)
 {
@@ -309,6 +350,7 @@ gst_structure_suite (void)
   tcase_add_test (tc_chain, test_structure_new);
   tcase_add_test (tc_chain, test_fixate);
   tcase_add_test (tc_chain, test_fixate_frac_list);
+  tcase_add_test (tc_chain, test_structure_nested);
   return s;
 }
 

@@ -1421,6 +1421,8 @@ gst_structure_get_abbrs (gint * n_abbrs)
       {"str", G_TYPE_STRING}
       ,
       {"s", G_TYPE_STRING}
+      ,
+      {"structure", GST_TYPE_STRUCTURE}
     };
     num = G_N_ELEMENTS (dyn_abbrs);
     /* permanently allocate and copy the array now */
@@ -1544,6 +1546,9 @@ gst_structure_to_string (const GstStructure * structure)
         gst_structure_to_abbr (type), GST_STR_NULL (t));
     g_free (t);
   }
+
+  g_string_append_c (s, ';');
+
   return g_string_free (s, FALSE);
 }
 
@@ -1895,17 +1900,14 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   copy = g_strdup (string);
   r = copy;
 
+  /* skipe spaces */
+  while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
+              && g_ascii_isspace (r[1]))))
+    r++;
+
   name = r;
   if (!gst_structure_parse_string (r, &w, &r)) {
     GST_WARNING ("Failed to parse structure string");
-    goto error;
-  }
-
-  /* skip spaces */
-  while (g_ascii_isspace (*r) || (r[0] == '\\' && g_ascii_isspace (r[1])))
-    r++;
-  if (*r != 0 && *r != ';' && *r != ',') {
-    GST_WARNING ("Failed to find delimiter, r=%s", r);
     goto error;
   }
 
@@ -1914,7 +1916,19 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   structure = gst_structure_empty_new (name);
   *w = save;
 
-  while (*r && (*r != ';')) {
+  do {
+    while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
+                && g_ascii_isspace (r[1]))))
+      r++;
+    if (*r == ';') {
+      /* end of structure, get the next char and finish */
+      r++;
+      break;
+    }
+    if (*r == '\0') {
+      /* accept \0 as end delimiter */
+      break;
+    }
     if (*r != ',') {
       GST_WARNING ("Failed to find delimiter, r=%s", r);
       goto error;
@@ -1928,10 +1942,8 @@ gst_structure_from_string (const gchar * string, gchar ** end)
     if (!gst_structure_parse_field (r, &r, &field))
       goto error;
     gst_structure_set_field (structure, &field);
-    while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
-                && g_ascii_isspace (r[1]))))
-      r++;
-  }
+
+  } while (TRUE);
 
   if (end)
     *end = (char *) string + (r - copy);

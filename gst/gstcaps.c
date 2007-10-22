@@ -1797,13 +1797,19 @@ gst_caps_to_string (const GstCaps * caps)
     GstStructure *structure;
     char *sstr;
 
-    if (i > 0)
-      g_string_append (s, "; ");
+    if (i > 0) {
+      /* ';' is now added by gst_structure_to_string */
+      g_string_append (s, " ");
+    }
 
     structure = gst_caps_get_structure (caps, i);
     sstr = gst_structure_to_string (structure);
     g_string_append (s, sstr);
     g_free (sstr);
+  }
+  if (s->len && s->str[s->len - 1] == ';') {
+    /* remove latest ';' */
+    s->str[--s->len] = '\0';
   }
 
   return g_string_free (s, FALSE);
@@ -1830,22 +1836,20 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
   }
   gst_caps_append_structure (caps, structure);
 
-  while (*s == ';') {
-    s++;
+  do {
+
     while (g_ascii_isspace (*s))
       s++;
+    if (*s == '\0') {
+      break;
+    }
     structure = gst_structure_from_string (s, &s);
     if (structure == NULL) {
       return FALSE;
     }
     gst_caps_append_structure (caps, structure);
-    while (g_ascii_isspace (*s))
-      s++;
-  }
 
-  if (*s != 0) {
-    return FALSE;
-  }
+  } while (TRUE);
 
   return TRUE;
 }
