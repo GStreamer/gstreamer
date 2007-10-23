@@ -1,3 +1,11 @@
+2007-10-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/gstdvbsrc.c:
+	Actually use the code-rate-hp parameter for DVB-S.
+	It turns out setting to AUTO does not always work (
+	especially in diseq situations). Set by default to 
+	FEC_AUTO.
+
 2007-10-22  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),

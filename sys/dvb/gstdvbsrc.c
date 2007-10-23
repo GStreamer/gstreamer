@@ -391,8 +391,8 @@ gst_dvbsrc_class_init (GstDvbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_HP,
       g_param_spec_enum ("code-rate-hp",
           "code-rate-hp",
-          "High Priority Code Rate (DVB-T)",
-          GST_TYPE_DVBSRC_CODE_RATE, 1, G_PARAM_READWRITE));
+          "High Priority Code Rate (DVB-T and DVB-S)",
+          GST_TYPE_DVBSRC_CODE_RATE, FEC_AUTO, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_DVBSRC_CODE_RATE_LP,
       g_param_spec_enum ("code-rate-lp",
@@ -468,7 +468,7 @@ gst_dvbsrc_init (GstDvbSrc * object, GstDvbSrcClass * klass)
   object->sym_rate = DEFAULT_SYMBOL_RATE;
   object->diseqc_src = DEFAULT_DISEQC_SRC;
   object->send_diseqc = FALSE;
-
+  object->code_rate_hp = FEC_AUTO;
   object->tune_mutex = g_mutex_new ();
 }
 
@@ -865,7 +865,7 @@ read_device (int fd, int adapter_number, int frontend_number, int size)
         } else
           count = count + tmp;
       } else {
-        fprintf (stderr, "revents = %d\n", pfd[0].revents);
+        GST_LOG ("revents = %d\n", pfd[0].revents);
       }
     } else if (ret_val == 0) {  // poll timeout
       attempts += 1;
@@ -940,7 +940,10 @@ gst_dvbsrc_start (GstBaseSrc * bsrc)
   GstDvbSrc *src = GST_DVBSRC (bsrc);
 
   gst_dvbsrc_open_frontend (src);
-  gst_dvbsrc_tune (src);
+  if (!gst_dvbsrc_tune (src)) {
+    GST_ERROR_OBJECT (src, "Not able to lock on to the dvb channel");
+    return FALSE;
+  }
   if (!gst_dvbsrc_frontend_status (src)) {
     return FALSE;
   }
@@ -1049,27 +1052,39 @@ static void
 diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
     fe_sec_tone_mode_t t, fe_sec_mini_cmd_t b)
 {
-  if (ioctl (fd, FE_SET_TONE, SEC_TONE_OFF) == -1)
-    perror ("FE_SET_TONE failed");
+  if (ioctl (fd, FE_SET_TONE, SEC_TONE_OFF) == -1) {
+    GST_ERROR ("Setting tone to off failed");
+    return;
+  }
 
-  if (ioctl (fd, FE_SET_VOLTAGE, v) == -1)
-    perror ("FE_SET_VOLTAGE failed");
+  if (ioctl (fd, FE_SET_VOLTAGE, v) == -1) {
+    GST_ERROR ("Setting voltage failed");
+    return;
+  }
+
+  usleep (15 * 1000);
+  GST_LOG ("diseqc: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x\n", cmd->cmd.msg[0],
+      cmd->cmd.msg[1], cmd->cmd.msg[2], cmd->cmd.msg[3], cmd->cmd.msg[4],
+      cmd->cmd.msg[5]);
+  if (ioctl (fd, FE_DISEQC_SEND_MASTER_CMD, &cmd->cmd) == -1) {
+    GST_ERROR ("Sending diseqc command failed");
+    return;
+  }
+
+  //usleep (cmd->wait * 1000);
+  usleep (15 * 1000);
+
+  if (ioctl (fd, FE_DISEQC_SEND_BURST, b) == -1) {
+    GST_ERROR ("Sending burst failed");
+    return;
+  }
 
   usleep (15 * 1000);
 
-  if (ioctl (fd, FE_DISEQC_SEND_MASTER_CMD, &cmd->cmd) == -1)
-    perror ("FE_DISEQC_SEND_MASTER_CMD failed");
-
-  usleep (cmd->wait * 1000);
-  usleep (15 * 1000);
-
-  if (ioctl (fd, FE_DISEQC_SEND_BURST, b) == -1)
-    perror ("FE_DISEQC_SEND_BURST failed");
-
-  usleep (15 * 1000);
-
-  if (ioctl (fd, FE_SET_TONE, t) == -1)
-    perror ("FE_SET_TONE failed");
+  if (ioctl (fd, FE_SET_TONE, t) == -1) {
+    GST_ERROR ("Setting tone failed");
+    return;
+  }
 }
 
 
@@ -1089,7 +1104,7 @@ diseqc (int secfd, int sat_no, int voltage, int tone)
       (voltage == SEC_VOLTAGE_13 ? 0 : 2));
 
   diseqc_send_msg (secfd, voltage, &cmd, tone,
-      (sat_no / 4) % 2 ? SEC_MINI_B : SEC_MINI_A);
+      sat_no % 2 ? SEC_MINI_B : SEC_MINI_A);
 
 }
 
@@ -1099,6 +1114,8 @@ gst_dvbsrc_tune (GstDvbSrc * object)
 {
   struct dvb_frontend_parameters feparams;
   fe_sec_voltage_t voltage;
+  int i;
+  fe_status_t status;
 
   unsigned int freq = object->freq;
   unsigned int sym_rate = object->sym_rate * 1000;
@@ -1143,7 +1160,7 @@ gst_dvbsrc_tune (GstDvbSrc * object)
 
       feparams.inversion = INVERSION_AUTO;
       feparams.u.qpsk.symbol_rate = sym_rate;
-      feparams.u.qpsk.fec_inner = FEC_AUTO;
+      feparams.u.qpsk.fec_inner = object->code_rate_hp;
 
       if (object->pol == DVB_POL_H)
         voltage = SEC_VOLTAGE_18;
@@ -1193,12 +1210,22 @@ gst_dvbsrc_tune (GstDvbSrc * object)
 
   }
   usleep (100000);
-
   /* now tune the frontend */
   if (ioctl (object->fd_frontend, FE_SET_FRONTEND, &feparams) < 0) {
     g_warning ("Error tuning channel: %s", strerror (errno));
   }
-
+  for (i = 0; i < 15; i++) {
+    usleep (100000);
+    if (ioctl (object->fd_frontend, FE_READ_STATUS, &status) == -1) {
+      perror ("FE_READ_STATUS");
+      break;
+    }
+    if (status & FE_HAS_LOCK) {
+      break;
+    }
+  }
+  if (!(status & FE_HAS_LOCK))
+    return FALSE;
   /* set pid filters */
   gst_dvbsrc_set_pes_filters (object);
 
