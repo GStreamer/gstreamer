@@ -752,8 +752,10 @@ gst_tag_demux_get_upstream_size (GstTagDemux * tagdemux)
 static gboolean
 gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
 {
+  GstTagDemux *tagdemux;
   gboolean res = FALSE;
-  GstTagDemux *tagdemux = GST_TAG_DEMUX (GST_PAD_PARENT (pad));
+
+  tagdemux = GST_TAG_DEMUX (gst_pad_get_parent (pad));
 
   /* Handle SEEK events, with adjusted byte offsets and sizes. */
 
@@ -789,8 +791,8 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
               cur = 0;
             cur -= tagdemux->priv->strip_end;
             break;
+          case GST_SEEK_TYPE_NONE:
           default:
-            g_assert_not_reached ();
             break;
         }
         switch (stop_type) {
@@ -809,6 +811,7 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
               stop = 0;
             stop -= tagdemux->priv->strip_end;
             break;
+          case GST_SEEK_TYPE_NONE:
           default:
             break;
         }
@@ -819,9 +822,11 @@ gst_tag_demux_srcpad_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
+      /* FIXME: shouldn't we pass unknown and unhandled events upstream? */
       break;
   }
 
+  gst_object_unref (tagdemux);
   gst_event_unref (event);
   return res;
 }
