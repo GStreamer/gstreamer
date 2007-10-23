@@ -162,7 +162,7 @@ gst_osx_audio_src_class_init (GstOsxAudioSrcClass * klass)
       GST_DEBUG_FUNCPTR (gst_osx_audio_src_get_property);
 
   g_object_class_install_property (gobject_class, ARG_DEVICE,
-      g_param_spec_int ("device", "Device ID", "Device ID of output device",
+      g_param_spec_int ("device", "Device ID", "Device ID of input device",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
 
   gstbaseaudiosrc_class->create_ringbuffer =
@@ -230,11 +230,17 @@ static GstRingBuffer *
 gst_osx_audio_src_create_ringbuffer (GstBaseAudioSrc * src)
 {
   GstOsxAudioSrc *osxsrc;
+  OSStatus status;
+  UInt32 propertySize;
 
   osxsrc = GST_OSX_AUDIO_SRC (src);
   if (!osxsrc->ringbuffer) {
     GST_DEBUG ("Creating ringbuffer");
     osxsrc->ringbuffer = g_object_new (GST_TYPE_OSX_RING_BUFFER, NULL);
+    /* change the device to the Default Input Device */
+    propertySize = sizeof (osxsrc->ringbuffer->device_id);
+    status = AudioHardwareGetProperty (kAudioHardwarePropertyDefaultInputDevice,
+        &propertySize, &osxsrc->ringbuffer->device_id);
     GST_DEBUG ("osx src 0x%p element 0x%p  ioproc 0x%p", osxsrc,
         GST_OSX_AUDIO_ELEMENT_GET_INTERFACE (osxsrc),
         (void *) gst_osx_audio_src_io_proc);
@@ -255,11 +261,12 @@ gst_osx_audio_src_io_proc (AudioDeviceID inDevice, const AudioTimeStamp * inNow,
   guint8 *writeptr;
   gint writeseg;
   gint len;
+  gint bytesToCopy;
 
   if (gst_ring_buffer_prepare_read (GST_RING_BUFFER (buf), &writeseg, &writeptr,
           &len)) {
-
-    memcpy (writeptr, (char *) inInputData->mBuffers[0].mData, len);
+    bytesToCopy = inInputData->mBuffers[0].mDataByteSize;
+    memcpy (writeptr, (char *) inInputData->mBuffers[0].mData, bytesToCopy);
 
     /* clear written samples */
     /*gst_ring_buffer_clear (GST_RING_BUFFER(buf), writeseg); */
