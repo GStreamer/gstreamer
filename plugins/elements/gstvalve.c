@@ -221,12 +221,12 @@ gst_valve_event (GstBaseTransform *trans, GstEvent *event)
 gboolean
 gst_valve_plugin_init (GstPlugin *plugin)
 {
-  return gst_element_register (plugin, "valve",
+  return gst_element_register (plugin, "fsvalve",
       GST_RANK_MARGINAL, GST_TYPE_VALVE);
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
-    "valve",
+    "fsvalve",
     "Valve",
     gst_valve_plugin_init, VERSION, "LGPL", "Farsight", "http://farsight.sf.net")
