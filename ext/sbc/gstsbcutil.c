@@ -21,12 +21,8 @@
  *
  */
 
-
-/* common functions for gstreamer sbc related plugins */
-
-
-#include "gstsbcutil.h"
 #include "ipc.h"
+#include "gstsbcutil.h"
 
 /*
  * Selects one rate from a list of possible rates

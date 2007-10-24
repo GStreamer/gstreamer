@@ -21,9 +21,6 @@
  *
  */
 
-
-/* common functions for gstreamer sbc related plugins */
-
 #include <gst/gst.h>
 
 gint gst_sbc_select_rate_from_list(const GValue *value);
@@ -38,10 +35,10 @@ gint gst_sbc_select_blocks_from_range(const GValue *value);
 gint gst_sbc_select_subbands_from_list(const GValue *value);
 gint gst_sbc_select_subbands_from_range(const GValue *value);
 
-const gchar* gst_sbc_get_allocation_from_list(const GValue *value);
-gint gst_sbc_get_allocation_mode_int(const gchar* allocation);
-const gchar* gst_sbc_get_allocation_string(int alloc);
+const gchar *gst_sbc_get_allocation_from_list(const GValue *value);
+gint gst_sbc_get_allocation_mode_int(const gchar *allocation);
+const gchar *gst_sbc_get_allocation_string(int alloc);
 
-const gchar* gst_sbc_get_mode_from_list(const GValue *value);
-gint gst_sbc_get_mode_int(const gchar* mode);
-const gchar* gst_sbc_get_mode_string(int joint);
+const gchar *gst_sbc_get_mode_from_list(const GValue *value);
+gint gst_sbc_get_mode_int(const gchar *mode);
+const gchar *gst_sbc_get_mode_string(int joint);
