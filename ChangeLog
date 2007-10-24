@@ -1,3 +1,21 @@
+2007-10-24  Wim Taymans  <wim.taymans@gmail.com>
+
+	Inspired by patch of: René Stadler <mail at renestadler dot de>
+
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_class_init),
+	(gst_decode_bin_autoplug_continue),
+	(gst_decode_bin_autoplug_factories),
+	(gst_decode_bin_autoplug_select), (analyze_new_pad), (connect_pad),
+	(find_compatibles):
+	* gst/playback/gstplay-marshal.list:
+	Remove the autoplug-sort signal and replace it with a binding friendly
+	autoplug-select signal.
+	Add an autoplug-factories signal that can be used to generate a list of
+	factories to try to autoplug.
+	Add the GstPad to the autoplugging signal args as it might be needed to
+	make a good factory selection.
+	Fix up the marshallers for this. Fixes #407282.
+
 2007-10-23  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gsttagdemux.c:

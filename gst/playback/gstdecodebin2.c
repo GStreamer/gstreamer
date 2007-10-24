@@ -110,11 +110,16 @@ struct _GstDecodeBinClass
   void (*removed_decoded_pad) (GstElement * element, GstPad * pad);
   /* signal fired when we found a pad that we cannot decode */
   void (*unknown_type) (GstElement * element, GstPad * pad, GstCaps * caps);
+
   /* signal fired to know if we continue trying to decode the given caps */
-    gboolean (*autoplug_continue) (GstElement * element, GstCaps * caps);
-  /* signal fired to reorder the proposed list of factories */
-    gboolean (*autoplug_sort) (GstElement * element, GstCaps * caps,
-      GList ** list);
+    gboolean (*autoplug_continue) (GstElement * element, GstPad * pad,
+      GstCaps * caps);
+  /* signal fired to get a list of factories to try to autoplug */
+  GValueArray *(*autoplug_factories) (GstElement * element, GstPad * pad,
+      GstCaps * caps);
+  /* signal fired to select from the proposed list of factories */
+    gint (*autoplug_select) (GstElement * element, GstPad * pad, GstCaps * caps,
+      GValueArray * factories);
 };
 
 /* signals */
@@ -124,7 +129,8 @@ enum
   SIGNAL_REMOVED_DECODED_PAD,
   SIGNAL_UNKNOWN_TYPE,
   SIGNAL_AUTOPLUG_CONTINUE,
-  SIGNAL_AUTOPLUG_SORT,
+  SIGNAL_AUTOPLUG_FACTORIES,
+  SIGNAL_AUTOPLUG_SELECT,
   LAST_SIGNAL
 };
 
@@ -152,9 +158,12 @@ static void type_found (GstElement * typefind, guint probability,
     GstCaps * caps, GstDecodeBin * decode_bin);
 
 static gboolean gst_decode_bin_autoplug_continue (GstElement * element,
-    GstCaps * caps);
-static gboolean gst_decode_bin_autoplug_sort (GstElement * element,
-    GstCaps * caps, GList ** list);
+    GstPad * pad, GstCaps * caps);
+static GValueArray *gst_decode_bin_autoplug_factories (GstElement *
+    element, GstPad * pad, GstCaps * caps);
+static gint gst_decode_bin_autoplug_select (GstElement * element,
+    GstPad * pad, GstCaps * caps, GValueArray * list);
+
 static void gst_decode_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_decode_bin_get_property (GObject * object, guint prop_id,
@@ -346,7 +355,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * This signal gets emitted as soon as a new pad of the same type as one of
    * the valid 'raw' types is added.
    */
-
   gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD] =
       g_signal_new ("new-decoded-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
@@ -360,7 +368,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * This signal is emitted when a 'final' caps pad has been removed.
    */
-
   gst_decode_bin_signals[SIGNAL_REMOVED_DECODED_PAD] =
       g_signal_new ("removed-decoded-pad", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST,
@@ -375,7 +382,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * This signal is emitted when a pad for which there is no further possible
    * decoding is added to the decodebin.
    */
-
   gst_decode_bin_signals[SIGNAL_UNKNOWN_TYPE] =
       g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, unknown_type),
@@ -384,6 +390,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   /**
    * GstDecodeBin2::autoplug-continue:
+   * @pad: The #GstPad.
    * @caps: The #GstCaps found.
    *
    * This signal is emitted whenever decodebin2 finds a new stream. It is
@@ -394,34 +401,51 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * final and the pad will be exposed as such (see 'new-decoded-pad'
    * signal).
    */
-
   gst_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE] =
       g_signal_new ("autoplug-continue", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_continue),
-      _gst_boolean_accumulator, NULL, gst_play_marshal_BOOLEAN__OBJECT,
-      G_TYPE_BOOLEAN, 1, GST_TYPE_CAPS);
+      _gst_boolean_accumulator, NULL, gst_play_marshal_BOOLEAN__OBJECT_OBJECT,
+      G_TYPE_BOOLEAN, 2, GST_TYPE_PAD, GST_TYPE_CAPS);
 
   /**
-   * GstDecodeBin2::autoplug-sort:
+   * GstDecodeBin2::autoplug-factories:
+   * @pad: The #GstPad.
+   * @caps: The #GstCaps found.
+   *
+   * This function is emited when an array of possible factories for @caps on
+   * @pad is needed. Decodebin2 will by default return 
+   *
+   * Returns: a #GValueArray* with a list of factories to try. The factories are
+   * by default tried in the returned order or based on the index returned by
+   * "autoplug-select".
+   */
+  gst_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES] =
+      g_signal_new ("autoplug-factories", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass,
+          autoplug_factories), NULL, NULL,
+      gst_play_marshal_BOXED__OBJECT_OBJECT, G_TYPE_VALUE_ARRAY, 2,
+      GST_TYPE_PAD, GST_TYPE_CAPS);
+
+  /**
+   * GstDecodeBin2::autoplug-select:
+   * @pad: The #GstPad.
    * @caps: The #GstCaps.
-   * @factories: A #GList of possible #GstElementFactory to use.
+   * @factories: A #GValueArray of possible #GstElementFactory to use, sorted by
+   * rank (higher ranks come first).
    *
    * This signal is emitted once decodebin2 has found all the possible
    * #GstElementFactory that can be used to handle the given @caps.
    *
-   * UNSTABLE API. Will change soon.
-   *
-   * Returns: #TRUE if you wish decodebin2 to start trying to decode
-   * the given @caps with the list of factories. #FALSE if you do not want
-   * these #GstCaps, if so the pad will be exposed as unknown (see
-   * 'unknown-type' signal).
+   * Returns: A #gint indicating what factory index from the @factories array
+   * that you wish decodebin2 to use for trying to decode the given @caps.
+   * -1 to stop selection of a factory. The default handler always
+   * returns the first possible factory.
    */
-
-  gst_decode_bin_signals[SIGNAL_AUTOPLUG_SORT] =
-      g_signal_new ("autoplug-sort", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_sort),
-      _gst_boolean_accumulator, NULL, gst_play_marshal_BOOLEAN__OBJECT_POINTER,
-      G_TYPE_BOOLEAN, 2, GST_TYPE_CAPS, G_TYPE_POINTER);
+  gst_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT] =
+      g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_select),
+      NULL, NULL, gst_play_marshal_INT__OBJECT_OBJECT_BOXED,
+      G_TYPE_INT, 3, GST_TYPE_PAD, GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
 
   g_object_class_install_property (gobject_klass, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps", "The caps on which to stop decoding.",
@@ -429,7 +453,9 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
 
   klass->autoplug_continue =
       GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_continue);
-  klass->autoplug_sort = GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_sort);
+  klass->autoplug_factories =
+      GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_factories);
+  klass->autoplug_select = GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_select);
 
   gst_element_class_add_pad_template (gstelement_klass,
       gst_static_pad_template_get (&decoder_bin_sink_template));
@@ -700,24 +726,42 @@ gst_decode_bin_get_caps (GstDecodeBin * dbin)
   return caps;
 }
 
+static GValueArray *find_compatibles (GstDecodeBin * decode_bin,
+    GstPad * pad, const GstCaps * caps);
+
 /*****
  * Default autoplug signal handlers
  *****/
-
 static gboolean
-gst_decode_bin_autoplug_continue (GstElement * element, GstCaps * caps)
+gst_decode_bin_autoplug_continue (GstElement * element, GstPad * pad,
+    GstCaps * caps)
 {
+  /* by default we always continue */
   return TRUE;
 }
 
-static gboolean
-gst_decode_bin_autoplug_sort (GstElement * element, GstCaps * caps,
-    GList ** list)
+static GValueArray *
+gst_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
+    GstCaps * caps)
 {
-  return TRUE;
+  GValueArray *result;
+
+  /* return all compatible factories for caps */
+  result = find_compatibles (GST_DECODE_BIN (element), pad, caps);
+
+  return result;
 }
 
+static gint
+gst_decode_bin_autoplug_select (GstElement * element, GstPad * pad,
+    GstCaps * caps, GValueArray * factories)
+{
+  g_return_val_if_fail (factories != NULL, -1);
+  g_return_val_if_fail (factories->n_values > 0, -1);
 
+  /* Return first factory. */
+  return 0;
+}
 
 /********
  * Discovery methods
@@ -725,11 +769,10 @@ gst_decode_bin_autoplug_sort (GstElement * element, GstCaps * caps,
 
 static gboolean are_raw_caps (GstDecodeBin * dbin, GstCaps * caps);
 static gboolean is_demuxer_element (GstElement * srcelement);
-static GList *find_compatibles (GstDecodeBin * decode_bin,
-    const GstCaps * caps);
 
 static gboolean connect_pad (GstDecodeBin * dbin, GstElement * src,
-    GstPad * pad, GList * factories, GstDecodeGroup * group);
+    GstPad * pad, GstCaps * caps, GValueArray * factories,
+    GstDecodeGroup * group);
 static gboolean connect_element (GstDecodeBin * dbin, GstElement * element,
     GstDecodeGroup * group);
 static void expose_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
@@ -754,8 +797,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     GstCaps * caps, GstDecodeGroup * group)
 {
   gboolean apcontinue = TRUE;
-  GList *factories = NULL;
-  gboolean apsort = TRUE;
+  GValueArray *factories = NULL;
 
   GST_DEBUG_OBJECT (dbin, "Pad %s:%s caps:%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -766,9 +808,11 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if (gst_caps_is_any (caps))
     goto any_caps;
 
-  /* 1. Emit 'autoplug-continue' */
+  /* 1. Emit 'autoplug-continue' the result will tell us if this pads needs
+   * further autoplugging. */
   g_signal_emit (G_OBJECT (dbin),
-      gst_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE], 0, caps, &apcontinue);
+      gst_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE], 0, pad, caps,
+      &apcontinue);
 
   /* 1.a if autoplug-continue is FALSE or caps is a raw format, goto pad_is_final */
   if ((!apcontinue) || are_raw_caps (dbin, caps))
@@ -779,18 +823,11 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if (!gst_caps_is_fixed (caps))
     goto non_fixed;
 
-  /* 1.c else if there's no compatible factory or 'autoplug-sort' returned FALSE, goto pad_not_used */
-  if ((factories = find_compatibles (dbin, caps))) {
-    /* emit autoplug-sort */
-    g_signal_emit (G_OBJECT (dbin),
-        gst_decode_bin_signals[SIGNAL_AUTOPLUG_SORT],
-        0, caps, &factories, &apsort);
-    if (!apsort) {
-      g_list_free (factories);
-      /* User doesn't want that pad */
-      goto pad_not_wanted;
-    }
-  } else {
+  /* 1.c else if there's no compatible factory goto unknown_type */
+  g_signal_emit (G_OBJECT (dbin),
+      gst_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES], 0, pad, caps,
+      &factories);
+  if (factories == NULL) {
     /* no compatible factories */
     goto unknown_type;
   }
@@ -798,8 +835,8 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   /* 1.d else goto pad_is_valid */
   GST_LOG_OBJECT (pad, "Let's continue discovery on this pad");
 
-  connect_pad (dbin, src, pad, factories, group);
-  g_list_free (factories);
+  connect_pad (dbin, src, pad, caps, factories, group);
+  g_value_array_free (factories);
 
   return;
 
@@ -807,12 +844,6 @@ expose_pad:
   {
     GST_LOG_OBJECT (dbin, "Pad is final. autoplug-continue:%d", apcontinue);
     expose_pad (dbin, src, pad, group);
-    return;
-  }
-
-pad_not_wanted:
-  {
-    GST_LOG_OBJECT (pad, "User doesn't want this pad, stopping discovery");
     return;
   }
 
@@ -870,13 +901,14 @@ setup_caps_delay:
 
 static gboolean
 connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
-    GList * factories, GstDecodeGroup * group)
+    GstCaps * caps, GValueArray * factories, GstDecodeGroup * group)
 {
   gboolean res = FALSE;
-  GList *tmp;
   GstPad *mqpad = NULL;
 
   g_return_val_if_fail (factories != NULL, FALSE);
+  g_return_val_if_fail (factories->n_values > 0, FALSE);
+
   GST_DEBUG_OBJECT (dbin, "pad %s:%s , group:%p",
       GST_DEBUG_PAD_NAME (pad), group);
 
@@ -898,10 +930,32 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   }
 
   /* 2. Try to create an element and link to it */
-  for (tmp = factories; tmp; tmp = g_list_next (tmp)) {
-    GstElementFactory *factory = (GstElementFactory *) tmp->data;
+  while (factories->n_values > 0) {
+    gint factidx;
+    GstElementFactory *factory;
     GstElement *element;
     GstPad *sinkpad;
+
+    /* emit autoplug-select */
+    g_signal_emit (G_OBJECT (dbin),
+        gst_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT],
+        0, pad, caps, factories, &factidx);
+
+    /* when the function returns -1, we leave the loop and stop */
+    if (factidx == -1) {
+      GST_DEBUG_OBJECT (dbin, "autoplug select returned -1");
+      break;
+    }
+
+    GST_DEBUG_OBJECT (dbin, "autoplug select returned %d", factidx);
+
+    factory = g_value_get_object (g_value_array_get_nth (factories, factidx));
+
+    /* factory is != NULL now since the default handler selects the first
+     * factory if all connected user handlers returned NULL. */
+
+    /* Remove selected factory from the list. */
+    g_value_array_remove (factories, factidx);
 
     /* 2.1. Try to create an element */
     if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
@@ -1279,14 +1333,14 @@ caps_notify_group_cb (GstPad * pad, GParamSpec * unused, GstDecodeGroup * group)
   gst_object_unref (element);
 }
 
-/* this function runs through the element factories and returns a list
- * of all elements that are able to sink the given caps 
+/* this function runs through the element factories and returns a value array of
+ * all elements that are able to sink the given caps
  */
-static GList *
-find_compatibles (GstDecodeBin * decode_bin, const GstCaps * caps)
+static GValueArray *
+find_compatibles (GstDecodeBin * decode_bin, GstPad * pad, const GstCaps * caps)
 {
   GList *factories;
-  GList *to_try = NULL;
+  GValueArray *to_try = g_value_array_new (0);
 
   /* loop over all the factories */
   for (factories = decode_bin->factories; factories;
@@ -1314,7 +1368,11 @@ find_compatibles (GstDecodeBin * decode_bin, const GstCaps * caps)
         /* check if the intersection is empty */
         if (!gst_caps_is_empty (intersect)) {
           /* non empty intersection, we can use this element */
-          to_try = g_list_prepend (to_try, factory);
+          GValue val = { 0, };
+          g_value_init (&val, G_TYPE_OBJECT);
+          g_value_set_object (&val, factory);
+          g_value_array_append (to_try, &val);
+          g_value_unset (&val);
           gst_caps_unref (intersect);
           break;
         }
@@ -1322,7 +1380,6 @@ find_compatibles (GstDecodeBin * decode_bin, const GstCaps * caps)
       }
     }
   }
-  to_try = g_list_reverse (to_try);
 
   return to_try;
 }
