@@ -366,7 +366,7 @@ gst_a2dp_sink_conf_resp (GstA2dpSink * sink)
 {
   gchar buf[IPC_MTU];
   GIOError io_error;
-  guint ret;
+  gsize ret;
   struct ipc_packet *pkt = (void *) buf;
   struct ipc_data_cfg *cfg = (void *) pkt->data;
 
@@ -404,7 +404,7 @@ gst_a2dp_sink_conf_recv_dev_conf (GstA2dpSink * sink)
 {
   gchar buf[IPC_MTU];
   GIOError io_error;
-  guint ret = 0;
+  gsize ret;
   struct ipc_packet *pkt = (void *) buf;
   struct ipc_data_cfg *cfg = (void *) pkt->data;
   struct ipc_codec_sbc *sbc = (void *) cfg->data;
@@ -613,7 +613,7 @@ gst_a2dp_sink_send_conf_pkt (GstA2dpSink * sink, GstCaps * caps)
   gchar buf[IPC_MTU];
   struct ipc_packet *pkt = (void *) buf;
   gboolean ret;
-  guint bytes_sent;
+  gsize bytes_sent;
   GIOError io_error;
 
   g_assert (sink->con_state == NOT_CONFIGURED);
