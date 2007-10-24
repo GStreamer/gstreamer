@@ -55,10 +55,7 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "subbands = (int) { 4, 8 }, "
         "allocation = (string) { snr, loudness }"));
 
-/*
-	Creates a fixed caps from the caps given.
-
-*/
+/* reates a fixed caps from the caps given. */
 static GstCaps *
 sbc_parse_select_caps (GstSbcParse * parse, GstCaps * caps)
 {
@@ -73,7 +70,6 @@ sbc_parse_select_caps (GstSbcParse * parse, GstCaps * caps)
 
   structure = gst_caps_get_structure (caps, 0);
 
-  /* rate */
   if (!gst_structure_has_field (structure, "rate")) {
     error = TRUE;
     error_message = "no rate.";
@@ -90,7 +86,6 @@ sbc_parse_select_caps (GstSbcParse * parse, GstCaps * caps)
     rate = temp;
   }
 
-  /* channels */
   if (!gst_structure_has_field (structure, "channels")) {
     error = TRUE;
     error_message = "no channels.";
@@ -107,7 +102,6 @@ sbc_parse_select_caps (GstSbcParse * parse, GstCaps * caps)
     channels = temp;
   }
 
-  /* blocks */
   if (!gst_structure_has_field (structure, "blocks")) {
     error = TRUE;
     error_message = "no blocks.";
@@ -124,7 +118,6 @@ sbc_parse_select_caps (GstSbcParse * parse, GstCaps * caps)
     blocks = temp;
   }
 
-  /* subbands */
   if (!gst_structure_has_field (structure, "subbands")) {
     error = TRUE;
     error_message = "no subbands.";
@@ -141,7 +134,6 @@ sbc_parse_select_caps (GstSbcParse * parse, GstCaps * caps)
     subbands = temp;
   }
 
-  /* allocation */
   if (!gst_structure_has_field (structure, "allocation")) {
     error = TRUE;
     error_message = "no allocation.";
@@ -155,7 +147,6 @@ sbc_parse_select_caps (GstSbcParse * parse, GstCaps * caps)
     }
   }
 
-  /* mode */
   if (!gst_structure_has_field (structure, "mode")) {
     error = TRUE;
     error_message = "no mode.";
@@ -174,7 +165,6 @@ error:
     GST_ERROR_OBJECT (parse, "Invalid input caps: %s", error_message);
     return NULL;
   }
-
 
   result = gst_caps_new_simple ("audio/x-sbc",
       "rate", G_TYPE_INT, rate,
@@ -251,12 +241,10 @@ sbc_parse_chain (GstPad * pad, GstBuffer * buffer)
     if (consumed <= 0)
       break;
 
-
     temp = GST_PAD_CAPS (parse->srcpad);
 
     res = gst_pad_alloc_buffer_and_set_caps (parse->srcpad,
         GST_BUFFER_OFFSET_NONE, consumed, temp, &output);
-
 
     if (res != GST_FLOW_OK)
       goto done;
