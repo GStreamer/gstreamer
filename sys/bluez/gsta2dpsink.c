@@ -358,7 +358,6 @@ gst_a2dp_sink_init_pkt_conf (GstA2dpSink * sink,
   pkt->error = PKT_ERROR_NONE;
 
   return TRUE;
-
 }
 
 static gboolean
@@ -441,8 +440,8 @@ gst_a2dp_sink_conf_recv_dev_conf (GstA2dpSink * sink)
     ret = gst_a2dp_sink_bluetooth_a2dp_init (sink, sbc);
     if (ret < 0)
       return FALSE;
-
   }
+
   return TRUE;
 }
 
