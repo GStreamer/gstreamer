@@ -109,104 +109,113 @@ GST_START_TEST (test_rtppayloaders)
   gchar *s;
 
   /* we use is-live here to avoid preroll */
-#define FAKESRC "fakesrc is-live=true num-buffers=5"
-#define FAKESINK "fakesink"
+#define PIPELINE_STRING(bufcount, bufsize, pl, dpl) "fakesrc is-live=true num-buffers=" bufcount " filltype=2 sizetype=2 sizemax=" bufsize " ! " pl " ! " dpl " ! fakesink"
+#define DEFAULT_BUFCOUNT "5"
+#define DEFAULT_BUFSIZE "16"
 
-  /* FIXME: why do we need to use capsfilter for some payloaders? */
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpilbcpay",
+      "rtpilbcdepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpgsmpay",
+      "rtpgsmdepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  /* This one needs a bit different buffer size than others or it doesn't work. */
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, "52", "rtpamrpay", "rtpamrdepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtppcmapay",
+      "rtppcmadepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtppcmupay",
+      "rtppcmudepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpmpapay",
+      "rtpmpadepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtph263ppay",
+      "rtph263pdepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtph263pay",
+      "rtph263depay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtph264pay",
+      "rtph264depay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpL16pay",
+      "rtpL16depay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpmp2tpay",
+      "rtpmp2tdepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpmp4vpay",
+      "rtpmp4vdepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpmp4gpay",
+      "rtpmp4gdepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  /* Cannot be tested with fakesrc becouse speex payloader requires a valid header?! */
+  /*
+     s = PIPELINE_STRING(DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpspeexpay", "rtpspeexdepay");
+     run_pipeline (setup_pipeline (s), s,
+     GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+     GST_MESSAGE_UNKNOWN);
+   */
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtptheorapay",
+      "rtptheoradepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpvorbispay",
+      "rtpvorbisdepay");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
 
   /*s = FAKESRC " ! ! rtpac3depay ! " FAKESINK */
-
-  s = FAKESRC
-      " ! audio/x-iLBC,mode=20 ! rtpilbcpay ! rtpilbcdepay ! audio/x-iLBC,mode=20 ! "
-      FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC " ! rtpgsmpay ! rtpgsmdepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC
-      " ! audio/AMR,channels=1,rate=8000 ! rtpamrpay ! rtpamrdepay ! audio/AMR,channels=1,rate=8000 ! "
-      FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC " ! rtppcmapay ! rtppcmadepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC " ! rtppcmupay ! rtppcmudepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC " ! rtpmpapay ! rtpmpadepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
+  /*s = FAKESRC " ! ! asteriskh263 ! " FAKESINK; */
   /*s = FAKESRC " ! ! rtpmpvdepay ! " FAKESINK; */
-
-  s = FAKESRC " ! rtph263ppay ! rtph263pdepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC " ! rtph263pay ! rtph263depay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC " ! rtph264pay ! rtph264depay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC " ! rtpL16pay ! rtpL16depay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  /*s = FAKESRC " ! asteriskh263 ! " FAKESINK; */
-
-  s = FAKESRC " ! rtpmp2tpay ! rtpmp2tdepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC " ! rtpmp4vpay ! rtpmp4vdepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
   /*s = FAKESRC " ! ! rtpmp4adepay ! " FAKESINK; */
-
-  s = FAKESRC " ! rtpmp4gpay ! rtpmp4gdepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC " ! rtpspeexpay ! rtpspeexdepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
   /*s = FAKESRC " ! ! rtpsv3vdepay ! " FAKESINK; */
-
-  s = FAKESRC " ! rtptheorapay ! rtptheoradepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
-
-  s = FAKESRC " ! rtpvorbispay ! rtpvorbisdepay ! " FAKESINK;
-  run_pipeline (setup_pipeline (s), s,
-      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
 }
 
 GST_END_TEST

@@ -1,3 +1,8 @@
+2007-10-24  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/pipelines/simple-launch-lines.c:
+	   Improve the tests a little more.
+
 2007-10-23  Zaheer Abbas Merali <zaheerabbas at merali dot org>
 
 	patch by: Yun Zheng Hu
