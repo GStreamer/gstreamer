@@ -345,20 +345,59 @@ gboolean     gst_tag_list_get_date_index    (const GstTagList * list,
  * GST_TAG_TITLE:
  *
  * commonly used title (string)
+ *
+ * The title as it should be displayed, e.g. 'The Doll House'
  */
 #define GST_TAG_TITLE                  "title"
+/**
+ * GST_TAG_TITLE_SORTNAME:
+ *
+ * commonly used title, as used for sorting (string)
+ *
+ * The title as it should be sorted, e.g. 'Doll House, The'
+ *
+ * Since: 0.10.15
+ */
+#define GST_TAG_TITLE_SORTNAME         "title-sortname"
 /**
  * GST_TAG_ARTIST:
  *
  * person(s) responsible for the recording (string)
+ *
+ * The artist name as it should be displayed, e.g. 'Jimi Hendrix' or
+ * 'The Guitar Heroes'
  */
 #define GST_TAG_ARTIST                 "artist"
+/**
+ * GST_TAG_ARTIST_SORTNAME:
+ *
+ * person(s) responsible for the recording, as used for sorting (string)
+ *
+ * The artist name as it should be sorted, e.g. 'Hendrix, Jimi' or
+ * 'Guitar Heroes, The'
+ *
+ * Since: 0.10.15
+ */
+/* FIXME 0.11: change to "artist-sortname" */
+#define GST_TAG_ARTIST_SORTNAME        "musicbrainz-sortname"
 /**
  * GST_TAG_ALBUM:
  *
  * album containing this data (string)
+ *
+ * The album name as it should be displayed, e.g. 'The Jazz Guitar'
  */
 #define GST_TAG_ALBUM                  "album"
+/**
+ * GST_TAG_ALBUM_SORTNAME:
+ *
+ * album containing this data, as used for sorting (string)
+ *
+ * The album name as it should be sorted, e.g. 'Jazz Guitar, The'
+ *
+ * Since: 0.10.15
+ */
+#define GST_TAG_ALBUM_SORTNAME         "album-sortname"
 /**
  * GST_TAG_COMPOSER:
  *

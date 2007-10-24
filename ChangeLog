@@ -1,5 +1,15 @@
 2007-10-24  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	  API: add GST_TAG_ARTIST_SORTNAME
+	  API: add GST_TAG_ALBUM_SORTNAME
+	  API: add GST_TAG_TITLE_SORTNAME
+	  Add tag variants for sorting (#414539).
+
+2007-10-24  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gststructure.c:
 	  Also allow white space for names so we don't break
 	  backwards compatibility.

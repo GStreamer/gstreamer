@@ -95,15 +95,26 @@ _gst_tag_initialize (void)
   gst_tag_register (GST_TAG_TITLE, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("title"), _("commonly used title"), gst_tag_merge_strings_with_comma);
+  gst_tag_register (GST_TAG_TITLE_SORTNAME, GST_TAG_FLAG_META,
+      G_TYPE_STRING,
+      _("title sortname"), _("commonly used title for sorting purposes"), NULL);
   gst_tag_register (GST_TAG_ARTIST, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("artist"),
       _("person(s) responsible for the recording"),
       gst_tag_merge_strings_with_comma);
+  gst_tag_register (GST_TAG_ARTIST_SORTNAME, GST_TAG_FLAG_META,
+      G_TYPE_STRING,
+      _("artist sortname"),
+      _("person(s) responsible for the recording for sorting purposes"), NULL);
   gst_tag_register (GST_TAG_ALBUM, GST_TAG_FLAG_META,
       G_TYPE_STRING,
       _("album"),
       _("album containing this data"), gst_tag_merge_strings_with_comma);
+  gst_tag_register (GST_TAG_ALBUM_SORTNAME, GST_TAG_FLAG_META,
+      G_TYPE_STRING,
+      _("album sortname"),
+      _("album containing this data for sorting purposes"), NULL);
   gst_tag_register (GST_TAG_DATE, GST_TAG_FLAG_META, GST_TYPE_DATE,
       _("date"), _("date the data was created (as a GDate structure)"), NULL);
   gst_tag_register (GST_TAG_GENRE, GST_TAG_FLAG_META,
