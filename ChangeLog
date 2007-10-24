@@ -1,3 +1,9 @@
+2007-10-24  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gststructure.c:
+	  Also allow white space for names so we don't break
+	  backwards compatibility.
+
 2007-10-22  Wim Taymans  <wim.taymans@gmail.com>
 
 	* docs/design/part-TODO.txt:

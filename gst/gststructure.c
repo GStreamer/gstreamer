@@ -151,9 +151,10 @@ gst_structure_validate_name (const gchar * name)
     return FALSE;
   }
 
+  /* FIXME 0.11: don't allow spaces */
   /* FIXME: test name string more */
   s = &name[1];
-  while (*s && (g_ascii_isalnum (*s) || strchr ("/-_.:+", *s) != NULL))
+  while (*s && (g_ascii_isalnum (*s) || strchr ("/-_.:+ ", *s) != NULL))
     s++;
   if (*s != '\0') {
     GST_WARNING ("Invalid character '%c' at offset %lu in structure name: %s",
@@ -392,8 +393,8 @@ gst_structure_get_name_id (const GstStructure * structure)
  * @name: the new name of the structure
  *
  * Sets the name of the structure to the given @name.  The string
- * provided is copied before being used. It must be not empty, start with a
- * letter and can be folled by letters, numbers and any of "/-_.:".
+ * provided is copied before being used. It must not be empty, start with a
+ * letter and can be followed by letters, numbers and any of "/-_.:".
  */
 void
 gst_structure_set_name (GstStructure * structure, const gchar * name)
