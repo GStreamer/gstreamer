@@ -67,7 +67,7 @@ struct _GstA2dpSink {
 	GMutex *sink_lock;
 
 	gint total;
-
+	guint watch_id;
 };
 
 struct _GstA2dpSinkClass {

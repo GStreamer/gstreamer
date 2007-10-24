@@ -70,24 +70,18 @@ GST_DEBUG_CATEGORY_STATIC (a2dp_sink_debug);
 		g_cond_signal (s->con_conf_end);			\
 	} G_STMT_END
 
-struct bluetooth_a2dp
+struct bluetooth_data
 {
+  struct ipc_data_cfg cfg;      /* Bluetooth device config */
   sbc_t sbc;                    /* Codec data */
   int codesize;                 /* SBC codesize */
   int samples;                  /* Number of encoded samples */
-  uint8_t buffer[BUFFER_SIZE];  /* Codec transfer buffer */
-  int count;                    /* Codec transfer buffer counter */
+  gchar buffer[BUFFER_SIZE];    /* Codec transfer buffer */
+  gsize count;                  /* Codec transfer buffer counter */
 
   int nsamples;                 /* Cumulative number of codec samples */
   uint16_t seq_num;             /* Cumulative packet sequence */
   int frame_count;              /* Current frames in buffer */
-};
-struct bluetooth_data
-{
-  struct ipc_data_cfg cfg;      /* Bluetooth device config */
-  uint8_t buffer[BUFFER_SIZE];  /* Encoded transfer buffer */
-  int count;                    /* Transfer buffer counter */
-  struct bluetooth_a2dp a2dp;   /* A2DP data */
 };
 
 #define IS_SBC(n) (strcmp((n), "audio/x-sbc") == 0)
@@ -137,15 +131,13 @@ static gboolean
 gst_a2dp_sink_stop (GstBaseSink * basesink)
 {
   GstA2dpSink *self = GST_A2DP_SINK (basesink);
-  struct bluetooth_a2dp *a2dp = &self->data->a2dp;
 
   self->con_state = NOT_CONFIGURED;
   self->total = 0;
 
-  if (self->stream) {
-    g_io_channel_close (self->stream);
-    g_io_channel_unref (self->stream);
-    self->stream = NULL;
+  if (self->watch_id != 0) {
+    g_source_remove (self->watch_id);
+    self->watch_id = 0;
   }
 
   if (self->server) {
@@ -154,10 +146,9 @@ gst_a2dp_sink_stop (GstBaseSink * basesink)
     self->stream = NULL;
   }
 
-  if (self->data->cfg.codec == CFG_CODEC_SBC)
-    sbc_finish (&a2dp->sbc);
-
   if (self->data) {
+    if (self->data->cfg.codec == CFG_CODEC_SBC)
+      sbc_finish (&self->data->sbc);
     g_free (self->data);
     self->data = NULL;
   }
@@ -252,6 +243,7 @@ gst_a2dp_sink_bluetooth_recvmsg_fd (GstA2dpSink * sink)
     if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS) {
       stream_fd = (*(int *) CMSG_DATA (cmsg));
       sink->stream = g_io_channel_unix_new (stream_fd);
+
       GST_DEBUG_OBJECT (sink, "stream_fd=%d", stream_fd);
       return 0;
     }
@@ -261,14 +253,14 @@ gst_a2dp_sink_bluetooth_recvmsg_fd (GstA2dpSink * sink)
 }
 
 static int
-gst_a2dp_sink_bluetooth_a2dp_init (GstA2dpSink * sink,
+gst_a2dp_sink_bluetooth_a2dp_init (GstA2dpSink * self,
     struct ipc_codec_sbc *sbc)
 {
-  struct bluetooth_a2dp *a2dp = &sink->data->a2dp;
-  struct ipc_data_cfg *cfg = &sink->data->cfg;
+  struct bluetooth_data *data = self->data;
+  struct ipc_data_cfg *cfg = &data->cfg;
 
   if (cfg == NULL) {
-    GST_ERROR_OBJECT (sink, "Error getting codec parameters");
+    GST_ERROR_OBJECT (self, "Error getting codec parameters");
     return -1;
   }
 
@@ -276,22 +268,24 @@ gst_a2dp_sink_bluetooth_a2dp_init (GstA2dpSink * sink,
     return -1;
 
   /* FIXME: init using flags? */
-  sbc_init (&a2dp->sbc, 0);
-  a2dp->sbc.rate = cfg->rate;
-  a2dp->sbc.channels = cfg->mode == CFG_MODE_MONO ? 1 : 2;
+  sbc_init (&data->sbc, 0);
+  data->sbc.rate = cfg->rate;
+  data->sbc.channels = cfg->mode == CFG_MODE_MONO ? 1 : 2;
   if (cfg->mode == CFG_MODE_MONO || cfg->mode == CFG_MODE_JOINT_STEREO)
-    a2dp->sbc.joint = 1;
-  a2dp->sbc.allocation = sbc->allocation;
-  a2dp->sbc.subbands = sbc->subbands;
-  a2dp->sbc.blocks = sbc->blocks;
-  a2dp->sbc.bitpool = sbc->bitpool;
-  a2dp->codesize = a2dp->sbc.subbands * a2dp->sbc.blocks *
-      a2dp->sbc.channels * 2;
-  a2dp->count = sizeof (struct rtp_header) + sizeof (struct rtp_payload);
+    data->sbc.joint = 1;
+  data->sbc.allocation = sbc->allocation;
+  data->sbc.subbands = sbc->subbands;
+  data->sbc.blocks = sbc->blocks;
+  data->sbc.bitpool = sbc->bitpool;
+  data->codesize = data->sbc.subbands * data->sbc.blocks *
+      data->sbc.channels * 2;
+  data->count = sizeof (struct rtp_header) + sizeof (struct rtp_payload);
 
-  GST_DEBUG_OBJECT (sink, "Codec parameters: \
-				\tallocation=%u\n\tsubbands=%u\n \
-				\tblocks=%u\n\tbitpool=%u\n", a2dp->sbc.allocation, a2dp->sbc.subbands, a2dp->sbc.blocks, a2dp->sbc.bitpool);
+  GST_DEBUG_OBJECT (self, "Codec parameters: "
+      "\tallocation=%u\n\tsubbands=%u\n "
+      "\tblocks=%u\n\tbitpool=%u\n",
+      data->sbc.allocation, data->sbc.subbands,
+      data->sbc.blocks, data->sbc.bitpool);
 
   return 0;
 }
@@ -381,21 +375,19 @@ gst_a2dp_sink_conf_resp (GstA2dpSink * sink)
   io_error = g_io_channel_read (sink->server, (gchar *) buf,
       sizeof (*pkt) + sizeof (*cfg), &ret);
   if (io_error != G_IO_ERROR_NONE && ret > 0) {
-    GST_ERROR_OBJECT (sink, "Error ocurred while receiving \
-					configurarion packet answer");
+    GST_ERROR_OBJECT (sink, "Error ocurred while receiving "
+        "configurarion packet answer");
     return FALSE;
   }
 
   sink->total = ret;
   if (pkt->type != PKT_TYPE_CFG_RSP) {
-    GST_ERROR_OBJECT (sink, "Unexpected packet type %d \
-					received", pkt->type);
+    GST_ERROR_OBJECT (sink, "Unexpected packet type %d " "received", pkt->type);
     return FALSE;
   }
 
   if (pkt->error != PKT_ERROR_NONE) {
-    GST_ERROR_OBJECT (sink, "Error %d while configuring \
-					device", pkt->error);
+    GST_ERROR_OBJECT (sink, "Error %d while configuring " "device", pkt->error);
     return FALSE;
   }
 
@@ -420,8 +412,8 @@ gst_a2dp_sink_conf_recv_dev_conf (GstA2dpSink * sink)
   io_error = g_io_channel_read (sink->server, (gchar *) sbc,
       sizeof (*sbc), &ret);
   if (io_error != G_IO_ERROR_NONE) {
-    GST_ERROR_OBJECT (sink, "Error while reading data from socket \
-				%s (%d)", strerror (errno), errno);
+    GST_ERROR_OBJECT (sink, "Error while reading data from socket "
+        "%s (%d)", strerror (errno), errno);
     return FALSE;
   } else if (ret == 0) {
     GST_ERROR_OBJECT (sink, "Read 0 bytes from socket");
@@ -430,17 +422,20 @@ gst_a2dp_sink_conf_recv_dev_conf (GstA2dpSink * sink)
 
   sink->total += ret;
   GST_DEBUG_OBJECT (sink, "OK - %d bytes received", sink->total);
-
+#if 0
   if (pkt->length != (sink->total - sizeof (struct ipc_packet))) {
     GST_ERROR_OBJECT (sink, "Error while configuring device: "
         "packet size doesn't match");
     return FALSE;
   }
-
+#endif
   memcpy (&sink->data->cfg, cfg, sizeof (*cfg));
 
-  GST_DEBUG_OBJECT (sink, "Device configuration:\n\tchannel=%p\n\t\
-			fd_opt=%u\n\tpkt_len=%u\n\tsample_size=%u\n\trate=%u", sink->stream, sink->data->cfg.fd_opt, sink->data->cfg.pkt_len, sink->data->cfg.sample_size, sink->data->cfg.rate);
+  GST_DEBUG_OBJECT (sink, "Device configuration:\n\tchannel=%p\n\t"
+      "fd_opt=%u\n\tpkt_len=%u\n\tsample_size=%u\n\trate=%u",
+      sink->stream, sink->data->cfg.fd_opt,
+      sink->data->cfg.pkt_len, sink->data->cfg.sample_size,
+      sink->data->cfg.rate);
 
   if (sink->data->cfg.codec == CFG_CODEC_SBC) {
     ret = gst_a2dp_sink_bluetooth_a2dp_init (sink, sbc);
@@ -452,32 +447,65 @@ gst_a2dp_sink_conf_recv_dev_conf (GstA2dpSink * sink)
 }
 
 static gboolean
-gst_a2dp_sink_conf_recv_stream_fd (GstA2dpSink * sink)
+gst_a2dp_sink_conf_recv_stream_fd (GstA2dpSink * self)
 {
+  struct bluetooth_data *data = self->data;
   gint ret;
   GIOError err;
+  GError *gerr = NULL;
+  GIOStatus status;
+  GIOFlags flags;
   gsize read;
 
-  ret = gst_a2dp_sink_bluetooth_recvmsg_fd (sink);
+  ret = gst_a2dp_sink_bluetooth_recvmsg_fd (self);
   if (ret < 0)
     return FALSE;
 
-  if (!sink->stream) {
-    GST_ERROR_OBJECT (sink, "Error while configuring device: "
+  if (!self->stream) {
+    GST_ERROR_OBJECT (self, "Error while configuring device: "
         "could not acquire audio socket");
     return FALSE;
   }
 
+  /* set stream socket to nonblock */
+  GST_LOG_OBJECT (self, "setting stream socket to nonblock");
+  flags = g_io_channel_get_flags (self->stream);
+  flags |= G_IO_FLAG_NONBLOCK;
+  status = g_io_channel_set_flags (self->stream, flags, &gerr);
+  if (status != G_IO_STATUS_NORMAL) {
+    if (gerr)
+      GST_WARNING_OBJECT (self, "Error while "
+          "setting server socket to nonblock: " "%s", gerr->message);
+    else
+      GST_WARNING_OBJECT (self, "Error while "
+          "setting server " "socket to nonblock");
+  }
+
   /* It is possible there is some outstanding
      data in the pipe - we have to empty it */
+  GST_LOG_OBJECT (self, "emptying stream pipe");
   while (1) {
-    err = g_io_channel_read (sink->stream,
-        (gchar *) sink->data->buffer, (gsize) sink->data->cfg.pkt_len, &read);
+    err = g_io_channel_read (self->stream, data->buffer,
+        (gsize) data->cfg.pkt_len, &read);
     if (err != G_IO_ERROR_NONE || read <= 0)
       break;
   }
 
-  memset (sink->data->buffer, 0, sizeof (sink->data->buffer));
+  /* set stream socket to block */
+  GST_LOG_OBJECT (self, "setting stream socket to block");
+  flags = g_io_channel_get_flags (self->stream);
+  flags &= ~G_IO_FLAG_NONBLOCK;
+  status = g_io_channel_set_flags (self->stream, flags, &gerr);
+  if (status != G_IO_STATUS_NORMAL) {
+    if (gerr)
+      GST_WARNING_OBJECT (self, "Error while "
+          "setting server socket to block:" "%s", gerr->message);
+    else
+      GST_WARNING_OBJECT (self, "Error while "
+          "setting server " "socket to block");
+  }
+
+  memset (data->buffer, 0, sizeof (data->buffer));
 
   return TRUE;
 }
@@ -518,27 +546,22 @@ gst_a2dp_sink_conf_recv_data (GstA2dpSink * sink)
 static gboolean
 server_callback (GIOChannel * chan, GIOCondition cond, gpointer data)
 {
-  GstA2dpSink *sink = GST_A2DP_SINK (data);
+  GstA2dpSink *sink;
 
-  switch (cond) {
-    case G_IO_IN:
-      if (sink->con_state != NOT_CONFIGURED && sink->con_state != CONFIGURED)
-        gst_a2dp_sink_conf_recv_data (sink);
-      else
-        GST_WARNING_OBJECT (sink, "Unexpected data received");
-      break;
-    case G_IO_HUP:
-      return FALSE;
-      break;
-    case G_IO_ERR:
-      GST_WARNING_OBJECT (sink, "Untreated callback G_IO_ERR");
-      break;
-    case G_IO_NVAL:
-      return FALSE;
-      break;
-    default:
-      GST_WARNING_OBJECT (sink, "Unexpected callback call");
-      break;
+  if (cond & G_IO_HUP || cond & G_IO_NVAL)
+    return FALSE;
+  else if (cond & G_IO_ERR) {
+    sink = GST_A2DP_SINK (data);
+    GST_WARNING_OBJECT (sink, "Untreated callback G_IO_ERR");
+  } else if (cond & G_IO_IN) {
+    sink = GST_A2DP_SINK (data);
+    if (sink->con_state != NOT_CONFIGURED && sink->con_state != CONFIGURED)
+      gst_a2dp_sink_conf_recv_data (sink);
+    else
+      GST_WARNING_OBJECT (sink, "Unexpected data received");
+  } else {
+    sink = GST_A2DP_SINK (data);
+    GST_WARNING_OBJECT (sink, "Unexpected callback call");
   }
 
   return TRUE;
@@ -551,6 +574,8 @@ gst_a2dp_sink_start (GstBaseSink * basesink)
   struct sockaddr_un addr = { AF_UNIX, IPC_SOCKET_NAME };
   gint sk;
   gint err;
+
+  self->watch_id = 0;
 
   sk = socket (PF_LOCAL, SOCK_STREAM, 0);
   if (sk < 0) {
@@ -568,11 +593,16 @@ gst_a2dp_sink_start (GstBaseSink * basesink)
 
   self->server = g_io_channel_unix_new (sk);
 
-  g_io_add_watch (self->server, G_IO_IN | G_IO_HUP | G_IO_ERR | G_IO_NVAL,
-      server_callback, self);
+  self->watch_id = g_io_add_watch (self->server, G_IO_IN | G_IO_HUP |
+      G_IO_ERR | G_IO_NVAL, server_callback, self);
 
   self->data = g_new0 (struct bluetooth_data, 1);
-  memset (self->data, 0, sizeof (struct bluetooth_data));
+
+  self->stream = NULL;
+  self->con_state = NOT_CONFIGURED;
+  self->total = 0;
+
+  self->waiting_con_conf = FALSE;
 
   return TRUE;
 }
@@ -591,8 +621,8 @@ gst_a2dp_sink_send_conf_pkt (GstA2dpSink * sink, GstCaps * caps)
   memset (pkt, 0, sizeof (buf));
   ret = gst_a2dp_sink_init_pkt_conf (sink, caps, pkt);
   if (!ret) {
-    GST_ERROR_OBJECT (sink, "Couldn't initialize parse caps \
-				to packet configuration");
+    GST_ERROR_OBJECT (sink, "Couldn't initialize parse caps "
+        "to packet configuration");
     return FALSE;
   }
 
@@ -601,8 +631,8 @@ gst_a2dp_sink_send_conf_pkt (GstA2dpSink * sink, GstCaps * caps)
   io_error = g_io_channel_write (sink->server, (gchar *) pkt,
       sizeof (*pkt) + pkt->length, &bytes_sent);
   if (io_error != G_IO_ERROR_NONE) {
-    GST_ERROR_OBJECT (sink, "Error ocurred while sending \
-					configurarion packet");
+    GST_ERROR_OBJECT (sink, "Error ocurred while sending "
+        "configurarion packet");
     sink->con_state = NOT_CONFIGURED;
     return FALSE;
   }
@@ -650,47 +680,37 @@ gst_a2dp_sink_preroll (GstBaseSink * basesink, GstBuffer * buffer)
 }
 
 static int
-gst_a2dp_sink_avdtp_write (GstA2dpSink * sink)
+gst_a2dp_sink_avdtp_write (GstA2dpSink * self)
 {
-  int ret = 0;
-  struct bluetooth_data *data;
+  gsize ret;
+  struct bluetooth_data *data = self->data;
   struct rtp_header *header;
   struct rtp_payload *payload;
-  struct bluetooth_a2dp *a2dp;
   GIOError err;
 
-  data = sink->data;
-  a2dp = &data->a2dp;
+  header = (void *) data->buffer;
+  payload = (void *) (data->buffer + sizeof (*header));
 
-  header = (void *) a2dp->buffer;
-  payload = (void *) (a2dp->buffer + sizeof (*header));
+  memset (data->buffer, 0, sizeof (*header) + sizeof (*payload));
 
-  memset (a2dp->buffer, 0, sizeof (*header) + sizeof (*payload));
-
-  payload->frame_count = a2dp->frame_count;
+  payload->frame_count = data->frame_count;
   header->v = 2;
   header->pt = 1;
-  header->sequence_number = htons (a2dp->seq_num);
-  header->timestamp = htonl (a2dp->nsamples);
+  header->sequence_number = htons (data->seq_num);
+  header->timestamp = htonl (data->nsamples);
   header->ssrc = htonl (1);
 
-  while (1) {
-    err = g_io_channel_write (sink->stream, (const char *) a2dp->buffer,
-        (gsize) a2dp->count, (gsize *) & ret);
-
-    if (err == G_IO_ERROR_AGAIN) {
-      usleep (100);
-      continue;
-    }
-
-    break;
+  err = g_io_channel_write (self->stream, data->buffer, data->count, &ret);
+  if (err != G_IO_ERROR_NONE) {
+    GST_ERROR_OBJECT (self, "Error while sending data");
+    ret = -1;
   }
 
   /* Reset buffer of data to send */
-  a2dp->count = sizeof (struct rtp_header) + sizeof (struct rtp_payload);
-  a2dp->frame_count = 0;
-  a2dp->samples = 0;
-  a2dp->seq_num++;
+  data->count = sizeof (struct rtp_header) + sizeof (struct rtp_payload);
+  data->frame_count = 0;
+  data->samples = 0;
+  data->seq_num++;
 
   return ret;
 }
@@ -698,29 +718,22 @@ gst_a2dp_sink_avdtp_write (GstA2dpSink * sink)
 static GstFlowReturn
 gst_a2dp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
 {
-  GstA2dpSink *sink;
-  struct bluetooth_data *data;
-  struct bluetooth_a2dp *a2dp;
-  gint encoded, frame_size = 1024;
-  gint ret = 0;
-
-  sink = GST_A2DP_SINK (basesink);
-  data = (struct bluetooth_data *) sink->data;
-  a2dp = &data->a2dp;
+  GstA2dpSink *self = GST_A2DP_SINK (basesink);
+  struct bluetooth_data *data = self->data;
+  gint encoded;
+  gint ret;
 
   encoded = GST_BUFFER_SIZE (buffer);
 
-  if (a2dp->count + encoded >= data->cfg.pkt_len) {
-    ret = gst_a2dp_sink_avdtp_write (sink);
+  if (data->count + encoded >= data->cfg.pkt_len) {
+    ret = gst_a2dp_sink_avdtp_write (self);
     if (ret < 0)
       return GST_FLOW_ERROR;
   }
 
-  memcpy (a2dp->buffer + a2dp->count, GST_BUFFER_DATA (buffer), encoded);
-  a2dp->count += encoded;
-  a2dp->frame_count++;
-  a2dp->samples += encoded / frame_size;
-  a2dp->nsamples += encoded / frame_size;
+  memcpy (data->buffer + data->count, GST_BUFFER_DATA (buffer), encoded);
+  data->count += encoded;
+  data->frame_count++;
 
   return GST_FLOW_OK;
 }
@@ -741,6 +754,11 @@ gst_a2dp_sink_set_caps (GstBaseSink * basesink, GstCaps * caps)
 static gboolean
 gst_a2dp_sink_unlock (GstBaseSink * basesink)
 {
+  GstA2dpSink *self = GST_A2DP_SINK (basesink);
+
+  if (self->stream != NULL)
+    g_io_channel_flush (self->stream, NULL);
+
   return TRUE;
 }
 
