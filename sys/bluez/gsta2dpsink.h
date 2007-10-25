@@ -37,15 +37,6 @@ G_BEGIN_DECLS
 #define GST_IS_A2DP_SINK_CLASS(obj) \
 	(G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_A2DP_SINK))
 
-enum {
-	NOT_CONFIGURED,
-	CONFIGURING_INIT,
-	CONFIGURING_SENT_CONF,
-	CONFIGURING_RCVD_CONF_RSP,
-	CONFIGURING_RCVD_DEV_CONF,
-	CONFIGURED
-};
-
 typedef struct _GstA2dpSink GstA2dpSink;
 typedef struct _GstA2dpSinkClass GstA2dpSinkClass;
 
@@ -66,7 +57,6 @@ struct _GstA2dpSink {
 	gboolean waiting_con_conf;
 	GMutex *sink_lock;
 
-	gint total;
 	guint watch_id;
 };
 

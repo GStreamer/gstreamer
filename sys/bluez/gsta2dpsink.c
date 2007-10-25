@@ -41,6 +41,15 @@
 
 #include "gsta2dpsink.h"
 
+enum
+{
+  NOT_CONFIGURED,
+  CONFIGURING_INIT,
+  CONFIGURING_SENT_CONF,
+  CONFIGURING_RCVD_DEV_CONF,
+  CONFIGURED
+};
+
 GST_DEBUG_CATEGORY_STATIC (a2dp_sink_debug);
 #define GST_CAT_DEFAULT a2dp_sink_debug
 
@@ -132,8 +141,9 @@ gst_a2dp_sink_stop (GstBaseSink * basesink)
 {
   GstA2dpSink *self = GST_A2DP_SINK (basesink);
 
+  GST_INFO_OBJECT (self, "stop");
+
   self->con_state = NOT_CONFIGURED;
-  self->total = 0;
 
   if (self->watch_id != 0) {
     g_source_remove (self->watch_id);
@@ -366,8 +376,10 @@ gst_a2dp_sink_conf_resp (GstA2dpSink * sink)
   gchar buf[IPC_MTU];
   GIOError io_error;
   gsize ret;
+  gint total;
   struct ipc_packet *pkt = (void *) buf;
   struct ipc_data_cfg *cfg = (void *) pkt->data;
+  struct ipc_codec_sbc *sbc = (void *) cfg->data;
 
   memset (buf, 0, sizeof (buf));
 
@@ -379,7 +391,7 @@ gst_a2dp_sink_conf_resp (GstA2dpSink * sink)
     return FALSE;
   }
 
-  sink->total = ret;
+  total = ret;
   if (pkt->type != PKT_TYPE_CFG_RSP) {
     GST_ERROR_OBJECT (sink, "Unexpected packet type %d " "received", pkt->type);
     return FALSE;
@@ -395,19 +407,6 @@ gst_a2dp_sink_conf_resp (GstA2dpSink * sink)
     return FALSE;
   }
 
-  return TRUE;
-}
-
-static gboolean
-gst_a2dp_sink_conf_recv_dev_conf (GstA2dpSink * sink)
-{
-  gchar buf[IPC_MTU];
-  GIOError io_error;
-  gsize ret;
-  struct ipc_packet *pkt = (void *) buf;
-  struct ipc_data_cfg *cfg = (void *) pkt->data;
-  struct ipc_codec_sbc *sbc = (void *) cfg->data;
-
   io_error = g_io_channel_read (sink->server, (gchar *) sbc,
       sizeof (*sbc), &ret);
   if (io_error != G_IO_ERROR_NONE) {
@@ -419,15 +418,15 @@ gst_a2dp_sink_conf_recv_dev_conf (GstA2dpSink * sink)
     return FALSE;
   }
 
-  sink->total += ret;
-  GST_DEBUG_OBJECT (sink, "OK - %d bytes received", sink->total);
-#if 0
-  if (pkt->length != (sink->total - sizeof (struct ipc_packet))) {
+  total += ret;
+  GST_DEBUG_OBJECT (sink, "OK - %d bytes received", total);
+
+  if (pkt->length != (total - sizeof (struct ipc_packet))) {
     GST_ERROR_OBJECT (sink, "Error while configuring device: "
         "packet size doesn't match");
     return FALSE;
   }
-#endif
+
   memcpy (&sink->data->cfg, cfg, sizeof (*cfg));
 
   GST_DEBUG_OBJECT (sink, "Device configuration:\n\tchannel=%p\n\t"
@@ -521,15 +520,10 @@ gst_a2dp_sink_conf_recv_data (GstA2dpSink * sink)
   switch (sink->con_state) {
     case CONFIGURING_SENT_CONF:
       if (gst_a2dp_sink_conf_resp (sink))
-        sink->con_state = CONFIGURING_RCVD_CONF_RSP;
-      else
-        GST_A2DP_SINK_CONFIGURATION_FAIL (sink);
-      break;
-    case CONFIGURING_RCVD_CONF_RSP:
-      if (gst_a2dp_sink_conf_recv_dev_conf (sink))
         sink->con_state = CONFIGURING_RCVD_DEV_CONF;
       else
         GST_A2DP_SINK_CONFIGURATION_FAIL (sink);
+      break;
     case CONFIGURING_RCVD_DEV_CONF:
       if (gst_a2dp_sink_conf_recv_stream_fd (sink))
         GST_A2DP_SINK_CONFIGURATION_SUCCESS (sink);
@@ -574,6 +568,8 @@ gst_a2dp_sink_start (GstBaseSink * basesink)
   gint sk;
   gint err;
 
+  GST_INFO_OBJECT (self, "start");
+
   self->watch_id = 0;
 
   sk = socket (PF_LOCAL, SOCK_STREAM, 0);
@@ -596,10 +592,10 @@ gst_a2dp_sink_start (GstBaseSink * basesink)
       G_IO_ERR | G_IO_NVAL, server_callback, self);
 
   self->data = g_new0 (struct bluetooth_data, 1);
+  memset (self->data, 0, sizeof (struct bluetooth_data));
 
   self->stream = NULL;
   self->con_state = NOT_CONFIGURED;
-  self->total = 0;
 
   self->waiting_con_conf = FALSE;
 
@@ -795,7 +791,6 @@ gst_a2dp_sink_init (GstA2dpSink * self, GstA2dpSinkClass * klass)
 
   self->stream = NULL;
   self->con_state = NOT_CONFIGURED;
-  self->total = 0;
 
   self->con_conf_end = g_cond_new ();
   self->waiting_con_conf = FALSE;
