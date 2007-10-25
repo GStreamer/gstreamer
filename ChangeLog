@@ -1,3 +1,8 @@
+2007-10-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/taglib/gstid3v2mux.cc (add_funcs):
+	  Map new SORTNAME tags to ID3v2 TSOP, TSOA and TSOT frames (#414539).
+
 2007-10-24  Stefan Kost  <ensonic@users.sf.net>
 
 	* tests/check/pipelines/simple-launch-lines.c:
