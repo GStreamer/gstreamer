@@ -76,7 +76,13 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_MUSICBRAINZ_ALBUMID, "MUSICBRAINZ_ALBUMID"},
   {GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "MUSICBRAINZ_ALBUMARTISTID"},
   {GST_TAG_MUSICBRAINZ_TRMID, "MUSICBRAINZ_TRMID"},
-  {GST_TAG_MUSICBRAINZ_SORTNAME, "MUSICBRAINZ_SORTNAME"},
+  {GST_TAG_ARTIST_SORTNAME, "ARTISTSORT"},
+  {GST_TAG_ARTIST_SORTNAME, "ARTISTSORTORDER"},
+  {GST_TAG_ARTIST_SORTNAME, "MUSICBRAINZ_SORTNAME"},
+  {GST_TAG_ALBUM_SORTNAME, "ALBUMSORT"},
+  {GST_TAG_ALBUM_SORTNAME, "ALBUMSORTORDER"},
+  {GST_TAG_TITLE_SORTNAME, "TITLESORT"},
+  {GST_TAG_TITLE_SORTNAME, "TITLESORTORDER"},
   {GST_TAG_LANGUAGE_CODE, "LANGUAGE"},
   {GST_TAG_CDDA_MUSICBRAINZ_DISCID, "MUSICBRAINZ_DISCID"},
   {GST_TAG_CDDA_CDDB_DISCID, "DISCID"},
@@ -408,6 +414,8 @@ gst_tag_to_vorbis_comments (const GstTagList * list, const gchar * tag)
       return NULL;
   }
 
+  /* FIXME: for tags that can map to multiple vorbis comment keys, add all
+   * of the possible keys */
   for (i = 0; i < gst_tag_list_get_tag_size (list, tag); i++) {
     GType tag_type = gst_tag_get_type (tag);
     gchar *result = NULL;

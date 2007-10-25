@@ -64,9 +64,6 @@ gst_tag_register_tags_internal (gpointer unused)
       _("album artist ID"), _("MusicBrainz album artist ID"), NULL);
   gst_tag_register (GST_TAG_MUSICBRAINZ_TRMID, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("track TRM ID"), _("MusicBrainz TRM ID"), NULL);
-  gst_tag_register (GST_TAG_MUSICBRAINZ_SORTNAME, GST_TAG_FLAG_META,
-      G_TYPE_STRING,
-      _("artist sortname"), _("MusicBrainz artist sortname"), NULL);
 
   /* CDDA tags */
   gst_tag_register (GST_TAG_CDDA_CDDB_DISCID, GST_TAG_FLAG_META,

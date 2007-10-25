@@ -1,3 +1,18 @@
+2007-10-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/tag.h: (GST_TAG_MUSICBRAINZ_SORTNAME):
+	* gst-libs/gst/tag/tags.c:
+	  Deprecate GST_TAG_MUSICBRAINZ_SORTNAME, replaced by the newly-added
+	  GST_TAG_ARTIST_SORTNAME (in an API and ABI compatible way).
+
+	* gst-libs/gst/tag/gstid3tag.c: (tag_matches):
+	  Map ID3v2 TSOP, TSOA and TSOT frames to new SORTNAME tags (#414539).
+
+	* gst-libs/gst/tag/gstvorbistag.c: (tag_matches),
+	  (gst_tag_to_vorbis_comments):
+	  Map new SORTNAME tags (these tags aren't even semi-official, so I'm
+	  just mapping everything I found in the wild) (#414539).
+
 2007-10-24  Wim Taymans  <wim.taymans@gmail.com>
 
 	Inspired by patch of: René Stadler <mail at renestadler dot de>

@@ -57,12 +57,19 @@ G_BEGIN_DECLS
  * MusicBrainz track TRM ID
  */
 #define GST_TAG_MUSICBRAINZ_TRMID	"musicbrainz-trmid"
+
+/* FIXME 0.11: remove GST_TAG_MUSICBRAINZ_SORTNAME */
+#ifndef GST_DISABLE_DEPRECATED
 /**
  * GST_TAG_MUSICBRAINZ_SORTNAME
  *
  * MusicBrainz artist sort name
+ *
+ * Deprecated.  Use GST_TAG_ARTIST_SORTNAME instead.
  */
-#define GST_TAG_MUSICBRAINZ_SORTNAME	"musicbrainz-sortname"
+#define GST_TAG_MUSICBRAINZ_SORTNAME	GST_TAG_ARTIST_SORTNAME
+#endif
+
 /**
  * GST_TAG_CMML_STREAM
  *
