@@ -2323,6 +2323,11 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_init (basesink->abidata.ABI.clip_segment,
           GST_FORMAT_UNDEFINED);
       basesink->have_newsegment = FALSE;
+      /* for position reporting */
+      GST_OBJECT_LOCK (basesink);
+      basesink->priv->current_sstart = -1;
+      basesink->priv->current_sstop = -1;
+      GST_OBJECT_UNLOCK (basesink);
 
       gst_event_unref (event);
       break;

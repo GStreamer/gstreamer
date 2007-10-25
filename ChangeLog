@@ -1,3 +1,9 @@
+2007-10-25  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_event):
+	Reset last seen position after flushing so that we don't report the old
+	position anymore.
+
 2007-10-25  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/gstelementfactory.c: (gst_element_register):
