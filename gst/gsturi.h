@@ -75,6 +75,14 @@ typedef struct _GstURIHandlerInterface GstURIHandlerInterface;
  * @get_protocols: Method to return the list of protocols handled by the element.
  * @get_uri: Method to return the URI currently handled by the element.
  * @set_uri: Method to set a new URI.
+ * @get_type_full: Variant of get_type which takes a GType argument. This is 
+ *  for use by bindings that need to pass context when creating a URI Handler.  *  If implemented, get_type will be used in preference to get_type_full.
+ *      Since: 0.10.15
+ * @get_protocols_full: Variant of get_type which takes a GType argument. 
+ * This is for use by bindings that need to pass context when creating a URI 
+ * Handler. If implemented, get_protocols will be used in preference to 
+ * get_protocols_full.
+ *      Since: 0.10.15
  *
  * #GstElements using this interface should implement these methods.
  */
@@ -103,11 +111,14 @@ struct _GstURIHandlerInterface {
   gboolean		(* set_uri)		(GstURIHandler * handler,
 						 const gchar *	 uri);
 
+  GstURIType		(* get_type_full)	(GType type);
+  gchar **		(* get_protocols_full)	(GType type);
+
   /*< private >*/
   /* we might want to add functions here to query features,
    * someone with gnome-vfs knowledge go ahead */
 
-  gpointer _gst_reserved[GST_PADDING];
+  gpointer _gst_reserved[GST_PADDING - 2];
 };
 
 /* general URI functions */

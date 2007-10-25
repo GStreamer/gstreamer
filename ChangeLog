@@ -1,5 +1,16 @@
 2007-10-25  Jan Schmidt  <Jan.Schmidt@sun.com>
 
+	* gst/gstelementfactory.c: (gst_element_register):
+	* gst/gsturi.h:
+	Patch from Alessandro Decina adding get_type_full and
+	get_protocols_full private vfuncs to the URIHandler interface
+	to allow bindings to support creating URI handlers. 
+	Partially fixes: #339279
+	API: GstURIHandlerInterface::get_type_full
+	API: GstURIHandlerInterface::get_protocols_full
+
+2007-10-25  Jan Schmidt  <Jan.Schmidt@sun.com>
+
 	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_set_property),
 	(gst_multi_queue_request_new_pad), (gst_single_queue_flush),
 	(gst_multi_queue_loop), (gst_multi_queue_sink_activate_push):
