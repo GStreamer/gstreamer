@@ -127,8 +127,15 @@ GST_START_TEST (test_to_string)
   ASSERT_CRITICAL (st1 = gst_structure_new ("Foo\nwith-newline", NULL));
   fail_unless (st1 == NULL);
 
+  /* FIXME 0.11: re-enable this */
+#if 0
   ASSERT_CRITICAL (st1 = gst_structure_new ("Foo with whitespace", NULL));
   fail_unless (st1 == NULL);
+#else
+  st1 = gst_structure_new ("Foo with whitespace is still allowed", NULL);
+  fail_unless (st1 != NULL);
+  gst_structure_free (st1);
+#endif
 
   ASSERT_CRITICAL (st1 = gst_structure_new ("1st", NULL));
   fail_unless (st1 == NULL);

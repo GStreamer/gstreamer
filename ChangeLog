@@ -1,3 +1,10 @@
+2007-10-25  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/gst/gststructure.c: (test_to_string):
+	  Disable test that checks that white spaces are not allowed
+	  in structure names or field names, since we need to
+	  support that for now for backwards compatibility reasons.
+
 2007-10-24  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* docs/gst/gstreamer-sections.txt:
