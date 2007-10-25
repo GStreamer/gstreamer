@@ -287,16 +287,22 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_MAX_SIZE_BYTES:
+      GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       mq->max_size.bytes = g_value_get_uint (value);
       SET_CHILD_PROPERTY (mq, bytes);
+      GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       break;
     case ARG_MAX_SIZE_BUFFERS:
+      GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       mq->max_size.visible = g_value_get_uint (value);
       SET_CHILD_PROPERTY (mq, visible);
+      GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       break;
     case ARG_MAX_SIZE_TIME:
+      GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       mq->max_size.time = g_value_get_uint64 (value);
       SET_CHILD_PROPERTY (mq, time);
+      GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       break;
     case ARG_EXTRA_SIZE_BYTES:
       mq->extra_size.bytes = g_value_get_uint (value);
@@ -398,7 +404,7 @@ gst_multi_queue_request_new_pad (GstElement * element, GstPadTemplate * temp,
   GstMultiQueue *mqueue = GST_MULTI_QUEUE (element);
   GstSingleQueue *squeue;
 
-  GST_LOG_OBJECT (element, "name : %s", name);
+  GST_LOG_OBJECT (element, "name : %s", GST_STR_NULL (name));
 
   /* Create a new single queue, add the sink and source pad and return the sink pad */
   squeue = gst_single_queue_new (mqueue);
@@ -482,7 +488,7 @@ gst_single_queue_flush (GstMultiQueue * mq, GstSingleQueue * sq, gboolean flush)
     gst_segment_init (&sq->sink_segment, GST_FORMAT_TIME);
     gst_segment_init (&sq->src_segment, GST_FORMAT_TIME);
     /* All pads start off not-linked for a smooth kick-off */
-    sq->srcresult = GST_FLOW_NOT_LINKED;
+    sq->srcresult = GST_FLOW_OK;
     sq->cur_time = 0;
     sq->max_size.visible = mq->max_size.visible;
     sq->is_eos = FALSE;
@@ -743,7 +749,8 @@ gst_multi_queue_loop (GstPad * pad)
      * we might need to wake some sleeping pad up, so there's extra work 
      * there too */
     if (sq->srcresult == GST_FLOW_NOT_LINKED ||
-        (oldid == -1) || (newid != (oldid + 1)) || oldid > mq->highid) {
+        (oldid == G_MAXUINT32) || (newid != (oldid + 1)) ||
+        oldid > mq->highid) {
       GST_LOG_OBJECT (mq, "CHECKING sq->srcresult: %s",
           gst_flow_get_name (sq->srcresult));
 
@@ -753,7 +760,7 @@ gst_multi_queue_loop (GstPad * pad)
       sq->nextid = newid;
 
       /* Update the oldid (the last ID we output) for highid tracking */
-      if (oldid != -1)
+      if (oldid != G_MAXUINT32)
         sq->oldid = oldid;
 
       if (sq->srcresult == GST_FLOW_NOT_LINKED) {
@@ -888,8 +895,8 @@ gst_multi_queue_sink_activate_push (GstPad * pad, gboolean active)
   sq = (GstSingleQueue *) gst_pad_get_element_private (pad);
 
   if (active) {
-    /* All pads start off not-linked for a smooth kick-off */
-    sq->srcresult = GST_FLOW_NOT_LINKED;
+    /* All pads start off linked until they push one buffer */
+    sq->srcresult = GST_FLOW_OK;
   } else {
     sq->srcresult = GST_FLOW_WRONG_STATE;
     gst_data_queue_flush (sq->queue);

@@ -284,6 +284,7 @@ struct PadData
   guint32 *max_linked_id_ptr;
   guint32 *eos_count_ptr;
   gboolean is_linked;
+  gboolean first_buf;
   gint n_linked;
 
   GMutex *mutex;
@@ -309,10 +310,11 @@ mq_dummypad_chain (GstPad * sinkpad, GstBuffer * buf)
   g_mutex_lock (pad_data->mutex);
 
   /* For not-linked pads, ensure that we're not running ahead of the 'linked'
-   * pads */
+   * pads. The first buffer is allowed to get ahead, because otherwise things can't
+   * always pre-roll correctly */
   if (!pad_data->is_linked) {
     /* If there are no linked pads, we can't track a max_id for them :) */
-    if (pad_data->n_linked > 0) {
+    if (pad_data->n_linked > 0 && !pad_data->first_buf) {
       g_static_mutex_lock (&_check_lock);
       fail_unless (cur_id <= *(pad_data->max_linked_id_ptr) + 1,
           "Got buffer %u on pad %u before buffer %u was seen on a "
@@ -325,6 +327,7 @@ mq_dummypad_chain (GstPad * sinkpad, GstBuffer * buf)
     if (cur_id > *(pad_data->max_linked_id_ptr))
       *(pad_data->max_linked_id_ptr) = cur_id;
   }
+  pad_data->first_buf = FALSE;
 
   g_mutex_unlock (pad_data->mutex);
 
@@ -390,6 +393,14 @@ run_output_order_test (gint n_linked)
   fail_unless (mq != NULL);
   gst_bin_add (GST_BIN (pipe), mq);
 
+  /* No limits */
+  g_object_set (mq,
+      "max-size-bytes", (guint) 0,
+      "max-size-buffers", (guint) 0,
+      "max-size-time", (guint64) 0,
+      "extra-size-bytes", (guint) 0,
+      "extra-size-buffers", (guint) 0, "extra-size-time", (guint64) 0, NULL);
+
   /* Construct NPADS dummy output pads. The first 'n_linked' return FLOW_OK, the rest
    * return NOT_LINKED. The not-linked ones check the expected ordering of 
    * output buffers */
@@ -424,6 +435,7 @@ run_output_order_test (gint n_linked)
     pad_data[i].n_linked = n_linked;
     pad_data[i].cond = cond;
     pad_data[i].mutex = mutex;
+    pad_data[i].first_buf = TRUE;
     gst_pad_set_element_private (sinkpads[i], pad_data + i);
 
     gst_pad_link (mq_srcpad, sinkpads[i]);
@@ -453,7 +465,8 @@ run_output_order_test (gint n_linked)
     g_static_mutex_lock (&_check_lock);
     fail_if (buf == NULL);
     g_static_mutex_unlock (&_check_lock);
-    GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), i);
+    GST_WRITE_UINT32_BE (GST_BUFFER_DATA (buf), i + 1);
+    GST_BUFFER_TIMESTAMP (buf) = (i + 1) * GST_SECOND;
 
     ret = gst_pad_push (inputpads[cur_pad], buf);
     g_static_mutex_lock (&_check_lock);

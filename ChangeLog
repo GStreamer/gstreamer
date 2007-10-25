@@ -1,5 +1,25 @@
 2007-10-25  Jan Schmidt  <Jan.Schmidt@sun.com>
 
+	* plugins/elements/gstmultiqueue.c: (gst_multi_queue_set_property),
+	(gst_multi_queue_request_new_pad), (gst_single_queue_flush),
+	(gst_multi_queue_loop), (gst_multi_queue_sink_activate_push):
+	Make it so that pads are considered linked until a buffer is pushed
+	and discovered otherwise. This avoids problems with decodebin2 hanging
+	after a seek in the filesrc ! decodebin2 name=d ! fakesink d. ! fakesink
+	case.
+
+	Make sure we lock the multiqueue when updating the max-size properties.
+	
+	Fix a crash on Solaris in a debug statement in get_request_pad that
+	passes a NULL string to GST_DEBUG. 
+
+	* tests/check/elements/multiqueue.c: (mq_dummypad_chain),
+	(run_output_order_test):
+	Fix the test to allow the first buffer on not-linked pads to come out
+	of sequence while multiqueue discovers that they are not-linked.
+
+2007-10-25  Jan Schmidt  <Jan.Schmidt@sun.com>
+
 	* configure.ac:
 	* libs/gst/check/Makefile.am:
 	Use a custom export symbol regex for libgstcheck, as it needs
