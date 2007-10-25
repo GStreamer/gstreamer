@@ -1,3 +1,19 @@
+2007-10-25  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* configure.ac:
+	* libs/gst/check/Makefile.am:
+	Use a custom export symbol regex for libgstcheck, as it needs
+	to export symbols that don't match the standard GStreamer gst_*
+	pattern, and  --export-dynamic is not portable (only works on 
+	GNU ld)
+
+	* libs/gst/check/gstcheck.c: (gst_check_setup_src_pad),
+	(gst_check_setup_sink_pad):
+	Make sure to pass a message parameter to the fail_* macros.
+
+	* tests/check/gst/gstinfo.c: (GST_START_TEST):
+	Fix some compiler warnings.
+
 2007-10-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* tests/check/gst/gststructure.c: (test_to_string):

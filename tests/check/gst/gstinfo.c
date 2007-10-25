@@ -54,7 +54,7 @@ GST_START_TEST (info_ptr_format_printf_extension)
   gst_debug_set_default_threshold (GST_LEVEL_LOG);
 
   /* NULL object */
-  GST_LOG ("NULL: %" GST_PTR_FORMAT, NULL);
+  GST_LOG ("NULL: %" GST_PTR_FORMAT, (gpointer) NULL);
 
   /* structure */
   {
@@ -170,7 +170,7 @@ GST_START_TEST (info_segment_format_printf_extension)
   }
 
   /* NULL segment */
-  GST_LOG ("NULL: %" GST_SEGMENT_FORMAT, NULL);
+  GST_LOG ("NULL: %" GST_SEGMENT_FORMAT, (GstSegment *) NULL);
 
   /* clean up */
   gst_debug_set_default_threshold (GST_LEVEL_NONE);
