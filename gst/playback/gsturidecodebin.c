@@ -33,6 +33,8 @@
 #include <gst/gst.h>
 #include <gst/gst-i18n-plugin.h>
 
+#include "gstplay-marshal.h"
+
 #define GST_TYPE_URI_DECODE_BIN \
   (gst_uri_decode_bin_get_type())
 #define GST_URI_DECODE_BIN(obj) \
@@ -53,6 +55,8 @@ struct _GstURIDecodeBin
 
   gchar *uri;
   guint connection_speed;
+  GstCaps *caps;
+  gchar *encoding;
 
   gboolean is_stream;
   GstElement *source;
@@ -70,6 +74,19 @@ struct _GstURIDecodeBin
 struct _GstURIDecodeBinClass
 {
   GstBinClass parent_class;
+
+  /* signal fired when we found a pad that we cannot decode */
+  void (*unknown_type) (GstElement * element, GstPad * pad, GstCaps * caps);
+
+  /* signal fired to know if we continue trying to decode the given caps */
+    gboolean (*autoplug_continue) (GstElement * element, GstPad * pad,
+      GstCaps * caps);
+  /* signal fired to get a list of factories to try to autoplug */
+  GValueArray *(*autoplug_factories) (GstElement * element, GstPad * pad,
+      GstCaps * caps);
+  /* signal fired to select from the proposed list of factories */
+    gint (*autoplug_select) (GstElement * element, GstPad * pad, GstCaps * caps,
+      GValueArray * factories);
 };
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src%d",
@@ -86,15 +103,33 @@ GST_ELEMENT_DETAILS ("URI Decoder",
     "Autoplug and decode an URI to raw media",
     "Wim Taymans <wim@fluendo.com>");
 
-#define DEFAULT_PROP_URI	        NULL
+/* signals */
+enum
+{
+  SIGNAL_UNKNOWN_TYPE,
+  SIGNAL_AUTOPLUG_CONTINUE,
+  SIGNAL_AUTOPLUG_FACTORIES,
+  SIGNAL_AUTOPLUG_SELECT,
+  LAST_SIGNAL
+};
+
+/* properties */
+#define DEFAULT_PROP_URI	    NULL
 #define DEFAULT_CONNECTION_SPEED    0
+#define DEFAULT_CAPS                NULL
+#define DEFAULT_SUBTITLE_ENCODING   NULL
+
 enum
 {
   PROP_0,
   PROP_URI,
   PROP_CONNECTION_SPEED,
+  PROP_CAPS,
+  PROP_SUBTITLE_ENCODING,
   PROP_LAST
 };
+
+static guint gst_uri_decode_bin_signals[LAST_SIGNAL] = { 0 };
 
 GST_BOILERPLATE (GstURIDecodeBin, gst_uri_decode_bin, GstBin, GST_TYPE_BIN);
 
@@ -117,6 +152,20 @@ gst_uri_decode_bin_base_init (gpointer g_class)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
   gst_element_class_set_details (gstelement_class, &gst_uri_decode_bin_details);
+}
+
+static gboolean
+_gst_boolean_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  gboolean myboolean;
+
+  myboolean = g_value_get_boolean (handler_return);
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boolean (return_accu, myboolean);
+
+  /* stop emission if FALSE */
+  return myboolean;
 }
 
 static void
@@ -143,6 +192,93 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
           "Network connection speed in kbps (0 = unknown)",
           0, G_MAXUINT, DEFAULT_CONNECTION_SPEED, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_CAPS,
+      g_param_spec_boxed ("caps", "Caps",
+          "The caps on which to stop decoding. (NULL = default)",
+          GST_TYPE_CAPS, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SUBTITLE_ENCODING,
+      g_param_spec_string ("subtitle-encoding", "subtitle encoding",
+          "Encoding to assume if input subtitles are not in UTF-8 encoding. "
+          "If not set, the GST_SUBTITLE_ENCODING environment variable will "
+          "be checked for an encoding to use. If that is not set either, "
+          "ISO-8859-15 will be assumed.", NULL, G_PARAM_READWRITE));
+
+  /**
+   * GstURIDecodeBin::unknown-type:
+   * @pad: the new pad containing caps that cannot be resolved to a 'final' stream type.
+   * @caps: the #GstCaps of the pad that cannot be resolved.
+   *
+   * This signal is emitted when a pad for which there is no further possible
+   * decoding is added to the uridecodebin.
+   */
+  gst_uri_decode_bin_signals[SIGNAL_UNKNOWN_TYPE] =
+      g_signal_new ("unknown-type", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass, unknown_type),
+      NULL, NULL, gst_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2,
+      GST_TYPE_PAD, GST_TYPE_CAPS);
+
+  /**
+   * GstURIDecodeBin::autoplug-continue:
+   * @pad: The #GstPad.
+   * @caps: The #GstCaps found.
+   *
+   * This signal is emitted whenever uridecodebin finds a new stream. It is
+   * emitted before looking for any elements that can handle that stream.
+   *
+   * Returns: #TRUE if you wish uridecodebin to look for elements that can
+   * handle the given @caps. If #FALSE, those caps will be considered as
+   * final and the pad will be exposed as such (see 'new-decoded-pad'
+   * signal).
+   */
+  gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE] =
+      g_signal_new ("autoplug-continue", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
+          autoplug_continue), _gst_boolean_accumulator, NULL,
+      gst_play_marshal_BOOLEAN__OBJECT_OBJECT, G_TYPE_BOOLEAN, 2, GST_TYPE_PAD,
+      GST_TYPE_CAPS);
+
+  /**
+   * GstURIDecodeBin::autoplug-factories:
+   * @pad: The #GstPad.
+   * @caps: The #GstCaps found.
+   *
+   * This function is emited when an array of possible factories for @caps on
+   * @pad is needed. Decodebin2 will by default return 
+   *
+   * Returns: a #GValueArray* with a list of factories to try. The factories are
+   * by default tried in the returned order or based on the index returned by
+   * "autoplug-select".
+   */
+  gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES] =
+      g_signal_new ("autoplug-factories", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
+          autoplug_factories), NULL, NULL,
+      gst_play_marshal_BOXED__OBJECT_OBJECT, G_TYPE_VALUE_ARRAY, 2,
+      GST_TYPE_PAD, GST_TYPE_CAPS);
+
+  /**
+   * GstURIDecodeBin::autoplug-select:
+   * @pad: The #GstPad.
+   * @caps: The #GstCaps.
+   * @factories: A #GValueArray of possible #GstElementFactory to use, sorted by
+   * rank (higher ranks come first).
+   *
+   * This signal is emitted once uridecodebin has found all the possible
+   * #GstElementFactory that can be used to handle the given @caps.
+   *
+   * Returns: A #gint indicating what factory index from the @factories array
+   * that you wish uridecodebin to use for trying to decode the given @caps.
+   * -1 to stop selection of a factory. The default handler always
+   * returns the first possible factory.
+   */
+  gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT] =
+      g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
+          autoplug_select), NULL, NULL,
+      gst_play_marshal_INT__OBJECT_OBJECT_BOXED, G_TYPE_INT, 3, GST_TYPE_PAD,
+      GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
+
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_query);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_change_state);
@@ -152,7 +288,9 @@ static void
 gst_uri_decode_bin_init (GstURIDecodeBin * dec, GstURIDecodeBinClass * klass)
 {
   dec->uri = g_strdup (DEFAULT_PROP_URI);
-  dec->uri = DEFAULT_CONNECTION_SPEED;
+  dec->connection_speed = DEFAULT_CONNECTION_SPEED;
+  dec->caps = DEFAULT_CAPS;
+  dec->encoding = g_strdup (DEFAULT_SUBTITLE_ENCODING);
 }
 
 static void
@@ -161,7 +299,7 @@ gst_uri_decode_bin_finalize (GObject * obj)
   GstURIDecodeBin *dec = GST_URI_DECODE_BIN (obj);
 
   g_free (dec->uri);
-  dec->uri = NULL;
+  g_free (dec->encoding);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -174,11 +312,28 @@ gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_URI:
+      GST_OBJECT_LOCK (dec);
       g_free (dec->uri);
       dec->uri = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (dec);
       break;
     case PROP_CONNECTION_SPEED:
+      GST_OBJECT_LOCK (dec);
       dec->connection_speed = g_value_get_uint (value) * 1000;
+      GST_OBJECT_UNLOCK (dec);
+      break;
+    case PROP_CAPS:
+      GST_OBJECT_LOCK (dec);
+      if (dec->caps)
+        gst_caps_unref (dec->caps);
+      dec->caps = g_value_dup_boxed (value);
+      GST_OBJECT_UNLOCK (dec);
+      break;
+    case PROP_SUBTITLE_ENCODING:
+      GST_OBJECT_LOCK (dec);
+      g_free (dec->encoding);
+      dec->encoding = g_value_dup_string (value);
+      GST_OBJECT_UNLOCK (dec);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -194,10 +349,24 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_URI:
+      GST_OBJECT_LOCK (dec);
       g_value_set_string (value, dec->uri);
+      GST_OBJECT_UNLOCK (dec);
       break;
     case PROP_CONNECTION_SPEED:
+      GST_OBJECT_LOCK (dec);
       g_value_set_uint (value, dec->connection_speed / 1000);
+      GST_OBJECT_UNLOCK (dec);
+      break;
+    case PROP_CAPS:
+      GST_OBJECT_LOCK (dec);
+      g_value_set_boxed (value, dec->caps);
+      GST_OBJECT_UNLOCK (dec);
+      break;
+    case PROP_SUBTITLE_ENCODING:
+      GST_OBJECT_LOCK (dec);
+      g_value_set_string (value, dec->encoding);
+      GST_OBJECT_UNLOCK (dec);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -602,6 +771,50 @@ remove_pads (GstURIDecodeBin * bin)
   bin->srcpads = NULL;
 }
 
+static void
+proxy_unknown_type_signal (GstElement * element, GstPad * pad, GstCaps * caps,
+    GstURIDecodeBin * dec)
+{
+  g_signal_emit (G_OBJECT (dec),
+      gst_uri_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, pad, caps);
+}
+
+static gboolean
+proxy_autoplug_continue_signal (GstElement * element, GstPad * pad,
+    GstCaps * caps, GstURIDecodeBin * dec)
+{
+  gboolean result;
+
+  g_signal_emit (G_OBJECT (dec),
+      gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE], 0, pad, caps,
+      &result);
+  return result;
+}
+
+static GValueArray *
+proxy_autoplug_factories_signal (GstElement * element, GstPad * pad,
+    GstCaps * caps, GstURIDecodeBin * dec)
+{
+  GValueArray *result;
+
+  g_signal_emit (G_OBJECT (dec),
+      gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES], 0, pad, caps,
+      &result);
+  return result;
+}
+
+static gint
+proxy_autoplug_select_signal (GstElement * element, GstPad * pad,
+    GstCaps * caps, GValueArray * array, GstURIDecodeBin * dec)
+{
+  gint result;
+
+  g_signal_emit (G_OBJECT (dec),
+      gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT], 0, pad, caps, array,
+      &result);
+  return result;
+}
+
 static GstElement *
 make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
 {
@@ -611,6 +824,16 @@ make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
   decodebin = gst_element_factory_make ("decodebin2", NULL);
   if (!decodebin)
     goto no_decodebin;
+
+  /* connect signals to proxy */
+  g_signal_connect (G_OBJECT (decodebin), "unknown-type",
+      G_CALLBACK (proxy_unknown_type_signal), decoder);
+  g_signal_connect (G_OBJECT (decodebin), "autoplug-continue",
+      G_CALLBACK (proxy_autoplug_continue_signal), decoder);
+  g_signal_connect (G_OBJECT (decodebin), "autoplug-factories",
+      G_CALLBACK (proxy_autoplug_factories_signal), decoder);
+  g_signal_connect (G_OBJECT (decodebin), "autoplug-select",
+      G_CALLBACK (proxy_autoplug_select_signal), decoder);
 
   if (use_queue) {
     GstElement *queue;

@@ -1,3 +1,24 @@
+2007-10-25  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_class_init),
+	(gst_decode_bin_dispose), (gst_decode_bin_set_caps),
+	(gst_decode_bin_set_subs_encoding),
+	(gst_decode_bin_get_subs_encoding), (gst_decode_bin_set_property),
+	(gst_decode_bin_get_property), (analyze_new_pad):
+	Move subtitle encoding property to decodebin2 so that it can set the
+	property value on all elements that it autoplugs and that require it.
+	Make caps refcounting more consistent in get/set.
+
+	* gst/playback/gsturidecodebin.c: (_gst_boolean_accumulator),
+	(gst_uri_decode_bin_class_init), (gst_uri_decode_bin_init),
+	(gst_uri_decode_bin_finalize), (gst_uri_decode_bin_set_property),
+	(gst_uri_decode_bin_get_property), (proxy_unknown_type_signal),
+	(proxy_autoplug_continue_signal),
+	(proxy_autoplug_factories_signal), (proxy_autoplug_select_signal),
+	(make_decoder):
+	Proxy properties and relevant signals from the internal decodebin.
+	Make properties MT safe.
+
 2007-10-25  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/tag.h: (GST_TAG_MUSICBRAINZ_SORTNAME):

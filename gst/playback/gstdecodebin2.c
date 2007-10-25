@@ -82,6 +82,10 @@ struct _GstDecodeBin
 {
   GstBin bin;                   /* we extend GstBin */
 
+  /* properties */
+  GstCaps *caps;                /* caps on which to stop decoding */
+  gchar *encoding;              /* encoding of subtitles */
+
   GstElement *typefind;         /* this holds the typefind object */
   GstElement *fakesink;
 
@@ -92,7 +96,6 @@ struct _GstDecodeBin
   GList *oldgroups;             /* List of no-longer-used GstDecodeGroups. 
                                  * Should be freed in dispose */
   gint nbpads;                  /* unique identifier for source pads */
-  GstCaps *caps;                /* caps on which to stop decoding */
 
   GList *factories;             /* factories we can use for selecting elements */
 
@@ -139,6 +142,7 @@ enum
 {
   PROP_0,
   PROP_CAPS,
+  PROP_SUBTITLE_ENCODING
 };
 
 static GstBinClass *parent_class;
@@ -451,6 +455,13 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       g_param_spec_boxed ("caps", "Caps", "The caps on which to stop decoding.",
           GST_TYPE_CAPS, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_klass, PROP_SUBTITLE_ENCODING,
+      g_param_spec_string ("subtitle-encoding", "subtitle encoding",
+          "Encoding to assume if input subtitles are not in UTF-8 encoding. "
+          "If not set, the GST_SUBTITLE_ENCODING environment variable will "
+          "be checked for an encoding to use. If that is not set either, "
+          "ISO-8859-15 will be assumed.", NULL, G_PARAM_READWRITE));
+
   klass->autoplug_continue =
       GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_continue);
   klass->autoplug_factories =
@@ -625,6 +636,10 @@ gst_decode_bin_dispose (GObject * object)
   if (decode_bin->caps)
     gst_caps_unref (decode_bin->caps);
   decode_bin->caps = NULL;
+
+  g_free (decode_bin->encoding);
+  decode_bin->encoding = NULL;
+
   remove_fakesink (decode_bin);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -645,52 +660,14 @@ gst_decode_bin_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static void
-gst_decode_bin_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstDecodeBin *dbin;
-
-  dbin = GST_DECODE_BIN (object);
-
-  switch (prop_id) {
-    case PROP_CAPS:
-      gst_decode_bin_set_caps (dbin, (GstCaps *) g_value_dup_boxed (value));
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_decode_bin_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstDecodeBin *dbin;
-
-  dbin = GST_DECODE_BIN (object);
-  switch (prop_id) {
-    case PROP_CAPS:{
-      g_value_take_boxed (value, gst_decode_bin_get_caps (dbin));
-      break;
-    }
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-
-}
-
 /* _set_caps
  * Changes the caps on which decodebin will stop decoding.
  * Will unref the previously set one. The refcount of the given caps will be
- * taken.
+ * increased.
  * @caps can be NULL.
  *
  * MT-safe
  */
-
 static void
 gst_decode_bin_set_caps (GstDecodeBin * dbin, GstCaps * caps)
 {
@@ -699,6 +676,8 @@ gst_decode_bin_set_caps (GstDecodeBin * dbin, GstCaps * caps)
   DECODE_BIN_LOCK (dbin);
   if (dbin->caps)
     gst_caps_unref (dbin->caps);
+  if (caps)
+    gst_caps_ref (caps);
   dbin->caps = caps;
   DECODE_BIN_UNLOCK (dbin);
 }
@@ -725,6 +704,73 @@ gst_decode_bin_get_caps (GstDecodeBin * dbin)
 
   return caps;
 }
+
+static void
+gst_decode_bin_set_subs_encoding (GstDecodeBin * dbin, const gchar * encoding)
+{
+  GST_DEBUG_OBJECT (dbin, "Setting new encoding: %s", GST_STR_NULL (encoding));
+
+  DECODE_BIN_LOCK (dbin);
+  g_free (dbin->encoding);
+  dbin->encoding = g_strdup (encoding);
+  DECODE_BIN_UNLOCK (dbin);
+}
+
+static gchar *
+gst_decode_bin_get_subs_encoding (GstDecodeBin * dbin)
+{
+  gchar *encoding;
+
+  GST_DEBUG_OBJECT (dbin, "Getting currently set encoding");
+
+  DECODE_BIN_LOCK (dbin);
+  encoding = g_strdup (dbin->encoding);
+  DECODE_BIN_UNLOCK (dbin);
+
+  return encoding;
+}
+
+static void
+gst_decode_bin_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstDecodeBin *dbin;
+
+  dbin = GST_DECODE_BIN (object);
+
+  switch (prop_id) {
+    case PROP_CAPS:
+      gst_decode_bin_set_caps (dbin, g_value_get_boxed (value));
+      break;
+    case PROP_SUBTITLE_ENCODING:
+      gst_decode_bin_set_subs_encoding (dbin, g_value_get_string (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_decode_bin_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstDecodeBin *dbin;
+
+  dbin = GST_DECODE_BIN (object);
+  switch (prop_id) {
+    case PROP_CAPS:
+      g_value_take_boxed (value, gst_decode_bin_get_caps (dbin));
+      break;
+    case PROP_SUBTITLE_ENCODING:
+      g_value_take_string (value, gst_decode_bin_get_subs_encoding (dbin));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 
 static GValueArray *find_compatibles (GstDecodeBin * decode_bin,
     GstPad * pad, const GstCaps * caps);
@@ -846,7 +892,6 @@ expose_pad:
     expose_pad (dbin, src, pad, group);
     return;
   }
-
 unknown_type:
   {
     GST_LOG_OBJECT (pad, "Unknown type, firing signal");
@@ -861,7 +906,6 @@ unknown_type:
         gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
     return;
   }
-
 non_fixed:
   {
     GST_DEBUG_OBJECT (pad, "pad has non-fixed caps delay autoplugging");
