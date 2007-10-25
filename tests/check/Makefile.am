@@ -60,6 +60,7 @@ check_PROGRAMS = \
 	$(check_timidity)  \
 	elements/bpwsinc  \
 	elements/lpwsinc  \
+	elements/multifile \
 	elements/rganalysis \
 	elements/rglimiter \
 	elements/rgvolume \

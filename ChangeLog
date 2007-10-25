@@ -1,3 +1,13 @@
+2007-10-25  David Schleef  <ds@schleef.org>
+
+	* gst/multifile/Makefile.am:
+	* gst/multifile/gstmultifilesink.c:
+	* gst/multifile/gstmultifilesrc.c:
+	* tests/check/Makefile.am:
+	* tests/check/elements/multifile.c:
+	  Improve documentation, write some tests for multifilesrc/sink
+	  for upcoming ->good review.
+
 2007-10-23  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/gstdvbsrc.c:
