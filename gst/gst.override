@@ -1208,6 +1208,145 @@ _wrap_gst_segment_clip (PyObject * self, PyObject * args, PyObject * kwargs)
 
     return py_ret;
 }
+
+%%
+override GstURIHandler__proxy_do_get_type_full
+static guint
+_wrap_GstURIHandler__proxy_do_get_type_full (GType type)
+{
+    PyGILState_STATE __py_state;
+    PyTypeObject *py_class;
+    PyObject *py_method;
+    PyObject *py_retval;
+    guint retval;
+    
+    __py_state = pyg_gil_state_ensure();
+    py_class = pygobject_lookup_class (type);
+    if (py_class == NULL) {
+      pyg_gil_state_release (__py_state);
+      return GST_URI_UNKNOWN;
+    }
+
+    py_method = PyObject_GetAttrString((PyObject *) py_class, "do_get_type_full");
+    Py_DECREF (py_class);
+    if (!py_method) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        pyg_gil_state_release(__py_state);
+        return GST_URI_UNKNOWN;
+    }
+
+    py_retval = PyObject_CallObject(py_method, NULL);
+    Py_DECREF (py_method);
+    if (!py_retval) {
+        if (PyErr_Occurred())
+            PyErr_Print();
+        pyg_gil_state_release(__py_state);
+        return GST_URI_UNKNOWN;
+    }
+
+    retval = PyLong_AsLong (py_retval);
+    Py_DECREF(py_retval);
+    pyg_gil_state_release(__py_state);
+    
+    return retval;
+}
+
+%%
+override GstURIHandler__proxy_do_get_protocols_full
+static gchar **
+_wrap_GstURIHandler__proxy_do_get_protocols_full (GType type)
+{
+    PyGILState_STATE __py_state;
+    PyTypeObject *py_class;
+    PyObject *py_method;
+    PyObject *py_retval;
+    Py_ssize_t ret_size, i;
+    gchar **retval;
+
+    __py_state = pyg_gil_state_ensure();
+    py_class = pygobject_lookup_class (type);
+    if (py_class == NULL) {
+      pyg_gil_state_release (__py_state);
+      return NULL;
+    }
+
+    py_method = PyObject_GetAttrString((PyObject *) py_class, "do_get_protocols_full");
+    Py_DECREF (py_class);
+    if (!py_method) {
+      if (PyErr_Occurred())
+          PyErr_Print();
+      pyg_gil_state_release(__py_state);
+      return NULL;
+    }
+
+    py_retval = PyObject_CallObject(py_method, NULL);
+    Py_DECREF (py_method);
+    if (!py_retval) {
+      if (PyErr_Occurred())
+          PyErr_Print();
+      Py_DECREF (py_retval);
+      pyg_gil_state_release(__py_state);
+      return NULL;
+    }
+
+    if (!PySequence_Check (py_retval)) {
+      PyErr_SetString (PyExc_TypeError, "GstURIHandler.do_get_protocols_full "
+        "must return a sequence of strings");
+      Py_DECREF (py_retval);
+      return NULL;
+    }
+    
+    ret_size = PySequence_Size (py_retval);
+    if (ret_size == -1) {
+      Py_DECREF (py_retval);
+      pyg_gil_state_release(__py_state);
+      return NULL;
+    }
+
+    retval = g_new (gchar *, ret_size + 1);
+    retval[ret_size] = NULL;
+    for (i = 0; i < PySequence_Size (py_retval); ++i) {
+      PyObject *item = PySequence_GetItem (py_retval, i);
+      if (!item) {
+        if (PyErr_Occurred ())
+          PyErr_Print ();
+        g_strfreev (retval);
+        Py_DECREF (py_retval);
+        pyg_gil_state_release(__py_state);
+        return NULL;
+      }
+
+      if (!PyString_Check (item)) {
+        PyErr_SetString (PyExc_TypeError, "GstURIHandler.do_get_protocols_full "
+          "must return a sequence of strings");
+        Py_DECREF (item);
+        g_strfreev (retval);
+        Py_DECREF (py_retval);
+        pyg_gil_state_release(__py_state);
+        return NULL;
+      }
+
+      retval [i] = PyString_AsString (item);
+      if (!retval [i]) {
+        if (PyErr_Occurred ())
+          PyErr_Print ();
+        g_strfreev (retval);
+        Py_DECREF (item);
+        Py_DECREF (py_retval);
+        pyg_gil_state_release(__py_state);
+        return NULL;
+      }
+
+      Py_DECREF (item);
+    }
+
+    Py_DECREF(py_retval);
+    pyg_gil_state_release(__py_state);
+    
+    return retval;
+}
+
 %%
 override g_error_new kwargs
 static int

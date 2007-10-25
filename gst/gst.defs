@@ -6610,14 +6610,20 @@
   )
 )
 
-(define-virtual get_type
+(define-virtual get_type_full
   (of-object "GstURIHandler")
+  (parameters
+    '("GType" "type")
+  )
   (return-type "guint")
 )
 
-(define-virtual get_protocols
+(define-virtual get_protocols_full
   (of-object "GstURIHandler")
-  (return-type "gchar**")
+  (parameters
+    '("GType" "type")
+  )
+  (return-type "GStrv")
 )
 
 (define-virtual get_uri

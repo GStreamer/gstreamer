@@ -1,3 +1,12 @@
+2007-10-25  Jan Schmidt  <Jan.Schmidt@sun.com>
+
+	* gst/gst.defs:
+	* gst/gst.override:
+	Patch from Alessandro Decina adding get_type_full and
+	get_protocols_full private vfuncs to the URIHandler interface
+	to allow bindings to support creating URI handlers.
+	Partially fixes: #339279
+
 2007-10-18  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* examples/play.py:
