@@ -20,24 +20,30 @@
  */
 /**
  * SECTION:element-multifilesrc
- * @short_description: reads buffers from sequentially-named files
+ * @short_description: Read buffers from sequentially-named files
  * @see_also: #GstFileSrc
  *
  * <refsect2>
  * <para>
  * Reads buffers from sequentially named files. If used together with an image
- * decoder one needs to use the GstMultiFileSrc::caps property or a capsfilter
- * to force to caps containing a framerate. Otherwise imagedecoders send EOS
+ * decoder, one needs to use the GstMultiFileSrc::caps property or a capsfilter
+ * to force to caps containing a framerate. Otherwise image decoders send EOS
  * after the first picture.
  * </para>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch multifilesrc location="img.%04d.png" index=0 ! image/png,framerate='(fraction)'1/1 ! pngdec ! ffmpegcolorspace ! ffenc_mpeg4 ! avimux ! filesink location="images.avi"
+ * gst-launch multifilesrc location="img.%04d.png" index=0 caps="image/png,framerate=\(fraction\)12/1" ! \
+ *     pngdec ! ffmpegcolorspace ! theoraenc ! oggmux ! \
+ *     filesink location="images.ogg"
  * </programlisting>
- * This pipeline joins multiple frames into one video.
+ * This pipeline creates a video file "images.ogg" by joining multiple PNG
+ * files named img.0000.png, img.0001.png, etc.
  * </para>
-  * </refsect2>
+ * <para>
+ * File names are created by replacing "%%d" with the index using printf().
+ * </para>
+ * </refsect2>
 */
 
 #ifdef HAVE_CONFIG_H
@@ -82,6 +88,9 @@ enum
   ARG_CAPS
 };
 
+#define DEFAULT_LOCATION "%05d"
+#define DEFAULT_INDEX 0
+
 
 GST_BOILERPLATE (GstMultiFileSrc, gst_multi_file_src, GstPushSrc,
     GST_TYPE_PUSH_SRC);
@@ -111,13 +120,18 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "File Location",
-          "Location of the file to read", NULL, G_PARAM_READWRITE));
+          "Pattern to create file names of input files.  File names are "
+          "created by calling sprintf() with the pattern and the current "
+          "index.", DEFAULT_LOCATION, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_INDEX,
       g_param_spec_int ("index", "File Index",
-          "Index of file to read", 0, INT_MAX, 0, G_PARAM_READWRITE));
+          "Index to use with location property to create file names.  The "
+          "index is incremented by one for each buffer read.",
+          0, INT_MAX, DEFAULT_INDEX, G_PARAM_READWRITE));
   g_object_class_install_property (gobject_class, ARG_CAPS,
       g_param_spec_boxed ("caps", "Caps",
-          "Caps of source pad", GST_TYPE_CAPS, G_PARAM_READWRITE));
+          "Caps describing the format of the data.",
+          GST_TYPE_CAPS, G_PARAM_READWRITE));
 
   gobject_class->dispose = gst_multi_file_src_dispose;
 
@@ -132,14 +146,15 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
 }
 
 static void
-gst_multi_file_src_init (GstMultiFileSrc * filesrc,
+gst_multi_file_src_init (GstMultiFileSrc * multifilesrc,
     GstMultiFileSrcClass * g_class)
 {
   GstPad *pad;
 
-  pad = GST_BASE_SRC_PAD (filesrc);
+  pad = GST_BASE_SRC_PAD (multifilesrc);
 
-  filesrc->filename = g_strdup ("output-%05d");
+  multifilesrc->index = DEFAULT_INDEX;
+  multifilesrc->filename = g_strdup (DEFAULT_LOCATION);
 }
 
 static void
@@ -160,7 +175,7 @@ gst_multi_file_src_getcaps (GstBaseSrc * src)
 {
   GstMultiFileSrc *multi_file_src = GST_MULTI_FILE_SRC (src);
 
-  GST_DEBUG ("returning %" GST_PTR_FORMAT, multi_file_src->caps);
+  GST_DEBUG_OBJECT (src, "returning %" GST_PTR_FORMAT, multi_file_src->caps);
 
   if (multi_file_src->caps) {
     return gst_caps_ref (multi_file_src->caps);
@@ -237,11 +252,11 @@ gst_multi_file_src_get_property (GObject * object, guint prop_id,
 }
 
 static gchar *
-gst_multi_file_src_get_filename (GstMultiFileSrc * filesrc)
+gst_multi_file_src_get_filename (GstMultiFileSrc * multifilesrc)
 {
   gchar *filename;
 
-  filename = g_strdup_printf (filesrc->filename, filesrc->index);
+  filename = g_strdup_printf (multifilesrc->filename, multifilesrc->index);
 
   return filename;
 }
@@ -249,18 +264,18 @@ gst_multi_file_src_get_filename (GstMultiFileSrc * filesrc)
 static GstFlowReturn
 gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 {
-  GstMultiFileSrc *filesrc;
+  GstMultiFileSrc *multifilesrc;
   guint size;
   gchar *filename;
   FILE *file;
   GstBuffer *buf;
   int ret;
 
-  filesrc = GST_MULTI_FILE_SRC (src);
+  multifilesrc = GST_MULTI_FILE_SRC (src);
 
-  filename = gst_multi_file_src_get_filename (filesrc);
+  filename = gst_multi_file_src_get_filename (multifilesrc);
 
-  GST_DEBUG_OBJECT (filesrc, "reading from file \"%s\".", filename);
+  GST_DEBUG_OBJECT (multifilesrc, "reading from file \"%s\".", filename);
 
   file = fopen (filename, "rb");
   if (!file) {
@@ -278,15 +293,15 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
     goto handle_error;
   }
 
-  filesrc->index++;
+  multifilesrc->index++;
 
   GST_BUFFER_SIZE (buf) = size;
-  GST_BUFFER_OFFSET (buf) = filesrc->offset;
-  GST_BUFFER_OFFSET_END (buf) = filesrc->offset + size;
-  filesrc->offset += size;
-  gst_buffer_set_caps (buf, filesrc->caps);
+  GST_BUFFER_OFFSET (buf) = multifilesrc->offset;
+  GST_BUFFER_OFFSET_END (buf) = multifilesrc->offset + size;
+  multifilesrc->offset += size;
+  gst_buffer_set_caps (buf, multifilesrc->caps);
 
-  GST_DEBUG_OBJECT (filesrc, "read file \"%s\".", filename);
+  GST_DEBUG_OBJECT (multifilesrc, "read file \"%s\".", filename);
 
   fclose (file);
   g_free (filename);
@@ -297,7 +312,7 @@ handle_error:
   {
     switch (errno) {
       default:{
-        GST_ELEMENT_ERROR (filesrc, RESOURCE, READ,
+        GST_ELEMENT_ERROR (multifilesrc, RESOURCE, READ,
             ("Error while reading from file \"%s\".", filename),
             ("%s", g_strerror (errno)));
       }

@@ -23,10 +23,13 @@
  */
 /**
  * SECTION:element-multifilesink
- * @short_description: write buffers to sequentially-named files
+ * @short_description: Writes buffers to sequentially-named files
  * @see_also: #GstFileSrc
  *
- * Write incoming data to a series of files in the local file system.
+ * <para>
+ * Write incoming data to a series of sequentially-named files.
+ * </para>
+ *
  */
 
 #ifdef HAVE_CONFIG_H
@@ -52,8 +55,12 @@ GST_ELEMENT_DETAILS ("Multi-File Sink",
 enum
 {
   ARG_0,
-  ARG_LOCATION
+  ARG_LOCATION,
+  ARG_INDEX
 };
+
+#define DEFAULT_LOCATION "%05d"
+#define DEFAULT_INDEX 0
 
 static void gst_multi_file_sink_dispose (GObject * object);
 
@@ -62,19 +69,8 @@ static void gst_multi_file_sink_set_property (GObject * object, guint prop_id,
 static void gst_multi_file_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-//static gboolean gst_multi_file_sink_open_file (GstMultiFileSink * sink);
-//static void gst_multi_file_sink_close_file (GstMultiFileSink * sink);
-
-//static gboolean gst_multi_file_sink_start (GstBaseSink * sink);
-//static gboolean gst_multi_file_sink_stop (GstBaseSink * sink);
-//static gboolean gst_multi_file_sink_event (GstBaseSink * sink, GstEvent * event);
 static GstFlowReturn gst_multi_file_sink_render (GstBaseSink * sink,
     GstBuffer * buffer);
-
-//static gboolean gst_multi_file_sink_do_seek (GstMultiFileSink * filesink,
-//    guint64 new_offset);
-
-//static gboolean gst_multi_file_sink_query (GstPad * pad, GstQuery * query);
 
 
 
@@ -107,14 +103,16 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
   g_object_class_install_property (gobject_class, ARG_LOCATION,
       g_param_spec_string ("location", "File Location",
           "Location of the file to write", NULL, G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, ARG_INDEX,
+      g_param_spec_int ("index", "Index",
+          "Index to use with location property to create file names.  The "
+          "index is incremented by one for each buffer read.",
+          0, INT_MAX, DEFAULT_INDEX, G_PARAM_READWRITE));
 
   gobject_class->dispose = gst_multi_file_sink_dispose;
 
   gstbasesink_class->get_times = NULL;
-  //gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_multi_file_sink_start);
-  //gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_multi_file_sink_stop);
   gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_multi_file_sink_render);
-  //gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_multi_file_sink_event);
 
   if (sizeof (off_t) < 8) {
     GST_LOG ("No large file support, sizeof (off_t) = %" G_GSIZE_FORMAT,
@@ -123,18 +121,17 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
 }
 
 static void
-gst_multi_file_sink_init (GstMultiFileSink * filesink,
+gst_multi_file_sink_init (GstMultiFileSink * multifilesink,
     GstMultiFileSinkClass * g_class)
 {
   GstPad *pad;
 
-  pad = GST_BASE_SINK_PAD (filesink);
+  pad = GST_BASE_SINK_PAD (multifilesink);
 
-  //gst_pad_set_query_function (pad, GST_DEBUG_FUNCPTR (gst_multi_file_sink_query));
+  multifilesink->filename = g_strdup (DEFAULT_LOCATION);
+  multifilesink->index = DEFAULT_INDEX;
 
-  filesink->filename = g_strdup ("output-%05d");
-
-  GST_BASE_SINK (filesink)->sync = FALSE;
+  GST_BASE_SINK (multifilesink)->sync = FALSE;
 }
 
 static void
@@ -171,6 +168,9 @@ gst_multi_file_sink_set_property (GObject * object, guint prop_id,
     case ARG_LOCATION:
       gst_multi_file_sink_set_location (sink, g_value_get_string (value));
       break;
+    case ARG_INDEX:
+      sink->index = g_value_get_int (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -187,6 +187,9 @@ gst_multi_file_sink_get_property (GObject * object, guint prop_id,
     case ARG_LOCATION:
       g_value_set_string (value, sink->filename);
       break;
+    case ARG_INDEX:
+      g_value_set_int (value, sink->index);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -200,11 +203,11 @@ gst_multi_file_sink_get_property (GObject * object, guint prop_id,
 #endif
 
 static gchar *
-gst_multi_file_sink_get_filename (GstMultiFileSink * filesink)
+gst_multi_file_sink_get_filename (GstMultiFileSink * multifilesink)
 {
   gchar *filename;
 
-  filename = g_strdup_printf (filesink->filename, filesink->index);
+  filename = g_strdup_printf (multifilesink->filename, multifilesink->index);
 
   return filename;
 }
@@ -212,16 +215,16 @@ gst_multi_file_sink_get_filename (GstMultiFileSink * filesink)
 static GstFlowReturn
 gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
 {
-  GstMultiFileSink *filesink;
+  GstMultiFileSink *multifilesink;
   guint size;
   gchar *filename;
   FILE *file;
 
   size = GST_BUFFER_SIZE (buffer);
 
-  filesink = GST_MULTI_FILE_SINK (sink);
+  multifilesink = GST_MULTI_FILE_SINK (sink);
 
-  filename = gst_multi_file_sink_get_filename (filesink);
+  filename = gst_multi_file_sink_get_filename (multifilesink);
 
   file = fopen (filename, "wb");
   if (!file) {
@@ -235,7 +238,7 @@ gst_multi_file_sink_render (GstBaseSink * sink, GstBuffer * buffer)
       goto handle_error;
   }
 
-  filesink->index++;
+  multifilesink->index++;
 
   fclose (file);
 
@@ -245,12 +248,13 @@ handle_error:
   {
     switch (errno) {
       case ENOSPC:{
-        GST_ELEMENT_ERROR (filesink, RESOURCE, NO_SPACE_LEFT, (NULL), (NULL));
+        GST_ELEMENT_ERROR (multifilesink, RESOURCE, NO_SPACE_LEFT, (NULL),
+            (NULL));
         break;
       }
       default:{
-        GST_ELEMENT_ERROR (filesink, RESOURCE, WRITE,
-            ("Error while writing to file \"%s\".", filesink->filename),
+        GST_ELEMENT_ERROR (multifilesink, RESOURCE, WRITE,
+            ("Error while writing to file \"%s\".", multifilesink->filename),
             ("%s", g_strerror (errno)));
       }
     }
