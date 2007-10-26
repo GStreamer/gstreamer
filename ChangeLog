@@ -1,3 +1,16 @@
+2007-10-26  Julien MOUTTE  <julien@moutte.net>
+
+	* configure.ac:
+	* gst/mpeg4videoparse/Makefile.am:
+	* gst/mpeg4videoparse/mpeg4videoparse.c: (gst_mpeg4vparse_drain),
+	(gst_mpeg4vparse_chain), (gst_mpeg4vparse_sink_setcaps),
+	(gst_mpeg4vparse_sink_event), (gst_mpeg4vparse_cleanup),
+	(gst_mpeg4vparse_change_state), (gst_mpeg4vparse_dispose),
+	(gst_mpeg4vparse_base_init), (gst_mpeg4vparse_class_init),
+	(gst_mpeg4vparse_init), (plugin_init):
+	* gst/mpeg4videoparse/mpeg4videoparse.h: Add a simple MPEG4 ES
+	parser.
+
 2007-10-25  David Schleef  <ds@schleef.org>
 
 	* gst/multifile/Makefile.am:

@@ -94,6 +94,7 @@ GST_PLUGINS_ALL="\
   librfb \
   modplug \
   mpegtsparse \
+  mpeg4videoparse \
   mpegvideoparse \
   multifile \
   mve \
@@ -1001,6 +1002,7 @@ gst/librfb/Makefile
 gst/modplug/Makefile
 gst/modplug/libmodplug/Makefile
 gst/mpegtsparse/Makefile
+gst/mpeg4videoparse/Makefile
 gst/mpegvideoparse/Makefile
 gst/multifile/Makefile
 gst/mve/Makefile
