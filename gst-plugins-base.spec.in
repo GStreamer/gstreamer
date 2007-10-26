@@ -191,6 +191,8 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/rtsp/gstrtspurl.h
 %{_includedir}/gstreamer-%{majorminor}/gst/sdp/gstsdp.h
 %{_includedir}/gstreamer-%{majorminor}/gst/sdp/gstsdpmessage.h
+%{_includedir}/gstreamer-%{majorminor}/gst/rtp/gstrtppayloads.h
+%{_includedir}/gstreamer-%{majorminor}/gst/tag/gsttagdemux.h
 %{_libdir}/libgstfft-%{majorminor}.so
 %{_libdir}/libgstrtsp-%{majorminor}.so
 %{_libdir}/libgstsdp-%{majorminor}.so
