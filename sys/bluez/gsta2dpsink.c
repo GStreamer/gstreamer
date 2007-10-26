@@ -36,7 +36,6 @@
 #include <bluetooth/bluetooth.h>
 
 #include "ipc.h"
-#include "sbc.h"
 #include "rtp.h"
 
 #include "gsta2dpsink.h"
@@ -82,8 +81,6 @@ GST_DEBUG_CATEGORY_STATIC (a2dp_sink_debug);
 struct bluetooth_data
 {
   struct ipc_data_cfg cfg;      /* Bluetooth device config */
-  sbc_t sbc;                    /* Codec data */
-  int codesize;                 /* SBC codesize */
   int samples;                  /* Number of encoded samples */
   gchar buffer[BUFFER_SIZE];    /* Codec transfer buffer */
   gsize count;                  /* Codec transfer buffer counter */
@@ -157,8 +154,6 @@ gst_a2dp_sink_stop (GstBaseSink * basesink)
   }
 
   if (self->data) {
-    if (self->data->cfg.codec == CFG_CODEC_SBC)
-      sbc_finish (&self->data->sbc);
     g_free (self->data);
     self->data = NULL;
   }
@@ -277,25 +272,12 @@ gst_a2dp_sink_bluetooth_a2dp_init (GstA2dpSink * self,
   if (cfg->codec != CFG_CODEC_SBC)
     return -1;
 
-  /* FIXME: init using flags? */
-  sbc_init (&data->sbc, 0);
-  data->sbc.rate = cfg->rate;
-  data->sbc.channels = cfg->mode == CFG_MODE_MONO ? 1 : 2;
-  if (cfg->mode == CFG_MODE_MONO || cfg->mode == CFG_MODE_JOINT_STEREO)
-    data->sbc.joint = 1;
-  data->sbc.allocation = sbc->allocation;
-  data->sbc.subbands = sbc->subbands;
-  data->sbc.blocks = sbc->blocks;
-  data->sbc.bitpool = sbc->bitpool;
-  data->codesize = data->sbc.subbands * data->sbc.blocks *
-      data->sbc.channels * 2;
   data->count = sizeof (struct rtp_header) + sizeof (struct rtp_payload);
 
   GST_DEBUG_OBJECT (self, "Codec parameters: "
       "\tallocation=%u\n\tsubbands=%u\n "
       "\tblocks=%u\n\tbitpool=%u\n",
-      data->sbc.allocation, data->sbc.subbands,
-      data->sbc.blocks, data->sbc.bitpool);
+      sbc->allocation, sbc->subbands, sbc->blocks, sbc->bitpool);
 
   return 0;
 }
