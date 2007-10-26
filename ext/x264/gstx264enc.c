@@ -593,7 +593,9 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
   encoder->x264param.b_deblocking_filter = 1;
   encoder->x264param.i_deblocking_filter_alphac0 = 0;
   encoder->x264param.i_deblocking_filter_beta = 0;
+#ifdef X264_RC_ABR
   encoder->x264param.rc.i_rc_method = X264_RC_ABR;
+#endif
   encoder->x264param.rc.i_bitrate = encoder->bitrate;
   encoder->x264param.rc.i_vbv_max_bitrate = encoder->bitrate;
   encoder->x264param.rc.i_vbv_buffer_size
