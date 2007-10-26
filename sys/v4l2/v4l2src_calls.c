@@ -739,11 +739,11 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
 {
   GstCaps *ret;
   GstStructure *tmp;
-  GList *results = NULL;
 
 #ifdef VIDIOC_ENUM_FRAMESIZES
   gint fd = v4l2src->v4l2object->video_fd;
   struct v4l2_frmsizeenum size;
+  GList *results = NULL;
   guint32 w, h;
 
   ret = gst_caps_new_empty ();
