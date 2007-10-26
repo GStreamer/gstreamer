@@ -41,6 +41,7 @@ BuildRequires:  gcc-c++
 # @USE_LADSPA_TRUE@BuildRequires: ladspa-devel
 @USE_AALIB_TRUE@BuildRequires:  aalib-devel >= 1.3
 @USE_AALIB_TRUE@Provides:       gstreamer-aasink = %{version}-%{release}
+@USE_WAVPACK_TRUE@Requires: wavpack-devel >= 4.32
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
