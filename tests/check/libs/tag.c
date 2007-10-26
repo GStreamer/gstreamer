@@ -191,6 +191,7 @@ GST_START_TEST (test_muscibrainz_tag_registration)
   gst_vorbis_tag_add (list, "MUSICBRAINZ_ALBUMID", "345678");
   gst_vorbis_tag_add (list, "MUSICBRAINZ_ALBUMARTISTID", "4567890");
   gst_vorbis_tag_add (list, "MUSICBRAINZ_TRMID", "5678901");
+  /* MUSICBRAINZ_SORTNAME = GST_TAG_ARTIST_SORTNAME now */
   gst_vorbis_tag_add (list, "MUSICBRAINZ_SORTNAME", "Five, 678901");
 
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_MUSICBRAINZ_TRACKID, "123456");
@@ -199,8 +200,7 @@ GST_START_TEST (test_muscibrainz_tag_registration)
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_MUSICBRAINZ_ALBUMARTISTID,
       "4567890");
   ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_MUSICBRAINZ_TRMID, "5678901");
-  ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_MUSICBRAINZ_SORTNAME,
-      "Five, 678901");
+  ASSERT_TAG_LIST_HAS_STRING (list, GST_TAG_ARTIST_SORTNAME, "Five, 678901");
 
   gst_tag_list_free (list);
 }

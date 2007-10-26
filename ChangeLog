@@ -1,3 +1,10 @@
+2007-10-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/libs/tag.c: (test_musicbrainz_tag_registration):
+	  GST_TAG_MUSICBRAINZ_SORTNAME is deprecated and we compile with
+	  -DGST_DISABLE_DEPRECATED, so use new GST_TAG_ARTIST_SORTNAME
+	  instead.
+
 2007-10-25  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/playback/gstdecodebin2.c: (gst_decode_bin_class_init),
