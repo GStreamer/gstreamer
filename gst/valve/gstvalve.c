@@ -197,8 +197,12 @@ gst_valve_transform_ip (GstBaseTransform *trans, GstBuffer *buf)
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_OBJECT_LOCK (GST_OBJECT (trans));
-  if (valve->drop)
+  if (valve->drop) {
+#if GST_VERSION_MAJOR >= 10 &&  GST_VERSION_MICRO >= 13
     ret = GST_BASE_TRANSFORM_FLOW_DROPPED;
+#endif
+    buf = NULL;
+  }
   GST_OBJECT_UNLOCK (GST_OBJECT (trans));
 
   return ret;
