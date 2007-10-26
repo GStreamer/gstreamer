@@ -1,3 +1,12 @@
+2007-10-26  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  Ugly hack to put the (recently removed and non-portable, apparently)
+	  -Wl,--export-dynamic back into libgstcheck's LDFLAGS when we're using
+	  GNU ld, because without that 'make check' fails miserably on my debian
+	  stable box.  Someone with more knowledge of linker intricacies and
+	  portability issues than me fix this properly please.
+
 2007-10-25  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_event):

@@ -526,6 +526,10 @@ GST_LIB_LDFLAGS="-export-symbols-regex \^[_]*\(gst_\|Gst\|GST_\).*"
 AC_SUBST(GST_LIB_LDFLAGS)
 dnl Version of the linker flags specifically for libgstcheck to support the boonky extra symbols it exports.
 GST_CHECK_LIB_LDFLAGS="-export-symbols-regex \^\([_]*\(gst_\|Gst\|GST_\).*\|check_\(debug\|mutex\|cond\)\|buffers\|mutex\|start_cond\|sync_cond\|thread_list\)$"
+dnl HACK: add non-portable --export-dynamic if we have GNU ld (needed on my debian stable, tpm)
+if test "x$ac_cv_prog_gnu_ld" = "xyes" -o "x$acl_cv_prog_gnu_ld" = "xyes" ; then
+  GST_CHECK_LIB_LDFLAGS="-Wl,--export-dynamic $GST_CHECK_LIB_LDFLAGS"
+fi
 AC_SUBST(GST_CHECK_LIB_LDFLAGS)
 
 dnl GST_OBJ_*
