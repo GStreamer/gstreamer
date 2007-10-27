@@ -40,6 +40,12 @@ G_BEGIN_DECLS
 typedef struct _GstMpeg4VParse GstMpeg4VParse;
 typedef struct _GstMpeg4VParseClass GstMpeg4VParseClass;
 
+typedef enum {
+  PARSE_NEED_START,
+  PARSE_START_FOUND,
+  PARSE_VOP_FOUND
+} GstMpeg4VParseState;
+
 struct _GstMpeg4VParse {
   GstElement element;
 
@@ -47,8 +53,9 @@ struct _GstMpeg4VParse {
   GstPad * srcpad;
 
   GstAdapter * adapter;
+  guint offset;
   
-  gboolean found_start;
+  GstMpeg4VParseState state;
 };
 
 struct _GstMpeg4VParseClass {

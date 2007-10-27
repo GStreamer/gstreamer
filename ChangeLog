@@ -1,3 +1,15 @@
+2007-10-27  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/mpeg4videoparse/mpeg4videoparse.c: (gst_mpeg4vparse_align),
+	(gst_mpeg4vparse_drain), (gst_mpeg4vparse_chain),
+	(gst_mpeg4vparse_sink_setcaps), (gst_mpeg4vparse_sink_event),
+	(gst_mpeg4vparse_cleanup), (gst_mpeg4vparse_change_state),
+	(gst_mpeg4vparse_dispose), (gst_mpeg4vparse_base_init),
+	(gst_mpeg4vparse_class_init), (gst_mpeg4vparse_init),
+	(plugin_init):
+	* gst/mpeg4videoparse/mpeg4videoparse.h: Improved version not
+	damaging headers using a simple state machine.
+
 2007-10-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/x264/gstx264enc.c:

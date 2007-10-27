@@ -51,51 +51,81 @@ GST_STATIC_PAD_TEMPLATE ("sink", GST_PAD_SINK,
 
 GST_BOILERPLATE (GstMpeg4VParse, gst_mpeg4vparse, GstElement, GST_TYPE_ELEMENT);
 
+static void
+gst_mpeg4vparse_align (GstMpeg4VParse * parse)
+{
+  guint flushed = 0;
+
+  /* Searching for a start code */
+  while (gst_adapter_available (parse->adapter) >= 4) {
+    /* If we have enough data, ensure we're aligned to a start code */
+    const guint8 *data = gst_adapter_peek (parse->adapter, 4);
+
+    if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
+      GST_LOG_OBJECT (parse, "found start code with type %02X", data[3]);
+      parse->state = PARSE_START_FOUND;
+      break;
+    } else {
+      gst_adapter_flush (parse->adapter, 1);
+      flushed++;
+      parse->state = PARSE_NEED_START;
+    }
+  }
+
+  if (G_UNLIKELY (flushed)) {
+    GST_LOG_OBJECT (parse, "flushed %u bytes while aligning", flushed);
+  }
+}
+
 static GstFlowReturn
 gst_mpeg4vparse_drain (GstMpeg4VParse * parse)
 {
   GstFlowReturn ret = GST_FLOW_OK;
   const guint8 *data = NULL;
-  guint i = 0, available = 0;
+  guint available = 0;
 
-  while (gst_adapter_available (parse->adapter) >= 4) {
-    /* If we have enough data, ensure we're aligned to a start code */
-    data = gst_adapter_peek (parse->adapter, 4);
-    if (data[0] == 0 && data[1] == 0 && data[2] == 1) {
-      GST_LOG_OBJECT (parse, "found start code with type %02X", data[3]);
-      parse->found_start = TRUE;
-      break;
-    } else {
-      GST_LOG_OBJECT (parse, "flushing 1 byte");
-      gst_adapter_flush (parse->adapter, 1);
-    }
-  }
-
-  if (G_UNLIKELY (!parse->found_start)) {
-    GST_DEBUG_OBJECT (parse, "start code not found, need more data");
-    goto beach;
-  }
-
-  if (G_UNLIKELY (gst_adapter_available (parse->adapter) < 8)) {
-    GST_DEBUG_OBJECT (parse, "start code found, need more data to find next");
-    goto beach;
-  }
-
-  /* Found a start code, search for the next one */
   available = gst_adapter_available (parse->adapter);
   data = gst_adapter_peek (parse->adapter, available);
-  for (i = 4; i < available - 4; i++) {
-    /* We generate packets based on VOP start code */
-    if (data[i] == 0 && data[i + 1] == 0 && data[i + 2] == 1 &&
-        data[i + 3] == 0xB6) {
-      GstBuffer *out_buf = gst_adapter_take_buffer (parse->adapter, i);
 
-      GST_LOG_OBJECT (parse, "found next start code at %u", i);
-      if (out_buf) {
-        gst_buffer_set_caps (out_buf, GST_PAD_CAPS (parse->srcpad));
-        gst_pad_push (parse->srcpad, out_buf);
+  while (parse->offset < available - 4) {
+    /* We generate packets based on VOP end code (next start code) */
+    if (data[parse->offset] == 0 && data[parse->offset + 1] == 0 &&
+        data[parse->offset + 2] == 1) {
+      switch (parse->state) {
+        case PARSE_START_FOUND:
+          if (data[parse->offset + 3] == 0xB6) {
+            GST_LOG_OBJECT (parse, "found VOP start marker at %u",
+                parse->offset);
+            parse->state = PARSE_VOP_FOUND;
+          }
+          /* Jump over it */
+          parse->offset += 4;
+          break;
+        case PARSE_VOP_FOUND:
+        {                       /* We were in a VOP already, any start code marks the end of it */
+          GstBuffer *out_buf = gst_adapter_take_buffer (parse->adapter,
+              parse->offset);
+
+          GST_LOG_OBJECT (parse, "found VOP end marker at %u", parse->offset);
+          if (out_buf) {
+            gst_buffer_set_caps (out_buf, GST_PAD_CAPS (parse->srcpad));
+            gst_pad_push (parse->srcpad, out_buf);
+          }
+          /* Restart now that we flushed data */
+          parse->offset = 0;
+          parse->state = PARSE_START_FOUND;
+          available = gst_adapter_available (parse->adapter);
+          data = gst_adapter_peek (parse->adapter, available);
+          break;
+        }
+        default:
+          GST_WARNING_OBJECT (parse, "unexpected parse state (%d)",
+              parse->state);
+          ret = GST_FLOW_UNEXPECTED;
+          goto beach;
       }
-      parse->found_start = FALSE;
+    } else {                    /* Continue searching */
+      parse->offset++;
     }
   }
 
@@ -116,8 +146,27 @@ gst_mpeg4vparse_chain (GstPad * pad, GstBuffer * buffer)
 
   gst_adapter_push (parse->adapter, buffer);
 
+  /* We need to get aligned on a start code */
+  if (G_UNLIKELY (parse->state == PARSE_NEED_START)) {
+    gst_mpeg4vparse_align (parse);
+    /* No start code found in that buffer */
+    if (G_UNLIKELY (parse->state == PARSE_NEED_START)) {
+      GST_DEBUG_OBJECT (parse, "start code not found, need more data");
+      goto beach;
+    }
+  }
+
+  /* We need at least 8 bytes to find the next start code which marks the end
+     of the one we just found */
+  if (G_UNLIKELY (gst_adapter_available (parse->adapter) < 8)) {
+    GST_DEBUG_OBJECT (parse, "start code found, need more data to find next");
+    goto beach;
+  }
+
+  /* Drain the accumulated blocks frame per frame */
   ret = gst_mpeg4vparse_drain (parse);
 
+beach:
   gst_object_unref (parse);
 
   return ret;
@@ -176,7 +225,8 @@ gst_mpeg4vparse_cleanup (GstMpeg4VParse * parse)
     gst_adapter_clear (parse->adapter);
   }
 
-  parse->found_start = FALSE;
+  parse->state = PARSE_NEED_START;
+  parse->offset = 0;
 }
 
 static GstStateChangeReturn
