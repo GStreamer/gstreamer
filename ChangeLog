@@ -1,3 +1,14 @@
+2007-10-27  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/interleave/interleave.c: (gst_interleave_request_new_pad):
+	  Let's not call every request pad we create "sink%d", that'll
+	  create problems if there's to be more than one pad. Fixes #490682.
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/.cvsignore:
+	* tests/check/elements/interleave.c:
+	  Add unit test for the above.
+
 2007-10-27  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/mpeg4videoparse/mpeg4videoparse.c: (gst_mpeg4vparse_align),
@@ -86,7 +97,7 @@
 	Patch by: Richard Hult <richard imendio com>
 
 	* gst/dvdspu/Makefile.am:
-	  Fix LIBS - we need to link against libgstreamer.
+	  Fix LIBS - we need to link against libgstreamer (fixes #487496).
 
 2007-10-17  Tim-Philipp Müller  <tim at centricular dot net>
 

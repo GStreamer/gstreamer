@@ -59,6 +59,7 @@ check_PROGRAMS = \
 	$(check_neon)      \
 	$(check_timidity)  \
 	elements/bpwsinc  \
+	elements/interleave \
 	elements/lpwsinc  \
 	elements/multifile \
 	elements/rganalysis \

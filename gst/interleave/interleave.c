@@ -195,27 +195,30 @@ static GstPad *
 gst_interleave_request_new_pad (GstElement * element, GstPadTemplate * templ,
     const gchar * name)
 {
-  GstPad *new;
   GstInterleave *self = GST_INTERLEAVE (element);
+  GstPad *new_pad;
+  gchar *pad_name;
 
-  new = g_object_new (GST_TYPE_INTERLEAVE_PAD,
-      "name", GST_OBJECT_NAME (templ), "direction", templ->direction,
-      "template", templ, NULL);
-  GST_INTERLEAVE_PAD (new)->channel = self->channels++;
+  pad_name = g_strdup_printf ("sink%d", self->channels);
+  new_pad = g_object_new (GST_TYPE_INTERLEAVE_PAD, "name", pad_name,
+      "direction", templ->direction, "template", templ, NULL);
+  g_free (pad_name);
+  GST_INTERLEAVE_PAD (new_pad)->channel = self->channels;
+  ++self->channels;
 
-  gst_pad_set_setcaps_function (new,
+  gst_pad_set_setcaps_function (new_pad,
       GST_DEBUG_FUNCPTR (gst_interleave_sink_setcaps));
-
-  gst_pad_set_chain_function (new, GST_DEBUG_FUNCPTR (gst_interleave_chain));
-  gst_pad_set_activatepush_function (new,
+  gst_pad_set_chain_function (new_pad,
+      GST_DEBUG_FUNCPTR (gst_interleave_chain));
+  gst_pad_set_activatepush_function (new_pad,
       GST_DEBUG_FUNCPTR (gst_interleave_sink_activate_push));
 
   self->pending_in++;
 
-  GST_PAD_UNSET_FLUSHING (new);
-  gst_element_add_pad (element, new);
+  GST_PAD_UNSET_FLUSHING (new_pad);
+  gst_element_add_pad (element, new_pad);
 
-  return new;
+  return new_pad;
 }
 
 static void

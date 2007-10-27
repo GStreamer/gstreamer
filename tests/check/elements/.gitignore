@@ -2,6 +2,7 @@
 deinterleave
 gdpdepay
 gdppay
+interleave
 mpeg2enc
 rglimiter
 rgvolume
