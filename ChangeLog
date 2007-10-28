@@ -1,3 +1,10 @@
+2007-10-28  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/faac/gstfaac.c: (gst_faac_profile_get_type),
+	  (gst_faac_class_init), (gst_faac_init):
+	  Fix bitrate ranges and change enum nick for low complexity
+	  profile from LOW to LC for consistency (#490060).
+
 2007-10-27  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/interleave/interleave.c: (gst_interleave_request_new_pad):
