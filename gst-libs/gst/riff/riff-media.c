@@ -707,7 +707,10 @@ gst_riff_wavext_add_channel_layout (GstCaps * caps, guint32 layout)
   if (!gst_structure_get_int (s, "channels", &num_channels))
     g_return_val_if_reached (FALSE);
 
-  if (num_channels < 2 || num_channels > MAX_CHANNEL_POSITIONS) {
+  /* In theory this should be done for 1 and 2 channels too but
+   * apparently breaks too many things currently.
+   */
+  if (num_channels <= 2 || num_channels > MAX_CHANNEL_POSITIONS) {
     GST_DEBUG ("invalid number of channels: %d", num_channels);
     return FALSE;
   }
@@ -739,6 +742,93 @@ gst_riff_wavext_add_channel_layout (GstCaps * caps, guint32 layout)
 
   gst_audio_set_channel_positions (s, pos);
   return TRUE;
+}
+
+static gboolean
+gst_riff_wave_add_default_channel_layout (GstCaps * caps)
+{
+  GstAudioChannelPosition pos[8] = { GST_AUDIO_CHANNEL_POSITION_NONE, };
+  GstStructure *s;
+  gint nchannels;
+
+  s = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_get_int (s, "channels", &nchannels))
+    g_return_val_if_reached (FALSE);
+
+  if (nchannels > 8) {
+    GST_DEBUG ("invalid number of channels: %d", nchannels);
+    return FALSE;
+  }
+
+  /* This uses the default channel mapping from ALSA which
+   * is used in quite a few surround test files and seems to be
+   * the defacto standard. The channel mapping from
+   * WAVE_FORMAT_EXTENSIBLE doesn't seem to be used in normal
+   * wav files like chan-id.wav.
+   * http://bugzilla.gnome.org/show_bug.cgi?id=489010
+   */
+  switch (nchannels) {
+    case 1:
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+      break;
+    case 8:
+      pos[7] = GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT;
+      pos[6] = GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT;
+      /* fall through */
+    case 6:
+      pos[5] = GST_AUDIO_CHANNEL_POSITION_LFE;
+      /* fall through */
+    case 5:
+      pos[4] = GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER;
+      /* fall through */
+    case 4:
+      pos[3] = GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT;
+      pos[2] = GST_AUDIO_CHANNEL_POSITION_REAR_LEFT;
+      /* fall through */
+    case 2:
+      pos[1] = GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT;
+      pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT;
+      break;
+    default:
+      return FALSE;
+  }
+
+  gst_audio_set_channel_positions (s, pos);
+  return TRUE;
+}
+
+static guint32
+gst_riff_wavext_get_default_channel_mask (guint nchannels)
+{
+  guint32 channel_mask = 0;
+
+  /* Set the default channel mask for the given number of channels.
+   * http://www.microsoft.com/whdc/device/audio/multichaud.mspx
+   */
+  switch (nchannels) {
+    case 11:
+      channel_mask |= 0x00400;
+      channel_mask |= 0x00200;
+    case 9:
+      channel_mask |= 0x00100;
+    case 8:
+      channel_mask |= 0x00080;
+      channel_mask |= 0x00040;
+    case 6:
+      channel_mask |= 0x00020;
+      channel_mask |= 0x00010;
+    case 4:
+      channel_mask |= 0x00008;
+    case 3:
+      channel_mask |= 0x00004;
+    case 2:
+      channel_mask |= 0x00002;
+      channel_mask |= 0x00001;
+      break;
+  }
+
+  return channel_mask;
 }
 
 GstCaps *
@@ -778,36 +868,17 @@ gst_riff_create_audio_caps (guint16 codec_id,
             "width", G_TYPE_INT, wd,
             "depth", G_TYPE_INT, ws, "signed", G_TYPE_BOOLEAN, wd != 8, NULL);
 
-        /* Add default MS channel layout if we have more than 2 channels,
-         * but the layout isn't specified like with WAVEEXT below. Not sure
-         * if this is right, but at least it makes sound output work at all
-         * in those cases. Somebody with a a 5.1 setup should double-check
-         * with chan-id.wav */
+        /* Add default channel layout. In theory this should be done
+         * for 1 and 2 channels too but apparently breaks too many
+         * things currently. Also we know no default layout for more than
+         * 8 channels. */
         if (ch > 2) {
-          guint32 channel_mask;
-
-          switch (ch) {
-            case 4:
-              channel_mask = 0x33;
-              break;
-            case 6:
-              channel_mask = 0x3f;
-              break;
-            case 8:
-              channel_mask = 0xff;
-              break;
-            default:
-              GST_WARNING ("don't know default layout for %d channels", ch);
-              channel_mask = 0;
-              break;
-          }
-
-          if (channel_mask) {
+          if (ch > 8)
+            GST_WARNING ("don't know default layout for %d channels", ch);
+          else if (gst_riff_wave_add_default_channel_layout (caps))
             GST_DEBUG ("using default channel layout for %d channels", ch);
-            if (!gst_riff_wavext_add_channel_layout (caps, channel_mask)) {
-              GST_WARNING ("failed to add channel layout");
-            }
-          }
+          else
+            GST_WARNING ("failed to add channel layout");
         }
       } else {
         /* FIXME: this is pretty useless - we need fixed caps */
@@ -841,36 +912,17 @@ gst_riff_create_audio_caps (guint16 codec_id,
             "endianness", G_TYPE_INT, G_LITTLE_ENDIAN,
             "channels", G_TYPE_INT, ch, "width", G_TYPE_INT, wd, NULL);
 
-        /* Add default MS channel layout if we have more than 2 channels,
-         * but the layout isn't specified like with WAVEEXT below. Not sure
-         * if this is right, but at least it makes sound output work at all
-         * in those cases. Somebody with a a 5.1 setup should double-check
-         * with chan-id.wav */
+        /* Add default channel layout. In theory this should be done
+         * for 1 and 2 channels too but apparently breaks too many
+         * things currently. Also we know no default layout for more than
+         * 8 channels. */
         if (ch > 2) {
-          guint32 channel_mask;
-
-          switch (ch) {
-            case 4:
-              channel_mask = 0x33;
-              break;
-            case 6:
-              channel_mask = 0x3f;
-              break;
-            case 8:
-              channel_mask = 0xff;
-              break;
-            default:
-              GST_WARNING ("don't know default layout for %d channels", ch);
-              channel_mask = 0;
-              break;
-          }
-
-          if (channel_mask) {
+          if (ch > 8)
+            GST_WARNING ("don't know default layout for %d channels", ch);
+          else if (gst_riff_wave_add_default_channel_layout (caps))
             GST_DEBUG ("using default channel layout for %d channels", ch);
-            if (!gst_riff_wavext_add_channel_layout (caps, channel_mask)) {
-              GST_WARNING ("failed to add channel layout");
-            }
-          }
+          else
+            GST_WARNING ("failed to add channel layout");
         }
       } else {
         /* FIXME: this is pretty useless - we need fixed caps */
@@ -1108,23 +1160,13 @@ gst_riff_create_audio_caps (guint16 codec_id,
                 "rate", G_TYPE_INT, strf->rate,
                 "signed", G_TYPE_BOOLEAN, wd != 8, NULL);
 
-            /* If channel_mask == 0 and channels <= 2, 4, 6 or 8 let's
+            /* If channel_mask == 0 and channels > 2 let's
              * assume default layout as some wav files don't have the
-             * channel mask set */
-
-            if (channel_mask == 0) {
-              switch (strf->channels) {
-                case 4:
-                  channel_mask = 0x33;
-                  break;
-                case 6:
-                  channel_mask = 0x3f;
-                  break;
-                case 8:
-                  channel_mask = 0xff;
-                  break;
-              }
-            }
+             * channel mask set. Don't set the layout for 1 or 2
+             * channels as it apparently breaks too many things currently. */
+            if (channel_mask == 0 && strf->channels > 2)
+              channel_mask =
+                  gst_riff_wavext_get_default_channel_mask (strf->channels);
 
             if ((channel_mask != 0 || strf->channels > 2) &&
                 !gst_riff_wavext_add_channel_layout (caps, channel_mask)) {
@@ -1154,23 +1196,13 @@ gst_riff_create_audio_caps (guint16 codec_id,
                 "channels", G_TYPE_INT, strf->channels,
                 "width", G_TYPE_INT, wd, "rate", G_TYPE_INT, strf->rate, NULL);
 
-            /* If channel_mask == 0 and channels <= 2, 4, 6 or 8 let's
+            /* If channel_mask == 0 and channels > 2 let's
              * assume default layout as some wav files don't have the
-             * channel mask set */
-
-            if (channel_mask == 0) {
-              switch (strf->channels) {
-                case 4:
-                  channel_mask = 0x33;
-                  break;
-                case 6:
-                  channel_mask = 0x3f;
-                  break;
-                case 8:
-                  channel_mask = 0xff;
-                  break;
-              }
-            }
+             * channel mask set. Don't set the layout for 1 or 2
+             * channels as it apparently breaks too many things currently. */
+            if (channel_mask == 0 && strf->channels > 2)
+              channel_mask =
+                  gst_riff_wavext_get_default_channel_mask (strf->channels);
 
             if ((channel_mask != 0 || strf->channels > 2) &&
                 !gst_riff_wavext_add_channel_layout (caps, channel_mask)) {
