@@ -459,6 +459,7 @@ _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
     fprintf (out, "}\n");
     fclose (out);
   }
+  GST_INFO ("wrote bin graph to : '%s'", file_name);
 }
 
 /*

@@ -1,3 +1,9 @@
+2007-10-29  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/running.xml:
+	* gst/gstdebugutils.c:
+	  Document new env-var. Add one log-line after dumpng a graph.
+
 2007-10-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

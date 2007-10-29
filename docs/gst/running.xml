@@ -77,7 +77,7 @@ be loaded in addition to, and before, the plug-ins in the system paths.
 
 </formalpara>
 
-<formalpara>
+<formalpara id="GST_DEBUG">
   <title><envar>GST_DEBUG</envar></title>
 
   <para>
@@ -171,10 +171,21 @@ to <option>*:5</option>
   <para>
 Set this environment variable to any value ("1" typically) to switch off
 colouring in GST_DEBUG output. This has the same effect as specifying the
---gst-debug-no-color command line option to well-behaved GStreamer
-applications (ie. those that pass command-line options correctly to GStreamer).
+<option>--gst-debug-no-color</option> command line option to well-behaved
+GStreamer applications (ie. those that pass command-line options correctly to
+GStreamer).
 This is particularly useful to reduce the size of debug output and also allows
 for the output to be compressed much better than with colours turned on.
+  </para>
+
+</formalpara>
+
+<formalpara id="GST_DEBUG_DUMP_DOT_FILES">
+  <title><envar>GST_DEBUG_DUMP_DOT_FILES</envar></title>
+
+  <para>
+Set this environment variable to any value ("1" typically) to turn on all
+#GST_DEBUG_BIN_TO_DOT_FILE or #GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS calls.
   </para>
 
 </formalpara>
