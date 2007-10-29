@@ -115,7 +115,8 @@ static GstStaticPadTemplate a2dp_sink_factory =
         "mode = (string) { mono, dual, stereo, joint }, "
         "blocks = (int) { 4, 8, 12, 16 }, "
         "subbands = (int) { 4, 8 }, "
-        "allocation = (string) { snr, loudness }; "
+        "allocation = (string) { snr, loudness },"
+        "bitpool = (int) [ 2, 64 ]; "
         "audio/mpeg, "
         "mpegversion = (int) 1, "
         "layer = (int) [ 1, 3 ], "
@@ -343,7 +344,9 @@ gst_a2dp_sink_init_pkt_conf (GstA2dpSink * sink,
 
   value = gst_structure_get_value (structure, "blocks");
   sbc->blocks = g_value_get_int (value);
-  sbc->bitpool = 32;
+
+  value = gst_structure_get_value (structure, "bitpool");
+  sbc->bitpool = g_value_get_int (value);
 
   pkt->length = sizeof (*cfg) + sizeof (*sbc);
   pkt->type = PKT_TYPE_CFG_REQ;
