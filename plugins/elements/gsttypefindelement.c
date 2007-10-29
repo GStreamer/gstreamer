@@ -470,7 +470,6 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
         case GST_EVENT_EOS:{
           GstTypeFindProbability prob = 0;
           GstCaps *caps = NULL;
-          gboolean found = FALSE;
 
           GST_INFO_OBJECT (typefind, "Got EOS and no type found yet");
 
@@ -483,14 +482,16 @@ gst_type_find_element_handle_event (GstPad * pad, GstEvent * event)
             if (caps && prob >= typefind->min_probability) {
               g_signal_emit (typefind, gst_type_find_element_signals[HAVE_TYPE],
                   0, prob, caps);
-              found = TRUE;
+            } else {
+              GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
+                  (NULL), (NULL));
             }
             gst_caps_replace (&caps, NULL);
-          }
-
-          if (!found) {
+          } else {
+            /* keep message in sync with the one in the pad activate function */
             GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
-                (NULL), (NULL));
+                (_("Stream contains no data.")),
+                ("Can't typefind empty stream"));
           }
 
           stop_typefinding (typefind);
@@ -731,9 +732,15 @@ gst_type_find_element_activate (GstPad * pad)
         return FALSE;
       }
 
-      found_caps = gst_type_find_helper_get_range (GST_OBJECT (peer),
-          (GstTypeFindHelperGetRangeFunction) (GST_PAD_GETRANGEFUNC (peer)),
-          (guint64) size, &probability);
+      if (size > 0) {
+        found_caps = gst_type_find_helper_get_range (GST_OBJECT_CAST (peer),
+            (GstTypeFindHelperGetRangeFunction) (GST_PAD_GETRANGEFUNC (peer)),
+            (guint64) size, &probability);
+      } else {
+        /* keep message in sync with message in sink event handler */
+        GST_ELEMENT_ERROR (typefind, STREAM, TYPE_NOT_FOUND,
+            (_("Stream contains no data.")), ("Can't typefind empty stream"));
+      }
 
       gst_object_unref (peer);
     }
