@@ -113,6 +113,16 @@ gst_sbc_select_subbands_from_range (const GValue * value)
 }
 
 /*
+ * Selects one bitpool option from a range
+ * TODO - use a better approach to this (it is selecting the maximum value)
+ */
+gint
+gst_sbc_select_bitpool_from_range (const GValue * value)
+{
+  return gst_value_get_int_range_max (value);
+}
+
+/*
  * Selects one allocation mode from the ones on the list
  * TODO - use a better approach
  */

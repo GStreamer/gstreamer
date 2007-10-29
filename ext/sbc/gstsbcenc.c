@@ -33,6 +33,7 @@
 #define SBC_ENC_DEFAULT_MODE CFG_MODE_AUTO
 #define SBC_ENC_DEFAULT_BLOCKS 16
 #define SBC_ENC_DEFAULT_SUB_BANDS 8
+#define SBC_ENC_DEFAULT_BITPOOL 53
 #define SBC_ENC_DEFAULT_ALLOCATION CFG_ALLOCATION_AUTO
 
 GST_DEBUG_CATEGORY_STATIC (sbc_enc_debug);
@@ -112,7 +113,8 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "mode = (string) { mono, dual, stereo, joint }, "
         "blocks = (int) { 4, 8, 12, 16 }, "
         "subbands = (int) { 4, 8 }, "
-        "allocation = (string) { snr, loudness }"));
+        "allocation = (string) { snr, loudness },"
+        "bitpool = (int) [ 2, 64 ]"));
 
 
 static GstCaps *
@@ -147,6 +149,8 @@ sbc_enc_generate_srcpad_caps (GstSbcEnc * enc, GstCaps * caps)
   else
     enc->sbc.allocation = enc->allocation;
 
+  enc->sbc.bitpool = SBC_ENC_DEFAULT_BITPOOL;
+
   mode = gst_sbc_get_mode_string (enc->sbc.joint);
   allocation = gst_sbc_get_allocation_string (enc->sbc.allocation);
 
@@ -156,7 +160,8 @@ sbc_enc_generate_srcpad_caps (GstSbcEnc * enc, GstCaps * caps)
       "mode", G_TYPE_STRING, mode,
       "subbands", G_TYPE_INT, enc->sbc.subbands,
       "blocks", G_TYPE_INT, enc->sbc.blocks,
-      "allocation", G_TYPE_STRING, allocation, NULL);
+      "allocation", G_TYPE_STRING, allocation,
+      "bitpool", G_TYPE_INT, enc->sbc.bitpool, NULL);
 
   return src_caps;
 }
