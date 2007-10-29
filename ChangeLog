@@ -1,3 +1,9 @@
+2007-10-29  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* sys/dvb/dvbbasebin.c:
+	Uncomment the line that sets the pid filter. Wrong way to 
+	work-around driver issues.
+
 2007-10-28  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/faac/gstfaac.c: (gst_faac_profile_get_type),

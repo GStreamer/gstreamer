@@ -607,9 +607,8 @@ dvb_base_bin_rebuild_filter (DvbBaseBin * dvbbasebin)
 
   GST_INFO_OBJECT (dvbbasebin, "rebuilt filter %s", dvbbasebin->filter);
 
-  /* FIXME: disable this until we find a way to filter out unwanted pids
-     g_object_set (dvbbasebin->dvbsrc, "pids", dvbbasebin->filter, NULL);
-   */
+  /* FIXME: find a way to not add unwanted pids controlled by app */
+  g_object_set (dvbbasebin->dvbsrc, "pids", dvbbasebin->filter, NULL);
   g_free (dvbbasebin->filter);
   dvbbasebin->filter = NULL;
 }
