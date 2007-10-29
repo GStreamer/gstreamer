@@ -452,8 +452,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         /* dump graph on warning */
         GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-            GST_DEBUG_GRAPH_SHOW_ALL,
-            "/tmp/gst-launch.warning.%" GST_TIME_FORMAT ".dot");
+            GST_DEBUG_GRAPH_SHOW_ALL, "gst-launch.warning");
 
         gst_message_parse_warning (message, &gerror, &debug);
         g_print (_("WARNING: from element %s: %s\n"), name, gerror->message);
@@ -471,8 +470,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
 
         /* dump graph on error */
         GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-            GST_DEBUG_GRAPH_SHOW_ALL,
-            "/tmp/gst-launch.error.%" GST_TIME_FORMAT ".dot");
+            GST_DEBUG_GRAPH_SHOW_ALL, "gst-launch.error");
 
         gst_message_parse_error (message, &gerror, &debug);
         gst_object_default_error (GST_MESSAGE_SRC (message), gerror, debug);
@@ -488,7 +486,7 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
         gst_message_parse_state_changed (message, &old, &new, &pending);
 
         /* debug each state change
-           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(GST_BIN(pipeline),GST_DEBUG_GRAPH_SHOW_ALL,"/tmp/gst-launch.%" GST_TIME_FORMAT ".dot");
+           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline), GST_DEBUG_GRAPH_SHOW_ALL, "gst-launch");
          */
 
         /* we only care about pipeline state change messages */
@@ -496,8 +494,13 @@ event_loop (GstElement * pipeline, gboolean blocking, GstState target_state)
           break;
 
         /* debug only overall state changes
-           FIXME: add statename to name template: gst_element_state_get_name(new);
-           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(GST_BIN(pipeline),GST_DEBUG_GRAPH_SHOW_ALL,"/tmp/gst-launch.%" GST_TIME_FORMAT ".dot");
+           {
+           gchar *dump_name;
+
+           dump_name = g_strdup_printf ("gst-launch.%s",gst_element_state_get_name (new);
+           GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline), GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
+           g_free (dump_name);
+           }
          */
 
         /* ignore when we are buffering since then we mess with the states

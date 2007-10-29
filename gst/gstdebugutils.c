@@ -37,7 +37,7 @@
 
 /*** PIPELINE GRAPHS **********************************************************/
 
-gboolean _gst_debug_dump_dot_files_on = FALSE;
+const gchar *_gst_debug_dump_dot_dir = NULL;
 extern GstClockTime _gst_info_start_time;
 
 static gchar *
@@ -402,7 +402,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
 /*
  * _gst_debug_bin_to_dot_file:
  * @bin: the top-level pipeline that should be analyzed
- * @file_name: output filename (e.g. "/tmp/metadata.dot")
+ * @file_name: output base filename (e.g. "myplayer")
  *
  * To aid debugging applications one can use this method to write out the whole
  * network of gstreamer elements that form the pipeline into an dot file.
@@ -415,15 +415,24 @@ void
 _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
     const gchar * file_name)
 {
+  gchar *full_file_name = NULL;
   FILE *out;
 
   g_return_if_fail (GST_IS_BIN (bin));
-  g_return_if_fail (file_name != NULL);
 
-  if (!_gst_debug_dump_dot_files_on)
+  if (!_gst_debug_dump_dot_dir)
     return;
 
-  if ((out = fopen (file_name, "wb"))) {
+  if (!file_name) {
+    file_name = g_get_application_name ();
+    if (!file_name)
+      file_name = "unnamed";
+  }
+
+  full_file_name = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s.dot",
+      _gst_debug_dump_dot_dir, file_name);
+
+  if ((out = fopen (full_file_name, "wb"))) {
     gchar *state_name = NULL;
     gchar *param_name = NULL;
 
@@ -459,59 +468,43 @@ _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
     fprintf (out, "}\n");
     fclose (out);
   }
-  GST_INFO ("wrote bin graph to : '%s'", file_name);
+  GST_INFO ("wrote bin graph to : '%s'", full_file_name);
+  g_free (full_file_name);
 }
 
 /*
  * _gst_debug_bin_to_dot_file_with_ts:
  * @bin: the top-level pipeline that should be analyzed
- * @file_tmpl: output filename template
- *             (e.g. "/tmp/metadata.%" GST_TIME_FORMAT ".dot")
+ * @file_name: output base filename (e.g. "myplayer")
  *
- * This works like _gst_debug_bin_to_dot_file(), but fills the filename template
- * with the timestamp, so that it can be used to take multiple snapshots.
+ * This works like _gst_debug_bin_to_dot_file(), but adds the current timestamp
+ * to the filename, so that it can be used to take multiple snapshots.
  */
 void
 _gst_debug_bin_to_dot_file_with_ts (GstBin * bin, GstDebugGraphDetails details,
-    const gchar * file_tmpl)
+    const gchar * file_name)
 {
-  gchar *file_name = NULL;
-  const gchar *pos;
+  gchar *ts_file_name = NULL;
   GTimeVal now;
   GstClockTime elapsed;
-  guint fmt_ct = 0;
 
   g_return_if_fail (GST_IS_BIN (bin));
-  g_return_if_fail (file_tmpl != NULL);
 
-  /* check file-name template */
-  pos = strchr (file_tmpl, '%');
-  if (pos) {
-    do {
-      pos++;
-      if (*pos != '\0') {
-        if (*pos != '%')
-          fmt_ct++;
-        pos++;
-      }
-      pos = strchr (pos, '%');
-    } while (pos);
-  }
-  if (fmt_ct == 0) {
-    GST_WARNING ("file template has no valid placeholder");
-    return;
-  } else if (fmt_ct != 4) {
-    GST_WARNING ("file template must have 4 placeholders, but has %d", fmt_ct);
-    return;
+  if (!file_name) {
+    file_name = g_get_application_name ();
+    if (!file_name)
+      file_name = "unnamed";
   }
 
   /* add timestamp */
   g_get_current_time (&now);
   elapsed = GST_TIMEVAL_TO_TIME (now) - _gst_info_start_time;
-  file_name = g_strdup_printf (file_tmpl, GST_TIME_ARGS (elapsed));
+  ts_file_name =
+      g_strdup_printf ("%" GST_TIME_FORMAT "-%s", GST_TIME_ARGS (elapsed),
+      file_name);
 
-  _gst_debug_bin_to_dot_file (bin, details, file_name);
-  g_free (file_name);
+  _gst_debug_bin_to_dot_file (bin, details, ts_file_name);
+  g_free (ts_file_name);
 }
 
 #endif /* GST_DISABLE_GST_DEBUG */

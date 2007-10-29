@@ -180,12 +180,13 @@ for the output to be compressed much better than with colours turned on.
 
 </formalpara>
 
-<formalpara id="GST_DEBUG_DUMP_DOT_FILES">
-  <title><envar>GST_DEBUG_DUMP_DOT_FILES</envar></title>
+<formalpara id="GST_DEBUG_DUMP_DOT_DIR">
+  <title><envar>GST_DEBUG_DUMP_DOT_DIR</envar></title>
 
   <para>
-Set this environment variable to any value ("1" typically) to turn on all
-#GST_DEBUG_BIN_TO_DOT_FILE or #GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS calls.
+Set this environment variable to a path to turn on all
+#GST_DEBUG_BIN_TO_DOT_FILE or #GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS calls
+and have the dot files in that location.
   </para>
 
 </formalpara>

@@ -60,7 +60,7 @@ void _gst_debug_bin_to_dot_file_with_ts (GstBin *bin, GstDebugGraphDetails detai
  * GST_DEBUG_BIN_TO_DOT_FILE:
  * @bin: the top-level pipeline that should be analyzed
  * @details: graph-details to show
- * @file_name: output filename (e.g. "/tmp/metadata.dot")
+ * @file_name: output base filename (e.g. "myplayer")
  *
  * To aid debugging applications one can use this method to write out the whole
  * network of gstreamer elements that form the pipeline into an dot file.
@@ -71,7 +71,7 @@ void _gst_debug_bin_to_dot_file_with_ts (GstBin *bin, GstDebugGraphDetails detai
  *
  * The macro is only active if gstreamer is configured with
  * &quot;--gst-enable-gst-debug&quot; and the environment variable
- * GST_DEBUG_DUMP_DOT_FILES is set (e.g. to 1).
+ * GST_DEBUG_DUMP_DOT_DIR is set to a basepath (e.g. /tmp).
  */
 #define GST_DEBUG_BIN_TO_DOT_FILE(bin, details, file_name) _gst_debug_bin_to_dot_file (bin, details, file_name)
 
@@ -79,11 +79,10 @@ void _gst_debug_bin_to_dot_file_with_ts (GstBin *bin, GstDebugGraphDetails detai
  * GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS:
  * @bin: the top-level pipeline that should be analyzed
  * @details: graph-details to show
- * @file_tmpl: output filename template
- *             (e.g. "/tmp/metadata.%" GST_TIME_FORMAT ".dot")
+ * @file_name: output base filename (e.g. "myplayer")
  *
- * This works like _gst_debug_bin_to_dot_file(), but fills the filename template
- * with the timestamp, so that it can be used to take multiple snapshots.
+ * This works like _gst_debug_bin_to_dot_file(), but adds the current timestamp
+ * to the filename, so that it can be used to take multiple snapshots.
  */
 #define GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(bin, details, file_tmpl) _gst_debug_bin_to_dot_file_with_ts (bin, details, file_tmpl)
 
