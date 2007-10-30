@@ -76,6 +76,12 @@ else
 DTS_DIR=
 endif
 
+if USE_METADATA
+METADATA_DIR=metadata
+else
+METADATA_DIR=
+endif
+
 if USE_FAAC
 FAAC_DIR=faac
 else
@@ -322,6 +328,7 @@ DIST_SUBDIRS = \
 	cdaudio \
 	dc1394 \
 	directfb \
+	metadata \
 	faac \
 	faad \
 	gio \

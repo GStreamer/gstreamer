@@ -486,6 +486,39 @@ return 0;
   fi
 ])
 
+dnl *** METADATA ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_METADATA, true)
+AG_GST_CHECK_FEATURE(METADATA, [METADATA muxer and demuxer], metadata, [
+  HAVE_METADATA="no"
+  PKG_CHECK_MODULES(EXIF, libexif >= 0.6.16, HAVE_EXIF="yes", [
+    HAVE_EXIF="no"
+  ])
+  PKG_CHECK_MODULES(IPTC, libiptcdata >= 1.0.2, HAVE_IPTC="yes", [
+    HAVE_IPTC="no"
+  ])
+  HAVE_XMP="no"
+  if test x$HAVE_EXIF = xyes; then
+    METADATA_CFLAGS="-DHAVE_EXIF $EXIF_CFLAGS $METADATA_CFLAGS"
+    METADATA_LIBS="$EXIF_LIBS $METADATA_LIBS"
+    HAVE_METADATA="yes"
+  fi
+  if test x$HAVE_IPTC = xyes; then
+    METADATA_CFLAGS="-DHAVE_IPTC $IPTC_CFLAGS $METADATA_CFLAGS"
+    METADATA_LIBS="$IPTC_LIBS $METADATA_LIBS"
+    HAVE_METADATA="yes"
+  fi
+  if test x$HAVE_XMP = xyes; then
+    METADATA_CFLAGS="-DHAVE_XMP $XMP_CFLAGS $METADATA_CFLAGS"
+    METADATA_LIBS="$XMP_LIBS $METADATA_LIBS"
+    HAVE_METADATA="yes"
+  fi
+  if test x$HAVE_METADATA = xno; then
+    AC_MSG_RESULT(no)
+  fi
+  AC_SUBST(METADATA_CFLAGS)
+  AC_SUBST(METADATA_LIBS)
+])
+
 dnl **** Free AAC Encoder (FAAC) ****
 translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
 AG_GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
@@ -1041,6 +1074,7 @@ ext/dc1394/Makefile
 ext/directfb/Makefile
 ext/divx/Makefile
 ext/dts/Makefile
+ext/metadata/Makefile
 ext/faac/Makefile
 ext/faad/Makefile
 ext/gio/Makefile
