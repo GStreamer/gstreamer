@@ -168,6 +168,14 @@ _gst_boolean_accumulator (GSignalInvocationHint * ihint,
   return myboolean;
 }
 
+static gboolean
+gst_uri_decode_bin_autoplug_continue (GstElement * element, GstPad * pad,
+    GstCaps * caps)
+{
+  /* by default we always continue */
+  return TRUE;
+}
+
 static void
 gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
 {
@@ -282,6 +290,9 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_query);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_change_state);
+
+  klass->autoplug_continue =
+      GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_continue);
 }
 
 static void
@@ -426,8 +437,7 @@ no_more_pads_full (GstElement * element, gboolean subs,
   g_object_set_data (G_OBJECT (element), "pending", NULL);
 
   decoder->pending--;
-  if (decoder->pending != 0)
-    final = FALSE;
+  final = (decoder->pending == 0);
 
 done:
   GST_OBJECT_UNLOCK (decoder);

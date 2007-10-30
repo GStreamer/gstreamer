@@ -1,3 +1,11 @@
+2007-10-30  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/playback/gsturidecodebin.c:
+	(gst_uri_decode_bin_autoplug_continue),
+	(gst_uri_decode_bin_class_init), (no_more_pads_full):
+	Implement default signal handler so that we return TRUE when nothing is
+	connected.
+
 2007-10-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst-libs/gst/riff/riff-media.c:
