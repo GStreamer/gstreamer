@@ -1,3 +1,19 @@
+2007-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/equalizer/gstiirequalizer.c:
+	(gst_iir_equalizer_band_set_property),
+	(gst_iir_equalizer_band_get_property),
+	(gst_iir_equalizer_band_class_init), (arg_to_scale),
+	(setup_filter), (gst_iir_equalizer_compute_frequencies):
+	Replace filters with a bit better filters for which we can actually
+	find documentation, which don't change anything on zero gain, etc.
+	
+	Make the frequency property of the bands writable, rename the
+	band-width property to bandwidth and change the	meaning to the
+	frequency difference between bandedges, change the meaning of the
+	gain property to dB instead of a weird scale between -1	and 1 that
+	has no real meaning.
+
 2007-10-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* sys/dvb/dvbbasebin.c:
