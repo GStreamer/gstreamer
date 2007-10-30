@@ -1,3 +1,8 @@
+2007-10-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* sys/dvb/dvbbasebin.c:
+	  Fix the build.
+
 2007-10-30  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/.cvsignore:
