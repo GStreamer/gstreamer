@@ -624,12 +624,6 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
     ret = gst_pad_push (mp3parse->srcpad, outbuf);
   }
 
-  /* return unexpected when we run off the end of the segment */
-  if (GST_CLOCK_TIME_IS_VALID (mp3parse->segment.stop)
-      && mp3parse->next_ts >= mp3parse->segment.stop) {
-    GST_DEBUG_OBJECT (mp3parse, "returning unexpected");
-    ret = GST_FLOW_UNEXPECTED;
-  }
   return ret;
 }
 

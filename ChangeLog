@@ -2,6 +2,13 @@
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:
 	(gst_mp3parse_emit_frame):
+	Remove some more broken code, it seems to clip even when it should not.
+	See #491305.
+
+2007-10-30  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	(gst_mp3parse_emit_frame):
 	When the element is not driving the streaming thread it is not supposed
 	to emit EOS or post SEGMENT done. It is allowed to return UNEXPECTED
 	upstream when it detects EOS. See #491305.
