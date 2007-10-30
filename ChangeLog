@@ -1,5 +1,15 @@
 2007-10-30  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/audio/gstaudiofilter.h:
+	* gst-libs/gst/interfaces/mixer.h:
+	* gst-libs/gst/rtp/gstbasertpdepayload.c:
+	* gst-libs/gst/rtp/gstbasertpdepayload.h:
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  Fix the docs according to what gtk-doc complained about.
+
+2007-10-30  Stefan Kost  <ensonic@users.sf.net>
+
 	* tests/icles/stress-playbin.c:
 	  Fix the build.
 

@@ -59,6 +59,7 @@ struct _GstBaseRTPDepayload
 
   GstPad *sinkpad, *srcpad;
 
+#ifndef GST_REMOVE_DEPRECATED
   /* lock to protect the queue, deprecated */
   GStaticRecMutex queuelock;
 
@@ -66,12 +67,15 @@ struct _GstBaseRTPDepayload
   gboolean thread_running;
   /* the releaser thread, deprecated */
   GThread *thread;
+#endif
 
   /* this attribute must be set by the child */
   guint clock_rate;
 
+#ifndef GST_REMOVE_DEPRECATED
   /* this value can be modified by the child if needed, deprecated */
   guint queue_delay;
+#endif
 
   /* we will queue up to RTP_QUEUEDELAY ms of packets,
    * reordering them if necessary

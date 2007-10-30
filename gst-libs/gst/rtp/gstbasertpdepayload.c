@@ -124,10 +124,12 @@ gst_base_rtp_depayload_class_init (GstBaseRTPDepayloadClass * klass)
    * Deprecated: Use a jitterbuffer or RTP session manager to delay packet
    * playback. This property has no effect anymore since 0.10.15.
    */
+#ifndef GST_REMOVE_DEPRECATED
   g_object_class_install_property (gobject_class, PROP_QUEUE_DELAY,
       g_param_spec_uint ("queue-delay", "Queue Delay",
           "Amount of ms to queue/buffer, deprecated", 0, G_MAXUINT,
           DEFAULT_QUEUE_DELAY, G_PARAM_READWRITE));
+#endif
 
   gstelement_class->change_state = gst_base_rtp_depayload_change_state;
 

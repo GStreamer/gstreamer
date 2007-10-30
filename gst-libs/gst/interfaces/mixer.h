@@ -77,7 +77,7 @@ typedef enum
 /**
  * GstMixerFlags:
  * @GST_MIXER_FLAG_NONE: No flags
- * @GST_MIXER_AUTO_NOTIFICATIONS: The mixer implementation automatically sends
+ * @GST_MIXER_FLAG_AUTO_NOTIFICATIONS: The mixer implementation automatically sends
  *    notification messages.
  * 
  * Flags for supported features. Whether the element automatically sends 

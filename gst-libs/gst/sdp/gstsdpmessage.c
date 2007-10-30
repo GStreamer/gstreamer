@@ -809,7 +809,7 @@ DEFINE_ARRAY_GETTER (zone, zones, const GstSDPZone);
 /**
  * gst_sdp_message_add_zone:
  * @msg: a #GstSDPMessage
- * @time: the NTP time that a time zone adjustment happens
+ * @adj_time: the NTP time that a time zone adjustment happens
  * @typed_time: the offset from the time when the session was first scheduled
  *
  * Add time zone information to @msg.
