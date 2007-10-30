@@ -902,6 +902,18 @@ unknown_type:
     if (dbin->groups == NULL)
       remove_fakesink (dbin);
 
+    if (src == dbin->typefind) {
+      gchar *desc;
+
+      desc = gst_pb_utils_get_decoder_description (caps);
+      GST_ELEMENT_ERROR (dbin, STREAM, CODEC_NOT_FOUND,
+          (_("A %s plugin is required to play this stream, but not installed."),
+              desc),
+          ("No decoder to handle media type '%s'",
+              gst_structure_get_name (gst_caps_get_structure (caps, 0))));
+      g_free (desc);
+    }
+
     gst_element_post_message (GST_ELEMENT_CAST (dbin),
         gst_missing_decoder_message_new (GST_ELEMENT_CAST (dbin), caps));
     return;

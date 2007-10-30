@@ -780,6 +780,19 @@ unknown_type:
 
     gst_element_post_message (GST_ELEMENT_CAST (decode_bin),
         gst_missing_decoder_message_new (GST_ELEMENT_CAST (decode_bin), caps));
+
+    if (element == decode_bin->typefind) {
+      gchar *desc;
+
+      desc = gst_pb_utils_get_decoder_description (caps);
+      GST_ELEMENT_ERROR (decode_bin, STREAM, CODEC_NOT_FOUND,
+          (_("A %s plugin is required to play this stream, but not installed."),
+              desc),
+          ("No decoder to handle media type '%s'",
+              gst_structure_get_name (gst_caps_get_structure (caps, 0))));
+      g_free (desc);
+    }
+
     return;
   }
 dont_know_yet:
@@ -1558,7 +1571,7 @@ type_found (GstElement * typefind, guint probability, GstCaps * caps,
   decode_bin->have_type = TRUE;
 
   /* special-case text/plain: we only want to accept it as a raw type if it
-   * comes from a subtitel parser element or a demuxer, but not if it is the
+   * comes from a subtitle parser element or a demuxer, but not if it is the
    * type of the entire stream, in which case we just want to error out */
   if (typefind == decode_bin->typefind &&
       gst_structure_has_name (gst_caps_get_structure (caps, 0), "text/plain")) {

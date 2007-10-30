@@ -1,3 +1,10 @@
+2007-10-30  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/playback/gstdecodebin.c: (close_pad_link), (type_found):
+	* gst/playback/gstdecodebin2.c: (analyze_new_pad):
+	  Post nice/more useful error message if we don't have a decoder for
+	  the primary type.
+
 2007-10-30  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/playback/gstdecodebin2.c: (gst_decode_group_expose):
