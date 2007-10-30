@@ -1,3 +1,18 @@
+2007-10-30  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_class_init),
+	(gst_base_sink_get_last_buffer), (gst_base_sink_set_last_buffer),
+	(gst_base_sink_get_property), (gst_base_sink_render_object),
+	(gst_base_sink_preroll_object),
+	(gst_base_sink_queue_object_unlocked), (gst_base_sink_event),
+	(gst_base_sink_change_state):
+	* libs/gst/base/gstbasesink.h:
+	Add a new last-buffer property that contains the last buffer used in
+	basesink for preroll or rendering. useful for making snapshots.
+	API: gst_base_sink_get_last_buffer()
+	API: GstBaseSink::last-buffer
+
 2007-10-29  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/running.xml:

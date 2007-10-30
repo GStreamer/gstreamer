@@ -209,6 +209,9 @@ gboolean	gst_base_sink_is_async_enabled 	(GstBaseSink *sink);
 void		gst_base_sink_set_ts_offset	(GstBaseSink *sink, GstClockTimeDiff offset);
 GstClockTimeDiff gst_base_sink_get_ts_offset 	(GstBaseSink *sink);
 
+/* last buffer */
+GstBuffer *	gst_base_sink_get_last_buffer	(GstBaseSink *sink);
+
 /* latency */
 gboolean	gst_base_sink_query_latency 	(GstBaseSink *sink, gboolean *live, gboolean *upstream_live,
 						 GstClockTime *min_latency, GstClockTime *max_latency);
