@@ -1,3 +1,11 @@
+2007-10-30  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment),
+	(gst_qtdemux_combine_flows), (gst_qtdemux_loop_state_movie):
+	Smarter combine_flow code that also deals with downstream elements
+	returning UNEXPECTED when they receive data out of the segment
+	boundaries. Fixes #491305.
+
 2007-10-26  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/v4l2/v4l2src_calls.c:

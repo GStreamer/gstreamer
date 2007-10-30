@@ -1087,6 +1087,8 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
     event = gst_event_new_new_segment (FALSE, rate, GST_FORMAT_TIME,
         start, stop, offset);
     gst_pad_push_event (stream->pad, event);
+    /* assume we can send more data now */
+    stream->last_ret = GST_FLOW_OK;
   }
 
   /* and move to the keyframe before the indicated media time of the
@@ -1241,32 +1243,41 @@ next_segment:
   }
 }
 
+/* UNEXPECTED and NOT_LINKED need to be combined. This means that we return:
+ *  
+ *  GST_FLOW_NOT_LINKED: when all pads NOT_LINKED.
+ *  GST_FLOW_UNEXPECTED: when all pads UNEXPECTED or NOT_LINKED.
+ */
 static GstFlowReturn
 gst_qtdemux_combine_flows (GstQTDemux * demux, QtDemuxStream * stream,
     GstFlowReturn ret)
 {
   gint i;
+  gboolean unexpected = FALSE, not_linked = TRUE;
+
+  GST_LOG_OBJECT (demux, "flow return: %s", gst_flow_get_name (ret));
 
   /* store the value */
   stream->last_ret = ret;
 
-  /* any other error that is not-linked can be returned right
-   * away */
-  if (ret != GST_FLOW_NOT_LINKED)
-    goto done;
-
-  /* only return NOT_LINKED if all other pads returned NOT_LINKED */
   for (i = 0; i < demux->n_streams; i++) {
     QtDemuxStream *ostream = demux->streams[i];
 
     ret = ostream->last_ret;
-    /* some other return value (must be SUCCESS but we can return
-     * other values as well) */
-    if (ret != GST_FLOW_NOT_LINKED)
+
+    /* no unexpected or unlinked, return */
+    if (ret != GST_FLOW_UNEXPECTED && ret != GST_FLOW_NOT_LINKED)
       goto done;
+
+    /* we check to see if we have at least 1 unexpected or all unlinked */
+    unexpected |= (ret == GST_FLOW_UNEXPECTED);
+    not_linked &= (ret == GST_FLOW_NOT_LINKED);
   }
-  /* if we get here, all other pads were unlinked and we return
-   * NOT_LINKED then */
+  /* when we get here, we all have unlinked or unexpected */
+  if (not_linked)
+    ret = GST_FLOW_NOT_LINKED;
+  else if (unexpected)
+    ret = GST_FLOW_UNEXPECTED;
 done:
   GST_LOG_OBJECT (demux, "combined flow return: %s", gst_flow_get_name (ret));
   return ret;
@@ -1437,6 +1448,10 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   if (G_UNLIKELY (size <= 0))
     goto next;
 
+  /* last pushed sample was out of boundary, goto next sample */
+  if (stream->last_ret == GST_FLOW_UNEXPECTED)
+    goto next;
+
   GST_LOG_OBJECT (qtdemux, "reading %d bytes @ %" G_GUINT64_FORMAT, size,
       offset);
 
@@ -1500,6 +1515,10 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
   /* combine flows */
   ret = gst_qtdemux_combine_flows (qtdemux, stream, ret);
+  /* ignore unlinked, we will not push on the pad anymore and we will EOS when
+   * we have no more data for the pad to push */
+  if (ret == GST_FLOW_UNEXPECTED)
+    ret = GST_FLOW_OK;
 
 next:
   gst_qtdemux_advance_sample (qtdemux, stream);
