@@ -1,5 +1,19 @@
 2007-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/equalizer/Makefile.am:
+	* gst/equalizer/demo.c: (on_window_destroy), (on_configure_event),
+	(on_gain_changed), (on_bandwidth_changed), (on_freq_changed),
+	(draw_spectrum), (message_handler), (main):
+	Add small demo application based on the spectrum demo applications
+	that gets white noise as input, pushes it through an equalizer and
+	paints the spectrum. For every equalizer band it's possible to set
+	gain, bandwidth and frequency.
+	* gst/equalizer/gstiirequalizer.c: (setup_filter):
+	Add some guarding against too large or too small frequencies and
+	bandwidths. Also improve debugging a bit.
+
+2007-10-30  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/equalizer/gstiirequalizer.c:
 	(gst_iir_equalizer_band_set_property),
 	(gst_iir_equalizer_band_get_property),

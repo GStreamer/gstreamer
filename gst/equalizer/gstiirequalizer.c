@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) <2004> Benjamin Otte <otte@gnome.org>
  *               <2007> Stefan Kost <ensonic@users.sf.net>
+ *               <2007> Sebastian Dröge <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -32,7 +33,6 @@
 
 GST_DEBUG_CATEGORY (equalizer_debug);
 #define GST_CAT_DEFAULT equalizer_debug
-
 
 static void gst_iir_equalizer_child_proxy_interface_init (gpointer g_iface,
     gpointer iface_data);
@@ -376,17 +376,32 @@ setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
    * - we need shelf-filter for 1st and last band
    */
   {
-    gdouble gain = arg_to_scale (band->gain);
-    gdouble frequency = band->freq / GST_AUDIO_FILTER (equ)->format.rate;
-    gdouble omega = 2.0 * M_PI * frequency;
-    gdouble bw =
-        2.0 * M_PI * (band->width / GST_AUDIO_FILTER (equ)->format.rate);
+    gdouble gain, omega, bw;
+    gdouble edge_gain, gamma;
+    gdouble alpha, beta;
 
-    gdouble edge_gain = sqrt (gain);
-    gdouble gamma = tan (bw / 2.0);
 
-    gdouble alpha = gamma * edge_gain;
-    gdouble beta = gamma / edge_gain;
+    gain = arg_to_scale (band->gain);
+
+    if (band->freq / GST_AUDIO_FILTER (equ)->format.rate > 0.5)
+      omega = M_PI;
+    else if (band->freq < 0.0)
+      omega = 0.0;
+    else
+      omega = 2.0 * M_PI * (band->freq / GST_AUDIO_FILTER (equ)->format.rate);
+
+    if (band->width / GST_AUDIO_FILTER (equ)->format.rate > 0.5)
+      bw = M_PI;
+    else if (band->width <= 1.0)
+      bw = 2.0 * M_PI * (1.0 / GST_AUDIO_FILTER (equ)->format.rate);
+    else
+      bw = 2.0 * M_PI * (band->width / GST_AUDIO_FILTER (equ)->format.rate);
+
+    edge_gain = sqrt (gain);
+    gamma = tan (bw / 2.0);
+
+    alpha = gamma * edge_gain;
+    beta = gamma / edge_gain;
 
     band->a0 = (1.0 + alpha) / (1.0 + beta);
     band->a1 = (-2.0 * cos (omega)) / (1.0 + beta);
@@ -396,8 +411,8 @@ setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
 
     GST_INFO
         ("gain = %7.5g, , bandwidth= %7.5g, frequency = %7.5g, a0 = %7.5g, a1 = %7.5g, a2=%7.5g b1 = %7.5g, b2 = %7.5g",
-        gain, band->width, frequency, band->a0, band->a1, band->a2, band->b1,
-        band->b2);
+        band->gain, band->width, band->freq, band->a0, band->a1, band->a2,
+        band->b1, band->b2);
   }
 }
 

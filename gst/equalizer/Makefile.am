@@ -11,3 +11,12 @@ libgstequalizer_la_LIBADD = $(GST_LIBS) $(GST_PLUGINS_BASE_LIBS) -lgstaudio-$(GS
 libgstequalizer_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = gstiirequalizer.h
+
+if HAVE_GTK
+noinst_PROGRAMS = demo
+endif
+
+demo_SOURCES = demo.c
+demo_CFLAGS  = $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(GTK_CFLAGS)
+demo_LDFLAGS = $(GST_BASE_LIBS) $(GST_LIBS) $(GTK_LIBS)
+
