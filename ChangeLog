@@ -1,5 +1,12 @@
 2007-10-30  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/playback/gstdecodebin2.c: (gst_decode_group_expose):
+	Be a bit more useful, unblock the pads after we fired the no-more-pads
+	signal so that we can use the signal to inspect and connect all pads
+	without having to keep extra state outside of decodebin.
+
+2007-10-30  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/playback/gsturidecodebin.c:
 	(gst_uri_decode_bin_autoplug_continue),
 	(gst_uri_decode_bin_class_init), (no_more_pads_full):

@@ -1941,13 +1941,24 @@ gst_decode_group_expose (GstDecodeGroup * group)
         gst_decode_bin_signals[SIGNAL_NEW_DECODED_PAD], 0, ghost,
         (next == NULL));
     GST_DEBUG_OBJECT (group->dbin, "emitted new-decoded-pad");
+  }
 
-    /* 3. Unblock internal  pad */
+  /* signal no-more-pads. This allows the application to hook stuff to the
+   * exposed pads */
+  GST_LOG_OBJECT (group->dbin, "signalling no-more-pads");
+  gst_element_no_more_pads (GST_ELEMENT (group->dbin));
+
+  /* 3. Unblock internal pads. The application should have connected stuff now
+   * so that streaming can continue. */
+  for (tmp = group->endpads; tmp; tmp = next) {
+    GstDecodePad *dpad = (GstDecodePad *) tmp->data;
+
+    next = g_list_next (tmp);
+
     GST_DEBUG_OBJECT (dpad->pad, "unblocking");
     gst_pad_set_blocked_async (dpad->pad, FALSE,
         (GstPadBlockCallback) source_pad_blocked_cb, dpad);
     GST_DEBUG_OBJECT (dpad->pad, "unblocked");
-
   }
 
   group->dbin->activegroup = group;
@@ -1959,9 +1970,6 @@ gst_decode_group_expose (GstDecodeGroup * group)
   remove_fakesink (group->dbin);
 
   group->exposed = TRUE;
-
-  GST_LOG_OBJECT (group->dbin, "signalling no-more-pads");
-  gst_element_no_more_pads (GST_ELEMENT (group->dbin));
 
   GST_LOG_OBJECT (group->dbin, "Group %p exposed", group);
   return TRUE;
