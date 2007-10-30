@@ -103,6 +103,7 @@ metadataparse_parse (ParseData * parse_data, const guint8 * buf,
           (guint8 *) buf, &bufsize, &next_start, next_size);
       break;
     case IMG_PNG:
+      ret = 0;
       break;
     default:
       /* unexpected */
@@ -114,6 +115,10 @@ metadataparse_parse (ParseData * parse_data, const guint8 * buf,
   *next_offset = next_start - buf;
 
 done:
+
+  if (ret == 0) {
+    parse_data->state = STATE_DONE;
+  }
 
   return ret;
 }

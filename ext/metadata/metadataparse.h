@@ -60,9 +60,6 @@ typedef enum _tag_ParseOption {
 typedef enum _tag_ParseState {
   STATE_NULL,
   STATE_READING,
-  STATE_EXIF,
-  STATE_IPTC,
-  STATE_XMP,
   STATE_DONE
 } ParseState;
 

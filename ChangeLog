@@ -1,5 +1,20 @@
 2007-10-30  Edgard Lima  <edgard.lima@indt.org.br>
 
+	* ext/metadata/.cvsignore:
+	* ext/metadata/gstmetadataparse.c: (gst_metadata_parse_base_init),
+	(gst_metadata_parse_init), (gst_metadata_parse_get_caps),
+	(gst_metadata_parse_configure_srccaps),
+	(gst_metadata_parse_set_caps), (gst_metadata_parse_activate),
+	(gst_metadata_parse_plugin_init):
+	* ext/metadata/metadataparse.c: (metadataparse_parse):
+	* ext/metadata/metadataparse.h:
+	  Changed kclass to "Parser/Extracter/Metadata", changed caps to
+	  "image/jpeg, tags-extract=true/false" and changed priority to
+	  GST_RANK_PRIMARY+1. Also, srcpad can only work in push mode until
+	  fixed to also work in pull mode.
+
+2007-10-30  Edgard Lima  <edgard.lima@indt.org.br>
+
 	* configure.ac:
 	* ext/Makefile.am:
 	* ext/metadata/:

@@ -99,13 +99,17 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/jpeg;" "image/png")
+    GST_STATIC_CAPS ("image/jpeg, "
+        "tags-extracted = (bool) false;"
+        "image/png, " "tags-extracted = (bool) false")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/jpeg-metadata;" "image/png-metadata")
+    GST_STATIC_CAPS ("image/jpeg, "
+        "tags-extracted = (bool) true;"
+        "image/png, " "tags-extracted = (bool) true")
     );
 
 GST_BOILERPLATE (GstMetadataParse, gst_metadata_parse, GstElement,
@@ -155,7 +159,7 @@ gst_metadata_parse_base_init (gpointer gclass)
 {
   static GstElementDetails element_details = {
     "Metadata parser",
-    "Image/Extracter/Metadata",
+    "Parser/Extracter/Metadata",
     "Send metadata tags (EXIF, IPTC and XMP) while passing throught the contents",
     "Edgard Lima <edgard.lima@indt.org.br>"
   };
@@ -236,8 +240,9 @@ gst_metadata_parse_init (GstMetadataParse * filter,
       GST_DEBUG_FUNCPTR (gst_metadata_parse_get_caps));
   gst_pad_set_event_function (filter->srcpad, gst_metadata_parse_src_event);
   gst_pad_use_fixed_caps (filter->srcpad);
+#if 0                           /* FIXME it should also work with it */
   gst_pad_set_getrange_function (filter->srcpad, gst_metadata_parse_get_range);
-
+#endif
   /* addind pads */
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
@@ -342,23 +347,23 @@ gst_metadata_parse_get_caps (GstPad * pad)
     for (i = 0; i < caps_size; ++i) {
       GstStructure *structure = NULL;
       GstStructure *structure_new = NULL;
-      GString *mime = NULL;
+      const gchar *mime = NULL;
 
       structure = gst_caps_get_structure (caps_otherpad_peer, i);
 
-      mime = g_string_new (gst_structure_get_name (structure));
-      if (otherpad == filter->sinkpad) {
-        g_string_append (mime, "-metadata");
+      mime = gst_structure_get_name (structure);
+
+      if (pad == filter->sinkpad) {
+        structure_new =
+            gst_structure_new (mime, "tags-extracted", G_TYPE_BOOLEAN, FALSE,
+            NULL);
       } else {
-        /* strip ou "-metadata" */
-        mime->str[mime->len - 9] = '\0';
+        structure_new =
+            gst_structure_new (mime, "tags-extracted", G_TYPE_BOOLEAN, TRUE,
+            NULL);
       }
 
-      structure_new = gst_structure_empty_new (mime->str);
-
       gst_caps_append_structure (caps_new, structure_new);
-
-      g_string_free (mime, TRUE);
 
     }
 
@@ -494,17 +499,19 @@ gst_metadata_parse_configure_srccaps (GstMetadataParse * filter)
 
   switch (filter->img_type) {
     case IMG_JPEG:
-      mime = "image/jpeg-metadata";
+      mime = "image/jpeg";
       break;
     case IMG_PNG:
-      mime = "image/png-metadata";
+      mime = "image/png";
       break;
     default:
+      ret = FALSE;
       goto done;
       break;
   }
 
-  caps = gst_caps_new_simple (mime, NULL);
+  caps =
+      gst_caps_new_simple (mime, "tags-extracted", G_TYPE_BOOLEAN, TRUE, NULL);
 
   ret = gst_pad_set_caps (filter->srcpad, caps);
 
@@ -573,6 +580,7 @@ gst_metadata_parse_set_caps (GstPad * pad, GstCaps * caps)
   GstStructure *structure = NULL;
   const gchar *mime = NULL;
   gboolean ret = FALSE;
+  gboolean parsed = TRUE;
 
   filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
 
@@ -585,7 +593,15 @@ gst_metadata_parse_set_caps (GstPad * pad, GstCaps * caps)
   } else if (strcmp (mime, "image/png") == 0) {
     filter->img_type = IMG_PNG;
   } else {
+    ret = FALSE;
     goto done;
+  }
+
+  if (gst_structure_get_boolean (structure, "tags-extracted", &parsed)) {
+    if (parsed == TRUE) {
+      ret = FALSE;
+      goto done;
+    }
   }
 
   ret = gst_metadata_parse_configure_srccaps (filter);
@@ -823,7 +839,7 @@ done:
 
       if (!gst_pad_is_active (filter->sinkpad)) {
         ret = gst_pad_activate_push (filter->srcpad, TRUE);
-        ret &= gst_pad_activate_push (filter->sinkpad, TRUE);
+        ret = ret && gst_pad_activate_push (filter->sinkpad, TRUE);
       }
 
     } while (FALSE);
@@ -910,5 +926,5 @@ gst_metadata_parse_plugin_init (GstPlugin * plugin)
 
 
   return gst_element_register (plugin, "metadataparse",
-      GST_RANK_PRIMARY, GST_TYPE_METADATA_PARSE);
+      GST_RANK_PRIMARY + 1, GST_TYPE_METADATA_PARSE);
 }
