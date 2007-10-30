@@ -1,3 +1,8 @@
+2007-10-30  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/icles/stress-playbin.c:
+	  Fix the build.
+
 2007-10-30  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstdecodebin.c: (close_pad_link), (type_found):

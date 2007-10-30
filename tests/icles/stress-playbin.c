@@ -1,4 +1,5 @@
 #include <gst/gst.h>
+#include <stdlib.h>
 
 #define TEST_RUNTIME 120.0      /* how long to run the test, in seconds */
 
