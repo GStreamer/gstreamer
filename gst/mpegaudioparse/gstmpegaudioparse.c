@@ -623,22 +623,12 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
     mp3parse->pending_segment = NULL;
     ret = gst_pad_push (mp3parse->srcpad, outbuf);
   }
-  if (ret == GST_FLOW_UNEXPECTED
-      && mp3parse->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-    GstClockTime stop;
 
-    GST_LOG_OBJECT (mp3parse, "Sending segment done");
-
-    if ((stop = mp3parse->segment.stop) == -1)
-      stop = mp3parse->segment.duration;
-
-    gst_element_post_message (GST_ELEMENT_CAST (mp3parse),
-        gst_message_new_segment_done (GST_OBJECT_CAST (mp3parse),
-            mp3parse->segment.format, stop));
-  } else if (GST_CLOCK_TIME_IS_VALID (mp3parse->segment.stop)
+  /* return unexpected when we run off the end of the segment */
+  if (GST_CLOCK_TIME_IS_VALID (mp3parse->segment.stop)
       && mp3parse->next_ts >= mp3parse->segment.stop) {
-    GST_DEBUG_OBJECT (mp3parse, "Sending EOS");
-    gst_pad_push_event (mp3parse->srcpad, gst_event_new_eos ());
+    GST_DEBUG_OBJECT (mp3parse, "returning unexpected");
+    ret = GST_FLOW_UNEXPECTED;
   }
   return ret;
 }
