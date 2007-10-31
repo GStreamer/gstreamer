@@ -224,8 +224,10 @@ _gst_audio_structure_set_list (GstStructure * structure,
  * @flag: a set of #GstAudioFieldFlag
  *
  * Do not use anymore.
- * @Deprecated: use gst_structure_set()
+ *
+ * Deprecated: use gst_structure_set()
  */
+#ifndef GST_REMOVE_DEPRECATED
 void
 gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag)
 {
@@ -251,6 +253,7 @@ gst_audio_structure_set_int (GstStructure * structure, GstAudioFieldFlag flag)
     _gst_audio_structure_set_list (structure, "signed", G_TYPE_BOOLEAN, 2, TRUE,
         FALSE, NULL);
 }
+#endif /* GST_REMOVE_DEPRECATED */
 
 /**
  * gst_audio_buffer_clip:

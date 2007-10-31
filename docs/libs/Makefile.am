@@ -43,7 +43,7 @@ DOC_SOURCE_DIR=$(top_srcdir)/gst-libs/gst
 DOC_BUILD_DIR=$(top_builddir)/gst-libs/gst
 
 # Extra options to supply to gtkdoc-scan.
-SCAN_OPTIONS=
+SCAN_OPTIONS=--deprecated-guards="GST_DISABLE_DEPRECATED"
 
 # FIXME :
 # there's something wrong with gstreamer-sections.txt not being in the dist

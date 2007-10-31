@@ -345,7 +345,6 @@ gst_mixer_get_mixer_flags (GstMixer * mixer)
 
 /**
  * gst_mixer_mute_toggled:
- *
  * @mixer: the #GstMixer (a #GstElement) that owns the track
  * @track: the GstMixerTrack that has change mute state.
  * @mute: the new state of the mute flag on the track
@@ -379,7 +378,6 @@ gst_mixer_mute_toggled (GstMixer * mixer, GstMixerTrack * track, gboolean mute)
 
 /**
  * gst_mixer_record_toggled:
- *
  * @mixer: the #GstMixer (a #GstElement) that owns the track
  * @track: the GstMixerTrack that has changed recording state.
  * @record: the new state of the record flag on the track
@@ -415,7 +413,6 @@ gst_mixer_record_toggled (GstMixer * mixer,
 
 /**
  * gst_mixer_volume_changed:
- *
  * @mixer: the #GstMixer (a #GstElement) that owns the track
  * @track: the GstMixerTrack that has changed.
  * @volumes: Array of volume values, one per channel on the mixer track.
@@ -467,7 +464,6 @@ gst_mixer_volume_changed (GstMixer * mixer,
 
 /**
  * gst_mixer_option_changed:
- *
  * @mixer: the #GstMixer (a #GstElement) that owns the options 
  * @opts: the GstMixerOptions that has changed value.
  * @value: the new value of the GstMixerOptions.

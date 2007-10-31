@@ -132,8 +132,10 @@ gboolean gst_audio_is_buffer_framed     (GstPad* pad, GstBuffer* buf);
  * GstAudioFieldFlag:
  *
  * Do not use anymore.
- * @Deprecated: use gst_structure_set() directly
+ *
+ * Deprecated: use gst_structure_set() directly
  */
+#ifndef GST_DISABLE_DEPRECATED
 typedef enum {
   GST_AUDIO_FIELD_RATE          = (1 << 0),
   GST_AUDIO_FIELD_CHANNELS      = (1 << 1),
@@ -142,6 +144,7 @@ typedef enum {
   GST_AUDIO_FIELD_DEPTH         = (1 << 4),
   GST_AUDIO_FIELD_SIGNED        = (1 << 5),
 } GstAudioFieldFlag;
+#endif /* GST_DISABLE_DEPRECATED */
 
 #ifndef GST_DISABLE_DEPRECATED
 void gst_audio_structure_set_int (GstStructure *structure, GstAudioFieldFlag flag);
