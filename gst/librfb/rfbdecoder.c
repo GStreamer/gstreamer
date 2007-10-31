@@ -639,24 +639,25 @@ static void
 rfb_decoder_raw_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     gint rect_w, gint rect_h)
 {
-  gint pos_y, size;
-  guint8 *frame, *buffer;
-  gint width;
-  guint32 src_offset;
-  guint32 dst_offset;
+  gint size;
+  guint8 *frame, *buffer, *p;
+  guint32 raw_line_size, line_size;
 
-  /* read the data */
   size = rect_h * rect_w * decoder->bpp / 8;
   GST_DEBUG ("Reading %d bytes", size);
   buffer = rfb_decoder_read (decoder, size);
 
-  frame = decoder->frame;
-  width = decoder->rect_width;
+  line_size = decoder->rect_width * decoder->bpp / 8;
+  raw_line_size = rect_w * decoder->bpp / 8;
+  frame =
+      decoder->frame + (((start_y * decoder->rect_width) +
+          start_x) * decoder->bpp / 8);
+  p = buffer;
 
-  for (pos_y = start_y; pos_y < (start_y + rect_h); pos_y++) {
-    src_offset = (pos_y - start_y) * rect_w * decoder->bpp / 8;
-    dst_offset = ((pos_y * width) + start_x) * decoder->bpp / 8;
-    memcpy (frame + dst_offset, buffer + src_offset, rect_w * decoder->bpp / 8);
+  while (rect_h--) {
+    memcpy (frame, p, raw_line_size);
+    p += raw_line_size;
+    frame += line_size;
   }
 
   g_free (buffer);

@@ -1,3 +1,8 @@
+2007-10-31  Thijs Vermeir,,,  <thijsvermeir@gmail.com>
+
+	* gst/librfb/rfbdecoder.c:
+		Some refactoring in RAW encoding
+
 2007-10-31  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/d3des.h:
