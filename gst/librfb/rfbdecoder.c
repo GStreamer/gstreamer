@@ -48,6 +48,10 @@ static gboolean rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder *
     decoder);
 static gboolean rfb_decoder_state_set_colour_map_entries (RfbDecoder * decoder);
 static gboolean rfb_decoder_state_server_cut_text (RfbDecoder * decoder);
+static void rfb_decoder_raw_encoding (RfbDecoder * decoder, gint start_x,
+    gint start_y, gint rect_w, gint rect_h);
+static void rfb_decoder_copyrect_encoding (RfbDecoder * decoder, gint start_x,
+    gint start_y, gint rect_w, gint rect_h);
 
 RfbDecoder *
 rfb_decoder_new (void)
@@ -181,6 +185,12 @@ rfb_decoder_send_update_request (RfbDecoder * decoder,
   RFB_SET_UINT16 (data + 8, height);
 
   rfb_decoder_send (decoder, data, 10);
+
+  /* create a backup of the prev frame for copyrect encoding */
+  memcpy (decoder->prev_frame, decoder->frame,
+      decoder->rect_width * decoder->rect_height * decoder->bpp / 8);
+
+  decoder->state = rfb_decoder_state_normal;
 }
 
 void
@@ -388,18 +398,24 @@ rfb_decoder_state_security_result (RfbDecoder * decoder)
 static gboolean
 rfb_decoder_state_set_encodings (RfbDecoder * decoder)
 {
-  guint8 *buffer = g_malloc0 (8);       // 4 + 4 * nr_of_encodings
+  guint8 *buffer = g_malloc0 (12);      // 4 + 4 * nr_of_encodings
+
+  GST_DEBUG ("Sending encoding types to server");
 
   buffer[0] = 2;                // message-type
-  buffer[3] = 1;                //  number of encodings
+  buffer[3] = 2;                //  number of encodings
 
   /* RAW encoding (0) */
 
-  rfb_decoder_send (decoder, buffer, 8);
+  /* CopyRect encoding (1) */
+  buffer[11] = 1;
+
+  rfb_decoder_send (decoder, buffer, 12);
 
   g_free (buffer);
 
   decoder->state = rfb_decoder_state_normal;
+  decoder->inited = TRUE;
 
   return TRUE;
 }
@@ -492,8 +508,6 @@ rfb_decoder_state_wait_for_server_initialisation (RfbDecoder * decoder)
   }
 
   decoder->state = rfb_decoder_state_set_encodings;
-  decoder->inited = TRUE;
-
   return TRUE;
 }
 
@@ -503,11 +517,13 @@ rfb_decoder_state_normal (RfbDecoder * decoder)
   guint8 *buffer;
   gint message_type;
 
+  GST_DEBUG ("decoder_state_normal");
+
   buffer = rfb_decoder_read (decoder, 1);
   message_type = RFB_GET_UINT8 (buffer);
 
   switch (message_type) {
-    case 0:
+    case MESSAGE_TYPE_FRAMEBUFFER_UPDATE:
       GST_DEBUG ("Receiving framebuffer update");
       decoder->state = rfb_decoder_state_framebuffer_update;
       break;
@@ -584,7 +600,6 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
   guint8 *buffer;
   gint x, y, w, h;
   gint encoding;
-  gint size;
 
   buffer = rfb_decoder_read (decoder, 12);
 
@@ -599,26 +614,85 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
   GST_DEBUG ("w:%d h:%d", w, h);
   GST_DEBUG ("encoding: %d", encoding);
 
-  if (encoding != 0)
-    g_critical ("unimplemented encoding\n");
-
-  g_free (buffer);
-
-  size = w * h * decoder->bpp / 8;
-  GST_DEBUG ("Reading %d bytes", size);
-  buffer = rfb_decoder_read (decoder, size);
-  GST_DEBUG ("Reading %d bytes", size);
-
-  if (decoder->paint_rect) {
-    decoder->paint_rect (decoder, x, y, w, h, buffer);
+  switch (encoding) {
+    case ENCODING_TYPE_RAW:
+      rfb_decoder_raw_encoding (decoder, x, y, w, h);
+      break;
+    case ENCODING_TYPE_COPYRECT:
+      rfb_decoder_copyrect_encoding (decoder, x, y, w, h);
+      break;
+    default:
+      g_critical ("unimplemented encoding\n");
+      break;
   }
-
   g_free (buffer);
   decoder->n_rects--;
   if (decoder->n_rects == 0) {
-    decoder->state = rfb_decoder_state_normal;
+    decoder->state = NULL;
+  } else {
+    decoder->state = rfb_decoder_state_framebuffer_update_rectangle;
   }
   return TRUE;
+}
+
+static void
+rfb_decoder_raw_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
+    gint rect_w, gint rect_h)
+{
+  gint pos_y, size;
+  guint8 *frame, *buffer;
+  gint width;
+  guint32 src_offset;
+  guint32 dst_offset;
+
+  /* read the data */
+  size = rect_h * rect_w * decoder->bpp / 8;
+  GST_DEBUG ("Reading %d bytes", size);
+  buffer = rfb_decoder_read (decoder, size);
+
+  frame = decoder->frame;
+  width = decoder->rect_width;
+
+  for (pos_y = start_y; pos_y < (start_y + rect_h); pos_y++) {
+    src_offset = (pos_y - start_y) * rect_w * decoder->bpp / 8;
+    dst_offset = ((pos_y * width) + start_x) * decoder->bpp / 8;
+    memcpy (frame + dst_offset, buffer + src_offset, rect_w * decoder->bpp / 8);
+  }
+
+  g_free (buffer);
+}
+
+static void
+rfb_decoder_copyrect_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
+    gint rect_w, gint rect_h)
+{
+  guint16 src_x, src_y;
+  guint32 src_offset;
+  guint32 dst_offset;
+  gint pos_y, max_y, line_width, copyrect_width;
+  guint8 *buffer;
+
+  buffer = rfb_decoder_read (decoder, 4);
+  max_y = start_y + rect_h;
+
+  src_x = RFB_GET_UINT16 (buffer);
+  src_y = RFB_GET_UINT16 (buffer + 2);
+  GST_DEBUG ("Copyrect from %d %d", src_x, src_y);
+
+  dst_offset =
+      (((start_y - 1) * decoder->rect_width) + start_x) * decoder->bpp / 8;
+  src_offset = (((src_y - 1) * decoder->rect_width) + src_x) * decoder->bpp / 8;
+  line_width = decoder->rect_width * decoder->bpp / 8;
+  copyrect_width = rect_w * decoder->bpp / 8;
+
+  for (pos_y = start_y; pos_y < max_y; pos_y++) {
+    dst_offset += line_width;
+    src_offset += line_width;
+    memcpy (decoder->frame + dst_offset, decoder->prev_frame + src_offset,
+        copyrect_width);
+  }
+
+  g_free (buffer);
 }
 
 static gboolean

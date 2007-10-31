@@ -3,12 +3,11 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
-enum {
-    SECURITY_FAIL = 0,
-    SECURITY_NONE,
-    SECURITY_VNC,
+G_BEGIN_DECLS enum
+{
+  SECURITY_FAIL = 0,
+  SECURITY_NONE,
+  SECURITY_VNC,
 };
 
 #define IS_VERSION(x, ma, mi)   ((x->protocol_major == ma) && (x->protocol_minor == mi))
@@ -16,23 +15,25 @@ enum {
 #define IS_VERSION_3_7(x)       IS_VERSION(x, 3, 7)
 #define IS_VERSION_3_8(x)       IS_VERSION(x, 3, 8)
 
+#define MESSAGE_TYPE_FRAMEBUFFER_UPDATE     0
+
+#define ENCODING_TYPE_RAW                   0
+#define ENCODING_TYPE_COPYRECT              1
+
 typedef struct _RfbDecoder RfbDecoder;
 
 struct _RfbDecoder
 {
   /* callbacks */
-  gint (*send_data) (guint8 *buffer, gint length, gpointer user_data);
-  void (*paint_rect) (RfbDecoder *decoder, gint x, gint y, gint w, gint h,
-      guint8 *data);
-  void (*copy_rect) (RfbDecoder *decoder, gint x, gint y, gint w, gint h,
-      gint src_x, gint src_y);
-  gboolean (*state) (RfbDecoder *decoder);
+  gboolean (*state) (RfbDecoder * decoder);
 
   gpointer buffer_handler_data;
 
   gint fd;
 
   gpointer decoder_private;
+  guint8 *frame;
+  guint8 *prev_frame;
 
   /* settable properties */
   gboolean shared_flag;
@@ -85,28 +86,18 @@ typedef struct _RfbRect
 } RfbRect;
 #endif
 
-RfbDecoder *rfb_decoder_new                 (void);
-void        rfb_decoder_free                (RfbDecoder * decoder);
-void        rfb_decoder_use_file_descriptor (RfbDecoder * decoder,
-                                             gint fd);
-gboolean    rfb_decoder_connect_tcp         (RfbDecoder * decoder,
-                                             gchar * addr,
-                                             guint port);
-gboolean    rfb_decoder_iterate             (RfbDecoder * decoder);
-void        rfb_decoder_send_update_request (RfbDecoder * decoder,
-                                             gboolean incremental,
-                                             gint x,
-                                             gint y,
-                                             gint width,
-                                             gint height);
-void        rfb_decoder_send_key_event      (RfbDecoder * decoder,
-                                             guint key,
-                                             gboolean down_flag);
-void        rfb_decoder_send_pointer_event  (RfbDecoder * decoder,
-                                             gint button_mask,
-                                             gint x,
-                                             gint y);
+RfbDecoder *rfb_decoder_new (void);
+void rfb_decoder_free (RfbDecoder * decoder);
+void rfb_decoder_use_file_descriptor (RfbDecoder * decoder, gint fd);
+gboolean rfb_decoder_connect_tcp (RfbDecoder * decoder,
+    gchar * addr, guint port);
+gboolean rfb_decoder_iterate (RfbDecoder * decoder);
+void rfb_decoder_send_update_request (RfbDecoder * decoder,
+    gboolean incremental, gint x, gint y, gint width, gint height);
+void rfb_decoder_send_key_event (RfbDecoder * decoder,
+    guint key, gboolean down_flag);
+void rfb_decoder_send_pointer_event (RfbDecoder * decoder,
+    gint button_mask, gint x, gint y);
 
 G_END_DECLS
-
 #endif

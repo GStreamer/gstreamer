@@ -27,7 +27,6 @@
 #include <librfb/rfb.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_RFB_SRC \
   (gst_rfb_src_get_type())
 #define GST_RFB_SRC(obj) \
@@ -38,7 +37,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RFB_SRC))
 #define GST_IS_RFB_SRC_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RFB_SRC))
-
 typedef struct _GstRfbSrc GstRfbSrc;
 typedef struct _GstRfbSrcClass GstRfbSrcClass;
 
@@ -55,7 +53,6 @@ struct _GstRfbSrc
   gint port;
 
   RfbDecoder *decoder;
-  guint8 *frame;
   gboolean go;
   gboolean incremental_update;
 
@@ -70,5 +67,4 @@ struct _GstRfbSrc
 GType gst_rfb_src_get_type (void);
 
 G_END_DECLS
-
 #endif

@@ -1,3 +1,16 @@
+2007-10-31  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/d3des.h:
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/gstrfbsrc.h:
+	* gst/librfb/rfbbuffer.h:
+	* gst/librfb/rfbcontext.h:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+	* gst/librfb/rfbutil.h:
+	* gst/librfb/vncauth.h:
+		Added copyrect encoding
+
 2007-10-31  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* sys/dvb/camswclient.c:

@@ -3,9 +3,7 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
-typedef struct _RfbContext
+G_BEGIN_DECLS typedef struct _RfbContext
 {
   RfbConnection *connection;
 
@@ -34,5 +32,4 @@ typedef struct _RfbRect
 } RfbRect;
 
 G_END_DECLS
-
 #endif

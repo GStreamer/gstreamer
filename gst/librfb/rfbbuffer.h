@@ -3,10 +3,8 @@
 
 #include <glib.h>
 
-G_BEGIN_DECLS
-
-typedef struct _RfbBuffer RfbBuffer;
-typedef void(*RfbBufferFreeFunc)(guint8 *data, gpointer priv);
+G_BEGIN_DECLS typedef struct _RfbBuffer RfbBuffer;
+typedef void (*RfbBufferFreeFunc) (guint8 * data, gpointer priv);
 
 struct _RfbBuffer
 {
@@ -17,10 +15,9 @@ struct _RfbBuffer
   gint length;
 };
 
-RfbBuffer *rfb_buffer_new           (void);
+RfbBuffer *rfb_buffer_new (void);
 RfbBuffer *rfb_buffer_new_and_alloc (gint len);
-void       rfb_buffer_free          (RfbBuffer *buffer);
+void rfb_buffer_free (RfbBuffer * buffer);
 
 G_END_DECLS
-
 #endif

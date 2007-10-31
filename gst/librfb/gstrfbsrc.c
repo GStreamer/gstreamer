@@ -84,8 +84,6 @@ static gboolean gst_rfb_src_stop (GstBaseSrc * bsrc);
 static gboolean gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event);
 static GstFlowReturn gst_rfb_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
-static void gst_rfb_src_paint_rect (RfbDecoder * decoder, gint x, gint y,
-    gint w, gint h, guint8 * data);
 
 GST_BOILERPLATE (GstRfbSrc, gst_rfb_src, GstPushSrc, GST_TYPE_PUSH_SRC);
 
@@ -327,11 +325,16 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
     rfb_decoder_iterate (decoder);
   }
 
+  decoder->rect_width =
+      (decoder->rect_width ? decoder->rect_width : decoder->width);
+  decoder->rect_height =
+      (decoder->rect_height ? decoder->rect_height : decoder->height);
+
   g_object_set (bsrc, "blocksize",
       src->decoder->width * src->decoder->height * (decoder->bpp / 8), NULL);
 
-  src->frame = g_malloc (bsrc->blocksize);
-  decoder->paint_rect = gst_rfb_src_paint_rect;
+  decoder->frame = g_malloc (bsrc->blocksize);
+  decoder->prev_frame = g_malloc (bsrc->blocksize);
   decoder->decoder_private = src;
 
   GST_DEBUG_OBJECT (src, "setting caps width to %d and height to %d",
@@ -356,9 +359,14 @@ gst_rfb_src_stop (GstBaseSrc * bsrc)
 
   src->decoder->fd = -1;
 
-  if (src->frame) {
-    g_free (src->frame);
-    src->frame = NULL;
+  if (src->decoder->frame) {
+    g_free (src->decoder->frame);
+    src->decoder->frame = NULL;
+  }
+
+  if (src->decoder->prev_frame) {
+    g_free (src->decoder->prev_frame);
+    src->decoder->prev_frame = NULL;
   }
 
   return TRUE;
@@ -373,13 +381,10 @@ gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   GstFlowReturn ret;
 
   rfb_decoder_send_update_request (decoder, src->incremental_update,
-      decoder->offset_x, decoder->offset_y,
-      (decoder->rect_width ? decoder->rect_width : decoder->width),
-      (decoder->rect_height ? decoder->rect_height : decoder->height));
-  // src->inter = TRUE;
+      decoder->offset_x, decoder->offset_y, decoder->rect_width,
+      decoder->rect_height);
 
-  src->go = TRUE;
-  while (src->go) {
+  while (decoder->state != NULL) {
     rfb_decoder_iterate (decoder);
   }
 
@@ -394,7 +399,7 @@ gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     return GST_FLOW_ERROR;
   }
 
-  memcpy (GST_BUFFER_DATA (*outbuf), src->frame, newsize);
+  memcpy (GST_BUFFER_DATA (*outbuf), decoder->frame, newsize);
   GST_BUFFER_SIZE (*outbuf) = newsize;
 
   return GST_FLOW_OK;
@@ -447,32 +452,6 @@ gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event)
   }
 
   return TRUE;
-}
-
-static void
-gst_rfb_src_paint_rect (RfbDecoder * decoder, gint start_x, gint start_y,
-    gint rect_w, gint rect_h, guint8 * data)
-{
-  gint pos_y;
-  guint8 *frame;
-  GstRfbSrc *src;
-  gint width;
-  guint32 src_offset;
-  guint32 dst_offset;
-
-  //printf ("painting %d,%d (%dx%d)\n", start_x, start_y, rect_w, rect_h);
-  src = GST_RFB_SRC (decoder->decoder_private);
-
-  frame = src->frame;
-  width = decoder->width;
-
-  for (pos_y = start_y; pos_y < (start_y + rect_h); pos_y++) {
-    src_offset = (pos_y - start_y) * rect_w * decoder->bpp / 8;
-    dst_offset = ((pos_y * width) + start_x) * decoder->bpp / 8;
-    memcpy (frame + dst_offset, data + src_offset, rect_w * decoder->bpp / 8);
-  }
-
-  src->go = FALSE;
 }
 
 static gboolean
