@@ -72,6 +72,7 @@ GST_START_TEST (test_text_plain_streams)
 
   g_object_set (src, "signal-handoffs", TRUE, NULL);
   g_object_set (src, "num-buffers", 1, NULL);
+  g_object_set (src, "can-activate-pull", FALSE, NULL);
   g_signal_connect (src, "handoff", G_CALLBACK (src_handoff_cb), NULL);
 
   decodebin = gst_element_factory_make ("decodebin", "decodebin");

@@ -1,5 +1,11 @@
 2007-10-31  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* tests/check/elements/decodebin.c: (test_text_plain_streams):
+	  Make sure the pipeline really operates in push mode as it should
+	  in this case.
+
+2007-10-31  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst-libs/gst/audio/audio.h:
 	  Don't guard deprecated enum with #ifndef DISABLE_DEPRECATED, or
 	  compilation with DISABLE_DEPRECATED and without REMOVE_DEPRECATED
