@@ -103,6 +103,7 @@ EXPORTS
 	GST_CAT_CALL_TRACE DATA
 	GST_CAT_CAPS DATA
 	GST_CAT_CLOCK DATA
+	GST_CAT_DEFAULT DATA
 	GST_CAT_ELEMENT_PADS DATA
 	GST_CAT_ERROR_SYSTEM DATA
 	GST_CAT_EVENT DATA
@@ -349,6 +350,8 @@ EXPORTS
 	gst_message_new_element
 	gst_message_new_eos
 	gst_message_new_error
+	gst_message_new_info
+	gst_message_new_latency
 	gst_message_new_new_clock
 	gst_message_new_segment_done
 	gst_message_new_segment_start

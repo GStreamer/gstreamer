@@ -56,6 +56,10 @@
 #include <fcntl.h>
 #include <string.h>
 
+#if defined (_MSC_VER) && _MSC_VER >= 1400
+# include <io.h>
+#endif
+
 #include "gst_private.h"
 #include "gstinfo.h"
 

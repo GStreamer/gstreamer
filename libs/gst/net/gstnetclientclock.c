@@ -50,10 +50,16 @@
 #include "config.h"
 #endif
 
-#include <unistd.h>
-
 #include "gstnettimepacket.h"
 #include "gstnetclientclock.h"
+
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#if defined (_MSC_VER) && _MSC_VER >= 1400
+#include <io.h>
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (ncc_debug);
 #define GST_CAT_DEFAULT (ncc_debug)
@@ -610,7 +616,7 @@ gst_net_client_clock_new (gchar * name, const gchar * remote_address,
 
 #ifdef G_OS_WIN32
   GST_DEBUG_OBJECT (ret, "creating pipe");
-  if ((iret = pipe (CONTROL_SOCKETS (ret))) < 0)
+  if ((iret = _pipe (CONTROL_SOCKETS (ret), 4096, _O_BINARY)) < 0)
     goto no_socket_pair;
 #else
   GST_DEBUG_OBJECT (ret, "creating socket pair");

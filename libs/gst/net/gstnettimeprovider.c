@@ -44,7 +44,14 @@
 
 #include <glib.h>
 
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
+
+#if defined (_MSC_VER) && _MSC_VER >= 1400
+#include <io.h>
+#endif
+
 #ifndef G_OS_WIN32
 #include <sys/ioctl.h>
 #endif
@@ -522,7 +529,7 @@ gst_net_time_provider_new (GstClock * clock, const gchar * address, gint port)
 
 #ifdef G_OS_WIN32
   GST_DEBUG_OBJECT (ret, "creating pipe");
-  if ((iret = pipe (CONTROL_SOCKETS (ret))) < 0)
+  if ((iret = _pipe (CONTROL_SOCKETS (ret), 4096, _O_BINARY)) < 0)
     goto no_socket_pair;
 #else
   GST_DEBUG_OBJECT (ret, "creating socket pair");

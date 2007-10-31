@@ -285,7 +285,7 @@ _treaddir (_TDIR * dirp)
 
     /* Start the search */
 
-    dirp->dd_handle = _tfindfirst (dirp->dd_name, &(dirp->dd_dta));
+    dirp->dd_handle = (long) _tfindfirst (dirp->dd_name, &(dirp->dd_dta));
 
 
     if (dirp->dd_handle == -1) {
@@ -353,7 +353,7 @@ _treaddir (_TDIR * dirp)
 
      * file name. */
 
-    dirp->dd_dir.d_namlen = _tcslen (dirp->dd_dta.name);
+    dirp->dd_dir.d_namlen = (unsigned short) _tcslen (dirp->dd_dta.name);
 
     _tcscpy (dirp->dd_dir.d_name, dirp->dd_dta.name);
 

@@ -1,5 +1,23 @@
 2007-10-31  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* gst/gsttrace.c:
+	* libs/gst/net/gstnetclientclock.c: (gst_net_client_clock_new):
+	* libs/gst/net/gstnettimepacket.c: (gst_net_time_packet_send):
+	* libs/gst/net/gstnettimeprovider.c: (gst_net_time_provider_new):
+	  Fix a couple of missing includes for MSVC2005 and a C99 issue. Also,
+	  starting with 2.14.0, GLib won't provide a pipe() macro any longer,
+	  so use _pipe() directly (#492077).
+
+	* win32/common/dirent.c: (_treaddir):
+	  Add a couple of casts to make it build without warnings with MSVC.
+
+	* win32/common/libgstreamer.def:
+	  Add some more symbols that need to be exported.
+
+2007-10-31  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/examples/metadata/read-metadata.c: (message_loop):
 	  Use _KEEP as merge mode rather than _KEEP_ALL, so tags
 	  arriving in a second or third tag message are added to

@@ -188,6 +188,7 @@ gst_net_time_packet_send (const GstNetTimePacket * packet, gint fd,
   fcntl (fd, F_SETFL, fdflags | O_NONBLOCK);
 #elif defined G_OS_WIN32
   flags = 1;
+  send_flags = 0;
 #else
   send_flags = MSG_DONTWAIT;
 #endif
@@ -196,10 +197,9 @@ gst_net_time_packet_send (const GstNetTimePacket * packet, gint fd,
 
 #ifdef G_OS_WIN32
   ioctlsocket (fd, FIONBIO, &flags);    /* Set nonblocking mode */
-  ret = sendto (fd, buffer, GST_NET_TIME_PACKET_SIZE, NULL, addr, len);
-#else
-  ret = sendto (fd, buffer, GST_NET_TIME_PACKET_SIZE, send_flags, addr, len);
 #endif
+
+  ret = sendto (fd, buffer, GST_NET_TIME_PACKET_SIZE, send_flags, addr, len);
 
 #ifdef __CYGWIN__
   fcntl (fd, F_SETFL, fdflags);
