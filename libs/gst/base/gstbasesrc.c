@@ -460,7 +460,7 @@ gst_base_src_finalize (GObject * object)
   g_cond_free (basesrc->live_cond);
 
   event_p = &basesrc->data.ABI.pending_seek;
-  gst_event_replace ((GstEvent **) event_p, NULL);
+  gst_event_replace (event_p, NULL);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -562,7 +562,7 @@ gst_base_src_is_live (GstBaseSrc * src)
  * If a format of GST_FORMAT_BYTES is set, the element will be able to
  * operate in pull mode if the #GstBaseSrc::is_seekable returns TRUE.
  *
- * @Since: 0.10.1
+ * Since: 0.10.1
  */
 void
 gst_base_src_set_format (GstBaseSrc * src, GstFormat format)
