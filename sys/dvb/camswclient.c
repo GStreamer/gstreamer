@@ -135,7 +135,9 @@ send_ca_pmt (CamSwClient * client, GObject * pmt,
 
   cam_write_length_field (&buffer[3], ca_pmt_size);
 
-  write (client->sock, buffer, buffer_size);
+  if (write (client->sock, buffer, buffer_size) == -1) {
+    GST_WARNING ("write failed when sending pmt with errno: %d", errno);
+  }
 
   g_free (ca_pmt);
   g_free (buffer);
