@@ -67,7 +67,7 @@ message_loop (GstElement * element, GstTagList ** tags)
 
         gst_message_parse_tag (message, &new_tags);
         if (*tags)
-          *tags = gst_tag_list_merge (*tags, new_tags, GST_TAG_MERGE_KEEP_ALL);
+          *tags = gst_tag_list_merge (*tags, new_tags, GST_TAG_MERGE_KEEP);
         else
           *tags = new_tags;
         break;

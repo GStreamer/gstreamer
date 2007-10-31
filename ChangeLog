@@ -1,3 +1,10 @@
+2007-10-31  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/examples/metadata/read-metadata.c: (message_loop):
+	  Use _KEEP as merge mode rather than _KEEP_ALL, so tags
+	  arriving in a second or third tag message are added to
+	  the tag list as well.
+
 2007-10-31  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstbasesrc.c:
