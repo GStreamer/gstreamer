@@ -1,3 +1,10 @@
+2007-10-31  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/libs/audio.c: (init_value_to_channel_layout),
+	  (test_channel_layout_value_intersect), (audio_suite):
+	  Add simple unit test to make sure GstValue intersection
+	  of channel layouts works the way I think it does.
+
 2007-10-30  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

@@ -456,6 +456,62 @@ GST_START_TEST (test_buffer_clipping_samples)
 
 GST_END_TEST;
 
+static void
+init_value_to_channel_layout (GValue * val, GstAudioChannelPosition pos1,
+    GstAudioChannelPosition pos2)
+{
+  GValue pos = { 0, };
+
+  g_value_init (val, GST_TYPE_ARRAY);
+  g_value_init (&pos, GST_TYPE_AUDIO_CHANNEL_POSITION);
+  g_value_set_enum (&pos, pos1);
+  gst_value_array_append_value (val, &pos);
+  g_value_set_enum (&pos, pos2);
+  gst_value_array_append_value (val, &pos);
+  g_value_unset (&pos);
+}
+
+GST_START_TEST (test_channel_layout_value_intersect)
+{
+  GValue layout = { 0, };
+  GValue list = { 0, };
+  GValue res = { 0, };
+
+  g_value_init (&list, GST_TYPE_LIST);
+  init_value_to_channel_layout (&layout, GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT);
+  gst_value_list_append_value (&list, &layout);
+  g_value_unset (&layout);
+  init_value_to_channel_layout (&layout, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT);
+  gst_value_list_append_value (&list, &layout);
+  g_value_unset (&layout);
+
+  init_value_to_channel_layout (&layout, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT);
+
+  /* we should get the second layout in the list, as it matches the input */
+  fail_unless (gst_value_intersect (&res, &layout, &list));
+  g_value_unset (&layout);
+  fail_unless (GST_VALUE_HOLDS_ARRAY (&res));
+  fail_unless_equals_int (gst_value_array_get_size (&res), 2);
+  fail_unless_equals_int (g_value_get_enum (gst_value_array_get_value (&res,
+              0)), GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT);
+  fail_unless_equals_int (g_value_get_enum (gst_value_array_get_value (&res,
+              1)), GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT);
+  g_value_unset (&res);
+
+  /* this (with rear position) should not yield any results */
+  init_value_to_channel_layout (&layout, GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+      GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT);
+  fail_if (gst_value_intersect (&res, &layout, &list));
+  g_value_unset (&layout);
+
+  g_value_unset (&list);
+}
+
+GST_END_TEST;
+
 static Suite *
 audio_suite (void)
 {
@@ -466,6 +522,7 @@ audio_suite (void)
   tcase_add_test (tc_chain, test_multichannel_checks);
   tcase_add_test (tc_chain, test_buffer_clipping_time);
   tcase_add_test (tc_chain, test_buffer_clipping_samples);
+  tcase_add_test (tc_chain, test_channel_layout_value_intersect);
 
   return s;
 }
