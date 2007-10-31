@@ -50,7 +50,10 @@
 G_BEGIN_DECLS
 
 extern void
-metadataparse_iptc_dump(GstAdapter *adapter);
+metadataparse_iptc_tag_list_add (GstTagList *taglist, GstTagMergeMode mode, GstAdapter * adapter);
+
+extern void
+metadataparse_iptc_tags_register (void);
 
 G_END_DECLS
 

@@ -1,3 +1,31 @@
+2007-10-31  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/gstmetadataparse.c:
+	(gst_metadata_parse_dispose_members),
+	(gst_metadata_parse_init_members), (gst_metadata_parse_send_tags),
+	(gst_metadata_parse_chain), (gst_metadata_parse_get_range),
+	(gst_metadata_parse_change_state),
+	(gst_metadata_parse_plugin_init):
+	* ext/metadata/gstmetadataparse.h:
+	* ext/metadata/metadataparseexif.c:
+	(metadataparse_exif_tags_register),
+	(metadataparse_exif_tag_list_add),
+	(exif_data_foreach_content_func),
+	(exif_content_foreach_entry_func):
+	* ext/metadata/metadataparseexif.h:
+	* ext/metadata/metadataparseiptc.c:
+	(metadataparse_iptc_tags_register),
+	(metadataparse_tag_list_add_chunk),
+	(metadataparse_iptc_tag_list_add),
+	(iptc_data_foreach_dataset_func):
+	* ext/metadata/metadataparseiptc.h:
+	* ext/metadata/metadataparsexmp.c:
+	(metadataparse_xmp_tags_register),
+	(metadataparse_xmp_tag_list_add):
+	* ext/metadata/metadataparsexmp.h:
+	  Now sending iptc tag in whole chunk. Ready to also send exif and xmp
+	  in the same way (look at bug #486659).
+
 2007-10-31  Thijs Vermeir,,,  <thijsvermeir@gmail.com>
 
 	* gst/librfb/rfbdecoder.c:

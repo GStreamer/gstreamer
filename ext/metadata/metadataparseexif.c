@@ -46,10 +46,16 @@
 GST_DEBUG_CATEGORY (gst_metadata_parse_exif_debug);
 #define GST_CAT_DEFAULT gst_metadata_parse_exif_debug
 
+void
+metadataparse_exif_tags_register (void)
+{
+}
+
 #ifndef HAVE_EXIF
 
 void
-metadataparse_exif_dump (GstAdapter * adapter)
+metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+    GstAdapter * adapter)
 {
 
   GST_LOG ("EXIF not defined, here I should send just one tag as whole chunk");
@@ -66,7 +72,8 @@ exif_data_foreach_content_func (ExifContent * content, void *callback_data);
 static void exif_content_foreach_entry_func (ExifEntry * entry, void *);
 
 void
-metadataparse_exif_dump (GstAdapter * adapter)
+metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+    GstAdapter * adapter)
 {
   const guint8 *buf;
   guint32 size;
@@ -84,7 +91,7 @@ metadataparse_exif_dump (GstAdapter * adapter)
   }
 
   exif_data_foreach_content (exif, exif_data_foreach_content_func,
-      (void *) NULL /* app data */ );
+      (void *) taglist);
 
 done:
 
@@ -96,20 +103,22 @@ done:
 }
 
 static void
-exif_data_foreach_content_func (ExifContent * content, void *callback_data)
+exif_data_foreach_content_func (ExifContent * content, void *user_data)
 {
   ExifIfd ifd = exif_content_get_ifd (content);
+  GstTagList *taglist = (GstTagList *) user_data;
 
   GST_LOG ("\n  Content %p: %s (ifd=%d)", content, exif_ifd_get_name (ifd),
       ifd);
   exif_content_foreach_entry (content, exif_content_foreach_entry_func,
-      callback_data);
+      user_data);
 }
 
 static void
-exif_content_foreach_entry_func (ExifEntry * entry, void *unused)
+exif_content_foreach_entry_func (ExifEntry * entry, void *user_data)
 {
   char buf[2048];
+  GstTagList *taglist = (GstTagList *) user_data;
 
   GST_LOG ("\n    Entry %p: %s (%s)\n"
       "      Size, Comps: %d, %d\n"

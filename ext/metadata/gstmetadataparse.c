@@ -154,6 +154,8 @@ static int
 gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
     guint32 size);
 
+static void gst_metadata_parse_send_tags (GstMetadataParse * filter);
+
 static void
 gst_metadata_parse_base_init (gpointer gclass)
 {
@@ -472,6 +474,10 @@ gst_metadata_parse_dispose_members (GstMetadataParse * filter)
     gst_object_unref (filter->adapter);
     filter->adapter = NULL;
   }
+  if (filter->taglist) {
+    gst_tag_list_free (filter->taglist);
+    filter->taglist = NULL;
+  }
 }
 
 static void
@@ -481,6 +487,7 @@ gst_metadata_parse_init_members (GstMetadataParse * filter)
   filter->exif = TRUE;
   filter->iptc = TRUE;
   filter->xmp = TRUE;
+  filter->taglist = NULL;
   filter->adapter = NULL;
   filter->next_offset = 0;
   filter->next_size = 0;
@@ -632,6 +639,40 @@ gst_metadata_parse_get_type_name (int img_type)
   return type_name;
 }
 
+static void
+gst_metadata_parse_send_tags (GstMetadataParse * filter)
+{
+
+  GstMessage *msg;
+  GstTagList *taglist;
+  GstEvent *event;
+
+  if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_EXIF)
+    metadataparse_exif_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
+        filter->parse_data.adpt_exif);
+  if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_IPTC)
+    metadataparse_iptc_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
+        filter->parse_data.adpt_iptc);
+  if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_XMP)
+    metadataparse_xmp_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
+        filter->parse_data.adpt_xmp);
+
+  if (!gst_tag_list_is_empty (filter->taglist)) {
+
+    taglist = gst_tag_list_copy (filter->taglist);
+    msg = gst_message_new_tag (GST_OBJECT (filter), taglist);
+    gst_element_post_message (GST_ELEMENT (filter), msg);
+
+    taglist = gst_tag_list_copy (filter->taglist);
+    event = gst_event_new_tag (taglist);
+    gst_pad_push_event (filter->srcpad, event);
+  }
+
+
+
+  filter->need_send_tag = FALSE;
+}
+
 /*
  * return:
  *   -1 -> error
@@ -740,11 +781,7 @@ gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf)
   }
 
   if (filter->need_send_tag) {
-    metadataparse_exif_dump (filter->parse_data.adpt_exif);
-    metadataparse_iptc_dump (filter->parse_data.adpt_iptc);
-    metadataparse_xmp_dump (filter->parse_data.adpt_xmp);
-
-    filter->need_send_tag = FALSE;
+    gst_metadata_parse_send_tags (filter);
   }
 
   gst_buffer_set_caps (buf, GST_PAD_CAPS (filter->srcpad));
@@ -859,11 +896,7 @@ gst_metadata_parse_get_range (GstPad * pad,
   filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
 
   if (filter->need_send_tag) {
-    metadataparse_exif_dump (filter->parse_data.adpt_exif);
-    metadataparse_iptc_dump (filter->parse_data.adpt_iptc);
-    metadataparse_xmp_dump (filter->parse_data.adpt_xmp);
-
-    filter->need_send_tag = FALSE;
+    gst_metadata_parse_send_tags (filter);
   }
 
   ret = gst_pad_pull_range (filter->sinkpad, offset, size, buf);
@@ -885,6 +918,7 @@ gst_metadata_parse_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       gst_metadata_parse_init_members (filter);
       filter->adapter = gst_adapter_new ();
+      filter->taglist = gst_tag_list_new ();
       break;
     default:
       break;
@@ -924,6 +958,12 @@ gst_metadata_parse_plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_metadata_parse_xmp_debug, "metadataparse_xmp", 0,
       "Metadata xmp demuxer");
 
+  /* FIXME: register tag should be done by plugin 'cause muxer element also uses it */
+  metadataparse_exif_tags_register ();
+
+  metadataparse_iptc_tags_register ();
+
+  metadataparse_xmp_tags_register ();
 
   return gst_element_register (plugin, "metadataparse",
       GST_RANK_PRIMARY + 1, GST_TYPE_METADATA_PARSE);

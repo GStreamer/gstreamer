@@ -83,6 +83,7 @@ struct _GstMetadataParse
 
   gboolean need_send_tag;
 
+  GstTagList *taglist;
   ParseData parse_data;
   GstAdapter * adapter;
   guint32 next_offset;

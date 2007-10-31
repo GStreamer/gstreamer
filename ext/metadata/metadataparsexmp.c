@@ -46,10 +46,16 @@
 GST_DEBUG_CATEGORY (gst_metadata_parse_xmp_debug);
 #define GST_CAT_DEFAULT gst_metadata_parse_xmp_debug
 
+void
+metadataparse_xmp_tags_register (void)
+{
+}
+
 #ifndef HAVE_XMP
 
 void
-metadataparse_xmp_dump (GstAdapter * adapter)
+metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+    GstAdapter * adapter)
 {
 
   GST_LOG ("XMP not defined, here I should send just one tag as whole chunk");
@@ -59,7 +65,8 @@ metadataparse_xmp_dump (GstAdapter * adapter)
 #else /* ifndef HAVE_XMP */
 
 void
-metadataparse_xmp_dump (GstAdapter * adapter)
+metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+    GstAdapter * adapter)
 {
 
   GST_LOG ("XMP still not implemented");

@@ -46,13 +46,45 @@
 GST_DEBUG_CATEGORY (gst_metadata_parse_iptc_debug);
 #define GST_CAT_DEFAULT gst_metadata_parse_iptc_debug
 
+#define GST_TAG_IPTC "iptc"
+
+void
+metadataparse_iptc_tags_register (void)
+{
+  gst_tag_register (GST_TAG_IPTC, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, GST_TAG_IPTC, "iptc metadata chunk", NULL);
+}
+
+void
+metadataparse_tag_list_add_chunk (GstTagList * taglist, GstTagMergeMode mode,
+    const gchar * name, GstAdapter * adapter)
+{
+  GstBuffer *buf;
+  guint size;
+
+  if (adapter && (size = gst_adapter_available (adapter))) {
+
+    buf = gst_buffer_new_and_alloc (size);
+
+    gst_adapter_copy (adapter, GST_BUFFER_DATA (buf), 0, size);
+
+    gst_tag_list_add (taglist, mode, name, buf, NULL);
+
+    gst_buffer_unref (buf);
+  }
+
+}
+
 #ifndef HAVE_IPTC
 
 void
-metadataparse_iptc_dump (GstAdapter * adapter)
+metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+    GstAdapter * adapter)
 {
 
   GST_LOG ("IPTC not defined, here I should send just one tag as whole chunk");
+
+  metadataparse_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
 
 }
 
@@ -64,7 +96,8 @@ static void
 iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data);
 
 void
-metadataparse_iptc_dump (GstAdapter * adapter)
+metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+    GstAdapter * adapter)
 {
   const guint8 *buf;
   guint32 size;
@@ -74,6 +107,9 @@ metadataparse_iptc_dump (GstAdapter * adapter)
     goto done;
   }
 
+  /* add chunk tag */
+  metadataparse_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
+
   buf = gst_adapter_peek (adapter, size);
 
   iptc = iptc_data_new_from_data (buf, size);
@@ -81,7 +117,8 @@ metadataparse_iptc_dump (GstAdapter * adapter)
     goto done;
   }
 
-  iptc_data_foreach_dataset (iptc, iptc_data_foreach_dataset_func, NULL);
+  iptc_data_foreach_dataset (iptc, iptc_data_foreach_dataset_func,
+      (void *) taglist);
 
 done:
 
@@ -97,6 +134,7 @@ iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data)
 {
 
   char *buf[256];
+  GstTagList *taglist = (GstTagList *) user_data;
 
   GST_LOG ("name -> %s", iptc_tag_get_name (dataset->record, dataset->tag));
   GST_LOG ("title -> %s", iptc_tag_get_title (dataset->record, dataset->tag));
