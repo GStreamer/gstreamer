@@ -1,3 +1,9 @@
+2007-10-31  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_ext_content_desc):
+	  Convert tags that come as string into the type required by
+	  GstTagList.
+
 2007-10-30  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:

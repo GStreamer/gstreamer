@@ -2070,9 +2070,24 @@ gst_asf_demux_process_ext_content_desc (GstASFDemux * demux, guint8 * data,
                 g_date_free (date);
               }
             } else {
-              g_value_init (&tag_value, G_TYPE_STRING);
-              g_value_set_string (&tag_value, value_utf8);
-              /* FIXME: convert to target value type if required */
+              GType tag_type;
+
+              /* convert tag from string to other type if required */
+              tag_type = gst_tag_get_type (gst_tag_name);
+              g_value_init (&tag_value, tag_type);
+              if (!gst_value_deserialize (&tag_value, value_utf8)) {
+                GValue from_val = { 0, };
+
+                g_value_init (&from_val, G_TYPE_STRING);
+                g_value_set_string (&from_val, value_utf8);
+                if (!g_value_transform (&from_val, &tag_value)) {
+                  GST_WARNING_OBJECT (demux,
+                      "Could not transform string tag to " "%s tag type %s",
+                      gst_tag_name, g_type_name (tag_type));
+                  g_value_unset (&tag_value);
+                }
+                g_value_unset (&from_val);
+              }
             }
           } else if (value_utf8 == NULL) {
             GST_WARNING ("Failed to convert string value to UTF8, skipping");
