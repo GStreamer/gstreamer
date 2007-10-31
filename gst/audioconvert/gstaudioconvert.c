@@ -660,6 +660,198 @@ gst_audio_convert_transform_caps (GstBaseTransform * base,
   return ret;
 }
 
+static const GstAudioChannelPosition default_positions[8][8] = {
+  /* 1 channel */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_MONO,
+      },
+  /* 2 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+      },
+  /* 3 channels (2.1) */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_LFE, /* or FRONT_CENTER for 3.0? */
+      },
+  /* 4 channels (4.0 or 3.1?) */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+      },
+  /* 5 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+      },
+  /* 6 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+      },
+  /* 7 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_REAR_CENTER,
+      },
+  /* 8 channels */
+  {
+        GST_AUDIO_CHANNEL_POSITION_FRONT_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_REAR_RIGHT,
+        GST_AUDIO_CHANNEL_POSITION_FRONT_CENTER,
+        GST_AUDIO_CHANNEL_POSITION_LFE,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
+        GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT,
+      }
+};
+
+const GValue *
+find_suitable_channel_layout (const GValue * val, guint chans)
+{
+  /* if output layout is fixed already and looks sane, we're done */
+  if (GST_VALUE_HOLDS_ARRAY (val) && gst_value_array_get_size (val) == chans)
+    return val;
+
+  /* if it's a list, go through it recursively and return the first
+   * sane-enough looking value we find */
+  if (GST_VALUE_HOLDS_LIST (val)) {
+    gint i;
+
+    for (i = 0; i < gst_value_list_get_size (val); ++i) {
+      const GValue *v, *ret;
+
+      v = gst_value_list_get_value (val, i);
+      if ((ret = find_suitable_channel_layout (v, chans)))
+        return ret;
+    }
+  }
+
+  return NULL;
+}
+
+static void
+gst_audio_convert_fixate_channels (GstBaseTransform * base, GstStructure * ins,
+    GstStructure * outs)
+{
+  const GValue *out_layout;
+  gint in_chans, out_chans;
+
+  if (!gst_structure_get_int (ins, "channels", &in_chans))
+    return;                     /* this shouldn't really happen, should it? */
+
+  if (!gst_structure_has_field (outs, "channels")) {
+    /* we could try to get the implied number of channels from the layout,
+     * but that seems overdoing it for a somewhat exotic corner case */
+    gst_structure_remove_field (outs, "channel-positions");
+    return;
+  }
+
+  /* ok, let's fixate the channels if they are not fixated yet */
+  gst_structure_fixate_field_nearest_int (outs, "channels", in_chans);
+
+  if (!gst_structure_get_int (outs, "channels", &out_chans)) {
+    /* shouldn't really happen ... */
+    gst_structure_remove_field (outs, "channel-positions");
+    return;
+  }
+
+  /* check if the output has a channel layout (or a list of layouts) */
+  out_layout = gst_structure_get_value (outs, "channel-positions");
+
+  if (out_layout == NULL) {
+    if (out_chans <= 2)
+      return;                   /* nothing to do, default layout will be assumed */
+    GST_WARNING_OBJECT (base, "downstream caps contain no channel layout");
+  }
+
+  if (in_chans == out_chans) {
+    const GValue *in_layout;
+    GValue res = { 0, };
+
+    in_layout = gst_structure_get_value (ins, "channel-positions");
+    g_return_if_fail (in_layout != NULL);
+
+    /* same number of channels and no output layout: just use input layout */
+    if (out_layout == NULL) {
+      gst_structure_set_value (outs, "channel-positions", in_layout);
+      return;
+    }
+
+    /* if output layout is fixed already and looks sane, we're done */
+    if (GST_VALUE_HOLDS_ARRAY (out_layout) &&
+        gst_value_array_get_size (out_layout) == out_chans) {
+      return;
+    }
+
+    /* if the output layout is not fixed, check if the output layout contains
+     * the input layout */
+    if (gst_value_intersect (&res, in_layout, out_layout)) {
+      gst_structure_set_value (outs, "channel-positions", in_layout);
+      g_value_unset (&res);
+      return;
+    }
+
+    /* output layout is not fixed and does not contain the input layout, so
+     * just pick the first layout in the list (it should be a list ...) */
+    if ((out_layout = find_suitable_channel_layout (out_layout, out_chans))) {
+      gst_structure_set_value (outs, "channel-positions", out_layout);
+      return;
+    }
+
+    /* ... else fall back to default layout (NB: out_layout is NULL here) */
+    GST_WARNING_OBJECT (base, "unexpected output channel layout");
+  }
+
+  /* number of input channels != number of output channels:
+   * if this value contains a list of channel layouts (or even worse: a list
+   * with another list), just pick the first value and repeat until we find a
+   * channel position array or something else that's not a list; we assume
+   * the input if half-way sane and don't try to fall back on other list items
+   * if the first one is something unexpected or non-channel-pos-array-y */
+  if (out_layout != NULL && GST_VALUE_HOLDS_LIST (out_layout))
+    out_layout = find_suitable_channel_layout (out_layout, out_chans);
+
+  if (out_layout != NULL) {
+    if (GST_VALUE_HOLDS_ARRAY (out_layout) &&
+        gst_value_array_get_size (out_layout) == out_chans) {
+      /* looks sane enough, let's use it */
+      gst_structure_set_value (outs, "channel-positions", out_layout);
+      return;
+    }
+
+    /* what now?! Just ignore what we're given and use default positions */
+    GST_WARNING_OBJECT (base, "invalid or unexpected channel-positions");
+  }
+
+  /* missing or invalid output layout and we can't use the input layout for
+   * one reason or another, so just pick a default layout (we could be smarter
+   * and try to add/remove channels from the input layout, or pick a default
+   * layout based on LFE-presence in input layout, but let's save that for
+   * another day) */
+  if (out_chans > 0 && out_chans < G_N_ELEMENTS (default_positions[0])) {
+    GST_DEBUG_OBJECT (base, "using default channel layout as fallback");
+    gst_audio_set_channel_positions (outs, default_positions[out_chans - 1]);
+  }
+}
+
 /* try to keep as many of the structure members the same by fixating the
  * possible ranges; this way we convert the least amount of things as possible
  */
@@ -668,7 +860,7 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps)
 {
   GstStructure *ins, *outs;
-  gint rate, endianness, depth, width, channels;
+  gint rate, endianness, depth, width;
   gboolean signedness;
 
   g_return_if_fail (gst_caps_is_fixed (caps));
@@ -679,11 +871,8 @@ gst_audio_convert_fixate_caps (GstBaseTransform * base,
   ins = gst_caps_get_structure (caps, 0);
   outs = gst_caps_get_structure (othercaps, 0);
 
-  if (gst_structure_get_int (ins, "channels", &channels)) {
-    if (gst_structure_has_field (outs, "channels")) {
-      gst_structure_fixate_field_nearest_int (outs, "channels", channels);
-    }
-  }
+  gst_audio_convert_fixate_channels (base, ins, outs);
+
   if (gst_structure_get_int (ins, "rate", &rate)) {
     if (gst_structure_has_field (outs, "rate")) {
       gst_structure_fixate_field_nearest_int (outs, "rate", rate);
