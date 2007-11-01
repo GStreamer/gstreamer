@@ -62,7 +62,7 @@ typedef void (*GstRingBufferCallback) (GstRingBuffer *rbuf, guint8* data, guint 
 typedef enum {
   GST_RING_BUFFER_STATE_STOPPED,
   GST_RING_BUFFER_STATE_PAUSED,
-  GST_RING_BUFFER_STATE_STARTED,
+  GST_RING_BUFFER_STATE_STARTED
 } GstRingBufferState;
 
 /**
@@ -78,7 +78,7 @@ typedef enum {
   GST_SEGSTATE_INVALID,
   GST_SEGSTATE_EMPTY,
   GST_SEGSTATE_FILLED,
-  GST_SEGSTATE_PARTIAL,
+  GST_SEGSTATE_PARTIAL
 } GstRingBufferSegState;
 
 /**
@@ -101,7 +101,7 @@ typedef enum
   GST_BUFTYPE_A_LAW,
   GST_BUFTYPE_IMA_ADPCM,
   GST_BUFTYPE_MPEG,
-  GST_BUFTYPE_GSM,
+  GST_BUFTYPE_GSM
 } GstBufferFormatType;
 
 typedef enum
@@ -149,10 +149,7 @@ typedef enum
   GST_A_LAW,
   GST_IMA_ADPCM,
   GST_MPEG,
-  GST_GSM,
-
-  /* fill me */
-
+  GST_GSM
 } GstBufferFormat;
 
 /**

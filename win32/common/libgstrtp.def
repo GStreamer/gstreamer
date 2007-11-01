@@ -12,21 +12,40 @@ EXPORTS
 	gst_base_rtp_depayload_get_type
 	gst_base_rtp_depayload_push
 	gst_base_rtp_depayload_push_ts
+	gst_rtp_buffer_allocate_data
+	gst_rtp_buffer_new_take_data
+	gst_rtp_buffer_new_copy_data
+	gst_rtp_buffer_new_allocate
+	gst_rtp_buffer_new_allocate_len
 	gst_rtp_buffer_calc_header_len
 	gst_rtp_buffer_calc_packet_len
 	gst_rtp_buffer_calc_payload_len
-	gst_rtp_buffer_get_marker
-	gst_rtp_buffer_get_payload
-	gst_rtp_buffer_get_payload_buffer
-	gst_rtp_buffer_get_payload_len
-	gst_rtp_buffer_get_payload_subbuffer
-	gst_rtp_buffer_get_payload_type
-	gst_rtp_buffer_get_seq
+	gst_rtp_buffer_validate_data
+	gst_rtp_buffer_validate
+	gst_rtp_buffer_set_packet_len
+	gst_rtp_buffer_get_packet_len
+	gst_rtp_buffer_get_version
+	gst_rtp_buffer_set_version
+	gst_rtp_buffer_get_padding
+	gst_rtp_buffer_set_padding
+	gst_rtp_buffer_pad_to
+	gst_rtp_buffer_get_extension
+	gst_rtp_buffer_set_extension
 	gst_rtp_buffer_get_ssrc
-	gst_rtp_buffer_get_timestamp
-	gst_rtp_buffer_new_allocate
-	gst_rtp_buffer_new_allocate_len
-	gst_rtp_buffer_new_take_data
+	gst_rtp_buffer_set_ssrc
+	gst_rtp_buffer_get_csrc_count
+	gst_rtp_buffer_get_csrc
+	gst_rtp_buffer_set_csrc
+	gst_rtp_buffer_get_marker
 	gst_rtp_buffer_set_marker
+	gst_rtp_buffer_get_payload_type
 	gst_rtp_buffer_set_payload_type
-	gst_rtp_buffer_validate	
+	gst_rtp_buffer_get_seq
+	gst_rtp_buffer_set_seq
+	gst_rtp_buffer_get_timestamp
+	gst_rtp_buffer_set_timestamp
+	gst_rtp_buffer_get_payload_buffer
+	gst_rtp_buffer_get_payload_subbuffer
+	gst_rtp_buffer_get_payload_len
+	gst_rtp_buffer_get_payload
+	gst_rtp_buffer_default_clock_rate

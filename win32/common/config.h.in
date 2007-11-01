@@ -169,10 +169,10 @@
 #undef HAVE_SYS_SOCKET_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#undef HAVE_SYS_STAT_H 1
+#undef HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H 1
+#undef HAVE_SYS_TYPES_H
 
 /* support for features: theoradec theoraenc */
 #undef HAVE_THEORA
@@ -208,16 +208,16 @@
 #define PACKAGE_BUGREPORT "@PACKAGE_BUGREPORT@"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME "@PACKAGE_NAME@"
+#define PACKAGE_NAME "@PACKAGE_NAME@"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING "@PACKAGE_STRING@"
+#define PACKAGE_STRING "@PACKAGE_STRING@"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME "@PACKAGE_TARNAME@"
+#define PACKAGE_TARNAME "@PACKAGE_TARNAME@"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION "@PACKAGE_VERSION@"
+#define PACKAGE_VERSION "@PACKAGE_VERSION@"
 
 /* directory where plugins are located */
 #undef PLUGINDIR
@@ -256,4 +256,6 @@
 #undef inline
 #endif
 
+/* FIXME: this should probably be hard-coded to some win32 system path */
 #define GST_INSTALL_PLUGINS_HELPER "@GST_INSTALL_PLUGINS_HELPER@"
+

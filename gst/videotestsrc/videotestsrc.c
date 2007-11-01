@@ -43,7 +43,7 @@ random_char (void)
 
   state *= 1103515245;
   state += 12345;
-  return (state >> 16);
+  return (state >> 16) & 0xff;
 }
 
 #if 0

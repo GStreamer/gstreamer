@@ -1,3 +1,27 @@
+2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* gst-libs/gst/audio/gstringbuffer.c: (build_linear_format),
+	  (gst_ring_buffer_parse_caps):
+	  Return NULL instead of an enum that happens to be 0, fixes warning
+	  on MSVC (#492114).
+
+	* gst-libs/gst/audio/gstringbuffer.h:
+	  No trailing commas in enum list (for gcc-2.9x).
+
+	* gst/videotestsrc/videotestsrc.c: (random_char):
+	  Make information loss explicit instead of implicitly truncating to
+	  eight bits via the return value.  Fixes runtime error on MSVC when
+	  using the debug CRT (#492114).
+
+	* win32/common/config.h.in:
+	  Fix a bunch of '#undef FOO bar', which MSVC doesn't like (#492114).
+
+	* win32/common/libgstinterfaces.def:
+	* win32/common/libgstrtp.def:
+	  Export a few more symbols (#492114).
+
 2007-11-01  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst-libs/gst/audio/audio.c:

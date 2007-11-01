@@ -189,7 +189,7 @@ build_linear_format (int depth, int width, int unsignd, int big_endian)
         formats = &linear24_defs[8];
         break;
       default:
-        return GST_UNKNOWN;
+        return NULL;
     }
   } else {
     switch (depth) {
@@ -206,7 +206,7 @@ build_linear_format (int depth, int width, int unsignd, int big_endian)
         formats = &linear_defs[12];
         break;
       default:
-        return GST_UNKNOWN;
+        return NULL;
     }
   }
   if (unsignd)
@@ -316,6 +316,9 @@ gst_ring_buffer_parse_caps (GstRingBufferSpec * spec, GstCaps * caps)
 
     def = build_linear_format (spec->depth, spec->width, spec->sign ? 0 : 1,
         spec->bigend ? 1 : 0);
+
+    if (def == NULL)
+      goto parse_error;
 
     spec->format = def->format;
 
