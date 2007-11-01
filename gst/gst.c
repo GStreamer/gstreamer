@@ -968,15 +968,15 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   _priv_gst_quarks_initialize ();
   _gst_format_initialize ();
   _gst_query_initialize ();
-  gst_object_get_type ();
-  gst_pad_get_type ();
-  gst_element_factory_get_type ();
-  gst_element_get_type ();
-  gst_type_find_factory_get_type ();
-  gst_bin_get_type ();
+  g_type_class_ref (gst_object_get_type ());
+  g_type_class_ref (gst_pad_get_type ());
+  g_type_class_ref (gst_element_factory_get_type ());
+  g_type_class_ref (gst_element_get_type ());
+  g_type_class_ref (gst_type_find_factory_get_type ());
+  g_type_class_ref (gst_bin_get_type ());
 
 #ifndef GST_DISABLE_INDEX
-  gst_index_factory_get_type ();
+  g_type_class_ref (gst_index_factory_get_type ());
 #endif /* GST_DISABLE_INDEX */
 #ifndef GST_DISABLE_URI
   gst_uri_handler_get_type ();
@@ -984,7 +984,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
 
   gst_structure_get_type ();
   _gst_value_initialize ();
-  gst_param_spec_fraction_get_type ();
+  g_type_class_ref (gst_param_spec_fraction_get_type ());
   gst_caps_get_type ();
   _gst_event_initialize ();
   _gst_buffer_initialize ();

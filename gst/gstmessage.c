@@ -67,17 +67,12 @@ static GstMessage *_gst_message_copy (GstMessage * message);
 void
 _gst_message_initialize (void)
 {
-  gpointer ptr;
-
   GST_CAT_INFO (GST_CAT_GST_INIT, "init messages");
-
-  gst_message_get_type ();
 
   /* the GstMiniObject types need to be class_ref'd once before it can be
    * done from multiple threads;
    * see http://bugzilla.gnome.org/show_bug.cgi?id=304551 */
-  ptr = g_type_class_ref (GST_TYPE_MESSAGE);
-  g_type_class_unref (ptr);
+  g_type_class_ref (gst_message_get_type ());
 }
 
 typedef struct

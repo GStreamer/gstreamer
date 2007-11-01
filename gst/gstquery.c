@@ -119,7 +119,7 @@ _gst_query_initialize (void)
   }
   g_static_mutex_unlock (&mutex);
 
-  gst_query_get_type ();
+  g_type_class_ref (gst_query_get_type ());
 }
 
 /**

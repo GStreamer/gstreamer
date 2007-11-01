@@ -1,5 +1,17 @@
 2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gst.c: (init_post):
+	* gst/gstevent.c: (_gst_event_initialize):
+	* gst/gstquery.c: (_gst_query_initialize):
+	* libs/gst/dataprotocol/dataprotocol.c (gst_dp_init):
+	  g_type_class_ref() other types as well, see #349410 and #64764.
+
+	* gst/gstbuffer.c: (_gst_buffer_initialize):
+	* gst/gstmessage.c: (_gst_message_initialize):
+	  Simplify existing g_type_class_ref().
+
+2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gstformat.c: (_gst_format_initialize):
 	  g_type_class_ref() our GstFormat type to make sure we avoid the
 	  thread-unsafe bits of the GObject/GType system, ie. bug #349410 and

@@ -92,9 +92,9 @@ static GstEvent *_gst_event_copy (GstEvent * event);
 void
 _gst_event_initialize (void)
 {
-  gst_event_get_type ();
-  gst_seek_flags_get_type ();
-  gst_seek_type_get_type ();
+  g_type_class_ref (gst_event_get_type ());
+  g_type_class_ref (gst_seek_flags_get_type ());
+  g_type_class_ref (gst_seek_type_get_type ());
 }
 
 typedef struct
