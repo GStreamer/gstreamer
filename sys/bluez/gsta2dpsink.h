@@ -49,9 +49,12 @@ struct _GstA2dpSink {
 	GIOChannel *stream;
 
 	struct bluetooth_data *data;
+	struct ipc_codec_sbc *sbc;
 	GIOChannel *server;
 
 	gint con_state;
+	GstCaps *dev_caps;
+	gboolean new_dev_caps;
 
 	GCond *con_conf_end;
 	gboolean waiting_con_conf;

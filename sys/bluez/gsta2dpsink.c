@@ -37,6 +37,7 @@
 
 #include "ipc.h"
 #include "rtp.h"
+#include "gstsbcutil.h"
 
 #include "gsta2dpsink.h"
 
@@ -148,15 +149,32 @@ gst_a2dp_sink_stop (GstBaseSink * basesink)
     self->watch_id = 0;
   }
 
+  if (self->stream) {
+    g_io_channel_flush (self->stream, NULL);
+    g_io_channel_close (self->stream);
+    g_io_channel_unref (self->stream);
+    self->stream = NULL;
+  }
+
   if (self->server) {
     g_io_channel_close (self->server);
     g_io_channel_unref (self->server);
-    self->stream = NULL;
+    self->server = NULL;
   }
 
   if (self->data) {
     g_free (self->data);
     self->data = NULL;
+  }
+
+  if (self->sbc) {
+    g_free (self->sbc);
+    self->sbc = NULL;
+  }
+
+  if (self->dev_caps) {
+    gst_caps_unref (self->dev_caps);
+    self->dev_caps = NULL;
   }
 
   return TRUE;
@@ -256,6 +274,25 @@ gst_a2dp_sink_bluetooth_recvmsg_fd (GstA2dpSink * sink)
   }
 
   return -EINVAL;
+}
+
+static void
+gst_a2dp_sink_check_dev_caps (GstA2dpSink * self)
+{
+  GstStructure *structure;
+  GstCaps *dev_caps;
+  gint channels;
+
+  structure = gst_caps_get_structure (self->dev_caps, 0);
+  if (!gst_structure_get_int (structure, "channels", &channels))
+    channels = 2;               /* FIXME how to get channels */
+  dev_caps = gst_sbc_caps_from_sbc (&(self->data->cfg), self->sbc, channels);
+
+  self->new_dev_caps = TRUE;
+  gst_caps_unref (self->dev_caps);
+  self->dev_caps = gst_caps_ref (dev_caps);
+
+
 }
 
 static int
@@ -413,6 +450,9 @@ gst_a2dp_sink_conf_resp (GstA2dpSink * sink)
   }
 
   memcpy (&sink->data->cfg, cfg, sizeof (*cfg));
+  memcpy (sink->sbc, sbc, sizeof (struct ipc_codec_sbc));
+
+  gst_a2dp_sink_check_dev_caps (sink);
 
   GST_DEBUG_OBJECT (sink, "Device configuration:\n\tchannel=%p\n\t"
       "fd_opt=%u\n\tpkt_len=%u\n\tsample_size=%u\n\trate=%u",
@@ -421,6 +461,7 @@ gst_a2dp_sink_conf_resp (GstA2dpSink * sink)
       sink->data->cfg.rate);
 
   if (sink->data->cfg.codec == CFG_CODEC_SBC) {
+    /* FIXME is this necessary? */
     ret = gst_a2dp_sink_bluetooth_a2dp_init (sink, sbc);
     if (ret < 0)
       return FALSE;
@@ -579,8 +620,12 @@ gst_a2dp_sink_start (GstBaseSink * basesink)
   self->data = g_new0 (struct bluetooth_data, 1);
   memset (self->data, 0, sizeof (struct bluetooth_data));
 
+  self->sbc = g_new0 (struct ipc_codec_sbc, 1);
+
   self->stream = NULL;
   self->con_state = NOT_CONFIGURED;
+  self->new_dev_caps = FALSE;
+  self->dev_caps = NULL;
 
   self->waiting_con_conf = FALSE;
 
@@ -724,8 +769,16 @@ gst_a2dp_sink_set_caps (GstBaseSink * basesink, GstCaps * caps)
   GstA2dpSink *self = GST_A2DP_SINK (basesink);
 
   GST_A2DP_SINK_MUTEX_LOCK (self);
-  if (self->con_state == NOT_CONFIGURED)
+  if (self->con_state == NOT_CONFIGURED) {
     gst_a2dp_sink_start_dev_conf (self, caps);
+
+    if (self->dev_caps)
+      gst_caps_unref (self->dev_caps);
+    self->dev_caps = gst_caps_ref (caps);
+
+    /* we suppose the device will accept this caps */
+    self->new_dev_caps = FALSE;
+  }
   GST_A2DP_SINK_MUTEX_UNLOCK (self);
 
   return TRUE;
@@ -740,6 +793,30 @@ gst_a2dp_sink_unlock (GstBaseSink * basesink)
     g_io_channel_flush (self->stream, NULL);
 
   return TRUE;
+}
+
+static GstFlowReturn
+gst_a2dp_sink_buffer_alloc (GstBaseSink * basesink,
+    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf)
+{
+  GstA2dpSink *self = GST_A2DP_SINK (basesink);
+
+  *buf = gst_buffer_new_and_alloc (size);
+  if (!(*buf)) {
+    GST_ERROR_OBJECT (self, "buffer allocation failed");
+    return GST_FLOW_ERROR;
+  }
+
+  if (self->new_dev_caps && self->dev_caps) {
+    GST_INFO_OBJECT (self, "new caps from device");
+    gst_buffer_set_caps (*buf, self->dev_caps);
+    self->new_dev_caps = FALSE;
+  } else
+    gst_buffer_set_caps (*buf, caps);
+
+  GST_BUFFER_OFFSET (*buf) = offset;
+
+  return GST_FLOW_OK;
 }
 
 static void
@@ -760,6 +837,7 @@ gst_a2dp_sink_class_init (GstA2dpSinkClass * klass)
   basesink_class->preroll = GST_DEBUG_FUNCPTR (gst_a2dp_sink_preroll);
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_a2dp_sink_set_caps);
   basesink_class->unlock = GST_DEBUG_FUNCPTR (gst_a2dp_sink_unlock);
+  basesink_class->buffer_alloc = GST_DEBUG_FUNCPTR (gst_a2dp_sink_buffer_alloc);
 
   g_object_class_install_property (object_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
@@ -773,6 +851,7 @@ gst_a2dp_sink_init (GstA2dpSink * self, GstA2dpSinkClass * klass)
 {
   self->device = NULL;
   self->data = NULL;
+  self->sbc = NULL;
 
   self->stream = NULL;
   self->con_state = NOT_CONFIGURED;
