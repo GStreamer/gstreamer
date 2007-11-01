@@ -219,6 +219,7 @@ sbc_enc_chain (GstPad * pad, GstBuffer * buffer)
       goto done;
 
     memcpy (GST_BUFFER_DATA (output), enc->sbc.data, enc->sbc.len);
+    GST_BUFFER_TIMESTAMP (output) = GST_BUFFER_TIMESTAMP (buffer);
 
     res = gst_pad_push (enc->srcpad, output);
     if (res != GST_FLOW_OK)
