@@ -27,9 +27,6 @@
 
 #include <gst/check/gstcheck.h>
 
-static gint count1;
-static gint count2;
-
 static void
 handoff (GstElement * fakesink, GstBuffer * buf, GstPad * pad, guint * count)
 {
@@ -41,29 +38,51 @@ handoff (GstElement * fakesink, GstBuffer * buf, GstPad * pad, guint * count)
  */
 GST_START_TEST (test_num_buffers)
 {
-  GstElement *pipeline;
-  GstElement *f1, *f2;
-  gchar *desc;
+#define NUM_SUBSTREAMS 15
+#define NUM_BUFFERS 3
+  GstElement *pipeline, *src, *tee;
+  GstElement *queues[NUM_SUBSTREAMS];
+  GstElement *sinks[NUM_SUBSTREAMS];
+  GstPad *req_pads[NUM_SUBSTREAMS];
+  guint counts[NUM_SUBSTREAMS];
   GstBus *bus;
   GstMessage *msg;
+  gint i;
 
-  desc = "fakesrc num-buffers=3 ! tee name=t ! queue ! fakesink name=f1 "
-      "t. ! queue ! fakesink name=f2";
-  pipeline = gst_parse_launch (desc, NULL);
-  fail_if (pipeline == NULL);
+  pipeline = gst_pipeline_new ("pipeline");
+  src = gst_check_setup_element ("fakesrc");
+  g_object_set (src, "num-buffers", NUM_BUFFERS, NULL);
+  tee = gst_check_setup_element ("tee");
+  fail_unless (gst_bin_add (GST_BIN (pipeline), src));
+  fail_unless (gst_bin_add (GST_BIN (pipeline), tee));
+  fail_unless (gst_element_link (src, tee));
 
-  f1 = gst_bin_get_by_name (GST_BIN (pipeline), "f1");
-  fail_if (f1 == NULL);
-  f2 = gst_bin_get_by_name (GST_BIN (pipeline), "f2");
-  fail_if (f2 == NULL);
+  for (i = 0; i < NUM_SUBSTREAMS; ++i) {
+    GstPad *qpad;
+    gchar name[32];
 
-  count1 = 0;
-  count2 = 0;
+    counts[i] = 0;
 
-  g_object_set (G_OBJECT (f1), "signal-handoffs", TRUE, NULL);
-  g_signal_connect (G_OBJECT (f1), "handoff", (GCallback) handoff, &count1);
-  g_object_set (G_OBJECT (f2), "signal-handoffs", TRUE, NULL);
-  g_signal_connect (G_OBJECT (f2), "handoff", (GCallback) handoff, &count2);
+    queues[i] = gst_check_setup_element ("queue");
+    g_snprintf (name, 32, "queue%d", i);
+    gst_object_set_name (GST_OBJECT (queues[i]), name);
+    fail_unless (gst_bin_add (GST_BIN (pipeline), queues[i]));
+
+    sinks[i] = gst_check_setup_element ("fakesink");
+    g_snprintf (name, 32, "sink%d", i);
+    gst_object_set_name (GST_OBJECT (sinks[i]), name);
+    fail_unless (gst_bin_add (GST_BIN (pipeline), sinks[i]));
+    fail_unless (gst_element_link (queues[i], sinks[i]));
+    g_object_set (sinks[i], "signal-handoffs", TRUE, NULL);
+    g_signal_connect (sinks[i], "handoff", (GCallback) handoff, &counts[i]);
+
+    req_pads[i] = gst_element_get_request_pad (tee, "src%d");
+    fail_unless (req_pads[i] != NULL);
+
+    qpad = gst_element_get_pad (queues[i], "sink");
+    fail_unless_equals_int (gst_pad_link (req_pads[i], qpad), GST_PAD_LINK_OK);
+    gst_object_unref (qpad);
+  }
 
   bus = gst_element_get_bus (pipeline);
   fail_if (bus == NULL);
@@ -73,13 +92,17 @@ GST_START_TEST (test_num_buffers)
   fail_if (GST_MESSAGE_TYPE (msg) != GST_MESSAGE_EOS);
   gst_message_unref (msg);
 
-  fail_if (count1 != 3);
-  fail_if (count2 != 3);
+  for (i = 0; i < NUM_SUBSTREAMS; ++i) {
+    fail_unless_equals_int (counts[i], NUM_BUFFERS);
+  }
 
   gst_element_set_state (pipeline, GST_STATE_NULL);
-  gst_object_unref (f1);
-  gst_object_unref (f2);
   gst_object_unref (bus);
+
+  for (i = 0; i < NUM_SUBSTREAMS; ++i) {
+    gst_element_release_request_pad (tee, req_pads[i]);
+    gst_object_unref (req_pads[i]);
+  }
   gst_object_unref (pipeline);
 }
 

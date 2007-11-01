@@ -1,3 +1,10 @@
+2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* tests/check/elements/tee.c: (test_num_buffers):
+	  Simplify, simplify, simplify - or not.  Rewrite unit test
+	  not to use gst_parse_launch(); allow N sub-streams. Increasing
+	  the number of sub-streams seems to reproduce #474823 more easily.
+
 2007-10-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
