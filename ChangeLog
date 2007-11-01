@@ -1,5 +1,25 @@
 2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Vincent Torri <vtorri at univ-evry dot fr>
+
+	* gst-libs/gst/fft/kiss_fft_s16.h: (KISS_FFT_S16_MALLOC):
+	* gst-libs/gst/fft/kiss_fft_s32.h: (KISS_FFT_S32_MALLOC):
+	  Include our own _stdint.h instead of sys/types.h, makes MingW happy
+	  (#492306).
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c: (gst_rtsp_connection_create):
+	  Use _pipe directly, GLib doesn't have a pipe() macro any longer
+	  (it disappeared in GLib 2.14.0) (#492306).
+
+	* gst-libs/gst/sdp/Makefile.am:
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  Fix includes and LIBS for win32/Mingw (#492306).
+
+	* tests/examples/dynamic/addstream.c (pause_play_stream):
+	  Use more portable g_usleep() instead of sleep() (#492306).
+
+2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* gst-libs/gst/audio/gstringbuffer.c: (build_linear_format),

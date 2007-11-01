@@ -54,12 +54,25 @@
  * Last reviewed on 2007-07-24 (0.10.14)
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <stdlib.h>
 #include <string.h>
+
+#ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
+#endif
+
+#include <glib.h>               /* for G_OS_WIN32 */
+
+#ifdef G_OS_WIN32
+#include <ws2tcpip.h>
+#else
 #include <sys/socket.h>
 #include <netdb.h>
+#endif
 
 #include "gstsdpmessage.h"
 

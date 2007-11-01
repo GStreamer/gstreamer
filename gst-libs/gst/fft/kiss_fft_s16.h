@@ -26,7 +26,8 @@ extern "C" {
 
 #define KISS_FFT_S16_MALLOC malloc
 
-#include <sys/types.h>	
+#include "_stdint.h"
+
 #define kiss_fft_s16_scalar int16_t
 
 typedef struct {

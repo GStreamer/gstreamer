@@ -27,7 +27,8 @@ extern "C" {
 #define KISS_FFT_S32_MALLOC malloc
 
 
-#include <sys/types.h>	
+#include "_stdint.h"
+
 #define kiss_fft_s32_scalar int32_t
 
 typedef struct {

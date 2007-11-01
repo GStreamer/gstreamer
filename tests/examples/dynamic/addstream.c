@@ -25,8 +25,6 @@
 #include "config.h"
 #endif
 
-#include <unistd.h>
-
 #include <gst/gst.h>
 
 static GstElement *pipeline;
@@ -93,7 +91,7 @@ pause_play_stream (GstElement * bin, gint seconds)
   }
 
   if (seconds)
-    sleep (seconds);
+    g_usleep (seconds * G_USEC_PER_SEC);
 
   if (punch_in) {
     /* new bin has to be aligned with previous running_time. We do this by taking

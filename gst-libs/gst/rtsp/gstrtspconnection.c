@@ -163,7 +163,7 @@ gst_rtsp_connection_create (GstRTSPUrl * url, GstRTSPConnection ** conn)
 #ifdef G_OS_WIN32
   /* This should work on UNIX too. PF_UNIX sockets replaced with pipe */
   /* pipe( CONTROL_SOCKETS(newconn) ) */
-  if ((ret = pipe (CONTROL_SOCKETS (newconn))) < 0)
+  if ((ret = _pipe (CONTROL_SOCKETS (newconn), 4096, _O_BINARY)) < 0)
     goto no_socket_pair;
 
   ioctlsocket (READ_SOCKET (newconn), FIONBIO, &flags);
