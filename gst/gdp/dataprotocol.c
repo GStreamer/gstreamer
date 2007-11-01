@@ -327,7 +327,7 @@ gst_dp_init (void)
 
   _gst_dp_initialized = TRUE;
 
-  gst_dp_version_get_type ();
+  g_type_class_ref (gst_dp_version_get_type ());
 
   GST_DEBUG_CATEGORY_INIT (data_protocol_debug, "gdp", 0,
       "GStreamer Data Protocol");
