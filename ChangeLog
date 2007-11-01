@@ -1,3 +1,9 @@
+2007-11-01  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst-libs/gst/audio/audio.c:
+	* gst-libs/gst/audio/audio.h:
+	  Readd the deprecation guards, but preserve compilability.
+
 2007-10-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/audioconvert/gstaudioconvert.c: (find_suitable_channel_layout),
