@@ -1,5 +1,13 @@
 2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstinfo.h: (GST_DEBUG_CATEGORY_EXTERN):
+	  Remove __declspec(dllimport) for MSVC that was copied over into core
+	  from a plugin, obviously without ever having been tested (note the
+	  single underscore in _declspec in the initial commit), and that doesn't
+	  really make sense.  See #492077.
+
+2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gst.c: (init_post):
 	* gst/gstevent.c: (_gst_event_initialize):
 	* gst/gstquery.c: (_gst_query_initialize):
