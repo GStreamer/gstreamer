@@ -42,6 +42,7 @@
  */
 
 #include "metadataparseiptc.h"
+#include "metadataparseutil.h"
 
 GST_DEBUG_CATEGORY (gst_metadata_parse_iptc_debug);
 #define GST_CAT_DEFAULT gst_metadata_parse_iptc_debug
@@ -53,26 +54,6 @@ metadataparse_iptc_tags_register (void)
 {
   gst_tag_register (GST_TAG_IPTC, GST_TAG_FLAG_META,
       GST_TYPE_BUFFER, GST_TAG_IPTC, "iptc metadata chunk", NULL);
-}
-
-void
-metadataparse_tag_list_add_chunk (GstTagList * taglist, GstTagMergeMode mode,
-    const gchar * name, GstAdapter * adapter)
-{
-  GstBuffer *buf;
-  guint size;
-
-  if (adapter && (size = gst_adapter_available (adapter))) {
-
-    buf = gst_buffer_new_and_alloc (size);
-
-    gst_adapter_copy (adapter, GST_BUFFER_DATA (buf), 0, size);
-
-    gst_tag_list_add (taglist, mode, name, buf, NULL);
-
-    gst_buffer_unref (buf);
-  }
-
 }
 
 #ifndef HAVE_IPTC

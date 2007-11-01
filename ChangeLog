@@ -1,3 +1,24 @@
+2007-11-01  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* ext/metadata/Makefile.am:
+	* ext/metadata/metadataparseexif.c:
+	(metadataparse_exif_tags_register),
+	(metadataparse_exif_tag_list_add):
+	* ext/metadata/metadataparseiptc.c:
+	* ext/metadata/metadataparsejpeg.c: (metadataparse_jpeg_init),
+	(metadataparse_jpeg_dispose), (metadataparse_jpeg_parse),
+	(metadataparse_jpeg_reading), (metadataparse_jpeg_xmp):
+	* ext/metadata/metadataparseutil.c:
+	(metadataparse_tag_list_add_chunk):
+	* ext/metadata/metadataparseutil.h:
+	* ext/metadata/metadataparsexmp.c:
+	(metadataparse_xmp_tags_register),
+	(metadataparse_xmp_tag_list_add), (metadataparse_xmp_init),
+	(metadataparse_xmp_dispose):
+	* ext/metadata/metadataparsexmp.h:
+	  Some XMP stuff added.
+
 2007-10-31  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/gstmetadataparse.c:

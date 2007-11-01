@@ -6,7 +6,8 @@ libgstmetadata_la_SOURCES =	gstmetadata.c       \
 				metadataparsejpeg.c \
 				metadataparseexif.c \
 				metadataparseiptc.c \
-				metadataparsexmp.c
+				metadataparsexmp.c  \
+				metadataparseutil.c
 
 libgstmetadata_la_CFLAGS = $(METADATA_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS)
 libgstmetadata_la_LIBADD = $(METADATA_LIBS) -lgsttag-@GST_MAJORMINOR@ $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS)
@@ -17,5 +18,6 @@ noinst_HEADERS = 	gstmetadataparse.h  \
 			metadataparsejpeg.h \
 			metadataparseexif.h \
 			metadataparseiptc.h \
-			metadataparsexmp.h
+			metadataparsexmp.h  \
+			metadataparseutil.h
 

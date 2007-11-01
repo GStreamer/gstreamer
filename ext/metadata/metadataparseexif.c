@@ -42,13 +42,18 @@
  */
 
 #include "metadataparseexif.h"
+#include "metadataparseutil.h"
 
 GST_DEBUG_CATEGORY (gst_metadata_parse_exif_debug);
 #define GST_CAT_DEFAULT gst_metadata_parse_exif_debug
 
+#define GST_TAG_EXIF "exif"
+
 void
 metadataparse_exif_tags_register (void)
 {
+  gst_tag_register (GST_TAG_EXIF, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, GST_TAG_EXIF, "exif metadata chunk", NULL);
 }
 
 #ifndef HAVE_EXIF
@@ -59,6 +64,8 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 {
 
   GST_LOG ("EXIF not defined, here I should send just one tag as whole chunk");
+
+  metadataparse_tag_list_add_chunk (taglist, mode, GST_TAG_EXIF, adapter);
 
 }
 
@@ -82,6 +89,9 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
   if (adapter == NULL || (size = gst_adapter_available (adapter)) == 0) {
     goto done;
   }
+
+  /* add chunk tag */
+  metadataparse_tag_list_add_chunk (taglist, mode, GST_TAG_EXIF, adapter);
 
   buf = gst_adapter_peek (adapter, size);
 

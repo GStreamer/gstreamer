@@ -496,7 +496,15 @@ AG_GST_CHECK_FEATURE(METADATA, [METADATA muxer and demuxer], metadata, [
   PKG_CHECK_MODULES(IPTC, libiptcdata >= 1.0.2, HAVE_IPTC="yes", [
     HAVE_IPTC="no"
   ])
-  HAVE_XMP="no"
+  AC_CHECK_HEADER(exempi-2.0/exempi/xmp.h, 
+    [
+    AC_CHECK_LIB(exempi, xmp_init, 
+      [
+      HAVE_XMP="yes"
+      XMP_CFLAGS="-I/usr/local/include/exempi-2.0/exempi/"
+      XMP_LIBS="-lexempi"
+      ], HAVE_XMP="no")
+    ], HAVE_XMP="no")
   if test x$HAVE_EXIF = xyes; then
     METADATA_CFLAGS="-DHAVE_EXIF $EXIF_CFLAGS $METADATA_CFLAGS"
     METADATA_LIBS="$EXIF_LIBS $METADATA_LIBS"
@@ -513,8 +521,10 @@ AG_GST_CHECK_FEATURE(METADATA, [METADATA muxer and demuxer], metadata, [
     HAVE_METADATA="yes"
   fi
   if test x$HAVE_METADATA = xno; then
-    AC_MSG_RESULT(no)
+    AC_MSG_WARN(no of metadata libraries (exif, iptc or xmp) found)
   fi
+  dnl metadata plugin will parse whole chunks anyway
+  HAVE_METADATA="yes"
   AC_SUBST(METADATA_CFLAGS)
   AC_SUBST(METADATA_LIBS)
 ])

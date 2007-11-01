@@ -66,6 +66,10 @@ metadataparse_jpeg_iptc (JpegData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
 static int
+metadataparse_jpeg_xmp (JpegData * jpeg_data, guint8 ** buf,
+    guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
+
+static int
 metadataparse_jpeg_jump (JpegData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
@@ -80,11 +84,14 @@ metadataparse_jpeg_init (JpegData * jpeg_data, GstAdapter ** adpt_exif,
   jpeg_data->adpt_iptc = adpt_iptc;
   jpeg_data->adpt_xmp = adpt_xmp;
   jpeg_data->read = 0;
+
+  metadataparse_xmp_init ();
 }
 
 void
 metadataparse_jpeg_dispose (JpegData * jpeg_data)
 {
+  metadataparse_xmp_dispose ();
 
   jpeg_data->adpt_exif = NULL;
   jpeg_data->adpt_iptc = NULL;
@@ -143,6 +150,11 @@ metadataparse_jpeg_parse (JpegData * jpeg_data, guint8 * buf,
             metadataparse_jpeg_iptc (jpeg_data, &buf, bufsize, next_start,
             next_size);
         break;
+      case JPEG_XMP:
+        ret =
+            metadataparse_jpeg_xmp (jpeg_data, &buf, bufsize, next_start,
+            next_size);
+        break;
       case JPEG_DONE:
         goto done;
         break;
@@ -172,6 +184,7 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
   static const unsigned char ExifHeader[] =
       { 0x45, 0x78, 0x69, 0x66, 0x00, 0x00 };
   static const char IptcHeader[] = "Photoshop 3.0";
+  static const char XmpHeader[] = "http://ns.adobe.com/xap/1.0/";
 
   *next_start = *buf;
 
@@ -204,7 +217,8 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
     chunk_size = READ (*buf, *bufsize) << 8;
     chunk_size += READ (*buf, *bufsize);
 
-    if (mark[1] == 0xE1) {      /* may be it is Exif */
+    if (mark[1] == 0xE1) {      /* may be it is Exif or XMP */
+
       if (chunk_size >= 8) {    /* size2 'EXIF' 0x00 0x00 */
         guint8 ch;
 
@@ -220,6 +234,22 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
             ret = 0;
             jpeg_data->state = JPEG_EXIF;
             goto done;
+          }
+        }
+        if (chunk_size >= 31) { /* size2 "http://ns.adobe.com/xap/1.0/" */
+          if (*bufsize < 29) {
+            *next_size = (*buf - *next_start) + 29;
+            ret = 1;
+            goto done;
+          }
+
+          if (jpeg_data->adpt_xmp) {
+            if (0 == memcmp (XmpHeader, *buf, 29)) {
+              jpeg_data->read = chunk_size - 2;
+              ret = 0;
+              jpeg_data->state = JPEG_XMP;
+              goto done;
+            }
           }
         }
       }
@@ -346,6 +376,16 @@ metadataparse_jpeg_iptc (JpegData * jpeg_data, guint8 ** buf,
   }
 
   return ret;
+
+}
+
+static int
+metadataparse_jpeg_xmp (JpegData * jpeg_data, guint8 ** buf,
+    guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
+{
+
+  return metadataparse_jpeg_hold_chunk (jpeg_data, buf,
+      bufsize, next_start, next_size, jpeg_data->adpt_xmp);
 
 }
 
