@@ -40,27 +40,6 @@ gst_sbc_select_rate_from_list (const GValue * value)
 }
 
 /*
- * Selects one rate from a range of possible rates
- * TODO - use a better approach to this (it is selecting the maximum value)
- */
-gint
-gst_sbc_select_rate_from_range (const GValue * value)
-{
-  return gst_value_get_int_range_max (value);
-}
-
-/*
- * Selects one number of channels from a list of possible numbers
- * TODO - use a better approach to this (it is selecting the last element)
- */
-gint
-gst_sbc_select_channels_from_list (const GValue * value)
-{
-  guint size = gst_value_list_get_size (value);
-  return g_value_get_int (gst_value_list_get_value (value, size - 1));
-}
-
-/*
  * Selects one number of channels option from a range of possible numbers
  * TODO - use a better approach to this (it is selecting the maximum value)
  */
@@ -82,16 +61,6 @@ gst_sbc_select_blocks_from_list (const GValue * value)
 }
 
 /*
- * Selects one blocks option from a range of possible blocks
- * TODO - use a better approach to this (it is selecting the maximum value)
- */
-gint
-gst_sbc_select_blocks_from_range (const GValue * value)
-{
-  return gst_value_get_int_range_max (value);
-}
-
-/*
  * Selects one number of subbands from a list
  * TODO - use a better approach to this (it is selecting the last element)
  */
@@ -100,16 +69,6 @@ gst_sbc_select_subbands_from_list (const GValue * value)
 {
   guint size = gst_value_list_get_size (value);
   return g_value_get_int (gst_value_list_get_value (value, size - 1));
-}
-
-/*
- * Selects one subbands option from a range
- * TODO - use a better approach to this (it is selecting the maximum value)
- */
-gint
-gst_sbc_select_subbands_from_range (const GValue * value)
-{
-  return gst_value_get_int_range_max (value);
 }
 
 /*
@@ -202,8 +161,31 @@ gst_sbc_get_allocation_string (int alloc)
     case CFG_ALLOCATION_SNR:
       return "snr";
     case CFG_ALLOCATION_AUTO:
-      return NULL;              /* TODO what should be selected here? */
+      return "loudness";        /* TODO what should be selected here? */
     default:
       return NULL;
   }
+}
+
+GstCaps *
+gst_sbc_caps_from_sbc (struct ipc_data_cfg * cfg,
+    struct ipc_codec_sbc * sbc, gint channels)
+{
+  GstCaps *caps;
+  const gchar *mode_str;
+  const gchar *allocation_str;
+
+  mode_str = gst_sbc_get_mode_string (cfg->mode);
+  allocation_str = gst_sbc_get_allocation_string (sbc->allocation);
+
+  caps = gst_caps_new_simple ("audio/x-sbc",
+      "rate", G_TYPE_INT, cfg->rate,
+      "channels", G_TYPE_INT, channels,
+      "mode", G_TYPE_STRING, mode_str,
+      "subbands", G_TYPE_INT, sbc->subbands,
+      "blocks", G_TYPE_INT, sbc->blocks,
+      "allocation", G_TYPE_STRING, allocation_str,
+      "bitpool", G_TYPE_INT, sbc->bitpool, NULL);
+
+  return caps;
 }

@@ -22,18 +22,20 @@
  */
 
 #include <gst/gst.h>
+#include "sbc.h"
+
+struct ipc_data_cfg; /* FIXME can't include ipc.h */
+struct ipc_codec_sbc;
 
 gint gst_sbc_select_rate_from_list(const GValue *value);
-gint gst_sbc_select_rate_from_range(const GValue *value);
 
-gint gst_sbc_select_channels_from_list(const GValue *value);
 gint gst_sbc_select_channels_from_range(const GValue *value);
 
 gint gst_sbc_select_blocks_from_list(const GValue *value);
-gint gst_sbc_select_blocks_from_range(const GValue *value);
 
 gint gst_sbc_select_subbands_from_list(const GValue *value);
-gint gst_sbc_select_subbands_from_range(const GValue *value);
+
+gint gst_sbc_select_bitpool_from_range(const GValue *value);
 
 gint gst_sbc_select_bitpool_from_range(const GValue *value);
 
@@ -44,3 +46,6 @@ const gchar *gst_sbc_get_allocation_string(int alloc);
 const gchar *gst_sbc_get_mode_from_list(const GValue *value);
 gint gst_sbc_get_mode_int(const gchar *mode);
 const gchar *gst_sbc_get_mode_string(int joint);
+
+GstCaps* gst_sbc_caps_from_sbc(struct ipc_data_cfg *cfg, struct ipc_codec_sbc *sbc,
+		gint channels);

@@ -22,6 +22,7 @@
  */
 
 #include <gst/gst.h>
+#include <gst/base/gstadapter.h>
 
 #include "sbc.h"
 #include "ipc.h"
@@ -48,6 +49,7 @@ struct _GstSbcEnc {
 
 	GstPad *sinkpad;
 	GstPad *srcpad;
+	GstAdapter *adapter;
 
 	gint mode;
 	gint blocks;

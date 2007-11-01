@@ -116,7 +116,6 @@ GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
         "allocation = (string) { snr, loudness },"
         "bitpool = (int) [ 2, 64 ]"));
 
-
 static GstCaps *
 sbc_enc_generate_srcpad_caps (GstSbcEnc * enc, GstCaps * caps)
 {
@@ -190,25 +189,86 @@ error:
   return FALSE;
 }
 
+gboolean
+gst_sbc_enc_fill_sbc_params (GstSbcEnc * enc, GstCaps * caps)
+{
+  GstStructure *structure;
+  gint rate, channels, subbands, blocks, bitpool;
+  const gchar *mode;
+  const gchar *allocation;
+
+  g_assert (gst_caps_is_fixed (caps));
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (!gst_structure_get_int (structure, "rate", &rate))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "channels", &channels))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "subbands", &subbands))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "blocks", &blocks))
+    return FALSE;
+  if (!gst_structure_get_int (structure, "bitpool", &bitpool))
+    return FALSE;
+
+  if (!(mode = gst_structure_get_string (structure, "mode")))
+    return FALSE;
+  if (!(allocation = gst_structure_get_string (structure, "allocation")))
+    return FALSE;
+
+  enc->sbc.rate = rate;
+  enc->sbc.channels = channels;
+  enc->blocks = blocks;
+  enc->sbc.subbands = subbands;
+  enc->sbc.bitpool = bitpool;
+  enc->mode = gst_sbc_get_mode_int (mode);
+  enc->allocation = gst_sbc_get_allocation_mode_int (allocation);
+
+  return TRUE;
+}
+
+static gboolean
+gst_sbc_enc_change_caps (GstSbcEnc * enc, GstCaps * caps)
+{
+  GST_INFO_OBJECT (enc, "Changing srcpad caps (renegotiation)");
+
+  if (!gst_pad_accept_caps (enc->srcpad, caps)) {
+    GST_WARNING_OBJECT (enc, "Src pad refused caps");
+    return FALSE;
+  }
+
+  if (!gst_sbc_enc_fill_sbc_params (enc, caps)) {
+    GST_ERROR_OBJECT (enc, "couldn't get sbc parameters from caps");
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static GstFlowReturn
 sbc_enc_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstSbcEnc *enc = GST_SBC_ENC (gst_pad_get_parent (pad));
+  GstAdapter *adapter = enc->adapter;
   GstFlowReturn res = GST_FLOW_OK;
-  guint size, offset = 0;
-  guint8 *data;
+  gint codesize = enc->sbc.subbands * enc->sbc.blocks * enc->sbc.channels * 2;
 
-  data = GST_BUFFER_DATA (buffer);
-  size = GST_BUFFER_SIZE (buffer);
+  gst_adapter_push (adapter, buffer);
 
-  while (offset < size) {
+  while (gst_adapter_available (adapter) >= codesize && res == GST_FLOW_OK) {
     GstBuffer *output;
     GstCaps *caps;
+    const guint8 *data;
     int consumed;
 
-    consumed = sbc_encode (&enc->sbc, data + offset, size - offset);
-    if (consumed <= 0)
+    data = gst_adapter_peek (adapter, codesize);
+    consumed = sbc_encode (&enc->sbc, (gpointer) data, codesize);
+    if (consumed <= 0) {
+      GST_ERROR ("comsumed < 0, codesize: %d", codesize);
       break;
+    }
+    gst_adapter_flush (adapter, consumed);
 
     caps = GST_PAD_CAPS (enc->srcpad);
 
@@ -218,21 +278,25 @@ sbc_enc_chain (GstPad * pad, GstBuffer * buffer)
     if (res != GST_FLOW_OK)
       goto done;
 
+    if (!gst_caps_is_equal (caps, GST_BUFFER_CAPS (output)))
+      if (!gst_sbc_enc_change_caps (enc, GST_BUFFER_CAPS (output))) {
+        res = GST_FLOW_ERROR;
+        GST_ERROR_OBJECT (enc, "couldn't renegotiate caps");
+        goto done;
+      }
+
     memcpy (GST_BUFFER_DATA (output), enc->sbc.data, enc->sbc.len);
     GST_BUFFER_TIMESTAMP (output) = GST_BUFFER_TIMESTAMP (buffer);
 
     res = gst_pad_push (enc->srcpad, output);
-    if (res != GST_FLOW_OK)
+    if (res != GST_FLOW_OK) {
+      GST_ERROR_OBJECT (enc, "pad pushing failed");
       goto done;
+    }
 
-    offset += consumed;
   }
 
-  if (offset < size)
-    res = GST_FLOW_ERROR;
-
 done:
-  gst_buffer_unref (buffer);
   gst_object_unref (enc);
 
   return res;
@@ -259,6 +323,17 @@ sbc_enc_change_state (GstElement * element, GstStateChange transition)
   }
 
   return parent_class->change_state (element, transition);
+}
+
+static void
+gst_sbc_enc_dispose (GObject * object)
+{
+  GstSbcEnc *enc = GST_SBC_ENC (object);
+
+  if (enc->adapter != NULL)
+    g_object_unref (G_OBJECT (enc->adapter));
+
+  enc->adapter = NULL;
 }
 
 static void
@@ -339,6 +414,7 @@ gst_sbc_enc_class_init (GstSbcEncClass * klass)
 
   object_class->set_property = GST_DEBUG_FUNCPTR (gst_sbc_enc_set_property);
   object_class->get_property = GST_DEBUG_FUNCPTR (gst_sbc_enc_get_property);
+  object_class->dispose = GST_DEBUG_FUNCPTR (gst_sbc_enc_dispose);
 
   element_class->change_state = GST_DEBUG_FUNCPTR (sbc_enc_change_state);
 
@@ -381,4 +457,6 @@ gst_sbc_enc_init (GstSbcEnc * self, GstSbcEncClass * klass)
   self->blocks = SBC_ENC_DEFAULT_BLOCKS;
   self->mode = SBC_ENC_DEFAULT_MODE;
   self->allocation = SBC_ENC_DEFAULT_ALLOCATION;
+
+  self->adapter = gst_adapter_new ();
 }
