@@ -4,3 +4,7 @@ ignore
    gst_registry_add_path
    gst_structure_get_uint
 %%
+ignore-type
+   GstLFOControlSource
+   GstLFOWaveform
+%%

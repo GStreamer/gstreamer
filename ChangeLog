@@ -1,3 +1,9 @@
+2007-11-01  Johan Dahlin  <johan@gnome.org>
+
+	* gst/gst.override: 
+	* gst/gst-0.10.15.ignore: 
+	Make sure it still builds with GStreamer 0.10.14.
+
 2007-10-25  Jan Schmidt  <Jan.Schmidt@sun.com>
 
 	* gst/gst.defs:
