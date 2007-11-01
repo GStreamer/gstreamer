@@ -74,7 +74,7 @@ _gst_format_initialize (void)
     _n_values++;
   }
   /* getting the type registers the enum */
-  gst_format_get_type ();
+  g_type_class_ref (gst_format_get_type ());
   g_static_mutex_unlock (&mutex);
 }
 

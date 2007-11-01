@@ -1,5 +1,12 @@
 2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gstformat.c: (_gst_format_initialize):
+	  g_type_class_ref() our GstFormat type to make sure we avoid the
+	  thread-unsafe bits of the GObject/GType system, ie. bug #349410 and
+	  bug #64764. Should fix intermittent tee unit test failures (#474823).
+
+2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* tests/check/elements/tee.c: (test_num_buffers):
 	  Simplify, simplify, simplify - or not.  Rewrite unit test
 	  not to use gst_parse_launch(); allow N sub-streams. Increasing
