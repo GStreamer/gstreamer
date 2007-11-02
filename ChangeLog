@@ -1,5 +1,13 @@
 2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* docs/plugins/gstreamer-plugins-sections.txt:
+	* gst/gstdebugutils.h:
+	* gst/gstxml.h:
+	* plugins/elements/gstqueue.c:
+	  gtk-doc fixes; trailing-comma-in-enum fix.
+
+2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/gst.c: (gst_deinit):
 	  Clean up on deinit (not the external ones though, doesn't seem to be
 	  needed for some reason).

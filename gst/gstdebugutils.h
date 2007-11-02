@@ -54,7 +54,7 @@ typedef enum {
 /********** pipeline graphs **********/
 
 void _gst_debug_bin_to_dot_file (GstBin *bin, GstDebugGraphDetails details, const gchar *file_name);
-void _gst_debug_bin_to_dot_file_with_ts (GstBin *bin, GstDebugGraphDetails details, const gchar *file_tmpl);
+void _gst_debug_bin_to_dot_file_with_ts (GstBin *bin, GstDebugGraphDetails details, const gchar *file_name);
 
 /**
  * GST_DEBUG_BIN_TO_DOT_FILE:
@@ -84,7 +84,7 @@ void _gst_debug_bin_to_dot_file_with_ts (GstBin *bin, GstDebugGraphDetails detai
  * This works like _gst_debug_bin_to_dot_file(), but adds the current timestamp
  * to the filename, so that it can be used to take multiple snapshots.
  */
-#define GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(bin, details, file_tmpl) _gst_debug_bin_to_dot_file_with_ts (bin, details, file_tmpl)
+#define GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS(bin, details, file_name) _gst_debug_bin_to_dot_file_with_ts (bin, details, file_name)
 
 
 #else /* GST_DISABLE_GST_DEBUG */

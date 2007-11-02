@@ -118,8 +118,8 @@ enum
   ARG_MIN_THRESHOLD_BUFFERS,
   ARG_MIN_THRESHOLD_BYTES,
   ARG_MIN_THRESHOLD_TIME,
-  ARG_LEAKY,
-  /* FILL ME */
+  ARG_LEAKY
+      /* FILL ME */
 };
 
 /* default property values */

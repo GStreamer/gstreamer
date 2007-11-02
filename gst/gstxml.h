@@ -43,7 +43,6 @@ typedef struct _GstXMLClass GstXMLClass;
 
 /**
  * GstXML:
- * @object: parent object
  * @topelements: list of element nodes
  * @ns: name space
  *

@@ -40,6 +40,7 @@ gst_fake_sink_get_type
 <TITLE>fdsink</TITLE>
 GstFdSink
 <SUBSECTION Standard>
+GstFdSinkClass
 GST_FD_SINK
 GST_IS_FD_SINK
 GST_TYPE_FD_SINK
@@ -139,6 +140,7 @@ GST_IS_QUEUE_CLASS
 GST_TYPE_QUEUE
 <SUBSECTION Private>
 gst_queue_get_type
+GST_QUEUE_CLEAR_LEVEL
 </SECTION>
 
 <SECTION>
