@@ -24,6 +24,18 @@
 #endif
 #include "gstudp-marshal.h"
 #include "gstdynudpsink.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <errno.h>
+#include <string.h>
+#ifdef HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
+#include <sys/types.h>
 #include <gst/netbuffer/gstnetbuffer.h>
 
 GST_DEBUG_CATEGORY_STATIC (dynudpsink_debug);

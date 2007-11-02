@@ -1,3 +1,19 @@
+2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* configure.ac:
+	* gst/udp/gstdynudpsink.c:
+	* gst/udp/gstdynudpsink.h:
+	* gst/udp/gstmultiudpsink.c:
+	* gst/udp/gstmultiudpsink.h:
+	* gst/udp/gstudpsink.c:
+	* gst/udp/gstudpsink.h:
+	  Fix includes for MSVC and GLib-2.14.0 (#492388).
+
+	* gst/udp/gstudpsrc.c: (gst_udpsrc_start):
+	  No more pipe define since GLib-2.14.0, need to use _pipe() directly.
+
 2007-11-02  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/law/mulaw-decode.c: (mulawdec_sink_setcaps),

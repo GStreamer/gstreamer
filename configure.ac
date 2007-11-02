@@ -198,6 +198,9 @@ AC_CHECK_HEADERS([netinet/in.h])
 AC_CHECK_HEADERS([winsock2.h])
 AM_CONDITIONAL(HAVE_WINSOCK2_H, test "x$HAVE_WINSOCK2_H" = "xyes")
 
+dnl used in gst/udp
+AC_CHECK_HEADERS([sys/time.h])
+
 dnl *** checks for types/defines ***
 
 dnl Check for FIONREAD ioctl declaration.  This check is needed

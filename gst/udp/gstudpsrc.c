@@ -120,8 +120,14 @@
 #endif
 
 #include "gstudpsrc.h"
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
+#endif
 #include <stdlib.h>
+
+#if defined _MSC_VER && (_MSC_VER >= 1400)
+#include <io.h>
+#endif
 
 #include <gst/netbuffer/gstnetbuffer.h>
 #ifdef G_OS_WIN32
@@ -711,8 +717,8 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   GST_DEBUG_OBJECT (src, "creating pipe");
 
   /* This should work on UNIX too. PF_UNIX sockets replaced with pipe */
-  /* pipe( CONTROL_SOCKETS(src) ) */
-  if ((ret = pipe (CONTROL_SOCKETS (src))) < 0)
+  /* pipe( CONTROL_SOCKETS(src), 4096, _O_BINARY ) */
+  if ((ret = _pipe (CONTROL_SOCKETS (src), 4096, _O_BINARY)) < 0)
     goto no_socket_pair;
 #else
   GST_DEBUG_OBJECT (src, "creating socket pair");

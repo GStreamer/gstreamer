@@ -22,6 +22,14 @@
 #endif
 #include "gstudpsink.h"
 
+#include <stdio.h>
+#include <stdlib.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+#include <errno.h>
+#include <string.h>
+
 #define UDP_DEFAULT_HOST        "localhost"
 #define UDP_DEFAULT_PORT        4951
 
