@@ -1,5 +1,12 @@
 2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* win32/common/libgstrtp.def:
+	  Add some more missing symbols (#492813).
+
+2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Thijs Vermeir <thijsvermeir@gmail.com>
 
 	* tests/check/elements/audioconvert.c: (verify_convert):
