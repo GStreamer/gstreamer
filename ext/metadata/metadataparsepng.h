@@ -41,73 +41,41 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __METADATAPARSE_H__
-#define __METADATAPARSE_H__
+#ifndef __METADATAPARSE_PNG_H__
+#define __METADATAPARSE_PNG_H__
 
 #include <gst/base/gstadapter.h>
 
-#include "metadataparsejpeg.h"
-#include "metadataparsepng.h"
-
 G_BEGIN_DECLS
 
-typedef enum _tag_ParseOption
+typedef enum _tag_PngState
 {
-  PARSE_OPT_EXIF = (1 << 0),
-  PARSE_OPT_IPTC = (1 << 1),
-  PARSE_OPT_XMP = (1 << 2),
-  PARSE_OPT_ALL = (1 << 3) - 1
-} ParseOption;
+  PNG_NULL,
+  PNG_READING,
+  PNG_JUMPING,
+  PNG_XMP,
+  PNG_DONE
+} PngState;
 
-typedef enum _tag_ParseState
+
+typedef struct _tag_PngData
 {
-  STATE_NULL,
-  STATE_READING,
-  STATE_DONE
-} ParseState;
-
-typedef enum _tag_ImageType
-{
-  IMG_NONE,
-  IMG_JPEG,
-  IMG_PNG
-} ImageType;
-
-typedef struct _tag_ParseData
-{
-  ParseState state;
-  ImageType img_type;
-  ParseOption option;
-  union
-  {
-    JpegData jpeg;
-    PngData png;
-  } format_data;
-  GstAdapter *adpt_exif;
-  GstAdapter *adpt_iptc;
-  GstAdapter *adpt_xmp;
-} ParseData;
-
-#define PARSE_DATA_IMG_TYPE(p) (p).img_type
-#define PARSE_DATA_OPTION(p) (p).option
-#define set_parse_option(p, m) do { (p).option = (p).option | (m); } while(FALSE)
-#define unset_parse_option(p, m) do { (p).option = (p).option & ~(m); } while(FALSE)
-
-extern void metadataparse_init (ParseData * parse_data);
-
-/*
- * offset: number of bytes to jump (just a hint to jump a chunk)
- * return:
- *   -1 -> error
- *    0 -> done
- *    1 -> need more data
- */
-extern int
-metadataparse_parse (ParseData * parse_data, const guint8 * buf,
-    guint32 bufsize, guint32 * next_offset, guint32 * next_size);
+  PngState state;
+  GstAdapter **adpt_xmp;
+  guint32 read;
+} PngData;
 
 
-extern void metadataparse_dispose (ParseData * parse_data);
+extern void
+metadataparse_png_init (PngData * png_data, GstAdapter ** adpt_exif,
+    GstAdapter ** adpt_iptc, GstAdapter ** adpt_xmp);
+
+extern void metadataparse_png_dispose (PngData * png_data);
+
+
+int
+metadataparse_png_parse (PngData * png_data, guint8 * buf,
+    guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
 G_END_DECLS
-#endif /* __METADATAPARSE_H__ */
+#endif /* __METADATAPARSE_PNG_H__ */

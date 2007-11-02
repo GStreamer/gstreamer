@@ -65,7 +65,7 @@ metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 
   GST_LOG ("IPTC not defined, here I should send just one tag as whole chunk");
 
-  metadataparse_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
+  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
 
 }
 
@@ -89,7 +89,7 @@ metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
   }
 
   /* add chunk tag */
-  metadataparse_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
+  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
 
   buf = gst_adapter_peek (adapter, size);
 

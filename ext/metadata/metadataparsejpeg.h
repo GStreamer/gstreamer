@@ -48,7 +48,8 @@
 
 G_BEGIN_DECLS
 
-typedef enum  _tag_JpegState {
+typedef enum _tag_JpegState
+{
   JPEG_NULL,
   JPEG_READING,
   JPEG_JUMPING,
@@ -59,7 +60,8 @@ typedef enum  _tag_JpegState {
 } JpegState;
 
 
-typedef struct _tag_JpegData {
+typedef struct _tag_JpegData
+{
   JpegState state;
   GstAdapter **adpt_exif;
   GstAdapter **adpt_iptc;
@@ -69,17 +71,15 @@ typedef struct _tag_JpegData {
 
 
 extern void
-metadataparse_jpeg_init(JpegData *jpeg_data, GstAdapter **adpt_exif, GstAdapter **adpt_iptc, GstAdapter **adpt_xmp);
+metadataparse_jpeg_init (JpegData * jpeg_data, GstAdapter ** adpt_exif,
+    GstAdapter ** adpt_iptc, GstAdapter ** adpt_xmp);
 
-extern void
-metadataparse_jpeg_dispose(JpegData *jpeg_data);
+extern void metadataparse_jpeg_dispose (JpegData * jpeg_data);
 
 
 int
-metadataparse_jpeg_parse(JpegData *jpeg_data, guint8 *buf,
-			 guint32 *bufsize, guint8 ** next_start,
-			 guint32 * next_size);
+metadataparse_jpeg_parse (JpegData * jpeg_data, guint8 * buf,
+    guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
 G_END_DECLS
-
 #endif /* __METADATAPARSE_JPEG_H__ */

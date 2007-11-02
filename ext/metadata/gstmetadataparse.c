@@ -146,6 +146,8 @@ static gboolean gst_metadata_parse_activate (GstPad * pad);
 static gboolean
 gst_metadata_parse_element_activate_src_pull (GstPad * pad, gboolean active);
 
+static gboolean gst_metadata_parse_pull_range_parse (GstMetadataParse * filter);
+
 static void gst_metadata_parse_init_members (GstMetadataParse * filter);
 static void gst_metadata_parse_dispose_members (GstMetadataParse * filter);
 
@@ -486,7 +488,7 @@ gst_metadata_parse_dispose_members (GstMetadataParse * filter)
 static void
 gst_metadata_parse_init_members (GstMetadataParse * filter)
 {
-  filter->need_send_tag = TRUE;
+  filter->need_send_tag = FALSE;
   filter->exif = TRUE;
   filter->iptc = TRUE;
   filter->xmp = TRUE;
@@ -708,6 +710,7 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
   } else {
     filter->state = MT_STATE_PARSED;
     filter->need_more_data = FALSE;
+    filter->need_send_tag = TRUE;
   }
 
   if (filter->img_type != PARSE_DATA_IMG_TYPE (filter->parse_data)) {
@@ -807,22 +810,14 @@ done:
 }
 
 static gboolean
-gst_metadata_parse_activate (GstPad * pad)
+gst_metadata_parse_pull_range_parse (GstMetadataParse * filter)
 {
-  GstMetadataParse *filter = NULL;
+
+  int res;
   gboolean ret = TRUE;
+  guint32 offset = 0;
   gint64 duration = 0;
   GstFormat format = GST_FORMAT_BYTES;
-  int res;
-  guint32 offset = 0;
-
-  filter = GST_METADATA_PARSE (GST_PAD_PARENT (pad));
-
-  if (!gst_pad_check_pull_range (pad) ||
-      !gst_pad_activate_pull (filter->sinkpad, TRUE)) {
-    /* nothing to be done by now, activate push mode */
-    return gst_pad_activate_push (pad, TRUE);
-  }
 
   if (!(ret =
           gst_pad_query_peer_duration (filter->sinkpad, &format, &duration))) {
@@ -836,7 +831,6 @@ gst_metadata_parse_activate (GstPad * pad)
     goto done;
   }
 
-  /* try to parse */
   do {
     GstFlowReturn flow;
     GstBuffer *buf = NULL;
@@ -869,6 +863,32 @@ gst_metadata_parse_activate (GstPad * pad)
     gst_buffer_unref (buf);
 
   } while (res > 0);
+
+done:
+
+  return ret;
+
+}
+
+static gboolean
+gst_metadata_parse_activate (GstPad * pad)
+{
+  GstMetadataParse *filter = NULL;
+  gboolean ret = TRUE;
+
+
+  filter = GST_METADATA_PARSE (GST_PAD_PARENT (pad));
+
+  if (!gst_pad_check_pull_range (pad) ||
+      !gst_pad_activate_pull (filter->sinkpad, TRUE)) {
+    /* nothing to be done by now, activate push mode */
+    return gst_pad_activate_push (pad, TRUE);
+  }
+
+  /* try to parse */
+  if (filter->state == MT_STATE_NULL) {
+    ret = gst_metadata_parse_pull_range_parse (filter);
+  }
 
 done:
 
@@ -910,6 +930,10 @@ gst_metadata_parse_element_activate_src_pull (GstPad * pad, gboolean active)
   filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
 
   ret = gst_pad_activate_pull (filter->sinkpad, active);
+
+  if (ret && filter->state == MT_STATE_NULL) {
+    ret = gst_metadata_parse_pull_range_parse (filter);
+  }
 
   gst_object_unref (filter);
 

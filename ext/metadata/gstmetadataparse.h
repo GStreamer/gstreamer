@@ -49,7 +49,6 @@
 #include "metadataparse.h"
 
 G_BEGIN_DECLS
-
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_METADATA_PARSE \
   (gst_metadata_parse_get_type())
@@ -61,13 +60,12 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_METADATA_PARSE))
 #define GST_IS_METADATA_PARSE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_METADATA_PARSE))
-
-typedef struct _GstMetadataParse      GstMetadataParse;
+typedef struct _GstMetadataParse GstMetadataParse;
 typedef struct _GstMetadataParseClass GstMetadataParseClass;
 
-typedef enum _tag_MetadataState {
-  MT_STATE_NULL,    /* still need to check media type */
-  MT_STATE_READING,
+typedef enum _tag_MetadataState
+{
+  MT_STATE_NULL,                /* still need to check media type */
   MT_STATE_PARSED
 } MetadataState;
 
@@ -85,7 +83,7 @@ struct _GstMetadataParse
 
   GstTagList *taglist;
   ParseData parse_data;
-  GstAdapter * adapter;
+  GstAdapter *adapter;
   guint32 next_offset;
   guint32 next_size;
   ImageType img_type;
@@ -98,17 +96,14 @@ struct _GstMetadataParse
 
 };
 
-struct _GstMetadataParseClass 
+struct _GstMetadataParseClass
 {
   GstElementClass parent_class;
 };
 
-extern GType
-gst_metadata_parse_get_type (void);
+extern GType gst_metadata_parse_get_type (void);
 
-extern gboolean
-gst_metadata_parse_plugin_init (GstPlugin * plugin);
+extern gboolean gst_metadata_parse_plugin_init (GstPlugin * plugin);
 
 G_END_DECLS
-
 #endif /* __GST_METADATA_PARSE_H__ */

@@ -51,12 +51,6 @@ static int
 metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
-
-static int
-metadataparse_jpeg_hold_chunk (JpegData * jpeg_data, guint8 ** buf,
-    guint32 * bufsize, guint8 ** next_start,
-    guint32 * next_size, GstAdapter ** adapter);
-
 static int
 metadataparse_jpeg_exif (JpegData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
@@ -245,7 +239,9 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
 
           if (jpeg_data->adpt_xmp) {
             if (0 == memcmp (XmpHeader, *buf, 29)) {
-              jpeg_data->read = chunk_size - 2;
+              *buf += 29;
+              *bufsize -= 29;
+              jpeg_data->read = chunk_size - 2 - 29;
               ret = 0;
               jpeg_data->state = JPEG_XMP;
               goto done;
@@ -292,43 +288,17 @@ done:
 }
 
 static int
-metadataparse_jpeg_hold_chunk (JpegData * jpeg_data, guint8 ** buf,
-    guint32 * bufsize, guint8 ** next_start,
-    guint32 * next_size, GstAdapter ** adapter)
-{
-  int ret;
-
-  if (jpeg_data->read > *bufsize) {
-    *next_start = *buf;
-    *next_size = jpeg_data->read;
-    ret = 1;
-  } else {
-    GstBuffer *gst_buf;
-
-    if (NULL == *adapter) {
-      *adapter = gst_adapter_new ();
-    }
-    gst_buf = gst_buffer_new_and_alloc (jpeg_data->read);
-    memcpy (GST_BUFFER_DATA (gst_buf), *buf, jpeg_data->read);
-    gst_adapter_push (*adapter, gst_buf);
-
-    *next_start = *buf + jpeg_data->read;
-    *buf += jpeg_data->read;
-    *bufsize -= jpeg_data->read;
-    jpeg_data->state = JPEG_READING;
-    ret = 0;
-  }
-
-  return ret;
-}
-
-static int
 metadataparse_jpeg_exif (JpegData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
 {
+  int ret;
 
-  return metadataparse_jpeg_hold_chunk (jpeg_data, buf,
+  ret = metadataparse_util_hold_chunk (&jpeg_data->read, buf,
       bufsize, next_start, next_size, jpeg_data->adpt_exif);
+  if (ret == 0) {
+    jpeg_data->state = JPEG_READING;
+  }
+  return ret;
 
 }
 
@@ -339,7 +309,7 @@ metadataparse_jpeg_iptc (JpegData * jpeg_data, guint8 ** buf,
 
   int ret;
 
-  ret = metadataparse_jpeg_hold_chunk (jpeg_data, buf,
+  ret = metadataparse_util_hold_chunk (&jpeg_data->read, buf,
       bufsize, next_start, next_size, jpeg_data->adpt_iptc);
 
 
@@ -349,6 +319,8 @@ metadataparse_jpeg_iptc (JpegData * jpeg_data, guint8 ** buf,
     guint32 size;
     unsigned int iptc_len;
     int res;
+
+    jpeg_data->state = JPEG_READING;
 
     size = gst_adapter_available (*jpeg_data->adpt_iptc);
     buf = gst_adapter_peek (*jpeg_data->adpt_iptc, size);
@@ -383,32 +355,22 @@ static int
 metadataparse_jpeg_xmp (JpegData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
 {
+  int ret;
 
-  return metadataparse_jpeg_hold_chunk (jpeg_data, buf,
+  ret = metadataparse_util_hold_chunk (&jpeg_data->read, buf,
       bufsize, next_start, next_size, jpeg_data->adpt_xmp);
 
+  if (ret == 0) {
+    jpeg_data->state = JPEG_READING;
+  }
+  return ret;
 }
 
 static int
 metadataparse_jpeg_jump (JpegData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
 {
-  int ret;
-
-  if (jpeg_data->read > *bufsize) {
-    jpeg_data->read -= *bufsize;
-    *next_size = 2;
-    *next_start = *buf + *bufsize + jpeg_data->read;
-    jpeg_data->read = 0;
-    *bufsize = 0;
-    jpeg_data->state = JPEG_READING;
-    ret = 1;
-  } else {
-    *next_start = *buf + jpeg_data->read;
-    *buf += jpeg_data->read;
-    *bufsize -= jpeg_data->read;
-    jpeg_data->state = JPEG_READING;
-    ret = 0;
-  }
-  return ret;
+  jpeg_data->state = JPEG_READING;
+  return metadataparse_util_jump_chunk (&jpeg_data->read, buf,
+      bufsize, next_start, next_size);
 }

@@ -50,17 +50,14 @@
 G_BEGIN_DECLS
 
 extern void
-metadataparse_xmp_tag_list_add (GstTagList *taglist, GstTagMergeMode mode, GstAdapter * adapter);
+metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+    GstAdapter * adapter);
 
-extern gboolean
-metadataparse_xmp_init(void);
+extern gboolean metadataparse_xmp_init (void);
 
-extern void
-metadataparse_xmp_dispose(void);
+extern void metadataparse_xmp_dispose (void);
 
-extern void
-metadataparse_xmp_tags_register (void);
+extern void metadataparse_xmp_tags_register (void);
 
 G_END_DECLS
-
 #endif /* __GST_METADATAPARSE_XMP_H__ */

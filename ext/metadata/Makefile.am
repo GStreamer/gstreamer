@@ -4,6 +4,7 @@ libgstmetadata_la_SOURCES =	gstmetadata.c       \
 				gstmetadataparse.c  \
 				metadataparse.c     \
 				metadataparsejpeg.c \
+				metadataparsepng.c  \
 				metadataparseexif.c \
 				metadataparseiptc.c \
 				metadataparsexmp.c  \
@@ -16,6 +17,7 @@ libgstmetadata_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 noinst_HEADERS = 	gstmetadataparse.h  \
 			metadataparse.h     \
 			metadataparsejpeg.h \
+			metadataparsepng.h  \
 			metadataparseexif.h \
 			metadataparseiptc.h \
 			metadataparsexmp.h  \

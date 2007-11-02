@@ -65,7 +65,7 @@ metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 
   GST_LOG ("XMP not defined, here I should send just one tag as whole chunk");
 
-  metadataparse_tag_list_add_chunk (taglist, mode, GST_TAG_XMP, adapter);
+  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_XMP, adapter);
 
 }
 
@@ -111,12 +111,9 @@ metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
   }
 
   /* add chunk tag */
-  metadataparse_tag_list_add_chunk (taglist, mode, GST_TAG_XMP, adapter);
+  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_XMP, adapter);
 
   buf = gst_adapter_peek (adapter, size);
-
-  buf += 29;                    /* jump "http://ns.adobe.com/xap/1.0/" */
-  size -= 29;
 
   xmp = xmp_new (buf, size);
   if (!xmp)
@@ -127,7 +124,6 @@ metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
     goto done;
 
   xmp_serialize (xmp, xmp_str, XMP_SERIAL_ENCODEUTF8, 2);
-
 
   GST_LOG (xmp_string_cstr (xmp_str));
 

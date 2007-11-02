@@ -48,13 +48,11 @@
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
+    extern void
+metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+    GstAdapter * adapter);
 
-extern void
-metadataparse_exif_tag_list_add (GstTagList *taglist, GstTagMergeMode mode, GstAdapter * adapter);
-
-extern void
-metadataparse_exif_tags_register (void);
+extern void metadataparse_exif_tags_register (void);
 
 G_END_DECLS
-
 #endif /* __GST_METADATAPARSE_EXIF_H__ */

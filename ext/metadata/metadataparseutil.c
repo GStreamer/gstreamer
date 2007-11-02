@@ -44,8 +44,8 @@
 #include "metadataparseutil.h"
 
 void
-metadataparse_tag_list_add_chunk (GstTagList * taglist, GstTagMergeMode mode,
-    const gchar * name, GstAdapter * adapter)
+metadataparse_util_tag_list_add_chunk (GstTagList * taglist,
+    GstTagMergeMode mode, const gchar * name, GstAdapter * adapter)
 {
   GstBuffer *buf;
   guint size;
@@ -61,4 +61,58 @@ metadataparse_tag_list_add_chunk (GstTagList * taglist, GstTagMergeMode mode,
     gst_buffer_unref (buf);
   }
 
+}
+
+int
+metadataparse_util_hold_chunk (guint32 * read, guint8 ** buf,
+    guint32 * bufsize, guint8 ** next_start,
+    guint32 * next_size, GstAdapter ** adapter)
+{
+  int ret;
+
+  if (*read > *bufsize) {
+    *next_start = *buf;
+    *next_size = *read;
+    ret = 1;
+  } else {
+    GstBuffer *gst_buf;
+
+    if (NULL == *adapter) {
+      *adapter = gst_adapter_new ();
+    }
+    gst_buf = gst_buffer_new_and_alloc (*read);
+    memcpy (GST_BUFFER_DATA (gst_buf), *buf, *read);
+    gst_adapter_push (*adapter, gst_buf);
+
+    *next_start = *buf + *read;
+    *buf += *read;
+    *bufsize -= *read;
+    *read = 0;
+    ret = 0;
+  }
+
+  return ret;
+}
+
+int
+metadataparse_util_jump_chunk (guint32 * read, guint8 ** buf,
+    guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
+{
+  int ret;
+
+  if (*read > *bufsize) {
+    *read -= *bufsize;
+    *next_size = 2;
+    *next_start = *buf + *bufsize + *read;
+    *read = 0;
+    *bufsize = 0;
+    ret = 1;
+  } else {
+    *next_start = *buf + *read;
+    *buf += *read;
+    *bufsize -= *read;
+    *read = 0;
+    ret = 0;
+  }
+  return ret;
 }

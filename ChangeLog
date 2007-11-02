@@ -1,5 +1,27 @@
 2007-11-02  Edgard Lima  <edgard.lima@indt.org.br>
 
+	* ext/metadata/Makefile.am:
+	* ext/metadata/gstmetadataparse.c:
+	* ext/metadata/gstmetadataparse.h:
+	* ext/metadata/metadataparse.c:
+	* ext/metadata/metadataparse.h:
+	* ext/metadata/metadataparseexif.c:
+	* ext/metadata/metadataparseexif.h:
+	* ext/metadata/metadataparseiptc.c:
+	* ext/metadata/metadataparseiptc.h:
+	* ext/metadata/metadataparsejpeg.c:
+	* ext/metadata/metadataparsejpeg.h:
+	* ext/metadata/metadataparsepng.c:
+	* ext/metadata/metadataparsepng.h:
+	* ext/metadata/metadataparseutil.c:
+	* ext/metadata/metadataparseutil.h:
+	* ext/metadata/metadataparsexmp.c:
+	* ext/metadata/metadataparsexmp.h:
+	  Added support for PNG/XMP. Indentation. And fixed pull mode to parse
+	  the file. 
+
+2007-11-02  Edgard Lima  <edgard.lima@indt.org.br>
+
 	* ext/metadata/gstmetadataparse.c: (gst_metadata_parse_init),
 	(gst_metadata_parse_activate), (gst_metadata_parse_get_range),
 	(gst_metadata_parse_element_activate_src_pull):

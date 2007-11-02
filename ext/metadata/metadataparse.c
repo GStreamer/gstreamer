@@ -43,9 +43,6 @@
 
 #include "metadataparse.h"
 
-#include "metadataparsejpeg.h"
-
-
 /*
  *static declarations
  */
@@ -103,7 +100,9 @@ metadataparse_parse (ParseData * parse_data, const guint8 * buf,
           (guint8 *) buf, &bufsize, &next_start, next_size);
       break;
     case IMG_PNG:
-      ret = 0;
+      ret =
+          metadataparse_png_parse (&parse_data->format_data.png,
+          (guint8 *) buf, &bufsize, &next_start, next_size);
       break;
     default:
       /* unexpected */
@@ -130,6 +129,9 @@ metadataparse_dispose (ParseData * parse_data)
   switch (parse_data->img_type) {
     case IMG_JPEG:
       metadataparse_jpeg_dispose (&parse_data->format_data.jpeg);
+      break;
+    case IMG_PNG:
+      metadataparse_png_dispose (&parse_data->format_data.png);
       break;
   }
 
@@ -169,13 +171,12 @@ metadataparse_parse_none (ParseData * parse_data, const guint8 * buf,
 
   parse_data->img_type = IMG_NONE;
 
-  if (*bufsize < 4) {
-    *next_size = 4;
+  if (*bufsize < 3) {
+    *next_size = 3;
     ret = 1;
     goto done;
   }
 
-  ret = 0;
   if (parse_data->option & PARSE_OPT_EXIF)
     adpt_exif = &parse_data->adpt_exif;
   if (parse_data->option & PARSE_OPT_IPTC)
@@ -186,12 +187,25 @@ metadataparse_parse_none (ParseData * parse_data, const guint8 * buf,
   if (buf[0] == 0xFF && buf[1] == 0xD8 && buf[2] == 0xFF) {
     metadataparse_jpeg_init (&parse_data->format_data.jpeg, adpt_exif,
         adpt_iptc, adpt_xmp);
+    ret = 0;
     parse_data->img_type = IMG_JPEG;
-  } else if (buf[0] == 0x89 && buf[1] == 0x50 && buf[2] == 0x4e
-      && buf[3] == 0x47) {
+    goto done;
+  }
+
+  if (*bufsize < 8) {
+    *next_size = 8;
+    ret = 1;
+    goto done;
+  }
+
+  if (buf[0] == 0x89 && buf[1] == 0x50 && buf[2] == 0x4E && buf[3] == 0x47 &&
+      buf[4] == 0x0D && buf[5] == 0x0A && buf[6] == 0x1A && buf[7] == 0x0A) {
+    metadataparse_png_init (&parse_data->format_data.png, adpt_exif,
+        adpt_iptc, adpt_xmp);
+    ret = 0;
     parse_data->img_type = IMG_PNG;
-  } else
-    ret = -1;
+    goto done;
+  }
 
 done:
 
