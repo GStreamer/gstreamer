@@ -139,8 +139,6 @@ struct _GstQueryClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-void            _gst_query_initialize          (void);
-
 const gchar*    gst_query_type_get_name        (GstQueryType query);
 GQuark          gst_query_type_to_quark        (GstQueryType query);
 

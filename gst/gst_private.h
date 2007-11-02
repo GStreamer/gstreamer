@@ -47,6 +47,20 @@ gboolean __gst_in_valgrind (void);
 /* Initialize GStreamer private quark storage */
 void _priv_gst_quarks_initialize (void);
 
+/* Other init functions called from gst_init().
+ * FIXME 0.11: rename to _priv_gst_foo_init() so they don't get exported
+ * (can't do this now because these functions used to be in our public
+ * headers, so at least the symbols need to continue to be available unless
+ * we want enterprise edition packagers dancing on our heads) */
+void  _gst_buffer_initialize (void);
+void  _gst_event_initialize (void);
+void  _gst_format_initialize (void);
+void  _gst_message_initialize (void);
+void  _gst_plugin_initialize (void);
+void  _gst_query_initialize (void);
+void  _gst_tag_initialize (void);
+void  _gst_value_initialize (void);
+
 /* Private registry functions */
 gboolean _priv_gst_registry_remove_cache_plugins (GstRegistry *registry);
 void _priv_gst_registry_cleanup (void);

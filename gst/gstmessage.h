@@ -215,8 +215,6 @@ struct _GstMessageClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-void		_gst_message_initialize		(void);
-
 GType		gst_message_get_type		(void);
 
 const gchar*	gst_message_type_get_name	(GstMessageType type);

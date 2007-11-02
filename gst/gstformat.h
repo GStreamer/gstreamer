@@ -88,8 +88,6 @@ struct _GstFormatDefinition
   GQuark     quark;
 };
 
-void		_gst_format_initialize		(void);
-
 const gchar*    gst_format_get_name             (GstFormat format);
 GQuark          gst_format_to_quark             (GstFormat format);
 

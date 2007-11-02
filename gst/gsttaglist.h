@@ -173,10 +173,9 @@ typedef void (*GstTagForeachFunc) (const GstTagList * list,
  */
 typedef void (* GstTagMergeFunc) (GValue *dest, const GValue *src);
 
-/* initialize tagging system */
-void         _gst_tag_initialize   (void);
 GType        gst_tag_list_get_type (void);
 
+/* tag registration */
 void         gst_tag_register      (const gchar     * name,
                                     GstTagFlag        flag,
                                     GType             type,

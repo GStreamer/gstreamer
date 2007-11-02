@@ -258,7 +258,6 @@ typedef gboolean        (*GstPluginFilter)              (GstPlugin *plugin,
 
 GType                   gst_plugin_get_type             (void);
 
-void			_gst_plugin_initialize		(void);
 void			_gst_plugin_register_static	(GstPluginDesc *desc);
 
 G_CONST_RETURN gchar*	gst_plugin_get_name		(GstPlugin *plugin);

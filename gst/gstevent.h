@@ -312,8 +312,6 @@ struct _GstEventClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-void		_gst_event_initialize		(void);
-
 const gchar*    gst_event_type_get_name         (GstEventType type);
 GQuark          gst_event_type_to_quark		(GstEventType type);
 GstEventTypeFlags

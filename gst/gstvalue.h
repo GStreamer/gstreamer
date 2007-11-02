@@ -533,9 +533,6 @@ void		gst_value_register_subtract_func (GType		minuend_type,
 /* fixation */
 gboolean	gst_value_is_fixed		(const GValue   *value);
 
-/* private */
-void		_gst_value_initialize		(void);
-
 G_END_DECLS
 
 #endif

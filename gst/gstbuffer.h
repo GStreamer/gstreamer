@@ -455,9 +455,6 @@ GstBuffer*	gst_buffer_span			(GstBuffer *buf1, guint32 offset, GstBuffer *buf2, 
  */
 #define		gst_value_get_buffer(v)		GST_BUFFER_CAST (gst_value_get_mini_object(v))
 
-/* --- protected --- */
-void		_gst_buffer_initialize		(void);
-
 G_END_DECLS
 
 #endif /* __GST_BUFFER_H__ */

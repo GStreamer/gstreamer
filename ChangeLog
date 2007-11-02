@@ -1,5 +1,19 @@
 2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gst_private.h:
+	* gst/gstbuffer.h:
+	* gst/gstevent.h:
+	* gst/gstformat.h:
+	* gst/gstmessage.h:
+	* gst/gstplugin.h:
+	* gst/gstquery.h:
+	* gst/gsttaglist.h:
+	* gst/gstvalue.h:
+	  Move declaration of private _gst_foo_initialize() functions into
+	  our private header file where they should have been all along.
+
+2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* docs/plugins/gstreamer-plugins-sections.txt:
 	* gst/gstdebugutils.h:
 	* gst/gstxml.h:
