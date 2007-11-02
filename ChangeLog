@@ -1,3 +1,10 @@
+2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  Fix bad function signatures (#492798).
+
 2007-11-02  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/Makefile.am:
