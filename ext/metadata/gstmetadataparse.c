@@ -143,6 +143,9 @@ gst_metadata_parse_get_range (GstPad * pad, guint64 offset, guint size,
 
 static gboolean gst_metadata_parse_activate (GstPad * pad);
 
+static gboolean
+gst_metadata_parse_element_activate_src_pull (GstPad * pad, gboolean active);
+
 static void gst_metadata_parse_init_members (GstMetadataParse * filter);
 static void gst_metadata_parse_dispose_members (GstMetadataParse * filter);
 
@@ -242,9 +245,9 @@ gst_metadata_parse_init (GstMetadataParse * filter,
       GST_DEBUG_FUNCPTR (gst_metadata_parse_get_caps));
   gst_pad_set_event_function (filter->srcpad, gst_metadata_parse_src_event);
   gst_pad_use_fixed_caps (filter->srcpad);
-#if 0                           /* FIXME it should also work with it */
   gst_pad_set_getrange_function (filter->srcpad, gst_metadata_parse_get_range);
-#endif
+  gst_pad_set_activatepull_function (filter->srcpad,
+      GST_DEBUG_FUNCPTR (gst_metadata_parse_element_activate_src_pull));
   /* addind pads */
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
@@ -813,12 +816,12 @@ gst_metadata_parse_activate (GstPad * pad)
   int res;
   guint32 offset = 0;
 
-  filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
+  filter = GST_METADATA_PARSE (GST_PAD_PARENT (pad));
 
   if (!gst_pad_check_pull_range (pad) ||
       !gst_pad_activate_pull (filter->sinkpad, TRUE)) {
     /* nothing to be done by now, activate push mode */
-    goto done;
+    return gst_pad_activate_push (pad, TRUE);
   }
 
   if (!(ret =
@@ -870,16 +873,12 @@ gst_metadata_parse_activate (GstPad * pad)
 done:
 
   if (ret) {
-    do {
-      if (!(ret = gst_pad_activate_pull (filter->sinkpad, FALSE)))
-        break;
-
-      if (!gst_pad_is_active (filter->sinkpad)) {
-        ret = gst_pad_activate_push (filter->srcpad, TRUE);
-        ret = ret && gst_pad_activate_push (filter->sinkpad, TRUE);
-      }
-
-    } while (FALSE);
+    gst_pad_activate_pull (pad, FALSE);
+    gst_pad_activate_push (filter->srcpad, FALSE);
+    if (!gst_pad_is_active (pad)) {
+      ret = gst_pad_activate_push (filter->srcpad, TRUE);
+      ret = ret && gst_pad_activate_push (pad, TRUE);
+    }
   }
 
   return ret;
@@ -891,21 +890,32 @@ gst_metadata_parse_get_range (GstPad * pad,
     guint64 offset, guint size, GstBuffer ** buf)
 {
   GstMetadataParse *filter = NULL;
-  gboolean ret;
 
-  filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
+  filter = GST_METADATA_PARSE (GST_PAD_PARENT (pad));
 
   if (filter->need_send_tag) {
     gst_metadata_parse_send_tags (filter);
   }
 
-  ret = gst_pad_pull_range (filter->sinkpad, offset, size, buf);
+  return gst_pad_pull_range (filter->sinkpad, offset, size, buf);
+
+}
+
+static gboolean
+gst_metadata_parse_element_activate_src_pull (GstPad * pad, gboolean active)
+{
+  GstMetadataParse *filter = NULL;
+  gboolean ret;
+
+  filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
+
+  ret = gst_pad_activate_pull (filter->sinkpad, active);
 
   gst_object_unref (filter);
 
   return ret;
-
 }
+
 
 static GstStateChangeReturn
 gst_metadata_parse_change_state (GstElement * element,

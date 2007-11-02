@@ -1,3 +1,10 @@
+2007-11-02  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/gstmetadataparse.c: (gst_metadata_parse_init),
+	(gst_metadata_parse_activate), (gst_metadata_parse_get_range),
+	(gst_metadata_parse_element_activate_src_pull):
+	  Now metadataparse works in push or pull mode.
+
 2007-11-01  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* configure.ac:
