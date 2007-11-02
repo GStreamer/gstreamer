@@ -1004,7 +1004,7 @@ gst_rtp_session_reconsider (RTPSession * sess, gpointer user_data)
   GST_RTP_SESSION_UNLOCK (rtpsession);
 }
 
-static GstFlowReturn
+static gboolean
 gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
@@ -1155,7 +1155,7 @@ push_error:
   }
 }
 
-static GstFlowReturn
+static gboolean
 gst_rtp_session_event_recv_rtcp_sink (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
@@ -1204,7 +1204,7 @@ gst_rtp_session_chain_recv_rtcp (GstPad * pad, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
-static GstFlowReturn
+static gboolean
 gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstEvent * event)
 {
   GstRtpSession *rtpsession;
