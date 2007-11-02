@@ -1,3 +1,9 @@
+2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gst.c: (gst_deinit):
+	  Clean up on deinit (not the external ones though, doesn't seem to be
+	  needed for some reason).
+
 2007-11-01  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstinfo.h: (GST_DEBUG_CATEGORY_EXTERN):

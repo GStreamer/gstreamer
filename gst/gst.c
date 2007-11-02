@@ -1242,6 +1242,17 @@ gst_deinit (void)
 
   _priv_gst_registry_cleanup ();
 
+  g_type_class_unref (g_type_class_peek (gst_object_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_pad_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_element_factory_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_element_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_type_find_factory_get_type ()));
+  g_type_class_unref (g_type_class_peek (gst_bin_get_type ()));
+#ifndef GST_DISABLE_INDEX
+  g_type_class_unref (g_type_class_peek (gst_index_factory_get_type ()));
+#endif /* GST_DISABLE_INDEX */
+  g_type_class_unref (g_type_class_peek (gst_param_spec_fraction_get_type ()));
+
   gst_initialized = FALSE;
   GST_INFO ("deinitialized GStreamer");
 }
