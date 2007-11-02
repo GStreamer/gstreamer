@@ -1,3 +1,11 @@
+2007-11-02  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/law/mulaw-decode.c: (mulawdec_sink_setcaps),
+	(gst_mulawdec_chain):
+	* gst/law/mulaw-decode.h:
+	Calculate outgoing buffer duration if incoming buffer didn't have a
+	valid duration.
+
 2007-10-30  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_activate_segment),

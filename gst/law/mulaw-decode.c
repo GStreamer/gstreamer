@@ -73,6 +73,9 @@ mulawdec_sink_setcaps (GstPad * pad, GstCaps * caps)
       "signed", G_TYPE_BOOLEAN, TRUE,
       "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
 
+  mulawdec->rate = rate;
+  mulawdec->channels = channels;
+
   return TRUE;
 }
 
@@ -163,7 +166,11 @@ gst_mulawdec_chain (GstPad * pad, GstBuffer * buffer)
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
 
   GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buffer);
-  GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
+  if (GST_BUFFER_DURATION (outbuf) == GST_CLOCK_TIME_NONE)
+    GST_BUFFER_DURATION (outbuf) = gst_util_uint64_scale_int (GST_SECOND,
+        mulaw_size * 2, 2 * mulawdec->rate * mulawdec->channels);
+  else
+    GST_BUFFER_DURATION (outbuf) = GST_BUFFER_DURATION (buffer);
   gst_buffer_set_caps (outbuf, mulawdec->srccaps);
 
   mulaw_decode (mulaw_data, linear_data, mulaw_size);
