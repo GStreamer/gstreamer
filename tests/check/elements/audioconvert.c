@@ -336,6 +336,25 @@ verify_convert (const gchar * which, void *in, int inlength,
   }
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), out, outlength) == 0,
       "failed converting %s", which);
+
+  /* make sure that the channel positions are not lost */
+  {
+    GstStructure *in_s, *out_s;
+    gint out_chans;
+
+    in_s = gst_caps_get_structure (incaps, 0);
+    out_s = gst_caps_get_structure (GST_BUFFER_CAPS (outbuffer), 0);
+    fail_unless (gst_structure_get_int (out_s, "channels", &out_chans));
+
+    /* positions for 1 and 2 channels are implicit if not provided */
+    if (out_chans > 2 && gst_structure_has_field (in_s, "channel-positions")) {
+      if (!gst_structure_has_field (out_s, "channel-positions")) {
+        g_error ("Channel layout got lost somewhere:\n\nIns : %s\nOuts: %s\n",
+            gst_structure_to_string (in_s), gst_structure_to_string (out_s));
+      }
+    }
+  }
+
   buffers = g_list_remove (buffers, outbuffer);
   gst_buffer_unref (outbuffer);
   fail_unless (gst_element_set_state (audioconvert,
