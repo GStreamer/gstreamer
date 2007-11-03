@@ -208,7 +208,7 @@ main (int argc, char *argv[])
         G_CALLBACK (on_gain_changed), (gpointer) band);
     gtk_box_pack_start (GTK_BOX (scales_hbox), widget, FALSE, FALSE, 0);
 
-    widget = gtk_vscale_new_with_range (1.0, 20000.0, 5.0);
+    widget = gtk_vscale_new_with_range (0.0, 20000.0, 5.0);
     gtk_scale_set_draw_value (GTK_SCALE (widget), TRUE);
     gtk_scale_set_value_pos (GTK_SCALE (widget), GTK_POS_TOP);
     gtk_range_set_value (GTK_RANGE (widget), bw);

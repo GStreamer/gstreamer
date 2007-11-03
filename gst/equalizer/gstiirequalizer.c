@@ -232,7 +232,7 @@ gst_iir_equalizer_band_class_init (GstIirEqualizerBandClass * klass)
   g_object_class_install_property (gobject_class, ARG_BANDWIDTH,
       g_param_spec_double ("bandwidth", "bandwidth",
           "difference between bandedges in Hz",
-          1.0, 100000.0, 1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          0.0, 100000.0, 1.0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 }
 
 static void
@@ -390,12 +390,26 @@ setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
     else
       omega = 2.0 * M_PI * (band->freq / GST_AUDIO_FILTER (equ)->format.rate);
 
-    if (band->width / GST_AUDIO_FILTER (equ)->format.rate > 0.5)
-      bw = M_PI;
-    else if (band->width <= 1.0)
-      bw = 2.0 * M_PI * (1.0 / GST_AUDIO_FILTER (equ)->format.rate);
-    else
+    if (band->width / GST_AUDIO_FILTER (equ)->format.rate >= 0.5) {
+      /* If bandwidth == 0.5 the calculation below fails as tan(M_PI/2)
+       * is undefined. So set the bandwidth to a slightly smaller value.
+       */
+      bw = M_PI - 0.00000001;
+    } else if (band->width <= 0.0) {
+      /* If bandwidth == 0 this band won't change anything so set
+       * the coefficients accordingly. The coefficient calculation
+       * below would create coefficients that for some reason amplify
+       * the band.
+       */
+      band->a0 = 1.0;
+      band->a1 = 0.0;
+      band->a2 = 0.0;
+      band->b1 = 0.0;
+      band->b2 = 0.0;
+      goto out;
+    } else {
       bw = 2.0 * M_PI * (band->width / GST_AUDIO_FILTER (equ)->format.rate);
+    }
 
     edge_gain = sqrt (gain);
     gamma = tan (bw / 2.0);
@@ -409,6 +423,7 @@ setup_filter (GstIirEqualizer * equ, GstIirEqualizerBand * band)
     band->b1 = (2.0 * cos (omega)) / (1.0 + beta);
     band->b2 = -(1.0 - beta) / (1.0 + beta);
 
+  out:
     GST_INFO
         ("gain = %7.5g, , bandwidth= %7.5g, frequency = %7.5g, a0 = %7.5g, a1 = %7.5g, a2=%7.5g b1 = %7.5g, b2 = %7.5g",
         band->gain, band->width, band->freq, band->a0, band->a1, band->a2,
