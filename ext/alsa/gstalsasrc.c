@@ -622,11 +622,14 @@ gst_alsasrc_open (GstAudioSrc * asrc)
 open_error:
   {
     if (err == -EBUSY) {
-      GST_ELEMENT_ERROR (alsa, RESOURCE, BUSY, (NULL), ("Device '%s' is busy",
-              alsa->device));
+      GST_ELEMENT_ERROR (alsa, RESOURCE, BUSY,
+          (_("Could not open audio device for recording. "
+                  "Device is being used by another application.")),
+          ("Device '%s' is busy", alsa->device));
     } else {
-      GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_WRITE,
-          (NULL), ("Recording open error on device '%s': %s", alsa->device,
+      GST_ELEMENT_ERROR (alsa, RESOURCE, OPEN_READ,
+          (_("Could not open audio device for recording.")),
+          ("Recording open error on device '%s': %s", alsa->device,
               snd_strerror (err)));
     }
     return FALSE;

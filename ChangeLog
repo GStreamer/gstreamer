@@ -1,3 +1,11 @@
+2007-11-03  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/alsa/gstalsasink.c: (gst_alsasink_open):
+	* ext/alsa/gstalsasrc.c: (gst_alsasrc_open):
+	  'Could not open resource for writing' is not an acceptable
+	  error message when we can't open the audio device (see #492334),
+	  even less so when we're trying to open it to record something.
+
 2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
