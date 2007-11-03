@@ -277,12 +277,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           "systemstream", G_TYPE_BOOLEAN, FALSE,
           "rmversion", G_TYPE_INT, version, NULL);
       if (context) {
-        gst_caps_set_simple (caps,
-            "format", G_TYPE_INT, context->sub_id, NULL);
+        gst_caps_set_simple (caps, "format", G_TYPE_INT, context->sub_id, NULL);
         if (context->extradata_size >= 8) {
           gst_caps_set_simple (caps,
-              "subformat", G_TYPE_INT, GST_READ_UINT32_BE (context->extradata), NULL);
-	}
+              "subformat", G_TYPE_INT, GST_READ_UINT32_BE (context->extradata),
+              NULL);
+        }
       }
     }
       break;

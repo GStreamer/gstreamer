@@ -570,9 +570,9 @@ gst_ffmpegenc_setcaps (GstPad * pad, GstCaps * caps)
 }
 
 static void
-ffmpegenc_setup_working_buf (GstFFMpegEnc *ffmpegenc)
+ffmpegenc_setup_working_buf (GstFFMpegEnc * ffmpegenc)
 {
-   if (ffmpegenc->working_buf == NULL ||
+  if (ffmpegenc->working_buf == NULL ||
       ffmpegenc->working_buf_size != ffmpegenc->buffer_size) {
     if (ffmpegenc->working_buf)
       g_free (ffmpegenc->working_buf);
@@ -605,8 +605,7 @@ gst_ffmpegenc_chain_video (GstPad * pad, GstBuffer * inbuf)
   ffmpegenc_setup_working_buf (ffmpegenc);
 
   ret_size = avcodec_encode_video (ffmpegenc->context,
-                 ffmpegenc->working_buf, ffmpegenc->working_buf_size,
-                 ffmpegenc->picture);
+      ffmpegenc->working_buf, ffmpegenc->working_buf_size, ffmpegenc->picture);
 
   if (ret_size < 0) {
 #ifndef GST_DISABLE_GST_DEBUG
@@ -758,7 +757,7 @@ gst_ffmpegenc_flush_buffers (GstFFMpegEnc * ffmpegenc, gboolean send)
     ffmpegenc_setup_working_buf (ffmpegenc);
 
     ret_size = avcodec_encode_video (ffmpegenc->context,
-                   ffmpegenc->working_buf, ffmpegenc->working_buf_size, NULL);
+        ffmpegenc->working_buf, ffmpegenc->working_buf_size, NULL);
 
     if (ret_size < 0) {         /* there should be something, notify and give up */
 #ifndef GST_DISABLE_GST_DEBUG

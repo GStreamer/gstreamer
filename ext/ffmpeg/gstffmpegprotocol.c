@@ -57,7 +57,7 @@ gst_ffmpegdata_open (URLContext * h, const char *filename, int flags)
   info->set_streamheader = flags & GST_FFMPEG_URL_STREAMHEADER;
   flags &= ~GST_FFMPEG_URL_STREAMHEADER;
   h->flags &= ~GST_FFMPEG_URL_STREAMHEADER;
-  
+
   /* we don't support R/W together */
   if (flags != URL_RDONLY && flags != URL_WRONLY) {
     GST_WARNING ("Only read-only or write-only are supported");
@@ -98,14 +98,14 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
   GstProtocolInfo *info;
   GstBuffer *inbuf = NULL;
   GstFlowReturn ret;
-  int	total = 0;
-  
+  int total = 0;
+
   g_return_val_if_fail (h->flags == URL_RDONLY, AVERROR_IO);
   info = (GstProtocolInfo *) h->priv_data;
 
   GST_DEBUG ("Pulling %d bytes at position %lld", size, info->offset);
 
-  ret = gst_pad_pull_range(info->pad, info->offset, (guint) size, &inbuf);
+  ret = gst_pad_pull_range (info->pad, info->offset, (guint) size, &inbuf);
 
   switch (ret) {
     case GST_FLOW_OK:
@@ -125,7 +125,8 @@ gst_ffmpegdata_peek (URLContext * h, unsigned char *buf, int size)
       break;
   }
 
-  GST_DEBUG ("Got %d (%s) return result %d", ret, gst_flow_get_name (ret), total);
+  GST_DEBUG ("Got %d (%s) return result %d", ret, gst_flow_get_name (ret),
+      total);
 
   return total;
 }
@@ -140,7 +141,7 @@ gst_ffmpegdata_read (URLContext * h, unsigned char *buf, int size)
 
   GST_DEBUG ("Reading %d bytes of data at position %lld", size, info->offset);
 
-  res = gst_ffmpegdata_peek(h, buf, size);
+  res = gst_ffmpegdata_peek (h, buf, size);
   if (res >= 0)
     info->offset += res;
 
@@ -161,15 +162,13 @@ gst_ffmpegdata_write (URLContext * h, unsigned char *buf, int size)
   g_return_val_if_fail (h->flags != URL_RDONLY, -EIO);
 
   /* create buffer and push data further */
-  if (gst_pad_alloc_buffer_and_set_caps(info->pad,
-					info->offset,
-					size, GST_PAD_CAPS (info->pad),
-					&outbuf) != GST_FLOW_OK)
+  if (gst_pad_alloc_buffer_and_set_caps (info->pad,
+          info->offset, size, GST_PAD_CAPS (info->pad), &outbuf) != GST_FLOW_OK)
     return 0;
-  
+
   memcpy (GST_BUFFER_DATA (outbuf), buf, size);
 
-  if (gst_pad_push(info->pad, outbuf) != GST_FLOW_OK)
+  if (gst_pad_push (info->pad, outbuf) != GST_FLOW_OK)
     return 0;
 
   info->offset += size;
@@ -189,59 +188,60 @@ gst_ffmpegdata_seek (URLContext * h, offset_t pos, int whence)
   /* TODO : if we are push-based, we need to return sensible info */
 
   switch (h->flags) {
-  case URL_RDONLY:
+    case URL_RDONLY:
     {
       /* sinkpad */
       switch (whence) {
-      case SEEK_SET:
-	info->offset = (guint64) pos;
-	break;
-      case SEEK_CUR:
-	info->offset += pos;
-	break;
-      case SEEK_END:
-	/* ffmpeg wants to know the current end position in bytes ! */
-	{
-	  GstFormat format = GST_FORMAT_BYTES;
-	  gint64 duration;
-	  
-	  if (gst_pad_is_linked (info->pad))
-	    if (gst_pad_query_duration (GST_PAD_PEER (info->pad), &format, &duration))
-	      info->offset = ((guint64) duration) + pos;
-	}
-	break;
-      default:
-	break;
+        case SEEK_SET:
+          info->offset = (guint64) pos;
+          break;
+        case SEEK_CUR:
+          info->offset += pos;
+          break;
+        case SEEK_END:
+          /* ffmpeg wants to know the current end position in bytes ! */
+        {
+          GstFormat format = GST_FORMAT_BYTES;
+          gint64 duration;
+
+          if (gst_pad_is_linked (info->pad))
+            if (gst_pad_query_duration (GST_PAD_PEER (info->pad), &format,
+                    &duration))
+              info->offset = ((guint64) duration) + pos;
+        }
+          break;
+        default:
+          break;
       }
       /* FIXME : implement case for push-based behaviour */
       newpos = info->offset;
     }
-    break;
-  case URL_WRONLY:
+      break;
+    case URL_WRONLY:
     {
       /* srcpad */
       switch (whence) {
-      case SEEK_SET:
-	info->offset = (guint64) pos;
-	gst_pad_push_event (info->pad,gst_event_new_new_segment
-			    (TRUE, 1.0, GST_FORMAT_BYTES, info->offset,
-			     GST_CLOCK_TIME_NONE, info->offset));
-	break;
-      case SEEK_CUR:
-	info->offset += pos;
-	gst_pad_push_event (info->pad,gst_event_new_new_segment
-			    (TRUE, 1.0, GST_FORMAT_BYTES, info->offset,
-			     GST_CLOCK_TIME_NONE, info->offset));
-	break;
-      default:
-	break;
+        case SEEK_SET:
+          info->offset = (guint64) pos;
+          gst_pad_push_event (info->pad, gst_event_new_new_segment
+              (TRUE, 1.0, GST_FORMAT_BYTES, info->offset,
+                  GST_CLOCK_TIME_NONE, info->offset));
+          break;
+        case SEEK_CUR:
+          info->offset += pos;
+          gst_pad_push_event (info->pad, gst_event_new_new_segment
+              (TRUE, 1.0, GST_FORMAT_BYTES, info->offset,
+                  GST_CLOCK_TIME_NONE, info->offset));
+          break;
+        default:
+          break;
       }
       newpos = info->offset;
     }
-    break;
-  default:
-    g_assert(0);
-    break;
+      break;
+    default:
+      g_assert (0);
+      break;
   }
 
   GST_DEBUG ("Now at offset %lld", info->offset);
@@ -263,13 +263,13 @@ gst_ffmpegdata_close (URLContext * h)
     case URL_WRONLY:
     {
       /* send EOS - that closes down the stream */
-      gst_pad_push_event (info->pad, gst_event_new_eos());
+      gst_pad_push_event (info->pad, gst_event_new_eos ());
       break;
     }
     default:
       break;
   }
-  
+
   /* clean up data */
   g_free (info);
   h->priv_data = NULL;
@@ -279,10 +279,10 @@ gst_ffmpegdata_close (URLContext * h)
 
 
 URLProtocol gstreamer_protocol = {
-  /*.name = */"gstreamer",
-  /*.url_open = */gst_ffmpegdata_open,
-  /*.url_read = */gst_ffmpegdata_read,
-  /*.url_write = */gst_ffmpegdata_write,
-  /*.url_seek = */gst_ffmpegdata_seek,
-  /*.url_close = */gst_ffmpegdata_close,
+  /*.name = */ "gstreamer",
+  /*.url_open = */ gst_ffmpegdata_open,
+  /*.url_read = */ gst_ffmpegdata_read,
+  /*.url_write = */ gst_ffmpegdata_write,
+  /*.url_seek = */ gst_ffmpegdata_seek,
+  /*.url_close = */ gst_ffmpegdata_close,
 };

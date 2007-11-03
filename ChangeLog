@@ -1,3 +1,28 @@
+2007-11-03  Edward Hervey  <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpeg.c: (gst_ffmpeg_avcodec_open),
+	(gst_ffmpeg_avcodec_close), (gst_ffmpeg_av_find_stream_info),
+	(gst_ffmpeg_log_callback), (plugin_init):
+	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_mb_decision_get_type),
+	(gst_ffmpeg_flags_get_type), (gst_ffmpeg_cfg_init),
+	(gst_ffmpeg_cfg_codec_has_pspec),
+	(gst_ffmpeg_cfg_install_property), (gst_ffmpeg_cfg_set_property),
+	(gst_ffmpeg_cfg_get_property), (gst_ffmpeg_cfg_set_defaults),
+	(gst_ffmpeg_cfg_fill_context), (gst_ffmpeg_cfg_finalize):
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open),
+	(gst_ffmpegdec_setcaps), (gst_ffmpegdec_save_incoming_values),
+	(gst_ffmpegdec_get_best_values), (gst_ffmpegdec_video_frame):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_base_init),
+	(gst_ffmpegdemux_src_query):
+	* ext/ffmpeg/gstffmpegenc.c: (ffmpegenc_setup_working_buf),
+	(gst_ffmpegenc_chain_video), (gst_ffmpegenc_flush_buffers):
+	* ext/ffmpeg/gstffmpegprotocol.c: (gst_ffmpegdata_open),
+	(gst_ffmpegdata_peek), (gst_ffmpegdata_read),
+	(gst_ffmpegdata_write), (gst_ffmpegdata_seek),
+	(gst_ffmpegdata_close):
+	gst-indent cleanup.
+
 2007-10-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

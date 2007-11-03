@@ -171,8 +171,7 @@ gst_ffmpegdemux_base_init (GstFFMpegDemuxClass * klass)
   GstElementDetails details;
   GstPadTemplate *sinktempl, *audiosrctempl, *videosrctempl;
 
-  params =
-      (GstFFMpegDemuxClassParams *)
+  params = (GstFFMpegDemuxClassParams *)
       g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass), GST_FFDEMUX_PARAMS_QDATA);
   g_assert (params != NULL);
 
@@ -711,8 +710,8 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstQuery * query)
       timeduration =
           gst_ffmpeg_time_ff_to_gst (avstream->duration, avstream->time_base);
       if (!(GST_CLOCK_TIME_IS_VALID (timeduration))) {
-	/* use duration of complete file if the stream duration is not known */
-	timeduration = demux->duration;
+        /* use duration of complete file if the stream duration is not known */
+        timeduration = demux->duration;
         if (!(GST_CLOCK_TIME_IS_VALID (timeduration)))
           break;
       }

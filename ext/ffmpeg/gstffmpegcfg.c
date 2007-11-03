@@ -86,7 +86,8 @@ gst_ffmpeg_mb_decision_get_type (void)
   if (!ffmpeg_mb_decision_type) {
     static const GEnumValue ffmpeg_mb_decisions[] = {
       {FF_MB_DECISION_SIMPLE, "Use method set by mb-cmp", "simple"},
-      {FF_MB_DECISION_BITS, "Chooses the one which needs the fewest bits aka vhq mode", "bits"},
+      {FF_MB_DECISION_BITS,
+            "Chooses the one which needs the fewest bits aka vhq mode", "bits"},
       {FF_MB_DECISION_RD, "Rate Distortion", "rd"},
       {0, NULL, NULL},
     };
@@ -263,16 +264,23 @@ gst_ffmpeg_flags_get_type (void)
       {CODEC_FLAG_QPEL, "Quartel Pel Motion Compensation", "qpel"},
       {CODEC_FLAG_GMC, "GMC", "gmc"},
       {CODEC_FLAG_MV0, "Always try a MB with MV (0,0)", "mv0"},
-      {CODEC_FLAG_PART, "Store MV, DC and AC coefficients in seperate partitions", "part"},
+      {CODEC_FLAG_PART,
+            "Store MV, DC and AC coefficients in seperate partitions", "part"},
       {CODEC_FLAG_GRAY, "Only decode/encode grayscale", "gray"},
-      {CODEC_FLAG_NORMALIZE_AQP, "Normalize Adaptive Quantization (masking, etc)", "aqp"},
+      {CODEC_FLAG_NORMALIZE_AQP,
+            "Normalize Adaptive Quantization (masking, etc)", "aqp"},
       {CODEC_FLAG_TRELLIS_QUANT, "Trellis Quantization", "trellis"},
-      {CODEC_FLAG_GLOBAL_HEADER, "Global headers in extradata instead of every keyframe", "global-headers"},
-      {CODEC_FLAG_AC_PRED, "H263 Advanced Intra Coding / MPEG4 AC prediction", "aic"},
+      {CODEC_FLAG_GLOBAL_HEADER,
+            "Global headers in extradata instead of every keyframe",
+            "global-headers"},
+      {CODEC_FLAG_AC_PRED, "H263 Advanced Intra Coding / MPEG4 AC prediction",
+            "aic"},
       {CODEC_FLAG_H263P_UMV, "Unlimited Motion Vector", "umv"},
       {CODEC_FLAG_CBP_RD, "Rate Distoration Optimization for CBP", "cbp-rd"},
-      {CODEC_FLAG_QP_RD, "Rate Distoration Optimization for QP selection", "qp-rd"},
-      {CODEC_FLAG_SVCD_SCAN_OFFSET, "Reserve space for SVCD scan offset user data", "scanoffset"},
+      {CODEC_FLAG_QP_RD, "Rate Distoration Optimization for QP selection",
+            "qp-rd"},
+      {CODEC_FLAG_SVCD_SCAN_OFFSET,
+            "Reserve space for SVCD scan offset user data", "scanoffset"},
       {CODEC_FLAG_CLOSED_GOP, "Closed GOP", "closedgop"},
       {0, NULL, NULL},
     };
@@ -375,13 +383,11 @@ gst_ffmpeg_cfg_init ()
 
   /* list properties here */
   pspec = g_param_spec_enum ("pass", "Encoding pass/type",
-      "Encoding pass/type", GST_TYPE_FFMPEG_PASS,
-      0, G_PARAM_READWRITE);
+      "Encoding pass/type", GST_TYPE_FFMPEG_PASS, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, pass, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("quantizer", "Constant Quantizer",
-      "Constant Quantizer", 0, 30, 0.01f,
-      G_PARAM_READWRITE);
+      "Constant Quantizer", 0, 30, 0.01f, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, quantizer, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_string ("statsfile", "Statistics Filename",
@@ -404,7 +410,9 @@ gst_ffmpeg_cfg_init ()
       GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_SAD, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.mb_cmp, FALSE, mpeg, NULL);
 
-  pspec = g_param_spec_enum ("me-pre-cmp", "Motion Estimation Pre Pass Compare Function",
+  pspec =
+      g_param_spec_enum ("me-pre-cmp",
+      "Motion Estimation Pre Pass Compare Function",
       "Motion Estimation Pre Pass Compare Function",
       GST_TYPE_FFMPEG_CMP_FUNCTION, FF_CMP_SAD, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.me_pre_cmp, FALSE, mpeg, NULL);
@@ -436,18 +444,15 @@ gst_ffmpeg_cfg_init ()
   gst_ffmpeg_add_pspec (pspec, config.idct_algo, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("quant-type", "Quantizer Type",
-      "Quantizer Type",
-      GST_TYPE_FFMPEG_QUANT_TYPE, 0, G_PARAM_READWRITE);
+      "Quantizer Type", GST_TYPE_FFMPEG_QUANT_TYPE, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.mpeg_quant, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("qmin", "Minimum Quantizer",
-      "Minimum Quantizer",
-      1, 31, 2, G_PARAM_READWRITE);
+      "Minimum Quantizer", 1, 31, 2, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.qmin, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("qmax", "Maximum Quantizer",
-      "Maximum Quantizer",
-      1, 31, 31, G_PARAM_READWRITE);
+      "Maximum Quantizer", 1, 31, 31, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.qmax, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("max-qdiff", "Maximum Quantizer Difference",
@@ -456,23 +461,19 @@ gst_ffmpeg_cfg_init ()
   gst_ffmpeg_add_pspec (pspec, config.max_qdiff, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("mb_qmin", "Minimum MB Quantizer",
-      "Minimum MB Quantizer",
-      0, 31, 2, G_PARAM_READWRITE);
+      "Minimum MB Quantizer", 0, 31, 2, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.mb_qmin, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("mb_qmax", "Maximum MB Quantizer",
-      "Maximum MB Quantizer",
-      0, 31, 31, G_PARAM_READWRITE);
+      "Maximum MB Quantizer", 0, 31, 31, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.mb_qmax, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("lmin", "Minimum Lagrange Multiplier",
-      "Minimum Lagrange Multiplier",
-      1, 31, 2, G_PARAM_READWRITE);
+      "Minimum Lagrange Multiplier", 1, 31, 2, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, lmin, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("lmax", "Maximum Lagrange Multiplier",
-      "Maximum Lagrange Multiplier",
-      1, 31, 31, G_PARAM_READWRITE);
+      "Maximum Lagrange Multiplier", 1, 31, 31, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, lmax, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("qcompress", "Quantizer Change",
@@ -481,8 +482,7 @@ gst_ffmpeg_cfg_init ()
   gst_ffmpeg_add_pspec (pspec, config.qcompress, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("qblur", "Quantizer Smoothing",
-      "Quantizer Smoothing over time",
-      0, 1.0f, 0.5f, G_PARAM_READWRITE);
+      "Quantizer Smoothing over time", 0, 1.0f, 0.5f, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.qblur, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("rc-qsquish", "Ratecontrol Limiting Method",
@@ -491,43 +491,41 @@ gst_ffmpeg_cfg_init ()
   gst_ffmpeg_add_pspec (pspec, config.rc_qsquish, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("rc-qmod-amp", "Ratecontrol Mod",
-      "Ratecontrol Mod",
-      0, 99.0f, 0, G_PARAM_READWRITE);
+      "Ratecontrol Mod", 0, 99.0f, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.rc_qmod_amp, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("rc-qmod-freq", "Ratecontrol Freq",
-      "Ratecontrol Freq",
-      0, 0, 0, G_PARAM_READWRITE);
+      "Ratecontrol Freq", 0, 0, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.rc_qmod_freq, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("rc-buffer-size", "Ratecontrol Buffer Size",
-      "Decoder bitstream buffer size",
-      0, G_MAXINT, 0, G_PARAM_READWRITE);
+      "Decoder bitstream buffer size", 0, G_MAXINT, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.rc_buffer_size, FALSE, mpeg, NULL);
 
-  pspec = g_param_spec_float ("rc-buffer-aggressivity", "Ratecontrol Buffer Aggressivity",
-      "Ratecontrol Buffer Aggressivity",
-      0, 99.0f, 1.0f, G_PARAM_READWRITE);
-  gst_ffmpeg_add_pspec (pspec, config.rc_buffer_aggressivity, FALSE, mpeg, NULL);
+  pspec =
+      g_param_spec_float ("rc-buffer-aggressivity",
+      "Ratecontrol Buffer Aggressivity", "Ratecontrol Buffer Aggressivity", 0,
+      99.0f, 1.0f, G_PARAM_READWRITE);
+  gst_ffmpeg_add_pspec (pspec, config.rc_buffer_aggressivity, FALSE, mpeg,
+      NULL);
 
   pspec = g_param_spec_int ("rc-max-rate", "Ratecontrol Maximum Bitrate",
-      "Ratecontrol Maximum Bitrate",
-      0, G_MAXINT, 0, G_PARAM_READWRITE);
+      "Ratecontrol Maximum Bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.rc_max_rate, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("rc-min-rate", "Ratecontrol Minimum Bitrate",
-      "Ratecontrol Minimum Bitrate",
-      0, G_MAXINT, 0, G_PARAM_READWRITE);
+      "Ratecontrol Minimum Bitrate", 0, G_MAXINT, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.rc_min_rate, FALSE, mpeg, NULL);
 
-  pspec = g_param_spec_float ("rc-initial-cplx", "Initial Complexity for Pass 1 Ratecontrol",
+  pspec =
+      g_param_spec_float ("rc-initial-cplx",
       "Initial Complexity for Pass 1 Ratecontrol",
-      0, 9999999.0f, 0, G_PARAM_READWRITE);
+      "Initial Complexity for Pass 1 Ratecontrol", 0, 9999999.0f, 0,
+      G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.rc_initial_cplx, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_string ("rc-eq", "Ratecontrol Equation",
-      "Ratecontrol Equation",
-      "tex^qComp", G_PARAM_READWRITE);
+      "Ratecontrol Equation", "tex^qComp", G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.rc_eq, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("b-quant-factor", "B-Quantizer Factor",
@@ -569,30 +567,25 @@ gst_ffmpeg_cfg_init ()
   gst_ffmpeg_add_pspec (pspec, config.chroma_elim_threshold, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("lumi-masking", "Luminance Masking",
-      "Luminance Masking",
-      -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
+      "Luminance Masking", -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.lumi_masking, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("dark-masking", "Darkness Masking",
-      "Darkness Masking",
-      -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
+      "Darkness Masking", -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.dark_masking, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("temporal-cplx-masking",
       "Temporal Complexity Masking",
-      "Temporal Complexity Masking",
-      -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
+      "Temporal Complexity Masking", -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.temporal_cplx_masking, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("spatial-cplx-masking",
       "Spatial Complexity Masking",
-      "Spatial Complexity Masking",
-      -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
+      "Spatial Complexity Masking", -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.spatial_cplx_masking, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_float ("p-masking", "P Block Masking",
-      "P Block  Masking",
-      -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
+      "P Block  Masking", -1.0f, 1.0f, 0.0f, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.p_masking, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("dia-size",
@@ -610,7 +603,7 @@ gst_ffmpeg_cfg_init ()
   pspec = g_param_spec_int ("last-predictor-count",
       "Last Predictor Count",
       "Amount of previous Motion Vector predictors",
-    0, 2000, 0, G_PARAM_READWRITE);
+      0, 2000, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.last_predictor_count, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("pre-me",
@@ -645,31 +638,26 @@ gst_ffmpeg_cfg_init ()
 
   pspec = g_param_spec_int ("noise-reduction",
       "Noise Reduction",
-      "Noise Reduction Strength",
-      0, 1000000, 0, G_PARAM_READWRITE);
+      "Noise Reduction Strength", 0, 1000000, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.noise_reduction, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("intra-dc-precision",
       "Intra DC precision",
-      "Precision of the Intra DC coefficient - 8",
-      0, 16, 0, G_PARAM_READWRITE);
+      "Precision of the Intra DC coefficient - 8", 0, 16, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.intra_dc_precision, FALSE, mpeg, NULL);
 
   /* TODO skipped coder_type, context_model, inter_threshold, scenechange_threshold */
 
   pspec = g_param_spec_flags ("flags", "Flags",
-      "Flags",
-      GST_TYPE_FFMPEG_FLAGS, 0, G_PARAM_READWRITE);
+      "Flags", GST_TYPE_FFMPEG_FLAGS, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.flags, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_boolean ("interlaced", "Interlaced Material",
-      "Interlaced Material",
-      FALSE, G_PARAM_READWRITE);
+      "Interlaced Material", FALSE, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, interlaced, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_int ("max-bframes", "Max B-Frames",
-      "Maximum B-frames in a row",
-      0, FF_MAX_B_FRAMES, 0, G_PARAM_READWRITE);
+      "Maximum B-frames in a row", 0, FF_MAX_B_FRAMES, 0, G_PARAM_READWRITE);
   gst_ffmpeg_add_pspec (pspec, config.max_b_frames, FALSE, mpeg, NULL);
 
   pspec = g_param_spec_enum ("prediction-method", "Prediction Method",
@@ -683,17 +671,17 @@ gst_ffmpeg_cfg_init ()
 
 /* return TRUE if property described by pspec applies to the codec with codec_id */
 static gboolean
-gst_ffmpeg_cfg_codec_has_pspec (enum CodecID codec_id, GParamSpec *pspec)
+gst_ffmpeg_cfg_codec_has_pspec (enum CodecID codec_id, GParamSpec * pspec)
 {
   GParamSpecData *qdata;
-  gint* codec;
+  gint *codec;
   gboolean ret = FALSE;
 
   qdata = g_param_spec_get_qdata (pspec, quark);
 
   /* check if excluded first */
   if ((codec = qdata->exclude_list)) {
-    for ( ; *codec != CODEC_ID_NONE; ++codec) {
+    for (; *codec != CODEC_ID_NONE; ++codec) {
       if (*codec == codec_id)
         return FALSE;
     }
@@ -701,7 +689,7 @@ gst_ffmpeg_cfg_codec_has_pspec (enum CodecID codec_id, GParamSpec *pspec)
 
   /* no include list means it is accepted */
   if ((codec = qdata->include_list)) {
-    for ( ; *codec != CODEC_ID_NONE; ++codec) {
+    for (; *codec != CODEC_ID_NONE; ++codec) {
       if (*codec == codec_id)
         ret = TRUE;
     }
@@ -724,7 +712,7 @@ gst_ffmpeg_cfg_install_property (GstFFMpegEncClass * klass, guint base)
   prop_id = base;
   g_return_if_fail (base > 0);
 
-  ctx = avcodec_alloc_context();
+  ctx = avcodec_alloc_context ();
   if (ctx)
     avcodec_get_context_defaults (ctx);
   else
@@ -736,9 +724,9 @@ gst_ffmpeg_cfg_install_property (GstFFMpegEncClass * klass, guint base)
       /* 'clone' the paramspec for the various codecs,
        * since a single paramspec cannot be owned by distinct types */
 
-      const gchar* name = g_param_spec_get_name (pspec);
-      const gchar* nick = g_param_spec_get_nick (pspec);
-      const gchar* blurb = g_param_spec_get_blurb (pspec);
+      const gchar *name = g_param_spec_get_name (pspec);
+      const gchar *nick = g_param_spec_get_nick (pspec);
+      const gchar *blurb = g_param_spec_get_blurb (pspec);
       GParamSpecData *qdata = g_param_spec_get_qdata (pspec, quark);
       gint ctx_offset = 0;
       gboolean lavc_default;
@@ -756,71 +744,73 @@ gst_ffmpeg_cfg_install_property (GstFFMpegEncClass * klass, guint base)
       }
 
       switch (G_PARAM_SPEC_VALUE_TYPE (pspec)) {
-        case G_TYPE_STRING: {
-          GParamSpecString* pstring = G_PARAM_SPEC_STRING (pspec);
+        case G_TYPE_STRING:{
+          GParamSpecString *pstring = G_PARAM_SPEC_STRING (pspec);
+
           pspec = g_param_spec_string (name, nick, blurb,
-              lavc_default ? G_STRUCT_MEMBER (gchar*, ctx, ctx_offset)
-                : pstring->default_value,
-              pspec->flags);
+              lavc_default ? G_STRUCT_MEMBER (gchar *, ctx, ctx_offset)
+              : pstring->default_value, pspec->flags);
           break;
         }
-        case G_TYPE_INT: {
-          GParamSpecInt* pint = G_PARAM_SPEC_INT (pspec);
+        case G_TYPE_INT:{
+          GParamSpecInt *pint = G_PARAM_SPEC_INT (pspec);
+
           pspec = g_param_spec_int (name, nick, blurb,
               pint->minimum, pint->maximum,
               lavc_default ? G_STRUCT_MEMBER (gint, ctx, ctx_offset)
-                : pint->default_value,
-              pspec->flags);
+              : pint->default_value, pspec->flags);
           break;
         }
-        case G_TYPE_UINT: {
-          GParamSpecUInt* puint = G_PARAM_SPEC_UINT (pspec);
+        case G_TYPE_UINT:{
+          GParamSpecUInt *puint = G_PARAM_SPEC_UINT (pspec);
+
           pspec = g_param_spec_uint (name, nick, blurb,
-                puint->minimum, puint->maximum,
-                lavc_default ? G_STRUCT_MEMBER (guint, ctx, ctx_offset)
-                : puint->default_value,
-              pspec->flags);
+              puint->minimum, puint->maximum,
+              lavc_default ? G_STRUCT_MEMBER (guint, ctx, ctx_offset)
+              : puint->default_value, pspec->flags);
           break;
         }
-        case G_TYPE_ULONG: {
-          GParamSpecULong* pulong = G_PARAM_SPEC_ULONG (pspec);
+        case G_TYPE_ULONG:{
+          GParamSpecULong *pulong = G_PARAM_SPEC_ULONG (pspec);
+
           pspec = g_param_spec_ulong (name, nick, blurb,
               pulong->minimum, pulong->maximum,
               lavc_default ? G_STRUCT_MEMBER (gulong, ctx, ctx_offset)
-                : pulong->default_value,
-              pspec->flags);
+              : pulong->default_value, pspec->flags);
           break;
         }
-        case G_TYPE_FLOAT: {
-          GParamSpecFloat* pfloat = G_PARAM_SPEC_FLOAT (pspec);
+        case G_TYPE_FLOAT:{
+          GParamSpecFloat *pfloat = G_PARAM_SPEC_FLOAT (pspec);
+
           pspec = g_param_spec_float (name, nick, blurb,
               pfloat->minimum, pfloat->maximum,
               lavc_default ? G_STRUCT_MEMBER (gfloat, ctx, ctx_offset)
-                : pfloat->default_value,
-              pspec->flags);
+              : pfloat->default_value, pspec->flags);
           break;
         }
-        case G_TYPE_BOOLEAN: {
-          GParamSpecBoolean* pboolean = G_PARAM_SPEC_BOOLEAN (pspec);
+        case G_TYPE_BOOLEAN:{
+          GParamSpecBoolean *pboolean = G_PARAM_SPEC_BOOLEAN (pspec);
+
           pspec = g_param_spec_boolean (name, nick, blurb,
               lavc_default ? G_STRUCT_MEMBER (gboolean, ctx, ctx_offset)
-                : pboolean->default_value,
-              pspec->flags);
+              : pboolean->default_value, pspec->flags);
           break;
         }
         default:
           if (G_IS_PARAM_SPEC_ENUM (pspec)) {
-            GParamSpecEnum* penum = G_PARAM_SPEC_ENUM (pspec);
+            GParamSpecEnum *penum = G_PARAM_SPEC_ENUM (pspec);
+
             pspec = g_param_spec_enum (name, nick, blurb,
                 pspec->value_type,
                 lavc_default ? G_STRUCT_MEMBER (gint, ctx, ctx_offset)
-                  : penum->default_value, pspec->flags);
+                : penum->default_value, pspec->flags);
           } else if (G_IS_PARAM_SPEC_FLAGS (pspec)) {
-            GParamSpecFlags* pflags = G_PARAM_SPEC_FLAGS (pspec);
+            GParamSpecFlags *pflags = G_PARAM_SPEC_FLAGS (pspec);
+
             pspec = g_param_spec_flags (name, nick, blurb,
                 pspec->value_type,
                 lavc_default ? G_STRUCT_MEMBER (guint, ctx, ctx_offset)
-                  : pflags->default_value, pspec->flags);
+                : pflags->default_value, pspec->flags);
           } else {
             g_critical ("%s does not yet support type %s", GST_FUNCTION,
                 g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
@@ -881,22 +871,22 @@ gst_ffmpeg_cfg_set_property (GObject * object,
           g_value_get_float (value);
       break;
     case G_TYPE_STRING:
-      g_return_val_if_fail (qdata->size == sizeof (gchar*), TRUE);
-      g_free (G_STRUCT_MEMBER (gchar*, ffmpegenc, qdata->offset));
-      G_STRUCT_MEMBER (gchar*, ffmpegenc, qdata->offset) =
+      g_return_val_if_fail (qdata->size == sizeof (gchar *), TRUE);
+      g_free (G_STRUCT_MEMBER (gchar *, ffmpegenc, qdata->offset));
+      G_STRUCT_MEMBER (gchar *, ffmpegenc, qdata->offset) =
           g_value_dup_string (value);
       break;
-    default: /* must be enum, given the check above */
+    default:                   /* must be enum, given the check above */
       if (G_IS_PARAM_SPEC_ENUM (pspec)) {
         g_return_val_if_fail (qdata->size == sizeof (gint), TRUE);
         G_STRUCT_MEMBER (gint, ffmpegenc, qdata->offset) =
-          g_value_get_enum (value);
+            g_value_get_enum (value);
       } else if (G_IS_PARAM_SPEC_FLAGS (pspec)) {
         g_return_val_if_fail (qdata->size == sizeof (guint), TRUE);
         G_STRUCT_MEMBER (guint, ffmpegenc, qdata->offset) =
             g_value_get_flags (value);
-      } else { /* oops, bit lazy we don't cover this case yet */
-        g_critical ("%s does not yet support type %s",GST_FUNCTION,
+      } else {                  /* oops, bit lazy we don't cover this case yet */
+        g_critical ("%s does not yet support type %s", GST_FUNCTION,
             g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
       }
 
@@ -935,8 +925,7 @@ gst_ffmpeg_cfg_get_property (GObject * object,
       break;
     case G_TYPE_INT:
       g_return_val_if_fail (qdata->size == sizeof (gint), TRUE);
-      g_value_set_int (value,
-          G_STRUCT_MEMBER (gint, ffmpegenc, qdata->offset));
+      g_value_set_int (value, G_STRUCT_MEMBER (gint, ffmpegenc, qdata->offset));
       break;
     case G_TYPE_ULONG:
       g_return_val_if_fail (qdata->size == sizeof (gulong), TRUE);
@@ -949,11 +938,11 @@ gst_ffmpeg_cfg_get_property (GObject * object,
           G_STRUCT_MEMBER (gfloat, ffmpegenc, qdata->offset));
       break;
     case G_TYPE_STRING:
-      g_return_val_if_fail (qdata->size == sizeof (gchar*), TRUE);
+      g_return_val_if_fail (qdata->size == sizeof (gchar *), TRUE);
       g_value_take_string (value,
-          g_strdup (G_STRUCT_MEMBER (gchar*, ffmpegenc, qdata->offset)));
+          g_strdup (G_STRUCT_MEMBER (gchar *, ffmpegenc, qdata->offset)));
       break;
-    default: /* must be enum, given the check above */
+    default:                   /* must be enum, given the check above */
       if (G_IS_PARAM_SPEC_ENUM (pspec)) {
         g_return_val_if_fail (qdata->size == sizeof (gint), TRUE);
         g_value_set_enum (value,
@@ -962,7 +951,7 @@ gst_ffmpeg_cfg_get_property (GObject * object,
         g_return_val_if_fail (qdata->size == sizeof (guint), TRUE);
         g_value_set_flags (value,
             G_STRUCT_MEMBER (guint, ffmpegenc, qdata->offset));
-      } else { /* oops, bit lazy we don't cover this case yet */
+      } else {                  /* oops, bit lazy we don't cover this case yet */
         g_critical ("%s does not yet support type %s", GST_FUNCTION,
             g_type_name (G_PARAM_SPEC_VALUE_TYPE (pspec)));
       }
@@ -982,8 +971,9 @@ gst_ffmpeg_cfg_set_defaults (GstFFMpegEnc * ffmpegenc)
       &num_props);
 
   for (i = 0; i < num_props; ++i) {
-    GValue val = {0, };
+    GValue val = { 0, };
     GParamSpec *pspec = pspecs[i];
+
     /* only touch those that are really ours; i.e. should have some qdata */
     if (!g_param_spec_get_qdata (pspec, quark))
       continue;
@@ -1020,8 +1010,7 @@ gst_ffmpeg_cfg_fill_context (GstFFMpegEnc * ffmpegenc, AVCodecContext * context)
         && context_offset >= 0) {
       /* memcpy a bit heavy for a small copy, but hardly part of 'inner loop' */
       memcpy (G_STRUCT_MEMBER_P (context, context_offset),
-          G_STRUCT_MEMBER_P (ffmpegenc, qdata->offset),
-          qdata->size);
+          G_STRUCT_MEMBER_P (ffmpegenc, qdata->offset), qdata->size);
     }
     list = list->next;
   }
@@ -1048,9 +1037,9 @@ gst_ffmpeg_cfg_finalize (GstFFMpegEnc * ffmpegenc)
 
     switch (G_PARAM_SPEC_VALUE_TYPE (pspec)) {
       case G_TYPE_STRING:
-        if(qdata->size == sizeof (gchar*)) {
-          g_free (G_STRUCT_MEMBER (gchar*, ffmpegenc, qdata->offset));
-          G_STRUCT_MEMBER (gchar*, ffmpegenc, qdata->offset) = NULL;
+        if (qdata->size == sizeof (gchar *)) {
+          g_free (G_STRUCT_MEMBER (gchar *, ffmpegenc, qdata->offset));
+          G_STRUCT_MEMBER (gchar *, ffmpegenc, qdata->offset) = NULL;
         }
         break;
       default:

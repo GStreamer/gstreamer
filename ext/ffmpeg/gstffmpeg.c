@@ -44,29 +44,32 @@ static GStaticMutex gst_avcodec_mutex = G_STATIC_MUTEX_INIT;
 
 
 int
-gst_ffmpeg_avcodec_open (AVCodecContext *avctx, AVCodec *codec) {
+gst_ffmpeg_avcodec_open (AVCodecContext * avctx, AVCodec * codec)
+{
   int ret;
 
   g_static_mutex_lock (&gst_avcodec_mutex);
   ret = avcodec_open (avctx, codec);
   g_static_mutex_unlock (&gst_avcodec_mutex);
-  
+
   return ret;
 }
 
 int
-gst_ffmpeg_avcodec_close (AVCodecContext *avctx) {
+gst_ffmpeg_avcodec_close (AVCodecContext * avctx)
+{
   int ret;
-  
+
   g_static_mutex_lock (&gst_avcodec_mutex);
   ret = avcodec_close (avctx);
   g_static_mutex_unlock (&gst_avcodec_mutex);
-  
+
   return ret;
 }
 
 int
-gst_ffmpeg_av_find_stream_info(AVFormatContext *ic) {
+gst_ffmpeg_av_find_stream_info (AVFormatContext * ic)
+{
   int ret;
 
   g_static_mutex_lock (&gst_avcodec_mutex);
@@ -78,7 +81,7 @@ gst_ffmpeg_av_find_stream_info(AVFormatContext *ic) {
 
 #ifndef GST_DISABLE_GST_DEBUG
 static void
-gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
+gst_ffmpeg_log_callback (void *ptr, int level, const char *fmt, va_list vl)
 {
   GstDebugLevel gst_level;
   gint len = strlen (fmt);
@@ -106,14 +109,15 @@ gst_ffmpeg_log_callback (void * ptr, int level, const char * fmt, va_list vl)
   }
 
   /* remove trailing newline as it gets already appended by the logger */
-  if (fmt[len-1] == '\n') {
+  if (fmt[len - 1] == '\n') {
     fmt2 = g_strdup (fmt);
-    fmt2[len-1] = '\0';
+    fmt2[len - 1] = '\0';
   }
 
-  gst_debug_log_valist (ffmpeg_debug, gst_level, "", "", 0, NULL, fmt2?fmt2:fmt, vl);
+  gst_debug_log_valist (ffmpeg_debug, gst_level, "", "", 0, NULL,
+      fmt2 ? fmt2 : fmt, vl);
 
-  g_free(fmt2);
+  g_free (fmt2);
 }
 #endif
 
@@ -130,7 +134,7 @@ plugin_init (GstPlugin * plugin)
   av_log_set_callback (gst_ffmpeg_log_callback);
 #endif
 
-  gst_ffmpeg_init_pix_fmt_info();
+  gst_ffmpeg_init_pix_fmt_info ();
 
   av_register_all ();
 
@@ -156,5 +160,3 @@ GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     "All FFMPEG codecs (" FFMPEG_SOURCE ")",
     plugin_init,
     PACKAGE_VERSION, "LGPL", "FFMpeg", "http://ffmpeg.sourceforge.net/")
-
-

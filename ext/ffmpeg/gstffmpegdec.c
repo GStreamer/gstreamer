@@ -544,7 +544,8 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
   }
 
   /* out-of-order incoming buffer handling */
-  if ((oclass->in_plugin->id == CODEC_ID_H264) && (ffmpegdec->context->extradata_size != 0))
+  if ((oclass->in_plugin->id == CODEC_ID_H264)
+      && (ffmpegdec->context->extradata_size != 0))
     ffmpegdec->outoforder = TRUE;
 
   ffmpegdec->next_ts = GST_CLOCK_TIME_NONE;
@@ -630,7 +631,7 @@ gst_ffmpegdec_setcaps (GstPad * pad, GstCaps * caps)
     GST_DEBUG_OBJECT (ffmpegdec, "Using framerate from codec");
   }
 
-  if(oclass->in_plugin->id != CODEC_ID_H264) {
+  if (oclass->in_plugin->id != CODEC_ID_H264) {
     /* do *not* draw edges */
     ffmpegdec->context->flags |= CODEC_FLAG_EMU_EDGE;
   }
@@ -852,13 +853,14 @@ no_par:
 }
 
 static void
-gst_ffmpegdec_save_incoming_values (GstFFMpegDec * ffmpegdec, GstClockTime timestamp,
-				    GstClockTime duration)
+gst_ffmpegdec_save_incoming_values (GstFFMpegDec * ffmpegdec,
+    GstClockTime timestamp, GstClockTime duration)
 {
-  GST_LOG_OBJECT (ffmpegdec, "BEFORE timestamp:%"GST_TIME_FORMAT"/%"GST_TIME_FORMAT
-		  " duration:%"GST_TIME_FORMAT"/%"GST_TIME_FORMAT,
-		  GST_TIME_ARGS (ffmpegdec->tstamp1), GST_TIME_ARGS (ffmpegdec->tstamp2),
-		  GST_TIME_ARGS (ffmpegdec->dur1), GST_TIME_ARGS (ffmpegdec->dur2));
+  GST_LOG_OBJECT (ffmpegdec,
+      "BEFORE timestamp:%" GST_TIME_FORMAT "/%" GST_TIME_FORMAT " duration:%"
+      GST_TIME_FORMAT "/%" GST_TIME_FORMAT, GST_TIME_ARGS (ffmpegdec->tstamp1),
+      GST_TIME_ARGS (ffmpegdec->tstamp2), GST_TIME_ARGS (ffmpegdec->dur1),
+      GST_TIME_ARGS (ffmpegdec->dur2));
 
   /* shift previous new values to oldest */
   if (ffmpegdec->tstamp2 != GST_CLOCK_TIME_NONE)
@@ -869,16 +871,17 @@ gst_ffmpegdec_save_incoming_values (GstFFMpegDec * ffmpegdec, GstClockTime times
   ffmpegdec->tstamp2 = timestamp;
   ffmpegdec->dur2 = duration;
 
-  GST_LOG_OBJECT (ffmpegdec, "AFTER timestamp:%"GST_TIME_FORMAT"/%"GST_TIME_FORMAT
-		  " duration:%"GST_TIME_FORMAT"/%"GST_TIME_FORMAT,
-		  GST_TIME_ARGS (ffmpegdec->tstamp1), GST_TIME_ARGS (ffmpegdec->tstamp2),
-		  GST_TIME_ARGS (ffmpegdec->dur1), GST_TIME_ARGS (ffmpegdec->dur2));
+  GST_LOG_OBJECT (ffmpegdec,
+      "AFTER timestamp:%" GST_TIME_FORMAT "/%" GST_TIME_FORMAT " duration:%"
+      GST_TIME_FORMAT "/%" GST_TIME_FORMAT, GST_TIME_ARGS (ffmpegdec->tstamp1),
+      GST_TIME_ARGS (ffmpegdec->tstamp2), GST_TIME_ARGS (ffmpegdec->dur1),
+      GST_TIME_ARGS (ffmpegdec->dur2));
 
 }
 
 static void
-gst_ffmpegdec_get_best_values (GstFFMpegDec * ffmpegdec, GstClockTime *timestamp,
-			       GstClockTime *duration)
+gst_ffmpegdec_get_best_values (GstFFMpegDec * ffmpegdec,
+    GstClockTime * timestamp, GstClockTime * duration)
 {
   /* Best timestamp is the smallest valid timestamp */
   if (ffmpegdec->tstamp1 == GST_CLOCK_TIME_NONE) {
@@ -904,9 +907,9 @@ gst_ffmpegdec_get_best_values (GstFFMpegDec * ffmpegdec, GstClockTime *timestamp
     ffmpegdec->dur1 = GST_CLOCK_TIME_NONE;
   }
 
-  GST_LOG_OBJECT (ffmpegdec, "Returning timestamp:%"GST_TIME_FORMAT" duration:%"GST_TIME_FORMAT,
-		  GST_TIME_ARGS (*timestamp),
-		  GST_TIME_ARGS (*duration));
+  GST_LOG_OBJECT (ffmpegdec,
+      "Returning timestamp:%" GST_TIME_FORMAT " duration:%" GST_TIME_FORMAT,
+      GST_TIME_ARGS (*timestamp), GST_TIME_ARGS (*duration));
 }
 
 static gboolean
@@ -1429,7 +1432,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
     /* if we have an input framerate, use that */
     if (ffmpegdec->format.video.fps_n != -1 &&
         (ffmpegdec->format.video.fps_n != 1000 &&
-         ffmpegdec->format.video.fps_d != 1)) {
+            ffmpegdec->format.video.fps_d != 1)) {
       GST_LOG_OBJECT (ffmpegdec, "using input framerate for duration");
       in_duration = gst_util_uint64_scale_int (GST_SECOND,
           ffmpegdec->format.video.fps_d, ffmpegdec->format.video.fps_n);
@@ -1447,8 +1450,7 @@ gst_ffmpegdec_video_frame (GstFFMpegDec * ffmpegdec,
         GST_LOG_OBJECT (ffmpegdec, "no valid duration found");
       }
     }
-  }
-  else {
+  } else {
     GST_LOG_OBJECT (ffmpegdec, "using in_duration");
   }
 
