@@ -84,7 +84,7 @@ gst_iir_equalizer_nbands_class_init (GstIirEqualizerNBandsClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_NUM_BANDS,
       g_param_spec_uint ("num-bands", "num-bands",
-          "number of different bands to use", 2, 64, 10,
+          "number of different bands to use", 1, 64, 10,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 }
 

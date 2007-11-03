@@ -1,3 +1,17 @@
+2007-11-03  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/equalizer/demo.c: (main):
+	* gst/equalizer/gstiirequalizer.c:
+	(gst_iir_equalizer_band_class_init), (setup_filter):
+	Allow setting 0 as bandwidth and handle this correctly.
+	Also handle a bandwidth of rate/2 properly.
+
+	* gst/equalizer/gstiirequalizernbands.c:
+	(gst_iir_equalizer_nbands_class_init):
+	Make it possible to generate a N-band equalizer with 1 bands. The
+	previous limit of 2 was caused by a nowadays replaced calculation
+	doing a division by zero if number of bands was 1.
+
 2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
