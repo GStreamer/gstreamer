@@ -4,7 +4,7 @@
 
 	* gst/gstobject.c:
 	  Corrected the registration of the parent-set and parent-unset
-	  signals: The parameter is a GstObject, not a GObject.
+	  signals: The parameter is a GstObject, not a GObject (#493134).
 
 2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
