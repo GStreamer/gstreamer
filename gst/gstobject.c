@@ -217,7 +217,7 @@ gst_object_class_init (GstObjectClass * klass)
   gst_object_signals[PARENT_SET] =
       g_signal_new ("parent-set", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstObjectClass, parent_set), NULL, NULL,
-      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+      g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
 
   /**
    * GstObject::parent-unset:
@@ -229,7 +229,7 @@ gst_object_class_init (GstObjectClass * klass)
   gst_object_signals[PARENT_UNSET] =
       g_signal_new ("parent-unset", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstObjectClass, parent_unset), NULL,
-      NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, G_TYPE_OBJECT);
+      NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, GST_TYPE_OBJECT);
 
 #ifndef GST_DISABLE_LOADSAVE
   /**
