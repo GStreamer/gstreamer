@@ -688,7 +688,7 @@ gst_dshowvideosrc_set_caps (GstBaseSrc * bsrc, GstCaps * caps)
         IGstDshowInterface_gst_set_media_type (srcinterface,
             pin_mediatype->mediatype);
         IGstDshowInterface_gst_set_buffer_callback (srcinterface,
-            gst_dshowvideosrc_push_buffer, (byte *) src);
+            (byte *) gst_dshowvideosrc_push_buffer, (byte *) src);
 
         if (srcinterface) {
           IGstDshowInterface_Release (srcinterface);

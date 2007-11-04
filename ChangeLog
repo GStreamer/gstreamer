@@ -1,3 +1,18 @@
+2007-11-04  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* gst-libs/gst/dshow/gstdshowfakesink.cpp:
+	  (CDshowFakeSink.CDshowFakeSink):
+	* gst-libs/gst/dshow/gstdshowfakesink.h: (CDshowFakeSink.m_hres):
+	  Fix crasher in constructor due to the base class's constructor
+	  not necessarily being NULL-safe (depends on the SDK version used
+	  apparently; #492406).
+
+	* sys/dshowsrcwrapper/gstdshowaudiosrc.c: (gst_dshowaudiosrc_prepare):
+	* sys/dshowsrcwrapper/gstdshowvideosrc.c: (gst_dshowvideosrc_set_caps):
+	  Fix a couple of MSVC compiler warnings (#492406).
+
 2007-11-03  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/equalizer/demo.c: (main):

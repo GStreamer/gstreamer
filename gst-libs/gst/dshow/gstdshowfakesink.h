@@ -43,6 +43,7 @@ public:
   STDMETHOD (gst_set_sample_size) (unsigned int size);
 
 protected:
+  HRESULT m_hres;
   CMediaType m_MediaType;
   push_buffer_func m_callback;
   byte *m_data;

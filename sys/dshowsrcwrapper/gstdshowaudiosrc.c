@@ -641,7 +641,7 @@ gst_dshowaudiosrc_prepare (GstAudioSrc * asrc, GstRingBufferSpec * spec)
         IGstDshowInterface_gst_set_media_type (srcinterface,
             pin_mediatype->mediatype);
         IGstDshowInterface_gst_set_buffer_callback (srcinterface,
-            gst_dshowaudiosrc_push_buffer, (byte *) src);
+            (byte *) gst_dshowaudiosrc_push_buffer, (byte *) src);
 
         if (srcinterface) {
           IGstDshowInterface_Release (srcinterface);
