@@ -1,12 +1,50 @@
 EXPORTS
 	gst_audio_buffer_clip
 	gst_audio_channel_position_get_type
+	gst_audio_clock_get_type
+	gst_audio_clock_new
+	gst_audio_default_registry_mixer_filter
 	gst_audio_duration_from_pad_buffer
-	gst_audio_get_channel_positions
 	gst_audio_filter_class_add_pad_templates
 	gst_audio_filter_get_type
+	gst_audio_fixate_channel_positions
+	gst_audio_frame_byte_size
+	gst_audio_frame_length
+	gst_audio_get_channel_positions
 	gst_audio_is_buffer_framed
+	gst_audio_set_caps_channel_positions_list
 	gst_audio_set_channel_positions
+	gst_audio_set_structure_channel_positions_list
 	gst_audio_sink_get_type
 	gst_audio_src_get_type
+	gst_audio_structure_set_int
+	gst_base_audio_sink_create_ringbuffer
 	gst_base_audio_sink_get_type
+	gst_base_audio_src_create_ringbuffer
+	gst_base_audio_src_get_type
+	gst_ring_buffer_acquire
+	gst_ring_buffer_advance
+	gst_ring_buffer_clear
+	gst_ring_buffer_clear_all
+	gst_ring_buffer_close_device
+	gst_ring_buffer_commit
+	gst_ring_buffer_commit_full
+	gst_ring_buffer_debug_spec_buff
+	gst_ring_buffer_debug_spec_caps
+	gst_ring_buffer_delay
+	gst_ring_buffer_device_is_open
+	gst_ring_buffer_get_type
+	gst_ring_buffer_is_acquired
+	gst_ring_buffer_may_start
+	gst_ring_buffer_open_device
+	gst_ring_buffer_parse_caps
+	gst_ring_buffer_pause
+	gst_ring_buffer_prepare_read
+	gst_ring_buffer_read
+	gst_ring_buffer_release
+	gst_ring_buffer_samples_done
+	gst_ring_buffer_set_callback
+	gst_ring_buffer_set_flushing
+	gst_ring_buffer_set_sample
+	gst_ring_buffer_start
+	gst_ring_buffer_stop

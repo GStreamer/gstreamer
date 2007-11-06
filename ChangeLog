@@ -1,3 +1,18 @@
+2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* win32/common/libgstaudio.def:
+	* win32/common/libgstcdda.def:
+	* win32/common/libgstinterfaces.def:
+	* win32/common/libgstnetbuffer.def:
+	* win32/common/libgstpbutils.def:
+	* win32/common/libgstrtp.def:
+	* win32/common/libgstrtsp.def:
+	* win32/common/libgsttag.def:
+	* win32/common/libgstvideo.def:
+	  More missing symbols to export (fixes #493986).
+
 2007-11-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/libs/gst-plugins-base-libs-sections.txt:

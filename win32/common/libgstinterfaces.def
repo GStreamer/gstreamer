@@ -6,10 +6,18 @@ EXPORTS
 	gst_color_balance_set_value
 	gst_color_balance_type_get_type
 	gst_color_balance_value_changed
+	gst_mixer_flags_get_type
+	gst_mixer_get_mixer_flags
 	gst_mixer_get_option
 	gst_mixer_get_type
 	gst_mixer_get_volume
 	gst_mixer_list_tracks
+	gst_mixer_message_get_type
+	gst_mixer_message_parse_mute_toggled
+	gst_mixer_message_parse_option_changed
+	gst_mixer_message_parse_record_toggled
+	gst_mixer_message_parse_volume_changed
+	gst_mixer_message_type_get_type
 	gst_mixer_mute_toggled
 	gst_mixer_option_changed
 	gst_mixer_options_get_type
@@ -22,6 +30,7 @@ EXPORTS
 	gst_mixer_track_flags_get_type
 	gst_mixer_track_get_type
 	gst_mixer_type_get_type
+	gst_mixer_volume_changed
 	gst_navigation_get_type
 	gst_navigation_send_event
 	gst_navigation_send_key_event
@@ -29,9 +38,13 @@ EXPORTS
 	gst_property_probe_get_properties
 	gst_property_probe_get_property
 	gst_property_probe_get_type
+	gst_property_probe_get_values
 	gst_property_probe_get_values_name
-	gst_property_probe_probe_and_get_values
+	gst_property_probe_needs_probe
 	gst_property_probe_needs_probe_name
+	gst_property_probe_probe_and_get_values
+	gst_property_probe_probe_and_get_values_name
+	gst_property_probe_probe_property
 	gst_property_probe_probe_property_name
 	gst_tuner_channel_changed
 	gst_tuner_channel_flags_get_type
@@ -52,7 +65,11 @@ EXPORTS
 	gst_tuner_set_norm
 	gst_tuner_signal_changed
 	gst_tuner_signal_strength
+	gst_video_orientation_get_hcenter
+	gst_video_orientation_get_hflip
 	gst_video_orientation_get_type
+	gst_video_orientation_get_vcenter
+	gst_video_orientation_get_vflip
 	gst_video_orientation_set_hcenter
 	gst_video_orientation_set_hflip
 	gst_video_orientation_set_vcenter
@@ -60,5 +77,6 @@ EXPORTS
 	gst_x_overlay_expose
 	gst_x_overlay_get_type
 	gst_x_overlay_got_xwindow_id
+	gst_x_overlay_handle_events
 	gst_x_overlay_prepare_xwindow_id
 	gst_x_overlay_set_xwindow_id
