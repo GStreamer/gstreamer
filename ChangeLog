@@ -1,3 +1,10 @@
+2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstvalue.c:
+	  Remove unused and uninitialised type variables that were still
+	  exported for some reason (they were never in any header files
+	  though).
+
 2007-11-06  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times),

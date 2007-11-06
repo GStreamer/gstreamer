@@ -67,13 +67,6 @@ struct _GstValueSubtractInfo
   GstValueSubtractFunc func;
 };
 
-GType gst_type_double_range;
-GType gst_type_fraction_range;
-GType gst_type_list;
-GType gst_type_array;
-GType gst_type_fraction;
-GType gst_type_date;
-
 static GArray *gst_value_table;
 static GArray *gst_value_union_funcs;
 static GArray *gst_value_intersect_funcs;
