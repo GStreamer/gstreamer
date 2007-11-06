@@ -69,9 +69,4 @@ void gst_fft_f32_free (GstFFTF32 *self);
 
 void gst_fft_f32_window (GstFFTF32 *self, gfloat *timedata, GstFFTWindow window);
 
-void gst_fft_f32_magnitude (GstFFTF32 *self, GstFFTF32Complex *freqdata,
-    gdouble *magnitude, gboolean decibel);
-void gst_fft_f32_phase (GstFFTF32 *self, GstFFTF32Complex *freqdata,
-    gdouble *phase);
-
 #endif /* __GST_FFT_F32_H__ */

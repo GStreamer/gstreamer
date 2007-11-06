@@ -1,3 +1,20 @@
+2007-11-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/fft/gstfftf32.c:
+	* gst-libs/gst/fft/gstfftf32.h:
+	* gst-libs/gst/fft/gstfftf64.c:
+	* gst-libs/gst/fft/gstfftf64.h:
+	* gst-libs/gst/fft/gstffts16.c:
+	* gst-libs/gst/fft/gstffts16.h:
+	* gst-libs/gst/fft/gstffts32.c:
+	* gst-libs/gst/fft/gstffts32.h:
+	* tests/check/libs/fft.c: (GST_START_TEST):
+	Remove the magnitude and phase calculation functions as these have
+	very special use cases and can't even be used for the spectrum
+	element. Also adjust the docs to mention some properties of the used
+	FFT implemention, i.e. how the values are scaled. Fixes #492098.
+
 2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/playback/gstplaybasebin.c: (queue_threshold_reached),

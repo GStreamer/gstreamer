@@ -242,10 +242,8 @@ GstFFTS16Complex
 gst_fft_s16_new
 gst_fft_s16_fft
 gst_fft_s16_inverse_fft
-gst_fft_s16_free
-gst_fft_s16_magnitude
-gst_fft_s16_phase
 gst_fft_s16_window
+gst_fft_s16_free
 </SECTION>
 
 <SECTION>
@@ -256,10 +254,8 @@ GstFFTS32Complex
 gst_fft_s32_new
 gst_fft_s32_fft
 gst_fft_s32_inverse_fft
-gst_fft_s32_free
-gst_fft_s32_magnitude
-gst_fft_s32_phase
 gst_fft_s32_window
+gst_fft_s32_free
 </SECTION>
 
 <SECTION>
@@ -270,10 +266,8 @@ GstFFTF32Complex
 gst_fft_f32_new
 gst_fft_f32_fft
 gst_fft_f32_inverse_fft
-gst_fft_f32_free
-gst_fft_f32_magnitude
-gst_fft_f32_phase
 gst_fft_f32_window
+gst_fft_f32_free
 </SECTION>
 
 <SECTION>
@@ -284,10 +278,8 @@ GstFFTF64Complex
 gst_fft_f64_new
 gst_fft_f64_fft
 gst_fft_f64_inverse_fft
-gst_fft_f64_free
-gst_fft_f64_magnitude
-gst_fft_f64_phase
 gst_fft_f64_window
+gst_fft_f64_free
 </SECTION>
 
 # floatcast

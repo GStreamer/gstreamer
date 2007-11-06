@@ -48,11 +48,11 @@
  * to apply a window function to it. For this gst_fft_s32_window() can comfortably
  * be used.
  *
- * For calculating the magnitude or phase of frequency data the functions
- * gst_fft_s32_magnitude() and gst_fft_s32_phase() exist, if you want to calculate
- * the magnitude yourself note that the magnitude of the frequency data is
- * a value between 0 and 2147483647 and is not to be scaled by the length of the FFT.
- *
+ * Be aware, that you can't simply run gst_fft_s32_inverse_fft() on the
+ * resulting frequency data of gst_fft_s32_fft() to get the original data back.
+ * The relation between them is iFFT (FFT (x)) = x / nfft where nfft is the
+ * length of the FFT. This also has to be taken into account when calculation
+ * the magnitude of the frequency data.
  */
 
 /**
@@ -199,71 +199,4 @@ gst_fft_s32_window (GstFFTS32 * self, gint32 * timedata, GstFFTWindow window)
       g_assert_not_reached ();
       break;
   }
-}
-
-/**
- * gst_fft_s32_magnitude:
- * @self: #GstFFTS32 instance for this call
- * @freqdata: Frequency domain samples
- * @magnitude: Target buffer for the magnitude
- * @decibel: %TRUE if the magnitude should be in decibel, %FALSE if it should be an amplitude
- *
- * This calculates the magnitude of @freqdata in @magnitude. Depending on the value
- * of @decibel the magnitude can be calculated in decibel or as amplitude between 0.0
- * and 1.0.
- *
- * @magnitude must be large enough to hold @len/2 + 1 values.
- *
- */
-void
-gst_fft_s32_magnitude (GstFFTS32 * self, GstFFTS32Complex * freqdata,
-    gdouble * magnitude, gboolean decibel)
-{
-  gint i, len;
-  gdouble val;
-
-  g_return_if_fail (self);
-  g_return_if_fail (freqdata);
-  g_return_if_fail (magnitude);
-
-  len = self->len / 2 + 1;
-
-  for (i = 0; i < len; i++) {
-    val = (gdouble) freqdata[i].r * (gdouble) freqdata[i].r
-        + (gdouble) freqdata[i].i * (gdouble) freqdata[i].i;
-    val = sqrt (val) / 2147483647.0;
-
-    if (decibel)
-      val = 20.0 * log10 (val);
-
-    magnitude[i] = val;
-  }
-}
-
-/**
- * gst_fft_s32_phase:
- * @self: #GstFFTS32 instance for this call
- * @freqdata: Frequency domain samples
- * @phase: Target buffer for the phase
- *
- * This calculates the phases of @freqdata in @phase. The returned
- * phases will be values between -pi and pi.
- *
- * @phase must be large enough to hold @len/2 + 1 values.
- *
- */
-void
-gst_fft_s32_phase (GstFFTS32 * self, GstFFTS32Complex * freqdata,
-    gdouble * phase)
-{
-  gint i, len;
-
-  g_return_if_fail (self);
-  g_return_if_fail (freqdata);
-  g_return_if_fail (phase);
-
-  len = self->len / 2 + 1;
-
-  for (i = 0; i < len; i++)
-    phase[i] = atan2 (freqdata[i].i, freqdata[i].r);
 }

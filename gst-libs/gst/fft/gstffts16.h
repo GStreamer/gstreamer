@@ -68,10 +68,4 @@ void gst_fft_s16_inverse_fft (GstFFTS16 *self, const GstFFTS16Complex *freqdata,
 void gst_fft_s16_free (GstFFTS16 *self);
 
 void gst_fft_s16_window (GstFFTS16 *self, gint16 *timedata, GstFFTWindow window);
-
-void gst_fft_s16_magnitude (GstFFTS16 *self, GstFFTS16Complex *freqdata,
-    gdouble *magnitude, gboolean decibel);
-void gst_fft_s16_phase (GstFFTS16 *self, GstFFTS16Complex *freqdata,
-    gdouble *phase);
-
 #endif /* __GST_FFT_S16_H__ */
