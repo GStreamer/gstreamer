@@ -1274,7 +1274,8 @@ async_failed:
 static gboolean
 gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     GstClockTime * rsstart, GstClockTime * rsstop,
-    GstClockTime * rrstart, GstClockTime * rrstop, gboolean * do_sync)
+    GstClockTime * rrstart, GstClockTime * rrstop, gboolean * do_sync,
+    GstSegment * segment)
 {
   GstBaseSinkClass *bclass;
   GstBuffer *buffer;
@@ -1283,7 +1284,9 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   gint64 rstart, rstop;         /* clipped timestamps converted to running time */
   GstClockTime sstart, sstop;   /* clipped timestamps converted to stream time */
   GstFormat format;
-  GstSegment *segment;
+  GstBaseSinkPrivate *priv;
+
+  priv = basesink->priv;
 
   /* start with nothing */
   start = stop = sstart = sstop = rstart = rstop = -1;
@@ -1294,8 +1297,8 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
     switch (GST_EVENT_TYPE (event)) {
         /* EOS event needs syncing */
       case GST_EVENT_EOS:
-        sstart = sstop = basesink->priv->current_sstop;
-        rstart = rstop = basesink->priv->eos_rtime;
+        sstart = sstop = priv->current_sstop;
+        rstart = rstop = priv->eos_rtime;
         *do_sync = rstart != -1;
         GST_DEBUG_OBJECT (basesink, "sync times for EOS %" GST_TIME_FORMAT,
             GST_TIME_ARGS (rstart));
@@ -1332,7 +1335,6 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
       GST_TIME_ARGS (stop), *do_sync);
 
   /* collect segment and format for code clarity */
-  segment = &basesink->segment;
   format = segment->format;
 
   /* no timestamp clipping if we did not * get a TIME segment format */
@@ -1605,17 +1607,20 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
   GstClockTimeDiff jitter;
   gboolean syncable;
   GstClockReturn status = GST_CLOCK_OK;
-  GstClockTime sstart, sstop, rstart, rstop;
+  GstClockTime rstart, rstop, sstart, sstop;
   gboolean do_sync;
+  GstBaseSinkPrivate *priv;
+
+  priv = basesink->priv;
 
   sstart = sstop = rstart = rstop = -1;
   do_sync = TRUE;
 
-  basesink->priv->current_rstart = -1;
+  priv->current_rstart = -1;
 
-  /* update timing information for this object */
+  /* get timing information for this object against the render segment */
   syncable = gst_base_sink_get_sync_times (basesink, obj,
-      &sstart, &sstop, &rstart, &rstop, &do_sync);
+      &sstart, &sstop, &rstart, &rstop, &do_sync, &basesink->segment);
 
   /* a syncable object needs to participate in preroll and
    * clocking. All buffers and EOS are syncable. */
@@ -1623,17 +1628,10 @@ gst_base_sink_do_sync (GstBaseSink * basesink, GstPad * pad,
     goto not_syncable;
 
   /* store timing info for current object */
-  basesink->priv->current_rstart = rstart;
-  basesink->priv->current_rstop = (rstop != -1 ? rstop : rstart);
+  priv->current_rstart = rstart;
+  priv->current_rstop = (rstop != -1 ? rstop : rstart);
   /* save sync time for eos when the previous object needed sync */
-  basesink->priv->eos_rtime = (do_sync ? basesink->priv->current_rstop : -1);
-
-  /* lock because we read this when answering the POSITION 
-   * query. */
-  GST_OBJECT_LOCK (basesink);
-  basesink->priv->current_sstart = sstart;
-  basesink->priv->current_sstop = (sstop != -1 ? sstop : sstart);
-  GST_OBJECT_UNLOCK (basesink);
+  priv->eos_rtime = (do_sync ? priv->current_rstop : -1);
 
 again:
   /* first do preroll, this makes sure we commit our state
@@ -1657,6 +1655,13 @@ again:
         goto flushing;
     }
   }
+
+  /* After rendering we store the position of the last buffer so that we can use
+   * it to report the position. We need to take the lock here. */
+  GST_OBJECT_LOCK (basesink);
+  priv->current_sstart = sstart;
+  priv->current_sstop = (sstop != -1 ? sstop : sstart);
+  GST_OBJECT_UNLOCK (basesink);
 
   if (!do_sync)
     goto done;
@@ -1687,7 +1692,7 @@ again:
   }
 
   /* successful syncing done, record observation */
-  basesink->priv->current_jitter = jitter;
+  priv->current_jitter = jitter;
 
   /* check if the object should be dropped */
   *late = gst_base_sink_is_too_late (basesink, obj, rstart, rstop,
@@ -2111,11 +2116,13 @@ gst_base_sink_preroll_object (GstBaseSink * basesink, GstPad * pad,
   if (G_LIKELY (GST_IS_BUFFER (obj))) {
     GstBaseSinkClass *bclass;
     GstBuffer *buf;
+    GstClockTime timestamp;
 
     buf = GST_BUFFER_CAST (obj);
+    timestamp = GST_BUFFER_TIMESTAMP (buf);
 
     GST_DEBUG_OBJECT (basesink, "preroll buffer %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+        GST_TIME_ARGS (timestamp));
 
     gst_base_sink_set_last_buffer (basesink, buf);
 
@@ -2394,6 +2401,7 @@ gst_base_sink_event (GstPad * pad, GstEvent * event)
       gst_segment_init (basesink->abidata.ABI.clip_segment,
           GST_FORMAT_UNDEFINED);
       basesink->have_newsegment = FALSE;
+
       /* for position reporting */
       GST_OBJECT_LOCK (basesink);
       basesink->priv->current_sstart = -1;
@@ -2965,16 +2973,19 @@ gst_base_sink_get_position_last (GstBaseSink * basesink, gint64 * cur)
 {
   /* return last observed stream time */
   *cur = basesink->priv->current_sstop;
+  GST_DEBUG_OBJECT (basesink, "POSITION: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (*cur));
   return TRUE;
 }
 
-/* get the position when we are PAUSED */
-/* FIXME, not entirely correct if we have preroll_queue_len > 1 and
- * there are multiple segments in the queue since we calculate on the
- * total segments, not the first one. */
+/* get the position when we are PAUSED, this is the stream time of the buffer
+ * that prerolled. If no buffer is prerolled (we are still flushing), this
+ * value will be -1. */
 static gboolean
 gst_base_sink_get_position_paused (GstBaseSink * basesink, gint64 * cur)
 {
+  gboolean res;
+
   *cur = basesink->priv->current_sstart;
 
   if (*cur != -1)
@@ -2982,7 +2993,11 @@ gst_base_sink_get_position_paused (GstBaseSink * basesink, gint64 * cur)
   else
     *cur = basesink->abidata.ABI.clip_segment->time;
 
-  return TRUE;
+  res = (*cur != -1);
+  GST_DEBUG_OBJECT (basesink, "POSITION: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (*cur));
+
+  return res;
 }
 
 static gboolean
@@ -3094,12 +3109,14 @@ done:
   /* special cases */
 in_eos:
   {
+    GST_DEBUG_OBJECT (basesink, "position in EOS");
     res = gst_base_sink_get_position_last (basesink, cur);
     GST_OBJECT_UNLOCK (basesink);
     goto done;
   }
 in_pause:
   {
+    GST_DEBUG_OBJECT (basesink, "position in PAUSED");
     res = gst_base_sink_get_position_paused (basesink, cur);
     GST_OBJECT_UNLOCK (basesink);
     goto done;
@@ -3107,8 +3124,9 @@ in_pause:
 wrong_state:
   {
     /* in NULL or READY we always return 0 */
-    res = TRUE;
-    *cur = 0;
+    GST_DEBUG_OBJECT (basesink, "position in wrong state, return -1");
+    res = FALSE;
+    *cur = -1;
     GST_OBJECT_UNLOCK (basesink);
     goto done;
   }
@@ -3118,6 +3136,8 @@ no_sync:
      * that upstream can answer */
     if ((*cur = basesink->priv->current_sstart) != -1)
       res = TRUE;
+    GST_DEBUG_OBJECT (basesink, "no sync, res %d, POSITION %" GST_TIME_FORMAT,
+        res, GST_TIME_ARGS (*cur));
     GST_OBJECT_UNLOCK (basesink);
     return res;
   }
@@ -3218,8 +3238,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       basesink->have_preroll = FALSE;
       basesink->need_preroll = TRUE;
       basesink->playing_async = TRUE;
-      priv->current_sstart = 0;
-      priv->current_sstop = 0;
+      priv->current_sstart = -1;
+      priv->current_sstop = -1;
       priv->eos_rtime = -1;
       priv->latency = 0;
       basesink->eos = FALSE;
@@ -3362,8 +3382,8 @@ gst_base_sink_change_state (GstElement * element, GstStateChange transition)
       } else {
         GST_DEBUG_OBJECT (basesink, "PAUSED to READY, don't need_preroll");
       }
-      priv->current_sstart = 0;
-      priv->current_sstop = 0;
+      priv->current_sstart = -1;
+      priv->current_sstop = -1;
       priv->have_latency = FALSE;
       gst_base_sink_set_last_buffer (basesink, NULL);
       GST_PAD_PREROLL_UNLOCK (basesink->sinkpad);
