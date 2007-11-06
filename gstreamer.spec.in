@@ -94,10 +94,10 @@ with different major/minor versions of GStreamer.
 
 %build
 %configure \
-  --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} \
   --disable-tests --disable-examples \
-  --enable-gtk-doc 
-#--enable-docbook \                                                                               
+  --enable-gtk-doc \
+  --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} 
+                                                                        
 make
 
 %install  

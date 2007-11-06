@@ -32,7 +32,7 @@ EXTRA_DIST = \
 	gstreamer.spec gstreamer.spec.in \
 	gst-element-check.m4.in \
 	configure.ac autogen.sh depcomp \
-	ABOUT-NLS RELEASE gstreamer.doap \
+	MAINTAINERS ABOUT-NLS RELEASE gstreamer.doap \
 	$(win32)
 
 CLEANFILES = gst-element-check-@GST_MAJORMINOR@.m4
