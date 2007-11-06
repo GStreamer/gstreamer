@@ -108,6 +108,10 @@ SOURCE="..\..\gst-libs\gst\tag\gstid3tag.c"
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\gst-libs\gst\tag\gsttagdemux.c"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\gst-libs\gst\tag\gstvorbistag.c"
 # End Source File
 # Begin Source File

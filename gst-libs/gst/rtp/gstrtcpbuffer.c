@@ -1637,9 +1637,11 @@ gst_rtcp_ntp_to_unix (guint64 ntptime)
 
   /* conversion from NTP timestamp (seconds since 1900) to seconds since
    * 1970. */
-  unixtime = ntptime - (2208988800ULL << 32);
+  unixtime = ntptime - (G_GUINT64_CONSTANT (2208988800) << 32);
   /* conversion to nanoseconds */
-  unixtime = gst_util_uint64_scale (unixtime, GST_SECOND, (1LL << 32));
+  unixtime =
+      gst_util_uint64_scale (unixtime, GST_SECOND,
+      (G_GINT64_CONSTANT (1) << 32));
 
   return unixtime;
 }
@@ -1663,10 +1665,12 @@ gst_rtcp_unix_to_ntp (guint64 unixtime)
 
   /* convert clock time to NTP time. upper 32 bits should contain the seconds
    * and the lower 32 bits, the fractions of a second. */
-  ntptime = gst_util_uint64_scale (unixtime, (1LL << 32), GST_SECOND);
+  ntptime =
+      gst_util_uint64_scale (unixtime, (G_GINT64_CONSTANT (1) << 32),
+      GST_SECOND);
   /* conversion from UNIX timestamp (seconds since 1970) to NTP (seconds
    * since 1900). */
-  ntptime += (2208988800ULL << 32);
+  ntptime += (G_GUINT64_CONSTANT (2208988800) << 32);
 
   return ntptime;
 }

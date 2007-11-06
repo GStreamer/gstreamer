@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0.lib gobject-2.0.lib /nologo /dll /machine:I386 /out:"Release/libgstaudio-0.10.dll" /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release"
+# ADD LINK32 glib-2.0.lib gobject-2.0.lib libgstreamer-0.10.lib libgstbase-0.10.lib libgstinterfaces-0.10.lib /nologo /dll /machine:I386 /out:"Release/libgstaudio-0.10.dll" /libpath:"../../../gstreamer/win32/vs6/release" /libpath:"./release"
 # Begin Special Build Tool
 TargetPath=.\Release\libgstaudio-0.10.dll
 SOURCE="$(InputPath)"
@@ -86,7 +86,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /debug /machine:I386 /pdbtype:sept
-# ADD LINK32 libgstreamer-0.10.lib libgstbase-0.10.lib glib-2.0D.lib gobject-2.0D.lib /nologo /dll /debug /machine:I386 /out:"Debug/libgstaudio-0.10.dll" /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"./debug"
+# ADD LINK32 glib-2.0D.lib gobject-2.0D.lib libgstreamer-0.10.lib libgstbase-0.10.lib libgstinterfaces-0.10.lib /nologo /dll /debug /machine:I386 /out:"Debug/libgstaudio-0.10.dll" /pdbtype:sept /libpath:"../../../gstreamer/win32/vs6/debug" /libpath:"./debug"
 # Begin Special Build Tool
 TargetPath=.\Debug\libgstaudio-0.10.dll
 SOURCE="$(InputPath)"
@@ -141,6 +141,10 @@ SOURCE="..\..\gst-libs\gst\audio\gstringbuffer.c"
 # Begin Source File
 
 SOURCE=..\common\libgstaudio.def
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\gst-libs\gst\audio\mixerutils.c"
 # End Source File
 # Begin Source File
 

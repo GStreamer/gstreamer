@@ -116,7 +116,15 @@ SOURCE="..\..\gst-libs\gst\rtp\gstbasertppayload.c"
 # End Source File
 # Begin Source File
 
+SOURCE="..\..\gst-libs\gst\rtp\gstrtcpbuffer.c"
+# End Source File
+# Begin Source File
+
 SOURCE="..\..\gst-libs\gst\rtp\gstrtpbuffer.c"
+# End Source File
+# Begin Source File
+
+SOURCE="..\..\gst-libs\gst\rtp\gstrtppayloads.c"
 # End Source File
 # Begin Source File
 

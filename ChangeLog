@@ -1,5 +1,21 @@
 2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Sebastien Moutte  <sebastien moutte net>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c: (gst_rtcp_ntp_to_unix),
+	  (gst_rtcp_unix_to_ntp):
+	* gst-libs/gst/rtp/gstrtppayloads.c: (gst_rtp_payload_info_for_name):
+	  Fix some C99-isms and and a missing function that some versions of
+	  MSVC don't like too much (#494346).
+
+	* win32/vs6/gst_plugins_base.dsw:
+	* win32/vs6/libgstaudio.dsp:
+	* win32/vs6/libgstrtp.dsp:
+	* win32/vs6/libgsttag.dsp:
+	  Update vs6 projects files (#494346).
+
+2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* win32/common/libgstaudio.def:

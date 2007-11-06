@@ -144,6 +144,18 @@ Package=<4>
 
 ###############################################################################
 
+Project: "libgstfft"=".\libgstfft.dsp" - Package Owner=<4>
+
+Package=<5>
+{{{
+}}}
+
+Package=<4>
+{{{
+}}}
+
+###############################################################################
+
 Project: "libgstgdp"=".\libgstgdp.dsp" - Package Owner=<4>
 
 Package=<5>
