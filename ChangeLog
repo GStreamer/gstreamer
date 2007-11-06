@@ -1,5 +1,31 @@
 2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/gst.c: (_gst_disable_segtrap):
+	  Make  _gst_disable_segtrap static, it's only used in gstplugin.c and
+	  we can use gst_segtrap_is_enabled() there now that we have that API.
+	  Move _gst_debug_dump_dot_dir into gstdebugutils.c, there's no reason
+	  to do the getenv here (and export the variable).
+
+	* gst/gstdebugutils.c: (debug_dump_element),
+	  (_gst_debug_bin_to_dot_file), (_gst_debug_bin_to_dot_file_with_ts):
+	  Don't use VLAs which is a C99ism and throws off MSVC (#493983).
+
+	* gst/gstinfo.c: (_priv_gst_info_start_time), (_gst_debug_init),
+	  (gst_debug_log_default):
+	  Rename _gst_info_start_time to priv_gst_info_start_time so it
+	  doesn't get exported (was never in any header).
+
+	* gst/gstplugin.c: (_gst_plugin_fault_handler_setup),
+	  (gst_plugin_loading_mutex):
+	  Make static mutex gst_plugin_loading_mutex really static (was never
+	  in any header), and use gst_segtrap_is_enabled() instead of
+	  _gst_disable_segtrap.
+
+	* gst/gsttrace.c: (_gst_trace_default):
+	  Make local _gst_trace_default static (was never in any header).
+
+2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
 
 	* win32/common/libgstbase.def:

@@ -95,7 +95,7 @@ gst_trace_read_tsc (gint64 * dst)
   read_tsc (dst);
 }
 
-GstTrace *_gst_trace_default = NULL;
+static GstTrace *_gst_trace_default = NULL;
 gint _gst_trace_on = 1;
 
 /**

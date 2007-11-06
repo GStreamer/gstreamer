@@ -65,13 +65,7 @@
 
 #include "gst_private.h"
 
-#include "gstplugin.h"
-#include "gstversion.h"
-#include "gstinfo.h"
-#include "gstfilter.h"
-#include "gstregistry.h"
-#include "gstmacros.h"
-
+#include <gst/gst.h>
 
 #define GST_CAT_DEFAULT GST_CAT_PLUGIN_LOADING
 
@@ -80,7 +74,6 @@ static gboolean _gst_plugin_inited;
 
 /* static variables for segfault handling of plugin loading */
 static char *_gst_plugin_fault_handler_filename = NULL;
-extern gboolean _gst_disable_segtrap;   /* see gst.c */
 
 #ifndef HAVE_WIN32
 static gboolean _gst_plugin_fault_handler_is_setup = FALSE;
@@ -327,7 +320,7 @@ _gst_plugin_fault_handler_setup (void)
   struct sigaction action;
 
   /* if asked to leave segfaults alone, just return */
-  if (_gst_disable_segtrap)
+  if (!gst_segtrap_is_enabled ())
     return;
 
   if (_gst_plugin_fault_handler_is_setup)
@@ -354,7 +347,7 @@ _gst_plugin_fault_handler_setup (void)
 
 static void _gst_plugin_fault_handler_setup ();
 
-GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
+static GStaticMutex gst_plugin_loading_mutex = G_STATIC_MUTEX_INIT;
 
 /**
  * gst_plugin_load_file:

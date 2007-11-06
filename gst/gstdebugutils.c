@@ -37,8 +37,7 @@
 
 /*** PIPELINE GRAPHS **********************************************************/
 
-const gchar *_gst_debug_dump_dot_dir = NULL;
-extern GstClockTime _gst_info_start_time;
+extern GstClockTime _priv_gst_info_start_time;
 
 static gchar *
 debug_dump_make_object_name (GstObject * element)
@@ -138,8 +137,9 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
   gchar *color_name;
   gchar *state_name = NULL;
   gchar *param_name = NULL;
-  gchar spc[1 + indent * 2];
+  gchar *spc = NULL;
 
+  spc = g_malloc (1 + indent * 2);
   memset (spc, 32, indent * 2);
   spc[indent * 2] = '\0';
 
@@ -251,8 +251,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
                         free_caps = TRUE;
                       } else {
                         free_caps = FALSE;
-                        if (!(caps =
-                                (GstCaps *)
+                        if (!(caps = (GstCaps *)
                                 gst_pad_get_pad_template_caps (pad))) {
                           /* this should not happen */
                           media = "?";
@@ -263,6 +262,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
                           gchar *tmp =
                               g_strdelimit (gst_caps_to_string (caps), ",",
                               '\n');
+
                           media = g_strescape (tmp, NULL);
                           free_media = TRUE;
                           g_free (tmp);
@@ -397,6 +397,7 @@ debug_dump_element (GstBin * bin, GstDebugGraphDetails details, FILE * out,
     }
   }
   gst_iterator_free (element_iter);
+  g_free (spc);
 }
 
 /*
@@ -415,12 +416,14 @@ void
 _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
     const gchar * file_name)
 {
+  const gchar *dump_dot_dir;
   gchar *full_file_name = NULL;
   FILE *out;
 
   g_return_if_fail (GST_IS_BIN (bin));
 
-  if (!_gst_debug_dump_dot_dir)
+  dump_dot_dir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");
+  if (!dump_dot_dir)
     return;
 
   if (!file_name) {
@@ -430,7 +433,7 @@ _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
   }
 
   full_file_name = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s.dot",
-      _gst_debug_dump_dot_dir, file_name);
+      dump_dot_dir, file_name);
 
   if ((out = fopen (full_file_name, "wb"))) {
     gchar *state_name = NULL;
@@ -498,7 +501,7 @@ _gst_debug_bin_to_dot_file_with_ts (GstBin * bin, GstDebugGraphDetails details,
 
   /* add timestamp */
   g_get_current_time (&now);
-  elapsed = GST_TIMEVAL_TO_TIME (now) - _gst_info_start_time;
+  elapsed = GST_TIMEVAL_TO_TIME (now) - _priv_gst_info_start_time;
   ts_file_name =
       g_strdup_printf ("%" GST_TIME_FORMAT "-%s", GST_TIME_ARGS (elapsed),
       file_name);

@@ -134,7 +134,6 @@ static GList *plugin_paths = NULL;      /* for delayed processing in post_init *
 #endif
 
 extern gint _gst_trace_on;
-extern const gchar *_gst_debug_dump_dot_dir;
 
 /* defaults */
 #ifdef HAVE_FORK
@@ -143,9 +142,8 @@ extern const gchar *_gst_debug_dump_dot_dir;
 #define DEFAULT_FORK FALSE
 #endif /* HAVE_FORK */
 
-/* set to TRUE when segfaults need to be left as is, FIXME, this variable is
- * global. */
-gboolean _gst_disable_segtrap = FALSE;
+/* set to TRUE when segfaults need to be left as is */
+static gboolean _gst_disable_segtrap = FALSE;
 
 /* control the behaviour of registry rebuild */
 static gboolean _gst_enable_registry_fork = DEFAULT_FORK;
@@ -586,8 +584,6 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
     if (debug_list) {
       parse_debug_list (debug_list);
     }
-
-    _gst_debug_dump_dot_dir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");
   }
 #endif
   /* This is the earliest we can make stuff show up in the logs.
