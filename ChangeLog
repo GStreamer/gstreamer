@@ -1,3 +1,13 @@
+2007-11-06  Wim Taymans  <wim.taymans@gmail.com>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_query),
+	(gst_base_src_perform_seek), (gst_base_src_default_event),
+	(gst_base_src_set_flushing), (gst_base_src_activate_push),
+	(gst_base_src_activate_pull):
+	Unify flushing code, remove some old unlock code that is no longer used.
+	Take the streaming lock when seeking to avoid races. Fixes #492729.
+	Added some more comments.
+
 2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (_gst_disable_segtrap):

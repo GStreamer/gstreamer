@@ -316,10 +316,7 @@ static gboolean gst_base_src_default_prepare_seek_segment (GstBaseSrc * src,
     GstEvent * event, GstSegment * segment);
 
 static gboolean gst_base_src_set_flushing (GstBaseSrc * basesrc,
-    gboolean flushing, gboolean live_play, gboolean unlock);
-static gboolean gst_base_src_unlock (GstBaseSrc * basesrc, gboolean unlock);
-static gboolean gst_base_src_unlock_stop (GstBaseSrc * basesrc,
-    gboolean unlock);
+    gboolean flushing, gboolean live_play, gboolean unlock, gboolean * playing);
 static gboolean gst_base_src_start (GstBaseSrc * basesrc);
 static gboolean gst_base_src_stop (GstBaseSrc * basesrc);
 
@@ -787,14 +784,20 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
         {
           gint64 duration;
 
+          /* this is the duration as configured by the subclass. */
           duration = src->segment.duration;
 
           if (duration != -1) {
-            /* convert to requested format */
+            /* convert to requested format, if this fails, we have a duration
+             * but we cannot answer the query, we must return FALSE. */
             res =
                 gst_pad_query_convert (src->srcpad, src->segment.format,
                 duration, &format, &duration);
           } else {
+            /* The subclass did not configure a duration, we assume that the
+             * media has an unknown duration then and we return TRUE to report
+             * this. Note that this is not the same as returning FALSE, which
+             * means that we cannot report the duration at all. */
             res = TRUE;
           }
           gst_query_set_duration (query, format, duration);
@@ -1078,7 +1081,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
   gint64 cur, stop;
-  gboolean flush;
+  gboolean flush, playing;
   gboolean update;
   gboolean relative_seek = FALSE;
   gboolean seekseg_configured = FALSE;
@@ -1118,16 +1121,15 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
   else
     gst_pad_pause_task (src->srcpad);
 
-  /* unblock streaming thread */
-  gst_base_src_unlock (src, unlock);
+  /* unblock streaming thread. */
+  gst_base_src_set_flushing (src, TRUE, FALSE, unlock, &playing);
 
-  /* grab live lock, this should eventually be possible, either
+  /* grab streaming lock, this should eventually be possible, either
    * because the task is paused, our streaming thread stopped 
-   * because our peer is flushing or because we are blocked in the live
-   * cond. */
-  GST_LIVE_LOCK (src);
+   * or because our peer is flushing. */
+  GST_PAD_STREAM_LOCK (src->srcpad);
 
-  gst_base_src_unlock_stop (src, unlock);
+  gst_base_src_set_flushing (src, FALSE, playing, unlock, NULL);
 
   /* If we configured the seeksegment above, don't overwrite it now. Otherwise
    * copy the current segment info into the temp segment that we can actually
@@ -1231,7 +1233,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
       src->srcpad);
 
   /* and release the lock again so we can continue streaming */
-  GST_LIVE_UNLOCK (src);
+  GST_PAD_STREAM_UNLOCK (src->srcpad);
 
   return res;
 
@@ -1387,10 +1389,10 @@ gst_base_src_default_event (GstBaseSrc * src, GstEvent * event)
     case GST_EVENT_FLUSH_START:
       /* cancel any blocking getrange, is normally called
        * when in pull mode. */
-      result = gst_base_src_set_flushing (src, TRUE, FALSE, TRUE);
+      result = gst_base_src_set_flushing (src, TRUE, FALSE, TRUE, NULL);
       break;
     case GST_EVENT_FLUSH_STOP:
-      result = gst_base_src_set_flushing (src, FALSE, TRUE, TRUE);
+      result = gst_base_src_set_flushing (src, FALSE, TRUE, TRUE, NULL);
       break;
     default:
       result = TRUE;
@@ -2112,65 +2114,6 @@ null_buffer:
   }
 }
 
-/* this will always be called between start() and stop(). So you can rely on
- * resources allocated by start() and freed from stop(). This needs to be added
- * to the docs at some point. */
-static gboolean
-gst_base_src_unlock (GstBaseSrc * basesrc, gboolean unlock)
-{
-  GstBaseSrcClass *bclass;
-  gboolean result = TRUE;
-
-  GST_DEBUG ("unlock");
-  bclass = GST_BASE_SRC_GET_CLASS (basesrc);
-  /* unblock whatever the subclass is doing if we were asked to */
-  if (unlock) {
-    if (bclass->unlock)
-      result = bclass->unlock (basesrc);
-  }
-
-  GST_LIVE_LOCK (basesrc);
-  GST_DEBUG ("unschedule clock");
-  /* and unblock the clock as well, if any */
-  if (basesrc->clock_id) {
-    gst_clock_id_unschedule (basesrc->clock_id);
-  }
-
-  if (unlock) {
-    if (bclass->unlock_stop)
-      result = bclass->unlock_stop (basesrc);
-  }
-
-  GST_DEBUG ("unlock done");
-  GST_LIVE_UNLOCK (basesrc);
-
-  return result;
-}
-
-/* this will always be called between start() and stop(). So you can rely on
- * resources allocated by start() and freed from stop(). This needs to be added
- * to the docs at some point. */
-static gboolean
-gst_base_src_unlock_stop (GstBaseSrc * basesrc, gboolean unlock)
-{
-  GstBaseSrcClass *bclass;
-  gboolean result = TRUE;
-
-  GST_DEBUG_OBJECT (basesrc, "unlock stop");
-
-  /* Finish a previous unblock request, allowing subclasses to flush command
-   * queues or whatever they need to do */
-  if (unlock) {
-    bclass = GST_BASE_SRC_GET_CLASS (basesrc);
-    if (bclass->unlock_stop)
-      result = bclass->unlock_stop (basesrc);
-  }
-
-  GST_DEBUG_OBJECT (basesrc, "unlock stop done");
-
-  return result;
-}
-
 /* default negotiation code. 
  *
  * Take intersection between src and sink pads, take first
@@ -2375,9 +2318,11 @@ gst_base_src_stop (GstBaseSrc * basesrc)
   return result;
 }
 
+/* start or stop flushing dataprocessing 
+ */
 static gboolean
 gst_base_src_set_flushing (GstBaseSrc * basesrc,
-    gboolean flushing, gboolean live_play, gboolean unlock)
+    gboolean flushing, gboolean live_play, gboolean unlock, gboolean * playing)
 {
   GstBaseSrcClass *bclass;
 
@@ -2394,6 +2339,8 @@ gst_base_src_set_flushing (GstBaseSrc * basesrc,
   /* the live lock is released when we are blocked, waiting for playing or
    * when we sync to the clock. */
   GST_LIVE_LOCK (basesrc);
+  if (playing)
+    *playing = basesrc->live_running;
   basesrc->priv->flushing = flushing;
   if (flushing) {
     /* if we are locked in the live lock, signal it to make it flush */
@@ -2489,7 +2436,7 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
 
     basesrc->priv->last_sent_eos = FALSE;
     basesrc->priv->discont = TRUE;
-    gst_base_src_set_flushing (basesrc, FALSE, FALSE, FALSE);
+    gst_base_src_set_flushing (basesrc, FALSE, FALSE, FALSE, NULL);
 
     /* do initial seek, which will start the task */
     GST_OBJECT_LOCK (basesrc);
@@ -2508,7 +2455,7 @@ gst_base_src_activate_push (GstPad * pad, gboolean active)
   } else {
     GST_DEBUG_OBJECT (basesrc, "Deactivating in push mode");
     /* flush all */
-    gst_base_src_set_flushing (basesrc, TRUE, FALSE, TRUE);
+    gst_base_src_set_flushing (basesrc, TRUE, FALSE, TRUE, NULL);
     /* stop the task */
     gst_pad_stop_task (pad);
     /* now we can stop the source */
@@ -2562,11 +2509,11 @@ gst_base_src_activate_pull (GstPad * pad, gboolean active)
 
     /* stop flushing now but for live sources, still block in the LIVE lock when
      * we are not yet PLAYING */
-    gst_base_src_set_flushing (basesrc, FALSE, FALSE, FALSE);
+    gst_base_src_set_flushing (basesrc, FALSE, FALSE, FALSE, NULL);
   } else {
     GST_DEBUG_OBJECT (basesrc, "Deactivating in pull mode");
     /* flush all, there is no task to stop */
-    gst_base_src_set_flushing (basesrc, TRUE, FALSE, TRUE);
+    gst_base_src_set_flushing (basesrc, TRUE, FALSE, TRUE, NULL);
 
     /* don't send EOS when going from PAUSED => READY when in pull mode */
     basesrc->priv->last_sent_eos = TRUE;
