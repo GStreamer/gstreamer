@@ -52,6 +52,27 @@ with 100 percent value is received, which might only happen after the pipeline
 prerolled.
 
 
+Buffering Query
+---------------
+
+It is possible to query the amount of buffering performed in the pipeline, which
+is defined as the amount of data made available at the source. This amount is
+expressed in some GstFormat and is usually compared to the duration or position 
+of the media stream in the same GstFormat.
+
+The buffering query should return the following information:
+
+ - format
+ - position
+ - duration
+
+The format is of lesser importance, the ratio of position versus duration can be
+used to calculate the percentage of available media. It should also be possible
+for the application to calculate the expected time when the complete file will
+be buffered. 
+
+
+
 Incremental download
 --------------------
 

@@ -1,3 +1,14 @@
+2007-11-06  Wim Taymans  <wim.taymans@gmail.com>
+
+	* MAINTAINERS:
+	Update with new email address.
+
+	* docs/design/part-TODO.txt:
+	Add some more info about future pad-block and negotiation changes.
+
+	* docs/design/part-buffering.txt:
+	Add some ideas about buffering reporting.
+
 2007-11-06  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* tests/check/gst/gstobject.c:

@@ -26,7 +26,8 @@ API/ABI
   (gstvalue/gststructure)
 
 - rethink how we handle dynamic replugging wrt segments and other events that
-  already got pushed and need to be pushed again.
+  already got pushed and need to be pushed again. Might need GstFlowReturn from
+  gst_pad_push_event().
 
 - keep track of seeks with a counter so that we can match seek events received
   in the demuxer srcpads. This is needed because a normal seek on a pipeline
@@ -36,6 +37,12 @@ API/ABI
   It would also be nice to have this same sequence number in the segment event
   that resulted from the seek so that everything seek related can be tracked
   properly.
+
+- Optimize negotiation. We currently do a get_caps() call when we link pads,
+  which could potentially generate a huge list of caps and all their
+  combinations, we need to avoid generating these huge lists by generating them
+  incrementaly when needed. We can do this with a gst_pad_iterate_caps() call.
+  We also need to incrementally return intersections etc, for this.
 
 - When an element goes to PAUSED there is no way to figure out the running time
   when this happened. One could think that we can store this time in the
@@ -58,6 +65,17 @@ API/ABI
   There needs to be a mechanism for a live source to request a new base_time or
   pipeline restart.
 
+- pad block has several issues: 
+  * can't block on selected things, like push, pull, pad_alloc, events, ...
+  * can't check why the block happened. We should also be able to get the item/
+    reason that blocked the pad. 
+  * it only blocks on datapassing. When EOS, the block never happens but ideally
+    should because pad block should inform the app when there is no dataflow.
+  * blocking should only happen from one thread. If one thread does pad_alloc
+    and another a push, the push might be busy while the block callback is done.
+  * maybe this name is overloaded. We need to look at some more use cases before
+    trying to fix this.
+
 
 IMPLEMENTATION
 --------------
@@ -66,7 +84,7 @@ IMPLEMENTATION
 
 - implement BUFFERSIZE.
 
-- implement pad_block with probes.
+- implement pad_block with probes? see above.
 
 
 DESIGN
