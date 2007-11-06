@@ -2300,12 +2300,15 @@ gst_element_set_state_func (GstElement * element, GstState state)
   current = GST_STATE (element);
   next = GST_STATE_NEXT (element);
   old_pending = GST_STATE_PENDING (element);
-  /* increment state cookie so that we can track each state change */
-  element->state_cookie++;
 
   /* this is the (new) state we should go to. TARGET is the last state we set on
    * the element. */
-  GST_STATE_TARGET (element) = state;
+  if (state != GST_STATE_TARGET (element)) {
+    GST_STATE_TARGET (element) = state;
+    /* increment state cookie so that we can track each state change. We only do
+     * this if this is actually a new state change. */
+    element->state_cookie++;
+  }
   GST_STATE_PENDING (element) = state;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_STATES, element,
