@@ -28,7 +28,7 @@
 #include <gst/gst.h>
 #include <gtk/gtk.h>
 
-#define DEFAULT_AUDIOSINK "alsasink"
+#define DEFAULT_AUDIOSINK "autoaudiosink"
 
 static GtkWidget *drawingarea = NULL;
 static guint spect_height = 64;
@@ -126,7 +126,7 @@ main (int argc, char *argv[])
   bin = gst_pipeline_new ("bin");
 
   src = gst_element_factory_make ("audiotestsrc", "src");
-  g_object_set (G_OBJECT (src), "wave", 1, NULL);
+  g_object_set (G_OBJECT (src), "wave", 0, NULL);
 
   spectrum = gst_element_factory_make ("spectrum", "spectrum");
   g_object_set (G_OBJECT (spectrum), "bands", spect_bands, "threshold", -80,

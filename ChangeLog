@@ -1,3 +1,11 @@
+2007-11-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/spectrum/demo-audiotest.c: (main):
+	Use autoaudiosink instead of alsasink and use a sine wave.
+
+	* gst/spectrum/gstspectrum.c:
+	Fix the magnitude calculation.
+
 2007-11-04  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>

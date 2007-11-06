@@ -517,10 +517,12 @@ process_s##width (GstSpectrum *spectrum, const gint##width *samples) \
   \
   /* Calculate magnitude in db */ \
   for (i = 0; i < spectrum->bands; i++) { \
-    gdouble val = (gdouble) freqdata[i].r * (gdouble) freqdata[i].r \
-        + (gdouble) freqdata[i].i * (gdouble) freqdata[i].i; \
-    val = sqrt (val); \
-    val = 20.0 * log10 (val / max); \
+    gdouble val; \
+    val = (gdouble) freqdata[i].r * (gdouble) freqdata[i].r; \
+    val += (gdouble) freqdata[i].i * (gdouble) freqdata[i].i; \
+    val *= nfft; \
+    val /= max*max; \
+    val = 10.0 * log10 (val); \
     if (val > spectrum->threshold) \
       val -= spectrum->threshold; \
     else \
@@ -583,9 +585,11 @@ process_f##width (GstSpectrum *spectrum, const g##type *samples) \
   \
   /* Calculate magnitude in db */ \
   for (i = 0; i < spectrum->bands; i++) { \
-    gdouble val = freqdata[i].r * freqdata[i].r + freqdata[i].i * freqdata[i].i; \
-    val = sqrt (val); \
-    val = 20.0 * log10 (val / nfft); \
+    gdouble val; \
+    val = freqdata[i].r * freqdata[i].r; \
+    val += freqdata[i].i * freqdata[i].i; \
+    val /= nfft; \
+    val = 10.0 * log10 (val); \
     if (val > spectrum->threshold) \
       val -= spectrum->threshold; \
     else \
