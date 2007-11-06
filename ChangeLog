@@ -1,3 +1,15 @@
+2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>
+
+	* win32/common/libgstbase.def:
+	* win32/common/libgstcontroller.def:
+	* win32/common/libgstdataprotocol.def:
+	* win32/common/libgstnet.def:
+	* win32/common/libgstreamer.def:
+	  Add more missing symbols, remove some duplicates, and sort
+	  as the 'sort' command sorts it (partially fixes #493983).
+
 2007-11-06  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gstelement.c: (gst_element_set_state_func):

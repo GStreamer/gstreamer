@@ -1,27 +1,35 @@
 EXPORTS
-	gst_adapter_new
 	gst_adapter_available
 	gst_adapter_available_fast
 	gst_adapter_clear
 	gst_adapter_copy
 	gst_adapter_flush
 	gst_adapter_get_type
+	gst_adapter_new
 	gst_adapter_peek
 	gst_adapter_push
 	gst_adapter_take
 	gst_adapter_take_buffer
+	gst_base_sink_get_last_buffer
+	gst_base_sink_get_latency
 	gst_base_sink_get_max_lateness
 	gst_base_sink_get_sync
+	gst_base_sink_get_ts_offset
 	gst_base_sink_get_type
-	gst_base_sink_get_latency
-	gst_base_sink_set_sync
+	gst_base_sink_is_async_enabled
 	gst_base_sink_is_qos_enabled
-	gst_base_sink_set_qos_enabled
-	gst_base_sink_set_max_lateness
 	gst_base_sink_query_latency
+	gst_base_sink_set_async_enabled
+	gst_base_sink_set_max_lateness
+	gst_base_sink_set_qos_enabled
+	gst_base_sink_set_sync
+	gst_base_sink_set_ts_offset
+	gst_base_sink_wait_eos
 	gst_base_sink_wait_preroll
+	gst_base_src_get_do_timestamp
 	gst_base_src_get_type
 	gst_base_src_is_live
+	gst_base_src_query_latency
 	gst_base_src_set_do_timestamp
 	gst_base_src_set_format
 	gst_base_src_set_live
@@ -34,15 +42,6 @@ EXPORTS
 	gst_base_transform_set_passthrough
 	gst_base_transform_set_qos_enabled
 	gst_base_transform_update_qos
-	gst_data_queue_flush
-	gst_data_queue_get_level
-	gst_data_queue_is_empty
-	gst_data_queue_is_full
-	gst_data_queue_limits_changed
-	gst_data_queue_new
-	gst_data_queue_pop
-	gst_data_queue_push
-	gst_data_queue_set_flushing
 	gst_collect_pads_add_pad
 	gst_collect_pads_add_pad_full
 	gst_collect_pads_available
@@ -60,6 +59,17 @@ EXPORTS
 	gst_collect_pads_set_function
 	gst_collect_pads_start
 	gst_collect_pads_stop
+	gst_data_queue_drop_head
+	gst_data_queue_flush
+	gst_data_queue_get_level
+	gst_data_queue_get_type
+	gst_data_queue_is_empty
+	gst_data_queue_is_full
+	gst_data_queue_limits_changed
+	gst_data_queue_new
+	gst_data_queue_pop
+	gst_data_queue_push
+	gst_data_queue_set_flushing
 	gst_push_src_get_type
 	gst_type_find_helper
 	gst_type_find_helper_for_buffer
