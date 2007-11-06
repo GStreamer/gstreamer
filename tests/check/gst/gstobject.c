@@ -155,11 +155,7 @@ GST_END_TEST
   return NULL;
 }
 
-/*
- * main thread sets and gets name while other threads set the name
- * constantly; fails because lock is released inbetween set and get
- */
-
+#if 0
 GST_START_TEST (test_fake_object_name_threaded_wrong)
 {
   GstObject *object;
@@ -194,7 +190,9 @@ GST_START_TEST (test_fake_object_name_threaded_wrong)
   fail_unless (expected_failure, "name did not get changed");
 }
 
-GST_END_TEST
+GST_END_TEST;
+#endif
+
 /*
  * main thread sets and gets name directly on struct inside the object lock
  * succeed because lock is held during set/get, and threads are locked out
@@ -453,7 +451,9 @@ GST_END_TEST
   suite_add_tcase (s, tc_chain);
   tcase_add_test (tc_chain, test_fake_object_new);
   tcase_add_test (tc_chain, test_fake_object_name);
+#if 0
   tcase_add_test (tc_chain, test_fake_object_name_threaded_wrong);
+#endif
   tcase_add_test (tc_chain, test_fake_object_name_threaded_right);
   tcase_add_test (tc_chain, test_fake_object_name_threaded_unique);
   tcase_add_test (tc_chain, test_fake_object_parentage);
