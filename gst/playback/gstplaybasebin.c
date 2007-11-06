@@ -671,9 +671,15 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
         play_base_bin->queue_min_threshold, NULL);
   }
 
+  GROUP_LOCK (play_base_bin);
+  group = get_active_group (play_base_bin);
+  if (!group) {
+    GROUP_UNLOCK (play_base_bin);
+    return;
+  }
+
   /* we remove the probe now because we don't need it anymore to give progress
    * about the buffering. */
-  group = get_active_group (play_base_bin);
   for (n = 0; n < NUM_TYPES; n++) {
     GstElement *element = group->type[n].preroll;
 
@@ -682,6 +688,8 @@ queue_threshold_reached (GstElement * queue, GstPlayBaseBin * play_base_bin)
 
     queue_remove_probe (element, play_base_bin);
   }
+
+  GROUP_UNLOCK (play_base_bin);
 
   /* we post a 100% buffering message to notify the app that buffering is
    * completed and playback can start/continue */
@@ -2205,6 +2213,7 @@ could_not_link:
 static void
 finish_source (GstPlayBaseBin * play_base_bin)
 {
+  /* FIXME: no need to grab the group lock here? (tpm) */
   if (get_active_group (play_base_bin) != NULL) {
     if (play_base_bin->subtitle) {
       /* make subs iterate from now on */
