@@ -140,6 +140,10 @@ SOURCE=..\..\gst\gstclock.c
 # End Source File
 # Begin Source File
 
+SOURCE=..\..\gst\gstdebugutils.c
+# End Source File
+# Begin Source File
+
 SOURCE=..\..\gst\gstelement.c
 # End Source File
 # Begin Source File

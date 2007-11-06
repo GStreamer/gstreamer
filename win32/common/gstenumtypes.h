@@ -40,6 +40,10 @@ GType gst_clock_entry_type_get_type (void);
 GType gst_clock_flags_get_type (void);
 #define GST_TYPE_CLOCK_FLAGS (gst_clock_flags_get_type())
 
+/* enumerations from "gstdebugutils.h" */
+GType gst_debug_graph_details_get_type (void);
+#define GST_TYPE_DEBUG_GRAPH_DETAILS (gst_debug_graph_details_get_type())
+
 /* enumerations from "gstelement.h" */
 GType gst_state_get_type (void);
 #define GST_TYPE_STATE (gst_state_get_type())

@@ -1,3 +1,14 @@
+2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Sebastien Moutte  <sebastien moutte net>
+
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstenumtypes.h:
+	  Update enum types.
+
+	* win32/vs6/libgstreamer.dsp:
+	  Update vs6 project files (#494343).
+
 2007-11-06  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_default_query),

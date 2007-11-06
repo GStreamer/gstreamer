@@ -244,6 +244,35 @@ gst_clock_flags_get_type (void)
   return id;
 }
 
+/* enumerations from "gstdebugutils.h" */
+static void
+register_gst_debug_graph_details (GType * id)
+{
+  static const GFlagsValue values[] = {
+    {C_FLAGS (GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE),
+        "GST_DEBUG_GRAPH_SHOW_MEDIA_TYPE", "media-type"},
+    {C_FLAGS (GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS),
+        "GST_DEBUG_GRAPH_SHOW_CAPS_DETAILS", "caps-details"},
+    {C_FLAGS (GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS),
+        "GST_DEBUG_GRAPH_SHOW_NON_DEFAULT_PARAMS", "non-default-params"},
+    {C_FLAGS (GST_DEBUG_GRAPH_SHOW_STATES), "GST_DEBUG_GRAPH_SHOW_STATES",
+        "states"},
+    {C_FLAGS (GST_DEBUG_GRAPH_SHOW_ALL), "GST_DEBUG_GRAPH_SHOW_ALL", "all"},
+    {0, NULL, NULL}
+  };
+  *id = g_flags_register_static ("GstDebugGraphDetails", values);
+}
+
+GType
+gst_debug_graph_details_get_type (void)
+{
+  static GType id;
+  static GOnce once = G_ONCE_INIT;
+
+  g_once (&once, (GThreadFunc) register_gst_debug_graph_details, &id);
+  return id;
+}
+
 /* enumerations from "gstelement.h" */
 static void
 register_gst_state (GType * id)
