@@ -1,6 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
+ * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,10 +19,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GSTGIOSRC_H__
-#define __GSTGIOSRC_H__
+#ifndef __GST_GIO_SRC_H__
+#define __GST_GIO_SRC_H__
 
 #include "gstgio.h"
+#include "gstgiobasesrc.h"
 
 #include <gio/gfile.h>
 #include <gst/base/gstbasesrc.h>
@@ -49,22 +51,19 @@ typedef struct _GstGioSrcClass GstGioSrcClass;
  */
 struct _GstGioSrc
 {
-  GstBaseSrc src;
+  GstGioBaseSrc src;
   
   /*< private >*/
-  GCancellable *cancel;
   gchar *location;
-  guint64 position;
-  GFileInputStream *stream;
 };
 
 struct _GstGioSrcClass 
 {
-  GstBaseSrcClass parent_class;
+  GstGioBaseSrcClass parent_class;
 };
 
 GType gst_gio_src_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GSTGIOSRC_H__ */
+#endif /* __GST_GIO_SRC_H__ */

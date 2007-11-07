@@ -27,6 +27,12 @@ SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-bad.supp
 
 clean-local: clean-local-check
 
+if USE_GIO
+check_gio = pipelines/gio
+else
+check_gio =
+endif
+
 if USE_MPEG2ENC
 check_mpeg2enc = elements/mpeg2enc
 else
@@ -55,6 +61,7 @@ VALGRIND_TESTS_DISABLE = \
 
 check_PROGRAMS = \
 	generic/states \
+	$(check_gio)  \
 	$(check_mpeg2enc)  \
 	$(check_neon)      \
 	$(check_timidity)  \
@@ -75,4 +82,7 @@ LDADD = $(GST_OBJ_LIBS) $(GST_CHECK_LIBS) $(CHECK_LIBS)
 
 elements_timidity_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 elements_timidity_LDADD = $(GST_BASE_LIBS) $(LDADD)
+
+pipelines_gio_CFLAGS = $(GIO_CFLAGS) $(AM_CFLAGS)
+pipelines_gio_LDADD = $(GIO_LIBS) $(LDADD)
 

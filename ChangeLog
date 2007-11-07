@@ -1,5 +1,61 @@
 2007-11-07  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/gio/gstgio.h:
+	Add macro to check if a stream supports seeking.
+
+	* ext/gio/Makefile.am:
+	* ext/gio/gstgiobasesink.c: (gst_gio_base_sink_base_init),
+	(gst_gio_base_sink_class_init), (gst_gio_base_sink_init),
+	(gst_gio_base_sink_finalize), (gst_gio_base_sink_start),
+	(gst_gio_base_sink_stop), (gst_gio_base_sink_unlock),
+	(gst_gio_base_sink_unlock_stop), (gst_gio_base_sink_event),
+	(gst_gio_base_sink_render), (gst_gio_base_sink_query),
+	(gst_gio_base_sink_set_stream):
+	* ext/gio/gstgiobasesink.h:
+	* ext/gio/gstgiobasesrc.c: (gst_gio_base_src_base_init),
+	(gst_gio_base_src_class_init), (gst_gio_base_src_init),
+	(gst_gio_base_src_finalize), (gst_gio_base_src_start),
+	(gst_gio_base_src_stop), (gst_gio_base_src_get_size),
+	(gst_gio_base_src_is_seekable), (gst_gio_base_src_unlock),
+	(gst_gio_base_src_unlock_stop), (gst_gio_base_src_check_get_range),
+	(gst_gio_base_src_create), (gst_gio_base_src_set_stream):
+	* ext/gio/gstgiobasesrc.h:
+	Refactor common GIO functions to GstGioBaseSink and GstGioBaseSrc
+	base classes that only require a GInputStream or GOutputStream to
+	work.
+
+	* ext/gio/gstgiosink.c: (gst_gio_sink_base_init),
+	(gst_gio_sink_class_init), (gst_gio_sink_init),
+	(gst_gio_sink_finalize), (gst_gio_sink_start):
+	* ext/gio/gstgiosink.h:
+	* ext/gio/gstgiosrc.c: (gst_gio_src_base_init),
+	(gst_gio_src_class_init), (gst_gio_src_init),
+	(gst_gio_src_finalize), (gst_gio_src_start):
+	* ext/gio/gstgiosrc.h:
+	Use the newly created base classes here.
+
+	* ext/gio/gstgio.c: (plugin_init):
+	* ext/gio/gstgiostreamsink.c: (gst_gio_stream_sink_base_init),
+	(gst_gio_stream_sink_class_init), (gst_gio_stream_sink_init),
+	(gst_gio_stream_sink_finalize), (gst_gio_stream_sink_set_property),
+	(gst_gio_stream_sink_get_property):
+	* ext/gio/gstgiostreamsink.h:
+	* ext/gio/gstgiostreamsrc.c: (gst_gio_stream_src_base_init),
+	(gst_gio_stream_src_class_init), (gst_gio_stream_src_init),
+	(gst_gio_stream_src_finalize), (gst_gio_stream_src_set_property),
+	(gst_gio_stream_src_get_property):
+	* ext/gio/gstgiostreamsrc.h:
+	Implement GstGioStreamSink and GstGioStreamSrc that have a property
+	to set the GInputStream/GOutputStream that should be used.
+
+	* tests/check/Makefile.am:
+	* tests/check/pipelines/.cvsignore:
+	* tests/check/pipelines/gio.c: (message_handler), (GST_START_TEST),
+	(gio_testsuite), (main):
+	Add unit test for giostreamsrc and giostreamsink.
+
+2007-11-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/gio/gstgio.c: (plugin_init):
 	Remove nowadays unnecessary workaround for a crash.
 	

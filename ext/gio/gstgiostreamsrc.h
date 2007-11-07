@@ -19,51 +19,48 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_GIO_SINK_H__
-#define __GST_GIO_SINK_H__
+#ifndef __GST_GIO_STREAM_SRC_H__
+#define __GST_GIO_STREAM_SRC_H__
 
 #include "gstgio.h"
-#include "gstgiobasesink.h"
+#include "gstgiobasesrc.h"
 
 #include <gio/gfile.h>
-#include <gst/base/gstbasesink.h>
+#include <gst/base/gstbasesrc.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GIO_SINK \
-  (gst_gio_sink_get_type())
-#define GST_GIO_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GIO_SINK,GstGioSink))
-#define GST_GIO_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GIO_SINK,GstGioSinkClass))
-#define GST_IS_GIO_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GIO_SINK))
-#define GST_IS_GIO_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GIO_SINK))
+#define GST_TYPE_GIO_STREAM_SRC \
+  (gst_gio_stream_src_get_type())
+#define GST_GIO_STREAM_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GIO_STREAM_SRC,GstGioStreamSrc))
+#define GST_GIO_STREAM_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GIO_STREAM_SRC,GstGioStreamSrcClass))
+#define GST_IS_GIO_STREAM_SRC(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GIO_STREAM_SRC))
+#define GST_IS_GIO_STREAM_SRC_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GIO_STREAM_SRC))
 
-typedef struct _GstGioSink      GstGioSink;
-typedef struct _GstGioSinkClass GstGioSinkClass;
+typedef struct _GstGioStreamSrc      GstGioStreamSrc;
+typedef struct _GstGioStreamSrcClass GstGioStreamSrcClass;
 
 /**
- * GstGioSink:
+ * GstGioStreamSrc:
  *
  * Opaque data structure.
  */
-struct _GstGioSink
+struct _GstGioStreamSrc
 {
-  GstGioBaseSink sink;
-
-  /*< private >*/
-  gchar *location;
+  GstGioBaseSrc src;
 };
 
-struct _GstGioSinkClass 
+struct _GstGioStreamSrcClass 
 {
-  GstGioBaseSinkClass parent_class;
+  GstGioBaseSrcClass parent_class;
 };
 
-GType gst_gio_sink_get_type (void);
+GType gst_gio_stream_src_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_GIO_SINK_H__ */
+#endif /* __GST_GIO_STREAM_SRC_H__ */
