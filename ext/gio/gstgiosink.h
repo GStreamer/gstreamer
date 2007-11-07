@@ -53,7 +53,6 @@ struct _GstGioSink
 
   /*< private >*/
   GCancellable *cancel;
-  GFile *file;
   gchar *location;
   guint64 position;
   GFileOutputStream *stream;

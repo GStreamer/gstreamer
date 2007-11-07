@@ -1,3 +1,24 @@
+2007-11-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/gio/gstgio.c: (plugin_init):
+	Remove nowadays unnecessary workaround for a crash.
+	
+	* ext/gio/gstgiosink.c: (gst_gio_sink_finalize),
+	(gst_gio_sink_start), (gst_gio_sink_stop),
+	(gst_gio_sink_unlock_stop):
+	* ext/gio/gstgiosink.h:
+	* ext/gio/gstgiosrc.c: (gst_gio_src_finalize), (gst_gio_src_start),
+	(gst_gio_src_stop), (gst_gio_src_unlock_stop):
+	* ext/gio/gstgiosrc.h:
+	Make the finalize function safer, clean up everything that could stay
+	around.
+
+	Reset the cancellable instead of creating a new one after cancelling
+	some operation.
+
+	Don't store the GFile in the element, it's only necessary for creating
+	the streams.
+
 2007-11-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/spectrum/demo-audiotest.c: (main):
