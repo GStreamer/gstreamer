@@ -37,6 +37,8 @@
 
 /*** PIPELINE GRAPHS **********************************************************/
 
+const gchar *priv_gst_dump_dot_dir;     /* NULL *//* set from gst.c */
+
 extern GstClockTime _priv_gst_info_start_time;
 
 static gchar *
@@ -416,14 +418,12 @@ void
 _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
     const gchar * file_name)
 {
-  const gchar *dump_dot_dir;
   gchar *full_file_name = NULL;
   FILE *out;
 
   g_return_if_fail (GST_IS_BIN (bin));
 
-  dump_dot_dir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");
-  if (!dump_dot_dir)
+  if (G_LIKELY (priv_gst_dump_dot_dir == NULL))
     return;
 
   if (!file_name) {
@@ -433,7 +433,7 @@ _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
   }
 
   full_file_name = g_strdup_printf ("%s" G_DIR_SEPARATOR_S "%s.dot",
-      dump_dot_dir, file_name);
+      priv_gst_dump_dot_dir, file_name);
 
   if ((out = fopen (full_file_name, "wb"))) {
     gchar *state_name = NULL;

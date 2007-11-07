@@ -135,6 +135,10 @@ static GList *plugin_paths = NULL;      /* for delayed processing in post_init *
 
 extern gint _gst_trace_on;
 
+#ifndef GST_DISABLE_GST_DEBUG
+extern const gchar *priv_gst_dump_dot_dir;
+#endif
+
 /* defaults */
 #ifdef HAVE_FORK
 #define DEFAULT_FORK TRUE
@@ -585,6 +589,8 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
       parse_debug_list (debug_list);
     }
   }
+
+  priv_gst_dump_dot_dir = g_getenv ("GST_DEBUG_DUMP_DOT_DIR");
 #endif
   /* This is the earliest we can make stuff show up in the logs.
    * So give some useful info about GStreamer here */
