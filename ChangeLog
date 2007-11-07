@@ -1,5 +1,10 @@
 2007-11-07  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* tests/icles/equalizer-test.c: (do_slider_fiddling):
+	Fix gain ranges for the latest equalizer changes.
+
+2007-11-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/gio/gstgio.h:
 	Add macro to check if a stream supports seeking.
 
