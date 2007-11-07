@@ -19,51 +19,48 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_GIO_SINK_H__
-#define __GST_GIO_SINK_H__
+#ifndef __GST_GIO_BASE_SINK_H__
+#define __GST_GIO_BASE_SINK_H__
 
 #include "gstgio.h"
-#include "gstgiobasesink.h"
 
 #include <gio/gfile.h>
 #include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_GIO_SINK \
-  (gst_gio_sink_get_type())
-#define GST_GIO_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GIO_SINK,GstGioSink))
-#define GST_GIO_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GIO_SINK,GstGioSinkClass))
-#define GST_IS_GIO_SINK(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GIO_SINK))
-#define GST_IS_GIO_SINK_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GIO_SINK))
+#define GST_TYPE_GIO_BASE_SINK \
+  (gst_gio_base_sink_get_type())
+#define GST_GIO_BASE_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GIO_BASE_SINK,GstGioBaseSink))
+#define GST_GIO_BASE_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GIO_BASE_SINK,GstGioBaseSinkClass))
+#define GST_IS_GIO_BASE_SINK(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GIO_BASE_SINK))
+#define GST_IS_GIO_BASE_SINK_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GIO_BASE_SINK))
 
-typedef struct _GstGioSink      GstGioSink;
-typedef struct _GstGioSinkClass GstGioSinkClass;
+typedef struct _GstGioBaseSink      GstGioBaseSink;
+typedef struct _GstGioBaseSinkClass GstGioBaseSinkClass;
 
-/**
- * GstGioSink:
- *
- * Opaque data structure.
- */
-struct _GstGioSink
+struct _GstGioBaseSink
 {
-  GstGioBaseSink sink;
+  GstBaseSink sink;
 
-  /*< private >*/
-  gchar *location;
+  GCancellable *cancel;
+  guint64 position;
+  GOutputStream *stream;
 };
 
-struct _GstGioSinkClass 
+struct _GstGioBaseSinkClass 
 {
-  GstGioBaseSinkClass parent_class;
+  GstBaseSinkClass parent_class;
 };
 
-GType gst_gio_sink_get_type (void);
+GType gst_gio_base_sink_get_type (void);
+
+void gst_gio_base_sink_set_stream (GstGioBaseSink *sink, GOutputStream *stream);
 
 G_END_DECLS
 
-#endif /* __GST_GIO_SINK_H__ */
+#endif /* __GST_GIO_BASE_SINK_H__ */

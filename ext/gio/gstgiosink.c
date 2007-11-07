@@ -1,6 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
+ * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -52,13 +53,8 @@ enum
   ARG_LOCATION
 };
 
-static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS_ANY);
-
-GST_BOILERPLATE_FULL (GstGioSink, gst_gio_sink, GstBaseSink, GST_TYPE_BASE_SINK,
-    gst_gio_uri_handler_do_init);
+GST_BOILERPLATE_FULL (GstGioSink, gst_gio_sink, GstGioBaseSink,
+    GST_TYPE_GIO_BASE_SINK, gst_gio_uri_handler_do_init);
 
 static void gst_gio_sink_finalize (GObject * object);
 static void gst_gio_sink_set_property (GObject * object, guint prop_id,
@@ -66,13 +62,6 @@ static void gst_gio_sink_set_property (GObject * object, guint prop_id,
 static void gst_gio_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_gio_sink_start (GstBaseSink * base_sink);
-static gboolean gst_gio_sink_stop (GstBaseSink * base_sink);
-static gboolean gst_gio_sink_unlock (GstBaseSink * base_sink);
-static gboolean gst_gio_sink_unlock_stop (GstBaseSink * base_sink);
-static gboolean gst_gio_sink_event (GstBaseSink * base_sink, GstEvent * event);
-static GstFlowReturn gst_gio_sink_render (GstBaseSink * base_sink,
-    GstBuffer * buffer);
-static gboolean gst_gio_sink_query (GstPad * pad, GstQuery * query);
 
 static void
 gst_gio_sink_base_init (gpointer gclass)
@@ -81,14 +70,13 @@ gst_gio_sink_base_init (gpointer gclass)
     "GIO sink",
     "Sink/File",
     "Write to any GIO-supported location",
-    "Ren\xc3\xa9 Stadler <mail@renestadler.de>"
+    "Ren\xc3\xa9 Stadler <mail@renestadler.de>, "
+        "Sebastian Dröge <slomo@circular-chaos.org>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
 
-  GST_DEBUG_CATEGORY_INIT (gst_gio_sink_debug, "giosink", 0, "GIO source");
+  GST_DEBUG_CATEGORY_INIT (gst_gio_sink_debug, "gio_sink", 0, "GIO sink");
 
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&sink_factory));
   gst_element_class_set_details (element_class, &element_details);
 }
 
@@ -112,38 +100,17 @@ gst_gio_sink_class_init (GstGioSinkClass * klass)
           NULL, G_PARAM_READWRITE));
 
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_gio_sink_start);
-  gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_gio_sink_stop);
-  gstbasesink_class->unlock = GST_DEBUG_FUNCPTR (gst_gio_sink_unlock);
-  gstbasesink_class->unlock_stop = GST_DEBUG_FUNCPTR (gst_gio_sink_unlock_stop);
-  gstbasesink_class->event = GST_DEBUG_FUNCPTR (gst_gio_sink_event);
-  gstbasesink_class->render = GST_DEBUG_FUNCPTR (gst_gio_sink_render);
 }
 
 static void
 gst_gio_sink_init (GstGioSink * sink, GstGioSinkClass * gclass)
 {
-  gst_pad_set_query_function (GST_BASE_SINK_PAD (sink),
-      GST_DEBUG_FUNCPTR (gst_gio_sink_query));
-
-  GST_BASE_SINK (sink)->sync = FALSE;
-
-  sink->cancel = g_cancellable_new ();
 }
 
 static void
 gst_gio_sink_finalize (GObject * object)
 {
   GstGioSink *sink = GST_GIO_SINK (object);
-
-  if (sink->cancel) {
-    g_object_unref (sink->cancel);
-    sink->cancel = NULL;
-  }
-
-  if (sink->stream) {
-    g_object_unref (sink->stream);
-    sink->stream = NULL;
-  }
 
   if (sink->location) {
     g_free (sink->location);
@@ -195,6 +162,8 @@ gst_gio_sink_start (GstBaseSink * base_sink)
 {
   GstGioSink *sink = GST_GIO_SINK (base_sink);
   GFile *file;
+  GOutputStream *stream;
+  GCancellable *cancel = GST_GIO_BASE_SINK (sink)->cancel;
   gboolean success;
   GError *err = NULL;
 
@@ -212,9 +181,10 @@ gst_gio_sink_start (GstBaseSink * base_sink)
     return FALSE;
   }
 
-  sink->stream =
-      g_file_create (file, G_FILE_CREATE_FLAGS_NONE, sink->cancel, &err);
-  success = (sink->stream != NULL);
+  stream =
+      G_OUTPUT_STREAM (g_file_create (file, G_FILE_CREATE_FLAGS_NONE, cancel,
+          &err));
+  success = (stream != NULL);
 
   g_object_unref (file);
 
@@ -238,187 +208,9 @@ gst_gio_sink_start (GstBaseSink * base_sink)
   if (!success)
     return FALSE;
 
-  sink->position = 0;
-
   GST_DEBUG_OBJECT (sink, "opened location %s", sink->location);
 
-  return TRUE;
-}
+  gst_gio_base_sink_set_stream (GST_GIO_BASE_SINK (sink), stream);
 
-static gboolean
-gst_gio_sink_stop (GstBaseSink * base_sink)
-{
-  GstGioSink *sink = GST_GIO_SINK (base_sink);
-  gboolean success = TRUE;
-  GError *err = NULL;
-
-  if (sink->stream != NULL) {
-    /* FIXME: In case that the call below would block, there is no one to
-     * trigger the cancellation! */
-
-    success = g_output_stream_close (G_OUTPUT_STREAM (sink->stream),
-        sink->cancel, &err);
-
-    if (success) {
-      GST_DEBUG_OBJECT (sink, "closed location %s", sink->location);
-    } else if (!gst_gio_error (sink, "g_output_stream_close", &err, NULL)) {
-      GST_ELEMENT_ERROR (sink, RESOURCE, CLOSE, (NULL),
-          ("g_output_stream_close failed: %s", err->message));
-      g_clear_error (&err);
-    }
-
-    g_object_unref (sink->stream);
-    sink->stream = NULL;
-  }
-
-  return success;
-}
-
-static gboolean
-gst_gio_sink_unlock (GstBaseSink * base_sink)
-{
-  GstGioSink *sink = GST_GIO_SINK (base_sink);
-
-  GST_LOG_OBJECT (sink, "triggering cancellation");
-
-  g_cancellable_cancel (sink->cancel);
-
-  return TRUE;
-}
-
-static gboolean
-gst_gio_sink_unlock_stop (GstBaseSink * base_sink)
-{
-  GstGioSink *sink = GST_GIO_SINK (base_sink);
-
-  GST_LOG_OBJECT (sink, "resetting cancellable");
-
-  g_cancellable_reset (sink->cancel);
-
-  return TRUE;
-}
-
-static gboolean
-gst_gio_sink_event (GstBaseSink * base_sink, GstEvent * event)
-{
-  GstGioSink *sink = GST_GIO_SINK (base_sink);
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  if (sink->stream == NULL)
-    return TRUE;
-
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-    {
-      GstFormat format;
-      gint64 offset;
-
-      gst_event_parse_new_segment (event, NULL, NULL, &format, &offset, NULL,
-          NULL);
-
-      if (format != GST_FORMAT_BYTES) {
-        GST_WARNING_OBJECT (sink, "ignored NEWSEGMENT event in %s format",
-            gst_format_get_name (format));
-        break;
-      }
-
-      ret = gst_gio_seek (sink, G_SEEKABLE (sink->stream), offset,
-          sink->cancel);
-
-      if (ret == GST_FLOW_OK)
-        sink->position = offset;
-    }
-      break;
-
-    case GST_EVENT_EOS:
-    case GST_EVENT_FLUSH_START:
-    {
-      gboolean success;
-      GError *err = NULL;
-
-      success = g_output_stream_flush (G_OUTPUT_STREAM (sink->stream),
-          sink->cancel, &err);
-
-      if (!success && !gst_gio_error (sink, "g_output_stream_flush", &err,
-              &ret)) {
-        GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
-            ("flush failed: %s", err->message));
-        g_clear_error (&err);
-      }
-    }
-      break;
-
-    default:
-      break;
-  }
-
-  return (ret == GST_FLOW_OK);
-}
-
-static GstFlowReturn
-gst_gio_sink_render (GstBaseSink * base_sink, GstBuffer * buffer)
-{
-  GstGioSink *sink = GST_GIO_SINK (base_sink);
-  gssize written;
-  gboolean success;
-  GError *err = NULL;
-
-  GST_LOG_OBJECT (sink, "writing %u bytes to offset %" G_GUINT64_FORMAT,
-      GST_BUFFER_SIZE (buffer), sink->position);
-
-  written = g_output_stream_write (G_OUTPUT_STREAM (sink->stream),
-      GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer), sink->cancel, &err);
-
-  success = (written >= 0);
-
-  if (G_UNLIKELY (success && written < GST_BUFFER_SIZE (buffer))) {
-    /* FIXME: Can this happen?  Should we handle it gracefully?  gnomevfssink
-     * doesn't... */
-    GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
-        ("Could not write to location %s: (short write, only %"
-            G_GUINT64_FORMAT " bytes of %d bytes written)",
-            sink->location, written, GST_BUFFER_SIZE (buffer)));
-    return GST_FLOW_ERROR;
-  }
-
-  if (success) {
-    sink->position += written;
-    return GST_FLOW_OK;
-
-  } else {
-    GstFlowReturn ret;
-
-    if (!gst_gio_error (sink, "g_output_stream_write", &err, &ret)) {
-      GST_ELEMENT_ERROR (sink, RESOURCE, WRITE, (NULL),
-          ("Could not write to location %s: %s", sink->location, err->message));
-      g_clear_error (&err);
-    }
-
-    return ret;
-  }
-}
-
-static gboolean
-gst_gio_sink_query (GstPad * pad, GstQuery * query)
-{
-  GstGioSink *sink = GST_GIO_SINK (GST_PAD_PARENT (pad));
-  GstFormat format;
-
-  switch (GST_QUERY_TYPE (query)) {
-    case GST_QUERY_POSITION:
-      gst_query_parse_position (query, &format, NULL);
-      switch (format) {
-        case GST_FORMAT_BYTES:
-        case GST_FORMAT_DEFAULT:
-          gst_query_set_position (query, GST_FORMAT_BYTES, sink->position);
-          return TRUE;
-        default:
-          return FALSE;
-      }
-    case GST_QUERY_FORMATS:
-      gst_query_set_formats (query, 2, GST_FORMAT_DEFAULT, GST_FORMAT_BYTES);
-      return TRUE;
-    default:
-      return gst_pad_query_default (pad, query);
-  }
+  return GST_BASE_SINK_CLASS (parent_class)->start (base_sink);
 }

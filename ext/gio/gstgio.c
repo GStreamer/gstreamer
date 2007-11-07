@@ -1,6 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
+ * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,6 +26,8 @@
 #include "gstgio.h"
 #include "gstgiosink.h"
 #include "gstgiosrc.h"
+#include "gstgiostreamsink.h"
+#include "gstgiostreamsrc.h"
 
 #include <gio/gvfs.h>
 
@@ -198,6 +201,12 @@ plugin_init (GstPlugin * plugin)
 
   ret &= gst_element_register (plugin, "giosrc", GST_RANK_MARGINAL,
       GST_TYPE_GIO_SRC);
+
+  ret &= gst_element_register (plugin, "giostreamsink", GST_RANK_NONE,
+      GST_TYPE_GIO_STREAM_SINK);
+
+  ret &= gst_element_register (plugin, "giostreamsrc", GST_RANK_NONE,
+      GST_TYPE_GIO_STREAM_SRC);
 
   return ret;
 }

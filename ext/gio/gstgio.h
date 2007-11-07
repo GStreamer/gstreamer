@@ -1,6 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 2007 Rene Stadler <mail@renestadler.de>
+ * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
  * 
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,8 +19,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GSTGIO_H__
-#define __GSTGIO_H__
+#ifndef __GST_GIO_H__
+#define __GST_GIO_H__
 
 #include <gio/gioerror.h>
 #include <gio/gseekable.h>
@@ -29,6 +30,8 @@ G_BEGIN_DECLS
 
 #define GST_GIO_ERROR_MATCHES(err, code) g_error_matches (err, G_IO_ERROR, G_IO_ERROR_##code)
 
+#define GST_GIO_STREAM_IS_SEEKABLE(stream) (G_IS_SEEKABLE (stream) && g_seekable_can_seek (G_SEEKABLE (stream)))
+
 gboolean gst_gio_error (gpointer element, const gchar *func_name,
     GError **err, GstFlowReturn *ret);
 GstFlowReturn gst_gio_seek (gpointer element, GSeekable *stream, guint64 offset,
@@ -37,4 +40,4 @@ void gst_gio_uri_handler_do_init (GType type);
 
 G_END_DECLS
 
-#endif /* __GSTGIO_H__ */
+#endif /* __GST_GIO_H__ */
