@@ -84,7 +84,7 @@ GST_START_TEST (test_memory_stream)
 
   out_data = g_byte_array_new ();
   output = G_MEMORY_OUTPUT_STREAM (g_memory_output_stream_new (out_data));
-  g_memory_output_stream_set_free_on_close (output, FALSE);
+  g_memory_output_stream_set_free_data (output, TRUE);
 
   loop = g_main_loop_new (NULL, FALSE);
 
@@ -115,17 +115,13 @@ GST_START_TEST (test_memory_stream)
 
   fail_unless (got_eos);
 
-  for (i = 0; i < 512; i++) {
+  for (i = 0; i < 512; i++)
     fail_unless_equals_int (in_data[i], out_data->data[i]);
-  }
-
-  g_byte_array_free (out_data, TRUE);
 
   g_object_unref (input);
   g_object_unref (output);
 
   g_main_loop_unref (loop);
-
 }
 
 GST_END_TEST;

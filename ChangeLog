@@ -1,5 +1,11 @@
 2007-11-07  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* configure.ac:
+	* tests/check/pipelines/gio.c: (GST_START_TEST):
+	Require GIO >= 0.1.2 and adjust unit test for an API change.
+
+2007-11-07  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* tests/icles/equalizer-test.c: (do_slider_fiddling):
 	Fix gain ranges for the latest equalizer changes.
 
