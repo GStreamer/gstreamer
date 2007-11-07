@@ -115,7 +115,7 @@ do_slider_fiddling (GstElement * playbin, GstElement * eq)
 {
   gboolean stop;
   guint num_bands, i;
-  gdouble d, step = 0.2;
+  gdouble d, step = 0.5;
 
   stop = FALSE;
 
@@ -125,34 +125,34 @@ do_slider_fiddling (GstElement * playbin, GstElement * eq)
 
   while (!stop) {
     for (i = 0; !stop && i < num_bands; ++i) {
-      d = 0.0;
-      while (!stop && d <= 1.0) {
+      d = -24.0;
+      while (!stop && d <= 12.0) {
         stop = equalizer_set_band_value_and_wait (eq, i, d);
         d += step;
       }
-      d = 1.0;
-      while (!stop && d >= -1.0) {
+      d = 12.0;
+      while (!stop && d >= -24.0) {
         stop = equalizer_set_band_value_and_wait (eq, i, d);
         d -= step;
       }
-      d = -1.0;
-      while (!stop && d <= 0.0) {
+      d = -24.0;
+      while (!stop && d <= 12.0) {
         stop = equalizer_set_band_value_and_wait (eq, i, d);
         d += step;
       }
     }
 
     d = 0.0;
-    while (!stop && d <= 1.0) {
+    while (!stop && d <= 12.0) {
       stop = equalizer_set_all_band_values_and_wait (eq, num_bands, d);
       d += step;
     }
-    d = 1.0;
-    while (!stop && d >= -1.0) {
+    d = 12.0;
+    while (!stop && d >= -24.0) {
       stop = equalizer_set_all_band_values_and_wait (eq, num_bands, d);
       d -= step;
     }
-    d = -1.0;
+    d = -24.0;
     while (!stop && d <= 0.0) {
       stop = equalizer_set_all_band_values_and_wait (eq, num_bands, d);
       d += step;
