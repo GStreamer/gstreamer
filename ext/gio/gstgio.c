@@ -189,13 +189,6 @@ plugin_init (GstPlugin * plugin)
 
   GST_DEBUG_CATEGORY_INIT (gst_gio_debug, "gio", 0, "GIO elements");
 
-  /* FIXME: This is needed to prevent a crash.  Needs further investigation
-   * probably. */
-  if (g_vfs_get_default () == NULL) {
-    GST_WARNING ("Failed to initialize default VFS, not registering plugin");
-    return FALSE;
-  }
-
   /* FIXME: Rank is MARGINAL for now, should be at least SECONDARY+1 in the future
    * to replace gnomevfssink/src. For testing purposes PRIMARY+1 one makes sense
    * so it gets autoplugged and preferred over filesrc/sink. */

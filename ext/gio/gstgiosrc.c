@@ -128,12 +128,20 @@ gst_gio_src_finalize (GObject * object)
 {
   GstGioSrc *src = GST_GIO_SRC (object);
 
-  g_object_unref (src->cancel);
+  if (src->cancel) {
+    g_object_unref (src->cancel);
+    src->cancel = NULL;
+  }
 
-  if (src->file)
-    g_object_unref (src->file);
+  if (src->stream) {
+    g_object_unref (src->stream);
+    src->stream = NULL;
+  }
 
-  g_free (src->location);
+  if (src->location) {
+    g_free (src->location);
+    src->location = NULL;
+  }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
@@ -179,6 +187,7 @@ static gboolean
 gst_gio_src_start (GstBaseSrc * base_src)
 {
   GstGioSrc *src = GST_GIO_SRC (base_src);
+  GFile *file;
   GError *err = NULL;
 
   if (src->location == NULL) {
@@ -186,15 +195,17 @@ gst_gio_src_start (GstBaseSrc * base_src)
     return FALSE;
   }
 
-  src->file = g_file_new_for_uri (src->location);
+  file = g_file_new_for_uri (src->location);
 
-  if (src->file == NULL) {
+  if (file == NULL) {
     GST_ELEMENT_ERROR (src, RESOURCE, OPEN_READ, (NULL),
         ("Malformed URI or protocol not supported (%s)", src->location));
     return FALSE;
   }
 
-  src->stream = g_file_read (src->file, src->cancel, &err);
+  src->stream = g_file_read (file, src->cancel, &err);
+
+  g_object_unref (file);
 
   if (src->stream == NULL && !gst_gio_error (src, "g_file_read", &err, NULL)) {
 
@@ -209,13 +220,9 @@ gst_gio_src_start (GstBaseSrc * base_src)
 
     g_clear_error (&err);
 
-    g_object_unref (src->file);
-    src->file = NULL;
-
     return FALSE;
 
   } else if (src->stream == NULL) {
-    g_object_unref (src->file);
     return FALSE;
   }
 
@@ -248,11 +255,6 @@ gst_gio_src_stop (GstBaseSrc * base_src)
 
     g_object_unref (src->stream);
     src->stream = NULL;
-  }
-
-  if (src->file != NULL) {
-    g_object_unref (src->file);
-    src->file = NULL;
   }
 
   GST_DEBUG_OBJECT (src, "closed location %s", src->location);
@@ -321,10 +323,9 @@ gst_gio_src_unlock_stop (GstBaseSrc * base_src)
 {
   GstGioSrc *src = GST_GIO_SRC (base_src);
 
-  GST_LOG_OBJECT (src, "restoring cancellable");
+  GST_LOG_OBJECT (src, "resetting cancellable");
 
-  g_object_unref (src->cancel);
-  src->cancel = g_cancellable_new ();
+  g_cancellable_reset (src->cancel);
 
   return TRUE;
 }

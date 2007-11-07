@@ -53,7 +53,6 @@ struct _GstGioSrc
   
   /*< private >*/
   GCancellable *cancel;
-  GFile *file;
   gchar *location;
   guint64 position;
   GFileInputStream *stream;

@@ -135,12 +135,20 @@ gst_gio_sink_finalize (GObject * object)
 {
   GstGioSink *sink = GST_GIO_SINK (object);
 
-  g_object_unref (sink->cancel);
+  if (sink->cancel) {
+    g_object_unref (sink->cancel);
+    sink->cancel = NULL;
+  }
 
-  if (sink->file)
-    g_object_unref (sink->file);
+  if (sink->stream) {
+    g_object_unref (sink->stream);
+    sink->stream = NULL;
+  }
 
-  g_free (sink->location);
+  if (sink->location) {
+    g_free (sink->location);
+    sink->location = NULL;
+  }
 
   GST_CALL_PARENT (G_OBJECT_CLASS, finalize, (object));
 }
@@ -186,6 +194,7 @@ static gboolean
 gst_gio_sink_start (GstBaseSink * base_sink)
 {
   GstGioSink *sink = GST_GIO_SINK (base_sink);
+  GFile *file;
   gboolean success;
   GError *err = NULL;
 
@@ -195,17 +204,19 @@ gst_gio_sink_start (GstBaseSink * base_sink)
     return FALSE;
   }
 
-  sink->file = g_file_new_for_uri (sink->location);
+  file = g_file_new_for_uri (sink->location);
 
-  if (sink->file == NULL) {
+  if (file == NULL) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE, (NULL),
         ("Malformed URI or protocol not supported (%s)", sink->location));
     return FALSE;
   }
 
   sink->stream =
-      g_file_create (sink->file, G_FILE_CREATE_FLAGS_NONE, sink->cancel, &err);
+      g_file_create (file, G_FILE_CREATE_FLAGS_NONE, sink->cancel, &err);
   success = (sink->stream != NULL);
+
+  g_object_unref (file);
 
   if (!success && !gst_gio_error (sink, "g_file_create", &err, NULL)) {
 
@@ -224,12 +235,8 @@ gst_gio_sink_start (GstBaseSink * base_sink)
     g_clear_error (&err);
   }
 
-  if (!success) {
-    g_object_unref (sink->file);
-    sink->file = NULL;
-
+  if (!success)
     return FALSE;
-  }
 
   sink->position = 0;
 
@@ -244,11 +251,6 @@ gst_gio_sink_stop (GstBaseSink * base_sink)
   GstGioSink *sink = GST_GIO_SINK (base_sink);
   gboolean success = TRUE;
   GError *err = NULL;
-
-  if (sink->file != NULL) {
-    g_object_unref (sink->file);
-    sink->file = NULL;
-  }
 
   if (sink->stream != NULL) {
     /* FIXME: In case that the call below would block, there is no one to
@@ -289,10 +291,9 @@ gst_gio_sink_unlock_stop (GstBaseSink * base_sink)
 {
   GstGioSink *sink = GST_GIO_SINK (base_sink);
 
-  GST_LOG_OBJECT (sink, "restoring cancellable");
+  GST_LOG_OBJECT (sink, "resetting cancellable");
 
-  g_object_unref (sink->cancel);
-  sink->cancel = g_cancellable_new ();
+  g_cancellable_reset (sink->cancel);
 
   return TRUE;
 }
