@@ -1,3 +1,12 @@
+2007-11-08  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/base.defs:
+	* gst/gst-0.10.15.ignore:
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gstmodule.c: (init_gst):
+	Update API changes for core+base pre-releases
+
 2007-11-05  Johan Dahlin  <johan@gnome.org>
 
 	* gstoptionmodule.c:

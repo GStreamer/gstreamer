@@ -240,6 +240,12 @@
   (return-type "GstClockTimeDiff")
 )
 
+(define-method get_last_buffer
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_get_last_buffer")
+  (return-type "GstBuffer*")
+)
+
 (define-method query_latency
   (of-object "GstBaseSink")
   (c-name "gst_base_sink_query_latency")
@@ -256,6 +262,16 @@
   (of-object "GstBaseSink")
   (c-name "gst_base_sink_get_latency")
   (return-type "GstClockTime")
+)
+
+(define-method wait_eos
+  (of-object "GstBaseSink")
+  (c-name "gst_base_sink_wait_eos")
+  (return-type "GstFlowReturn")
+  (parameters
+    '("GstClockTime" "time")
+    '("GstClockTimeDiff*" "jitter")
+  )
 )
 
 (define-virtual get_caps

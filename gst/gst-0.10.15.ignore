@@ -3,6 +3,13 @@ ignore
    gst_pad_peer_query
    gst_registry_add_path
    gst_structure_get_uint
+   gst_bus_pop_filtered
+   gst_bus_timed_pop_filtered
+   gst_base_sink_get_last_buffer
+   GstURIHandler__do_get_protocols_full
+   GstURIHandler__proxy_do_get_protocols_full
+   GstURIHandler__do_get_type_full
+   GstURIHandler__proxy_do_get_type_full
 %%
 ignore-type
    GstLFOControlSource

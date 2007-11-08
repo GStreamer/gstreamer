@@ -378,6 +378,16 @@
   (caller-owns-return #t)
 )
 
+(define-method pop_filtered
+  (of-object "GstBus")
+  (c-name "gst_bus_pop_filtered")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+   '("GstMessageType" "types")
+  )
+)
+
 (define-method timed_pop
   (of-object "GstBus")
   (c-name "gst_bus_timed_pop")
@@ -385,6 +395,17 @@
   (caller-owns-return #t)
   (parameters
     '("GstClockTime" "timeout")
+  )
+)
+
+(define-method timed_pop_filtered
+  (of-object "GstBus")
+  (c-name "gst_bus_timed_pop_filtered")
+  (return-type "GstMessage*")
+  (caller-owns-return #t)
+  (parameters
+    '("GstClockTime" "timeout")
+    '("GstMessageType" "types")
   )
 )
 

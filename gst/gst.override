@@ -284,7 +284,6 @@ ignore-glob
   *_ref
   *_unref
   *_deinit
-  *_full
   gst_class_*
   gst_init*
   gst_interface_*
@@ -1347,6 +1346,66 @@ _wrap_GstURIHandler__proxy_do_get_protocols_full (GType type)
     pyg_gil_state_release(__py_state);
     
     return retval;
+}
+%%
+override GstURIHandler__do_get_type_full
+static PyObject *
+_wrap_GstURIHandler__do_get_type_full(PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    GstURIHandlerInterface *iface;
+    static char *kwlist[] = { "self", "type", NULL };
+    PyGObject *self;
+    PyObject *py_type = NULL;
+    GType type;
+    guint ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!O:GstURIHandler.get_type_full", kwlist, &PyGstURIHandler_Type, &self, &py_type))
+        return NULL;
+    if ((type = pyg_type_from_object(py_type)) == 0)
+        return NULL;
+    iface = g_type_interface_peek(g_type_class_peek(pyg_type_from_object(cls)), GST_TYPE_URI_HANDLER);
+    if (iface->get_type_full)
+        ret = iface->get_type_full(type);
+    else {
+        PyErr_SetString(PyExc_NotImplementedError, "interface method GstURIHandler.get_type_full not implemented");
+        return NULL;
+    }
+    return PyLong_FromUnsignedLong(ret);
+}
+%%
+override GstURIHandler__do_get_protocols_full
+static PyObject *
+_wrap_GstURIHandler__do_get_protocols_full(PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    GstURIHandlerInterface *iface;
+    static char *kwlist[] = { "self", "type", NULL };
+    PyGObject *self;
+    PyObject *py_type = NULL;
+    GType type;
+    gchar **ret;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs,"O!O:GstURIHandler.get_protocols_full", kwlist, &PyGstURIHandler_Type, &self, &py_type))
+        return NULL;
+    if ((type = pyg_type_from_object(py_type)) == 0)
+        return NULL;
+    iface = g_type_interface_peek(g_type_class_peek(pyg_type_from_object(cls)), GST_TYPE_URI_HANDLER);
+    if (iface->get_protocols_full)
+        ret = iface->get_protocols_full(type);
+    else {
+        PyErr_SetString(PyExc_NotImplementedError, "interface method GstURIHandler.get_protocols_full not implemented");
+        return NULL;
+    }
+    if (ret) {
+        guint size = g_strv_length(ret);
+        PyObject *py_ret = PyTuple_New(size);
+        gint i;
+        for (i = 0; i < size; i++)
+            PyTuple_SetItem(py_ret, i,
+                PyString_FromString(ret[i]));
+        return py_ret;
+    }
+    return PyTuple_New (0);
+
 }
 
 %%
