@@ -1,3 +1,9 @@
+2007-11-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c:
+	  Return FALSE if we can't handle a query instead of changing the
+	  format. Ignore fact when dealing with mpeg audio.
+
 2007-11-02  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Ole André Vadla Ravnås  <ole.andre.ravnas@tandberg.com>

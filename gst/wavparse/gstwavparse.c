@@ -1031,7 +1031,7 @@ gst_wavparse_peek_chunk (GstWavParse * wav, guint32 * tag, guint32 * size)
 
 /*
  * gst_wavparse_calculate_duration:
- * @wav Wavparse object
+ * @wav: wavparse object
  *
  * Calculate duration on demand and store in @wav. Prefer bps, but use fact as a
  * fallback.
@@ -1259,31 +1259,34 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         GST_DEBUG_OBJECT (wav, "datasize = %d", size);
         break;
       }
-      case GST_RIFF_TAG_fact:{
-        /* number of samples (for compressed formats) */
-        if (wav->streaming) {
-          const guint8 *data = NULL;
+      case GST_RIFF_TAG_fact:
+        if (wav->format != GST_RIFF_WAVE_FORMAT_MPEGL12 &&
+            wav->format != GST_RIFF_WAVE_FORMAT_MPEGL3) {
+          /* number of samples (for compressed formats) */
+          if (wav->streaming) {
+            const guint8 *data = NULL;
 
-          if (gst_adapter_available (wav->adapter) < 8 + 4) {
-            return GST_FLOW_OK;
+            if (gst_adapter_available (wav->adapter) < 8 + 4) {
+              return GST_FLOW_OK;
+            }
+            gst_adapter_flush (wav->adapter, 8);
+            data = gst_adapter_peek (wav->adapter, 4);
+            wav->fact = GST_READ_UINT32_LE (data);
+            gst_adapter_flush (wav->adapter, 4);
+          } else {
+            gst_buffer_unref (buf);
+            if ((res =
+                    gst_pad_pull_range (wav->sinkpad, wav->offset + 8, 4,
+                        &buf)) != GST_FLOW_OK)
+              goto header_read_error;
+            wav->fact = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
+            gst_buffer_unref (buf);
           }
-          gst_adapter_flush (wav->adapter, 8);
-          data = gst_adapter_peek (wav->adapter, 4);
-          wav->fact = GST_READ_UINT32_LE (data);
-          gst_adapter_flush (wav->adapter, 4);
-        } else {
-          gst_buffer_unref (buf);
-          if ((res =
-                  gst_pad_pull_range (wav->sinkpad, wav->offset + 8, 4,
-                      &buf)) != GST_FLOW_OK)
-            goto header_read_error;
-          wav->fact = GST_READ_UINT32_LE (GST_BUFFER_DATA (buf));
-          gst_buffer_unref (buf);
+          GST_DEBUG_OBJECT (wav, "have fact %u", wav->fact);
+          wav->offset += 8 + 4;
+          break;
         }
-        GST_DEBUG_OBJECT (wav, "have fact %u", wav->fact);
-        wav->offset += 8 + 4;
-        break;
-      }
+        /* fall-through */
       default:
         if (wav->streaming) {
           if (!gst_wavparse_peek_chunk (wav, &tag, &size))
@@ -1875,14 +1878,15 @@ gst_wavparse_pad_convert (GstPad * pad,
               "src=%" G_GINT64_FORMAT ", offset=%" G_GINT64_FORMAT, src_value,
               wavparse->offset);
           if (wavparse->bps > 0)
-            *dest_value = gst_util_uint64_scale (src_value, GST_SECOND,
+            *dest_value = uint64_ceiling_scale (src_value, GST_SECOND,
                 (guint64) wavparse->bps);
-          else {
-            guint64 bps = gst_util_uint64_scale_int (wavparse->datasize,
+          else if (wavparse->fact) {
+            guint64 bps = uint64_ceiling_scale_int (wavparse->datasize,
                 wavparse->rate, wavparse->fact);
 
-            *dest_value =
-                gst_util_uint64_scale_int (src_value, GST_SECOND, bps);
+            *dest_value = uint64_ceiling_scale_int (src_value, GST_SECOND, bps);
+          } else {
+            res = FALSE;
           }
           break;
         default:
@@ -2003,18 +2007,15 @@ gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
     }
     case GST_QUERY_DURATION:
     {
-      gint64 duration;
+      gint64 duration = 0;
       GstFormat format;
 
       gst_query_parse_duration (query, &format, NULL);
 
       switch (format) {
         case GST_FORMAT_TIME:{
-          if (gst_wavparse_calculate_duration (wav)) {
+          if ((res = gst_wavparse_calculate_duration (wav))) {
             duration = wav->duration;
-          } else {
-            format = GST_FORMAT_BYTES;
-            duration = wav->datasize;
           }
           break;
         }
