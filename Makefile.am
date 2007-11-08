@@ -1,11 +1,27 @@
 SUBDIRS = codegen gst examples testsuite pkgconfig
 
 win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
+common_cflags = $(PYGOBJECT_CFLAGS) $(GST_CFLAGS) $(GST_OPTION_CFLAGS) -fno-strict-aliasing
+common_libadd = $(GST_LIBS) $(GST_OPTION_LIBS)
+common_ldflags = -module -avoid-version
 
 debug:
 	echo $(win32)	
 
 ACLOCAL_AMFLAGS = -I common/m4
+
+pyexec_LTLIBRARIES = 
+
+if HAVE_PYGOBJECT_2_16
+pyexec_LTLIBRARIES += gstoption.la
+endif
+
+# GStreamer option bindings
+gstoption_la_CFLAGS = $(common_cflags)
+gstoption_la_LIBADD = $(common_libadd)
+gstoption_la_LDFLAGS = $(common_ldflags) \
+	-export-symbols-regex "^(initgstoption|_PyGObject_API).*"
+gstoption_la_SOURCES = gstoptionmodule.c
 
 EXTRA_DIST = \
 	gstltihooks.py \

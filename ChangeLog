@@ -1,3 +1,15 @@
+2007-11-05  Johan Dahlin  <johan@gnome.org>
+
+	* gstoptionmodule.c:
+	* Makefile.am:
+	* configure.ac:
+	Add a new module, gstoption which allows you to fetch the
+	GOptionGroup from gstreamer without initializing and parsing
+	the command line arguments. Requires PyGObject 2.15.0
+	Fixes #425847
+	
+	* examples/option-parser.py (main): Example
+
 2007-11-01  Johan Dahlin  <johan@gnome.org>
 
 	* gst/gst.override: 

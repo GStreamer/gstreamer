@@ -323,6 +323,17 @@ PKG_CHECK_MODULES(PYGOBJECT_2_12, pygobject-2.0 >= 2.11.1,
       [Defined if we have a 2.12 series pygobject])
   ], HAVE_PYGOBJECT_2_12="no")
 
+dnl FIXME: check for a pygobject which exports pyg_option_group_new
+PKG_CHECK_MODULES(PYGOBJECT_2_16, pygobject-2.0 >= 2.15.0,
+  [
+    HAVE_PYGOBJECT_2_16="yes"
+    AC_MSG_RESULT([yes])
+    AC_DEFINE_UNQUOTED(HAVE_PYGOBJECT_2_16, 1,
+      [Defined if we have a 2.16 series pygobject])
+  ], HAVE_PYGOBJECT_2_16="no")
+
+AM_CONDITIONAL(HAVE_PYGOBJECT_2_16, test x$HAVE_PYGOBJECT_2_16 != xno)
+
 dnl define an ERROR_CFLAGS Makefile variable
 AG_GST_SET_ERROR_CFLAGS($GST_CVS)
 
