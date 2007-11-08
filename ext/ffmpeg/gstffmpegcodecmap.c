@@ -1584,7 +1584,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
 
           flags = GUINT16_FROM_LE (flags);
 
-          memcpy (context->extradata + 0x62, &flags, 2);
+          memcpy ((gchar *) context->extradata + 0x62, &flags, 2);
           context->extradata_size = 0x64;
         }
       }

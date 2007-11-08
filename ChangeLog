@@ -1,3 +1,10 @@
+2007-11-08  Edward Hervey  <bilboed@bilboed.com>
+
+	Patch by: Ole André Vadla Ravnås <ole dot andre dot ravnas at tandberg dot com>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_caps_with_codecid):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_init):
+
 2007-11-03  Edward Hervey  <bilboed@bilboed.com>
 
 	* ext/ffmpeg/gstffmpeg.c: (gst_ffmpeg_avcodec_open),

@@ -206,7 +206,7 @@ gst_ffmpegmux_init (GstFFMpegMux * ffmpegmux, GstFFMpegMuxClass * g_class)
   ffmpegmux->context = g_new0 (AVFormatContext, 1);
   ffmpegmux->context->oformat = oclass->in_plugin;
   ffmpegmux->context->nb_streams = 0;
-  snprintf (ffmpegmux->context->filename,
+  g_snprintf (ffmpegmux->context->filename,
       sizeof (ffmpegmux->context->filename),
       "gstreamer://%p", ffmpegmux->srcpad);
   ffmpegmux->opened = FALSE;
