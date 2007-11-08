@@ -132,8 +132,9 @@ main (int argc, char *argv[])
 
   bin = gst_pipeline_new ("bin");
 
+  /* White noise */
   src = gst_element_factory_make ("audiotestsrc", "src");
-  g_object_set (G_OBJECT (src), "wave", 5, NULL);       /* White noise */
+  g_object_set (G_OBJECT (src), "wave", 5, "volume", 0.5, NULL);
 
   /* Force float32 samples */
   capsfilter = gst_element_factory_make ("capsfilter", "capsfilter");
@@ -175,7 +176,7 @@ main (int argc, char *argv[])
       G_CALLBACK (on_configure_event), (gpointer) spectrum);
   gtk_box_pack_start (GTK_BOX (vbox), drawingarea, TRUE, TRUE, 0);
 
-  hbox = gtk_hbox_new (FALSE, 30);
+  hbox = gtk_hbox_new (FALSE, 20);
 
   int i;
 
@@ -215,7 +216,7 @@ main (int argc, char *argv[])
     gtk_widget_set_size_request (widget, 25, 150);
     g_signal_connect (G_OBJECT (widget), "value-changed",
         G_CALLBACK (on_bandwidth_changed), (gpointer) band);
-    gtk_box_pack_start (GTK_BOX (scales_hbox), widget, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (scales_hbox), widget, TRUE, TRUE, 0);
 
     widget = gtk_vscale_new_with_range (20.0, 20000.0, 5.0);
     gtk_scale_set_draw_value (GTK_SCALE (widget), TRUE);
@@ -224,11 +225,11 @@ main (int argc, char *argv[])
     gtk_widget_set_size_request (widget, 25, 150);
     g_signal_connect (G_OBJECT (widget), "value-changed",
         G_CALLBACK (on_freq_changed), (gpointer) band);
-    gtk_box_pack_start (GTK_BOX (scales_hbox), widget, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (scales_hbox), widget, TRUE, TRUE, 0);
 
     gtk_container_add (GTK_CONTAINER (frame), scales_hbox);
 
-    gtk_box_pack_start (GTK_BOX (hbox), frame, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (hbox), frame, TRUE, TRUE, 0);
   }
 
   gtk_box_pack_start (GTK_BOX (vbox), hbox, TRUE, TRUE, 0);

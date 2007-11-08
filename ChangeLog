@@ -1,3 +1,9 @@
+2007-11-08  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/equalizer/demo.c:
+	  Make default volume a bit less. Improve layout by giving more space to
+	  the slider with big-numbers and enable fill.
+
 2007-11-07  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
