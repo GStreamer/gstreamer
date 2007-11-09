@@ -1341,6 +1341,8 @@ gst_base_sink_get_sync_times (GstBaseSink * basesink, GstMiniObject * obj,
   if (G_UNLIKELY (format != GST_FORMAT_TIME)) {
     cstart = start;
     cstop = stop;
+    /* do running and stream time in TIME format */
+    format = GST_FORMAT_TIME;
     goto do_times;
   }
 

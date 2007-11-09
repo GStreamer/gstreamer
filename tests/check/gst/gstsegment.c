@@ -1334,6 +1334,165 @@ GST_START_TEST (segment_newsegment_runningtime)
 
 GST_END_TEST;
 
+/* mess with the segment structure in the time format */
+GST_START_TEST (segment_newsegment_accum)
+{
+  GstSegment segment;
+  gint64 result;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  /***************************
+   * Normal reverse segment
+   ***************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, -1.0, 1.0,
+      GST_FORMAT_TIME, 0, 200, 0);
+
+  fail_unless (segment.rate == -1.0);
+  fail_unless (segment.applied_rate == 1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.accum == 0);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == 0);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 50);
+
+  /* update segment, this accumulates 50 from the previous segment. */
+  gst_segment_set_newsegment_full (&segment, TRUE, -2.0, 1.0,
+      GST_FORMAT_TIME, 0, 150, 0);
+
+  fail_unless (segment.rate == -2.0);
+  fail_unless (segment.applied_rate == 1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 150);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.accum == 50);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 50);
+
+  /* 50 accumulated + 50 / 2 */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 75);
+
+  /* update segment, this does not accumulate anything. */
+  gst_segment_set_newsegment_full (&segment, TRUE, 1.0, 1.0,
+      GST_FORMAT_TIME, 100, 200, 100);
+
+  fail_unless (segment.rate == 1.0);
+  fail_unless (segment.applied_rate == 1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 100);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 100);
+  fail_unless (segment.accum == 50);
+  fail_unless (segment.last_stop == 100);
+  fail_unless (segment.duration == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 100);
+  fail_unless (result == 50);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 100);
+}
+
+GST_END_TEST;
+
+/* mess with the segment structure in the time format */
+GST_START_TEST (segment_newsegment_accum2)
+{
+  GstSegment segment;
+  gint64 result;
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+
+  /***************************
+   * Normal reverse segment
+   ***************************/
+  gst_segment_set_newsegment_full (&segment, FALSE, -1.0, 1.0,
+      GST_FORMAT_TIME, 0, 200, 0);
+
+  fail_unless (segment.rate == -1.0);
+  fail_unless (segment.applied_rate == 1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 0);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.accum == 0);
+  fail_unless (segment.last_stop == 0);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == 0);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 50);
+
+  /* close segment, this accumulates nothing. */
+  gst_segment_set_newsegment_full (&segment, TRUE, -1.0, 1.0,
+      GST_FORMAT_TIME, 150, 200, 0);
+
+  fail_unless (segment.rate == -1.0);
+  fail_unless (segment.applied_rate == 1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 150);
+  fail_unless (segment.stop == 200);
+  fail_unless (segment.time == 0);
+  fail_unless (segment.accum == 0);
+  fail_unless (segment.last_stop == 150);
+  fail_unless (segment.duration == -1);
+
+  /* new segment, this accumulates 50. */
+  gst_segment_set_newsegment_full (&segment, FALSE, 1.0, 1.0,
+      GST_FORMAT_TIME, 150, 300, 150);
+
+  fail_unless (segment.rate == 1.0);
+  fail_unless (segment.applied_rate == 1.0);
+  fail_unless (segment.format == GST_FORMAT_TIME);
+  fail_unless (segment.flags == 0);
+  fail_unless (segment.start == 150);
+  fail_unless (segment.stop == 300);
+  fail_unless (segment.time == 150);
+  fail_unless (segment.accum == 50);
+  fail_unless (segment.last_stop == 150);
+  fail_unless (segment.duration == -1);
+
+  /* invalid time gives invalid result */
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, -1);
+  fail_unless (result == -1);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 150);
+  fail_unless (result == 50);
+
+  result = gst_segment_to_running_time (&segment, GST_FORMAT_TIME, 200);
+  fail_unless (result == 100);
+}
+
+GST_END_TEST;
+
 Suite *
 gst_segment_suite (void)
 {
@@ -1353,6 +1512,8 @@ gst_segment_suite (void)
   tcase_add_test (tc_chain, segment_newsegment_streamtime_applied_rate);
   tcase_add_test (tc_chain, segment_newsegment_streamtime_applied_rate_rate);
   tcase_add_test (tc_chain, segment_newsegment_runningtime);
+  tcase_add_test (tc_chain, segment_newsegment_accum);
+  tcase_add_test (tc_chain, segment_newsegment_accum2);
 
   return s;
 }

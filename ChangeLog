@@ -1,3 +1,19 @@
+2007-11-09  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/gstsegment.c: (gst_segment_set_newsegment_full),
+	(gst_segment_to_stream_time), (gst_segment_to_running_time):
+	Also accumulate time correctly when doing reverse playback. Fixes
+	#488201,
+	When converting to running and stream time, use default values for
+	start/stop/time/accum when comparing different formats. Fixes #494245.
+
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_get_sync_times):
+	Do running/stream time in TIME format.
+
+	* tests/check/gst/gstsegment.c: (GST_START_TEST),
+	(gst_segment_suite):
+	2 new unit tests for segment accumulation.
+
 2007-11-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gst.c: (init_pre):
