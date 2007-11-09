@@ -517,10 +517,9 @@ process_s##width (GstSpectrum *spectrum, const gint##width *samples) \
   \
   /* Calculate magnitude in db */ \
   for (i = 0; i < spectrum->bands; i++) { \
-    gdouble val; \
+    gdouble val = 0.0; \
     val = (gdouble) freqdata[i].r * (gdouble) freqdata[i].r; \
     val += (gdouble) freqdata[i].i * (gdouble) freqdata[i].i; \
-    val *= nfft; \
     val /= max*max; \
     val = 10.0 * log10 (val); \
     if (val > spectrum->threshold) \
@@ -585,10 +584,10 @@ process_f##width (GstSpectrum *spectrum, const g##type *samples) \
   \
   /* Calculate magnitude in db */ \
   for (i = 0; i < spectrum->bands; i++) { \
-    gdouble val; \
+    gdouble val = 0.0; \
     val = freqdata[i].r * freqdata[i].r; \
     val += freqdata[i].i * freqdata[i].i; \
-    val /= nfft; \
+    val /= nfft*nfft; \
     val = 10.0 * log10 (val); \
     if (val > spectrum->threshold) \
       val -= spectrum->threshold; \
