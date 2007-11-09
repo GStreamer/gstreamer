@@ -85,6 +85,17 @@ metadataparse_xmp_dispose (void)
 
 #include <xmp.h>
 
+#define XMP_SCHEMA_NODE 0x80000000UL
+
+void
+metadataparse_xmp_iter_array (XmpPtr xmp, const char *schema, const char *path);
+
+static void
+metadataparse_xmp_iter_simple (const char *schema, const char *path,
+    const char *value);
+
+static void metadataparse_xmp_iter (XmpPtr xmp, XmpIteratorPtr iter);
+
 gboolean
 metadataparse_xmp_init (void)
 {
@@ -103,8 +114,8 @@ metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 {
   const guint8 *buf;
   guint32 size;
-  XmpPtr *xmp = NULL;
-  XmpStringPtr xmp_str = NULL;
+  XmpPtr xmp = NULL;
+  XmpIteratorPtr xmp_iter = NULL;
 
   if (adapter == NULL || (size = gst_adapter_available (adapter)) == 0) {
     goto done;
@@ -119,18 +130,17 @@ metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
   if (!xmp)
     goto done;
 
-  xmp_str = xmp_string_new ();
-  if (!xmp_str)
+  xmp_iter = xmp_iterator_new (xmp, NULL, NULL, XMP_ITER_JUSTCHILDREN);
+
+  if (!xmp_iter)
     goto done;
 
-  xmp_serialize (xmp, xmp_str, XMP_SERIAL_ENCODEUTF8, 2);
-
-  GST_LOG (xmp_string_cstr (xmp_str));
+  metadataparse_xmp_iter (xmp, xmp_iter);
 
 done:
 
-  if (xmp_str) {
-    xmp_string_free (xmp_str);
+  if (xmp_iter) {
+    xmp_iterator_free (xmp_iter);
   }
 
   if (xmp) {
@@ -139,6 +149,97 @@ done:
 
   return;
 
+}
+
+void
+metadataparse_xmp_iter_simple_qual (const char *schema, const char *path,
+    const char *value)
+{
+  GString *string = g_string_new (path);
+  gchar *ch;
+
+  ch = string->str + string->len - 3;
+  while (ch != string->str) {
+    if (*ch == '[') {
+      *ch = '\0';
+    }
+    --ch;
+  }
+
+  GST_LOG ("  %s = %s\n", string->str, value);
+  g_string_free (string, TRUE);
+}
+
+void
+metadataparse_xmp_iter_simple (const char *schema, const char *path,
+    const char *value)
+{
+  GST_LOG ("  %s = %s\n", path, value);
+}
+
+void
+metadataparse_xmp_iter_array (XmpPtr xmp, const char *schema, const char *path)
+{
+
+  XmpIteratorPtr xmp_iter = NULL;
+
+  xmp_iter = xmp_iterator_new (xmp, schema, path, XMP_ITER_JUSTCHILDREN);
+
+  if (xmp_iter) {
+    metadataparse_xmp_iter (xmp, xmp_iter);
+
+    xmp_iterator_free (xmp_iter);
+  }
+
+}
+
+void
+metadataparse_xmp_iter (XmpPtr xmp, XmpIteratorPtr iter)
+{
+  XmpStringPtr xstr_schema = xmp_string_new ();
+  XmpStringPtr xstr_path = xmp_string_new ();
+  XmpStringPtr xstr_prop = xmp_string_new ();
+  uint32_t opt = 0;
+
+  while (xmp_iterator_next (iter, xstr_schema, xstr_path, xstr_prop, &opt)) {
+    const char *schema = xmp_string_cstr (xstr_schema);
+    const char *path = xmp_string_cstr (xstr_path);
+    const char *value = xmp_string_cstr (xstr_prop);
+
+    if (XMP_IS_NODE_SCHEMA (opt)) {
+      GST_LOG ("%s\n", schema);
+      metadataparse_xmp_iter_array (xmp, schema, path);
+    } else if (XMP_IS_PROP_SIMPLE (opt)) {
+      if (strcmp (path, "") != 0) {
+        if (XMP_HAS_PROP_QUALIFIERS (opt)) {
+          metadataparse_xmp_iter_simple_qual (schema, path, value);
+        } else {
+          metadataparse_xmp_iter_simple (schema, path, value);
+        }
+      }
+    } else if (XMP_IS_PROP_ARRAY (opt)) {
+      if (XMP_IS_ARRAY_ALTTEXT (opt)) {
+        metadataparse_xmp_iter_array (xmp, schema, path);
+        xmp_iterator_skip (iter, XMP_ITER_SKIPSUBTREE);
+      } else {
+        metadataparse_xmp_iter_array (xmp, schema, path);
+        xmp_iterator_skip (iter, XMP_ITER_SKIPSUBTREE);
+      }
+    }
+
+
+
+  }
+
+  if (xstr_prop) {
+    xmp_string_free (xstr_prop);
+  }
+  if (xstr_path) {
+    xmp_string_free (xstr_path);
+  }
+  if (xstr_schema) {
+    xmp_string_free (xstr_schema);
+  }
 }
 
 #endif /* else (ifndef HAVE_XMP) */

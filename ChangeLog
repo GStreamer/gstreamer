@@ -1,3 +1,12 @@
+2007-11-09  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/metadataparsexmp.c:
+	(metadataparse_xmp_tag_list_add),
+	(metadataparse_xmp_iter_simple_qual),
+	(metadataparse_xmp_iter_simple), (metadataparse_xmp_iter_array),
+	(metadataparse_xmp_iter):
+	  Extracting more detailed info from XMP.
+
 2007-11-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/equalizer/demo.c:
