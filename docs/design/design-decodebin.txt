@@ -43,29 +43,40 @@ fine-tune the process.
 
   _ 'autoplug-continue' :
 
-    gboolean user_function (GstElement * decodebin, GstCaps * caps)
+    gboolean user_function (GstElement * decodebin, GstPad *pad, GstCaps * caps)
 
     This signal is fired at the very beginning with the source pad GstCaps. If
   the callback returns TRUE, the process continues normally. If the callback
   returns FALSE, then the GstCaps are considered as a target caps and the
   autoplugging process stops.
 
-  - 'autoplug-sort' :
+  - 'autoplug-factories' :
 
-    gboolean user_function (GstElement * decodebin, GstCaps * caps, GList
-    **list)
+    GValueArray user_function (GstElement* decodebin, GstPad* pad, 
+         GstCaps* caps);
+
+    Get a list of elementfactories for @pad with @caps. This function is used to
+    instruct decodebin2 of the elements it should try to autoplug. The default
+    behaviour when this function is not overridern is to get all elements that
+    can handle @caps from the registry sorted by rank.
+
+  - 'autoplug-select' :
+
+    gint user_function (GstElement* decodebin, GstPad* pad, GstCaps* caps,
+                GValueArray* factories);
 
     This signal is fired once autoplugging has got a list of compatible
   GstElementFactory. The signal is emitted with the GstCaps of the source pad
-  and a pointer on the GList* of compatible factories.
+  and a pointer on the GValueArray of compatible factories.
 
-    The callback can re-order the given list of factories in order to put the
-  preferred factory at the beginning of the GList *.
+    The callback should return the index of the elementfactory in @factories
+    that should be tried next.
 
-    If the callback returns TRUE, then the autoplugging process will create an
-  element to link using the first GstElementFactory of that list. If the
-  callback returns FALSE, then the autoplugging process will stop as if no
-  compatible factories was found.
+    If the callback returns -1, the autoplugging process will stop as if no
+  compatible factories were found.
+
+  The default implementation of this function will try to autoplug the first
+  factory of the list.
 
 * Target Caps
 

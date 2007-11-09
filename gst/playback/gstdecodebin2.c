@@ -838,6 +838,18 @@ static void no_more_pads_cb (GstElement * element, GstDecodeBin * dbin);
 
 static GstDecodeGroup *get_current_group (GstDecodeBin * dbin);
 
+/* called when a new pad is discovered. It will perform some basic actions
+ * before trying to link something to it.
+ *
+ *  - Check the caps, don't do anything when there are no caps or when they have
+ *    no good type.
+ *  - signal AUTOPLUG_CONTINUE to check if we need to continue autoplugging this
+ *    pad.
+ *  - if the caps are non-fixed, setup a handler to continue autoplugging when
+ *    the caps become fixed (connect to notify::caps).
+ *  - get list of factories to autoplug.
+ *  - continue autoplugging to one of the factories.
+ */
 static void
 analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     GstCaps * caps, GstDecodeGroup * group)
@@ -869,7 +881,8 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   if (!gst_caps_is_fixed (caps))
     goto non_fixed;
 
-  /* 1.c else if there's no compatible factory goto unknown_type */
+  /* 1.c else get the factories and if there's no compatible factory goto
+   * unknown_type */
   g_signal_emit (G_OBJECT (dbin),
       gst_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES], 0, pad, caps,
       &factories);
@@ -878,10 +891,10 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     goto unknown_type;
   }
 
-  /* 1.d else goto pad_is_valid */
+  /* 1.d else continue autoplugging something from the list. */
   GST_LOG_OBJECT (pad, "Let's continue discovery on this pad");
-
   connect_pad (dbin, src, pad, caps, factories, group);
+
   g_value_array_free (factories);
 
   return;
@@ -954,7 +967,6 @@ setup_caps_delay:
  *
  * Returns TRUE if an element was properly created and linked
  */
-
 static gboolean
 connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     GstCaps * caps, GValueArray * factories, GstDecodeGroup * group)

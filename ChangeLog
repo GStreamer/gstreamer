@@ -1,3 +1,9 @@
+2007-11-09  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/design/design-decodebin.txt:
+	* gst/playback/gstdecodebin2.c: (analyze_new_pad):
+	Update some more docs and comments.
+
 2007-11-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	Patch by: Sebastien Moutte  <sebastien moutte net>
