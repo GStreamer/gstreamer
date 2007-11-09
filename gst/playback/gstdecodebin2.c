@@ -2097,6 +2097,16 @@ gst_decode_group_free (GstDecodeGroup * group)
   GST_LOG ("group %p", group);
 
   GROUP_MUTEX_LOCK (group);
+
+  /* free ghost pads */
+  if (group == group->dbin->activegroup) {
+    for (tmp = group->ghosts; tmp; tmp = g_list_next (tmp))
+      gst_element_remove_pad (GST_ELEMENT (group->dbin), (GstPad *) tmp->data);
+
+    g_list_free (group->ghosts);
+    group->ghosts = NULL;
+  }
+
   /* Clear all GstDecodePad */
   for (tmp = group->endpads; tmp; tmp = g_list_next (tmp)) {
     GstDecodePad *dpad = (GstDecodePad *) tmp->data;
