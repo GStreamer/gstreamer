@@ -834,9 +834,18 @@ gst_base_sink_get_last_buffer (GstBaseSink * sink)
 static void
 gst_base_sink_set_last_buffer (GstBaseSink * sink, GstBuffer * buffer)
 {
+  GstBuffer *old;
+
+  if (buffer)
+    gst_buffer_ref (buffer);
+
   GST_OBJECT_LOCK (sink);
-  gst_buffer_replace (&sink->priv->last_buffer, buffer);
+  old = sink->priv->last_buffer;
+  sink->priv->last_buffer = buffer;
   GST_OBJECT_UNLOCK (sink);
+
+  if (old)
+    gst_buffer_unref (old);
 }
 
 /**

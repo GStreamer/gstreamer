@@ -1,5 +1,12 @@
 2007-11-09  Wim Taymans  <wim.taymans@gmail.com>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_set_last_buffer):
+	Don't hold the object lock when unreffing a buffer because it could
+	cause a deadlock when the finalize function wants to grab the object
+	lock too. Fixes #495133.
+
+2007-11-09  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/gstsegment.c: (gst_segment_set_newsegment_full),
 	(gst_segment_to_stream_time), (gst_segment_to_running_time):
 	Also accumulate time correctly when doing reverse playback. Fixes
