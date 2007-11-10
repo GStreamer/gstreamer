@@ -70,31 +70,10 @@ GST_STATIC_PAD_TEMPLATE (
   GST_STATIC_CAPS ("video/x-msnwebcam") 
 );
 
-/* props */
-// FIXME remove or fix 
-/*
-enum
-{
-  ARG_0,
-  ARG_RESOLUTION
-};
-*/
 
 static void          gst_mimenc_class_init	      (GstMimEncClass *klass);
 static void          gst_mimenc_base_init	      (GstMimEncClass *klass);
 static void          gst_mimenc_init              (GstMimEnc      *mimenc);
-
-// FIXME remove or fix 
-/*
-static void          gst_mimenc_set_property      (GObject        *object, 
-                                                   guint           prop_id,
-                                                   const GValue   *value, 
-                                                   GParamSpec     *spec);
-static void          gst_mimenc_get_property      (GObject        *object, 
-                                                   guint           prop_id,
-                                                   GValue         *value, 
-                                                   GParamSpec     *spec);
-*/
 
 static gboolean      gst_mimenc_setcaps           (GstPad         *pad, 
                                                    GstCaps        *caps);
@@ -168,14 +147,6 @@ gst_mimenc_class_init (GstMimEncClass *klass)
   gstelement_class = (GstElementClass*) klass;
   gstelement_class->change_state = gst_mimenc_change_state;
 
-/*
-  gobject_class->set_property = gst_mimenc_set_property;
-  gobject_class->get_property = gst_mimenc_get_property;
-  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_RESOLUTION,
-          g_param_spec_uint ("resolution", "Input resolution", 
-             "The input resolution (1 = 320x240 default) (2 = 160x120)",
-             0, G_MAXUINT16, 0, G_PARAM_READWRITE));
-*/
   parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
 
   GST_DEBUG_CATEGORY_INIT (mimenc_debug, "mimenc", 0, "Mimic encoder plugin");
@@ -358,60 +329,4 @@ gst_mimenc_change_state (GstElement * element, GstStateChange transition)
   return GST_ELEMENT_CLASS (parent_class)->change_state (element);
 #else
   return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-#endif
 }
-
-// FIXME remove or fix 
-/*
-static void
-gst_mimenc_set_property (GObject      *object, 
-                         guint         prop_id,
-                         const GValue *value, 
-                         GParamSpec   *pspec)
-{
-  GstMimEnc *mimenc;
-  guint res;
-
-  g_return_if_fail (GST_IS_MIMENC (object));
-
-  mimenc = GST_MIMENC (object);
-
-  switch (prop_id) {
-    case ARG_RESOLUTION:
-      res = g_value_get_uint(value);
-      if (res == 1)
-          mimenc->res = MIMIC_RES_HIGH;
-      else
-          mimenc->res = MIMIC_RES_LOW;
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_mimenc_get_property (GObject    *object, 
-                         guint       prop_id, 
-                         GValue     *value,
-                         GParamSpec *pspec)
-{
-  GstMimEnc *mimenc;
-
-  g_return_if_fail (GST_IS_MIMENC (object));
-
-  mimenc = GST_MIMENC (object);
-
-  switch (prop_id) {
-    case ARG_RESOLUTION:
-      if (mimenc->res == MIMIC_RES_HIGH)
-        g_value_set_uint (value, 1);
-      else
-        g_value_set_uint (value, 2);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-*/
