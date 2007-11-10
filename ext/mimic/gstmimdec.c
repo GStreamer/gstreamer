@@ -182,6 +182,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
   guint16 header_size;
   gint width, height;
   GstCaps * caps;
+  GstFlowReturn res = GST_FLOW_OK;
 
   GST_DEBUG ("in gst_mimdec_chain");
 
@@ -319,12 +320,12 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
               "height", G_TYPE_INT, height, NULL);
       gst_buffer_set_caps (out_buf, caps);
       gst_caps_unref (caps);
-      gst_pad_push (mimdec->srcpad, out_buf);
+      res = gst_pad_push (mimdec->srcpad, out_buf);
 
       gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
       mimdec->have_header = FALSE;
 
-      return GST_FLOW_OK;
+      return res;
   }
 
   return GST_FLOW_OK;
