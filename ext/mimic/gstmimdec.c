@@ -1,9 +1,10 @@
-/* 
+/*
  * GStreamer
  * Copyright (c) 2005 INdT.
  * @author Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>
  * @author Rob Taylor <robtaylor@fastmail.fm>
  * @author Philippe Khalaf <burger@speedy.org>
+ * @author Ole André Vadla Ravnås <oleavr@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -37,7 +38,7 @@ GST_STATIC_PAD_TEMPLATE (
   "sink",
   GST_PAD_SINK,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("video/x-msnwebcam") 
+  GST_STATIC_CAPS ("video/x-msnmsgr-webcam")
 );
 
 static GstStaticPadTemplate src_factory =
@@ -49,7 +50,7 @@ GST_STATIC_PAD_TEMPLATE (
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) 4321, "
-        "framerate = (fraction) [1/1, 30/1], "
+        "framerate = (double) [1.0, 30.0], "
         "red_mask = (int) 16711680, "
         "green_mask = (int) 65280, "
         "blue_mask = (int) 255, "
@@ -66,14 +67,10 @@ static void          gst_mimdec_finalize      (GObject        *object);
 static GstFlowReturn gst_mimdec_chain        (GstPad         *pad, 
                                               GstBuffer      *in);
 static GstCaps      *gst_mimdec_src_getcaps  (GstPad         *pad);
-#if (GST_VERSION_MAJOR == 0) && (GST_VERSION_MINOR == 9) && (GST_VERSION_MICRO <= 1)
-static GstElementStateReturn
-                     gst_mimdec_change_state (GstElement     *element);
-#else
+
 static GstStateChangeReturn
                      gst_mimdec_change_state (GstElement     *element, 
                                               GstStateChange  transition);
-#endif
 
 static GstElementClass *parent_class = NULL;
 
@@ -110,7 +107,10 @@ gst_mimdec_base_init (GstMimDecClass *klass)
     "MimDec",
     "Codec/Decoder/Video",
     "Mimic decoder",
-    "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>"
+    "Andre Moreira Magalhaes <andre.magalhaes@indt.org.br>, "
+    "Rob Taylor <robtaylor@fastmail.fm>, "
+    "Philippe Khalaf <burger@speedy.org>, "
+    "Ole André Vadla Ravnås <oleavr@gmail.com>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
 
@@ -181,7 +181,9 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
   guint32 fourcc;
   guint16 header_size;
   gint width, height;
-  GstCaps *caps;
+  GstCaps * caps;
+
+  GST_DEBUG ("in gst_mimdec_chain");
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
 
@@ -245,6 +247,10 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       frame_body = (guchar *) gst_adapter_peek (mimdec->adapter, mimdec->payload_size);
 
       if (mimdec->dec == NULL) {
+          GstSegment segment;
+          GstEvent * event;
+          gboolean result;
+
           mimdec->dec = mimic_open ();
           if (mimdec->dec == NULL) {
               GST_WARNING ("mimic_open error\n");
@@ -273,10 +279,20 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
               mimdec->have_header = FALSE;
               return GST_FLOW_ERROR;
           }
+
+          gst_segment_init (&segment, GST_FORMAT_TIME);
+          event = gst_event_new_new_segment (FALSE, segment.rate,
+              segment.format, segment.start, segment.stop, segment.time);
+
+          result = gst_pad_push_event (mimdec->srcpad, event);
+          if (!result)
+          {
+              GST_WARNING ("gst_pad_push_event failed");
+          }
       }
 
       out_buf = gst_buffer_new_and_alloc (mimdec->buffer_size);
-
+      GST_BUFFER_TIMESTAMP(out_buf) = GST_BUFFER_TIMESTAMP(buf);
       if (!mimic_decode_frame (mimdec->dec, frame_body, GST_BUFFER_DATA (out_buf))) {
           GST_WARNING ("mimic_decode_frame error\n");
 
@@ -286,32 +302,21 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
           gst_buffer_unref (out_buf);
           return GST_FLOW_ERROR;
       }
-
-      if (mimdec->last_ts != -1) {
-        int diff = mimdec->current_ts - mimdec->last_ts;
-        if (diff < 0 || diff > 5000) {
-          diff = 1000;
-        }
-        mimdec->gst_timestamp += diff * GST_MSECOND;
-      }
-      GST_BUFFER_TIMESTAMP(out_buf) = mimdec->gst_timestamp;
-      mimdec->last_ts = mimdec->current_ts;
-
-
+      
       mimic_get_property(mimdec->dec, "width", &width);
       mimic_get_property(mimdec->dec, "height", &height);
-      GST_DEBUG ("got WxH %d x %d payload size %d buffer_size %d", width, height, mimdec->payload_size, mimdec->buffer_size);
+      GST_DEBUG ("got WxH %d x %d payload size %d buffer_size %d",
+          width, height, mimdec->payload_size, mimdec->buffer_size);
       caps = gst_caps_new_simple ("video/x-raw-rgb",
               "bpp", G_TYPE_INT, 24,
               "depth", G_TYPE_INT, 24,
               "endianness", G_TYPE_INT, 4321,
-              "framerate", GST_TYPE_FRACTION, 30, 1,
+              "framerate", G_TYPE_DOUBLE, 30.0,
               "red_mask", G_TYPE_INT, 16711680,
               "green_mask", G_TYPE_INT, 65280,
               "blue_mask", G_TYPE_INT, 255,
               "width", G_TYPE_INT, width,
               "height", G_TYPE_INT, height, NULL);
-      // gst_pad_set_caps (mimdec->srcpad, caps);
       gst_buffer_set_caps (out_buf, caps);
       gst_caps_unref (caps);
       gst_pad_push (mimdec->srcpad, out_buf);
@@ -321,19 +326,10 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
 
       return GST_FLOW_OK;
   }
-  
+
   return GST_FLOW_OK;
 }
 
-#if (GST_VERSION_MAJOR == 0) && (GST_VERSION_MINOR == 9) && (GST_VERSION_MICRO <= 1)
-static GstElementStateReturn
-gst_mimdec_change_state (GstElement *element)
-{
-  GstMimDec *mimdec;
-
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_NULL:
-#else
 static GstStateChangeReturn
 gst_mimdec_change_state (GstElement *element, GstStateChange transition)
 {
@@ -341,7 +337,6 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-#endif
       mimdec = GST_MIMDEC (element);
       if (mimdec->dec != NULL) {
         mimic_close (mimdec->dec);
@@ -349,20 +344,13 @@ gst_mimdec_change_state (GstElement *element, GstStateChange transition)
         mimdec->buffer_size = -1;
         mimdec->have_header = FALSE;
         mimdec->payload_size = -1;
-        mimdec->gst_timestamp = -1;
-        mimdec->current_ts = -1;
-        mimdec->last_ts = -1;
       }
       break;
     default:
       break;
   }
 
-#if (GST_VERSION_MAJOR == 0) && (GST_VERSION_MINOR == 9) && (GST_VERSION_MICRO <= 1)
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-#else
   return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-#endif
 }
 
 static GstCaps *
