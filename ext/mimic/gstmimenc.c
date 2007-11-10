@@ -175,7 +175,7 @@ gst_mimenc_setcaps (GstPad *pad, GstCaps *caps)
 {
   GstMimEnc *filter;
   GstStructure *structure;
-  int ret, height, width;
+  int ret = TRUE, height, width;
 
   filter = GST_MIMENC (gst_pad_get_parent (pad));
   g_return_val_if_fail (filter != NULL, FALSE);
@@ -183,17 +183,34 @@ gst_mimenc_setcaps (GstPad *pad, GstCaps *caps)
 
   structure = gst_caps_get_structure( caps, 0 );
   ret = gst_structure_get_int( structure, "width", &width );
+  if (!ret) {
+    GST_DEBUG_OBJECT (filter, "No width set");
+    goto out;
+  }
   ret = gst_structure_get_int( structure, "height", &height );
+  if (!ret) {
+    GST_DEBUG_OBJECT (filter, "No height set");
+    goto out;
+  }
+
+  if (width == 320 && height == 240)
+    filter->res = MIMIC_RES_HIGH;
+  else if (width == 160 && height == 120)
+    filter->res = MIMIC_RES_LOW;
+  else {
+    GST_WARNING_OBJECT (filter, "Invalid resolution %dx%d", width, height);
+    ret = FALSE;
+    goto out;
+  }
+
   filter->width = (guint16)width;
   filter->height = (guint16)height;
-  filter->res = (width == 320) ? MIMIC_RES_HIGH : MIMIC_RES_LOW;
-  GST_DEBUG ("Got info from caps w : %d, h : %d", filter->width, filter->height);
-  if (!ret) {
-      gst_object_unref(filter);
-      return FALSE;
-  }
+
+  GST_DEBUG_OBJECT (filter,"Got info from caps w : %d, h : %d",
+      filter->width, filter->height);
+ out:
   gst_object_unref(filter);
-  return TRUE;
+  return ret;
 }
 
 static GstFlowReturn
