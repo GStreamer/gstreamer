@@ -147,7 +147,7 @@ gst_mimenc_class_init (GstMimEncClass *klass)
   gstelement_class = (GstElementClass*) klass;
   gstelement_class->change_state = gst_mimenc_change_state;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   GST_DEBUG_CATEGORY_INIT (mimenc_debug, "mimenc", 0, "Mimic encoder plugin");
 }

@@ -134,7 +134,7 @@ gst_mimdec_class_init (GstMimDecClass *klass)
 
   gobject_class->finalize = gst_mimdec_finalize;
 
-  parent_class = g_type_class_ref (GST_TYPE_ELEMENT);
+  parent_class = g_type_class_peek_parent (klass);
 
   GST_DEBUG_CATEGORY_INIT (mimdec_debug, "mimdec", 0, "Mimic decoder plugin");
 }
