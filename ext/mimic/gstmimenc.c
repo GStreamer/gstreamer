@@ -82,14 +82,9 @@ static GstFlowReturn gst_mimenc_chain             (GstPad         *pad,
 static GstBuffer*    gst_mimenc_create_tcp_header (GstMimEnc      *mimenc, 
                                                    gint            payload_size);
 
-#if (GST_VERSION_MAJOR == 0) && (GST_VERSION_MINOR == 9) && (GST_VERSION_MICRO <= 1)
-static GstElementStateReturn
-                     gst_mimenc_change_state      (GstElement     *element);
-#else
 static GstStateChangeReturn
-                     gst_mimenc_change_state      (GstElement     *element, 
+                     gst_mimenc_change_state      (GstElement     *element,
                                                   GstStateChange   transition);
-#endif
 
 static GstElementClass *parent_class = NULL;
 
@@ -295,15 +290,6 @@ gst_mimenc_create_tcp_header (GstMimEnc *mimenc, gint payload_size)
     return buf_header;
 }
 
-#if (GST_VERSION_MAJOR == 0) && (GST_VERSION_MINOR == 9) && (GST_VERSION_MICRO <= 1)
-static GstElementStateReturn
-gst_mimenc_change_state (GstElement * element)
-{
-  GstMimEnc *mimenc;
-
-  switch (GST_STATE_TRANSITION (element)) {
-    case GST_STATE_READY_TO_NULL:
-#else
 static GstStateChangeReturn
 gst_mimenc_change_state (GstElement * element, GstStateChange transition)
 {
@@ -311,7 +297,6 @@ gst_mimenc_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_NULL:
-#endif
       mimenc = GST_MIMENC (element);
       if (mimenc->enc != NULL) {
         mimic_close (mimenc->enc);
@@ -325,8 +310,5 @@ gst_mimenc_change_state (GstElement * element, GstStateChange transition)
       break;
   }
 
-#if (GST_VERSION_MAJOR == 0) && (GST_VERSION_MINOR == 9) && (GST_VERSION_MICRO <= 1)
-  return GST_ELEMENT_CLASS (parent_class)->change_state (element);
-#else
   return GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 }
