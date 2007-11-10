@@ -217,7 +217,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
           header = (guchar *) gst_adapter_peek (mimdec->adapter, 24);
           header_size = GUINT16_FROM_LE (*(guint16 *) (header + 0));
           if (header_size != 24) {
-              GST_WARNING ("invalid frame: header size %d incorrect", header_size);
+              GST_WARNING_OBJECT (mimdec, 
+                "invalid frame: header size %d incorrect", header_size);
               gst_adapter_flush (mimdec->adapter, 24);
               res = GST_FLOW_ERROR;
               goto out;
@@ -225,16 +226,13 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
 
           fourcc = GST_MAKE_FOURCC ('M', 'L', '2', '0');
           if (GUINT32_FROM_LE (*((guint32 *) (header + 12))) != fourcc) {
-              GST_WARNING ("invalid frame: unknown FOURCC code %d", fourcc);
+              GST_WARNING_OBJECT (mimdec, "invalid frame: unknown FOURCC code %d", fourcc);
               gst_adapter_flush (mimdec->adapter, 24);
               res = GST_FLOW_ERROR;
               goto out;
           }
 
           mimdec->payload_size = GUINT32_FROM_LE (*((guint32 *) (header + 8)));
-
-          mimdec->current_ts = GUINT32_FROM_LE (*((guint32 *) (header + 20)));
-
           GST_DEBUG ("Got packet, payload size %d", mimdec->payload_size);
 
           gst_adapter_flush (mimdec->adapter, 24);
@@ -256,7 +254,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
 
           mimdec->dec = mimic_open ();
           if (mimdec->dec == NULL) {
-              GST_WARNING ("mimic_open error\n");
+              GST_WARNING_OBJECT (mimdec, "mimic_open error\n");
 
               gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
               mimdec->have_header = FALSE;
@@ -265,7 +263,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
           }
 
           if (!mimic_decoder_init (mimdec->dec, frame_body)) {
-              GST_WARNING ("mimic_decoder_init error\n");
+              GST_WARNING_OBJECT (mimdec, "mimic_decoder_init error\n");
               mimic_close (mimdec->dec);
               mimdec->dec = NULL;
 
@@ -276,7 +274,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
           }
 
           if (!mimic_get_property (mimdec->dec, "buffer_size", &mimdec->buffer_size)) {
-              GST_WARNING ("mimic_get_property('buffer_size') error\n");
+              GST_WARNING_OBJECT (mimdec,
+                  "mimic_get_property('buffer_size') error\n");
               mimic_close (mimdec->dec);
               mimdec->dec = NULL;
 
@@ -293,7 +292,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
           result = gst_pad_push_event (mimdec->srcpad, event);
           if (!result)
           {
-              GST_WARNING ("gst_pad_push_event failed");
+              GST_WARNING_OBJECT (mimdec, "gst_pad_push_event failed");
               res = GST_FLOW_ERROR;
               goto out;
           }
@@ -302,7 +301,7 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       out_buf = gst_buffer_new_and_alloc (mimdec->buffer_size);
       GST_BUFFER_TIMESTAMP(out_buf) = GST_BUFFER_TIMESTAMP(buf);
       if (!mimic_decode_frame (mimdec->dec, frame_body, GST_BUFFER_DATA (out_buf))) {
-          GST_WARNING ("mimic_decode_frame error\n");
+          GST_WARNING_OBJECT (mimdec, "mimic_decode_frame error\n");
 
           gst_adapter_flush (mimdec->adapter, mimdec->payload_size);
           mimdec->have_header = FALSE;
@@ -314,7 +313,8 @@ gst_mimdec_chain (GstPad *pad, GstBuffer *in)
       
       mimic_get_property(mimdec->dec, "width", &width);
       mimic_get_property(mimdec->dec, "height", &height);
-      GST_DEBUG ("got WxH %d x %d payload size %d buffer_size %d",
+      GST_DEBUG_OBJECT (mimdec, 
+          "got WxH %d x %d payload size %d buffer_size %d",
           width, height, mimdec->payload_size, mimdec->buffer_size);
       caps = gst_caps_new_simple ("video/x-raw-rgb",
               "bpp", G_TYPE_INT, 24,
