@@ -217,13 +217,14 @@ static GstFlowReturn
 gst_mimenc_chain (GstPad *pad, GstBuffer *in)
 {
   GstMimEnc *mimenc;
-  GstBuffer *out_buf, *buf;
+  GstBuffer *out_buf = NULL, *buf = NULL;
   guchar *data;
   gint buffer_size;
   GstBuffer * header = NULL;
+  GstFlowReturn res = GST_FLOW_OK;
 
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
-  mimenc = GST_MIMENC (GST_OBJECT_PARENT (pad));
+  mimenc = GST_MIMENC (gst_pad_get_parent (pad));
 
   g_return_val_if_fail (GST_IS_MIMENC (mimenc), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_LINKED (mimenc->srcpad), GST_FLOW_ERROR);
@@ -231,22 +232,25 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
   if (mimenc->enc == NULL) {
     mimenc->enc = mimic_open ();
     if (mimenc->enc == NULL) {
-      GST_WARNING ("mimic_open error\n");
-      return GST_FLOW_ERROR;
+      GST_WARNING_OBJECT (mimenc, "mimic_open error\n");
+      res = GST_FLOW_ERROR;
+      goto out;
     }
     
     if (!mimic_encoder_init (mimenc->enc, mimenc->res)) {
-      GST_WARNING ("mimic_encoder_init error\n");
+      GST_WARNING_OBJECT (mimenc, "mimic_encoder_init error\n");
       mimic_close (mimenc->enc);
       mimenc->enc = NULL;
-      return GST_FLOW_ERROR;
+      res = GST_FLOW_ERROR;
+      goto out;
     }
     
     if (!mimic_get_property (mimenc->enc, "buffer_size", &mimenc->buffer_size)) {
-      GST_WARNING ("mimic_get_property('buffer_size') error\n");
+      GST_WARNING_OBJECT (mimenc, "mimic_get_property('buffer_size') error\n");
       mimic_close (mimenc->enc);
       mimenc->enc = NULL;
-      return GST_FLOW_ERROR;
+      res = GST_FLOW_ERROR;
+      goto out;
     }
   }
 
@@ -258,14 +262,16 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
   buffer_size = mimenc->buffer_size;
   if (!mimic_encode_frame (mimenc->enc, data, GST_BUFFER_DATA (out_buf), 
       &buffer_size, ((mimenc->frames % MAX_INTERFRAMES) == 0 ? TRUE : FALSE))) {
-    GST_WARNING ("mimic_encode_frame error\n");
+    GST_WARNING_OBJECT (mimenc, "mimic_encode_frame error\n");
     gst_buffer_unref (out_buf);
     gst_buffer_unref (buf);
-    return GST_FLOW_ERROR;
+    res = GST_FLOW_ERROR;
+    goto out;
   }
   GST_BUFFER_SIZE (out_buf) = buffer_size;
 
-  GST_DEBUG ("incoming buf size %d, encoded size %d", GST_BUFFER_SIZE(buf), GST_BUFFER_SIZE(out_buf));
+  GST_DEBUG_OBJECT (mimenc, "incoming buf size %d, encoded size %d",
+      GST_BUFFER_SIZE(buf), GST_BUFFER_SIZE(out_buf));
   ++mimenc->frames;
 
   // now let's create that tcp header
@@ -273,18 +279,26 @@ gst_mimenc_chain (GstPad *pad, GstBuffer *in)
 
   if (header)
   {
-      gst_pad_push (mimenc->srcpad, header);
-      gst_pad_push (mimenc->srcpad, out_buf);
+    res = gst_pad_push (mimenc->srcpad, header);
+    if (res != GST_FLOW_OK) {
+      gst_buffer_unref (out_buf);
+      goto out;
+    }
+
+    res = gst_pad_push (mimenc->srcpad, out_buf);
   }
   else
   {
-      GST_DEBUG("header not created succesfully");
-      return GST_FLOW_ERROR;
+      GST_DEBUG_OBJECT(mimenc, "header not created succesfully");
+      res = GST_FLOW_ERROR;
   }
 
-  gst_buffer_unref (buf);
+ out:
+  if (buf)
+    gst_buffer_unref (buf);
+  gst_object_unref (mimenc);
 
-  return GST_FLOW_OK;
+  return res;
 }
 
 static GstBuffer* 
