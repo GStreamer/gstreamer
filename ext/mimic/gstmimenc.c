@@ -43,7 +43,7 @@ GST_STATIC_PAD_TEMPLATE (
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) 4321, "
-        "framerate = (double) [1.0, 30.0], "
+        "framerate = (fraction) [1/1, 30/1], "
         "red_mask = (int) 16711680, "
         "green_mask = (int) 65280, "
         "blue_mask = (int) 255, "
@@ -53,7 +53,7 @@ GST_STATIC_PAD_TEMPLATE (
         "bpp = (int) 24, "
         "depth = (int) 24, "
         "endianness = (int) 4321, "
-        "framerate = (double) [1.0, 30.0], "
+        "framerate = (fraction) [1/1, 30/1], "
         "red_mask = (int) 16711680, "
         "green_mask = (int) 65280, "
         "blue_mask = (int) 255, "
@@ -67,7 +67,7 @@ GST_STATIC_PAD_TEMPLATE (
   "src",
   GST_PAD_SRC,
   GST_PAD_ALWAYS,
-  GST_STATIC_CAPS ("video/x-msnwebcam") 
+  GST_STATIC_CAPS ("video/x-msnmsgr-webcam")
 );
 
 
