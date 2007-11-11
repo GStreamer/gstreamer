@@ -40,9 +40,9 @@
  *   <para>
  *   #GstValueList of #gfloat
  *   <classname>&quot;magnitude&quot;</classname>:
- *   the level for each frequency band. A value of 0 maps to the
- *   db value given by the
- *   <link linkend="GstSpectrum--threshold">threshold property.</link>.
+ *   the level for each frequency band in dB. All values below the value of the
+ *   <link linkend="GstSpectrum--threshold">threshold property</link> will
+ *   be set to the threshold.
  *   </para>
  * </listitem>
  * <listitem>
@@ -57,7 +57,7 @@
  * This element cannot be used with the gst-launch command in a sensible way.
  * The included demo shows how to use it in an application.
  *
- * Last reviewed on 2007-08-18 (0.10.5)
+ * Last reviewed on 2007-11-11 (0.10.6)
  * </refsect2>
  */
 
@@ -212,8 +212,8 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_THRESHOLD,
       g_param_spec_int ("threshold", "Threshold",
-          "db threshold for result, maps to 0", G_MININT, 0, DEFAULT_THRESHOLD,
-          G_PARAM_READWRITE));
+          "dB threshold for result. All lower values will be set to this",
+          G_MININT, 0, DEFAULT_THRESHOLD, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (gst_spectrum_debug, "spectrum", 0,
       "audio spectrum analyser element");
@@ -522,10 +522,8 @@ process_s##width (GstSpectrum *spectrum, const gint##width *samples) \
     val += (gdouble) freqdata[i].i * (gdouble) freqdata[i].i; \
     val /= max*max; \
     val = 10.0 * log10 (val); \
-    if (val > spectrum->threshold) \
-      val -= spectrum->threshold; \
-    else \
-      val = 0.0; \
+    if (val < spectrum->threshold) \
+      val = spectrum->threshold; \
     spect_magnitude[i] += val; \
   } \
    \
@@ -589,10 +587,8 @@ process_f##width (GstSpectrum *spectrum, const g##type *samples) \
     val += freqdata[i].i * freqdata[i].i; \
     val /= nfft*nfft; \
     val = 10.0 * log10 (val); \
-    if (val > spectrum->threshold) \
-      val -= spectrum->threshold; \
-    else \
-      val = 0.0; \
+    if (val < spectrum->threshold) \
+      val = spectrum->threshold; \
     spect_magnitude[i] += val; \
   } \
    \

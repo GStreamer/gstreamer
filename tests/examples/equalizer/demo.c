@@ -88,7 +88,7 @@ draw_spectrum (gfloat * data)
       TRUE, 0, 0, spect_bands, spect_height);
   for (i = 0; i < spect_bands; i++) {
     gdk_draw_rectangle (drawingarea->window, drawingarea->style->white_gc,
-        TRUE, i, spect_height - data[i], 1, data[i]);
+        TRUE, i, -data[i], 1, spect_height + data[i]);
   }
   gdk_window_end_paint (drawingarea->window);
 }
@@ -134,7 +134,7 @@ main (int argc, char *argv[])
 
   /* White noise */
   src = gst_element_factory_make ("audiotestsrc", "src");
-  g_object_set (G_OBJECT (src), "wave", 5, "volume", 0.5, NULL);
+  g_object_set (G_OBJECT (src), "wave", 5, "volume", 0.8, NULL);
 
   /* Force float32 samples */
   capsfilter = gst_element_factory_make ("capsfilter", "capsfilter");
