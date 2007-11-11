@@ -1,3 +1,12 @@
+2007-11-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/equalizer/gstiirequalizer10bands.c:
+	(gst_iir_equalizer_10bands_class_init):
+	* gst/equalizer/gstiirequalizer3bands.c:
+	(gst_iir_equalizer_3bands_class_init):
+	* gst/equalizer/gstiirequalizernbands.c:
+	Update docs and property ranges to the real values.
+
 2007-11-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/spectrum/gstspectrum.c:
