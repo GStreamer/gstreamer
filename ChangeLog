@@ -1,5 +1,15 @@
 2007-11-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/equalizer/demo.c: (draw_spectrum):
+	* gst/spectrum/demo-audiotest.c: (draw_spectrum):
+	* gst/spectrum/demo-osssrc.c: (draw_spectrum):
+	* gst/spectrum/gstspectrum.c: (gst_spectrum_class_init):
+	Change the meaning of the magnitude values given in the
+	GstMessages by spectrum to decibel instead of
+	decibel+threshold.
+
+2007-11-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/equalizer/gstiirequalizer10bands.c:
 	* gst/equalizer/gstiirequalizer3bands.c:
 	* gst/equalizer/gstiirequalizernbands.c:

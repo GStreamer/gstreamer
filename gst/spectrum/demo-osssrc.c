@@ -71,7 +71,7 @@ draw_spectrum (gfloat * data)
       TRUE, 0, 0, spect_bands, spect_height);
   for (i = 0; i < spect_bands; i++) {
     gdk_draw_rectangle (drawingarea->window, drawingarea->style->white_gc,
-        TRUE, i, spect_height - data[i], 1, data[i]);
+        TRUE, i, -data[i], 1, spect_height + data[i]);
   }
   gdk_window_end_paint (drawingarea->window);
 }
