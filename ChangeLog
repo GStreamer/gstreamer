@@ -1,6 +1,14 @@
 2007-11-11  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/equalizer/gstiirequalizer10bands.c:
+	* gst/equalizer/gstiirequalizer3bands.c:
+	* gst/equalizer/gstiirequalizernbands.c:
+	And continue to update docs. Also include some sample code
+	for the n-band equalizer in the docs.
+
+2007-11-11  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/equalizer/gstiirequalizer10bands.c:
 	(gst_iir_equalizer_10bands_class_init):
 	* gst/equalizer/gstiirequalizer3bands.c:
 	(gst_iir_equalizer_3bands_class_init):
