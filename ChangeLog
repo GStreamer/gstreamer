@@ -1,3 +1,8 @@
+2007-11-11  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/mpegstream/gstmpegdemux.c:
+	recognize the padding stream
+
 2007-10-31  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/asfdemux/gstasfdemux.c: (gst_asf_demux_process_ext_content_desc):

@@ -763,6 +763,9 @@ done:
         id - 0xE0, GST_MPEG_DEMUX_VIDEO_MPEG, &mpeg_version);
     ret = CLASS (mpeg_demux)->send_subbuffer (mpeg_demux, outstream, buffer,
         timestamp, headerlen + 4, datalen);
+  } else if (id == 0xBE) {
+    /* padding stream */
+    GST_DEBUG_OBJECT (mpeg_demux, "we have a padding packet");
   } else {
     GST_WARNING_OBJECT (mpeg_demux, "unknown stream id 0x%02x", id);
   }
