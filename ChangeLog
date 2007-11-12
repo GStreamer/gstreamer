@@ -2,6 +2,13 @@
 
 	* gst/avi/gstavidemux.c:
 	* gst/qtdemux/qtdemux.c:
+	  Drop EOS in _handle_src_event(). Fix the refcount in qtdemux that
+	  previous commit messed up.
+
+2007-11-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c:
+	* gst/qtdemux/qtdemux.c:
 	  Sync _handle_src_event() with oggdemux. In avidemux also ref the
 	  element when we should, but not when we its not needed.
 

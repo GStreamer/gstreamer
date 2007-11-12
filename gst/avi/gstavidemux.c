@@ -602,6 +602,11 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
       res = gst_avi_demux_handle_seek (avi, pad, event);
       gst_event_unref (event);
       break;
+    case GST_EVENT_QOS:
+    case GST_EVENT_NAVIGATION:
+      res = FALSE;
+      gst_event_unref (event);
+      break;
     default:
       res = gst_pad_event_default (pad, event);
       break;
