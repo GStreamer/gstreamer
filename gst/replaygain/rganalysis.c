@@ -246,7 +246,10 @@ static inline void
 yule_filter (const gfloat * input, gfloat * output,
     const gfloat * a, const gfloat * b)
 {
-  output[0] = input[0] * b[0]
+  /* 1e-10 is added below to avoid running into denormals when operating on
+   * near silence. */
+
+  output[0] = 1e-10 + input[0] * b[0]
       + input[-1] * b[1] - output[-1] * a[1]
       + input[-2] * b[2] - output[-2] * a[2]
       + input[-3] * b[3] - output[-3] * a[3]
