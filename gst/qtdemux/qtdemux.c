@@ -842,13 +842,12 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstEvent * event)
         GST_DEBUG_OBJECT (qtdemux, "cannot seek in streaming mode");
         res = FALSE;
       }
+      gst_object_unref (qtdemux);
       break;
     default:
-      res = FALSE;
+      res = gst_pad_event_default (pad, event);
       break;
   }
-
-  gst_object_unref (qtdemux);
 
   gst_event_unref (event);
 

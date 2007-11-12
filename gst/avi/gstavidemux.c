@@ -374,7 +374,7 @@ gst_avi_demux_src_convert (GstPad * pad,
     gint64 src_value, GstFormat * dest_format, gint64 * dest_value)
 {
   gboolean res = TRUE;
-  GstAviDemux *avidemux = GST_AVI_DEMUX (gst_pad_get_parent (pad));
+  GstAviDemux *avidemux = GST_AVI_DEMUX (GST_PAD_PARENT (pad));
 
   avi_stream_context *stream = gst_pad_get_element_private (pad);
 
@@ -446,7 +446,6 @@ done:
   GST_LOG_OBJECT (avidemux,
       "Returning res:%d dest_format:%s dest_value:%" G_GUINT64_FORMAT, res,
       gst_format_get_name (*dest_format), *dest_value);
-  gst_object_unref (avidemux);
   return res;
 }
 
@@ -467,7 +466,7 @@ static gboolean
 gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstAviDemux *avi = GST_AVI_DEMUX (GST_PAD_PARENT (pad));
+  GstAviDemux *avi = GST_AVI_DEMUX (gst_pad_get_parent (pad));
 
   avi_stream_context *stream = gst_pad_get_element_private (pad);
 
@@ -571,6 +570,7 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstQuery * query)
       break;
   }
 
+  gst_object_unref (avi);
   return res;
 }
 
@@ -591,7 +591,7 @@ static gboolean
 gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
 {
   gboolean res = TRUE;
-  GstAviDemux *avi = GST_AVI_DEMUX (GST_PAD_PARENT (pad));
+  GstAviDemux *avi = GST_AVI_DEMUX (gst_pad_get_parent (pad));
 
   GST_DEBUG_OBJECT (avi,
       "have event type %s: %p on src pad", GST_EVENT_TYPE_NAME (event), event);
@@ -600,18 +600,15 @@ gst_avi_demux_handle_src_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_SEEK:
       /* handle seeking */
       res = gst_avi_demux_handle_seek (avi, pad, event);
-      break;
-    case GST_EVENT_QOS:
-      /* FIXME, we can do something clever here like skip to the next keyframe
-       * based on the QoS values. */
-      res = FALSE;
+      gst_event_unref (event);
       break;
     default:
-      /* most other events are not very usefull */
-      res = FALSE;
+      res = gst_pad_event_default (pad, event);
       break;
   }
-  gst_event_unref (event);
+
+  gst_object_unref (avi);
+
   return res;
 }
 

@@ -1,3 +1,10 @@
+2007-11-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/avi/gstavidemux.c:
+	* gst/qtdemux/qtdemux.c:
+	  Sync _handle_src_event() with oggdemux. In avidemux also ref the
+	  element when we should, but not when we its not needed.
+
 2007-11-08  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/wavparse/gstwavparse.c:
