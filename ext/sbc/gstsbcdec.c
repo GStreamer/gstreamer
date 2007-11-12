@@ -57,10 +57,11 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
 {
   GstSbcDec *dec = GST_SBC_DEC (gst_pad_get_parent (pad));
   GstFlowReturn res = GST_FLOW_OK;
-  guint size, offset = 0;
+  guint size, codesize, offset = 0;
   guint8 *data;
   GstClockTime timestamp;
 
+  codesize = sbc_get_codesize (&dec->sbc);
   timestamp = GST_BUFFER_TIMESTAMP (buffer);
 
   if (dec->buffer) {
@@ -81,10 +82,6 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
     GstCaps *caps, *temp;
     int consumed;
 
-    consumed = sbc_decode (&dec->sbc, data + offset, size - offset);
-    if (consumed <= 0)
-      break;
-
     caps = gst_caps_new_simple ("audio/x-raw-int",
         "rate", G_TYPE_INT, dec->sbc.rate,
         "channels", G_TYPE_INT, dec->sbc.channels, NULL);
@@ -96,14 +93,19 @@ sbc_dec_chain (GstPad * pad, GstBuffer * buffer)
     gst_caps_unref (caps);
 
     res = gst_pad_alloc_buffer_and_set_caps (dec->srcpad,
-        GST_BUFFER_OFFSET_NONE, dec->sbc.len, temp, &output);
+        GST_BUFFER_OFFSET_NONE, codesize, temp, &output);
 
     gst_caps_unref (temp);
 
     if (res != GST_FLOW_OK)
       goto done;
 
-    memcpy (GST_BUFFER_DATA (output), dec->sbc.data, dec->sbc.len);
+    consumed = sbc_decode (&dec->sbc, data + offset, size - offset,
+        GST_BUFFER_DATA (output), codesize, NULL);
+    if (consumed <= 0)
+      break;
+
+    GST_BUFFER_TIMESTAMP (output) = GST_BUFFER_TIMESTAMP (buffer);
 
     res = gst_pad_push (dec->srcpad, output);
     if (res != GST_FLOW_OK)

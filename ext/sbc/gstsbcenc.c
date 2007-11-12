@@ -136,10 +136,11 @@ sbc_enc_generate_srcpad_caps (GstSbcEnc * enc, GstCaps * caps)
   enc->sbc.rate = rate;
   enc->sbc.channels = channels;
 
-  if (enc->mode == 0)
-    enc->sbc.joint = CFG_MODE_JOINT_STEREO;
-  else
-    enc->sbc.joint = enc->mode;
+  if (enc->mode == CFG_MODE_AUTO)
+    enc->mode = CFG_MODE_JOINT_STEREO;
+
+  if (enc->mode == CFG_MODE_MONO || enc->mode == CFG_MODE_JOINT_STEREO)
+    enc->sbc.joint = 1;
 
   enc->sbc.blocks = enc->blocks;
   enc->sbc.subbands = enc->subbands;
@@ -252,8 +253,10 @@ sbc_enc_chain (GstPad * pad, GstBuffer * buffer)
   GstSbcEnc *enc = GST_SBC_ENC (gst_pad_get_parent (pad));
   GstAdapter *adapter = enc->adapter;
   GstFlowReturn res = GST_FLOW_OK;
-  gint codesize = enc->sbc.subbands * enc->sbc.blocks * enc->sbc.channels * 2;
+  gint codesize, frame_len;
 
+  codesize = sbc_get_codesize (&enc->sbc);
+  frame_len = sbc_get_frame_length (&enc->sbc);
   gst_adapter_push (adapter, buffer);
 
   while (gst_adapter_available (adapter) >= codesize && res == GST_FLOW_OK) {
@@ -262,18 +265,19 @@ sbc_enc_chain (GstPad * pad, GstBuffer * buffer)
     const guint8 *data;
     int consumed;
 
+    caps = GST_PAD_CAPS (enc->srcpad);
+
+    res = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
+        GST_BUFFER_OFFSET_NONE, frame_len, caps, &output);
+
     data = gst_adapter_peek (adapter, codesize);
-    consumed = sbc_encode (&enc->sbc, (gpointer) data, codesize);
+    consumed = sbc_encode (&enc->sbc, (gpointer) data, codesize,
+        GST_BUFFER_DATA (output), frame_len, NULL);
     if (consumed <= 0) {
       GST_ERROR ("comsumed < 0, codesize: %d", codesize);
       break;
     }
     gst_adapter_flush (adapter, consumed);
-
-    caps = GST_PAD_CAPS (enc->srcpad);
-
-    res = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
-        GST_BUFFER_OFFSET_NONE, enc->sbc.len, caps, &output);
 
     if (res != GST_FLOW_OK)
       goto done;
@@ -285,7 +289,6 @@ sbc_enc_chain (GstPad * pad, GstBuffer * buffer)
         goto done;
       }
 
-    memcpy (GST_BUFFER_DATA (output), enc->sbc.data, enc->sbc.len);
     GST_BUFFER_TIMESTAMP (output) = GST_BUFFER_TIMESTAMP (buffer);
 
     res = gst_pad_push (enc->srcpad, output);
