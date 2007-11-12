@@ -1,3 +1,11 @@
+2007-11-12  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/flv/gstflvparse.c:
+	Add mapping for Nellymoser ASAO audio codec.
+	(gst_flv_parse_tag_audio), (gst_flv_parse_tag_video): Make sure we
+	actually have data to read at the end of the tag. This avoids trying
+	to allocate negative buffers.
+
 2007-11-12  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/README:

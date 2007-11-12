@@ -460,6 +460,9 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
             "signed", G_TYPE_BOOLEAN, TRUE,
             "width", G_TYPE_INT, width, "depth", G_TYPE_INT, width, NULL);
         break;
+      case 6:
+        caps = gst_caps_new_simple ("audio/x-nellymoser", NULL);
+        break;
       default:
         GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
     }
@@ -525,6 +528,9 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
       case 3:
         caps = gst_caps_new_simple ("audio/x-raw-int", NULL);
         break;
+      case 6:
+        caps = gst_caps_new_simple ("audio/x-nellymoser", NULL);
+        break;
       default:
         GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
     }
@@ -562,6 +568,12 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
       demux->taglist = gst_tag_list_new ();
       demux->push_tags = FALSE;
     }
+  }
+
+  /* Check if we have anything to push */
+  if (demux->tag_data_size <= codec_data) {
+    GST_LOG_OBJECT (demux, "Nothing left in this tag, returning");
+    goto beach;
   }
 
   /* Create buffer from pad */
@@ -797,6 +809,12 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
       demux->taglist = gst_tag_list_new ();
       demux->push_tags = FALSE;
     }
+  }
+
+  /* Check if we have anything to push */
+  if (demux->tag_data_size <= codec_data) {
+    GST_LOG_OBJECT (demux, "Nothing left in this tag, returning");
+    goto beach;
   }
 
   /* Create buffer from pad */
