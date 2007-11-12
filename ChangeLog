@@ -1,3 +1,11 @@
+2007-11-12  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
+	(qtdemux_parse_samples):
+	Properly free QTDemuxSamples array.
+	Protect table write with a sensible check, some files apparently DO contain
+	stts values starting with 0 :(
+
 2007-11-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/avi/gstavidemux.c:

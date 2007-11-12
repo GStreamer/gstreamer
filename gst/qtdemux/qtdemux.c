@@ -914,10 +914,12 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
 
         if (stream->pad)
           gst_element_remove_pad (element, stream->pad);
-        g_free (stream->samples);
+        if (stream->samples)
+          g_free (stream->samples);
         if (stream->caps)
           gst_caps_unref (stream->caps);
-        g_free (stream->segments);
+        if (stream->segments)
+          g_free (stream->segments);
         g_free (stream);
       }
       qtdemux->n_streams = 0;
@@ -2570,8 +2572,10 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream,
         for (i = 0; i < n_sample_syncs; i++) {
           /* note that the first sample is index 1, not 0 */
           index = QT_UINT32 ((guint8 *) stss->data + offset);
-          samples[index - 1].keyframe = TRUE;
-          offset += 4;
+          if (index > 0) {
+            samples[index - 1].keyframe = TRUE;
+            offset += 4;
+          }
         }
       }
     } else {
