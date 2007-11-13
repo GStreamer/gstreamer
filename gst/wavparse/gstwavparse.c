@@ -1851,7 +1851,7 @@ gst_wavparse_pad_convert (GstPad * pad,
   GstWavParse *wavparse;
   gboolean res = TRUE;
 
-  wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
+  wavparse = GST_WAVPARSE (GST_PAD_PARENT (pad));
 
   if (*dest_format == src_format) {
     *dest_value = src_value;
@@ -1941,8 +1941,6 @@ gst_wavparse_pad_convert (GstPad * pad,
   }
 
 done:
-  gst_object_unref (wavparse);
-
   return res;
 
   /* ERRORS */
@@ -1973,7 +1971,7 @@ static gboolean
 gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
 {
   gboolean res = TRUE;
-  GstWavParse *wav = GST_WAVPARSE (GST_PAD_PARENT (pad));
+  GstWavParse *wav = GST_WAVPARSE (gst_pad_get_parent (pad));
 
   /* only if we know */
   if (wav->state != GST_WAVPARSE_DATA)
@@ -2062,33 +2060,32 @@ gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
       res = gst_pad_query_default (pad, query);
       break;
   }
+  gst_object_unref (wav);
   return res;
 }
 
 static gboolean
 gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
 {
-  GstWavParse *wavparse = GST_WAVPARSE (GST_PAD_PARENT (pad));
-  gboolean res = TRUE;
+  GstWavParse *wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
+  gboolean res = FALSE;
 
   GST_DEBUG_OBJECT (wavparse, "event %d, %s", GST_EVENT_TYPE (event),
       GST_EVENT_TYPE_NAME (event));
 
-  /* can only handle events when we are in the data state */
-  if (wavparse->state != GST_WAVPARSE_DATA)
-    return FALSE;
-
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-    {
-      res = gst_wavparse_perform_seek (wavparse, event);
+      /* can only handle events when we are in the data state */
+      if (wavparse->state != GST_WAVPARSE_DATA) {
+        res = gst_wavparse_perform_seek (wavparse, event);
+      }
       gst_event_unref (event);
       break;
-    }
     default:
       res = gst_pad_push_event (wavparse->sinkpad, event);
       break;
   }
+  gst_object_unref (wavparse);
   return res;
 }
 

@@ -1,3 +1,11 @@
+2007-11-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/wavparse/gstwavparse.c: (gst_wavparse_stream_headers),
+	(gst_wavparse_pad_convert), (gst_wavparse_pad_query),
+	(gst_wavparse_srcpad_event):
+	  Ref the element when we should, but not when we its not needed. Reflow
+	  the event_handling to not leak the event.	  
+
 2007-11-12  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
@@ -10,7 +18,7 @@
 
 	* gst/avi/gstavidemux.c:
 	* gst/qtdemux/qtdemux.c:
-	  Drop EOS in _handle_src_event(). Fix the refcount in qtdemux that
+	  Drop QOS in _handle_src_event(). Fix the refcount in qtdemux that
 	  previous commit messed up.
 
 2007-11-12  Stefan Kost  <ensonic@users.sf.net>
