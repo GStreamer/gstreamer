@@ -810,6 +810,9 @@ gst_v4l2src_probe_caps_for_format (GstV4l2Src * v4l2src, guint32 pixelformat,
     results = g_list_delete_link (results, results);
   }
 
+  if (gst_caps_is_empty (ret))
+    goto enum_framesizes_no_results;
+
   return ret;
 
   /* ERRORS */
@@ -819,6 +822,15 @@ enum_framesizes_failed:
     GST_DEBUG_OBJECT (v4l2src,
         "Failed to enumerate frame sizes for pixelformat %" GST_FOURCC_FORMAT
         " (%s)", GST_FOURCC_ARGS (pixelformat), g_strerror (errno));
+    goto default_frame_sizes;
+  }
+enum_framesizes_no_results:
+  {
+    /* it's possible that VIDIOC_ENUM_FRAMESIZES is defined but the driver in
+     * question doesn't actually support it yet */
+    GST_DEBUG_OBJECT (v4l2src, "No results for pixelformat %" GST_FOURCC_FORMAT
+        " enumerating frame sizes, trying fallback",
+        GST_FOURCC_ARGS (pixelformat));
     goto default_frame_sizes;
   }
 unknown_type:
