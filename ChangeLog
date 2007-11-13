@@ -1,3 +1,9 @@
+2007-11-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/design/draft-tagreading.txt:
+	* docs/random/ensonic/profiling.txt:
+	Update fast tagreading draft and performance profiling ideas.
+
 2007-11-09  Wim Taymans  <wim.taymans@gmail.com>
 
 	* libs/gst/base/gstbasesink.c: (gst_base_sink_set_last_buffer):

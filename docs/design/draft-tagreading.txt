@@ -3,20 +3,20 @@ Tagreading
 
 The tagreading (metadata reading) use case for mediacenter applications is not
 to well supported by the current GStreamer architecture. It uses demuxers on the
-files, which generelly said takes too long. what we want is specialized elements
-that just do the tag-reading.
+files, which generelly said takes too long (building seek-index, prerolling).
+What we want is specialized elements / parsing modes that just do the
+tag-reading.
 
-The idea is to have one plugin 'tagread' simmilar to 'typefind' that provides
-elements for the different formats. The advantage of having those in on plugin
-would be that when building a metadatabase one only loads this plugin.
+The idea is to define a TagReadIFace. Tag-demuxers, classic demuxers and decoder
+plugins can just implement the interface or provide a separate element that
+implements the interface.
 
-Then there would be a tagbin, that similar to decodebin does a typefind and then
-plugs the right tagread element. It might plug a demuxer as a fallback solution.
+In addition we need a tagreadbin, that similar to decodebin does a typefind and
+then plugs the right tagread element(s). If will only look at elements that
+implement the interface. It can plug serval if possible.
 
 For optimal performance typefind and tagread could share the list of already
-peeked buffers.
-
-Still it would be nice to reuse code from demuxers/tag-filters.
+peeked buffers (but no idea how we could implement that).
 
 
 Design
@@ -33,14 +33,31 @@ The plan is that applications can do the following:
 
 * it should have one sinkpad of type ANY
 * it should send EOS when all metadata has been read
-  (and all tags have been sent)
-* it could have a generic element that uses taglib
-  http://developer.kde.org/~wheeler/taglib.html
-* tagread-elements should have RANK_NONE to be not autoplugged by decodebin
+  "done"-signal from all tagread-elements
+* special tagread-elements should have RANK_NONE to be not autoplugged by
+  decodebin
 
+Interface
+---------
+* gboolean iface property "tag-reading"
+  Switches the element to tagreading mode. Needed if normal element implement
+  that behaviour. Elements will skip parsing unneeded data, don't build a
+  seeking index, etc.
+* signal "done"
+  Equivalent of EOS.
 
-Open Issues
------------
+Use Cases
+---------
+
+* mp3 with id3- and apetags
+  * plug id3demux ! apedemux
+* avi with vorbis audio
+  * plug avidemux
+  * new pad -> audio/vorbis
+  * plug vorbisdec or special vorbiscomment reader
+
+Additional Thoughts
+-------------------
 * would it make sense to have 2-phase tag-reading (property on tagbin and/or
   tagread elements)
   * 1st phase: get tag-data that are directly embedded in the data
@@ -55,6 +72,10 @@ Open Issues
     GstTagList *gst_tag_cache_load_tag_data (GstTagCache *self, const gchar *uri);
     gst_tag_cache_store_tag_data (GstTagCache *self, const gchar *uri, GstTagList *tags);
 
+Code Locations
+--------------
+* tagreadbin -> gst-plugins-base/gst/tagread
+* tagreaderiface -> gst-plugins-base/gst-libs/gst/tag
 
 Reuse
 -----
