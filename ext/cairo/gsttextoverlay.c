@@ -67,6 +67,8 @@ enum
 #define DEFAULT_XPAD 25
 #define DEFAULT_FONT "sans"
 
+#define GST_CAIRO_TEXT_OVERLAY_DEFAULT_SCALE   20.0
+
 static GstStaticPadTemplate cairo_text_overlay_src_template_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -248,9 +250,6 @@ gst_text_overlay_init (GstCairoTextOverlay * overlay,
   overlay->need_render = TRUE;
 
   overlay->font = g_strdup (DEFAULT_FONT);
-  overlay->slant = CAIRO_FONT_SLANT_NORMAL;
-  overlay->weight = CAIRO_FONT_WEIGHT_NORMAL;
-  overlay->scale = 20;
   gst_text_overlay_font_init (overlay);
 
   overlay->fps_n = 0;
@@ -274,6 +273,33 @@ gst_text_overlay_font_init (GstCairoTextOverlay * overlay)
   cairo_font_extents_t font_extents;
   cairo_surface_t *surface;
   cairo_t *cr;
+  gchar *font_desc, *sep;
+
+  font_desc = g_ascii_strdown (overlay->font, -1);
+
+  /* cairo_select_font_face() does not parse the size at the end, so we have
+   * to do that ourselves; same for slate and weight */
+  sep = MAX (strrchr (font_desc, ' '), strrchr (font_desc, ','));
+  if (sep != NULL && g_strtod (sep, NULL) > 0.0) {
+    /* there may be a suffix such as 'px', but we just ignore that for now */
+    overlay->scale = g_strtod (sep, NULL);
+  } else {
+    overlay->scale = GST_CAIRO_TEXT_OVERLAY_DEFAULT_SCALE;
+  }
+  if (strstr (font_desc, "bold"))
+    overlay->weight = CAIRO_FONT_WEIGHT_BOLD;
+  else
+    overlay->weight = CAIRO_FONT_WEIGHT_NORMAL;
+
+  if (strstr (font_desc, "italic"))
+    overlay->slant = CAIRO_FONT_SLANT_ITALIC;
+  else if (strstr (font_desc, "oblique"))
+    overlay->slant = CAIRO_FONT_SLANT_OBLIQUE;
+  else
+    overlay->slant = CAIRO_FONT_SLANT_NORMAL;
+
+  GST_LOG_OBJECT (overlay, "Font desc: '%s', scale=%f, weight=%d, slant=%d",
+      overlay->font, overlay->scale, overlay->weight, overlay->slant);
 
   surface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 256, 256);
   cr = cairo_create (surface);
@@ -290,6 +316,7 @@ gst_text_overlay_font_init (GstCairoTextOverlay * overlay)
 
   cairo_destroy (cr);
   cairo_surface_destroy (surface);
+  g_free (font_desc);
 }
 
 static void
