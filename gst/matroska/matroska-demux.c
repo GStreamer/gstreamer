@@ -2368,6 +2368,62 @@ gst_matroska_demux_push_xiph_codec_priv_data (GstMatroskaDemux * demux,
   return TRUE;
 }
 
+static void
+gst_matroska_demux_push_dvd_clut_change_event (GstMatroskaDemux * demux,
+    GstMatroskaTrackContext * stream)
+{
+  gchar *buf, *start;
+
+  g_assert (!strcmp (stream->codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB));
+
+  if (!stream->codec_priv)
+    return;
+
+  /* ideally, VobSub private data should be parsed and stored more convenient
+   * elsewhere, but for now, only interested in a small part */
+
+  /* make sure we have terminating 0 */
+  buf = g_strndup (stream->codec_priv, stream->codec_priv_size);
+
+  /* just locate and parse palette part */
+  start = strstr (stream->codec_priv, "palette:");
+  if (start) {
+    gint i;
+    guint clut[16];
+
+    start += 8;
+    while (g_ascii_isspace (*start))
+      start++;
+    for (i = 0; i < 16; i++) {
+      if (sscanf (start, "%06x", &clut[i]) != 1)
+        break;
+      start += 6;
+      while ((*start == ',') || g_ascii_isspace (*start))
+        start++;
+    }
+
+    /* got them all without problems; build and send event */
+    if (i == 16) {
+      GstStructure *s;
+
+      s = gst_structure_new ("application/x-gst-dvd", "event", G_TYPE_STRING,
+          "dvd-spu-clut-change", "clut00", G_TYPE_INT, clut[0], "clut01",
+          G_TYPE_INT, clut[1], "clut02", G_TYPE_INT, clut[2], "clut03",
+          G_TYPE_INT, clut[3], "clut04", G_TYPE_INT, clut[4], "clut05",
+          G_TYPE_INT, clut[5], "clut06", G_TYPE_INT, clut[6], "clut07",
+          G_TYPE_INT, clut[7], "clut08", G_TYPE_INT, clut[8], "clut09",
+          G_TYPE_INT, clut[9], "clut10", G_TYPE_INT, clut[10], "clut11",
+          G_TYPE_INT, clut[11], "clut12", G_TYPE_INT, clut[12], "clut13",
+          G_TYPE_INT, clut[13], "clut14", G_TYPE_INT, clut[14], "clut15",
+          G_TYPE_INT, clut[15], NULL);
+
+      gst_pad_push_event (stream->pad,
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s));
+    }
+  }
+  g_free (buf);
+}
+
 static gboolean
 gst_matroska_demux_stream_is_wavpack (GstMatroskaTrackContext * stream)
 {
@@ -2759,6 +2815,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
             got_error = TRUE;
           }
           stream->send_flac_headers = FALSE;
+        }
+
+        if (stream->send_dvd_event) {
+          gst_matroska_demux_push_dvd_clut_change_event (demux, stream);
+          /* FIXME: should we send this event again after (flushing) seek ? */
+          stream->send_dvd_event = FALSE;
         }
 
         if (got_error)
@@ -3971,6 +4033,7 @@ gst_matroska_demux_subtitle_caps (GstMatroskaTrackSubtitleContext *
     subtitlecontext->check_utf8 = TRUE;
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_SUBTITLE_VOBSUB)) {
     caps = gst_caps_new_simple ("video/x-dvd-subpicture", NULL);
+    ((GstMatroskaTrackContext *) subtitlecontext)->send_dvd_event = TRUE;
     subtitlecontext->check_utf8 = FALSE;
   } else {
     GST_DEBUG ("Unknown subtitle stream: codec_id='%s'", codec_id);

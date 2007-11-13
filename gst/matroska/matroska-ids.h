@@ -277,6 +277,11 @@ typedef struct _GstMatroskaTrackContext {
    * testing for time == 0 is not enough to detect that. Used by demuxer */
   gboolean      send_flac_headers;
 
+  /* Special flag for VobSub, for which we have to send colour table info
+   * (if available) first before sending any data, and just testing
+   * for time == 0 is not enough to detect that. Used by demuxer */
+  gboolean      send_dvd_event;
+
   /* Special counter for muxer to skip the first N vorbis/theora headers -
    * they are put into codec private data, not muxed into the stream */
   guint         xiph_headers_to_skip;

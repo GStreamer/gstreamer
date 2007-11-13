@@ -1,5 +1,17 @@
 2007-11-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Mark Nauwelaerts <manauw skynet be>
+
+	* gst/matroska/matroska-demux.c:
+	  (gst_matroska_demux_push_dvd_clut_change_event),
+	  (gst_matroska_demux_parse_blockgroup_or_simpleblock),
+	  (gst_matroska_demux_subtitle_caps):
+	* gst/matroska/matroska-ids.h:
+	  Extract palette data for dvd subpicture streams and send it
+	  downstream as custom gstreamer dvd event (fixes #453417).
+
+2007-11-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/cairo/gsttextoverlay.c: (gst_text_overlay_font_init):
 	  Implement minimal parsing of the passed pango font description
 	  string, so passing a font size works the same as with the
