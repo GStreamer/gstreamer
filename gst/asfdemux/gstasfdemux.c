@@ -273,7 +273,6 @@ static gboolean
 gst_asf_demux_activate_pull (GstPad * pad, gboolean active)
 {
   GstASFDemux *demux;
-  gboolean ret;
 
   demux = GST_ASF_DEMUX (GST_OBJECT_PARENT (pad));
 
@@ -281,11 +280,11 @@ gst_asf_demux_activate_pull (GstPad * pad, gboolean active)
     demux->state = GST_ASF_DEMUX_STATE_HEADER;
     demux->streaming = FALSE;
 
-    ret = gst_pad_start_task (pad, (GstTaskFunction) gst_asf_demux_loop, demux);
+    return gst_pad_start_task (pad, (GstTaskFunction) gst_asf_demux_loop,
+        demux);
   } else {
-    ret = gst_pad_stop_task (pad);
+    return gst_pad_stop_task (pad);
   }
-  return ret;
 }
 
 
