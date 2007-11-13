@@ -1974,8 +1974,10 @@ gst_wavparse_pad_query (GstPad * pad, GstQuery * query)
   GstWavParse *wav = GST_WAVPARSE (gst_pad_get_parent (pad));
 
   /* only if we know */
-  if (wav->state != GST_WAVPARSE_DATA)
+  if (wav->state != GST_WAVPARSE_DATA) {
+    gst_object_unref (wav);
     return FALSE;
+  }
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -2117,20 +2119,17 @@ gst_wavparse_sink_activate (GstPad * sinkpad)
 static gboolean
 gst_wavparse_sink_activate_pull (GstPad * sinkpad, gboolean active)
 {
-  GstWavParse *wav = GST_WAVPARSE (gst_pad_get_parent (sinkpad));
-
-  GST_DEBUG_OBJECT (wav, "activating pull");
+  GstWavParse *wav = GST_WAVPARSE (GST_OBJECT_PARENT (sinkpad));
 
   if (active) {
     /* if we have a scheduler we can start the task */
     wav->segment_running = TRUE;
-    gst_pad_start_task (sinkpad, (GstTaskFunction) gst_wavparse_loop, sinkpad);
+    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_wavparse_loop,
+        sinkpad);
   } else {
-    gst_pad_stop_task (sinkpad);
+    wav->segment_running = FALSE;
+    return gst_pad_stop_task (sinkpad);
   }
-  gst_object_unref (wav);
-
-  return TRUE;
 };
 
 static GstStateChangeReturn

@@ -3834,6 +3834,7 @@ static gboolean
 gst_avi_demux_sink_activate (GstPad * sinkpad)
 {
   if (gst_pad_check_pull_range (sinkpad)) {
+    GST_DEBUG ("going to pull mode");
     return gst_pad_activate_pull (sinkpad, TRUE);
   } else {
     GST_DEBUG ("going to push (streaming) mode");
@@ -3844,18 +3845,16 @@ gst_avi_demux_sink_activate (GstPad * sinkpad)
 static gboolean
 gst_avi_demux_sink_activate_pull (GstPad * sinkpad, gboolean active)
 {
-  GstAviDemux *avi = GST_AVI_DEMUX (gst_pad_get_parent (sinkpad));
+  GstAviDemux *avi = GST_AVI_DEMUX (GST_OBJECT_PARENT (sinkpad));
 
   if (active) {
     avi->segment_running = TRUE;
-    gst_pad_start_task (sinkpad, (GstTaskFunction) gst_avi_demux_loop, sinkpad);
+    return gst_pad_start_task (sinkpad, (GstTaskFunction) gst_avi_demux_loop,
+        sinkpad);
   } else {
-    gst_pad_stop_task (sinkpad);
     avi->segment_running = FALSE;
+    return gst_pad_stop_task (sinkpad);
   }
-  gst_object_unref (avi);
-
-  return TRUE;
 }
 
 static gboolean
