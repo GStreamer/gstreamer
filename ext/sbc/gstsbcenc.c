@@ -218,8 +218,7 @@ gst_sbc_enc_fill_sbc_params (GstSbcEnc * enc, GstCaps * caps)
   if (!(allocation = gst_structure_get_string (structure, "allocation")))
     return FALSE;
 
-  sbc_finish (&enc->sbc);
-  sbc_init (&enc->sbc, 0);
+  sbc_reinit (&enc->sbc, 0);
   enc->sbc.rate = rate;
   enc->sbc.channels = channels;
   enc->blocks = blocks;
