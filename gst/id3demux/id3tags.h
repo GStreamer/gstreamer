@@ -75,9 +75,6 @@ typedef struct {
   guint8 *parse_data;
   guint parse_size;
   
-  /* Previous genre string, for simple duplicate removal */
-  gchar *prev_genre;
-
   /* To collect day/month from obsolete TDAT frame if it exists */
   guint pending_month;
   guint pending_day;

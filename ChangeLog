@@ -1,5 +1,14 @@
 2007-11-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/id3demux/id3tags.c:
+	* gst/id3demux/id3tags.h:
+	* gst/id3demux/id3v2frames.c: (id3v2_tag_to_taglist):
+	  We don't want the same string multiple times in a tag list for the
+	  same tag ever, for any tag, not just for GST_TAG_GENRE, so make sure
+	  this doesn't happen and remove special-case code for GST_TAG_GENRE.
+
+2007-11-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* ext/taglib/gstid3v2mux.cc: (add_musicbrainz_tag), (add_funcs):
 	  Write GST_TAG_MUSICBRAINZ_DISCID and GST_TAG_CDDA_CDDB_DISCID
 	  into ID3v2 TXXX frames (fixes #347848).

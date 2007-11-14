@@ -794,14 +794,23 @@ id3v2_tag_to_taglist (ID3TagsWorking * work, const gchar * tag_name,
       break;
     }
     case G_TYPE_STRING:{
-      if (!strcmp (tag_name, GST_TAG_GENRE)) {
-        if (work->prev_genre && !strcmp (tag_str, work->prev_genre))
-          break;                /* Same as the last genre */
-        g_free (work->prev_genre);
-        work->prev_genre = g_strdup (tag_str);
+      const GValue *val;
+      guint i, num;
+
+      /* make sure we add each unique string only once per tag, we don't want
+       * to have the same genre in the genre list multiple times, for example,
+       * or the same DiscID in there twice just because it's contained in the
+       * tag multiple times under different TXXX user tags */
+      num = gst_tag_list_get_tag_size (tag_list, tag_name);
+      for (i = 0; i < num; ++i) {
+        val = gst_tag_list_get_value_index (tag_list, tag_name, i);
+        if (val != NULL && strcmp (g_value_get_string (val), tag_str) == 0)
+          break;
       }
-      gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
-          tag_name, tag_str, NULL);
+      if (i == num) {
+        gst_tag_list_add (tag_list, GST_TAG_MERGE_APPEND,
+            tag_name, tag_str, NULL);
+      }
       break;
     }
 
