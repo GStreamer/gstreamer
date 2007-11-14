@@ -156,7 +156,7 @@ class Producer (object):
 
 class LineCache (Producer):
 
-    _lines_per_iteration = 1000
+    _lines_per_iteration = 50000
 
     def __init__ (self, fileobj, dispatcher):
 
@@ -208,7 +208,8 @@ class LineCache (Producer):
                 continue
             offsets.append (offset)
             i += 1
-            if i == limit:
+            if i >= limit:
+                i = 0
                 yield True
 
         self.have_load_finished ()

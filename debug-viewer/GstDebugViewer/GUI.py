@@ -1040,7 +1040,7 @@ class Window (object):
         dialog.set_transient_for (self.gtk_window)
         dialog.show ()
 
-        self.update_progress_id = gobject.timeout_add (50, self.update_load_progress)
+        self.update_progress_id = gobject.timeout_add (250, self.update_load_progress)
 
     def update_load_progress (self):
 
