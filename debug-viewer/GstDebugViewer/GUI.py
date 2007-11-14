@@ -265,6 +265,8 @@ class SizedColumn (Column):
 # Sync with gst-inspector?
 class TextColumn (SizedColumn):
 
+    font_family = None
+
     def __init__ (self):
 
         Column.__init__ (self)
@@ -272,6 +274,10 @@ class TextColumn (SizedColumn):
         column = self.view_column
         cell = gtk.CellRendererText ()
         column.pack_start (cell)
+
+        if self.font_family:
+            cell.props.family = self.font_family
+            cell.props.family_set = True
 
         if not self.get_modify_func:
             column.add_attribute (cell, "text", self.id)
@@ -315,6 +321,7 @@ class TimeColumn (TextColumn):
     name = "time"
     label_header = _("Time")
     id = LazyLogModel.COL_TIME
+    font_family = "monospace"
 
     @staticmethod
     def get_modify_func ():
@@ -364,6 +371,7 @@ class PidColumn (TextColumn):
     name = "pid"
     label_header = _("PID")
     id = LazyLogModel.COL_PID
+    font_family = "monospace"
 
     @staticmethod
     def get_modify_func ():
@@ -382,6 +390,7 @@ class ThreadColumn (TextColumn):
     name = "thread"
     label_header = _("Thread")
     id = LazyLogModel.COL_THREAD
+    font_family = "monospace"
 
     @staticmethod
     def get_modify_func ():
@@ -396,7 +405,7 @@ class ThreadColumn (TextColumn):
         # TODO: Same as for TimeColumn.  There is no guarantee that aaaaaaaa is
         # the widest string; use fixed font or come up with something better.
 
-        return [int ("aaaaaaaaa", 16)]
+        return [int ("ffffff", 16)]
 
 class CategoryColumn (TextColumn):
 
