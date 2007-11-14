@@ -51,27 +51,6 @@ from GstDebugViewer.Common import utils
 
 from GstDebugViewer import Data, Main
 
-## # Keep in sync with gst-inspector.py!
-## class MetaModel (gobject.GObjectMeta):
-
-##     def __init__ (cls, name, bases, dict):
-
-##         super (MetaModel, cls).__init__ (name, bases, dict)
-
-##         columns = cls.columns
-##         column_types = []
-##         def gen ():
-##             i = 0
-##             it = iter (columns)
-##             while True:
-##                 yield (i, it.next (), it.next (),)
-##                 i += 1
-##         for col_index, col_name, col_type in gen ():
-##             setattr (cls, col_name, col_index)
-##             column_types.append (col_type)
-
-##         cls.column_types = tuple (column_types)
-
 class LazyLogModel (gtk.GenericTreeModel):
 
     __metaclass__ = Common.GUI.MetaModel
@@ -231,148 +210,6 @@ class LazyLogModel (gtk.GenericTreeModel):
     def on_unref_node (self, rowref):
 
         pass
-
-class LogModel (gtk.ListStore):
-
-    __metaclass__ = Common.GUI.MetaModel
-
-    __gsignals__ = {"loading-progress" : (0, None, (float,),),
-                    "loading-finished" : (0, None, (),),}
-                
-    columns = ("COL_LEVEL", str,
-               "COL_PID", int,
-               "COL_THREAD", gobject.TYPE_UINT64,
-               "COL_TIME", gobject.TYPE_UINT64,
-               "COL_CATEGORY", str,
-               "COL_FILENAME", str,
-               "COL_LINE", int,
-               "COL_FUNCTION", str,
-               "COL_OBJECT", str,
-               #"COL_MESSAGE_OFFSET", object,)
-               "COL_MESSAGE", str,)
-
-    def __init__ (self):
-
-        gtk.ListStore.__init__ (self, *self.column_types)
-
-        self.match_line = default_log_line_regex ()
-        self.match_column_order = (self.COL_TIME,
-                                   self.COL_PID,
-                                   self.COL_THREAD,
-                                   self.COL_LEVEL, 
-                                   self.COL_CATEGORY,
-                                   self.COL_FILENAME,
-                                   self.COL_LINE,
-                                   self.COL_FUNCTION,
-                                   self.COL_OBJECT,
-                                   #self.COL_MESSAGE_OFFSET,)
-                                   self.COL_MESSAGE,)
-
-        self.categories = Set ()
-        self.objects = {}
-
-    @staticmethod
-    def _filter_func (model, tree_iter):
-
-        return True
-
-    def filtered (self):
-
-        filtered_model = self.filter_new ()
-        filtered_model.set_visible_func (self._filter_func)
-        return filtered_model
-        
-    def add_parsed (self, args):
-
-        category = args[4]
-        self.categories.add (category)
-
-        object_name = args[8]
-        if object_name:
-            self.objects[object_name] = None
-
-        #args[-1] = args[-1][:60] # FIXME: Message truncated
-
-        list_iter = self.insert (-1)
-        try:
-            self.set (list_iter, *(reduce (add,
-                                           zip (self.match_column_order,
-                                                args))))
-        except TypeError, exc:
-            for column_id, arg in zip (self.match_column_order, args):
-                try:
-                    self.set (list_iter, column_id, arg)
-                except TypeError, exc:
-                    # FIXME
-                    print >> sys.stderr, str (exc)
-                    print >> sys.stderr, "column: %i, arg: %r" % (column_id, arg)
-
-    def parse_line (self, line, offset):
-
-        if not line.endswith (os.linesep):
-            raise ValueError, "line does not end in a line separator"
-
-        match = self.match_line.match (line[:-1])
-        if match is None:
-            raise ValueError ("line does not match format")
-        groups = list (match.groups ())
-
-        groups[0] = parse_time (groups[0]) # time
-        groups[1] = int (groups[1]) # pid
-        groups[2] = int (groups[2], 16) # thread pointer
-        groups[6] = int (groups[6]) # line
-        groups[8] = groups[8] or "" # object (optional)
-        ##groups[9] = offset + match.start (10)
-        return groups
-
-    def load_file (self, filename):
-
-        file_class = file
-        if filename.endswith (".gz") or filename.endswith (".gzip"):
-            import gzip
-            file_class = gzip.GzipFile
-        elif filename.endswith (".bz") or filename.endswith (".bz2"):
-            import bz2
-            file_class = bz2.BZ2File
-        
-        self.fp = file_class (filename, "r")
-        self.size = os.path.getsize (filename)
-        gobject.idle_add (self.load_deferred ().next)
-
-    def load_deferred (self):
-
-        yield True
-
-        UPDATE = 1000
-
-        i = 0
-        while True:
-            offset = self.fp.tell ()
-            line = self.fp.readline ()
-            if not line:
-                break
-
-            if not line.strip ():
-                continue
-
-            line = strip_escape (line)
-
-            try:
-                self.add_parsed (self.parse_line (line, offset))
-            except ValueError, exc:
-                print >> sys.stderr, "Cannot parse %s (%s)" % (repr (line), exc)
-
-            i += 1
-            if i % UPDATE == 0:
-                self.emit ("loading-progress", min (1.0, float (self.fp.tell ()) / self.size))
-                yield True
-
-        if i % UPDATE != 0:
-            self.emit ("loading-progress", 1.0)
-
-        self.emit ("loading-finished")
-        
-        yield False
 
 # Sync with gst-inspector!
 class Column (object):
@@ -1116,17 +953,6 @@ class Window (object):
         self.progress_dialog.destroy ()
         self.progress_dialog = None
         self.progress_bar = None
-
-        ## parent_menu = self.glade_tree.get_widget ("view_categories")
-        ## sub_menu = gtk.Menu ()
-        ## sub_menu.show ()
-        ## parent_menu.set_submenu (sub_menu)
-##         for category in sorted (model.categories):
-##             item = gtk.CheckMenuItem (category, use_underline = False)
-##             item.props.active = True
-##             item.connect ("toggled", self.handle_view_category_toggled)
-##             item.show ()
-##             sub_menu.append (item)
 
         self.log_model.set_log (self.log_file)
 
