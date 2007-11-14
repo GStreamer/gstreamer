@@ -203,7 +203,7 @@ gst_alpha_color_set_caps (GstBaseTransform * btrans, GstCaps * incaps,
 #if (G_BYTE_ORDER == G_BIG_ENDIAN)
   if (red_mask != 0x000000ff)
 #else
-  if (red_mask != 0x00ff0000)
+  if (red_mask != 0xff000000)
 #endif
     alpha->in_rgba = FALSE;
 
