@@ -51,7 +51,7 @@ from GstDebugViewer.Common import utils
 
 from GstDebugViewer import Data, Main
 
-class LazyLogModel (gtk.GenericTreeModel):
+class LogModelBase (gtk.GenericTreeModel):
 
     __metaclass__ = Common.GUI.MetaModel
 
@@ -66,11 +66,98 @@ class LazyLogModel (gtk.GenericTreeModel):
                "COL_OBJECT", str,
                "COL_MESSAGE", str,)
 
-    def __init__ (self, log_obj = None):
+    def __init__ (self):
 
         gtk.GenericTreeModel.__init__ (self)
 
         ##self.props.leak_references = False
+
+        self.line_offsets = []
+        self.line_cache = {}
+
+    def on_get_flags (self):
+
+        flags = gtk.TREE_MODEL_LIST_ONLY | gtk.TREE_MODEL_ITERS_PERSIST
+
+        return flags
+
+    def on_get_n_columns (self):
+        
+        return len (self.column_types)
+
+    def on_get_column_type (self, col_id):
+
+        return self.column_types[col_id]
+    
+    def on_get_iter (self, path):
+
+        if len (path) > 1:
+            raise ValueError ("flat model")
+
+        line_index = path[0]
+
+        return line_index
+
+    def on_get_path (self, line_index):
+
+        return (line_index,)
+
+    def on_get_value (self, line_index, col_id):
+
+        if line_index > len (self.line_offsets) - 1:
+            return None
+
+        line_offset = self.line_offsets[line_index]
+        self.ensure_cached (line_offset)
+
+        return self.line_cache[line_offset][col_id]
+
+    def on_iter_next (self, line_index):
+
+        if line_index > len (self.line_offsets) - 1:
+            return None
+        else:
+            return line_index + 1
+
+    def on_iter_children (self, parent):
+
+        return self.on_iter_nth_child (parent, 0)
+
+    def on_iter_has_child (self, line_index):
+
+        return False
+
+    def on_iter_n_children (self, rowref):
+
+        if rowref is not None:
+            return 0
+
+        return len (self.line_offsets)
+
+    def on_iter_nth_child (self, parent, n):
+
+        if parent or n > len (self.line_offsets) - 1:
+            return None
+        else:
+            return n ## self.line_offsets[n]
+
+    def on_iter_parent (self, child):
+
+        return None
+
+    ## def on_ref_node (self, rowref):
+
+    ##     pass
+
+    ## def on_unref_node (self, rowref):
+
+    ##     pass
+
+class LazyLogModel (LogModelBase):
+
+    def __init__ (self, log_obj = None):
+
+        LogModelBase.__init__ (self)
 
         self.__log_obj = log_obj
 
@@ -85,24 +172,20 @@ class LazyLogModel (gtk.GenericTreeModel):
                                    self.COL_FUNCTION,
                                    self.COL_OBJECT,
                                    self.COL_MESSAGE,)
-        self.__line_offsets = []
-        self.__line_cache = {}
-
         if log_obj:
             self.set_log (log_obj)
 
     def set_log (self, log_obj):
 
-        self.__line_cache.clear ()
-        self.__line_offsets = log_obj.line_cache.offsets
         self.__fileobj = log_obj.fileobj
 
-    def __ensure_cached (self, line_index):
+        self.line_cache.clear ()
+        self.line_offsets = log_obj.line_cache.offsets
 
-        if line_index in self.__line_cache:
+    def ensure_cached (self, line_offset):
+
+        if line_offset in self.line_cache:
             return
-
-        line_offset = self.__line_offsets[line_index]
 
         if line_offset == 0:
             self.__fileobj.seek (0)
@@ -135,81 +218,23 @@ class LazyLogModel (gtk.GenericTreeModel):
 
         groups = [x[1] for x in sorted (zip (self.__line_match_order,
                                              groups))]
-        self.__line_cache[line_index] = groups
+        self.line_cache[line_offset] = groups
 
-    def on_get_flags (self):
+class FilteredLogModel (LogModelBase):
 
-        flags = gtk.TREE_MODEL_LIST_ONLY | gtk.TREE_MODEL_ITERS_PERSIST
+    def __init__ (self, lazy_log_model):
 
-        return flags
+        LogModelBase.__init__ (self)
 
-    def on_get_n_columns (self):
-        
-        return len (self.column_types)
+        self.parent_model = lazy_log_model
 
-    def on_get_column_type (self, index):
+        self.line_offsets = []
+        self.line_cache = lazy_log_model.line_cache
 
-        return self.column_types[index]
-    
-    def on_get_iter (self, path):
+    def ensure_cached (self, line_index):
 
-        if len (path) > 1:
-            raise ValueError ("flat model")
-
-        line_index = path[0]
-
-        return line_index
-
-    def on_get_path (self, rowref):
-
-        return (rowref,)
-
-    def on_get_value (self, rowref, column):
-
-        if rowref >= len (self.__line_offsets):
-            return None
-
-        self.__ensure_cached (rowref)
-
-        return self.__line_cache[rowref][column]
-
-    def on_iter_next (self, rowref):
-
-        if rowref >= len (self.__line_offsets):
-            return None
-        else:
-            return rowref + 1
-
-    def on_iter_children (self, parent):
-
-        return self.on_iter_nth_child (parent, 0)
-
-    def on_iter_has_child (self, rowref):
-
-        return False
-
-    def on_iter_n_children (self, rowref):
-
-        return len (self.__line_offsets)
-
-    def on_iter_nth_child (self, parent, n):
-
-        if parent or n >= len (self.__line_offsets):
-            return None
-        else:
-            return n ## self.__line_offsets[n]
-
-    def on_iter_parent (self, child):
-
-        return None
-
-    def on_ref_node (self, rowref):
-
-        pass
-
-    def on_unref_node (self, rowref):
-
-        pass
+        line_offset = self.line_offsets[line_index]
+        self.parent_model.ensure_cached (line_offset)
 
 # Sync with gst-inspector!
 class Column (object):
