@@ -1367,6 +1367,7 @@ gst_rtspsrc_handle_src_event (GstPad * pad, GstEvent * event)
     default:
       break;
   }
+  gst_event_unref (event);
   gst_object_unref (src);
 
   return res;
@@ -3782,6 +3783,8 @@ gst_rtspsrc_parse_range (GstRTSPSrc * src, const gchar * range,
      * there that we want to keep. */
     if (seconds != -1)
       gst_segment_set_duration (segment, GST_FORMAT_TIME, seconds);
+
+    gst_rtsp_range_free (therange);
   } else {
     GST_WARNING_OBJECT (src, "could not parse range: '%s'", range);
   }
