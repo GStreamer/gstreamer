@@ -76,7 +76,7 @@ class LazyLogModel (gtk.GenericTreeModel):
 
     __metaclass__ = Common.GUI.MetaModel
 
-    columns = ("COL_LEVEL", str,
+    columns = ("COL_LEVEL", str, # FIXME: Use Data.DebugLevel instances/ints!
                "COL_PID", int,
                "COL_THREAD", gobject.TYPE_UINT64,
                "COL_TIME", gobject.TYPE_UINT64,
@@ -886,8 +886,6 @@ class Window (object):
 
         self.file = None
         self.log_model = LazyLogModel ()
-##         self.log_model.connect ("loading-progress", self.handle_load_progress)
-##         self.log_model.connect ("loading-finished", self.handle_load_finished)
 
         glade_filename = os.path.join (Main.Paths.data_dir, "gst-debug-viewer.glade")
         self.widget_factory = Common.GUI.WidgetFactory (glade_filename)
@@ -1136,7 +1134,7 @@ class Window (object):
             sentinel ()
 
         def idle_set ():
-            self.log_view.props.model = self.log_model #model.filtered ()
+            self.log_view.props.model = self.log_model
             return False
 
         gobject.idle_add (idle_set)
