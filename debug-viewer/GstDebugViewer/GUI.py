@@ -92,9 +92,12 @@ class LogModelBase (gtk.GenericTreeModel):
     def on_get_iter (self, path):
 
         if len (path) > 1:
-            raise ValueError ("flat model")
+            return None
 
         line_index = path[0]
+
+        if line_index > len (self.line_offsets) - 1:
+            return None
 
         return line_index
 
@@ -114,7 +117,7 @@ class LogModelBase (gtk.GenericTreeModel):
 
     def on_iter_next (self, line_index):
 
-        if line_index > len (self.line_offsets) - 1:
+        if line_index >= len (self.line_offsets) - 1:
             return None
         else:
             return line_index + 1
@@ -123,7 +126,7 @@ class LogModelBase (gtk.GenericTreeModel):
 
         return self.on_iter_nth_child (parent, 0)
 
-    def on_iter_has_child (self, line_index):
+    def on_iter_has_child (self, rowref):
 
         return False
 
@@ -227,14 +230,11 @@ class FilteredLogModel (LogModelBase):
         LogModelBase.__init__ (self)
 
         self.parent_model = lazy_log_model
+        self.ensure_cached = lazy_log_model.ensure_cached
 
-        self.line_offsets = []
         self.line_cache = lazy_log_model.line_cache
 
-    def ensure_cached (self, line_index):
-
-        line_offset = self.line_offsets[line_index]
-        self.parent_model.ensure_cached (line_offset)
+        self.line_offsets += lazy_log_model.line_offsets
 
 # Sync with gst-inspector!
 class Column (object):
@@ -985,7 +985,8 @@ class Window (object):
             sentinel ()
 
         def idle_set ():
-            self.log_view.props.model = self.log_model
+            #self.log_view.props.model = self.log_model
+            self.log_view.props.model = FilteredLogModel (self.log_model)
             return False
 
         gobject.idle_add (idle_set)
