@@ -13,6 +13,7 @@
         <menuitem name="ViewColumnsTime" action="show-time-column"/>
         <menuitem name="ViewColumnsLevel" action="show-level-column"/>
         <menuitem name="ViewColumnsThread" action="show-thread-column"/>
+        <menuitem name="ViewColumnsFilename" action="show-filename-column"/>
         <menuitem name="ViewColumnsCategory" action="show-category-column"/>
         <menuitem name="ViewColumnsFunction" action="show-function-column"/>
         <menuitem name="ViewColumnsObject" action="show-object-column"/>

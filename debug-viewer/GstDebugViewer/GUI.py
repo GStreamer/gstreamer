@@ -529,6 +529,16 @@ class CategoryColumn (TextColumn):
 
         return ["GST_LONG_CATEGORY", "somelongelement"]
 
+class FilenameColumn (TextColumn):
+
+    name = "filename"
+    label_header = _("Filename")
+    id = LazyLogModel.COL_FILENAME
+
+    def get_values_for_size (self):
+
+        return ["gstsomefilename.c"]
+
 class FunctionColumn (TextColumn):
 
     name = "function"
@@ -747,7 +757,7 @@ class ColumnManager (Common.GUI.Manager):
 class ViewColumnManager (ColumnManager):
 
     column_classes = (TimeColumn, LevelColumn, ThreadColumn, CategoryColumn,
-                      FunctionColumn, ObjectColumn, MessageColumn,)
+                      FilenameColumn, FunctionColumn, ObjectColumn, MessageColumn,)
 
     def __init__ (self, state):
 
@@ -811,6 +821,9 @@ class ViewColumnManager (ColumnManager):
     def __handle_notify_model (self, view, gparam):
 
         model = self.view.props.model
+        self.logger.debug ("model changed: %r", model)
+        if model is None:
+            return
         for column in self.iter_items ():
             self.size_column (column, view, model)
 
@@ -969,10 +982,10 @@ class Window (object):
 
     def close (self, *a, **kw):
 
+        self.logger.debug ("closing window, detaching")
         self.detach ()
-
         self.gtk_window.hide ()
-
+        self.logger.debug ("requesting close from app")
         self.app.close_window (self)
 
     def handle_window_delete_event (self, window, event):
