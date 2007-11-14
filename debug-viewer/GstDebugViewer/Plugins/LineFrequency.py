@@ -145,6 +145,12 @@ class LineFrequencyWidget (gtk.DrawingArea):
             ctx.rectangle (position1, 0, line_width, h)
             ctx.fill ()
 
+    def find_indicative_time_step (self):
+
+        MINIMUM_PIXEL_STEP = 32
+        time_per_pixel = self.sentinel_step
+        return 32 # FIXME use self.sentinel_step and len (self.sentinel_data)
+
     def __draw (self, drawable):
 
         ctx = drawable.cairo_create ()
@@ -156,11 +162,19 @@ class LineFrequencyWidget (gtk.DrawingArea):
         ctx.new_path ()
 
         ctx.set_line_width (1.)
-        ctx.set_source_rgb (.96, .96, .96)
+        ctx.set_source_rgb (.95, .95, .95)
         for i in range (h // 16):
             y = i * 16 - .5
             ctx.move_to (0, y)
             ctx.line_to (w, y)
+            ctx.stroke ()
+
+        pixel_step = self.find_indicative_time_step ()
+        ctx.set_source_rgb (.9, .9, .9)
+        for i in range (w // pixel_step):
+            x = i * pixel_step - .5
+            ctx.move_to (x, 0)
+            ctx.line_to (x, h)
             ctx.stroke ()
 
         if self.sentinel_data is None and self.sentinel:

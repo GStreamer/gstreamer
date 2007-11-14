@@ -231,7 +231,6 @@ class FilteredLogModel (LogModelBase):
 
         self.parent_model = lazy_log_model
         self.ensure_cached = lazy_log_model.ensure_cached
-
         self.line_cache = lazy_log_model.line_cache
 
         self.line_offsets += lazy_log_model.line_offsets
