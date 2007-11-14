@@ -498,6 +498,24 @@ class LevelColumn (TextColumn):
 
         return values
 
+class PidColumn (TextColumn):
+
+    name = "pid"
+    label_header = _("PID")
+    id = LazyLogModel.COL_PID
+
+    @staticmethod
+    def get_modify_func ():
+
+        return str
+
+    def get_values_for_size (self):
+
+        # TODO: Same as for TimeColumn.  There is no guarantee that 999999 is
+        # the widest string; use fixed font or come up with something better.
+
+        return ["999999"]
+
 class ThreadColumn (TextColumn):
 
     name = "thread"
@@ -756,7 +774,7 @@ class ColumnManager (Common.GUI.Manager):
 
 class ViewColumnManager (ColumnManager):
 
-    column_classes = (TimeColumn, LevelColumn, ThreadColumn, CategoryColumn,
+    column_classes = (TimeColumn, LevelColumn, PidColumn, ThreadColumn, CategoryColumn,
                       FilenameColumn, FunctionColumn, ObjectColumn, MessageColumn,)
 
     def __init__ (self, state):
