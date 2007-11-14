@@ -865,7 +865,7 @@ class Window (object):
         group = gtk.ActionGroup ("MenuActions")
         group.add_actions ([("FileMenuAction", None, _("_File")),
                             ("ViewMenuAction", None, _("_View")),
-                            ("ViewColumnsMenuAction", None, _("View columns")),
+                            ("ViewColumnsMenuAction", None, _("_Columns")),
                             ("HelpMenuAction", None, _("_Help"))])
         self.actions.add_group (group)
 
