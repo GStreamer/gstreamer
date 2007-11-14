@@ -1,3 +1,8 @@
+2007-11-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/elements/spectrum.c: (GST_START_TEST):
+	Fix spectrum unit test for the latest spectrum changes.
+
 2007-11-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	Patch by: René Stadler <mail at renestadler dot de>

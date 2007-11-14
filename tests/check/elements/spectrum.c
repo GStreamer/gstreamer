@@ -202,9 +202,9 @@ GST_START_TEST (test_int16)
     GST_DEBUG ("band[%3d] is %.2f", i, level);
     /* Only the bands in the middle should have a level above 60 */
     fail_if ((i == SPECT_BANDS / 2 || i == SPECT_BANDS / 2 - 1)
-        && level < 60.0);
+        && level < -20.0);
     fail_if ((i != SPECT_BANDS / 2 && i != SPECT_BANDS / 2 - 1)
-        && level > 60.0);
+        && level > -20.0);
   }
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
@@ -304,9 +304,9 @@ GST_START_TEST (test_int32)
     GST_DEBUG ("band[%3d] is %.2f", i, level);
     /* Only the bands in the middle should have a level above 60 */
     fail_if ((i == SPECT_BANDS / 2 || i == SPECT_BANDS / 2 - 1)
-        && level < 60.0);
+        && level < -20.0);
     fail_if ((i != SPECT_BANDS / 2 && i != SPECT_BANDS / 2 - 1)
-        && level > 60.0);
+        && level > -20.0);
   }
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
@@ -406,9 +406,9 @@ GST_START_TEST (test_float32)
     GST_DEBUG ("band[%3d] is %.2f", i, level);
     /* Only the bands in the middle should have a level above 60 */
     fail_if ((i == SPECT_BANDS / 2 || i == SPECT_BANDS / 2 - 1)
-        && level < 60.0);
+        && level < -20.0);
     fail_if ((i != SPECT_BANDS / 2 && i != SPECT_BANDS / 2 - 1)
-        && level > 60.0);
+        && level > -20.0);
   }
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
@@ -508,9 +508,9 @@ GST_START_TEST (test_float64)
     GST_DEBUG ("band[%3d] is %.2f", i, level);
     /* Only the bands in the middle should have a level above 60 */
     fail_if ((i == SPECT_BANDS / 2 || i == SPECT_BANDS / 2 - 1)
-        && level < 60.0);
+        && level < -20.0);
     fail_if ((i != SPECT_BANDS / 2 && i != SPECT_BANDS / 2 - 1)
-        && level > 60.0);
+        && level > -20.0);
   }
   fail_unless_equals_int (g_list_length (buffers), 1);
   fail_if ((outbuffer = (GstBuffer *) buffers->data) == NULL);
