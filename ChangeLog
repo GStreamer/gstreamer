@@ -1,5 +1,11 @@
 2007-11-14  Jan Schmidt  <jan.schmidt@sun.com>
 
+	* win32/vs6/libgstinterfaces.dsp:
+	* win32/vs6/libgstrtsp.dsp:
+	Convert line endings back to DOS
+
+2007-11-14  Jan Schmidt  <jan.schmidt@sun.com>
+
 	* gst-libs/gst/fft/kiss_fft_f32.h:
 	* gst-libs/gst/fft/kiss_fft_f64.h:
 	* gst-libs/gst/fft/kiss_fft_s16.h:
