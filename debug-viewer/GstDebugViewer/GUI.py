@@ -422,7 +422,7 @@ class TextColumn (SizedColumn):
             column.set_cell_data_func (cell, cell_data_func)
 
         column.props.resizable = True
-        column.set_sort_column_id (self.id)
+        ## column.set_sort_column_id (self.id)
 
     def compute_default_size (self, view, model):
 
