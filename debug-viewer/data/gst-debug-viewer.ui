@@ -1,0 +1,32 @@
+<!-- -*- mode: xml; -*- -->
+<ui>
+  <menubar>
+    <menu name="FileMenu" action="FileMenuAction">
+      <menuitem name="FileNewWindow" action="new-window"/>
+      <menuitem name="FileOpen" action="open-file"/>
+      <placeholder name="FileMenuAdditions"/>
+      <separator/>
+      <menuitem name="FileCloseWindow" action="close-window"/>
+    </menu>
+    <menu name="ViewMenu" action="ViewMenuAction">
+      <menu name="ViewColumnsMenu" action="ViewColumnsMenuAction">
+        <menuitem name="ViewColumnsTime" action="show-time-column"/>
+        <menuitem name="ViewColumnsLevel" action="show-level-column"/>
+        <menuitem name="ViewColumnsThread" action="show-thread-column"/>
+        <menuitem name="ViewColumnsCategory" action="show-category-column"/>
+        <menuitem name="ViewColumnsFunction" action="show-function-column"/>
+        <menuitem name="ViewColumnsObject" action="show-object-column"/>
+        <menuitem name="ViewColumnsMessage" action="show-message-column"/>
+      </menu>
+      <placeholder name="ViewMenuAdditions"/>
+      <!--<menuitem name="ViewLineDensity" action="show-line-density"/>-->
+      <separator/>
+      <menuitem name="ViewContextMenuCopyMessage" action="edit-copy-message"/>
+      <menuitem name="ViewContextMenuCopyLine" action="edit-copy-line"/>
+    </menu>
+    <menu name="HelpMenu" action="HelpMenuAction">
+      <placeholder name="HelpMenuAdditions"/>
+      <menuitem name="HelpInfo" action="show-about"/>
+    </menu>
+  </menubar>
+</ui>
