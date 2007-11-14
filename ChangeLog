@@ -1,5 +1,11 @@
 2007-11-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* ext/taglib/gstid3v2mux.cc: (add_musicbrainz_tag), (add_funcs):
+	  Write GST_TAG_MUSICBRAINZ_DISCID and GST_TAG_CDDA_CDDB_DISCID
+	  into ID3v2 TXXX frames (fixes #347848).
+
+2007-11-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_open):
 	  Don't leak sdp message contents (fixes #496773).
 
