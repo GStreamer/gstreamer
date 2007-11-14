@@ -134,13 +134,14 @@ class LineFrequencyWidget (gtk.DrawingArea):
         x, y, w, h = self.get_allocation ()
 
         line_width = position2 - position1
-        ctx.set_source_rgba (1., 0., 0., .5)
         if line_width <= 1:
+            ctx.set_source_rgb (1., 0., 0.)
             ctx.set_line_width (1.)
             ctx.move_to (position1 + .5, 0)
             ctx.line_to (position1 + .5, h)
             ctx.stroke ()
         else:
+            ctx.set_source_rgba (1., 0., 0., .5)
             ctx.rectangle (position1, 0, line_width, h)
             ctx.fill ()
 
