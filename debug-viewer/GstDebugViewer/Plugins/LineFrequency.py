@@ -155,6 +155,14 @@ class LineFrequencyWidget (gtk.DrawingArea):
         ctx.fill ()
         ctx.new_path ()
 
+        ctx.set_line_width (1.)
+        ctx.set_source_rgb (.96, .96, .96)
+        for i in range (h // 16):
+            y = i * 16 - .5
+            ctx.move_to (0, y)
+            ctx.line_to (w, y)
+            ctx.stroke ()
+
         if self.sentinel_data is None and self.sentinel:
             if w > 15:
                 self.logger.debug ("running sentinel for width %i", w)
