@@ -1,5 +1,13 @@
 2007-11-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_open):
+	  Don't leak sdp message contents (fixes #496773).
+
+	* gst/udp/gstudpsink.c: (gst_udpsink_finalize):
+	  Don't leak URI string.
+
+2007-11-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Julien Puydt <julien dot puydt at laposte net>
 
 	* ext/raw1394/Makefile.am:

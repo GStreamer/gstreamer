@@ -157,6 +157,7 @@ static void
 gst_udpsink_finalize (GstUDPSink * udpsink)
 {
   g_free (udpsink->host);
+  g_free (udpsink->uri);
 
   G_OBJECT_CLASS (parent_class)->finalize ((GObject *) udpsink);
 }

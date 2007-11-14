@@ -3914,6 +3914,7 @@ gst_rtspsrc_open (GstRTSPSrc * src)
   /* clean up any messages */
   gst_rtsp_message_unset (&request);
   gst_rtsp_message_unset (&response);
+  gst_sdp_message_uninit (&sdp);
 
   return TRUE;
 
@@ -3978,6 +3979,7 @@ cleanup_error:
     GST_RTSP_STATE_UNLOCK (src);
     gst_rtsp_message_unset (&request);
     gst_rtsp_message_unset (&response);
+    gst_sdp_message_uninit (&sdp);
     return FALSE;
   }
 }
