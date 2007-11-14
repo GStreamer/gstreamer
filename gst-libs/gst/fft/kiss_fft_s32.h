@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <memory.h>
-#include <malloc.h>
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -24,7 +24,7 @@ extern "C" {
   in the tools/ directory.
 */
 
-#define KISS_FFT_S32_MALLOC malloc
+#define KISS_FFT_S32_MALLOC g_malloc
 
 
 #include "_stdint.h"
@@ -82,7 +82,7 @@ void kiss_fft_s32_stride(kiss_fft_s32_cfg cfg,const kiss_fft_s32_cpx *fin,kiss_f
 
 /* If kiss_fft_s32_alloc allocated a buffer, it is one contiguous 
    buffer and can be simply free()d when no longer needed*/
-#define kiss_fft_s32_free free
+#define kiss_fft_s32_free g_free
 
 /*
  Cleans up some memory that gets managed internally. Not necessary to call, but it might clean up 

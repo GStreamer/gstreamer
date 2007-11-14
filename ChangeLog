@@ -1,3 +1,13 @@
+2007-11-14  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst-libs/gst/fft/kiss_fft_f32.h:
+	* gst-libs/gst/fft/kiss_fft_f64.h:
+	* gst-libs/gst/fft/kiss_fft_s16.h:
+	* gst-libs/gst/fft/kiss_fft_s32.h:
+	Don't include malloc.h which doesn't exist on Mac OSX.
+	Instead, pull in glib.h and use g_malloc/g_free for 
+	consistency. Fixes: #496548
+
 2007-11-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/playback/gstdecodebin2.c:
