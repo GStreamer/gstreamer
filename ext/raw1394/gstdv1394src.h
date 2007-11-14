@@ -76,6 +76,8 @@ struct _GstDV1394Src {
 
   gchar *uri;
 
+  gchar *device_name;
+
   gboolean connected;
   #ifdef HAVE_LIBIEC61883
   iec61883_dv_fb_t iec61883dv;

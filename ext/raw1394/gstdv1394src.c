@@ -41,6 +41,7 @@
 #include <gst/gst.h>
 
 #include "gstdv1394src.h"
+#include "gst1394probe.h"
 
 
 #define CONTROL_STOP            'S'     /* stop the select call */
@@ -93,7 +94,8 @@ enum
   PROP_SKIP,
   PROP_DROP_INCOMPLETE,
   PROP_USE_AVC,
-  PROP_GUID
+  PROP_GUID,
+  PROP_DEVICE_NAME
 };
 
 static const GstElementDetails gst_dv1394src_details =
@@ -132,6 +134,7 @@ static gboolean gst_dv1394src_convert (GstPad * pad,
 
 static const GstQueryType *gst_dv1394src_get_query_types (GstPad * pad);
 static gboolean gst_dv1394src_query (GstPad * pad, GstQuery * query);
+static void gst_dv1394src_update_device_name (GstDV1394Src * src);
 
 static void
 _do_init (GType type)
@@ -142,6 +145,8 @@ _do_init (GType type)
     NULL,
   };
   g_type_add_interface_static (type, GST_TYPE_URI_HANDLER, &urihandler_info);
+
+  gst_1394_type_add_property_probe_interface (type);
 
   GST_DEBUG_CATEGORY_INIT (dv1394src_debug, "dv1394src", 0,
       "DV firewire source");
@@ -210,6 +215,16 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
           "select one of multiple DV devices by its GUID. use a hexadecimal "
           "like 0xhhhhhhhhhhhhhhhh. (0 = no guid)", 0, G_MAXUINT64,
           DEFAULT_GUID, G_PARAM_READWRITE));
+  /**
+   * GstDV1394Src:device-name
+   *
+   * Descriptive name of the currently opened device
+   *
+   * Since: 0.10.7
+   **/
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "device name",
+          "user-friendly name of the device", "Default", G_PARAM_READABLE));
 
   gstbasesrc_class->negotiate = NULL;
   gstbasesrc_class->start = gst_dv1394src_start;
@@ -239,6 +254,7 @@ gst_dv1394src_init (GstDV1394Src * dv1394src, GstDV1394SrcClass * klass)
   dv1394src->use_avc = DEFAULT_USE_AVC;
   dv1394src->guid = DEFAULT_GUID;
   dv1394src->uri = g_strdup_printf ("dv://%d", dv1394src->port);
+  dv1394src->device_name = g_strdup_printf ("Default");
 
   READ_SOCKET (dv1394src) = -1;
   WRITE_SOCKET (dv1394src) = -1;
@@ -258,6 +274,9 @@ gst_dv1394src_dispose (GObject * object)
 
   g_free (src->uri);
   src->uri = NULL;
+
+  g_free (src->device_name);
+  src->device_name = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -291,6 +310,7 @@ gst_dv1394src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_GUID:
       filter->guid = g_value_get_uint64 (value);
+      gst_dv1394src_update_device_name (filter);
       break;
     default:
       break;
@@ -324,6 +344,9 @@ gst_dv1394src_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_GUID:
       g_value_set_uint64 (value, filter->guid);
+      break;
+    case PROP_DEVICE_NAME:
+      g_value_set_string (value, filter->device_name);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -721,8 +744,11 @@ gst_dv1394src_discover_avc_node (GstDV1394Src * src)
           src->guid = rom1394_get_guid (handle, i);
           g_free (src->uri);
           src->uri = g_strdup_printf ("dv://%d", src->port);
+          g_free (src->device_name);
+          src->device_name = g_strdup (rom_dir.label);
           break;
         }
+        rom1394_free_directory (&rom_dir);
       }
     }
   next:
@@ -1041,6 +1067,58 @@ not_supported:
   {
     gst_object_unref (src);
     return FALSE;
+  }
+}
+
+static void
+gst_dv1394src_update_device_name (GstDV1394Src * src)
+{
+  raw1394handle_t handle;
+  gint portcount, port, nodecount, node;
+  rom1394_directory directory;
+
+  g_free (src->device_name);
+  src->device_name = NULL;
+
+  GST_LOG_OBJECT (src, "updating device name for current GUID");
+
+  handle = raw1394_new_handle ();
+
+  if (handle == NULL)
+    goto gethandle_failed;
+
+  portcount = raw1394_get_port_info (handle, NULL, 0);
+  for (port = 0; port < portcount; port++) {
+    if (raw1394_set_port (handle, port) >= 0) {
+      nodecount = raw1394_get_nodecount (handle);
+      for (node = 0; node < nodecount; node++) {
+        if (src->guid == rom1394_get_guid (handle, node)) {
+          if (rom1394_get_directory (handle, node, &directory) >= 0) {
+            g_free (src->device_name);
+            src->device_name = g_strdup (directory.label);
+            rom1394_free_directory (&directory);
+            goto done;
+          } else {
+            GST_WARNING ("error reading rom directory for node %d", node);
+          }
+        }
+      }
+    }
+  }
+
+  src->device_name = g_strdup ("Unknown");      /* FIXME: translate? */
+
+done:
+
+  raw1394_destroy_handle (handle);
+  return;
+
+/* ERRORS */
+gethandle_failed:
+  {
+    GST_WARNING ("failed to get raw1394 handle: %s", g_strerror (errno));
+    src->device_name = g_strdup ("Unknown");    /* FIXME: translate? */
+    return;
   }
 }
 

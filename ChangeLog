@@ -1,5 +1,29 @@
 2007-11-14  Tim-Philipp Müller  <tim at centricular dot net>
 
+	Patch by: Julien Puydt <julien dot puydt at laposte net>
+
+	* ext/raw1394/Makefile.am:
+	* ext/raw1394/gst1394probe.c: (gst_1394_get_guid_array),
+	  (gst_1394_property_probe_get_properties),
+	  (gst_1394_property_probe_probe_property),
+	  (gst_1394_property_probe_needs_probe),
+	  (gst_1394_property_probe_get_values),
+	  (gst_1394_property_probe_interface_init),
+	  (gst_1394_type_add_property_probe_interface):
+	* ext/raw1394/gst1394probe.h: (GST_1394_PROBE_H):
+	* ext/raw1394/gstdv1394src.c: (_do_init), (gst_dv1394src_class_init),
+	  (gst_dv1394src_init), (gst_dv1394src_dispose),
+	  (gst_dv1394src_set_property), (gst_dv1394src_get_property),
+	  (gst_dv1394src_discover_avc_node), (gst_dv1394src_query),
+	  (gst_dv1394src_update_device_name):
+	* ext/raw1394/gstdv1394src.h:
+	  Implement GstPropertyProbe interface and add "device-name" property,
+	  so applications can use this to probe for available devices in the
+	  same way they can already with v4lsrc and v4l2src (however horrible
+	  this property probe interface may be). Fixes #358841.
+
+2007-11-14  Tim-Philipp Müller  <tim at centricular dot net>
+
 	Patch by: Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
 
 	* gst/rtsp/gstrtspsrc.c: (gst_rtspsrc_handle_src_event),
