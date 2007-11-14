@@ -565,7 +565,6 @@ class MessageColumn (TextColumn):
     label_header = _("Message")
     id = LazyLogModel.COL_MESSAGE
 
-# Sync with gst-inspector!
 class ColumnManager (Common.GUI.Manager):
 
     column_classes = ()
@@ -750,18 +749,38 @@ class ViewColumnManager (ColumnManager):
     column_classes = (TimeColumn, LevelColumn, ThreadColumn, CategoryColumn,
                       FunctionColumn, ObjectColumn, MessageColumn,)
 
-    def __init__ (self, *a, **kw):
+    def __init__ (self, state):
 
-        ColumnManager.__init__ (self, *a, **kw)
+        ColumnManager.__init__ (self)
 
         self.logger = logging.getLogger ("ui.columns")
+
+        self.state = state
 
     def attach (self, view):
 
         self.view = view
         view.connect ("notify::model", self.__handle_notify_model)
 
+        order = self.state.column_order
+        if len (order) == len (self.column_classes):
+            self.column_order[:] = order
+
+        visible = self.state.columns_visible
+        if not visible:
+            visible = self.column_classes
+        for col_class in self.column_classes:
+            action = self.get_toggle_action (col_class)
+            action.props.active = (col_class in visible)
+
         ColumnManager.attach (self)
+
+    def detach (self):
+
+        self.state.column_order = self.column_order
+        self.state.columns_visible = self.columns
+
+        return ColumnManager.detach (self)
 
     def size_column (self, column, view, model):
 
@@ -808,7 +827,7 @@ class Window (object):
         self.update_progress_id = None
 
         self.window_state = Common.GUI.WindowState ()
-        self.column_manager = ViewColumnManager ()
+        self.column_manager = ViewColumnManager (app.state)
 
         self.actions = Common.GUI.Actions ()
 
@@ -938,6 +957,7 @@ class Window (object):
     def detach (self):
 
         self.window_state.detach ()
+        self.column_manager.detach ()
 
     def get_active_line (self):
 
@@ -1094,6 +1114,9 @@ class AppState (Common.GUI.AppState):
 
     geometry = Common.GUI.StateInt4 ("window-geometry")
     maximized = Common.GUI.StateBool ("window-maximized")
+
+    column_order = Common.GUI.StateItemList ("column-order", ViewColumnManager)
+    columns_visible = Common.GUI.StateItemList ("columns-visible", ViewColumnManager)
 
 class App (object):
 
