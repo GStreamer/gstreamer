@@ -402,7 +402,7 @@ class ThreadColumn (TextColumn):
 
     def get_values_for_size (self):
 
-        # TODO: Same as for TimeColumn.  There is no guarantee that aaaaaaaa is
+        # TODO: Same as for TimeColumn.  There is no guarantee that ffffff is
         # the widest string; use fixed font or come up with something better.
 
         return [int ("ffffff", 16)]
