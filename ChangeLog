@@ -1,5 +1,13 @@
 2007-11-15  Thijs Vermeir  <thijsvermeir@gmail.com>
 
+	* gst/librfb/gstrfbsrc.c:
+	don't forget to handle the offset's
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+	precalculate some many used values
+
+2007-11-15  Thijs Vermeir  <thijsvermeir@gmail.com>
+
 	patch by: Armando Taffarel Neto <taffarel@solis.coop.br>
 	* gst/librfb/gstrfbsrc.c:
 	Set the timestamp for the output buffers

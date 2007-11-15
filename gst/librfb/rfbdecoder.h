@@ -69,6 +69,10 @@ struct _RfbDecoder
   guint rect_height;
 
   gint n_rects;
+
+  /* some many used values */
+  guint bytespp;
+  guint line_size;
 };
 
 #if 0

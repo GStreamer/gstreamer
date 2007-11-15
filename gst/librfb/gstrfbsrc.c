@@ -337,14 +337,18 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
   decoder->prev_frame = g_malloc (bsrc->blocksize);
   decoder->decoder_private = src;
 
+  /* calculate some many used values */
+  decoder->bytespp = decoder->bpp / 8;
+  decoder->line_size = decoder->rect_width * decoder->bytespp;
+
   GST_DEBUG_OBJECT (src, "setting caps width to %d and height to %d",
-      decoder->width, decoder->height);
+      decoder->rect_width, decoder->rect_height);
 
   caps =
       gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc)));
-  gst_caps_set_simple (caps, "width", G_TYPE_INT, decoder->width, "height",
-      G_TYPE_INT, decoder->height, "bpp", G_TYPE_INT, decoder->bpp, "depth",
-      G_TYPE_INT, decoder->depth, "endianness", G_TYPE_INT,
+  gst_caps_set_simple (caps, "width", G_TYPE_INT, decoder->rect_width, "height",
+      G_TYPE_INT, decoder->rect_height, "bpp", G_TYPE_INT, decoder->bpp,
+      "depth", G_TYPE_INT, decoder->depth, "endianness", G_TYPE_INT,
       (decoder->big_endian ? 1234 : 4321), NULL);
   gst_pad_set_caps (GST_BASE_SRC_PAD (bsrc), caps);
   gst_caps_unref (caps);
@@ -424,6 +428,10 @@ gst_rfb_src_event (GstBaseSrc * bsrc, GstEvent * event)
       gst_structure_get_double (structure, "pointer_x", &x);
       gst_structure_get_double (structure, "pointer_y", &y);
       button = 0;
+
+      /* we need to take care of the offset's */
+      x += src->decoder->offset_x;
+      y += src->decoder->offset_y;
 
       if (strcmp (event_type, "key-press") == 0) {
         const gchar *key = gst_structure_get_string (structure, "key");

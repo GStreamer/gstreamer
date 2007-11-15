@@ -641,23 +641,22 @@ rfb_decoder_raw_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
 {
   gint size;
   guint8 *frame, *buffer, *p;
-  guint32 raw_line_size, line_size;
+  guint32 raw_line_size;
 
-  size = rect_h * rect_w * decoder->bpp / 8;
+  raw_line_size = rect_w * decoder->bytespp;
+  size = rect_h * raw_line_size;
   GST_DEBUG ("Reading %d bytes", size);
   buffer = rfb_decoder_read (decoder, size);
 
-  line_size = decoder->rect_width * decoder->bpp / 8;
-  raw_line_size = rect_w * decoder->bpp / 8;
   frame =
       decoder->frame + (((start_y * decoder->rect_width) +
-          start_x) * decoder->bpp / 8);
+          start_x) * decoder->bytespp);
   p = buffer;
 
   while (rect_h--) {
     memcpy (frame, p, raw_line_size);
     p += raw_line_size;
-    frame += line_size;
+    frame += decoder->line_size;
   }
 
   g_free (buffer);
@@ -668,29 +667,30 @@ rfb_decoder_copyrect_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     gint rect_w, gint rect_h)
 {
   guint16 src_x, src_y;
-  guint32 src_offset;
-  guint32 dst_offset;
-  gint pos_y, max_y, line_width, copyrect_width;
+  gint line_width, copyrect_width;
   guint8 *buffer;
+  guint8 *src, *dst;
 
   buffer = rfb_decoder_read (decoder, 4);
-  max_y = start_y + rect_h;
 
-  src_x = RFB_GET_UINT16 (buffer);
-  src_y = RFB_GET_UINT16 (buffer + 2);
+  /* don't forget the offset */
+  src_x = RFB_GET_UINT16 (buffer) - decoder->offset_x;
+  src_y = RFB_GET_UINT16 (buffer + 2) - decoder->offset_y;
   GST_DEBUG ("Copyrect from %d %d", src_x, src_y);
 
-  dst_offset =
-      (((start_y - 1) * decoder->rect_width) + start_x) * decoder->bpp / 8;
-  src_offset = (((src_y - 1) * decoder->rect_width) + src_x) * decoder->bpp / 8;
-  line_width = decoder->rect_width * decoder->bpp / 8;
-  copyrect_width = rect_w * decoder->bpp / 8;
+  copyrect_width = rect_w * decoder->bytespp;
+  line_width = decoder->line_size;
+  src =
+      decoder->prev_frame + ((src_y * decoder->rect_width) +
+      src_x) * decoder->bytespp;
+  dst =
+      decoder->frame + ((start_y * decoder->rect_width) +
+      start_x) * decoder->bytespp;
 
-  for (pos_y = start_y; pos_y < max_y; pos_y++) {
-    dst_offset += line_width;
-    src_offset += line_width;
-    memcpy (decoder->frame + dst_offset, decoder->prev_frame + src_offset,
-        copyrect_width);
+  while (rect_h--) {
+    memcpy (dst, src, copyrect_width);
+    src += line_width;
+    dst += line_width;
   }
 
   g_free (buffer);
