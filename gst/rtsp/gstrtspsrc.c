@@ -692,14 +692,16 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
       pad = gst_element_get_pad (udpsrc, "src");
       if (stream->channelpad[i]) {
         gst_pad_unlink (pad, stream->channelpad[i]);
-        gst_object_unref (stream->channelpad[i]);
-        stream->channelpad[i] = NULL;
       }
 
       gst_element_set_state (udpsrc, GST_STATE_NULL);
       gst_bin_remove (GST_BIN_CAST (src), udpsrc);
       gst_object_unref (stream->udpsrc[i]);
       stream->udpsrc[i] = NULL;
+    }
+    if (stream->channelpad[i]) {
+      gst_object_unref (stream->channelpad[i]);
+      stream->channelpad[i] = NULL;
     }
   }
   if (stream->udpsink) {
@@ -715,6 +717,10 @@ gst_rtspsrc_stream_free (GstRTSPSrc * src, GstRTSPStream * stream)
       stream->added = FALSE;
     }
     stream->srcpad = NULL;
+  }
+  if (stream->rtcppad) {
+    gst_object_unref (stream->rtcppad);
+    stream->rtcppad = NULL;
   }
   g_free (stream);
 }
@@ -1875,6 +1881,8 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
     /* and link */
     if (pad)
       gst_pad_link (pad, stream->rtcppad);
+
+    gst_object_unref (template);
   }
   return TRUE;
 }
