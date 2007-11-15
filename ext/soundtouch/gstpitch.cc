@@ -44,6 +44,8 @@ struct _GstPitchPrivate
 {
   gfloat stream_time_ratio;
 
+  GstEvent *pending_segment;
+
     soundtouch::SoundTouch * st;
 };
 
@@ -108,7 +110,7 @@ gst_pitch_base_init (gpointer g_class)
 
   gst_element_class_set_details_simple (gstelement_class, "Pitch controller",
       "Filter/Converter/Audio", "Control the pitch of an audio stream",
-      "Wouter Paesen <wouter@kangaroot.net>");
+      "Wouter Paesen <wouter@blue-gate.be>");
 }
 
 static void
@@ -448,6 +450,11 @@ gst_pitch_convert (GstPitch * pitch,
     return FALSE;
   }
 
+  if (src_format == *dst_format) {
+    *dst_value = src_value;
+    return TRUE;
+  }
+
   switch (src_format) {
     case GST_FORMAT_BYTES:
       switch (*dst_format) {
@@ -599,6 +606,67 @@ gst_pitch_src_query (GstPad * pad, GstQuery * query)
   return res;
 }
 
+/* this function returns FALSE if not enough data is known to transform the
+ * segment into proper downstream values.  If the function does return false
+ * the sgement should be stalled until enough information is available.
+ * If the funtion returns TRUE, event will be replaced by the new downstream
+ * compatible event.
+ */
+static gboolean
+gst_pitch_process_segment (GstPitch * pitch, GstEvent ** event)
+{
+  GstFormat format, conv_format;
+  gint64 start_value, stop_value, base;
+  gint64 next_offset = 0, next_time = 0;
+  gboolean update = FALSE;
+  gdouble rate;
+  gfloat stream_time_ratio;
+
+  g_return_val_if_fail (event, FALSE);
+
+  GST_OBJECT_LOCK (pitch);
+  stream_time_ratio = pitch->priv->stream_time_ratio;
+  GST_OBJECT_UNLOCK (pitch);
+
+  gst_event_parse_new_segment (*event, &update, &rate, &format, &start_value,
+      &stop_value, &base);
+
+  GST_LOG_OBJECT (pitch->sinkpad, "segment %lld - %lld (%d)", start_value,
+      stop_value, format);
+
+  if (stream_time_ratio == 0) {
+    GST_LOG_OBJECT (pitch->sinkpad, "stream_time_ratio is zero");
+    return FALSE;
+  }
+
+  start_value = (gint64) (start_value / stream_time_ratio);
+  stop_value = (gint64) (stop_value / stream_time_ratio);
+  base = (gint64) (base / stream_time_ratio);
+
+  conv_format = GST_FORMAT_TIME;
+  if (!gst_pitch_convert (pitch, format, start_value, &conv_format, &next_time)) {
+    GST_LOG_OBJECT (pitch->sinkpad,
+        "could not convert segment start value to time");
+    return FALSE;
+  }
+
+  conv_format = GST_FORMAT_DEFAULT;
+  if (!gst_pitch_convert (pitch, format, start_value, &conv_format,
+          &next_offset)) {
+    GST_LOG_OBJECT (pitch->sinkpad,
+        "could not convert segment start value to offset");
+    return FALSE;
+  }
+
+  pitch->next_buffer_time = next_time;
+  pitch->next_buffer_offset = next_offset;
+
+  gst_event_unref (*event);
+  *event = gst_event_new_new_segment (update, rate, format, start_value,
+      stop_value, base);
+
+  return TRUE;
+}
 
 static gboolean
 gst_pitch_sink_event (GstPad * pad, GstEvent * event)
@@ -617,12 +685,22 @@ gst_pitch_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       gst_pitch_flush_buffer (pitch, TRUE);
       break;
+    case GST_EVENT_NEWSEGMENT:
+      if (!gst_pitch_process_segment (pitch, &event)) {
+        GST_LOG_OBJECT (pad, "not enough data known, stalling segment");
+        if (GST_PITCH_GET_PRIVATE (pitch)->pending_segment)
+          gst_event_unref (GST_PITCH_GET_PRIVATE (pitch)->pending_segment);
+        GST_PITCH_GET_PRIVATE (pitch)->pending_segment = event;
+        event = NULL;
+      }
+      break;
     default:
       break;
   }
 
   /* and forward it */
-  res = gst_pad_event_default (pad, event);
+  if (event)
+    res = gst_pad_event_default (pad, event);
 
   gst_object_unref (pitch);
   return res;
@@ -642,6 +720,25 @@ gst_pitch_chain (GstPad * pad, GstBuffer * buffer)
   /* push the received samples on the soundtouch buffer */
   GST_LOG_OBJECT (pitch, "incoming buffer (%d samples)",
       (gint) (GST_BUFFER_SIZE (buffer) / pitch->sample_size));
+
+  if (GST_PITCH_GET_PRIVATE (pitch)->pending_segment) {
+    GstEvent *event =
+        gst_event_copy (GST_PITCH_GET_PRIVATE (pitch)->pending_segment);
+
+    GST_LOG_OBJECT (pitch, "processing stalled segment");
+    if (!gst_pitch_process_segment (pitch, &event)) {
+      gst_event_unref (event);
+      return GST_FLOW_ERROR;
+    }
+
+    if (!gst_pad_event_default (pitch->sinkpad, event)) {
+      gst_event_unref (event);
+      return GST_FLOW_ERROR;
+    }
+
+    gst_event_unref (GST_PITCH_GET_PRIVATE (pitch)->pending_segment);
+    GST_PITCH_GET_PRIVATE (pitch)->pending_segment = NULL;
+  }
 
   priv->st->putSamples ((gfloat *) GST_BUFFER_DATA (buffer),
       GST_BUFFER_SIZE (buffer) / pitch->sample_size);
@@ -683,7 +780,13 @@ gst_pitch_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      if (GST_PITCH_GET_PRIVATE (pitch)->pending_segment) {
+        gst_event_unref (GST_PITCH_GET_PRIVATE (pitch)->pending_segment);
+        GST_PITCH_GET_PRIVATE (pitch)->pending_segment = NULL;
+      }
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
     default:
       break;

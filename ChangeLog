@@ -1,5 +1,12 @@
 2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: Wouter Paesen <wouter at blue-gate dot be>
+
+	* ext/soundtouch/gstpitch.cc:
+	Handle seeking correctly. Fixes #461068.
+
+2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
+
 	Patch by: Michael Kötter <m dot koetter at oraise dot de>
 
 	* ext/alsaspdif/alsaspdifsink.c: (alsaspdifsink_set_caps),
