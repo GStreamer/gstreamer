@@ -55,10 +55,10 @@ class LogModelBase (gtk.GenericTreeModel):
 
     __metaclass__ = Common.GUI.MetaModel
 
-    columns = ("COL_LEVEL", object,
+    columns = ("COL_TIME", gobject.TYPE_UINT64,
                "COL_PID", int,
                "COL_THREAD", gobject.TYPE_UINT64,
-               "COL_TIME", gobject.TYPE_UINT64,
+               "COL_LEVEL", object,               
                "COL_CATEGORY", str,
                "COL_FILENAME", str,
                "COL_LINE", int,
@@ -187,16 +187,7 @@ class LazyLogModel (LogModelBase):
         self.__log_obj = log_obj
 
         self.__line_regex = Data.default_log_line_regex ()
-        self.__line_match_order = (self.COL_TIME,
-                                   self.COL_PID,
-                                   self.COL_THREAD,
-                                   self.COL_LEVEL, 
-                                   self.COL_CATEGORY,
-                                   self.COL_FILENAME,
-                                   self.COL_LINE,
-                                   self.COL_FUNCTION,
-                                   self.COL_OBJECT,
-                                   self.COL_MESSAGE,)
+
         if log_obj:
             self.set_log (log_obj)
 
@@ -245,8 +236,6 @@ class LazyLogModel (LogModelBase):
             groups[6] = int (groups[6]) # line
             groups[8] = groups[8] or "" # object (optional)
 
-        groups = [x[1] for x in sorted (zip (self.__line_match_order,
-                                             groups))]
         self.line_cache[line_offset] = groups
 
 class FilteredLogModel (LogModelBase):
