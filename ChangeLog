@@ -1,5 +1,16 @@
 2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: Michael Kötter <m dot koetter at oraise dot de>
+
+	* ext/alsaspdif/alsaspdifsink.c: (alsaspdifsink_set_caps),
+	(alsaspdifsink_get_time), (alsaspdifsink_open),
+	(alsaspdifsink_set_params), (alsaspdifsink_delay), (plugin_init):
+	Fix sample rate and clocking.
+	Remove buffer_time and period_time as this seems to break on some
+	hardware. Fixes #485462.
+
+2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
+
 	Patch by: Wouter Cloetens <wouter at mind dot be>
 
 	* configure.ac:

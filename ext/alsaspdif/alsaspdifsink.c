@@ -50,6 +50,8 @@ GST_DEBUG_CATEGORY_STATIC (alsaspdifsink_debug);
 /* Size in bytes of an ALSA PCM frame (4, for this case). */
 #define ALSASPDIFSINK_BYTES_PER_FRAME ((AC3_BITS / 8) * AC3_CHANNELS)
 
+#define IEC958_SAMPLES_PER_FRAME (IEC958_FRAME_SIZE / ALSASPDIFSINK_BYTES_PER_FRAME)
+
 #if 0
 /* The duration of a single IEC958 frame. */
 #define IEC958_FRAME_DURATION (32 * GST_MSECOND)
@@ -127,6 +129,8 @@ static void alsaspdifsink_finalize (GObject * object);
 static GstStateChangeReturn alsaspdifsink_change_state (GstElement * element,
     GstStateChange transition);
 static int alsaspdifsink_find_pcm_device (AlsaSPDIFSink * sink);
+static gboolean alsaspdifsink_set_params (AlsaSPDIFSink * sink);
+static snd_pcm_sframes_t alsaspdifsink_delay (AlsaSPDIFSink * sink);
 
 /* Alsa error handler to suppress messages from within the ALSA library */
 static void ignore_alsa_err (const char *file, int line, const char *function,
@@ -275,6 +279,12 @@ alsaspdifsink_set_caps (GstBaseSink * bsink, GstCaps * caps)
           &sink->rate))
     sink->rate = 48000;
 
+  if (!alsaspdifsink_set_params (sink)) {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+        ("Cannot set ALSA hardware parameters"), GST_ERROR_SYSTEM);
+    return FALSE;
+  }
+
   return TRUE;
 }
 
@@ -289,22 +299,31 @@ alsaspdifsink_provide_clock (GstElement * elem)
 static GstClockTime
 alsaspdifsink_get_time (GstClock * clock, gpointer user_data)
 {
+  GstClockTime result;
+  snd_pcm_sframes_t raw, delay, samples;
   AlsaSPDIFSink *sink = ALSASPDIFSINK (user_data);
 
-  return sink->frames * sink->rate / 1536;
+  raw = samples = sink->frames * IEC958_SAMPLES_PER_FRAME;
+  delay = alsaspdifsink_delay (sink);
+
+  if (samples > delay)
+    samples -= delay;
+  else
+    samples = 0;
+
+  result = gst_util_uint64_scale_int (samples, GST_SECOND, sink->rate);
+  GST_LOG_OBJECT (sink,
+      "Samples raw: %d, delay: %d, real: %d, Time: %" GST_TIME_FORMAT, raw,
+      delay, samples, GST_TIME_ARGS (result));
+  return result;
 }
 
 static gboolean
 alsaspdifsink_open (AlsaSPDIFSink * sink)
 {
   char *pcm_name = sink->device;
-  snd_pcm_hw_params_t *params;
-  snd_pcm_sw_params_t *sw_params;
-  unsigned int rate, buffer_time, period_time, tmp;
-  snd_pcm_uframes_t avail_min;
-  int err, step;
+  int err;
   char devstr[256];             /* Storage for local 'default' device string */
-  GstClockTime time;
 
   /*
    * Try and open our default iec958 device. Fall back to searching on card x
@@ -333,28 +352,44 @@ alsaspdifsink_open (AlsaSPDIFSink * sink)
         pcm_name);
 
     err = alsaspdifsink_find_pcm_device (sink);
-    if (err == 0 && sink->pcm == NULL) {
-      GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-          ("Could not open IEC958/SPDIF output device"), GST_ERROR_SYSTEM);
-      return FALSE;
-    }
+    if (err == 0 && sink->pcm == NULL)
+      goto open_failed;
   }
+  if (err < 0)
+    goto failed;
 
-  if (err < 0) {
+  return TRUE;
+
+  /* ERRORS */
+open_failed:
+  {
+    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
+        ("Could not open IEC958/SPDIF output device"), GST_ERROR_SYSTEM);
+    return FALSE;
+  }
+failed:
+  {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         ("snd_pcm_open: %s", snd_strerror (err)), GST_ERROR_SYSTEM);
     return FALSE;
   }
+}
+
+static gboolean
+alsaspdifsink_set_params (AlsaSPDIFSink * sink)
+{
+  snd_pcm_hw_params_t *params;
+  unsigned int rate;
+  int err;
 
   snd_pcm_hw_params_malloc (&params);
-  snd_pcm_sw_params_malloc (&sw_params);
 
   err = snd_pcm_hw_params_any (sink->pcm, params);
   if (err < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         ("Broken configuration for this PCM: "
             "no configurations available"), GST_ERROR_SYSTEM);
-    goto __close;
+    goto __error;
   }
 
   /* Set interleaved access. */
@@ -363,12 +398,13 @@ alsaspdifsink_open (AlsaSPDIFSink * sink)
   if (err < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         ("Access type not available"), GST_ERROR_SYSTEM);
-    goto __close;
+    goto __error;
   }
 
   err = snd_pcm_hw_params_set_format (sink->pcm, params, AC3_FORMAT_BE);
   if (err < 0) {
     /* Try LE output and swap data */
+    GST_DEBUG_OBJECT (sink, "PCM format S16_BE not supported, trying S16_LE");
     err = snd_pcm_hw_params_set_format (sink->pcm, params, AC3_FORMAT_LE);
     sink->need_swap = TRUE;
   } else
@@ -377,101 +413,43 @@ alsaspdifsink_open (AlsaSPDIFSink * sink)
   if (err < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         ("Sample format not available"), GST_ERROR_SYSTEM);
-    goto __close;
+    goto __error;
   }
 
   err = snd_pcm_hw_params_set_channels (sink->pcm, params, AC3_CHANNELS);
   if (err < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         ("Channels count not available"), GST_ERROR_SYSTEM);
-    goto __close;
+    goto __error;
   }
 
   rate = sink->rate;
+  GST_DEBUG_OBJECT (sink, "Setting S/PDIF sample rate: %d", rate);
   err = snd_pcm_hw_params_set_rate_near (sink->pcm, params, &rate, 0);
-  if (err < 0) {
+  if (err != 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         ("Rate not available"), GST_ERROR_SYSTEM);
-    goto __close;
-  }
-
-  buffer_time = 500000;
-  err = snd_pcm_hw_params_set_buffer_time_near (sink->pcm, params,
-      &buffer_time, 0);
-  if (err < 0) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-        ("Buffer time not available"), GST_ERROR_SYSTEM);
-    goto __close;
-  }
-  time = buffer_time * 1000;
-  GST_DEBUG_OBJECT (sink, "buffer size set to %" GST_TIME_FORMAT,
-      GST_TIME_ARGS (time));
-
-  step = 2;
-  period_time = 10000 * 2;
-  do {
-    period_time /= 2;
-    tmp = period_time;
-
-    err = snd_pcm_hw_params_set_period_time_near (sink->pcm, params, &tmp, 0);
-    if (err < 0) {
-      GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-          ("Period time not available"), GST_ERROR_SYSTEM);
-      goto __close;
-    }
-
-    if (tmp == period_time) {
-      period_time /= 3;
-      tmp = period_time;
-      err = snd_pcm_hw_params_set_period_time_near (sink->pcm, params, &tmp, 0);
-      if (tmp == period_time) {
-        period_time = 10000 * 2;
-      }
-    }
-  } while (buffer_time == period_time && period_time > 10000);
-
-  if (buffer_time == period_time) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-        ("Buffer time and period time match, could not use"), GST_ERROR_SYSTEM);
-    goto __close;
+    goto __error;
   }
 
   err = snd_pcm_hw_params (sink->pcm, params);
   if (err < 0) {
     GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
         ("PCM hw_params failed: %s", snd_strerror (err)), GST_ERROR_SYSTEM);
-    goto __close;
+    goto __error;
   }
-
-  err = snd_pcm_sw_params_current (sink->pcm, sw_params);
-  if (err < 0) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-        ("Cannot retrieve software params"), GST_ERROR_SYSTEM);
-    goto __close;
-  }
-
-  avail_min = 48000 * 0.15;
-  err = snd_pcm_sw_params_set_avail_min (sink->pcm, sw_params, avail_min);
-  if (err < 0) {
-    GST_ELEMENT_ERROR (sink, RESOURCE, OPEN_WRITE,
-        ("Cannot set avail min"), GST_ERROR_SYSTEM);
-    goto __close;
-  }
-  snd_pcm_sw_params_get_avail_min (sw_params, &avail_min);
-  GST_DEBUG_OBJECT (sink, "Avail min set to:%lu frames", avail_min);
 
   snd_pcm_hw_params_free (params);
-  snd_pcm_sw_params_free (sw_params);
+
   return TRUE;
 
-__close:
-  snd_pcm_hw_params_free (params);
-  snd_pcm_sw_params_free (sw_params);
-  snd_pcm_close (sink->pcm);
-  sink->pcm = NULL;
-  return FALSE;
+  /* ERRORS */
+__error:
+  {
+    snd_pcm_hw_params_free (params);
+    return FALSE;
+  }
 }
-
 
 static void
 alsaspdifsink_close (AlsaSPDIFSink * sink)
@@ -700,9 +678,8 @@ alsaspdifsink_get_times (GstBaseSink * bsink, GstBuffer * buffer,
   *end = GST_CLOCK_TIME_NONE;
 }
 
-#if 0
-static GstClockTime
-alsaspdifsink_current_delay (AlsaSPDIFSink * sink)
+static snd_pcm_sframes_t
+alsaspdifsink_delay (AlsaSPDIFSink * sink)
 {
   snd_pcm_sframes_t delay;
   int err;
@@ -712,9 +689,10 @@ alsaspdifsink_current_delay (AlsaSPDIFSink * sink)
     return 0;
   }
 
-  return ALSASPDIFSINK_TIME_PER_FRAMES (sink, delay);
+  return delay;
 }
 
+#if 0
 static void
 generate_iec958_zero_frame (guchar * buffer)
 {
@@ -850,10 +828,8 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_ALSASPDIFSINK)) {
     return FALSE;
   }
-
   return TRUE;
 }
-
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
     GST_VERSION_MINOR,
