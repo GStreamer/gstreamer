@@ -124,7 +124,7 @@ def default_log_line_regex_ ():
     OBJECT = "(?:<([^>]+)>)?"
     MESSAGE = " (.+)"
 
-    expressions = [CATEGORY, FILENAME, LINE, FUNCTION, OBJECT, MESSAGE]
+    expressions = [CATEGORY, FILENAME, LINE, FUNCTION, OBJECT]
     # New log format:
     ## expressions = [TIME, PID, THREAD, LEVEL, CATEGORY, FILENAME, LINE, FUNCTION,
     ##                OBJECT, MESSAGE]

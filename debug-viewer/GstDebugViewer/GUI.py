@@ -79,6 +79,10 @@ class LogModelBase (gtk.GenericTreeModel):
 
         raise NotImplementedError ("derived classes must override this method")
 
+    def access_offset (self, offset):
+
+        raise NotImplementedError ("derived classes must override this method")
+
     def iter_rows_offset (self):
 
         for offset in self.line_offsets:
@@ -131,7 +135,12 @@ class LogModelBase (gtk.GenericTreeModel):
         line_offset = self.line_offsets[line_index]
         self.ensure_cached (line_offset)
 
-        return self.line_cache[line_offset][col_id]
+        value = self.line_cache[line_offset][col_id]
+        if col_id == self.COL_MESSAGE:
+            message_offset = value
+            value = self.access_offset (line_offset + message_offset).strip ()
+
+        return value
 
     def on_iter_next (self, line_index):
 
@@ -198,6 +207,11 @@ class LazyLogModel (LogModelBase):
         self.line_cache.clear ()
         self.line_offsets = log_obj.line_cache.offsets
 
+    def access_offset (self, offset):
+
+        self.__fileobj.seek (offset)
+        return self.__fileobj.readline ()
+
     def ensure_cached (self, line_offset):
 
         if line_offset in self.line_cache:
@@ -240,14 +254,16 @@ class LazyLogModel (LogModelBase):
 
         if match is None:
             # FIXME?
-            groups = [0, 0, 0, Data.DebugLevelNone, "", "", 0, "", "", line[ts_len:-len (os.linesep)]]
+            groups = [0, 0, 0, Data.DebugLevelNone, "", "", 0, "", "", ts_len]
         else:            
-            groups = [ts, pid, thread, level] + list (match.groups ())
+            groups = [ts, pid, thread, level] + list (match.groups ()) + [match.end ()]
 
-            # TODO: Figure out how much string interning can save here and how
-            # much run time speed it costs!
+            for col_id in (self.COL_CATEGORY, self.COL_FILENAME, self.COL_FUNCTION,
+                           self.COL_OBJECT,):
+                groups[col_id] = intern (groups[col_id] or "")
+            
             groups[6] = int (groups[6]) # line
-            groups[8] = groups[8] or "" # object (optional)
+            # groups[8] = groups[8] or "" # object (optional)
 
         self.line_cache[line_offset] = groups
 
@@ -258,14 +274,11 @@ class FilteredLogModel (LogModelBase):
         LogModelBase.__init__ (self)
 
         self.parent_model = lazy_log_model
-        ##self.ensure_cached = lazy_log_model.ensure_cached
+        self.access_offset = lazy_log_model.access_offset
+        self.ensure_cached = lazy_log_model.ensure_cached
         self.line_cache = lazy_log_model.line_cache
 
         self.line_offsets += lazy_log_model.line_offsets
-
-    def ensure_cached (self, line_offset):
-
-        return self.parent_model.ensure_cached (line_offset)
 
     def add_filter (self, filter):
 
