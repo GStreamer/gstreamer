@@ -401,6 +401,9 @@ gst_rfb_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
 
   memcpy (GST_BUFFER_DATA (*outbuf), decoder->frame, newsize);
   GST_BUFFER_SIZE (*outbuf) = newsize;
+  GST_BUFFER_TIMESTAMP (*outbuf) =
+      gst_clock_get_time (GST_ELEMENT_CLOCK (src)) -
+      GST_ELEMENT_CAST (src)->base_time;
 
   return GST_FLOW_OK;
 }

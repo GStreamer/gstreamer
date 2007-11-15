@@ -1,3 +1,9 @@
+2007-11-15  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	patch by: Armando Taffarel Neto <taffarel@solis.coop.br>
+	* gst/librfb/gstrfbsrc.c:
+	Set the timestamp for the output buffers
+
 2007-11-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/elements/spectrum.c: (GST_START_TEST):
