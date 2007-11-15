@@ -1,5 +1,16 @@
 2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: Wai-Ming Ho <webregbox at yahoo dot co dot uk>
+
+	* gst/mpegtsparse/mpegtspacketizer.c: (foreach_stream_clear),
+	(remove_all), (mpegts_packetizer_clear):
+	Ensure that the plugin does not crash when the property pat-info is
+	queried before a PAT is available. It also ensures that the PAT info is
+	cleared when the changing from PLAYING to READY.
+	Fixes #487892.
+
+2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
+
 	Patch by: Wouter Paesen <wouter at blue-gate dot be>
 
 	* ext/soundtouch/gstpitch.cc:

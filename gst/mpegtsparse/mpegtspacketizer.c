@@ -428,19 +428,28 @@ error:
 static void
 foreach_stream_clear (gpointer key, gpointer value, gpointer data)
 {
-  MpegTSPacketizer *packetizer = (MpegTSPacketizer *) data;
   MpegTSPacketizerStream *stream = (MpegTSPacketizerStream *) value;
 
-  mpegts_packetizer_clear_section (packetizer, stream);
+  /* remove the stream */
+  g_object_unref (stream->section_adapter);
+  g_free (stream);
+}
+
+static gboolean
+remove_all (gpointer key, gpointer value, gpointer user_data)
+{
+  return TRUE;
 }
 
 void
 mpegts_packetizer_clear (MpegTSPacketizer * packetizer)
 {
   g_hash_table_foreach (packetizer->streams, foreach_stream_clear, packetizer);
+
+  /* FIXME can't use remove_all because we don't depend on 2.12 yet */
+  g_hash_table_foreach_remove (packetizer->streams, remove_all, NULL);
   gst_adapter_clear (packetizer->adapter);
 }
-
 
 MpegTSPacketizer *
 mpegts_packetizer_new ()
