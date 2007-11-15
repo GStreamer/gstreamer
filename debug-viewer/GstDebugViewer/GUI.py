@@ -1139,7 +1139,7 @@ class TestParsingPerformance (object):
     def __init__ (self, filename):
 
         self.main_loop = gobject.MainLoop ()
-        self.log_file = Data.LogFile (filename, DefaultDispatcher ())
+        self.log_file = Data.LogFile (filename, Common.Data.DefaultDispatcher ())
         self.log_file.consumers.append (self)
 
     def start (self):
@@ -1155,16 +1155,17 @@ class TestParsingPerformance (object):
         diff = time.time () - self.start_time
         print "line cache built in %0.1f ms" % (diff * 1000.,)
 
-        self.start_time = time.time ()
+        start_time = time.time ()
         model = LazyLogModel (self.log_file)
         for row in model:
             pass
-        diff = time.time () - self.start_time
+        diff = time.time () - start_time
         print "data parsed in %0.1f ms" % (diff * 1000.,)
+        print "overall time spent: %0.1f s" % (time.time () - self.start_time,)
 
 def main ():
 
-    if len (sys.argv) > 1 and sys.argv[1] == "--benchmark":
+    if len (sys.argv) > 1 and sys.argv[1] == "benchmark":
         test = TestParsingPerformance (sys.argv[2])
         test.start ()
         return
