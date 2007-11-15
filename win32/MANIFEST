@@ -30,6 +30,7 @@ win32/vs6/libgstcdda.dsp
 win32/vs6/libgstdecodebin2.dsp
 win32/vs6/libgstdecodebin.dsp
 win32/vs6/libgstffmpegcolorspace.dsp
+win32/vs6/libgstfft.dsp
 win32/vs6/libgstgdp.dsp
 win32/vs6/libgstinterfaces.dsp
 win32/vs6/libgstnetbuffer.dsp

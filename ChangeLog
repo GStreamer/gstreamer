@@ -1,3 +1,16 @@
+2007-11-15  Sebastien Moutte <sebastien@moutte.net>
+
+	* win32/vs6/gst_plugins_base.dsw:
+	* win32/vs6/libgstfft.dsp:
+	* win32/MANIFEST:
+	Add a project file for fft plugin and remove socket
+	based plugin which don't build from the workspace.
+	* win32/vs6/libgstaudio.dsp:
+	* win32/vs6/libgstrtp.dsp:
+	* win32/vs6/libgsttag.dsp:
+	Convert line endings back to DOS.
+	Fixes #496724
+
 2007-11-14  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* win32/vs6/libgstinterfaces.dsp:

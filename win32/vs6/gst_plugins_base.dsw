@@ -156,18 +156,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstgdp"=".\libgstgdp.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "libgstinterfaces"=".\libgstinterfaces.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -279,18 +267,6 @@ Package=<4>
 
 ###############################################################################
 
-Project: "libgstsdp"=".\libgstsdp.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
 Project: "libgstsubparse"=".\libgstsubparse.dsp" - Package Owner=<4>
 
 Package=<5>
@@ -311,21 +287,6 @@ Package=<5>
 
 Package=<4>
 {{{
-}}}
-
-###############################################################################
-
-Project: "libgsttcp"=".\libgsttcp.dsp" - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-    Begin Project Dependency
-    Project_Dep_Name grammar
-    End Project Dependency
 }}}
 
 ###############################################################################
