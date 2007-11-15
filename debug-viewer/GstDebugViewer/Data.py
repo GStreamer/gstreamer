@@ -112,9 +112,7 @@ def default_log_line_regex_ ():
     # "0x8165430 "
     THREAD = r"(0x[0-9a-f]+) +" #r"\((0x[0-9a-f]+) - "
     # "0:00:00.777913000  "
-    #TIME = r"([0-9]+:[0-9][0-9]:[0-9][0-9]\.[0-9]+) +"
-    TIME = " +" # Only eating whitespace before PID away, we parse timestamps
-                # without regex.  
+    TIME = r"([0-9]+:[0-9][0-9]:[0-9][0-9]\.[0-9]+) +"
     CATEGORY = "([A-Za-z_-]+) +" # "GST_REFCOUNTING ", "flacdec "
     # "  3089 "
     PID = r"([0-9]+) +"
@@ -126,10 +124,13 @@ def default_log_line_regex_ ():
     OBJECT = "(?:<([^>]+)>)?"
     MESSAGE = " (.+)"
 
-    expressions = [TIME, PID, THREAD, LEVEL, CATEGORY, FILENAME, LINE, FUNCTION,
-                   OBJECT, MESSAGE]
-##     expressions = [LEVEL, THREAD, TIME, CATEGORY, PID, FILENAME, LINE,
-##                    FUNCTION, OBJECT, MESSAGE]
+    expressions = [CATEGORY, FILENAME, LINE, FUNCTION, OBJECT, MESSAGE]
+    # New log format:
+    ## expressions = [TIME, PID, THREAD, LEVEL, CATEGORY, FILENAME, LINE, FUNCTION,
+    ##                OBJECT, MESSAGE]
+    # Old log format:
+    ## expressions = [LEVEL, THREAD, TIME, CATEGORY, PID, FILENAME, LINE,
+    ##                FUNCTION, OBJECT, MESSAGE]
 
     return expressions
 

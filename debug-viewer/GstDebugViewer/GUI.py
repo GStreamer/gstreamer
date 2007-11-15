@@ -217,22 +217,35 @@ class LazyLogModel (LogModelBase):
             line = self.__fileobj.readline ()
 
         ts_len = 17
-        ts = Data.parse_time (line[:ts_len])
-        match = self.__line_regex.match (line[ts_len:-len (os.linesep)])
+        pid_len = 5
+        thread_len = 9 # FIXME: %p, so this should be larger on a 64 bit CPU, no?
+        level_len = 5
+
+        non_regex_len = ts_len + 1 + pid_len + thread_len + 1 + level_len + 1
+        non_regex_line = line[:non_regex_len]
+        regex_line = line[non_regex_len:]
+
+        try:
+            prefix = non_regex_line.rstrip ()
+            while "  " in prefix:
+                prefix = prefix.replace ("  ", " ")
+            ts_s, pid_s, thread_s, level_s = prefix.split (" ")
+            ts = Data.parse_time (ts_s)
+            pid = int (pid_s)
+            thread = int (thread_s, 16)
+            level = Data.DebugLevel (level_s)
+            match = self.__line_regex.match (regex_line[:-len (os.linesep)].lstrip ())
+        except ValueError:
+            match = None
+
         if match is None:
             # FIXME?
-            groups = [ts, 0, 0, Data.DebugLevelNone, "", "", 0, "", "", line[ts_len:-len (os.linesep)]]
+            groups = [0, 0, 0, Data.DebugLevelNone, "", "", 0, "", "", line[ts_len:-len (os.linesep)]]
         else:            
-            groups = [ts] + list (match.groups ())
+            groups = [ts, pid, thread, level] + list (match.groups ())
 
             # TODO: Figure out how much string interning can save here and how
             # much run time speed it costs!
-            groups[1] = int (groups[1]) # pid
-            groups[2] = int (groups[2], 16) # thread pointer
-            try:
-                groups[3] = Data.DebugLevel (groups[3])
-            except ValueError:
-                groups[3] = Data.DebugLevelNone
             groups[6] = int (groups[6]) # line
             groups[8] = groups[8] or "" # object (optional)
 
