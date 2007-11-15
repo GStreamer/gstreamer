@@ -23,6 +23,7 @@
 
 #include <gst/gst.h>
 #include <gst/rtp/gstbasertppayload.h>
+#include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
@@ -43,6 +44,10 @@ typedef struct _GstRTPMP2TPayClass GstRTPMP2TPayClass;
 struct _GstRTPMP2TPay
 {
   GstBaseRTPPayload payload;
+  
+  GstAdapter  *adapter;
+  GstClockTime first_ts;
+  GstClockTime duration;
 };
 
 struct _GstRTPMP2TPayClass
