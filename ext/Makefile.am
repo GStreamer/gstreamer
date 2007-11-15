@@ -94,6 +94,12 @@ else
  FAAD_DIR=
 endif
 
+#if USE_G729
+#G729_DIR=g729
+#else
+G729_DIR=
+#endif
+
 if USE_GIO
 GIO_DIR=gio
 else
@@ -188,6 +194,12 @@ if USE_NEON
 NEON_DIR=neon
 else
 NEON_DIR=
+endif
+
+if USE_SOUP
+SOUP_DIR=soup
+else
+SOUP_DIR=
 endif
 
 if USE_TIMIDITY
@@ -292,6 +304,7 @@ SUBDIRS=\
 	$(FAAD_DIR) \
 	$(GIO_DIR) \
 	$(GSM_DIR) \
+	$(G729_DIR) \
 	$(HERMES_DIR) \
 	$(IVORBIS_DIR) \
 	$(JACK_DIR) \
@@ -306,6 +319,7 @@ SUBDIRS=\
 	$(MYTHTV_DIR) \
 	$(NAS_DIR) \
 	$(NEON_DIR) \
+	$(SOUP_DIR) \
 	$(POLYP_DIR) \
 	$(SDL_DIR) \
 	$(SHOUT_DIR) \
@@ -345,6 +359,7 @@ DIST_SUBDIRS = \
 	mythtv \
 	nas \
 	neon \
+	soup \
 	sdl \
 	sndfile \
 	soundtouch \

@@ -1,3 +1,21 @@
+2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/soup/Makefile.am:
+	* ext/soup/gstsouphttpsrc.c: (_do_init),
+	(gst_souphttp_src_base_init), (gst_souphttp_src_class_init),
+	(gst_souphttp_src_init), (gst_souphttp_src_dispose),
+	(gst_souphttp_src_set_property), (gst_souphttp_src_get_property),
+	(gst_souphttp_src_create), (gst_souphttp_src_start),
+	(gst_souphttp_src_stop), (gst_souphttp_src_unlock),
+	(gst_souphttp_src_set_location), (soup_got_chunk), (soup_response),
+	(soup_session_close), (plugin_init):
+	* ext/soup/gstsouphttpsrc.h:
+	Added HTTP source based on libsoup. Fixes #497020.
+
 2007-11-15  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c:
