@@ -1,3 +1,8 @@
+2007-11-15  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* win32/vs6/libgstfft.dsp:
+	Convert line endings to DOS.
+
 2007-11-15  Sebastien Moutte <sebastien@moutte.net>
 
 	* win32/vs6/gst_plugins_base.dsw:
