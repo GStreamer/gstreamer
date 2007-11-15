@@ -248,15 +248,15 @@ class LazyLogModel (LogModelBase):
             pid = int (pid_s)
             thread = int (thread_s, 16)
             level = Data.DebugLevel (level_s)
-            match = self.__line_regex.match (regex_line[:-len (os.linesep)].lstrip ())
+            match = self.__line_regex.match (regex_line[:-len (os.linesep)])
         except ValueError:
             match = None
 
         if match is None:
             # FIXME?
-            groups = [0, 0, 0, Data.DebugLevelNone, "", "", 0, "", "", ts_len]
+            groups = [0, 0, 0, Data.DebugLevelNone, "", "", 0, "", "", non_regex_len]
         else:            
-            groups = [ts, pid, thread, level] + list (match.groups ()) + [match.end ()]
+            groups = [ts, pid, thread, level] + list (match.groups ()) + [non_regex_len + match.end ()]
 
             for col_id in (self.COL_CATEGORY, self.COL_FILENAME, self.COL_FUNCTION,
                            self.COL_OBJECT,):
