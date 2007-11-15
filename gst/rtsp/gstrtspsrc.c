@@ -3690,6 +3690,9 @@ gst_rtspsrc_setup_streams (GstRTSPSrc * src)
     next:
       /* clean up our transport struct */
       gst_rtsp_transport_init (&transport);
+      /* clean up used RTSP messages */
+      gst_rtsp_message_unset (&request);
+      gst_rtsp_message_unset (&response);
     }
   }
 
