@@ -128,6 +128,13 @@ G_BEGIN_DECLS
 #define FOURCC_frma     GST_MAKE_FOURCC('f','r','m','a')
 #define FOURCC_ctts     GST_MAKE_FOURCC('c','t','t','s')
 
+/* Xiph fourcc */
+#define FOURCC_XiTh     GST_MAKE_FOURCC('X','i','T','h')
+#define FOURCC_XdxT     GST_MAKE_FOURCC('X','d','x','T')
+#define FOURCC_tCtH     GST_MAKE_FOURCC('t','C','t','H')
+#define FOURCC_tCt_     GST_MAKE_FOURCC('t','C','t','#')
+#define FOURCC_tCtC     GST_MAKE_FOURCC('t','C','t','C')
+
 G_END_DECLS
 
 #endif /* __GST_QTDEMUX_FOURCC_H__ */

@@ -130,6 +130,7 @@ struct _QtDemuxStream
 
   /* if we use chunks or samples */
   gboolean sampled;
+  guint padding;
 
   /* video info */
   gint width;
@@ -152,6 +153,9 @@ struct _QtDemuxStream
 
   /* when a discontinuity is pending */
   gboolean discont;
+
+  /* list of buffers to push first */
+  GSList *buffers;
 
   /* if we need to clip this buffer. This is only needed for uncompressed
    * data */
@@ -912,6 +916,11 @@ gst_qtdemux_change_state (GstElement * element, GstStateChange transition)
       for (n = 0; n < qtdemux->n_streams; n++) {
         QtDemuxStream *stream = qtdemux->streams[n];
 
+        while (stream->buffers) {
+          gst_buffer_unref (GST_BUFFER_CAST (stream->buffers->data));
+          stream->buffers =
+              g_slist_delete_link (stream->buffers, stream->buffers);
+        }
         if (stream->pad)
           gst_element_remove_pad (element, stream->pad);
         if (stream->samples)
@@ -1170,6 +1179,21 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   GST_LOG_OBJECT (qtdemux, "segment active, index = %u of %u",
       stream->sample_index, stream->n_samples);
 
+  /* send out pending buffers */
+  while (stream->buffers) {
+    GstBuffer *buffer = (GstBuffer *) stream->buffers->data;
+
+    if (stream->discont) {
+      GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+      stream->discont = FALSE;
+    }
+    gst_buffer_set_caps (buffer, stream->caps);
+
+    gst_pad_push (stream->pad, buffer);
+
+    stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
+  }
+
   if (stream->sample_index >= stream->n_samples)
     goto eos;
 
@@ -1181,6 +1205,12 @@ gst_qtdemux_prepare_current_sample (GstQTDemux * qtdemux,
   *size = sample->size;
   *duration = sample->duration;
   *keyframe = stream->all_keyframe || sample->keyframe;
+
+  /* add padding */
+  if (stream->padding) {
+    *offset += stream->padding;
+    *size -= stream->padding;
+  }
 
   return TRUE;
 
@@ -1489,6 +1519,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
     GST_BUFFER_TIMESTAMP (buf) = timestamp;
     GST_BUFFER_DURATION (buf) = duration;
+    GST_BUFFER_OFFSET (buf) = -1;
+    GST_BUFFER_OFFSET_END (buf) = -1;
 
     if (stream->need_clip)
       buf = gst_qtdemux_clip_buffer (qtdemux, stream, buf);
@@ -2114,6 +2146,66 @@ qtdemux_parse_container (GstQTDemux * qtdemux, GNode * node, guint8 * buf,
 }
 
 static gboolean
+qtdemux_parse_theora_extension (GstQTDemux * qtdemux, QtDemuxStream * stream,
+    GNode * xdxt)
+{
+  int len = QT_UINT32 (xdxt->data);
+  guint8 *buf = xdxt->data;
+  guint8 *end = buf + len;
+  GstBuffer *buffer;
+
+  /* skip size and type */
+  buf += 8;
+  end -= 8;
+
+  while (buf < end) {
+    gint size;
+    guint32 type;
+
+    size = QT_UINT32 (buf);
+    type = QT_FOURCC (buf + 4);
+
+    GST_LOG_OBJECT (qtdemux, "%p %p", buf, end);
+
+    if (buf + size > end || size <= 0)
+      break;
+
+    buf += 8;
+    size -= 8;
+
+    GST_WARNING_OBJECT (qtdemux, "have cookie %" GST_FOURCC_FORMAT,
+        GST_FOURCC_ARGS (type));
+
+    switch (type) {
+      case FOURCC_tCtH:
+        buffer = gst_buffer_new_and_alloc (size);
+        memcpy (GST_BUFFER_DATA (buffer), buf, size);
+        stream->buffers = g_slist_append (stream->buffers, buffer);
+        GST_LOG_OBJECT (qtdemux, "parsing theora header");
+        break;
+      case FOURCC_tCt_:
+        buffer = gst_buffer_new_and_alloc (size);
+        memcpy (GST_BUFFER_DATA (buffer), buf, size);
+        stream->buffers = g_slist_append (stream->buffers, buffer);
+        GST_LOG_OBJECT (qtdemux, "parsing theora comment");
+        break;
+      case FOURCC_tCtC:
+        buffer = gst_buffer_new_and_alloc (size);
+        memcpy (GST_BUFFER_DATA (buffer), buf, size);
+        stream->buffers = g_slist_append (stream->buffers, buffer);
+        GST_LOG_OBJECT (qtdemux, "parsing theora codebook");
+        break;
+      default:
+        GST_WARNING_OBJECT (qtdemux,
+            "unknown theora cookie %" GST_FOURCC_FORMAT, type);
+        break;
+    }
+    buf += size;
+  }
+  return TRUE;
+}
+
+static gboolean
 qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
     int length)
 {
@@ -2223,6 +2315,27 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, guint8 * buffer,
       {
         GST_DEBUG_OBJECT (qtdemux, "parsing meta atom");
         qtdemux_parse_container (qtdemux, node, buffer + 12, end);
+        break;
+      }
+      case FOURCC_XiTh:
+      {
+        guint32 version;
+        guint32 offset;
+
+        version = QT_UINT32 (buffer + 12);
+        GST_DEBUG_OBJECT (qtdemux, "parsing XiTh atom version 0x%08x", version);
+
+        switch (version) {
+          case 0x00000001:
+            offset = 0x62;
+            break;
+          default:
+            GST_DEBUG_OBJECT (qtdemux, "unknown version 0x%08x", version);
+            offset = 0;
+            break;
+        }
+        if (offset)
+          qtdemux_parse_container (qtdemux, node, buffer + offset, end);
         break;
       }
       default:
@@ -2981,6 +3094,25 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         {
           gst_caps_set_simple (stream->caps,
               "depth", G_TYPE_INT, QT_UINT16 (stsd_data + offset + 82), NULL);
+          break;
+        }
+        case FOURCC_XiTh:
+        {
+          GNode *xith, *xdxt;
+
+          GST_DEBUG_OBJECT (qtdemux, "found XiTh");
+          xith = qtdemux_tree_get_child_by_type (stsd, FOURCC_XiTh);
+          if (!xith)
+            break;
+
+          xdxt = qtdemux_tree_get_child_by_type (xith, FOURCC_XdxT);
+          if (!xdxt)
+            break;
+
+          GST_DEBUG_OBJECT (qtdemux, "found XdxT node");
+          /* collect the headers and store them in a stream list so that we can
+           * send them out first */
+          qtdemux_parse_theora_extension (qtdemux, stream, xdxt);
           break;
         }
         default:
@@ -4071,6 +4203,13 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('V', 'P', '3', '1'):
       _codec ("VP3");
       caps = gst_caps_from_string ("video/x-vp3");
+      break;
+    case GST_MAKE_FOURCC ('X', 'i', 'T', 'h'):
+      _codec ("Theora");
+      caps = gst_caps_from_string ("video/x-theora");
+      /* theora uses one byte of padding in the data stream because it does not
+       * allow 0 sized packets while theora does */
+      stream->padding = 1;
       break;
     case GST_MAKE_FOURCC ('k', 'p', 'c', 'd'):
     default:

@@ -1,3 +1,13 @@
+2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
+	(gst_qtdemux_prepare_current_sample),
+	(gst_qtdemux_loop_state_movie), (qtdemux_parse_theora_extension),
+	(qtdemux_parse_node), (qtdemux_parse_trak), (qtdemux_video_caps):
+	* gst/qtdemux/qtdemux_fourcc.h:
+	* gst/qtdemux/qtdemux_types.c:
+	Add suppport for theora in quicktime according to XiphQT.
+
 2007-11-15  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* sys/v4l2/gstv4l2src.c: (gst_v4l2src_class_init),
