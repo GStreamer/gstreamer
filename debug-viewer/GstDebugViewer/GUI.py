@@ -239,22 +239,23 @@ class LazyLogModel (LogModelBase):
         non_regex_line = line[:non_regex_len]
         regex_line = line[non_regex_len:]
 
+        prefix = non_regex_line.rstrip ()
+        while "  " in prefix:
+            prefix = prefix.replace ("  ", " ")
+        ts_s, pid_s, thread_s, level_s = prefix.split (" ")
+        ts = Data.parse_time (ts_s)
+        pid = int (pid_s)
+        thread = int (thread_s, 16)
         try:
-            prefix = non_regex_line.rstrip ()
-            while "  " in prefix:
-                prefix = prefix.replace ("  ", " ")
-            ts_s, pid_s, thread_s, level_s = prefix.split (" ")
-            ts = Data.parse_time (ts_s)
-            pid = int (pid_s)
-            thread = int (thread_s, 16)
             level = Data.DebugLevel (level_s)
             match = self.__line_regex.match (regex_line[:-len (os.linesep)])
         except ValueError:
+            level = Data.DebugLevelNone
             match = None
 
         if match is None:
             # FIXME?
-            groups = [0, 0, 0, Data.DebugLevelNone, "", "", 0, "", "", non_regex_len]
+            groups = [ts, pid, thread, level, "", "", 0, "", "", non_regex_len]
         else:            
             groups = [ts, pid, thread, level] + list (match.groups ()) + [non_regex_len + match.end ()]
 
