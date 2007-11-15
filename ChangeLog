@@ -1,5 +1,12 @@
 2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: Tommi Myöhänen  <ext-tommi dot myohanen at nokia dot com>
+
+	* gst/rtp/gstrtph264depay.c: (gst_rtp_h264_depay_setcaps):
+	Fix small leak. Fixes #497017.
+
+2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_change_state),
 	(gst_qtdemux_prepare_current_sample),
 	(gst_qtdemux_loop_state_movie), (qtdemux_parse_theora_extension),

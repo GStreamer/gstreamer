@@ -257,6 +257,7 @@ gst_rtp_h264_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
       b64 += len;
     }
     GST_BUFFER_SIZE (codec_data) = total;
+    g_strfreev (params);
 
     /* keep the codec_data, we need to send it as the first buffer. We cannot
      * push it in the adapter because the adapter might be flushed on discont.
