@@ -853,6 +853,11 @@ class Window (object):
             feature.attach (self)
             self.features.append (feature)
 
+        # FIXME: With multiple selection mode, browsing the list with key
+        # up/down slows to a crawl! WTF is wrong with this stupid widget???
+        ## sel = self.log_view.get_selection ()
+        ## sel.set_mode (gtk.SELECTION_MULTIPLE)
+
     def detach (self):
 
         self.window_state.detach ()
