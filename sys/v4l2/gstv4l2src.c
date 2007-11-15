@@ -68,11 +68,14 @@ GST_ELEMENT_DETAILS ("Video (video4linux2/raw) Source",
 GST_DEBUG_CATEGORY (v4l2src_debug);
 #define GST_CAT_DEFAULT v4l2src_debug
 
+#define DEFAULT_PROP_ALWAYS_COPY        TRUE
+
 enum
 {
   PROP_0,
   V4L2_STD_OBJECT_PROPS,
-  PROP_QUEUE_SIZE
+  PROP_QUEUE_SIZE,
+  PROP_ALWAYS_COPY
 };
 
 static const guint32 gst_v4l2_formats[] = {
@@ -289,6 +292,10 @@ gst_v4l2src_class_init (GstV4l2SrcClass * klass)
           "Number of buffers to be enqueud in the driver",
           GST_V4L2_MIN_BUFFERS, GST_V4L2_MAX_BUFFERS, GST_V4L2_MIN_BUFFERS,
           G_PARAM_READWRITE));
+  g_object_class_install_property (gobject_class, PROP_ALWAYS_COPY,
+      g_param_spec_boolean ("always-copy", "Always Copy",
+          "If the buffer will or not be used directly from mmap",
+          DEFAULT_PROP_ALWAYS_COPY, G_PARAM_READWRITE));
 
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_get_caps);
   basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_v4l2src_set_caps);
@@ -309,6 +316,8 @@ gst_v4l2src_init (GstV4l2Src * v4l2src, GstV4l2SrcClass * klass)
 
   /* number of buffers requested */
   v4l2src->num_buffers = GST_V4L2_MIN_BUFFERS;
+
+  v4l2src->always_copy = DEFAULT_PROP_ALWAYS_COPY;
 
   v4l2src->formats = NULL;
 
@@ -356,6 +365,9 @@ gst_v4l2src_set_property (GObject * object,
       case PROP_QUEUE_SIZE:
         v4l2src->num_buffers = g_value_get_uint (value);
         break;
+      case PROP_ALWAYS_COPY:
+        v4l2src->always_copy = g_value_get_boolean (value);
+        break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
         break;
@@ -375,6 +387,9 @@ gst_v4l2src_get_property (GObject * object,
     switch (prop_id) {
       case PROP_QUEUE_SIZE:
         g_value_set_uint (value, v4l2src->num_buffers);
+        break;
+      case PROP_ALWAYS_COPY:
+        g_value_set_boolean (value, v4l2src->always_copy);
         break;
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -101,6 +101,9 @@ struct _GstV4l2Src
   gboolean use_mmap;
   guint32 frame_byte_size;
 
+  /* if the buffer will be or not used from directly mmap */
+  gboolean always_copy;
+
   /* True if we want to stop */
   gboolean quit;
   gboolean is_capturing;

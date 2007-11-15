@@ -954,26 +954,16 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
     }
   }
 
-  do {
+  g_mutex_lock (v4l2src->pool->lock);
 
-    g_mutex_lock (v4l2src->pool->lock);
+  index = buffer.index;
 
-    index = buffer.index;
+  /* get our GstBuffer with that index from the pool, if the buffer was
+   * outstanding we have a serious problem. */
+  pool_buffer = GST_BUFFER (v4l2src->pool->buffers[index]);
 
-    /* get our GstBuffer with that index from the pool, if the buffer was
-     * outstanding we have a serious problem. */
-    pool_buffer = GST_BUFFER (v4l2src->pool->buffers[index]);
-
-    if (pool_buffer == NULL) {
-      g_mutex_unlock (v4l2src->pool->lock);
-      g_usleep (20000);         /* wait 20 miliseconds */
-      /* FIXME: we need a exit condition here */
-    } else {
-      break;
-    }
-
-  } while (TRUE);
-
+  if (pool_buffer == NULL)
+    goto no_buffer;
 
   GST_LOG_OBJECT (v4l2src, "grabbed buffer %p at index %d", pool_buffer, index);
 
@@ -982,7 +972,8 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
   v4l2src->pool->num_live_buffers++;
   /* if we are handing out the last buffer in the pool, we need to make a
    * copy and bring the buffer back in the pool. */
-  need_copy = v4l2src->pool->num_live_buffers == v4l2src->pool->buffer_count;
+  need_copy = v4l2src->always_copy
+      || (v4l2src->pool->num_live_buffers == v4l2src->pool->buffer_count);
 
   g_mutex_unlock (v4l2src->pool->lock);
 
@@ -1020,6 +1011,7 @@ gst_v4l2src_grab_frame (GstV4l2Src * v4l2src, GstBuffer ** buf)
 
   if (G_UNLIKELY (need_copy)) {
     *buf = gst_buffer_copy (pool_buffer);
+    GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
     /* this will requeue */
     gst_buffer_unref (pool_buffer);
   } else {
@@ -1059,7 +1051,7 @@ too_many_trials:
             NUM_TRIALS, v4l2src->v4l2object->videodev, g_strerror (errno)));
     return GST_FLOW_ERROR;
   }
-#if 0
+no_buffer:
   {
     GST_ELEMENT_ERROR (v4l2src, RESOURCE, FAILED,
         (_("Failed trying to get video frames from device '%s'."),
@@ -1068,7 +1060,6 @@ too_many_trials:
     g_mutex_unlock (v4l2src->pool->lock);
     return GST_FLOW_ERROR;
   }
-#endif
 /*
 qbuf_failed:
   {
