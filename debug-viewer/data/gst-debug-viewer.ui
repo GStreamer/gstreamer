@@ -26,6 +26,7 @@
       <separator/>
       <menuitem name="ViewContextMenuCopyMessage" action="edit-copy-message"/>
       <menuitem name="ViewContextMenuCopyLine" action="edit-copy-line"/>
+      <menuitem name="ViewContextMenuFilterLevel" action="filter-out-higher-levels"/>
     </menu>
     <menu name="HelpMenu" action="HelpMenuAction">
       <placeholder name="HelpMenuAdditions"/>

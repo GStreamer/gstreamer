@@ -55,7 +55,7 @@ class LogModelBase (gtk.GenericTreeModel):
 
     __metaclass__ = Common.GUI.MetaModel
 
-    columns = ("COL_LEVEL", str, # FIXME: Use Data.DebugLevel instances/ints!
+    columns = ("COL_LEVEL", object,
                "COL_PID", int,
                "COL_THREAD", gobject.TYPE_UINT64,
                "COL_TIME", gobject.TYPE_UINT64,
@@ -75,6 +75,16 @@ class LogModelBase (gtk.GenericTreeModel):
         self.line_offsets = []
         self.line_cache = {}
 
+    def ensure_cached (self, line_offset):
+
+        raise NotImplementedError ("derived classes must override this method")
+
+    def iter_rows_offset (self):
+
+        for offset in self.line_offsets:
+            self.ensure_cached (offset)
+            yield (self.line_cache[offset], offset,)
+
     def on_get_flags (self):
 
         flags = gtk.TREE_MODEL_LIST_ONLY | gtk.TREE_MODEL_ITERS_PERSIST
@@ -88,10 +98,14 @@ class LogModelBase (gtk.GenericTreeModel):
     def on_get_column_type (self, col_id):
 
         return self.column_types[col_id]
-    
+
     def on_get_iter (self, path):
 
+        if not path:
+            return
+
         if len (path) > 1:
+            # Flat model.
             return None
 
         line_index = path[0]
@@ -101,13 +115,17 @@ class LogModelBase (gtk.GenericTreeModel):
 
         return line_index
 
-    def on_get_path (self, line_index):
+    def on_get_path (self, rowref):
+
+        line_index = rowref
 
         return (line_index,)
 
     def on_get_value (self, line_index, col_id):
 
-        if line_index > len (self.line_offsets) - 1:
+        last_index = len (self.line_offsets) - 1
+
+        if line_index > last_index:
             return None
 
         line_offset = self.line_offsets[line_index]
@@ -117,7 +135,9 @@ class LogModelBase (gtk.GenericTreeModel):
 
     def on_iter_next (self, line_index):
 
-        if line_index >= len (self.line_offsets) - 1:
+        last_index = len (self.line_offsets) - 1
+
+        if line_index >= last_index:
             return None
         else:
             return line_index + 1
@@ -139,10 +159,12 @@ class LogModelBase (gtk.GenericTreeModel):
 
     def on_iter_nth_child (self, parent, n):
 
-        if parent or n > len (self.line_offsets) - 1:
+        last_index = len (self.line_offsets) - 1
+
+        if parent or n > last_index:
             return None
-        else:
-            return n ## self.line_offsets[n]
+
+        return n
 
     def on_iter_parent (self, child):
 
@@ -208,7 +230,7 @@ class LazyLogModel (LogModelBase):
         match = self.__line_regex.match (line[ts_len:-len (os.linesep)])
         if match is None:
             # FIXME?
-            groups = [ts, 0, 0, "?", "", "", 0, "", "", line[ts_len:-len (os.linesep)]]
+            groups = [ts, 0, 0, Data.DebugLevelNone, "", "", 0, "", "", line[ts_len:-len (os.linesep)]]
         else:            
             groups = [ts] + list (match.groups ())
 
@@ -216,6 +238,10 @@ class LazyLogModel (LogModelBase):
             # much run time speed it costs!
             groups[1] = int (groups[1]) # pid
             groups[2] = int (groups[2], 16) # thread pointer
+            try:
+                groups[3] = Data.DebugLevel (groups[3])
+            except ValueError:
+                groups[3] = Data.DebugLevelNone
             groups[6] = int (groups[6]) # line
             groups[8] = groups[8] or "" # object (optional)
 
@@ -230,10 +256,35 @@ class FilteredLogModel (LogModelBase):
         LogModelBase.__init__ (self)
 
         self.parent_model = lazy_log_model
-        self.ensure_cached = lazy_log_model.ensure_cached
+        ##self.ensure_cached = lazy_log_model.ensure_cached
         self.line_cache = lazy_log_model.line_cache
 
         self.line_offsets += lazy_log_model.line_offsets
+
+    def ensure_cached (self, line_offset):
+
+        return self.parent_model.ensure_cached (line_offset)
+
+    def add_filter (self, filter):
+
+        func = filter.filter_func
+        #enum = self.lazy_log_model.iter_rows_offset ()
+        enum = self.iter_rows_offset ()
+        self.line_offsets[:] = (offset for row, offset in enum
+                                if func (row))
+
+class Filter (object):
+
+    pass
+
+class DebugLevelFilter (Filter):
+
+    def __init__ (self, debug_level):
+
+        col_id = LogModelBase.COL_LEVEL
+        def filter_func (row):
+            return row[col_id] < debug_level
+        self.filter_func = filter_func
 
 # Sync with gst-inspector!
 class Column (object):
@@ -353,16 +404,14 @@ class LevelColumn (TextColumn):
     def get_modify_func ():
 
         def format_level (value):
-            if value is None:
-                # FIXME: Should never be None!
-                return ""
-            return value[0]
+            return value.name[0]
 
         return format_level
 
     def get_values_for_size (self):
 
-        values = ["LOG", "DEBUG", "INFO", "WARN", "ERROR"]
+        values = [Data.DebugLevelLog, Data.DebugLevelDebug, Data.DebugLevelInfo,
+                  Data.DebugLevelWarning, Data.DebugLevelError]
 
         return values
 
@@ -749,7 +798,8 @@ class Window (object):
 
         group = gtk.ActionGroup ("RowActions")
         group.add_actions ([("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
-                            ("edit-copy-message", gtk.STOCK_COPY, _("Copy message"))])
+                            ("edit-copy-message", gtk.STOCK_COPY, _("Copy message")),
+                            ("filter-out-higher-levels", None, _("Filter out higher debug levels"))])
         self.actions.add_group (group)
 
         self.actions.add_group (self.column_manager.action_group)
@@ -775,7 +825,6 @@ class Window (object):
         self.log_view = self.widgets.log_view
         self.log_view.drag_dest_unset ()
         self.log_view.props.fixed_height_mode = True
-        #self.log_view.props.model = self.log_model.filtered ()
 
         self.log_view.connect ("button-press-event", self.handle_log_view_button_press_event)
 
@@ -839,6 +888,7 @@ class Window (object):
 
         for action_name in ("new-window", "open-file", "close-window",
                             "edit-copy-line", "edit-copy-message",
+                            "filter-out-higher-levels",
                             "show-about",):
             name = action_name.replace ("-", "_")
             action = getattr (self.actions, name)
@@ -869,7 +919,8 @@ class Window (object):
         model, tree_iter = selection.get_selected ()
         if tree_iter is None:
             raise ValueError ("no line selected")
-        return self.log_model.get (tree_iter, *LazyLogModel.column_ids)
+        model = self.log_view.props.model
+        return model.get (tree_iter, *self.log_model.column_ids)
 
     def close (self, *a, **kw):
 
@@ -914,6 +965,21 @@ class Window (object):
 
         col_id = self.log_model.COL_MESSAGE
         self.clipboard.set_text (self.get_active_line ()[col_id])
+
+    def handle_filter_out_higher_levels_action_activate (self, action):
+
+        row = self.get_active_line ()
+        debug_level = row[self.log_model.COL_LEVEL]
+
+        try:
+            target_level = debug_level.higher_level ()
+        except ValueError:
+            return
+        self.log_filter.add_filter (DebugLevelFilter (target_level))
+
+        # FIXME:
+        self.log_view.props.model = gtk.TreeStore (str)
+        self.log_view.props.model = self.log_filter
 
     def handle_show_about_action_activate (self, action):
 
@@ -997,9 +1063,11 @@ class Window (object):
         for sentinel in self.sentinels:
             sentinel ()
 
+        self.log_filter = FilteredLogModel (self.log_model)
+
         def idle_set ():
-            #self.log_view.props.model = self.log_model
-            self.log_view.props.model = FilteredLogModel (self.log_model)
+            ##self.log_view.props.model = self.log_model
+            self.log_view.props.model = self.log_filter
             return False
 
         gobject.idle_add (idle_set)
