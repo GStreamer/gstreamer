@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.14\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-07-26 22:01+0200\n"
+"POT-Creation-Date: 2007-11-10 20:45+0000\n"
 "PO-Revision-Date: 2007-08-06 14:15+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -21,94 +21,105 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: gst/gst.c:301
+#: gst/gst.c:304
 msgid "Print the GStreamer version"
 msgstr "Näytä GStreamerin versio"
 
-#: gst/gst.c:303
+#: gst/gst.c:306
 msgid "Make all warnings fatal"
 msgstr "Tee kaikista varoituksista vakavia"
 
-#: gst/gst.c:307
+#: gst/gst.c:310
 msgid "Print available debug categories and exit"
 msgstr "Tulosta saatavilla olevat vianetsintäluokat ja poistu"
 
-#: gst/gst.c:311
-msgid "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
-msgstr "Oletusvianetsintätaso väliltä 1:stä (vain virheet) 5:een (kaikki) tai 0 ei tulostetta"
+#: gst/gst.c:314
+msgid ""
+"Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
+msgstr ""
+"Oletusvianetsintätaso väliltä 1:stä (vain virheet) 5:een (kaikki) tai 0 ei "
+"tulostetta"
 
-#: gst/gst.c:313
+#: gst/gst.c:316
 msgid "LEVEL"
 msgstr "TASO"
 
-#: gst/gst.c:315
-msgid "Comma-separated list of category_name:level pairs to set specific levels for the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-msgstr "Pilkuin eroteltu luettelo luokkanimi:taso-pareista, joilla asetetaan tietyt tasot yksittäisille luokille. Esimerkki: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
-
 #: gst/gst.c:318
+msgid ""
+"Comma-separated list of category_name:level pairs to set specific levels for "
+"the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+msgstr ""
+"Pilkuin eroteltu luettelo luokkanimi:taso-pareista, joilla asetetaan tietyt "
+"tasot yksittäisille luokille. Esimerkki: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
+
+#: gst/gst.c:321
 msgid "LIST"
 msgstr "LUETTELO"
 
-#: gst/gst.c:320
+#: gst/gst.c:323
 msgid "Disable colored debugging output"
 msgstr "Ei väritettyjä vianetsintätietoja"
 
-#: gst/gst.c:323
+#: gst/gst.c:326
 msgid "Disable debugging"
 msgstr "Ei vianetsintää"
 
-#: gst/gst.c:327
+#: gst/gst.c:330
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Käytä monisanaista liitännäisten latausdiagnostiikka"
 
-#: gst/gst.c:331
+#: gst/gst.c:334
 msgid "Colon-separated paths containing plugins"
 msgstr "Kaksoispistein erotellut polut liitännäisiin"
 
-#: gst/gst.c:331
+#: gst/gst.c:334
 msgid "PATHS"
 msgstr "POLUT"
 
-#: gst/gst.c:334
-msgid "Comma-separated list of plugins to preload in addition to the list stored in environment variable GST_PLUGIN_PATH"
-msgstr "Pilkuin eroteltu luettelo liitännäisistä, jotka esiladataan ympäristömuuttujassa GST_PLUGIN_PATH lueteltujen lisäksi"
+#: gst/gst.c:337
+msgid ""
+"Comma-separated list of plugins to preload in addition to the list stored in "
+"environment variable GST_PLUGIN_PATH"
+msgstr ""
+"Pilkuin eroteltu luettelo liitännäisistä, jotka esiladataan "
+"ympäristömuuttujassa GST_PLUGIN_PATH lueteltujen lisäksi"
 
-#: gst/gst.c:336
+#: gst/gst.c:339
 msgid "PLUGINS"
 msgstr "LIITÄNNÄISET"
 
-#: gst/gst.c:339
+#: gst/gst.c:342
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr "Ei muistialueen ylityksen tarkkailua liitännäisten latauksen aikana"
 
-#: gst/gst.c:344
+#: gst/gst.c:347
 msgid "Disable the use of fork() while scanning the registry"
 msgstr "Älä käytä fork()-kutsua rekisterin skannauksessa"
 
-#: gst/gst.c:365
+#: gst/gst.c:368
 msgid "GStreamer Options"
 msgstr "GStreamerin valitsimet"
 
-#: gst/gst.c:366
+#: gst/gst.c:369
 msgid "Show GStreamer Options"
 msgstr "Näytä GStreamerin valitsimet"
 
-#: gst/gst.c:750
+#: gst/gst.c:753
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Virhe kirjoitettaessa rekisterivälimuistia kohteeseen %s: %s"
 
-#: gst/gst.c:792 gst/gst.c:808 gst/gst.c:853
+#: gst/gst.c:795 gst/gst.c:811 gst/gst.c:856
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr "Virhe uudelleenskannatessa rekisteriä %s: %s"
 
-#: gst/gst.c:868
+#: gst/gst.c:871
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr "Virhe uudelleenskannatessa rekisteriä %s"
 
-#: gst/gst.c:1154
+#: gst/gst.c:1157
 msgid "Unknown option"
 msgstr "Tuntematon valitsin"
 
@@ -117,7 +128,7 @@ msgstr "Tuntematon valitsin"
 msgid "ERROR: from element %s: %s\n"
 msgstr "VIRHE: elementiltä %s: %s\n"
 
-#: gst/gstelement.c:292 gst/gstutils.c:2181 tools/gst-launch.c:455
+#: gst/gstelement.c:292 gst/gstutils.c:2181 tools/gst-launch.c:460
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -131,8 +142,11 @@ msgid "GStreamer encountered a general core library error."
 msgstr "GStreamer kohtasi virheen yleisessä ydinkirjastossa."
 
 #: gst/gsterror.c:141 gst/gsterror.c:181 gst/gsterror.c:201 gst/gsterror.c:232
-msgid "GStreamer developers were too lazy to assign an error code to this error."
-msgstr "GStreamer-kehittäjät olivat liian laiskoja antaakseen tälle virheelle omaa virhekoodia."
+msgid ""
+"GStreamer developers were too lazy to assign an error code to this error."
+msgstr ""
+"GStreamer-kehittäjät olivat liian laiskoja antaakseen tälle virheelle omaa "
+"virhekoodia."
 
 #: gst/gsterror.c:144
 msgid "Internal GStreamer error: code not implemented."
@@ -179,8 +193,12 @@ msgid "Internal GStreamer error: clock problem."
 msgstr "Sisäinen GStreamer-virhe: kello-ongelma."
 
 #: gst/gsterror.c:164
-msgid "This application is trying to use GStreamer functionality that has been disabled."
-msgstr "Tämä sovellus yrittää käyttää sellaista GStreamerin toiminnallisuutta, joka on poissa käytöstä."
+msgid ""
+"This application is trying to use GStreamer functionality that has been "
+"disabled."
+msgstr ""
+"Tämä sovellus yrittää käyttää sellaista GStreamerin toiminnallisuutta, joka "
+"on poissa käytöstä."
 
 #: gst/gsterror.c:179
 msgid "GStreamer encountered a general supporting library error."
@@ -268,7 +286,8 @@ msgstr "Tietovirta on eri tyyppiä kuin mitä tämä elementti käsittelee."
 
 #: gst/gsterror.c:241
 msgid "There is no codec present that can handle the stream's type."
-msgstr "Saatavilla ei ole koodekkia, joka osaa käsitellä tämän tyyppistä tietovirtaa."
+msgstr ""
+"Saatavilla ei ole koodekkia, joka osaa käsitellä tämän tyyppistä tietovirtaa."
 
 #: gst/gsterror.c:242
 msgid "Could not decode stream."
@@ -300,7 +319,7 @@ msgstr "Virheviestiä alueelle %s ei ole."
 msgid "No standard error message for domain %s and code %d."
 msgstr "Standardia virheviestiä alueelle %s ja koodille %d ei ole."
 
-#: gst/gstpipeline.c:567
+#: gst/gstpipeline.c:530
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Valittua kelloa ei voi käyttää liukuhihnassa."
 
@@ -313,330 +332,369 @@ msgid "commonly used title"
 msgstr "yleensä käytetty nimi"
 
 #: gst/gsttaglist.c:100
+msgid "title sortname"
+msgstr ""
+
+#: gst/gsttaglist.c:100
+#, fuzzy
+msgid "commonly used title for sorting purposes"
+msgstr "yleensä käytetty nimi"
+
+#: gst/gsttaglist.c:103
 msgid "artist"
 msgstr "esittäjä"
 
-#: gst/gsttaglist.c:101
+#: gst/gsttaglist.c:104
 msgid "person(s) responsible for the recording"
 msgstr "nauhoituksesta vastuussa oleva(t) henkilö(t)"
 
-#: gst/gsttaglist.c:105
+#: gst/gsttaglist.c:108
+msgid "artist sortname"
+msgstr ""
+
+#: gst/gsttaglist.c:109
+#, fuzzy
+msgid "person(s) responsible for the recording for sorting purposes"
+msgstr "nauhoituksesta vastuussa oleva(t) henkilö(t)"
+
+#: gst/gsttaglist.c:112
 msgid "album"
 msgstr "levy"
 
-#: gst/gsttaglist.c:106
+#: gst/gsttaglist.c:113
 msgid "album containing this data"
 msgstr "levy, joka sisältää tämän datan"
 
-#: gst/gsttaglist.c:108
+#: gst/gsttaglist.c:116
+msgid "album sortname"
+msgstr ""
+
+#: gst/gsttaglist.c:117
+#, fuzzy
+msgid "album containing this data for sorting purposes"
+msgstr "levy, joka sisältää tämän datan"
+
+#: gst/gsttaglist.c:119
 msgid "date"
 msgstr "päiväys"
 
-#: gst/gsttaglist.c:108
+#: gst/gsttaglist.c:119
 msgid "date the data was created (as a GDate structure)"
 msgstr "päiväys, jolloin data luotiin (GDate-muodossa)"
 
-#: gst/gsttaglist.c:111
+#: gst/gsttaglist.c:122
 msgid "genre"
 msgstr "laji"
 
-#: gst/gsttaglist.c:112
+#: gst/gsttaglist.c:123
 msgid "genre this data belongs to"
 msgstr "laji, johon tämä data kuuluu"
 
-#: gst/gsttaglist.c:115
+#: gst/gsttaglist.c:126
 msgid "comment"
 msgstr "kommentti"
 
-#: gst/gsttaglist.c:116
+#: gst/gsttaglist.c:127
 msgid "free text commenting the data"
 msgstr "vapaa kommenttiteksti datalle"
 
-#: gst/gsttaglist.c:119
+#: gst/gsttaglist.c:130
 msgid "extended comment"
 msgstr "laajennettu kommentti"
 
-#: gst/gsttaglist.c:120
+#: gst/gsttaglist.c:131
 msgid "free text commenting the data in key=value or key[en]=comment form"
-msgstr "vapaa kommenttiteksti datalle muodossa avain=arvo tai avain[fi]=kommentti"
+msgstr ""
+"vapaa kommenttiteksti datalle muodossa avain=arvo tai avain[fi]=kommentti"
 
-#: gst/gsttaglist.c:124
+#: gst/gsttaglist.c:135
 msgid "track number"
 msgstr "raidan numero"
 
-#: gst/gsttaglist.c:125
+#: gst/gsttaglist.c:136
 msgid "track number inside a collection"
 msgstr "raidan numero kokoelman sisällä"
 
-#: gst/gsttaglist.c:128
+#: gst/gsttaglist.c:139
 msgid "track count"
 msgstr "raitojen määrä"
 
-#: gst/gsttaglist.c:129
+#: gst/gsttaglist.c:140
 msgid "count of tracks inside collection this track belongs to"
 msgstr "tähän kokoelmaan kuuluvien raitojen lukumäärä"
 
-#: gst/gsttaglist.c:133
+#: gst/gsttaglist.c:144
 msgid "disc number"
 msgstr "levynumero"
 
-#: gst/gsttaglist.c:134
+#: gst/gsttaglist.c:145
 msgid "disc number inside a collection"
 msgstr "levynumero kokoelman sisällä"
 
-#: gst/gsttaglist.c:137
+#: gst/gsttaglist.c:148
 msgid "disc count"
 msgstr "levymäärä"
 
-#: gst/gsttaglist.c:138
+#: gst/gsttaglist.c:149
 msgid "count of discs inside collection this disc belongs to"
 msgstr "tämän levyn kokoelmaan kuuluvien levyjen lukumäärä"
 
-#: gst/gsttaglist.c:142
+#: gst/gsttaglist.c:153
 msgid "location"
 msgstr "sijainti"
 
-#: gst/gsttaglist.c:143
+#: gst/gsttaglist.c:154
 msgid "original location of file as a URI"
 msgstr "tiedoston alkuperäinen sijainti URI:na"
 
-#: gst/gsttaglist.c:147
+#: gst/gsttaglist.c:158
 msgid "description"
 msgstr "kuvaus"
 
-#: gst/gsttaglist.c:148
+#: gst/gsttaglist.c:159
 msgid "short text describing the content of the data"
 msgstr "lyhyt teksti, joka kuvaa datan sisältöä"
 
-#: gst/gsttaglist.c:151
+#: gst/gsttaglist.c:162
 msgid "version"
 msgstr "versio"
 
-#: gst/gsttaglist.c:151
+#: gst/gsttaglist.c:162
 msgid "version of this data"
 msgstr "tämän datan versio"
 
-#: gst/gsttaglist.c:154
+#: gst/gsttaglist.c:165
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttaglist.c:156
+#: gst/gsttaglist.c:167
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
-msgstr "Kansainvälinen standardoitu äänitekoodi ISRC - katso http://www.ifpi.org/isrc/"
+msgstr ""
+"Kansainvälinen standardoitu äänitekoodi ISRC - katso http://www.ifpi.org/"
+"isrc/"
 
-#: gst/gsttaglist.c:158
+#: gst/gsttaglist.c:169
 msgid "organization"
 msgstr "organisaatio"
 
-#: gst/gsttaglist.c:161
+#: gst/gsttaglist.c:172
 msgid "copyright"
 msgstr "tekijänoikeus"
 
-#: gst/gsttaglist.c:161
+#: gst/gsttaglist.c:172
 msgid "copyright notice of the data"
 msgstr "huomautus datan tekijänoikeuksista"
 
-#: gst/gsttaglist.c:163
+#: gst/gsttaglist.c:174
 msgid "copyright uri"
 msgstr "tekijänoikeus-uri"
 
-#: gst/gsttaglist.c:164
+#: gst/gsttaglist.c:175
 msgid "URI to the copyright notice of the data"
 msgstr "URI huomautukseen datan tekijänoikeuksista"
 
-#: gst/gsttaglist.c:167
+#: gst/gsttaglist.c:178
 msgid "contact"
 msgstr "yhteystiedot"
 
-#: gst/gsttaglist.c:167
+#: gst/gsttaglist.c:178
 msgid "contact information"
 msgstr "yhteystiedot"
 
-#: gst/gsttaglist.c:169
+#: gst/gsttaglist.c:180
 msgid "license"
 msgstr "lisenssi"
 
-#: gst/gsttaglist.c:169
+#: gst/gsttaglist.c:180
 msgid "license of data"
 msgstr "datan lisenssi"
 
-#: gst/gsttaglist.c:171
+#: gst/gsttaglist.c:182
 msgid "license uri"
 msgstr "lisenssin uri"
 
-#: gst/gsttaglist.c:172
+#: gst/gsttaglist.c:183
 msgid "URI to the license of the data"
 msgstr "URI datan lisenssiin"
 
-#: gst/gsttaglist.c:175
+#: gst/gsttaglist.c:186
 msgid "performer"
 msgstr "esittäjä"
 
-#: gst/gsttaglist.c:176
+#: gst/gsttaglist.c:187
 msgid "person(s) performing"
 msgstr "esittämässä oleva(t) henkilö(t)"
 
-#: gst/gsttaglist.c:179
+#: gst/gsttaglist.c:190
+msgid "composer"
+msgstr ""
+
+#: gst/gsttaglist.c:191
+#, fuzzy
+msgid "person(s) who composed the recording"
+msgstr "nauhoituksesta vastuussa oleva(t) henkilö(t)"
+
+#: gst/gsttaglist.c:195
 msgid "duration"
 msgstr "kesto"
 
-#: gst/gsttaglist.c:179
+#: gst/gsttaglist.c:195
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "pituus GStreamerin aikayksikköinä (nanosekuntia)"
 
-#: gst/gsttaglist.c:182
+#: gst/gsttaglist.c:198
 msgid "codec"
 msgstr "koodekki"
 
-#: gst/gsttaglist.c:183
+#: gst/gsttaglist.c:199
 msgid "codec the data is stored in"
 msgstr "koodekki, jolla data on tallennettu"
 
-#: gst/gsttaglist.c:186
+#: gst/gsttaglist.c:202
 msgid "video codec"
 msgstr "videokoodekki"
 
-#: gst/gsttaglist.c:186
+#: gst/gsttaglist.c:202
 msgid "codec the video data is stored in"
 msgstr "koodekki, jolla videodata on tallennettu"
 
-#: gst/gsttaglist.c:189
+#: gst/gsttaglist.c:205
 msgid "audio codec"
 msgstr "äänikoodekki"
 
-#: gst/gsttaglist.c:189
+#: gst/gsttaglist.c:205
 msgid "codec the audio data is stored in"
 msgstr "koodekki, jolla äänidata on tallennettu"
 
-#: gst/gsttaglist.c:191
+#: gst/gsttaglist.c:207
 msgid "bitrate"
 msgstr "bittinopeus"
 
-#: gst/gsttaglist.c:191
+#: gst/gsttaglist.c:207
 msgid "exact or average bitrate in bits/s"
 msgstr "tarkka tai keskimääräinen bittinopeus [bittiä/s]"
 
-#: gst/gsttaglist.c:193
+#: gst/gsttaglist.c:209
 msgid "nominal bitrate"
 msgstr "nimellinen bittinopeus"
 
-#: gst/gsttaglist.c:193
+#: gst/gsttaglist.c:209
 msgid "nominal bitrate in bits/s"
 msgstr "nimellinen bittinopeus [bittiä/s]"
 
-#: gst/gsttaglist.c:195
+#: gst/gsttaglist.c:211
 msgid "minimum bitrate"
 msgstr "vähimmäisbittinopeus"
 
-#: gst/gsttaglist.c:195
+#: gst/gsttaglist.c:211
 msgid "minimum bitrate in bits/s"
 msgstr "vähimmäisbittinopeus [bittiä/s]"
 
-#: gst/gsttaglist.c:197
+#: gst/gsttaglist.c:213
 msgid "maximum bitrate"
 msgstr "enimmäisbittinopeus"
 
-#: gst/gsttaglist.c:197
+#: gst/gsttaglist.c:213
 msgid "maximum bitrate in bits/s"
 msgstr "enimmäisbittinopeus [bittiä/s]"
 
-#: gst/gsttaglist.c:200
+#: gst/gsttaglist.c:216
 msgid "encoder"
 msgstr "koodain"
 
-#: gst/gsttaglist.c:200
+#: gst/gsttaglist.c:216
 msgid "encoder used to encode this stream"
 msgstr "koodain, joka koodaa tämän virran"
 
-#: gst/gsttaglist.c:203
+#: gst/gsttaglist.c:219
 msgid "encoder version"
 msgstr "koodaimen versio"
 
-#: gst/gsttaglist.c:204
+#: gst/gsttaglist.c:220
 msgid "version of the encoder used to encode this stream"
 msgstr "tämän virran koodaamiseen käytetyn koodaimen versio"
 
-#: gst/gsttaglist.c:206
+#: gst/gsttaglist.c:222
 msgid "serial"
 msgstr "sarjanumero"
 
-#: gst/gsttaglist.c:206
+#: gst/gsttaglist.c:222
 msgid "serial number of track"
 msgstr "raidan sarjanumero"
 
-#: gst/gsttaglist.c:208
+#: gst/gsttaglist.c:224
 msgid "replaygain track gain"
 msgstr "raidan replaygain-vahvistus"
 
-#: gst/gsttaglist.c:208
+#: gst/gsttaglist.c:224
 msgid "track gain in db"
 msgstr "raidan vahvistus desibeleissä"
 
-#: gst/gsttaglist.c:210
+#: gst/gsttaglist.c:226
 msgid "replaygain track peak"
 msgstr "raidan replaygain-huippu"
 
-#: gst/gsttaglist.c:210
+#: gst/gsttaglist.c:226
 msgid "peak of the track"
 msgstr "raidan huippu"
 
-#: gst/gsttaglist.c:212
+#: gst/gsttaglist.c:228
 msgid "replaygain album gain"
 msgstr "levyn replaygain-vahvistus"
 
-#: gst/gsttaglist.c:212
+#: gst/gsttaglist.c:228
 msgid "album gain in db"
 msgstr "levyn vahvistus desibeleissä"
 
-#: gst/gsttaglist.c:214
+#: gst/gsttaglist.c:230
 msgid "replaygain album peak"
 msgstr "levyn replaygain-huippu"
 
-#: gst/gsttaglist.c:214
+#: gst/gsttaglist.c:230
 msgid "peak of the album"
 msgstr "levyn huippu"
 
-#: gst/gsttaglist.c:216
+#: gst/gsttaglist.c:232
 msgid "replaygain reference level"
 msgstr "raidan replaygain-viitetaso"
 
-#: gst/gsttaglist.c:217
+#: gst/gsttaglist.c:233
 msgid "reference level of track and album gain values"
 msgstr "viitetaso raidan ja albumin gain-arvoille"
 
-#: gst/gsttaglist.c:219
+#: gst/gsttaglist.c:235
 msgid "language code"
 msgstr "kielikoodi"
 
-#: gst/gsttaglist.c:220
+#: gst/gsttaglist.c:236
 msgid "language code for this stream, conforming to ISO-639-1"
 msgstr "tämän virran kielikoodi ISO-639-1-standardin mukaisesti"
 
-#: gst/gsttaglist.c:222
+#: gst/gsttaglist.c:238
 msgid "image"
 msgstr "kuva"
 
-#: gst/gsttaglist.c:222
+#: gst/gsttaglist.c:238
 msgid "image related to this stream"
 msgstr "kuva, joka liittyy tähän virtaan"
 
-#: gst/gsttaglist.c:224
+#: gst/gsttaglist.c:240
 msgid "preview image"
 msgstr "esikatselukuva"
 
-#: gst/gsttaglist.c:224
+#: gst/gsttaglist.c:240
 msgid "preview image related to this stream"
 msgstr "esikatselukuva, joka liittyy tähän virtaan"
 
-#: gst/gsttaglist.c:226
+#: gst/gsttaglist.c:242
 msgid "beats per minute"
 msgstr "tahtia per minuutti"
 
-#: gst/gsttaglist.c:226
+#: gst/gsttaglist.c:242
 msgid "number of beats per minute in audio"
 msgstr "tahtien määrä per minuutti äänessä"
 
-#: gst/gsttaglist.c:266
+#: gst/gsttaglist.c:282
 msgid ", "
 msgstr ", "
 
@@ -658,7 +716,8 @@ msgstr "ominaisuutta \"%s\" ei ole elementissä \"%s\""
 #: gst/parse/grammar.y:319
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "elementin \"%2$s\" ominaisuutta \"%1$s\" ei voitu asettaa arvoon \"%3$s\""
+msgstr ""
+"elementin \"%2$s\" ominaisuutta \"%1$s\" ei voitu asettaa arvoon \"%3$s\""
 
 #: gst/parse/grammar.y:461
 #, c-format
@@ -708,19 +767,19 @@ msgstr "nieluelementtiä ei voitu linkittää URIlle \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tyhjää liukuhihnaa ei sallita"
 
-#: libs/gst/base/gstbasesrc.c:1576
+#: libs/gst/base/gstbasesrc.c:1818
 msgid "Internal clock error."
 msgstr "Sisäinen kellovirhe."
 
-#: libs/gst/base/gstbasesrc.c:1815 libs/gst/base/gstbasesrc.c:1826
+#: libs/gst/base/gstbasesrc.c:2098 libs/gst/base/gstbasesrc.c:2109
 msgid "Internal data flow error."
 msgstr "Sisäinen tiedon virtausvirhe."
 
-#: libs/gst/base/gstbasesink.c:2119
+#: libs/gst/base/gstbasesink.c:2523
 msgid "Internal data flow problem."
 msgstr "Sisäinen tiedon virtausongelma."
 
-#: libs/gst/base/gstbasesink.c:2251
+#: libs/gst/base/gstbasesink.c:2665
 msgid "Internal data stream error."
 msgstr "Sisäinen tietovirtavirhe."
 
@@ -729,8 +788,12 @@ msgid "Filter caps"
 msgstr "Kykysuodatus"
 
 #: plugins/elements/gstcapsfilter.c:110
-msgid "Restrict the possible allowed capabilities (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object."
-msgstr "Rajoita mahdollisia sallittuja kykyjä (NULL tarkoittaa mitä tahansa). Tämän ominaisuuden asettaminen ottaa kahvan annettuun GstCaps-olioon."
+msgid ""
+"Restrict the possible allowed capabilities (NULL means ANY). Setting this "
+"property takes a reference to the supplied GstCaps object."
+msgstr ""
+"Rajoita mahdollisia sallittuja kykyjä (NULL tarkoittaa mitä tahansa). Tämän "
+"ominaisuuden asettaminen ottaa kahvan annettuun GstCaps-olioon."
 
 #: plugins/elements/gstfdsink.c:329
 #, c-format
@@ -794,123 +857,133 @@ msgstr "Tiedosto \"%s\" on pistoke."
 msgid "Failed after iterations as requested."
 msgstr "Epäonnistui, kuten pyydettiin, yritysten jälkeen."
 
-#: plugins/elements/gsttypefindelement.c:190
+#: plugins/elements/gsttypefindelement.c:192
 msgid "caps"
 msgstr "kyvyt"
 
-#: plugins/elements/gsttypefindelement.c:191
+#: plugins/elements/gsttypefindelement.c:193
 msgid "detected capabilities in stream"
 msgstr "tunnistettu kyvyt virrassa"
 
-#: plugins/elements/gsttypefindelement.c:194
+#: plugins/elements/gsttypefindelement.c:196
 msgid "minimum"
 msgstr "vähintään"
 
-#: plugins/elements/gsttypefindelement.c:198
+#: plugins/elements/gsttypefindelement.c:200
 msgid "maximum"
 msgstr "enintään"
 
-#: tools/gst-inspect.c:250
+#: plugins/elements/gsttypefindelement.c:493
+#: plugins/elements/gsttypefindelement.c:742
+#, fuzzy
+msgid "Stream contains no data."
+msgstr "levy, joka sisältää tämän datan"
+
+#: tools/gst-inspect.c:251
 msgid "Implemented Interfaces:\n"
 msgstr "Toteutetut rajapinnat:\n"
 
-#: tools/gst-inspect.c:292
+#: tools/gst-inspect.c:300
 msgid "readable"
 msgstr "luettavissa"
 
-#: tools/gst-inspect.c:297
+#: tools/gst-inspect.c:307
 msgid "writable"
 msgstr "kirjoitettavissa"
 
-#: tools/gst-inspect.c:302
+#: tools/gst-inspect.c:314
 msgid "controllable"
 msgstr "ohjattavissa"
 
-#: tools/gst-inspect.c:926
+#: tools/gst-inspect.c:946
 msgid "Total count: "
 msgstr "Yhteismäärä: "
 
-#: tools/gst-inspect.c:927
+#: tools/gst-inspect.c:947
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d liitännäinen"
 msgstr[1] "%d liitännäistä"
 
-#: tools/gst-inspect.c:929
+#: tools/gst-inspect.c:949
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d ominaisuus"
 msgstr[1] "%d ominaisuutta"
 
-#: tools/gst-inspect.c:1240
+#: tools/gst-inspect.c:1259
 msgid "Print all elements"
 msgstr "Tulosta kaikki elementit"
 
-#: tools/gst-inspect.c:1242
+#: tools/gst-inspect.c:1261
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
-"                                       Useful in connection with external automatic plugin installation mechanisms"
+"                                       Useful in connection with external "
+"automatic plugin installation mechanisms"
 msgstr ""
-"Tulosta koneluettava luettelo ominaisuuksista, jotka annettu liitännäinen tarjoaa.\n"
-"                                       Hyödyllinen ulkoisten automaattisten liitännäisten asennusmekanismien yhteydessä"
+"Tulosta koneluettava luettelo ominaisuuksista, jotka annettu liitännäinen "
+"tarjoaa.\n"
+"                                       Hyödyllinen ulkoisten automaattisten "
+"liitännäisten asennusmekanismien yhteydessä"
 
-#: tools/gst-inspect.c:1322
+#: tools/gst-inspect.c:1341
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Ei voitu ladata liitännäistiedostoa: %s\n"
 
-#: tools/gst-inspect.c:1327
+#: tools/gst-inspect.c:1346
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Ei tällaista elementtiä tai liitännäistä \"%s\"\n"
 
-#: tools/gst-launch.c:79
+#: tools/gst-launch.c:80
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-msgstr "Käyttö: gst-xmllaunch <tiedosto.xml> [ elementti.ominaisuus=arvo ... ]\n"
+msgstr ""
+"Käyttö: gst-xmllaunch <tiedosto.xml> [ elementti.ominaisuus=arvo ... ]\n"
 
-#: tools/gst-launch.c:88
+#: tools/gst-launch.c:89
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "VIRHE: XML-tiedoston \"%s\" jäsentäminen epäonnistui.\n"
 
-#: tools/gst-launch.c:94
+#: tools/gst-launch.c:95
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "VIRHE: päätason liukuhihnaelementtiä ei ole tiedostossa \"%s\".\n"
 
-#: tools/gst-launch.c:101
+#: tools/gst-launch.c:102
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "VAROITUS: vain yhtä päätason elementtiä tuetaan tällä kertaa."
 
-#: tools/gst-launch.c:112
+#: tools/gst-launch.c:113
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr "VIRHE: ei voitu jäsentää komentoriviargumenttia %d: %s.\n"
 
-#: tools/gst-launch.c:123
+#: tools/gst-launch.c:124
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "VAROITUS: elementtiä nimeltä \"%s\" ei löytynyt.\n"
 
-#: tools/gst-launch.c:393
+#: tools/gst-launch.c:394
 #, c-format
 msgid "Got Message from element \"%s\" (%s): "
 msgstr "Saatiin Viesti elementiltä \"%s\" (%s): "
 
-#: tools/gst-launch.c:419
+#: tools/gst-launch.c:420
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Saatiin EOS (virran loppu) elementiltä \"%s\".\n"
 
-#: tools/gst-launch.c:427
+#: tools/gst-launch.c:428
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "LÖYTYI MERKINTÄ: sen löysi elementti \"%s\".\n"
 
-#: tools/gst-launch.c:440
+#: tools/gst-launch.c:441
 #, c-format
 msgid ""
 "INFO:\n"
@@ -919,142 +992,147 @@ msgstr ""
 "INFO:\n"
 "%s\n"
 
-#: tools/gst-launch.c:453
+#: tools/gst-launch.c:458
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "VAROITUS: elementiltä %s: %s\n"
 
-#: tools/gst-launch.c:487
+#: tools/gst-launch.c:510
 #, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Esipyöritetty, odotetaan puskuroinnin päättymistä...\n"
 
-#: tools/gst-launch.c:510
+#: tools/gst-launch.c:525
+#, c-format
+msgid "buffering... %d  \r"
+msgstr ""
+
+#: tools/gst-launch.c:537
 #, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Puskurointi tehty, asetetaan liukuhihna tilaan SOI...\n"
 
-#: tools/gst-launch.c:518
+#: tools/gst-launch.c:545
 #, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Puskuroidaan, asetetaan liukuhihna tilaan TAUOLLA...\n"
 
-#: tools/gst-launch.c:533
-#, c-format
-msgid "Interrupt: Setting pipeline to PAUSED ...\n"
+#: tools/gst-launch.c:560
+#, fuzzy, c-format
+msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Keskeytys: Asetetaan liukuhihna tilaan TAUOLLA...\n"
 
-#: tools/gst-launch.c:569
+#: tools/gst-launch.c:595
 msgid "Output tags (also known as metadata)"
 msgstr "Tulostemerkinnät (tunnetaan myös metadatana)"
 
-#: tools/gst-launch.c:571
+#: tools/gst-launch.c:597
 msgid "Output status information and property notifications"
 msgstr "Tulostetilatiedot ja ominaisuushuomiot"
 
-#: tools/gst-launch.c:573
+#: tools/gst-launch.c:599
 msgid "Output messages"
 msgstr "Tulosteviestit"
 
-#: tools/gst-launch.c:575
+#: tools/gst-launch.c:601
 msgid "Do not output status information of TYPE"
 msgstr "Älä tulosta tilatietoa TYYPPI"
 
-#: tools/gst-launch.c:575
+#: tools/gst-launch.c:601
 msgid "TYPE1,TYPE2,..."
 msgstr "TYYPPI1,TYYPPI2,..."
 
-#: tools/gst-launch.c:578
+#: tools/gst-launch.c:604
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Tallenna liukuhihnan XML-esitys TIEDOSTOon ja poistu"
 
-#: tools/gst-launch.c:578
+#: tools/gst-launch.c:604
 msgid "FILE"
 msgstr "TIEDOSTO"
 
-#: tools/gst-launch.c:581
+#: tools/gst-launch.c:607
 msgid "Do not install a fault handler"
 msgstr "Älä asenna virheenkäsittelintä"
 
-#: tools/gst-launch.c:583
+#: tools/gst-launch.c:609
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr "Tulosta varausjälki (jos valittu käännöksen yhteydessä)"
 
-#: tools/gst-launch.c:651
+#: tools/gst-launch.c:677
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "VIRHE: liukuhihnaa ei voitu rakentaa: %s.\n"
 
-#: tools/gst-launch.c:655
+#: tools/gst-launch.c:681
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "VIRHE: liukuhihnaa ei voitu rakentaa.\n"
 
-#: tools/gst-launch.c:659
+#: tools/gst-launch.c:685
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "VAROITUS: virheellinen liukuhihna: %s\n"
 
-#: tools/gst-launch.c:686
+#: tools/gst-launch.c:712
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "VIRHE: \"liukuhihna\"-elementtiä ei löytynyt.\n"
 
-#: tools/gst-launch.c:692 tools/gst-launch.c:746
+#: tools/gst-launch.c:718 tools/gst-launch.c:788
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Asetetaan liukuhihna tilaan TAUOLLA...\n"
 
-#: tools/gst-launch.c:697
+#: tools/gst-launch.c:723
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "VIRHE: Liukuhihna ei halua mennä tauolle.\n"
 
-#: tools/gst-launch.c:702
+#: tools/gst-launch.c:728
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Liukuhihna on käynnissä eikä sitä tarvitse ESIRULLATA...\n"
 
-#: tools/gst-launch.c:705
+#: tools/gst-launch.c:732
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Liukuhihna ESIRULLAUTUU...\n"
 
-#: tools/gst-launch.c:708 tools/gst-launch.c:721
+#: tools/gst-launch.c:735 tools/gst-launch.c:748
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "VIRHE: Liukuhihna ei halua esirullautua.\n"
 
-#: tools/gst-launch.c:714
+#: tools/gst-launch.c:741
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Liukuhihna on ESIRULLATTU...\n"
 
-#: tools/gst-launch.c:726
+#: tools/gst-launch.c:753
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Asetetaan liukuhihna tilaan SOI...\n"
 
-#: tools/gst-launch.c:729
+#: tools/gst-launch.c:759
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "VIRHE: Liukuhihna ei halua toistaa.\n"
 
-#: tools/gst-launch.c:740
+#: tools/gst-launch.c:782
 msgid "Execution ended after %"
 msgstr "Suoritus päättyi jälkeen %"
 
-#: tools/gst-launch.c:750
+#: tools/gst-launch.c:792
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Asetetaan liukuhihna tilaan VALMIS...\n"
 
-#: tools/gst-launch.c:755
+#: tools/gst-launch.c:797
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Asetetaan liukuhihna tilaan TYHJÄ...\n"
 
-#: tools/gst-launch.c:760
+#: tools/gst-launch.c:802
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "VAPAUTETAAN liukuhihna...\n"
@@ -1087,13 +1165,19 @@ msgstr "VAPAUTETAAN liukuhihna...\n"
 #~ msgstr "Kuvan koodaus epäonnistui."
 
 #~ msgid "There is no element present to handle the stream's mime type %s."
-#~ msgstr "Käytettävissä ei ole elementtiä, joka käsittelisi tietovirran MIME-tyypin %s."
+#~ msgstr ""
+#~ "Käytettävissä ei ole elementtiä, joka käsittelisi tietovirran MIME-tyypin "
+#~ "%s."
 
 #~ msgid "stream type"
 #~ msgstr "tietovirran tyyppi"
 
-#~ msgid "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, max %s ns).\n"
-#~ msgstr "Suoritus päättyi %s läpikäynnin jälkeen (summa %s ns, keskiarvo %s ns, alin %s ns, ylin %s ns).\n"
+#~ msgid ""
+#~ "Execution ended after %s iterations (sum %s ns, average %s ns, min %s ns, "
+#~ "max %s ns).\n"
+#~ msgstr ""
+#~ "Suoritus päättyi %s läpikäynnin jälkeen (summa %s ns, keskiarvo %s ns, "
+#~ "alin %s ns, ylin %s ns).\n"
 
 #~ msgid "Number of times to iterate pipeline"
 #~ msgstr "Kuinka monta kertaa liukuhihna käydään läpi"

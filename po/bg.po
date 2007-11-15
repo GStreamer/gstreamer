@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.12\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-07-26 22:01+0200\n"
+"POT-Creation-Date: 2007-11-10 20:45+0000\n"
 "PO-Revision-Date: 2007-03-10 10:44+0200\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -16,30 +16,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: gst/gst.c:301
+#: gst/gst.c:304
 msgid "Print the GStreamer version"
 msgstr "Отпечатване на версията на GStreamer"
 
-#: gst/gst.c:303
+#: gst/gst.c:306
 msgid "Make all warnings fatal"
 msgstr "Всички предупреждения да са фатални"
 
-#: gst/gst.c:307
+#: gst/gst.c:310
 msgid "Print available debug categories and exit"
 msgstr "Отпечатване на наличните категории за изчистване на грешки и изход"
 
-#: gst/gst.c:311
+#: gst/gst.c:314
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
 "Стандартното ниво за изчистване на грешки - от 1 (само грешки) до 5 (всичко) "
 "или 0 - без никакви съобщения за изчистване на грешки"
 
-#: gst/gst.c:313
+#: gst/gst.c:316
 msgid "LEVEL"
 msgstr "НИВО"
 
-#: gst/gst.c:315
+#: gst/gst.c:318
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
@@ -48,31 +48,31 @@ msgstr ""
 "конкретните нива за съобщения за изчистване на грешки на отделните "
 "категории. Например: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
-#: gst/gst.c:318
+#: gst/gst.c:321
 msgid "LIST"
 msgstr "СПИСЪК"
 
-#: gst/gst.c:320
+#: gst/gst.c:323
 msgid "Disable colored debugging output"
 msgstr "Спиране на оцветените съобщения за изчистване на грешки"
 
-#: gst/gst.c:323
+#: gst/gst.c:326
 msgid "Disable debugging"
 msgstr "Спиране на съобщенията за изчистване на грешки"
 
-#: gst/gst.c:327
+#: gst/gst.c:330
 msgid "Enable verbose plugin loading diagnostics"
 msgstr "Включване на подробни съобщения при зареждане на приставка"
 
-#: gst/gst.c:331
+#: gst/gst.c:334
 msgid "Colon-separated paths containing plugins"
 msgstr "Пътища с приставки, разделени с двоеточие"
 
-#: gst/gst.c:331
+#: gst/gst.c:334
 msgid "PATHS"
 msgstr "ПЪТИЩА"
 
-#: gst/gst.c:334
+#: gst/gst.c:337
 msgid ""
 "Comma-separated list of plugins to preload in addition to the list stored in "
 "environment variable GST_PLUGIN_PATH"
@@ -81,44 +81,44 @@ msgstr ""
 "заредени в допълнение към тези от списъка в променливата на средата "
 "GST_PPLUGIN_PATH"
 
-#: gst/gst.c:336
+#: gst/gst.c:339
 msgid "PLUGINS"
 msgstr "ПРИСТАВКИ"
 
-#: gst/gst.c:339
+#: gst/gst.c:342
 msgid "Disable trapping of segmentation faults during plugin loading"
 msgstr ""
 "Спиране не прихващането на сегментационни грешки по времето на зареждане на "
 "приставка"
 
-#: gst/gst.c:344
+#: gst/gst.c:347
 msgid "Disable the use of fork() while scanning the registry"
 msgstr "При прочитането на регистъра да не се ползва fork()"
 
-#: gst/gst.c:365
+#: gst/gst.c:368
 msgid "GStreamer Options"
 msgstr "Настройки на GStreamer"
 
-#: gst/gst.c:366
+#: gst/gst.c:369
 msgid "Show GStreamer Options"
 msgstr "Показване на опциите на GStreamer"
 
-#: gst/gst.c:750
+#: gst/gst.c:753
 #, c-format
 msgid "Error writing registry cache to %s: %s"
 msgstr "Грешка при запазването на кеша на регистъра в „%s“: %s"
 
-#: gst/gst.c:792 gst/gst.c:808 gst/gst.c:853
+#: gst/gst.c:795 gst/gst.c:811 gst/gst.c:856
 #, c-format
 msgid "Error re-scanning registry %s: %s"
 msgstr "Грешка при повторното прочитане на регистъра „%s“: %s"
 
-#: gst/gst.c:868
+#: gst/gst.c:871
 #, c-format
 msgid "Error re-scanning registry %s"
 msgstr "Грешка при повторното прочитане на регистъра „%s“"
 
-#: gst/gst.c:1154
+#: gst/gst.c:1157
 msgid "Unknown option"
 msgstr "Непозната опция"
 
@@ -127,7 +127,7 @@ msgstr "Непозната опция"
 msgid "ERROR: from element %s: %s\n"
 msgstr "ГРЕШКА: от елемент %s: %s\n"
 
-#: gst/gstelement.c:292 gst/gstutils.c:2181 tools/gst-launch.c:455
+#: gst/gstelement.c:292 gst/gstutils.c:2181 tools/gst-launch.c:460
 #, c-format
 msgid ""
 "Additional debug info:\n"
@@ -317,7 +317,7 @@ msgstr "Няма съобщение за грешка за областта %s."
 msgid "No standard error message for domain %s and code %d."
 msgstr "Няма стандартно съобщение за грешка за областта %s с код %d."
 
-#: gst/gstpipeline.c:567
+#: gst/gstpipeline.c:530
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Избраният часовник не може да се използва в конвейер."
 
@@ -330,336 +330,372 @@ msgid "commonly used title"
 msgstr "популярно заглавие"
 
 #: gst/gsttaglist.c:100
+msgid "title sortname"
+msgstr ""
+
+#: gst/gsttaglist.c:100
+#, fuzzy
+msgid "commonly used title for sorting purposes"
+msgstr "популярно заглавие"
+
+#: gst/gsttaglist.c:103
 msgid "artist"
 msgstr "изпълнител"
 
-#: gst/gsttaglist.c:101
+#: gst/gsttaglist.c:104
 msgid "person(s) responsible for the recording"
 msgstr "отговорник/ци за записа"
 
-#: gst/gsttaglist.c:105
+#: gst/gsttaglist.c:108
+msgid "artist sortname"
+msgstr ""
+
+#: gst/gsttaglist.c:109
+#, fuzzy
+msgid "person(s) responsible for the recording for sorting purposes"
+msgstr "отговорник/ци за записа"
+
+#: gst/gsttaglist.c:112
 msgid "album"
 msgstr "албум"
 
-#: gst/gsttaglist.c:106
+#: gst/gsttaglist.c:113
 msgid "album containing this data"
 msgstr "албумът съдържащ тези данни"
 
-#: gst/gsttaglist.c:108
+#: gst/gsttaglist.c:116
+msgid "album sortname"
+msgstr ""
+
+#: gst/gsttaglist.c:117
+#, fuzzy
+msgid "album containing this data for sorting purposes"
+msgstr "албумът съдържащ тези данни"
+
+#: gst/gsttaglist.c:119
 msgid "date"
 msgstr "дата"
 
-#: gst/gsttaglist.c:108
+#: gst/gsttaglist.c:119
 msgid "date the data was created (as a GDate structure)"
 msgstr "датата на създаване на данните (като структура GDate)"
 
-#: gst/gsttaglist.c:111
+#: gst/gsttaglist.c:122
 msgid "genre"
 msgstr "жанр"
 
-#: gst/gsttaglist.c:112
+#: gst/gsttaglist.c:123
 msgid "genre this data belongs to"
 msgstr "жанрът на тези данни"
 
-#: gst/gsttaglist.c:115
+#: gst/gsttaglist.c:126
 msgid "comment"
 msgstr "коментар"
 
-#: gst/gsttaglist.c:116
+#: gst/gsttaglist.c:127
 msgid "free text commenting the data"
 msgstr "свободен текст относно данните"
 
-#: gst/gsttaglist.c:119
+#: gst/gsttaglist.c:130
 msgid "extended comment"
 msgstr "допълнителен коментар"
 
-#: gst/gsttaglist.c:120
+#: gst/gsttaglist.c:131
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
 "свободен текст относно данните във формат ключ=стойност или ключ[език]"
 "=коментар"
 
-#: gst/gsttaglist.c:124
+#: gst/gsttaglist.c:135
 msgid "track number"
 msgstr "номер на песента"
 
-#: gst/gsttaglist.c:125
+#: gst/gsttaglist.c:136
 msgid "track number inside a collection"
 msgstr "номер на песента в колекция"
 
-#: gst/gsttaglist.c:128
+#: gst/gsttaglist.c:139
 msgid "track count"
 msgstr "брой песни"
 
-#: gst/gsttaglist.c:129
+#: gst/gsttaglist.c:140
 msgid "count of tracks inside collection this track belongs to"
 msgstr "броят на песните в колекцията, към която принадлежи тази песен"
 
-#: gst/gsttaglist.c:133
+#: gst/gsttaglist.c:144
 msgid "disc number"
 msgstr "номер на диска"
 
-#: gst/gsttaglist.c:134
+#: gst/gsttaglist.c:145
 msgid "disc number inside a collection"
 msgstr "номер на диска от колекция"
 
-#: gst/gsttaglist.c:137
+#: gst/gsttaglist.c:148
 msgid "disc count"
 msgstr "брой дискове"
 
-#: gst/gsttaglist.c:138
+#: gst/gsttaglist.c:149
 msgid "count of discs inside collection this disc belongs to"
 msgstr "броят на дискове в колекция, към която принадлежи този диск"
 
-#: gst/gsttaglist.c:142
+#: gst/gsttaglist.c:153
 msgid "location"
 msgstr "местоположение"
 
-#: gst/gsttaglist.c:143
+#: gst/gsttaglist.c:154
 msgid "original location of file as a URI"
 msgstr "първоначалното местоположение като адрес"
 
-#: gst/gsttaglist.c:147
+#: gst/gsttaglist.c:158
 msgid "description"
 msgstr "описание"
 
-#: gst/gsttaglist.c:148
+#: gst/gsttaglist.c:159
 msgid "short text describing the content of the data"
 msgstr "кратък текст - съдържание"
 
-#: gst/gsttaglist.c:151
+#: gst/gsttaglist.c:162
 msgid "version"
 msgstr "версия"
 
-#: gst/gsttaglist.c:151
+#: gst/gsttaglist.c:162
 msgid "version of this data"
 msgstr "версията на тези данни"
 
-#: gst/gsttaglist.c:154
+#: gst/gsttaglist.c:165
 msgid "ISRC"
 msgstr "ISRC"
 
-#: gst/gsttaglist.c:156
+#: gst/gsttaglist.c:167
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr "Стандартен, международен код на запис - http://www.ifpi.org/isrc/"
 
-#: gst/gsttaglist.c:158
+#: gst/gsttaglist.c:169
 msgid "organization"
 msgstr "организация"
 
-#: gst/gsttaglist.c:161
+#: gst/gsttaglist.c:172
 msgid "copyright"
 msgstr "авторски права"
 
-#: gst/gsttaglist.c:161
+#: gst/gsttaglist.c:172
 msgid "copyright notice of the data"
 msgstr "означение на авторските права на данните"
 
-#: gst/gsttaglist.c:163
+#: gst/gsttaglist.c:174
 #, fuzzy
 msgid "copyright uri"
 msgstr "авторски права"
 
-#: gst/gsttaglist.c:164
+#: gst/gsttaglist.c:175
 #, fuzzy
 msgid "URI to the copyright notice of the data"
 msgstr "означение на авторските права на данните"
 
-#: gst/gsttaglist.c:167
+#: gst/gsttaglist.c:178
 msgid "contact"
 msgstr "контакт"
 
-#: gst/gsttaglist.c:167
+#: gst/gsttaglist.c:178
 msgid "contact information"
 msgstr "информация за контакт"
 
-#: gst/gsttaglist.c:169
+#: gst/gsttaglist.c:180
 msgid "license"
 msgstr "лиценз"
 
-#: gst/gsttaglist.c:169
+#: gst/gsttaglist.c:180
 msgid "license of data"
 msgstr "лиценз на данните"
 
-#: gst/gsttaglist.c:171
+#: gst/gsttaglist.c:182
 #, fuzzy
 msgid "license uri"
 msgstr "лиценз"
 
-#: gst/gsttaglist.c:172
+#: gst/gsttaglist.c:183
 #, fuzzy
 msgid "URI to the license of the data"
 msgstr "лиценз на данните"
 
-#: gst/gsttaglist.c:175
+#: gst/gsttaglist.c:186
 msgid "performer"
 msgstr "изпълнител"
 
-#: gst/gsttaglist.c:176
+#: gst/gsttaglist.c:187
 msgid "person(s) performing"
 msgstr "кой изпълнява данните"
 
-#: gst/gsttaglist.c:179
+#: gst/gsttaglist.c:190
+msgid "composer"
+msgstr ""
+
+#: gst/gsttaglist.c:191
+#, fuzzy
+msgid "person(s) who composed the recording"
+msgstr "отговорник/ци за записа"
+
+#: gst/gsttaglist.c:195
 msgid "duration"
 msgstr "продължителност"
 
-#: gst/gsttaglist.c:179
+#: gst/gsttaglist.c:195
 msgid "length in GStreamer time units (nanoseconds)"
 msgstr "продължителност в единици на GStreamer (наносекунди)"
 
-#: gst/gsttaglist.c:182
+#: gst/gsttaglist.c:198
 msgid "codec"
 msgstr "кодер"
 
-#: gst/gsttaglist.c:183
+#: gst/gsttaglist.c:199
 msgid "codec the data is stored in"
 msgstr "кодер, чрез който са съхранени данните"
 
-#: gst/gsttaglist.c:186
+#: gst/gsttaglist.c:202
 msgid "video codec"
 msgstr "видео кодер"
 
-#: gst/gsttaglist.c:186
+#: gst/gsttaglist.c:202
 msgid "codec the video data is stored in"
 msgstr "кодер, чрез който са съхранени видео данните"
 
-#: gst/gsttaglist.c:189
+#: gst/gsttaglist.c:205
 msgid "audio codec"
 msgstr "аудио кодер"
 
-#: gst/gsttaglist.c:189
+#: gst/gsttaglist.c:205
 msgid "codec the audio data is stored in"
 msgstr "кодер, чрез който са съхранени аудио данните"
 
-#: gst/gsttaglist.c:191
+#: gst/gsttaglist.c:207
 msgid "bitrate"
 msgstr "скорост на битовете"
 
-#: gst/gsttaglist.c:191
+#: gst/gsttaglist.c:207
 msgid "exact or average bitrate in bits/s"
 msgstr "точна или усреднена скорост на битовете"
 
-#: gst/gsttaglist.c:193
+#: gst/gsttaglist.c:209
 msgid "nominal bitrate"
 msgstr "номинална скорост на битовете"
 
-#: gst/gsttaglist.c:193
+#: gst/gsttaglist.c:209
 msgid "nominal bitrate in bits/s"
 msgstr "номинална скорост на битовете в bps"
 
-#: gst/gsttaglist.c:195
+#: gst/gsttaglist.c:211
 msgid "minimum bitrate"
 msgstr "минимална скорост на битовете"
 
-#: gst/gsttaglist.c:195
+#: gst/gsttaglist.c:211
 msgid "minimum bitrate in bits/s"
 msgstr "минимална скорост на битовете в bps"
 
-#: gst/gsttaglist.c:197
+#: gst/gsttaglist.c:213
 msgid "maximum bitrate"
 msgstr "максимална скорост на битовете"
 
-#: gst/gsttaglist.c:197
+#: gst/gsttaglist.c:213
 msgid "maximum bitrate in bits/s"
 msgstr "максимална скорост на битовете в bps"
 
-#: gst/gsttaglist.c:200
+#: gst/gsttaglist.c:216
 msgid "encoder"
 msgstr "кодер"
 
-#: gst/gsttaglist.c:200
+#: gst/gsttaglist.c:216
 msgid "encoder used to encode this stream"
 msgstr "кодер, чрез който е кодиран този поток"
 
-#: gst/gsttaglist.c:203
+#: gst/gsttaglist.c:219
 msgid "encoder version"
 msgstr "версия на кодера"
 
-#: gst/gsttaglist.c:204
+#: gst/gsttaglist.c:220
 msgid "version of the encoder used to encode this stream"
 msgstr "версия на кодера, чрез който е кодиран този поток"
 
-#: gst/gsttaglist.c:206
+#: gst/gsttaglist.c:222
 msgid "serial"
 msgstr "сер. №"
 
-#: gst/gsttaglist.c:206
+#: gst/gsttaglist.c:222
 msgid "serial number of track"
 msgstr "сериен номер на песента"
 
-#: gst/gsttaglist.c:208
+#: gst/gsttaglist.c:224
 msgid "replaygain track gain"
 msgstr "усилване на песента при изпълнение"
 
-#: gst/gsttaglist.c:208
+#: gst/gsttaglist.c:224
 msgid "track gain in db"
 msgstr "усилване на песента в db"
 
-#: gst/gsttaglist.c:210
+#: gst/gsttaglist.c:226
 msgid "replaygain track peak"
 msgstr "максимално усилване на песента при изпълнение"
 
-#: gst/gsttaglist.c:210
+#: gst/gsttaglist.c:226
 msgid "peak of the track"
 msgstr "максимално усилване на песента"
 
-#: gst/gsttaglist.c:212
+#: gst/gsttaglist.c:228
 msgid "replaygain album gain"
 msgstr "усилване на албума при изпълнение"
 
-#: gst/gsttaglist.c:212
+#: gst/gsttaglist.c:228
 msgid "album gain in db"
 msgstr "усилване на албума в db"
 
-#: gst/gsttaglist.c:214
+#: gst/gsttaglist.c:230
 msgid "replaygain album peak"
 msgstr "максимално усилване на албума при изпълнение"
 
-#: gst/gsttaglist.c:214
+#: gst/gsttaglist.c:230
 msgid "peak of the album"
 msgstr "максимално усилване на албума"
 
-#: gst/gsttaglist.c:216
+#: gst/gsttaglist.c:232
 msgid "replaygain reference level"
 msgstr "еталонно максимално усилване на песента при изпълнение"
 
-#: gst/gsttaglist.c:217
+#: gst/gsttaglist.c:233
 msgid "reference level of track and album gain values"
 msgstr "еталонно ниво на усилването на песните и албумите"
 
-#: gst/gsttaglist.c:219
+#: gst/gsttaglist.c:235
 msgid "language code"
 msgstr "езиков код"
 
-#: gst/gsttaglist.c:220
+#: gst/gsttaglist.c:236
 msgid "language code for this stream, conforming to ISO-639-1"
 msgstr "езиковият код на този поток според ISO-639-1"
 
-#: gst/gsttaglist.c:222
+#: gst/gsttaglist.c:238
 msgid "image"
 msgstr "изображение"
 
-#: gst/gsttaglist.c:222
+#: gst/gsttaglist.c:238
 msgid "image related to this stream"
 msgstr "изображение свързано с този поток"
 
-#: gst/gsttaglist.c:224
+#: gst/gsttaglist.c:240
 msgid "preview image"
 msgstr "изображение за преглед"
 
-#: gst/gsttaglist.c:224
+#: gst/gsttaglist.c:240
 msgid "preview image related to this stream"
 msgstr "изображение за преглед свързано с този поток"
 
-#: gst/gsttaglist.c:226
+#: gst/gsttaglist.c:242
 msgid "beats per minute"
 msgstr "такта в минута"
 
-#: gst/gsttaglist.c:226
+#: gst/gsttaglist.c:242
 msgid "number of beats per minute in audio"
 msgstr "броят тактове в минута в аудио"
 
-#: gst/gsttaglist.c:266
+#: gst/gsttaglist.c:282
 msgid ", "
 msgstr ", "
 
@@ -731,20 +767,20 @@ msgstr "не може да се свърже елемент-приемник к�
 msgid "empty pipeline not allowed"
 msgstr "празен конвейер не е позволен"
 
-#: libs/gst/base/gstbasesrc.c:1576
+#: libs/gst/base/gstbasesrc.c:1818
 #, fuzzy
 msgid "Internal clock error."
 msgstr "Вътрешна грешка на потока от данни."
 
-#: libs/gst/base/gstbasesrc.c:1815 libs/gst/base/gstbasesrc.c:1826
+#: libs/gst/base/gstbasesrc.c:2098 libs/gst/base/gstbasesrc.c:2109
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка на потока от данни."
 
-#: libs/gst/base/gstbasesink.c:2119
+#: libs/gst/base/gstbasesink.c:2523
 msgid "Internal data flow problem."
 msgstr "Вътрешен проблем на потока от данни."
 
-#: libs/gst/base/gstbasesink.c:2251
+#: libs/gst/base/gstbasesink.c:2665
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка на потока от данни."
 
@@ -821,61 +857,67 @@ msgstr "Файлът „%s“ е гнездо."
 msgid "Failed after iterations as requested."
 msgstr "Грешка след заявения брой повторения."
 
-#: plugins/elements/gsttypefindelement.c:190
+#: plugins/elements/gsttypefindelement.c:192
 msgid "caps"
 msgstr "възможности"
 
-#: plugins/elements/gsttypefindelement.c:191
+#: plugins/elements/gsttypefindelement.c:193
 msgid "detected capabilities in stream"
 msgstr "засечените възможности на потока"
 
-#: plugins/elements/gsttypefindelement.c:194
+#: plugins/elements/gsttypefindelement.c:196
 msgid "minimum"
 msgstr "минимум"
 
-#: plugins/elements/gsttypefindelement.c:198
+#: plugins/elements/gsttypefindelement.c:200
 msgid "maximum"
 msgstr "максимум"
 
-#: tools/gst-inspect.c:250
+#: plugins/elements/gsttypefindelement.c:493
+#: plugins/elements/gsttypefindelement.c:742
+#, fuzzy
+msgid "Stream contains no data."
+msgstr "албумът съдържащ тези данни"
+
+#: tools/gst-inspect.c:251
 msgid "Implemented Interfaces:\n"
 msgstr "Реализирани интерфейси:\n"
 
-#: tools/gst-inspect.c:292
+#: tools/gst-inspect.c:300
 msgid "readable"
 msgstr "с права за четене"
 
-#: tools/gst-inspect.c:297
+#: tools/gst-inspect.c:307
 msgid "writable"
 msgstr "с права за запис"
 
-#: tools/gst-inspect.c:302
+#: tools/gst-inspect.c:314
 msgid "controllable"
 msgstr "може да се контролира"
 
-#: tools/gst-inspect.c:926
+#: tools/gst-inspect.c:946
 msgid "Total count: "
 msgstr "Общ брой:"
 
-#: tools/gst-inspect.c:927
+#: tools/gst-inspect.c:947
 #, c-format
 msgid "%d plugin"
 msgid_plural "%d plugins"
 msgstr[0] "%d приставка"
 msgstr[1] "%d приставки"
 
-#: tools/gst-inspect.c:929
+#: tools/gst-inspect.c:949
 #, c-format
 msgid "%d feature"
 msgid_plural "%d features"
 msgstr[0] "%d свойство"
 msgstr[1] "%d свойства"
 
-#: tools/gst-inspect.c:1240
+#: tools/gst-inspect.c:1259
 msgid "Print all elements"
 msgstr "Отпечатване на всички елементи"
 
-#: tools/gst-inspect.c:1242
+#: tools/gst-inspect.c:1261
 msgid ""
 "Print a machine-parsable list of features the specified plugin provides.\n"
 "                                       Useful in connection with external "
@@ -886,63 +928,63 @@ msgstr ""
 "                                       Удобно във връзка с външни механизми "
 "за автоматично инсталиране на приставки"
 
-#: tools/gst-inspect.c:1322
+#: tools/gst-inspect.c:1341
 #, c-format
 msgid "Could not load plugin file: %s\n"
 msgstr "Файлът на приставката не може да бъде зареден: %s\n"
 
-#: tools/gst-inspect.c:1327
+#: tools/gst-inspect.c:1346
 #, c-format
 msgid "No such element or plugin '%s'\n"
 msgstr "Няма такъв елемент или приставка „%s“\n"
 
-#: tools/gst-launch.c:79
+#: tools/gst-launch.c:80
 msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 msgstr "Употреба: gst-xmllaunch <файл.xml> [ елемент.свойство=стойност ... ]\n"
 
-#: tools/gst-launch.c:88
+#: tools/gst-launch.c:89
 #, c-format
 msgid "ERROR: parse of xml file '%s' failed.\n"
 msgstr "ГРЕШКА: файлът с xml „%s“ не може да бъде анализиран.\n"
 
-#: tools/gst-launch.c:94
+#: tools/gst-launch.c:95
 #, c-format
 msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
 msgstr "ГРЕШКА: няма най-горен елемент за конвейер във файла „%s“.\n"
 
-#: tools/gst-launch.c:101
+#: tools/gst-launch.c:102
 #, c-format
 msgid "WARNING: only one toplevel element is supported at this time."
 msgstr "ПРЕДУПРЕЖДЕНИЕ: засега е позволен само един най-горен елемент."
 
-#: tools/gst-launch.c:112
+#: tools/gst-launch.c:113
 #, c-format
 msgid "ERROR: could not parse command line argument %d: %s.\n"
 msgstr ""
 "ГРЕШКА: аргументът подаден на командния ред не може да бъде анализиран %d: %"
 "s.\n"
 
-#: tools/gst-launch.c:123
+#: tools/gst-launch.c:124
 #, c-format
 msgid "WARNING: element named '%s' not found.\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: елементът на име „%s“ не е открит.\n"
 
-#: tools/gst-launch.c:393
+#: tools/gst-launch.c:394
 #, c-format
 msgid "Got Message from element \"%s\" (%s): "
 msgstr "Получено е съобщение от елемента „%s“ (%s): "
 
-#: tools/gst-launch.c:419
+#: tools/gst-launch.c:420
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
 msgstr "Получен е EOS (край на потока) от елемент „%s“.\n"
 
-#: tools/gst-launch.c:427
+#: tools/gst-launch.c:428
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
 msgstr "ОТКРИТ ЕТИКЕТ      : открит към елемент „%s“.\n"
 
-#: tools/gst-launch.c:440
+#: tools/gst-launch.c:441
 #, c-format
 msgid ""
 "INFO:\n"
@@ -951,144 +993,149 @@ msgstr ""
 "ИНФОРМАЦИЯ:\n"
 "%s\n"
 
-#: tools/gst-launch.c:453
+#: tools/gst-launch.c:458
 #, c-format
 msgid "WARNING: from element %s: %s\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: от елемент %s: %s\n"
 
-#: tools/gst-launch.c:487
+#: tools/gst-launch.c:510
 #, c-format
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr ""
 
-#: tools/gst-launch.c:510
+#: tools/gst-launch.c:525
+#, c-format
+msgid "buffering... %d  \r"
+msgstr ""
+
+#: tools/gst-launch.c:537
 #, fuzzy, c-format
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr "Конвейерът се дава за ИЗПЪЛНЕНИЕ...\n"
 
-#: tools/gst-launch.c:518
+#: tools/gst-launch.c:545
 #, fuzzy, c-format
 msgid "Buffering, setting pipeline to PAUSED ...\n"
 msgstr "Конвейерът се дава НА ПАУЗА...\n"
 
-#: tools/gst-launch.c:533
-#, c-format
-msgid "Interrupt: Setting pipeline to PAUSED ...\n"
+#: tools/gst-launch.c:560
+#, fuzzy, c-format
+msgid "Interrupt: Stopping pipeline ...\n"
 msgstr "Прекъсване: Конвейерът се дава НА ПАУЗА...\n"
 
-#: tools/gst-launch.c:569
+#: tools/gst-launch.c:595
 msgid "Output tags (also known as metadata)"
 msgstr "Изходни съобщения за етикетите (метаданните)"
 
-#: tools/gst-launch.c:571
+#: tools/gst-launch.c:597
 msgid "Output status information and property notifications"
 msgstr "Да се дават изходни съобщения за състоянието и промяната на свойства"
 
-#: tools/gst-launch.c:573
+#: tools/gst-launch.c:599
 msgid "Output messages"
 msgstr "Изходни съобщения"
 
-#: tools/gst-launch.c:575
+#: tools/gst-launch.c:601
 msgid "Do not output status information of TYPE"
 msgstr "Да не се дават изходни съобщения от следните ВИДове за състоянието "
 
-#: tools/gst-launch.c:575
+#: tools/gst-launch.c:601
 msgid "TYPE1,TYPE2,..."
 msgstr "ВИД1,ВИД2,..."
 
-#: tools/gst-launch.c:578
+#: tools/gst-launch.c:604
 msgid "Save xml representation of pipeline to FILE and exit"
 msgstr "Запазване на конвейера във вид на XML във ФАЙЛа и изход"
 
-#: tools/gst-launch.c:578
+#: tools/gst-launch.c:604
 msgid "FILE"
 msgstr "ФАЙЛ"
 
-#: tools/gst-launch.c:581
+#: tools/gst-launch.c:607
 msgid "Do not install a fault handler"
 msgstr "Да не се инсталира обработчик на грешки"
 
-#: tools/gst-launch.c:583
+#: tools/gst-launch.c:609
 msgid "Print alloc trace (if enabled at compile time)"
 msgstr ""
 "Отпечатване на заделянето на памет (ако е било включено при компилиране на "
 "програмата)"
 
-#: tools/gst-launch.c:651
+#: tools/gst-launch.c:677
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
 msgstr "ГРЕШКА: конвейерът не може да бъде конструиран: %s.\n"
 
-#: tools/gst-launch.c:655
+#: tools/gst-launch.c:681
 #, c-format
 msgid "ERROR: pipeline could not be constructed.\n"
 msgstr "ГРЕШКА: конвейерът не може да бъде конструиран.\n"
 
-#: tools/gst-launch.c:659
+#: tools/gst-launch.c:685
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
 msgstr "ПРЕДУПРЕЖДЕНИЕ: конвейер с грешки: %s\n"
 
-#: tools/gst-launch.c:686
+#: tools/gst-launch.c:712
 #, c-format
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
 msgstr "ГРЕШКА: не е открит елемент за конвейер - „pipeline“.\n"
 
-#: tools/gst-launch.c:692 tools/gst-launch.c:746
+#: tools/gst-launch.c:718 tools/gst-launch.c:788
 #, c-format
 msgid "Setting pipeline to PAUSED ...\n"
 msgstr "Конвейерът се дава НА ПАУЗА...\n"
 
-#: tools/gst-launch.c:697
+#: tools/gst-launch.c:723
 #, c-format
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ГРЕШКА: конвейерът не изпълнява даването на пауза.\n"
 
-#: tools/gst-launch.c:702
+#: tools/gst-launch.c:728
 #, c-format
 msgid "Pipeline is live and does not need PREROLL ...\n"
 msgstr "Конвейерът работи и не се нуждае от БУФЕРИРАНЕ...\n"
 
-#: tools/gst-launch.c:705
+#: tools/gst-launch.c:732
 #, c-format
 msgid "Pipeline is PREROLLING ...\n"
 msgstr "Конвейерът се БУФЕРИРА...\n"
 
-#: tools/gst-launch.c:708 tools/gst-launch.c:721
+#: tools/gst-launch.c:735 tools/gst-launch.c:748
 #, c-format
 msgid "ERROR: pipeline doesn't want to preroll.\n"
 msgstr "ГРЕШКА: конвейерът не иска да превърти напред.\n"
 
-#: tools/gst-launch.c:714
+#: tools/gst-launch.c:741
 #, c-format
 msgid "Pipeline is PREROLLED ...\n"
 msgstr "Конвейерът е БУФЕРИРАН...\n"
 
-#: tools/gst-launch.c:726
+#: tools/gst-launch.c:753
 #, c-format
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Конвейерът се дава за ИЗПЪЛНЕНИЕ...\n"
 
-#: tools/gst-launch.c:729
+#: tools/gst-launch.c:759
 #, c-format
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "ГРЕШКА: конвейерът не иска да проработи.\n"
 
-#: tools/gst-launch.c:740
+#: tools/gst-launch.c:782
 msgid "Execution ended after %"
 msgstr "Изпълнението завърши след %"
 
-#: tools/gst-launch.c:750
+#: tools/gst-launch.c:792
 #, c-format
 msgid "Setting pipeline to READY ...\n"
 msgstr "Конвейерът е в ГОТОВНОСТ...\n"
 
-#: tools/gst-launch.c:755
+#: tools/gst-launch.c:797
 #, c-format
 msgid "Setting pipeline to NULL ...\n"
 msgstr "Конвейерът се ЗАНУЛЯВА...\n"
 
-#: tools/gst-launch.c:760
+#: tools/gst-launch.c:802
 #, c-format
 msgid "FREEING pipeline ...\n"
 msgstr "ОСВОБОЖДАВАНЕ на конвейера...\n"
