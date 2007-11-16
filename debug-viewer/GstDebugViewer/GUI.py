@@ -51,6 +51,33 @@ from GstDebugViewer.Common import utils
 
 from GstDebugViewer import Data, Main
 
+class ColorTheme (object):
+
+    def __init__ (self):
+
+        self.colors = {}
+
+    def add_color (self, key, fg_color, bg_color = None, bg_color2 = None):
+
+        self.colors[key] = (fg_color, bg_color, bg_color2,)
+
+class LevelColorTheme (ColorTheme):
+
+    pass
+
+class LevelColorThemeTango (LevelColorTheme):
+
+    def __init__ (self):
+
+        LevelColorTheme.__init__ (self)
+
+        self.add_color (Data.debug_level_none, None, None, None)
+        self.add_color (Data.debug_level_log, "#000000", "#ad7fa8", "#e0a4d9")
+        self.add_color (Data.debug_level_debug, "#000000", "#729fcf", "#8cc4ff")
+        self.add_color (Data.debug_level_info, "#000000", "#8ae234", "#9dff3b")
+        self.add_color (Data.debug_level_warning, "#000000", "#fcaf3e", "#ffc266")
+        self.add_color (Data.debug_level_error, "#ffffff", "#ef2929", "#ff4545")
+
 class LogModelBase (gtk.GenericTreeModel):
 
     __metaclass__ = Common.GUI.MetaModel
@@ -325,6 +352,7 @@ class Column (object):
     id = None
     label_header = None
     get_modify_func = None
+    get_data_func = None
     get_sort_func = None
 
     def __init__ (self):
@@ -360,7 +388,13 @@ class TextColumn (SizedColumn):
             cell.props.family = self.font_family
             cell.props.family_set = True
 
-        if not self.get_modify_func:
+        if self.get_data_func:
+            data_func = self.get_data_func ()
+            id_ = self.id
+            def cell_data_func (column, cell, model, tree_iter):
+                data_func (cell.props, model.get (tree_iter, id_)[0], model.get_path (tree_iter))
+            column.set_cell_data_func (cell, cell_data_func)
+        elif not self.get_modify_func:
             column.add_attribute (cell, "text", self.id)
         else:
             modify_func = self.get_modify_func ()
@@ -437,6 +471,23 @@ class LevelColumn (TextColumn):
             return value.name[0]
 
         return format_level
+
+    @staticmethod
+    def get_data_func ():
+
+        theme = LevelColorThemeTango ()
+        colors = theme.colors
+        def level_data_func (cell_props, level, path):
+            cell_props.text = level.name[0]
+            cell_colors = colors[level]
+            # FIXME: Use GdkColors!
+            cell_props.foreground = cell_colors[0]
+            if path[0] % 2:
+                cell_props.background = cell_colors[1]
+            else:
+                cell_props.background = cell_colors[2]
+
+        return level_data_func
 
     def get_values_for_size (self):
 
