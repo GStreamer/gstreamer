@@ -257,7 +257,7 @@ class LazyLogModel (LogModelBase):
             ## level = Data.DebugLevel (level_s)
             match = self.__line_regex.match (regex_line[:-len (os.linesep)])
         except ValueError:
-            level = Data.DebugLevelNone
+            level = Data.debug_level_none
             match = None
 
         if match is None:
@@ -440,8 +440,9 @@ class LevelColumn (TextColumn):
 
     def get_values_for_size (self):
 
-        values = [Data.DebugLevelLog, Data.DebugLevelDebug, Data.DebugLevelInfo,
-                  Data.DebugLevelWarning, Data.DebugLevelError]
+        values = [Data.debug_level_log, Data.debug_level_debug,
+                  Data.debug_level_info, Data.debug_level_warning,
+                  Data.debug_level_error]
 
         return values
 

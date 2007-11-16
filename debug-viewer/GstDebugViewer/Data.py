@@ -92,12 +92,12 @@ class DebugLevel (int):
 
         return DebugLevel (self - 1)
 
-DebugLevelNone = DebugLevel ("NONE")
-DebugLevelError = DebugLevel ("ERROR")
-DebugLevelWarning = DebugLevel ("WARN")
-DebugLevelInfo = DebugLevel ("INFO")
-DebugLevelDebug = DebugLevel ("DEBUG")
-DebugLevelLog = DebugLevel ("LOG")
+debug_level_none = DebugLevel ("NONE")
+debug_level_error = DebugLevel ("ERROR")
+debug_level_warning = DebugLevel ("WARN")
+debug_level_info = DebugLevel ("INFO")
+debug_level_debug = DebugLevel ("DEBUG")
+debug_level_log = DebugLevel ("LOG")
 
 # For stripping color codes:
 _escape = re.compile ("\x1b\\[[0-9;]*m")
@@ -198,8 +198,9 @@ class LineCache (Producer):
         level_len = 5
         level_offset = ts_len + 1 + pid_len + 1 + thread_len + 1
         level_end = level_offset + 1
-        dict_levels = {"D" : DebugLevelDebug, "L" : DebugLevelLog, "I" : DebugLevelInfo,
-                       "E" : DebugLevelError, "W" : DebugLevelWarning, " " : DebugLevelNone}
+        dict_levels = {"D" : debug_level_debug, "L" : debug_level_log,
+                       "I" : debug_level_info, "E" : debug_level_error,
+                       "W" : debug_level_warning, " " : debug_level_none}
 
         readline = self.__fileobj.readline
         tell = self.__fileobj.tell
