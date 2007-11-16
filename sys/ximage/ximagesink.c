@@ -1214,6 +1214,7 @@ gst_ximagesink_xcontext_get (GstXImageSink * ximagesink)
   if (!px_formats) {
     XCloseDisplay (xcontext->disp);
     g_mutex_unlock (ximagesink->x_lock);
+    g_free (xcontext->par);
     g_free (xcontext);
     return NULL;
   }

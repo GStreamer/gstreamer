@@ -1645,7 +1645,6 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   GST_DEBUG_OBJECT (xvimagesink, "X reports %dx%d pixels and %d mm x %d mm",
       xcontext->width, xcontext->height, xcontext->widthmm, xcontext->heightmm);
 
-
   gst_xvimagesink_calculate_pixel_aspect_ratio (xcontext);
   /* We get supported pixmap formats at supported depth */
   px_formats = XListPixmapFormats (xcontext->disp, &nb_formats);
@@ -1653,6 +1652,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   if (!px_formats) {
     XCloseDisplay (xcontext->disp);
     g_mutex_unlock (xvimagesink->x_lock);
+    g_free (xcontext->par);
     g_free (xcontext);
     GST_ELEMENT_ERROR (xvimagesink, RESOURCE, SETTINGS,
         ("Could not initialise Xv output"), ("Could not get pixel formats"));
@@ -1690,6 +1690,7 @@ gst_xvimagesink_xcontext_get (GstXvImageSink * xvimagesink)
   if (!xcontext->caps) {
     XCloseDisplay (xcontext->disp);
     g_mutex_unlock (xvimagesink->x_lock);
+    g_free (xcontext->par);
     g_free (xcontext);
     /* GST_ELEMENT_ERROR is thrown by gst_xvimagesink_get_xv_support */
     return NULL;

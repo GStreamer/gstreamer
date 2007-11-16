@@ -1,3 +1,12 @@
+2007-11-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
+
+	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get),
+	(gst_ximagesink_change_state):
+	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_get):
+	Don't leak the PAR on errors. Fixes #496731.
+
 2007-11-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/tag/gstid3tag.c: (user_tag_matches),
