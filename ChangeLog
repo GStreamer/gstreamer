@@ -1,6 +1,11 @@
 2007-11-16  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst-plugins-base.doap:
+	Oops, fix the release name.
+
+2007-11-16  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst-plugins-base.doap:
 	Add 0.10.15 release
 
 2007-11-16  Jan Schmidt  <jan.schmidt@sun.com>

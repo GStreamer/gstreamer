@@ -39,7 +39,7 @@ A wide range of video and audio decoders, encoders, and filters are included.
   <Version>
    <revision>0.10.15</revision>
    <branch>0.10</branch>
-   <name>Light Years Ahead</name>
+   <name>No need to argue</name>
    <created>2007-11-15</created>
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.15.tar.bz2" />
    <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-base/gst-plugins-base-0.10.15.tar.gz" />
