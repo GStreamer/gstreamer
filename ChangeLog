@@ -2,6 +2,13 @@
 
 	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
 
+	* gst-libs/gst/rtsp/gstrtspmessage.c: (gst_rtsp_message_unset):
+	Fix leaking headers. Fixes #496761.
+
+2007-11-16  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
+
 	* sys/ximage/ximagesink.c: (gst_ximagesink_xcontext_get),
 	(gst_ximagesink_change_state):
 	* sys/xvimage/xvimagesink.c: (gst_xvimagesink_xcontext_get):

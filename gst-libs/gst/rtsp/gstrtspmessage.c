@@ -452,9 +452,16 @@ gst_rtsp_message_unset (GstRTSPMessage * msg)
       break;
   }
 
-  if (msg->hdr_fields != NULL)
-    g_array_free (msg->hdr_fields, TRUE);
+  if (msg->hdr_fields != NULL) {
+    gint i;
 
+    for (i = 0; i < msg->hdr_fields->len; i++) {
+      RTSPKeyValue *keyval = &g_array_index (msg->hdr_fields, RTSPKeyValue, i);
+
+      g_free (keyval->value);
+    }
+    g_array_free (msg->hdr_fields, TRUE);
+  }
   g_free (msg->body);
 
   memset (msg, 0, sizeof *msg);
