@@ -191,15 +191,15 @@ class LineCache (Producer):
         offsets = self.offsets
         levels = self.levels
 
-        ## # FIXME: Duplicated from GUI.LazyLogModel!
-        ## ts_len = 17
-        ## pid_len = 5
-        ## thread_len = 9 # FIXME: %p, so this should be larger on a 64 bit CPU, no?
-        ## level_len = 5
-        ## level_offset = ts_len + 1 + pid_len + 1 + thread_len + 1
-        ## level_end = level_offset + 1
-        ## dict_levels = {"D" : DebugLevelDebug, "L" : DebugLevelLog, "I" : DebugLevelInfo,
-        ##                "E" : DebugLevelError, "W" : DebugLevelWarning, " " : DebugLevelNone}
+        # FIXME: Duplicated from GUI.LazyLogModel!
+        ts_len = 17
+        pid_len = 5
+        thread_len = 9 # FIXME: %p, so this should be larger on a 64 bit CPU, no?
+        level_len = 5
+        level_offset = ts_len + 1 + pid_len + 1 + thread_len + 1
+        level_end = level_offset + 1
+        dict_levels = {"D" : DebugLevelDebug, "L" : DebugLevelLog, "I" : DebugLevelInfo,
+                       "E" : DebugLevelError, "W" : DebugLevelWarning, " " : DebugLevelNone}
 
         readline = self.__fileobj.readline
         tell = self.__fileobj.tell
@@ -221,7 +221,7 @@ class LineCache (Producer):
                 # No timestamp at start, ignore line:
                 continue
             offsets.append (offset)
-            ## levels.append (dict_levels[line[level_offset:level_end]])
+            levels.append (dict_levels[line[level_offset:level_end]])
             i += 1
             if i >= limit:
                 i = 0

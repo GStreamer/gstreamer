@@ -73,6 +73,7 @@ class LogModelBase (gtk.GenericTreeModel):
         ##self.props.leak_references = False
 
         self.line_offsets = []
+        self.line_levels = [] # FIXME: Not so nice!
         self.line_cache = {}
 
     def ensure_cached (self, line_offset):
@@ -85,9 +86,11 @@ class LogModelBase (gtk.GenericTreeModel):
 
     def iter_rows_offset (self):
 
-        for offset in self.line_offsets:
+        for i, offset in enumerate (self.line_offsets):
             self.ensure_cached (offset)
-            yield (self.line_cache[offset], offset,)
+            row = self.line_cache[offset]
+            row[self.COL_LEVEL] = self.line_levels[i] # FIXME
+            yield (row, offset,)
 
     def on_get_flags (self):
 
@@ -131,6 +134,9 @@ class LogModelBase (gtk.GenericTreeModel):
 
         if line_index > last_index:
             return None
+
+        if col_id == self.COL_LEVEL:
+            return self.line_levels[line_index]
 
         line_offset = self.line_offsets[line_index]
         self.ensure_cached (line_offset)
@@ -206,6 +212,7 @@ class LazyLogModel (LogModelBase):
 
         self.line_cache.clear ()
         self.line_offsets = log_obj.line_cache.offsets
+        self.line_levels = log_obj.line_cache.levels
 
     def access_offset (self, offset):
 
@@ -242,12 +249,12 @@ class LazyLogModel (LogModelBase):
         prefix = non_regex_line.rstrip ()
         while "  " in prefix:
             prefix = prefix.replace ("  ", " ")
-        ts_s, pid_s, thread_s, level_s = prefix.split (" ")
+        ts_s, pid_s, thread_s = prefix.split (" ")[:-1] # Omits level.
         ts = Data.parse_time (ts_s)
         pid = int (pid_s)
         thread = int (thread_s, 16)
         try:
-            level = Data.DebugLevel (level_s)
+            ## level = Data.DebugLevel (level_s)
             match = self.__line_regex.match (regex_line[:-len (os.linesep)])
         except ValueError:
             level = Data.DebugLevelNone
@@ -255,9 +262,10 @@ class LazyLogModel (LogModelBase):
 
         if match is None:
             # FIXME?
-            groups = [ts, pid, thread, level, "", "", 0, "", "", non_regex_len]
-        else:            
-            groups = [ts, pid, thread, level] + list (match.groups ()) + [non_regex_len + match.end ()]
+            groups = [ts, pid, thread, 0, "", "", 0, "", "", non_regex_len]
+        else:
+            # FIXME: Level (the 0 after thread) needs to be moved out of here!
+            groups = [ts, pid, thread, 0] + list (match.groups ()) + [non_regex_len + match.end ()]
 
             for col_id in (self.COL_CATEGORY, self.COL_FILENAME, self.COL_FUNCTION,
                            self.COL_OBJECT,):
@@ -284,6 +292,8 @@ class FilteredLogModel (LogModelBase):
 
         del self.line_offsets[:]
         self.line_offsets += self.parent_model.line_offsets
+        del self.line_levels[:]
+        self.line_levels += self.parent_model.line_levels
 
     def add_filter (self, filter):
 
