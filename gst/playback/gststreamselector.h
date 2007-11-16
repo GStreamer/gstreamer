@@ -42,9 +42,12 @@ typedef struct _GstStreamSelectorClass GstStreamSelectorClass;
 struct _GstStreamSelector {
   GstElement element;
 
-  GstPad *active_sinkpad;
   GstPad *srcpad;
+
+  GstPad *active_sinkpad;
   guint nb_sinkpads;
+
+  GstSegment segment;
 };
 
 struct _GstStreamSelectorClass {
