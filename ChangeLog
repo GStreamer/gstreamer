@@ -1,5 +1,23 @@
 2007-11-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_class_init),
+	(gst_decode_group_check_if_drained), (source_pad_event_probe),
+	(remove_fakesink):
+	Add drained signal fired when decodebin finishes decoding the data.
+	Remove deprecated STATE_DIRTY message.
+
+	* gst/playback/gsturidecodebin.c: (gst_uri_decode_bin_class_init),
+	(unknown_type_cb), (new_decoded_pad_cb), (pad_removed_cb),
+	(analyse_source), (proxy_drained_signal), (make_decoder),
+	(source_new_pad), (value_list_append_structure_list),
+	(handle_redirect_message), (handle_message):
+	Proxy the new drained signal.
+	Handle pad removed from decodebin.
+	Handle redirect messages by sorting multiple redirections based on the
+	connection speed.
+
+2007-11-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
 
 	* gst-libs/gst/rtsp/gstrtspmessage.c: (gst_rtsp_message_unset):

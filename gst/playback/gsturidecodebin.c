@@ -87,6 +87,9 @@ struct _GstURIDecodeBinClass
   /* signal fired to select from the proposed list of factories */
     gint (*autoplug_select) (GstElement * element, GstPad * pad, GstCaps * caps,
       GValueArray * factories);
+
+  /* emited when all data is decoded */
+  void (*drained) (GstElement * element);
 };
 
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src%d",
@@ -110,6 +113,7 @@ enum
   SIGNAL_AUTOPLUG_CONTINUE,
   SIGNAL_AUTOPLUG_FACTORIES,
   SIGNAL_AUTOPLUG_SELECT,
+  SIGNAL_DRAINED,
   LAST_SIGNAL
 };
 
@@ -138,6 +142,8 @@ static void gst_uri_decode_bin_set_property (GObject * object, guint prop_id,
 static void gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_uri_decode_bin_finalize (GObject * obj);
+
+static void handle_message (GstBin * bin, GstMessage * msg);
 
 static gboolean gst_uri_decode_bin_query (GstElement * element,
     GstQuery * query);
@@ -287,9 +293,22 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
       gst_play_marshal_INT__OBJECT_OBJECT_BOXED, G_TYPE_INT, 3, GST_TYPE_PAD,
       GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
 
+  /**
+   * GstURIDecodeBin::drained:
+   *
+   * This signal is emitted when the data for the current uri is played.
+   */
+  gst_uri_decode_bin_signals[SIGNAL_DRAINED] =
+      g_signal_new ("drained", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstURIDecodeBinClass, drained), NULL, NULL,
+      gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
+
   gstelement_class->query = GST_DEBUG_FUNCPTR (gst_uri_decode_bin_query);
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_change_state);
+
+  gstbin_class->handle_message = GST_DEBUG_FUNCPTR (handle_message);
 
   klass->autoplug_continue =
       GST_DEBUG_FUNCPTR (gst_uri_decode_bin_autoplug_continue);
@@ -390,7 +409,7 @@ gst_uri_decode_bin_get_property (GObject * object, guint prop_id,
 #define DEFAULT_QUEUE_THRESHOLD     ((DEFAULT_QUEUE_SIZE * 95) / 100)
 
 static void
-unknown_type (GstElement * element, GstPad * pad, GstCaps * caps,
+unknown_type_cb (GstElement * element, GstPad * pad, GstCaps * caps,
     GstURIDecodeBin * decoder)
 {
   gchar *capsstr;
@@ -472,7 +491,7 @@ source_no_more_pads (GstElement * element, GstURIDecodeBin * bin)
  * found a new raw pad.  
  */
 static void
-new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
+new_decoded_pad_cb (GstElement * element, GstPad * pad, gboolean last,
     GstURIDecodeBin * decoder)
 {
   GstPad *newpad;
@@ -489,8 +508,39 @@ new_decoded_pad (GstElement * element, GstPad * pad, gboolean last,
   newpad = gst_ghost_pad_new (padname, pad);
   g_free (padname);
 
+  /* store ref to the ghostpad so we can remove it */
+  g_object_set_data (G_OBJECT (pad), "uridecodebin.ghostpad", newpad);
+
   gst_pad_set_active (newpad, TRUE);
   gst_element_add_pad (GST_ELEMENT_CAST (decoder), newpad);
+}
+
+static void
+pad_removed_cb (GstElement * element, GstPad * pad, GstURIDecodeBin * decoder)
+{
+  GstPad *ghost;
+
+  GST_DEBUG_OBJECT (element, "pad removed name: <%s:%s>",
+      GST_DEBUG_PAD_NAME (pad));
+
+  if (!(ghost = g_object_get_data (G_OBJECT (pad), "uridecodebin.ghostpad")))
+    goto no_ghost;
+
+  /* unghost the pad */
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (ghost), NULL);
+
+  /* deactivate and remove */
+  gst_pad_set_active (pad, FALSE);
+  gst_element_remove_pad (GST_ELEMENT_CAST (decoder), ghost);
+
+  return;
+
+  /* ERRORS */
+no_ghost:
+  {
+    GST_WARNING_OBJECT (element, "no ghost pad found");
+    return;
+  }
 }
 
 /* helper function to lookup stuff in lists */
@@ -718,7 +768,7 @@ analyse_source (GstURIDecodeBin * decoder, gboolean * is_raw,
 
         /* caps on source pad are all raw, we can add the pad */
         if (*is_raw)
-          new_decoded_pad (decoder->source, pad, FALSE, decoder);
+          new_decoded_pad_cb (decoder->source, pad, FALSE, decoder);
         break;
     }
   }
@@ -825,6 +875,13 @@ proxy_autoplug_select_signal (GstElement * element, GstPad * pad,
   return result;
 }
 
+static void
+proxy_drained_signal (GstElement * element, GstURIDecodeBin * dec)
+{
+  g_signal_emit (G_OBJECT (dec),
+      gst_uri_decode_bin_signals[SIGNAL_DRAINED], 0, NULL);
+}
+
 static GstElement *
 make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
 {
@@ -844,6 +901,8 @@ make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
       G_CALLBACK (proxy_autoplug_factories_signal), decoder);
   g_signal_connect (G_OBJECT (decodebin), "autoplug-select",
       G_CALLBACK (proxy_autoplug_select_signal), decoder);
+  g_signal_connect (G_OBJECT (decodebin), "drained",
+      G_CALLBACK (proxy_drained_signal), decoder);
 
   if (use_queue) {
     GstElement *queue;
@@ -876,11 +935,13 @@ make_decoder (GstURIDecodeBin * decoder, gboolean use_queue)
   /* set up callbacks to create the links between decoded data
    * and video/audio/subtitle rendering/output. */
   g_signal_connect (G_OBJECT (decodebin),
-      "new-decoded-pad", G_CALLBACK (new_decoded_pad), decoder);
+      "new-decoded-pad", G_CALLBACK (new_decoded_pad_cb), decoder);
+  g_signal_connect (G_OBJECT (decodebin),
+      "pad-removed", G_CALLBACK (pad_removed_cb), decoder);
   g_signal_connect (G_OBJECT (decodebin), "no-more-pads",
       G_CALLBACK (no_more_pads), decoder);
   g_signal_connect (G_OBJECT (decodebin),
-      "unknown-type", G_CALLBACK (unknown_type), decoder);
+      "unknown-type", G_CALLBACK (unknown_type_cb), decoder);
   g_object_set_data (G_OBJECT (decodebin), "pending", "1");
   decoder->pending++;
 
@@ -940,7 +1001,7 @@ source_new_pad (GstElement * element, GstPad * pad, GstURIDecodeBin * bin)
   /* if this is a pad with all raw caps, we can expose it */
   if (has_all_raw_caps (pad, &is_raw) && is_raw) {
     /* it's all raw, create output pads. */
-    new_decoded_pad (element, pad, FALSE, bin);
+    new_decoded_pad_cb (element, pad, FALSE, bin);
     return;
   }
 
@@ -1067,6 +1128,107 @@ could_not_link:
         (NULL), ("Can't link source to decoder element"));
     return FALSE;
   }
+}
+
+static void
+value_list_append_structure_list (GValue * list_val, GstStructure ** first,
+    GList * structure_list)
+{
+  GList *l;
+
+  for (l = structure_list; l != NULL; l = l->next) {
+    GValue val = { 0, };
+
+    if (*first == NULL)
+      *first = gst_structure_copy ((GstStructure *) l->data);
+
+    g_value_init (&val, GST_TYPE_STRUCTURE);
+    g_value_take_boxed (&val, gst_structure_copy ((GstStructure *) l->data));
+    gst_value_list_append_value (list_val, &val);
+    g_value_unset (&val);
+  }
+}
+
+/* if it's a redirect message with multiple redirect locations we might
+ * want to pick a different 'best' location depending on the required
+ * bitrates and the connection speed */
+static GstMessage *
+handle_redirect_message (GstURIDecodeBin * dec, GstMessage * msg)
+{
+  const GValue *locations_list, *location_val;
+  GstMessage *new_msg;
+  GstStructure *new_structure = NULL;
+  GList *l_good = NULL, *l_neutral = NULL, *l_bad = NULL;
+  GValue new_list = { 0, };
+  guint size, i;
+
+  GST_DEBUG_OBJECT (dec, "redirect message: %" GST_PTR_FORMAT, msg);
+  GST_DEBUG_OBJECT (dec, "connection speed: %u", dec->connection_speed);
+
+  if (dec->connection_speed == 0 || msg->structure == NULL)
+    return msg;
+
+  locations_list = gst_structure_get_value (msg->structure, "locations");
+  if (locations_list == NULL)
+    return msg;
+
+  size = gst_value_list_get_size (locations_list);
+  if (size < 2)
+    return msg;
+
+  /* maintain existing order as much as possible, just sort references
+   * with too high a bitrate to the end (the assumption being that if
+   * bitrates are given they are given for all interesting streams and
+   * that the you-need-at-least-version-xyz redirect has the same bitrate
+   * as the lowest referenced redirect alternative) */
+  for (i = 0; i < size; ++i) {
+    const GstStructure *s;
+    gint bitrate = 0;
+
+    location_val = gst_value_list_get_value (locations_list, i);
+    s = (const GstStructure *) g_value_get_boxed (location_val);
+    if (!gst_structure_get_int (s, "minimum-bitrate", &bitrate) || bitrate <= 0) {
+      GST_DEBUG_OBJECT (dec, "no bitrate: %" GST_PTR_FORMAT, s);
+      l_neutral = g_list_append (l_neutral, (gpointer) s);
+    } else if (bitrate > dec->connection_speed) {
+      GST_DEBUG_OBJECT (dec, "bitrate too high: %" GST_PTR_FORMAT, s);
+      l_bad = g_list_append (l_bad, (gpointer) s);
+    } else if (bitrate <= dec->connection_speed) {
+      GST_DEBUG_OBJECT (dec, "bitrate OK: %" GST_PTR_FORMAT, s);
+      l_good = g_list_append (l_good, (gpointer) s);
+    }
+  }
+
+  g_value_init (&new_list, GST_TYPE_LIST);
+  value_list_append_structure_list (&new_list, &new_structure, l_good);
+  value_list_append_structure_list (&new_list, &new_structure, l_neutral);
+  value_list_append_structure_list (&new_list, &new_structure, l_bad);
+  gst_structure_set_value (new_structure, "locations", &new_list);
+  g_value_unset (&new_list);
+
+  g_list_free (l_good);
+  g_list_free (l_neutral);
+  g_list_free (l_bad);
+
+  new_msg = gst_message_new_element (msg->src, new_structure);
+  gst_message_unref (msg);
+
+  GST_DEBUG_OBJECT (dec, "new redirect message: %" GST_PTR_FORMAT, new_msg);
+  return new_msg;
+}
+
+static void
+handle_message (GstBin * bin, GstMessage * msg)
+{
+  if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ELEMENT && msg->structure != NULL
+      && gst_structure_has_name (msg->structure, "redirect")) {
+    /* sort redirect messages based on the connection speed. This simplifies
+     * the user of this element as it can in most cases just pick the first item
+     * of the sorted list as a good redirection candidate. It can of course
+     * choose something else from the list if it has a better way. */
+    msg = handle_redirect_message (GST_URI_DECODE_BIN (bin), msg);
+  }
+  GST_BIN_CLASS (parent_class)->handle_message (bin, msg);
 }
 
 /* generic struct passed to all query fold methods

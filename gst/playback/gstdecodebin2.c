@@ -123,6 +123,9 @@ struct _GstDecodeBinClass
   /* signal fired to select from the proposed list of factories */
     gint (*autoplug_select) (GstElement * element, GstPad * pad, GstCaps * caps,
       GValueArray * factories);
+
+  /* fired when the last group is drained */
+  void (*drained) (GstElement * element);
 };
 
 /* signals */
@@ -134,6 +137,7 @@ enum
   SIGNAL_AUTOPLUG_CONTINUE,
   SIGNAL_AUTOPLUG_FACTORIES,
   SIGNAL_AUTOPLUG_SELECT,
+  SIGNAL_DRAINED,
   LAST_SIGNAL
 };
 
@@ -205,7 +209,6 @@ static GstStateChangeReturn gst_decode_bin_change_state (GstElement * element,
  * Streams belonging to the same group/chain of a media file
  *
  */
-
 struct _GstDecodeGroup
 {
   GstDecodeBin *dbin;
@@ -222,8 +225,7 @@ struct _GstDecodeGroup
 
   GList *endpads;               /* List of GstDecodePad of source pads to be exposed */
   GList *ghosts;                /* List of GstGhostPad for the endpads */
-
-  GList *reqpads;               /* List of RequestPads */
+  GList *reqpads;               /* List of RequestPads for multiqueue. */
 };
 
 #define GROUP_MUTEX_LOCK(group) G_STMT_START {				\
@@ -450,6 +452,18 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_select),
       NULL, NULL, gst_play_marshal_INT__OBJECT_OBJECT_BOXED,
       G_TYPE_INT, 3, GST_TYPE_PAD, GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
+
+  /**
+   * GstDecodeBin2::drained
+   *
+   * This signal is emitted once decodebin2 has finished decoding all the data.
+   *
+   * Since: 0.10.16
+   */
+  gst_decode_bin_signals[SIGNAL_DRAINED] =
+      g_signal_new ("drained", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, drained),
+      NULL, NULL, gst_marshal_VOID__VOID, G_TYPE_NONE, 0, G_TYPE_NONE);
 
   g_object_class_install_property (gobject_klass, PROP_CAPS,
       g_param_spec_boxed ("caps", "Caps", "The caps on which to stop decoding.",
@@ -1808,20 +1822,29 @@ gst_decode_group_check_if_drained (GstDecodeGroup * group)
   }
 
   group->drained = drained;
-  GST_LOG ("group is drained");
-
   if (!drained)
     return;
 
+  /* we are drained. Check if there is a next group to activate */
   DECODE_BIN_LOCK (dbin);
   if ((group == dbin->activegroup) && dbin->groups) {
     GST_DEBUG_OBJECT (dbin, "Switching to new group");
 
+    /* hide current group */
     gst_decode_group_hide (group);
-
+    /* expose next group */
     gst_decode_group_expose ((GstDecodeGroup *) dbin->groups->data);
+    /* we're not yet drained now */
+    drained = FALSE;
   }
   DECODE_BIN_UNLOCK (dbin);
+
+  if (drained) {
+    /* no more groups to activate, we're completely drained now */
+    GST_LOG ("all groups drained, fire signal");
+    g_signal_emit (G_OBJECT (dbin), gst_decode_bin_signals[SIGNAL_DRAINED], 0,
+        NULL);
+  }
 }
 
 /* sort_end_pads:
@@ -2189,10 +2212,14 @@ source_pad_event_probe (GstPad * pad, GstEvent * event, GstDecodePad * dpad)
     /* Set our pad as drained */
     dpad->drained = TRUE;
 
-    /* Check if all pads are drained */
+    GST_DEBUG_OBJECT (pad, "we received EOS");
+
+    /* Check if all pads are drained. If there is a next group to expose, we
+     * will remove the ghostpad of the current group first, which unlinks the
+     * peer and so drops the EOS. */
     gst_decode_group_check_if_drained (dpad->group);
   }
-
+  /* never drop events */
   return TRUE;
 }
 
@@ -2201,7 +2228,6 @@ source_pad_event_probe (GstPad * pad, GstEvent * event, GstDecodePad * dpad)
  * Creates a new GstDecodePad for the given pad.
  * If block is TRUE, Sets the pad blocking asynchronously
  */
-
 static GstDecodePad *
 gst_decode_pad_new (GstDecodeGroup * group, GstPad * pad, gboolean block)
 {
@@ -2292,9 +2318,6 @@ remove_fakesink (GstDecodeBin * decode_bin)
   gst_element_set_state (decode_bin->fakesink, GST_STATE_NULL);
   gst_bin_remove (GST_BIN (decode_bin), decode_bin->fakesink);
   decode_bin->fakesink = NULL;
-
-  gst_element_post_message (GST_ELEMENT_CAST (decode_bin),
-      gst_message_new_state_dirty (GST_OBJECT_CAST (decode_bin)));
 }
 
 /*****
