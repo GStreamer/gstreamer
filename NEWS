@@ -1,4 +1,83 @@
-This is GStreamer 0.10.14 "Breathing Vacuum"
+This is GStreamer 0.10.15 "October"
+
+Changes since 0.10.14:
+
+      * Changes for asynchronous sink management
+      * New ts-offset property on basesink for adjusting clock synchronisation
+      * New GstController LFO feature
+      * Fixes and improvements in latency measurement for live pipelines
+      * Additional documentation and docs fixes
+      * Faster typefinding
+      * More tag types added
+      * Improvements in various core elements and parent classes
+      * New unit tests
+      * Allow dumping pipelines as dot graphs
+      * GstStructures now support nesting
+      * URIHandler interface can now be implemented in bindings
+      * Many other bug-fixes and improvements
+
+Bugs fixed since 0.10.14:
+
+      * 496722 : DSP/DSW files in win32/vs6 directory are in unix format
+      * 476514 : [queue] Doesn't forward EOS event in all cases
+      * 456573 : allow dumping pipelines as dot graphs
+      * 475723 : cleanup static caps correctly
+      * 480341 : Memory leak at fakesink (regression in cvs)
+      * 349410 : Problems with type handling
+      * 414539 : [API] Support more GST_TAG*_SORTNAME and remove MusicBrai...
+      * 459717 : [Controller] Add GstLFOControlSource that provides values...
+      * 459809 : [API] add GST_TAG_COMPOSER
+      * 461598 : Commit Hungarian translations from TP
+      * 461599 : Some files missing from POTFILES.in
+      * 464366 : program including gst/gstbuffer.h does not compile with -...
+      * 466595 : gst_index_add_association generates corrupted entries
+      * 469402 : File uri handling on windows broken
+      * 473846 : Deadlock if sink is unable to send first buffer
+      * 474371 : Can't build libsgtcontroller with VS6
+      * 474823 : tee unit test failure
+      * 478347 : GST_STATIC_PAD_TEMPLATE macro causes warnings with g++-4.2
+      * 478401 : gstbasesrc.c ref count bug
+      * 479784 : GST_PLUGIN_DEFINE() doesn't accept BSD and MIT/X11 licences
+      * 485343 : Implement a wait_eos function in basesink
+      * 487969 : allow nested GstStructures
+      * 492077 : Build issues on Windows/MSVC
+      * 493134 : Wrong GstObject signals registration
+      * 493983 : Build issues on Windows
+      * 494343 : pre-release vs6 patch
+      * 480858 : gstqueue code cleaning
+      * 486758 : queue element fails to re-negotiate caps upstream when si...
+      * 488201 : gst_segment_set_newsegment does not accumulate correctly
+      * 492729 : PAUSED- > PLAYING returns ASYNC when triggered from bus han...
+      * 494245 : [basesink] doesn't sync correctly if segment is in BYTES ...
+
+API added since 0.10.14:
+
+      * gst_base_sink_get_last_buffer()
+      * GstBaseSink::last-buffer
+      * GstURIHandlerInterface::get_type_full
+      * GstURIHandlerInterface::get_protocols_full
+      * New tag: GST_TAG_ARTIST_SORTNAME
+      * New tag: GST_TAG_ALBUM_SORTNAME
+      * New tag: GST_TAG_TITLE_SORTNAME
+      * New tag: GST_TAG_COMPOSER
+      * gst_value_set_structure()
+      * gst_value_get_structure()
+      * GST_VALUE_HOLDS_STRUCTURE macro
+      * gst_bus_pop_filtered()
+      * gst_bus_timed_pop_filtered()
+      * gst_base_sink_wait_eos()
+      * gst_pad_peer_query()
+      * GstBaseSrc::do-timestamp
+      * gst_base_src_set_do_timestamp()
+      * gst_base_src_get_do_timestamp()
+      * GstBaseSink::ts-offset property
+      * gst_base_sink_set_ts_offset()
+      * gst_base_sink_get_ts_offset()
+      * GstBaseSink::async property
+      * gst_base_sink_set_async_enabled()
+      * gst_base_sink_is_async_enabled()
+      * gst_structure_get_uint()
+      * GstLFOControlSource and functions
 
 Changes since 0.10.13:
 
