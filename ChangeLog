@@ -1,3 +1,8 @@
+2007-11-16  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	  Als use AG_GST_PLUGIN_DOCS (see #344039).
+
 2007-11-15  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Wai-Ming Ho <webregbox at yahoo dot co dot uk>
