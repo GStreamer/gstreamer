@@ -278,8 +278,12 @@ class FilteredLogModel (LogModelBase):
         self.access_offset = lazy_log_model.access_offset
         self.ensure_cached = lazy_log_model.ensure_cached
         self.line_cache = lazy_log_model.line_cache
+        self.reset ()
+        
+    def reset (self):
 
-        self.line_offsets += lazy_log_model.line_offsets
+        del self.line_offsets[:]
+        self.line_offsets += self.parent_model.line_offsets
 
     def add_filter (self, filter):
 
@@ -822,6 +826,7 @@ class Window (object):
 
         self.file = None
         self.log_model = LazyLogModel ()
+        self.log_filter = FilteredLogModel (self.log_model)
 
         glade_filename = os.path.join (Main.Paths.data_dir, "gst-debug-viewer.glade")
         self.widget_factory = Common.GUI.WidgetFactory (glade_filename)
@@ -936,7 +941,7 @@ class Window (object):
         if tree_iter is None:
             raise ValueError ("no line selected")
         model = self.log_view.props.model
-        return model.get (tree_iter, *self.log_model.column_ids)
+        return model.get (tree_iter, *LogModelBase.column_ids)
 
     def close (self, *a, **kw):
 
@@ -979,13 +984,13 @@ class Window (object):
 
     def handle_edit_copy_message_action_activate (self, action):
 
-        col_id = self.log_model.COL_MESSAGE
+        col_id = LogModelBase.COL_MESSAGE
         self.clipboard.set_text (self.get_active_line ()[col_id])
 
     def handle_filter_out_higher_levels_action_activate (self, action):
 
         row = self.get_active_line ()
-        debug_level = row[self.log_model.COL_LEVEL]
+        debug_level = row[LogModelBase.COL_LEVEL]
 
         try:
             target_level = debug_level.higher_level ()
@@ -1079,7 +1084,7 @@ class Window (object):
         for sentinel in self.sentinels:
             sentinel ()
 
-        self.log_filter = FilteredLogModel (self.log_model)
+        self.log_filter.reset ()
 
         def idle_set ():
             ##self.log_view.props.model = self.log_model

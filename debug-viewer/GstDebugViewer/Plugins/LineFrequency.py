@@ -237,6 +237,7 @@ class LineFrequencyFeature (FeatureBase):
     def attach (self, window):
 
         self.log_model = window.log_model
+        self.log_filter = window.log_filter
         self.log_view = window.log_view
 
         ui = window.ui_manager
