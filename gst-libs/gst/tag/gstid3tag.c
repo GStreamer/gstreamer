@@ -249,18 +249,28 @@ static const GstTagEntryMatch user_tag_matches[] = {
   {GST_TAG_MUSICBRAINZ_ALBUMID, "TXXX|musicbrainz_albumid"},
   {GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "TXXX|musicbrainz_albumartistid"},
   {GST_TAG_MUSICBRAINZ_TRMID, "TXXX|musicbrainz_trmid"},
+  {GST_TAG_CDDA_MUSICBRAINZ_DISCID, "TXXX|musicbrainz_discid"},
   /* musicbrainz identifiers according to spec no one pays
    * attention to (http://musicbrainz.org/docs/specs/metadata_tags.html) */
   {GST_TAG_MUSICBRAINZ_ARTISTID, "TXXX|MusicBrainz Artist Id"},
   {GST_TAG_MUSICBRAINZ_ALBUMID, "TXXX|MusicBrainz Album Id"},
   {GST_TAG_MUSICBRAINZ_ALBUMARTISTID, "TXXX|MusicBrainz Album Artist Id"},
   {GST_TAG_MUSICBRAINZ_TRMID, "TXXX|MusicBrainz TRM Id"},
+  /* according to: http://wiki.musicbrainz.org/MusicBrainzTag (yes, no space
+   * before 'ID' and not 'Id' either this time, yay for consistency) */
+  {GST_TAG_CDDA_MUSICBRAINZ_DISCID, "TXXX|MusicBrainz DiscID"},
   /* foobar2000 uses these identifiers to store gain/peak information in
    * ID3v2 tags <= v2.3.0. In v2.4.0 there's the RVA2 frame for that */
   {GST_TAG_TRACK_GAIN, "TXXX|replaygain_track_gain"},
   {GST_TAG_TRACK_PEAK, "TXXX|replaygain_track_peak"},
   {GST_TAG_ALBUM_GAIN, "TXXX|replaygain_album_gain"},
-  {GST_TAG_ALBUM_PEAK, "TXXX|replaygain_album_peak"}
+  {GST_TAG_ALBUM_PEAK, "TXXX|replaygain_album_peak"},
+  /* the following two are more or less made up, there seems to be little
+   * evidence that any popular application is actually putting this info
+   * into TXXX frames; the first one comes from a musicbrainz wiki 'proposed
+   * tags' page, the second one is analogue to the vorbis/ape/flac tag. */
+  {GST_TAG_CDDA_CDDB_DISCID, "TXXX|discid"},
+  {GST_TAG_CDDA_CDDB_DISCID, "TXXX|CDDB DiscID"}
 };
 
 /**
@@ -283,7 +293,8 @@ gst_tag_from_id3_user_tag (const gchar * type, const gchar * id3_user_tag)
 
   for (i = 0; i < G_N_ELEMENTS (user_tag_matches); ++i) {
     if (strncmp (type, user_tag_matches[i].original_tag, 4) == 0 &&
-        strcmp (id3_user_tag, user_tag_matches[i].original_tag + 5) == 0) {
+        g_ascii_strcasecmp (id3_user_tag,
+            user_tag_matches[i].original_tag + 5) == 0) {
       GST_LOG ("Mapped ID3v2 user tag '%s' to GStreamer tag '%s'",
           user_tag_matches[i].original_tag, user_tag_matches[i].gstreamer_tag);
       return user_tag_matches[i].gstreamer_tag;

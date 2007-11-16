@@ -1,3 +1,12 @@
+2007-11-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/tag/gstid3tag.c: (user_tag_matches),
+	  (gst_tag_from_id3_user_tag):
+	  Add mapping for audio cd discid tags, so we can extract
+	  them from tags as well (see #347848). Also compare identifiers
+	  in ID3v2 TXXX frames in a case-insensitive way to increase
+	  compatibility when reading tags (discid vs. DiscID vs. DiscId).
+
 2007-11-16  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst-plugins-base.doap:
