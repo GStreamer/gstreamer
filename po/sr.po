@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-07-26 21:49+0200\n"
+"POT-Creation-Date: 2007-11-10 20:49+0000\n"
 "PO-Revision-Date: 2004-03-13 00:18+0100\n"
 "Last-Translator: Danilo Segan <dsegan@gmx.net>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -62,34 +62,57 @@ msgstr ""
 msgid "Capture"
 msgstr ""
 
-#: ext/alsa/gstalsasink.c:441
+#: ext/alsa/gstalsasink.c:457
 #, fuzzy
 msgid "Could not open device for playback in mono mode."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
-#: ext/alsa/gstalsasink.c:443
+#: ext/alsa/gstalsasink.c:459
 #, fuzzy
 msgid "Could not open device for playback in stereo mode."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
-#: ext/alsa/gstalsasink.c:447
+#: ext/alsa/gstalsasink.c:463
 #, fuzzy, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
-#: ext/alsa/gstalsasrc.c:406
+#: ext/alsa/gstalsasink.c:649
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr ""
+
+#: ext/alsa/gstalsasink.c:654
+#, fuzzy
+msgid "Could not open audio device for playback."
+msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
+
+#: ext/alsa/gstalsasrc.c:422
 #, fuzzy
 msgid "Could not open device for recording in mono mode."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
-#: ext/alsa/gstalsasrc.c:408
+#: ext/alsa/gstalsasrc.c:424
 #, fuzzy
 msgid "Could not open device for recording in stereo mode."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
-#: ext/alsa/gstalsasrc.c:412
+#: ext/alsa/gstalsasrc.c:428
 #, fuzzy, c-format
 msgid "Could not open device for recording in %d-channel mode"
+msgstr "Не могу да отворим ЦД уређај ради читања."
+
+#: ext/alsa/gstalsasrc.c:626
+#, fuzzy
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
+
+#: ext/alsa/gstalsasrc.c:631
+#, fuzzy
+msgid "Could not open audio device for recording."
 msgstr "Не могу да отворим ЦД уређај ради читања."
 
 #: ext/cdparanoia/gstcdparanoiasrc.c:240 ext/cdparanoia/gstcdparanoiasrc.c:246
@@ -126,119 +149,119 @@ msgstr "Не могу да затворим ВСД датотеку „%s“."
 msgid "Error while writing to file \"%s\"."
 msgstr "Грешка при затварању датотеке „%s“."
 
-#: ext/ogg/gstoggdemux.c:3095
+#: ext/ogg/gstoggdemux.c:3099
 msgid "Internal data stream error."
 msgstr ""
 
-#: gst/playback/gstdecodebin.c:1552
-#, fuzzy
-msgid "This appears to be a text file"
-msgstr "Уређај „%s“ не представља уређај за снимање."
-
-#: gst/playback/gstplaybasebin.c:1460
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr ""
-
-#: gst/playback/gstplaybasebin.c:1477 gst/playback/gstplaybasebin.c:1603
+#: gst/playback/gstdecodebin.c:789 gst/playback/gstdecodebin2.c:923
+#: gst/playback/gstplaybasebin.c:1526 gst/playback/gstplaybasebin.c:1662
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1573 gst/playback/gsturidecodebin.c:378
+#: gst/playback/gstdecodebin.c:1581
+msgid "This appears to be a text file"
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1509
+#, c-format
+msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+msgstr ""
+
+#: gst/playback/gstplaybasebin.c:1632 gst/playback/gsturidecodebin.c:582
 msgid "No URI specified to play from."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1579 gst/playback/gsturidecodebin.c:384
+#: gst/playback/gstplaybasebin.c:1638 gst/playback/gsturidecodebin.c:588
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1585
+#: gst/playback/gstplaybasebin.c:1644
 msgid "RTSP streams cannot be played yet."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:1915
+#: gst/playback/gstplaybasebin.c:1979
 msgid "Could not create \"decodebin\" element."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2133 gst/playback/gsturidecodebin.c:798
+#: gst/playback/gstplaybasebin.c:2197 gst/playback/gsturidecodebin.c:1056
 msgid "Source element is invalid."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2209
+#: gst/playback/gstplaybasebin.c:2274
 msgid ""
 "Only a subtitle stream was detected. Either you are loading a subtitle file "
 "or some other type of text file, or the media file was not recognized."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2214
+#: gst/playback/gstplaybasebin.c:2279
 msgid ""
 "You do not have a decoder installed to handle this file. You might need to "
 "install the necessary plugins."
 msgstr ""
 
-#: gst/playback/gstplaybasebin.c:2218
+#: gst/playback/gstplaybasebin.c:2283
 #, fuzzy
 msgid "This is not a media file"
 msgstr "Уређај „%s“ не представља уређај за снимање."
 
-#: gst/playback/gstplaybasebin.c:2223
+#: gst/playback/gstplaybasebin.c:2288
 msgid "A subtitle stream was detected, but no video stream."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:906
+#: gst/playback/gstplaybin.c:884
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:914 gst/playback/gstplaybin.c:924
-#: gst/playback/gstplaybin.c:1109 gst/playback/gstplaybin.c:1119
-#: gst/playback/gstplaybin.c:1250 gst/playback/gstplaybin.c:1259
-#: gst/playback/gstplaybin.c:1268
+#: gst/playback/gstplaybin.c:892 gst/playback/gstplaybin.c:902
+#: gst/playback/gstplaybin.c:1087 gst/playback/gstplaybin.c:1097
+#: gst/playback/gstplaybin.c:1228 gst/playback/gstplaybin.c:1237
+#: gst/playback/gstplaybin.c:1246
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
 
-#: gst/playback/gstplaybin.c:1102
+#: gst/playback/gstplaybin.c:1080
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr ""
 
-#: gst/playback/gstqueue2.c:944
+#: gst/playback/gstqueue2.c:936
 #, fuzzy
 msgid "No file name specified."
 msgstr "Име датотеке није задато."
 
-#: gst/playback/gstqueue2.c:950
+#: gst/playback/gstqueue2.c:942
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ ради читања."
 
-#: gst/playback/gsturidecodebin.c:205
+#: gst/playback/gsturidecodebin.c:400
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:390
+#: gst/playback/gsturidecodebin.c:594
 msgid "This stream type cannot be played yet."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:401
+#: gst/playback/gsturidecodebin.c:605
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:639
+#: gst/playback/gsturidecodebin.c:897
 msgid "Could not create \"decodebin2\" element."
 msgstr ""
 
-#: gst/playback/gsturidecodebin.c:645
+#: gst/playback/gsturidecodebin.c:903
 msgid "Could not create \"queue2\" element."
 msgstr ""
 
 #: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:270
-#, c-format
+#, fuzzy, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr ""
+msgstr "Грешка при затварању датотеке „%s“."
 
 #: gst/tcp/gsttcp.c:571
 #, c-format
@@ -255,7 +278,7 @@ msgstr ""
 msgid "Connection to %s:%d refused."
 msgstr ""
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:602
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:618
 msgid "Can't record audio fast enough"
 msgstr ""
 
@@ -297,14 +320,6 @@ msgstr ""
 
 #: gst-libs/gst/tag/tags.c:66
 msgid "MusicBrainz TRM ID"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:69
-msgid "artist sortname"
-msgstr ""
-
-#: gst-libs/gst/tag/tags.c:69
-msgid "MusicBrainz artist sortname"
 msgstr ""
 
 #: gst-libs/gst/cdda/gstcddabasesrc.c:1385
@@ -506,27 +521,27 @@ msgstr ""
 msgid "GStreamer element %s"
 msgstr ""
 
-#: gst-libs/gst/pbutils/missing-plugins.c:550
+#: gst-libs/gst/pbutils/missing-plugins.c:551
 msgid "Unknown source element"
 msgstr ""
 
-#: gst-libs/gst/pbutils/missing-plugins.c:553
+#: gst-libs/gst/pbutils/missing-plugins.c:554
 msgid "Unknown sink element"
 msgstr ""
 
-#: gst-libs/gst/pbutils/missing-plugins.c:556
+#: gst-libs/gst/pbutils/missing-plugins.c:557
 msgid "Unknown element"
 msgstr ""
 
-#: gst-libs/gst/pbutils/missing-plugins.c:559
+#: gst-libs/gst/pbutils/missing-plugins.c:560
 msgid "Unknown decoder element"
 msgstr ""
 
-#: gst-libs/gst/pbutils/missing-plugins.c:562
+#: gst-libs/gst/pbutils/missing-plugins.c:563
 msgid "Unknown encoder element"
 msgstr ""
 
-#: gst-libs/gst/pbutils/missing-plugins.c:567
+#: gst-libs/gst/pbutils/missing-plugins.c:568
 msgid "Plugin or element of unknown type"
 msgstr ""
 
@@ -571,9 +586,6 @@ msgstr "Не могу да отворим уређај „%s“ ради чит�
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
 #~ msgstr "Улазног звука нема или је неисправан, АВИ ток ће бити искварен."
-
-#~ msgid "Could not open audio device \"%s\" for writing."
-#~ msgstr "Не могу да отворим звучни уређај „%s“ ради уписа."
 
 #~ msgid "Could not open control device \"%s\" for writing."
 #~ msgstr "Не могу да отворим управљачки уређај „%s“ ради уписа."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-07-26 21:49+0200\n"
+"POT-Creation-Date: 2007-11-10 20:49+0000\n"
 "PO-Revision-Date: 2007-09-07 00:24+0300\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -63,31 +63,55 @@ msgstr "Toisto"
 msgid "Capture"
 msgstr "Nauhoitus"
 
-#: ext/alsa/gstalsasink.c:441
+#: ext/alsa/gstalsasink.c:457
 msgid "Could not open device for playback in mono mode."
 msgstr "Laitetta ei voitu avata toistoa varten monona."
 
-#: ext/alsa/gstalsasink.c:443
+#: ext/alsa/gstalsasink.c:459
 msgid "Could not open device for playback in stereo mode."
 msgstr "Laitetta ei voitu avata toistoa varten stereona."
 
-#: ext/alsa/gstalsasink.c:447
+#: ext/alsa/gstalsasink.c:463
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Laitetta ei voitu avata toistoa varten %d-kanavaisessa tilassa."
 
-#: ext/alsa/gstalsasrc.c:406
+#: ext/alsa/gstalsasink.c:649
+#, fuzzy
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr "Laitetta ei voitu avata toistoa varten stereona."
+
+#: ext/alsa/gstalsasink.c:654
+#, fuzzy
+msgid "Could not open audio device for playback."
+msgstr "Laitetta ei voitu avata toistoa varten monona."
+
+#: ext/alsa/gstalsasrc.c:422
 msgid "Could not open device for recording in mono mode."
 msgstr "Laitetta ei voitu avata nauhoitusta varten monona."
 
-#: ext/alsa/gstalsasrc.c:408
+#: ext/alsa/gstalsasrc.c:424
 msgid "Could not open device for recording in stereo mode."
 msgstr "Laitetta ei voitu avata nauhoitusta varten stereona."
 
-#: ext/alsa/gstalsasrc.c:412
+#: ext/alsa/gstalsasrc.c:428
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Laitetta ei voitu avata nauhoitusta varten %d-kanavaisessa tilassa."
+
+#: ext/alsa/gstalsasrc.c:626
+#, fuzzy
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr "Laitetta ei voitu avata nauhoitusta varten stereona."
+
+#: ext/alsa/gstalsasrc.c:631
+#, fuzzy
+msgid "Could not open audio device for recording."
+msgstr "CD-laitetta ei voitu avata luettavaksi."
 
 #: ext/cdparanoia/gstcdparanoiasrc.c:240 ext/cdparanoia/gstcdparanoiasrc.c:246
 msgid "Could not open CD device for reading."
@@ -120,105 +144,115 @@ msgstr "VFS-tiedostoa \"%s\" ei voitu sulkea."
 msgid "Error while writing to file \"%s\"."
 msgstr "Virhe kirjoitettaessa tiedostoon \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:3095
+#: ext/ogg/gstoggdemux.c:3099
 msgid "Internal data stream error."
 msgstr "Sisäisen tietovirran virhe."
 
-#: gst/playback/gstdecodebin.c:1552
+#: gst/playback/gstdecodebin.c:789 gst/playback/gstdecodebin2.c:923
+#: gst/playback/gstplaybasebin.c:1526 gst/playback/gstplaybasebin.c:1662
+#, c-format
+msgid "A %s plugin is required to play this stream, but not installed."
+msgstr ""
+"Virran toistamiseen tarvitaan %s-liitännäinen, mutta se ei ole asennettu."
+
+#: gst/playback/gstdecodebin.c:1581
 msgid "This appears to be a text file"
 msgstr "Tämä näyttää olevan tekstitiedosto"
 
-#: gst/playback/gstplaybasebin.c:1460
+#: gst/playback/gstplaybasebin.c:1509
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Virheellinen tekstitysten URI \"%s\", tekstitys ei ole käytössä."
 
-#: gst/playback/gstplaybasebin.c:1477 gst/playback/gstplaybasebin.c:1603
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr "Virran toistamiseen tarvitaan %s-liitännäinen, mutta se ei ole asennettu."
-
-#: gst/playback/gstplaybasebin.c:1573 gst/playback/gsturidecodebin.c:378
+#: gst/playback/gstplaybasebin.c:1632 gst/playback/gsturidecodebin.c:582
 msgid "No URI specified to play from."
 msgstr "URIa, josta soitetaan, ei annettu."
 
-#: gst/playback/gstplaybasebin.c:1579 gst/playback/gsturidecodebin.c:384
+#: gst/playback/gstplaybasebin.c:1638 gst/playback/gsturidecodebin.c:588
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Virheellinen URI \"%s\"."
 
-#: gst/playback/gstplaybasebin.c:1585
+#: gst/playback/gstplaybasebin.c:1644
 msgid "RTSP streams cannot be played yet."
 msgstr "RTSP-virtoja ei voi vielä soittaa."
 
-#: gst/playback/gstplaybasebin.c:1915
+#: gst/playback/gstplaybasebin.c:1979
 msgid "Could not create \"decodebin\" element."
 msgstr "Elementtiä \"decodebin\" ei voitu luoda."
 
-#: gst/playback/gstplaybasebin.c:2133 gst/playback/gsturidecodebin.c:798
+#: gst/playback/gstplaybasebin.c:2197 gst/playback/gsturidecodebin.c:1056
 msgid "Source element is invalid."
 msgstr "Lähde-elementti on virheellinen."
 
-#: gst/playback/gstplaybasebin.c:2209
-msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
-msgstr "Havaittiin vain tekstitysvirta. Joko yrität ladata tekstitystiedostoa tai muuta tekstitiedostoa, tai mediatiedostoa ei voitu tunnistaa."
+#: gst/playback/gstplaybasebin.c:2274
+msgid ""
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+"Havaittiin vain tekstitysvirta. Joko yrität ladata tekstitystiedostoa tai "
+"muuta tekstitiedostoa, tai mediatiedostoa ei voitu tunnistaa."
 
-#: gst/playback/gstplaybasebin.c:2214
-msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
-msgstr "Tämän tiedoston käsittelyyn ei ole asennettu purkajaa. Voi olla, että sinun täytyy asentaa tarvittavia liitännäisiä."
+#: gst/playback/gstplaybasebin.c:2279
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
+"install the necessary plugins."
+msgstr ""
+"Tämän tiedoston käsittelyyn ei ole asennettu purkajaa. Voi olla, että sinun "
+"täytyy asentaa tarvittavia liitännäisiä."
 
-#: gst/playback/gstplaybasebin.c:2218
+#: gst/playback/gstplaybasebin.c:2283
 msgid "This is not a media file"
 msgstr "Tämä ei ole mediatiedosto"
 
-#: gst/playback/gstplaybasebin.c:2223
+#: gst/playback/gstplaybasebin.c:2288
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Havaittiin tekstitysvirta, mutta ei videovirtaa."
 
-#: gst/playback/gstplaybin.c:906
+#: gst/playback/gstplaybin.c:884
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Sekä autovideosink- ja xvimagesink-elementit puuttuvat."
 
-#: gst/playback/gstplaybin.c:914 gst/playback/gstplaybin.c:924
-#: gst/playback/gstplaybin.c:1109 gst/playback/gstplaybin.c:1119
-#: gst/playback/gstplaybin.c:1250 gst/playback/gstplaybin.c:1259
-#: gst/playback/gstplaybin.c:1268
+#: gst/playback/gstplaybin.c:892 gst/playback/gstplaybin.c:902
+#: gst/playback/gstplaybin.c:1087 gst/playback/gstplaybin.c:1097
+#: gst/playback/gstplaybin.c:1228 gst/playback/gstplaybin.c:1237
+#: gst/playback/gstplaybin.c:1246
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Puuttuva elementti \"%s\" - tarkista GStreamer-asennuksesi."
 
-#: gst/playback/gstplaybin.c:1102
+#: gst/playback/gstplaybin.c:1080
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Sekä autoaudiosink- että alsasink-elementit puuttuvat."
 
-#: gst/playback/gstqueue2.c:944
+#: gst/playback/gstqueue2.c:936
 msgid "No file name specified."
 msgstr "Tiedostonimeä ei annettu."
 
-#: gst/playback/gstqueue2.c:950
+#: gst/playback/gstqueue2.c:942
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Tiedostoa \"%s\" ei voi avata luettavaksi."
 
-#: gst/playback/gsturidecodebin.c:205
+#: gst/playback/gsturidecodebin.c:400
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Purkajaa tyypille \"%s\" ei ole saatavilla."
 
-#: gst/playback/gsturidecodebin.c:390
+#: gst/playback/gsturidecodebin.c:594
 msgid "This stream type cannot be played yet."
 msgstr "Tätä virtatyyppiä ei voi vielä soittaa."
 
-#: gst/playback/gsturidecodebin.c:401
+#: gst/playback/gsturidecodebin.c:605
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Protokollalle \"%s\" ei ole määritelty URI-käsittelijää."
 
-#: gst/playback/gsturidecodebin.c:639
+#: gst/playback/gsturidecodebin.c:897
 msgid "Could not create \"decodebin2\" element."
 msgstr "Elementtiä \"decodebin2\" ei voitu luoda."
 
-#: gst/playback/gsturidecodebin.c:645
+#: gst/playback/gsturidecodebin.c:903
 msgid "Could not create \"queue2\" element."
 msgstr "Elementtiä \"queue2\" ei voitu luoda."
 
@@ -242,7 +276,7 @@ msgstr "Virhe lähetettäessä gdp-sisältöä kohteeseen \"%s:%d\"."
 msgid "Connection to %s:%d refused."
 msgstr "Yhteys kohteeseen %s:%d estettiin."
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:602
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:618
 msgid "Can't record audio fast enough"
 msgstr "Ääntä ei voi nauhoittaa tarpeeksi nopeasti"
 
@@ -285,14 +319,6 @@ msgstr "kappaleen TRM-tunniste"
 #: gst-libs/gst/tag/tags.c:66
 msgid "MusicBrainz TRM ID"
 msgstr "MusicBrainz TRM-tunniste"
-
-#: gst-libs/gst/tag/tags.c:69
-msgid "artist sortname"
-msgstr "esittäjän järjestysnimi"
-
-#: gst-libs/gst/tag/tags.c:69
-msgid "MusicBrainz artist sortname"
-msgstr "MusicBrainz esittäjän järjestysnimi"
 
 #: gst-libs/gst/cdda/gstcddabasesrc.c:1385
 #: gst-libs/gst/cdda/gstcddabasesrc.c:1418
@@ -493,27 +519,27 @@ msgstr "%s-pakkain"
 msgid "GStreamer element %s"
 msgstr "GStreamer-elementti %s"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:550
+#: gst-libs/gst/pbutils/missing-plugins.c:551
 msgid "Unknown source element"
 msgstr "Tuntematon lähde-elementti"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:553
+#: gst-libs/gst/pbutils/missing-plugins.c:554
 msgid "Unknown sink element"
 msgstr "Tuntematon nieluelementti"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:556
+#: gst-libs/gst/pbutils/missing-plugins.c:557
 msgid "Unknown element"
 msgstr "Tuntematon elementti"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:559
+#: gst-libs/gst/pbutils/missing-plugins.c:560
 msgid "Unknown decoder element"
 msgstr "Tuntematon purkajaelementti"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:562
+#: gst-libs/gst/pbutils/missing-plugins.c:563
 msgid "Unknown encoder element"
 msgstr "Tuntematon kodekkielementti"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:567
+#: gst-libs/gst/pbutils/missing-plugins.c:568
 msgid "Plugin or element of unknown type"
 msgstr "Liitännäisen tai elementin tyyppi on tuntematon"
 
@@ -535,3 +561,9 @@ msgstr "Laite \"%s\" on jo käytössä."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Laitetta \"%s\" ei voi avata luettavaksi ja kirjoitettavaksi."
+
+#~ msgid "artist sortname"
+#~ msgstr "esittäjän järjestysnimi"
+
+#~ msgid "MusicBrainz artist sortname"
+#~ msgstr "MusicBrainz esittäjän järjestysnimi"

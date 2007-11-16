@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.12\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-03-05 11:20+0000\n"
+"POT-Creation-Date: 2007-11-10 20:49+0000\n"
 "PO-Revision-Date: 2007-03-10 10:55+0200\n"
 "Last-Translator: Alexander Shopov <ash@contact.bg>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -16,93 +16,118 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 
-#: ext/alsa/gstalsamixertrack.c:130
+#: ext/alsa/gstalsamixertrack.c:131
 msgid "Master"
 msgstr "Главен"
 
-#: ext/alsa/gstalsamixertrack.c:131
+#: ext/alsa/gstalsamixertrack.c:132
 msgid "Bass"
 msgstr "Баси"
 
-#: ext/alsa/gstalsamixertrack.c:132
+#: ext/alsa/gstalsamixertrack.c:133
 msgid "Treble"
 msgstr "Високи"
 
-#: ext/alsa/gstalsamixertrack.c:133
+#: ext/alsa/gstalsamixertrack.c:134
 msgid "PCM"
 msgstr "PCM"
 
-#: ext/alsa/gstalsamixertrack.c:134
+#: ext/alsa/gstalsamixertrack.c:135
 msgid "Synth"
 msgstr "Синтезатор"
 
-#: ext/alsa/gstalsamixertrack.c:135
+#: ext/alsa/gstalsamixertrack.c:136
 msgid "Line-in"
 msgstr "Вход"
 
-#: ext/alsa/gstalsamixertrack.c:136
+#: ext/alsa/gstalsamixertrack.c:137
 msgid "CD"
 msgstr "CD"
 
-#: ext/alsa/gstalsamixertrack.c:137
+#: ext/alsa/gstalsamixertrack.c:138
 msgid "Microphone"
 msgstr "Микрофон"
 
-#: ext/alsa/gstalsamixertrack.c:138
+#: ext/alsa/gstalsamixertrack.c:139
 msgid "PC Speaker"
 msgstr "Високоговорител на PC"
 
-#: ext/alsa/gstalsamixertrack.c:139
+#: ext/alsa/gstalsamixertrack.c:140
 msgid "Playback"
 msgstr "Изпълнение"
 
-#: ext/alsa/gstalsamixertrack.c:140 ext/alsa/gstalsamixertrack.c:201
-#: ext/alsa/gstalsamixertrack.c:204
+#: ext/alsa/gstalsamixertrack.c:141 ext/alsa/gstalsamixertrack.c:204
+#: ext/alsa/gstalsamixertrack.c:207
 msgid "Capture"
 msgstr "Запис"
 
-#: ext/alsa/gstalsasink.c:441
+#: ext/alsa/gstalsasink.c:457
 msgid "Could not open device for playback in mono mode."
 msgstr "Устройството не може да се отвори за изпълнение в моно режим."
 
-#: ext/alsa/gstalsasink.c:443
+#: ext/alsa/gstalsasink.c:459
 msgid "Could not open device for playback in stereo mode."
 msgstr "Устройството не може да се отвори за изпълнение в стерео режим."
 
-#: ext/alsa/gstalsasink.c:447
+#: ext/alsa/gstalsasink.c:463
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Устройството не може да се отвори за изпълнение в %d-канален режим."
 
-#: ext/alsa/gstalsasrc.c:406
+#: ext/alsa/gstalsasink.c:649
+#, fuzzy
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr "Устройството не може да се отвори за изпълнение в стерео режим."
+
+#: ext/alsa/gstalsasink.c:654
+#, fuzzy
+msgid "Could not open audio device for playback."
+msgstr "Устройството не може да се отвори за изпълнение в моно режим."
+
+#: ext/alsa/gstalsasrc.c:422
 msgid "Could not open device for recording in mono mode."
 msgstr "Устройството не може да се отвори за запис в моно режим."
 
-#: ext/alsa/gstalsasrc.c:408
+#: ext/alsa/gstalsasrc.c:424
 msgid "Could not open device for recording in stereo mode."
 msgstr "Устройството не може да се отвори за изпълнение в стерео режим."
 
-#: ext/alsa/gstalsasrc.c:412
+#: ext/alsa/gstalsasrc.c:428
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Устройството не може да се отвори за изпълнение в %d-канален режим."
+
+#: ext/alsa/gstalsasrc.c:626
+#, fuzzy
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr "Устройството не може да се отвори за изпълнение в стерео режим."
+
+#: ext/alsa/gstalsasrc.c:631
+#, fuzzy
+msgid "Could not open audio device for recording."
+msgstr "Устройството за CD-та не може да се отвори за четене."
 
 #: ext/cdparanoia/gstcdparanoiasrc.c:240 ext/cdparanoia/gstcdparanoiasrc.c:246
 msgid "Could not open CD device for reading."
 msgstr "Устройството за CD-та не може да се отвори за четене."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:333
+#: ext/cdparanoia/gstcdparanoiasrc.c:372
 msgid "Could not seek CD."
 msgstr "По CD-то не може да се търси."
 
-#: ext/cdparanoia/gstcdparanoiasrc.c:363
+#: ext/cdparanoia/gstcdparanoiasrc.c:380
 msgid "Could not read CD."
 msgstr "CD-то не може да бъде прочетено."
 
 #: ext/gnomevfs/gstgnomevfssink.c:387
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Файлът „%s“ от виртуалната файлова система не може да се отвори за запис: %s."
+msgstr ""
+"Файлът „%s“ от виртуалната файлова система не може да се отвори за запис: %s."
 
 #: ext/gnomevfs/gstgnomevfssink.c:394
 msgid "No filename given"
@@ -113,79 +138,132 @@ msgstr "Не е дадено име на файл"
 msgid "Could not close vfs file \"%s\"."
 msgstr "Файлът „%s“ от виртуалната файлова система не може да се затвори."
 
-#: ext/gnomevfs/gstgnomevfssink.c:571
+#: ext/gnomevfs/gstgnomevfssink.c:572
 #, c-format
 msgid "Error while writing to file \"%s\"."
 msgstr "Грешка при запис във файла „%s“."
 
-#: ext/ogg/gstoggdemux.c:3081
+#: ext/ogg/gstoggdemux.c:3099
 msgid "Internal data stream error."
 msgstr "Вътрешна грешка на потока от данни."
 
-#: gst/playback/gstplaybasebin.c:1437
+#: gst/playback/gstdecodebin.c:789 gst/playback/gstdecodebin2.c:923
+#: gst/playback/gstplaybasebin.c:1526 gst/playback/gstplaybasebin.c:1662
+#, c-format
+msgid "A %s plugin is required to play this stream, but not installed."
+msgstr ""
+"За да пуснете този поток, се нуждаете от приставка за %s. Такава не е "
+"инсталирана."
+
+#: gst/playback/gstdecodebin.c:1581
+#, fuzzy
+msgid "This appears to be a text file"
+msgstr "Това не е медиен файл"
+
+#: gst/playback/gstplaybasebin.c:1509
 #, c-format
 msgid "Invalid subtitle URI \"%s\", subtitles disabled."
 msgstr "Грешен адрес за субтитри „%s“, субтитрите са изключени."
 
-#: gst/playback/gstplaybasebin.c:1454 gst/playback/gstplaybasebin.c:1580
-#, c-format
-msgid "A %s plugin is required to play this stream, but not installed."
-msgstr "За да пуснете този поток, се нуждаете от приставка за %s. Такава не е инсталирана."
-
-#: gst/playback/gstplaybasebin.c:1550
+#: gst/playback/gstplaybasebin.c:1632 gst/playback/gsturidecodebin.c:582
 msgid "No URI specified to play from."
 msgstr "Не е указан адрес за пускане."
 
-#: gst/playback/gstplaybasebin.c:1556
+#: gst/playback/gstplaybasebin.c:1638 gst/playback/gsturidecodebin.c:588
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Грешен адрес „%s“."
 
-#: gst/playback/gstplaybasebin.c:1562
+#: gst/playback/gstplaybasebin.c:1644
 msgid "RTSP streams cannot be played yet."
 msgstr "Потоци с RTSP все още не се поддържат."
 
-#: gst/playback/gstplaybasebin.c:1889
+#: gst/playback/gstplaybasebin.c:1979
 msgid "Could not create \"decodebin\" element."
 msgstr "Не може да се създаде елемент-резервоар - „decodebin“."
 
-#: gst/playback/gstplaybasebin.c:2100
+#: gst/playback/gstplaybasebin.c:2197 gst/playback/gsturidecodebin.c:1056
 msgid "Source element is invalid."
 msgstr "Елементът-източник е грешен."
 
-#: gst/playback/gstplaybasebin.c:2176
-msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
-msgstr "Бе засечен единствено поток със субтитри. Или сте заредили файл със субтитри, или някакъв друг вид текстов файл, или просто видът на мултимедийния файл не е разпознат."
+#: gst/playback/gstplaybasebin.c:2274
+msgid ""
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+"Бе засечен единствено поток със субтитри. Или сте заредили файл със "
+"субтитри, или някакъв друг вид текстов файл, или просто видът на "
+"мултимедийния файл не е разпознат."
 
-#: gst/playback/gstplaybasebin.c:2181
-msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
-msgstr "Липсва декодер за обработката на този файл. Ще трябва да инсталирате необходимите приставки."
+#: gst/playback/gstplaybasebin.c:2279
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
+"install the necessary plugins."
+msgstr ""
+"Липсва декодер за обработката на този файл. Ще трябва да инсталирате "
+"необходимите приставки."
 
-#: gst/playback/gstplaybasebin.c:2185
+#: gst/playback/gstplaybasebin.c:2283
 msgid "This is not a media file"
 msgstr "Това не е медиен файл"
 
-#: gst/playback/gstplaybasebin.c:2190
+#: gst/playback/gstplaybasebin.c:2288
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Открит е поток със субтитри, липсва видео поток."
 
-#: gst/playback/gstplaybin.c:909
+#: gst/playback/gstplaybin.c:884
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Едновременно липсват елементите-приемници autovideosink и xvimagesink."
 
-#: gst/playback/gstplaybin.c:917 gst/playback/gstplaybin.c:927
-#: gst/playback/gstplaybin.c:1112 gst/playback/gstplaybin.c:1122
-#: gst/playback/gstplaybin.c:1253 gst/playback/gstplaybin.c:1262
-#: gst/playback/gstplaybin.c:1271
+#: gst/playback/gstplaybin.c:892 gst/playback/gstplaybin.c:902
+#: gst/playback/gstplaybin.c:1087 gst/playback/gstplaybin.c:1097
+#: gst/playback/gstplaybin.c:1228 gst/playback/gstplaybin.c:1237
+#: gst/playback/gstplaybin.c:1246
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Елементът „%s“ липсва - проверете инсталацията на GStreamer."
 
-#: gst/playback/gstplaybin.c:1105
+#: gst/playback/gstplaybin.c:1080
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Едновременно липсват елементите-приемници autoaudiosink и alsasink."
 
-#: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:268
+#: gst/playback/gstqueue2.c:936
+#, fuzzy
+msgid "No file name specified."
+msgstr "Не е указано устройство."
+
+#: gst/playback/gstqueue2.c:942
+#, fuzzy, c-format
+msgid "Could not open file \"%s\" for reading."
+msgstr ""
+"Файлът „%s“ от виртуалната файлова система не може да се отвори за запис: %s."
+
+#: gst/playback/gsturidecodebin.c:400
+#, c-format
+msgid "No decoder available for type '%s'."
+msgstr ""
+
+#: gst/playback/gsturidecodebin.c:594
+#, fuzzy
+msgid "This stream type cannot be played yet."
+msgstr "Потоци с RTSP все още не се поддържат."
+
+#: gst/playback/gsturidecodebin.c:605
+#, c-format
+msgid "No URI handler implemented for \"%s\"."
+msgstr ""
+
+#: gst/playback/gsturidecodebin.c:897
+#, fuzzy
+msgid "Could not create \"decodebin2\" element."
+msgstr "Не може да се създаде елемент-резервоар - „decodebin“."
+
+#: gst/playback/gsturidecodebin.c:903
+#, fuzzy
+msgid "Could not create \"queue2\" element."
+msgstr "Не може да се създаде елемент-резервоар - „decodebin“."
+
+#: gst/tcp/gsttcp.c:519 gst/tcp/gsttcpclientsink.c:270
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Грешка при запис във файла „%s:%d“."
@@ -200,10 +278,14 @@ msgstr "Грешка при запис на заглавните данни gdp 
 msgid "Error while sending gdp payload data to \"%s:%d\"."
 msgstr "Грешка при изпращането на натоварените по gtp данни към „%s:%d“."
 
-#: gst/tcp/gsttcpclientsink.c:380 gst/tcp/gsttcpclientsrc.c:364
+#: gst/tcp/gsttcpclientsink.c:382 gst/tcp/gsttcpclientsrc.c:366
 #, c-format
 msgid "Connection to %s:%d refused."
 msgstr "Връзката към %s:%d е отказана."
+
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:618
+msgid "Can't record audio fast enough"
+msgstr ""
 
 #: gst-libs/gst/tag/tags.c:57
 msgid "track ID"
@@ -245,16 +327,8 @@ msgstr "индустриален идентификатор на песен (TRM
 msgid "MusicBrainz TRM ID"
 msgstr "индустриален идентификатор на песен според MusicBrainz (TRM)"
 
-#: gst-libs/gst/tag/tags.c:69
-msgid "artist sortname"
-msgstr "име на изпълнител при подредба"
-
-#: gst-libs/gst/tag/tags.c:69
-msgid "MusicBrainz artist sortname"
-msgstr "име на изпълнител при подредба според MusicBrainz"
-
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1382
-#: gst-libs/gst/cdda/gstcddabasesrc.c:1415
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1385
+#: gst-libs/gst/cdda/gstcddabasesrc.c:1418
 msgid "This CD has no audio tracks"
 msgstr "В това CD липсва аудио"
 
@@ -376,103 +450,103 @@ msgstr "Аудио, необработено, %d-битово, с плаваща
 msgid "Raw floating-point audio"
 msgstr "Аудио, необработено с плаваща запетая"
 
-#: gst-libs/gst/pbutils/descriptions.c:636
+#: gst-libs/gst/pbutils/descriptions.c:644
 msgid "Audio CD source"
 msgstr "Елемент-източник - CD"
 
-#: gst-libs/gst/pbutils/descriptions.c:639
+#: gst-libs/gst/pbutils/descriptions.c:647
 msgid "DVD source"
 msgstr "Елемент-източник - DVD"
 
-#: gst-libs/gst/pbutils/descriptions.c:642
+#: gst-libs/gst/pbutils/descriptions.c:650
 msgid "Real Time Streaming Protocol (RTSP) source"
 msgstr "Елемент-източник - RTSP (поточен протокол в реално време)"
 
-#: gst-libs/gst/pbutils/descriptions.c:646
+#: gst-libs/gst/pbutils/descriptions.c:654
 msgid "Microsoft Media Server (MMS) protocol source"
 msgstr "Елемент-източник - MMS (сървър за медия на Майкрософт)"
 
-#: gst-libs/gst/pbutils/descriptions.c:654
+#: gst-libs/gst/pbutils/descriptions.c:662
 #, c-format
 msgid "%s protocol source"
 msgstr "Елемент-източник, протокол %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:722
+#: gst-libs/gst/pbutils/descriptions.c:730
 #, c-format
 msgid "%s video RTP depayloader"
 msgstr "%s елемент, разтоварващ видеото от RTP"
 
-#: gst-libs/gst/pbutils/descriptions.c:724
+#: gst-libs/gst/pbutils/descriptions.c:732
 #, c-format
 msgid "%s audio RTP depayloader"
 msgstr "%s елемент, разтоварващ аудиото от RTP"
 
-#: gst-libs/gst/pbutils/descriptions.c:726
+#: gst-libs/gst/pbutils/descriptions.c:734
 #, c-format
 msgid "%s RTP depayloader"
 msgstr "%s елемент, разтоварващ  данни от RTP"
 
-#: gst-libs/gst/pbutils/descriptions.c:733
+#: gst-libs/gst/pbutils/descriptions.c:741
 #, c-format
 msgid "%s demuxer"
 msgstr "Разделител (демултиплексор) %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:735
+#: gst-libs/gst/pbutils/descriptions.c:743
 #, c-format
 msgid "%s decoder"
 msgstr "Декодер %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:770
+#: gst-libs/gst/pbutils/descriptions.c:778
 #, c-format
 msgid "%s video RTP payloader"
 msgstr "%s елемент, товарещ видеото по RTP"
 
-#: gst-libs/gst/pbutils/descriptions.c:772
+#: gst-libs/gst/pbutils/descriptions.c:780
 #, c-format
 msgid "%s audio RTP payloader"
 msgstr "%s елемент, товарещ аудиото по RTP"
 
-#: gst-libs/gst/pbutils/descriptions.c:774
+#: gst-libs/gst/pbutils/descriptions.c:782
 #, c-format
 msgid "%s RTP payloader"
 msgstr "%s елемент, товарещ данни по RTP"
 
-#: gst-libs/gst/pbutils/descriptions.c:781
+#: gst-libs/gst/pbutils/descriptions.c:789
 #, c-format
 msgid "%s muxer"
 msgstr "Уплътнител (мултиплексор) %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:783
+#: gst-libs/gst/pbutils/descriptions.c:791
 #, c-format
 msgid "%s encoder"
 msgstr "Кодер %s"
 
-#: gst-libs/gst/pbutils/descriptions.c:814
+#: gst-libs/gst/pbutils/descriptions.c:822
 #, c-format
 msgid "GStreamer element %s"
 msgstr "Елемент на GStreamer %s"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:540
+#: gst-libs/gst/pbutils/missing-plugins.c:551
 msgid "Unknown source element"
 msgstr "Непознат елемент-източник"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:543
+#: gst-libs/gst/pbutils/missing-plugins.c:554
 msgid "Unknown sink element"
 msgstr "Непознат елемент-приемник"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:546
+#: gst-libs/gst/pbutils/missing-plugins.c:557
 msgid "Unknown element"
 msgstr "Непознат елемент"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:549
+#: gst-libs/gst/pbutils/missing-plugins.c:560
 msgid "Unknown decoder element"
 msgstr "Непознат елемент-декодер"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:552
+#: gst-libs/gst/pbutils/missing-plugins.c:563
 msgid "Unknown encoder element"
 msgstr "Непознат елемент-кодер"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:557
+#: gst-libs/gst/pbutils/missing-plugins.c:568
 msgid "Plugin or element of unknown type"
 msgstr "Приставка или елемент от непознат вид"
 
@@ -494,3 +568,9 @@ msgstr "Устройството „%s“ вече се използва."
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Устройството „%s“ не може да се отвори за четене и запис."
+
+#~ msgid "artist sortname"
+#~ msgstr "име на изпълнител при подредба"
+
+#~ msgid "MusicBrainz artist sortname"
+#~ msgstr "име на изпълнител при подредба според MusicBrainz"

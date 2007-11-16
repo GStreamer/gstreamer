@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-07-26 21:49+0200\n"
+"POT-Creation-Date: 2007-11-10 20:49+0000\n"
 "PO-Revision-Date: 2007-09-07 15:40+0200\n"
 "Last-Translator: Maxim V. Dziumanenko <dziumanenko@gmail.com>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -60,31 +60,55 @@ msgstr "Відтворення"
 msgid "Capture"
 msgstr "Запис"
 
-#: ext/alsa/gstalsasink.c:441
+#: ext/alsa/gstalsasink.c:457
 msgid "Could not open device for playback in mono mode."
 msgstr "Не вдається відкрити пристрій відтворення у режимі моно."
 
-#: ext/alsa/gstalsasink.c:443
+#: ext/alsa/gstalsasink.c:459
 msgid "Could not open device for playback in stereo mode."
 msgstr "Не вдається відкрити пристрій відтворення у режимі стерео."
 
-#: ext/alsa/gstalsasink.c:447
+#: ext/alsa/gstalsasink.c:463
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Не вдається відкрити пристрій відтворення у %d канальному режимі."
 
-#: ext/alsa/gstalsasrc.c:406
+#: ext/alsa/gstalsasink.c:649
+#, fuzzy
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr "Не вдається відкрити пристрій відтворення у режимі стерео."
+
+#: ext/alsa/gstalsasink.c:654
+#, fuzzy
+msgid "Could not open audio device for playback."
+msgstr "Не вдається відкрити пристрій відтворення у режимі моно."
+
+#: ext/alsa/gstalsasrc.c:422
 msgid "Could not open device for recording in mono mode."
 msgstr "Не вдається відкрити пристрій запису у режимі моно."
 
-#: ext/alsa/gstalsasrc.c:408
+#: ext/alsa/gstalsasrc.c:424
 msgid "Could not open device for recording in stereo mode."
 msgstr "Не вдається відкрити пристрій запису у режимі стерео."
 
-#: ext/alsa/gstalsasrc.c:412
+#: ext/alsa/gstalsasrc.c:428
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Не вдається відкрити пристрій запису у %d-канальному режимі."
+
+#: ext/alsa/gstalsasrc.c:626
+#, fuzzy
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr "Не вдається відкрити пристрій запису у режимі стерео."
+
+#: ext/alsa/gstalsasrc.c:631
+#, fuzzy
+msgid "Could not open audio device for recording."
+msgstr "Не вдається відкрити пристрій компакт-дисків для читання."
 
 #: ext/cdparanoia/gstcdparanoiasrc.c:240 ext/cdparanoia/gstcdparanoiasrc.c:246
 msgid "Could not open CD device for reading."
@@ -101,7 +125,8 @@ msgstr "Не вдається прочитати CD."
 #: ext/gnomevfs/gstgnomevfssink.c:387
 #, c-format
 msgid "Could not open vfs file \"%s\" for writing: %s."
-msgstr "Не вдається відкрити файл віртуальної файлової системи \"%s\" для запису: %s."
+msgstr ""
+"Не вдається відкрити файл віртуальної файлової системи \"%s\" для запису: %s."
 
 #: ext/gnomevfs/gstgnomevfssink.c:394
 msgid "No filename given"
@@ -117,105 +142,114 @@ msgstr "Не вдається закрити файл віртуальної ф�
 msgid "Error while writing to file \"%s\"."
 msgstr "Помилка при записі у файл \"%s\"."
 
-#: ext/ogg/gstoggdemux.c:3095
+#: ext/ogg/gstoggdemux.c:3099
 msgid "Internal data stream error."
 msgstr "Помилка внутрішнього потоку даних."
 
-#: gst/playback/gstdecodebin.c:1552
-msgid "This appears to be a text file"
-msgstr "Файл схожий на текстовий файл"
-
-#: gst/playback/gstplaybasebin.c:1460
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "Неправильний URI субтитру \"%s\", субтитри вимкнено."
-
-#: gst/playback/gstplaybasebin.c:1477 gst/playback/gstplaybasebin.c:1603
+#: gst/playback/gstdecodebin.c:789 gst/playback/gstdecodebin2.c:923
+#: gst/playback/gstplaybasebin.c:1526 gst/playback/gstplaybasebin.c:1662
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Для відтворення потоку потрібен модуль %s, але він не встановлений."
 
-#: gst/playback/gstplaybasebin.c:1573 gst/playback/gsturidecodebin.c:378
+#: gst/playback/gstdecodebin.c:1581
+msgid "This appears to be a text file"
+msgstr "Файл схожий на текстовий файл"
+
+#: gst/playback/gstplaybasebin.c:1509
+#, c-format
+msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+msgstr "Неправильний URI субтитру \"%s\", субтитри вимкнено."
+
+#: gst/playback/gstplaybasebin.c:1632 gst/playback/gsturidecodebin.c:582
 msgid "No URI specified to play from."
 msgstr "Не вказано URI для відтворення."
 
-#: gst/playback/gstplaybasebin.c:1579 gst/playback/gsturidecodebin.c:384
+#: gst/playback/gstplaybasebin.c:1638 gst/playback/gsturidecodebin.c:588
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "Неправильний URI \"%s\"."
 
-#: gst/playback/gstplaybasebin.c:1585
+#: gst/playback/gstplaybasebin.c:1644
 msgid "RTSP streams cannot be played yet."
 msgstr "Відтворення потоків RTSP поки-що не підтримується."
 
-#: gst/playback/gstplaybasebin.c:1915
+#: gst/playback/gstplaybasebin.c:1979
 msgid "Could not create \"decodebin\" element."
 msgstr "Не вдається створити елемент \"decodebin\"."
 
-#: gst/playback/gstplaybasebin.c:2133 gst/playback/gsturidecodebin.c:798
+#: gst/playback/gstplaybasebin.c:2197 gst/playback/gsturidecodebin.c:1056
 msgid "Source element is invalid."
 msgstr "Неправильний вхідний елемент."
 
-#: gst/playback/gstplaybasebin.c:2209
-msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
-msgstr "Виявлено лише потік субтитрів. Або ви завантажили файл субтитрів чи інший текстовий файл, або носій не розпізнано."
+#: gst/playback/gstplaybasebin.c:2274
+msgid ""
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+"Виявлено лише потік субтитрів. Або ви завантажили файл субтитрів чи інший "
+"текстовий файл, або носій не розпізнано."
 
-#: gst/playback/gstplaybasebin.c:2214
-msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
-msgstr "Не встановлено декодер для обробки цього файлу. Можливо потрібно встановити додаткові модулі."
+#: gst/playback/gstplaybasebin.c:2279
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
+"install the necessary plugins."
+msgstr ""
+"Не встановлено декодер для обробки цього файлу. Можливо потрібно встановити "
+"додаткові модулі."
 
-#: gst/playback/gstplaybasebin.c:2218
+#: gst/playback/gstplaybasebin.c:2283
 msgid "This is not a media file"
 msgstr "Файл не є мультимедійним"
 
-#: gst/playback/gstplaybasebin.c:2223
+#: gst/playback/gstplaybasebin.c:2288
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Виявлено потік субтитрів, с не відео-потік."
 
-#: gst/playback/gstplaybin.c:906
+#: gst/playback/gstplaybin.c:884
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Відсутні елементи autovideosink та xvimagesink."
 
-#: gst/playback/gstplaybin.c:914 gst/playback/gstplaybin.c:924
-#: gst/playback/gstplaybin.c:1109 gst/playback/gstplaybin.c:1119
-#: gst/playback/gstplaybin.c:1250 gst/playback/gstplaybin.c:1259
-#: gst/playback/gstplaybin.c:1268
+#: gst/playback/gstplaybin.c:892 gst/playback/gstplaybin.c:902
+#: gst/playback/gstplaybin.c:1087 gst/playback/gstplaybin.c:1097
+#: gst/playback/gstplaybin.c:1228 gst/playback/gstplaybin.c:1237
+#: gst/playback/gstplaybin.c:1246
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Відсутній елемент '%s' - перевірте встановлення GStreamer."
 
-#: gst/playback/gstplaybin.c:1102
+#: gst/playback/gstplaybin.c:1080
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Відсутні елементи autoaudiosink та alsasink."
 
-#: gst/playback/gstqueue2.c:944
+#: gst/playback/gstqueue2.c:936
 msgid "No file name specified."
 msgstr "Не вказано назву файлу."
 
-#: gst/playback/gstqueue2.c:950
+#: gst/playback/gstqueue2.c:942
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не вдається відкрити файл \"%s\" для читання."
 
-#: gst/playback/gsturidecodebin.c:205
+#: gst/playback/gsturidecodebin.c:400
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Для типу '%s' немає доступних декодерів."
 
-#: gst/playback/gsturidecodebin.c:390
+#: gst/playback/gsturidecodebin.c:594
 msgid "This stream type cannot be played yet."
 msgstr "Цей потік поки-що не може бути відтворений."
 
-#: gst/playback/gsturidecodebin.c:401
+#: gst/playback/gsturidecodebin.c:605
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Не реалізовано обробник URI для \"%s\"."
 
-#: gst/playback/gsturidecodebin.c:639
+#: gst/playback/gsturidecodebin.c:897
 msgid "Could not create \"decodebin2\" element."
 msgstr "Не вдається створити елемент \"decodebin2\"."
 
-#: gst/playback/gsturidecodebin.c:645
+#: gst/playback/gsturidecodebin.c:903
 msgid "Could not create \"queue2\" element."
 msgstr "Не вдається створити елемент \"queue2\"."
 
@@ -239,7 +273,7 @@ msgstr "Помилка при надсиланні даних gdp до \"%s:%d\"
 msgid "Connection to %s:%d refused."
 msgstr "У з'єднанні з %s:%d відмовлено."
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:602
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:618
 msgid "Can't record audio fast enough"
 msgstr "Не вдається запис аудіоданих з потрібною швидкістю"
 
@@ -282,14 +316,6 @@ msgstr "ідентифікатор доріжки TRM"
 #: gst-libs/gst/tag/tags.c:66
 msgid "MusicBrainz TRM ID"
 msgstr "Ідентифікатор доріжки TRM у MusicBrainz"
-
-#: gst-libs/gst/tag/tags.c:69
-msgid "artist sortname"
-msgstr "категорія виконавця"
-
-#: gst-libs/gst/tag/tags.c:69
-msgid "MusicBrainz artist sortname"
-msgstr "Категорія виконавця у MusicBrainz"
 
 #: gst-libs/gst/cdda/gstcddabasesrc.c:1385
 #: gst-libs/gst/cdda/gstcddabasesrc.c:1418
@@ -490,27 +516,27 @@ msgstr "кодер %s"
 msgid "GStreamer element %s"
 msgstr "Елемент GStreamer %s"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:550
+#: gst-libs/gst/pbutils/missing-plugins.c:551
 msgid "Unknown source element"
 msgstr "Невідомий елемент джерела"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:553
+#: gst-libs/gst/pbutils/missing-plugins.c:554
 msgid "Unknown sink element"
 msgstr "Невідомий елемент споживання"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:556
+#: gst-libs/gst/pbutils/missing-plugins.c:557
 msgid "Unknown element"
 msgstr "Невідомий елемент"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:559
+#: gst-libs/gst/pbutils/missing-plugins.c:560
 msgid "Unknown decoder element"
 msgstr "Невідомий елемент декодеру"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:562
+#: gst-libs/gst/pbutils/missing-plugins.c:563
 msgid "Unknown encoder element"
 msgstr "Невідомий елемент кодеру"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:567
+#: gst-libs/gst/pbutils/missing-plugins.c:568
 msgid "Plugin or element of unknown type"
 msgstr "Модуль або елемент невідомого типу"
 
@@ -532,3 +558,9 @@ msgstr "Пристрій \"%s\" вже використовується іншо
 #, c-format
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Не вдається відкрити пристрій \"%s\" для читання чи запису."
+
+#~ msgid "artist sortname"
+#~ msgstr "категорія виконавця"
+
+#~ msgid "MusicBrainz artist sortname"
+#~ msgstr "Категорія виконавця у MusicBrainz"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.14\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2007-07-26 21:49+0200\n"
+"POT-Creation-Date: 2007-11-10 20:49+0000\n"
 "PO-Revision-Date: 2007-08-05 17:29+0930\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com> \n"
@@ -61,31 +61,55 @@ msgstr "Phát lại"
 msgid "Capture"
 msgstr "Bắt"
 
-#: ext/alsa/gstalsasink.c:441
+#: ext/alsa/gstalsasink.c:457
 msgid "Could not open device for playback in mono mode."
 msgstr "Không thể mở thiết bị để phát lại trong chế độ đơn nguồn."
 
-#: ext/alsa/gstalsasink.c:443
+#: ext/alsa/gstalsasink.c:459
 msgid "Could not open device for playback in stereo mode."
 msgstr "Không thể mở thiết bị để phát lại trong chế độ âm lập thể."
 
-#: ext/alsa/gstalsasink.c:447
+#: ext/alsa/gstalsasink.c:463
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
 msgstr "Không thể mở thiết bị để phát lại trong chế độ %d kênh."
 
-#: ext/alsa/gstalsasrc.c:406
+#: ext/alsa/gstalsasink.c:649
+#, fuzzy
+msgid ""
+"Could not open audio device for playback. Device is being used by another "
+"application."
+msgstr "Không thể mở thiết bị để phát lại trong chế độ âm lập thể."
+
+#: ext/alsa/gstalsasink.c:654
+#, fuzzy
+msgid "Could not open audio device for playback."
+msgstr "Không thể mở thiết bị để phát lại trong chế độ đơn nguồn."
+
+#: ext/alsa/gstalsasrc.c:422
 msgid "Could not open device for recording in mono mode."
 msgstr "Không thể mở thiết bị để thu trong chế độ đơn nguồn."
 
-#: ext/alsa/gstalsasrc.c:408
+#: ext/alsa/gstalsasrc.c:424
 msgid "Could not open device for recording in stereo mode."
 msgstr "Không thể mở thiết bị để thu trong chế độ âm lập thể."
 
-#: ext/alsa/gstalsasrc.c:412
+#: ext/alsa/gstalsasrc.c:428
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
 msgstr "Không thể mở thiết bị để thu trong chế độ %d kênh."
+
+#: ext/alsa/gstalsasrc.c:626
+#, fuzzy
+msgid ""
+"Could not open audio device for recording. Device is being used by another "
+"application."
+msgstr "Không thể mở thiết bị để thu trong chế độ âm lập thể."
+
+#: ext/alsa/gstalsasrc.c:631
+#, fuzzy
+msgid "Could not open audio device for recording."
+msgstr "Không thể mở thiết bị đĩa CD để đọc."
 
 #: ext/cdparanoia/gstcdparanoiasrc.c:240 ext/cdparanoia/gstcdparanoiasrc.c:246
 msgid "Could not open CD device for reading."
@@ -118,105 +142,114 @@ msgstr "Không thể đóng tập tin VFS « %s »."
 msgid "Error while writing to file \"%s\"."
 msgstr "Lỗi khi ghi vào tập tin « %s »."
 
-#: ext/ogg/gstoggdemux.c:3095
+#: ext/ogg/gstoggdemux.c:3099
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
-#: gst/playback/gstdecodebin.c:1552
-msgid "This appears to be a text file"
-msgstr "Hình như đây là tập tin văn bản"
-
-#: gst/playback/gstplaybasebin.c:1460
-#, c-format
-msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-msgstr "URI phụ đề không hợp lệ « %s » nên tắt khả năng phụ đề."
-
-#: gst/playback/gstplaybasebin.c:1477 gst/playback/gstplaybasebin.c:1603
+#: gst/playback/gstdecodebin.c:789 gst/playback/gstdecodebin2.c:923
+#: gst/playback/gstplaybasebin.c:1526 gst/playback/gstplaybasebin.c:1662
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Cần bổ sung %s để phát luồng này nhưng chưa cài đặt."
 
-#: gst/playback/gstplaybasebin.c:1573 gst/playback/gsturidecodebin.c:378
+#: gst/playback/gstdecodebin.c:1581
+msgid "This appears to be a text file"
+msgstr "Hình như đây là tập tin văn bản"
+
+#: gst/playback/gstplaybasebin.c:1509
+#, c-format
+msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+msgstr "URI phụ đề không hợp lệ « %s » nên tắt khả năng phụ đề."
+
+#: gst/playback/gstplaybasebin.c:1632 gst/playback/gsturidecodebin.c:582
 msgid "No URI specified to play from."
 msgstr "Chưa ghi rõ URI từ đó cần phát."
 
-#: gst/playback/gstplaybasebin.c:1579 gst/playback/gsturidecodebin.c:384
+#: gst/playback/gstplaybasebin.c:1638 gst/playback/gsturidecodebin.c:588
 #, c-format
 msgid "Invalid URI \"%s\"."
 msgstr "URI không hợp lệ « %s »."
 
-#: gst/playback/gstplaybasebin.c:1585
+#: gst/playback/gstplaybasebin.c:1644
 msgid "RTSP streams cannot be played yet."
 msgstr "Chưa có khả năng phát luồng RTSP."
 
-#: gst/playback/gstplaybasebin.c:1915
+#: gst/playback/gstplaybasebin.c:1979
 msgid "Could not create \"decodebin\" element."
 msgstr "Không thể tạo yếu tố « decodebin »."
 
-#: gst/playback/gstplaybasebin.c:2133 gst/playback/gsturidecodebin.c:798
+#: gst/playback/gstplaybasebin.c:2197 gst/playback/gsturidecodebin.c:1056
 msgid "Source element is invalid."
 msgstr "Yếu tố nguồn không phải hợp lệ."
 
-#: gst/playback/gstplaybasebin.c:2209
-msgid "Only a subtitle stream was detected. Either you are loading a subtitle file or some other type of text file, or the media file was not recognized."
-msgstr "Chỉ phát hiện luồng phụ đề. Hoặc bạn đang nạp tập tin phụ đề hay tập tin văn bản kiểu khác, hoặc không nhận diện tập tin nhạc/ảnh."
+#: gst/playback/gstplaybasebin.c:2274
+msgid ""
+"Only a subtitle stream was detected. Either you are loading a subtitle file "
+"or some other type of text file, or the media file was not recognized."
+msgstr ""
+"Chỉ phát hiện luồng phụ đề. Hoặc bạn đang nạp tập tin phụ đề hay tập tin văn "
+"bản kiểu khác, hoặc không nhận diện tập tin nhạc/ảnh."
 
-#: gst/playback/gstplaybasebin.c:2214
-msgid "You do not have a decoder installed to handle this file. You might need to install the necessary plugins."
-msgstr "Chưa cài đặt bộ giải mã có khả năng quản lý tập tin này. Có thể cần phải cài đặt bổ sung."
+#: gst/playback/gstplaybasebin.c:2279
+msgid ""
+"You do not have a decoder installed to handle this file. You might need to "
+"install the necessary plugins."
+msgstr ""
+"Chưa cài đặt bộ giải mã có khả năng quản lý tập tin này. Có thể cần phải cài "
+"đặt bổ sung."
 
-#: gst/playback/gstplaybasebin.c:2218
+#: gst/playback/gstplaybasebin.c:2283
 msgid "This is not a media file"
 msgstr "Đây không phải tập tin nhạc/ảnh"
 
-#: gst/playback/gstplaybasebin.c:2223
+#: gst/playback/gstplaybasebin.c:2288
 msgid "A subtitle stream was detected, but no video stream."
 msgstr "Phát hiện luồng phụ đề, không có luồng ảnh động."
 
-#: gst/playback/gstplaybin.c:906
+#: gst/playback/gstplaybin.c:884
 msgid "Both autovideosink and xvimagesink elements are missing."
 msgstr "Thiếu yếu tố autovideosink, cũng thiếu yếu tố xvimagesink."
 
-#: gst/playback/gstplaybin.c:914 gst/playback/gstplaybin.c:924
-#: gst/playback/gstplaybin.c:1109 gst/playback/gstplaybin.c:1119
-#: gst/playback/gstplaybin.c:1250 gst/playback/gstplaybin.c:1259
-#: gst/playback/gstplaybin.c:1268
+#: gst/playback/gstplaybin.c:892 gst/playback/gstplaybin.c:902
+#: gst/playback/gstplaybin.c:1087 gst/playback/gstplaybin.c:1097
+#: gst/playback/gstplaybin.c:1228 gst/playback/gstplaybin.c:1237
+#: gst/playback/gstplaybin.c:1246
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr "Thiếu yếu tố « %s » — hãy kiểm tra lại cài đặt GStreamer."
 
-#: gst/playback/gstplaybin.c:1102
+#: gst/playback/gstplaybin.c:1080
 msgid "Both autoaudiosink and alsasink elements are missing."
 msgstr "Thiếu yếu tố autoaudiosink, cũng thiếu yếu tố alsasink."
 
-#: gst/playback/gstqueue2.c:944
+#: gst/playback/gstqueue2.c:936
 msgid "No file name specified."
 msgstr "Chưa ghi rõ tên tập tin."
 
-#: gst/playback/gstqueue2.c:950
+#: gst/playback/gstqueue2.c:942
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Không thể mở tập tin « %s » để đọc."
 
-#: gst/playback/gsturidecodebin.c:205
+#: gst/playback/gsturidecodebin.c:400
 #, c-format
 msgid "No decoder available for type '%s'."
 msgstr "Không có bộ giải mã sẵn sàng cho kiểu « %s »."
 
-#: gst/playback/gsturidecodebin.c:390
+#: gst/playback/gsturidecodebin.c:594
 msgid "This stream type cannot be played yet."
 msgstr "Chưa có khả năng phát kiểu luồng này."
 
-#: gst/playback/gsturidecodebin.c:401
+#: gst/playback/gsturidecodebin.c:605
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
 msgstr "Không có bộ quản lý địa chỉ URI được thực hiện cho « %s »."
 
-#: gst/playback/gsturidecodebin.c:639
+#: gst/playback/gsturidecodebin.c:897
 msgid "Could not create \"decodebin2\" element."
 msgstr "Không thể tạo yếu tố « decodebin2 »."
 
-#: gst/playback/gsturidecodebin.c:645
+#: gst/playback/gsturidecodebin.c:903
 msgid "Could not create \"queue2\" element."
 msgstr "Không thể tạo yếu tố « queue2 »."
 
@@ -240,7 +273,7 @@ msgstr "Lỗi khi gởi dữ liệu trọng tải GDP cho « %s:%d »."
 msgid "Connection to %s:%d refused."
 msgstr "Kết nối tới « %s:%d » bị từ chối."
 
-#: gst-libs/gst/audio/gstbaseaudiosrc.c:602
+#: gst-libs/gst/audio/gstbaseaudiosrc.c:618
 msgid "Can't record audio fast enough"
 msgstr "Không thể thu âm thanh một cách đủ nhanh"
 
@@ -284,14 +317,6 @@ msgstr "mã TRM rãnh"
 msgid "MusicBrainz TRM ID"
 msgstr "mã TRM rãnh MusicBrainz"
 
-#: gst-libs/gst/tag/tags.c:69
-msgid "artist sortname"
-msgstr "tên sắp xếp nghệ sĩ"
-
-#: gst-libs/gst/tag/tags.c:69
-msgid "MusicBrainz artist sortname"
-msgstr "tên sắp xếp nghệ sĩ MusicBrainz"
-
 #: gst-libs/gst/cdda/gstcddabasesrc.c:1385
 #: gst-libs/gst/cdda/gstcddabasesrc.c:1418
 msgid "This CD has no audio tracks"
@@ -303,7 +328,9 @@ msgstr "Âm thanh không mất gì của Apple (Apple Lossless Audio: ALAC)"
 
 #: gst-libs/gst/pbutils/descriptions.c:98
 msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Phương pháp tự do không mất gì nén và truyền nhiều loại dữ liệu âm thanh khác (Free Lossless Audio Codec: FLAC)"
+msgstr ""
+"Phương pháp tự do không mất gì nén và truyền nhiều loại dữ liệu âm thanh "
+"khác (Free Lossless Audio Codec: FLAC)"
 
 #: gst-libs/gst/pbutils/descriptions.c:121
 #: gst-libs/gst/pbutils/descriptions.c:122
@@ -425,11 +452,14 @@ msgstr "Nguồn đĩa DVD"
 
 #: gst-libs/gst/pbutils/descriptions.c:650
 msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Nguồn Giao thức chạy luồng giờ thật (Real Time Streaming Protocol: RTSP)"
+msgstr ""
+"Nguồn Giao thức chạy luồng giờ thật (Real Time Streaming Protocol: RTSP)"
 
 #: gst-libs/gst/pbutils/descriptions.c:654
 msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Nguồn Giao thức trình phục vụ nhạc/ảnh Microsoft (Microsoft Media Server: MMS)"
+msgstr ""
+"Nguồn Giao thức trình phục vụ nhạc/ảnh Microsoft (Microsoft Media Server: "
+"MMS)"
 
 #: gst-libs/gst/pbutils/descriptions.c:662
 #, c-format
@@ -491,27 +521,27 @@ msgstr "bộ mã hoá %s"
 msgid "GStreamer element %s"
 msgstr "Yếu tố GStreamer %s"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:550
+#: gst-libs/gst/pbutils/missing-plugins.c:551
 msgid "Unknown source element"
 msgstr "Yếu tố nguồn lạ"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:553
+#: gst-libs/gst/pbutils/missing-plugins.c:554
 msgid "Unknown sink element"
 msgstr "Yếu tố ổ chìm lạ"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:556
+#: gst-libs/gst/pbutils/missing-plugins.c:557
 msgid "Unknown element"
 msgstr "Yếu tố lạ"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:559
+#: gst-libs/gst/pbutils/missing-plugins.c:560
 msgid "Unknown decoder element"
 msgstr "Yếu tố giải mã lạ"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:562
+#: gst-libs/gst/pbutils/missing-plugins.c:563
 msgid "Unknown encoder element"
 msgstr "Yếu tố mã hoá lạ"
 
-#: gst-libs/gst/pbutils/missing-plugins.c:567
+#: gst-libs/gst/pbutils/missing-plugins.c:568
 msgid "Plugin or element of unknown type"
 msgstr "Bổ sung hay yếu tố có kiểu lạ"
 
@@ -534,6 +564,12 @@ msgstr "Thiết bị « %s » đang được dùng."
 msgid "Could not open device \"%s\" for reading and writing."
 msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
 
+#~ msgid "artist sortname"
+#~ msgstr "tên sắp xếp nghệ sĩ"
+
+#~ msgid "MusicBrainz artist sortname"
+#~ msgstr "tên sắp xếp nghệ sĩ MusicBrainz"
+
 #~ msgid "Device is not open."
 #~ msgstr "Thiết bị chưa mở."
 
@@ -553,10 +589,18 @@ msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
 #~ msgstr "Không thể ghi vào tập tin « %s »."
 
 #~ msgid "No or invalid input audio, AVI stream will be corrupt."
-#~ msgstr "Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. Sẽ có dòng AVI hư."
+#~ msgstr ""
+#~ "Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. "
+#~ "Sẽ có dòng AVI hư."
 
-#~ msgid "The %s element could not be found. This element is essential for playback. Please install the right plug-in and verify that it works by running 'gst-inspect %s'"
-#~ msgstr "Chưa tìm được yếu tố %s. Phải có yếu tố này để phát lại được.Hãy cài đặt trình cầm phít đúng và kiểm chứng nó hoạt động được bằng cách chạy lệnh 'gst-inspect %s'"
+#~ msgid ""
+#~ "The %s element could not be found. This element is essential for "
+#~ "playback. Please install the right plug-in and verify that it works by "
+#~ "running 'gst-inspect %s'"
+#~ msgstr ""
+#~ "Chưa tìm được yếu tố %s. Phải có yếu tố này để phát lại được.Hãy cài đặt "
+#~ "trình cầm phít đúng và kiểm chứng nó hoạt động được bằng cách chạy lệnh "
+#~ "'gst-inspect %s'"
 
 #~ msgid ""
 #~ "No usable colorspace element could be found.\n"
