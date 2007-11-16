@@ -1,5 +1,10 @@
 2007-11-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* tests/examples/seek/seek.c: (make_playerbin2_pipeline), (main):
+	Add playbin2 seek pipeline.
+
+2007-11-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/playback/Makefile.am:
 	* gst/playback/gstplayback.c: (plugin_init):
 	* gst/playback/test7.c: (update_scale), (warning_cb), (error_cb),

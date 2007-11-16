@@ -848,6 +848,24 @@ make_playerbin_pipeline (const gchar * location)
   return player;
 }
 
+static GstElement *
+make_playerbin2_pipeline (const gchar * location)
+{
+  GstElement *player;
+
+  player = gst_element_factory_make ("playbin2", "player");
+  g_assert (player);
+
+  g_object_set (G_OBJECT (player), "uri", location, NULL);
+
+  seekable_elements = g_list_prepend (seekable_elements, player);
+
+  /* force element seeking on this pipeline */
+  elem_seek = TRUE;
+
+  return player;
+}
+
 #ifndef GST_DISABLE_PARSE
 static GstElement *
 make_parselaunch_pipeline (const gchar * description)
@@ -891,6 +909,7 @@ static Pipeline pipelines[] = {
 #ifndef GST_DISABLE_PARSE
   {"parse-launch", make_parselaunch_pipeline},
 #endif
+  {"playerbin2", make_playerbin2_pipeline},
   {NULL, NULL},
 };
 
@@ -1648,6 +1667,8 @@ main (int argc, char **argv)
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
   hscale = gtk_hscale_new (adjustment);
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
+  gtk_range_set_show_fill_level (GTK_RANGE (hscale), TRUE);
+  gtk_range_set_fill_level (GTK_RANGE (hscale), 100.0);
   gtk_range_set_update_policy (GTK_RANGE (hscale), GTK_UPDATE_CONTINUOUS);
 
   gtk_signal_connect (GTK_OBJECT (hscale),
