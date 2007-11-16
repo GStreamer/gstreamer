@@ -1,6 +1,7 @@
 
 import logging
 
+from GstDebugViewer import Data, GUI
 from GstDebugViewer.Plugins import *
 
 import cairo
@@ -80,6 +81,39 @@ class LineFrequencySentinel (object):
 
         return (step, result,)
 
+class LevelDistributionSentinel (object):
+
+    def __init__ (self, model):
+
+        self.model = model
+
+    def run_for (self, step, n):
+
+        model_get = self.model.get
+        model_next = self.model.iter_next
+        id_time = self.model.COL_TIME
+        id_level = self.model.COL_LEVEL
+        result = [0] * n
+        i = 0
+        counts = [0] * 6
+        max_ts = step
+        tree_iter = self.model.get_iter_first ()
+        while tree_iter:
+            # FIXME: THIS IS SLOW! Either save partition data in
+            # LineFrequencySentinel or pre-parse timestamps too!
+            ts, level = model_get (tree_iter, id_time, id_level)
+            if ts > max_ts:
+                max_ts += step
+                result[i] = tuple (counts)
+                counts = [0] * 6
+                i += 1
+            counts[level] += 1
+            tree_iter = model_next (tree_iter)
+
+        # FIXME: We lose the last partition here!
+
+        return result
+
 class LineFrequencyWidget (gtk.DrawingArea):
 
     __gtype_name__ = "LineFrequencyWidget"
@@ -93,7 +127,7 @@ class LineFrequencyWidget (gtk.DrawingArea):
         self.sentinel = sentinel
         self.sentinel_step = None
         self.sentinel_data = None
-        self.__configure_id = None
+        self.level_dist_sentinel = None
         self.connect ("expose-event", self.__handle_expose_event)
         self.connect ("configure-event", self.__handle_configure_event)
         self.connect ("size-request", self.__handle_size_request)
@@ -101,6 +135,7 @@ class LineFrequencyWidget (gtk.DrawingArea):
     def set_sentinel (self, sentinel):
 
         self.sentinel = sentinel
+        self.level_dist_sentinel = LevelDistributionSentinel (sentinel.model)
         self.__redraw ()
 
     def __redraw (self):
@@ -180,7 +215,7 @@ class LineFrequencyWidget (gtk.DrawingArea):
         if self.sentinel_data is None and self.sentinel:
             if w > 15:
                 self.logger.debug ("running sentinel for width %i", w)
-                self.sentinel_step, self.sentinel_data = self.sentinel.run_for (w)
+                self.__update_sentinel_data (w)
             else:
                 return
 
@@ -188,11 +223,29 @@ class LineFrequencyWidget (gtk.DrawingArea):
             self.logger.debug ("not redrawing: no sentinel set")
             return
 
-        from operator import add
         maximum = max (self.sentinel_data)
-        heights = [h * float (d) / maximum for d in self.sentinel_data]
-        ctx.move_to (0, h)
+
         ctx.set_source_rgb (0., 0., 0.)
+        self.__draw_graph (ctx, w, h, maximum, self.sentinel_data)
+
+        theme = GUI.LevelColorThemeTango ()
+        dist_data = self.level_dist_data
+
+        level = Data.debug_level_debug
+        level_prev = Data.debug_level_log
+        ctx.set_source_rgb (*(theme.colors_float (level)[1]))
+        self.__draw_graph (ctx, w, h, maximum, [counts[level] + counts[level_prev]
+                                                for counts in dist_data])
+
+        level = Data.debug_level_log
+        ctx.set_source_rgb (*(theme.colors_float (level)[1]))
+        self.__draw_graph (ctx, w, h, maximum, [counts[level] for counts in dist_data])
+
+    def __draw_graph (self, ctx, w, h, maximum, data):
+
+        from operator import add
+        heights = [h * float (d) / maximum for d in data]
+        ctx.move_to (0, h)
         for i in range (len (heights)):
             ctx.line_to (i - .5, h - heights[i] + .5)
             #ctx.rectangle (i - .5, h - heights[i] + .5, i + 1, h)
@@ -207,13 +260,19 @@ class LineFrequencyWidget (gtk.DrawingArea):
         self.__redraw ()
         return True
 
+    def __update_sentinel_data (self, width):
+
+        self.sentinel_step, self.sentinel_data = self.sentinel.run_for (width)
+        self.level_dist_data = self.level_dist_sentinel.run_for (self.sentinel_step,
+                                                                 len (self.sentinel_data))
+
     def __handle_configure_event (self, self_, event):
 
         if event.width < 16:
             return
 
         if self.sentinel:
-            self.sentinel_step, self.sentinel_data = self.sentinel.run_for (event.width)
+            self.__update_sentinel_data (event.width)
 
         # FIXME: Is this done automatically?
         self.queue_draw ()

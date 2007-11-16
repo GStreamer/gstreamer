@@ -61,6 +61,18 @@ class ColorTheme (object):
 
         self.colors[key] = (fg_color, bg_color, bg_color2,)
 
+    @staticmethod
+    def hex_string_to_floats (s):
+
+        if s.startswith ("#"):
+            s = s[1:]
+        return tuple ((float (int (hs, 16)) / 255. for hs in (s[:2], s[2:4], s[4:],)))
+
+    def colors_float (self, key):
+
+        return tuple ((self.hex_string_to_floats (color)
+                       for color in self.colors[key]))
+
 class LevelColorTheme (ColorTheme):
 
     pass
