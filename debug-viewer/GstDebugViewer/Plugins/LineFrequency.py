@@ -241,6 +241,18 @@ class LineFrequencyWidget (gtk.DrawingArea):
         ctx.set_source_rgb (*(theme.colors_float (level)[1]))
         self.__draw_graph (ctx, w, h, maximum, [counts[level] for counts in dist_data])
 
+        for level in (Data.debug_level_warning, Data.debug_level_error,):
+            ctx.set_source_rgb (*(theme.colors_float (level)[1]))
+            for i, counts in enumerate (dist_data):
+                if counts[level] == 0:
+                    continue
+                SIZE = 8
+                ctx.move_to (i - SIZE // 2, 0)
+                ctx.line_to (i + SIZE // 2, 0)
+                ctx.line_to (i, SIZE / 1.41)
+                ctx.close_path ()
+                ctx.fill ()
+
     def __draw_graph (self, ctx, w, h, maximum, data):
 
         from operator import add
