@@ -18,6 +18,9 @@ class LineFrequencySentinel (object):
     def __init__ (self, model):
 
         self.model = model
+        self.data = None
+        self.partitions = None
+        self.step = None
 
     def _search_ts (self, target_ts, first_index, last_index):
 
@@ -44,6 +47,7 @@ class LineFrequencySentinel (object):
 
         model = self.model
         result = []
+        partitions = []
 
         last_ts = None
         for row in iter_model_reversed (self.model):
@@ -53,7 +57,7 @@ class LineFrequencySentinel (object):
                 break
 
         if last_ts is None:
-            return result
+            return
 
         step = int (float (last_ts) / float (n))
 
@@ -63,6 +67,7 @@ class LineFrequencySentinel (object):
         while target_ts < last_ts:
             found = self._search_ts (target_ts, first_index, last_index)
             result.append (found - old_found)
+            partitions.append (found)
             old_found = found
             first_index = found
             target_ts += step
@@ -79,40 +84,45 @@ class LineFrequencySentinel (object):
         ##         count = 0
         ##     count += 1
 
-        return (step, result,)
+        self.step = step
+        self.data = result
+        self.partitions = partitions
 
 class LevelDistributionSentinel (object):
 
     def __init__ (self, model):
 
         self.model = model
+        self.data = []
 
-    def run_for (self, step, n):
+    def run_for (self, freq_sentinel):
 
         model_get = self.model.get
         model_next = self.model.iter_next
         id_time = self.model.COL_TIME
         id_level = self.model.COL_LEVEL
-        result = [0] * n
+        result = []
         i = 0
+        partitions_i = 0
+        partitions = freq_sentinel.partitions
         counts = [0] * 6
-        max_ts = step
         tree_iter = self.model.get_iter_first ()
         while tree_iter:
-            # FIXME: THIS IS SLOW! Either save partition data in
-            # LineFrequencySentinel or pre-parse timestamps too!
-            ts, level = model_get (tree_iter, id_time, id_level)
-            if ts > max_ts:
-                max_ts += step
-                result[i] = tuple (counts)
+            level = model_get (tree_iter, id_level)[0]
+            if i > partitions[partitions_i]:
+                result.append (tuple (counts))
                 counts = [0] * 6
-                i += 1
+                partitions_i += 1
+                if partitions_i == len (partitions):
+                    # FIXME?
+                    break
+            i += 1
             counts[level] += 1
             tree_iter = model_next (tree_iter)
 
         # FIXME: We lose the last partition here!
 
-        return result
+        self.data = result
 
 class LineFrequencyWidget (gtk.DrawingArea):
 
@@ -125,8 +135,6 @@ class LineFrequencyWidget (gtk.DrawingArea):
         self.logger = logging.getLogger ("ui.density-widget")
 
         self.sentinel = sentinel
-        self.sentinel_step = None
-        self.sentinel_data = None
         self.level_dist_sentinel = None
         self.connect ("expose-event", self.__handle_expose_event)
         self.connect ("configure-event", self.__handle_configure_event)
@@ -162,8 +170,8 @@ class LineFrequencyWidget (gtk.DrawingArea):
 
         self.__update ()
 
-        position1 = int (float (start_ts) / self.sentinel_step)
-        position2 = int (float (end_ts) / self.sentinel_step)
+        position1 = int (float (start_ts) / self.sentinel.step)
+        position2 = int (float (end_ts) / self.sentinel.step)
 
         ctx = self.window.cairo_create ()
         x, y, w, h = self.get_allocation ()
@@ -183,8 +191,8 @@ class LineFrequencyWidget (gtk.DrawingArea):
     def find_indicative_time_step (self):
 
         MINIMUM_PIXEL_STEP = 32
-        time_per_pixel = self.sentinel_step
-        return 32 # FIXME use self.sentinel_step and len (self.sentinel_data)
+        time_per_pixel = self.sentinel.step
+        return 32 # FIXME use self.sentinel.step and len (self.sentinel.data)
 
     def __draw (self, drawable):
 
@@ -212,24 +220,25 @@ class LineFrequencyWidget (gtk.DrawingArea):
             ctx.line_to (x, h)
             ctx.stroke ()
 
-        if self.sentinel_data is None and self.sentinel:
+        if self.sentinel and not self.sentinel.data:
             if w > 15:
                 self.logger.debug ("running sentinel for width %i", w)
                 self.__update_sentinel_data (w)
             else:
+                self.logger.debug ("not running sentinel: widget width too small (%i)", w)
                 return
 
-        if self.sentinel_data is None:
+        if self.sentinel is None:
             self.logger.debug ("not redrawing: no sentinel set")
             return
 
-        maximum = max (self.sentinel_data)
+        maximum = max (self.sentinel.data)
 
         ctx.set_source_rgb (0., 0., 0.)
-        self.__draw_graph (ctx, w, h, maximum, self.sentinel_data)
+        self.__draw_graph (ctx, w, h, maximum, self.sentinel.data)
 
         theme = GUI.LevelColorThemeTango ()
-        dist_data = self.level_dist_data
+        dist_data = self.level_dist_sentinel.data
 
         level = Data.debug_level_debug
         level_prev = Data.debug_level_log
@@ -255,6 +264,9 @@ class LineFrequencyWidget (gtk.DrawingArea):
 
     def __draw_graph (self, ctx, w, h, maximum, data):
 
+        if not data:
+            return
+
         from operator import add
         heights = [h * float (d) / maximum for d in data]
         ctx.move_to (0, h)
@@ -274,14 +286,21 @@ class LineFrequencyWidget (gtk.DrawingArea):
 
     def __update_sentinel_data (self, width):
 
-        self.sentinel_step, self.sentinel_data = self.sentinel.run_for (width)
-        self.level_dist_data = self.level_dist_sentinel.run_for (self.sentinel_step,
-                                                                 len (self.sentinel_data))
+        self.logger.debug ("updating sentinel data for width %i", width)
+        self.sentinel.run_for (width)
+        self.logger.debug ("updating level distribution data")
+        self.level_dist_sentinel.run_for (self.sentinel)
+        if not self.level_dist_sentinel.data:
+            self.logger.warning ("no level distribution data sensed")
+        self.logger.debug ("sentinel update complete")
 
     def __handle_configure_event (self, self_, event):
 
+        self.logger.debug ("widget size configured to %ix%i",
+                           event.width, event.height)
+
         if event.width < 16:
-            return
+            return False
 
         if self.sentinel:
             self.__update_sentinel_data (event.width)
@@ -400,7 +419,7 @@ class LineFrequencyFeature (FeatureBase):
 
     def goto_density (self, pos):
 
-        data = self.density_display.sentinel_data
+        data = self.density_display.sentinel.data
         if not data:
             return True
         count = 0
