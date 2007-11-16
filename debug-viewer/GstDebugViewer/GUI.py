@@ -278,7 +278,9 @@ class LazyLogModel (LogModelBase):
 
         ts_len = 17
         pid_len = 5
-        thread_len = 9 # FIXME: %p, so this should be larger on a 64 bit CPU, no?
+
+        thread_pos = ts_len + 1 + pid_len + 1
+        thread_len = line[thread_pos:thread_pos + 32].find (" ")
         level_len = 5
 
         non_regex_len = ts_len + 1 + pid_len + thread_len + 1 + level_len + 1

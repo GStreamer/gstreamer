@@ -194,10 +194,9 @@ class LineCache (Producer):
         # FIXME: Duplicated from GUI.LazyLogModel!
         ts_len = 17
         pid_len = 5
-        thread_len = 9 # FIXME: %p, so this should be larger on a 64 bit CPU, no?
+        # Need to find out thread len below...
         level_len = 5
-        level_offset = ts_len + 1 + pid_len + 1 + thread_len + 1
-        level_end = level_offset + 1
+        thread_start = ts_len + 1 + pid_len + 1
         dict_levels = {"D" : debug_level_debug, "L" : debug_level_log,
                        "I" : debug_level_info, "E" : debug_level_error,
                        "W" : debug_level_warning, " " : debug_level_none}
@@ -221,8 +220,10 @@ class LineCache (Producer):
             if line[1] != ":" or line[4] != ":" or line[7] != ".":
                 # No timestamp at start, ignore line:
                 continue
+
+            thread_end = line.find (" ", thread_start)
             offsets.append (offset)
-            levels.append (dict_levels[line[level_offset:level_end]])
+            levels.append (dict_levels[line[thread_end + 1:thread_end + 2]])
             i += 1
             if i >= limit:
                 i = 0
