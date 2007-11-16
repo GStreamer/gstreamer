@@ -8,10 +8,13 @@ built_headers = gstplay-marshal.h
 plugindir = $(libdir)/gstreamer-@GST_MAJORMINOR@
 
 plugin_LTLIBRARIES = libgstplaybin.la libgstdecodebin.la libgstdecodebin2.la libgstqueue2.la \
-		     libgsturidecodebin.la
+		     libgsturidecodebin.la 
 
 libgstplaybin_la_SOURCES = \
+	gstplayback.c \
 	gstplaybin.c \
+	gstplaybin2.c \
+	gstplaysink.c \
 	gstplaybasebin.c \
 	gststreaminfo.c \
 	gststreamselector.c
@@ -55,10 +58,11 @@ libgsturidecodebin_la_LIBADD = \
 
 noinst_HEADERS = \
 	gstplaybasebin.h \
+	gstplaysink.h \
 	gststreaminfo.h \
 	gststreamselector.h
 
-noinst_PROGRAMS = test decodetest test2 test3 test4 test5 test6
+noinst_PROGRAMS = test decodetest test2 test3 test4 test5 test6 test7
 
 test_LDADD = $(GST_LIBS) 
 test_CFLAGS = $(GST_CFLAGS)
@@ -77,6 +81,9 @@ test5_CFLAGS = $(GST_CFLAGS)
 
 test6_LDADD = $(GST_LIBS) 
 test6_CFLAGS = $(GST_CFLAGS)
+
+test7_LDADD = $(GST_LIBS) 
+test7_CFLAGS = $(GST_CFLAGS)
 
 decodetest_LDADD = $(GST_LIBS) 
 decodetest_CFLAGS = $(GST_CFLAGS)

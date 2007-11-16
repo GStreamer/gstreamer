@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2003 Colin Walters <cwalters@gnome.org>
- *                    2000,2005,2007 Wim Taymans <wim@fluendo.com>
+ *                    2000,2005,2007 Wim Taymans <wim.taymans@gmail.com>
  *                    2007 Thiago Sousa Santos <thiagoss@lcc.ufcg.edu.br>
  *
  * gstqueue2.c:

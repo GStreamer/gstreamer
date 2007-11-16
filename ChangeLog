@@ -1,5 +1,52 @@
 2007-11-16  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/playback/Makefile.am:
+	* gst/playback/gstplayback.c: (plugin_init):
+	* gst/playback/test7.c: (update_scale), (warning_cb), (error_cb),
+	(eos_cb), (about_to_finish_cb), (main):
+	Add playbin2.
+	Added gapless playback example.
+
+	* gst/playback/gstplaybasebin.c:
+	* gst/playback/gstplaybasebin.h:
+	* gst/playback/gstplaybin.c: (gst_play_bin_plugin_init):
+	* gst/playback/gstqueue2.c:
+	* gst/playback/test.c:
+	* gst/playback/gsturidecodebin.c: (gst_uri_decode_bin_class_init),
+	(pad_removed_cb):
+	* gst/playback/gststreaminfo.h:
+	Change email.
+
+	* gst/playback/gstplaybin2.c: (gst_play_bin_get_type),
+	(gst_play_bin_class_init), (init_group), (gst_play_bin_init),
+	(gst_play_bin_dispose), (gst_play_bin_set_uri),
+	(gst_play_bin_set_suburi), (gst_play_bin_set_property),
+	(gst_play_bin_get_property), (gst_play_bin_handle_message),
+	(pad_added_cb), (pad_removed_cb), (no_more_pads_cb), (perform_eos),
+	(drained_cb), (unlink_group), (activate_group),
+	(setup_next_source), (gst_play_bin_change_state),
+	(gst_play_bin2_plugin_init):
+	Added raw first version of playbin2. Does chained oggs and gapless
+	playback fine. No support for raw sinks yet. No visualisations or
+	subtitles yet.
+
+	* gst/playback/gstplaysink.c: (gst_play_sink_get_type),
+	(gst_play_sink_class_init), (gst_play_sink_init),
+	(gst_play_sink_dispose), (gst_play_sink_vis_unblocked),
+	(gst_play_sink_vis_blocked), (gst_play_sink_set_video_sink),
+	(gst_play_sink_set_audio_sink), (gst_play_sink_set_vis_plugin),
+	(gst_play_sink_set_property), (gst_play_sink_get_property),
+	(post_missing_element_message), (free_chain), (add_chain),
+	(activate_chain), (gen_video_chain), (gen_text_element),
+	(gen_audio_chain), (gen_vis_element), (gst_play_sink_get_mode),
+	(gst_play_sink_set_mode), (gst_play_sink_request_pad),
+	(gst_play_sink_release_pad), (gst_play_sink_send_event_to_sink),
+	(gst_play_sink_send_event), (gst_play_sink_change_state):
+	* gst/playback/gstplaysink.h:
+	Added Element that abstracts the sinks and their pipelines for playbin2.
+
+2007-11-16  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/playback/gststreamselector.c: (gst_selector_pad_get_type),
 	(gst_selector_pad_class_init), (gst_selector_pad_init),
 	(gst_selector_pad_finalize), (gst_selector_pad_reset),

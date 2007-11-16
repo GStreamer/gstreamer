@@ -1829,25 +1829,11 @@ gst_play_bin_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+gst_play_bin_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_play_bin_debug, "playbin", 0, "play bin");
-
-  gst_pb_utils_init ();
-
-#ifdef ENABLE_NLS
-  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
-      LOCALEDIR);
-  bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
-#endif /* ENABLE_NLS */
 
   return gst_element_register (plugin, "playbin", GST_RANK_NONE,
       GST_TYPE_PLAY_BIN);
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "playbin",
-    "player bin", plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME,
-    GST_PACKAGE_ORIGIN)
