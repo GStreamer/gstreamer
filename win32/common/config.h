@@ -169,10 +169,10 @@
 #undef HAVE_SYS_SOCKET_H
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
-#undef HAVE_SYS_STAT_H 1
+#undef HAVE_SYS_STAT_H
 
 /* Define to 1 if you have the <sys/types.h> header file. */
-#undef HAVE_SYS_TYPES_H 1
+#undef HAVE_SYS_TYPES_H
 
 /* support for features: theoradec theoraenc */
 #undef HAVE_THEORA
@@ -208,16 +208,16 @@
 #define PACKAGE_BUGREPORT "http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer"
 
 /* Define to the full name of this package. */
-#undef PACKAGE_NAME "GStreamer Base Plug-ins"
+#define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#undef PACKAGE_STRING "GStreamer Base Plug-ins 0.10.14"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 0.10.15"
 
 /* Define to the one symbol short name of this package. */
-#undef PACKAGE_TARNAME "gst-plugins-base"
+#define PACKAGE_TARNAME "gst-plugins-base"
 
 /* Define to the version of this package. */
-#undef PACKAGE_VERSION "0.10.14"
+#define PACKAGE_VERSION "0.10.15"
 
 /* directory where plugins are located */
 #undef PLUGINDIR
@@ -241,7 +241,7 @@
 #undef STDC_HEADERS
 
 /* Version number of package */
-#define VERSION "0.10.14"
+#define VERSION "0.10.15"
 
 /* Define to 1 if your processor stores words with the most significant byte
    first (like Motorola and SPARC, unlike Intel and VAX). */
@@ -256,5 +256,6 @@
 #undef inline
 #endif
 
+/* FIXME: this should probably be hard-coded to some win32 system path */
 #define GST_INSTALL_PLUGINS_HELPER "/home/jan/.install/libexec/gst-install-plugins-helper"
 

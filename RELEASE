@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plug-ins 0.10.14 "Light Years Ahead"
+Release notes for GStreamer Base Plug-ins 0.10.15 "No need to argue"
         
 
 
@@ -54,59 +54,89 @@ contains a set of less supported plug-ins that haven't passed the
 
 Features of this release
     
-      * Audio dither and noise-shaping when reducing bit-depth
-      * RTSP and SDP helper libraries added
-      * Experimental buffering element "queue2" now supports pull-mode
-    and file-based buffering.
-      * Support for more 32-bit video pixel layouts
-      * Various fixes and improvements
-      * Parallel installability with 0.8.x series
-      * Threadsafe design and API
+      * RTP/RTSP/RTCP/SDP support improved
+      * New FFT support library libgstfft, based on Kiss FFT
+      * New formats supported in volume and audiotestsrc
+      * Fixes in audiorate and videorate
+      * Audio capture fixes
+      * Playbin and decodebin fixes
+      * New tagdemux base class for ID3/APE style tag readers
+      * Fix a nasty crash in the X sinks on shutdown
+      * New tags supported
+      * Add support for multichannel WAV files.
+      * Preserve channel layout information when up/down-mixing.
+      * Many bug-fixes and improvements
+      * 
 
 Bugs fixed in this release
      
-      * 380625 : [x*imagesink] add 'handle-expose' property
-      * 385527 : oggmux sometimes gets DELTA flag on output wrong near start
-      * 402076 : videoscale 4-tap method broken for downscaling
-      * 437169 : [xvimagesink] add property to disable Xv double-buffering
-      * 441264 : queue2 support to do buffering on a file
-      * 442553 : [v4lsrc] doesn't output segments in GST_FORMAT_TIME
-      * 442557 : [videorate] doesn't handle latency queries
-      * 442944 : Audiotestsrc can overflow on seeks
-      * 444523 : [queue2] Pull mode support
-      * 444630 : Compilation error with fsseko (from gstqueue2.c) -- unabl...
-      * 445505 : [queue2] It does not work in pull mode with oggdemux
-      * 446551 : [queue2] Buffering is not working properly if it is set t...
-      * 446572 : [queue2] Division by zero
-      * 446972 : warning when compiling  gstoggdemux.c
-      * 449156 : Regression in CVS for decodebin2
-      * 450875 : Missing files in po/POTFILES.in
-      * 451707 : [tag] UTF-8 in ID3v1 tag not correctly decoded
-      * 451908 : [ffmpegcolorspace] regression: doesn't accept GST_VIDEO_C...
-      * 454264 : Playbin fails to " play " image url after a movie url
-      * 456656 : [API] Addition of audio buffer clipping function to gstaudio
-      * 460978 : gst_audio_buffer_clip outputs warnings
-      * 152864 : [PATCH] GstAlsaMixer doesn't support signals
-      * 360246 : [audioconvert] Optionally apply dithering
-      * 394061 : Add support for Subviewer subtitles
-      * 420326 : Base payloader class has wrong property types and ranges
-      * 451145 : [vorbisdec] errors out on 0-sized packets
-      * 459204 : [PATCH] [playbin] gst_play_base_bin_get_streaminfo_value_...
+      * 475395 : decodebin2 leaks request-pads
+      * 475451 : [decodebin2] leaks ghostpad
+      * 378770 : [xvimagesink] race condition in event thread?
+      * 407282 : [decodebin2] autoplug-sort signal has GList ** parameter
+      * 430677 : [audioconvert] does not preserve channel positions when f...
+      * 442654 : [volume] controller bypassed by default
+      * 445529 : [volume] support for 24/32-bit audio/x-raw-int
+      * 446766 : return code for gst_base_rtp_payload_audio_handle_event()
+      * 451970 : Subparse requires HTML parser
+      * 453650 : [audiobasesrc] two alsasrcs do not work in one pipeline
+      * 459334 : [textoverlay] expose pango line alignment property
+      * 459585 : [basertpdepayload] api without namespace
+      * 460422 : [audiotestsrc] Add support for float and double output
+      * 462805 : [alsa] compilation fails with gcc 4.2
+      * 462979 : Add 'silent' property to GstTimeOverlay
+      * 463215 : [audioconvert] compile errors
+      * 464320 : [PATCH] gst-plugins-base-0.14 does not build for win32
+      * 464666 : [playbin] QT trailer hangs in preroll with decodebin2
+      * 464690 : Add connection-speed property to uridecodebin element
+      * 465015 : [playbin] Not removed probes causes deadlocks in streamin...
+      * 465028 : some warnings with mingw
+      * 467667 : GST_FRAMES_TO_CLOCK_TIME() and GST_CLOCK_TIME_TO_FRAMES()...
+      * 468129 : [basertpaudiopayload] event handler returns the wrong value
+      * 468619 : New library gstfft: FFT library for integer and float typ...
+      * 470456 : [API] add gst_missing_*_installer_detail_new()
+      * 470766 : [ssaparse] line breaks in SSA subtitle parser
+      * 471067 : Make the SDP code useable for generating SDP descriptions
+      * 471194 : [rtpbuffer] RTP headers are wrong for win32
+      * 473097 : [baseaudiosink] gstreamer-properties hangs when testing s...
+      * 474384 : gstrtsp-enumtypes.c and .h needed for win32
+      * 474880 : [xvimagesink] [ximagesink] leaking buffer caps reference
+      * 475731 : rtspconnection is able to read incomplete messages
+      * 483620 : All Rtp buffers are discarded --  gst_rtp_buffer_get_payl...
+      * 484989 : memleak, not unrefed caps for gstbasertppayload.c
+      * 489010 : Please change default channel order for WAVE_EXT-less .wa...
+      * 491722 : [playbin] regression: crash with external subtitles
+      * 492098 : [GstFFT] Broken scaling
+      * 492114 : Build issues on Windows/MSVC
+      * 492306 : compilation errors with MinGW
+      * 492813 : Missing symbols in libgstrtp.def
+      * 493986 : Build issues on Windows (missing symbols)
+      * 494346 : pre-release vs6 patch
+      * 496548 : Including malloc.h breaks macos build
+      * 496724 : DSW file references non-existent DSP files
+      * 464079 : audiotestsrc doesn't respond to conversion queries properly
+      * 442065 : floatcast.h includes config.h and might break other apps
+      * 466717 : gst_event_new_new_segment_full:assertion `start < = stop' ...
+      * 485753 : Decodebin2 deadlocks when nulling pipeline during typefind
+      * 464028 : Move connection-speed from playbin to playbasebin
 
 API changed in this release
      
 - API additions:
     
-* RTSP and SDP libraries added
-* gst_rtsp_base64_decode_ip
-* Add buffer clipping function gst_audio_buffer_clip for raw audio buffers. Fixes #456656.
-* gst_mixer_get_mixer_flags
-* gst_mixer_message_parse_mute_toggled
-* gst_mixer_message_parse_record_toggled
-* gst_mixer_message_parse_volume_changed
-* gst_mixer_message_parse_option_changed
-* GstMixerMessageType
-* GstMixerFlags
+* GstTagDemux base class for simple tag demuxers
+* GstBaseAudioSrc::provide-clock property
+* gst_rtcp_ntp_to_unix()
+* gst_rtcp_unix_to_ntp()
+* gst_rtp_buffer_get_header_len()
+* gst_rtp_buffer_get_extension_data()
+* gst_rtp_buffer_compare_seqnum()
+* gst_rtp_buffer_ext_timestamp()
+* gst_rtcp_packet_sdes_copy_entry()
+* gst_install_plugins_supported()
+* gst_missing_*_installer_detail_new() convenience API
+* gst_rtsp_connection_poll()
+* GstTextOverlay::line-alignment property
 
 Download
 
@@ -136,19 +166,40 @@ Applications
   
 Contributors to this release
     
-      * Andy Wingo
-      * Bastien Nocera
+      * Stefan Kost
+      * Alexander Shopov
+      * Damien Lespiau
       * Dan Williams
+      * Daniel Díaz
       * David Schleef
-      * Edward Hervey
+      * Davyd Madeley
+      * Funda Wang
+      * Haakon Sporsheim
+      * Ilkka Tuohela
+      * Jakub Bogusz
       * Jan Schmidt
-      * Jorn Baayen
+      * Jason Kivlighn
+      * Jens Granseuer
+      * Johan Dahlin
+      * Jorge González González
+      * Josep Torra Valles
+      * Julien MOUTTE
+      * Laurent Glayal
       * Michael Smith
+      * Mogens Jaeger
+      * Ole André Vadla Ravnås
+      * Olivier Crete
+      * Peter Kjellerstedt
+      * Renato Filho
+      * René Stadler
       * Sebastian Dröge
       * Sebastien Moutte
       * Stefan Kost
-      * Thiago Sousa Santos
+      * Thijs Vermeir
       * Thomas Vander Stichele
       * Tim-Philipp Müller
+      * Tommi Myöhänen
+      * Vincent Torri
       * Wim Taymans
+      * Yang Hong
  

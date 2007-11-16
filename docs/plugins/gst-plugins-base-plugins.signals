@@ -151,7 +151,8 @@ gint  arg1
 <RETURNS>gboolean</RETURNS>
 <FLAGS>l</FLAGS>
 GstDecodeBin2 *gstdecodebin2
-GstCaps *arg1
+GstPad *arg1
+GstCaps *arg2
 </SIGNAL>
 
 <SIGNAL>
@@ -185,6 +186,62 @@ GstPad *arg1
 <RETURNS>void</RETURNS>
 <FLAGS>l</FLAGS>
 GstDecodeBin2 *gstdecodebin2
+GstPad *arg1
+GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin2::autoplug-factories</NAME>
+<RETURNS>GValueArray*</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin2 *gstdecodebin2
+GstPad *arg1
+GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstDecodeBin2::autoplug-select</NAME>
+<RETURNS>gint</RETURNS>
+<FLAGS>l</FLAGS>
+GstDecodeBin2 *gstdecodebin2
+GstPad *arg1
+GstCaps *arg2
+GValueArray *arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstURIDecodeBin::autoplug-continue</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>l</FLAGS>
+GstURIDecodeBin *gsturidecodebin
+GstPad *arg1
+GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstURIDecodeBin::autoplug-factories</NAME>
+<RETURNS>GValueArray*</RETURNS>
+<FLAGS>l</FLAGS>
+GstURIDecodeBin *gsturidecodebin
+GstPad *arg1
+GstCaps *arg2
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstURIDecodeBin::autoplug-select</NAME>
+<RETURNS>gint</RETURNS>
+<FLAGS>l</FLAGS>
+GstURIDecodeBin *gsturidecodebin
+GstPad *arg1
+GstCaps *arg2
+GValueArray *arg3
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstURIDecodeBin::unknown-type</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstURIDecodeBin *gsturidecodebin
 GstPad *arg1
 GstCaps *arg2
 </SIGNAL>

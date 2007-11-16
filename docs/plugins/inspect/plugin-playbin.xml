@@ -3,7 +3,7 @@
   <description>player bin</description>
   <filename>../../gst/playback/.libs/libgstplaybin.so</filename>
   <basename>libgstplaybin.so</basename>
-  <version>0.10.14</version>
+  <version>0.10.15</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>

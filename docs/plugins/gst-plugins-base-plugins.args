@@ -471,7 +471,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-max</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers max</NICK>
 <BLURB>max number of buffers to queue for a client (-1 = no limit).</BLURB>
@@ -491,7 +491,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-soft-max</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers soft max</NICK>
 <BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
@@ -581,7 +581,7 @@
 <ARG>
 <NAME>GstMultiFdSink::buffers-min</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Buffers min</NICK>
 <BLURB>min number of buffers to queue (-1 = as few as possible).</BLURB>
@@ -611,7 +611,7 @@
 <ARG>
 <NAME>GstMultiFdSink::bytes-min</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bytes min</NICK>
 <BLURB>min number of bytes to queue (-1 = as little as possible).</BLURB>
@@ -621,7 +621,7 @@
 <ARG>
 <NAME>GstMultiFdSink::time-min</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Time min</NICK>
 <BLURB>min number of time to queue (-1 = as little as possible).</BLURB>
@@ -641,7 +641,7 @@
 <ARG>
 <NAME>GstMultiFdSink::units-max</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Units max</NICK>
 <BLURB>max number of units to queue (-1 = no limit).</BLURB>
@@ -651,7 +651,7 @@
 <ARG>
 <NAME>GstMultiFdSink::units-soft-max</NAME>
 <TYPE>gint64</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Units soft max</NICK>
 <BLURB>Recover client when going over this limit (-1 = no limit).</BLURB>
@@ -791,7 +791,7 @@
 <ARG>
 <NAME>GstVorbisEnc::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250001]</RANGE>
+<RANGE>[-1,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Target Bitrate</NICK>
 <BLURB>Attempt to encode at a bitrate averaging this (in bps). This uses the bitrate management engine, and is not recommended for most users. Quality is a better alternative. (-1 == disabled).</BLURB>
@@ -821,7 +821,7 @@
 <ARG>
 <NAME>GstVorbisEnc::max-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250001]</RANGE>
+<RANGE>[-1,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Maximum Bitrate</NICK>
 <BLURB>Specify a maximum bitrate (in bps). Useful for streaming applications. (-1 == disabled).</BLURB>
@@ -831,7 +831,7 @@
 <ARG>
 <NAME>GstVorbisEnc::min-bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,250001]</RANGE>
+<RANGE>[-1,250001]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Minimum Bitrate</NICK>
 <BLURB>Specify a minimum bitrate (in bps). Useful for encoding for a fixed-size channel. (-1 == disabled).</BLURB>
@@ -1429,6 +1429,26 @@
 </ARG>
 
 <ARG>
+<NAME>GstTextOverlay::line-alignment</NAME>
+<TYPE>GstTextOverlayLineAlign</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>line alignment</NICK>
+<BLURB>Alignment of text lines relative to each other.</BLURB>
+<DEFAULT>center</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstTextOverlay::silent</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>silent</NICK>
+<BLURB>Whether to render the text string.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>CDParanoia::abort-on-skip</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -1621,7 +1641,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::read-speed</NAME>
 <TYPE>gint</TYPE>
-<RANGE>>= G_MAXULONG</RANGE>
+<RANGE>>= -1</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Read speed</NICK>
 <BLURB>Read from device at specified speed.</BLURB>
@@ -1631,7 +1651,7 @@
 <ARG>
 <NAME>GstCdParanoiaSrc::search-overlap</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[G_MAXULONG,75]</RANGE>
+<RANGE>[-1,75]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Search overlap</NICK>
 <BLURB>Force minimum overlap search during verification to n sectors.</BLURB>
@@ -1699,6 +1719,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDecodeBin2::subtitle-encoding</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>subtitle encoding</NICK>
+<BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstURIDecodeBin::uri</NAME>
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>
@@ -1716,6 +1746,26 @@
 <NICK>Connection Speed</NICK>
 <BLURB>Network connection speed in kbps (0 = unknown).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin::caps</NAME>
+<TYPE>GstCaps</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps</NICK>
+<BLURB>The caps on which to stop decoding. (NULL = default).</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstURIDecodeBin::subtitle-encoding</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>subtitle encoding</NICK>
+<BLURB>Encoding to assume if input subtitles are not in UTF-8 encoding. If not set, the GST_SUBTITLE_ENCODING environment variable will be checked for an encoding to use. If that is not set either, ISO-8859-15 will be assumed.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
