@@ -1,5 +1,16 @@
 2007-11-17  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstpreset.c:
+	  Add some comments and TODOs.
+
+	* gst/gstpreset.h:
+	  Add padding for future changes.
+
+	* plugins/elements/gstqueue.c:
+	  Implement the iface.	  
+
+2007-11-17  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-docs.sgml:
 	* docs/gst/gstreamer-sections.txt:
 	* docs/gst/gstreamer.types.in:

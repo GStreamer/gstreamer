@@ -61,6 +61,9 @@ struct _GstPresetInterface
    * instances of a type and if the list changes, we trigger the signal for all
    * instance
    */
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType gst_preset_get_type(void);

@@ -36,6 +36,7 @@
  * - how can we support both Preferences and Presets, a flag for _get_preset_names ?
  * - should there be a 'preset-list' property to get the preset list
  *   (and to connect a notify:: to to listen for changes)
+ * - do we want to ship presets for some elements?
  *
  * http://www.buzztard.org/index.php/Preset_handling_interface
  */
