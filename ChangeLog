@@ -1,3 +1,14 @@
+2007-11-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types.in:
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* gst/gstpreset.c:
+	* gst/gstpreset.h:
+	  Add the preset interface (Fixes #396779). Do some doc cleanups along.
+
 2007-11-16  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* configure.ac:

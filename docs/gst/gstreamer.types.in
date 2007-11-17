@@ -10,6 +10,7 @@
 
 gst_bin_get_type
 gst_bus_get_type
+gst_child_proxy_get_type
 gst_clock_get_type
 gst_element_factory_get_type
 gst_element_get_type
@@ -17,21 +18,25 @@ gst_ghost_pad_get_type
 gst_implements_interface_get_type
 @GST_INDEX_DOC_TYPES@gst_index_factory_get_type
 @GST_INDEX_DOC_TYPES@gst_index_get_type
-gst_registry_get_type
-
-% these are not GObject derived types !
-% gst_mini_object_get_type
-% gst_message_get_type
-
 gst_object_get_type
 gst_pad_get_type
 gst_pad_template_get_type
 gst_pipeline_get_type
 gst_plugin_feature_get_type
+gst_preset_get_type
+gst_registry_get_type
+gst_system_clock_get_type
 gst_tag_setter_get_type
 gst_task_get_type
 gst_type_find_factory_get_type
+gst_uri_handler_get_type
 @GST_LOADSAVE_DOC_TYPES@gst_xml_get_type
+
+% these are not GObject derived types !
+% gst_buffer_get_type
+% gst_mini_object_get_type
+% gst_message_get_type
+% gst_query_get_type
 
 % base classes
 

@@ -1600,6 +1600,28 @@ gst_rank_get_type
 
 
 <SECTION>
+<FILE>gstpreset</FILE>
+<TITLE>GstPreset</TITLE>
+GstPreset
+gst_preset_get_preset_names
+gst_preset_load_preset
+gst_preset_save_preset
+gst_preset_rename_preset
+gst_preset_delete_preset
+gst_preset_set_meta
+gst_preset_get_meta
+gst_preset_create_preset
+<SUBSECTION Standard>
+GstPresetInterface
+GST_PRESET
+GST_IS_PRESET
+GST_TYPE_PRESET
+GST_PRESET_GET_INTERFACE
+gst_preset_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>gstquery</FILE>
 <TITLE>GstQuery</TITLE>
 GstQuery
@@ -1607,7 +1629,6 @@ GstQueryType
 GST_QUERY_TYPE
 GST_QUERY_TYPE_NAME
 GstQueryTypeDefinition
-
 
 gst_query_type_get_name
 gst_query_type_to_quark
