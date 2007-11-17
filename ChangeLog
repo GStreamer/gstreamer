@@ -1,3 +1,9 @@
+2007-11-17  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/playback/README:
+	* gst/playback/test7.c:
+	  Fix the build + little README update.
+
 2007-11-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	* tests/examples/seek/seek.c: (make_playerbin2_pipeline), (main):

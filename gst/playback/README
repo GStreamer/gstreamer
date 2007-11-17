@@ -1,4 +1,4 @@
-decoderbin:
+decodebin:
 
   A bin with a sinkpad that decodes the data into raw formats. It works by sending
   the input data through a typefind element and then recursively autoplugs elements 
@@ -66,6 +66,7 @@ playbasebin:
   - when the first pad is closed, it's possible that another dynamic element is
     added somewhere so that we need a queue for the first pad as well.
 
+
 playbin:
   
    Extends playbasebin, sets up default audiosink and videosink for first audio/video
@@ -80,11 +81,11 @@ playbin:
    - be smarter about replugging the sinks instead of removing them and readding them.
    - Do not crap out when the audio device is in use.
 
+
 general
 
    TODO
    - playlist support. maybe use a playlist bin that streams the contents of the
      playlist on a pad, interleaved with new_media events. Also add a tuner 
      interface while we're at it.
-   - plug the many memleaks.
    
