@@ -37,7 +37,7 @@
  * The event should be unreffed with gst_event_unref() if it has not been sent.
  *
  * Events that have been received can be parsed with their respective 
- * gst_event_parse_*() functions.
+ * gst_event_parse_*() functions. It is valid to pass %NULL for unwanted details.
  *
  * Events are passed between elements in parallel to the data stream. Some events
  * are serialized with buffers, others are not. Some events only travel downstream,

@@ -30,15 +30,22 @@
  * on demand, if presets are not used, the list is not created.
  *
  */
-/* @TODO:
+/* @todo:
  * - we need locks to avoid two instances manipulating the preset list -> flock
  * - need to add support for GstChildProxy
- * - how can we support both Preferences and Presets, a flag for _get_preset_names ?
+ * - how can we support both Preferences and Presets,
+ *   - preferences = static settings (non controlable)
+ *   - preset = a snapshot of dynamic params
+ *   - flag
+ *     - we could save all, but have a flag when loading
+ *     - we could use a flag for _get_preset_names()
+ * 
  * - should there be a 'preset-list' property to get the preset list
  *   (and to connect a notify:: to to listen for changes)
- * - do we want to ship presets for some elements?
+ * - should there be a 'preset-name' property so that we can set a preset via
+ *   gst-launch
  *
- * http://www.buzztard.org/index.php/Preset_handling_interface
+ * - do we want to ship presets for some elements?
  */
 
 #include "gst_private.h"
@@ -202,7 +209,7 @@ gst_preset_default_get_preset_names (GstPreset * self)
       }
       if (!fgets (line, LINE_LEN, in))
         goto eof_error;
-      /* @todo: what version */
+      /* @todo: what version (core?) */
       if (!fgets (line, LINE_LEN, in))
         goto eof_error;
       if (strcmp (g_strchomp (line), element_name)) {
@@ -421,7 +428,7 @@ gst_preset_default_save_presets_file (GstPreset * self)
 
     GST_DEBUG ("saving preset file: '%s'", preset_path);
 
-    // create backup if possible
+    /* create backup if possible */
     bak_file_name = g_strdup_printf ("%s.bak", preset_path);
     if (g_file_test (bak_file_name, G_FILE_TEST_EXISTS)) {
       if (g_unlink (bak_file_name)) {
@@ -436,9 +443,6 @@ gst_preset_default_save_presets_file (GstPreset * self)
     }
     g_free (bak_file_name);
 
-
-    /* @todo: create backup */
-
     /* write presets */
     if ((out = fopen (preset_path, "wb"))) {
       const gchar *element_name = G_OBJECT_TYPE_NAME (self);
@@ -449,7 +453,7 @@ gst_preset_default_save_presets_file (GstPreset * self)
       /* write header */
       if (!(fputs ("GStreamer Preset\n", out)))
         goto eof_error;
-      /* @todo: what version */
+      /* @todo: what version (core?) */
       if (!(fputs ("1.0\n", out)))
         goto eof_error;
       if (!(fputs (element_name, out)))
@@ -771,13 +775,11 @@ gst_preset_default_create_preset (GstPreset * self)
                   (self)), &number_of_properties))) {
     gdouble rnd;
 
-    /* @todo: what about voice properties */
-
     GST_INFO ("nr of values : %d", number_of_properties);
     for (i = 0; i < number_of_properties; i++) {
       property = properties[i];
 
-      /* skip non-controlable, trigger params & voice params */
+      /* skip non-controlable, and non persistent params */
       if (!(property->flags & GST_PARAM_CONTROLLABLE))
         continue;
       /* we do not want to create a setting for trigger properties, buzztard
@@ -836,10 +838,10 @@ gst_preset_default_create_preset (GstPreset * self)
                           enum_class->minimum) * rnd)), NULL);
         } break;
         default:
-          //GST_WARNING("unhandled GType=%d:'%s'",param_type,G_VALUE_TYPE_NAME(param_type));
           GST_WARNING ("unhandled GType=%d", param_type);
       }
     }
+    /* @todo: handle childproxy properties as well */
   }
 }
 

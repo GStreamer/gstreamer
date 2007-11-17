@@ -1,5 +1,20 @@
 2007-11-17  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstevent.c:
+	  Little documentation improvment.
+
+	* gst/gstpreset.c:
+	  More TODO cleanups. Remove c++ comments.
+
+	* libs/gst/controller/gstcontroller.c:
+	  Add TODO and use quark from static string.
+
+	* tests/check/gst/gstmessage.c:
+	* tests/check/gst/gststructure.c:
+	  Use quark from static string.
+
+2007-11-17  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstpreset.c:
 	  Add some comments and TODOs.
 

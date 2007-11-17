@@ -188,6 +188,7 @@ gst_controller_find_controlled_property (GstController * self,
 
   for (node = self->properties; node; node = g_list_next (node)) {
     prop = node->data;
+    /* FIXME: eventually use GQuark to speed it up */
     if (!strcmp (prop->name, name)) {
       return prop;
     }
@@ -909,7 +910,7 @@ _gst_controller_class_init (GstControllerClass * klass)
   gobject_class->dispose = _gst_controller_dispose;
   gobject_class->finalize = _gst_controller_finalize;
 
-  __gst_controller_key = g_quark_from_string ("gst::controller");
+  __gst_controller_key = g_quark_from_static_string ("gst::controller");
 
   /* register properties */
   g_object_class_install_property (gobject_class, PROP_CONTROL_RATE,

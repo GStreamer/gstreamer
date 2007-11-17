@@ -234,7 +234,7 @@ GST_START_TEST (test_structure_new)
 
   gst_structure_free (s);
 
-  domain = g_quark_from_string ("test");
+  domain = g_quark_from_static_string ("test");
   e = g_error_new (domain, 0, "a test error");
   s = gst_structure_new ("name", "key", GST_TYPE_G_ERROR, e, NULL);
   g_error_free (e);

@@ -28,7 +28,7 @@ GST_START_TEST (test_parsing)
 {
   GstMessage *message;
 
-  domain = g_quark_from_string ("test");
+  domain = g_quark_from_static_string ("test");
 
   /* GST_MESSAGE_EOS */
   {
