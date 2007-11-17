@@ -22,7 +22,6 @@
         <menuitem name="ViewColumnsMessage" action="show-message-column"/>
       </menu>
       <placeholder name="ViewMenuAdditions"/>
-      <!--<menuitem name="ViewLineDensity" action="show-line-density"/>-->
       <separator/>
       <menuitem name="ViewContextMenuCopyMessage" action="edit-copy-message"/>
       <menuitem name="ViewContextMenuCopyLine" action="edit-copy-line"/>

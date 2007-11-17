@@ -124,15 +124,15 @@ class LevelDistributionSentinel (object):
 
         self.data = result
 
-class LineFrequencyWidget (gtk.DrawingArea):
+class TimelineWidget (gtk.DrawingArea):
 
-    __gtype_name__ = "LineFrequencyWidget"
+    __gtype_name__ = "GstDebugViewerTimelineWidget"
 
     def __init__ (self, sentinel = None):
 
         gtk.DrawingArea.__init__ (self)
 
-        self.logger = logging.getLogger ("ui.density-widget")
+        self.logger = logging.getLogger ("ui.timeline")
 
         self.sentinel = sentinel
         self.level_dist_sentinel = None
@@ -314,15 +314,15 @@ class LineFrequencyWidget (gtk.DrawingArea):
         # FIXME:
         req.height = 64
 
-class LineFrequencyFeature (FeatureBase):
+class TimelineFeature (FeatureBase):
 
-    state_section_name = "line-frequency-display"
+    state_section_name = "timeline"
 
     def __init__ (self):
 
-        self.action_group = gtk.ActionGroup ("LineFrequencyActions")
-        self.action_group.add_toggle_actions ([("show-line-frequency",
-                                                None, _("Line _Density"))])
+        self.action_group = gtk.ActionGroup ("TimelineActions")
+        self.action_group.add_toggle_actions ([("show-timeline",
+                                                None, _("_Timeline"))])
 
     def attach (self, window):
 
@@ -336,23 +336,23 @@ class LineFrequencyFeature (FeatureBase):
         
         self.merge_id = ui.new_merge_id ()
         ui.add_ui (self.merge_id, "/menubar/ViewMenu/ViewMenuAdditions",
-                   "ViewLineFrequency", "show-line-frequency",
+                   "ViewTimeline", "show-timeline",
                    gtk.UI_MANAGER_MENUITEM, False)
 
         box = window.get_top_attach_point ()
 
-        self.density_display = LineFrequencyWidget ()
-        self.density_display.add_events (gtk.gdk.ALL_EVENTS_MASK) # FIXME
-        self.density_display.connect ("button-press-event", self.handle_density_button_press_event)
-        self.density_display.connect ("motion-notify-event", self.handle_density_motion_notify_event)
-        box.pack_start (self.density_display, False, False, 0)
-        self.density_display.hide ()
+        self.timeline = TimelineWidget ()
+        self.timeline.add_events (gtk.gdk.ALL_EVENTS_MASK) # FIXME
+        self.timeline.connect ("button-press-event", self.handle_density_button_press_event)
+        self.timeline.connect ("motion-notify-event", self.handle_density_motion_notify_event)
+        box.pack_start (self.timeline, False, False, 0)
+        self.timeline.hide ()
 
         window.widgets.log_view_scrolled_window.props.vadjustment.connect ("value-changed",
                                                                            self.handle_log_view_adjustment_value_changed)
 
         handler = self.handle_show_action_toggled
-        self.action_group.get_action ("show-line-frequency").connect ("toggled", handler)
+        self.action_group.get_action ("show-timeline").connect ("toggled", handler)
 
         window.sentinels.append (self.sentinel_process)
 
@@ -365,19 +365,19 @@ class LineFrequencyFeature (FeatureBase):
 
         # FIXME: Remove action group from ui manager!
 
-        self.density_display.destroy ()
-        self.density_display = None
+        self.timeline.destroy ()
+        self.timeline = None
 
     def sentinel_process (self):
 
-        if self.action_group.get_action ("show-line-frequency").props.active:
+        if self.action_group.get_action ("show-timeline").props.active:
             sentinel = LineDensitySentinel (self.log_model)
-            self.density_display.set_sentinel (sentinel)
+            self.timeline.set_sentinel (sentinel)
 
     def handle_log_view_adjustment_value_changed (self, adj):
 
         # FIXME: If not visible, disconnect this handler!
-        if not self.density_display.props.visible:
+        if not self.timeline.props.visible:
             return
 
         start_path, end_path = self.log_view.get_visible_range ()
@@ -385,19 +385,19 @@ class LineFrequencyFeature (FeatureBase):
                                   self.log_model.COL_TIME)[0]
         ts2 = self.log_model.get (self.log_model.get_iter (end_path),
                                   self.log_model.COL_TIME)[0]
-        self.density_display.update_position (ts1, ts2)
+        self.timeline.update_position (ts1, ts2)
 
     def handle_show_action_toggled (self, action):
 
         show = action.props.active
 
         if show:
-            self.density_display.show ()
-            if self.density_display.sentinel is None:
+            self.timeline.show ()
+            if self.timeline.sentinel is None:
                 sentinel = LineFrequencySentinel (self.log_model)
-                self.density_display.set_sentinel (sentinel)
+                self.timeline.set_sentinel (sentinel)
         else:
-            self.density_display.hide ()
+            self.timeline.hide ()
 
     def handle_density_button_press_event (self, widget, event):
 
@@ -419,7 +419,7 @@ class LineFrequencyFeature (FeatureBase):
 
     def goto_density (self, pos):
 
-        data = self.density_display.sentinel.data
+        data = self.timeline.sentinel.data
         if not data:
             return True
         count = 0
@@ -433,4 +433,4 @@ class LineFrequencyFeature (FeatureBase):
 
 class Plugin (PluginBase):
 
-    features = [LineFrequencyFeature]
+    features = [TimelineFeature]
