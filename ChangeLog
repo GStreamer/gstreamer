@@ -1,3 +1,16 @@
+2007-11-18  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/gstmetadataparse.c:
+	* ext/metadata/gstmetadataparse.h:
+	* ext/metadata/metadataparse.c:
+	* ext/metadata/metadataparse.h:
+	* ext/metadata/metadataparsejpeg.c:
+	* ext/metadata/metadataparsejpeg.h:
+	* ext/metadata/metadataparsepng.c:
+	* ext/metadata/metadataparsepng.h:
+	* ext/metadata/metadataparsetypes.h:
+	  Strip out metadata chunks.
+
 2007-11-16  Stefan Kost  <ensonic@users.sf.net>
 
 	* configure.ac:

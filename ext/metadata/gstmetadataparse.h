@@ -79,6 +79,14 @@ struct _GstMetadataParse
   gboolean iptc;
   gboolean xmp;
 
+  gint64 seg_offset[3];
+  guint32 seg_size[3];
+
+  guint32 seg_inject_size[3];
+  guint8 * seg_inject_data[3];
+
+  gint8 num_segs;
+
   gboolean need_send_tag;
 
   GstTagList *taglist;
@@ -87,6 +95,9 @@ struct _GstMetadataParse
   guint32 next_offset;
   guint32 next_size;
   ImageType img_type;
+
+  gint64 duration;
+  gint64 offset;
 
   MetadataState state;
 

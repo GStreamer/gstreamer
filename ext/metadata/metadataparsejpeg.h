@@ -44,7 +44,7 @@
 #ifndef __METADATAPARSE_JPEG_H__
 #define __METADATAPARSE_JPEG_H__
 
-#include <gst/base/gstadapter.h>
+#include "metadataparsetypes.h"
 
 G_BEGIN_DECLS
 
@@ -63,23 +63,24 @@ typedef enum _tag_JpegState
 typedef struct _tag_JpegData
 {
   JpegState state;
-  GstAdapter **adpt_exif;
-  GstAdapter **adpt_iptc;
-  GstAdapter **adpt_xmp;
+  MetadataChunk *exif;
+  MetadataChunk *iptc;
+  MetadataChunk *xmp;
   guint32 read;
+  gboolean jfif_found;
 } JpegData;
 
 
 extern void
-metadataparse_jpeg_init (JpegData * jpeg_data, GstAdapter ** adpt_exif,
-    GstAdapter ** adpt_iptc, GstAdapter ** adpt_xmp);
+metadataparse_jpeg_init (JpegData * jpeg_data, MetadataChunk * adpt_exif,
+    MetadataChunk * adpt_iptc, MetadataChunk * adpt_xmp);
 
 extern void metadataparse_jpeg_dispose (JpegData * jpeg_data);
 
 
 int
 metadataparse_jpeg_parse (JpegData * jpeg_data, guint8 * buf,
-    guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
+    guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
 
 G_END_DECLS
 #endif /* __METADATAPARSE_JPEG_H__ */

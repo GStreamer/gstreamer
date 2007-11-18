@@ -44,7 +44,7 @@
 #ifndef __METADATAPARSE_PNG_H__
 #define __METADATAPARSE_PNG_H__
 
-#include <gst/base/gstadapter.h>
+#include "metadataparsetypes.h"
 
 G_BEGIN_DECLS
 
@@ -61,21 +61,21 @@ typedef enum _tag_PngState
 typedef struct _tag_PngData
 {
   PngState state;
-  GstAdapter **adpt_xmp;
+  MetadataChunk *xmp;
   guint32 read;
 } PngData;
 
 
 extern void
-metadataparse_png_init (PngData * png_data, GstAdapter ** adpt_exif,
-    GstAdapter ** adpt_iptc, GstAdapter ** adpt_xmp);
+metadataparse_png_init (PngData * png_data, MetadataChunk *exif,
+    MetadataChunk * iptc, MetadataChunk *xmp);
 
 extern void metadataparse_png_dispose (PngData * png_data);
 
 
 int
 metadataparse_png_parse (PngData * png_data, guint8 * buf,
-    guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
+    guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
 
 G_END_DECLS
 #endif /* __METADATAPARSE_PNG_H__ */

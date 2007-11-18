@@ -161,6 +161,13 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
 
 static void gst_metadata_parse_send_tags (GstMetadataParse * filter);
 
+static gboolean gst_metadata_parse_activate (GstPad * pad);
+
+static gboolean
+gst_metadata_parse_get_strip_range (gint64 * boffset, guint32 * bsize,
+    const gint64 seg_offset, const guint32 seg_size,
+    gint64 * toffset, guint32 * tsize, gint64 * ioffset);
+
 static void
 gst_metadata_parse_base_init (gpointer gclass)
 {
@@ -492,11 +499,24 @@ gst_metadata_parse_init_members (GstMetadataParse * filter)
   filter->exif = TRUE;
   filter->iptc = TRUE;
   filter->xmp = TRUE;
+
+  memset (filter->seg_offset, 0x00, sizeof (filter->seg_offset[0]) * 3);
+  memset (filter->seg_size, 0x00, sizeof (filter->seg_size[0]) * 3);
+
+  memset (filter->seg_inject_data, 0x00,
+      sizeof (filter->seg_inject_data[0]) * 3);
+  memset (filter->seg_inject_size, 0x00,
+      sizeof (filter->seg_inject_size[0]) * 3);
+
+  filter->num_segs = 0;
+
   filter->taglist = NULL;
   filter->adapter = NULL;
   filter->next_offset = 0;
   filter->next_size = 0;
   filter->img_type = IMG_NONE;
+  filter->duration = -1;
+  filter->offset = 0;
   filter->state = MT_STATE_NULL;
   filter->need_more_data = FALSE;
   metadataparse_init (&filter->parse_data);
@@ -654,13 +674,13 @@ gst_metadata_parse_send_tags (GstMetadataParse * filter)
 
   if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_EXIF)
     metadataparse_exif_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
-        filter->parse_data.adpt_exif);
+        filter->parse_data.exif.adapter);
   if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_IPTC)
     metadataparse_iptc_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
-        filter->parse_data.adpt_iptc);
+        filter->parse_data.iptc.adapter);
   if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_XMP)
     metadataparse_xmp_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
-        filter->parse_data.adpt_xmp);
+        filter->parse_data.xmp.adapter);
 
   if (!gst_tag_list_is_empty (filter->taglist)) {
 
@@ -708,6 +728,70 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
   } else if (ret > 0) {
     filter->need_more_data = TRUE;
   } else {
+    int i, j;
+
+    filter->num_segs = 0;
+
+    /* FIXME: better design for segments */
+
+    filter->seg_size[0] = filter->parse_data.exif.size;
+    filter->seg_offset[0] = filter->parse_data.exif.offset;
+    filter->seg_inject_size[0] = filter->parse_data.exif.size_inject;
+    filter->seg_inject_data[0] = filter->parse_data.exif.buffer;
+
+    filter->seg_size[1] = filter->parse_data.iptc.size;
+    filter->seg_offset[1] = filter->parse_data.iptc.offset;
+    filter->seg_inject_size[1] = filter->parse_data.iptc.size_inject;
+    filter->seg_inject_data[1] = filter->parse_data.iptc.buffer;
+
+    filter->seg_size[2] = filter->parse_data.xmp.size;
+    filter->seg_offset[2] = filter->parse_data.xmp.offset;
+    filter->seg_inject_size[2] = filter->parse_data.xmp.size_inject;
+    filter->seg_inject_data[2] = filter->parse_data.xmp.buffer;
+
+    for (i = 0; i < 3; ++i) {
+      if (filter->seg_size[i]) {
+        filter->num_segs++;
+      }
+    }
+
+    if (filter->num_segs) {
+
+      for (i = 0; i < 3; ++i) {
+        int j, min = i;
+
+        for (j = i + 1; j < 3; ++j) {
+          if (filter->seg_size[j])
+            if (filter->seg_size[min] == 0
+                || filter->seg_offset[j] < filter->seg_offset[min])
+              min = j;
+        }
+        if (min != i) {
+          gint64 aux_offset;
+          guint32 aux_size;
+          guint8 *aux_data;
+
+          aux_offset = filter->seg_offset[i];
+          aux_size = filter->seg_size[i];
+
+          filter->seg_offset[i] = filter->seg_offset[min];
+          filter->seg_size[i] = filter->seg_size[min];
+
+          filter->seg_offset[min] = aux_offset;
+          filter->seg_size[min] = aux_size;
+
+          aux_size = filter->seg_inject_size[i];
+          filter->seg_inject_size[i] = filter->seg_inject_size[min];
+          filter->seg_inject_size[min] = aux_size;
+
+          aux_data = filter->seg_inject_data[i];
+          filter->seg_inject_data[i] = filter->seg_inject_data[min];
+          filter->seg_inject_data[min] = aux_data;
+        }
+      }
+
+    }
+
     filter->state = MT_STATE_PARSED;
     filter->need_more_data = FALSE;
     filter->need_send_tag = TRUE;
@@ -739,9 +823,12 @@ gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf)
 {
   GstMetadataParse *filter = NULL;
   GstFlowReturn ret = GST_FLOW_ERROR;
+  guint32 buf_size;
 
   filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
 
+  /* commented until I figure out how to strip if it wasn't parsed yet */
+#if 0
   if (filter->state != MT_STATE_PARSED) {
     guint32 adpt_size = gst_adapter_available (filter->adapter);
 
@@ -785,15 +872,24 @@ gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf)
         goto done;
     }
   }
+#endif
 
   if (filter->need_send_tag) {
     gst_metadata_parse_send_tags (filter);
   }
 
-  gst_buffer_set_caps (buf, GST_PAD_CAPS (filter->srcpad));
+  buf_size = GST_BUFFER_SIZE (buf);
+  gst_metadata_parse_strip_buffer (filter, &buf);
+  filter->offset += buf_size;
 
-  ret = gst_pad_push (filter->srcpad, buf);
-  buf = NULL;                   /* this function don't owner it anymore */
+  if (buf) {                    /* may be all buffer has been striped */
+    gst_buffer_set_caps (buf, GST_PAD_CAPS (filter->srcpad));
+
+    ret = gst_pad_push (filter->srcpad, buf);
+    buf = NULL;                 /* this function don't owner it anymore */
+  } else {
+    ret = GST_FLOW_OK;
+  }
 
 done:
 
@@ -900,6 +996,197 @@ done:
       ret = ret && gst_pad_activate_push (pad, TRUE);
     }
   }
+
+  return ret;
+
+}
+
+/*
+ * Returns FALSE if nothing has stripped, TRUE if otherwise
+ */
+
+gboolean
+gst_metadata_parse_get_strip_range (gint64 * boffset, guint32 * bsize,
+    const gint64 seg_offset, const guint32 seg_size,
+    gint64 * toffset, guint32 * tsize, gint64 * ioffset)
+{
+
+  gboolean ret = FALSE;
+
+  if (seg_size == 0 || *bsize == 0)
+    goto done;
+
+  /* segment after buffer */
+  if (seg_offset > *boffset + *bsize) {
+    *bsize = 0;
+    goto done;
+  }
+
+  if (seg_offset < *boffset) {
+    /* segment start somewhere before buffer */
+    guint32 cut_size;
+
+    /* all segment before buffer */
+    if (seg_offset + seg_size <= *boffset) {
+      *tsize = *bsize;
+      *bsize = 0;
+      *toffset = *boffset;
+      goto done;
+    }
+
+    cut_size = seg_size - (*boffset - seg_offset);
+
+    if (cut_size >= *bsize) {
+      /* all buffer striped out */
+      *bsize = 0;
+      *tsize = 0;
+    } else {
+      /* just beginning buffers striped */
+      *toffset = *boffset + cut_size;
+      *tsize = *bsize - cut_size;
+      *bsize = 0;
+    }
+
+  } else {
+    /* segment start somewhere into buffer */
+    *ioffset = seg_offset;
+
+    if (seg_offset + seg_size >= *boffset + *bsize) {
+      /* strip just tail */
+      *bsize = seg_offset - *boffset;
+    } else {
+      /* strip the middle */
+      *toffset = seg_offset + seg_size;
+      *tsize = *boffset + *bsize - seg_offset - seg_size;
+      *bsize = seg_offset - *boffset;
+    }
+
+  }
+
+  ret = TRUE;
+
+done:
+
+  return ret;
+
+}
+
+/*
+ *  TRUE -> buffer striped (or injeted)
+ *  FALSE -> buffer unmodified
+ */
+
+gboolean
+gst_metadata_parse_strip_buffer (GstMetadataParse * filter, GstBuffer ** buf)
+{
+
+  gint64 boffset[3];
+  guint32 bsize[3];
+
+  gint64 toffset[3];
+  guint32 tsize[3];
+
+  gint64 ioffset[3];
+
+  const gint64 *seg_offset = filter->seg_offset;
+
+  const guint32 *seg_size = filter->seg_size;
+
+  int i;
+  gboolean ret = FALSE;
+  guint32 new_size = 0;
+  const gint64 offset = filter->offset;
+
+  if (filter->num_segs == 0)
+    goto done;
+
+  memset (bsize, 0x00, sizeof (bsize));
+  memset (tsize, 0x00, sizeof (tsize));
+
+  for (i = 0; i < filter->num_segs; ++i) {
+    ioffset[i] = -1;
+  }
+
+  boffset[0] = offset;
+  new_size = bsize[0] = GST_BUFFER_SIZE (*buf);
+  i = 0;
+
+  for (i = 0; i < filter->num_segs; ++i) {
+    guint32 striped_size;
+
+    striped_size = bsize[i];
+    if (gst_metadata_parse_get_strip_range (&boffset[i], &bsize[i],
+            seg_offset[i], seg_size[i], &toffset[i], &tsize[i], &ioffset[i])) {
+      ret = TRUE;
+      new_size -= (striped_size - (bsize[i] + tsize[i]));
+    }
+    if (i + 1 < filter->num_segs) {
+      if (tsize[i]) {
+        boffset[i + 1] = toffset[i];
+        bsize[i + 1] = GST_BUFFER_SIZE (*buf) - (toffset[i] - offset);
+        tsize[i] = 0;
+      } else {
+        /* buffer already consumed */
+        break;
+      }
+    }
+    if (new_size == 0) {
+      /* all buffer striped already */
+      break;
+    }
+
+  }
+
+  /* segments must be sorted by offset to make this copy */
+  if (ret) {
+    if (new_size == 0) {
+      gst_buffer_unref (*buf);
+      *buf = NULL;
+    } else {
+      GstBuffer *new_buf;
+      guint8 *data;
+
+      for (i = 0; i < filter->num_segs; ++i) {
+        if (filter->seg_inject_size[i] == 0)
+          ioffset[i] = -1;
+        else
+          new_size += filter->seg_inject_size[i];
+      }
+
+      if (GST_BUFFER_SIZE (new_buf) < new_size) {
+        /* FIXME: alloc more memory here */
+      }
+
+      /* FIXME: try to use buffer data in place */
+      new_buf = gst_buffer_copy (*buf);
+      data = GST_BUFFER_DATA (new_buf);
+
+      GST_BUFFER_SIZE (new_buf) = new_size;
+
+      for (i = 0; i < filter->num_segs; ++i) {
+        if (bsize[i]) {
+          memcpy (data,
+              GST_BUFFER_DATA (*buf) + (boffset[i] - offset), bsize[i]);
+          data += bsize[i];
+        }
+        if (ioffset[i] >= 0) {
+          memcpy (data, filter->seg_inject_data[i], filter->seg_inject_size[i]);
+          data += filter->seg_inject_size[i];
+        }
+        if (tsize[i]) {
+          memcpy (data,
+              GST_BUFFER_DATA (*buf) + (toffset[i] - offset), tsize[i]);
+          data += tsize[i];
+        }
+      }
+      gst_buffer_unref (*buf);
+      *buf = new_buf;
+      GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
+    }
+  }
+
+
+done:
 
   return ret;
 
