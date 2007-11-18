@@ -19,16 +19,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef GST_DISABLE_GST_DEBUG
-
 #include "gst_private.h"
+#include "gstdebugutils.h"
+
+#ifndef GST_DISABLE_GST_DEBUG
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 
 #include "gstinfo.h"
-#include "gstdebugutils.h"
 #include "gstbin.h"
 #include "gstobject.h"
 #include "gstghostpad.h"

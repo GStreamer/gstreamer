@@ -1531,10 +1531,9 @@ static GstStateChangeReturn
 gst_bin_get_state_func (GstElement * element, GstState * state,
     GstState * pending, GstClockTime timeout)
 {
-  GstBin *bin = GST_BIN (element);
   GstStateChangeReturn ret;
 
-  GST_CAT_INFO_OBJECT (GST_CAT_STATES, bin, "getting state");
+  GST_CAT_INFO_OBJECT (GST_CAT_STATES, element, "getting state");
 
   ret = parent_class->get_state (element, state, pending, timeout);
 

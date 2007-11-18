@@ -1,3 +1,10 @@
+2007-11-18  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstbin.c:
+	* gst/gstdebugutils.c:
+	  Fix build with --disable-gst-debug. Fixes #497859.
+	  Spotted by Sameer Naik.
+
 2007-11-17  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstevent.c:
