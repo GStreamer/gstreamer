@@ -96,6 +96,7 @@ struct _GstMetadataParse
   guint32 next_size;
   ImageType img_type;
 
+  gint64 offset_orig;
   gint64 duration;
   gint64 offset;
 

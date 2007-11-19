@@ -1,3 +1,9 @@
+2007-11-19  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/gstmetadataparse.c:
+	* ext/metadata/gstmetadataparse.h:
+	  Strip out in pull mode also. Seek and Query functions added.
+
 2007-11-18  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/gstmetadataparse.c:

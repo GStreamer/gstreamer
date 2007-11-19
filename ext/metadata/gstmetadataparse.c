@@ -168,6 +168,18 @@ gst_metadata_parse_get_strip_range (gint64 * boffset, guint32 * bsize,
     const gint64 seg_offset, const guint32 seg_size,
     gint64 * toffset, guint32 * tsize, gint64 * ioffset);
 
+static gboolean
+gst_metadata_parse_strip_buffer (GstMetadataParse * filter, gint64 offset,
+    GstBuffer ** buf);
+
+static void
+gst_metadata_parse_translate_pos (GstMetadataParse * filter, gint64 pos,
+    gint64 * orig_pos);
+
+static const GstQueryType *gst_metadata_parse_get_query_types (GstPad * pad);
+
+static gboolean gst_metadata_parse_src_query (GstPad * pad, GstQuery * query);
+
 static void
 gst_metadata_parse_base_init (gpointer gclass)
 {
@@ -253,6 +265,10 @@ gst_metadata_parse_init (GstMetadataParse * filter,
   gst_pad_set_getcaps_function (filter->srcpad,
       GST_DEBUG_FUNCPTR (gst_metadata_parse_get_caps));
   gst_pad_set_event_function (filter->srcpad, gst_metadata_parse_src_event);
+  gst_pad_set_query_function (filter->srcpad,
+      GST_DEBUG_FUNCPTR (gst_metadata_parse_src_query));
+  gst_pad_set_query_type_function (filter->srcpad,
+      GST_DEBUG_FUNCPTR (gst_metadata_parse_get_query_types));
   gst_pad_use_fixed_caps (filter->srcpad);
   gst_pad_set_getrange_function (filter->srcpad, gst_metadata_parse_get_range);
   gst_pad_set_activatepull_function (filter->srcpad,
@@ -406,11 +422,60 @@ gst_metadata_parse_src_event (GstPad * pad, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
-      if (filter->state != MT_STATE_PARSED) {
-        /* FIXME: What to do here */
-        ret = TRUE;
+    {
+      gdouble rate;
+      GstFormat format;
+      GstSeekFlags flags;
+      GstSeekType start_type;
+      gint64 start;
+      GstSeekType stop_type;
+      gint64 stop;
+
+      /* we don't know where are the chunks to be stripped before parse */
+      if (filter->state != MT_STATE_PARSED)
         goto done;
+
+      gst_event_parse_seek (event, &rate, &format, &flags,
+          &start_type, &start, &stop_type, &stop);
+
+      switch (format) {
+        case GST_FORMAT_BYTES:
+          break;
+        case GST_FORMAT_PERCENT:
+          if (filter->duration < 0)
+            goto done;
+          break;
+        default:
+          goto done;
       }
+
+      if (start_type == GST_SEEK_TYPE_CUR)
+        start = filter->offset + start;
+      else if (start_type == GST_SEEK_TYPE_END) {
+        if (filter->duration < 0)
+          goto done;
+        start = filter->duration + start;
+      }
+      start_type == GST_SEEK_TYPE_SET;
+
+      gst_metadata_parse_translate_pos (filter, start, &start);
+
+      if (stop_type == GST_SEEK_TYPE_CUR)
+        stop = filter->offset + stop;
+      else if (stop_type == GST_SEEK_TYPE_END) {
+        if (filter->duration < 0)
+          goto done;
+        stop = filter->duration + stop;
+      }
+      stop_type == GST_SEEK_TYPE_SET;
+
+      gst_metadata_parse_translate_pos (filter, stop, &stop);
+
+      gst_event_unref (event);
+      event = gst_event_new_seek (rate, format, flags,
+          start_type, start, stop_type, stop);
+
+    }
       break;
     default:
       break;
@@ -516,6 +581,7 @@ gst_metadata_parse_init_members (GstMetadataParse * filter)
   filter->next_size = 0;
   filter->img_type = IMG_NONE;
   filter->duration = -1;
+  filter->offset_orig = 0;
   filter->offset = 0;
   filter->state = MT_STATE_NULL;
   filter->need_more_data = FALSE;
@@ -698,6 +764,59 @@ gst_metadata_parse_send_tags (GstMetadataParse * filter)
   filter->need_send_tag = FALSE;
 }
 
+static const GstQueryType *
+gst_metadata_parse_get_query_types (GstPad * pad)
+{
+  static const GstQueryType gst_metadata_parse_src_query_types[] = {
+    GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_FORMATS,
+    0
+  };
+
+  return gst_metadata_parse_src_query_types;
+}
+
+static gboolean
+gst_metadata_parse_src_query (GstPad * pad, GstQuery * query)
+{
+  gboolean ret = FALSE;
+  GstFormat format;
+  GstMetadataParse *filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_POSITION:
+      gst_query_parse_position (query, &format, NULL);
+
+      if (format == GST_FORMAT_BYTES) {
+        gst_query_set_position (query, GST_FORMAT_BYTES, filter->offset);
+        ret = TRUE;
+      }
+      break;
+    case GST_QUERY_DURATION:
+      gst_query_parse_duration (query, &format, NULL);
+
+      if (format == GST_FORMAT_BYTES) {
+        if (filter->duration >= 0) {
+          gst_query_set_duration (query, GST_FORMAT_BYTES, filter->duration);
+          ret = TRUE;
+        }
+      }
+      break;
+    case GST_QUERY_FORMATS:
+      gst_query_set_formats (query, 1, GST_FORMAT_BYTES);
+      ret = TRUE;
+      break;
+    default:
+      break;
+  }
+
+  gst_object_unref (filter);
+
+  return ret;
+
+}
+
 /*
  * return:
  *   -1 -> error
@@ -818,12 +937,19 @@ done:
  * this function does the actual processing
  */
 
+/* FIXME */
+/* Current parse is just done before is pull mode could be activated */
+/* may be it is possible to parse in chain mode by doing some trick with gst-adapter */
+/* the pipeline below would be a test for that case */
+/* gst-launch-0.10 filesrc location=Exif.jpg ! queue !  metadataparse ! filesink location=gen3.jpg */
+
 static GstFlowReturn
 gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf)
 {
   GstMetadataParse *filter = NULL;
   GstFlowReturn ret = GST_FLOW_ERROR;
-  guint32 buf_size;
+  guint32 buf_size = 0;
+  guint32 new_buf_size = 0;
 
   filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
 
@@ -879,11 +1005,11 @@ gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf)
   }
 
   buf_size = GST_BUFFER_SIZE (buf);
-  gst_metadata_parse_strip_buffer (filter, &buf);
-  filter->offset += buf_size;
+  gst_metadata_parse_strip_buffer (filter, filter->offset_orig, &buf);
 
   if (buf) {                    /* may be all buffer has been striped */
     gst_buffer_set_caps (buf, GST_PAD_CAPS (filter->srcpad));
+    new_buf_size = GST_BUFFER_SIZE (buf);
 
     ret = gst_pad_push (filter->srcpad, buf);
     buf = NULL;                 /* this function don't owner it anymore */
@@ -892,6 +1018,9 @@ gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf)
   }
 
 done:
+
+  filter->offset_orig += buf_size;
+  filter->offset += new_buf_size;
 
   if (buf) {
     /* there was an error and buffer wasn't pushed */
@@ -960,6 +1089,19 @@ gst_metadata_parse_pull_range_parse (GstMetadataParse * filter)
 
   } while (res > 0);
 
+  if (res == 0) {
+    int i;
+
+    filter->duration = duration;
+
+    for (i = 0; i < filter->num_segs; ++i) {
+
+      filter->duration -= (filter->seg_size[i] - filter->seg_inject_size[i]);
+
+    }
+
+  }
+
 done:
 
   return ret;
@@ -977,6 +1119,7 @@ gst_metadata_parse_activate (GstPad * pad)
 
   if (!gst_pad_check_pull_range (pad) ||
       !gst_pad_activate_pull (filter->sinkpad, TRUE)) {
+    /* FIXME: currently it is not possible to parse in chain. Fail here ? */
     /* nothing to be done by now, activate push mode */
     return gst_pad_activate_push (pad, TRUE);
   }
@@ -1005,7 +1148,7 @@ done:
  * Returns FALSE if nothing has stripped, TRUE if otherwise
  */
 
-gboolean
+static gboolean
 gst_metadata_parse_get_strip_range (gint64 * boffset, guint32 * bsize,
     const gint64 seg_offset, const guint32 seg_size,
     gint64 * toffset, guint32 * tsize, gint64 * ioffset)
@@ -1076,8 +1219,9 @@ done:
  *  FALSE -> buffer unmodified
  */
 
-gboolean
-gst_metadata_parse_strip_buffer (GstMetadataParse * filter, GstBuffer ** buf)
+static gboolean
+gst_metadata_parse_strip_buffer (GstMetadataParse * filter, gint64 offset,
+    GstBuffer ** buf)
 {
 
   gint64 boffset[3];
@@ -1095,7 +1239,6 @@ gst_metadata_parse_strip_buffer (GstMetadataParse * filter, GstBuffer ** buf)
   int i;
   gboolean ret = FALSE;
   guint32 new_size = 0;
-  const gint64 offset = filter->offset;
 
   if (filter->num_segs == 0)
     goto done;
@@ -1192,11 +1335,35 @@ done:
 
 }
 
+/*
+ * pos - position in stream striped
+ * orig_pos - position in original stream
+ */
+static void
+gst_metadata_parse_translate_pos (GstMetadataParse * filter, gint64 pos,
+    gint64 * orig_pos)
+{
+  int i;
+
+  *orig_pos = 0;
+  for (i = 0; i < filter->num_segs; ++i) {
+    if (filter->seg_offset[i] > pos) {
+      break;
+    }
+    *orig_pos += filter->seg_size[i];
+  }
+  *orig_pos += pos;
+
+}
+
 static gboolean
 gst_metadata_parse_get_range (GstPad * pad,
     guint64 offset, guint size, GstBuffer ** buf)
 {
   GstMetadataParse *filter = NULL;
+  gboolean ret;
+  gint64 pos;
+  const gint64 saved_offset = offset + size;
 
   filter = GST_METADATA_PARSE (GST_PAD_PARENT (pad));
 
@@ -1204,7 +1371,18 @@ gst_metadata_parse_get_range (GstPad * pad,
     gst_metadata_parse_send_tags (filter);
   }
 
-  return gst_pad_pull_range (filter->sinkpad, offset, size, buf);
+  gst_metadata_parse_translate_pos (filter, offset + size - 1, &pos);
+  gst_metadata_parse_translate_pos (filter, offset, &offset);
+
+  ret = gst_pad_pull_range (filter->sinkpad, offset, 1 + pos - offset, buf);
+
+  if (ret == GST_FLOW_OK && *buf) {
+    gst_metadata_parse_strip_buffer (filter, offset, buf);
+    filter->offset_orig = pos;
+    filter->offset = saved_offset;
+  }
+
+  return ret;
 
 }
 
