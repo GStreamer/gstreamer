@@ -1,3 +1,8 @@
+2007-11-19  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  Plug some leaks.
+
 2007-11-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/asfdemux/gstasfdemux.c:

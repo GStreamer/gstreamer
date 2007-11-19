@@ -101,7 +101,7 @@ mp3parse_total_bytes (GstMPEGAudioParse * mp3parse, gint64 * total);
 
 GST_BOILERPLATE (GstMPEGAudioParse, gst_mp3parse, GstElement, GST_TYPE_ELEMENT);
 
-static guint mp3types_bitrates[2][3][16] = {
+static const guint mp3types_bitrates[2][3][16] = {
   {
         {0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448,},
         {0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384,},
@@ -114,7 +114,7 @@ static guint mp3types_bitrates[2][3][16] = {
       },
 };
 
-static guint mp3types_freqs[3][3] = { {44100, 48000, 32000},
+static const guint mp3types_freqs[3][3] = { {44100, 48000, 32000},
 {22050, 24000, 16000},
 {11025, 12000, 8000}
 };
@@ -268,15 +268,23 @@ gst_mp3parse_reset (GstMPEGAudioParse * mp3parse)
 
   if (mp3parse->seek_table) {
     g_list_foreach (mp3parse->seek_table, (GFunc) g_free, NULL);
+    g_list_free (mp3parse->seek_table);
     mp3parse->seek_table = NULL;
   }
 
   g_mutex_lock (mp3parse->pending_accurate_seeks_lock);
   if (mp3parse->pending_accurate_seeks) {
     g_slist_foreach (mp3parse->pending_accurate_seeks, (GFunc) g_free, NULL);
+    g_slist_free (mp3parse->pending_accurate_seeks);
     mp3parse->pending_accurate_seeks = NULL;
   }
   g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
+
+  if (mp3parse->pending_segment) {
+    GstEvent **eventp = &mp3parse->pending_segment;
+
+    gst_event_replace (eventp, NULL);
+  }
 
   mp3parse->exact_position = FALSE;
   gst_segment_init (&mp3parse->segment, GST_FORMAT_TIME);
@@ -417,15 +425,16 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
               ", pos = %" GST_TIME_FORMAT, GST_TIME_ARGS (seg_start),
               GST_TIME_ARGS (seg_stop), GST_TIME_ARGS (seg_pos));
         }
+      } else {
+        if (format != GST_FORMAT_TIME) {
+          /* Unknown incoming segment format. Output a default open-ended 
+           * TIME segment */
+          gst_event_unref (event);
+          event = gst_event_new_new_segment_full (update, rate, applied_rate,
+              GST_FORMAT_TIME, 0, GST_CLOCK_TIME_NONE, 0);
+        }
       }
 
-      if (format != GST_FORMAT_TIME) {
-        /* Unknown incoming segment format. Output a default open-ended 
-         * TIME segment */
-        gst_event_unref (event);
-        event = gst_event_new_new_segment_full (update, rate, applied_rate,
-            GST_FORMAT_TIME, 0, GST_CLOCK_TIME_NONE, 0);
-      }
       mp3parse->resyncing = TRUE;
       mp3parse->cur_offset = -1;
       mp3parse->next_ts = GST_CLOCK_TIME_NONE;
@@ -445,6 +454,7 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
        * the caps are fixed and the next linked element can receive the segment. */
       eventp = &mp3parse->pending_segment;
       gst_event_replace (eventp, event);
+      gst_event_unref (event);
       res = TRUE;
       break;
     }
@@ -618,9 +628,10 @@ gst_mp3parse_emit_frame (GstMPEGAudioParse * mp3parse, guint size)
         GST_BUFFER_OFFSET (outbuf));
     mp3parse->segment.last_stop = GST_BUFFER_TIMESTAMP (outbuf);
     /* push any pending segment now */
-    if (mp3parse->pending_segment)
+    if (mp3parse->pending_segment) {
       gst_pad_push_event (mp3parse->srcpad, mp3parse->pending_segment);
-    mp3parse->pending_segment = NULL;
+      mp3parse->pending_segment = NULL;
+    }
     ret = gst_pad_push (mp3parse->srcpad, outbuf);
   }
 
