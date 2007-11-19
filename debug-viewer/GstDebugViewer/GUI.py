@@ -315,7 +315,7 @@ class LazyLogModel (LogModelBase):
             groups[6] = int (groups[6]) # line
             # groups[8] = groups[8] or "" # object (optional)
 
-        self.line_cache[line_offset] = groups
+        self.line_cache[line_offset] = Data.LogLine (groups)
 
 class FilteredLogModel (LogModelBase):
 
