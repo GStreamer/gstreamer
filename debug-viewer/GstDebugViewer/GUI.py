@@ -240,8 +240,6 @@ class LazyLogModel (LogModelBase):
 
         self.__log_obj = log_obj
 
-        self.__line_regex = Data.default_log_line_regex ()
-
         if log_obj:
             self.set_log (log_obj)
 
