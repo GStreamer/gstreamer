@@ -794,7 +794,7 @@ gst_preset_default_create_preset (GstPreset * self)
          }
        */
 
-      GST_INFO ("property '%s' (GType=%d)", property->name,
+      GST_INFO ("property '%s' (GType=%lu)", property->name,
           property->value_type);
 
       param_type = property->value_type;
@@ -838,7 +838,7 @@ gst_preset_default_create_preset (GstPreset * self)
                           enum_class->minimum) * rnd)), NULL);
         } break;
         default:
-          GST_WARNING ("unhandled GType=%d", param_type);
+          GST_WARNING ("unhandled GType=%lu", param_type);
       }
     }
     /* @todo: handle childproxy properties as well */
