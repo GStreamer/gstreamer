@@ -19,6 +19,7 @@
 
 """GStreamer debug viewer data module"""
 
+import os
 import logging
 import re
 
@@ -238,6 +239,8 @@ class LineCache (Producer):
 
 class LogLine (list):
 
+    _line_regex = default_log_line_regex ()
+
     @classmethod
     def parse_full (cls, line_string):
 
@@ -245,12 +248,12 @@ class LogLine (list):
         pid_len = 5
 
         thread_pos = ts_len + 1 + pid_len + 1
-        thread_len = line[thread_pos:thread_pos + 32].find (" ")
+        thread_len = line_string[thread_pos:thread_pos + 32].find (" ")
         level_len = 5
 
         non_regex_len = ts_len + 1 + pid_len + thread_len + 1 + level_len + 1
-        non_regex_line = line[:non_regex_len]
-        regex_line = line[non_regex_len:]
+        non_regex_line = line_string[:non_regex_len]
+        regex_line = line_string[non_regex_len:]
 
         prefix = non_regex_line.rstrip ()
         while "  " in prefix:
@@ -261,7 +264,7 @@ class LogLine (list):
         thread = int (thread_s, 16)
         try:
             ## level = DebugLevel (level_s)
-            match = self.__line_regex.match (regex_line[:-len (os.linesep)])
+            match = cls._line_regex.match (regex_line[:-len (os.linesep)])
         except ValueError:
             level = debug_level_none
             match = None
@@ -273,8 +276,10 @@ class LogLine (list):
             # FIXME: Level (the 0 after thread) needs to be moved out of here!
             groups = [ts, pid, thread, 0] + list (match.groups ()) + [non_regex_len + match.end ()]
 
-            for col_id in (self.COL_CATEGORY, self.COL_FILENAME, self.COL_FUNCTION,
-                           self.COL_OBJECT,):
+            for col_id in (4,   # COL_CATEGORY
+                           5,   # COL_FILENAME
+                           7,   # COL_FUNCTION,
+                           8,): # COL_OBJECT
                 groups[col_id] = intern (groups[col_id] or "")
             
             groups[6] = int (groups[6]) # line
