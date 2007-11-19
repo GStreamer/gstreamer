@@ -276,46 +276,7 @@ class LazyLogModel (LogModelBase):
                 raise ValueError ("file changed!")
             line = self.__fileobj.readline ()
 
-        ts_len = 17
-        pid_len = 5
-
-        thread_pos = ts_len + 1 + pid_len + 1
-        thread_len = line[thread_pos:thread_pos + 32].find (" ")
-        level_len = 5
-
-        non_regex_len = ts_len + 1 + pid_len + thread_len + 1 + level_len + 1
-        non_regex_line = line[:non_regex_len]
-        regex_line = line[non_regex_len:]
-
-        prefix = non_regex_line.rstrip ()
-        while "  " in prefix:
-            prefix = prefix.replace ("  ", " ")
-        ts_s, pid_s, thread_s = prefix.split (" ")[:-1] # Omits level.
-        ts = Data.parse_time (ts_s)
-        pid = int (pid_s)
-        thread = int (thread_s, 16)
-        try:
-            ## level = Data.DebugLevel (level_s)
-            match = self.__line_regex.match (regex_line[:-len (os.linesep)])
-        except ValueError:
-            level = Data.debug_level_none
-            match = None
-
-        if match is None:
-            # FIXME?
-            groups = [ts, pid, thread, 0, "", "", 0, "", "", non_regex_len]
-        else:
-            # FIXME: Level (the 0 after thread) needs to be moved out of here!
-            groups = [ts, pid, thread, 0] + list (match.groups ()) + [non_regex_len + match.end ()]
-
-            for col_id in (self.COL_CATEGORY, self.COL_FILENAME, self.COL_FUNCTION,
-                           self.COL_OBJECT,):
-                groups[col_id] = intern (groups[col_id] or "")
-            
-            groups[6] = int (groups[6]) # line
-            # groups[8] = groups[8] or "" # object (optional)
-
-        self.line_cache[line_offset] = Data.LogLine (groups)
+        self.line_cache[line_offset] = Data.LogLine.parse_full (line)
 
 class FilteredLogModel (LogModelBase):
 
