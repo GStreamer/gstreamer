@@ -103,7 +103,11 @@ debug_level_log = DebugLevel ("LOG")
 _escape = re.compile ("\x1b\\[[0-9;]*m")
 def strip_escape (s):
 
-    return _escape.sub ("", s)
+    # FIXME: This can be optimized further!
+
+    while "\x1b" in s:
+        s = _escape.sub ("", s)
+    return s
 
 def default_log_line_regex_ ():
 
