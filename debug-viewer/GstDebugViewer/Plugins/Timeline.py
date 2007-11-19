@@ -240,15 +240,27 @@ class TimelineWidget (gtk.DrawingArea):
         theme = GUI.LevelColorThemeTango ()
         dist_data = self.level_dist_sentinel.data
 
-        level = Data.debug_level_debug
-        level_prev = Data.debug_level_log
+        def cumulative_level_counts (*levels):
+            for level_counts in dist_data:
+                yield sum ((level_counts[level] for level in levels))
+
+        level = Data.debug_level_info
+        levels_prev = (Data.debug_level_log, Data.debug_level_debug,)
         ctx.set_source_rgb (*(theme.colors_float (level)[1]))
-        self.__draw_graph (ctx, w, h, maximum, [counts[level] + counts[level_prev]
-                                                for counts in dist_data])
+        self.__draw_graph (ctx, w, h, maximum,
+                           list (cumulative_level_counts (level, *levels_prev)))
+
+        level = Data.debug_level_debug
+        levels_prev = (Data.debug_level_log,)
+        ctx.set_source_rgb (*(theme.colors_float (level)[1]))
+        self.__draw_graph (ctx, w, h, maximum,
+                           list (cumulative_level_counts (level, *levels_prev)))
 
         level = Data.debug_level_log
         ctx.set_source_rgb (*(theme.colors_float (level)[1]))
         self.__draw_graph (ctx, w, h, maximum, [counts[level] for counts in dist_data])
+
+        # Draw error and warning triangle indicators:
 
         for level in (Data.debug_level_warning, Data.debug_level_error,):
             ctx.set_source_rgb (*(theme.colors_float (level)[1]))
