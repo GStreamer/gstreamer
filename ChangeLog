@@ -1,3 +1,10 @@
+2007-11-19  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	Restore the segment handling logic.
+	Please don't do behavioural changes under the heading of 'leak fixes'
+	or 'whitespace changes', people.
+
 2007-11-19  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:

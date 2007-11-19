@@ -425,14 +425,14 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
               ", pos = %" GST_TIME_FORMAT, GST_TIME_ARGS (seg_start),
               GST_TIME_ARGS (seg_stop), GST_TIME_ARGS (seg_pos));
         }
-      } else {
-        if (format != GST_FORMAT_TIME) {
-          /* Unknown incoming segment format. Output a default open-ended 
-           * TIME segment */
-          gst_event_unref (event);
-          event = gst_event_new_new_segment_full (update, rate, applied_rate,
-              GST_FORMAT_TIME, 0, GST_CLOCK_TIME_NONE, 0);
-        }
+      }
+
+      if (format != GST_FORMAT_TIME) {
+        /* Unknown incoming segment format. Output a default open-ended 
+         * TIME segment */
+        gst_event_unref (event);
+        event = gst_event_new_new_segment_full (update, rate, applied_rate,
+            GST_FORMAT_TIME, 0, GST_CLOCK_TIME_NONE, 0);
       }
 
       mp3parse->resyncing = TRUE;
