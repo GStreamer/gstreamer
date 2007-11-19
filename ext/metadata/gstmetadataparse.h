@@ -79,9 +79,10 @@ struct _GstMetadataParse
   gboolean iptc;
   gboolean xmp;
 
-  gint64 seg_offset[3];
+  gint64 seg_offset_orig[3]; /* offset in chunk in original stream */
   guint32 seg_size[3];
 
+  gint64 seg_inject_offset[3]; /* offset of chunk in resulting stream */
   guint32 seg_inject_size[3];
   guint8 * seg_inject_data[3];
 

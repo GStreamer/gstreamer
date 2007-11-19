@@ -163,11 +163,10 @@ static void gst_metadata_parse_send_tags (GstMetadataParse * filter);
 
 static gboolean gst_metadata_parse_activate (GstPad * pad);
 
-static gboolean
-gst_metadata_parse_get_strip_range (gint64 * boffset, guint32 * bsize,
+static int
+gst_metadata_parse_get_strip_seg (const gint64 offset, guint32 size,
     const gint64 seg_offset, const guint32 seg_size,
-    gint64 * toffset, guint32 * tsize, gint64 * ioffset);
-
+    guint32 * boffset, guint32 * bsize, guint32 * seg_binter);
 static gboolean
 gst_metadata_parse_strip_buffer (GstMetadataParse * filter, gint64 offset,
     GstBuffer ** buf);
@@ -444,10 +443,13 @@ gst_metadata_parse_src_event (GstPad * pad, GstEvent * event)
         case GST_FORMAT_PERCENT:
           if (filter->duration < 0)
             goto done;
+          start = start * filter->duration / 100;
+          stop = stop * filter->duration / 100;
           break;
         default:
           goto done;
       }
+      format = GST_FORMAT_BYTES;
 
       if (start_type == GST_SEEK_TYPE_CUR)
         start = filter->offset + start;
@@ -565,9 +567,12 @@ gst_metadata_parse_init_members (GstMetadataParse * filter)
   filter->iptc = TRUE;
   filter->xmp = TRUE;
 
-  memset (filter->seg_offset, 0x00, sizeof (filter->seg_offset[0]) * 3);
+  memset (filter->seg_offset_orig, 0x00,
+      sizeof (filter->seg_offset_orig[0]) * 3);
   memset (filter->seg_size, 0x00, sizeof (filter->seg_size[0]) * 3);
 
+  memset (filter->seg_inject_offset, 0x00,
+      sizeof (filter->seg_inject_offset[0]) * 3);
   memset (filter->seg_inject_data, 0x00,
       sizeof (filter->seg_inject_data[0]) * 3);
   memset (filter->seg_inject_size, 0x00,
@@ -848,23 +853,24 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
     filter->need_more_data = TRUE;
   } else {
     int i, j;
+    guint32 bytes_striped;
 
     filter->num_segs = 0;
 
     /* FIXME: better design for segments */
 
     filter->seg_size[0] = filter->parse_data.exif.size;
-    filter->seg_offset[0] = filter->parse_data.exif.offset;
+    filter->seg_offset_orig[0] = filter->parse_data.exif.offset;
     filter->seg_inject_size[0] = filter->parse_data.exif.size_inject;
     filter->seg_inject_data[0] = filter->parse_data.exif.buffer;
 
     filter->seg_size[1] = filter->parse_data.iptc.size;
-    filter->seg_offset[1] = filter->parse_data.iptc.offset;
+    filter->seg_offset_orig[1] = filter->parse_data.iptc.offset;
     filter->seg_inject_size[1] = filter->parse_data.iptc.size_inject;
     filter->seg_inject_data[1] = filter->parse_data.iptc.buffer;
 
     filter->seg_size[2] = filter->parse_data.xmp.size;
-    filter->seg_offset[2] = filter->parse_data.xmp.offset;
+    filter->seg_offset_orig[2] = filter->parse_data.xmp.offset;
     filter->seg_inject_size[2] = filter->parse_data.xmp.size_inject;
     filter->seg_inject_data[2] = filter->parse_data.xmp.buffer;
 
@@ -882,7 +888,7 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
         for (j = i + 1; j < 3; ++j) {
           if (filter->seg_size[j])
             if (filter->seg_size[min] == 0
-                || filter->seg_offset[j] < filter->seg_offset[min])
+                || filter->seg_offset_orig[j] < filter->seg_offset_orig[min])
               min = j;
         }
         if (min != i) {
@@ -890,13 +896,13 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
           guint32 aux_size;
           guint8 *aux_data;
 
-          aux_offset = filter->seg_offset[i];
+          aux_offset = filter->seg_offset_orig[i];
           aux_size = filter->seg_size[i];
 
-          filter->seg_offset[i] = filter->seg_offset[min];
+          filter->seg_offset_orig[i] = filter->seg_offset_orig[min];
           filter->seg_size[i] = filter->seg_size[min];
 
-          filter->seg_offset[min] = aux_offset;
+          filter->seg_offset_orig[min] = aux_offset;
           filter->seg_size[min] = aux_size;
 
           aux_size = filter->seg_inject_size[i];
@@ -907,6 +913,15 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
           filter->seg_inject_data[i] = filter->seg_inject_data[min];
           filter->seg_inject_data[min] = aux_data;
         }
+      }
+
+      bytes_striped = 0;
+
+      /* calculate the new position off injected chunks */
+      for (i = 0; i < filter->num_segs; ++i) {
+        filter->seg_inject_offset[i] =
+            filter->seg_offset_orig[i] - bytes_striped;
+        bytes_striped += filter->seg_size[i] - filter->seg_inject_size[i];
       }
 
     }
@@ -1145,68 +1160,77 @@ done:
 }
 
 /*
- * Returns FALSE if nothing has stripped, TRUE if otherwise
+ * offset - offset of buffer in original stream
+ * size - size of buffer
+ * seg_offset - offset of segment in original stream
+ * seg_size - size of segment
+ * boffset - offset inside buffer where segment starts (-1 for no intersection)
+ * bsize - size of intersection
+ * seg_binter - if segment start inside buffer is zero. if segment start before
+ *               buffer and intersect, it is the offset inside segment.
+ *
+ * ret:
+ *  -1 - segment before buffer
+ *   0 - segment intersects
+ *   1 - segment after buffer
  */
 
-static gboolean
-gst_metadata_parse_get_strip_range (gint64 * boffset, guint32 * bsize,
+static int
+gst_metadata_parse_get_strip_seg (const gint64 offset, guint32 size,
     const gint64 seg_offset, const guint32 seg_size,
-    gint64 * toffset, guint32 * tsize, gint64 * ioffset)
+    guint32 * boffset, guint32 * bsize, guint32 * seg_binter)
 {
+  int ret = -1;
 
-  gboolean ret = FALSE;
+  *boffset = -1;
+  *bsize = 0;
+  *seg_binter = -1;
 
-  if (seg_size == 0 || *bsize == 0)
-    goto done;
-
-  /* segment after buffer */
-  if (seg_offset > *boffset + *bsize) {
-    *bsize = 0;
+  /* all segment after buffer */
+  if (seg_offset >= offset + size) {
+    ret = 1;
     goto done;
   }
 
-  if (seg_offset < *boffset) {
+  if (seg_offset < offset) {
     /* segment start somewhere before buffer */
-    guint32 cut_size;
 
     /* all segment before buffer */
-    if (seg_offset + seg_size <= *boffset) {
-      *tsize = *bsize;
-      *bsize = 0;
-      *toffset = *boffset;
+    if (seg_offset + seg_size <= offset) {
+      ret = -1;
       goto done;
     }
 
-    cut_size = seg_size - (*boffset - seg_offset);
+    *seg_binter = offset - seg_offset;
+    *boffset = 0;
 
-    if (cut_size >= *bsize) {
-      /* all buffer striped out */
-      *bsize = 0;
-      *tsize = 0;
+    /* FIXME : optimize to >= size -> = size */
+    if (seg_offset + seg_size >= offset + size) {
+      /* segment cover all buffer */
+      *bsize = size;
     } else {
-      /* just beginning buffers striped */
-      *toffset = *boffset + cut_size;
-      *tsize = *bsize - cut_size;
-      *bsize = 0;
+      /* segment goes from start of buffer to somewhere before end */
+      *bsize = seg_size - *seg_binter;
     }
+
+    ret = 0;
 
   } else {
     /* segment start somewhere into buffer */
-    *ioffset = seg_offset;
 
-    if (seg_offset + seg_size >= *boffset + *bsize) {
-      /* strip just tail */
-      *bsize = seg_offset - *boffset;
+    *boffset = seg_offset - offset;
+    *seg_binter = 0;
+
+    if (seg_offset + seg_size <= offset + size) {
+      /* all segment into buffer */
+      *bsize = seg_size;
     } else {
-      /* strip the middle */
-      *toffset = seg_offset + seg_size;
-      *tsize = *boffset + *bsize - seg_offset - seg_size;
-      *bsize = seg_offset - *boffset;
+      *bsize = size - *boffset;
     }
 
-  }
+    ret = 0;
 
-  ret = TRUE;
+  }
 
 done:
 
@@ -1224,110 +1248,85 @@ gst_metadata_parse_strip_buffer (GstMetadataParse * filter, gint64 offset,
     GstBuffer ** buf)
 {
 
+  const gint64 *seg_offset = filter->seg_offset_orig;
+  const guint32 *seg_size = filter->seg_size;
+  const guint32 *seg_inject_size = filter->seg_inject_size;
+  const guint8 **seg_inject_data = filter->seg_inject_data;
+
+  const size = GST_BUFFER_SIZE (*buf);
+
   gint64 boffset[3];
   guint32 bsize[3];
-
-  gint64 toffset[3];
-  guint32 tsize[3];
-
-  gint64 ioffset[3];
-
-  const gint64 *seg_offset = filter->seg_offset;
-
-  const guint32 *seg_size = filter->seg_size;
+  guint32 seg_binter[3];
 
   int i;
   gboolean ret = FALSE;
-  guint32 new_size = 0;
 
   if (filter->num_segs == 0)
     goto done;
 
   memset (bsize, 0x00, sizeof (bsize));
-  memset (tsize, 0x00, sizeof (tsize));
 
   for (i = 0; i < filter->num_segs; ++i) {
-    ioffset[i] = -1;
-  }
+    int res;
 
-  boffset[0] = offset;
-  new_size = bsize[0] = GST_BUFFER_SIZE (*buf);
-  i = 0;
+    res = gst_metadata_parse_get_strip_seg (offset, size,
+        seg_offset[i], seg_size[i], &boffset[i], &bsize[i], &seg_binter[i]);
 
-  for (i = 0; i < filter->num_segs; ++i) {
-    guint32 striped_size;
-
-    striped_size = bsize[i];
-    if (gst_metadata_parse_get_strip_range (&boffset[i], &bsize[i],
-            seg_offset[i], seg_size[i], &toffset[i], &tsize[i], &ioffset[i])) {
-      ret = TRUE;
-      new_size -= (striped_size - (bsize[i] + tsize[i]));
-    }
-    if (i + 1 < filter->num_segs) {
-      if (tsize[i]) {
-        boffset[i + 1] = toffset[i];
-        bsize[i + 1] = GST_BUFFER_SIZE (*buf) - (toffset[i] - offset);
-        tsize[i] = 0;
-      } else {
-        /* buffer already consumed */
-        break;
-      }
-    }
-    if (new_size == 0) {
-      /* all buffer striped already */
+    /* segment is after size (segments are sorted) */
+    if (res > 0)
       break;
-    }
+    if (res == 0)
+      ret = TRUE;
 
   }
 
   /* segments must be sorted by offset to make this copy */
   if (ret) {
-    if (new_size == 0) {
-      gst_buffer_unref (*buf);
-      *buf = NULL;
-    } else {
-      GstBuffer *new_buf;
-      guint8 *data;
 
-      for (i = 0; i < filter->num_segs; ++i) {
-        if (filter->seg_inject_size[i] == 0)
-          ioffset[i] = -1;
-        else
-          new_size += filter->seg_inject_size[i];
-      }
+    guint8 *data;
+    guint32 moved = 0;
 
-      if (GST_BUFFER_SIZE (new_buf) < new_size) {
-        /* FIXME: alloc more memory here */
-      }
+    if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY)) {
+      GstBuffer *new_buf = gst_buffer_copy (*buf);
 
-      /* FIXME: try to use buffer data in place */
-      new_buf = gst_buffer_copy (*buf);
-      data = GST_BUFFER_DATA (new_buf);
-
-      GST_BUFFER_SIZE (new_buf) = new_size;
-
-      for (i = 0; i < filter->num_segs; ++i) {
-        if (bsize[i]) {
-          memcpy (data,
-              GST_BUFFER_DATA (*buf) + (boffset[i] - offset), bsize[i]);
-          data += bsize[i];
-        }
-        if (ioffset[i] >= 0) {
-          memcpy (data, filter->seg_inject_data[i], filter->seg_inject_size[i]);
-          data += filter->seg_inject_size[i];
-        }
-        if (tsize[i]) {
-          memcpy (data,
-              GST_BUFFER_DATA (*buf) + (toffset[i] - offset), tsize[i]);
-          data += tsize[i];
-        }
-      }
       gst_buffer_unref (*buf);
       *buf = new_buf;
       GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
     }
-  }
 
+    data = GST_BUFFER_DATA (*buf);
+
+    for (i = 0; i < filter->num_segs; ++i) {
+
+      /* intersect */
+      if (bsize[i]) {
+        /* has data to inject */
+        if (seg_inject_size[i]) {
+          /* has data to inject here */
+          if (seg_binter[i] < seg_inject_size[i]) {
+            const guint32 inject_size = seg_inject_size[i] - seg_binter[i];
+
+            memcpy (data + boffset[i], seg_inject_data[i] + seg_binter[i],
+                inject_size);
+            boffset[i] += inject_size;
+            bsize[i] -= inject_size;
+          }
+        }
+        if (bsize[i]) {
+          /* if even inject there is still thing to remove */
+          memmove (data + boffset[i] - moved,
+              data + boffset[i] + bsize[i] - moved,
+              size - boffset[i] - bsize[i] + moved);
+          moved += bsize[i];
+        }
+      }
+
+    }
+
+    GST_BUFFER_SIZE (*buf) -= moved;
+
+  }
 
 done:
 
@@ -1347,10 +1346,10 @@ gst_metadata_parse_translate_pos (GstMetadataParse * filter, gint64 pos,
 
   *orig_pos = 0;
   for (i = 0; i < filter->num_segs; ++i) {
-    if (filter->seg_offset[i] > pos) {
+    if (filter->seg_offset_orig[i] > pos) {
       break;
     }
-    *orig_pos += filter->seg_size[i];
+    *orig_pos += filter->seg_size[i] - filter->seg_inject_size[i];
   }
   *orig_pos += pos;
 
