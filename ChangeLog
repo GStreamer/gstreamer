@@ -1,3 +1,8 @@
+2007-11-19  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/libs/fft.c: (GST_START_TEST):
+	Fix scaling to really have dB instead of something else.
+
 2007-11-19  Julien MOUTTE  <julien@moutte.net>
 
 	* tests/examples/seek/seek.c: (main): There's a nice macro to check

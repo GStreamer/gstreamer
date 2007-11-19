@@ -64,7 +64,6 @@ GST_START_TEST (test_s16_0hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag *= 2048.0;
     mag /= 32767.0 * 32767.0;
     mag = 10.0 * log10 (mag);
     if (i < 2)
@@ -106,12 +105,11 @@ GST_START_TEST (test_s16_11025hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag *= 2048.0;
     mag /= 32767.0 * 32767.0;
     mag = 10.0 * log10 (mag);
 
     if (abs (512 - i) < 2)
-      fail_unless (mag > -15.0);
+      fail_unless (mag > -20.0);
     else
       fail_unless (mag < -55.0);
   }
@@ -147,7 +145,6 @@ GST_START_TEST (test_s16_22050hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag *= 2048.0;
     mag /= 32767.0 * 32767.0;
     mag = 10.0 * log10 (mag);
 
@@ -186,7 +183,6 @@ GST_START_TEST (test_s32_0hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag *= 2048.0;
     mag /= 2147483647.0 * 2147483647.0;
     mag = 10.0 * log10 (mag);
 
@@ -229,12 +225,11 @@ GST_START_TEST (test_s32_11025hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag *= 2048.0;
     mag /= 2147483647.0 * 2147483647.0;
     mag = 10.0 * log10 (mag);
 
     if (abs (512 - i) < 2)
-      fail_unless (mag > -15.0);
+      fail_unless (mag > -20.0);
     else
       fail_unless (mag < -60.0);
   }
@@ -270,7 +265,6 @@ GST_START_TEST (test_s32_22050hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag *= 2048.0;
     mag /= 2147483647.0 * 2147483647.0;
     mag = 10.0 * log10 (mag);
 
@@ -309,7 +303,7 @@ GST_START_TEST (test_f32_0hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag /= 2048.0;
+    mag /= 2048.0 * 2048.0;
     mag = 10.0 * log10 (mag);
 
     if (i < 2)
@@ -351,11 +345,11 @@ GST_START_TEST (test_f32_11025hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag /= 2048.0;
+    mag /= 2048.0 * 2048.0;
     mag = 10.0 * log10 (mag);
 
     if (abs (512 - i) < 2)
-      fail_unless (mag > -15.0);
+      fail_unless (mag > -20.0);
     else
       fail_unless (mag < -60.0);
   }
@@ -391,7 +385,7 @@ GST_START_TEST (test_f32_22050hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag /= 2048.0;
+    mag /= 2048.0 * 2048.0;
     mag = 10.0 * log10 (mag);
 
     if (i > 1022)
@@ -429,7 +423,7 @@ GST_START_TEST (test_f64_0hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag /= 2048.0;
+    mag /= 2048.0 * 2048.0;
     mag = 10.0 * log10 (mag);
 
     if (i < 2)
@@ -471,11 +465,11 @@ GST_START_TEST (test_f64_11025hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag /= 2048.0;
+    mag /= 2048.0 * 2048.0;
     mag = 10.0 * log10 (mag);
 
     if (abs (512 - i) < 2)
-      fail_unless (mag > -15.0);
+      fail_unless (mag > -20.0);
     else
       fail_unless (mag < -60.0);
   }
@@ -511,7 +505,7 @@ GST_START_TEST (test_f64_22050hz)
 
     mag = (gdouble) out[i].r * (gdouble) out[i].r;
     mag += (gdouble) out[i].i * (gdouble) out[i].i;
-    mag /= 2048.0;
+    mag /= 2048.0 * 2048.0;
     mag = 10.0 * log10 (mag);
 
     if (i > 1022)
