@@ -1,3 +1,9 @@
+2007-11-19  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstpreset.c:
+	  Fix bogus warning and make the property type specific code more
+	  similar.
+
 2007-11-19  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/gstpreset.c: (gst_preset_default_create_preset): Make

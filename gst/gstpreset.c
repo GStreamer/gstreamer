@@ -351,9 +351,9 @@ gst_preset_default_load_preset (GstPreset * self, const gchar * name)
                 property->name);
             /* get base type */
             base = property->value_type;
-            while ((parent = g_type_parent (base))) {
+            while ((parent = g_type_parent (base)))
               base = parent;
-            }
+
             switch (base) {
               case G_TYPE_INT:
               case G_TYPE_UINT:
@@ -528,12 +528,12 @@ gst_preset_default_save_preset (GstPreset * self, const gchar * name)
 
       /* get base type */
       base = property->value_type;
-      while ((parent = g_type_parent (base))) {
+      while ((parent = g_type_parent (base)))
         base = parent;
-      }
       /* get value and serialize */
       GST_INFO ("  storing property: %s (type is %s)", property->name,
           g_type_name (base));
+
       switch (base) {
         case G_TYPE_BOOLEAN:
         case G_TYPE_ENUM:
@@ -768,7 +768,7 @@ gst_preset_default_create_preset (GstPreset * self)
 {
   GParamSpec **properties, *property;
   guint i, number_of_properties;
-  GType param_type, base_type;
+  GType base, parent;
 
   if ((properties =
           g_object_class_list_properties (G_OBJECT_CLASS (GST_OBJECT_GET_CLASS
@@ -794,15 +794,16 @@ gst_preset_default_create_preset (GstPreset * self)
          }
        */
 
-      GST_INFO ("property '%s' (GType=%lu)", property->name,
-          property->value_type);
-
-      param_type = property->value_type;
-      while ((base_type = g_type_parent (param_type)))
-        param_type = base_type;
-
       rnd = ((gdouble) rand ()) / (RAND_MAX + 1.0);
-      switch (param_type) {
+
+      /* get base type */
+      base = property->value_type;
+      while ((parent = g_type_parent (base)))
+        base = parent;
+      GST_INFO ("set random value for property: %s (type is %s)",
+          property->name, g_type_name (base));
+
+      switch (base) {
         case G_TYPE_BOOLEAN:{
           g_object_set (self, property->name, (gboolean) (2.0 * rnd), NULL);
         }
@@ -838,7 +839,8 @@ gst_preset_default_create_preset (GstPreset * self)
                           enum_class->minimum) * rnd)), NULL);
         } break;
         default:
-          GST_WARNING ("unhandled GType=%lu", param_type);
+          GST_WARNING ("incomplete implementation for GParamSpec type '%s'",
+              G_PARAM_SPEC_TYPE_NAME (property));
       }
     }
     /* @todo: handle childproxy properties as well */
