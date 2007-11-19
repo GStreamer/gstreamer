@@ -34,12 +34,15 @@
  * - we need locks to avoid two instances manipulating the preset list -> flock
  * - need to add support for GstChildProxy
  * - how can we support both Preferences and Presets,
- *   - preferences = static settings (non controlable)
+ *   - preferences = static settings, configurations (non controlable)
+ *     e.g. alsasink:device
  *   - preset = a snapshot of dynamic params
- *   - flag
- *     - we could save all, but have a flag when loading
- *     - we could use a flag for _get_preset_names()
- * 
+ *     e.g. volume:volume
+ *   - we could use a flag for _get_preset_names()
+ *   - we could even use tags as part of preset metadata
+ *     e.g. quality, performance, preset, config
+ *     if there are some agreed tags, one could say, please optimize the pipline
+ *     for 'performance'
  * - should there be a 'preset-list' property to get the preset list
  *   (and to connect a notify:: to to listen for changes)
  * - should there be a 'preset-name' property so that we can set a preset via
@@ -130,12 +133,12 @@ preset_get_path (GstPreset * self)
       GST_INFO ("file_name: '%s'", file_name);
       /*
          '/home/ensonic/buzztard/lib/gstreamer-0.10/libgstsimsyn.so'
-         -> '/home/ensonic/buzztard/share/gstreamer-0.10/GstSimSyn.xml'
-         -> '$HOME/.gstreamer-0.10/presets/GstSimSyn.xml'
+         -> '/home/ensonic/buzztard/share/gstreamer-0.10/GstSimSyn.prs'
+         -> '$HOME/.gstreamer-0.10/presets/GstSimSyn.prs'
 
          '/usr/lib/gstreamer-0.10/libgstaudiofx.so'
-         -> '/usr/share/gstreamer-0.10/GstAudioPanorama.xml'
-         -> '$HOME/.gstreamer-0.10/presets/GstAudioPanorama.xml'
+         -> '/usr/share/gstreamer-0.10/GstAudioPanorama.prs'
+         -> '$HOME/.gstreamer-0.10/presets/GstAudioPanorama.prs'
        */
     }
 
@@ -154,6 +157,19 @@ preset_get_path (GstPreset * self)
     g_type_set_qdata (type, preset_path_quark, (gpointer) preset_path);
   }
   return (preset_path);
+}
+
+static gboolean
+preset_skip_property (GParamSpec * property)
+{
+  /* @todo: currently we skip non-controlable parameters and thus only create
+   * presets, skipping the controlable one would create a config/preference
+   */
+  if (!(property->flags & GST_PARAM_CONTROLLABLE) ||
+      !(property->flags & G_PARAM_READABLE) ||
+      (property->flags & G_PARAM_CONSTRUCT_ONLY))
+    return TRUE;
+  return FALSE;
 }
 
 static void
@@ -313,6 +329,7 @@ gst_preset_default_get_preset_names (GstPreset * self)
     instances = g_list_prepend (instances, self);
     g_type_set_qdata (type, instance_list_quark, (gpointer) instances);
   }
+  /* @todo: copy strings to avoid races? transform into a strv? */
   return (presets);
 }
 
@@ -342,9 +359,9 @@ gst_preset_default_load_preset (GstPreset * self, const gchar * name)
                   (GST_ELEMENT_GET_CLASS (self)), &number_of_properties))) {
         for (i = 0; i < number_of_properties; i++) {
           property = properties[i];
-          /* skip non-controlable */
-          if (!(property->flags & GST_PARAM_CONTROLLABLE))
+          if (preset_skip_property (property))
             continue;
+
           /* check if we have a settings for this property */
           if ((val = (gchar *) g_hash_table_lookup (data, property->name))) {
             GST_DEBUG ("setting value '%s' for property '%s'", val,
@@ -523,7 +540,7 @@ gst_preset_default_save_preset (GstPreset * self, const gchar * name)
       /*flags=GPOINTER_TO_INT(g_param_spec_get_qdata(property,gst_property_meta_quark_flags)); */
 
       /* skip non-controlable */
-      if (!(property->flags & GST_PARAM_CONTROLLABLE))
+      if (preset_skip_property (property))
         continue;
 
       /* get base type */
@@ -596,6 +613,7 @@ gst_preset_default_save_preset (GstPreset * self, const gchar * name)
       }
 
     }
+    /* @todo: handle childproxy properties as well */
     GST_INFO ("  saved");
   }
 
@@ -780,7 +798,7 @@ gst_preset_default_create_preset (GstPreset * self)
       property = properties[i];
 
       /* skip non-controlable, and non persistent params */
-      if (!(property->flags & GST_PARAM_CONTROLLABLE))
+      if (preset_skip_property (property))
         continue;
       /* we do not want to create a setting for trigger properties, buzztard
          has more flags attached to g_param_specs
@@ -853,7 +871,7 @@ gst_preset_default_create_preset (GstPreset * self)
  * gst_preset_get_preset_names:
  * @self: a #GObject that implements #GstPreset
  *
- * Get a copy of the preset list names. Free list when done.
+ * Get a copy of the preset name list. Free list when done.
  *
  * Returns: list with names
  */
