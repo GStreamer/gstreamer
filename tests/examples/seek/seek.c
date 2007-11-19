@@ -1667,7 +1667,7 @@ main (int argc, char **argv)
       GTK_ADJUSTMENT (gtk_adjustment_new (0.0, 0.00, 100.0, 0.1, 1.0, 1.0));
   hscale = gtk_hscale_new (adjustment);
   gtk_scale_set_digits (GTK_SCALE (hscale), 2);
-#if GTK_MAJOR_VERSION > 2 && GTK_MINOR_VERSION > 12
+#if GTK_CHECK_VERSION(2,12,0)
   gtk_range_set_show_fill_level (GTK_RANGE (hscale), TRUE);
   gtk_range_set_fill_level (GTK_RANGE (hscale), 100.0);
 #endif

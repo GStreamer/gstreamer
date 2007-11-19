@@ -1,5 +1,10 @@
 2007-11-19  Julien MOUTTE  <julien@moutte.net>
 
+	* tests/examples/seek/seek.c: (main): There's a nice macro to check
+	GTK version, use it.
+
+2007-11-19  Julien MOUTTE  <julien@moutte.net>
+
 	* tests/examples/seek/seek.c: (main): Try to support stable version
 	of GTK.
 
