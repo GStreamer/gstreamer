@@ -1,7 +1,7 @@
 /* GStreamer
  *
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *                    2004 Wim Taymans <wim@fluendo.com>
+ *                    2004 Wim Taymans <wim.taymans@gmail.com>
  *
  * gstbin.c: GstBin container object and support code
  *
@@ -189,7 +189,8 @@ static const GstElementDetails gst_bin_details =
 GST_ELEMENT_DETAILS ("Generic bin",
     "Generic/Bin",
     "Simple container object",
-    "Erik Walthinsen <omega@cse.ogi.edu>," "Wim Taymans <wim@fluendo.com>");
+    "Erik Walthinsen <omega@cse.ogi.edu>,"
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 /* a bin is toplevel if it has no parent or when it is configured to behave like
  * a toplevel bin */
@@ -257,6 +258,8 @@ enum
   ELEMENT_REMOVED,
   LAST_SIGNAL
 };
+
+#define DEFAULT_ASYNC_HANDLING	FALSE
 
 enum
 {
@@ -402,7 +405,7 @@ gst_bin_class_init (GstBinClass * klass)
   g_object_class_install_property (gobject_class, PROP_ASYNC_HANDLING,
       g_param_spec_boolean ("async-handling", "Async Handling",
           "The bin will handle Asynchronous state changes",
-          FALSE, G_PARAM_READWRITE));
+          DEFAULT_ASYNC_HANDLING, G_PARAM_READWRITE));
 
   /**
    * GstBin::element-added:
@@ -481,7 +484,7 @@ gst_bin_init (GstBin * bin)
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) bin_bus_handler, bin);
 
   bin->priv = g_new0 (GstBinPrivate, 1);
-  bin->priv->asynchandling = FALSE;
+  bin->priv->asynchandling = DEFAULT_ASYNC_HANDLING;
 }
 
 static void
@@ -911,12 +914,6 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   bin->numchildren++;
   bin->children_cookie++;
 
-  ret = GST_STATE_RETURN (bin);
-
-  /* no need to update the state if we are in error */
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    goto no_state_recalc;
-
   /* distribute the bus */
   gst_element_set_bus (element, bin->child_bus);
 
@@ -926,6 +923,11 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
    * that is not important right now. When the pipeline goes to PLAYING,
    * a new clock will be selected */
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
+
+  ret = GST_STATE_RETURN (bin);
+  /* no need to update the state if we are in error */
+  if (ret == GST_STATE_CHANGE_FAILURE)
+    goto no_state_recalc;
 
   /* update the bin state, the new element could have been an ASYNC or
    * NO_PREROLL element */
@@ -1248,6 +1250,7 @@ not_in_bin:
   }
 already_removing:
   {
+    GST_CAT_INFO_OBJECT (GST_CAT_PARENTAGE, bin, "already removing child");
     GST_OBJECT_UNLOCK (element);
     return FALSE;
   }
@@ -1831,7 +1834,7 @@ gst_bin_sort_iterator_new (GstBin * bin)
  * the most downstream elements (sinks) to the sources.
  *
  * This function is used internally to perform the state changes
- * of the bin elements.
+ * of the bin elements and for clock selection.
  *
  * Each element yielded by the iterator will have its refcount increased, so
  * unref after use.
@@ -2022,6 +2025,8 @@ failed:
   }
 }
 
+/* do latency correction. We do a latency query on the bin, and then send a
+ * LATENCY event on the elements fo configure them */
 static gboolean
 do_bin_latency (GstElement * element)
 {
@@ -2137,6 +2142,8 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
       break;
   }
 
+  /* this flag is used to make the async state changes return immediatly. We
+   * don't want them to interfere with this state change */
   GST_OBJECT_LOCK (bin);
   bin->polling = TRUE;
   GST_OBJECT_UNLOCK (bin);
@@ -2339,6 +2346,9 @@ gst_bin_send_event (GstElement * element, GstEvent * event)
   return res;
 }
 
+/* this is the function called by the threadpool. When async elements commit
+ * their state, this function will attempt to bring the bin to the next state.
+ */
 static void
 gst_bin_continue_func (BinContinueData * data)
 {
@@ -2356,6 +2366,8 @@ gst_bin_continue_func (BinContinueData * data)
   GST_DEBUG_OBJECT (bin, "doing state continue");
   GST_OBJECT_LOCK (bin);
 
+  /* if a new state change happened after this thread was scheduled, we return
+   * immediatly. */
   if (data->cookie != GST_ELEMENT_CAST (bin)->state_cookie)
     goto interrupted;
 
@@ -2382,11 +2394,14 @@ gst_bin_continue_func (BinContinueData * data)
   return;
 
 interrupted:
-  GST_OBJECT_UNLOCK (bin);
-  GST_STATE_UNLOCK (bin);
-  GST_DEBUG_OBJECT (bin, "state continue aborted due to intervening change");
-  gst_object_unref (bin);
-  g_free (data);
+  {
+    GST_OBJECT_UNLOCK (bin);
+    GST_STATE_UNLOCK (bin);
+    GST_DEBUG_OBJECT (bin, "state continue aborted due to intervening change");
+    gst_object_unref (bin);
+    g_free (data);
+    return;
+  }
 }
 
 static GstBusSyncReply
@@ -3028,6 +3043,7 @@ bin_query_latency_fold (GstElement * item, GValue * ret, QueryFold * fold)
   gst_object_unref (item);
   return TRUE;
 }
+
 static void
 bin_query_latency_done (GstBin * bin, QueryFold * fold)
 {
@@ -3039,7 +3055,6 @@ bin_query_latency_done (GstBin * bin, QueryFold * fold)
       ", live %d", GST_TIME_ARGS (fold->min), GST_TIME_ARGS (fold->max),
       fold->live);
 }
-
 
 /* generic fold, return first valid result */
 static gboolean

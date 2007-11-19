@@ -1,3 +1,11 @@
+2007-11-19  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/gstbin.c: (gst_bin_class_init), (gst_bin_init),
+	(gst_bin_add_func), (gst_bin_remove_func),
+	(gst_bin_change_state_func), (gst_bin_continue_func):
+	Change email, cleanups add some more debug and comments.
+	Also set bus and clock on new elements when the pipeline was in error.
+
 2007-11-18  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstbin.c:
