@@ -434,9 +434,7 @@ class TimelineFeature (FeatureBase):
         data = self.timeline.sentinel.data
         if not data:
             return True
-        count = 0
-        for i in range (pos):
-            count += data[i]
+        count = sum (data[:pos + 1])
 
         row = self.log_model[count]
         self.log_view.scroll_to_cell ((count,), use_align = True, row_align = .5)
