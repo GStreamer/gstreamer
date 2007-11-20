@@ -296,9 +296,9 @@ class LogLine (list):
         if isinstance (message_offset, str):
             message = message_offset
 
-        return "%s %5d 0x%x %s %20s %s:%d:%s:%s %s" % (time_args (ts), pid, thread, level.name.ljust (5),
-                                                       category, filename, line, function,
-                                                       object_, message,)
+        return "%s %5d 0x%x %s %20s %s:%d:%s:<%s> %s" % (time_args (ts), pid, thread, level.name.ljust (5),
+                                                         category, filename, line, function,
+                                                         object_, message,)
 
 class LogFile (Producer):
 
