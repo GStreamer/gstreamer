@@ -100,7 +100,7 @@ class LogModelBase (gtk.GenericTreeModel):
                "COL_LEVEL", object,               
                "COL_CATEGORY", str,
                "COL_FILENAME", str,
-               "COL_LINE", int,
+               "COL_LINE_NUMBER", int,
                "COL_FUNCTION", str,
                "COL_OBJECT", str,
                "COL_MESSAGE", str,)
