@@ -219,6 +219,32 @@ GST_START_TEST (test_rtppayloaders)
 }
 
 GST_END_TEST
+GST_START_TEST (test_video_encoders_decoders)
+{
+  gchar *s;
+
+  /* no is-live on the source because we actually want to preroll since
+   * run_pipeline only goes into PAUSED */
+#define ENC_DEC_PIPELINE_STRING(bufcount, enc, dec) "videotestsrc num-buffers=" bufcount " ! " enc " ! " dec " ! fakesink"
+#define DEFAULT_BUFCOUNT "5"
+
+  s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "jpegenc", "jpegdec");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "pngenc", "pngdec");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+
+  s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "smokeenc", "smokedec");
+  run_pipeline (setup_pipeline (s), s,
+      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
+      GST_MESSAGE_UNKNOWN);
+}
+
+GST_END_TEST
 #endif /* #ifndef GST_DISABLE_PARSE */
     Suite * simple_launch_lines_suite (void)
 {
@@ -231,6 +257,7 @@ GST_END_TEST
   suite_add_tcase (s, tc_chain);
 #ifndef GST_DISABLE_PARSE
   tcase_add_test (tc_chain, test_rtppayloaders);
+  tcase_add_test (tc_chain, test_video_encoders_decoders);
 #endif
   return s;
 }
