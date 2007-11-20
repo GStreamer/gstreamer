@@ -5,7 +5,8 @@ libgstosxaudio_la_SOURCES = gstosxringbuffer.c		\
 			    gstosxaudiosink.c \
 			    gstosxaudiosrc.c
 
-libgstosxaudio_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS)
+libgstosxaudio_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
+	-Wno-deprecated-declarations
 libgstosxaudio_la_LIBADD = 			\
 	-lgstinterfaces-@GST_MAJORMINOR@	\
 	-lgstaudio-@GST_MAJORMINOR@		\

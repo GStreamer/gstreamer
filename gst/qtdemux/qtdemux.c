@@ -2197,7 +2197,8 @@ qtdemux_parse_theora_extension (GstQTDemux * qtdemux, QtDemuxStream * stream,
         break;
       default:
         GST_WARNING_OBJECT (qtdemux,
-            "unknown theora cookie %" GST_FOURCC_FORMAT, type);
+            "unknown theora cookie %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (type));
         break;
     }
     buf += size;

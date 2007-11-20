@@ -35,7 +35,7 @@ struct _GstOSXImage;
 @interface GstGLView : NSOpenGLView
 {
     int i_effect;
-    unsigned long pi_texture;
+    unsigned int pi_texture;
     float f_x;
     float f_y;
     int initDone;

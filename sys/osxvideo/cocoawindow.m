@@ -262,7 +262,7 @@
 }
 
 - (void) drawRect:(NSRect) rect {
-  long params[] = { 1 };
+  int params[] = { 1 };
 
   [actualContext makeCurrentContext];
 
