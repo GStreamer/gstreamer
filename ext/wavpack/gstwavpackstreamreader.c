@@ -35,11 +35,15 @@ gst_wavpack_stream_reader_read_bytes (void *id, void *data, int32_t bcount)
   uint32_t left = rid->length - rid->position;
   uint32_t to_read = MIN (left, bcount);
 
+  GST_DEBUG ("Trying to read %d of %d bytes from position %d", bcount,
+      rid->length, rid->position);
+
   if (to_read > 0) {
     g_memmove (data, rid->buffer + rid->position, to_read);
     rid->position += to_read;
     return to_read;
   } else {
+    GST_WARNING ("Couldn't read %d bytes");
     return 0;
   }
 }
@@ -47,20 +51,23 @@ gst_wavpack_stream_reader_read_bytes (void *id, void *data, int32_t bcount)
 static uint32_t
 gst_wavpack_stream_reader_get_pos (void *id)
 {
+  GST_DEBUG ("Returning position %d", ((read_id *) id)->position);
   return ((read_id *) id)->position;
 }
 
 static int
 gst_wavpack_stream_reader_set_pos_abs (void *id, uint32_t pos)
 {
-  GST_DEBUG ("should not be called");
+  GST_WARNING ("Should not be called: tried to set absolute position to %d",
+      pos);
   return -1;
 }
 
 static int
 gst_wavpack_stream_reader_set_pos_rel (void *id, int32_t delta, int mode)
 {
-  GST_DEBUG ("should not be called");
+  GST_WARNING ("Should not be called: tried to set relative position to %d"
+      " with mode %d", delta, mode);
   return -1;
 }
 
@@ -68,6 +75,8 @@ static int
 gst_wavpack_stream_reader_push_back_byte (void *id, int c)
 {
   read_id *rid = (read_id *) id;
+
+  GST_DEBUG ("Pushing back one byte: 0x%x", c);
 
   rid->position -= 1;
   if (rid->position < 0)
@@ -78,19 +87,22 @@ gst_wavpack_stream_reader_push_back_byte (void *id, int c)
 static uint32_t
 gst_wavpack_stream_reader_get_length (void *id)
 {
+  GST_DEBUG ("Returning length %d", ((read_id *) id)->length);
+
   return ((read_id *) id)->length;
 }
 
 static int
 gst_wavpack_stream_reader_can_seek (void *id)
 {
+  GST_DEBUG ("Can't seek");
   return FALSE;
 }
 
 static int32_t
 gst_wavpack_stream_reader_write_bytes (void *id, void *data, int32_t bcount)
 {
-  GST_DEBUG ("should not be called");
+  GST_WARNING ("Should not be called, tried to write %d bytes", bcount);
   return 0;
 }
 

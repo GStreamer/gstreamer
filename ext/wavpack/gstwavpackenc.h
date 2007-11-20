@@ -45,6 +45,7 @@ typedef struct
 {
   gboolean correction;
   GstWavpackEnc *wavpack_enc;
+  gboolean passthrough;
 } GstWavpackEncWriteID;
 
 
@@ -64,6 +65,9 @@ struct _GstWavpackEnc
 
   gint samplerate;
   gint channels;
+  gint channel_mask;
+  gint8 channel_mapping[8];
+  gboolean need_channel_remap;
   gint depth;
 
   GstWavpackEncWriteID wv_id;
@@ -80,6 +84,9 @@ struct _GstWavpackEnc
 
   void *first_block;
   int32_t first_block_size;
+
+  GstBuffer *pending_buffer;
+  gint32 pending_offset;
 };
 
 struct _GstWavpackEncClass

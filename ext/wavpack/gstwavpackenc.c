@@ -52,21 +52,7 @@
  */
 
 /*
- * TODO: - add multichannel handling. channel_mask is:
- *                  front left
- *                  front right
- *                  center
- *                  LFE
- *                  back left
- *                  back right
- *                  front left center
- *                  front right center
- *                  back left
- *                  back center
- *                  side left
- *                  side right
- *                  ...
- *        - add 32 bit float mode. CONFIG_FLOAT_DATA
+ * TODO: - add 32 bit float mode. CONFIG_FLOAT_DATA
  */
 
 #include <string.h>
@@ -111,7 +97,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
         "width = (int) 32, "
         "depth = (int) [ 1, 32], "
         "endianness = (int) BYTE_ORDER, "
-        "channels = (int) [ 1, 2 ], "
+        "channels = (int) [ 1, 8 ], "
         "rate = (int) [ 6000, 192000 ]," "signed = (boolean) TRUE")
     );
 
@@ -320,6 +306,12 @@ gst_wavpack_enc_reset (GstWavpackEnc * enc)
     enc->md5_context = NULL;
   }
 
+  if (enc->pending_buffer) {
+    gst_buffer_unref (enc->pending_buffer);
+    enc->pending_buffer = NULL;
+    enc->pending_offset = 0;
+  }
+
   /* reset the last returns to GST_FLOW_OK. This is only set to something else
    * while WavpackPackSamples() or more specific gst_wavpack_enc_push_block()
    * so not valid anymore */
@@ -329,6 +321,8 @@ gst_wavpack_enc_reset (GstWavpackEnc * enc)
   enc->samplerate = 0;
   enc->depth = 0;
   enc->channels = 0;
+  enc->channel_mask = 0;
+  enc->need_channel_remap = FALSE;
 }
 
 static void
@@ -356,8 +350,10 @@ gst_wavpack_enc_init (GstWavpackEnc * enc, GstWavpackEncClass * gclass)
 
   enc->wv_id.correction = FALSE;
   enc->wv_id.wavpack_enc = enc;
+  enc->wv_id.passthrough = FALSE;
   enc->wvc_id.correction = TRUE;
   enc->wvc_id.wavpack_enc = enc;
+  enc->wvc_id.passthrough = FALSE;
 
   /* set default values of params */
   enc->mode = GST_WAVPACK_ENC_MODE_DEFAULT;
@@ -374,6 +370,7 @@ gst_wavpack_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
 {
   GstWavpackEnc *enc = GST_WAVPACK_ENC (gst_pad_get_parent (pad));
   GstStructure *structure = gst_caps_get_structure (caps, 0);
+  GstAudioChannelPosition *pos;
 
   if (!gst_structure_get_int (structure, "channels", &enc->channels) ||
       !gst_structure_get_int (structure, "rate", &enc->samplerate) ||
@@ -384,11 +381,36 @@ gst_wavpack_enc_sink_set_caps (GstPad * pad, GstCaps * caps)
     return FALSE;
   }
 
+  pos = gst_audio_get_channel_positions (structure);
+  /* If one channel is NONE they'll be all undefined */
+  if (pos != NULL && pos[0] == GST_AUDIO_CHANNEL_POSITION_NONE) {
+    g_free (pos);
+    pos = NULL;
+  }
+
+  if (pos == NULL) {
+    GST_ELEMENT_ERROR (enc, STREAM, FORMAT, (NULL),
+        ("input has no valid channel layout"));
+
+    gst_object_unref (enc);
+    return FALSE;
+  }
+
+  enc->channel_mask =
+      gst_wavpack_get_channel_mask_from_positions (pos, enc->channels);
+  enc->need_channel_remap =
+      gst_wavpack_set_channel_mapping (pos, enc->channels,
+      enc->channel_mapping);
+  g_free (pos);
+
   /* set fixed src pad caps now that we know what we will get */
   caps = gst_caps_new_simple ("audio/x-wavpack",
       "channels", G_TYPE_INT, enc->channels,
       "rate", G_TYPE_INT, enc->samplerate,
       "width", G_TYPE_INT, enc->depth, "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  if (!gst_wavpack_set_channel_layout (caps, enc->channel_mask))
+    GST_WARNING_OBJECT (enc, "setting channel layout failed");
 
   if (!gst_pad_set_caps (enc->srcpad, caps)) {
     GST_ELEMENT_ERROR (enc, LIBRARY, INIT, (NULL),
@@ -412,13 +434,7 @@ gst_wavpack_enc_set_wp_config (GstWavpackEnc * enc)
   enc->wp_config->bytes_per_sample = GST_ROUND_UP_8 (enc->depth) / 8;
   enc->wp_config->bits_per_sample = enc->depth;
   enc->wp_config->num_channels = enc->channels;
-
-  /* TODO: handle more than 2 channels correctly! */
-  if (enc->channels == 1) {
-    enc->wp_config->channel_mask = 0x4;
-  } else if (enc->channels == 2) {
-    enc->wp_config->channel_mask = 0x2 | 0x1;
-  }
+  enc->wp_config->channel_mask = enc->channel_mask;
   enc->wp_config->sample_rate = enc->samplerate;
 
   /*
@@ -556,17 +572,43 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
 
     gst_wavpack_read_header (&wph, block);
 
-    /* if it's the first wavpack block, send a NEW_SEGMENT event */
-    if (wph.block_index == 0) {
-      gst_pad_push_event (pad,
-          gst_event_new_new_segment (FALSE,
-              1.0, GST_FORMAT_TIME, 0, GST_BUFFER_OFFSET_NONE, 0));
+    /* Only set when pushing the first buffer again, in that case
+     * we don't want to delay the buffer or push newsegment events
+     */
+    if (!wid->passthrough) {
+      /* Only push complete blocks */
+      if (enc->pending_buffer == NULL) {
+        enc->pending_buffer = buffer;
+        enc->pending_offset = wph.block_index;
+      } else if (enc->pending_offset == wph.block_index) {
+        enc->pending_buffer = gst_buffer_join (enc->pending_buffer, buffer);
+      } else {
+        GST_ERROR ("Got incomplete block, dropping");
+        gst_buffer_unref (enc->pending_buffer);
+        enc->pending_buffer = buffer;
+        enc->pending_offset = wph.block_index;
+      }
 
-      /* save header for later reference, so we can re-send it later on
-       * EOS with fixed up values for total sample count etc. */
-      if (enc->first_block == NULL && !wid->correction) {
-        enc->first_block = g_memdup (block, count);
-        enc->first_block_size = count;
+      if (!(wph.flags & FINAL_BLOCK))
+        return TRUE;
+
+      buffer = enc->pending_buffer;
+      enc->pending_buffer = NULL;
+      enc->pending_offset = 0;
+
+      /* if it's the first wavpack block, send a NEW_SEGMENT event */
+      if (wph.block_index == 0) {
+        gst_pad_push_event (pad,
+            gst_event_new_new_segment (FALSE,
+                1.0, GST_FORMAT_TIME, 0, GST_BUFFER_OFFSET_NONE, 0));
+
+        /* save header for later reference, so we can re-send it later on
+         * EOS with fixed up values for total sample count etc. */
+        if (enc->first_block == NULL && !wid->correction) {
+          enc->first_block =
+              g_memdup (GST_BUFFER_DATA (buffer), GST_BUFFER_SIZE (buffer));
+          enc->first_block_size = GST_BUFFER_SIZE (buffer);
+        }
       }
     }
 
@@ -589,6 +631,8 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
   }
 
   /* push the buffer and forward errors */
+  GST_DEBUG_OBJECT (enc, "pushing buffer with %d bytes",
+      GST_BUFFER_SIZE (buffer));
   *flow = gst_pad_push (pad, buffer);
 
   if (*flow != GST_FLOW_OK) {
@@ -598,6 +642,24 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
   }
 
   return TRUE;
+}
+
+static void
+gst_wavpack_enc_fix_channel_order (GstWavpackEnc * enc, gint32 * data,
+    gint nsamples)
+{
+  gint i, j;
+  gint32 tmp[8];
+
+  for (i = 0; i < nsamples / enc->channels; i++) {
+    for (j = 0; j < enc->channels; j++) {
+      tmp[enc->channel_mapping[j]] = data[j];
+    }
+    for (j = 0; j < enc->channels; j++) {
+      data[j] = tmp[j];
+    }
+    data += enc->channels;
+  }
 }
 
 static GstFlowReturn
@@ -644,6 +706,12 @@ gst_wavpack_enc_chain (GstPad * pad, GstBuffer * buf)
       return GST_FLOW_ERROR;
     }
     GST_DEBUG ("setup of encoding context successfull");
+  }
+
+  if (enc->need_channel_remap) {
+    buf = gst_buffer_make_writable (buf);
+    gst_wavpack_enc_fix_channel_order (enc, (gint32 *) GST_BUFFER_DATA (buf),
+        sample_count);
   }
 
   /* if we want to append the MD5 sum to the stream update it here
@@ -700,8 +768,10 @@ gst_wavpack_enc_rewrite_first_block (GstWavpackEnc * enc)
   if (ret) {
     /* try to rewrite the first block */
     GST_DEBUG_OBJECT (enc, "rewriting first block ...");
+    enc->wv_id.passthrough = TRUE;
     ret = gst_wavpack_enc_push_block (&enc->wv_id,
         enc->first_block, enc->first_block_size);
+    enc->wv_id.passthrough = FALSE;
   } else {
     GST_WARNING_OBJECT (enc, "rewriting of first block failed. "
         "Seeking to first block failed!");
@@ -720,6 +790,14 @@ gst_wavpack_enc_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_EOS:
       /* Encode all remaining samples and flush them to the src pads */
       WavpackFlushSamples (enc->wp_context);
+
+      /* Drop all remaining data, this is no complete block otherwise
+       * it would've been pushed already */
+      if (enc->pending_buffer) {
+        gst_object_unref (enc->pending_buffer);
+        enc->pending_buffer = NULL;
+        enc->pending_offset = 0;
+      }
 
       /* write the MD5 sum if we have to write one */
       if ((enc->md5) && (enc->md5_context)) {

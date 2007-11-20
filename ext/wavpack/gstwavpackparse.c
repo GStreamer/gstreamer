@@ -70,7 +70,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SOMETIMES,
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "width = (int) [ 1, 32 ], "
-        "channels = (int) [ 1, 2 ], "
+        "channels = (int) [ 1, 8 ], "
         "rate = (int) [ 6000, 192000 ], " "framed = (boolean) true")
     );
 
@@ -189,7 +189,8 @@ gst_wavpack_parse_index_append_entry (GstWavpackParse * wvparse,
   /* do we have this one already? */
   if (wvparse->entries) {
     entry = gst_wavpack_parse_index_get_last_entry (wvparse);
-    if (entry->byte_offset >= byte_offset)
+    if (entry->byte_offset >= byte_offset
+        || entry->sample_offset >= sample_offset)
       return;
   }
 
@@ -245,6 +246,11 @@ gst_wavpack_parse_reset (GstWavpackParse * parse)
   g_list_foreach (parse->queued_events, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (parse->queued_events);
   parse->queued_events = NULL;
+
+  if (parse->pending_buffer)
+    gst_buffer_unref (parse->pending_buffer);
+
+  parse->pending_buffer = NULL;
 }
 
 static const GstQueryType *
@@ -422,8 +428,11 @@ gst_wavpack_parse_scan_to_find_sample (GstWavpackParse * parse,
     gst_wavpack_read_header (&header, GST_BUFFER_DATA (buf));
     gst_buffer_unref (buf);
 
-    gst_wavpack_parse_index_append_entry (parse, off, header.block_index,
-        header.block_samples);
+    if (header.flags & INITIAL_BLOCK)
+      gst_wavpack_parse_index_append_entry (parse, off, header.block_index,
+          header.block_samples);
+    else
+      continue;
 
     if (header.block_index <= sample &&
         sample < (header.block_index + header.block_samples)) {
@@ -631,6 +640,11 @@ gst_wavpack_parse_sink_event (GstPad * pad, GstEvent * event)
       if (parse->adapter) {
         gst_adapter_clear (parse->adapter);
       }
+      if (parse->pending_buffer) {
+        gst_buffer_unref (parse->pending_buffer);
+        parse->pending_buffer = NULL;
+        parse->pending_offset = 0;
+      }
       ret = gst_pad_push_event (parse->srcpad, event);
       break;
     }
@@ -645,6 +659,11 @@ gst_wavpack_parse_sink_event (GstPad * pad, GstEvent * event)
         /* remove all bytes that are left in the adapter after EOS. They can't
          * be a complete Wavpack block and we can't do anything with them */
         gst_adapter_clear (parse->adapter);
+      }
+      if (parse->pending_buffer) {
+        gst_buffer_unref (parse->pending_buffer);
+        parse->pending_buffer = NULL;
+        parse->pending_offset = 0;
       }
       ret = gst_pad_push_event (parse->srcpad, event);
       break;
@@ -794,6 +813,7 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
         WavpackContext *wpc;
         gchar error_msg[80];
         read_id rid;
+        gint channel_mask;
 
         rid.buffer = GST_BUFFER_DATA (buf);
         rid.length = GST_BUFFER_SIZE (buf);
@@ -816,6 +836,23 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
             "channels", G_TYPE_INT, wvparse->channels,
             "rate", G_TYPE_INT, wvparse->samplerate,
             "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+        channel_mask = WavpackGetChannelMask (wpc);
+        if (channel_mask == 0)
+          channel_mask =
+              gst_wavpack_get_default_channel_mask (wvparse->channels);
+
+        if (channel_mask != 0) {
+          if (!gst_wavpack_set_channel_layout (caps, channel_mask)) {
+            GST_WARNING_OBJECT (wvparse, "Failed to set channel layout");
+            gst_caps_unref (caps);
+            caps = NULL;
+            WavpackCloseFile (wpc);
+            g_free (stream_reader);
+            break;
+          }
+        }
+
         wvparse->srcpad =
             gst_pad_new_from_template (gst_element_class_get_pad_template
             (GST_ELEMENT_GET_CLASS (wvparse), "src"), "src");
@@ -879,6 +916,24 @@ gst_wavpack_parse_push_buffer (GstWavpackParse * wvparse, GstBuffer * buf,
     g_list_free (wvparse->queued_events);
     wvparse->queued_events = NULL;
   }
+
+  if (wvparse->pending_buffer == NULL) {
+    wvparse->pending_buffer = buf;
+    wvparse->pending_offset = header->block_index;
+  } else if (wvparse->pending_offset == header->block_index) {
+    wvparse->pending_buffer = gst_buffer_join (wvparse->pending_buffer, buf);
+  } else {
+    GST_ERROR ("Got incomplete block, dropping");
+    gst_buffer_unref (wvparse->pending_buffer);
+    wvparse->pending_buffer = buf;
+    wvparse->pending_offset = header->block_index;
+  }
+
+  if (!(header->flags & FINAL_BLOCK))
+    return GST_FLOW_OK;
+
+  buf = wvparse->pending_buffer;
+  wvparse->pending_buffer = NULL;
 
   GST_BUFFER_TIMESTAMP (buf) = gst_util_uint64_scale_int (header->block_index,
       GST_SECOND, wvparse->samplerate);
@@ -1014,9 +1069,9 @@ gst_wavpack_parse_loop (GstElement * element)
       goto pause;
     }
   }
-
-  gst_wavpack_parse_index_append_entry (parse, parse->current_offset,
-      header.block_index, header.block_samples);
+  if (header.flags & INITIAL_BLOCK)
+    gst_wavpack_parse_index_append_entry (parse, parse->current_offset,
+        header.block_index, header.block_samples);
 
   flow_ret = gst_wavpack_parse_push_buffer (parse, buf, &header);
   if (flow_ret != GST_FLOW_OK)

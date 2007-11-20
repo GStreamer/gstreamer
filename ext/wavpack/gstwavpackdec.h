@@ -62,6 +62,7 @@ struct _GstWavpackDec
   gint sample_rate;
   gint depth;
   gint channels;
+  gint channel_mask;
 
   gint error_count;
 };

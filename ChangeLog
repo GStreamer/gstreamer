@@ -1,3 +1,43 @@
+2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackcommon.c:
+	(gst_wavpack_get_default_channel_mask),
+	(gst_wavpack_set_channel_layout),
+	(gst_wavpack_get_default_channel_positions),
+	(gst_wavpack_get_channel_mask_from_positions),
+	(gst_wavpack_set_channel_mapping):
+	* ext/wavpack/gstwavpackcommon.h:
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_reset),
+	(gst_wavpack_dec_sink_set_caps), (gst_wavpack_dec_chain):
+	* ext/wavpack/gstwavpackdec.h:
+	* ext/wavpack/gstwavpackenc.c: (gst_wavpack_enc_reset),
+	(gst_wavpack_enc_init), (gst_wavpack_enc_sink_set_caps),
+	(gst_wavpack_enc_set_wp_config), (gst_wavpack_enc_push_block),
+	(gst_wavpack_enc_fix_channel_order), (gst_wavpack_enc_chain),
+	(gst_wavpack_enc_rewrite_first_block),
+	(gst_wavpack_enc_sink_event):
+	* ext/wavpack/gstwavpackenc.h:
+	* ext/wavpack/gstwavpackparse.c:
+	(gst_wavpack_parse_index_append_entry), (gst_wavpack_parse_reset),
+	(gst_wavpack_parse_scan_to_find_sample),
+	(gst_wavpack_parse_sink_event), (gst_wavpack_parse_create_src_pad),
+	(gst_wavpack_parse_push_buffer), (gst_wavpack_parse_loop):
+	* ext/wavpack/gstwavpackparse.h:
+	Add support for encoding, parsing and decoding multichannel
+	files with up to 8 channels. This also improves the robustness
+	of parsing quite a bit.
+
+	* ext/wavpack/gstwavpackstreamreader.c:
+	(gst_wavpack_stream_reader_read_bytes),
+	(gst_wavpack_stream_reader_get_pos),
+	(gst_wavpack_stream_reader_set_pos_abs),
+	(gst_wavpack_stream_reader_set_pos_rel),
+	(gst_wavpack_stream_reader_push_back_byte),
+	(gst_wavpack_stream_reader_get_length),
+	(gst_wavpack_stream_reader_can_seek),
+	(gst_wavpack_stream_reader_write_bytes):
+	Improve debugging.
+
 2007-11-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/libpng/gstpngdec.c:

@@ -24,6 +24,7 @@
 #define __GST_WAVPACK_COMMON_H__
 
 #include <gst/gst.h>
+#include <gst/audio/multichannel.h>
 #include <wavpack/wavpack.h>
 
 typedef struct
@@ -65,5 +66,10 @@ typedef struct
 gboolean gst_wavpack_read_header (WavpackHeader * header, guint8 * buf);
 gboolean gst_wavpack_read_metadata (GstWavpackMetadata * meta,
     guint8 * header_data, guint8 ** p_data);
+gint gst_wavpack_get_default_channel_mask (gint nchannels);
+gboolean gst_wavpack_set_channel_layout (GstCaps * caps, gint layout);
+GstAudioChannelPosition *gst_wavpack_get_default_channel_positions (gint nchannels);
+gint gst_wavpack_get_channel_mask_from_positions (GstAudioChannelPosition *pos, gint nchannels);
+gboolean gst_wavpack_set_channel_mapping (GstAudioChannelPosition *pos, gint nchannels, gint8 *channel_mapping);
 
 #endif

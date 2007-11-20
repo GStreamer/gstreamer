@@ -67,6 +67,9 @@ struct _GstWavpackParse
 
   GstSegment segment;           /* the currently configured segment, in
                                  * samples/audio frames (DEFAULT format) */
+
+  GstBuffer *pending_buffer;
+  gint32 pending_offset;
   guint32 next_block_index;
 
   GstAdapter *adapter;          /* when operating chain-based, otherwise NULL */

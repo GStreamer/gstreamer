@@ -42,6 +42,7 @@
 
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
+#include <gst/audio/multichannel.h>
 
 #include <math.h>
 #include <string.h>
@@ -62,7 +63,7 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/x-wavpack, "
         "width = (int) [ 1, 32 ], "
-        "channels = (int) [ 1, 2 ], "
+        "channels = (int) [ 1, 8 ], "
         "rate = (int) [ 6000, 192000 ], " "framed = (boolean) true")
     );
 
@@ -72,7 +73,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("audio/x-raw-int, "
         "width = (int) 32, "
         "depth = (int) [ 1, 32 ], "
-        "channels = (int) [ 1, 2 ], "
+        "channels = (int) [ 1, 8 ], "
         "rate = (int) [ 6000, 192000 ], "
         "endianness = (int) BYTE_ORDER, " "signed = (boolean) true")
     );
@@ -126,6 +127,7 @@ gst_wavpack_dec_reset (GstWavpackDec * dec)
   dec->error_count = 0;
 
   dec->channels = 0;
+  dec->channel_mask = 0;
   dec->sample_rate = 0;
   dec->depth = 0;
 
@@ -177,6 +179,7 @@ gst_wavpack_dec_sink_set_caps (GstPad * pad, GstCaps * caps)
       gst_structure_get_int (structure, "rate", &dec->sample_rate) &&
       gst_structure_get_int (structure, "width", &dec->depth)) {
     GstCaps *caps;
+    GstAudioChannelPosition *pos;
 
     caps = gst_caps_new_simple ("audio/x-raw-int",
         "rate", G_TYPE_INT, dec->sample_rate,
@@ -185,6 +188,22 @@ gst_wavpack_dec_sink_set_caps (GstPad * pad, GstCaps * caps)
         "width", G_TYPE_INT, 32,
         "endianness", G_TYPE_INT, G_BYTE_ORDER,
         "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+    /* If we already have the channel layout set from upstream
+     * take this */
+    if (gst_structure_has_field (structure, "channel-positions")) {
+      pos = gst_audio_get_channel_positions (structure);
+      if (pos != NULL && dec->channels > 2) {
+        GstStructure *new_str = gst_caps_get_structure (caps, 0);
+
+        gst_audio_set_channel_positions (new_str, pos);
+        dec->channel_mask =
+            gst_wavpack_get_channel_mask_from_positions (pos, dec->channels);
+      }
+
+      if (pos != NULL)
+        g_free (pos);
+    }
 
     GST_DEBUG_OBJECT (dec, "setting caps %" GST_PTR_FORMAT, caps);
 
@@ -248,7 +267,10 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
   if (!gst_wavpack_read_header (&wph, GST_BUFFER_DATA (buf)))
     goto invalid_header;
 
-  if (GST_BUFFER_SIZE (buf) != wph.ckSize + 4 * 1 + 4)
+  if (GST_BUFFER_SIZE (buf) < wph.ckSize + 4 * 1 + 4)
+    goto input_not_framed;
+
+  if (!(wph.flags & INITIAL_BLOCK))
     goto input_not_framed;
 
   dec->wv_id.buffer = GST_BUFFER_DATA (buf);
@@ -282,10 +304,12 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
   format_changed =
       (dec->sample_rate != WavpackGetSampleRate (dec->context)) ||
       (dec->channels != WavpackGetNumChannels (dec->context)) ||
-      (dec->depth != WavpackGetBitsPerSample (dec->context));
+      (dec->depth != WavpackGetBitsPerSample (dec->context)) ||
+      (dec->channel_mask != WavpackGetChannelMask (dec->context));
 
   if (!GST_PAD_CAPS (dec->srcpad) || format_changed) {
     GstCaps *caps;
+    gint channel_mask;
 
     dec->sample_rate = WavpackGetSampleRate (dec->context);
     dec->channels = WavpackGetNumChannels (dec->context);
@@ -298,6 +322,18 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
         "width", G_TYPE_INT, 32,
         "endianness", G_TYPE_INT, G_BYTE_ORDER,
         "signed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+    channel_mask = WavpackGetChannelMask (dec->context);
+    if (channel_mask == 0)
+      channel_mask = gst_wavpack_get_default_channel_mask (dec->channels);
+
+    dec->channel_mask = channel_mask;
+
+    /* Only set the channel layout for more than two channels
+     * otherwise things break unfortunately */
+    if (channel_mask != 0 && dec->channels > 2)
+      if (!gst_wavpack_set_channel_layout (caps, channel_mask))
+        GST_WARNING_OBJECT (dec, "Failed to set channel layout");
 
     GST_DEBUG_OBJECT (dec, "setting caps %" GST_PTR_FORMAT, caps);
 
@@ -367,7 +403,9 @@ invalid_header:
 decode_error:
   {
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-        ("Failed to decode wavpack stream"));
+        ("Failed to decode wavpack stream: %s",
+            (dec->context) ? WavpackGetErrorMessage (dec->
+                context) : "couldn't create decoder context"));
     gst_buffer_unref (outbuf);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
