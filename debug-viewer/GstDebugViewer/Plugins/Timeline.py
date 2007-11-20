@@ -355,8 +355,8 @@ class TimelineFeature (FeatureBase):
 
         self.timeline = TimelineWidget ()
         self.timeline.add_events (gtk.gdk.ALL_EVENTS_MASK) # FIXME
-        self.timeline.connect ("button-press-event", self.handle_density_button_press_event)
-        self.timeline.connect ("motion-notify-event", self.handle_density_motion_notify_event)
+        self.timeline.connect ("button-press-event", self.handle_timeline_button_press_event)
+        self.timeline.connect ("motion-notify-event", self.handle_timeline_motion_notify_event)
         box.pack_start (self.timeline, False, False, 0)
         self.timeline.hide ()
 
@@ -411,25 +411,25 @@ class TimelineFeature (FeatureBase):
         else:
             self.timeline.hide ()
 
-    def handle_density_button_press_event (self, widget, event):
+    def handle_timeline_button_press_event (self, widget, event):
 
         if event.button != 1:
             return True
 
         pos = int (event.x)
-        self.goto_density (pos)
+        self.goto_time_position (pos)
         return False
 
-    def handle_density_motion_notify_event (self, widget, event):
+    def handle_timeline_motion_notify_event (self, widget, event):
 
         if not event.state & gtk.gdk.BUTTON1_MASK:
             return True
 
         pos = int (event.x)
-        self.goto_density (pos)
+        self.goto_time_position (pos)
         return False
 
-    def goto_density (self, pos):
+    def goto_time_position (self, pos):
 
         data = self.timeline.sentinel.data
         if not data:
