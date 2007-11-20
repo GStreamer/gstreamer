@@ -71,18 +71,6 @@ class LineFrequencySentinel (object):
             old_found = found
             first_index = found
             target_ts += step
-        
-        ## count = 0
-        ## limit = step
-        ## for row in self.model:
-        ##     ts = row[model.COL_TIME]
-        ##     if ts is None:
-        ##         continue
-        ##     if ts > limit:
-        ##         limit += step
-        ##         result.append (count)
-        ##         count = 0
-        ##     count += 1
 
         self.step = step
         self.data = result
@@ -284,7 +272,6 @@ class TimelineWidget (gtk.DrawingArea):
         ctx.move_to (0, h)
         for i in range (len (heights)):
             ctx.line_to (i - .5, h - heights[i] + .5)
-            #ctx.rectangle (i - .5, h - heights[i] + .5, i + 1, h)
 
         ctx.line_to (i, h)
         ctx.close_path ()
@@ -375,7 +362,7 @@ class TimelineFeature (FeatureBase):
         window.ui_manager.remove_ui (self.merge_id)
         self.merge_id = None
 
-        # FIXME: Remove action group from ui manager!
+        window.ui_manager.remove_action_group (self.action_group)
 
         self.timeline.destroy ()
         self.timeline = None
