@@ -1,5 +1,12 @@
 2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_fix_output_buffer), (gst_speex_resample_process):
+	If the resampler gives less output samples than expected
+	adjust the output buffer and print a warning.
+
+2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	* gst/speexresample/arch.h:
 	* gst/speexresample/fixed_generic.h:
