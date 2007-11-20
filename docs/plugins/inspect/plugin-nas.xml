@@ -1,0 +1,28 @@
+<plugin>
+  <name>nas</name>
+  <description>NAS (Network Audio System) support for GStreamer</description>
+  <filename>../../ext/nas/.libs/libgstnassink.so</filename>
+  <basename>libgstnassink.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>nassink</name>
+      <longname>NAS audio sink</longname>
+      <class>Sink/Audio</class>
+      <description>Plays audio to a Network Audio Server</description>
+      <author>Laurent Vivier &lt;Laurent.Vivier@bull.net&gt;, Arwed v. Merkatz &lt;v.merkatz@gmx.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, endianness=(int)1234, signed=(boolean)true, width=(int)16, depth=(int)16, rate=(int)[ 1000, 96000 ], channels=(int)[ 1, 2 ]; audio/x-raw-int, signed=(boolean)false, width=(int)8, depth=(int)8, rate=(int)[ 1000, 96000 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

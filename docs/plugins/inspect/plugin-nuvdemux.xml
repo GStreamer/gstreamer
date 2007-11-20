@@ -1,0 +1,40 @@
+<plugin>
+  <name>nuvdemux</name>
+  <description>Demuxes and muxes audio and video</description>
+  <filename>../../gst/nuvdemux/.libs/libgstnuvdemux.so</filename>
+  <basename>libgstnuvdemux.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>NuvDemux</package>
+  <origin></origin>
+  <elements>
+    <element>
+      <name>nuvdemux</name>
+      <longname>Nuv demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demultiplex a .nuv file into audio and video</description>
+      <author>Renato Araujo Oliveira Filho &lt;renato.filho@indt.org.br&gt;,Rosfran Borges &lt;rosfran.borges@indt.org.br&gt;</author>
+      <pads>
+        <caps>
+          <name>audio_src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video_src</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-nuv</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

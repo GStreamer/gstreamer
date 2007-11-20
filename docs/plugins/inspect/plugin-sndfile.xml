@@ -1,0 +1,43 @@
+<plugin>
+  <name>sndfile</name>
+  <description>use libsndfile to read and write audio from and to files</description>
+  <filename>../../ext/sndfile/.libs/libgstsndfile.so</filename>
+  <basename>libgstsndfile.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>sfsink</name>
+      <longname>Sndfile sink</longname>
+      <class>Sink/Audio</class>
+      <description>Write audio streams to disk using libsndfile</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int){ 16, 32 }, depth=(int){ 16, 32 }, signed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>sfsrc</name>
+      <longname>Sndfile source</longname>
+      <class>Source/Audio</class>
+      <description>Read audio streams from disk using libsndfile</description>
+      <author>Andy Wingo &lt;wingo at pobox dot com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int)32; audio/x-raw-int, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ], endianness=(int)1234, width=(int){ 16, 32 }, depth=(int){ 16, 32 }, signed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

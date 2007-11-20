@@ -1,0 +1,34 @@
+<plugin>
+  <name>videoparse</name>
+  <description>Parses byte streams into video frames</description>
+  <filename>../../gst/videoparse/.libs/libgstvideoparse.so</filename>
+  <basename>libgstvideoparse.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>videoparse</name>
+      <longname>Video Parse</longname>
+      <class>Filter/Video</class>
+      <description>Converts stream into video frames</description>
+      <author>David Schleef &lt;ds@schleef.org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

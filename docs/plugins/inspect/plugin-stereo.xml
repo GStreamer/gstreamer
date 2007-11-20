@@ -1,0 +1,34 @@
+<plugin>
+  <name>stereo</name>
+  <description>Muck with the stereo signal, enhance it's 'stereo-ness'</description>
+  <filename>../../gst/stereo/.libs/libgststereo.so</filename>
+  <basename>libgststereo.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>stereo</name>
+      <longname>Stereo effect</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Muck with the stereo signal to enhance its 'stereo-ness'</description>
+      <author>Erik Walthinsen &lt;omega@cse.ogi.edu&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)2, signed=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, depth=(int)16, width=(int)16, endianness=(int)1234, rate=(int)[ 1, 2147483647 ], channels=(int)2, signed=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

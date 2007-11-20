@@ -1,0 +1,229 @@
+<plugin>
+  <name>ladspa</name>
+  <description>All LADSPA plugins</description>
+  <filename>../../ext/ladspa/.libs/libgstladspa.so</filename>
+  <basename>libgstladspa.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>ladspa-amp-mono</name>
+      <longname>Mono Amplifier</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Mono Amplifier</description>
+      <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-amp-stereo</name>
+      <longname>Stereo Amplifier</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Stereo Amplifier</description>
+      <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Input_-Left-</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Output_-Left-</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Input_-Right-</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Output_-Right-</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-delay-5s</name>
+      <longname>Simple Delay Line</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Simple Delay Line</description>
+      <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-hpf</name>
+      <longname>Simple High Pass Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Simple High Pass Filter</description>
+      <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-lpf</name>
+      <longname>Simple Low Pass Filter</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Simple Low Pass Filter</description>
+      <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Input</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-noise-white</name>
+      <longname>White Noise Source</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>White Noise Source</description>
+      <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sine-faaa</name>
+      <longname>Sine Oscillator (Freq:audio, Amp:audio)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Sine Oscillator (Freq:audio, Amp:audio)</description>
+      <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Frequency_-Hz-</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Amplitude</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sine-faac</name>
+      <longname>Sine Oscillator (Freq:audio, Amp:control)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Sine Oscillator (Freq:audio, Amp:control)</description>
+      <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Frequency_-Hz-</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sine-fcaa</name>
+      <longname>Sine Oscillator (Freq:control, Amp:audio)</longname>
+      <class>Filter/Effect/Audio/LADSPA</class>
+      <description>Sine Oscillator (Freq:control, Amp:audio)</description>
+      <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Amplitude</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>ladspa-sine-fcac</name>
+      <longname>Sine Oscillator (Freq:control, Amp:control)</longname>
+      <class>Source/Audio/LADSPA</class>
+      <description>Sine Oscillator (Freq:control, Amp:control)</description>
+      <author>Richard Furse (LADSPA example plugins)</author>
+      <pads>
+        <caps>
+          <name>Output</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-float, width=(int)32, rate=(int)[ 1, 2147483647 ], channels=(int)1, endianness=(int)1234</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

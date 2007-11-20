@@ -1,0 +1,40 @@
+<plugin>
+  <name>mpegtsparse</name>
+  <description>MPEG-2 transport stream parser</description>
+  <filename>../../gst/mpegtsparse/.libs/libgstmpegtsparse.so</filename>
+  <basename>libgstmpegtsparse.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mpegtsparse</name>
+      <longname>MPEG transport stream parser</longname>
+      <class>Codec/Parser</class>
+      <description>Parses MPEG2 transport streams</description>
+      <author>Alessandro Decina &lt;alessandro@nnva.org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>request</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>program_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

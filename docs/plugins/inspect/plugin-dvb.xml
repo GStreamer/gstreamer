@@ -1,0 +1,50 @@
+<plugin>
+  <name>dvb</name>
+  <description>DVB elements</description>
+  <filename>../../sys/dvb/.libs/libgstdvb.so</filename>
+  <basename>libgstdvb.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>dvbbasebin</name>
+      <longname>DVB bin</longname>
+      <class>Source/Bin/Video</class>
+      <description>Access descramble and split DVB streams</description>
+      <author>Alessandro Decina &lt;alessandro@nnva.org&gt;</author>
+      <pads>
+        <caps>
+          <name>src%d</name>
+          <direction>source</direction>
+          <presence>request</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+        <caps>
+          <name>program_%d</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>video/mpegts, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>dvbsrc</name>
+      <longname>DVB Source</longname>
+      <class>Source/Video</class>
+      <description>Digital Video Broadcast Source</description>
+      <author>P2P-VCR, C-Lab, University of Paderborn
+    Zaheer Abbas Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpegts, mpegversion=(int)2, systemstream=(boolean)true</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

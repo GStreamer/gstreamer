@@ -1,0 +1,28 @@
+<plugin>
+  <name>rfbsrc</name>
+  <description>Connects to a VNC server and decodes RFB stream</description>
+  <filename>../../gst/librfb/.libs/libgstrfbsrc.so</filename>
+  <basename>libgstrfbsrc.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>rfbsrc</name>
+      <longname>Rfb source</longname>
+      <class>Source/Video</class>
+      <description>Creates a rfb video stream</description>
+      <author>David A. Schleef &lt;ds@schleef.org&gt;, Andre Moreira Magalhaes &lt;andre.magalhaes@indt.org.br&gt;, Thijs Vermeir &lt;thijsvermeir@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-rgb, bpp=(int)[ 1, 255 ], depth=(int)[ 1, 255 ], endianness=(int)[ 1234, 4321 ], red_mask=(int)65280, green_mask=(int)16711680, blue_mask=(int)-16777216, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], framerate=(fraction)0/1</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

@@ -1,0 +1,35 @@
+<plugin>
+  <name>switch</name>
+  <description>N-to-1 input switching</description>
+  <filename>../../gst/switch/.libs/libgstswitch.so</filename>
+  <basename>libgstswitch.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>switch</name>
+      <longname>Switch</longname>
+      <class>Generic</class>
+      <description>N-to-1 input switching</description>
+      <author>Julien Moutte &lt;julien@moutte.net&gt;
+    Zaheer Merali &lt;zaheerabbas at merali dot org&gt;</author>
+      <pads>
+        <caps>
+          <name>sink%d</name>
+          <direction>sink</direction>
+          <presence>request</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

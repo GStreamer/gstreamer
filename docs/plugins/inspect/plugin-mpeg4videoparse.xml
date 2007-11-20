@@ -1,0 +1,34 @@
+<plugin>
+  <name>mpeg4videoparse</name>
+  <description>MPEG-4 video parser</description>
+  <filename>../../gst/mpeg4videoparse/.libs/libgstmpeg4videoparse.so</filename>
+  <basename>libgstmpeg4videoparse.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mpeg4videoparse</name>
+      <longname>MPEG 4 video elementary stream parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>Parses MPEG-4 Part 2 elementary video streams</description>
+      <author>Julien Moutte &lt;julien@fluendo.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)4, parsed=(boolean)true, systemstream=(boolean)false</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)4, parsed=(boolean)false, systemstream=(boolean)false</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

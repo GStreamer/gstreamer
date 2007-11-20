@@ -1,0 +1,34 @@
+<plugin>
+  <name>festival</name>
+  <description>Synthesizes plain text into audio</description>
+  <filename>../../gst/festival/.libs/libgstfestival.so</filename>
+  <basename>libgstfestival.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>festival</name>
+      <longname>Festival Text-to-Speech synthesizer</longname>
+      <class>Filter/Effect/Audio</class>
+      <description>Synthesizes plain text into audio</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>text/plain</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-wav</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

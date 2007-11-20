@@ -1,0 +1,40 @@
+<plugin>
+  <name>flvdemux</name>
+  <description>Element demuxing FLV stream</description>
+  <filename>../../gst/flv/.libs/libgstflvdemux.so</filename>
+  <basename>libgstflvdemux.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>flvdemux</name>
+      <longname>FLV Demuxer</longname>
+      <class>Codec/Demuxer</class>
+      <description>Demux FLV feeds into digital streams</description>
+      <author>Julien Moutte &lt;julien@moutte.net&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-flv</details>
+        </caps>
+        <caps>
+          <name>audio</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+        <caps>
+          <name>video</name>
+          <direction>source</direction>
+          <presence>sometimes</presence>
+          <details>ANY</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

@@ -1,0 +1,35 @@
+<plugin>
+  <name>mpegvideoparse</name>
+  <description>MPEG-1 and MPEG-2 video parser</description>
+  <filename>../../gst/mpegvideoparse/.libs/libgstmpegvideoparse.so</filename>
+  <basename>libgstmpegvideoparse.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>mpegvideoparse</name>
+      <longname>MPEG video elementary stream parser</longname>
+      <class>Codec/Parser/Video</class>
+      <description>Parses and frames MPEG-1 and MPEG-2 elementary video streams</description>
+      <author>Wim Taymans &lt;wim.taymans@chello.be&gt;
+    Jan Schmidt &lt;thaytan@mad.scientist.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], parsed=(boolean)true, systemstream=(boolean)false, width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ], pixel-aspect-ratio=(fraction)[ 0/1, 2147483647/1 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/mpeg, mpegversion=(int)[ 1, 2 ], parsed=(boolean)false, systemstream=(boolean)false</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

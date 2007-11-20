@@ -1,0 +1,55 @@
+<plugin>
+  <name>real</name>
+  <description>Decode REAL streams</description>
+  <filename>../../gst/real/.libs/libgstreal.so</filename>
+  <basename>libgstreal.so</basename>
+  <version>0.10.5.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins CVS/prerelease</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>realaudiodec</name>
+      <longname>RealAudio decoder</longname>
+      <class>Codec/Decoder/Audio</class>
+      <description>Decoder for RealAudio streams</description>
+      <author>Lutz Mueller &lt;lutz@topfrose.de&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-pn-realaudio; audio/x-sipro</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw-int, width=(int)[ 1, 2147483647 ], depth=(int)[ 1, 2147483647 ], rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>realvideodec</name>
+      <longname>RealVideo decoder</longname>
+      <class>Codec/Decoder/Video</class>
+      <description>Decoder for RealVideo streams</description>
+      <author>Lutz Mueller &lt;lutz@topfrose.de&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-pn-realvideo, rmversion=(int)[ 2, 4 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw-yuv, format=(fourcc)I420, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 16, 4096 ], height=(int)[ 16, 4096 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
