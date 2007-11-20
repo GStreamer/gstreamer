@@ -534,6 +534,28 @@ gst_speex_resample_check_discont (GstSpeexResample * resample,
   return FALSE;
 }
 
+static void
+gst_speex_fix_output_buffer (GstSpeexResample * resample, GstBuffer * outbuf,
+    guint diff)
+{
+  GstClockTime timediff =
+      gst_util_uint64_scale (diff, GST_SECOND, resample->outrate);
+
+  GST_LOG ("Adjusting buffer by %d samples", diff);
+
+  GST_BUFFER_DURATION (outbuf) -= timediff;
+  GST_BUFFER_SIZE (outbuf) -= diff * ((resample->fp) ? 4 : 2);
+
+  if (resample->ts_offset != -1) {
+    GST_BUFFER_OFFSET_END (outbuf) -= diff;
+    resample->offset -= diff;
+    resample->ts_offset -= diff;
+    resample->next_ts =
+        gst_util_uint64_scale_int (resample->ts_offset, GST_SECOND,
+        resample->outrate);
+  }
+}
+
 static GstFlowReturn
 gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
     GstBuffer * outbuf)
@@ -568,9 +590,17 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
   if (in_len != in_processed)
     GST_WARNING ("Converted %d of %d input samples", in_processed, in_len);
 
-  if (out_len != out_processed)
-    GST_WARNING ("Converted to %d instead of %d output samples", out_processed,
-        out_len);
+  if (out_len != out_processed) {
+    /* One sample difference is allowed as this will happen
+     * because of rounding errors */
+    if (out_len - out_processed != 1)
+      GST_WARNING ("Converted to %d instead of %d output samples",
+          out_processed, out_len);
+    if (out_len > out_processed)
+      gst_speex_fix_output_buffer (resample, outbuf, out_len - out_processed);
+    else
+      g_error ("Wrote more output then allocated!");
+  }
 
   if (err != RESAMPLER_ERR_SUCCESS) {
     GST_ERROR ("Failed to convert data: %s", resample_resampler_strerror (err));
