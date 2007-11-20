@@ -1604,6 +1604,7 @@ gst_rank_get_type
 <TITLE>GstPreset</TITLE>
 GstPreset
 gst_preset_get_preset_names
+gst_preset_get_property_names
 gst_preset_load_preset
 gst_preset_save_preset
 gst_preset_rename_preset
