@@ -1051,11 +1051,11 @@
 <ARG>
 <NAME>GstFaac::bitrate</NAME>
 <TYPE>gint</TYPE>
-<RANGE>[8192,327680]</RANGE>
+<RANGE>[8000,320000]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Bitrate (bps)</NICK>
 <BLURB>Bitrate in bits/sec.</BLURB>
-<DEFAULT>131072</DEFAULT>
+<DEFAULT>128000</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1374,7 +1374,7 @@
 <RANGE><= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Threshold</NICK>
-<BLURB>db threshold for result, maps to 0.</BLURB>
+<BLURB>dB threshold for result. All lower values will be set to this.</BLURB>
 <DEFAULT>-60</DEFAULT>
 </ARG>
 
@@ -1682,7 +1682,7 @@
 <NAME>GstDvbSrc::bandwidth</NAME>
 <TYPE>GstDvbSrcBandwidth</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>bandwidth</NICK>
 <BLURB>Bandwidth (DVB-T).</BLURB>
 <DEFAULT>7</DEFAULT>
@@ -1692,17 +1692,17 @@
 <NAME>GstDvbSrc::code-rate-hp</NAME>
 <TYPE>GstDvbSrcCode_Rate</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>code-rate-hp</NICK>
-<BLURB>High Priority Code Rate (DVB-T).</BLURB>
-<DEFAULT>1/2</DEFAULT>
+<BLURB>High Priority Code Rate (DVB-T and DVB-S).</BLURB>
+<DEFAULT>AUTO</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstDvbSrc::code-rate-lp</NAME>
 <TYPE>GstDvbSrcCode_Rate</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>code-rate-lp</NICK>
 <BLURB>Low Priority Code Rate (DVB-T).</BLURB>
 <DEFAULT>1/2</DEFAULT>
@@ -1742,7 +1742,7 @@
 <NAME>GstDvbSrc::guard</NAME>
 <TYPE>GstDvbSrcGuard</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>guard</NICK>
 <BLURB>Guard Interval (DVB-T).</BLURB>
 <DEFAULT>16</DEFAULT>
@@ -1752,7 +1752,7 @@
 <NAME>GstDvbSrc::hierarchy</NAME>
 <TYPE>GstDvbSrcHierarchy</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>hierarchy</NICK>
 <BLURB>Hierarchy Information (DVB-T).</BLURB>
 <DEFAULT>1</DEFAULT>
@@ -1762,7 +1762,7 @@
 <NAME>GstDvbSrc::inversion</NAME>
 <TYPE>GstDvbSrcInversion</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>inversion</NICK>
 <BLURB>Inversion Information (DVB-T).</BLURB>
 <DEFAULT>ON</DEFAULT>
@@ -1772,7 +1772,7 @@
 <NAME>GstDvbSrc::modulation</NAME>
 <TYPE>GstDvbSrcModulation</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>modulation</NICK>
 <BLURB>Modulation (DVB-T).</BLURB>
 <DEFAULT>QAM 16</DEFAULT>
@@ -1812,7 +1812,7 @@
 <NAME>GstDvbSrc::trans-mode</NAME>
 <TYPE>GstDvbSrcTransmission_Mode</TYPE>
 <RANGE></RANGE>
-<FLAGS>w</FLAGS>
+<FLAGS>rw</FLAGS>
 <NICK>trans-mode</NICK>
 <BLURB>Transmission Mode (DVB-T).</BLURB>
 <DEFAULT>8k</DEFAULT>
@@ -1889,6 +1889,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDvbSrc::stats-reporting-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>stats-reporting-interval</NICK>
+<BLURB>The number of reads before reporting frontend stats.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMultiFileSink::location</NAME>
 <TYPE>gchararray</TYPE>
 <RANGE></RANGE>
@@ -1899,12 +1909,22 @@
 </ARG>
 
 <ARG>
+<NAME>GstMultiFileSink::index</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Index</NICK>
+<BLURB>Index to use with location property to create file names.  The index is incremented by one for each buffer read.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstMultiFileSrc::caps</NAME>
 <TYPE>GstCaps</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Caps</NICK>
-<BLURB>Caps of source pad.</BLURB>
+<BLURB>Caps describing the format of the data.</BLURB>
 <DEFAULT></DEFAULT>
 </ARG>
 
@@ -1914,7 +1934,7 @@
 <RANGE>>= 0</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Index</NICK>
-<BLURB>Index of file to read.</BLURB>
+<BLURB>Index to use with location property to create file names.  The index is incremented by one for each buffer read.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -1924,8 +1944,8 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>File Location</NICK>
-<BLURB>Location of the file to read.</BLURB>
-<DEFAULT>NULL</DEFAULT>
+<BLURB>Pattern to create file names of input files.  File names are created by calling sprintf() with the pattern and the current index.</BLURB>
+<DEFAULT>"%05d"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -1966,6 +1986,56 @@
 <NICK>RFB protocol version</NICK>
 <BLURB>RFB protocol version.</BLURB>
 <DEFAULT>"3.3"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRfbSrc::height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>height of screen</NICK>
+<BLURB>height of screen.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRfbSrc::incremental</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Incremental updates</NICK>
+<BLURB>Incremental updates.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRfbSrc::offset-x</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>x offset for screen scrapping</NICK>
+<BLURB>x offset for screen scrapping.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRfbSrc::offset-y</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>y offset for screen scrapping</NICK>
+<BLURB>y offset for screen scrapping.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRfbSrc::width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>width of screen</NICK>
+<BLURB>width of screen.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -17341,137 +17411,137 @@
 <ARG>
 <NAME>GstIirEqualizer10Bands::band0</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>29 Hz</NICK>
-<BLURB>gain for the frequency band 29 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 29 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer10Bands::band1</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>59 Hz</NICK>
-<BLURB>gain for the frequency band 59 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 59 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer10Bands::band2</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>119 Hz</NICK>
-<BLURB>gain for the frequency band 119 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 119 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer10Bands::band3</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>227 Hz</NICK>
-<BLURB>gain for the frequency band 227 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 227 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer10Bands::band4</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>474 Hz</NICK>
-<BLURB>gain for the frequency band 474 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 474 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer10Bands::band5</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>947 Hz</NICK>
-<BLURB>gain for the frequency band 947 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 947 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer10Bands::band6</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>1889 Hz</NICK>
-<BLURB>gain for the frequency band 1889 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 1889 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer10Bands::band7</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>3770 Hz</NICK>
-<BLURB>gain for the frequency band 3770 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 3770 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer10Bands::band8</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>7523 Hz</NICK>
-<BLURB>gain for the frequency band 7523 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 7523 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer10Bands::band9</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>15011 Hz</NICK>
-<BLURB>gain for the frequency band 15011 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 15011 Hz, ranging from -24 dB to +12 dB.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer3Bands::band0</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>110 Hz</NICK>
-<BLURB>gain for the frequency band 110 Hz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 100 Hz, ranging from -24.0 to +12.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer3Bands::band1</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>1110 Hz</NICK>
-<BLURB>gain for the frequency band 1110 Hz, ranging from -1.0 to +1.0.</BLURB>
+<NICK>1100 Hz</NICK>
+<BLURB>gain for the frequency band 1100 Hz, ranging from -24.0 to +12.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizer3Bands::band2</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[-1,1]</RANGE>
+<RANGE>[-24,12]</RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>11 kHz</NICK>
-<BLURB>gain for the frequency band 11 kHz, ranging from -1.0 to +1.0.</BLURB>
+<BLURB>gain for the frequency band 11 kHz, ranging from -24.0 to +12.0.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
 <NAME>GstIirEqualizerNBands::num-bands</NAME>
 <TYPE>guint</TYPE>
-<RANGE>[2,64]</RANGE>
+<RANGE>[1,64]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>num-bands</NICK>
 <BLURB>number of different bands to use.</BLURB>
@@ -18266,5 +18336,235 @@
 <NICK>Location</NICK>
 <BLURB>URI location to write to.</BLURB>
 <DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGioStreamSrc::stream</NAME>
+<TYPE>GInputStream</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stream</NICK>
+<BLURB>Stream to read from.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstGioStreamSink::stream</NAME>
+<TYPE>GOutputStream</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stream</NICK>
+<BLURB>Stream to write to.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::adapter</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The adapter device number</NICK>
+<BLURB>The adapter device number (eg. 0 for adapter0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::bandwidth</NAME>
+<TYPE>GstDvbSrcBandwidth</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>bandwidth</NICK>
+<BLURB>Bandwidth (DVB-T).</BLURB>
+<DEFAULT>7</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::code-rate-hp</NAME>
+<TYPE>GstDvbSrcCode_Rate</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>code-rate-hp</NICK>
+<BLURB>High Priority Code Rate (DVB-T and DVB-S).</BLURB>
+<DEFAULT>AUTO</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::code-rate-lp</NAME>
+<TYPE>GstDvbSrcCode_Rate</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>code-rate-lp</NICK>
+<BLURB>Low Priority Code Rate (DVB-T).</BLURB>
+<DEFAULT>1/2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::diseqc-source</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[-1,7]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>diseqc source</NICK>
+<BLURB>DISEqC selected source (-1 disabled) (DVB-S).</BLURB>
+<DEFAULT>-1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::frequency</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>frequency</NICK>
+<BLURB>Frequency.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::frontend</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,16]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The frontend device number</NICK>
+<BLURB>The frontend device number (eg. 0 for frontend0).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::guard</NAME>
+<TYPE>GstDvbSrcGuard</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>guard</NICK>
+<BLURB>Guard Interval (DVB-T).</BLURB>
+<DEFAULT>16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::hierarchy</NAME>
+<TYPE>GstDvbSrcHierarchy</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>hierarchy</NICK>
+<BLURB>Hierarchy Information (DVB-T).</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::inversion</NAME>
+<TYPE>GstDvbSrcInversion</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>inversion</NICK>
+<BLURB>Inversion Information (DVB-T).</BLURB>
+<DEFAULT>ON</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::modulation</NAME>
+<TYPE>GstDvbSrcModulation</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>modulation</NICK>
+<BLURB>Modulation (DVB-T).</BLURB>
+<DEFAULT>QAM 16</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::polarity</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>polarity</NICK>
+<BLURB>Polarity [vhHV] (DVB-S).</BLURB>
+<DEFAULT>"h"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::program-numbers</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Program Numbers</NICK>
+<BLURB>Colon separated list of programs.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::stats-reporting-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>stats-reporting-interval</NICK>
+<BLURB>The number of reads before reporting frontend stats.</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::symbol-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>symbol rate</NICK>
+<BLURB>Symbol Rate (DVB-S, DVB-C).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>DvbBaseBin::trans-mode</NAME>
+<TYPE>GstDvbSrcTransmission_Mode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>trans-mode</NICK>
+<BLURB>Transmission Mode (DVB-T).</BLURB>
+<DEFAULT>8k</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSDPDemux::debug</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Debug</NICK>
+<BLURB>Dump request and response messages to stdout.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSDPDemux::latency</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Buffer latency in ms</NICK>
+<BLURB>Amount of ms to buffer.</BLURB>
+<DEFAULT>200</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSDPDemux::timeout</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Timeout</NICK>
+<BLURB>Fail transport after UDP timeout microseconds (0 = disabled).</BLURB>
+<DEFAULT>10000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSouphttpSrc::location</NAME>
+<TYPE>gchararray</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Location</NICK>
+<BLURB>Location to read from.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstSpeexResample::quality</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Quality</NICK>
+<BLURB>Resample quality with 0 being the lowest and 10 being the best.</BLURB>
+<DEFAULT>4</DEFAULT>
 </ARG>
 

@@ -68,7 +68,12 @@ CFILE_GLOB=$(DOC_SOURCE_DIR)/*/*/*.c $(DOC_SOURCE_DIR)/*/*/*.cc
 SCANOBJ_DEPS =
 
 # Header files to ignore when scanning.
-IGNORE_HFILES = 
+IGNORE_HFILES = \
+	arch.h \
+	speex_resampler.h \
+	speex_resampler_wrapper.h \
+	fixed_generic.h
+
 IGNORE_CFILES =
 
 # we add all .h files of elements that have signals/args we want
@@ -117,6 +122,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/gst/rtpmanager/gstrtpsession.h \
 	$(top_srcdir)/gst/rtpmanager/gstrtpssrcdemux.h \
 	$(top_srcdir)/gst/spectrum/gstspectrum.h \
+	$(top_srcdir)/gst/speexresample/gstspeexresample.h \
 	$(top_srcdir)/gst/videosignal/gstvideoanalyse.h \
 	$(top_srcdir)/gst/videosignal/gstvideodetect.h \
 	$(top_srcdir)/gst/videosignal/gstvideomark.h

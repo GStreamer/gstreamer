@@ -37,6 +37,7 @@
     <xi:include href="xml/element-gstrtpssrcdemux.xml" />
     <xi:include href="xml/element-sdlaudiosink.xml" />
     <xi:include href="xml/element-sdlvideosink.xml" />
+    <xi:include href="xml/element-speexresample.xml" />
     <xi:include href="xml/element-timidity.xml" />
     <xi:include href="xml/element-trm.xml" />
     <xi:include href="xml/element-videoanalyse.xml" />
@@ -72,6 +73,7 @@
     <xi:include href="xml/plugin-sdl.xml" />
     <xi:include href="xml/plugin-spectrum.xml" />
     <xi:include href="xml/plugin-speed.xml" />
+    <xi:include href="xml/plugin-speexresample.xml" />
     <xi:include href="xml/plugin-timidity.xml" />
     <xi:include href="xml/plugin-tta.xml" />
     <xi:include href="xml/plugin-videosignal.xml" />

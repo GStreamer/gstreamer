@@ -396,6 +396,20 @@ gst_spectrum_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-speexresample</FILE>
+<TITLE>speexresample</TITLE>
+GstSpeexResample
+<SUBSECTION Standard>
+GstSpeexResampleClass
+GST_SPEEX_RESAMPLE
+GST_SPEEX_RESAMPLE_CLASS
+GST_IS_SPEEX_RESAMPLE
+GST_IS_SPEEX_RESAMPLE_CLASS
+GST_TYPE_SPEEX_RESAMPLE
+gst_speex_resample_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-timidity</FILE>
 <TITLE>timidity</TITLE>
 GstTimidity

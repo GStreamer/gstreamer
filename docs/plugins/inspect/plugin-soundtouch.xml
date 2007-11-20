@@ -14,17 +14,17 @@
       <longname>Pitch controller</longname>
       <class>Filter/Converter/Audio</class>
       <description>Control the pitch of an audio stream</description>
-      <author>Wouter Paesen &lt;wouter@kangaroot.net&gt;</author>
+      <author>Wouter Paesen &lt;wouter@blue-gate.be&gt;</author>
       <pads>
         <caps>
-          <name>sink</name>
-          <direction>sink</direction>
+          <name>src</name>
+          <direction>source</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)32, buffer-frames=(int)[ 0, 2147483647 ]</details>
         </caps>
         <caps>
-          <name>src</name>
-          <direction>source</direction>
+          <name>sink</name>
+          <direction>sink</direction>
           <presence>always</presence>
           <details>audio/x-raw-float, rate=(int)[ 8000, 48000 ], channels=(int)[ 1, 2 ], endianness=(int)1234, width=(int)32, buffer-frames=(int)[ 0, 2147483647 ]</details>
         </caps>

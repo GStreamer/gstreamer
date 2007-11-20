@@ -51,6 +51,8 @@ typedef struct _GstSpeexResampleClass GstSpeexResampleClass;
 struct _GstSpeexResample {
   GstBaseTransform element;
 
+  /* <private> */
+
   GstCaps *srccaps, *sinkcaps;
 
   gboolean need_discont;

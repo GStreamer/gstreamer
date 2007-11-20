@@ -135,7 +135,7 @@ guint  arg1
 <SIGNAL>
 <NAME>GstRtpBin::clear-pt-map</NAME>
 <RETURNS>void</RETURNS>
-<FLAGS>a</FLAGS>
+<FLAGS>la</FLAGS>
 GstRtpBin *gstrtpbin
 </SIGNAL>
 
