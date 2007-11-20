@@ -1,3 +1,45 @@
+2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* gst/speexresample/arch.h:
+	* gst/speexresample/fixed_generic.h:
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_base_init), (gst_speex_resample_class_init),
+	(gst_speex_resample_init), (gst_speex_resample_start),
+	(gst_speex_resample_stop), (gst_speex_resample_get_unit_size),
+	(gst_speex_resample_transform_caps),
+	(gst_speex_resample_init_state), (gst_speex_resample_update_state),
+	(gst_speex_resample_reset_state), (gst_speex_resample_parse_caps),
+	(gst_speex_resample_transform_size), (gst_speex_resample_set_caps),
+	(gst_speex_resample_event), (gst_speex_resample_check_discont),
+	(gst_speex_resample_process), (gst_speex_resample_transform),
+	(gst_speex_resample_set_property),
+	(gst_speex_resample_get_property), (plugin_init):
+	* gst/speexresample/gstspeexresample.h:
+	* gst/speexresample/resample.c: (speex_alloc), (speex_realloc),
+	(speex_free), (compute_func), (main), (sinc), (cubic_coef),
+	(resampler_basic_direct_single), (resampler_basic_direct_double),
+	(resampler_basic_interpolate_single),
+	(resampler_basic_interpolate_double), (update_filter),
+	(speex_resampler_init), (speex_resampler_init_frac),
+	(speex_resampler_destroy), (speex_resampler_process_native),
+	(speex_resampler_process_float), (speex_resampler_process_int),
+	(speex_resampler_process_interleaved_float),
+	(speex_resampler_process_interleaved_int),
+	(speex_resampler_set_rate), (speex_resampler_get_rate),
+	(speex_resampler_set_rate_frac), (speex_resampler_get_ratio),
+	(speex_resampler_set_quality), (speex_resampler_get_quality),
+	(speex_resampler_set_input_stride),
+	(speex_resampler_get_input_stride),
+	(speex_resampler_set_output_stride),
+	(speex_resampler_get_output_stride), (speex_resampler_skip_zeros),
+	(speex_resampler_reset_mem), (speex_resampler_strerror):
+	* gst/speexresample/speex_resampler.h:
+	* gst/speexresample/speex_resampler_float.c:
+	* gst/speexresample/speex_resampler_int.c:
+	* gst/speexresample/speex_resampler_wrapper.h:
+	Add resample element based on the Speex resampling algorithm.
+
 2007-11-20  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/gstmetadataparse.c:
