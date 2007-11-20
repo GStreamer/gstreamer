@@ -304,8 +304,6 @@ class TimelineWidget (gtk.DrawingArea):
         if self.sentinel:
             self.__update_sentinel_data (event.width)
 
-        # FIXME: Is this done automatically?
-        self.queue_draw ()
         return False
 
     def __handle_size_request (self, self_, req):
