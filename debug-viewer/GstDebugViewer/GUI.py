@@ -887,50 +887,6 @@ class Window (object):
         self.attach ()
         self.column_manager.attach (self.log_view)
 
-##         cell = gtk.CellRendererText ()
-##         column = gtk.TreeViewColumn ("Level", cell,
-##                                      text = self.log_model.COL_LEVEL)
-##         column.props.sizing = gtk.TREE_VIEW_COLUMN_FIXED
-##         column.props.fixed_width = 80 # FIXME
-##         self.log_view.append_column (column)
-
-##         cell = gtk.CellRendererText ()
-##         cell.props.family = "monospace"
-##         cell.props.family_set = True
-##         column = gtk.TreeViewColumn ("Time", cell)
-##                                      #text = self.log_model.COL_TIME)
-##         column.set_cell_data_func (cell, self._timestamp_cell_data_func)
-##         column.props.sizing = gtk.TREE_VIEW_COLUMN_FIXED
-##         column.props.fixed_width = 180 # FIXME
-##         self.log_view.append_column (column)
-
-##         cell = gtk.CellRendererText ()
-##         column = gtk.TreeViewColumn ("Category", cell,
-##                                      text = self.log_model.COL_CATEGORY)
-##         column.props.sizing = gtk.TREE_VIEW_COLUMN_FIXED
-##         column.props.fixed_width = 150 # FIXME
-##         self.log_view.append_column (column)
-
-##         cell = gtk.CellRendererText ()
-##         column = gtk.TreeViewColumn ("Function", cell,
-##                                      text = self.log_model.COL_FUNCTION)
-##         column.props.sizing = gtk.TREE_VIEW_COLUMN_FIXED
-##         column.props.fixed_width = 180 # FIXME
-##         self.log_view.append_column (column)
-
-##         cell = gtk.CellRendererText ()
-##         column = gtk.TreeViewColumn ("Object", cell,
-##                                      text = self.log_model.COL_OBJECT)
-##         column.props.sizing = gtk.TREE_VIEW_COLUMN_FIXED
-##         column.props.fixed_width = 150 # FIXME
-##         self.log_view.append_column (column)
-
-##         cell = gtk.CellRendererText ()
-##         column = gtk.TreeViewColumn ("Message", cell, text = self.log_model.COL_MESSAGE)
-##         ##column.set_cell_data_func (cell, self._message_cell_data_func)
-##         column.props.sizing = gtk.TREE_VIEW_COLUMN_FIXED
-##         self.log_view.append_column (column)
-
     def get_top_attach_point (self):
 
         return self.widgets.vbox_main
