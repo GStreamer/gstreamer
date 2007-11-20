@@ -168,6 +168,8 @@ gst_pngdec_init (GstPngDec * pngdec)
   pngdec->in_duration = GST_CLOCK_TIME_NONE;
 
   gst_segment_init (&pngdec->segment, GST_FORMAT_UNDEFINED);
+
+  pngdec->image_ready = FALSE;
 }
 
 static void
@@ -292,18 +294,7 @@ user_end_callback (png_structp png_ptr, png_infop info)
     gst_buffer_unref (pngdec->buffer_out);
   }
   pngdec->buffer_out = NULL;
-
-  if (pngdec->framed) {
-    /* Reset ourselves for the next frame */
-    gst_pngdec_libpng_clear (pngdec);
-    gst_pngdec_libpng_init (pngdec);
-    GST_LOG_OBJECT (pngdec, "setting up callbacks for next frame");
-    png_set_progressive_read_fn (pngdec->png, pngdec,
-        user_info_callback, user_endrow_callback, user_end_callback);
-  } else {
-    GST_LOG_OBJECT (pngdec, "sending EOS");
-    pngdec->ret = gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
-  }
+  pngdec->image_ready = TRUE;
 }
 
 static void
@@ -563,6 +554,21 @@ gst_pngdec_chain (GstPad * pad, GstBuffer * buffer)
   /* Progressive loading of the PNG image */
   png_process_data (pngdec->png, pngdec->info, GST_BUFFER_DATA (buffer),
       GST_BUFFER_SIZE (buffer));
+
+  if (pngdec->image_ready) {
+    if (pngdec->framed) {
+      /* Reset ourselves for the next frame */
+      gst_pngdec_libpng_clear (pngdec);
+      gst_pngdec_libpng_init (pngdec);
+      GST_LOG_OBJECT (pngdec, "setting up callbacks for next frame");
+      png_set_progressive_read_fn (pngdec->png, pngdec,
+          user_info_callback, user_endrow_callback, user_end_callback);
+    } else {
+      GST_LOG_OBJECT (pngdec, "sending EOS");
+      pngdec->ret = gst_pad_push_event (pngdec->srcpad, gst_event_new_eos ());
+    }
+    pngdec->image_ready = FALSE;
+  }
 
   /* grab new return code */
   ret = pngdec->ret;

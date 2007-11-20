@@ -1,5 +1,11 @@
 2007-11-20  Stefan Kost  <ensonic@users.sf.net>
 
+	* ext/libpng/gstpngdec.c:
+	* ext/libpng/gstpngdec.h:
+	  Don't release the png-memory from within the callback.
+
+2007-11-20  Stefan Kost  <ensonic@users.sf.net>
+
 	Patch by: René Stadler <mail at renestadler dot de>
 
 	* ext/libpng/gstpngenc.c:
