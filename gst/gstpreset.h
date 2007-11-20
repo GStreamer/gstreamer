@@ -41,7 +41,8 @@ struct _GstPresetInterface
 {
   GTypeInterface parent;
 
-  GList* (*get_preset_names) (GstPreset *self);
+  gchar** (*get_preset_names) (GstPreset *self);
+  GList* (*get_property_names) (GstPreset * self);
 
   gboolean (*load_preset) (GstPreset *self, const gchar *name);
   gboolean (*save_preset) (GstPreset *self, const gchar *name);
@@ -68,7 +69,8 @@ struct _GstPresetInterface
 
 GType gst_preset_get_type(void);
 
-GList* gst_preset_get_preset_names (GstPreset *self);
+gchar** gst_preset_get_preset_names (GstPreset *self);
+GList *gst_preset_get_property_names (GstPreset * self);
 
 gboolean gst_preset_load_preset (GstPreset *self, const gchar *name);
 gboolean gst_preset_save_preset (GstPreset *self, const gchar *name);

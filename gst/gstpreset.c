@@ -29,9 +29,15 @@
  * All instances of one type will share the list of presets. The list is created
  * on demand, if presets are not used, the list is not created.
  *
+ * The interface comes with a default implementation that servers most plugins.
+ * Wrapper plugins will override most methods to implement support for the
+ * native preset format of those wrapped plugins.
+ * One method that is useful to be overridde is gst_preset_get_property_names().
+ * With that one can control which properties are saved and in which order.
  */
 /* @todo:
  * - we need locks to avoid two instances manipulating the preset list -> flock
+ *   better save the new file to a tempfile and then rename
  * - need to add support for GstChildProxy
  * - how can we support both Preferences and Presets,
  *   - preferences = static settings, configurations (non controlable)
@@ -68,6 +74,8 @@ static GQuark preset_data_quark = 0;
 static GQuark preset_meta_quark = 0;
 static GQuark instance_list_quark = 0;
 
+/*static GQuark property_list_quark = 0;*/
+
 /* default iface implementation */
 
 /* max character per line */
@@ -100,7 +108,7 @@ preset_get_storage (GstPreset * self, GList ** presets,
       GST_DEBUG ("new data hash");
     }
   }
-  GST_INFO ("%ld:%s: presets: %p, %p, %p", type, G_OBJECT_TYPE_NAME (self),
+  GST_INFO ("%s: presets: %p, %p, %p", G_OBJECT_TYPE_NAME (self),
       *presets, (preset_meta ? *preset_meta : 0),
       (preset_data ? *preset_data : 0));
   return (res);
@@ -162,11 +170,7 @@ preset_get_path (GstPreset * self)
 static gboolean
 preset_skip_property (GParamSpec * property)
 {
-  /* @todo: currently we skip non-controlable parameters and thus only create
-   * presets, skipping the controlable one would create a config/preference
-   */
-  if (!(property->flags & GST_PARAM_CONTROLLABLE) ||
-      !(property->flags & G_PARAM_READABLE) ||
+  if (!(property->flags & (G_PARAM_READABLE | G_PARAM_WRITABLE)) ||
       (property->flags & G_PARAM_CONSTRUCT_ONLY))
     return TRUE;
   return FALSE;
@@ -187,7 +191,7 @@ preset_cleanup (gpointer user_data, GObject * self)
   }
 }
 
-static GList *
+static gchar **
 gst_preset_default_get_preset_names (GstPreset * self)
 {
   GType type = G_TYPE_FROM_INSTANCE (self);
@@ -329,8 +333,48 @@ gst_preset_default_get_preset_names (GstPreset * self)
     instances = g_list_prepend (instances, self);
     g_type_set_qdata (type, instance_list_quark, (gpointer) instances);
   }
-  /* @todo: copy strings to avoid races? transform into a strv? */
-  return (presets);
+  /* copy strings to avoid races */
+  if (presets) {
+    gchar **preset_names = g_new (gchar *, g_list_length (presets) + 1);
+    GList *node;
+    guint i = 0;
+
+    for (node = presets; node; node = g_list_next (node)) {
+      preset_names[i++] = g_strdup (node->data);
+    }
+    preset_names[i] = NULL;
+    return (preset_names);
+  }
+  return (NULL);
+}
+
+static GList *
+gst_preset_default_get_property_names (GstPreset * self)
+{
+  GParamSpec **properties, *property;
+  GList *names = NULL;
+  guint i, number_of_properties;
+
+  if ((properties = g_object_class_list_properties (G_OBJECT_CLASS
+              (GST_ELEMENT_GET_CLASS (self)), &number_of_properties))) {
+    for (i = 0; i < number_of_properties; i++) {
+      property = properties[i];
+      if (preset_skip_property (property) ||
+          (property->flags & GST_PARAM_CONTROLLABLE))
+        continue;
+
+      names = g_list_prepend (names, property->name);
+    }
+    for (i = 0; i < number_of_properties; i++) {
+      property = properties[i];
+      if (preset_skip_property (property) ||
+          !(property->flags & GST_PARAM_CONTROLLABLE))
+        continue;
+
+      names = g_list_prepend (names, property->name);
+    }
+  }
+  return names;
 }
 
 static gboolean
@@ -345,22 +389,21 @@ gst_preset_default_load_preset (GstPreset * self, const gchar * name)
 
     if ((node = g_list_find_custom (presets, name, (GCompareFunc) strcmp))) {
       GHashTable *data = g_hash_table_lookup (preset_data, node->data);
-      GParamSpec **properties, *property;
+      GList *properties;
       GType base, parent;
-      guint i, number_of_properties;
       gchar *val = NULL;
 
       GST_DEBUG ("loading preset : '%s', data : %p (size=%d)", name, data,
           g_hash_table_size (data));
 
       /* preset found, now set values */
-      if ((properties =
-              g_object_class_list_properties (G_OBJECT_CLASS
-                  (GST_ELEMENT_GET_CLASS (self)), &number_of_properties))) {
-        for (i = 0; i < number_of_properties; i++) {
-          property = properties[i];
-          if (preset_skip_property (property))
-            continue;
+      if ((properties = gst_preset_get_property_names (self))) {
+        GParamSpec *property;
+        GList *node;
+
+        for (node = properties; node; node = g_list_next (node)) {
+          property = g_object_class_find_property (G_OBJECT_CLASS
+              (GST_ELEMENT_GET_CLASS (self)), node->data);
 
           /* check if we have a settings for this property */
           if ((val = (gchar *) g_hash_table_lookup (data, property->name))) {
@@ -404,7 +447,10 @@ gst_preset_default_load_preset (GstPreset * self, const gchar * name)
             GST_INFO ("parameter '%s' not in preset", property->name);
           }
         }
+        g_list_free (properties);
         return (TRUE);
+      } else {
+        GST_INFO ("no properties");
       }
     }
   } else {
@@ -516,9 +562,8 @@ gst_preset_default_save_preset (GstPreset * self, const gchar * name)
   GList *presets;
   GHashTable *preset_meta, *preset_data;
   GHashTable *meta, *data;
-  GParamSpec **properties, *property;
+  GList *properties;
   GType base, parent;
-  guint i, number_of_properties;
   gchar *str = NULL, buffer[30 + 1];
 
   /*guint flags; */
@@ -532,16 +577,13 @@ gst_preset_default_save_preset (GstPreset * self, const gchar * name)
   meta = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 
   /* take copies of current gobject properties from self */
-  if ((properties =
-          g_object_class_list_properties (G_OBJECT_CLASS (GST_ELEMENT_GET_CLASS
-                  (self)), &number_of_properties))) {
-    for (i = 0; i < number_of_properties; i++) {
-      property = properties[i];
-      /*flags=GPOINTER_TO_INT(g_param_spec_get_qdata(property,gst_property_meta_quark_flags)); */
+  if ((properties = gst_preset_get_property_names (self))) {
+    GParamSpec *property;
+    GList *node;
 
-      /* skip non-controlable */
-      if (preset_skip_property (property))
-        continue;
+    for (node = properties; node; node = g_list_next (node)) {
+      property = g_object_class_find_property (G_OBJECT_CLASS
+          (GST_ELEMENT_GET_CLASS (self)), node->data);
 
       /* get base type */
       base = property->value_type;
@@ -611,14 +653,16 @@ gst_preset_default_save_preset (GstPreset * self, const gchar * name)
         g_hash_table_insert (data, (gpointer) property->name, (gpointer) str);
         str = NULL;
       }
-
+      g_list_free (properties);
     }
     /* @todo: handle childproxy properties as well */
     GST_INFO ("  saved");
+  } else {
+    GST_INFO ("no properties");
   }
 
   /*
-   * flock(fileno())
+   * @todo: flock(fileno())
    * http://www.ecst.csuchico.edu/~beej/guide/ipc/flock.html
    */
   g_hash_table_insert (preset_data, (gpointer) name, (gpointer) data);
@@ -784,33 +828,17 @@ gst_preset_default_get_meta (GstPreset * self, const gchar * name,
 static void
 gst_preset_default_create_preset (GstPreset * self)
 {
-  GParamSpec **properties, *property;
-  guint i, number_of_properties;
+  GList *properties;
   GType base, parent;
 
-  if ((properties =
-          g_object_class_list_properties (G_OBJECT_CLASS (GST_OBJECT_GET_CLASS
-                  (self)), &number_of_properties))) {
+  if ((properties = gst_preset_get_property_names (self))) {
+    GParamSpec *property;
+    GList *node;
     gdouble rnd;
 
-    GST_INFO ("nr of values : %d", number_of_properties);
-    for (i = 0; i < number_of_properties; i++) {
-      property = properties[i];
-
-      /* skip non-controlable, and non persistent params */
-      if (preset_skip_property (property))
-        continue;
-      /* we do not want to create a setting for trigger properties, buzztard
-         has more flags attached to g_param_specs
-         else {
-         guint flags=0;
-
-         if(BT_IS_PROPERTY_META(self)) {
-         flags=GPOINTER_TO_INT(g_param_spec_get_qdata(property,bt_property_meta_quark_flags));
-         }
-         if(!(flags&BT_PROPERTY_META_STATE)) continue;
-         }
-       */
+    for (node = properties; node; node = g_list_next (node)) {
+      property = g_object_class_find_property (G_OBJECT_CLASS
+          (GST_ELEMENT_GET_CLASS (self)), node->data);
 
       rnd = ((gdouble) rand ()) / (RAND_MAX + 1.0);
 
@@ -871,16 +899,33 @@ gst_preset_default_create_preset (GstPreset * self)
  * gst_preset_get_preset_names:
  * @self: a #GObject that implements #GstPreset
  *
- * Get a copy of the preset name list. Free list when done.
+ * Get a copy of preset names as a NULL terminated string array. Free with
+ * g_strfreev() wen done.
  *
  * Returns: list with names
  */
-GList *
+gchar **
 gst_preset_get_preset_names (GstPreset * self)
 {
   g_return_val_if_fail (GST_IS_PRESET (self), NULL);
 
   return (GST_PRESET_GET_INTERFACE (self)->get_preset_names (self));
+}
+
+/**
+ * gst_preset_get_property_names:
+ * @self: a #GObject that implements #GstPreset
+ *
+ * Get a the gobject property names to use for presets.
+ *
+ * Returns: list with names
+ */
+GList *
+gst_preset_get_property_names (GstPreset * self)
+{
+  g_return_val_if_fail (GST_IS_PRESET (self), NULL);
+
+  return (GST_PRESET_GET_INTERFACE (self)->get_property_names (self));
 }
 
 /**
@@ -1031,6 +1076,7 @@ static void
 gst_preset_class_init (GstPresetInterface * iface)
 {
   iface->get_preset_names = gst_preset_default_get_preset_names;
+  iface->get_property_names = gst_preset_default_get_property_names;
 
   iface->load_preset = gst_preset_default_load_preset;
   iface->save_preset = gst_preset_default_save_preset;
@@ -1054,11 +1100,12 @@ gst_preset_base_init (gpointer g_class)
         GST_DEBUG_FG_WHITE | GST_DEBUG_BG_BLACK, "preset interface");
 
     /* create quarks for use with g_type_{g,s}et_qdata() */
-    preset_list_quark = g_quark_from_string ("GstPreset::presets");
-    preset_path_quark = g_quark_from_string ("GstPreset::path");
-    preset_data_quark = g_quark_from_string ("GstPreset::data");
-    preset_meta_quark = g_quark_from_string ("GstPreset::meta");
-    instance_list_quark = g_quark_from_string ("GstPreset::instances");
+    preset_list_quark = g_quark_from_static_string ("GstPreset::presets");
+    preset_path_quark = g_quark_from_static_string ("GstPreset::path");
+    preset_data_quark = g_quark_from_static_string ("GstPreset::data");
+    preset_meta_quark = g_quark_from_static_string ("GstPreset::meta");
+    instance_list_quark = g_quark_from_static_string ("GstPreset::instances");
+    /*property_list_quark = g_quark_from_static_string ("GstPreset::properties"); */
 
     initialized = TRUE;
   }
