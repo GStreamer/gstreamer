@@ -1,5 +1,10 @@
 2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/speexresample/Makefile.am:
+	Add missing file.
+
+2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* docs/plugins/inspect/plugin-app.xml:
 	* docs/plugins/inspect/plugin-bayer.xml:
 	* docs/plugins/inspect/plugin-cdaudio.xml:
