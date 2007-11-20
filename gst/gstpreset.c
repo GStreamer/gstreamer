@@ -357,6 +357,7 @@ gst_preset_default_get_property_names (GstPreset * self)
 
   if ((properties = g_object_class_list_properties (G_OBJECT_CLASS
               (GST_ELEMENT_GET_CLASS (self)), &number_of_properties))) {
+    GST_INFO ("  filtering properties: %u", number_of_properties);
     for (i = 0; i < number_of_properties; i++) {
       property = properties[i];
       if (preset_skip_property (property) ||
@@ -373,6 +374,9 @@ gst_preset_default_get_property_names (GstPreset * self)
 
       names = g_list_prepend (names, property->name);
     }
+    g_free (properties);
+  } else {
+    GST_INFO ("no properties");
   }
   return names;
 }
@@ -653,10 +657,10 @@ gst_preset_default_save_preset (GstPreset * self, const gchar * name)
         g_hash_table_insert (data, (gpointer) property->name, (gpointer) str);
         str = NULL;
       }
-      g_list_free (properties);
     }
     /* @todo: handle childproxy properties as well */
     GST_INFO ("  saved");
+    g_list_free (properties);
   } else {
     GST_INFO ("no properties");
   }
