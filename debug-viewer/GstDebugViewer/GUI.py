@@ -925,6 +925,15 @@ class Window (object):
         self.window_state.detach ()
         self.column_manager.detach ()
 
+    def get_active_line_index (self):
+
+        selection = self.log_view.get_selection ()
+        model, tree_iter = selection.get_selected ()
+        if tree_iter is None:
+            raise ValueError ("no line selected")
+        path = model.get_path (tree_iter)
+        return path[0]
+
     def get_active_line (self):
 
         selection = self.log_view.get_selection ()
@@ -968,10 +977,10 @@ class Window (object):
 
     def handle_edit_copy_line_action_activate (self, action):
 
-        self.logger.warning ("FIXME")
-        return
-        col_id = self.log_model.COL_
-        self.clipboard.set_text (self.get_active_line ()[col_id])
+        line_index = self.get_active_line_index ()
+        line = self.log_file.get_full_line (line_index)
+        self.logger.warning ("FIXME: This gets the wrong level; we still have the level in the model only (d'oh)")
+        self.clipboard.set_text (line.line_string ())
 
     def handle_edit_copy_message_action_activate (self, action):
 

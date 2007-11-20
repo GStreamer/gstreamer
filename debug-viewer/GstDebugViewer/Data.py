@@ -287,6 +287,19 @@ class LogLine (list):
 
         return cls (groups)
 
+    def line_string (self, message = None):
+
+        # Replicates gstreamer/gst/gstinfo.c:gst_debug_log_default.
+
+        ts, pid, thread, level, category, filename, line, function, object_, message_offset = self
+
+        if isinstance (message_offset, str):
+            message = message_offset
+
+        return "%s %5d 0x%x %s %20s %s:%d:%s:%s %s" % (time_args (ts), pid, thread, level.name,
+                                                       category, filename, line, function,
+                                                       object_, message,)
+
 class LogFile (Producer):
 
     def __init__ (self, filename, dispatcher):
@@ -298,6 +311,16 @@ class LogFile (Producer):
         self.fileobj = file (filename, "rb")
         self.line_cache = LineCache (self.fileobj, dispatcher)
         self.line_cache.consumers.append (self)
+
+    def get_full_line (self, line_index):
+
+        offset = self.line_cache.offsets[line_index]
+        self.fileobj.seek (offset)
+        line_string = self.fileobj.readline ()
+        line = LogLine.parse_full (line_string)
+        msg = line_string[line[-1]:]
+        line[-1] = msg
+        return line
 
     def start_loading (self):
 
