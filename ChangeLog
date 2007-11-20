@@ -1,5 +1,11 @@
 2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_fix_output_buffer), (gst_speex_resample_transform):
+	Some small cleanup and addition of a TODO item.
+
+2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/speexresample/Makefile.am:
 	Add missing file.
 

@@ -19,6 +19,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+ /* TODO:
+  *   - Find out what to do about the first n zero samples
+  *     in the output.
+  */
+
 /**
  * SECTION:element-speexresample
  *
@@ -538,8 +543,7 @@ static void
 gst_speex_fix_output_buffer (GstSpeexResample * resample, GstBuffer * outbuf,
     guint diff)
 {
-  GstClockTime timediff =
-      gst_util_uint64_scale (diff, GST_SECOND, resample->outrate);
+  GstClockTime timediff = GST_FRAMES_TO_CLOCK_TIME (diff, resample->outrate);
 
   GST_LOG ("Adjusting buffer by %d samples", diff);
 
@@ -551,8 +555,7 @@ gst_speex_fix_output_buffer (GstSpeexResample * resample, GstBuffer * outbuf,
     resample->offset -= diff;
     resample->ts_offset -= diff;
     resample->next_ts =
-        gst_util_uint64_scale_int (resample->ts_offset, GST_SECOND,
-        resample->outrate);
+        GST_FRAMES_TO_CLOCK_TIME (resample->ts_offset, resample->outrate);
   }
 }
 
@@ -662,12 +665,11 @@ gst_speex_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
        * same timestamp as the incoming timestamp. */
       resample->next_ts = timestamp;
       resample->ts_offset =
-          gst_util_uint64_scale_int (timestamp, resample->outrate, GST_SECOND);
+          GST_CLOCK_TIME_TO_FRAMES (timestamp, resample->outrate);
       /* offset used to set as the buffer offset, this offset is always
        * relative to the stream time, note that timestamp is not... */
       stime = (timestamp - base->segment.start) + base->segment.time;
-      resample->offset =
-          gst_util_uint64_scale_int (stime, resample->outrate, GST_SECOND);
+      resample->offset = GST_CLOCK_TIME_TO_FRAMES (stime, resample->outrate);
     }
   }
   resample->prev_ts = timestamp;
@@ -680,8 +682,7 @@ gst_speex_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
     resample->offset += outsamples;
     resample->ts_offset += outsamples;
     resample->next_ts =
-        gst_util_uint64_scale_int (resample->ts_offset, GST_SECOND,
-        resample->outrate);
+        GST_FRAMES_TO_CLOCK_TIME (resample->ts_offset, resample->outrate);
     GST_BUFFER_OFFSET_END (outbuf) = resample->offset;
 
     /* we calculate DURATION as the difference between "next" timestamp
@@ -692,7 +693,7 @@ gst_speex_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
   } else {
     /* no valid offset know, we can still sortof calculate the duration though */
     GST_BUFFER_DURATION (outbuf) =
-        gst_util_uint64_scale_int (outsamples, GST_SECOND, resample->outrate);
+        GST_FRAMES_TO_CLOCK_TIME (outsamples, resample->outrate);
   }
 
   if (G_UNLIKELY (resample->need_discont)) {
