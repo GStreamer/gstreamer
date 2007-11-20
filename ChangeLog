@@ -1,5 +1,11 @@
 2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackcommon.c: (gst_wavpack_set_channel_layout):
+	Also set the channel layout on the Wavpack caps if we're having
+	a mono layout. Of course only do it for "audio/x-wavpack".
+
+2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* ext/wavpack/gstwavpackcommon.c:
 	(gst_wavpack_get_default_channel_mask),
 	(gst_wavpack_set_channel_layout),

@@ -185,6 +185,7 @@ gst_wavpack_set_channel_layout (GstCaps * caps, gint layout)
 
   if (num_channels == 1 && layout == 0x00004) {
     pos[0] = GST_AUDIO_CHANNEL_POSITION_FRONT_MONO;
+    gst_audio_set_channel_positions (s, pos);
     return TRUE;
   }
 
