@@ -365,7 +365,7 @@ class TextColumn (SizedColumn):
             data_func = self.get_data_func ()
             id_ = self.id
             def cell_data_func (column, cell, model, tree_iter):
-                data_func (cell.props, model.get (tree_iter, id_)[0], model.get_path (tree_iter))
+                data_func (cell.props, model.get_value (tree_iter, id_), model.get_path (tree_iter))
             column.set_cell_data_func (cell, cell_data_func)
         elif not self.get_modify_func:
             column.add_attribute (cell, "text", self.id)
@@ -1049,12 +1049,12 @@ class Window (object):
     @staticmethod
     def _timestamp_cell_data_func (column, renderer, model, tree_iter):
 
-        ts = model.get (tree_iter, LogModel.COL_TIME)[0]
+        ts = model.get_value (tree_iter, LogModel.COL_TIME)
         renderer.props.text = Data.time_args (ts)
 
     def _message_cell_data_func (self, column, renderer, model, tree_iter):
 
-        offset = model.get (tree_iter, LogModel.COL_MESSAGE_OFFSET)[0]
+        offset = model.get_value (tree_iter, LogModel.COL_MESSAGE_OFFSET)
         self.log_file.seek (offset)
         renderer.props.text = strip_escape (self.log_file.readline ().strip ())
 

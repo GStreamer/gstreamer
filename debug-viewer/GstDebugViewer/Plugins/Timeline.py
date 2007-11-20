@@ -24,7 +24,7 @@ class LineFrequencySentinel (object):
 
     def _search_ts (self, target_ts, first_index, last_index):
 
-        model_get = self.model.get
+        model_get = self.model.get_value
         model_iter_nth_child = self.model.iter_nth_child
         col_id = self.model.COL_TIME
 
@@ -32,7 +32,7 @@ class LineFrequencySentinel (object):
             middle = (last_index - first_index) // 2 + first_index
             if middle == first_index:
                 return last_index
-            ts = model_get (model_iter_nth_child (None, middle), col_id)[0]
+            ts = model_get (model_iter_nth_child (None, middle), col_id)
             if ts < target_ts:
                 first_index = middle + 1
             elif ts > target_ts:
@@ -85,7 +85,7 @@ class LevelDistributionSentinel (object):
 
     def run_for (self, freq_sentinel):
 
-        model_get = self.model.get
+        model_get = self.model.get_value
         model_next = self.model.iter_next
         id_time = self.model.COL_TIME
         id_level = self.model.COL_LEVEL
@@ -96,7 +96,7 @@ class LevelDistributionSentinel (object):
         counts = [0] * 6
         tree_iter = self.model.get_iter_first ()
         while tree_iter:
-            level = model_get (tree_iter, id_level)[0]
+            level = model_get (tree_iter, id_level)
             if i > partitions[partitions_i]:
                 result.append (tuple (counts))
                 counts = [0] * 6
