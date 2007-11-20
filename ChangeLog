@@ -2,6 +2,13 @@
 
 	Patch by: René Stadler <mail at renestadler dot de>
 
+	* ext/libpng/gstpngenc.c:
+	  Don't leak buffer data memory. Fixes #498395.
+
+2007-11-20  Stefan Kost  <ensonic@users.sf.net>
+
+	Patch by: René Stadler <mail at renestadler dot de>
+
 	* tests/check/pipelines/simple-launch-lines.c:
 	  Tests for #498395.
 

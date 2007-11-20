@@ -228,7 +228,8 @@ user_write_data (png_structp png_ptr, png_bytep data, png_uint_32 length)
   pngenc = (GstPngEnc *) png_get_io_ptr (png_ptr);
 
   buffer = gst_buffer_new ();
-  GST_BUFFER_DATA (buffer) = g_memdup (data, length);
+  GST_BUFFER_MALLOCDATA (buffer) = g_memdup (data, length);
+  GST_BUFFER_DATA (buffer) = GST_BUFFER_MALLOCDATA (buffer);
   GST_BUFFER_SIZE (buffer) = length;
 
   if (pngenc->buffer_out) {
