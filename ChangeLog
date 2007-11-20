@@ -1,3 +1,8 @@
+2007-11-20  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/realmedia/rtspreal.c: (rtsp_ext_real_parse_sdp): Fix build
+	on Mac OS X.
+
 2007-11-19  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* gst/mpegaudioparse/gstmpegaudioparse.c:

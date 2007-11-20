@@ -395,7 +395,8 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     READ_BUFFER_M (media, "OpaqueData", opaque_data, opaque_data_len);
 
     if (opaque_data_len < 4) {
-      GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 4", opaque_data_len);
+      GST_DEBUG_OBJECT (ctx, "opaque_data_len %" G_GSIZE_FORMAT " < 4",
+          opaque_data_len);
       goto strange_opaque_data;
     }
     if (strncmp (opaque_data, "MLTI", 4)) {
@@ -408,7 +409,8 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     opaque_data_len -= 4;
 
     if (opaque_data_len < 2) {
-      GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 2", opaque_data_len);
+      GST_DEBUG_OBJECT (ctx, "opaque_data_len %" G_GSIZE_FORMAT " < 2",
+          opaque_data_len);
       goto strange_opaque_data;
     }
     stream->num_rules = GST_READ_UINT16_BE (opaque_data);
@@ -421,15 +423,16 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     }
 
     if (opaque_data_len < 2 * sel) {
-      GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 2 * sel (%d)",
-          opaque_data_len, 2 * sel);
+      GST_DEBUG_OBJECT (ctx, "opaque_data_len %" G_GSIZE_FORMAT
+          " < 2 * sel (%d)", opaque_data_len, 2 * sel);
       goto strange_opaque_data;
     }
     opaque_data += 2 * sel;
     opaque_data_len -= 2 * sel;
 
     if (opaque_data_len < 2) {
-      GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 2", opaque_data_len);
+      GST_DEBUG_OBJECT (ctx, "opaque_data_len %" G_GSIZE_FORMAT " < 2",
+          opaque_data_len);
       goto strange_opaque_data;
     }
     stream->codec = GST_READ_UINT16_BE (opaque_data);
@@ -437,15 +440,16 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     opaque_data_len -= 2;
 
     if (opaque_data_len < 2 * (stream->num_rules - sel - 1)) {
-      GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < %d", opaque_data_len,
-          2 * (stream->num_rules - sel - 1));
+      GST_DEBUG_OBJECT (ctx, "opaque_data_len %" G_GSIZE_FORMAT
+          " < %d", opaque_data_len, 2 * (stream->num_rules - sel - 1));
       goto strange_opaque_data;
     }
     opaque_data += 2 * (stream->num_rules - sel - 1);
     opaque_data_len -= 2 * (stream->num_rules - sel - 1);
 
     if (opaque_data_len < 2) {
-      GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 2", opaque_data_len);
+      GST_DEBUG_OBJECT (ctx, "opaque_data_len %" G_GSIZE_FORMAT " < 2",
+          opaque_data_len);
       goto strange_opaque_data;
     }
     stream->num_rules = GST_READ_UINT16_BE (opaque_data);
@@ -460,7 +464,8 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
 
     for (j = 0; j < stream->codec; j++) {
       if (opaque_data_len < 4) {
-        GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 4", opaque_data_len);
+        GST_DEBUG_OBJECT (ctx, "opaque_data_len %" G_GSIZE_FORMAT " < 4",
+            opaque_data_len);
         goto strange_opaque_data;
       }
       len = GST_READ_UINT32_BE (opaque_data);
@@ -468,8 +473,8 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
       opaque_data_len -= 4;
 
       if (opaque_data_len < len) {
-        GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < len %d", opaque_data_len,
-            len);
+        GST_DEBUG_OBJECT (ctx, "opaque_data_len %" G_GSIZE_FORMAT " < len %d",
+            opaque_data_len, len);
         goto strange_opaque_data;
       }
       opaque_data += len;
@@ -477,7 +482,8 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     }
 
     if (opaque_data_len < 4) {
-      GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < 4", opaque_data_len);
+      GST_DEBUG_OBJECT (ctx, "opaque_data_len %" G_GSIZE_FORMAT " < 4",
+          opaque_data_len);
       goto strange_opaque_data;
     }
     stream->type_specific_data_len = GST_READ_UINT32_BE (opaque_data);
@@ -485,8 +491,8 @@ rtsp_ext_real_parse_sdp (GstRTSPExtension * ext, GstSDPMessage * sdp,
     opaque_data_len -= 4;
 
     if (opaque_data_len < stream->type_specific_data_len) {
-      GST_DEBUG_OBJECT (ctx, "opaque_data_len %d < %d", opaque_data_len,
-          stream->type_specific_data_len);
+      GST_DEBUG_OBJECT (ctx, "opaque_data_len %" G_GSIZE_FORMAT " < %d",
+          opaque_data_len, stream->type_specific_data_len);
       goto strange_opaque_data;
     }
     stream->type_specific_data =
