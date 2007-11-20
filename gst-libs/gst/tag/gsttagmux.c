@@ -166,7 +166,7 @@ gst_tag_lib_mux_render_tag (GstTagLibMux * mux)
     goto render_error;
 
   mux->tag_size = GST_BUFFER_SIZE (buffer);
-  GST_LOG_OBJECT (mux, "tag size = %d bytes", mux->tag_size);
+  GST_LOG_OBJECT (mux, "tag size = %" G_GSIZE_FORMAT " bytes", mux->tag_size);
 
   /* Send newsegment event from byte position 0, so the tag really gets
    * written to the start of the file, independent of the upstream segment */
@@ -218,7 +218,7 @@ gst_tag_lib_mux_adjust_event_offsets (GstTagLibMux * mux,
 
   GST_DEBUG_OBJECT (mux, "adjusting newsegment event offsets to start=%"
       G_GINT64_FORMAT ", stop=%" G_GINT64_FORMAT ", cur=%" G_GINT64_FORMAT
-      " (delta = +%u)", start, stop, cur, mux->tag_size);
+      " (delta = +%" G_GSIZE_FORMAT ")", start, stop, cur, mux->tag_size);
 
   return gst_event_new_new_segment (TRUE, 1.0, format, start, stop, cur);
 }
