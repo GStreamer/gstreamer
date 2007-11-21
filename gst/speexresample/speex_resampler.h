@@ -48,6 +48,11 @@
 /* If the resampler is defined outside of Speex, we change the symbol names so that 
    there won't be any clash if linking with Speex later on. */
 
+/* #define RANDOM_PREFIX your software name here */
+#ifndef RANDOM_PREFIX
+#error "Please define RANDOM_PREFIX (above) to something specific to your project to prevent symbol name clashes"
+#endif
+
 #define CAT_PREFIX2(a,b) a ## b
 #define CAT_PREFIX(a,b) CAT_PREFIX2(a, b)
       
