@@ -300,6 +300,35 @@ class LogLine (list):
                                                          category, filename, line, function,
                                                          object_, message,)
 
+class LogLines (object):
+
+    def __init__ (self, fileobj, line_cache):
+
+        self.__fileobj = fileobj
+        self.__line_cache = line_cache
+
+    def __len__ (self):
+
+        return len (self.__line_cache.offsets)
+
+    def __getitem__ (self, line_index):
+
+        offset = self.__line_cache.offsets[line_index]
+        self.__fileobj.seek (offset)
+        line_string = self.__fileobj.readline ()
+        line = LogLine.parse_full (line_string)
+        msg = line_string[line[-1]:]
+        line[-1] = msg
+        return line
+
+    def __iter__ (self):
+
+        l = len (self)
+        i = 0
+        while i < l:
+            yield self[i]
+            i += 1
+
 class LogFile (Producer):
 
     def __init__ (self, filename, dispatcher):
@@ -337,6 +366,8 @@ class LogFile (Producer):
         self.have_load_started ()
 
     def handle_load_finished (self):
+
+        self.lines = LogLines (self.fileobj, self.line_cache)
 
         # Chain up to our consumers:
         self.have_load_finished ()
