@@ -764,6 +764,8 @@ lpwsinc_set_property (GObject * object, guint prop_id, const GValue * value,
         self->kernel_length = val;
         self->latency = val / 2;
         lpwsinc_build_kernel (self);
+        gst_element_post_message (GST_ELEMENT (self),
+            gst_message_new_latency (GST_OBJECT (self)));
       }
       GST_BASE_TRANSFORM_UNLOCK (self);
       break;
