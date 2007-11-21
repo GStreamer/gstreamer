@@ -1,3 +1,8 @@
+2007-11-21  Julien Moutte  <julien@fluendo.com>
+
+	* ext/sdl/sdlaudiosink.c: (gst_sdlaudio_sink_write): Fix build
+	on Mac OS X. (missing format parameter)
+
 2007-11-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/equalizer/gstiirequalizer10bands.c:

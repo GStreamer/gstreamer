@@ -288,7 +288,7 @@ gst_sdlaudio_sink_write (GstAudioSink * asink, gpointer data, guint length)
   GstSDLAudioSink *sdlaudio = GST_SDLAUDIOSINK (asink);
 
   if (sdlaudio->fmt.size != length) {
-    GST_ERROR ("ring buffer segment lenght (%u) != sdl buffer len", length,
+    GST_ERROR ("ring buffer segment length (%u) != sdl buffer len (%u)", length,
         sdlaudio->fmt.size);
   }
 
