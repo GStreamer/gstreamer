@@ -1,3 +1,8 @@
+2007-11-21  Julien Moutte  <julien@fluendo.com>
+
+	* docs/faq/gst-uninstalled: Yet another missing library for the
+	uninstalled script (fft)
+
 2007-11-21  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* docs/faq/developing.xml:
