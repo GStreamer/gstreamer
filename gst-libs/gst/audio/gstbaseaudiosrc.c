@@ -288,6 +288,52 @@ gst_base_audio_src_check_get_range (GstBaseSrc * bsrc)
   return TRUE;
 }
 
+/**
+ * gst_base_audio_src_set_provide_clock:
+ * @src: a #GstBaseAudioSrc
+ * @provide: new state
+ *
+ * Controls whether @src will provide a clock or not. If @provide is %TRUE, 
+ * gst_element_provide_clock() will return a clock that reflects the datarate
+ * of @src. If @provide is %FALSE, gst_element_provide_clock() will return NULL.
+ *
+ * Since: 0.10.16
+ */
+void
+gst_base_audio_src_set_provide_clock (GstBaseAudioSrc * src, gboolean provide)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_SRC (src));
+
+  GST_OBJECT_LOCK (src);
+  src->priv->provide_clock = provide;
+  GST_OBJECT_UNLOCK (src);
+}
+
+/**
+ * gst_base_audio_src_get_provide_clock:
+ * @src: a #GstBaseAudioSrc
+ *
+ * Queries whether @src will provide a clock or not. See also
+ * gst_base_audio_src_set_provide_clock.
+ *
+ * Returns: %TRUE if @src will provide a clock.
+ *
+ * Since: 0.10.16
+ */
+gboolean
+gst_base_audio_src_get_provide_clock (GstBaseAudioSrc * src)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_SRC (src), FALSE);
+
+  GST_OBJECT_LOCK (src);
+  result = src->priv->provide_clock;
+  GST_OBJECT_UNLOCK (src);
+
+  return result;
+}
+
 static void
 gst_base_audio_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -304,9 +350,7 @@ gst_base_audio_src_set_property (GObject * object, guint prop_id,
       src->latency_time = g_value_get_int64 (value);
       break;
     case PROP_PROVIDE_CLOCK:
-      GST_OBJECT_LOCK (src);
-      src->priv->provide_clock = g_value_get_boolean (value);
-      GST_OBJECT_UNLOCK (src);
+      gst_base_audio_src_set_provide_clock (src, g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -330,9 +374,7 @@ gst_base_audio_src_get_property (GObject * object, guint prop_id,
       g_value_set_int64 (value, src->latency_time);
       break;
     case PROP_PROVIDE_CLOCK:
-      GST_OBJECT_LOCK (src);
-      g_value_set_boolean (value, src->priv->provide_clock);
-      GST_OBJECT_UNLOCK (src);
+      g_value_set_boolean (value, gst_base_audio_src_get_provide_clock (src));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -1,3 +1,36 @@
+2007-11-21  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/audio/gstbaseaudiosink.c: (slave_method_get_type),
+	(gst_base_audio_sink_set_provide_clock),
+	(gst_base_audio_sink_get_provide_clock),
+	(gst_base_audio_sink_set_slave_method),
+	(gst_base_audio_sink_get_slave_method),
+	(gst_base_audio_sink_set_property),
+	(gst_base_audio_sink_get_property), (gst_base_audio_sink_drain),
+	(gst_base_audio_sink_none_slaving),
+	(gst_base_audio_sink_handle_slaving):
+	* gst-libs/gst/audio/gstbaseaudiosink.h:
+	Expose methods for some object properties so that subclasses can more
+	easily configure them.
+	Added slave method none, that completely disables slaving to the
+	internal clock.
+	API: gst_base_audio_sink_set_provide_clock()
+	API: gst_base_audio_sink_get_provide_clock()
+	API: gst_base_audio_sink_set_slave_method()
+	API: gst_base_audio_sink_get_slave_method()
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_set_provide_clock),
+	(gst_base_audio_src_get_provide_clock),
+	(gst_base_audio_src_set_property),
+	(gst_base_audio_src_get_property), (gst_base_audio_src_create):
+	* gst-libs/gst/audio/gstbaseaudiosrc.h:
+	Expose methods for some object properties so that subclasses can more
+	easily configure them.
+	API: gst_base_audio_src_set_provide_clock()
+	API: gst_base_audio_src_get_provide_clock()
+
 2007-11-20  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Joe Peterson <lavajoe at gentoo dot org>

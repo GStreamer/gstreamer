@@ -94,6 +94,7 @@ slave_method_get_type (void)
   static const GEnumValue slave_method[] = {
     {GST_BASE_AUDIO_SINK_SLAVE_RESAMPLE, "Resampling slaving", "resample"},
     {GST_BASE_AUDIO_SINK_SLAVE_SKEW, "Skew slaving", "skew"},
+    {GST_BASE_AUDIO_SINK_SLAVE_NONE, "No slaving", "none"},
     {0, NULL, NULL},
   };
 
@@ -395,6 +396,97 @@ gst_base_audio_sink_get_time (GstClock * clock, GstBaseAudioSink * sink)
   return result;
 }
 
+/**
+ * gst_base_audio_sink_set_provide_clock:
+ * @sink: a #GstBaseAudioSink
+ * @provide: new state
+ *
+ * Controls whether @sink will provide a clock or not. If @provide is %TRUE, 
+ * gst_element_provide_clock() will return a clock that reflects the datarate
+ * of @sink. If @provide is %FALSE, gst_element_provide_clock() will return NULL.
+ *
+ * Since: 0.10.16
+ */
+void
+gst_base_audio_sink_set_provide_clock (GstBaseAudioSink * sink,
+    gboolean provide)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  sink->provide_clock = provide;
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_audio_sink_get_provide_clock:
+ * @sink: a #GstBaseAudioSink
+ *
+ * Queries whether @sink will provide a clock or not. See also
+ * gst_base_audio_sink_set_provide_clock.
+ *
+ * Returns: %TRUE if @sink will provide a clock.
+ *
+ * Since: 0.10.16
+ */
+gboolean
+gst_base_audio_sink_get_provide_clock (GstBaseAudioSink * sink)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_SINK (sink), FALSE);
+
+  GST_OBJECT_LOCK (sink);
+  result = sink->provide_clock;
+  GST_OBJECT_UNLOCK (sink);
+
+  return result;
+}
+
+/**
+ * gst_base_audio_sink_set_slave_method:
+ * @sink: a #GstBaseAudioSink
+ * @method: the new slave method
+ *
+ * Controls how clock slaving will be performed in @sink. 
+ *
+ * Since: 0.10.16
+ */
+void
+gst_base_audio_sink_set_slave_method (GstBaseAudioSink * sink,
+    GstBaseAudioSinkSlaveMethod method)
+{
+  g_return_if_fail (GST_IS_BASE_AUDIO_SINK (sink));
+
+  GST_OBJECT_LOCK (sink);
+  sink->priv->slave_method = method;
+  GST_OBJECT_UNLOCK (sink);
+}
+
+/**
+ * gst_base_audio_sink_get_slave_method:
+ * @sink: a #GstBaseAudioSink
+ *
+ * Get the current slave method used by @sink.
+ *
+ * Returns: The current slave method used by @sink.
+ *
+ * Since: 0.10.16
+ */
+GstBaseAudioSinkSlaveMethod
+gst_base_audio_sink_get_slave_method (GstBaseAudioSink * sink)
+{
+  GstBaseAudioSinkSlaveMethod result;
+
+  g_return_val_if_fail (GST_IS_BASE_AUDIO_SINK (sink), -1);
+
+  GST_OBJECT_LOCK (sink);
+  result = sink->priv->slave_method;
+  GST_OBJECT_UNLOCK (sink);
+
+  return result;
+}
+
 static void
 gst_base_audio_sink_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -411,12 +503,10 @@ gst_base_audio_sink_set_property (GObject * object, guint prop_id,
       sink->latency_time = g_value_get_int64 (value);
       break;
     case PROP_PROVIDE_CLOCK:
-      GST_OBJECT_LOCK (sink);
-      sink->provide_clock = g_value_get_boolean (value);
-      GST_OBJECT_UNLOCK (sink);
+      gst_base_audio_sink_set_provide_clock (sink, g_value_get_boolean (value));
       break;
     case PROP_SLAVE_METHOD:
-      sink->priv->slave_method = g_value_get_enum (value);
+      gst_base_audio_sink_set_slave_method (sink, g_value_get_enum (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -440,12 +530,10 @@ gst_base_audio_sink_get_property (GObject * object, guint prop_id,
       g_value_set_int64 (value, sink->latency_time);
       break;
     case PROP_PROVIDE_CLOCK:
-      GST_OBJECT_LOCK (sink);
-      g_value_set_boolean (value, sink->provide_clock);
-      GST_OBJECT_UNLOCK (sink);
+      g_value_set_boolean (value, gst_base_audio_sink_get_provide_clock (sink));
       break;
     case PROP_SLAVE_METHOD:
-      g_value_set_enum (value, sink->priv->slave_method);
+      g_value_set_enum (value, gst_base_audio_sink_get_slave_method (sink));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -842,6 +930,28 @@ gst_base_audio_sink_skew_slaving (GstBaseAudioSink * sink,
   *srender_stop = render_stop;
 }
 
+/* apply the clock offset but do no slaving otherwise */
+static void
+gst_base_audio_sink_none_slaving (GstBaseAudioSink * sink,
+    GstClockTime render_start, GstClockTime render_stop,
+    GstClockTime * srender_start, GstClockTime * srender_stop)
+{
+  GstClockTime cinternal, cexternal, crate_num, crate_denom;
+
+  /* get calibration parameters to compensate for offsets */
+  gst_clock_get_calibration (sink->provided_clock, &cinternal, &cexternal,
+      &crate_num, &crate_denom);
+
+  /* convert, ignoring speed */
+  render_start = clock_convert_external (render_start, cinternal, cexternal,
+      crate_num, crate_denom, sink->priv->us_latency);
+  render_stop = clock_convert_external (render_stop, cinternal, cexternal,
+      crate_num, crate_denom, sink->priv->us_latency);
+
+  *srender_start = render_start;
+  *srender_stop = render_stop;
+}
+
 /* converts render_start and render_stop to their slaved values */
 static void
 gst_base_audio_sink_handle_slaving (GstBaseAudioSink * sink,
@@ -855,6 +965,10 @@ gst_base_audio_sink_handle_slaving (GstBaseAudioSink * sink,
       break;
     case GST_BASE_AUDIO_SINK_SLAVE_SKEW:
       gst_base_audio_sink_skew_slaving (sink, render_start, render_stop,
+          srender_start, srender_stop);
+      break;
+    case GST_BASE_AUDIO_SINK_SLAVE_NONE:
+      gst_base_audio_sink_none_slaving (sink, render_start, render_stop,
           srender_start, srender_stop);
       break;
     default:

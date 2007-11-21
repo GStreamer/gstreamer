@@ -109,6 +109,9 @@ GType gst_base_audio_src_get_type(void);
 
 GstRingBuffer *gst_base_audio_src_create_ringbuffer (GstBaseAudioSrc *src);
 
+void       gst_base_audio_src_set_provide_clock        (GstBaseAudioSrc *src, gboolean provide);
+gboolean   gst_base_audio_src_get_provide_clock        (GstBaseAudioSrc *src);
+
 G_END_DECLS
 
 #endif /* __GST_BASE_AUDIO_SRC_H__ */

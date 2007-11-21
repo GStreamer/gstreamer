@@ -98,6 +98,10 @@ GstBaseAudioSinkSlaveMethod
 GST_BASE_AUDIO_SINK_CLOCK
 GST_BASE_AUDIO_SINK_PAD
 gst_base_audio_sink_create_ringbuffer
+gst_base_audio_sink_set_provide_clock
+gst_base_audio_sink_get_provide_clock
+gst_base_audio_sink_set_slave_method
+gst_base_audio_sink_get_slave_method
 <SUBSECTION Standard>
 GST_BASE_AUDIO_SINK
 GST_IS_BASE_AUDIO_SINK
@@ -118,6 +122,8 @@ GstBaseAudioSrcClass
 GST_BASE_AUDIO_SRC_CLOCK
 GST_BASE_AUDIO_SRC_PAD
 gst_base_audio_src_create_ringbuffer
+gst_base_audio_src_set_provide_clock
+gst_base_audio_src_get_provide_clock
 <SUBSECTION Standard>
 GST_BASE_AUDIO_SRC
 GST_IS_BASE_AUDIO_SRC
