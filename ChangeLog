@@ -1,3 +1,10 @@
+2007-11-21  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/equalizer/gstiirequalizer10bands.c:
+	* gst/equalizer/gstiirequalizer3bands.c:
+	  Remove preset iface again. We'll re-add this after its been released
+	  in -good.
+
 2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/speexresample/gstspeexresample.c:
