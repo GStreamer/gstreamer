@@ -53,7 +53,7 @@ RELEASE PROCEDURE:
     - Run bin/data-put in www/ to sync the new tarballs to the website
     - Announce the availability of the new tarballs
     - Tell the translation project by sending an email to 
-      translation@iro.umontreal.ca, eg:
+      coordinator@translationproject.org, eg:
         Subject: gst-plugins-bad-0.10.5.2.pot available
         Tarball is at http://gstreamer.freedesktop.org/src/gst-plugins-bad/pre/gst-plugins-bad-0.10.5.2.tar.bz2 
       FIXME: Not sure if the translation project bot parses version strings 

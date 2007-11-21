@@ -101,7 +101,7 @@ _do_init (GType fd_src_type)
   GST_DEBUG_CATEGORY_INIT (gst_fd_src_debug, "fdsrc", 0, "fdsrc element");
 }
 
-GST_BOILERPLATE_FULL (GstFdSrc, gst_fd_src, GstElement, GST_TYPE_PUSH_SRC,
+GST_BOILERPLATE_FULL (GstFdSrc, gst_fd_src, GstPushSrc, GST_TYPE_PUSH_SRC,
     _do_init);
 
 static void gst_fd_src_set_property (GObject * object, guint prop_id,

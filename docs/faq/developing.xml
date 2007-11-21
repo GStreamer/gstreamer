@@ -202,5 +202,14 @@ sent to the mailing list.
         </para>
       </answer>
     </qandaentry>
+    <qandaentry>
+    <question id="developing-translations">
+    <para>I have translated one of the module .po files into a new language. How do I get it into CVS?</para>
+    </question>
+    <answer>
+    <para>GStreamer translations are uniformly managed through the Translation Project (http://translationproject.org). There are some instructions on how to join the Translation Project team and submit new translations at http://translationproject.org/html/translators.html.</para>
+    <para>New translations submitted via the Translation Project are merged periodically into CVS by the maintainers by running 'make download-po' in the various modules.</para>
+    </answer>
+    </qandaentry>
   </qandaset>
 </sect1>

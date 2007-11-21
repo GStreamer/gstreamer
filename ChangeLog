@@ -1,3 +1,14 @@
+2007-11-21  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* docs/faq/developing.xml:
+	Add a question about how to submit new translations.
+
+	* docs/random/release:
+	Update the contact email address for the Translation Project
+
+	* plugins/elements/gstfdsrc.c:
+	The parent_class for fdsrc is pushsrc, not GstElement.
+
 2007-11-20  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstpreset.c:
