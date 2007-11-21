@@ -21,6 +21,7 @@ class LineFrequencySentinel (object):
         self.data = None
         self.partitions = None
         self.step = None
+        self.ts_range = (None, None,)
 
     def _search_ts (self, target_ts, first_index, last_index):
 
@@ -49,9 +50,20 @@ class LineFrequencySentinel (object):
         result = []
         partitions = []
 
+        first_ts = None
+        for row in self.model:
+            first_ts = row[model.COL_TIME]
+            if first_ts is not None:
+                break
+
+        if first_ts is None:
+            return
+
         last_ts = None
         for row in iter_model_reversed (self.model):
             last_ts = row[model.COL_TIME]
+            # FIXME: We ignore 0 here (unparsable lines!), this should be
+            # handled differently!
             if last_ts:
                 last_index = row.path[0]
                 break
@@ -59,10 +71,10 @@ class LineFrequencySentinel (object):
         if last_ts is None:
             return
 
-        step = int (float (last_ts) / float (n))
+        step = int (float (last_ts - first_ts) / float (n))
 
         first_index = 0
-        target_ts = step
+        target_ts = first_ts + step
         old_found = 0
         while target_ts < last_ts:
             found = self._search_ts (target_ts, first_index, last_index)
@@ -75,6 +87,7 @@ class LineFrequencySentinel (object):
         self.step = step
         self.data = result
         self.partitions = partitions
+        self.ts_range = (first_ts, last_ts,)
 
 class LevelDistributionSentinel (object):
 
@@ -158,8 +171,10 @@ class TimelineWidget (gtk.DrawingArea):
 
         self.__update ()
 
-        position1 = int (float (start_ts) / self.sentinel.step)
-        position2 = int (float (end_ts) / self.sentinel.step)
+        first_ts, last_ts = self.sentinel.ts_range
+
+        position1 = int (float (start_ts - first_ts) / self.sentinel.step)
+        position2 = int (float (end_ts - first_ts) / self.sentinel.step)
 
         ctx = self.window.cairo_create ()
         x, y, w, h = self.get_allocation ()
