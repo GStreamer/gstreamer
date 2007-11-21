@@ -248,7 +248,7 @@ gst_preset_default_get_preset_names (GstPreset * self)
       /* read preset entries */
       while (!feof (in)) {
         /* read preset entry */
-        fgets (line, LINE_LEN, in);
+        (void) fgets (line, LINE_LEN, in);
         g_strchomp (line);
         if (*line) {
           preset_name = g_strdup (line);
@@ -261,7 +261,7 @@ gst_preset_default_get_preset_names (GstPreset * self)
           /* read preset lines */
           parse_preset = TRUE;
           while (parse_preset) {
-            fgets (line, LINE_LEN, in);
+            (void) fgets (line, LINE_LEN, in);
             if (feof (in) || (*line == '\n')) {
               GST_DEBUG ("preset done");
               parse_preset = FALSE;
