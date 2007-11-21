@@ -25,8 +25,6 @@
 #include <gst/base/gstadapter.h>
 
 #include "sbc.h"
-#include "ipc.h"
-
 
 G_BEGIN_DECLS
 
@@ -51,6 +49,8 @@ struct _GstSbcEnc {
 	GstPad *srcpad;
 	GstAdapter *adapter;
 
+	gint rate;
+	gint channels;
 	gint mode;
 	gint blocks;
 	gint allocation;

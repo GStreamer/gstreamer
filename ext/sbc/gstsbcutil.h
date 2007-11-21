@@ -22,10 +22,9 @@
  */
 
 #include <gst/gst.h>
-#include "sbc.h"
 
-struct ipc_data_cfg; /* FIXME can't include ipc.h */
-struct ipc_codec_sbc;
+#include "sbc.h"
+#include "ipc.h"
 
 gint gst_sbc_select_rate_from_list(const GValue *value);
 
@@ -47,5 +46,6 @@ const gchar *gst_sbc_get_mode_from_list(const GValue *value);
 gint gst_sbc_get_mode_int(const gchar *mode);
 const gchar *gst_sbc_get_mode_string(int joint);
 
-GstCaps* gst_sbc_caps_from_sbc(struct ipc_data_cfg *cfg, struct ipc_codec_sbc *sbc,
-		gint channels);
+GstCaps* gst_sbc_caps_from_sbc(sbc_capabilities_t *sbc, gint channels);
+
+GstCaps* gst_sbc_util_caps_fixate(GstCaps *caps, gchar** error_message);
