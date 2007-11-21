@@ -43,13 +43,7 @@ import gtk.glade
 
 ## import gnome # FIXME
 
-import GstDebugViewer.Common.Data
-import GstDebugViewer.Common.GUI
-import GstDebugViewer.Common.Main
-Common = GstDebugViewer.Common
-from GstDebugViewer.Common import utils
-
-from GstDebugViewer import Data, Main
+from GstDebugViewer import Common, Data, Main
 
 class ColorTheme (object):
 
@@ -1123,7 +1117,9 @@ class App (object):
 
     def attach (self):
 
-        state_filename = os.path.join (utils.XDG.CONFIG_HOME, "gst-debug-viewer", "state")
+        config_home = Common.utils.XDG.CONFIG_HOME
+
+        state_filename = os.path.join (config_home, "gst-debug-viewer", "state")
 
         self.state = AppState (state_filename)
 
