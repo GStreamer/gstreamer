@@ -2927,7 +2927,10 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
 {
   GstPad *pad;
   GstBaseSink *basesink = GST_BASE_SINK (element);
-  gboolean forward = TRUE, result = TRUE;
+  gboolean forward, result = TRUE;
+
+  /* only push UPSTREAM events upstream */
+  forward = GST_EVENT_IS_UPSTREAM (event);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_LATENCY:
@@ -2944,7 +2947,6 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
 
       /* don't forward, yet */
       forward = FALSE;
-      gst_event_unref (event);
       break;
     }
     default:
@@ -2959,6 +2961,9 @@ gst_base_sink_send_event (GstElement * element, GstEvent * event)
     result = gst_pad_push_event (pad, event);
 
     gst_object_unref (pad);
+  } else {
+    /* not forwarded, unref the event */
+    gst_event_unref (event);
   }
   return result;
 }

@@ -1,5 +1,10 @@
 2007-11-21  Wim Taymans  <wim.taymans@gmail.com>
 
+	* libs/gst/base/gstbasesink.c: (gst_base_sink_send_event):
+	Only send upstream events upstream. Fixes #498746.
+
+2007-11-21  Wim Taymans  <wim.taymans@gmail.com>
+
 	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
 
 	* plugins/elements/gstidentity.c: (gst_identity_class_init),
