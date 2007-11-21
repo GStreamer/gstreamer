@@ -1,5 +1,15 @@
 2007-11-21  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst-libs/gst/audio/gstbaseaudiosink.c:
+	(gst_base_audio_sink_drain):
+	Our EOS time contains the base_time, _wait_eos() expects a running_time
+	so we have to subtract the base_time again before calling the function.
+	This fixes an EOS regression where the base_time was added twice and EOS
+	took longer and longer in certain situations.
+	Fixes #498767.
+
+2007-11-21  Wim Taymans  <wim.taymans@gmail.com>
+
 	* docs/libs/gst-plugins-base-libs-sections.txt:
 	* gst-libs/gst/audio/gstbaseaudiosink.c: (slave_method_get_type),
 	(gst_base_audio_sink_set_provide_clock),
