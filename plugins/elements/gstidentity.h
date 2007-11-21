@@ -72,6 +72,7 @@ struct _GstIdentity {
   guint64        prev_offset_end;
   gchar 	*last_message;
   guint64        offset;
+  gboolean       signal_handoffs;
 };
 
 struct _GstIdentityClass {

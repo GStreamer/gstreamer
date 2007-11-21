@@ -71,6 +71,7 @@ enum
 #define DEFAULT_CHECK_PERFECT           FALSE
 #define DEFAULT_CHECK_IMPERFECT_TIMESTAMP FALSE
 #define DEFAULT_CHECK_IMPERFECT_OFFSET    FALSE
+#define DEFAULT_SIGNAL_HANDOFFS           TRUE
 
 enum
 {
@@ -86,7 +87,8 @@ enum
   PROP_SYNC,
   PROP_CHECK_PERFECT,
   PROP_CHECK_IMPERFECT_TIMESTAMP,
-  PROP_CHECK_IMPERFECT_OFFSET
+  PROP_CHECK_IMPERFECT_OFFSET,
+  PROP_SIGNAL_HANDOFFS
 };
 
 
@@ -229,7 +231,20 @@ gst_identity_class_init (GstIdentityClass * klass)
           "Send element messages if offset and offset_end do not match up",
           DEFAULT_CHECK_IMPERFECT_OFFSET, G_PARAM_READWRITE));
 
-   /**
+  /**
+   * GstIdentity:signal-handoffs
+   *
+   * If set to #TRUE, the identity will emit a handoff signal when handling a buffer.
+   * When set to #FALSE, no signal will be emited, which might improve performance.
+   *
+   * Since: 0.10.16
+   */
+  g_object_class_install_property (gobject_class, PROP_SIGNAL_HANDOFFS,
+      g_param_spec_boolean ("signal-handoffs",
+          "Signal handoffs", "Send a signal before pushing the buffer",
+          DEFAULT_SIGNAL_HANDOFFS, G_PARAM_READWRITE));
+
+  /**
    * GstIdentity::handoff:
    * @identity: the identity instance
    * @buffer: the buffer that just has been received
@@ -268,6 +283,7 @@ gst_identity_init (GstIdentity * identity, GstIdentityClass * g_class)
   identity->check_imperfect_offset = DEFAULT_CHECK_IMPERFECT_OFFSET;
   identity->dump = DEFAULT_DUMP;
   identity->last_message = NULL;
+  identity->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
 }
 
 static gboolean
@@ -548,8 +564,9 @@ gst_identity_transform_ip (GstBaseTransform * trans, GstBuffer * buf)
         GST_BUFFER_SIZE (buf) * GST_SECOND / identity->datarate;
   }
 
-  g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
-      buf);
+  if (identity->signal_handoffs)
+    g_signal_emit (G_OBJECT (identity), gst_identity_signals[SIGNAL_HANDOFF], 0,
+        buf);
 
   if (trans->segment.format == GST_FORMAT_TIME)
     runtimestamp = gst_segment_to_running_time (&trans->segment,
@@ -640,6 +657,9 @@ gst_identity_set_property (GObject * object, guint prop_id,
     case PROP_CHECK_IMPERFECT_OFFSET:
       identity->check_imperfect_offset = g_value_get_boolean (value);
       break;
+    case PROP_SIGNAL_HANDOFFS:
+      identity->signal_handoffs = g_value_get_boolean (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -692,6 +712,9 @@ gst_identity_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_CHECK_IMPERFECT_OFFSET:
       g_value_set_boolean (value, identity->check_imperfect_offset);
+      break;
+    case PROP_SIGNAL_HANDOFFS:
+      g_value_set_boolean (value, identity->signal_handoffs);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

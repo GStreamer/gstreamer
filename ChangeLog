@@ -1,3 +1,14 @@
+2007-11-21  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Laurent Glayal <spglegle at yahoo dot fr>
+
+	* plugins/elements/gstidentity.c: (gst_identity_class_init),
+	(gst_identity_init), (gst_identity_transform_ip),
+	(gst_identity_set_property), (gst_identity_get_property):
+	* plugins/elements/gstidentity.h:
+	Add property to disable handoff signal emission. Fixes #498694.
+	API: GstIdentity::signal-handoffs
+
 2007-11-21  Julien Moutte  <julien@fluendo.com>
 
 	* docs/faq/gst-uninstalled: Yet another missing library for the
