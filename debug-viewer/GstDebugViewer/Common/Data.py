@@ -30,6 +30,10 @@ class Dispatcher (object):
 
         raise NotImplementedError ("derived classes must override this method")
 
+    def cancel (self):
+
+        pass
+
 class DefaultDispatcher (Dispatcher):
 
     def __call__ (self, iterator):
@@ -51,3 +55,11 @@ class GSourceDispatcher (Dispatcher):
             gobject.source_remove (self.source_id)
 
         self.source_id = gobject.idle_add (iterator.next)
+
+    def cancel (self):
+
+        if self.source_id is None:
+            return
+
+        gobject.source_remove (self.source_id)
+        self.source_id = None

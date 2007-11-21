@@ -1,7 +1,7 @@
 
 import logging
 
-from GstDebugViewer import Data, GUI
+from GstDebugViewer import Common, Data, GUI
 from GstDebugViewer.Plugins import *
 
 import cairo
@@ -18,10 +18,15 @@ class LineFrequencySentinel (object):
     def __init__ (self, model):
 
         self.model = model
+        self.clear ()
+
+    def clear (self):
+
         self.data = None
+        self.n_partitions = None
         self.partitions = None
         self.step = None
-        self.ts_range = (None, None,)
+        self.ts_range = (None, None,)        
 
     def _search_ts (self, target_ts, first_index, last_index):
 
@@ -45,6 +50,10 @@ class LineFrequencySentinel (object):
 
         if n == 0:
             raise ValueError ("illegal value for n")
+
+        self.n_partitions = n
+
+    def process (self):
 
         model = self.model
         result = []
@@ -71,12 +80,19 @@ class LineFrequencySentinel (object):
         if last_ts is None:
             return
 
-        step = int (float (last_ts - first_ts) / float (n))
+        step = int (float (last_ts - first_ts) / float (self.n_partitions))
+
+        YIELD_LIMIT = 100
+        limit = YIELD_LIMIT
 
         first_index = 0
         target_ts = first_ts + step
         old_found = 0
         while target_ts < last_ts:
+            limit -= 1
+            if limit == 0:
+                limit = YIELD_LIMIT
+                yield True
             found = self._search_ts (target_ts, first_index, last_index)
             result.append (found - old_found)
             partitions.append (found)
@@ -91,12 +107,20 @@ class LineFrequencySentinel (object):
 
 class LevelDistributionSentinel (object):
 
-    def __init__ (self, model):
+    def __init__ (self, freq_sentinel, model):
 
+        self.freq_sentinel = freq_sentinel
         self.model = model
         self.data = []
 
-    def run_for (self, freq_sentinel):
+    def clear (self):
+
+        del self.data[:]
+
+    def process (self):
+
+        YIELD_LIMIT = 10000
+        y = YIELD_LIMIT
 
         model_get = self.model.get_value
         model_next = self.model.iter_next
@@ -105,10 +129,14 @@ class LevelDistributionSentinel (object):
         result = []
         i = 0
         partitions_i = 0
-        partitions = freq_sentinel.partitions
+        partitions = self.freq_sentinel.partitions
         counts = [0] * 6
         tree_iter = self.model.get_iter_first ()
         while tree_iter:
+            y -= 1
+            if y == 0:
+                y = YIELD_LIMIT
+                yield True
             level = model_get (tree_iter, id_level)
             if i > partitions[partitions_i]:
                 result.append (tuple (counts))
@@ -125,26 +153,87 @@ class LevelDistributionSentinel (object):
 
         self.data = result
 
+        yield False
+
+class UpdateProcess (object):
+
+    def __init__ (self, freq_sentinel, dist_sentinel):
+
+        self.freq_sentinel = freq_sentinel
+        self.dist_sentinel = dist_sentinel
+        self.is_running = False
+        self.dispatcher = Common.Data.GSourceDispatcher ()
+
+    def __process (self):
+
+        self.is_running = True
+
+        for x in self.freq_sentinel.process ():
+            yield True
+
+        self.handle_sentinel_finished (self.freq_sentinel)
+
+        for x in self.dist_sentinel.process ():
+            yield True
+
+        self.is_running = False
+
+        self.handle_sentinel_finished (self.dist_sentinel)
+        self.handle_process_finished ()
+
+        yield False
+
+    def run (self):
+
+        if self.is_running:
+            return
+
+        self.dispatcher (self.__process ())
+
+    def abort (self):
+
+        if not self.is_running:
+            return
+
+        self.dispatcher.cancel ()
+        self.is_running = False
+
+    def handle_sentinel_finished (self, sentinel):
+
+        pass
+
+    def handle_process_finished (self):
+
+        pass
+
 class TimelineWidget (gtk.DrawingArea):
 
     __gtype_name__ = "GstDebugViewerTimelineWidget"
 
-    def __init__ (self, sentinel = None):
+    def __init__ (self, log_model):
 
         gtk.DrawingArea.__init__ (self)
 
         self.logger = logging.getLogger ("ui.timeline")
 
-        self.sentinel = sentinel
-        self.level_dist_sentinel = None
+        self.freq_sentinel = LineFrequencySentinel (log_model)
+        self.dist_sentinel = LevelDistributionSentinel (self.freq_sentinel, log_model)
+        self.process = UpdateProcess (self.freq_sentinel, self.dist_sentinel)
         self.connect ("expose-event", self.__handle_expose_event)
         self.connect ("configure-event", self.__handle_configure_event)
         self.connect ("size-request", self.__handle_size_request)
+        self.process.handle_sentinel_finished = self.handle_sentinel_finished
+        self.process.handle_process_finished = self.handle_process_finished
 
-    def set_sentinel (self, sentinel):
+        self.__offscreen = None
 
-        self.sentinel = sentinel
-        self.level_dist_sentinel = LevelDistributionSentinel (sentinel.model)
+    def handle_sentinel_finished (self, sentinel):
+
+        if sentinel == self.freq_sentinel:
+            self.__redraw ()
+
+    def handle_process_finished (self):
+
         self.__redraw ()
 
     def __redraw (self):
@@ -153,9 +242,9 @@ class TimelineWidget (gtk.DrawingArea):
             return
 
         x, y, w, h = self.get_allocation ()
-        self.offscreen = gtk.gdk.Pixmap (self.window, w, h, -1)
+        self.__offscreen = gtk.gdk.Pixmap (self.window, w, h, -1)
 
-        self.__draw (self.offscreen)
+        self.__draw (self.__offscreen)
 
         self.__update ()
 
@@ -164,17 +253,24 @@ class TimelineWidget (gtk.DrawingArea):
         if not self.props.visible:
             return
 
+        if self.__offscreen is None:
+            self.__redraw ()
+
         gc = gtk.gdk.GC (self.window)
-        self.window.draw_drawable (gc, self.offscreen, 0, 0, 0, 0, -1, -1)
+        self.window.draw_drawable (gc, self.__offscreen, 0, 0, 0, 0, -1, -1)
 
     def update_position (self, start_ts, end_ts):
 
+        if not self.freq_sentinel.data:
+            return
+
         self.__update ()
 
-        first_ts, last_ts = self.sentinel.ts_range
+        first_ts, last_ts = self.freq_sentinel.ts_range
+        step = self.freq_sentinel.step
 
-        position1 = int (float (start_ts - first_ts) / self.sentinel.step)
-        position2 = int (float (end_ts - first_ts) / self.sentinel.step)
+        position1 = int (float (start_ts - first_ts) / step)
+        position2 = int (float (end_ts - first_ts) / step)
 
         ctx = self.window.cairo_create ()
         x, y, w, h = self.get_allocation ()
@@ -194,8 +290,8 @@ class TimelineWidget (gtk.DrawingArea):
     def find_indicative_time_step (self):
 
         MINIMUM_PIXEL_STEP = 32
-        time_per_pixel = self.sentinel.step
-        return 32 # FIXME use self.sentinel.step and len (self.sentinel.data)
+        time_per_pixel = self.freq_sentinel.step
+        return 32 # FIXME use self.freq_sentinel.step and len (self.freq_sentinel.data)
 
     def __draw (self, drawable):
 
@@ -223,25 +319,21 @@ class TimelineWidget (gtk.DrawingArea):
             ctx.line_to (x, h)
             ctx.stroke ()
 
-        if self.sentinel and not self.sentinel.data:
-            if w > 15:
-                self.logger.debug ("running sentinel for width %i", w)
-                self.__update_sentinel_data (w)
-            else:
-                self.logger.debug ("not running sentinel: widget width too small (%i)", w)
-                return
-
-        if self.sentinel is None:
-            self.logger.debug ("not redrawing: no sentinel set")
+        if not self.freq_sentinel.data:
+            self.logger.debug ("frequency sentinel has no data yet")
             return
 
-        maximum = max (self.sentinel.data)
+        maximum = max (self.freq_sentinel.data)
 
         ctx.set_source_rgb (0., 0., 0.)
-        self.__draw_graph (ctx, w, h, maximum, self.sentinel.data)
+        self.__draw_graph (ctx, w, h, maximum, self.freq_sentinel.data)
+
+        if not self.dist_sentinel.data:
+            self.logger.debug ("level distribution sentinel has no data yet")
+            return
 
         theme = GUI.LevelColorThemeTango ()
-        dist_data = self.level_dist_sentinel.data
+        dist_data = self.dist_sentinel.data
 
         def cumulative_level_counts (*levels):
             for level_counts in dist_data:
@@ -298,16 +390,6 @@ class TimelineWidget (gtk.DrawingArea):
         self.__redraw ()
         return True
 
-    def __update_sentinel_data (self, width):
-
-        self.logger.debug ("updating sentinel data for width %i", width)
-        self.sentinel.run_for (width)
-        self.logger.debug ("updating level distribution data")
-        self.level_dist_sentinel.run_for (self.sentinel)
-        if not self.level_dist_sentinel.data:
-            self.logger.warning ("no level distribution data sensed")
-        self.logger.debug ("sentinel update complete")
-
     def __handle_configure_event (self, self_, event):
 
         self.logger.debug ("widget size configured to %ix%i",
@@ -316,8 +398,11 @@ class TimelineWidget (gtk.DrawingArea):
         if event.width < 16:
             return False
 
-        if self.sentinel:
-            self.__update_sentinel_data (event.width)
+        self.process.abort ()
+        self.freq_sentinel.clear ()
+        self.dist_sentinel.clear ()
+        self.freq_sentinel.run_for (event.width)
+        self.process.run ()
 
         return False
 
@@ -353,7 +438,7 @@ class TimelineFeature (FeatureBase):
 
         box = window.get_top_attach_point ()
 
-        self.timeline = TimelineWidget ()
+        self.timeline = TimelineWidget (self.log_model)
         self.timeline.add_events (gtk.gdk.ALL_EVENTS_MASK) # FIXME
         self.timeline.connect ("button-press-event", self.handle_timeline_button_press_event)
         self.timeline.connect ("motion-notify-event", self.handle_timeline_motion_notify_event)
@@ -366,11 +451,7 @@ class TimelineFeature (FeatureBase):
         handler = self.handle_show_action_toggled
         self.action_group.get_action ("show-timeline").connect ("toggled", handler)
 
-        window.sentinels.append (self.sentinel_process)
-
     def detach (self, window):
-
-        window.sentinels.remove (self.sentinel_process)
 
         window.ui_manager.remove_ui (self.merge_id)
         self.merge_id = None
@@ -379,12 +460,6 @@ class TimelineFeature (FeatureBase):
 
         self.timeline.destroy ()
         self.timeline = None
-
-    def sentinel_process (self):
-
-        if self.action_group.get_action ("show-timeline").props.active:
-            sentinel = LineDensitySentinel (self.log_model)
-            self.timeline.set_sentinel (sentinel)
 
     def handle_log_view_adjustment_value_changed (self, adj):
 
@@ -405,9 +480,6 @@ class TimelineFeature (FeatureBase):
 
         if show:
             self.timeline.show ()
-            if self.timeline.sentinel is None:
-                sentinel = LineFrequencySentinel (self.log_model)
-                self.timeline.set_sentinel (sentinel)
         else:
             self.timeline.hide ()
 
@@ -431,7 +503,7 @@ class TimelineFeature (FeatureBase):
 
     def goto_time_position (self, pos):
 
-        data = self.timeline.sentinel.data
+        data = self.timeline.freq_sentinel.data
         if not data:
             return True
         count = sum (data[:pos + 1])
