@@ -134,8 +134,7 @@ gst_valve_class_init (GstValveClass *klass)
 }
 
 static void
-gst_valve_init (GstValve *valve,
-    GstValveClass *klass)
+gst_valve_init (GstValve *valve, GstValveClass *klass)
 {
 
   valve->drop = 0;
@@ -198,7 +197,7 @@ gst_valve_transform_ip (GstBaseTransform *trans, GstBuffer *buf)
 
   GST_OBJECT_LOCK (GST_OBJECT (trans));
   if (valve->drop) {
-#if GST_VERSION_MAJOR >= 10 &&  GST_VERSION_MICRO >= 13
+#if GST_VERSION_MINOR >= 10 &&  GST_VERSION_MICRO >= 13
     ret = GST_BASE_TRANSFORM_FLOW_DROPPED;
 #endif
     buf = NULL;
