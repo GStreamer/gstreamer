@@ -139,7 +139,9 @@ gst_valve_init (GstValve *valve, GstValveClass *klass)
 
   valve->drop = 0;
 
+#if GST_VERSION_MINOR >= 10 &&  GST_VERSION_MICRO >= 13
   gst_base_transform_set_passthrough ((GstBaseTransform *)valve, TRUE);
+#endif
 
 }
 
