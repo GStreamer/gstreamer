@@ -178,16 +178,7 @@ class LineCache (Producer):
         self.__file_size = self.__fileobj.tell ()
         self.__fileobj.seek (0)
 
-        from array import array
-        offsets = array ("L")
-        try:
-            offsets.append (self.__file_size)
-        except OverflowError:
-            offsets = []
-        else:
-            del offsets[0]
-        self.offsets = offsets
-
+        self.offsets = []
         self.levels = [] # FIXME
 
     def start_loading (self):
