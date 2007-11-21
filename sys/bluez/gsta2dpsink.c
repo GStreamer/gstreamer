@@ -41,15 +41,6 @@
 
 #include "gsta2dpsink.h"
 
-enum
-{
-  NOT_CONFIGURED,
-  CONFIGURING_INIT,
-  CONFIGURING_SENT_CONF,
-  CONFIGURING_RCVD_DEV_CONF,
-  CONFIGURED
-};
-
 GST_DEBUG_CATEGORY_STATIC (a2dp_sink_debug);
 #define GST_CAT_DEFAULT a2dp_sink_debug
 
@@ -63,25 +54,11 @@ GST_DEBUG_CATEGORY_STATIC (a2dp_sink_debug);
 		g_mutex_unlock (s->sink_lock);		\
 	} G_STMT_END
 
-#define GST_A2DP_SINK_WAIT_CON_END(s) G_STMT_START {			\
-		s->waiting_con_conf = TRUE;				\
-		g_cond_wait (s->con_conf_end, s->sink_lock);		\
-		s->waiting_con_conf = FALSE;				\
-	} G_STMT_END
-
-#define GST_A2DP_SINK_CONFIGURATION_FAIL(s) G_STMT_START {		\
-		s->con_state = NOT_CONFIGURED;				\
-		g_cond_signal (s->con_conf_end);			\
-	} G_STMT_END
-
-#define GST_A2DP_SINK_CONFIGURATION_SUCCESS(s) G_STMT_START {		\
-		s->con_state = CONFIGURED;				\
-		g_cond_signal (s->con_conf_end);			\
-	} G_STMT_END
 
 struct bluetooth_data
 {
-  struct ipc_data_cfg cfg;      /* Bluetooth device config */
+  struct bt_getcapabilities_rsp cfg;    /* Bluetooth device config */
+  gint link_mtu;
   int samples;                  /* Number of encoded samples */
   gchar buffer[BUFFER_SIZE];    /* Codec transfer buffer */
   gsize count;                  /* Codec transfer buffer counter */
@@ -124,6 +101,12 @@ static GstStaticPadTemplate a2dp_sink_factory =
         "rate = (int) { 16000, 22050, 24000, 32000, 44100, 48000 }, "
         "channels = (int) [ 1, 2 ]"));
 
+static GIOError gst_a2dp_sink_audioservice_send (GstA2dpSink * self,
+    const bt_audio_msg_header_t * msg);
+static GIOError gst_a2dp_sink_audioservice_expect (GstA2dpSink * self,
+    bt_audio_msg_header_t * outmsg, int expected_type);
+
+
 static void
 gst_a2dp_sink_base_init (gpointer g_class)
 {
@@ -142,8 +125,6 @@ gst_a2dp_sink_stop (GstBaseSink * basesink)
 
   GST_INFO_OBJECT (self, "stop");
 
-  self->con_state = NOT_CONFIGURED;
-
   if (self->watch_id != 0) {
     g_source_remove (self->watch_id);
     self->watch_id = 0;
@@ -157,7 +138,7 @@ gst_a2dp_sink_stop (GstBaseSink * basesink)
   }
 
   if (self->server) {
-    g_io_channel_close (self->server);
+    bt_audio_service_close (g_io_channel_unix_get_fd (self->server));
     g_io_channel_unref (self->server);
     self->server = NULL;
   }
@@ -167,9 +148,9 @@ gst_a2dp_sink_stop (GstBaseSink * basesink)
     self->data = NULL;
   }
 
-  if (self->sbc) {
-    g_free (self->sbc);
-    self->sbc = NULL;
+  if (self->stream_caps) {
+    gst_caps_unref (self->stream_caps);
+    self->stream_caps = NULL;
   }
 
   if (self->dev_caps) {
@@ -191,12 +172,6 @@ gst_a2dp_sink_finalize (GObject * object)
   if (self->device)
     g_free (self->device);
 
-  /* unlock any thread waiting for this signal */
-  GST_A2DP_SINK_MUTEX_LOCK (self);
-  GST_A2DP_SINK_CONFIGURATION_FAIL (self);
-  GST_A2DP_SINK_MUTEX_UNLOCK (self);
-
-  g_cond_free (self->con_conf_end);
   g_mutex_free (self->sink_lock);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
@@ -241,19 +216,10 @@ gst_a2dp_sink_get_property (GObject * object, guint prop_id,
 static gint
 gst_a2dp_sink_bluetooth_recvmsg_fd (GstA2dpSink * sink)
 {
-  char cmsg_b[CMSG_SPACE (sizeof (int))], m;
-  int err, ret, stream_fd;
-  struct iovec iov = { &m, sizeof (m) };
-  struct msghdr msgh;
-  struct cmsghdr *cmsg;
+  int err, ret;
 
-  memset (&msgh, 0, sizeof (msgh));
-  msgh.msg_iov = &iov;
-  msgh.msg_iovlen = 1;
-  msgh.msg_control = &cmsg_b;
-  msgh.msg_controllen = CMSG_LEN (sizeof (int));
+  ret = bt_audio_service_get_data_fd (g_io_channel_unix_get_fd (sink->server));
 
-  ret = recvmsg (g_io_channel_unix_get_fd (sink->server), &msgh, 0);
   if (ret < 0) {
     err = errno;
     GST_ERROR_OBJECT (sink, "Unable to receive fd: %s (%d)",
@@ -261,72 +227,17 @@ gst_a2dp_sink_bluetooth_recvmsg_fd (GstA2dpSink * sink)
     return -err;
   }
 
-  /* Receive auxiliary data in msgh */
-  for (cmsg = CMSG_FIRSTHDR (&msgh); cmsg != NULL;
-      cmsg = CMSG_NXTHDR (&msgh, cmsg)) {
-    if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS) {
-      stream_fd = (*(int *) CMSG_DATA (cmsg));
-      sink->stream = g_io_channel_unix_new (stream_fd);
-
-      GST_DEBUG_OBJECT (sink, "stream_fd=%d", stream_fd);
-      return 0;
-    }
-  }
-
-  return -EINVAL;
-}
-
-static void
-gst_a2dp_sink_check_dev_caps (GstA2dpSink * self)
-{
-  GstStructure *structure;
-  GstCaps *dev_caps;
-  gint channels;
-
-  structure = gst_caps_get_structure (self->dev_caps, 0);
-  if (!gst_structure_get_int (structure, "channels", &channels))
-    channels = 2;               /* FIXME how to get channels */
-  dev_caps = gst_sbc_caps_from_sbc (&(self->data->cfg), self->sbc, channels);
-
-  self->new_dev_caps = TRUE;
-  gst_caps_unref (self->dev_caps);
-  self->dev_caps = gst_caps_ref (dev_caps);
-
-
-}
-
-static int
-gst_a2dp_sink_bluetooth_a2dp_init (GstA2dpSink * self,
-    struct ipc_codec_sbc *sbc)
-{
-  struct bluetooth_data *data = self->data;
-  struct ipc_data_cfg *cfg = &data->cfg;
-
-  if (cfg == NULL) {
-    GST_ERROR_OBJECT (self, "Error getting codec parameters");
-    return -1;
-  }
-
-  if (cfg->codec != CFG_CODEC_SBC)
-    return -1;
-
-  data->count = sizeof (struct rtp_header) + sizeof (struct rtp_payload);
-
-  GST_DEBUG_OBJECT (self, "Codec parameters: "
-      "\tallocation=%u\n\tsubbands=%u\n "
-      "\tblocks=%u\n\tbitpool=%u\n",
-      sbc->allocation, sbc->subbands, sbc->blocks, sbc->bitpool);
+  sink->stream = g_io_channel_unix_new (ret);
+  GST_DEBUG_OBJECT (sink, "stream_fd=%d", ret);
 
   return 0;
 }
 
 static gboolean
 gst_a2dp_sink_init_pkt_conf (GstA2dpSink * sink,
-    GstCaps * caps, struct ipc_packet *pkt)
+    GstCaps * caps, sbc_capabilities_t * pkt)
 {
-
-  struct ipc_data_cfg *cfg = (void *) pkt->data;
-  struct ipc_codec_sbc *sbc = (void *) cfg->data;
+  sbc_capabilities_t *cfg = &sink->data->cfg.sbc_capabilities;
   const GValue *value = NULL;
   const char *pref, *name;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
@@ -338,26 +249,21 @@ gst_a2dp_sink_init_pkt_conf (GstA2dpSink * sink,
     return FALSE;
   }
 
-  if (sink->device)
-    strncpy (pkt->device, sink->device, 18);
-
-  pkt->role = PKT_ROLE_HIFI;
-
   value = gst_structure_get_value (structure, "rate");
-  cfg->rate = g_value_get_int (value);
+  cfg->frequency = g_value_get_int (value);
 
   value = gst_structure_get_value (structure, "mode");
   pref = g_value_get_string (value);
   if (strcmp (pref, "auto") == 0)
-    cfg->mode = CFG_MODE_AUTO;
+    cfg->channel_mode = BT_A2DP_CHANNEL_MODE_AUTO;
   else if (strcmp (pref, "mono") == 0)
-    cfg->mode = CFG_MODE_MONO;
+    cfg->channel_mode = BT_A2DP_CHANNEL_MODE_MONO;
   else if (strcmp (pref, "dual") == 0)
-    cfg->mode = CFG_MODE_DUAL_CHANNEL;
+    cfg->channel_mode = BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL;
   else if (strcmp (pref, "stereo") == 0)
-    cfg->mode = CFG_MODE_STEREO;
+    cfg->channel_mode = BT_A2DP_CHANNEL_MODE_STEREO;
   else if (strcmp (pref, "joint") == 0)
-    cfg->mode = CFG_MODE_JOINT_STEREO;
+    cfg->channel_mode = BT_A2DP_CHANNEL_MODE_JOINT_STEREO;
   else {
     GST_ERROR_OBJECT (sink, "Invalid mode %s", pref);
     return FALSE;
@@ -366,106 +272,27 @@ gst_a2dp_sink_init_pkt_conf (GstA2dpSink * sink,
   value = gst_structure_get_value (structure, "allocation");
   pref = g_value_get_string (value);
   if (strcmp (pref, "auto") == 0)
-    sbc->allocation = CFG_ALLOCATION_AUTO;
+    cfg->allocation_method = BT_A2DP_ALLOCATION_AUTO;
   else if (strcmp (pref, "loudness") == 0)
-    sbc->allocation = CFG_ALLOCATION_LOUDNESS;
+    cfg->allocation_method = BT_A2DP_ALLOCATION_LOUDNESS;
   else if (strcmp (pref, "snr") == 0)
-    sbc->allocation = CFG_ALLOCATION_SNR;
+    cfg->allocation_method = BT_A2DP_ALLOCATION_SNR;
   else {
     GST_ERROR_OBJECT (sink, "Invalid allocation: %s", pref);
     return FALSE;
   }
 
   value = gst_structure_get_value (structure, "subbands");
-  sbc->subbands = g_value_get_int (value);
+  cfg->subbands = g_value_get_int (value);
 
   value = gst_structure_get_value (structure, "blocks");
-  sbc->blocks = g_value_get_int (value);
+  cfg->block_length = g_value_get_int (value);
 
+  /* FIXME min and max ??? */
   value = gst_structure_get_value (structure, "bitpool");
-  sbc->bitpool = g_value_get_int (value);
+  cfg->max_bitpool = cfg->min_bitpool = g_value_get_int (value);
 
-  pkt->length = sizeof (*cfg) + sizeof (*sbc);
-  pkt->type = PKT_TYPE_CFG_REQ;
-  pkt->error = PKT_ERROR_NONE;
-
-  return TRUE;
-}
-
-static gboolean
-gst_a2dp_sink_conf_resp (GstA2dpSink * sink)
-{
-  gchar buf[IPC_MTU];
-  GIOError io_error;
-  gsize ret;
-  gint total;
-  struct ipc_packet *pkt = (void *) buf;
-  struct ipc_data_cfg *cfg = (void *) pkt->data;
-  struct ipc_codec_sbc *sbc = (void *) cfg->data;
-
-  memset (buf, 0, sizeof (buf));
-
-  io_error = g_io_channel_read (sink->server, (gchar *) buf,
-      sizeof (*pkt) + sizeof (*cfg), &ret);
-  if (io_error != G_IO_ERROR_NONE && ret > 0) {
-    GST_ERROR_OBJECT (sink, "Error ocurred while receiving "
-        "configurarion packet answer");
-    return FALSE;
-  }
-
-  total = ret;
-  if (pkt->type != PKT_TYPE_CFG_RSP) {
-    GST_ERROR_OBJECT (sink, "Unexpected packet type %d " "received", pkt->type);
-    return FALSE;
-  }
-
-  if (pkt->error != PKT_ERROR_NONE) {
-    GST_ERROR_OBJECT (sink, "Error %d while configuring " "device", pkt->error);
-    return FALSE;
-  }
-
-  if (cfg->codec != CFG_CODEC_SBC) {
-    GST_ERROR_OBJECT (sink, "Unsupported format");
-    return FALSE;
-  }
-
-  io_error = g_io_channel_read (sink->server, (gchar *) sbc,
-      sizeof (*sbc), &ret);
-  if (io_error != G_IO_ERROR_NONE) {
-    GST_ERROR_OBJECT (sink, "Error while reading data from socket "
-        "%s (%d)", strerror (errno), errno);
-    return FALSE;
-  } else if (ret == 0) {
-    GST_ERROR_OBJECT (sink, "Read 0 bytes from socket");
-    return FALSE;
-  }
-
-  total += ret;
-  GST_DEBUG_OBJECT (sink, "OK - %d bytes received", total);
-
-  if (pkt->length != (total - sizeof (struct ipc_packet))) {
-    GST_ERROR_OBJECT (sink, "Error while configuring device: "
-        "packet size doesn't match");
-    return FALSE;
-  }
-
-  memcpy (&sink->data->cfg, cfg, sizeof (*cfg));
-  memcpy (sink->sbc, sbc, sizeof (struct ipc_codec_sbc));
-
-  gst_a2dp_sink_check_dev_caps (sink);
-
-  GST_DEBUG_OBJECT (sink, "Device configuration:\n\tchannel=%p\n\t"
-      "fd_opt=%u\n\tpkt_len=%u\n\tsample_size=%u\n\trate=%u",
-      sink->stream, sink->data->cfg.fd_opt,
-      sink->data->cfg.pkt_len, sink->data->cfg.sample_size,
-      sink->data->cfg.rate);
-
-  if (sink->data->cfg.codec == CFG_CODEC_SBC) {
-    /* FIXME is this necessary? */
-    ret = gst_a2dp_sink_bluetooth_a2dp_init (sink, sbc);
-    if (ret < 0)
-      return FALSE;
-  }
+  memcpy (pkt, cfg, sizeof (*pkt));
 
   return TRUE;
 }
@@ -510,7 +337,7 @@ gst_a2dp_sink_conf_recv_stream_fd (GstA2dpSink * self)
   GST_LOG_OBJECT (self, "emptying stream pipe");
   while (1) {
     err = g_io_channel_read (self->stream, data->buffer,
-        (gsize) data->cfg.pkt_len, &read);
+        (gsize) data->cfg.link_mtu, &read);
     if (err != G_IO_ERROR_NONE || read <= 0)
       break;
   }
@@ -534,34 +361,6 @@ gst_a2dp_sink_conf_recv_stream_fd (GstA2dpSink * self)
   return TRUE;
 }
 
-static void
-gst_a2dp_sink_conf_recv_data (GstA2dpSink * sink)
-{
-  /*
-   * We hold the lock, since we can send a signal.
-   * It is a good practice, according to the glib api.
-   */
-  GST_A2DP_SINK_MUTEX_LOCK (sink);
-
-  switch (sink->con_state) {
-    case CONFIGURING_SENT_CONF:
-      if (gst_a2dp_sink_conf_resp (sink))
-        sink->con_state = CONFIGURING_RCVD_DEV_CONF;
-      else
-        GST_A2DP_SINK_CONFIGURATION_FAIL (sink);
-      break;
-    case CONFIGURING_RCVD_DEV_CONF:
-      if (gst_a2dp_sink_conf_recv_stream_fd (sink))
-        GST_A2DP_SINK_CONFIGURATION_SUCCESS (sink);
-      else
-        GST_A2DP_SINK_CONFIGURATION_FAIL (sink);
-      break;
-  }
-
-  GST_A2DP_SINK_MUTEX_UNLOCK (sink);
-}
-
-
 static gboolean
 server_callback (GIOChannel * chan, GIOCondition cond, gpointer data)
 {
@@ -572,15 +371,218 @@ server_callback (GIOChannel * chan, GIOCondition cond, gpointer data)
   else if (cond & G_IO_ERR) {
     sink = GST_A2DP_SINK (data);
     GST_WARNING_OBJECT (sink, "Untreated callback G_IO_ERR");
-  } else if (cond & G_IO_IN) {
-    sink = GST_A2DP_SINK (data);
-    if (sink->con_state != NOT_CONFIGURED && sink->con_state != CONFIGURED)
-      gst_a2dp_sink_conf_recv_data (sink);
-    else
-      GST_WARNING_OBJECT (sink, "Unexpected data received");
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_a2dp_sink_update_caps (GstA2dpSink * self)
+{
+  sbc_capabilities_t *sbc = &self->data->cfg.sbc_capabilities;
+  GstStructure *structure;
+  GValue *value;
+  GValue *list;
+  gchar *tmp;
+
+  GST_LOG_OBJECT (self, "updating device caps");
+
+  structure = gst_structure_empty_new ("audio/x-sbc");
+  value = g_value_init (g_new0 (GValue, 1), G_TYPE_STRING);
+
+  /* mode */
+  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+  if (sbc->channel_mode == BT_A2DP_CHANNEL_MODE_AUTO) {
+    g_value_set_static_string (value, "joint");
+    gst_value_list_prepend_value (list, value);
+    g_value_set_static_string (value, "stereo");
+    gst_value_list_prepend_value (list, value);
+    g_value_set_static_string (value, "mono");
+    gst_value_list_prepend_value (list, value);
+    g_value_set_static_string (value, "dual");
+    gst_value_list_prepend_value (list, value);
   } else {
-    sink = GST_A2DP_SINK (data);
-    GST_WARNING_OBJECT (sink, "Unexpected callback call");
+    if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_MONO) {
+      g_value_set_static_string (value, "mono");
+      gst_value_list_prepend_value (list, value);
+    }
+    if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_STEREO) {
+      g_value_set_static_string (value, "stereo");
+      gst_value_list_prepend_value (list, value);
+    }
+    if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_DUAL_CHANNEL) {
+      g_value_set_static_string (value, "dual");
+      gst_value_list_prepend_value (list, value);
+    }
+    if (sbc->channel_mode & BT_A2DP_CHANNEL_MODE_JOINT_STEREO) {
+      g_value_set_static_string (value, "joint");
+      gst_value_list_prepend_value (list, value);
+    }
+  }
+  g_value_unset (value);
+  if (list) {
+    gst_structure_set_value (structure, "mode", list);
+    g_free (list);
+    list = NULL;
+  }
+
+  /* subbands */
+  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+  value = g_value_init (value, G_TYPE_INT);
+  if (sbc->subbands & BT_A2DP_SUBBANDS_4) {
+    g_value_set_int (value, 4);
+    gst_value_list_prepend_value (list, value);
+  }
+  if (sbc->subbands & BT_A2DP_SUBBANDS_8) {
+    g_value_set_int (value, 8);
+    gst_value_list_prepend_value (list, value);
+  }
+  g_value_unset (value);
+  if (list) {
+    gst_structure_set_value (structure, "subbands", list);
+    g_free (list);
+    list = NULL;
+  }
+
+  /* blocks */
+  value = g_value_init (value, G_TYPE_INT);
+  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+  if (sbc->block_length & BT_A2DP_BLOCK_LENGTH_16) {
+    g_value_set_int (value, 16);
+    gst_value_list_prepend_value (list, value);
+  }
+  if (sbc->block_length & BT_A2DP_BLOCK_LENGTH_12) {
+    g_value_set_int (value, 12);
+    gst_value_list_prepend_value (list, value);
+  }
+  if (sbc->block_length & BT_A2DP_BLOCK_LENGTH_8) {
+    g_value_set_int (value, 8);
+    gst_value_list_prepend_value (list, value);
+  }
+  if (sbc->block_length & BT_A2DP_BLOCK_LENGTH_4) {
+    g_value_set_int (value, 4);
+    gst_value_list_prepend_value (list, value);
+  }
+  g_value_unset (value);
+  if (list) {
+    gst_structure_set_value (structure, "blocks", list);
+    g_free (list);
+    list = NULL;
+  }
+
+  /* allocation */
+  g_value_init (value, G_TYPE_STRING);
+  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+  if (sbc->allocation_method == BT_A2DP_ALLOCATION_AUTO) {
+    g_value_set_static_string (value, "loudness");
+    gst_value_list_prepend_value (list, value);
+    g_value_set_static_string (value, "snr");
+    gst_value_list_prepend_value (list, value);
+  } else {
+    if (sbc->allocation_method & BT_A2DP_ALLOCATION_LOUDNESS) {
+      g_value_set_static_string (value, "loudness");
+      gst_value_list_prepend_value (list, value);
+    }
+    if (sbc->allocation_method & BT_A2DP_ALLOCATION_SNR) {
+      g_value_set_static_string (value, "snr");
+      gst_value_list_prepend_value (list, value);
+    }
+  }
+  g_value_unset (value);
+  if (list) {
+    gst_structure_set_value (structure, "allocation", list);
+    g_free (list);
+    list = NULL;
+  }
+
+  /* rate */
+  g_value_init (value, G_TYPE_INT);
+  list = g_value_init (g_new0 (GValue, 1), GST_TYPE_LIST);
+  if (sbc->frequency & BT_A2DP_SAMPLING_FREQ_48000) {
+    g_value_set_int (value, 48000);
+    gst_value_list_prepend_value (list, value);
+  }
+  if (sbc->frequency & BT_A2DP_SAMPLING_FREQ_44100) {
+    g_value_set_int (value, 44100);
+    gst_value_list_prepend_value (list, value);
+  }
+  if (sbc->frequency & BT_A2DP_SAMPLING_FREQ_32000) {
+    g_value_set_int (value, 32000);
+    gst_value_list_prepend_value (list, value);
+  }
+  if (sbc->frequency & BT_A2DP_SAMPLING_FREQ_16000) {
+    g_value_set_int (value, 16000);
+    gst_value_list_prepend_value (list, value);
+  }
+  g_value_unset (value);
+  if (list) {
+    gst_structure_set_value (structure, "rate", list);
+    g_free (list);
+    list = NULL;
+  }
+
+  /* bitpool */
+  value = g_value_init (value, GST_TYPE_INT_RANGE);
+  gst_value_set_int_range (value, sbc->min_bitpool, sbc->max_bitpool);
+  gst_structure_set_value (structure, "bitpool", value);
+
+  /* channels */
+  gst_value_set_int_range (value, 1, 2);
+  gst_structure_set_value (structure, "channels", value);
+
+  g_free (value);
+
+  self->dev_caps = gst_caps_new_full (structure, NULL);
+
+  tmp = gst_caps_to_string (self->dev_caps);
+  GST_DEBUG_OBJECT (self, "Device capabilities: %s", tmp);
+  g_free (tmp);
+
+  return TRUE;
+}
+
+static gboolean
+gst_a2dp_sink_get_capabilities (GstA2dpSink * self)
+{
+  gchar *buf[BT_AUDIO_IPC_PACKET_SIZE];
+  struct bt_getcapabilities_req *req = (void *) buf;
+  struct bt_getcapabilities_rsp *rsp = (void *) buf;
+  GIOError io_error;
+
+  memset (req, 0, BT_AUDIO_IPC_PACKET_SIZE);
+
+  req->h.msg_type = BT_GETCAPABILITIES_REQ;
+  strncpy (req->device, self->device, 18);
+
+  req->transport = BT_CAPABILITIES_TRANSPORT_A2DP;
+  req->access_mode = BT_CAPABILITIES_ACCESS_MODE_WRITE;
+  io_error = gst_a2dp_sink_audioservice_send (self, &req->h);
+  if (io_error != G_IO_ERROR_NONE) {
+    GST_ERROR_OBJECT (self, "Error while asking device caps");
+  }
+
+  io_error = gst_a2dp_sink_audioservice_expect (self, &rsp->h,
+      BT_GETCAPABILITIES_RSP);
+  if (io_error != G_IO_ERROR_NONE) {
+    GST_ERROR_OBJECT (self, "Error while getting device caps");
+    return FALSE;
+  }
+
+  if (rsp->posix_errno != 0) {
+    GST_ERROR_OBJECT (self, "BT_GETCAPABILITIES failed : %s(%d)",
+        strerror (rsp->posix_errno), rsp->posix_errno);
+    return FALSE;
+  }
+
+  if (rsp->transport != BT_CAPABILITIES_TRANSPORT_A2DP) {
+    GST_ERROR_OBJECT (self, "Non a2dp answer from device");
+    return FALSE;
+  }
+
+  memcpy (&self->data->cfg, rsp, sizeof (*rsp));
+  if (!gst_a2dp_sink_update_caps (self)) {
+    GST_WARNING_OBJECT (self, "failed to update capabilities");
+    return FALSE;
   }
 
   return TRUE;
@@ -590,7 +592,6 @@ static gboolean
 gst_a2dp_sink_start (GstBaseSink * basesink)
 {
   GstA2dpSink *self = GST_A2DP_SINK (basesink);
-  struct sockaddr_un addr = { AF_UNIX, IPC_SOCKET_NAME };
   gint sk;
   gint err;
 
@@ -598,107 +599,143 @@ gst_a2dp_sink_start (GstBaseSink * basesink)
 
   self->watch_id = 0;
 
-  sk = socket (PF_LOCAL, SOCK_STREAM, 0);
-  if (sk < 0) {
+  sk = bt_audio_service_open ();
+  if (sk <= 0) {
     err = errno;
-    GST_ERROR_OBJECT (self, "Cannot open socket: %s (%d)", strerror (err), err);
-    return FALSE;
-  }
-
-  if (connect (sk, (struct sockaddr *) &addr, sizeof (addr)) < 0) {
-    err = errno;
-    GST_ERROR_OBJECT (self, "Connection fail %s (%d)", strerror (err), err);
-    close (sk);
-    return FALSE;
+    GST_ERROR_OBJECT (self, "Cannot open connection to bt "
+        "audio service: %s %d", strerror (err), err);
+    goto failed;
   }
 
   self->server = g_io_channel_unix_new (sk);
-
-  self->watch_id = g_io_add_watch (self->server, G_IO_IN | G_IO_HUP |
-      G_IO_ERR | G_IO_NVAL, server_callback, self);
+  self->watch_id = g_io_add_watch (self->server, G_IO_HUP | G_IO_ERR |
+      G_IO_NVAL, server_callback, self);
 
   self->data = g_new0 (struct bluetooth_data, 1);
   memset (self->data, 0, sizeof (struct bluetooth_data));
 
-  self->sbc = g_new0 (struct ipc_codec_sbc, 1);
-
   self->stream = NULL;
-  self->con_state = NOT_CONFIGURED;
-  self->new_dev_caps = FALSE;
-  self->dev_caps = NULL;
+  self->stream_caps = NULL;
 
-  self->waiting_con_conf = FALSE;
+  if (!gst_a2dp_sink_get_capabilities (self))
+    goto failed;
 
   return TRUE;
+
+failed:
+  bt_audio_service_close (sk);
+  return FALSE;
 }
 
 static gboolean
-gst_a2dp_sink_send_conf_pkt (GstA2dpSink * sink, GstCaps * caps)
+gst_a2dp_sink_stream_start (GstA2dpSink * self)
 {
-  gchar buf[IPC_MTU];
-  struct ipc_packet *pkt = (void *) buf;
-  gboolean ret;
-  gsize bytes_sent;
+  gchar buf[BT_AUDIO_IPC_PACKET_SIZE];
+  struct bt_streamstart_req *req = (void *) buf;
+  struct bt_streamstart_rsp *rsp = (void *) buf;
+  struct bt_datafd_ind *ind = (void *) buf;
   GIOError io_error;
 
-  g_assert (sink->con_state == NOT_CONFIGURED);
+  GST_DEBUG_OBJECT (self, "stream start");
 
-  memset (pkt, 0, sizeof (buf));
-  ret = gst_a2dp_sink_init_pkt_conf (sink, caps, pkt);
-  if (!ret) {
-    GST_ERROR_OBJECT (sink, "Couldn't initialize parse caps "
-        "to packet configuration");
-    return FALSE;
-  }
+  memset (req, 0, sizeof (buf));
+  req->h.msg_type = BT_STREAMSTART_REQ;
 
-  sink->con_state = CONFIGURING_INIT;
-
-  io_error = g_io_channel_write (sink->server, (gchar *) pkt,
-      sizeof (*pkt) + pkt->length, &bytes_sent);
+  io_error = gst_a2dp_sink_audioservice_send (self, &req->h);
   if (io_error != G_IO_ERROR_NONE) {
-    GST_ERROR_OBJECT (sink, "Error ocurred while sending "
-        "configurarion packet");
-    sink->con_state = NOT_CONFIGURED;
+    GST_ERROR_OBJECT (self, "Error ocurred while sending " "start packet");
     return FALSE;
   }
 
-  GST_DEBUG_OBJECT (sink, "%d bytes sent", bytes_sent);
-  sink->con_state = CONFIGURING_SENT_CONF;
+  GST_DEBUG_OBJECT (self, "stream start packet sent");
+
+  io_error = gst_a2dp_sink_audioservice_expect (self, &rsp->h,
+      BT_STREAMSTART_RSP);
+  if (io_error != G_IO_ERROR_NONE) {
+    GST_ERROR_OBJECT (self, "Error while stream start confirmation");
+    return FALSE;
+  }
+
+  if (rsp->posix_errno != 0) {
+    GST_ERROR_OBJECT (self, "BT_STREAMSTART_RSP failed : %s(%d)",
+        strerror (rsp->posix_errno), rsp->posix_errno);
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (self, "stream started");
+
+  io_error = gst_a2dp_sink_audioservice_expect (self, &ind->h, BT_STREAMFD_IND);
+  if (io_error != G_IO_ERROR_NONE) {
+    GST_ERROR_OBJECT (self, "Error while receiving stream fd");
+    return FALSE;
+  }
+
+  if (!gst_a2dp_sink_conf_recv_stream_fd (self))
+    return FALSE;
 
   return TRUE;
 }
 
 static gboolean
-gst_a2dp_sink_start_dev_conf (GstA2dpSink * sink, GstCaps * caps)
+gst_a2dp_sink_configure (GstA2dpSink * self, GstCaps * caps)
 {
+  gchar buf[BT_AUDIO_IPC_PACKET_SIZE];
+  struct bt_setconfiguration_req *req = (void *) buf;
+  struct bt_setconfiguration_rsp *rsp = (void *) buf;
   gboolean ret;
+  GIOError io_error;
 
-  g_assert (sink->con_state == NOT_CONFIGURED);
+  GST_DEBUG_OBJECT (self, "configuring device");
 
-  GST_DEBUG_OBJECT (sink, "starting device configuration");
+  memset (req, 0, sizeof (buf));
+  req->h.msg_type = BT_SETCONFIGURATION_REQ;
+  strncpy (req->device, self->device, 18);
+  ret = gst_a2dp_sink_init_pkt_conf (self, caps, &req->sbc_capabilities);
+  if (!ret) {
+    GST_ERROR_OBJECT (self, "Couldn't parse caps " "to packet configuration");
+    return FALSE;
+  }
 
-  ret = gst_a2dp_sink_send_conf_pkt (sink, caps);
+  io_error = gst_a2dp_sink_audioservice_send (self, &req->h);
+  if (io_error != G_IO_ERROR_NONE) {
+    GST_ERROR_OBJECT (self, "Error ocurred while sending "
+        "configurarion packet");
+    return FALSE;
+  }
 
-  return ret;
+  GST_DEBUG_OBJECT (self, "configuration packet sent");
+
+  io_error = gst_a2dp_sink_audioservice_expect (self, &rsp->h,
+      BT_SETCONFIGURATION_RSP);
+  if (io_error != G_IO_ERROR_NONE) {
+    GST_ERROR_OBJECT (self, "Error while receiving device confirmation");
+    return FALSE;
+  }
+
+  if (rsp->posix_errno != 0) {
+    GST_ERROR_OBJECT (self, "BT_SETCONFIGURATION_RSP failed : %s(%d)",
+        strerror (rsp->posix_errno), rsp->posix_errno);
+    return FALSE;
+  }
+
+  GST_DEBUG_OBJECT (self, "configuration set");
+
+  return TRUE;
 }
 
 static GstFlowReturn
 gst_a2dp_sink_preroll (GstBaseSink * basesink, GstBuffer * buffer)
 {
   GstA2dpSink *sink = GST_A2DP_SINK (basesink);
+  gboolean ret;
 
   GST_A2DP_SINK_MUTEX_LOCK (sink);
 
-  if (sink->con_state == NOT_CONFIGURED)
-    gst_a2dp_sink_start_dev_conf (sink, GST_BUFFER_CAPS (buffer));
-
-  /* wait for the connection process to finish */
-  if (sink->con_state != CONFIGURED)
-    GST_A2DP_SINK_WAIT_CON_END (sink);
+  ret = gst_a2dp_sink_stream_start (sink);
 
   GST_A2DP_SINK_MUTEX_UNLOCK (sink);
 
-  if (sink->con_state != CONFIGURED)
+  if (!ret)
     return GST_FLOW_ERROR;
 
   return GST_FLOW_OK;
@@ -750,7 +787,7 @@ gst_a2dp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
 
   encoded = GST_BUFFER_SIZE (buffer);
 
-  if (data->count + encoded >= data->cfg.pkt_len) {
+  if (data->count + encoded >= data->cfg.link_mtu) {
     ret = gst_a2dp_sink_avdtp_write (self);
     if (ret < 0)
       return GST_FLOW_ERROR;
@@ -763,25 +800,30 @@ gst_a2dp_sink_render (GstBaseSink * basesink, GstBuffer * buffer)
   return GST_FLOW_OK;
 }
 
+static GstCaps *
+gst_a2dp_sink_get_caps (GstBaseSink * basesink)
+{
+  GstA2dpSink *self = GST_A2DP_SINK (basesink);
+
+  return self->dev_caps ? gst_caps_ref (self->dev_caps) : NULL;
+}
+
 static gboolean
 gst_a2dp_sink_set_caps (GstBaseSink * basesink, GstCaps * caps)
 {
   GstA2dpSink *self = GST_A2DP_SINK (basesink);
+  gboolean ret;
 
   GST_A2DP_SINK_MUTEX_LOCK (self);
-  if (self->con_state == NOT_CONFIGURED) {
-    gst_a2dp_sink_start_dev_conf (self, caps);
+  ret = gst_a2dp_sink_configure (self, caps);
 
-    if (self->dev_caps)
-      gst_caps_unref (self->dev_caps);
-    self->dev_caps = gst_caps_ref (caps);
+  if (self->stream_caps)
+    gst_caps_unref (self->stream_caps);
+  self->stream_caps = gst_caps_ref (caps);
 
-    /* we suppose the device will accept this caps */
-    self->new_dev_caps = FALSE;
-  }
   GST_A2DP_SINK_MUTEX_UNLOCK (self);
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
@@ -807,12 +849,7 @@ gst_a2dp_sink_buffer_alloc (GstBaseSink * basesink,
     return GST_FLOW_ERROR;
   }
 
-  if (self->new_dev_caps && self->dev_caps) {
-    GST_INFO_OBJECT (self, "new caps from device");
-    gst_buffer_set_caps (*buf, self->dev_caps);
-    self->new_dev_caps = FALSE;
-  } else
-    gst_buffer_set_caps (*buf, caps);
+  gst_buffer_set_caps (*buf, caps);
 
   GST_BUFFER_OFFSET (*buf) = offset;
 
@@ -836,6 +873,7 @@ gst_a2dp_sink_class_init (GstA2dpSinkClass * klass)
   basesink_class->render = GST_DEBUG_FUNCPTR (gst_a2dp_sink_render);
   basesink_class->preroll = GST_DEBUG_FUNCPTR (gst_a2dp_sink_preroll);
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_a2dp_sink_set_caps);
+  basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_a2dp_sink_get_caps);
   basesink_class->unlock = GST_DEBUG_FUNCPTR (gst_a2dp_sink_unlock);
   basesink_class->buffer_alloc = GST_DEBUG_FUNCPTR (gst_a2dp_sink_buffer_alloc);
 
@@ -851,12 +889,78 @@ gst_a2dp_sink_init (GstA2dpSink * self, GstA2dpSinkClass * klass)
 {
   self->device = NULL;
   self->data = NULL;
-  self->sbc = NULL;
 
   self->stream = NULL;
-  self->con_state = NOT_CONFIGURED;
 
-  self->con_conf_end = g_cond_new ();
-  self->waiting_con_conf = FALSE;
+  self->dev_caps = NULL;
+
   self->sink_lock = g_mutex_new ();
+}
+
+static GIOError
+gst_a2dp_sink_audioservice_send (GstA2dpSink * self,
+    const bt_audio_msg_header_t * msg)
+{
+  gint err;
+  GIOError error;
+  gsize written;
+
+  GST_DEBUG_OBJECT (self, "sending %s", bt_audio_strmsg (msg->msg_type));
+
+  error = g_io_channel_write (self->server, (const gchar *) msg,
+      BT_AUDIO_IPC_PACKET_SIZE, &written);
+  if (error != G_IO_ERROR_NONE) {
+    err = errno;
+    GST_ERROR_OBJECT (self, "Error sending data to audio service:"
+        " %s(%d)", strerror (err), err);
+  }
+
+  return error;
+}
+
+static GIOError
+gst_a2dp_sink_audioservice_recv (GstA2dpSink * self,
+    bt_audio_msg_header_t * inmsg)
+{
+  GIOError status;
+  gsize bytes_read;
+  const char *type;
+
+  status = g_io_channel_read (self->server, (gchar *) inmsg,
+      BT_AUDIO_IPC_PACKET_SIZE, &bytes_read);
+  if (status != G_IO_ERROR_NONE) {
+    GST_ERROR_OBJECT (self, "Error receiving data from service");
+    return status;
+  }
+
+  type = bt_audio_strmsg (inmsg->msg_type);
+  if (!type) {
+    GST_ERROR_OBJECT (self, "Bogus message type %d "
+        "received from audio service", inmsg->msg_type);
+    return G_IO_ERROR_INVAL;
+  }
+
+  GST_DEBUG_OBJECT (self, "Received %s", type);
+
+  return status;
+}
+
+static GIOError
+gst_a2dp_sink_audioservice_expect (GstA2dpSink * self,
+    bt_audio_msg_header_t * outmsg, int expected_type)
+{
+  GIOError status;
+
+  status = gst_a2dp_sink_audioservice_recv (self, outmsg);
+  if (status != G_IO_ERROR_NONE)
+    return status;
+
+  if (outmsg->msg_type != expected_type) {
+    GST_ERROR_OBJECT (self, "Bogus message %s "
+        "received while %s was expected",
+        bt_audio_strmsg (outmsg->msg_type), bt_audio_strmsg (expected_type));
+    return G_IO_ERROR_INVAL;
+  }
+
+  return status;
 }
