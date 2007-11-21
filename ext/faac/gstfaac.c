@@ -453,9 +453,13 @@ gst_faac_sink_event (GstPad * pad, GstEvent * event)
     {
       GstBuffer *outbuf;
 
+      if (!faac->handle)
+        ret = FALSE;
+      else
+        ret = TRUE;
+
       /* flush first */
-      ret = TRUE;
-      do {
+      while (ret) {
         if (gst_pad_alloc_buffer_and_set_caps (faac->srcpad,
                 GST_BUFFER_OFFSET_NONE, faac->bytes,
                 GST_PAD_CAPS (faac->srcpad), &outbuf) == GST_FLOW_OK) {
@@ -472,8 +476,7 @@ gst_faac_sink_event (GstPad * pad, GstEvent * event)
             ret = FALSE;
           }
         }
-      } while (ret);
-
+      }
       ret = gst_pad_event_default (pad, event);
       break;
     }

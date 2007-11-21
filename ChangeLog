@@ -1,3 +1,9 @@
+2007-11-21  Wim Taymans  <wim.taymans@gmail.com>
+
+	* ext/faac/gstfaac.c: (gst_faac_sink_event):
+	Don't try to flush the decoder on EOS when it was not initialized.
+	Fixes #498667
+
 2007-11-21  Julien Moutte  <julien@fluendo.com>
 
 	* ext/sdl/sdlaudiosink.c: (gst_sdlaudio_sink_write): Fix build
