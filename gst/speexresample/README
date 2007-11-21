@@ -1,0 +1,80 @@
+resample.c
+arch.h
+fixed_generic.h
+speex_resampler.h
+
+are taken from http://svn.xiph.org/trunk/speex/ revision 14208.
+
+The only changes are:
+
+--- speex/libspeex/arch.h       2007-11-21 11:05:46.000000000 +0100
++++ speexresample/arch.h      2007-11-20 05:41:09.000000000 +0100
+@@ -78,7 +78,9 @@
+ #include "speex/speex_types.h"
+ #endif
+ 
++#ifndef ABS
+ #define ABS(x) ((x) < 0 ? (-(x)) : (x))      /**< Absolute integer value. */
++#endif
+ #define ABS16(x) ((x) < 0 ? (-(x)) : (x))    /**< Absolute 16-bit value.  */
+ #define MIN16(a,b) ((a) < (b) ? (a) : (b))   /**< Maximum 16-bit value.   */
+ #define MAX16(a,b) ((a) > (b) ? (a) : (b))   /**< Maximum 16-bit value.   */
+
+--- speex/include/speex/speex_resampler.h       2007-11-21 11:05:44.000000000 +0100
++++ speexresample/speex_resampler.h   2007-11-21 11:10:02.000000000 +0100
+@@ -41,6 +41,8 @@
+ 
+ #ifdef OUTSIDE_SPEEX
+ 
++#include <glib.h>
++
+ /********* WARNING: MENTAL SANITY ENDS HERE *************/
+ 
+ /* If the resampler is defined outside of Speex, we change the symbol names so that 
+@@ -75,10 +77,10 @@
+ #define speex_resampler_reset_mem CAT_PREFIX(RANDOM_PREFIX,_resampler_reset_mem)
+ #define speex_resampler_strerror CAT_PREFIX(RANDOM_PREFIX,_resampler_strerror)
+ 
+-#define spx_int16_t short
+-#define spx_int32_t int
+-#define spx_uint16_t unsigned short
+-#define spx_uint32_t unsigned int
++#define spx_int16_t gint16
++#define spx_int32_t gint32
++#define spx_uint16_t guint16
++#define spx_uint32_t guint32
+       
+ #else /* OUTSIDE_SPEEX */
+
+--- speex/libspeex/resample.c   2007-11-21 11:07:32.000000000 +0100
++++ speexresample/resample.c  2007-11-21 11:15:09.000000000 +0100
+@@ -62,20 +62,22 @@
+ 
+ #ifdef OUTSIDE_SPEEX
+ #include <stdlib.h>
+-static void *
++#include <glib.h>
++
++static inline void *
+ speex_alloc (int size)
+ {
+-  return calloc (size, 1);
++  return g_malloc0 (size);
+ }
+-static void *
++static inline void *
+ speex_realloc (void *ptr, int size)
+ {
+-  return realloc (ptr, size);
++  return g_realloc (ptr, size);
+ }
+-static void
++static inline void
+ speex_free (void *ptr)
+ {
+-  free (ptr);
++  g_free (ptr);
+ }
+ 
+ #include "speex_resampler.h"
+

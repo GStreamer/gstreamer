@@ -62,20 +62,22 @@
 
 #ifdef OUTSIDE_SPEEX
 #include <stdlib.h>
-static void *
+#include <glib.h>
+
+static inline void *
 speex_alloc (int size)
 {
-  return calloc (size, 1);
+  return g_malloc0 (size);
 }
-static void *
+static inline void *
 speex_realloc (void *ptr, int size)
 {
-  return realloc (ptr, size);
+  return g_realloc (ptr, size);
 }
-static void
+static inline void
 speex_free (void *ptr)
 {
-  free (ptr);
+  g_free (ptr);
 }
 
 #include "speex_resampler.h"

@@ -1,5 +1,20 @@
 2007-11-21  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/speexresample/README:
+	Add README explaining where the resampling code was taken from
+	and which changes were done.
+
+	* gst/speexresample/resample.c: (speex_alloc), (speex_realloc),
+	(speex_free):
+	Use g_malloc() and friends instead of malloc() to achieve higher
+	portability and define the functions inline.
+
+	* gst/speexresample/speex_resampler.h:
+	Add back some useless preprocessor stuff to keep the diff between
+	our version and the one from the Speex SVN repository lower.
+
+2007-11-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/filter/gstbpwsinc.c: (bpwsinc_set_property):
 	* gst/filter/gstlpwsinc.c: (lpwsinc_set_property):
 	Post a GST_MESSAGE_LATENCY if the latency changes.
