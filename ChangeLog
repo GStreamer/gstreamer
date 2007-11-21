@@ -1,3 +1,9 @@
+2007-11-21  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/filter/gstbpwsinc.c: (bpwsinc_set_property):
+	* gst/filter/gstlpwsinc.c: (lpwsinc_set_property):
+	Post a GST_MESSAGE_LATENCY if the latency changes.
+
 2007-11-21  Wim Taymans  <wim.taymans@gmail.com>
 
 	* ext/faac/gstfaac.c: (gst_faac_sink_event):
