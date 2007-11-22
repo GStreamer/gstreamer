@@ -356,8 +356,11 @@ class TextColumn (SizedColumn):
         if self.get_data_func:
             data_func = self.get_data_func ()
             id_ = self.id
-            def cell_data_func (column, cell, model, tree_iter):
-                data_func (cell.props, model.get_value (tree_iter, id_), model.get_path (tree_iter))
+            if id_ is not None:
+                def cell_data_func (column, cell, model, tree_iter):
+                    data_func (cell.props, model.get_value (tree_iter, id_), model.get_path (tree_iter))
+            else:
+                cell_data_func = data_func
             column.set_cell_data_func (cell, cell_data_func)
         elif not self.get_modify_func:
             column.add_attribute (cell, "text", self.id)
@@ -521,15 +524,26 @@ class CategoryColumn (TextColumn):
 
         return ["GST_LONG_CATEGORY", "somelongelement"]
 
-class FilenameColumn (TextColumn):
+class CodeColumn (TextColumn):
 
-    name = "filename"
-    label_header = _("Filename")
-    id = LazyLogModel.COL_FILENAME
+    name = "code"
+    label_header = _("Code")
+    id = None
+
+    @staticmethod
+    def get_data_func ():
+
+        filename_id = LogModelBase.COL_FILENAME
+        line_number_id = LogModelBase.COL_LINE_NUMBER
+        def filename_data_func (column, cell, model, tree_iter):
+            args = model.get (tree_iter, filename_id, line_number_id)
+            cell.props.text = "%s:%i" % args
+
+        return filename_data_func
 
     def get_values_for_size (self):
 
-        return ["gstsomefilename.c"]
+        return ["gstsomefilename.c:1234"]
 
 class FunctionColumn (TextColumn):
 
@@ -540,16 +554,6 @@ class FunctionColumn (TextColumn):
     def get_values_for_size (self):
 
         return ["gst_this_should_be_enough"]
-
-## class FullCodeLocation (TextColumn):
-
-##     name = "code-location"
-##     label_header = _("Code Location")
-##     id = LazyLogModel.COL_FILENAME
-
-##     def get_values_for_size (self):
-
-##         return ["gstwhateverfile.c:1234"]
 
 class ObjectColumn (TextColumn):
 
@@ -749,7 +753,7 @@ class ColumnManager (Common.GUI.Manager):
 class ViewColumnManager (ColumnManager):
 
     column_classes = (TimeColumn, LevelColumn, PidColumn, ThreadColumn, CategoryColumn,
-                      FilenameColumn, FunctionColumn, ObjectColumn, MessageColumn,)
+                      CodeColumn, FunctionColumn, ObjectColumn, MessageColumn,)
 
     def __init__ (self, state):
 
