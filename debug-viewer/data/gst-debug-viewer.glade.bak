@@ -30,7 +30,7 @@
       <property name="spacing">0</property>
 
       <child>
-	<widget class="GtkScrolledWindow" id="scrolledwindow1">
+	<widget class="GtkScrolledWindow" id="log_view_scrolled_window">
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
 	  <property name="hscrollbar_policy">GTK_POLICY_AUTOMATIC</property>

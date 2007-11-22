@@ -822,6 +822,7 @@ class Window (object):
 
         self.sentinels = []
 
+        self.dispatcher = None
         self.progress_bar = None
         self.update_progress_id = None
 
@@ -841,6 +842,7 @@ class Window (object):
         group.add_actions ([("new-window", gtk.STOCK_NEW, _("_New Window"), "<Ctrl>N"),
                             ("open-file", gtk.STOCK_OPEN, _("_Open File"), "<Ctrl>O"),
                             ("close-window", gtk.STOCK_CLOSE, _("Close _Window"), "<Ctrl>W"),
+                            ("cancel-load", gtk.STOCK_CANCEL, None,),
                             ("show-about", gtk.STOCK_ABOUT, None)])
         ## group.add_toggle_actions ([("show-line-density", None, _("Line _Density"), "<Ctrl>D")])
         self.actions.add_group (group)
@@ -893,6 +895,7 @@ class Window (object):
                                         gtk.gdk.SELECTION_CLIPBOARD)
 
         for action_name in ("new-window", "open-file", "close-window",
+                            "cancel-load",
                             "edit-copy-line", "edit-copy-message",
                             "filter-out-higher-levels",
                             "show-about",):
@@ -965,6 +968,19 @@ class Window (object):
             self.set_log_file (dialog.get_filename ())
         dialog.destroy ()
 
+    def handle_cancel_load_action_activate (self, action):
+
+        self.logger.debug ("cancelling data load")
+
+        self.set_log_file (None)
+        if self.progress_dialog:
+            self.progress_dialog.destroy ()
+            self.progress_dialog = None
+        self.progress_bar = None
+        if self.update_progress_id is not None:
+            gobject.source_remove (self.update_progress_id)
+            self.update_progress_id = None
+
     def handle_close_window_action_activate (self, action):
 
         self.close ()
@@ -1019,12 +1035,18 @@ class Window (object):
 
     def set_log_file (self, filename):
 
-        self.logger.debug ("setting log file %r", filename)
+        if filename is None:
+            if self.dispatcher is not None:
+                self.dispatcher.cancel ()
+            self.dispatcher = None
+            self.log_file = None
+        else:
+            self.logger.debug ("setting log file %r", filename)
 
-        dispatcher = Common.Data.GSourceDispatcher ()
-        self.log_file = Data.LogFile (filename, dispatcher)
-        self.log_file.consumers.append (self)
-        self.log_file.start_loading ()
+            self.dispatcher = Common.Data.GSourceDispatcher ()
+            self.log_file = Data.LogFile (filename, self.dispatcher)
+            self.log_file.consumers.append (self)
+            self.log_file.start_loading ()
 
     def handle_log_view_button_press_event (self, view, event):
 
@@ -1040,12 +1062,17 @@ class Window (object):
 
         widgets = self.widget_factory.make ("progress_dialog")
         dialog = widgets.progress_dialog
+        dialog.connect ("response", self.handle_progress_dialog_response)
         self.progress_dialog = dialog
         self.progress_bar = widgets.progress_bar
         dialog.set_transient_for (self.gtk_window)
         dialog.show ()
 
         self.update_progress_id = gobject.timeout_add (250, self.update_load_progress)
+
+    def handle_progress_dialog_response (self, dialog, response):
+
+        self.actions.cancel_load.activate ()
 
     def update_load_progress (self):
 
