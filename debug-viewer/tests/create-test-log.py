@@ -25,10 +25,12 @@ def main ():
               Data.debug_level_debug,
               Data.debug_level_info,)
 
+    shift = 0
     for i in xrange (count):
 
         ts = i * 10000
-        level = levels[i % 3]
+        shift += i % (count // 100)
+        level = levels[(i + shift) % 3]
         line = Data.LogLine ([ts, pid, thread, level, category, filename, file_line, function, object_, message])
         print line.line_string ()
 
