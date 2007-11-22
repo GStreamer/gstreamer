@@ -1,6 +1,6 @@
 # -*- coding: utf-8; mode: python; -*-
 #
-#  GStreamer Inspector - Multimedia system plugin introspection
+#  GStreamer Development Utilities
 #
 #  Copyright (C) 2007 René Stadler <mail@renestadler.de>
 #
@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License along with
 #  this program; if not, see <http://www.gnu.org/licenses/>.
 
-"""Misc utilities."""
+"""GStreamer Development Utilities Common utils module."""
 
 import os
 import logging

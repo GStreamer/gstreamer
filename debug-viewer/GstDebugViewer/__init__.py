@@ -1,6 +1,6 @@
 # -*- coding: utf-8; mode: python; -*-
 #
-#  GStreamer Debug Viewer
+#  GStreamer Debug Viewer - View and analyze GStreamer debug log files
 #
 #  Copyright (C) 2007 René Stadler <mail@renestadler.de>
 #
@@ -16,6 +16,8 @@
 #
 #  You should have received a copy of the GNU General Public License along with
 #  this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""GStreamer Debug Viewer package."""
 
 version = "0.1"
 

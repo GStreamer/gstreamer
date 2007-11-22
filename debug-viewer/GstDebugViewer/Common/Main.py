@@ -15,9 +15,9 @@
 #  more details.
 #
 #  You should have received a copy of the GNU General Public License along with
-#  this program; if not, see <http://www.gnu.org/licenses/>.
+#  this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""GStreamer development utilities common main module."""
+"""GStreamer Development Utilities Common Main module."""
 
 import sys
 import os

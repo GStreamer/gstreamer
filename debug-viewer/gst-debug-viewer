@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8; mode: python; -*-
 #
-#  GStreamer Debug Viewer
+#  GStreamer Debug Viewer - View and analyze GStreamer debug log files
 #
 #  Copyright (C) 2007 René Stadler <mail@renestadler.de>
 #

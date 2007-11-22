@@ -17,7 +17,7 @@
 #  You should have received a copy of the GNU General Public License along with
 #  this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""GStreamer development utilities common Data module"""
+"""GStreamer Development Utilities Common Data module."""
 
 import pygtk
 pygtk.require ("2.0")

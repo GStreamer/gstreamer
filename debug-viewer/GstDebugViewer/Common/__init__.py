@@ -1,5 +1,7 @@
 # -*- coding: utf-8; mode: python; -*-
 #
+#  GStreamer Development Utilities
+#
 #  Copyright (C) 2007 René Stadler <mail@renestadler.de>
 #
 #  This program is free software; you can redistribute it and/or modify it
@@ -15,6 +17,6 @@
 #  You should have received a copy of the GNU General Public License along with
 #  this program.  If not, see <http://www.gnu.org/licenses/>.
 
-"""GStreamer development utilities common module"""
+"""GStreamer Development Utilities Common package."""
 
 import Data, GUI, Main, utils
