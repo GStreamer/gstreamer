@@ -185,6 +185,9 @@ class UpdateProcess (object):
 
     def __process (self):
 
+        if self.freq_sentinel is None or self.dist_sentinel is None:
+            return
+
         self.is_running = True
 
         for x in self.freq_sentinel.process ():
@@ -234,15 +237,13 @@ class TimelineWidget (gtk.DrawingArea):
 
     __gtype_name__ = "GstDebugViewerTimelineWidget"
 
-    def __init__ (self, log_model):
+    def __init__ (self):
 
         gtk.DrawingArea.__init__ (self)
 
         self.logger = logging.getLogger ("ui.timeline")
 
-        self.freq_sentinel = LineFrequencySentinel (log_model)
-        self.dist_sentinel = LevelDistributionSentinel (self.freq_sentinel, log_model)
-        self.process = UpdateProcess (self.freq_sentinel, self.dist_sentinel)
+        self.process = UpdateProcess (None, None)
         self.connect ("expose-event", self.__handle_expose_event)
         self.connect ("configure-event", self.__handle_configure_event)
         self.connect ("size-request", self.__handle_size_request)
@@ -250,6 +251,7 @@ class TimelineWidget (gtk.DrawingArea):
         self.process.handle_sentinel_finished = self.handle_sentinel_finished
         self.process.handle_process_finished = self.handle_process_finished
 
+        self.model = None
         self.__offscreen = None
 
     def handle_sentinel_progress (self, sentinel):
@@ -258,7 +260,7 @@ class TimelineWidget (gtk.DrawingArea):
 
     def handle_sentinel_finished (self, sentinel):
 
-        if sentinel == self.freq_sentinel:
+        if sentinel == self.process.freq_sentinel:
             self.__redraw ()
 
     def handle_process_finished (self):
@@ -288,25 +290,38 @@ class TimelineWidget (gtk.DrawingArea):
         gc = gtk.gdk.GC (self.window)
         self.window.draw_drawable (gc, self.__offscreen, 0, 0, 0, 0, -1, -1)
 
-    def update (self):
+    def update (self, model):
+
+        self.model = model
 
         width = self.get_allocation ()[2]
 
         self.process.abort ()
-        self.freq_sentinel.clear ()
-        self.dist_sentinel.clear ()
-        self.freq_sentinel.run_for (width)
-        self.process.run ()
+        if model:
+            self.process.freq_sentinel = LineFrequencySentinel (model)
+            self.process.dist_sentinel = LevelDistributionSentinel (self.process.freq_sentinel, model)
+            self.process.freq_sentinel.run_for (width)
+            self.process.run ()
+
+    def clear (self):
+
+        self.process.abort ()
+        self.process.freq_sentinel = None
+        self.process.dist_sentinel = None
+        self.__redraw ()
 
     def update_position (self, start_ts, end_ts):
 
-        if not self.freq_sentinel.data:
+        if not self.process.freq_sentinel:
+            return
+
+        if not self.process.freq_sentinel.data:
             return
 
         self.__update ()
 
-        first_ts, last_ts = self.freq_sentinel.ts_range
-        step = self.freq_sentinel.step
+        first_ts, last_ts = self.process.freq_sentinel.ts_range
+        step = self.process.freq_sentinel.step
 
         position1 = int (float (start_ts - first_ts) / step)
         position2 = int (float (end_ts - first_ts) / step)
@@ -329,8 +344,8 @@ class TimelineWidget (gtk.DrawingArea):
     def find_indicative_time_step (self):
 
         MINIMUM_PIXEL_STEP = 32
-        time_per_pixel = self.freq_sentinel.step
-        return 32 # FIXME use self.freq_sentinel.step and len (self.freq_sentinel.data)
+        time_per_pixel = self.process.freq_sentinel.step
+        return 32 # FIXME use self.freq_sentinel.step and len (self.process.freq_sentinel.data)
 
     def __draw (self, drawable):
 
@@ -353,6 +368,9 @@ class TimelineWidget (gtk.DrawingArea):
             ctx.line_to (w, y)
             ctx.stroke ()
 
+        if self.process.freq_sentinel is None:
+            return
+
         # Vertical reference lines.
         pixel_step = self.find_indicative_time_step ()
         ctx.set_source_rgb (.9, .9, .9)
@@ -362,21 +380,21 @@ class TimelineWidget (gtk.DrawingArea):
             ctx.line_to (x, h)
             ctx.stroke ()
 
-        if not self.freq_sentinel.data:
+        if not self.process.freq_sentinel.data:
             self.logger.debug ("frequency sentinel has no data yet")
             return
 
-        maximum = max (self.freq_sentinel.data)
+        maximum = max (self.process.freq_sentinel.data)
 
         ctx.set_source_rgb (0., 0., 0.)
-        self.__draw_graph (ctx, w, h, maximum, self.freq_sentinel.data)
+        self.__draw_graph (ctx, w, h, maximum, self.process.freq_sentinel.data)
 
-        if not self.dist_sentinel.data:
+        if not self.process.dist_sentinel.data:
             self.logger.debug ("level distribution sentinel has no data yet")
             return
 
         theme = GUI.LevelColorThemeTango ()
-        dist_data = self.dist_sentinel.data
+        dist_data = self.process.dist_sentinel.data
 
         def cumulative_level_counts (*levels):
             for level_counts in dist_data:
@@ -441,7 +459,7 @@ class TimelineWidget (gtk.DrawingArea):
         if event.width < 16:
             return False
 
-        self.update ()
+        self.update (self.model)
 
         return False
 
@@ -460,10 +478,8 @@ class TimelineFeature (FeatureBase):
         self.action_group.add_toggle_actions ([("show-timeline",
                                                 None, _("_Timeline"),)])
 
-    def attach (self, window):
+    def handle_attach_window (self, window):
 
-        self.log_model = window.log_model
-        self.log_filter = window.log_filter
         self.log_view = window.log_view
 
         ui = window.ui_manager
@@ -477,7 +493,7 @@ class TimelineFeature (FeatureBase):
 
         box = window.get_top_attach_point ()
 
-        self.timeline = TimelineWidget (self.log_model)
+        self.timeline = TimelineWidget ()
         self.timeline.add_events (gtk.gdk.ALL_EVENTS_MASK) # FIXME
         self.timeline.connect ("button-press-event", self.handle_timeline_button_press_event)
         self.timeline.connect ("motion-notify-event", self.handle_timeline_motion_notify_event)
@@ -492,7 +508,7 @@ class TimelineFeature (FeatureBase):
         action.connect ("toggled", handler)
         action.activate ()
 
-    def detach (self, window):
+    def handle_detach_window (self, window):
 
         window.ui_manager.remove_ui (self.merge_id)
         self.merge_id = None
@@ -502,9 +518,14 @@ class TimelineFeature (FeatureBase):
         self.timeline.destroy ()
         self.timeline = None
 
-    def handle_log_file_changed (self):
+    def handle_attach_log_file (self, window, log_file):
 
-        self.timeline.update ()
+        model = window.log_filter
+        self.timeline.update (model)
+
+    def handle_detach_log_file (self, window, log_file):
+
+        self.timeline.clear ()
 
     def handle_log_view_adjustment_value_changed (self, adj):
 
@@ -512,11 +533,12 @@ class TimelineFeature (FeatureBase):
         if not self.timeline.props.visible:
             return
 
+        model = self.log_view.props.model
         start_path, end_path = self.log_view.get_visible_range ()
-        ts1 = self.log_model.get (self.log_model.get_iter (start_path),
-                                  self.log_model.COL_TIME)[0]
-        ts2 = self.log_model.get (self.log_model.get_iter (end_path),
-                                  self.log_model.COL_TIME)[0]
+        ts1 = model.get (model.get_iter (start_path),
+                         model.COL_TIME)[0]
+        ts2 = model.get (model.get_iter (end_path),
+                         model.COL_TIME)[0]
         self.timeline.update_position (ts1, ts2)
 
     def handle_show_action_toggled (self, action):
@@ -548,7 +570,10 @@ class TimelineFeature (FeatureBase):
 
     def goto_time_position (self, pos):
 
-        data = self.timeline.freq_sentinel.data
+        if not self.timeline.process.freq_sentinel:
+            return True
+
+        data = self.timeline.process.freq_sentinel.data
         if not data:
             return True
 
@@ -559,7 +584,8 @@ class TimelineFeature (FeatureBase):
 
         count = sum (data[:pos + 1])
 
-        row = self.log_model[count]
+        model = self.log_view.props.model
+        row = model[count]
         self.log_view.scroll_to_cell ((count,), use_align = True, row_align = .5)
         
         return False

@@ -49,7 +49,19 @@ class FeatureBase (object):
 
     state_section_name = None
 
-    def handle_log_file_changed (self):
+    def handle_attach_window (self, window):
+
+        pass
+
+    def handle_attach_log_file (self, window, log_file):
+
+        pass
+
+    def handle_detach_log_file (self, window, log_file):
+
+        pass
+
+    def handle_detach_window (self, window):
 
         pass
 

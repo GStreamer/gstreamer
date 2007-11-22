@@ -859,7 +859,7 @@ class Window (object):
 
         self.actions.add_group (self.column_manager.action_group)
 
-        self.file = None
+        self.log_file = None
         self.log_model = LazyLogModel ()
         self.log_filter = FilteredLogModel (self.log_model)
 
@@ -911,10 +911,13 @@ class Window (object):
         self.gtk_window.connect ("delete-event", self.handle_window_delete_event)
 
         self.features = []
+
         for plugin_feature in self.app.iter_plugin_features ():
             feature = plugin_feature ()
-            feature.attach (self)
             self.features.append (feature)
+
+        for feature in self.features:
+            feature.handle_attach_window (self)
 
         # FIXME: With multiple selection mode, browsing the list with key
         # up/down slows to a crawl! WTF is wrong with this stupid widget???
@@ -922,6 +925,10 @@ class Window (object):
         ## sel.set_mode (gtk.SELECTION_MULTIPLE)
 
     def detach (self):
+
+        self.set_log_file (None)
+        for feature in self.features:
+            feature.handle_detach_window (self)
 
         self.window_state.detach ()
         self.column_manager.detach ()
@@ -1039,24 +1046,25 @@ class Window (object):
 
     def set_log_file (self, filename):
 
+        if self.log_file is not None:
+            for feature in self.features:
+                feature.handle_detach_log_file (self, self.log_file)
+
         if filename is None:
             if self.dispatcher is not None:
                 self.dispatcher.cancel ()
             self.dispatcher = None
             self.log_file = None
-            self.have_log_file_changed ()
         else:
             self.logger.debug ("setting log file %r", filename)
+
+            self.log_model = LazyLogModel ()
+            self.log_filter = FilteredLogModel (self.log_model)
 
             self.dispatcher = Common.Data.GSourceDispatcher ()
             self.log_file = Data.LogFile (filename, self.dispatcher)
             self.log_file.consumers.append (self)
             self.log_file.start_loading ()
-
-    def have_log_file_changed (self):
-
-        for feature in self.features:
-            feature.handle_log_file_changed ()
 
     def handle_log_view_button_press_event (self, view, event):
 
@@ -1117,7 +1125,8 @@ class Window (object):
         def idle_set ():
             ##self.log_view.props.model = self.log_model
             self.log_view.props.model = self.log_filter
-            self.have_log_file_changed ()
+            for feature in self.features:
+                feature.handle_attach_log_file (self, self.log_file)
             return False
 
         gobject.idle_add (idle_set)
