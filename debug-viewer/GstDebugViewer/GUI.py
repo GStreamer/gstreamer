@@ -388,7 +388,8 @@ class TextColumn (SizedColumn):
         max_width = 0
         for value in values:
             cell.props.text = format (value)
-            max_width = max (max_width, cell.get_size (view, None)[2])
+            rect, x, y, w, h = self.view_column.cell_get_size ()
+            max_width = max (max_width, w)
 
         return max_width
 
