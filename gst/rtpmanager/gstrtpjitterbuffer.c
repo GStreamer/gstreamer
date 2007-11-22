@@ -1209,11 +1209,9 @@ gst_rtp_jitter_buffer_query (GstPad * pad, GstQuery * query)
         GST_DEBUG_OBJECT (jitterbuffer, "Our latency: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (our_latency));
 
+        /* we add some latency but can buffer an infinite amount of time */
         min_latency += our_latency;
-        /* max_latency can be -1, meaning there is no upper limit for the
-         * latency. */
-        if (max_latency != -1)
-          max_latency += our_latency;
+        max_latency = -1;
 
         GST_DEBUG_OBJECT (jitterbuffer, "Calculated total latency : min %"
             GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
