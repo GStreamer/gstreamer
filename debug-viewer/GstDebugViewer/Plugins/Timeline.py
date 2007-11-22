@@ -268,6 +268,16 @@ class TimelineWidget (gtk.DrawingArea):
         gc = gtk.gdk.GC (self.window)
         self.window.draw_drawable (gc, self.__offscreen, 0, 0, 0, 0, -1, -1)
 
+    def update (self):
+
+        width = self.get_allocation ()[2]
+
+        self.process.abort ()
+        self.freq_sentinel.clear ()
+        self.dist_sentinel.clear ()
+        self.freq_sentinel.run_for (width)
+        self.process.run ()
+
     def update_position (self, start_ts, end_ts):
 
         if not self.freq_sentinel.data:
@@ -411,11 +421,7 @@ class TimelineWidget (gtk.DrawingArea):
         if event.width < 16:
             return False
 
-        self.process.abort ()
-        self.freq_sentinel.clear ()
-        self.dist_sentinel.clear ()
-        self.freq_sentinel.run_for (event.width)
-        self.process.run ()
+        self.update ()
 
         return False
 
@@ -432,7 +438,7 @@ class TimelineFeature (FeatureBase):
 
         self.action_group = gtk.ActionGroup ("TimelineActions")
         self.action_group.add_toggle_actions ([("show-timeline",
-                                                None, _("_Timeline"))])
+                                                None, _("_Timeline"),)])
 
     def attach (self, window):
 
@@ -462,7 +468,9 @@ class TimelineFeature (FeatureBase):
                                                                            self.handle_log_view_adjustment_value_changed)
 
         handler = self.handle_show_action_toggled
-        self.action_group.get_action ("show-timeline").connect ("toggled", handler)
+        action = self.action_group.get_action ("show-timeline")
+        action.connect ("toggled", handler)
+        action.activate ()
 
     def detach (self, window):
 
@@ -473,6 +481,10 @@ class TimelineFeature (FeatureBase):
 
         self.timeline.destroy ()
         self.timeline = None
+
+    def handle_log_file_changed (self):
+
+        self.timeline.update ()
 
     def handle_log_view_adjustment_value_changed (self, adj):
 

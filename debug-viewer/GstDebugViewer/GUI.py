@@ -1040,6 +1040,7 @@ class Window (object):
                 self.dispatcher.cancel ()
             self.dispatcher = None
             self.log_file = None
+            self.have_log_file_changed ()
         else:
             self.logger.debug ("setting log file %r", filename)
 
@@ -1047,6 +1048,11 @@ class Window (object):
             self.log_file = Data.LogFile (filename, self.dispatcher)
             self.log_file.consumers.append (self)
             self.log_file.start_loading ()
+
+    def have_log_file_changed (self):
+
+        for feature in self.features:
+            feature.handle_log_file_changed ()
 
     def handle_log_view_button_press_event (self, view, event):
 
@@ -1110,6 +1116,7 @@ class Window (object):
         def idle_set ():
             ##self.log_view.props.model = self.log_model
             self.log_view.props.model = self.log_filter
+            self.have_log_file_changed ()
             return False
 
         gobject.idle_add (idle_set)

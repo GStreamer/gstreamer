@@ -29,6 +29,10 @@ class FeatureBase (object):
 
     state_section_name = None
 
+    def handle_log_file_changed (self):
+
+        pass
+
     def register_lazy_sentinel (self, sentinel):
 
         pass
