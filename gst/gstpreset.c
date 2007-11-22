@@ -141,11 +141,11 @@ preset_get_path (GstPreset * self)
       GST_INFO ("file_name: '%s'", file_name);
       /*
          '/home/ensonic/buzztard/lib/gstreamer-0.10/libgstsimsyn.so'
-         -> '/home/ensonic/buzztard/share/gstreamer-0.10/GstSimSyn.prs'
+         -> '/home/ensonic/buzztard/share/gstreamer-0.10/presets/GstSimSyn.prs'
          -> '$HOME/.gstreamer-0.10/presets/GstSimSyn.prs'
 
          '/usr/lib/gstreamer-0.10/libgstaudiofx.so'
-         -> '/usr/share/gstreamer-0.10/GstAudioPanorama.prs'
+         -> '/usr/share/gstreamer-0.10/presets/GstAudioPanorama.prs'
          -> '$HOME/.gstreamer-0.10/presets/GstAudioPanorama.prs'
        */
     }
@@ -248,7 +248,8 @@ gst_preset_default_get_preset_names (GstPreset * self)
       /* read preset entries */
       while (!feof (in)) {
         /* read preset entry */
-        (void) fgets (line, LINE_LEN, in);
+        if (!fgets (line, LINE_LEN, in))
+          break;
         g_strchomp (line);
         if (*line) {
           preset_name = g_strdup (line);
@@ -261,8 +262,7 @@ gst_preset_default_get_preset_names (GstPreset * self)
           /* read preset lines */
           parse_preset = TRUE;
           while (parse_preset) {
-            (void) fgets (line, LINE_LEN, in);
-            if (feof (in) || (*line == '\n')) {
+            if (!fgets (line, LINE_LEN, in) || (*line == '\n')) {
               GST_DEBUG ("preset done");
               parse_preset = FALSE;
               break;

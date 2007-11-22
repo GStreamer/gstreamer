@@ -1,3 +1,8 @@
+2007-11-22  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstpreset.c:
+	  Try harder to use the return value from fgets().
+
 2007-11-21  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstpreset.c:
