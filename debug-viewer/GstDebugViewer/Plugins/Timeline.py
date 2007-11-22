@@ -551,6 +551,12 @@ class TimelineFeature (FeatureBase):
         data = self.timeline.freq_sentinel.data
         if not data:
             return True
+
+        if pos < 0:
+            pos = 0
+        elif pos >= len (data):
+            pos = len (data) - 1
+
         count = sum (data[:pos + 1])
 
         row = self.log_model[count]
