@@ -126,7 +126,8 @@ class LevelDistributionSentinel (object):
         model_next = self.model.iter_next
         id_time = self.model.COL_TIME
         id_level = self.model.COL_LEVEL
-        result = []
+        del self.data[:]
+        data = self.data
         i = 0
         partitions_i = 0
         partitions = self.freq_sentinel.partitions
@@ -139,7 +140,7 @@ class LevelDistributionSentinel (object):
                 yield True
             level = model_get (tree_iter, id_level)
             if i > partitions[partitions_i]:
-                result.append (tuple (counts))
+                data.append (tuple (counts))
                 counts = [0] * 6
                 partitions_i += 1
                 if partitions_i == len (partitions):
@@ -150,8 +151,6 @@ class LevelDistributionSentinel (object):
             tree_iter = model_next (tree_iter)
 
         # FIXME: We lose the last partition here!
-
-        self.data = result
 
         yield False
 
@@ -175,6 +174,7 @@ class UpdateProcess (object):
 
         for x in self.dist_sentinel.process ():
             yield True
+            self.handle_sentinel_progress (self.dist_sentinel)
 
         self.is_running = False
 
@@ -197,6 +197,10 @@ class UpdateProcess (object):
 
         self.dispatcher.cancel ()
         self.is_running = False
+
+    def handle_sentinel_progress (self, sentinel):
+
+        pass
 
     def handle_sentinel_finished (self, sentinel):
 
@@ -222,10 +226,15 @@ class TimelineWidget (gtk.DrawingArea):
         self.connect ("expose-event", self.__handle_expose_event)
         self.connect ("configure-event", self.__handle_configure_event)
         self.connect ("size-request", self.__handle_size_request)
+        self.process.handle_sentinel_progress = self.handle_sentinel_progress
         self.process.handle_sentinel_finished = self.handle_sentinel_finished
         self.process.handle_process_finished = self.handle_process_finished
 
         self.__offscreen = None
+
+    def handle_sentinel_progress (self, sentinel):
+
+        self.__redraw ()
 
     def handle_sentinel_finished (self, sentinel):
 
