@@ -1,5 +1,10 @@
 2007-11-22  Stefan Kost  <ensonic@users.sf.net>
 
+	* tools/gst-inspect.c:
+	  Print 'default value' for enums and flags too.
+
+2007-11-22  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/random/ensonic/profiling.txt:
 	  More ideas.
 

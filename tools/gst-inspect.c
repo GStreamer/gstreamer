@@ -448,22 +448,27 @@ print_element_properties_info (GstElement * element)
             print_caps (caps, "                           ");
           }
         } else if (G_IS_PARAM_SPEC_ENUM (param)) {
+          GParamSpecEnum *penum = G_PARAM_SPEC_ENUM (param);
           GEnumValue *values;
           guint j = 0;
           gint enum_value;
+          const gchar *def_val_nick = "", *cur_val_nick = "";
 
           values = G_ENUM_CLASS (g_type_class_ref (param->value_type))->values;
           enum_value = g_value_get_enum (&value);
 
           while (values[j].value_name) {
             if (values[j].value == enum_value)
-              break;
+              cur_val_nick = values[j].value_nick;
+            if (values[j].value == penum->default_value)
+              def_val_nick = values[j].value_nick;
             j++;
           }
 
-          n_print ("%-23.23s Enum \"%s\" Current: %d, \"%s\"", "",
-              g_type_name (G_VALUE_TYPE (&value)),
-              enum_value, values[j].value_nick);
+          n_print
+              ("%-23.23s Enum \"%s\" Default: %d, \"%s\" Current: %d, \"%s\"",
+              "", g_type_name (G_VALUE_TYPE (&value)), penum->default_value,
+              def_val_nick, enum_value, cur_val_nick);
 
           j = 0;
           while (values[j].value_name) {
@@ -476,28 +481,40 @@ print_element_properties_info (GstElement * element)
           }
           /* g_type_class_unref (ec); */
         } else if (G_IS_PARAM_SPEC_FLAGS (param)) {
+          GParamSpecFlags *pflags = G_PARAM_SPEC_FLAGS (param);
           GFlagsValue *values;
           guint j = 0;
           gint flags_value;
-          GString *flags = NULL;
+          GString *cur_flags = NULL, *def_flags = NULL;
 
           values = G_FLAGS_CLASS (g_type_class_ref (param->value_type))->values;
           flags_value = g_value_get_flags (&value);
 
           while (values[j].value_name) {
             if (values[j].value & flags_value) {
-              if (flags) {
-                g_string_append_printf (flags, " | %s", values[j].value_nick);
+              if (cur_flags) {
+                g_string_append_printf (cur_flags, " | %s",
+                    values[j].value_nick);
               } else {
-                flags = g_string_new (values[j].value_nick);
+                cur_flags = g_string_new (values[j].value_nick);
+              }
+            }
+            if (values[j].value & pflags->default_value) {
+              if (def_flags) {
+                g_string_append_printf (def_flags, " | %s",
+                    values[j].value_nick);
+              } else {
+                def_flags = g_string_new (values[j].value_nick);
               }
             }
             j++;
           }
 
-          n_print ("%-23.23s Flags \"%s\" Current: %d, \"%s\"", "",
-              g_type_name (G_VALUE_TYPE (&value)),
-              flags_value, (flags ? flags->str : "(none)"));
+          n_print
+              ("%-23.23s Flags \"%s\" Default: %d, \"%s\" Current: %d, \"%s\"",
+              "", g_type_name (G_VALUE_TYPE (&value)), pflags->default_value,
+              (def_flags ? def_flags->str : "(none)"), flags_value,
+              (cur_flags ? cur_flags->str : "(none)"));
 
           j = 0;
           while (values[j].value_name) {
@@ -509,8 +526,10 @@ print_element_properties_info (GstElement * element)
             j++;
           }
 
-          if (flags)
-            g_string_free (flags, TRUE);
+          if (cur_flags)
+            g_string_free (cur_flags, TRUE);
+          if (def_flags)
+            g_string_free (def_flags, TRUE);
         } else if (G_IS_PARAM_SPEC_OBJECT (param)) {
           n_print ("%-23.23s Object of type \"%s\"", "",
               g_type_name (param->value_type));
