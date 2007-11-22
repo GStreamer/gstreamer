@@ -380,7 +380,7 @@ class TextColumn (SizedColumn):
         if not values:
             return SizedColumn.compute_default_size (self, view, model)
 
-        cell = self.view_column.get_cells ()[0]
+        cell = self.view_column.get_cell_renderers ()[0]
 
         if self.get_modify_func is not None:
             format = self.get_modify_func ()
@@ -437,7 +437,7 @@ class LevelColumn (TextColumn):
 
         TextColumn.__init__ (self)
 
-        cell = self.view_column.get_cells ()[0]
+        cell = self.view_column.get_cell_renderers ()[0]
         cell.props.xalign = .5
 
     @staticmethod
