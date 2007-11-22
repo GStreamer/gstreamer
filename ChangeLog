@@ -1,5 +1,17 @@
 2007-11-22  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/random/ensonic/profiling.txt:
+	  More ideas.
+
+	* gst/gstbin.c:
+	  Fix typo and give better log output.
+
+	* gst/gstdebugutils.c:
+	* gst/gstdebugutils.h:
+	  More ideas, make graphs a bit smaller and fix param name in macro.
+
+2007-11-22  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstpreset.c:
 	  Try harder to use the return value from fgets().
 

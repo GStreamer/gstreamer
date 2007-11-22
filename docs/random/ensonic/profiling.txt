@@ -3,7 +3,7 @@ $Id$
 = profiling =
 
 == what information is interesting? ==
-* pipeline through-output
+* pipeline throughput
   if we know the cpu-load for a given datastream, we could extrapolate what the
   system can handle
   -> qos profiling
@@ -104,6 +104,9 @@ Sensors do meassurements and deliver timestampe performance data.
   * when (gst_clock_get_time) ?
   * we want it per thread
 * queue fill levels
+* number of
+  * threads
+  * open files
 
 == Wanted Sensors ==
 * dropped buffers
@@ -127,6 +130,7 @@ timestamp [qos-ratio] [cpu-load={sum,17284,17285}]
 == Running ==
 LD_PRELOAD=libgstperfmon.so GST_PERFMON_DETAILS="qos-ratio,cpu-load=all" <application>
 LD_PRELOAD=libgstperfmon.so GST_PERFMON_DETAILS="qos-ratio,cpu-load=sum" <application>
+LD_PRELOAD=libgstperfmon.so GST_PERFMON_DETAILS="*" <application>
 
 == Exploration
 pygtk ui, mathplotlib

@@ -18,6 +18,13 @@
  * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
  * Boston, MA 02111-1307, USA.
  */
+/* TODO:
+ * edge [ constraint=false ];
+ * edge [ minlen=0 ];
+ *   does not create spacial dependency
+ * node [ margin="0.02,0.01" ];
+ *   space surrounding the label
+ */
 
 #include "gst_private.h"
 #include "gstdebugutils.h"
@@ -453,7 +460,8 @@ _gst_debug_bin_to_dot_file (GstBin * bin, GstDebugGraphDetails details,
         "  fontname=\"Bitstream Vera Sans\";\n"
         "  fontsize=\"8\";\n"
         "  labelloc=t;\n"
-        "  nodesep=.15;\n"
+        "  nodesep=.1;\n"
+        "  ranksep=.2;\n"
         "  label=\"<%s>\\n%s%s%s\";\n"
         "  node [style=filled, shape=box, fontsize=\"7\", fontname=\"Bitstream Vera Sans\"];\n"
         "  edge [labelfontsize=\"7\", fontsize=\"7\", labelfontname=\"Bitstream Vera Sans\", fontname=\"Bitstream Vera Sans\"];\n"

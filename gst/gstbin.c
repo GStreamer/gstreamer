@@ -735,11 +735,20 @@ find_message (GstBin * bin, GstObject * src, GstMessageType types)
       (GCompareFunc) message_check);
 
   if (result) {
-    GST_DEBUG_OBJECT (bin, "we found a message %p from %s mathing types %08x",
+    GST_DEBUG_OBJECT (bin, "we found a message %p from %s matching types %08x",
         result->data, GST_OBJECT_NAME (GST_MESSAGE_CAST (result->data)->src),
         types);
   } else {
     GST_DEBUG_OBJECT (bin, "no message found matching types %08x", types);
+#ifndef GST_DISABLE_GST_DEBUG
+    {
+      guint i;
+
+      for (i = 0; i < 32; i++)
+        if (types & (1 << i))
+          GST_DEBUG_OBJECT (bin, "  %s", gst_message_type_get_name (1 << i));
+    }
+#endif
   }
 
   return result;
