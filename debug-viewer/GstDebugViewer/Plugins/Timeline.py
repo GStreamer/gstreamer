@@ -306,12 +306,15 @@ class TimelineWidget (gtk.DrawingArea):
 
         ctx = drawable.cairo_create ()
         x, y, w, h = self.get_allocation ()
+
+        # White background rectangle.
         ctx.set_line_width (0.)
         ctx.rectangle (0, 0, w, h)
         ctx.set_source_rgb (1., 1., 1.)
         ctx.fill ()
         ctx.new_path ()
 
+        # Horizontal reference lines.
         ctx.set_line_width (1.)
         ctx.set_source_rgb (.95, .95, .95)
         for i in range (h // 16):
@@ -320,9 +323,10 @@ class TimelineWidget (gtk.DrawingArea):
             ctx.line_to (w, y)
             ctx.stroke ()
 
+        # Vertical reference lines.
         pixel_step = self.find_indicative_time_step ()
         ctx.set_source_rgb (.9, .9, .9)
-        for i in range (w // pixel_step):
+        for i in range (1, w // pixel_step + 1):
             x = i * pixel_step - .5
             ctx.move_to (x, 0)
             ctx.line_to (x, h)
