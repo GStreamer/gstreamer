@@ -820,8 +820,6 @@ class Window (object):
         self.logger = logging.getLogger ("ui.window")
         self.app = app
 
-        self.sentinels = []
-
         self.dispatcher = None
         self.progress_bar = None
         self.update_progress_id = None
@@ -1107,9 +1105,6 @@ class Window (object):
         self.progress_bar = None
 
         self.log_model.set_log (self.log_file)
-
-        for sentinel in self.sentinels:
-            sentinel ()
 
         self.log_filter.reset ()
 

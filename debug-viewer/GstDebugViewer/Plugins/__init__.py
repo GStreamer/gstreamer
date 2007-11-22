@@ -33,10 +33,6 @@ class FeatureBase (object):
 
         pass
 
-    def register_lazy_sentinel (self, sentinel):
-
-        pass
-
 class PluginBase (object):
 
     features = ()
