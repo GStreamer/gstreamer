@@ -430,6 +430,13 @@ class LevelColumn (TextColumn):
     label_header = _("L")
     id = LazyLogModel.COL_LEVEL
 
+    def __init__ (self):
+
+        TextColumn.__init__ (self)
+
+        cell = self.view_column.get_cells ()[0]
+        cell.props.xalign = .5
+
     @staticmethod
     def get_modify_func ():
 
