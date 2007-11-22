@@ -964,11 +964,11 @@ class Window (object):
 
         dialog = gtk.FileChooserDialog (None, self.gtk_window,
                                         gtk.FILE_CHOOSER_ACTION_OPEN,
-                                        (gtk.STOCK_CANCEL, 1,
-                                         gtk.STOCK_OPEN, 0,))
+                                        (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                         gtk.STOCK_OPEN, gtk.RESPONSE_ACCEPT,))
         response = dialog.run ()
         dialog.hide ()
-        if response == 0:
+        if response == gtk.RESPONSE_ACCEPT:
             self.set_log_file (dialog.get_filename ())
         dialog.destroy ()
 
