@@ -243,7 +243,10 @@ class VerticalTimelineWidget (gtk.DrawingArea):
 
         self.logger = logging.getLogger ("ui.vtimeline")
 
+        self.theme = GUI.ThreadColorThemeTango ()
         self.params = None
+        self.thread_colors = {}
+        self.next_thread_color = 0
 
         self.connect ("expose-event", self.__handle_expose_event)
         self.connect ("size-request", self.__handle_size_request)
@@ -267,8 +270,8 @@ class VerticalTimelineWidget (gtk.DrawingArea):
         if self.params is None:
             return
 
-        first_y, cell_height, ts_list = self.params
-        first_ts, last_ts = ts_list[0], ts_list[-1]
+        first_y, cell_height, data = self.params
+        first_ts, last_ts = data[0][0], data[-1][0]
         ts_range = last_ts - first_ts
 
         if ts_range == 0:
@@ -278,7 +281,17 @@ class VerticalTimelineWidget (gtk.DrawingArea):
         ctx.set_source_rgb (0., 0., 0.)
         
         first_y += cell_height // 2 - .5
-        for i, ts in enumerate (ts_list):
+        for i, i_data in enumerate (data):
+            ts, thread = i_data
+            if thread in self.thread_colors:
+                ctx.set_source_rgb (*self.thread_colors[thread])
+            else:
+                self.next_thread_color += 1
+                if self.next_thread_color == len (self.theme.colors):
+                    self.next_thread_color = 0
+                color = self.theme.colors[self.next_thread_color][0].float_tuple ()
+                self.thread_colors[thread] = color
+                ctx.set_source_rgb (*color)
             ts_fraction = float (ts - first_ts) / ts_range
             ts_offset = ts_fraction * h
             row_offset = first_y + i * cell_height
@@ -295,14 +308,16 @@ class VerticalTimelineWidget (gtk.DrawingArea):
     def clear (self):
 
         self.params = None
+        self.thread_colors.clear ()
+        self.next_thread_color = 0
         self.queue_draw ()
 
-    def update (self, first_y, cell_height, ts_list):
+    def update (self, first_y, cell_height, data):
 
         # FIXME: Ideally we should be informed of the vertical position
         # difference of the view (which is 0) with the current UI layout.
 
-        self.params = (first_y, cell_height, ts_list,)
+        self.params = (first_y, cell_height, data,)
         self.queue_draw ()
 
 class TimelineWidget (gtk.DrawingArea):
@@ -642,13 +657,13 @@ class TimelineFeature (FeatureBase):
         bg_rect = self.log_view.get_background_area (start_path, column)
         cell_height = bg_rect.height
 
-        ts_list = []
+        data = []
         tree_iter = model.get_iter (start_path)
         while model.get_path (tree_iter) != end_path:
-            ts_list.append (model.get_value (tree_iter, model.COL_TIME))
+            data.append (model.get (tree_iter, model.COL_TIME, model.COL_THREAD))
             tree_iter = model.iter_next (tree_iter)
 
-        self.vtimeline.update (first_y, cell_height, ts_list)
+        self.vtimeline.update (first_y, cell_height, data)
 
     def handle_show_action_toggled (self, action):
 

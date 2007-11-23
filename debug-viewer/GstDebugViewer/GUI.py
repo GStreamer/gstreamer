@@ -43,6 +43,77 @@ import gtk.glade
 
 from GstDebugViewer import Common, Data, Main
 
+class Color (object):
+
+    def __init__ (self, hex_24):
+
+        if hex_24.startswith ("#"):
+            s = hex_24[1:]
+        else:
+            s = hex_24
+
+        self._fields = tuple ((int (hs, 16) for hs in (s[:2], s[2:4], s[4:],)))
+
+    def hex_string (self):
+
+        return "#%02x%02x%02x" % self._fields
+
+    def float_tuple (self):
+
+        return tuple ((float (x) / 255 for x in self._fields))
+
+    def byte_tuple (self):
+
+        return self._fields
+
+    def short_tuple (self):
+
+        return tuple ((x << 8 for x in self._fields))
+
+class ColorPalette (object):
+
+    @classmethod
+    def get (cls):
+
+        try:
+            return cls._instance
+        except AttributeError:
+            cls._instance = cls ()
+            return cls._instance
+
+class TangoPalette (ColorPalette):
+
+    def __init__ (self):
+
+        for name, r, g, b in  [("butter1", 252, 233, 79),
+                               ("butter2", 237, 212, 0),
+                               ("butter3", 196, 160, 0),
+                               ("chameleon1", 138, 226, 52),
+                               ("chameleon2", 115, 210, 22),
+                               ("chameleon3", 78, 154, 6),
+                               ("orange1", 252, 175, 62),
+                               ("orange2", 245, 121, 0),
+                               ("orange3", 206, 92, 0),
+                               ("skyblue1", 114, 159, 207),
+                               ("skyblue2", 52, 101, 164),
+                               ("skyblue3", 32, 74, 135),
+                               ("plum1", 173, 127, 168),
+                               ("plum2", 117, 80, 123),
+                               ("plum3", 92, 53, 102),
+                               ("chocolate1", 233, 185, 110),
+                               ("chocolate2", 193, 125, 17),
+                               ("chocolate3", 143, 89, 2),
+                               ("scarletred1", 239, 41, 41),
+                               ("scarletred2", 204, 0, 0),
+                               ("scarletred3", 164, 0, 0),
+                               ("aluminium1", 238, 238, 236),
+                               ("aluminium2", 211, 215, 207),
+                               ("aluminium3", 186, 189, 182),
+                               ("aluminium4", 136, 138, 133),
+                               ("aluminium5", 85, 87, 83),
+                               ("aluminium6", 46, 52, 54)]:
+            setattr (self, name, Color ("%02x%02x%02x" % (r, g, b,)))
+
 class ColorTheme (object):
 
     def __init__ (self):
@@ -53,17 +124,17 @@ class ColorTheme (object):
 
         self.colors[key] = (fg_color, bg_color, bg_color2,)
 
+    def colors_float (self, key):
+
+        return tuple ((self.hex_string_to_floats (color)
+                       for color in self.colors[key]))
+
     @staticmethod
     def hex_string_to_floats (s):
 
         if s.startswith ("#"):
             s = s[1:]
         return tuple ((float (int (hs, 16)) / 255. for hs in (s[:2], s[2:4], s[4:],)))
-
-    def colors_float (self, key):
-
-        return tuple ((self.hex_string_to_floats (color)
-                       for color in self.colors[key]))
 
 class LevelColorTheme (ColorTheme):
 
@@ -81,6 +152,27 @@ class LevelColorThemeTango (LevelColorTheme):
         self.add_color (Data.debug_level_info, "#000000", "#8ae234", "#9dff3b")
         self.add_color (Data.debug_level_warning, "#000000", "#fcaf3e", "#ffc266")
         self.add_color (Data.debug_level_error, "#ffffff", "#ef2929", "#ff4545")
+
+class ThreadColorTheme (ColorTheme):
+
+    pass
+
+class ThreadColorThemeTango (ThreadColorTheme):
+
+    def __init__ (self):
+
+        ThreadColorTheme.__init__ (self)
+
+        t = TangoPalette.get ()
+        for i, color in enumerate ([t.butter3,
+                                    t.orange2,
+                                    t.chocolate3,
+                                    t.chameleon3,
+                                    t.skyblue2,
+                                    t.plum2,
+                                    t.scarletred2,
+                                    t.aluminium5]):
+            self.add_color (i, color)
 
 class LogModelBase (gtk.GenericTreeModel):
 
