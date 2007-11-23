@@ -29,9 +29,6 @@
 
 #include "mpegtsparse.h"
 #include "mpegtsparsemarshal.h"
-#include "flutspatinfo.h"
-#include "flutspmtinfo.h"
-#include "flutspmtstreaminfo.h"
 
 GST_DEBUG_CATEGORY_STATIC (mpegts_parse_debug);
 #define GST_CAT_DEFAULT mpegts_parse_debug
@@ -49,7 +46,7 @@ typedef struct
   gint program_number;
   guint16 pmt_pid;
   guint16 pcr_pid;
-  GObject *pmt_info;
+  GstStructure *pmt_info;
   GHashTable *streams;
   gint patcount;
   gint selected;
@@ -98,7 +95,11 @@ GST_STATIC_PAD_TEMPLATE ("program_%d", GST_PAD_SRC,
 
 enum
 {
+  SIGNAL_PAT,
   SIGNAL_PMT,
+  SIGNAL_NIT,
+  SIGNAL_SDT,
+  SIGNAL_EIT,
   /* FILL ME */
   LAST_SIGNAL
 };
@@ -107,8 +108,7 @@ enum
 {
   ARG_0,
   PROP_PROGRAM_NUMBERS,
-  PROP_PAT_INFO
-      /* FILL ME */
+  /* FILL ME */
 };
 
 static void mpegts_parse_set_property (GObject * object, guint prop_id,
@@ -180,21 +180,26 @@ mpegts_parse_class_init (MpegTSParseClass * klass)
           "Program Numbers",
           "Colon separated list of programs", "", G_PARAM_READWRITE));
 
-  g_object_class_install_property (gobject_class, PROP_PAT_INFO,
-      g_param_spec_value_array ("pat-info",
-          "GValueArray containing GObjects with properties",
-          "Array of GObjects containing information from the TS PAT "
-          "about all programs listed in the current Program Association "
-          "Table (PAT)",
-          g_param_spec_object ("flu-pat-streaminfo", "FluPATStreamInfo",
-              "Fluendo TS Demuxer PAT Stream info object",
-              MPEGTS_TYPE_PAT_INFO, G_PARAM_READABLE), G_PARAM_READABLE));
-
+  signals[SIGNAL_PAT] =
+      g_signal_new ("pat-info", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (MpegTSParseClass, pat_info), NULL, NULL,
+      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
   signals[SIGNAL_PMT] =
       g_signal_new ("pmt-info", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (MpegTSParseClass, pmt_info), NULL, NULL,
-      mpegts_parse_marshal_VOID__INT_OBJECT, G_TYPE_NONE, 2, G_TYPE_INT,
-      MPEGTS_TYPE_PMT_INFO);
+      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
+  signals[SIGNAL_NIT] =
+      g_signal_new ("nit-info", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (MpegTSParseClass, nit_info), NULL, NULL,
+      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
+  signals[SIGNAL_SDT] =
+      g_signal_new ("sdt-info", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (MpegTSParseClass, sdt_info), NULL, NULL,
+      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
+  signals[SIGNAL_EIT] =
+      g_signal_new ("eit-info", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (MpegTSParseClass, eit_info), NULL, NULL,
+      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
 }
 
 static gboolean
@@ -212,6 +217,18 @@ mpegts_parse_reset (MpegTSParse * parse)
   /* PAT */
   g_hash_table_insert (parse->psi_pids,
       GINT_TO_POINTER (0), GINT_TO_POINTER (1));
+
+  /* NIT */
+  g_hash_table_insert (parse->psi_pids,
+      GINT_TO_POINTER (0x10), GINT_TO_POINTER (1));
+
+  /* SDT */
+  g_hash_table_insert (parse->psi_pids,
+      GINT_TO_POINTER (0x11), GINT_TO_POINTER (1));
+
+  /* EIT */
+  g_hash_table_insert (parse->psi_pids,
+      GINT_TO_POINTER (0x12), GINT_TO_POINTER (1));
 
   /* pmt pids will be added and removed dinamically */
 }
@@ -254,8 +271,8 @@ mpegts_parse_finalize (GObject * object)
   MpegTSParse *parse = GST_MPEGTS_PARSE (object);
 
   g_free (parse->program_numbers);
-  if (parse->pat_info)
-    g_value_array_free (parse->pat_info);
+  if (parse->pat)
+    gst_structure_free (parse->pat);
   g_hash_table_destroy (parse->programs);
   g_hash_table_destroy (parse->psi_pids);
 
@@ -287,9 +304,6 @@ mpegts_parse_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_PROGRAM_NUMBERS:
       g_value_set_string (value, parse->program_numbers);
-      break;
-    case PROP_PAT_INFO:
-      g_value_set_boxed (value, parse->pat_info);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -368,7 +382,7 @@ static void
 mpegts_parse_free_program (MpegTSParseProgram * program)
 {
   if (program->pmt_info)
-    g_object_unref (program->pmt_info);
+    gst_structure_free (program->pmt_info);
 
   g_hash_table_destroy (program->streams);
 
@@ -714,30 +728,38 @@ mpegts_parse_is_psi_pid (MpegTSParse * parse, guint16 pid)
 }
 
 static void
-mpegts_parse_apply_pat (MpegTSParse * parse, GValueArray * pat_info)
+mpegts_parse_apply_pat (MpegTSParse * parse, GstStructure * pat_info)
 {
-  GValue *value;
-  GValueArray *old_pat;
-  GObject *program_info;
-  gint program_number;
+  const GValue *value;
+  GstStructure *old_pat;
+  GstStructure *program_info;
+  guint program_number;
   guint pid;
   MpegTSParseProgram *program;
   gint i;
   GList *pads_to_add = NULL;
   GList *pads_to_remove = NULL;
+  const GValue *programs;
+  gchar *dbg;
 
-  old_pat = parse->pat_info;
-  parse->pat_info = pat_info;
-  g_object_notify (G_OBJECT (parse), "pat-info");
+  old_pat = parse->pat;
+  parse->pat = pat_info;
+
+  dbg = gst_structure_to_string (pat_info);
+  GST_INFO_OBJECT (parse, "PAT %s", dbg);
+  g_free (dbg);
+
+  g_signal_emit (parse, signals[SIGNAL_PAT], 0, pat_info);
 
   GST_OBJECT_LOCK (parse);
+  programs = gst_structure_get_value (pat_info, "programs");
   /* activate the new table */
-  for (i = 0; i < pat_info->n_values; ++i) {
-    value = g_value_array_get_nth (pat_info, i);
+  for (i = 0; i < gst_value_list_get_size (programs); ++i) {
+    value = gst_value_list_get_value (programs, i);
 
-    program_info = g_value_get_object (value);
-    g_object_get (program_info,
-        "program-number", &program_number, "pid", &pid, NULL);
+    program_info = g_value_get_boxed (value);
+    gst_structure_get_uint (program_info, "program-number", &program_number);
+    gst_structure_get_uint (program_info, "pid", &pid);
 
     program = mpegts_parse_get_program (parse, program_number);
     if (program) {
@@ -755,9 +777,6 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GValueArray * pat_info)
 
       program->patcount += 1;
     } else {
-      GST_INFO_OBJECT (parse, "PAT adding program %d pmt_pid %d",
-          program_number, pid);
-
       g_hash_table_insert (parse->psi_pids,
           GINT_TO_POINTER ((gint) pid), GINT_TO_POINTER (1));
       program = mpegts_parse_add_program (parse, program_number, pid);
@@ -771,12 +790,13 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GValueArray * pat_info)
   if (old_pat) {
     /* deactivate the old table */
 
-    for (i = 0; i < old_pat->n_values; ++i) {
-      value = g_value_array_get_nth (old_pat, i);
+    programs = gst_structure_get_value (old_pat, "programs");
+    for (i = 0; i < gst_value_list_get_size (programs); ++i) {
+      value = gst_value_list_get_value (programs, i);
 
-      program_info = g_value_get_object (value);
-      g_object_get (program_info,
-          "program-number", &program_number, "pid", &pid, NULL);
+      program_info = g_value_get_boxed (value);
+      gst_structure_get_uint (program_info, "program-number", &program_number);
+      gst_structure_get_uint (program_info, "pid", &pid);
 
       program = mpegts_parse_get_program (parse, program_number);
       if (program == NULL) {
@@ -789,8 +809,12 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GValueArray * pat_info)
         /* the program has been referenced by the new pat, keep it */
         continue;
 
-      GST_INFO_OBJECT (parse, "PAT removing program %d pmt_pid %d",
-          program_number, pid);
+      {
+        gchar *dbg = gst_structure_to_string (program_info);
+
+        GST_INFO_OBJECT (parse, "PAT removing program %s", dbg);
+        g_free (dbg);
+      }
 
       if (program->active)
         parse->pads_to_remove = g_list_append (parse->pads_to_remove,
@@ -800,7 +824,7 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GValueArray * pat_info)
       g_hash_table_remove (parse->psi_pids, GINT_TO_POINTER ((gint) pid));
     }
 
-    g_value_array_free (old_pat);
+    gst_structure_free (old_pat);
   }
 
   pads_to_add = parse->pads_to_add;
@@ -814,39 +838,40 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GValueArray * pat_info)
 
 static void
 mpegts_parse_apply_pmt (MpegTSParse * parse,
-    guint16 pmt_pid, GObject * pmt_info)
+    guint16 pmt_pid, GstStructure * pmt_info)
 {
   MpegTSParseProgram *program;
-  gint program_number;
+  guint program_number;
   guint pcr_pid;
   guint pid;
   guint stream_type;
-  GValueArray *old_streams;
-  GValueArray *new_streams;
-  GValue *value;
-  GObject *stream;
+  GstStructure *stream;
   gint i;
+  const GValue *old_streams;
+  const GValue *new_streams;
+  const GValue *value;
 
-  g_object_get (pmt_info, "program_number", &program_number,
-      "pcr-pid", &pcr_pid, "stream-info", &new_streams, NULL);
+  gst_structure_get_uint (pmt_info, "program-number", &program_number);
+  gst_structure_get_uint (pmt_info, "pcr-pid", &pcr_pid);
+  new_streams = gst_structure_get_value (pmt_info, "streams");
 
   GST_OBJECT_LOCK (parse);
   program = mpegts_parse_get_program (parse, program_number);
   if (program) {
     if (program->pmt_info) {
       /* deactivate old pmt */
-      g_object_get (program->pmt_info, "stream-info", &old_streams, NULL);
+      old_streams = gst_structure_get_value (program->pmt_info, "streams");
 
-      for (i = 0; i < old_streams->n_values; ++i) {
-        value = g_value_array_get_nth (old_streams, i);
-        stream = g_value_get_object (value);
+      for (i = 0; i < gst_value_list_get_size (old_streams); ++i) {
+        value = gst_value_list_get_value (old_streams, i);
+        stream = g_value_get_boxed (value);
 
-        g_object_get (stream, "pid", &pid, "stream-type", &stream_type, NULL);
+        gst_structure_get_uint (stream, "pid", &pid);
+        gst_structure_get_uint (stream, "stream-type", &stream_type);
         mpegts_parse_program_remove_stream (parse, program, (guint16) pid);
       }
 
-      g_value_array_free (old_streams);
-      g_object_unref (program->pmt_info);
+      gst_structure_free (program->pmt_info);
     }
   } else {
     /* no PAT?? */
@@ -862,20 +887,46 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
   program->pcr_pid = pcr_pid;
   mpegts_parse_program_add_stream (parse, program, (guint16) pcr_pid, -1);
 
-  for (i = 0; i < new_streams->n_values; ++i) {
-    value = g_value_array_get_nth (new_streams, i);
-    stream = g_value_get_object (value);
+  for (i = 0; i < gst_value_list_get_size (new_streams); ++i) {
+    value = gst_value_list_get_value (new_streams, i);
+    stream = g_value_get_boxed (value);
 
-    g_object_get (stream, "pid", &pid, "stream-type", &stream_type, NULL);
-    GST_DEBUG_OBJECT (parse, "PMT program %d pid %d", program_number, pid);
-    mpegts_parse_program_add_stream (parse, program, (guint16) pid,
-        (guint8) stream_type);
+    gst_structure_get_uint (stream, "pid", &pid);
+    gst_structure_get_uint (stream, "stream-type", &stream_type);
+    mpegts_parse_program_add_stream (parse, program,
+        (guint16) pid, (guint8) stream_type);
   }
   GST_OBJECT_UNLOCK (parse);
 
-  g_value_array_free (new_streams);
+  {
+    gchar *dbg = gst_structure_to_string (pmt_info);
 
-  g_signal_emit (parse, signals[SIGNAL_PMT], 0, program_number, pmt_info);
+    GST_DEBUG_OBJECT (parse, "new pmt %s", dbg);
+    g_free (dbg);
+  }
+
+  g_signal_emit (parse, signals[SIGNAL_PMT], 0, pmt_info);
+}
+
+static void
+mpegts_parse_apply_nit (MpegTSParse * parse,
+    guint16 pmt_pid, GstStructure * nit_info)
+{
+  g_signal_emit (parse, signals[SIGNAL_NIT], 0, nit_info);
+}
+
+static void
+mpegts_parse_apply_sdt (MpegTSParse * parse,
+    guint16 pmt_pid, GstStructure * sdt_info)
+{
+  g_signal_emit (parse, signals[SIGNAL_SDT], 0, sdt_info);
+}
+
+static void
+mpegts_parse_apply_eit (MpegTSParse * parse,
+    guint16 pmt_pid, GstStructure * eit_info)
+{
+  g_signal_emit (parse, signals[SIGNAL_EIT], 0, eit_info);
 }
 
 static gboolean
@@ -887,7 +938,7 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
     case 0x00:
     {
       /* PAT */
-      GValueArray *pat_info;
+      GstStructure *pat_info;
 
       pat_info = mpegts_packetizer_parse_pat (parse->packetizer, section);
       if (pat_info)
@@ -900,7 +951,7 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
     case 0x02:
     {
       /* PMT */
-      GObject *pmt_info;
+      GstStructure *pmt_info;
 
       pmt_info = mpegts_packetizer_parse_pmt (parse->packetizer, section);
       if (pmt_info)
@@ -908,6 +959,63 @@ mpegts_parse_handle_psi (MpegTSParse * parse, MpegTSPacketizerSection * section)
       else
         res = FALSE;
 
+      break;
+    }
+    case 0x40:
+      /* NIT, actual network */
+    case 0x41:
+      /* NIT, other network */
+    {
+      GstStructure *nit_info;
+
+      nit_info = mpegts_packetizer_parse_nit (parse->packetizer, section);
+      if (nit_info)
+        mpegts_parse_apply_nit (parse, section->pid, nit_info);
+      else
+        res = FALSE;
+
+      break;
+    }
+    case 0x42:
+    {
+      /* SDT */
+      GstStructure *sdt_info;
+
+      sdt_info = mpegts_packetizer_parse_sdt (parse->packetizer, section);
+      if (sdt_info)
+        mpegts_parse_apply_sdt (parse, section->pid, sdt_info);
+      else
+        res = FALSE;
+      break;
+    }
+    case 0x4E:
+      /* EIT, present/following */
+    case 0x50:
+    case 0x51:
+    case 0x52:
+    case 0x53:
+    case 0x54:
+    case 0x55:
+    case 0x56:
+    case 0x57:
+    case 0x58:
+    case 0x59:
+    case 0x5A:
+    case 0x5B:
+    case 0x5C:
+    case 0x5D:
+    case 0x5E:
+    case 0x5F:
+      /* EIT, schedule */
+    {
+      /* EIT */
+      GstStructure *eit_info;
+
+      eit_info = mpegts_packetizer_parse_eit (parse->packetizer, section);
+      if (eit_info)
+        mpegts_parse_apply_eit (parse, section->pid, eit_info);
+      else
+        res = FALSE;
       break;
     }
     default:

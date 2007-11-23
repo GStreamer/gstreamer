@@ -50,6 +50,6 @@ CamConditionalAccess *cam_conditional_access_new ();
 void cam_conditional_access_destroy (CamConditionalAccess *cas);
 
 CamReturn cam_conditional_access_set_pmt (CamConditionalAccess *cas,
-  GObject *pmt, CamConditionalAccessPmtFlag flag);
+  GstStructure *pmt, CamConditionalAccessPmtFlag flag);
 
 #endif /* CAM_CONDITIONAL_ACCESS_H */

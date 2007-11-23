@@ -210,7 +210,7 @@ write_ca_descriptors (guint8 * body, GValueArray * descriptors)
 }
 
 guint8 *
-cam_build_ca_pmt (GObject * pmt, guint8 list_management, guint8 cmd_id,
+cam_build_ca_pmt (GstStructure * pmt, guint8 list_management, guint8 cmd_id,
     guint * size)
 {
   guint body_size = 0;
@@ -218,20 +218,20 @@ cam_build_ca_pmt (GObject * pmt, guint8 list_management, guint8 cmd_id,
   guint8 *body;
   GList *lengths = NULL;
   guint len = 0;
-  GValueArray *streams = NULL;
-  gint program_number;
+  const GValue *streams;
+  guint program_number;
   guint version_number;
   guint i;
-  GValue *value;
-  GObject *stream;
+  const GValue *value;
+  GstStructure *stream;
   GValueArray *program_descriptors = NULL;
   GValueArray *stream_descriptors = NULL;
 
-  g_object_get (pmt,
-      "program-number", &program_number,
-      "version-number", &version_number,
-      "stream-info", &streams, "descriptors", &program_descriptors, NULL);
-
+  gst_structure_get_uint (pmt, "program-number", &program_number);
+  gst_structure_get_uint (pmt, "version-number", &version_number);
+  streams = gst_structure_get_value (pmt, "streams");
+  value = gst_structure_get_value (pmt, "descriptors");
+  program_descriptors = g_value_get_boxed (value);
   /* get the length of program level CA_descriptor()s */
   len = get_ca_descriptors_length (program_descriptors);
   if (len > 0)
@@ -243,11 +243,12 @@ cam_build_ca_pmt (GObject * pmt, guint8 list_management, guint8 cmd_id,
 
   /* get the length of stream level CA_descriptor()s */
   if (streams != NULL) {
-    for (i = 0; i < streams->n_values; ++i) {
-      value = g_value_array_get_nth (streams, i);
-      stream = g_value_get_object (value);
+    for (i = 0; i < gst_value_list_get_size (streams); ++i) {
+      value = gst_value_list_get_value (streams, i);
+      stream = g_value_get_boxed (value);
 
-      g_object_get (stream, "descriptors", &stream_descriptors, NULL);
+      value = gst_structure_get_value (stream, "descriptors");
+      stream_descriptors = g_value_get_boxed (value);
 
       len = get_ca_descriptors_length (stream_descriptors);
       if (len > 0)
@@ -257,29 +258,11 @@ cam_build_ca_pmt (GObject * pmt, guint8 list_management, guint8 cmd_id,
       lengths = g_list_append (lengths, GINT_TO_POINTER (len));
       body_size += 5 + len;
 
-      if (stream_descriptors) {
-        g_value_array_free (stream_descriptors);
-        stream_descriptors = NULL;
-      }
     }
   }
 
   buffer = g_malloc0 (body_size);
   body = buffer;
-
-  /*
-     guint length_field_len = cam_calc_length_field_size (body_size);
-     guint apdu_header_length = 3 + length_field_len;
-     guint8 *apdu = (buffer + buffer_size) - body_size - apdu_header_length;
-     apdu [0] = 0x9F;
-     apdu [1] = 0x80;
-     apdu [2] = 0x32;
-
-     g_print ("LEN %d %d", length_field_len, body_size);
-
-     cam_write_length_field (&apdu [3], body_size);
-     body += 4;
-   */
 
   *body++ = list_management;
 
@@ -302,16 +285,17 @@ cam_build_ca_pmt (GObject * pmt, guint8 list_management, guint8 cmd_id,
   if (program_descriptors)
     g_value_array_free (program_descriptors);
 
-  for (i = 0; i < streams->n_values; ++i) {
+  for (i = 0; i < gst_value_list_get_size (streams); ++i) {
     guint stream_type;
     guint stream_pid;
 
-    value = g_value_array_get_nth (streams, i);
-    stream = g_value_get_object (value);
+    value = gst_value_list_get_value (streams, i);
+    stream = g_value_get_boxed (value);
 
-    g_object_get (stream,
-        "stream-type", &stream_type,
-        "pid", &stream_pid, "descriptors", &stream_descriptors, NULL);
+    gst_structure_get_uint (stream, "stream-type", &stream_type);
+    gst_structure_get_uint (stream, "pid", &stream_pid);
+    value = gst_structure_get_value (stream, "descriptors");
+    stream_descriptors = g_value_get_boxed (value);
 
     *body++ = stream_type;
     GST_WRITE_UINT16_BE (body, stream_pid);
@@ -325,15 +309,7 @@ cam_build_ca_pmt (GObject * pmt, guint8 list_management, guint8 cmd_id,
       *body++ = cmd_id;
       body = write_ca_descriptors (body, stream_descriptors);
     }
-
-    if (stream_descriptors) {
-      g_value_array_free (stream_descriptors);
-      stream_descriptors = NULL;
-    }
   }
-
-  if (streams)
-    g_value_array_free (streams);
 
   *size = body_size;
   return buffer;

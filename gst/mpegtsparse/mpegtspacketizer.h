@@ -97,9 +97,15 @@ void mpegts_packetizer_clear_packet (MpegTSPacketizer *packetizer,
 
 gboolean mpegts_packetizer_push_section (MpegTSPacketizer *packetzer,
   MpegTSPacketizerPacket *packet, MpegTSPacketizerSection *section);
-GValueArray *mpegts_packetizer_parse_pat (MpegTSPacketizer *packetizer,
+GstStructure *mpegts_packetizer_parse_pat (MpegTSPacketizer *packetizer,
   MpegTSPacketizerSection *section);
-GObject *mpegts_packetizer_parse_pmt (MpegTSPacketizer *packetizer,
+GstStructure *mpegts_packetizer_parse_pmt (MpegTSPacketizer *packetizer,
+  MpegTSPacketizerSection *section);
+GstStructure *mpegts_packetizer_parse_nit (MpegTSPacketizer *packetizer,
+  MpegTSPacketizerSection *section);
+GstStructure *mpegts_packetizer_parse_sdt (MpegTSPacketizer *packetizer,
+  MpegTSPacketizerSection *section);
+GstStructure *mpegts_packetizer_parse_eit (MpegTSPacketizer *packetizer,
   MpegTSPacketizerSection *section);
 
 G_END_DECLS

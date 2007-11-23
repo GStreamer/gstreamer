@@ -64,6 +64,6 @@ void cam_device_close (CamDevice *device);
 gboolean cam_device_ready (CamDevice *device);
 void cam_device_poll (CamDevice *device);
 void cam_device_set_pmt (CamDevice *device,
-  GObject *pmt, CamConditionalAccessPmtFlag flag);
+  GstStructure *pmt, CamConditionalAccessPmtFlag flag);
 
 #endif /* CAM_DEVICE_H */

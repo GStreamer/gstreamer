@@ -57,7 +57,7 @@ struct _MpegTSParse {
   GHashTable *programs;
   guint req_pads;
 
-  GValueArray *pat_info;
+  GstStructure *pat;
   MpegTSPacketizer *packetizer;
   GHashTable *psi_pids;
   gboolean disposed;
@@ -67,7 +67,11 @@ struct _MpegTSParseClass {
   GstElementClass parent_class;
 
   /* signals */
-  void (*pmt_info) (GObject *pmt_info);
+  void (*pat_info) (GstStructure *pat);
+  void (*pmt_info) (GstStructure *pmt);
+  void (*nit_info) (GstStructure *nit);
+  void (*sdt_info) (GstStructure *sdt);
+  void (*eit_info) (GstStructure *eit);
 };
 
 GType gst_mpegts_parse_get_type(void);

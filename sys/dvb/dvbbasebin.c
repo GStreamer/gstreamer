@@ -88,8 +88,8 @@ typedef struct
   gint program_number;
   guint16 pmt_pid;
   guint16 pcr_pid;
-  GObject *pmt;
-  GObject *old_pmt;
+  GstStructure *pmt;
+  GstStructure *old_pmt;
   gboolean selected;
   gboolean pmt_active;
   gboolean active;
@@ -107,10 +107,10 @@ static gboolean dvb_base_bin_ts_pad_probe_cb (GstPad * pad,
     GstBuffer * buf, gpointer user_data);
 static GstStateChangeReturn dvb_base_bin_change_state (GstElement * element,
     GstStateChange transition);
-static void dvb_base_bin_pat_info_changed_cb (GstElement * mpegtsparse,
-    GParamSpec * pspec, DvbBaseBin * dvbbasebin);
+static void dvb_base_bin_pat_info_cb (GstElement * mpegtsparse,
+    GstStructure * pat, DvbBaseBin * dvbbasebin);
 static void dvb_base_bin_pmt_info_cb (GstElement * mpegtsparse,
-    guint program_number, GObject * pmt, DvbBaseBin * dvbbasebin);
+    GstStructure * pmt, DvbBaseBin * dvbbasebin);
 static void dvb_base_bin_pad_added_cb (GstElement * mpegtsparse,
     GstPad * pad, DvbBaseBin * dvbbasebin);
 static void dvb_base_bin_pad_removed_cb (GstElement * mpegtsparse,
@@ -310,7 +310,7 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin, DvbBaseBinClass * klass)
   dvbbasebin->buffer_queue = gst_element_factory_make ("queue", NULL);
   dvbbasebin->mpegtsparse = gst_element_factory_make ("mpegtsparse", NULL);
   g_object_connect (dvbbasebin->mpegtsparse,
-      "signal::notify::pat-info", dvb_base_bin_pat_info_changed_cb, dvbbasebin,
+      "signal::pat-info", dvb_base_bin_pat_info_cb, dvbbasebin,
       "signal::pmt-info", dvb_base_bin_pmt_info_cb, dvbbasebin,
       "signal::pad-added", dvb_base_bin_pad_added_cb, dvbbasebin,
       "signal::pad-removed", dvb_base_bin_pad_removed_cb, dvbbasebin, NULL);
@@ -478,7 +478,7 @@ dvb_base_bin_reset_pmtlist (DvbBaseBin * dvbbasebin)
 {
   CamConditionalAccessPmtFlag flag;
   GList *walk;
-  GObject *pmt;
+  GstStructure *pmt;
 
   walk = dvbbasebin->pmtlist;
   while (walk) {
@@ -494,7 +494,7 @@ dvb_base_bin_reset_pmtlist (DvbBaseBin * dvbbasebin)
         flag = CAM_CONDITIONAL_ACCESS_PMT_FLAG_MORE;
     }
 
-    pmt = G_OBJECT (walk->data);
+    pmt = GST_STRUCTURE (walk->data);
     cam_device_set_pmt (dvbbasebin->hwcam, pmt, flag);
 
     walk = walk->next;
@@ -615,25 +615,26 @@ dvb_base_bin_rebuild_filter (DvbBaseBin * dvbbasebin)
 }
 
 static void
-dvb_base_bin_remove_pmt_streams (DvbBaseBin * dvbbasebin, GObject * pmt)
+dvb_base_bin_remove_pmt_streams (DvbBaseBin * dvbbasebin, GstStructure * pmt)
 {
-  GValueArray *streams;
-  gint program_number;
+  const GValue *streams;
+  guint program_number;
   gint i;
-  GValue *value;
-  GObject *streamobj;
+  const GValue *value;
+  GstStructure *stream_info;
   DvbBaseBinStream *stream;
   guint pid;
   guint stream_type;
 
-  g_object_get (pmt, "program-number", &program_number,
-      "stream-info", &streams, NULL);
+  gst_structure_get_uint (pmt, "program-number", &program_number);
+  streams = gst_structure_get_value (pmt, "streams");
 
-  for (i = 0; i < streams->n_values; ++i) {
-    value = g_value_array_get_nth (streams, i);
-    streamobj = g_value_get_object (value);
+  for (i = 0; i < gst_value_list_get_size (streams); ++i) {
+    value = gst_value_list_get_value (streams, i);
+    stream_info = g_value_get_boxed (value);
 
-    g_object_get (streamobj, "pid", &pid, "stream-type", &stream_type, NULL);
+    gst_structure_get_uint (stream_info, "pid", &pid);
+    gst_structure_get_uint (stream_info, "stream-type", &stream_type);
 
     stream = dvb_base_bin_get_stream (dvbbasebin, (guint16) pid);
     if (stream == NULL) {
@@ -646,25 +647,26 @@ dvb_base_bin_remove_pmt_streams (DvbBaseBin * dvbbasebin, GObject * pmt)
 }
 
 static void
-dvb_base_bin_add_pmt_streams (DvbBaseBin * dvbbasebin, GObject * pmt)
+dvb_base_bin_add_pmt_streams (DvbBaseBin * dvbbasebin, GstStructure * pmt)
 {
   DvbBaseBinStream *stream;
-  GValueArray *streams;
-  gint program_number;
+  const GValue *streams;
+  guint program_number;
   gint i;
-  GValue *value;
-  GObject *streamobj;
+  const GValue *value;
+  GstStructure *stream_info;
   guint pid;
   guint stream_type;
 
-  g_object_get (pmt, "program-number", &program_number,
-      "stream-info", &streams, NULL);
+  gst_structure_get_uint (pmt, "program-number", &program_number);
+  streams = gst_structure_get_value (pmt, "streams");
 
-  for (i = 0; i < streams->n_values; ++i) {
-    value = g_value_array_get_nth (streams, i);
-    streamobj = g_value_get_object (value);
+  for (i = 0; i < gst_value_list_get_size (streams); ++i) {
+    value = gst_value_list_get_value (streams, i);
+    stream_info = g_value_get_boxed (value);
 
-    g_object_get (streamobj, "pid", &pid, "stream-type", &stream_type, NULL);
+    gst_structure_get_uint (stream_info, "pid", &pid);
+    gst_structure_get_uint (stream_info, "stream-type", &stream_type);
     GST_DEBUG ("filtering stream %d stream_type %d", pid, stream_type);
 
     stream = dvb_base_bin_get_stream (dvbbasebin, (guint16) pid);
@@ -702,7 +704,7 @@ dvb_base_bin_activate_program (DvbBaseBin * dvbbasebin,
     guint16 old_pcr_pid;
 
     old_pcr_pid = program->pcr_pid;
-    g_object_get (program->pmt, "pcr-pid", &pid, NULL);
+    gst_structure_get_uint (program->pmt, "pcr-pid", &pid);
     program->pcr_pid = pid;
     if (old_pcr_pid != G_MAXUINT16 && old_pcr_pid != program->pcr_pid)
       dvb_base_bin_get_stream (dvbbasebin, old_pcr_pid)->usecount--;
@@ -747,28 +749,27 @@ dvb_base_bin_deactivate_program (DvbBaseBin * dvbbasebin,
 }
 
 static void
-dvb_base_bin_pat_info_changed_cb (GstElement * mpegtsparse,
-    GParamSpec * pspec, DvbBaseBin * dvbbasebin)
+dvb_base_bin_pat_info_cb (GstElement * mpegtsparse,
+    GstStructure * pat_info, DvbBaseBin * dvbbasebin)
 {
   DvbBaseBinProgram *program;
   DvbBaseBinStream *stream;
-  GValueArray *pat_info;
-  GValue *value;
-  GObject *program_info;
-  gint program_number;
+  const GValue *value;
+  GstStructure *program_info;
+  guint program_number;
   guint pid;
-  guint16 old_pmt_pid;
+  guint old_pmt_pid;
   gint i;
   gboolean rebuild_filter = FALSE;
+  const GValue *programs;
 
-  g_object_get (mpegtsparse, "pat-info", &pat_info, NULL);
+  programs = gst_structure_get_value (pat_info, "programs");
+  for (i = 0; i < gst_value_list_get_size (programs); ++i) {
+    value = gst_value_list_get_value (programs, i);
+    program_info = g_value_get_boxed (value);
 
-  for (i = 0; i < pat_info->n_values; ++i) {
-    value = g_value_array_get_nth (pat_info, i);
-    program_info = g_value_get_object (value);
-
-    g_object_get (program_info, "program-number", &program_number,
-        "pid", &pid, NULL);
+    gst_structure_get_uint (program_info, "program-number", &program_number);
+    gst_structure_get_uint (program_info, "pid", &pid);
 
     program = dvb_base_bin_get_program (dvbbasebin, program_number);
     if (program == NULL)
@@ -792,17 +793,18 @@ dvb_base_bin_pat_info_changed_cb (GstElement * mpegtsparse,
     }
   }
 
-  g_value_array_free (pat_info);
-
   if (rebuild_filter)
     dvb_base_bin_rebuild_filter (dvbbasebin);
 }
 
 static void
 dvb_base_bin_pmt_info_cb (GstElement * mpegtsparse,
-    guint program_number, GObject * pmt, DvbBaseBin * dvbbasebin)
+    GstStructure * pmt, DvbBaseBin * dvbbasebin)
 {
   DvbBaseBinProgram *program;
+  guint program_number;
+
+  gst_structure_get_uint (pmt, "program-number", &program_number);
 
   program = dvb_base_bin_get_program (dvbbasebin, program_number);
   if (program == NULL) {
@@ -812,7 +814,7 @@ dvb_base_bin_pmt_info_cb (GstElement * mpegtsparse,
   }
 
   program->old_pmt = program->pmt;
-  program->pmt = g_object_ref (pmt);
+  program->pmt = gst_structure_copy (pmt);
 
   /* activate the program if it's selected and either it's not active or its pmt
    * changed */
@@ -820,7 +822,7 @@ dvb_base_bin_pmt_info_cb (GstElement * mpegtsparse,
     dvb_base_bin_activate_program (dvbbasebin, program);
 
   if (program->old_pmt) {
-    g_object_unref (program->old_pmt);
+    gst_structure_free (program->old_pmt);
     program->old_pmt = NULL;
   }
 }

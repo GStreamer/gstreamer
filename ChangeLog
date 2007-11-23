@@ -1,3 +1,30 @@
+2007-11-23  Zaheer Abbas Merali <zaheerabbas at merali dot org>
+
+	patch by: Alessandro Decina
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	* gst/mpegtsparse/mpegtspacketizer.h:
+	* gst/mpegtsparse/mpegtsparse.c:
+	* gst/mpegtsparse/mpegtsparse.h:
+	pat-info is now a signal not a GObject property that
+	gets notified.
+	pat-info, pmt-info now instead of passing a GObject as
+	a parameter, pass a GstStructure.
+	New signals: nit-info, sdt-info, eit-info for DVB SI information
+	* sys/dvb/camconditionalaccess.c:
+	* sys/dvb/camconditionalaccess.h:
+	* sys/dvb/camdevice.c:
+	* sys/dvb/camdevice.h:
+	* sys/dvb/camswclient.c:
+	* sys/dvb/camswclient.h:
+	* sys/dvb/camutils.c:
+	* sys/dvb/camutils.h:
+	Cam code now uses the pmt GstStructure passed from mpegtsparse
+	signals rather than the GObject.
+	* sys/dvb/dvbbasebin.c:
+	Use new signals in mpegtsparse and use GstStructures as per
+	mpegtsparse's modified API.
+	
 2007-11-23  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/Makefile.am:
