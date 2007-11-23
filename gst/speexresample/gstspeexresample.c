@@ -279,7 +279,7 @@ gst_speex_resample_update_state (GstSpeexResample * resample, gint channels,
   gboolean updated_latency = FALSE;
 
   updated_latency = (resample->inrate != inrate
-      || quality != resample->quality);
+      || quality != resample->quality) && resample->state != NULL;
 
   if (resample->state == NULL) {
     ret = TRUE;
