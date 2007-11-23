@@ -276,6 +276,10 @@ gst_speex_resample_update_state (GstSpeexResample * resample, gint channels,
     gint inrate, gint outrate, gint quality, gboolean fp)
 {
   gboolean ret = TRUE;
+  gboolean updated_latency = FALSE;
+
+  updated_latency = (resample->inrate != inrate
+      || quality != resample->quality);
 
   if (resample->state == NULL) {
     ret = TRUE;
@@ -319,6 +323,10 @@ gst_speex_resample_update_state (GstSpeexResample * resample, gint channels,
   resample->quality = quality;
   resample->inrate = inrate;
   resample->outrate = outrate;
+
+  if (updated_latency)
+    gst_element_post_message (GST_ELEMENT (resample),
+        gst_message_new_latency (GST_OBJECT (resample)));
 
   return ret;
 }
