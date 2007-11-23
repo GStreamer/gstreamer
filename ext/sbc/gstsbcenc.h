@@ -55,6 +55,9 @@ struct _GstSbcEnc {
 	gint blocks;
 	gint allocation;
 	gint subbands;
+	gint codesize;
+	gint frame_length;
+	gint frame_duration;
 
 	sbc_t sbc;
 };

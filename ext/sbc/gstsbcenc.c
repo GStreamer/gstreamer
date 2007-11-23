@@ -350,24 +350,11 @@ gst_sbc_enc_fill_sbc_params (GstSbcEnc * enc, GstCaps * caps)
   enc->mode = enc->sbc.joint = gst_sbc_get_mode_int (mode);
   enc->allocation = enc->sbc.allocation =
       gst_sbc_get_allocation_mode_int (allocation);
-
-  return TRUE;
-}
-
-static gboolean
-gst_sbc_enc_change_caps (GstSbcEnc * enc, GstCaps * caps)
-{
-  GST_INFO_OBJECT (enc, "Changing srcpad caps (renegotiation)");
-
-  if (!gst_pad_accept_caps (enc->srcpad, caps)) {
-    GST_WARNING_OBJECT (enc, "Src pad refused caps");
-    return FALSE;
-  }
-
-  if (!gst_sbc_enc_fill_sbc_params (enc, caps)) {
-    GST_ERROR_OBJECT (enc, "couldn't get sbc parameters from caps");
-    return FALSE;
-  }
+  enc->codesize = sbc_get_codesize (&enc->sbc);
+  enc->frame_length = sbc_get_frame_length (&enc->sbc);
+  enc->frame_duration = sbc_get_frame_duration (&enc->sbc);
+  GST_DEBUG ("codesize: %d, frame_length: %d, frame_duration: %d",
+      enc->codesize, enc->frame_length, enc->frame_duration);
 
   return TRUE;
 }
@@ -378,41 +365,30 @@ sbc_enc_chain (GstPad * pad, GstBuffer * buffer)
   GstSbcEnc *enc = GST_SBC_ENC (gst_pad_get_parent (pad));
   GstAdapter *adapter = enc->adapter;
   GstFlowReturn res = GST_FLOW_OK;
-  gint codesize, frame_len;
 
-  codesize = sbc_get_codesize (&enc->sbc);
-  frame_len = sbc_get_frame_length (&enc->sbc);
   gst_adapter_push (adapter, buffer);
 
-  while (gst_adapter_available (adapter) >= codesize && res == GST_FLOW_OK) {
+  while (gst_adapter_available (adapter) >= enc->codesize && res == GST_FLOW_OK) {
     GstBuffer *output;
     GstCaps *caps;
     const guint8 *data;
     int consumed;
 
     caps = GST_PAD_CAPS (enc->srcpad);
-
     res = gst_pad_alloc_buffer_and_set_caps (enc->srcpad,
-        GST_BUFFER_OFFSET_NONE, frame_len, caps, &output);
-
-    data = gst_adapter_peek (adapter, codesize);
-    consumed = sbc_encode (&enc->sbc, (gpointer) data, codesize,
-        GST_BUFFER_DATA (output), frame_len, NULL);
-    if (consumed <= 0) {
-      GST_ERROR ("comsumed < 0, codesize: %d", codesize);
-      break;
-    }
-    gst_adapter_flush (adapter, consumed);
-
+        GST_BUFFER_OFFSET_NONE, enc->frame_length, caps, &output);
     if (res != GST_FLOW_OK)
       goto done;
 
-    if (!gst_caps_is_equal (caps, GST_BUFFER_CAPS (output)))
-      if (!gst_sbc_enc_change_caps (enc, GST_BUFFER_CAPS (output))) {
-        res = GST_FLOW_ERROR;
-        GST_ERROR_OBJECT (enc, "couldn't renegotiate caps");
-        goto done;
-      }
+    data = gst_adapter_peek (adapter, enc->codesize);
+    consumed = sbc_encode (&enc->sbc, (gpointer) data,
+        enc->codesize,
+        GST_BUFFER_DATA (output), GST_BUFFER_SIZE (output), NULL);
+    if (consumed <= 0) {
+      GST_ERROR ("comsumed < 0, codesize: %d", enc->codesize);
+      break;
+    }
+    gst_adapter_flush (adapter, consumed);
 
     GST_BUFFER_TIMESTAMP (output) = GST_BUFFER_TIMESTAMP (buffer);
 
