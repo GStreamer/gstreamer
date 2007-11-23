@@ -1,5 +1,11 @@
 2007-11-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_update_state):
+	Also post GST_MESSAGE_LATENCY if the latency changes.
+
+2007-11-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/speexresample/resample.c: (speex_resampler_get_latency),
 	(speex_resampler_drain_float), (speex_resampler_drain_int),
 	(speex_resampler_drain_interleaved_float),
