@@ -233,6 +233,73 @@ class UpdateProcess (object):
 
         pass
 
+class VerticalTimelineWidget (gtk.DrawingArea):
+
+    __gtype_name__ = "GstDebugViewerVerticalTimelineWidget"
+
+    def __init__ (self):
+
+        gtk.DrawingArea.__init__ (self)
+
+        self.logger = logging.getLogger ("ui.vtimeline")
+
+        self.params = None
+
+        self.connect ("expose-event", self.__handle_expose_event)
+        self.connect ("size-request", self.__handle_size_request)
+
+    def __handle_expose_event (self, self_, event):
+
+        self.__draw (self.window)
+
+    def __draw (self, drawable):
+
+        ctx = drawable.cairo_create ()
+        x, y, w, h = self.get_allocation ()
+
+        # White background rectangle.
+        ctx.set_line_width (0.)
+        ctx.rectangle (0, 0, w, h)
+        ctx.set_source_rgb (1., 1., 1.)
+        ctx.fill ()
+        ctx.new_path ()
+
+        if self.params is None:
+            return
+
+        first_y, cell_height, ts_list = self.params
+        first_ts, last_ts = ts_list[0], ts_list[-1]
+        ts_range = last_ts - first_ts
+
+        if ts_range == 0:
+            return
+
+        ctx.set_line_width (1.)
+        ctx.set_source_rgb (0., 0., 0.)
+        
+        first_y += cell_height // 2 - .5
+        for i, ts in enumerate (ts_list):
+            ts_fraction = float (ts - first_ts) / ts_range
+            ts_offset = ts_fraction * h
+            row_offset = first_y + i * cell_height
+            ctx.move_to (-.5, ts_offset)
+            ctx.line_to (4.5, ts_offset)
+            ctx.line_to (w - 4.5, row_offset)
+            ctx.line_to (w + .5, row_offset)
+            ctx.stroke ()
+
+    def __handle_size_request (self, self_, req):
+
+        req.width = 64 # FIXME
+
+    def update (self, first_y, cell_height, ts_list):
+
+        # FIXME: Ideally we should be informed of the vertical position
+        # difference of the view (which is 0) with the current UI layout.
+
+        self.params = (first_y, cell_height, ts_list,)
+        self.queue_draw ()
+
 class TimelineWidget (gtk.DrawingArea):
 
     __gtype_name__ = "GstDebugViewerTimelineWidget"
@@ -500,6 +567,12 @@ class TimelineFeature (FeatureBase):
         box.pack_start (self.timeline, False, False, 0)
         self.timeline.hide ()
 
+        box = window.get_side_attach_point ()
+
+        self.vtimeline = VerticalTimelineWidget ()
+        box.pack_start (self.vtimeline, False, False, 0)
+        self.vtimeline.hide ()
+
         window.widgets.log_view_scrolled_window.props.vadjustment.connect ("value-changed",
                                                                            self.handle_log_view_adjustment_value_changed)
 
@@ -535,11 +608,26 @@ class TimelineFeature (FeatureBase):
 
         model = self.log_view.props.model
         start_path, end_path = self.log_view.get_visible_range ()
-        ts1 = model.get (model.get_iter (start_path),
-                         model.COL_TIME)[0]
-        ts2 = model.get (model.get_iter (end_path),
-                         model.COL_TIME)[0]
+        ts1 = model.get_value (model.get_iter (start_path),
+                               model.COL_TIME)
+        ts2 = model.get_value (model.get_iter (end_path),
+                               model.COL_TIME)
+        
         self.timeline.update_position (ts1, ts2)
+
+        column = self.log_view.get_column (0)
+        cell_rect = self.log_view.get_cell_area (start_path, column)
+        first_y = self.log_view.convert_bin_window_to_widget_coords (cell_rect.x, cell_rect.y)[1]
+        bg_rect = self.log_view.get_background_area (start_path, column)
+        cell_height = bg_rect.height
+
+        ts_list = []
+        tree_iter = model.get_iter (start_path)
+        while model.get_path (tree_iter) != end_path:
+            ts_list.append (model.get_value (tree_iter, model.COL_TIME))
+            tree_iter = model.iter_next (tree_iter)
+
+        self.vtimeline.update (first_y, cell_height, ts_list)
 
     def handle_show_action_toggled (self, action):
 
@@ -547,8 +635,10 @@ class TimelineFeature (FeatureBase):
 
         if show:
             self.timeline.show ()
+            self.vtimeline.show ()
         else:
             self.timeline.hide ()
+            self.vtimeline.hide ()
 
     def handle_timeline_button_press_event (self, widget, event):
 

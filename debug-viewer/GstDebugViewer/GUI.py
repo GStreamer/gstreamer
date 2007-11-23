@@ -895,6 +895,10 @@ class Window (object):
 
         return self.widgets.vbox_main
 
+    def get_side_attach_point (self):
+
+        return self.widgets.hbox_view
+
     def attach (self):
 
         self.window_state.attach (window = self.gtk_window, state = self.app.state)
