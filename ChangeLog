@@ -2,6 +2,12 @@
 
 	* gst/speexresample/gstspeexresample.c:
 	(gst_speex_resample_update_state):
+	Only post the latency message if we have a resampler state already.
+
+2007-11-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_update_state):
 	Also post GST_MESSAGE_LATENCY if the latency changes.
 
 2007-11-23  Sebastian Dröge  <slomo@circular-chaos.org>
