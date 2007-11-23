@@ -63,10 +63,12 @@ metadataparse_init (ParseData * parse_data)
   parse_data->state = STATE_NULL;
   parse_data->img_type = IMG_NONE;
   parse_data->option = PARSE_OPT_ALL;
-  parse_data->offset = 0;
-  memset (&parse_data->exif, 0x00, sizeof (MetadataChunk));
-  memset (&parse_data->iptc, 0x00, sizeof (MetadataChunk));
-  memset (&parse_data->xmp, 0x00, sizeof (MetadataChunk));
+  parse_data->offset_orig = 0;
+  parse_data->exif_adapter = NULL;
+  parse_data->iptc_adapter = NULL;
+  parse_data->xmp_adapter = NULL;
+  metadata_chunk_array_init (&parse_data->strip_chunks, 4);
+  metadata_chunk_array_init (&parse_data->inject_chunks, 1);
 }
 
 /*
@@ -100,12 +102,14 @@ metadataparse_parse (ParseData * parse_data, const guint8 * buf,
     case IMG_JPEG:
       ret =
           metadataparse_jpeg_parse (&parse_data->format_data.jpeg,
-          (guint8 *) buf, &bufsize, parse_data->offset, &next_start, next_size);
+          (guint8 *) buf, &bufsize, parse_data->offset_orig, &next_start,
+          next_size);
       break;
     case IMG_PNG:
       ret =
           metadataparse_png_parse (&parse_data->format_data.png,
-          (guint8 *) buf, &bufsize, parse_data->offset, &next_start, next_size);
+          (guint8 *) buf, &bufsize, parse_data->offset_orig, &next_start,
+          next_size);
       break;
     default:
       /* unexpected */
@@ -115,7 +119,7 @@ metadataparse_parse (ParseData * parse_data, const guint8 * buf,
   }
 
   *next_offset = next_start - buf;
-  parse_data->offset += *next_offset;
+  parse_data->offset_orig += *next_offset;
 
 done:
 
@@ -139,33 +143,23 @@ metadataparse_dispose (ParseData * parse_data)
       break;
   }
 
-  if (parse_data->xmp.adapter) {
-    gst_object_unref (parse_data->xmp.adapter);
+  metadata_chunk_array_free (&parse_data->strip_chunks);
+  metadata_chunk_array_free (&parse_data->inject_chunks);
+
+  if (parse_data->xmp_adapter) {
+    gst_object_unref (parse_data->xmp_adapter);
+    parse_data->xmp_adapter = NULL;
   }
 
-  if (parse_data->iptc.adapter) {
-    gst_object_unref (parse_data->iptc.adapter);
+  if (parse_data->iptc_adapter) {
+    gst_object_unref (parse_data->iptc_adapter);
+    parse_data->iptc_adapter = NULL;
   }
 
-  if (parse_data->exif.adapter) {
-    gst_object_unref (parse_data->exif.adapter);
+  if (parse_data->exif_adapter) {
+    gst_object_unref (parse_data->exif_adapter);
+    parse_data->exif_adapter = NULL;
   }
-
-  if (parse_data->xmp.buffer) {
-    free (parse_data->xmp.buffer);
-  }
-
-  if (parse_data->iptc.buffer) {
-    free (parse_data->iptc.buffer);
-  }
-
-  if (parse_data->exif.buffer) {
-    free (parse_data->exif.buffer);
-  }
-
-  memset (&parse_data->xmp, 0x00, sizeof (MetadataChunk));
-  memset (&parse_data->iptc, 0x00, sizeof (MetadataChunk));
-  memset (&parse_data->exif, 0x00, sizeof (MetadataChunk));
 
 }
 
@@ -180,9 +174,9 @@ metadataparse_parse_none (ParseData * parse_data, const guint8 * buf,
 {
 
   int ret = -1;
-  MetadataChunk *exif = NULL;
-  MetadataChunk *iptc = NULL;
-  MetadataChunk *xmp = NULL;
+  GstAdapter **exif = NULL;
+  GstAdapter **iptc = NULL;
+  GstAdapter **xmp = NULL;
 
   *next_start = (guint8 *) buf;
 
@@ -195,14 +189,15 @@ metadataparse_parse_none (ParseData * parse_data, const guint8 * buf,
   }
 
   if (parse_data->option & PARSE_OPT_EXIF)
-    exif = &parse_data->exif;
+    exif = &parse_data->exif_adapter;
   if (parse_data->option & PARSE_OPT_IPTC)
-    iptc = &parse_data->iptc;
+    iptc = &parse_data->iptc_adapter;
   if (parse_data->option & PARSE_OPT_XMP)
-    xmp = &parse_data->xmp;
+    xmp = &parse_data->xmp_adapter;
 
   if (buf[0] == 0xFF && buf[1] == 0xD8 && buf[2] == 0xFF) {
-    metadataparse_jpeg_init (&parse_data->format_data.jpeg, exif, iptc, xmp);
+    metadataparse_jpeg_init (&parse_data->format_data.jpeg, exif, iptc, xmp,
+        &parse_data->strip_chunks, &parse_data->inject_chunks);
     ret = 0;
     parse_data->img_type = IMG_JPEG;
     goto done;
@@ -216,7 +211,8 @@ metadataparse_parse_none (ParseData * parse_data, const guint8 * buf,
 
   if (buf[0] == 0x89 && buf[1] == 0x50 && buf[2] == 0x4E && buf[3] == 0x47 &&
       buf[4] == 0x0D && buf[5] == 0x0A && buf[6] == 0x1A && buf[7] == 0x0A) {
-    metadataparse_png_init (&parse_data->format_data.png, exif, iptc, xmp);
+    metadataparse_png_init (&parse_data->format_data.png, exif, iptc, xmp,
+        &parse_data->strip_chunks, &parse_data->inject_chunks);
     ret = 0;
     parse_data->img_type = IMG_PNG;
     goto done;

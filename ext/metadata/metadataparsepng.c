@@ -61,12 +61,16 @@ metadataparse_png_jump (PngData * png_data, guint8 ** buf,
 #define READ(buf, size) ( (size)--, *((buf)++) )
 
 void
-metadataparse_png_init (PngData * png_data, MetadataChunk * exif,
-    MetadataChunk * iptc, MetadataChunk * xmp)
+metadataparse_png_init (PngData * png_data, GstAdapter ** exif_adpt,
+    GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
+    MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks)
 {
   png_data->state = PNG_NULL;
-  png_data->xmp = xmp;
+  png_data->xmp_adapter = xmp_adpt;
   png_data->read = 0;
+
+  png_data->strip_chunks = strip_chunks;
+  png_data->inject_chunks = inject_chunks;
 
   metadataparse_xmp_init ();
 }
@@ -76,7 +80,7 @@ metadataparse_png_dispose (PngData * png_data)
 {
   metadataparse_xmp_dispose ();
 
-  png_data->xmp = NULL;
+  png_data->xmp_adapter = NULL;
 }
 
 int
@@ -197,10 +201,17 @@ metadataparse_png_reading (PngData * png_data, guint8 ** buf,
         goto done;
       }
 
-      if (png_data->xmp) {
-        if (0 == memcmp (XmpHeader, *buf, 18)) {
-          png_data->xmp->offset = (*buf - step_buf) + offset - 8;       /* maker + size */
-          png_data->xmp->size = chunk_size + 12;        /* chunk size plus app marker plus crc */
+      if (0 == memcmp (XmpHeader, *buf, 18)) {
+        MetadataChunk chunk;
+
+        memset (&chunk, 0x00, sizeof (MetadataChunk));
+        chunk.offset_orig = (*buf - step_buf) + offset - 8;     /* maker + size */
+        chunk.size = chunk_size + 12;   /* chunk size plus app marker plus crc */
+
+        metadata_chunk_array_append_sorted (png_data->strip_chunks, &chunk);
+
+        /* if adapter has been provided, prepare to hold chunk */
+        if (png_data->xmp_adapter) {
           *buf += 22;           /* jump "XML:com.adobe.xmp" plus some flags */
           *bufsize -= 22;
           png_data->read = chunk_size - 22;     /* four CRC bytes at the end will be jumped after */
@@ -240,13 +251,13 @@ metadataparse_png_xmp (PngData * png_data, guint8 ** buf,
   int ret;
 
   ret = metadataparse_util_hold_chunk (&png_data->read, buf,
-      bufsize, next_start, next_size, &png_data->xmp->adapter);
+      bufsize, next_start, next_size, png_data->xmp_adapter);
   if (ret == 0) {
     /* jump four CRC bytes at the end of chunk */
     png_data->read = 4;
     png_data->state = PNG_JUMPING;
     /* if there is a second XMP chunk in the file it will be jumped */
-    png_data->xmp = NULL;
+    png_data->xmp_adapter = NULL;
   }
   return ret;
 

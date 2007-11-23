@@ -41,24 +41,45 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __METADATAPARSETYPES_H__
-#define __METADATAPARSETYPES_H__
+#ifndef __METADATATYPES_H__
+#define __METADATATYPES_H__
 
-#include <gst/base/gstadapter.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 
 typedef struct _tag_MetadataChunk
 {
-  gint64 offset;               /* from the beginning of file */
-  guint32 size;                 /* size of bytes in chunk (same as adapter size) */
-  GstAdapter *adapter;
-  /* in some cases, when there is JPEG/EXIF, and no JIF as first chunk
-     is is need to add a chunk data back to the file */
-  guint32 size_inject;          /* same as buffer size */
-  guint8 * buffer;
+  gint64 offset_orig;         /* from the beginning of original file */
+  gint64 offset;         /*here just for convinience (filled by element) offset in new stream */
+  guint32 size;          /* chunk or buffer size*/
+  guint8 * data;
 } MetadataChunk;
 
+typedef struct _tag_MetadataChunkArray
+{
+  MetadataChunk * chunk;
+  gsize len;    
+  gsize allocated_len;
+} MetadataChunkArray;
+
+extern void
+metadata_chunk_array_init(MetadataChunkArray * array, gsize alloc_size);
+
+extern void
+metadata_chunk_array_free(MetadataChunkArray * array);
+
+extern void
+metadata_chunk_array_clear(MetadataChunkArray * array);
+
+extern void
+metadata_chunk_array_append(MetadataChunkArray * array, MetadataChunk * chunk);
+
+/* sorted by offset (chunk supposed to be already sorted
+ * returns false if chunks are inserted in same offset
+ */
+extern void
+metadata_chunk_array_append_sorted(MetadataChunkArray * array, MetadataChunk * chunk);
 
 G_END_DECLS
-#endif /* __METADATAPARSETYPES_H__ */
+#endif /* __METADATATYPES_H__ */

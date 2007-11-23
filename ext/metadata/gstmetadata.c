@@ -45,14 +45,22 @@
 #include "config.h"
 #endif
 
-#include "gstmetadataparse.h"
-/* #include "gstmetadatamux.h" ...soon.. */
+#include <gst/gst.h>
+
+extern gboolean gst_metadata_parse_plugin_init (GstPlugin * plugin);
+extern gboolean gst_metadata_mux_plugin_init (GstPlugin * plugin);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
 
-  return gst_metadata_parse_plugin_init (plugin);
+  gboolean ret = TRUE;
+
+  ret = gst_metadata_parse_plugin_init (plugin);
+
+  ret = ret && gst_metadata_mux_plugin_init (plugin);
+
+  return ret;
 
 }
 

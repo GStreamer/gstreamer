@@ -138,13 +138,13 @@ static gboolean gst_metadata_parse_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf);
 
 static gboolean
-gst_metadata_parse_get_range (GstPad * pad, guint64 offset, guint size,
+gst_metadata_parse_get_range (GstPad * pad, guint64 offset_orig, guint size,
     GstBuffer ** buf);
 
-static gboolean gst_metadata_parse_activate (GstPad * pad);
+static gboolean gst_metadata_parse_sink_activate (GstPad * pad);
 
 static gboolean
-gst_metadata_parse_element_activate_src_pull (GstPad * pad, gboolean active);
+gst_metadata_parse_src_activate_pull (GstPad * pad, gboolean active);
 
 static gboolean gst_metadata_parse_pull_range_parse (GstMetadataParse * filter);
 
@@ -161,19 +161,20 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
 
 static void gst_metadata_parse_send_tags (GstMetadataParse * filter);
 
-static gboolean gst_metadata_parse_activate (GstPad * pad);
+
 
 static int
 gst_metadata_parse_get_strip_seg (const gint64 offset, guint32 size,
     const gint64 seg_offset, const guint32 seg_size,
-    guint32 * boffset, guint32 * bsize, guint32 * seg_binter);
-static gboolean
-gst_metadata_parse_strip_buffer (GstMetadataParse * filter, gint64 offset,
-    GstBuffer ** buf);
+    gint64 * boffset, guint32 * bsize, guint32 * seg_binter);
 
-static void
-gst_metadata_parse_translate_pos (GstMetadataParse * filter, gint64 pos,
-    gint64 * orig_pos);
+static gboolean
+gst_metadata_parse_strip_push_buffer (GstMetadataParse * filter,
+    gint64 offset_orig, GstBuffer ** prepend, GstBuffer ** buf);
+
+static gboolean
+gst_metadata_parse_translate_pos_to_orig (GstMetadataParse * filter, gint64 pos,
+    gint64 * orig_pos, GstBuffer ** buf);
 
 static const GstQueryType *gst_metadata_parse_get_query_types (GstPad * pad);
 
@@ -254,7 +255,8 @@ gst_metadata_parse_init (GstMetadataParse * filter,
   gst_pad_set_event_function (filter->sinkpad, gst_metadata_parse_sink_event);
   gst_pad_set_chain_function (filter->sinkpad,
       GST_DEBUG_FUNCPTR (gst_metadata_parse_chain));
-  gst_pad_set_activate_function (filter->sinkpad, gst_metadata_parse_activate);
+  gst_pad_set_activate_function (filter->sinkpad,
+      gst_metadata_parse_sink_activate);
 
   /* source pad */
 
@@ -269,9 +271,11 @@ gst_metadata_parse_init (GstMetadataParse * filter,
   gst_pad_set_query_type_function (filter->srcpad,
       GST_DEBUG_FUNCPTR (gst_metadata_parse_get_query_types));
   gst_pad_use_fixed_caps (filter->srcpad);
+
   gst_pad_set_getrange_function (filter->srcpad, gst_metadata_parse_get_range);
+
   gst_pad_set_activatepull_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_metadata_parse_element_activate_src_pull));
+      GST_DEBUG_FUNCPTR (gst_metadata_parse_src_activate_pull));
   /* addind pads */
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
@@ -460,7 +464,13 @@ gst_metadata_parse_src_event (GstPad * pad, GstEvent * event)
       }
       start_type == GST_SEEK_TYPE_SET;
 
-      gst_metadata_parse_translate_pos (filter, start, &start);
+      if (filter->prepend_buffer) {
+        gst_buffer_unref (filter->prepend_buffer);
+        filter->prepend_buffer = NULL;
+      }
+
+      gst_metadata_parse_translate_pos_to_orig (filter, start, &start,
+          &filter->prepend_buffer);
 
       if (stop_type == GST_SEEK_TYPE_CUR)
         stop = filter->offset + stop;
@@ -471,7 +481,7 @@ gst_metadata_parse_src_event (GstPad * pad, GstEvent * event)
       }
       stop_type == GST_SEEK_TYPE_SET;
 
-      gst_metadata_parse_translate_pos (filter, stop, &stop);
+      gst_metadata_parse_translate_pos_to_orig (filter, stop, &stop, NULL);
 
       gst_event_unref (event);
       event = gst_event_new_seek (rate, format, flags,
@@ -549,13 +559,30 @@ static void
 gst_metadata_parse_dispose_members (GstMetadataParse * filter)
 {
   metadataparse_dispose (&filter->parse_data);
-  if (filter->adapter) {
-    gst_object_unref (filter->adapter);
-    filter->adapter = NULL;
+
+  if (filter->adapter_parsing) {
+    gst_object_unref (filter->adapter_parsing);
+    filter->adapter_parsing = NULL;
   }
+
+  if (filter->adapter_holding) {
+    gst_object_unref (filter->adapter_holding);
+    filter->adapter_holding = NULL;
+  }
+
   if (filter->taglist) {
     gst_tag_list_free (filter->taglist);
     filter->taglist = NULL;
+  }
+
+  if (filter->append_buffer) {
+    gst_buffer_unref (filter->append_buffer);
+    filter->append_buffer = NULL;
+  }
+
+  if (filter->prepend_buffer) {
+    gst_buffer_unref (filter->prepend_buffer);
+    filter->prepend_buffer = NULL;
   }
 }
 
@@ -567,30 +594,23 @@ gst_metadata_parse_init_members (GstMetadataParse * filter)
   filter->iptc = TRUE;
   filter->xmp = TRUE;
 
-  memset (filter->seg_offset_orig, 0x00,
-      sizeof (filter->seg_offset_orig[0]) * 3);
-  memset (filter->seg_size, 0x00, sizeof (filter->seg_size[0]) * 3);
-
-  memset (filter->seg_inject_offset, 0x00,
-      sizeof (filter->seg_inject_offset[0]) * 3);
-  memset (filter->seg_inject_data, 0x00,
-      sizeof (filter->seg_inject_data[0]) * 3);
-  memset (filter->seg_inject_size, 0x00,
-      sizeof (filter->seg_inject_size[0]) * 3);
-
-  filter->num_segs = 0;
-
   filter->taglist = NULL;
-  filter->adapter = NULL;
+  filter->adapter_parsing = NULL;
+  filter->adapter_holding = NULL;
   filter->next_offset = 0;
   filter->next_size = 0;
   filter->img_type = IMG_NONE;
-  filter->duration = -1;
   filter->offset_orig = 0;
+  filter->duration_orig = 0;
   filter->offset = 0;
+  filter->duration = 0;
   filter->state = MT_STATE_NULL;
   filter->need_more_data = FALSE;
-  metadataparse_init (&filter->parse_data);
+
+  filter->append_buffer = NULL;
+  filter->prepend_buffer = NULL;
+
+  memset (&filter->parse_data, 0x00, sizeof (ParseData));
 }
 
 static gboolean
@@ -745,13 +765,13 @@ gst_metadata_parse_send_tags (GstMetadataParse * filter)
 
   if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_EXIF)
     metadataparse_exif_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
-        filter->parse_data.exif.adapter);
+        filter->parse_data.exif_adapter);
   if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_IPTC)
     metadataparse_iptc_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
-        filter->parse_data.iptc.adapter);
+        filter->parse_data.iptc_adapter);
   if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_XMP)
     metadataparse_xmp_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
-        filter->parse_data.xmp.adapter);
+        filter->parse_data.xmp_adapter);
 
   if (!gst_tag_list_is_empty (filter->taglist)) {
 
@@ -853,77 +873,50 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
     filter->need_more_data = TRUE;
   } else {
     int i, j;
-    guint32 bytes_striped;
+    guint32 append_size;
+    guint32 bytes_striped, bytes_inject;
+    MetadataChunk *strip = filter->parse_data.strip_chunks.chunk;
+    MetadataChunk *inject = filter->parse_data.inject_chunks.chunk;
+    const gsize strip_len = filter->parse_data.strip_chunks.len;
+    const gsize inject_len = filter->parse_data.inject_chunks.len;
 
-    filter->num_segs = 0;
+    bytes_striped = 0;
+    bytes_inject = 0;
 
-    /* FIXME: better design for segments */
-
-    filter->seg_size[0] = filter->parse_data.exif.size;
-    filter->seg_offset_orig[0] = filter->parse_data.exif.offset;
-    filter->seg_inject_size[0] = filter->parse_data.exif.size_inject;
-    filter->seg_inject_data[0] = filter->parse_data.exif.buffer;
-
-    filter->seg_size[1] = filter->parse_data.iptc.size;
-    filter->seg_offset_orig[1] = filter->parse_data.iptc.offset;
-    filter->seg_inject_size[1] = filter->parse_data.iptc.size_inject;
-    filter->seg_inject_data[1] = filter->parse_data.iptc.buffer;
-
-    filter->seg_size[2] = filter->parse_data.xmp.size;
-    filter->seg_offset_orig[2] = filter->parse_data.xmp.offset;
-    filter->seg_inject_size[2] = filter->parse_data.xmp.size_inject;
-    filter->seg_inject_data[2] = filter->parse_data.xmp.buffer;
-
-    for (i = 0; i < 3; ++i) {
-      if (filter->seg_size[i]) {
-        filter->num_segs++;
+    /* calculate the new position off injected chunks */
+    for (i = 0; i < inject_len; ++i) {
+      for (j = 0; j < strip_len; ++i) {
+        if (strip[j].offset_orig >= inject[i].offset_orig) {
+          break;
+        }
+        inject[i].offset = inject[i].offset_orig - bytes_striped + bytes_inject;
+        bytes_striped += strip[j].size;
       }
+      bytes_inject += inject[i].size;
     }
 
-    if (filter->num_segs) {
+    /* calculate append (doesnt make much sense, but, anyway..) */
+    append_size = 0;
+    for (i = inject_len - 1; i >= 0; --i) {
+      if (inject[i].offset_orig == filter->duration_orig)
+        append_size += inject[i].size;
+      else
+        break;
+    }
+    if (append_size) {
+      guint8 *data;
 
-      for (i = 0; i < 3; ++i) {
-        int j, min = i;
-
-        for (j = i + 1; j < 3; ++j) {
-          if (filter->seg_size[j])
-            if (filter->seg_size[min] == 0
-                || filter->seg_offset_orig[j] < filter->seg_offset_orig[min])
-              min = j;
-        }
-        if (min != i) {
-          gint64 aux_offset;
-          guint32 aux_size;
-          guint8 *aux_data;
-
-          aux_offset = filter->seg_offset_orig[i];
-          aux_size = filter->seg_size[i];
-
-          filter->seg_offset_orig[i] = filter->seg_offset_orig[min];
-          filter->seg_size[i] = filter->seg_size[min];
-
-          filter->seg_offset_orig[min] = aux_offset;
-          filter->seg_size[min] = aux_size;
-
-          aux_size = filter->seg_inject_size[i];
-          filter->seg_inject_size[i] = filter->seg_inject_size[min];
-          filter->seg_inject_size[min] = aux_size;
-
-          aux_data = filter->seg_inject_data[i];
-          filter->seg_inject_data[i] = filter->seg_inject_data[min];
-          filter->seg_inject_data[min] = aux_data;
+      filter->append_buffer = gst_buffer_new_and_alloc (append_size);
+      GST_BUFFER_FLAG_SET (filter->append_buffer, GST_BUFFER_FLAG_READONLY);
+      data = GST_BUFFER_DATA (filter->append_buffer);
+      for (i = inject_len - 1; i >= 0; --i) {
+        if (inject[i].offset_orig == filter->duration_orig) {
+          memcpy (data, inject[i].data, inject[i].size);
+          data += inject[i].size;
+        } else {
+          break;
         }
       }
-
-      bytes_striped = 0;
-
-      /* calculate the new position off injected chunks */
-      for (i = 0; i < filter->num_segs; ++i) {
-        filter->seg_inject_offset[i] =
-            filter->seg_offset_orig[i] - bytes_striped;
-        bytes_striped += filter->seg_size[i] - filter->seg_inject_size[i];
-      }
-
     }
 
     filter->state = MT_STATE_PARSED;
@@ -965,18 +958,19 @@ gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn ret = GST_FLOW_ERROR;
   guint32 buf_size = 0;
   guint32 new_buf_size = 0;
+  gboolean append = FALSE;
 
   filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
 
   /* commented until I figure out how to strip if it wasn't parsed yet */
-#if 0
+
   if (filter->state != MT_STATE_PARSED) {
-    guint32 adpt_size = gst_adapter_available (filter->adapter);
+    guint32 adpt_size = gst_adapter_available (filter->adapter_parsing);
 
     if (filter->next_offset) {
       if (filter->next_offset >= adpt_size) {
         /* clean adapter */
-        gst_adapter_clear (filter->adapter);
+        gst_adapter_clear (filter->adapter_parsing);
         filter->next_offset -= adpt_size;
         if (filter->next_offset >= GST_BUFFER_SIZE (buf)) {
           /* we don't need data in this buffer */
@@ -991,51 +985,87 @@ gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf)
           memcpy (GST_BUFFER_DATA (new_buf), GST_BUFFER_DATA (buf),
               GST_BUFFER_SIZE (buf) - filter->next_offset);
           filter->next_offset = 0;
-          gst_adapter_push (filter->adapter, new_buf);
+          gst_adapter_push (filter->adapter_parsing, new_buf);
         }
       } else {
         /* remove first bytes and add buffer */
-        gst_adapter_flush (filter->adapter, filter->next_offset);
+        gst_adapter_flush (filter->adapter_parsing, filter->next_offset);
         filter->next_offset = 0;
-        gst_adapter_push (filter->adapter, gst_buffer_copy (buf));
+        gst_adapter_push (filter->adapter_parsing, gst_buffer_copy (buf));
       }
     } else {
       /* just push buffer */
-      gst_adapter_push (filter->adapter, gst_buffer_copy (buf));
+      gst_adapter_push (filter->adapter_parsing, gst_buffer_copy (buf));
     }
 
-    adpt_size = gst_adapter_available (filter->adapter);
+    adpt_size = gst_adapter_available (filter->adapter_parsing);
 
     if (adpt_size && filter->next_size <= adpt_size) {
-      const guint8 *new_buf = gst_adapter_peek (filter->adapter, adpt_size);
+      const guint8 *new_buf =
+          gst_adapter_peek (filter->adapter_parsing, adpt_size);
 
       if (gst_metadata_parse_parse (filter, new_buf, adpt_size) < 0)
         goto done;
     }
   }
-#endif
 
-  if (filter->need_send_tag) {
-    gst_metadata_parse_send_tags (filter);
-  }
+  if (filter->state == MT_STATE_PARSED) {
 
-  buf_size = GST_BUFFER_SIZE (buf);
-  gst_metadata_parse_strip_buffer (filter, filter->offset_orig, &buf);
+    if (filter->adapter_holding) {
+      gst_adapter_push (filter->adapter_holding, buf);
+      buf = gst_adapter_take_buffer (filter->adapter_holding,
+          gst_adapter_available (filter->adapter_holding));
+      g_object_unref (filter->adapter_holding);
+      filter->adapter_holding = NULL;
+    }
 
-  if (buf) {                    /* may be all buffer has been striped */
-    gst_buffer_set_caps (buf, GST_PAD_CAPS (filter->srcpad));
-    new_buf_size = GST_BUFFER_SIZE (buf);
+    if (filter->need_send_tag) {
+      gst_metadata_parse_send_tags (filter);
+    }
 
-    ret = gst_pad_push (filter->srcpad, buf);
-    buf = NULL;                 /* this function don't owner it anymore */
+    if (filter->offset_orig + GST_BUFFER_SIZE (buf) == filter->duration_orig)
+      append = TRUE;
+
+    buf_size = GST_BUFFER_SIZE (buf);
+
+    gst_metadata_parse_strip_push_buffer (filter, filter->offset_orig,
+        &filter->prepend_buffer, &buf);
+
+    if (buf) {                  /* may be all buffer has been striped */
+      gst_buffer_set_caps (buf, GST_PAD_CAPS (filter->srcpad));
+      new_buf_size = GST_BUFFER_SIZE (buf);
+
+      ret = gst_pad_push (filter->srcpad, buf);
+      buf = NULL;               /* this function don't owner it anymore */
+      if (ret != GST_FLOW_OK)
+        goto done;
+    } else {
+      ret = GST_FLOW_OK;
+    }
+
+    if (append && filter->append_buffer) {
+      gst_buffer_set_caps (filter->append_buffer,
+          GST_PAD_CAPS (filter->srcpad));
+      gst_buffer_ref (filter->append_buffer);
+      ret = gst_pad_push (filter->srcpad, filter->append_buffer);
+      if (ret != GST_FLOW_OK)
+        goto done;
+    }
+
+    filter->offset_orig += buf_size;
+    filter->offset += new_buf_size;
+
   } else {
+    /* just store while still not parsed */
+    if (!filter->adapter_holding)
+      filter->adapter_holding = gst_adapter_new ();
+    gst_adapter_push (filter->adapter_holding, buf);
+    buf = NULL;
     ret = GST_FLOW_OK;
   }
 
 done:
 
-  filter->offset_orig += buf_size;
-  filter->offset += new_buf_size;
 
   if (buf) {
     /* there was an error and buffer wasn't pushed */
@@ -1106,13 +1136,19 @@ gst_metadata_parse_pull_range_parse (GstMetadataParse * filter)
 
   if (res == 0) {
     int i;
+    MetadataChunk *strip = filter->parse_data.strip_chunks.chunk;
+    MetadataChunk *inject = filter->parse_data.inject_chunks.chunk;
+    const gsize strip_len = filter->parse_data.strip_chunks.len;
+    const gsize inject_len = filter->parse_data.inject_chunks.len;
 
     filter->duration = duration;
+    filter->duration_orig = duration;
 
-    for (i = 0; i < filter->num_segs; ++i) {
-
-      filter->duration -= (filter->seg_size[i] - filter->seg_inject_size[i]);
-
+    for (i = 0; i < inject_len; ++i) {
+      filter->duration += inject[i].size;
+    }
+    for (i = 0; i < strip_len; ++i) {
+      filter->duration -= strip[i].size;
     }
 
   }
@@ -1124,7 +1160,7 @@ done:
 }
 
 static gboolean
-gst_metadata_parse_activate (GstPad * pad)
+gst_metadata_parse_sink_activate (GstPad * pad)
 {
   GstMetadataParse *filter = NULL;
   gboolean ret = TRUE;
@@ -1178,7 +1214,7 @@ done:
 static int
 gst_metadata_parse_get_strip_seg (const gint64 offset, guint32 size,
     const gint64 seg_offset, const guint32 seg_size,
-    guint32 * boffset, guint32 * bsize, guint32 * seg_binter)
+    gint64 * boffset, guint32 * bsize, guint32 * seg_binter)
 {
   int ret = -1;
 
@@ -1239,119 +1275,320 @@ done:
 }
 
 /*
- *  TRUE -> buffer striped (or injeted)
+ *  TRUE -> buffer striped or injeted
  *  FALSE -> buffer unmodified
  */
 
 static gboolean
-gst_metadata_parse_strip_buffer (GstMetadataParse * filter, gint64 offset,
-    GstBuffer ** buf)
+gst_metadata_parse_strip_push_buffer (GstMetadataParse * filter,
+    gint64 offset_orig, GstBuffer ** prepend, GstBuffer ** buf)
 {
+  MetadataChunk *strip = filter->parse_data.strip_chunks.chunk;
+  MetadataChunk *inject = filter->parse_data.inject_chunks.chunk;
+  const gsize strip_len = filter->parse_data.strip_chunks.len;
+  const gsize inject_len = filter->parse_data.inject_chunks.len;
 
-  const gint64 *seg_offset = filter->seg_offset_orig;
-  const guint32 *seg_size = filter->seg_size;
-  const guint32 *seg_inject_size = filter->seg_inject_size;
-  const guint8 **seg_inject_data = filter->seg_inject_data;
+  guint32 size_buf_in = GST_BUFFER_SIZE (*buf);
 
-  const size = GST_BUFFER_SIZE (*buf);
+  gint64 *boffset_strip = NULL;
+  guint32 *bsize_strip = NULL;
+  guint32 *seg_binter_strip = NULL;
 
-  gint64 boffset[3];
-  guint32 bsize[3];
-  guint32 seg_binter[3];
+  int i, j;
+  gboolean need_free_strip = FALSE;
 
-  int i;
-  gboolean ret = FALSE;
+  guint32 striped_bytes = 0;
+  guint32 injected_bytes = 0;
 
-  if (filter->num_segs == 0)
-    goto done;
+  guint32 prepend_size = prepend && *prepend ? GST_BUFFER_SIZE (*prepend) : 0;
 
-  memset (bsize, 0x00, sizeof (bsize));
+  if (inject_len) {
 
-  for (i = 0; i < filter->num_segs; ++i) {
-    int res;
+    for (i = 0; i < inject_len; ++i) {
+      int res;
 
-    res = gst_metadata_parse_get_strip_seg (offset, size,
-        seg_offset[i], seg_size[i], &boffset[i], &bsize[i], &seg_binter[i]);
-
-    /* segment is after size (segments are sorted) */
-    if (res > 0)
-      break;
-    if (res == 0)
-      ret = TRUE;
+      if (inject[i].offset_orig >= offset_orig) {
+        if (inject[i].offset_orig < offset_orig + size_buf_in) {
+          injected_bytes += inject[i].size;
+        } else {
+          /* segment is after size (segments are sorted) */
+          break;
+        }
+      }
+    }
 
   }
 
-  /* segments must be sorted by offset to make this copy */
-  if (ret) {
+  /*
+   * strip segments
+   */
+
+  if (strip_len == 0)
+    goto inject;
+
+  if (G_UNLIKELY (strip_len > 16)) {
+    boffset_strip = g_new (gint64, strip_len);
+    bsize_strip = g_new (guint32, strip_len);
+    seg_binter_strip = g_new (guint32, strip_len);
+    need_free_strip = TRUE;
+  } else {
+    boffset_strip = g_alloca (sizeof (boffset_strip[0]) * strip_len);
+    bsize_strip = g_alloca (sizeof (bsize_strip[0]) * strip_len);
+    seg_binter_strip = g_alloca (sizeof (seg_binter_strip[0]) * strip_len);
+  }
+
+  memset (bsize_strip, 0x00, sizeof (bsize_strip[0]) * strip_len);
+
+  for (i = 0; i < strip_len; ++i) {
+    int res;
+
+    res = gst_metadata_parse_get_strip_seg (offset_orig, size_buf_in,
+        strip[i].offset_orig, strip[i].size, &boffset_strip[i], &bsize_strip[i],
+        &seg_binter_strip[i]);
+
+    /* segment is after size (segments are sorted) */
+    striped_bytes += bsize_strip[i];
+    if (res > 0) {
+      break;
+    }
+
+  }
+
+  if (striped_bytes) {
 
     guint8 *data;
-    guint32 moved = 0;
 
-    if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY)) {
+    if (injected_bytes + prepend_size > striped_bytes) {
+      GstBuffer *new_buf =
+          gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + injected_bytes +
+          prepend_size - striped_bytes);
+
+      memcpy (GST_BUFFER_DATA (new_buf), GST_BUFFER_DATA (*buf),
+          GST_BUFFER_SIZE (*buf));
+
+      gst_buffer_unref (*buf);
+      *buf = new_buf;
+
+    } else if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY)) {
       GstBuffer *new_buf = gst_buffer_copy (*buf);
 
       gst_buffer_unref (*buf);
       *buf = new_buf;
       GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
+      GST_BUFFER_SIZE (*buf) += injected_bytes + prepend_size - striped_bytes;
     }
 
     data = GST_BUFFER_DATA (*buf);
 
-    for (i = 0; i < filter->num_segs; ++i) {
-
+    striped_bytes = 0;
+    for (i = 0; i < strip_len; ++i) {
       /* intersect */
-      if (bsize[i]) {
-        /* has data to inject */
-        if (seg_inject_size[i]) {
-          /* has data to inject here */
-          if (seg_binter[i] < seg_inject_size[i]) {
-            const guint32 inject_size = seg_inject_size[i] - seg_binter[i];
-
-            memcpy (data + boffset[i], seg_inject_data[i] + seg_binter[i],
-                inject_size);
-            boffset[i] += inject_size;
-            bsize[i] -= inject_size;
-          }
-        }
-        if (bsize[i]) {
-          /* if even inject there is still thing to remove */
-          memmove (data + boffset[i] - moved,
-              data + boffset[i] + bsize[i] - moved,
-              size - boffset[i] - bsize[i] + moved);
-          moved += bsize[i];
-        }
+      if (bsize_strip[i]) {
+        memmove (data + boffset_strip[i] - striped_bytes,
+            data + boffset_strip[i] + bsize_strip[i] - striped_bytes,
+            size_buf_in - boffset_strip[i] - bsize_strip[i]);
+        striped_bytes += bsize_strip[i];
       }
-
     }
-
-    GST_BUFFER_SIZE (*buf) -= moved;
+    size_buf_in -= striped_bytes;
 
   }
 
+inject:
+
+  /*
+   * inject segments
+   */
+
+  if (inject_len) {
+
+    guint8 *data;
+    guint32 striped_so_far;
+
+    if (injected_bytes + prepend_size > striped_bytes) {
+      GstBuffer *new_buf =
+          gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + injected_bytes +
+          prepend_size - striped_bytes);
+
+      memcpy (GST_BUFFER_DATA (new_buf), GST_BUFFER_DATA (*buf),
+          GST_BUFFER_SIZE (*buf));
+
+      gst_buffer_unref (*buf);
+      *buf = new_buf;
+
+    } else if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY)) {
+      GstBuffer *new_buf = gst_buffer_copy (*buf);
+
+      gst_buffer_unref (*buf);
+      *buf = new_buf;
+      GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
+      GST_BUFFER_SIZE (*buf) += injected_bytes + prepend_size - striped_bytes;
+    }
+
+    data = GST_BUFFER_DATA (*buf);
+
+    injected_bytes = 0;
+    striped_so_far = 0;
+    j = 0;
+    for (i = 0; i < inject_len; ++i) {
+      int res;
+
+      while (j < strip_len) {
+        if (strip[j].offset_orig < inject[i].offset_orig)
+          striped_so_far += bsize_strip[j++];
+        else
+          break;
+      }
+
+      if (inject[i].offset_orig >= offset_orig) {
+        if (inject[i].offset_orig < offset_orig + size_buf_in + striped_bytes) {
+          /* insert */
+          guint32 buf_off =
+              inject[i].offset_orig - offset_orig - striped_so_far +
+              injected_bytes;
+          memmove (data + buf_off + inject[i].size, data + buf_off,
+              size_buf_in - buf_off);
+          memcpy (data + buf_off, inject[i].data, inject[i].size);
+          injected_bytes += inject[i].size;
+          size_buf_in += injected_bytes;
+        } else {
+          /* segment is after size (segments are sorted) */
+          break;
+        }
+      }
+    }
+
+  }
+
+
 done:
 
-  return ret;
+  if (prepend_size) {
+    if (injected_bytes == 0 && striped_bytes == 0) {
+      GstBuffer *new_buf =
+          gst_buffer_new_and_alloc (size_buf_in + prepend_size);
+
+      memcpy (GST_BUFFER_DATA (new_buf) + prepend_size, GST_BUFFER_DATA (*buf),
+          size_buf_in);
+
+      gst_buffer_unref (*buf);
+      *buf = new_buf;
+    } else {
+      memmove (GST_BUFFER_DATA (*buf) + prepend_size, GST_BUFFER_DATA (*buf),
+          size_buf_in);
+    }
+    memcpy (GST_BUFFER_DATA (*buf), GST_BUFFER_DATA (*prepend), prepend_size);
+    gst_buffer_unref (*prepend);
+    *prepend = NULL;
+  }
+
+  GST_BUFFER_SIZE (*buf) = size_buf_in + prepend_size;
+
+  if (need_free_strip) {
+    g_free (boffset_strip);
+    g_free (bsize_strip);
+    g_free (seg_binter_strip);
+  }
+
+  return injected_bytes || striped_bytes;
 
 }
 
 /*
  * pos - position in stream striped
  * orig_pos - position in original stream
+ * return TRUE - position in original buffer
+ *        FALSE - position in inserted chunk
  */
-static void
-gst_metadata_parse_translate_pos (GstMetadataParse * filter, gint64 pos,
-    gint64 * orig_pos)
+static gboolean
+gst_metadata_parse_translate_pos_to_orig (GstMetadataParse * filter, gint64 pos,
+    gint64 * orig_pos, GstBuffer ** buf)
 {
   int i;
+  MetadataChunk *strip = filter->parse_data.strip_chunks.chunk;
+  MetadataChunk *inject = filter->parse_data.inject_chunks.chunk;
+  const gsize strip_len = filter->parse_data.strip_chunks.len;
+  const gsize inject_len = filter->parse_data.inject_chunks.len;
+  gboolean ret = TRUE;
+  guint64 new_buf_size = 0;
+  guint64 injected_before = 0;
 
-  *orig_pos = 0;
-  for (i = 0; i < filter->num_segs; ++i) {
-    if (filter->seg_offset_orig[i] > pos) {
+  if (G_UNLIKELY (pos == -1)) {
+    *orig_pos = -1;
+    return TRUE;
+  } else if (G_UNLIKELY (pos >= filter->duration)) {
+    /* this should never happen */
+    *orig_pos = filter->duration_orig;
+    return TRUE;
+  }
+
+  /* calculate for injected */
+
+  /* just calculate size */
+  *orig_pos = pos;              /* save pos */
+  for (i = 0; i < inject_len; ++i) {
+    /* check if pos in inside chunk */
+    if (inject[i].offset <= pos) {
+      if (pos < inject[i].offset + inject[i].size) {
+        /* orig pos points after insert chunk */
+        new_buf_size += inject[i].size;
+        /* put pos after current chunk */
+        pos = inject[i].offset + inject[i].size;
+        ret = FALSE;
+      } else {
+        /* in case pos is not inside a injected chunk */
+        injected_before += inject[i].size;
+      }
+    } else {
       break;
     }
-    *orig_pos += filter->seg_size[i] - filter->seg_inject_size[i];
   }
-  *orig_pos += pos;
+
+  /* alloc buffer and calcute original pos */
+  if (buf && ret == FALSE) {
+    guint8 *data;
+
+    if (*buf)
+      gst_buffer_unref (*buf);
+    *buf = gst_buffer_new_and_alloc (new_buf_size);
+    data = GST_BUFFER_DATA (*buf);
+    pos = *orig_pos;            /* recover saved pos */
+    for (i = 0; i < inject_len; ++i) {
+      if (inject[i].offset > pos) {
+        break;
+      }
+      if (inject[i].offset <= pos && pos < inject[i].offset + inject[i].size) {
+        memcpy (data, inject[i].data, inject[i].size);
+        data += inject[i].size;
+        pos = inject[i].offset + inject[i].size;
+        /* out position after insert chunk orig */
+        *orig_pos = inject[i].offset_orig + inject[i].size;
+      }
+    }
+  }
+
+  if (ret == FALSE) {
+    /* if it inside a injected is already done */
+    goto done;
+  }
+
+  /* calculate for striped */
+
+  *orig_pos = pos - injected_before;
+  for (i = 0; i < strip_len; ++i) {
+    if (strip[i].offset_orig > pos) {
+      break;
+    }
+    *orig_pos += strip[i].size;
+  }
+
+done:
+
+  if (G_UNLIKELY (*orig_pos >= filter->duration_orig)) {
+    *orig_pos = filter->duration_orig - 1;
+  }
+
+  return ret;
 
 }
 
@@ -1360,33 +1597,64 @@ gst_metadata_parse_get_range (GstPad * pad,
     guint64 offset, guint size, GstBuffer ** buf)
 {
   GstMetadataParse *filter = NULL;
-  gboolean ret;
-  gint64 pos;
-  const gint64 saved_offset = offset + size;
+  gboolean ret = TRUE;
+  const gint64 offset_orig = 0;
+  guint size_orig;
+  GstBuffer *prepend = NULL;
+  gboolean need_append = FALSE;
 
   filter = GST_METADATA_PARSE (GST_PAD_PARENT (pad));
+
+  if (offset + size > filter->duration) {
+    /* this should never happen */
+    return FALSE;
+  }
+
+  size_orig = size;
 
   if (filter->need_send_tag) {
     gst_metadata_parse_send_tags (filter);
   }
 
-  gst_metadata_parse_translate_pos (filter, offset + size - 1, &pos);
-  gst_metadata_parse_translate_pos (filter, offset, &offset);
+  gst_metadata_parse_translate_pos_to_orig (filter, offset, &offset_orig,
+      &prepend);
 
-  ret = gst_pad_pull_range (filter->sinkpad, offset, 1 + pos - offset, buf);
+  if (size > 1) {
+    gint64 pos;
 
-  if (ret == GST_FLOW_OK && *buf) {
-    gst_metadata_parse_strip_buffer (filter, offset, buf);
-    filter->offset_orig = pos;
-    filter->offset = saved_offset;
+    pos = offset + size - 1;
+    gst_metadata_parse_translate_pos_to_orig (filter, pos, &pos, NULL);
+    size_orig = pos + 1 - offset_orig;
   }
+
+  if (size_orig) {
+
+    ret = gst_pad_pull_range (filter->sinkpad, offset_orig, size_orig, buf);
+
+    if (ret == GST_FLOW_OK && *buf) {
+      /* FIXEME: put prepend here */
+      gst_metadata_parse_strip_push_buffer (filter, offset_orig, &prepend, buf);
+      filter->offset_orig = offset;
+      filter->offset = offset;
+
+      if (GST_BUFFER_SIZE (*buf) < size) {
+        /* need append */
+        need_append = TRUE;
+      }
+
+    }
+  } else {
+    *buf = prepend;
+  }
+
+done:
 
   return ret;
 
 }
 
 static gboolean
-gst_metadata_parse_element_activate_src_pull (GstPad * pad, gboolean active)
+gst_metadata_parse_src_activate_pull (GstPad * pad, gboolean active)
 {
   GstMetadataParse *filter = NULL;
   gboolean ret;
@@ -1415,8 +1683,9 @@ gst_metadata_parse_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
       gst_metadata_parse_init_members (filter);
-      filter->adapter = gst_adapter_new ();
+      filter->adapter_parsing = gst_adapter_new ();
       filter->taglist = gst_tag_list_new ();
+      metadataparse_init (&filter->parse_data);
       break;
     default:
       break;

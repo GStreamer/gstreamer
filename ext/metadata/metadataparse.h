@@ -45,7 +45,7 @@
 #define __METADATAPARSE_H__
 
 #include <gst/base/gstadapter.h>
-#include "metadataparsetypes.h"
+#include "metadatatypes.h"
 
 #include "metadataparsejpeg.h"
 #include "metadataparsepng.h"
@@ -79,15 +79,19 @@ typedef struct _tag_ParseData
   ParseState state;
   ImageType img_type;
   ParseOption option;
-  guint32 offset; /* offset since begining of stream */
+  guint32 offset_orig; /* offset since begining of stream */
   union
   {
     JpegData jpeg;
     PngData png;
   } format_data;
-  MetadataChunk exif;
-  MetadataChunk iptc;
-  MetadataChunk xmp;
+  GstAdapter * exif_adapter;
+  GstAdapter * iptc_adapter;
+  GstAdapter * xmp_adapter;
+
+  MetadataChunkArray strip_chunks;
+  MetadataChunkArray inject_chunks;
+
 } ParseData;
 
 #define PARSE_DATA_IMG_TYPE(p) (p).img_type

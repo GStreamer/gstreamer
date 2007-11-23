@@ -41,76 +41,75 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_METADATA_PARSE_H__
-#define __GST_METADATA_PARSE_H__
+#include "metadatatypes.h"
 
-#include <gst/gst.h>
+#include <string.h>
 
-#include "metadataparse.h"
-
-G_BEGIN_DECLS
-/* #defines don't like whitespacey bits */
-#define GST_TYPE_METADATA_PARSE \
-  (gst_metadata_parse_get_type())
-#define GST_METADATA_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_METADATA_PARSE,GstMetadataParse))
-#define GST_METADATA_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_METADATA_PARSE,GstMetadataParseClass))
-#define GST_IS_METADATA_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_METADATA_PARSE))
-#define GST_IS_METADATA_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_METADATA_PARSE))
-typedef struct _GstMetadataParse GstMetadataParse;
-typedef struct _GstMetadataParseClass GstMetadataParseClass;
-
-typedef enum _tag_MetadataState
+void
+metadata_chunk_array_init (MetadataChunkArray * array, gsize alloc_size)
 {
-  MT_STATE_NULL,                /* still need to check media type */
-  MT_STATE_PARSED
-} MetadataState;
+  array->len = 0;
+  array->chunk = g_new0 (MetadataChunk, alloc_size);
+  array->allocated_len = alloc_size;
+}
 
-struct _GstMetadataParse
+void
+metadata_chunk_array_free (MetadataChunkArray * array)
 {
-  GstElement element;
+  metadata_chunk_array_clear (array);
+  array->allocated_len = 0;
+  if (array->chunk) {
+    g_free (array->chunk);
+    array->chunk = NULL;
+  }
+}
 
-  GstPad *sinkpad, *srcpad;
-
-  gboolean exif;
-  gboolean iptc;
-  gboolean xmp;
-
-  gboolean need_send_tag;
-
-  GstTagList *taglist;
-  ParseData parse_data;
-  GstAdapter *adapter_parsing;
-  GstAdapter *adapter_holding;
-  guint32 next_offset;
-  guint32 next_size;
-  ImageType img_type;
-
-  gint64 offset_orig;  /* offset in original stream */
-  gint64 duration_orig;     /* durarion of stream */
-  gint64 offset;       /* offset in current stream */
-  gint64 duration;     /* durarion of modified stream */
-
-  MetadataState state;
-
-  GstBuffer * prepend_buffer;
-  GstBuffer * append_buffer;
-
-  gboolean need_more_data;
-
-
-
-};
-
-struct _GstMetadataParseClass
+void
+metadata_chunk_array_clear (MetadataChunkArray * array)
 {
-  GstElementClass parent_class;
-};
+  while (array->len) {
+    array->len--;
+    if (array->chunk[array->len].data) {
+      g_free (array->chunk[array->len].data);
+    }
+  }
+}
 
-extern GType gst_metadata_parse_get_type (void);
+void
+metadata_chunk_array_append (MetadataChunkArray * array, MetadataChunk * chunk)
+{
+  if (array->len == array->allocated_len) {
+    array->allocated_len += 2;
+    array->chunk = g_realloc (array->chunk, array->allocated_len);
+  }
+  memcpy (&array->chunk[array->len], chunk, sizeof (MetadataChunk));
+  ++array->len;
+}
 
-G_END_DECLS
-#endif /* __GST_METADATA_PARSE_H__ */
+void
+metadata_chunk_array_append_sorted (MetadataChunkArray * array,
+    MetadataChunk * chunk)
+{
+  gint32 i, pos;
+
+  if (array->len == array->allocated_len) {
+    array->allocated_len += 2;
+    array->chunk = g_realloc (array->chunk, array->allocated_len);
+  }
+  pos = array->len;
+  for (i = array->len - 1; i >= 0; --i) {
+    if (chunk->offset_orig > array->chunk[i].offset_orig) {
+      break;
+    }
+  }
+  pos = i + 1;
+  if (pos < array->len) {
+    memmove (&array->chunk[pos + 1], &array->chunk[pos],
+        sizeof (MetadataChunk) * (array->len - pos));
+  }
+  memcpy (&array->chunk[pos], chunk, sizeof (MetadataChunk));
+  ++array->len;
+
+  return;
+
+}

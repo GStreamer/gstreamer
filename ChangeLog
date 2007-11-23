@@ -1,3 +1,23 @@
+2007-11-23  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/Makefile.am:
+	* ext/metadata/gstmetadata.c:
+	* ext/metadata/gstmetadatamux.c:
+	* ext/metadata/gstmetadatamux.h:
+	* ext/metadata/gstmetadataparse.c:
+	* ext/metadata/gstmetadataparse.h:
+	* ext/metadata/metadataparse.c:
+	* ext/metadata/metadataparse.h:
+	* ext/metadata/metadataparsejpeg.c:
+	* ext/metadata/metadataparsejpeg.h:
+	* ext/metadata/metadataparsepng.c:
+	* ext/metadata/metadataparsepng.h:
+	* ext/metadata/metadataparsetypes.h:
+	* ext/metadata/metadatatypes.c:
+	* ext/metadata/metadatatypes.h:
+	  Now parser is generic (just add/remove a list of chunks). And a
+	  template of muxer has been created.
+
 2007-11-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/speexresample/gstspeexresample.c:

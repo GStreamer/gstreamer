@@ -41,76 +41,43 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_METADATA_PARSE_H__
-#define __GST_METADATA_PARSE_H__
+#ifndef __GST_METADATA_MUX_H__
+#define __GST_METADATA_MUX_H__
 
 #include <gst/gst.h>
 
-#include "metadataparse.h"
-
 G_BEGIN_DECLS
+
 /* #defines don't like whitespacey bits */
-#define GST_TYPE_METADATA_PARSE \
-  (gst_metadata_parse_get_type())
-#define GST_METADATA_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_METADATA_PARSE,GstMetadataParse))
-#define GST_METADATA_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_METADATA_PARSE,GstMetadataParseClass))
-#define GST_IS_METADATA_PARSE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_METADATA_PARSE))
-#define GST_IS_METADATA_PARSE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_METADATA_PARSE))
-typedef struct _GstMetadataParse GstMetadataParse;
-typedef struct _GstMetadataParseClass GstMetadataParseClass;
+#define GST_TYPE_METADATA_MUX \
+  (gst_metadata_mux_get_type())
+#define GST_METADATA_MUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_METADATA_MUX,GstMetadataMux))
+#define GST_METADATA_MUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_METADATA_MUX,GstMetadataMuxClass))
+#define GST_IS_METADATAMUX(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_METADATA_MUX))
+#define GST_IS_METADATAMUX_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_METADATA_MUX))
 
-typedef enum _tag_MetadataState
-{
-  MT_STATE_NULL,                /* still need to check media type */
-  MT_STATE_PARSED
-} MetadataState;
+typedef struct _GstMetadataMux      GstMetadataMux;
+typedef struct _GstMetadataMuxClass GstMetadataMuxClass;
 
-struct _GstMetadataParse
+struct _GstMetadataMux
 {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
 
-  gboolean exif;
-  gboolean iptc;
-  gboolean xmp;
-
-  gboolean need_send_tag;
-
-  GstTagList *taglist;
-  ParseData parse_data;
-  GstAdapter *adapter_parsing;
-  GstAdapter *adapter_holding;
-  guint32 next_offset;
-  guint32 next_size;
-  ImageType img_type;
-
-  gint64 offset_orig;  /* offset in original stream */
-  gint64 duration_orig;     /* durarion of stream */
-  gint64 offset;       /* offset in current stream */
-  gint64 duration;     /* durarion of modified stream */
-
-  MetadataState state;
-
-  GstBuffer * prepend_buffer;
-  GstBuffer * append_buffer;
-
-  gboolean need_more_data;
-
-
-
 };
 
-struct _GstMetadataParseClass
+struct _GstMetadataMuxClass 
 {
   GstElementClass parent_class;
 };
 
-extern GType gst_metadata_parse_get_type (void);
+GType gst_metadata_mux_get_type (void);
 
 G_END_DECLS
-#endif /* __GST_METADATA_PARSE_H__ */
+
+#endif /* __GST_METADATA_MUX_H__ */
