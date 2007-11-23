@@ -292,6 +292,11 @@ class VerticalTimelineWidget (gtk.DrawingArea):
 
         req.width = 64 # FIXME
 
+    def clear (self):
+
+        self.params = None
+        self.queue_draw ()
+
     def update (self, first_y, cell_height, ts_list):
 
         # FIXME: Ideally we should be informed of the vertical position
@@ -541,6 +546,8 @@ class TimelineFeature (FeatureBase):
 
     def __init__ (self):
 
+        self.logger = logging.getLogger ("ui.timeline")
+
         self.action_group = gtk.ActionGroup ("TimelineActions")
         self.action_group.add_toggle_actions ([("show-timeline",
                                                 None, _("_Timeline"),)])
@@ -595,10 +602,14 @@ class TimelineFeature (FeatureBase):
 
         model = window.log_filter
         self.timeline.update (model)
+        # FIXME: On startup, this triggers a GtkWarning in
+        # view.get_visible_range for no apparent reason.
+        ## self.update_vtimeline ()
 
     def handle_detach_log_file (self, window, log_file):
 
         self.timeline.clear ()
+        self.vtimeline.clear ()
 
     def handle_log_view_adjustment_value_changed (self, adj):
 
@@ -614,6 +625,16 @@ class TimelineFeature (FeatureBase):
                                model.COL_TIME)
         
         self.timeline.update_position (ts1, ts2)
+
+        self.update_vtimeline ()
+
+    def update_vtimeline (self):
+
+        model = self.log_view.props.model
+        start_path, end_path = self.log_view.get_visible_range ()
+
+        if not start_path or not end_path:
+            return
 
         column = self.log_view.get_column (0)
         cell_rect = self.log_view.get_cell_area (start_path, column)
