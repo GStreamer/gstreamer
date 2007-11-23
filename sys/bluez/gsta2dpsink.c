@@ -837,25 +837,6 @@ gst_a2dp_sink_unlock (GstBaseSink * basesink)
   return TRUE;
 }
 
-static GstFlowReturn
-gst_a2dp_sink_buffer_alloc (GstBaseSink * basesink,
-    guint64 offset, guint size, GstCaps * caps, GstBuffer ** buf)
-{
-  GstA2dpSink *self = GST_A2DP_SINK (basesink);
-
-  *buf = gst_buffer_new_and_alloc (size);
-  if (!(*buf)) {
-    GST_ERROR_OBJECT (self, "buffer allocation failed");
-    return GST_FLOW_ERROR;
-  }
-
-  gst_buffer_set_caps (*buf, caps);
-
-  GST_BUFFER_OFFSET (*buf) = offset;
-
-  return GST_FLOW_OK;
-}
-
 static void
 gst_a2dp_sink_class_init (GstA2dpSinkClass * klass)
 {
@@ -875,7 +856,6 @@ gst_a2dp_sink_class_init (GstA2dpSinkClass * klass)
   basesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_a2dp_sink_set_caps);
   basesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_a2dp_sink_get_caps);
   basesink_class->unlock = GST_DEBUG_FUNCPTR (gst_a2dp_sink_unlock);
-  basesink_class->buffer_alloc = GST_DEBUG_FUNCPTR (gst_a2dp_sink_buffer_alloc);
 
   g_object_class_install_property (object_class, PROP_DEVICE,
       g_param_spec_string ("device", "Device",
