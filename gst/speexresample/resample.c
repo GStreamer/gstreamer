@@ -1273,6 +1273,136 @@ speex_resampler_get_output_stride (SpeexResamplerState * st,
 }
 
 int
+speex_resampler_get_latency (SpeexResamplerState * st)
+{
+  return st->filt_len / 2;
+}
+
+int
+speex_resampler_drain_float (SpeexResamplerState * st,
+    spx_uint32_t channel_index, float *out, spx_uint32_t * out_len)
+{
+  spx_uint32_t in_len;
+  int ret;
+  float *in;
+
+  in_len = speex_resampler_get_latency (st);
+
+  in = speex_alloc (sizeof (float) * in_len);
+  *out_len =
+      MIN (in_len * st->den_rate + (st->num_rate >> 1) / st->num_rate,
+      *out_len);
+
+  ret =
+      speex_resampler_process_float (st, channel_index, in, &in_len, out,
+      out_len);
+
+  speex_free (in);
+
+  speex_resampler_reset_mem (st);
+
+  return ret;
+}
+
+int
+speex_resampler_drain_int (SpeexResamplerState * st,
+    spx_uint32_t channel_index, spx_int16_t * out, spx_uint32_t * out_len)
+{
+  spx_uint32_t in_len;
+  int ret;
+  spx_int16_t *in;
+
+  in_len = speex_resampler_get_latency (st);
+
+  in = speex_alloc (sizeof (spx_int16_t) * in_len);
+  *out_len =
+      MIN (in_len * st->den_rate + (st->num_rate >> 1) / st->num_rate,
+      *out_len);
+
+  ret =
+      speex_resampler_process_int (st, channel_index, in, &in_len, out,
+      out_len);
+
+  speex_free (in);
+
+  speex_resampler_reset_mem (st);
+
+  return ret;
+}
+
+int
+speex_resampler_drain_interleaved_float (SpeexResamplerState * st,
+    float *out, spx_uint32_t * out_len)
+{
+  spx_uint32_t i;
+  int istride_save, ostride_save;
+  spx_uint32_t bak_len;
+  spx_uint32_t in_len;
+  float *in;
+
+  in_len = speex_resampler_get_latency (st);
+
+  in = speex_alloc (sizeof (float) * in_len);
+  *out_len =
+      MIN (in_len * st->den_rate + (st->num_rate >> 1) / st->num_rate,
+      *out_len);
+  bak_len = *out_len;
+
+  istride_save = st->in_stride;
+  ostride_save = st->out_stride;
+  st->in_stride = 1;
+  st->out_stride = st->nb_channels;
+  for (i = 0; i < st->nb_channels; i++) {
+    *out_len = bak_len;
+    speex_resampler_process_float (st, i, in, &in_len, out + i, out_len);
+  }
+  st->in_stride = istride_save;
+  st->out_stride = ostride_save;
+
+  speex_free (in);
+
+  speex_resampler_reset_mem (st);
+
+  return RESAMPLER_ERR_SUCCESS;
+}
+
+int
+speex_resampler_drain_interleaved_int (SpeexResamplerState * st,
+    spx_int16_t * out, spx_uint32_t * out_len)
+{
+  spx_uint32_t i;
+  int istride_save, ostride_save;
+  spx_uint32_t bak_len;
+  spx_uint32_t in_len;
+  spx_int16_t *in;
+
+  in_len = speex_resampler_get_latency (st);
+
+  in = speex_alloc (sizeof (spx_int16_t) * in_len);
+  *out_len =
+      MIN (in_len * st->den_rate + (st->num_rate >> 1) / st->num_rate,
+      *out_len);
+  bak_len = *out_len;
+
+  istride_save = st->in_stride;
+  ostride_save = st->out_stride;
+  st->in_stride = 1;
+  st->out_stride = st->nb_channels;
+  for (i = 0; i < st->nb_channels; i++) {
+    *out_len = bak_len;
+    speex_resampler_process_int (st, i, in, &in_len, out + i, out_len);
+  }
+  st->in_stride = istride_save;
+  st->out_stride = ostride_save;
+
+  speex_free (in);
+
+  speex_resampler_reset_mem (st);
+
+  return RESAMPLER_ERR_SUCCESS;
+}
+
+int
 speex_resampler_skip_zeros (SpeexResamplerState * st)
 {
   spx_uint32_t i;

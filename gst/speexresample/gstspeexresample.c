@@ -19,11 +19,6 @@
  * Boston, MA 02111-1307, USA.
  */
 
- /* TODO:
-  *   - Find out what to do about the first n zero samples
-  *     in the output.
-  */
-
 /**
  * SECTION:element-speexresample
  *
@@ -107,6 +102,8 @@ static gboolean gst_speex_resample_event (GstBaseTransform * base,
     GstEvent * event);
 static gboolean gst_speex_resample_start (GstBaseTransform * base);
 static gboolean gst_speex_resample_stop (GstBaseTransform * base);
+static gboolean gst_speex_resample_query (GstPad * pad, GstQuery * query);
+static const GstQueryType *gst_speex_resample_query_type (GstPad * pad);
 
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (speex_resample_debug, "speex_resample", 0, "audio resampling element");
@@ -168,9 +165,15 @@ static void
 gst_speex_resample_init (GstSpeexResample * resample,
     GstSpeexResampleClass * klass)
 {
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (resample);
+
   resample->quality = SPEEX_RESAMPLER_QUALITY_DEFAULT;
 
   resample->need_discont = FALSE;
+
+  gst_pad_set_query_function (trans->srcpad, gst_speex_resample_query);
+  gst_pad_set_query_type_function (trans->srcpad,
+      gst_speex_resample_query_type);
 }
 
 /* vmethods */
@@ -259,6 +262,11 @@ gst_speex_resample_init_state (guint channels, guint inrate, guint outrate,
         resample_resampler_strerror (err));
     return NULL;
   }
+
+  if (fp)
+    resample_float_resampler_skip_zeros (ret);
+  else
+    resample_int_resampler_skip_zeros (ret);
 
   return ret;
 }
@@ -440,6 +448,7 @@ gst_speex_resample_transform_size (GstBaseTransform * base,
     size /= fac;
     *othersize = (size * ratio_den + (ratio_num >> 1)) / ratio_num;
     *othersize *= fac;
+    size *= fac;
   } else {
     gint fac = (fp) ? 4 : 2;
 
@@ -447,6 +456,7 @@ gst_speex_resample_transform_size (GstBaseTransform * base,
     size /= fac;
     *othersize = (size * ratio_num + (ratio_den >> 1)) / ratio_den;
     *othersize *= fac;
+    size *= fac;
   }
 
   GST_LOG ("transformed size %d to %d", size, *othersize);
@@ -488,6 +498,102 @@ gst_speex_resample_set_caps (GstBaseTransform * base, GstCaps * incaps,
   return TRUE;
 }
 
+static void
+gst_speex_resample_push_drain (GstSpeexResample * resample)
+{
+  GstBuffer *buf;
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (resample);
+  GstFlowReturn res;
+  gint outsize;
+  guint out_len, out_processed;
+  gint err;
+
+  if (!resample->state)
+    return;
+
+  if (resample->fp) {
+    guint num, den;
+
+    resample_float_resampler_get_ratio (resample->state, &num, &den);
+
+    out_len = resample_float_resampler_get_latency (resample->state);
+    out_len = out_processed = (out_len * den + (num >> 1)) / num;
+    outsize = 4 * out_len * resample->channels;
+  } else {
+    guint num, den;
+
+    resample_int_resampler_get_ratio (resample->state, &num, &den);
+
+    out_len = resample_int_resampler_get_latency (resample->state);
+    out_len = out_processed = (out_len * den + (num >> 1)) / num;
+    outsize = 2 * out_len * resample->channels;
+  }
+
+  res = gst_pad_alloc_buffer (trans->srcpad, GST_BUFFER_OFFSET_NONE, outsize,
+      GST_PAD_CAPS (trans->srcpad), &buf);
+
+  if (G_UNLIKELY (res != GST_FLOW_OK)) {
+    GST_WARNING ("failed allocating buffer of %d bytes", outsize);
+    return;
+  }
+
+  if (resample->fp)
+    err = resample_float_resampler_drain_interleaved_float (resample->state,
+        (gfloat *) GST_BUFFER_DATA (buf), &out_processed);
+  else
+    err = resample_int_resampler_drain_interleaved_int (resample->state,
+        (gint16 *) GST_BUFFER_DATA (buf), &out_processed);
+
+  if (err != RESAMPLER_ERR_SUCCESS) {
+    GST_WARNING ("Failed to process drain: %s",
+        resample_resampler_strerror (err));
+    gst_buffer_unref (buf);
+    return;
+  }
+
+  if (out_processed == 0) {
+    GST_WARNING ("Failed to get drain, dropping buffer");
+    gst_buffer_unref (buf);
+    return;
+  }
+
+  GST_BUFFER_OFFSET (buf) = resample->offset;
+  GST_BUFFER_TIMESTAMP (buf) = resample->next_ts;
+  GST_BUFFER_SIZE (buf) =
+      out_processed * resample->channels * ((resample->fp) ? 4 : 2);
+
+  if (resample->ts_offset != -1) {
+    resample->offset += out_processed;
+    resample->ts_offset += out_processed;
+    resample->next_ts =
+        GST_FRAMES_TO_CLOCK_TIME (resample->ts_offset, resample->outrate);
+    GST_BUFFER_OFFSET_END (buf) = resample->offset;
+
+    /* we calculate DURATION as the difference between "next" timestamp
+     * and current timestamp so we ensure a contiguous stream, instead of
+     * having rounding errors. */
+    GST_BUFFER_DURATION (buf) = resample->next_ts - GST_BUFFER_TIMESTAMP (buf);
+  } else {
+    /* no valid offset know, we can still sortof calculate the duration though */
+    GST_BUFFER_DURATION (buf) =
+        GST_FRAMES_TO_CLOCK_TIME (out_processed, resample->outrate);
+  }
+
+  GST_LOG ("Pushing drain buffer of %ld bytes with timestamp %" GST_TIME_FORMAT
+      " duration %" GST_TIME_FORMAT " offset %lld offset_end %lld",
+      GST_BUFFER_SIZE (buf),
+      GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
+      GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
+      GST_BUFFER_OFFSET (buf), GST_BUFFER_OFFSET_END (buf));
+
+  res = gst_pad_push (trans->srcpad, buf);
+
+  if (res != GST_FLOW_OK)
+    GST_WARNING ("Failed to push drain");
+
+  return;
+}
+
 static gboolean
 gst_speex_resample_event (GstBaseTransform * base, GstEvent * event)
 {
@@ -497,15 +603,22 @@ gst_speex_resample_event (GstBaseTransform * base, GstEvent * event)
     case GST_EVENT_FLUSH_START:
       break;
     case GST_EVENT_FLUSH_STOP:
+      gst_speex_resample_reset_state (resample);
+      resample->ts_offset = -1;
+      resample->next_ts = -1;
+      resample->offset = -1;
     case GST_EVENT_NEWSEGMENT:
+      gst_speex_resample_push_drain (resample);
       gst_speex_resample_reset_state (resample);
       resample->ts_offset = -1;
       resample->next_ts = -1;
       resample->offset = -1;
       break;
-    case GST_EVENT_EOS:
+    case GST_EVENT_EOS:{
+      gst_speex_resample_push_drain (resample);
       gst_speex_resample_reset_state (resample);
       break;
+    }
     default:
       break;
   }
@@ -548,7 +661,8 @@ gst_speex_fix_output_buffer (GstSpeexResample * resample, GstBuffer * outbuf,
   GST_LOG ("Adjusting buffer by %d samples", diff);
 
   GST_BUFFER_DURATION (outbuf) -= timediff;
-  GST_BUFFER_SIZE (outbuf) -= diff * ((resample->fp) ? 4 : 2);
+  GST_BUFFER_SIZE (outbuf) -=
+      diff * ((resample->fp) ? 4 : 2) * resample->channels;
 
   if (resample->ts_offset != -1) {
     GST_BUFFER_OFFSET_END (outbuf) -= diff;
@@ -596,19 +710,39 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
   if (out_len != out_processed) {
     /* One sample difference is allowed as this will happen
      * because of rounding errors */
-    if (out_len - out_processed != 1)
+    if (out_processed == 0) {
+      GST_DEBUG ("Converted to 0 samples, buffer dropped");
+
+      if (resample->ts_offset != -1) {
+        GST_BUFFER_OFFSET_END (outbuf) -= out_len;
+        resample->offset -= out_len;
+        resample->ts_offset -= out_len;
+        resample->next_ts =
+            GST_FRAMES_TO_CLOCK_TIME (resample->ts_offset, resample->outrate);
+      }
+
+      return GST_BASE_TRANSFORM_FLOW_DROPPED;
+    } else if (out_len - out_processed != 1)
       GST_WARNING ("Converted to %d instead of %d output samples",
           out_processed, out_len);
-    if (out_len > out_processed)
+    if (out_len > out_processed) {
       gst_speex_fix_output_buffer (resample, outbuf, out_len - out_processed);
-    else
-      g_error ("Wrote more output then allocated!");
+    } else {
+      GST_ERROR ("Wrote more output than allocated!");
+      return GST_FLOW_ERROR;
+    }
   }
 
   if (err != RESAMPLER_ERR_SUCCESS) {
     GST_ERROR ("Failed to convert data: %s", resample_resampler_strerror (err));
     return GST_FLOW_ERROR;
   } else {
+    GST_LOG ("Converted to buffer of %ld bytes with timestamp %" GST_TIME_FORMAT
+        ", duration %" GST_TIME_FORMAT ", offset %lld, offset_end %lld",
+        GST_BUFFER_SIZE (outbuf),
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
+        GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
+        GST_BUFFER_OFFSET (outbuf), GST_BUFFER_OFFSET_END (outbuf));
     return GST_FLOW_OK;
   }
 }
@@ -703,6 +837,85 @@ gst_speex_resample_transform (GstBaseTransform * base, GstBuffer * inbuf,
   }
 
   return gst_speex_resample_process (resample, inbuf, outbuf);
+}
+
+static gboolean
+gst_speex_resample_query (GstPad * pad, GstQuery * query)
+{
+  GstSpeexResample *resample = GST_SPEEX_RESAMPLE (gst_pad_get_parent (pad));
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (resample);
+  gboolean res = TRUE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      GstClockTime min, max;
+      gboolean live;
+      guint64 latency;
+      GstPad *peer;
+      gint rate = resample->inrate;
+      gint resampler_latency;
+
+      if (resample->state && resample->fp)
+        resampler_latency =
+            resample_float_resampler_get_latency (resample->state);
+      else if (resample->state && !resample->fp)
+        resampler_latency =
+            resample_int_resampler_get_latency (resample->state);
+      else
+        resampler_latency = 0;
+
+      if (gst_base_transform_is_passthrough (trans))
+        resampler_latency = 0;
+
+      if ((peer = gst_pad_get_peer (trans->sinkpad))) {
+        if ((res = gst_pad_query (peer, query))) {
+          gst_query_parse_latency (query, &live, &min, &max);
+
+          GST_DEBUG ("Peer latency: min %"
+              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+          /* add our own latency */
+          if (rate != 0 && resampler_latency != 0)
+            latency =
+                gst_util_uint64_scale (resampler_latency, GST_SECOND, rate);
+          else
+            latency = 0;
+
+          GST_DEBUG ("Our latency: %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
+
+          min += latency;
+          if (max != GST_CLOCK_TIME_NONE)
+            max += latency;
+
+          GST_DEBUG ("Calculated total latency : min %"
+              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+          gst_query_set_latency (query, live, min, max);
+        }
+        gst_object_unref (peer);
+      }
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  gst_object_unref (resample);
+  return res;
+}
+
+static const GstQueryType *
+gst_speex_resample_query_type (GstPad * pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_LATENCY,
+    0
+  };
+
+  return types;
 }
 
 static void

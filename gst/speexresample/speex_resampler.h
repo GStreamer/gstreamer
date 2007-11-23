@@ -73,6 +73,11 @@
 #define speex_resampler_get_input_stride CAT_PREFIX(RANDOM_PREFIX,_resampler_get_input_stride)
 #define speex_resampler_set_output_stride CAT_PREFIX(RANDOM_PREFIX,_resampler_set_output_stride)
 #define speex_resampler_get_output_stride CAT_PREFIX(RANDOM_PREFIX,_resampler_get_output_stride)
+#define speex_resampler_get_latency CAT_PREFIX(RANDOM_PREFIX,_resampler_get_latency)
+#define speex_resampler_drain_float CAT_PREFIX(RANDOM_PREFIX,_resampler_drain_float)
+#define speex_resampler_drain_int CAT_PREFIX(RANDOM_PREFIX,_resampler_drain_int)
+#define speex_resampler_drain_interleaved_float CAT_PREFIX(RANDOM_PREFIX,_resampler_drain_interleaved_float)
+#define speex_resampler_drain_interleaved_int CAT_PREFIX(RANDOM_PREFIX,_resampler_drain_interleaved_int)
 #define speex_resampler_skip_zeros CAT_PREFIX(RANDOM_PREFIX,_resampler_skip_zeros)
 #define speex_resampler_reset_mem CAT_PREFIX(RANDOM_PREFIX,_resampler_reset_mem)
 #define speex_resampler_strerror CAT_PREFIX(RANDOM_PREFIX,_resampler_strerror)
@@ -283,7 +288,7 @@ void speex_resampler_set_input_stride(SpeexResamplerState *st,
 
 /** Get the input stride.
  * @param st Resampler state
- * @param stride Input stride copied
+ * @param stride Input stride
  */
 void speex_resampler_get_input_stride(SpeexResamplerState *st, 
                                       spx_uint32_t *stride);
@@ -296,11 +301,67 @@ void speex_resampler_set_output_stride(SpeexResamplerState *st,
                                       spx_uint32_t stride);
 
 /** Get the output stride.
- * @param st Resampler state copied
+ * @param st Resampler state
  * @param stride Output stride
  */
 void speex_resampler_get_output_stride(SpeexResamplerState *st, 
                                       spx_uint32_t *stride);
+
+/** Get the latency in input samples introduced by the resampler.
+ * @param st Resampler state
+ */
+int speex_resampler_get_latency(SpeexResamplerState *st);
+
+/**
+ * Outputs the remaining samples into a float array.
+ * @param st Resampler state
+ * @param channel_index Index of the channel to process for the multi-channel 
+ * base (0 otherwise)
+ * of samples processed
+ * @param out Output buffer
+ * @param out_len Size of the output buffer. Returns the number of samples written
+ */
+int speex_resampler_drain_float(SpeexResamplerState *st,
+                                          spx_uint32_t channel_index,
+					  float *out,
+					  spx_uint32_t *out_len);
+/**
+ * Outputs the remaining samples into an int array.
+ * @param st Resampler state
+ * @param channel_index Index of the channel to process for the multi-channel 
+ * base (0 otherwise)
+ * of samples processed
+ * @param out Output buffer
+ * @param out_len Size of the output buffer. Returns the number of samples written
+ */
+int speex_resampler_drain_int(SpeexResamplerState *st,
+                                        spx_uint32_t channel_index,
+					spx_int16_t *out,
+					spx_uint32_t *out_len);
+/**
+ * Outputs the remaining samples into a float array.
+ * @param st Resampler state
+ * @param channel_index Index of the channel to process for the multi-channel 
+ * base (0 otherwise)
+ * of samples processed
+ * @param out Output buffer
+ * @param out_len Size of the output buffer. Returns the number of samples written
+ */
+int speex_resampler_drain_interleaved_float(SpeexResamplerState *st,
+                                                      float *out,
+						      spx_uint32_t *out_len);
+/**
+ * Outputs the remaining samples into an int array.
+ * @param st Resampler state
+ * @param channel_index Index of the channel to process for the multi-channel 
+ * base (0 otherwise)
+ * of samples processed
+ * @param out Output buffer
+ * @param out_len Size of the output buffer. Returns the number of samples written
+ */
+int speex_resampler_drain_interleaved_int(SpeexResamplerState *st,
+                                                    spx_int16_t *out,
+						    spx_uint32_t *out_len);
 
 /** Make sure that the first samples to go out of the resamplers don't have 
  * leading zeros. This is only useful before starting to use a newly created 
