@@ -67,12 +67,24 @@ void resample_float_resampler_get_ratio (SpeexResamplerState * st,
 void resample_int_resampler_get_ratio (SpeexResamplerState * st,
     guint32 * ratio_num, guint32 * ratio_den);
 
+int resample_float_resampler_get_latency (SpeexResamplerState * st);
+int resample_int_resampler_get_latency (SpeexResamplerState * st);
+
 int resample_float_resampler_set_quality (SpeexResamplerState * st,
     gint quality);
 int resample_int_resampler_set_quality (SpeexResamplerState * st, gint quality);
 
 int resample_float_resampler_reset_mem (SpeexResamplerState * st);
 int resample_int_resampler_reset_mem (SpeexResamplerState * st);
+
+int
+resample_float_resampler_drain_interleaved_float (SpeexResamplerState
+    * st, gfloat * out, guint32 * out_len);
+int resample_int_resampler_drain_interleaved_int (SpeexResamplerState
+    * st, gint16 * out, guint32 * out_len);
+
+int resample_float_resampler_skip_zeros (SpeexResamplerState * st);
+int resample_int_resampler_skip_zeros (SpeexResamplerState * st);
 
 #define resample_resampler_strerror resample_int_resampler_strerror
 const char *resample_resampler_strerror (gint err);
