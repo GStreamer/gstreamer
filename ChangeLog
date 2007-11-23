@@ -1,3 +1,10 @@
+2007-11-23  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audioresample/gstaudioresample.c: (gst_audioresample_init),
+	(audioresample_query), (audioresample_query_type),
+	(gst_audioresample_set_property):
+	Implement latency query.
+
 2007-11-21  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/audio/gstbaseaudiosink.c:

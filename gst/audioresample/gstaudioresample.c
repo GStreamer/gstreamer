@@ -127,6 +127,9 @@ static gboolean audioresample_event (GstBaseTransform * base, GstEvent * event);
 static gboolean audioresample_start (GstBaseTransform * base);
 static gboolean audioresample_stop (GstBaseTransform * base);
 
+static gboolean audioresample_query (GstPad * pad, GstQuery * query);
+static const GstQueryType *audioresample_query_type (GstPad * pad);
+
 #define DEBUG_INIT(bla) \
   GST_DEBUG_CATEGORY_INIT (audioresample_debug, "audioresample", 0, "audio resampling element");
 
@@ -196,6 +199,9 @@ gst_audioresample_init (GstAudioresample * audioresample,
   audioresample->filter_length = DEFAULT_FILTERLEN;
 
   audioresample->need_discont = FALSE;
+
+  gst_pad_set_query_function (trans->srcpad, audioresample_query);
+  gst_pad_set_query_type_function (trans->srcpad, audioresample_query_type);
 }
 
 /* vmethods */
@@ -701,6 +707,76 @@ done:
   return res;
 }
 
+static gboolean
+audioresample_query (GstPad * pad, GstQuery * query)
+{
+  GstAudioresample *audioresample =
+      GST_AUDIORESAMPLE (gst_pad_get_parent (pad));
+  GstBaseTransform *trans = GST_BASE_TRANSFORM (audioresample);
+  gboolean res = TRUE;
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_LATENCY:
+    {
+      GstClockTime min, max;
+      gboolean live;
+      guint64 latency;
+      GstPad *peer;
+      gint rate = audioresample->i_rate;
+      gint resampler_latency = audioresample->filter_length / 2;
+
+      if (gst_base_transform_is_passthrough (trans))
+        resampler_latency = 0;
+
+      if ((peer = gst_pad_get_peer (trans->sinkpad))) {
+        if ((res = gst_pad_query (peer, query))) {
+          gst_query_parse_latency (query, &live, &min, &max);
+
+          GST_DEBUG ("Peer latency: min %"
+              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+          /* add our own latency */
+          if (rate != 0 && resampler_latency != 0)
+            latency =
+                gst_util_uint64_scale (resampler_latency, GST_SECOND, rate);
+          else
+            latency = 0;
+
+          GST_DEBUG ("Our latency: %" GST_TIME_FORMAT, GST_TIME_ARGS (latency));
+
+          min += latency;
+          if (max != GST_CLOCK_TIME_NONE)
+            max += latency;
+
+          GST_DEBUG ("Calculated total latency : min %"
+              GST_TIME_FORMAT " max %" GST_TIME_FORMAT,
+              GST_TIME_ARGS (min), GST_TIME_ARGS (max));
+
+          gst_query_set_latency (query, live, min, max);
+        }
+        gst_object_unref (peer);
+      }
+      break;
+    }
+    default:
+      res = gst_pad_query_default (pad, query);
+      break;
+  }
+  gst_object_unref (audioresample);
+  return res;
+}
+
+static const GstQueryType *
+audioresample_query_type (GstPad * pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_LATENCY,
+    0
+  };
+
+  return types;
+}
 
 static void
 gst_audioresample_set_property (GObject * object, guint prop_id,
@@ -718,6 +794,8 @@ gst_audioresample_set_property (GObject * object, guint prop_id,
       if (audioresample->resample) {
         resample_set_filter_length (audioresample->resample,
             audioresample->filter_length);
+        gst_element_post_message (GST_ELEMENT (audioresample),
+            gst_message_new_latency (GST_OBJECT (audioresample)));
       }
       break;
     default:
