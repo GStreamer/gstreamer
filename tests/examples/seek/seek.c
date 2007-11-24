@@ -1638,7 +1638,7 @@ main (int argc, char **argv)
   flush_checkbox = gtk_check_button_new_with_label ("Flush");
   scrub_checkbox = gtk_check_button_new_with_label ("Scrub");
   play_scrub_checkbox = gtk_check_button_new_with_label ("Play Scrub");
-  rate_spinbutton = gtk_spin_button_new_with_range (-10, 10, 0.1);
+  rate_spinbutton = gtk_spin_button_new_with_range (-100, 100, 0.1);
   rate_label = gtk_label_new ("Rate");
 
   gtk_tooltips_set_tip (tips, accurate_checkbox,

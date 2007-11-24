@@ -1,3 +1,9 @@
+2007-11-24  Julien MOUTTE  <julien@moutte.net>
+
+	* tests/examples/seek/seek.c: (main): Increase the range of the
+	rate selector as I would like to test QOS behavior at higher
+	forward and reverse playback speed like say 64x.
+
 2007-11-23  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/audioresample/gstaudioresample.c: (gst_audioresample_init),
