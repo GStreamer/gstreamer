@@ -1,3 +1,8 @@
+2007-11-24  Edward Hervey  <bilboed@bilboed.com>
+
+	* configure.ac:
+	0.10.8.2 pre-releases
+
 2007-11-08  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/base.defs:
