@@ -1,3 +1,12 @@
+2007-11-24  Julien MOUTTE  <julien@moutte.net>
+
+	* gst/qtdemux/qtdemux.c: (gst_qtdemux_find_segment),
+	(gst_qtdemux_move_stream), (gst_qtdemux_do_seek),
+	(gst_qtdemux_seek_to_previous_keyframe),
+	(gst_qtdemux_activate_segment), (gst_qtdemux_advance_sample),
+	(gst_qtdemux_loop_state_movie), (gst_qtdemux_loop): Implement
+	reverse playback support.
+
 2007-11-20  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackcommon.c: (gst_wavpack_set_channel_layout):
