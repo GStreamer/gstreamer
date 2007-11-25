@@ -1,3 +1,10 @@
+2007-11-25  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	(gst_flv_parse_tag_video):
+	Output segment with proper 'stop' value, makes flvdemux 100% compatible
+	with gnonlin.
+
 2007-11-25  Stefan Kost  <ensonic@users.sf.net>
 
 	* ext/dc1394/gstdc1394.c:
