@@ -610,10 +610,12 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
     if (!demux->new_seg_event) {
       GST_DEBUG_OBJECT (demux, "pushing newsegment from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->segment->last_stop), GST_TIME_ARGS (-1));
-      demux->new_seg_event = gst_event_new_new_segment (FALSE,
-          demux->segment->rate, demux->segment->format,
-          demux->segment->last_stop, -1, demux->segment->last_stop);
+          GST_TIME_ARGS (demux->segment->last_stop),
+          GST_TIME_ARGS (demux->segment->stop));
+      demux->new_seg_event =
+          gst_event_new_new_segment (FALSE, demux->segment->rate,
+          demux->segment->format, demux->segment->last_stop,
+          demux->segment->stop, demux->segment->last_stop);
     } else {
       GST_DEBUG_OBJECT (demux, "pushing pre-generated newsegment event");
     }
@@ -865,10 +867,12 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
     if (!demux->new_seg_event) {
       GST_DEBUG_OBJECT (demux, "pushing newsegment from %"
           GST_TIME_FORMAT " to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (demux->segment->last_stop), GST_TIME_ARGS (-1));
-      demux->new_seg_event = gst_event_new_new_segment (FALSE,
-          demux->segment->rate, demux->segment->format,
-          demux->segment->last_stop, -1, demux->segment->last_stop);
+          GST_TIME_ARGS (demux->segment->last_stop),
+          GST_TIME_ARGS (demux->segment->stop));
+      demux->new_seg_event =
+          gst_event_new_new_segment (FALSE, demux->segment->rate,
+          demux->segment->format, demux->segment->last_stop,
+          demux->segment->stop, demux->segment->last_stop);
     } else {
       GST_DEBUG_OBJECT (demux, "pushing pre-generated newsegment event");
     }
