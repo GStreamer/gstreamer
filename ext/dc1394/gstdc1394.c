@@ -793,7 +793,7 @@ gst_dc1394_get_all_dc1394_caps ()
   gcaps = gst_caps_new_empty ();
   // first, the fixed mode caps
   for (i = DC1394_VIDEO_MODE_MIN; i < DC1394_VIDEO_MODE_EXIF; i++) {
-    GstStructure *gs = gst_structure_empty_new ("");
+    GstStructure *gs = gst_structure_empty_new ("video");
     gint ret = gst_dc1394_caps_set_format_vmode_caps (gs, i);
 
     gst_structure_set (gs,
@@ -807,7 +807,7 @@ gst_dc1394_get_all_dc1394_caps ()
   // then Format 7 options
 
   for (i = DC1394_COLOR_CODING_MIN; i <= DC1394_COLOR_CODING_MAX; i++) {
-    GstStructure *gs = gst_structure_empty_new ("");
+    GstStructure *gs = gst_structure_empty_new ("video");
 
     //int ret =  gst_dc1394_caps_set_format_vmode_caps(gs, i); 
 
@@ -1216,7 +1216,6 @@ gst_dc1394_change_camera_transmission (GstDc1394 * src, gboolean on)
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-
   GST_DEBUG_CATEGORY_INIT (dc1394_debug, "dc1394", 0, "DC1394 interface");
 
   return gst_element_register (plugin, "dc1394src", GST_RANK_NONE,

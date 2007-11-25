@@ -1,3 +1,9 @@
+2007-11-25  Stefan Kost  <ensonic@users.sf.net>
+
+	* ext/dc1394/gstdc1394.c:
+	  Set initial structure name to fix assertion, due to recent caps name
+	  constraints.
+
 2007-11-23  Zaheer Abbas Merali <zaheerabbas at merali dot org>
 
 	patch by: Alessandro Decina
