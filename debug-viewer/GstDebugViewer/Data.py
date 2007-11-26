@@ -337,6 +337,7 @@ class LogFile (Producer):
 
         self.logger = logging.getLogger ("logfile")
 
+        self.path = os.path.normpath (os.path.abspath (filename))
         self.fileobj = file (filename, "rb")
         self.line_cache = LineCache (self.fileobj, dispatcher)
         self.line_cache.consumers.append (self)

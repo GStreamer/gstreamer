@@ -4,6 +4,7 @@
     <menu name="FileMenu" action="FileMenuAction">
       <!--<menuitem name="FileNewWindow" action="new-window"/>-->
       <menuitem name="FileOpen" action="open-file"/>
+      <menuitem name="FileReload" action="reload-file"/>
       <separator/>
       <placeholder name="FileMenuAdditions"/>
       <separator/>

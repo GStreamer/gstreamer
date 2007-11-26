@@ -941,11 +941,13 @@ class Window (object):
         group = gtk.ActionGroup ("WindowActions")
         group.add_actions ([("new-window", gtk.STOCK_NEW, _("_New Window"), "<Ctrl>N"),
                             ("open-file", gtk.STOCK_OPEN, _("_Open File"), "<Ctrl>O"),
+                            ("reload-file", gtk.STOCK_REFRESH, _("_Reload File"), "<Ctrl>R"),
                             ("close-window", gtk.STOCK_CLOSE, _("Close _Window"), "<Ctrl>W"),
                             ("cancel-load", gtk.STOCK_CANCEL, None,),
                             ("show-about", gtk.STOCK_ABOUT, None)])
         ## group.add_toggle_actions ([("show-line-density", None, _("Line _Density"), "<Ctrl>D")])
         self.actions.add_group (group)
+        self.actions.reload_file.props.sensitive = False
 
         group = gtk.ActionGroup ("RowActions")
         group.add_actions ([("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
@@ -1001,8 +1003,8 @@ class Window (object):
         self.clipboard = gtk.Clipboard (self.gtk_window.get_display (),
                                         gtk.gdk.SELECTION_CLIPBOARD)
 
-        for action_name in ("new-window", "open-file", "close-window",
-                            "cancel-load",
+        for action_name in ("new-window", "open-file", "reload-file",
+                            "close-window", "cancel-load",
                             "edit-copy-line", "edit-copy-message",
                             "filter-out-higher-levels",
                             "show-about",):
@@ -1082,6 +1084,13 @@ class Window (object):
             self.set_log_file (dialog.get_filename ())
         dialog.destroy ()
 
+    def handle_reload_file_action_activate (self, action):
+
+        if self.log_file is None:
+            return
+
+        self.set_log_file (self.log_file.path)
+
     def handle_cancel_load_action_activate (self, action):
 
         self.logger.debug ("cancelling data load")
@@ -1158,6 +1167,7 @@ class Window (object):
                 self.dispatcher.cancel ()
             self.dispatcher = None
             self.log_file = None
+            self.actions.reload_file.props.sensitive = False
         else:
             self.logger.debug ("setting log file %r", filename)
 
@@ -1254,6 +1264,8 @@ class Window (object):
         self.log_model.set_log (self.log_file)
 
         self.log_filter.reset ()
+
+        self.actions.reload_file.props.sensitive = True
 
         def idle_set ():
             ##self.log_view.props.model = self.log_model
