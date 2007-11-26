@@ -523,12 +523,16 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   num_frames = num_int_samples / filter->channels;
 
   for (i = 0; i < filter->channels; ++i) {
-    filter->process (in_data, num_int_samples, filter->channels, &CS,
-        &filter->peak[i]);
-    GST_LOG_OBJECT (filter,
-        "channel %d, cumulative sum %f, peak %f, over %d samples/%d channels",
-        i, CS, filter->peak[i], num_int_samples, filter->channels);
-    filter->CS[i] += CS;
+    if (!GST_BUFFER_FLAG_IS_SET (in, GST_BUFFER_FLAG_GAP)) {
+      filter->process (in_data, num_int_samples, filter->channels, &CS,
+          &filter->peak[i]);
+      GST_LOG_OBJECT (filter,
+          "channel %d, cumulative sum %f, peak %f, over %d samples/%d channels",
+          i, CS, filter->peak[i], num_int_samples, filter->channels);
+      filter->CS[i] += CS;
+    } else {
+      filter->peak[i] = 0.0;
+    }
     in_data += (filter->width / 8);
 
     filter->decay_peak_age[i] +=

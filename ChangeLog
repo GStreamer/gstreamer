@@ -1,3 +1,8 @@
+2007-11-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/level/gstlevel.c:
+	  Add GAP-flag support.
+
 2007-11-26  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/rtp/gstrtph263depay.c: (gst_rtp_h263_depay_process):
