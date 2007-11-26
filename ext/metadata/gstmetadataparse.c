@@ -137,6 +137,8 @@ static gboolean gst_metadata_parse_sink_event (GstPad * pad, GstEvent * event);
 
 static GstFlowReturn gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf);
 
+static gboolean gst_metadata_parse_checkgetrange (GstPad * srcpad);
+
 static gboolean
 gst_metadata_parse_get_range (GstPad * pad, guint64 offset_orig, guint size,
     GstBuffer ** buf);
@@ -272,6 +274,8 @@ gst_metadata_parse_init (GstMetadataParse * filter,
       GST_DEBUG_FUNCPTR (gst_metadata_parse_get_query_types));
   gst_pad_use_fixed_caps (filter->srcpad);
 
+  gst_pad_set_checkgetrange_function (filter->srcpad,
+      GST_DEBUG_FUNCPTR (gst_metadata_parse_checkgetrange));
   gst_pad_set_getrange_function (filter->srcpad, gst_metadata_parse_get_range);
 
   gst_pad_set_activatepull_function (filter->srcpad,
@@ -982,7 +986,8 @@ gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf)
           new_buf =
               gst_buffer_new_and_alloc (GST_BUFFER_SIZE (buf) -
               filter->next_offset);
-          memcpy (GST_BUFFER_DATA (new_buf), GST_BUFFER_DATA (buf),
+          memcpy (GST_BUFFER_DATA (new_buf),
+              GST_BUFFER_DATA (buf) + filter->next_offset,
               GST_BUFFER_SIZE (buf) - filter->next_offset);
           filter->next_offset = 0;
           gst_adapter_push (filter->adapter_parsing, new_buf);
@@ -1590,6 +1595,16 @@ done:
 
   return ret;
 
+}
+
+static gboolean
+gst_metadata_parse_checkgetrange (GstPad * srcpad)
+{
+  GstMetadataParse *filter = NULL;
+
+  filter = GST_METADATA_PARSE (GST_PAD_PARENT (srcpad));
+
+  return gst_pad_check_pull_range (filter->sinkpad);
 }
 
 static gboolean

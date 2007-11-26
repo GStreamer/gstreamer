@@ -1,3 +1,9 @@
+2007-11-26  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/gstmetadataparse.c: (gst_metadata_parse_init),
+	(gst_metadata_parse_chain), (gst_metadata_parse_checkgetrange):
+	  Now works when get_range is not available upstream.
+
 2007-11-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/speexresample/README:
