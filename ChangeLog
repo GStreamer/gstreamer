@@ -1,3 +1,15 @@
+2007-11-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-docs.sgml:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/gstreamer.types.in:
+	* gst/Makefile.am:
+	* gst/gst.h:
+	* gst/gstpreset.c:
+	* gst/gstpreset.h:
+	* plugins/elements/gstqueue.c:
+	  Due to popular request remove preset interface again. :-(.
+
 2007-11-22  Stefan Kost  <ensonic@users.sf.net>
 
 	* tools/gst-inspect.c:

@@ -35,7 +35,6 @@
 <!ENTITY GstPipeline SYSTEM "xml/gstpipeline.xml">
 <!ENTITY GstPlugin SYSTEM "xml/gstplugin.xml">
 <!ENTITY GstPluginFeature SYSTEM "xml/gstpluginfeature.xml">
-<!ENTITY GstPreset SYSTEM "xml/gstpreset.xml">
 <!ENTITY GstQuery SYSTEM "xml/gstquery.xml">
 <!ENTITY GstRegistry SYSTEM "xml/gstregistry.xml">
 <!ENTITY GstSegment SYSTEM "xml/gstsegment.xml">
@@ -139,7 +138,6 @@ Windows.  It is released under the GNU Library General Public License
     &GstPipeline;
     &GstPlugin;
     &GstPluginFeature;
-    &GstPreset;
     &GstQuery;
     &GstRegistry;
     &GstSegment;

@@ -174,15 +174,7 @@ enum
 #define _do_init(bla) \
     GST_DEBUG_CATEGORY_INIT (queue_debug, "queue", 0, "queue element"); \
     GST_DEBUG_CATEGORY_INIT (queue_dataflow, "queue_dataflow", 0, \
-        "dataflow inside the queue element"); \
-    { \
-      const GInterfaceInfo preset_interface_info = { \
-        NULL,               /* interface_init */ \
-        NULL,               /* interface_finalize */ \
-        NULL                /* interface_data */ \
-      }; \
-      g_type_add_interface_static(object_type, GST_TYPE_PRESET, &preset_interface_info); \
-   }
+        "dataflow inside the queue element");
 
 GST_BOILERPLATE_FULL (GstQueue, gst_queue, GstElement,
     GST_TYPE_ELEMENT, _do_init);
