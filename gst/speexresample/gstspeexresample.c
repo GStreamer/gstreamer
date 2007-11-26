@@ -594,8 +594,9 @@ gst_speex_resample_push_drain (GstSpeexResample * resample)
         GST_FRAMES_TO_CLOCK_TIME (out_processed, resample->outrate);
   }
 
-  GST_LOG ("Pushing drain buffer of %ld bytes with timestamp %" GST_TIME_FORMAT
-      " duration %" GST_TIME_FORMAT " offset %lld offset_end %lld",
+  GST_LOG ("Pushing drain buffer of %u bytes with timestamp %" GST_TIME_FORMAT
+      " duration %" GST_TIME_FORMAT " offset %" G_GUINT64_FORMAT
+      " offset_end %" G_GUINT64_FORMAT,
       GST_BUFFER_SIZE (buf),
       GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)),
       GST_TIME_ARGS (GST_BUFFER_DURATION (buf)),
@@ -752,8 +753,9 @@ gst_speex_resample_process (GstSpeexResample * resample, GstBuffer * inbuf,
     GST_ERROR ("Failed to convert data: %s", resample_resampler_strerror (err));
     return GST_FLOW_ERROR;
   } else {
-    GST_LOG ("Converted to buffer of %ld bytes with timestamp %" GST_TIME_FORMAT
-        ", duration %" GST_TIME_FORMAT ", offset %lld, offset_end %lld",
+    GST_LOG ("Converted to buffer of %u bytes with timestamp %" GST_TIME_FORMAT
+        ", duration %" GST_TIME_FORMAT ", offset %" G_GUINT64_FORMAT
+        ", offset_end %" G_GUINT64_FORMAT,
         GST_BUFFER_SIZE (outbuf),
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (outbuf)),
