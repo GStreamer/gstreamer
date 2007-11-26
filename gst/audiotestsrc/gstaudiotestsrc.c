@@ -870,7 +870,14 @@ gst_audio_test_src_create (GstBaseSrc * basesrc, guint64 offset,
   src->running_time = next_time;
   src->n_samples = n_samples;
 
+  GST_LOG_OBJECT (src, "generating %u samples at ts %" GST_TIME_FORMAT,
+      length, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)));
+
   src->process (src, GST_BUFFER_DATA (buf));
+
+  if (src->wave == G_UNLIKELY (GST_AUDIO_TEST_SRC_WAVE_SILENCE)) {
+    GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_GAP);
+  }
 
   *buffer = buf;
 

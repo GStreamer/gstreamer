@@ -313,6 +313,8 @@ volume_update_real_volume (GstVolume * this)
     this->real_vol_i32 = this->volume_i32;
     passthrough = (this->volume_i16 == VOLUME_UNITY_INT16);
   }
+  if (this->real_vol_f != 0.0)
+    this->silent_buffer = FALSE;
   volume_choose_func (this);
   gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (this), passthrough);
 }
@@ -747,10 +749,18 @@ volume_transform_ip (GstBaseTransform * base, GstBuffer * outbuf)
     gst_object_sync_values (G_OBJECT (this), timestamp);
 
   /* don't process data in passthrough-mode */
-  if (gst_base_transform_is_passthrough (base))
+  if (gst_base_transform_is_passthrough (base) ||
+      GST_BUFFER_FLAG_IS_SET (outbuf, GST_BUFFER_FLAG_GAP))
     return GST_FLOW_OK;
 
+  if (this->real_vol_f == 0.0)
+    this->silent_buffer = TRUE;
+
   this->process (this, GST_BUFFER_DATA (outbuf), GST_BUFFER_SIZE (outbuf));
+
+  if (this->silent_buffer)
+    GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_GAP);
+  this->silent_buffer = FALSE;
 
   return GST_FLOW_OK;
 }

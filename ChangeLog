@@ -1,3 +1,10 @@
+2007-11-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/audiotestsrc/gstaudiotestsrc.c:
+	* gst/volume/gstvolume.c:
+	* gst/volume/gstvolume.h:
+	  Add GAP-flag support.
+
 2007-11-24  Julien MOUTTE  <julien@moutte.net>
 
 	* tests/examples/seek/seek.c: (main): Increase the range of the

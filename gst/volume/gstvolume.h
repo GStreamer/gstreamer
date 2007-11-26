@@ -68,6 +68,7 @@ struct _GstVolume {
   GList *tracklist;
   GstVolumeFormat format;       /* caps variables */
   gint width;
+  gboolean silent_buffer;       /* flag for silent buffers */
 };
 
 struct _GstVolumeClass {
