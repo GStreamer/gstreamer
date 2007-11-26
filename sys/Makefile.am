@@ -34,6 +34,12 @@ else
 DVB_DIR=
 endif
 
-SUBDIRS = $(GL_DIR) $(DVB_DIR) $(VCD_DIR)
+if USE_QUICKTIME
+QT_DIR=qtwrapper
+else
+QT_DIR=
+endif
 
-DIST_SUBDIRS = glsink dvb vcd
+SUBDIRS = $(GL_DIR) $(DVB_DIR) $(VCD_DIR) $(QT_DIR)
+
+DIST_SUBDIRS = glsink dvb vcd qtwrapper

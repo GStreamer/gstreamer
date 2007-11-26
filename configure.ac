@@ -298,6 +298,12 @@ AG_GST_CHECK_FEATURE(OPENGL, [Open GL], glsink, [
 CPPFLAGS="$save_CPPFLAGS"
 LIBS="$save_LIBS"
 
+dnl check for QuickTime
+translit(dnm, m, l) AM_CONDITIONAL(USE_QUICKTIME, true)
+AG_GST_CHECK_FEATURE(QUICKTIME, [QuickTime wrapper], qtwrapper, [
+  AC_CHECK_HEADER(QuickTime/Movies.h, HAVE_QUICKTIME="yes", HAVE_QUICKTIME="no")
+])
+
 dnl check for Video CD
 translit(dnm, m, l) AM_CONDITIONAL(USE_VCD, true)
 AG_GST_CHECK_FEATURE(VCD, [Video CD], vcdsrc, [
@@ -955,6 +961,7 @@ dnl not building plugins with external dependencies,
 dnl but we still need to set the conditionals
 
 AM_CONDITIONAL(USE_OPENGL, false)
+AM_CONDITIONAL(USE_QUICKTIME, false)
 AM_CONDITIONAL(USE_VCD, false)
 AM_CONDITIONAL(USE_X, false)
 AM_CONDITIONAL(USE_ALSA, false)
@@ -1086,6 +1093,7 @@ gst-libs/gst/app/Makefile
 sys/Makefile
 sys/glsink/Makefile
 sys/dvb/Makefile
+sys/qtwrapper/Makefile
 sys/vcd/Makefile
 examples/Makefile
 examples/app/Makefile

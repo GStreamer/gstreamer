@@ -1,3 +1,49 @@
+2007-11-26  Julien Moutte  <julien@fluendo.com>
+
+	* configure.ac: Add QuickTime Wrapper plug-in.
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_push_drain), (gst_speex_resample_process): Fix
+	build on Mac OS X Leopard. Incorrect printf format arguments.
+	* sys/Makefile.am:
+	* sys/qtwrapper/Makefile.am:
+	* sys/qtwrapper/audiodecoders.c:
+	(qtwrapper_audio_decoder_base_init),
+	(qtwrapper_audio_decoder_class_init),
+	(qtwrapper_audio_decoder_init),
+	(clear_AudioStreamBasicDescription), (fill_indesc_mp3),
+	(fill_indesc_aac), (fill_indesc_samr), (fill_indesc_generic),
+	(make_samr_magic_cookie), (open_decoder),
+	(qtwrapper_audio_decoder_sink_setcaps), (process_buffer_cb),
+	(qtwrapper_audio_decoder_chain),
+	(qtwrapper_audio_decoder_sink_event),
+	(qtwrapper_audio_decoders_register):
+	* sys/qtwrapper/codecmapping.c: (audio_caps_from_string),
+	(fourcc_to_caps):
+	* sys/qtwrapper/codecmapping.h:
+	* sys/qtwrapper/imagedescription.c: (image_description_for_avc1),
+	(image_description_for_mp4v), (image_description_from_stsd_buffer),
+	(image_description_from_codec_data):
+	* sys/qtwrapper/imagedescription.h:
+	* sys/qtwrapper/qtutils.c: (get_name_info_from_component),
+	(get_output_info_from_component), (dump_avcc_atom),
+	(dump_image_description), (dump_codec_decompress_params),
+	(addSInt32ToDictionary), (dump_cvpixel_buffer),
+	(DestroyAudioBufferList), (AllocateAudioBufferList):
+	* sys/qtwrapper/qtutils.h:
+	* sys/qtwrapper/qtwrapper.c: (plugin_init):
+	* sys/qtwrapper/qtwrapper.h:
+	* sys/qtwrapper/videodecoders.c:
+	(qtwrapper_video_decoder_base_init),
+	(qtwrapper_video_decoder_class_init),
+	(qtwrapper_video_decoder_init), (qtwrapper_video_decoder_finalize),
+	(fill_image_description), (new_image_description), (close_decoder),
+	(open_decoder), (qtwrapper_video_decoder_sink_setcaps),
+	(decompressCb), (qtwrapper_video_decoder_chain),
+	(qtwrapper_video_decoder_sink_event),
+	(qtwrapper_video_decoders_register): Initial import of QuickTime
+	wrapper jointly developped by Songbird authors (Pioneers of the
+	Inevitable) and Fluendo.
+
 2007-11-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/spectrum/gstspectrum.c:
