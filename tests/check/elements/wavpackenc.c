@@ -141,11 +141,6 @@ GST_START_TEST (test_encode_silence)
   fail_unless (memcmp (GST_BUFFER_DATA (outbuffer), "wvpk", 4) == 0,
       "Failed to encode to valid Wavpack frames");
 
-  caps = gst_caps_from_string (WAVPACK_CAPS_STRING);
-  fail_unless (gst_caps_is_equal (caps, GST_BUFFER_CAPS (outbuffer)) == TRUE,
-      "Wrong caps");
-  gst_caps_unref (caps);
-
   /* free all buffers */
   num_buffers = g_list_length (buffers);
 

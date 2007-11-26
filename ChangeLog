@@ -1,3 +1,10 @@
+2007-11-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/elements/wavpackenc.c: (GST_START_TEST):
+	Don't check the caps of the output buffer if they're equal some
+	other caps. The caps can change in a backward compatible way
+	and did at this point.
+
 2007-11-24  Julien MOUTTE  <julien@moutte.net>
 
 	* gst/qtdemux/qtdemux.c: (gst_qtdemux_find_segment),
