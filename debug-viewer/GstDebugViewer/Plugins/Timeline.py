@@ -284,8 +284,10 @@ class VerticalTimelineWidget (gtk.DrawingArea):
 
         ctx.set_line_width (1.)
         ctx.set_source_rgb (0., 0., 0.)
-        
-        first_y += cell_height // 2 - .5
+
+        half_height = cell_height // 2 - .5
+        quarter_height = cell_height // 4 - .5
+        first_y += half_height
         for i, i_data in enumerate (data):
             ts, thread = i_data
             if thread in self.thread_colors:
@@ -301,10 +303,13 @@ class VerticalTimelineWidget (gtk.DrawingArea):
             ts_offset = ts_fraction * h
             row_offset = first_y + i * cell_height
             ctx.move_to (-.5, ts_offset)
-            ctx.line_to (4.5, ts_offset)
-            ctx.line_to (w - 4.5, row_offset)
-            ctx.line_to (w + .5, row_offset)
+            ctx.line_to (half_height, ts_offset)
+            ctx.line_to (w - quarter_height, row_offset)
             ctx.stroke ()
+            ctx.line_to (w - quarter_height, row_offset)
+            ctx.line_to (w + .5, row_offset - half_height)
+            ctx.line_to (w + .5, row_offset + half_height)
+            ctx.fill ()
 
     def __handle_size_request (self, self_, req):
 
