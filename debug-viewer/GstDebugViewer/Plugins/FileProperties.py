@@ -33,7 +33,7 @@ class FilePropertiesDialog (gtk.Dialog):
 
 class FilePropertiesFeature (FeatureBase):
 
-    def __init__ (self):
+    def __init__ (self, *a, **kw):
 
         self.action_group = gtk.ActionGroup ("FilePropertiesActions")
         self.action_group.add_actions ([("show-file-properties", gtk.STOCK_PROPERTIES,

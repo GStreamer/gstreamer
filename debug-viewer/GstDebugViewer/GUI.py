@@ -1014,7 +1014,7 @@ class Window (object):
         self.features = []
 
         for plugin_feature in self.app.iter_plugin_features ():
-            feature = plugin_feature ()
+            feature = plugin_feature (self.app)
             self.features.append (feature)
 
         for feature in self.features:
@@ -1284,15 +1284,17 @@ class App (object):
 
     def __init__ (self):
 
-        self.load_plugins ()
-
         self.attach ()
 
     def load_plugins (self):
 
         from GstDebugViewer import Plugins
 
-        self.plugins = list (Plugins.load ([os.path.dirname (Plugins.__file__)]))
+        plugin_classes = list (Plugins.load ([os.path.dirname (Plugins.__file__)]))
+        self.plugins = []
+        for plugin_class in plugin_classes:
+            plugin = plugin_class (self)
+            self.plugins.append (plugin)
 
     def iter_plugin_features (self):
 
@@ -1308,6 +1310,8 @@ class App (object):
 
         self.state = AppState (state_filename)
         self.state_section = self.state.sections["state"]
+
+        self.load_plugins ()
 
         self.windows = [Window (self)]
 

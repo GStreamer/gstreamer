@@ -212,9 +212,10 @@ class StateString (object):
 
     """Descriptor for binding to StateSection classes."""
 
-    def __init__ (self, option):
+    def __init__ (self, option, default = None):
 
         self.option = option
+        self.default = default
 
     def __get__ (self, section, section_class = None):
 
@@ -241,7 +242,7 @@ class StateString (object):
 
     def get_default (self, section):
 
-        return None
+        return self.default
 
     def set (self, section, value):
 
@@ -300,9 +301,9 @@ class StateItem (StateString):
     """Descriptor for binding to StateSection classes.  This implements storing
     a class controlled by a Manager class."""
 
-    def __init__ (self, option, manager_class):
+    def __init__ (self, option, manager_class, default = None):
 
-        StateString.__init__ (self, option)
+        StateString.__init__ (self, option, default = default)
 
         self.manager = manager_class
 
@@ -357,7 +358,11 @@ class StateItemList (StateItem):
 
     def get_default (self, section):
 
-        return []
+        default = StateItem.get_default (self, section)
+        if default is None:
+            return []
+        else:
+            return default
 
     def set (self, section, value):
 

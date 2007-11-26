@@ -153,6 +153,10 @@ class LevelDistributionSentinel (object):
         partitions = self.freq_sentinel.partitions
         counts = [0] * 6
         tree_iter = self.model.get_iter_first ()
+
+        if not partitions:
+            return
+        
         while tree_iter:
             y -= 1
             if y == 0:
@@ -555,17 +559,23 @@ class TimelineWidget (gtk.DrawingArea):
         # FIXME:
         req.height = 64
 
+class TimelineState (Common.GUI.StateSection):
+
+    _name = "timeline"
+
+    shown = Common.GUI.StateBool ("shown", default = True)
+
 class TimelineFeature (FeatureBase):
 
-    state_section_name = "timeline"
-
-    def __init__ (self):
+    def __init__ (self, app):
 
         self.logger = logging.getLogger ("ui.timeline")
 
         self.action_group = gtk.ActionGroup ("TimelineActions")
         self.action_group.add_toggle_actions ([("show-timeline",
                                                 None, _("_Timeline"),)])
+
+        self.state = app.state.sections[TimelineState._name]
 
     def handle_attach_window (self, window):
 
@@ -601,7 +611,7 @@ class TimelineFeature (FeatureBase):
         handler = self.handle_show_action_toggled
         action = self.action_group.get_action ("show-timeline")
         action.connect ("toggled", handler)
-        action.activate ()
+        action.props.active = self.state.shown
 
     def handle_detach_window (self, window):
 
@@ -672,9 +682,11 @@ class TimelineFeature (FeatureBase):
         if show:
             self.timeline.show ()
             self.vtimeline.show ()
+            self.state.shown = True
         else:
             self.timeline.hide ()
             self.vtimeline.hide ()
+            self.state.shown = False
 
     def handle_timeline_button_press_event (self, widget, event):
 
@@ -719,3 +731,8 @@ class TimelineFeature (FeatureBase):
 class Plugin (PluginBase):
 
     features = [TimelineFeature]
+
+    def __init__ (self, app):
+
+        app.state.add_section_class (TimelineState)
+        self.state = app.state.sections[TimelineState._name]

@@ -47,7 +47,9 @@ def _load_plugins (path):
 
 class FeatureBase (object):
 
-    state_section_name = None
+    def __init__ (self, app):
+
+        pass
 
     def handle_attach_window (self, window):
 
@@ -69,6 +71,7 @@ class PluginBase (object):
 
     features = ()
 
-    def __init__ (self):
+    def __init__ (self, app):
 
         pass
+

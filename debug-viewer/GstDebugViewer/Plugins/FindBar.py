@@ -108,9 +108,9 @@ class FindBarWidget (gtk.HBox):
 
 class FindBarFeature (FeatureBase):
 
-    def __init__ (self):
+    def __init__ (self, app):
 
-        FeatureBase.__init__ (self)
+        FeatureBase.__init__ (self, app)
 
         self.matches = []
 
