@@ -142,7 +142,7 @@ static void gst_level_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_level_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-static void gst_level_dispose (GObject * obj);
+static void gst_level_finalize (GObject * obj);
 
 static gboolean gst_level_set_caps (GstBaseTransform * trans, GstCaps * in,
     GstCaps * out);
@@ -166,29 +166,26 @@ gst_level_base_init (gpointer g_class)
 static void
 gst_level_class_init (GstLevelClass * klass)
 {
-  GObjectClass *gobject_class;
-  GstBaseTransformClass *trans_class;
-
-  gobject_class = (GObjectClass *) klass;
-  trans_class = (GstBaseTransformClass *) klass;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstBaseTransformClass *trans_class = GST_BASE_TRANSFORM_CLASS (klass);
 
   gobject_class->set_property = gst_level_set_property;
   gobject_class->get_property = gst_level_get_property;
-  gobject_class->dispose = gst_level_dispose;
+  gobject_class->finalize = gst_level_finalize;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_LEVEL,
+  g_object_class_install_property (gobject_class, PROP_SIGNAL_LEVEL,
       g_param_spec_boolean ("message", "mesage",
           "Post a level message for each passed interval",
           TRUE, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SIGNAL_INTERVAL,
+  g_object_class_install_property (gobject_class, PROP_SIGNAL_INTERVAL,
       g_param_spec_uint64 ("interval", "Interval",
           "Interval of time between message posts (in nanoseconds)",
           1, G_MAXUINT64, GST_SECOND / 10, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PEAK_TTL,
+  g_object_class_install_property (gobject_class, PROP_PEAK_TTL,
       g_param_spec_uint64 ("peak-ttl", "Peak TTL",
           "Time To Live of decay peak before it falls back (in nanoseconds)",
           0, G_MAXUINT64, GST_SECOND / 10 * 3, G_PARAM_READWRITE));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PEAK_FALLOFF,
+  g_object_class_install_property (gobject_class, PROP_PEAK_FALLOFF,
       g_param_spec_double ("peak-falloff", "Peak Falloff",
           "Decay rate of decay peak after TTL (in dB/sec)",
           0.0, G_MAXDOUBLE, 10.0, G_PARAM_READWRITE));
@@ -221,7 +218,7 @@ gst_level_init (GstLevel * filter, GstLevelClass * g_class)
 }
 
 static void
-gst_level_dispose (GObject * obj)
+gst_level_finalize (GObject * obj)
 {
   GstLevel *filter = GST_LEVEL (obj);
 
@@ -239,7 +236,7 @@ gst_level_dispose (GObject * obj)
   filter->decay_peak_base = NULL;
   filter->decay_peak_age = NULL;
 
-  G_OBJECT_CLASS (parent_class)->dispose (obj);
+  G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
 static void
@@ -263,6 +260,7 @@ gst_level_set_property (GObject * object, guint prop_id,
       filter->decay_peak_falloff = g_value_get_double (value);
       break;
     default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -310,7 +308,7 @@ gst_level_get_property (GObject * object, guint prop_id,
  */
 
 #define DEFINE_INT_LEVEL_CALCULATOR(TYPE, RESOLUTION)                         \
-static void inline                                                            \
+static void inline                                                          \
 gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
                             gdouble *NCS, gdouble *NPS)                       \
 {                                                                             \
@@ -321,11 +319,12 @@ gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
   register gdouble peaksquare = 0.0; /* Peak Square Sample */                 \
   gdouble normalizer;               /* divisor to get a [-1.0, 1.0] range */  \
                                                                               \
-  *NCS = 0.0;                       /* Normalized Cumulative Square */        \
-  *NPS = 0.0;                       /* Normalized Peask Square */             \
+  /* *NCS = 0.0; Normalized Cumulative Square */                              \
+  /* *NPS = 0.0; Normalized Peask Square */                                   \
                                                                               \
   normalizer = (gdouble) (1 << (RESOLUTION * 2));                             \
                                                                               \
+  /* oil_squaresum_f64(&squaresum,in,num); */                                 \
   for (j = 0; j < num; j += channels)                                         \
   {                                                                           \
     square = ((gdouble) in[j]) * in[j];                                       \
@@ -351,9 +350,10 @@ gst_level_calculate_##TYPE (gpointer data, guint num, guint channels,         \
   register gdouble square = 0.0;     /* Square */                             \
   register gdouble peaksquare = 0.0; /* Peak Square Sample */                 \
                                                                               \
-  *NCS = 0.0;                       /* Normalized Cumulative Square */        \
-  *NPS = 0.0;                       /* Normalized Peask Square */             \
+  /* *NCS = 0.0; Normalized Cumulative Square */                              \
+  /* *NPS = 0.0; Normalized Peask Square */                                   \
                                                                               \
+  /* oil_squaresum_f64(&squaresum,in,num); */                                 \
   for (j = 0; j < num; j += channels)                                         \
   {                                                                           \
     square = ((gdouble) in[j]) * in[j];                                       \
@@ -503,19 +503,19 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 {
   GstLevel *filter;
   guint8 *in_data;
-  double CS = 0.0;
+  double CS;
+  guint i;
   guint num_frames = 0;
   guint num_int_samples = 0;    /* number of interleaved samples
                                  * ie. total count for all channels combined */
-  guint i;
 
   filter = GST_LEVEL (trans);
 
-  for (i = 0; i < filter->channels; ++i)
-    filter->peak[i] = 0.0;
-
   in_data = GST_BUFFER_DATA (in);
   num_int_samples = GST_BUFFER_SIZE (in) / (filter->width / 8);
+
+  GST_LOG_OBJECT (filter, "analyzing %u sample frames at ts %" GST_TIME_FORMAT,
+      num_int_samples, GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (in)));
 
   g_return_val_if_fail (num_int_samples % filter->channels == 0,
       GST_FLOW_ERROR);
@@ -523,7 +523,6 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
   num_frames = num_int_samples / filter->channels;
 
   for (i = 0; i < filter->channels; ++i) {
-    CS = 0.0;
     filter->process (in_data, num_int_samples, filter->channels, &CS,
         &filter->peak[i]);
     GST_LOG_OBJECT (filter,
@@ -531,11 +530,7 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
         i, CS, filter->peak[i], num_int_samples, filter->channels);
     filter->CS[i] += CS;
     in_data += (filter->width / 8);
-  }
 
-  filter->num_frames += num_frames;
-
-  for (i = 0; i < filter->channels; ++i) {
     filter->decay_peak_age[i] +=
         GST_FRAMES_TO_CLOCK_TIME (num_frames, filter->rate);
     GST_LOG_OBJECT (filter, "filter peak info [%d]: decay peak %f, age %"
@@ -582,6 +577,8 @@ gst_level_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       filter->decay_peak_age[i] = G_GINT64_CONSTANT (0);
     }
   }
+
+  filter->num_frames += num_frames;
 
   /* do we need to message ? */
   if (filter->num_frames >=
