@@ -1158,13 +1158,43 @@ class Window (object):
         else:
             self.logger.debug ("setting log file %r", filename)
 
-            self.log_model = LazyLogModel ()
-            self.log_filter = FilteredLogModel (self.log_model)
-
-            self.dispatcher = Common.Data.GSourceDispatcher ()
-            self.log_file = Data.LogFile (filename, self.dispatcher)
+            try:
+                self.log_model = LazyLogModel ()
+                self.log_filter = FilteredLogModel (self.log_model)
+                
+                self.dispatcher = Common.Data.GSourceDispatcher ()
+                self.log_file = Data.LogFile (filename, self.dispatcher)
+            except EnvironmentError, exc:
+                try:
+                    file_size = os.path.getsize (filename)
+                except EnvironmentError:
+                    pass
+                else:
+                    if file_size == 0:
+                        # Trying to mmap an empty file results in an invalid
+                        # argument error.
+                        self.show_error (_("Could not open file"),
+                                         _("The selected file is empty"))
+                        return
+                self.handle_environment_error (exc, filename)
+                return
             self.log_file.consumers.append (self)
             self.log_file.start_loading ()
+
+    def handle_environment_error (self, exc, filename):
+
+        self.show_error (_("Could not open file"), str (exc))
+
+    def show_error (self, message1, message2):
+
+        dialog = gtk.MessageDialog (self.gtk_window, gtk.DIALOG_MODAL, gtk.MESSAGE_ERROR,
+                                    gtk.BUTTONS_OK, message1)
+        # The property for secondary text is new in 2.10, so we use this clunky
+        # method instead.
+        dialog.format_secondary_text (message2)
+        dialog.set_default_response (0)
+        dialog.run ()
+        dialog.destroy ()
 
     def handle_log_view_button_press_event (self, view, event):
 
