@@ -24,8 +24,9 @@ import logging
 from GstDebugViewer import Common, Data, GUI
 from GstDebugViewer.Plugins import *
 
-import cairo
+import gobject
 import gtk
+import cairo
 
 def iter_model_reversed (model):
 
@@ -46,7 +47,7 @@ class LineFrequencySentinel (object):
         self.n_partitions = None
         self.partitions = None
         self.step = None
-        self.ts_range = (None, None,)        
+        self.ts_range = None
 
     def _search_ts (self, target_ts, first_index, last_index):
 
@@ -338,39 +339,45 @@ class TimelineWidget (gtk.DrawingArea):
         self.connect ("expose-event", self.__handle_expose_event)
         self.connect ("configure-event", self.__handle_configure_event)
         self.connect ("size-request", self.__handle_size_request)
-        self.process.handle_sentinel_progress = self.handle_sentinel_progress
-        self.process.handle_sentinel_finished = self.handle_sentinel_finished
-        self.process.handle_process_finished = self.handle_process_finished
+        self.process.handle_sentinel_progress = self.__handle_sentinel_progress
+        self.process.handle_sentinel_finished = self.__handle_sentinel_finished
+        self.process.handle_process_finished = self.__handle_process_finished
 
         self.model = None
         self.__offscreen = None
 
-    def handle_sentinel_progress (self, sentinel):
+        self.__position_ts_range = None
+
+    def __handle_sentinel_progress (self, sentinel):
 
         self.__redraw ()
 
-    def handle_sentinel_finished (self, sentinel):
+    def __handle_sentinel_finished (self, sentinel):
 
         if sentinel == self.process.freq_sentinel:
             self.__redraw ()
 
-    def handle_process_finished (self):
+    def __handle_process_finished (self):
 
         self.__redraw ()
+
+    def __ensure_offscreen (self):
+
+        x, y, w, h = self.get_allocation ()
+        self.__offscreen = gtk.gdk.Pixmap (self.window, w, h, -1)
+        if not self.__offscreen:
+            raise ValueError ("could not obtain pixmap")
 
     def __redraw (self):
 
         if not self.props.visible:
             return
 
-        x, y, w, h = self.get_allocation ()
-        self.__offscreen = gtk.gdk.Pixmap (self.window, w, h, -1)
-
+        self.__ensure_offscreen ()
         self.__draw (self.__offscreen)
+        self.__update_from_offscreen ()
 
-        self.__update ()
-
-    def __update (self):
+    def __update_from_offscreen (self):
 
         if not self.props.visible:
             return
@@ -380,6 +387,7 @@ class TimelineWidget (gtk.DrawingArea):
 
         gc = gtk.gdk.GC (self.window)
         self.window.draw_drawable (gc, self.__offscreen, 0, 0, 0, 0, -1, -1)
+        self.__draw_position (self.window)
 
     def update (self, model):
 
@@ -403,34 +411,15 @@ class TimelineWidget (gtk.DrawingArea):
 
     def update_position (self, start_ts, end_ts):
 
+        self.__position_ts_range = (start_ts, end_ts,)
+
         if not self.process.freq_sentinel:
             return
 
         if not self.process.freq_sentinel.data:
             return
 
-        self.__update ()
-
-        first_ts, last_ts = self.process.freq_sentinel.ts_range
-        step = self.process.freq_sentinel.step
-
-        position1 = int (float (start_ts - first_ts) / step)
-        position2 = int (float (end_ts - first_ts) / step)
-
-        ctx = self.window.cairo_create ()
-        x, y, w, h = self.get_allocation ()
-
-        line_width = position2 - position1
-        if line_width <= 1:
-            ctx.set_source_rgb (1., 0., 0.)
-            ctx.set_line_width (1.)
-            ctx.move_to (position1 + .5, 0)
-            ctx.line_to (position1 + .5, h)
-            ctx.stroke ()
-        else:
-            ctx.set_source_rgba (1., 0., 0., .5)
-            ctx.rectangle (position1, 0, line_width, h)
-            ctx.fill ()
+        self.__update_from_offscreen ()
 
     def find_indicative_time_step (self):
 
@@ -537,9 +526,49 @@ class TimelineWidget (gtk.DrawingArea):
         
         ctx.fill ()
 
+    def __have_position (self):
+
+        if ((self.__position_ts_range is not None) and
+            (self.process is not None) and
+            (self.process.freq_sentinel is not None) and
+            (self.process.freq_sentinel.ts_range is not None)):
+            return True
+        else:
+            return False
+
+    def __draw_position (self, drawable):
+
+        if not self.__have_position ():
+            return
+
+        start_ts, end_ts = self.__position_ts_range
+        first_ts, last_ts = self.process.freq_sentinel.ts_range
+        step = self.process.freq_sentinel.step
+
+        position1 = int (float (start_ts - first_ts) / step)
+        position2 = int (float (end_ts - first_ts) / step)
+
+        ctx = drawable.cairo_create ()
+        x, y, w, h = self.get_allocation ()
+
+        line_width = position2 - position1
+        if line_width <= 1:
+            ctx.set_source_rgb (1., 0., 0.)
+            ctx.set_line_width (1.)
+            ctx.move_to (position1 + .5, 0)
+            ctx.line_to (position1 + .5, h)
+            ctx.stroke ()
+        else:
+            ctx.set_source_rgba (1., 0., 0., .5)
+            ctx.rectangle (position1, 0, line_width, h)
+            ctx.fill ()
+
     def __handle_expose_event (self, self_, event):
 
-        self.__redraw ()
+        if self.__offscreen:
+            self.__update_from_offscreen ()
+        else:
+            self.__redraw ()
         return True
 
     def __handle_configure_event (self, self_, event):
@@ -627,20 +656,21 @@ class TimelineFeature (FeatureBase):
 
         model = window.log_filter
         self.timeline.update (model)
-        # FIXME: On startup, this triggers a GtkWarning in
-        # view.get_visible_range for no apparent reason.
-        ## self.update_vtimeline ()
+
+        # Need to dispatch these idly with a low priority to avoid triggering a
+        # warning in treeview.get_visible_range:
+        def idle_update ():
+            self.update_timeline_position ()
+            self.update_vtimeline ()
+            return False
+        gobject.idle_add (idle_update, priority = gobject.PRIORITY_LOW)
 
     def handle_detach_log_file (self, window, log_file):
 
         self.timeline.clear ()
         self.vtimeline.clear ()
 
-    def handle_log_view_adjustment_value_changed (self, adj):
-
-        # FIXME: If not visible, disconnect this handler!
-        if not self.timeline.props.visible:
-            return
+    def update_timeline_position (self):
 
         model = self.log_view.props.model
         start_path, end_path = self.log_view.get_visible_range ()
@@ -651,6 +681,13 @@ class TimelineFeature (FeatureBase):
         
         self.timeline.update_position (ts1, ts2)
 
+    def handle_log_view_adjustment_value_changed (self, adj):
+
+        # FIXME: If not visible, disconnect this handler!
+        if not self.timeline.props.visible:
+            return
+
+        self.update_timeline_position ()
         self.update_vtimeline ()
 
     def update_vtimeline (self):
