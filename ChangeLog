@@ -1,3 +1,26 @@
+2007-11-26  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/speexresample/README:
+	* gst/speexresample/arch.h:
+	* gst/speexresample/resample.c: (resampler_basic_direct_single),
+	(resampler_basic_direct_double),
+	(resampler_basic_interpolate_single),
+	(resampler_basic_interpolate_double),
+	(speex_resampler_process_native), (speex_resampler_process_float),
+	(speex_resampler_process_int),
+	(speex_resampler_process_interleaved_float),
+	(speex_resampler_process_interleaved_int),
+	(speex_resampler_get_input_latency),
+	(speex_resampler_get_output_latency):
+	* gst/speexresample/speex_resampler.h:
+	Update speex resampler to latest SVN. We're now down to only the
+	changes noted in README again.
+
+	* gst/speexresample/speex_resampler_wrapper.h:
+	* gst/speexresample/gstspeexresample.c:
+	(gst_speex_resample_push_drain), (gst_speex_resample_query):
+	Adjust to API changes.
+
 2007-11-25  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),

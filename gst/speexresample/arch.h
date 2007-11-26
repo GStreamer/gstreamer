@@ -40,7 +40,7 @@
 #define SPEEX_MINOR_VERSION 1         /**< Minor Speex version. */
 #define SPEEX_MICRO_VERSION 15        /**< Micro Speex version. */
 #define SPEEX_EXTRA_VERSION ""        /**< Extra Speex version. */
-#define SPEEX_VERSION "speex-1.2beta3"  /**< Speex version string. */
+#define SPEEX_VERSION "speex-1.2beta4"  /**< Speex version string. */
 #endif
 
 /* A couple test to catch stupid option combinations */
@@ -127,8 +127,6 @@ typedef spx_word32_t spx_sig_t;
 #include "fixed_arm5e.h"
 #elif defined (ARM4_ASM)
 #include "fixed_arm4.h"
-#elif defined (ARM5E_ASM)
-#include "fixed_arm5e.h"
 #elif defined (BFIN_ASM)
 #include "fixed_bfin.h"
 #endif

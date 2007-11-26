@@ -74,6 +74,7 @@ speex_realloc (void *ptr, int size)
 {
   return g_realloc (ptr, size);
 }
+
 static inline void
 speex_free (void *ptr)
 {
@@ -395,10 +396,13 @@ resampler_basic_direct_single (SpeexResamplerState * st,
     }
 
     /* Do the new part */
-    ptr = in + st->in_stride * (last_sample - N + 1 + j);
-    for (; j < N; j++) {
-      sum += MULT16_16 (*ptr, st->sinc_table[samp_frac_num * st->filt_len + j]);
-      ptr += st->in_stride;
+    if (in != NULL) {
+      ptr = in + st->in_stride * (last_sample - N + 1 + j);
+      for (; j < N; j++) {
+        sum +=
+            MULT16_16 (*ptr, st->sinc_table[samp_frac_num * st->filt_len + j]);
+        ptr += st->in_stride;
+      }
     }
 
     *out = PSHR32 (sum, 15);
@@ -447,12 +451,14 @@ resampler_basic_direct_double (SpeexResamplerState * st,
     }
 
     /* Do the new part */
-    ptr = in + st->in_stride * (last_sample - N + 1 + j);
-    for (; j < N; j++) {
-      sum +=
-          MULT16_16 (*ptr,
-          (double) st->sinc_table[samp_frac_num * st->filt_len + j]);
-      ptr += st->in_stride;
+    if (in != NULL) {
+      ptr = in + st->in_stride * (last_sample - N + 1 + j);
+      for (; j < N; j++) {
+        sum +=
+            MULT16_16 (*ptr,
+            (double) st->sinc_table[samp_frac_num * st->filt_len + j]);
+        ptr += st->in_stride;
+      }
     }
 
     *out = sum;
@@ -524,24 +530,27 @@ resampler_basic_interpolate_single (SpeexResamplerState * st,
           MULT16_16 (curr_mem,
           st->sinc_table[4 + (j + 1) * st->oversample - offset + 1]);
     }
-    ptr = in + st->in_stride * (last_sample - N + 1 + j);
-    /* Do the new part */
-    for (; j < N; j++) {
-      spx_word16_t curr_in = *ptr;
 
-      ptr += st->in_stride;
-      accum[0] +=
-          MULT16_16 (curr_in,
-          st->sinc_table[4 + (j + 1) * st->oversample - offset - 2]);
-      accum[1] +=
-          MULT16_16 (curr_in,
-          st->sinc_table[4 + (j + 1) * st->oversample - offset - 1]);
-      accum[2] +=
-          MULT16_16 (curr_in,
-          st->sinc_table[4 + (j + 1) * st->oversample - offset]);
-      accum[3] +=
-          MULT16_16 (curr_in,
-          st->sinc_table[4 + (j + 1) * st->oversample - offset + 1]);
+    if (in != NULL) {
+      ptr = in + st->in_stride * (last_sample - N + 1 + j);
+      /* Do the new part */
+      for (; j < N; j++) {
+        spx_word16_t curr_in = *ptr;
+
+        ptr += st->in_stride;
+        accum[0] +=
+            MULT16_16 (curr_in,
+            st->sinc_table[4 + (j + 1) * st->oversample - offset - 2]);
+        accum[1] +=
+            MULT16_16 (curr_in,
+            st->sinc_table[4 + (j + 1) * st->oversample - offset - 1]);
+        accum[2] +=
+            MULT16_16 (curr_in,
+            st->sinc_table[4 + (j + 1) * st->oversample - offset]);
+        accum[3] +=
+            MULT16_16 (curr_in,
+            st->sinc_table[4 + (j + 1) * st->oversample - offset + 1]);
+      }
     }
     cubic_coef (frac, interp);
     sum =
@@ -611,24 +620,26 @@ resampler_basic_interpolate_double (SpeexResamplerState * st,
           MULT16_16 (curr_mem,
           st->sinc_table[4 + (j + 1) * st->oversample - offset + 1]);
     }
-    ptr = in + st->in_stride * (last_sample - N + 1 + j);
-    /* Do the new part */
-    for (; j < N; j++) {
-      double curr_in = *ptr;
+    if (in != NULL) {
+      ptr = in + st->in_stride * (last_sample - N + 1 + j);
+      /* Do the new part */
+      for (; j < N; j++) {
+        double curr_in = *ptr;
 
-      ptr += st->in_stride;
-      accum[0] +=
-          MULT16_16 (curr_in,
-          st->sinc_table[4 + (j + 1) * st->oversample - offset - 2]);
-      accum[1] +=
-          MULT16_16 (curr_in,
-          st->sinc_table[4 + (j + 1) * st->oversample - offset - 1]);
-      accum[2] +=
-          MULT16_16 (curr_in,
-          st->sinc_table[4 + (j + 1) * st->oversample - offset]);
-      accum[3] +=
-          MULT16_16 (curr_in,
-          st->sinc_table[4 + (j + 1) * st->oversample - offset + 1]);
+        ptr += st->in_stride;
+        accum[0] +=
+            MULT16_16 (curr_in,
+            st->sinc_table[4 + (j + 1) * st->oversample - offset - 2]);
+        accum[1] +=
+            MULT16_16 (curr_in,
+            st->sinc_table[4 + (j + 1) * st->oversample - offset - 1]);
+        accum[2] +=
+            MULT16_16 (curr_in,
+            st->sinc_table[4 + (j + 1) * st->oversample - offset]);
+        accum[3] +=
+            MULT16_16 (curr_in,
+            st->sinc_table[4 + (j + 1) * st->oversample - offset + 1]);
+      }
     }
     cubic_coef (frac, interp);
     sum =
@@ -971,9 +982,13 @@ speex_resampler_process_native (SpeexResamplerState * st,
 
   for (j = 0; j < N - 1 - (spx_int32_t) * in_len; j++)
     mem[j] = mem[j + *in_len];
-  for (; j < N - 1; j++)
-    mem[j] = in[st->in_stride * (j + *in_len - N + 1)];
-
+  if (in != NULL) {
+    for (; j < N - 1; j++)
+      mem[j] = in[st->in_stride * (j + *in_len - N + 1)];
+  } else {
+    for (; j < N - 1; j++)
+      mem[j] = 0;
+  }
   return RESAMPLER_ERR_SUCCESS;
 }
 
@@ -998,10 +1013,16 @@ speex_resampler_process_float (SpeexResamplerState * st,
      ALLOC(y, *out_len, spx_word16_t); */
   istride_save = st->in_stride;
   ostride_save = st->out_stride;
-  for (i = 0; i < *in_len; i++)
-    x[i] = WORD2INT (in[i * st->in_stride]);
-  st->in_stride = st->out_stride = 1;
-  speex_resampler_process_native (st, channel_index, x, in_len, y, out_len);
+  if (in != NULL) {
+    for (i = 0; i < *in_len; i++)
+      x[i] = WORD2INT (in[i * st->in_stride]);
+    st->in_stride = st->out_stride = 1;
+    speex_resampler_process_native (st, channel_index, x, in_len, y, out_len);
+  } else {
+    st->in_stride = st->out_stride = 1;
+    speex_resampler_process_native (st, channel_index, NULL, in_len, y,
+        out_len);
+  }
   st->in_stride = istride_save;
   st->out_stride = ostride_save;
   for (i = 0; i < *out_len; i++)
@@ -1022,10 +1043,17 @@ speex_resampler_process_float (SpeexResamplerState * st,
       ichunk = FIXED_STACK_ALLOC;
     if (ochunk > FIXED_STACK_ALLOC)
       ochunk = FIXED_STACK_ALLOC;
-    for (i = 0; i < ichunk; i++)
-      x[i] = WORD2INT (in[i * st->in_stride]);
-    st->in_stride = st->out_stride = 1;
-    speex_resampler_process_native (st, channel_index, x, &ichunk, y, &ochunk);
+    if (in != NULL) {
+      for (i = 0; i < ichunk; i++)
+        x[i] = WORD2INT (in[i * st->in_stride]);
+      st->in_stride = st->out_stride = 1;
+      speex_resampler_process_native (st, channel_index, x, &ichunk, y,
+          &ochunk);
+    } else {
+      st->in_stride = st->out_stride = 1;
+      speex_resampler_process_native (st, channel_index, NULL, &ichunk, y,
+          &ochunk);
+    }
     st->in_stride = istride_save;
     st->out_stride = ostride_save;
     for (i = 0; i < ochunk; i++)
@@ -1077,10 +1105,16 @@ speex_resampler_process_int (SpeexResamplerState * st,
      ALLOC(y, *out_len, spx_word16_t); */
   istride_save = st->in_stride;
   ostride_save = st->out_stride;
-  for (i = 0; i < *in_len; i++)
-    x[i] = in[i * st->in_stride];
-  st->in_stride = st->out_stride = 1;
-  speex_resampler_process_native (st, channel_index, x, in_len, y, out_len);
+  if (in != NULL) {
+    for (i = 0; i < *in_len; i++)
+      x[i] = in[i * st->in_stride];
+    st->in_stride = st->out_stride = 1;
+    speex_resampler_process_native (st, channel_index, x, in_len, y, out_len);
+  } else {
+    st->in_stride = st->out_stride = 1;
+    speex_resampler_process_native (st, channel_index, NULL, in_len, y,
+        out_len);
+  }
   st->in_stride = istride_save;
   st->out_stride = ostride_save;
   for (i = 0; i < *out_len; i++)
@@ -1101,10 +1135,17 @@ speex_resampler_process_int (SpeexResamplerState * st,
       ichunk = FIXED_STACK_ALLOC;
     if (ochunk > FIXED_STACK_ALLOC)
       ochunk = FIXED_STACK_ALLOC;
-    for (i = 0; i < ichunk; i++)
-      x[i] = in[i * st->in_stride];
-    st->in_stride = st->out_stride = 1;
-    speex_resampler_process_native (st, channel_index, x, &ichunk, y, &ochunk);
+    if (in != NULL) {
+      for (i = 0; i < ichunk; i++)
+        x[i] = in[i * st->in_stride];
+      st->in_stride = st->out_stride = 1;
+      speex_resampler_process_native (st, channel_index, x, &ichunk, y,
+          &ochunk);
+    } else {
+      st->in_stride = st->out_stride = 1;
+      speex_resampler_process_native (st, channel_index, NULL, &ichunk, y,
+          &ochunk);
+    }
     st->in_stride = istride_save;
     st->out_stride = ostride_save;
     for (i = 0; i < ochunk; i++)
@@ -1134,7 +1175,10 @@ speex_resampler_process_interleaved_float (SpeexResamplerState * st,
   st->in_stride = st->out_stride = st->nb_channels;
   for (i = 0; i < st->nb_channels; i++) {
     *out_len = bak_len;
-    speex_resampler_process_float (st, i, in + i, in_len, out + i, out_len);
+    if (in != NULL)
+      speex_resampler_process_float (st, i, in + i, in_len, out + i, out_len);
+    else
+      speex_resampler_process_float (st, i, NULL, in_len, out + i, out_len);
   }
   st->in_stride = istride_save;
   st->out_stride = ostride_save;
@@ -1156,7 +1200,10 @@ speex_resampler_process_interleaved_int (SpeexResamplerState * st,
   st->in_stride = st->out_stride = st->nb_channels;
   for (i = 0; i < st->nb_channels; i++) {
     *out_len = bak_len;
-    speex_resampler_process_int (st, i, in + i, in_len, out + i, out_len);
+    if (in != NULL)
+      speex_resampler_process_int (st, i, in + i, in_len, out + i, out_len);
+    else
+      speex_resampler_process_int (st, i, NULL, in_len, out + i, out_len);
   }
   st->in_stride = istride_save;
   st->out_stride = ostride_save;
@@ -1273,133 +1320,16 @@ speex_resampler_get_output_stride (SpeexResamplerState * st,
 }
 
 int
-speex_resampler_get_latency (SpeexResamplerState * st)
+speex_resampler_get_input_latency (SpeexResamplerState * st)
 {
   return st->filt_len / 2;
 }
 
 int
-speex_resampler_drain_float (SpeexResamplerState * st,
-    spx_uint32_t channel_index, float *out, spx_uint32_t * out_len)
+speex_resampler_get_output_latency (SpeexResamplerState * st)
 {
-  spx_uint32_t in_len;
-  int ret;
-  float *in;
-
-  in_len = speex_resampler_get_latency (st);
-
-  in = speex_alloc (sizeof (float) * in_len);
-  *out_len =
-      MIN (in_len * st->den_rate + (st->num_rate >> 1) / st->num_rate,
-      *out_len);
-
-  ret =
-      speex_resampler_process_float (st, channel_index, in, &in_len, out,
-      out_len);
-
-  speex_free (in);
-
-  speex_resampler_reset_mem (st);
-
-  return ret;
-}
-
-int
-speex_resampler_drain_int (SpeexResamplerState * st,
-    spx_uint32_t channel_index, spx_int16_t * out, spx_uint32_t * out_len)
-{
-  spx_uint32_t in_len;
-  int ret;
-  spx_int16_t *in;
-
-  in_len = speex_resampler_get_latency (st);
-
-  in = speex_alloc (sizeof (spx_int16_t) * in_len);
-  *out_len =
-      MIN (in_len * st->den_rate + (st->num_rate >> 1) / st->num_rate,
-      *out_len);
-
-  ret =
-      speex_resampler_process_int (st, channel_index, in, &in_len, out,
-      out_len);
-
-  speex_free (in);
-
-  speex_resampler_reset_mem (st);
-
-  return ret;
-}
-
-int
-speex_resampler_drain_interleaved_float (SpeexResamplerState * st,
-    float *out, spx_uint32_t * out_len)
-{
-  spx_uint32_t i;
-  int istride_save, ostride_save;
-  spx_uint32_t bak_len;
-  spx_uint32_t in_len;
-  float *in;
-
-  in_len = speex_resampler_get_latency (st);
-
-  in = speex_alloc (sizeof (float) * in_len);
-  *out_len =
-      MIN (in_len * st->den_rate + (st->num_rate >> 1) / st->num_rate,
-      *out_len);
-  bak_len = *out_len;
-
-  istride_save = st->in_stride;
-  ostride_save = st->out_stride;
-  st->in_stride = 1;
-  st->out_stride = st->nb_channels;
-  for (i = 0; i < st->nb_channels; i++) {
-    *out_len = bak_len;
-    speex_resampler_process_float (st, i, in, &in_len, out + i, out_len);
-  }
-  st->in_stride = istride_save;
-  st->out_stride = ostride_save;
-
-  speex_free (in);
-
-  speex_resampler_reset_mem (st);
-
-  return RESAMPLER_ERR_SUCCESS;
-}
-
-int
-speex_resampler_drain_interleaved_int (SpeexResamplerState * st,
-    spx_int16_t * out, spx_uint32_t * out_len)
-{
-  spx_uint32_t i;
-  int istride_save, ostride_save;
-  spx_uint32_t bak_len;
-  spx_uint32_t in_len;
-  spx_int16_t *in;
-
-  in_len = speex_resampler_get_latency (st);
-
-  in = speex_alloc (sizeof (spx_int16_t) * in_len);
-  *out_len =
-      MIN (in_len * st->den_rate + (st->num_rate >> 1) / st->num_rate,
-      *out_len);
-  bak_len = *out_len;
-
-  istride_save = st->in_stride;
-  ostride_save = st->out_stride;
-  st->in_stride = 1;
-  st->out_stride = st->nb_channels;
-  for (i = 0; i < st->nb_channels; i++) {
-    *out_len = bak_len;
-    speex_resampler_process_int (st, i, in, &in_len, out + i, out_len);
-  }
-  st->in_stride = istride_save;
-  st->out_stride = ostride_save;
-
-  speex_free (in);
-
-  speex_resampler_reset_mem (st);
-
-  return RESAMPLER_ERR_SUCCESS;
+  return ((st->filt_len / 2) * st->den_rate +
+      (st->num_rate >> 1)) / st->num_rate;
 }
 
 int
