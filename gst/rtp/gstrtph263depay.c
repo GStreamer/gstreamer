@@ -188,6 +188,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     guint header_len;
 
     gboolean F, P, M;
+    gboolean I = FALSE;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
@@ -209,6 +210,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
        * |F|P|SBIT |EBIT | SRC |I|U|S|A|R      |DBQ| TRB |    TR         |
        * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
+      I = (payload[1] & 0x10) == 0x10;
     } else if (P == 0) {
       /* F == 1 and P == 0
        * mode B */
@@ -267,6 +269,9 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
         gst_adapter_flush (rtph263depay->adapter, avail);
       }
       memcpy (GST_BUFFER_DATA (outbuf) + avail, payload, payload_len);
+
+      if (I)
+        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
       return outbuf;
 

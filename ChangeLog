@@ -1,3 +1,10 @@
+2007-11-26  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/rtp/gstrtph263depay.c: (gst_rtp_h263_depay_process):
+	Read the I flag for Mode A h263 rtp stream and set the
+	GST_BUFFER_FLAG_DELTA_UNIT accordingly.
+	Fixes #499383
+
 2007-11-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/level/gstlevel.c:
