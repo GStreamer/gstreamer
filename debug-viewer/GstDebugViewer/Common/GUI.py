@@ -210,88 +210,70 @@ class Manager (object):
 
 class StateString (object):
 
-    """Descriptor for binding to AppState classes."""
+    """Descriptor for binding to StateSection classes."""
 
-    def __init__ (self, option, section = None):
+    def __init__ (self, option):
 
         self.option = option
-        self.section = section
 
-    def get_section (self, state):
+    def __get__ (self, section, section_class = None):
 
-        if self.section is None:
-            return state._default_section
-        else:
-            return self.section
+        import ConfigParser
 
-    def get_getter (self, state):
+        if section is None:
+            return self
 
-        return state._parser.get
+        try:
+            return self.get (section)
+        except (ConfigParser.NoSectionError,
+                ConfigParser.NoOptionError,):
+            return self.get_default (section)
 
-    def get_default (self, state):
+    def __set__ (self, section, value):
+
+        import ConfigParser
+
+        self.set (section, value)
+
+    def get (self, section):
+
+        return section.get (self)
+
+    def get_default (self, section):
 
         return None
 
-    def __get__ (self, state, state_class = None):
-
-        import ConfigParser
-
-        if state is None:
-            return self
-
-        getter = self.get_getter (state)
-        section = self.get_section (state)
-
-        try:
-            return getter (section, self.option)
-        except (ConfigParser.NoSectionError,
-                ConfigParser.NoOptionError,):
-            return self.get_default (state)
-
-    def __set__ (self, state, value):
-
-        import ConfigParser
+    def set (self, section, value):
 
         if value is None:
             value = ""
 
-        section = self.get_section (state)
-        option = self.option
-        option_value = str (value)
-
-        try:
-            state._parser.set (section, option, option_value)
-        except ConfigParser.NoSectionError:
-            state._parser.add_section (section)
-            state._parser.set (section, option, option_value)
+        section.set (self, str (value))
 
 class StateBool (StateString):
 
-    """Descriptor for binding to AppState classes."""
+    """Descriptor for binding to StateSection classes."""
 
-    def get_getter (self, state):
+    def get (self, section):
 
-        return state._parser.getboolean
+        return section.state._parser.getboolean (section._name, self.option)
 
 class StateInt (StateString):
 
-    """Descriptor for binding to AppState classes."""
+    """Descriptor for binding to StateSection classes."""
 
-    def get_getter (self, state):
+    def get (self, section):
 
-        return state._parser.getint
+        return section.state._parser.getint (section._name, self.option)
 
 class StateInt4 (StateString):
 
-    """Descriptor for binding to AppState classes.  This implements storing a
-    tuple of 4 integers."""
+    """Descriptor for binding to StateSection classes.  This implements storing
+    a tuple of 4 integers."""
 
-    def __get__ (self, state, state_class = None):
+    def get (self, section):
 
-        if state is None:
-            return self
-
-        value = StateString.__get__ (self, state)
+        value = StateString.get (self, section)
 
         try:
             l = value.split (",")
@@ -302,7 +284,7 @@ class StateInt4 (StateString):
         except (AttributeError, TypeError, ValueError,):
             return None
 
-    def __set__ (self, state, value):
+    def set (self, section, value):
 
         if value is None:
             svalue = ""
@@ -311,39 +293,36 @@ class StateInt4 (StateString):
         else:
             svalue = ", ".join ((str (v) for v in value))
 
-        return StateString.__set__ (self, state, svalue)
+        return StateString.set (self, section, svalue)
 
 class StateItem (StateString):
 
-    """Descriptor for binding to AppState classes.  This implements storing a
-    class controlled by a Manager class."""
+    """Descriptor for binding to StateSection classes.  This implements storing
+    a class controlled by a Manager class."""
 
-    def __init__ (self, option, manager_class, section = None):
+    def __init__ (self, option, manager_class):
 
-        StateString.__init__ (self, option, section = section)
+        StateString.__init__ (self, option)
 
         self.manager = manager_class
 
-    def __get__ (self, state, state_class = None):
+    def get (self, section):
 
-        if state is None:
-            return self
-
-        value = StateString.__get__ (self, state)
+        value = SectionString.get (self, section)
 
         if not value:
             return None
 
         return self.parse_item (value)
         
-    def __set__ (self, state, value):
+    def set (self, section, value):
 
         if value is None:
             svalue = ""
         else:
             svalue = value.name
 
-        StateString.__set__ (self, state, svalue)
+        StateString.set (self, section, svalue)
 
     def parse_item (self, value):
 
@@ -356,15 +335,12 @@ class StateItem (StateString):
 
 class StateItemList (StateItem):
 
-    """Descriptor for binding to AppState classes.  This implements storing an
-    ordered set of Manager items."""
+    """Descriptor for binding to StateSection classes.  This implements storing
+    an ordered set of Manager items."""
 
-    def __get__ (self, state, state_class = None):
+    def get (self, section):
 
-        if state is None:
-            return self
-
-        value = StateString.__get__ (self, state)
+        value = StateString.get (self, section)
 
         if not value:
             return []
@@ -379,22 +355,53 @@ class StateItemList (StateItem):
 
         return classes
 
-    def __set__ (self, state, value):
+    def get_default (self, section):
+
+        return []
+
+    def set (self, section, value):
 
         if value is None:
             svalue = ""
         else:
             svalue = ", ".join ((v.name for v in value))
-        
-        StateString.__set__ (self, state, svalue)
 
-class AppState (object):
+        StateString.set (self, section, svalue)
 
-    _default_section = "state"
+class StateSection (object):
+
+    _name = None
+
+    def __init__ (self, state):
+
+        self.state = state
+
+        if self._name is None:
+            raise NotImplementedError ("subclasses must override the _name attribute")
+
+    def get (self, state_string):
+
+        return self.state._parser.get (self._name, state_string.option)
+
+    def set (self, state_string, value):
+
+        import ConfigParser
+
+        parser = self.state._parser
+
+        try:
+            parser.set (self._name, state_string.option, value)
+        except ConfigParser.NoSectionError:
+            parser.add_section (self._name)
+            parser.set (self._name, state_string.option, value)
+
+class State (object):
 
     def __init__ (self, filename, old_filenames = ()):
 
         import ConfigParser
+
+        self.sections = {}
 
         self._filename = filename
         self._parser = ConfigParser.RawConfigParser ()
@@ -404,6 +411,10 @@ class AppState (object):
                 success = self._parser.read ([old_filename])
                 if success:
                     break
+
+    def add_section_class (self, section_class):
+
+        self.sections[section_class._name] = section_class (self)
 
     def save (self):
 

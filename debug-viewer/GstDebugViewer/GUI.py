@@ -927,7 +927,7 @@ class Window (object):
         self.update_progress_id = None
 
         self.window_state = Common.GUI.WindowState ()
-        self.column_manager = ViewColumnManager (app.state)
+        self.column_manager = ViewColumnManager (app.state_section)
 
         self.actions = Common.GUI.Actions ()
 
@@ -993,7 +993,8 @@ class Window (object):
 
     def attach (self):
 
-        self.window_state.attach (window = self.gtk_window, state = self.app.state)
+        self.window_state.attach (window = self.gtk_window,
+                                  state = self.app.state_section)
 
         self.clipboard = gtk.Clipboard (self.gtk_window.get_display (),
                                         gtk.gdk.SELECTION_CLIPBOARD)
@@ -1261,13 +1262,23 @@ class Window (object):
 
         gobject.idle_add (idle_set)
 
-class AppState (Common.GUI.AppState):
+class AppStateSection (Common.GUI.StateSection):
+
+    _name = "state"
 
     geometry = Common.GUI.StateInt4 ("window-geometry")
     maximized = Common.GUI.StateBool ("window-maximized")
 
     column_order = Common.GUI.StateItemList ("column-order", ViewColumnManager)
-    columns_visible = Common.GUI.StateItemList ("columns-visible", ViewColumnManager)
+    columns_visible = Common.GUI.StateItemList ("columns-visible", ViewColumnManager)    
+
+class AppState (Common.GUI.State):
+
+    def __init__ (self, *a, **kw):
+
+        Common.GUI.State.__init__ (self, *a, **kw)
+
+        self.add_section_class (AppStateSection)
 
 class App (object):
 
@@ -1296,6 +1307,7 @@ class App (object):
         state_filename = os.path.join (config_home, "gst-debug-viewer", "state")
 
         self.state = AppState (state_filename)
+        self.state_section = self.state.sections["state"]
 
         self.windows = [Window (self)]
 
