@@ -1,3 +1,8 @@
+2007-11-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/spectrum/gstspectrum.c:
+	  Use dispose and finalize. Dispose can be called multiple times.
+
 2007-11-26  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/gstmetadataparse.c: (gst_metadata_parse_init),

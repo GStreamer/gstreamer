@@ -136,6 +136,7 @@ GST_BOILERPLATE (GstSpectrum, gst_spectrum, GstAudioFilter,
     GST_TYPE_AUDIO_FILTER);
 
 static void gst_spectrum_dispose (GObject * object);
+static void gst_spectrum_finalize (GObject * object);
 static void gst_spectrum_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_spectrum_get_property (GObject * object, guint prop_id,
@@ -177,6 +178,7 @@ gst_spectrum_class_init (GstSpectrumClass * klass)
   gobject_class->set_property = gst_spectrum_set_property;
   gobject_class->get_property = gst_spectrum_get_property;
   gobject_class->dispose = gst_spectrum_dispose;
+  gobject_class->finalize = gst_spectrum_finalize;
 
   trans_class->start = GST_DEBUG_FUNCPTR (gst_spectrum_start);
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_spectrum_stop);
@@ -245,6 +247,14 @@ gst_spectrum_dispose (GObject * object)
     spectrum->adapter = NULL;
   }
 
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
+gst_spectrum_finalize (GObject * object)
+{
+  GstSpectrum *spectrum = GST_SPECTRUM (object);
+
   g_free (spectrum->in);
   if (spectrum->fft_free_func) {
     spectrum->fft_free_func (spectrum->fft_ctx);
@@ -260,7 +270,7 @@ gst_spectrum_dispose (GObject * object)
   spectrum->spect_phase = NULL;
   spectrum->freqdata = NULL;
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
