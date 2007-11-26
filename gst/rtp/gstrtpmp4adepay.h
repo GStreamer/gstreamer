@@ -42,8 +42,8 @@ typedef struct _GstRtpMP4ADepayClass GstRtpMP4ADepayClass;
 struct _GstRtpMP4ADepay
 {
   GstBaseRTPDepayload depayload;
-  
   GstAdapter *adapter;
+  guint8 numSubFrames;
 };
 
 struct _GstRtpMP4ADepayClass

@@ -191,6 +191,7 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
 
       data = GST_BUFFER_DATA (buffer);
       size = GST_BUFFER_SIZE (buffer);
+
       if (size < 2) {
         GST_WARNING_OBJECT (depayload, "config too short (%d < 2)", size);
         goto bad_config;
@@ -200,7 +201,7 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
        *
        * audioMuxVersion           == 0 (1 bit)
        * allStreamsSameTimeFraming == 1 (1 bit)
-       * numSubFrames              == 0 (6 bits)
+       * numSubFrames              == rtpmp4adepay->numSubFrames (6 bits)
        * numProgram                == 0 (4 bits)
        * numLayer                  == 0 (3 bits)
        *
@@ -213,6 +214,11 @@ gst_rtp_mp4a_depay_setcaps (GstBaseRTPDepayload * depayload, GstCaps * caps)
         GST_WARNING_OBJECT (depayload, "unknown audioMuxVersion 1");
         goto bad_config;
       }
+
+      rtpmp4adepay->numSubFrames = (data[0] & 0x3F);
+
+      GST_LOG_OBJECT (rtpmp4adepay, "numSubFrames %d",
+          rtpmp4adepay->numSubFrames);
 
       /* shift rest of string 15 bits down */
       size -= 2;
@@ -261,45 +267,89 @@ gst_rtp_mp4a_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
    * and push a buffer */
   if (gst_rtp_buffer_get_marker (buf)) {
     guint avail;
-    guint latm_header_len;
-    guint data_len;
+    guint i;
     guint8 *data;
+    guint pos;
 
     avail = gst_adapter_available (rtpmp4adepay->adapter);
 
+    GST_LOG_OBJECT (rtpmp4adepay, "have marker and %u available", avail);
+
     outbuf = gst_adapter_take_buffer (rtpmp4adepay->adapter, avail);
-
-    /* determine payload length and set buffer data pointer accordingly */
-    /* FIXME, check for overrun */
-    latm_header_len = 0;
-    data_len = 0;
     data = GST_BUFFER_DATA (outbuf);
-    do {
-      data_len += data[latm_header_len];
-    } while (data[latm_header_len++] == 0xff);
+    /* position in data we are at */
+    pos = 0;
 
-    /* just a check that lengths match, possibly there can be more than one
-     * audioMuxElement in the payload? */
-    if ((data_len + latm_header_len) != avail) {
-      GST_WARNING_OBJECT (depayload, "not all payload consumed");
+    /* looping through the number of sub-frames in the audio payload */
+    for (i = 0; i <= rtpmp4adepay->numSubFrames; i++) {
+      /* determine payload length and set buffer data pointer accordingly */
+      guint skip;
+      guint data_len;
+      guint32 timestamp;
+
+      GstBuffer *tmp = NULL;
+
+      timestamp = gst_rtp_buffer_get_timestamp (buf);
+
+      /* each subframe starts with a variable length encoding */
+      data_len = 0;
+      for (skip = 0; skip < avail; skip++) {
+        data_len += data[skip];
+        if (data[skip] != 0xff)
+          break;
+      }
+      skip++;
+
+      /* this can not be possible, we have not enough data or the length
+       * decoding failed because we ran out of data. */
+      if (skip + data_len < avail)
+        goto wrong_size;
+
+      GST_LOG_OBJECT (rtpmp4adepay,
+          "subframe %u, header len %u, data len %u, left %u", i, skip, data_len,
+          avail);
+
+      /* take data out, skip the header */
+      pos += skip;
+      tmp = gst_buffer_create_sub (outbuf, pos, data_len);
+
+      /* skip data too */
+      skip += data_len;
+      pos += data_len;
+
+      /* update our pointers whith what we consumed */
+      data += skip;
+      avail -= skip;
+
+      gst_buffer_set_caps (tmp, GST_PAD_CAPS (depayload->srcpad));
+
+      /* only apply the timestamp for the first buffer. Based on gstrtpmp4gdepay.c */
+      if (i == 0)
+        gst_base_rtp_depayload_push_ts (depayload, timestamp, tmp);
+      else
+        gst_base_rtp_depayload_push (depayload, tmp);
     }
 
-    GST_BUFFER_SIZE (outbuf) = avail - latm_header_len;
-    GST_BUFFER_DATA (outbuf) += latm_header_len;
-
-    gst_buffer_set_caps (outbuf, GST_PAD_CAPS (depayload->srcpad));
-
-    GST_DEBUG ("gst_rtp_mp4a_depay_process: pushing buffer of size %d",
-        GST_BUFFER_SIZE (outbuf));
-
-    return outbuf;
+    /* just a check that lengths match */
+    if (avail) {
+      GST_ELEMENT_WARNING (depayload, STREAM, DECODE,
+          ("Packet invalid"), ("Not all payload consumed: "
+              "possible wrongly encoded packet."));
+    }
   }
   return NULL;
 
+  /* ERRORS */
 bad_packet:
   {
     GST_ELEMENT_WARNING (rtpmp4adepay, STREAM, DECODE,
         ("Packet did not validate"), (NULL));
+    return NULL;
+  }
+wrong_size:
+  {
+    GST_ELEMENT_WARNING (rtpmp4adepay, STREAM, DECODE,
+        ("Packet did not validate"), ("wrong packet size"));
     return NULL;
   }
 }

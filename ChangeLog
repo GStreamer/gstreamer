@@ -1,3 +1,13 @@
+2007-11-26  Wim Taymans  <wim.taymans@gmail.com>
+
+	Based on Path by: Jayarama S. Santana <sundarsantana at gmail dot com>
+
+	* gst/rtp/gstrtpmp4adepay.c: (gst_rtp_mp4a_depay_setcaps),
+	(gst_rtp_mp4a_depay_process):
+	* gst/rtp/gstrtpmp4adepay.h:
+	Fix depayloading when multiple frames are inside one RTP packet.
+	Fixes #499239.
+
 2007-11-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/level/gstlevel.c:
