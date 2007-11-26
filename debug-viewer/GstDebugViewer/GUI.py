@@ -1191,6 +1191,10 @@ class Window (object):
                         return
                 self.handle_environment_error (exc, filename)
                 return
+
+            basename = os.path.basename (filename)
+            self.gtk_window.props.title = _("%s - GStreamer Debug Viewer") % (basename,)
+
             self.log_file.consumers.append (self)
             self.log_file.start_loading ()
 
