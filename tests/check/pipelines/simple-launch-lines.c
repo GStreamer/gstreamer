@@ -44,7 +44,7 @@ setup_pipeline (const gchar * pipe_descr)
  */
 static void
 run_pipeline (GstElement * pipe, const gchar * descr,
-    GstMessageType events, GstMessageType tevent)
+    GstMessageType events, GstMessageType tevent, GstState target_state)
 {
   GstBus *bus;
   GstMessage *message;
@@ -55,8 +55,7 @@ run_pipeline (GstElement * pipe, const gchar * descr,
   bus = gst_element_get_bus (pipe);
   g_assert (bus);
 
-  /* FIXME: going to playing would be nice, but thet leads to lot of failure */
-  fail_if (gst_element_set_state (pipe, GST_STATE_PAUSED) ==
+  fail_if (gst_element_set_state (pipe, target_state) ==
       GST_STATE_CHANGE_FAILURE, "Could not set pipeline %s to playing", descr);
   ret = gst_element_get_state (pipe, NULL, NULL, 10 * GST_SECOND);
   if (ret == GST_STATE_CHANGE_ASYNC) {
@@ -104,9 +103,12 @@ done:
   gst_object_unref (bus);
 }
 
-GST_START_TEST (test_rtppayloaders)
+GST_START_TEST (test_rtp_payloaders)
 {
   gchar *s;
+
+  /* FIXME: going to playing would be nice, but thet leads to lot of failure */
+  GstState target_state = GST_STATE_PAUSED;
 
   /* we use is-live here to avoid preroll */
 #define PIPELINE_STRING(bufcount, bufsize, pl, dpl) "fakesrc is-live=true num-buffers=" bufcount " filltype=2 sizetype=2 sizemax=" bufsize " ! " pl " ! " dpl " ! fakesink"
@@ -117,99 +119,99 @@ GST_START_TEST (test_rtppayloaders)
       "rtpilbcdepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpgsmpay",
       "rtpgsmdepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   /* This one needs a bit different buffer size than others or it doesn't work. */
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, "52", "rtpamrpay", "rtpamrdepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtppcmapay",
       "rtppcmadepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtppcmupay",
       "rtppcmudepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpmpapay",
       "rtpmpadepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtph263ppay",
       "rtph263pdepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtph263pay",
       "rtph263depay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtph264pay",
       "rtph264depay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpL16pay",
       "rtpL16depay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpmp2tpay",
       "rtpmp2tdepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpmp4vpay",
       "rtpmp4vdepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpmp4gpay",
       "rtpmp4gdepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   /* Cannot be tested with fakesrc becouse speex payloader requires a valid header?! */
   /*
      s = PIPELINE_STRING(DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpspeexpay", "rtpspeexdepay");
      run_pipeline (setup_pipeline (s), s,
      GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-     GST_MESSAGE_UNKNOWN);
+     GST_MESSAGE_UNKNOWN, target_state);
    */
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtptheorapay",
       "rtptheoradepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = PIPELINE_STRING (DEFAULT_BUFCOUNT, DEFAULT_BUFSIZE, "rtpvorbispay",
       "rtpvorbisdepay");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   /*s = FAKESRC " ! ! rtpac3depay ! " FAKESINK */
   /*s = FAKESRC " ! ! asteriskh263 ! " FAKESINK; */
@@ -222,6 +224,7 @@ GST_END_TEST
 GST_START_TEST (test_video_encoders_decoders)
 {
   gchar *s;
+  GstState target_state = GST_STATE_PLAYING;
 
   /* no is-live on the source because we actually want to preroll since
    * run_pipeline only goes into PAUSED */
@@ -231,17 +234,17 @@ GST_START_TEST (test_video_encoders_decoders)
   s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "jpegenc", "jpegdec");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "pngenc", "pngdec");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 
   s = ENC_DEC_PIPELINE_STRING (DEFAULT_BUFCOUNT, "smokeenc", "smokedec");
   run_pipeline (setup_pipeline (s), s,
       GST_MESSAGE_ANY & ~(GST_MESSAGE_ERROR | GST_MESSAGE_WARNING),
-      GST_MESSAGE_UNKNOWN);
+      GST_MESSAGE_UNKNOWN, target_state);
 }
 
 GST_END_TEST
@@ -256,7 +259,7 @@ GST_END_TEST
 
   suite_add_tcase (s, tc_chain);
 #ifndef GST_DISABLE_PARSE
-  tcase_add_test (tc_chain, test_rtppayloaders);
+  tcase_add_test (tc_chain, test_rtp_payloaders);
   tcase_add_test (tc_chain, test_video_encoders_decoders);
 #endif
   return s;

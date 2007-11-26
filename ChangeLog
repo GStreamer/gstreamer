@@ -1,3 +1,8 @@
+2007-11-26  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/pipelines/simple-launch-lines.c:
+	  Improve the tests by allowing to set a target state.
+
 2007-11-26  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tests/check/elements/wavpackenc.c: (GST_START_TEST):
