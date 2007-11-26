@@ -3,7 +3,7 @@ arch.h
 fixed_generic.h
 speex_resampler.h
 
-are taken from http://svn.xiph.org/trunk/speex/ revision 14208.
+are taken from http://svn.xiph.org/trunk/speex/ revision 14232.
 
 The only changes are:
 
@@ -46,9 +46,9 @@ The only changes are:
        
  #else /* OUTSIDE_SPEEX */
 
---- speex/libspeex/resample.c   2007-11-21 11:07:32.000000000 +0100
-+++ speexresample/resample.c  2007-11-21 11:15:09.000000000 +0100
-@@ -62,20 +62,22 @@
+--- speex/libspeex/resample.c	2007-11-25 14:15:38.000000000 +0100
++++ speexresample/resample.c	2007-11-25 14:15:31.000000000 +0100
+@@ -62,20 +62,23 @@
  
  #ifdef OUTSIDE_SPEEX
  #include <stdlib.h>
@@ -69,6 +69,7 @@ The only changes are:
 +  return g_realloc (ptr, size);
  }
 -static void
++
 +static inline void
  speex_free (void *ptr)
  {
@@ -77,4 +78,3 @@ The only changes are:
  }
  
  #include "speex_resampler.h"
-

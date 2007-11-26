@@ -524,7 +524,7 @@ gst_speex_resample_push_drain (GstSpeexResample * resample)
 
     resample_float_resampler_get_ratio (resample->state, &num, &den);
 
-    out_len = resample_float_resampler_get_latency (resample->state);
+    out_len = resample_float_resampler_get_input_latency (resample->state);
     out_len = out_processed = (out_len * den + (num >> 1)) / num;
     outsize = 4 * out_len * resample->channels;
   } else {
@@ -532,7 +532,7 @@ gst_speex_resample_push_drain (GstSpeexResample * resample)
 
     resample_int_resampler_get_ratio (resample->state, &num, &den);
 
-    out_len = resample_int_resampler_get_latency (resample->state);
+    out_len = resample_int_resampler_get_input_latency (resample->state);
     out_len = out_processed = (out_len * den + (num >> 1)) / num;
     outsize = 2 * out_len * resample->channels;
   }
@@ -545,12 +545,19 @@ gst_speex_resample_push_drain (GstSpeexResample * resample)
     return;
   }
 
-  if (resample->fp)
-    err = resample_float_resampler_drain_interleaved_float (resample->state,
-        (gfloat *) GST_BUFFER_DATA (buf), &out_processed);
-  else
-    err = resample_int_resampler_drain_interleaved_int (resample->state,
-        (gint16 *) GST_BUFFER_DATA (buf), &out_processed);
+  if (resample->fp) {
+    guint len = resample_float_resampler_get_input_latency (resample->state);
+
+    err =
+        resample_float_resampler_process_interleaved_float (resample->state,
+        NULL, &len, (gfloat *) GST_BUFFER_DATA (buf), &out_processed);
+  } else {
+    guint len = resample_int_resampler_get_input_latency (resample->state);
+
+    err =
+        resample_int_resampler_process_interleaved_int (resample->state, NULL,
+        &len, (gint16 *) GST_BUFFER_DATA (buf), &out_processed);
+  }
 
   if (err != RESAMPLER_ERR_SUCCESS) {
     GST_WARNING ("Failed to process drain: %s",
@@ -866,10 +873,10 @@ gst_speex_resample_query (GstPad * pad, GstQuery * query)
 
       if (resample->state && resample->fp)
         resampler_latency =
-            resample_float_resampler_get_latency (resample->state);
+            resample_float_resampler_get_input_latency (resample->state);
       else if (resample->state && !resample->fp)
         resampler_latency =
-            resample_int_resampler_get_latency (resample->state);
+            resample_int_resampler_get_input_latency (resample->state);
       else
         resampler_latency = 0;
 
