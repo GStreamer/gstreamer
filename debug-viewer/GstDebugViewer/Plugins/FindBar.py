@@ -198,9 +198,9 @@ class FindBarFeature (FeatureBase):
             self.logger.debug ("search string set to '', aborting search")
             self.sentinel.abort ()
             self.clear_results ()
-        # FIXME: Set start position
         self.logger.debug ("starting search for %r", search_string)
-        self.operation = SearchOperation (model, search_string)
+        start_path = self.log_view.get_visible_range ()[0]
+        self.operation = SearchOperation (model, search_string, start_position = start_path[0])
         self.sentinel.run_for (self.operation)
 
     def handle_match_found (self, model, tree_iter):
