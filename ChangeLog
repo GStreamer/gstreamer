@@ -1,3 +1,10 @@
+2007-11-27  Wim Taymans  <wim.taymans@gmail.com>
+
+	Patch by: Jayarama S. Santana <sundarsantana at gmail dot com>
+
+	* gst/rtp/gstrtpmp4adepay.c: (gst_rtp_mp4a_depay_process):
+	Fix wrong comparison in overrun check. Fixes #499239 some more.
+
 2007-11-27  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/rtp/gstrtph263depay.c: (gst_rtp_h263_depay_init),

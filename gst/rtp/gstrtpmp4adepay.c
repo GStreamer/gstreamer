@@ -302,7 +302,7 @@ gst_rtp_mp4a_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
       /* this can not be possible, we have not enough data or the length
        * decoding failed because we ran out of data. */
-      if (skip + data_len < avail)
+      if (skip + data_len > avail)
         goto wrong_size;
 
       GST_LOG_OBJECT (rtpmp4adepay,
