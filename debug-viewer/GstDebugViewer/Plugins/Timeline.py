@@ -720,10 +720,20 @@ class TimelineFeature (FeatureBase):
             return
 
         column = self.log_view.get_column (0)
-        cell_rect = self.log_view.get_cell_area (start_path, column)
-        first_y = self.log_view.convert_bin_window_to_widget_coords (cell_rect.x, cell_rect.y)[1]
         bg_rect = self.log_view.get_background_area (start_path, column)
         cell_height = bg_rect.height
+        cell_rect = self.log_view.get_cell_area (start_path, column)
+        try:
+            first_y = self.log_view.convert_bin_window_to_widget_coords (cell_rect.x, cell_rect.y)[1]
+        except (AttributeError, SystemError,):
+            # AttributeError is with PyGTK before 2.12.  SystemError is raised
+            # with PyGTK 2.12.0, pygtk bug #479012.
+            first_y = cell_rect.y % cell_height
+            if not hasattr (self, "_warn_tree_view_coords"):
+                self.logger.warning ("tree view coordinate conversion method "
+                                     "not available, using aproximate offset")
+                # Only warn once:
+                self._warn_tree_view_coords = True
 
         data = []
         tree_iter = model.get_iter (start_path)
