@@ -1,3 +1,10 @@
+2007-11-27  Wim Taymans  <wim.taymans@gmail.com>
+
+	* plugins/elements/gstfilesink.c: (gst_file_sink_event):
+	Be a bit smarter when seeking, like, don't try to do a seek when it's
+	not needed. This avoids errors when the file is not seekable.
+	Fixes #499771.
+
 2007-11-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* docs/gst/gstreamer-docs.sgml:

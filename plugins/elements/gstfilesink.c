@@ -384,15 +384,22 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
           &stop, &pos);
 
       if (format == GST_FORMAT_BYTES) {
-        /* FIXME, the seek should be performed on the pos field, start/stop are
-         * just boundaries for valid bytes offsets. We should also fill the file
-         * with zeroes if the new position extends the current EOF (sparse streams
-         * and segment accumulation). */
-        if (!gst_file_sink_do_seek (filesink, (guint64) start))
-          goto seek_failed;
+        /* only try to seek and fail when we are going to a different
+         * position */
+        if (filesink->current_pos != start) {
+          /* FIXME, the seek should be performed on the pos field, start/stop are
+           * just boundaries for valid bytes offsets. We should also fill the file
+           * with zeroes if the new position extends the current EOF (sparse streams
+           * and segment accumulation). */
+          if (!gst_file_sink_do_seek (filesink, (guint64) start))
+            goto seek_failed;
+        } else {
+          GST_DEBUG_OBJECT (filesink, "Ignored NEWSEGMENT, no seek needed");
+        }
       } else {
-        GST_DEBUG ("Ignored NEWSEGMENT event of format %u (%s)",
-            (guint) format, gst_format_get_name (format));
+        GST_DEBUG_OBJECT (filesink,
+            "Ignored NEWSEGMENT event of format %u (%s)", (guint) format,
+            gst_format_get_name (format));
       }
       break;
     }
