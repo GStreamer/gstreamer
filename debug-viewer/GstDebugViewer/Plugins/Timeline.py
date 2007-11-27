@@ -647,7 +647,13 @@ class TimelineFeature (FeatureBase):
         action.connect ("toggled", handler)
         action.props.active = self.state.shown
 
+        handler = self.handle_log_view_notify_model
+        self.notify_model_id = self.log_view.connect ("notify::model", handler)
+
     def handle_detach_window (self, window):
+
+        self.log_view.disconnect (self.notify_model_id)
+        self.log_view = None
 
         window.ui_manager.remove_ui (self.merge_id)
         self.merge_id = None
@@ -659,7 +665,22 @@ class TimelineFeature (FeatureBase):
 
     def handle_attach_log_file (self, window, log_file):
 
-        model = window.log_filter
+        pass
+
+    def handle_detach_log_file (self, window, log_file):
+
+        self.timeline.clear ()
+        self.vtimeline.clear ()
+
+    def handle_log_view_notify_model (self, view, gparam):
+
+        model = view.props.model
+
+        if model is None:
+            self.timeline.clear ()
+            self.vtimeline.clear ()
+            return
+        
         self.timeline.update (model)
 
         # Need to dispatch these idly with a low priority to avoid triggering a
@@ -669,11 +690,6 @@ class TimelineFeature (FeatureBase):
             self.update_vtimeline ()
             return False
         gobject.idle_add (idle_update, priority = gobject.PRIORITY_LOW)
-
-    def handle_detach_log_file (self, window, log_file):
-
-        self.timeline.clear ()
-        self.vtimeline.clear ()
 
     def update_timeline_position (self):
 

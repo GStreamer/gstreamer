@@ -387,9 +387,61 @@ class FilteredLogModel (LogModelBase):
         self.line_offsets[:] = (offset for row, offset in enum
                                 if func (row))
 
+    def parent_line_index (self, line_index):
+
+        return line_index # FIXME
+
 class Filter (object):
 
     pass
+
+class SubRange (object):
+
+    def __init__ (self, l, start, end):
+
+        if start > end:
+            raise ValueError ("need start <= end")
+
+        self.l = l
+        self.start = start
+        self.end = end
+
+    def __getitem__ (self, i):
+
+        return self.l[i + self.start]
+
+    def __len__ (self):
+
+        return self.end - self.start
+
+    def __iter__ (self):
+
+        l = self.l
+        i = self.start
+        while i <= self.end:
+            yield l[i]
+
+class RangeFilteredLogModel (FilteredLogModel):
+
+    def __init__ (self, lazy_log_model):
+
+        FilteredLogModel.__init__ (self, lazy_log_model)
+
+        self.line_index_range = None
+
+    def set_range (self, start_index, last_index):
+
+        self.line_index_range = (start_index, last_index,)
+        self.line_offsets = SubRange (self.parent_model.line_offsets,
+                                      start_index, last_index)
+        self.line_levels = SubRange (self.parent_model.line_levels,
+                                     start_index, last_index)
+
+    def parent_line_index (self, line_index):
+
+        start_index = self.line_index_range[0]
+
+        return line_index + start_index
 
 class DebugLevelFilter (Filter):
 
@@ -979,10 +1031,14 @@ class Window (object):
         self.actions.reload_file.props.sensitive = False
 
         group = gtk.ActionGroup ("RowActions")
-        group.add_actions ([("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
+        group.add_actions ([("omit-before-line", None, _("Omit lines before this one")),
+                            ("omit-after-line", None, _("Omit lines after this one")),
+                            ("show-hidden-lines", None, _("Show omitted lines")),
+                            ("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
                             ("edit-copy-message", gtk.STOCK_COPY, _("Copy message")),
                             ("filter-out-higher-levels", None, _("Filter out higher debug levels"))])
         self.actions.add_group (group)
+        self.actions.show_hidden_lines.props.sensitive = False
 
         self.actions.add_group (self.column_manager.action_group)
 
@@ -1034,6 +1090,7 @@ class Window (object):
 
         for action_name in ("new-window", "open-file", "reload-file",
                             "close-window", "cancel-load",
+                            "omit-before-line", "omit-after-line", "show-hidden-lines",
                             "edit-copy-line", "edit-copy-message",
                             "filter-out-higher-levels",
                             "show-about",):
@@ -1136,6 +1193,51 @@ class Window (object):
     def handle_close_window_action_activate (self, action):
 
         self.close ()
+
+    def handle_omit_after_line_action_activate (self, action):
+
+        first_index = self.log_filter.parent_line_index (0)
+        try:
+            filtered_line_index = self.get_active_line_index ()
+        except ValueError:
+            return
+        last_index = self.log_filter.parent_line_index (filtered_line_index)
+
+        self.logger.info ("omitting lines after %i (abs %i), first line is abs %i",
+                          filtered_line_index,
+                          last_index,
+                          first_index)
+
+        self.log_filter = RangeFilteredLogModel (self.log_model)
+        self.log_filter.set_range (first_index, last_index + 1)
+        self.log_view.props.model = self.log_filter
+        self.actions.show_hidden_lines.props.sensitive = True
+
+    def handle_omit_before_line_action_activate (self, action):
+
+        try:
+            filtered_line_index = self.get_active_line_index ()
+        except ValueError:
+            return
+        first_index = self.log_filter.parent_line_index (filtered_line_index)
+        last_index = self.log_filter.parent_line_index (len (self.log_filter) - 1)
+
+        self.logger.info ("omitting lines before %i (abs %i), last line is abs %i",
+                          filtered_line_index,
+                          first_index,
+                          last_index)
+
+        self.log_filter = RangeFilteredLogModel (self.log_model)
+        self.log_filter.set_range (first_index, last_index)
+        self.log_view.props.model = self.log_filter
+        self.actions.show_hidden_lines.props.sensitive = True
+
+    def handle_show_hidden_lines_action_activate (self, action):
+
+        self.logger.info ("restoring model filter to show all lines")
+        self.log_filter = FilteredLogModel (self.log_model)
+        self.log_view.props.model = self.log_filter
+        self.actions.show_hidden_lines.props.sensitive = False
 
     def handle_edit_copy_line_action_activate (self, action):
 
