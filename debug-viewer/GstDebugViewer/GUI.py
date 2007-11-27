@@ -447,6 +447,7 @@ class TextColumn (SizedColumn):
 
         if self.get_data_func:
             data_func = self.get_data_func ()
+            assert data_func
             id_ = self.id
             if id_ is not None:
                 def cell_data_func (column, cell, model, tree_iter):
@@ -662,6 +663,34 @@ class MessageColumn (TextColumn):
     name = "message"
     label_header = _("Message")
     id = LazyLogModel.COL_MESSAGE
+
+    def __init__ (self, *a, **kw):
+
+        self.highlight = {}
+
+        TextColumn.__init__ (self, *a, **kw)
+
+    def get_data_func (self):
+
+        highlight = self.highlight
+        escape = gobject.markup_escape_text
+
+        def message_data_func (props, value, path):
+
+            line_index = path[0]
+            if line_index in highlight:
+                props.text = None
+                start, end = highlight[line_index]
+                props.markup = escape (value[:start]) + \
+                               "<span background='blue' foreground='white'>" + \
+                               escape (value[start:end]) + \
+                               "</span>" + \
+                               escape (value[end:])
+            else:
+                props.markup = None
+                props.text = value
+
+        return message_data_func
 
 class ColumnManager (Common.GUI.Manager):
 

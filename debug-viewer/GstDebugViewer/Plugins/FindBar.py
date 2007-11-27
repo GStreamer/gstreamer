@@ -146,6 +146,8 @@ class FindBarFeature (FeatureBase):
 
     def handle_attach_window (self, window):
 
+        self.window = window
+
         ui = window.ui_manager
 
         ui.insert_action_group (self.action_group, 0)
@@ -170,6 +172,8 @@ class FindBarFeature (FeatureBase):
 
     def handle_detach_window (self, window):
 
+        self.window = None
+
         window.ui_manager.remove_ui (self.merge_id)
         self.merge_id = None
 
@@ -186,13 +190,14 @@ class FindBarFeature (FeatureBase):
         # FIXME: If the new search operation is stricter than the previous one
         # (find as you type!), re-use the previous results for a nice
         # performance gain (by only searching in previous results again)
-        del self.matches[:]
+        self.clear_results ()
 
         model = self.log_view.props.model
         search_string = entry.props.text
         if search_string == "":
             self.logger.debug ("search string set to '', aborting search")
             self.sentinel.abort ()
+            self.clear_results ()
         # FIXME: Set start position
         self.logger.debug ("starting search for %r", search_string)
         self.operation = SearchOperation (model, search_string)
@@ -203,6 +208,8 @@ class FindBarFeature (FeatureBase):
         line_index = model.get_path (tree_iter)[0]
         self.matches.append (line_index)
 
+        self.update_results ()
+
         if len (self.matches) == 1:
             self.scroll_view_to_line (line_index)
         elif len (self.matches) > 10000:
@@ -210,9 +217,55 @@ class FindBarFeature (FeatureBase):
 
     def handle_search_complete (self):
 
+        self.update_results (finished = True)
         self.logger.debug ("search for %r complete, got %i results",
                            self.operation.search_string,
                            len (self.matches))
+
+    def update_results (self, finished = False):
+
+        INTERVAL = 100
+
+        if len (self.matches) % INTERVAL == 0:
+            new_matches = self.matches[-INTERVAL:]
+        elif finished:
+            new_matches = self.matches[-(len (self.matches) % INTERVAL):]
+        else:
+            return
+
+        model = self.log_view.props.model
+        column = self.window.column_manager.find_item (name = "message")
+        search = self.operation.search_string
+
+        start_path, end_path = self.log_view.get_visible_range ()
+        start_index, end_index = start_path[0], end_path[0]
+
+        for line_index in new_matches:
+            path = (line_index,)
+            tree_iter = model.get_iter (path)
+            message = model.get_value (tree_iter, model.COL_MESSAGE)
+            pos = message.find (search)
+            column.highlight[line_index] = (pos, pos + len (search),)
+            if line_index >= start_index and line_index <= end_index:
+                model.row_changed (path, tree_iter)
+
+    def clear_results (self):
+
+        column = self.window.column_manager.find_item (name = "message")
+        column.highlight.clear ()
+
+        model = self.log_view.props.model
+
+        start_path, end_path = self.log_view.get_visible_range ()
+        start_index, end_index = start_path[0], end_path[0]
+
+        for line_index in range (start_index, end_index + 1):
+            if line_index in self.matches:
+                tree_path = (line_index,)
+                tree_iter = model.get_iter (tree_path)
+                model.row_changed (tree_path, tree_iter)
+
+        del self.matches[:]
 
 class Plugin (PluginBase):
 
