@@ -1,3 +1,11 @@
+2007-11-27  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/rtp/gstrtph263depay.c: (gst_rtp_h263_depay_init),
+	(gst_rtp_h263_depay_process):
+	* gst/rtp/gstrtph263depay.h:
+	Fix h263 depayloader so that ANY h263 decoder can handle the outgoing
+	stream.
+
 2007-11-26  Wim Taymans  <wim.taymans@gmail.com>
 
 	Based on Path by: Jayarama S. Santana <sundarsantana at gmail dot com>

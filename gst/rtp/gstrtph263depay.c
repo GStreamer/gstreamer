@@ -5,6 +5,7 @@
  *  @author: Philippe Kalaf <philippe.kalaf@collabora.co.uk>
  *
  * Copyright (C) <2005> Wim Taymans <wim@fluendo.com>
+ *               <2007> Edward Hervey <bilboed@bilboed.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -36,7 +37,8 @@ static const GstElementDetails gst_rtp_h263depay_details =
 GST_ELEMENT_DETAILS ("RTP H263 packet depayloader",
     "Codec/Depayloader/Network",
     "Extracts H263 video from RTP packets (RFC 2190)",
-    "Philippe Kalaf <philippe.kalaf@collabora.co.uk>");
+    "Philippe Kalaf <philippe.kalaf@collabora.co.uk>, "
+    "Edward Hervey <bilboed@bilboed.com>");
 
 enum
 {
@@ -135,6 +137,9 @@ gst_rtp_h263_depay_init (GstRtpH263Depay * rtph263depay,
     GstRtpH263DepayClass * klass)
 {
   rtph263depay->adapter = gst_adapter_new ();
+
+  rtph263depay->offset = 0;
+  rtph263depay->leftover = 0;
 }
 
 static void
@@ -181,14 +186,22 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
   if (!gst_rtp_buffer_validate (buf))
     goto bad_packet;
 
+  /* flush remaining data on discont */
+  if (GST_BUFFER_IS_DISCONT (buf)) {
+    gst_adapter_clear (rtph263depay->adapter);
+    rtph263depay->offset = 0;
+    rtph263depay->leftover = 0;
+  }
+
   {
     gint payload_len;
     guint8 *payload;
-    guint32 timestamp;
     guint header_len;
+    guint8 total_offset;
 
+    guint SBIT, EBIT;
     gboolean F, P, M;
-    gboolean I = FALSE;
+    gboolean I;
 
     payload_len = gst_rtp_buffer_get_payload_len (buf);
     payload = gst_rtp_buffer_get_payload (buf);
@@ -196,9 +209,14 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
     M = gst_rtp_buffer_get_marker (buf);
 
     /* Let's see what mode we are using */
-    F = (payload[0] & 0x01) == 0x01;
-    P = (payload[0] & 0x02) == 0x02;
+    F = (payload[0] & 0x80) == 0x80;
+    P = (payload[0] & 0x40) == 0x40;
 
+    /* Bit shifting */
+    SBIT = (payload[0] & 0x38) >> 3;
+    EBIT = (payload[0] & 0x07);
+
+    /* Figure out header length and I-flag */
     if (F == 0) {
       /* F == 0 and P == 0 or 1
        * mode A */
@@ -211,6 +229,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
        * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
       I = (payload[1] & 0x10) == 0x10;
+
     } else if (P == 0) {
       /* F == 1 and P == 0
        * mode B */
@@ -224,6 +243,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
        * |I|U|S|A| HMV1        | VMV1        | HMV2        | VMV2        |
        * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
+      I = (payload[4] & 0x80) == 0x80;
     } else {
       /* F == 1 and P == 1
        * mode C */
@@ -239,49 +259,92 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
        * | RR                                  |DBQ| TRB |    TR         |
        * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
        */
+      I = (payload[4] & 0x80) == 0x80;
     }
 
+#if 0
+    GST_WARNING ("F/P/M/I : %d/%d/%d/%d", F, P, M, I);
+    GST_WARNING ("SBIT : %d , EBIT : %d", SBIT, EBIT);
+    GST_WARNING ("payload_len : %d, header_len : %d , leftover : %d",
+        payload_len, header_len, rtph263depay->offset);
+    gst_util_dump_mem (payload, header_len);
+#endif
+
+    /* skip header */
     payload += header_len;
     payload_len -= header_len;
 
-    timestamp = gst_rtp_buffer_get_timestamp (buf);
+    total_offset = rtph263depay->offset + SBIT;
 
-    /* FIXME at this point, we just drop the header and don't check for any missing
-     * buffers, proper behaviour is to recreate the appropriate information in the
-     * bitstream if it has been lost */
+    if (total_offset) {
+      int i;
+
+      /* shift bits */
+
+      if (rtph263depay->offset)
+        rtph263depay->leftover |= payload[0] << total_offset;
+
+      for (i = 0; i < payload_len - 1; i++)
+        payload[i] =
+            (payload[i] << total_offset) | (payload[i + 1] >> (8 -
+                total_offset));
+
+      payload[payload_len - 1] = payload[payload_len - 1] << total_offset;
+    }
+
+    if (rtph263depay->offset) {
+      /* push leftover into the adapter because by now it is a complete byte */
+      GstBuffer *buf = gst_buffer_new_and_alloc (1);
+
+      GST_BUFFER_DATA (buf)[0] = rtph263depay->leftover;
+      gst_adapter_push (rtph263depay->adapter, buf);
+    }
+
+    /* store current buffer into the adapter */
+    if (total_offset + EBIT) {
+      /* push payload_len - 1 */
+      outbuf = gst_buffer_new_and_alloc (payload_len - 1);
+      memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len - 1);
+      gst_adapter_push (rtph263depay->adapter, outbuf);
+
+      /* store last byte as leftover */
+      rtph263depay->leftover = payload[payload_len - 1];
+    } else {
+      outbuf = gst_buffer_new_and_alloc (payload_len);
+      memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
+      gst_adapter_push (rtph263depay->adapter, outbuf);
+    }
+
+    /* Adjust offset */
+    rtph263depay->offset += EBIT + SBIT;
+    rtph263depay->offset %= 8;
+
+    /* Trim end of the leftover */
+    if (rtph263depay->offset)
+      rtph263depay->leftover &= 0xFF << rtph263depay->offset;
+
     if (M) {
-      /* frame is completed: append to previous, push it out */
-      guint len, padlen;
+      /* frame is completed */
       guint avail;
+      guint32 timestamp;
+
+      if (rtph263depay->offset) {
+        /* push in the leftover */
+        GstBuffer *buf = gst_buffer_new_and_alloc (1);
+
+        GST_BUFFER_DATA (buf)[0] = rtph263depay->leftover;
+        gst_adapter_push (rtph263depay->adapter, buf);
+      }
 
       avail = gst_adapter_available (rtph263depay->adapter);
-
-      len = avail + payload_len;
-      padlen = (len % 4) + 4;
-      outbuf = gst_buffer_new_and_alloc (len + padlen);
-      memset (GST_BUFFER_DATA (outbuf) + len, 0, padlen);
-      GST_BUFFER_SIZE (outbuf) = len;
-
-      /* prepend previous data */
-      if (avail > 0) {
-        gst_adapter_copy (rtph263depay->adapter, GST_BUFFER_DATA (outbuf), 0,
-            avail);
-        gst_adapter_flush (rtph263depay->adapter, avail);
-      }
-      memcpy (GST_BUFFER_DATA (outbuf) + avail, payload, payload_len);
+      outbuf = gst_adapter_take_buffer (rtph263depay->adapter, avail);
 
       if (I)
         GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-      return outbuf;
+      timestamp = gst_rtp_buffer_get_timestamp (buf);
+      gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
 
-    } else {
-      /* frame not completed: store in adapter */
-      outbuf = gst_buffer_new_and_alloc (payload_len);
-
-      memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
-
-      gst_adapter_push (rtph263depay->adapter, outbuf);
     }
   }
   return NULL;
