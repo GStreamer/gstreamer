@@ -1,3 +1,8 @@
+2007-11-28  Edward Hervey  <bilboed@bilboed.com>
+
+	* configure.ac:
+	0.10.2.2 pre-release
+
 2007-11-08  Edward Hervey  <bilboed@bilboed.com>
 
 	Patch by: Ole André Vadla Ravnås <ole dot andre dot ravnas at tandberg dot com>
