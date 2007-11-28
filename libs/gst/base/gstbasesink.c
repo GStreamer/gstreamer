@@ -189,7 +189,7 @@ struct _GstBaseSinkPrivate
    * buffers. */
   GstClockTime last_left_systime;
   GstClockTime avg_jitter;
-  GTimeVal start, stop;
+  GstClockTime start, stop;
   GstClockTime avg_render;
 
   /* number of rendered and dropped frames */
@@ -1969,14 +1969,13 @@ gst_base_sink_do_render_stats (GstBaseSink * basesink, gboolean start)
   priv = basesink->priv;
 
   if (start) {
-    g_get_current_time (&priv->start);
+    GST_GET_TIMESTAMP (priv->start);
   } else {
     GstClockTime elapsed;
 
-    g_get_current_time (&priv->stop);
+    GST_GET_TIMESTAMP (priv->stop);
 
-    elapsed =
-        GST_TIMEVAL_TO_TIME (priv->stop) - GST_TIMEVAL_TO_TIME (priv->start);
+    elapsed = GST_CLOCK_DIFF (priv->start, priv->stop);
 
     if (priv->avg_render == -1)
       priv->avg_render = elapsed;
