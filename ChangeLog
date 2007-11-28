@@ -1,3 +1,12 @@
+=== release 0.10.9 ===
+
+2007-11-28  Edward Hervey  <bilboed@bilboed.com>
+
+	* configure.ac:
+	* NEWS:
+	* RELEASE:
+	  releasing 0.10.9, "I've heard a lot of stories in my time"
+
 2007-11-24  Edward Hervey  <bilboed@bilboed.com>
 
 	* configure.ac:

@@ -1,4 +1,14 @@
-This is GStreamer Python Bindings 0.10.8, "This time I know our side will win."
+This is GStreamer Python Bindings 0.10.9, "I've heard a lot of stories in my time"
+
+Changes since 0.10.8
+      * Major crasher fixed when using latest pygobject
+      * Build system for Visual Studio 6
+      * Added wrapping for 0.10.15 gstreamer core/base
+
+Bugs fixed since 0.10.8:
+
+      * 490195 : [gst.URIHandler] interfaces with class-global virtual met...
+      * 425847 : Silently overrides some functions of default module optparse
 
 Changes since 0.10.7:
 
