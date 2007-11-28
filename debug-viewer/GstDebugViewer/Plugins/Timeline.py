@@ -624,6 +624,19 @@ class TimelineFeature (FeatureBase):
                    "ViewTimeline", "show-timeline",
                    gtk.UI_MANAGER_MENUITEM, False)
 
+        ui.add_ui (self.merge_id, "/", "TimelineContextMenu", None,
+                   gtk.UI_MANAGER_POPUP, False)
+        # TODO: Makes sense to have these here too, but we need to add logic to
+        # the actions to associate the correct line with the activation.
+        ## ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineOmitLinesBefore",
+        ##            "omit-before-line", gtk.UI_MANAGER_MENUITEM, False)
+        ## ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineOmitLinesAfter",
+        ##            "omit-after-line", gtk.UI_MANAGER_MENUITEM, False)
+        ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineShowOmittedLines",
+                   "show-hidden-lines", gtk.UI_MANAGER_MENUITEM, False)
+
+        self.popup = ui.get_widget ("/TimelineContextMenu")
+        
         box = window.get_top_attach_point ()
 
         self.timeline = TimelineWidget ()
@@ -757,6 +770,10 @@ class TimelineFeature (FeatureBase):
             self.state.shown = False
 
     def handle_timeline_button_press_event (self, widget, event):
+
+        if event.button == 3:
+            self.popup.popup (None, None, None, event.button, event.get_time ())
+            return True
 
         if event.button != 1:
             return True
