@@ -1,5 +1,14 @@
 2007-11-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstclock.h:
+	* gst/gstdebugutils.c:
+	* gst/gstinfo.c:
+	  Now hide the different clock stuff behind a macro.
+	  API: GST_GET_CURRENT_TIME
+
+2007-11-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* configure.ac:
 	* gst/gstdebugutils.c:
 	* gst/gstinfo.c:
