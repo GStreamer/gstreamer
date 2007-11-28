@@ -41,8 +41,8 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_METADATAPARSE_IPTC_H__
-#define __GST_METADATAPARSE_IPTC_H__
+#ifndef __GST_METADATAPARSE_XMP_H__
+#define __GST_METADATAPARSE_XMP_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
@@ -50,10 +50,16 @@
 G_BEGIN_DECLS
 
 extern void
-metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
     GstAdapter * adapter);
 
-extern void metadataparse_iptc_tags_register (void);
+extern gboolean metadataparse_xmp_init (void);
+
+extern void metadataparse_xmp_dispose (void);
+
+extern void
+metadatamux_xmp_create_chunk_from_tag_list (GstAdapter ** adapter,
+    GstTagList * taglist);
 
 G_END_DECLS
-#endif /* __GST_METADATAPARSE_IPTC_H__ */
+#endif /* __GST_METADATAPARSE_XMP_H__ */

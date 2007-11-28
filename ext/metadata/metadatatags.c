@@ -41,87 +41,51 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "metadataparseiptc.h"
-#include "metadataparseutil.h"
+#include "metadatatags.h"
 
-GST_DEBUG_CATEGORY (gst_metadata_parse_iptc_debug);
-#define GST_CAT_DEFAULT gst_metadata_parse_iptc_debug
+/*
+ * EXIF tags
+ */
 
-#define GST_TAG_IPTC "iptc"
+static void
+metadata_tags_exif_register (void)
+{
+  gst_tag_register (GST_TAG_EXIF, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, GST_TAG_EXIF, "exif metadata chunk", NULL);
+}
 
-void
-metadataparse_iptc_tags_register (void)
+/*
+ * IPTC tags
+ */
+
+static void
+metadata_tags_iptc_register (void)
 {
   gst_tag_register (GST_TAG_IPTC, GST_TAG_FLAG_META,
       GST_TYPE_BUFFER, GST_TAG_IPTC, "iptc metadata chunk", NULL);
 }
 
-#ifndef HAVE_IPTC
-
-void
-metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
-    GstAdapter * adapter)
-{
-
-  GST_LOG ("IPTC not defined, here I should send just one tag as whole chunk");
-
-  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
-
-}
-
-#else /* ifndef HAVE_IPTC */
-
-#include <iptc-data.h>
+/*
+ * XMP tags
+ */
 
 static void
-iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data);
+metadata_tags_xmp_register (void)
+{
+  gst_tag_register (GST_TAG_XMP, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, GST_TAG_XMP, "xmp metadata chunk", NULL);
+}
+
+/*
+ *
+ */
 
 void
-metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
-    GstAdapter * adapter)
-{
-  const guint8 *buf;
-  guint32 size;
-  IptcData *iptc = NULL;
-
-  if (adapter == NULL || (size = gst_adapter_available (adapter)) == 0) {
-    goto done;
-  }
-
-  /* add chunk tag */
-  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
-
-  buf = gst_adapter_peek (adapter, size);
-
-  iptc = iptc_data_new_from_data (buf, size);
-  if (iptc == NULL) {
-    goto done;
-  }
-
-  iptc_data_foreach_dataset (iptc, iptc_data_foreach_dataset_func,
-      (void *) taglist);
-
-done:
-
-  if (iptc)
-    iptc_data_unref (iptc);
-
-  return;
-
-}
-
-static void
-iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data)
+metadata_tags_register (void)
 {
 
-  char *buf[256];
-  GstTagList *taglist = (GstTagList *) user_data;
+  metadata_tags_exif_register ();
+  metadata_tags_iptc_register ();
+  metadata_tags_xmp_register ();
 
-  GST_LOG ("name -> %s", iptc_tag_get_name (dataset->record, dataset->tag));
-  GST_LOG ("title -> %s", iptc_tag_get_title (dataset->record, dataset->tag));
-  GST_LOG ("description -> %s", iptc_tag_get_description (dataset->record,
-          dataset->tag));
-  GST_LOG ("value = %s", iptc_dataset_get_as_str (dataset, buf, 256));
 }
-
-#endif /* else (ifndef HAVE_IPTC) */

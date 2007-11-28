@@ -41,108 +41,104 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "metadataparseexif.h"
+#include "metadataiptc.h"
 #include "metadataparseutil.h"
+#include "metadatatags.h"
 
-GST_DEBUG_CATEGORY (gst_metadata_parse_exif_debug);
-#define GST_CAT_DEFAULT gst_metadata_parse_exif_debug
+GST_DEBUG_CATEGORY (gst_metadata_iptc_debug);
+#define GST_CAT_DEFAULT gst_metadata_iptc_debug
 
-#define GST_TAG_EXIF "exif"
-
-void
-metadataparse_exif_tags_register (void)
-{
-  gst_tag_register (GST_TAG_EXIF, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, GST_TAG_EXIF, "exif metadata chunk", NULL);
-}
-
-#ifndef HAVE_EXIF
+#ifndef HAVE_IPTC
 
 void
-metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
     GstAdapter * adapter)
 {
 
-  GST_LOG ("EXIF not defined, here I should send just one tag as whole chunk");
+  GST_LOG ("IPTC not defined, here I should send just one tag as whole chunk");
 
-  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_EXIF, adapter);
+  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
 
 }
 
-#else /* ifndef HAVE_EXIF */
-
-#include <libexif/exif-data.h>
-
-static void
-exif_data_foreach_content_func (ExifContent * content, void *callback_data);
-
-static void exif_content_foreach_entry_func (ExifEntry * entry, void *);
 
 void
-metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+metadatamux_iptc_create_chunk_from_tag_list (GstAdapter ** adapter,
+    GstTagList * taglist)
+{
+  /* do nothing */
+}
+
+#else /* ifndef HAVE_IPTC */
+
+#include <iptc-data.h>
+
+static void
+iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data);
+
+void
+metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
     GstAdapter * adapter)
 {
   const guint8 *buf;
   guint32 size;
-  ExifData *exif = NULL;
+  IptcData *iptc = NULL;
 
   if (adapter == NULL || (size = gst_adapter_available (adapter)) == 0) {
     goto done;
   }
 
   /* add chunk tag */
-  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_EXIF, adapter);
+  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
 
   buf = gst_adapter_peek (adapter, size);
 
-  exif = exif_data_new_from_data (buf, size);
-  if (exif == NULL) {
+  iptc = iptc_data_new_from_data (buf, size);
+  if (iptc == NULL) {
     goto done;
   }
 
-  exif_data_foreach_content (exif, exif_data_foreach_content_func,
+  iptc_data_foreach_dataset (iptc, iptc_data_foreach_dataset_func,
       (void *) taglist);
 
 done:
 
-  if (exif)
-    exif_data_unref (exif);
+  if (iptc)
+    iptc_data_unref (iptc);
 
   return;
 
 }
 
 static void
-exif_data_foreach_content_func (ExifContent * content, void *user_data)
+iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data)
 {
-  ExifIfd ifd = exif_content_get_ifd (content);
+
+  char *buf[256];
   GstTagList *taglist = (GstTagList *) user_data;
 
-  GST_LOG ("\n  Content %p: %s (ifd=%d)", content, exif_ifd_get_name (ifd),
-      ifd);
-  exif_content_foreach_entry (content, exif_content_foreach_entry_func,
-      user_data);
+  GST_LOG ("name -> %s", iptc_tag_get_name (dataset->record, dataset->tag));
+  GST_LOG ("title -> %s", iptc_tag_get_title (dataset->record, dataset->tag));
+  GST_LOG ("description -> %s", iptc_tag_get_description (dataset->record,
+          dataset->tag));
+  GST_LOG ("value = %s", iptc_dataset_get_as_str (dataset, buf, 256));
 }
 
-static void
-exif_content_foreach_entry_func (ExifEntry * entry, void *user_data)
+void
+metadatamux_iptc_create_chunk_from_tag_list (GstAdapter ** adapter,
+    GstTagList * taglist)
 {
-  char buf[2048];
-  GstTagList *taglist = (GstTagList *) user_data;
+  if (adapter == NULL)
+    goto done;
 
-  GST_LOG ("\n    Entry %p: %s (%s)\n"
-      "      Size, Comps: %d, %d\n"
-      "      Value: %s\n"
-      "      Title: %s\n"
-      "      Description: %s\n",
-      entry,
-      exif_tag_get_name_in_ifd (entry->tag, EXIF_IFD_0),
-      exif_format_get_name (entry->format),
-      entry->size,
-      (int) (entry->components),
-      exif_entry_get_value (entry, buf, sizeof (buf)),
-      exif_tag_get_title_in_ifd (entry->tag, EXIF_IFD_0),
-      exif_tag_get_description_in_ifd (entry->tag, EXIF_IFD_0));
+  if (*adapter)
+    g_object_unref (*adapter);
+
+  *adapter = gst_adapter_new ();
+
+done:
+
+  return;
 }
 
-#endif /* else (ifndef HAVE_EXIF) */
+#endif /* else (ifndef HAVE_IPTC) */

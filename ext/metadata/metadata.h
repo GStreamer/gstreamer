@@ -41,46 +41,82 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+#ifndef __METADATA_H__
+#define __METADATA_H__
 
-#include <gst/gst.h>
+#include <gst/base/gstadapter.h>
+#include "metadatatypes.h"
 
-#include "metadatatags.h"
+#include "metadataparsejpeg.h"
+#include "metadataparsepng.h"
 
-extern gboolean gst_metadata_parse_plugin_init (GstPlugin * plugin);
-extern gboolean gst_metadata_mux_plugin_init (GstPlugin * plugin);
+G_BEGIN_DECLS
 
-GST_DEBUG_CATEGORY_EXTERN (gst_metadata_exif_debug);
-GST_DEBUG_CATEGORY_EXTERN (gst_metadata_iptc_debug);
-GST_DEBUG_CATEGORY_EXTERN (gst_metadata_xmp_debug);
-
-static gboolean
-plugin_init (GstPlugin * plugin)
+typedef enum _tag_MetaOption
 {
+  META_OPT_EXIF = (1 << 0),
+  META_OPT_IPTC = (1 << 1),
+  META_OPT_XMP = (1 << 2),
+  META_OPT_ALL = (1 << 3) - 1
+} MetaOption;
 
-  gboolean ret = TRUE;
+typedef enum _tag_MetaState
+{
+  STATE_NULL,
+  STATE_READING,
+  STATE_DONE
+} MetaState;
 
-  GST_DEBUG_CATEGORY_INIT (gst_metadata_exif_debug, "metadata_exif",
-      0, "Metadata exif");
-  GST_DEBUG_CATEGORY_INIT (gst_metadata_iptc_debug, "metadata_iptc",
-      0, "Metadata iptc");
-  GST_DEBUG_CATEGORY_INIT (gst_metadata_xmp_debug, "metadata_xmp", 0,
-      "Metadata xmp");
+typedef enum _tag_ImageType
+{
+  IMG_NONE,
+  IMG_JPEG,
+  IMG_PNG
+} ImageType;
 
-  metadata_tags_register ();
+typedef struct _tag_MetaData
+{
+  MetaState state;
+  ImageType img_type;
+  MetaOption option;
+  guint32 offset_orig; /* offset since begining of stream */
+  union
+  {
+    JpegData jpeg;
+    PngData png;
+  } format_data;
+  GstAdapter * exif_adapter;
+  GstAdapter * iptc_adapter;
+  GstAdapter * xmp_adapter;
 
-  ret = gst_metadata_parse_plugin_init (plugin);
+  MetadataChunkArray strip_chunks;
+  MetadataChunkArray inject_chunks;
 
-  ret = ret && gst_metadata_mux_plugin_init (plugin);
+} MetaData;
 
-  return ret;
+#define META_DATA_IMG_TYPE(p) (p).img_type
+#define META_DATA_OPTION(p) (p).option
+#define set_meta_option(p, m) do { (p).option = (p).option | (m); } while(FALSE)
+#define unset_meta_option(p, m) do { (p).option = (p).option & ~(m); } while(FALSE)
 
-}
+extern void metadata_init (MetaData * meta_data);
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "metadata",
-    "Metadata (EXIF, IPTC and XMP) image (JPEG, TIFF) parser and muxer",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+/*
+ * offset: number of bytes that MUST be jumped after current "buf" pointer
+ * next_size: number of minimum amount of bytes required on next step.
+ *            if less than this is provided, the return will be 1 for sure.
+ *            and the offset will be 0 (zero)
+ * return:
+ *   -1 -> error
+ *    0 -> done
+ *    1 -> need more data
+ */
+extern int
+metadata_meta (MetaData * meta_data, const guint8 * buf,
+    guint32 bufsize, guint32 * next_offset, guint32 * next_size);
+
+
+extern void metadata_dispose (MetaData * meta_data);
+
+G_END_DECLS
+#endif /* __METADATA_H__ */

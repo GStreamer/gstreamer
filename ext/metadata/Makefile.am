@@ -2,28 +2,30 @@ plugin_LTLIBRARIES = libgstmetadata.la
 
 libgstmetadata_la_SOURCES =	gstmetadata.c       \
 				gstmetadataparse.c  \
-				metadataparse.c     \
+				metadata.c          \
 				metadataparsejpeg.c \
 				metadataparsepng.c  \
-				metadataparseexif.c \
-				metadataparseiptc.c \
-				metadataparsexmp.c  \
+				metadataexif.c      \
+				metadataiptc.c      \
+				metadataxmp.c       \
 				metadataparseutil.c \
 				metadatatypes.c     \
-				gstmetadatamux.c
+				gstmetadatamux.c    \
+				metadatatags.c
 
 libgstmetadata_la_CFLAGS = $(METADATA_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS)
 libgstmetadata_la_LIBADD = $(METADATA_LIBS) -lgsttag-@GST_MAJORMINOR@ $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS)
 libgstmetadata_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
 noinst_HEADERS = 	gstmetadataparse.h   \
-			metadataparse.h      \
+			metadata.h           \
 			metadataparsejpeg.h  \
 			metadataparsepng.h   \
-			metadataparseexif.h  \
-			metadataparseiptc.h  \
-			metadataparsexmp.h   \
+			metadataexif.h       \
+			metadataiptc.h       \
+			metadataxmp.h        \
 			metadataparseutil.h  \
 			metadatatypes.h      \
-			gstmetadatamux.h
+			gstmetadatamux.h     \
+			metadatatags.h
 

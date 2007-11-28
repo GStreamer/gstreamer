@@ -41,23 +41,22 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_METADATAPARSE_XMP_H__
-#define __GST_METADATAPARSE_XMP_H__
+#ifndef __GST_METADATA_TAGS_H__
+#define __GST_METADATA_TAGS_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
 
+#define GST_TAG_EXIF "exif"
+
+#define GST_TAG_IPTC "iptc"
+
+#define GST_TAG_XMP "xmp"
+
 extern void
-metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
-    GstAdapter * adapter);
-
-extern gboolean metadataparse_xmp_init (void);
-
-extern void metadataparse_xmp_dispose (void);
-
-extern void metadataparse_xmp_tags_register (void);
+metadata_tags_register (void);
 
 G_END_DECLS
-#endif /* __GST_METADATAPARSE_XMP_H__ */
+#endif /* __GST_METADATA_TAGS_H__ */

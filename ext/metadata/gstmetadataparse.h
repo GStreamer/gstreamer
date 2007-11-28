@@ -46,7 +46,7 @@
 
 #include <gst/gst.h>
 
-#include "metadataparse.h"
+#include "metadata.h"
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -82,7 +82,7 @@ struct _GstMetadataParse
   gboolean need_send_tag;
 
   GstTagList *taglist;
-  ParseData parse_data;
+  MetaData parse_data;
   GstAdapter *adapter_parsing;
   GstAdapter *adapter_holding;
   guint32 next_offset;

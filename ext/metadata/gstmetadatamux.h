@@ -46,8 +46,9 @@
 
 #include <gst/gst.h>
 
-G_BEGIN_DECLS
+#include "metadata.h"
 
+G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
 #define GST_TYPE_METADATA_MUX \
   (gst_metadata_mux_get_type())
@@ -55,13 +56,18 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_METADATA_MUX,GstMetadataMux))
 #define GST_METADATA_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_METADATA_MUX,GstMetadataMuxClass))
-#define GST_IS_METADATAMUX(obj) \
+#define GST_IS_METADATA_MUX(obj) \
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_METADATA_MUX))
-#define GST_IS_METADATAMUX_CLASS(klass) \
+#define GST_IS_METADATA_MUX_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_METADATA_MUX))
-
-typedef struct _GstMetadataMux      GstMetadataMux;
+typedef struct _GstMetadataMux GstMetadataMux;
 typedef struct _GstMetadataMuxClass GstMetadataMuxClass;
+
+typedef enum _tag_MetadataState
+{
+  MT_STATE_NULL,                /* still need to check media type */
+  MT_STATE_MUXED
+} MetadataState;
 
 struct _GstMetadataMux
 {
@@ -69,15 +75,42 @@ struct _GstMetadataMux
 
   GstPad *sinkpad, *srcpad;
 
+  gboolean exif;
+  gboolean iptc;
+  gboolean xmp;
+
+  gboolean need_send_tag;
+
+  GstTagList *taglist;
+  MetaData mux_data;
+  GstAdapter *adapter_parsing;
+  GstAdapter *adapter_holding;
+  guint32 next_offset;
+  guint32 next_size;
+  ImageType img_type;
+
+  gint64 offset_orig;  /* offset in original stream */
+  gint64 duration_orig;     /* durarion of stream */
+  gint64 offset;       /* offset in current stream */
+  gint64 duration;     /* durarion of modified stream */
+
+  MetadataState state;
+
+  GstBuffer * prepend_buffer;
+  GstBuffer * append_buffer;
+
+  gboolean need_more_data;
+
+
+
 };
 
-struct _GstMetadataMuxClass 
+struct _GstMetadataMuxClass
 {
   GstElementClass parent_class;
 };
 
-GType gst_metadata_mux_get_type (void);
+extern GType gst_metadata_mux_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_METADATA_MUX_H__ */

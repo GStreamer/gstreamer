@@ -41,20 +41,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "metadataparsexmp.h"
+#include "metadataxmp.h"
 #include "metadataparseutil.h"
+#include "metadatatags.h"
 
-GST_DEBUG_CATEGORY (gst_metadata_parse_xmp_debug);
-#define GST_CAT_DEFAULT gst_metadata_parse_xmp_debug
-
-#define GST_TAG_XMP "xmp"
-
-void
-metadataparse_xmp_tags_register (void)
-{
-  gst_tag_register (GST_TAG_XMP, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, GST_TAG_XMP, "xmp metadata chunk", NULL);
-}
+GST_DEBUG_CATEGORY (gst_metadata_xmp_debug);
+#define GST_CAT_DEFAULT gst_metadata_xmp_debug
 
 #ifndef HAVE_XMP
 
@@ -79,6 +71,13 @@ void
 metadataparse_xmp_dispose (void)
 {
   return;
+}
+
+void
+metadatamux_xmp_create_chunk_from_tag_list (GstAdapter ** adapter,
+    GstTagList * taglist)
+{
+  /* do nothing */
 }
 
 #else /* ifndef HAVE_XMP */
@@ -240,6 +239,23 @@ metadataparse_xmp_iter (XmpPtr xmp, XmpIteratorPtr iter)
   if (xstr_schema) {
     xmp_string_free (xstr_schema);
   }
+}
+
+void
+metadatamux_xmp_create_chunk_from_tag_list (GstAdapter ** adapter,
+    GstTagList * taglist)
+{
+  if (adapter == NULL)
+    goto done;
+
+  if (*adapter)
+    g_object_unref (*adapter);
+
+  *adapter = gst_adapter_new ();
+
+done:
+
+  return;
 }
 
 #endif /* else (ifndef HAVE_XMP) */

@@ -62,21 +62,16 @@
 
 #include "gstmetadataparse.h"
 
+#include "metadataexif.h"
 
-#include "metadataparseexif.h"
+#include "metadataiptc.h"
 
-#include "metadataparseiptc.h"
-
-#include "metadataparsexmp.h"
+#include "metadataxmp.h"
 
 #include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_metadata_parse_debug);
 #define GST_CAT_DEFAULT gst_metadata_parse_debug
-
-GST_DEBUG_CATEGORY_EXTERN (gst_metadata_parse_exif_debug);
-GST_DEBUG_CATEGORY_EXTERN (gst_metadata_parse_iptc_debug);
-GST_DEBUG_CATEGORY_EXTERN (gst_metadata_parse_xmp_debug);
 
 #define GOTO_DONE_IF_NULL(ptr) do { if ( NULL == (ptr) ) goto done; } while(FALSE)
 #define GOTO_DONE_IF_NULL_AND_FAIL(ptr, ret) do { if ( NULL == (ptr) ) { (ret) = FALSE; goto done; } } while(FALSE)
@@ -139,7 +134,7 @@ static GstFlowReturn gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf);
 
 static gboolean gst_metadata_parse_checkgetrange (GstPad * srcpad);
 
-static gboolean
+static GstFlowReturn
 gst_metadata_parse_get_range (GstPad * pad, guint64 offset_orig, guint size,
     GstBuffer ** buf);
 
@@ -300,21 +295,21 @@ gst_metadata_parse_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_EXIF:
       if (g_value_get_boolean (value))
-        set_parse_option (filter->parse_data, PARSE_OPT_EXIF);
+        set_meta_option (filter->parse_data, META_OPT_EXIF);
       else
-        unset_parse_option (filter->parse_data, PARSE_OPT_EXIF);
+        unset_meta_option (filter->parse_data, META_OPT_EXIF);
       break;
     case ARG_IPTC:
       if (g_value_get_boolean (value))
-        set_parse_option (filter->parse_data, PARSE_OPT_IPTC);
+        set_meta_option (filter->parse_data, META_OPT_IPTC);
       else
-        unset_parse_option (filter->parse_data, PARSE_OPT_IPTC);
+        unset_meta_option (filter->parse_data, META_OPT_IPTC);
       break;
     case ARG_XMP:
       if (g_value_get_boolean (value))
-        set_parse_option (filter->parse_data, PARSE_OPT_XMP);
+        set_meta_option (filter->parse_data, META_OPT_XMP);
       else
-        unset_parse_option (filter->parse_data, PARSE_OPT_XMP);
+        unset_meta_option (filter->parse_data, META_OPT_XMP);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -331,15 +326,15 @@ gst_metadata_parse_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_EXIF:
       g_value_set_boolean (value,
-          PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_EXIF);
+          META_DATA_OPTION (filter->parse_data) & META_OPT_EXIF);
       break;
     case ARG_IPTC:
       g_value_set_boolean (value,
-          PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_IPTC);
+          META_DATA_OPTION (filter->parse_data) & META_OPT_IPTC);
       break;
     case ARG_XMP:
       g_value_set_boolean (value,
-          PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_XMP);
+          META_DATA_OPTION (filter->parse_data) & META_OPT_XMP);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -473,8 +468,11 @@ gst_metadata_parse_src_event (GstPad * pad, GstEvent * event)
         filter->prepend_buffer = NULL;
       }
 
+      /* FIXME: related to append */
+      filter->offset = start;
       gst_metadata_parse_translate_pos_to_orig (filter, start, &start,
           &filter->prepend_buffer);
+      filter->offset_orig = start;
 
       if (stop_type == GST_SEEK_TYPE_CUR)
         stop = filter->offset + stop;
@@ -562,7 +560,7 @@ gst_metadata_parse_finalize (GObject * object)
 static void
 gst_metadata_parse_dispose_members (GstMetadataParse * filter)
 {
-  metadataparse_dispose (&filter->parse_data);
+  metadata_dispose (&filter->parse_data);
 
   if (filter->adapter_parsing) {
     gst_object_unref (filter->adapter_parsing);
@@ -614,7 +612,7 @@ gst_metadata_parse_init_members (GstMetadataParse * filter)
   filter->append_buffer = NULL;
   filter->prepend_buffer = NULL;
 
-  memset (&filter->parse_data, 0x00, sizeof (ParseData));
+  memset (&filter->parse_data, 0x00, sizeof (MetaData));
 }
 
 static gboolean
@@ -767,13 +765,13 @@ gst_metadata_parse_send_tags (GstMetadataParse * filter)
   GstTagList *taglist;
   GstEvent *event;
 
-  if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_EXIF)
+  if (META_DATA_OPTION (filter->parse_data) & META_OPT_EXIF)
     metadataparse_exif_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
         filter->parse_data.exif_adapter);
-  if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_IPTC)
+  if (META_DATA_OPTION (filter->parse_data) & META_OPT_IPTC)
     metadataparse_iptc_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
         filter->parse_data.iptc_adapter);
-  if (PARSE_DATA_OPTION (filter->parse_data) & PARSE_OPT_XMP)
+  if (META_DATA_OPTION (filter->parse_data) & META_OPT_XMP)
     metadataparse_xmp_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
         filter->parse_data.xmp_adapter);
 
@@ -823,6 +821,9 @@ gst_metadata_parse_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     case GST_QUERY_DURATION:
+      if (filter->state != MT_STATE_PARSED)
+        goto done;
+
       gst_query_parse_duration (query, &format, NULL);
 
       if (format == GST_FORMAT_BYTES) {
@@ -839,6 +840,8 @@ gst_metadata_parse_src_query (GstPad * pad, GstQuery * query)
     default:
       break;
   }
+
+done:
 
   gst_object_unref (filter);
 
@@ -863,11 +866,11 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
   filter->next_offset = 0;
   filter->next_size = 0;
 
-  ret = metadataparse_parse (&filter->parse_data, buf, size,
+  ret = metadata_parse (&filter->parse_data, buf, size,
       &filter->next_offset, &filter->next_size);
 
   if (ret < 0) {
-    if (PARSE_DATA_IMG_TYPE (filter->parse_data) == IMG_NONE) {
+    if (META_DATA_IMG_TYPE (filter->parse_data) == IMG_NONE) {
       /* image type not recognized */
       GST_ELEMENT_ERROR (filter, STREAM, TYPE_NOT_FOUND, (NULL),
           ("Only jpeg and png are supported"));
@@ -928,8 +931,8 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
     filter->need_send_tag = TRUE;
   }
 
-  if (filter->img_type != PARSE_DATA_IMG_TYPE (filter->parse_data)) {
-    filter->img_type = PARSE_DATA_IMG_TYPE (filter->parse_data);
+  if (filter->img_type != META_DATA_IMG_TYPE (filter->parse_data)) {
+    filter->img_type = META_DATA_IMG_TYPE (filter->parse_data);
     if (!gst_metadata_parse_configure_caps (filter)) {
       GST_ELEMENT_ERROR (filter, STREAM, FORMAT, (NULL),
           ("Couldn't reconfigure caps for %s",
@@ -965,8 +968,6 @@ gst_metadata_parse_chain (GstPad * pad, GstBuffer * buf)
   gboolean append = FALSE;
 
   filter = GST_METADATA_PARSE (gst_pad_get_parent (pad));
-
-  /* commented until I figure out how to strip if it wasn't parsed yet */
 
   if (filter->state != MT_STATE_PARSED) {
     guint32 adpt_size = gst_adapter_available (filter->adapter_parsing);
@@ -1607,22 +1608,26 @@ gst_metadata_parse_checkgetrange (GstPad * srcpad)
   return gst_pad_check_pull_range (filter->sinkpad);
 }
 
-static gboolean
+static GstFlowReturn
 gst_metadata_parse_get_range (GstPad * pad,
     guint64 offset, guint size, GstBuffer ** buf)
 {
   GstMetadataParse *filter = NULL;
-  gboolean ret = TRUE;
-  const gint64 offset_orig = 0;
+  GstFlowReturn ret = GST_FLOW_OK;
+  gint64 offset_orig = 0;
   guint size_orig;
   GstBuffer *prepend = NULL;
   gboolean need_append = FALSE;
 
   filter = GST_METADATA_PARSE (GST_PAD_PARENT (pad));
 
+  if (filter->state != MT_STATE_PARSED) {
+    ret = GST_FLOW_ERROR;
+    goto done;
+  }
+
   if (offset + size > filter->duration) {
-    /* this should never happen */
-    return FALSE;
+    size = filter->duration - offset;
   }
 
   size_orig = size;
@@ -1647,10 +1652,7 @@ gst_metadata_parse_get_range (GstPad * pad,
     ret = gst_pad_pull_range (filter->sinkpad, offset_orig, size_orig, buf);
 
     if (ret == GST_FLOW_OK && *buf) {
-      /* FIXEME: put prepend here */
       gst_metadata_parse_strip_push_buffer (filter, offset_orig, &prepend, buf);
-      filter->offset_orig = offset;
-      filter->offset = offset;
 
       if (GST_BUFFER_SIZE (*buf) < size) {
         /* need append */
@@ -1663,6 +1665,15 @@ gst_metadata_parse_get_range (GstPad * pad,
   }
 
 done:
+
+  if (need_append) {
+    /* FIXME: together with SEEK and
+     * gst_metadata_parse_translate_pos_to_orig
+     * this way if chunk is added in the end we are in trolble
+     * ...still not implemented 'cause it will not be the
+     * case for the time being
+     */
+  }
 
   return ret;
 
@@ -1700,7 +1711,7 @@ gst_metadata_parse_change_state (GstElement * element,
       gst_metadata_parse_init_members (filter);
       filter->adapter_parsing = gst_adapter_new ();
       filter->taglist = gst_tag_list_new ();
-      metadataparse_init (&filter->parse_data);
+      metadata_init (&filter->parse_data);
       break;
     default:
       break;
@@ -1711,6 +1722,22 @@ gst_metadata_parse_change_state (GstElement * element,
     goto done;
 
   switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      filter->offset = 0;
+      filter->offset_orig = 0;
+      if (filter->adapter_parsing) {
+        gst_adapter_clear (filter->adapter_parsing);
+      }
+      if (filter->adapter_holding) {
+        gst_adapter_clear (filter->adapter_holding);
+      }
+      if (filter->state != MT_STATE_PARSED) {
+        /* cleanup parser */
+        /* FIXME: could be improved a bit to avoid mem allocation */
+        metadata_dispose (&filter->parse_data);
+        metadata_init (&filter->parse_data);
+      }
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_metadata_parse_dispose_members (filter);
       break;
@@ -1732,20 +1759,6 @@ gst_metadata_parse_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_metadata_parse_debug, "metadataparse", 0,
       "Metadata demuxer");
-
-  GST_DEBUG_CATEGORY_INIT (gst_metadata_parse_exif_debug, "metadataparse_exif",
-      0, "Metadata exif demuxer");
-  GST_DEBUG_CATEGORY_INIT (gst_metadata_parse_iptc_debug, "metadataparse_iptc",
-      0, "Metadata iptc demuxer");
-  GST_DEBUG_CATEGORY_INIT (gst_metadata_parse_xmp_debug, "metadataparse_xmp", 0,
-      "Metadata xmp demuxer");
-
-  /* FIXME: register tag should be done by plugin 'cause muxer element also uses it */
-  metadataparse_exif_tags_register ();
-
-  metadataparse_iptc_tags_register ();
-
-  metadataparse_xmp_tags_register ();
 
   return gst_element_register (plugin, "metadataparse",
       GST_RANK_PRIMARY + 1, GST_TYPE_METADATA_PARSE);

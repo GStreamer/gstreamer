@@ -41,18 +41,21 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_METADATAPARSE_EXIF_H__
-#define __GST_METADATAPARSE_EXIF_H__
+#ifndef __GST_METADATAPARSE_IPTC_H__
+#define __GST_METADATAPARSE_IPTC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
 G_BEGIN_DECLS
-    extern void
-metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
+
+extern void
+metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
     GstAdapter * adapter);
 
-extern void metadataparse_exif_tags_register (void);
+extern void
+metadatamux_iptc_create_chunk_from_tag_list (GstAdapter ** adapter,
+    GstTagList * taglist);
 
 G_END_DECLS
-#endif /* __GST_METADATAPARSE_EXIF_H__ */
+#endif /* __GST_METADATAPARSE_IPTC_H__ */
