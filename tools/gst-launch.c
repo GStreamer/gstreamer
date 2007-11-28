@@ -747,7 +747,7 @@ main (int argc, char *argv[])
     if (caught_error) {
       fprintf (stderr, _("ERROR: pipeline doesn't want to preroll.\n"));
     } else {
-      GTimeVal tfthen, tfnow;
+      GstClockTime tfthen, tfnow;
       GstClockTimeDiff diff;
 
       fprintf (stderr, _("Setting pipeline to PLAYING ...\n"));
@@ -773,11 +773,11 @@ main (int argc, char *argv[])
         goto end;
       }
 
-      g_get_current_time (&tfthen);
+      GST_GET_TIMESTAMP (tfthen);
       caught_error = event_loop (pipeline, TRUE, GST_STATE_PLAYING);
-      g_get_current_time (&tfnow);
+      GST_GET_TIMESTAMP (tfnow);
 
-      diff = GST_TIMEVAL_TO_TIME (tfnow) - GST_TIMEVAL_TO_TIME (tfthen);
+      diff = GST_CLOCK_DIFF (tfthen, tfnow);
 
       g_print (_("Execution ended after %" G_GUINT64_FORMAT " ns.\n"), diff);
     }

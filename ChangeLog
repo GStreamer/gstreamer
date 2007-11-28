@@ -1,5 +1,14 @@
 2007-11-28  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstdebugutils.c:
+	* gst/gstinfo.c:
+	  Fix wrong order of args in GST_CLOCK_DIFF() usage.
+
+	* tools/gst-launch.c:
+	  Use new API to get elapsed time.
+
+2007-11-28  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstclock.h:
 	* gst/gstdebugutils.c:

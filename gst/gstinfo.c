@@ -666,7 +666,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   }
 
   GST_GET_TIMESTAMP (now);
-  elapsed = GST_CLOCK_DIFF (now, _priv_gst_info_start_time);
+  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time, now);
 
   /*
      g_printerr ("%s (%p - %" GST_TIME_FORMAT ") %s%20s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",
