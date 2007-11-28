@@ -281,7 +281,7 @@ _gst_debug_init (void)
   gst_atomic_int_set (&__use_color, 1);
 
   /* get time we started for debugging messages */
-  GST_GET_CURRENT_TIME (_priv_gst_info_start_time);
+  GST_GET_TIMESTAMP (_priv_gst_info_start_time);
 
 #ifdef HAVE_PRINTF_EXTENSION
   register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension_ptr,
@@ -665,7 +665,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     free_obj = FALSE;
   }
 
-  GST_GET_CURRENT_TIME (now);
+  GST_GET_TIMESTAMP (now);
   elapsed = GST_CLOCK_DIFF (now, _priv_gst_info_start_time);
 
   /*

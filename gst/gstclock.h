@@ -199,22 +199,23 @@ G_STMT_START {						\
 } G_STMT_END
 
 /**
- * GST_GET_CURRENT_TIME:
- * @now: GstClockTime variable that will get the current time
+ * GST_GET_TIMESTAMP:
+ * @now: GstClockTime variable that will get the timestamp
  *
- * Get the current time as a GstClockTime from the system.
+ * Get a timestamp as GstClockTime to be used for interval meassurements.
+ * The timestamp should now be interpreted in any other way.
  *
  * Since: 0.10.16
  */
 #ifdef HAVE_POSIX_TIMERS
-#define GST_GET_CURRENT_TIME(now) \
+#define GST_GET_TIMESTAMP(now) \
 G_STMT_START { \
   struct timespec _now; \
   clock_gettime (CLOCK_MONOTONIC, &_now); \
   now = GST_TIMESPEC_TO_TIME (_now); \
 } G_STMT_END
 #else
-#define GST_GET_CURRENT_TIME(now) \
+#define GST_GET_TIMESTAMP(now) \
 G_STMT_START { \
   GTimeVal _now; \
   g_get_current_time (&_now); \

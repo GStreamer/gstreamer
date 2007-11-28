@@ -507,7 +507,7 @@ _gst_debug_bin_to_dot_file_with_ts (GstBin * bin, GstDebugGraphDetails details,
   }
 
   /* add timestamp */
-  GST_GET_CURRENT_TIME (now);
+  GST_GET_TIMESTAMP (now);
   elapsed = GST_CLOCK_DIFF (now, _priv_gst_info_start_time);
   ts_file_name =
       g_strdup_printf ("%" GST_TIME_FORMAT "-%s", GST_TIME_ARGS (elapsed),
