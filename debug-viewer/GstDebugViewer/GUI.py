@@ -493,6 +493,8 @@ class TextColumn (SizedColumn):
         cell = gtk.CellRendererText ()
         column.pack_start (cell)
 
+        cell.props.yalign = 0.
+
         if self.font_family:
             cell.props.family = self.font_family
             cell.props.family_set = True
@@ -996,6 +998,131 @@ class ViewColumnManager (ColumnManager):
         for column in self.iter_items ():
             self.size_column (column, view, model)
 
+class LineViewLogModel (FilteredLogModel):
+
+    def __init__ (self, lazy_log_model):
+
+        FilteredLogModel.__init__ (self, lazy_log_model)
+
+        self.line_offsets = []
+        self.line_levels = []
+
+    def insert_line (self, position, parent_line_index):
+
+        if position == -1:
+            position = len (self.line_offsets)
+        li = parent_line_index
+        self.line_offsets.insert (position, self.parent_model.line_offsets[li])
+        self.line_levels.insert (position, self.parent_model.line_levels[li])
+
+        path = (position,)
+        tree_iter = self.get_iter (path)
+        self.row_inserted (path, tree_iter)
+
+    def replace_line (self, line_index, parent_line_index):
+
+        li = line_index
+        self.line_offsets[li] = self.parent_model.line_offsets[parent_line_index]
+        self.line_levels[li] = self.parent_model.line_levels[parent_line_index]
+
+        path = (line_index,)
+        tree_iter = self.get_iter (path)
+        self.row_changed (path, tree_iter)
+
+class WrappingMessageColumn (MessageColumn):
+
+    def wrap_to_width (self, width):
+
+        col = self.view_column
+        col.props.max_width = width
+        col.get_cells ()[0].props.wrap_width = width
+        col.queue_resize ()
+
+class LineViewColumnManager (ColumnManager):
+
+    column_classes = (TimeColumn, WrappingMessageColumn,)
+
+    def __init__ (self):
+
+        ColumnManager.__init__ (self)
+
+    def attach (self, window):
+
+        self.__size_update = None
+
+        self.view = window.widgets.line_view
+        self.view.set_size_request (0, 0)
+        self.view.connect_after ("size-allocate", self.__handle_size_allocate)
+        ColumnManager.attach (self)
+
+    def __update_sizes (self):
+
+        view_width = self.view.get_allocation ().width
+        if view_width == self.__size_update:
+            # Prevent endless recursion.
+            return
+
+        self.__size_update = view_width
+
+        col = self.find_item (name = "time")
+        other_width = col.view_column.props.width
+
+        try:
+            col = self.find_item (name = "message")
+        except KeyError:
+            return
+
+        width = view_width - other_width
+        col.wrap_to_width (width)
+
+    def __handle_size_allocate (self, self_, allocation):
+
+        self.__update_sizes ()
+
+class LineView (object):
+
+    def __init__ (self):
+
+        self.column_manager = LineViewColumnManager ()
+
+    def attach (self, window):
+        
+        self.line_view = window.widgets.line_view
+        
+
+        log_view = window.log_view
+        log_view.connect ("notify::model", self.handle_log_view_notify_model)
+        sel = log_view.get_selection ()
+        sel.connect ("changed", self.handle_log_view_selection_changed)
+
+        self.column_manager.attach (window)
+
+    def handle_log_view_notify_model (self, view, gparam):
+
+        log_model = view.props.model
+
+        if log_model is None:
+            return
+
+        line_model = LineViewLogModel (log_model)
+        self.line_view.props.model = line_model
+
+    def handle_log_view_selection_changed (self, selection):
+
+        model, tree_iter = selection.get_selected ()
+
+        if tree_iter is None:
+            return
+
+        path = model.get_path (tree_iter)
+        line_index = model.parent_line_index (path[0])
+
+        line_model = self.line_view.props.model
+        if len (line_model) == 0:
+            line_model.insert_line (0, line_index)
+        else:
+            line_model.replace_line (0, line_index)
+
 class Window (object):
 
     def __init__ (self, app):
@@ -1069,6 +1196,8 @@ class Window (object):
 
         self.log_view.connect ("button-press-event", self.handle_log_view_button_press_event)
 
+        self.line_view = LineView ()
+
         self.attach ()
         self.column_manager.attach (self.log_view)
 
@@ -1114,6 +1243,8 @@ class Window (object):
         # up/down slows to a crawl! WTF is wrong with this stupid widget???
         sel = self.log_view.get_selection ()
         sel.set_mode (gtk.SELECTION_BROWSE)
+
+        self.line_view.attach (self)
 
     def detach (self):
 
@@ -1397,8 +1528,7 @@ class Window (object):
         self.progress_bar = None
 
         self.log_model.set_log (self.log_file)
-
-        self.log_filter.reset ()
+        self.log_filter = FilteredLogModel (self.log_model)
 
         self.actions.reload_file.props.sensitive = True
         self.actions.groups["RowActions"].props.sensitive = True
