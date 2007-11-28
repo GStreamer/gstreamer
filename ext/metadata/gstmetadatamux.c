@@ -151,7 +151,7 @@ static int
 gst_metadata_mux_mux (GstMetadataMux * filter, const guint8 * buf,
     guint32 size);
 
-static void gst_metadata_mux_send_tags (GstMetadataMux * filter);
+static void gst_metadata_mux_create_chunks_from_tags (GstMetadataMux * filter);
 
 
 
@@ -214,11 +214,11 @@ gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_IPTC,
       g_param_spec_boolean ("iptc", "IPTC", "Send IPTC metadata ?",
-          TRUE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_XMP,
       g_param_spec_boolean ("xmp", "XMP", "Send XMP metadata ?",
-          TRUE, G_PARAM_READWRITE));
+          FALSE, G_PARAM_READWRITE));
 
   gstelement_class->change_state = gst_metadata_mux_change_state;
 
@@ -381,12 +381,10 @@ gst_metadata_mux_get_caps (GstPad * pad)
 
       if (pad == filter->sinkpad) {
         structure_new =
-            gst_structure_new (mime, "tags-extracted", G_TYPE_BOOLEAN, FALSE,
-            NULL);
-      } else {
-        structure_new =
             gst_structure_new (mime, "tags-extracted", G_TYPE_BOOLEAN, TRUE,
             NULL);
+      } else {
+        structure_new = gst_structure_new (mime, NULL);
       }
 
       gst_caps_append_structure (caps_new, structure_new);
@@ -587,8 +585,8 @@ gst_metadata_mux_init_members (GstMetadataMux * filter)
 {
   filter->need_send_tag = FALSE;
   filter->exif = TRUE;
-  filter->iptc = TRUE;
-  filter->xmp = TRUE;
+  filter->iptc = FALSE;
+  filter->xmp = FALSE;
 
   filter->taglist = NULL;
   filter->adapter_parsing = NULL;
@@ -629,8 +627,7 @@ gst_metadata_mux_configure_srccaps (GstMetadataMux * filter)
       break;
   }
 
-  caps =
-      gst_caps_new_simple (mime, "tags-extracted", G_TYPE_BOOLEAN, TRUE, NULL);
+  caps = gst_caps_new_simple (mime, NULL);
 
   ret = gst_pad_set_caps (filter->srcpad, caps);
 
@@ -717,7 +714,7 @@ gst_metadata_mux_set_caps (GstPad * pad, GstCaps * caps)
   }
 
   if (gst_structure_get_boolean (structure, "tags-extracted", &muxd)) {
-    if (muxd == TRUE) {
+    if (muxd == FALSE) {
       ret = FALSE;
       goto done;
     }
@@ -752,7 +749,7 @@ gst_metadata_mux_get_type_name (int img_type)
 }
 
 static void
-gst_metadata_mux_send_tags (GstMetadataMux * filter)
+gst_metadata_create_chunks_from_tags (GstMetadataMux * filter)
 {
 
   GstMessage *msg;
@@ -1022,7 +1019,7 @@ gst_metadata_mux_chain (GstPad * pad, GstBuffer * buf)
     }
 
     if (filter->need_send_tag) {
-      gst_metadata_mux_send_tags (filter);
+      gst_metadata_create_chunks_from_tags (filter);
     }
 
     if (filter->offset_orig + GST_BUFFER_SIZE (buf) == filter->duration_orig)
@@ -1629,7 +1626,7 @@ gst_metadata_mux_get_range (GstPad * pad,
   size_orig = size;
 
   if (filter->need_send_tag) {
-    gst_metadata_mux_send_tags (filter);
+    gst_metadata_create_chunks_from_tags (filter);
   }
 
   gst_metadata_mux_translate_pos_to_orig (filter, offset, &offset_orig,

@@ -83,6 +83,12 @@ metadata_tags_xmp_register (void)
 void
 metadata_tags_register (void)
 {
+  gst_tag_register (GST_TAG_DEVICE_MAKE, GST_TAG_FLAG_META,
+      G_TYPE_STRING, GST_TAG_DEVICE_MAKE,
+      "The manufacturer of the recording equipment", NULL);
+  gst_tag_register (GST_TAG_DEVICE_MODEL, GST_TAG_FLAG_META, G_TYPE_STRING,
+      GST_TAG_DEVICE_MODEL, "The model name or model number of the equipment",
+      NULL);
 
   metadata_tags_exif_register ();
   metadata_tags_iptc_register ();

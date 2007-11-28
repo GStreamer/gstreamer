@@ -1,5 +1,19 @@
 2007-11-28  Edgard Lima  <edgard.lima@indt.org.br>
 
+	* ext/metadata/gstmetadatamux.c:
+	* ext/metadata/gstmetadataparse.c:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadataexif.h:
+	* ext/metadata/metadataiptc.c:
+	* ext/metadata/metadataiptc.h:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	* ext/metadata/metadataxmp.c:
+	* ext/metadata/metadataxmp.h:
+	  Sending make and model individual tags and muxer now links fine.
+
+2007-11-28  Edgard Lima  <edgard.lima@indt.org.br>
+
 	* ext/metadata/Makefile.am:
 	* ext/metadata/gstmetadata.c:
 	* ext/metadata/gstmetadatamux.c:

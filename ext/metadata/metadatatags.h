@@ -49,11 +49,20 @@
 
 G_BEGIN_DECLS
 
+/* set bit to desired mapping */
+typedef enum {
+  METADATA_TAG_MAP_INDIVIDUALS = 1 << 0,
+  METADATA_TAG_MAP_WHOLECHUNK =  1 << 1
+} MetadataTagMapping;
+
 #define GST_TAG_EXIF "exif"
 
 #define GST_TAG_IPTC "iptc"
 
 #define GST_TAG_XMP "xmp"
+
+#define GST_TAG_DEVICE_MAKE "device-make"
+#define GST_TAG_DEVICE_MODEL "device-model"
 
 extern void
 metadata_tags_register (void);

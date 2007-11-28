@@ -762,31 +762,52 @@ gst_metadata_parse_send_tags (GstMetadataParse * filter)
 {
 
   GstMessage *msg;
-  GstTagList *taglist;
+  GstTagList *taglist = gst_tag_list_new ();
   GstEvent *event;
 
   if (META_DATA_OPTION (filter->parse_data) & META_OPT_EXIF)
-    metadataparse_exif_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
-        filter->parse_data.exif_adapter);
+    metadataparse_exif_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->parse_data.exif_adapter, METADATA_TAG_MAP_WHOLECHUNK);
   if (META_DATA_OPTION (filter->parse_data) & META_OPT_IPTC)
-    metadataparse_iptc_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
-        filter->parse_data.iptc_adapter);
+    metadataparse_iptc_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->parse_data.iptc_adapter, METADATA_TAG_MAP_WHOLECHUNK);
   if (META_DATA_OPTION (filter->parse_data) & META_OPT_XMP)
-    metadataparse_xmp_tag_list_add (filter->taglist, GST_TAG_MERGE_KEEP,
-        filter->parse_data.xmp_adapter);
+    metadataparse_xmp_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->parse_data.xmp_adapter, METADATA_TAG_MAP_WHOLECHUNK);
 
-  if (!gst_tag_list_is_empty (filter->taglist)) {
+  if (taglist && !gst_tag_list_is_empty (taglist)) {
 
-    taglist = gst_tag_list_copy (filter->taglist);
-    msg = gst_message_new_tag (GST_OBJECT (filter), taglist);
+    msg =
+        gst_message_new_tag (GST_OBJECT (filter), gst_tag_list_copy (taglist));
     gst_element_post_message (GST_ELEMENT (filter), msg);
 
-    taglist = gst_tag_list_copy (filter->taglist);
     event = gst_event_new_tag (taglist);
     gst_pad_push_event (filter->srcpad, event);
+    taglist = NULL;
   }
 
+  if (!taglist)
+    taglist = gst_tag_list_new ();
 
+  if (META_DATA_OPTION (filter->parse_data) & META_OPT_EXIF)
+    metadataparse_exif_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->parse_data.exif_adapter, METADATA_TAG_MAP_INDIVIDUALS);
+  if (META_DATA_OPTION (filter->parse_data) & META_OPT_IPTC)
+    metadataparse_iptc_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->parse_data.iptc_adapter, METADATA_TAG_MAP_INDIVIDUALS);
+  if (META_DATA_OPTION (filter->parse_data) & META_OPT_XMP)
+    metadataparse_xmp_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->parse_data.xmp_adapter, METADATA_TAG_MAP_INDIVIDUALS);
+
+  if (taglist && !gst_tag_list_is_empty (taglist)) {
+
+    msg = gst_message_new_tag (GST_OBJECT (filter), taglist);
+    gst_element_post_message (GST_ELEMENT (filter), msg);
+    taglist = NULL;
+  }
+
+  if (taglist)
+    gst_tag_list_free (taglist);
 
   filter->need_send_tag = FALSE;
 }

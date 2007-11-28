@@ -46,12 +46,13 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include "metadatatags.h"
 
 G_BEGIN_DECLS
 
 extern void
 metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
-    GstAdapter * adapter);
+    GstAdapter * adapter, MetadataTagMapping mapping);
 
 extern gboolean metadataparse_xmp_init (void);
 

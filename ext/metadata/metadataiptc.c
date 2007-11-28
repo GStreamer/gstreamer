@@ -52,12 +52,14 @@ GST_DEBUG_CATEGORY (gst_metadata_iptc_debug);
 
 void
 metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
-    GstAdapter * adapter)
+    GstAdapter * adapter, MetadataTagMapping mapping)
 {
 
   GST_LOG ("IPTC not defined, here I should send just one tag as whole chunk");
 
-  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
+  if (mapping & METADATA_TAG_MAP_WHOLECHUNK)
+    metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC,
+        adapter);
 
 }
 
@@ -78,7 +80,7 @@ iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data);
 
 void
 metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
-    GstAdapter * adapter)
+    GstAdapter * adapter, MetadataTagMapping mapping)
 {
   const guint8 *buf;
   guint32 size;
@@ -89,7 +91,12 @@ metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
   }
 
   /* add chunk tag */
-  metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC, adapter);
+  if (mapping & METADATA_TAG_MAP_WHOLECHUNK)
+    metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_IPTC,
+        adapter);
+
+  if (!(mapping & METADATA_TAG_MAP_INDIVIDUALS))
+    goto done;
 
   buf = gst_adapter_peek (adapter, size);
 

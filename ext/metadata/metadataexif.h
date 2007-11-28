@@ -46,12 +46,13 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
+#include "metadatatags.h"
 
 G_BEGIN_DECLS
 
 extern void
 metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
-    GstAdapter * adapter);
+    GstAdapter * adapter, MetadataTagMapping mapping);
 
 extern void
 metadatamux_exif_create_chunk_from_tag_list (GstAdapter ** adapter,
