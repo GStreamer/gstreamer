@@ -1,3 +1,12 @@
+2007-11-28  Stefan Kost  <ensonic@users.sf.net>
+
+	* configure.ac:
+	* gst/gstdebugutils.c:
+	* gst/gstinfo.c:
+	  Apply the posix-timer check from #361155. Conditionally use the posix
+	  timer for logging. This gives better timestamp precission, less
+	  overhead and no ntp jitter.
+
 2007-11-28  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/gstminiobject.c: (gst_mini_object_get_type),

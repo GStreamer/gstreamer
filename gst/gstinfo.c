@@ -277,14 +277,25 @@ __gst_in_valgrind (void)
 void
 _gst_debug_init (void)
 {
-  GTimeVal current;
-
   gst_atomic_int_set (&__default_level, GST_LEVEL_DEFAULT);
   gst_atomic_int_set (&__use_color, 1);
 
   /* get time we started for debugging messages */
-  g_get_current_time (&current);
-  _priv_gst_info_start_time = GST_TIMEVAL_TO_TIME (current);
+#ifdef HAVE_POSIX_TIMERS
+  {
+    struct timespec current;
+
+    clock_gettime (CLOCK_MONOTONIC, &current);
+    _priv_gst_info_start_time = GST_TIMESPEC_TO_TIME (current);
+  }
+#else
+  {
+    GTimeVal current;
+
+    g_get_current_time (&current);
+    _priv_gst_info_start_time = GST_TIMEVAL_TO_TIME (current);
+  }
+#endif
 
 #ifdef HAVE_PRINTF_EXTENSION
   register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension_ptr,
@@ -629,7 +640,6 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   gchar pidcolor[10];
   const gchar *levelcolor;
   gint pid;
-  GTimeVal now;
   GstClockTime elapsed;
   gboolean free_color = TRUE;
   gboolean free_obj = TRUE;
@@ -669,8 +679,21 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     free_obj = FALSE;
   }
 
-  g_get_current_time (&now);
-  elapsed = GST_TIMEVAL_TO_TIME (now) - _priv_gst_info_start_time;
+#ifdef HAVE_POSIX_TIMERS
+  {
+    struct timespec now;
+
+    clock_gettime (CLOCK_MONOTONIC, &now);
+    elapsed = GST_TIMESPEC_TO_TIME (now) - _priv_gst_info_start_time;
+  }
+#else
+  {
+    GTimeVal now;
+
+    g_get_current_time (&now);
+    elapsed = GST_TIMEVAL_TO_TIME (now) - _priv_gst_info_start_time;
+  }
+#endif
 
   /*
      g_printerr ("%s (%p - %" GST_TIME_FORMAT ") %s%20s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",

@@ -358,6 +358,58 @@ dnl check for mmap()
 AC_FUNC_MMAP
 AM_CONDITIONAL(HAVE_MMAP, test "x$ac_cv_func_mmap_fixed_mapped" = "xyes")
 
+dnl Check for POSIX timers
+AC_CHECK_FUNCS(clock_gettime, [], [
+  AC_CHECK_LIB(rt, clock_gettime, [
+    AC_DEFINE(HAVE_CLOCK_GETTIME, 1)
+    LIBS="$LIBS -lrt"
+  ])
+])
+
+AC_CACHE_CHECK(for posix timers, gst_cv_posix_timers,AC_TRY_RUN([
+#include <time.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+      int main() {
+#if defined(_POSIX_TIMERS) && _POSIX_TIMERS >= 0 && defined(CLOCK_REALTIME)
+        return 0;
+#else
+        return 1;
+#endif
+      }],gst_cv_posix_timers=yes,gst_cv_posix_timers=no))
+
+if test "$gst_cv_posix_timers" = "yes"; then
+  AC_DEFINE(HAVE_POSIX_TIMERS,1,[Have posix timers])
+  GST_HAVE_POSIX_TIMERS_DEFINE="#define GST_HAVE_POSIX_TIMERS 1"
+else
+  GST_HAVE_POSIX_TIMERS_DEFINE="#define GST_HAVE_POSIX_TIMERS 0"
+fi
+AC_SUBST(GST_HAVE_POSIX_TIMERS_DEFINE)
+AM_CONDITIONAL(GST_HAVE_POSIX_TIMERS, test "$gst_cv_posix_timers" = "yes")
+
+AC_CACHE_CHECK(for monotonic clock, gst_cv_monotonic_clock,AC_TRY_RUN([
+#include <time.h>
+#ifdef HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+      int main() {
+#if defined(_POSIX_MONOTONIC_CLOCK) && _POSIX_MONOTONIC_CLOCK >= 0 && defined(CLOCK_MONOTONIC)
+        return 0;
+#else
+        return 1;
+#endif
+      }],gst_cv_monotonic_clock=yes,gst_cv_monotonic_clock=no))
+
+if test "$gst_cv_monotonic_clock" = "yes"; then
+  AC_DEFINE(HAVE_MONOTONIC_CLOCK,1,[Have a monotonic clock])
+  GST_HAVE_MONOTONIC_CLOCK_DEFINE="#define GST_HAVE_MONOTONIC_CLOCK 1"
+else
+  GST_HAVE_MONOTONIC_CLOCK_DEFINE="#define GST_HAVE_MONOTONIC_CLOCK 0"
+fi
+AC_SUBST(GST_HAVE_MONOTONIC_CLOCK_DEFINE)
+AM_CONDITIONAL(GST_HAVE_MONOTONIC_CLOCK, test "$gst_cv_monotonic_clock" = "yes")
+
 dnl Check for a way to display the function name in debug output
 AG_GST_CHECK_FUNCTION
 
