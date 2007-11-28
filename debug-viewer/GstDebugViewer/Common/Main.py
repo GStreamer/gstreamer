@@ -301,6 +301,9 @@ class OptionParser (object):
 
         self.options = options
 
+        self.__remaining_args = []
+        self.__entries.append ((gobject.OPTION_REMAINING, "\0", 0, "", "",))
+
     def add_option (self, long_name, short_name = None, description = None,
                     arg_name = None, arg_parser = None, hidden = False):
 
@@ -326,6 +329,10 @@ class OptionParser (object):
 
     def __handle_option (self, option, arg, group):
 
+        if option == gobject.OPTION_REMAINING:
+            self.__remaining_args.append (arg)
+            return
+
         for entry in self.__entries:
             long_name, short_name = entry[:2]
             arg_name = entry[-1]
@@ -340,6 +347,7 @@ class OptionParser (object):
             else:
                 value = arg
             self.options[attr] = value
+            break
 
     def parse (self, argv):
 
@@ -353,13 +361,13 @@ class OptionParser (object):
         except gobject.GError, exc:
             raise OptionError (exc.message)
 
-        self.handle_parse_complete ()
+        self.handle_parse_complete (self.__remaining_args)
 
     def get_parameter_string (self):
 
         raise NotImplementedError ("derived classes must override this method")
 
-    def handle_parse_complete (self):
+    def handle_parse_complete (self, remaining_args):
 
         pass
         
@@ -474,6 +482,6 @@ def main (option_parser = None, gettext_domain = None, paths = None):
         _init_logging (log_level)
 
     try:
-        options["main"] ()
+        options["main"] (options)
     finally:
         logging.shutdown ()

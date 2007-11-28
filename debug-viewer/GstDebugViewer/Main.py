@@ -27,7 +27,7 @@ Common = GstDebugViewer.Common
 
 GETTEXT_DOMAIN = "gst-debug-viewer"
 
-def main_version ():
+def main_version (options):
 
     from GstDebugViewer import version
 
@@ -44,14 +44,15 @@ class OptionParser (Common.Main.LogOptionParser):
         Common.Main.LogOptionParser.__init__ (self, options)
 
         options["main"] = None
+        options["args"] = []
 
         self.add_option ("version", None, _("Display version and exit"))
 
     def get_parameter_string (self):
 
-        return _("- Display and analyze debug log files")
+        return _("[FILENAME] - Display and analyze debug log files")
 
-    def handle_parse_complete (self):
+    def handle_parse_complete (self, remaining_args):
 
         try:
             version = self.options["version"]
@@ -64,6 +65,8 @@ class OptionParser (Common.Main.LogOptionParser):
         if self.options["main"] is None:
             import GUI
             self.options["main"] = GUI.main
+
+        self.options["args"][:] = remaining_args
 
 def main ():
 

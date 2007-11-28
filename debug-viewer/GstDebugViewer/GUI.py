@@ -1524,18 +1524,22 @@ class TestParsingPerformance (object):
         print "time spent in user mode: %.2f s" % (rusage.ru_utime,)
         print "time spent in system mode: %.2f s" % (rusage.ru_stime,)
 
-def main ():
+def main (options):
 
-    if len (sys.argv) > 1 and sys.argv[1] == "benchmark":
-        test = TestParsingPerformance (sys.argv[2])
+    args = options["args"]
+
+    if len (args) > 1 and args[0] == "benchmark":
+        test = TestParsingPerformance (args[1])
         test.start ()
         return
 
     app = App ()
 
+    # TODO: Once we support more than one window, open one window for each
+    # supplied filename.
     window = app.windows[0]
-    if len (sys.argv) > 1:
-        window.set_log_file (sys.argv[-1])
+    if len (args) > 0:
+        window.set_log_file (args[0])
 
     app.run ()
 
