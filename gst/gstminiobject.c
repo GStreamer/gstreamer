@@ -48,8 +48,8 @@ static GstAllocTrace *_gst_mini_object_trace;
 #if 0
 static void gst_mini_object_base_init (gpointer g_class);
 static void gst_mini_object_base_finalize (gpointer g_class);
-static void gst_mini_object_class_init (gpointer g_class, gpointer class_data);
 #endif
+static void gst_mini_object_class_init (gpointer g_class, gpointer class_data);
 static void gst_mini_object_init (GTypeInstance * instance, gpointer klass);
 
 static void gst_value_mini_object_init (GValue * value);
@@ -61,6 +61,9 @@ static gchar *gst_value_mini_object_collect (GValue * value,
     guint n_collect_values, GTypeCValue * collect_values, guint collect_flags);
 static gchar *gst_value_mini_object_lcopy (const GValue * value,
     guint n_collect_values, GTypeCValue * collect_values, guint collect_flags);
+
+static GstMiniObject *gst_mini_object_copy_default (const GstMiniObject * obj);
+static void gst_mini_object_finalize (GstMiniObject * obj);
 
 GType
 gst_mini_object_get_type (void)
@@ -83,10 +86,10 @@ gst_mini_object_get_type (void)
 #if 0
       gst_mini_object_base_init,
       gst_mini_object_base_finalize,
-      gst_mini_object_class_init,
 #else
-      NULL, NULL, NULL,
+      NULL, NULL,
 #endif
+      gst_mini_object_class_init,
       NULL,
       NULL,
       sizeof (GstMiniObject),
@@ -126,13 +129,16 @@ gst_mini_object_base_finalize (gpointer g_class)
 {
   /* do nothing */
 }
+#endif
 
 static void
 gst_mini_object_class_init (gpointer g_class, gpointer class_data)
 {
-  /* do nothing */
+  GstMiniObjectClass *mo_class = GST_MINI_OBJECT_CLASS (g_class);
+
+  mo_class->copy = gst_mini_object_copy_default;
+  mo_class->finalize = gst_mini_object_finalize;
 }
-#endif
 
 static void
 gst_mini_object_init (GTypeInstance * instance, gpointer klass)
@@ -140,6 +146,19 @@ gst_mini_object_init (GTypeInstance * instance, gpointer klass)
   GstMiniObject *mini_object = GST_MINI_OBJECT_CAST (instance);
 
   mini_object->refcount = 1;
+}
+
+static GstMiniObject *
+gst_mini_object_copy_default (const GstMiniObject * obj)
+{
+  g_warning ("GstMiniObject classes must implement GstMiniObject::copy");
+  return NULL;
+}
+
+static void
+gst_mini_object_finalize (GstMiniObject * obj)
+{
+  /* do nothing */
 }
 
 /**
@@ -183,6 +202,8 @@ gst_mini_object_copy (const GstMiniObject * mini_object)
 {
   GstMiniObjectClass *mo_class;
 
+  g_return_val_if_fail (mini_object != NULL, NULL);
+
   mo_class = GST_MINI_OBJECT_GET_CLASS (mini_object);
 
   return mo_class->copy (mini_object);
@@ -204,6 +225,8 @@ gst_mini_object_copy (const GstMiniObject * mini_object)
 gboolean
 gst_mini_object_is_writable (const GstMiniObject * mini_object)
 {
+  g_return_val_if_fail (mini_object != NULL, FALSE);
+
   return (GST_MINI_OBJECT_REFCOUNT_VALUE (mini_object) == 1) &&
       ((mini_object->flags & GST_MINI_OBJECT_FLAG_READONLY) == 0);
 }
@@ -224,6 +247,8 @@ GstMiniObject *
 gst_mini_object_make_writable (GstMiniObject * mini_object)
 {
   GstMiniObject *ret;
+
+  g_return_val_if_fail (mini_object != NULL, NULL);
 
   if (gst_mini_object_is_writable (mini_object)) {
     ret = (GstMiniObject *) mini_object;
@@ -330,6 +355,8 @@ void
 gst_mini_object_replace (GstMiniObject ** olddata, GstMiniObject * newdata)
 {
   GstMiniObject *olddata_val;
+
+  g_return_if_fail (olddata != NULL);
 
 #ifdef DEBUG_REFCOUNT
   GST_CAT_LOG (GST_CAT_REFCOUNTING, "replace %p (%d) with %p (%d)",
@@ -505,14 +532,14 @@ param_mini_object_validate (GParamSpec * pspec, GValue * value)
 {
   GstParamSpecMiniObject *ospec = GST_PARAM_SPEC_MINI_OBJECT (pspec);
   GstMiniObject *mini_object = value->data[0].v_pointer;
-  guint changed = 0;
+  gboolean changed = FALSE;
 
   if (mini_object
       && !g_value_type_compatible (G_OBJECT_TYPE (mini_object),
           G_PARAM_SPEC_VALUE_TYPE (ospec))) {
     gst_mini_object_unref (mini_object);
     value->data[0].v_pointer = NULL;
-    changed++;
+    changed = TRUE;
   }
 
   return changed;
@@ -546,6 +573,7 @@ gst_param_spec_mini_object_get_type (void)
       param_mini_object_validate,       /* value_validate */
       param_mini_object_values_cmp,     /* values_cmp */
     };
+    /* FIXME 0.11: Should really be GstParamSpecMiniObject */
     type = g_param_type_register_static ("GParamSpecMiniObject", &pspec_info);
   }
 

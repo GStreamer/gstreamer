@@ -1,3 +1,13 @@
+2007-11-28  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/gstminiobject.c: (gst_mini_object_get_type),
+	(gst_mini_object_class_init), (gst_mini_object_copy_default),
+	(gst_mini_object_finalize), (gst_mini_object_copy),
+	(gst_mini_object_is_writable), (gst_mini_object_make_writable),
+	(gst_mini_object_replace), (param_mini_object_validate),
+	(gst_param_spec_mini_object_get_type):
+	Some cleanup and checking against invalid function parameters.
+
 2007-11-28  Wim Taymans  <wim.taymans@gmail.com>
 
 	* docs/gst/gstreamer-sections.txt:
