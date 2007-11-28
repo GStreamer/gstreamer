@@ -21,6 +21,26 @@
 
 #include <gst/check/gstcheck.h>
 
+/* see if the defines make sense */
+GST_START_TEST (test_range)
+{
+  GstClockTime time, time2;
+
+  time = GST_SECOND;
+  fail_unless (time == G_GUINT64_CONSTANT (1000000000));
+
+  time2 = time / 1000;
+  fail_unless (time2 == 1000000);
+  fail_unless (time2 == GST_MSECOND);
+  fail_unless (time2 == GST_TIME_AS_USECONDS (time));
+
+  time2 = time / 1000000;
+  fail_unless (time2 == 1000);
+  fail_unless (time2 == GST_USECOND);
+  fail_unless (time2 == GST_TIME_AS_MSECONDS (time));
+}
+
+GST_END_TEST
 GST_START_TEST (test_signedness)
 {
   GstClockTime time[] = { 0, 1, G_MAXUINT64 / GST_SECOND };
@@ -386,6 +406,7 @@ gst_systemclock_suite (void)
   TCase *tc_chain = tcase_create ("waiting");
 
   suite_add_tcase (s, tc_chain);
+  tcase_add_test (tc_chain, test_range);
   tcase_add_test (tc_chain, test_signedness);
   tcase_add_test (tc_chain, test_single_shot);
   tcase_add_test (tc_chain, test_periodic_shot);

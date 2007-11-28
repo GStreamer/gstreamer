@@ -1,3 +1,12 @@
+2007-11-28  Wim Taymans  <wim.taymans@gmail.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstclock.h:
+	* tests/check/gst/gstsystemclock.c: (GST_START_TEST),
+	(gst_systemclock_suite):
+	Start merging in the easy bits of #361155, the monotonic clock patch.
+	This one adds a few handy macros with docs and a testsuite.
+
 2007-11-27  Wim Taymans  <wim.taymans@gmail.com>
 
 	* plugins/elements/gstfilesink.c: (gst_file_sink_event):
