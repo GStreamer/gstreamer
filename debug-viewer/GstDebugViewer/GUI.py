@@ -1088,7 +1088,6 @@ class LineView (object):
     def attach (self, window):
         
         self.line_view = window.widgets.line_view
-        
 
         log_view = window.log_view
         log_view.connect ("notify::model", self.handle_log_view_notify_model)
