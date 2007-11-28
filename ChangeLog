@@ -1,3 +1,9 @@
+2007-11-28  Sebastien Moutte  <sebastien@moutte.net>
+
+	* win32/vs6/gst_plugins_good.dsw:
+	* win32/vs6/libgstpng.dsp:
+	Add a project file for libgstpng
+
 2007-11-28  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst/rtp/gstrtph263depay.c: (gst_rtp_h263_depay_class_init),
