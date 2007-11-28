@@ -1,3 +1,12 @@
+2007-11-28  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst/rtp/gstrtph263depay.c: (gst_rtp_h263_depay_class_init),
+	(gst_rtp_h263_depay_process):
+	Code beautification.
+	Added debug statements.
+	Don't bit-shift everything, just do operations on last/first byte
+	instead.
+
 2007-11-27  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Jayarama S. Santana <sundarsantana at gmail dot com>

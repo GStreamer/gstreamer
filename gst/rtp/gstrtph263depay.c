@@ -32,6 +32,9 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include "gstrtph263depay.h"
 
+GST_DEBUG_CATEGORY_STATIC (rtph263depay_debug);
+#define GST_CAT_DEFAULT (rtph263depay_debug)
+
 /* elementfactory information */
 static const GstElementDetails gst_rtp_h263depay_details =
 GST_ELEMENT_DETAILS ("RTP H263 packet depayloader",
@@ -130,6 +133,9 @@ gst_rtp_h263_depay_class_init (GstRtpH263DepayClass * klass)
   gobject_class->get_property = gst_rtp_h263_depay_get_property;
 
   gstelement_class->change_state = gst_rtp_h263_depay_change_state;
+
+  GST_DEBUG_CATEGORY_INIT (rtph263depay_debug, "rtph263depay", 0,
+      "H263 Video RTP Depayloader");
 }
 
 static void
@@ -180,6 +186,13 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   GstRtpH263Depay *rtph263depay;
   GstBuffer *outbuf;
+  gint payload_len;
+  guint8 *payload;
+  guint header_len;
+
+  guint SBIT, EBIT;
+  gboolean F, P, M;
+  gboolean I;
 
   rtph263depay = GST_RTP_H263_DEPAY (depayload);
 
@@ -188,52 +201,46 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
 
   /* flush remaining data on discont */
   if (GST_BUFFER_IS_DISCONT (buf)) {
+    GST_LOG_OBJECT (depayload, "Discont buffer, flushing adapter");
     gst_adapter_clear (rtph263depay->adapter);
     rtph263depay->offset = 0;
     rtph263depay->leftover = 0;
   }
 
-  {
-    gint payload_len;
-    guint8 *payload;
-    guint header_len;
-    guint8 total_offset;
+  payload_len = gst_rtp_buffer_get_payload_len (buf);
+  payload = gst_rtp_buffer_get_payload (buf);
 
-    guint SBIT, EBIT;
-    gboolean F, P, M;
-    gboolean I;
+  M = gst_rtp_buffer_get_marker (buf);
 
-    payload_len = gst_rtp_buffer_get_payload_len (buf);
-    payload = gst_rtp_buffer_get_payload (buf);
+  /* Let's see what mode we are using */
+  F = (payload[0] & 0x80) == 0x80;
+  P = (payload[0] & 0x40) == 0x40;
 
-    M = gst_rtp_buffer_get_marker (buf);
+  /* Bit shifting */
+  SBIT = (payload[0] & 0x38) >> 3;
+  EBIT = (payload[0] & 0x07);
 
-    /* Let's see what mode we are using */
-    F = (payload[0] & 0x80) == 0x80;
-    P = (payload[0] & 0x40) == 0x40;
+  /* Figure out header length and I-flag */
+  if (F == 0) {
+    /* F == 0 and P == 0 or 1
+     * mode A */
+    header_len = GST_RFC2190A_HEADER_LEN;
+    GST_LOG ("Mode A");
 
-    /* Bit shifting */
-    SBIT = (payload[0] & 0x38) >> 3;
-    EBIT = (payload[0] & 0x07);
+    /* 0                   1                   2                   3
+     * 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     * |F|P|SBIT |EBIT | SRC |I|U|S|A|R      |DBQ| TRB |    TR         |
+     * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     */
+    I = (payload[1] & 0x10) == 0x10;
 
-    /* Figure out header length and I-flag */
-    if (F == 0) {
-      /* F == 0 and P == 0 or 1
-       * mode A */
-      header_len = GST_RFC2190A_HEADER_LEN;
-
-      /* 0                   1                   2                   3
-       * 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-       * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       * |F|P|SBIT |EBIT | SRC |I|U|S|A|R      |DBQ| TRB |    TR         |
-       * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       */
-      I = (payload[1] & 0x10) == 0x10;
-
-    } else if (P == 0) {
+  } else {
+    if (P == 0) {
       /* F == 1 and P == 0
        * mode B */
       header_len = GST_RFC2190B_HEADER_LEN;
+      GST_LOG ("Mode B");
 
       /* 0                   1                   2                   3
        * 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -248,6 +255,7 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
       /* F == 1 and P == 1
        * mode C */
       header_len = GST_RFC2190C_HEADER_LEN;
+      GST_LOG ("Mode C");
 
       /* 0                   1                   2                   3
        * 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
@@ -261,92 +269,81 @@ gst_rtp_h263_depay_process (GstBaseRTPDepayload * depayload, GstBuffer * buf)
        */
       I = (payload[4] & 0x80) == 0x80;
     }
+  }
 
+  GST_LOG ("F/P/M/I : %d/%d/%d/%d", F, P, M, I);
+  GST_LOG ("SBIT : %d , EBIT : %d", SBIT, EBIT);
+  GST_LOG ("payload_len : %d, header_len : %d , leftover : 0x%x",
+      payload_len, header_len, rtph263depay->leftover);
 #if 0
-    GST_WARNING ("F/P/M/I : %d/%d/%d/%d", F, P, M, I);
-    GST_WARNING ("SBIT : %d , EBIT : %d", SBIT, EBIT);
-    GST_WARNING ("payload_len : %d, header_len : %d , leftover : %d",
-        payload_len, header_len, rtph263depay->offset);
-    gst_util_dump_mem (payload, header_len);
+  gst_util_dump_mem (payload, header_len);
 #endif
 
-    /* skip header */
-    payload += header_len;
-    payload_len -= header_len;
+  /* skip header */
+  payload += header_len;
+  payload_len -= header_len;
 
-    total_offset = rtph263depay->offset + SBIT;
+  if (SBIT) {
+    /* take the leftover and merge it at the beginning */
+    GST_LOG ("payload[0] : 0x%x", payload[0]);
+    payload[0] &= 0xFF >> SBIT;
+    GST_LOG ("payload[0] : 0x%x", payload[0]);
+    payload[0] |= rtph263depay->leftover;
+    GST_LOG ("payload[0] : 0x%x", payload[0]);
+    rtph263depay->leftover = 0;
+    rtph263depay->offset = 0;
+  }
 
-    if (total_offset) {
-      int i;
+  if (!EBIT) {
+    GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len);
 
-      /* shift bits */
+    /* Copy the entire buffer */
+    memcpy (GST_BUFFER_DATA (tmp), payload, payload_len);
+    gst_adapter_push (rtph263depay->adapter, tmp);
+  } else {
+    GstBuffer *tmp = gst_buffer_new_and_alloc (payload_len - 1);
 
-      if (rtph263depay->offset)
-        rtph263depay->leftover |= payload[0] << total_offset;
+    /* Copy the entire buffer except for the last byte */
+    memcpy (GST_BUFFER_DATA (tmp), payload, payload_len - 1);
+    gst_adapter_push (rtph263depay->adapter, tmp);
 
-      for (i = 0; i < payload_len - 1; i++)
-        payload[i] =
-            (payload[i] << total_offset) | (payload[i + 1] >> (8 -
-                total_offset));
+    /* Put the last byte into the leftover */
+    GST_DEBUG ("payload[payload_len - 1] : 0x%x", payload[payload_len - 1]);
+    GST_DEBUG ("mask : 0x%x", 0xFF << EBIT);
+    rtph263depay->leftover = (payload[payload_len - 1] >> EBIT) << EBIT;
+    rtph263depay->offset = 1;
+    GST_DEBUG ("leftover : 0x%x", rtph263depay->leftover);
+  }
 
-      payload[payload_len - 1] = payload[payload_len - 1] << total_offset;
-    }
+  if (M) {
+    /* frame is completed */
+    guint avail;
+    guint32 timestamp;
 
     if (rtph263depay->offset) {
-      /* push leftover into the adapter because by now it is a complete byte */
+      /* push in the leftover */
       GstBuffer *buf = gst_buffer_new_and_alloc (1);
 
+      GST_DEBUG ("Pushing leftover in adapter");
       GST_BUFFER_DATA (buf)[0] = rtph263depay->leftover;
       gst_adapter_push (rtph263depay->adapter, buf);
     }
 
-    /* store current buffer into the adapter */
-    if (total_offset + EBIT) {
-      /* push payload_len - 1 */
-      outbuf = gst_buffer_new_and_alloc (payload_len - 1);
-      memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len - 1);
-      gst_adapter_push (rtph263depay->adapter, outbuf);
+    avail = gst_adapter_available (rtph263depay->adapter);
+    outbuf = gst_adapter_take_buffer (rtph263depay->adapter, avail);
 
-      /* store last byte as leftover */
-      rtph263depay->leftover = payload[payload_len - 1];
-    } else {
-      outbuf = gst_buffer_new_and_alloc (payload_len);
-      memcpy (GST_BUFFER_DATA (outbuf), payload, payload_len);
-      gst_adapter_push (rtph263depay->adapter, outbuf);
-    }
+    if (I)
+      GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
 
-    /* Adjust offset */
-    rtph263depay->offset += EBIT + SBIT;
-    rtph263depay->offset %= 8;
+    GST_DEBUG ("Pushing out a buffer of %d bytes", avail);
 
-    /* Trim end of the leftover */
-    if (rtph263depay->offset)
-      rtph263depay->leftover &= 0xFF << rtph263depay->offset;
+    timestamp = gst_rtp_buffer_get_timestamp (buf);
+    gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
+    rtph263depay->offset = 0;
+    rtph263depay->leftover = 0;
 
-    if (M) {
-      /* frame is completed */
-      guint avail;
-      guint32 timestamp;
-
-      if (rtph263depay->offset) {
-        /* push in the leftover */
-        GstBuffer *buf = gst_buffer_new_and_alloc (1);
-
-        GST_BUFFER_DATA (buf)[0] = rtph263depay->leftover;
-        gst_adapter_push (rtph263depay->adapter, buf);
-      }
-
-      avail = gst_adapter_available (rtph263depay->adapter);
-      outbuf = gst_adapter_take_buffer (rtph263depay->adapter, avail);
-
-      if (I)
-        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DELTA_UNIT);
-
-      timestamp = gst_rtp_buffer_get_timestamp (buf);
-      gst_base_rtp_depayload_push_ts (depayload, timestamp, outbuf);
-
-    }
   }
+
   return NULL;
 
 bad_packet:
