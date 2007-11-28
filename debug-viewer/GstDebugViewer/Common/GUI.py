@@ -36,7 +36,7 @@ class Actions (dict):
 
         dict.__init__ (self)
 
-        self.groups = ()
+        self.groups = {}
 
     def __getattr__ (self, name):
 
@@ -53,7 +53,10 @@ class Actions (dict):
 
     def add_group (self, group):
 
-        self.groups += (group,)
+        name = group.props.name
+        if name in self.groups:
+            raise ValueError ("already have a group named %s", name)
+        self.groups[name] = group
         for action in group.list_actions ():
             self[action.props.name] = action
 
@@ -111,7 +114,7 @@ class UIFactory (object):
     def make (self, extra_actions = None):
 
         ui_manager = gtk.UIManager ()
-        for action_group in self.action_groups:
+        for action_group in self.action_groups.values ():
             ui_manager.insert_action_group (action_group, 0)
         if extra_actions:
             for action_group in extra_actions.groups:

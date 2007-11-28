@@ -1037,8 +1037,8 @@ class Window (object):
                             ("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
                             ("edit-copy-message", gtk.STOCK_COPY, _("Copy message")),
                             ("filter-out-higher-levels", None, _("Filter out higher debug levels"))])
+        group.props.sensitive = False
         self.actions.add_group (group)
-        self.actions.show_hidden_lines.props.sensitive = False
 
         self.actions.add_group (self.column_manager.action_group)
 
@@ -1298,7 +1298,7 @@ class Window (object):
                 self.dispatcher.cancel ()
             self.dispatcher = None
             self.log_file = None
-            self.actions.reload_file.props.sensitive = False
+            self.actions.groups["RowActions"].props.sensitive = False
         else:
             self.logger.debug ("setting log file %r", filename)
 
@@ -1401,6 +1401,8 @@ class Window (object):
         self.log_filter.reset ()
 
         self.actions.reload_file.props.sensitive = True
+        self.actions.groups["RowActions"].props.sensitive = True
+        self.actions.show_hidden_lines.props.sensitive = False
 
         def idle_set ():
             ##self.log_view.props.model = self.log_model
