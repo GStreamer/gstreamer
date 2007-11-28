@@ -1007,6 +1007,11 @@ class LineViewLogModel (FilteredLogModel):
         self.line_offsets = []
         self.line_levels = []
 
+    def reset (self):
+
+        del self.line_offsets[:]
+        del self.line_levels[:]
+
     def insert_line (self, position, parent_line_index):
 
         if position == -1:
@@ -1117,6 +1122,8 @@ class LineView (object):
         line_index = model.parent_line_index (path[0])
 
         line_model = self.line_view.props.model
+        if line_model is None:
+            return
         if len (line_model) == 0:
             line_model.insert_line (0, line_index)
         else:
