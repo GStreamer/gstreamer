@@ -1481,8 +1481,8 @@ class App (object):
 
     def close_window (self, window):
 
-        # For some reason, going down takes some time for large files.  Let's
-        # block until the window is hidden:
+        # GtkTreeView takes some time to go down for large files.  Let's block
+        # until the window is hidden:
         gobject.idle_add (gtk.main_quit)
         gtk.main ()
         
