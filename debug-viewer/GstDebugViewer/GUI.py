@@ -164,14 +164,14 @@ class ThreadColorThemeTango (ThreadColorTheme):
         ThreadColorTheme.__init__ (self)
 
         t = TangoPalette.get ()
-        for i, color in enumerate ([t.butter3,
+        for i, color in enumerate ([t.butter2,
                                     t.orange2,
                                     t.chocolate3,
-                                    t.chameleon3,
-                                    t.skyblue2,
-                                    t.plum2,
-                                    t.scarletred2,
-                                    t.aluminium5]):
+                                    t.chameleon2,
+                                    t.skyblue1,
+                                    t.plum1,
+                                    t.scarletred1,
+                                    t.aluminium6]):
             self.add_color (i, color)
 
 class LogModelBase (gtk.GenericTreeModel):
