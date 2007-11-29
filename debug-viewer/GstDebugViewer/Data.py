@@ -265,6 +265,8 @@ class LogLine (list):
         prefix = non_regex_line.rstrip ()
         while "  " in prefix:
             prefix = prefix.replace ("  ", " ")
+        if prefix.count (" ") < 3:
+            return [0, 0, 0, 0, "", "", 0, "", "", 0]
         ts_s, pid_s, thread_s = prefix.split (" ")[:-1] # Omits level.
         ts = parse_time (ts_s)
         pid = int (pid_s)
