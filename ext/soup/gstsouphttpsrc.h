@@ -40,13 +40,16 @@ typedef struct _GstSouphttpSrcClass GstSouphttpSrcClass;
 struct _GstSouphttpSrc {
   GstPushSrc element;
 
-  gchar *location;                      /* Full URI. */
-  GMainLoop *loop;                      /* Event loop. */
-  SoupSession *session;                 /* Async context. */
-  SoupMessage *msg;                     /* Request message. */
+  gchar * location;                     /* Full URI. */
+  GMainContext * context;               /* I/O context. */
+  GMainLoop * loop;                     /* Event loop. */
+  SoupSession * session;                /* Async context. */
+  SoupMessage * msg;                    /* Request message. */
   GstFlowReturn ret;                    /* Return code from callback. */
-  GstBuffer **outbuf;                   /* Return buffer allocated by callback. */
+  GstBuffer ** outbuf;                  /* Return buffer allocated by callback. */
   gboolean interrupted;                 /* Signal unlock(). */
+  gboolean have_size;                   /* Received and parsed Content-Length header. */
+  guint64 content_size;                 /* Value of Content-Length header. */
 };
 
 struct _GstSouphttpSrcClass {

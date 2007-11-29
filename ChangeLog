@@ -1,5 +1,28 @@
 2007-11-29  Wim Taymans  <wim.taymans@gmail.com>
 
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* configure.ac:
+	Bump libsoup requirement as libsoup does not support async client
+	operation prior to version 2.2.104 and it has some leaks.
+
+	* ext/soup/gstsouphttpsrc.c: (gst_souphttp_src_class_init),
+	(gst_souphttp_src_init), (gst_souphttp_src_dispose),
+	(gst_souphttp_src_set_property), (gst_souphttp_src_create),
+	(gst_souphttp_src_start), (gst_souphttp_src_stop),
+	(gst_souphttp_src_unlock), (gst_souphttp_src_unlock_stop),
+	(gst_souphttp_src_get_size), (soup_got_headers), (soup_got_body),
+	(soup_finished), (soup_got_chunk), (soup_response),
+	(soup_session_close):
+	* ext/soup/gstsouphttpsrc.h:
+	Implement unlock().
+	Picks up the size from the Content-Length header and emit a duration
+	message.
+	Don't leak the GMainContext object.
+	Fixes #500099.
+
+2007-11-29  Wim Taymans  <wim.taymans@gmail.com>
+
 	* ext/alsaspdif/alsaspdifsink.c: (alsaspdifsink_set_caps),
 	(alsaspdifsink_get_time), (alsaspdifsink_set_params),
 	(alsaspdifsink_find_pcm_device):
