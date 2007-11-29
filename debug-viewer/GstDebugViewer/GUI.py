@@ -1096,6 +1096,7 @@ class LineView (object):
 
         log_view = window.log_view
         log_view.connect ("notify::model", self.handle_log_view_notify_model)
+        log_view.connect ("row-activated", self.handle_log_view_row_activated)
         sel = log_view.get_selection ()
         sel.connect ("changed", self.handle_log_view_selection_changed)
 
@@ -1110,6 +1111,18 @@ class LineView (object):
 
         line_model = LineViewLogModel (log_model)
         self.line_view.props.model = line_model
+
+    def handle_log_view_row_activated (self, view, path, column):
+
+        log_filter = view.props.model
+        line_index = path[0]
+
+        parent_line_index = log_filter.parent_line_index (line_index)
+        line_model = self.line_view.props.model
+        if line_model is None:
+            return
+
+        line_model.insert_line (0, parent_line_index)
 
     def handle_log_view_selection_changed (self, selection):
 
