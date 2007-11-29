@@ -629,9 +629,6 @@ class PidColumn (TextColumn):
 
     def get_values_for_size (self):
 
-        # TODO: Same as for TimeColumn.  There is no guarantee that 999999 is
-        # the widest string; use fixed font or come up with something better.
-
         return ["999999"]
 
 class ThreadColumn (TextColumn):
@@ -650,9 +647,6 @@ class ThreadColumn (TextColumn):
         return format_thread
 
     def get_values_for_size (self):
-
-        # TODO: Same as for TimeColumn.  There is no guarantee that ffffff is
-        # the widest string; use fixed font or come up with something better.
 
         return [int ("ffffff", 16)]
 
