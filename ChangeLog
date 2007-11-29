@@ -1,3 +1,10 @@
+2007-11-29  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* acinclude.m4:
+	Use pythonX.Y-config to detect the include path for the python
+	version and use the old values as fallback if pythonX.Y-config
+	doesn't exist.
+
 2007-11-28  Edward Hervey  <bilboed@bilboed.com>
 
 	* configure.ac:
