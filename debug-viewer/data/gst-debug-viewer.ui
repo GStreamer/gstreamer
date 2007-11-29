@@ -27,6 +27,7 @@
       <menuitem name="ViewContextMenuHideBefore" action="hide-before-line"/>
       <menuitem name="ViewContextMenuHideAfter" action="hide-after-line"/>
       <menuitem name="ViewContextMenuShowHidden" action="show-hidden-lines"/>
+      <separator/>
       <menuitem name="ViewContextMenuCopyMessage" action="edit-copy-message"/>
       <menuitem name="ViewContextMenuCopyLine" action="edit-copy-line"/>
       <menuitem name="ViewContextMenuFilterLevel" action="filter-out-higher-levels"/>
