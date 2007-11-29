@@ -389,6 +389,10 @@ class FilteredLogModel (LogModelBase):
 
         return line_index # FIXME
 
+    def from_parent_line_index (self, parent_line_index):
+
+        return parent_line_index
+
 class Filter (object):
 
     pass
@@ -440,6 +444,15 @@ class RangeFilteredLogModel (FilteredLogModel):
         start_index = self.line_index_range[0]
 
         return line_index + start_index
+
+    def from_parent_line_index (self, li):
+
+        start, end = self.line_index_range
+
+        if li < start or li > end:
+            raise IndexError ("not in range")
+
+        return li - start
 
 class DebugLevelFilter (Filter):
 
@@ -1319,6 +1332,23 @@ class Window (object):
         self.logger.debug ("requesting close from app")
         self.app.close_window (self)
 
+    def change_model (self, model):
+
+        previous_model = self.log_view.props.model
+        if previous_model:
+            line_index = self.get_active_line_index ()
+            selected_index = previous_model.parent_line_index (line_index)
+
+        self.log_view.props.model = model
+        try:
+            select_index = model.from_parent_line_index (selected_index)
+        except IndexError:
+            # Filtered out.
+            pass
+        else:
+            sel = self.log_view.get_selection ()
+            sel.select_path ((select_index,))
+
     def handle_window_delete_event (self, window, event):
 
         self.actions.close_window.activate ()
@@ -1379,7 +1409,7 @@ class Window (object):
 
         self.log_filter = RangeFilteredLogModel (self.log_model)
         self.log_filter.set_range (first_index, last_index + 1)
-        self.log_view.props.model = self.log_filter
+        self.change_model (self.log_filter)
         self.actions.show_hidden_lines.props.sensitive = True
 
     def handle_hide_before_line_action_activate (self, action):
@@ -1398,14 +1428,14 @@ class Window (object):
 
         self.log_filter = RangeFilteredLogModel (self.log_model)
         self.log_filter.set_range (first_index, last_index)
-        self.log_view.props.model = self.log_filter
+        self.change_model (self.log_filter)
         self.actions.show_hidden_lines.props.sensitive = True
 
     def handle_show_hidden_lines_action_activate (self, action):
 
         self.logger.info ("restoring model filter to show all lines")
         self.log_filter = FilteredLogModel (self.log_model)
-        self.log_view.props.model = self.log_filter
+        self.change_model (self.log_filter)
         self.actions.show_hidden_lines.props.sensitive = False
 
     def handle_edit_copy_line_action_activate (self, action):
