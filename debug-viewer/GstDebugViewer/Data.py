@@ -212,6 +212,8 @@ class LineCache (Producer):
         self.__fileobj.seek (0)
         limit = self._lines_per_iteration
         i = 0
+        # TODO: Remove the checks inside this loop.  Instead, let exceptions
+        # raise, catch them outside (for performance) and resume the iteration.
         while True:
             offset = tell ()
             line = readline ()
@@ -221,14 +223,19 @@ class LineCache (Producer):
                 # Ignore empty lines, especially the one established by the
                 # final newline at the end:
                 continue
+            if len (line) < ts_len:
+                continue
             # FIXME: We need to handle foreign lines separately!
             if line[1] != ":" or line[4] != ":" or line[7] != ".":
                 # No timestamp at start, ignore line:
                 continue
 
             thread_end = line.find (" ", thread_start)
+            if thread_end == -1 or thread_end + 1 >= len (line):
+                continue
             offsets.append (offset)
-            levels.append (dict_levels[line[thread_end + 1:thread_end + 2]])
+            level_start = line[thread_end + 1:thread_end + 2]
+            levels.append (dict_levels.get (level_start, debug_level_none))
             i += 1
             if i >= limit:
                 i = 0
