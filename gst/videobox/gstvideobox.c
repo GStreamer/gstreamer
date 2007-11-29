@@ -1158,6 +1158,8 @@ invalid_format:
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  oil_init ();
+
   return gst_element_register (plugin, "videobox", GST_RANK_NONE,
       GST_TYPE_VIDEO_BOX);
 }

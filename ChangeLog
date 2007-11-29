@@ -1,3 +1,10 @@
+2007-11-29  Michael Smith <msmith@fluendo.com>
+
+	Patch by: Arek Korbik <arkadini@gmail.com>
+
+	* gst/videobox/gstvideobox.c: (plugin_init):
+	  Initialise liboil in plugin_init()
+
 2007-11-29  Wim Taymans  <wim.taymans@gmail.com>
 
 	* ext/libpng/gstpngdec.c: (gst_pngdec_task):
