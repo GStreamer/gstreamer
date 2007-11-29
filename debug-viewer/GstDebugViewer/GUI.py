@@ -565,8 +565,6 @@ class TimeColumn (TextColumn):
 
     def get_values_for_size (self):
 
-        # TODO: Use more than just 0:00:00.000000000 to account for funny fonts
-        # maybe? Well, or use monospaced...
         values = [0]
 
         return values
