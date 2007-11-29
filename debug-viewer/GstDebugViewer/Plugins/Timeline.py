@@ -90,15 +90,20 @@ class LineFrequencySentinel (object):
             return
 
         last_ts = None
+        i = 0
+        UNPARSABLE_LIMIT = 500
         for row in iter_model_reversed (self.model):
             last_ts = row[model.COL_TIME]
             # FIXME: We ignore 0 here (unparsable lines!), this should be
             # handled differently!
+            i += 1
+            if i == UNPARSABLE_LIMIT:
+                break
             if last_ts:
                 last_index = row.path[0]
                 break
 
-        if last_ts is None:
+        if last_ts is None or last_ts < first_ts:
             return
 
         step = int (float (last_ts - first_ts) / float (self.n_partitions))
