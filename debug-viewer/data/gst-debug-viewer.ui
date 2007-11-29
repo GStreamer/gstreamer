@@ -24,8 +24,8 @@
       </menu>
       <placeholder name="ViewMenuAdditions"/>
       <separator/>
-      <menuitem name="ViewContextMenuOmitBefore" action="omit-before-line"/>
-      <menuitem name="ViewContextMenuOmitAfter" action="omit-after-line"/>
+      <menuitem name="ViewContextMenuHideBefore" action="hide-before-line"/>
+      <menuitem name="ViewContextMenuHideAfter" action="hide-after-line"/>
       <menuitem name="ViewContextMenuShowHidden" action="show-hidden-lines"/>
       <menuitem name="ViewContextMenuCopyMessage" action="edit-copy-message"/>
       <menuitem name="ViewContextMenuCopyLine" action="edit-copy-line"/>

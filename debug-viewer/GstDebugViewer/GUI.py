@@ -1196,9 +1196,9 @@ class Window (object):
         self.actions.reload_file.props.sensitive = False
 
         group = gtk.ActionGroup ("RowActions")
-        group.add_actions ([("omit-before-line", None, _("Omit lines before this one")),
-                            ("omit-after-line", None, _("Omit lines after this one")),
-                            ("show-hidden-lines", None, _("Show omitted lines")),
+        group.add_actions ([("hide-before-line", None, _("Hide lines before this one")),
+                            ("hide-after-line", None, _("Hide lines after this one")),
+                            ("show-hidden-lines", None, _("Show hidden lines")),
                             ("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
                             ("edit-copy-message", gtk.STOCK_COPY, _("Copy message")),
                             ("filter-out-higher-levels", None, _("Filter out higher debug levels"))])
@@ -1257,7 +1257,7 @@ class Window (object):
 
         for action_name in ("new-window", "open-file", "reload-file",
                             "close-window", "cancel-load",
-                            "omit-before-line", "omit-after-line", "show-hidden-lines",
+                            "hide-before-line", "hide-after-line", "show-hidden-lines",
                             "edit-copy-line", "edit-copy-message",
                             "filter-out-higher-levels",
                             "show-about",):
@@ -1363,7 +1363,7 @@ class Window (object):
 
         self.close ()
 
-    def handle_omit_after_line_action_activate (self, action):
+    def handle_hide_after_line_action_activate (self, action):
 
         first_index = self.log_filter.parent_line_index (0)
         try:
@@ -1372,7 +1372,7 @@ class Window (object):
             return
         last_index = self.log_filter.parent_line_index (filtered_line_index)
 
-        self.logger.info ("omitting lines after %i (abs %i), first line is abs %i",
+        self.logger.info ("hiding lines after %i (abs %i), first line is abs %i",
                           filtered_line_index,
                           last_index,
                           first_index)
@@ -1382,7 +1382,7 @@ class Window (object):
         self.log_view.props.model = self.log_filter
         self.actions.show_hidden_lines.props.sensitive = True
 
-    def handle_omit_before_line_action_activate (self, action):
+    def handle_hide_before_line_action_activate (self, action):
 
         try:
             filtered_line_index = self.get_active_line_index ()
@@ -1391,7 +1391,7 @@ class Window (object):
         first_index = self.log_filter.parent_line_index (filtered_line_index)
         last_index = self.log_filter.parent_line_index (len (self.log_filter) - 1)
 
-        self.logger.info ("omitting lines before %i (abs %i), last line is abs %i",
+        self.logger.info ("hiding lines before %i (abs %i), last line is abs %i",
                           filtered_line_index,
                           first_index,
                           last_index)

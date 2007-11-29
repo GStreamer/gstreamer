@@ -628,11 +628,11 @@ class TimelineFeature (FeatureBase):
                    gtk.UI_MANAGER_POPUP, False)
         # TODO: Makes sense to have these here too, but we need to add logic to
         # the actions to associate the correct line with the activation.
-        ## ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineOmitLinesBefore",
-        ##            "omit-before-line", gtk.UI_MANAGER_MENUITEM, False)
-        ## ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineOmitLinesAfter",
-        ##            "omit-after-line", gtk.UI_MANAGER_MENUITEM, False)
-        ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineShowOmittedLines",
+        ## ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineHideLinesBefore",
+        ##            "hide-before-line", gtk.UI_MANAGER_MENUITEM, False)
+        ## ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineHideLinesAfter",
+        ##            "hide-after-line", gtk.UI_MANAGER_MENUITEM, False)
+        ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineShowHiddenLines",
                    "show-hidden-lines", gtk.UI_MANAGER_MENUITEM, False)
 
         self.popup = ui.get_widget ("/TimelineContextMenu")
