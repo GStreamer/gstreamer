@@ -121,6 +121,10 @@ class LineFrequencySentinel (object):
             first_index = found
             target_ts += step
 
+        if step == 0:
+            result = []
+            partitions = []
+
         self.step = step
         self.data = result
         self.partitions = partitions
