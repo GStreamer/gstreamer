@@ -1,3 +1,10 @@
+2007-11-29  Wim Taymans  <wim.taymans@gmail.com>
+
+	* ext/alsaspdif/alsaspdifsink.c: (alsaspdifsink_set_caps),
+	(alsaspdifsink_get_time), (alsaspdifsink_set_params),
+	(alsaspdifsink_find_pcm_device):
+	Don't free uninitialized data when we are in error.
+
 2007-11-28  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/gstmetadatamux.c:

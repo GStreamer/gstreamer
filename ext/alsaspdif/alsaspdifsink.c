@@ -475,11 +475,11 @@ alsaspdifsink_find_pcm_device (AlsaSPDIFSink * sink)
   int card = sink->card;
   gchar pcm_name[24];
   snd_pcm_t *pcm = NULL;
-  snd_ctl_t *ctl;
-  snd_ctl_card_info_t *info;
-  snd_ctl_elem_list_t *clist;
-  snd_ctl_elem_id_t *cid;
-  snd_pcm_info_t *pinfo;
+  snd_ctl_t *ctl = NULL;
+  snd_ctl_card_info_t *info = NULL;
+  snd_ctl_elem_list_t *clist = NULL;
+  snd_ctl_elem_id_t *cid = NULL;
+  snd_pcm_info_t *pinfo = NULL;
 
   GST_WARNING ("Opening IEC958 named device failed. Trying to autodetect");
 
@@ -585,12 +585,18 @@ alsaspdifsink_find_pcm_device (AlsaSPDIFSink * sink)
 beach:
   if (pcm)
     snd_pcm_close (pcm);
-  snd_ctl_elem_list_clear (clist);
-  snd_ctl_close (ctl);
-  snd_ctl_elem_list_free (clist);
-  snd_ctl_elem_id_free (cid);
-  snd_ctl_card_info_free (info);
-  snd_pcm_info_free (pinfo);
+  if (clist)
+    snd_ctl_elem_list_clear (clist);
+  if (ctl)
+    snd_ctl_close (ctl);
+  if (clist)
+    snd_ctl_elem_list_free (clist);
+  if (cid)
+    snd_ctl_elem_id_free (cid);
+  if (info)
+    snd_ctl_card_info_free (info);
+  if (pinfo)
+    snd_pcm_info_free (pinfo);
   return err;
 }
 
