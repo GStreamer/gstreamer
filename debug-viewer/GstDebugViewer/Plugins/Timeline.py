@@ -708,7 +708,10 @@ class TimelineFeature (FeatureBase):
     def update_timeline_position (self):
 
         model = self.log_view.props.model
-        start_path, end_path = self.log_view.get_visible_range ()
+        visible_range = self.log_view.get_visible_range ()
+        if visible_range is None:
+            return
+        start_path, end_path = visible_range
         ts1 = model.get_value (model.get_iter (start_path),
                                model.COL_TIME)
         ts2 = model.get_value (model.get_iter (end_path),
@@ -728,7 +731,10 @@ class TimelineFeature (FeatureBase):
     def update_vtimeline (self):
 
         model = self.log_view.props.model
-        start_path, end_path = self.log_view.get_visible_range ()
+        visible_range = self.log_view.get_visible_range ()
+        if visible_range is None:
+            return
+        start_path, end_path = visible_range
 
         if not start_path or not end_path:
             return
