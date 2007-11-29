@@ -809,7 +809,10 @@ class TimelineFeature (FeatureBase):
 
         model = self.log_view.props.model
         row = model[count]
-        self.log_view.scroll_to_cell ((count,), use_align = True, row_align = .5)
+        path = (count,)
+        self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
+        sel = self.log_view.get_selection ()
+        sel.select_path (path)
         
         return False
 
