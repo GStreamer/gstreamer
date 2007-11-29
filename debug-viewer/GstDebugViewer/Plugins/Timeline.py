@@ -175,7 +175,8 @@ class LevelDistributionSentinel (object):
             counts[level] += 1
             tree_iter = model_next (tree_iter)
 
-        # FIXME: We lose the last partition here!
+        # Now handle the last one:
+        data.append (tuple (counts))
 
         yield False
 
