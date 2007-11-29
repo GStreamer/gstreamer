@@ -735,6 +735,12 @@ class MessageColumn (TextColumn):
 
         return message_data_func
 
+    def get_values_for_size (self):
+
+        values = ["Just some good minimum size"]
+
+        return values
+
 class ColumnManager (Common.GUI.Manager):
 
     column_classes = ()
