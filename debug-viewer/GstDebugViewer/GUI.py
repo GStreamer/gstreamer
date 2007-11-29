@@ -1278,6 +1278,8 @@ class Window (object):
 
         self.line_view.attach (self)
 
+        self.gtk_window.show ()
+
     def detach (self):
 
         self.set_log_file (None)
