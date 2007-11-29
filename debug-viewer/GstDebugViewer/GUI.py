@@ -1682,7 +1682,7 @@ class TestParsingPerformance (object):
         for row in model:
             pass
         diff = time.time () - start_time
-        print "data parsed in %0.1f ms" % (diff * 1000.,)
+        print "model iterated in %0.1f ms" % (diff * 1000.,)
         print "overall time spent: %0.1f s" % (time.time () - self.start_time,)
 
         import resource
