@@ -1577,6 +1577,9 @@ class Window (object):
             self.log_view.props.model = self.log_filter
             for feature in self.features:
                 feature.handle_attach_log_file (self, self.log_file)
+            if len (self.log_filter):
+                sel = self.log_view.get_selection ()
+                sel.select_path ((0,))
             return False
 
         gobject.idle_add (idle_set)
