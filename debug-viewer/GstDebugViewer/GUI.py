@@ -1118,6 +1118,8 @@ class LineView (object):
         parent_index = line_model.parent_line_index (line_index)
         path = (parent_index,)
         self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
+        sel = self.log_view.get_selection ()
+        sel.select_path (path)
 
     def handle_log_view_notify_model (self, view, gparam):
 
