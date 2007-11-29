@@ -550,6 +550,8 @@ class TimelineWidget (gtk.DrawingArea):
         start_ts, end_ts = self.__position_ts_range
         first_ts, last_ts = self.process.freq_sentinel.ts_range
         step = self.process.freq_sentinel.step
+        if step == 0:
+            return
 
         position1 = int (float (start_ts - first_ts) / step)
         position2 = int (float (end_ts - first_ts) / step)
