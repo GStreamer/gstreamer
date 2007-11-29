@@ -1,3 +1,8 @@
+2007-11-29  Wim Taymans  <wim.taymans@gmail.com>
+
+	* ext/libpng/gstpngdec.c: (gst_pngdec_task):
+	Post error before sending EOS. Fixes #499178.
+
 2007-11-28  Sebastien Moutte  <sebastien@moutte.net>
 
 	* win32/vs6/gst_plugins_good.dsw:
