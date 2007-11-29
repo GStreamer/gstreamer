@@ -39,8 +39,6 @@ import gobject
 import gtk
 import gtk.glade
 
-## import gnome # FIXME
-
 from GstDebugViewer import Common, Data, Main
 
 class Color (object):
@@ -519,7 +517,6 @@ class TextColumn (SizedColumn):
             column.set_cell_data_func (cell, cell_data_func)
 
         column.props.resizable = True
-        ## column.set_sort_column_id (self.id)
 
     def compute_default_size (self, view, model):
 
@@ -1191,7 +1188,6 @@ class Window (object):
                             ("close-window", gtk.STOCK_CLOSE, _("Close _Window"), "<Ctrl>W"),
                             ("cancel-load", gtk.STOCK_CANCEL, None,),
                             ("show-about", gtk.STOCK_ABOUT, None)])
-        ## group.add_toggle_actions ([("show-line-density", None, _("Line _Density"), "<Ctrl>D")])
         self.actions.add_group (group)
         self.actions.reload_file.props.sensitive = False
 
@@ -1573,7 +1569,6 @@ class Window (object):
         self.actions.show_hidden_lines.props.sensitive = False
 
         def idle_set ():
-            ##self.log_view.props.model = self.log_model
             self.log_view.props.model = self.log_filter
             for feature in self.features:
                 feature.handle_attach_log_file (self, self.log_file)
