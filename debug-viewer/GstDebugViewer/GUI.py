@@ -951,6 +951,8 @@ class ViewColumnManager (ColumnManager):
 
         ColumnManager.attach (self)
 
+        self.columns_sized = False
+
     def detach (self):
 
         self.state.column_order = self.column_order
@@ -986,12 +988,16 @@ class ViewColumnManager (ColumnManager):
 
     def __handle_notify_model (self, view, gparam):
 
+        if self.columns_sized:
+            # Already sized.
+            return
         model = self.view.props.model
-        self.logger.debug ("model changed: %r", model)
         if model is None:
             return
+        self.logger.debug ("model changed, sizing columns")
         for column in self.iter_items ():
             self.size_column (column, view, model)
+        self.columns_sized = True
 
 class LineViewLogModel (FilteredLogModel):
 
