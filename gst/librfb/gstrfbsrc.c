@@ -43,6 +43,7 @@ enum
   ARG_WIDTH,
   ARG_HEIGHT,
   ARG_INCREMENTAL,
+  ARG_USE_COPYRECT
 };
 
 GST_DEBUG_CATEGORY_STATIC (rfbsrc_debug);
@@ -140,7 +141,9 @@ gst_rfb_src_class_init (GstRfbSrcClass * klass)
   g_object_class_install_property (gobject_class, ARG_INCREMENTAL,
       g_param_spec_boolean ("incremental", "Incremental updates",
           "Incremental updates", TRUE, G_PARAM_READWRITE));
-
+  g_object_class_install_property (gobject_class, ARG_USE_COPYRECT,
+      g_param_spec_boolean ("use-copyrect", "Use copyrect encoding",
+          "Use copyrect encoding", FALSE, G_PARAM_READWRITE));
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_rfb_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_rfb_src_stop);
   gstbasesrc_class->event = GST_DEBUG_FUNCPTR (gst_rfb_src_event);
@@ -258,6 +261,9 @@ gst_rfb_src_set_property (GObject * object, guint prop_id,
     case ARG_INCREMENTAL:
       src->incremental_update = g_value_get_boolean (value);
       break;
+    case ARG_USE_COPYRECT:
+      src->decoder->use_copyrect = g_value_get_boolean (value);
+      break;
     default:
       break;
   }
@@ -297,6 +303,9 @@ gst_rfb_src_get_property (GObject * object, guint prop_id,
     case ARG_INCREMENTAL:
       g_value_set_boolean (value, src->incremental_update);
       break;
+    case ARG_USE_COPYRECT:
+      g_value_set_boolean (value, src->decoder->use_copyrect);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -334,7 +343,9 @@ gst_rfb_src_start (GstBaseSrc * bsrc)
       src->decoder->width * src->decoder->height * (decoder->bpp / 8), NULL);
 
   decoder->frame = g_malloc (bsrc->blocksize);
-  decoder->prev_frame = g_malloc (bsrc->blocksize);
+  if (decoder->use_copyrect) {
+    decoder->prev_frame = g_malloc (bsrc->blocksize);
+  }
   decoder->decoder_private = src;
 
   /* calculate some many used values */

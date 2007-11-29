@@ -1,3 +1,11 @@
+2007-11-29  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+		Disable CopyRect encoding by default
+		Add RRE encoding
+
 2007-11-29  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Wouter Cloetens <wouter at mind dot be>
