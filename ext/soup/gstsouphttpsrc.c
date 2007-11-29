@@ -50,11 +50,16 @@ static GstFlowReturn gst_souphttp_src_create (GstPushSrc * psrc,
     GstBuffer ** outbuf);
 static gboolean gst_souphttp_src_start (GstBaseSrc * bsrc);
 static gboolean gst_souphttp_src_stop (GstBaseSrc * bsrc);
+static gboolean gst_souphttp_src_get_size (GstBaseSrc * bsrc, guint64 * size);
 static gboolean gst_souphttp_src_unlock (GstBaseSrc * bsrc);
+static gboolean gst_souphttp_src_unlock_stop (GstBaseSrc * bsrc);
 
 static gboolean gst_souphttp_src_set_location (GstSouphttpSrc * src,
     const gchar * uri);
 
+static void soup_got_headers (SoupMessage * msg, GstSouphttpSrc * src);
+static void soup_finished (SoupMessage * msg, GstSouphttpSrc * src);
+static void soup_got_body (SoupMessage * msg, GstSouphttpSrc * src);
 static void soup_got_chunk (SoupMessage * msg, GstSouphttpSrc * src);
 static void soup_response (SoupMessage * msg, gpointer user_data);
 static void soup_session_close (GstSouphttpSrc * src);
@@ -103,6 +108,9 @@ gst_souphttp_src_class_init (GstSouphttpSrcClass * klass)
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_souphttp_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_souphttp_src_stop);
   gstbasesrc_class->unlock = GST_DEBUG_FUNCPTR (gst_souphttp_src_unlock);
+  gstbasesrc_class->unlock_stop =
+      GST_DEBUG_FUNCPTR (gst_souphttp_src_unlock_stop);
+  gstbasesrc_class->get_size = GST_DEBUG_FUNCPTR (gst_souphttp_src_get_size);
 
   gstpushsrc_class->create = GST_DEBUG_FUNCPTR (gst_souphttp_src_create);
 
@@ -115,9 +123,11 @@ gst_souphttp_src_init (GstSouphttpSrc * src, GstSouphttpSrcClass * g_class)
 {
   src->location = NULL;
   src->loop = NULL;
+  src->context = NULL;
   src->session = NULL;
   src->msg = NULL;
   src->interrupted = FALSE;
+  src->have_size = FALSE;
 }
 
 static void
@@ -129,7 +139,9 @@ gst_souphttp_src_dispose (GObject * gobject)
   soup_session_close (src);
   if (src->loop) {
     g_main_loop_unref (src->loop);
+    g_main_context_unref (src->context);
     src->loop = NULL;
+    src->context = NULL;
   }
   if (src->location) {
     g_free (src->location);
@@ -202,6 +214,7 @@ gst_souphttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
     }
     if (!src->session) {
       GST_DEBUG_OBJECT (src, "EOS reached");
+      soup_session_close (src);
       src->ret = GST_FLOW_UNEXPECTED;
       break;
     }
@@ -231,12 +244,10 @@ gst_souphttp_src_create (GstPushSrc * psrc, GstBuffer ** outbuf)
   return src->ret;
 }
 
-/* create a socket for connecting to remote server */
 static gboolean
 gst_souphttp_src_start (GstBaseSrc * bsrc)
 {
   GstSouphttpSrc *src = GST_SOUPHTTP_SRC (bsrc);
-  GMainContext *context;
 
   if (!src->location) {
     GST_ELEMENT_ERROR (src, LIBRARY, INIT,
@@ -244,18 +255,19 @@ gst_souphttp_src_start (GstBaseSrc * bsrc)
     return FALSE;
   }
 
-  context = g_main_context_new ();
+  src->context = g_main_context_new ();
 
-  src->loop = g_main_loop_new (context, TRUE);
+  src->loop = g_main_loop_new (src->context, TRUE);
   if (!src->loop) {
     GST_ELEMENT_ERROR (src, LIBRARY, INIT,
         (NULL), ("Failed to start GMainLoop"));
+    g_main_context_unref (src->context);
     return FALSE;
   }
 
   src->session =
-      soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT, context,
-      NULL);
+      soup_session_async_new_with_options (SOUP_SESSION_ASYNC_CONTEXT,
+      src->context, NULL);
   if (!src->session) {
     GST_ELEMENT_ERROR (src, LIBRARY, INIT,
         (NULL), ("Failed to create async session"));
@@ -267,7 +279,12 @@ gst_souphttp_src_start (GstBaseSrc * bsrc)
     GST_ELEMENT_ERROR (src, LIBRARY, INIT, (NULL), ("Error parsing URL"));
     return FALSE;
   }
+  soup_message_add_header (src->msg->request_headers, "Connection", "close");
 
+  g_signal_connect (src->msg, "got_headers",
+      G_CALLBACK (soup_got_headers), src);
+  g_signal_connect (src->msg, "got_body", G_CALLBACK (soup_got_body), src);
+  g_signal_connect (src->msg, "finished", G_CALLBACK (soup_finished), src);
   g_signal_connect (src->msg, "got_chunk", G_CALLBACK (soup_got_chunk), src);
   soup_message_set_flags (src->msg, SOUP_MESSAGE_OVERWRITE_CHUNKS);
 
@@ -298,9 +315,38 @@ gst_souphttp_src_unlock (GstBaseSrc * bsrc)
   GST_DEBUG_OBJECT (src, "unlock()");
 
   src->interrupted = TRUE;
-  g_main_loop_quit (src->loop);
-
+  if (src->loop)
+    g_main_loop_quit (src->loop);
   return TRUE;
+}
+
+/* Interrupt interrupt. */
+static gboolean
+gst_souphttp_src_unlock_stop (GstBaseSrc * bsrc)
+{
+  GstSouphttpSrc *src;
+
+  src = GST_SOUPHTTP_SRC (bsrc);
+  GST_DEBUG_OBJECT (src, "unlock_stop()");
+
+  src->interrupted = FALSE;
+  return TRUE;
+}
+
+static gboolean
+gst_souphttp_src_get_size (GstBaseSrc * bsrc, guint64 * size)
+{
+  GstSouphttpSrc *src;
+
+  src = GST_SOUPHTTP_SRC (bsrc);
+
+  if (src->have_size) {
+    GST_DEBUG_OBJECT (src, "get_size() = %llu", src->content_size);
+    *size = src->content_size;
+    return TRUE;
+  }
+  GST_DEBUG_OBJECT (src, "get_size() = FALSE");
+  return FALSE;
 }
 
 static gboolean
@@ -316,6 +362,47 @@ gst_souphttp_src_set_location (GstSouphttpSrc * src, const gchar * uri)
 }
 
 static void
+soup_got_headers (SoupMessage * msg, GstSouphttpSrc * src)
+{
+  const char *value;
+
+  GST_DEBUG_OBJECT (src, "got headers");
+
+  value = soup_message_get_header (msg->response_headers, "Content-Length");
+  if (value != NULL) {
+    src->content_size = g_ascii_strtoull (value, NULL, 10);
+    src->have_size = TRUE;
+    GST_DEBUG_OBJECT (src, "size = %llu", src->content_size);
+
+    gst_element_post_message (GST_ELEMENT (src),
+        gst_message_new_duration (GST_OBJECT (src), GST_FORMAT_BYTES,
+            src->content_size));
+  }
+}
+
+/* Have body. Signal EOS. */
+static void
+soup_got_body (SoupMessage * msg, GstSouphttpSrc * src)
+{
+  GST_DEBUG_OBJECT (src, "got body");
+  src->ret = GST_FLOW_UNEXPECTED;
+  if (src->loop)
+    g_main_loop_quit (src->loop);
+  soup_message_io_pause (msg);
+}
+
+/* Finished. Signal EOS. */
+static void
+soup_finished (SoupMessage * msg, GstSouphttpSrc * src)
+{
+  GST_DEBUG_OBJECT (src, "finished");
+  src->ret = GST_FLOW_UNEXPECTED;
+  if (src->loop)
+    g_main_loop_quit (src->loop);
+  soup_message_io_pause (msg);
+}
+
+static void
 soup_got_chunk (SoupMessage * msg, GstSouphttpSrc * src)
 {
   GstBaseSrc *basesrc;
@@ -327,9 +414,10 @@ soup_got_chunk (SoupMessage * msg, GstSouphttpSrc * src)
   src->ret = gst_pad_alloc_buffer (GST_BASE_SRC_PAD (basesrc),
       basesrc->segment.last_stop, msg->response.length,
       GST_PAD_CAPS (GST_BASE_SRC_PAD (basesrc)), src->outbuf);
-  if (G_LIKELY (src->ret == GST_FLOW_OK))
+  if (G_LIKELY (src->ret == GST_FLOW_OK)) {
     memcpy (GST_BUFFER_DATA (*src->outbuf), msg->response.body,
         msg->response.length);
+  }
 
   g_main_loop_quit (src->loop);
   soup_message_io_pause (msg);
@@ -348,7 +436,6 @@ soup_response (SoupMessage * msg, gpointer user_data)
 static void
 soup_session_close (GstSouphttpSrc * src)
 {
-  GST_DEBUG_OBJECT (src, "Connection closed");
   if (src->session) {
     soup_session_abort (src->session);  /* This unrefs the message. */
     g_object_unref (src->session);
