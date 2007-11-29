@@ -1007,10 +1007,16 @@ class LineViewLogModel (FilteredLogModel):
         self.line_offsets = []
         self.line_levels = []
 
+        self.parent_indices = []
+
     def reset (self):
 
         del self.line_offsets[:]
         del self.line_levels[:]
+
+    def parent_line_index (self, line_index):
+
+        return self.parent_indices[line_index]
 
     def insert_line (self, position, parent_line_index):
 
@@ -1019,6 +1025,7 @@ class LineViewLogModel (FilteredLogModel):
         li = parent_line_index
         self.line_offsets.insert (position, self.parent_model.line_offsets[li])
         self.line_levels.insert (position, self.parent_model.line_levels[li])
+        self.parent_indices.insert (position, parent_line_index)
 
         path = (position,)
         tree_iter = self.get_iter (path)
@@ -1029,6 +1036,7 @@ class LineViewLogModel (FilteredLogModel):
         li = line_index
         self.line_offsets[li] = self.parent_model.line_offsets[parent_line_index]
         self.line_levels[li] = self.parent_model.line_levels[parent_line_index]
+        self.parent_indices[li] = parent_line_index
 
         path = (line_index,)
         tree_iter = self.get_iter (path)
@@ -1093,14 +1101,23 @@ class LineView (object):
     def attach (self, window):
         
         self.line_view = window.widgets.line_view
+        self.line_view.connect ("row-activated", self.handle_line_view_row_activated)
 
-        log_view = window.log_view
+        self.log_view = log_view = window.log_view
         log_view.connect ("notify::model", self.handle_log_view_notify_model)
         log_view.connect ("row-activated", self.handle_log_view_row_activated)
         sel = log_view.get_selection ()
         sel.connect ("changed", self.handle_log_view_selection_changed)
 
         self.column_manager.attach (window)
+
+    def handle_line_view_row_activated (self, view, path, column):
+
+        line_index = path[0]
+        line_model = view.props.model
+        parent_index = line_model.parent_line_index (line_index)
+        path = (parent_index,)
+        self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
 
     def handle_log_view_notify_model (self, view, gparam):
 
