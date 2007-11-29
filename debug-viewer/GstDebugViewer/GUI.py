@@ -1223,8 +1223,6 @@ class Window (object):
         self.log_view = self.widgets.log_view
         self.log_view.drag_dest_unset ()
         self.log_view.set_search_column (-1)
-        self.log_view.props.enable_search = False
-        self.log_view.props.fixed_height_mode = True
 
         self.log_view.connect ("button-press-event", self.handle_log_view_button_press_event)
 
