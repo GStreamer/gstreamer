@@ -325,8 +325,8 @@ class VerticalTimelineWidget (gtk.DrawingArea):
 
     def update (self, first_y, cell_height, data):
 
-        # FIXME: Ideally we should be informed of the vertical position
-        # difference of the view (which is 0) with the current UI layout.
+        # FIXME: Ideally we should take the vertical position difference of the
+        # view into account (which is 0 with the current UI layout).
 
         self.params = (first_y, cell_height, data,)
         self.queue_draw ()
