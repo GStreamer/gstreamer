@@ -498,6 +498,9 @@ class RangeFilteredLogModel (FilteredLogModelBase):
 
         start, end = self.line_index_range
 
+        if start == end:
+            raise IndexError ("not in range (empty)")
+
         if li < start or li > end:
             raise IndexError ("not in range")
 
