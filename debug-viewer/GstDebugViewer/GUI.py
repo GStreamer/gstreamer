@@ -358,7 +358,7 @@ class LazyLogModel (LogModelBase):
 
         self.line_cache[line_offset] = Data.LogLine.parse_full (line)
 
-class FilteredLogModel (LogModelBase):
+class FilteredLogModelBase (LogModelBase):
 
     def __init__ (self, super_model):
 
@@ -367,7 +367,22 @@ class FilteredLogModel (LogModelBase):
         self.super_model = super_model
         self.access_offset = super_model.access_offset
         self.ensure_cached = super_model.ensure_cached
-        self.line_cache = super_model.line_cache
+        self.line_cache = super_model.line_cache    
+
+    def line_index_to_super (self, line_index):
+
+        raise NotImplementedError ("index conversion not supported")
+
+    def line_index_from_super (self, super_line_index):
+
+        raise NotImplementedError ("index conversion not supported")
+
+class FilteredLogModel (FilteredLogModelBase):
+
+    def __init__ (self, super_model):
+
+        FilteredLogModelBase.__init__ (self, super_model)
+
         self.reset ()
         
     def reset (self):
@@ -385,13 +400,17 @@ class FilteredLogModel (LogModelBase):
         self.line_offsets[:] = (offset for row, offset in enum
                                 if func (row))
 
-    def line_index_to_super (self, line_index):
-
-        return line_index # FIXME
-
     def line_index_from_super (self, super_line_index):
 
+        # FIXME
+
         return super_line_index
+
+    def line_index_to_super (self, line_index):
+
+        # FIXME
+
+        return line_index
 
 class Filter (object):
 
