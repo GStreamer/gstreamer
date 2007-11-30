@@ -1340,7 +1340,12 @@ class Window (object):
             pass
         else:
             sel = self.log_view.get_selection ()
-            sel.select_path ((select_index,))
+            path = (select_index,)
+            sel.select_path (path)
+
+            # FIXME: Instead of scrolling to the selected row, try to restore
+            # the previous visible range.
+            self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
 
     def handle_window_delete_event (self, window, event):
 
