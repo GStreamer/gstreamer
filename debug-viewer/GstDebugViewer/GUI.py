@@ -1251,6 +1251,9 @@ class Window (object):
         group.props.sensitive = False
         self.actions.add_group (group)
 
+        self.actions.hide_log_category.props.visible = False
+        self.actions.hide_log_object.props.visible = False
+
         self.actions.add_group (self.column_manager.action_group)
 
         self.log_file = None
