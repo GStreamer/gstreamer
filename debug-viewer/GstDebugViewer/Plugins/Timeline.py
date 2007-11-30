@@ -289,9 +289,10 @@ class VerticalTimelineWidget (gtk.DrawingArea):
             return
 
         first_y, cell_height, data = self.params
+        if len (data) < 2:
+            return
         first_ts, last_ts = data[0][0], data[-1][0]
         ts_range = last_ts - first_ts
-
         if ts_range == 0:
             return
 
