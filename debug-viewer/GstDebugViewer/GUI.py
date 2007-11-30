@@ -397,6 +397,15 @@ class Filter (object):
 
     pass
 
+class DebugLevelFilter (Filter):
+
+    def __init__ (self, debug_level):
+
+        col_id = LogModelBase.COL_LEVEL
+        def filter_func (row):
+            return row[col_id] < debug_level
+        self.filter_func = filter_func
+
 class SubRange (object):
 
     def __init__ (self, l, start, end):
@@ -453,15 +462,6 @@ class RangeFilteredLogModel (FilteredLogModel):
             raise IndexError ("not in range")
 
         return li - start
-
-class DebugLevelFilter (Filter):
-
-    def __init__ (self, debug_level):
-
-        col_id = LogModelBase.COL_LEVEL
-        def filter_func (row):
-            return row[col_id] < debug_level
-        self.filter_func = filter_func
 
 # Sync with gst-inspector!
 class Column (object):
