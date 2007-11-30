@@ -1118,12 +1118,15 @@ class LineView (object):
         self.line_view.connect ("row-activated", self.handle_line_view_row_activated)
 
         self.log_view = log_view = window.log_view
-        log_view.connect ("notify::model", self.handle_log_view_notify_model)
         log_view.connect ("row-activated", self.handle_log_view_row_activated)
         sel = log_view.get_selection ()
         sel.connect ("changed", self.handle_log_view_selection_changed)
 
         self.column_manager.attach (window)
+
+    def handle_attach_log_file (self, window):
+
+        self.line_view.props.model = LineViewLogModel (window.log_model)
 
     def handle_line_view_row_activated (self, view, path, column):
 
@@ -1134,16 +1137,6 @@ class LineView (object):
         self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
         sel = self.log_view.get_selection ()
         sel.select_path (path)
-
-    def handle_log_view_notify_model (self, view, gparam):
-
-        log_model = view.props.model
-
-        if log_model is None:
-            return
-
-        line_model = LineViewLogModel (log_model)
-        self.line_view.props.model = line_model
 
     def handle_log_view_row_activated (self, view, path, column):
 
@@ -1604,6 +1597,7 @@ class Window (object):
 
         def idle_set ():
             self.log_view.props.model = self.log_filter
+            self.line_view.handle_attach_log_file (self)
             for feature in self.features:
                 feature.handle_attach_log_file (self, self.log_file)
             if len (self.log_filter):
