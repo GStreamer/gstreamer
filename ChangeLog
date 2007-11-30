@@ -1,3 +1,8 @@
+2007-11-30  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/rfbdecoder.c:
+		Use glib macro for swapping
+
 2007-11-29  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/gstrfbsrc.c:

@@ -12,7 +12,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
-#include <byteswap.h>
 
 #include "vncauth.h"
 
@@ -723,7 +722,7 @@ rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
 
   buffer = rfb_decoder_read (decoder, 4 + decoder->bytespp);
   number_of_rectangles = RFB_GET_UINT32 (buffer);
-  color = bswap_32 (RFB_GET_UINT32 (buffer + 4));
+  color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (buffer + 4)));
   g_free (buffer);
 
   GST_DEBUG ("number of rectangles :%d", number_of_rectangles);
@@ -734,7 +733,7 @@ rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
   while (number_of_rectangles--) {
 
     buffer = rfb_decoder_read (decoder, decoder->bytespp + 8);
-    color = bswap_32 (RFB_GET_UINT32 (buffer));
+    color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (buffer)));
     x = RFB_GET_UINT16 (buffer + decoder->bytespp);
     y = RFB_GET_UINT16 (buffer + decoder->bytespp + 2);
     w = RFB_GET_UINT16 (buffer + decoder->bytespp + 4);
