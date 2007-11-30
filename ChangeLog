@@ -1,3 +1,9 @@
+2007-11-30  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtsparse.c:
+	CRC check the psi pids. CRC checking code relicenced from MPL.
+	Thanks Fluendo.
+
 2007-11-30  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/Makefile.am:
