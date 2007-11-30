@@ -276,6 +276,8 @@ gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass)
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
+
+  metadataparse_xmp_init ();
   /* init members */
 
   gst_metadata_mux_init_members (filter);
@@ -522,6 +524,12 @@ gst_metadata_mux_sink_event (GstPad * pad, GstEvent * event)
       }
       break;
     case GST_EVENT_TAG:
+    {
+      GstTagList *taglist = NULL;
+
+      gst_event_parse_tag (event, &taglist);
+      gst_tag_list_insert (filter->taglist, taglist, GST_TAG_MERGE_REPLACE);
+    }
       break;
     default:
       break;
@@ -543,6 +551,8 @@ gst_metadata_mux_dispose (GObject * object)
   filter = GST_METADATA_MUX (object);
 
   gst_metadata_mux_dispose_members (filter);
+
+  metadataparse_xmp_dispose ();
 
   G_OBJECT_CLASS (metadata_parent_class)->dispose (object);
 }
@@ -753,27 +763,29 @@ gst_metadata_mux_get_type_name (int img_type)
 }
 
 static void
-gst_metadata_update_segment (GstMetadataMux * filter, GstAdapter * adapter,
-    MetadataChunkType type)
+gst_metadata_update_segment (GstMetadataMux * filter, guint8 ** buf,
+    guint32 * size, MetadataChunkType type)
 {
   int i;
   MetadataChunk *inject = filter->mux_data.inject_chunks.chunk;
   const gsize inject_len = filter->mux_data.inject_chunks.len;
-  guint32 size;
 
-  if (adapter == NULL)
+  if (!(buf && size))
     goto done;
-
-  size = gst_adapter_available (adapter);
-
-  if (size == 0)
+  if (*buf == 0)
+    goto done;
+  if (*size == 0)
     goto done;
 
   /* calculate the new position off injected chunks */
   for (i = 0; i < inject_len; ++i) {
     if (inject[i].type == type) {
-      inject[i].size = size;
-      inject[i].data = (guint8 *) gst_adapter_peek (adapter, inject[i].size);
+      inject[i].size = *size;
+      if (inject[i].data)
+        g_free (inject[i].data);
+      inject[i].data = *buf;
+      *size = 0;
+      *buf = 0;
       break;
     }
   }
@@ -791,26 +803,22 @@ gst_metadata_create_chunks_from_tags (GstMetadataMux * filter)
   GstMessage *msg;
   GstTagList *taglist;
   GstEvent *event;
+  guint8 *buf = NULL;
+  guint32 size = 0;
 
   if (META_DATA_OPTION (filter->mux_data) & META_OPT_EXIF) {
-    metadatamux_exif_create_chunk_from_tag_list (&filter->mux_data.exif_adapter,
-        filter->taglist);
-    gst_metadata_update_segment (filter, filter->mux_data.exif_adapter,
-        MD_CHUNK_EXIF);
+    metadatamux_exif_create_chunk_from_tag_list (&buf, &size, filter->taglist);
+    gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_EXIF);
   }
 
   if (META_DATA_OPTION (filter->mux_data) & META_OPT_IPTC) {
-    metadatamux_iptc_create_chunk_from_tag_list (&filter->mux_data.iptc_adapter,
-        filter->taglist);
-    gst_metadata_update_segment (filter, filter->mux_data.iptc_adapter,
-        MD_CHUNK_IPTC);
+    metadatamux_iptc_create_chunk_from_tag_list (&buf, &size, filter->taglist);
+    gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_IPTC);
   }
 
   if (META_DATA_OPTION (filter->mux_data) & META_OPT_XMP) {
-    metadatamux_xmp_create_chunk_from_tag_list (&filter->mux_data.xmp_adapter,
-        filter->taglist);
-    gst_metadata_update_segment (filter, filter->mux_data.xmp_adapter,
-        MD_CHUNK_XMP);
+    metadatamux_xmp_create_chunk_from_tag_list (&buf, &size, filter->taglist);
+    gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_XMP);
   }
 
   metadata_chunk_array_remove_zero_size (&filter->mux_data.inject_chunks);
@@ -900,6 +908,8 @@ gst_metadata_mux_calculate_offsets (GstMetadataMux * filter)
 
   gst_metadata_create_chunks_from_tags (filter);
 
+  metadata_lazy_update (&filter->mux_data);
+
   bytes_striped = 0;
   bytes_inject = 0;
 
@@ -939,8 +949,6 @@ gst_metadata_mux_calculate_offsets (GstMetadataMux * filter)
       }
     }
   }
-
-  metadata_lazy_update (&filter->mux_data);
 
   if (filter->duration_orig) {
     filter->duration = filter->duration_orig;
@@ -1486,7 +1494,8 @@ inject:
       }
 
       if (inject[i].offset_orig >= offset_orig) {
-        if (inject[i].offset_orig < offset_orig + size_buf_in + striped_bytes) {
+        if (inject[i].offset_orig <
+            offset_orig + size_buf_in + striped_bytes - injected_bytes) {
           /* insert */
           guint32 buf_off =
               inject[i].offset_orig - offset_orig - striped_so_far +

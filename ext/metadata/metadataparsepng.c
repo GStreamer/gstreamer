@@ -78,14 +78,11 @@ metadataparse_png_init (PngParseData * png_data, GstAdapter ** exif_adpt,
   png_data->strip_chunks = strip_chunks;
   png_data->inject_chunks = inject_chunks;
 
-  metadataparse_xmp_init ();
 }
 
 void
 metadataparse_png_dispose (PngParseData * png_data)
 {
-  metadataparse_xmp_dispose ();
-
   png_data->xmp_adapter = NULL;
 }
 
@@ -213,6 +210,7 @@ metadataparse_png_reading (PngParseData * png_data, guint8 ** buf,
         memset (&chunk, 0x00, sizeof (MetadataChunk));
         chunk.offset_orig = (*buf - step_buf) + offset - 8;     /* maker + size */
         chunk.size = chunk_size + 12;   /* chunk size plus app marker plus crc */
+        chunk.type = MD_CHUNK_XMP;
 
         metadata_chunk_array_append_sorted (png_data->strip_chunks, &chunk);
 

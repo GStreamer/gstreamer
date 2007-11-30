@@ -280,6 +280,7 @@ gst_metadata_parse_init (GstMetadataParse * filter,
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
+  metadataparse_xmp_init ();
   /* init members */
 
   gst_metadata_parse_init_members (filter);
@@ -548,7 +549,10 @@ gst_metadata_parse_dispose (GObject * object)
 
   gst_metadata_parse_dispose_members (filter);
 
+  metadataparse_xmp_dispose ();
+
   G_OBJECT_CLASS (metadata_parent_class)->dispose (object);
+
 }
 
 static void
@@ -572,11 +576,6 @@ gst_metadata_parse_dispose_members (GstMetadataParse * filter)
     filter->adapter_holding = NULL;
   }
 
-  if (filter->taglist) {
-    gst_tag_list_free (filter->taglist);
-    filter->taglist = NULL;
-  }
-
   if (filter->append_buffer) {
     gst_buffer_unref (filter->append_buffer);
     filter->append_buffer = NULL;
@@ -596,7 +595,6 @@ gst_metadata_parse_init_members (GstMetadataParse * filter)
   filter->iptc = TRUE;
   filter->xmp = TRUE;
 
-  filter->taglist = NULL;
   filter->adapter_parsing = NULL;
   filter->adapter_holding = NULL;
   filter->next_offset = 0;
@@ -1471,7 +1469,8 @@ inject:
       }
 
       if (inject[i].offset_orig >= offset_orig) {
-        if (inject[i].offset_orig < offset_orig + size_buf_in + striped_bytes) {
+        if (inject[i].offset_orig <
+            offset_orig + size_buf_in + striped_bytes - injected_bytes) {
           /* insert */
           guint32 buf_off =
               inject[i].offset_orig - offset_orig - striped_so_far +
@@ -1734,7 +1733,6 @@ gst_metadata_parse_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       gst_metadata_parse_init_members (filter);
       filter->adapter_parsing = gst_adapter_new ();
-      filter->taglist = gst_tag_list_new ();
       metadata_init (&filter->parse_data, TRUE);
       break;
     default:

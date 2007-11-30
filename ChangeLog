@@ -1,3 +1,21 @@
+2007-11-30  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/gstmetadatamux.c:
+	* ext/metadata/gstmetadatamux.h:
+	* ext/metadata/gstmetadataparse.c:
+	* ext/metadata/gstmetadataparse.h:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadataexif.h:
+	* ext/metadata/metadataiptc.c:
+	* ext/metadata/metadataiptc.h:
+	* ext/metadata/metadatamuxjpeg.c:
+	* ext/metadata/metadatamuxpng.c:
+	* ext/metadata/metadataparsejpeg.c:
+	* ext/metadata/metadataparsepng.c:
+	* ext/metadata/metadataxmp.c:
+	* ext/metadata/metadataxmp.h:
+	  Muxer writes (in jpeg only) whole EXIF and XMP chunks sent as tags.
+
 2007-11-30  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/rfbdecoder.c:

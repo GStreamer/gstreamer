@@ -64,7 +64,7 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 }
 
 void
-metadatamux_exif_create_chunk_from_tag_list (GstAdapter ** adapter,
+metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
     GstTagList * taglist)
 {
   /* do nothing */
@@ -202,18 +202,45 @@ exif_content_foreach_entry_func (ExifEntry * entry, void *user_data)
  */
 
 void
-metadatamux_exif_create_chunk_from_tag_list (GstAdapter ** adapter,
+metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
     GstTagList * taglist)
 {
-  if (adapter == NULL)
+  ExifData *ed = NULL;
+  GstBuffer *exif_chunk = NULL;
+  const GValue *val = NULL;
+
+  if (!(buf && size))
     goto done;
+  if (*buf) {
+    g_free (*buf);
+    *buf = NULL;
+  }
+  *size = 0;
 
-  if (*adapter)
-    g_object_unref (*adapter);
+  val = gst_tag_list_get_value_index (taglist, GST_TAG_EXIF, 0);
+  if (val) {
+    exif_chunk = gst_value_get_buffer (val);
+    if (exif_chunk) {
+      ed = exif_data_new_from_data (GST_BUFFER_DATA (exif_chunk),
+          GST_BUFFER_SIZE (exif_chunk));
+    }
+  }
 
-  *adapter = gst_adapter_new ();
+  if (!ed) {
+    ed = exif_data_new ();
+    exif_data_set_data_type (ed, EXIF_DATA_TYPE_COMPRESSED);
+    exif_data_fix (ed);
+  }
+
+  /* FIXME: consider individual tags */
+
+  exif_data_save_data (ed, buf, size);
+
 
 done:
+
+  if (ed)
+    exif_data_unref (ed);
 
   return;
 }

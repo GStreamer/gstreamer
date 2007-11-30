@@ -65,7 +65,7 @@ metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 
 
 void
-metadatamux_iptc_create_chunk_from_tag_list (GstAdapter ** adapter,
+metadatamux_iptc_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
     GstTagList * taglist)
 {
   /* do nothing */
@@ -132,16 +132,16 @@ iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data)
 }
 
 void
-metadatamux_iptc_create_chunk_from_tag_list (GstAdapter ** adapter,
+metadatamux_iptc_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
     GstTagList * taglist)
 {
-  if (adapter == NULL)
+  if (!(buf && size))
     goto done;
-
-  if (*adapter)
-    g_object_unref (*adapter);
-
-  *adapter = gst_adapter_new ();
+  if (*buf) {
+    g_free (*buf);
+    *buf = NULL;
+  }
+  *size = 0;
 
 done:
 

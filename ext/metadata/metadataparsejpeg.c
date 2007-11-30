@@ -91,14 +91,11 @@ metadataparse_jpeg_init (JpegParseData * jpeg_data, GstAdapter ** exif_adpt,
   jpeg_data->strip_chunks = strip_chunks;
   jpeg_data->inject_chunks = inject_chunks;
 
-  metadataparse_xmp_init ();
 }
 
 void
 metadataparse_jpeg_dispose (JpegParseData * jpeg_data)
 {
-  metadataparse_xmp_dispose ();
-
   jpeg_data->exif_adapter = NULL;
   jpeg_data->iptc_adapter = NULL;
   jpeg_data->xmp_adapter = NULL;

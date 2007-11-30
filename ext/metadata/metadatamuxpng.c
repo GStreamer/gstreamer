@@ -50,14 +50,6 @@ metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size);
 
-static int
-metadatamux_png_xmp (PngMuxData * png_data, guint8 ** buf,
-    guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
-
-static int
-metadatamux_png_jump (PngMuxData * png_data, guint8 ** buf,
-    guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
-
 #define READ(buf, size) ( (size)--, *((buf)++) )
 
 void
@@ -78,14 +70,11 @@ metadatamux_png_init (PngMuxData * png_data, GstAdapter ** exif_adpt,
   png_data->strip_chunks = strip_chunks;
   png_data->inject_chunks = inject_chunks;
 
-  metadataparse_xmp_init ();
 }
 
 void
 metadatamux_png_dispose (PngMuxData * png_data)
 {
-  metadataparse_xmp_dispose ();
-
   png_data->xmp_adapter = NULL;
 }
 
@@ -139,16 +128,6 @@ metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
             metadatamux_png_reading (png_data, &buf, bufsize,
             offset, step_buf, next_start, next_size);
         break;
-      case PNG_MUX_JUMPING:
-        ret =
-            metadatamux_png_jump (png_data, &buf, bufsize, next_start,
-            next_size);
-        break;
-      case PNG_MUX_XMP:
-        ret =
-            metadatamux_png_xmp (png_data, &buf, bufsize, next_start,
-            next_size);
-        break;
       case PNG_MUX_DONE:
         goto done;
         break;
@@ -175,6 +154,7 @@ metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
   int ret = -1;
   guint8 mark[4];
   guint32 chunk_size = 0;
+  MetadataChunk chunk;
 
   static const char XmpHeader[] = "XML:com.adobe.xmp";
 
@@ -196,78 +176,27 @@ metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
   mark[2] = READ (*buf, *bufsize);
   mark[3] = READ (*buf, *bufsize);
 
-  if (mark[0] == 'I' && mark[1] == 'E' && mark[2] == 'N' && mark[3] == 'D') {
-    ret = 0;
-    png_data->state = PNG_MUX_DONE;
+  if (!(mark[0] == 'I' && mark[1] == 'H' && mark[2] == 'D' && mark[3] == 'R')) {
+    ret = -1;
+    png_data->state = PNG_MUX_NULL;
     goto done;
   }
 
-  if (mark[0] == 'i' && mark[1] == 'T' && mark[2] == 'X' && mark[3] == 't') {
-    if (chunk_size >= 22) {     /* "XML:com.adobe.xmp" plus some flags */
-      if (*bufsize < 22) {
-        *next_size = (*buf - *next_start) + 22;
-        ret = 1;
-        goto done;
-      }
+  /* always inject after first chunk (IHDR) */
 
-      if (0 == memcmp (XmpHeader, *buf, 18)) {
-        MetadataChunk chunk;
+  memset (&chunk, 0x00, sizeof (MetadataChunk));
+  /* 8(header) + 4(size) +4(id) + chunksize + 4(crc) */
+  chunk.offset_orig = chunk_size + 20;
+  chunk.type = MD_CHUNK_XMP;
 
-        memset (&chunk, 0x00, sizeof (MetadataChunk));
-        chunk.offset_orig = (*buf - step_buf) + offset - 8;     /* maker + size */
-        chunk.size = chunk_size + 12;   /* chunk size plus app marker plus crc */
+  metadata_chunk_array_append_sorted (png_data->inject_chunks, &chunk);
 
-        metadata_chunk_array_append_sorted (png_data->strip_chunks, &chunk);
-
-        /* if adapter has been provided, prepare to hold chunk */
-        if (png_data->xmp_adapter) {
-          *buf += 22;           /* jump "XML:com.adobe.xmp" plus some flags */
-          *bufsize -= 22;
-          png_data->read = chunk_size - 22;     /* four CRC bytes at the end will be jumped after */
-          png_data->state = PNG_MUX_XMP;
-          ret = 0;
-          goto done;
-        }
-      }
-    }
-  }
-
-  /* just set jump sise  */
-  png_data->read = chunk_size + 4;      /* four CRC bytes at the end */
-  png_data->state = PNG_MUX_JUMPING;
+  png_data->state = PNG_MUX_DONE;
   ret = 0;
 
 done:
 
   return ret;
 
-
-}
-
-static int
-metadatamux_png_jump (PngMuxData * png_data, guint8 ** buf,
-    guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
-{
-  png_data->state = PNG_MUX_READING;
-  return metadataparse_util_jump_chunk (&png_data->read, buf,
-      bufsize, next_start, next_size);
-}
-
-static int
-metadatamux_png_xmp (PngMuxData * png_data, guint8 ** buf,
-    guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
-{
-  int ret;
-
-  ret = metadataparse_util_hold_chunk (&png_data->read, buf,
-      bufsize, next_start, next_size, png_data->xmp_adapter);
-  if (ret == 0) {
-    /* jump four CRC bytes at the end of chunk */
-    png_data->read = 4;
-    png_data->state = PNG_MUX_JUMPING;
-    /* if there is a second XMP chunk in the file it will be jumped */
-    png_data->xmp_adapter = NULL;
-  }
-  return ret;
 
 }

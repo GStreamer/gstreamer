@@ -81,7 +81,6 @@ struct _GstMetadataParse
 
   gboolean need_send_tag;
 
-  GstTagList *taglist;
   MetaData parse_data;
   GstAdapter *adapter_parsing;
   GstAdapter *adapter_holding;

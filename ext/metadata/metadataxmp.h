@@ -59,7 +59,7 @@ extern gboolean metadataparse_xmp_init (void);
 extern void metadataparse_xmp_dispose (void);
 
 extern void
-metadatamux_xmp_create_chunk_from_tag_list (GstAdapter ** adapter,
+metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 *size,
     GstTagList * taglist);
 
 G_END_DECLS

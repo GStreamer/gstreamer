@@ -75,7 +75,7 @@ metadataparse_xmp_dispose (void)
 }
 
 void
-metadatamux_xmp_create_chunk_from_tag_list (GstAdapter ** adapter,
+metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
     GstTagList * taglist)
 {
   /* do nothing */
@@ -247,16 +247,29 @@ metadataparse_xmp_iter (XmpPtr xmp, XmpIteratorPtr iter)
 }
 
 void
-metadatamux_xmp_create_chunk_from_tag_list (GstAdapter ** adapter,
+metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
     GstTagList * taglist)
 {
-  if (adapter == NULL)
+  GstBuffer *xmp_chunk = NULL;
+  const GValue *val = NULL;
+
+  if (!(buf && size))
     goto done;
+  if (*buf) {
+    g_free (*buf);
+    *buf = NULL;
+  }
+  *size = 0;
 
-  if (*adapter)
-    g_object_unref (*adapter);
-
-  *adapter = gst_adapter_new ();
+  val = gst_tag_list_get_value_index (taglist, GST_TAG_XMP, 0);
+  if (val) {
+    xmp_chunk = gst_value_get_buffer (val);
+    if (xmp_chunk) {
+      *size = GST_BUFFER_SIZE (xmp_chunk);
+      *buf = g_new (guint8, *size);
+      memcpy (*buf, GST_BUFFER_DATA (xmp_chunk), *size);
+    }
+  }
 
 done:
 

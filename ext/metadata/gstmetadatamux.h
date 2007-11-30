@@ -79,7 +79,6 @@ struct _GstMetadataMux
   gboolean iptc;
   gboolean xmp;
 
-  GstTagList *taglist;
   MetaData mux_data;
   GstAdapter *adapter_parsing;
   GstAdapter *adapter_holding;
@@ -99,7 +98,7 @@ struct _GstMetadataMux
 
   gboolean need_more_data;
 
-  gboolean need_send_tag; /* demux still need send tags */
+  GstTagList *taglist;
   gboolean need_calculate_offset; /* mux need to calculate offsets of insert chunks */
 
 };

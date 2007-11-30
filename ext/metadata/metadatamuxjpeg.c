@@ -54,16 +54,49 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
 
 #define READ(buf, size) ( (size)--, *((buf)++) )
 
+static void
+metadatamux_wrap_chunk (MetadataChunk * chunk, guint8 * buf, guint32 buf_size,
+    guint8 a, guint8 b)
+{
+  guint8 *data = g_new (guint8, 4 + buf_size + chunk->size);
+
+  memcpy (data + 4 + buf_size, chunk->data, chunk->size);
+  g_free (chunk->data);
+  chunk->data = data;
+  chunk->size += 4 + buf_size;
+  data[0] = a;
+  data[1] = b;
+  data[2] = (chunk->size - 2) >> 8;
+  data[3] = (chunk->size - 2) & 0x00FF;
+  if (buf && buf_size) {
+    memcpy (data + 4, buf, buf_size);
+  }
+}
+
 void
 metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
 {
   gsize i;
 
   for (i = 0; i < jpeg_data->inject_chunks->len; ++i) {
-    if (jpeg_data->inject_chunks->chunk[i].type == MD_CHUNK_EXIF &&
-        jpeg_data->inject_chunks->chunk[i].size > 0) {
-      /* zero size chunks should be removed before but we check anyway */
-      break;
+    if (jpeg_data->inject_chunks->chunk[i].size > 0 &&
+        jpeg_data->inject_chunks->chunk[i].data) {
+      switch (jpeg_data->inject_chunks->chunk[i].type) {
+        case MD_CHUNK_EXIF:
+          metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i], NULL, 0,
+              0xFF, 0xE1);
+          break;
+        case MD_CHUNK_XMP:
+        {
+          static const char XmpHeader[] = "http://ns.adobe.com/xap/1.0/";
+
+          metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i],
+              XmpHeader, sizeof (XmpHeader), 0xFF, 0xE1);
+        }
+          break;
+        default:
+          break;
+      }
     }
   }
   if (i == jpeg_data->inject_chunks->len) {
@@ -181,21 +214,6 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
   mark[1] = READ (*buf, *bufsize);
 
   if (mark[0] == 0xFF) {
-    if (mark[1] == 0xD9) {      /* end of image */
-      ret = 0;
-      jpeg_data->state = JPEG_MUX_DONE;
-      goto done;
-    } else if (mark[1] == 0xDA) {       /* start of scan, lets not look behinf of this */
-      ret = 0;
-      jpeg_data->state = JPEG_MUX_DONE;
-      goto done;
-    }
-
-    if (*bufsize < 2) {
-      *next_size = (*buf - *next_start) + 2;
-      ret = 1;
-      goto done;
-    }
 
     chunk_size = READ (*buf, *bufsize) << 8;
     chunk_size += READ (*buf, *bufsize);
@@ -203,27 +221,32 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
     if (mark[1] == 0xE0) {      /* may be JFIF */
 
       if (chunk_size >= 16) {
-        if (*bufsize < 14) {
-          *next_size = (*buf - *next_start) + 14;
+        if (*bufsize < 5) {
+          *next_size = (*buf - *next_start) + 5;
           ret = 1;
           goto done;
         }
 
         if (0 == memcmp (JfifHeader, *buf, 5)) {
           jfif_found = TRUE;
-          /* FIXME: should we fail if not find JFIF */
-          /* Yes, I think so */
         }
+      } else {
+        /* FIXME: should we check if the first chunk is EXIF? */
       }
 
     }
 
-    new_chunk_offset = (*buf - step_buf) + offset - 4;  /* maker + size */
+    if (!jfif_found) {
+      ret = -1;
+      goto done;
+    }
+
+    new_chunk_offset = 2;
 
     /* EXIF will always be in the begining */
 
     memset (&chunk, 0x00, sizeof (MetadataChunk));
-    chunk.offset_orig = new_chunk_offset;
+    chunk.offset_orig = 2;
     chunk.type = MD_CHUNK_EXIF;
     metadata_chunk_array_append_sorted (jpeg_data->inject_chunks, &chunk);
 
@@ -232,7 +255,7 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
       /* this acation can be canceled with lazy update if no Exif is add */
 
       memset (&chunk, 0x00, sizeof (MetadataChunk));
-      chunk.offset_orig = new_chunk_offset;
+      chunk.offset_orig = 2;
       chunk.size = chunk_size + 2;      /* chunk size plus app marker */
       chunk.type = MD_CHUNK_UNKNOWN;
 
