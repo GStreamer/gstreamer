@@ -377,6 +377,23 @@ class FilteredLogModelBase (LogModelBase):
 
         raise NotImplementedError ("index conversion not supported")
 
+class FilteredLogModelIdentity (FilteredLogModelBase):
+
+    def __init__ (self, super_model):
+
+        FilteredLogModelBase.__init__ (self, super_model)
+
+        self.line_offsets = self.super_model.line_offsets
+        self.line_levels = self.super_model.line_levels
+
+    def line_index_from_super (self, super_line_index):
+
+        return super_line_index
+
+    def line_index_to_super (self, line_index):
+
+        return line_index
+
 class FilteredLogModel (FilteredLogModelBase):
 
     def __init__ (self, super_model):
@@ -1232,7 +1249,7 @@ class Window (object):
 
         self.log_file = None
         self.log_model = LazyLogModel ()
-        self.log_filter = FilteredLogModel (self.log_model)
+        self.log_filter = FilteredLogModelIdentity (self.log_model)
 
         glade_filename = os.path.join (Main.Paths.data_dir, "gst-debug-viewer.glade")
         self.widget_factory = Common.GUI.WidgetFactory (glade_filename)
@@ -1449,7 +1466,7 @@ class Window (object):
     def handle_show_hidden_lines_action_activate (self, action):
 
         self.logger.info ("restoring model filter to show all lines")
-        self.log_filter = FilteredLogModel (self.log_model)
+        self.log_filter = FilteredLogModelIdentity (self.log_model)
         self.change_model (self.log_filter)
         self.actions.show_hidden_lines.props.sensitive = False
 
@@ -1518,7 +1535,7 @@ class Window (object):
 
             try:
                 self.log_model = LazyLogModel ()
-                self.log_filter = FilteredLogModel (self.log_model)
+                self.log_filter = FilteredLogModelIdentity (self.log_model)
                 
                 self.dispatcher = Common.Data.GSourceDispatcher ()
                 self.log_file = Data.LogFile (filename, self.dispatcher)
@@ -1611,7 +1628,7 @@ class Window (object):
         self.progress_bar = None
 
         self.log_model.set_log (self.log_file)
-        self.log_filter = FilteredLogModel (self.log_model)
+        self.log_filter = FilteredLogModelIdentity (self.log_model)
 
         self.actions.reload_file.props.sensitive = True
         self.actions.groups["RowActions"].props.sensitive = True
