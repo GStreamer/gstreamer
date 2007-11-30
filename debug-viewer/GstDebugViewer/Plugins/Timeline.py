@@ -726,6 +726,8 @@ class TimelineFeature (FeatureBase):
         if visible_range is None:
             return
         start_path, end_path = visible_range
+        if not start_path or not end_path:
+            return
         ts1 = model.get_value (model.get_iter (start_path),
                                model.COL_TIME)
         ts2 = model.get_value (model.get_iter (end_path),
