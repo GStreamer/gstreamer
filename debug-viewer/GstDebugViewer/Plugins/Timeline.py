@@ -166,22 +166,25 @@ class LevelDistributionSentinel (object):
 
         if not partitions:
             return
-        
+
+        finished = False
         while tree_iter:
             y -= 1
             if y == 0:
                 y = YIELD_LIMIT
                 yield True
             level = model_get (tree_iter, id_level)
-            if i > partitions[partitions_i]:
+            while i > partitions[partitions_i]:
                 data.append (tuple (counts))
                 counts = [0] * 6
                 partitions_i += 1
                 if partitions_i == len (partitions):
-                    # FIXME?
+                    finished = True
                     break
-            i += 1
+            if finished:
+                break
             counts[level] += 1
+            i += 1
             tree_iter = model_next (tree_iter)
 
         # Now handle the last one:
