@@ -20,6 +20,7 @@ G_BEGIN_DECLS enum
 #define ENCODING_TYPE_RAW                   0
 #define ENCODING_TYPE_COPYRECT              1
 #define ENCODING_TYPE_RRE                   2
+#define ENCODING_TYPE_CORRE                 4
 
 typedef struct _RfbDecoder RfbDecoder;
 

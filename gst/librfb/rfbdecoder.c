@@ -54,6 +54,8 @@ static void rfb_decoder_copyrect_encoding (RfbDecoder * decoder, gint start_x,
     gint start_y, gint rect_w, gint rect_h);
 static void rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x,
     gint start_y, gint rect_w, gint rect_h);
+static void rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x,
+    gint start_y, gint rect_w, gint rect_h);
 
 RfbDecoder *
 rfb_decoder_new (void)
@@ -429,6 +431,7 @@ rfb_decoder_state_set_encodings (RfbDecoder * decoder)
 
   GST_DEBUG ("entered set encodings");
 
+  encoder_list = g_slist_append (encoder_list, (guint32 *) ENCODING_TYPE_CORRE);
   encoder_list = g_slist_append (encoder_list, (guint32 *) ENCODING_TYPE_RRE);
   if (decoder->use_copyrect) {
     encoder_list =
@@ -618,6 +621,9 @@ rfb_decoder_state_framebuffer_update_rectangle (RfbDecoder * decoder)
     case ENCODING_TYPE_RRE:
       rfb_decoder_rre_encoding (decoder, x, y, w, h);
       break;
+    case ENCODING_TYPE_CORRE:
+      rfb_decoder_corre_encoding (decoder, x, y, w, h);
+      break;
     default:
       g_critical ("unimplemented encoding\n");
       break;
@@ -738,6 +744,40 @@ rfb_decoder_rre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
     y = RFB_GET_UINT16 (buffer + decoder->bytespp + 2);
     w = RFB_GET_UINT16 (buffer + decoder->bytespp + 4);
     h = RFB_GET_UINT16 (buffer + decoder->bytespp + 6);
+
+    /* draw the rectangle in the foreground */
+    rfb_decoder_fill_rectangle (decoder, start_x + x, start_y + y, w, h, color);
+
+    g_free (buffer);
+  }
+}
+
+static void
+rfb_decoder_corre_encoding (RfbDecoder * decoder, gint start_x, gint start_y,
+    gint rect_w, gint rect_h)
+{
+  guint8 *buffer;
+  guint32 number_of_rectangles, color;
+  guint8 x, y, w, h;
+
+  buffer = rfb_decoder_read (decoder, 4 + decoder->bytespp);
+  number_of_rectangles = RFB_GET_UINT32 (buffer);
+  color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (buffer + 4)));
+  g_free (buffer);
+
+  GST_DEBUG ("number of rectangles :%d", number_of_rectangles);
+
+  /* color the background of this rectangle */
+  rfb_decoder_fill_rectangle (decoder, start_x, start_y, rect_w, rect_h, color);
+
+  while (number_of_rectangles--) {
+
+    buffer = rfb_decoder_read (decoder, decoder->bytespp + 8);
+    color = GUINT32_SWAP_LE_BE ((RFB_GET_UINT32 (buffer)));
+    x = RFB_GET_UINT8 (buffer + decoder->bytespp);
+    y = RFB_GET_UINT8 (buffer + decoder->bytespp + 1);
+    w = RFB_GET_UINT8 (buffer + decoder->bytespp + 2);
+    h = RFB_GET_UINT8 (buffer + decoder->bytespp + 3);
 
     /* draw the rectangle in the foreground */
     rfb_decoder_fill_rectangle (decoder, start_x + x, start_y + y, w, h, color);
