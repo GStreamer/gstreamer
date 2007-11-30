@@ -360,38 +360,38 @@ class LazyLogModel (LogModelBase):
 
 class FilteredLogModel (LogModelBase):
 
-    def __init__ (self, lazy_log_model):
+    def __init__ (self, super_model):
 
         LogModelBase.__init__ (self)
 
-        self.parent_model = lazy_log_model
-        self.access_offset = lazy_log_model.access_offset
-        self.ensure_cached = lazy_log_model.ensure_cached
-        self.line_cache = lazy_log_model.line_cache
+        self.super_model = super_model
+        self.access_offset = super_model.access_offset
+        self.ensure_cached = super_model.ensure_cached
+        self.line_cache = super_model.line_cache
         self.reset ()
         
     def reset (self):
 
         del self.line_offsets[:]
-        self.line_offsets += self.parent_model.line_offsets
+        self.line_offsets += self.super_model.line_offsets
         del self.line_levels[:]
-        self.line_levels += self.parent_model.line_levels
+        self.line_levels += self.super_model.line_levels
 
     def add_filter (self, filter):
 
         func = filter.filter_func
-        #enum = self.lazy_log_model.iter_rows_offset ()
+        #enum = self.super_model.iter_rows_offset ()
         enum = self.iter_rows_offset ()
         self.line_offsets[:] = (offset for row, offset in enum
                                 if func (row))
 
-    def parent_line_index (self, line_index):
+    def line_index_to_super (self, line_index):
 
         return line_index # FIXME
 
-    def from_parent_line_index (self, parent_line_index):
+    def line_index_from_super (self, super_line_index):
 
-        return parent_line_index
+        return super_line_index
 
 class Filter (object):
 
@@ -425,27 +425,27 @@ class SubRange (object):
 
 class RangeFilteredLogModel (FilteredLogModel):
 
-    def __init__ (self, lazy_log_model):
+    def __init__ (self, super_model):
 
-        FilteredLogModel.__init__ (self, lazy_log_model)
+        FilteredLogModel.__init__ (self, super_model)
 
         self.line_index_range = None
 
     def set_range (self, start_index, last_index):
 
         self.line_index_range = (start_index, last_index,)
-        self.line_offsets = SubRange (self.parent_model.line_offsets,
+        self.line_offsets = SubRange (self.super_model.line_offsets,
                                       start_index, last_index)
-        self.line_levels = SubRange (self.parent_model.line_levels,
+        self.line_levels = SubRange (self.super_model.line_levels,
                                      start_index, last_index)
 
-    def parent_line_index (self, line_index):
+    def line_index_to_super (self, line_index):
 
         start_index = self.line_index_range[0]
 
         return line_index + start_index
 
-    def from_parent_line_index (self, li):
+    def line_index_from_super (self, li):
 
         start, end = self.line_index_range
 
@@ -1012,9 +1012,9 @@ class ViewColumnManager (ColumnManager):
 
 class LineViewLogModel (FilteredLogModel):
 
-    def __init__ (self, lazy_log_model):
+    def __init__ (self, super_model):
 
-        FilteredLogModel.__init__ (self, lazy_log_model)
+        FilteredLogModel.__init__ (self, super_model)
 
         self.line_offsets = []
         self.line_levels = []
@@ -1026,29 +1026,29 @@ class LineViewLogModel (FilteredLogModel):
         del self.line_offsets[:]
         del self.line_levels[:]
 
-    def parent_line_index (self, line_index):
+    def line_index_to_super (self, line_index):
 
         return self.parent_indices[line_index]
 
-    def insert_line (self, position, parent_line_index):
+    def insert_line (self, position, super_line_index):
 
         if position == -1:
             position = len (self.line_offsets)
-        li = parent_line_index
-        self.line_offsets.insert (position, self.parent_model.line_offsets[li])
-        self.line_levels.insert (position, self.parent_model.line_levels[li])
-        self.parent_indices.insert (position, parent_line_index)
+        li = super_line_index
+        self.line_offsets.insert (position, self.super_model.line_offsets[li])
+        self.line_levels.insert (position, self.super_model.line_levels[li])
+        self.parent_indices.insert (position, super_line_index)
 
         path = (position,)
         tree_iter = self.get_iter (path)
         self.row_inserted (path, tree_iter)
 
-    def replace_line (self, line_index, parent_line_index):
+    def replace_line (self, line_index, super_line_index):
 
         li = line_index
-        self.line_offsets[li] = self.parent_model.line_offsets[parent_line_index]
-        self.line_levels[li] = self.parent_model.line_levels[parent_line_index]
-        self.parent_indices[li] = parent_line_index
+        self.line_offsets[li] = self.super_model.line_offsets[super_line_index]
+        self.line_levels[li] = self.super_model.line_levels[super_line_index]
+        self.parent_indices[li] = super_line_index
 
         path = (line_index,)
         tree_iter = self.get_iter (path)
@@ -1130,7 +1130,7 @@ class LineView (object):
 
         line_index = path[0]
         line_model = view.props.model
-        parent_index = line_model.parent_line_index (line_index)
+        parent_index = line_model.line_index_to_super (line_index)
         path = (parent_index,)
         self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
         sel = self.log_view.get_selection ()
@@ -1141,12 +1141,12 @@ class LineView (object):
         log_filter = view.props.model
         line_index = path[0]
 
-        parent_line_index = log_filter.parent_line_index (line_index)
+        super_line_index = log_filter.line_index_to_super (line_index)
         line_model = self.line_view.props.model
         if line_model is None:
             return
 
-        line_model.insert_line (0, parent_line_index)
+        line_model.insert_line (0, super_line_index)
 
     def handle_log_view_selection_changed (self, selection):
 
@@ -1156,7 +1156,7 @@ class LineView (object):
             return
 
         path = model.get_path (tree_iter)
-        line_index = model.parent_line_index (path[0])
+        line_index = model.line_index_to_super (path[0])
 
         line_model = self.line_view.props.model
         if line_model is None:
@@ -1328,11 +1328,11 @@ class Window (object):
         previous_model = self.log_view.props.model
         if previous_model:
             line_index = self.get_active_line_index ()
-            selected_index = previous_model.parent_line_index (line_index)
+            selected_index = previous_model.line_index_to_super (line_index)
 
         self.log_view.props.model = model
         try:
-            select_index = model.from_parent_line_index (selected_index)
+            select_index = model.line_index_from_super (selected_index)
         except IndexError:
             # Filtered out.
             pass
@@ -1391,12 +1391,12 @@ class Window (object):
 
     def handle_hide_after_line_action_activate (self, action):
 
-        first_index = self.log_filter.parent_line_index (0)
+        first_index = self.log_filter.line_index_to_super (0)
         try:
             filtered_line_index = self.get_active_line_index ()
         except ValueError:
             return
-        last_index = self.log_filter.parent_line_index (filtered_line_index)
+        last_index = self.log_filter.line_index_to_super (filtered_line_index)
 
         self.logger.info ("hiding lines after %i (abs %i), first line is abs %i",
                           filtered_line_index,
@@ -1414,8 +1414,8 @@ class Window (object):
             filtered_line_index = self.get_active_line_index ()
         except ValueError:
             return
-        first_index = self.log_filter.parent_line_index (filtered_line_index)
-        last_index = self.log_filter.parent_line_index (len (self.log_filter) - 1)
+        first_index = self.log_filter.line_index_to_super (filtered_line_index)
+        last_index = self.log_filter.line_index_to_super (len (self.log_filter) - 1)
 
         self.logger.info ("hiding lines before %i (abs %i), last line is abs %i",
                           filtered_line_index,
