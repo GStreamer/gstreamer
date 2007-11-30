@@ -172,6 +172,8 @@ static const GstQueryType *gst_metadata_mux_get_query_types (GstPad * pad);
 
 static gboolean gst_metadata_mux_src_query (GstPad * pad, GstQuery * query);
 
+static gboolean gst_metadata_mux_calculate_offsets (GstMetadataMux * filter);
+
 static void
 gst_metadata_mux_base_init (gpointer gclass)
 {
@@ -426,8 +428,10 @@ gst_metadata_mux_src_event (GstPad * pad, GstEvent * event)
       gint64 stop;
 
       /* we don't know where are the chunks to be stripped before mux */
-      if (filter->state != MT_STATE_MUXED)
-        goto done;
+      if (filter->need_calculate_offset) {
+        if (!gst_metadata_mux_calculate_offsets (filter))
+          goto done;
+      }
 
       gst_event_parse_seek (event, &rate, &format, &flags,
           &start_type, &start, &stop_type, &stop);
@@ -583,7 +587,7 @@ gst_metadata_mux_dispose_members (GstMetadataMux * filter)
 static void
 gst_metadata_mux_init_members (GstMetadataMux * filter)
 {
-  filter->need_send_tag = FALSE;
+  filter->need_calculate_offset = FALSE;
   filter->exif = TRUE;
   filter->iptc = FALSE;
   filter->xmp = FALSE;
@@ -749,6 +753,38 @@ gst_metadata_mux_get_type_name (int img_type)
 }
 
 static void
+gst_metadata_update_segment (GstMetadataMux * filter, GstAdapter * adapter,
+    MetadataChunkType type)
+{
+  int i;
+  MetadataChunk *inject = filter->mux_data.inject_chunks.chunk;
+  const gsize inject_len = filter->mux_data.inject_chunks.len;
+  guint32 size;
+
+  if (adapter == NULL)
+    goto done;
+
+  size = gst_adapter_available (adapter);
+
+  if (size == 0)
+    goto done;
+
+  /* calculate the new position off injected chunks */
+  for (i = 0; i < inject_len; ++i) {
+    if (inject[i].type == type) {
+      inject[i].size = size;
+      inject[i].data = (guint8 *) gst_adapter_peek (adapter, inject[i].size);
+      break;
+    }
+  }
+
+done:
+
+  return;
+
+}
+
+static void
 gst_metadata_create_chunks_from_tags (GstMetadataMux * filter)
 {
 
@@ -756,33 +792,29 @@ gst_metadata_create_chunks_from_tags (GstMetadataMux * filter)
   GstTagList *taglist;
   GstEvent *event;
 
-  if (META_DATA_OPTION (filter->mux_data) & META_OPT_EXIF)
+  if (META_DATA_OPTION (filter->mux_data) & META_OPT_EXIF) {
     metadatamux_exif_create_chunk_from_tag_list (&filter->mux_data.exif_adapter,
         filter->taglist);
-
-  if (META_DATA_OPTION (filter->mux_data) & META_OPT_IPTC)
-    metadatamux_iptc_create_chunk_from_tag_list (&filter->mux_data.iptc_adapter,
-        filter->taglist);
-
-  if (META_DATA_OPTION (filter->mux_data) & META_OPT_XMP)
-    metadatamux_xmp_create_chunk_from_tag_list (&filter->mux_data.exif_adapter,
-        filter->taglist);
-
-
-  if (!gst_tag_list_is_empty (filter->taglist)) {
-
-    taglist = gst_tag_list_copy (filter->taglist);
-    msg = gst_message_new_tag (GST_OBJECT (filter), taglist);
-    gst_element_post_message (GST_ELEMENT (filter), msg);
-
-    taglist = gst_tag_list_copy (filter->taglist);
-    event = gst_event_new_tag (taglist);
-    gst_pad_push_event (filter->srcpad, event);
+    gst_metadata_update_segment (filter, filter->mux_data.exif_adapter,
+        MD_CHUNK_EXIF);
   }
 
+  if (META_DATA_OPTION (filter->mux_data) & META_OPT_IPTC) {
+    metadatamux_iptc_create_chunk_from_tag_list (&filter->mux_data.iptc_adapter,
+        filter->taglist);
+    gst_metadata_update_segment (filter, filter->mux_data.iptc_adapter,
+        MD_CHUNK_IPTC);
+  }
 
+  if (META_DATA_OPTION (filter->mux_data) & META_OPT_XMP) {
+    metadatamux_xmp_create_chunk_from_tag_list (&filter->mux_data.xmp_adapter,
+        filter->taglist);
+    gst_metadata_update_segment (filter, filter->mux_data.xmp_adapter,
+        MD_CHUNK_XMP);
+  }
 
-  filter->need_send_tag = FALSE;
+  metadata_chunk_array_remove_zero_size (&filter->mux_data.inject_chunks);
+
 }
 
 static const GstQueryType *
@@ -815,8 +847,10 @@ gst_metadata_mux_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     case GST_QUERY_DURATION:
-      if (filter->state != MT_STATE_MUXED)
-        goto done;
+      if (filter->need_calculate_offset) {
+        if (!gst_metadata_mux_calculate_offsets (filter))
+          goto done;
+      }
 
       gst_query_parse_duration (query, &format, NULL);
 
@@ -850,6 +884,80 @@ done:
  *    1 -> need more data
  */
 
+static gboolean
+gst_metadata_mux_calculate_offsets (GstMetadataMux * filter)
+{
+  int i, j;
+  guint32 append_size;
+  guint32 bytes_striped, bytes_inject;
+  MetadataChunk *strip = filter->mux_data.strip_chunks.chunk;
+  MetadataChunk *inject = filter->mux_data.inject_chunks.chunk;
+  const gsize strip_len = filter->mux_data.strip_chunks.len;
+  const gsize inject_len = filter->mux_data.inject_chunks.len;
+
+  if (filter->state != MT_STATE_MUXED)
+    return FALSE;
+
+  gst_metadata_create_chunks_from_tags (filter);
+
+  bytes_striped = 0;
+  bytes_inject = 0;
+
+  /* calculate the new position off injected chunks */
+  j = 0;
+  for (i = 0; i < inject_len; ++i) {
+    for (; j < strip_len; ++j) {
+      if (strip[j].offset_orig >= inject[i].offset_orig) {
+        break;
+      }
+      bytes_striped += strip[j].size;
+    }
+    inject[i].offset = inject[i].offset_orig - bytes_striped + bytes_inject;
+    bytes_inject += inject[i].size;
+  }
+
+  /* calculate append (doesnt make much sense, but, anyway..) */
+  append_size = 0;
+  for (i = inject_len - 1; i >= 0; --i) {
+    if (inject[i].offset_orig == filter->duration_orig)
+      append_size += inject[i].size;
+    else
+      break;
+  }
+  if (append_size) {
+    guint8 *data;
+
+    filter->append_buffer = gst_buffer_new_and_alloc (append_size);
+    GST_BUFFER_FLAG_SET (filter->append_buffer, GST_BUFFER_FLAG_READONLY);
+    data = GST_BUFFER_DATA (filter->append_buffer);
+    for (i = inject_len - 1; i >= 0; --i) {
+      if (inject[i].offset_orig == filter->duration_orig) {
+        memcpy (data, inject[i].data, inject[i].size);
+        data += inject[i].size;
+      } else {
+        break;
+      }
+    }
+  }
+
+  metadata_lazy_update (&filter->mux_data);
+
+  if (filter->duration_orig) {
+    filter->duration = filter->duration_orig;
+    for (i = 0; i < inject_len; ++i) {
+      filter->duration += inject[i].size;
+    }
+    for (i = 0; i < strip_len; ++i) {
+      filter->duration -= strip[i].size;
+    }
+  }
+
+  filter->need_calculate_offset = FALSE;
+
+  return TRUE;
+
+}
+
 static int
 gst_metadata_mux_mux (GstMetadataMux * filter, const guint8 * buf, guint32 size)
 {
@@ -872,56 +980,9 @@ gst_metadata_mux_mux (GstMetadataMux * filter, const guint8 * buf, guint32 size)
   } else if (ret > 0) {
     filter->need_more_data = TRUE;
   } else {
-    int i, j;
-    guint32 append_size;
-    guint32 bytes_striped, bytes_inject;
-    MetadataChunk *strip = filter->mux_data.strip_chunks.chunk;
-    MetadataChunk *inject = filter->mux_data.inject_chunks.chunk;
-    const gsize strip_len = filter->mux_data.strip_chunks.len;
-    const gsize inject_len = filter->mux_data.inject_chunks.len;
-
-    bytes_striped = 0;
-    bytes_inject = 0;
-
-    /* calculate the new position off injected chunks */
-    for (i = 0; i < inject_len; ++i) {
-      for (j = 0; j < strip_len; ++i) {
-        if (strip[j].offset_orig >= inject[i].offset_orig) {
-          break;
-        }
-        inject[i].offset = inject[i].offset_orig - bytes_striped + bytes_inject;
-        bytes_striped += strip[j].size;
-      }
-      bytes_inject += inject[i].size;
-    }
-
-    /* calculate append (doesnt make much sense, but, anyway..) */
-    append_size = 0;
-    for (i = inject_len - 1; i >= 0; --i) {
-      if (inject[i].offset_orig == filter->duration_orig)
-        append_size += inject[i].size;
-      else
-        break;
-    }
-    if (append_size) {
-      guint8 *data;
-
-      filter->append_buffer = gst_buffer_new_and_alloc (append_size);
-      GST_BUFFER_FLAG_SET (filter->append_buffer, GST_BUFFER_FLAG_READONLY);
-      data = GST_BUFFER_DATA (filter->append_buffer);
-      for (i = inject_len - 1; i >= 0; --i) {
-        if (inject[i].offset_orig == filter->duration_orig) {
-          memcpy (data, inject[i].data, inject[i].size);
-          data += inject[i].size;
-        } else {
-          break;
-        }
-      }
-    }
-
     filter->state = MT_STATE_MUXED;
     filter->need_more_data = FALSE;
-    filter->need_send_tag = TRUE;
+    filter->need_calculate_offset = TRUE;
   }
 
   if (filter->img_type != META_DATA_IMG_TYPE (filter->mux_data)) {
@@ -1018,8 +1079,9 @@ gst_metadata_mux_chain (GstPad * pad, GstBuffer * buf)
       filter->adapter_holding = NULL;
     }
 
-    if (filter->need_send_tag) {
-      gst_metadata_create_chunks_from_tags (filter);
+    if (filter->need_calculate_offset) {
+      if (!gst_metadata_mux_calculate_offsets (filter))
+        goto done;
     }
 
     if (filter->offset_orig + GST_BUFFER_SIZE (buf) == filter->duration_orig)
@@ -1094,6 +1156,8 @@ gst_metadata_mux_pull_range_mux (GstMetadataMux * filter)
     ret = TRUE;
     goto done;
   }
+  filter->duration_orig = duration;
+
   if (format != GST_FORMAT_BYTES) {
     /* this should never happen, but try chain anyway */
     ret = TRUE;
@@ -1133,24 +1197,6 @@ gst_metadata_mux_pull_range_mux (GstMetadataMux * filter)
 
   } while (res > 0);
 
-  if (res == 0) {
-    int i;
-    MetadataChunk *strip = filter->mux_data.strip_chunks.chunk;
-    MetadataChunk *inject = filter->mux_data.inject_chunks.chunk;
-    const gsize strip_len = filter->mux_data.strip_chunks.len;
-    const gsize inject_len = filter->mux_data.inject_chunks.len;
-
-    filter->duration = duration;
-    filter->duration_orig = duration;
-
-    for (i = 0; i < inject_len; ++i) {
-      filter->duration += inject[i].size;
-    }
-    for (i = 0; i < strip_len; ++i) {
-      filter->duration -= strip[i].size;
-    }
-
-  }
 
 done:
 
@@ -1614,9 +1660,11 @@ gst_metadata_mux_get_range (GstPad * pad,
 
   filter = GST_METADATA_MUX (GST_PAD_PARENT (pad));
 
-  if (filter->state != MT_STATE_MUXED) {
-    ret = GST_FLOW_ERROR;
-    goto done;
+  if (filter->need_calculate_offset) {
+    if (!gst_metadata_mux_calculate_offsets (filter)) {
+      ret = GST_FLOW_ERROR;
+      goto done;
+    }
   }
 
   if (offset + size > filter->duration) {
@@ -1624,10 +1672,6 @@ gst_metadata_mux_get_range (GstPad * pad,
   }
 
   size_orig = size;
-
-  if (filter->need_send_tag) {
-    gst_metadata_create_chunks_from_tags (filter);
-  }
 
   gst_metadata_mux_translate_pos_to_orig (filter, offset, &offset_orig,
       &prepend);
@@ -1703,7 +1747,7 @@ gst_metadata_mux_change_state (GstElement * element, GstStateChange transition)
       gst_metadata_mux_init_members (filter);
       filter->adapter_parsing = gst_adapter_new ();
       filter->taglist = gst_tag_list_new ();
-      metadata_init (&filter->mux_data);
+      metadata_init (&filter->mux_data, FALSE);
       break;
     default:
       break;
@@ -1727,7 +1771,7 @@ gst_metadata_mux_change_state (GstElement * element, GstStateChange transition)
         /* cleanup parser */
         /* FIXME: could be improved a bit to avoid mem allocation */
         metadata_dispose (&filter->mux_data);
-        metadata_init (&filter->mux_data);
+        metadata_init (&filter->mux_data, FALSE);
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:

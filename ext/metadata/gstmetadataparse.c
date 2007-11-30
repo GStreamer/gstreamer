@@ -870,6 +870,72 @@ done:
 
 }
 
+static void
+gst_metadata_parse_calculate_offsets (GstMetadataParse * filter)
+{
+  int i, j;
+  guint32 append_size;
+  guint32 bytes_striped, bytes_inject;
+  MetadataChunk *strip = filter->parse_data.strip_chunks.chunk;
+  MetadataChunk *inject = filter->parse_data.inject_chunks.chunk;
+  const gsize strip_len = filter->parse_data.strip_chunks.len;
+  const gsize inject_len = filter->parse_data.inject_chunks.len;
+
+  bytes_striped = 0;
+  bytes_inject = 0;
+
+  /* calculate the new position off injected chunks */
+  j = 0;
+  for (i = 0; i < inject_len; ++i) {
+    for (; j < strip_len; ++j) {
+      if (strip[j].offset_orig >= inject[i].offset_orig) {
+        break;
+      }
+      bytes_striped += strip[j].size;
+    }
+    inject[i].offset = inject[i].offset_orig - bytes_striped + bytes_inject;
+    bytes_inject += inject[i].size;
+  }
+
+  /* calculate append (doesnt make much sense, but, anyway..) */
+  append_size = 0;
+  for (i = inject_len - 1; i >= 0; --i) {
+    if (inject[i].offset_orig == filter->duration_orig)
+      append_size += inject[i].size;
+    else
+      break;
+  }
+  if (append_size) {
+    guint8 *data;
+
+    filter->append_buffer = gst_buffer_new_and_alloc (append_size);
+    GST_BUFFER_FLAG_SET (filter->append_buffer, GST_BUFFER_FLAG_READONLY);
+    data = GST_BUFFER_DATA (filter->append_buffer);
+    for (i = inject_len - 1; i >= 0; --i) {
+      if (inject[i].offset_orig == filter->duration_orig) {
+        memcpy (data, inject[i].data, inject[i].size);
+        data += inject[i].size;
+      } else {
+        break;
+      }
+    }
+  }
+
+  /* do nothing but just call for consistence */
+  metadata_lazy_update (&filter->parse_data);
+
+  if (filter->duration_orig) {
+    filter->duration = filter->duration_orig;
+    for (i = 0; i < inject_len; ++i) {
+      filter->duration += inject[i].size;
+    }
+    for (i = 0; i < strip_len; ++i) {
+      filter->duration -= strip[i].size;
+    }
+  }
+
+}
+
 /*
  * return:
  *   -1 -> error
@@ -900,52 +966,7 @@ gst_metadata_parse_parse (GstMetadataParse * filter, const guint8 * buf,
   } else if (ret > 0) {
     filter->need_more_data = TRUE;
   } else {
-    int i, j;
-    guint32 append_size;
-    guint32 bytes_striped, bytes_inject;
-    MetadataChunk *strip = filter->parse_data.strip_chunks.chunk;
-    MetadataChunk *inject = filter->parse_data.inject_chunks.chunk;
-    const gsize strip_len = filter->parse_data.strip_chunks.len;
-    const gsize inject_len = filter->parse_data.inject_chunks.len;
-
-    bytes_striped = 0;
-    bytes_inject = 0;
-
-    /* calculate the new position off injected chunks */
-    for (i = 0; i < inject_len; ++i) {
-      for (j = 0; j < strip_len; ++i) {
-        if (strip[j].offset_orig >= inject[i].offset_orig) {
-          break;
-        }
-        inject[i].offset = inject[i].offset_orig - bytes_striped + bytes_inject;
-        bytes_striped += strip[j].size;
-      }
-      bytes_inject += inject[i].size;
-    }
-
-    /* calculate append (doesnt make much sense, but, anyway..) */
-    append_size = 0;
-    for (i = inject_len - 1; i >= 0; --i) {
-      if (inject[i].offset_orig == filter->duration_orig)
-        append_size += inject[i].size;
-      else
-        break;
-    }
-    if (append_size) {
-      guint8 *data;
-
-      filter->append_buffer = gst_buffer_new_and_alloc (append_size);
-      GST_BUFFER_FLAG_SET (filter->append_buffer, GST_BUFFER_FLAG_READONLY);
-      data = GST_BUFFER_DATA (filter->append_buffer);
-      for (i = inject_len - 1; i >= 0; --i) {
-        if (inject[i].offset_orig == filter->duration_orig) {
-          memcpy (data, inject[i].data, inject[i].size);
-          data += inject[i].size;
-        } else {
-          break;
-        }
-      }
-    }
+    gst_metadata_parse_calculate_offsets (filter);
 
     filter->state = MT_STATE_PARSED;
     filter->need_more_data = FALSE;
@@ -1122,6 +1143,7 @@ gst_metadata_parse_pull_range_parse (GstMetadataParse * filter)
     ret = TRUE;
     goto done;
   }
+  filter->duration_orig = duration;
   if (format != GST_FORMAT_BYTES) {
     /* this should never happen, but try chain anyway */
     ret = TRUE;
@@ -1160,25 +1182,6 @@ gst_metadata_parse_pull_range_parse (GstMetadataParse * filter)
     gst_buffer_unref (buf);
 
   } while (res > 0);
-
-  if (res == 0) {
-    int i;
-    MetadataChunk *strip = filter->parse_data.strip_chunks.chunk;
-    MetadataChunk *inject = filter->parse_data.inject_chunks.chunk;
-    const gsize strip_len = filter->parse_data.strip_chunks.len;
-    const gsize inject_len = filter->parse_data.inject_chunks.len;
-
-    filter->duration = duration;
-    filter->duration_orig = duration;
-
-    for (i = 0; i < inject_len; ++i) {
-      filter->duration += inject[i].size;
-    }
-    for (i = 0; i < strip_len; ++i) {
-      filter->duration -= strip[i].size;
-    }
-
-  }
 
 done:
 
@@ -1732,7 +1735,7 @@ gst_metadata_parse_change_state (GstElement * element,
       gst_metadata_parse_init_members (filter);
       filter->adapter_parsing = gst_adapter_new ();
       filter->taglist = gst_tag_list_new ();
-      metadata_init (&filter->parse_data);
+      metadata_init (&filter->parse_data, TRUE);
       break;
     default:
       break;
@@ -1756,7 +1759,7 @@ gst_metadata_parse_change_state (GstElement * element,
         /* cleanup parser */
         /* FIXME: could be improved a bit to avoid mem allocation */
         metadata_dispose (&filter->parse_data);
-        metadata_init (&filter->parse_data);
+        metadata_init (&filter->parse_data, TRUE);
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:

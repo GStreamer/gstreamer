@@ -50,21 +50,21 @@
 
 G_BEGIN_DECLS
 
-typedef enum _tag_JpegState
+typedef enum _tag_JpegParseState
 {
-  JPEG_NULL,
-  JPEG_READING,
-  JPEG_JUMPING,
-  JPEG_EXIF,
-  JPEG_IPTC,
-  JPEG_XMP,
-  JPEG_DONE
-} JpegState;
+  JPEG_PARSE_NULL,
+  JPEG_PARSE_READING,
+  JPEG_PARSE_JUMPING,
+  JPEG_PARSE_EXIF,
+  JPEG_PARSE_IPTC,
+  JPEG_PARSE_XMP,
+  JPEG_PARSE_DONE
+} JpegParseState;
 
 
-typedef struct _tag_JpegData
+typedef struct _tag_JpegParseData
 {
-  JpegState state;
+  JpegParseState state;
 
   GstAdapter ** exif_adapter;
   GstAdapter ** iptc_adapter;
@@ -75,19 +75,20 @@ typedef struct _tag_JpegData
 
   guint32 read;
   gboolean jfif_found;
-} JpegData;
+} JpegParseData;
 
 
 extern void
-metadataparse_jpeg_init (JpegData * jpeg_data, GstAdapter ** exif_adpt,
+metadataparse_jpeg_init (JpegParseData * jpeg_data, GstAdapter ** exif_adpt,
     GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
     MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks);
 
-extern void metadataparse_jpeg_dispose (JpegData * jpeg_data);
+extern void metadataparse_jpeg_dispose (JpegParseData * jpeg_data);
 
+extern void metadataparse_jpeg_lazy_update (JpegParseData * jpeg_data);
 
 int
-metadataparse_jpeg_parse (JpegData * jpeg_data, guint8 * buf,
+metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
     guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
 
 G_END_DECLS

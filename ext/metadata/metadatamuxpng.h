@@ -41,90 +41,50 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __METADATA_H__
-#define __METADATA_H__
+#ifndef __METADATAMUX_PNG_H__
+#define __METADATAMUX_PNG_H__
 
 #include <gst/base/gstadapter.h>
-#include "metadatatypes.h"
 
-#include "metadataparsejpeg.h"
-#include "metadatamuxjpeg.h"
-#include "metadataparsepng.h"
-#include "metadatamuxpng.h"
+#include "metadatatypes.h"
 
 G_BEGIN_DECLS
 
-typedef enum _tag_MetaOption
+typedef enum _tag_PngMuxState
 {
-  META_OPT_EXIF = (1 << 0),
-  META_OPT_IPTC = (1 << 1),
-  META_OPT_XMP = (1 << 2),
-  META_OPT_ALL = (1 << 3) - 1
-} MetaOption;
+  PNG_MUX_NULL,
+  PNG_MUX_READING,
+  PNG_MUX_JUMPING,
+  PNG_MUX_XMP,
+  PNG_MUX_DONE
+} PngMuxState;
 
-typedef enum _tag_MetaState
+
+typedef struct _tag_PngMuxData
 {
-  STATE_NULL,
-  STATE_READING,
-  STATE_DONE
-} MetaState;
+  PngMuxState state;
 
-typedef enum _tag_ImageType
-{
-  IMG_NONE,
-  IMG_JPEG,
-  IMG_PNG
-} ImageType;
+  GstAdapter ** xmp_adapter;
 
-typedef struct _tag_MetaData
-{
-  MetaState state;
-  ImageType img_type;
-  MetaOption option;
-  guint32 offset_orig; /* offset since begining of stream */
-  union
-  {
-    JpegParseData jpeg_parse;
-    JpegMuxData jpeg_mux;
-    PngParseData png_parse;
-    PngMuxData png_mux;
-  } format_data;
-  GstAdapter * exif_adapter;
-  GstAdapter * iptc_adapter;
-  GstAdapter * xmp_adapter;
+  MetadataChunkArray * strip_chunks;
+  MetadataChunkArray * inject_chunks;
 
-  MetadataChunkArray strip_chunks;
-  MetadataChunkArray inject_chunks;
-
-  gboolean parse; /* true - parsing, false - muxing */
-
-} MetaData;
-
-#define META_DATA_IMG_TYPE(p) (p).img_type
-#define META_DATA_OPTION(p) (p).option
-#define set_meta_option(p, m) do { (p).option = (p).option | (m); } while(FALSE)
-#define unset_meta_option(p, m) do { (p).option = (p).option & ~(m); } while(FALSE)
-
-extern void metadata_init (MetaData * meta_data, gboolean parse);
-
-/*
- * offset: number of bytes that MUST be jumped after current "buf" pointer
- * next_size: number of minimum amount of bytes required on next step.
- *            if less than this is provided, the return will be 1 for sure.
- *            and the offset will be 0 (zero)
- * return:
- *   -1 -> error
- *    0 -> done
- *    1 -> need more data
- */
-extern int
-metadata_parse (MetaData * meta_data, const guint8 * buf,
-    guint32 bufsize, guint32 * next_offset, guint32 * next_size);
+  guint32 read;
+} PngMuxData;
 
 
-extern void metadata_lazy_update (MetaData * meta_data);
+extern void
+metadatamux_png_init (PngMuxData * png_data, GstAdapter ** exif_adpt,
+    GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
+    MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks);
 
-extern void metadata_dispose (MetaData * meta_data);
+extern void metadatamux_png_dispose (PngMuxData * png_data);
+
+extern void metadatamux_png_lazy_update (PngMuxData * jpeg_data);
+
+int
+metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
+    guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
 
 G_END_DECLS
-#endif /* __METADATA_H__ */
+#endif /* __METADATAMUX_PNG_H__ */

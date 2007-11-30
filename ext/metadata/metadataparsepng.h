@@ -50,19 +50,19 @@
 
 G_BEGIN_DECLS
 
-typedef enum _tag_PngState
+typedef enum _tag_PngParseState
 {
-  PNG_NULL,
-  PNG_READING,
-  PNG_JUMPING,
-  PNG_XMP,
-  PNG_DONE
-} PngState;
+  PNG_PARSE_NULL,
+  PNG_PARSE_READING,
+  PNG_PARSE_JUMPING,
+  PNG_PARSE_XMP,
+  PNG_PARSE_DONE
+} PngParseState;
 
 
-typedef struct _tag_PngData
+typedef struct _tag_PngParseData
 {
-  PngState state;
+  PngParseState state;
 
   GstAdapter ** xmp_adapter;
 
@@ -70,19 +70,20 @@ typedef struct _tag_PngData
   MetadataChunkArray * inject_chunks;
 
   guint32 read;
-} PngData;
+} PngParseData;
 
 
 extern void
-metadataparse_png_init (PngData * png_data, GstAdapter ** exif_adpt,
+metadataparse_png_init (PngParseData * png_data, GstAdapter ** exif_adpt,
     GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
     MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks);
 
-extern void metadataparse_png_dispose (PngData * png_data);
+extern void metadataparse_png_dispose (PngParseData * png_data);
 
+extern void metadataparse_png_lazy_update (PngParseData * jpeg_data);
 
 int
-metadataparse_png_parse (PngData * png_data, guint8 * buf,
+metadataparse_png_parse (PngParseData * png_data, guint8 * buf,
     guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
 
 G_END_DECLS

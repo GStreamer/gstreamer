@@ -48,12 +48,21 @@
 
 G_BEGIN_DECLS
 
+typedef enum _tag_MetadataChunkType {
+  MD_CHUNK_UNKNOWN,
+  MD_CHUNK_EXIF,
+  MD_CHUNK_IPTC,
+  MD_CHUNK_XMP
+} MetadataChunkType;
+
 typedef struct _tag_MetadataChunk
 {
-  gint64 offset_orig;         /* from the beginning of original file */
-  gint64 offset;         /*here just for convinience (filled by element) offset in new stream */
+  gint64 offset_orig;    /* from the beginning of original file */
+  /*here just for convinience (filled by element) offset in new stream */
+  gint64 offset;         
   guint32 size;          /* chunk or buffer size*/
   guint8 * data;
+  MetadataChunkType type; /* used by mux to see what tags to insert here */
 } MetadataChunk;
 
 typedef struct _tag_MetadataChunkArray
@@ -80,6 +89,9 @@ metadata_chunk_array_append(MetadataChunkArray * array, MetadataChunk * chunk);
  */
 extern void
 metadata_chunk_array_append_sorted(MetadataChunkArray * array, MetadataChunk * chunk);
+
+extern void
+metadata_chunk_array_remove_zero_size (MetadataChunkArray * array);
 
 G_END_DECLS
 #endif /* __METADATATYPES_H__ */

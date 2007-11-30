@@ -58,7 +58,7 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
  */
 
 void
-metadata_init (MetaData * meta_data)
+metadata_init (MetaData * meta_data, gboolean parse)
 {
   meta_data->state = STATE_NULL;
   meta_data->img_type = IMG_NONE;
@@ -67,8 +67,16 @@ metadata_init (MetaData * meta_data)
   meta_data->exif_adapter = NULL;
   meta_data->iptc_adapter = NULL;
   meta_data->xmp_adapter = NULL;
-  metadata_chunk_array_init (&meta_data->strip_chunks, 4);
-  metadata_chunk_array_init (&meta_data->inject_chunks, 1);
+  meta_data->parse = parse;
+
+  if (parse) {
+    metadata_chunk_array_init (&meta_data->strip_chunks, 4);
+    metadata_chunk_array_init (&meta_data->inject_chunks, 1);
+  } else {
+    metadata_chunk_array_init (&meta_data->strip_chunks, 1);
+    metadata_chunk_array_init (&meta_data->inject_chunks, 3);
+  }
+
 }
 
 /*
@@ -99,16 +107,30 @@ metadata_parse (MetaData * meta_data, const guint8 * buf,
 
   switch (meta_data->img_type) {
     case IMG_JPEG:
-      ret =
-          metadataparse_jpeg_parse (&meta_data->format_data.jpeg,
-          (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
-          next_size);
+      if (G_LIKELY (meta_data->parse))
+        ret =
+            metadataparse_jpeg_parse (&meta_data->format_data.jpeg_parse,
+            (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
+            next_size);
+      else
+        ret =
+            metadatamux_jpeg_parse (&meta_data->format_data.jpeg_mux,
+            (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
+            next_size);
       break;
     case IMG_PNG:
-      ret =
-          metadataparse_png_parse (&meta_data->format_data.png,
-          (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
-          next_size);
+      if (G_LIKELY (meta_data->parse))
+        ret =
+            metadataparse_png_parse (&meta_data->format_data.png_parse,
+            (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
+            next_size);
+      /*
+         else
+         ret =
+         metadatamux_png_parse (&meta_data->format_data.png_mux,
+         (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
+         next_size);
+       */
       break;
     default:
       /* unexpected */
@@ -135,10 +157,18 @@ metadata_dispose (MetaData * meta_data)
 
   switch (meta_data->img_type) {
     case IMG_JPEG:
-      metadataparse_jpeg_dispose (&meta_data->format_data.jpeg);
+      if (G_LIKELY (meta_data->parse))
+        metadataparse_jpeg_dispose (&meta_data->format_data.jpeg_parse);
+      else
+        metadatamux_jpeg_dispose (&meta_data->format_data.jpeg_mux);
       break;
     case IMG_PNG:
-      metadataparse_png_dispose (&meta_data->format_data.png);
+      if (G_LIKELY (meta_data->parse))
+        metadataparse_png_dispose (&meta_data->format_data.png_parse);
+      /*
+         else
+         metadatamux_png_dispose (&meta_data->format_data.png_mux);
+       */
       break;
   }
 
@@ -195,8 +225,12 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
     xmp = &meta_data->xmp_adapter;
 
   if (buf[0] == 0xFF && buf[1] == 0xD8 && buf[2] == 0xFF) {
-    metadataparse_jpeg_init (&meta_data->format_data.jpeg, exif, iptc, xmp,
-        &meta_data->strip_chunks, &meta_data->inject_chunks);
+    if (G_LIKELY (meta_data->parse))
+      metadataparse_jpeg_init (&meta_data->format_data.jpeg_parse, exif, iptc,
+          xmp, &meta_data->strip_chunks, &meta_data->inject_chunks);
+    else
+      metadatamux_jpeg_init (&meta_data->format_data.jpeg_mux, exif, iptc, xmp,
+          &meta_data->strip_chunks, &meta_data->inject_chunks);
     ret = 0;
     meta_data->img_type = IMG_JPEG;
     goto done;
@@ -210,8 +244,14 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
 
   if (buf[0] == 0x89 && buf[1] == 0x50 && buf[2] == 0x4E && buf[3] == 0x47 &&
       buf[4] == 0x0D && buf[5] == 0x0A && buf[6] == 0x1A && buf[7] == 0x0A) {
-    metadataparse_png_init (&meta_data->format_data.png, exif, iptc, xmp,
-        &meta_data->strip_chunks, &meta_data->inject_chunks);
+    if (G_LIKELY (meta_data->parse))
+      metadataparse_png_init (&meta_data->format_data.png_parse, exif, iptc,
+          xmp, &meta_data->strip_chunks, &meta_data->inject_chunks);
+    /*
+       else
+       metadatamux_png_init (&meta_data->format_data.png_mux, exif, iptc, xmp,
+       &meta_data->strip_chunks, &meta_data->inject_chunks);
+     */
     ret = 0;
     meta_data->img_type = IMG_PNG;
     goto done;
@@ -220,4 +260,29 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
 done:
 
   return ret;
+}
+
+void
+metadata_lazy_update (MetaData * meta_data)
+{
+  switch (meta_data->img_type) {
+    case IMG_JPEG:
+      if (G_LIKELY (meta_data->parse))
+        metadataparse_jpeg_lazy_update (&meta_data->format_data.jpeg_parse);
+      else
+        metadatamux_jpeg_lazy_update (&meta_data->format_data.jpeg_mux);
+      break;
+    case IMG_PNG:
+      if (G_LIKELY (meta_data->parse))
+        metadataparse_png_lazy_update (&meta_data->format_data.png_parse);
+      /*
+         else
+         metadatamux_png_lazy_update (&meta_data->format_data.png_mux);
+       */
+      break;
+    default:
+      /* unexpected */
+      break;
+  }
+
 }

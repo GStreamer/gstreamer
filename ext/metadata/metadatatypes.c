@@ -80,7 +80,8 @@ metadata_chunk_array_append (MetadataChunkArray * array, MetadataChunk * chunk)
 {
   if (array->len == array->allocated_len) {
     array->allocated_len += 2;
-    array->chunk = g_realloc (array->chunk, array->allocated_len);
+    array->chunk =
+        g_realloc (array->chunk, sizeof (MetadataChunk) * array->allocated_len);
   }
   memcpy (&array->chunk[array->len], chunk, sizeof (MetadataChunk));
   ++array->len;
@@ -94,7 +95,8 @@ metadata_chunk_array_append_sorted (MetadataChunkArray * array,
 
   if (array->len == array->allocated_len) {
     array->allocated_len += 2;
-    array->chunk = g_realloc (array->chunk, array->allocated_len);
+    array->chunk =
+        g_realloc (array->chunk, sizeof (MetadataChunk) * array->allocated_len);
   }
   pos = array->len;
   for (i = array->len - 1; i >= 0; --i) {
@@ -112,4 +114,22 @@ metadata_chunk_array_append_sorted (MetadataChunkArray * array,
 
   return;
 
+}
+
+void
+metadata_chunk_array_remove_zero_size (MetadataChunkArray * array)
+{
+
+  int i;
+
+  for (i = 0; i < array->len;) {
+    if (array->chunk[i].size == 0) {
+      if (i < --array->len) {
+        memmove (&array->chunk[i], &array->chunk[i + 1],
+            sizeof (MetadataChunk) * (array->len - i));
+      }
+    } else {
+      ++i;
+    }
+  }
 }

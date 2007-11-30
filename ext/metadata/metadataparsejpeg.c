@@ -48,34 +48,40 @@
 #include <libiptcdata/iptc-jpeg.h>
 
 static int
-metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
+metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size);
 
 static int
-metadataparse_jpeg_exif (JpegData * jpeg_data, guint8 ** buf,
+metadataparse_jpeg_exif (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
 static int
-metadataparse_jpeg_iptc (JpegData * jpeg_data, guint8 ** buf,
+metadataparse_jpeg_iptc (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
 static int
-metadataparse_jpeg_xmp (JpegData * jpeg_data, guint8 ** buf,
+metadataparse_jpeg_xmp (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
 static int
-metadataparse_jpeg_jump (JpegData * jpeg_data, guint8 ** buf,
+metadataparse_jpeg_jump (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
 #define READ(buf, size) ( (size)--, *((buf)++) )
 
 void
-metadataparse_jpeg_init (JpegData * jpeg_data, GstAdapter ** exif_adpt,
+metadataparse_jpeg_lazy_update (JpegParseData * jpeg_data)
+{
+  /* nothing to do */
+}
+
+void
+metadataparse_jpeg_init (JpegParseData * jpeg_data, GstAdapter ** exif_adpt,
     GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
     MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks)
 {
-  jpeg_data->state = JPEG_NULL;
+  jpeg_data->state = JPEG_PARSE_NULL;
   jpeg_data->exif_adapter = exif_adpt;
   jpeg_data->iptc_adapter = iptc_adpt;
   jpeg_data->xmp_adapter = xmp_adpt;
@@ -89,7 +95,7 @@ metadataparse_jpeg_init (JpegData * jpeg_data, GstAdapter ** exif_adpt,
 }
 
 void
-metadataparse_jpeg_dispose (JpegData * jpeg_data)
+metadataparse_jpeg_dispose (JpegParseData * jpeg_data)
 {
   metadataparse_xmp_dispose ();
 
@@ -99,7 +105,7 @@ metadataparse_jpeg_dispose (JpegData * jpeg_data)
 }
 
 int
-metadataparse_jpeg_parse (JpegData * jpeg_data, guint8 * buf,
+metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
     guint32 * bufsize, const guint32 offset, guint8 ** next_start,
     guint32 * next_size)
 {
@@ -110,7 +116,7 @@ metadataparse_jpeg_parse (JpegData * jpeg_data, guint8 * buf,
 
   *next_start = buf;
 
-  if (jpeg_data->state == JPEG_NULL) {
+  if (jpeg_data->state == JPEG_PARSE_NULL) {
 
     if (*bufsize < 2) {
       *next_size = (buf - *next_start) + 2;
@@ -126,38 +132,38 @@ metadataparse_jpeg_parse (JpegData * jpeg_data, guint8 * buf,
       goto done;
     }
 
-    jpeg_data->state = JPEG_READING;
+    jpeg_data->state = JPEG_PARSE_READING;
 
   }
 
   while (ret == 0) {
     switch (jpeg_data->state) {
-      case JPEG_READING:
+      case JPEG_PARSE_READING:
         ret =
             metadataparse_jpeg_reading (jpeg_data, &buf, bufsize,
             offset, step_buf, next_start, next_size);
         break;
-      case JPEG_JUMPING:
+      case JPEG_PARSE_JUMPING:
         ret =
             metadataparse_jpeg_jump (jpeg_data, &buf, bufsize, next_start,
             next_size);
         break;
-      case JPEG_EXIF:
+      case JPEG_PARSE_EXIF:
         ret =
             metadataparse_jpeg_exif (jpeg_data, &buf, bufsize, next_start,
             next_size);
         break;
-      case JPEG_IPTC:
+      case JPEG_PARSE_IPTC:
         ret =
             metadataparse_jpeg_iptc (jpeg_data, &buf, bufsize, next_start,
             next_size);
         break;
-      case JPEG_XMP:
+      case JPEG_PARSE_XMP:
         ret =
             metadataparse_jpeg_xmp (jpeg_data, &buf, bufsize, next_start,
             next_size);
         break;
-      case JPEG_DONE:
+      case JPEG_PARSE_DONE:
         goto done;
         break;
       default:
@@ -175,7 +181,7 @@ done:
 
 /* look for markers */
 static int
-metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
+metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size)
 {
@@ -204,11 +210,11 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
   if (mark[0] == 0xFF) {
     if (mark[1] == 0xD9) {      /* end of image */
       ret = 0;
-      jpeg_data->state = JPEG_DONE;
+      jpeg_data->state = JPEG_PARSE_DONE;
       goto done;
     } else if (mark[1] == 0xDA) {       /* start of scan, lets not look behinf of this */
       ret = 0;
-      jpeg_data->state = JPEG_DONE;
+      jpeg_data->state = JPEG_PARSE_DONE;
       goto done;
     }
 
@@ -252,6 +258,7 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
           memset (&chunk, 0x00, sizeof (MetadataChunk));
           chunk.offset_orig = (*buf - step_buf) + offset - 4;   /* maker + size */
           chunk.size = chunk_size + 2;  /* chunk size plus app marker */
+          chunk.type = MD_CHUNK_EXIF;
 
           metadata_chunk_array_append_sorted (jpeg_data->strip_chunks, &chunk);
 
@@ -269,6 +276,7 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
             memset (&chunk, 0x00, sizeof (MetadataChunk));
             chunk.offset_orig = 2;
             chunk.size = 18;
+            chunk.type = MD_CHUNK_UNKNOWN;
             chunk.data = g_new (guint8, 18);
             memcpy (chunk.data, segment, 18);
 
@@ -280,7 +288,7 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
           if (jpeg_data->exif_adapter) {
 
             jpeg_data->read = chunk_size - 2;
-            jpeg_data->state = JPEG_EXIF;
+            jpeg_data->state = JPEG_PARSE_EXIF;
             ret = 0;
             goto done;
           }
@@ -298,6 +306,7 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
             memset (&chunk, 0x00, sizeof (MetadataChunk));
             chunk.offset_orig = (*buf - step_buf) + offset - 4; /* maker + size */
             chunk.size = chunk_size + 2;        /* chunk size plus app marker */
+            chunk.type = MD_CHUNK_XMP;
 
             metadata_chunk_array_append_sorted (jpeg_data->strip_chunks,
                 &chunk);
@@ -307,7 +316,7 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
               *buf += 29;
               *bufsize -= 29;
               jpeg_data->read = chunk_size - 2 - 29;
-              jpeg_data->state = JPEG_XMP;
+              jpeg_data->state = JPEG_PARSE_XMP;
               ret = 0;
               goto done;
             }
@@ -330,13 +339,14 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
           memset (&chunk, 0x00, sizeof (MetadataChunk));
           chunk.offset_orig = (*buf - step_buf) + offset - 4;   /* maker + size */
           chunk.size = chunk_size + 2;  /* chunk size plus app marker */
+          chunk.type = MD_CHUNK_IPTC;
 
           metadata_chunk_array_append_sorted (jpeg_data->strip_chunks, &chunk);
 
           /* if adapter has been provided, prepare to hold chunk */
           if (jpeg_data->iptc_adapter) {
             jpeg_data->read = chunk_size - 2;
-            jpeg_data->state = JPEG_IPTC;
+            jpeg_data->state = JPEG_PARSE_IPTC;
             ret = 0;
             goto done;
           }
@@ -346,7 +356,7 @@ metadataparse_jpeg_reading (JpegData * jpeg_data, guint8 ** buf,
 
     /* just set jump sise  */
     jpeg_data->read = chunk_size - 2;
-    jpeg_data->state = JPEG_JUMPING;
+    jpeg_data->state = JPEG_PARSE_JUMPING;
     ret = 0;
 
   } else {
@@ -363,7 +373,7 @@ done:
 }
 
 static int
-metadataparse_jpeg_exif (JpegData * jpeg_data, guint8 ** buf,
+metadataparse_jpeg_exif (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
 {
   int ret;
@@ -372,7 +382,7 @@ metadataparse_jpeg_exif (JpegData * jpeg_data, guint8 ** buf,
       bufsize, next_start, next_size, jpeg_data->exif_adapter);
   if (ret == 0) {
 
-    jpeg_data->state = JPEG_READING;
+    jpeg_data->state = JPEG_PARSE_READING;
 
     /* if there is a second Exif chunk in the file it will be jumped */
     jpeg_data->exif_adapter = NULL;
@@ -382,7 +392,7 @@ metadataparse_jpeg_exif (JpegData * jpeg_data, guint8 ** buf,
 }
 
 static int
-metadataparse_jpeg_iptc (JpegData * jpeg_data, guint8 ** buf,
+metadataparse_jpeg_iptc (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
 {
 
@@ -399,7 +409,7 @@ metadataparse_jpeg_iptc (JpegData * jpeg_data, guint8 ** buf,
     unsigned int iptc_len;
     int res;
 
-    jpeg_data->state = JPEG_READING;
+    jpeg_data->state = JPEG_PARSE_READING;
 
     size = gst_adapter_available (*jpeg_data->iptc_adapter);
     buf = gst_adapter_peek (*jpeg_data->iptc_adapter, size);
@@ -434,7 +444,7 @@ metadataparse_jpeg_iptc (JpegData * jpeg_data, guint8 ** buf,
 }
 
 static int
-metadataparse_jpeg_xmp (JpegData * jpeg_data, guint8 ** buf,
+metadataparse_jpeg_xmp (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
 {
   int ret;
@@ -443,7 +453,7 @@ metadataparse_jpeg_xmp (JpegData * jpeg_data, guint8 ** buf,
       bufsize, next_start, next_size, jpeg_data->xmp_adapter);
 
   if (ret == 0) {
-    jpeg_data->state = JPEG_READING;
+    jpeg_data->state = JPEG_PARSE_READING;
     /* if there is a second XMP chunk in the file it will be jumped */
     jpeg_data->xmp_adapter = NULL;
   }
@@ -451,10 +461,10 @@ metadataparse_jpeg_xmp (JpegData * jpeg_data, guint8 ** buf,
 }
 
 static int
-metadataparse_jpeg_jump (JpegData * jpeg_data, guint8 ** buf,
+metadataparse_jpeg_jump (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
 {
-  jpeg_data->state = JPEG_READING;
+  jpeg_data->state = JPEG_PARSE_READING;
   return metadataparse_util_jump_chunk (&jpeg_data->read, buf,
       bufsize, next_start, next_size);
 }
