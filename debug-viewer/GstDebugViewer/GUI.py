@@ -468,11 +468,11 @@ class SubRange (object):
         while i <= self.end:
             yield l[i]
 
-class RangeFilteredLogModel (FilteredLogModel):
+class RangeFilteredLogModel (FilteredLogModelBase):
 
     def __init__ (self, super_model):
 
-        FilteredLogModel.__init__ (self, super_model)
+        FilteredLogModelBase.__init__ (self, super_model)
 
         self.line_index_range = None
 
