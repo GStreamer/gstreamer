@@ -411,11 +411,15 @@ class FilteredLogModel (FilteredLogModelBase):
 
     def add_filter (self, filter):
 
+        del self.line_offsets[:]
+        del self.line_levels[:]
+        level_id = self.COL_LEVEL
         func = filter.filter_func
-        #enum = self.super_model.iter_rows_offset ()
-        enum = self.iter_rows_offset ()
-        self.line_offsets[:] = (offset for row, offset in enum
-                                if func (row))
+        enum = self.super_model.iter_rows_offset ()
+        for row, offset in enum:
+            if func (row):
+                self.line_offsets.append (offset)
+                self.line_levels.append (row[level_id])
 
     def line_index_from_super (self, super_line_index):
 
@@ -439,7 +443,7 @@ class DebugLevelFilter (Filter):
 
         col_id = LogModelBase.COL_LEVEL
         def filter_func (row):
-            return row[col_id] < debug_level
+            return row[col_id] != debug_level
         self.filter_func = filter_func
 
 class SubRange (object):
@@ -1486,20 +1490,14 @@ class Window (object):
 
     def handle_hide_log_level_action_activate (self, action):
 
-        return # FIXME
-
         row = self.get_active_line ()
         debug_level = row[LogModelBase.COL_LEVEL]
 
-        try:
-            target_level = debug_level.higher_level ()
-        except ValueError:
-            return
-        self.log_filter.add_filter (DebugLevelFilter (target_level))
-
-        # FIXME:
-        self.log_view.props.model = gtk.TreeStore (str)
-        self.log_view.props.model = self.log_filter
+        model = FilteredLogModel (self.log_model)
+        model.add_filter (DebugLevelFilter (debug_level))
+        self.model_filter = model
+        self.change_model (self.model_filter)
+        self.actions.show_hidden_lines.props.sensitive = True
 
     def handle_hide_log_category_action_activate (self, action):
 
