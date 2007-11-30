@@ -1375,10 +1375,18 @@ class Window (object):
 
         previous_model = self.log_view.props.model
         if previous_model:
-            line_index = self.get_active_line_index ()
-            selected_index = previous_model.line_index_to_super (line_index)
+            try:
+                line_index = self.get_active_line_index ()
+            except ValueError:
+                selected_index = None
+            else:
+                selected_index = previous_model.line_index_to_super (line_index)
 
         self.log_view.props.model = model
+
+        if selected_index is None:
+            return
+
         try:
             select_index = model.line_index_from_super (selected_index)
         except IndexError:
