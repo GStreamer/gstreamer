@@ -1241,7 +1241,9 @@ class Window (object):
                             ("show-hidden-lines", None, _("Show hidden lines")),
                             ("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
                             ("edit-copy-message", gtk.STOCK_COPY, _("Copy message")),
-                            ("filter-out-higher-levels", None, _("Filter out higher debug levels"))])
+                            ("hide-log-level", None, _("Hide log level")),
+                            ("hide-log-category", None, _("Hide log category")),
+                            ("hide-log-object", None, _("Hide object"))])
         group.props.sensitive = False
         self.actions.add_group (group)
 
@@ -1297,7 +1299,7 @@ class Window (object):
                             "close-window", "cancel-load",
                             "hide-before-line", "hide-after-line", "show-hidden-lines",
                             "edit-copy-line", "edit-copy-message",
-                            "filter-out-higher-levels",
+                            "hide-log-level", "hide-log-category", "hide-log-object",
                             "show-about",):
             name = action_name.replace ("-", "_")
             action = getattr (self.actions, name)
@@ -1482,7 +1484,9 @@ class Window (object):
         col_id = LogModelBase.COL_MESSAGE
         self.clipboard.set_text (self.get_active_line ()[col_id])
 
-    def handle_filter_out_higher_levels_action_activate (self, action):
+    def handle_hide_log_level_action_activate (self, action):
+
+        return # FIXME
 
         row = self.get_active_line ()
         debug_level = row[LogModelBase.COL_LEVEL]
@@ -1496,6 +1500,14 @@ class Window (object):
         # FIXME:
         self.log_view.props.model = gtk.TreeStore (str)
         self.log_view.props.model = self.log_filter
+
+    def handle_hide_log_category_action_activate (self, action):
+
+        pass
+
+    def handle_hide_log_object_action_activate (self, action):
+
+        pass
 
     def handle_show_about_action_activate (self, action):
 
