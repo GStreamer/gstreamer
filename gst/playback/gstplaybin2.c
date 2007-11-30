@@ -249,6 +249,7 @@
 #include <gst/pbutils/pbutils.h>
 
 #include "gstplaysink.h"
+#include "gstfactorylists.h"
 #include "gststreaminfo.h"
 #include "gststreamselector.h"
 
@@ -319,6 +320,9 @@ struct _GstPlayBin
 
   /* our play sink */
   GstPlaySink *playsink;
+
+  GValueArray *elements;        /* factories we can use for selecting sinks */
+  GValueArray *sinks;           /* factories we can use for selecting sinks */
 };
 
 struct _GstPlayBinClass
@@ -360,7 +364,7 @@ enum
 
 static void gst_play_bin_class_init (GstPlayBinClass * klass);
 static void gst_play_bin_init (GstPlayBin * play_bin);
-static void gst_play_bin_dispose (GObject * object);
+static void gst_play_bin_finalize (GObject * object);
 
 static void gst_play_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * spec);
@@ -379,10 +383,10 @@ static GstElementClass *parent_class;
 static guint gst_play_bin_signals[LAST_SIGNAL] = { 0 };
 
 static const GstElementDetails gst_play_bin_details =
-GST_ELEMENT_DETAILS ("Player Bin",
+GST_ELEMENT_DETAILS ("Player Bin 2",
     "Generic/Bin/Player",
     "Autoplug and play media from an uri",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GType
 gst_play_bin_get_type (void)
@@ -426,7 +430,7 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
   gobject_klass->set_property = gst_play_bin_set_property;
   gobject_klass->get_property = gst_play_bin_get_property;
 
-  gobject_klass->dispose = GST_DEBUG_FUNCPTR (gst_play_bin_dispose);
+  gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_play_bin_finalize);
 
   g_object_class_install_property (gobject_klass, PROP_URI,
       g_param_spec_string ("uri", "URI", "URI of the media to play",
@@ -545,16 +549,23 @@ gst_play_bin_init (GstPlayBin * playbin)
   playbin->next_group = &playbin->groups[1];
   init_group (playbin, &playbin->groups[0]);
   init_group (playbin, &playbin->groups[1]);
+
+  /* first filter out the interesting element factories */
+  playbin->sinks = gst_factory_list_get_sinks ();
+
+  /* get the caps */
 }
 
 static void
-gst_play_bin_dispose (GObject * object)
+gst_play_bin_finalize (GObject * object)
 {
   GstPlayBin *play_bin;
 
   play_bin = GST_PLAY_BIN (object);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  g_value_array_free (play_bin->sinks);
+
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
@@ -938,6 +949,25 @@ drained_cb (GstElement * decodebin, GstSourceGroup * group)
   }
 }
 
+/* a callback is called */
+static GValueArray *
+autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
+    GstCaps * caps, GstSourceGroup * group)
+{
+  GstPlayBin *playbin;
+  GValueArray *result = NULL;
+
+  playbin = group->playbin;
+
+  GST_DEBUG_OBJECT (playbin, "continue group %p for %s:%s, %" GST_PTR_FORMAT,
+      group, GST_DEBUG_PAD_NAME (pad), caps);
+
+
+  GST_DEBUG_OBJECT (playbin, "found factories %p", result);
+
+  return result;
+}
+
 /* unlink a group of uridecodebins from the sink */
 static void
 unlink_group (GstPlayBin * playbin, GstSourceGroup * group)
@@ -991,6 +1021,11 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
   /* is called when the uridecodebin is out of data and we can switch to the
    * next uri */
   g_signal_connect (uridecodebin, "drained", G_CALLBACK (drained_cb), group);
+
+  /* will be called when a new media type is found. We will see if we have a
+   * working sink that can natively handle this format. */
+  g_signal_connect (uridecodebin, "autoplug-factories",
+      G_CALLBACK (autoplug_factories_cb), group);
 
   /*  */
   gst_bin_add (GST_BIN_CAST (playbin), uridecodebin);

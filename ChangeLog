@@ -1,3 +1,31 @@
+2007-11-30  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/playback/Makefile.am:
+	* gst/playback/gstfactorylists.c: (compare_ranks), (print_feature),
+	(get_feature_array), (decoders_filter), (sinks_filter),
+	(gst_factory_list_get_decoders), (gst_factory_list_get_sinks),
+	(gst_factory_list_filter):
+	* gst/playback/gstfactorylists.h:
+	Refactor some common code to filter factories and check caps compat.
+
+	* gst/playback/gstdecodebin.c:
+	* gst/playback/gstdecodebin2.c: (gst_decode_bin_class_init),
+	(gst_decode_bin_init), (gst_decode_bin_dispose),
+	(gst_decode_bin_autoplug_continue),
+	(gst_decode_bin_autoplug_factories),
+	(gst_decode_bin_autoplug_select), (analyze_new_pad),
+	(find_compatibles):
+	* gst/playback/gstplaybin.c:
+	* gst/playback/gstplaybin2.c: (gst_play_bin_class_init),
+	(gst_play_bin_init), (gst_play_bin_finalize),
+	(autoplug_factories_cb), (activate_group):
+	* gst/playback/gstqueue2.c:
+	* gst/playback/gsturidecodebin.c: (proxy_unknown_type_signal),
+	(proxy_autoplug_continue_signal),
+	(proxy_autoplug_factories_signal), (proxy_autoplug_select_signal),
+	(proxy_drained_signal):
+	Add some more debug info and use factor filtering code.
+
 2007-11-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:

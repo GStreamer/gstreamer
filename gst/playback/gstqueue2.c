@@ -60,7 +60,8 @@
 static const GstElementDetails gst_queue_details = GST_ELEMENT_DETAILS ("Queue",
     "Generic",
     "Simple data queue",
-    "Erik Walthinsen <omega@cse.ogi.edu>, " "Wim Taymans <wim@fluendo.com>");
+    "Erik Walthinsen <omega@cse.ogi.edu>, "
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,

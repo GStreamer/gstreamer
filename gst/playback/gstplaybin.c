@@ -345,7 +345,7 @@ static const GstElementDetails gst_play_bin_details =
 GST_ELEMENT_DETAILS ("Player Bin",
     "Generic/Bin/Player",
     "Autoplug and play media from an uri",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 static GType
 gst_play_bin_get_type (void)

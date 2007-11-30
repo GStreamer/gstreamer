@@ -104,7 +104,7 @@ static const GstElementDetails gst_uri_decode_bin_details =
 GST_ELEMENT_DETAILS ("URI Decoder",
     "Generic/Bin/Decoder",
     "Autoplug and decode an URI to raw media",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 /* signals */
 enum
@@ -835,6 +835,8 @@ static void
 proxy_unknown_type_signal (GstElement * element, GstPad * pad, GstCaps * caps,
     GstURIDecodeBin * dec)
 {
+  GST_DEBUG_OBJECT (dec, "unknown-type signaled");
+
   g_signal_emit (G_OBJECT (dec),
       gst_uri_decode_bin_signals[SIGNAL_UNKNOWN_TYPE], 0, pad, caps);
 }
@@ -848,6 +850,9 @@ proxy_autoplug_continue_signal (GstElement * element, GstPad * pad,
   g_signal_emit (G_OBJECT (dec),
       gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_CONTINUE], 0, pad, caps,
       &result);
+
+  GST_DEBUG_OBJECT (dec, "autoplug-continue returned %d", result);
+
   return result;
 }
 
@@ -855,11 +860,14 @@ static GValueArray *
 proxy_autoplug_factories_signal (GstElement * element, GstPad * pad,
     GstCaps * caps, GstURIDecodeBin * dec)
 {
-  GValueArray *result;
+  GValueArray *result = NULL;
 
   g_signal_emit (G_OBJECT (dec),
       gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES], 0, pad, caps,
       &result);
+
+  GST_DEBUG_OBJECT (dec, "autoplug-factories returned %p", result);
+
   return result;
 }
 
@@ -872,12 +880,17 @@ proxy_autoplug_select_signal (GstElement * element, GstPad * pad,
   g_signal_emit (G_OBJECT (dec),
       gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT], 0, pad, caps, array,
       &result);
+
+  GST_DEBUG_OBJECT (dec, "autoplug-select returned %d", result);
+
   return result;
 }
 
 static void
 proxy_drained_signal (GstElement * element, GstURIDecodeBin * dec)
 {
+  GST_DEBUG_OBJECT (dec, "drained signaled");
+
   g_signal_emit (G_OBJECT (dec),
       gst_uri_decode_bin_signals[SIGNAL_DRAINED], 0, NULL);
 }

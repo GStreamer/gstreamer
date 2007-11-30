@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2004> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2004> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -162,7 +162,7 @@ static const GstElementDetails gst_decode_bin_details =
 GST_ELEMENT_DETAILS ("Decoder Bin",
     "Generic/Bin/Decoder",
     "Autoplug and decode to raw media",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 
 static GType

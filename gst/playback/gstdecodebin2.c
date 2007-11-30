@@ -43,6 +43,7 @@
 #include <gst/pbutils/pbutils.h>
 
 #include "gstplay-marshal.h"
+#include "gstfactorylists.h"
 
 /* generic templates */
 static GstStaticPadTemplate decoder_bin_sink_template =
@@ -97,7 +98,7 @@ struct _GstDecodeBin
                                  * Should be freed in dispose */
   gint nbpads;                  /* unique identifier for source pads */
 
-  GList *factories;             /* factories we can use for selecting elements */
+  GValueArray *factories;       /* factories we can use for selecting elements */
 
   gboolean have_type;           /* if we received the have_type signal */
   guint have_type_id;           /* signal id for have-type from typefind */
@@ -419,7 +420,13 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * @caps: The #GstCaps found.
    *
    * This function is emited when an array of possible factories for @caps on
-   * @pad is needed. Decodebin2 will by default return 
+   * @pad is needed. Decodebin2 will by default return an array with all
+   * compatible factories, sorted by rank. 
+   *
+   * If this function returns NULL, @pad will be exposed as a final caps.
+   *
+   * If this function returns an empty array, the pad will be considered as 
+   * having an unhandled type media type.
    *
    * Returns: a #GValueArray* with a list of factories to try. The factories are
    * by default tried in the returned order or based on the index returned by
@@ -493,80 +500,11 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_decode_bin_change_state);
 }
 
-/* the filter function for selecting the elements we can use in
- * autoplugging */
-static gboolean
-gst_decode_bin_factory_filter (GstPluginFeature * feature,
-    GstDecodeBin * decode_bin)
-{
-  guint rank;
-  const gchar *klass;
-
-  /* we only care about element factories */
-  if (!GST_IS_ELEMENT_FACTORY (feature))
-    return FALSE;
-
-  klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
-  /* only demuxers, decoders, depayloaders and parsers can play */
-  if (strstr (klass, "Demux") == NULL &&
-      strstr (klass, "Decoder") == NULL &&
-      strstr (klass, "Depayloader") == NULL &&
-      strstr (klass, "Parse") == NULL) {
-    return FALSE;
-  }
-
-  /* only select elements with autoplugging rank */
-  rank = gst_plugin_feature_get_rank (feature);
-  if (rank < GST_RANK_MARGINAL)
-    return FALSE;
-
-  return TRUE;
-}
-
-/* function used to sort element features */
-static gint
-compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
-{
-  gint diff;
-  const gchar *rname1, *rname2;
-
-  diff = gst_plugin_feature_get_rank (f2) - gst_plugin_feature_get_rank (f1);
-  if (diff != 0)
-    return diff;
-
-  rname1 = gst_plugin_feature_get_name (f1);
-  rname2 = gst_plugin_feature_get_name (f2);
-
-  diff = strcmp (rname2, rname1);
-
-  return diff;
-}
-
-static void
-print_feature (GstPluginFeature * feature)
-{
-  const gchar *rname;
-
-  rname = gst_plugin_feature_get_name (feature);
-
-  GST_DEBUG ("%s", rname);
-}
-
 static void
 gst_decode_bin_init (GstDecodeBin * decode_bin)
 {
-  GList *factories;
-
   /* first filter out the interesting element factories */
-  factories = gst_default_registry_feature_filter (
-      (GstPluginFeatureFilter) gst_decode_bin_factory_filter,
-      FALSE, decode_bin);
-
-  /* sort them according to their ranks */
-  decode_bin->factories = g_list_sort (factories, (GCompareFunc) compare_ranks);
-  /* do some debugging */
-  g_list_foreach (decode_bin->factories, (GFunc) print_feature, NULL);
-
+  decode_bin->factories = gst_factory_list_get_decoders ();
 
   /* we create the typefind element only once */
   decode_bin->typefind = gst_element_factory_make ("typefind", "typefind");
@@ -622,7 +560,7 @@ gst_decode_bin_dispose (GObject * object)
   decode_bin = GST_DECODE_BIN (object);
 
   if (decode_bin->factories)
-    gst_plugin_feature_list_free (decode_bin->factories);
+    g_value_array_free (decode_bin->factories);
   decode_bin->factories = NULL;
 
   if (decode_bin->activegroup) {
@@ -796,6 +734,8 @@ static gboolean
 gst_decode_bin_autoplug_continue (GstElement * element, GstPad * pad,
     GstCaps * caps)
 {
+  GST_DEBUG_OBJECT (element, "autoplug-continue returns TRUE");
+
   /* by default we always continue */
   return TRUE;
 }
@@ -809,6 +749,8 @@ gst_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
   /* return all compatible factories for caps */
   result = find_compatibles (GST_DECODE_BIN (element), pad, caps);
 
+  GST_DEBUG_OBJECT (element, "autoplug-factories returns %p", result);
+
   return result;
 }
 
@@ -818,6 +760,8 @@ gst_decode_bin_autoplug_select (GstElement * element, GstPad * pad,
 {
   g_return_val_if_fail (factories != NULL, -1);
   g_return_val_if_fail (factories->n_values > 0, -1);
+
+  GST_DEBUG_OBJECT (element, "default autoplug-select returns 0");
 
   /* Return first factory. */
   return 0;
@@ -900,8 +844,15 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
   g_signal_emit (G_OBJECT (dbin),
       gst_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES], 0, pad, caps,
       &factories);
-  if (factories == NULL) {
+
+  /* NULL means that we can expose the pad */
+  if (factories == NULL)
+    goto expose_pad;
+
+  /* if the array is empty, we have an unknown type */
+  if (factories->n_values == 0) {
     /* no compatible factories */
+    g_value_array_free (factories);
     goto unknown_type;
   }
 
@@ -1421,49 +1372,13 @@ caps_notify_group_cb (GstPad * pad, GParamSpec * unused, GstDecodeGroup * group)
 static GValueArray *
 find_compatibles (GstDecodeBin * decode_bin, GstPad * pad, const GstCaps * caps)
 {
-  GList *factories;
-  GValueArray *to_try = g_value_array_new (0);
+  GValueArray *result;
 
-  /* loop over all the factories */
-  for (factories = decode_bin->factories; factories;
-      factories = g_list_next (factories)) {
-    GstElementFactory *factory = GST_ELEMENT_FACTORY (factories->data);
-    const GList *templates;
-    GList *walk;
+  GST_DEBUG_OBJECT (decode_bin, "finding factories");
 
-    /* get the templates from the element factory */
-    templates = gst_element_factory_get_static_pad_templates (factory);
-    for (walk = (GList *) templates; walk; walk = g_list_next (walk)) {
-      GstStaticPadTemplate *templ = walk->data;
+  result = gst_factory_list_filter (decode_bin->factories, caps);
 
-      /* we only care about the sink templates */
-      if (templ->direction == GST_PAD_SINK) {
-        GstCaps *intersect;
-        GstCaps *tmpl_caps;
-
-        /* try to intersect the caps with the caps of the template */
-        tmpl_caps = gst_static_caps_get (&templ->static_caps);
-
-        intersect = gst_caps_intersect (caps, tmpl_caps);
-        gst_caps_unref (tmpl_caps);
-
-        /* check if the intersection is empty */
-        if (!gst_caps_is_empty (intersect)) {
-          /* non empty intersection, we can use this element */
-          GValue val = { 0, };
-          g_value_init (&val, G_TYPE_OBJECT);
-          g_value_set_object (&val, factory);
-          g_value_array_append (to_try, &val);
-          g_value_unset (&val);
-          gst_caps_unref (intersect);
-          break;
-        }
-        gst_caps_unref (intersect);
-      }
-    }
-  }
-
-  return to_try;
+  return result;
 }
 
 /* Decide whether an element is a demuxer based on the 
