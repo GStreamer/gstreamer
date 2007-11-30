@@ -728,23 +728,21 @@ class MessageColumn (TextColumn):
 
     def get_data_func (self):
 
+        from pango import AttrList, AttrBackground, AttrForeground
         highlight = self.highlight
-        escape = gobject.markup_escape_text
 
         def message_data_func (props, value, path):
 
             line_index = path[0]
+            props.text = value
             if line_index in highlight:
-                props.text = None
                 start, end = highlight[line_index]
-                props.markup = escape (value[:start]) + \
-                               "<span background='blue' foreground='white'>" + \
-                               escape (value[start:end]) + \
-                               "</span>" + \
-                               escape (value[end:])
+                attrlist = AttrList ()
+                attrlist.insert (AttrBackground (0, 0, 65535, start, end))
+                attrlist.insert (AttrForeground (65535, 65535, 65535, start, end))
+                props.attributes = attrlist
             else:
-                props.markup = None
-                props.text = value
+                props.attributes = None
 
         return message_data_func
 
