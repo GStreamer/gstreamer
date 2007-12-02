@@ -1,3 +1,8 @@
+2007-12-02  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tests/check/Makefile.am:
+	  Don't forget to dist {gst,libs}/struct_hppa.h.
+
 2007-11-28  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstbasesink.c:

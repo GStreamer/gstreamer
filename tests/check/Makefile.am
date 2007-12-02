@@ -113,10 +113,12 @@ TESTS = $(check_PROGRAMS)
 noinst_HEADERS = \
 	gst/capslist.h \
 	gst/struct_i386.h \
+	gst/struct_hppa.h \
 	gst/struct_ppc32.h \
 	gst/struct_ppc64.h \
 	gst/struct_x86_64.h \
 	libs/struct_i386.h \
+	libs/struct_hppa.h \
 	libs/struct_ppc32.h \
 	libs/struct_ppc64.h \
 	libs/struct_x86_64.h
