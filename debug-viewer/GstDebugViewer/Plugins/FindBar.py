@@ -194,7 +194,7 @@ class FindBarFeature (FeatureBase):
         self.bar.hide ()
 
         action = self.action_group.get_action ("show-find-bar")
-        handler = self.handle_show_find_bar_action_activate
+        handler = self.handle_show_find_bar_action_toggled
         action.connect ("toggled", handler)
 
         action = self.action_group.get_action ("goto-previous-search-result")
@@ -214,7 +214,7 @@ class FindBarFeature (FeatureBase):
         window.ui_manager.remove_ui (self.merge_id)
         self.merge_id = None
 
-    def handle_show_find_bar_action_activate (self, action):
+    def handle_show_find_bar_action_toggled (self, action):
 
         if action.props.active:
             self.bar.show ()
