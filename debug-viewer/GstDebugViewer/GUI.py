@@ -208,7 +208,7 @@ class LogModelBase (gtk.GenericTreeModel):
     def iter_rows_offset (self):
 
         for i, offset in enumerate (self.line_offsets):
-            self.ensure_cached (i)
+            self.ensure_cached (offset)
             row = self.line_cache[offset]
             row[self.COL_LEVEL] = self.line_levels[i] # FIXME
             yield (row, offset,)
@@ -260,7 +260,7 @@ class LogModelBase (gtk.GenericTreeModel):
             return self.line_levels[line_index]
 
         line_offset = self.line_offsets[line_index]
-        self.ensure_cached (line_index)
+        self.ensure_cached (line_offset)
 
         value = self.line_cache[line_offset][col_id]
         if col_id == self.COL_MESSAGE:
@@ -339,9 +339,7 @@ class LazyLogModel (LogModelBase):
         self.__fileobj.seek (offset)
         return self.__fileobj.readline ()
 
-    def ensure_cached (self, line_index):
-
-        line_offset = self.line_offsets[line_index]
+    def ensure_cached (self, line_offset):
 
         if line_offset in self.line_cache:
             return
@@ -349,12 +347,8 @@ class LazyLogModel (LogModelBase):
         if len (self.line_cache) > 10000:
             self.line_cache.clear ()
 
-        if line_index == len (self.line_offsets) - 1:
-            self.__fileobj.seek (line_offset)
-            line = self.__fileobj.readline ()
-        else:
-            next_offset = self.line_offsets[line_index + 1]
-            line = self.__fileobj[line_offset:next_offset]
+        self.__fileobj.seek (line_offset)
+        line = self.__fileobj.readline ()
 
         self.line_cache[line_offset] = Data.LogLine.parse_full (line)
 
