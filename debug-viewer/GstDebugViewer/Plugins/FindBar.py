@@ -220,6 +220,11 @@ class FindBarFeature (FeatureBase):
             self.bar.show ()
             self.bar.entry.grab_focus ()
         else:
+            try:
+                column = self.window.column_manager.find_item (name = "message")
+                del column.highlighters[self]
+            except KeyError:
+                pass
             self.bar.hide ()
 
     def handle_goto_previous_search_result_action_activate (self, action):
@@ -270,6 +275,9 @@ class FindBarFeature (FeatureBase):
         self.operation = SearchOperation (model, search_string, start_position = start_path[0])
         self.sentinel.run_for (self.operation)
 
+        column = self.window.column_manager.find_item (name = "message")
+        column.highlighters[self] = self.operation.match_func
+
     def handle_match_found (self, model, tree_iter):
 
         line_index = model.get_path (tree_iter)[0]
@@ -307,19 +315,20 @@ class FindBarFeature (FeatureBase):
         start_path, end_path = self.log_view.get_visible_range ()
         start_index, end_index = start_path[0], end_path[0]
 
+        # Update highlighting.  FIXME: Probably not needed/can be done better.
         for line_index in new_matches:
             path = (line_index,)
             tree_iter = model.get_iter (path)
-            row = model[tree_iter]
-            ranges = match_func (row)
-            column.highlight[line_index] = ranges[0]
             if line_index >= start_index and line_index <= end_index:
                 model.row_changed (path, tree_iter)
 
     def clear_results (self):
 
-        column = self.window.column_manager.find_item (name = "message")
-        column.highlight.clear ()
+        try:
+            column = self.window.column_manager.find_item (name = "message")
+            del column.highlighters[self]
+        except KeyError:
+            pass
 
         model = self.log_view.props.model
 

@@ -516,6 +516,7 @@ class Column (object):
     label_header = None
     get_modify_func = None
     get_data_func = None
+    get_row_data_func = None
     get_sort_func = None
 
     def __init__ (self):
@@ -562,6 +563,12 @@ class TextColumn (SizedColumn):
                     data_func (cell.props, model.get_value (tree_iter, id_), model.get_path (tree_iter))
             else:
                 cell_data_func = data_func
+            column.set_cell_data_func (cell, cell_data_func)
+        elif self.get_row_data_func:
+            data_func = self.get_row_data_func ()
+            assert data_func
+            def cell_data_func (column, cell, model, tree_iter):
+                data_func (cell.props, model[tree_iter])
             column.set_cell_data_func (cell, cell_data_func)
         elif not self.get_modify_func:
             column.add_attribute (cell, "text", self.id)
@@ -765,27 +772,29 @@ class MessageColumn (TextColumn):
 
     def __init__ (self, *a, **kw):
 
-        self.highlight = {}
+        self.highlighters = {}
 
         TextColumn.__init__ (self, *a, **kw)
 
-    def get_data_func (self):
+    def get_row_data_func (self):
 
         from pango import AttrList, AttrBackground, AttrForeground
-        highlight = self.highlight
+        highlighters = self.highlighters
+        id_ = self.id
 
-        def message_data_func (props, value, path):
+        def message_data_func (props, row):
 
-            line_index = path[0]
-            props.text = value
-            if line_index in highlight:
-                start, end = highlight[line_index]
-                attrlist = AttrList ()
-                attrlist.insert (AttrBackground (0, 0, 65535, start, end))
-                attrlist.insert (AttrForeground (65535, 65535, 65535, start, end))
-                props.attributes = attrlist
-            else:
-                props.attributes = None
+            props.text = row[id_]
+            for highlighter in highlighters.values ():
+                ranges = highlighter (row)
+                if not ranges:
+                    props.attributes = None
+                else:
+                    attrlist = AttrList ()
+                    for start, end in ranges:
+                        attrlist.insert (AttrBackground (0, 0, 65535, start, end))
+                        attrlist.insert (AttrForeground (65535, 65535, 65535, start, end))
+                    props.attributes = attrlist
 
         return message_data_func
 
