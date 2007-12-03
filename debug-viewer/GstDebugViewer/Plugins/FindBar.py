@@ -94,15 +94,25 @@ class SearchSentinel (object):
 
 class FindBarWidget (gtk.HBox):
 
-    def __init__ (self):
+    def __init__ (self, action_group):
 
         gtk.HBox.__init__ (self)
 
         label = gtk.Label (_("Find:"))
-        self.pack_start (label, False, False, 0)
+        self.pack_start (label, False, False, 2)
 
         self.entry = gtk.Entry ()
         self.pack_start (self.entry)
+
+        prev_action = action_group.get_action ("goto-previous-search-result")
+        prev_button = gtk.Button ()
+        prev_action.connect_proxy (prev_button)
+        self.pack_start (prev_button, False, False, 0)
+
+        next_action = action_group.get_action ("goto-next-search-result")
+        next_button = gtk.Button ()
+        next_action.connect_proxy (next_button)
+        self.pack_start (next_button, False, False, 0)
 
         self.show_all ()
 
@@ -121,6 +131,12 @@ class FindBarFeature (FeatureBase):
                                                 None,
                                                 _("Find Bar"),
                                                 "<Ctrl>F")])
+        self.action_group.add_actions ([("goto-next-search-result",
+                                         None, _("Goto Next Match"),
+                                         None), # FIXME
+                                        ("goto-previous-search-result",
+                                         None, _("Goto Previous Match"),
+                                         None)]) # FIXME
 
         self.bar = None
         self.operation = None
@@ -160,13 +176,21 @@ class FindBarFeature (FeatureBase):
                    gtk.UI_MANAGER_MENUITEM, False)
 
         box = window.widgets.vbox_view
-        self.bar = FindBarWidget ()
+        self.bar = FindBarWidget (self.action_group)
         box.pack_end (self.bar, False, False, 0)
         self.bar.hide ()
 
         action = self.action_group.get_action ("show-find-bar")
         handler = self.handle_show_find_bar_action_activate
         action.connect ("toggled", handler)
+
+        action = self.action_group.get_action ("goto-previous-search-result")
+        handler = self.handle_goto_previous_search_result_action_activate
+        action.connect ("activate", handler)
+
+        action = self.action_group.get_action ("goto-next-search-result")
+        handler = self.handle_goto_next_search_result_action_activate
+        action.connect ("activate", handler)
 
         self.bar.entry.connect ("changed", self.handle_entry_changed)
 
@@ -184,6 +208,36 @@ class FindBarFeature (FeatureBase):
             self.bar.entry.grab_focus ()
         else:
             self.bar.hide ()
+
+    def handle_goto_previous_search_result_action_activate (self, action):
+
+        model = self.log_view.props.model
+
+        start_path, end_path = self.log_view.get_visible_range ()
+        start_index, end_index = start_path[0], end_path[0]
+
+        for line_index in reversed (self.matches):
+            if line_index < start_index:
+                break
+        else:
+            return
+
+        self.scroll_view_to_line (line_index)
+
+    def handle_goto_next_search_result_action_activate (self, action):
+
+        model = self.log_view.props.model
+
+        start_path, end_path = self.log_view.get_visible_range ()
+        start_index, end_index = start_path[0], end_path[0]
+
+        for line_index in self.matches:
+            if line_index > end_index:
+                break
+        else:
+            return
+
+        self.scroll_view_to_line (line_index)
 
     def handle_entry_changed (self, entry):
 
