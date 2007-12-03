@@ -408,7 +408,7 @@ rfb_decoder_message_set_encodings (GSList * encodings_list)
   guint32 *encoding_type = (guint32 *) (message + 4);
 
   while (encodings_list) {
-    RFB_SET_UINT32 (encoding_type, (guint32) encodings_list->data);
+    RFB_SET_UINT32 (encoding_type, GPOINTER_TO_UINT (encodings_list->data));
     encoding_type++;
     encodings_list = encodings_list->next;
   }
@@ -431,13 +431,17 @@ rfb_decoder_state_set_encodings (RfbDecoder * decoder)
 
   GST_DEBUG ("entered set encodings");
 
-  encoder_list = g_slist_append (encoder_list, (guint32 *) ENCODING_TYPE_CORRE);
-  encoder_list = g_slist_append (encoder_list, (guint32 *) ENCODING_TYPE_RRE);
+  encoder_list =
+      g_slist_append (encoder_list, GUINT_TO_POINTER (ENCODING_TYPE_CORRE));
+  encoder_list =
+      g_slist_append (encoder_list, GUINT_TO_POINTER (ENCODING_TYPE_RRE));
   if (decoder->use_copyrect) {
     encoder_list =
-        g_slist_append (encoder_list, (guint32 *) ENCODING_TYPE_COPYRECT);
+        g_slist_append (encoder_list,
+        GUINT_TO_POINTER (ENCODING_TYPE_COPYRECT));
   }
-  encoder_list = g_slist_append (encoder_list, (guint32 *) ENCODING_TYPE_RAW);
+  encoder_list =
+      g_slist_append (encoder_list, GUINT_TO_POINTER (ENCODING_TYPE_RAW));
 
   guint8 *message = rfb_decoder_message_set_encodings (encoder_list);
 

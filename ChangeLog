@@ -1,3 +1,8 @@
+2007-12-03  Thijs Vermeir  <thijsvermeir@gmail.com>
+
+	* gst/librfb/rfbdecoder.c:
+		Should fix the 64-bit build
+
 2007-11-30  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/gstmetadatamux.c:
