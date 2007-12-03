@@ -1,3 +1,8 @@
+2007-12-03  Edward Hervey  <bilboed@bilboed.com>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	Add 'WVC1' codec mapping for Windows Media VC-1 video codec.
+
 2007-12-03  Wim Taymans  <wim.taymans@gmail.com>
 
 	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_bisect_forward_serialno),
@@ -34,6 +39,7 @@
 	(proxy_drained_signal):
 	Add some more debug info and use factor filtering code.
 
+>>>>>>> 1.3622
 2007-11-26  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/audiotestsrc/gstaudiotestsrc.c:
@@ -41,6 +47,7 @@
 	* gst/volume/gstvolume.h:
 	  Add GAP-flag support.
 
+>>>>>>> 1.3620
 2007-11-24  Julien MOUTTE  <julien@moutte.net>
 
 	* tests/examples/seek/seek.c: (main): Increase the range of the
@@ -220,6 +227,7 @@
 	Handle redirect messages by sorting multiple redirections based on the
 	connection speed.
 
+>>>>>>> 1.3619
 2007-11-16  Wim Taymans  <wim.taymans@gmail.com>
 
 	Patch by: Tommi Myöhänen <ext-tommi dot myohanen at nokia dot com>
@@ -301,6 +309,7 @@
 	Instead, pull in glib.h and use g_malloc/g_free for 
 	consistency. Fixes: #496548
 
+>>>>>>> 1.3606
 2007-11-09  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/playback/gstdecodebin2.c:
