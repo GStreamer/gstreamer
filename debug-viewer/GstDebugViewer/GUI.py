@@ -208,7 +208,7 @@ class LogModelBase (gtk.GenericTreeModel):
     def iter_rows_offset (self):
 
         for i, offset in enumerate (self.line_offsets):
-            self.ensure_cached (offset)
+            self.ensure_cached (i)
             row = self.line_cache[offset]
             row[self.COL_LEVEL] = self.line_levels[i] # FIXME
             yield (row, offset,)
@@ -260,7 +260,7 @@ class LogModelBase (gtk.GenericTreeModel):
             return self.line_levels[line_index]
 
         line_offset = self.line_offsets[line_index]
-        self.ensure_cached (line_offset)
+        self.ensure_cached (line_index)
 
         value = self.line_cache[line_offset][col_id]
         if col_id == self.COL_MESSAGE:
@@ -335,10 +335,13 @@ class LazyLogModel (LogModelBase):
 
     def access_offset (self, offset):
 
+        # TODO: Implement using one slice access instead of seek+readline.
         self.__fileobj.seek (offset)
         return self.__fileobj.readline ()
 
-    def ensure_cached (self, line_offset):
+    def ensure_cached (self, line_index):
+
+        line_offset = self.line_offsets[line_index]
 
         if line_offset in self.line_cache:
             return
@@ -346,18 +349,12 @@ class LazyLogModel (LogModelBase):
         if len (self.line_cache) > 10000:
             self.line_cache.clear ()
 
-        if line_offset == 0:
-            self.__fileobj.seek (0)
+        if line_index == len (self.line_offsets) - 1:
+            self.__fileobj.seek (line_offset)
             line = self.__fileobj.readline ()
         else:
-            # Seek a bit further backwards to verify that offset (still) points
-            # to the beginning of a line:
-            self.__fileobj.seek (line_offset - len (os.linesep))
-            line_start = (self.__fileobj.readline () == os.linesep)
-            if not line_start:
-                # FIXME: We should re-read the file instead!
-                raise ValueError ("file changed!")
-            line = self.__fileobj.readline ()
+            next_offset = self.line_offsets[line_index + 1]
+            line = self.__fileobj[line_offset:next_offset]
 
         self.line_cache[line_offset] = Data.LogLine.parse_full (line)
 

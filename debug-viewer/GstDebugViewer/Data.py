@@ -171,9 +171,7 @@ class LineCache (Producer):
         self.logger = logging.getLogger ("linecache")
         self.dispatcher = dispatcher
 
-        import mmap
-        self.__fileobj = mmap.mmap (fileobj.fileno (), 0, prot = mmap.PROT_READ)
-
+        self.__fileobj = fileobj
         self.__fileobj.seek (0, 2)
         self.__file_size = self.__fileobj.tell ()
         self.__fileobj.seek (0)
@@ -342,12 +340,15 @@ class LogFile (Producer):
 
     def __init__ (self, filename, dispatcher):
 
+        import mmap
+
         Producer.__init__ (self)
 
         self.logger = logging.getLogger ("logfile")
 
         self.path = os.path.normpath (os.path.abspath (filename))
-        self.fileobj = file (filename, "rb")
+        self.__real_fileobj = file (filename, "rb")
+        self.fileobj = mmap.mmap (self.__real_fileobj.fileno (), 0, prot = mmap.PROT_READ)
         self.line_cache = LineCache (self.fileobj, dispatcher)
         self.line_cache.consumers.append (self)
 
