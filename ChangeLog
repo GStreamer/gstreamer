@@ -1,3 +1,9 @@
+2007-12-03  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_push):
+	Use runnning time as the base time instead of the timestamp.
+	Spotted by Saur on IRC.
+
 2007-12-03  Edward Hervey  <bilboed@bilboed.com>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):

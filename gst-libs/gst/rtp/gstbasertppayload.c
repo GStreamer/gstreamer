@@ -659,9 +659,9 @@ gst_basertppayload_push (GstBaseRTPPayload * payload, GstBuffer * buffer)
     /* take first timestamp as base, we want to calculate the RTP timestamp
      * starting from the ts_base */
     if (priv->rt_base == -1) {
-      priv->rt_base = timestamp;
+      priv->rt_base = rtime;
       GST_LOG_OBJECT (payload, "first timestamp %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (timestamp));
+          GST_TIME_ARGS (rtime));
     }
     rtime -= priv->rt_base;
 
