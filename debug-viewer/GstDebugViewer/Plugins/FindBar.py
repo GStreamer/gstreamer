@@ -35,6 +35,21 @@ class SearchOperation (object):
         self.search_forward = search_forward
         self.start_position = start_position
 
+        col_id = GUI.LogModelBase.COL_MESSAGE
+        len_search_string = len (search_string)
+        
+        def match_func (model_row):
+
+            message = model_row[col_id]
+            if search_string in message:
+                # TODO: Return all match ranges here.
+                pos = message.find (search_string)
+                return ((pos, pos + len_search_string,),)
+            else:
+                return ()
+
+        self.match_func = match_func
+
 class SearchSentinel (object):
 
     def __init__ (self):
@@ -63,9 +78,7 @@ class SearchSentinel (object):
             # FIXME:
             raise NotImplementedError ("backward search not supported yet")
 
-        search_string = operation.search_string
-        col_id = model.COL_MESSAGE
-        model_get = model.get_value
+        match_func = operation.match_func
         iter_next = model.iter_next
 
         YIELD_LIMIT = 1000
@@ -76,8 +89,8 @@ class SearchSentinel (object):
             if i == 0:
                 yield True
                 i = YIELD_LIMIT
-            msg = model_get (tree_iter, col_id)
-            if search_string in msg:
+            row = model[tree_iter]
+            if match_func (row):
                 self.handle_match_found (model, tree_iter)
             tree_iter = iter_next (tree_iter)
 
@@ -289,7 +302,7 @@ class FindBarFeature (FeatureBase):
 
         model = self.log_view.props.model
         column = self.window.column_manager.find_item (name = "message")
-        search = self.operation.search_string
+        match_func = self.operation.match_func
 
         start_path, end_path = self.log_view.get_visible_range ()
         start_index, end_index = start_path[0], end_path[0]
@@ -297,9 +310,9 @@ class FindBarFeature (FeatureBase):
         for line_index in new_matches:
             path = (line_index,)
             tree_iter = model.get_iter (path)
-            message = model.get_value (tree_iter, model.COL_MESSAGE)
-            pos = message.find (search)
-            column.highlight[line_index] = (pos, pos + len (search),)
+            row = model[tree_iter]
+            ranges = match_func (row)
+            column.highlight[line_index] = ranges[0]
             if line_index >= start_index and line_index <= end_index:
                 model.row_changed (path, tree_iter)
 
