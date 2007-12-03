@@ -343,6 +343,9 @@ class LazyLogModel (LogModelBase):
         if line_offset in self.line_cache:
             return
 
+        if len (self.line_cache) > 10000:
+            self.line_cache.clear ()
+
         if line_offset == 0:
             self.__fileobj.seek (0)
             line = self.__fileobj.readline ()
