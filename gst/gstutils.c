@@ -886,7 +886,7 @@ gst_element_request_compatible_pad (GstElement * element,
  * cases.
  *
  * Returns: the #GstPad to which a link can be made, or %NULL if one cannot be
- * found.
+ * found. gst_object_unref() after usage.
  */
 GstPad *
 gst_element_get_compatible_pad (GstElement * element, GstPad * pad,
