@@ -104,8 +104,17 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_STATIC_CAPS ("image/jpeg; " "image/png")
     );
 
-GST_BOILERPLATE (GstMetadataMux, gst_metadata_mux, GstElement,
-    GST_TYPE_ELEMENT);
+static void
+gst_metadata_mux_add_interfaces (GType type)
+{
+  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
+
+  g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
+}
+
+
+GST_BOILERPLATE_FULL (GstMetadataMux, gst_metadata_mux, GstElement,
+    GST_TYPE_ELEMENT, gst_metadata_mux_add_interfaces);
 
 static GstMetadataMuxClass *metadata_parent_class = NULL;
 
@@ -526,9 +535,11 @@ gst_metadata_mux_sink_event (GstPad * pad, GstEvent * event)
     case GST_EVENT_TAG:
     {
       GstTagList *taglist = NULL;
+      GstTagSetter *setter = GST_TAG_SETTER (filter);
 
       gst_event_parse_tag (event, &taglist);
-      gst_tag_list_insert (filter->taglist, taglist, GST_TAG_MERGE_REPLACE);
+      gst_tag_setter_merge_tags (setter, taglist, GST_TAG_MERGE_REPLACE);
+
     }
       break;
     default:
@@ -578,11 +589,6 @@ gst_metadata_mux_dispose_members (GstMetadataMux * filter)
     filter->adapter_holding = NULL;
   }
 
-  if (filter->taglist) {
-    gst_tag_list_free (filter->taglist);
-    filter->taglist = NULL;
-  }
-
   if (filter->append_buffer) {
     gst_buffer_unref (filter->append_buffer);
     filter->append_buffer = NULL;
@@ -602,7 +608,6 @@ gst_metadata_mux_init_members (GstMetadataMux * filter)
   filter->iptc = FALSE;
   filter->xmp = FALSE;
 
-  filter->taglist = NULL;
   filter->adapter_parsing = NULL;
   filter->adapter_holding = NULL;
   filter->next_offset = 0;
@@ -801,24 +806,29 @@ gst_metadata_create_chunks_from_tags (GstMetadataMux * filter)
 {
 
   GstMessage *msg;
-  GstTagList *taglist;
+  GstTagSetter *setter = GST_TAG_SETTER (filter);
+  const GstTagList *taglist = gst_tag_setter_get_tag_list (setter);
   GstEvent *event;
   guint8 *buf = NULL;
   guint32 size = 0;
 
-  if (META_DATA_OPTION (filter->mux_data) & META_OPT_EXIF) {
-    metadatamux_exif_create_chunk_from_tag_list (&buf, &size, filter->taglist);
-    gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_EXIF);
-  }
+  if (taglist) {
 
-  if (META_DATA_OPTION (filter->mux_data) & META_OPT_IPTC) {
-    metadatamux_iptc_create_chunk_from_tag_list (&buf, &size, filter->taglist);
-    gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_IPTC);
-  }
+    if (META_DATA_OPTION (filter->mux_data) & META_OPT_EXIF) {
+      metadatamux_exif_create_chunk_from_tag_list (&buf, &size, taglist);
+      gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_EXIF);
+    }
 
-  if (META_DATA_OPTION (filter->mux_data) & META_OPT_XMP) {
-    metadatamux_xmp_create_chunk_from_tag_list (&buf, &size, filter->taglist);
-    gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_XMP);
+    if (META_DATA_OPTION (filter->mux_data) & META_OPT_IPTC) {
+      metadatamux_iptc_create_chunk_from_tag_list (&buf, &size, taglist);
+      gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_IPTC);
+    }
+
+    if (META_DATA_OPTION (filter->mux_data) & META_OPT_XMP) {
+      metadatamux_xmp_create_chunk_from_tag_list (&buf, &size, taglist);
+      gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_XMP);
+    }
+
   }
 
   metadata_chunk_array_remove_zero_size (&filter->mux_data.inject_chunks);
@@ -900,8 +910,8 @@ gst_metadata_mux_calculate_offsets (GstMetadataMux * filter)
   guint32 bytes_striped, bytes_inject;
   MetadataChunk *strip = filter->mux_data.strip_chunks.chunk;
   MetadataChunk *inject = filter->mux_data.inject_chunks.chunk;
-  const gsize strip_len = filter->mux_data.strip_chunks.len;
-  const gsize inject_len = filter->mux_data.inject_chunks.len;
+  gsize strip_len;
+  gsize inject_len;
 
   if (filter->state != MT_STATE_MUXED)
     return FALSE;
@@ -909,6 +919,9 @@ gst_metadata_mux_calculate_offsets (GstMetadataMux * filter)
   gst_metadata_create_chunks_from_tags (filter);
 
   metadata_lazy_update (&filter->mux_data);
+
+  strip_len = filter->mux_data.strip_chunks.len;
+  inject_len = filter->mux_data.inject_chunks.len;
 
   bytes_striped = 0;
   bytes_inject = 0;
@@ -1755,7 +1768,6 @@ gst_metadata_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       gst_metadata_mux_init_members (filter);
       filter->adapter_parsing = gst_adapter_new ();
-      filter->taglist = gst_tag_list_new ();
       metadata_init (&filter->mux_data, FALSE);
       break;
     default:

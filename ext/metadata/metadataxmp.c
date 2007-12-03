@@ -76,7 +76,7 @@ metadataparse_xmp_dispose (void)
 
 void
 metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
-    GstTagList * taglist)
+    const GstTagList * taglist)
 {
   /* do nothing */
 }
@@ -248,7 +248,7 @@ metadataparse_xmp_iter (XmpPtr xmp, XmpIteratorPtr iter)
 
 void
 metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
-    GstTagList * taglist)
+    const GstTagList * taglist)
 {
   GstBuffer *xmp_chunk = NULL;
   const GValue *val = NULL;

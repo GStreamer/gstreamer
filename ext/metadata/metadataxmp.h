@@ -60,7 +60,7 @@ extern void metadataparse_xmp_dispose (void);
 
 extern void
 metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 *size,
-    GstTagList * taglist);
+    const GstTagList * taglist);
 
 G_END_DECLS
 #endif /* __GST_METADATAPARSE_XMP_H__ */

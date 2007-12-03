@@ -77,6 +77,7 @@ void
 metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
 {
   gsize i;
+  gboolean has_exif = FALSE;
 
   for (i = 0; i < jpeg_data->inject_chunks->len; ++i) {
     if (jpeg_data->inject_chunks->chunk[i].size > 0 &&
@@ -85,6 +86,28 @@ metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
         case MD_CHUNK_EXIF:
           metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i], NULL, 0,
               0xFF, 0xE1);
+          has_exif = TRUE;
+          break;
+        case MD_CHUNK_IPTC:
+        {
+          unsigned int size = jpeg_data->inject_chunks->chunk[i].size + 256;
+          unsigned char *buf = g_new (guint8, size);
+
+          size = iptc_jpeg_ps3_save_iptc (NULL, 0,
+              jpeg_data->inject_chunks->chunk[i].data,
+              jpeg_data->inject_chunks->chunk[i].size, buf, size);
+          if (size > 0) {
+            g_free (jpeg_data->inject_chunks->chunk[i].data);
+            jpeg_data->inject_chunks->chunk[i].data = buf;
+            jpeg_data->inject_chunks->chunk[i].size = size;
+            metadatamux_wrap_chunk (&jpeg_data->inject_chunks->chunk[i], NULL,
+                0, 0xFF, 0xED);
+          } else {
+            GST_ERROR ("Invalid IPTC chunk\n");
+            g_free (buf);
+            /* FIXME: remove entry from list */
+          }
+        }
           break;
         case MD_CHUNK_XMP:
         {
@@ -99,7 +122,7 @@ metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
       }
     }
   }
-  if (i == jpeg_data->inject_chunks->len) {
+  if (!has_exif) {
     /* EXIF not injected so not strip JFIF anymore */
     metadata_chunk_array_clear (jpeg_data->strip_chunks);
   }

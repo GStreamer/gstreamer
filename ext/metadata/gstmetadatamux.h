@@ -98,7 +98,6 @@ struct _GstMetadataMux
 
   gboolean need_more_data;
 
-  GstTagList *taglist;
   gboolean need_calculate_offset; /* mux need to calculate offsets of insert chunks */
 
 };

@@ -56,7 +56,7 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 
 extern void
 metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 *size,
-    GstTagList * taglist);
+    const GstTagList * taglist);
 
 G_END_DECLS
 #endif /* __GST_METADATAPARSE_EXIF_H__ */

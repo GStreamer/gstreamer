@@ -65,7 +65,7 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 
 void
 metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
-    GstTagList * taglist)
+    const GstTagList * taglist)
 {
   /* do nothing */
 }
@@ -203,7 +203,7 @@ exif_content_foreach_entry_func (ExifEntry * entry, void *user_data)
 
 void
 metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
-    GstTagList * taglist)
+    const GstTagList * taglist)
 {
   ExifData *ed = NULL;
   GstBuffer *exif_chunk = NULL;

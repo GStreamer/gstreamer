@@ -66,7 +66,7 @@ metadataparse_iptc_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
 
 void
 metadatamux_iptc_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
-    GstTagList * taglist)
+    const GstTagList * taglist)
 {
   /* do nothing */
 }
@@ -133,8 +133,11 @@ iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data)
 
 void
 metadatamux_iptc_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
-    GstTagList * taglist)
+    const GstTagList * taglist)
 {
+  GstBuffer *iptc_chunk = NULL;
+  const GValue *val = NULL;
+
   if (!(buf && size))
     goto done;
   if (*buf) {
@@ -142,6 +145,16 @@ metadatamux_iptc_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
     *buf = NULL;
   }
   *size = 0;
+
+  val = gst_tag_list_get_value_index (taglist, GST_TAG_IPTC, 0);
+  if (val) {
+    iptc_chunk = gst_value_get_buffer (val);
+    if (iptc_chunk) {
+      *size = GST_BUFFER_SIZE (iptc_chunk);
+      *buf = g_new (guint8, *size);
+      memcpy (*buf, GST_BUFFER_DATA (iptc_chunk), *size);
+    }
+  }
 
 done:
 
