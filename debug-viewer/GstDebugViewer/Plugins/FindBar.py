@@ -277,6 +277,7 @@ class FindBarFeature (FeatureBase):
 
         column = self.window.column_manager.find_item (name = "message")
         column.highlighters[self] = self.operation.match_func
+        self.window.update_view ()
 
     def handle_match_found (self, model, tree_iter):
 
@@ -307,18 +308,6 @@ class FindBarFeature (FeatureBase):
             new_matches = self.matches[-(len (self.matches) % INTERVAL):]
         else:
             return
-
-        model = self.log_view.props.model
-
-        start_path, end_path = self.log_view.get_visible_range ()
-        start_index, end_index = start_path[0], end_path[0]
-
-        # Update highlighting.  FIXME: Probably not needed/can be done better.
-        for line_index in new_matches:
-            path = (line_index,)
-            tree_iter = model.get_iter (path)
-            if line_index >= start_index and line_index <= end_index:
-                model.row_changed (path, tree_iter)
 
     def clear_results (self):
 

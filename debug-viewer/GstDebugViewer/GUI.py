@@ -1410,6 +1410,19 @@ class Window (object):
             # the previous visible range.
             self.log_view.scroll_to_cell (path, use_align = True, row_align = .5)
 
+    def update_view (self):
+
+        view = self.log_view
+        model = view.props.model
+
+        start_path, end_path = view.get_visible_range ()
+        start_index, end_index = start_path[0], end_path[0]
+
+        for line_index in range (start_index, end_index + 1):
+            path = (line_index,)
+            tree_iter = model.get_iter (path)
+            model.row_changed (path, tree_iter)
+
     def handle_window_delete_event (self, window, event):
 
         self.actions.close_window.activate ()
