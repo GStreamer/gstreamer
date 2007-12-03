@@ -45,6 +45,7 @@ GST_DEBUG_CATEGORY_STATIC (a2dp_sink_debug);
 #define GST_CAT_DEFAULT a2dp_sink_debug
 
 #define BUFFER_SIZE 2048
+#define TEMPLATE_MAX_BITPOOL_VALUE 64
 
 #define GST_A2DP_SINK_MUTEX_LOCK(s) G_STMT_START {	\
 		g_mutex_lock (s->sink_lock);		\
@@ -57,8 +58,8 @@ GST_DEBUG_CATEGORY_STATIC (a2dp_sink_debug);
 
 struct bluetooth_data
 {
-  struct bt_getcapabilities_rsp cfg;    /* Bluetooth device config */
-  gint link_mtu;
+  struct bt_getcapabilities_rsp caps;   /* Bluetooth device capabilities */
+  struct bt_setconfiguration_rsp cfg;   /* Bluetooth device configuration */
   int samples;                  /* Number of encoded samples */
   gchar buffer[BUFFER_SIZE];    /* Codec transfer buffer */
   gsize count;                  /* Codec transfer buffer counter */
@@ -67,6 +68,7 @@ struct bluetooth_data
   uint16_t seq_num;             /* Cumulative packet sequence */
   int frame_count;              /* Current frames in buffer */
 };
+
 
 #define IS_SBC(n) (strcmp((n), "audio/x-sbc") == 0)
 #define IS_MPEG(n) (strcmp((n), "audio/mpeg") == 0)
@@ -92,8 +94,8 @@ static GstStaticPadTemplate a2dp_sink_factory =
         "channels = (int) [ 1, 2 ], "
         "mode = (string) { mono, dual, stereo, joint }, "
         "blocks = (int) { 4, 8, 12, 16 }, "
-        "subbands = (int) { 4, 8 }, "
-        "allocation = (string) { snr, loudness },"
+        "subbands = (int) { 4, 8 }, " "allocation = (string) { snr, loudness },"
+        /* FIXME use constant here */
         "bitpool = (int) [ 2, 64 ]; "
         "audio/mpeg, "
         "mpegversion = (int) 1, "
@@ -237,9 +239,10 @@ static gboolean
 gst_a2dp_sink_init_pkt_conf (GstA2dpSink * sink,
     GstCaps * caps, sbc_capabilities_t * pkt)
 {
-  sbc_capabilities_t *cfg = &sink->data->cfg.sbc_capabilities;
+  sbc_capabilities_t *cfg = &sink->data->caps.sbc_capabilities;
   const GValue *value = NULL;
   const char *pref, *name;
+  gint rate, blocks, subbands;
   GstStructure *structure = gst_caps_get_structure (caps, 0);
 
   name = gst_structure_get_name (structure);
@@ -250,7 +253,19 @@ gst_a2dp_sink_init_pkt_conf (GstA2dpSink * sink,
   }
 
   value = gst_structure_get_value (structure, "rate");
-  cfg->frequency = g_value_get_int (value);
+  rate = g_value_get_int (value);
+  if (rate == 44100)
+    cfg->frequency = BT_A2DP_SAMPLING_FREQ_44100;
+  else if (rate == 48000)
+    cfg->frequency = BT_A2DP_SAMPLING_FREQ_48000;
+  else if (rate == 32000)
+    cfg->frequency = BT_A2DP_SAMPLING_FREQ_32000;
+  else if (rate == 16000)
+    cfg->frequency = BT_A2DP_SAMPLING_FREQ_16000;
+  else {
+    GST_ERROR_OBJECT (sink, "Invalid rate while setting caps");
+    return FALSE;
+  }
 
   value = gst_structure_get_value (structure, "mode");
   pref = g_value_get_string (value);
@@ -283,13 +298,34 @@ gst_a2dp_sink_init_pkt_conf (GstA2dpSink * sink,
   }
 
   value = gst_structure_get_value (structure, "subbands");
-  cfg->subbands = g_value_get_int (value);
+  subbands = g_value_get_int (value);
+  if (subbands == 8)
+    cfg->subbands = BT_A2DP_SUBBANDS_8;
+  else if (subbands == 4)
+    cfg->subbands = BT_A2DP_SUBBANDS_4;
+  else {
+    GST_ERROR_OBJECT (sink, "Invalid subbands %d", subbands);
+    return FALSE;
+  }
 
   value = gst_structure_get_value (structure, "blocks");
-  cfg->block_length = g_value_get_int (value);
+  blocks = g_value_get_int (value);
+  if (blocks == 16)
+    cfg->block_length = BT_A2DP_BLOCK_LENGTH_16;
+  else if (blocks == 12)
+    cfg->block_length = BT_A2DP_BLOCK_LENGTH_12;
+  else if (blocks == 8)
+    cfg->block_length = BT_A2DP_BLOCK_LENGTH_8;
+  else if (blocks == 4)
+    cfg->block_length = BT_A2DP_BLOCK_LENGTH_4;
+  else {
+    GST_ERROR_OBJECT (sink, "Invalid blocks %d", blocks);
+    return FALSE;
+  }
 
   /* FIXME min and max ??? */
   value = gst_structure_get_value (structure, "bitpool");
+
   cfg->max_bitpool = cfg->min_bitpool = g_value_get_int (value);
 
   memcpy (pkt, cfg, sizeof (*pkt));
@@ -379,7 +415,7 @@ server_callback (GIOChannel * chan, GIOCondition cond, gpointer data)
 static gboolean
 gst_a2dp_sink_update_caps (GstA2dpSink * self)
 {
-  sbc_capabilities_t *sbc = &self->data->cfg.sbc_capabilities;
+  sbc_capabilities_t *sbc = &self->data->caps.sbc_capabilities;
   GstStructure *structure;
   GValue *value;
   GValue *list;
@@ -523,7 +559,9 @@ gst_a2dp_sink_update_caps (GstA2dpSink * self)
 
   /* bitpool */
   value = g_value_init (value, GST_TYPE_INT_RANGE);
-  gst_value_set_int_range (value, sbc->min_bitpool, sbc->max_bitpool);
+  gst_value_set_int_range (value,
+      MIN (sbc->min_bitpool, TEMPLATE_MAX_BITPOOL_VALUE),
+      MIN (sbc->max_bitpool, TEMPLATE_MAX_BITPOOL_VALUE));
   gst_structure_set_value (structure, "bitpool", value);
 
   /* channels */
@@ -532,6 +570,8 @@ gst_a2dp_sink_update_caps (GstA2dpSink * self)
 
   g_free (value);
 
+  if (self->dev_caps != NULL)
+    gst_caps_unref (self->dev_caps);
   self->dev_caps = gst_caps_new_full (structure, NULL);
 
   tmp = gst_caps_to_string (self->dev_caps);
@@ -554,8 +594,6 @@ gst_a2dp_sink_get_capabilities (GstA2dpSink * self)
   req->h.msg_type = BT_GETCAPABILITIES_REQ;
   strncpy (req->device, self->device, 18);
 
-  req->transport = BT_CAPABILITIES_TRANSPORT_A2DP;
-  req->access_mode = BT_CAPABILITIES_ACCESS_MODE_WRITE;
   io_error = gst_a2dp_sink_audioservice_send (self, &req->h);
   if (io_error != G_IO_ERROR_NONE) {
     GST_ERROR_OBJECT (self, "Error while asking device caps");
@@ -574,12 +612,7 @@ gst_a2dp_sink_get_capabilities (GstA2dpSink * self)
     return FALSE;
   }
 
-  if (rsp->transport != BT_CAPABILITIES_TRANSPORT_A2DP) {
-    GST_ERROR_OBJECT (self, "Non a2dp answer from device");
-    return FALSE;
-  }
-
-  memcpy (&self->data->cfg, rsp, sizeof (*rsp));
+  memcpy (&self->data->caps, rsp, sizeof (*rsp));
   if (!gst_a2dp_sink_update_caps (self)) {
     GST_WARNING_OBJECT (self, "failed to update capabilities");
     return FALSE;
@@ -689,6 +722,7 @@ gst_a2dp_sink_configure (GstA2dpSink * self, GstCaps * caps)
 
   memset (req, 0, sizeof (buf));
   req->h.msg_type = BT_SETCONFIGURATION_REQ;
+  req->access_mode = BT_CAPABILITIES_ACCESS_MODE_WRITE;
   strncpy (req->device, self->device, 18);
   ret = gst_a2dp_sink_init_pkt_conf (self, caps, &req->sbc_capabilities);
   if (!ret) {
@@ -718,6 +752,7 @@ gst_a2dp_sink_configure (GstA2dpSink * self, GstCaps * caps)
     return FALSE;
   }
 
+  memcpy (&self->data->cfg, rsp, sizeof (*rsp));
   GST_DEBUG_OBJECT (self, "configuration set");
 
   return TRUE;
@@ -805,7 +840,11 @@ gst_a2dp_sink_get_caps (GstBaseSink * basesink)
 {
   GstA2dpSink *self = GST_A2DP_SINK (basesink);
 
-  return self->dev_caps ? gst_caps_ref (self->dev_caps) : NULL;
+  if (self->dev_caps)
+    return gst_caps_ref (self->dev_caps);
+
+  return
+      gst_caps_copy (gst_pad_get_pad_template_caps (GST_BASE_SINK_PAD (self)));
 }
 
 static gboolean
