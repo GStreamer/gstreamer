@@ -309,8 +309,6 @@ class FindBarFeature (FeatureBase):
             return
 
         model = self.log_view.props.model
-        column = self.window.column_manager.find_item (name = "message")
-        match_func = self.operation.match_func
 
         start_path, end_path = self.log_view.get_visible_range ()
         start_index, end_index = start_path[0], end_path[0]
