@@ -520,7 +520,6 @@ class Column (object):
 
         self.view_column = view_column
 
-# FIXME: Merge with gst-inspector?
 class SizedColumn (Column):
 
     default_size = None
@@ -1192,7 +1191,14 @@ class LineView (object):
         if line_model is None:
             return
 
-        line_model.insert_line (0, super_line_index)
+        if len (line_model):
+            timestamps = [row[line_model.COL_TIME] for row in line_model]
+            row = log_filter[(super_line_index,)]
+            from bisect import bisect_right
+            position = bisect_right (timestamps, row[line_model.COL_TIME])
+        else:
+            position = 0
+        line_model.insert_line (position, super_line_index)
 
     def handle_log_view_selection_changed (self, selection):
 
