@@ -107,10 +107,11 @@ static gboolean dvb_base_bin_ts_pad_probe_cb (GstPad * pad,
     GstBuffer * buf, gpointer user_data);
 static GstStateChangeReturn dvb_base_bin_change_state (GstElement * element,
     GstStateChange transition);
-static void dvb_base_bin_pat_info_cb (GstElement * mpegtsparse,
-    GstStructure * pat, DvbBaseBin * dvbbasebin);
-static void dvb_base_bin_pmt_info_cb (GstElement * mpegtsparse,
-    GstStructure * pmt, DvbBaseBin * dvbbasebin);
+static void dvb_base_bin_handle_message (GstBin * bin, GstMessage * message);
+static void dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin,
+    GstStructure * pat);
+static void dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin,
+    GstStructure * pmt);
 static void dvb_base_bin_pad_added_cb (GstElement * mpegtsparse,
     GstPad * pad, DvbBaseBin * dvbbasebin);
 static void dvb_base_bin_pad_removed_cb (GstElement * mpegtsparse,
@@ -118,6 +119,7 @@ static void dvb_base_bin_pad_removed_cb (GstElement * mpegtsparse,
 static GstPad *dvb_base_bin_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void dvb_base_bin_release_pad (GstElement * element, GstPad * pad);
+static void dvb_base_bin_rebuild_filter (DvbBaseBin * dvbbasebin);
 
 static DvbBaseBinStream *
 dvb_base_bin_add_stream (DvbBaseBin * dvbbasebin, guint16 pid)
@@ -195,6 +197,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *element_class;
+  GstBinClass *bin_class;
   GstElementFactory *dvbsrc_factory;
   GObjectClass *dvbsrc_class;
   typedef struct
@@ -221,6 +224,9 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
     {PROP_STATS_REPORTING_INTERVAL, "stats-reporting-interval"},
     {0, NULL}
   };
+
+  bin_class = GST_BIN_CLASS (klass);
+  bin_class->handle_message = dvb_base_bin_handle_message;
 
   element_class = GST_ELEMENT_CLASS (klass);
   element_class->change_state = dvb_base_bin_change_state;
@@ -309,9 +315,8 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin, DvbBaseBinClass * klass)
   dvbbasebin->dvbsrc = gst_element_factory_make ("dvbsrc", NULL);
   dvbbasebin->buffer_queue = gst_element_factory_make ("queue", NULL);
   dvbbasebin->mpegtsparse = gst_element_factory_make ("mpegtsparse", NULL);
+
   g_object_connect (dvbbasebin->mpegtsparse,
-      "signal::pat-info", dvb_base_bin_pat_info_cb, dvbbasebin,
-      "signal::pmt-info", dvb_base_bin_pmt_info_cb, dvbbasebin,
       "signal::pad-added", dvb_base_bin_pad_added_cb, dvbbasebin,
       "signal::pad-removed", dvb_base_bin_pad_removed_cb, dvbbasebin, NULL);
 
@@ -331,6 +336,14 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin, DvbBaseBinClass * klass)
 
   dvbbasebin->disposed = FALSE;
   dvb_base_bin_reset (dvbbasebin);
+
+  /* add PAT, CAT, NIT, SDT, EIT to pids filter for dvbsrc */
+  dvb_base_bin_add_stream (dvbbasebin, 0);
+  dvb_base_bin_add_stream (dvbbasebin, 1);
+  dvb_base_bin_add_stream (dvbbasebin, 10);
+  dvb_base_bin_add_stream (dvbbasebin, 11);
+  dvb_base_bin_add_stream (dvbbasebin, 12);
+  dvb_base_bin_rebuild_filter (dvbbasebin);
 }
 
 static void
@@ -749,8 +762,40 @@ dvb_base_bin_deactivate_program (DvbBaseBin * dvbbasebin,
 }
 
 static void
-dvb_base_bin_pat_info_cb (GstElement * mpegtsparse,
-    GstStructure * pat_info, DvbBaseBin * dvbbasebin)
+dvb_base_bin_handle_message (GstBin * bin, GstMessage * message)
+{
+  DvbBaseBin *dvbbasebin;
+
+  dvbbasebin = GST_DVB_BASE_BIN (bin);
+
+  if (message->type == GST_MESSAGE_ELEMENT &&
+      GST_ELEMENT (message->src) == GST_ELEMENT (dvbbasebin->mpegtsparse)) {
+    const gchar *structure_name = gst_structure_get_name (message->structure);
+
+    if (strcmp (structure_name, "pat") == 0)
+      dvb_base_bin_pat_info_cb (dvbbasebin, message->structure);
+    else if (strcmp (structure_name, "pmt") == 0)
+      dvb_base_bin_pmt_info_cb (dvbbasebin, message->structure);
+
+    /*else if (strcmp (structure_name, "nit") == 0)
+       dvb_base_bin_nit_info_cb (dvbbasebin, message->structure);
+       else if (strcmp (structure_name, "sdt") == 0)
+       dvb_base_bin_sdt_info_cb (dvbbasebin, message->structure);
+       else if (strcmp (structure_name, "eit") == 0)
+       dvb_base_bin_eit_info_cb (dvbbasebin, message->structure); */
+    /* forward the message on */
+    gst_element_post_message (GST_ELEMENT_CAST (bin), message);
+  } else {
+    /* chain up */
+    GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+  }
+
+}
+
+
+
+static void
+dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin, GstStructure * pat_info)
 {
   DvbBaseBinProgram *program;
   DvbBaseBinStream *stream;
@@ -798,8 +843,7 @@ dvb_base_bin_pat_info_cb (GstElement * mpegtsparse,
 }
 
 static void
-dvb_base_bin_pmt_info_cb (GstElement * mpegtsparse,
-    GstStructure * pmt, DvbBaseBin * dvbbasebin)
+dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin, GstStructure * pmt)
 {
   DvbBaseBinProgram *program;
   guint program_number;

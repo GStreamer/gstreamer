@@ -1,3 +1,15 @@
+2007-12-03  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/Makefile.am:
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	* gst/mpegtsparse/mpegtsparse.c:
+	Remove signals for pat, pmt, nit, eit, sdt. Replace with bus
+	messages.
+	* sys/dvb/dvbbasebin.c:
+	Instead of attaching to signals, use the bus messages.
+	Also fix up so the dvbsrc starts only outputting the info tables
+	like PAT, CAT, NIT, SDT, EIT instead of the whole ts.
+
 2007-12-03  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/gstmetadatamux.c:

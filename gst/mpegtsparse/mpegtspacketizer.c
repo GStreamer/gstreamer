@@ -398,7 +398,7 @@ mpegts_packetizer_parse_pmt (MpegTSPacketizer * packetizer,
   program_info_length = GST_READ_UINT16_BE (data) & 0x0FFF;
   data += 2;
 
-  struct_name = g_strdup_printf ("program-%d", program_number);
+  struct_name = g_strdup ("pmt");
   pmt = gst_structure_new (struct_name,
       "program-number", G_TYPE_UINT, program_number,
       "pcr-pid", G_TYPE_UINT, pcr_pid,

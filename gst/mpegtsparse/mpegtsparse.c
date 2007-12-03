@@ -28,7 +28,6 @@
 #include <stdlib.h>
 
 #include "mpegtsparse.h"
-#include "mpegtsparsemarshal.h"
 
 GST_DEBUG_CATEGORY_STATIC (mpegts_parse_debug);
 #define GST_CAT_DEFAULT mpegts_parse_debug
@@ -95,17 +94,6 @@ GST_STATIC_PAD_TEMPLATE ("program_%d", GST_PAD_SRC,
 
 enum
 {
-  SIGNAL_PAT,
-  SIGNAL_PMT,
-  SIGNAL_NIT,
-  SIGNAL_SDT,
-  SIGNAL_EIT,
-  /* FILL ME */
-  LAST_SIGNAL
-};
-
-enum
-{
   ARG_0,
   PROP_PROGRAM_NUMBERS,
   /* FILL ME */
@@ -137,8 +125,6 @@ static GstFlowReturn mpegts_parse_chain (GstPad * pad, GstBuffer * buf);
 static gboolean mpegts_parse_sink_event (GstPad * pad, GstEvent * event);
 static GstStateChangeReturn mpegts_parse_change_state (GstElement * element,
     GstStateChange transition);
-
-static guint signals[LAST_SIGNAL] = { 0 };
 
 GST_BOILERPLATE (MpegTSParse, mpegts_parse, GstElement, GST_TYPE_ELEMENT);
 
@@ -238,27 +224,6 @@ mpegts_parse_class_init (MpegTSParseClass * klass)
       g_param_spec_string ("program-numbers",
           "Program Numbers",
           "Colon separated list of programs", "", G_PARAM_READWRITE));
-
-  signals[SIGNAL_PAT] =
-      g_signal_new ("pat-info", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (MpegTSParseClass, pat_info), NULL, NULL,
-      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
-  signals[SIGNAL_PMT] =
-      g_signal_new ("pmt-info", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (MpegTSParseClass, pmt_info), NULL, NULL,
-      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
-  signals[SIGNAL_NIT] =
-      g_signal_new ("nit-info", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (MpegTSParseClass, nit_info), NULL, NULL,
-      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
-  signals[SIGNAL_SDT] =
-      g_signal_new ("sdt-info", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (MpegTSParseClass, sdt_info), NULL, NULL,
-      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
-  signals[SIGNAL_EIT] =
-      g_signal_new ("eit-info", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
-      G_STRUCT_OFFSET (MpegTSParseClass, eit_info), NULL, NULL,
-      g_cclosure_marshal_VOID__BOXED, G_TYPE_NONE, 1, GST_TYPE_STRUCTURE);
 }
 
 static gboolean
@@ -808,7 +773,9 @@ mpegts_parse_apply_pat (MpegTSParse * parse, GstStructure * pat_info)
   GST_INFO_OBJECT (parse, "PAT %s", dbg);
   g_free (dbg);
 
-  g_signal_emit (parse, signals[SIGNAL_PAT], 0, pat_info);
+  gst_element_post_message (GST_ELEMENT_CAST (parse),
+      gst_message_new_element (GST_OBJECT (parse),
+          gst_structure_copy (pat_info)));
 
   GST_OBJECT_LOCK (parse);
   programs = gst_structure_get_value (pat_info, "programs");
@@ -964,28 +931,39 @@ mpegts_parse_apply_pmt (MpegTSParse * parse,
     g_free (dbg);
   }
 
-  g_signal_emit (parse, signals[SIGNAL_PMT], 0, pmt_info);
+  gst_element_post_message (GST_ELEMENT_CAST (parse),
+      gst_message_new_element (GST_OBJECT (parse),
+          gst_structure_copy (pmt_info)));
 }
 
 static void
 mpegts_parse_apply_nit (MpegTSParse * parse,
     guint16 pmt_pid, GstStructure * nit_info)
 {
-  g_signal_emit (parse, signals[SIGNAL_NIT], 0, nit_info);
+  /*gst_element_post_message(GST_ELEMENT_CAST(parse), 
+   *  gst_message_new_element (GST_OBJECT(parse), 
+   *    gst_structure_copy(nit_info)));
+   */
 }
 
 static void
 mpegts_parse_apply_sdt (MpegTSParse * parse,
     guint16 pmt_pid, GstStructure * sdt_info)
 {
-  g_signal_emit (parse, signals[SIGNAL_SDT], 0, sdt_info);
+  /*gst_element_post_message(GST_ELEMENT_CAST(parse), 
+   *  gst_message_new_element (GST_OBJECT(parse), 
+   *    gst_structure_copy(sdt_info)));
+   */
 }
 
 static void
 mpegts_parse_apply_eit (MpegTSParse * parse,
     guint16 pmt_pid, GstStructure * eit_info)
 {
-  g_signal_emit (parse, signals[SIGNAL_EIT], 0, eit_info);
+  /*gst_element_post_message(GST_ELEMENT_CAST(parse), 
+   *  gst_message_new_element (GST_OBJECT(parse), 
+   *    gst_structure_copy(eit_info)));
+   */
 }
 
 static gboolean
