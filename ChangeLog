@@ -1,3 +1,11 @@
+2007-12-03  Wim Taymans  <wim.taymans@gmail.com>
+
+	* ext/ogg/gstoggdemux.c: (gst_ogg_demux_bisect_forward_serialno),
+	(gst_ogg_demux_read_chain):
+	If we find a new serial number but it does not contain a BOS page, make
+	sure we initialize the chain to NULL because else we will try to scan it
+	and crash. Fixes #500763
+
 2007-11-30  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/playback/Makefile.am:

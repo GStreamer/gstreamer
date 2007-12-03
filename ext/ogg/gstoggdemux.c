@@ -2295,6 +2295,8 @@ gst_ogg_demux_bisect_forward_serialno (GstOggDemux * ogg,
     if (ret != GST_FLOW_OK)
       goto done;
   }
+  GST_LOG_OBJECT (ogg, "adding chain %p", chain);
+
   g_array_insert_val (ogg->chains, 0, chain);
 
 done:
@@ -2363,6 +2365,8 @@ gst_ogg_demux_read_chain (GstOggDemux * ogg, GstOggChain ** res_chain)
     if (chain) {
       gst_ogg_chain_free (chain);
     }
+    if (res_chain)
+      *res_chain = NULL;
     return ret;
   }
 
