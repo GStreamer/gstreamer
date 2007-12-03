@@ -1198,7 +1198,15 @@ class LineView (object):
             position = bisect_right (timestamps, row[line_model.COL_TIME])
         else:
             position = 0
-        line_model.insert_line (position, super_line_index)
+        if len (line_model) > 1:
+            other_index = line_model.line_index_to_super (position - 1)
+        else:
+            other_index = -1
+        if other_index == super_line_index:
+            # Already have the line.
+            pass
+        else:
+            line_model.insert_line (position, super_line_index)
 
     def handle_log_view_selection_changed (self, selection):
 
