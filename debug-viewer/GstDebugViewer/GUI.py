@@ -408,6 +408,8 @@ class FilteredLogModel (FilteredLogModelBase):
         FilteredLogModelBase.__init__ (self, super_model)
 
         self.filters = []
+        self.super_index = []
+        self.from_super_index = {}
         self.reset ()
         
     def reset (self):
@@ -417,6 +419,9 @@ class FilteredLogModel (FilteredLogModelBase):
         del self.line_levels[:]
         self.line_levels += self.super_model.line_levels
 
+        del self.super_index[:]
+        self.from_super_index.clear ()
+
     def add_filter (self, filter):
 
         self.filters.append (filter)
@@ -425,22 +430,25 @@ class FilteredLogModel (FilteredLogModelBase):
         level_id = self.COL_LEVEL
         func = filter.filter_func
         enum = self.super_model.iter_rows_offset ()
+        i = 0
         for row, offset in enum:
             if func (row):
                 self.line_offsets.append (offset)
                 self.line_levels.append (row[level_id])
+                self.super_index.append (i)
+                self.from_super_index[i] = len (self.super_index) - 1
+            i += 1
 
     def line_index_from_super (self, super_line_index):
 
-        # FIXME
-
-        return super_line_index
+        try:
+            return self.from_super_index[super_line_index]
+        except KeyError:
+            raise IndexError ("super index %i not handled" % (super_line_index,))
 
     def line_index_to_super (self, line_index):
 
-        # FIXME
-
-        return line_index
+        return self.super_index[line_index]
 
     def super_model_changed (self):
 
