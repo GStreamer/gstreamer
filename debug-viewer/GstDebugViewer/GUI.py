@@ -371,6 +371,19 @@ class FilteredLogModelBase (LogModelBase):
 
         raise NotImplementedError ("index conversion not supported")
 
+    def line_index_to_top (self, line_index):
+
+        model = self
+        super_index = line_index
+        while hasattr (model, "super_model") and model.super_model:
+            super_index = model.line_index_to_super (super_index)
+            model = model.super_model
+        return super_index
+
+    def super_model_changed (self):
+
+        pass
+
 class FilteredLogModelIdentity (FilteredLogModelBase):
 
     def __init__ (self, super_model):
@@ -394,6 +407,7 @@ class FilteredLogModel (FilteredLogModelBase):
 
         FilteredLogModelBase.__init__ (self, super_model)
 
+        self.filters = []
         self.reset ()
         
     def reset (self):
@@ -405,6 +419,7 @@ class FilteredLogModel (FilteredLogModelBase):
 
     def add_filter (self, filter):
 
+        self.filters.append (filter)
         del self.line_offsets[:]
         del self.line_levels[:]
         level_id = self.COL_LEVEL
@@ -426,6 +441,24 @@ class FilteredLogModel (FilteredLogModelBase):
         # FIXME
 
         return line_index
+
+    def super_model_changed (self):
+
+        from bisect import bisect_right
+
+        self.reset () # FIXME: Only remove obsolete lines.
+
+        if not self.filters:
+            return
+        filter = self.filters[0] # FIXME
+        enum = self.super_model.iter_rows_offset ()
+        for row, offset in enum:
+            if not offset in self.line_offsets: # FIXME: Slow test.
+                if filter.filter_func (row):
+                    # FIXME: This assumes that offsets are consecutive.
+                    position = bisect_right (self.line_offsets, offset)
+                    self.line_offsets.insert (position, offset)
+                    self.line_levels.insert (position, row[self.COL_LEVEL])
 
 class Filter (object):
 
@@ -1477,12 +1510,12 @@ class Window (object):
 
     def handle_hide_after_line_action_activate (self, action):
 
-        first_index = self.log_filter.line_index_to_super (0)
+        first_index = self.log_filter.line_index_to_top (0)
         try:
             filtered_line_index = self.get_active_line_index ()
         except ValueError:
             return
-        last_index = self.log_filter.line_index_to_super (filtered_line_index)
+        last_index = self.log_filter.line_index_to_top (filtered_line_index)
 
         self.logger.info ("hiding lines after %i (abs %i), first line is abs %i",
                           filtered_line_index,
@@ -1500,8 +1533,8 @@ class Window (object):
             filtered_line_index = self.get_active_line_index ()
         except ValueError:
             return
-        first_index = self.log_filter.line_index_to_super (filtered_line_index)
-        last_index = self.log_filter.line_index_to_super (len (self.log_filter) - 1)
+        first_index = self.log_filter.line_index_to_top (filtered_line_index)
+        last_index = self.log_filter.line_index_to_top (len (self.log_filter) - 1)
 
         self.logger.info ("hiding lines before %i (abs %i), last line is abs %i",
                           filtered_line_index,
