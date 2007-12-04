@@ -45,7 +45,9 @@
 
 #include <string.h>
 
+#ifdef HAVE_IPTC
 #include <libiptcdata/iptc-jpeg.h>
+#endif
 
 static int
 metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
@@ -55,8 +57,8 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
 #define READ(buf, size) ( (size)--, *((buf)++) )
 
 static void
-metadatamux_wrap_chunk (MetadataChunk * chunk, guint8 * buf, guint32 buf_size,
-    guint8 a, guint8 b)
+metadatamux_wrap_chunk (MetadataChunk * chunk, const guint8 * buf,
+    guint32 buf_size, guint8 a, guint8 b)
 {
   guint8 *data = g_new (guint8, 4 + buf_size + chunk->size);
 
@@ -89,6 +91,7 @@ metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
           has_exif = TRUE;
           break;
         case MD_CHUNK_IPTC:
+#ifdef HAVE_IPTC
         {
           unsigned int size = jpeg_data->inject_chunks->chunk[i].size + 256;
           unsigned char *buf = g_new (guint8, size);
@@ -108,6 +111,7 @@ metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
             /* FIXME: remove entry from list */
           }
         }
+#endif /* #ifdef HAVE_IPTC */
           break;
         case MD_CHUNK_XMP:
         {

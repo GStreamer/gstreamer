@@ -45,7 +45,9 @@
 
 #include <string.h>
 
+#ifdef HAVE_IPTC
 #include <libiptcdata/iptc-jpeg.h>
+#endif
 
 static int
 metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
@@ -56,9 +58,11 @@ static int
 metadataparse_jpeg_exif (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
+#ifdef HAVE_IPTC
 static int
 metadataparse_jpeg_iptc (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
+#endif
 
 static int
 metadataparse_jpeg_xmp (JpegParseData * jpeg_data, guint8 ** buf,
@@ -151,9 +155,11 @@ metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
             next_size);
         break;
       case JPEG_PARSE_IPTC:
+#ifdef HAVE_IPTC
         ret =
             metadataparse_jpeg_iptc (jpeg_data, &buf, bufsize, next_start,
             next_size);
+#endif
         break;
       case JPEG_PARSE_XMP:
         ret =
@@ -320,7 +326,9 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
           }
         }
       }
-    } else if (mark[1] == 0xED) {       /* may be it is photoshop and may be there is iptc */
+    }
+#ifdef HAVE_IPTC
+    else if (mark[1] == 0xED) { /* may be it is photoshop and may be there is iptc */
       if (chunk_size >= 16) {   /* size2 "Photoshop 3.0" */
 
         if (*bufsize < 14) {
@@ -350,6 +358,7 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
         }
       }
     }
+#endif /* #ifdef HAVE_IPTC */
 
     /* just set jump sise  */
     jpeg_data->read = chunk_size - 2;
@@ -388,6 +397,7 @@ metadataparse_jpeg_exif (JpegParseData * jpeg_data, guint8 ** buf,
 
 }
 
+#ifdef HAVE_IPTC
 static int
 metadataparse_jpeg_iptc (JpegParseData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
@@ -439,6 +449,7 @@ metadataparse_jpeg_iptc (JpegParseData * jpeg_data, guint8 ** buf,
   return ret;
 
 }
+#endif
 
 static int
 metadataparse_jpeg_xmp (JpegParseData * jpeg_data, guint8 ** buf,

@@ -1,5 +1,13 @@
 2007-12-04  Edgard Lima  <edgard.lima@indt.org.br>
 
+	* ext/metadata/metadatamuxjpeg.c: (metadatamux_wrap_chunk),
+	(metadatamux_jpeg_lazy_update):
+	* ext/metadata/metadataparsejpeg.c: (metadataparse_jpeg_parse),
+	(metadataparse_jpeg_reading):
+	  Now compiles even when libiptc is missing.
+
+2007-12-04  Edgard Lima  <edgard.lima@indt.org.br>
+
 	* ext/metadata/gstmetadatamux.c:
 	* ext/metadata/gstmetadatamux.h:
 	* ext/metadata/gstmetadataparse.c:
