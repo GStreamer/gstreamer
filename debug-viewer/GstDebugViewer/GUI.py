@@ -1243,7 +1243,7 @@ class LineView (object):
             other_index = line_model.line_index_to_super (position - 1)
         else:
             other_index = -1
-        if other_index == super_line_index:
+        if other_index == super_line_index and position != 1:
             # Already have the line.
             pass
         else:
