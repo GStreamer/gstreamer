@@ -1565,7 +1565,11 @@ class Window (object):
 
         line_index = self.get_active_line_index ()
         line = self.log_file.get_full_line (line_index)
-        self.logger.warning ("FIXME: This gets the wrong level; we still have the level in the model only (d'oh)")
+
+        # FIXME:
+        level = self.log_filter[(line_index,)][LogModelBase.COL_LEVEL]
+        line[LogModelBase.COL_LEVEL] = level
+
         self.clipboard.set_text (line.line_string ())
 
     def handle_edit_copy_message_action_activate (self, action):
