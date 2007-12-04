@@ -1234,7 +1234,7 @@ class LineView (object):
 
         if len (line_model):
             timestamps = [row[line_model.COL_TIME] for row in line_model]
-            row = log_filter[(super_line_index,)]
+            row = log_filter[(line_index,)]
             from bisect import bisect_right
             position = bisect_right (timestamps, row[line_model.COL_TIME])
         else:
