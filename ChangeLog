@@ -1,3 +1,17 @@
+2007-12-04  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/gstmetadatamux.c:
+	* ext/metadata/gstmetadatamux.h:
+	* ext/metadata/gstmetadataparse.c:
+	* ext/metadata/gstmetadataparse.h:
+	* ext/metadata/metadata.c:
+	* ext/metadata/metadata.h:
+	* ext/metadata/metadatamuxjpeg.c:
+	* ext/metadata/metadatamuxjpeg.h:
+	* ext/metadata/metadatamuxpng.c:
+	* ext/metadata/metadatamuxpng.h:
+	  Fixed element properties and now muxer writes to png also.
+
 2007-12-03  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/Makefile.am:

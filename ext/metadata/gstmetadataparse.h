@@ -75,9 +75,7 @@ struct _GstMetadataParse
 
   GstPad *sinkpad, *srcpad;
 
-  gboolean exif;
-  gboolean iptc;
-  gboolean xmp;
+  guint8 options;
 
   gboolean need_send_tag;
 

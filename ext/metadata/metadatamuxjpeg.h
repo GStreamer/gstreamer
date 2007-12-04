@@ -69,8 +69,7 @@ typedef struct _tag_JpegMuxData
 
 
 extern void
-metadatamux_jpeg_init (JpegMuxData * jpeg_data, GstAdapter ** exif_adpt,
-    GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
+metadatamux_jpeg_init (JpegMuxData * jpeg_data, 
     MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks);
 
 extern void metadatamux_jpeg_dispose (JpegMuxData * jpeg_data);

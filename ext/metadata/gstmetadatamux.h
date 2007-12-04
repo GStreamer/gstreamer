@@ -75,9 +75,7 @@ struct _GstMetadataMux
 
   GstPad *sinkpad, *srcpad;
 
-  gboolean exif;
-  gboolean iptc;
-  gboolean xmp;
+  guint8 options;
 
   MetaData mux_data;
   GstAdapter *adapter_parsing;

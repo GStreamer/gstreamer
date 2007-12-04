@@ -58,11 +58,11 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
  */
 
 void
-metadata_init (MetaData * meta_data, gboolean parse)
+metadata_init (MetaData * meta_data, gboolean parse, guint8 options)
 {
   meta_data->state = STATE_NULL;
   meta_data->img_type = IMG_NONE;
-  meta_data->option = META_OPT_ALL;
+  meta_data->options = options;
   meta_data->offset_orig = 0;
   meta_data->exif_adapter = NULL;
   meta_data->iptc_adapter = NULL;
@@ -124,13 +124,11 @@ metadata_parse (MetaData * meta_data, const guint8 * buf,
             metadataparse_png_parse (&meta_data->format_data.png_parse,
             (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
             next_size);
-      /*
-         else
-         ret =
-         metadatamux_png_parse (&meta_data->format_data.png_mux,
-         (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
-         next_size);
-       */
+      else
+        ret =
+            metadatamux_png_parse (&meta_data->format_data.png_mux,
+            (guint8 *) buf, &bufsize, meta_data->offset_orig, &next_start,
+            next_size);
       break;
     default:
       /* unexpected */
@@ -165,10 +163,8 @@ metadata_dispose (MetaData * meta_data)
     case IMG_PNG:
       if (G_LIKELY (meta_data->parse))
         metadataparse_png_dispose (&meta_data->format_data.png_parse);
-      /*
-         else
-         metadatamux_png_dispose (&meta_data->format_data.png_mux);
-       */
+      else
+        metadatamux_png_dispose (&meta_data->format_data.png_mux);
       break;
   }
 
@@ -217,11 +213,11 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
     goto done;
   }
 
-  if (meta_data->option & META_OPT_EXIF)
+  if (meta_data->options & META_OPT_EXIF)
     exif = &meta_data->exif_adapter;
-  if (meta_data->option & META_OPT_IPTC)
+  if (meta_data->options & META_OPT_IPTC)
     iptc = &meta_data->iptc_adapter;
-  if (meta_data->option & META_OPT_XMP)
+  if (meta_data->options & META_OPT_XMP)
     xmp = &meta_data->xmp_adapter;
 
   if (buf[0] == 0xFF && buf[1] == 0xD8 && buf[2] == 0xFF) {
@@ -229,7 +225,7 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
       metadataparse_jpeg_init (&meta_data->format_data.jpeg_parse, exif, iptc,
           xmp, &meta_data->strip_chunks, &meta_data->inject_chunks);
     else
-      metadatamux_jpeg_init (&meta_data->format_data.jpeg_mux, exif, iptc, xmp,
+      metadatamux_jpeg_init (&meta_data->format_data.jpeg_mux,
           &meta_data->strip_chunks, &meta_data->inject_chunks);
     ret = 0;
     meta_data->img_type = IMG_JPEG;
@@ -247,11 +243,9 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
     if (G_LIKELY (meta_data->parse))
       metadataparse_png_init (&meta_data->format_data.png_parse, exif, iptc,
           xmp, &meta_data->strip_chunks, &meta_data->inject_chunks);
-    /*
-       else
-       metadatamux_png_init (&meta_data->format_data.png_mux, exif, iptc, xmp,
-       &meta_data->strip_chunks, &meta_data->inject_chunks);
-     */
+    else
+      metadatamux_png_init (&meta_data->format_data.png_mux,
+          &meta_data->strip_chunks, &meta_data->inject_chunks);
     ret = 0;
     meta_data->img_type = IMG_PNG;
     goto done;
@@ -275,10 +269,8 @@ metadata_lazy_update (MetaData * meta_data)
     case IMG_PNG:
       if (G_LIKELY (meta_data->parse))
         metadataparse_png_lazy_update (&meta_data->format_data.png_parse);
-      /*
-         else
-         metadatamux_png_lazy_update (&meta_data->format_data.png_mux);
-       */
+      else
+        metadatamux_png_lazy_update (&meta_data->format_data.png_mux);
       break;
     default:
       /* unexpected */

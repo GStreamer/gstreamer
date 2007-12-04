@@ -66,8 +66,8 @@ metadatamux_wrap_chunk (MetadataChunk * chunk, guint8 * buf, guint32 buf_size,
   chunk->size += 4 + buf_size;
   data[0] = a;
   data[1] = b;
-  data[2] = (chunk->size - 2) >> 8;
-  data[3] = (chunk->size - 2) & 0x00FF;
+  data[2] = ((chunk->size - 2) >> 8) & 0xFF;
+  data[3] = (chunk->size - 2) & 0xFF;
   if (buf && buf_size) {
     memcpy (data + 4, buf, buf_size);
   }
@@ -130,8 +130,7 @@ metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data)
 }
 
 void
-metadatamux_jpeg_init (JpegMuxData * jpeg_data, GstAdapter ** exif_adpt,
-    GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
+metadatamux_jpeg_init (JpegMuxData * jpeg_data,
     MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks)
 {
   jpeg_data->state = JPEG_MUX_NULL;

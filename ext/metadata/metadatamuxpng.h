@@ -64,23 +64,19 @@ typedef struct _tag_PngMuxData
 {
   PngMuxState state;
 
-  GstAdapter ** xmp_adapter;
-
   MetadataChunkArray * strip_chunks;
   MetadataChunkArray * inject_chunks;
 
-  guint32 read;
 } PngMuxData;
 
 
 extern void
-metadatamux_png_init (PngMuxData * png_data, GstAdapter ** exif_adpt,
-    GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
+metadatamux_png_init (PngMuxData * png_data,
     MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks);
 
 extern void metadatamux_png_dispose (PngMuxData * png_data);
 
-extern void metadatamux_png_lazy_update (PngMuxData * jpeg_data);
+extern void metadatamux_png_lazy_update (PngMuxData * png_data);
 
 int
 metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,

@@ -52,30 +52,120 @@ metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
 
 #define READ(buf, size) ( (size)--, *((buf)++) )
 
-void
-metadatamux_png_lazy_update (PngMuxData * jpeg_data)
+static void
+make_crc_table (guint32 crc_table[])
 {
-  /* nothing to do */
+  guint32 c;
+  guint16 n, k;
+
+  for (n = 0; n < 256; n++) {
+    c = (guint32) n;
+    for (k = 0; k < 8; k++) {
+      if (c & 1)
+        c = 0xedb88320L ^ (c >> 1);
+      else
+        c = c >> 1;
+    }
+    crc_table[n] = c;
+  }
+}
+
+static guint32
+update_crc (guint32 crc, guint8 * buf, guint32 len)
+{
+  guint32 c = crc;
+  guint32 n;
+  guint32 crc_table[256];
+
+  /* FIXME:  make_crc_table should be done once in life 
+     for speed up */
+  make_crc_table (crc_table);
+
+  for (n = 0; n < len; n++) {
+    c = crc_table[(c ^ buf[n]) & 0xff] ^ (c >> 8);
+  }
+  return c;
+}
+
+/* Return the CRC of the bytes buf[0..len-1]. */
+static guint32
+calc_crc (guint8 * buf, guint32 len)
+{
+  return update_crc (0xffffffffL, buf, len) ^ 0xffffffffL;
+}
+
+
+static void
+metadatamux_wrap_xmp_chunk (MetadataChunk * chunk)
+{
+  static const char XmpHeader[] = "XML:com.adobe.xmp";
+  guint8 *data = NULL;
+  guint32 crc;
+
+  data = g_new (guint8, 12 + 18 + 4 + chunk->size);
+
+  memcpy (data + 8, XmpHeader, 18);
+  memset (data + 8 + 18, 0x00, 4);
+  memcpy (data + 8 + 18 + 4, chunk->data, chunk->size);
+  g_free (chunk->data);
+  chunk->data = data;
+  chunk->size += 18 + 4;
+  data[0] = (chunk->size >> 24) & 0xFF;
+  data[1] = (chunk->size >> 16) & 0xFF;
+  data[2] = (chunk->size >> 8) & 0xFF;
+  data[3] = chunk->size & 0xFF;
+  data[4] = 'i';
+  data[5] = 'T';
+  data[6] = 'X';
+  data[7] = 't';
+  crc = calc_crc (data + 4, chunk->size + 4 + 18);
+  data[chunk->size + 8] = (crc >> 24) & 0xFF;
+  data[chunk->size + 9] = (crc >> 16) & 0xFF;
+  data[chunk->size + 10] = (crc >> 8) & 0xFF;
+  data[chunk->size + 11] = crc & 0xFF;
+  chunk->size += 12;
+
 }
 
 void
-metadatamux_png_init (PngMuxData * png_data, GstAdapter ** exif_adpt,
-    GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
+metadatamux_png_lazy_update (PngMuxData * png_data)
+{
+  gsize i;
+
+  for (i = 0; i < png_data->inject_chunks->len; ++i) {
+    if (png_data->inject_chunks->chunk[i].size > 0 &&
+        png_data->inject_chunks->chunk[i].data) {
+      switch (png_data->inject_chunks->chunk[i].type) {
+        case MD_CHUNK_XMP:
+        {
+          metadatamux_wrap_xmp_chunk (&png_data->inject_chunks->chunk[i]);
+        }
+          break;
+        default:
+          GST_ERROR ("Unexpected chunk for PNG muxer.");
+          break;
+      }
+    }
+  }
+}
+
+void
+metadatamux_png_init (PngMuxData * png_data,
     MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks)
 {
   png_data->state = PNG_MUX_NULL;
-  png_data->xmp_adapter = xmp_adpt;
-  png_data->read = 0;
 
   png_data->strip_chunks = strip_chunks;
   png_data->inject_chunks = inject_chunks;
-
 }
 
 void
 metadatamux_png_dispose (PngMuxData * png_data)
 {
-  png_data->xmp_adapter = NULL;
+  png_data->strip_chunks = NULL;
+  png_data->inject_chunks = NULL;
+
+  png_data->state = PNG_MUX_NULL;
 }
 
 int
@@ -117,9 +207,6 @@ metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
     png_data->state = PNG_MUX_READING;
 
   }
-
-  /* JUST UNTIL NOT IMPLEMENTED */
-  return 0;
 
   while (ret == 0) {
     switch (png_data->state) {

@@ -283,6 +283,8 @@ gst_metadata_parse_init (GstMetadataParse * filter,
   metadataparse_xmp_init ();
   /* init members */
 
+  filter->options = META_OPT_EXIF | META_OPT_IPTC | META_OPT_XMP;
+
   gst_metadata_parse_init_members (filter);
 
 }
@@ -296,21 +298,21 @@ gst_metadata_parse_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_EXIF:
       if (g_value_get_boolean (value))
-        set_meta_option (filter->parse_data, META_OPT_EXIF);
+        filter->options |= META_OPT_EXIF;
       else
-        unset_meta_option (filter->parse_data, META_OPT_EXIF);
+        filter->options &= ~META_OPT_EXIF;
       break;
     case ARG_IPTC:
       if (g_value_get_boolean (value))
-        set_meta_option (filter->parse_data, META_OPT_IPTC);
+        filter->options |= META_OPT_IPTC;
       else
-        unset_meta_option (filter->parse_data, META_OPT_IPTC);
+        filter->options &= ~META_OPT_IPTC;
       break;
     case ARG_XMP:
       if (g_value_get_boolean (value))
-        set_meta_option (filter->parse_data, META_OPT_XMP);
+        filter->options |= META_OPT_XMP;
       else
-        unset_meta_option (filter->parse_data, META_OPT_XMP);
+        filter->options &= ~META_OPT_XMP;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -326,16 +328,13 @@ gst_metadata_parse_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_EXIF:
-      g_value_set_boolean (value,
-          META_DATA_OPTION (filter->parse_data) & META_OPT_EXIF);
+      g_value_set_boolean (value, filter->options & META_OPT_EXIF);
       break;
     case ARG_IPTC:
-      g_value_set_boolean (value,
-          META_DATA_OPTION (filter->parse_data) & META_OPT_IPTC);
+      g_value_set_boolean (value, filter->options & META_OPT_IPTC);
       break;
     case ARG_XMP:
-      g_value_set_boolean (value,
-          META_DATA_OPTION (filter->parse_data) & META_OPT_XMP);
+      g_value_set_boolean (value, filter->options & META_OPT_XMP);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -591,9 +590,6 @@ static void
 gst_metadata_parse_init_members (GstMetadataParse * filter)
 {
   filter->need_send_tag = FALSE;
-  filter->exif = TRUE;
-  filter->iptc = TRUE;
-  filter->xmp = TRUE;
 
   filter->adapter_parsing = NULL;
   filter->adapter_holding = NULL;
@@ -611,6 +607,7 @@ gst_metadata_parse_init_members (GstMetadataParse * filter)
   filter->prepend_buffer = NULL;
 
   memset (&filter->parse_data, 0x00, sizeof (MetaData));
+
 }
 
 static gboolean
@@ -763,13 +760,13 @@ gst_metadata_parse_send_tags (GstMetadataParse * filter)
   GstTagList *taglist = gst_tag_list_new ();
   GstEvent *event;
 
-  if (META_DATA_OPTION (filter->parse_data) & META_OPT_EXIF)
+  if (filter->options & META_OPT_EXIF)
     metadataparse_exif_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
         filter->parse_data.exif_adapter, METADATA_TAG_MAP_WHOLECHUNK);
-  if (META_DATA_OPTION (filter->parse_data) & META_OPT_IPTC)
+  if (filter->options & META_OPT_IPTC)
     metadataparse_iptc_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
         filter->parse_data.iptc_adapter, METADATA_TAG_MAP_WHOLECHUNK);
-  if (META_DATA_OPTION (filter->parse_data) & META_OPT_XMP)
+  if (filter->options & META_OPT_XMP)
     metadataparse_xmp_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
         filter->parse_data.xmp_adapter, METADATA_TAG_MAP_WHOLECHUNK);
 
@@ -787,13 +784,13 @@ gst_metadata_parse_send_tags (GstMetadataParse * filter)
   if (!taglist)
     taglist = gst_tag_list_new ();
 
-  if (META_DATA_OPTION (filter->parse_data) & META_OPT_EXIF)
+  if (filter->options & META_OPT_EXIF)
     metadataparse_exif_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
         filter->parse_data.exif_adapter, METADATA_TAG_MAP_INDIVIDUALS);
-  if (META_DATA_OPTION (filter->parse_data) & META_OPT_IPTC)
+  if (filter->options & META_OPT_IPTC)
     metadataparse_iptc_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
         filter->parse_data.iptc_adapter, METADATA_TAG_MAP_INDIVIDUALS);
-  if (META_DATA_OPTION (filter->parse_data) & META_OPT_XMP)
+  if (filter->options & META_OPT_XMP)
     metadataparse_xmp_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
         filter->parse_data.xmp_adapter, METADATA_TAG_MAP_INDIVIDUALS);
 
@@ -1733,7 +1730,7 @@ gst_metadata_parse_change_state (GstElement * element,
     case GST_STATE_CHANGE_NULL_TO_READY:
       gst_metadata_parse_init_members (filter);
       filter->adapter_parsing = gst_adapter_new ();
-      metadata_init (&filter->parse_data, TRUE);
+      metadata_init (&filter->parse_data, TRUE, filter->options);
       break;
     default:
       break;
@@ -1757,7 +1754,7 @@ gst_metadata_parse_change_state (GstElement * element,
         /* cleanup parser */
         /* FIXME: could be improved a bit to avoid mem allocation */
         metadata_dispose (&filter->parse_data);
-        metadata_init (&filter->parse_data, TRUE);
+        metadata_init (&filter->parse_data, TRUE, filter->options);
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:

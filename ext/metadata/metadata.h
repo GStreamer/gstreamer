@@ -80,7 +80,7 @@ typedef struct _tag_MetaData
 {
   MetaState state;
   ImageType img_type;
-  MetaOption option;
+  guint8 options;
   guint32 offset_orig; /* offset since begining of stream */
   union
   {
@@ -101,11 +101,8 @@ typedef struct _tag_MetaData
 } MetaData;
 
 #define META_DATA_IMG_TYPE(p) (p).img_type
-#define META_DATA_OPTION(p) (p).option
-#define set_meta_option(p, m) do { (p).option = (p).option | (m); } while(FALSE)
-#define unset_meta_option(p, m) do { (p).option = (p).option & ~(m); } while(FALSE)
 
-extern void metadata_init (MetaData * meta_data, gboolean parse);
+extern void metadata_init (MetaData * meta_data, gboolean parse, guint8 options);
 
 /*
  * offset: number of bytes that MUST be jumped after current "buf" pointer

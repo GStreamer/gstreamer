@@ -162,8 +162,6 @@ gst_metadata_mux_mux (GstMetadataMux * filter, const guint8 * buf,
 
 static void gst_metadata_mux_create_chunks_from_tags (GstMetadataMux * filter);
 
-
-
 static int
 gst_metadata_mux_get_strip_seg (const gint64 offset, guint32 size,
     const gint64 seg_offset, const guint32 seg_size,
@@ -289,6 +287,7 @@ gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass)
   metadataparse_xmp_init ();
   /* init members */
 
+  filter->options = META_OPT_EXIF | META_OPT_IPTC | META_OPT_XMP;
   gst_metadata_mux_init_members (filter);
 
 }
@@ -302,21 +301,21 @@ gst_metadata_mux_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_EXIF:
       if (g_value_get_boolean (value))
-        set_meta_option (filter->mux_data, META_OPT_EXIF);
+        filter->options |= META_OPT_EXIF;
       else
-        unset_meta_option (filter->mux_data, META_OPT_EXIF);
+        filter->options &= ~META_OPT_EXIF;
       break;
     case ARG_IPTC:
       if (g_value_get_boolean (value))
-        set_meta_option (filter->mux_data, META_OPT_IPTC);
+        filter->options |= META_OPT_IPTC;
       else
-        unset_meta_option (filter->mux_data, META_OPT_IPTC);
+        filter->options &= ~META_OPT_IPTC;
       break;
     case ARG_XMP:
       if (g_value_get_boolean (value))
-        set_meta_option (filter->mux_data, META_OPT_XMP);
+        filter->options |= META_OPT_XMP;
       else
-        unset_meta_option (filter->mux_data, META_OPT_XMP);
+        filter->options &= ~META_OPT_XMP;
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -332,16 +331,13 @@ gst_metadata_mux_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_EXIF:
-      g_value_set_boolean (value,
-          META_DATA_OPTION (filter->mux_data) & META_OPT_EXIF);
+      g_value_set_boolean (value, filter->options & META_OPT_EXIF);
       break;
     case ARG_IPTC:
-      g_value_set_boolean (value,
-          META_DATA_OPTION (filter->mux_data) & META_OPT_IPTC);
+      g_value_set_boolean (value, filter->options & META_OPT_IPTC);
       break;
     case ARG_XMP:
-      g_value_set_boolean (value,
-          META_DATA_OPTION (filter->mux_data) & META_OPT_XMP);
+      g_value_set_boolean (value, filter->options & META_OPT_XMP);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -604,9 +600,6 @@ static void
 gst_metadata_mux_init_members (GstMetadataMux * filter)
 {
   filter->need_calculate_offset = FALSE;
-  filter->exif = TRUE;
-  filter->iptc = FALSE;
-  filter->xmp = FALSE;
 
   filter->adapter_parsing = NULL;
   filter->adapter_holding = NULL;
@@ -624,6 +617,7 @@ gst_metadata_mux_init_members (GstMetadataMux * filter)
   filter->prepend_buffer = NULL;
 
   memset (&filter->mux_data, 0x00, sizeof (MetaData));
+
 }
 
 static gboolean
@@ -814,21 +808,25 @@ gst_metadata_create_chunks_from_tags (GstMetadataMux * filter)
 
   if (taglist) {
 
-    if (META_DATA_OPTION (filter->mux_data) & META_OPT_EXIF) {
+    if (filter->options & META_OPT_EXIF) {
       metadatamux_exif_create_chunk_from_tag_list (&buf, &size, taglist);
       gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_EXIF);
     }
 
-    if (META_DATA_OPTION (filter->mux_data) & META_OPT_IPTC) {
+    if (filter->options & META_OPT_IPTC) {
       metadatamux_iptc_create_chunk_from_tag_list (&buf, &size, taglist);
       gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_IPTC);
     }
 
-    if (META_DATA_OPTION (filter->mux_data) & META_OPT_XMP) {
+    if (filter->options & META_OPT_XMP) {
       metadatamux_xmp_create_chunk_from_tag_list (&buf, &size, taglist);
       gst_metadata_update_segment (filter, &buf, &size, MD_CHUNK_XMP);
     }
 
+  }
+
+  if (buf) {
+    g_free (buf);
   }
 
   metadata_chunk_array_remove_zero_size (&filter->mux_data.inject_chunks);
@@ -1768,7 +1766,7 @@ gst_metadata_mux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_NULL_TO_READY:
       gst_metadata_mux_init_members (filter);
       filter->adapter_parsing = gst_adapter_new ();
-      metadata_init (&filter->mux_data, FALSE);
+      metadata_init (&filter->mux_data, FALSE, filter->options);
       break;
     default:
       break;
@@ -1792,7 +1790,7 @@ gst_metadata_mux_change_state (GstElement * element, GstStateChange transition)
         /* cleanup parser */
         /* FIXME: could be improved a bit to avoid mem allocation */
         metadata_dispose (&filter->mux_data);
-        metadata_init (&filter->mux_data, FALSE);
+        metadata_init (&filter->mux_data, FALSE, filter->options);
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
