@@ -1,3 +1,12 @@
+=== release 0.10.3 ===
+
+2007-12-04  Edward Hervey  <bilboed@bilboed.com>
+
+	* configure.ac:
+	* NEWS:
+	* RELEASE:
+	  releasing 0.10.3, "My T-Shirt is slowly fading"
+
 2007-11-28  Edward Hervey  <bilboed@bilboed.com>
 
 	* configure.ac:

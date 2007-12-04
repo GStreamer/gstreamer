@@ -1,16 +1,10 @@
-This is GStreamer FFmpeg Plug-ins 0.10.2, "At the edge of Taymans"
+This is GStreamer FFmpeg Plug-ins 0.10.3, "My T-Shirt is slowly fading"
 
-Note: There is a known small regression in this release, playing some
-H264 videos with unusual widths on some machines.
-
-Changes since 0.10.1:
+Changes since 0.10.2:
     
-      * Updated FFmpeg snapshot with many more formats
-      * Vastly improved playback
-      * Ported the muxer support from GStreamer 0.8
-      * Expose more encoder settings as element properties
-      * Post-processing elements ported
-      * QoS support for slow cpus
+      * Memory usage fixes
+      * Playback and seeking fixes
+      * Improved QOS support
       * Parallel installability with 0.8.x series
       * Threadsafe design and API
 
