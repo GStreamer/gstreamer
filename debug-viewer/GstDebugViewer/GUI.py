@@ -1305,7 +1305,7 @@ class Window (object):
                             ("hide-after-line", None, _("Hide lines after this one")),
                             ("show-hidden-lines", None, _("Show hidden lines")),
                             ("edit-copy-line", gtk.STOCK_COPY, _("Copy line"), "<Ctrl>C"),
-                            ("edit-copy-message", gtk.STOCK_COPY, _("Copy message")),
+                            ("edit-copy-message", gtk.STOCK_COPY, _("Copy message"), ""),
                             ("hide-log-level", None, _("Hide log level")),
                             ("hide-log-category", None, _("Hide log category")),
                             ("hide-log-object", None, _("Hide object"))])
