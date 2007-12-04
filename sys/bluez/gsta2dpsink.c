@@ -586,6 +586,7 @@ gst_a2dp_sink_get_capabilities (GstA2dpSink * self)
 {
   gchar *buf[BT_AUDIO_IPC_PACKET_SIZE];
   struct bt_getcapabilities_req *req = (void *) buf;
+  bt_audio_rsp_msg_header_t *rsp_hdr = (void *) buf;
   struct bt_getcapabilities_rsp *rsp = (void *) buf;
   GIOError io_error;
 
@@ -599,16 +600,16 @@ gst_a2dp_sink_get_capabilities (GstA2dpSink * self)
     GST_ERROR_OBJECT (self, "Error while asking device caps");
   }
 
-  io_error = gst_a2dp_sink_audioservice_expect (self, &rsp->h,
+  io_error = gst_a2dp_sink_audioservice_expect (self, &rsp_hdr->msg_h,
       BT_GETCAPABILITIES_RSP);
   if (io_error != G_IO_ERROR_NONE) {
     GST_ERROR_OBJECT (self, "Error while getting device caps");
     return FALSE;
   }
 
-  if (rsp->posix_errno != 0) {
+  if (rsp_hdr->posix_errno != 0) {
     GST_ERROR_OBJECT (self, "BT_GETCAPABILITIES failed : %s(%d)",
-        strerror (rsp->posix_errno), rsp->posix_errno);
+        strerror (rsp_hdr->posix_errno), rsp_hdr->posix_errno);
     return FALSE;
   }
 
@@ -665,8 +666,8 @@ gst_a2dp_sink_stream_start (GstA2dpSink * self)
 {
   gchar buf[BT_AUDIO_IPC_PACKET_SIZE];
   struct bt_streamstart_req *req = (void *) buf;
-  struct bt_streamstart_rsp *rsp = (void *) buf;
-  struct bt_datafd_ind *ind = (void *) buf;
+  bt_audio_rsp_msg_header_t *rsp_hdr = (void *) buf;
+  struct bt_streamfd_ind *ind = (void *) buf;
   GIOError io_error;
 
   GST_DEBUG_OBJECT (self, "stream start");
@@ -682,16 +683,16 @@ gst_a2dp_sink_stream_start (GstA2dpSink * self)
 
   GST_DEBUG_OBJECT (self, "stream start packet sent");
 
-  io_error = gst_a2dp_sink_audioservice_expect (self, &rsp->h,
+  io_error = gst_a2dp_sink_audioservice_expect (self, &rsp_hdr->msg_h,
       BT_STREAMSTART_RSP);
   if (io_error != G_IO_ERROR_NONE) {
     GST_ERROR_OBJECT (self, "Error while stream start confirmation");
     return FALSE;
   }
 
-  if (rsp->posix_errno != 0) {
+  if (rsp_hdr->posix_errno != 0) {
     GST_ERROR_OBJECT (self, "BT_STREAMSTART_RSP failed : %s(%d)",
-        strerror (rsp->posix_errno), rsp->posix_errno);
+        strerror (rsp_hdr->posix_errno), rsp_hdr->posix_errno);
     return FALSE;
   }
 
@@ -714,6 +715,7 @@ gst_a2dp_sink_configure (GstA2dpSink * self, GstCaps * caps)
 {
   gchar buf[BT_AUDIO_IPC_PACKET_SIZE];
   struct bt_setconfiguration_req *req = (void *) buf;
+  bt_audio_rsp_msg_header_t *rsp_hdr = (void *) buf;
   struct bt_setconfiguration_rsp *rsp = (void *) buf;
   gboolean ret;
   GIOError io_error;
@@ -739,16 +741,16 @@ gst_a2dp_sink_configure (GstA2dpSink * self, GstCaps * caps)
 
   GST_DEBUG_OBJECT (self, "configuration packet sent");
 
-  io_error = gst_a2dp_sink_audioservice_expect (self, &rsp->h,
+  io_error = gst_a2dp_sink_audioservice_expect (self, &rsp_hdr->msg_h,
       BT_SETCONFIGURATION_RSP);
   if (io_error != G_IO_ERROR_NONE) {
     GST_ERROR_OBJECT (self, "Error while receiving device confirmation");
     return FALSE;
   }
 
-  if (rsp->posix_errno != 0) {
+  if (rsp_hdr->posix_errno != 0) {
     GST_ERROR_OBJECT (self, "BT_SETCONFIGURATION_RSP failed : %s(%d)",
-        strerror (rsp->posix_errno), rsp->posix_errno);
+        strerror (rsp_hdr->posix_errno), rsp_hdr->posix_errno);
     return FALSE;
   }
 
