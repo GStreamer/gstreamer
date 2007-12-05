@@ -45,17 +45,30 @@ G_BEGIN_DECLS
  * Features to enable in the sink.
  */
 typedef enum {
-  GST_PLAY_SINK_MODE_VIDEO  = (1 << 0),
-  GST_PLAY_SINK_MODE_AUDIO  = (1 << 1),
-  GST_PLAY_SINK_MODE_TEXT   = (1 << 2),
-  GST_PLAY_SINK_MODE_VIS    = (1 << 3)
+  GST_PLAY_SINK_MODE_VIDEO       = (1 << 0),
+  GST_PLAY_SINK_MODE_AUDIO       = (1 << 1),
+  GST_PLAY_SINK_MODE_TEXT        = (1 << 2),
+  GST_PLAY_SINK_MODE_VIS         = (1 << 3)
 } GstPlaySinkMode;
 
+/**
+ * GstPlaySinkType:
+ * @GST_PLAY_SINK_TYPE_AUDIO: A non-raw audio pad
+ * @GST_PLAY_SINK_TYPE_AUDIO_RAW: a raw audio pad
+ * @GST_PLAY_SINK_TYPE_VIDEO: a non-raw video pad
+ * @GST_PLAY_SINK_TYPE_VIDEO_RAW: a raw video pad
+ * @GST_PLAY_SINK_TYPE_TEXT: a raw text pad
+ * @GST_PLAY_SINK_TYPE_LAST: the last type
+ *
+ * Types of pads that can be requested from the sinks.
+ */
 typedef enum {
-  GST_PLAY_SINK_TYPE_AUDIO = 0,
-  GST_PLAY_SINK_TYPE_VIDEO = 1,
-  GST_PLAY_SINK_TYPE_TEXT  = 2,
-  GST_PLAY_SINK_TYPE_LAST  = 3
+  GST_PLAY_SINK_TYPE_AUDIO     = 0,
+  GST_PLAY_SINK_TYPE_AUDIO_RAW = 1,
+  GST_PLAY_SINK_TYPE_VIDEO     = 2,
+  GST_PLAY_SINK_TYPE_VIDEO_RAW = 3,
+  GST_PLAY_SINK_TYPE_TEXT      = 4,
+  GST_PLAY_SINK_TYPE_LAST      = 5
 } GstPlaySinkType;
 
 typedef struct _GstPlaySink GstPlaySink;
@@ -65,6 +78,10 @@ GType gst_play_sink_get_type (void);
 
 GstPad *         gst_play_sink_request_pad    (GstPlaySink *playsink, GstPlaySinkType type);
 void             gst_play_sink_release_pad    (GstPlaySink *playsink, GstPad *pad);
+
+void             gst_play_sink_set_video_sink (GstPlaySink * play_sink, GstElement * sink);
+void             gst_play_sink_set_audio_sink (GstPlaySink * play_sink, GstElement * sink);
+void             gst_play_sink_set_vis_plugin (GstPlaySink * play_sink, GstElement * vis);
 
 GstPlaySinkMode  gst_play_sink_get_mode       (GstPlaySink *playsink);
 gboolean         gst_play_sink_set_mode       (GstPlaySink *playsink, GstPlaySinkMode mode);

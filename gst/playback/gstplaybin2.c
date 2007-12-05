@@ -248,6 +248,7 @@
 #include <gst/gst-i18n-plugin.h>
 #include <gst/pbutils/pbutils.h>
 
+#include "gstplay-enum.h"
 #include "gstplaysink.h"
 #include "gstfactorylists.h"
 #include "gststreaminfo.h"
@@ -321,8 +322,7 @@ struct _GstPlayBin
   /* our play sink */
   GstPlaySink *playsink;
 
-  GValueArray *elements;        /* factories we can use for selecting sinks */
-  GValueArray *sinks;           /* factories we can use for selecting sinks */
+  GValueArray *elements;        /* factories we can use for selecting elements */
 };
 
 struct _GstPlayBinClass
@@ -530,20 +530,28 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
 {
   /* init selectors */
   group->playbin = playbin;
-  group->selector[0].media = "audio/";
-  group->selector[0].type = GST_PLAY_SINK_TYPE_AUDIO;
+  group->selector[0].media = "audio/x-raw-";
+  group->selector[0].type = GST_PLAY_SINK_TYPE_AUDIO_RAW;
   group->selector[0].mode = GST_PLAY_SINK_MODE_AUDIO;
-  group->selector[1].media = "video/";
-  group->selector[1].type = GST_PLAY_SINK_TYPE_VIDEO;
-  group->selector[1].mode = GST_PLAY_SINK_MODE_VIDEO;
-  group->selector[2].media = "text/";
-  group->selector[2].type = GST_PLAY_SINK_TYPE_TEXT;
-  group->selector[2].mode = GST_PLAY_SINK_MODE_TEXT;
+  group->selector[1].media = "audio/";
+  group->selector[1].type = GST_PLAY_SINK_TYPE_AUDIO;
+  group->selector[1].mode = GST_PLAY_SINK_MODE_AUDIO;
+  group->selector[2].media = "video/x-raw-";
+  group->selector[2].type = GST_PLAY_SINK_TYPE_VIDEO_RAW;
+  group->selector[2].mode = GST_PLAY_SINK_MODE_VIDEO;
+  group->selector[3].media = "video/";
+  group->selector[3].type = GST_PLAY_SINK_TYPE_VIDEO;
+  group->selector[3].mode = GST_PLAY_SINK_MODE_VIDEO;
+  group->selector[4].media = "text/";
+  group->selector[4].type = GST_PLAY_SINK_TYPE_TEXT;
+  group->selector[4].mode = GST_PLAY_SINK_MODE_TEXT;
 }
 
 static void
 gst_play_bin_init (GstPlayBin * playbin)
 {
+  GstFactoryListType type;
+
   /* init groups */
   playbin->curr_group = &playbin->groups[0];
   playbin->next_group = &playbin->groups[1];
@@ -551,7 +559,9 @@ gst_play_bin_init (GstPlayBin * playbin)
   init_group (playbin, &playbin->groups[1]);
 
   /* first filter out the interesting element factories */
-  playbin->sinks = gst_factory_list_get_sinks ();
+  type = GST_FACTORY_LIST_DECODER | GST_FACTORY_LIST_SINK;
+  playbin->elements = gst_factory_list_get_elements (type);
+  gst_factory_list_debug (playbin->elements);
 
   /* get the caps */
 }
@@ -563,7 +573,7 @@ gst_play_bin_finalize (GObject * object)
 
   play_bin = GST_PLAY_BIN (object);
 
-  g_value_array_free (play_bin->sinks);
+  g_value_array_free (play_bin->elements);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -868,7 +878,6 @@ not_linked:
     GST_DEBUG_OBJECT (playbin, "pad not linked");
     return;
   }
-
 }
 
 /* we get called when all pads are available and we must connect the sinks to
@@ -949,23 +958,94 @@ drained_cb (GstElement * decodebin, GstSourceGroup * group)
   }
 }
 
-/* a callback is called */
+/* Called when we must provide a list of factories to plug to @pad with @caps.
+ * We first check if we have a sink that can handle the format and if we do, we
+ * return NULL, to expose the pad. If we have no sink (or the sink does not
+ * work), we return the list of elements that can connect. */
 static GValueArray *
 autoplug_factories_cb (GstElement * decodebin, GstPad * pad,
     GstCaps * caps, GstSourceGroup * group)
 {
   GstPlayBin *playbin;
-  GValueArray *result = NULL;
+  GValueArray *result;
 
   playbin = group->playbin;
 
-  GST_DEBUG_OBJECT (playbin, "continue group %p for %s:%s, %" GST_PTR_FORMAT,
+  GST_DEBUG_OBJECT (playbin, "factories group %p for %s:%s, %" GST_PTR_FORMAT,
       group, GST_DEBUG_PAD_NAME (pad), caps);
 
+  /* filter out the elements based on the caps. */
+  result = gst_factory_list_filter (playbin->elements, caps);
 
   GST_DEBUG_OBJECT (playbin, "found factories %p", result);
+  gst_factory_list_debug (result);
 
   return result;
+}
+
+/* We are asked to select an element. See if the next element to check
+ * is a sink. If this is the case, we see if the sink works by setting it to
+ * READY. If the sink works, we return -2 to make decodebin expose the raw pad
+ * so that we can setup the mixers. */
+static GstAutoplugSelectResult
+autoplug_select_cb (GstElement * decodebin, GstPad * pad,
+    GstCaps * caps, GstElementFactory * factory, GstSourceGroup * group)
+{
+  GstPlayBin *playbin;
+  GstElement *element;
+  const gchar *klass;
+
+  playbin = group->playbin;
+
+  GST_DEBUG_OBJECT (playbin, "select group %p for %s:%s, %" GST_PTR_FORMAT,
+      group, GST_DEBUG_PAD_NAME (pad), caps);
+
+  GST_DEBUG_OBJECT (playbin, "checking factory %s",
+      GST_PLUGIN_FEATURE_NAME (factory));
+
+  /* if it's not a sink, we just make decodebin try it */
+  if (!gst_factory_list_is_type (factory, GST_FACTORY_LIST_SINK))
+    return GST_AUTOPLUG_SELECT_TRY;
+
+  /* it's a sink, see if an instance of it actually works */
+  GST_DEBUG_OBJECT (playbin, "we found a sink");
+
+  if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
+    GST_WARNING_OBJECT (playbin, "Could not create an element from %s",
+        gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
+    return GST_AUTOPLUG_SELECT_SKIP;
+  }
+
+  /* ... activate it ... We do this before adding it to the bin so that we
+   * don't accidentally make it post error messages that will stop
+   * everything. */
+  if ((gst_element_set_state (element,
+              GST_STATE_READY)) == GST_STATE_CHANGE_FAILURE) {
+    GST_WARNING_OBJECT (playbin, "Couldn't set %s to READY",
+        GST_ELEMENT_NAME (element));
+    gst_object_unref (element);
+    return GST_AUTOPLUG_SELECT_SKIP;
+  }
+
+  /* at this point, we have the sink working, configure it in playsink */
+  klass = gst_element_factory_get_klass (factory);
+
+  /* get klass to figure out if it's audio or video */
+  if (strstr (klass, "Audio")) {
+    GST_DEBUG_OBJECT (playbin, "configure audio sink");
+    gst_play_sink_set_audio_sink (playbin->playsink, element);
+  } else if (strstr (klass, "Video")) {
+    GST_DEBUG_OBJECT (playbin, "configure video sink");
+    gst_play_sink_set_video_sink (playbin->playsink, element);
+  } else {
+    GST_WARNING_OBJECT (playbin, "unknown sink klass %s found", klass);
+  }
+
+  /* tell decodebin to expose the pad because we are going to use this
+   * sink */
+  GST_DEBUG_OBJECT (playbin, "we found a working sink, expose pad");
+
+  return GST_AUTOPLUG_SELECT_EXPOSE;
 }
 
 /* unlink a group of uridecodebins from the sink */
@@ -1022,10 +1102,13 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group)
    * next uri */
   g_signal_connect (uridecodebin, "drained", G_CALLBACK (drained_cb), group);
 
-  /* will be called when a new media type is found. We will see if we have a
-   * working sink that can natively handle this format. */
+  /* will be called when a new media type is found. We return a list of decoders
+   * including sinks for decodebin to try */
   g_signal_connect (uridecodebin, "autoplug-factories",
       G_CALLBACK (autoplug_factories_cb), group);
+
+  g_signal_connect (uridecodebin, "autoplug-select",
+      G_CALLBACK (autoplug_select_cb), group);
 
   /*  */
   gst_bin_add (GST_BIN_CAST (playbin), uridecodebin);

@@ -1,3 +1,51 @@
+2007-12-05  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/playback/Makefile.am:
+	Group decodebin2 and uridecodebin into the same plugin so that they
+	can share the GEnumType.
+
+	* gst/playback/gstdecodebin2.c: (_gst_array_accumulator),
+	(_gst_select_accumulator), (gst_decode_bin_class_init),
+	(gst_decode_bin_init), (gst_decode_bin_autoplug_sort),
+	(gst_decode_bin_autoplug_select), (gst_decode_bin_autoplug_add),
+	(analyze_new_pad), (connect_pad), (gst_decode_bin_plugin_init):
+	Add signal to sort factories instead of the more awkward autoplug-select
+	signal.
+	Modify autoplug_select so that we can try, skip or expose the
+	autopluggin of an element on a pad.
+
+	* gst/playback/gstfactorylists.c: (compare_ranks),
+	(decoders_filter), (sinks_filter), (gst_factory_list_is_type),
+	(element_filter), (gst_factory_list_get_elements),
+	(gst_factory_list_debug), (gst_factory_list_filter):
+	* gst/playback/gstfactorylists.h:
+	Simplify the API, allow getting elements based on mask.
+
+	* gst/playback/gstplay-marshal.list:
+	Add some more marshallers.
+
+	* gst/playback/gstplaybin2.c: (init_group), (gst_play_bin_init),
+	(gst_play_bin_finalize), (pad_removed_cb), (autoplug_factories_cb),
+	(autoplug_select_cb), (activate_group):
+	Add support for managing non-raw sinks by providing a custom element and
+	sink list to decodebin2.
+	Try to plug non-raw sinks when decodebin2 using autoplug-select of
+	decodebin2.
+
+	* gst/playback/gstplaysink.c: (gen_video_chain), (gen_audio_chain),
+	(gst_play_sink_set_mode), (gst_play_sink_request_pad):
+	* gst/playback/gstplaysink.h:
+	Add support for raw and non-raw sinks. 
+	Add support to force sinks selected by playbin2.
+	Don't plug raw converters for non-raw sinks.
+
+	* gst/playback/gsturidecodebin.c: (_gst_array_accumulator),
+	(_gst_select_accumulator), (gst_uri_decode_bin_class_init),
+	(proxy_autoplug_select_signal), (gst_uri_decode_bin_plugin_init),
+	(plugin_init):
+	Use right accumulators.
+	Proxy new signal.
+
 2007-12-03  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst-libs/gst/rtp/gstbasertppayload.c: (gst_basertppayload_push):

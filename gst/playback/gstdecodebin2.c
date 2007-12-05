@@ -43,6 +43,7 @@
 #include <gst/pbutils/pbutils.h>
 
 #include "gstplay-marshal.h"
+#include "gstplay-enum.h"
 #include "gstfactorylists.h"
 
 /* generic templates */
@@ -121,9 +122,12 @@ struct _GstDecodeBinClass
   /* signal fired to get a list of factories to try to autoplug */
   GValueArray *(*autoplug_factories) (GstElement * element, GstPad * pad,
       GstCaps * caps);
+  /* signal fired to sort the factories */
+  GValueArray *(*autoplug_sort) (GstElement * element, GstPad * pad,
+      GstCaps * caps, GValueArray * factories);
   /* signal fired to select from the proposed list of factories */
-    gint (*autoplug_select) (GstElement * element, GstPad * pad, GstCaps * caps,
-      GValueArray * factories);
+    GstAutoplugSelectResult (*autoplug_select) (GstElement * element,
+      GstPad * pad, GstCaps * caps, GstElementFactory * factory);
 
   /* fired when the last group is drained */
   void (*drained) (GstElement * element);
@@ -138,6 +142,7 @@ enum
   SIGNAL_AUTOPLUG_CONTINUE,
   SIGNAL_AUTOPLUG_FACTORIES,
   SIGNAL_AUTOPLUG_SELECT,
+  SIGNAL_AUTOPLUG_SORT,
   SIGNAL_DRAINED,
   LAST_SIGNAL
 };
@@ -170,8 +175,10 @@ static gboolean gst_decode_bin_autoplug_continue (GstElement * element,
     GstPad * pad, GstCaps * caps);
 static GValueArray *gst_decode_bin_autoplug_factories (GstElement *
     element, GstPad * pad, GstCaps * caps);
-static gint gst_decode_bin_autoplug_select (GstElement * element,
-    GstPad * pad, GstCaps * caps, GValueArray * list);
+static GValueArray *gst_decode_bin_autoplug_sort (GstElement * element,
+    GstPad * pad, GstCaps * caps, GValueArray * factories);
+static GstAutoplugSelectResult gst_decode_bin_autoplug_select (GstElement *
+    element, GstPad * pad, GstCaps * caps, GstElementFactory * factory);
 
 static void gst_decode_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
@@ -336,6 +343,33 @@ _gst_boolean_accumulator (GSignalInvocationHint * ihint,
   return myboolean;
 }
 
+/* we collect the first result */
+static gboolean
+_gst_array_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  gpointer array;
+
+  array = g_value_get_boxed (handler_return);
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boxed (return_accu, array);
+
+  return FALSE;
+}
+
+static gboolean
+_gst_select_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  GstAutoplugSelectResult res;
+
+  res = g_value_get_enum (handler_return);
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_enum (return_accu, res);
+
+  return FALSE;
+}
+
 static void
 gst_decode_bin_class_init (GstDecodeBinClass * klass)
 {
@@ -435,9 +469,30 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
   gst_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES] =
       g_signal_new ("autoplug-factories", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass,
-          autoplug_factories), NULL, NULL,
+          autoplug_factories), _gst_array_accumulator, NULL,
       gst_play_marshal_BOXED__OBJECT_OBJECT, G_TYPE_VALUE_ARRAY, 2,
       GST_TYPE_PAD, GST_TYPE_CAPS);
+
+  /**
+   * GstDecodeBin2::autoplug-sort:
+   * @pad: The #GstPad.
+   * @caps: The #GstCaps.
+   * @factories: A #GValueArray of possible #GstElementFactory to use.
+   *
+   * Once decodebin2 has found the possible #GstElementFactory objects to try
+   * for @caps on @pad, this signal is emited. The purpose of the signal is for
+   * the application to perform additional sorting or filtering on the element
+   * factory array.
+   *
+   * The callee should copy and modify @factories.
+   *
+   * Returns: A new sorted array of #GstElementFactory objects.
+   */
+  gst_decode_bin_signals[SIGNAL_AUTOPLUG_SORT] =
+      g_signal_new ("autoplug-sort", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_sort),
+      NULL, NULL, gst_play_marshal_BOXED__OBJECT_OBJECT_BOXED,
+      G_TYPE_VALUE_ARRAY, 3, GST_TYPE_PAD, GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
 
   /**
    * GstDecodeBin2::autoplug-select:
@@ -451,14 +506,16 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * Returns: A #gint indicating what factory index from the @factories array
    * that you wish decodebin2 to use for trying to decode the given @caps.
-   * -1 to stop selection of a factory. The default handler always
-   * returns the first possible factory.
+   * Return -1 to stop selection of a factory and expose the pad as a raw type. 
+   * The default handler always returns the first possible factory (index 0).
    */
   gst_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT] =
       g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstDecodeBinClass, autoplug_select),
-      NULL, NULL, gst_play_marshal_INT__OBJECT_OBJECT_BOXED,
-      G_TYPE_INT, 3, GST_TYPE_PAD, GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
+      _gst_select_accumulator, NULL,
+      gst_play_marshal_ENUM__OBJECT_OBJECT_OBJECT,
+      GST_TYPE_AUTOPLUG_SELECT_RESULT, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
+      GST_TYPE_ELEMENT_FACTORY);
 
   /**
    * GstDecodeBin2::drained
@@ -487,6 +544,7 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
       GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_continue);
   klass->autoplug_factories =
       GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_factories);
+  klass->autoplug_sort = GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_sort);
   klass->autoplug_select = GST_DEBUG_FUNCPTR (gst_decode_bin_autoplug_select);
 
   gst_element_class_add_pad_template (gstelement_klass,
@@ -504,7 +562,8 @@ static void
 gst_decode_bin_init (GstDecodeBin * decode_bin)
 {
   /* first filter out the interesting element factories */
-  decode_bin->factories = gst_factory_list_get_decoders ();
+  decode_bin->factories =
+      gst_factory_list_get_elements (GST_FACTORY_LIST_DECODER);
 
   /* we create the typefind element only once */
   decode_bin->typefind = gst_element_factory_make ("typefind", "typefind");
@@ -754,17 +813,28 @@ gst_decode_bin_autoplug_factories (GstElement * element, GstPad * pad,
   return result;
 }
 
-static gint
-gst_decode_bin_autoplug_select (GstElement * element, GstPad * pad,
+static GValueArray *
+gst_decode_bin_autoplug_sort (GstElement * element, GstPad * pad,
     GstCaps * caps, GValueArray * factories)
 {
-  g_return_val_if_fail (factories != NULL, -1);
-  g_return_val_if_fail (factories->n_values > 0, -1);
+  GValueArray *result;
 
-  GST_DEBUG_OBJECT (element, "default autoplug-select returns 0");
+  result = g_value_array_copy (factories);
 
-  /* Return first factory. */
-  return 0;
+  GST_DEBUG_OBJECT (element, "autoplug-sort returns %p", result);
+
+  /* return input */
+  return result;
+}
+
+static GstAutoplugSelectResult
+gst_decode_bin_autoplug_select (GstElement * element, GstPad * pad,
+    GstCaps * caps, GstElementFactory * factory)
+{
+  GST_DEBUG_OBJECT (element, "default autoplug-select returns TRY");
+
+  /* Try factory. */
+  return GST_AUTOPLUG_SELECT_TRY;
 }
 
 /********
@@ -776,7 +846,7 @@ static gboolean is_demuxer_element (GstElement * srcelement);
 
 static gboolean connect_pad (GstDecodeBin * dbin, GstElement * src,
     GstPad * pad, GstCaps * caps, GValueArray * factories,
-    GstDecodeGroup * group);
+    GstDecodeGroup * group, gboolean * expose);
 static gboolean connect_element (GstDecodeBin * dbin, GstElement * element,
     GstDecodeGroup * group);
 static void expose_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
@@ -813,7 +883,8 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     GstCaps * caps, GstDecodeGroup * group)
 {
   gboolean apcontinue = TRUE;
-  GValueArray *factories = NULL;
+  GValueArray *factories = NULL, *result = NULL;
+  gboolean expose;
 
   GST_DEBUG_OBJECT (dbin, "Pad %s:%s caps:%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -856,11 +927,21 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     goto unknown_type;
   }
 
-  /* 1.d else continue autoplugging something from the list. */
+  /* 1.d sort some more. */
+  g_signal_emit (G_OBJECT (dbin),
+      gst_decode_bin_signals[SIGNAL_AUTOPLUG_SORT], 0, pad, caps, factories,
+      &result);
+  g_value_array_free (factories);
+  factories = result;
+
+  /* 1.e else continue autoplugging something from the list. */
   GST_LOG_OBJECT (pad, "Let's continue discovery on this pad");
-  connect_pad (dbin, src, pad, caps, factories, group);
+  connect_pad (dbin, src, pad, caps, factories, group, &expose);
 
   g_value_array_free (factories);
+
+  if (expose)
+    goto expose_pad;
 
   return;
 
@@ -934,13 +1015,16 @@ setup_caps_delay:
  */
 static gboolean
 connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
-    GstCaps * caps, GValueArray * factories, GstDecodeGroup * group)
+    GstCaps * caps, GValueArray * factories, GstDecodeGroup * group,
+    gboolean * expose)
 {
   gboolean res = FALSE;
   GstPad *mqpad = NULL;
 
   g_return_val_if_fail (factories != NULL, FALSE);
   g_return_val_if_fail (factories->n_values > 0, FALSE);
+
+  *expose = FALSE;
 
   GST_DEBUG_OBJECT (dbin, "pad %s:%s , group:%p",
       GST_DEBUG_PAD_NAME (pad), group);
@@ -964,31 +1048,36 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   /* 2. Try to create an element and link to it */
   while (factories->n_values > 0) {
-    gint factidx;
+    GstAutoplugSelectResult ret;
     GstElementFactory *factory;
     GstElement *element;
     GstPad *sinkpad;
 
-    /* emit autoplug-select */
+    /* take first factory */
+    factory = g_value_get_object (g_value_array_get_nth (factories, 0));
+    /* Remove selected factory from the list. */
+    g_value_array_remove (factories, 0);
+
+    /* emit autoplug-select to see what we should do with it. */
     g_signal_emit (G_OBJECT (dbin),
         gst_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT],
-        0, pad, caps, factories, &factidx);
+        0, pad, caps, factory, &ret);
 
-    /* when the function returns -1, we leave the loop and stop */
-    if (factidx == -1) {
-      GST_DEBUG_OBJECT (dbin, "autoplug select returned -1");
-      break;
+    switch (ret) {
+      case GST_AUTOPLUG_SELECT_TRY:
+        GST_DEBUG_OBJECT (dbin, "autoplug select requested try");
+        break;
+      case GST_AUTOPLUG_SELECT_EXPOSE:
+        GST_DEBUG_OBJECT (dbin, "autoplug select requested expose");
+        *expose = TRUE;
+        goto beach;
+      case GST_AUTOPLUG_SELECT_SKIP:
+        GST_DEBUG_OBJECT (dbin, "autoplug select requested skip");
+        continue;
+      default:
+        GST_WARNING_OBJECT (dbin, "autoplug select returned unhandled %d", ret);
+        break;
     }
-
-    GST_DEBUG_OBJECT (dbin, "autoplug select returned %d", factidx);
-
-    factory = g_value_get_object (g_value_array_get_nth (factories, factidx));
-
-    /* factory is != NULL now since the default handler selects the first
-     * factory if all connected user handlers returned NULL. */
-
-    /* Remove selected factory from the list. */
-    g_value_array_remove (factories, factidx);
 
     /* 2.1. Try to create an element */
     if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
@@ -997,7 +1086,18 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
       continue;
     }
 
-    /* 2.3. Find its sink pad */
+    /* ... activate it ... We do this before adding it to the bin so that we
+     * don't accidentally make it post error messages that will stop
+     * everything. */
+    if ((gst_element_set_state (element,
+                GST_STATE_READY)) == GST_STATE_CHANGE_FAILURE) {
+      GST_WARNING_OBJECT (dbin, "Couldn't set %s to READY",
+          GST_ELEMENT_NAME (element));
+      gst_object_unref (element);
+      continue;
+    }
+
+    /* 2.3. Find its sink pad, this should work after activating it. */
     if (!(sinkpad = find_sink_pad (element))) {
       GST_WARNING_OBJECT (dbin, "Element %s doesn't have a sink pad",
           GST_ELEMENT_NAME (element));
@@ -1006,21 +1106,11 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     }
 
     /* 2.4 add it ... */
-    if (!(gst_bin_add (GST_BIN (dbin), element))) {
+    if (!(gst_bin_add (GST_BIN_CAST (dbin), element))) {
       GST_WARNING_OBJECT (dbin, "Couldn't add %s to the bin",
           GST_ELEMENT_NAME (element));
       gst_object_unref (sinkpad);
       gst_object_unref (element);
-      continue;
-    }
-
-    /* ... activate it ... */
-    if ((gst_element_set_state (element,
-                GST_STATE_READY)) == GST_STATE_CHANGE_FAILURE) {
-      GST_WARNING_OBJECT (dbin, "Couldn't set %s to READY",
-          GST_ELEMENT_NAME (element));
-      gst_object_unref (sinkpad);
-      gst_bin_remove (GST_BIN (dbin), element);
       continue;
     }
 
@@ -1053,10 +1143,10 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     break;
   }
 
+beach:
   if (mqpad)
     gst_object_unref (mqpad);
 
-beach:
   return res;
 }
 
@@ -2306,8 +2396,8 @@ missing_fakesink:
   }
 }
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+gboolean
+gst_decode_bin_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_decode_bin_debug, "decodebin2", 0,
       "decoder bin");
@@ -2321,9 +2411,3 @@ plugin_init (GstPlugin * plugin)
   return gst_element_register (plugin, "decodebin2", GST_RANK_NONE,
       GST_TYPE_DECODE_BIN);
 }
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "decodebin2",
-    "decoder bin newer version", plugin_init, VERSION, GST_LICENSE,
-    GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

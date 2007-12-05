@@ -20,6 +20,11 @@
 
 #include "gstfactorylists.h"
 
+typedef struct
+{
+  GstFactoryListType type;
+} FilterData;
+
 /* function used to sort element features. We first sort on the rank, then
  * on the element name (to get a consistent, predictable list) */
 static gint
@@ -44,29 +49,119 @@ compare_ranks (GValue * v1, GValue * v2)
   return diff;
 }
 
-#if 0
-static void
-print_feature (GstPluginFeature * feature)
+/* the filter function for selecting the elements we can use in
+ * autoplugging */
+static gboolean
+decoders_filter (GstElementFactory * factory)
 {
-  const gchar *rname;
+  guint rank;
+  const gchar *klass;
 
-  rname = gst_plugin_feature_get_name (feature);
+  klass = gst_element_factory_get_klass (factory);
+  /* only demuxers, decoders, depayloaders and parsers can play */
+  if (strstr (klass, "Demux") == NULL &&
+      strstr (klass, "Decoder") == NULL &&
+      strstr (klass, "Depayloader") == NULL &&
+      strstr (klass, "Parse") == NULL) {
+    return FALSE;
+  }
 
-  GST_DEBUG ("%s", rname);
+  /* only select elements with autoplugging rank */
+  rank = gst_plugin_feature_get_rank (GST_PLUGIN_FEATURE (factory));
+  if (rank < GST_RANK_MARGINAL)
+    return FALSE;
+
+  return TRUE;
 }
-#endif
 
-/* get a filtered feature list as a GValueArray */
-static GValueArray *
-get_feature_array (GstPluginFeatureFilter filter)
+/* the filter function for selecting the elements we can use in
+ * autoplugging */
+static gboolean
+sinks_filter (GstElementFactory * factory)
+{
+  guint rank;
+  const gchar *klass;
+
+  klass = gst_element_factory_get_klass (factory);
+  /* only sinks can play */
+  if (strstr (klass, "Sink") == NULL) {
+    return FALSE;
+  }
+
+  /* must be audio or video sink */
+  if (strstr (klass, "Audio") == NULL && strstr (klass, "Video") == NULL) {
+    return FALSE;
+  }
+
+  /* only select elements with autoplugging rank */
+  rank = gst_plugin_feature_get_rank (GST_PLUGIN_FEATURE (factory));
+  if (rank < GST_RANK_MARGINAL)
+    return FALSE;
+
+  return TRUE;
+}
+
+/**
+ * gst_factory_list_is_type:
+ * @factory: a #GstElementFactory
+ * @type: a #GstFactoryListType
+ *
+ * Check if @factory if of the given types.
+ *
+ * Returns: %TRUE if @factory is of @type.
+ */
+gboolean
+gst_factory_list_is_type (GstElementFactory * factory, GstFactoryListType type)
+{
+  gboolean res = FALSE;
+
+  if (!res && (type & GST_FACTORY_LIST_SINK))
+    res = sinks_filter (factory);
+  if (!res && (type & GST_FACTORY_LIST_DECODER))
+    res = decoders_filter (factory);
+
+  return res;
+}
+
+static gboolean
+element_filter (GstPluginFeature * feature, FilterData * data)
+{
+  gboolean res;
+
+  /* we only care about element factories */
+  if (!GST_IS_ELEMENT_FACTORY (feature))
+    return FALSE;
+
+  res = gst_factory_list_is_type (GST_ELEMENT_FACTORY (feature), data->type);
+
+  return res;
+}
+
+/**
+ * gst_factory_list_get_elements:
+ * @type: a #GstFactoryListType
+ *
+ * Get a sorted list of factories of @type.
+ *
+ * Returns: a #GValueArray of #GstElementFactory elements. Use
+ * g_value_array_free() after usage.
+ */
+GValueArray *
+gst_factory_list_get_elements (GstFactoryListType type)
 {
   GValueArray *result;
   GList *walk, *list;
+  FilterData data;
 
   result = g_value_array_new (0);
 
+  /* prepare type */
+  data.type = type;
+
   /* get the feature list using the filter */
-  list = gst_default_registry_feature_filter (filter, FALSE, NULL);
+  list =
+      gst_default_registry_feature_filter ((GstPluginFeatureFilter)
+      element_filter, FALSE, &data);
 
   /* convert to an array */
   for (walk = list; walk; walk = g_list_next (walk)) {
@@ -86,104 +181,26 @@ get_feature_array (GstPluginFeatureFilter filter)
   return result;
 }
 
-/* the filter function for selecting the elements we can use in
- * autoplugging */
-static gboolean
-decoders_filter (GstPluginFeature * feature)
-{
-  guint rank;
-  const gchar *klass;
-
-  /* we only care about element factories */
-  if (!GST_IS_ELEMENT_FACTORY (feature))
-    return FALSE;
-
-  klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
-  /* only demuxers, decoders, depayloaders and parsers can play */
-  if (strstr (klass, "Demux") == NULL &&
-      strstr (klass, "Decoder") == NULL &&
-      strstr (klass, "Depayloader") == NULL &&
-      strstr (klass, "Parse") == NULL) {
-    return FALSE;
-  }
-
-  /* only select elements with autoplugging rank */
-  rank = gst_plugin_feature_get_rank (feature);
-  if (rank < GST_RANK_MARGINAL)
-    return FALSE;
-
-  return TRUE;
-}
-
-/* the filter function for selecting the elements we can use in
- * autoplugging */
-static gboolean
-sinks_filter (GstPluginFeature * feature)
-{
-  guint rank;
-  const gchar *klass;
-
-  /* we only care about element factories */
-  if (!GST_IS_ELEMENT_FACTORY (feature))
-    return FALSE;
-
-  klass = gst_element_factory_get_klass (GST_ELEMENT_FACTORY (feature));
-  /* only sinks can play */
-  if (strstr (klass, "Sink") == NULL) {
-    return FALSE;
-  }
-
-  /* must be audio or video sink */
-  if (strstr (klass, "Audio") == NULL && strstr (klass, "Video") == NULL) {
-    return FALSE;
-  }
-
-  /* only select elements with autoplugging rank */
-  rank = gst_plugin_feature_get_rank (feature);
-  if (rank < GST_RANK_MARGINAL)
-    return FALSE;
-
-  return TRUE;
-}
-
-
 /**
- * gst_factory_list_get_decoders:
+ * gst_factory_list_debug:
+ * @array: an array of element factories
  *
- * Get a sorted list of factories that can be used in decoding pipelines.
- *
- * Returns: a #GValueArray of #GstElementFactory elements. Use
- * g_value_array_free() after usage.
+ * Debug the element factory names in @array.
  */
-GValueArray *
-gst_factory_list_get_decoders (void)
+void
+gst_factory_list_debug (GValueArray * array)
 {
-  GValueArray *result;
+  gint i;
 
-  /* first filter out the interesting element factories */
-  result = get_feature_array ((GstPluginFeatureFilter) decoders_filter);
+  for (i = 0; i < array->n_values; i++) {
+    GValue *value;
+    GstPluginFeature *feature;
 
-  return result;
-}
+    value = g_value_array_get_nth (array, i);
+    feature = g_value_get_object (value);
 
-/**
- * gst_factory_list_get_sinks:
- *
- * Get a sorted list of factories that can be used as sinks in a decoding
- * pipeline.
- *
- * Returns: a #GValueArray of #GstElementFactory elements. Use
- * g_value_array_free() after usage.
- */
-GValueArray *
-gst_factory_list_get_sinks (void)
-{
-  GValueArray *result;
-
-  /* first filter out the interesting element factories */
-  result = get_feature_array ((GstPluginFeatureFilter) sinks_filter);
-
-  return result;
+    GST_DEBUG ("%s", gst_plugin_feature_get_name (feature));
+  }
 }
 
 /**

@@ -25,8 +25,17 @@
 
 G_BEGIN_DECLS
 
-GValueArray * gst_factory_list_get_decoders (void);
-GValueArray * gst_factory_list_get_sinks    (void);
+typedef enum {
+  GST_FACTORY_LIST_DECODER = (1 << 0),
+  GST_FACTORY_LIST_ENCODER = (1 << 1),
+  GST_FACTORY_LIST_SINK    = (1 << 2),
+  GST_FACTORY_LIST_SRC     = (1 << 3)
+} GstFactoryListType;
+
+gboolean      gst_factory_list_is_type      (GstElementFactory *factory, GstFactoryListType type);
+GValueArray * gst_factory_list_get_elements (GstFactoryListType type);
+
+void          gst_factory_list_debug        (GValueArray *array);
 
 GValueArray * gst_factory_list_filter       (GValueArray *array, const GstCaps *caps);
 

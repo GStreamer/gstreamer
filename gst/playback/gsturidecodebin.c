@@ -34,6 +34,7 @@
 #include <gst/gst-i18n-plugin.h>
 
 #include "gstplay-marshal.h"
+#include "gstplay-enum.h"
 
 #define GST_TYPE_URI_DECODE_BIN \
   (gst_uri_decode_bin_get_type())
@@ -85,8 +86,8 @@ struct _GstURIDecodeBinClass
   GValueArray *(*autoplug_factories) (GstElement * element, GstPad * pad,
       GstCaps * caps);
   /* signal fired to select from the proposed list of factories */
-    gint (*autoplug_select) (GstElement * element, GstPad * pad, GstCaps * caps,
-      GValueArray * factories);
+    GstAutoplugSelectResult (*autoplug_select) (GstElement * element,
+      GstPad * pad, GstCaps * caps, GValueArray * factories);
 
   /* emited when all data is decoded */
   void (*drained) (GstElement * element);
@@ -172,6 +173,32 @@ _gst_boolean_accumulator (GSignalInvocationHint * ihint,
 
   /* stop emission if FALSE */
   return myboolean;
+}
+
+static gboolean
+_gst_array_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  gpointer array;
+
+  array = g_value_get_boxed (handler_return);
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_boxed (return_accu, array);
+
+  return FALSE;
+}
+
+static gboolean
+_gst_select_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  GstAutoplugSelectResult res;
+
+  res = g_value_get_enum (handler_return);
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_enum (return_accu, res);
+
+  return FALSE;
 }
 
 static gboolean
@@ -267,7 +294,7 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_FACTORIES] =
       g_signal_new ("autoplug-factories", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
-          autoplug_factories), NULL, NULL,
+          autoplug_factories), _gst_array_accumulator, NULL,
       gst_play_marshal_BOXED__OBJECT_OBJECT, G_TYPE_VALUE_ARRAY, 2,
       GST_TYPE_PAD, GST_TYPE_CAPS);
 
@@ -289,9 +316,10 @@ gst_uri_decode_bin_class_init (GstURIDecodeBinClass * klass)
   gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT] =
       g_signal_new ("autoplug-select", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstURIDecodeBinClass,
-          autoplug_select), NULL, NULL,
-      gst_play_marshal_INT__OBJECT_OBJECT_BOXED, G_TYPE_INT, 3, GST_TYPE_PAD,
-      GST_TYPE_CAPS, G_TYPE_VALUE_ARRAY);
+          autoplug_select), _gst_select_accumulator, NULL,
+      gst_play_marshal_ENUM__OBJECT_OBJECT_OBJECT,
+      GST_TYPE_AUTOPLUG_SELECT_RESULT, 3, GST_TYPE_PAD, GST_TYPE_CAPS,
+      GST_TYPE_ELEMENT_FACTORY);
 
   /**
    * GstURIDecodeBin::drained:
@@ -871,14 +899,14 @@ proxy_autoplug_factories_signal (GstElement * element, GstPad * pad,
   return result;
 }
 
-static gint
+static GstAutoplugSelectResult
 proxy_autoplug_select_signal (GstElement * element, GstPad * pad,
-    GstCaps * caps, GValueArray * array, GstURIDecodeBin * dec)
+    GstCaps * caps, GstElementFactory * factory, GstURIDecodeBin * dec)
 {
-  gint result;
+  GstAutoplugSelectResult result;
 
   g_signal_emit (G_OBJECT (dec),
-      gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT], 0, pad, caps, array,
+      gst_uri_decode_bin_signals[SIGNAL_AUTOPLUG_SELECT], 0, pad, caps, factory,
       &result);
 
   GST_DEBUG_OBJECT (dec, "autoplug-select returned %d", result);
@@ -1558,8 +1586,10 @@ setup_failed:
   }
 }
 
+gboolean gst_decode_bin_plugin_init (GstPlugin * plugin);
+
 static gboolean
-plugin_init (GstPlugin * plugin)
+gst_uri_decode_bin_plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_uri_decode_bin_debug, "uridecodebin", 0,
       "URI decoder element");
@@ -1572,6 +1602,17 @@ plugin_init (GstPlugin * plugin)
 
   return gst_element_register (plugin, "uridecodebin", GST_RANK_NONE,
       GST_TYPE_URI_DECODE_BIN);
+}
+
+static gboolean
+plugin_init (GstPlugin * plugin)
+{
+  if (!gst_decode_bin_plugin_init (plugin))
+    return FALSE;
+  if (!gst_uri_decode_bin_plugin_init (plugin))
+    return FALSE;
+
+  return TRUE;
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,

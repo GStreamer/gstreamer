@@ -74,7 +74,9 @@ struct _GstPlaySink
   GstPlayChain *videochain;
 
   GstPad *audio_pad;
+  gboolean audio_pad_raw;
   GstPad *video_pad;
+  gboolean video_pad_raw;
   GstPad *text_pad;
 
   /* properties */
@@ -388,7 +390,7 @@ beach:
       play_sink);
 }
 
-static void
+void
 gst_play_sink_set_video_sink (GstPlaySink * play_sink, GstElement * sink)
 {
   GST_OBJECT_LOCK (play_sink);
@@ -403,7 +405,7 @@ gst_play_sink_set_video_sink (GstPlaySink * play_sink, GstElement * sink)
   GST_OBJECT_UNLOCK (play_sink);
 }
 
-static void
+void
 gst_play_sink_set_audio_sink (GstPlaySink * play_sink, GstElement * sink)
 {
   GST_OBJECT_LOCK (play_sink);
@@ -418,7 +420,7 @@ gst_play_sink_set_audio_sink (GstPlaySink * play_sink, GstElement * sink)
   GST_OBJECT_UNLOCK (play_sink);
 }
 
-static void
+void
 gst_play_sink_set_vis_plugin (GstPlaySink * play_sink,
     GstElement * pending_visualisation)
 {
@@ -622,7 +624,7 @@ activate_chain (GstPlayChain * chain, gboolean activate)
  *           
  */
 static GstPlayChain *
-gen_video_chain (GstPlaySink * play_sink)
+gen_video_chain (GstPlaySink * play_sink, gboolean raw)
 {
   GstPlayVideoChain *chain;
   GstBin *bin;
@@ -650,11 +652,17 @@ gen_video_chain (GstPlaySink * play_sink)
   gst_object_sink (bin);
   gst_bin_add (bin, chain->sink);
 
+  if (raw) {
+    chain->conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
+    if (chain->conv == NULL)
+      goto no_colorspace;
+    gst_bin_add (bin, chain->conv);
 
-  chain->conv = gst_element_factory_make ("ffmpegcolorspace", "vconv");
-  if (chain->conv == NULL)
-    goto no_colorspace;
-  gst_bin_add (bin, chain->conv);
+    chain->scale = gst_element_factory_make ("videoscale", "vscale");
+    if (chain->scale == NULL)
+      goto no_videoscale;
+    gst_bin_add (bin, chain->scale);
+  }
 
   /* decouple decoder from sink, this improves playback quite a lot since the
    * decoder can continue while the sink blocks for synchronisation. We don't
@@ -665,19 +673,21 @@ gen_video_chain (GstPlaySink * play_sink)
       "max-size-bytes", 0, "max-size-time", (gint64) 0, NULL);
   gst_bin_add (bin, chain->queue);
 
-  chain->scale = gst_element_factory_make ("videoscale", "vscale");
-  if (chain->scale == NULL)
-    goto no_videoscale;
-  gst_bin_add (bin, chain->scale);
+  if (raw) {
+    gst_element_link_pads (chain->conv, "src", chain->queue, "sink");
+    gst_element_link_pads (chain->queue, "src", chain->scale, "sink");
+    /* be more careful with the pad from the custom sink element, it might not
+     * be named 'sink' */
+    if (!gst_element_link_pads (chain->scale, "src", chain->sink, NULL))
+      goto link_failed;
 
-  gst_element_link_pads (chain->conv, "src", chain->queue, "sink");
-  gst_element_link_pads (chain->queue, "src", chain->scale, "sink");
-  /* be more careful with the pad from the custom sink element, it might not
-   * be named 'sink' */
-  if (!gst_element_link_pads (chain->scale, "src", chain->sink, NULL))
-    goto link_failed;
+    pad = gst_element_get_pad (chain->conv, "sink");
+  } else {
+    if (!gst_element_link_pads (chain->queue, "src", chain->sink, NULL))
+      goto link_failed;
+    pad = gst_element_get_pad (chain->queue, "sink");
+  }
 
-  pad = gst_element_get_pad (chain->conv, "sink");
   chain->chain.sinkpad = gst_ghost_pad_new ("sink", pad);
   gst_object_unref (pad);
   gst_element_add_pad (chain->chain.bin, chain->chain.sinkpad);
@@ -817,7 +827,7 @@ no_overlay:
  *  +-------------------------------------------------------------+
  */
 static GstPlayChain *
-gen_audio_chain (GstPlaySink * play_sink)
+gen_audio_chain (GstPlaySink * play_sink, gboolean raw)
 {
   GstPlayAudioChain *chain;
   GstBin *bin;
@@ -843,27 +853,32 @@ gen_audio_chain (GstPlaySink * play_sink)
   gst_object_sink (bin);
   gst_bin_add (bin, chain->sink);
 
-  chain->conv = gst_element_factory_make ("audioconvert", "aconv");
-  if (chain->conv == NULL)
-    goto no_audioconvert;
-  gst_bin_add (bin, chain->conv);
+  if (raw) {
+    chain->conv = gst_element_factory_make ("audioconvert", "aconv");
+    if (chain->conv == NULL)
+      goto no_audioconvert;
+    gst_bin_add (bin, chain->conv);
 
-  chain->resample = gst_element_factory_make ("audioresample", "aresample");
-  if (chain->resample == NULL)
-    goto no_audioresample;
-  gst_bin_add (bin, chain->resample);
+    chain->resample = gst_element_factory_make ("audioresample", "aresample");
+    if (chain->resample == NULL)
+      goto no_audioresample;
+    gst_bin_add (bin, chain->resample);
 
-  chain->volume = gst_element_factory_make ("volume", "volume");
-  g_object_set (G_OBJECT (chain->volume), "volume", play_sink->volume, NULL);
-  gst_bin_add (bin, chain->volume);
+    chain->volume = gst_element_factory_make ("volume", "volume");
+    g_object_set (G_OBJECT (chain->volume), "volume", play_sink->volume, NULL);
+    gst_bin_add (bin, chain->volume);
 
-  res = gst_element_link_pads (chain->conv, "src", chain->resample, "sink");
-  res &= gst_element_link_pads (chain->resample, "src", chain->volume, "sink");
-  res &= gst_element_link_pads (chain->volume, "src", chain->sink, NULL);
-  if (!res)
-    goto link_failed;
+    res = gst_element_link_pads (chain->conv, "src", chain->resample, "sink");
+    res &=
+        gst_element_link_pads (chain->resample, "src", chain->volume, "sink");
+    res &= gst_element_link_pads (chain->volume, "src", chain->sink, NULL);
+    if (!res)
+      goto link_failed;
 
-  pad = gst_element_get_pad (chain->conv, "sink");
+    pad = gst_element_get_pad (chain->conv, "sink");
+  } else {
+    pad = gst_element_get_pad (chain->sink, "sink");
+  }
   chain->chain.sinkpad = gst_ghost_pad_new ("sink", pad);
   gst_object_unref (pad);
   gst_element_add_pad (chain->chain.bin, chain->chain.sinkpad);
@@ -1078,7 +1093,8 @@ gst_play_sink_set_mode (GstPlaySink * playsink, GstPlaySinkMode mode)
 {
   if (mode & GST_PLAY_SINK_MODE_AUDIO && playsink->audio_pad) {
     if (!playsink->audiochain)
-      playsink->audiochain = gen_audio_chain (playsink);
+      playsink->audiochain =
+          gen_audio_chain (playsink, playsink->audio_pad_raw);
     add_chain (playsink->audiochain, TRUE);
     activate_chain (playsink->audiochain, TRUE);
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->audio_pad),
@@ -1094,7 +1110,8 @@ gst_play_sink_set_mode (GstPlaySink * playsink, GstPlaySinkMode mode)
 
   if (mode & GST_PLAY_SINK_MODE_VIDEO && playsink->video_pad) {
     if (!playsink->videochain)
-      playsink->videochain = gen_video_chain (playsink);
+      playsink->videochain =
+          gen_video_chain (playsink, playsink->video_pad_raw);
     add_chain (playsink->videochain, TRUE);
     activate_chain (playsink->videochain, TRUE);
     gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->video_pad),
@@ -1118,22 +1135,29 @@ gst_play_sink_request_pad (GstPlaySink * playsink, GstPlaySinkType type)
 {
   GstPad *res = NULL;
   gboolean created = FALSE;
+  gboolean raw = FALSE;
 
   switch (type) {
+    case GST_PLAY_SINK_TYPE_AUDIO_RAW:
+      raw = TRUE;
     case GST_PLAY_SINK_TYPE_AUDIO:
       if (!playsink->audio_pad) {
         playsink->audio_pad =
             gst_ghost_pad_new_no_target ("audio_sink", GST_PAD_SINK);
         created = TRUE;
       }
+      playsink->audio_pad_raw = raw;
       res = playsink->audio_pad;
       break;
+    case GST_PLAY_SINK_TYPE_VIDEO_RAW:
+      raw = TRUE;
     case GST_PLAY_SINK_TYPE_VIDEO:
       if (!playsink->video_pad) {
         playsink->video_pad =
             gst_ghost_pad_new_no_target ("video_sink", GST_PAD_SINK);
         created = TRUE;
       }
+      playsink->video_pad_raw = raw;
       res = playsink->video_pad;
       break;
     case GST_PLAY_SINK_TYPE_TEXT:
