@@ -1,3 +1,12 @@
+2007-12-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	* gst/mpegtsparse/mpegtsparse.c:
+	A sub table is identified by the pair table_id and 
+	sub_table_identifier, not by pid. So hash with that.
+	* sys/dvb/dvbbasebin.c:
+	Make sure initial pids are added properly to filter,
+
 2007-12-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst/switch/gstswitch.c (gst_switch_set_property): Don't push

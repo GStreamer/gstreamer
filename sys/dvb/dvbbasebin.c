@@ -309,9 +309,14 @@ dvb_base_bin_reset (DvbBaseBin * dvbbasebin)
   }
 }
 
+static gint16 initial_pids[] = { 0, 1, 0x10, 0x11, 0x12, -1 };
+
 static void
 dvb_base_bin_init (DvbBaseBin * dvbbasebin, DvbBaseBinClass * klass)
 {
+  DvbBaseBinStream *stream;
+  int i;
+
   dvbbasebin->dvbsrc = gst_element_factory_make ("dvbsrc", NULL);
   dvbbasebin->buffer_queue = gst_element_factory_make ("queue", NULL);
   dvbbasebin->mpegtsparse = gst_element_factory_make ("mpegtsparse", NULL);
@@ -338,11 +343,12 @@ dvb_base_bin_init (DvbBaseBin * dvbbasebin, DvbBaseBinClass * klass)
   dvb_base_bin_reset (dvbbasebin);
 
   /* add PAT, CAT, NIT, SDT, EIT to pids filter for dvbsrc */
-  dvb_base_bin_add_stream (dvbbasebin, 0);
-  dvb_base_bin_add_stream (dvbbasebin, 1);
-  dvb_base_bin_add_stream (dvbbasebin, 10);
-  dvb_base_bin_add_stream (dvbbasebin, 11);
-  dvb_base_bin_add_stream (dvbbasebin, 12);
+  i = 0;
+  while (initial_pids[i] >= 0) {
+    stream = dvb_base_bin_add_stream (dvbbasebin, (guint16) initial_pids[i]);
+    ++stream->usecount;
+    i++;
+  }
   dvb_base_bin_rebuild_filter (dvbbasebin);
 }
 

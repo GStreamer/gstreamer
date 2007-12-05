@@ -37,7 +37,11 @@ static void mpegts_packetizer_finalize (GObject * object);
 
 typedef struct
 {
-  guint16 pid;
+  guint8 table_id;
+  /* the spec says sub_table_extension is the fourth and fifth byte of a 
+   * section when the section_syntax_indicator is set to a value of "1". If 
+   * section_syntax_indicator is 0, sub_table_extension will be set to 0 */
+  guint16 sub_table_extension;
   guint continuity_counter;
   GstAdapter *section_adapter;
   guint section_length;
@@ -45,13 +49,14 @@ typedef struct
 } MpegTSPacketizerStream;
 
 static MpegTSPacketizerStream *
-mpegts_packetizer_stream_new (guint16 pid)
+mpegts_packetizer_stream_new (guint8 table_id, guint16 sub_table_extension)
 {
   MpegTSPacketizerStream *stream;
 
   stream = (MpegTSPacketizerStream *) g_new0 (MpegTSPacketizerStream, 1);
   stream->section_adapter = gst_adapter_new ();
-  stream->pid = pid;
+  stream->table_id = table_id;
+  stream->sub_table_extension = sub_table_extension;
   stream->continuity_counter = CONTINUITY_UNSET;
   stream->section_version_number = SECTION_VERSION_NUMBER_NOTSET;
   return stream;
@@ -89,7 +94,7 @@ static void
 mpegts_packetizer_init (MpegTSPacketizer * packetizer)
 {
   packetizer->adapter = gst_adapter_new ();
-  packetizer->streams = g_hash_table_new (g_direct_hash, g_direct_equal);
+  packetizer->streams = g_hash_table_new (g_str_hash, g_str_equal);
 }
 
 static void
@@ -1053,9 +1058,11 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
   gboolean res = FALSE;
   MpegTSPacketizerStream *stream;
   guint8 pointer, table_id;
+  guint16 sub_table_extension;
   guint section_length;
   GstBuffer *sub_buf;
   guint8 *data;
+  gchar *sub_table_identifier;
 
   g_return_val_if_fail (GST_IS_MPEGTS_PACKETIZER (packetizer), FALSE);
   g_return_val_if_fail (packet != NULL, FALSE);
@@ -1063,14 +1070,6 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
 
   data = packet->data;
   section->pid = packet->pid;
-
-  stream = (MpegTSPacketizerStream *) g_hash_table_lookup (packetizer->streams,
-      GINT_TO_POINTER ((gint) packet->pid));
-  if (stream == NULL) {
-    stream = mpegts_packetizer_stream_new (packet->pid);
-    g_hash_table_insert (packetizer->streams,
-        GINT_TO_POINTER ((gint) packet->pid), stream);
-  }
 
   if (packet->payload_unit_start_indicator == 1) {
     pointer = *data++;
@@ -1082,8 +1081,24 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
 
     data += pointer;
   }
-
   table_id = *data++;
+  /* sub_table_extension should be read from 4th and 5th bytes only if 
+   * section_syntax_indicator is 1 */
+  if ((data[0] & 0x80) == 0)
+    sub_table_extension = 0;
+  else
+    sub_table_extension = GST_READ_UINT16_BE (data + 2);
+  sub_table_identifier =
+      g_strdup_printf ("%d,%d", table_id, sub_table_extension);
+  GST_DEBUG ("sub table identifier is: %s", sub_table_identifier);
+  stream = (MpegTSPacketizerStream *) g_hash_table_lookup (packetizer->streams,
+      sub_table_identifier);
+  if (stream == NULL) {
+    stream = mpegts_packetizer_stream_new (table_id, sub_table_extension);
+    g_hash_table_insert (packetizer->streams, sub_table_identifier, stream);
+  } else {
+    g_free (sub_table_identifier);
+  }
 
   section_length = GST_READ_UINT16_BE (data) & 0x0FFF;
   data += 2;

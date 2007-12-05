@@ -940,30 +940,27 @@ static void
 mpegts_parse_apply_nit (MpegTSParse * parse,
     guint16 pmt_pid, GstStructure * nit_info)
 {
-  /*gst_element_post_message(GST_ELEMENT_CAST(parse), 
-   *  gst_message_new_element (GST_OBJECT(parse), 
-   *    gst_structure_copy(nit_info)));
-   */
+  gst_element_post_message (GST_ELEMENT_CAST (parse),
+      gst_message_new_element (GST_OBJECT (parse),
+          gst_structure_copy (nit_info)));
 }
 
 static void
 mpegts_parse_apply_sdt (MpegTSParse * parse,
     guint16 pmt_pid, GstStructure * sdt_info)
 {
-  /*gst_element_post_message(GST_ELEMENT_CAST(parse), 
-   *  gst_message_new_element (GST_OBJECT(parse), 
-   *    gst_structure_copy(sdt_info)));
-   */
+  gst_element_post_message (GST_ELEMENT_CAST (parse),
+      gst_message_new_element (GST_OBJECT (parse),
+          gst_structure_copy (sdt_info)));
 }
 
 static void
 mpegts_parse_apply_eit (MpegTSParse * parse,
     guint16 pmt_pid, GstStructure * eit_info)
 {
-  /*gst_element_post_message(GST_ELEMENT_CAST(parse), 
-   *  gst_message_new_element (GST_OBJECT(parse), 
-   *    gst_structure_copy(eit_info)));
-   */
+  gst_element_post_message (GST_ELEMENT_CAST (parse),
+      gst_message_new_element (GST_OBJECT (parse),
+          gst_structure_copy (eit_info)));
 }
 
 static gboolean
