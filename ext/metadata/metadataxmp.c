@@ -55,10 +55,10 @@ metadataparse_xmp_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
     GstAdapter * adapter, MetadataTagMapping mapping)
 {
 
-  GST_LOG ("XMP not defined, here I should send just one tag as whole chunk");
-
-  if (mapping & METADATA_TAG_MAP_WHOLECHUNK)
+  if (mapping & METADATA_TAG_MAP_WHOLECHUNK) {
+    GST_LOG ("XMP not defined, here I should send just one tag as whole chunk");
     metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_XMP, adapter);
+  }
 
 }
 

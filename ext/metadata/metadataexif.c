@@ -55,11 +55,12 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
     GstAdapter * adapter, MetadataTagMapping mapping)
 {
 
-  GST_LOG ("EXIF not defined, here I should send just one tag as whole chunk");
-
-  if (mapping & METADATA_TAG_MAP_WHOLECHUNK)
+  if (mapping & METADATA_TAG_MAP_WHOLECHUNK) {
+    GST_LOG
+        ("EXIF not defined, here I should send just one tag as whole chunk");
     metadataparse_util_tag_list_add_chunk (taglist, mode, GST_TAG_EXIF,
         adapter);
+  }
 
 }
 
@@ -73,11 +74,13 @@ metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
 #else /* ifndef HAVE_EXIF */
 
 #include <libexif/exif-data.h>
+#include <stdlib.h>
 
 typedef struct _tag_MEUserData
 {
   GstTagList *taglist;
   GstTagMergeMode mode;
+  ExifShort resolution_unit;    /* 2- inches (default), 3- cm */
 } MEUserData;
 
 typedef struct _tag_MapIntStr
@@ -96,10 +99,22 @@ const gchar *
 metadataparse_exif_get_tag_from_exif (ExifTag exif, GType * type)
 {
   /* FIXEME: sorted with binary search */
-  static const MapIntStr array[] = {
+  static MapIntStr array[] = {
     {EXIF_TAG_MAKE, GST_TAG_DEVICE_MAKE, G_TYPE_STRING},
     {EXIF_TAG_MODEL, GST_TAG_DEVICE_MODEL, G_TYPE_STRING},
-    {0, NULL, G_TYPE_NONE}
+    {EXIF_TAG_SOFTWARE, GST_TAG_CREATOR_TOOL, G_TYPE_STRING},
+    {EXIF_TAG_X_RESOLUTION, GST_TAG_IMAGE_XRESOLUTION, G_TYPE_FLOAT},   /* asure inches */
+    {EXIF_TAG_Y_RESOLUTION, GST_TAG_IMAGE_YRESOLUTION, G_TYPE_FLOAT},   /* asure inches */
+    {EXIF_TAG_EXPOSURE_TIME, GST_TAG_CAPTURE_EXPOSURE_TIME, G_TYPE_FLOAT},
+    {EXIF_TAG_FNUMBER, GST_TAG_CAPTURE_FNUMBER, G_TYPE_FLOAT},
+    {EXIF_TAG_EXPOSURE_PROGRAM, GST_TAG_CAPTURE_EXPOSURE_PROGRAM, G_TYPE_UINT},
+    {EXIF_TAG_BRIGHTNESS_VALUE, GST_TAG_CAPTURE_BRIGHTNESS, G_TYPE_FLOAT},
+    {EXIF_TAG_WHITE_BALANCE, GST_TAG_CAPTURE_WHITE_BALANCE, G_TYPE_UINT},
+    {EXIF_TAG_DIGITAL_ZOOM_RATIO, GST_TAG_CAPTURE_DIGITAL_ZOOM, G_TYPE_FLOAT},
+    {EXIF_TAG_GAIN_CONTROL, GST_TAG_CAPTURE_GAIN, G_TYPE_UINT},
+    {EXIF_TAG_CONTRAST, GST_TAG_CAPTURE_CONTRAST, G_TYPE_UINT},
+    {EXIF_TAG_SATURATION, GST_TAG_CAPTURE_SATURATION, G_TYPE_UINT},
+    {0, NULL, G_TYPE_NONE, G_TYPE_UINT}
   };
   int i = 0;
 
@@ -121,7 +136,7 @@ metadataparse_exif_tag_list_add (GstTagList * taglist, GstTagMergeMode mode,
   const guint8 *buf;
   guint32 size;
   ExifData *exif = NULL;
-  MEUserData user_data = { taglist, mode };
+  MEUserData user_data = { taglist, mode, 2 };
 
   if (adapter == NULL || (size = gst_adapter_available (adapter)) == 0) {
     goto done;
@@ -171,7 +186,110 @@ exif_content_foreach_entry_func (ExifEntry * entry, void *user_data)
   char buf[2048];
   MEUserData *meudata = (MEUserData *) user_data;
   GType type;
+  ExifByteOrder byte_order;
   const gchar *tag = metadataparse_exif_get_tag_from_exif (entry->tag, &type);
+
+  /* We need the byte order */
+  if (!entry || !entry->parent || !entry->parent->parent)
+    return;
+  byte_order = exif_data_get_byte_order (entry->parent->parent);
+
+  if (entry->tag == EXIF_TAG_RESOLUTION_UNIT) {
+    meudata->resolution_unit = exif_get_short (entry->data, byte_order);
+    if (meudata->resolution_unit == 3) {
+      /* if [xy]resolution has alredy been add in cm, replace it in inches */
+      gfloat value;
+
+      if (gst_tag_list_get_float (meudata->taglist, GST_TAG_IMAGE_XRESOLUTION,
+              &value))
+        gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_IMAGE_XRESOLUTION, value * 0.4f, NULL);
+      if (gst_tag_list_get_float (meudata->taglist, GST_TAG_IMAGE_YRESOLUTION,
+              &value))
+        gst_tag_list_add (meudata->taglist, GST_TAG_MERGE_REPLACE,
+            GST_TAG_IMAGE_YRESOLUTION, value * 0.4f, NULL);
+    }
+    goto done;
+  }
+
+  if (tag) {
+    /* FIXME: create a generic function for this */
+    /* could also be used with entry->format */
+    switch (type) {
+      case G_TYPE_STRING:
+        gst_tag_list_add (meudata->taglist, meudata->mode, tag,
+            exif_entry_get_value (entry, buf, sizeof (buf)), NULL);
+        break;
+      case G_TYPE_FLOAT:
+      {
+        gfloat f_value;
+        ExifRational v_rat;
+
+        switch (entry->format) {
+          case EXIF_FORMAT_RATIONAL:
+            v_rat = exif_get_rational (entry->data, byte_order);
+            if (v_rat.numerator == 0)
+              f_value = 0.0f;
+            else
+              f_value = (float) v_rat.numerator / (float) v_rat.denominator;
+            if (v_rat.numerator == 0xFFFFFFFF) {
+              if (entry->tag == GST_TAG_CAPTURE_BRIGHTNESS) {
+                f_value = 100.0f;
+              }
+            }
+            break;
+          default:
+            GST_ERROR ("Unexpected Tag Type");
+            goto done;
+            break;
+        }
+        if (meudata->resolution_unit == 3) {
+          /* converts from cm to inches */
+          if (entry->tag == EXIF_TAG_X_RESOLUTION
+              || entry->tag == EXIF_TAG_Y_RESOLUTION) {
+            f_value *= 0.4f;
+          }
+        }
+        gst_tag_list_add (meudata->taglist, meudata->mode, tag, f_value, NULL);
+      }
+      case G_TYPE_UINT:
+      {
+        ExifShort v_short;
+
+        switch (entry->format) {
+          case EXIF_FORMAT_SHORT:
+            v_short = exif_get_short (entry->data, byte_order);
+            break;
+          default:
+            GST_ERROR ("Unexpected Tag Type");
+            goto done;
+            break;
+        }
+        if (entry->tag == EXIF_TAG_CONTRAST ||
+            entry->tag == EXIF_TAG_SATURATION) {
+          switch (v_short) {
+            case 0:
+              break;
+            case 1:
+              v_short = -67;
+              break;
+            case 2:
+              v_short = 66;
+              break;
+            default:
+              GST_ERROR ("Unexpected value");
+              break;
+          }
+        }
+        gst_tag_list_add (meudata->taglist, meudata->mode, tag, v_short, NULL);
+      }
+        break;
+      default:
+        break;
+    }
+  }
+
+done:
 
   GST_LOG ("\n    Entry %p: %s (%s)\n"
       "      Size, Comps: %d, %d\n"
@@ -187,13 +305,7 @@ exif_content_foreach_entry_func (ExifEntry * entry, void *user_data)
       exif_tag_get_title_in_ifd (entry->tag, EXIF_IFD_0),
       exif_tag_get_description_in_ifd (entry->tag, EXIF_IFD_0));
 
-  if (tag) {
-    /* FIXME: create a generic function for this */
-    /* could also be used with entry->format */
-    if (type == G_TYPE_STRING)
-      gst_tag_list_add (meudata->taglist, meudata->mode, tag,
-          exif_entry_get_value (entry, buf, sizeof (buf)), NULL);
-  }
+  return;
 
 }
 

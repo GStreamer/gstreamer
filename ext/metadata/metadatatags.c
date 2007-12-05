@@ -83,12 +83,105 @@ metadata_tags_xmp_register (void)
 void
 metadata_tags_register (void)
 {
+  /* devices tags */
+
   gst_tag_register (GST_TAG_DEVICE_MAKE, GST_TAG_FLAG_META,
       G_TYPE_STRING, GST_TAG_DEVICE_MAKE,
       "The manufacturer of the recording equipment", NULL);
   gst_tag_register (GST_TAG_DEVICE_MODEL, GST_TAG_FLAG_META, G_TYPE_STRING,
       GST_TAG_DEVICE_MODEL, "The model name or model number of the equipment",
       NULL);
+
+  /* generic tags */
+
+  gst_tag_register (GST_TAG_CREATOR_TOOL, GST_TAG_FLAG_META, G_TYPE_STRING,
+      GST_TAG_CREATOR_TOOL,
+      "The name of the first known tool used to create the resource."
+      " Or firmware or driver version of device", NULL);
+
+  /* image tags */
+
+  gst_tag_register (GST_TAG_IMAGE_XRESOLUTION, GST_TAG_FLAG_META, G_TYPE_FLOAT,
+      GST_TAG_IMAGE_XRESOLUTION, "Horizontal resolution in pixels per inch",
+      NULL);
+  gst_tag_register (GST_TAG_IMAGE_YRESOLUTION, GST_TAG_FLAG_META, G_TYPE_FLOAT,
+      GST_TAG_IMAGE_YRESOLUTION, "Vertical resolution in pixels per inch",
+      NULL);
+
+  /* capture tags */
+
+  gst_tag_register (GST_TAG_CAPTURE_EXPOSURE_TIME, GST_TAG_FLAG_META,
+      G_TYPE_FLOAT, GST_TAG_CAPTURE_EXPOSURE_TIME, "Exposure time in seconds",
+      NULL);
+  gst_tag_register (GST_TAG_CAPTURE_FNUMBER, GST_TAG_FLAG_META, G_TYPE_FLOAT,
+      GST_TAG_CAPTURE_FNUMBER, "F number (focal ratio)", NULL);
+  /**
+    0 - not defined
+    1- Manual
+    2- Normal program
+    3- Aperture priority
+    4- Shutter priority
+    5- Creative program (biased toward death of field)
+    6- Action program (biased toward fast shutter speed)
+    7- Portrait mode (for closeup photos with the background out of focus)
+    8- Landscape mode (for landscape photos with the background in focus)
+    *** exif is until here ***
+    9- Night
+    10- Back-light
+    11- Spotlight
+    12- Snow
+    13- Beach
+  */
+  gst_tag_register (GST_TAG_CAPTURE_EXPOSURE_PROGRAM, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_CAPTURE_EXPOSURE_PROGRAM,
+      "Class of program used for exposure", NULL);
+  /** The unit is the APEX value.
+      Ordinarily it is given in the range of -99.99 to 99.99.
+      100.0 mean unknown      
+  */
+  gst_tag_register (GST_TAG_CAPTURE_BRIGHTNESS, GST_TAG_FLAG_META, G_TYPE_FLOAT,
+      GST_TAG_CAPTURE_BRIGHTNESS, "Brightness (APEX from -99.99 to 99.99)",
+      NULL);
+  /**
+     0- Auto
+     1- Off
+     *** exif is until here ***
+     2- Sunlight
+     3- Cloudy
+     4- Shade
+     5- Tungsten
+     6- Fluorescent
+     7- Incandescent
+     8- Flash
+     9- Horizon (sun on the horizon)
+  */
+  gst_tag_register (GST_TAG_CAPTURE_WHITE_BALANCE, GST_TAG_FLAG_META,
+      G_TYPE_UINT, GST_TAG_CAPTURE_WHITE_BALANCE, "White balance mode", NULL);
+  /** if Zero ZOOM not used
+   */
+  gst_tag_register (GST_TAG_CAPTURE_DIGITAL_ZOOM, GST_TAG_FLAG_META,
+      G_TYPE_FLOAT, GST_TAG_CAPTURE_DIGITAL_ZOOM, "Digital zoom ratio", NULL);
+  /**
+     0- None
+     1- Low gain up
+     2- High gain up
+     3- Low gain down
+     4- High gain down
+  */
+  gst_tag_register (GST_TAG_CAPTURE_GAIN, GST_TAG_FLAG_META, G_TYPE_UINT,
+      GST_TAG_CAPTURE_GAIN, "", NULL);
+  /**
+     from -100 to 100
+     *** exif is just 0, 1, 2 (normal, soft and hard)
+  */
+  gst_tag_register (GST_TAG_CAPTURE_CONTRAST, GST_TAG_FLAG_META, G_TYPE_INT,
+      GST_TAG_CAPTURE_CONTRAST, "", NULL);
+  /**
+     from -100 to 100
+     *** exif is just 0, 1, 2 (normal, low and high)
+  */
+  gst_tag_register (GST_TAG_CAPTURE_SATURATION, GST_TAG_FLAG_META, G_TYPE_INT,
+      GST_TAG_CAPTURE_SATURATION, "", NULL);
 
   metadata_tags_exif_register ();
   metadata_tags_iptc_register ();

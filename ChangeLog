@@ -1,3 +1,12 @@
+2007-12-05  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadataiptc.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/metadatatags.h:
+	* ext/metadata/metadataxmp.c:
+	  Added some tags to exif parser.
+
 2007-12-05  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtspacketizer.c:
