@@ -26,7 +26,7 @@
  * <para>
  * autovideosink is a video sink that automatically detects an appropriate
  * video sink to use.  It does so by scanning the registry for all elements
- * that have <quote>Sink</quote> and <quote>Audio</quote> in the class field
+ * that have <quote>Sink</quote> and <quote>Video</quote> in the class field
  * of their element information, and also have a non-zero autoplugging rank.
  * </para>
  * <title>Example launch line</title>
@@ -47,11 +47,23 @@
 #include "gstautovideosink.h"
 #include "gstautodetect.h"
 
+/* Properties */
+enum
+{
+  PROP_0,
+  PROP_CAPS,
+};
+
 static GstStateChangeReturn
 gst_auto_video_sink_change_state (GstElement * element,
     GstStateChange transition);
 static void gst_auto_video_sink_dispose (GstAutoVideoSink * sink);
 static void gst_auto_video_sink_clear_kid (GstAutoVideoSink * sink);
+
+static void gst_auto_video_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_auto_video_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 GST_BOILERPLATE (GstAutoVideoSink, gst_auto_video_sink, GstBin, GST_TYPE_BIN);
 
@@ -87,12 +99,36 @@ gst_auto_video_sink_class_init (GstAutoVideoSinkClass * klass)
   gobject_class->dispose =
       (GObjectFinalizeFunc) GST_DEBUG_FUNCPTR (gst_auto_video_sink_dispose);
   eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_video_sink_change_state);
+  gobject_class->set_property =
+      GST_DEBUG_FUNCPTR (gst_auto_video_sink_set_property);
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_auto_video_sink_get_property);
+
+  /**
+   * GstAutoVideoSink:filter-caps
+   *
+   * This property will filter out candidate sinks that can handle the specified
+   * caps. By default only video sinks that support raw rgb and yuv video
+   * are selected.
+   *
+   * This property can only be set before the element goes to the READY state.
+   *
+   * Since: 0.10.7
+   **/
+  g_object_class_install_property (gobject_class, PROP_CAPS,
+      g_param_spec_boxed ("filter-caps", "Filter caps",
+          "Filter sink candidates using these caps.", GST_TYPE_CAPS,
+          G_PARAM_READWRITE));
 }
 
 static void
 gst_auto_video_sink_dispose (GstAutoVideoSink * sink)
 {
   gst_auto_video_sink_clear_kid (sink);
+
+  if (sink->filter_caps)
+    gst_caps_unref (sink->filter_caps);
+  sink->filter_caps = NULL;
 
   G_OBJECT_CLASS (parent_class)->dispose ((GObject *) sink);
 }
@@ -130,6 +166,9 @@ gst_auto_video_sink_reset (GstAutoVideoSink * sink)
   gst_object_unref (targetpad);
 }
 
+static GstStaticCaps raw_caps =
+    GST_STATIC_CAPS ("video/x-raw-yuv; video/x-raw-rgb");
+
 static void
 gst_auto_video_sink_init (GstAutoVideoSink * sink,
     GstAutoVideoSinkClass * g_class)
@@ -139,6 +178,10 @@ gst_auto_video_sink_init (GstAutoVideoSink * sink,
 
   gst_auto_video_sink_reset (sink);
 
+  /* set the default raw video caps */
+  sink->filter_caps = gst_static_caps_get (&raw_caps);
+
+  /* mark as sink */
   GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_IS_SINK);
 }
 
@@ -178,47 +221,117 @@ gst_auto_video_sink_compare_ranks (GstPluginFeature * f1, GstPluginFeature * f2)
 }
 
 static GstElement *
+gst_auto_video_sink_create_element_with_pretty_name (GstAutoVideoSink * sink,
+    GstElementFactory * factory)
+{
+  GstElement *element;
+  gchar *name, *marker;
+
+  marker = g_strdup (GST_PLUGIN_FEATURE (factory)->name);
+  if (g_str_has_suffix (marker, "sink"))
+    marker[strlen (marker) - 4] = '\0';
+  if (g_str_has_prefix (marker, "gst"))
+    g_memmove (marker, marker + 3, strlen (marker + 3) + 1);
+  name = g_strdup_printf ("%s-actual-sink-%s", GST_OBJECT_NAME (sink), marker);
+  g_free (marker);
+
+  element = gst_element_factory_create (factory, name);
+  g_free (name);
+
+  return element;
+}
+
+static GstElement *
 gst_auto_video_sink_find_best (GstAutoVideoSink * sink)
 {
+  GList *list, *item;
   GstElement *choice = NULL;
-  GList *list, *walk;
-  gchar *child_name = g_strdup_printf ("%s-actual-sink",
-      GST_OBJECT_NAME (sink));
+  GstMessage *message = NULL;
+  GSList *errors = NULL;
+  GstBus *bus = gst_bus_new ();
+  GstPad *el_pad = NULL;
+  GstCaps *el_caps = NULL, *intersect = NULL;
+  gboolean no_match = TRUE;
 
   list = gst_registry_feature_filter (gst_registry_get_default (),
       (GstPluginFeatureFilter) gst_auto_video_sink_factory_filter, FALSE, sink);
   list = g_list_sort (list, (GCompareFunc) gst_auto_video_sink_compare_ranks);
 
-  for (walk = list; walk != NULL; walk = walk->next) {
-    GstElementFactory *f = GST_ELEMENT_FACTORY (walk->data);
+  GST_LOG_OBJECT (sink, "Trying to find usable video devices ...");
+
+  for (item = list; item != NULL; item = item->next) {
+    GstElementFactory *f = GST_ELEMENT_FACTORY (item->data);
     GstElement *el;
 
-    GST_DEBUG_OBJECT (sink, "Trying %s", GST_PLUGIN_FEATURE (f)->name);
-    if ((el = gst_element_factory_create (f, child_name))) {
+    if ((el = gst_auto_video_sink_create_element_with_pretty_name (sink, f))) {
       GstStateChangeReturn ret;
 
-      GST_DEBUG_OBJECT (sink, "Changing state to READY");
+      GST_DEBUG_OBJECT (sink, "Testing %s", GST_PLUGIN_FEATURE (f)->name);
 
-      ret = gst_element_set_state (el, GST_STATE_READY);
-      if (ret == GST_STATE_CHANGE_SUCCESS) {
-        GST_DEBUG_OBJECT (sink, "success");
-        choice = el;
-        goto done;
+      /* If autovideosink has been provided with filter caps,
+       * accept only sinks that match with the filter caps */
+      if (sink->filter_caps) {
+        el_pad = gst_element_get_static_pad (GST_ELEMENT (el), "sink");
+        el_caps = gst_pad_get_caps (el_pad);
+        gst_object_unref (el_pad);
+        GST_DEBUG_OBJECT (sink,
+            "Checking caps: %" GST_PTR_FORMAT " vs. %" GST_PTR_FORMAT,
+            sink->filter_caps, el_caps);
+        intersect = gst_caps_intersect (sink->filter_caps, el_caps);
+        no_match = gst_caps_is_empty (intersect);
+        gst_caps_unref (el_caps);
+        gst_caps_unref (intersect);
+
+        if (no_match) {
+          GST_DEBUG_OBJECT (sink, "Incompatible caps");
+          gst_object_unref (el);
+          continue;
+        } else {
+          GST_DEBUG_OBJECT (sink, "Found compatible caps");
+        }
       }
 
-      GST_WARNING_OBJECT (sink, "Couldn't set READY: %d", ret);
-      ret = gst_element_set_state (el, GST_STATE_NULL);
-      if (ret != GST_STATE_CHANGE_SUCCESS)
-        GST_WARNING_OBJECT (sink,
-            "Couldn't set element to NULL prior to disposal.");
+      gst_element_set_bus (el, bus);
+      ret = gst_element_set_state (el, GST_STATE_READY);
+      if (ret == GST_STATE_CHANGE_SUCCESS) {
+        GST_DEBUG_OBJECT (sink, "This worked!");
+        choice = el;
+        break;
+      }
 
+      /* collect all error messages */
+      while ((message = gst_bus_pop_filtered (bus, GST_MESSAGE_ERROR))) {
+        GST_DEBUG_OBJECT (sink, "error message %" GST_PTR_FORMAT, message);
+        errors = g_slist_append (errors, message);
+      }
+
+      gst_element_set_state (el, GST_STATE_NULL);
       gst_object_unref (el);
     }
   }
 
-done:
-  g_free (child_name);
+  GST_DEBUG_OBJECT (sink, "done trying");
+  if (!choice) {
+    if (errors) {
+      /* FIXME: we forward the first error for now; but later on it might make
+       * sense to actually analyse them */
+      gst_message_ref (GST_MESSAGE (errors->data));
+      GST_DEBUG_OBJECT (sink, "reposting message %p", errors->data);
+      gst_element_post_message (GST_ELEMENT (sink), GST_MESSAGE (errors->data));
+    } else {
+      /* send warning message to application and use a fakesink */
+      GST_ELEMENT_WARNING (sink, RESOURCE, NOT_FOUND, (NULL),
+          ("Failed to find a usable video sink"));
+      choice = gst_element_factory_make ("fakesink", "fake-video-sink");
+      if (g_object_class_find_property (G_OBJECT_GET_CLASS (choice), "sync"))
+        g_object_set (choice, "sync", TRUE, NULL);
+      gst_element_set_state (choice, GST_STATE_READY);
+    }
+  }
+  gst_object_unref (bus);
   gst_plugin_feature_list_free (list);
+  g_slist_foreach (errors, (GFunc) gst_mini_object_unref, NULL);
+  g_slist_free (errors);
 
   return choice;
 }
@@ -284,4 +397,39 @@ gst_auto_video_sink_change_state (GstElement * element,
   }
 
   return ret;
+}
+
+static void
+gst_auto_video_sink_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstAutoVideoSink *sink = GST_AUTO_VIDEO_SINK (object);
+
+  switch (prop_id) {
+    case PROP_CAPS:
+      if (sink->filter_caps)
+        gst_caps_unref (sink->filter_caps);
+      sink->filter_caps = gst_caps_copy (gst_value_get_caps (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_auto_video_sink_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstAutoVideoSink *sink = GST_AUTO_VIDEO_SINK (object);
+
+  switch (prop_id) {
+    case PROP_CAPS:{
+      gst_value_set_caps (value, sink->filter_caps);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
