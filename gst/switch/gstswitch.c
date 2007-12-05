@@ -513,23 +513,6 @@ gst_switch_set_property (GObject * object, guint prop_id,
     case ARG_QUEUE_BUFFERS:
       GST_SWITCH_LOCK (gstswitch);
       gstswitch->queue_buffers = g_value_get_boolean (value);
-      if (!gstswitch->queue_buffers && !gstswitch->need_to_send_newsegment) {
-        GList *buffers;
-
-        /* send all the stored buffers if any */
-        buffers =
-            g_hash_table_lookup (gstswitch->stored_buffers,
-            gstswitch->active_sinkpad);
-        while (buffers != NULL) {
-          gst_buffer_ref (GST_BUFFER (buffers->data));
-          GST_SWITCH_UNLOCK (gstswitch);
-          gst_pad_push (gstswitch->srcpad, GST_BUFFER (buffers->data));
-          GST_SWITCH_LOCK (gstswitch);
-          buffers = buffers->next;
-        }
-        g_hash_table_remove (gstswitch->stored_buffers,
-            gstswitch->active_sinkpad);
-      }
       GST_SWITCH_UNLOCK (gstswitch);
       break;
     default:

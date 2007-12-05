@@ -1,3 +1,9 @@
+2007-12-05  Andy Wingo  <wingo@pobox.com>
+
+	* gst/switch/gstswitch.c (gst_switch_set_property): Don't push
+	buffers from app thread when unsetting `queue-buffers', it's
+	dangerous and the chain function will do it for us anyway.
+
 2007-12-04  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/metadatamuxjpeg.c: (metadatamux_wrap_chunk),
