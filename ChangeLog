@@ -1,3 +1,8 @@
+2007-12-06  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/mpegtsparse/mpegtsparse.c: (crc_tab):
+	  Mark crc values table as constant.
+
 2007-12-05  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/metadataexif.c:
