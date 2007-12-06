@@ -1,3 +1,11 @@
+2007-12-06  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/playback/gstplay-enum.c:
+	(register_gst_autoplug_select_result),
+	(gst_autoplug_select_result_get_type):
+	* gst/playback/gstplay-enum.h:
+	Add missing files.
+
 2007-12-05  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/playback/Makefile.am:
