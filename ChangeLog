@@ -1,3 +1,10 @@
+2007-12-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/filter/gstbpwsinc.c: (bpwsinc_transform):
+	* gst/filter/gstlpwsinc.c: (lpwsinc_transform):
+	Sync the GObject properties with the controller even in passthrough
+	mode to get consistent property values.
+
 2007-12-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/mpegtsparse/mpegtsparse.c: (crc_tab):
@@ -21,6 +28,7 @@
 	* sys/dvb/dvbbasebin.c:
 	Make sure initial pids are added properly to filter,
 
+>>>>>>> 1.2909
 2007-12-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst/switch/gstswitch.c (gst_switch_set_property): Don't push
