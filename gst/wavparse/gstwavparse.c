@@ -2072,13 +2072,12 @@ gst_wavparse_srcpad_event (GstPad * pad, GstEvent * event)
   GstWavParse *wavparse = GST_WAVPARSE (gst_pad_get_parent (pad));
   gboolean res = FALSE;
 
-  GST_DEBUG_OBJECT (wavparse, "event %d, %s", GST_EVENT_TYPE (event),
-      GST_EVENT_TYPE_NAME (event));
+  GST_DEBUG_OBJECT (wavparse, "%s event", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
       /* can only handle events when we are in the data state */
-      if (wavparse->state != GST_WAVPARSE_DATA) {
+      if (wavparse->state == GST_WAVPARSE_DATA) {
         res = gst_wavparse_perform_seek (wavparse, event);
       }
       gst_event_unref (event);
