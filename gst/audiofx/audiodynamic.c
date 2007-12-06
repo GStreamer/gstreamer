@@ -699,7 +699,7 @@ gst_audio_dynamic_transform_ip (GstBaseTransform * base, GstBuffer * buf)
   guint num_samples =
       GST_BUFFER_SIZE (buf) / (GST_AUDIO_FILTER (filter)->format.width / 8);
 
-  if (!gst_buffer_is_writable (buf))
+  if (gst_base_transform_is_passthrough (base))
     return GST_FLOW_OK;
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buf)))

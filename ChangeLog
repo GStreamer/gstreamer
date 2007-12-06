@@ -1,3 +1,20 @@
+2007-12-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/audiofx/audioamplify.c: (gst_audio_amplify_transform_ip):
+	* gst/audiofx/audiochebyshevfreqband.c:
+	(gst_audio_chebyshev_freq_band_transform_ip):
+	* gst/audiofx/audiochebyshevfreqlimit.c:
+	(gst_audio_chebyshev_freq_limit_transform_ip):
+	* gst/audiofx/audiodynamic.c: (gst_audio_dynamic_transform_ip):
+	* gst/audiofx/audioinvert.c: (gst_audio_invert_transform_ip):
+	The transform_ip() methods should do nothing if in passthrough mode.
+	It might get non-writable buffers in that case but the buffer might
+	as well be writable.
+
+	* gst/audiofx/audiopanorama.c: (gst_audio_panorama_transform):
+	The transform() methods won't be called in passthrough mode and
+	otherwise the buffer is always writable so don't check here.
+
 2007-12-06  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/wavparse/gstwavparse.c: (gst_wavparse_srcpad_event):

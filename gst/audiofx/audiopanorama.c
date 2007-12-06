@@ -169,19 +169,19 @@ static GstFlowReturn gst_audio_panorama_transform (GstBaseTransform * base,
 static GstAudioPanoramaProcessFunc panorama_process_functions[2][2][2] = {
   {
         {(GstAudioPanoramaProcessFunc) gst_audio_panorama_transform_m2s_int,
-            (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_m2s_int_simple},
+              (GstAudioPanoramaProcessFunc)
+            gst_audio_panorama_transform_m2s_int_simple},
         {(GstAudioPanoramaProcessFunc) gst_audio_panorama_transform_m2s_float,
-            (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_m2s_float_simple}
+              (GstAudioPanoramaProcessFunc)
+            gst_audio_panorama_transform_m2s_float_simple}
       },
   {
         {(GstAudioPanoramaProcessFunc) gst_audio_panorama_transform_s2s_int,
-            (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_s2s_int_simple},
+              (GstAudioPanoramaProcessFunc)
+            gst_audio_panorama_transform_s2s_int_simple},
         {(GstAudioPanoramaProcessFunc) gst_audio_panorama_transform_s2s_float,
-            (GstAudioPanoramaProcessFunc)
-              gst_audio_panorama_transform_s2s_float_simple}
+              (GstAudioPanoramaProcessFunc)
+            gst_audio_panorama_transform_s2s_float_simple}
       }
 };
 
@@ -630,9 +630,6 @@ gst_audio_panorama_transform (GstBaseTransform * base, GstBuffer * inbuf,
 {
   GstAudioPanorama *filter = GST_AUDIO_PANORAMA (base);
   guint num_samples = GST_BUFFER_SIZE (outbuf) / (2 * filter->width);
-
-  if (!gst_buffer_is_writable (outbuf))
-    return GST_FLOW_OK;
 
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (outbuf)))
     gst_object_sync_values (G_OBJECT (filter), GST_BUFFER_TIMESTAMP (outbuf));
