@@ -2,6 +2,13 @@
 
 	* gst/filter/gstbpwsinc.c: (bpwsinc_transform):
 	* gst/filter/gstlpwsinc.c: (lpwsinc_transform):
+	The transform() methods are not called in passthrough mode so
+	there's no need for checking if the element is in passthrough mode.
+
+2007-12-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/filter/gstbpwsinc.c: (bpwsinc_transform):
+	* gst/filter/gstlpwsinc.c: (lpwsinc_transform):
 	Sync the GObject properties with the controller even in passthrough
 	mode to get consistent property values.
 
