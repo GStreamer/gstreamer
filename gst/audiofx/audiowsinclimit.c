@@ -536,10 +536,6 @@ lpwsinc_transform (GstBaseTransform * base, GstBuffer * inbuf,
   if (GST_CLOCK_TIME_IS_VALID (timestamp))
     gst_object_sync_values (G_OBJECT (self), timestamp);
 
-  /* don't process data in passthrough-mode */
-  if (gst_base_transform_is_passthrough (base))
-    return GST_FLOW_OK;
-
   if (!self->have_kernel)
     lpwsinc_build_kernel (self);
 
