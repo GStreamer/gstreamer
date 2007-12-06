@@ -1140,6 +1140,16 @@ class LineViewLogModel (FilteredLogModel):
         tree_iter = self.get_iter (path)
         self.row_changed (path, tree_iter)
 
+    def remove_line (self, line_index):
+
+        for l in (self.line_offsets,
+                  self.line_levels,
+                  self.parent_indices,):
+            del l[line_index]
+
+        path = (line_index,)
+        self.row_deleted (path)
+
 class WrappingMessageColumn (MessageColumn):
 
     def wrap_to_width (self, width):
@@ -1197,16 +1207,38 @@ class LineView (object):
         self.column_manager = LineViewColumnManager ()
 
     def attach (self, window):
-        
+
+        self.clear_action = window.actions.clear_line_view
+        handler = self.handle_clear_line_view_action_activate
+        self.clear_action.connect ("activate", handler)
+
+        ui = window.ui_manager
+        self.popup = ui.get_widget ("/ui/context/LineViewContextMenu").get_submenu ()
+
         self.line_view = window.widgets.line_view
         self.line_view.connect ("row-activated", self.handle_line_view_row_activated)
+        self.line_view.connect ("button-press-event",
+                                self.handle_line_view_button_press_event)
 
         self.log_view = log_view = window.log_view
         log_view.connect ("row-activated", self.handle_log_view_row_activated)
         sel = log_view.get_selection ()
         sel.connect ("changed", self.handle_log_view_selection_changed)
 
+        self.clear_action.props.sensitive = False
         self.column_manager.attach (window)
+
+    def clear (self):
+
+        model = self.line_view.props.model
+
+        if len (model) == 0:
+            return
+
+        for i in range (1, len (model)):
+            model.remove_line (1)
+
+        self.clear_action.props.sensitive = False
 
     def handle_attach_log_file (self, window):
 
@@ -1248,6 +1280,7 @@ class LineView (object):
             pass
         else:
             line_model.insert_line (position, super_line_index)
+            self.clear_action.props.sensitive = True
 
     def handle_log_view_selection_changed (self, selection):
 
@@ -1266,6 +1299,18 @@ class LineView (object):
             line_model.insert_line (0, line_index)
         else:
             line_model.replace_line (0, line_index)
+
+    def handle_clear_line_view_action_activate (self, action):
+
+        self.clear ()
+
+    def handle_line_view_button_press_event (self, line_view, event):
+
+        if event.button != 3:
+            return False
+
+        self.popup.popup (None, None, None, event.button, event.get_time ())
+        return True
 
 class Window (object):
 
@@ -1287,7 +1332,8 @@ class Window (object):
         group.add_actions ([("FileMenuAction", None, _("_File")),
                             ("ViewMenuAction", None, _("_View")),
                             ("ViewColumnsMenuAction", None, _("_Columns")),
-                            ("HelpMenuAction", None, _("_Help"))])
+                            ("HelpMenuAction", None, _("_Help")),
+                            ("LineViewContextMenuAction", None, "")])
         self.actions.add_group (group)
 
         group = gtk.ActionGroup ("WindowActions")
@@ -1296,6 +1342,7 @@ class Window (object):
                             ("reload-file", gtk.STOCK_REFRESH, _("_Reload File"), "<Ctrl>R"),
                             ("close-window", gtk.STOCK_CLOSE, _("Close _Window"), "<Ctrl>W"),
                             ("cancel-load", gtk.STOCK_CANCEL, None,),
+                            ("clear-line-view", gtk.STOCK_CLEAR, None),
                             ("show-about", gtk.STOCK_ABOUT, None)])
         self.actions.add_group (group)
         self.actions.reload_file.props.sensitive = False

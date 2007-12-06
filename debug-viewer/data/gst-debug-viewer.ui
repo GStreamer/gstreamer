@@ -39,4 +39,10 @@
       <menuitem name="HelpInfo" action="show-about"/>
     </menu>
   </menubar>
+  <menubar name="context">
+    <menu name="LineViewContextMenu" action="LineViewContextMenuAction">
+      <menuitem name="LineViewContextMenuClear" action="clear-line-view"/>
+      <placeholder name="LineViewContextMenuAdditions"/>
+    </menu>
+  </menubar>
 </ui>
