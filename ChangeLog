@@ -2,6 +2,12 @@
 
 	* gst/equalizer/gstiirequalizer.c:
 	(gst_iir_equalizer_transform_ip):
+	Fix compilation.
+
+2007-12-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/equalizer/gstiirequalizer.c:
+	(gst_iir_equalizer_transform_ip):
 	Don't process buffers in passthrough mode.
 
 2007-12-06  Sebastian Dröge  <slomo@circular-chaos.org>
