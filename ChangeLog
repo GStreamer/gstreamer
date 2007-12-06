@@ -1,5 +1,11 @@
 2007-12-06  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/equalizer/gstiirequalizer.c:
+	(gst_iir_equalizer_transform_ip):
+	Don't process buffers in passthrough mode.
+
+2007-12-06  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/filter/gstbpwsinc.c: (bpwsinc_transform):
 	* gst/filter/gstlpwsinc.c: (lpwsinc_transform):
 	The transform() methods are not called in passthrough mode so
