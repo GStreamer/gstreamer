@@ -1212,13 +1212,12 @@ class LineView (object):
         handler = self.handle_clear_line_view_action_activate
         self.clear_action.connect ("activate", handler)
 
-        ui = window.ui_manager
-        self.popup = ui.get_widget ("/ui/context/LineViewContextMenu").get_submenu ()
-
         self.line_view = window.widgets.line_view
         self.line_view.connect ("row-activated", self.handle_line_view_row_activated)
-        self.line_view.connect ("button-press-event",
-                                self.handle_line_view_button_press_event)
+
+        ui = window.ui_manager
+        self.popup = ui.get_widget ("/ui/context/LineViewContextMenu").get_submenu ()
+        Common.GUI.widget_add_popup_menu (self.line_view, self.popup)
 
         self.log_view = log_view = window.log_view
         log_view.connect ("row-activated", self.handle_log_view_row_activated)
@@ -1304,14 +1303,6 @@ class LineView (object):
 
         self.clear ()
 
-    def handle_line_view_button_press_event (self, line_view, event):
-
-        if event.button != 3:
-            return False
-
-        self.popup.popup (None, None, None, event.button, event.get_time ())
-        return True
-
 class Window (object):
 
     def __init__ (self, app):
@@ -1379,7 +1370,6 @@ class Window (object):
         self.ui_manager = ui = self.ui_factory.make ()
         menubar = ui.get_widget ("/ui/menubar")        
         self.widgets.vbox_main.pack_start (menubar, False, False, 0)
-        self.view_popup = ui.get_widget ("/ui/menubar/ViewMenu").get_submenu ()
 
         self.gtk_window = self.widgets.main_window
         self.gtk_window.add_accel_group (ui.get_accel_group ())
@@ -1387,7 +1377,8 @@ class Window (object):
         self.log_view.drag_dest_unset ()
         self.log_view.set_search_column (-1)
 
-        self.log_view.connect ("button-press-event", self.handle_log_view_button_press_event)
+        self.view_popup = ui.get_widget ("/ui/menubar/ViewMenu").get_submenu ()
+        Common.GUI.widget_add_popup_menu (self.log_view, self.view_popup)
 
         self.line_view = LineView ()
 
@@ -1720,14 +1711,6 @@ class Window (object):
         dialog.set_default_response (0)
         dialog.run ()
         dialog.destroy ()
-
-    def handle_log_view_button_press_event (self, view, event):
-
-        if event.button != 3:
-            return False
-
-        self.view_popup.popup (None, None, None, event.button, event.get_time ())
-        return True
 
     def handle_load_started (self):
 

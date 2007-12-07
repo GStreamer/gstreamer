@@ -30,6 +30,18 @@ import gtk
 
 from GstDebugViewer.Common import utils
 
+def widget_add_popup_menu (widget, menu, button = 3):
+
+    def popup_callback (widget, event):
+
+        if event.button == button:
+            menu.popup (None, None, None, event.button, event.get_time ())
+            return True
+        else:
+            return False
+
+    widget.connect ("button-press-event", popup_callback)
+
 class Actions (dict):
 
     def __init__ (self):

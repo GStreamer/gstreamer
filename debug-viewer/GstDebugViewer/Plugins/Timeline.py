@@ -660,8 +660,6 @@ class TimelineFeature (FeatureBase):
                    "hide-after-line", gtk.UI_MANAGER_MENUITEM, False)
         ui.add_ui (self.merge_id, "/TimelineContextMenu", "TimelineShowHiddenLines",
                    "show-hidden-lines", gtk.UI_MANAGER_MENUITEM, False)
-
-        self.popup = ui.get_widget ("/TimelineContextMenu")
         
         box = window.get_top_attach_point ()
 
@@ -671,6 +669,9 @@ class TimelineFeature (FeatureBase):
         self.timeline.connect ("motion-notify-event", self.handle_timeline_motion_notify_event)
         box.pack_start (self.timeline, False, False, 0)
         self.timeline.hide ()
+
+        self.popup = ui.get_widget ("/TimelineContextMenu")
+        Common.GUI.widget_add_popup_menu (self.timeline, self.popup)
 
         box = window.get_side_attach_point ()
 
@@ -805,12 +806,8 @@ class TimelineFeature (FeatureBase):
 
     def handle_timeline_button_press_event (self, widget, event):
 
-        if event.button == 3:
-            self.popup.popup (None, None, None, event.button, event.get_time ())
-            return True
-
         if event.button != 1:
-            return True
+            return False
 
         # TODO: Check if clicked inside a warning/error indicator triangle and
         # navigate there.
