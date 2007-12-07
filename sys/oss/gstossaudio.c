@@ -28,6 +28,7 @@
 #include "gstosssrc.h"
 
 GST_DEBUG_CATEGORY (oss_debug);
+#define GST_CAT_DEFAULT oss_debug
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -44,7 +45,8 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (oss_debug, "oss", 0, "OSS elements");
 
 #ifdef ENABLE_NLS
-  setlocale (LC_ALL, "");
+  GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
+      LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
 #endif /* ENABLE_NLS */
 

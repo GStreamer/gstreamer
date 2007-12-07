@@ -1,3 +1,11 @@
+2007-12-07  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/oss/gstossaudio.c: (plugin_init):
+	* sys/oss/gstosssink.c: (gst_oss_sink_open):
+	* sys/oss/gstosssrc.c: (gst_oss_src_open):
+	  Post decent (and translated) error message when we can't
+	  open the audio device for some reason.
+
 2007-12-07  Jan Schmidt  <jan.schmidt@sun.com>
 
 	* sys/oss/gstosssink.c:

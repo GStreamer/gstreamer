@@ -77,6 +77,8 @@
 #include "common.h"
 #include "gstosssink.h"
 
+#include <gst/gst-i18n-plugin.h>
+
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);
 #define GST_CAT_DEFAULT oss_debug
 
@@ -396,6 +398,8 @@ gst_oss_sink_open (GstAudioSink * asink)
     switch (errno) {
       case EBUSY:
         goto busy;
+      case EACCES:
+        goto no_permission;
       default:
         goto open_failed;
     }
@@ -406,12 +410,23 @@ gst_oss_sink_open (GstAudioSink * asink)
   /* ERRORS */
 busy:
   {
-    GST_ELEMENT_ERROR (oss, RESOURCE, BUSY, (NULL), (NULL));
+    GST_ELEMENT_ERROR (oss, RESOURCE, BUSY,
+        (_("Could not open audio device for playback. "
+                "Device is being used by another application.")), (NULL));
+    return FALSE;
+  }
+no_permission:
+  {
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
+        (_("Could not open audio device for playback."
+                "You don't have permission to open the device.")),
+        GST_ERROR_SYSTEM);
     return FALSE;
   }
 open_failed:
   {
-    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE, (NULL), GST_ERROR_SYSTEM);
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_WRITE,
+        (_("Could not open audio device for playback.")), GST_ERROR_SYSTEM);
     return FALSE;
   }
 }

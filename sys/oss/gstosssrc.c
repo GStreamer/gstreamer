@@ -67,6 +67,8 @@
 #include "gstosssrc.h"
 #include "common.h"
 
+#include <gst/gst-i18n-plugin.h>
+
 GST_DEBUG_CATEGORY_EXTERN (oss_debug);
 #define GST_CAT_DEFAULT oss_debug
 
@@ -342,8 +344,14 @@ gst_oss_src_open (GstAudioSrc * asrc)
   mode |= O_NONBLOCK;
 
   oss->fd = open (oss->device, mode, 0);
-  if (oss->fd == -1)
-    goto open_failed;
+  if (oss->fd == -1) {
+    switch (errno) {
+      case EACCES:
+        goto no_permission;
+      default:
+        goto open_failed;
+    }
+  }
 
   if (!oss->mixer) {
     oss->mixer = gst_ossmixer_new ("/dev/mixer", GST_OSS_MIXER_CAPTURE);
@@ -355,11 +363,20 @@ gst_oss_src_open (GstAudioSrc * asrc)
   }
   return TRUE;
 
+no_permission:
+  {
+    GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+        (_("Could not open audio device for recording."
+                "You don't have permission to open the device.")),
+        GST_ERROR_SYSTEM);
+    return FALSE;
+  }
 open_failed:
   {
     GST_ELEMENT_ERROR (oss, RESOURCE, OPEN_READ,
+        (_("Could not open audio device for recording.")),
         ("Unable to open device %s for recording: %s",
-            oss->device, g_strerror (errno)), (NULL));
+            oss->device, g_strerror (errno)));
     return FALSE;
   }
 }
