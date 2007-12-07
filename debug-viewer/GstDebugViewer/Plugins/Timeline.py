@@ -535,6 +535,7 @@ class TimelineWidget (gtk.DrawingArea):
             for i, counts in enumerate (dist_data):
                 if counts[level] == 0:
                     continue
+                ctx.identity_matrix ()
                 ctx.translate (i, 0)
                 triangle (ctx)
                 ctx.fill ()
