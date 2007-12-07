@@ -269,6 +269,13 @@ class VerticalTimelineWidget (gtk.DrawingArea):
         self.connect ("expose-event", self.__handle_expose_event)
         self.connect ("size-request", self.__handle_size_request)
 
+        try:
+            self.set_tooltip_text (_("Vertical timeline\n"
+                                     "Different colors represent different threads"))
+        except AttributeError:
+            # Compatibility.
+            pass
+
     def __handle_expose_event (self, self_, event):
 
         self.__draw (self.window)
