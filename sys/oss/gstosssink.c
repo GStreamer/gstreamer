@@ -235,9 +235,14 @@ gst_oss_sink_class_init (GstOssSinkClass * klass)
 static void
 gst_oss_sink_init (GstOssSink * osssink)
 {
+  const gchar *device;
+
   GST_DEBUG_OBJECT (osssink, "initializing osssink");
 
-  osssink->device = g_strdup (DEFAULT_DEVICE);
+  device = g_getenv ("AUDIODEV");
+  if (device == NULL)
+    device = DEFAULT_DEVICE;
+  osssink->device = g_strdup (device);
   osssink->fd = -1;
 }
 

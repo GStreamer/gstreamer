@@ -230,10 +230,16 @@ gst_oss_src_get_property (GObject * object, guint prop_id,
 static void
 gst_oss_src_init (GstOssSrc * osssrc, GstOssSrcClass * g_class)
 {
+  const gchar *device;
+
   GST_DEBUG ("initializing osssrc");
 
+  device = g_getenv ("AUDIODEV");
+  if (device == NULL)
+    device = DEFAULT_DEVICE;
+
   osssrc->fd = -1;
-  osssrc->device = g_strdup (DEFAULT_DEVICE);
+  osssrc->device = g_strdup (device);
   osssrc->device_name = g_strdup (DEFAULT_DEVICE_NAME);
 }
 
