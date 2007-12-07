@@ -524,16 +524,19 @@ class TimelineWidget (gtk.DrawingArea):
 
         # Draw error and warning triangle indicators:
 
+        def triangle (ctx, size = 8):
+            ctx.move_to (-size // 2, 0)
+            ctx.line_to ((size + 1) // 2, 0)
+            ctx.line_to (0, size / 1.41)
+            ctx.close_path ()            
+
         for level in (Data.debug_level_warning, Data.debug_level_error,):
             ctx.set_source_rgb (*(theme.colors_float (level)[1]))
             for i, counts in enumerate (dist_data):
                 if counts[level] == 0:
                     continue
-                SIZE = 8
-                ctx.move_to (i - SIZE // 2, 0)
-                ctx.line_to (i + SIZE // 2, 0)
-                ctx.line_to (i, SIZE / 1.41)
-                ctx.close_path ()
+                ctx.translate (i, 0)
+                triangle (ctx)
                 ctx.fill ()
 
     def __draw_graph (self, ctx, w, h, maximum, data):
@@ -809,18 +812,34 @@ class TimelineFeature (FeatureBase):
         if event.button != 1:
             return True
 
+        # TODO: Check if clicked inside a warning/error indicator triangle and
+        # navigate there.
+
         pos = int (event.x)
         self.goto_time_position (pos)
         return False
 
     def handle_timeline_motion_notify_event (self, widget, event):
 
-        if not event.state & gtk.gdk.BUTTON1_MASK:
-            return True
+        x = event.x
+        y = event.y
 
-        pos = int (event.x)
-        self.goto_time_position (pos)
-        return False
+        if event.state & gtk.gdk.BUTTON1_MASK:
+            self.handle_timeline_motion_button1 (x, y)
+            return True
+        else:
+            self.handle_timeline_motion (x, y)
+            return False
+
+    def handle_timeline_motion (self, x, y):
+
+        # TODO: Prelight warning and error indicator triangles.
+
+        pass
+
+    def handle_timeline_motion_button1 (self, x, y):
+
+        self.goto_time_position (int (x))
 
     def goto_time_position (self, pos):
 
