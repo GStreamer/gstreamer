@@ -1,3 +1,10 @@
+2007-12-08  Jan Schmidt  <jan.schmidt@sun.com>
+
+	* sys/oss/gstosshelper.c:
+	Verify that the format returned after the ioctl is the one
+	we requested. It is valid for the ioctl to succeed while
+	substituting an alternate 'supported' sample format.
+
 2007-12-07  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/oss/gstossaudio.c: (plugin_init):
