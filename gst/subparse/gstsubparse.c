@@ -895,7 +895,7 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     need_init_regexps = FALSE;
     if ((err = regcomp (&mdvd_rx, "^\\{[0-9]+\\}\\{[0-9]+\\}",
                 REG_EXTENDED | REG_NEWLINE | REG_NOSUB) != 0) ||
-        (err = regcomp (&subrip_rx, "^[1-9]([0-9]){0,3}(\x0d)?\x0a"
+        (err = regcomp (&subrip_rx, "^[0-9]([0-9]){0,3}(\x0d)?\x0a"
                 "[0-9][0-9]:[0-9][0-9]:[0-9][0-9],[0-9]{3}"
                 " --> [0-9][0-9]:[0-9][0-9]:[0-9][0-9],[0-9]{3}",
                 REG_EXTENDED | REG_NEWLINE | REG_NOSUB)) != 0) {

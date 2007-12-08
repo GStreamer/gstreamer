@@ -106,6 +106,17 @@ static SubParseInputChunk srt_input[] = {
       600 * GST_SECOND, 660 * GST_SECOND, "This is in blue but &lt;5"}
 };
 
+/* starts with chunk number 0 (not exactly according to spec) */
+static SubParseInputChunk srt_input0[] = {
+  {
+        "0\n00:00:01,000 --> 00:00:02,000\nOne\n\n",
+      1 * GST_SECOND, 2 * GST_SECOND, "One"}, {
+        "1\n00:00:02,000 --> 00:00:03,000\nTwo\n\n",
+      2 * GST_SECOND, 3 * GST_SECOND, "Two"}, {
+        "2\n00:00:03,000 --> 00:00:04,000\nThree\n\n",
+      3 * GST_SECOND, 4 * GST_SECOND, "Three"}
+};
+
 static void
 setup_subparse (void)
 {
@@ -205,6 +216,9 @@ GST_START_TEST (test_srt)
 
   /* try with empty input, immediate EOS */
   test_srt_do_test (srt_input, 5, G_N_ELEMENTS (srt_input) - 5);
+
+  /* try with chunk number 0 (which is not exactly according to spec) */
+  test_srt_do_test (srt_input0, 0, G_N_ELEMENTS (srt_input0));
 }
 
 GST_END_TEST;

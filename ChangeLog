@@ -1,3 +1,15 @@
+2007-12-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	Patch by: Robin Stocker <robin dot stocker at gmx dot ch>
+
+	* gst/subparse/gstsubparse.c: (gst_sub_parse_data_format_autodetect):
+	  Some .srt files start with chunk number 0 and not chunk number 1,
+	  recognise and accept those as well (fixes #502497).
+
+	* tests/check/elements/subparse.c: (srt_input), (srt_input0),
+	  (test_src):
+	  Add unit test for the above.
+
 2007-12-06  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/playback/gstplay-enum.c:
