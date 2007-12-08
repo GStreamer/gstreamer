@@ -145,7 +145,8 @@ gst_structure_validate_name (const gchar * name)
 
   g_return_val_if_fail (name != NULL, FALSE);
 
-  if (!g_ascii_isalpha (*name)) {
+  /* FIXME 0.11: use g_ascii_isalpha() */
+  if (!g_ascii_isalnum (*name)) {
     GST_WARNING ("Invalid character '%c' at offset 0 in structure name: %s",
         *name, name);
     return FALSE;
@@ -236,7 +237,9 @@ gst_structure_new_valist (const gchar * name,
   g_return_val_if_fail (name != NULL, NULL);
 
   structure = gst_structure_empty_new (name);
-  gst_structure_set_valist (structure, firstfield, varargs);
+
+  if (structure)
+    gst_structure_set_valist (structure, firstfield, varargs);
 
   return structure;
 }
@@ -1883,7 +1886,7 @@ gst_structure_parse_value (gchar * str,
  * where parsing ended will be returned.
  *
  * Returns: a new #GstStructure or NULL when the string could not
- * be parsed. Free after usage.
+ * be parsed. Free with gst_structure_free() after use.
  */
 GstStructure *
 gst_structure_from_string (const gchar * string, gchar ** end)
@@ -1901,7 +1904,7 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   copy = g_strdup (string);
   r = copy;
 
-  /* skipe spaces */
+  /* skip spaces (FIXME: _isspace treats tabs and newlines as space!) */
   while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'
               && g_ascii_isspace (r[1]))))
     r++;
@@ -1916,6 +1919,9 @@ gst_structure_from_string (const gchar * string, gchar ** end)
   *w = 0;
   structure = gst_structure_empty_new (name);
   *w = save;
+
+  if (structure == NULL)
+    goto error;
 
   do {
     while (*r && (g_ascii_isspace (*r) || (r[0] == '\\'

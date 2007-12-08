@@ -115,6 +115,17 @@ GST_START_TEST (test_from_string)
   fail_unless (G_VALUE_HOLDS_BOOLEAN (val));
   fail_unless_equals_int (g_value_get_boolean (val), TRUE);
   gst_structure_free (structure);
+
+  /* This should still work for now (FIXME: 0.11) */
+  s = "0.10:decoder-video/mpeg, abc=(boolean)false";
+  structure = gst_structure_from_string (s, NULL);
+  fail_if (structure == NULL, "Could not get structure from string %s", s);
+  gst_structure_free (structure);
+
+  /* make sure we bail out correctly in case of an error or if parsing fails */
+  s = "***foo***, abc=(boolean)false";
+  structure = gst_structure_from_string (s, NULL);
+  fail_unless (structure == NULL);
 }
 
 GST_END_TEST;
@@ -131,14 +142,18 @@ GST_START_TEST (test_to_string)
 #if 0
   ASSERT_CRITICAL (st1 = gst_structure_new ("Foo with whitespace", NULL));
   fail_unless (st1 == NULL);
+  ASSERT_CRITICAL (st1 = gst_structure_new ("1st", NULL));
+  fail_unless (st1 == NULL);
 #else
   st1 = gst_structure_new ("Foo with whitespace is still allowed", NULL);
   fail_unless (st1 != NULL);
   gst_structure_free (st1);
-#endif
 
-  ASSERT_CRITICAL (st1 = gst_structure_new ("1st", NULL));
-  fail_unless (st1 == NULL);
+  /* structure names starting with a number are also still allowed */
+  st1 = gst_structure_new ("1st", NULL);
+  fail_unless (st1 != NULL);
+  gst_structure_free (st1);
+#endif
 }
 
 GST_END_TEST;
@@ -239,6 +254,14 @@ GST_START_TEST (test_structure_new)
   s = gst_structure_new ("name", "key", GST_TYPE_G_ERROR, e, NULL);
   g_error_free (e);
   gst_structure_free (s);
+
+  /* This should still work for now (FIXME 0.11) */
+  gst_structure_free (gst_structure_new ("0.10:decoder-video/mpeg", NULL));
+
+  /* make sure we bail out correctly in case of an error or if parsing fails */
+  ASSERT_CRITICAL (s = gst_structure_new ("^joo\nba\ndoo^",
+          "abc", G_TYPE_BOOLEAN, FALSE, NULL));
+  fail_unless (s == NULL);
 }
 
 GST_END_TEST;

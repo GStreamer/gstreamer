@@ -1,3 +1,16 @@
+2007-12-08  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gststructure.c: (gst_structure_validate_name),
+	  (gst_structure_new_valist), (gst_structure_parse_value),
+	  (gst_structure_from_string):
+	  Don't crash in _from_string() if the structure name is not valid
+	  (fixes #501560).  Allow structure names to start with a number
+	  again (this apparently broke the ubuntu codec installer).
+
+	* tests/check/gst/gststructure.c: (GST_START_TEST), (GST_START_TEST),
+	  (GST_START_TEST):
+	  Add unit test for the crash; update unit tests for new behaviour.
+
 2007-12-03  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/gstutils.c:
