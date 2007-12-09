@@ -1,5 +1,16 @@
 2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	Based on a patch by: Kwang Yul Seo <kwangyul dot seo at gmail dot com>
+
+	* configure.ac:
+	* ext/cairo/gsttimeoverlay.c:
+	  (gst_cairo_time_overlay_print_smpte_time):
+	  Fix compilation with MSVC by using gst_util_guint64_to_gdouble()
+	  and checking for rint() and implementing it ourself if it doesn't
+	  exist.
+
+2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	  Don't define GST_DISABLE_DEPRECATED for releases. Fixes #498181.
 

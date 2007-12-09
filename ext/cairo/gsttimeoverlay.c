@@ -48,6 +48,10 @@
 
 #include <gst/video/video.h>
 
+#ifndef HAVE_RINT
+#define rint(x) ((double) floor((x)+(((x) < 0)? -0.5 : 0.5)))
+#endif
+
 static const GstElementDetails cairo_time_overlay_details =
 GST_ELEMENT_DETAILS ("Time overlay",
     "Filter/Editor/Video",
@@ -159,7 +163,7 @@ gst_cairo_time_overlay_print_smpte_time (guint64 time)
   int ms;
   double x;
 
-  x = rint ((time + 500000) * 1e-6);
+  x = rint (gst_util_guint64_to_gdouble (time + 500000) * 1e-6);
 
   hours = floor (x / (60 * 60 * 1000));
   x -= hours * 60 * 60 * 1000;
