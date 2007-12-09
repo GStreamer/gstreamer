@@ -40,6 +40,10 @@
  * </refsect2>
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <gst/audio/multichannel.h>
@@ -410,10 +414,17 @@ invalid_header:
   }
 decode_error:
   {
+    const gchar *reason = "unknown";
+
+    if (dec->context) {
+#ifndef WAVPACK_OLD_API
+      reason = WavpackGetErrorMessage (dec->context);
+#endif
+    } else {
+      reason = "couldn't create decoder context";
+    }
     GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL),
-        ("Failed to decode wavpack stream: %s",
-            (dec->context) ? WavpackGetErrorMessage (dec->
-                context) : "couldn't create decoder context"));
+        ("Failed to decode wavpack stream: %s", reason));
     gst_buffer_unref (outbuf);
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;

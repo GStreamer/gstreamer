@@ -1,3 +1,11 @@
+2007-12-09  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/wavpack/gstwavpackdec.c:
+	  More build fixes for old libwavpack versions: include config.h so
+	  that WAVPACK_OLD_API is actually defined as detected; only use
+	  WavpackGetErrorMessage if it is available. This fixes the build
+	  on debian stable for me.
+
 2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
