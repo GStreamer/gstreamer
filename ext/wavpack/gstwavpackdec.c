@@ -417,7 +417,9 @@ decode_error:
     const gchar *reason = "unknown";
 
     if (dec->context) {
-#ifndef WAVPACK_OLD_API
+#ifdef WAVPACK_OLD_API
+      reason = dec->context->error_message;
+#else
       reason = WavpackGetErrorMessage (dec->context);
 #endif
     } else {

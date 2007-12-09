@@ -1,3 +1,9 @@
+2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
+	  Also print a useful error message with the old Wavpack API
+	  if possible.
+
 2007-12-09  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* ext/wavpack/gstwavpackdec.c:
