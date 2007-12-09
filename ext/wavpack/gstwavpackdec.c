@@ -305,7 +305,11 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
       (dec->sample_rate != WavpackGetSampleRate (dec->context)) ||
       (dec->channels != WavpackGetNumChannels (dec->context)) ||
       (dec->depth != WavpackGetBitsPerSample (dec->context)) ||
+#ifdef WAVPACK_OLD_API
+      (dec->channel_mask != dec->context->config.channel_mask);
+#else
       (dec->channel_mask != WavpackGetChannelMask (dec->context));
+#endif
 
   if (!GST_PAD_CAPS (dec->srcpad) || format_changed) {
     GstCaps *caps;
@@ -323,7 +327,11 @@ gst_wavpack_dec_chain (GstPad * pad, GstBuffer * buf)
         "endianness", G_TYPE_INT, G_BYTE_ORDER,
         "signed", G_TYPE_BOOLEAN, TRUE, NULL);
 
+#ifdef WAVPACK_OLD_API
+    channel_mask = dec->context->config.channel_mask;
+#else
     channel_mask = WavpackGetChannelMask (dec->context);
+#endif
     if (channel_mask == 0)
       channel_mask = gst_wavpack_get_default_channel_mask (dec->channels);
 

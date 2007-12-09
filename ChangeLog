@@ -1,5 +1,13 @@
 2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
+	* ext/wavpack/gstwavpackparse.c:
+	  (gst_wavpack_parse_create_src_pad):
+	  Workaround the non-existance of WavpackGetChannelMask in Wavpack
+	  versions below 4.40.0.
+
+2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* configure.ac:
 	  And now do it right for real...
 

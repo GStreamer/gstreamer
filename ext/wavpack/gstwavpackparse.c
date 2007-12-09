@@ -836,8 +836,11 @@ gst_wavpack_parse_create_src_pad (GstWavpackParse * wvparse, GstBuffer * buf,
             "channels", G_TYPE_INT, wvparse->channels,
             "rate", G_TYPE_INT, wvparse->samplerate,
             "framed", G_TYPE_BOOLEAN, TRUE, NULL);
-
+#ifdef WAVPACK_OLD_API
+        channel_mask = wpc->config.channel_mask;
+#else
         channel_mask = WavpackGetChannelMask (wpc);
+#endif
         if (channel_mask == 0)
           channel_mask =
               gst_wavpack_get_default_channel_mask (wvparse->channels);
