@@ -437,6 +437,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   /* If we don't have our audio pad created, then create it. */
   if (G_UNLIKELY (!demux->audio_pad)) {
     GstCaps *caps = NULL;
+    gchar *codec_name = NULL;
 
     demux->audio_pad = gst_pad_new ("audio", GST_PAD_SRC);
     if (G_UNLIKELY (!demux->audio_pad)) {
@@ -449,9 +450,16 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
     gst_pad_set_active (demux->audio_pad, TRUE);
 
     switch (codec_tag) {
+      case 1:
+        caps =
+            gst_caps_new_simple ("audio/x-adpcm", "layout", G_TYPE_STRING,
+            "swf", NULL);
+        codec_name = "Shockwave ADPCM";
+        break;
       case 2:
         caps = gst_caps_new_simple ("audio/mpeg",
             "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3, NULL);
+        codec_name = "MPEG 1 Audio, Layer 3 (MP3)";
         break;
       case 0:
       case 3:
@@ -459,9 +467,12 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
             "endianness", G_TYPE_INT, G_BYTE_ORDER,
             "signed", G_TYPE_BOOLEAN, TRUE,
             "width", G_TYPE_INT, width, "depth", G_TYPE_INT, width, NULL);
+        codec_name = "Raw Audio";
         break;
+      case 5:
       case 6:
         caps = gst_caps_new_simple ("audio/x-nellymoser", NULL);
+        codec_name = "Nellymoser ASAO";
         break;
       default:
         GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
@@ -479,6 +490,12 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
         "rate", G_TYPE_INT, rate, "channels", G_TYPE_INT, channels, NULL);
 
     gst_pad_set_caps (demux->audio_pad, caps);
+    if (codec_name) {
+      if (demux->taglist == NULL)
+        demux->taglist = gst_tag_list_new ();
+      gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_AUDIO_CODEC, g_strdup (codec_name), NULL);
+    }
 
     GST_DEBUG_OBJECT (demux, "created audio pad with caps %" GST_PTR_FORMAT,
         caps);
@@ -516,20 +533,30 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
   if (G_UNLIKELY (rate != demux->rate || channels != demux->channels ||
           codec_tag != demux->audio_codec_tag || width != demux->width)) {
     GstCaps *caps = NULL;
+    gchar *codec_name = NULL;
 
     GST_DEBUG_OBJECT (demux, "audio settings have changed, changing caps");
 
     switch (codec_tag) {
+      case 1:
+        caps =
+            gst_caps_new_simple ("audio/x-adpcm", "layout", G_TYPE_STRING,
+            "swf", NULL);
+        codec_name = "Shockwave ADPCM";
+        break;
       case 2:
         caps = gst_caps_new_simple ("audio/mpeg",
             "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 3, NULL);
+        codec_name = "MPEG 1 Audio, Layer 3 (MP3)";
         break;
       case 0:
       case 3:
         caps = gst_caps_new_simple ("audio/x-raw-int", NULL);
+        codec_name = "Raw Audio";
         break;
       case 6:
         caps = gst_caps_new_simple ("audio/x-nellymoser", NULL);
+        codec_name = "Nellymoser ASAO";
         break;
       default:
         GST_WARNING_OBJECT (demux, "unsupported audio codec tag %u", codec_tag);
@@ -546,6 +573,12 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
         "channels", G_TYPE_INT, channels, "width", G_TYPE_INT, width, NULL);
 
     gst_pad_set_caps (demux->audio_pad, caps);
+    if (codec_name) {
+      if (demux->taglist == NULL)
+        demux->taglist = gst_tag_list_new ();
+      gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_AUDIO_CODEC, g_strdup (codec_name), NULL);
+    }
 
     gst_caps_unref (caps);
 
@@ -680,6 +713,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   /* If we don't have our video pad created, then create it. */
   if (G_UNLIKELY (!demux->video_pad)) {
     GstCaps *caps = NULL;
+    gchar *codec_name = NULL;
 
     demux->video_pad = gst_pad_new ("video", GST_PAD_SRC);
     if (G_UNLIKELY (!demux->video_pad)) {
@@ -694,15 +728,15 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
     switch (codec_tag) {
       case 2:
         caps = gst_caps_new_simple ("video/x-flash-video", NULL);
+        codec_name = "Sorenson Video";
         break;
       case 3:
-        caps = gst_caps_new_simple ("video/x-flash-video", NULL);
-        break;
+        caps = gst_caps_new_simple ("video/x-flash-screen", NULL);
+        codec_name = "Flash Screen Video";
       case 4:
-        caps = gst_caps_new_simple ("video/x-vp6-flash", NULL);
-        break;
       case 5:
         caps = gst_caps_new_simple ("video/x-vp6-flash", NULL);
+        codec_name = "On2 VP6 Video";
         break;
       default:
         GST_WARNING_OBJECT (demux, "unsupported video codec tag %d", codec_tag);
@@ -729,6 +763,12 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
         caps);
 
     gst_caps_unref (caps);
+    if (codec_name) {
+      if (demux->taglist == NULL)
+        demux->taglist = gst_tag_list_new ();
+      gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_VIDEO_CODEC, g_strdup (codec_name), NULL);
+    }
 
     /* Store the caps we have set */
     demux->video_codec_tag = codec_tag;
@@ -757,6 +797,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
   /* Check if caps have changed */
   if (G_UNLIKELY (codec_tag != demux->video_codec_tag || demux->got_par)) {
     GstCaps *caps = NULL;
+    gchar *codec_name = NULL;
 
     GST_DEBUG_OBJECT (demux, "video settings have changed, changing caps");
 
@@ -764,15 +805,15 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
     switch (codec_tag) {
       case 2:
         caps = gst_caps_new_simple ("video/x-flash-video", NULL);
+        codec_name = "Sorenson Video";
         break;
       case 3:
-        caps = gst_caps_new_simple ("video/x-flash-video", NULL);
-        break;
+        caps = gst_caps_new_simple ("video/x-flash-screen", NULL);
+        codec_name = "Flash Screen Video";
       case 4:
-        caps = gst_caps_new_simple ("video/x-vp6", NULL);
-        break;
       case 5:
         caps = gst_caps_new_simple ("video/x-vp6", NULL);
+        codec_name = "On2 VP6 Video";
         break;
       default:
         GST_WARNING_OBJECT (demux, "unsupported video codec tag %d", codec_tag);
@@ -794,6 +835,12 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
     gst_pad_set_caps (demux->video_pad, caps);
 
     gst_caps_unref (caps);
+    if (codec_name) {
+      if (demux->taglist == NULL)
+        demux->taglist = gst_tag_list_new ();
+      gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
+          GST_TAG_VIDEO_CODEC, g_strdup (codec_name), NULL);
+    }
 
     /* Store the caps we have set */
     demux->video_codec_tag = codec_tag;
