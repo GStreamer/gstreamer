@@ -1016,7 +1016,11 @@ if test "x$USE_DEBUG" = xyes; then
 fi
 AC_SUBST(PROFILE_CFLAGS)
 
-DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+if test "x$GST_CVS" = "xyes"; then
+  DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+else
+  DEPRECATED_CFLAGS=""
+fi
 AC_SUBST(DEPRECATED_CFLAGS)
 
 dnl every flag in GST_OPTION_CFLAGS can be overridden at make time
