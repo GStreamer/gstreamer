@@ -541,7 +541,11 @@ AC_SUBST(PROFILE_CFLAGS)
 # GST_DISABLE_DEPRECATED: hide the visibility of deprecated
 # functionality from the API that gstreamer uses
 # GST_REMOVE_DEPRECATED: don't compile deprecated functionality (breaks ABI)
-DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+if test "x$GST_CVS" = "xyes"; then
+  DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+else
+  DEPRECATED_CFLAGS=""
+fi
 AC_SUBST(DEPRECATED_CFLAGS)
 
 dnl every flag in GST_OPTION_CFLAGS can be overridden at make time via e.g.

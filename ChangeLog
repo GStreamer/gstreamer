@@ -1,3 +1,8 @@
+2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Don't define GST_DISABLE_DEPRECATED for releases. Fixes #498181.
+
 2007-12-08  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gststructure.c: (gst_structure_validate_name),
