@@ -1,3 +1,11 @@
+2007-12-09  Edward Hervey  <edward@collabora.co.uk>
+
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	(gst_flv_parse_tag_video):
+	Fix list of supported and known codecs.
+	Emit tag with the codec name so it gets properly reported in totem and
+	other applications.
+
 2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
