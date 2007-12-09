@@ -1,6 +1,11 @@
 2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
+	  And now do it right for real...
+
+2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
 	  Correctly reset $LIBS to not contain -lm.
 
 2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
