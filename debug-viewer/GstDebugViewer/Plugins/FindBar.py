@@ -187,8 +187,6 @@ class FindBarFeature (FeatureBase):
 
         FeatureBase.__init__ (self, app)
 
-        self.matches = []
-
         self.logger = logging.getLogger ("ui.findbar")
 
         self.action_group = gtk.ActionGroup ("FindBarActions")
@@ -286,18 +284,21 @@ class FindBarFeature (FeatureBase):
 
     def handle_goto_previous_search_result_action_activate (self, action):
 
-        model = self.log_view.props.model
+        # FIXME:
+        pass
 
-        start_path, end_path = self.log_view.get_visible_range ()
-        start_index, end_index = start_path[0], end_path[0]
+        ## model = self.log_view.props.model
 
-        for line_index in reversed (self.matches):
-            if line_index < start_index:
-                break
-        else:
-            return
+        ## start_path, end_path = self.log_view.get_visible_range ()
+        ## start_index, end_index = start_path[0], end_path[0]
 
-        self.scroll_view_to_line (line_index)
+        ## for line_index in reversed (self.matches):
+        ##     if line_index < start_index:
+        ##         break
+        ## else:
+        ##     return
+
+        ## self.scroll_view_to_line (line_index)
 
     def handle_goto_next_search_result_action_activate (self, action):
 
@@ -328,8 +329,6 @@ class FindBarFeature (FeatureBase):
 
     def handle_entry_changed (self, entry):
 
-        self.clear_results ()
-
         model = self.log_view.props.model
         search_text = entry.props.text
         column = self.window.column_manager.find_item (name = "message")
@@ -340,7 +339,6 @@ class FindBarFeature (FeatureBase):
             self.prev_match = None
             self.update_sensitivity ()
             self.sentinel.abort ()
-            self.clear_results ()
             try:
                 del column.highlighters[self]
             except KeyError:
@@ -440,45 +438,6 @@ class FindBarFeature (FeatureBase):
         self.update_sensitivity ()
         if self.prev_match is None and self.next_match is None:
             self.bar.status_no_match_found ()
-
-    def update_results (self, finished = False):
-
-        INTERVAL = 100
-
-        if finished and len (self.matches) == 0:
-            self.bar.status_no_match_found ()
-        elif finished:
-            self.bar.clear_status ()
-
-        if len (self.matches) % INTERVAL == 0:
-            new_matches = self.matches[-INTERVAL:]
-        elif finished:
-            new_matches = self.matches[-(len (self.matches) % INTERVAL):]
-        else:
-            return
-
-    def clear_results (self):
-
-        try:
-            column = self.window.column_manager.find_item (name = "message")
-            del column.highlighters[self]
-        except KeyError:
-            pass
-
-        model = self.log_view.props.model
-
-        start_path, end_path = self.log_view.get_visible_range ()
-        start_index, end_index = start_path[0], end_path[0]
-
-        for line_index in range (start_index, end_index + 1):
-            if line_index in self.matches:
-                tree_path = (line_index,)
-                tree_iter = model.get_iter (tree_path)
-                model.row_changed (tree_path, tree_iter)
-
-        del self.matches[:]
-
-        self.bar.clear_status ()
 
 class Plugin (PluginBase):
 
