@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -119,9 +119,9 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("on-new-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_new_ssrc),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      G_TYPE_OBJECT);
+      RTP_TYPE_SOURCE);
   /**
-   * RTPSession::on-ssrc_collision:
+   * RTPSession::on-ssrc-collision:
    * @session: the object which received the signal
    * @src: the #RTPSource that caused a collision
    *
@@ -131,9 +131,9 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("on-ssrc-collision", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_collision),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      G_TYPE_OBJECT);
+      RTP_TYPE_SOURCE);
   /**
-   * RTPSession::on-ssrc_validated:
+   * RTPSession::on-ssrc-validated:
    * @session: the object which received the signal
    * @src: the new validated RTPSource
    *
@@ -143,7 +143,7 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("on-ssrc-validated", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_validated),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      G_TYPE_OBJECT);
+      RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-ssrc-active:
    * @session: the object which received the signal
@@ -155,7 +155,7 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("on-ssrc-active", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_active),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      G_TYPE_OBJECT);
+      RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-ssrc-sdes:
    * @session: the object which received the signal
@@ -167,7 +167,7 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("on-ssrc-sdes", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_sdes),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      G_TYPE_OBJECT);
+      RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-bye-ssrc:
    * @session: the object which received the signal
@@ -179,7 +179,7 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("on-bye-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_bye_ssrc),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      G_TYPE_OBJECT);
+      RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-bye-timeout:
    * @session: the object which received the signal
@@ -191,7 +191,7 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("on-bye-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_bye_timeout),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      G_TYPE_OBJECT);
+      RTP_TYPE_SOURCE);
   /**
    * RTPSession::on-timeout:
    * @session: the object which received the signal
@@ -203,7 +203,7 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("on-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_timeout),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
-      G_TYPE_OBJECT);
+      RTP_TYPE_SOURCE);
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SOURCE,
       g_param_spec_object ("internal-source", "Internal Source",
@@ -473,6 +473,7 @@ on_ssrc_active (RTPSession * sess, RTPSource * source)
 static void
 on_ssrc_sdes (RTPSession * sess, RTPSource * source)
 {
+  GST_DEBUG ("SDES changed for SSRC %08x", source->ssrc);
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SSRC_SDES], 0, source);
   RTP_SESSION_LOCK (sess);
@@ -1258,7 +1259,7 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
       GST_DEBUG ("entry %d, type %d, len %d, data %.*s", j, type, len, len,
           data);
 
-
+      changed |= rtp_source_set_sdes (source, type, data, len);
 
       more_entries = gst_rtcp_packet_sdes_next_entry (packet);
       j++;

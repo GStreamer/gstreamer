@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * RTP SSRC demuxer
  *
@@ -93,7 +93,7 @@ static GstElementDetails gst_rtp_ssrc_demux_details = {
   "RTP SSRC Demux",
   "Demux/Network/RTP",
   "Splits RTP streams based on the SSRC",
-  "Wim Taymans <wim@fluendo.com>"
+  "Wim Taymans <wim.taymans@gmail.com>"
 };
 
 #define GST_PAD_LOCK(obj)   (g_mutex_lock ((obj)->padlock))

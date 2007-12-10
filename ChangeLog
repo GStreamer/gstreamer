@@ -1,3 +1,31 @@
+2007-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (on_ssrc_sdes), (create_session),
+	(gst_rtp_bin_class_init):
+	* gst/rtpmanager/gstrtpbin.h:
+	* gst/rtpmanager/gstrtpclient.c:
+	* gst/rtpmanager/gstrtpclient.h:
+	* gst/rtpmanager/gstrtpjitterbuffer.h:
+	* gst/rtpmanager/gstrtpmanager.c:
+	* gst/rtpmanager/gstrtpptdemux.c:
+	* gst/rtpmanager/gstrtpptdemux.h:
+	* gst/rtpmanager/gstrtpsession.c: (on_ssrc_sdes),
+	(gst_rtp_session_class_init), (gst_rtp_session_init):
+	* gst/rtpmanager/gstrtpsession.h:
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	* gst/rtpmanager/gstrtpssrcdemux.h:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
+	(on_ssrc_sdes), (rtp_session_process_sdes):
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpsource.c:
+	* gst/rtpmanager/rtpsource.h:
+	* gst/rtpmanager/rtpstats.c:
+	* gst/rtpmanager/rtpstats.h:
+	Add signal to notify of an SDES change.
+	Fix object type in the signal callbacks.
+
 2007-12-10  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/rtpmanager/gstrtpbin.c: (create_session),

@@ -4,7 +4,7 @@
  *  Copyright 2007 Collabora Ltd, 
  *  Copyright 2007 Nokia Corporation
  *   @author: Philippe Kalaf <philippe.kalaf@collabora.co.uk>.
- *  Copyright 2007 Wim Taymans <wim@fluendo.com>
+ *  Copyright 2007 Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public

@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -55,7 +55,7 @@ static const GstElementDetails rtpclient_details =
 GST_ELEMENT_DETAILS ("RTP Client",
     "Filter/Network/RTP",
     "Implement an RTP client",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 /* sink pads */
 static GstStaticPadTemplate rtpclient_rtp_sink_template =
