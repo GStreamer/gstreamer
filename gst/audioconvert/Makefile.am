@@ -11,7 +11,7 @@ libgstaudioconvert_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(G
 libgstaudioconvert_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstaudioconvert_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/audio/libgstaudio-@GST_MAJORMINOR@.la \
-	$(GST_BASE_LIBS) $(GST_LIBS)
+	$(GST_BASE_LIBS) $(GST_LIBS) $(LIBM)
 
 noinst_HEADERS = \
 	gstaudioconvert.h \

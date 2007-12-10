@@ -1,5 +1,10 @@
 2007-12-10  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/audioconvert/Makefile.am:
+	Also link to libm.
+
+2007-12-10  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
 	No need for floating point operations here. avoids having to link
 	against the math library too.
