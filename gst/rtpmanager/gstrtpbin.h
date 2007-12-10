@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -69,6 +69,7 @@ struct _GstRtpBinClass {
   void     (*on_ssrc_collision) (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_ssrc_validated) (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_ssrc_active)    (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+  void     (*on_ssrc_sdes)      (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_bye_ssrc)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_bye_timeout)    (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_timeout)        (GstRtpBin *rtpbin, guint session, guint32 ssrc);

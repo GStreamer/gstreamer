@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -144,7 +144,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_bin_debug);
 static const GstElementDetails rtpbin_details = GST_ELEMENT_DETAILS ("RTP Bin",
     "Filter/Network/RTP",
     "Implement an RTP bin",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 /* sink pads */
 static GstStaticPadTemplate rtpbin_recv_rtp_sink_template =
@@ -221,6 +221,7 @@ enum
   SIGNAL_ON_SSRC_COLLISION,
   SIGNAL_ON_SSRC_VALIDATED,
   SIGNAL_ON_SSRC_ACTIVE,
+  SIGNAL_ON_SSRC_SDES,
   SIGNAL_ON_BYE_SSRC,
   SIGNAL_ON_BYE_TIMEOUT,
   SIGNAL_ON_TIMEOUT,
@@ -410,6 +411,13 @@ on_ssrc_active (GstElement * session, guint32 ssrc, GstRtpBinSession * sess)
 }
 
 static void
+on_ssrc_sdes (GstElement * session, guint32 ssrc, GstRtpBinSession * sess)
+{
+  g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_SSRC_SDES], 0,
+      sess->id, ssrc);
+}
+
+static void
 on_bye_ssrc (GstElement * session, guint32 ssrc, GstRtpBinSession * sess)
 {
   g_signal_emit (sess->bin, gst_rtp_bin_signals[SIGNAL_ON_BYE_SSRC], 0,
@@ -474,6 +482,8 @@ create_session (GstRtpBin * rtpbin, gint id)
       (GCallback) on_ssrc_validated, sess);
   g_signal_connect (sess->session, "on-ssrc-active",
       (GCallback) on_ssrc_active, sess);
+  g_signal_connect (sess->session, "on-ssrc-sdes",
+      (GCallback) on_ssrc_sdes, sess);
   g_signal_connect (sess->session, "on-bye-ssrc",
       (GCallback) on_bye_ssrc, sess);
   g_signal_connect (sess->session, "on-bye-timeout",
@@ -1100,7 +1110,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
       G_TYPE_UINT, G_TYPE_UINT);
   /**
-   * GstRtpBin::on-ssrc_collision:
+   * GstRtpBin::on-ssrc-collision:
    * @rtpbin: the object which received the signal
    * @session: the session
    * @ssrc: the SSRC 
@@ -1113,7 +1123,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
       G_TYPE_UINT, G_TYPE_UINT);
   /**
-   * GstRtpBin::on-ssrc_validated:
+   * GstRtpBin::on-ssrc-validated:
    * @rtpbin: the object which received the signal
    * @session: the session
    * @ssrc: the SSRC 
@@ -1126,7 +1136,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
       G_TYPE_UINT, G_TYPE_UINT);
   /**
-   * GstRtpBin::on-ssrc_active:
+   * GstRtpBin::on-ssrc-active:
    * @rtpbin: the object which received the signal
    * @session: the session
    * @ssrc: the SSRC
@@ -1136,6 +1146,19 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_SSRC_ACTIVE] =
       g_signal_new ("on-ssrc-active", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_ssrc_active),
+      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
+      G_TYPE_UINT, G_TYPE_UINT);
+  /**
+   * GstRtpBin::on-ssrc-sdes:
+   * @rtpbin: the object which received the signal
+   * @session: the session
+   * @ssrc: the SSRC
+   *
+   * Notify of a SSRC that is active, i.e., sending RTCP.
+   */
+  gst_rtp_bin_signals[SIGNAL_ON_SSRC_SDES] =
+      g_signal_new ("on-ssrc-sdes", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_ssrc_sdes),
       NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
       G_TYPE_UINT, G_TYPE_UINT);
 

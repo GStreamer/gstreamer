@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -67,6 +67,7 @@ struct _GstRtpSessionClass {
   void     (*on_ssrc_collision) (GstRtpSession *sess, guint32 ssrc);
   void     (*on_ssrc_validated) (GstRtpSession *sess, guint32 ssrc);
   void     (*on_ssrc_active)    (GstRtpSession *sess, guint32 ssrc);
+  void     (*on_ssrc_sdes)      (GstRtpSession *sess, guint32 ssrc);
   void     (*on_bye_ssrc)       (GstRtpSession *sess, guint32 ssrc);
   void     (*on_bye_timeout)    (GstRtpSession *sess, guint32 ssrc);
   void     (*on_timeout)        (GstRtpSession *sess, guint32 ssrc);

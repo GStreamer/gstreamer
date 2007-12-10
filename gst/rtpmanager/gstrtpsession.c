@@ -1,5 +1,5 @@
 /* GStreamer
- * Copyright (C) <2007> Wim Taymans <wim@fluendo.com>
+ * Copyright (C) <2007> Wim Taymans <wim.taymans@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -146,7 +146,7 @@ static const GstElementDetails rtpsession_details =
 GST_ELEMENT_DETAILS ("RTP Session",
     "Filter/Network/RTP",
     "Implement an RTP session",
-    "Wim Taymans <wim@fluendo.com>");
+    "Wim Taymans <wim.taymans@gmail.com>");
 
 /* sink pads */
 static GstStaticPadTemplate rtpsession_recv_rtp_sink_template =
@@ -209,6 +209,7 @@ enum
   SIGNAL_ON_SSRC_COLLISION,
   SIGNAL_ON_SSRC_VALIDATED,
   SIGNAL_ON_SSRC_ACTIVE,
+  SIGNAL_ON_SSRC_SDES,
   SIGNAL_ON_BYE_SSRC,
   SIGNAL_ON_BYE_TIMEOUT,
   SIGNAL_ON_TIMEOUT,
@@ -334,6 +335,13 @@ static void
 on_ssrc_active (RTPSession * session, RTPSource * src, GstRtpSession * sess)
 {
   g_signal_emit (sess, gst_rtp_session_signals[SIGNAL_ON_SSRC_ACTIVE], 0,
+      src->ssrc);
+}
+
+static void
+on_ssrc_sdes (RTPSession * session, RTPSource * src, GstRtpSession * sess)
+{
+  g_signal_emit (sess, gst_rtp_session_signals[SIGNAL_ON_SSRC_SDES], 0,
       src->ssrc);
 }
 
@@ -471,6 +479,17 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpSessionClass,
           on_ssrc_active), NULL, NULL, g_cclosure_marshal_VOID__UINT,
       G_TYPE_NONE, 1, G_TYPE_UINT);
+  /**
+   * GstRtpSession::on-ssrc-sdes:
+   * @session: the object which received the signal
+   * @src: the SSRC
+   *
+   * Notify that a new SDES was received for SSRC.
+   */
+  gst_rtp_session_signals[SIGNAL_ON_SSRC_SDES] =
+      g_signal_new ("on-ssrc-sdes", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpSessionClass, on_ssrc_sdes),
+      NULL, NULL, g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
 
   /**
    * GstRtpSession::on-bye-ssrc:
@@ -596,6 +615,8 @@ gst_rtp_session_init (GstRtpSession * rtpsession, GstRtpSessionClass * klass)
       (GCallback) on_ssrc_validated, rtpsession);
   g_signal_connect (rtpsession->priv->session, "on-ssrc-active",
       (GCallback) on_ssrc_active, rtpsession);
+  g_signal_connect (rtpsession->priv->session, "on-ssrc-sdes",
+      (GCallback) on_ssrc_sdes, rtpsession);
   g_signal_connect (rtpsession->priv->session, "on-bye-ssrc",
       (GCallback) on_bye_ssrc, rtpsession);
   g_signal_connect (rtpsession->priv->session, "on-bye-timeout",
