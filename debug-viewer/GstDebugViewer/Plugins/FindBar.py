@@ -205,6 +205,10 @@ class FindBarFeature (FeatureBase):
 
         self.bar = None
         self.operation = None
+        self.search_state = None
+        self.next_match = None
+        self.prev_match = None
+        self.scroll_match = False
 
         self.sentinel = SearchSentinel ()
         self.sentinel.handle_match_found = self.handle_match_found
@@ -297,24 +301,33 @@ class FindBarFeature (FeatureBase):
 
     def handle_goto_next_search_result_action_activate (self, action):
 
-        model = self.log_view.props.model
-
-        start_path, end_path = self.log_view.get_visible_range ()
-        start_index, end_index = start_path[0], end_path[0]
-
-        for line_index in self.matches:
-            if line_index > end_index:
-                break
-        else:
+        if self.next_match is None:
+            self.logger.warning ("inconsistent action sensitivity")
             return
 
-        self.scroll_view_to_line (line_index)
+        self.scroll_view_to_line (self.next_match)
+        self.next_match = None
+
+        end_path = self.log_view.get_visible_range ()[1]
+        new_position = end_path[0] + 1
+        self.start_search_operation (start_position = new_position)
+        # FIXME: Finish.
+
+        ## model = self.log_view.props.model
+
+        ## start_path, end_path = self.log_view.get_visible_range ()
+        ## start_index, end_index = start_path[0], end_path[0]
+
+        ## for line_index in self.matches:
+        ##     if line_index > end_index:
+        ##         break
+        ## else:
+        ##     return
+
+        ## self.scroll_view_to_line (line_index)
 
     def handle_entry_changed (self, entry):
 
-        # FIXME: If the new search operation is stricter than the previous one
-        # (find as you type!), re-use the previous results for a nice
-        # performance gain (by only searching in previous results again)
         self.clear_results ()
 
         model = self.log_view.props.model
@@ -322,6 +335,10 @@ class FindBarFeature (FeatureBase):
         column = self.window.column_manager.find_item (name = "message")
         if search_string == "":
             self.logger.debug ("search string set to '', aborting search")
+            self.search_state = None
+            self.next_match = None
+            self.prev_match = None
+            self.update_sensitivity ()
             self.sentinel.abort ()
             self.clear_results ()
             try:
@@ -330,32 +347,99 @@ class FindBarFeature (FeatureBase):
                 pass
         else:
             self.logger.debug ("starting search for %r", search_string)
+            self.next_match = None
+            self.prev_match = None
+            self.update_sensitivity ()
+            self.scroll_match = True
+
             start_path = self.log_view.get_visible_range ()[0]
-            self.operation = SearchOperation (model, search_string, start_position = start_path[0])
-            self.sentinel.run_for (self.operation)
+            self.start_search_operation (search_string, start_position = start_path[0])
             self.bar.status_searching ()
             column.highlighters[self] = self.operation.match_func
 
         self.window.update_view ()
 
+    def update_sensitivity (self):
+
+        for name, value in (("goto-next-search-result", self.next_match,),
+                            ("goto-previous-search-result", self.prev_match,),):
+            action = self.action_group.get_action (name)
+            action.props.sensitive = (value is not None)
+
+    def start_search_operation (self, search_string = None, forward = True, start_position = None):
+
+        model = self.log_view.props.model
+
+        if forward:
+            self.search_state = "search-forward"
+            if start_position is None:
+                start_position = 0
+        else:
+            self.search_state = "search-backward"
+            if start_position is None:
+                start_position = len (model) - 1
+
+        if search_string is None:
+            operation = self.operation
+            if operation is None:
+                raise ValueError ("search_string not given but have no previous search operation")
+            search_string = operation.search_string
+
+        self.operation = SearchOperation (model, search_string, start_position = start_position)
+        self.sentinel.run_for (self.operation)
+
     def handle_match_found (self, model, tree_iter):
 
+        if not self.search_state in ("search-forward", "search-backward",):
+            self.logger.warning ("inconsistent search state %r", self.search_state)
+            return
+
         line_index = model.get_path (tree_iter)[0]
-        self.matches.append (line_index)
+        forward_search = (self.search_state == "search-forward")
 
-        self.update_results ()
+        if forward_search:
+            self.logger.debug ("forward search for %r matches line %i",
+                               self.operation.search_string, line_index)
+        else:
+            self.logger.debug ("backward search for %r matches line %i",
+                               self.operation.search_string, line_index)
 
-        if len (self.matches) == 1:
+        self.sentinel.abort ()
+
+        if self.scroll_match:
+            self.logger.debug ("scrolling to matching line")
             self.scroll_view_to_line (line_index)
-        elif len (self.matches) > 10000:
-            self.sentinel.abort ()
+            # FIXME: Implement backward search!!!
+
+            # Now search for the next one:
+            self.scroll_match = False
+            self.start_search_operation (start_position = line_index + 1)
+        else:
+            if forward_search:
+                self.next_match = line_index
+            else:
+                self.prev_match = line_index
+            self.update_sensitivity ()
+            self.bar.clear_status ()
 
     def handle_search_complete (self):
 
-        self.update_results (finished = True)
-        self.logger.debug ("search for %r complete, got %i results",
-                           self.operation.search_string,
-                           len (self.matches))
+        if self.search_state == "search-forward":
+            self.logger.debug ("forward search for %r reached last line",
+                               self.operation.search_string)
+            self.next_match = None
+        elif self.search_state == "search-backward":
+            self.logger.debug ("backward search for %r reached first line",
+                               self.operation.search_string)
+            self.prev_match = None
+        else:
+            self.logger.warning ("inconsistent search state %r",
+                                 self.search_state)
+            return
+
+        self.update_sensitivity ()
+        if self.prev_match is None and self.next_match is None:
+            self.bar.status_no_match_found ()
 
     def update_results (self, finished = False):
 
