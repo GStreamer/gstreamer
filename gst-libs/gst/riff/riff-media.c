@@ -862,7 +862,7 @@ gst_riff_create_audio_caps (guint16 codec_id,
         if (strf->size > 32) {
           GST_WARNING ("invalid depth (%d) of pcm audio, overwriting.",
               strf->size);
-          strf->size = 8 * (guint) ceil (wd / 8.0);
+          strf->size = 8 * ((wd + 7) / 8);
         }
         /* in riff, the depth is stored in the size field but it just means that
          * the _least_ significant bits are cleared. We can therefore just play
