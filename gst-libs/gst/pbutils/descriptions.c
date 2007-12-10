@@ -76,8 +76,6 @@ static const FormatInfo formats[] = {
   {"audio/ac3", "AC-3 (ATSC A/52)", 0},
   {"audio/x-private-ac3", "DVD AC-3 (ATSC A/52)", 0},
   {"audio/x-private1-ac3", "DVD AC-3 (ATSC A/52)", 0},
-  {"audio/x-adpcm", "ADPCM", 0},
-  {"audio/aiff", "Audio Interchange File Format (AIFF)", 0},
   {"audio/x-alaw", "A-Law", 0},
   {"audio/amr", "Adaptive Multi Rate (AMR)", 0},
   {"audio/AMR", "Adaptive Multi Rate (AMR)", 0},
@@ -85,7 +83,7 @@ static const FormatInfo formats[] = {
   {"audio/iLBC-sh", "Internet Low Bitrate Codec (iLBC)", 0},
   {"audio/ms-gsm", "MS GSM", 0},
   {"audio/qcelp", "QCELP", 0},
-  {"audio/x-adpcm", "ADPCM", 0},        /* TODO: different variants */
+  {"audio/aiff", "Audio Interchange File Format (AIFF)", 0},
   {"audio/x-aiff", "Audio Interchange File Format (AIFF)", 0},
   {"audio/x-alac", N_("Apple Lossless Audio (ALAC)"), 0},
   {"audio/x-amr-nb-sh", "Adaptive Multi Rate NarrowBand (AMR-NB)", 0},
@@ -106,6 +104,7 @@ static const FormatInfo formats[] = {
   {"audio/x-mod", "Module Music Format (MOD)", 0},
   {"audio/x-mulaw", "Mu-Law", 0},
   {"audio/x-musepack", "Musepack (MPC)", 0},
+  {"audio/x-nellymoser", "Nellymoser Asao", 0},
   {"audio/x-nist", "Sphere NIST", 0},
   {"audio/x-nsf", "Nintendo NSF", 0},
   {"audio/x-paris", "Ensoniq PARIS", 0},
@@ -207,6 +206,7 @@ static const FormatInfo formats[] = {
 
   /* formats with dynamic descriptions */
   {"audio/mpeg", NULL, 0},
+  {"audio/x-adpcm", NULL, 0},
   {"audio/x-mace", NULL, 0},
   {"audio/x-pn-realaudio", NULL, 0},
   {"audio/x-raw-int", NULL, 0},
@@ -463,6 +463,35 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       GST_WARNING ("Unexpected acrversion in %" GST_PTR_FORMAT, caps);
       return g_strdup ("ATI VCR");
     }
+  } else if (strcmp (info->type, "audio/x-adpcm") == 0) {
+    const GValue *layout_val;
+
+    layout_val = gst_structure_get_value (s, "layout");
+    if (layout_val != NULL && G_VALUE_HOLDS_STRING (layout_val)) {
+      const gchar *layout;
+
+      if ((layout = g_value_get_string (layout_val))) {
+        gchar *layout_upper, *ret;
+
+        if (strcmp (layout, "swf") == 0)
+          return g_strdup ("Shockwave ADPCM");
+        if (strcmp (layout, "microsoft") == 0)
+          return g_strdup ("Microsoft ADPCM");
+        if (strcmp (layout, "quicktime") == 0)
+          return g_strdup ("Quicktime ADPCM");
+        if (strcmp (layout, "westwood") == 0)
+          return g_strdup ("Westwood ADPCM");
+        if (strcmp (layout, "yamaha") == 0)
+          return g_strdup ("Yamaha ADPCM");
+        /* FIXME: other layouts: sbpro2, sbpro3, sbpro4, ct, g726, ea,
+         * adx, xa, 4xm, smjpeg, dk4, dk3, dvi */
+        layout_upper = g_ascii_strup (layout, -1);
+        ret = g_strdup_printf ("%s ADPCM", layout_upper);
+        g_free (layout_upper);
+        return ret;
+      }
+    }
+    return g_strdup ("ADPCM");
   } else if (strcmp (info->type, "audio/mpeg") == 0) {
     gint ver = 0, layer = 0;
 

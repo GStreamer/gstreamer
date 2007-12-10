@@ -1,3 +1,12 @@
+2007-12-10  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/pbutils/descriptions.c: (formats),
+	  (format_info_get_desc):
+	* tests/check/libs/pbutils.c: (GST_START_TEST), (caps_strings),
+	  (GST_START_TEST):
+	  Add one or two missing formats.  Generate ADPCM description
+	  dynamically depending on layout/format.
+
 2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

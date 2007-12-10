@@ -291,6 +291,11 @@ static const gchar *caps_strings[] = {
   "application/x-rtp, encoding-name=(string)TPM",
   "application/x-rtp, media=(string)woohoo",
   /* formats with dynamic descriptions */
+  "audio/x-adpcm",
+  "audio/x-adpcm, layout=(string)dvi",
+  "audio/x-adpcm, layout=(string)swf",
+  "audio/x-adpcm, layout=(string)microsoft",
+  "audio/x-adpcm, layout=(string)quicktime",
   "audio/mpeg, mpegversion=(int)4",
   "audio/mpeg, mpegversion=(int)1, layer=(int)1",
   "audio/mpeg, mpegversion=(int)1, layer=(int)2",
