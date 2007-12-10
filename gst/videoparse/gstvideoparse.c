@@ -355,16 +355,13 @@ gst_video_parse_src_query (GstPad * pad, GstQuery * query)
 
     gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
   } else {
-    ret = GST_ELEMENT_CLASS (parent_class)->query (GST_ELEMENT (vp), query);
+    /* else forward upstream */
+    ret = gst_pad_peer_query (vp->sinkpad, query);
   }
 
   gst_object_unref (vp);
   return ret;
 }
-
-
-
-
 
 static gboolean
 plugin_init (GstPlugin * plugin)

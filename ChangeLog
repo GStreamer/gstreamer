@@ -1,5 +1,13 @@
 2007-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Based on patch by: <mutex at runbox dot com>
+
+	* gst/videoparse/gstvideoparse.c: (gst_video_parse_src_query):
+	Forward the query upstream, the default element event handler does
+	something different. Fixes #502879.
+
+2007-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpbin.c: (on_ssrc_sdes), (create_session),
 	(gst_rtp_bin_class_init):
 	* gst/rtpmanager/gstrtpbin.h:
