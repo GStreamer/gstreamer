@@ -819,6 +819,8 @@ class MessageColumn (TextColumn):
         def message_data_func (props, row):
 
             props.text = row[id_]
+            if not highlighters:
+                props.attributes = None
             for highlighter in highlighters.values ():
                 ranges = highlighter (row)
                 if not ranges:

@@ -56,15 +56,18 @@ class SearchSentinel (object):
     def __init__ (self):
 
         self.dispatcher = Common.Data.GSourceDispatcher ()
+        self.cancelled = False
 
     def run_for (self, operation):
 
         self.dispatcher.cancel ()
         self.dispatcher (self.__process (operation))
+        self.cancelled = False
 
     def abort (self):
 
         self.dispatcher.cancel ()
+        self.cancelled = True
 
     def __process (self, operation):
 
@@ -85,7 +88,7 @@ class SearchSentinel (object):
         YIELD_LIMIT = 1000
         i = YIELD_LIMIT
         tree_iter = start_iter
-        while tree_iter:
+        while tree_iter and not self.cancelled:
             i -= 1
             if i == 0:
                 yield True
@@ -95,7 +98,8 @@ class SearchSentinel (object):
                 self.handle_match_found (model, tree_iter)
             tree_iter = iter_next (tree_iter)
 
-        self.handle_search_complete ()
+        if not self.cancelled:
+            self.handle_search_complete ()
         yield False
 
     def handle_match_found (self, model, tree_iter):
@@ -315,18 +319,23 @@ class FindBarFeature (FeatureBase):
 
         model = self.log_view.props.model
         search_string = entry.props.text
+        column = self.window.column_manager.find_item (name = "message")
         if search_string == "":
             self.logger.debug ("search string set to '', aborting search")
             self.sentinel.abort ()
             self.clear_results ()
-        self.logger.debug ("starting search for %r", search_string)
-        start_path = self.log_view.get_visible_range ()[0]
-        self.operation = SearchOperation (model, search_string, start_position = start_path[0])
-        self.sentinel.run_for (self.operation)
-        self.bar.status_searching ()
+            try:
+                del column.highlighters[self]
+            except KeyError:
+                pass
+        else:
+            self.logger.debug ("starting search for %r", search_string)
+            start_path = self.log_view.get_visible_range ()[0]
+            self.operation = SearchOperation (model, search_string, start_position = start_path[0])
+            self.sentinel.run_for (self.operation)
+            self.bar.status_searching ()
+            column.highlighters[self] = self.operation.match_func
 
-        column = self.window.column_manager.find_item (name = "message")
-        column.highlighters[self] = self.operation.match_func
         self.window.update_view ()
 
     def handle_match_found (self, model, tree_iter):
