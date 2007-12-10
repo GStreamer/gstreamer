@@ -29,23 +29,23 @@ import gtk
 
 class SearchOperation (object):
 
-    def __init__ (self, model, search_string, search_forward = True, start_position = None):
+    def __init__ (self, model, search_text, search_forward = True, start_position = None):
 
         self.model = model
-        self.search_string = search_string
+        self.search_text = search_text
         self.search_forward = search_forward
         self.start_position = start_position
 
         col_id = GUI.LogModelBase.COL_MESSAGE
-        len_search_string = len (search_string)
+        len_search_text = len (search_text)
         
         def match_func (model_row):
 
             message = model_row[col_id]
-            if search_string in message:
+            if search_text in message:
                 # TODO: Return all match ranges here.
-                pos = message.find (search_string)
-                return ((pos, pos + len_search_string,),)
+                pos = message.find (search_text)
+                return ((pos, pos + len_search_text,),)
             else:
                 return ()
 
@@ -331,9 +331,9 @@ class FindBarFeature (FeatureBase):
         self.clear_results ()
 
         model = self.log_view.props.model
-        search_string = entry.props.text
+        search_text = entry.props.text
         column = self.window.column_manager.find_item (name = "message")
-        if search_string == "":
+        if search_text == "":
             self.logger.debug ("search string set to '', aborting search")
             self.search_state = None
             self.next_match = None
@@ -346,14 +346,14 @@ class FindBarFeature (FeatureBase):
             except KeyError:
                 pass
         else:
-            self.logger.debug ("starting search for %r", search_string)
+            self.logger.debug ("starting search for %r", search_text)
             self.next_match = None
             self.prev_match = None
             self.update_sensitivity ()
             self.scroll_match = True
 
             start_path = self.log_view.get_visible_range ()[0]
-            self.start_search_operation (search_string, start_position = start_path[0])
+            self.start_search_operation (search_text, start_position = start_path[0])
             self.bar.status_searching ()
             column.highlighters[self] = self.operation.match_func
 
@@ -366,7 +366,7 @@ class FindBarFeature (FeatureBase):
             action = self.action_group.get_action (name)
             action.props.sensitive = (value is not None)
 
-    def start_search_operation (self, search_string = None, forward = True, start_position = None):
+    def start_search_operation (self, search_text = None, forward = True, start_position = None):
 
         model = self.log_view.props.model
 
@@ -379,13 +379,13 @@ class FindBarFeature (FeatureBase):
             if start_position is None:
                 start_position = len (model) - 1
 
-        if search_string is None:
+        if search_text is None:
             operation = self.operation
             if operation is None:
-                raise ValueError ("search_string not given but have no previous search operation")
-            search_string = operation.search_string
+                raise ValueError ("search_text not given but have no previous search operation")
+            search_text = operation.search_text
 
-        self.operation = SearchOperation (model, search_string, start_position = start_position)
+        self.operation = SearchOperation (model, search_text, start_position = start_position)
         self.sentinel.run_for (self.operation)
 
     def handle_match_found (self, model, tree_iter):
@@ -399,10 +399,10 @@ class FindBarFeature (FeatureBase):
 
         if forward_search:
             self.logger.debug ("forward search for %r matches line %i",
-                               self.operation.search_string, line_index)
+                               self.operation.search_text, line_index)
         else:
             self.logger.debug ("backward search for %r matches line %i",
-                               self.operation.search_string, line_index)
+                               self.operation.search_text, line_index)
 
         self.sentinel.abort ()
 
@@ -426,11 +426,11 @@ class FindBarFeature (FeatureBase):
 
         if self.search_state == "search-forward":
             self.logger.debug ("forward search for %r reached last line",
-                               self.operation.search_string)
+                               self.operation.search_text)
             self.next_match = None
         elif self.search_state == "search-backward":
             self.logger.debug ("backward search for %r reached first line",
-                               self.operation.search_string)
+                               self.operation.search_text)
             self.prev_match = None
         else:
             self.logger.warning ("inconsistent search state %r",
