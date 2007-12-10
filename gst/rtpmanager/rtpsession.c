@@ -1221,7 +1221,7 @@ rtp_session_process_rr (RTPSession * sess, GstRTCPPacket * packet,
   rtp_session_process_rb (sess, source, packet, arrival);
 }
 
-/* FIXME, we're just printing this for now... */
+/* Get SDES items and store them in the SSRC */
 static void
 rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
     RTPArrivalStats * arrival)

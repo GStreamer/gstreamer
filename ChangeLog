@@ -1,5 +1,17 @@
 2007-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_class_init),
+	(gst_rtp_bin_handle_message):
+	* gst/rtpmanager/gstrtpsession.c: (source_get_sdes_structure),
+	(on_ssrc_sdes):
+	Post a message when the SDES infor changes for a source.
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsource.c:
+	Update some comments.
+
+2007-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Based on patch by: <mutex at runbox dot com>
 
 	* gst/videoparse/gstvideoparse.c: (gst_video_parse_src_query):
@@ -150,7 +162,6 @@
 	* sys/dvb/dvbbasebin.c:
 	Make sure initial pids are added properly to filter,
 
->>>>>>> 1.2909
 2007-12-05  Andy Wingo  <wingo@pobox.com>
 
 	* gst/switch/gstswitch.c (gst_switch_set_property): Don't push

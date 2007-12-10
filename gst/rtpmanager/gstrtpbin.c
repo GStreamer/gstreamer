@@ -1021,6 +1021,7 @@ static GstStateChangeReturn gst_rtp_bin_change_state (GstElement * element,
 static GstPad *gst_rtp_bin_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name);
 static void gst_rtp_bin_release_pad (GstElement * element, GstPad * pad);
+static void gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message);
 static void gst_rtp_bin_clear_pt_map (GstRtpBin * bin);
 
 GST_BOILERPLATE (GstRtpBin, gst_rtp_bin, GstBin, GST_TYPE_BIN);
@@ -1054,9 +1055,11 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
+  GstBinClass *gstbin_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
+  gstbin_class = (GstBinClass *) klass;
 
   g_type_class_add_private (klass, sizeof (GstRtpBinPrivate));
 
@@ -1243,6 +1246,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
   gstelement_class->release_pad = GST_DEBUG_FUNCPTR (gst_rtp_bin_release_pad);
+
+  gstbin_class->handle_message = GST_DEBUG_FUNCPTR (gst_rtp_bin_handle_message);
 
   klass->clear_pt_map = GST_DEBUG_FUNCPTR (gst_rtp_bin_clear_pt_map);
 
@@ -1468,6 +1473,50 @@ gst_rtp_bin_provide_clock (GstElement * element)
   rtpbin = GST_RTP_BIN (element);
 
   return GST_CLOCK_CAST (gst_object_ref (rtpbin->provided_clock));
+}
+
+static void
+gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message)
+{
+  GstRtpBin *rtpbin;
+
+  rtpbin = GST_RTP_BIN (bin);
+
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ELEMENT:
+    {
+      const GstStructure *s = gst_message_get_structure (message);
+
+      /* we change the structure name and add the session ID to it */
+      if (gst_structure_has_name (s, "GstRTPSessionSDES")) {
+        GSList *walk;
+
+        /* find the session, the message source has it */
+        for (walk = rtpbin->sessions; walk; walk = g_slist_next (walk)) {
+          GstRtpBinSession *sess = (GstRtpBinSession *) walk->data;
+
+          /* if we found the session, change message. else we exit the loop and
+           * leave the message unchanged */
+          if (GST_OBJECT_CAST (sess->session) == GST_MESSAGE_SRC (message)) {
+            message = gst_message_make_writable (message);
+            s = gst_message_get_structure (message);
+
+            gst_structure_set_name ((GstStructure *) s, "GstRTPBinSDES");
+
+            gst_structure_set ((GstStructure *) s, "session", G_TYPE_UINT,
+                sess->id, NULL);
+            break;
+          }
+        }
+      }
+      /* fallthrough to forward the modified message to the parent */
+    }
+    default:
+    {
+      GST_BIN_CLASS (parent_class)->handle_message (bin, message);
+      break;
+    }
+  }
 }
 
 static void
