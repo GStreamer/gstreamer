@@ -37,18 +37,42 @@ enum
   SIGNAL_ON_SSRC_COLLISION,
   SIGNAL_ON_SSRC_VALIDATED,
   SIGNAL_ON_SSRC_ACTIVE,
+  SIGNAL_ON_SSRC_SDES,
   SIGNAL_ON_BYE_SSRC,
   SIGNAL_ON_BYE_TIMEOUT,
   SIGNAL_ON_TIMEOUT,
   LAST_SIGNAL
 };
 
-#define RTP_DEFAULT_BANDWIDTH        64000.0
-#define RTP_DEFAULT_RTCP_BANDWIDTH   1000
+#define DEFAULT_INTERNAL_SOURCE      NULL
+#define DEFAULT_BANDWIDTH            RTP_STATS_BANDWIDTH
+#define DEFAULT_RTCP_FRACTION        RTP_STATS_RTCP_BANDWIDTH
+#define DEFAULT_SDES_CNAME           NULL
+#define DEFAULT_SDES_NAME            NULL
+#define DEFAULT_SDES_EMAIL           NULL
+#define DEFAULT_SDES_PHONE           NULL
+#define DEFAULT_SDES_LOCATION        NULL
+#define DEFAULT_SDES_TOOL            NULL
+#define DEFAULT_SDES_NOTE            NULL
+#define DEFAULT_NUM_SOURCES          0
+#define DEFAULT_NUM_ACTIVE_SOURCES   0
 
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_INTERNAL_SOURCE,
+  PROP_BANDWIDTH,
+  PROP_RTCP_FRACTION,
+  PROP_SDES_CNAME,
+  PROP_SDES_NAME,
+  PROP_SDES_EMAIL,
+  PROP_SDES_PHONE,
+  PROP_SDES_LOCATION,
+  PROP_SDES_TOOL,
+  PROP_SDES_NOTE,
+  PROP_NUM_SOURCES,
+  PROP_NUM_ACTIVE_SOURCES,
+  PROP_LAST
 };
 
 /* update average packet size, we keep this scaled by 16 to keep enough
@@ -121,7 +145,7 @@ rtp_session_class_init (RTPSessionClass * klass)
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
       G_TYPE_OBJECT);
   /**
-   * RTPSession::on-ssrc_active:
+   * RTPSession::on-ssrc-active:
    * @session: the object which received the signal
    * @src: the active RTPSource
    *
@@ -130,6 +154,18 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SSRC_ACTIVE] =
       g_signal_new ("on-ssrc-active", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_active),
+      NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
+      G_TYPE_OBJECT);
+  /**
+   * RTPSession::on-ssrc-sdes:
+   * @session: the object which received the signal
+   * @src: the RTPSource
+   *
+   * Notify that a new SDES was received for SSRC.
+   */
+  rtp_session_signals[SIGNAL_ON_SSRC_SDES] =
+      g_signal_new ("on-ssrc-sdes", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_ssrc_sdes),
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
       G_TYPE_OBJECT);
   /**
@@ -169,6 +205,66 @@ rtp_session_class_init (RTPSessionClass * klass)
       NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1,
       G_TYPE_OBJECT);
 
+  g_object_class_install_property (gobject_class, PROP_INTERNAL_SOURCE,
+      g_param_spec_object ("internal-source", "Internal Source",
+          "The internal source element of the session",
+          RTP_TYPE_SOURCE, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
+      g_param_spec_double ("bandwidth", "Bandwidth",
+          "The bandwidth of the session",
+          0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_RTCP_FRACTION,
+      g_param_spec_double ("rtcp-fraction", "RTCP Fraction",
+          "The fraction of the bandwidth used for RTCP",
+          0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_CNAME,
+      g_param_spec_string ("sdes-cname", "SDES CNAME",
+          "The CNAME to put in SDES messages of this session",
+          DEFAULT_SDES_CNAME, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_NAME,
+      g_param_spec_string ("sdes-name", "SDES NAME",
+          "The NAME to put in SDES messages of this session",
+          DEFAULT_SDES_NAME, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_EMAIL,
+      g_param_spec_string ("sdes-email", "SDES EMAIL",
+          "The EMAIL to put in SDES messages of this session",
+          DEFAULT_SDES_EMAIL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_PHONE,
+      g_param_spec_string ("sdes-phone", "SDES PHONE",
+          "The PHONE to put in SDES messages of this session",
+          DEFAULT_SDES_PHONE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_LOCATION,
+      g_param_spec_string ("sdes-location", "SDES LOCATION",
+          "The LOCATION to put in SDES messages of this session",
+          DEFAULT_SDES_LOCATION, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_TOOL,
+      g_param_spec_string ("sdes-tool", "SDES TOOL",
+          "The TOOL to put in SDES messages of this session",
+          DEFAULT_SDES_TOOL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_NOTE,
+      g_param_spec_string ("sdes-note", "SDES NOTE",
+          "The NOTE to put in SDES messages of this session",
+          DEFAULT_SDES_NOTE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_NUM_SOURCES,
+      g_param_spec_uint ("num-sources", "Num Sources",
+          "The number of sources in the session", 0, G_MAXUINT,
+          DEFAULT_NUM_SOURCES, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class, PROP_NUM_ACTIVE_SOURCES,
+      g_param_spec_uint ("num-active-sources", "Num Active Sources",
+          "The number of active sources in the session", 0, G_MAXUINT,
+          DEFAULT_NUM_ACTIVE_SOURCES, G_PARAM_READABLE));
+
   GST_DEBUG_CATEGORY_INIT (rtp_session_debug, "rtpsession", 0, "RTP Session");
 }
 
@@ -176,6 +272,7 @@ static void
 rtp_session_init (RTPSession * sess)
 {
   gint i;
+  gchar *str;
 
   sess->lock = g_mutex_new ();
   sess->key = g_random_int ();
@@ -201,10 +298,13 @@ rtp_session_init (RTPSession * sess)
   sess->mtu = 1400;
 
   /* some default SDES entries */
-  sess->cname =
-      g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
-  sess->name = g_strdup (g_get_real_name ());
-  sess->tool = g_strdup ("GStreamer");
+  str = g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
+  rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_CNAME, str);
+  g_free (str);
+
+  rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_NAME,
+      g_get_real_name ());
+  rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_TOOL, "GStreamer");
 
   sess->first_rtcp = TRUE;
 
@@ -226,15 +326,6 @@ rtp_session_finalize (GObject * object)
   g_hash_table_destroy (sess->cnames);
   g_object_unref (sess->source);
 
-  g_free (sess->cname);
-  g_free (sess->name);
-  g_free (sess->email);
-  g_free (sess->phone);
-  g_free (sess->location);
-  g_free (sess->tool);
-  g_free (sess->note);
-  g_free (sess->bye_reason);
-
   G_OBJECT_CLASS (rtp_session_parent_class)->finalize (object);
 }
 
@@ -247,6 +338,40 @@ rtp_session_set_property (GObject * object, guint prop_id,
   sess = RTP_SESSION (object);
 
   switch (prop_id) {
+    case PROP_BANDWIDTH:
+      rtp_session_set_bandwidth (sess, g_value_get_double (value));
+      break;
+    case PROP_RTCP_FRACTION:
+      rtp_session_set_rtcp_fraction (sess, g_value_get_double (value));
+      break;
+    case PROP_SDES_CNAME:
+      rtp_session_set_sdes_string (sess, GST_RTCP_SDES_CNAME,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_NAME:
+      rtp_session_set_sdes_string (sess, GST_RTCP_SDES_NAME,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_EMAIL:
+      rtp_session_set_sdes_string (sess, GST_RTCP_SDES_EMAIL,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_PHONE:
+      rtp_session_set_sdes_string (sess, GST_RTCP_SDES_PHONE,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_LOCATION:
+      rtp_session_set_sdes_string (sess, GST_RTCP_SDES_LOC,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_TOOL:
+      rtp_session_set_sdes_string (sess, GST_RTCP_SDES_TOOL,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_NOTE:
+      rtp_session_set_sdes_string (sess, GST_RTCP_SDES_NOTE,
+          g_value_get_string (value));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -262,6 +387,49 @@ rtp_session_get_property (GObject * object, guint prop_id,
   sess = RTP_SESSION (object);
 
   switch (prop_id) {
+    case PROP_INTERNAL_SOURCE:
+      g_value_take_object (value, rtp_session_get_internal_source (sess));
+      break;
+    case PROP_BANDWIDTH:
+      g_value_set_double (value, rtp_session_get_bandwidth (sess));
+      break;
+    case PROP_RTCP_FRACTION:
+      g_value_set_double (value, rtp_session_get_rtcp_fraction (sess));
+      break;
+    case PROP_SDES_CNAME:
+      g_value_take_string (value, rtp_session_get_sdes_string (sess,
+              GST_RTCP_SDES_CNAME));
+      break;
+    case PROP_SDES_NAME:
+      g_value_take_string (value, rtp_session_get_sdes_string (sess,
+              GST_RTCP_SDES_NAME));
+      break;
+    case PROP_SDES_EMAIL:
+      g_value_take_string (value, rtp_session_get_sdes_string (sess,
+              GST_RTCP_SDES_EMAIL));
+      break;
+    case PROP_SDES_PHONE:
+      g_value_take_string (value, rtp_session_get_sdes_string (sess,
+              GST_RTCP_SDES_PHONE));
+      break;
+    case PROP_SDES_LOCATION:
+      g_value_take_string (value, rtp_session_get_sdes_string (sess,
+              GST_RTCP_SDES_LOC));
+      break;
+    case PROP_SDES_TOOL:
+      g_value_take_string (value, rtp_session_get_sdes_string (sess,
+              GST_RTCP_SDES_TOOL));
+      break;
+    case PROP_SDES_NOTE:
+      g_value_take_string (value, rtp_session_get_sdes_string (sess,
+              GST_RTCP_SDES_NOTE));
+      break;
+    case PROP_NUM_SOURCES:
+      g_value_set_uint (value, rtp_session_get_num_sources (sess));
+      break;
+    case PROP_NUM_ACTIVE_SOURCES:
+      g_value_set_uint (value, rtp_session_get_num_active_sources (sess));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -299,6 +467,14 @@ on_ssrc_active (RTPSession * sess, RTPSource * source)
 {
   RTP_SESSION_UNLOCK (sess);
   g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SSRC_ACTIVE], 0, source);
+  RTP_SESSION_LOCK (sess);
+}
+
+static void
+on_ssrc_sdes (RTPSession * sess, RTPSource * source)
+{
+  RTP_SESSION_UNLOCK (sess);
+  g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SSRC_SDES], 0, source);
   RTP_SESSION_LOCK (sess);
 }
 
@@ -378,7 +554,9 @@ rtp_session_set_bandwidth (RTPSession * sess, gdouble bandwidth)
 {
   g_return_if_fail (RTP_IS_SESSION (sess));
 
+  RTP_SESSION_LOCK (sess);
   sess->stats.bandwidth = bandwidth;
+  RTP_SESSION_UNLOCK (sess);
 }
 
 /**
@@ -392,13 +570,19 @@ rtp_session_set_bandwidth (RTPSession * sess, gdouble bandwidth)
 gdouble
 rtp_session_get_bandwidth (RTPSession * sess)
 {
+  gdouble result;
+
   g_return_val_if_fail (RTP_IS_SESSION (sess), 0);
 
-  return sess->stats.bandwidth;
+  RTP_SESSION_LOCK (sess);
+  result = sess->stats.bandwidth;
+  RTP_SESSION_UNLOCK (sess);
+
+  return result;
 }
 
 /**
- * rtp_session_set_rtcp_bandwidth:
+ * rtp_session_set_rtcp_fraction:
  * @sess: an #RTPSession
  * @bandwidth: the RTCP bandwidth
  *
@@ -406,15 +590,17 @@ rtp_session_get_bandwidth (RTPSession * sess)
  * messages.
  */
 void
-rtp_session_set_rtcp_bandwidth (RTPSession * sess, gdouble bandwidth)
+rtp_session_set_rtcp_fraction (RTPSession * sess, gdouble bandwidth)
 {
   g_return_if_fail (RTP_IS_SESSION (sess));
 
+  RTP_SESSION_LOCK (sess);
   sess->stats.rtcp_bandwidth = bandwidth;
+  RTP_SESSION_UNLOCK (sess);
 }
 
 /**
- * rtp_session_get_rtcp_bandwidth:
+ * rtp_session_get_rtcp_fraction:
  * @sess: an #RTPSession
  *
  * Get the session bandwidth used for RTCP.
@@ -422,235 +608,66 @@ rtp_session_set_rtcp_bandwidth (RTPSession * sess, gdouble bandwidth)
  * Returns: The bandwidth used for RTCP messages.
  */
 gdouble
-rtp_session_get_rtcp_bandwidth (RTPSession * sess)
+rtp_session_get_rtcp_fraction (RTPSession * sess)
 {
+  gdouble result;
+
   g_return_val_if_fail (RTP_IS_SESSION (sess), 0.0);
 
-  return sess->stats.rtcp_bandwidth;
+  RTP_SESSION_LOCK (sess);
+  result = sess->stats.rtcp_bandwidth;
+  RTP_SESSION_UNLOCK (sess);
+
+  return result;
 }
 
 /**
- * rtp_session_set_cname:
+ * rtp_session_set_sdes_string:
  * @sess: an #RTPSession
- * @cname: a CNAME for the session
+ * @type: the type of the SDES item
+ * @item: a null-terminated string to set. 
  *
- * Set the CNAME for the session.
+ * Store an SDES item of @type in @sess. 
+ *
+ * Returns: %FALSE if the data was unchanged @type is invalid.
  */
-void
-rtp_session_set_cname (RTPSession * sess, const gchar * cname)
+gboolean
+rtp_session_set_sdes_string (RTPSession * sess, GstRTCPSDESType type,
+    const gchar * item)
 {
-  g_return_if_fail (RTP_IS_SESSION (sess));
+  gboolean result;
 
-  g_free (sess->cname);
-  sess->cname = g_strdup (cname);
+  g_return_val_if_fail (RTP_IS_SESSION (sess), FALSE);
+
+  RTP_SESSION_LOCK (sess);
+  result = rtp_source_set_sdes_string (sess->source, type, item);
+  RTP_SESSION_UNLOCK (sess);
+
+  return result;
 }
 
 /**
- * rtp_session_get_cname:
+ * rtp_session_get_sdes_string:
  * @sess: an #RTPSession
+ * @type: the type of the SDES item
  *
- * Get the currently configured CNAME for the session.
+ * Get the SDES item of @type from @sess. 
  *
- * Returns: The CNAME. g_free after usage.
- */
-gchar *
-rtp_session_get_cname (RTPSession * sess)
-{
-  g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
-
-  return g_strdup (sess->cname);
-}
-
-/**
- * rtp_session_set_name:
- * @sess: an #RTPSession
- * @name: a NAME for the session
- *
- * Set the NAME for the session.
- */
-void
-rtp_session_set_name (RTPSession * sess, const gchar * name)
-{
-  g_return_if_fail (RTP_IS_SESSION (sess));
-
-  g_free (sess->name);
-  sess->name = g_strdup (name);
-}
-
-/**
- * rtp_session_get_name:
- * @sess: an #RTPSession
- *
- * Get the currently configured NAME for the session.
- *
- * Returns: The NAME. g_free after usage.
+ * Returns: a null-terminated copy of the SDES item or NULL when @type was not
+ * valid. g_free() after usage.
  */
 gchar *
-rtp_session_get_name (RTPSession * sess)
+rtp_session_get_sdes_string (RTPSession * sess, GstRTCPSDESType type)
 {
+  gchar *result;
+
   g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
 
-  return g_strdup (sess->name);
-}
+  RTP_SESSION_LOCK (sess);
+  result = rtp_source_get_sdes_string (sess->source, type);
+  RTP_SESSION_UNLOCK (sess);
 
-/**
- * rtp_session_set_email:
- * @sess: an #RTPSession
- * @email: an EMAIL for the session
- *
- * Set the EMAIL the session.
- */
-void
-rtp_session_set_email (RTPSession * sess, const gchar * email)
-{
-  g_return_if_fail (RTP_IS_SESSION (sess));
-
-  g_free (sess->email);
-  sess->email = g_strdup (email);
-}
-
-/**
- * rtp_session_get_email:
- * @sess: an #RTPSession
- *
- * Get the currently configured EMAIL of the session.
- *
- * Returns: The EMAIL. g_free after usage.
- */
-gchar *
-rtp_session_get_email (RTPSession * sess)
-{
-  g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
-
-  return g_strdup (sess->email);
-}
-
-/**
- * rtp_session_set_phone:
- * @sess: an #RTPSession
- * @phone: a PHONE for the session
- *
- * Set the PHONE the session.
- */
-void
-rtp_session_set_phone (RTPSession * sess, const gchar * phone)
-{
-  g_return_if_fail (RTP_IS_SESSION (sess));
-
-  g_free (sess->phone);
-  sess->phone = g_strdup (phone);
-}
-
-/**
- * rtp_session_get_location:
- * @sess: an #RTPSession
- *
- * Get the currently configured PHONE of the session.
- *
- * Returns: The PHONE. g_free after usage.
- */
-gchar *
-rtp_session_get_phone (RTPSession * sess)
-{
-  g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
-
-  return g_strdup (sess->phone);
-}
-
-/**
- * rtp_session_set_location:
- * @sess: an #RTPSession
- * @location: a LOCATION for the session
- *
- * Set the LOCATION the session.
- */
-void
-rtp_session_set_location (RTPSession * sess, const gchar * location)
-{
-  g_return_if_fail (RTP_IS_SESSION (sess));
-
-  g_free (sess->location);
-  sess->location = g_strdup (location);
-}
-
-/**
- * rtp_session_get_location:
- * @sess: an #RTPSession
- *
- * Get the currently configured LOCATION of the session.
- *
- * Returns: The LOCATION. g_free after usage.
- */
-gchar *
-rtp_session_get_location (RTPSession * sess)
-{
-  g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
-
-  return g_strdup (sess->location);
-}
-
-/**
- * rtp_session_set_tool:
- * @sess: an #RTPSession
- * @tool: a TOOL for the session
- *
- * Set the TOOL the session.
- */
-void
-rtp_session_set_tool (RTPSession * sess, const gchar * tool)
-{
-  g_return_if_fail (RTP_IS_SESSION (sess));
-
-  g_free (sess->tool);
-  sess->tool = g_strdup (tool);
-}
-
-/**
- * rtp_session_get_tool:
- * @sess: an #RTPSession
- *
- * Get the currently configured TOOL of the session.
- *
- * Returns: The TOOL. g_free after usage.
- */
-gchar *
-rtp_session_get_tool (RTPSession * sess)
-{
-  g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
-
-  return g_strdup (sess->tool);
-}
-
-/**
- * rtp_session_set_note:
- * @sess: an #RTPSession
- * @note: a NOTE for the session
- *
- * Set the NOTE the session.
- */
-void
-rtp_session_set_note (RTPSession * sess, const gchar * note)
-{
-  g_return_if_fail (RTP_IS_SESSION (sess));
-
-  g_free (sess->note);
-  sess->note = g_strdup (note);
-}
-
-/**
- * rtp_session_get_note:
- * @sess: an #RTPSession
- *
- * Get the currently configured NOTE of the session.
- *
- * Returns: The NOTE. g_free after usage.
- */
-gchar *
-rtp_session_get_note (RTPSession * sess)
-{
-  g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
-
-  return g_strdup (sess->note);
+  return result;
 }
 
 static GstFlowReturn
@@ -714,6 +731,7 @@ check_collision (RTPSession * sess, RTPSource * source,
   return FALSE;
 }
 
+/* must be called with the session lock */
 static RTPSource *
 obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
     RTPArrivalStats * arrival, gboolean rtp)
@@ -726,6 +744,9 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
     /* make new Source in probation and insert */
     source = rtp_source_new (ssrc);
 
+    /* for RTP packets we need to set the source in probation. Receiving RTCP
+     * packets of an SSRC, on the other hand, is a strong indication that we
+     * are dealing with a valid source. */
     if (rtp)
       source->probation = RTP_DEFAULT_PROBATION;
     else
@@ -760,6 +781,26 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
     source->last_rtp_activity = arrival->time;
 
   return source;
+}
+
+/**
+ * rtp_session_get_internal_source:
+ * @sess: a #RTPSession
+ *
+ * Get the internal #RTPSource of @session.
+ *
+ * Returns: The internal #RTPSource. g_object_unref() after usage.
+ */
+RTPSource *
+rtp_session_get_internal_source (RTPSession * sess)
+{
+  RTPSource *result;
+
+  g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
+
+  result = g_object_ref (sess->source);
+
+  return result;
 }
 
 /**
@@ -1194,10 +1235,16 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
   i = 0;
   while (more_items) {
     guint32 ssrc;
+    gboolean changed, created;
+    RTPSource *source;
 
     ssrc = gst_rtcp_packet_sdes_get_ssrc (packet);
 
     GST_DEBUG ("item %d, SSRC %08x", i, ssrc);
+
+    /* find src, no probation when dealing with RTCP */
+    source = obtain_source (sess, ssrc, &created, arrival, FALSE);
+    changed = FALSE;
 
     more_entries = gst_rtcp_packet_sdes_first_entry (packet);
     j = 0;
@@ -1211,9 +1258,17 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
       GST_DEBUG ("entry %d, type %d, len %d, data %.*s", j, type, len, len,
           data);
 
+
+
       more_entries = gst_rtcp_packet_sdes_next_entry (packet);
       j++;
     }
+
+    if (created)
+      on_new_ssrc (sess, source);
+    if (changed)
+      on_ssrc_sdes (sess, source);
+
     more_items = gst_rtcp_packet_sdes_next_item (packet);
     i++;
   }
@@ -1418,7 +1473,7 @@ ignore:
  * rtp_session_send_rtp:
  * @sess: an #RTPSession
  * @buffer: an RTP buffer
- * @ntptime: the NTP time of when this buffer was captured.
+ * @ntpnstime: the NTP time in nanoseconds of when this buffer was captured.
  *
  * Send the RTP buffer in the session manager. This function takes ownership of
  * @buffer.
@@ -1426,7 +1481,7 @@ ignore:
  * Returns: a #GstFlowReturn.
  */
 GstFlowReturn
-rtp_session_send_rtp (RTPSession * sess, GstBuffer * buffer, guint64 ntptime)
+rtp_session_send_rtp (RTPSession * sess, GstBuffer * buffer, guint64 ntpnstime)
 {
   GstFlowReturn result;
   RTPSource *source;
@@ -1451,7 +1506,7 @@ rtp_session_send_rtp (RTPSession * sess, GstBuffer * buffer, guint64 ntptime)
   prevsender = RTP_SOURCE_IS_SENDER (source);
 
   /* we use our own source to send */
-  result = rtp_source_send_rtp (source, buffer, ntptime);
+  result = rtp_source_send_rtp (source, buffer, ntpnstime);
 
   if (RTP_SOURCE_IS_SENDER (source) && !prevsender)
     sess->stats.sender_sources++;
@@ -1755,13 +1810,18 @@ static void
 session_sdes (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
+  guint8 *sdes_data;
+  guint sdes_len;
 
   /* add SDES packet */
   gst_rtcp_buffer_add_packet (data->rtcp, GST_RTCP_TYPE_SDES, packet);
 
   gst_rtcp_packet_sdes_add_item (packet, sess->source->ssrc);
-  gst_rtcp_packet_sdes_add_entry (packet, GST_RTCP_SDES_CNAME,
-      strlen (sess->cname), (guint8 *) sess->cname);
+
+  rtp_source_get_sdes (sess->source, GST_RTCP_SDES_CNAME, &sdes_data,
+      &sdes_len);
+  gst_rtcp_packet_sdes_add_entry (packet, GST_RTCP_SDES_CNAME, sdes_len,
+      sdes_data);
 
   /* other SDES items must only be added at regular intervals and only when the
    * user requests to since it might be a privacy problem */
