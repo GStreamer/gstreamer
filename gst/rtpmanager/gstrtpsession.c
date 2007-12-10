@@ -338,9 +338,75 @@ on_ssrc_active (RTPSession * session, RTPSource * src, GstRtpSession * sess)
       src->ssrc);
 }
 
+static GstStructure *
+source_get_sdes_structure (RTPSource * src)
+{
+  GstStructure *result;
+  GValue val = { 0 };
+  gchar *str;
+
+  result = gst_structure_empty_new ("GstRTPSessionSDES");
+
+  gst_structure_set (result, "ssrc", G_TYPE_UINT, src->ssrc, NULL);
+
+  g_value_init (&val, G_TYPE_STRING);
+  str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_CNAME);
+  if (str) {
+    g_value_take_string (&val, str);
+    gst_structure_set_value (result, "cname", &val);
+  }
+  str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_NAME);
+  if (str) {
+    g_value_take_string (&val, str);
+    gst_structure_set_value (result, "name", &val);
+  }
+  str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_EMAIL);
+  if (str) {
+    g_value_take_string (&val, str);
+    gst_structure_set_value (result, "email", &val);
+  }
+  str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_PHONE);
+  if (str) {
+    g_value_take_string (&val, str);
+    gst_structure_set_value (result, "phone", &val);
+  }
+  str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_LOC);
+  if (str) {
+    g_value_take_string (&val, str);
+    gst_structure_set_value (result, "location", &val);
+  }
+  str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_TOOL);
+  if (str) {
+    g_value_take_string (&val, str);
+    gst_structure_set_value (result, "tool", &val);
+  }
+  str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_NOTE);
+  if (str) {
+    g_value_take_string (&val, str);
+    gst_structure_set_value (result, "note", &val);
+  }
+  str = rtp_source_get_sdes_string (src, GST_RTCP_SDES_PRIV);
+  if (str) {
+    g_value_take_string (&val, str);
+    gst_structure_set_value (result, "priv", &val);
+  }
+
+  return result;
+}
+
 static void
 on_ssrc_sdes (RTPSession * session, RTPSource * src, GstRtpSession * sess)
 {
+  GstStructure *s;
+  GstMessage *m;
+
+  /* convert the new SDES info into a message */
+  RTP_SESSION_LOCK (session);
+  s = source_get_sdes_structure (src);
+  RTP_SESSION_UNLOCK (session);
+  m = gst_message_new_custom (GST_MESSAGE_ELEMENT, GST_OBJECT (sess), s);
+  gst_element_post_message (GST_ELEMENT_CAST (sess), m);
+
   g_signal_emit (sess, gst_rtp_session_signals[SIGNAL_ON_SSRC_SDES], 0,
       src->ssrc);
 }

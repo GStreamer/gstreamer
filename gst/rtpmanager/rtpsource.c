@@ -600,7 +600,7 @@ rtp_source_set_sdes_string (RTPSource * src, GstRTCPSDESType type,
  * @data remains valid until the next call to rtp_source_set_sdes().
  *
  * Returns: %TRUE if @type was valid and @data and @len contain valid
- * data. 
+ * data. @data can be NULL when the item was unset.
  */
 gboolean
 rtp_source_get_sdes (RTPSource * src, GstRTCPSDESType type, guint8 ** data,
@@ -627,7 +627,7 @@ rtp_source_get_sdes (RTPSource * src, GstRTCPSDESType type, guint8 ** data,
  * Get the SDES item of @type from @src. 
  *
  * Returns: a null-terminated copy of the SDES item or NULL when @type was not
- * valid. g_free() after usage.
+ * valid or the SDES item was unset. g_free() after usage.
  */
 gchar *
 rtp_source_get_sdes_string (RTPSource * src, GstRTCPSDESType type)
