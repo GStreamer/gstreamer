@@ -24,6 +24,7 @@ import logging
 from GstDebugViewer import Common, Data, GUI
 from GstDebugViewer.Plugins import *
 
+import pango
 import gtk
 
 class SearchOperation (object):
@@ -107,6 +108,9 @@ class SearchSentinel (object):
 
 class FindBarWidget (gtk.HBox):
 
+    __status = {"no-match-found" : _N("No match found"),
+                "searching" : _N("Searching...")}
+
     def __init__ (self, action_group):
 
         gtk.HBox.__init__ (self)
@@ -127,7 +131,51 @@ class FindBarWidget (gtk.HBox):
         next_action.connect_proxy (next_button)
         self.pack_start (next_button, False, False, 0)
 
+        self.status_label = gtk.Label ("")
+        self.status_label.props.xalign = 0.
+        attrs = pango.AttrList ()
+        attrs.insert (pango.AttrWeight (pango.WEIGHT_BOLD, 0, -1))
+        self.status_label.props.attributes = attrs
+        self.pack_start (self.status_label, False, False, 6)
+        self.__compute_status_size ()
+        self.status_label.connect ("notify::style", self.__handle_notify_style)
+
         self.show_all ()
+
+    def __compute_status_size (self):
+
+        label = self.status_label
+        old_text = label.props.label
+        label.set_size_request (-1, -1)
+        max_width = 0
+        try:
+            for status in self.__status.values ():
+                self.__set_status (_(status))
+                width, height = label.size_request ()
+                max_width = max (max_width, width)
+            label.set_size_request (max_width, -1)
+        finally:
+            label.props.label = old_text
+
+    def __handle_notify_style (self, *a, **kw):
+
+        self.__compute_status_size ()
+
+    def __set_status (self, text):
+
+        self.status_label.props.label = text
+
+    def status_no_match_found (self):
+
+        self.__set_status (_(self.__status["no-match-found"]))
+
+    def status_searching (self):
+
+        self.__set_status (_(self.__status["searching"]))
+
+    def clear_status (self):
+
+        self.__set_status ("")
 
 class FindBarFeature (FeatureBase):
 
@@ -225,6 +273,7 @@ class FindBarFeature (FeatureBase):
                 del column.highlighters[self]
             except KeyError:
                 pass
+            self.bar.clear_status ()
             self.bar.hide ()
 
     def handle_goto_previous_search_result_action_activate (self, action):
@@ -274,6 +323,7 @@ class FindBarFeature (FeatureBase):
         start_path = self.log_view.get_visible_range ()[0]
         self.operation = SearchOperation (model, search_string, start_position = start_path[0])
         self.sentinel.run_for (self.operation)
+        self.bar.status_searching ()
 
         column = self.window.column_manager.find_item (name = "message")
         column.highlighters[self] = self.operation.match_func
@@ -302,6 +352,11 @@ class FindBarFeature (FeatureBase):
 
         INTERVAL = 100
 
+        if finished and len (self.matches) == 0:
+            self.bar.status_no_match_found ()
+        elif finished:
+            self.bar.clear_status ()
+
         if len (self.matches) % INTERVAL == 0:
             new_matches = self.matches[-INTERVAL:]
         elif finished:
@@ -329,6 +384,8 @@ class FindBarFeature (FeatureBase):
                 model.row_changed (tree_path, tree_iter)
 
         del self.matches[:]
+
+        self.bar.clear_status ()
 
 class Plugin (PluginBase):
 
