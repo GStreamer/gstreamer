@@ -51,6 +51,9 @@ struct _GstRtpBin {
   /* a list of clients, these are streams with the same CNAME */
   GSList         *clients;
 
+  /* the default SDES items for sessions */
+  gchar          *sdes[9];
+
   /*< private >*/
   GstRtpBinPrivate *priv;
 };

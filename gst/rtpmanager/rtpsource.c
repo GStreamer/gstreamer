@@ -89,7 +89,7 @@ rtp_source_class_init (RTPSourceClass * klass)
   g_object_class_install_property (gobject_class, PROP_SSRC,
       g_param_spec_uint ("ssrc", "SSRC",
           "The SSRC of this source", 0, G_MAXUINT,
-          DEFAULT_SSRC, G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY));
+          DEFAULT_SSRC, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   g_object_class_install_property (gobject_class, PROP_IS_CSRC,
       g_param_spec_boolean ("is-csrc", "Is CSRC",
@@ -190,6 +190,9 @@ rtp_source_set_property (GObject * object, guint prop_id,
   src = RTP_SOURCE (object);
 
   switch (prop_id) {
+    case PROP_SSRC:
+      src->ssrc = g_value_get_uint (value);
+      break;
     case PROP_SDES_CNAME:
       rtp_source_set_sdes_string (src, GST_RTCP_SDES_CNAME,
           g_value_get_string (value));
