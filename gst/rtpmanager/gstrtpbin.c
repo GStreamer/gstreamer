@@ -228,11 +228,26 @@ enum
 };
 
 #define DEFAULT_LATENCY_MS	200
+#define DEFAULT_SDES_CNAME           NULL
+#define DEFAULT_SDES_NAME            NULL
+#define DEFAULT_SDES_EMAIL           NULL
+#define DEFAULT_SDES_PHONE           NULL
+#define DEFAULT_SDES_LOCATION        NULL
+#define DEFAULT_SDES_TOOL            NULL
+#define DEFAULT_SDES_NOTE            NULL
 
 enum
 {
   PROP_0,
-  PROP_LATENCY
+  PROP_LATENCY,
+  PROP_SDES_CNAME,
+  PROP_SDES_NAME,
+  PROP_SDES_EMAIL,
+  PROP_SDES_PHONE,
+  PROP_SDES_LOCATION,
+  PROP_SDES_TOOL,
+  PROP_SDES_NOTE,
+  PROP_LAST
 };
 
 /* helper objects */
@@ -244,6 +259,9 @@ static guint gst_rtp_bin_signals[LAST_SIGNAL] = { 0 };
 
 static GstCaps *pt_map_requested (GstElement * element, guint pt,
     GstRtpBinSession * session);
+static const gchar *sdes_type_to_name (GstRTCPSDESType type);
+static void gst_rtp_bin_set_sdes_string (GstRtpBin * bin,
+    GstRTCPSDESType type, const gchar * data);
 
 static void free_stream (GstRtpBinStream * stream);
 
@@ -418,6 +436,7 @@ create_session (GstRtpBin * rtpbin, gint id)
 {
   GstRtpBinSession *sess;
   GstElement *session, *demux;
+  gint i;
 
   if (!(session = gst_element_factory_make ("gstrtpsession", NULL)))
     goto no_session;
@@ -436,6 +455,12 @@ create_session (GstRtpBin * rtpbin, gint id)
 
   /* set NTP base or new session */
   g_object_set (session, "ntp-ns-base", rtpbin->priv->ntp_ns_base, NULL);
+  /* configure SDES items */
+  GST_OBJECT_LOCK (rtpbin);
+  for (i = GST_RTCP_SDES_CNAME; i < GST_RTCP_SDES_PRIV; i++) {
+    g_object_set (session, sdes_type_to_name (i), rtpbin->sdes[i], NULL);
+  }
+  GST_OBJECT_UNLOCK (rtpbin);
 
   /* provide clock_rate to the session manager when needed */
   g_signal_connect (session, "request-pt-map",
@@ -1154,6 +1179,41 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
       G_TYPE_UINT, G_TYPE_UINT);
 
+  g_object_class_install_property (gobject_class, PROP_SDES_CNAME,
+      g_param_spec_string ("sdes-cname", "SDES CNAME",
+          "The CNAME to put in SDES messages of this session",
+          DEFAULT_SDES_CNAME, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_NAME,
+      g_param_spec_string ("sdes-name", "SDES NAME",
+          "The NAME to put in SDES messages of this session",
+          DEFAULT_SDES_NAME, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_EMAIL,
+      g_param_spec_string ("sdes-email", "SDES EMAIL",
+          "The EMAIL to put in SDES messages of this session",
+          DEFAULT_SDES_EMAIL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_PHONE,
+      g_param_spec_string ("sdes-phone", "SDES PHONE",
+          "The PHONE to put in SDES messages of this session",
+          DEFAULT_SDES_PHONE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_LOCATION,
+      g_param_spec_string ("sdes-location", "SDES LOCATION",
+          "The LOCATION to put in SDES messages of this session",
+          DEFAULT_SDES_LOCATION, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_TOOL,
+      g_param_spec_string ("sdes-tool", "SDES TOOL",
+          "The TOOL to put in SDES messages of this session",
+          DEFAULT_SDES_TOOL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_NOTE,
+      g_param_spec_string ("sdes-note", "SDES NOTE",
+          "The NOTE to put in SDES messages of this session",
+          DEFAULT_SDES_NOTE, G_PARAM_READWRITE));
+
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_provide_clock);
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
@@ -1169,10 +1229,20 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
 static void
 gst_rtp_bin_init (GstRtpBin * rtpbin, GstRtpBinClass * klass)
 {
+  gchar *str;
+
   rtpbin->priv = GST_RTP_BIN_GET_PRIVATE (rtpbin);
   rtpbin->priv->bin_lock = g_mutex_new ();
   rtpbin->provided_clock = gst_system_clock_obtain ();
   rtpbin->latency = DEFAULT_LATENCY_MS;
+
+  /* some default SDES entries */
+  str = g_strdup_printf ("%s@%s", g_get_user_name (), g_get_host_name ());
+  gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_CNAME, str);
+  g_free (str);
+
+  gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_NAME, g_get_real_name ());
+  gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_TOOL, "GStreamer");
 }
 
 static void
@@ -1205,6 +1275,72 @@ gst_rtp_bin_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
+static const gchar *
+sdes_type_to_name (GstRTCPSDESType type)
+{
+  const gchar *result;
+
+  switch (type) {
+    case GST_RTCP_SDES_CNAME:
+      result = "sdes-cname";
+      break;
+    case GST_RTCP_SDES_NAME:
+      result = "sdes-name";
+      break;
+    case GST_RTCP_SDES_EMAIL:
+      result = "sdes-email";
+      break;
+    case GST_RTCP_SDES_PHONE:
+      result = "sdes-phone";
+      break;
+    case GST_RTCP_SDES_LOC:
+      result = "sdes-location";
+      break;
+    case GST_RTCP_SDES_TOOL:
+      result = "sdes-tool";
+      break;
+    case GST_RTCP_SDES_NOTE:
+      result = "sdes-note";
+      break;
+    case GST_RTCP_SDES_PRIV:
+      result = "sdes-priv";
+      break;
+    default:
+      result = NULL;
+      break;
+  }
+  return result;
+}
+
+static void
+gst_rtp_bin_set_sdes_string (GstRtpBin * bin, GstRTCPSDESType type,
+    const gchar * data)
+{
+  GSList *item;
+  const gchar *name;
+
+  GST_OBJECT_LOCK (bin);
+  g_free (bin->sdes[type]);
+  bin->sdes[type] = g_strdup (data);
+  name = sdes_type_to_name (type);
+  /* store in all sessions */
+  for (item = bin->sessions; item; item = g_slist_next (item))
+    g_object_set (item->data, name, bin->sdes[type], NULL);
+  GST_OBJECT_UNLOCK (bin);
+}
+
+static gchar *
+gst_rtp_bin_get_sdes_string (GstRtpBin * bin, GstRTCPSDESType type)
+{
+  gchar *result;
+
+  GST_OBJECT_LOCK (bin);
+  result = g_strdup (bin->sdes[type]);
+  GST_OBJECT_UNLOCK (bin);
+
+  return result;
+}
+
 static void
 gst_rtp_bin_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1218,6 +1354,34 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       GST_RTP_BIN_LOCK (rtpbin);
       rtpbin->latency = g_value_get_uint (value);
       GST_RTP_BIN_UNLOCK (rtpbin);
+      break;
+    case PROP_SDES_CNAME:
+      gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_CNAME,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_NAME:
+      gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_NAME,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_EMAIL:
+      gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_EMAIL,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_PHONE:
+      gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_PHONE,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_LOCATION:
+      gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_LOC,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_TOOL:
+      gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_TOOL,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_NOTE:
+      gst_rtp_bin_set_sdes_string (rtpbin, GST_RTCP_SDES_NOTE,
+          g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1238,6 +1402,34 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       GST_RTP_BIN_LOCK (rtpbin);
       g_value_set_uint (value, rtpbin->latency);
       GST_RTP_BIN_UNLOCK (rtpbin);
+      break;
+    case PROP_SDES_CNAME:
+      g_value_take_string (value, gst_rtp_bin_get_sdes_string (rtpbin,
+              GST_RTCP_SDES_CNAME));
+      break;
+    case PROP_SDES_NAME:
+      g_value_take_string (value, gst_rtp_bin_get_sdes_string (rtpbin,
+              GST_RTCP_SDES_NAME));
+      break;
+    case PROP_SDES_EMAIL:
+      g_value_take_string (value, gst_rtp_bin_get_sdes_string (rtpbin,
+              GST_RTCP_SDES_EMAIL));
+      break;
+    case PROP_SDES_PHONE:
+      g_value_take_string (value, gst_rtp_bin_get_sdes_string (rtpbin,
+              GST_RTCP_SDES_PHONE));
+      break;
+    case PROP_SDES_LOCATION:
+      g_value_take_string (value, gst_rtp_bin_get_sdes_string (rtpbin,
+              GST_RTCP_SDES_LOC));
+      break;
+    case PROP_SDES_TOOL:
+      g_value_take_string (value, gst_rtp_bin_get_sdes_string (rtpbin,
+              GST_RTCP_SDES_TOOL));
+      break;
+    case PROP_SDES_NOTE:
+      g_value_take_string (value, gst_rtp_bin_get_sdes_string (rtpbin,
+              GST_RTCP_SDES_NOTE));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

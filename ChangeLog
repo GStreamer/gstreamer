@@ -1,5 +1,19 @@
 2007-12-10  Wim Taymans  <wim.taymans@gmail.com>
 
+	* gst/rtpmanager/gstrtpbin.c: (create_session),
+	(gst_rtp_bin_class_init), (gst_rtp_bin_init), (sdes_type_to_name),
+	(gst_rtp_bin_set_sdes_string), (gst_rtp_bin_get_sdes_string),
+	(gst_rtp_bin_set_property), (gst_rtp_bin_get_property):
+	* gst/rtpmanager/gstrtpbin.h:
+	Expose SDES items as properties and configure the session managers with
+	them.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_class_init),
+	(rtp_source_set_property):
+	Fix SSRC property.
+
+2007-12-10  Wim Taymans  <wim.taymans@gmail.com>
+
 	* gst/rtpmanager/gstrtpbin.c: (create_session):
 	* gst/rtpmanager/rtpjitterbuffer.c:
 	Update comment.
