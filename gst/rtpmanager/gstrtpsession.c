@@ -215,12 +215,35 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_NTP_NS_BASE 0
+#define DEFAULT_NTP_NS_BASE          0
+#define DEFAULT_BANDWIDTH            RTP_STATS_BANDWIDTH
+#define DEFAULT_RTCP_FRACTION        RTP_STATS_RTCP_BANDWIDTH
+#define DEFAULT_SDES_CNAME           NULL
+#define DEFAULT_SDES_NAME            NULL
+#define DEFAULT_SDES_EMAIL           NULL
+#define DEFAULT_SDES_PHONE           NULL
+#define DEFAULT_SDES_LOCATION        NULL
+#define DEFAULT_SDES_TOOL            NULL
+#define DEFAULT_SDES_NOTE            NULL
+#define DEFAULT_NUM_SOURCES          0
+#define DEFAULT_NUM_ACTIVE_SOURCES   0
 
 enum
 {
   PROP_0,
-  PROP_NTP_NS_BASE
+  PROP_NTP_NS_BASE,
+  PROP_BANDWIDTH,
+  PROP_RTCP_FRACTION,
+  PROP_SDES_CNAME,
+  PROP_SDES_NAME,
+  PROP_SDES_EMAIL,
+  PROP_SDES_PHONE,
+  PROP_SDES_LOCATION,
+  PROP_SDES_TOOL,
+  PROP_SDES_NOTE,
+  PROP_NUM_SOURCES,
+  PROP_NUM_ACTIVE_SOURCES,
+  PROP_LAST
 };
 
 #define GST_RTP_SESSION_GET_PRIVATE(obj)  \
@@ -378,7 +401,6 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
   gobject_class->set_property = gst_rtp_session_set_property;
   gobject_class->get_property = gst_rtp_session_get_property;
 
-
   /**
    * GstRtpSession::request-pt-map:
    * @sess: the object which received the signal
@@ -489,6 +511,61 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           "The NTP base time corresponding to running_time 0", 0,
           G_MAXUINT64, DEFAULT_NTP_NS_BASE, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
+      g_param_spec_double ("bandwidth", "Bandwidth",
+          "The bandwidth of the session",
+          0.0, G_MAXDOUBLE, DEFAULT_BANDWIDTH, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_RTCP_FRACTION,
+      g_param_spec_double ("rtcp-fraction", "RTCP Fraction",
+          "The fraction of the bandwidth used for RTCP",
+          0.0, G_MAXDOUBLE, DEFAULT_RTCP_FRACTION, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_CNAME,
+      g_param_spec_string ("sdes-cname", "SDES CNAME",
+          "The CNAME to put in SDES messages of this session",
+          DEFAULT_SDES_CNAME, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_NAME,
+      g_param_spec_string ("sdes-name", "SDES NAME",
+          "The NAME to put in SDES messages of this session",
+          DEFAULT_SDES_NAME, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_EMAIL,
+      g_param_spec_string ("sdes-email", "SDES EMAIL",
+          "The EMAIL to put in SDES messages of this session",
+          DEFAULT_SDES_EMAIL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_PHONE,
+      g_param_spec_string ("sdes-phone", "SDES PHONE",
+          "The PHONE to put in SDES messages of this session",
+          DEFAULT_SDES_PHONE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_LOCATION,
+      g_param_spec_string ("sdes-location", "SDES LOCATION",
+          "The LOCATION to put in SDES messages of this session",
+          DEFAULT_SDES_LOCATION, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_TOOL,
+      g_param_spec_string ("sdes-tool", "SDES TOOL",
+          "The TOOL to put in SDES messages of this session",
+          DEFAULT_SDES_TOOL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_NOTE,
+      g_param_spec_string ("sdes-note", "SDES NOTE",
+          "The NOTE to put in SDES messages of this session",
+          DEFAULT_SDES_NOTE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_NUM_SOURCES,
+      g_param_spec_uint ("num-sources", "Num Sources",
+          "The number of sources in the session", 0, G_MAXUINT,
+          DEFAULT_NUM_SOURCES, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class, PROP_NUM_ACTIVE_SOURCES,
+      g_param_spec_uint ("num-active-sources", "Num Active Sources",
+          "The number of active sources in the session", 0, G_MAXUINT,
+          DEFAULT_NUM_ACTIVE_SOURCES, G_PARAM_READABLE));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -550,16 +627,52 @@ gst_rtp_session_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstRtpSession *rtpsession;
+  GstRtpSessionPrivate *priv;
 
   rtpsession = GST_RTP_SESSION (object);
+  priv = rtpsession->priv;
 
   switch (prop_id) {
     case PROP_NTP_NS_BASE:
       GST_OBJECT_LOCK (rtpsession);
-      rtpsession->priv->ntpnsbase = g_value_get_uint64 (value);
+      priv->ntpnsbase = g_value_get_uint64 (value);
       GST_DEBUG_OBJECT (rtpsession, "setting NTP base to %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (rtpsession->priv->ntpnsbase));
+          GST_TIME_ARGS (priv->ntpnsbase));
       GST_OBJECT_UNLOCK (rtpsession);
+      break;
+    case PROP_BANDWIDTH:
+      rtp_session_set_bandwidth (priv->session, g_value_get_double (value));
+      break;
+    case PROP_RTCP_FRACTION:
+      rtp_session_set_rtcp_fraction (priv->session, g_value_get_double (value));
+      break;
+    case PROP_SDES_CNAME:
+      rtp_session_set_sdes_string (priv->session, GST_RTCP_SDES_CNAME,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_NAME:
+      rtp_session_set_sdes_string (priv->session, GST_RTCP_SDES_NAME,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_EMAIL:
+      rtp_session_set_sdes_string (priv->session, GST_RTCP_SDES_EMAIL,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_PHONE:
+      rtp_session_set_sdes_string (priv->session, GST_RTCP_SDES_PHONE,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_LOCATION:
+      rtp_session_set_sdes_string (priv->session, GST_RTCP_SDES_LOC,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_TOOL:
+      rtp_session_set_sdes_string (priv->session, GST_RTCP_SDES_TOOL,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_NOTE:
+      rtp_session_set_sdes_string (priv->session, GST_RTCP_SDES_NOTE,
+          g_value_get_string (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -572,14 +685,57 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
   GstRtpSession *rtpsession;
+  GstRtpSessionPrivate *priv;
 
   rtpsession = GST_RTP_SESSION (object);
+  priv = rtpsession->priv;
 
   switch (prop_id) {
     case PROP_NTP_NS_BASE:
       GST_OBJECT_LOCK (rtpsession);
-      g_value_set_uint64 (value, rtpsession->priv->ntpnsbase);
+      g_value_set_uint64 (value, priv->ntpnsbase);
       GST_OBJECT_UNLOCK (rtpsession);
+      break;
+    case PROP_BANDWIDTH:
+      g_value_set_double (value, rtp_session_get_bandwidth (priv->session));
+      break;
+    case PROP_RTCP_FRACTION:
+      g_value_set_double (value, rtp_session_get_rtcp_fraction (priv->session));
+      break;
+    case PROP_SDES_CNAME:
+      g_value_take_string (value, rtp_session_get_sdes_string (priv->session,
+              GST_RTCP_SDES_CNAME));
+      break;
+    case PROP_SDES_NAME:
+      g_value_take_string (value, rtp_session_get_sdes_string (priv->session,
+              GST_RTCP_SDES_NAME));
+      break;
+    case PROP_SDES_EMAIL:
+      g_value_take_string (value, rtp_session_get_sdes_string (priv->session,
+              GST_RTCP_SDES_EMAIL));
+      break;
+    case PROP_SDES_PHONE:
+      g_value_take_string (value, rtp_session_get_sdes_string (priv->session,
+              GST_RTCP_SDES_PHONE));
+      break;
+    case PROP_SDES_LOCATION:
+      g_value_take_string (value, rtp_session_get_sdes_string (priv->session,
+              GST_RTCP_SDES_LOC));
+      break;
+    case PROP_SDES_TOOL:
+      g_value_take_string (value, rtp_session_get_sdes_string (priv->session,
+              GST_RTCP_SDES_TOOL));
+      break;
+    case PROP_SDES_NOTE:
+      g_value_take_string (value, rtp_session_get_sdes_string (priv->session,
+              GST_RTCP_SDES_NOTE));
+      break;
+    case PROP_NUM_SOURCES:
+      g_value_set_uint (value, rtp_session_get_num_sources (priv->session));
+      break;
+    case PROP_NUM_ACTIVE_SOURCES:
+      g_value_set_uint (value,
+          rtp_session_get_num_active_sources (priv->session));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

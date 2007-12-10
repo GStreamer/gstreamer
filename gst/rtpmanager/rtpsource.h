@@ -118,13 +118,9 @@ struct _RTPSource {
   gboolean      is_csrc;
   gboolean      is_sender;
 
-  gchar        *cname;
-  gchar        *name;
-  gchar        *email;
-  gchar        *phone;
-  gchar        *location;
-  gchar        *tool;
-  gchar        *note;
+  guint8       *sdes[9];
+  guint         sdes_len[9];
+
   gboolean      received_bye;
   gchar        *bye_reason;
 
@@ -161,38 +157,62 @@ struct _RTPSourceClass {
 GType rtp_source_get_type (void);
 
 /* managing lifetime of sources */
-RTPSource*      rtp_source_new            (guint32 ssrc);
-void            rtp_source_update_caps    (RTPSource *src, GstCaps *caps);
+RTPSource*      rtp_source_new                 (guint32 ssrc);
+void            rtp_source_set_callbacks       (RTPSource *src, RTPSourceCallbacks *cb, gpointer data);
 
-void            rtp_source_set_callbacks  (RTPSource *src, RTPSourceCallbacks *cb, gpointer data);
-void            rtp_source_set_as_csrc    (RTPSource *src);
+/* properties */
+guint32         rtp_source_get_ssrc            (RTPSource *src);
 
-void            rtp_source_set_rtp_from   (RTPSource *src, GstNetAddress *address);
-void            rtp_source_set_rtcp_from  (RTPSource *src, GstNetAddress *address);
+void            rtp_source_set_as_csrc         (RTPSource *src);
+gboolean        rtp_source_is_as_csrc          (RTPSource *src);
+
+gboolean        rtp_source_is_active           (RTPSource *src);
+gboolean        rtp_source_is_validated        (RTPSource *src);
+gboolean        rtp_source_is_sender           (RTPSource *src);
+
+gboolean        rtp_source_received_bye        (RTPSource *src);
+gchar *         rtp_source_get_bye_reason      (RTPSource *src);
+
+void            rtp_source_update_caps         (RTPSource *src, GstCaps *caps);
+
+/* SDES info */
+gboolean        rtp_source_set_sdes            (RTPSource *src, GstRTCPSDESType type, 
+                                                const guint8 *data, guint len);
+gboolean        rtp_source_set_sdes_string     (RTPSource *src, GstRTCPSDESType type,
+                                                const gchar *data);
+gboolean        rtp_source_get_sdes            (RTPSource *src, GstRTCPSDESType type,
+                                                guint8 **data, guint *len);
+gchar*          rtp_source_get_sdes_string     (RTPSource *src, GstRTCPSDESType type);
+
+/* handling network address */
+void            rtp_source_set_rtp_from        (RTPSource *src, GstNetAddress *address);
+void            rtp_source_set_rtcp_from       (RTPSource *src, GstNetAddress *address);
 
 /* handling RTP */
-GstFlowReturn   rtp_source_process_rtp    (RTPSource *src, GstBuffer *buffer, RTPArrivalStats *arrival);
+GstFlowReturn   rtp_source_process_rtp         (RTPSource *src, GstBuffer *buffer, RTPArrivalStats *arrival);
 
-GstFlowReturn   rtp_source_send_rtp       (RTPSource *src, GstBuffer *buffer, guint64 ntpnstime);
+GstFlowReturn   rtp_source_send_rtp            (RTPSource *src, GstBuffer *buffer, guint64 ntpnstime);
 
 /* RTCP messages */
-void            rtp_source_process_bye    (RTPSource *src, const gchar *reason);
-void            rtp_source_process_sr     (RTPSource *src, GstClockTime time, guint64 ntptime,
-                                           guint32 rtptime, guint32 packet_count, guint32 octet_count);
-void            rtp_source_process_rb     (RTPSource *src, GstClockTime time, guint8 fractionlost,
-                                           gint32 packetslost, guint32 exthighestseq, guint32 jitter,
-                                           guint32 lsr, guint32 dlsr);
+void            rtp_source_process_bye         (RTPSource *src, const gchar *reason);
+void            rtp_source_process_sr          (RTPSource *src, GstClockTime time, guint64 ntptime,
+                                                guint32 rtptime, guint32 packet_count, guint32 octet_count);
+void            rtp_source_process_rb          (RTPSource *src, GstClockTime time, guint8 fractionlost,
+                                                gint32 packetslost, guint32 exthighestseq, guint32 jitter,
+                                                guint32 lsr, guint32 dlsr);
 
-gboolean        rtp_source_get_new_sr     (RTPSource *src, GstClockTime time, guint64 *ntptime,
-		                           guint32 *rtptime, guint32 *packet_count, guint32 *octet_count);
-gboolean        rtp_source_get_new_rb     (RTPSource *src, GstClockTime time, guint8 *fractionlost,
-                                           gint32 *packetslost, guint32 *exthighestseq, guint32 *jitter,
-                                           guint32 *lsr, guint32 *dlsr);
+gboolean        rtp_source_get_new_sr          (RTPSource *src, GstClockTime time, guint64 *ntptime,
+		                                guint32 *rtptime, guint32 *packet_count,
+						guint32 *octet_count);
+gboolean        rtp_source_get_new_rb          (RTPSource *src, GstClockTime time, guint8 *fractionlost,
+                                                gint32 *packetslost, guint32 *exthighestseq, guint32 *jitter,
+                                                guint32 *lsr, guint32 *dlsr);
 
-gboolean        rtp_source_get_last_sr    (RTPSource *src, GstClockTime *time, guint64 *ntptime,
-                                           guint32 *rtptime, guint32 *packet_count, guint32 *octet_count);
-gboolean        rtp_source_get_last_rb    (RTPSource *src, guint8 *fractionlost, gint32 *packetslost,
-                                           guint32 *exthighestseq, guint32 *jitter,
-                                           guint32 *lsr, guint32 *dlsr);
+gboolean        rtp_source_get_last_sr         (RTPSource *src, GstClockTime *time, guint64 *ntptime,
+                                                guint32 *rtptime, guint32 *packet_count,
+						guint32 *octet_count);
+gboolean        rtp_source_get_last_rb         (RTPSource *src, guint8 *fractionlost, gint32 *packetslost,
+                                                guint32 *exthighestseq, guint32 *jitter,
+                                                guint32 *lsr, guint32 *dlsr);
 
 #endif /* __RTP_SOURCE_H__ */

@@ -181,7 +181,7 @@ rtp_jitter_buffer_reset_skew (RTPJitterBuffer * jbuf)
  * We use a 2 second window or up to 512 data points, which is statistically big
  * enough to catch spikes (FIXME, detect spikes).
  * We also use a rather large weighting factor (125) to smoothly adapt. During
- * startup, when filling the window) we use a parabolic weighting factor, the
+ * startup, when filling the window, we use a parabolic weighting factor, the
  * more the window is filled, the faster we move to the detected possible skew.
  *
  * Returns: @time adjusted with the clock skew.

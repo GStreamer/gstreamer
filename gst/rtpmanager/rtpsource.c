@@ -34,13 +34,41 @@ enum
   LAST_SIGNAL
 };
 
+#define DEFAULT_SSRC                 0
+#define DEFAULT_IS_CSRC              FALSE
+#define DEFAULT_IS_VALIDATED         FALSE
+#define DEFAULT_IS_SENDER            FALSE
+#define DEFAULT_SDES_CNAME           NULL
+#define DEFAULT_SDES_NAME            NULL
+#define DEFAULT_SDES_EMAIL           NULL
+#define DEFAULT_SDES_PHONE           NULL
+#define DEFAULT_SDES_LOCATION        NULL
+#define DEFAULT_SDES_TOOL            NULL
+#define DEFAULT_SDES_NOTE            NULL
+
 enum
 {
-  PROP_0
+  PROP_0,
+  PROP_SSRC,
+  PROP_IS_CSRC,
+  PROP_IS_VALIDATED,
+  PROP_IS_SENDER,
+  PROP_SDES_CNAME,
+  PROP_SDES_NAME,
+  PROP_SDES_EMAIL,
+  PROP_SDES_PHONE,
+  PROP_SDES_LOCATION,
+  PROP_SDES_TOOL,
+  PROP_SDES_NOTE,
+  PROP_LAST
 };
 
 /* GObject vmethods */
 static void rtp_source_finalize (GObject * object);
+static void rtp_source_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void rtp_source_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 /* static guint rtp_source_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -54,6 +82,62 @@ rtp_source_class_init (RTPSourceClass * klass)
   gobject_class = (GObjectClass *) klass;
 
   gobject_class->finalize = rtp_source_finalize;
+
+  gobject_class->set_property = rtp_source_set_property;
+  gobject_class->get_property = rtp_source_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_SSRC,
+      g_param_spec_uint ("ssrc", "SSRC",
+          "The SSRC of this source", 0, G_MAXUINT,
+          DEFAULT_SSRC, G_PARAM_READABLE | G_PARAM_CONSTRUCT_ONLY));
+
+  g_object_class_install_property (gobject_class, PROP_IS_CSRC,
+      g_param_spec_boolean ("is-csrc", "Is CSRC",
+          "If this SSRC is acting as a contributing source",
+          DEFAULT_IS_CSRC, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class, PROP_IS_VALIDATED,
+      g_param_spec_boolean ("is-validated", "Is Validated",
+          "If this SSRC is validated", DEFAULT_IS_VALIDATED, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class, PROP_IS_SENDER,
+      g_param_spec_boolean ("is-sender", "Is Sender",
+          "If this SSRC is a sender", DEFAULT_IS_SENDER, G_PARAM_READABLE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_CNAME,
+      g_param_spec_string ("sdes-cname", "SDES CNAME",
+          "The CNAME to put in SDES messages of this source",
+          DEFAULT_SDES_CNAME, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_NAME,
+      g_param_spec_string ("sdes-name", "SDES NAME",
+          "The NAME to put in SDES messages of this source",
+          DEFAULT_SDES_NAME, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_EMAIL,
+      g_param_spec_string ("sdes-email", "SDES EMAIL",
+          "The EMAIL to put in SDES messages of this source",
+          DEFAULT_SDES_EMAIL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_PHONE,
+      g_param_spec_string ("sdes-phone", "SDES PHONE",
+          "The PHONE to put in SDES messages of this source",
+          DEFAULT_SDES_PHONE, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_LOCATION,
+      g_param_spec_string ("sdes-location", "SDES LOCATION",
+          "The LOCATION to put in SDES messages of this source",
+          DEFAULT_SDES_LOCATION, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_TOOL,
+      g_param_spec_string ("sdes-tool", "SDES TOOL",
+          "The TOOL to put in SDES messages of this source",
+          DEFAULT_SDES_TOOL, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_SDES_NOTE,
+      g_param_spec_string ("sdes-note", "SDES NOTE",
+          "The NOTE to put in SDES messages of this source",
+          DEFAULT_SDES_NOTE, G_PARAM_READWRITE));
 
   GST_DEBUG_CATEGORY_INIT (rtp_source_debug, "rtpsource", 0, "RTP Source");
 }
@@ -92,7 +176,107 @@ rtp_source_finalize (GObject * object)
     gst_buffer_unref (buffer);
   g_queue_free (src->packets);
 
+  g_free (src->bye_reason);
+
   G_OBJECT_CLASS (rtp_source_parent_class)->finalize (object);
+}
+
+static void
+rtp_source_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  RTPSource *src;
+
+  src = RTP_SOURCE (object);
+
+  switch (prop_id) {
+    case PROP_SDES_CNAME:
+      rtp_source_set_sdes_string (src, GST_RTCP_SDES_CNAME,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_NAME:
+      rtp_source_set_sdes_string (src, GST_RTCP_SDES_NAME,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_EMAIL:
+      rtp_source_set_sdes_string (src, GST_RTCP_SDES_EMAIL,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_PHONE:
+      rtp_source_set_sdes_string (src, GST_RTCP_SDES_PHONE,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_LOCATION:
+      rtp_source_set_sdes_string (src, GST_RTCP_SDES_LOC,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_TOOL:
+      rtp_source_set_sdes_string (src, GST_RTCP_SDES_TOOL,
+          g_value_get_string (value));
+      break;
+    case PROP_SDES_NOTE:
+      rtp_source_set_sdes_string (src, GST_RTCP_SDES_NOTE,
+          g_value_get_string (value));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+rtp_source_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  RTPSource *src;
+
+  src = RTP_SOURCE (object);
+
+  switch (prop_id) {
+    case PROP_SSRC:
+      g_value_set_uint (value, rtp_source_get_ssrc (src));
+      break;
+    case PROP_IS_CSRC:
+      g_value_set_boolean (value, rtp_source_is_as_csrc (src));
+      break;
+    case PROP_IS_VALIDATED:
+      g_value_set_boolean (value, rtp_source_is_validated (src));
+      break;
+    case PROP_IS_SENDER:
+      g_value_set_boolean (value, rtp_source_is_sender (src));
+      break;
+    case PROP_SDES_CNAME:
+      g_value_take_string (value, rtp_source_get_sdes_string (src,
+              GST_RTCP_SDES_CNAME));
+      break;
+    case PROP_SDES_NAME:
+      g_value_take_string (value, rtp_source_get_sdes_string (src,
+              GST_RTCP_SDES_NAME));
+      break;
+    case PROP_SDES_EMAIL:
+      g_value_take_string (value, rtp_source_get_sdes_string (src,
+              GST_RTCP_SDES_EMAIL));
+      break;
+    case PROP_SDES_PHONE:
+      g_value_take_string (value, rtp_source_get_sdes_string (src,
+              GST_RTCP_SDES_PHONE));
+      break;
+    case PROP_SDES_LOCATION:
+      g_value_take_string (value, rtp_source_get_sdes_string (src,
+              GST_RTCP_SDES_LOC));
+      break;
+    case PROP_SDES_TOOL:
+      g_value_take_string (value, rtp_source_get_sdes_string (src,
+              GST_RTCP_SDES_TOOL));
+      break;
+    case PROP_SDES_NOTE:
+      g_value_take_string (value, rtp_source_get_sdes_string (src,
+              GST_RTCP_SDES_NOTE));
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 /**
@@ -112,6 +296,184 @@ rtp_source_new (guint32 ssrc)
   src->ssrc = ssrc;
 
   return src;
+}
+
+/**
+ * rtp_source_set_callbacks:
+ * @src: an #RTPSource
+ * @cb: callback functions
+ * @user_data: user data
+ *
+ * Set the callbacks for the source.
+ */
+void
+rtp_source_set_callbacks (RTPSource * src, RTPSourceCallbacks * cb,
+    gpointer user_data)
+{
+  g_return_if_fail (RTP_IS_SOURCE (src));
+
+  src->callbacks.push_rtp = cb->push_rtp;
+  src->callbacks.clock_rate = cb->clock_rate;
+  src->user_data = user_data;
+}
+
+/**
+ * rtp_source_get_ssrc:
+ * @src: an #RTPSource
+ *
+ * Get the SSRC of @source.
+ *
+ * Returns: the SSRC of src.
+ */
+guint32
+rtp_source_get_ssrc (RTPSource * src)
+{
+  guint32 result;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), 0);
+
+  result = src->ssrc;
+
+  return result;
+}
+
+/**
+ * rtp_source_set_as_csrc:
+ * @src: an #RTPSource
+ *
+ * Configure @src as a CSRC, this will also validate @src.
+ */
+void
+rtp_source_set_as_csrc (RTPSource * src)
+{
+  g_return_if_fail (RTP_IS_SOURCE (src));
+
+  src->validated = TRUE;
+  src->is_csrc = TRUE;
+}
+
+/**
+ * rtp_source_is_as_csrc:
+ * @src: an #RTPSource
+ *
+ * Check if @src is a contributing source.
+ *
+ * Returns: %TRUE if @src is acting as a contributing source.
+ */
+gboolean
+rtp_source_is_as_csrc (RTPSource * src)
+{
+  gboolean result;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
+
+  result = src->is_csrc;
+
+  return result;
+}
+
+/**
+ * rtp_source_is_active:
+ * @src: an #RTPSource
+ *
+ * Check if @src is an active source. A source is active if it has been
+ * validated and has not yet received a BYE packet
+ *
+ * Returns: %TRUE if @src is an qactive source.
+ */
+gboolean
+rtp_source_is_active (RTPSource * src)
+{
+  gboolean result;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
+
+  result = RTP_SOURCE_IS_ACTIVE (src);
+
+  return result;
+}
+
+/**
+ * rtp_source_is_validated:
+ * @src: an #RTPSource
+ *
+ * Check if @src is a validated source.
+ *
+ * Returns: %TRUE if @src is a validated source.
+ */
+gboolean
+rtp_source_is_validated (RTPSource * src)
+{
+  gboolean result;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
+
+  result = src->validated;
+
+  return result;
+}
+
+/**
+ * rtp_source_is_sender:
+ * @src: an #RTPSource
+ *
+ * Check if @src is a sending source.
+ *
+ * Returns: %TRUE if @src is a sending source.
+ */
+gboolean
+rtp_source_is_sender (RTPSource * src)
+{
+  gboolean result;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
+
+  result = RTP_SOURCE_IS_SENDER (src);
+
+  return result;
+}
+
+/**
+ * rtp_source_received_bye:
+ * @src: an #RTPSource
+ *
+ * Check if @src has receoved a BYE packet.
+ *
+ * Returns: %TRUE if @src has received a BYE packet.
+ */
+gboolean
+rtp_source_received_bye (RTPSource * src)
+{
+  gboolean result;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
+
+  result = src->received_bye;
+
+  return result;
+}
+
+
+/**
+ * rtp_source_get_bye_reason:
+ * @src: an #RTPSource
+ *
+ * Get the BYE reason for @src. Check if the source receoved a BYE message first
+ * with rtp_source_received_bye().
+ *
+ * Returns: The BYE reason or NULL when no reason was given or the source did
+ * not receive a BYE message yet. g_fee() after usage.
+ */
+gchar *
+rtp_source_get_bye_reason (RTPSource * src)
+{
+  gchar *result;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), NULL);
+
+  result = g_strdup (src->bye_reason);
+
+  return result;
 }
 
 /**
@@ -153,37 +515,130 @@ rtp_source_update_caps (RTPSource * src, GstCaps * caps)
 }
 
 /**
- * rtp_source_set_callbacks:
+ * rtp_source_set_sdes:
  * @src: an #RTPSource
- * @cb: callback functions
- * @user_data: user data
+ * @type: the type of the SDES item
+ * @data: the SDES data
+ * @len: the SDES length
  *
- * Set the callbacks for the source.
+ * Store an SDES item of @type in @src. 
+ *
+ * Returns: %FALSE if the SDES item was unchanged or @type is unknown.
  */
-void
-rtp_source_set_callbacks (RTPSource * src, RTPSourceCallbacks * cb,
-    gpointer user_data)
+gboolean
+rtp_source_set_sdes (RTPSource * src, GstRTCPSDESType type,
+    const guint8 * data, guint len)
 {
-  g_return_if_fail (RTP_IS_SOURCE (src));
+  guint8 *old;
 
-  src->callbacks.push_rtp = cb->push_rtp;
-  src->callbacks.clock_rate = cb->clock_rate;
-  src->user_data = user_data;
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
+
+  if (type < 0 || type > GST_RTCP_SDES_PRIV)
+    return FALSE;
+
+  old = src->sdes[type];
+
+  /* lengths are the same, check if the data is the same */
+  if ((src->sdes_len[type] == len))
+    if (data != NULL && old != NULL && (memcmp (old, data, len) == 0))
+      return FALSE;
+
+  /* NULL data, make sure we store 0 length or if no length is given,
+   * take strlen */
+  if (data == NULL)
+    len = 0;
+
+  g_free (src->sdes[type]);
+  src->sdes[type] = g_memdup (data, len);
+  src->sdes_len[type] = len;
+
+  return TRUE;
 }
 
 /**
- * rtp_source_set_as_csrc:
+ * rtp_source_set_sdes_string:
  * @src: an #RTPSource
+ * @type: the type of the SDES item
+ * @data: the SDES data
  *
- * Configure @src as a CSRC, this will validate the RTpSource.
+ * Store an SDES item of @type in @src. This function is similar to
+ * rtp_source_set_sdes() but takes a null-terminated string for convenience.
+ *
+ * Returns: %FALSE if the SDES item was unchanged or @type is unknown.
  */
-void
-rtp_source_set_as_csrc (RTPSource * src)
+gboolean
+rtp_source_set_sdes_string (RTPSource * src, GstRTCPSDESType type,
+    const gchar * data)
 {
-  g_return_if_fail (RTP_IS_SOURCE (src));
+  guint len;
+  gboolean result;
 
-  src->validated = TRUE;
-  src->is_csrc = TRUE;
+  if (data)
+    len = strlen (data);
+  else
+    len = 0;
+
+  result = rtp_source_set_sdes (src, type, (guint8 *) data, len);
+
+  return result;
+}
+
+/**
+ * rtp_source_get_sdes:
+ * @src: an #RTPSource
+ * @type: the type of the SDES item
+ * @data: location to store the SDES data or NULL
+ * @len: location to store the SDES length or NULL
+ *
+ * Get the SDES item of @type from @src. Note that @data does not always point
+ * to a null-terminated string, use rtp_source_get_sdes_string() to retrieve a
+ * null-terminated string instead.
+ *
+ * @data remains valid until the next call to rtp_source_set_sdes().
+ *
+ * Returns: %TRUE if @type was valid and @data and @len contain valid
+ * data. 
+ */
+gboolean
+rtp_source_get_sdes (RTPSource * src, GstRTCPSDESType type, guint8 ** data,
+    guint * len)
+{
+  g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
+
+  if (type < 0 || type > GST_RTCP_SDES_PRIV)
+    return FALSE;
+
+  if (data)
+    *data = src->sdes[type];
+  if (len)
+    *len = src->sdes_len[type];
+
+  return TRUE;
+}
+
+/**
+ * rtp_source_get_sdes_string:
+ * @src: an #RTPSource
+ * @type: the type of the SDES item
+ *
+ * Get the SDES item of @type from @src. 
+ *
+ * Returns: a null-terminated copy of the SDES item or NULL when @type was not
+ * valid. g_free() after usage.
+ */
+gchar *
+rtp_source_get_sdes_string (RTPSource * src, GstRTCPSDESType type)
+{
+  gchar *result;
+
+  g_return_val_if_fail (RTP_IS_SOURCE (src), NULL);
+
+  if (type < 0 || type > GST_RTCP_SDES_PRIV)
+    return NULL;
+
+  result = g_strndup ((const gchar *) src->sdes[type], src->sdes_len[type]);
+
+  return result;
 }
 
 /**
@@ -588,7 +1043,7 @@ rtp_source_send_rtp (RTPSource * src, GstBuffer * buffer, guint64 ntpnstime)
  * rtp_source_process_sr:
  * @src: an #RTPSource
  * @time: time of packet arrival
- * @ntptime: the NTP time
+ * @ntptime: the NTP time in 32.32 fixed point
  * @rtptime: the RTP time
  * @packet_count: the packet count
  * @octet_count: the octect count
@@ -684,9 +1139,9 @@ rtp_source_process_rb (RTPSource * src, GstClockTime time, guint8 fractionlost,
 /**
  * rtp_source_get_new_sr:
  * @src: an #RTPSource
- * @time: the current time in nanoseconds since 1970
- * @ntptime: the NTP time
- * @rtptime: the RTP time
+ * @ntpnstime: the current time in nanoseconds since 1970
+ * @ntptime: the NTP time in 32.32 fixed point
+ * @rtptime: the RTP time corresponding to @ntptime
  * @packet_count: the packet count
  * @octet_count: the octect count
  *
@@ -695,7 +1150,7 @@ rtp_source_process_rb (RTPSource * src, GstClockTime time, guint8 fractionlost,
  * Returns: %TRUE on success.
  */
 gboolean
-rtp_source_get_new_sr (RTPSource * src, GstClockTime ntpnstime,
+rtp_source_get_new_sr (RTPSource * src, guint64 ntpnstime,
     guint64 * ntptime, guint32 * rtptime, guint32 * packet_count,
     guint32 * octet_count)
 {
@@ -757,7 +1212,7 @@ rtp_source_get_new_sr (RTPSource * src, GstClockTime ntpnstime,
 /**
  * rtp_source_get_new_rb:
  * @src: an #RTPSource
- * @time: the current time in nanoseconds since 1970
+ * @ntpnstime: the current time in nanoseconds since 1970
  * @fractionlost: fraction lost since last SR/RR
  * @packetslost: the cumululative number of packets lost
  * @exthighestseq: the extended last sequence number received
@@ -765,12 +1220,12 @@ rtp_source_get_new_sr (RTPSource * src, GstClockTime ntpnstime,
  * @lsr: the last SR packet from this source
  * @dlsr: the delay since last SR packet
  *
- * Get the values of the last RB report set with rtp_source_process_rb().
+ * Get new values to put into a new report block from this source.
  *
  * Returns: %TRUE on success.
  */
 gboolean
-rtp_source_get_new_rb (RTPSource * src, GstClockTime time,
+rtp_source_get_new_rb (RTPSource * src, guint64 ntpnstime,
     guint8 * fractionlost, gint32 * packetslost, guint32 * exthighestseq,
     guint32 * jitter, guint32 * lsr, guint32 * dlsr)
 {
@@ -816,7 +1271,7 @@ rtp_source_get_new_rb (RTPSource * src, GstClockTime time,
 
     /* LSR is middle 32 bits of the last ntptime */
     LSR = (ntptime >> 16) & 0xffffffff;
-    diff = time - sr_time;
+    diff = ntpnstime - sr_time;
     GST_DEBUG ("last SR time diff %" GST_TIME_FORMAT, GST_TIME_ARGS (diff));
     /* DLSR, delay since last SR is expressed in 1/65536 second units */
     DLSR = gst_util_uint64_scale_int (diff, 65536, GST_SECOND);
@@ -849,7 +1304,7 @@ rtp_source_get_new_rb (RTPSource * src, GstClockTime time,
  * rtp_source_get_last_sr:
  * @src: an #RTPSource
  * @time: time of packet arrival
- * @ntptime: the NTP time
+ * @ntptime: the NTP time in 32.32 fixed point
  * @rtptime: the RTP time
  * @packet_count: the packet count
  * @octet_count: the octect count

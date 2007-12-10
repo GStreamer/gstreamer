@@ -455,6 +455,7 @@ create_session (GstRtpBin * rtpbin, gint id)
       (GCallback) on_bye_timeout, sess);
   g_signal_connect (sess->session, "on-timeout", (GCallback) on_timeout, sess);
 
+  /* FIXME, change state only to what's needed */
   gst_bin_add (GST_BIN_CAST (rtpbin), session);
   gst_element_set_state (session, GST_STATE_PLAYING);
   gst_bin_add (GST_BIN_CAST (rtpbin), demux);

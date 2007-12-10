@@ -1,3 +1,43 @@
+2007-12-10  Wim Taymans  <wim.taymans@gmail.com>
+
+	* gst/rtpmanager/gstrtpbin.c: (create_session):
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	Update comment.
+
+	* gst/rtpmanager/gstrtpsession.c: (gst_rtp_session_class_init),
+	(gst_rtp_session_set_property), (gst_rtp_session_get_property):
+	Define some GObject properties to set SDES and other configuration.
+
+	* gst/rtpmanager/rtpsession.c: (rtp_session_class_init),
+	(rtp_session_init), (rtp_session_finalize),
+	(rtp_session_set_property), (rtp_session_get_property),
+	(on_ssrc_sdes), (rtp_session_set_bandwidth),
+	(rtp_session_get_bandwidth), (rtp_session_set_rtcp_fraction),
+	(rtp_session_get_rtcp_fraction), (rtp_session_set_sdes_string),
+	(rtp_session_get_sdes_string), (obtain_source),
+	(rtp_session_get_internal_source), (rtp_session_process_sdes),
+	(rtp_session_send_rtp), (rtp_session_next_timeout), (session_sdes),
+	(is_rtcp_time):
+	* gst/rtpmanager/rtpsession.h:
+	Add signal when new SDES infor has been found for a source.
+	Create properties for SDES and other info.
+	Simplify the SDES API.
+	Add method for getting the internal source object of the session.
+
+	* gst/rtpmanager/rtpsource.c: (rtp_source_class_init),
+	(rtp_source_finalize), (rtp_source_set_property),
+	(rtp_source_get_property), (rtp_source_set_callbacks),
+	(rtp_source_get_ssrc), (rtp_source_set_as_csrc),
+	(rtp_source_is_as_csrc), (rtp_source_is_active),
+	(rtp_source_is_validated), (rtp_source_is_sender),
+	(rtp_source_received_bye), (rtp_source_get_bye_reason),
+	(rtp_source_set_sdes), (rtp_source_set_sdes_string),
+	(rtp_source_get_sdes), (rtp_source_get_sdes_string),
+	(rtp_source_get_new_sr), (rtp_source_get_new_rb):
+	* gst/rtpmanager/rtpsource.h:
+	Add GObject properties for various things.
+	Don't leak the bye reason.
+
 2007-12-09  Edward Hervey  <edward@collabora.co.uk>
 
 	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
