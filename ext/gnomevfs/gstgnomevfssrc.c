@@ -101,6 +101,8 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gst/tag/tag.h>
+
 /* gnome-vfs.h doesn't include the following header, which we need: */
 #include <libgnomevfs/gnome-vfs-standard-callbacks.h>
 
@@ -482,35 +484,13 @@ gst_gnome_vfs_src_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 static char *
-unicodify (const char *str, int len, ...)
-{
-  char *ret = NULL, *cset;
-  va_list args;
-  gsize bytes_read, bytes_written;
-
-  if (g_utf8_validate (str, len, NULL))
-    return g_strndup (str, len >= 0 ? len : strlen (str));
-
-  va_start (args, len);
-  while ((cset = va_arg (args, char *)) != NULL)
-  {
-    if (!strcmp (cset, "locale"))
-      ret = g_locale_to_utf8 (str, len, &bytes_read, &bytes_written, NULL);
-    else
-      ret = g_convert (str, len, "UTF-8", cset,
-          &bytes_read, &bytes_written, NULL);
-    if (ret)
-      break;
-  }
-  va_end (args);
-
-  return ret;
-}
-
-static char *
 gst_gnome_vfs_src_unicodify (const char *str)
 {
-  return unicodify (str, -1, "locale", "ISO-8859-1", NULL);
+  const gchar *env_vars[] = { "GST_ICY_TAG_ENCODING",
+    "GST_TAG_ENCODING", NULL
+  };
+
+  return gst_tag_freeform_string_to_utf8 (str, -1, env_vars);
 }
 
 static void

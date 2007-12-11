@@ -1,3 +1,11 @@
+2007-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* ext/gnomevfs/Makefile.am:
+	* ext/gnomevfs/gstgnomevfssrc.c: (gst_gnome_vfs_src_unicodify):
+	  Use gst_tag_freeform_string_to_utf8() here, which also takes
+	  into account any character sets specified by the user via
+	  environment variables.
+
 2007-12-10  Wim Taymans  <wim.taymans@gmail.com>
 
 	* gst/audioconvert/Makefile.am:
