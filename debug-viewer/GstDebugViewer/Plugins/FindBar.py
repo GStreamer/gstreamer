@@ -207,10 +207,10 @@ class FindBarFeature (FeatureBase):
                                                 "<Ctrl>F")])
         self.action_group.add_actions ([("goto-next-search-result",
                                          None, _("Goto Next Match"),
-                                         None), # FIXME
+                                         "<Ctrl>G"),
                                         ("goto-previous-search-result",
                                          None, _("Goto Previous Match"),
-                                         None)]) # FIXME
+                                         "<Ctrl><Shift>G")])
 
         self.bar = None
         self.operation = None
