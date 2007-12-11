@@ -249,9 +249,11 @@ class FindBarFeature (FeatureBase):
         self.log_view = window.log_view
         
         self.merge_id = ui.new_merge_id ()
-        ui.add_ui (self.merge_id, "/menubar/ViewMenu/ViewMenuAdditions",
-                   "ViewFindBar", "show-find-bar",
-                   gtk.UI_MANAGER_MENUITEM, False)
+        for name, action_name in [("ViewFindBar", "show-find-bar",),
+                                  ("ViewNextResult", "goto-next-search-result",),
+                                  ("ViewPrevResult", "goto-previous-search-result",)]:
+            ui.add_ui (self.merge_id, "/menubar/ViewMenu/ViewMenuAdditions",
+                       name, action_name, gtk.UI_MANAGER_MENUITEM, False)
 
         box = window.widgets.vbox_view
         self.bar = FindBarWidget (self.action_group)
