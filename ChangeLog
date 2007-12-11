@@ -1,3 +1,8 @@
+2007-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/x264/gstx264enc.c: (gst_x264_enc_set_src_caps):
+	Fix caps memleak.
+
 2007-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
