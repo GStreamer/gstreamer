@@ -527,8 +527,11 @@ gst_multipart_demux_chain (GstPad * pad, GstBuffer * buf)
       gst_pad_push_event (srcpad->pad, event);
       GST_BUFFER_TIMESTAMP (outbuf) = 0;
     } else {
-      GST_BUFFER_TIMESTAMP (outbuf) = -1;
+      GST_BUFFER_TIMESTAMP (outbuf) = GST_BUFFER_TIMESTAMP (buf);
     }
+    GST_DEBUG_OBJECT (multipart,
+        "pushing buffer with timestamp %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
     res = gst_pad_push (srcpad->pad, outbuf);
     if (res != GST_FLOW_OK)
       break;

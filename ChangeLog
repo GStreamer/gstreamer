@@ -1,3 +1,11 @@
+2007-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Wouter Cloetens <wouter at mind dot be>
+
+	* gst/multipart/multipartdemux.c: (gst_multipart_demux_chain):
+	Copy timestamp from input to output. Not very perfect yet but better
+	than nothing. Fixes #503023.
+
 2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/wavpack/gstwavpackdec.c: (gst_wavpack_dec_chain):
