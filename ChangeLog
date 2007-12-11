@@ -1,5 +1,12 @@
 2007-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Mark Nauwelaerts <manauw skynet be>
+
+	* gst/avi/gstavimux.c: (gst_avi_mux_start_file):
+	Fix regression in stream numbering. Fixes #502655.
+
+2007-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	Patch by: Wai-Ming Ho <webregbox at yahoo dot co dot uk>
 
 	* gst/rtp/gstrtph264pay.c: (gst_rtp_h264_pay_init),

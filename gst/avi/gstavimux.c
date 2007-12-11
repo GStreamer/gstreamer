@@ -1398,8 +1398,14 @@ gst_avi_mux_start_file (GstAviMux * avimux)
     node = node->next;
 
     if (!avipad->is_video) {
+      /* audio stream numbers must start at 1 iff there is a video stream 0;
+       * request_pad inserts video pad at head of list, so this test suffices */
+      if (avimux->video_pads)
+        avimux->audio_pads++;
       avipad->tag = g_strdup_printf ("%02uwb", avimux->audio_pads);
-      avipad->idx_tag = g_strdup_printf ("ix%02u", avimux->audio_pads++);
+      avipad->idx_tag = g_strdup_printf ("ix%02u", avimux->audio_pads);
+      if (!avimux->video_pads)
+        avimux->audio_pads++;
     } else {
       avipad->tag = g_strdup_printf ("%02udb", avimux->video_pads);
       avipad->idx_tag = g_strdup_printf ("ix%02u", avimux->video_pads++);
