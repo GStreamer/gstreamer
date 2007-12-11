@@ -3339,7 +3339,7 @@ gst_type_register_static_full (GType parent_type,
  *
  * Since: 0.10.16
  */
-G_GNUC_PURE GstClockTime
+GstClockTime
 gst_util_get_timestamp (void)
 {
 #ifdef HAVE_POSIX_TIMERS

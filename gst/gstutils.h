@@ -689,7 +689,7 @@ GstElement *            gst_parse_bin_from_description  (const gchar * bin_descr
                                                          gboolean ghost_unconnected_pads,
                                                          GError ** err);
 
-GstClockTime gst_util_get_timestamp (void) G_GNUC_PURE;
+GstClockTime gst_util_get_timestamp (void);
 
 G_END_DECLS
 

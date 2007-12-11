@@ -1,5 +1,11 @@
 2007-12-11  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	  Actually its not PURE as it gets the time from elsewhere.
+
+2007-12-11  Stefan Kost  <ensonic@users.sf.net>
+
 	* docs/gst/gstreamer-sections.txt:
 	* gst/gstclock.h:
 	* gst/gstdebugutils.c:
