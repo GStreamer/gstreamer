@@ -1,3 +1,8 @@
+2007-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* configure.ac:
+	  We need core/base 0.10.15 or later.
+
 2007-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Mark Nauwelaerts <manauw skynet be>
