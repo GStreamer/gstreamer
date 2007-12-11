@@ -288,6 +288,7 @@ class FindBarFeature (FeatureBase):
         if action.props.active:
             self.bar.show ()
             self.bar.entry.grab_focus ()
+            self.update_search ()
         else:
             try:
                 column = self.window.column_manager.find_item (name = "message")
@@ -346,8 +347,12 @@ class FindBarFeature (FeatureBase):
 
     def handle_entry_changed (self, entry):
 
+        self.update_search ()
+
+    def update_search (self):
+
         model = self.log_view.props.model
-        search_text = entry.props.text
+        search_text = self.bar.entry.props.text
         column = self.window.column_manager.find_item (name = "message")
         if search_text == "":
             self.logger.debug ("search string set to '', aborting search")
