@@ -266,10 +266,12 @@ class FindBarFeature (FeatureBase):
 
         action = self.action_group.get_action ("goto-previous-search-result")
         handler = self.handle_goto_previous_search_result_action_activate
+        action.props.sensitive = False
         action.connect ("activate", handler)
 
         action = self.action_group.get_action ("goto-next-search-result")
         handler = self.handle_goto_next_search_result_action_activate
+        action.props.sensitive = False
         action.connect ("activate", handler)
 
         self.bar.entry.connect ("changed", self.handle_entry_changed)
@@ -294,6 +296,9 @@ class FindBarFeature (FeatureBase):
                 pass
             self.bar.clear_status ()
             self.bar.hide ()
+            for action_name in ["goto-next-search-result",
+                                "goto-previous-search-result"]:
+                self.action_group.get_action (action_name).props.sensitive = False
 
     def handle_goto_previous_search_result_action_activate (self, action):
 
