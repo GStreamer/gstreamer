@@ -281,7 +281,7 @@ _gst_debug_init (void)
   gst_atomic_int_set (&__use_color, 1);
 
   /* get time we started for debugging messages */
-  GST_GET_TIMESTAMP (_priv_gst_info_start_time);
+  _priv_gst_info_start_time = gst_util_get_timestamp ();
 
 #ifdef HAVE_PRINTF_EXTENSION
   register_printf_function (GST_PTR_FORMAT[0], _gst_info_printf_extension_ptr,
@@ -626,7 +626,7 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   gchar pidcolor[10];
   const gchar *levelcolor;
   gint pid;
-  GstClockTime now, elapsed;
+  GstClockTime elapsed;
   gboolean free_color = TRUE;
   gboolean free_obj = TRUE;
   static const gchar *levelcolormap[] = {
@@ -665,8 +665,8 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
     free_obj = FALSE;
   }
 
-  GST_GET_TIMESTAMP (now);
-  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time, now);
+  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
+      gst_util_get_timestamp ());
 
   /*
      g_printerr ("%s (%p - %" GST_TIME_FORMAT ") %s%20s%s(%s%5d%s) %s%s(%d):%s:%s%s %s\n",

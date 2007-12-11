@@ -320,7 +320,6 @@ GST_TIMEVAL_TO_TIME
 GST_TIME_TO_TIMEVAL
 GST_TIMESPEC_TO_TIME
 GST_TIME_TO_TIMESPEC
-GST_GET_TIMESTAMP
 GST_CLOCK_ENTRY_TRACE_NAME
 GstClockEntry
 GstClockCallback
@@ -359,7 +358,6 @@ gst_clock_id_compare_func
 gst_clock_id_ref
 gst_clock_id_unref
 GST_TYPE_CLOCK_TIME
-
 <SUBSECTION Standard>
 GST_CLOCK
 GST_IS_CLOCK
@@ -2169,6 +2167,7 @@ gst_util_uint64_scale
 gst_util_uint64_scale_int
 gst_util_set_object_arg
 gst_util_set_value_from_string
+gst_util_get_timestamp
 <SUBSECTION Private>
 GST_HAVE_UNALIGNED_ACCESS
 gst_util_guint64_to_gdouble

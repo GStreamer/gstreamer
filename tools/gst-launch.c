@@ -773,9 +773,9 @@ main (int argc, char *argv[])
         goto end;
       }
 
-      GST_GET_TIMESTAMP (tfthen);
+      tfthen = gst_util_get_timestamp ();
       caught_error = event_loop (pipeline, TRUE, GST_STATE_PLAYING);
-      GST_GET_TIMESTAMP (tfnow);
+      tfnow = gst_util_get_timestamp ();
 
       diff = GST_CLOCK_DIFF (tfthen, tfnow);
 

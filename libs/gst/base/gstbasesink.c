@@ -1969,11 +1969,11 @@ gst_base_sink_do_render_stats (GstBaseSink * basesink, gboolean start)
   priv = basesink->priv;
 
   if (start) {
-    GST_GET_TIMESTAMP (priv->start);
+    priv->start = gst_util_get_timestamp ();
   } else {
     GstClockTime elapsed;
 
-    GST_GET_TIMESTAMP (priv->stop);
+    priv->stop = gst_util_get_timestamp ();
 
     elapsed = GST_CLOCK_DIFF (priv->start, priv->stop);
 

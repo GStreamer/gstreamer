@@ -496,7 +496,7 @@ _gst_debug_bin_to_dot_file_with_ts (GstBin * bin, GstDebugGraphDetails details,
     const gchar * file_name)
 {
   gchar *ts_file_name = NULL;
-  GstClockTime now, elapsed;
+  GstClockTime elapsed;
 
   g_return_if_fail (GST_IS_BIN (bin));
 
@@ -507,8 +507,8 @@ _gst_debug_bin_to_dot_file_with_ts (GstBin * bin, GstDebugGraphDetails details,
   }
 
   /* add timestamp */
-  GST_GET_TIMESTAMP (now);
-  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time, now);
+  elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
+      gst_util_get_timestamp ());
   ts_file_name =
       g_strdup_printf ("%" GST_TIME_FORMAT "-%s", GST_TIME_ARGS (elapsed),
       file_name);

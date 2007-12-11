@@ -1,3 +1,17 @@
+2007-12-11  Stefan Kost  <ensonic@users.sf.net>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstclock.h:
+	* gst/gstdebugutils.c:
+	* gst/gstinfo.c:
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	* libs/gst/base/gstbasesink.c:
+	* tools/gst-launch.c:
+	  Change GST_GET_TIMESTAMP into gst_util_get_timestamp and replace all
+	  uses as we don't have HAVE_POSIX_TIMERS in public headers.
+	  Thanks Tim for spotting.
+
 2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

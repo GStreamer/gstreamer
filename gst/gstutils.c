@@ -3327,3 +3327,30 @@ gst_type_register_static_full (GType parent_type,
 
   return g_type_register_static (parent_type, type_name, &info, flags);
 }
+
+
+/**
+ * gst_util_get_timestamp:
+ *
+ * Get a timestamp as GstClockTime to be used for interval meassurements.
+ * The timestamp should not be interpreted in any other way.
+ *
+ * Returns: the timestamp
+ *
+ * Since: 0.10.16
+ */
+G_GNUC_PURE GstClockTime
+gst_util_get_timestamp (void)
+{
+#ifdef HAVE_POSIX_TIMERS
+  struct timespec now;
+
+  clock_gettime (CLOCK_MONOTONIC, &now);
+  return GST_TIMESPEC_TO_TIME (now);
+#else
+  GTimeVal now;
+
+  g_get_current_time (&now);
+  return GST_TIMEVAL_TO_TIME (now);
+#endif
+}
