@@ -1,5 +1,8 @@
-%define         majorminor      @GST_MAJORMINOR@
 %define		gstreamer	gstreamer
+%define		majorminor	@GST_MAJORMINOR@
+
+%define 	_glib2		@GLIB2_REQ@
+%define 	_libxml2	@LIBXML2_REQ@
 
 Name: 		%{gstreamer}
 Version: 	@VERSION@
@@ -9,43 +12,39 @@ Summary: 	GStreamer streaming media framework runtime
 Group: 		Applications/Multimedia
 License: 	LGPL
 URL:		http://gstreamer.freedesktop.org/
-Vendor:         GStreamer Backpackers Team <package@gstreamer.freedesktop.org>
-Source: 	http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-%{version}.tar.gz
+Source: 	http://gstreamer.freedesktop.org/src/gstreamer/gstreamer-%{version}.tar.bz2
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-%define 	_glib2		@GLIB2_REQ@
-%define 	_libxml2	@LIBXML2_REQ@
+Requires:	gstreamer-tools >= %{version}
+# gst-feedback uses these
+Requires:	which, pkgconfig
 
-Requires: 	glib2 >= %_glib2
-Requires: 	libxml2 >= %_libxml2
-Requires:	popt > 1.6
-
-# Provides:	gstreamer =%{version}-%{release}
-
-BuildRequires: 	glib2-devel >= %_glib2
-BuildRequires: 	libxml2-devel >= %_libxml2
+BuildRequires: 	glib2-devel >= %{_glib2}
+BuildRequires: 	libxml2-devel >= %{_libxml2}
 BuildRequires: 	bison
 BuildRequires: 	flex
 BuildRequires: 	m4
-BuildRequires: 	check
-BuildRequires: 	gtk-doc >= 1.1
-BuildRequires: 	gcc
-BuildRequires: 	gettext
-BuildRequires: 	zlib-devel
-BuildRequires:  popt > 1.6
+BuildRequires: 	check-devel
+BuildRequires: 	gtk-doc >= 1.3
+BuildRequires:	gettext
+
+# because AM_PROG_LIBTOOL was used in configure.ac
+BuildRequires:	gcc-c++
 
 ### documentation requirements
 BuildRequires:  python2
 BuildRequires:  openjade
 BuildRequires:  jadetex
-BuildRequires:  libxslt
+BuildRequires:	libxslt
 BuildRequires:  docbook-style-dsssl
 BuildRequires:  docbook-style-xsl
 BuildRequires:  docbook-utils
 BuildRequires:	transfig
 BuildRequires:  xfig
 BuildRequires:  netpbm-progs
+BuildRequires:  tetex-dvips
 BuildRequires:  ghostscript
+BuildRequires:  PyXML
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
@@ -60,11 +59,12 @@ Summary: 	Libraries/include files for GStreamer streaming media framework
 Group: 		Development/Libraries
 
 Requires: 	%{name} = %{version}-%{release}
-Requires: 	glib2-devel >= %_glib2
-Requires: 	libxml2-devel >= %_libxml2
+Requires: 	glib2-devel >= %{_glib2}
+Requires: 	libxml2-devel >= %{_libxml2}
+Requires:	check-devel
 
 %description devel
-GStreamer is a streaming-media framework, based on graphs of filters which
+GStreamer is a streaming media framework, based on graphs of filters which
 operate on media data. Applications using this library can do anything
 from real-time sound processing to playing videos, and just about anything
 else media-related.  Its plugin-based architecture means that new data
@@ -72,14 +72,15 @@ types or processing capabilities can be added simply by installing new
 plugins.
 
 This package contains the libraries and includes files necessary to develop
-applications and plugins for GStreamer.
+applications and plugins for GStreamer, as well as general and API
+documentation.
 
-%package -n %{gstreamer}-tools
-Summary: 	tools for GStreamer streaming media framework
+%package -n gstreamer-tools
+Summary: 	common tools and files for GStreamer streaming media framework
 Group: 		Applications/Multimedia
 
-%description -n %{gstreamer}-tools
-GStreamer is a streaming-media framework, based on graphs of filters which
+%description -n gstreamer-tools
+GStreamer is a streaming media framework, based on graphs of filters which
 operate on media data. Applications using this library can do anything
 from real-time sound processing to playing videos, and just about anything
 else media-related.  Its plugin-based architecture means that new data
@@ -88,31 +89,34 @@ plugins.
 
 This package contains wrapper scripts for the command-line tools that work
 with different major/minor versions of GStreamer.
-                                                                                
+
 %prep
 %setup -q -n gstreamer-%{version}
 
 %build
+# 0.10.0: manuals do not build due to an openjade error; disable for now
 %configure \
-  --disable-tests --disable-examples \
-  --enable-gtk-doc \
-  --with-cachedir=%{_localstatedir}/cache/gstreamer-%{majorminor} 
-                                                                        
+  --with-package-name='CVS gstreamer package' \
+  --with-package-origin='http://gstreamer.freedesktop.org' \
+  --enable-debug
+
+#make %{?_smp_mflags}
+# FIXME: docs building doesn't work with smp yet
 make
 
 %install  
 rm -rf $RPM_BUILD_ROOT
 
 # Install doc temporarily in order to be included later by rpm
-%makeinstall docdir="`pwd`/installed-doc"
+make install DESTDIR=$RPM_BUILD_ROOT
 
 %find_lang gstreamer-%{majorminor}
-# Clean out files that should not be part of the rpm.
+# Clean out files that should not be part of the rpm. 
+mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{majorminor}
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.la
 rm -f $RPM_BUILD_ROOT%{_libdir}/gstreamer-%{majorminor}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.a
 rm -f $RPM_BUILD_ROOT%{_libdir}/*.la
-
 # Create empty cache directory
 mkdir -p $RPM_BUILD_ROOT%{_localstatedir}/cache/gstreamer-%{majorminor}
 
@@ -125,13 +129,13 @@ rm -rf $RPM_BUILD_ROOT
 
 %files -f gstreamer-%{majorminor}.lang
 %defattr(-, root, root, -)
-%doc AUTHORS COPYING README RELEASE MAINTAINERS ChangeLog gstreamer.doap
+%doc AUTHORS COPYING NEWS README RELEASE TODO
 %{_libdir}/libgstreamer-%{majorminor}.so.*
 %{_libdir}/libgstbase-%{majorminor}.so.*
 %{_libdir}/libgstcontroller-%{majorminor}.so.*
 %{_libdir}/libgstdataprotocol-%{majorminor}.so.*
 %{_libdir}/libgstnet-%{majorminor}.so.*
-%{_libdir}/libgstcheck-0.10.so.*
+
 %dir %{_libdir}/gstreamer-%{majorminor}
 %{_libdir}/gstreamer-%{majorminor}/libgstcoreelements.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcoreindexers.so
@@ -142,16 +146,15 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/gst-typefind-%{majorminor}
 %{_bindir}/gst-xmlinspect-%{majorminor}
 %{_bindir}/gst-xmllaunch-%{majorminor}
-%{_mandir}/man1/gst-feedback-%{majorminor}.*
-%{_mandir}/man1/gst-inspect-%{majorminor}.*
-%{_mandir}/man1/gst-launch-%{majorminor}.*
-%{_mandir}/man1/gst-typefind-%{majorminor}.*
-%{_mandir}/man1/gst-xmlinspect-%{majorminor}.*
-%{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
 
-%dir %{_localstatedir}/cache/gstreamer-%{majorminor}
+%doc %{_mandir}/man1/gst-feedback-%{majorminor}.*
+%doc %{_mandir}/man1/gst-inspect-%{majorminor}.*
+%doc %{_mandir}/man1/gst-launch-%{majorminor}.*
+%doc %{_mandir}/man1/gst-typefind-%{majorminor}.*
+%doc %{_mandir}/man1/gst-xmlinspect-%{majorminor}.*
+%doc %{_mandir}/man1/gst-xmllaunch-%{majorminor}.*
 
-%files -n %{gstreamer}-tools
+%files -n gstreamer-tools
 %defattr(-, root, root, -)
 %{_bindir}/gst-feedback
 %{_bindir}/gst-inspect
@@ -162,60 +165,254 @@ rm -rf $RPM_BUILD_ROOT
 
 %files devel
 %defattr(-, root, root, -)
-# %doc installed-doc/faq installed-doc/pwg installed-doc/manual
 %dir %{_includedir}/gstreamer-%{majorminor}
 %dir %{_includedir}/gstreamer-%{majorminor}/gst
 %{_includedir}/gstreamer-%{majorminor}/gst/*.h
-%{_includedir}/gstreamer-%{majorminor}/gst/controller/gstcontroller.h
-%{_includedir}/gstreamer-%{majorminor}/gst/net/gstnet.h
-%{_includedir}/gstreamer-%{majorminor}/gst/net/gstnetclientclock.h
-%{_includedir}/gstreamer-%{majorminor}/gst/net/gstnettimepacket.h
-%{_includedir}/gstreamer-%{majorminor}/gst/net/gstnettimeprovider.h
+
 %{_includedir}/gstreamer-%{majorminor}/gst/base
+%{_includedir}/gstreamer-%{majorminor}/gst/check
+%{_includedir}/gstreamer-%{majorminor}/gst/controller
 %{_includedir}/gstreamer-%{majorminor}/gst/dataprotocol
-%{_includedir}/gstreamer-%{majorminor}/gst/check/gstcheck.h
-%{_includedir}/gstreamer-%{majorminor}/gst/check/gstbufferstraw.h
-%{_includedir}/gstreamer-%{majorminor}/gst/controller/gstcontrolsource.h
-%{_includedir}/gstreamer-%{majorminor}/gst/controller/gstinterpolationcontrolsource.h
-%{_includedir}/gstreamer-%{majorminor}/gst/controller/gstlfocontrolsource.h
+%{_includedir}/gstreamer-%{majorminor}/gst/net
+
 %{_libdir}/libgstreamer-%{majorminor}.so
 %{_libdir}/libgstdataprotocol-%{majorminor}.so
 %{_libdir}/libgstbase-%{majorminor}.so
+%{_libdir}/libgstcheck-%{majorminor}.so*
 %{_libdir}/libgstcontroller-%{majorminor}.so
 %{_libdir}/libgstnet-%{majorminor}.so
-%{_libdir}/libgstcheck-%{majorminor}.so
 
 %{_datadir}/aclocal/gst-element-check-%{majorminor}.m4
 %{_libdir}/pkgconfig/gstreamer-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-base-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-dataprotocol-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-controller-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-net-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-check-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-dataprotocol-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-net-%{majorminor}.pc
 
-%doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}
-%doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}
-%doc %{_datadir}/gtk-doc/html/gstreamer-plugins-%{majorminor}
-                                                                                
+%doc %{_datadir}/gtk-doc/html/gstreamer-%{majorminor}/*
+%doc %{_datadir}/gtk-doc/html/gstreamer-libs-%{majorminor}/*
+%doc %{_datadir}/gtk-doc/html/gstreamer-plugins-%{majorminor}/*
+
 %changelog
-* Fri Dec 15 2006 Thomas Vander Stichele <thomas at apestaart dot org>
-- add doap file
-- further cleanups
+* Tue Dec 11 2007 Christian Schaller <christian.schaller@collabora.co.uk> 
+- Import from Fedora package
 
-* Fri Sep 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
-- clean up a little
+* Fri Nov 16 2007 - Bastien Nocera <bnocera@redhat.com> - 0.10.15-1
+- Update to 0.10.15
+
+* Mon Oct  1 2007 Matthias Clasen <mclasen@redhat.com> - 0.10.14-4
+- Add missing Requires (#312671)
+
+* Tue Aug 14 2007 Matthias Clasen <mclasen@redhat.com> - 0.10.14-3
+- Require check-devel (#251956)
+
+* Sat Aug 04 2007 - Bastien Nocera <bnocera@redhat.com> - 0.10.14-1
+- Update to 0.10.14
+
+* Tue Jun 05 2007 - Bastien Nocera <bnocera@redhat.com> - 0.10.13-2
+- Remove upstreamed docs patch
+
+* Tue Jun 05 2007 - Bastien Nocera <bnocera@redhat.com> - 0.10.13-1
+- Update to 0.10.13
+
+* Thu Mar 08 2007 - Bastien Nocera <bnocera@redhat.com> - 0.10.12-1
+- Update to 0.10.12
+
+* Tue Feb 13 2007 - Bastien Nocera <bnocera@redhat.com> - 0.10.11-2
+- Remove Requires on packages that BuildRequire us
+
+* Tue Dec 12 2006 Matthias Clasen <mclasen@redhat.com> - 0.10.11-1
+- Update to 0.10.11
+
+* Fri Oct 27 2006 Matthias Clasen <mclasen@redhat.com> - 0.10.10-2
+- Cleanups
+- Attempt to fix multilib conflicts
+
+* Mon Oct 23 2006 Matthias Clasen <mclasen@redhat.com> - 0.10.10-1
+- Update to 0.10.10
+
+* Thu Jul 27 2006 Matthias Clasen <mclasen@redhat.com> - 0.10.9-2
+- Disable gtk-doc to fix multilib conflicts
+
+* Thu Jul 20 2006 John (J5) Palmieri <johnp@redhat.com> - 0.10.9-1
+- Update to new upstream version
+
+* Wed Jul 19 2006 Matthias Clasen <mclasen@redhat.com> - 0.10.8-4
+- Re-add the gstreamer-plugins-good dependency
+
+* Wed Jul 19 2006 Matthias Clasen <mclasen@redhat.com> - 0.10.8-3.2
+- Temporarily break the dependency cycle with gsteamer-plugins-good
+
+* Wed Jul 12 2006 Jesse Keating <jkeating@redhat.com> - 0.10.8-3.1
+- rebuild
+
+* Wed Jun 28 2006 Karsten Hopp <karsten@redhat.de> 0.10.8-3
+- remove RPATH pointing to RPM_BUILD_ROOT (#196870)
+
+* Tue Jun 13 2006 Matthias Clasen <mclasen@redhat.com> - 0.10.8-2
+- Rebuild
+
+* Tue Jun 13 2006 Matthias Clasen <mclasen@redhat.com> - 0.10.8-1
+- Update to 0.10.8
+
+* Mon May 22 2006 Matthias Clasen <mclasen@redhat.com> - 0.10.6-1
+- Update to 0.10.6
+
+* Tue Feb 14 2006 Rik van Riel <riel@redhat.com> - 0.10-3-3
+- Obsolete gstreamer-plugins (#181296)
+
+* Mon Feb 13 2006 Christopher Aillon <caillon@redhat.com> - 0.10.3-2
+- Rebuild
+
+* Fri Feb 10 2006 Christopher Aillon <caillon@redhat.com> - 0.10.3-1
+- Update to 0.10.3
+
+* Tue Feb 07 2006 Jesse Keating <jkeating@redhat.com> - 0.10.2-1.1
+- rebuilt for new gcc4.1 snapshot and glibc changes
+
+* Wed Jan 18 2006 John (J5) Palmieri <johnp@redhat.com> - 0.10.2-1
+- Upgrade to 0.10.2
+
+* Fri Jan 06 2006 John (J5) Palmieri <johnp@redhat.com> - 0.10.1-1
+- New upstream version
+
+* Fri Dec 16 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.10.0-1
+- rebuilt for Fedora Core Development
+
+* Wed Dec 14 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.10.0-0.gst.2
+- rebuilt against newer GLib and friends
+
+* Mon Dec 05 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.10.0-0.gst.1
+- new release
+
+* Thu Dec 01 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.9.7-0.gst.1
+- new release, with 0.10 majorminor
+- removed compprep and complete
+- added plugins docs
+- renamed libgstcorelements, libgstcoreindexers
+- added libgstnet
+
+* Sat Nov 12 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.9.5-0.gst.1
+- new release
+
+* Mon Oct 24 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.9.4-0.gst.1
+- new release
+
+* Mon Oct 03 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.9.3-0.gst.1
+- new release
+
+* Thu Sep 08 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.9.2-0.gst.1
+- added libgstcheck
+- new release
 
 * Thu Jun 09 2005 Thomas Vander Stichele <thomas at apestaart dot org>
-- clean up spec for 0.9 builds
+- 0.9.1-0.gst.1
+- first development series release
 
-* Thu Feb 12 2004 Thomas Vander Stichele <thomas at apestaart dot org>
-- sync with 0.7.4 fedora spec
+* Tue May 03 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.10-0.gst.1
+- new release
+- up glib2 to 2.4 because disting on 2.4 builds marshalling code needing 2.4
 
-* Thu Feb 05 2004 Thomas Vander Stichele <thomas at apestaart dot org>
-- bump gtk-doc required version to 1.0 for the new options used
+* Mon May 02 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.9.2-0.gst.1
+- new prerelease
+
+* Tue Feb 08 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.9-0.gst.1
+- new release
+- switch back to the gst tag since fedora.us is gone
+
+* Thu Feb 03 2005 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.8.2-0.fdr.1
+- new prerelease
+
+* Thu Dec 23 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.8-0.fdr.1
+- new upstream release
+
+* Fri Dec 17 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.7.2-0.fdr.1
+- new prerelease
+- added fair gthread scheduler
+
+* Wed Oct 06 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.7-0.fdr.1
+- update for new GStreamer release
+
+* Tue Oct 05 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.6-0.fdr.1
+- update for new GStreamer release
+
+* Sun Sep 26 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.5.3-0.fdr.1
+- update for new GStreamer prerelease
+
+* Sun Sep 12 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.5.2-0.fdr.1
+- update for new GStreamer prerelease
+
+* Mon Aug 16 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.5-0.fdr.1
+- update for new GStreamer release
+
+* Thu Aug 12 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.4.2-0.fdr.1
+- update for new GStreamer prerelease
+- set package name and origin
+
+* Tue Jul 20 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.4-0.fdr.1
+- update for new GStreamer release
+- unbreak the postun script by not removing the cache dir
+
+* Tue Jul 20 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.3.3-0.fdr.1: update for new GStreamer prerelease
+
+* Fri Jul 16 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.3.2-0.fdr.1: update for new GStreamer prerelease
+
+* Sat Jun 05 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.3-0.fdr.1: update for new GStreamer release
+
+* Fri Jun 04 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.2-0.fdr.1: update for new GStreamer release
+
+* Thu Apr 15 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.1-0.fdr.1: update for new GStreamer release
+
+* Thu Apr 15 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- add entry schedulers, clean up scheduler file section
+
+* Tue Mar 16 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.8.0-0.fdr.1: update for new GStreamer release, renamed base to gstreamer
+
+* Tue Mar 09 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.7.6-0.fdr.1: updated for new GStreamer release, with maj/min set to 0.8
+
+* Mon Mar 08 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.7.5-0.fdr.3: fix postun script
+
+* Fri Mar 05 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.7.5-0.fdr.2: new release
+
+* Wed Feb 11 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- 0.7.4-0.fdr.1: synchronize with Matthias's package
+
+* Sat Feb 07 2004 Thomas Vander Stichele <thomas at apestaart dot org>
+- make the package name gstreamer07 since this is an unstable release
 
 * Wed Feb 04 2004 Thomas Vander Stichele <thomas at apestaart dot org>
-- add -common package containing frontend wrapper binaries
+- put versioned tools inside base package, and put unversioned tools in tools
 
 * Mon Dec 01 2003 Thomas Vander Stichele <thomas at apestaart dot org>
 - changed documentation buildrequires
@@ -336,3 +533,4 @@ rm -rf $RPM_BUILD_ROOT
 
 * Sun Jan 30 2000 Erik Walthinsen <omega@cse.ogi.edu>
 - first draft of spec file
+
