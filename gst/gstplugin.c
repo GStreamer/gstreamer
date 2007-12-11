@@ -64,6 +64,7 @@
 #include <errno.h>
 
 #include "gst_private.h"
+#include "glib-compat-private.h"
 
 #include <gst/gst.h>
 
