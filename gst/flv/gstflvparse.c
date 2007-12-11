@@ -494,7 +494,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
       if (demux->taglist == NULL)
         demux->taglist = gst_tag_list_new ();
       gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-          GST_TAG_AUDIO_CODEC, g_strdup (codec_name), NULL);
+          GST_TAG_AUDIO_CODEC, codec_name, NULL);
     }
 
     GST_DEBUG_OBJECT (demux, "created audio pad with caps %" GST_PTR_FORMAT,
@@ -577,7 +577,7 @@ gst_flv_parse_tag_audio (GstFLVDemux * demux, const guint8 * data,
       if (demux->taglist == NULL)
         demux->taglist = gst_tag_list_new ();
       gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-          GST_TAG_AUDIO_CODEC, g_strdup (codec_name), NULL);
+          GST_TAG_AUDIO_CODEC, codec_name, NULL);
     }
 
     gst_caps_unref (caps);
@@ -767,7 +767,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
       if (demux->taglist == NULL)
         demux->taglist = gst_tag_list_new ();
       gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-          GST_TAG_VIDEO_CODEC, g_strdup (codec_name), NULL);
+          GST_TAG_VIDEO_CODEC, codec_name, NULL);
     }
 
     /* Store the caps we have set */
@@ -839,7 +839,7 @@ gst_flv_parse_tag_video (GstFLVDemux * demux, const guint8 * data,
       if (demux->taglist == NULL)
         demux->taglist = gst_tag_list_new ();
       gst_tag_list_add (demux->taglist, GST_TAG_MERGE_REPLACE,
-          GST_TAG_VIDEO_CODEC, g_strdup (codec_name), NULL);
+          GST_TAG_VIDEO_CODEC, codec_name, NULL);
     }
 
     /* Store the caps we have set */

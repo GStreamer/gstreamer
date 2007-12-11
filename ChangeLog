@@ -1,3 +1,10 @@
+2007-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/flv/gstflvparse.c: (gst_flv_parse_tag_audio),
+	  (gst_flv_parse_tag_video):
+	  Don't strdup (and thus leak) codec name strings when passing
+	  them to gst_tag_list_add().
+
 2007-12-10  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_class_init),
