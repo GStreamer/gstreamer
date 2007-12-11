@@ -41,6 +41,7 @@ struct _GstSouphttpSrc {
   GstPushSrc element;
 
   gchar * location;                     /* Full URI. */
+  gchar * user_agent;                   /* User-Agent HTTP header. */
   GMainContext * context;               /* I/O context. */
   GMainLoop * loop;                     /* Event loop. */
   SoupSession * session;                /* Async context. */
@@ -48,8 +49,18 @@ struct _GstSouphttpSrc {
   GstFlowReturn ret;                    /* Return code from callback. */
   GstBuffer ** outbuf;                  /* Return buffer allocated by callback. */
   gboolean interrupted;                 /* Signal unlock(). */
+
   gboolean have_size;                   /* Received and parsed Content-Length header. */
   guint64 content_size;                 /* Value of Content-Length header. */
+  guint64 read_position;                /* Current position. */
+
+  /* Shoutcast/icecast metadata extraction handling. */
+  gboolean iradio_mode;
+  GstCaps * icy_caps;
+  gchar * iradio_name;
+  gchar * iradio_genre;
+  gchar * iradio_url;
+  gchar * iradio_title;
 };
 
 struct _GstSouphttpSrcClass {
