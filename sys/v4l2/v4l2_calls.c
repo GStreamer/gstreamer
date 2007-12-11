@@ -102,7 +102,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   GST_DEBUG_OBJECT (e, "  channels");
   /* and now, the channels */
   for (n = 0;; n++) {
-    struct v4l2_input input;
+    struct v4l2_input input = { 0, };
     GstV4l2TunerChannel *v4l2channel;
     GstTunerChannel *channel;
 
@@ -170,7 +170,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   GST_DEBUG_OBJECT (e, "  norms");
   /* norms... */
   for (n = 0;; n++) {
-    struct v4l2_standard standard;
+    struct v4l2_standard standard = { 0, };
     GstV4l2TunerNorm *v4l2norm;
     GstTunerNorm *norm;
 
@@ -209,7 +209,7 @@ gst_v4l2_fill_lists (GstV4l2Object * v4l2object)
   GST_DEBUG_OBJECT (e, "  controls+menus");
   /* and lastly, controls+menus (if appropriate) */
   for (n = V4L2_CID_BASE;; n++) {
-    struct v4l2_queryctrl control;
+    struct v4l2_queryctrl control = { 0, };
     GstV4l2ColorBalanceChannel *v4l2channel;
     GstColorBalanceChannel *channel;
 

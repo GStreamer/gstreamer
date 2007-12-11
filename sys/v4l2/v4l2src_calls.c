@@ -486,16 +486,18 @@ gst_v4l2src_fill_format_list (GstV4l2Src * v4l2src)
 
   /* format enumeration */
   for (n = 0;; n++) {
-    format = g_new (struct v4l2_fmtdesc, 1);
+    format = g_new0 (struct v4l2_fmtdesc, 1);
 
     format->index = n;
     format->type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 
     if (ioctl (v4l2src->v4l2object->video_fd, VIDIOC_ENUM_FMT, format) < 0) {
-      if (errno == EINVAL)
+      if (errno == EINVAL) {
+        g_free (format);
         break;                  /* end of enumeration */
-      else
+      } else {
         goto failed;
+      }
     }
 
     GST_LOG_OBJECT (v4l2src, "index:       %u", format->index);

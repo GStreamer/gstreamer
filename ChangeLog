@@ -1,3 +1,10 @@
+2007-12-11  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* sys/v4l2/v4l2_calls.c: (gst_v4l2_fill_lists):
+	* sys/v4l2/v4l2src_calls.c: (gst_v4l2src_fill_format_list):
+	  Init some structs to zero before we pass them to ioctl, which
+	  avoids valgrind warnings.  Also fix a small memory leak.
+
 2007-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Wouter Cloetens <wouter at mind dot be>
