@@ -285,6 +285,8 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstPad * pad, GstCaps * caps)
   GstStructure *structure;
   GValue header = { 0, };
   GstBuffer *buf;
+  GstCaps *outcaps;
+  gboolean res;
 
   structure = gst_caps_get_structure (caps, 0);
   structure = gst_structure_copy (structure);
@@ -301,8 +303,11 @@ gst_x264_enc_set_src_caps (GstX264Enc * encoder, GstPad * pad, GstCaps * caps)
     }
   }
 
-  /* FIXME: doesn't this leak? (tpm) */
-  return gst_pad_set_caps (pad, gst_caps_new_full (structure, NULL));
+  outcaps = gst_caps_new_full (structure, NULL);
+  res = gst_pad_set_caps (pad, outcaps);
+  gst_caps_unref (outcaps);
+
+  return res;
 }
 
 static gboolean
