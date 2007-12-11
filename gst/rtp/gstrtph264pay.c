@@ -26,6 +26,12 @@
 
 #include "gstrtph264pay.h"
 
+
+#define SPS_TYPE_ID  7
+#define PPS_TYPE_ID  8
+#define USE_MEMCMP
+
+
 GST_DEBUG_CATEGORY_STATIC (rtph264pay_debug);
 #define GST_CAT_DEFAULT (rtph264pay_debug)
 
@@ -116,6 +122,9 @@ gst_rtp_h264_pay_class_init (GstRtpH264PayClass * klass)
 static void
 gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay, GstRtpH264PayClass * klass)
 {
+  rtph264pay->profile = 0;
+  rtph264pay->sps = NULL;
+  rtph264pay->pps = NULL;
 }
 
 static void
@@ -125,9 +134,13 @@ gst_rtp_h264_pay_finalize (GObject * object)
 
   rtph264pay = GST_RTP_H264_PAY (object);
 
+  if (rtph264pay->sps)
+    g_free (rtph264pay->sps);
+  if (rtph264pay->pps)
+    g_free (rtph264pay->pps);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
-
 
 static gboolean
 gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
@@ -136,18 +149,257 @@ gst_rtp_h264_pay_setcaps (GstBaseRTPPayload * basepayload, GstCaps * caps)
 
   rtph264pay = GST_RTP_H264_PAY (basepayload);
 
+  /* we can only set the output caps when we found the sprops and profile
+   * NALs */
   gst_basertppayload_set_options (basepayload, "video", TRUE, "H264", 90000);
-  gst_basertppayload_set_outcaps (basepayload, NULL);
 
   return TRUE;
 }
 
+static guint
+next_start_code (guint8 * data, guint size)
+{
+  /* Boyer-Moore string matching algorithm, in a degenerative
+   * sense because our search 'alphabet' is binary - 0 & 1 only.
+   * This allow us to simplify the general BM algorithm to a very
+   * simple form. */
+  /* assume 1 is in the 4th byte */
+  guint offset = 3;
+
+  while (offset < size) {
+    if (1 == data[offset]) {
+      unsigned int shift = offset;
+
+      if (0 == data[--shift]) {
+        if (0 == data[--shift]) {
+          if (0 == data[--shift]) {
+            return shift;
+          }
+        }
+      }
+      /* The jump is always 4 because of the 1 previously matched.
+       * All the 0's must be after this '1' matched at offset */
+      offset += 4;
+    } else if (0 == data[offset]) {
+      /* maybe next byte is 1? */
+      offset++;
+    } else {
+      /* can jump 4 bytes forward */
+      offset += 4;
+    }
+    /* at each iteration, we rescan in a backward manner until
+     * we match 0.0.0.1 in reverse order. Since our search string
+     * has only 2 'alpabets' (i.e. 0 & 1), we know that any
+     * mismatch will force us to shift a fixed number of steps */
+  }
+  GST_DEBUG ("Cannot find next NAL start code. returning %u", size);
+
+  return size;
+}
+
+/* we don't use memcpy but this faster version (around 20%) because we need to
+ * perform it on all data. */
+static gboolean
+is_nal_equal (const guint8 * nal1, const guint8 * nal2, guint len)
+{
+  /* if we have a 64-bit processor, we may use guint64 to make 
+   * this go faster. Otherwise with 32 bits, we are already
+   * going faster than byte to byte compare.
+   */
+  guint remainder = len & 0x3;
+  guint num_int = len >> 2;
+  guint32 *pu1 = (guint32 *) nal1, *pu2 = (guint32 *) nal2;
+  guint i;
+
+  /* compare by groups of sizeof(guint32) bytes */
+  for (i = 0; i < num_int; i++) {
+    /* XOR is faster than CMP?... */
+    if (pu1[i] ^ pu2[i])
+      return FALSE;
+  }
+
+  /* check that the remaining bytes are still equal */
+  if (!remainder) {
+    return TRUE;
+  } else if (1 == remainder) {
+    return (nal1[--len] == nal2[len]);
+  } else {                      /* 2 or 3 */
+    if (remainder & 1) {        /* -1 if 3 bytes left */
+      if (nal1[--len] != nal2[len])
+        return FALSE;
+    }
+    /* last 2 bytes */
+    return ((nal1[--len] == nal2[len])  /* -1 */
+        &&(nal1[--len] == nal2[len]));  /* -2 */
+  }
+}
+
+static void
+gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
+    guint8 * data, guint size, gboolean * updated)
+{
+  guint8 *sps = NULL, *pps = NULL;
+  guint sps_len = 0, pps_len = 0;
+
+  /* default is no update */
+  *updated = FALSE;
+
+  if (size <= 3) {
+    GST_WARNING ("Encoded buffer len %u <= 3", size);
+  } else {
+    GST_DEBUG ("NAL payload len=%u", size);
+
+    /* loop through all NAL units and save the locations of any
+     * SPS / PPS for later processing. Only the last seen SPS
+     * or PPS will be considered */
+    while (size > 5) {
+      guint8 header, type;
+      guint len;
+
+      len = next_start_code (data, size);
+      header = data[0];
+      type = header & 0x1f;
+
+      /* keep sps & pps separately so that we can update either one 
+       * independently */
+      if (SPS_TYPE_ID == type) {
+        /* encode the entire SPS NAL in base64 */
+        GST_DEBUG ("Found SPS %x %x %x Len=%u\n", (header >> 7),
+            (header >> 5) & 3, type, len);
+
+        sps = data;
+        sps_len = len;
+      } else if (PPS_TYPE_ID == type) {
+        /* encoder the entire PPS NAL in base64 */
+        GST_DEBUG ("Found PPS %x %x %x Len = %u\n",
+            (header >> 7), (header >> 5) & 3, type, len);
+
+        pps = data;
+        pps_len = len;
+      } else {
+        GST_DEBUG ("NAL: %x %x %x Len = %u\n", (header >> 7),
+            (header >> 5) & 3, type, len);
+      }
+
+      /* end of loop */
+      if (len >= size - 4) {
+        break;
+      }
+
+      /* next NAL start */
+      data += len + 4;
+      size -= len + 4;
+    }
+
+    /* If we encountered an SPS and/or a PPS, check if it's the
+     * same as the one we have. If not, update our version and
+     * set *updated to TRUE
+     */
+    if (sps_len > 0) {
+      if ((payloader->sps_len != sps_len)
+          || !is_nal_equal (payloader->sps, sps, sps_len)) {
+        payloader->profile = (sps[1] << 16) + (sps[2] << 8) + sps[3];
+
+        GST_DEBUG ("Profile level IDC = %06x", payloader->profile);
+
+        if (payloader->sps_len)
+          g_free (payloader->sps);
+
+        payloader->sps = sps_len ? g_new (guint8, sps_len) : NULL;
+        memcpy (payloader->sps, sps, sps_len);
+        payloader->sps_len = sps_len;
+        *updated = TRUE;
+      }
+    }
+
+    if (pps_len > 0) {
+      if ((payloader->pps_len != pps_len)
+          || !is_nal_equal (payloader->pps, pps, pps_len)) {
+        if (payloader->pps_len)
+          g_free (payloader->pps);
+
+        payloader->pps = pps_len ? g_new (guint8, pps_len) : NULL;
+        memcpy (payloader->pps, pps, pps_len);
+        payloader->pps_len = pps_len;
+        *updated = TRUE;
+      }
+    }
+  }
+}
+
+static gchar *
+encode_base64 (const guint8 * in, guint size, guint * len)
+{
+  gchar *ret, *d;
+  static const gchar *v =
+      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+  *len = ((size + 2) / 3) * 4;
+  d = ret = (gchar *) g_malloc (*len + 1);
+  for (; size; in += 3) {       /* process tuplets */
+    *d++ = v[in[0] >> 2];       /* byte 1: high 6 bits (1) */
+    /* byte 2: low 2 bits (1), high 4 bits (2) */
+    *d++ = v[((in[0] << 4) + (--size ? (in[1] >> 4) : 0)) & 0x3f];
+    /* byte 3: low 4 bits (2), high 2 bits (3) */
+    *d++ = size ? v[((in[1] << 2) + (--size ? (in[2] >> 6) : 0)) & 0x3f] : '=';
+    /* byte 4: low 6 bits (3) */
+    *d++ = size ? v[in[2] & 0x3f] : '=';
+    if (size)
+      size--;                   /* count third character if processed */
+  }
+  *d = '\0';                    /* tie off string */
+
+  return ret;                   /* return the resulting string */
+}
+
+static void
+gst_rtp_h264_pay_parse_sps_pps (GstBaseRTPPayload * basepayload,
+    guint8 * data, guint size)
+{
+  gboolean update = FALSE;
+  GstRtpH264Pay *payloader = GST_RTP_H264_PAY (basepayload);
+
+  gst_rtp_h264_pay_decode_nal (payloader, data, size, &update);
+
+  /* if has new SPS & PPS, update the output caps */
+  if (update) {
+    gchar *profile;
+    gchar *sps;
+    gchar *pps;
+    gchar *sprops;
+    guint len;
+
+    /* profile is 24 bit. Force it to respect the limit */
+    profile = g_strdup_printf ("%06x", payloader->profile & 0xffffff);
+
+    /* build the sprop-parameter-sets */
+    sps = (payloader->sps_len > 0)
+        ? encode_base64 (payloader->sps, payloader->sps_len, &len) : NULL;
+    pps = (payloader->pps_len > 0)
+        ? encode_base64 (payloader->pps, payloader->pps_len, &len) : NULL;
+
+    if (sps)
+      sprops = g_strjoin (",", sps, pps, NULL);
+    else
+      sprops = g_strdup (pps);
+
+    gst_basertppayload_set_outcaps (basepayload, "profile-level-id",
+        G_TYPE_STRING, profile,
+        "sprop-parameter-sets", G_TYPE_STRING, sprops, NULL);
+
+    GST_DEBUG ("outcaps udpate: profile=%s, sps=%s, pps=%s\n",
+        profile, sps, pps);
+
+    g_free (profile);
+    g_free (sps);
+    g_free (pps);
+  }
+}
 
 static GstFlowReturn
 gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GstBuffer * buffer)
 {
-
   GstRtpH264Pay *rtph264pay;
   GstFlowReturn ret;
   guint size, idxdata;
@@ -168,14 +420,19 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
 
   /* H264 stream analysis */
   pdata = data;
-  idxdata = size;
-  while (idxdata > 5 &&
-      (pdata[0] != 0x00 || pdata[1] != 0x00 || pdata[2] != 0x1 ||
-          (pdata[3] & 0x1f) < 1 || (pdata[3] & 0x1f) > 23)
-      ) {
-    pdata++;
-    idxdata--;
-    GST_DEBUG_OBJECT (basepayload, "idxdata=%d", idxdata);
+
+  /* use next_start_code() to scan buffer.
+   * next_start_code() returns the offset in data, 
+   * starting from zero to the first byte of 0.0.0.1
+   * If no start code is found, it returns the value of the 
+   * 'size' parameter. 
+   * pdata is unchanged by the call to next_start_code()
+   */
+  {
+    guint offset = next_start_code (pdata, size);
+
+    pdata += offset;
+    idxdata = size - offset;
   }
 
   if (idxdata < 5) {
@@ -184,8 +441,12 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     return GST_FLOW_OK;
   }
 
-  pdata += 3;
-  idxdata -= 3;
+  pdata += 4;
+  idxdata -= 4;
+
+  /* We know our stream is a valid H264 NAL packet, 
+   * go parse it for SPS/PPS to enrich the caps */
+  gst_rtp_h264_pay_parse_sps_pps (basepayload, pdata, idxdata);
 
   nalType = pdata[0] & 0x1f;
   GST_DEBUG_OBJECT (basepayload, "Processing Buffer with NAL TYPE=%d", nalType);
@@ -224,7 +485,8 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
     GST_DEBUG_OBJECT (basepayload, "Using FU-A fragmentation for data size=%d",
         idxdata);
 
-    payload_len = gst_rtp_buffer_calc_payload_len (mtu - 2, 0, 0);      /* We keep 2 bytes for FU indicator and FU Header */
+    /* We keep 2 bytes for FU indicator and FU Header */
+    payload_len = gst_rtp_buffer_calc_payload_len (mtu - 2, 0, 0);
 
     while (end == 0) {
       limitedSize = idxdata < payload_len ? idxdata : payload_len;
@@ -273,7 +535,6 @@ gst_rtp_h264_pay_handle_buffer (GstBaseRTPPayload * basepayload,
   gst_buffer_unref (buffer);
 
   return GST_FLOW_ERROR;
-
 }
 
 static void

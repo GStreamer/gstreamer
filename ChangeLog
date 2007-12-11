@@ -1,3 +1,17 @@
+2007-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	Patch by: Wai-Ming Ho <webregbox at yahoo dot co dot uk>
+
+	* gst/rtp/gstrtph264pay.c: (gst_rtp_h264_pay_init),
+	(gst_rtp_h264_pay_finalize), (gst_rtp_h264_pay_setcaps),
+	(next_start_code), (is_nal_equal), (gst_rtp_h264_pay_decode_nal),
+	(encode_base64), (gst_rtp_h264_pay_parse_sps_pps),
+	(gst_rtp_h264_pay_handle_buffer):
+	* gst/rtp/gstrtph264pay.h:
+	Use higher performance start-code searching.
+	Parse NALs and store SPS, PPS and profile in the caps so that they can
+	be used in the SDP. Fixes #502814.
+
 2007-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* sys/v4l2/v4l2_calls.c: (gst_v4l2_fill_lists):

@@ -42,6 +42,10 @@ typedef struct _GstRtpH264PayClass GstRtpH264PayClass;
 struct _GstRtpH264Pay
 {
   GstBaseRTPPayload payload;
+
+  guint profile;
+  guint8 *sps, *pps;
+  guint sps_len, pps_len;
 };
 
 struct _GstRtpH264PayClass
