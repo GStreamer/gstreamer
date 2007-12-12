@@ -407,6 +407,8 @@ class FilteredLogModel (FilteredLogModelBase):
 
         FilteredLogModelBase.__init__ (self, super_model)
 
+        self.logger = logging.getLogger ("filtered-log-model")
+
         self.filters = []
         self.super_index = []
         self.from_super_index = {}
@@ -422,22 +424,46 @@ class FilteredLogModel (FilteredLogModelBase):
         del self.super_index[:]
         self.from_super_index.clear ()
 
+        del self.filters[:]
+
     def add_filter (self, filter):
 
+        self.logger.debug ("preparing new filter")
         self.filters.append (filter)
-        del self.line_offsets[:]
-        del self.line_levels[:]
+        ## del self.line_offsets[:]
+        ## del self.line_levels[:]
+        new_line_offsets = []
+        new_line_levels = []
+        new_super_index = []
+        new_from_super_index = {}
         level_id = self.COL_LEVEL
         func = filter.filter_func
-        enum = self.super_model.iter_rows_offset ()
-        i = 0
-        for row, offset in enum:
+        if len (self.filters) == 1:
+            # This is the first filter that gets applied.
+            def enum ():
+                i = 0
+                for row, offset in self.iter_rows_offset ():
+                    yield (i, row, offset,)
+                    i += 1
+        else:
+            def enum ():
+                i = 0
+                for row, offset in self.iter_rows_offset ():
+                    line_index = self.super_index[i]
+                    yield (line_index, row, offset,)
+                    i += 1
+        self.logger.debug ("running filter")
+        for i, row, offset in enum ():
             if func (row):
-                self.line_offsets.append (offset)
-                self.line_levels.append (row[level_id])
-                self.super_index.append (i)
-                self.from_super_index[i] = len (self.super_index) - 1
-            i += 1
+                new_line_offsets.append (offset)
+                new_line_levels.append (row[level_id])
+                new_super_index.append (i)
+                new_from_super_index[i] = len (new_super_index) - 1
+        self.line_offsets = new_line_offsets
+        self.line_levels = new_line_levels
+        self.super_index = new_super_index
+        self.from_super_index = new_from_super_index
+        self.logger.debug ("filtering finished")
 
     def line_index_from_super (self, super_line_index):
 
@@ -1471,6 +1497,7 @@ class Window (object):
 
     def change_model (self, model):
 
+        selected_index = None
         previous_model = self.log_view.props.model
         if previous_model:
             try:
@@ -1597,6 +1624,8 @@ class Window (object):
     def handle_show_hidden_lines_action_activate (self, action):
 
         self.logger.info ("restoring model filter to show all lines")
+        if hasattr (self, "filter_model"):
+            del self.filter_model # FIXME
         self.log_filter = FilteredLogModelIdentity (self.log_model)
         self.change_model (self.log_filter)
         self.actions.show_hidden_lines.props.sensitive = False
@@ -1622,10 +1651,19 @@ class Window (object):
         row = self.get_active_line ()
         debug_level = row[LogModelBase.COL_LEVEL]
 
-        model = FilteredLogModel (self.log_model)
-        model.add_filter (DebugLevelFilter (debug_level))
-        self.model_filter = model
-        self.change_model (self.model_filter)
+        if not hasattr (self, "model_filter"):
+            model = FilteredLogModel (self.log_model)
+            model.add_filter (DebugLevelFilter (debug_level))
+            self.model_filter = model
+            self.change_model (self.model_filter)
+        else:
+            # Empty dummy to clear all state:
+            self.log_view.props.model = gtk.ListStore (str)
+
+            self.model_filter.add_filter (DebugLevelFilter (debug_level))
+
+            self.log_view.props.model = self.model_filter
+
         self.actions.show_hidden_lines.props.sensitive = True
 
     def handle_hide_log_category_action_activate (self, action):
