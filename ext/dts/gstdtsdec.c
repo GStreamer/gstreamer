@@ -50,11 +50,10 @@ enum
   ARG_0,
   ARG_DRC
 };
-
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-dts")
+    GST_STATIC_CAPS ("audio/x-dts;" "audio/x-private1-dts")
     );
 
 #if defined(LIBDTS_FIXED)
@@ -85,6 +84,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 
 GST_BOILERPLATE (GstDtsDec, gst_dtsdec, GstElement, GST_TYPE_ELEMENT);
 
+static gboolean gst_dtsdec_sink_setcaps (GstPad * pad, GstCaps * caps);
 static gboolean gst_dtsdec_sink_event (GstPad * pad, GstEvent * event);
 static GstFlowReturn gst_dtsdec_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_dtsdec_change_state (GstElement * element,
@@ -147,6 +147,8 @@ static void
 gst_dtsdec_init (GstDtsDec * dtsdec, GstDtsDecClass * g_class)
 {
   dtsdec->sinkpad = gst_pad_new_from_static_template (&sink_factory, "sink");
+  gst_pad_set_setcaps_function (dtsdec->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_dtsdec_sink_setcaps));
   gst_pad_set_chain_function (dtsdec->sinkpad,
       GST_DEBUG_FUNCPTR (gst_dtsdec_chain));
   gst_pad_set_event_function (dtsdec->sinkpad,
@@ -335,6 +337,24 @@ gst_dtsdec_sink_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_dtsdec_sink_setcaps (GstPad * pad, GstCaps * caps)
+{
+  GstDtsDec *dts = GST_DTSDEC (gst_pad_get_parent (pad));
+  GstStructure *structure;
+
+  structure = gst_caps_get_structure (caps, 0);
+
+  if (structure && gst_structure_has_name (structure, "audio/x-private1-dts"))
+    dts->dvdmode = TRUE;
+  else
+    dts->dvdmode = FALSE;
+
+  gst_object_unref (dts);
+
+  return TRUE;
+}
+
 static void
 gst_dtsdec_update_streaminfo (GstDtsDec * dts)
 {
@@ -482,7 +502,7 @@ gst_dtsdec_handle_frame (GstDtsDec * dts, guint8 * data,
 }
 
 static GstFlowReturn
-gst_dtsdec_chain (GstPad * pad, GstBuffer * buf)
+gst_dtsdec_chain_raw (GstPad * pad, GstBuffer * buf)
 {
   GstDtsDec *dts;
   guint8 *data;
@@ -490,7 +510,7 @@ gst_dtsdec_chain (GstPad * pad, GstBuffer * buf)
   gint length, flags, sample_rate, bit_rate, frame_length;
   GstFlowReturn result = GST_FLOW_OK;
 
-  dts = GST_DTSDEC (gst_pad_get_parent (pad));
+  dts = GST_DTSDEC (GST_PAD_PARENT (pad));
 
   if (dts->cache) {
     buf = gst_buffer_join (dts->cache, buf);
@@ -533,9 +553,82 @@ gst_dtsdec_chain (GstPad * pad, GstBuffer * buf)
   }
 
   gst_buffer_unref (buf);
-  gst_object_unref (dts);
 
   return result;
+}
+
+
+static GstFlowReturn
+gst_dtsdec_chain (GstPad * pad, GstBuffer * buf)
+{
+  GstFlowReturn res = GST_FLOW_OK;
+  GstDtsDec *dts = GST_DTSDEC (GST_PAD_PARENT (pad));
+  gint first_access;
+
+  if (dts->dvdmode) {
+    gint size = GST_BUFFER_SIZE (buf);
+    guint8 *data = GST_BUFFER_DATA (buf);
+    gint offset, len;
+    GstBuffer *subbuf;
+
+    if (size < 2)
+      goto not_enough_data;
+
+    first_access = (data[0] << 8) | data[1];
+
+    /* Skip the first_access header */
+    offset = 2;
+
+    if (first_access > 1) {
+      /* Length of data before first_access */
+      len = first_access - 1;
+
+      if (len <= 0 || offset + len > size)
+        goto bad_first_access_parameter;
+
+      subbuf = gst_buffer_create_sub (buf, offset, len);
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_CLOCK_TIME_NONE;
+      res = gst_dtsdec_chain_raw (pad, subbuf);
+      if (res != GST_FLOW_OK)
+        goto done;
+
+      offset += len;
+      len = size - offset;
+
+      if (len > 0) {
+        subbuf = gst_buffer_create_sub (buf, offset, len);
+        GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
+
+        res = gst_dtsdec_chain_raw (pad, subbuf);
+      }
+    } else {
+      /* first_access = 0 or 1, so if there's a timestamp it applies
+       * to the first byte */
+      subbuf = gst_buffer_create_sub (buf, offset, size - offset);
+      GST_BUFFER_TIMESTAMP (subbuf) = GST_BUFFER_TIMESTAMP (buf);
+      res = gst_dtsdec_chain_raw (pad, subbuf);
+    }
+  } else {
+    res = gst_dtsdec_chain_raw (pad, buf);
+  }
+
+done:
+  return res;
+
+/* ERRORS */
+not_enough_data:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dts), STREAM, DECODE, (NULL),
+        ("Insufficient data in buffer. Can't determine first_acess"));
+    return GST_FLOW_ERROR;
+  }
+bad_first_access_parameter:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (dts), STREAM, DECODE, (NULL),
+        ("Bad first_access parameter (%d) in buffer", first_access));
+    return GST_FLOW_ERROR;
+  }
+
 }
 
 static GstStateChangeReturn

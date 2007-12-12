@@ -59,6 +59,7 @@ struct _GstDtsDec {
   gboolean 	 dynamic_range_compression;
   sample_t 	*samples;
   dts_state_t 	*state;
+  gboolean       dvdmode;
 
   /* Data left over from the previous buffer */
   GstBuffer	*cache;
