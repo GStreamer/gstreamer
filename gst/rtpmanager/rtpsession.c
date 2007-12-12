@@ -323,6 +323,8 @@ rtp_session_finalize (GObject * object)
   for (i = 0; i < 32; i++)
     g_hash_table_destroy (sess->ssrcs[i]);
 
+  g_free (sess->bye_reason);
+
   g_hash_table_destroy (sess->cnames);
   g_object_unref (sess->source);
 
@@ -1577,6 +1579,7 @@ rtp_session_send_bye (RTPSession * sess, const gchar * reason)
   /* we have BYE now */
   source->received_bye = TRUE;
   /* at least one member wants to send a BYE */
+  g_free (sess->bye_reason);
   sess->bye_reason = g_strdup (reason);
   sess->stats.avg_rtcp_packet_size = 100;
   sess->stats.bye_members = 1;

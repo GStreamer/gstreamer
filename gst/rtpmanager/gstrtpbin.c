@@ -1294,8 +1294,12 @@ static void
 gst_rtp_bin_finalize (GObject * object)
 {
   GstRtpBin *rtpbin;
+  gint i;
 
   rtpbin = GST_RTP_BIN (object);
+
+  for (i = 0; i < 9; i++)
+    g_free (rtpbin->sdes[i]);
 
   g_mutex_free (rtpbin->priv->bin_lock);
   gst_object_unref (rtpbin->provided_clock);
@@ -1347,6 +1351,9 @@ gst_rtp_bin_set_sdes_string (GstRtpBin * bin, GstRTCPSDESType type,
   GSList *item;
   const gchar *name;
 
+  if (type < 0 || type > 8)
+    return;
+
   GST_OBJECT_LOCK (bin);
   g_free (bin->sdes[type]);
   bin->sdes[type] = g_strdup (data);
@@ -1361,6 +1368,9 @@ static gchar *
 gst_rtp_bin_get_sdes_string (GstRtpBin * bin, GstRTCPSDESType type)
 {
   gchar *result;
+
+  if (type < 0 || type > 8)
+    return NULL;
 
   GST_OBJECT_LOCK (bin);
   result = g_strdup (bin->sdes[type]);
