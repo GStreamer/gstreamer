@@ -1340,6 +1340,44 @@ class LineView (object):
 
         self.clear ()
 
+class ProgressDialog (object):
+
+    def __init__ (self, window, title = ""):
+
+        widgets = window.widget_factory.make ("progress_dialog")
+        dialog = widgets.progress_dialog
+        dialog.connect ("response", self.__handle_dialog_response)
+
+        self.__dialog = dialog
+        self.__progress_bar = widgets.progress_bar
+        self.__progress_bar.props.text = title
+
+        dialog.set_transient_for (window.gtk_window)
+        dialog.show ()
+
+    def __handle_dialog_response (self, dialog, resp):
+
+        self.handle_cancel ()
+
+    def handle_cancel (self):
+
+        pass
+
+    def update (self, progress):
+
+        if self.__progress_bar is None:
+            return
+
+        self.__progress_bar.props.fraction = progress
+
+    def destroy (self):
+
+        if self.__dialog is None:
+            return
+        self.__dialog.destroy ()
+        self.__dialog = None
+        self.__progress_bar = None
+
 class Window (object):
 
     def __init__ (self, app):
@@ -1348,7 +1386,7 @@ class Window (object):
         self.app = app
 
         self.dispatcher = None
-        self.progress_bar = None
+        self.progress_dialog = None
         self.update_progress_id = None
 
         self.window_state = Common.GUI.WindowState ()
@@ -1579,10 +1617,10 @@ class Window (object):
         self.logger.debug ("cancelling data load")
 
         self.set_log_file (None)
+
         if self.progress_dialog:
             self.progress_dialog.destroy ()
             self.progress_dialog = None
-        self.progress_bar = None
         if self.update_progress_id is not None:
             gobject.source_remove (self.update_progress_id)
             self.update_progress_id = None
@@ -1769,30 +1807,23 @@ class Window (object):
 
         self.logger.debug ("load has started")
 
-        widgets = self.widget_factory.make ("progress_dialog")
-        dialog = widgets.progress_dialog
-        dialog.connect ("response", self.handle_progress_dialog_response)
-        self.progress_dialog = dialog
-        self.progress_bar = widgets.progress_bar
-        dialog.set_transient_for (self.gtk_window)
-        dialog.show ()
-
+        self.progress_dialog = ProgressDialog (self, _("Loading log file"))
+        self.progress_dialog.handle_cancel = self.handle_load_progress_dialog_cancel
         self.update_progress_id = gobject.timeout_add (250, self.update_load_progress)
 
-    def handle_progress_dialog_response (self, dialog, response):
+    def handle_load_progress_dialog_cancel (self):
 
         self.actions.cancel_load.activate ()
 
     def update_load_progress (self):
 
-        if not self.progress_bar:
-            self.logger.debug ("progress window is gone, removing progress update timeout")
+        if self.progress_dialog is None:
+            self.logger.debug ("progress dialog is gone, removing progress update timeout")
             self.update_progress_id = None
             return False
 
         progress = self.log_file.get_load_progress ()
-        self.logger.debug ("update progress to %i%%", progress * 100)
-        self.progress_bar.props.fraction = progress
+        self.progress_dialog.update (progress)
 
         return True
 
@@ -1800,14 +1831,8 @@ class Window (object):
 
         self.logger.debug ("load has finshed")
 
-        if self.update_progress_id is not None:
-            gobject.source_remove (self.update_progress_id)
-            self.update_progress_id = None
-
-        self.progress_dialog.hide ()
         self.progress_dialog.destroy ()
         self.progress_dialog = None
-        self.progress_bar = None
 
         self.log_model.set_log (self.log_file)
         self.log_filter = FilteredLogModelIdentity (self.log_model)

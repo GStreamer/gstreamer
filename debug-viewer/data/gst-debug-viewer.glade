@@ -484,7 +484,7 @@ Public License instead of this License.
 
 <widget class="GtkDialog" id="progress_dialog">
   <property name="visible">True</property>
-  <property name="title" translatable="yes">Loading log...</property>
+  <property name="title" translatable="yes"></property>
   <property name="type">GTK_WINDOW_TOPLEVEL</property>
   <property name="window_position">GTK_WIN_POS_CENTER_ON_PARENT</property>
   <property name="modal">True</property>
@@ -545,7 +545,7 @@ Public License instead of this License.
 	      <property name="orientation">GTK_PROGRESS_LEFT_TO_RIGHT</property>
 	      <property name="fraction">0</property>
 	      <property name="pulse_step">0.10000000149</property>
-	      <property name="text" translatable="yes">Loading file</property>
+	      <property name="text" translatable="yes"></property>
 	      <property name="ellipsize">PANGO_ELLIPSIZE_NONE</property>
 	    </widget>
 	    <packing>
