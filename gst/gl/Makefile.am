@@ -1,7 +1,7 @@
 
 plugin_LTLIBRARIES = libgstglimagesink.la
 
-libgstglimagesink_la_SOURCES =  glimagesink.c 
+libgstglimagesink_la_SOURCES =  glimagesink.c glvideo.c
 libgstglimagesink_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS)
 libgstglimagesink_la_LIBADD = $(X_LIBS) $(XSHM_LIBS) -lGL \
