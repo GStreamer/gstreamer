@@ -169,12 +169,16 @@ rtp_source_finalize (GObject * object)
 {
   RTPSource *src;
   GstBuffer *buffer;
+  gint i;
 
   src = RTP_SOURCE_CAST (object);
 
   while ((buffer = g_queue_pop_head (src->packets)))
     gst_buffer_unref (buffer);
   g_queue_free (src->packets);
+
+  for (i = 0; i < 9; i++)
+    g_free (src->sdes[i]);
 
   g_free (src->bye_reason);
 

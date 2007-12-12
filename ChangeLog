@@ -1,3 +1,13 @@
+2007-12-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_finalize),
+	(gst_rtp_bin_set_sdes_string), (gst_rtp_bin_get_sdes_string),
+	(gst_rtp_bin_handle_message):
+	* gst/rtpmanager/rtpsession.c: (rtp_session_finalize),
+	(rtp_session_send_bye):
+	* gst/rtpmanager/rtpsource.c: (rtp_source_finalize):
+	Fix some leaks.
+
 2007-12-12  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* ext/dts/gstdtsdec.c: (gst_dtsdec_init),
