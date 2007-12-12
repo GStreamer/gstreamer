@@ -1,3 +1,13 @@
+2007-12-11  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/Makefile.am:
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/glvideo.c:
+	* sys/glsink/glvideo.h:
+	  Split out gl-related code into a separate file with a
+	  sensible API.  Major cleanup.  Still crashes occasionally
+	  due to different threads touching bits at the same time.
+
 2007-12-11  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Wouter Cloetens <wouter at mind dot be>

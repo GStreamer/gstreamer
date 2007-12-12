@@ -1,6 +1,6 @@
 /* GStreamer
  * Copyright (C) 2003 Julien Moutte <julien@moutte.net>
- * Copyright (C) 2005,2006 David A. Schleef <ds@schleef.org>
+ * Copyright (C) 2005,2006,2007 David A. Schleef <ds@schleef.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -30,8 +30,7 @@
 
 #include <string.h>
 
-#include <GL/glx.h>
-#include <GL/gl.h>
+#include "glvideo.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_debug_glimage_sink);
 #define GST_CAT_DEFAULT gst_debug_glimage_sink
@@ -61,22 +60,12 @@ struct _GstGLImageSink
   GstCaps *caps;
   int fps_n, fps_d;
   int par_n, par_d;
-  int height, width;
 
-  Window window;
-  Window parent_window;
-  XVisualInfo *visinfo;
+  GLVideoDisplay *display;
+  GLVideoDrawable *drawable;
+  GLVideoImageType type;
 
-  Display *display;
-  GLXContext context;
-  gboolean internal;
-
-  int max_texture_size;
-  gboolean have_yuv;
-
-  gboolean use_rgb;
-  gboolean use_rgbx;
-  gboolean use_yuy2;
+  XID window_id;
 };
 
 struct _GstGLImageSinkClass
@@ -118,11 +107,7 @@ static gboolean gst_glimage_sink_interface_supported (GstImplementsInterface *
 static void gst_glimage_sink_implements_init (GstImplementsInterfaceClass *
     klass);
 
-static void gst_glimage_sink_create_window (GstGLImageSink * glimage_sink);
-static gboolean gst_glimage_sink_init_display (GstGLImageSink * glimage_sink);
 static void gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink);
-static void gst_glimage_sink_push_image (GstGLImageSink * glimage_sink,
-    GstBuffer * buf);
 
 static const GstElementDetails gst_glimage_sink_details =
 GST_ELEMENT_DETAILS ("OpenGL video sink",
@@ -217,9 +202,6 @@ static void
 gst_glimage_sink_init (GstGLImageSink * glimage_sink,
     GstGLImageSinkClass * glimage_sink_class)
 {
-
-  glimage_sink->width = -1;
-  glimage_sink->height = -1;
 
   glimage_sink->display_name = NULL;
   gst_glimage_sink_update_caps (glimage_sink);
@@ -338,13 +320,32 @@ static gboolean
 gst_glimage_sink_start (GstBaseSink * bsink)
 {
   GstGLImageSink *glimage_sink;
-  gboolean ret;
+
+  GST_DEBUG ("start");
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  ret = gst_glimage_sink_init_display (glimage_sink);
+  glimage_sink->display = glv_display_new (glimage_sink->display_name);
+  if (glimage_sink->display == NULL) {
+    GST_ERROR ("failed to open display");
+    return FALSE;
+  }
 
-  return ret;
+  if (glimage_sink->window_id) {
+    glimage_sink->drawable =
+        glv_drawable_new_from_window (glimage_sink->display,
+        glimage_sink->window_id);
+  } else {
+    glimage_sink->drawable = glv_drawable_new_window (glimage_sink->display);
+  }
+  if (glimage_sink->drawable == NULL) {
+    GST_ERROR ("failed to create window");
+    return FALSE;
+  }
+
+  GST_DEBUG ("start done");
+
+  return TRUE;
 }
 
 static gboolean
@@ -352,19 +353,16 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
 {
   GstGLImageSink *glimage_sink;
 
+  GST_DEBUG ("stop");
+
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  if (glimage_sink->display) {
-    if (glimage_sink->context) {
-      glXDestroyContext (glimage_sink->display, glimage_sink->context);
-      glimage_sink->context = NULL;
-    }
-    XSync (glimage_sink->display, False);
-    XCloseDisplay (glimage_sink->display);
-    glimage_sink->display = NULL;
-  }
-  glimage_sink->context = NULL;
-  glimage_sink->window = 0;
+  glv_drawable_free (glimage_sink->drawable);
+  glv_display_free (glimage_sink->display);
+
+  glimage_sink->display = NULL;
+  glimage_sink->drawable = NULL;
+
   return TRUE;
 }
 
@@ -372,6 +370,8 @@ static gboolean
 gst_glimage_sink_unlock (GstBaseSink * bsink)
 {
   //GstGLImageSink *glimage_sink;
+
+  GST_DEBUG ("unlock");
 
   //glimage_sink = GST_GLIMAGE_SINK (bsink);
 
@@ -450,8 +450,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   if (!ret)
     return FALSE;
 
-  glimage_sink->width = width;
-  glimage_sink->height = height;
   glimage_sink->fps_n = gst_value_get_fraction_numerator (fps);
   glimage_sink->fps_d = gst_value_get_fraction_denominator (fps);
   if (par) {
@@ -469,35 +467,31 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     int red_mask;
 
     GST_DEBUG ("using RGB");
-    glimage_sink->use_rgb = TRUE;
     gst_structure_get_int (structure, "red_mask", &red_mask);
 
     if (red_mask == 0xff000000) {
-      glimage_sink->use_rgbx = TRUE;
+      glimage_sink->type = GLVIDEO_IMAGE_TYPE_RGBA;
     } else {
-      glimage_sink->use_rgbx = FALSE;
+      glimage_sink->type = GLVIDEO_IMAGE_TYPE_BGRA;
     }
   } else {
     unsigned int fourcc;
 
     GST_DEBUG ("using YUV");
-    glimage_sink->use_rgb = FALSE;
 
     gst_structure_get_fourcc (structure, "format", &fourcc);
     if (fourcc == GST_MAKE_FOURCC ('Y', 'U', 'Y', '2')) {
-      glimage_sink->use_yuy2 = TRUE;
+      glimage_sink->type = GLVIDEO_IMAGE_TYPE_YUY2;
     } else {
-      glimage_sink->use_yuy2 = FALSE;
+      glimage_sink->type = GLVIDEO_IMAGE_TYPE_UYVY;
     }
   }
 
-  if (!glimage_sink->window) {
-    gst_x_overlay_prepare_xwindow_id (GST_X_OVERLAY (glimage_sink));
-  }
-
+#if 0
   if (!glimage_sink->window) {
     gst_glimage_sink_create_window (glimage_sink);
   }
+#endif
 
   return TRUE;
 }
@@ -507,9 +501,14 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
 
+  GST_DEBUG ("render");
+
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  gst_glimage_sink_push_image (glimage_sink, buf);
+  glv_drawable_draw_image (glimage_sink->drawable,
+      glimage_sink->type, GST_BUFFER_DATA (buf),
+      GST_VIDEO_SINK_WIDTH (glimage_sink),
+      GST_VIDEO_SINK_HEIGHT (glimage_sink));
 
   return GST_FLOW_OK;
 }
@@ -532,36 +531,19 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay, XID window_id)
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (overlay));
 
+  GST_DEBUG ("set_xwindow_id");
+
   glimage_sink = GST_GLIMAGE_SINK (overlay);
-  if (glimage_sink->window == window_id) {
+
+  if (glimage_sink->window_id == window_id) {
     return;
   }
-
-  /* FIXME check if display inited */
-
-  if (window_id == 0) {
-    /* go back to independent window */
-    /* FIXME */
-    glimage_sink->internal = TRUE;
-  } else {
-    XWindowAttributes attr;
-
-    glimage_sink->window = window_id;
-
-    XGetWindowAttributes (glimage_sink->display, window_id, &attr);
-    glimage_sink->width = attr.width;
-    glimage_sink->height = attr.height;
-    glimage_sink->internal = FALSE;
-#if 0
-    /* FIXME */
-    if (glimage_sink->handle_events) {
-      XSelectInput (glimage_sink->display, window_id,
-          ExposureMask | StructureNotifyMask | PointerMotionMask | KeyPressMask
-          | KeyReleaseMask);
-    }
-#endif
+  glimage_sink->window_id = window_id;
+  if (glimage_sink->drawable) {
+    glv_drawable_free (glimage_sink->drawable);
+    glimage_sink->drawable =
+        glv_drawable_new_from_window (glimage_sink->display, window_id);
   }
-
 }
 
 static void
@@ -631,7 +613,7 @@ gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
 
   caps = gst_caps_from_string (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx);
 #ifdef GL_YCBCR_MESA
-  if (glimage_sink->have_yuv) {
+  if (glimage_sink->display->have_ycbcr_texture) {
     GstCaps *ycaps =
         gst_caps_from_string (GST_VIDEO_CAPS_YUV ("{ UYVY, YUY2 }"));
     gst_caps_append (ycaps, caps);
@@ -639,7 +621,7 @@ gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
   }
 #endif
 
-  max_size = glimage_sink->max_texture_size;
+  max_size = glimage_sink->display->max_texture_size;
   if (max_size == 0) {
     max_size = 1024;
   }
@@ -651,319 +633,6 @@ gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
   gst_caps_replace (&glimage_sink->caps, caps);
 }
 
-static void
-gst_glimage_sink_create_window (GstGLImageSink * glimage_sink)
-{
-  gboolean ret;
-  Window root;
-  XSetWindowAttributes attr;
-  Screen *screen;
-  int scrnum;
-  int mask;
-  int width, height;
-
-  screen = XDefaultScreenOfDisplay (glimage_sink->display);
-  scrnum = XScreenNumberOfScreen (screen);
-  root = XRootWindow (glimage_sink->display, scrnum);
-
-  if (glimage_sink->parent_window) {
-    XWindowAttributes pattr;
-
-    XGetWindowAttributes (glimage_sink->display, glimage_sink->parent_window,
-        &pattr);
-    width = pattr.width;
-    height = pattr.height;
-  } else {
-    width = GST_VIDEO_SINK (glimage_sink)->width;
-    height = GST_VIDEO_SINK (glimage_sink)->height;
-  }
-  attr.background_pixel = 0;
-  attr.border_pixel = 0;
-  attr.colormap = XCreateColormap (glimage_sink->display, root,
-      glimage_sink->visinfo->visual, AllocNone);
-  if (glimage_sink->parent_window) {
-    attr.override_redirect = True;
-  } else {
-    attr.override_redirect = False;
-  }
-
-  mask = CWBackPixel | CWBorderPixel | CWColormap | CWOverrideRedirect;
-
-  GST_DEBUG ("creating window with size %d x %d", width, height);
-
-  glimage_sink->window = XCreateWindow (glimage_sink->display, root, 0, 0,
-      width, height,
-      0, glimage_sink->visinfo->depth, InputOutput,
-      glimage_sink->visinfo->visual, mask, &attr);
-
-  if (glimage_sink->parent_window) {
-    ret = XReparentWindow (glimage_sink->display, glimage_sink->window,
-        glimage_sink->parent_window, 0, 0);
-    XMapWindow (glimage_sink->display, glimage_sink->window);
-  } else {
-    XMapWindow (glimage_sink->display, glimage_sink->window);
-  }
-
-  XSync (glimage_sink->display, False);
-
-  gst_x_overlay_got_xwindow_id (GST_X_OVERLAY (glimage_sink),
-      glimage_sink->window);
-
-  glXMakeCurrent (glimage_sink->display, glimage_sink->window,
-      glimage_sink->context);
-
-  glDepthFunc (GL_LESS);
-  glEnable (GL_DEPTH_TEST);
-  glClearColor (0.2, 0.2, 0.2, 1.0);
-  glViewport (0, 0, width, height);
-}
-
-
-static gboolean
-gst_glimage_sink_init_display (GstGLImageSink * glimage_sink)
-{
-  gboolean ret;
-  XVisualInfo *visinfo;
-  Screen *screen;
-  Window root;
-  int scrnum;
-  int attrib[] = { GLX_RGBA, GLX_DOUBLEBUFFER, GLX_RED_SIZE, 8,
-    GLX_GREEN_SIZE, 8, GLX_BLUE_SIZE, 8, None
-  };
-  XSetWindowAttributes attr;
-  int error_base;
-  int event_base;
-  int mask;
-  const char *extstring;
-  Window window;
-
-  GST_DEBUG_OBJECT (glimage_sink, "initializing display");
-
-  glimage_sink->display = XOpenDisplay (NULL);
-  if (glimage_sink->display == NULL) {
-    GST_DEBUG_OBJECT (glimage_sink, "Could not open display");
-    return FALSE;
-  }
-
-  screen = XDefaultScreenOfDisplay (glimage_sink->display);
-  scrnum = XScreenNumberOfScreen (screen);
-  root = XRootWindow (glimage_sink->display, scrnum);
-
-  ret = glXQueryExtension (glimage_sink->display, &error_base, &event_base);
-  if (!ret) {
-    GST_DEBUG_OBJECT (glimage_sink, "No GLX extension");
-    return FALSE;
-  }
-
-  visinfo = glXChooseVisual (glimage_sink->display, scrnum, attrib);
-  if (visinfo == NULL) {
-    GST_DEBUG_OBJECT (glimage_sink, "No usable visual");
-    return FALSE;
-  }
-
-  glimage_sink->visinfo = visinfo;
-
-  glimage_sink->context = glXCreateContext (glimage_sink->display,
-      visinfo, NULL, True);
-
-  attr.background_pixel = 0;
-  attr.border_pixel = 0;
-  attr.colormap = XCreateColormap (glimage_sink->display, root,
-      visinfo->visual, AllocNone);
-  attr.event_mask = StructureNotifyMask | ExposureMask;
-  attr.override_redirect = True;
-
-  //mask = CWBackPixel | CWBorderPixel | CWColormap | CWEventMask;
-  mask = CWBackPixel | CWBorderPixel | CWColormap | CWOverrideRedirect;
-
-  window = XCreateWindow (glimage_sink->display, root, 0, 0,
-      100, 100, 0, visinfo->depth, InputOutput, visinfo->visual, mask, &attr);
-
-  XSync (glimage_sink->display, FALSE);
-
-  glXMakeCurrent (glimage_sink->display, window, glimage_sink->context);
-
-  glGetIntegerv (GL_MAX_TEXTURE_SIZE, &glimage_sink->max_texture_size);
-
-  extstring = (const char *) glGetString (GL_EXTENSIONS);
-#ifdef GL_YCBCR_MESA
-  if (strstr (extstring, "GL_MESA_ycbcr_texture")) {
-    glimage_sink->have_yuv = TRUE;
-  } else {
-    glimage_sink->have_yuv = FALSE;
-  }
-#else
-  glimage_sink->have_yuv = FALSE;
-#endif
-  gst_glimage_sink_update_caps (glimage_sink);
-
-  glXMakeCurrent (glimage_sink->display, None, NULL);
-  XDestroyWindow (glimage_sink->display, window);
-
-  return TRUE;
-}
-
-static void
-gst_glimage_sink_push_image (GstGLImageSink * glimage_sink, GstBuffer * buf)
-{
-  int texture_size;
-  XWindowAttributes attr;
-
-  g_return_if_fail (buf != NULL);
-
-  if (glimage_sink->display == NULL || glimage_sink->window == 0) {
-    g_warning ("display or window not set up\n");
-  }
-
-  glXMakeCurrent (glimage_sink->display, glimage_sink->window,
-      glimage_sink->context);
-
-  if (glimage_sink->parent_window) {
-    XGetWindowAttributes (glimage_sink->display, glimage_sink->parent_window,
-        &attr);
-    //gst_glimage_sink_set_window_size (glimage_sink, attr.width, attr.height);
-  } else {
-    XGetWindowAttributes (glimage_sink->display, glimage_sink->window, &attr);
-    glViewport (0, 0, attr.width, attr.height);
-  }
-
-  glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-  glMatrixMode (GL_PROJECTION);
-  glLoadIdentity ();
-
-  glMatrixMode (GL_MODELVIEW);
-  glLoadIdentity ();
-
-  glDisable (GL_CULL_FACE);
-  glEnable (GL_TEXTURE_2D);
-  glEnableClientState (GL_TEXTURE_COORD_ARRAY);
-
-  glColor4f (1, 1, 1, 1);
-
-#define TEXID 1000
-  glBindTexture (GL_TEXTURE_2D, TEXID);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-
-  for (texture_size = 64;
-      (texture_size < GST_VIDEO_SINK (glimage_sink)->width ||
-          texture_size < GST_VIDEO_SINK (glimage_sink)->height) &&
-      (texture_size > 0); texture_size <<= 1);
-
-  if (glimage_sink->use_rgb) {
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, texture_size,
-        texture_size, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-    if (glimage_sink->use_rgbx) {
-      glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_VIDEO_SINK (glimage_sink)->width,
-          GST_VIDEO_SINK (glimage_sink)->height,
-          GL_RGBA, GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
-    } else {
-      glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_VIDEO_SINK (glimage_sink)->width,
-          GST_VIDEO_SINK (glimage_sink)->height,
-          GL_BGRA, GL_UNSIGNED_BYTE, GST_BUFFER_DATA (buf));
-    }
-  } else {
-#ifdef GL_YCBCR_MESA
-    glTexImage2D (GL_TEXTURE_2D, 0, GL_YCBCR_MESA, texture_size,
-        texture_size, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
-
-    if (glimage_sink->use_yuy2) {
-      glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_VIDEO_SINK (glimage_sink)->width,
-          GST_VIDEO_SINK (glimage_sink)->height,
-          GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, GST_BUFFER_DATA (buf));
-    } else {
-      glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
-          GST_VIDEO_SINK (glimage_sink)->width,
-          GST_VIDEO_SINK (glimage_sink)->height,
-          GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, GST_BUFFER_DATA (buf));
-    }
-#else
-    g_assert_not_reached ();
-#endif
-  }
-
-  glColor4f (1, 0, 1, 1);
-  glBegin (GL_QUADS);
-
-  glNormal3f (0, 0, -1);
-
-  {
-    double xmax = GST_VIDEO_SINK (glimage_sink)->width / (double) texture_size;
-    double ymax = GST_VIDEO_SINK (glimage_sink)->height / (double) texture_size;
-
-    glTexCoord2f (xmax, 0);
-    glVertex3f (1.0, 1.0, 0);
-    glTexCoord2f (0, 0);
-    glVertex3f (-1.0, 1.0, 0);
-    glTexCoord2f (0, ymax);
-    glVertex3f (-1.0, -1.0, 0);
-    glTexCoord2f (xmax, ymax);
-    glVertex3f (1.0, -1.0, 0);
-    glEnd ();
-  }
-
-  glFlush ();
-  glXSwapBuffers (glimage_sink->display, glimage_sink->window);
-}
-
-
-#ifdef unused
-
-
-static void gst_glimage_sink_set_window_size (GstGLImageSink * glimage_sink,
-    int width, int height);
-
-
-
-static void
-gst_glimage_sink_set_window_size (GstGLImageSink * glimage_sink,
-    int width, int height)
-{
-  GST_DEBUG ("resizing to %d x %d",
-      GST_VIDEO_SINK_WIDTH (glimage_sink),
-      GST_VIDEO_SINK_HEIGHT (glimage_sink));
-
-  if (glimage_sink->display && glimage_sink->window) {
-    XResizeWindow (glimage_sink->display, glimage_sink->window, width, height);
-    XSync (glimage_sink->display, False);
-    glViewport (0, 0, width, height);
-  }
-}
-
-
-
-static void
-gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay, XID xwindow_id)
-{
-  GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
-
-  GST_DEBUG ("set_xwindow_id %ld", xwindow_id);
-
-  g_return_if_fail (GST_IS_GLIMAGE_SINK (glimage_sink));
-
-  /* If the element has not initialized the X11 context try to do so */
-  if (!glimage_sink->display) {
-    g_warning ("X display not inited\n");
-  }
-
-  if (glimage_sink->parent_window == xwindow_id)
-    return;
-
-  glimage_sink->parent_window = xwindow_id;
-
-  XSync (glimage_sink->display, False);
-  gst_glimage_sink_create_window (glimage_sink);
-}
-
-#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
