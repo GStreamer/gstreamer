@@ -1,5 +1,15 @@
 2007-12-12  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_finalize),
+	(gst_rtp_pt_demux_setup), (gst_rtp_pt_demux_release),
+	(gst_rtp_pt_demux_change_state):
+	* gst/rtpmanager/gstrtpssrcdemux.c: (gst_rtp_ssrc_demux_reset),
+	(gst_rtp_ssrc_demux_dispose), (gst_rtp_ssrc_demux_src_query),
+	(gst_rtp_ssrc_demux_change_state):
+	Clean up the dynamic pads when going to READY.
+
+2007-12-12  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/rtpmanager/gstrtpbin.c: (gst_rtp_bin_finalize),
 	(gst_rtp_bin_set_sdes_string), (gst_rtp_bin_get_sdes_string),
 	(gst_rtp_bin_handle_message):
