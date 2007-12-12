@@ -507,6 +507,15 @@ class DebugLevelFilter (Filter):
             return row[col_id] != debug_level
         self.filter_func = filter_func
 
+class CategoryFilter (Filter):
+
+    def __init__ (self, category):
+
+        col_id = LogModelBase.COL_CATEGORY
+        def category_filter_func (row):
+            return row[col_id] != category
+        self.filter_func = category_filter_func
+
 class SubRange (object):
 
     def __init__ (self, l, start, end):
@@ -1378,7 +1387,6 @@ class Window (object):
         group.props.sensitive = False
         self.actions.add_group (group)
 
-        self.actions.hide_log_category.props.visible = False
         self.actions.hide_log_object.props.visible = False
 
         self.actions.add_group (self.column_manager.action_group)
@@ -1646,29 +1654,34 @@ class Window (object):
         col_id = LogModelBase.COL_MESSAGE
         self.clipboard.set_text (self.get_active_line ()[col_id])
 
-    def handle_hide_log_level_action_activate (self, action):
+    def add_model_filter (self, filter):
 
-        row = self.get_active_line ()
-        debug_level = row[LogModelBase.COL_LEVEL]
-
-        if not hasattr (self, "model_filter"):
+        if not hasattr (self, "model_filter"): # FIXME
             model = FilteredLogModel (self.log_model)
-            model.add_filter (DebugLevelFilter (debug_level))
+            model.add_filter (filter)
             self.model_filter = model
             self.change_model (self.model_filter)
         else:
             # Empty dummy to clear all state:
             self.log_view.props.model = gtk.ListStore (str)
 
-            self.model_filter.add_filter (DebugLevelFilter (debug_level))
+            self.model_filter.add_filter (filter)
 
             self.log_view.props.model = self.model_filter
 
         self.actions.show_hidden_lines.props.sensitive = True
 
+    def handle_hide_log_level_action_activate (self, action):
+
+        row = self.get_active_line ()
+        debug_level = row[LogModelBase.COL_LEVEL]
+        self.add_model_filter (DebugLevelFilter (debug_level))
+
     def handle_hide_log_category_action_activate (self, action):
 
-        pass
+        row = self.get_active_line ()
+        category = row[LogModelBase.COL_CATEGORY]
+        self.add_model_filter (CategoryFilter (category))
 
     def handle_hide_log_object_action_activate (self, action):
 
