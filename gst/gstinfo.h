@@ -253,6 +253,7 @@ typedef void (*GstLogFunction)  (GstDebugCategory * category,
 
 #ifndef GST_DISABLE_GST_DEBUG
 
+/* FIXME 0.11: move this into private headers */
 void            _gst_debug_init (void);
 
 

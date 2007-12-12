@@ -237,7 +237,7 @@ GstDebugCategory *GST_CAT_QOS = NULL;
 
 /* FIXME: export this? */
 gboolean
-__gst_in_valgrind (void)
+_priv_gst_in_valgrind (void)
 {
   static enum
   {
@@ -358,7 +358,7 @@ _gst_debug_init (void)
 
 
   /* print out the valgrind message if we're in valgrind */
-  __gst_in_valgrind ();
+  _priv_gst_in_valgrind ();
 }
 
 /* we can't do this further above, because we initialize the GST_CAT_DEFAULT struct */
@@ -1330,7 +1330,7 @@ gst_debug_remove_log_function_by_data (gpointer data)
 }
 
 gboolean
-__gst_in_valgrind (void)
+_priv_gst_in_valgrind (void)
 {
   return FALSE;
 }

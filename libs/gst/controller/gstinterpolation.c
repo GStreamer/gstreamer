@@ -28,7 +28,7 @@
 #include "gstinterpolationcontrolsource.h"
 #include "gstinterpolationcontrolsourceprivate.h"
 
-#define GST_CAT_DEFAULT gst_controller_debug
+#define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 
 #define EMPTY(x) (x)

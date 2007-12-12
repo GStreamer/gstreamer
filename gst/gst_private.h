@@ -42,7 +42,7 @@ extern const char             g_log_domain_gstreamer[];
 
 G_BEGIN_DECLS
 
-gboolean __gst_in_valgrind (void);
+gboolean _priv_gst_in_valgrind (void);
 
 /* Initialize GStreamer private quark storage */
 void _priv_gst_quarks_initialize (void);

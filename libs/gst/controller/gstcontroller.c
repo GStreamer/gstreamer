@@ -78,11 +78,11 @@
 #include "gstcontrolsource.h"
 #include "gstinterpolationcontrolsource.h"
 
-#define GST_CAT_DEFAULT gst_controller_debug
+#define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 
 static GObjectClass *parent_class = NULL;
-GQuark __gst_controller_key;
+GQuark priv_gst_controller_key;
 
 /* property ids */
 enum
@@ -221,7 +221,7 @@ gst_controller_new_valist (GObject * object, va_list var_args)
 
   GST_INFO ("setting up a new controller");
 
-  self = g_object_get_qdata (object, __gst_controller_key);
+  self = g_object_get_qdata (object, priv_gst_controller_key);
   /* create GstControlledProperty for each property */
   while ((name = va_arg (var_args, gchar *))) {
     /* test if this property isn't yet controlled */
@@ -233,7 +233,7 @@ gst_controller_new_valist (GObject * object, va_list var_args)
           self = g_object_new (GST_TYPE_CONTROLLER, NULL);
           self->object = g_object_ref (object);
           /* store the controller */
-          g_object_set_qdata (object, __gst_controller_key, self);
+          g_object_set_qdata (object, priv_gst_controller_key, self);
           ref_existing = FALSE;
         } else {
           /* only want one single _ref(), even for multiple properties */
@@ -282,7 +282,7 @@ gst_controller_new_list (GObject * object, GList * list)
 
   GST_INFO ("setting up a new controller");
 
-  self = g_object_get_qdata (object, __gst_controller_key);
+  self = g_object_get_qdata (object, priv_gst_controller_key);
   /* create GstControlledProperty for each property */
   for (node = list; node; node = g_list_next (node)) {
     name = (gchar *) node->data;
@@ -295,7 +295,7 @@ gst_controller_new_list (GObject * object, GList * list)
           self = g_object_new (GST_TYPE_CONTROLLER, NULL);
           self->object = g_object_ref (object);
           /* store the controller */
-          g_object_set_qdata (object, __gst_controller_key, self);
+          g_object_set_qdata (object, priv_gst_controller_key, self);
           ref_existing = FALSE;
         } else {
           /* only want one single _ref(), even for multiple properties */
@@ -863,7 +863,7 @@ _gst_controller_dispose (GObject * object)
     }
 
     /* remove controller from object's qdata list */
-    g_object_set_qdata (self->object, __gst_controller_key, NULL);
+    g_object_set_qdata (self->object, priv_gst_controller_key, NULL);
     g_object_unref (self->object);
     self->object = NULL;
     g_mutex_unlock (self->lock);
@@ -910,7 +910,7 @@ _gst_controller_class_init (GstControllerClass * klass)
   gobject_class->dispose = _gst_controller_dispose;
   gobject_class->finalize = _gst_controller_finalize;
 
-  __gst_controller_key = g_quark_from_static_string ("gst::controller");
+  priv_gst_controller_key = g_quark_from_static_string ("gst::controller");
 
   /* register properties */
   g_object_class_install_property (gobject_class, PROP_CONTROL_RATE,

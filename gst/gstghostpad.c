@@ -87,6 +87,8 @@ struct _GstProxyPadClass
   gpointer _gst_reserved[1];
 };
 
+static GType gst_proxy_pad_get_type (void);
+
 G_DEFINE_TYPE (GstProxyPad, gst_proxy_pad, GST_TYPE_PAD);
 
 static GstPad *gst_proxy_pad_get_target (GstPad * pad);
@@ -118,7 +120,7 @@ gst_proxy_pad_class_init (GstProxyPadClass * klass)
 #endif
 }
 
-const GstQueryType *
+static const GstQueryType *
 gst_proxy_pad_do_query_type (GstPad * pad)
 {
   GstPad *target = gst_proxy_pad_get_target (pad);

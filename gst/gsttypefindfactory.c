@@ -86,8 +86,8 @@
 #include "gsttypefindfactory.h"
 #include "gstregistry.h"
 
-GST_DEBUG_CATEGORY (gst_type_find_debug);
-#define GST_CAT_DEFAULT gst_type_find_debug
+GST_DEBUG_CATEGORY (type_find_debug);
+#define GST_CAT_DEFAULT type_find_debug
 
 static void gst_type_find_factory_class_init (gpointer g_class,
     gpointer class_data);
@@ -118,7 +118,7 @@ gst_type_find_factory_get_type (void)
 
     typefind_type = g_type_register_static (GST_TYPE_PLUGIN_FEATURE,
         "GstTypeFindFactory", &typefind_info, 0);
-    GST_DEBUG_CATEGORY_INIT (gst_type_find_debug, "GST_TYPEFIND",
+    GST_DEBUG_CATEGORY_INIT (type_find_debug, "GST_TYPEFIND",
         GST_DEBUG_FG_GREEN, "typefinding subsystem");
   }
 

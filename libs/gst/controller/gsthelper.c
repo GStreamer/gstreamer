@@ -38,10 +38,10 @@
 #include "gstcontrollerprivate.h"
 #include "gstcontroller.h"
 
-#define GST_CAT_DEFAULT gst_controller_debug
+#define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 
-extern GQuark __gst_controller_key;
+extern GQuark priv_gst_controller_key;
 
 /**
  * gst_object_control_properties:
@@ -93,7 +93,7 @@ gst_object_uncontrol_properties (GObject * object, ...)
 
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
 
-  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+  if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     va_list var_args;
 
     va_start (var_args, object);
@@ -117,7 +117,7 @@ gst_object_get_controller (GObject * object)
 {
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
 
-  return (g_object_get_qdata (object, __gst_controller_key));
+  return (g_object_get_qdata (object, priv_gst_controller_key));
 }
 
 /**
@@ -138,8 +138,8 @@ gst_object_set_controller (GObject * object, GstController * controller)
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (controller, FALSE);
 
-  if (!(ctrl = g_object_get_qdata (object, __gst_controller_key))) {
-    g_object_set_qdata (object, __gst_controller_key, controller);
+  if (!(ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
+    g_object_set_qdata (object, priv_gst_controller_key, controller);
     return (TRUE);
   }
   return (FALSE);
@@ -161,7 +161,7 @@ gst_object_suggest_next_sync (GObject * object)
 
   g_return_val_if_fail (G_IS_OBJECT (object), GST_CLOCK_TIME_NONE);
 
-  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+  if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     return gst_controller_suggest_next_sync (ctrl);
   }
   return (GST_CLOCK_TIME_NONE);
@@ -185,7 +185,7 @@ gst_object_sync_values (GObject * object, GstClockTime timestamp)
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+  if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     return gst_controller_sync_values (ctrl, timestamp);
   }
   return (FALSE);
@@ -214,7 +214,7 @@ gst_object_set_control_source (GObject * object, gchar * property_name,
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_IS_CONTROL_SOURCE (csource), FALSE);
 
-  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+  if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     return gst_controller_set_control_source (ctrl, property_name, csource);
   }
   return FALSE;
@@ -240,7 +240,7 @@ gst_object_get_control_source (GObject * object, gchar * property_name)
 
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
 
-  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+  if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     return gst_controller_get_control_source (ctrl, property_name);
   }
   return FALSE;
@@ -273,7 +273,7 @@ gst_object_get_value_arrays (GObject * object, GstClockTime timestamp,
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+  if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     return gst_controller_get_value_arrays (ctrl, timestamp, value_arrays);
   }
   return (FALSE);
@@ -304,7 +304,7 @@ gst_object_get_value_array (GObject * object, GstClockTime timestamp,
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
   g_return_val_if_fail (GST_CLOCK_TIME_IS_VALID (timestamp), FALSE);
 
-  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+  if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     return gst_controller_get_value_array (ctrl, timestamp, value_array);
   }
   return (FALSE);
@@ -336,7 +336,7 @@ gst_object_get_control_rate (GObject * object)
 
   g_return_val_if_fail (G_IS_OBJECT (object), FALSE);
 
-  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+  if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     g_object_get (ctrl, "control-rate", &control_rate, NULL);
   }
   return (control_rate);
@@ -364,7 +364,7 @@ gst_object_set_control_rate (GObject * object, GstClockTime control_rate)
 
   g_return_if_fail (G_IS_OBJECT (object));
 
-  if ((ctrl = g_object_get_qdata (object, __gst_controller_key))) {
+  if ((ctrl = g_object_get_qdata (object, priv_gst_controller_key))) {
     g_object_set (ctrl, "control-rate", control_rate, NULL);
   }
 }

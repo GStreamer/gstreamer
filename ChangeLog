@@ -1,3 +1,41 @@
+2007-12-12  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* Makefile.am:
+	  Add check-exports target and run it as part of 'make check'
+	  (see #499140 and #493983).
+
+	* gst/gst_private.h:
+	* gst/gstelementfactory.h:
+	* gst/gstghostpad.c: (gst_proxy_pad_class_init):
+	* gst/gstinfo.c: (_priv_gst_in_valgrind), (_gst_debug_init),
+	  (_priv_gst_in_valgrind):
+	* gst/gstinfo.h: (GstLogFunction):
+	* gst/gsttypefind.c: (type_find_debug), (GST_CAT_DEFAULT),
+	  (gst_type_find_register):
+	* gst/gsttypefindfactory.c: (type_find_debug), (GST_CAT_DEFAULT),
+	  (gst_type_find_factory_get_type):
+	* libs/gst/controller/gstcontroller.c: (GST_CAT_DEFAULT),
+	  (GST_CAT_DEFAULT), (parent_class), (priv_gst_controller_key),
+	  (gst_controller_new_valist), (gst_controller_new_list),
+	  (_gst_controller_dispose), (_gst_controller_class_init):
+	* libs/gst/controller/gstcontrolsource.c: (GST_CAT_DEFAULT):
+	* libs/gst/controller/gsthelper.c: (GST_CAT_DEFAULT),
+	  (GST_CAT_DEFAULT), (gst_object_uncontrol_properties),
+	  (gst_object_get_controller), (gst_object_set_controller),
+	  (gst_object_suggest_next_sync), (gst_object_sync_values),
+	  (gst_object_set_control_source), (gst_object_get_control_source),
+	  (gst_object_get_value_arrays), (gst_object_get_value_array),
+	  (gst_object_get_control_rate), (gst_object_set_control_rate):
+	* libs/gst/controller/gstinterpolation.c: (GST_CAT_DEFAULT):
+	* libs/gst/controller/lib.c: (GST_CAT_DEFAULT):
+	  Make some functions that should be static static; rename some
+	  private symbols so that they don't get exported; add some FIXME
+	  comments so we can move accidentally exported functions into
+	  our private section in 0.11.
+
+	* win32/common/libgstreamer.def:
+	  Add gst_utils_get_timestamp().
+
 2007-12-12  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstvalue.c:

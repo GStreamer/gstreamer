@@ -112,3 +112,21 @@ win32-update:
 	$(top_srcdir)/tools/gst-indent win32/common/gstenumtypes.c
 
 include $(top_srcdir)/common/coverage/lcov.mak
+
+# make sure all symbols we export on linux are defined in the win32 .def too
+# (don't care about other unixes for now, it's enough if it works on one of
+# the linux build bots; we assume .so )
+corelibs='libgstreamer libgstbase libgstcontroller libgstdataprotocol libgstnet'
+check-exports:
+	for l in `eval echo $(corelibs)`; do \
+	  libso=`find "$(top_builddir)" -name "$$l-0.10.so"`; \
+	  libdef="$(top_srcdir)/win32/common/$$l.def"; \
+	  if test "x$$libso" != "x"; then \
+	    echo Checking symbols in $$libso; \
+	    $(top_srcdir)/common/check-exports $$libdef $$libso || exit 1; \
+	  fi; \
+	done
+
+check: check-exports
+
+

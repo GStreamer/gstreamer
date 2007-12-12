@@ -46,7 +46,7 @@
 
 #include "gstcontrolsource.h"
 
-#define GST_CAT_DEFAULT gst_controller_debug
+#define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_DEFAULT);
 
 static void gst_control_source_class_init (GstControlSourceClass * klass);

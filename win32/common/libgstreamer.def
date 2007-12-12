@@ -890,6 +890,7 @@ EXPORTS
 	gst_uri_type_get_type
 	gst_util_dump_mem
 	gst_util_gdouble_to_guint64
+	gst_util_get_timestamp
 	gst_util_guint64_to_gdouble
 	gst_util_set_object_arg
 	gst_util_set_value_from_string

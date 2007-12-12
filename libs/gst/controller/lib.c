@@ -27,7 +27,7 @@
 
 /* library initialisation */
 
-#define GST_CAT_DEFAULT gst_controller_debug
+#define GST_CAT_DEFAULT controller_debug
 GST_DEBUG_CATEGORY (GST_CAT_DEFAULT);
 
 /**

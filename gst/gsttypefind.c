@@ -35,8 +35,8 @@
 #include "gstregistry.h"
 #include "gsttypefindfactory.h"
 
-GST_DEBUG_CATEGORY_EXTERN (gst_type_find_debug);
-#define GST_CAT_DEFAULT gst_type_find_debug
+GST_DEBUG_CATEGORY_EXTERN (type_find_debug);
+#define GST_CAT_DEFAULT type_find_debug
 
 GType
 gst_type_find_get_type (void)
