@@ -1,3 +1,8 @@
+2007-12-12  Stefan Kost  <ensonic@users.sf.net>
+
+	* gst/gstutils.c:
+	  Add mising "Since:" to docs.
+
 2007-12-11  Stefan Kost  <ensonic@users.sf.net>
 
 	* gst/gstplugin.c:

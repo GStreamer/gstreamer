@@ -1031,6 +1031,8 @@ gst_element_state_get_name (GstState state)
  * Gets a string representing the given state change result.
  *
  * Returns: a string with the name of the state change result.
+ *
+ * Since: 0.10.11
  */
 G_CONST_RETURN gchar *
 gst_element_state_change_return_get_name (GstStateChangeReturn state_ret)
