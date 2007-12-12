@@ -413,6 +413,8 @@ class FilteredLogModel (FilteredLogModelBase):
         self.super_index = []
         self.from_super_index = {}
         self.reset ()
+        self.__active_process = None
+        self.__filter_progress = 0.
         
     def reset (self):
 
@@ -426,7 +428,9 @@ class FilteredLogModel (FilteredLogModelBase):
 
         del self.filters[:]
 
-    def add_filter (self, filter):
+    def __filter_process (self, filter):
+
+        YIELD_LIMIT = 10000
 
         self.logger.debug ("preparing new filter")
         self.filters.append (filter)
@@ -453,17 +457,64 @@ class FilteredLogModel (FilteredLogModelBase):
                     yield (line_index, row, offset,)
                     i += 1
         self.logger.debug ("running filter")
+        progress = 0.
+        progress_full = float (len (self))
+        y = YIELD_LIMIT
         for i, row, offset in enum ():
             if func (row):
                 new_line_offsets.append (offset)
                 new_line_levels.append (row[level_id])
                 new_super_index.append (i)
                 new_from_super_index[i] = len (new_super_index) - 1
+            y -= 1
+            if y == 0:
+                progress += float (YIELD_LIMIT)
+                self.__filter_progress = progress / progress_full
+                y = YIELD_LIMIT
+                yield True
         self.line_offsets = new_line_offsets
         self.line_levels = new_line_levels
         self.super_index = new_super_index
         self.from_super_index = new_from_super_index
         self.logger.debug ("filtering finished")
+
+        self.__filter_progress = 1.
+        self.__handle_filter_process_finished ()
+        yield False
+
+    def add_filter (self, filter, dispatcher):
+
+        if self.__active_process is not None:
+            raise ValueError ("dispatched a filter process already")
+
+        self.__dispatcher = dispatcher
+        self.__active_process = self.__filter_process (filter)
+        dispatcher (self.__active_process)
+
+    def abort_process (self):
+
+        if self.__active_process is None:
+            return
+
+        self.__dispatcher.cancel ()
+        self.__active_process = None
+        self.__dispatcher = None
+
+    def get_filter_progress (self):
+
+        if self.__active_process is None:
+            raise ValueError ("no filter process running")
+
+        return self.__filter_progress
+
+    def __handle_filter_process_finished (self):
+
+        self.__active_process = None
+        self.handle_process_finished ()
+
+    def handle_process_finished (self):
+
+        pass
 
     def line_index_from_super (self, super_line_index):
 
@@ -1670,8 +1721,8 @@ class Window (object):
     def handle_show_hidden_lines_action_activate (self, action):
 
         self.logger.info ("restoring model filter to show all lines")
-        if hasattr (self, "filter_model"):
-            del self.filter_model # FIXME
+        if hasattr (self, "model_filter"):
+            del self.model_filter # FIXME
         self.log_filter = FilteredLogModelIdentity (self.log_model)
         self.change_model (self.log_filter)
         self.actions.show_hidden_lines.props.sensitive = False
@@ -1694,17 +1745,62 @@ class Window (object):
 
     def add_model_filter (self, filter):
 
+        self.progress_dialog = ProgressDialog (self, _("Filtering"))
+        self.progress_dialog.handle_cancel = self.handle_filter_progress_dialog_cancel
+        dispatcher = Common.Data.GSourceDispatcher ()
+        self.filter_dispatcher = dispatcher
+
         if not hasattr (self, "model_filter"): # FIXME
+            self.had_model_filter = False
             model = FilteredLogModel (self.log_model)
-            model.add_filter (filter)
+            model.handle_process_finished = self.handle_model_filter_process_finished
+            model.add_filter (filter, dispatcher = dispatcher)
             self.model_filter = model
+
+            # FIXME: Unsetting the model to keep e.g. the dispatched timeline
+            # sentinel from collecting data while we filter idly, which slows
+            # things down for nothing.
+            self.log_view.set_model (None)
+        else:
+            self.had_model_filter = True
+            self.log_view.set_model (None)
+            self.model_filter.add_filter (filter, dispatcher = dispatcher)
+
+        gobject.timeout_add (250, self.update_filter_progress)
+
+    def update_filter_progress (self):
+
+        if self.progress_dialog is None:
+            return False
+
+        progress = self.model_filter.get_filter_progress ()
+        self.progress_dialog.update (progress)
+
+        return True
+
+    def handle_filter_progress_dialog_cancel (self):
+
+        return
+
+        self.progress_dialog.destroy ()
+        self.progress_dialog = None
+
+        # FIXME: Implement filter cancelling correctly; the stuff below does
+        # not work.
+        
+        self.model_filter.abort_process ()
+        self.model_filter.reset ()
+        # FIXME:
+        self.actions.show_hidden_lines.activate ()
+
+    def handle_model_filter_process_finished (self):
+
+        self.progress_dialog.destroy ()
+        self.progress_dialog = None
+
+        if not self.had_model_filter: # FIXME
             self.change_model (self.model_filter)
         else:
-            # Empty dummy to clear all state:
-            self.log_view.props.model = gtk.ListStore (str)
-
-            self.model_filter.add_filter (filter)
-
             self.log_view.props.model = self.model_filter
 
         self.actions.show_hidden_lines.props.sensitive = True
