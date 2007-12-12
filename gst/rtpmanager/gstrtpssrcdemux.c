@@ -309,15 +309,32 @@ gst_rtp_ssrc_demux_init (GstRtpSsrcDemux * demux,
 }
 
 static void
+gst_rtp_ssrc_demux_reset (GstRtpSsrcDemux * demux)
+{
+  GSList *walk;
+
+  for (walk = demux->srcpads; walk; walk = g_slist_next (walk)) {
+    GstRtpSsrcDemuxPad *dpad = (GstRtpSsrcDemuxPad *) walk->data;
+
+    gst_pad_set_active (dpad->rtp_pad, FALSE);
+    gst_pad_set_active (dpad->rtcp_pad, FALSE);
+
+    gst_element_remove_pad (GST_ELEMENT_CAST (demux), dpad->rtp_pad);
+    gst_element_remove_pad (GST_ELEMENT_CAST (demux), dpad->rtcp_pad);
+    g_free (dpad);
+  }
+  g_slist_free (demux->srcpads);
+  demux->srcpads = NULL;
+}
+
+static void
 gst_rtp_ssrc_demux_dispose (GObject * object)
 {
   GstRtpSsrcDemux *demux;
 
   demux = GST_RTP_SSRC_DEMUX (object);
 
-  g_slist_foreach (demux->srcpads, (GFunc) g_free, NULL);
-  g_slist_free (demux->srcpads);
-  demux->srcpads = NULL;
+  gst_rtp_ssrc_demux_reset (demux);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -592,12 +609,6 @@ gst_rtp_ssrc_demux_src_query (GstPad * pad, GstQuery * query)
             "latency for SSRC %08x, latency %" GST_TIME_FORMAT, demuxpad->ssrc,
             GST_TIME_ARGS (demuxpad->first_ts));
 
-#if 0
-        min_latency += demuxpad->first_ts;
-        if (max_latency != -1)
-          max_latency += demuxpad->first_ts;
-#endif
-
         gst_query_set_latency (query, live, min_latency, max_latency);
       }
       break;
@@ -633,6 +644,8 @@ gst_rtp_ssrc_demux_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_rtp_ssrc_demux_reset (demux);
+      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
     default:
       break;

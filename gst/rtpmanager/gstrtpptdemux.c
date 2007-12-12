@@ -126,8 +126,8 @@ GST_BOILERPLATE (GstRtpPtDemux, gst_rtp_pt_demux, GstElement, GST_TYPE_ELEMENT);
 
 static void gst_rtp_pt_demux_finalize (GObject * object);
 
-static void gst_rtp_pt_demux_release (GstElement * element);
-static gboolean gst_rtp_pt_demux_setup (GstElement * element);
+static void gst_rtp_pt_demux_release (GstRtpPtDemux * ptdemux);
+static gboolean gst_rtp_pt_demux_setup (GstRtpPtDemux * ptdemux);
 
 static GstFlowReturn gst_rtp_pt_demux_chain (GstPad * pad, GstBuffer * buf);
 static GstStateChangeReturn gst_rtp_pt_demux_change_state (GstElement * element,
@@ -249,7 +249,7 @@ gst_rtp_pt_demux_init (GstRtpPtDemux * ptdemux, GstRtpPtDemuxClass * g_class)
 static void
 gst_rtp_pt_demux_finalize (GObject * object)
 {
-  gst_rtp_pt_demux_release (GST_ELEMENT (object));
+  gst_rtp_pt_demux_release (GST_RTP_PT_DEMUX (object));
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -426,33 +426,31 @@ find_pad_for_pt (GstRtpPtDemux * rtpdemux, guint8 pt)
  * Reserves resources for the object.
  */
 static gboolean
-gst_rtp_pt_demux_setup (GstElement * element)
+gst_rtp_pt_demux_setup (GstRtpPtDemux * ptdemux)
 {
-  GstRtpPtDemux *ptdemux = GST_RTP_PT_DEMUX (element);
-  gboolean res = TRUE;
+  ptdemux->srcpads = NULL;
+  ptdemux->last_pt = 0xFFFF;
 
-  if (ptdemux) {
-    ptdemux->srcpads = NULL;
-    ptdemux->last_pt = 0xFFFF;
-  }
-
-  return res;
+  return TRUE;
 }
 
 /**
  * Free resources for the object.
  */
 static void
-gst_rtp_pt_demux_release (GstElement * element)
+gst_rtp_pt_demux_release (GstRtpPtDemux * ptdemux)
 {
-  GstRtpPtDemux *ptdemux = GST_RTP_PT_DEMUX (element);
+  GSList *walk;
 
-  if (ptdemux) {
-    /* note: GstElement's dispose() will handle the pads */
-    g_slist_foreach (ptdemux->srcpads, (GFunc) g_free, NULL);
-    g_slist_free (ptdemux->srcpads);
-    ptdemux->srcpads = NULL;
+  for (walk = ptdemux->srcpads; walk; walk = g_slist_next (walk)) {
+    GstRtpPtDemuxPad *pad = walk->data;
+
+    gst_pad_set_active (pad->pad, FALSE);
+    gst_element_remove_pad (GST_ELEMENT_CAST (ptdemux), pad->pad);
+    g_free (pad);
   }
+  g_slist_free (ptdemux->srcpads);
+  ptdemux->srcpads = NULL;
 }
 
 static GstStateChangeReturn
@@ -465,7 +463,7 @@ gst_rtp_pt_demux_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      if (gst_rtp_pt_demux_setup (element) != TRUE)
+      if (gst_rtp_pt_demux_setup (ptdemux) != TRUE)
         ret = GST_STATE_CHANGE_FAILURE;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -481,7 +479,7 @@ gst_rtp_pt_demux_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_rtp_pt_demux_release (element);
+      gst_rtp_pt_demux_release (ptdemux);
       break;
     default:
       break;
