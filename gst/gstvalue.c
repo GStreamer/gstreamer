@@ -1292,6 +1292,8 @@ gst_value_deserialize_caps (GValue * dest, const gchar * s)
  * @structure: the structure to set the value to
  *
  * Sets the contents of @value to @structure.  The actual
+ *
+ * Since: 0.10.15
  */
 void
 gst_value_set_structure (GValue * value, const GstStructure * structure)
@@ -1308,6 +1310,8 @@ gst_value_set_structure (GValue * value, const GstStructure * structure)
  * Gets the contents of @value.
  *
  * Returns: the contents of @value
+ *
+ * Since: 0.10.15
  */
 const GstStructure *
 gst_value_get_structure (const GValue * value)

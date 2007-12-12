@@ -146,6 +146,8 @@ G_BEGIN_DECLS
  * @x: the #GValue to check
  *
  * Checks if the given #GValue contains a #GST_TYPE_STRUCTURE value.
+ *
+ * Since: 0.10.15
  */
 #define GST_VALUE_HOLDS_STRUCTURE(x)		(G_VALUE_HOLDS(x, GST_TYPE_STRUCTURE))
 

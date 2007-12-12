@@ -1,5 +1,11 @@
 2007-12-12  Stefan Kost  <ensonic@users.sf.net>
 
+	* gst/gstvalue.c:
+	* gst/gstvalue.h:
+	  Add more missing "Since:" tags to docs.
+
+2007-12-12  Stefan Kost  <ensonic@users.sf.net>
+
 	* gst/gstutils.c:
 	  Add mising "Since:" to docs.
 
