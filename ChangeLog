@@ -1,5 +1,10 @@
 2007-12-13  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst-libs/gst/pbutils/descriptions.c: (formats):
+	  Add description for 'private' dts caps (who come up with that name?).
+
+2007-12-13  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* Makefile.am:
 	  Add check-exports target and run it with 'make check'.
 

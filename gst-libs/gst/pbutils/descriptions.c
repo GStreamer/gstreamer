@@ -92,6 +92,7 @@ static const FormatInfo formats[] = {
   {"audio/x-cinepak", "Cinepak Audio", 0},
   {"audio/x-dpcm", "DPCM", 0},
   {"audio/x-dts", "DTS", 0},
+  {"audio/x-private1-dts", "DTS", 0},
   {"audio/x-dv", "DV Audio", 0},
   {"audio/x-flac", N_("Free Lossless Audio Codec (FLAC)"), 0},
   {"audio/x-gsm", "GSM", 0},
