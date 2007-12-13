@@ -234,7 +234,7 @@ gst_video_parse_init (GstVideoParse * vp, GstVideoParseClass * g_class)
 
   vp->width = 320;
   vp->height = 240;
-  vp->format = 0;
+  vp->format = GST_VIDEO_PARSE_FORMAT_I420;
   vp->par_n = 1;
   vp->par_d = 1;
   vp->fps_n = 25;
@@ -265,7 +265,7 @@ gst_video_parse_set_property (GObject * object, guint prop_id,
       vp->height = g_value_get_int (value);
       break;
     case ARG_FORMAT:
-      vp->format = g_value_get_int (value);
+      vp->format = g_value_get_enum (value);
       break;
     case ARG_FRAMERATE:
       vp->fps_n = gst_value_get_fraction_numerator (value);
@@ -296,7 +296,7 @@ gst_video_parse_get_property (GObject * object, guint prop_id, GValue * value,
       g_value_set_int (value, vp->height);
       break;
     case ARG_FORMAT:
-      g_value_set_int (value, vp->format);
+      g_value_set_enum (value, vp->format);
       break;
     case ARG_FRAMERATE:
       gst_value_set_fraction (value, vp->fps_n, vp->fps_d);

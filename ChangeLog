@@ -1,3 +1,13 @@
+2007-12-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/videoparse/Makefile.am:
+	  Add $(GST_PLUGINS_BASE_CFLAGS) to CFLAGS to fix the build.
+
+	* gst/videoparse/gstvideoparse.c: (gst_video_parse_init),
+	  (gst_video_parse_set_property), (gst_video_parse_get_property):
+	  Use g_value_[sg]et_enum() for enum properties, g_value_[sg]et_int()
+	  gives a g_critical().
+
 2007-12-12  David Schleef  <ds@schleef.org>
 
 	* gst/videoparse/README:
