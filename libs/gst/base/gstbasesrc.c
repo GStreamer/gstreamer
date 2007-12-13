@@ -1948,11 +1948,9 @@ gst_base_src_pad_check_get_range (GstPad * pad)
   GstBaseSrc *src;
   gboolean res;
 
-  src = GST_BASE_SRC (gst_pad_get_parent (pad));
+  src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
   res = gst_base_src_check_get_range (src);
-
-  gst_object_unref (src);
 
   return res;
 }
@@ -1968,7 +1966,7 @@ gst_base_src_loop (GstPad * pad)
 
   eos = FALSE;
 
-  src = GST_BASE_SRC (gst_pad_get_parent (pad));
+  src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
   GST_LIVE_LOCK (src);
   if (src->priv->flushing)
@@ -2056,13 +2054,12 @@ gst_base_src_loop (GstPad * pad)
   }
 
   if (eos) {
-    GST_INFO_OBJECT (src, "pausing after EOS");
+    GST_INFO_OBJECT (src, "pausing after end of segment");
     ret = GST_FLOW_UNEXPECTED;
     goto pause;
   }
 
 done:
-  gst_object_unref (src);
   return;
 
   /* special cases */

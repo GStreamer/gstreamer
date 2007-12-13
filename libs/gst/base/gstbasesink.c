@@ -2584,7 +2584,7 @@ gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
   GstBaseSink *basesink;
   GstFlowReturn result;
 
-  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
+  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
 
   if (G_UNLIKELY (basesink->pad_mode != GST_ACTIVATE_PUSH))
     goto wrong_mode;
@@ -2594,8 +2594,6 @@ gst_base_sink_chain (GstPad * pad, GstBuffer * buf)
   GST_PAD_PREROLL_UNLOCK (pad);
 
 done:
-  gst_object_unref (basesink);
-
   return result;
 
   /* ERRORS */
@@ -2623,7 +2621,7 @@ gst_base_sink_loop (GstPad * pad)
   GstBuffer *buf = NULL;
   GstFlowReturn result;
 
-  basesink = GST_BASE_SINK (gst_pad_get_parent (pad));
+  basesink = GST_BASE_SINK (GST_OBJECT_PARENT (pad));
 
   g_assert (basesink->pad_mode == GST_ACTIVATE_PULL);
 
@@ -2645,8 +2643,6 @@ gst_base_sink_loop (GstPad * pad)
   if (G_UNLIKELY (result != GST_FLOW_OK))
     goto paused;
 
-  gst_object_unref (basesink);
-
   return;
 
   /* ERRORS */
@@ -2665,7 +2661,6 @@ paused:
             ("stream stopped, reason %s", gst_flow_get_name (result)));
       }
     }
-    gst_object_unref (basesink);
     return;
   }
 no_buffer:

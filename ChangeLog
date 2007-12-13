@@ -1,3 +1,11 @@
+2007-12-13  Stefan Kost  <ensonic@users.sf.net>
+
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	* libs/gst/base/gstbasetransform.c:
+	  Replace gst_pad_get_parent by GST_OBJECT_PARENT inside streaming
+	  thread. Correct log message in gstbasesrc.c.
+
 2007-12-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstutils.c: (element_find_unconnected_pad):

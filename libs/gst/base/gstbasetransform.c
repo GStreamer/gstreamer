@@ -1570,7 +1570,7 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
   GstClockTime last_stop = GST_CLOCK_TIME_NONE;
   GstBuffer *outbuf = NULL;
 
-  trans = GST_BASE_TRANSFORM (gst_pad_get_parent (pad));
+  trans = GST_BASE_TRANSFORM (GST_OBJECT_PARENT (pad));
 
   /* calculate end position of the incoming buffer */
   if (GST_BUFFER_TIMESTAMP (buffer) != GST_CLOCK_TIME_NONE) {
@@ -1612,8 +1612,6 @@ gst_base_transform_chain (GstPad * pad, GstBuffer * buffer)
     trans->priv->discont = TRUE;
     ret = GST_FLOW_OK;
   }
-
-  gst_object_unref (trans);
 
   return ret;
 }
