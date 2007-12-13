@@ -517,23 +517,14 @@ gst_object_dispatch_properties_changed (GObject * object,
   /* now let the parent dispatch those, too */
   parent = gst_object_get_parent (gst_object);
   while (parent) {
-    /* for debugging ... */
-    gchar *parent_name = gst_object_get_name (parent);
-
-#ifndef GST_DISABLE_GST_DEBUG
-    gchar *debug_parent_name = GST_STR_NULL (parent_name);
-#endif
-
-    /* need own category? */
     for (i = 0; i < n_pspecs; i++) {
-      GST_CAT_LOG (GST_CAT_EVENT, "deep notification from %s to %s (%s)",
-          debug_name, debug_parent_name, pspecs[i]->name);
+      GST_LOG_OBJECT (parent, "deep notification from %s (%s)",
+          debug_name, pspecs[i]->name);
 
       g_signal_emit (parent, gst_object_signals[DEEP_NOTIFY],
           g_quark_from_string (pspecs[i]->name), GST_OBJECT_CAST (object),
           pspecs[i]);
     }
-    g_free (parent_name);
 
     old_parent = parent;
     parent = gst_object_get_parent (old_parent);

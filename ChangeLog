@@ -1,3 +1,8 @@
+2007-12-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstobject.c: (gst_object_dispatch_properties_changed):
+	  Don't use GST_CAT_EVENT here for logging, it makes no sense.
+
 2007-12-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* tools/gst-inspect.c: (print_element_properties_info):
