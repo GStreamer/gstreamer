@@ -11,7 +11,7 @@ def strip_color (input, output):
     for line in input:
         while "\x1b" in line:
             line = _escape.sub ("", line)
-        print output.write (line)
+        output.write (line)
 
 def main ():
 
