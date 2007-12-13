@@ -87,7 +87,7 @@ extern void metadataparse_jpeg_dispose (JpegParseData * jpeg_data);
 
 extern void metadataparse_jpeg_lazy_update (JpegParseData * jpeg_data);
 
-int
+extern MetadataParsingReturn
 metadataparse_jpeg_parse (JpegParseData * jpeg_data, guint8 * buf,
     guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
 

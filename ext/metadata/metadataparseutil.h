@@ -47,16 +47,20 @@
 #include <gst/gst.h>
 #include <gst/base/gstadapter.h>
 
+#include "metadatatypes.h"
+
 G_BEGIN_DECLS
 
 extern void
 metadataparse_util_tag_list_add_chunk (GstTagList * taglist,
     GstTagMergeMode mode, const gchar * name, GstAdapter * adapter);
-extern int metadataparse_util_hold_chunk (guint32 * read, guint8 ** buf,
+
+extern MetadataParsingReturn
+metadataparse_util_hold_chunk (guint32 * read, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size,
     GstAdapter ** adapter);
 
-extern int
+extern MetadataParsingReturn
 metadataparse_util_jump_chunk (guint32 * read, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 

@@ -84,6 +84,7 @@ metadatamux_xmp_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
 #else /* ifndef HAVE_XMP */
 
 #include <xmp.h>
+#include <string.h>
 
 #define XMP_SCHEMA_NODE 0x80000000UL
 

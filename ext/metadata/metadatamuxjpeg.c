@@ -49,7 +49,7 @@
 #include <libiptcdata/iptc-jpeg.h>
 #endif
 
-static int
+static MetadataParsingReturn
 metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size);
@@ -153,13 +153,13 @@ metadatamux_jpeg_dispose (JpegMuxData * jpeg_data)
   jpeg_data->state = JPEG_MUX_NULL;
 }
 
-int
+MetadataParsingReturn
 metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
     guint32 * bufsize, const guint32 offset, guint8 ** next_start,
     guint32 * next_size)
 {
 
-  int ret = 0;
+  int ret = META_PARSING_DONE;
   guint8 mark[2] = { 0x00, 0x00 };
   const guint8 *step_buf = buf;
 
@@ -169,7 +169,7 @@ metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
 
     if (*bufsize < 2) {
       *next_size = (buf - *next_start) + 2;
-      ret = 1;
+      ret = META_PARSING_NEED_MORE_DATA;
       goto done;
     }
 
@@ -177,7 +177,7 @@ metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
     mark[1] = READ (buf, *bufsize);
 
     if (mark[0] != 0xFF || mark[1] != 0xD8) {
-      ret = -1;
+      ret = META_PARSING_ERROR;
       goto done;
     }
 
@@ -185,7 +185,7 @@ metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
 
   }
 
-  while (ret == 0) {
+  while (ret == META_PARSING_DONE) {
     switch (jpeg_data->state) {
       case JPEG_MUX_READING:
         ret =
@@ -196,7 +196,7 @@ metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
         goto done;
         break;
       default:
-        ret = -1;
+        ret = META_PARSING_ERROR;
         break;
     }
   }
@@ -209,13 +209,13 @@ done:
 
 
 /* look for markers */
-static int
+static MetadataParsingReturn
 metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size)
 {
 
-  int ret = -1;
+  int ret = META_PARSING_ERROR;
   guint8 mark[2] = { 0x00, 0x00 };
   guint16 chunk_size = 0;
   gint64 new_chunk_offset = 0;
@@ -232,7 +232,7 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
 
   if (*bufsize < 2) {
     *next_size = (*buf - *next_start) + 2;
-    ret = 1;
+    ret = META_PARSING_NEED_MORE_DATA;
     goto done;
   }
 
@@ -249,7 +249,7 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
       if (chunk_size >= 16) {
         if (*bufsize < 5) {
           *next_size = (*buf - *next_start) + 5;
-          ret = 1;
+          ret = META_PARSING_NEED_MORE_DATA;
           goto done;
         }
 
@@ -263,7 +263,7 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
     }
 
     if (!jfif_found) {
-      ret = -1;
+      ret = META_PARSING_ERROR;
       goto done;
     }
 
@@ -305,11 +305,11 @@ metadatamux_jpeg_reading (JpegMuxData * jpeg_data, guint8 ** buf,
     metadata_chunk_array_append_sorted (jpeg_data->inject_chunks, &chunk);
 
     jpeg_data->state = JPEG_MUX_DONE;
-    ret = 0;
+    ret = META_PARSING_DONE;
 
   } else {
     /* invalid JPEG chunk */
-    ret = -1;
+    ret = META_PARSING_ERROR;
   }
 
 

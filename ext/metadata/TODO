@@ -1,0 +1,18 @@
+
+This file contains a list of things to be done as well some open issues (questions) related to design/implementation.
+
+TODO:
+
+1- Add individual tags IPTC and XMP (and more for EXIF)
+2- Use GST_TYPE_FRACTION for Rational and SRational (metadataexif.c)
+3- Get properties like 'width' and 'height' from caps
+4- Review the code (in order to move to gst-plugins-good)
+5- Document how the plugin works (atchitecture and interaction beteween modules)
+
+OPEN ISSUES:
+
+1- What is (How) the best way to delete some tag?
+2- How to change metadata when the orignal image was modified.
+  ex: file.jpeg has XMP, then we do filesrc ! metadataparse ! jpegdec ! pngenc ! metadatamux ! files
+  is the metadata still valid? which fields are no valid anymore?
+

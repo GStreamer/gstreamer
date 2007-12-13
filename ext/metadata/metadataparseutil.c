@@ -63,7 +63,7 @@ metadataparse_util_tag_list_add_chunk (GstTagList * taglist,
 
 }
 
-int
+MetadataParsingReturn
 metadataparse_util_hold_chunk (guint32 * read, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start,
     guint32 * next_size, GstAdapter ** adapter)
@@ -73,7 +73,7 @@ metadataparse_util_hold_chunk (guint32 * read, guint8 ** buf,
   if (*read > *bufsize) {
     *next_start = *buf;
     *next_size = *read;
-    ret = 1;
+    ret = META_PARSING_NEED_MORE_DATA;
   } else {
     GstBuffer *gst_buf;
 
@@ -88,13 +88,13 @@ metadataparse_util_hold_chunk (guint32 * read, guint8 ** buf,
     *buf += *read;
     *bufsize -= *read;
     *read = 0;
-    ret = 0;
+    ret = META_PARSING_DONE;
   }
 
   return ret;
 }
 
-int
+MetadataParsingReturn
 metadataparse_util_jump_chunk (guint32 * read, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
 {
@@ -106,13 +106,13 @@ metadataparse_util_jump_chunk (guint32 * read, guint8 ** buf,
     *next_start = *buf + *bufsize + *read;
     *read = 0;
     *bufsize = 0;
-    ret = 1;
+    ret = META_PARSING_NEED_MORE_DATA;
   } else {
     *next_start = *buf + *read;
     *buf += *read;
     *bufsize -= *read;
     *read = 0;
-    ret = 0;
+    ret = META_PARSING_DONE;
   }
   return ret;
 }

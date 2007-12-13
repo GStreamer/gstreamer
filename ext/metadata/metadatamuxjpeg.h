@@ -76,7 +76,7 @@ extern void metadatamux_jpeg_dispose (JpegMuxData * jpeg_data);
 
 extern void metadatamux_jpeg_lazy_update (JpegMuxData * jpeg_data);
 
-int
+extern MetadataParsingReturn
 metadatamux_jpeg_parse (JpegMuxData * jpeg_data, guint8 * buf,
     guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
 

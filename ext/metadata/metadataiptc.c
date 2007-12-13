@@ -75,6 +75,7 @@ metadatamux_iptc_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
 #else /* ifndef HAVE_IPTC */
 
 #include <iptc-data.h>
+#include <string.h>
 
 static void
 iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data);
@@ -122,7 +123,7 @@ static void
 iptc_data_foreach_dataset_func (IptcDataSet * dataset, void *user_data)
 {
 
-  char *buf[256];
+  char buf[256];
   GstTagList *taglist = (GstTagList *) user_data;
 
   GST_LOG ("name -> %s", iptc_tag_get_name (dataset->record, dataset->tag));

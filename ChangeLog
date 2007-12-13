@@ -1,5 +1,27 @@
 2007-12-13  Edgard Lima  <edgard.lima@indt.org.br>
 
+	* ext/metadata/TODO:
+	* ext/metadata/gstmetadatamux.c:
+	* ext/metadata/gstmetadataparse.c:
+	* ext/metadata/metadata.c:
+	* ext/metadata/metadata.h:
+	* ext/metadata/metadataiptc.c:
+	* ext/metadata/metadatamuxjpeg.c:
+	* ext/metadata/metadatamuxjpeg.h:
+	* ext/metadata/metadatamuxpng.c:
+	* ext/metadata/metadatamuxpng.h:
+	* ext/metadata/metadataparsejpeg.c:
+	* ext/metadata/metadataparsejpeg.h:
+	* ext/metadata/metadataparsepng.c:
+	* ext/metadata/metadataparsepng.h:
+	* ext/metadata/metadataparseutil.c:
+	* ext/metadata/metadataparseutil.h:
+	* ext/metadata/metadatatypes.h:
+	* ext/metadata/metadataxmp.c:
+	  Code documentation.
+
+2007-12-13  Edgard Lima  <edgard.lima@indt.org.br>
+
 	* configure.ac:
 	* ext/metadata/Makefile.am:
 	* ext/metadata/gstmetadatamux.c:

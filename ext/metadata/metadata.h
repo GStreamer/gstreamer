@@ -54,13 +54,16 @@
 
 G_BEGIN_DECLS
 
+/* *INDENT-OFF* */
+
 typedef enum _tag_MetaOption
 {
   META_OPT_EXIF = (1 << 0),
   META_OPT_IPTC = (1 << 1),
-  META_OPT_XMP = (1 << 2),
-  META_OPT_ALL = (1 << 3) - 1
+  META_OPT_XMP =  (1 << 2),
+  META_OPT_ALL =  (1 << 3) - 1
 } MetaOption;
+/* *INDENT-ON* */
 
 typedef enum _tag_MetaState
 {
@@ -102,26 +105,16 @@ typedef struct _tag_MetaData
 
 #define META_DATA_IMG_TYPE(p) (p).img_type
 
-extern void metadata_init (MetaData * meta_data, gboolean parse, guint8 options);
+extern void metadata_init (MetaData * meta_data, const gboolean parse, const guint8 options);
 
-/*
- * offset: number of bytes that MUST be jumped after current "buf" pointer
- * next_size: number of minimum amount of bytes required on next step.
- *            if less than this is provided, the return will be 1 for sure.
- *            and the offset will be 0 (zero)
- * return:
- *   -1 -> error
- *    0 -> done
- *    1 -> need more data
- */
-extern int
+extern void metadata_dispose (MetaData * meta_data);
+
+extern MetadataParsingReturn
 metadata_parse (MetaData * meta_data, const guint8 * buf,
     guint32 bufsize, guint32 * next_offset, guint32 * next_size);
 
 
 extern void metadata_lazy_update (MetaData * meta_data);
-
-extern void metadata_dispose (MetaData * meta_data);
 
 G_END_DECLS
 #endif /* __METADATA_H__ */

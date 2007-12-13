@@ -82,7 +82,7 @@ extern void metadataparse_png_dispose (PngParseData * png_data);
 
 extern void metadataparse_png_lazy_update (PngParseData * jpeg_data);
 
-int
+extern MetadataParsingReturn
 metadataparse_png_parse (PngParseData * png_data, guint8 * buf,
     guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
 

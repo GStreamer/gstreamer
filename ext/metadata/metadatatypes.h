@@ -48,6 +48,16 @@
 
 G_BEGIN_DECLS
 
+/* *INDENT-OFF* */
+
+typedef enum _tag_MetadataParsingReturn {
+  META_PARSING_ERROR          = -1,
+  META_PARSING_DONE           = 0,
+  META_PARSING_NEED_MORE_DATA = 1
+} MetadataParsingReturn;
+
+/* *INDENT-ON* */
+
 typedef enum _tag_MetadataChunkType {
   MD_CHUNK_UNKNOWN,
   MD_CHUNK_EXIF,

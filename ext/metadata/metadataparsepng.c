@@ -45,16 +45,16 @@
 
 #include <string.h>
 
-static int
+static MetadataParsingReturn
 metadataparse_png_reading (PngParseData * png_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size);
 
-static int
+static MetadataParsingReturn
 metadataparse_png_xmp (PngParseData * png_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
-static int
+static MetadataParsingReturn
 metadataparse_png_jump (PngParseData * png_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size);
 
@@ -86,13 +86,13 @@ metadataparse_png_dispose (PngParseData * png_data)
   png_data->xmp_adapter = NULL;
 }
 
-int
+MetadataParsingReturn
 metadataparse_png_parse (PngParseData * png_data, guint8 * buf,
     guint32 * bufsize, const guint32 offset, guint8 ** next_start,
     guint32 * next_size)
 {
 
-  int ret = 0;
+  int ret = META_PARSING_DONE;
   guint8 mark[8];
   const guint8 *step_buf = buf;
 
@@ -102,7 +102,7 @@ metadataparse_png_parse (PngParseData * png_data, guint8 * buf,
 
     if (*bufsize < 8) {
       *next_size = (buf - *next_start) + 8;
-      ret = 1;
+      ret = META_PARSING_NEED_MORE_DATA;
       goto done;
     }
 
@@ -118,7 +118,7 @@ metadataparse_png_parse (PngParseData * png_data, guint8 * buf,
     if (mark[0] != 0x89 || mark[1] != 0x50 || mark[2] != 0x4E || mark[3] != 0x47
         || mark[4] != 0x0D || mark[5] != 0x0A || mark[6] != 0x1A
         || mark[7] != 0x0A) {
-      ret = -1;
+      ret = META_PARSING_ERROR;
       goto done;
     }
 
@@ -126,7 +126,7 @@ metadataparse_png_parse (PngParseData * png_data, guint8 * buf,
 
   }
 
-  while (ret == 0) {
+  while (ret == META_PARSING_DONE) {
     switch (png_data->state) {
       case PNG_PARSE_READING:
         ret =
@@ -147,7 +147,7 @@ metadataparse_png_parse (PngParseData * png_data, guint8 * buf,
         goto done;
         break;
       default:
-        ret = -1;
+        ret = META_PARSING_ERROR;
         break;
     }
   }
@@ -160,13 +160,13 @@ done:
 
 
 /* look for markers */
-static int
+static MetadataParsingReturn
 metadataparse_png_reading (PngParseData * png_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size)
 {
 
-  int ret = -1;
+  int ret = META_PARSING_ERROR;
   guint8 mark[4];
   guint32 chunk_size = 0;
 
@@ -176,7 +176,7 @@ metadataparse_png_reading (PngParseData * png_data, guint8 ** buf,
 
   if (*bufsize < 8) {
     *next_size = (*buf - *next_start) + 8;
-    ret = 1;
+    ret = META_PARSING_NEED_MORE_DATA;
     goto done;
   }
 
@@ -191,7 +191,7 @@ metadataparse_png_reading (PngParseData * png_data, guint8 ** buf,
   mark[3] = READ (*buf, *bufsize);
 
   if (mark[0] == 'I' && mark[1] == 'E' && mark[2] == 'N' && mark[3] == 'D') {
-    ret = 0;
+    ret = META_PARSING_DONE;
     png_data->state = PNG_PARSE_DONE;
     goto done;
   }
@@ -200,7 +200,7 @@ metadataparse_png_reading (PngParseData * png_data, guint8 ** buf,
     if (chunk_size >= 22) {     /* "XML:com.adobe.xmp" plus some flags */
       if (*bufsize < 22) {
         *next_size = (*buf - *next_start) + 22;
-        ret = 1;
+        ret = META_PARSING_NEED_MORE_DATA;
         goto done;
       }
 
@@ -220,7 +220,7 @@ metadataparse_png_reading (PngParseData * png_data, guint8 ** buf,
           *bufsize -= 22;
           png_data->read = chunk_size - 22;     /* four CRC bytes at the end will be jumped after */
           png_data->state = PNG_PARSE_XMP;
-          ret = 0;
+          ret = META_PARSING_DONE;
           goto done;
         }
       }
@@ -230,7 +230,7 @@ metadataparse_png_reading (PngParseData * png_data, guint8 ** buf,
   /* just set jump sise  */
   png_data->read = chunk_size + 4;      /* four CRC bytes at the end */
   png_data->state = PNG_PARSE_JUMPING;
-  ret = 0;
+  ret = META_PARSING_DONE;
 
 done:
 
@@ -239,7 +239,7 @@ done:
 
 }
 
-static int
+static MetadataParsingReturn
 metadataparse_png_jump (PngParseData * png_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
 {
@@ -248,7 +248,7 @@ metadataparse_png_jump (PngParseData * png_data, guint8 ** buf,
       bufsize, next_start, next_size);
 }
 
-static int
+static MetadataParsingReturn
 metadataparse_png_xmp (PngParseData * png_data, guint8 ** buf,
     guint32 * bufsize, guint8 ** next_start, guint32 * next_size)
 {
@@ -256,7 +256,7 @@ metadataparse_png_xmp (PngParseData * png_data, guint8 ** buf,
 
   ret = metadataparse_util_hold_chunk (&png_data->read, buf,
       bufsize, next_start, next_size, png_data->xmp_adapter);
-  if (ret == 0) {
+  if (ret == META_PARSING_DONE) {
     /* jump four CRC bytes at the end of chunk */
     png_data->read = 4;
     png_data->state = PNG_PARSE_JUMPING;

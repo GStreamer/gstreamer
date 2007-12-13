@@ -45,7 +45,7 @@
 
 #include <string.h>
 
-static int
+static MetadataParsingReturn
 metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size);
@@ -168,13 +168,13 @@ metadatamux_png_dispose (PngMuxData * png_data)
   png_data->state = PNG_MUX_NULL;
 }
 
-int
+MetadataParsingReturn
 metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
     guint32 * bufsize, const guint32 offset, guint8 ** next_start,
     guint32 * next_size)
 {
 
-  int ret = 0;
+  int ret = META_PARSING_DONE;
   guint8 mark[8];
   const guint8 *step_buf = buf;
 
@@ -184,7 +184,7 @@ metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
 
     if (*bufsize < 8) {
       *next_size = (buf - *next_start) + 8;
-      ret = 1;
+      ret = META_PARSING_NEED_MORE_DATA;
       goto done;
     }
 
@@ -200,7 +200,7 @@ metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
     if (mark[0] != 0x89 || mark[1] != 0x50 || mark[2] != 0x4E || mark[3] != 0x47
         || mark[4] != 0x0D || mark[5] != 0x0A || mark[6] != 0x1A
         || mark[7] != 0x0A) {
-      ret = -1;
+      ret = META_PARSING_ERROR;
       goto done;
     }
 
@@ -208,7 +208,7 @@ metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
 
   }
 
-  while (ret == 0) {
+  while (ret == META_PARSING_DONE) {
     switch (png_data->state) {
       case PNG_MUX_READING:
         ret =
@@ -219,7 +219,7 @@ metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
         goto done;
         break;
       default:
-        ret = -1;
+        ret = META_PARSING_ERROR;
         break;
     }
   }
@@ -232,13 +232,13 @@ done:
 
 
 /* look for markers */
-static int
+static MetadataParsingReturn
 metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
     guint32 * bufsize, const guint32 offset, const guint8 * step_buf,
     guint8 ** next_start, guint32 * next_size)
 {
 
-  int ret = -1;
+  int ret = META_PARSING_ERROR;
   guint8 mark[4];
   guint32 chunk_size = 0;
   MetadataChunk chunk;
@@ -249,7 +249,7 @@ metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
 
   if (*bufsize < 8) {
     *next_size = (*buf - *next_start) + 8;
-    ret = 1;
+    ret = META_PARSING_NEED_MORE_DATA;
     goto done;
   }
 
@@ -264,7 +264,7 @@ metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
   mark[3] = READ (*buf, *bufsize);
 
   if (!(mark[0] == 'I' && mark[1] == 'H' && mark[2] == 'D' && mark[3] == 'R')) {
-    ret = -1;
+    ret = META_PARSING_ERROR;
     png_data->state = PNG_MUX_NULL;
     goto done;
   }
@@ -279,7 +279,7 @@ metadatamux_png_reading (PngMuxData * png_data, guint8 ** buf,
   metadata_chunk_array_append_sorted (png_data->inject_chunks, &chunk);
 
   png_data->state = PNG_MUX_DONE;
-  ret = 0;
+  ret = META_PARSING_DONE;
 
 done:
 

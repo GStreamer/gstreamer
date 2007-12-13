@@ -157,7 +157,7 @@ static gboolean gst_metadata_mux_configure_srccaps (GstMetadataMux * filter);
 static gboolean gst_metadata_mux_configure_caps (GstMetadataMux * filter);
 
 static int
-gst_metadata_mux_mux (GstMetadataMux * filter, const guint8 * buf,
+gst_metadata_mux_parse (GstMetadataMux * filter, const guint8 * buf,
     guint32 size);
 
 static void gst_metadata_mux_create_chunks_from_tags (GstMetadataMux * filter);
@@ -976,11 +976,21 @@ gst_metadata_mux_calculate_offsets (GstMetadataMux * filter)
 
 }
 
+
+/*
+ * Do parsing step-by-step and reconfigure caps if need
+ * return:
+ *   META_PARSING_ERROR
+ *   META_PARSING_DONE
+ *   META_PARSING_NEED_MORE_DATA
+ */
+
 static int
-gst_metadata_mux_mux (GstMetadataMux * filter, const guint8 * buf, guint32 size)
+gst_metadata_mux_parse (GstMetadataMux * filter, const guint8 * buf,
+    guint32 size)
 {
 
-  int ret = -1;
+  int ret = META_PARSING_ERROR;
 
   filter->next_offset = 0;
   filter->next_size = 0;
@@ -988,14 +998,14 @@ gst_metadata_mux_mux (GstMetadataMux * filter, const guint8 * buf, guint32 size)
   ret = metadata_parse (&filter->mux_data, buf, size,
       &filter->next_offset, &filter->next_size);
 
-  if (ret < 0) {
+  if (ret == META_PARSING_ERROR) {
     if (META_DATA_IMG_TYPE (filter->mux_data) == IMG_NONE) {
       /* image type not recognized */
       GST_ELEMENT_ERROR (filter, STREAM, TYPE_NOT_FOUND, (NULL),
           ("Only jpeg and png are supported"));
       goto done;
     }
-  } else if (ret > 0) {
+  } else if (ret == META_PARSING_NEED_MORE_DATA) {
     filter->need_more_data = TRUE;
   } else {
     filter->state = MT_STATE_MUXED;
@@ -1009,7 +1019,7 @@ gst_metadata_mux_mux (GstMetadataMux * filter, const guint8 * buf, guint32 size)
       GST_ELEMENT_ERROR (filter, STREAM, FORMAT, (NULL),
           ("Couldn't reconfigure caps for %s",
               gst_metadata_mux_get_type_name (filter->img_type)));
-      ret = -1;
+      ret = META_PARSING_ERROR;
       goto done;
     }
   }
@@ -1082,8 +1092,11 @@ gst_metadata_mux_chain (GstPad * pad, GstBuffer * buf)
       const guint8 *new_buf =
           gst_adapter_peek (filter->adapter_parsing, adpt_size);
 
-      if (gst_metadata_mux_mux (filter, new_buf, adpt_size) < 0)
+      if (gst_metadata_mux_parse (filter, new_buf,
+              adpt_size) == META_PARSING_ERROR) {
+        ret = GST_FLOW_ERROR;
         goto done;
+      }
     }
   }
 
@@ -1098,8 +1111,10 @@ gst_metadata_mux_chain (GstPad * pad, GstBuffer * buf)
     }
 
     if (filter->need_calculate_offset) {
-      if (!gst_metadata_mux_calculate_offsets (filter))
+      if (!gst_metadata_mux_calculate_offsets (filter)) {
+        ret = GST_FLOW_ERROR;
         goto done;
+      }
     }
 
     if (filter->offset_orig + GST_BUFFER_SIZE (buf) == filter->duration_orig)
@@ -1188,8 +1203,13 @@ gst_metadata_mux_pull_range_mux (GstMetadataMux * filter)
 
     offset += filter->next_offset;
 
+    /* 'filter->next_size' only says the minimum required number of bytes.
+       We try provided more bytes (4096) just to avoid a lot of calls to 'metadata_parse'
+       returning META_PARSING_NEED_MORE_DATA */
     if (filter->next_size < 4096) {
       if (duration - offset < 4096) {
+        /* In case there is no 4096 bytes available upstream.
+           It should be done upstream but we do here for safety */
         filter->next_size = duration - offset;
       } else {
         filter->next_size = 4096;
@@ -1204,16 +1224,16 @@ gst_metadata_mux_pull_range_mux (GstMetadataMux * filter)
     }
 
     res =
-        gst_metadata_mux_mux (filter, GST_BUFFER_DATA (buf),
+        gst_metadata_mux_parse (filter, GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf));
-    if (res < 0) {
+    if (res == META_PARSING_ERROR) {
       ret = FALSE;
       goto done;
     }
 
     gst_buffer_unref (buf);
 
-  } while (res > 0);
+  } while (res == META_PARSING_NEED_MORE_DATA);
 
 
 done:

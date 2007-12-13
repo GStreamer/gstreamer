@@ -78,7 +78,7 @@ extern void metadatamux_png_dispose (PngMuxData * png_data);
 
 extern void metadatamux_png_lazy_update (PngMuxData * png_data);
 
-int
+extern MetadataParsingReturn
 metadatamux_png_parse (PngMuxData * png_data, guint8 * buf,
     guint32 * bufsize, const guint32 offset, guint8 ** next_start, guint32 * next_size);
 
