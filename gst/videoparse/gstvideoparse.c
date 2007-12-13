@@ -112,13 +112,13 @@ static GstStaticPadTemplate gst_video_parse_src_pad_template =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YUY2, UYVY }")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY }")));
 
 static GstStaticPadTemplate gst_video_parse_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YUY2, UYVY }")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY }")));
 
 GST_DEBUG_CATEGORY_STATIC (gst_video_parse_debug);
 #define GST_CAT_DEFAULT gst_video_parse_debug
@@ -511,8 +511,10 @@ gst_video_parse_sink_event (GstPad * pad, GstEvent * event)
 
       ret =
           gst_video_parse_convert (vp, format, start, GST_FORMAT_TIME, &start);
-      ret &= gst_video_parse_convert (vp, format, stop, GST_FORMAT_TIME, &stop);
       ret &= gst_video_parse_convert (vp, format, time, GST_FORMAT_TIME, &time);
+      if (stop != GST_CLOCK_TIME_NONE)
+        ret &=
+            gst_video_parse_convert (vp, format, stop, GST_FORMAT_TIME, &stop);
       if (!ret) {
         GST_ERROR_OBJECT (vp,
             "Failed converting to GST_FORMAT_TIME format (%d)", format);
