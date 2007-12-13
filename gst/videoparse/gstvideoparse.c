@@ -101,6 +101,8 @@ static void gst_video_parse_get_property (GObject * object, guint prop_id,
 
 static GstFlowReturn gst_video_parse_chain (GstPad * pad, GstBuffer * buffer);
 static gboolean gst_video_parse_sink_event (GstPad * pad, GstEvent * event);
+static gboolean gst_video_parse_src_event (GstPad * pad, GstEvent * event);
+static const GstQueryType *gst_video_parse_src_query_type (GstPad * pad);
 static gboolean gst_video_parse_src_query (GstPad * pad, GstQuery * query);
 static gboolean gst_video_parse_convert (GstVideoParse * vp,
     GstFormat src_format, gint64 src_value,
@@ -118,7 +120,7 @@ static GstStaticPadTemplate gst_video_parse_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY }")));
+    GST_STATIC_CAPS_ANY);
 
 GST_DEBUG_CATEGORY_STATIC (gst_video_parse_debug);
 #define GST_CAT_DEFAULT gst_video_parse_debug
@@ -226,7 +228,11 @@ gst_video_parse_init (GstVideoParse * vp, GstVideoParseClass * g_class)
       "src");
   gst_element_add_pad (GST_ELEMENT (vp), vp->srcpad);
 
+  gst_pad_set_event_function (vp->srcpad, gst_video_parse_src_event);
+
   if (1) {
+    gst_pad_set_query_type_function (vp->srcpad,
+        gst_video_parse_src_query_type);
     gst_pad_set_query_function (vp->srcpad, gst_video_parse_src_query);
   }
 
@@ -551,6 +557,67 @@ gst_video_parse_sink_event (GstPad * pad, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_video_parse_src_event (GstPad * pad, GstEvent * event)
+{
+  GstVideoParse *vp = GST_VIDEO_PARSE (gst_pad_get_parent (pad));
+  gboolean ret;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:{
+      GstFormat format;
+      gdouble rate;
+      GstSeekFlags flags;
+      GstSeekType start_type, stop_type;
+      gint64 start, stop;
+
+      gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
+          &stop_type, &stop);
+
+      /* We only handle TIME and DEFAULT (aka frames), forward everything
+       * upstream */
+      if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
+        gst_event_ref (event);
+        ret = gst_pad_push_event (vp->sinkpad, event);
+      } else {
+        ret =
+            gst_video_parse_convert (vp, format, start, GST_FORMAT_BYTES,
+            &start);
+        ret &=
+            gst_video_parse_convert (vp, format, stop, GST_FORMAT_BYTES, &stop);
+
+        if (ret) {
+          event =
+              gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, start_type,
+              start, stop_type, stop);
+
+          ret = gst_pad_push_event (vp->sinkpad, event);
+        }
+      }
+      break;
+    }
+    default:
+      ret = gst_pad_event_default (vp->srcpad, event);
+      break;
+  }
+
+  gst_object_unref (vp);
+
+  return ret;
+}
+
+static const GstQueryType *
+gst_video_parse_src_query_type (GstPad * pad)
+{
+  static const GstQueryType types[] = {
+    GST_QUERY_POSITION,
+    GST_QUERY_DURATION,
+    GST_QUERY_CONVERT,
+    0
+  };
+
+  return types;
+}
 
 static gboolean
 gst_video_parse_src_query (GstPad * pad, GstQuery * query)

@@ -1,5 +1,13 @@
 2007-12-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/videoparse/gstvideoparse.c: (gst_video_parse_init),
+	  (gst_video_parse_src_event), (gst_video_parse_src_query_type):
+	  Implement a query type function for the src pad, implement seeking
+	  and use ANY caps for the sink pad as the element doesn't care what
+	  caps the input has and everything is handled via properties.
+
+2007-12-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/videoparse/gstvideoparse.c: (gst_video_parse_convert),
 	  (gst_video_parse_sink_event):
 	  Handle -1 values for the CONVERT query too.
