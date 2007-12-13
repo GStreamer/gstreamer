@@ -1,3 +1,10 @@
+2007-12-12  David Schleef  <ds@schleef.org>
+
+	* gst/videoparse/README:
+	* gst/videoparse/gstvideoparse.c:
+	  Add a bunch of features: handle format specification, handle
+	  queries and conversion.  Works much like a normal parser now.
+
 2007-12-12  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* gst/rtpmanager/gstrtpptdemux.c: (gst_rtp_pt_demux_finalize),
