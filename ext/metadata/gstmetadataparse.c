@@ -1312,6 +1312,7 @@ gst_metadata_parse_strip_push_buffer (GstMetadataParse * filter,
   MetadataChunk *inject = filter->parse_data.inject_chunks.chunk;
   const gsize strip_len = filter->parse_data.strip_chunks.len;
   const gsize inject_len = filter->parse_data.inject_chunks.len;
+  gboolean buffer_reallocated = FALSE;
 
   guint32 size_buf_in = GST_BUFFER_SIZE (*buf);
 
@@ -1383,24 +1384,27 @@ gst_metadata_parse_strip_push_buffer (GstMetadataParse * filter,
 
     guint8 *data;
 
-    if (injected_bytes + prepend_size > striped_bytes) {
-      GstBuffer *new_buf =
-          gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + injected_bytes +
-          prepend_size - striped_bytes);
+    if (!buffer_reallocated) {
+      buffer_reallocated = TRUE;
+      if (injected_bytes + prepend_size > striped_bytes) {
+        GstBuffer *new_buf =
+            gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + injected_bytes +
+            prepend_size - striped_bytes);
 
-      memcpy (GST_BUFFER_DATA (new_buf), GST_BUFFER_DATA (*buf),
-          GST_BUFFER_SIZE (*buf));
+        memcpy (GST_BUFFER_DATA (new_buf), GST_BUFFER_DATA (*buf),
+            GST_BUFFER_SIZE (*buf));
 
-      gst_buffer_unref (*buf);
-      *buf = new_buf;
+        gst_buffer_unref (*buf);
+        *buf = new_buf;
 
-    } else if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY)) {
-      GstBuffer *new_buf = gst_buffer_copy (*buf);
+      } else if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY)) {
+        GstBuffer *new_buf = gst_buffer_copy (*buf);
 
-      gst_buffer_unref (*buf);
-      *buf = new_buf;
-      GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
-      GST_BUFFER_SIZE (*buf) += injected_bytes + prepend_size - striped_bytes;
+        gst_buffer_unref (*buf);
+        *buf = new_buf;
+        GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
+        GST_BUFFER_SIZE (*buf) += injected_bytes + prepend_size - striped_bytes;
+      }
     }
 
     data = GST_BUFFER_DATA (*buf);
@@ -1430,24 +1434,27 @@ inject:
     guint8 *data;
     guint32 striped_so_far;
 
-    if (injected_bytes + prepend_size > striped_bytes) {
-      GstBuffer *new_buf =
-          gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + injected_bytes +
-          prepend_size - striped_bytes);
+    if (!buffer_reallocated) {
+      buffer_reallocated = TRUE;
+      if (injected_bytes + prepend_size > striped_bytes) {
+        GstBuffer *new_buf =
+            gst_buffer_new_and_alloc (GST_BUFFER_SIZE (*buf) + injected_bytes +
+            prepend_size - striped_bytes);
 
-      memcpy (GST_BUFFER_DATA (new_buf), GST_BUFFER_DATA (*buf),
-          GST_BUFFER_SIZE (*buf));
+        memcpy (GST_BUFFER_DATA (new_buf), GST_BUFFER_DATA (*buf),
+            GST_BUFFER_SIZE (*buf));
 
-      gst_buffer_unref (*buf);
-      *buf = new_buf;
+        gst_buffer_unref (*buf);
+        *buf = new_buf;
 
-    } else if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY)) {
-      GstBuffer *new_buf = gst_buffer_copy (*buf);
+      } else if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_READONLY)) {
+        GstBuffer *new_buf = gst_buffer_copy (*buf);
 
-      gst_buffer_unref (*buf);
-      *buf = new_buf;
-      GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
-      GST_BUFFER_SIZE (*buf) += injected_bytes + prepend_size - striped_bytes;
+        gst_buffer_unref (*buf);
+        *buf = new_buf;
+        GST_BUFFER_FLAG_UNSET (*buf, GST_BUFFER_FLAG_READONLY);
+        GST_BUFFER_SIZE (*buf) += injected_bytes + prepend_size - striped_bytes;
+      }
     }
 
     data = GST_BUFFER_DATA (*buf);
@@ -1476,7 +1483,7 @@ inject:
               size_buf_in - buf_off);
           memcpy (data + buf_off, inject[i].data, inject[i].size);
           injected_bytes += inject[i].size;
-          size_buf_in += injected_bytes;
+          size_buf_in += inject[i].size;
         } else {
           /* segment is after size (segments are sorted) */
           break;

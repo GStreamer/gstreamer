@@ -30,6 +30,5 @@ noinst_HEADERS = 	gstmetadataparse.h   \
 			metadataxmp.h        \
 			metadataparseutil.h  \
 			metadatatypes.h      \
-			gstmetadatamux.h     \
-			metadatatags.h
+			gstmetadatamux.h 
 

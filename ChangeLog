@@ -1,3 +1,16 @@
+2007-12-13  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* configure.ac:
+	* ext/metadata/Makefile.am:
+	* ext/metadata/gstmetadatamux.c:
+	* ext/metadata/gstmetadataparse.c:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/test/Makefile:
+	* ext/metadata/test/MetadataEditorMain.glade:
+	* ext/metadata/test/metadata_editor.c:
+	  Added a test application. Added some EXIF tags. Fixed a muxer bug.
+
 2007-12-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/videoparse/gstvideoparse.c: (gst_video_parse_init),

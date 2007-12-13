@@ -75,6 +75,8 @@ metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
 
 #include <libexif/exif-data.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
 
 typedef struct _tag_MEUserData
 {
@@ -95,37 +97,55 @@ exif_data_foreach_content_func (ExifContent * content, void *callback_data);
 
 static void exif_content_foreach_entry_func (ExifEntry * entry, void *);
 
-const gchar *
+/* *INDENT-OFF* */
+static MapIntStr mappedTags[] = {
+  {EXIF_TAG_MAKE,               /*EXIF_FORMAT_ASCII,*/     GST_TAG_DEVICE_MAKE,              G_TYPE_STRING},
+  {EXIF_TAG_MODEL,              /*EXIF_FORMAT_ASCII,*/     GST_TAG_DEVICE_MODEL,             G_TYPE_STRING},
+  {EXIF_TAG_SOFTWARE,           /*EXIF_FORMAT_ASCII,*/     GST_TAG_CREATOR_TOOL,             G_TYPE_STRING},
+  {EXIF_TAG_X_RESOLUTION,       /*EXIF_FORMAT_RATIONAL,*/  GST_TAG_IMAGE_XRESOLUTION,        G_TYPE_FLOAT},   /* inches */
+  {EXIF_TAG_Y_RESOLUTION,       /*EXIF_FORMAT_RATIONAL,*/  GST_TAG_IMAGE_YRESOLUTION,        G_TYPE_FLOAT},   /* inches */
+  {EXIF_TAG_EXPOSURE_TIME,      /*EXIF_FORMAT_RATIONAL,*/  GST_TAG_CAPTURE_EXPOSURE_TIME,    G_TYPE_FLOAT},
+  {EXIF_TAG_FNUMBER,            /*EXIF_FORMAT_RATIONAL,*/  GST_TAG_CAPTURE_FNUMBER,          G_TYPE_FLOAT},
+  {EXIF_TAG_EXPOSURE_PROGRAM,   /*EXIF_FORMAT_SHORT,*/     GST_TAG_CAPTURE_EXPOSURE_PROGRAM, G_TYPE_UINT},
+  {EXIF_TAG_BRIGHTNESS_VALUE,   /*EXIF_FORMAT_SRATIONAL,*/ GST_TAG_CAPTURE_BRIGHTNESS,       G_TYPE_FLOAT},
+  {EXIF_TAG_WHITE_BALANCE,      /*EXIF_FORMAT_SHORT,*/     GST_TAG_CAPTURE_WHITE_BALANCE,    G_TYPE_UINT},
+  {EXIF_TAG_DIGITAL_ZOOM_RATIO, /*EXIF_FORMAT_RATIONAL,*/  GST_TAG_CAPTURE_DIGITAL_ZOOM,     G_TYPE_FLOAT},
+  {EXIF_TAG_GAIN_CONTROL,       /*EXIF_FORMAT_SHORT,*/     GST_TAG_CAPTURE_GAIN,             G_TYPE_UINT},
+  {EXIF_TAG_CONTRAST,           /*EXIF_FORMAT_SHORT,*/     GST_TAG_CAPTURE_CONTRAST,         G_TYPE_INT},
+  {EXIF_TAG_SATURATION,         /*EXIF_FORMAT_SHORT,*/     GST_TAG_CAPTURE_SATURATION,       G_TYPE_INT},
+  {0, NULL, G_TYPE_NONE}
+};
+/* *INDENT-ON* */
+
+static const gchar *
 metadataparse_exif_get_tag_from_exif (ExifTag exif, GType * type)
 {
-  /* FIXEME: sorted with binary search */
-  static MapIntStr array[] = {
-    {EXIF_TAG_MAKE, GST_TAG_DEVICE_MAKE, G_TYPE_STRING},
-    {EXIF_TAG_MODEL, GST_TAG_DEVICE_MODEL, G_TYPE_STRING},
-    {EXIF_TAG_SOFTWARE, GST_TAG_CREATOR_TOOL, G_TYPE_STRING},
-    {EXIF_TAG_X_RESOLUTION, GST_TAG_IMAGE_XRESOLUTION, G_TYPE_FLOAT},   /* asure inches */
-    {EXIF_TAG_Y_RESOLUTION, GST_TAG_IMAGE_YRESOLUTION, G_TYPE_FLOAT},   /* asure inches */
-    {EXIF_TAG_EXPOSURE_TIME, GST_TAG_CAPTURE_EXPOSURE_TIME, G_TYPE_FLOAT},
-    {EXIF_TAG_FNUMBER, GST_TAG_CAPTURE_FNUMBER, G_TYPE_FLOAT},
-    {EXIF_TAG_EXPOSURE_PROGRAM, GST_TAG_CAPTURE_EXPOSURE_PROGRAM, G_TYPE_UINT},
-    {EXIF_TAG_BRIGHTNESS_VALUE, GST_TAG_CAPTURE_BRIGHTNESS, G_TYPE_FLOAT},
-    {EXIF_TAG_WHITE_BALANCE, GST_TAG_CAPTURE_WHITE_BALANCE, G_TYPE_UINT},
-    {EXIF_TAG_DIGITAL_ZOOM_RATIO, GST_TAG_CAPTURE_DIGITAL_ZOOM, G_TYPE_FLOAT},
-    {EXIF_TAG_GAIN_CONTROL, GST_TAG_CAPTURE_GAIN, G_TYPE_UINT},
-    {EXIF_TAG_CONTRAST, GST_TAG_CAPTURE_CONTRAST, G_TYPE_UINT},
-    {EXIF_TAG_SATURATION, GST_TAG_CAPTURE_SATURATION, G_TYPE_UINT},
-    {0, NULL, G_TYPE_NONE, G_TYPE_UINT}
-  };
   int i = 0;
 
-  while (array[i].exif) {
-    if (exif == array[i].exif)
+  while (mappedTags[i].exif) {
+    if (exif == mappedTags[i].exif)
       break;
     ++i;
   }
 
-  *type = array[i].type;
-  return array[i].str;
+  *type = mappedTags[i].type;
+  return mappedTags[i].str;
+
+}
+
+static ExifTag
+metadataparse_exif_get_exif_from_tag (const gchar * tag, GType * type)
+{
+  int i = 0;
+
+  while (mappedTags[i].exif) {
+    if (0 == strcmp (mappedTags[i].str, tag))
+      break;
+    ++i;
+  }
+
+  *type = mappedTags[i].type;
+  return mappedTags[i].exif;
 
 }
 
@@ -180,6 +200,31 @@ exif_data_foreach_content_func (ExifContent * content, void *user_data)
       user_data);
 }
 
+#if 0
+static gboolean
+exif_fast_mdc (glong n, glong d, gulong * m)
+{
+  gboolean ret = FALSE;
+
+  static const int a[] =
+      { 2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 39, 41, 43, 47, 49, 53, 0 };
+  int i = 0;
+
+  *m = 1;
+
+  while (a[i] <= n && a[i] <= d) {
+    while ((n % a[i] == 0) && (d % a[i]) == 0) {
+      *m *= a[i];
+      ret = TRUE;
+    }
+    ++i;
+  }
+
+  return ret;
+
+}
+#endif
+
 static void
 exif_content_foreach_entry_func (ExifEntry * entry, void *user_data)
 {
@@ -223,65 +268,83 @@ exif_content_foreach_entry_func (ExifEntry * entry, void *user_data)
       case G_TYPE_FLOAT:
       {
         gfloat f_value;
-        ExifRational v_rat;
 
         switch (entry->format) {
-          case EXIF_FORMAT_RATIONAL:
-            v_rat = exif_get_rational (entry->data, byte_order);
-            if (v_rat.numerator == 0)
+          case EXIF_FORMAT_SRATIONAL:
+          {
+            ExifSRational v_srat;
+
+            v_srat = exif_get_srational (entry->data, byte_order);
+            if (v_srat.denominator == 0)
               f_value = 0.0f;
             else
-              f_value = (float) v_rat.numerator / (float) v_rat.denominator;
-            if (v_rat.numerator == 0xFFFFFFFF) {
-              if (entry->tag == GST_TAG_CAPTURE_BRIGHTNESS) {
+              f_value = (float) v_srat.numerator / (float) v_srat.denominator;
+            if (v_srat.numerator == 0xFFFFFFFF) {
+              if (entry->tag == EXIF_TAG_BRIGHTNESS_VALUE) {
                 f_value = 100.0f;
               }
             }
+          }
+            break;
+          case EXIF_FORMAT_RATIONAL:
+          {
+            ExifRational v_rat;
+
+            v_rat = exif_get_rational (entry->data, byte_order);
+            if (v_rat.denominator == 0)
+              f_value = 0.0f;
+            else
+              f_value = (float) v_rat.numerator / (float) v_rat.denominator;
+            if (meudata->resolution_unit == 3) {
+              /* converts from cm to inches */
+              if (entry->tag == EXIF_TAG_X_RESOLUTION
+                  || entry->tag == EXIF_TAG_Y_RESOLUTION) {
+                f_value *= 0.4f;
+              }
+            }
+          }
             break;
           default:
             GST_ERROR ("Unexpected Tag Type");
             goto done;
             break;
         }
-        if (meudata->resolution_unit == 3) {
-          /* converts from cm to inches */
-          if (entry->tag == EXIF_TAG_X_RESOLUTION
-              || entry->tag == EXIF_TAG_Y_RESOLUTION) {
-            f_value *= 0.4f;
-          }
-        }
         gst_tag_list_add (meudata->taglist, meudata->mode, tag, f_value, NULL);
       }
+        break;
+      case G_TYPE_INT:
+        /* fall through */
       case G_TYPE_UINT:
       {
-        ExifShort v_short;
+        gint value;
 
         switch (entry->format) {
           case EXIF_FORMAT_SHORT:
-            v_short = exif_get_short (entry->data, byte_order);
+            value = exif_get_short (entry->data, byte_order);
             break;
           default:
-            GST_ERROR ("Unexpected Tag Type");
+            GST_ERROR ("Unexpected Exif Tag Type (%s - %s)",
+                tag, exif_format_get_name (entry->format));
             goto done;
             break;
         }
         if (entry->tag == EXIF_TAG_CONTRAST ||
             entry->tag == EXIF_TAG_SATURATION) {
-          switch (v_short) {
+          switch (value) {
             case 0:
               break;
             case 1:
-              v_short = -67;
+              value = -67;      /* -100-34 /2 */
               break;
             case 2:
-              v_short = 66;
+              value = 67;       /* 100+34 /2 */
               break;
             default:
               GST_ERROR ("Unexpected value");
               break;
           }
         }
-        gst_tag_list_add (meudata->taglist, meudata->mode, tag, v_short, NULL);
+        gst_tag_list_add (meudata->taglist, meudata->mode, tag, value, NULL);
       }
         break;
       default:
@@ -312,6 +375,188 @@ done:
 /*
  *
  */
+
+static ExifRational
+float_to_rational (gfloat f)
+{
+  ExifRational r;
+  int i = 6;                    /* precision */
+
+  r.denominator = 1;
+
+  while (i--) {
+    if (f == floorf (f)) {
+      break;
+    }
+    f *= 10.0f;
+    r.denominator *= 10;
+  }
+
+  r.numerator = f;
+
+  if (!(r.numerator & 0x1 || r.denominator & 0x1)) {
+    /* divide both by 2 */
+    r.numerator >>= 1;
+    r.denominator >>= 1;
+  }
+  if (r.numerator % 5 == 0 && r.denominator % 5 == 0) {
+    r.numerator /= 5;
+    r.denominator /= 5;
+  }
+
+  return r;
+
+}
+
+static ExifSRational
+float_to_srational (gfloat f)
+{
+  ExifSRational sr;
+  int i = 6;                    /* precision */
+
+  sr.denominator = 1;
+
+  while (i--) {
+    if (f == floorf (f)) {
+      break;
+    }
+    f *= 10.0f;
+    sr.denominator *= 10;
+  }
+
+  sr.numerator = f;
+
+  if (!(sr.numerator & 0x1 || sr.denominator & 0x1)) {
+    /* divide both by 2 */
+    sr.numerator >>= 1;
+    sr.denominator >>= 1;
+  }
+  if (sr.numerator % 5 == 0 && sr.denominator % 5 == 0) {
+    sr.numerator /= 5;
+    sr.denominator /= 5;
+  }
+
+  return sr;
+
+}
+
+static void
+metadataexif_for_each_tag_in_list (const GstTagList * list, const gchar * tag,
+    gpointer user_data)
+{
+  ExifData *ed = (ExifData *) user_data;
+  ExifTag exif_tag;
+  GType type;
+  ExifEntry *entry = NULL;
+  const ExifByteOrder byte_order = exif_data_get_byte_order (ed);
+
+  exif_tag = metadataparse_exif_get_exif_from_tag (tag, &type);
+
+  if (!exif_tag)
+    goto done;
+
+  entry = exif_data_get_entry (ed, exif_tag);
+
+  if (entry)
+    exif_entry_ref (entry);
+  else {
+    entry = exif_entry_new ();
+    exif_content_add_entry (ed->ifd[EXIF_IFD_0], entry);
+    exif_entry_initialize (entry, exif_tag);
+  }
+
+  switch (type) {
+    case G_TYPE_STRING:
+    {
+      gchar *value = NULL;
+
+      if (gst_tag_list_get_string (list, tag, &value)) {
+        entry->components = strlen (value) + 1;
+        entry->size = exif_format_get_size (entry->format) * entry->components;
+        entry->data = value;
+      }
+    }
+      break;
+    case G_TYPE_FLOAT:
+    {
+      gfloat value;
+
+      gst_tag_list_get_float (list, tag, &value);
+
+      switch (entry->format) {
+        case EXIF_FORMAT_SRATIONAL:
+        {
+          ExifSRational sr;
+
+          sr = float_to_srational (value);
+          if (entry->tag == EXIF_TAG_BRIGHTNESS_VALUE) {
+            if (value == 100.0f) {
+              sr.numerator = 0xFFFFFFFF;
+              sr.denominator = 1;
+            }
+          }
+
+          exif_set_srational (entry->data, byte_order, sr);
+        }
+          break;
+        case EXIF_FORMAT_RATIONAL:
+        {
+          ExifRational r;
+
+          r = float_to_rational (value);
+          exif_set_rational (entry->data, byte_order, r);
+          if (entry->tag == EXIF_TAG_X_RESOLUTION ||
+              entry->tag == EXIF_TAG_Y_RESOLUTION) {
+            ExifEntry *unit_entry = NULL;
+
+            if ((unit_entry =
+                    exif_data_get_entry (ed, EXIF_TAG_RESOLUTION_UNIT))) {
+              ExifShort vsh = exif_get_short (unit_entry->data, byte_order);
+
+              if (vsh != 2)     /* inches */
+                exif_set_short (unit_entry->data, byte_order, 2);
+            }
+          }
+        }
+          break;
+        default:
+          break;
+      }
+    }
+      break;
+    case G_TYPE_UINT:
+    case G_TYPE_INT:
+    {
+      gint value;
+      ExifShort v_short;
+
+      if (G_TYPE_UINT == type) {
+        gst_tag_list_get_uint (list, tag, &value);
+      } else {
+        gst_tag_list_get_int (list, tag, &value);
+      }
+      if (entry->tag == EXIF_TAG_CONTRAST || entry->tag == EXIF_TAG_SATURATION) {
+        if (value < -33)
+          value = 1;            /* low */
+        else if (value < 34)
+          value = 0;            /* normal */
+        else
+          value = 2;            /* high */
+      }
+      v_short = value;
+      exif_set_short (entry->data, byte_order, v_short);
+    }
+      break;
+    default:
+      break;
+  }
+
+done:
+
+  if (entry)
+    exif_entry_unref (entry);
+
+}
 
 void
 metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
@@ -344,7 +589,7 @@ metadatamux_exif_create_chunk_from_tag_list (guint8 ** buf, guint32 * size,
     exif_data_fix (ed);
   }
 
-  /* FIXME: consider individual tags */
+  gst_tag_list_foreach (taglist, metadataexif_for_each_tag_in_list, ed);
 
   exif_data_save_data (ed, buf, size);
 

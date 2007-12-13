@@ -172,12 +172,18 @@ metadata_tags_register (void)
       GST_TAG_CAPTURE_GAIN, "", NULL);
   /**
      from -100 to 100
+     [-100, -34] - soft
+     [-33, 33] - normal
+     [34, 100] - hard
      *** exif is just 0, 1, 2 (normal, soft and hard)
   */
   gst_tag_register (GST_TAG_CAPTURE_CONTRAST, GST_TAG_FLAG_META, G_TYPE_INT,
       GST_TAG_CAPTURE_CONTRAST, "", NULL);
   /**
      from -100 to 100
+     [-100, -34] - low
+     [-33, 33] - normal
+     [34, 100] - high
      *** exif is just 0, 1, 2 (normal, low and high)
   */
   gst_tag_register (GST_TAG_CAPTURE_SATURATION, GST_TAG_FLAG_META, G_TYPE_INT,

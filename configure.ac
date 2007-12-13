@@ -515,7 +515,7 @@ AG_GST_CHECK_FEATURE(METADATA, [METADATA muxer and demuxer], metadata, [
     ], HAVE_XMP="no")
   if test x$HAVE_EXIF = xyes; then
     METADATA_CFLAGS="-DHAVE_EXIF $EXIF_CFLAGS $METADATA_CFLAGS"
-    METADATA_LIBS="$EXIF_LIBS $METADATA_LIBS"
+    METADATA_LIBS="$EXIF_LIBS $METADATA_LIBS -lm"
     HAVE_METADATA="yes"
   fi
   if test x$HAVE_IPTC = xyes; then
