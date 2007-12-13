@@ -1,3 +1,8 @@
+2007-12-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* tools/gst-inspect.c: (print_element_properties_info):
+	  Add support for GstFraction properties.
+
 2007-12-12  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* Makefile.am:

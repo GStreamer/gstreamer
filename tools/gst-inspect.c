@@ -545,6 +545,20 @@ print_element_properties_info (GstElement * element)
           }
         } else if (param->value_type == G_TYPE_VALUE_ARRAY) {
           n_print ("%-23.23s Array of GValues", "");
+        } else if (GST_IS_PARAM_SPEC_FRACTION (param)) {
+          GstParamSpecFraction *pfraction = GST_PARAM_SPEC_FRACTION (param);
+
+          n_print ("%-23.23s Fraction. ", "");
+
+          g_print ("Range: %d/%d - %d/%d Default: %d/%d ",
+              pfraction->min_num, pfraction->min_den,
+              pfraction->max_num, pfraction->max_den,
+              pfraction->def_num, pfraction->def_den);
+          if (readable)
+            g_print ("Current: %d/%d",
+                gst_value_get_fraction_numerator (&value),
+                gst_value_get_fraction_denominator (&value));
+
         } else {
           n_print ("%-23.23s Unknown type %ld \"%s\"", "", param->value_type,
               g_type_name (param->value_type));
