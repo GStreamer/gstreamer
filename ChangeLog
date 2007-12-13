@@ -1,3 +1,19 @@
+2007-12-13  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* Makefile.am:
+	  Add check-exports target and run it with 'make check'.
+
+	* configure.ac:
+	  Be stricter about what we export in our libraries: change regexp so that
+	  we only export _gst_foo(), but not __gst_foo().
+
+	* gst-libs/gst/cdda/base64.h: (rfc822_binary):
+	* gst-libs/gst/cdda/sha1.h: (sha_init), (sha_update), (sha_final):
+	  Change internal functions to __gst_foo so they dont' get exported.
+
+	* win32/common/libgstaudio.def:
+	  Add missing symbols.
+
 2007-12-11  David Schleef  <ds@schleef.org>
 
 	* ChangeLog: remove conflict markers

@@ -25,9 +25,9 @@ typedef struct {
     int local;			/* unprocessed amount in data */
 } SHA_INFO;
 
-#define sha_init   _gst_cdda_sha_init
-#define sha_update _gst_cdda_sha_update
-#define sha_final  _gst_cdda_sha_final
+#define sha_init   __gst_cdda_sha_init
+#define sha_update __gst_cdda_sha_update
+#define sha_final  __gst_cdda_sha_final
 
 void sha_init(SHA_INFO *);
 void sha_update(SHA_INFO *, SHA_BYTE *, int);

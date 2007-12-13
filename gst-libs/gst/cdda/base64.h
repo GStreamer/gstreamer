@@ -67,7 +67,7 @@
 #ifndef __GST_CDDA_BASE64_H__
 #define __GST_CDDA_BASE64_H__
 
-#define rfc822_binary  _gst_cdda_rfc822_binary
+#define rfc822_binary  __gst_cdda_rfc822_binary
 
 unsigned char *rfc822_binary (void *src,unsigned long srcl,unsigned long *len);
 
