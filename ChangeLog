@@ -1,3 +1,8 @@
+2007-12-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c: (analyze_new_pad), (connect_pad):
+	Expose the right pad in the right place with the right element.
+
 2007-12-13  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/pbutils/descriptions.c: (formats):

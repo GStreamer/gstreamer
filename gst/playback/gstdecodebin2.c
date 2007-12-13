@@ -846,7 +846,7 @@ static gboolean is_demuxer_element (GstElement * srcelement);
 
 static gboolean connect_pad (GstDecodeBin * dbin, GstElement * src,
     GstPad * pad, GstCaps * caps, GValueArray * factories,
-    GstDecodeGroup * group, gboolean * expose);
+    GstDecodeGroup * group);
 static gboolean connect_element (GstDecodeBin * dbin, GstElement * element,
     GstDecodeGroup * group);
 static void expose_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
@@ -884,7 +884,6 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 {
   gboolean apcontinue = TRUE;
   GValueArray *factories = NULL, *result = NULL;
-  gboolean expose;
 
   GST_DEBUG_OBJECT (dbin, "Pad %s:%s caps:%" GST_PTR_FORMAT,
       GST_DEBUG_PAD_NAME (pad), caps);
@@ -936,12 +935,9 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   /* 1.e else continue autoplugging something from the list. */
   GST_LOG_OBJECT (pad, "Let's continue discovery on this pad");
-  connect_pad (dbin, src, pad, caps, factories, group, &expose);
+  connect_pad (dbin, src, pad, caps, factories, group);
 
   g_value_array_free (factories);
-
-  if (expose)
-    goto expose_pad;
 
   return;
 
@@ -1015,16 +1011,13 @@ setup_caps_delay:
  */
 static gboolean
 connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
-    GstCaps * caps, GValueArray * factories, GstDecodeGroup * group,
-    gboolean * expose)
+    GstCaps * caps, GValueArray * factories, GstDecodeGroup * group)
 {
   gboolean res = FALSE;
   GstPad *mqpad = NULL;
 
   g_return_val_if_fail (factories != NULL, FALSE);
   g_return_val_if_fail (factories->n_values > 0, FALSE);
-
-  *expose = FALSE;
 
   GST_DEBUG_OBJECT (dbin, "pad %s:%s , group:%p",
       GST_DEBUG_PAD_NAME (pad), group);
@@ -1043,6 +1036,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
     if (!(mqpad = gst_decode_group_control_demuxer_pad (group, pad)))
       goto beach;
+    src = group->multiqueue;
     pad = mqpad;
   }
 
@@ -1069,7 +1063,9 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
         break;
       case GST_AUTOPLUG_SELECT_EXPOSE:
         GST_DEBUG_OBJECT (dbin, "autoplug select requested expose");
-        *expose = TRUE;
+        /* expose the pad, we don't have the source element */
+        expose_pad (dbin, src, pad, group);
+        res = TRUE;
         goto beach;
       case GST_AUTOPLUG_SELECT_SKIP:
         GST_DEBUG_OBJECT (dbin, "autoplug select requested skip");
