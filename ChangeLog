@@ -1,3 +1,10 @@
+2007-12-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/mpegaudioparse/gstmpegaudioparse.c:
+	  (gst_mp3parse_sink_event), (mp3parse_handle_seek):
+	  Don't post SEGMENT_START messages on the bus, only the element
+	  driving the pipeline should do that.
+
 2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:

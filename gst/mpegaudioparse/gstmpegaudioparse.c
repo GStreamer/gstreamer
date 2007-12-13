@@ -391,11 +391,6 @@ gst_mp3parse_sink_event (GstPad * pad, GstEvent * event)
               g_slist_delete_link (mp3parse->pending_accurate_seeks, node);
 
           g_mutex_unlock (mp3parse->pending_accurate_seeks_lock);
-          if (s->flags & GST_SEEK_FLAG_SEGMENT) {
-            gst_element_post_message (GST_ELEMENT_CAST (mp3parse),
-                gst_message_new_segment_start (GST_OBJECT_CAST (mp3parse),
-                    s->format, s->last_stop));
-          }
           res = gst_pad_push_event (mp3parse->srcpad, event);
 
           return res;
@@ -1376,11 +1371,6 @@ mp3parse_handle_seek (GstMPEGAudioParse * mp3parse, GstEvent * event)
   event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type,
       byte_cur, stop_type, byte_stop);
 
-  if (flags & GST_SEEK_FLAG_SEGMENT) {
-    gst_element_post_message (GST_ELEMENT_CAST (mp3parse),
-        gst_message_new_segment_start (GST_OBJECT_CAST (mp3parse),
-            GST_FORMAT_TIME, cur));
-  }
   return gst_pad_push_event (mp3parse->sinkpad, event);
 no_pos:
   GST_DEBUG_OBJECT (mp3parse,
