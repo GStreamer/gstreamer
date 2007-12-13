@@ -415,6 +415,13 @@ gst_video_parse_convert (GstVideoParse * vp,
   if (src_format == dest_format) {
     *dest_value = src_value;
     ret = TRUE;
+    goto done;
+  }
+
+  if (src_value == -1) {
+    *dest_value = -1;
+    ret = TRUE;
+    goto done;
   }
 
   /* bytes to frames */
@@ -426,12 +433,14 @@ gst_video_parse_convert (GstVideoParse * vp,
       *dest_value = 0;
     }
     ret = TRUE;
+    goto done;
   }
 
   /* frames to bytes */
   if (src_format == GST_FORMAT_DEFAULT && dest_format == GST_FORMAT_BYTES) {
     *dest_value = gst_util_uint64_scale_int (src_value, vp->blocksize, 1);
     ret = TRUE;
+    goto done;
   }
 
   /* time to frames */
@@ -444,6 +453,7 @@ gst_video_parse_convert (GstVideoParse * vp,
       *dest_value = 0;
     }
     ret = TRUE;
+    goto done;
   }
 
   /* frames to time */
@@ -456,6 +466,7 @@ gst_video_parse_convert (GstVideoParse * vp,
       *dest_value = 0;
     }
     ret = TRUE;
+    goto done;
   }
 
   /* time to bytes */
@@ -468,6 +479,7 @@ gst_video_parse_convert (GstVideoParse * vp,
       *dest_value = 0;
     }
     ret = TRUE;
+    goto done;
   }
 
   /* bytes to time */
@@ -481,6 +493,8 @@ gst_video_parse_convert (GstVideoParse * vp,
     }
     ret = TRUE;
   }
+
+done:
 
   GST_DEBUG ("ret=%d result %" G_GINT64_FORMAT, ret, *dest_value);
 
@@ -512,9 +526,7 @@ gst_video_parse_sink_event (GstPad * pad, GstEvent * event)
       ret =
           gst_video_parse_convert (vp, format, start, GST_FORMAT_TIME, &start);
       ret &= gst_video_parse_convert (vp, format, time, GST_FORMAT_TIME, &time);
-      if (stop != GST_CLOCK_TIME_NONE)
-        ret &=
-            gst_video_parse_convert (vp, format, stop, GST_FORMAT_TIME, &stop);
+      ret &= gst_video_parse_convert (vp, format, stop, GST_FORMAT_TIME, &stop);
       if (!ret) {
         GST_ERROR_OBJECT (vp,
             "Failed converting to GST_FORMAT_TIME format (%d)", format);

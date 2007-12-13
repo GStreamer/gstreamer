@@ -1,5 +1,11 @@
 2007-12-13  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/videoparse/gstvideoparse.c: (gst_video_parse_convert),
+	  (gst_video_parse_sink_event):
+	  Handle -1 values for the CONVERT query too.
+
+2007-12-13  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/videoparse/gstvideoparse.c: (gst_video_parse_sink_event):
 	  Add YV12 to the pad templates as it is supported too and allow
 	  -1 as stop position for NEWSEGMENT events.
