@@ -1,5 +1,13 @@
 2007-12-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	Patch by: Peter Kjellerstedt  <pkj at axis com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	(gst_rtsp_connection_free):
+	Close control sockets. Fixes #503440.
+
+2007-12-13  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstdecodebin2.c: (analyze_new_pad), (connect_pad):
 	Expose the right pad in the right place with the right element.
 

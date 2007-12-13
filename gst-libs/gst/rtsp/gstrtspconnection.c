@@ -1163,6 +1163,10 @@ gst_rtsp_connection_free (GstRTSPConnection * conn)
 
   g_return_val_if_fail (conn != NULL, GST_RTSP_EINVAL);
 
+  if (WRITE_SOCKET (conn) >= 0)
+    CLOSE_SOCKET (WRITE_SOCKET (conn));
+  if (READ_SOCKET (conn) >= 0)
+    CLOSE_SOCKET (READ_SOCKET (conn));
 #ifdef G_OS_WIN32
   WSACleanup ();
 #endif
