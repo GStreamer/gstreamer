@@ -3090,7 +3090,7 @@ element_find_unconnected_pad (GstElement * element, GstPadDirection direction)
       iter = gst_element_iterate_sink_pads (element);
       break;
     default:
-      g_assert_not_reached ();
+      g_return_val_if_reached (NULL);
   }
 
   done = FALSE;
