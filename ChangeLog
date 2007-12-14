@@ -1,3 +1,7 @@
+2007-12-14  David Schleef  <ds@schleef.org>
+
+	* docs/faq/getting.xml: Fix typo.
+
 2007-12-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* docs/libs/gstreamer-libs-sections.txt:

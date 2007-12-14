@@ -52,7 +52,7 @@ CVS</link></para></listitem>
          <para>
            All GStreamer command line tools are suffixed with their main
            version, e.g. gst-launch-0.8 and gst-launch-0.10, or gst-inspect-0.8
-           and gst-inspect-0.10.  There corresponding GStreamer command line
+           and gst-inspect-0.10.  The corresponding GStreamer command line
            tools without a suffix (e.g. gst-launch) will default to the highest
            major version.
          </para>
