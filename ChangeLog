@@ -1,3 +1,14 @@
+2007-12-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstbasetransform.c: (gst_base_transform_init),
+	  (gst_base_transform_prepare_output_buffer),
+	  (gst_base_transform_set_gap_aware):
+	* libs/gst/base/gstbasetransform.h:
+	  API: Add gst_base_transform_set_gap_aware() to control whether
+	  the element correctly handles GST_BUFFER_FLAG_GAP or shouldn't
+	  get buffers with this flag at all. Fixes #503231.
+
 2007-12-13  Stefan Kost  <ensonic@users.sf.net>
 
 	* libs/gst/base/gstbasesink.c:

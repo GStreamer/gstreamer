@@ -234,6 +234,8 @@ struct _GstBaseTransformPrivate
   gboolean discont;
 
   GstActivateMode pad_mode;
+
+  gboolean gap_aware;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -400,6 +402,7 @@ gst_base_transform_init (GstBaseTransform * trans,
   trans->cache_caps1 = NULL;
   trans->cache_caps2 = NULL;
   trans->priv->pad_mode = GST_ACTIVATE_NONE;
+  trans->priv->gap_aware = FALSE;
 
   trans->passthrough = FALSE;
   if (bclass->transform == NULL) {
@@ -974,6 +977,12 @@ gst_base_transform_prepare_output_buffer (GstBaseTransform * trans,
 
     gst_buffer_copy_metadata (*out_buf, in_buf,
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
+
+    /* Unset the GAP flag if the element is _not_ GAP aware. Otherwise
+     * it might create an output buffer that does not contain neutral data
+     * but still has the GAP flag on it! */
+    if (!trans->priv->gap_aware)
+      GST_BUFFER_FLAG_UNSET (*out_buf, GST_BUFFER_FLAG_GAP);
   }
 
 done:
@@ -1944,4 +1953,30 @@ gst_base_transform_is_qos_enabled (GstBaseTransform * trans)
   GST_OBJECT_UNLOCK (trans);
 
   return result;
+}
+
+/**
+ * gst_base_transform_set_gap_aware:
+ * @trans: a #GstBaseTransform
+ * @gap_aware: New state
+ *
+ * If @gap_aware is %FALSE (as it is by default) subclasses will never get
+ * output buffers with the %GST_BUFFER_FLAG_GAP flag set.
+ *
+ * If set to %TRUE elements must handle output buffers with this flag set
+ * correctly, i.e. they can assume that the buffer contains neutral data
+ * but must unset the flag if the output is no neutral data.
+ * Since: 0.10.16
+ *
+ * MT safe.
+ */
+void
+gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
+{
+  g_return_if_fail (trans != NULL);
+
+  GST_OBJECT_LOCK (trans);
+  trans->priv->gap_aware = gap_aware;
+  GST_DEBUG_OBJECT (trans, "set gap aware %d", trans->priv->gap_aware);
+  GST_OBJECT_UNLOCK (trans);
 }
