@@ -1,5 +1,13 @@
 2007-12-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* tests/examples/seek/seek.c: (msg_segment_done), (main):
+	Don't go to READY on EOS as this avoids testing of seeking and
+	restarting after EOS, use the stop button when you want to READY.
+	Don't try to do a flushing seek in segment-done, it does not make
+	sense to use this for gapless playback and is not needed.
+
+2007-12-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstqueue2.c: (gst_queue_init), (gst_queue_finalize),
 	(reset_rate_timer), (update_in_rates), (update_out_rates),
 	(gst_queue_locked_enqueue), (gst_queue_locked_dequeue),

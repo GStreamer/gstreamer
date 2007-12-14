@@ -1474,23 +1474,6 @@ message_received (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 }
 
 static void
-msg_eos (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
-{
-  GstStateChangeReturn ret;
-
-  GST_DEBUG ("position is %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
-
-  g_print ("READY pipeline\n");
-  ret = gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_READY);
-  if (ret == GST_STATE_CHANGE_FAILURE)
-    g_print ("READY failed\n");
-
-  set_scale (0.0);
-
-  state = GST_STATE_READY;
-}
-
-static void
 msg_state_changed (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
 {
   const GstStructure *s;
@@ -1521,15 +1504,14 @@ msg_segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
   GstFormat format;
 
   GST_DEBUG ("position is %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
-  format = GST_FORMAT_TIME;
   gst_message_parse_segment_done (message, &format, &position);
   GST_DEBUG ("end of segment at %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
 
-  set_update_scale (FALSE);
-
-  flags = GST_SEEK_FLAG_SEGMENT;
-  if (flush_seek)
-    flags |= GST_SEEK_FLAG_FLUSH;
+  flags = 0;
+  /* in the segment-done callback we never flush as this would not make sense
+   * for seamless playback. */
+  if (loop_seek)
+    flags = GST_SEEK_FLAG_SEGMENT;
 
   s_event = gst_event_new_seek (rate,
       GST_FORMAT_TIME, flags, GST_SEEK_TYPE_SET, G_GINT64_CONSTANT (0),
@@ -1539,16 +1521,8 @@ msg_segment_done (GstBus * bus, GstMessage * message, GstPipeline * pipeline)
       rate, GST_TIME_ARGS (duration));
 
   res = send_event (s_event);
-  if (res) {
-    if (flush_seek) {
-      gst_pipeline_set_new_stream_time (GST_PIPELINE (pipeline), 0);
-      gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, SEEK_TIMEOUT);
-    }
-  } else
+  if (!res)
     g_print ("segment seek failed\n");
-
-  position = 0;
-  set_update_scale (TRUE);
 }
 
 static void
@@ -1738,7 +1712,6 @@ main (int argc, char **argv)
     bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
     gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
 
-    g_signal_connect (bus, "message::eos", (GCallback) msg_eos, pipeline);
     g_signal_connect (bus, "message::state-changed",
         (GCallback) msg_state_changed, pipeline);
     g_signal_connect (bus, "message::segment-done",
@@ -1758,10 +1731,6 @@ main (int argc, char **argv)
         pipeline);
     g_signal_connect (bus, "message::segment-done",
         (GCallback) message_received, pipeline);
-    /*g_signal_connect (bus, "message::state-changed",
-       (GCallback) message_received, pipeline);
-     */
-
   }
   gtk_main ();
 
