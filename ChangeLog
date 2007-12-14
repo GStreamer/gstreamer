@@ -1,3 +1,9 @@
+2007-12-14  Christian Schaller <christian.schaller@collabora.co.uk>
+
+	* sys/glsink/Makefile.am: add glvideo.h
+	* gst/speexresample/Makefile.am: add speex_resampler_wrapper.h
+	* gst-plugins-bad.spec.in: add latest plugins
+
 2007-12-13  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/TODO:

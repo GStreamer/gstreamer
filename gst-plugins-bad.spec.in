@@ -90,7 +90,6 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstspectrum.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfilter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstnsf.so
-%{_libdir}/gstreamer-%{majorminor}/libgstdvbsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstreplaygain.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdeinterlace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstnuvdemux.so
@@ -112,6 +111,10 @@ rm -rf $RPM_BUILD_ROOT
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgststereo.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvcdsrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdvb.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsdpelem.so
+%{_libdir}/gstreamer-%{majorminor}/libgstspeexresample.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpeg4videoparse.so
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappbuffer.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsink.h
 %{_includedir}/gstreamer-%{majorminor}/gst/app/gstappsrc.h
@@ -143,8 +146,13 @@ rm -rf $RPM_BUILD_ROOT
 @USE_MYTHTV_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstmythtvsrc.so
 @USE_X264_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstx264.so
 @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
+@USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
+
 
 %changelog
+* Fri Dec 14 2007 Christian Schaller <christian at collabora dot co uk>
+- Update spec file with timidity, libgstdvb, libgstsdpelem, libgstspeexresample, libgstmpeg4videoparse
+
 * Tue Jun 12 2007 Jan Schmidt <jan at fluendo dot com>
 - wavpack and qtdemux have moved to good.
 
