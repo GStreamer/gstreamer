@@ -1,5 +1,15 @@
 2007-12-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gstqueue2.c: (gst_queue_init), (gst_queue_finalize),
+	(reset_rate_timer), (update_in_rates), (update_out_rates),
+	(gst_queue_locked_enqueue), (gst_queue_locked_dequeue),
+	(gst_queue_chain), (gst_queue_loop):
+	Use separate timers for input and output rates.
+	Pause measuring the output rate when we block for more data.
+	See #503262.
+
+2007-12-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst/playback/gstqueue2.c: (gst_queue_chain):
 	Pause the timer to measure the input rate when we block because the
 	queue is filled. See #503262.
