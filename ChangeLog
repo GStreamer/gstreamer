@@ -1,3 +1,9 @@
+2007-12-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst/playback/gstqueue2.c: (gst_queue_chain):
+	Pause the timer to measure the input rate when we block because the
+	queue is filled. See #503262.
+
 2007-12-13  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	Patch by: Peter Kjellerstedt  <pkj at axis com>

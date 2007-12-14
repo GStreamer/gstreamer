@@ -1292,10 +1292,21 @@ gst_queue_chain (GstPad * pad, GstBuffer * buffer)
   /* We make space available if we're "full" according to whatever
    * the user defined as "full". */
   while (gst_queue_is_filled (queue)) {
+    gboolean started;
+
+    /* pause the timer while we wait. The fact that we are waiting does not mean
+     * the byterate on the input pad is lower */
+    if ((started = queue->timer_started))
+      g_timer_stop (queue->timer);
+
     GST_CAT_DEBUG_OBJECT (queue_dataflow, queue,
         "queue is full, waiting for free space");
     /* Wait for space to be available, we could be unlocked because of a flush. */
     GST_QUEUE_WAIT_DEL_CHECK (queue, out_flushing);
+
+    /* and continue if we were running before */
+    if (started)
+      g_timer_continue (queue->timer);
   }
 
   /* put buffer in queue now */
