@@ -1,3 +1,22 @@
+2007-12-14  Edgard Lima,,,,  <edgard.lima@indt.org.br>
+
+	* ext/metadata/Makefile.am:
+	* ext/metadata/TODO:
+	* ext/metadata/gstmetadata.c:
+	* ext/metadata/gstmetadatacommon.c:
+	* ext/metadata/gstmetadatacommon.h:
+	* ext/metadata/gstmetadatademux.c:
+	* ext/metadata/gstmetadatademux.h:
+	* ext/metadata/gstmetadatamux.c:
+	* ext/metadata/gstmetadatamux.h:
+	* ext/metadata/gstmetadataparse.c:
+	* ext/metadata/gstmetadataparse.h:
+	* ext/metadata/metadataexif.c:
+	* ext/metadata/metadatatags.c:
+	* ext/metadata/test/metadata_editor.c:
+	  Added new module for common functions. Using GST_TYPE_FRACTION for
+	  Exif (S)Rational types.
+
 2007-12-14  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
 
 	* gst/mpegtsparse/mpegtspacketizer.c:

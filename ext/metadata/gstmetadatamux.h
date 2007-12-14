@@ -46,7 +46,7 @@
 
 #include <gst/gst.h>
 
-#include "metadata.h"
+#include "gstmetadatacommon.h"
 
 G_BEGIN_DECLS
 /* #defines don't like whitespacey bits */
@@ -63,21 +63,16 @@ G_BEGIN_DECLS
 typedef struct _GstMetadataMux GstMetadataMux;
 typedef struct _GstMetadataMuxClass GstMetadataMuxClass;
 
-typedef enum _tag_MetadataState
-{
-  MT_STATE_NULL,                /* still need to check media type */
-  MT_STATE_MUXED
-} MetadataState;
-
 struct _GstMetadataMux
 {
   GstElement element;
 
   GstPad *sinkpad, *srcpad;
 
+  GstMetadataCommon common;
+
   guint8 options;
 
-  MetaData mux_data;
   GstAdapter *adapter_parsing;
   GstAdapter *adapter_holding;
   guint32 next_offset;
@@ -85,14 +80,9 @@ struct _GstMetadataMux
   ImageType img_type;
 
   gint64 offset_orig;  /* offset in original stream */
-  gint64 duration_orig;     /* durarion of stream */
   gint64 offset;       /* offset in current stream */
-  gint64 duration;     /* durarion of modified stream */
-
-  MetadataState state;
 
   GstBuffer * prepend_buffer;
-  GstBuffer * append_buffer;
 
   gboolean need_more_data;
 

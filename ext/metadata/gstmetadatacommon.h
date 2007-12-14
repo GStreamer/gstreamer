@@ -41,46 +41,56 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
-#include <gst/gst.h>
+#ifndef __GST_METADATA_COMMON_H__
+#define __GST_METADATA_COMMON_H__
 
-#include "metadatatags.h"
+#include "metadata.h"
 
-extern gboolean gst_metadata_demux_plugin_init (GstPlugin * plugin);
-extern gboolean gst_metadata_mux_plugin_init (GstPlugin * plugin);
+G_BEGIN_DECLS
 
-GST_DEBUG_CATEGORY_EXTERN (gst_metadata_exif_debug);
-GST_DEBUG_CATEGORY_EXTERN (gst_metadata_iptc_debug);
-GST_DEBUG_CATEGORY_EXTERN (gst_metadata_xmp_debug);
+typedef struct _GstMetadataCommon GstMetadataCommon;
 
-static gboolean
-plugin_init (GstPlugin * plugin)
+typedef enum _tag_MetadataState
 {
+  MT_STATE_NULL,                /* still need to check media type */
+  MT_STATE_PARSED
+} MetadataState;
 
-  gboolean ret = TRUE;
+struct _GstMetadataCommon {
 
-  GST_DEBUG_CATEGORY_INIT (gst_metadata_exif_debug, "metadata_exif",
-      0, "Metadata exif");
-  GST_DEBUG_CATEGORY_INIT (gst_metadata_iptc_debug, "metadata_iptc",
-      0, "Metadata iptc");
-  GST_DEBUG_CATEGORY_INIT (gst_metadata_xmp_debug, "metadata_xmp", 0,
-      "Metadata xmp");
+  MetaData metadata;
+  gint64 duration_orig;     /* durarion of stream */
+  gint64 duration;          /* durarion of modified stream */
 
-  metadata_tags_register ();
+  GstBuffer * append_buffer;
+  MetadataState state;
 
-  ret = gst_metadata_demux_plugin_init (plugin);
+};
 
-  ret = ret && gst_metadata_mux_plugin_init (plugin);
+extern void
+gst_metadata_common_init(GstMetadataCommon *common, gboolean parse, guint8 options);
 
-  return ret;
+extern void
+gst_metadata_common_dispose(GstMetadataCommon *common);
 
-}
+extern gboolean
+gst_metadata_common_strip_push_buffer (GstMetadataCommon *common, gint64 offset_orig,
+    GstBuffer ** prepend, GstBuffer ** buf);
 
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "metadata",
-    "Metadata (EXIF, IPTC and XMP) image (JPEG, TIFF) demuxer and muxer",
-    plugin_init, VERSION, "LGPL", GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)
+extern gboolean
+gst_metadata_common_translate_pos_to_orig (GstMetadataCommon *common,
+    gint64 pos, gint64 * orig_pos, GstBuffer ** buf);
+
+extern gboolean
+gst_metadata_common_calculate_offsets (GstMetadataCommon *common);
+
+extern void
+gst_metadata_common_update_segment_with_new_buffer (GstMetadataCommon *common,
+    guint8 ** buf, guint32 * size, MetadataChunkType type);
+
+extern const gchar *
+gst_metadata_common_get_type_name (int img_type);
+
+G_END_DECLS
+#endif /* __GST_METADATA_COMMON_H__ */

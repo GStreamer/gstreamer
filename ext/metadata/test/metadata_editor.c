@@ -160,33 +160,43 @@ change_tag_list (GstTagList ** list, const gchar * tag, const gchar * value)
 
   type = gst_tag_get_type (tag);
 
-  switch (type) {
-    case G_TYPE_STRING:
-      gst_tag_list_add (*list, GST_TAG_MERGE_REPLACE, tag, value, NULL);
-      ret = TRUE;
-      break;
-    case G_TYPE_FLOAT:
-    {
-      gfloat fv = (gfloat) g_strtod (value, NULL);
+  if (type == GST_TYPE_FRACTION) {
+    /* FIXME: Ask GStreamer guys to add GST_FRACTION support to TAGS */
+    /* Even better: ask GLib guys to add this type */
+    gint n, d;
 
-      gst_tag_list_add (*list, GST_TAG_MERGE_REPLACE, tag, fv, NULL);
-      ret = TRUE;
-    }
-      break;
-    case G_TYPE_INT:
-      /* fall through */
-    case G_TYPE_UINT:
-    {
-      gint iv = atoi (value);
+    sscanf (value, "%d/%d", &n, &d);
+    gst_tag_list_add (*list, GST_TAG_MERGE_REPLACE, tag, n, d, NULL);
+    ret = TRUE;
+  } else {
+    switch (type) {
+      case G_TYPE_STRING:
+        gst_tag_list_add (*list, GST_TAG_MERGE_REPLACE, tag, value, NULL);
+        ret = TRUE;
+        break;
+      case G_TYPE_FLOAT:
+      {
+        gfloat fv = (gfloat) g_strtod (value, NULL);
 
-      gst_tag_list_add (*list, GST_TAG_MERGE_REPLACE, tag, iv, NULL);
-      ret = TRUE;
+        gst_tag_list_add (*list, GST_TAG_MERGE_REPLACE, tag, fv, NULL);
+        ret = TRUE;
+      }
+        break;
+      case G_TYPE_INT:
+        /* fall through */
+      case G_TYPE_UINT:
+      {
+        gint iv = atoi (value);
+
+        gst_tag_list_add (*list, GST_TAG_MERGE_REPLACE, tag, iv, NULL);
+        ret = TRUE;
+      }
+        break;
+      default:
+        fprintf (stderr, "This app still doesn't handle type (%s)(%ld)\n",
+            g_type_name (type), type);
+        break;
     }
-      break;
-    default:
-      fprintf (stderr, "This app still doesn't handle type (%s)(%ld)\n",
-          g_type_name (type), type);
-      break;
   }
 
 done:
@@ -700,7 +710,7 @@ me_gst_setup_encode_pipeline (const gchar * src_file, const gchar * dest_file,
 
   /* create elements */
   gst_source = gst_element_factory_make ("filesrc", NULL);
-  gst_metadata_demux = gst_element_factory_make ("metadataparse", NULL);
+  gst_metadata_demux = gst_element_factory_make ("metadatademux", NULL);
   gst_metadata_mux = gst_element_factory_make ("metadatamux", NULL);
   gst_file_sink = gst_element_factory_make ("filesink", NULL);
 
@@ -767,7 +777,7 @@ me_gst_setup_view_pipeline (const gchar * filename, GdkWindow * window)
 
   /* create elements */
   gst_source = gst_element_factory_make ("filesrc", NULL);
-  gst_metadata_demux = gst_element_factory_make ("metadataparse", NULL);
+  gst_metadata_demux = gst_element_factory_make ("metadatademux", NULL);
   /* let's do a dummy stuff to avoid decodebin */
   if (is_png (filename))
     gst_image_dec = gst_element_factory_make ("pngdec", NULL);

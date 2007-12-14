@@ -1,7 +1,8 @@
 plugin_LTLIBRARIES = libgstmetadata.la
 
 libgstmetadata_la_SOURCES =	gstmetadata.c       \
-				gstmetadataparse.c  \
+				gstmetadatacommon.c \
+				gstmetadatademux.c  \
 				metadata.c          \
 				metadataparsejpeg.c \
 				metadatamuxjpeg.c   \
@@ -15,11 +16,15 @@ libgstmetadata_la_SOURCES =	gstmetadata.c       \
 				gstmetadatamux.c    \
 				metadatatags.c
 
+libgstmetadata_ladir = $(includedir)/gstreamer-@GST_MAJORMINOR@/metadata
+libgstmetadata_la_HEADERS = metadatatags.h
+
 libgstmetadata_la_CFLAGS = $(METADATA_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS)
 libgstmetadata_la_LIBADD = $(METADATA_LIBS) -lgsttag-@GST_MAJORMINOR@ $(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS)
 libgstmetadata_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
-noinst_HEADERS = 	gstmetadataparse.h   \
+noinst_HEADERS = 	gstmetadatademux.h   \
+			gstmetadatacommon.h  \
 			metadata.h           \
 			metadataparsejpeg.h  \
 			metadatamuxjpeg.h    \

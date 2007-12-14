@@ -42,13 +42,13 @@
  */
 
 /**
- * SECTION:metadatamux-metadata
+ * SECTION:metadatademux-metadata
  *
  * <refsect2>
  * <title>Example launch line</title>
  * <para>
  * <programlisting>
- * gst-launch -v -m filesrc location=./test.jpeg ! metadatamux ! fakesink silent=TRUE
+ * gst-launch -v -m filesrc location=./test.jpeg ! metadatademux ! fakesink silent=TRUE
  * </programlisting>
  * </para>
  * </refsect2>
@@ -60,7 +60,7 @@
 
 #include <gst/gst.h>
 
-#include "gstmetadatamux.h"
+#include "gstmetadatademux.h"
 
 #include "metadataexif.h"
 
@@ -70,8 +70,8 @@
 
 #include <string.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_metadata_mux_debug);
-#define GST_CAT_DEFAULT gst_metadata_mux_debug
+GST_DEBUG_CATEGORY_STATIC (gst_metadata_demux_debug);
+#define GST_CAT_DEFAULT gst_metadata_demux_debug
 
 #define GOTO_DONE_IF_NULL(ptr) do { if ( NULL == (ptr) ) goto done; } while(FALSE)
 #define GOTO_DONE_IF_NULL_AND_FAIL(ptr, ret) do { if ( NULL == (ptr) ) { (ret) = FALSE; goto done; } } while(FALSE)
@@ -94,86 +94,82 @@ enum
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/jpeg, tags-extracted = (bool) true;"
-        "image/png,  tags-extracted = (bool) true")
+    GST_STATIC_CAPS ("image/jpeg, "
+        "tags-extracted = (bool) false;"
+        "image/png, " "tags-extracted = (bool) false")
     );
 
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("image/jpeg; " "image/png")
+    GST_STATIC_CAPS ("image/jpeg, "
+        "tags-extracted = (bool) true;"
+        "image/png, " "tags-extracted = (bool) true")
     );
 
-static void
-gst_metadata_mux_add_interfaces (GType type)
-{
-  static const GInterfaceInfo tag_setter_info = { NULL, NULL, NULL };
+GST_BOILERPLATE (GstMetadataDemux, gst_metadata_demux, GstElement,
+    GST_TYPE_ELEMENT);
 
-  g_type_add_interface_static (type, GST_TYPE_TAG_SETTER, &tag_setter_info);
-}
+static GstMetadataDemuxClass *metadata_parent_class = NULL;
 
+static void gst_metadata_demux_dispose (GObject * object);
 
-GST_BOILERPLATE_FULL (GstMetadataMux, gst_metadata_mux, GstElement,
-    GST_TYPE_ELEMENT, gst_metadata_mux_add_interfaces);
+static void gst_metadata_demux_finalize (GObject * object);
 
-static GstMetadataMuxClass *metadata_parent_class = NULL;
-
-static void gst_metadata_mux_dispose (GObject * object);
-
-static void gst_metadata_mux_finalize (GObject * object);
-
-static void gst_metadata_mux_set_property (GObject * object, guint prop_id,
+static void gst_metadata_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
-static void gst_metadata_mux_get_property (GObject * object, guint prop_id,
+static void gst_metadata_demux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstStateChangeReturn
-gst_metadata_mux_change_state (GstElement * element, GstStateChange transition);
+gst_metadata_demux_change_state (GstElement * element,
+    GstStateChange transition);
 
-static GstCaps *gst_metadata_mux_get_caps (GstPad * pad);
-static gboolean gst_metadata_mux_set_caps (GstPad * pad, GstCaps * caps);
-static gboolean gst_metadata_mux_src_event (GstPad * pad, GstEvent * event);
-static gboolean gst_metadata_mux_sink_event (GstPad * pad, GstEvent * event);
+static GstCaps *gst_metadata_demux_get_caps (GstPad * pad);
+static gboolean gst_metadata_demux_set_caps (GstPad * pad, GstCaps * caps);
+static gboolean gst_metadata_demux_src_event (GstPad * pad, GstEvent * event);
+static gboolean gst_metadata_demux_sink_event (GstPad * pad, GstEvent * event);
 
-static GstFlowReturn gst_metadata_mux_chain (GstPad * pad, GstBuffer * buf);
+static GstFlowReturn gst_metadata_demux_chain (GstPad * pad, GstBuffer * buf);
 
-static gboolean gst_metadata_mux_checkgetrange (GstPad * srcpad);
+static gboolean gst_metadata_demux_checkgetrange (GstPad * srcpad);
 
 static GstFlowReturn
-gst_metadata_mux_get_range (GstPad * pad, guint64 offset_orig, guint size,
+gst_metadata_demux_get_range (GstPad * pad, guint64 offset_orig, guint size,
     GstBuffer ** buf);
 
-static gboolean gst_metadata_mux_sink_activate (GstPad * pad);
+static gboolean gst_metadata_demux_sink_activate (GstPad * pad);
 
 static gboolean
-gst_metadata_mux_src_activate_pull (GstPad * pad, gboolean active);
+gst_metadata_demux_src_activate_pull (GstPad * pad, gboolean active);
 
-static gboolean gst_metadata_mux_pull_range_mux (GstMetadataMux * filter);
+static gboolean gst_metadata_demux_pull_range_demux (GstMetadataDemux * filter);
 
-static void gst_metadata_mux_init_members (GstMetadataMux * filter);
-static void gst_metadata_mux_dispose_members (GstMetadataMux * filter);
+static void gst_metadata_demux_init_members (GstMetadataDemux * filter);
+static void gst_metadata_demux_dispose_members (GstMetadataDemux * filter);
 
-static gboolean gst_metadata_mux_configure_srccaps (GstMetadataMux * filter);
+static gboolean
+gst_metadata_demux_configure_srccaps (GstMetadataDemux * filter);
 
-static gboolean gst_metadata_mux_configure_caps (GstMetadataMux * filter);
+static gboolean gst_metadata_demux_configure_caps (GstMetadataDemux * filter);
 
 static int
-gst_metadata_mux_parse (GstMetadataMux * filter, const guint8 * buf,
+gst_metadata_demux_parse (GstMetadataDemux * filter, const guint8 * buf,
     guint32 size);
 
-static void gst_metadata_mux_create_chunks_from_tags (GstMetadataMux * filter);
+static void gst_metadata_demux_send_tags (GstMetadataDemux * filter);
 
-static const GstQueryType *gst_metadata_mux_get_query_types (GstPad * pad);
+static const GstQueryType *gst_metadata_demux_get_query_types (GstPad * pad);
 
-static gboolean gst_metadata_mux_src_query (GstPad * pad, GstQuery * query);
+static gboolean gst_metadata_demux_src_query (GstPad * pad, GstQuery * query);
 
 static void
-gst_metadata_mux_base_init (gpointer gclass)
+gst_metadata_demux_base_init (gpointer gclass)
 {
   static GstElementDetails element_details = {
-    "Metadata muxer",
-    "Muxer/Metadata",
-    "Convert tags to metadata (EXIF, IPTC and XMP) and insert into the stream",
+    "Metadata demuxr",
+    "Demuxr/Extracter/Metadata",
+    "Send metadata tags (EXIF, IPTC and XMP) and remove metadata chunks from stream",
     "Edgard Lima <edgard.lima@indt.org.br>"
   };
   GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
@@ -187,7 +183,7 @@ gst_metadata_mux_base_init (gpointer gclass)
 
 /* initialize the plugin's class */
 static void
-gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
+gst_metadata_demux_class_init (GstMetadataDemuxClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
@@ -197,11 +193,11 @@ gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
 
   metadata_parent_class = g_type_class_peek_parent (klass);
 
-  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_metadata_mux_dispose);
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_metadata_mux_finalize);
+  gobject_class->dispose = GST_DEBUG_FUNCPTR (gst_metadata_demux_dispose);
+  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_metadata_demux_finalize);
 
-  gobject_class->set_property = gst_metadata_mux_set_property;
-  gobject_class->get_property = gst_metadata_mux_get_property;
+  gobject_class->set_property = gst_metadata_demux_set_property;
+  gobject_class->get_property = gst_metadata_demux_get_property;
 
   g_object_class_install_property (gobject_class, ARG_EXIF,
       g_param_spec_boolean ("exif", "EXIF", "Send EXIF metadata ?",
@@ -209,13 +205,13 @@ gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
 
   g_object_class_install_property (gobject_class, ARG_IPTC,
       g_param_spec_boolean ("iptc", "IPTC", "Send IPTC metadata ?",
-          FALSE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, ARG_XMP,
       g_param_spec_boolean ("xmp", "XMP", "Send XMP metadata ?",
-          FALSE, G_PARAM_READWRITE));
+          TRUE, G_PARAM_READWRITE));
 
-  gstelement_class->change_state = gst_metadata_mux_change_state;
+  gstelement_class->change_state = gst_metadata_demux_change_state;
 
 }
 
@@ -225,7 +221,8 @@ gst_metadata_mux_class_init (GstMetadataMuxClass * klass)
  * initialize structure
  */
 static void
-gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass)
+gst_metadata_demux_init (GstMetadataDemux * filter,
+    GstMetadataDemuxClass * gclass)
 {
   GstElementClass *klass = GST_ELEMENT_GET_CLASS (filter);
 
@@ -235,14 +232,14 @@ gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass)
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "sink"), "sink");
   gst_pad_set_setcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_set_caps));
+      GST_DEBUG_FUNCPTR (gst_metadata_demux_set_caps));
   gst_pad_set_getcaps_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_get_caps));
-  gst_pad_set_event_function (filter->sinkpad, gst_metadata_mux_sink_event);
+      GST_DEBUG_FUNCPTR (gst_metadata_demux_get_caps));
+  gst_pad_set_event_function (filter->sinkpad, gst_metadata_demux_sink_event);
   gst_pad_set_chain_function (filter->sinkpad,
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_chain));
+      GST_DEBUG_FUNCPTR (gst_metadata_demux_chain));
   gst_pad_set_activate_function (filter->sinkpad,
-      gst_metadata_mux_sink_activate);
+      gst_metadata_demux_sink_activate);
 
   /* source pad */
 
@@ -250,20 +247,20 @@ gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass)
       gst_pad_new_from_template (gst_element_class_get_pad_template (klass,
           "src"), "src");
   gst_pad_set_getcaps_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_get_caps));
-  gst_pad_set_event_function (filter->srcpad, gst_metadata_mux_src_event);
+      GST_DEBUG_FUNCPTR (gst_metadata_demux_get_caps));
+  gst_pad_set_event_function (filter->srcpad, gst_metadata_demux_src_event);
   gst_pad_set_query_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_src_query));
+      GST_DEBUG_FUNCPTR (gst_metadata_demux_src_query));
   gst_pad_set_query_type_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_get_query_types));
+      GST_DEBUG_FUNCPTR (gst_metadata_demux_get_query_types));
   gst_pad_use_fixed_caps (filter->srcpad);
 
   gst_pad_set_checkgetrange_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_checkgetrange));
-  gst_pad_set_getrange_function (filter->srcpad, gst_metadata_mux_get_range);
+      GST_DEBUG_FUNCPTR (gst_metadata_demux_checkgetrange));
+  gst_pad_set_getrange_function (filter->srcpad, gst_metadata_demux_get_range);
 
   gst_pad_set_activatepull_function (filter->srcpad,
-      GST_DEBUG_FUNCPTR (gst_metadata_mux_src_activate_pull));
+      GST_DEBUG_FUNCPTR (gst_metadata_demux_src_activate_pull));
   /* addind pads */
 
   gst_element_add_pad (GST_ELEMENT (filter), filter->sinkpad);
@@ -274,15 +271,15 @@ gst_metadata_mux_init (GstMetadataMux * filter, GstMetadataMuxClass * gclass)
 
   filter->options = META_OPT_EXIF | META_OPT_IPTC | META_OPT_XMP;
 
-  gst_metadata_mux_init_members (filter);
+  gst_metadata_demux_init_members (filter);
 
 }
 
 static void
-gst_metadata_mux_set_property (GObject * object, guint prop_id,
+gst_metadata_demux_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstMetadataMux *filter = GST_METADATA_MUX (object);
+  GstMetadataDemux *filter = GST_METADATA_DEMUX (object);
 
   switch (prop_id) {
     case ARG_EXIF:
@@ -310,10 +307,10 @@ gst_metadata_mux_set_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_metadata_mux_get_property (GObject * object, guint prop_id,
+gst_metadata_demux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstMetadataMux *filter = GST_METADATA_MUX (object);
+  GstMetadataDemux *filter = GST_METADATA_DEMUX (object);
 
   switch (prop_id) {
     case ARG_EXIF:
@@ -334,14 +331,14 @@ gst_metadata_mux_get_property (GObject * object, guint prop_id,
 /* GstElement vmethod implementations */
 
 static GstCaps *
-gst_metadata_mux_get_caps (GstPad * pad)
+gst_metadata_demux_get_caps (GstPad * pad)
 {
-  GstMetadataMux *filter = NULL;
+  GstMetadataDemux *filter = NULL;
   GstPad *otherpad;
   GstCaps *caps_new = NULL;
   GstCaps *caps_otherpad_peer = NULL;
 
-  filter = GST_METADATA_MUX (gst_pad_get_parent (pad));
+  filter = GST_METADATA_DEMUX (gst_pad_get_parent (pad));
 
   (filter->srcpad == pad) ? (otherpad = filter->sinkpad) : (otherpad =
       filter->srcpad);
@@ -376,10 +373,12 @@ gst_metadata_mux_get_caps (GstPad * pad)
 
       if (pad == filter->sinkpad) {
         structure_new =
-            gst_structure_new (mime, "tags-extracted", G_TYPE_BOOLEAN, TRUE,
+            gst_structure_new (mime, "tags-extracted", G_TYPE_BOOLEAN, FALSE,
             NULL);
       } else {
-        structure_new = gst_structure_new (mime, NULL);
+        structure_new =
+            gst_structure_new (mime, "tags-extracted", G_TYPE_BOOLEAN, TRUE,
+            NULL);
       }
 
       gst_caps_append_structure (caps_new, structure_new);
@@ -401,55 +400,13 @@ done:
 
 }
 
-static void
-gst_metadata_create_chunks_from_tags (GstMetadataMux * filter)
-{
-
-  GstMessage *msg;
-  GstTagSetter *setter = GST_TAG_SETTER (filter);
-  const GstTagList *taglist = gst_tag_setter_get_tag_list (setter);
-  GstEvent *event;
-  guint8 *buf = NULL;
-  guint32 size = 0;
-
-  if (taglist) {
-
-    if (filter->options & META_OPT_EXIF) {
-      metadatamux_exif_create_chunk_from_tag_list (&buf, &size, taglist);
-      gst_metadata_common_update_segment_with_new_buffer (&filter->common, &buf,
-          &size, MD_CHUNK_EXIF);
-    }
-
-    if (filter->options & META_OPT_IPTC) {
-      metadatamux_iptc_create_chunk_from_tag_list (&buf, &size, taglist);
-      gst_metadata_common_update_segment_with_new_buffer (&filter->common, &buf,
-          &size, MD_CHUNK_IPTC);
-    }
-
-    if (filter->options & META_OPT_XMP) {
-      metadatamux_xmp_create_chunk_from_tag_list (&buf, &size, taglist);
-      gst_metadata_common_update_segment_with_new_buffer (&filter->common, &buf,
-          &size, MD_CHUNK_XMP);
-    }
-
-  }
-
-  if (buf) {
-    g_free (buf);
-  }
-
-  metadata_chunk_array_remove_zero_size (&filter->common.metadata.
-      inject_chunks);
-
-}
-
 static gboolean
-gst_metadata_mux_src_event (GstPad * pad, GstEvent * event)
+gst_metadata_demux_src_event (GstPad * pad, GstEvent * event)
 {
-  GstMetadataMux *filter = NULL;
+  GstMetadataDemux *filter = NULL;
   gboolean ret = FALSE;
 
-  filter = GST_METADATA_MUX (gst_pad_get_parent (pad));
+  filter = GST_METADATA_DEMUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -462,14 +419,9 @@ gst_metadata_mux_src_event (GstPad * pad, GstEvent * event)
       GstSeekType stop_type;
       gint64 stop;
 
-      /* we don't know where are the chunks to be stripped before mux */
-      if (filter->need_calculate_offset) {
-        gst_metadata_create_chunks_from_tags (filter);
-        if (gst_metadata_common_calculate_offsets (&filter->common))
-          filter->need_calculate_offset = FALSE;
-        else
-          goto done;
-      }
+      /* we don't know where are the chunks to be stripped before demux */
+      if (filter->common.state != MT_STATE_PARSED)
+        goto done;
 
       gst_event_parse_seek (event, &rate, &format, &flags,
           &start_type, &start, &stop_type, &stop);
@@ -546,12 +498,12 @@ done:
 }
 
 static gboolean
-gst_metadata_mux_sink_event (GstPad * pad, GstEvent * event)
+gst_metadata_demux_sink_event (GstPad * pad, GstEvent * event)
 {
-  GstMetadataMux *filter = NULL;
+  GstMetadataDemux *filter = NULL;
   gboolean ret = FALSE;
 
-  filter = GST_METADATA_MUX (gst_pad_get_parent (pad));
+  filter = GST_METADATA_DEMUX (gst_pad_get_parent (pad));
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
@@ -561,14 +513,6 @@ gst_metadata_mux_sink_event (GstPad * pad, GstEvent * event)
       }
       break;
     case GST_EVENT_TAG:
-    {
-      GstTagList *taglist = NULL;
-      GstTagSetter *setter = GST_TAG_SETTER (filter);
-
-      gst_event_parse_tag (event, &taglist);
-      gst_tag_setter_merge_tags (setter, taglist, GST_TAG_MERGE_REPLACE);
-
-    }
       break;
     default:
       break;
@@ -583,13 +527,13 @@ gst_metadata_mux_sink_event (GstPad * pad, GstEvent * event)
 }
 
 static void
-gst_metadata_mux_dispose (GObject * object)
+gst_metadata_demux_dispose (GObject * object)
 {
-  GstMetadataMux *filter = NULL;
+  GstMetadataDemux *filter = NULL;
 
-  filter = GST_METADATA_MUX (object);
+  filter = GST_METADATA_DEMUX (object);
 
-  gst_metadata_mux_dispose_members (filter);
+  gst_metadata_demux_dispose_members (filter);
 
   metadataparse_xmp_dispose ();
 
@@ -597,13 +541,13 @@ gst_metadata_mux_dispose (GObject * object)
 }
 
 static void
-gst_metadata_mux_finalize (GObject * object)
+gst_metadata_demux_finalize (GObject * object)
 {
   G_OBJECT_CLASS (metadata_parent_class)->finalize (object);
 }
 
 static void
-gst_metadata_mux_dispose_members (GstMetadataMux * filter)
+gst_metadata_demux_dispose_members (GstMetadataDemux * filter)
 {
   gst_metadata_common_dispose (&filter->common);
 
@@ -624,9 +568,9 @@ gst_metadata_mux_dispose_members (GstMetadataMux * filter)
 }
 
 static void
-gst_metadata_mux_init_members (GstMetadataMux * filter)
+gst_metadata_demux_init_members (GstMetadataDemux * filter)
 {
-  filter->need_calculate_offset = FALSE;
+  filter->need_send_tag = FALSE;
 
   filter->adapter_parsing = NULL;
   filter->adapter_holding = NULL;
@@ -644,7 +588,7 @@ gst_metadata_mux_init_members (GstMetadataMux * filter)
 }
 
 static gboolean
-gst_metadata_mux_configure_srccaps (GstMetadataMux * filter)
+gst_metadata_demux_configure_srccaps (GstMetadataDemux * filter)
 {
   GstCaps *caps = NULL;
   gboolean ret = FALSE;
@@ -663,7 +607,8 @@ gst_metadata_mux_configure_srccaps (GstMetadataMux * filter)
       break;
   }
 
-  caps = gst_caps_new_simple (mime, NULL);
+  caps =
+      gst_caps_new_simple (mime, "tags-extracted", G_TYPE_BOOLEAN, TRUE, NULL);
 
   ret = gst_pad_set_caps (filter->srcpad, caps);
 
@@ -679,7 +624,7 @@ done:
 }
 
 static gboolean
-gst_metadata_mux_configure_caps (GstMetadataMux * filter)
+gst_metadata_demux_configure_caps (GstMetadataDemux * filter)
 {
   GstCaps *caps = NULL;
   gboolean ret = FALSE;
@@ -726,15 +671,15 @@ done:
 
 /* this function handles the link with other elements */
 static gboolean
-gst_metadata_mux_set_caps (GstPad * pad, GstCaps * caps)
+gst_metadata_demux_set_caps (GstPad * pad, GstCaps * caps)
 {
-  GstMetadataMux *filter = NULL;
+  GstMetadataDemux *filter = NULL;
   GstStructure *structure = NULL;
   const gchar *mime = NULL;
   gboolean ret = FALSE;
-  gboolean muxd = TRUE;
+  gboolean demuxd = TRUE;
 
-  filter = GST_METADATA_MUX (gst_pad_get_parent (pad));
+  filter = GST_METADATA_DEMUX (gst_pad_get_parent (pad));
 
   structure = gst_caps_get_structure (caps, 0);
 
@@ -749,14 +694,14 @@ gst_metadata_mux_set_caps (GstPad * pad, GstCaps * caps)
     goto done;
   }
 
-  if (gst_structure_get_boolean (structure, "tags-extracted", &muxd)) {
-    if (muxd == FALSE) {
+  if (gst_structure_get_boolean (structure, "tags-extracted", &demuxd)) {
+    if (demuxd == TRUE) {
       ret = FALSE;
       goto done;
     }
   }
 
-  ret = gst_metadata_mux_configure_srccaps (filter);
+  ret = gst_metadata_demux_configure_srccaps (filter);
 
 done:
 
@@ -765,25 +710,80 @@ done:
   return ret;
 }
 
-static const GstQueryType *
-gst_metadata_mux_get_query_types (GstPad * pad)
+static void
+gst_metadata_demux_send_tags (GstMetadataDemux * filter)
 {
-  static const GstQueryType gst_metadata_mux_src_query_types[] = {
+
+  GstMessage *msg;
+  GstTagList *taglist = gst_tag_list_new ();
+  GstEvent *event;
+
+  if (filter->options & META_OPT_EXIF)
+    metadataparse_exif_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->common.metadata.exif_adapter, METADATA_TAG_MAP_WHOLECHUNK);
+  if (filter->options & META_OPT_IPTC)
+    metadataparse_iptc_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->common.metadata.iptc_adapter, METADATA_TAG_MAP_WHOLECHUNK);
+  if (filter->options & META_OPT_XMP)
+    metadataparse_xmp_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->common.metadata.xmp_adapter, METADATA_TAG_MAP_WHOLECHUNK);
+
+  if (taglist && !gst_tag_list_is_empty (taglist)) {
+
+    msg =
+        gst_message_new_tag (GST_OBJECT (filter), gst_tag_list_copy (taglist));
+    gst_element_post_message (GST_ELEMENT (filter), msg);
+
+    event = gst_event_new_tag (taglist);
+    gst_pad_push_event (filter->srcpad, event);
+    taglist = NULL;
+  }
+
+  if (!taglist)
+    taglist = gst_tag_list_new ();
+
+  if (filter->options & META_OPT_EXIF)
+    metadataparse_exif_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->common.metadata.exif_adapter, METADATA_TAG_MAP_INDIVIDUALS);
+  if (filter->options & META_OPT_IPTC)
+    metadataparse_iptc_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->common.metadata.iptc_adapter, METADATA_TAG_MAP_INDIVIDUALS);
+  if (filter->options & META_OPT_XMP)
+    metadataparse_xmp_tag_list_add (taglist, GST_TAG_MERGE_KEEP,
+        filter->common.metadata.xmp_adapter, METADATA_TAG_MAP_INDIVIDUALS);
+
+  if (taglist && !gst_tag_list_is_empty (taglist)) {
+
+    msg = gst_message_new_tag (GST_OBJECT (filter), taglist);
+    gst_element_post_message (GST_ELEMENT (filter), msg);
+    taglist = NULL;
+  }
+
+  if (taglist)
+    gst_tag_list_free (taglist);
+
+  filter->need_send_tag = FALSE;
+}
+
+static const GstQueryType *
+gst_metadata_demux_get_query_types (GstPad * pad)
+{
+  static const GstQueryType gst_metadata_demux_src_query_types[] = {
     GST_QUERY_POSITION,
     GST_QUERY_DURATION,
     GST_QUERY_FORMATS,
     0
   };
 
-  return gst_metadata_mux_src_query_types;
+  return gst_metadata_demux_src_query_types;
 }
 
 static gboolean
-gst_metadata_mux_src_query (GstPad * pad, GstQuery * query)
+gst_metadata_demux_src_query (GstPad * pad, GstQuery * query)
 {
   gboolean ret = FALSE;
   GstFormat format;
-  GstMetadataMux *filter = GST_METADATA_MUX (gst_pad_get_parent (pad));
+  GstMetadataDemux *filter = GST_METADATA_DEMUX (gst_pad_get_parent (pad));
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_POSITION:
@@ -795,13 +795,8 @@ gst_metadata_mux_src_query (GstPad * pad, GstQuery * query)
       }
       break;
     case GST_QUERY_DURATION:
-      if (filter->need_calculate_offset) {
-        gst_metadata_create_chunks_from_tags (filter);
-        if (gst_metadata_common_calculate_offsets (&filter->common))
-          filter->need_calculate_offset = FALSE;
-        else
-          goto done;
-      }
+      if (filter->common.state != MT_STATE_PARSED)
+        goto done;
 
       gst_query_parse_duration (query, &format, NULL);
 
@@ -838,7 +833,7 @@ done:
  */
 
 static int
-gst_metadata_mux_parse (GstMetadataMux * filter, const guint8 * buf,
+gst_metadata_demux_parse (GstMetadataDemux * filter, const guint8 * buf,
     guint32 size)
 {
 
@@ -861,14 +856,15 @@ gst_metadata_mux_parse (GstMetadataMux * filter, const guint8 * buf,
     filter->need_more_data = TRUE;
   } else {
     filter->common.state = MT_STATE_PARSED;
+    gst_metadata_common_calculate_offsets (&filter->common);
     filter->need_more_data = FALSE;
-    filter->need_calculate_offset = TRUE;
+    filter->need_send_tag = TRUE;
   }
 
-  /* reconfigure caps if it is different from type detected by 'metadata_mux' function */
+  /* reconfigure caps if it is different from type detected by 'metadata_demux' function */
   if (filter->img_type != META_DATA_IMG_TYPE (filter->common.metadata)) {
     filter->img_type = META_DATA_IMG_TYPE (filter->common.metadata);
-    if (!gst_metadata_mux_configure_caps (filter)) {
+    if (!gst_metadata_demux_configure_caps (filter)) {
       GST_ELEMENT_ERROR (filter, STREAM, FORMAT, (NULL),
           ("Couldn't reconfigure caps for %s",
               gst_metadata_common_get_type_name (filter->img_type)));
@@ -888,21 +884,21 @@ done:
  */
 
 /* FIXME */
-/* Current mux is just done before is pull mode could be activated */
-/* may be it is possible to mux in chain mode by doing some trick with gst-adapter */
+/* Current demux is just done before is pull mode could be activated */
+/* may be it is possible to demux in chain mode by doing some trick with gst-adapter */
 /* the pipeline below would be a test for that case */
-/* gst-launch-0.10 filesrc location=Exif.jpg ! queue !  metadatamux ! filesink location=gen3.jpg */
+/* gst-launch-0.10 filesrc location=Exif.jpg ! queue !  metadatademux ! filesink location=gen3.jpg */
 
 static GstFlowReturn
-gst_metadata_mux_chain (GstPad * pad, GstBuffer * buf)
+gst_metadata_demux_chain (GstPad * pad, GstBuffer * buf)
 {
-  GstMetadataMux *filter = NULL;
+  GstMetadataDemux *filter = NULL;
   GstFlowReturn ret = GST_FLOW_ERROR;
   guint32 buf_size = 0;
   guint32 new_buf_size = 0;
   gboolean append = FALSE;
 
-  filter = GST_METADATA_MUX (gst_pad_get_parent (pad));
+  filter = GST_METADATA_DEMUX (gst_pad_get_parent (pad));
 
   if (filter->common.state != MT_STATE_PARSED) {
     guint32 adpt_size = gst_adapter_available (filter->adapter_parsing);
@@ -945,7 +941,7 @@ gst_metadata_mux_chain (GstPad * pad, GstBuffer * buf)
       const guint8 *new_buf =
           gst_adapter_peek (filter->adapter_parsing, adpt_size);
 
-      if (gst_metadata_mux_parse (filter, new_buf,
+      if (gst_metadata_demux_parse (filter, new_buf,
               adpt_size) == META_PARSING_ERROR) {
         ret = GST_FLOW_ERROR;
         goto done;
@@ -963,14 +959,8 @@ gst_metadata_mux_chain (GstPad * pad, GstBuffer * buf)
       filter->adapter_holding = NULL;
     }
 
-    if (filter->need_calculate_offset) {
-      gst_metadata_create_chunks_from_tags (filter);
-      if (gst_metadata_common_calculate_offsets (&filter->common)) {
-        filter->need_calculate_offset = FALSE;
-      } else {
-        ret = GST_FLOW_ERROR;
-        goto done;
-      }
+    if (filter->need_send_tag) {
+      gst_metadata_demux_send_tags (filter);
     }
 
     if (filter->offset_orig + GST_BUFFER_SIZE (buf) ==
@@ -1007,7 +997,7 @@ gst_metadata_mux_chain (GstPad * pad, GstBuffer * buf)
     filter->offset += new_buf_size;
 
   } else {
-    /* just store while still not muxd */
+    /* just store while still not demuxd */
     if (!filter->adapter_holding)
       filter->adapter_holding = gst_adapter_new ();
     gst_adapter_push (filter->adapter_holding, buf);
@@ -1031,7 +1021,7 @@ done:
 }
 
 static gboolean
-gst_metadata_mux_pull_range_mux (GstMetadataMux * filter)
+gst_metadata_demux_pull_range_demux (GstMetadataDemux * filter)
 {
 
   int res;
@@ -1061,7 +1051,7 @@ gst_metadata_mux_pull_range_mux (GstMetadataMux * filter)
     offset += filter->next_offset;
 
     /* 'filter->next_size' only says the minimum required number of bytes.
-       We try provided more bytes (4096) just to avoid a lot of calls to 'metadata_parse'
+       We try provided more bytes (4096) just to avoid a lot of calls to 'metadata_demux'
        returning META_PARSING_NEED_MORE_DATA */
     if (filter->next_size < 4096) {
       if (duration - offset < 4096) {
@@ -1081,7 +1071,7 @@ gst_metadata_mux_pull_range_mux (GstMetadataMux * filter)
     }
 
     res =
-        gst_metadata_mux_parse (filter, GST_BUFFER_DATA (buf),
+        gst_metadata_demux_parse (filter, GST_BUFFER_DATA (buf),
         GST_BUFFER_SIZE (buf));
     if (res == META_PARSING_ERROR) {
       ret = FALSE;
@@ -1099,24 +1089,24 @@ done:
 }
 
 static gboolean
-gst_metadata_mux_sink_activate (GstPad * pad)
+gst_metadata_demux_sink_activate (GstPad * pad)
 {
-  GstMetadataMux *filter = NULL;
+  GstMetadataDemux *filter = NULL;
   gboolean ret = TRUE;
 
 
-  filter = GST_METADATA_MUX (GST_PAD_PARENT (pad));
+  filter = GST_METADATA_DEMUX (GST_PAD_PARENT (pad));
 
   if (!gst_pad_check_pull_range (pad) ||
       !gst_pad_activate_pull (filter->sinkpad, TRUE)) {
-    /* FIXME: currently it is not possible to mux in chain. Fail here ? */
+    /* FIXME: currently it is not possible to demux in chain. Fail here ? */
     /* nothing to be done by now, activate push mode */
     return gst_pad_activate_push (pad, TRUE);
   }
 
-  /* try to mux */
+  /* try to demux */
   if (filter->common.state == MT_STATE_NULL) {
-    ret = gst_metadata_mux_pull_range_mux (filter);
+    ret = gst_metadata_demux_pull_range_demux (filter);
   }
 
 done:
@@ -1135,36 +1125,31 @@ done:
 }
 
 static gboolean
-gst_metadata_mux_checkgetrange (GstPad * srcpad)
+gst_metadata_demux_checkgetrange (GstPad * srcpad)
 {
-  GstMetadataMux *filter = NULL;
+  GstMetadataDemux *filter = NULL;
 
-  filter = GST_METADATA_MUX (GST_PAD_PARENT (srcpad));
+  filter = GST_METADATA_DEMUX (GST_PAD_PARENT (srcpad));
 
   return gst_pad_check_pull_range (filter->sinkpad);
 }
 
 static GstFlowReturn
-gst_metadata_mux_get_range (GstPad * pad,
+gst_metadata_demux_get_range (GstPad * pad,
     guint64 offset, guint size, GstBuffer ** buf)
 {
-  GstMetadataMux *filter = NULL;
+  GstMetadataDemux *filter = NULL;
   GstFlowReturn ret = GST_FLOW_OK;
   gint64 offset_orig = 0;
   guint size_orig;
   GstBuffer *prepend = NULL;
   gboolean need_append = FALSE;
 
-  filter = GST_METADATA_MUX (GST_PAD_PARENT (pad));
+  filter = GST_METADATA_DEMUX (GST_PAD_PARENT (pad));
 
-  if (filter->need_calculate_offset) {
-    gst_metadata_create_chunks_from_tags (filter);
-    if (gst_metadata_common_calculate_offsets (&filter->common)) {
-      filter->need_calculate_offset = FALSE;
-    } else {
-      ret = GST_FLOW_ERROR;
-      goto done;
-    }
+  if (filter->common.state != MT_STATE_PARSED) {
+    ret = GST_FLOW_ERROR;
+    goto done;
   }
 
   if (offset + size > filter->common.duration) {
@@ -1172,6 +1157,10 @@ gst_metadata_mux_get_range (GstPad * pad,
   }
 
   size_orig = size;
+
+  if (filter->need_send_tag) {
+    gst_metadata_demux_send_tags (filter);
+  }
 
   gst_metadata_common_translate_pos_to_orig (&filter->common, offset,
       &offset_orig, &prepend);
@@ -1219,17 +1208,17 @@ done:
 }
 
 static gboolean
-gst_metadata_mux_src_activate_pull (GstPad * pad, gboolean active)
+gst_metadata_demux_src_activate_pull (GstPad * pad, gboolean active)
 {
-  GstMetadataMux *filter = NULL;
+  GstMetadataDemux *filter = NULL;
   gboolean ret;
 
-  filter = GST_METADATA_MUX (gst_pad_get_parent (pad));
+  filter = GST_METADATA_DEMUX (gst_pad_get_parent (pad));
 
   ret = gst_pad_activate_pull (filter->sinkpad, active);
 
   if (ret && filter->common.state == MT_STATE_NULL) {
-    ret = gst_metadata_mux_pull_range_mux (filter);
+    ret = gst_metadata_demux_pull_range_demux (filter);
   }
 
   gst_object_unref (filter);
@@ -1239,16 +1228,17 @@ gst_metadata_mux_src_activate_pull (GstPad * pad, gboolean active)
 
 
 static GstStateChangeReturn
-gst_metadata_mux_change_state (GstElement * element, GstStateChange transition)
+gst_metadata_demux_change_state (GstElement * element,
+    GstStateChange transition)
 {
   GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-  GstMetadataMux *filter = GST_METADATA_MUX (element);
+  GstMetadataDemux *filter = GST_METADATA_DEMUX (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
-      gst_metadata_mux_init_members (filter);
+      gst_metadata_demux_init_members (filter);
       filter->adapter_parsing = gst_adapter_new ();
-      gst_metadata_common_init (&filter->common, FALSE, filter->options);
+      gst_metadata_common_init (&filter->common, TRUE, filter->options);
       break;
     default:
       break;
@@ -1269,13 +1259,13 @@ gst_metadata_mux_change_state (GstElement * element, GstStateChange transition)
         gst_adapter_clear (filter->adapter_holding);
       }
       if (filter->common.state != MT_STATE_PARSED) {
-        /* cleanup parser */
+        /* cleanup demuxr */
         gst_metadata_common_dispose (&filter->common);
-        gst_metadata_common_init (&filter->common, FALSE, filter->options);
+        gst_metadata_common_init (&filter->common, TRUE, filter->options);
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      gst_metadata_mux_dispose_members (filter);
+      gst_metadata_demux_dispose_members (filter);
       break;
     default:
       break;
@@ -1291,11 +1281,11 @@ done:
  */
 
 gboolean
-gst_metadata_mux_plugin_init (GstPlugin * plugin)
+gst_metadata_demux_plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_metadata_mux_debug, "metadatamux", 0,
+  GST_DEBUG_CATEGORY_INIT (gst_metadata_demux_debug, "metadatademux", 0,
       "Metadata demuxer");
 
-  return gst_element_register (plugin, "metadatamux",
-      GST_RANK_NONE, GST_TYPE_METADATA_MUX);
+  return gst_element_register (plugin, "metadatademux",
+      GST_RANK_PRIMARY + 1, GST_TYPE_METADATA_DEMUX);
 }

@@ -50,39 +50,6 @@
 static void
 metadata_tags_exif_register (void)
 {
-  gst_tag_register (GST_TAG_EXIF, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, GST_TAG_EXIF, "exif metadata chunk", NULL);
-}
-
-/*
- * IPTC tags
- */
-
-static void
-metadata_tags_iptc_register (void)
-{
-  gst_tag_register (GST_TAG_IPTC, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, GST_TAG_IPTC, "iptc metadata chunk", NULL);
-}
-
-/*
- * XMP tags
- */
-
-static void
-metadata_tags_xmp_register (void)
-{
-  gst_tag_register (GST_TAG_XMP, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, GST_TAG_XMP, "xmp metadata chunk", NULL);
-}
-
-/*
- *
- */
-
-void
-metadata_tags_register (void)
-{
   /* devices tags */
 
   gst_tag_register (GST_TAG_DEVICE_MAKE, GST_TAG_FLAG_META,
@@ -101,20 +68,21 @@ metadata_tags_register (void)
 
   /* image tags */
 
-  gst_tag_register (GST_TAG_IMAGE_XRESOLUTION, GST_TAG_FLAG_META, G_TYPE_FLOAT,
-      GST_TAG_IMAGE_XRESOLUTION, "Horizontal resolution in pixels per inch",
-      NULL);
-  gst_tag_register (GST_TAG_IMAGE_YRESOLUTION, GST_TAG_FLAG_META, G_TYPE_FLOAT,
-      GST_TAG_IMAGE_YRESOLUTION, "Vertical resolution in pixels per inch",
-      NULL);
+  gst_tag_register (GST_TAG_IMAGE_XRESOLUTION, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_IMAGE_XRESOLUTION,
+      "Horizontal resolution in pixels per inch", NULL);
+  gst_tag_register (GST_TAG_IMAGE_YRESOLUTION, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_IMAGE_YRESOLUTION,
+      "Vertical resolution in pixels per inch", NULL);
 
   /* capture tags */
 
   gst_tag_register (GST_TAG_CAPTURE_EXPOSURE_TIME, GST_TAG_FLAG_META,
-      G_TYPE_FLOAT, GST_TAG_CAPTURE_EXPOSURE_TIME, "Exposure time in seconds",
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_EXPOSURE_TIME,
+      "Exposure time in seconds", NULL);
+  gst_tag_register (GST_TAG_CAPTURE_FNUMBER, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_FNUMBER, "F number (focal ratio)",
       NULL);
-  gst_tag_register (GST_TAG_CAPTURE_FNUMBER, GST_TAG_FLAG_META, G_TYPE_FLOAT,
-      GST_TAG_CAPTURE_FNUMBER, "F number (focal ratio)", NULL);
   /**
     0 - not defined
     1- Manual
@@ -137,11 +105,11 @@ metadata_tags_register (void)
       "Class of program used for exposure", NULL);
   /** The unit is the APEX value.
       Ordinarily it is given in the range of -99.99 to 99.99.
-      100.0 mean unknown      
+      if numerator is 0xFFFFFFFF means unknown      
   */
-  gst_tag_register (GST_TAG_CAPTURE_BRIGHTNESS, GST_TAG_FLAG_META, G_TYPE_FLOAT,
-      GST_TAG_CAPTURE_BRIGHTNESS, "Brightness (APEX from -99.99 to 99.99)",
-      NULL);
+  gst_tag_register (GST_TAG_CAPTURE_BRIGHTNESS, GST_TAG_FLAG_META,
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_BRIGHTNESS,
+      "Brightness (APEX from -99.99 to 99.99)", NULL);
   /**
      0- Auto
      1- Off
@@ -160,7 +128,8 @@ metadata_tags_register (void)
   /** if Zero ZOOM not used
    */
   gst_tag_register (GST_TAG_CAPTURE_DIGITAL_ZOOM, GST_TAG_FLAG_META,
-      G_TYPE_FLOAT, GST_TAG_CAPTURE_DIGITAL_ZOOM, "Digital zoom ratio", NULL);
+      GST_TYPE_FRACTION, GST_TAG_CAPTURE_DIGITAL_ZOOM, "Digital zoom ratio",
+      NULL);
   /**
      0- None
      1- Low gain up
@@ -188,6 +157,49 @@ metadata_tags_register (void)
   */
   gst_tag_register (GST_TAG_CAPTURE_SATURATION, GST_TAG_FLAG_META, G_TYPE_INT,
       GST_TAG_CAPTURE_SATURATION, "", NULL);
+
+}
+
+/*
+ * IPTC tags
+ */
+
+static void
+metadata_tags_iptc_register (void)
+{
+
+}
+
+/*
+ * XMP tags
+ */
+
+static void
+metadata_tags_xmp_register (void)
+{
+
+}
+
+/*
+ *
+ */
+
+void
+metadata_tags_register (void)
+{
+
+  /* whole chunk tags */
+
+  gst_tag_register (GST_TAG_EXIF, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, GST_TAG_EXIF, "exif metadata chunk", NULL);
+
+  gst_tag_register (GST_TAG_IPTC, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, GST_TAG_IPTC, "iptc metadata chunk", NULL);
+
+  gst_tag_register (GST_TAG_XMP, GST_TAG_FLAG_META,
+      GST_TYPE_BUFFER, GST_TAG_XMP, "xmp metadata chunk", NULL);
+
+  /* tags related to some metadata */
 
   metadata_tags_exif_register ();
   metadata_tags_iptc_register ();
