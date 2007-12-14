@@ -23,7 +23,8 @@ noinst_HEADERS = \
 	arch.h \
 	fixed_generic.h \
 	gstspeexresample.h \
-	speex_resampler.h
+	speex_resampler.h \
+	speex_resampler_wrapper.h
 
 EXTRA_DIST = \
 	resample.c
