@@ -1,3 +1,11 @@
+2007-12-14  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* ext/flac/gstflacdec.c: (gst_flac_dec_metadata_callback),
+	(gst_flac_dec_write):
+	* ext/flac/gstflacdec.h:
+	Send segments from the streaming thread. Fixes #502187.
+	Fix segment seeking and a bunch of other seeking cases.
+
 2007-12-14  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/id3demux/id3v2frames.c: (parse_url_link_frame):

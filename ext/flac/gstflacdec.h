@@ -71,6 +71,10 @@ struct _GstFlacDec {
 
   GstSegment     segment;     /* the currently configured segment, in
                                * samples/audio frames (DEFAULT format) */
+  gboolean       running;
+  gboolean       discont;
+  GstEvent      *close_segment;
+  GstEvent      *start_segment;
 
   GstFlowReturn  last_flow;   /* the last flow return received from either
                                * gst_pad_push or gst_pad_buffer_alloc */
