@@ -1,3 +1,11 @@
+2007-12-14  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/id3demux/id3v2frames.c: (parse_url_link_frame):
+	  Parse WOAF frames and put the result into GST_TAG_CONTACT,
+	  which is where it would end up if the same information was
+	  put in a vorbis comment (don't think it's worth adding a
+	  new URI tag for this). Fixes #488112.
+
 2007-12-11  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* configure.ac:

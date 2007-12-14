@@ -348,6 +348,11 @@ parse_url_link_frame (ID3TagsWorking * work, const gchar ** tag_name)
       *tag_name = GST_TAG_LICENSE_URI;
     else
       *tag_name = GST_TAG_COPYRIGHT_URI;
+  } else if (strcmp (work->frame_id, "WOAF") == 0) {
+    /* can't be bothered to create a CONTACT_URI tag for this, so let's just
+     * put into into GST_TAG_CONTACT, which is where it ends up when reading
+     * the info from vorbis comments as well */
+    *tag_name = GST_TAG_CONTACT;
   }
 
   return link;
