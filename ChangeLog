@@ -1,3 +1,11 @@
+2007-12-14  Zaheer Abbas Merali  <zaheerabbas at merali dot org>
+
+	* gst/mpegtsparse/mpegtspacketizer.c:
+	* gst/mpegtsparse/mpegtspacketizer.h:
+	Hash streams by pid again. Add a linked list inside each
+	stream with a list of sub_tables. Fix multiple sections
+	as it was borked with my last commit.
+
 2007-12-14  Christian Schaller <christian.schaller@collabora.co.uk>
 
 	* sys/glsink/Makefile.am: add glvideo.h

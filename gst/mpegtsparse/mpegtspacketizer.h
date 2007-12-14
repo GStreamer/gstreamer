@@ -49,6 +49,7 @@ struct _MpegTSPacketizer {
   GObject object;
 
   GstAdapter *adapter;
+  /* streams hashed by pid */
   GHashTable *streams;
   gboolean disposed;
 };
@@ -78,6 +79,7 @@ typedef struct
   GstBuffer *buffer;
   gint16 pid;
   guint8 table_id;
+  guint16 subtable_extension;
   guint section_length;
   guint8 version_number;
   guint8 current_next_indicator;

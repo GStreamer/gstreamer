@@ -33,7 +33,7 @@ static void mpegts_packetizer_finalize (GObject * object);
 
 #define CONTINUITY_UNSET 255
 #define MAX_CONTINUITY 15
-#define SECTION_VERSION_NUMBER_NOTSET 255
+#define VERSION_NUMBER_NOTSET 255
 
 typedef struct
 {
@@ -41,24 +41,54 @@ typedef struct
   /* the spec says sub_table_extension is the fourth and fifth byte of a 
    * section when the section_syntax_indicator is set to a value of "1". If 
    * section_syntax_indicator is 0, sub_table_extension will be set to 0 */
-  guint16 sub_table_extension;
+  guint16 subtable_extension;
+  guint8 version_number;
+} MpegTSPacketizerStreamSubtable;
+
+typedef struct
+{
   guint continuity_counter;
   GstAdapter *section_adapter;
   guint section_length;
-  guint8 section_version_number;
+  GSList *subtables;
 } MpegTSPacketizerStream;
 
+static gint
+mpegts_packetizer_stream_subtable_compare (gconstpointer a, gconstpointer b)
+{
+  MpegTSPacketizerStreamSubtable *asub, *bsub;
+
+  asub = (MpegTSPacketizerStreamSubtable *) a;
+  bsub = (MpegTSPacketizerStreamSubtable *) b;
+
+  if (asub->table_id == bsub->table_id &&
+      asub->subtable_extension == bsub->subtable_extension)
+    return 0;
+  return -1;
+}
+
+static MpegTSPacketizerStreamSubtable *
+mpegts_packetizer_stream_subtable_new (guint8 table_id,
+    guint16 subtable_extension)
+{
+  MpegTSPacketizerStreamSubtable *subtable;
+
+  subtable = g_new0 (MpegTSPacketizerStreamSubtable, 1);
+  subtable->version_number = VERSION_NUMBER_NOTSET;
+  subtable->table_id = table_id;
+  subtable->subtable_extension = subtable_extension;
+  return subtable;
+}
+
 static MpegTSPacketizerStream *
-mpegts_packetizer_stream_new (guint8 table_id, guint16 sub_table_extension)
+mpegts_packetizer_stream_new ()
 {
   MpegTSPacketizerStream *stream;
 
   stream = (MpegTSPacketizerStream *) g_new0 (MpegTSPacketizerStream, 1);
   stream->section_adapter = gst_adapter_new ();
-  stream->table_id = table_id;
-  stream->sub_table_extension = sub_table_extension;
   stream->continuity_counter = CONTINUITY_UNSET;
-  stream->section_version_number = SECTION_VERSION_NUMBER_NOTSET;
+  stream->subtables = NULL;
   return stream;
 }
 
@@ -67,6 +97,8 @@ mpegts_packetizer_stream_free (MpegTSPacketizerStream * stream)
 {
   gst_adapter_clear (stream->section_adapter);
   g_object_unref (stream->section_adapter);
+  g_slist_foreach (stream->subtables, (GFunc) g_free, NULL);
+  g_slist_free (stream->subtables);
   g_free (stream);
 }
 
@@ -94,7 +126,7 @@ static void
 mpegts_packetizer_init (MpegTSPacketizer * packetizer)
 {
   packetizer->adapter = gst_adapter_new ();
-  packetizer->streams = g_hash_table_new (g_str_hash, g_str_equal);
+  packetizer->streams = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
 static void
@@ -207,6 +239,8 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer * packetizer,
 {
   guint8 tmp;
   guint8 *data;
+  MpegTSPacketizerStreamSubtable *subtable;
+  GSList *subtable_list = NULL;
 
   section->complete = TRUE;
   /* get the section buffer, pass the ownership to the caller */
@@ -215,6 +249,23 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer * packetizer,
   data = GST_BUFFER_DATA (section->buffer);
 
   section->table_id = *data++;
+  if ((data[0] & 0x80) == 0)
+    section->subtable_extension = 0;
+  else
+    section->subtable_extension = GST_READ_UINT16_BE (data + 2);
+
+  subtable = mpegts_packetizer_stream_subtable_new (section->table_id,
+      section->subtable_extension);
+
+  subtable_list = g_slist_find_custom (stream->subtables, subtable,
+      mpegts_packetizer_stream_subtable_compare);
+  if (subtable_list) {
+    g_free (subtable);
+    subtable = (MpegTSPacketizerStreamSubtable *) (subtable_list->data);
+  } else {
+    stream->subtables = g_slist_prepend (stream->subtables, subtable);
+  }
+
   section->section_length = GST_READ_UINT16_BE (data) & 0x0FFF;
   data += 2;
 
@@ -224,18 +275,20 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer * packetizer,
   tmp = *data++;
   section->version_number = (tmp >> 1) & 0x1F;
   section->current_next_indicator = tmp & 0x01;
-
   if (!section->current_next_indicator)
     goto not_applicable;
 
-  if (section->version_number == stream->section_version_number)
+  if (section->version_number == subtable->version_number)
     goto not_applicable;
-
-  stream->section_version_number = section->version_number;
+  subtable->version_number = section->version_number;
 
   return TRUE;
 
 not_applicable:
+  GST_LOG
+      ("not applicable pid %d table_id %d subtable_extension %d, current_next %d version %d",
+      section->pid, section->table_id, section->subtable_extension,
+      section->current_next_indicator, section->version_number);
   section->complete = FALSE;
   gst_buffer_unref (section->buffer);
   return TRUE;
@@ -504,6 +557,7 @@ mpegts_packetizer_parse_nit (MpegTSPacketizer * packetizer,
   GValueArray *descriptors = NULL;
   gchar *dbg_str;
 
+  GST_DEBUG ("NIT");
   /* fixed header + CRC == 16 */
   if (GST_BUFFER_SIZE (section->buffer) < 23) {
     GST_WARNING ("PID %d invalid NIT size %d",
@@ -670,6 +724,7 @@ mpegts_packetizer_parse_sdt (MpegTSPacketizer * packetizer,
   GValue service_value = { 0 };
   gchar *dbg_str;
 
+  GST_DEBUG ("SDT");
   /* fixed header + CRC == 16 */
   if (GST_BUFFER_SIZE (section->buffer) < 14) {
     GST_WARNING ("PID %d invalid SDT size %d",
@@ -1058,11 +1113,10 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
   gboolean res = FALSE;
   MpegTSPacketizerStream *stream;
   guint8 pointer, table_id;
-  guint16 sub_table_extension;
+  guint16 subtable_extension;
   guint section_length;
   GstBuffer *sub_buf;
   guint8 *data;
-  gchar *sub_table_identifier;
 
   g_return_val_if_fail (GST_IS_MPEGTS_PACKETIZER (packetizer), FALSE);
   g_return_val_if_fail (packet != NULL, FALSE);
@@ -1081,59 +1135,65 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
 
     data += pointer;
   }
-  table_id = *data++;
-  /* sub_table_extension should be read from 4th and 5th bytes only if 
-   * section_syntax_indicator is 1 */
-  if ((data[0] & 0x80) == 0)
-    sub_table_extension = 0;
-  else
-    sub_table_extension = GST_READ_UINT16_BE (data + 2);
-  sub_table_identifier =
-      g_strdup_printf ("%d,%d", table_id, sub_table_extension);
-  GST_DEBUG ("sub table identifier is: %s", sub_table_identifier);
-  stream = (MpegTSPacketizerStream *) g_hash_table_lookup (packetizer->streams,
-      sub_table_identifier);
-  if (stream == NULL) {
-    stream = mpegts_packetizer_stream_new (table_id, sub_table_extension);
-    g_hash_table_insert (packetizer->streams, sub_table_identifier, stream);
-  } else {
-    g_free (sub_table_identifier);
-  }
-
-  section_length = GST_READ_UINT16_BE (data) & 0x0FFF;
-  data += 2;
-
   /* create a sub buffer from the start of the section (table_id and
    * section_length included) to the end */
   sub_buf = gst_buffer_create_sub (packet->buffer,
-      data - 3 - GST_BUFFER_DATA (packet->buffer), packet->data_end - data + 3);
+      data - GST_BUFFER_DATA (packet->buffer), packet->data_end - data);
+
+  stream = (MpegTSPacketizerStream *) g_hash_table_lookup (packetizer->streams,
+      GINT_TO_POINTER ((gint) packet->pid));
+  if (stream == NULL) {
+    stream = mpegts_packetizer_stream_new ();
+    g_hash_table_insert (packetizer->streams,
+        GINT_TO_POINTER ((gint) packet->pid), stream);
+  }
 
   if (packet->payload_unit_start_indicator) {
+    table_id = *data++;
+    /* subtable_extension should be read from 4th and 5th bytes only if 
+     * section_syntax_indicator is 1 */
+    if ((data[0] & 0x80) == 0)
+      subtable_extension = 0;
+    else
+      subtable_extension = GST_READ_UINT16_BE (data + 2);
+    GST_DEBUG ("pid: %d table_id %d sub_table_extension %d",
+        packet->pid, table_id, subtable_extension);
+
+    section_length = GST_READ_UINT16_BE (data) & 0x0FFF;
+
     if (stream->continuity_counter != CONTINUITY_UNSET) {
-      GST_WARNING ("PID %d payload_unit_start_indicator set but section "
+      GST_DEBUG
+          ("PID %d table_id %d sub_table_extension %d payload_unit_start_indicator set but section "
           "not complete (last_continuity: %d continuity: %d sec len %d buffer %d avail %d",
-          packet->pid, stream->continuity_counter, packet->continuity_counter,
-          section_length, GST_BUFFER_SIZE (sub_buf),
+          packet->pid, table_id, subtable_extension, stream->continuity_counter,
+          packet->continuity_counter, section_length, GST_BUFFER_SIZE (sub_buf),
           gst_adapter_available (stream->section_adapter));
       mpegts_packetizer_clear_section (packetizer, stream);
+    } else {
+      GST_DEBUG
+          ("pusi set and new stream section is %d long and data we have is: %d",
+          section_length, packet->data_end - packet->data);
     }
-
     stream->continuity_counter = packet->continuity_counter;
     stream->section_length = section_length;
     gst_adapter_push (stream->section_adapter, sub_buf);
 
     res = TRUE;
-  } else if (packet->continuity_counter == stream->continuity_counter + 1 ||
-      (stream->continuity_counter == MAX_CONTINUITY &&
-          packet->continuity_counter == 0)) {
+  } else if (stream->continuity_counter != CONTINUITY_UNSET &&
+      (packet->continuity_counter == stream->continuity_counter + 1 ||
+          (stream->continuity_counter == MAX_CONTINUITY &&
+              packet->continuity_counter == 0))) {
     stream->continuity_counter = packet->continuity_counter;
     gst_adapter_push (stream->section_adapter, sub_buf);
 
     res = TRUE;
   } else {
-    GST_WARNING ("PID %d section discontinuity "
-        "(last_continuity: %d continuity: %d", packet->pid,
-        stream->continuity_counter, packet->continuity_counter);
+    if (stream->continuity_counter == CONTINUITY_UNSET)
+      GST_DEBUG ("PID %d waiting for pusi", packet->pid);
+    else
+      GST_DEBUG ("PID %d section discontinuity "
+          "(last_continuity: %d continuity: %d", packet->pid,
+          stream->continuity_counter, packet->continuity_counter);
     mpegts_packetizer_clear_section (packetizer, stream);
     gst_buffer_unref (sub_buf);
   }
@@ -1146,7 +1206,6 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
      * section_length */
     if (gst_adapter_available (stream->section_adapter) >=
         stream->section_length + 3) {
-
       res = mpegts_packetizer_parse_section_header (packetizer,
           stream, section);
 
@@ -1157,6 +1216,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer * packetizer,
       section->complete = FALSE;
     }
   } else {
+    GST_WARNING ("section not complete");
     section->complete = FALSE;
   }
 
