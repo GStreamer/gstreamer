@@ -9,3 +9,5 @@ libgstglimagesink_la_LIBADD = $(X_LIBS) $(XSHM_LIBS) -lGL \
 	$(GST_PLUGINS_BASE_LIBS) -lgstinterfaces-$(GST_MAJORMINOR)
 libgstglimagesink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 
+noinst_HEADERS = \
+	glvideo.h
