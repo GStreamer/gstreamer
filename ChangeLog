@@ -1,5 +1,11 @@
 2007-12-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/videoparse/gstvideoparse.c: (gst_video_parse_dispose),
+	(gst_video_parse_sink_event):
+	Free the adapter on dispose and correctly reset on newsegment events.
+
+2007-12-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/videoparse/gstvideoparse.c: (gst_video_parse_sink_event),
 	(gst_video_parse_src_event), (gst_video_parse_src_query):
 	Improve duration query by first asking upstream and if it can't handle

@@ -337,7 +337,12 @@ gst_video_parse_init (GstVideoParse * vp, GstVideoParseClass * g_class)
 static void
 gst_video_parse_dispose (GObject * object)
 {
-  //GstVideoParse *vp = GST_VIDEO_PARSE (object);
+  GstVideoParse *vp = GST_VIDEO_PARSE (object);
+
+  if (vp->adapter) {
+    g_object_unref (vp->adapter);
+    vp->adapter = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -725,6 +730,10 @@ gst_video_parse_sink_event (GstPad * pad, GstEvent * event)
 
         ret = gst_pad_push_event (vp->srcpad, event);
       }
+
+      vp->n_frames = 0;
+      vp->discont = TRUE;
+      gst_adapter_clear (vp->adapter);
       break;
     }
     default:
