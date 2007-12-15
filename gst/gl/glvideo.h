@@ -10,8 +10,8 @@ typedef struct _GLVideoDisplay GLVideoDisplay;
 typedef struct _GLVideoDrawable GLVideoDrawable;
 
 typedef enum {
-  GLVIDEO_IMAGE_TYPE_RGBA,
-  GLVIDEO_IMAGE_TYPE_BGRA,
+  GLVIDEO_IMAGE_TYPE_RGBx,
+  GLVIDEO_IMAGE_TYPE_BGRx,
   GLVIDEO_IMAGE_TYPE_YUY2,
   GLVIDEO_IMAGE_TYPE_UYVY,
 } GLVideoImageType;
