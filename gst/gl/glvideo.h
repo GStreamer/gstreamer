@@ -12,8 +12,11 @@ typedef struct _GLVideoDrawable GLVideoDrawable;
 typedef enum {
   GLVIDEO_IMAGE_TYPE_RGBx,
   GLVIDEO_IMAGE_TYPE_BGRx,
+  GLVIDEO_IMAGE_TYPE_xRGB,
+  GLVIDEO_IMAGE_TYPE_xBGR,
   GLVIDEO_IMAGE_TYPE_YUY2,
   GLVIDEO_IMAGE_TYPE_UYVY,
+  GLVIDEO_IMAGE_TYPE_AYUV,
 } GLVideoImageType;
 
 
@@ -30,6 +33,8 @@ struct _GLVideoDisplay {
   int max_texture_size;
 
   gboolean have_ycbcr_texture;
+  gboolean have_texture_rectangle;
+  gboolean have_color_matrix;
 }; 
 
 struct _GLVideoDrawable {
@@ -45,6 +50,8 @@ struct _GLVideoDrawable {
 
 
 GLVideoDisplay *glv_display_new (const char *display_name);
+gboolean glv_display_can_handle_type (GLVideoDisplay *display,
+    GLVideoImageType type);
 void glv_display_free (GLVideoDisplay *display);
 
 /* drawable */

@@ -77,7 +77,7 @@ GST_ELEMENT_DETAILS ("OpenGL video sink",
     "David Schleef <ds@schleef.org>");
 
 #ifdef GL_YCBCR_MESA
-#define YUV_CAPS ";" GST_VIDEO_CAPS_YUV ("{ UYVY, YUY2 }")
+#define YUV_CAPS ";" GST_VIDEO_CAPS_YUV ("{ AYUV, UYVY, YUY2 }")
 #else
 #define YUV_CAPS
 #endif
@@ -85,7 +85,8 @@ static GstStaticPadTemplate gst_glimage_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx YUV_CAPS)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
+        GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR YUV_CAPS)
     );
 
 enum
@@ -423,11 +424,20 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     case GST_VIDEO_FORMAT_UYVY:
       glimage_sink->type = GLVIDEO_IMAGE_TYPE_UYVY;
       break;
+    case GST_VIDEO_FORMAT_AYUV:
+      glimage_sink->type = GLVIDEO_IMAGE_TYPE_AYUV;
+      break;
     case GST_VIDEO_FORMAT_RGBx:
       glimage_sink->type = GLVIDEO_IMAGE_TYPE_RGBx;
       break;
     case GST_VIDEO_FORMAT_BGRx:
       glimage_sink->type = GLVIDEO_IMAGE_TYPE_BGRx;
+      break;
+    case GST_VIDEO_FORMAT_xRGB:
+      glimage_sink->type = GLVIDEO_IMAGE_TYPE_xRGB;
+      break;
+    case GST_VIDEO_FORMAT_xBGR:
+      glimage_sink->type = GLVIDEO_IMAGE_TYPE_xBGR;
       break;
     default:
       break;
@@ -557,11 +567,13 @@ gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
     return;
   }
 
-  caps = gst_caps_from_string (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx);
+  caps =
+      gst_caps_from_string (GST_VIDEO_CAPS_RGBx ";" GST_VIDEO_CAPS_BGRx ";"
+      GST_VIDEO_CAPS_xRGB ";" GST_VIDEO_CAPS_xBGR);
 #ifdef GL_YCBCR_MESA
   if (glimage_sink->display->have_ycbcr_texture) {
     GstCaps *ycaps =
-        gst_caps_from_string (GST_VIDEO_CAPS_YUV ("{ UYVY, YUY2 }"));
+        gst_caps_from_string (GST_VIDEO_CAPS_YUV ("{ AYUV, UYVY, YUY2 }"));
     gst_caps_append (ycaps, caps);
     caps = ycaps;
   }
