@@ -232,6 +232,7 @@ gst_x_overlay_expose (GstXOverlay * overlay)
   GstXOverlayClass *klass;
 
   g_return_if_fail (overlay != NULL);
+  g_return_if_fail (GST_IS_X_OVERLAY (overlay));
 
   klass = GST_X_OVERLAY_GET_CLASS (overlay);
 
@@ -257,6 +258,7 @@ gst_x_overlay_handle_events (GstXOverlay * overlay, gboolean handle_events)
   GstXOverlayClass *klass;
 
   g_return_if_fail (overlay != NULL);
+  g_return_if_fail (GST_IS_X_OVERLAY (overlay));
 
   klass = GST_X_OVERLAY_GET_CLASS (overlay);
 

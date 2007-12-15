@@ -1,3 +1,9 @@
+2007-12-15  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/interfaces/xoverlay.c: (gst_x_overlay_expose),
+	  (gst_x_overlay_handle_events):
+	  More guards (we don't want klass to end up being NULL).
+
 2007-12-14  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* configure.ac:
