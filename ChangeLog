@@ -1,3 +1,8 @@
+2007-12-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* tests/check/gst/gstbin.c:
+	  Adjust the test to the refcount change two days ago.
+
 2007-12-14  David Schleef  <ds@schleef.org>
 
 	* docs/faq/getting.xml: Fix typo.

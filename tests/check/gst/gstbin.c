@@ -299,10 +299,10 @@ GST_START_TEST (test_message_state_changed_children)
    * base_src is blocked in the push and has an extra refcount.
    * base_sink_chain has taken a refcount on the sink, and is blocked on
    * preroll */
-  ASSERT_OBJECT_REFCOUNT (src, "src", 3);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 2);
   /* refcount can be 4 if the bin is still processing the async_done message of
    * the sink. */
-  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 3, 4);
+  ASSERT_OBJECT_REFCOUNT_BETWEEN (sink, "sink", 2, 3);
   /* 2 or 3 is valid, because the pipeline might still be posting 
    * its state_change message */
   ASSERT_OBJECT_REFCOUNT_BETWEEN (pipeline, "pipeline", 2, 3);
@@ -312,8 +312,8 @@ GST_START_TEST (test_message_state_changed_children)
   fail_if ((gst_bus_pop (bus)) != NULL);
 
   ASSERT_OBJECT_REFCOUNT (bus, "bus", 2);
-  ASSERT_OBJECT_REFCOUNT (src, "src", 2);
-  ASSERT_OBJECT_REFCOUNT (sink, "sink", 2);
+  ASSERT_OBJECT_REFCOUNT (src, "src", 1);
+  ASSERT_OBJECT_REFCOUNT (sink, "sink", 1);
   ASSERT_OBJECT_REFCOUNT (pipeline, "pipeline", 1);
 
   /* change state to PLAYING, spawning three messages */
