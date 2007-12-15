@@ -1,3 +1,11 @@
+2007-12-14  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* gst/volume/gstvolume.c: (gst_volume_init):
+	  Use new gst_base_transform_set_gap_aware() function as volume
+	  correctly handles GST_BUFFER_FLAG_GAP. Require core 0.10.15.1 
+	  for this.
+
 2007-12-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* tests/examples/seek/seek.c: (msg_segment_done), (main):

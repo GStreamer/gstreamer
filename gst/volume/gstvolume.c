@@ -479,6 +479,8 @@ gst_volume_init (GstVolume * this, GstVolumeClass * g_class)
     track->flags = GST_MIXER_TRACK_SOFTWARE;
     this->tracklist = g_list_append (this->tracklist, track);
   }
+
+  gst_base_transform_set_gap_aware (GST_BASE_TRANSFORM (this), TRUE);
 }
 
 /* NOTE: although it might be tempting to have volume_process_mute() which uses
