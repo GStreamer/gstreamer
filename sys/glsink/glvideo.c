@@ -328,13 +328,13 @@ glv_drawable_draw_image (GLVideoDrawable * drawable, GLVideoImageType type,
   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
   switch (type) {
-    case GLVIDEO_IMAGE_TYPE_RGBA:
+    case GLVIDEO_IMAGE_TYPE_RGBx:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_BYTE, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_BGRA:
+    case GLVIDEO_IMAGE_TYPE_BGRx:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
@@ -351,6 +351,7 @@ glv_drawable_draw_image (GLVideoDrawable * drawable, GLVideoImageType type,
           0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
+      break;
     default:
       g_assert_not_reached ();
   }

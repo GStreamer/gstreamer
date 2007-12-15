@@ -30,49 +30,10 @@
 
 #include <string.h>
 
-#include "glvideo.h"
+#include <glimagesink.h>
 
-GST_DEBUG_CATEGORY_STATIC (gst_debug_glimage_sink);
+GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define GST_CAT_DEFAULT gst_debug_glimage_sink
-
-#define GST_TYPE_GLIMAGE_SINK \
-    (gst_glimage_sink_get_type())
-#define GST_GLIMAGE_SINK(obj) \
-    (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GLIMAGE_SINK,GstGLImageSink))
-#define GST_GLIMAGE_SINK_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_GLIMAGE_SINK,GstGLImageSinkClass))
-#define GST_IS_GLIMAGE_SINK(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GLIMAGE_SINK))
-#define GST_IS_GLIMAGE_SINK_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GLIMAGE_SINK))
-
-typedef struct _GstGLImageSink GstGLImageSink;
-typedef struct _GstGLImageSinkClass GstGLImageSinkClass;
-
-struct _GstGLImageSink
-{
-  GstVideoSink video_sink;
-
-  /* properties */
-  char *display_name;
-
-  /* caps */
-  GstCaps *caps;
-  int fps_n, fps_d;
-  int par_n, par_d;
-
-  GLVideoDisplay *display;
-  GLVideoDrawable *drawable;
-  GLVideoImageType type;
-
-  XID window_id;
-};
-
-struct _GstGLImageSinkClass
-{
-  GstVideoSinkClass video_sink_class;
-
-};
 
 static void gst_glimage_sink_init_interfaces (GType type);
 
@@ -421,12 +382,12 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstGLImageSink *glimage_sink;
   GstCaps *intersection;
-  GstStructure *structure;
   int width;
   int height;
-  gboolean ret;
-  const GValue *fps;
-  const GValue *par;
+  gboolean ok;
+  int fps_n, fps_d;
+  int par_n, par_d;
+  GstVideoFormat format;
 
   GST_DEBUG ("set caps with %" GST_PTR_FORMAT, caps);
 
@@ -440,51 +401,36 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   gst_caps_unref (intersection);
 
-  structure = gst_caps_get_structure (caps, 0);
-  ret = gst_structure_get_int (structure, "width", &width);
-  ret &= gst_structure_get_int (structure, "height", &height);
-  fps = gst_structure_get_value (structure, "framerate");
-  ret &= (fps != NULL);
-  par = gst_structure_get_value (structure, "pixel-aspect-ratio");
+  ok = gst_video_parse_caps (caps, &format, &width, &height);
+  ok &= gst_video_parse_caps_framerate (caps, &fps_n, &fps_d);
+  ok &= gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d);
 
-  if (!ret)
+  if (!ok)
     return FALSE;
-
-  glimage_sink->fps_n = gst_value_get_fraction_numerator (fps);
-  glimage_sink->fps_d = gst_value_get_fraction_denominator (fps);
-  if (par) {
-    glimage_sink->par_n = gst_value_get_fraction_numerator (par);
-    glimage_sink->par_d = gst_value_get_fraction_denominator (par);
-  } else {
-    glimage_sink->par_n = 1;
-    glimage_sink->par_d = 1;
-  }
 
   GST_VIDEO_SINK_WIDTH (glimage_sink) = width;
   GST_VIDEO_SINK_HEIGHT (glimage_sink) = height;
+  glimage_sink->format = format;
+  glimage_sink->fps_n = fps_n;
+  glimage_sink->fps_d = fps_d;
+  glimage_sink->par_n = par_n;
+  glimage_sink->par_d = par_d;
 
-  if (strcmp (gst_structure_get_name (structure), "video/x-raw-rgb") == 0) {
-    int red_mask;
-
-    GST_DEBUG ("using RGB");
-    gst_structure_get_int (structure, "red_mask", &red_mask);
-
-    if (red_mask == 0xff000000) {
-      glimage_sink->type = GLVIDEO_IMAGE_TYPE_RGBA;
-    } else {
-      glimage_sink->type = GLVIDEO_IMAGE_TYPE_BGRA;
-    }
-  } else {
-    unsigned int fourcc;
-
-    GST_DEBUG ("using YUV");
-
-    gst_structure_get_fourcc (structure, "format", &fourcc);
-    if (fourcc == GST_MAKE_FOURCC ('Y', 'U', 'Y', '2')) {
+  switch (format) {
+    case GST_VIDEO_FORMAT_YUY2:
       glimage_sink->type = GLVIDEO_IMAGE_TYPE_YUY2;
-    } else {
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
       glimage_sink->type = GLVIDEO_IMAGE_TYPE_UYVY;
-    }
+      break;
+    case GST_VIDEO_FORMAT_RGBx:
+      glimage_sink->type = GLVIDEO_IMAGE_TYPE_RGBx;
+      break;
+    case GST_VIDEO_FORMAT_BGRx:
+      glimage_sink->type = GLVIDEO_IMAGE_TYPE_BGRx;
+      break;
+    default:
+      break;
   }
 
 #if 0
@@ -632,23 +578,3 @@ gst_glimage_sink_update_caps (GstGLImageSink * glimage_sink)
 
   gst_caps_replace (&glimage_sink->caps, caps);
 }
-
-
-static gboolean
-plugin_init (GstPlugin * plugin)
-{
-  if (!gst_element_register (plugin, "glimagesink",
-          GST_RANK_MARGINAL, GST_TYPE_GLIMAGE_SINK))
-    return FALSE;
-
-  GST_DEBUG_CATEGORY_INIT (gst_debug_glimage_sink, "glimagesink", 0,
-      "glimagesink element");
-
-  return TRUE;
-}
-
-GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
-    GST_VERSION_MINOR,
-    "glimagesink",
-    "OpenGL video output plugin",
-    plugin_init, VERSION, GST_LICENSE, GST_PACKAGE_NAME, GST_PACKAGE_ORIGIN)

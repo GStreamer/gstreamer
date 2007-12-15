@@ -1,3 +1,17 @@
+2007-12-14  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/gstvideo-common.c:
+	* sys/glsink/gstvideo-common.h:
+	  Pull together some common raw video functions into one location.
+	  This should eventually move to -base.
+	* sys/glsink/Makefile.am:
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/glimagesink.h:
+	* sys/glsink/glvideo.c:
+	* sys/glsink/glvideo.h:
+	* sys/glsink/gstopengl.c:
+	  Use the new video-common.h stuff.  Readd support for RGB video.
+
 2007-12-14  Edgard Lima,,,,  <edgard.lima@indt.org.br>
 
 	* ext/metadata/Makefile.am:
