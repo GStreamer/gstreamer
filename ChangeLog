@@ -1,6 +1,11 @@
 2007-12-15  Stefan Kost  <ensonic@users.sf.net>
 
 	* win32/common/libgstbase.def:
+	  Yes, you can also have a <TAB> if you want.
+
+2007-12-15  Stefan Kost  <ensonic@users.sf.net>
+
+	* win32/common/libgstbase.def:
 	  Add new basetransform API to win export file.
 
 2007-12-15  Stefan Kost  <ensonic@users.sf.net>
