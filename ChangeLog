@@ -1,3 +1,14 @@
+2007-12-15  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/Makefile.am:
+	* sys/glsink/glimagesink.c:
+	* sys/glsink/glvideo.c:
+	* sys/glsink/glvideo.h:
+	* sys/glsink/gstvideo-common.c:
+	* sys/glsink/gstvideo-common.h:
+	  Add support for xRGB, xBGR, and AYUV.  Re-add support for
+	  power-of-2 textures.
+
 2007-12-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* gst/videoparse/gstvideoparse.c: (gst_video_parse_dispose),
