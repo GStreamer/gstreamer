@@ -697,22 +697,34 @@ gst_video_parse_sink_event (GstPad * pad, GstEvent * event)
       gst_event_parse_new_segment_full (event, &update, &rate, &arate, &format,
           &start, &stop, &time);
 
-      ret =
-          gst_video_parse_convert (vp, format, start, GST_FORMAT_TIME, &start);
-      ret &= gst_video_parse_convert (vp, format, time, GST_FORMAT_TIME, &time);
-      ret &= gst_video_parse_convert (vp, format, stop, GST_FORMAT_TIME, &stop);
-      if (!ret) {
-        GST_ERROR_OBJECT (vp,
-            "Failed converting to GST_FORMAT_TIME format (%d)", format);
-        break;
+      if (format == GST_FORMAT_TIME) {
+        ret = gst_pad_push_event (vp->srcpad, event);
+        gst_segment_set_newsegment_full (&vp->segment, update, rate, arate,
+            GST_FORMAT_TIME, start, stop, time);
+      } else {
+
+        gst_event_unref (event);
+
+        ret =
+            gst_video_parse_convert (vp, format, start, GST_FORMAT_TIME,
+            &start);
+        ret &=
+            gst_video_parse_convert (vp, format, time, GST_FORMAT_TIME, &time);
+        ret &=
+            gst_video_parse_convert (vp, format, stop, GST_FORMAT_TIME, &stop);
+        if (!ret) {
+          GST_ERROR_OBJECT (vp,
+              "Failed converting to GST_FORMAT_TIME format (%d)", format);
+          break;
+        }
+
+        gst_segment_set_newsegment_full (&vp->segment, update, rate, arate,
+            GST_FORMAT_TIME, start, stop, time);
+        event = gst_event_new_new_segment (FALSE, vp->segment.rate,
+            GST_FORMAT_TIME, start, stop, time);
+
+        ret = gst_pad_push_event (vp->srcpad, event);
       }
-
-      gst_segment_set_newsegment_full (&vp->segment, update, rate, arate,
-          GST_FORMAT_TIME, start, stop, time);
-      event = gst_event_new_new_segment (FALSE, vp->segment.rate,
-          GST_FORMAT_TIME, start, stop, time);
-
-      ret = gst_pad_push_event (vp->srcpad, event);
       break;
     }
     default:
@@ -742,12 +754,15 @@ gst_video_parse_src_event (GstPad * pad, GstEvent * event)
       gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
           &stop_type, &stop);
 
-      /* We only handle TIME and DEFAULT (aka frames), forward everything
-       * upstream */
-      if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT) {
-        gst_event_ref (event);
-        ret = gst_pad_push_event (vp->sinkpad, event);
-      } else {
+      /* First try if upstream handles the seek */
+      ret = gst_pad_push_event (vp->sinkpad, event);
+      if (ret)
+        goto done;
+
+      /* Otherwise convert to bytes and push upstream */
+      if (format == GST_FORMAT_TIME || format == GST_FORMAT_DEFAULT) {
+        gst_event_unref (event);
+
         ret =
             gst_video_parse_convert (vp, format, start, GST_FORMAT_BYTES,
             &start);
@@ -769,6 +784,7 @@ gst_video_parse_src_event (GstPad * pad, GstEvent * event)
       break;
   }
 
+done:
   gst_object_unref (vp);
 
   return ret;
@@ -801,7 +817,7 @@ gst_video_parse_src_query (GstPad * pad, GstQuery * query)
       GstFormat format;
       gint64 time, value;
 
-      GST_ERROR ("query position");
+      GST_LOG ("query position");
 
       gst_query_parse_position (query, &format, NULL);
 
@@ -813,18 +829,46 @@ gst_video_parse_src_query (GstPad * pad, GstQuery * query)
 
       break;
     }
-    case GST_QUERY_DURATION:
-      GST_ERROR ("query duration");
-      ret = gst_pad_query (GST_PAD_PEER (vp->srcpad), query);
-      if (!ret)
+    case GST_QUERY_DURATION:{
+      gint64 duration;
+      GstFormat format;
+      GstQuery *bquery;
+
+      GST_LOG ("query duration");
+      ret = gst_pad_peer_query (vp->srcpad, query);
+      if (ret)
+        goto done;
+
+      gst_query_parse_duration (query, &format, NULL);
+      /* We only handle TIME and DEFAULT format */
+      if (format != GST_FORMAT_TIME && format != GST_FORMAT_DEFAULT)
         goto error;
+
+      bquery = gst_query_new_duration (GST_FORMAT_BYTES);
+      ret = gst_pad_peer_query (vp->srcpad, bquery);
+
+      if (!ret) {
+        gst_query_unref (bquery);
+        goto error;
+      }
+
+      gst_query_parse_duration (bquery, NULL, &duration);
+      gst_query_unref (bquery);
+
+      ret =
+          gst_video_parse_convert (vp, GST_FORMAT_BYTES, duration, format,
+          &duration);
+      if (ret)
+        gst_query_set_duration (query, format, duration);
+
       break;
+    }
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;
       gint64 src_val, dest_val;
 
-      GST_ERROR ("query convert");
+      GST_LOG ("query convert");
 
       gst_query_parse_convert (query, &src_fmt, &src_val, &dest_fmt, &dest_val);
       ret = gst_video_parse_convert (vp, src_fmt, src_val, dest_fmt, &dest_val);

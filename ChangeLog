@@ -1,5 +1,16 @@
 2007-12-15  Sebastian Dröge  <slomo@circular-chaos.org>
 
+	* gst/videoparse/gstvideoparse.c: (gst_video_parse_sink_event),
+	(gst_video_parse_src_event), (gst_video_parse_src_query):
+	Improve duration query by first asking upstream and if it can't handle
+	the query try to get the duration in bytes from upstream and convert.
+	For seeks, try if upstream handles this already first and do our
+	conversion to byte format only if it doesn't and if we get a
+	newsegment event in time format keep it and only do our conversions
+	if the event has another format.
+
+2007-12-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
 	* gst/videoparse/gstvideoparse.c:
 	(gst_video_parse_format_get_type),
 	(gst_video_parse_endianness_get_type),
