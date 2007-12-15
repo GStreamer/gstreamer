@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2006 David A. Schleef <ds@schleef.org>
+ * Copyright (C) 2007 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstvideoparse.c:
  *
@@ -60,6 +61,13 @@ struct _GstVideoParse
   int fps_d;
   int par_n;
   int par_d;
+  int bpp;
+  int depth;
+  int endianness;
+  int red_mask;
+  int blue_mask;
+  int green_mask;
+  int alpha_mask;
 
   /* private */
 
@@ -89,8 +97,16 @@ typedef enum
   GST_VIDEO_PARSE_FORMAT_I420,
   GST_VIDEO_PARSE_FORMAT_YV12,
   GST_VIDEO_PARSE_FORMAT_YUY2,
-  GST_VIDEO_PARSE_FORMAT_UYVY
+  GST_VIDEO_PARSE_FORMAT_UYVY,
+  GST_VIDEO_PARSE_FORMAT_RGB = 10,
+  GST_VIDEO_PARSE_FORMAT_GRAY
 } GstVideoParseFormat;
+
+typedef enum
+{
+  GST_VIDEO_PARSE_ENDIANNESS_LITTLE = 1234,
+  GST_VIDEO_PARSE_ENDIANNESS_BIG = 4321
+} GstVideoParseEndianness;
 
 static void gst_video_parse_dispose (GObject * object);
 
@@ -111,10 +127,11 @@ static void gst_video_parse_update_block_size (GstVideoParse * vp);
 
 
 static GstStaticPadTemplate gst_video_parse_src_pad_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY }")));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_YUV ("{ I420, YV12, YUY2, UYVY }") ";"
+        "video/x-raw-rgb;" "video/x-raw-gray"));
 
 static GstStaticPadTemplate gst_video_parse_sink_pad_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -138,7 +155,14 @@ enum
   ARG_HEIGHT,
   ARG_FORMAT,
   ARG_PAR,
-  ARG_FRAMERATE
+  ARG_FRAMERATE,
+  ARG_BPP,
+  ARG_DEPTH,
+  ARG_ENDIANNESS,
+  ARG_RED_MASK,
+  ARG_GREEN_MASK,
+  ARG_BLUE_MASK,
+  ARG_ALPHA_MASK
 };
 
 
@@ -152,6 +176,8 @@ gst_video_parse_format_get_type (void)
     {GST_VIDEO_PARSE_FORMAT_YV12, "YV12", "YV12"},
     {GST_VIDEO_PARSE_FORMAT_YUY2, "YUY2", "YUY2"},
     {GST_VIDEO_PARSE_FORMAT_UYVY, "UYVY", "UYVY"},
+    {GST_VIDEO_PARSE_FORMAT_RGB, "RGB", "RGB"},
+    {GST_VIDEO_PARSE_FORMAT_GRAY, "GRAY", "GRAY"},
     {0, NULL, NULL}
   };
 
@@ -161,6 +187,25 @@ gst_video_parse_format_get_type (void)
   }
 
   return video_parse_format_type;
+}
+
+#define GST_VIDEO_PARSE_ENDIANNESS (gst_video_parse_endianness_get_type ())
+static GType
+gst_video_parse_endianness_get_type (void)
+{
+  static GType video_parse_endianness_type = 0;
+  static const GEnumValue endian_types[] = {
+    {GST_VIDEO_PARSE_ENDIANNESS_LITTLE, "Little Endian", "little"},
+    {GST_VIDEO_PARSE_ENDIANNESS_BIG, "Big Endian", "big"},
+    {0, NULL, NULL}
+  };
+
+  if (!video_parse_endianness_type) {
+    video_parse_endianness_type =
+        g_enum_register_static ("GstVideoParseEndianness", endian_types);
+  }
+
+  return video_parse_endianness_type;
 }
 
 GST_BOILERPLATE (GstVideoParse, gst_video_parse, GstElement, GST_TYPE_ELEMENT);
@@ -210,6 +255,39 @@ gst_video_parse_class_init (GstVideoParseClass * klass)
       gst_param_spec_fraction ("pixel_aspect_ratio", "Pixel Aspect Ratio",
           "Pixel aspect ratio of images in raw stream", 1, 100, 100, 1, 1, 1,
           G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_BPP,
+      g_param_spec_int ("bpp", "Bpp", "Bits per pixel of images in raw stream",
+          0, INT_MAX, 24, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_DEPTH,
+      g_param_spec_int ("depth", "Depth", "Depth of images in raw stream",
+          0, INT_MAX, 24, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_ENDIANNESS,
+      g_param_spec_enum ("endianness", "Endianness",
+          "Endianness of images in raw stream", GST_VIDEO_PARSE_ENDIANNESS,
+          G_BYTE_ORDER, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_RED_MASK,
+      g_param_spec_int ("red-mask", "Red mask",
+          "Red mask of images in raw stream", 0, INT_MAX,
+          GST_VIDEO_BYTE1_MASK_24_INT, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_GREEN_MASK,
+      g_param_spec_int ("green-mask", "Green mask",
+          "Green mask of images in raw stream", 0, INT_MAX,
+          GST_VIDEO_BYTE2_MASK_24_INT, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_BLUE_MASK,
+      g_param_spec_int ("blue-mask", "Blue mask",
+          "Blue mask of images in raw stream", 0, INT_MAX,
+          GST_VIDEO_BYTE3_MASK_24_INT, G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, ARG_ALPHA_MASK,
+      g_param_spec_int ("alpha-mask", "Alpha mask",
+          "Alpha mask of images in raw stream", 0, INT_MAX, 0,
+          G_PARAM_READWRITE));
 }
 
 static void
@@ -245,6 +323,13 @@ gst_video_parse_init (GstVideoParse * vp, GstVideoParseClass * g_class)
   vp->par_d = 1;
   vp->fps_n = 25;
   vp->fps_d = 1;
+  vp->bpp = 24;
+  vp->depth = 24;
+  vp->endianness = G_BYTE_ORDER;
+  vp->red_mask = GST_VIDEO_BYTE1_MASK_24_INT;
+  vp->green_mask = GST_VIDEO_BYTE2_MASK_24_INT;
+  vp->blue_mask = GST_VIDEO_BYTE3_MASK_24_INT;
+  vp->alpha_mask = 0;
 
   gst_video_parse_update_block_size (vp);
 }
@@ -263,6 +348,8 @@ gst_video_parse_set_property (GObject * object, guint prop_id,
 {
   GstVideoParse *vp = GST_VIDEO_PARSE (object);
 
+  g_return_if_fail (!vp->negotiated);
+
   switch (prop_id) {
     case ARG_WIDTH:
       vp->width = g_value_get_int (value);
@@ -280,6 +367,27 @@ gst_video_parse_set_property (GObject * object, guint prop_id,
     case ARG_PAR:
       vp->par_n = gst_value_get_fraction_numerator (value);
       vp->par_d = gst_value_get_fraction_denominator (value);
+      break;
+    case ARG_BPP:
+      vp->bpp = g_value_get_int (value);
+      break;
+    case ARG_DEPTH:
+      vp->depth = g_value_get_int (value);
+      break;
+    case ARG_ENDIANNESS:
+      vp->endianness = g_value_get_enum (value);
+      break;
+    case ARG_RED_MASK:
+      vp->red_mask = g_value_get_int (value);
+      break;
+    case ARG_GREEN_MASK:
+      vp->green_mask = g_value_get_int (value);
+      break;
+    case ARG_BLUE_MASK:
+      vp->blue_mask = g_value_get_int (value);
+      break;
+    case ARG_ALPHA_MASK:
+      vp->alpha_mask = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -310,6 +418,27 @@ gst_video_parse_get_property (GObject * object, guint prop_id, GValue * value,
     case ARG_PAR:
       gst_value_set_fraction (value, vp->par_n, vp->par_d);
       break;
+    case ARG_BPP:
+      g_value_set_int (value, vp->bpp);
+      break;
+    case ARG_DEPTH:
+      g_value_set_int (value, vp->depth);
+      break;
+    case ARG_ENDIANNESS:
+      g_value_set_enum (value, vp->endianness);
+      break;
+    case ARG_RED_MASK:
+      g_value_set_int (value, vp->red_mask);
+      break;
+    case ARG_GREEN_MASK:
+      g_value_set_int (value, vp->green_mask);
+      break;
+    case ARG_BLUE_MASK:
+      g_value_set_int (value, vp->blue_mask);
+      break;
+    case ARG_ALPHA_MASK:
+      g_value_set_int (value, vp->alpha_mask);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -328,6 +457,8 @@ gst_video_parse_format_to_fourcc (GstVideoParseFormat format)
       return GST_MAKE_FOURCC ('Y', 'U', 'Y', '2');
     case GST_VIDEO_PARSE_FORMAT_UYVY:
       return GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y');
+    default:
+      g_assert_not_reached ();
   }
   return 0;
 }
@@ -335,7 +466,20 @@ gst_video_parse_format_to_fourcc (GstVideoParseFormat format)
 void
 gst_video_parse_update_block_size (GstVideoParse * vp)
 {
-  vp->blocksize = vp->width * vp->height * 3 / 2;
+  if (vp->format == GST_VIDEO_PARSE_FORMAT_I420 ||
+      vp->format == GST_VIDEO_PARSE_FORMAT_YV12) {
+    vp->blocksize = GST_ROUND_UP_4 (vp->width) * GST_ROUND_UP_2 (vp->height)
+        +
+        2 * (GST_ROUND_UP_8 (vp->width) / 2) * (GST_ROUND_UP_2 (vp->height) /
+        2);
+  } else if (vp->format == GST_VIDEO_PARSE_FORMAT_YUY2
+      || vp->format == GST_VIDEO_PARSE_FORMAT_UYVY) {
+    vp->blocksize = GST_ROUND_UP_4 (vp->width * 2) * vp->height;
+  } else if (vp->format == GST_VIDEO_PARSE_FORMAT_RGB) {
+    vp->blocksize = GST_ROUND_UP_4 (vp->width * vp->bpp) * vp->height;
+  } else {
+    vp->blocksize = GST_ROUND_UP_4 (vp->width * vp->bpp) * vp->height;
+  }
 }
 
 static void
@@ -363,13 +507,37 @@ gst_video_parse_chain (GstPad * pad, GstBuffer * buffer)
   if (!vp->negotiated) {
     GstCaps *caps;
 
-    caps = gst_caps_new_simple ("video/x-raw-yuv",
-        "width", G_TYPE_INT, vp->width,
-        "height", G_TYPE_INT, vp->height,
-        "format", GST_TYPE_FOURCC,
-        gst_video_parse_format_to_fourcc (vp->format), "framerate",
-        GST_TYPE_FRACTION, vp->fps_n, vp->fps_d, "pixel_aspect_ratio",
-        GST_TYPE_FRACTION, vp->par_n, vp->par_d, NULL);
+    g_print ("%d\n", vp->format);
+    if (vp->format < GST_VIDEO_PARSE_FORMAT_RGB) {
+      caps = gst_caps_new_simple ("video/x-raw-yuv",
+          "width", G_TYPE_INT, vp->width,
+          "height", G_TYPE_INT, vp->height,
+          "format", GST_TYPE_FOURCC,
+          gst_video_parse_format_to_fourcc (vp->format), "framerate",
+          GST_TYPE_FRACTION, vp->fps_n, vp->fps_d, "pixel_aspect_ratio",
+          GST_TYPE_FRACTION, vp->par_n, vp->par_d, NULL);
+    } else if (vp->format == GST_VIDEO_PARSE_FORMAT_RGB) {
+      caps = gst_caps_new_simple ("video/x-raw-rgb",
+          "width", G_TYPE_INT, vp->width,
+          "height", G_TYPE_INT, vp->height,
+          "bpp", G_TYPE_INT, vp->bpp,
+          "depth", G_TYPE_INT, vp->depth,
+          "framerate", GST_TYPE_FRACTION, vp->fps_n, vp->fps_d,
+          "pixel_aspect_ratio", GST_TYPE_FRACTION, vp->par_n, vp->par_d,
+          "red_mask", G_TYPE_INT, vp->red_mask,
+          "green_mask", G_TYPE_INT, vp->green_mask,
+          "blue_mask", G_TYPE_INT, vp->blue_mask,
+          "alpha_mask", G_TYPE_INT, vp->alpha_mask,
+          "endianness", G_TYPE_INT, vp->endianness, NULL);
+    } else {
+      caps = gst_caps_new_simple ("video/x-raw-gray",
+          "width", G_TYPE_INT, vp->width,
+          "height", G_TYPE_INT, vp->height,
+          "bpp", G_TYPE_INT, vp->bpp,
+          "depth", G_TYPE_INT, vp->depth,
+          "framerate", GST_TYPE_FRACTION, vp->fps_n, vp->fps_d,
+          "pixel_aspect_ratio", GST_TYPE_FRACTION, vp->par_n, vp->par_d, NULL);
+    }
     gst_pad_set_caps (vp->srcpad, caps);
     vp->negotiated = TRUE;
 
@@ -548,7 +716,7 @@ gst_video_parse_sink_event (GstPad * pad, GstEvent * event)
       break;
     }
     default:
-      ret = gst_pad_event_default (vp->srcpad, event);
+      ret = gst_pad_event_default (vp->sinkpad, event);
       break;
   }
 

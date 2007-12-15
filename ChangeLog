@@ -1,3 +1,16 @@
+2007-12-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* gst/videoparse/gstvideoparse.c:
+	(gst_video_parse_format_get_type),
+	(gst_video_parse_endianness_get_type),
+	(gst_video_parse_class_init), (gst_video_parse_init),
+	(gst_video_parse_set_property), (gst_video_parse_get_property),
+	(gst_video_parse_format_to_fourcc),
+	(gst_video_parse_update_block_size), (gst_video_parse_chain),
+	(gst_video_parse_sink_event):
+	Add support for video/x-raw-rgb and video/x-raw-gray. Also send
+	downstream elements downstream, not upstream.
+
 2007-12-14  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/gstvideo-common.c:
