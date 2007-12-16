@@ -1,6 +1,15 @@
 2007-12-15  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/Makefile.am:
+	* sys/glsink/glextensions.c:
+	* sys/glsink/glextensions.h:
+	* sys/glsink/glvideo.c:
+	  Add vblank synchronization.  Isn't really working on my
+	  driver. :(
+
+2007-12-15  David Schleef  <ds@schleef.org>
+
+	* sys/glsink/Makefile.am:
 	* sys/glsink/glimagesink.c:
 	* sys/glsink/glvideo.c:
 	* sys/glsink/glvideo.h:

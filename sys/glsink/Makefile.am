@@ -5,7 +5,8 @@ libgstglimagesink_la_SOURCES = \
 	glimagesink.c \
 	glvideo.c \
 	gstopengl.c \
-	gstvideo-common.c
+	gstvideo-common.c \
+	glextensions.c
 libgstglimagesink_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS)
 libgstglimagesink_la_LIBADD = $(X_LIBS) $(XSHM_LIBS) -lGL \
@@ -16,4 +17,5 @@ libgstglimagesink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 noinst_HEADERS = \
 	glimagesink.h \
 	gstvideo-common.h \
-	glvideo.h
+	glvideo.h \
+	glextensions.h
