@@ -993,9 +993,8 @@ gst_jpeg_dec_chain (GstPad * pad, GstBuffer * buf)
             GST_TIME_ARGS (clip_stop - clip_start));
         GST_BUFFER_DURATION (outbuf) = clip_stop - clip_start;
       }
-    } else {
-      GST_WARNING_OBJECT (dec, "Outgoing buffer is outside configured segment");
-    }
+    } else
+      goto drop_buffer;
   }
 
   GST_LOG_OBJECT (dec, "pushing buffer (ts=%" GST_TIME_FORMAT ", dur=%"
@@ -1059,6 +1058,13 @@ alloc_failed:
           ("Buffer allocation failed, reason: %s", reason),
           ("Buffer allocation failed, reason: %s", reason));
     }
+    goto exit;
+  }
+drop_buffer:
+  {
+    GST_WARNING_OBJECT (dec, "Outgoing buffer is outside configured segment");
+    gst_buffer_unref (outbuf);
+    ret = GST_FLOW_OK;
     goto exit;
   }
 }

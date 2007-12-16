@@ -1,3 +1,9 @@
+2007-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c: (gst_jpeg_dec_chain):
+	Actually drop the buffers which are outside the currently configured
+	segment instead of just emitting a WARNING.
+
 2007-12-14  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* ext/flac/gstflacdec.c: (gst_flac_dec_metadata_callback),
