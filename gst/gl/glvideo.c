@@ -22,6 +22,7 @@
 #endif
 
 #include "glvideo.h"
+#include "glextensions.h"
 /* only use gst for debugging */
 #include <gst/gst.h>
 
@@ -327,11 +328,14 @@ static void
 draw_rect_texture (GLVideoDrawable * drawable, GLVideoImageType type,
     void *data, int width, int height)
 {
+  GLuint texture;
+
   GST_DEBUG ("using rectangular texture");
 
 #ifdef GL_TEXTURE_RECTANGLE_ARB
   glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 1);
+  glGenTextures (1, &texture);
+  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -415,6 +419,7 @@ draw_rect_texture (GLVideoDrawable * drawable, GLVideoImageType type,
   glTexCoord2f (width, height);
   glVertex3f (1.0, -1.0, 0);
   glEnd ();
+  glDeleteTextures (1, &texture);
 #else
   g_assert_not_reached ();
 #endif
@@ -427,6 +432,7 @@ draw_pow2_texture (GLVideoDrawable * drawable, GLVideoImageType type,
   int pow2_width;
   int pow2_height;
   double x, y;
+  GLuint texture;
 
   GST_DEBUG ("using power-of-2 texture");
 
@@ -435,7 +441,8 @@ draw_pow2_texture (GLVideoDrawable * drawable, GLVideoImageType type,
   for (pow2_width = 64; pow2_width < width && pow2_width > 0; pow2_width <<= 1);
 
   glEnable (GL_TEXTURE_2D);
-  glBindTexture (GL_TEXTURE_2D, 1);
+  glGenTextures (1, &texture);
+  glBindTexture (GL_TEXTURE_2D, texture);
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -522,6 +529,7 @@ draw_pow2_texture (GLVideoDrawable * drawable, GLVideoImageType type,
   glTexCoord2f (x, y);
   glVertex3f (1.0, -1.0, 0);
   glEnd ();
+  glDeleteTextures (1, &texture);
 }
 
 void
@@ -534,8 +542,36 @@ glv_drawable_draw_image (GLVideoDrawable * drawable, GLVideoImageType type,
 
   glv_drawable_lock (drawable);
 
+#if 0
+  /* Doesn't work */
+  {
+    int64_t ust = 1234;
+    int64_t mst = 1234;
+    int64_t sbc = 1234;
+    gboolean ret;
+
+    ret = glXGetSyncValuesOML (drawable->display->display, drawable->window,
+        &ust, &mst, &sbc);
+    GST_ERROR ("sync values %d %lld %lld %lld", ret, ust, mst, sbc);
+  }
+#endif
+
+#if 0
+  /* Does work, but is not relevant */
+  {
+    int32_t num = 1234;
+    int32_t den = 1234;
+    gboolean ret;
+
+    ret = glXGetMscRateOML (drawable->display->display, drawable->window,
+        &num, &den);
+    GST_ERROR ("rate %d %d %d", ret, num, den);
+  }
+#endif
+
   glv_drawable_update_attributes (drawable);
 
+  glXSwapIntervalSGI (1);
   glViewport (0, 0, drawable->win_width, drawable->win_height);
 
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -557,8 +593,17 @@ glv_drawable_draw_image (GLVideoDrawable * drawable, GLVideoImageType type,
     draw_pow2_texture (drawable, type, data, width, height);
   }
 
-  glFlush ();
   glXSwapBuffers (drawable->display->display, drawable->window);
+#if 0
+  /* Doesn't work */
+  {
+    ret = glXSwapBuffersMscOML (drawable->display->display, drawable->window,
+        0, 1, 0);
+    if (ret == 0) {
+      GST_ERROR ("glXSwapBuffersMscOML failed");
+    }
+  }
+#endif
 
   glv_drawable_unlock (drawable);
 }
