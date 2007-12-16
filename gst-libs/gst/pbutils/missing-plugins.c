@@ -454,8 +454,7 @@ gst_missing_plugin_message_get_installer_detail (GstMessage * msg)
       break;
     }
     default:
-      g_assert_not_reached ();
-      break;
+      g_return_val_if_reached (NULL);
   }
 
   g_string_append_printf (str, "%s-%s", type, detail);

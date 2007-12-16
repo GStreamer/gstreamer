@@ -505,7 +505,7 @@ gst_install_plugins_spawn_child (gchar ** details,
     ret = g_spawn_async (NULL, argv, NULL, G_SPAWN_DO_NOT_REAP_CHILD, NULL,
         NULL, child_pid, &err);
   } else {
-    g_assert_not_reached ();
+    g_return_val_if_reached (FALSE);
   }
 
   if (!ret) {

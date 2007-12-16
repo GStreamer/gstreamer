@@ -550,7 +550,7 @@ gst_rtsp_connection_send (GstRTSPConnection * conn, GstRTSPMessage * message,
       break;
     }
     default:
-      g_assert_not_reached ();
+      g_return_val_if_reached (GST_RTSP_EINVAL);
       break;
   }
 

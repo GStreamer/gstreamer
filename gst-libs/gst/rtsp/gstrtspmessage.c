@@ -448,8 +448,7 @@ gst_rtsp_message_unset (GstRTSPMessage * msg)
     case GST_RTSP_MESSAGE_DATA:
       break;
     default:
-      g_assert_not_reached ();
-      break;
+      g_return_val_if_reached (GST_RTSP_EINVAL);
   }
 
   if (msg->hdr_fields != NULL) {

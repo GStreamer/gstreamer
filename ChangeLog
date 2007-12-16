@@ -1,3 +1,17 @@
+2007-12-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst-libs/gst/cdda/gstcddabasesrc.c: (gst_cdda_base_src_do_seek),
+	  (gst_cdda_base_src_handle_track_seek), (gst_cdda_base_src_create):
+	* gst-libs/gst/pbutils/install-plugins.c:
+	  (gst_install_plugins_spawn_child), (gst_install_plugins_supported):
+	* gst-libs/gst/pbutils/missing-plugins.c:
+	  (gst_missing_plugin_message_get_installer_detail),
+	  (gst_missing_encoder_installer_detail_new):
+	* gst-libs/gst/rtsp/gstrtspconnection.c: (gst_rtsp_connection_send):
+	* gst-libs/gst/rtsp/gstrtspmessage.c: (gst_rtsp_message_unset):
+	  Turn a few g_assert_not_reached() into g_return_val_if_reached() to
+	  avoid compiler warnings (#503930).
+
 2007-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):

@@ -704,7 +704,7 @@ gst_cdda_base_src_do_seek (GstBaseSrc * basesrc, GstSegment * segment)
       seek_sector += src->tracks[0].start;
       break;
     default:
-      g_assert_not_reached ();
+      g_return_val_if_reached (FALSE);
   }
 
   src->cur_sector = (gint) seek_sector;
@@ -754,7 +754,7 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
         start_time = -1;
         break;
       default:
-        g_assert_not_reached ();
+        g_return_val_if_reached (FALSE);
     }
 
     switch (stop_type) {
@@ -779,7 +779,7 @@ gst_cdda_base_src_handle_track_seek (GstCddaBaseSrc * src, gdouble rate,
         stop_time = -1;
         break;
       default:
-        g_assert_not_reached ();
+        g_return_val_if_reached (FALSE);
     }
 
     GST_LOG_OBJECT (src, "seek segment %" GST_TIME_FORMAT "-%" GST_TIME_FORMAT,
@@ -1510,7 +1510,7 @@ gst_cdda_base_src_create (GstPushSrc * pushsrc, GstBuffer ** buffer)
           src->cur_sector);
       break;
     default:
-      g_assert_not_reached ();
+      g_return_val_if_reached (GST_FLOW_ERROR);
   }
 
   if (eos) {
