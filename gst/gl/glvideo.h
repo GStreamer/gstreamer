@@ -1,26 +1,26 @@
 
-#ifndef __GLVIDEO_H__
-#define __GLVIDEO_H__
+#ifndef __GST_GL_H__
+#define __GST_GL_H__
 
 #include <GL/glx.h>
 #include <GL/gl.h>
-#include <glib.h>
+#include <gst/gst.h>
 
-typedef struct _GLVideoDisplay GLVideoDisplay;
-typedef struct _GLVideoDrawable GLVideoDrawable;
+typedef struct _GstGLDisplay GstGLDisplay;
+typedef struct _GstGLDrawable GstGLDrawable;
 
 typedef enum {
-  GLVIDEO_IMAGE_TYPE_RGBx,
-  GLVIDEO_IMAGE_TYPE_BGRx,
-  GLVIDEO_IMAGE_TYPE_xRGB,
-  GLVIDEO_IMAGE_TYPE_xBGR,
-  GLVIDEO_IMAGE_TYPE_YUY2,
-  GLVIDEO_IMAGE_TYPE_UYVY,
-  GLVIDEO_IMAGE_TYPE_AYUV,
-} GLVideoImageType;
+  GST_GL_IMAGE_TYPE_RGBx,
+  GST_GL_IMAGE_TYPE_BGRx,
+  GST_GL_IMAGE_TYPE_xRGB,
+  GST_GL_IMAGE_TYPE_xBGR,
+  GST_GL_IMAGE_TYPE_YUY2,
+  GST_GL_IMAGE_TYPE_UYVY,
+  GST_GL_IMAGE_TYPE_AYUV,
+} GstGLImageType;
 
 
-struct _GLVideoDisplay {
+struct _GstGLDisplay {
   Display *display;
   XVisualInfo *visinfo;
   GLXContext context;
@@ -37,8 +37,8 @@ struct _GLVideoDisplay {
   gboolean have_color_matrix;
 }; 
 
-struct _GLVideoDrawable {
-  GLVideoDisplay *display;
+struct _GstGLDrawable {
+  GstGLDisplay *display;
 
   Window window;
 
@@ -49,22 +49,22 @@ struct _GLVideoDrawable {
 };
 
 
-GLVideoDisplay *glv_display_new (const char *display_name);
-gboolean glv_display_can_handle_type (GLVideoDisplay *display,
-    GLVideoImageType type);
-void glv_display_free (GLVideoDisplay *display);
+GstGLDisplay *gst_gl_display_new (const char *display_name);
+gboolean gst_gl_display_can_handle_type (GstGLDisplay *display,
+    GstGLImageType type);
+void gst_gl_display_free (GstGLDisplay *display);
 
 /* drawable */
 
-GLVideoDrawable * glv_drawable_new_window (GLVideoDisplay *display);
-GLVideoDrawable * glv_drawable_new_root_window (GLVideoDisplay *display);
-GLVideoDrawable * glv_drawable_new_from_window (GLVideoDisplay *display, Window window);
-void glv_drawable_free (GLVideoDrawable *drawable);
-void glv_drawable_lock (GLVideoDrawable *drawable);
-void glv_drawable_unlock (GLVideoDrawable *drawable);
-void glv_drawable_update_attributes (GLVideoDrawable *drawable);
-void glv_drawable_clear (GLVideoDrawable *drawable);
-void glv_drawable_draw_image (GLVideoDrawable *drawable, GLVideoImageType type, void *data, int width, int height);
+GstGLDrawable * gst_gl_drawable_new_window (GstGLDisplay *display);
+GstGLDrawable * gst_gl_drawable_new_root_window (GstGLDisplay *display);
+GstGLDrawable * gst_gl_drawable_new_from_window (GstGLDisplay *display, Window window);
+void gst_gl_drawable_free (GstGLDrawable *drawable);
+void gst_gl_drawable_lock (GstGLDrawable *drawable);
+void gst_gl_drawable_unlock (GstGLDrawable *drawable);
+void gst_gl_drawable_update_attributes (GstGLDrawable *drawable);
+void gst_gl_drawable_clear (GstGLDrawable *drawable);
+void gst_gl_drawable_draw_image (GstGLDrawable *drawable, GstGLImageType type, void *data, int width, int height);
 
 
 #endif

@@ -287,7 +287,7 @@ gst_glimage_sink_start (GstBaseSink * bsink)
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  glimage_sink->display = glv_display_new (glimage_sink->display_name);
+  glimage_sink->display = gst_gl_display_new (glimage_sink->display_name);
   if (glimage_sink->display == NULL) {
     GST_ERROR ("failed to open display");
     return FALSE;
@@ -295,10 +295,10 @@ gst_glimage_sink_start (GstBaseSink * bsink)
 
   if (glimage_sink->window_id) {
     glimage_sink->drawable =
-        glv_drawable_new_from_window (glimage_sink->display,
+        gst_gl_drawable_new_from_window (glimage_sink->display,
         glimage_sink->window_id);
   } else {
-    glimage_sink->drawable = glv_drawable_new_window (glimage_sink->display);
+    glimage_sink->drawable = gst_gl_drawable_new_window (glimage_sink->display);
   }
   if (glimage_sink->drawable == NULL) {
     GST_ERROR ("failed to create window");
@@ -319,8 +319,8 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  glv_drawable_free (glimage_sink->drawable);
-  glv_display_free (glimage_sink->display);
+  gst_gl_drawable_free (glimage_sink->drawable);
+  gst_gl_display_free (glimage_sink->display);
 
   glimage_sink->display = NULL;
   glimage_sink->drawable = NULL;
@@ -419,25 +419,25 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   switch (format) {
     case GST_VIDEO_FORMAT_YUY2:
-      glimage_sink->type = GLVIDEO_IMAGE_TYPE_YUY2;
+      glimage_sink->type = GST_GL_IMAGE_TYPE_YUY2;
       break;
     case GST_VIDEO_FORMAT_UYVY:
-      glimage_sink->type = GLVIDEO_IMAGE_TYPE_UYVY;
+      glimage_sink->type = GST_GL_IMAGE_TYPE_UYVY;
       break;
     case GST_VIDEO_FORMAT_AYUV:
-      glimage_sink->type = GLVIDEO_IMAGE_TYPE_AYUV;
+      glimage_sink->type = GST_GL_IMAGE_TYPE_AYUV;
       break;
     case GST_VIDEO_FORMAT_RGBx:
-      glimage_sink->type = GLVIDEO_IMAGE_TYPE_RGBx;
+      glimage_sink->type = GST_GL_IMAGE_TYPE_RGBx;
       break;
     case GST_VIDEO_FORMAT_BGRx:
-      glimage_sink->type = GLVIDEO_IMAGE_TYPE_BGRx;
+      glimage_sink->type = GST_GL_IMAGE_TYPE_BGRx;
       break;
     case GST_VIDEO_FORMAT_xRGB:
-      glimage_sink->type = GLVIDEO_IMAGE_TYPE_xRGB;
+      glimage_sink->type = GST_GL_IMAGE_TYPE_xRGB;
       break;
     case GST_VIDEO_FORMAT_xBGR:
-      glimage_sink->type = GLVIDEO_IMAGE_TYPE_xBGR;
+      glimage_sink->type = GST_GL_IMAGE_TYPE_xBGR;
       break;
     default:
       break;
@@ -461,7 +461,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   glimage_sink = GST_GLIMAGE_SINK (bsink);
 
-  glv_drawable_draw_image (glimage_sink->drawable,
+  gst_gl_drawable_draw_image (glimage_sink->drawable,
       glimage_sink->type, GST_BUFFER_DATA (buf),
       GST_VIDEO_SINK_WIDTH (glimage_sink),
       GST_VIDEO_SINK_HEIGHT (glimage_sink));
@@ -496,9 +496,9 @@ gst_glimage_sink_set_xwindow_id (GstXOverlay * overlay, XID window_id)
   }
   glimage_sink->window_id = window_id;
   if (glimage_sink->drawable) {
-    glv_drawable_free (glimage_sink->drawable);
+    gst_gl_drawable_free (glimage_sink->drawable);
     glimage_sink->drawable =
-        glv_drawable_new_from_window (glimage_sink->display, window_id);
+        gst_gl_drawable_new_from_window (glimage_sink->display, window_id);
   }
 }
 
