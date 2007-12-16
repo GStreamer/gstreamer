@@ -1,3 +1,16 @@
+2007-12-16  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* gst/gstregistrybinary.c: (gst_registry_binary_write_cache):
+	  Use g_remove() and g_rename(). Check result of g_rename(), and
+	  don't leak the open file descriptor if we error out when writing.
+
+	* gst/gstregistryxml.c: (load_plugin), (gst_registry_xml_write_cache):
+	  Must check the return value of close() after writing out the new
+	  registry file.  Sometimes write problems such as out-of-diskspace
+	  are only reported when the file is closed and not already during
+	  the write.  This may have caused partial/broken registry files in
+	  some rare circumstances. Should fix #503675.
+
 2007-12-16  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* docs/gst/.cvsignore:

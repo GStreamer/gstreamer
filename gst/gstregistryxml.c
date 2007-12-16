@@ -916,22 +916,44 @@ gst_registry_xml_write_cache (GstRegistry * registry, const char *location)
   if (!gst_registry_save (registry, "</GST-PluginRegistry>\n"))
     goto fail;
 
-  close (registry->cache_file);
+  /* check return value of close(), write errors may only get reported here */
+  if (close (registry->cache_file) < 0)
+    goto close_failed;
 
   if (g_file_test (tmp_location, G_FILE_TEST_EXISTS)) {
 #ifdef WIN32
     g_remove (location);
 #endif
-    g_rename (tmp_location, location);
+    if (g_rename (tmp_location, location) < 0)
+      goto rename_failed;
+  } else {
+    /* FIXME: shouldn't we return FALSE here? */
   }
 
   g_free (tmp_location);
-
+  GST_INFO ("Wrote XML registry cache");
   return TRUE;
 
+/* ERRORS */
 fail:
-  close (registry->cache_file);
-  g_free (tmp_location);
-
-  return FALSE;
+  {
+    (void) close (registry->cache_file);
+    /* fall through */
+  }
+fail_after_close:
+  {
+    g_remove (tmp_location);
+    g_free (tmp_location);
+    return FALSE;
+  }
+close_failed:
+  {
+    GST_ERROR ("close() failed: %s", g_strerror (errno));
+    goto fail_after_close;
+  }
+rename_failed:
+  {
+    GST_ERROR ("g_rename() failed: %s", g_strerror (errno));
+    goto fail_after_close;
+  }
 }

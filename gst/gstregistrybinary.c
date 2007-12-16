@@ -544,16 +544,17 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
   }
   g_list_free (to_write);
 
-  if (close (registry->cache_file) < 0) {
-    GST_DEBUG ("Can't close registry file : %s", g_strerror (errno));
-    goto fail;
-  }
+  if (close (registry->cache_file) < 0)
+    goto close_failed;
 
   if (g_file_test (tmp_location, G_FILE_TEST_EXISTS)) {
 #ifdef WIN32
-    remove (location);
+    g_remove (location);
 #endif
-    rename (tmp_location, location);
+    if (g_rename (tmp_location, location) < 0)
+      goto rename_failed;
+  } else {
+    /* FIXME: shouldn't we return FALSE here? */
   }
 
   g_free (tmp_location);
@@ -562,8 +563,26 @@ gst_registry_binary_write_cache (GstRegistry * registry, const char *location)
 
   /* Errors */
 fail:
-  g_free (tmp_location);
-  return FALSE;
+  {
+    (void) close (registry->cache_file);
+    /* fall through */
+  }
+fail_after_close:
+  {
+    g_remove (tmp_location);
+    g_free (tmp_location);
+    return FALSE;
+  }
+close_failed:
+  {
+    GST_ERROR ("close() failed: %s", g_strerror (errno));
+    goto fail_after_close;
+  }
+rename_failed:
+  {
+    GST_ERROR ("g_rename() failed: %s", g_strerror (errno));
+    goto fail_after_close;
+  }
 }
 
 
