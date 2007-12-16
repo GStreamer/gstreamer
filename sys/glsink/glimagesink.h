@@ -58,9 +58,9 @@ struct _GstGLImageSink
   int fps_n, fps_d;
   int par_n, par_d;
 
-  GLVideoDisplay *display;
-  GLVideoDrawable *drawable;
-  GLVideoImageType type;
+  GstGLDisplay *display;
+  GstGLDrawable *drawable;
+  GstGLImageType type;
 
   XID window_id;
 };

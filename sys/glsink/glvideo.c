@@ -23,22 +23,21 @@
 
 #include "glvideo.h"
 #include "glextensions.h"
-/* only use gst for debugging */
 #include <gst/gst.h>
 
 #include <string.h>
 
 
-static gboolean glv_display_check_features (GLVideoDisplay * display);
+static gboolean gst_gl_display_check_features (GstGLDisplay * display);
 
 
-GLVideoDisplay *
-glv_display_new (const char *display_name)
+GstGLDisplay *
+gst_gl_display_new (const char *display_name)
 {
-  GLVideoDisplay *display;
+  GstGLDisplay *display;
   gboolean usable;
 
-  display = g_malloc0 (sizeof (GLVideoDisplay));
+  display = g_malloc0 (sizeof (GstGLDisplay));
 
   display->display = XOpenDisplay (display_name);
   if (display->display == NULL) {
@@ -46,7 +45,7 @@ glv_display_new (const char *display_name)
     return NULL;
   }
 
-  usable = glv_display_check_features (display);
+  usable = gst_gl_display_check_features (display);
   if (!usable) {
     g_free (display);
     return NULL;
@@ -58,7 +57,7 @@ glv_display_new (const char *display_name)
 }
 
 static gboolean
-glv_display_check_features (GLVideoDisplay * display)
+gst_gl_display_check_features (GstGLDisplay * display)
 {
   gboolean ret;
   XVisualInfo *visinfo;
@@ -143,18 +142,18 @@ glv_display_check_features (GLVideoDisplay * display)
 }
 
 gboolean
-glv_display_can_handle_type (GLVideoDisplay * display, GLVideoImageType type)
+gst_gl_display_can_handle_type (GstGLDisplay * display, GstGLImageType type)
 {
   switch (type) {
-    case GLVIDEO_IMAGE_TYPE_RGBx:
-    case GLVIDEO_IMAGE_TYPE_BGRx:
-    case GLVIDEO_IMAGE_TYPE_xRGB:
-    case GLVIDEO_IMAGE_TYPE_xBGR:
+    case GST_GL_IMAGE_TYPE_RGBx:
+    case GST_GL_IMAGE_TYPE_BGRx:
+    case GST_GL_IMAGE_TYPE_xRGB:
+    case GST_GL_IMAGE_TYPE_xBGR:
       return TRUE;
-    case GLVIDEO_IMAGE_TYPE_YUY2:
-    case GLVIDEO_IMAGE_TYPE_UYVY:
+    case GST_GL_IMAGE_TYPE_YUY2:
+    case GST_GL_IMAGE_TYPE_UYVY:
       return display->have_ycbcr_texture;
-    case GLVIDEO_IMAGE_TYPE_AYUV:
+    case GST_GL_IMAGE_TYPE_AYUV:
       return display->have_color_matrix;
     default:
       return FALSE;
@@ -162,7 +161,7 @@ glv_display_can_handle_type (GLVideoDisplay * display, GLVideoImageType type)
 }
 
 void
-glv_display_free (GLVideoDisplay * display)
+gst_gl_display_free (GstGLDisplay * display)
 {
   /* sure hope nobody is using it as it's being freed */
   g_mutex_lock (display->lock);
@@ -186,17 +185,17 @@ glv_display_free (GLVideoDisplay * display)
 
 /* drawable */
 
-GLVideoDrawable *
-glv_drawable_new_window (GLVideoDisplay * display)
+GstGLDrawable *
+gst_gl_drawable_new_window (GstGLDisplay * display)
 {
-  GLVideoDrawable *drawable;
+  GstGLDrawable *drawable;
   XSetWindowAttributes attr = { 0 };
   int scrnum;
   int mask;
   Window root;
   Screen *screen;
 
-  drawable = g_malloc0 (sizeof (GLVideoDrawable));
+  drawable = g_malloc0 (sizeof (GstGLDrawable));
 
   g_mutex_lock (display->lock);
   drawable->display = display;
@@ -230,14 +229,14 @@ glv_drawable_new_window (GLVideoDisplay * display)
   return drawable;
 }
 
-GLVideoDrawable *
-glv_drawable_new_root_window (GLVideoDisplay * display)
+GstGLDrawable *
+gst_gl_drawable_new_root_window (GstGLDisplay * display)
 {
-  GLVideoDrawable *drawable;
+  GstGLDrawable *drawable;
   int scrnum;
   Screen *screen;
 
-  drawable = g_malloc0 (sizeof (GLVideoDrawable));
+  drawable = g_malloc0 (sizeof (GstGLDrawable));
 
   g_mutex_lock (display->lock);
   drawable->display = display;
@@ -252,12 +251,12 @@ glv_drawable_new_root_window (GLVideoDisplay * display)
   return drawable;
 }
 
-GLVideoDrawable *
-glv_drawable_new_from_window (GLVideoDisplay * display, Window window)
+GstGLDrawable *
+gst_gl_drawable_new_from_window (GstGLDisplay * display, Window window)
 {
-  GLVideoDrawable *drawable;
+  GstGLDrawable *drawable;
 
-  drawable = g_malloc0 (sizeof (GLVideoDrawable));
+  drawable = g_malloc0 (sizeof (GstGLDrawable));
 
   g_mutex_lock (display->lock);
   drawable->display = display;
@@ -270,7 +269,7 @@ glv_drawable_new_from_window (GLVideoDisplay * display, Window window)
 }
 
 void
-glv_drawable_free (GLVideoDrawable * drawable)
+gst_gl_drawable_free (GstGLDrawable * drawable)
 {
 
   g_mutex_lock (drawable->display->lock);
@@ -283,7 +282,7 @@ glv_drawable_free (GLVideoDrawable * drawable)
 }
 
 void
-glv_drawable_lock (GLVideoDrawable * drawable)
+gst_gl_drawable_lock (GstGLDrawable * drawable)
 {
   g_mutex_lock (drawable->display->lock);
   glXMakeCurrent (drawable->display->display, drawable->window,
@@ -291,14 +290,14 @@ glv_drawable_lock (GLVideoDrawable * drawable)
 }
 
 void
-glv_drawable_unlock (GLVideoDrawable * drawable)
+gst_gl_drawable_unlock (GstGLDrawable * drawable)
 {
   glXMakeCurrent (drawable->display->display, None, NULL);
   g_mutex_unlock (drawable->display->lock);
 }
 
 void
-glv_drawable_update_attributes (GLVideoDrawable * drawable)
+gst_gl_drawable_update_attributes (GstGLDrawable * drawable)
 {
   XWindowAttributes attr;
 
@@ -309,23 +308,23 @@ glv_drawable_update_attributes (GLVideoDrawable * drawable)
 }
 
 void
-glv_drawable_clear (GLVideoDrawable * drawable)
+gst_gl_drawable_clear (GstGLDrawable * drawable)
 {
 
-  glv_drawable_lock (drawable);
+  gst_gl_drawable_lock (drawable);
 
   glDepthFunc (GL_LESS);
   glEnable (GL_DEPTH_TEST);
   glClearColor (0.2, 0.2, 0.2, 1.0);
   glViewport (0, 0, drawable->win_width, drawable->win_height);
 
-  glv_drawable_unlock (drawable);
+  gst_gl_drawable_unlock (drawable);
 }
 
 
 
 static void
-draw_rect_texture (GLVideoDrawable * drawable, GLVideoImageType type,
+draw_rect_texture (GstGLDrawable * drawable, GstGLImageType type,
     void *data, int width, int height)
 {
   GLuint texture;
@@ -343,43 +342,43 @@ draw_rect_texture (GLVideoDrawable * drawable, GLVideoImageType type,
   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
   switch (type) {
-    case GLVIDEO_IMAGE_TYPE_RGBx:
+    case GST_GL_IMAGE_TYPE_RGBx:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_BYTE, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_BGRx:
+    case GST_GL_IMAGE_TYPE_BGRx:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_BGRA, GL_UNSIGNED_BYTE, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_xRGB:
+    case GST_GL_IMAGE_TYPE_xRGB:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_xBGR:
+    case GST_GL_IMAGE_TYPE_xBGR:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_YUY2:
+    case GST_GL_IMAGE_TYPE_YUY2:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width, height,
           0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_UYVY:
+    case GST_GL_IMAGE_TYPE_UYVY:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width, height,
           0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_AYUV:
+    case GST_GL_IMAGE_TYPE_AYUV:
       glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA, width, height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, width, height,
@@ -390,7 +389,7 @@ draw_rect_texture (GLVideoDrawable * drawable, GLVideoImageType type,
   }
 
 #ifdef GL_POST_COLOR_MATRIX_RED_BIAS
-  if (type == GLVIDEO_IMAGE_TYPE_AYUV) {
+  if (type == GST_GL_IMAGE_TYPE_AYUV) {
     const double matrix[16] = {
       1, 1, 1, 0,
       0, -0.344 * 1, 1.770 * 1, 0,
@@ -426,7 +425,7 @@ draw_rect_texture (GLVideoDrawable * drawable, GLVideoImageType type,
 }
 
 static void
-draw_pow2_texture (GLVideoDrawable * drawable, GLVideoImageType type,
+draw_pow2_texture (GstGLDrawable * drawable, GstGLImageType type,
     void *data, int width, int height)
 {
   int pow2_width;
@@ -450,43 +449,43 @@ draw_pow2_texture (GLVideoDrawable * drawable, GLVideoImageType type,
   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
   switch (type) {
-    case GLVIDEO_IMAGE_TYPE_RGBx:
+    case GST_GL_IMAGE_TYPE_RGBx:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, pow2_width, pow2_height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_BYTE, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_BGRx:
+    case GST_GL_IMAGE_TYPE_BGRx:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, pow2_width, pow2_height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_BGRA, GL_UNSIGNED_BYTE, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_xRGB:
+    case GST_GL_IMAGE_TYPE_xRGB:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, pow2_width, pow2_height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_xBGR:
+    case GST_GL_IMAGE_TYPE_xBGR:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, pow2_width, pow2_height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_YUY2:
+    case GST_GL_IMAGE_TYPE_YUY2:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_YCBCR_MESA, pow2_width, pow2_height,
           0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_UYVY:
+    case GST_GL_IMAGE_TYPE_UYVY:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_YCBCR_MESA, pow2_width, pow2_height,
           0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
           GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, data);
       break;
-    case GLVIDEO_IMAGE_TYPE_AYUV:
+    case GST_GL_IMAGE_TYPE_AYUV:
       glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA, pow2_width, pow2_height,
           0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
       glTexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, width, height,
@@ -497,7 +496,7 @@ draw_pow2_texture (GLVideoDrawable * drawable, GLVideoImageType type,
   }
 
 #ifdef GL_POST_COLOR_MATRIX_RED_BIAS
-  if (type == GLVIDEO_IMAGE_TYPE_AYUV) {
+  if (type == GST_GL_IMAGE_TYPE_AYUV) {
     const double matrix[16] = {
       1, 1, 1, 0,
       0, -0.344 * 1, 1.770 * 1, 0,
@@ -533,14 +532,14 @@ draw_pow2_texture (GLVideoDrawable * drawable, GLVideoImageType type,
 }
 
 void
-glv_drawable_draw_image (GLVideoDrawable * drawable, GLVideoImageType type,
+gst_gl_drawable_draw_image (GstGLDrawable * drawable, GstGLImageType type,
     void *data, int width, int height)
 {
   g_return_if_fail (data != NULL);
   g_return_if_fail (width > 0);
   g_return_if_fail (height > 0);
 
-  glv_drawable_lock (drawable);
+  gst_gl_drawable_lock (drawable);
 
 #if 0
   /* Doesn't work */
@@ -569,7 +568,7 @@ glv_drawable_draw_image (GLVideoDrawable * drawable, GLVideoImageType type,
   }
 #endif
 
-  glv_drawable_update_attributes (drawable);
+  gst_gl_drawable_update_attributes (drawable);
 
   glXSwapIntervalSGI (1);
   glViewport (0, 0, drawable->win_width, drawable->win_height);
@@ -605,5 +604,5 @@ glv_drawable_draw_image (GLVideoDrawable * drawable, GLVideoImageType type,
   }
 #endif
 
-  glv_drawable_unlock (drawable);
+  gst_gl_drawable_unlock (drawable);
 }
