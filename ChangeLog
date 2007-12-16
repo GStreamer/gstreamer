@@ -1,3 +1,11 @@
+2007-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_video_caps):
+	Be apologetic of software that use the 'jpeg' instead of 'JPEG' FOURCC
+	for jpeg video streams.
+	Add the 'avc1'/'AVC1' fourcc mapping for h264, same software-comment as
+	for the above modification.
+
 2007-12-15  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/interfaces/xoverlay.c: (gst_x_overlay_expose),

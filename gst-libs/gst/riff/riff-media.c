@@ -120,6 +120,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       break;
 
     case GST_MAKE_FOURCC ('J', 'P', 'E', 'G'): /* generic (mostly RGB) MJPEG */
+    case GST_MAKE_FOURCC ('j', 'p', 'e', 'g'): /* generic (mostly RGB) MJPEG */
       caps = gst_caps_new_simple ("image/jpeg", NULL);
       if (codec_name)
         *codec_name = g_strdup ("JPEG Still Image");
@@ -230,6 +231,8 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
     case GST_MAKE_FOURCC ('H', '2', '6', '4'):
     case GST_MAKE_FOURCC ('h', '2', '6', '4'):
+    case GST_MAKE_FOURCC ('a', 'v', 'c', '1'):
+    case GST_MAKE_FOURCC ('A', 'V', 'C', '1'):
       caps = gst_caps_new_simple ("video/x-h264",
           "variant", G_TYPE_STRING, "itu", NULL);
       if (codec_name)
