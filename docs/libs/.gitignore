@@ -8,6 +8,7 @@ gstreamer-libs-decl-list.txt
 gstreamer-libs-presed-scan.c
 gstreamer-libs-undocumented.txt
 gstreamer-libs-unused.txt
+gstreamer-libs-undeclared.txt
 gstreamer-libs.args
 gstreamer-libs.hierarchy
 gstreamer-libs.interfaces

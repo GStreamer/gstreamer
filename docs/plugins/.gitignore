@@ -5,6 +5,7 @@ gstreamer-plugins-undocumented.txt
 gstreamer-plugins.args.new
 gstreamer-plugins.signals.new
 gstreamer-plugins-unused.txt
+gstreamer-plugins-undeclared.txt
 html
 html-build.stamp
 html.stamp

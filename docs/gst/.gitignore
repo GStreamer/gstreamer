@@ -4,6 +4,7 @@ gstreamer-decl-list.txt
 gstreamer-decl.txt
 gstreamer-undocumented.txt
 gstreamer-unused.txt
+gstreamer-undeclared.txt
 
 gstreamer.args
 gstreamer.hierarchy
