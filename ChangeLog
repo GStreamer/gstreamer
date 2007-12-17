@@ -1,5 +1,16 @@
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/switch/gstswitch.h (struct _GstStreamSelector): Add some
+	state variables.
+
+	* gst/switch/gstswitch.c (gst_stream_selector_push_pending_stop)
+	(gst_selector_pad_chain): Push any pending stop event.
+	(gst_stream_selector_set_active_pad)
+	(gst_stream_selector_set_property): Factor out setting the active
+	pad to a function. Close the segment of the previous active pad if
+	told to do so via a stop_time != GST_CLOCK_TIME_NONE.
+	(gst_stream_selector_switch): Implement switch vmethod. Patch 5/12.
+
 	* gst/switch/gstswitch.c (gst_stream_selector_block): Implement
 	the block() signal. This implementation will be replaced in future
 	patches, however. Patch 4/12.

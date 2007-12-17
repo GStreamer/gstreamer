@@ -73,6 +73,7 @@ static GstPad *gst_stream_selector_activate_sinkpad (GstStreamSelector * sel,
     GstPad * pad);
 static GstPad *gst_stream_selector_get_linked_pad (GstPad * pad,
     gboolean strict);
+static void gst_stream_selector_push_pending_stop (GstStreamSelector * self);
 
 #define GST_TYPE_SELECTOR_PAD \
   (gst_selector_pad_get_type())
@@ -339,6 +340,8 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   if (pad != active_sinkpad)
     goto ignore;
 
+  gst_stream_selector_push_pending_stop (sel);
+
   /* if we have a pending segment, push it out now */
   if (selpad->segment_pending) {
     gst_pad_push_event (sel->srcpad, gst_event_new_new_segment_full (FALSE,
@@ -505,41 +508,67 @@ gst_stream_selector_dispose (GObject * object)
 }
 
 static void
+gst_stream_selector_set_active_pad (GstStreamSelector * self,
+    const gchar * pad_name, GstClockTime stop_time, GstClockTime start_time)
+{
+  GstPad *pad;
+  GstSelectorPad *old, *new;
+  GstPad **active_pad_p;
+
+  if (strcmp (pad_name, "") != 0)
+    pad = gst_element_get_pad (GST_ELEMENT (self), pad_name);
+  else
+    pad = NULL;
+
+  GST_OBJECT_LOCK (self);
+
+  if (pad == self->active_sinkpad)
+    goto done;
+
+  old = GST_SELECTOR_PAD_CAST (self->active_sinkpad);
+  new = GST_SELECTOR_PAD_CAST (pad);
+
+  if (old && old->active && !self->pending_stop
+      && GST_CLOCK_TIME_IS_VALID (stop_time)) {
+    /* schedule a last_stop update if one isn't already scheduled, and a
+       segment has been pushed before. */
+    memcpy (&self->pending_stop_segment, &old->segment,
+        sizeof (self->pending_stop_segment));
+    gst_segment_set_last_stop (&self->pending_stop_segment,
+        old->segment.format, stop_time);
+    self->pending_stop = TRUE;
+  }
+
+  if (new && GST_CLOCK_TIME_IS_VALID (start_time)) {
+    /* schedule a new segment push */
+    new->segment.start = start_time;
+    new->segment_pending = TRUE;
+  }
+
+  active_pad_p = &self->active_sinkpad;
+  gst_object_replace ((GstObject **) active_pad_p, GST_OBJECT_CAST (pad));
+  GST_DEBUG_OBJECT (self, "New active pad is %" GST_PTR_FORMAT,
+      self->active_sinkpad);
+
+done:
+  GST_OBJECT_UNLOCK (self);
+
+  if (pad)
+    gst_object_unref (pad);
+}
+
+
+static void
 gst_stream_selector_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
   GstStreamSelector *sel = GST_STREAM_SELECTOR (object);
 
   switch (prop_id) {
-    case PROP_ACTIVE_PAD:{
-      const gchar *pad_name = g_value_get_string (value);
-      GstPad *pad = NULL;
-      GstPad **active_pad_p;
-
-      if (strcmp (pad_name, "") != 0)
-        pad = gst_element_get_pad (GST_ELEMENT (object), pad_name);
-      GST_OBJECT_LOCK (object);
-      if (pad != sel->active_sinkpad) {
-        GstSelectorPad *selpad;
-
-        selpad = GST_SELECTOR_PAD_CAST (pad);
-        /* we can only activate pads that have data received */
-        if (selpad && !selpad->active) {
-          GST_DEBUG_OBJECT (sel, "No data received on pad %" GST_PTR_FORMAT,
-              pad);
-        } else {
-          active_pad_p = &sel->active_sinkpad;
-          gst_object_replace ((GstObject **) active_pad_p,
-              GST_OBJECT_CAST (pad));
-          GST_DEBUG_OBJECT (sel, "New active pad is %" GST_PTR_FORMAT,
-              sel->active_sinkpad);
-        }
-      }
-      GST_OBJECT_UNLOCK (object);
-      if (pad)
-        gst_object_unref (pad);
+    case PROP_ACTIVE_PAD:
+      gst_stream_selector_set_active_pad (sel,
+          g_value_get_string (value), GST_CLOCK_TIME_NONE, GST_CLOCK_TIME_NONE);
       break;
-    }
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -741,6 +770,8 @@ block_all_pads (GstStreamSelector * self, gboolean block)
   GstIterator *iter;
   GstIteratorResult res;
 
+  g_return_val_if_fail (self->blocked != block, FALSE);
+
   iter = gst_element_iterate_sink_pads (GST_ELEMENT (self));
 
   while (TRUE) {
@@ -760,6 +791,7 @@ block_all_pads (GstStreamSelector * self, gboolean block)
 done:
   GST_DEBUG_OBJECT (self, "block_all_pads(%d) succeeded", block);
   gst_iterator_free (iter);
+  self->blocked = block;
   return TRUE;
 
 error:
@@ -768,6 +800,7 @@ error:
   return FALSE;
 }
 
+/* FIXME: blocked flag not mt-safe */
 
 static void
 gst_stream_selector_block (GstStreamSelector * self)
@@ -776,10 +809,36 @@ gst_stream_selector_block (GstStreamSelector * self)
 }
 
 static void
+gst_stream_selector_push_pending_stop (GstStreamSelector * self)
+{
+  GstEvent *event = NULL;
+
+  GST_OBJECT_LOCK (self);
+
+  if (G_UNLIKELY (self->pending_stop)) {
+    GstSegment *seg = &self->pending_stop_segment;
+
+    event = gst_event_new_new_segment_full (TRUE, seg->rate,
+        seg->applied_rate, seg->format, seg->start, seg->last_stop, seg->time);
+
+    self->pending_stop = FALSE;
+  }
+
+  GST_OBJECT_UNLOCK (self);
+
+  if (event)
+    gst_pad_push_event (self->srcpad, event);
+}
+
+static void
 gst_stream_selector_switch (GstStreamSelector * self, const gchar * pad_name,
     GstClockTime stop_time, GstClockTime start_time)
 {
-  return;
+  g_return_if_fail (self->blocked == TRUE);
+
+  gst_stream_selector_set_active_pad (self, pad_name, stop_time, start_time);
+
+  block_all_pads (self, FALSE);
 }
 
 static gboolean

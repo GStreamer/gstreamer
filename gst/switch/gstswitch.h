@@ -48,6 +48,10 @@ struct _GstStreamSelector {
   guint nb_sinkpads;
 
   GstSegment segment;
+
+  gboolean blocked;
+  gboolean pending_stop;
+  GstSegment pending_stop_segment;
 };
 
 struct _GstStreamSelectorClass {
