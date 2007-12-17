@@ -51,6 +51,7 @@ struct _GstMultiFileSrc
   int offset;
 
   GstCaps *caps;
+  gboolean successful_read;
 };
 
 struct _GstMultiFileSrcClass
