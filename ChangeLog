@@ -1,5 +1,9 @@
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/switch/gstswitch.c (gst_stream_selector_block): Implement
+	the block() signal. This implementation will be replaced in future
+	patches, however. Patch 4/12.
+
 	* gst/switch/gstswitch.h (struct _GstStreamSelectorClass): Fix
 	vmethod prototypes.
 

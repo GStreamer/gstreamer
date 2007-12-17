@@ -722,9 +722,57 @@ gst_stream_selector_release_pad (GstElement * element, GstPad * pad)
 }
 
 static void
+block_func (GstPad * pad, gboolean blocked, gpointer user_data)
+{
+  GST_DEBUG_OBJECT (pad, "got blocked = %d", blocked ? 1 : 0);
+}
+
+static void
+foreach_set_blocking (GstPad * pad, gpointer user_data)
+{
+  gboolean block = GPOINTER_TO_INT (user_data);
+
+  gst_pad_set_blocked_async (pad, block, block_func, NULL);
+}
+
+static gboolean
+block_all_pads (GstStreamSelector * self, gboolean block)
+{
+  GstIterator *iter;
+  GstIteratorResult res;
+
+  iter = gst_element_iterate_sink_pads (GST_ELEMENT (self));
+
+  while (TRUE) {
+    res = gst_iterator_foreach (iter, (GFunc) foreach_set_blocking,
+        GINT_TO_POINTER (block));
+    switch (res) {
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_DONE:
+        goto done;
+      default:
+        goto error;
+    }
+  }
+
+done:
+  GST_DEBUG_OBJECT (self, "block_all_pads(%d) succeeded", block);
+  gst_iterator_free (iter);
+  return TRUE;
+
+error:
+  GST_WARNING_OBJECT (self, "block(%d) signal error: %d", block, res);
+  gst_iterator_free (iter);
+  return FALSE;
+}
+
+
+static void
 gst_stream_selector_block (GstStreamSelector * self)
 {
-  return;
+  block_all_pads (self, TRUE);
 }
 
 static void
