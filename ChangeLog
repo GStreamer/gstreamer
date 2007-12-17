@@ -1,3 +1,15 @@
+2007-12-17  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/gstbaseaudiosrc.c:
+	(gst_base_audio_src_create), (gst_base_audio_src_change_state):
+	Add debug info.
+	When going from PLAYING to PAUSED, pause the ringbuffer before calling
+	the parent state change function, just like the audiosink, because the
+	parent waits for the element to finish its processing before completing
+	the state change. This makes going to PAUSED a lot snappier.
+	When going from READY to PAUSED, don't allow the ringbuffer to start
+	yet.
+
 2007-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):

@@ -642,8 +642,11 @@ gst_base_audio_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
       break;
 
     /* else something interrupted us and we wait for playing again. */
+    GST_DEBUG_OBJECT (src, "wait playing");
     if (gst_base_src_wait_playing (bsrc) != GST_FLOW_OK)
       goto stopped;
+
+    GST_DEBUG_OBJECT (src, "continue playing");
 
     /* read next samples */
     sample += read;
@@ -760,6 +763,7 @@ gst_base_audio_src_change_state (GstElement * element,
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      GST_DEBUG_OBJECT (src, "NULL->READY");
       if (src->ringbuffer == NULL) {
         src->ringbuffer = gst_base_audio_src_create_ringbuffer (src);
       }
@@ -767,13 +771,22 @@ gst_base_audio_src_change_state (GstElement * element,
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_DEBUG_OBJECT (src, "READY->PAUSED");
       src->next_sample = -1;
       gst_ring_buffer_set_flushing (src->ringbuffer, FALSE);
+      gst_ring_buffer_may_start (src->ringbuffer, FALSE);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      GST_DEBUG_OBJECT (src, "PAUSED->PLAYING");
       gst_ring_buffer_may_start (src->ringbuffer, TRUE);
       break;
+    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      GST_DEBUG_OBJECT (src, "PLAYING->PAUSED");
+      gst_ring_buffer_may_start (src->ringbuffer, FALSE);
+      gst_ring_buffer_pause (src->ringbuffer);
+      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_DEBUG_OBJECT (src, "PAUSED->READY");
       gst_ring_buffer_set_flushing (src->ringbuffer, TRUE);
       break;
     default:
@@ -783,14 +796,12 @@ gst_base_audio_src_change_state (GstElement * element,
   ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
   switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      gst_ring_buffer_may_start (src->ringbuffer, FALSE);
-      gst_ring_buffer_pause (src->ringbuffer);
-      break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
+      GST_DEBUG_OBJECT (src, "PAUSED->READY");
       gst_ring_buffer_release (src->ringbuffer);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
+      GST_DEBUG_OBJECT (src, "READY->NULL");
       gst_ring_buffer_close_device (src->ringbuffer);
       gst_object_unparent (GST_OBJECT_CAST (src->ringbuffer));
       src->ringbuffer = NULL;
