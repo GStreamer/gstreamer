@@ -1,5 +1,9 @@
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/switch/gstswitch.c (gst_stream_selector_class_init)
+	(gst_stream_selector_get_property): Add last-stop-time readable
+	property. Patch 6/12.
+
 	* gst/switch/gstswitch.h (struct _GstStreamSelector): Add some
 	state variables.
 
