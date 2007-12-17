@@ -1,5 +1,11 @@
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/switch/gstswitch-marshal.list:
+	* gst/switch/gstswitch.h (struct _GstStreamSelectorClass): 
+	* gst/switch/gstswitch.c (gst_stream_selector_class_init)
+	(gst_stream_selector_block): Make the block() signal return the
+	last stop time of the active pad. Patch 10/12.
+
 	* gst/switch/gstswitch.c (gst_selector_pad_get_property)
 	(gst_selector_pad_class_init, gst_stream_selector_class_init)
 	(gst_stream_selector_get_property): Expose 'last-stop-time' as a

@@ -446,7 +446,7 @@ static GstStateChangeReturn gst_stream_selector_change_state (GstElement *
     element, GstStateChange transition);
 static GList *gst_stream_selector_get_linked_pads (GstPad * pad);
 static GstCaps *gst_stream_selector_getcaps (GstPad * pad);
-static void gst_stream_selector_block (GstStreamSelector * self);
+static GstClockTime gst_stream_selector_block (GstStreamSelector * self);
 static void gst_stream_selector_switch (GstStreamSelector * self,
     const gchar * pad_name, GstClockTime stop_time, GstClockTime start_time);
 
@@ -514,12 +514,14 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
    * GstStreamSelector::block:
    * @streamselector: the streamselector element to emit this signal on
    *
-   * Block all sink pads in preparation for a switch.
+   * Block all sink pads in preparation for a switch. Returns the stop time of
+   * the current switch segment, or #GST_CLOCK_TIME_NONE if there is no current
+   * active pad or the current active pad never received data.
    */
   gst_stream_selector_signals[SIGNAL_BLOCK] =
       g_signal_new ("block", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstStreamSelectorClass, block),
-      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+      NULL, NULL, gst_switch_marshal_UINT64__VOID, G_TYPE_UINT64, 0);
   /**
    * GstStreamSelector::switch:
    * @streamselector: the streamselector element to emit this signal on
@@ -840,9 +842,11 @@ gst_stream_selector_change_state (GstElement * element,
   return result;
 }
 
-static void
+static GstClockTime
 gst_stream_selector_block (GstStreamSelector * self)
 {
+  GstClockTime ret = GST_CLOCK_TIME_NONE;
+
   GST_OBJECT_LOCK (self);
 
   if (self->blocked)
@@ -850,7 +854,23 @@ gst_stream_selector_block (GstStreamSelector * self)
 
   self->blocked = TRUE;
 
+  if (self->active_sinkpad) {
+    GstSelectorPad *spad = GST_SELECTOR_PAD_CAST (self->active_sinkpad);
+
+    if (spad->active) {
+      ret = spad->segment.last_stop;
+      GST_DEBUG_OBJECT (self, "last stop on %" GST_PTR_FORMAT ": %"
+          GST_TIME_FORMAT, spad, GST_TIME_ARGS (ret));
+    } else {
+      GST_DEBUG_OBJECT (self, "pad %" GST_PTR_FORMAT " never got data", spad);
+    }
+  } else {
+    GST_DEBUG_OBJECT (self, "no active pad while blocking");
+  }
+
   GST_OBJECT_UNLOCK (self);
+
+  return ret;
 }
 
 static void
