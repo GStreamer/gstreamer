@@ -1,5 +1,9 @@
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/switch/gstswitch.c (gst_stream_selector_change_state)
+	(gst_stream_selector_block, gst_stream_selector_switch): Use the
+	cond mechanism instead of blocked pads. Patch 8/12.
+
 	* gst/switch/gstswitch.h (struct _GstStreamSelector): 
 
 	* gst/switch/gstswitch.c (gst_stream_selector_wait)

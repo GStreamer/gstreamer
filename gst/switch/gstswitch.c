@@ -404,6 +404,8 @@ static GstPad *gst_stream_selector_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * unused);
 static void gst_stream_selector_release_pad (GstElement * element,
     GstPad * pad);
+static GstStateChangeReturn gst_stream_selector_change_state (GstElement *
+    element, GstStateChange transition);
 static GList *gst_stream_selector_get_linked_pads (GstPad * pad);
 static GstCaps *gst_stream_selector_getcaps (GstPad * pad);
 static void gst_stream_selector_block (GstStreamSelector * self);
@@ -472,6 +474,7 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
   gobject_class->dispose = gst_stream_selector_dispose;
   gstelement_class->request_new_pad = gst_stream_selector_request_new_pad;
   gstelement_class->release_pad = gst_stream_selector_release_pad;
+  gstelement_class->change_state = gst_stream_selector_change_state;
 
   /**
    * GstStreamSelector::block:
@@ -796,62 +799,36 @@ gst_stream_selector_release_pad (GstElement * element, GstPad * pad)
   gst_element_remove_pad (GST_ELEMENT (sel), pad);
 }
 
-static void
-block_func (GstPad * pad, gboolean blocked, gpointer user_data)
+static GstStateChangeReturn
+gst_stream_selector_change_state (GstElement * element,
+    GstStateChange transition)
 {
-  GST_DEBUG_OBJECT (pad, "got blocked = %d", blocked ? 1 : 0);
-}
+  GstStreamSelector *self = GST_STREAM_SELECTOR (element);
+  GstStateChangeReturn result;
 
-static void
-foreach_set_blocking (GstPad * pad, gpointer user_data)
-{
-  gboolean block = GPOINTER_TO_INT (user_data);
+  result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
 
-  gst_pad_set_blocked_async (pad, block, block_func, NULL);
-}
-
-static gboolean
-block_all_pads (GstStreamSelector * self, gboolean block)
-{
-  GstIterator *iter;
-  GstIteratorResult res;
-
-  g_return_val_if_fail (self->blocked != block, FALSE);
-
-  iter = gst_element_iterate_sink_pads (GST_ELEMENT (self));
-
-  while (TRUE) {
-    res = gst_iterator_foreach (iter, (GFunc) foreach_set_blocking,
-        GINT_TO_POINTER (block));
-    switch (res) {
-      case GST_ITERATOR_RESYNC:
-        gst_iterator_resync (iter);
-        break;
-      case GST_ITERATOR_DONE:
-        goto done;
-      default:
-        goto error;
-    }
+  if (transition == GST_STATE_CHANGE_PAUSED_TO_READY) {
+    GST_OBJECT_LOCK (self);
+    self->blocked = FALSE;
+    g_cond_broadcast (self->blocked_cond);
+    GST_OBJECT_UNLOCK (self);
   }
 
-done:
-  GST_DEBUG_OBJECT (self, "block_all_pads(%d) succeeded", block);
-  gst_iterator_free (iter);
-  self->blocked = block;
-  return TRUE;
-
-error:
-  GST_WARNING_OBJECT (self, "block(%d) signal error: %d", block, res);
-  gst_iterator_free (iter);
-  return FALSE;
+  return result;
 }
-
-/* FIXME: blocked flag not mt-safe */
 
 static void
 gst_stream_selector_block (GstStreamSelector * self)
 {
-  block_all_pads (self, TRUE);
+  GST_OBJECT_LOCK (self);
+
+  if (self->blocked)
+    GST_WARNING_OBJECT (self, "switch already blocked");
+
+  self->blocked = TRUE;
+
+  GST_OBJECT_UNLOCK (self);
 }
 
 static void
@@ -884,7 +861,10 @@ gst_stream_selector_switch (GstStreamSelector * self, const gchar * pad_name,
 
   gst_stream_selector_set_active_pad (self, pad_name, stop_time, start_time);
 
-  block_all_pads (self, FALSE);
+  GST_OBJECT_LOCK (self);
+  self->blocked = FALSE;
+  g_cond_broadcast (self->blocked_cond);
+  GST_OBJECT_UNLOCK (self);
 }
 
 static gboolean
