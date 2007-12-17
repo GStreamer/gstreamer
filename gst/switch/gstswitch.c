@@ -425,7 +425,7 @@ ignore:
     GST_DEBUG_OBJECT (sel, "Ignoring buffer %p from pad %s:%s",
         buf, GST_DEBUG_PAD_NAME (pad));
     gst_buffer_unref (buf);
-    res = GST_FLOW_NOT_LINKED;
+    res = GST_FLOW_OK;
     goto done;
   }
 }

@@ -1,5 +1,10 @@
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/switch/gstswitch.c (gst_selector_pad_chain): Return OK when
+	a buffer is ignored, not NOT_LINKED. No sense in making a source
+	element error out; at least fdsrc considers NOT_LINKED to be a
+	fatal error. Patch 11/12. There is no patch 12/12. Foo.
+
 	* gst/switch/gstswitch-marshal.list:
 	* gst/switch/gstswitch.h (struct _GstStreamSelectorClass): 
 	* gst/switch/gstswitch.c (gst_stream_selector_class_init)
