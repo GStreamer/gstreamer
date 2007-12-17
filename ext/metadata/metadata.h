@@ -58,10 +58,11 @@ G_BEGIN_DECLS
 
 typedef enum _tag_MetaOption
 {
-  META_OPT_EXIF = (1 << 0),
-  META_OPT_IPTC = (1 << 1),
-  META_OPT_XMP =  (1 << 2),
-  META_OPT_ALL =  (1 << 3) - 1
+  META_OPT_EXIF       = (1 << 0),
+  META_OPT_IPTC       = (1 << 1),
+  META_OPT_XMP        = (1 << 2),
+  META_OPT_PARSE_ONLY = (1 << 3),
+  META_OPT_ALL        = (1 << 4) - 1
 } MetaOption;
 /* *INDENT-ON* */
 

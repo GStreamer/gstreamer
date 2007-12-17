@@ -67,7 +67,8 @@ typedef struct _tag_PngParseData
   GstAdapter ** xmp_adapter;
 
   MetadataChunkArray * strip_chunks;
-  MetadataChunkArray * inject_chunks;
+
+  gboolean parse_only;
 
   guint32 read;
 } PngParseData;
@@ -76,7 +77,8 @@ typedef struct _tag_PngParseData
 extern void
 metadataparse_png_init (PngParseData * png_data, GstAdapter ** exif_adpt,
     GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
-    MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks);
+    MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks,
+    gboolean parse_only);
 
 extern void metadataparse_png_dispose (PngParseData * png_data);
 

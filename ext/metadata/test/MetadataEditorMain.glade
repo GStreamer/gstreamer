@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE glade-interface SYSTEM "glade-2.0.dtd">
-<!--Generated with glade3 3.2.0 on Wed Dec 12 14:07:03 2007 by edlima@feisty-laptop-->
+<!--Generated with glade3 3.2.0 on Mon Dec 17 11:42:47 2007 by edlima@feisty-laptop-->
 <glade-interface>
   <widget class="GtkWindow" id="windowMain">
     <property name="width_request">800</property>
@@ -121,6 +121,19 @@
                     <property name="expand">False</property>
                     <property name="fill">False</property>
                     <property name="position">1</property>
+                  </packing>
+                </child>
+                <child>
+                  <widget class="GtkCheckButton" id="checkbuttonCapture">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="events">GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK</property>
+                    <property name="label" translatable="yes">Capture image from camera</property>
+                    <property name="draw_indicator">True</property>
+                    <signal name="toggled" handler="on_checkbuttonCapture_toggled"/>
+                  </widget>
+                  <packing>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </widget>

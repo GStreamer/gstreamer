@@ -15,6 +15,5 @@ OPEN ISSUES:
   ex: file.jpeg has XMP, then we do filesrc ! metadataparse ! jpegdec ! pngenc ! metadatamux ! files
   is the metadata still valid? which fields are no valid anymore?
 3- Add GST_TYPE_FRACTION support for GStreamer TAGS
-4- Have parse, demux and mux? (or just demux and must) see issue (5)
-5- After decided issue (4) put more things to gstmetadatacommon (or else create a Class)
+4- After decided issue (4) put more things to gstmetadatacommon (or else create a Class)
 

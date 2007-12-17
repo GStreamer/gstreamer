@@ -69,14 +69,16 @@ metadataparse_png_lazy_update (PngParseData * jpeg_data)
 void
 metadataparse_png_init (PngParseData * png_data, GstAdapter ** exif_adpt,
     GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
-    MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks)
+    MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks,
+    gboolean parse_only)
 {
   png_data->state = PNG_PARSE_NULL;
   png_data->xmp_adapter = xmp_adpt;
   png_data->read = 0;
 
   png_data->strip_chunks = strip_chunks;
-  png_data->inject_chunks = inject_chunks;
+
+  png_data->parse_only = parse_only;
 
 }
 
@@ -205,14 +207,17 @@ metadataparse_png_reading (PngParseData * png_data, guint8 ** buf,
       }
 
       if (0 == memcmp (XmpHeader, *buf, 18)) {
-        MetadataChunk chunk;
 
-        memset (&chunk, 0x00, sizeof (MetadataChunk));
-        chunk.offset_orig = (*buf - step_buf) + offset - 8;     /* maker + size */
-        chunk.size = chunk_size + 12;   /* chunk size plus app marker plus crc */
-        chunk.type = MD_CHUNK_XMP;
+        if (!png_data->parse_only) {
+          MetadataChunk chunk;
 
-        metadata_chunk_array_append_sorted (png_data->strip_chunks, &chunk);
+          memset (&chunk, 0x00, sizeof (MetadataChunk));
+          chunk.offset_orig = (*buf - step_buf) + offset - 8;   /* maker + size */
+          chunk.size = chunk_size + 12; /* chunk size plus app marker plus crc */
+          chunk.type = MD_CHUNK_XMP;
+
+          metadata_chunk_array_append_sorted (png_data->strip_chunks, &chunk);
+        }
 
         /* if adapter has been provided, prepare to hold chunk */
         if (png_data->xmp_adapter) {

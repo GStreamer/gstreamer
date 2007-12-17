@@ -73,6 +73,8 @@ typedef struct _tag_JpegParseData
   MetadataChunkArray * strip_chunks;
   MetadataChunkArray * inject_chunks;
 
+  gboolean parse_only;
+
   guint32 read;
   gboolean jfif_found;
 } JpegParseData;
@@ -81,7 +83,8 @@ typedef struct _tag_JpegParseData
 extern void
 metadataparse_jpeg_init (JpegParseData * jpeg_data, GstAdapter ** exif_adpt,
     GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
-    MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks);
+    MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks,
+    gboolean parse_only);
 
 extern void metadataparse_jpeg_dispose (JpegParseData * jpeg_data);
 

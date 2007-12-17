@@ -88,7 +88,8 @@ enum
   ARG_0,
   ARG_EXIF,
   ARG_IPTC,
-  ARG_XMP
+  ARG_XMP,
+  ARG_PARSE_ONLY
 };
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
@@ -211,6 +212,10 @@ gst_metadata_demux_class_init (GstMetadataDemuxClass * klass)
       g_param_spec_boolean ("xmp", "XMP", "Send XMP metadata ?",
           TRUE, G_PARAM_READWRITE));
 
+  g_object_class_install_property (gobject_class, ARG_PARSE_ONLY,
+      g_param_spec_boolean ("parse-only", "parse-only",
+          "If TRUE, don't strip out any chunk", FALSE, G_PARAM_READWRITE));
+
   gstelement_class->change_state = gst_metadata_demux_change_state;
 
 }
@@ -300,6 +305,12 @@ gst_metadata_demux_set_property (GObject * object, guint prop_id,
       else
         filter->options &= ~META_OPT_XMP;
       break;
+    case ARG_PARSE_ONLY:
+      if (g_value_get_boolean (value))
+        filter->options |= META_OPT_PARSE_ONLY;
+      else
+        filter->options &= ~META_OPT_PARSE_ONLY;
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -321,6 +332,9 @@ gst_metadata_demux_get_property (GObject * object, guint prop_id,
       break;
     case ARG_XMP:
       g_value_set_boolean (value, filter->options & META_OPT_XMP);
+      break;
+    case ARG_PARSE_ONLY:
+      g_value_set_boolean (value, filter->options & META_OPT_PARSE_ONLY);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

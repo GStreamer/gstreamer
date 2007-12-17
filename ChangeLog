@@ -1,3 +1,17 @@
+2007-12-17  Edgard Lima  <edgard.lima@indt.org.br>
+
+	* ext/metadata/TODO:
+	* ext/metadata/gstmetadatademux.c:
+	* ext/metadata/metadata.c:
+	* ext/metadata/metadata.h:
+	* ext/metadata/metadataparsejpeg.c:
+	* ext/metadata/metadataparsejpeg.h:
+	* ext/metadata/metadataparsepng.c:
+	* ext/metadata/metadataparsepng.h:
+	* ext/metadata/test/MetadataEditorMain.glade:
+	* ext/metadata/test/metadata_editor.c:
+	  Added "parse-only" property to metadatademux.
+
 2007-12-16  David Schleef  <ds@schleef.org>
 
 	* sys/glsink/glimagesink.c:
@@ -70,7 +84,7 @@
 	* sys/glsink/gstopengl.c:
 	  Use the new video-common.h stuff.  Readd support for RGB video.
 
-2007-12-14  Edgard Lima,,,,  <edgard.lima@indt.org.br>
+2007-12-14  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/Makefile.am:
 	* ext/metadata/TODO:
@@ -1344,7 +1358,7 @@
 	  Now sending iptc tag in whole chunk. Ready to also send exif and xmp
 	  in the same way (look at bug #486659).
 
-2007-10-31  Thijs Vermeir,,,  <thijsvermeir@gmail.com>
+2007-10-31  Thijs Vermeir  <thijsvermeir@gmail.com>
 
 	* gst/librfb/rfbdecoder.c:
 		Some refactoring in RAW encoding

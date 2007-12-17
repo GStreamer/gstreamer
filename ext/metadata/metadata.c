@@ -295,7 +295,8 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
   if (buf[0] == 0xFF && buf[1] == 0xD8 && buf[2] == 0xFF) {
     if (G_LIKELY (meta_data->parse))
       metadataparse_jpeg_init (&meta_data->format_data.jpeg_parse, exif, iptc,
-          xmp, &meta_data->strip_chunks, &meta_data->inject_chunks);
+          xmp, &meta_data->strip_chunks, &meta_data->inject_chunks,
+          meta_data->options & META_OPT_PARSE_ONLY);
     else
       metadatamux_jpeg_init (&meta_data->format_data.jpeg_mux,
           &meta_data->strip_chunks, &meta_data->inject_chunks);
@@ -315,7 +316,8 @@ metadata_parse_none (MetaData * meta_data, const guint8 * buf,
       buf[4] == 0x0D && buf[5] == 0x0A && buf[6] == 0x1A && buf[7] == 0x0A) {
     if (G_LIKELY (meta_data->parse))
       metadataparse_png_init (&meta_data->format_data.png_parse, exif, iptc,
-          xmp, &meta_data->strip_chunks, &meta_data->inject_chunks);
+          xmp, &meta_data->strip_chunks, &meta_data->inject_chunks,
+          meta_data->options & META_OPT_PARSE_ONLY);
     else
       metadatamux_png_init (&meta_data->format_data.png_mux,
           &meta_data->strip_chunks, &meta_data->inject_chunks);

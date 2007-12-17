@@ -83,7 +83,8 @@ metadataparse_jpeg_lazy_update (JpegParseData * jpeg_data)
 void
 metadataparse_jpeg_init (JpegParseData * jpeg_data, GstAdapter ** exif_adpt,
     GstAdapter ** iptc_adpt, GstAdapter ** xmp_adpt,
-    MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks)
+    MetadataChunkArray * strip_chunks, MetadataChunkArray * inject_chunks,
+    gboolean parse_only)
 {
   jpeg_data->state = JPEG_PARSE_NULL;
   jpeg_data->exif_adapter = exif_adpt;
@@ -94,6 +95,8 @@ metadataparse_jpeg_init (JpegParseData * jpeg_data, GstAdapter ** exif_adpt,
 
   jpeg_data->strip_chunks = strip_chunks;
   jpeg_data->inject_chunks = inject_chunks;
+
+  jpeg_data->parse_only = parse_only;
 
 }
 
@@ -258,12 +261,17 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
         if (0 == memcmp (ExifHeader, *buf, 6)) {
           MetadataChunk chunk;
 
-          memset (&chunk, 0x00, sizeof (MetadataChunk));
-          chunk.offset_orig = (*buf - step_buf) + offset - 4;   /* maker + size */
-          chunk.size = chunk_size + 2;  /* chunk size plus app marker */
-          chunk.type = MD_CHUNK_EXIF;
+          if (!jpeg_data->parse_only) {
 
-          metadata_chunk_array_append_sorted (jpeg_data->strip_chunks, &chunk);
+            memset (&chunk, 0x00, sizeof (MetadataChunk));
+            chunk.offset_orig = (*buf - step_buf) + offset - 4; /* maker + size */
+            chunk.size = chunk_size + 2;        /* chunk size plus app marker */
+            chunk.type = MD_CHUNK_EXIF;
+
+            metadata_chunk_array_append_sorted (jpeg_data->strip_chunks,
+                &chunk);
+
+          }
 
           if (!jpeg_data->jfif_found) {
             /* only inject if no JFIF has been found */
@@ -275,16 +283,19 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
               0x00, 0x00
             };
 
+            if (!jpeg_data->parse_only) {
 
-            memset (&chunk, 0x00, sizeof (MetadataChunk));
-            chunk.offset_orig = 2;
-            chunk.size = 18;
-            chunk.type = MD_CHUNK_UNKNOWN;
-            chunk.data = g_new (guint8, 18);
-            memcpy (chunk.data, segment, 18);
+              memset (&chunk, 0x00, sizeof (MetadataChunk));
+              chunk.offset_orig = 2;
+              chunk.size = 18;
+              chunk.type = MD_CHUNK_UNKNOWN;
+              chunk.data = g_new (guint8, 18);
+              memcpy (chunk.data, segment, 18);
 
-            metadata_chunk_array_append_sorted (jpeg_data->inject_chunks,
-                &chunk);
+              metadata_chunk_array_append_sorted (jpeg_data->inject_chunks,
+                  &chunk);
+
+            }
 
           }
 
@@ -304,15 +315,20 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
           }
 
           if (0 == memcmp (XmpHeader, *buf, 29)) {
-            MetadataChunk chunk;
 
-            memset (&chunk, 0x00, sizeof (MetadataChunk));
-            chunk.offset_orig = (*buf - step_buf) + offset - 4; /* maker + size */
-            chunk.size = chunk_size + 2;        /* chunk size plus app marker */
-            chunk.type = MD_CHUNK_XMP;
+            if (!jpeg_data->parse_only) {
 
-            metadata_chunk_array_append_sorted (jpeg_data->strip_chunks,
-                &chunk);
+              MetadataChunk chunk;
+
+              memset (&chunk, 0x00, sizeof (MetadataChunk));
+              chunk.offset_orig = (*buf - step_buf) + offset - 4;       /* maker + size */
+              chunk.size = chunk_size + 2;      /* chunk size plus app marker */
+              chunk.type = MD_CHUNK_XMP;
+
+              metadata_chunk_array_append_sorted (jpeg_data->strip_chunks,
+                  &chunk);
+
+            }
 
             /* if adapter has been provided, prepare to hold chunk */
             if (jpeg_data->xmp_adapter) {
@@ -339,14 +355,20 @@ metadataparse_jpeg_reading (JpegParseData * jpeg_data, guint8 ** buf,
 
 
         if (0 == memcmp (IptcHeader, *buf, 14)) {
-          MetadataChunk chunk;
 
-          memset (&chunk, 0x00, sizeof (MetadataChunk));
-          chunk.offset_orig = (*buf - step_buf) + offset - 4;   /* maker + size */
-          chunk.size = chunk_size + 2;  /* chunk size plus app marker */
-          chunk.type = MD_CHUNK_IPTC;
+          if (!jpeg_data->parse_only) {
 
-          metadata_chunk_array_append_sorted (jpeg_data->strip_chunks, &chunk);
+            MetadataChunk chunk;
+
+            memset (&chunk, 0x00, sizeof (MetadataChunk));
+            chunk.offset_orig = (*buf - step_buf) + offset - 4; /* maker + size */
+            chunk.size = chunk_size + 2;        /* chunk size plus app marker */
+            chunk.type = MD_CHUNK_IPTC;
+
+            metadata_chunk_array_append_sorted (jpeg_data->strip_chunks,
+                &chunk);
+
+          }
 
           /* if adapter has been provided, prepare to hold chunk */
           if (jpeg_data->iptc_adapter) {

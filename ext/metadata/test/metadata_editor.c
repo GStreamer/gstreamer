@@ -77,6 +77,9 @@ static void me_gst_cleanup_elements ();
 static int
 me_gst_setup_view_pipeline (const gchar * filename, GdkWindow * window);
 static int
+me_gst_setup_capture_pipeline (const gchar * src_file, const gchar * dest_file,
+    gint * encode_status);
+static int
 me_gst_setup_encode_pipeline (const gchar * src_file, const gchar * dest_file,
     gint * encode_status);
 
@@ -92,6 +95,7 @@ GstElement *gst_source = NULL;
 GstElement *gst_metadata_demux = NULL;
 GstElement *gst_metadata_mux = NULL;
 GstElement *gst_image_dec = NULL;
+GstElement *gst_image_enc = NULL;
 GstElement *gst_video_scale = NULL;
 GstElement *gst_video_convert = NULL;
 GstElement *gst_video_sink = NULL;
@@ -107,6 +111,8 @@ GtkWidget *ui_tree = NULL;
 
 GtkEntry *ui_entry_insert_tag = NULL;
 GtkEntry *ui_entry_insert_value = NULL;
+
+GtkToggleButton *ui_chk_bnt_capture = NULL;
 
 GString *filename = NULL;
 
@@ -278,6 +284,29 @@ on_buttonInsert_clicked (GtkButton * button, gpointer user_data)
 
 }
 
+static void
+setup_new_filename (GString * str, const gchar * ext)
+{
+  int i = 0;
+
+  for (i = str->len - 1; i > 0; --i) {
+    if (str->str[i] == '/') {
+      ++i;
+      break;
+    }
+  }
+  g_string_insert (str, i, "_new_");
+  if (ext) {
+    int len = strlen (ext);
+
+    if (len > str->len)
+      g_string_append (str, ext);
+    else if (strcasecmp (ext, &str->str[str->len - len]))
+      g_string_append (str, ext);
+
+  }
+}
+
 void
 on_buttonSaveFile_clicked (GtkButton * button, gpointer user_data)
 {
@@ -290,14 +319,22 @@ on_buttonSaveFile_clicked (GtkButton * button, gpointer user_data)
 
   src_file = g_string_new (filename->str);
 
-  g_string_prepend (filename, "_new_");
-  remove (filename->str);
+  if (gtk_toggle_button_get_active (ui_chk_bnt_capture)) {
+    setup_new_filename (filename, ".jpg");
+    if (me_gst_setup_capture_pipeline (src_file->str, filename->str,
+            &enc_status)) {
+      goto done;
+    }
+  } else {
+    setup_new_filename (filename, NULL);
+    if (me_gst_setup_encode_pipeline (src_file->str, filename->str,
+            &enc_status)) {
+      goto done;
+    }
+  }
 
   ui_refresh ();
-
-  if (me_gst_setup_encode_pipeline (src_file->str, filename->str, &enc_status)) {
-    goto done;
-  }
+  remove (filename->str);
 
   if (tag_list && gst_metadata_mux) {
     GstTagSetter *setter = GST_TAG_SETTER (gst_metadata_mux);
@@ -340,6 +377,14 @@ done:
   if (src_file)
     g_string_free (src_file, TRUE);
 
+}
+
+void
+on_checkbuttonCapture_toggled (GtkToggleButton * togglebutton,
+    gpointer user_data)
+{
+  if (gtk_toggle_button_get_active (togglebutton)) {
+  }
 }
 
 /*
@@ -498,8 +543,12 @@ ui_create ()
   ui_entry_insert_value =
       GTK_ENTRY (glade_xml_get_widget (ui_glade_xml, "entryValue"));
 
+  ui_chk_bnt_capture =
+      GTK_TOGGLE_BUTTON (glade_xml_get_widget (ui_glade_xml,
+          "checkbuttonCapture"));
+
   if (!(ui_main_window && ui_drawing && ui_tree && ui_entry_insert_tag
-          && ui_entry_insert_value)) {
+          && ui_entry_insert_value && ui_chk_bnt_capture)) {
     fprintf (stderr, "Some widgets couldn't be created\n");
     ret = -105;
     goto done;
@@ -648,6 +697,10 @@ me_gst_cleanup_elements ()
     gst_object_unref (gst_image_dec);
     gst_image_dec = NULL;
   }
+  if (gst_image_enc) {
+    gst_object_unref (gst_image_enc);
+    gst_image_enc = NULL;
+  }
   if (gst_video_scale) {
     gst_object_unref (gst_video_scale);
     gst_video_scale = NULL;
@@ -689,6 +742,76 @@ is_png (const gchar * filename)
 
   if (0 == strcasecmp (filename + (len - 4), ".png"))
     ret = TRUE;
+
+done:
+
+  return ret;
+
+}
+
+static int
+me_gst_setup_capture_pipeline (const gchar * src_file, const gchar * dest_file,
+    gint * encode_status)
+{
+  int ret = 0;
+  GstBus *bus = NULL;
+  gboolean linked;
+
+  *encode_status = ENC_ERROR;
+
+  me_gst_cleanup_elements ();
+
+  /* create elements */
+  gst_source = gst_element_factory_make ("v4l2src", NULL);
+  gst_video_convert = gst_element_factory_make ("ffmpegcolorspace", NULL);
+  gst_image_enc = gst_element_factory_make ("jpegenc", NULL);
+  gst_metadata_mux = gst_element_factory_make ("metadatamux", NULL);
+  gst_file_sink = gst_element_factory_make ("filesink", NULL);
+
+  if (!(gst_source && gst_video_convert && gst_image_enc && gst_metadata_mux
+          && gst_file_sink)) {
+    fprintf (stderr, "An element couldn't be created for ecoding\n");
+    ret = -300;
+    goto done;
+  }
+
+  /* create gst_pipeline */
+  gst_pipeline = gst_pipeline_new (NULL);
+
+  if (NULL == gst_pipeline) {
+    fprintf (stderr, "Pipeline couldn't be created\n");
+    ret = -305;
+    goto done;
+  }
+
+  /* set elements's properties */
+  g_object_set (gst_source, "num-buffers", 1, NULL);
+  g_object_set (gst_file_sink, "location", dest_file, NULL);
+
+  /* adding and linking elements */
+  gst_bin_add_many (GST_BIN (gst_pipeline), gst_source, gst_video_convert,
+      gst_image_enc, gst_metadata_mux, gst_file_sink, NULL);
+
+  linked =
+      gst_element_link_many (gst_source, gst_video_convert, gst_image_enc,
+      gst_metadata_mux, gst_file_sink, NULL);
+
+  /* now element are owned by pipeline (for videosink we keep a extra ref) */
+  gst_source = gst_video_convert = gst_image_enc = gst_file_sink = NULL;
+  gst_object_ref (gst_metadata_mux);
+
+  if (!linked) {
+    fprintf (stderr, "Elements couldn't be linked\n");
+    ret = -310;
+    goto done;
+  }
+
+  *encode_status = ENC_UNKNOWN;
+
+  /* adding message bus */
+  bus = gst_pipeline_get_bus (GST_PIPELINE (gst_pipeline));
+  gst_bus_add_watch (bus, me_gst_bus_callback_encode, encode_status);
+  gst_object_unref (bus);
 
 done:
 
