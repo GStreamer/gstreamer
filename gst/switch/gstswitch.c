@@ -381,6 +381,10 @@ static void gst_stream_selector_release_pad (GstElement * element,
     GstPad * pad);
 static GList *gst_stream_selector_get_linked_pads (GstPad * pad);
 static GstCaps *gst_stream_selector_getcaps (GstPad * pad);
+static void gst_stream_selector_block (GstStreamSelector * self);
+static void gst_stream_selector_switch (GstStreamSelector * self,
+    const gchar * pad_name, GstClockTime stop_time, GstClockTime start_time);
+
 static GstElementClass *parent_class = NULL;
 
 GType
@@ -467,6 +471,9 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
       G_STRUCT_OFFSET (GstStreamSelectorClass, switch_),
       NULL, NULL, gst_switch_marshal_VOID__STRING_UINT64_UINT64,
       G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_UINT64, G_TYPE_UINT64);
+
+  klass->block = GST_DEBUG_FUNCPTR (gst_stream_selector_block);
+  klass->switch_ = GST_DEBUG_FUNCPTR (gst_stream_selector_switch);
 }
 
 static void
@@ -712,6 +719,19 @@ gst_stream_selector_release_pad (GstElement * element, GstPad * pad)
 
   gst_pad_set_active (pad, FALSE);
   gst_element_remove_pad (GST_ELEMENT (sel), pad);
+}
+
+static void
+gst_stream_selector_block (GstStreamSelector * self)
+{
+  return;
+}
+
+static void
+gst_stream_selector_switch (GstStreamSelector * self, const gchar * pad_name,
+    GstClockTime stop_time, GstClockTime start_time)
+{
+  return;
 }
 
 static gboolean

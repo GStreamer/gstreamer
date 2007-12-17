@@ -1,5 +1,12 @@
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/switch/gstswitch.h (struct _GstStreamSelectorClass): Fix
+	vmethod prototypes.
+
+	* gst/switch/gstswitch.c (gst_stream_selector_class_init)
+	(gst_stream_selector_block, gst_stream_selector_switch): Add empty
+	vmethod definitions. Patch 3/12.
+
 	* gst/switch/gstswitch.h (struct _GstStreamSelectorClass): 
 	* gst/switch/gstswitch.c (gst_stream_selector_class_init): Add
 	`block' and `switch' signals.
