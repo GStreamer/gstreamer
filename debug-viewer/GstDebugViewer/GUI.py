@@ -518,6 +518,10 @@ class FilteredLogModel (FilteredLogModelBase):
 
     def line_index_from_super (self, super_line_index):
 
+        if len (self.filters) == 0:
+            # Identity.
+            return super_line_index
+
         try:
             return self.from_super_index[super_line_index]
         except KeyError:
@@ -525,25 +529,37 @@ class FilteredLogModel (FilteredLogModelBase):
 
     def line_index_to_super (self, line_index):
 
+        if len (self.filters) == 0:
+            # Identity.
+            return line_index
+
         return self.super_index[line_index]
 
-    def super_model_changed (self):
+    def super_model_changed_range (self):
 
-        from bisect import bisect_right
+        range_model = self.super_model
+        super_start, super_end = range_model.line_index_range
 
-        self.reset () # FIXME: Only remove obsolete lines.
+        start_index = self.line_index_from_super (super_start)
+        end_index = self.line_index_from_super (super_end)
 
-        if not self.filters:
-            return
-        filter = self.filters[0] # FIXME
-        enum = self.super_model.iter_rows_offset ()
-        for row, offset in enum:
-            if not offset in self.line_offsets: # FIXME: Slow test.
-                if filter.filter_func (row):
-                    # FIXME: This assumes that offsets are consecutive.
-                    position = bisect_right (self.line_offsets, offset)
-                    self.line_offsets.insert (position, offset)
-                    self.line_levels.insert (position, row[self.COL_LEVEL])
+        last_index = len (self.line_offsets) - 1
+        if end_index < last_index:
+            self.__remove_range (end_index + 1, last_index - 1)
+
+        if start_index > 0:
+            self.__remove_range (0, start_index - 1)
+
+    def __remove_range (self, start, end):
+
+        del self.line_offsets[start:end + 1]
+        del self.line_levels[start:end + 1]
+        for super_index in self.super_index[start:end + 1]:
+            del self.from_super_index[super_index]
+        del self.super_index[start:end + 1]
+        if start > 0:
+            for super_index in self.super_index:
+                self.from_super_index[super_index] -= start
 
 class Filter (object):
 
@@ -584,14 +600,16 @@ class SubRange (object):
 
     def __len__ (self):
 
-        return self.end - self.start
+        return self.end - self.start + 1
 
     def __iter__ (self):
 
+        # FIXME: Use itertools, should be faster!
         l = self.l
         i = self.start
         while i <= self.end:
             yield l[i]
+            i += 1
 
 class RangeFilteredLogModel (FilteredLogModelBase):
 
@@ -608,6 +626,10 @@ class RangeFilteredLogModel (FilteredLogModelBase):
                                       start_index, last_index)
         self.line_levels = SubRange (self.super_model.line_levels,
                                      start_index, last_index)
+
+    def reset (self):
+
+        self.set_range (0, len (self.super_model) - 1,)
 
     def line_index_to_super (self, line_index):
 
@@ -1343,17 +1365,17 @@ class LineView (object):
 
     def handle_log_view_row_activated (self, view, path, column):
 
-        log_filter = view.props.model
+        log_model = view.props.model
         line_index = path[0]
 
-        super_line_index = log_filter.line_index_to_super (line_index)
+        super_line_index = log_model.line_index_to_super (line_index)
         line_model = self.line_view.props.model
         if line_model is None:
             return
 
         if len (line_model):
             timestamps = [row[line_model.COL_TIME] for row in line_model]
-            row = log_filter[(line_index,)]
+            row = log_model[(line_index,)]
             from bisect import bisect_right
             position = bisect_right (timestamps, row[line_model.COL_TIME])
         else:
@@ -1481,8 +1503,7 @@ class Window (object):
         self.actions.add_group (self.column_manager.action_group)
 
         self.log_file = None
-        self.log_model = LazyLogModel ()
-        self.log_filter = FilteredLogModelIdentity (self.log_model)
+        self.setup_model (LazyLogModel ())
 
         glade_filename = os.path.join (Main.Paths.data_dir, "gst-debug-viewer.glade")
         self.widget_factory = Common.GUI.WidgetFactory (glade_filename)
@@ -1509,6 +1530,16 @@ class Window (object):
 
         self.attach ()
         self.column_manager.attach (self.log_view)
+
+    def setup_model (self, model, filter = False):
+
+        self.log_model = model
+        self.log_range = RangeFilteredLogModel (self.log_model)
+        if filter:
+            self.log_filter = FilteredLogModel (self.log_range)
+            self.log_filter.handle_process_finished = self.handle_log_filter_process_finished
+        else:
+            self.log_filter = None
 
     def get_top_attach_point (self):
 
@@ -1592,8 +1623,10 @@ class Window (object):
         self.logger.debug ("requesting close from app")
         self.app.close_window (self)
 
-    def change_model (self, model):
+    def update_model (self, model = None):
 
+        if model is None:
+            model = self.log_view.props.model
         selected_index = None
         previous_model = self.log_view.props.model
         if previous_model:
@@ -1604,6 +1637,9 @@ class Window (object):
             else:
                 selected_index = previous_model.line_index_to_super (line_index)
 
+        if previous_model == model:
+            # Force update.
+            self.log_view.set_model (None)
         self.log_view.props.model = model
 
         if selected_index is None:
@@ -1682,21 +1718,23 @@ class Window (object):
 
     def handle_hide_after_line_action_activate (self, action):
 
-        first_index = self.log_filter.line_index_to_top (0)
+        model = self.log_view.props.model
+        first_index = model.line_index_to_top (0)
         try:
             filtered_line_index = self.get_active_line_index ()
         except ValueError:
             return
-        last_index = self.log_filter.line_index_to_top (filtered_line_index)
+        last_index = model.line_index_to_top (filtered_line_index)
 
         self.logger.info ("hiding lines after %i (abs %i), first line is abs %i",
                           filtered_line_index,
                           last_index,
                           first_index)
 
-        self.log_filter = RangeFilteredLogModel (self.log_model)
-        self.log_filter.set_range (first_index, last_index + 1)
-        self.change_model (self.log_filter)
+        self.log_range.set_range (first_index, last_index)
+        if self.log_filter:
+            self.log_filter.super_model_changed_range ()
+        self.update_model ()
         self.actions.show_hidden_lines.props.sensitive = True
 
     def handle_hide_before_line_action_activate (self, action):
@@ -1705,26 +1743,27 @@ class Window (object):
             filtered_line_index = self.get_active_line_index ()
         except ValueError:
             return
-        first_index = self.log_filter.line_index_to_top (filtered_line_index)
-        last_index = self.log_filter.line_index_to_top (len (self.log_filter) - 1)
+        model = self.log_view.props.model
+        first_index = model.line_index_to_top (filtered_line_index)
+        last_index = model.line_index_to_top (len (model) - 1)
 
         self.logger.info ("hiding lines before %i (abs %i), last line is abs %i",
                           filtered_line_index,
                           first_index,
                           last_index)
 
-        self.log_filter = RangeFilteredLogModel (self.log_model)
-        self.log_filter.set_range (first_index, last_index)
-        self.change_model (self.log_filter)
+        self.log_range.set_range (first_index, last_index)
+        if self.log_filter:
+            self.log_filter.super_model_changed_range ()
+        self.update_model ()
         self.actions.show_hidden_lines.props.sensitive = True
 
     def handle_show_hidden_lines_action_activate (self, action):
 
         self.logger.info ("restoring model filter to show all lines")
-        if hasattr (self, "model_filter"):
-            del self.model_filter # FIXME
-        self.log_filter = FilteredLogModelIdentity (self.log_model)
-        self.change_model (self.log_filter)
+        self.log_range.reset ()
+        self.log_filter = None
+        self.update_model (self.log_range)
         self.actions.show_hidden_lines.props.sensitive = False
 
     def handle_edit_copy_line_action_activate (self, action):
@@ -1750,21 +1789,14 @@ class Window (object):
         dispatcher = Common.Data.GSourceDispatcher ()
         self.filter_dispatcher = dispatcher
 
-        if not hasattr (self, "model_filter"): # FIXME
-            self.had_model_filter = False
-            model = FilteredLogModel (self.log_model)
-            model.handle_process_finished = self.handle_model_filter_process_finished
-            model.add_filter (filter, dispatcher = dispatcher)
-            self.model_filter = model
-
-            # FIXME: Unsetting the model to keep e.g. the dispatched timeline
-            # sentinel from collecting data while we filter idly, which slows
-            # things down for nothing.
-            self.log_view.set_model (None)
-        else:
-            self.had_model_filter = True
-            self.log_view.set_model (None)
-            self.model_filter.add_filter (filter, dispatcher = dispatcher)
+        # FIXME: Unsetting the model to keep e.g. the dispatched timeline
+        # sentinel from collecting data while we filter idly, which slows
+        # things down for nothing.
+        self.log_view.set_model (None)
+        if self.log_filter is None:
+            self.log_filter = FilteredLogModel (self.log_range)
+            self.log_filter.handle_process_finished = self.handle_log_filter_process_finished
+        self.log_filter.add_filter (filter, dispatcher = dispatcher)
 
         gobject.timeout_add (250, self.update_filter_progress)
 
@@ -1773,7 +1805,12 @@ class Window (object):
         if self.progress_dialog is None:
             return False
 
-        progress = self.model_filter.get_filter_progress ()
+        try:
+            progress = self.log_filter.get_filter_progress ()
+        except ValueError:
+            self.logger.warning ("no filter process running")
+            return False
+
         self.progress_dialog.update (progress)
 
         return True
@@ -1788,20 +1825,17 @@ class Window (object):
         # FIXME: Implement filter cancelling correctly; the stuff below does
         # not work.
         
-        self.model_filter.abort_process ()
-        self.model_filter.reset ()
+        self.log_filter.abort_process ()
+        self.log_filter.reset ()
         # FIXME:
         self.actions.show_hidden_lines.activate ()
 
-    def handle_model_filter_process_finished (self):
+    def handle_log_filter_process_finished (self):
 
         self.progress_dialog.destroy ()
         self.progress_dialog = None
 
-        if not self.had_model_filter: # FIXME
-            self.change_model (self.model_filter)
-        else:
-            self.log_view.props.model = self.model_filter
+        self.update_model (self.log_filter)
 
         self.actions.show_hidden_lines.props.sensitive = True
 
@@ -1858,8 +1892,7 @@ class Window (object):
             self.logger.debug ("setting log file %r", filename)
 
             try:
-                self.log_model = LazyLogModel ()
-                self.log_filter = FilteredLogModelIdentity (self.log_model)
+                self.setup_model (LazyLogModel ())
                 
                 self.dispatcher = Common.Data.GSourceDispatcher ()
                 self.log_file = Data.LogFile (filename, self.dispatcher)
@@ -1931,18 +1964,19 @@ class Window (object):
         self.progress_dialog = None
 
         self.log_model.set_log (self.log_file)
-        self.log_filter = FilteredLogModelIdentity (self.log_model)
+        self.log_range.reset ()
+        self.log_filter = None
 
         self.actions.reload_file.props.sensitive = True
         self.actions.groups["RowActions"].props.sensitive = True
         self.actions.show_hidden_lines.props.sensitive = False
 
         def idle_set ():
-            self.log_view.props.model = self.log_filter
+            self.log_view.props.model = self.log_range
             self.line_view.handle_attach_log_file (self)
             for feature in self.features:
                 feature.handle_attach_log_file (self, self.log_file)
-            if len (self.log_filter):
+            if len (self.log_range):
                 sel = self.log_view.get_selection ()
                 sel.select_path ((0,))
             return False
