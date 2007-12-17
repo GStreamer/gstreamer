@@ -1,3 +1,10 @@
+2007-12-17  David Schleef  <ds@schleef.org>
+
+	* gst/multifile/gstmultifilesrc.c:
+	* gst/multifile/gstmultifilesrc.h:
+	  When subsequent files are read, if the file doesn't exist, send
+	  an EOS instead of causing an error.
+
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
 	* gst/switch/gstswitch.c (gst_selector_pad_chain): Return OK when

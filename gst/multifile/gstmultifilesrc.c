@@ -155,6 +155,7 @@ gst_multi_file_src_init (GstMultiFileSrc * multifilesrc,
 
   multifilesrc->index = DEFAULT_INDEX;
   multifilesrc->filename = g_strdup (DEFAULT_LOCATION);
+  multifilesrc->successful_read = FALSE;
 }
 
 static void
@@ -279,7 +280,13 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
 
   file = fopen (filename, "rb");
   if (!file) {
-    goto handle_error;
+    if (multifilesrc->successful_read) {
+      /* If we've read at least one buffer successfully, not finding the
+       * next file is EOS. */
+      return GST_FLOW_UNEXPECTED;
+    } else {
+      goto handle_error;
+    }
   }
 
   fseek (file, 0, SEEK_END);
@@ -293,6 +300,7 @@ gst_multi_file_src_create (GstPushSrc * src, GstBuffer ** buffer)
     goto handle_error;
   }
 
+  multifilesrc->successful_read = TRUE;
   multifilesrc->index++;
 
   GST_BUFFER_SIZE (buf) = size;
