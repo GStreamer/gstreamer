@@ -1,3 +1,10 @@
+2007-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-media.c: (gst_riff_create_audio_caps):
+	Yet another fix for broken software that produce files with an empty
+	blockalign field. Instead of completely failing, make a second attempt
+	at guessing the width/depth by looking at strf->size.
+
 2007-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst-libs/gst/cdda/gstcddabasesrc.c: (gst_cdda_base_src_do_seek),
