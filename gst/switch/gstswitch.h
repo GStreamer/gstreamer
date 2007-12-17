@@ -49,6 +49,7 @@ struct _GstStreamSelector {
 
   GstSegment segment;
 
+  GCond *blocked_cond;
   gboolean blocked;
   gboolean pending_stop;
   GstSegment pending_stop_segment;

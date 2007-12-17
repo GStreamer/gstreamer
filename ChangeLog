@@ -1,5 +1,13 @@
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/switch/gstswitch.h (struct _GstStreamSelector): 
+
+	* gst/switch/gstswitch.c (gst_stream_selector_wait)
+	(gst_selector_pad_chain, gst_stream_selector_init)
+	(gst_stream_selector_dispose): Add infrastructure for new blocking
+	mechanism that does not use gst_pad_set_blocked, which does not
+	work on sink pads. Patch 7/12.
+
 	* gst/switch/gstswitch.c (gst_stream_selector_class_init)
 	(gst_stream_selector_get_property): Add last-stop-time readable
 	property. Patch 6/12.

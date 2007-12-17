@@ -314,6 +314,25 @@ gst_selector_pad_bufferalloc (GstPad * pad, guint64 offset,
   return result;
 }
 
+static gboolean
+gst_stream_selector_wait (GstStreamSelector * self, GstPad * pad)
+{
+  gboolean flushing;
+
+  GST_OBJECT_LOCK (self);
+
+  while (self->blocked)
+    g_cond_wait (self->blocked_cond, GST_OBJECT_GET_LOCK (self));
+
+  GST_OBJECT_UNLOCK (self);
+
+  GST_OBJECT_LOCK (pad);
+  flushing = GST_PAD_IS_FLUSHING (pad);
+  GST_OBJECT_UNLOCK (pad);
+
+  return flushing;
+}
+
 static GstFlowReturn
 gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
 {
@@ -327,6 +346,9 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
   selpad = GST_SELECTOR_PAD_CAST (pad);
   seg = &selpad->segment;
+
+  if (gst_stream_selector_wait (sel, pad))
+    goto ignore;
 
   active_sinkpad = gst_stream_selector_activate_sinkpad (sel, pad);
 
@@ -368,7 +390,6 @@ ignore:
     res = GST_FLOW_NOT_LINKED;
     goto done;
   }
-
 }
 
 static void gst_stream_selector_dispose (GObject * object);
@@ -497,6 +518,9 @@ gst_stream_selector_init (GstStreamSelector * sel)
   sel->active_sinkpad = NULL;
   sel->nb_sinkpads = 0;
   gst_segment_init (&sel->segment, GST_FORMAT_UNDEFINED);
+
+  sel->blocked_cond = g_cond_new ();
+  sel->blocked = FALSE;
 }
 
 static void
@@ -507,6 +531,11 @@ gst_stream_selector_dispose (GObject * object)
   if (sel->active_sinkpad) {
     gst_object_unref (sel->active_sinkpad);
     sel->active_sinkpad = NULL;
+  }
+
+  if (sel->blocked_cond) {
+    g_cond_free (sel->blocked_cond);
+    sel->blocked_cond = NULL;
   }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
