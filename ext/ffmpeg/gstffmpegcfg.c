@@ -87,7 +87,7 @@ gst_ffmpeg_mb_decision_get_type (void)
     static const GEnumValue ffmpeg_mb_decisions[] = {
       {FF_MB_DECISION_SIMPLE, "Use method set by mb-cmp", "simple"},
       {FF_MB_DECISION_BITS,
-            "Chooses the one which needs the fewest bits aka vhq mode", "bits"},
+          "Chooses the one which needs the fewest bits aka vhq mode", "bits"},
       {FF_MB_DECISION_RD, "Rate Distortion", "rd"},
       {0, NULL, NULL},
     };
@@ -223,6 +223,7 @@ gst_ffmpeg_pre_me_get_type (void)
       {0, "Disabled", "off"},
       {1, "Only after I-frames", "key"},
       {2, "Always", "all"},
+      {0, NULL, NULL}
     };
 
     ffmpeg_pre_me_type =
@@ -243,6 +244,7 @@ gst_ffmpeg_pred_method_get_type (void)
       {FF_PRED_LEFT, "Left", "left"},
       {FF_PRED_PLANE, "Plane", "plane"},
       {FF_PRED_MEDIAN, "Median", "median"},
+      {0, NULL, NULL}
     };
 
     ffmpeg_pred_method =
@@ -265,22 +267,22 @@ gst_ffmpeg_flags_get_type (void)
       {CODEC_FLAG_GMC, "GMC", "gmc"},
       {CODEC_FLAG_MV0, "Always try a MB with MV (0,0)", "mv0"},
       {CODEC_FLAG_PART,
-            "Store MV, DC and AC coefficients in seperate partitions", "part"},
+          "Store MV, DC and AC coefficients in seperate partitions", "part"},
       {CODEC_FLAG_GRAY, "Only decode/encode grayscale", "gray"},
       {CODEC_FLAG_NORMALIZE_AQP,
-            "Normalize Adaptive Quantization (masking, etc)", "aqp"},
+          "Normalize Adaptive Quantization (masking, etc)", "aqp"},
       {CODEC_FLAG_TRELLIS_QUANT, "Trellis Quantization", "trellis"},
       {CODEC_FLAG_GLOBAL_HEADER,
             "Global headers in extradata instead of every keyframe",
-            "global-headers"},
+          "global-headers"},
       {CODEC_FLAG_AC_PRED, "H263 Advanced Intra Coding / MPEG4 AC prediction",
-            "aic"},
+          "aic"},
       {CODEC_FLAG_H263P_UMV, "Unlimited Motion Vector", "umv"},
       {CODEC_FLAG_CBP_RD, "Rate Distoration Optimization for CBP", "cbp-rd"},
       {CODEC_FLAG_QP_RD, "Rate Distoration Optimization for QP selection",
-            "qp-rd"},
+          "qp-rd"},
       {CODEC_FLAG_SVCD_SCAN_OFFSET,
-            "Reserve space for SVCD scan offset user data", "scanoffset"},
+          "Reserve space for SVCD scan offset user data", "scanoffset"},
       {CODEC_FLAG_CLOSED_GOP, "Closed GOP", "closedgop"},
       {0, NULL, NULL},
     };

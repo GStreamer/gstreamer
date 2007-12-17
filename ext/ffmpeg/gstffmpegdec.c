@@ -230,7 +230,8 @@ gst_ffmpegdec_base_init (GstFFMpegDecClass * klass)
   details.description = g_strdup_printf ("FFMPEG %s decoder",
       params->in_plugin->name);
   details.author = "Wim Taymans <wim@fluendo.com>, "
-      "Ronald Bultje <rbultje@ronald.bitfreak.net>";
+      "Ronald Bultje <rbultje@ronald.bitfreak.net>, "
+      "Edward Hervey <bilboed@bilboed.com>";
   gst_element_class_set_details (element_class, &details);
   g_free (details.longname);
   g_free (details.klass);
@@ -497,6 +498,7 @@ gst_ffmpegdec_open (GstFFMpegDec * ffmpegdec)
     case CODEC_ID_MPEG4:
     case CODEC_ID_MJPEG:
     case CODEC_ID_MP3:
+  case CODEC_ID_VC1:
       GST_LOG_OBJECT (ffmpegdec, "not using parser, blacklisted codec");
       ffmpegdec->pctx = NULL;
       break;
@@ -693,6 +695,8 @@ gst_ffmpegdec_get_buffer (AVCodecContext * context, AVFrame * picture)
 
   switch (context->codec_type) {
     case CODEC_TYPE_VIDEO:
+    /* some ffmpeg video plugins don't see the point in setting codec_type ... */
+    case CODEC_TYPE_UNKNOWN:
       avcodec_align_dimensions (context, &width, &height);
 
       bufsize = avpicture_get_size (context->pix_fmt, width, height);
@@ -1586,7 +1590,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
     GstBuffer ** outbuf, GstFlowReturn * ret)
 {
   gint len = -1;
-  gint have_data;
+  gint have_data = AVCODEC_MAX_AUDIO_FRAME_SIZE;
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "size:%d, ts:%" GST_TIME_FORMAT ", dur:%" GST_TIME_FORMAT
@@ -1602,7 +1606,7 @@ gst_ffmpegdec_audio_frame (GstFFMpegDec * ffmpegdec,
     ffmpegdec->last_buffer = NULL;
   }
 
-  len = avcodec_decode_audio (ffmpegdec->context,
+  len = avcodec_decode_audio2 (ffmpegdec->context,
       (int16_t *) GST_BUFFER_DATA (*outbuf), &have_data, data, size);
   GST_DEBUG_OBJECT (ffmpegdec,
       "Decode audio: len=%d, have_data=%d", len, have_data);
@@ -2242,10 +2246,18 @@ gst_ffmpegdec_register (GstPlugin * plugin)
 
   in_plugin = first_avcodec;
 
+  GST_LOG ("Registering decoders");
+
   while (in_plugin) {
     GstFFMpegDecClassParams *params;
     GstCaps *srccaps = NULL, *sinkcaps = NULL;
     gchar *type_name;
+    gchar *plugin_name;
+
+    /* only decoders */
+    if (!in_plugin->decode) {
+      goto next;
+    }
 
     /* no quasi-codecs, please */
     if (in_plugin->id == CODEC_ID_RAWVIDEO ||
@@ -2254,30 +2266,46 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       goto next;
     }
 
-    /* only decoders */
-    if (!in_plugin->decode) {
+    /* no codecs for which we're GUARANTEED to have better alternatives */
+    /* MPEG1VIDEO : the mpeg2video decoder is preferred */
+    /* MP2 : Use MP3 for decoding */
+    if (!strcmp (in_plugin->name, "gif") ||
+        !strcmp (in_plugin->name, "vorbis") ||
+        !strcmp (in_plugin->name, "mpeg1video") ||
+        !strcmp (in_plugin->name, "mp2")) {
+      GST_LOG ("Ignoring decoder %s", in_plugin->name);
       goto next;
     }
 
     /* name */
     if (!gst_ffmpeg_get_codecid_longname (in_plugin->id)) {
-      GST_INFO ("Add decoder %s (%d) please", in_plugin->name, in_plugin->id);
+      GST_WARNING ("Add a longname mapping for decoder %s (%d) please",
+          in_plugin->name, in_plugin->id);
       goto next;
     }
 
     /* first make sure we've got a supported type */
     sinkcaps = gst_ffmpeg_codecid_to_caps (in_plugin->id, NULL, FALSE);
+    if (!sinkcaps) {
+      GST_WARNING ("Couldn't get input caps for decoder '%s'", in_plugin->name);
+    }
     if (in_plugin->type == CODEC_TYPE_VIDEO) {
       srccaps = gst_caps_from_string ("video/x-raw-rgb; video/x-raw-yuv");
     } else {
       srccaps =
           gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL, in_plugin->id);
     }
-    if (!sinkcaps || !srccaps)
+    if (!sinkcaps || !srccaps) {
+      GST_WARNING ("Couldn't get source or sink caps for decoder %s",
+          in_plugin->name);
       goto next;
+    }
 
     /* construct the type */
-    type_name = g_strdup_printf ("ffdec_%s", in_plugin->name);
+    plugin_name = g_strdup ((gchar *) in_plugin->name);
+    g_strdelimit (plugin_name, NULL, '_');
+    type_name = g_strdup_printf ("ffdec_%s", plugin_name);
+    g_free (plugin_name);
 
     /* if it's already registered, drop it */
     if (g_type_from_name (type_name)) {
@@ -2337,6 +2365,8 @@ gst_ffmpegdec_register (GstPlugin * plugin)
       gst_caps_unref (srccaps);
     in_plugin = in_plugin->next;
   }
+
+  GST_LOG ("Finished Registering decoders");
 
   return TRUE;
 }

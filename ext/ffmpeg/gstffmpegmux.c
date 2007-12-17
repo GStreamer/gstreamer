@@ -481,7 +481,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     ffmpegmux->opened = TRUE;
 
     /* flush the header so it will be used as streamheader */
-    put_flush_packet (&ffmpegmux->context->pb);
+    put_flush_packet (ffmpegmux->context->pb);
   }
 
   /* take the one with earliest timestamp,
@@ -556,8 +556,8 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     /* close down */
     av_write_trailer (ffmpegmux->context);
     ffmpegmux->opened = FALSE;
-    put_flush_packet (&ffmpegmux->context->pb);
-    url_fclose (&ffmpegmux->context->pb);
+    put_flush_packet (ffmpegmux->context->pb);
+    url_fclose (ffmpegmux->context->pb);
     gst_pad_push_event (ffmpegmux->srcpad, gst_event_new_eos ());
     return GST_FLOW_UNEXPECTED;
   }
@@ -598,7 +598,7 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
       }
       if (ffmpegmux->opened) {
         ffmpegmux->opened = FALSE;
-        url_fclose (&ffmpegmux->context->pb);
+        url_fclose (ffmpegmux->context->pb);
       }
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
@@ -673,6 +673,8 @@ gst_ffmpegmux_register (GstPlugin * plugin)
 
   in_plugin = first_oformat;
 
+  GST_LOG ("Registering muxers");
+
   while (in_plugin) {
     gchar *type_name;
     gchar *p;
@@ -682,11 +684,15 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     /* Try to find the caps that belongs here */
     srccaps = gst_ffmpeg_formatid_to_caps (in_plugin->name);
     if (!srccaps) {
+      GST_WARNING ("Couldn't get source caps for muxer %s", in_plugin->name);
       goto next;
     }
     if (!gst_ffmpeg_formatid_get_codecids (in_plugin->name,
             &video_ids, &audio_ids)) {
       gst_caps_unref (srccaps);
+      GST_WARNING
+          ("Couldn't get sink caps for muxer %s, mapping maybe missing ?",
+          in_plugin->name);
       goto next;
     }
     videosinkcaps = video_ids ? gst_ffmpegmux_get_id_caps (video_ids) : NULL;
@@ -748,6 +754,8 @@ gst_ffmpegmux_register (GstPlugin * plugin)
   next:
     in_plugin = in_plugin->next;
   }
+
+  GST_LOG ("Finished registering muxers");
 
   return TRUE;
 }

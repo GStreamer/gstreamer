@@ -946,6 +946,8 @@ gst_ffmpegenc_register (GstPlugin * plugin)
 
   in_plugin = first_avcodec;
 
+  GST_LOG ("Registering encoders");
+
   /* build global ffmpeg param/property info */
   gst_ffmpeg_cfg_init ();
 
@@ -967,9 +969,17 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       goto next;
     }
 
+    /* no codecs for which we're GUARANTEED to have better alternatives */
+    if (!strcmp (in_plugin->name, "vorbis") ||
+        !strcmp (in_plugin->name, "gif") || !strcmp (in_plugin->name, "flac")) {
+      GST_LOG ("Ignoring encoder %s", in_plugin->name);
+      goto next;
+    }
+
     /* name */
     if (!gst_ffmpeg_get_codecid_longname (in_plugin->id)) {
-      GST_INFO ("Add encoder %s (%d) please", in_plugin->name, in_plugin->id);
+      GST_WARNING ("Add a longname mapping for encoder %s (%d) please",
+          in_plugin->name, in_plugin->id);
       goto next;
     }
 
@@ -982,9 +992,11 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       sinkcaps =
           gst_ffmpeg_codectype_to_caps (in_plugin->type, NULL, in_plugin->id);
     }
-    if (!sinkcaps || !srccaps)
+    if (!sinkcaps || !srccaps) {
+      GST_WARNING ("Couldn't get either source/sink caps for encoder %s",
+          in_plugin->name);
       goto next;
-
+    }
     /* construct the type */
     type_name = g_strdup_printf ("ffenc_%s", in_plugin->name);
 
@@ -1017,6 +1029,8 @@ gst_ffmpegenc_register (GstPlugin * plugin)
       gst_caps_unref (srccaps);
     in_plugin = in_plugin->next;
   }
+
+  GST_LOG ("Finished registering encoders");
 
   return TRUE;
 }

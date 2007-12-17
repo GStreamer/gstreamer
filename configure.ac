@@ -113,11 +113,14 @@ AM_CONDITIONAL(HAVE_GST_CHECK, test "x$HAVE_GST_CHECK" = "xyes")
 AC_MSG_NOTICE(Using GStreamer Core Plugins in $GST_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
-dnl liboil is required
+dnl liboil is required for cpu detection for libpostproc
+dnl FIXME : In theory we should be able to compile libpostproc with cpudetect
+dnl capabilities, which would enable us to get rid of this
 PKG_CHECK_MODULES(LIBOIL, liboil-$LIBOIL_MAJORMINOR >= $LIBOIL_REQ, HAVE_LIBOIL=yes, HAVE_LIBOIL=no)
 if test "x$HAVE_LIBOIL" != "xyes"
 then
-  AC_ERROR([liboil-$LIBOIL_REQ or later is required])
+  AC_MSG_ERROR([liboil-$LIBOIL_REQ or later is required])
+  AC_ERROR
 fi
 
 AC_SUBST(LIBOIL_CFLAGS)
@@ -150,7 +153,11 @@ if test "x$USE_DEBUG" = xyes; then
 fi
 AC_SUBST(PROFILE_CFLAGS)
 
-DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+if test "x$GST_CVS" = "xyes"; then
+  DEPRECATED_CFLAGS="-DGST_DISABLE_DEPRECATED"
+else
+  DEPRECATED_CFLAGS=""
+fi
 AC_SUBST(DEPRECATED_CFLAGS)
 
 dnl every flag in GST_OPTION_CFLAGS can be overridden at make time
@@ -235,26 +242,48 @@ if test "x$with_system_ffmpeg" = "xyes"; then
   dnl No, this is not too extreme, we want people to see and read the above
   sleep 15
 else
+
+  source ./ffmpegrev 
+  
+  AC_MSG_NOTICE([Using ffmpeg revision $FFMPEG_REVISION])
+  
+  dnl libgstffmpeg.la: include dirs
   FFMPEG_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
                  -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
-                 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec"
-  FFMPEG_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libavformat/libavformat.la"
+                 -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec -Wno-deprecated-declarations"
+
+  dnl libgstffmpeg.la: libs to statically link to        
+  FFMPEG_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libavformat/libavformat.a \
+               \$(top_builddir)/gst-libs/ext/ffmpeg/libavcodec/libavcodec.a \
+               \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a \
+              -lz"
+  dnl
   POSTPROC_CFLAGS="-I \$(top_srcdir)/gst-libs/ext/ffmpeg/libpostproc \
                    -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavformat \
                    -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavutil \
                    -I \$(top_srcdir)/gst-libs/ext/ffmpeg/libavcodec"
-  POSTPROC_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libavcodec/libavcodec.la"
+
+  dnl libgstpostproc.la: libs to statically link to
+  POSTPROC_LIBS="\$(top_builddir)/gst-libs/ext/ffmpeg/libpostproc/libpostproc.a \
+  		 \$(top_builddir)/gst-libs/ext/ffmpeg/libavutil/libavutil.a"
+  				 
   FFMPEG_SUBDIRS=gst-libs
   AC_DEFINE(HAVE_AVI_H)
   AC_DEFINE([FFMPEG_SOURCE], ["local snapshot"], [Describes where the FFmpeg libraries come from.])
-  ac_configure_args="$ac_configure_args --disable-v4l --disable-audio-oss --disable-dv1394 --disable-vhook --disable-ffmpeg --disable-ffserver --disable-ffplay --disable-sdltest --enable-pp"
+  ac_configure_args="$ac_configure_args --disable-vhook --disable-ffserver --disable-ffplay --enable-pp --enable-gpl --enable-static --disable-shared --disable-encoder=flac --disable-decoder=cavs --extra-cflags=-fPIC"
+  AC_SUBST(FFMPEG_CO_DIR)
+  AC_SUBST(FFMPEG_SVN)
+  AC_SUBST(FFMPEG_REVISION)
   AC_CONFIG_SUBDIRS(gst-libs/ext/ffmpeg)
   AC_MSG_NOTICE([Using included FFMpeg code])
 fi
+
 AC_SUBST(FFMPEG_CFLAGS)
 AC_SUBST(FFMPEG_LIBS)
 AC_SUBST(FFMPEG_SUBDIRS)
-
+AC_SUBST(POSTPROC_CFLAGS)
+AC_SUBST(POSTPROC_LIBS)
+  
 AC_DEFINE_UNQUOTED(HAVE_FFMPEG_UNINSTALLED, $HAVE_FFMPEG_UNINSTALLED,
                    [Defined if building against uninstalled FFmpeg source])
 AM_CONDITIONAL(HAVE_FFMPEG_UNINSTALLED, test x$HAVE_FFMPEG_UNINSTALLED = x1)

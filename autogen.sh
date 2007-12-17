@@ -5,6 +5,9 @@ DIE=0
 package=gst-ffmpeg
 srcfile=configure.ac
 
+# FFMPEG specific properties
+. ./ffmpegrev
+
 # a quick cvs co if necessary to alleviate the pain - may remove this
 # when developers get a clue ;)
 if test ! -d common; 
@@ -13,11 +16,16 @@ then
   cvs co common 
 fi
 
-if test ! -f gst-libs/ext/ffmpeg/autogen.sh
-then 
-  rm -rf gst-libs/ext/ffmpeg
-  echo "+ getting ffmpeg from cvs"
-  cvs co mirror-ffmpeg 
+if test ! -f $FFMPEG_CO_DIR/configure
+then
+	# checkout ffmpeg from its repository
+	rm -rf $FFMPEG_CO_DIR
+	echo "+ getting ffmpeg from svn"
+	svn -r $FFMPEG_REVISION co $FFMPEG_SVN $FFMPEG_CO_DIR
+else
+    # update ffmpeg from its repository
+    echo "+ updating ffmpeg checkout"
+    svn -r $FFMPEG_REVISION up $FFMPEG_CO_DIR
 fi
 
 
@@ -30,7 +38,23 @@ then
 fi
 . common/gst-autogen.sh
 
-CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-gtk-doc'
+# Let's check if we can disable the building of the ffmpeg binary
+can_disable=`$FFMPEG_CO_DIR/configure --help | grep 'disable-ffmpeg' | wc -l`
+
+if [ $can_disable != "0" ]
+then
+    CONFIGURE_DEF_OPT="--disable-ffmpeg"
+fi
+
+# Let's clear the 'exit 1' command when we post an Unknown option
+echo "Patching ffmpeg ./configure"
+sed -e '/Unknown option/ {
+N
+N
+s/exit 1/#/
+}' $FFMPEG_CO_DIR/configure > $FFMPEG_CO_DIR/configure.tmp
+mv $FFMPEG_CO_DIR/configure.tmp $FFMPEG_CO_DIR/configure
+chmod +x $FFMPEG_CO_DIR/configure
 
 autogen_options $@
 
@@ -87,17 +111,6 @@ if test -f disable; then
     CONFIGURE_FILE_OPT="$CONFIGURE_FILE_OPT --disable-$a"
   done
 fi
-
-# remove ffmpeg's configure, it's going to get created anyway and it probably
-# conflicted before this too
-rm -f gst-libs/ext/ffmpeg/configure
-
-# now, run ffmpeg's autogen
-echo "+ running autogen.sh in gst-libs/ext/ffmpeg"
-cd gst-libs/ext/ffmpeg
-chmod +x autogen.sh
-./autogen.sh || exit 1
-cd ../../..
 
 test -n "$NOCONFIGURE" && {
   echo "+ skipping configure stage for package $package, as requested."

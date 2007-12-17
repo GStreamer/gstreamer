@@ -193,13 +193,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
   switch (codec_id) {
     case CODEC_ID_MPEG1VIDEO:
-      /* For decoding, CODEC_ID_MPEG2VIDEO is preferred... So omit here */
-      if (encode) {
-        /* FIXME: bitrate */
-        caps = gst_ff_vid_caps_new (context, codec_id, "video/mpeg",
-            "mpegversion", G_TYPE_INT, 1,
-            "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-      }
+      /* FIXME: bitrate */
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/mpeg",
+          "mpegversion", G_TYPE_INT, 1,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
 
     case CODEC_ID_MPEG2VIDEO:
@@ -288,12 +285,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_MP2:
-      /* we use CODEC_ID_MP3 for decoding */
-      if (encode) {
-        /* FIXME: bitrate */
-        caps = gst_ff_aud_caps_new (context, codec_id, "audio/mpeg",
-            "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 2, NULL);
-      }
+      /* FIXME: bitrate */
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/mpeg",
+          "mpegversion", G_TYPE_INT, 1, "layer", G_TYPE_INT, 2, NULL);
       break;
 
     case CODEC_ID_MP3:
@@ -310,26 +304,15 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       }
       break;
 
-    case CODEC_ID_VORBIS:
-      /* This one is disabled for several reasons:
-       * - GStreamer already has perfect Ogg and Vorbis support
-       * - The ffmpeg implementation depends on libvorbis/libogg,
-       *   which are not included in the ffmpeg that GStreamer ships.
-       * - The ffmpeg implementation depends on shared objects between
-       *   the ogg demuxer and vorbis decoder, which GStreamer doesn't.
-       */
+    case CODEC_ID_AC3:
+      /* FIXME: bitrate */
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-ac3", NULL);
       break;
 
-    case CODEC_ID_AC3:
-      /* Decoding is disabled, because:
-       * - it depends on liba52, which we don't ship in ffmpeg.
-       * - we already have a liba52 plugin ourselves.
-       */
-      if (encode) {
-        /* FIXME: bitrate */
-        caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-ac3", NULL);
-      }
+    case CODEC_ID_ATRAC3:
+      caps = gst_ff_aud_caps_new (context, codec_id, "audio/atrac3", NULL);
       break;
+
     case CODEC_ID_DTS:
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-dts", NULL);
       break;
@@ -554,12 +537,15 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp6-flash", NULL);
       break;
 
+    case CODEC_ID_VP6A:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-vp6-alpha", NULL);
+      break;
+
     case CODEC_ID_THEORA:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-theora", NULL);
       break;
 
     case CODEC_ID_AAC:
-    case CODEC_ID_MPEG4AAC:
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/mpeg",
           "mpegversion", G_TYPE_INT, 4, NULL);
       break;
@@ -645,9 +631,13 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
 
     case CODEC_ID_WMV3:
-    case CODEC_ID_VC1:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-wmv",
           "wmvversion", G_TYPE_INT, 3, NULL);
+      break;
+    case CODEC_ID_VC1:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-wmv",
+				  "wmvversion", G_TYPE_INT, 3, "fourcc", GST_TYPE_FOURCC, 
+				  GST_MAKE_FOURCC('W', 'V', 'C', '1'), NULL);
       break;
     case CODEC_ID_QDM2:
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-qdm2", NULL);
@@ -683,6 +673,14 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       } else {
         gst_caps_set_simple (caps, "depth", GST_TYPE_INT_RANGE, 8, 32, NULL);
       }
+      break;
+
+    case CODEC_ID_KMVC:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-kmvc", NULL);
+      break;
+
+    case CODEC_ID_NUV:
+      caps = gst_ff_vid_caps_new (context, codec_id, "video/x-nuv", NULL);
       break;
 
     case CODEC_ID_PNG:
@@ -811,6 +809,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_IMA_DK4:
     case CODEC_ID_ADPCM_IMA_WS:
     case CODEC_ID_ADPCM_IMA_SMJPEG:
+    case CODEC_ID_ADPCM_IMA_AMV:
     case CODEC_ID_ADPCM_MS:
     case CODEC_ID_ADPCM_4XM:
     case CODEC_ID_ADPCM_XA:
@@ -823,6 +822,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case CODEC_ID_ADPCM_SBPRO_2:
     case CODEC_ID_ADPCM_SBPRO_3:
     case CODEC_ID_ADPCM_SBPRO_4:
+    case CODEC_ID_ADPCM_EA_R1:
+    case CODEC_ID_ADPCM_EA_R2:
+    case CODEC_ID_ADPCM_EA_R3:
+    case CODEC_ID_ADPCM_THP:
     {
       gchar *layout = NULL;
 
@@ -844,6 +847,9 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           break;
         case CODEC_ID_ADPCM_IMA_SMJPEG:
           layout = "smjpeg";
+          break;
+        case CODEC_ID_ADPCM_IMA_AMV:
+          layout = "amv";
           break;
         case CODEC_ID_ADPCM_MS:
           layout = "microsoft";
@@ -881,6 +887,18 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
         case CODEC_ID_ADPCM_SBPRO_4:
           layout = "sbpro4";
           break;
+        case CODEC_ID_ADPCM_EA_R1:
+          layout = "ea-r1";
+          break;
+        case CODEC_ID_ADPCM_EA_R2:
+          layout = "ea-r3";
+          break;
+        case CODEC_ID_ADPCM_EA_R3:
+          layout = "ea-r3";
+          break;
+        case CODEC_ID_ADPCM_THP:
+          layout = "thp";
+          break;
         default:
           g_assert (0);         /* don't worry, we never get here */
           break;
@@ -903,6 +921,11 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_AMR_WB:
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/AMR-WB", NULL);
+      break;
+
+    case CODEC_ID_NELLYMOSER:
+      caps =
+          gst_ff_aud_caps_new (context, codec_id, "audio/x-nellymoser", NULL);
       break;
 
     case CODEC_ID_RA_144:
@@ -1571,7 +1594,7 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
             gst_structure_get_int (str, "unknown_svq3_flag",
                 &unknown_svq3_flag)) {
           context->extradata = (guint8 *) av_mallocz (0x64);
-          g_stpcpy (context->extradata, "SVQ3");
+          g_stpcpy ((gchar *) context->extradata, "SVQ3");
           flags = 1 << 3;
           flags |= low_delay;
           flags = flags << 2;
@@ -2032,7 +2055,14 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           id = CODEC_ID_WMV2;
           break;
         case 3:
-          id = CODEC_ID_WMV3;
+	  {
+	    guint32 fourcc;
+	    if (gst_structure_get_fourcc (structure, "fourcc", &fourcc)) {
+	      if (fourcc == GST_MAKE_FOURCC ('W', 'V', 'C', '1'))
+		id = CODEC_ID_VC1;
+	    } else
+	      id = CODEC_ID_WMV3;
+	  }
           break;
       }
     }
@@ -2087,6 +2117,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       audio = TRUE;
   } else if (!strcmp (mimetype, "audio/x-ac3")) {
     id = CODEC_ID_AC3;
+    audio = TRUE;
+  } else if (!strcmp (mimetype, "audio/atrac3")) {
+    id = CODEC_ID_ATRAC3;
     audio = TRUE;
   } else if (!strcmp (mimetype, "audio/x-dts")) {
     id = CODEC_ID_DTS;
@@ -2156,6 +2189,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-vp6-flash")) {
     id = CODEC_ID_VP6F;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-vp6-alpha")) {
+    id = CODEC_ID_VP6A;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-flash-screen")) {
     id = CODEC_ID_FLASHSV;
@@ -2367,6 +2403,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
       }
     }
 
+  } else if (!strcmp (mimetype, "audio/x-nellymoser")) {
+    id = CODEC_ID_NELLYMOSER;
+    audio = TRUE;
   } else if (!strncmp (mimetype, "audio/x-gst_ff-", 15)) {
     gchar ext[16];
     AVCodec *codec;
@@ -2464,6 +2503,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_AC3:
       name = "AC-3 audio";
+      break;
+    case CODEC_ID_ATRAC3:
+      name = "Sony ATRAC-3";
       break;
     case CODEC_ID_DTS:
       name = "DTS Audio";
@@ -2564,6 +2606,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_VP6F:
       name = "VP6 Flash video";
       break;
+    case CODEC_ID_VP6A:
+      name = "VP6 Alpha video";
+      break;
     case CODEC_ID_FLASHSV:
       name = "Flash Screen Video";
       break;
@@ -2571,7 +2616,6 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       name = "Theora video";
       break;
     case CODEC_ID_AAC:
-    case CODEC_ID_MPEG4AAC:
       name = "MPEG-2/4 AAC audio";
       break;
     case CODEC_ID_ASV1:
@@ -2745,6 +2789,12 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
     case CODEC_ID_ADPCM_IMA_SMJPEG:
       name = "IMA/SMJPEG ADPCM audio";
       break;
+    case CODEC_ID_ADPCM_IMA_AMV:
+      name = "IMA/AMV ADPCM audio";
+      break;
+    case CODEC_ID_ADPCM_THP:
+      name = "Nintendo THP ADPCM audio";
+      break;
     case CODEC_ID_ADPCM_MS:
       name = "Microsoft ADPCM audio";
       break;
@@ -2780,6 +2830,15 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_ADPCM_YAMAHA:
       name = "Yamaha ADPCM";
+      break;
+    case CODEC_ID_ADPCM_EA_R1:
+      name = "EA ADPCM R1";
+      break;
+    case CODEC_ID_ADPCM_EA_R2:
+      name = "EA ADPCM R2";
+      break;
+    case CODEC_ID_ADPCM_EA_R3:
+      name = "EA ADPCM R3";
       break;
     case CODEC_ID_RA_144:
       name = "Realaudio 14k4bps";
@@ -2849,6 +2908,15 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_AMR_WB:
       name = "3GPP AMR WideBand speech audio codec";
+      break;
+    case CODEC_ID_KMVC:
+      name = "Karl Morton's video Codec";
+      break;
+    case CODEC_ID_NUV:
+      name = "NuppelVideo codec";
+      break;
+    case CODEC_ID_NELLYMOSER:
+      name = "Nellymoser ASAO audio codec";
       break;
     default:
       GST_LOG ("Unknown codecID 0x%x", codec_id);

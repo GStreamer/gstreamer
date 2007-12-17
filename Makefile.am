@@ -8,7 +8,7 @@ debug:
 	echo $(win32)	
 
 EXTRA_DIST = \
-	gst-ffmpeg.spec depcomp \
+	gst-ffmpeg.spec depcomp ffmpegrev \
 	AUTHORS COPYING NEWS README ChangeLog gst-ffmpeg.doap \
 	$(win32)
 

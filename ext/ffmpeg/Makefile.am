@@ -9,7 +9,9 @@ libgstffmpeg_la_SOURCES = gstffmpeg.c	\
 			  gstffmpegdemux.c	\
 			  gstffmpegmux.c    \
 			  gstffmpegdeinterlace.c	\
-			  gstffmpegscale.c
+			  gstffmpegaudioresample.c
+# 	\
+# 			  gstffmpegscale.c
 
 libgstffmpeg_la_CFLAGS = $(GST_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
 	$(FFMPEG_CFLAGS)

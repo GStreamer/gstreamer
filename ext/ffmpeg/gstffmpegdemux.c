@@ -143,9 +143,6 @@ gst_ffmpegdemux_averror (gint av_errno)
     case AVERROR_NUMEXPECTED:
       message = "Number syntax expected in filename";
       break;
-    case AVERROR_INVALIDDATA:
-      message = "Invalid data found";
-      break;
     case AVERROR_NOMEM:
       message = "Not enough memory";
       break;
@@ -1458,12 +1455,17 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
 
   in_plugin = first_iformat;
 
+  GST_LOG ("Registering demuxers");
+
   while (in_plugin) {
     gchar *type_name, *typefind_name;
     gchar *p, *name = NULL;
     GstCaps *sinkcaps, *audiosrccaps, *videosrccaps;
     gint rank;
     gboolean register_typefind_func = TRUE;
+
+    GST_LOG ("Attempting to handle ffmpeg demuxer plugin %s [%s]",
+        in_plugin->name, in_plugin->long_name);
 
     /* no emulators */
     if (!strncmp (in_plugin->long_name, "raw ", 4) ||
@@ -1546,6 +1548,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     /* Try to find the caps that belongs here */
     sinkcaps = gst_ffmpeg_formatid_to_caps (name);
     if (!sinkcaps) {
+      GST_WARNING ("Couldn't get sinkcaps for demuxer %s", in_plugin->name);
       goto next;
     }
     /* This is a bit ugly, but we just take all formats
@@ -1603,6 +1606,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
     g_free (name);
     in_plugin = in_plugin->next;
   }
+
+  GST_LOG ("Finished registering demuxers");
 
   return TRUE;
 }

@@ -1,3 +1,104 @@
+2007-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* configure.ac:
+	Minor typo in disabling cavs decoder. Now compiles AND works on x86 32
+	and 64 bits ! Time to merge :)
+
+2007-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_to_codecid):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_open):
+	Handle VC-1 properly , which is handled differently from WMV3.
+
+2007-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
+
+	* autogen.sh:
+	Fix call to ffmpegrev
+	* configure.ac:
+	Re-apply -fPIC extra-cflag for ffmpeg while removing support for the
+	flac encoder which is currently broken for x86/32bits with -fPIC.
+	* ffmpegrev:
+	Switch to latest upstream revision so we can have the split-up for
+	flac mmx optimizations.
+
+2007-12-15  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	Based on a patch by:
+	    Hans de Goede <j dot w dot r degoede at hhs dot nl>
+
+	* ext/ffmpeg/gstffmpegcfg.c: (gst_ffmpeg_pre_me_get_type),
+	  (gst_ffmpeg_pred_method_get_type):
+	  NULL-terminate the GEnumValue arrays, otherwise they will cause
+	  crashes. Fixes #503733.
+
+2007-12-09  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Don't define GST_DISABLE_DEPRECATED for releases. Fixes #498181.
+
+2007-11-28  Edward Hervey  <bilboed@bilboed.com>
+
+	* configure.ac:
+	Temporarily remove fPIC option for building ffmpeg
+	* ffmpegrev:
+	Switch to latest ffmpeg checkout so people can enjoy all the niceties
+	that have just landed (mmx optimisations for vc1 and h263, bugfixes,..)
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_collected),
+	(gst_ffmpegmux_change_state):
+	Adjust code to ffmpeg API changes.
+
+2007-11-22  Edward Hervey  <bilboed@bilboed.com>
+
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	(gst_ffmpegaudioresample_get_unit_size),
+	(gst_ffmpegaudioresample_transform):
+	Correct the output size of the buffer.
+
+2007-11-15  Edward Hervey  <bilboed@bilboed.com>
+
+	* ext/ffmpeg/Makefile.am:
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	* ext/ffmpeg/gstffmpeg.h:
+	* ext/ffmpeg/gstffmpegaudioresample.c:
+	(gst_ffmpegaudioresample_base_init),
+	(gst_ffmpegaudioresample_class_init),
+	(gst_ffmpegaudioresample_init), (gst_ffmpegaudioresample_finalize),
+	(gst_ffmpegaudioresample_transform_caps),
+	(gst_ffmpegaudioresample_transform_size),
+	(gst_ffmpegaudioresample_get_unit_size),
+	(gst_ffmpegaudioresample_set_caps),
+	(gst_ffmpegaudioresample_transform),
+	(gst_ffmpegaudioresample_register):
+	Added new ffaudioresample element using the ffmpeg resampling code.
+	It's (way) faster than audioresample, doesn't introduce latency, but
+	might cause a little bit of 'clicking'.
+
+2007-11-15  Edward Hervey  <bilboed@bilboed.com>
+
+	* Makefile.am:
+	* autogen.sh:
+	* configure.ac:
+	* ext/ffmpeg/Makefile.am:
+	* ffmpegrev:
+	* gst-libs/ext/Makefile.am:
+	Initial patch of the new mirror-less build-system for gst-ffmpeg using
+	specific revisions of ffmpeg svn instead.
+	Might still have some issues, we need people to try this.
+	Help by : Dejan Sakelšak  <sakdean at gmail dot com>
+	* ext/ffmpeg/gstffmpeg.c: (plugin_init):
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_caps_with_codecid), (gst_ffmpeg_caps_to_codecid),
+	(gst_ffmpeg_get_codecid_longname):
+	* ext/ffmpeg/gstffmpegdec.c: (gst_ffmpegdec_base_init),
+	(gst_ffmpegdec_get_buffer), (gst_ffmpegdec_audio_frame),
+	(gst_ffmpegdec_register):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_averror),
+	(gst_ffmpegdemux_register):
+	* ext/ffmpeg/gstffmpegenc.c: (gst_ffmpegenc_register):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_register):
+	Update code for new ffmpeg API.
+
 2007-12-04  Edward Hervey  <bilboed@bilboed.com>
 
 	* configure.ac:
