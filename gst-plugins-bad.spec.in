@@ -147,6 +147,7 @@ rm -rf $RPM_BUILD_ROOT
 @USE_X264_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstx264.so
 @USE_DC1394_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 @USE_TIMIDITY_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgsttimidity.so
+@USE_SOUP_TRUE@%{_libdir}/gstreamer-%{majorminor}/libgstsouphttpsrc.so
 
 
 %changelog
