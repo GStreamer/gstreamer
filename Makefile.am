@@ -28,7 +28,8 @@ DIST_SUBDIRS = 			\
 	m4 			\
 	pkgconfig
 
-win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
+# include before EXTRA_DIST for win32 assignment
+include $(top_srcdir)/common/win32.mak
 
 EXTRA_DIST = \
 	gst-plugins-base.spec depcomp \
@@ -61,21 +62,6 @@ win32-update:
 	for f in $(WIN32_COPY); do cp $$f win32/common;done
 
 include $(top_srcdir)/common/coverage/lcov.mak
-
-# make sure all symbols we export on linux are defined in the win32 .def too
-# (don't care about other unixes for now, it's enough if it works on one of
-# the linux build bots; we assume .so )
-baselibs='libgstaudio libgstrtp libgstpbutils libgsttag libgstnetbuffer \
-libgstinterfaces libgstvideo libgstriff libgstrtsp libgstcdda'
-check-exports:
-	for l in `eval echo $(baselibs)`; do \
-	  libso=`find "$(top_builddir)" -name "$$l-0.10.so"`; \
-	  libdef="$(top_srcdir)/win32/common/$$l.def"; \
-	  if test "x$$libso" != "x"; then \
-	    echo Checking symbols in $$libso; \
-	    $(top_srcdir)/common/check-exports $$libdef $$libso || exit 1; \
-	  fi; \
-	done
 
 check: check-exports
 
