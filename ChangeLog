@@ -1,3 +1,15 @@
+2007-12-17  Sebastian Dröge  <slomo@circular-chaos.org>
+
+	* ext/ffmpeg/gstffmpegcodecmap.c: (gst_ffmpeg_codecid_to_caps),
+	(gst_ffmpeg_formatid_get_codecids),
+	(gst_ffmpeg_get_codecid_longname):
+	* ext/ffmpeg/gstffmpegdemux.c: (gst_ffmpegdemux_loop),
+	(gst_ffmpegdemux_register):
+	* ext/ffmpeg/gstffmpegmux.c: (gst_ffmpegmux_collected),
+	(gst_ffmpegmux_register):
+	Add GIF (animations and single images) decoding and encoding support.
+	Fixes #503249.
+
 2007-12-17  Edward Hervey  <edward.hervey@collabora.co.uk>
 
 	* configure.ac:

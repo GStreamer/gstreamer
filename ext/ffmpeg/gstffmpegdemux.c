@@ -1162,6 +1162,8 @@ gst_ffmpegdemux_loop (GstPad * pad)
   AVStream *avstream;
   GstBuffer *outbuf;
   GstClockTime timestamp, duration;
+  gint outsize;
+  gboolean rawvideo;
 
   demux = (GstFFMpegDemux *) (GST_PAD_PARENT (pad));
 
@@ -1222,16 +1224,52 @@ gst_ffmpegdemux_loop (GstPad * pad)
   /* prepare to push packet to peer */
   srcpad = stream->pad;
 
+  rawvideo = (avstream->codec->codec_type == CODEC_TYPE_VIDEO &&
+      avstream->codec->codec_id == CODEC_ID_RAWVIDEO);
+
+  if (rawvideo)
+    outsize = gst_ffmpeg_avpicture_get_size (avstream->codec->pix_fmt,
+        avstream->codec->width, avstream->codec->height);
+  else
+    outsize = pkt.size;
+
   ret = gst_pad_alloc_buffer_and_set_caps (srcpad,
-      GST_CLOCK_TIME_NONE, pkt.size, GST_PAD_CAPS (srcpad), &outbuf);
+      GST_CLOCK_TIME_NONE, outsize, GST_PAD_CAPS (srcpad), &outbuf);
   /* we can ignore not linked */
   if (ret == GST_FLOW_NOT_LINKED)
     goto done;
   if (ret != GST_FLOW_OK)
     goto no_buffer;
 
-  /* copy the data from packet into the target buffer */
-  memcpy (GST_BUFFER_DATA (outbuf), pkt.data, pkt.size);
+  /* copy the data from packet into the target buffer
+   * and do conversions for raw video packets */
+  if (rawvideo) {
+    AVPicture src, dst;
+    const gchar *plugin_name =
+        ((GstFFMpegDemuxClass *) (G_OBJECT_GET_CLASS (demux)))->in_plugin->name;
+
+    if (strcmp (plugin_name, "gif") == 0) {
+      src.data[0] = pkt.data;
+      src.data[1] = NULL;
+      src.data[2] = NULL;
+      src.linesize[0] = avstream->codec->width * 3;;
+    } else {
+      GST_WARNING ("Unknown demuxer %s, no idea what to do", plugin_name);
+      gst_ffmpeg_avpicture_fill (&src, pkt.data,
+          avstream->codec->pix_fmt, avstream->codec->width,
+          avstream->codec->height);
+    }
+
+    gst_ffmpeg_avpicture_fill (&dst, GST_BUFFER_DATA (outbuf),
+        avstream->codec->pix_fmt, avstream->codec->width,
+        avstream->codec->height);
+
+    gst_ffmpeg_img_convert (&dst, avstream->codec->pix_fmt,
+        &src, avstream->codec->pix_fmt, avstream->codec->width,
+        avstream->codec->height);
+  } else {
+    memcpy (GST_BUFFER_DATA (outbuf), pkt.data, outsize);
+  }
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
   GST_BUFFER_DURATION (outbuf) = duration;
@@ -1498,7 +1536,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "wav") ||
         !strcmp (in_plugin->name, "au") ||
         !strcmp (in_plugin->name, "tta") ||
-        !strcmp (in_plugin->name, "rm") || !strcmp (in_plugin->name, "amr"))
+        !strcmp (in_plugin->name, "rm") ||
+        !strcmp (in_plugin->name, "amr") || !strcmp (in_plugin->name, "gif"))
       register_typefind_func = FALSE;
 
     /* Set the rank of demuxers know to work to MARGINAL.
@@ -1533,7 +1572,8 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "avs") ||
         !strcmp (in_plugin->name, "aiff") ||
         !strcmp (in_plugin->name, "4xm") ||
-        !strcmp (in_plugin->name, "yuv4mpegpipe"))
+        !strcmp (in_plugin->name, "yuv4mpegpipe") ||
+        !strcmp (in_plugin->name, "gif"))
       rank = GST_RANK_MARGINAL;
     else
       rank = GST_RANK_NONE;

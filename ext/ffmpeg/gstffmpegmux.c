@@ -525,6 +525,7 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
   if (best_pad != NULL) {
     GstBuffer *buf;
     AVPacket pkt;
+    gboolean need_free = FALSE;
 
     /* push out current buffer */
     buf = gst_collect_pads_pop (ffmpegmux->collect,
@@ -536,8 +537,30 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
     pkt.pts = gst_ffmpeg_time_gst_to_ff (GST_BUFFER_TIMESTAMP (buf),
         ffmpegmux->context->streams[best_pad->padnum]->time_base);
     pkt.dts = pkt.pts;
-    pkt.data = GST_BUFFER_DATA (buf);
-    pkt.size = GST_BUFFER_SIZE (buf);
+
+    if (strcmp (ffmpegmux->context->oformat->name, "gif") == 0) {
+      AVStream *st = ffmpegmux->context->streams[best_pad->padnum];
+      AVPicture src, dst;
+
+      need_free = TRUE;
+      pkt.size = st->codec->width * st->codec->height * 3;
+      pkt.data = g_malloc (pkt.size);
+
+      dst.data[0] = pkt.data;
+      dst.data[1] = NULL;
+      dst.data[2] = NULL;
+      dst.linesize[0] = st->codec->width * 3;
+
+      gst_ffmpeg_avpicture_fill (&src, GST_BUFFER_DATA (buf),
+          PIX_FMT_RGB24, st->codec->width, st->codec->height);
+
+      gst_ffmpeg_img_convert (&dst, PIX_FMT_RGB24,
+          &src, PIX_FMT_RGB24, st->codec->width, st->codec->height);
+    } else {
+      pkt.data = GST_BUFFER_DATA (buf);
+      pkt.size = GST_BUFFER_SIZE (buf);
+    }
+
     pkt.stream_index = best_pad->padnum;
     pkt.flags = 0;
 
@@ -552,6 +575,8 @@ gst_ffmpegmux_collected (GstCollectPads * pads, gpointer user_data)
       pkt.duration = 0;
     av_write_frame (ffmpegmux->context, &pkt);
     gst_buffer_unref (buf);
+    if (need_free)
+      g_free (pkt.data);
   } else {
     /* close down */
     av_write_trailer (ffmpegmux->context);
@@ -725,6 +750,12 @@ gst_ffmpegmux_register (GstPlugin * plugin)
       const gint rates[] = { 44100, 22050, 11025 };
 
       gst_ffmpeg_mux_simple_caps_set_int_list (audiosinkcaps, "rate", 3, rates);
+    } else if (strcmp (in_plugin->name, "gif") == 0) {
+      if (videosinkcaps)
+        gst_caps_unref (videosinkcaps);
+
+      videosinkcaps =
+          gst_caps_from_string ("video/x-raw-rgb, bpp=(int)24, depth=(int)24");
     }
 
     /* create a cache for these properties */

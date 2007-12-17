@@ -636,8 +636,8 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       break;
     case CODEC_ID_VC1:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-wmv",
-				  "wmvversion", G_TYPE_INT, 3, "fourcc", GST_TYPE_FOURCC, 
-				  GST_MAKE_FOURCC('W', 'V', 'C', '1'), NULL);
+          "wmvversion", G_TYPE_INT, 3, "fourcc", GST_TYPE_FOURCC,
+          GST_MAKE_FOURCC ('W', 'V', 'C', '1'), NULL);
       break;
     case CODEC_ID_QDM2:
       caps = gst_ff_aud_caps_new (context, codec_id, "audio/x-qdm2", NULL);
@@ -681,6 +681,10 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
 
     case CODEC_ID_NUV:
       caps = gst_ff_vid_caps_new (context, codec_id, "video/x-nuv", NULL);
+      break;
+
+    case CODEC_ID_GIF:
+      caps = gst_ff_vid_caps_new (context, codec_id, "image/gif", NULL);
       break;
 
     case CODEC_ID_PNG:
@@ -1914,6 +1918,12 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
     };
     *video_codec_list = NULL;
     *audio_codec_list = amr_audio_list;
+  } else if (!strcmp (format_name, "gif")) {
+    static enum CodecID gif_image_list[] = {
+      CODEC_ID_RAWVIDEO, CODEC_ID_NONE
+    };
+    *video_codec_list = gif_image_list;
+    *audio_codec_list = NULL;
   } else {
     GST_LOG ("Format %s not found", format_name);
     return FALSE;
@@ -2055,14 +2065,15 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
           id = CODEC_ID_WMV2;
           break;
         case 3:
-	  {
-	    guint32 fourcc;
-	    if (gst_structure_get_fourcc (structure, "fourcc", &fourcc)) {
-	      if (fourcc == GST_MAKE_FOURCC ('W', 'V', 'C', '1'))
-		id = CODEC_ID_VC1;
-	    } else
-	      id = CODEC_ID_WMV3;
-	  }
+        {
+          guint32 fourcc;
+
+          if (gst_structure_get_fourcc (structure, "fourcc", &fourcc)) {
+            if (fourcc == GST_MAKE_FOURCC ('W', 'V', 'C', '1'))
+              id = CODEC_ID_VC1;
+          } else
+            id = CODEC_ID_WMV3;
+        }
           break;
       }
     }
@@ -2725,6 +2736,9 @@ gst_ffmpeg_get_codecid_longname (enum CodecID codec_id)
       break;
     case CODEC_ID_XVID:
       name = "XviD video";
+      break;
+    case CODEC_ID_GIF:
+      name = "GIF image";
       break;
     case CODEC_ID_PNG:
       name = "PNG image";
