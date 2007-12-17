@@ -1,3 +1,10 @@
+2007-12-17  Andy Wingo  <wingo@pobox.com>
+
+	* gst/switch/gstswitch.h: 
+	* gst/switch/gstswitch.c: Replace with files from
+	gststreamselector.[ch], registered as the "switch" plugin, with
+	"GstSwitch" types. Patch 1/12.
+
 2007-12-17  Edgard Lima  <edgard.lima@indt.org.br>
 
 	* ext/metadata/TODO:

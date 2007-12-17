@@ -1,5 +1,6 @@
 /* GStreamer
  * Copyright (C) 2003 Julien Moutte <julien@moutte.net>
+ * Copyright (C) 2005 Ronald S. Bultje <rbultje@ronald.bitfreak.net>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,67 +18,44 @@
  * Boston, MA 02111-1307, USA.
  */
  
-#ifndef __GST_SWITCH_H__
-#define __GST_SWITCH_H__
+#ifndef __GST_STREAM_SELECTOR_H__
+#define __GST_STREAM_SELECTOR_H__
 
 #include <gst/gst.h>
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_SWITCH \
-  (gst_switch_get_type())
-#define GST_SWITCH(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_SWITCH, GstSwitch))
-#define GST_SWITCH_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass), GST_TYPE_SWITCH, GstSwitchClass))
-#define GST_IS_SWITCH(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_SWITCH))
-#define GST_IS_SWITCH_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_SWITCH))
+#define GST_TYPE_STREAM_SELECTOR \
+  (gst_stream_selector_get_type())
+#define GST_STREAM_SELECTOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_STREAM_SELECTOR, GstStreamSelector))
+#define GST_STREAM_SELECTOR_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_STREAM_SELECTOR, GstStreamSelectorClass))
+#define GST_IS_STREAM_SELECTOR(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_STREAM_SELECTOR))
+#define GST_IS_STREAM_SELECTOR_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_STREAM_SELECTOR))
 
-typedef struct _GstSwitch GstSwitch;
-typedef struct _GstSwitchClass GstSwitchClass;
+typedef struct _GstStreamSelector GstStreamSelector;
+typedef struct _GstStreamSelectorClass GstStreamSelectorClass;
 
-struct _GstSwitch {
+struct _GstStreamSelector {
   GstElement element;
-  
-  GstPad *active_sinkpad;
-  GstPad *srcpad;
-  GstPad *previous_sinkpad;
 
+  GstPad *srcpad;
+
+  GstPad *active_sinkpad;
   guint nb_sinkpads;
-  /* this hash table stores for key of the pad pointer
-   * the last new segment event received for this pad
-   * so when switching we can send new segment events
-   */
-  GHashTable *newsegment_events;
-  /* flag to decide whether we need to send a new segment event
-   * before we receive the next buffer */
-  gboolean need_to_send_newsegment;
-  /* flag to decide whether to queue buffers received from current
-   * pads */
-  gboolean queue_buffers;
-  GstClockTime stop_value;
-  GstClockTime start_value;
-  GstClockTime current_start;
-  GstClockTime last_ts;
-  /* this hash tables stores for key of the pad pointer
-   * a GList of stored buffers that need to be sent once the
-   * new segment has been sent
-   */
-  GHashTable *stored_buffers;
-  GMutex *switch_mutex;
+
+  GstSegment segment;
 };
 
-#define GST_SWITCH_LOCK(obj) g_mutex_lock(obj->switch_mutex)
-#define GST_SWITCH_UNLOCK(obj) g_mutex_unlock(obj->switch_mutex)
-
-struct _GstSwitchClass {
+struct _GstStreamSelectorClass {
   GstElementClass parent_class;
 };
 
-GType gst_switch_get_type (void);
+GType gst_stream_selector_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_SWITCH_H__ */
+#endif /* __GST_STREAM_SELECTOR_H__ */
