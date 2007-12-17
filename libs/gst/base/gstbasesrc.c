@@ -484,17 +484,11 @@ GstFlowReturn
 gst_base_src_wait_playing (GstBaseSrc * src)
 {
   /* block until the state changes, or we get a flush, or something */
-  if (src->is_live) {
-    while (G_UNLIKELY (!src->live_running)) {
-      GST_DEBUG ("live source signal waiting");
-      GST_LIVE_SIGNAL (src);
-      GST_DEBUG ("live source waiting for running state");
-      GST_LIVE_WAIT (src);
-      GST_DEBUG ("live source unlocked");
-    }
-    if (src->priv->flushing)
-      goto flushing;
-  }
+  GST_DEBUG_OBJECT (src, "live source waiting for running state");
+  GST_LIVE_WAIT (src);
+  if (src->priv->flushing)
+    goto flushing;
+  GST_DEBUG_OBJECT (src, "live source unlocked");
 
   return GST_FLOW_OK;
 
@@ -1207,7 +1201,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
               src->segment.format, src->segment.last_stop));
     }
 
-    /* for deriving a stop position for the playback segment form the seek
+    /* for deriving a stop position for the playback segment from the seek
      * segment, we must take the duration when the stop is not set */
     if ((stop = src->segment.stop) == -1)
       stop = src->segment.duration;
@@ -1751,9 +1745,13 @@ gst_base_src_get_range (GstBaseSrc * src, guint64 offset, guint length,
 
   bclass = GST_BASE_SRC_GET_CLASS (src);
 
-  ret = gst_base_src_wait_playing (src);
-  if (ret != GST_FLOW_OK)
-    goto stopped;
+  if (src->is_live) {
+    while (G_UNLIKELY (!src->live_running)) {
+      ret = gst_base_src_wait_playing (src);
+      if (ret != GST_FLOW_OK)
+        goto stopped;
+    }
+  }
 
   if (G_UNLIKELY (!GST_OBJECT_FLAG_IS_SET (src, GST_BASE_SRC_STARTED)))
     goto not_started;
@@ -2380,12 +2378,14 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
    * waiting for PLAYING while blocked in the LIVE cond or we can be waiting
    * for the clock. */
   GST_LIVE_LOCK (basesrc);
+  GST_DEBUG_OBJECT (basesrc, "unschedule clock");
 
   /* unblock clock sync (if any) */
   if (basesrc->clock_id)
     gst_clock_id_unschedule (basesrc->clock_id);
 
   /* configure what to do when we get to the LIVE lock. */
+  GST_DEBUG_OBJECT (basesrc, "live running %d", live_play);
   basesrc->live_running = live_play;
 
   if (live_play) {
@@ -2406,8 +2406,9 @@ gst_base_src_set_playing (GstBaseSrc * basesrc, gboolean live_play)
     if (start)
       gst_pad_start_task (basesrc->srcpad, (GstTaskFunction) gst_base_src_loop,
           basesrc->srcpad);
+    GST_DEBUG_OBJECT (basesrc, "signal");
+    GST_LIVE_SIGNAL (basesrc);
   }
-  GST_LIVE_SIGNAL (basesrc);
   GST_LIVE_UNLOCK (basesrc);
 
   return TRUE;
@@ -2555,6 +2556,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
       no_preroll = gst_base_src_is_live (basesrc);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      GST_DEBUG_OBJECT (basesrc, "PAUSED->PLAYING");
       if (gst_base_src_is_live (basesrc)) {
         /* now we can start playback */
         gst_base_src_set_playing (basesrc, TRUE);
@@ -2571,6 +2573,7 @@ gst_base_src_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
+      GST_DEBUG_OBJECT (basesrc, "PLAYING->PAUSED");
       if (gst_base_src_is_live (basesrc)) {
         /* make sure we block in the live lock in PAUSED */
         gst_base_src_set_playing (basesrc, FALSE);

@@ -1,3 +1,14 @@
+2007-12-17  Wim Taymans  <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c: (gst_base_src_wait_playing),
+	(gst_base_src_perform_seek), (gst_base_src_get_range),
+	(gst_base_src_set_playing), (gst_base_src_change_state):
+	Make _wait_playing() not check any variables so that we can call this
+	function from subclasses. Move the checks elsewhere similar to
+	_wait_preroll() in basesink.
+	Add some debugging.
+	Only signal the LIVE cond when we are going back to PLAYING.
+
 2007-12-16  Tim-Philipp Müller  <tim at centricular dot net>
 
 	* gst/gstregistrybinary.c: (gst_registry_binary_write_cache):
