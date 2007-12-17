@@ -1,3 +1,8 @@
+2007-12-17  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* Makefile.am:
+	  The check-exports stuff moved to common/win32.mak, so include that.
+
 2007-12-17  Wim Taymans  <wim.taymans@collabora.co.uk>
 
 	* libs/gst/base/gstbasesrc.c: (gst_base_src_wait_playing),
