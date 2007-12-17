@@ -1,5 +1,12 @@
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/switch/gstswitch.c (gst_selector_pad_get_property)
+	(gst_selector_pad_class_init, gst_stream_selector_class_init)
+	(gst_stream_selector_get_property): Expose 'last-stop-time' as a
+	pad property, not an element property.
+	(gst_selector_pad_chain): Mark the last_stop time as timestamp +
+	duration, not timestamp. Patch 9/12.
+
 	* gst/switch/gstswitch.c (gst_stream_selector_change_state)
 	(gst_stream_selector_block, gst_stream_selector_switch): Use the
 	cond mechanism instead of blocked pads. Patch 8/12.

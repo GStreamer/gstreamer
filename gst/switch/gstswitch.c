@@ -55,8 +55,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
 
 enum
 {
-  PROP_ACTIVE_PAD = 1,
-  PROP_LAST_STOP_TIME
+  PROP_ACTIVE_PAD = 1
+};
+
+enum
+{
+  PAD_PROP_LAST_STOP_TIME = 1
 };
 
 enum
@@ -110,6 +114,8 @@ struct _GstSelectorPadClass
 static void gst_selector_pad_class_init (GstSelectorPadClass * klass);
 static void gst_selector_pad_init (GstSelectorPad * pad);
 static void gst_selector_pad_finalize (GObject * object);
+static void gst_selector_pad_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec);
 
 static GstPadClass *selector_pad_parent_class = NULL;
 
@@ -155,6 +161,13 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
 
   selector_pad_parent_class = g_type_class_peek_parent (klass);
 
+  gobject_class->get_property =
+      GST_DEBUG_FUNCPTR (gst_selector_pad_get_property);
+  g_object_class_install_property (gobject_class, PAD_PROP_LAST_STOP_TIME,
+      g_param_spec_uint64 ("last-stop-time", "Last stop time",
+          "Last stop time seen on pad", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
+          G_PARAM_READABLE));
+
   gobject_class->finalize = gst_selector_pad_finalize;
 }
 
@@ -171,6 +184,28 @@ gst_selector_pad_finalize (GObject * object)
   pad = GST_SELECTOR_PAD_CAST (object);
 
   G_OBJECT_CLASS (selector_pad_parent_class)->finalize (object);
+}
+
+static void
+gst_selector_pad_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstSelectorPad *spad = GST_SELECTOR_PAD_CAST (object);
+
+  switch (prop_id) {
+    case PAD_PROP_LAST_STOP_TIME:{
+      GST_OBJECT_LOCK (object);
+      if (spad->active)
+        g_value_set_uint64 (value, spad->segment.last_stop);
+      else
+        g_value_set_uint64 (value, GST_CLOCK_TIME_NONE);
+      GST_OBJECT_UNLOCK (object);
+      break;
+    }
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static void
@@ -340,7 +375,7 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
   GstFlowReturn res;
   GstPad *active_sinkpad;
   GstSelectorPad *selpad;
-  GstClockTime timestamp;
+  GstClockTime end_time, duration;
   GstSegment *seg;
 
   sel = GST_STREAM_SELECTOR (gst_pad_get_parent (pad));
@@ -352,11 +387,14 @@ gst_selector_pad_chain (GstPad * pad, GstBuffer * buf)
 
   active_sinkpad = gst_stream_selector_activate_sinkpad (sel, pad);
 
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
-  if (GST_CLOCK_TIME_IS_VALID (timestamp)) {
-    GST_DEBUG_OBJECT (sel, "received timestamp %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timestamp));
-    gst_segment_set_last_stop (seg, seg->format, timestamp);
+  end_time = GST_BUFFER_TIMESTAMP (buf);
+  if (GST_CLOCK_TIME_IS_VALID (end_time)) {
+    duration = GST_BUFFER_DURATION (buf);
+    if (GST_CLOCK_TIME_IS_VALID (duration))
+      end_time += duration;
+    GST_DEBUG_OBJECT (sel, "received end time %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (end_time));
+    gst_segment_set_last_stop (seg, seg->format, end_time);
   }
 
   /* Ignore buffers from pads except the selected one */
@@ -467,10 +505,6 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
   g_object_class_install_property (gobject_class, PROP_ACTIVE_PAD,
       g_param_spec_string ("active-pad", "Active pad",
           "Name of the currently" " active sink pad", NULL, G_PARAM_READWRITE));
-  g_object_class_install_property (gobject_class, PROP_LAST_STOP_TIME,
-      g_param_spec_uint64 ("last-stop-time", "Last stop time",
-          "Last stop time on active pad", 0, G_MAXUINT64, GST_CLOCK_TIME_NONE,
-          G_PARAM_READABLE));
   gobject_class->dispose = gst_stream_selector_dispose;
   gstelement_class->request_new_pad = gst_stream_selector_request_new_pad;
   gstelement_class->release_pad = gst_stream_selector_release_pad;
@@ -626,18 +660,6 @@ gst_stream_selector_get_property (GObject * object, guint prop_id,
       } else {
         g_value_set_string (value, "");
       }
-      GST_OBJECT_UNLOCK (object);
-      break;
-    }
-    case PROP_LAST_STOP_TIME:{
-      GstSelectorPad *spad;
-
-      GST_OBJECT_LOCK (object);
-      spad = GST_SELECTOR_PAD_CAST (sel->active_sinkpad);
-      if (spad && spad->active)
-        g_value_set_uint64 (value, spad->segment.last_stop);
-      else
-        g_value_set_uint64 (value, GST_CLOCK_TIME_NONE);
       GST_OBJECT_UNLOCK (object);
       break;
     }
