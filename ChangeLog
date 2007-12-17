@@ -1,5 +1,13 @@
 2007-12-17  Andy Wingo  <wingo@pobox.com>
 
+	* gst/switch/gstswitch.h (struct _GstStreamSelectorClass): 
+	* gst/switch/gstswitch.c (gst_stream_selector_class_init): Add
+	`block' and `switch' signals.
+
+	* gst/switch/Makefile.am: 
+	* gst/switch/gstswitch-marshal.list: Add foo to generate a
+	marshaller for the `switch' signal. Patch 2/12.
+
 	* gst/switch/gstswitch.h: 
 	* gst/switch/gstswitch.c: Replace with files from
 	gststreamselector.[ch], registered as the "switch" plugin, with

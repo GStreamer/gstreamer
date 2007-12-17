@@ -27,6 +27,7 @@
 #include <string.h>
 
 #include "gstswitch.h"
+#include "gstswitch-marshal.h"
 
 GST_DEBUG_CATEGORY_STATIC (stream_selector_debug);
 #define GST_CAT_DEFAULT stream_selector_debug
@@ -56,6 +57,15 @@ enum
 {
   PROP_ACTIVE_PAD = 1
 };
+
+enum
+{
+  /* methods */
+  SIGNAL_BLOCK,
+  SIGNAL_SWITCH,
+  LAST_SIGNAL
+};
+static guint gst_stream_selector_signals[LAST_SIGNAL] = { 0 };
 
 static gboolean gst_stream_selector_is_active_sinkpad (GstStreamSelector * sel,
     GstPad * pad);
@@ -429,6 +439,34 @@ gst_stream_selector_class_init (GstStreamSelectorClass * klass)
   gobject_class->dispose = gst_stream_selector_dispose;
   gstelement_class->request_new_pad = gst_stream_selector_request_new_pad;
   gstelement_class->release_pad = gst_stream_selector_release_pad;
+
+  /**
+   * GstStreamSelector::block:
+   * @streamselector: the streamselector element to emit this signal on
+   *
+   * Block all sink pads in preparation for a switch.
+   */
+  gst_stream_selector_signals[SIGNAL_BLOCK] =
+      g_signal_new ("block", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstStreamSelectorClass, block),
+      NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+  /**
+   * GstStreamSelector::switch:
+   * @streamselector: the streamselector element to emit this signal on
+   * @pad:            name of pad to switch to
+   * @stop_time:      time at which to close the previous segment, or
+   *                  #GST_CLOCK_TIME_NONE for the last time on the previously
+   *                  active pad
+   * @start_time:     start time for new segment, or foo
+   *
+   * Switch the given open file descriptor to multifdsink to write to and
+   * specify the burst parameters for the new connection.
+   */
+  gst_stream_selector_signals[SIGNAL_SWITCH] =
+      g_signal_new ("switch", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
+      G_STRUCT_OFFSET (GstStreamSelectorClass, switch_),
+      NULL, NULL, gst_switch_marshal_VOID__STRING_UINT64_UINT64,
+      G_TYPE_NONE, 3, G_TYPE_STRING, G_TYPE_UINT64, G_TYPE_UINT64);
 }
 
 static void
