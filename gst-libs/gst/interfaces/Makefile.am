@@ -35,8 +35,6 @@ libgstinterfacesinclude_HEADERS = \
 nodist_libgstinterfacesinclude_HEADERS = \
 	interfaces-enumtypes.h
 
-noinst_HEADERS = interfaces.h
-
 libgstinterfaces_@GST_MAJORMINOR@_la_SOURCES = \
 	colorbalance.c		\
 	colorbalancechannel.c	\
