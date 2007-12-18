@@ -573,7 +573,7 @@ class FilteredLogModel (FilteredLogModelBase):
 
         last_index = len (self.line_offsets) - 1
         if end_index < last_index:
-            self.__remove_range (end_index + 1, last_index - 1)
+            self.__remove_range (end_index + 1, last_index)
 
         if start_index > 0:
             self.__remove_range (0, start_index - 1)
@@ -1669,13 +1669,14 @@ class Window (object):
         try:
             line_index = self.get_active_line_index ()
         except ValueError:
+            super_index = None
             self.logger.debug ("no line selected")
-            selected_index = None
         else:
-            self.logger.debug ("pushing selected line %i", line_index)
-            selected_index = model.line_index_to_top (line_index)
+            super_index = model.line_index_to_top (line_index)
+            self.logger.debug ("pushing selected line %i (abs %i)",
+                               line_index, super_index)
 
-        self.default_index = selected_index
+        self.default_index = super_index
 
     def update_model (self, model = None):
 
