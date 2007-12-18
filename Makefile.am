@@ -3,10 +3,8 @@ DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 SUBDIRS = \
 	gst-libs gst ext docs m4 tests common po
 
-win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
-
-debug:
-	echo $(win32)	
+# include before EXTRA_DIST for win32 assignment
+include $(top_srcdir)/common/win32.mak
 	
 EXTRA_DIST = \
 	gst-plugins-ugly.spec depcomp \
