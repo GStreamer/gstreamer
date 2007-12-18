@@ -18,7 +18,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-/* FIXME: BOM detection and format conversion; validate UTF-8; handle seeks */
+/* FIXME: handle seeks, documentation */
 
 /* example of a subtitle chunk in an avi file
  * 00000000: 47 41 42 32 00 02 00 10 00 00 00 45 00 6e 00 67  GAB2.......E.n.g
@@ -64,24 +64,72 @@ static GstStateChangeReturn gst_avi_subtitle_change_state (GstElement * element,
 GST_BOILERPLATE (GstAviSubtitle, gst_avi_subtitle, GstElement,
     GST_TYPE_ELEMENT);
 
+#define IS_BOM_UTF8(data)     ((GST_READ_UINT32_BE(data) >> 8) == 0xEFBBBF)
+#define IS_BOM_UTF16_BE(data) (GST_READ_UINT16_BE(data) == 0xFEFF)
+#define IS_BOM_UTF16_LE(data) (GST_READ_UINT16_LE(data) == 0xFEFF)
+#define IS_BOM_UTF32_BE(data) (GST_READ_UINT32_BE(data) == 0xFEFF)
+#define IS_BOM_UTF32_LE(data) (GST_READ_UINT32_LE(data) == 0xFEFF)
+
 static GstBuffer *
-gst_avi_subtitle_extract_utf8_file (GstBuffer * buffer, guint offset, guint len)
+gst_avi_subtitle_extract_file (GstAviSubtitle * sub, GstBuffer * buffer,
+    guint offset, guint len)
 {
-  guint8 *file = GST_BUFFER_DATA (buffer) + offset;
+  const gchar *input_enc = NULL;
+  GstBuffer *ret;
+  gchar *data;
 
-  if (file[0] == 0xEF && file[1] == 0xBB && file[2] == 0xBF) {
-    /* UTF-8 */
-    return gst_buffer_create_sub (buffer, offset + 3, len - 3);
+  data = (gchar *) GST_BUFFER_DATA (buffer) + offset;
+
+  if (len >= (3 + 1) && IS_BOM_UTF8 (data) &&
+      g_utf8_validate (data + 3, len - 3, NULL)) {
+    ret = gst_buffer_create_sub (buffer, offset + 3, len - 3);
+  } else if (len >= 2 && IS_BOM_UTF16_BE (data)) {
+    input_enc = "UTF-16BE";
+    data += 2;
+    len -= 2;
+  } else if (len >= 2 && IS_BOM_UTF16_LE (data)) {
+    input_enc = "UTF-16LE";
+    data += 2;
+    len -= 2;
+  } else if (len >= 4 && IS_BOM_UTF32_BE (data)) {
+    input_enc = "UTF-32BE";
+    data += 4;
+    len -= 4;
+  } else if (len >= 4 && IS_BOM_UTF32_LE (data)) {
+    input_enc = "UTF-32LE";
+    data += 4;
+    len -= 4;
+  } else if (g_utf8_validate (data, len, NULL)) {
+    /* not specified, check if it's UTF-8 */
+    ret = gst_buffer_create_sub (buffer, offset, len);
+  } else {
+    /* we could fall back to gst_tag_freeform_to_utf8() here */
+    GST_WARNING_OBJECT (sub, "unspecified encoding, and not UTF-8");
+    return NULL;
   }
-  /* TODO Check for:
-   * 00 00 FE FF    UTF-32, big-endian
-   * FF FE 00 00    UTF-32, little-endian
-   * FE FF          UTF-16, big-endian
-   * FF FE          UTF-16, little-endian
-   */
 
-  /* No BOM detected assuming UTF-8 */
-  return gst_buffer_create_sub (buffer, offset, len);
+  if (input_enc) {
+    GError *err = NULL;
+    gchar *utf8;
+
+    GST_DEBUG_OBJECT (sub, "converting subtitles from %s to UTF-8", input_enc);
+    utf8 = g_convert (data, len, "UTF-8", input_enc, NULL, NULL, &err);
+
+    if (err != NULL) {
+      GST_WARNING_OBJECT (sub, "conversion to UTF-8 failed : %s", err->message);
+      g_error_free (err);
+      return NULL;
+    }
+
+    ret = gst_buffer_new ();
+    GST_BUFFER_DATA (ret) = (guint8 *) utf8;
+    GST_BUFFER_MALLOCDATA (ret) = (guint8 *) utf8;
+    GST_BUFFER_SIZE (ret) = strlen (utf8);
+    GST_BUFFER_OFFSET (ret) = 0;
+  }
+
+  GST_BUFFER_CAPS (ret) = gst_caps_new_simple ("application/x-subtitle", NULL);
+  return ret;
 }
 
 static GstFlowReturn
@@ -129,7 +177,10 @@ gst_avi_subtitle_parse_gab2_chunk (GstAviSubtitle * sub, GstBuffer * buf)
    * assume all the remaining data in the chunk is subtitle data, there may
    * be padding at the end for some reason, so only parse file_length bytes */
   sub->subfile =
-      gst_avi_subtitle_extract_utf8_file (buf, 17 + name_length, file_length);
+      gst_avi_subtitle_extract_file (sub, buf, 17 + name_length, file_length);
+
+  if (sub->subfile == NULL)
+    goto extract_failed;
 
   return GST_FLOW_OK;
 
@@ -157,6 +208,12 @@ wrong_total_length:
     GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
         ("buffer size is wrong: need %d bytes, have %d bytes",
             17 + name_length + file_length, size));
+    return GST_FLOW_ERROR;
+  }
+extract_failed:
+  {
+    GST_ELEMENT_ERROR (sub, STREAM, DECODE, (NULL),
+        ("could not extract subtitles"));
     return GST_FLOW_ERROR;
   }
 }

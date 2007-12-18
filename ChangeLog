@@ -1,5 +1,13 @@
 2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
 
+	* gst/avi/gstavisubtitle.c: (IS_BOM_UTF8), (IS_BOM_UTF16_BE),
+	  (IS_BOM_UTF16_LE), (IS_BOM_UTF32_BE), (IS_BOM_UTF32_LE),
+	  (gst_avi_subtitle_extract_file), (gst_avi_subtitle_parse_gab2_chunk):
+	  Detect other UTF byte order markers and convert to UTF-8 as
+	  appropriate.
+
+2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
+
 	* gst/avi/gstavisubtitle.c: (src_template),
 	  (gst_avi_subtitle_extract_utf8_file),
 	  (gst_avi_subtitle_parse_gab2_chunk), (gst_avi_subtitle_chain),
