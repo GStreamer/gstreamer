@@ -1,5 +1,10 @@
 2007-12-18  Wim Taymans  <wim.taymans@collabora.co.uk>
 
+	* gst/playback/gststreamselector.c: (gst_selector_pad_init):
+	Init the pad segment too.
+
+2007-12-18  Wim Taymans  <wim.taymans@collabora.co.uk>
+
 	* gst-libs/gst/audio/gstaudiosink.c: (audioringbuffer_thread_func),
 	(gst_audioringbuffer_open_device),
 	(gst_audioringbuffer_close_device), (gst_audioringbuffer_acquire),

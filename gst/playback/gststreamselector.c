@@ -149,6 +149,7 @@ gst_selector_pad_class_init (GstSelectorPadClass * klass)
 static void
 gst_selector_pad_init (GstSelectorPad * pad)
 {
+  gst_selector_pad_reset (pad);
 }
 
 static void
