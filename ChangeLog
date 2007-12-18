@@ -1,3 +1,14 @@
+2007-12-18  Tim-Philipp Müller  <tim at centricular dot net>
+
+	* Makefile.am:
+	  Include common/win32.mak for CRLF check of win32 project
+	  files (see #393626).
+
+	* win32/vs6/gst_python.dsw:
+	* win32/vs6/libgstpython.dsp:
+	* win32/vs6/pygenfiles.dsp:
+	  Fix line endings and do cvs admin -kb.
+
 2007-11-29  Sebastian Dröge  <slomo@circular-chaos.org>
 
 	* acinclude.m4:

@@ -1,12 +1,11 @@
 SUBDIRS = codegen gst examples testsuite pkgconfig
 
-win32 = $(shell cat $(top_srcdir)/win32/MANIFEST)
 common_cflags = $(PYGOBJECT_CFLAGS) $(GST_CFLAGS) $(GST_OPTION_CFLAGS) -fno-strict-aliasing
 common_libadd = $(GST_LIBS) $(GST_OPTION_LIBS)
 common_ldflags = -module -avoid-version
 
-debug:
-	echo $(win32)	
+# include before EXTRA_DIST for win32 assignment
+include $(top_srcdir)/common/win32.mak
 
 ACLOCAL_AMFLAGS = -I common/m4
 
