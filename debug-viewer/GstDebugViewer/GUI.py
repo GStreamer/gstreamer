@@ -358,6 +358,8 @@ class FilteredLogModelBase (LogModelBase):
 
         LogModelBase.__init__ (self)
 
+        self.logger = logging.getLogger ("filter-model-base")
+
         self.super_model = super_model
         self.access_offset = super_model.access_offset
         self.ensure_cached = super_model.ensure_cached
@@ -373,16 +375,42 @@ class FilteredLogModelBase (LogModelBase):
 
     def line_index_to_top (self, line_index):
 
-        model = self
+        _log_indices = [line_index]
+        
         super_index = line_index
-        while hasattr (model, "super_model") and model.super_model:
+        for model in self._iter_hierarchy ():
             super_index = model.line_index_to_super (super_index)
-            model = model.super_model
+            _log_indices.append (super_index)
+
+        _log_trans = " -> ".join ([str (x) for x in _log_indices])
+        self.logger.debug ("translated index to top: %s", _log_trans)
+
         return super_index
+
+    def line_index_from_top (self, super_index):
+
+        _log_indices = [super_index]
+
+        line_index = super_index
+        for model in reversed (list (self._iter_hierarchy ())):
+            line_index = model.line_index_from_super (line_index)
+            _log_indices.append (line_index)
+
+        _log_trans = " -> ".join ([str (x) for x in _log_indices])
+        self.logger.debug ("translated index from top: %s", _log_trans)
+
+        return line_index
 
     def super_model_changed (self):
 
         pass
+
+    def _iter_hierarchy (self):
+
+        model = self
+        while hasattr (model, "super_model") and model.super_model:
+            yield model
+            model = model.super_model
 
 class FilteredLogModelIdentity (FilteredLogModelBase):
 
@@ -617,9 +645,14 @@ class RangeFilteredLogModel (FilteredLogModelBase):
 
         FilteredLogModelBase.__init__ (self, super_model)
 
+        self.logger = logging.getLogger ("range-filtered-model")
+
         self.line_index_range = None
 
     def set_range (self, start_index, last_index):
+
+        self.logger.debug ("setting range to first = %i, last = %i",
+                           start_index, last_index)
 
         self.line_index_range = (start_index, last_index,)
         self.line_offsets = SubRange (self.super_model.line_offsets,
@@ -629,7 +662,12 @@ class RangeFilteredLogModel (FilteredLogModelBase):
 
     def reset (self):
 
-        self.set_range (0, len (self.super_model) - 1,)
+        self.logger.debug ("reset")
+
+        first_index = 0
+        last_index = len (self.super_model) - 1
+
+        self.set_range (first_index, last_index,)
 
     def line_index_to_super (self, line_index):
 
@@ -640,9 +678,6 @@ class RangeFilteredLogModel (FilteredLogModelBase):
     def line_index_from_super (self, li):
 
         start, end = self.line_index_range
-
-        if start == end:
-            raise IndexError ("not in range (empty)")
 
         if li < start or li > end:
             raise IndexError ("not in range")
@@ -1623,34 +1658,54 @@ class Window (object):
         self.logger.debug ("requesting close from app")
         self.app.close_window (self)
 
+    def push_view_state (self):
+
+        self.default_index = None
+
+        model = self.log_view.props.model
+        if model is None:
+            return
+        
+        try:
+            line_index = self.get_active_line_index ()
+        except ValueError:
+            self.logger.debug ("no line selected")
+            selected_index = None
+        else:
+            self.logger.debug ("pushing selected line %i", line_index)
+            selected_index = model.line_index_to_top (line_index)
+
+        self.default_index = selected_index
+
     def update_model (self, model = None):
 
         if model is None:
             model = self.log_view.props.model
-        selected_index = None
+
         previous_model = self.log_view.props.model
-        if previous_model:
-            try:
-                line_index = self.get_active_line_index ()
-            except ValueError:
-                selected_index = None
-            else:
-                selected_index = previous_model.line_index_to_super (line_index)
 
         if previous_model == model:
             # Force update.
             self.log_view.set_model (None)
         self.log_view.props.model = model
 
+    def pop_view_state (self):
+
+        selected_index = self.default_index
         if selected_index is None:
             return
 
+        model = self.log_view.props.model
+        if model is None:
+            return
+
         try:
-            select_index = model.line_index_from_super (selected_index)
-        except IndexError:
-            # Filtered out.
-            pass
+            select_index = model.line_index_from_top (selected_index)
+        except IndexError, exc:
+            self.logger.debug ("abs line index %i filtered out, not reselecting",
+                               selected_index)
         else:
+            assert select_index >= 0
             sel = self.log_view.get_selection ()
             path = (select_index,)
             sel.select_path (path)
@@ -1731,10 +1786,12 @@ class Window (object):
                           last_index,
                           first_index)
 
+        self.push_view_state ()
         self.log_range.set_range (first_index, last_index)
         if self.log_filter:
             self.log_filter.super_model_changed_range ()
         self.update_model ()
+        self.pop_view_state ()
         self.actions.show_hidden_lines.props.sensitive = True
 
     def handle_hide_before_line_action_activate (self, action):
@@ -1752,18 +1809,22 @@ class Window (object):
                           first_index,
                           last_index)
 
+        self.push_view_state ()
         self.log_range.set_range (first_index, last_index)
         if self.log_filter:
             self.log_filter.super_model_changed_range ()
         self.update_model ()
+        self.pop_view_state ()
         self.actions.show_hidden_lines.props.sensitive = True
 
     def handle_show_hidden_lines_action_activate (self, action):
 
         self.logger.info ("restoring model filter to show all lines")
+        self.push_view_state ()
         self.log_range.reset ()
         self.log_filter = None
         self.update_model (self.log_range)
+        self.pop_view_state ()
         self.actions.show_hidden_lines.props.sensitive = False
 
     def handle_edit_copy_line_action_activate (self, action):
@@ -1792,6 +1853,7 @@ class Window (object):
         # FIXME: Unsetting the model to keep e.g. the dispatched timeline
         # sentinel from collecting data while we filter idly, which slows
         # things down for nothing.
+        self.push_view_state ()
         self.log_view.set_model (None)
         if self.log_filter is None:
             self.log_filter = FilteredLogModel (self.log_range)
@@ -1835,7 +1897,9 @@ class Window (object):
         self.progress_dialog.destroy ()
         self.progress_dialog = None
 
+        # No push_view_state here, did this in add_model_filter.
         self.update_model (self.log_filter)
+        self.pop_view_state ()
 
         self.actions.show_hidden_lines.props.sensitive = True
 
